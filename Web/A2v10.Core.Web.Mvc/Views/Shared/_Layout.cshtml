@@ -1,0 +1,30 @@
+﻿<!DOCTYPE html>
+<!--
+A2v10 platform.
+Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+Site: https://a2v10.com
+GitHub: https://github.com/alex-kukhtin/A2v10.Core
+-->
+<html lang="@ViewBag.__Locale">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta name="format-detection" content="telephone=no" />
+	<meta name="google" content="notranslate" />
+	<title></title>
+	<link href="/css/@Html.Raw(ViewBag.__Theme + ".min.css")?v=@ViewBag.__Build" rel="stylesheet" />
+	<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+	<link rel="icon" href="/favicon.ico" type="image/x-icon" />
+</head>
+<body>
+	@RenderBody()
+	<script type="text/javascript" src="/scripts/vue.@Html.Raw(ViewBag.__Minify)js?v=@ViewBag.__Build"></script>
+	<script type="text/javascript" src="/scripts/d3.min.js?v=@ViewBag.__Build"></script>
+	<script type="text/javascript" src="/scripts/locale-@Html.Raw(ViewBag.__Locale + ".min.js")?v=$(Build)"></script>
+	<script type="text/javascript" src="/scripts/main.js?v=@ViewBag.__Build"></script>
+	@ViewBag.__AssetsScripts
+	<script type="text/javascript" src="/_shell/script"></script>
+	@ViewBag.__LayoutScripts
+</body>
+</html>

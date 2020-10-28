@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Copyright>Copyright © 2015-2020 Oleksandr Kukhtin. All rights reserved.</Copyright>
+    <AssemblyVersion>10.0.8000.0</AssemblyVersion>
+    <FileVersion>10.0.8000.0</FileVersion>
+    <Product>A2v10</Product>
+    <Version>10.0.8000</Version>
+    <Company>Olexandr Kukhtin</Company>
+    <Authors>Oleksandr Kukhtin</Authors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7247" />
+  </ItemGroup>
+
+</Project>

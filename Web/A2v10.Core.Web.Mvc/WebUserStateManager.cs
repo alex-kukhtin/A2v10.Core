@@ -1,0 +1,46 @@
+﻿
+using System;
+using Microsoft.AspNetCore.Http;
+
+using A2v10.Infrastructure;
+using System.Text;
+
+namespace A2v10.Core.Web.Mvc
+{
+
+	public class WebUserStateManager : IUserStateManager
+	{
+		const String _readOnly_ = "_readOnly_";
+		const String _userCompanyKey = "_userCompany_";
+
+		private readonly IHttpContextAccessor _httpContextAccessor;
+
+		public WebUserStateManager(IHttpContextAccessor httpContextAccessor)
+		{
+			_httpContextAccessor = httpContextAccessor;
+		}
+
+		public Boolean IsReadOnly(Int64 userId)
+		{
+			if (userId == 0)
+				return false;
+			var ro = _httpContextAccessor.HttpContext.Session.GetInt32(_readOnly_);
+			return ro != 0;
+		}
+
+		public void SetReadOnly(Boolean readOnly)
+		{
+			_httpContextAccessor.HttpContext.Session.SetInt32(_readOnly_, readOnly ? 1 : 0);
+		}
+
+		public void SetUserCompanyId(long CompanyId)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Int64 UserCompanyId(int TenantId, long UserId)
+		{
+			throw new NotImplementedException();
+		}
+	}
+}
