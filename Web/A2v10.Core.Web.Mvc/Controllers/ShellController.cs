@@ -27,12 +27,11 @@ namespace A2v10.Core.Web.Mvc
 
 	public class ShellController : BaseController
 	{
-		private readonly IUserStateManager _userStateManager;
 
-		public ShellController(IDbContext dbContext, IApplicationHost host, IAppCodeProvider codeProvider,  IUserStateManager userStateManager)
-			: base(host, codeProvider)
+		public ShellController(IDbContext dbContext, IApplicationHost host, IAppCodeProvider codeProvider, 
+			ILocalizer localizer, IUserStateManager userStateManager)
+			: base(dbContext, host, codeProvider, localizer, userStateManager)
 		{
-			_userStateManager = userStateManager; // may be null;
 		}
 
 		public Boolean IsDebugConfiguration => _host.IsDebugConfiguration;

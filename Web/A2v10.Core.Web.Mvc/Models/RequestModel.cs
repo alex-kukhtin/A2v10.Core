@@ -21,6 +21,15 @@ namespace A2v10.Core.Web.Mvc
 		{
 
 		}
+
+		public RequestModelException()
+		{
+		}
+
+		public RequestModelException(String message, Exception innerException) 
+			: base(message, innerException)
+		{
+		}
 	}
 
 	public enum RequestUrlKind
@@ -375,17 +384,13 @@ namespace A2v10.Core.Web.Mvc
 
 		public Encoding GetEncoding()
 		{
-			switch (encoding)
+			return encoding switch
 			{
-				case "1251":
-					return Encoding.GetEncoding(1251);
-				case "866":
-					return Encoding.GetEncoding(866);
-				case "utf8":
-					return Encoding.UTF8;
-				default:
-					throw new RequestModelException($"Invalid encoding value '{encoding}'. Possible values are 'utf8', '1251', '866'");
-			}
+				"1251" => Encoding.GetEncoding(1251),
+				"866" => Encoding.GetEncoding(866),
+				"utf8" => Encoding.UTF8,
+				_ => throw new RequestModelException($"Invalid encoding value '{encoding}'. Possible values are 'utf8', '1251', '866'"),
+			};
 		}
 	}
 
@@ -690,19 +695,20 @@ namespace A2v10.Core.Web.Mvc
 		public String ModelFile => _file;
 
 		[JsonIgnore]
-		public String CurrentSource => source ?? _host.TenantDataSource;
+		// TODO
+		//public String CurrentSource => source ?? _host.TenantDataSource;
+		public String CurrentSource => source;
 
 		[JsonIgnore]
 		public RequestDataAction DataAction
 		{
 			get
 			{
-				switch (_data.ToLowerInvariant())
+				return (_data.ToLowerInvariant()) switch
 				{
-					case "save": return RequestDataAction.Save;
-					default:
-						throw new InvalidOperationException($"Invalid data action {_data}");
-				}
+					"save" => RequestDataAction.Save,
+					_ => throw new InvalidOperationException($"Invalid data action {_data}"),
+				};
 			}
 		}
 
@@ -711,15 +717,11 @@ namespace A2v10.Core.Web.Mvc
 		{
 			get
 			{
-				String kind = String.Empty;
-				switch (_kind)
+				String kind = _kind switch
 				{
-					case RequestUrlKind.Page:
-						kind = "_page";
-						break;
-					default:
-						throw new InvalidOperationException($"Invalid RequestKind '{_kind}' for indirect query");
-				}
+					RequestUrlKind.Page => "_page",
+					_ => throw new InvalidOperationException($"Invalid RequestKind '{_kind}' for indirect query"),
+				};
 				return $"/{kind}/{_modelPath}/{_action}/{_id}";
 			}
 		}
@@ -729,14 +731,12 @@ namespace A2v10.Core.Web.Mvc
 		{
 			get
 			{
-				switch (_kind)
+				return _kind switch
 				{
-					case RequestUrlKind.Page:
-						return $"{_modelPath}/{_action}/{_id}";
-					case RequestUrlKind.Dialog:
-						return $"{_modelPath}/{_dialog}/{_id}";
-				}
-				return null;
+					RequestUrlKind.Page => $"{_modelPath}/{_action}/{_id}",
+					RequestUrlKind.Dialog => $"{_modelPath}/{_dialog}/{_id}",
+					_ => null,
+				};
 			}
 		}
 
@@ -917,7 +917,7 @@ namespace A2v10.Core.Web.Mvc
 			return mi;
 		}
 
-		static Lazy<RedirectModule> _redirect = new Lazy<RedirectModule>(() => new RedirectModule(), isThreadSafe: true);
+		static readonly Lazy<RedirectModule> _redirect = new Lazy<RedirectModule>(() => new RedirectModule(), isThreadSafe: true);
 
 		public static async Task<RequestModel> CreateFromUrl(IAppCodeProvider codeProvider, RequestUrlKind kind, String normalizedUrl)
 		{

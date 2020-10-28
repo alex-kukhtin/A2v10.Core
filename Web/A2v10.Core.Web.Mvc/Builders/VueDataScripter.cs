@@ -117,10 +117,13 @@ const vm = new DataModelController({
 
 		private readonly IAppCodeProvider _codeProvider;
 		private readonly ILocalizer _localizer;
-		public VueDataScripter(IAppCodeProvider codeProvider, ILocalizer localizer)
+		private readonly IApplicationHost _host;
+
+		public VueDataScripter(IApplicationHost host, IAppCodeProvider codeProvider, ILocalizer localizer)
 		{
 			_codeProvider = codeProvider ?? throw new ArgumentNullException(nameof(codeProvider));
 			_localizer = localizer ?? throw new ArgumentNullException(nameof(localizer));
+			_host = host ?? throw new ArgumentNullException(nameof(host));
 		}
 
 		public String CreateDataModelScript(IDataModel model)
@@ -231,7 +234,7 @@ const vm = new DataModelController({
 			return sb;
 		}
 
-		public StringBuilder GetProperties(IDataMetadata meta)
+		public static StringBuilder GetProperties(IDataMetadata meta)
 		{
 			var sb = new StringBuilder();
 			foreach (var fd in meta.Fields)
@@ -312,7 +315,7 @@ const vm = new DataModelController({
 			if (lazyFields.Length != 0)
 			{
 				lazyFields.RemoveTailComma();
-				sb.Append($"$lazy: [{lazyFields.ToString()}]");
+				sb.Append($"$lazy: [{lazyFields}]");
 			}
 			if (sb.Length == 0)
 				return null;
@@ -513,7 +516,7 @@ const vm = new DataModelController({
 			StringBuilder sbRequired = new StringBuilder();
 
 			// write model script
-			String fileTemplateText = null;
+			String fileTemplateText;
 			if (msi.Template != null)
 			{
 				fileTemplateText = await _codeProvider.ReadTextFileAsync(msi.Path, msi.Template + ".js");
@@ -581,5 +584,4 @@ const vm = new DataModelController({
 			};
 		}
 	}
-}
 }

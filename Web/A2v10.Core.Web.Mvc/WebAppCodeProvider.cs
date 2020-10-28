@@ -11,7 +11,7 @@ namespace A2v10.Core.Web.Mvc
 	public class WebAppCodeProvider : IAppCodeProvider
 	{
 
-		IConfiguration _appSection;
+		private readonly IConfiguration _appSection;
 		public WebAppCodeProvider(IConfiguration config)
 		{
 			_appSection = config.GetSection("application");
@@ -20,7 +20,7 @@ namespace A2v10.Core.Web.Mvc
 		private String AppPath => _appSection.GetValue<String>("path");
 		private String AppKey => _appSection.GetValue<String>("key");
 
-		public String MakeFullPath(string path, string fileName)
+		public String MakeFullPath(String path, String fileName)
 		{
 			String appKey = AppKey;
 			if (fileName.StartsWith("/"))
@@ -42,10 +42,23 @@ namespace A2v10.Core.Web.Mvc
 			if (!File.Exists(fullPath))
 				return null;
 
-			using (var tr = new StreamReader(fullPath))
-			{
-				return await tr.ReadToEndAsync();
-			}
+			using var tr = new StreamReader(fullPath);
+			return await tr.ReadToEndAsync();
+		}
+
+		public String ReadTextFile(String path, String fileName)
+		{
+			String fullPath = MakeFullPath(path, fileName);
+			if (!File.Exists(fullPath))
+				return null;
+			using var tr = new StreamReader(fullPath);
+			return tr.ReadToEnd();
+		}
+
+
+		public Boolean FileExists(String fullPath)
+		{
+			return File.Exists(fullPath);
 		}
 	}
 }

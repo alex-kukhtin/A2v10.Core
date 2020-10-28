@@ -28,12 +28,17 @@ namespace A2v10.Core.Web.Mvc
 		protected readonly IApplicationHost _host;
 		protected readonly IAppCodeProvider _codeProvider;
 		protected readonly IDbContext _dbContext;
+		protected readonly ILocalizer _localizer;
+		protected readonly IUserStateManager _userStateManager;
 
-		public BaseController(IDbContext dbContext, IApplicationHost host, IAppCodeProvider codeProvider)
+		public BaseController(IDbContext dbContext, IApplicationHost host, IAppCodeProvider codeProvider,
+			ILocalizer localizer, IUserStateManager userStateManager)
 		{
 			_dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
 			_host = host ?? throw new ArgumentNullException(nameof(host));
 			_codeProvider = codeProvider ?? throw new ArgumentNullException(nameof(codeProvider));
+			_localizer = _localizer ?? throw new ArgumentNullException(nameof(localizer));
+			_userStateManager = userStateManager ?? throw new ArgumentNullException(nameof(userStateManager));
 		}
 
 		Int64 UserId => 99; //TODO:
@@ -85,7 +90,7 @@ namespace A2v10.Core.Web.Mvc
 			}
 		}
 
-		public NameValueCollection CheckPeriod(NameValueCollection coll)
+		public static NameValueCollection CheckPeriod(NameValueCollection coll)
 		{
 			var res = new NameValueCollection();
 			foreach (var key in coll.Keys)
