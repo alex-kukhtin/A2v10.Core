@@ -3,8 +3,9 @@
 using System;
 using System.IO;
 using A2v10.Data.Interfaces;
+using A2v10.Infrastructure;
 
-namespace A2v10.Infrastructure
+namespace A2v10.Xaml
 {
 	public class RenderInfo
 	{

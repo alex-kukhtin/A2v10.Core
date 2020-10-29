@@ -20,8 +20,8 @@ namespace A2v10.Core.Web.Mvc.Controllers
 		public Boolean Admin => _host.IsAdminMode;
 
 		public PageController(IDbContext dbContext, IApplicationHost host, IAppCodeProvider codeProvider,
-			ILocalizer localizer, IUserStateManager userStateManager)
-			: base(dbContext, host, codeProvider, localizer, userStateManager)
+			ILocalizer localizer, IUserStateManager userStateManager, IProfiler profiler)
+			: base(dbContext, host, codeProvider, localizer, userStateManager, profiler)
 		{
 		}
 
@@ -57,7 +57,7 @@ namespace A2v10.Core.Web.Mvc.Controllers
 
 				RequestModel rm = await RequestModel.CreateFromUrl(_codeProvider, kind, path);
 				RequestView rw = rm.GetCurrentAction(kind);
-				var pageBuilder = new PageBuilder(_host, _dbContext, _codeProvider, _localizer, _userStateManager);
+				var pageBuilder = new PageBuilder(_host, _dbContext, _codeProvider, _localizer, _userStateManager, _profiler);
 				await pageBuilder.Render(rw, loadPrms, Response);
 			} 
 			catch (Exception ex)

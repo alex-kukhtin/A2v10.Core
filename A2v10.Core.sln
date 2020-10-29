@@ -20,7 +20,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		todo.txt = todo.txt
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "A2v10.Xaml", "Shared\A2v10.Xaml\A2v10.Xaml.csproj", "{4008DC76-6D3D-4331-B6EE-AFA3C0AE17B8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "A2v10.Xaml", "Shared\A2v10.Xaml\A2v10.Xaml.csproj", "{4008DC76-6D3D-4331-B6EE-AFA3C0AE17B8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "A2v10.Web.Config", "Web\A2v10.Web.Config\A2v10.Web.Config.csproj", "{D14947CD-F6E4-4725-8F2D-89858BFD0D7B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -48,6 +50,10 @@ Global
 		{4008DC76-6D3D-4331-B6EE-AFA3C0AE17B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4008DC76-6D3D-4331-B6EE-AFA3C0AE17B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4008DC76-6D3D-4331-B6EE-AFA3C0AE17B8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D14947CD-F6E4-4725-8F2D-89858BFD0D7B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D14947CD-F6E4-4725-8F2D-89858BFD0D7B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D14947CD-F6E4-4725-8F2D-89858BFD0D7B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D14947CD-F6E4-4725-8F2D-89858BFD0D7B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -58,6 +64,7 @@ Global
 		{09557B3F-0C6A-44C3-898A-485A3EF05854} = {1823B559-E142-4E96-B927-DF861817AF4E}
 		{DA3B3240-1E97-47FA-B013-ECE46D2B7B2F} = {16E0B455-399E-4612-927E-C4AE753F187E}
 		{4008DC76-6D3D-4331-B6EE-AFA3C0AE17B8} = {16E0B455-399E-4612-927E-C4AE753F187E}
+		{D14947CD-F6E4-4725-8F2D-89858BFD0D7B} = {1823B559-E142-4E96-B927-DF861817AF4E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D64A03C5-D2E1-49C8-A7A9-D6022941DE01}

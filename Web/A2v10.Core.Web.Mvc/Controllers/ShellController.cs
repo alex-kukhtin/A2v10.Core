@@ -29,8 +29,8 @@ namespace A2v10.Core.Web.Mvc
 	{
 
 		public ShellController(IDbContext dbContext, IApplicationHost host, IAppCodeProvider codeProvider, 
-			ILocalizer localizer, IUserStateManager userStateManager)
-			: base(dbContext, host, codeProvider, localizer, userStateManager)
+			ILocalizer localizer, IUserStateManager userStateManager, IProfiler profiler)
+			: base(dbContext, host, codeProvider, localizer, userStateManager, profiler)
 		{
 		}
 

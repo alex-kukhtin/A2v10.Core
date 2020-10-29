@@ -6,6 +6,7 @@ using System.Dynamic;
 using Microsoft.Extensions.Configuration;
 
 using A2v10.Infrastructure;
+using System.Text;
 
 namespace A2v10.Core.Web.Mvc
 {
@@ -86,9 +87,28 @@ namespace A2v10.Core.Web.Mvc
 			throw new NotImplementedException();
 		}
 
-		public string GetAppSettings(string source)
+		public String GetAppSettings(string source)
 		{
-			throw new NotImplementedException();
+			if (source == null)
+				return null;
+			if (source.IndexOf("@{AppSettings.") == -1)
+				return source;
+			Int32 xpos = 0;
+			var sb = new StringBuilder();
+			do
+			{
+				Int32 start = source.IndexOf("@{AppSettings.", xpos);
+				if (start == -1) break;
+				Int32 end = source.IndexOf("}", start + 14);
+				if (end == -1) break;
+				var key = source.Substring(start + 14, end - start - 14);
+				var value = _appSettings.GetValue<String>(key) ?? String.Empty;
+				sb.Append(source.Substring(xpos, start - xpos));
+				sb.Append(value);
+				xpos = end + 1;
+			} while (true);
+			sb.Append(source.Substring(xpos));
+			return sb.ToString();
 		}
 
 		public ExpandoObject GetEnvironmentObject(string key)

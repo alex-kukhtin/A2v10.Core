@@ -6,31 +6,33 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
-using A2v10.Data.Interfaces;
-using A2v10.Infrastructure;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
 
+using A2v10.Data.Interfaces;
+using A2v10.Infrastructure;
+using A2v10.Xaml;
+
 namespace A2v10.Core.Web.Mvc.Builders
 {
-	public class PageBuilder
+	public class PageBuilder: BaseBuilder
 	{
 		private readonly IDataScripter _scripter;
-		private readonly IDbContext _dbContext;
-		private readonly IAppCodeProvider _codeProvider;
 		private readonly IApplicationHost _host;
 		private readonly ILocalizer _localizer;
 		private readonly IUserStateManager _userStateManager;
 		private readonly IRenderer _renderer;
+		private readonly IProfiler _profiler;
 
-		public PageBuilder(IApplicationHost host, IDbContext dbContext, IAppCodeProvider codeProvider, ILocalizer localizer, IUserStateManager userStateManager)
+		public PageBuilder(IApplicationHost host, IDbContext dbContext, IAppCodeProvider codeProvider, ILocalizer localizer, IUserStateManager userStateManager, IProfiler profiler)
+			: base(dbContext, codeProvider)
 		{
 			_host = host ?? throw new ArgumentNullException(nameof(host));
 			_localizer = localizer ?? throw new ArgumentNullException(nameof(localizer));
-			_codeProvider = codeProvider ?? throw new ArgumentNullException(nameof(codeProvider));
-			_dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
 			_userStateManager = userStateManager ?? throw new ArgumentNullException(nameof(userStateManager));
 			_scripter = new VueDataScripter(_host, codeProvider, _localizer);
+			_profiler = profiler ?? throw new ArgumentNullException(nameof(profiler));
+			_renderer = new XamlRenderer(_profiler, _codeProvider);
 		}
 
 		internal async Task<DataModelAndView> GetDataModelForView(RequestView rw, ExpandoObject loadPrms)
@@ -104,7 +106,7 @@ namespace A2v10.Core.Web.Mvc.Builders
 			return dmv;
 		}
 
-		public async Task Render(RequestView rwArg, ExpandoObject loadPrms, HttpResponse response)
+		public async Task Render(RequestView rwArg, ExpandoObject loadPrms, HttpResponse response, Boolean secondPhase = false)
 		{
 			var dmAndView = await GetDataModelForView(rwArg, loadPrms);
 
@@ -186,6 +188,12 @@ namespace A2v10.Core.Web.Mvc.Builders
 			}
 			await ProcessDbEvents(rw);
 			await HttpResponseWritingExtensions.WriteAsync(response, modelScript, Encoding.UTF8);
+		}
+
+		Task ProcessDbEvents(RequestView rw)
+		{
+			// TODO:
+			return Task.CompletedTask;
 		}
 
 	}

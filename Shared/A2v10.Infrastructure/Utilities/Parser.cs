@@ -52,7 +52,7 @@ namespace A2v10.Infrastructure
 				get
 				{
 					if (id == TokenId.StringLiteral)
-						return Text.Substring(1, Text.Length - 2);
+						return Text[1..^1];
 					return Text;
 				}
 			}
@@ -247,7 +247,7 @@ namespace A2v10.Infrastructure
 					throw new ParseError($"Invalid character. ch : {ch}, pos : {textPos}");
 			}
 			token.id = t;
-			token.Text = text.Substring(tokenPos, textPos - tokenPos);
+			token.Text = text[tokenPos..textPos];
 			token.pos = tokenPos;
 		}
 	}

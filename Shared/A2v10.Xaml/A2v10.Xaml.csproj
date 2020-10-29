@@ -4,4 +4,12 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Portable.Xaml" Version="0.25.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
+  </ItemGroup>
+
 </Project>

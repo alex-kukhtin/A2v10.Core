@@ -60,5 +60,21 @@ namespace A2v10.Core.Web.Mvc
 		{
 			return File.Exists(fullPath);
 		}
+
+		public Stream FileStreamFullPathRO(String fullPath)
+		{
+			return new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+		}
+
+		public String FileReadAllText(String fullPath)
+		{
+			return File.ReadAllText(fullPath);
+		}
+
+		public String CombineRelativePath(String path1, String path2)
+		{
+			return Path.GetFullPath(Path.Combine(path1, path2));
+		}
+
 	}
 }

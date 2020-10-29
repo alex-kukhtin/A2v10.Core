@@ -23,6 +23,7 @@ using Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation;
 using Microsoft.Extensions.FileProviders;
 using A2v10.Infrastructure;
 using Microsoft.AspNetCore.Http;
+using A2v10.Web.Config;
 
 namespace A2v10.Core.Web.Site
 {
@@ -91,11 +92,16 @@ namespace A2v10.Core.Web.Site
 				opts.ReturnUrlParameter = "returnurl";
 			});
 
+			services.AddScoped<ILocalizer, WebLocalizer>();
+			services.AddScoped<IDataLocalizer, WebLocalizer>();
+			services.AddScoped<IProfiler, WebProfiler>();
+			services.AddScoped<IDataProfiler, WebProfiler>();
+
 			services.AddScoped<IApplicationHost>(provider => new WebApplicationHost(Configuration));
 			services.AddScoped<IDbContext>(provider => 
-				new SqlDbContext(new NullDataProfiler(), 
-				new DataConfiguration(Configuration), 
-				new NullDataLocalizer())
+				new SqlDbContext(provider.GetService<IDataProfiler>(), 
+					new DataConfiguration(Configuration), 
+					provider.GetService<IDataLocalizer>())
 			);
 			services.AddScoped<IAppCodeProvider>(provider => new WebAppCodeProvider(Configuration));
 			services.AddScoped<IUserStateManager>(provider => 

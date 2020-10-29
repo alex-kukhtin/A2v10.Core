@@ -18,6 +18,7 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\..\Shared\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
+	  <ProjectReference Include="..\..\Shared\A2v10.Xaml\A2v10.Xaml.csproj" />
 	  <ProjectReference Include="..\A2v10.Web.Identity\A2v10.Web.Identity.csproj" />
 	</ItemGroup>
 
