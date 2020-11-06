@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using A2v10.Data.Interfaces;
@@ -38,17 +37,17 @@ namespace A2v10.Web.Identity
 			throw new NotImplementedException();
 		}
 
-		public Task<AppUser> FindByIdAsync(string userId, CancellationToken cancellationToken)
+		public Task<AppUser> FindByIdAsync(String userId, CancellationToken cancellationToken)
 		{
 			throw new NotImplementedException();
 		}
 
-		public Task<AppUser> FindByLoginAsync(string loginProvider, string providerKey, CancellationToken cancellationToken)
+		public Task<AppUser> FindByLoginAsync(String loginProvider, String providerKey, CancellationToken cancellationToken)
 		{
 			throw new NotImplementedException();
 		}
 
-		public Task<AppUser> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)
+		public Task<AppUser> FindByNameAsync(String normalizedUserName, CancellationToken cancellationToken)
 		{
 			throw new NotImplementedException();
 		}
@@ -58,42 +57,42 @@ namespace A2v10.Web.Identity
 			throw new NotImplementedException();
 		}
 
-		public Task<string> GetNormalizedUserNameAsync(AppUser user, CancellationToken cancellationToken)
+		public Task<String> GetNormalizedUserNameAsync(AppUser user, CancellationToken cancellationToken)
 		{
 			throw new NotImplementedException();
 		}
 
-		public Task<string> GetSecurityStampAsync(AppUser user, CancellationToken cancellationToken)
+		public Task<String> GetSecurityStampAsync(AppUser user, CancellationToken cancellationToken)
 		{
 			throw new NotImplementedException();
 		}
 
-		public Task<string> GetUserIdAsync(AppUser user, CancellationToken cancellationToken)
+		public Task<String> GetUserIdAsync(AppUser user, CancellationToken cancellationToken)
 		{
 			throw new NotImplementedException();
 		}
 
-		public Task<string> GetUserNameAsync(AppUser user, CancellationToken cancellationToken)
+		public Task<String> GetUserNameAsync(AppUser user, CancellationToken cancellationToken)
 		{
 			throw new NotImplementedException();
 		}
 
-		public Task RemoveLoginAsync(AppUser user, string loginProvider, string providerKey, CancellationToken cancellationToken)
+		public Task RemoveLoginAsync(AppUser user, String loginProvider, String providerKey, CancellationToken cancellationToken)
 		{
 			throw new NotImplementedException();
 		}
 
-		public Task SetNormalizedUserNameAsync(AppUser user, string normalizedName, CancellationToken cancellationToken)
+		public Task SetNormalizedUserNameAsync(AppUser user, String normalizedName, CancellationToken cancellationToken)
 		{
 			throw new NotImplementedException();
 		}
 
-		public Task SetSecurityStampAsync(AppUser user, string stamp, CancellationToken cancellationToken)
+		public Task SetSecurityStampAsync(AppUser user, String stamp, CancellationToken cancellationToken)
 		{
 			throw new NotImplementedException();
 		}
 
-		public Task SetUserNameAsync(AppUser user, string userName, CancellationToken cancellationToken)
+		public Task SetUserNameAsync(AppUser user, String userName, CancellationToken cancellationToken)
 		{
 			throw new NotImplementedException();
 		}
