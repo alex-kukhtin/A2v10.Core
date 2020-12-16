@@ -11,8 +11,6 @@ namespace A2v10.Xaml
 {
 	public class Bind : BindBase, ISupportInitialize
 	{
-		const String NullString = "null";
-
 		public String Path { get; set; }
 		public String Format { get; set; }
 		public DataType DataType { get; set; }
@@ -62,7 +60,7 @@ namespace A2v10.Xaml
 				return realPath;
 			var opts = new StringBuilder("{");
 			if (DataType != DataType.String)
-				opts.Append($"dataType: '{DataType.ToString()}',");
+				opts.Append($"dataType: '{DataType}',");
 			if (!String.IsNullOrEmpty(Format))
 				opts.Append($"format: '{context.Localize(Format.Replace("'", "\\'"))}',");
 			if (maskBind != null)
@@ -74,12 +72,12 @@ namespace A2v10.Xaml
 			if (HideZeros)
 				opts.Append("hideZeros: true,");
 			opts.RemoveTailComma();
-			opts.Append("}");
+			opts.Append('}');
 			return $"$format({realPath}, {opts})";
 		}
 
 
-		private static Regex _selectedRegEx = new Regex(@"([\w\.]+)\.Selected\((\w+)\)", RegexOptions.Compiled);
+		private static readonly Regex _selectedRegEx = new Regex(@"([\w\.]+)\.Selected\((\w+)\)", RegexOptions.Compiled);
 
 		#region ISupportInitialize
 		public void BeginInit()

@@ -57,7 +57,7 @@ namespace A2v10.Xaml
 						{
 							if (stylesStream != null)
 							{
-								if (!(XamlServices.Load(stylesStream) is Styles styles))
+								if (XamlServices.Load(stylesStream) is not Styles styles)
 									throw new XamlException("Xaml. Styles is not 'Styles'");
 								if (uiElem is RootContainer root)
 								{
@@ -85,7 +85,7 @@ namespace A2v10.Xaml
 
 				if (info.SecondPhase)
 				{
-					if (!(uiElem is ISupportTwoPhaseRendering twoPhaseRender))
+					if (uiElem is not ISupportTwoPhaseRendering twoPhaseRender)
 						throw new XamlException("The two-phase rendering is not available");
 					twoPhaseRender.RenderSecondPhase(ctx);
 				}

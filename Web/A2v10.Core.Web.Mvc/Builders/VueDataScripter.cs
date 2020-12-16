@@ -14,7 +14,7 @@ using A2v10.Infrastructure;
 
 namespace A2v10.Core.Web.Mvc.Builders
 {
-	internal class SCRIPT_PARTS
+	static internal class SCRIPT_PARTS
 	{
 		internal const String HEADER =
 		@"
@@ -201,9 +201,9 @@ const vm = new DataModelController({
 			sb.Append("const ctors = {");
 			foreach (var re in meta)
 			{
-				sb.Append(re.Key).Append(",");
+				sb.Append(re.Key).Append(',');
 				if (re.Value.IsArrayType)
-					sb.Append(re.Key + "Array").Append(",");
+					sb.Append(re.Key + "Array").Append(',');
 			}
 			sb.RemoveTailComma();
 			sb.AppendLine("};");
@@ -221,7 +221,7 @@ const vm = new DataModelController({
 			// metadata
 			.Append($"cmn.defineObject({name}, {{props: {{")
 			.Append(GetProperties(ctor))
-			.Append("}")
+			.Append('}')
 			.Append(GetSpecialProperties(ctor))
 			.AppendLine($"}}, {arrItem});");
 
@@ -253,7 +253,7 @@ const vm = new DataModelController({
 				sb.Append($"'{fd.Key}'")
 				.Append(':')
 				.Append(propObj)
-				.Append(",");
+				.Append(',');
 			}
 			if (sb.Length == 0)
 				return sb;
@@ -277,9 +277,9 @@ const vm = new DataModelController({
 					sb.RemoveTailComma();
 				}
 				*/
-				sb.Append("]");
+				sb.Append(']');
 			}
-			sb.AppendLine("}");
+			sb.AppendLine('}');
 			return sb.ToString();
 		}
 

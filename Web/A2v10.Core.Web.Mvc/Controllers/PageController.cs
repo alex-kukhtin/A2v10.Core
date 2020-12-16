@@ -64,7 +64,7 @@ namespace A2v10.Core.Web.Mvc.Controllers
 			{
 				if (ex.Message.StartsWith("UI:"))
 				{
-					var error = Localize(ex.Message.Substring(3));
+					var error = Localize(ex.Message[3..]);
 					WriteExceptionStatus(ex);
 				}
 				else

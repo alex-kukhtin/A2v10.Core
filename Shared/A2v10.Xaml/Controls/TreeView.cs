@@ -159,7 +159,7 @@ namespace A2v10.Xaml
 
 			childElem.AppendJsValues(sb, context);
 			sb.RemoveTailComma(); // tail comma
-			sb.Append("}");
+			sb.Append('}');
 			return sb.ToString();
 		}
 

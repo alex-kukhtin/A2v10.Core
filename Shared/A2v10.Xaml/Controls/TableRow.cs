@@ -133,17 +133,17 @@ namespace A2v10.Xaml
 					var cell = new TableCell();
 					if (s.EndsWith(":R"))
 					{
-						cell.Content = s.Substring(0, s.Length - 2);
+						cell.Content = s[0..^2];
 						cell.Align = TextAlign.Right;
 					}
 					else if (s.EndsWith(":C"))
 					{
-						cell.Content = s.Substring(0, s.Length - 2);
+						cell.Content = s[0..^2];
 						cell.Align = TextAlign.Center;
 					}
 					else if (s.EndsWith(":L"))
 					{
-						cell.Content = s.Substring(0, s.Length - 2);
+						cell.Content = s[0..^2];
 						cell.Align = TextAlign.Left;
 					}
 					else

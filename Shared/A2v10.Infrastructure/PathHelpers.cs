@@ -22,7 +22,7 @@ namespace A2v10.Infrastructure
 			if (String.IsNullOrEmpty(This))
 				return This;
 			if (This.StartsWith("/"))
-				return This.Substring(1);
+				return This[1..];
 			return This;
 		}
 
@@ -39,7 +39,7 @@ namespace A2v10.Infrastructure
 			var dirSep = new String(Path.DirectorySeparatorChar, 1);
 			var combined = Path.GetFullPath(Path.Combine(dirSep, path1, path2));
 			var root = Path.GetFullPath(dirSep);
-			return combined.Substring(root.Length);
+			return combined[root.Length..];
 		}
 	}
 }

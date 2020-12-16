@@ -24,7 +24,7 @@ namespace A2v10.Xaml
 		{
 			try
 			{
-				if (!(serviceProvider.GetService(typeof(IProvideValueTarget)) is IProvideValueTarget iTarget))
+				if (serviceProvider.GetService(typeof(IProvideValueTarget)) is not IProvideValueTarget iTarget)
 					return null;
 				var targetProp = iTarget.TargetProperty as PropertyInfo;
 				if (targetProp == null)

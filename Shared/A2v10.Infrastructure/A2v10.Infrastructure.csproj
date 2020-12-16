@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <Copyright>Copyright © 2015-2020 Oleksandr Kukhtin. All rights reserved.</Copyright>
     <AssemblyVersion>10.0.8000.0</AssemblyVersion>
     <FileVersion>10.0.8000.0</FileVersion>

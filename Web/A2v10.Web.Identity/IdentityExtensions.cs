@@ -30,7 +30,7 @@ namespace A2v10.Web.Identity
 
 		public static Boolean IsUserAdmin(this IIdentity identity)
 		{
-			if (!(identity is ClaimsIdentity user))
+			if (identity is not ClaimsIdentity user)
 				return false;
 			var value = user?.FindFirst("Admin")?.Value;
 			return value == "Admin";
@@ -38,7 +38,7 @@ namespace A2v10.Web.Identity
 
 		public static String GetUserClientId(this IIdentity identity)
 		{
-			if (!(identity is ClaimsIdentity user))
+			if (identity is not ClaimsIdentity user)
 				return null;
 			var value = user.FindFirst("ClientId").Value;
 			return String.IsNullOrEmpty(value) ? null : value;
@@ -46,7 +46,7 @@ namespace A2v10.Web.Identity
 
 		public static Boolean IsTenantAdmin(this IIdentity identity)
 		{
-			if (!(identity is ClaimsIdentity user))
+			if (identity is not ClaimsIdentity user)
 				return false;
 			var value = user.FindFirst("TenantAdmin").Value;
 			return value == "TenantAdmin";
@@ -56,7 +56,7 @@ namespace A2v10.Web.Identity
 		{
 			if (identity == null)
 				return null;
-			if (!(identity is ClaimsIdentity user))
+			if (identity is not ClaimsIdentity user)
 				return null;
 			var ui = new IdentityUserInfo()
 			{
@@ -75,7 +75,7 @@ namespace A2v10.Web.Identity
 		{
 			if (identity == null)
 				return 0;
-			if (!(identity is ClaimsIdentity user))
+			if (identity is not ClaimsIdentity user)
 				return 0;
 			var value = user.FindFirst("TenantId").Value;
 			if (Int32.TryParse(value, out Int32 tenantId))
@@ -87,7 +87,7 @@ namespace A2v10.Web.Identity
 		{
 			if (identity == null)
 				return default;
-			if (!(identity is ClaimsIdentity user))
+			if (identity is not ClaimsIdentity user)
 				return default;
 			var claim = user?.FindFirst(ClaimsIdentity.DefaultNameClaimType)?.Value;
 			if (claim == null)
@@ -99,14 +99,14 @@ namespace A2v10.Web.Identity
 		{
 			if (identity == null)
 				return null;
-			if (!(identity is ClaimsIdentity user))
+			if (identity is not ClaimsIdentity user)
 				return null;
 			return user.FindFirst("Segment").Value;
 		}
 
 		public static String GetUserClaim(this IIdentity identity, String claim)
 		{
-			if (!(identity is ClaimsIdentity user))
+			if (identity is not ClaimsIdentity user)
 				return null;
 			return user.FindFirst(claim).Value;
 		}

@@ -30,7 +30,7 @@ namespace A2v10.Xaml
 				sb.Append(", count: true");
 			if (!String.IsNullOrEmpty(Title))
 				sb.Append($", title: '{Title.EncodeJs()}' ");
-			sb.Append("}");
+			sb.Append('}');
 			return sb.ToString();
 		}
 	}
@@ -49,7 +49,7 @@ namespace A2v10.Xaml
 				sb.Append(d.GetJsValue(context)).Append(',');
 			}
 			sb.RemoveTailComma();
-			sb.Append("]");
+			sb.Append(']');
 			return sb.ToString();
 		}
 	}

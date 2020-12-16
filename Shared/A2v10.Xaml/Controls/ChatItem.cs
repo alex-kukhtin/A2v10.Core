@@ -13,7 +13,7 @@ namespace A2v10.Xaml
 		public String Time { get; set; }
 		public String User { get; set; }
 
-		Lazy<UIElementCollection> _addOns = new Lazy<UIElementCollection>();
+		private readonly Lazy<UIElementCollection> _addOns = new Lazy<UIElementCollection>();
 
 		public UIElementCollection AddOns { get { return _addOns.Value; } }
 

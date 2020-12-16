@@ -57,9 +57,8 @@ namespace A2v10.Xaml
 			var isBind = GetBinding(nameof(ItemsSource));
 			if (isBind != null && Buttons.Count != 1)
 				throw new XamlException("For a TabBar with an items source, only one child element is allowed");
-			String valPath = null;
 			var valBind = GetBinding(nameof(Value));
-			valPath = valBind?.GetPathFormat(context);
+			var valPath = valBind?.GetPathFormat(context);
 			foreach (var b in Buttons)
 			{
 				var tag = new TagBuilder(null, "a2-tab-bar-item");

@@ -167,7 +167,7 @@ namespace A2v10.Core.Web.Mvc
 				{
 					var feature = f.Eval<String>("Feature");
 					if (feature != null)
-						strFeatures.Append(feature).Append(",");
+						strFeatures.Append(feature).Append(',');
 				});
 				if (strFeatures.Length > 0)
 					prms.Set("Features", strFeatures.RemoveTailComma().ToString());

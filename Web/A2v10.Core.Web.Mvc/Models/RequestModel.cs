@@ -957,47 +957,47 @@ namespace A2v10.Core.Web.Mvc
 			if (baseUrl.StartsWith("/_dialog"))
 			{
 				kind = RequestUrlKind.Dialog;
-				baseUrl = baseUrl.Substring(9);
+				baseUrl = baseUrl[9..];
 			}
 			else if (baseUrl.StartsWith("/_page"))
 			{
 				kind = RequestUrlKind.Page;
-				baseUrl = baseUrl.Substring(7);
+				baseUrl = baseUrl[7..];
 			}
 			else if (baseUrl.StartsWith("/_popup"))
 			{
 				kind = RequestUrlKind.Popup;
-				baseUrl = baseUrl.Substring(8);
+				baseUrl = baseUrl[8..];
 			}
 			else if (baseUrl.StartsWith("/_image"))
 			{
 				kind = RequestUrlKind.Image;
-				baseUrl = baseUrl.Substring(8);
+				baseUrl = baseUrl[8..];
 			}
 			else if (baseUrl.StartsWith("/_attachment"))
 			{
 				kind = RequestUrlKind.Attachment;
-				baseUrl = baseUrl.Substring(13);
+				baseUrl = baseUrl[13..];
 			}
 			else if (baseUrl.StartsWith("/_file"))
 			{
 				kind = RequestUrlKind.File;
-				baseUrl = baseUrl.Substring(7);
+				baseUrl = baseUrl[7..];
 			}
 			else if (baseUrl.StartsWith("/_report"))
 			{
 				kind = RequestUrlKind.Report;
-				baseUrl = baseUrl.Substring(9);
+				baseUrl = baseUrl[9..];
 			}
 			else if (baseUrl.StartsWith("/_export"))
 			{
 				kind = RequestUrlKind.Export;
-				baseUrl = baseUrl.Substring(9);
+				baseUrl = baseUrl[9..];
 			}
 			else if (baseUrl.StartsWith("/_simple"))
 			{
 				kind = RequestUrlKind.Simple;
-				baseUrl = baseUrl.Substring(9);
+				baseUrl = baseUrl[9..];
 			}
 			else
 			{

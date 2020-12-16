@@ -127,7 +127,7 @@ namespace A2v10.Infrastructure
 				return null;
 			var tx = source.Trim();
 			if (tx.StartsWith("{{") && tx.EndsWith("}}"))
-				return tx.Substring(2, tx.Length - 4).Trim();
+				return tx[2..^2].Trim();
 			return null;
 		}
 
