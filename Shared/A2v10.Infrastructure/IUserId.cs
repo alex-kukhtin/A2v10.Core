@@ -16,7 +16,7 @@ namespace A2v10.Infrastructure
 		Boolean IsTenantAdmin { get; set; }
 	}
 
-	public struct FullUserInfo
+	public record FullUserInfo
 	{
 		public Int64 UserId { get; set; }
 		public String UserName { get; set; }

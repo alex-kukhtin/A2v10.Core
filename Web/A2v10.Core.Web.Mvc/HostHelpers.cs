@@ -62,8 +62,11 @@ namespace A2v10.Core.Web.Mvc
 
 		public static String CustomManifest(this IApplicationHost host)
 		{
+			return null;
+			/*
 			var manifestPath = Path.Combine(host.HostingPath, "manifest.json");
 			return File.Exists(manifestPath) ? "<link rel=\"manifest\" href=\"/manifest.json\">" : null;
+			*/
 		}
 
 		public static Task ProcessDbEvents(this IApplicationHost host, IDbContext dbContext)

@@ -16,12 +16,12 @@ namespace A2v10.Infrastructure
 	{
 		public static T Get<T>(this ExpandoObject obj, String name)
 		{
-			if (!(obj is IDictionary<String, Object> d))
+			if (obj is not IDictionary<String, Object> d)
 				return default(T);
 			if (d.TryGetValue(name, out Object result))
 			{
-				if (result is T)
-					return (T)result;
+				if (result is T t)
+					return t;
 			}
 			return default(T);
 		}
@@ -29,7 +29,7 @@ namespace A2v10.Infrastructure
 
 		public static Object GetObject(this ExpandoObject obj, String name)
 		{
-			if (!(obj is IDictionary<String, Object> d))
+			if (obj is not IDictionary<String, Object> d)
 				return null;
 			if (d.TryGetValue(name, out Object result))
 			{
@@ -40,7 +40,7 @@ namespace A2v10.Infrastructure
 
 		public static void Set(this ExpandoObject obj, String name, Object value)
 		{
-			if (!(obj is IDictionary<String, Object> d))
+			if (obj is not IDictionary<String, Object> d)
 				return;
 			if (d.ContainsKey(name))
 				d[name] = value;
@@ -50,7 +50,7 @@ namespace A2v10.Infrastructure
 
 		public static void SetIfNotExists(this ExpandoObject obj, String name, Object value)
 		{
-			if (!(obj is IDictionary<String, Object> d))
+			if (obj is not IDictionary<String, Object> d)
 				return;
 			if (!d.ContainsKey(name))
 				d.Add(name, value);
@@ -58,7 +58,7 @@ namespace A2v10.Infrastructure
 
 		public static void RemoveKeys(this ExpandoObject obj, String keys)
 		{
-			if (!(obj is IDictionary<String, Object> d))
+			if (obj is not IDictionary<String, Object> d)
 				return;
 			foreach (var key in keys.Split(','))
 			{
@@ -69,7 +69,7 @@ namespace A2v10.Infrastructure
 
 		public static Boolean HasProperty(this ExpandoObject obj, String name)
 		{
-			if (!(obj is IDictionary<String, Object> d))
+			if (obj is not IDictionary<String, Object> d)
 				return false;
 			return d.ContainsKey(name);
 		}
@@ -231,8 +231,8 @@ namespace A2v10.Infrastructure
 			Object result = root.EvalExpression(expression, throwIfError);
 			if (result == null)
 				return fallback;
-			if (result is T)
-				return (T)result;
+			if (result is T t)
+				return t;
 			return fallback;
 		}
 

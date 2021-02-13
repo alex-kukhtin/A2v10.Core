@@ -1,7 +1,7 @@
 ﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
 
 using System;
-using Portable.Xaml.Markup;
+using A2v10.System.Xaml;
 
 using A2v10.Infrastructure;
 
@@ -10,6 +10,11 @@ namespace A2v10.Xaml
 	[ContentProperty("Children")]
 	public class Page : RootContainer
 	{
+
+		public Page()
+		{
+			int z2 = 223;
+		}
 
 		public UIElementBase Toolbar { get; set; }
 		public UIElementBase Taskpad { get; set; }

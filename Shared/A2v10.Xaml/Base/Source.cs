@@ -2,8 +2,8 @@
 
 using System;
 using System.Reflection;
-using Portable.Xaml.Markup;
-using Portable.Xaml;
+using A2v10.System.Xaml;
+using System.Windows.Markup;
 
 namespace A2v10.Xaml
 {
@@ -48,7 +48,8 @@ namespace A2v10.Xaml
 		Object Load(String baseFileName)
 		{
 			var appReader = XamlRenderer.AppCodeProvider;
-
+			throw new NotImplementedException();
+			/*
 			String basePath = System.IO.Path.GetDirectoryName(baseFileName);
 			String targetDir = appReader.CombineRelativePath(basePath, Path).ToLowerInvariant().Replace('\\','/');
 
@@ -76,6 +77,7 @@ namespace A2v10.Xaml
 				else
 					throw new XamlException($"File not found {Path}");
 			}
+			*/
 		}
 	}
 }

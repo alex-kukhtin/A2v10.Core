@@ -279,7 +279,7 @@ const vm = new DataModelController({
 				*/
 				sb.Append(']');
 			}
-			sb.AppendLine('}');
+			sb.AppendLine("}");
 			return sb.ToString();
 		}
 

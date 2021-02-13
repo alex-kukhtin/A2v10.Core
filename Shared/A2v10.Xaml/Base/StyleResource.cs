@@ -1,8 +1,8 @@
 ﻿// Copyright © 2015-2017 Alex Kukhtin. All rights reserved.
 
 using System;
-using Portable.Xaml.Markup;
-using Portable.Xaml;
+using A2v10.System.Xaml;
+using System.Windows.Markup;
 
 namespace A2v10.Xaml
 {
