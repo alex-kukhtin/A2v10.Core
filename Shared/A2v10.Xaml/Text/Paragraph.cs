@@ -10,7 +10,7 @@ namespace A2v10.Xaml
 	[ContentProperty("Inlines")]
 	public class Paragraph : UIElement
 	{
-		public InlineCollection Inlines { get; } = new InlineCollection();
+		public InlineCollection Inlines { get; set; } = new InlineCollection();
 
 		public Boolean Small { get; set; }
 		public TextColor Color { get; set; }

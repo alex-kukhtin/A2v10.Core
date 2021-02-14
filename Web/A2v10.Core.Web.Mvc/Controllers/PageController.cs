@@ -73,6 +73,5 @@ namespace A2v10.Core.Web.Mvc.Controllers
 				}
 			}
 		}
-
 	}
 }

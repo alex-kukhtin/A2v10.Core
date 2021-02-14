@@ -105,5 +105,20 @@ namespace A2v10.Xaml
 				disp.Dispose();
 			}
 		}
+
+		void Test()
+		{
+			var page = new Page()
+			{
+				Toolbar = new Toolbar(),
+				Pager = new Pager(),
+				Children = new UIElementCollection()
+				{
+					new Block(),
+					new Block(),
+					new Block()
+				}
+			};
+		}
 	}
 }
