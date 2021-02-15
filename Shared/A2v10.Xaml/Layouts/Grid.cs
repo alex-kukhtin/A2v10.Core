@@ -7,6 +7,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using A2v10.Infrastructure;
+using A2v10.System.Xaml;
 
 namespace A2v10.Xaml
 {
@@ -19,6 +20,7 @@ namespace A2v10.Xaml
 		ColumnDense 
 	}
 
+	[AttachedProperties("Col,Row,ColSpan,RowSpan,VAlign")]
 	public class Grid : Container
 	{
 

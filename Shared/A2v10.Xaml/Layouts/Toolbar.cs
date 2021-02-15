@@ -4,6 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using A2v10.Infrastructure;
+using A2v10.System.Xaml;
 
 namespace A2v10.Xaml
 {
@@ -22,6 +23,7 @@ namespace A2v10.Xaml
 		BottomShadow
 	}
 
+	[AttachedProperties("Align")]
 	public class Toolbar : Container
 	{
 
