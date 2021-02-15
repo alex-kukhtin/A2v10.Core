@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
-
 using A2v10.System.Xaml;
 
 using A2v10.Infrastructure;

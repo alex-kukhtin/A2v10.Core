@@ -1,9 +1,10 @@
 ﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
 
-using A2v10.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Text;
+
+using A2v10.Infrastructure;
 using A2v10.System.Xaml;
 
 namespace A2v10.Xaml
@@ -62,6 +63,13 @@ namespace A2v10.Xaml
 				sb.Append($"isGroup: '{isGroupBind.GetTypedPath(context, TypeCheckerTypeCode.Skip)}',");
 			else if (IsGroup != null)
 				throw new XamlException("The IsGroup property must be a binding");
+
+			// visible => if or show
+			var showBind = GetBinding(nameof(Show));
+			if (showBind == null)
+				showBind = GetBinding(nameof(If));
+			if (showBind != null)
+				sb.Append($"isVisible: '{showBind.GetTypedPath(context, TypeCheckerTypeCode.Skip)}',");
 		}
 	}
 
@@ -159,7 +167,7 @@ namespace A2v10.Xaml
 
 			childElem.AppendJsValues(sb, context);
 			sb.RemoveTailComma(); // tail comma
-			sb.Append('}');
+			sb.Append("}");
 			return sb.ToString();
 		}
 

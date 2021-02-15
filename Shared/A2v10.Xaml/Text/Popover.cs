@@ -4,9 +4,7 @@
 using System;
 using System.ComponentModel;
 using System.Globalization;
-
 using A2v10.System.Xaml;
-
 using A2v10.Infrastructure;
 
 namespace A2v10.Xaml

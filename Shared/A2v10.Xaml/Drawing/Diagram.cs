@@ -3,8 +3,6 @@
 using System;
 using A2v10.System.Xaml;
 
-//using A2v10.Xaml.Properties;
-
 namespace A2v10.Xaml.Drawing
 {
 	[ContentProperty("Content")]
@@ -50,7 +48,6 @@ namespace A2v10.Xaml.Drawing
 
 		void RenderDefs(RenderContext context)
 		{
-			throw new NotImplementedException(nameof(RenderDefs));
 			//var defs = Resources.svgdefs;
 			//context.Writer.Write(defs);
 		}

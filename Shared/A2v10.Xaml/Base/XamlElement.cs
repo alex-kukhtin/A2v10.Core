@@ -100,6 +100,18 @@ namespace A2v10.Xaml
 
 		}
 
+		public void MergeBoolAttributeIfExists(TagBuilder tag, RenderContext context, String propName, Boolean? value)
+		{
+			var attrBind = GetBinding(propName);
+			// bool attrs always with ':'
+			String attrName = $":{propName.ToLowerInvariant()}";
+			if (attrBind != null)
+				tag.MergeAttribute(attrName, attrBind.GetPath(context), true);
+			else if (value != null)
+				tag.MergeAttribute(attrName, value.ToString().ToLowerInvariant(), true);
+
+		}
+
 		public String GetBindingString(RenderContext context, String propertyName, String propValue)
 		{
 			String resVal = null;
@@ -132,7 +144,7 @@ namespace A2v10.Xaml
 			if (cmd == null)
 				return;
 			cmd.MergeCommandAttributes(tag, context);
-			tag.MergeAttribute("@click.prevent", cmd.GetCommand(context, indirect:false, argument:null, src:this));
+			tag.MergeAttribute("@click.stop.prevent", cmd.GetCommand(context, indirect:false, argument:null, src:this));
 			if (withHref)
 				tag.MergeAttribute(":href", cmd.GetHrefForCommand(context));
 		}

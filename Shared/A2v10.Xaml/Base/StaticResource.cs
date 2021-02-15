@@ -21,9 +21,9 @@ namespace A2v10.Xaml
 		public override Object ProvideValue(IServiceProvider serviceProvider)
 		{
 			IProvideValueTarget iTarget = serviceProvider.GetService(typeof(IProvideValueTarget)) as IProvideValueTarget;
-			if (serviceProvider.GetService(typeof(IRootObjectProvider)) is not IRootObjectProvider iRoot)
+			if (!(serviceProvider.GetService(typeof(IRootObjectProvider)) is IRootObjectProvider iRoot))
 				throw new InvalidOperationException("StaticResource.ProvideValue. IRootObjectProvider is null");
-			if (iRoot.RootObject is not RootContainer root)
+			if (!(iRoot.RootObject is RootContainer root))
 				return null;
 			Object resrc = root.FindResource(Member);
 			if (resrc == null)

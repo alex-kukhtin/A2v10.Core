@@ -81,7 +81,7 @@ namespace A2v10.Xaml
 
 		void RenderHeaderTemplate(RenderContext context)
 		{
-			if (Tabs[0].Header is not UIElementBase tabHeader)
+			if (!(Tabs[0].Header is UIElementBase tabHeader))
 				return;
 			var tml = new TagBuilder("template");
 			tml.MergeAttribute("slot", "header");

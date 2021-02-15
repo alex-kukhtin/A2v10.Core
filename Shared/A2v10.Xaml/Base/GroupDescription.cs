@@ -1,11 +1,10 @@
-﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2017 Alex Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Text;
-
 using A2v10.System.Xaml;
 
 using A2v10.Infrastructure;
@@ -30,7 +29,7 @@ namespace A2v10.Xaml
 				sb.Append(", count: true");
 			if (!String.IsNullOrEmpty(Title))
 				sb.Append($", title: '{Title.EncodeJs()}' ");
-			sb.Append('}');
+			sb.Append("}");
 			return sb.ToString();
 		}
 	}
@@ -49,7 +48,7 @@ namespace A2v10.Xaml
 				sb.Append(d.GetJsValue(context)).Append(',');
 			}
 			sb.RemoveTailComma();
-			sb.Append(']');
+			sb.Append("]");
 			return sb.ToString();
 		}
 	}

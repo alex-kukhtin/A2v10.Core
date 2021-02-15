@@ -11,11 +11,6 @@ namespace A2v10.Xaml
 	public class Page : RootContainer
 	{
 
-		public Page()
-		{
-			int z2 = 223;
-		}
-
 		public UIElementBase Toolbar { get; set; }
 		public UIElementBase Taskpad { get; set; }
 		public Pager Pager { get; set; }

@@ -1,14 +1,13 @@
-﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2017 Alex Kukhtin. All rights reserved.
 
 using System;
 using System.Text;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Globalization;
-
 using A2v10.System.Xaml;
 
 using A2v10.Infrastructure;
+using System.ComponentModel;
+using System.Globalization;
 
 namespace A2v10.Xaml
 {
@@ -93,27 +92,27 @@ namespace A2v10.Xaml
 		public String GetJsValue(RenderContext context)
 		{
 			var sb = new StringBuilder();
-			sb.Append('{');
+			sb.Append("{");
 			foreach (var itm in Items)
 			{
 				sb.Append($"{itm.Property.EncodeJs()}: {itm.GetJsValue(context)},");
 			}
 			sb.RemoveTailComma();
-			sb.Append('}');
+			sb.Append("}");
 			return sb.ToString();
 		}
 
 		public String GetPersistentValue(RenderContext context)
 		{
 			var sb = new StringBuilder();
-			sb.Append('[');
+			sb.Append("[");
 			foreach (var itm in Items)
 			{
 				if (itm.Persistent)
 					sb.Append($"'{itm.Property.EncodeJs()}',");
 			}
 			sb.RemoveTailComma();
-			sb.Append(']');
+			sb.Append("]");
 			return sb.ToString();
 		}
 	}

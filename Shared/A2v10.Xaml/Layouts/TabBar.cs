@@ -1,8 +1,9 @@
 ﻿// Copyright © 2019 Alex Kukhtin. All rights reserved.
 
 
-using A2v10.Infrastructure;
 using System;
+
+using A2v10.Infrastructure;
 using A2v10.System.Xaml;
 
 namespace A2v10.Xaml
@@ -57,8 +58,9 @@ namespace A2v10.Xaml
 			var isBind = GetBinding(nameof(ItemsSource));
 			if (isBind != null && Buttons.Count != 1)
 				throw new XamlException("For a TabBar with an items source, only one child element is allowed");
+
 			var valBind = GetBinding(nameof(Value));
-			var valPath = valBind?.GetPathFormat(context);
+			String valPath = valBind?.GetPathFormat(context);
 			foreach (var b in Buttons)
 			{
 				var tag = new TagBuilder(null, "a2-tab-bar-item");
@@ -66,6 +68,7 @@ namespace A2v10.Xaml
 				if (isBind != null)
 				{
 					tag.MergeAttribute("v-for", $"(btn, btnIndex) in {isBind.GetPath(context)}");
+					tag.MergeAttribute(":class", b.GetClassForParent(context, valPath));
 					tag.RenderStart(context);
 					using (new ScopeContext(context, "btn", isBind.Path))
 					{
@@ -75,6 +78,7 @@ namespace A2v10.Xaml
 				}
 				else
 				{
+					tag.MergeAttribute(":class", b.GetClassForParent(context, valPath));
 					tag.RenderStart(context);
 					b.RenderMe(context, valPath);
 					tag.RenderEnd(context);

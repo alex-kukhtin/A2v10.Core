@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
-
 using A2v10.System.Xaml;
 
 namespace A2v10.Xaml

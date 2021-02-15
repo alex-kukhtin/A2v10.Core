@@ -3,9 +3,11 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using A2v10.System.Xaml;
 
 namespace A2v10.Xaml
 {
+	[AttachedProperties("Fill,Skip")]
 	public class FullHeightPanel : Container
 	{
 		#region Attached Properties

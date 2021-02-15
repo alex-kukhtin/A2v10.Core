@@ -8,14 +8,22 @@ namespace A2v10.Xaml
 	{
 		public static String AlignSelf(this AlignItem vAlign)
 		{
-			return vAlign switch
+			switch (vAlign)
 			{
-				AlignItem.Top or AlignItem.Start => "start",
-				AlignItem.Middle or AlignItem.Center => "center",
-				AlignItem.Bottom or AlignItem.End => "end",
-				AlignItem.Stretch => "stretch",
-				_ => null,
-			};
+				case AlignItem.Top:
+				case AlignItem.Start:
+					return "start";
+				case AlignItem.Middle:
+				case AlignItem.Center:
+					return "center";
+				case AlignItem.Bottom:
+				case AlignItem.End:
+					return "end";
+				case AlignItem.Stretch:
+					return "stretch";
+				default:
+					return null;
+			}
 		}
 	}
 }

@@ -12,11 +12,6 @@ namespace A2v10.Xaml
 
 	public class Pager : UIElementBase
 	{
-		public Pager()
-		{
-			int z4 = 100;
-		}
-
 		public Object Source { get; set; }
 
 		public PagerStyle Style { get; set; }

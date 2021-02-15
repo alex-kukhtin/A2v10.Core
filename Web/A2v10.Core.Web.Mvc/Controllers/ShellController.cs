@@ -47,6 +47,11 @@ namespace A2v10.Core.Web.Mvc
 			return View();
 		}
 
+		public IActionResult Trace()
+		{
+			return Content("TRACE HERE");
+		}
+
 		[Route("_shell/[action]")]
 		public async Task Script()
 		{

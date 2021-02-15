@@ -3,7 +3,6 @@
 using System;
 using System.Reflection;
 using A2v10.System.Xaml;
-using System.Windows.Markup;
 
 namespace A2v10.Xaml
 {
@@ -24,7 +23,7 @@ namespace A2v10.Xaml
 		{
 			try
 			{
-				if (serviceProvider.GetService(typeof(IProvideValueTarget)) is not IProvideValueTarget iTarget)
+				if (!(serviceProvider.GetService(typeof(IProvideValueTarget)) is IProvideValueTarget iTarget))
 					return null;
 				var targetProp = iTarget.TargetProperty as PropertyInfo;
 				if (targetProp == null)
@@ -47,9 +46,10 @@ namespace A2v10.Xaml
 
 		Object Load(String baseFileName)
 		{
-			var appReader = XamlRenderer.AppCodeProvider;
-			throw new NotImplementedException();
+			return null;
 			/*
+			var appReader = XamlRenderer.ApplicationReader;
+
 			String basePath = System.IO.Path.GetDirectoryName(baseFileName);
 			String targetDir = appReader.CombineRelativePath(basePath, Path).ToLowerInvariant().Replace('\\','/');
 

@@ -1,12 +1,16 @@
-﻿// Copyright © 2015-2017 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
 using System.ComponentModel;
 using System.Globalization;
 
+using A2v10.System.Xaml;
+
 namespace A2v10.Xaml
 {
 	[TypeConverter(typeof(ConfirmConverter))]
+	[ContentProperty("Message")]
+
 	public class Confirm : XamlElement
 	{
 		public String Message { get; set; }
