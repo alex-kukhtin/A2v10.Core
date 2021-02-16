@@ -93,17 +93,19 @@ namespace A2v10.Core.Web.Site
 				opts.ReturnUrlParameter = "returnurl";
 			});
 
-			services.AddSingleton<ILocalizer, WebLocalizer>();
-			services.AddSingleton<IDataLocalizer, WebLocalizer>();
+			services.AddSingleton<WebLocalizer>();
+			services.AddSingleton<ILocalizer>(s => s.GetService<WebLocalizer>());
+			services.AddSingleton<IDataLocalizer>(s => s.GetService<WebLocalizer>());
 			services.AddSingleton<IXamlReaderService, XamlReaderService>();
-			services.AddScoped<IProfiler, WebProfiler>();
-			services.AddScoped<IDataProfiler, WebProfiler>();
+			services.AddScoped<WebProfiler>();
+			services.AddScoped<IProfiler>(s => s.GetService<WebProfiler>());
+			services.AddScoped<IDataProfiler>(s=> s.GetService<WebProfiler>());
 
 			services.AddScoped<IApplicationHost>(provider => new WebApplicationHost(Configuration));
-			services.AddScoped<IDbContext>(provider => 
-				new SqlDbContext(provider.GetService<IDataProfiler>(), 
+			services.AddScoped<IDbContext>(s => 
+				new SqlDbContext(s.GetService<IDataProfiler>(), 
 					new DataConfiguration(Configuration), 
-					provider.GetService<IDataLocalizer>())
+					s.GetService<IDataLocalizer>())
 			);
 			services.AddScoped<IAppCodeProvider>(provider => new WebAppCodeProvider(Configuration));
 			services.AddScoped<IUserStateManager>(provider => 

@@ -23,8 +23,10 @@ namespace A2v10.Infrastructure
 	public interface IProfiler
 	{
 		Boolean Enabled { get; set; }
+
 		IProfileRequest BeginRequest(String address, String session);
 		IProfileRequest CurrentRequest { get; }
+		void EndRequest(IProfileRequest request);
 
 		String GetJson();
 	}

@@ -15,6 +15,7 @@ using A2v10.Infrastructure;
 namespace A2v10.Core.Web.Mvc.Controllers
 {
 	[Route("_data/[action]")]
+	[ExecutingFilter]
 	public class DataController : BaseController
 	{
 		public DataController(IDbContext dbContext, IApplicationHost host, IAppCodeProvider codeProvider,

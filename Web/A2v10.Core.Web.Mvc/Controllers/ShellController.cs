@@ -25,34 +25,52 @@ namespace A2v10.Core.Web.Mvc
 		public String Period { get; set; }
 	}
 
-	public class ShellController : BaseController
+	[Route("_shell/[action]")]
+	public class ShellController : Controller // : BaseController
 	{
 
+		/*
 		public ShellController(IDbContext dbContext, IApplicationHost host, IAppCodeProvider codeProvider, 
 			ILocalizer localizer, IUserStateManager userStateManager, IProfiler profiler)
 			: base(dbContext, host, codeProvider, localizer, userStateManager, profiler)
 		{
 		}
 
+		 */
+
+		private readonly IApplicationHost _host;
+		private readonly IDbContext _dbContext;
+		private readonly IUserStateManager _userStateManager;
+		private readonly IProfiler _profiler;
+
+		public ShellController(IDbContext dbContext, IApplicationHost host, IUserStateManager userStateManager, IProfiler profiler)
+		{
+			_host = host;
+			_dbContext = dbContext;
+			_userStateManager = userStateManager;
+			_profiler = profiler;
+		}
+
+		Int64 UserId => 99; //TODO:
+		Int32 TenantId => 0; // TODO:
+
 		public Boolean IsDebugConfiguration => _host.IsDebugConfiguration;
 
-		[Route("{*pathInfo}")]
-		public IActionResult Default(String pathInfo)
+		public async Task Trace()
 		{
-			ViewBag.__Locale = "uk";
-			ViewBag.__Build = 8000;
-			ViewBag.__Minify = "min.";
-			ViewBag.__Theme = "classic";
-			ViewBag.__PersonName = "Person name";
-			return View();
+			try
+			{
+				String json = _profiler.GetJson() ?? "{}";
+				Response.ContentType = "application/json";
+				await HttpResponseWritingExtensions.WriteAsync(Response, json, Encoding.UTF8);
+			}
+			catch (Exception ex)
+			{
+				//WriteExceptionStatus(ex);
+				throw;
+			}
 		}
 
-		public IActionResult Trace()
-		{
-			return Content("TRACE HERE");
-		}
-
-		[Route("_shell/[action]")]
 		public async Task Script()
 		{
 			Response.ContentType = "application/javascript";
@@ -60,12 +78,20 @@ namespace A2v10.Core.Web.Mvc
 			await HttpResponseWritingExtensions.WriteAsync(Response, script, Encoding.UTF8);
 		}
 
+		void SetSqlParams(ExpandoObject prms)
+		{
+			prms.Set("UserId", UserId);
+			if (_host.IsMultiTenant)
+				prms.Set("TenantId", TenantId);
+			//SetClaimsToParams(ExpandoObject prms)
+		}
+
 		async Task<String> BuildScript(bool bAdmin)
 		{
 			String shell = bAdmin ? Resource.shellAdmin : Resource.shell;
 
 			ExpandoObject loadPrms = new ExpandoObject();
-			SetSqlQueryParamsWithoutCompany(loadPrms);
+			SetSqlParams(loadPrms);
 
 			var userInfo = User.Identity.UserInfo();
 

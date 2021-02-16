@@ -23,7 +23,7 @@ namespace A2v10.Core.Web.Mvc
 		public RequestView RequestView;
 	}
 
-	public class BaseController : Controller
+	public class BaseController : Controller, IControllerProfiler
 	{
 		protected readonly IApplicationHost _host;
 		protected readonly IAppCodeProvider _codeProvider;
@@ -41,11 +41,14 @@ namespace A2v10.Core.Web.Mvc
 			_localizer = localizer ?? throw new ArgumentNullException(nameof(localizer));
 			_userStateManager = userStateManager ?? throw new ArgumentNullException(nameof(userStateManager));
 			_profiler = profiler ?? throw new ArgumentNullException(nameof(profiler));
+			_profiler.Enabled = true; //TODO:
 		}
 
 		Int64 UserId => 99; //TODO:
 		Int32 TenantId => 0; // TODO:
 		Int64 CompanyId => 1; // TODO: _baseController.UserStateManager.UserCompanyId(TenantId, UserId);
+
+		public IProfiler Profiler => _profiler;
 
 		protected void SetSqlQueryParamsWithoutCompany(ExpandoObject prms)
 		{
@@ -126,13 +129,7 @@ namespace A2v10.Core.Web.Mvc
 
 		public void ProfileException(Exception ex)
 		{
-			/*
-			TODO:
-			using (Host.Profiler.CurrentRequest.Start(ProfileAction.Exception, ex.Message))
-			{
-				// do nothing
-			}
-			*/
+			using var disposable = _profiler.CurrentRequest.Start(ProfileAction.Exception, ex.Message);
 		}
 
 		protected String Localize(String msg)
@@ -176,5 +173,14 @@ namespace A2v10.Core.Web.Mvc
 			//TODO::Response.Write(Localize(ex.Message));
 		}
 
+		public IProfileRequest BeginRequest()
+		{
+			return _profiler.BeginRequest(Request.Path + Request.QueryString, null);
+		}
+
+		public void EndRequest(IProfileRequest request)
+		{
+			_profiler.EndRequest(request);
+		}
 	}
 }

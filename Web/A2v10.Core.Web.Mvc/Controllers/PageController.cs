@@ -15,6 +15,7 @@ using A2v10.System.Xaml;
 
 namespace A2v10.Core.Web.Mvc.Controllers
 {
+	[ExecutingFilter]
 	public class PageController : BaseController
 	{
 
