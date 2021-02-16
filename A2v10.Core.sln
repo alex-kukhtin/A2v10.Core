@@ -28,6 +28,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{961DEE
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "A2v10.System.Xaml", "..\..\Advance\A2v10.Workflow\A2v10.System.Xaml\A2v10.System.Xaml.csproj", "{2B517238-C1A1-4968-A486-C95D3187F4B2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "A2v10.Web.Services", "A2v10.Web.Services\A2v10.Web.Services.csproj", "{FC153808-CD48-4BF2-884B-AD6ED73F6828}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -62,6 +64,10 @@ Global
 		{2B517238-C1A1-4968-A486-C95D3187F4B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2B517238-C1A1-4968-A486-C95D3187F4B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2B517238-C1A1-4968-A486-C95D3187F4B2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC153808-CD48-4BF2-884B-AD6ED73F6828}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC153808-CD48-4BF2-884B-AD6ED73F6828}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC153808-CD48-4BF2-884B-AD6ED73F6828}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC153808-CD48-4BF2-884B-AD6ED73F6828}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -74,6 +80,7 @@ Global
 		{4008DC76-6D3D-4331-B6EE-AFA3C0AE17B8} = {16E0B455-399E-4612-927E-C4AE753F187E}
 		{D14947CD-F6E4-4725-8F2D-89858BFD0D7B} = {1823B559-E142-4E96-B927-DF861817AF4E}
 		{2B517238-C1A1-4968-A486-C95D3187F4B2} = {961DEE71-5A38-44B0-B3B9-FCECC06A33BE}
+		{FC153808-CD48-4BF2-884B-AD6ED73F6828} = {1823B559-E142-4E96-B927-DF861817AF4E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D64A03C5-D2E1-49C8-A7A9-D6022941DE01}

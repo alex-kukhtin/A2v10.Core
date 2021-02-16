@@ -9,16 +9,19 @@ namespace A2v10.Xaml
 	{
 		private readonly IProfiler _profile;
 		private readonly IAppCodeProvider _codeprovider;
+		private readonly IXamlReaderService _xamlReader;
 
 		[ThreadStatic]
 		public static String RootFileName;
 		[ThreadStatic]
 		public static IAppCodeProvider AppCodeProvider;
 
-		public XamlRenderer(IProfiler profile, IAppCodeProvider provider)
+
+		public XamlRenderer(IProfiler profile, IAppCodeProvider provider, IXamlReaderService xamlReader)
 		{
 			_profile = profile;
 			_codeprovider = provider;
+			_xamlReader = xamlReader;
 		}
 
 		public void Render(RenderInfo info)
@@ -40,11 +43,11 @@ namespace A2v10.Xaml
 
 							RootFileName = info.FileName;
 							AppCodeProvider = _codeprovider;
-							uiElem = XamlServices.Load(fileStream) as UIElementBase;
+							uiElem = _xamlReader.Load(fileStream) as UIElementBase;
 						}
 					}
 					else if (!String.IsNullOrEmpty(info.Text))
-						uiElem = XamlServices.Parse(info.Text) as UIElementBase;
+						uiElem = _xamlReader.ParseXml(info.Text) as UIElementBase;
 					else
 						throw new XamlException("Xaml. There must be either a 'FileName' or a 'Text' property");
 					if (uiElem == null)
@@ -57,7 +60,7 @@ namespace A2v10.Xaml
 						{
 							if (stylesStream != null)
 							{
-								if (XamlServices.Load(stylesStream) is not Styles styles)
+								if (_xamlReader.Load(stylesStream) is not Styles styles)
 									throw new XamlException("Xaml. Styles is not 'Styles'");
 								if (uiElem is RootContainer root)
 								{

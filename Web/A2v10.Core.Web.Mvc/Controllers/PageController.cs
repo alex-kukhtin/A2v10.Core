@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Core.Web.Mvc.Builders;
+using A2v10.System.Xaml;
 
 namespace A2v10.Core.Web.Mvc.Controllers
 {
@@ -19,10 +20,12 @@ namespace A2v10.Core.Web.Mvc.Controllers
 
 		public Boolean Admin => _host.IsAdminMode;
 
+		private readonly IXamlReaderService _xamlReader;
 		public PageController(IDbContext dbContext, IApplicationHost host, IAppCodeProvider codeProvider,
-			ILocalizer localizer, IUserStateManager userStateManager, IProfiler profiler)
+			ILocalizer localizer, IUserStateManager userStateManager, IProfiler profiler, IXamlReaderService xamlReader)
 			: base(dbContext, host, codeProvider, localizer, userStateManager, profiler)
 		{
+			_xamlReader = xamlReader;
 		}
 
 		[Route("_page/{*pathInfo}")]
@@ -57,7 +60,7 @@ namespace A2v10.Core.Web.Mvc.Controllers
 
 				RequestModel rm = await RequestModel.CreateFromUrl(_codeProvider, kind, path);
 				RequestView rw = rm.GetCurrentAction(kind);
-				var pageBuilder = new PageBuilder(_host, _dbContext, _codeProvider, _localizer, _userStateManager, _profiler);
+				var pageBuilder = new PageBuilder(_host, _dbContext, _codeProvider, _localizer, _userStateManager, _profiler, _xamlReader);
 				await pageBuilder.Render(rw, loadPrms, Response);
 			} 
 			catch (Exception ex)

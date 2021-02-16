@@ -12,6 +12,7 @@ using Microsoft.Extensions.Hosting;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Xaml;
+using A2v10.System.Xaml;
 
 namespace A2v10.Core.Web.Mvc.Builders
 {
@@ -24,7 +25,9 @@ namespace A2v10.Core.Web.Mvc.Builders
 		private readonly IRenderer _renderer;
 		private readonly IProfiler _profiler;
 
-		public PageBuilder(IApplicationHost host, IDbContext dbContext, IAppCodeProvider codeProvider, ILocalizer localizer, IUserStateManager userStateManager, IProfiler profiler)
+		public PageBuilder(IApplicationHost host, IDbContext dbContext, IAppCodeProvider codeProvider, 
+				ILocalizer localizer, IUserStateManager userStateManager, IProfiler profiler,
+				IXamlReaderService xamlReader)
 			: base(dbContext, codeProvider)
 		{
 			_host = host ?? throw new ArgumentNullException(nameof(host));
@@ -32,7 +35,7 @@ namespace A2v10.Core.Web.Mvc.Builders
 			_userStateManager = userStateManager ?? throw new ArgumentNullException(nameof(userStateManager));
 			_scripter = new VueDataScripter(_host, codeProvider, _localizer);
 			_profiler = profiler ?? throw new ArgumentNullException(nameof(profiler));
-			_renderer = new XamlRenderer(_profiler, _codeProvider);
+			_renderer = new XamlRenderer(_profiler, _codeProvider, xamlReader);
 		}
 
 		internal async Task<DataModelAndView> GetDataModelForView(RequestView rw, ExpandoObject loadPrms)
