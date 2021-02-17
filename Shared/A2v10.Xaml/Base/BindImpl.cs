@@ -16,13 +16,17 @@ namespace A2v10.Xaml
 		{
 			if (_bindings == null)
 				_bindings = new Dictionary<String, BindBase>();
-			_bindings.Add(name, bind);
+			if (_bindings.ContainsKey(name))
+				_bindings[name] = bind;
+			else
+				_bindings.Add(name, bind);
 			return bind;
 		}
 
 		public void RemoveBinding(String name)
 		{
-			if (_bindings == null) return;
+			if (_bindings == null) 
+				return;
 			if (_bindings.ContainsKey(name))
 				_bindings.Remove(name);
 		}

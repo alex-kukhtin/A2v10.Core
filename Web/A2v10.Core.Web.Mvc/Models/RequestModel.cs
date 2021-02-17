@@ -1,10 +1,9 @@
-﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Dynamic;
-using System.Text.RegularExpressions;
 using System.IO;
 using System.Text;
 
@@ -785,18 +784,9 @@ namespace A2v10.Core.Web.Mvc
 			}
 		}
 
-		public RequestCommand CurrentCommand
-		{
-			get
-			{
-				return GetCommand(_command);
-			}
-		}
+		public RequestCommand CurrentCommand => GetCommand(_command);
 
-		public RequestView GetCurrentAction()
-		{
-			return GetCurrentAction(_kind);
-		}
+		public RequestView GetCurrentAction() => GetCurrentAction(_kind);
 
 		public RequestView GetCurrentAction(RequestUrlKind kind)
 		{

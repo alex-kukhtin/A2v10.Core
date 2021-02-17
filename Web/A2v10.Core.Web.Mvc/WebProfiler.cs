@@ -26,8 +26,10 @@ namespace A2v10.Core.Web.Mvc
 		public void Stop()
 		{
 			if (_timer.IsRunning)
+			{
 				_timer.Stop();
-			Elapsed = _timer.ElapsedMilliseconds;
+				Elapsed = _timer.ElapsedMilliseconds;
+			}
 		}
 	}
 
@@ -117,8 +119,12 @@ namespace A2v10.Core.Web.Mvc
 
 		public void Dispose()
 		{
-			if (_request != null)
-				_request.Dispose();
+			var rq = _request;
+			if (rq != null)
+			{
+				_request = null;
+				rq.Dispose();
+			}
 		}
 
 		public IProfileRequest CurrentRequest => _request ?? new DummyRequest() as IProfileRequest;
@@ -142,6 +148,7 @@ namespace A2v10.Core.Web.Mvc
 			if (request != _request)
 				return;
 			SaveSession();
+			_request.Stop();
 		}
 
 		void LoadSession()

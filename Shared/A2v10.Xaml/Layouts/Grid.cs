@@ -24,6 +24,11 @@ namespace A2v10.Xaml
 	public class Grid : Container
 	{
 
+		public Grid(IServiceProvider serviceProvider)
+		{
+			int z = 55;
+		}
+
 		#region Attached Properties
 		[ThreadStatic]
 		static IDictionary<Object, Int32> _attachedColumn;
