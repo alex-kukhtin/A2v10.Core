@@ -1,9 +1,8 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 
 namespace A2v10.Web.Identity
 {
