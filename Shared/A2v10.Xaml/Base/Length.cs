@@ -54,7 +54,6 @@ namespace A2v10.Xaml
 		public static Length FromString(String strVal)
 		{
 			strVal = strVal.Trim();
-			Double dblVal = 0;
 			if (strVal == "Auto")
 				return new Length() { Value = "auto" };
 			if (strVal == "Fit")
@@ -65,7 +64,7 @@ namespace A2v10.Xaml
 				return new Length() { Value = strVal };
 			else if (IsValidLength(strVal))
 				return new Length() { Value = strVal };
-			else if (Double.TryParse(strVal, out dblVal))
+			else if (Double.TryParse(strVal, out _))
 				return new Length() { Value = strVal + "px" };
 			throw new XamlException($"Invalid length value '{strVal}'");
 		}
@@ -98,7 +97,6 @@ namespace A2v10.Xaml
 
 		public static GridLength FromString(String strVal)
 		{
-			Double dblVal = 0;
 			if (strVal == "Auto")
 				return new GridLength("auto");
 			else if (strVal.StartsWith("MinMax"))
@@ -109,13 +107,13 @@ namespace A2v10.Xaml
 					throw new XamlException($"Invalid grid length value '{strVal}'");
 				GridLength gl1 = GridLength.FromString(match.Groups[1].Value);
 				GridLength gl2 = GridLength.FromString(match.Groups[2].Value);
-				return new GridLength($"minmax({gl1.ToString()},{gl2.ToString()})");
+				return new GridLength($"minmax({gl1},{gl2})");
 			}
 			else if (Length.IsValidLength(strVal))
 				return new GridLength() { Value = strVal };
 			if (strVal.EndsWith("*"))
 				return new GridLength(strVal.Trim().Replace("*", "fr"));
-			else if (Double.TryParse(strVal, out dblVal))
+			else if (Double.TryParse(strVal, out _))
 				return new GridLength(strVal + "px");
 			throw new XamlException($"Invalid grid length value '{strVal}'");
 		}

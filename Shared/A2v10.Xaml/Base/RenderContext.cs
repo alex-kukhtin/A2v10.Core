@@ -11,11 +11,11 @@ namespace A2v10.Xaml
 {
 	public struct GridRowCol
 	{
-		private Int32? _row;
-		private Int32? _col;
-		private Int32? _rowSpan;
-		private Int32? _colSpan;
-		private AlignItem? _vAlign;
+		private readonly Int32? _row;
+		private readonly Int32? _col;
+		private readonly Int32? _rowSpan;
+		private readonly Int32? _colSpan;
+		private readonly AlignItem? _vAlign;
 
 		public GridRowCol(Int32? row, Int32? col, Int32? rowSpan, Int32? colSpan, AlignItem? vAlign)
 		{
@@ -69,7 +69,7 @@ namespace A2v10.Xaml
 
 	public sealed class GridContext : IDisposable
 	{
-		RenderContext _renderContext;
+		private readonly RenderContext _renderContext;
 
 		public GridContext(RenderContext renderContext, GridRowCol rowCol)
 		{
@@ -85,9 +85,10 @@ namespace A2v10.Xaml
 
 
 
-	internal class ScopeContext : IDisposable
+	public sealed class ScopeContext : IDisposable
 	{
-		RenderContext _renderContext;
+		private readonly RenderContext _renderContext;
+
 		public ScopeContext(RenderContext context, String scope, String path, Func<String, String> replace = null)
 		{
 			_renderContext = context;
@@ -123,8 +124,8 @@ namespace A2v10.Xaml
 
 		public Boolean IsDebugConfiguration { get; }
 
-		private Stack<GridRowCol> _stackGrid = new Stack<GridRowCol>();
-		private Stack<ScopeElem> _stackScope = new Stack<ScopeElem>();
+		private readonly Stack<GridRowCol> _stackGrid = new Stack<GridRowCol>();
+		private readonly Stack<ScopeElem> _stackScope = new Stack<ScopeElem>();
 
 		readonly private UIElementBase _root;
 		private readonly IDataModel _dataModel;
@@ -219,7 +220,7 @@ namespace A2v10.Xaml
 			if (path == null)
 				path = String.Empty;
 			if (path.StartsWith("!"))
-				return "!" + GetNormalizedPathInternal(path.Substring(1));
+				return "!" + GetNormalizedPathInternal(path[1..]);
 
 			if (_typeChecker != null)
 				_typeChecker.CheckXamlExpression(GetExpressionForChecker(path));
@@ -233,7 +234,7 @@ namespace A2v10.Xaml
 			if (path == null)
 				path = String.Empty;
 			if (path.StartsWith("!"))
-				return "!" + GetNormalizedPathInternal(path.Substring(1));
+				return "!" + GetNormalizedPathInternal(path[1..]);
 
 			if (_typeChecker != null && typeCode != TypeCheckerTypeCode.Skip)
 				_typeChecker.CheckTypedXamlExpression(GetExpressionForChecker(path), typeCode);
@@ -256,7 +257,7 @@ namespace A2v10.Xaml
 			if (path.StartsWith("Parent."))
 				return path;
 			if (path.StartsWith(rootKey))
-				return "$data." + path.Substring(rootKey.Length);
+				return "$data." + path[rootKey.Length..];
 			ScopeElem scope = _stackScope.Peek();
 			String result = scope.Scope;
 			if (!String.IsNullOrEmpty(path))

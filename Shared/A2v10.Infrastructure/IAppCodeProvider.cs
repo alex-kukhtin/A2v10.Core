@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
 using System.IO;
@@ -17,5 +17,11 @@ namespace A2v10.Infrastructure
 
 		Stream FileStreamFullPathRO(String fullPath);
 		String FileReadAllText(String fullPath);
-	}
+
+		// replaces
+		String ReplaceFileName(String baseFullName, String relativeName);
+		String GetExtension(String fullName);
+		String ChangeExtension(String fullName, String extension);
+
+}
 }

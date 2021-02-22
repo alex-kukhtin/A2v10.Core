@@ -76,5 +76,23 @@ namespace A2v10.Core.Web.Mvc
 			return Path.GetFullPath(Path.Combine(path1, path2));
 		}
 
+
+		public String ReplaceFileName(String baseFullName, String relativeName)
+		{
+			String dir = Path.GetDirectoryName(baseFullName);
+			return Path.GetFullPath(Path.Combine(dir, relativeName));
+		}
+
+		public String GetExtension(String fullName)
+		{
+			return Path.GetExtension(fullName);
+		}
+		
+		public String ChangeExtension(String fullName, String extension)
+		{
+			return Path.ChangeExtension(fullName, extension);
+		}
+
 	}
 }
+

@@ -1,7 +1,9 @@
-﻿// Copyright © 2015-2017 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
 using A2v10.System.Xaml;
+
+using A2v10.Xaml.Properties;
 
 namespace A2v10.Xaml.Drawing
 {
@@ -48,8 +50,8 @@ namespace A2v10.Xaml.Drawing
 
 		void RenderDefs(RenderContext context)
 		{
-			//var defs = Resources.svgdefs;
-			//context.Writer.Write(defs);
+			var defs = Resources.svgdefs;
+			context.Writer.Write(defs);
 		}
 	}
 }

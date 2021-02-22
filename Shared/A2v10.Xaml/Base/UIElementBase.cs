@@ -83,7 +83,7 @@ namespace A2v10.Xaml
 			tag.MergeAttribute("id", HtmlId);
 		}
 
-		protected void RenderContent(RenderContext context, Object content)
+		protected static void RenderContent(RenderContext context, Object content)
 		{
 			// if it's a binding, it will be added via MergeAttribute
 			if (content == null)
@@ -166,17 +166,17 @@ namespace A2v10.Xaml
 			input.MergeAttribute($"{prefix}-prop", Prop);
 		}
 
-		protected (String Path, String Prop) SplitToPathProp(String path)
+		protected static (String Path, String Prop) SplitToPathProp(String path)
 		{
 			var result = (Path: "", Prop: "");
-			String itemPath = String.Empty;
-			String itemProp = String.Empty;
+
 			if (String.IsNullOrEmpty(path))
 				return result;
+
 			Int32 ix = path.LastIndexOf('.');
 			if (ix != -1)
 			{
-				result.Prop = path.Substring(ix + 1);
+				result.Prop = path[(ix + 1)..];
 				result.Path = path.Substring(0, ix);
 			}
 			return result;
@@ -217,7 +217,7 @@ namespace A2v10.Xaml
 			if (rm == RenderMode.Hide)
 				return true;
 			if (rm == RenderMode.Debug)
-				return context.IsDebugConfiguration ? false : true;
+				return !context.IsDebugConfiguration;
 			return false;
 		}
 

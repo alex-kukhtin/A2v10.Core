@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
+
 using A2v10.Infrastructure;
 using A2v10.System.Xaml;
 
@@ -24,92 +25,40 @@ namespace A2v10.Xaml
 	public class Grid : Container
 	{
 
+		private readonly IAttachedPropertyManager _attachedPropertyManager;
+
 		public Grid(IServiceProvider serviceProvider)
 		{
-			int z = 55;
+			_attachedPropertyManager = serviceProvider.GetService(typeof(IAttachedPropertyManager)) as IAttachedPropertyManager;
 		}
 
 		#region Attached Properties
-		[ThreadStatic]
-		static IDictionary<Object, Int32> _attachedColumn;
-		[ThreadStatic]
-		static IDictionary<Object, Int32> _attachedRow;
-		[ThreadStatic]
-		static IDictionary<Object, Int32> _attachedColSpan;
-		[ThreadStatic]
-		static IDictionary<Object, Int32> _attachedRowSpan;
-		[ThreadStatic]
-		static IDictionary<Object, AlignItem> _attachedVAlign;
 
-
-		public static void SetCol(Object obj, Int32 col)
+		public Int32? GetCol(Object obj)
 		{
-			if (_attachedColumn == null)
-				_attachedColumn = new Dictionary<Object, Int32>();
-			AttachedHelpers.SetAttached(_attachedColumn, obj, col);
+			return _attachedPropertyManager.GetProperty<Int32?>("Grid.Col", obj);
 		}
 
-		public static Int32? GetCol(Object obj)
+		public Int32? GetRow(Object obj)
 		{
-			return AttachedHelpers.GetAttached(_attachedColumn, obj);
+			return _attachedPropertyManager.GetProperty<Int32?>("Grid.Row", obj);
 		}
 
-		public static void SetRow(Object obj, Int32 row)
+		public Int32? GetColSpan(Object obj)
 		{
-			if (_attachedRow == null)
-				_attachedRow = new Dictionary<Object, Int32>();
-			AttachedHelpers.SetAttached(_attachedRow, obj, row);
+			return _attachedPropertyManager.GetProperty<Int32?>("Grid.ColSpan", obj);
 		}
 
-		public static Int32? GetRow(Object obj)
+		public Int32? GetRowSpan(Object obj)
 		{
-			return AttachedHelpers.GetAttached(_attachedRow, obj);
+			return _attachedPropertyManager.GetProperty<Int32?>("Grid.RowSpan", obj);
 		}
 
-		public static void SetColSpan(Object obj, Int32 span)
+		public AlignItem? GetVAlign(Object obj)
 		{
-			if (_attachedColSpan == null)
-				_attachedColSpan = new Dictionary<Object, Int32>();
-			AttachedHelpers.SetAttached(_attachedColSpan, obj, span);
+			return _attachedPropertyManager.GetProperty<AlignItem?>("Grid.VAlign", obj);
 		}
 
-		public static Int32? GetColSpan(Object obj)
-		{
-			return AttachedHelpers.GetAttached(_attachedColSpan, obj);
-		}
-
-		public static void SetRowSpan(Object obj, Int32 span)
-		{
-			if (_attachedRowSpan == null)
-				_attachedRowSpan = new Dictionary<Object, Int32>();
-			AttachedHelpers.SetAttached(_attachedRowSpan, obj, span);
-		}
-
-		public static Int32? GetRowSpan(Object obj)
-		{
-			return AttachedHelpers.GetAttached(_attachedRowSpan, obj);
-		}
-
-		public static void SetVAlign(Object obj, AlignItem vAlign)
-		{
-			if (_attachedVAlign == null)
-				_attachedVAlign = new Dictionary<Object, AlignItem>();
-			AttachedHelpers.SetAttached(_attachedVAlign, obj, vAlign);
-		}
-
-		public static AlignItem? GetVAlign(Object obj)
-		{
-			return AttachedHelpers.GetAttached(_attachedVAlign, obj);
-		}
-
-		public static void ClearAttached()
-		{
-			_attachedRow = null;
-			_attachedColumn = null;
-			_attachedRowSpan = null;
-			_attachedColSpan = null;
-			_attachedVAlign = null;
-		}
 		#endregion
 
 

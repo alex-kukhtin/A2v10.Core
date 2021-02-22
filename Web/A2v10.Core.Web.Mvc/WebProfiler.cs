@@ -1,19 +1,22 @@
 ﻿
-using A2v10.Data.Interfaces;
-using A2v10.Infrastructure;
-using Microsoft.AspNetCore.Http;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+
+using Microsoft.AspNetCore.Http;
+
+using Newtonsoft.Json;
+
+using A2v10.Data.Interfaces;
+using A2v10.Infrastructure;
 
 namespace A2v10.Core.Web.Mvc
 {
 
 	public class ProfileTimer
 	{
-		private Stopwatch _timer;
+		private readonly Stopwatch _timer;
 
 		[JsonProperty("elapsed")]
 		public Int64 Elapsed { get; set; }

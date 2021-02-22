@@ -25,6 +25,7 @@ using A2v10.Infrastructure;
 using Microsoft.AspNetCore.Http;
 using A2v10.Web.Config;
 using A2v10.System.Xaml;
+using A2v10.Xaml;
 
 namespace A2v10.Core.Web.Site
 {
@@ -96,7 +97,10 @@ namespace A2v10.Core.Web.Site
 			services.AddSingleton<WebLocalizer>();
 			services.AddSingleton<ILocalizer>(s => s.GetService<WebLocalizer>());
 			services.AddSingleton<IDataLocalizer>(s => s.GetService<WebLocalizer>());
-			services.AddSingleton<IXamlReaderService, XamlReaderService>();
+
+			services.AddSingleton<IAppCodeProvider>(provider => new WebAppCodeProvider(Configuration));
+			services.AddSingleton<IXamlReaderService, AppXamlReaderService>();
+
 			services.AddScoped<WebProfiler>();
 			services.AddScoped<IProfiler>(s => s.GetService<WebProfiler>());
 			services.AddScoped<IDataProfiler>(s=> s.GetService<WebProfiler>());
@@ -107,7 +111,6 @@ namespace A2v10.Core.Web.Site
 					new DataConfiguration(Configuration), 
 					s.GetService<IDataLocalizer>())
 			);
-			services.AddScoped<IAppCodeProvider>(provider => new WebAppCodeProvider(Configuration));
 			services.AddScoped<IUserStateManager>(provider => 
 				new WebUserStateManager(provider.GetService<IHttpContextAccessor>()));
 

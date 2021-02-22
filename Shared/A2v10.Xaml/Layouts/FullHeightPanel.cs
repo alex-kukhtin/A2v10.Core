@@ -1,7 +1,7 @@
-﻿// Copyright © 2015-2019 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+
 
 using System;
-using System.Collections.Generic;
 using System.Text;
 using A2v10.System.Xaml;
 
@@ -10,41 +10,24 @@ namespace A2v10.Xaml
 	[AttachedProperties("Fill,Skip")]
 	public class FullHeightPanel : Container
 	{
+		private readonly IAttachedPropertyManager _attachedPropertyManager;
+
+		public FullHeightPanel(IServiceProvider serviceProvider)
+		{
+			_attachedPropertyManager = serviceProvider.GetService(typeof(IAttachedPropertyManager)) as IAttachedPropertyManager;
+		}
+
 		#region Attached Properties
-		[ThreadStatic]
-		static IDictionary<Object, Boolean> _attachedFill;
-		[ThreadStatic]
-		static IDictionary<Object, Boolean> _attachedSkip;
 
-		public static void SetFill(Object obj, Boolean fill)
+
+		public Boolean? GetFill(Object obj)
 		{
-			if (_attachedFill == null)
-				_attachedFill = new Dictionary<Object, Boolean>();
-			AttachedHelpers.SetAttached(_attachedFill, obj, fill);
+			return _attachedPropertyManager.GetProperty<Boolean?>("FullHeightPanel.Fill", obj);
 		}
 
-		public static Boolean? GetFill(Object obj)
+		public Boolean? GetSkip(Object obj)
 		{
-			return AttachedHelpers.GetAttached(_attachedFill, obj);
-		}
-
-		public static void SetSkip(Object obj, Boolean skip)
-		{
-			if (_attachedSkip == null)
-				_attachedSkip = new Dictionary<Object, Boolean>();
-			AttachedHelpers.SetAttached(_attachedSkip, obj, skip);
-		}
-
-		public static Boolean? GetSkip(Object obj)
-		{
-			return AttachedHelpers.GetAttached(_attachedSkip, obj);
-		}
-
-
-		internal static void ClearAttached()
-		{
-			_attachedFill = null;
-			_attachedSkip = null;
+			return _attachedPropertyManager.GetProperty<Boolean?>("FullHeightPanel.Skip", obj);
 		}
 
 		#endregion

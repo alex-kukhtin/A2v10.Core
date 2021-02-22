@@ -11,11 +11,6 @@ namespace A2v10.Xaml
 		private readonly IAppCodeProvider _codeprovider;
 		private readonly IXamlReaderService _xamlReader;
 
-		[ThreadStatic]
-		public static String RootFileName;
-		[ThreadStatic]
-		public static IAppCodeProvider AppCodeProvider;
-
 
 		public XamlRenderer(IProfiler profile, IAppCodeProvider provider, IXamlReaderService xamlReader)
 		{
@@ -31,50 +26,44 @@ namespace A2v10.Xaml
 			IProfileRequest request = _profile.CurrentRequest;
 			String fileName = String.Empty;
 			UIElementBase uiElem = null;
+
+			var xamlServiceOptions = new XamlServicesOptions()
+			{
+				OnCreateReader = (rdr) =>
+				{
+					rdr.InjectService<IAppCodeProvider>(_codeprovider);
+				}
+			};
+
 			using (request.Start(ProfileAction.Render, $"load: {info.FileTitle}"))
 			{
-				try
+				// XamlServices.Load sets IUriContext
+				if (!String.IsNullOrEmpty(info.FileName))
 				{
-					// XamlServices.Load sets IUriContext
-					if (!String.IsNullOrEmpty(info.FileName))
-					{
-						using (var fileStream = _codeprovider.FileStreamFullPathRO(info.FileName))
-						{
-
-							RootFileName = info.FileName;
-							AppCodeProvider = _codeprovider;
-							uiElem = _xamlReader.Load(fileStream) as UIElementBase;
-						}
-					}
-					else if (!String.IsNullOrEmpty(info.Text))
-						uiElem = _xamlReader.ParseXml(info.Text) as UIElementBase;
-					else
-						throw new XamlException("Xaml. There must be either a 'FileName' or a 'Text' property");
-					if (uiElem == null)
-						throw new XamlException("Xaml. Root is not 'UIElement'");
-
-					var stylesPath = _codeprovider.MakeFullPath(String.Empty, "styles.xaml");
-					if (_codeprovider.FileExists(stylesPath))
-					{
-						using (var stylesStream = _codeprovider.FileStreamFullPathRO(stylesPath))
-						{
-							if (stylesStream != null)
-							{
-								if (_xamlReader.Load(stylesStream) is not Styles styles)
-									throw new XamlException("Xaml. Styles is not 'Styles'");
-								if (uiElem is RootContainer root)
-								{
-									root.Styles = styles;
-									root?.OnSetStyles();
-								}
-							}
-						}
-					}
+					using var fileStream = _codeprovider.FileStreamFullPathRO(info.FileName);
+					uiElem = _xamlReader.Load(fileStream, new Uri(info.FileName)) as UIElementBase;
 				}
-				finally
+				else if (!String.IsNullOrEmpty(info.Text))
+					uiElem = _xamlReader.ParseXml(info.Text) as UIElementBase;
+				else
+					throw new XamlException("Xaml. There must be either a 'FileName' or a 'Text' property");
+				if (uiElem == null)
+					throw new XamlException("Xaml. Root is not 'UIElement'");
+
+				var stylesPath = _codeprovider.MakeFullPath(String.Empty, "styles.xaml");
+				if (_codeprovider.FileExists(stylesPath))
 				{
-					RootFileName = null;
-					AppCodeProvider = null;
+					var stylesStream = _codeprovider.FileStreamFullPathRO(stylesPath);
+					if (stylesStream != null)
+					{
+						if (_xamlReader.Load(stylesStream, new Uri(stylesPath)) is not Styles styles)
+							throw new XamlException("Xaml. Styles is not 'Styles'");
+						if (uiElem is RootContainer root)
+						{
+							root.Styles = styles;
+							root?.OnSetStyles();
+						}
+					}
 				}
 			}
 
@@ -96,11 +85,6 @@ namespace A2v10.Xaml
 				{
 					uiElem.RenderElement(ctx);
 				}
-
-				Grid.ClearAttached();
-				Splitter.ClearAttached();
-				FullHeightPanel.ClearAttached();
-				Toolbar.ClearAttached();
 			}
 
 			if (uiElem is IDisposable disp)

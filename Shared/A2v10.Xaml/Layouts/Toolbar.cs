@@ -32,25 +32,19 @@ namespace A2v10.Xaml
 			Right
 		}
 
+
+		private readonly IAttachedPropertyManager _attachedPropertyManager;
+
+		public Toolbar(IServiceProvider serviceProvider)
+		{
+			_attachedPropertyManager = serviceProvider.GetService(typeof(IAttachedPropertyManager)) as IAttachedPropertyManager;
+		}
+
 		#region Attached Properties
-		[ThreadStatic]
-		static IDictionary<Object, ToolbarAlign> _attachedPart;
 
-		public static void SetAlign(Object obj, ToolbarAlign aln)
+		public ToolbarAlign GetAlgin(Object obj)
 		{
-			if (_attachedPart == null)
-				_attachedPart = new Dictionary<Object, ToolbarAlign>();
-			AttachedHelpers.SetAttached(_attachedPart, obj, aln);
-		}
-
-		public static ToolbarAlign GetAlgin(Object obj)
-		{
-			return AttachedHelpers.GetAttached(_attachedPart, obj);
-		}
-
-		internal static void ClearAttached()
-		{
-			_attachedPart = null;
+			return _attachedPropertyManager.GetProperty<ToolbarAlign>("Toolbar.Align", obj);
 		}
 
 		#endregion
@@ -79,15 +73,8 @@ namespace A2v10.Xaml
 
 		public override void RenderChildren(RenderContext context, Action<TagBuilder> onRenderStatic = null)
 		{
-			if (_attachedPart == null)
-			{
-				base.RenderChildren(context);
-				return;
-			}
 			List<UIElementBase> rightList = new List<UIElementBase>();
-
 			Boolean bFirst = true;
-
 			foreach (var ch in Children)
 			{
 				if (GetAlgin(ch) == ToolbarAlign.Right)
@@ -103,10 +90,11 @@ namespace A2v10.Xaml
 			}
 			if (rightList.Count == 0)
 				return;
+
 			// aligner
 			new TagBuilder("div", "aligner").Render(context);
 
-			// Те, что справа
+			// right elements
 			foreach (var ch in rightList)
 				ch.RenderElement(context);
 		}

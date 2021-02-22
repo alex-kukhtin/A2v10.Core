@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2017 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
 using A2v10.System.Xaml;
@@ -20,16 +20,13 @@ namespace A2v10.Xaml
 
 		public override Object ProvideValue(IServiceProvider serviceProvider)
 		{
-			IProvideValueTarget iTarget = serviceProvider.GetService(typeof(IProvideValueTarget)) as IProvideValueTarget;
-			if (!(serviceProvider.GetService(typeof(IRootObjectProvider)) is IRootObjectProvider iRoot))
+			if (serviceProvider.GetService(typeof(IRootObjectProvider)) is not IRootObjectProvider iRoot)
 				throw new InvalidOperationException("StaticResource.ProvideValue. IRootObjectProvider is null");
-			if (!(iRoot.RootObject is RootContainer root))
+			if (iRoot.RootObject is not RootContainer root)
 				return null;
 			Object resrc = root.FindResource(Member);
 			if (resrc == null)
-			{
 				throw new XamlException($"Resource '{Member}' not found");
-			}
 			return resrc;
 		}
 	}

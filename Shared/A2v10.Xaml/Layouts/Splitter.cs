@@ -1,7 +1,6 @@
 ﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
-using System.Collections.Generic;
 using A2v10.System.Xaml;
 
 namespace A2v10.Xaml
@@ -14,40 +13,30 @@ namespace A2v10.Xaml
 		public Length Height { get; set; }
 		public Length MinWidth { get; set; }
 
+		private readonly IAttachedPropertyManager _attachedPropertyManager;
+
+		public Splitter(IServiceProvider serviceProvider)
+		{
+			_attachedPropertyManager = serviceProvider.GetService(typeof(IAttachedPropertyManager)) as IAttachedPropertyManager;
+		}
+
 		#region Attached Properties
-		[ThreadStatic]
-		static IDictionary<Object, GridLength> _attachedWidths;
-		[ThreadStatic]
-		static IDictionary<Object, Length> _attachedMinWidths;
 
-		public static void SetWidth(Object obj, GridLength width)
+		public GridLength GetWidth(Object obj)
 		{
-			if (_attachedWidths == null)
-				_attachedWidths = new Dictionary<Object, GridLength>();
-			AttachedHelpers.SetAttached(_attachedWidths, obj, width);
+			var prop = _attachedPropertyManager.GetProperty<Object>("Splitter.Width", obj);
+			if (prop == null)
+				return new GridLength();
+			return GridLength.FromString(prop.ToString());
 		}
 
-		public static GridLength GetWidth(Object obj)
-		{
-			return AttachedHelpers.GetAttached(_attachedWidths, obj);
-		}
 
-		public static void SetMinWidth(Object obj, Length width)
+		public Length GetMinWidth(Object obj)
 		{
-			if (_attachedMinWidths == null)
-				_attachedMinWidths = new Dictionary<Object, Length>();
-			AttachedHelpers.SetAttached(_attachedMinWidths, obj, width);
-		}
-
-		public static Length GetMinWidth(Object obj)
-		{
-			return AttachedHelpers.GetAttached(_attachedMinWidths, obj);
-		}
-
-		internal static void ClearAttached()
-		{
-			_attachedWidths = null;
-			_attachedMinWidths = null;
+			var prop = _attachedPropertyManager.GetProperty<Object>("Splitter.MinWidth", obj);
+			if (prop == null)
+				return new Length();
+			return Length.FromString(prop.ToString());
 		}
 
 		#endregion
