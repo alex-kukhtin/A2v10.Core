@@ -1,0 +1,12 @@
+﻿
+@model LoginViewModel
+@{ 
+	Layout = null;
+}
+
+<form method="post" novalidate=novalidate>
+	<input name="Login" type=text value="@Model.Login"/>
+	<input name="Password" type=password />
+	<input name="RememberMe" type="checkbox" value="@Model.RememberMe"/>
+	<button type=submit>Login</button>
+</form>

@@ -1,9 +1,9 @@
-1. Localization
-4. Authorization
+
 5. DataService
-6. Xaml. AttachedProperties without thread static
-7. Xaml. IUriContext
 8. Site sample
 9. Redirect
-10. Xaml. Resources for RenderDefs (diagram)
-11. UserStore & Account controller
+12. Xaml. styles.xaml cache
+13. SetUserPassword
+14. Доделать AccountController
+15. LayoutPage from resources (no view)
+16. 

@@ -143,27 +143,25 @@ namespace A2v10.Core.Web.Mvc.Builders
 			if (_codeProvider.FileExists(filePath))
 			{
 				// render XAML
-				using (var strWriter = new StringWriter())
+				using var strWriter = new StringWriter();
+				var ri = new RenderInfo()
 				{
-					var ri = new RenderInfo()
-					{
-						RootId = rootId,
-						FileName = filePath,
-						FileTitle = fileName,
-						Path = basePath,
-						Writer = strWriter,
-						DataModel = model,
-						Localizer = _localizer,
-						TypeChecker = typeChecker,
-						CurrentLocale = null,
-						IsDebugConfiguration = _host.IsDebugConfiguration,
-						SecondPhase = secondPhase
-					};
-					_renderer.Render(ri);
-					// write markup
-					await HttpResponseWritingExtensions.WriteAsync(response, strWriter.ToString(), Encoding.UTF8);
-					bRendered = true;
-				}
+					RootId = rootId,
+					FileName = filePath,
+					FileTitle = fileName,
+					Path = basePath,
+					Writer = strWriter,
+					DataModel = model,
+					Localizer = _localizer,
+					TypeChecker = typeChecker,
+					CurrentLocale = null,
+					IsDebugConfiguration = _host.IsDebugConfiguration,
+					SecondPhase = secondPhase
+				};
+				_renderer.Render(ri);
+				// write markup
+				await HttpResponseWritingExtensions.WriteAsync(response, strWriter.ToString(), Encoding.UTF8);
+				bRendered = true;
 			}
 			else
 			{
@@ -174,14 +172,12 @@ namespace A2v10.Core.Web.Mvc.Builders
 				{
 					using (_profiler.CurrentRequest.Start(ProfileAction.Render, $"render: {fileName}"))
 					{
-						using (var tr = new StreamReader(filePath))
-						{
-							String htmlText = await tr.ReadToEndAsync();
-							htmlText = htmlText.Replace("$(RootId)", rootId);
-							htmlText = _localizer.Localize(null, htmlText, false);
-							await HttpResponseWritingExtensions.WriteAsync(response, htmlText, Encoding.UTF8);
-							bRendered = true;
-						}
+						using var tr = new StreamReader(filePath);
+						String htmlText = await tr.ReadToEndAsync();
+						htmlText = htmlText.Replace("$(RootId)", rootId);
+						htmlText = _localizer.Localize(null, htmlText, false);
+						await HttpResponseWritingExtensions.WriteAsync(response, htmlText, Encoding.UTF8);
+						bRendered = true;
 					}
 				}
 			}

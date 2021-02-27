@@ -13,6 +13,8 @@ using Microsoft.AspNetCore.Http;
 
 using A2v10.Infrastructure;
 using A2v10.Data.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using A2v10.Web.Identity;
 
 namespace A2v10.Core.Web.Mvc
 {
@@ -23,6 +25,7 @@ namespace A2v10.Core.Web.Mvc
 		public RequestView RequestView;
 	}
 
+	[Authorize]
 	public class BaseController : Controller, IControllerProfiler
 	{
 		protected readonly IApplicationHost _host;
@@ -44,9 +47,10 @@ namespace A2v10.Core.Web.Mvc
 			_profiler.Enabled = true; //TODO:
 		}
 
-		Int64 UserId => 99; //TODO:
+		Int64 UserId => User.Identity.GetUserId<Int64>();
+
 		Int32 TenantId => 0; // TODO:
-		Int64 CompanyId => 1; // TODO: _baseController.UserStateManager.UserCompanyId(TenantId, UserId);
+		Int64 CompanyId => _userStateManager.UserCompanyId(TenantId, UserId); 
 
 		public IProfiler Profiler => _profiler;
 
@@ -132,10 +136,9 @@ namespace A2v10.Core.Web.Mvc
 			using var disposable = _profiler.CurrentRequest.Start(ProfileAction.Exception, ex.Message);
 		}
 
-		protected String Localize(String msg)
+		protected String Localize(String content)
 		{
-			// TODO:
-			return msg;
+			return _localizer.Localize(null, content);
 		}
 
 		public async Task WriteHtmlException(Exception ex)

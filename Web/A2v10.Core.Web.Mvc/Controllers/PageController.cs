@@ -12,10 +12,13 @@ using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Core.Web.Mvc.Builders;
 using A2v10.System.Xaml;
+using Microsoft.AspNetCore.Authorization;
 
 namespace A2v10.Core.Web.Mvc.Controllers
 {
 	[ExecutingFilter]
+	[Authorize]
+	[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 	public class PageController : BaseController
 	{
 

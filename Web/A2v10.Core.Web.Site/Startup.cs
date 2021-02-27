@@ -16,9 +16,7 @@ using Microsoft.Extensions.Hosting;
 using A2v10.Data.Interfaces;
 using A2v10.Data;
 using A2v10.Web.Identity;
-using System.Reflection;
 using A2v10.Core.Web.Mvc;
-using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation;
 using Microsoft.Extensions.FileProviders;
 using A2v10.Infrastructure;
@@ -26,6 +24,7 @@ using Microsoft.AspNetCore.Http;
 using A2v10.Web.Config;
 using A2v10.System.Xaml;
 using A2v10.Xaml;
+using System.IO;
 
 namespace A2v10.Core.Web.Site
 {
@@ -92,29 +91,51 @@ namespace A2v10.Core.Web.Site
 			{
 				opts.LoginPath = "/account/login";
 				opts.ReturnUrlParameter = "returnurl";
+				opts.SlidingExpiration = true;
 			});
 
-			services.AddSingleton<WebLocalizer>();
+			services.AddSingleton<WebLocalizer>(s => 
+				new WebLocalizer(s.GetService<IAppCodeProvider>(), "uk-UA")
+			);
 			services.AddSingleton<ILocalizer>(s => s.GetService<WebLocalizer>());
 			services.AddSingleton<IDataLocalizer>(s => s.GetService<WebLocalizer>());
 
-			services.AddSingleton<IAppCodeProvider>(provider => new WebAppCodeProvider(Configuration));
+			services.AddSingleton<IAppCodeProvider>(s => 
+				CreateCodeProvider(Configuration, 
+				s.GetService<IWebHostEnvironment>())
+			);
+
 			services.AddSingleton<IXamlReaderService, AppXamlReaderService>();
 
 			services.AddScoped<WebProfiler>();
 			services.AddScoped<IProfiler>(s => s.GetService<WebProfiler>());
 			services.AddScoped<IDataProfiler>(s=> s.GetService<WebProfiler>());
 
-			services.AddScoped<IApplicationHost>(provider => new WebApplicationHost(Configuration));
+			services.AddScoped<IApplicationHost, WebApplicationHost>();
 			services.AddScoped<IDbContext>(s => 
 				new SqlDbContext(s.GetService<IDataProfiler>(), 
 					new DataConfiguration(Configuration), 
 					s.GetService<IDataLocalizer>())
 			);
-			services.AddScoped<IUserStateManager>(provider => 
-				new WebUserStateManager(provider.GetService<IHttpContextAccessor>()));
+			services.AddScoped<IUserStateManager>(s => 
+				new WebUserStateManager(s.GetService<IHttpContextAccessor>()));
 
 			services.AddSession();
+		}
+
+		static IAppCodeProvider CreateCodeProvider(IConfiguration config, IWebHostEnvironment webHost)
+		{
+			var appSection = config.GetSection("application");
+			var appPath = appSection.GetValue<String>("path");
+			var appKey = appSection.GetValue<String>("name");
+			if (appPath.StartsWith("db:"))
+				throw new NotImplementedException("DB: AppCodeProvider");
+			
+			var zipFileName = Path.ChangeExtension(Path.Combine(appPath, appKey), "zip");
+			if (File.Exists(zipFileName))
+				throw new NotImplementedException("ZIP: AppCodeProvider");
+			
+			return new FileSystemCodeProvider(webHost, appPath, appKey);
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -138,6 +159,7 @@ namespace A2v10.Core.Web.Site
 
 			app.UseAuthentication();
 			app.UseAuthorization();
+
 			app.UseSession();
 
 			app.UseEndpoints(endpoints =>

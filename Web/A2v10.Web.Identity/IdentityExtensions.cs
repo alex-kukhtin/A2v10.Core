@@ -16,6 +16,12 @@ namespace A2v10.Web.Identity
 		public Boolean IsTenantAdmin { get; set; }
 	}
 
+	public static class WellKnownClims
+	{
+		public const String NameIdentifier =  "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier";
+		public const String PersonName = "PersonName";
+	}
+
 	public static class IdentityExtensions
 	{
 		/*TODO:
@@ -89,7 +95,7 @@ namespace A2v10.Web.Identity
 				return default;
 			if (identity is not ClaimsIdentity user)
 				return default;
-			var claim = user?.FindFirst(ClaimsIdentity.DefaultNameClaimType)?.Value;
+			var claim = user?.FindFirst(WellKnownClims.NameIdentifier)?.Value;
 			if (claim == null)
 				return default;
 			return (T) Convert.ChangeType(claim, typeof(T), CultureInfo.InvariantCulture);
@@ -108,7 +114,7 @@ namespace A2v10.Web.Identity
 		{
 			if (identity is not ClaimsIdentity user)
 				return null;
-			return user.FindFirst(claim).Value;
+			return user.FindFirst(claim)?.Value;
 		}
 	}
 }

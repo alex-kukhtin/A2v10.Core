@@ -149,7 +149,7 @@ const vm = new DataModelController({
 			return sb.ToString();
 		}
 
-		String CreateEmptyStript()
+		static String CreateEmptyStript()
 		{
 			var sb = new StringBuilder();
 			sb.AppendLine("function modelData(template, data) {");
@@ -164,7 +164,7 @@ const vm = new DataModelController({
 			return sb.ToString();
 		}
 
-		StringBuilder SetModelInfo(IDataHelper helper, IDictionary<String, Object> sys)
+		static StringBuilder SetModelInfo(IDataHelper helper, IDictionary<String, Object> sys)
 		{
 			if (sys == null)
 				return null;
@@ -187,7 +187,7 @@ const vm = new DataModelController({
 			return sb;
 		}
 
-		StringBuilder GetConstructors(IDictionary<String, IDataMetadata> meta)
+		static StringBuilder GetConstructors(IDictionary<String, IDataMetadata> meta)
 		{
 			if (meta == null)
 				return null;
@@ -210,7 +210,7 @@ const vm = new DataModelController({
 			return sb;
 		}
 
-		StringBuilder GetOneConstructor(String name, IDataMetadata ctor)
+		static StringBuilder GetOneConstructor(String name, IDataMetadata ctor)
 		{
 			var sb = new StringBuilder();
 			String arrItem = ctor.IsArrayType ? "true" : "false";
@@ -261,7 +261,7 @@ const vm = new DataModelController({
 			return sb;
 		}
 
-		String GetCrossProperties(IDataMetadata meta)
+		static String GetCrossProperties(IDataMetadata meta)
 		{
 			var sb = new StringBuilder("{");
 			foreach (var c in meta.Cross)
@@ -269,21 +269,13 @@ const vm = new DataModelController({
 				sb.Append($"{c.Key}: [");
 				if (c.Value != null)
 					sb.Append(String.Join(",", c.Value.Select(s => $"'{s}'")));
-				/*
-				if (c.Value != null)
-				{
-					foreach (var s in c.Value)
-						sb.Append($"'{s}',");
-					sb.RemoveTailComma();
-				}
-				*/
 				sb.Append(']');
 			}
 			sb.AppendLine("}");
 			return sb.ToString();
 		}
 
-		public String GetSpecialProperties(IDataMetadata meta)
+		static public String GetSpecialProperties(IDataMetadata meta)
 		{
 			StringBuilder sb = new StringBuilder();
 			if (!String.IsNullOrEmpty(meta.Id))
@@ -344,7 +336,7 @@ const vm = new DataModelController({
 			return sb.ToString();
 		}
 
-		String CreateTemplateForWrite(String fileTemplateText)
+		static String CreateTemplateForWrite(String fileTemplateText)
 		{
 			if (fileTemplateText != null && fileTemplateText.Contains("define([\"require\", \"exports\"]"))
 			{

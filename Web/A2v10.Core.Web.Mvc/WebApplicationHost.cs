@@ -25,6 +25,7 @@ namespace A2v10.Core.Web.Mvc
 
 		public Boolean IsMultiTenant => _appSettings.GetValue<Boolean>("multiTenant");
 		public Boolean IsMultiCompany => _appSettings.GetValue<Boolean>("multiCompany");
+
 		public Boolean IsDebugConfiguration
 		{
 			get
@@ -60,7 +61,7 @@ namespace A2v10.Core.Web.Mvc
 
 		public String ScriptEngine => throw new NotImplementedException();
 
-		public Boolean IsAdminAppPresent => throw new NotImplementedException();
+		public Boolean IsAdminAppPresent => false /*TODO:*/;
 
 		public String CustomSecuritySchema => throw new NotImplementedException();
 

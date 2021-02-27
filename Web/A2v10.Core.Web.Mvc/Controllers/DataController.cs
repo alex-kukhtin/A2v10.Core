@@ -11,11 +11,14 @@ using Newtonsoft.Json.Converters;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
+using Microsoft.AspNetCore.Authorization;
 
 namespace A2v10.Core.Web.Mvc.Controllers
 {
 	[Route("_data/[action]")]
 	[ExecutingFilter]
+	[Authorize]
+	[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 	public class DataController : BaseController
 	{
 		public DataController(IDbContext dbContext, IApplicationHost host, IAppCodeProvider codeProvider,

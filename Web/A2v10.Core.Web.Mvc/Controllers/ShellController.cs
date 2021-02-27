@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 using Newtonsoft.Json;
 
@@ -26,18 +27,9 @@ namespace A2v10.Core.Web.Mvc
 	}
 
 	[Route("_shell/[action]")]
+	[Authorize]
 	public class ShellController : Controller // : BaseController
 	{
-
-		/*
-		public ShellController(IDbContext dbContext, IApplicationHost host, IAppCodeProvider codeProvider, 
-			ILocalizer localizer, IUserStateManager userStateManager, IProfiler profiler)
-			: base(dbContext, host, codeProvider, localizer, userStateManager, profiler)
-		{
-		}
-
-		 */
-
 		private readonly IApplicationHost _host;
 		private readonly IDbContext _dbContext;
 		private readonly IUserStateManager _userStateManager;
@@ -51,7 +43,7 @@ namespace A2v10.Core.Web.Mvc
 			_profiler = profiler;
 		}
 
-		Int64 UserId => 99; //TODO:
+		Int64 UserId => User.Identity.GetUserId<Int64>();
 		Int32 TenantId => 0; // TODO:
 
 		public Boolean IsDebugConfiguration => _host.IsDebugConfiguration;
@@ -73,9 +65,18 @@ namespace A2v10.Core.Web.Mvc
 
 		public async Task Script()
 		{
-			Response.ContentType = "application/javascript";
-			var script = await BuildScript(false);
-			await HttpResponseWritingExtensions.WriteAsync(Response, script, Encoding.UTF8);
+			try
+			{
+				Response.ContentType = "application/javascript";
+				var script = await BuildScript(false);
+				await HttpResponseWritingExtensions.WriteAsync(Response, script, Encoding.UTF8);
+			} 
+			catch (Exception ex)
+			{
+				Response.ContentType = "text/plain";
+				Response.StatusCode = 500;
+				await HttpResponseWritingExtensions.WriteAsync(Response, ex.ToString());
+			}
 		}
 
 		void SetSqlParams(ExpandoObject prms)
