@@ -94,9 +94,7 @@ namespace A2v10.Core.Web.Mvc
 		{
 			prms.Set("UserId", UserId);
 			if (_host.IsMultiTenant)
-			{
 				prms.Set("TenantId", TenantId);
-			}
 		}
 
 		public static NameValueCollection CheckPeriod(NameValueCollection coll)
@@ -133,7 +131,7 @@ namespace A2v10.Core.Web.Mvc
 
 		public void ProfileException(Exception ex)
 		{
-			using var disposable = _profiler.CurrentRequest.Start(ProfileAction.Exception, ex.Message);
+			using var _ = _profiler.CurrentRequest.Start(ProfileAction.Exception, ex.Message);
 		}
 
 		protected String Localize(String content)

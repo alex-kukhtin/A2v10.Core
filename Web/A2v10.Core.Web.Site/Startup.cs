@@ -25,6 +25,7 @@ using A2v10.Web.Config;
 using A2v10.System.Xaml;
 using A2v10.Xaml;
 using System.IO;
+using A2v10.Services;
 
 namespace A2v10.Core.Web.Site
 {
@@ -119,6 +120,9 @@ namespace A2v10.Core.Web.Site
 			);
 			services.AddScoped<IUserStateManager>(s => 
 				new WebUserStateManager(s.GetService<IHttpContextAccessor>()));
+
+			services.AddScoped<IDataService, DataService>();
+			services.AddScoped<IModelJsonReader, ModelJsonReader>();
 
 			services.AddSession();
 		}

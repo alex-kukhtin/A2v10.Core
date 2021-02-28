@@ -12,7 +12,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Shared\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\A2v10.Services\A2v10.Services.csproj" />
     <ProjectReference Include="..\A2v10.Core.Web.Mvc\A2v10.Core.Web.Mvc.csproj" />
     <ProjectReference Include="..\A2v10.Web.Config\A2v10.Web.Config.csproj" />
     <ProjectReference Include="..\A2v10.Web.Identity\A2v10.Web.Identity.csproj" />

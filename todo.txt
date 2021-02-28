@@ -6,4 +6,7 @@
 13. SetUserPassword
 14. Доделать AccountController
 15. LayoutPage from resources (no view)
-16. 
+16. Проверить  CacheOutput из Data
+17. Authorization: Session lifetime, lockCounter, SlidingExpiration
+18. UserStore: options for DataSource, Schema
+19. 

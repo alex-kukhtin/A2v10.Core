@@ -44,9 +44,10 @@ namespace A2v10.Web.Identity
 			throw new NotImplementedException();
 		}
 
-		public Task<AppUser> FindByIdAsync(String userId, CancellationToken cancellationToken)
+		public Task<AppUser> FindByIdAsync(String UserId, CancellationToken cancellationToken)
 		{
-			throw new NotImplementedException();
+			var Id = Int64.Parse(UserId);
+			return _dbContext.LoadAsync<AppUser>(DataSource, $"[{DbSchema}].[FindUserById]", new { Id });
 		}
 
 		public Task<AppUser> FindByLoginAsync(String loginProvider, String providerKey, CancellationToken cancellationToken)
@@ -54,11 +55,10 @@ namespace A2v10.Web.Identity
 			throw new NotImplementedException();
 		}
 
-		public async Task<AppUser> FindByNameAsync(String normalizedUserName, CancellationToken cancellationToken)
+		public Task<AppUser> FindByNameAsync(String normalizedUserName, CancellationToken cancellationToken)
 		{
 			var UserName = normalizedUserName.ToLowerInvariant(); // A2v10
-			var user = await _dbContext.LoadAsync<AppUser>(DataSource, $"[{DbSchema}].[FindUserByName]", new { UserName });
-			return user;
+			return _dbContext.LoadAsync<AppUser>(DataSource, $"[{DbSchema}].[FindUserByName]", new { UserName });
 		}
 
 		public Task<IList<UserLoginInfo>> GetLoginsAsync(AppUser user, CancellationToken cancellationToken)

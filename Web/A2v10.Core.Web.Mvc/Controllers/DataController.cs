@@ -5,13 +5,18 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
+using System.Text;
+
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
-using Microsoft.AspNetCore.Authorization;
+
 
 namespace A2v10.Core.Web.Mvc.Controllers
 {
@@ -21,22 +26,34 @@ namespace A2v10.Core.Web.Mvc.Controllers
 	[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 	public class DataController : BaseController
 	{
+		private readonly IDataService _dataService;
+
 		public DataController(IDbContext dbContext, IApplicationHost host, IAppCodeProvider codeProvider,
-			ILocalizer localizer, IUserStateManager userStateManager, IProfiler profiler)
+			ILocalizer localizer, IUserStateManager userStateManager, IProfiler profiler, IDataService dataService)
 			: base(dbContext, host, codeProvider, localizer, userStateManager, profiler)
 		{
+			_dataService = dataService;
 		}
 
 		[HttpPost]
 		public async Task Reload()
 		{
-			Response.ContentType = "application/json";
 			try
 			{
-				using var tr = new StreamReader(Request.Body);
-				String json = await tr.ReadToEndAsync();
-				await ReloadData(json, SetSqlQueryParams, Response.Body);
-					//await _baseController.Data(command, SetSqlQueryParams, json, Response);
+				var eo = await Request.ExpandoFromBodyAsync();
+				if (eo == null)
+					throw new InvalidReqestExecption(Request.Path);
+				var baseUrl = eo.Get<String>("baseUrl");
+				if (baseUrl == null)
+					throw new InvalidReqestExecption(nameof(Reload));
+
+				String data = await _dataService.Reload(null, SetSqlQueryParams);
+
+				Response.ContentType = MimeTypes.Application.Json;
+				await HttpResponseWritingExtensions.WriteAsync(Response, data, Encoding.UTF8);
+
+				// await ReloadData(json, SetSqlQueryParams, Response.Body);
+				//await _baseController.Data(command, SetSqlQueryParams, json, Response);
 			}
 			catch (Exception ex)
 			{
@@ -153,19 +170,100 @@ namespace A2v10.Core.Web.Mvc.Controllers
 			return rw;
 		}
 
-		public IActionResult Save()
+		[HttpPost]
+		public async Task Expand()
 		{
-			return Content("SAVE HERE");
+			await TryCatch(async () =>
+			{
+				var eo = await Request.ExpandoFromBodyAsync();
+				if (eo == null)
+					throw new InvalidReqestExecption(Request.Path);
+
+				var baseUrl = eo.Get<String>("baseUrl");
+				if (baseUrl == null)
+					throw new InvalidReqestExecption(nameof(Reload));
+
+				Object id = eo.Get<Object>("id");
+
+				var expandData = await _dataService.Expand(baseUrl, id, SetSqlQueryParams);
+
+				Response.ContentType = MimeTypes.Application.Json;
+				await HttpResponseWritingExtensions.WriteAsync(Response, expandData, Encoding.UTF8);
+			});
 		}
 
-		public IActionResult Expand()
+		[HttpPost]
+		public async Task LoadLazy()
 		{
-			return Content("Expand HERE");
+			await TryCatch(async () =>
+			{
+				var eo = await Request.ExpandoFromBodyAsync();
+				if (eo == null)
+					throw new InvalidReqestExecption(Request.Path);
+
+				var baseUrl = eo.Get<String>("baseUrl");
+				if (baseUrl == null)
+					throw new InvalidReqestExecption(nameof(LoadLazy));
+
+				var id = eo.Get<Object>("id");
+				var prop = eo.Get<String>("prop");
+
+				var lazyData = await _dataService.LoadLazy(baseUrl, id, prop, SetSqlQueryParams);
+
+				Response.ContentType = MimeTypes.Application.Json;
+				await HttpResponseWritingExtensions.WriteAsync(Response, lazyData, Encoding.UTF8);
+			});
 		}
 
+		[HttpPost]
+		public Task Save()
+		{
+			return TryCatch(async () =>
+			{
+				var eo = await Request.ExpandoFromBodyAsync();
+				if (eo == null)
+					throw new InvalidReqestExecption(Request.Path);
+				String baseUrl = eo.Get<String>("baseUrl");
+				if (baseUrl == null)
+					throw new InvalidReqestExecption(nameof(Save));
+				ExpandoObject data = eo.Get<ExpandoObject>("data");
+
+				var savedData = await _dataService.Save(baseUrl, data, SetSqlQueryParams);
+
+				Response.ContentType = MimeTypes.Application.Json;
+				await HttpResponseWritingExtensions.WriteAsync(Response, savedData, Encoding.UTF8);
+			});
+		}
+
+		[HttpPost]
 		public IActionResult Invoke()
 		{
 			return Content("Expand HERE");
+		}
+
+		[HttpPost]
+		public IActionResult DbRemove()
+		{
+			return Content("DbRemove");
+		}
+
+		[HttpPost]
+		public IActionResult ExportTo()
+		{
+			return Content("ExportTo");
+		}
+
+		private async Task TryCatch(Func<Task> action)
+		{
+			try
+			{
+				await action();
+			} 
+			catch (Exception ex)
+			{
+				Response.StatusCode = 500;
+				await HttpResponseWritingExtensions.WriteAsync(Response, ex.Message, Encoding.UTF8);
+			}
 		}
 	}
 }

@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
 using System.Globalization;
@@ -20,34 +20,49 @@ namespace A2v10.Web.Identity
 	{
 		public const String NameIdentifier =  "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier";
 		public const String PersonName = "PersonName";
+		public const String Admin = "Admin";
+		public const String TenantAdmin = "TenantAdmin";
+		public const String ClientId = "ClientId";
+		public const String TenantId = "TenantId";
 	}
 
 	public static class IdentityExtensions
 	{
-		/*TODO:
+
+		public static T GetUserId<T>(this IIdentity identity)
+		{
+			if (identity == null)
+				return default;
+			if (identity is not ClaimsIdentity user)
+				return default;
+			var claim = user?.FindFirst(WellKnownClims.NameIdentifier)?.Value;
+			if (claim == null)
+				return default;
+			return (T)Convert.ChangeType(claim, typeof(T), CultureInfo.InvariantCulture);
+		}
+
+		public static String GetUserClaim(this IIdentity identity, String claim)
+		{
+			if (identity is not ClaimsIdentity user)
+				return null;
+			return user.FindFirst(claim)?.Value;
+		}
+
 		public static String GetUserPersonName(this IIdentity identity)
 		{
-			if (!(identity is ClaimsIdentity user))
-				return null;
-			var value = user.FindFirst("PersonName").Value;
-			return String.IsNullOrEmpty(value) ? identity.GetUserName() : value;
+			var claim = identity.GetUserClaim(WellKnownClims.PersonName);
+			return String.IsNullOrEmpty(claim) ? identity.Name : claim;
 		}
-		*/
 
 		public static Boolean IsUserAdmin(this IIdentity identity)
 		{
-			if (identity is not ClaimsIdentity user)
-				return false;
-			var value = user?.FindFirst("Admin")?.Value;
-			return value == "Admin";
+			var claim = identity.GetUserClaim(WellKnownClims.Admin);
+			return claim == "Admin";
 		}
 
 		public static String GetUserClientId(this IIdentity identity)
 		{
-			if (identity is not ClaimsIdentity user)
-				return null;
-			var value = user.FindFirst("ClientId").Value;
-			return String.IsNullOrEmpty(value) ? null : value;
+			return identity.GetUserClaim(WellKnownClims.ClientId);
 		}
 
 		public static Boolean IsTenantAdmin(this IIdentity identity)
@@ -64,6 +79,7 @@ namespace A2v10.Web.Identity
 				return null;
 			if (identity is not ClaimsIdentity user)
 				return null;
+
 			var ui = new IdentityUserInfo()
 			{
 				UserId = identity.GetUserId<Int64>()
@@ -83,22 +99,10 @@ namespace A2v10.Web.Identity
 				return 0;
 			if (identity is not ClaimsIdentity user)
 				return 0;
-			var value = user.FindFirst("TenantId").Value;
+			var value = user.FindFirst(WellKnownClims.TenantId).Value;
 			if (Int32.TryParse(value, out Int32 tenantId))
 				return tenantId;
 			return 0;
-		}
-
-		public static T GetUserId<T>(this IIdentity identity)
-		{
-			if (identity == null)
-				return default;
-			if (identity is not ClaimsIdentity user)
-				return default;
-			var claim = user?.FindFirst(WellKnownClims.NameIdentifier)?.Value;
-			if (claim == null)
-				return default;
-			return (T) Convert.ChangeType(claim, typeof(T), CultureInfo.InvariantCulture);
 		}
 
 		public static String GetUserSegment(this IIdentity identity)
@@ -108,13 +112,6 @@ namespace A2v10.Web.Identity
 			if (identity is not ClaimsIdentity user)
 				return null;
 			return user.FindFirst("Segment").Value;
-		}
-
-		public static String GetUserClaim(this IIdentity identity, String claim)
-		{
-			if (identity is not ClaimsIdentity user)
-				return null;
-			return user.FindFirst(claim)?.Value;
 		}
 	}
 }
