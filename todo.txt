@@ -1,5 +1,4 @@
 
-5. DataService
 8. Site sample
 9. Redirect
 12. Xaml. styles.xaml cache
@@ -9,4 +8,7 @@
 16. Проверить  CacheOutput из Data
 17. Authorization: Session lifetime, lockCounter, SlidingExpiration
 18. UserStore: options for DataSource, Schema
-19. 
+19. PlatformURL  parse query
+20. IViewEngine
+21. DataController.Invoke
+22. 

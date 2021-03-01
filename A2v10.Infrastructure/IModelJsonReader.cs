@@ -6,15 +6,33 @@ using System.Threading.Tasks;
 
 namespace A2v10.Infrastructure
 {
-	public interface IModelView
+	public interface IModelBase
 	{
 		String DataSource { get; }
+
 		String LoadProcedure();
+		Boolean HasModel();
+
+		String Path { get; }
+		String BaseUrl { get; }
+	}
+
+	public interface IModelView: IModelBase
+	{
+		Boolean Copy { get; }
+		Boolean Indirect { get; }
+		String Template { get; }
+
+		ExpandoObject Parameters { get; }
+
+		IModelBase Merge { get; }
+
+		String GetView(Boolean bMobile);
+		Boolean IsDialog { get; }
+
 		String ExpandProcedure();
 		String UpdateProcedure();
 		String LoadLazyProcedure(String property);
-
-		ExpandoObject Parameters { get; }
 	}
 
 	public interface IModelCommand

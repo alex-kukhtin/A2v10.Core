@@ -53,10 +53,10 @@ namespace A2v10.Core.Web.Mvc
 			try
 			{
 				String json = _profiler.GetJson() ?? "{}";
-				Response.ContentType = "application/json";
+				Response.ContentType = MimeTypes.Application.Json;
 				await HttpResponseWritingExtensions.WriteAsync(Response, json, Encoding.UTF8);
 			}
-			catch (Exception ex)
+			catch (Exception /*ex*/)
 			{
 				//WriteExceptionStatus(ex);
 				throw;
@@ -67,13 +67,13 @@ namespace A2v10.Core.Web.Mvc
 		{
 			try
 			{
-				Response.ContentType = "application/javascript";
+				Response.ContentType = MimeTypes.Application.Javascript;
 				var script = await BuildScript(false);
 				await HttpResponseWritingExtensions.WriteAsync(Response, script, Encoding.UTF8);
 			} 
 			catch (Exception ex)
 			{
-				Response.ContentType = "text/plain";
+				Response.ContentType = MimeTypes.Text.Plain;
 				Response.StatusCode = 500;
 				await HttpResponseWritingExtensions.WriteAsync(Response, ex.ToString());
 			}

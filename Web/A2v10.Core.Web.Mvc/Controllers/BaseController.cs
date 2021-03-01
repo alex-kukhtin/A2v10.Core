@@ -29,18 +29,13 @@ namespace A2v10.Core.Web.Mvc
 	public class BaseController : Controller, IControllerProfiler
 	{
 		protected readonly IApplicationHost _host;
-		protected readonly IAppCodeProvider _codeProvider;
-		protected readonly IDbContext _dbContext;
 		protected readonly ILocalizer _localizer;
 		protected readonly IUserStateManager _userStateManager;
 		protected readonly IProfiler _profiler;
 
-		public BaseController(IDbContext dbContext, IApplicationHost host, IAppCodeProvider codeProvider,
-			ILocalizer localizer, IUserStateManager userStateManager, IProfiler profiler)
+		public BaseController(IApplicationHost host, ILocalizer localizer, IUserStateManager userStateManager, IProfiler profiler)
 		{
-			_dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
 			_host = host ?? throw new ArgumentNullException(nameof(host));
-			_codeProvider = codeProvider ?? throw new ArgumentNullException(nameof(codeProvider));
 			_localizer = localizer ?? throw new ArgumentNullException(nameof(localizer));
 			_userStateManager = userStateManager ?? throw new ArgumentNullException(nameof(userStateManager));
 			_profiler = profiler ?? throw new ArgumentNullException(nameof(profiler));

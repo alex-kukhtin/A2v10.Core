@@ -17,7 +17,7 @@ namespace A2v10.Infrastructure
 		public static T Get<T>(this ExpandoObject obj, String name)
 		{
 			if (obj is not IDictionary<String, Object> d)
-				return default(T);
+				return default;
 			if (d.TryGetValue(name, out Object result))
 			{
 				if (result is T t)
@@ -36,6 +36,13 @@ namespace A2v10.Infrastructure
 				return result;
 			}
 			return null;
+		}
+
+		public static void SetNotNull(this ExpandoObject obj, String name, Object value)
+		{
+			if (value == null)
+				return;
+			obj.Set(name, value);
 		}
 
 		public static void Set(this ExpandoObject obj, String name, Object value)
@@ -224,7 +231,7 @@ namespace A2v10.Infrastructure
 			return eo;
 		}
 
-		public static T Eval<T>(this ExpandoObject root, String expression, T fallback = default(T), Boolean throwIfError = false)
+		public static T Eval<T>(this ExpandoObject root, String expression, T fallback = default, Boolean throwIfError = false)
 		{
 			if (expression == null)
 				return fallback;

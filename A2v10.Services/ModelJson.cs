@@ -1,15 +1,13 @@
-﻿using A2v10.Infrastructure;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Dynamic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
+using A2v10.Infrastructure;
 
 namespace A2v10.Services
 {
 
-	public class RequestBase
+	public class RequestData : IModelBase
 	{
 		private ModelJson _parent;
 
@@ -17,14 +15,9 @@ namespace A2v10.Services
 		public String Schema;
 		public String Model;
 
-		public Boolean Index;
-		public Boolean Copy;
-
 		public Int32 CommandTimeout;
 
-		public ExpandoObject Parameters { get; set; }
-
-		internal void SetParent(ModelJson rm)
+		internal virtual void SetParent(ModelJson rm)
 		{
 			_parent = rm;
 		}
@@ -32,16 +25,64 @@ namespace A2v10.Services
 		public String DataSource => String.IsNullOrEmpty(Source) ? _parent.Source : Source;
 		public String CurrentModel => String.IsNullOrEmpty(Model) ? _parent.Model : Model;
 		public String CurrentSchema => String.IsNullOrEmpty(Schema) ? _parent.Schema : Schema;
+
+		public Boolean HasModel() => !String.IsNullOrEmpty(CurrentModel);
+
+		public virtual String LoadProcedure()
+		{
+			var cm = CurrentModel;
+			if (String.IsNullOrEmpty(cm))
+				throw new DataServiceException("The model is empty (Load))");
+			return $"[{CurrentSchema}].[{cm}.Load]";
+		}
+
+		public String Path => _parent.LocalPath;
+		public String BaseUrl => _parent.BaseUrl;
+	}
+
+	public class RequestBase : RequestData
+	{
+		#region JSON
+		public Boolean Index { get; set; }
+		public Boolean Copy { get; set; }
+		public Boolean Indirect { get; set; }
+
+		public RequestData Merge { get; set; }
+
+		public ExpandoObject Parameters { get; set; }
+		#endregion
+
+
+		internal override void SetParent(ModelJson rm)
+		{
+			base.SetParent(rm);
+			Merge?.SetParent(rm);
+		}
 	}
 
 	public class ModelJsonView : RequestBase, IModelView
 	{
-		public String LoadProcedure()
+		IModelBase IModelView.Merge => Merge;
+
+		public String View { get; set; }
+		public String ViewMobile { get; set; }
+		public String Template { get; set; }
+
+		public virtual Boolean IsDialog => false;
+
+		public String GetView(Boolean mobile)
+		{
+			if (mobile && !String.IsNullOrEmpty(ViewMobile))
+				return ViewMobile;
+			return View;
+		}
+
+		public override String LoadProcedure()
 		{
 			var cm = CurrentModel;
 			String action = Index ? "Index" : Copy ? "Copy" : "Load";
 			if (String.IsNullOrEmpty(cm))
-				throw new DataServiceException($"The model is empty (Load.{action})");
+				throw new DataServiceException($"The model is empty ({action})");
 			return $"[{CurrentSchema}].[{cm}.{action}]";
 		}
 
@@ -72,15 +113,29 @@ namespace A2v10.Services
 		}
 	}
 
+	public class ModelJsonDialog : ModelJsonView
+	{
+		public override Boolean IsDialog => true;
+	}
+
 	public class ModelJson
 	{
-		public String Source;
-		public String Schema;
-		public String Model;
+		private String _localPath;
+		private String _baseUrl;
+
+		#region JSON
+		public String Source { get; set; }
+		public String Schema { get; set; }
+		public String Model { get; set; }
 
 		public Dictionary<String, ModelJsonView> Actions = new Dictionary<string, ModelJsonView>(StringComparer.OrdinalIgnoreCase);
-		public Dictionary<String, ModelJsonView> Dialogs = new Dictionary<string, ModelJsonView>(StringComparer.OrdinalIgnoreCase);
+		public Dictionary<String, ModelJsonDialog> Dialogs = new Dictionary<string, ModelJsonDialog>(StringComparer.OrdinalIgnoreCase);
 		public Dictionary<String, ModelJsonView> Popups = new Dictionary<string, ModelJsonView>(StringComparer.OrdinalIgnoreCase);
+
+		#endregion
+
+		public String LocalPath => _localPath;
+		public String BaseUrl => _baseUrl;
 
 		public ModelJsonView GetAction(String key)
 		{
@@ -90,8 +145,24 @@ namespace A2v10.Services
 			throw new KeyNotFoundException($"Action: {key} not found");
 		}
 
-		public void OnEndInit()
+		public ModelJsonDialog GetDialog(String key)
 		{
+			if (Dialogs.TryGetValue(key, out ModelJsonDialog view))
+				return view;
+			throw new KeyNotFoundException($"Dialog: {key} not found");
+		}
+
+		public ModelJsonView GetPopup(String key)
+		{
+			if (Popups.TryGetValue(key, out ModelJsonView view))
+				return view;
+			throw new KeyNotFoundException($"Popup: {key} not found");
+		}
+
+		public void OnEndInit(IPlatformUrl url)
+		{
+			_localPath = url.LocalPath;
+			_baseUrl = url.BaseUrl;
 			foreach (var (_, v) in Actions)
 				v.SetParent(this);
 			foreach (var (_, v) in Dialogs)

@@ -13,7 +13,7 @@ namespace A2v10.Core.Web.Mvc
 	public class RedirectModule
 	{
 		private readonly IDictionary<String, String> _redirect;
-		private FileSystemWatcher _redirectWatcher;
+		private readonly FileSystemWatcher _redirectWatcher;
 		private Boolean _loaded;
 
 		public RedirectModule()

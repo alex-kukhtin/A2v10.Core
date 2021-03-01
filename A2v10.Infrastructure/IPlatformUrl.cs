@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+
+using System;
+using System.Dynamic;
 
 namespace A2v10.Infrastructure
 {
@@ -11,13 +10,17 @@ namespace A2v10.Infrastructure
 		Undefined,
 		Page,
 		Dialog,
-		Poupup
+		Popup
 	}
 
 	public interface IPlatformUrl
 	{
 		String LocalPath { get; }
+		String BaseUrl { get; }
 		UrlKind Kind { get; }
 		String Action { get; }
+		String Id { get; }
+
+		ExpandoObject Query { get; }
 	}
 }
