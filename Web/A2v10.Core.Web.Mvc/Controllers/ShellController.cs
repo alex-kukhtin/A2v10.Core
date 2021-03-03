@@ -91,7 +91,7 @@ namespace A2v10.Core.Web.Mvc
 		{
 			String shell = bAdmin ? Resource.shellAdmin : Resource.shell;
 
-			ExpandoObject loadPrms = new ExpandoObject();
+			ExpandoObject loadPrms = new();
 			SetSqlParams(loadPrms);
 
 			var userInfo = User.Identity.UserInfo();
@@ -176,8 +176,8 @@ namespace A2v10.Core.Web.Mvc
 				_userStateManager.SetUserCompanyId(currentCompanyId);
 
 			// get keys and features
-			StringBuilder strKeys = new StringBuilder();
-			StringBuilder strFeatures = new StringBuilder();
+			StringBuilder strKeys = new();
+			StringBuilder strFeatures = new();
 			var modules = root.Eval<List<ExpandoObject>>("Modules");
 			var features = root.Eval<List<ExpandoObject>>("Features");
 			if (modules != null)
@@ -245,10 +245,12 @@ namespace A2v10.Core.Web.Mvc
 			}
 			*/
 
-			ExpandoObject defAppData = new ExpandoObject();
-			defAppData.Set("version", _host.AppVersion);
-			defAppData.Set("title", "A2v10.Core Web Application");
-			defAppData.Set("copyright", _host.Copyright);
+			ExpandoObject defAppData = new()
+			{
+				{ "version", _host.AppVersion },
+				{ "title", "A2v10.Core Web Application" },
+				{ "copyright", _host.Copyright }
+			};
 			return JsonConvert.SerializeObject(defAppData);
 		}
 	}

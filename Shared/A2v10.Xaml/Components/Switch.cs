@@ -9,7 +9,7 @@ namespace A2v10.Xaml
 	[ContentProperty("Children")]
 	public class Case : XamlElement
 	{
-		public UIElementCollection Children { get; set; } = new UIElementCollection();
+		public UIElementCollection Children { get; set; } = new();
 		public String Value { get; set; }
 
 		public void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)

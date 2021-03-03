@@ -113,8 +113,8 @@ namespace A2v10.Xaml
 		{
 			if (String.IsNullOrEmpty(value))
 				return this;
-			if (Char.IsDigit(value[value.Length - 1]))
-				value = value + "px";
+			if (Char.IsDigit(value[^1]))
+				value += "px";
 			return MergeStyle(key, value);
 		}
 
@@ -265,7 +265,7 @@ namespace A2v10.Xaml
 		{
 			var sb = new StringBuilder(255);
 			this.MergeStyles(_inGrid ? context.GetGridAttributes() : null);
-			sb.Append("<")
+			sb.Append('<')
 				.Append(TagName)
 				.Append(GetCssClasses())
 				.Append(GetAttributes())

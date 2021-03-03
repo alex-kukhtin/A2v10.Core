@@ -23,7 +23,7 @@ namespace A2v10.Infrastructure
 				if (result is T t)
 					return t;
 			}
-			return default(T);
+			return default;
 		}
 
 
@@ -43,6 +43,14 @@ namespace A2v10.Infrastructure
 			if (value == null)
 				return;
 			obj.Set(name, value);
+		}
+
+		public static ExpandoObject Add(this ExpandoObject obj, String name, Object value)
+		{
+			if (obj is not IDictionary<String, Object> d)
+				return obj;
+			d.Add(name, value);
+			return obj;
 		}
 
 		public static void Set(this ExpandoObject obj, String name, Object value)
@@ -271,7 +279,6 @@ namespace A2v10.Infrastructure
 		{
 			if (obj == null)
 				return null;
-			var e = new ExpandoObject();
 			var d = new Dictionary<String, Object>();
 			foreach (var pi in obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
 			{

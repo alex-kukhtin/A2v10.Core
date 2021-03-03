@@ -69,7 +69,7 @@ namespace A2v10.Xaml
 
 			using (request.Start(ProfileAction.Render, $"render: {info.FileTitle}"))
 			{
-				RenderContext ctx = new RenderContext(uiElem, info)
+				RenderContext ctx = new(uiElem, info)
 				{
 					RootId = info.RootId,
 					Path = info.Path

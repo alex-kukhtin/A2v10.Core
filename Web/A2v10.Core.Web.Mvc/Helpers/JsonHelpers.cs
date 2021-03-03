@@ -7,7 +7,7 @@ namespace A2v10.Core.Web.Mvc
 	public static class JsonHelpers
 	{
 		public static readonly JsonSerializerSettings StandardSerializerSettings =
-			new JsonSerializerSettings()
+			new()
 			{
 				Formatting = Formatting.Indented,
 				StringEscapeHandling = StringEscapeHandling.EscapeHtml,
@@ -18,7 +18,7 @@ namespace A2v10.Core.Web.Mvc
 			};
 
 		public static readonly JsonSerializerSettings ReleaseSerializerSettings =
-			new JsonSerializerSettings()
+			new()
 			{
 				Formatting = Formatting.None,
 				StringEscapeHandling = StringEscapeHandling.EscapeHtml,

@@ -37,7 +37,7 @@ namespace A2v10.Xaml
 				if (italicBind != null)
 					sb.Append($"italic: {italicBind.GetPath(context)}, ");
 				sb.RemoveTailComma();
-				sb.Append("}");
+				sb.Append('}');
 				tag.MergeAttribute(":class", sb.ToString());
 			}
 			tag.AddCssClassBoolNo(Bold, "bold");

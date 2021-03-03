@@ -118,7 +118,7 @@ namespace A2v10.Services
 			var view = await _modelReader.GetViewAsync(platformBaseUrl);
 			var expandProc = view.ExpandProcedure();
 
-			ExpandoObject execPrms = new ExpandoObject();
+			var execPrms = new ExpandoObject();
 			execPrms.Append(platformBaseUrl.Query);
 			setParams?.Invoke(execPrms);
 			execPrms.Set("Id", Id);
@@ -143,7 +143,7 @@ namespace A2v10.Services
 
 			String loadProc = view.LoadLazyProcedure(propertyName.ToPascalCase());
 
-			ExpandoObject execPrms = new ExpandoObject();
+			var execPrms = new ExpandoObject();
 			execPrms.Append(platformBaseUrl.Query);
 			setParams?.Invoke(execPrms);
 			execPrms.Set("Id", Id);
@@ -157,7 +157,7 @@ namespace A2v10.Services
 			var platformBaseUrl = new PlatformUrl(baseUrl);
 			var view = await _modelReader.GetViewAsync(platformBaseUrl);
 
-			ExpandoObject savePrms = new ExpandoObject();
+			var savePrms = new ExpandoObject();
 			setParams?.Invoke(savePrms);
 			savePrms.Append(view.Parameters);
 			CheckUserState(savePrms);

@@ -97,8 +97,8 @@ namespace A2v10.Xaml
 				return null;
 			if (value is String)
 			{
-				SheetRows rows = new SheetRows();
-				SheetRow row = new SheetRow();
+				var rows = new SheetRows();
+				var row = new SheetRow();
 				rows.Add(row);
 				foreach (var s in value.ToString().Split(','))
 				{

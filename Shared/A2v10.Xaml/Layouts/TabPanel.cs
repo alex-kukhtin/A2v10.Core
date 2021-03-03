@@ -29,7 +29,7 @@ namespace A2v10.Xaml
 
 		public TabCollection Tabs { get; set; } = new TabCollection();
 
-		static String _replaceScope(String path)
+		static String ReplaceScope(String path)
 		{
 			return path.Replace("tabitem.item.$Index", "tabitem.index").
 					 Replace("tabitem.item.$Number", "tabitem.number");
@@ -61,7 +61,7 @@ namespace A2v10.Xaml
 				tml.MergeAttribute("slot", "items");
 				tml.MergeAttribute("slot-scope", "tabitem");
 				tml.RenderStart(context);
-				using (var cts = new ScopeContext(context, "tabitem.item", isBind.Path,_replaceScope))
+				using (var cts = new ScopeContext(context, "tabitem.item", isBind.Path,ReplaceScope))
 				{
 					Tabs[0].RenderTemplate(context);
 				}
@@ -81,13 +81,13 @@ namespace A2v10.Xaml
 
 		void RenderHeaderTemplate(RenderContext context)
 		{
-			if (!(Tabs[0].Header is UIElementBase tabHeader))
+			if (Tabs[0].Header is not UIElementBase tabHeader)
 				return;
 			var tml = new TagBuilder("template");
 			tml.MergeAttribute("slot", "header");
 			tml.MergeAttribute("slot-scope", "tabitem");
 			tml.RenderStart(context);
-			using (var cts = new ScopeContext(context, "tabitem.item", null, _replaceScope))
+			using (var cts = new ScopeContext(context, "tabitem.item", null, ReplaceScope))
 			{
 				tabHeader.RenderElement(context);
 			}

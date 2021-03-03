@@ -168,7 +168,7 @@ namespace A2v10.Web.Identity
 		#region IUserClaimStore
 		public Task<IList<Claim>> GetClaimsAsync(AppUser user, CancellationToken cancellationToken)
 		{
-			List<Claim> list = new List<Claim>
+			List<Claim> list = new()
 			{
 				new Claim(WellKnownClims.PersonName, user.PersonName ?? String.Empty),
 				//new Claim("Segment", user.Segment ?? String.Empty)

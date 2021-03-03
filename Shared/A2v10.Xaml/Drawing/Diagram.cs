@@ -48,7 +48,7 @@ namespace A2v10.Xaml.Drawing
 			svg.RenderEnd(context);
 		}
 
-		void RenderDefs(RenderContext context)
+		static void RenderDefs(RenderContext context)
 		{
 			var defs = Resources.svgdefs;
 			context.Writer.Write(defs);

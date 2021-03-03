@@ -92,27 +92,27 @@ namespace A2v10.Xaml
 		public String GetJsValue(RenderContext context)
 		{
 			var sb = new StringBuilder();
-			sb.Append("{");
+			sb.Append('{');
 			foreach (var itm in Items)
 			{
 				sb.Append($"{itm.Property.EncodeJs()}: {itm.GetJsValue(context)},");
 			}
 			sb.RemoveTailComma();
-			sb.Append("}");
+			sb.Append('}');
 			return sb.ToString();
 		}
 
 		public String GetPersistentValue(RenderContext context)
 		{
 			var sb = new StringBuilder();
-			sb.Append("[");
+			sb.Append('[');
 			foreach (var itm in Items)
 			{
 				if (itm.Persistent)
 					sb.Append($"'{itm.Property.EncodeJs()}',");
 			}
 			sb.RemoveTailComma();
-			sb.Append("]");
+			sb.Append(']');
 			return sb.ToString();
 		}
 	}

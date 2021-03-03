@@ -907,7 +907,7 @@ namespace A2v10.Core.Web.Mvc
 			return mi;
 		}
 
-		static readonly Lazy<RedirectModule> _redirect = new Lazy<RedirectModule>(() => new RedirectModule(), isThreadSafe: true);
+		static readonly Lazy<RedirectModule> _redirect = new (() => new RedirectModule(), isThreadSafe: true);
 
 		public static async Task<RequestModel> CreateFromUrl(IAppCodeProvider codeProvider, RequestUrlKind kind, String normalizedUrl)
 		{

@@ -12,7 +12,7 @@ namespace A2v10.Services
 	public static class JsonHelpers
 	{
 		public static readonly JsonSerializerSettings CamelCaseSerializerSettings =
-			new JsonSerializerSettings()
+			new()
 			{
 				NullValueHandling = NullValueHandling.Ignore,
 				DefaultValueHandling = DefaultValueHandling.Ignore,
@@ -23,7 +23,7 @@ namespace A2v10.Services
 			};
 
 		public static readonly JsonSerializerSettings DataSerializerSettings =
-			new JsonSerializerSettings()
+			new()
 			{
 				Formatting = Formatting.None,
 				StringEscapeHandling = StringEscapeHandling.EscapeHtml,

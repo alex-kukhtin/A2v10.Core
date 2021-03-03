@@ -141,18 +141,14 @@ namespace A2v10.Xaml
 
 		internal String GetHrefForCommand(RenderContext context)
 		{
-			switch (Command)
+			return Command switch
 			{
-				case CommandType.Open:
-					return $"$href({CommandUrl(context)}, {CommandArgument(context)})";
-				case CommandType.MailTo:
-					return $"$mailto({CommandArgument(context)}, {GetData(context)})";
-				case CommandType.Help:
-					return $"$helpHref({CommandUrl(context)})";
-				case CommandType.NavigateExternal:
-					return $"{CommandUrl(context, decorate: false, skipCheck: true)}";
-			}
-			return null;
+				CommandType.Open   => $"$href({CommandUrl(context)}, {CommandArgument(context)})",
+				CommandType.MailTo => $"$mailto({CommandArgument(context)}, {GetData(context)})",
+				CommandType.Help   => $"$helpHref({CommandUrl(context)})",
+				CommandType.NavigateExternal => $"{CommandUrl(context, decorate: false, skipCheck: true)}",
+				_ => null,
+			};
 		}
 
 		internal String NewWindowJS => NewWindow.ToString().ToLowerInvariant();
@@ -343,12 +339,12 @@ namespace A2v10.Xaml
 			return $"'{Report}'";
 		}
 
-		String GetOptions(RenderContext context)
+		String GetOptions(RenderContext _/*context*/)
 		{
 			if (!SaveRequired && !ValidRequired && !CheckReadOnly && !Export && !Print && !NewWindow 
 				&& !CheckArgument && !ReloadAfter && Permission == Permission.None)
 				return nullString;
-			StringBuilder sb = new StringBuilder("{");
+			var sb = new StringBuilder("{");
 			if (SaveRequired)
 				sb.Append("saveRequired: true,");
 			if (ValidRequired)
@@ -371,7 +367,7 @@ namespace A2v10.Xaml
 			if (ReloadAfter)
 				sb.Append("reloadAfter: true,");
 			sb.RemoveTailComma();
-			sb.Append("}");
+			sb.Append('}');
 			return sb.ToString();
 		}
 
@@ -386,13 +382,11 @@ namespace A2v10.Xaml
 		{
 			if (!ValidRequired)
 				return nullString;
-			StringBuilder sb = new StringBuilder("{");
+			var sb = new StringBuilder("{");
 			if (ValidRequired)
-			{
 				sb.Append("validRequired: true, ");
-			}
 			sb.RemoveTailComma();
-			sb.Append("}");
+			sb.Append('}');
 			return sb.ToString();
 		}
 
@@ -524,7 +518,7 @@ namespace A2v10.Xaml
 			return $"'{Url}'";
 		}
 
-		internal void MergeDisabled(TagBuilder tag, String disabledVal)
+		public static void MergeDisabled(TagBuilder tag, String disabledVal)
 		{
 			var existingDisabled = tag.GetAttribute(":disabled");
 			if (!String.IsNullOrEmpty(existingDisabled))

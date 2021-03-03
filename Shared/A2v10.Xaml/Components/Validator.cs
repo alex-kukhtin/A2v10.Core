@@ -67,7 +67,7 @@ namespace A2v10.Xaml
 			if (Placement != null)
 				sb.Append($"placement: '{Placement.Value.ToString().ToKebabCase()}',");
 			sb.RemoveTailComma();
-			sb.Append("}");
+			sb.Append('}');
 			return sb.ToString();
 		}
 	}

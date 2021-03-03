@@ -36,7 +36,7 @@ namespace A2v10.Xaml
 
 		String GetRows()
 		{
-			StringBuilder sb = new StringBuilder(); 
+			var sb = new StringBuilder(); 
 			foreach (var c in Children)
 			{
 				var skip = GetSkip(c);

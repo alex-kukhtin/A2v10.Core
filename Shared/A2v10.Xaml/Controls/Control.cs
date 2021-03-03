@@ -20,7 +20,7 @@ namespace A2v10.Xaml
 		public UIElement Link { get; set; }
 		public ControlSize Size { get; set; }
 
-		Lazy<UIElementCollection> _addOns = new Lazy<UIElementCollection>();
+		private readonly Lazy<UIElementCollection> _addOns = new();
 
 		public UIElementCollection AddOns { get { return _addOns.Value; } }
 
@@ -153,7 +153,7 @@ namespace A2v10.Xaml
 			if (rm == RenderMode.Hide)
 				return true;
 			if (rm == RenderMode.Debug)
-				return context.IsDebugConfiguration ? false : true;
+				return !context.IsDebugConfiguration;
 			if (rm == RenderMode.Show)
 				return false; // skip read only
 			if (context.IsDataModelIsReadOnly || rm == RenderMode.ReadOnly)

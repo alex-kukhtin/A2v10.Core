@@ -70,8 +70,10 @@ namespace A2v10.Services
 			var pathArr = new ArraySegment<String>(parts, 1, len - 3);
 			LocalPath = String.Join("/", pathArr);
 			// baseUrl with action and id
-			var baseArr = new List<String>(pathArr);
-			baseArr.Add(Action);
+			var baseArr = new List<String>(pathArr)
+			{
+				Action
+			};
 			if (Id != null)
 				baseArr.Add(Id);
 			baseArr.Add(String.Empty); // for last slash
@@ -88,7 +90,8 @@ namespace A2v10.Services
 					Query = eo;
 			}
 		}
-		void AddQueryParam(ExpandoObject eo, String key, String value)
+
+		static void AddQueryParam(ExpandoObject eo, String key, String value)
 		{
 			if (!key.Equals("period", StringComparison.OrdinalIgnoreCase)) {
 				eo.Set(key.ToPascalCase(), value);

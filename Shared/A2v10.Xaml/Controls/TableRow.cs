@@ -66,7 +66,7 @@ namespace A2v10.Xaml
 		protected override void OnEndInit()
 		{
 			base.OnEndInit();
-			TableCellCollection newCells = new TableCellCollection();
+			var newCells = new TableCellCollection();
 			foreach (var c in Cells)
 			{
 				if (c is TableCell || c is TableMarkCell)
@@ -123,8 +123,8 @@ namespace A2v10.Xaml
 				return null;
 			if (value is String)
 			{
-				TableRowCollection trc = new TableRowCollection();
-				TableRow row = new TableRow();
+				var trc = new TableRowCollection();
+				var row = new TableRow();
 				trc.Add(row);
 				foreach (var st in value.ToString().Split(','))
 				{
@@ -132,17 +132,17 @@ namespace A2v10.Xaml
 					var cell = new TableCell();
 					if (s.EndsWith(":R"))
 					{
-						cell.Content = s.Substring(0, s.Length - 2);
+						cell.Content = s[0..^2];
 						cell.Align = TextAlign.Right;
 					}
 					else if (s.EndsWith(":C"))
 					{
-						cell.Content = s.Substring(0, s.Length - 2);
+						cell.Content = s[0..^2];
 						cell.Align = TextAlign.Center;
 					}
 					else if (s.EndsWith(":L"))
 					{
-						cell.Content = s.Substring(0, s.Length - 2);
+						cell.Content = s[0..^2];
 						cell.Align = TextAlign.Left;
 					}
 					else

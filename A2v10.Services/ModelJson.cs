@@ -134,9 +134,9 @@ namespace A2v10.Services
 		public String Schema { get; set; }
 		public String Model { get; set; }
 
-		public Dictionary<String, ModelJsonView> Actions = new Dictionary<string, ModelJsonView>(StringComparer.OrdinalIgnoreCase);
-		public Dictionary<String, ModelJsonDialog> Dialogs = new Dictionary<string, ModelJsonDialog>(StringComparer.OrdinalIgnoreCase);
-		public Dictionary<String, ModelJsonView> Popups = new Dictionary<string, ModelJsonView>(StringComparer.OrdinalIgnoreCase);
+		public Dictionary<String, ModelJsonView> Actions = new(StringComparer.OrdinalIgnoreCase);
+		public Dictionary<String, ModelJsonDialog> Dialogs = new(StringComparer.OrdinalIgnoreCase);
+		public Dictionary<String, ModelJsonView> Popups = new(StringComparer.OrdinalIgnoreCase);
 
 		#endregion
 

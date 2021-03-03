@@ -24,14 +24,15 @@ namespace A2v10.Xaml
 			var len = definition.Length;
 			if (definition.IndexOf('+') == len - 2) {
 				var color = definition[len - 1];
-				switch (color) {
-					case 'Y': Background = ColumnBackgroundStyle.Yellow; break;
-					case 'B': Background = ColumnBackgroundStyle.Blue; break;
-					case 'G': Background = ColumnBackgroundStyle.Green; break;
-					case 'R': Background = ColumnBackgroundStyle.Red; break;
-					case 'A': Background = ColumnBackgroundStyle.Gray; break;
-					default: throw new XamlException($"Invalid BackgroundColor for SheetColumn ('{color}')");
-				}
+				Background = color switch
+				{
+					'Y' => ColumnBackgroundStyle.Yellow,
+					'B' => ColumnBackgroundStyle.Blue,
+					'G' => ColumnBackgroundStyle.Green,
+					'R' => ColumnBackgroundStyle.Red,
+					'A' => ColumnBackgroundStyle.Gray,
+					_ => throw new XamlException($"Invalid BackgroundColor for SheetColumn ('{color}')"),
+				};
 				definition = definition.Substring(0, len - 2);
 			}
 			if (definition == "Fit")

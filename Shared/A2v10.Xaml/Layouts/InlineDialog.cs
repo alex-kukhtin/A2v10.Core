@@ -54,7 +54,7 @@ namespace A2v10.Xaml
 
 		}
 
-		void RenderLoadIndicator(RenderContext context)
+		static void RenderLoadIndicator(RenderContext context)
 		{
 			new TagBuilder("div", "load-indicator")
 				.MergeAttribute("v-show", "$isLoading")

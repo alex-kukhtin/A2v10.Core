@@ -39,10 +39,8 @@ namespace A2v10.Xaml
 			{
 				td.MergeAttribute("v-for", $"(cell, cellIndex) in {isBind.GetPath(context)}");
 				td.MergeAttribute(":key", "cellIndex");
-				using (var scope = new ScopeContext(context, "cell", isBind.Path))
-				{
-					RenderCell(td, context);
-				}
+				using var scope = new ScopeContext(context, "cell", isBind.Path);
+				RenderCell(td, context);
 			}
 			else
 			{
@@ -64,7 +62,7 @@ namespace A2v10.Xaml
 				if (italicBind != null)
 					sb.Append($"italic: {italicBind.GetPath(context)}, ");
 				sb.RemoveTailComma();
-				sb.Append("}");
+				sb.Append('}');
 				td.MergeAttribute(":class", sb.ToString());
 			}
 			td.AddCssClassBoolNo(Bold, "bold");

@@ -21,7 +21,7 @@ namespace A2v10.Xaml
 				else if (x is Inline)
 					(x as Inline).RenderElement(context);
 				else
-					throw new XamlException($"Invalid inline element '{x.GetType().ToString()}'");
+					throw new XamlException($"Invalid inline element '{x.GetType()}'");
 			}
 		}
 	}

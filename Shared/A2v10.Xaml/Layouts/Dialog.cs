@@ -55,7 +55,7 @@ namespace A2v10.Xaml
 			if (AlwaysOk)
 				opts.Append("'alwaysOk': true,");
 			opts.RemoveTailComma();
-			opts.Append("}");
+			opts.Append('}');
 			return opts.ToString();
 		}
 
@@ -148,7 +148,7 @@ namespace A2v10.Xaml
 			if (MinWidth != null)
 				sb.Append($"minWidth:'{MinWidth.Value}',");
 			sb.RemoveTailComma();
-			sb.Append("}");
+			sb.Append('}');
 			dialog.MergeAttribute("v-modal-width", sb.ToString());
 		}
 
@@ -238,7 +238,7 @@ namespace A2v10.Xaml
 		{
 			if (Children.Count != 1)
 				throw new XamlException("Invalid dialog for two-phase rendering");
-			if (!(Children[0] is EUSignFrame eusignFrame))
+			if (Children[0] is not EUSignFrame eusignFrame)
 				throw new XamlException("Invalid dialog for two-phase rendering");
 			eusignFrame.RenderTwoPhaseContent(context);
 		}

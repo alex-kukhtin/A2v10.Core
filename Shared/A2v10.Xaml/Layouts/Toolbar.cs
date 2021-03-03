@@ -73,7 +73,7 @@ namespace A2v10.Xaml
 
 		public override void RenderChildren(RenderContext context, Action<TagBuilder> onRenderStatic = null)
 		{
-			List<UIElementBase> rightList = new List<UIElementBase>();
+			var rightList = new List<UIElementBase>();
 			Boolean bFirst = true;
 			foreach (var ch in Children)
 			{

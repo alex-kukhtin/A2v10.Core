@@ -198,7 +198,7 @@ namespace A2v10.Xaml
 			var sb = new StringBuilder();
 			foreach (var w in this)
 			{
-				sb.Append(w.Height.Value).Append(" ");
+				sb.Append(w.Height.Value).Append(' ');
 			}
 			return sb.ToString();
 		}
@@ -248,7 +248,7 @@ namespace A2v10.Xaml
 			var sb = new StringBuilder();
 			foreach (var w in this)
 			{
-				sb.Append(w.Width.Value).Append(" ");
+				sb.Append(w.Width.Value).Append(' ');
 			}
 			return sb.ToString();
 		}

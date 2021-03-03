@@ -124,8 +124,8 @@ namespace A2v10.Xaml
 
 		public Boolean IsDebugConfiguration { get; }
 
-		private readonly Stack<GridRowCol> _stackGrid = new Stack<GridRowCol>();
-		private readonly Stack<ScopeElem> _stackScope = new Stack<ScopeElem>();
+		private readonly Stack<GridRowCol> _stackGrid = new();
+		private readonly Stack<ScopeElem> _stackScope = new();
 
 		readonly private UIElementBase _root;
 		private readonly IDataModel _dataModel;

@@ -12,7 +12,6 @@ namespace A2v10.Core.Web.Mvc
 	{
 		const String _readOnly_ = "_readOnly_";
 		const String _userCompanyKey = "_userCompany_";
-		private Int64 _companyId = 0;
 
 		private readonly IHttpContextAccessor _httpContextAccessor;
 

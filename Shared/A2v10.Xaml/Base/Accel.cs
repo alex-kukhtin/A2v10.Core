@@ -20,7 +20,7 @@ namespace A2v10.Xaml
 			{
 				var modifiers = new StringBuilder("____:");
 				var x = Key.Split('+');
-				var keyName = KeyName2EventCode(x[x.Length - 1]); // last char
+				var keyName = KeyName2EventCode(x[^1]); // last char
 				for (Int32 i=0; i<x.Length - 1; i++)
 				{
 					switch (x[i].Trim())
@@ -47,7 +47,7 @@ namespace A2v10.Xaml
 			return "____:" + KeyName2EventCode(Key);
 		}
 
-		String KeyName2EventCode(String keyName)
+		private static String KeyName2EventCode(String keyName)
 		{
 			keyName = keyName.Trim();
 			if (keyName.Length == 1 && keyName[0] >= 'A' && keyName[0] <= 'Z')

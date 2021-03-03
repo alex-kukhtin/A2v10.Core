@@ -31,11 +31,11 @@ namespace A2v10.Xaml
 			var sb = new StringBuilder("{");
 			sb.Append($"orientation:'{Orientation.ToString().ToLowerInvariant()}',");
 			if (Margin != null)
-				sb.Append($"margin: '{Margin.ToString()}',");
+				sb.Append($"margin: '{Margin}',");
 			if (Zoom != null)
-				sb.Append($"zoom: '{Zoom.ToString()}',");
+				sb.Append($"zoom: '{Zoom}',");
 			sb.RemoveTailComma();
-			sb.Append("}");
+			sb.Append('}');
 			return sb.ToString();
 		}
 	}
@@ -66,7 +66,7 @@ namespace A2v10.Xaml
 				}
 				else if (strVal.EndsWith("%"))
 				{
-					if (Double.TryParse(strVal.Substring(0, strVal.Length-1), NumberStyles.Any, CultureInfo.InvariantCulture, out Double dblVal))
+					if (Double.TryParse(strVal[0..^1], NumberStyles.Any, CultureInfo.InvariantCulture, out Double dblVal))
 					{
 						z.Value = dblVal / 100.0;
 						return z;

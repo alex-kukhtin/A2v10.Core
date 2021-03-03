@@ -53,7 +53,7 @@ namespace A2v10.Xaml
 			table.RenderEnd(context);
 		}
 
-		void RenderColumns(RenderContext context)
+		static void RenderColumns(RenderContext context)
 		{
 			var colGroup = new TagBuilder("colgroup").RenderStart(context);
 			new TagBuilder("col", "prop-name").Render(context, TagRenderMode.SelfClosing);

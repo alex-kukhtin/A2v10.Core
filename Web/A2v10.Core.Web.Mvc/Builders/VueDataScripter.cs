@@ -277,7 +277,7 @@ const vm = new DataModelController({
 
 		static public String GetSpecialProperties(IDataMetadata meta)
 		{
-			StringBuilder sb = new StringBuilder();
+			var sb = new StringBuilder();
 			if (!String.IsNullOrEmpty(meta.Id))
 				sb.Append($"$id: '{meta.Id}',");
 			if (!String.IsNullOrEmpty(meta.Name))
@@ -300,7 +300,7 @@ const vm = new DataModelController({
 				sb.Append($"$group: true,");
 			if (meta.HasCross)
 				sb.Append($"$cross: {GetCrossProperties(meta)},");
-			StringBuilder lazyFields = new StringBuilder();
+			var lazyFields = new StringBuilder();
 			foreach (var f in meta.Fields)
 			{
 				if (f.Value.IsLazy)
@@ -504,10 +504,10 @@ const vm = new DataModelController({
 		public async Task<ScriptInfo> GetModelScript(ModelScriptInfo msi)
 		{
 			var result = new ScriptInfo();
-			StringBuilder output = new StringBuilder();
+			var output = new StringBuilder();
 			String dataModelText = "{}";
 			String templateText = "{}";
-			StringBuilder sbRequired = new StringBuilder();
+			var sbRequired = new StringBuilder();
 
 			// write model script
 			String fileTemplateText;

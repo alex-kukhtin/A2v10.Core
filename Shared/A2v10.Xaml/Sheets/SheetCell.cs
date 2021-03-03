@@ -82,13 +82,13 @@ namespace A2v10.Xaml
 			}
 		}
 
-		protected void RenderContentVert(RenderContext context, Object content)
+		protected static void RenderContentVert(RenderContext context, Object content)
 		{
 			// if it's a binding, it will be added via MergeAttribute
 			if (content == null)
 				return;
-			if (content is UIElementBase)
-				(content as UIElementBase).RenderElement(context);
+			if (content is UIElementBase uIElementBase)
+				uIElementBase.RenderElement(context);
 			else if (content != null)
 			{
 				context.Writer.Write(

@@ -13,7 +13,7 @@ namespace A2v10.Web.Config
 
 	class LocaleMapItem
 	{
-		public ConcurrentDictionary<String, String> Map { get; } = new ConcurrentDictionary<String, String>();
+		public ConcurrentDictionary<String, String> Map { get; } = new();
 
 		public LocaleMapItem(Action<ConcurrentDictionary<String, String>> action)
 		{
@@ -26,7 +26,7 @@ namespace A2v10.Web.Config
 
 	internal class WebDictionary
 	{
-		private readonly ConcurrentDictionary<String, LocaleMapItem> _maps = new ConcurrentDictionary<String, LocaleMapItem>();
+		private readonly ConcurrentDictionary<String, LocaleMapItem> _maps = new();
 
 		FileSystemWatcher _watcher_system = null;
 		FileSystemWatcher _watcher_app = null;
