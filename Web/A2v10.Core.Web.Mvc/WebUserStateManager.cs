@@ -12,6 +12,7 @@ namespace A2v10.Core.Web.Mvc
 	{
 		const String _readOnly_ = "_readOnly_";
 		const String _userCompanyKey = "_userCompany_";
+		private Int64 _companyId = 0;
 
 		private readonly IHttpContextAccessor _httpContextAccessor;
 
@@ -33,14 +34,17 @@ namespace A2v10.Core.Web.Mvc
 			_httpContextAccessor.HttpContext.Session.SetInt32(_readOnly_, readOnly ? 1 : 0);
 		}
 
-		public void SetUserCompanyId(long CompanyId)
+		public void SetUserCompanyId(Int64 CompanyId)
 		{
-			throw new NotImplementedException();
+			_httpContextAccessor.HttpContext.Session.SetString(_userCompanyKey, CompanyId.ToString());
 		}
 
-		public Int64 UserCompanyId(int TenantId, long UserId)
+		public Int64 UserCompanyId(Int32 TenantId, Int64 UserId)
 		{
-			throw new NotImplementedException();
+			var str =_httpContextAccessor.HttpContext.Session.GetString(_userCompanyKey);
+			if (String.IsNullOrEmpty(str))
+				return 0;
+			return Int64.Parse(str);
 		}
 	}
 }

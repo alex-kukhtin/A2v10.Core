@@ -24,6 +24,7 @@ namespace A2v10.Web.Identity
 		public const String TenantAdmin = "TenantAdmin";
 		public const String ClientId = "ClientId";
 		public const String TenantId = "TenantId";
+		public const String Segment = "Segment";
 	}
 
 	public static class IdentityExtensions
@@ -99,7 +100,9 @@ namespace A2v10.Web.Identity
 				return 0;
 			if (identity is not ClaimsIdentity user)
 				return 0;
-			var value = user.FindFirst(WellKnownClims.TenantId).Value;
+			var value = user.FindFirst(WellKnownClims.TenantId)?.Value;
+			if (value == null)
+				return 0;
 			if (Int32.TryParse(value, out Int32 tenantId))
 				return tenantId;
 			return 0;

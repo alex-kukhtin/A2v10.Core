@@ -45,7 +45,6 @@ namespace A2v10.Services
 		#region JSON
 		public Boolean Index { get; set; }
 		public Boolean Copy { get; set; }
-		public Boolean Indirect { get; set; }
 
 		public RequestData Merge { get; set; }
 
@@ -62,13 +61,20 @@ namespace A2v10.Services
 
 	public class ModelJsonView : RequestBase, IModelView
 	{
+		// explicit
 		IModelBase IModelView.Merge => Merge;
+		IModelView IModelView.TargetModel => TargetModel;
 
 		public String View { get; set; }
 		public String ViewMobile { get; set; }
 		public String Template { get; set; }
 
 		public virtual Boolean IsDialog => false;
+
+		public Boolean Indirect { get; set; }
+		public String Target { get; set; }
+		public String TargetId { get; set; }
+		public ModelJsonView TargetModel { get; }
 
 		public String GetView(Boolean mobile)
 		{

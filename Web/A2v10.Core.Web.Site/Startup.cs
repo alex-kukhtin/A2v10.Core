@@ -1,30 +1,24 @@
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Security.Cryptography;
+using System.IO;
 
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.AspNetCore.Http;
 
 using A2v10.Data.Interfaces;
 using A2v10.Data;
 using A2v10.Web.Identity;
 using A2v10.Core.Web.Mvc;
-using Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation;
-using Microsoft.Extensions.FileProviders;
 using A2v10.Infrastructure;
-using Microsoft.AspNetCore.Http;
 using A2v10.Web.Config;
 using A2v10.System.Xaml;
 using A2v10.Xaml;
-using System.IO;
 using A2v10.Services;
 
 namespace A2v10.Core.Web.Site
@@ -40,7 +34,7 @@ namespace A2v10.Core.Web.Site
 			_config = config ?? throw new ArgumentNullException(nameof(config));
 		}
 
-		public string ConnectionString(String source)
+		public String ConnectionString(String source)
 		{
 			if (String.IsNullOrEmpty(source))
 				source = "Default";
@@ -60,11 +54,6 @@ namespace A2v10.Core.Web.Site
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services)
 		{
-			//services.AddDbContext<ApplicationDbContext>(options =>
-			//options.UseSqlServer(
-			//Configuration.GetConnectionString("DefaultConnection")));
-			//services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
-			//.AddEntityFrameworkStores<ApplicationDbContext>();
 
 			var webMvcAssembly = typeof(ShellController).Assembly;
 			services.AddControllersWithViews()
@@ -73,33 +62,13 @@ namespace A2v10.Core.Web.Site
 			services.Configure<MvcRazorRuntimeCompilationOptions>(opts =>
 				opts.FileProviders.Add(new EmbeddedFileProvider(webMvcAssembly)));
 
-			//services.AddRazorPages();
-			services.AddIdentity<AppUser, AppRole>(options =>
-			{
-				options.Lockout.MaxFailedAccessAttempts = 5;
-				options.SignIn.RequireConfirmedEmail = true;
-
-				options.User.RequireUniqueEmail = true;
-			})
-			.AddUserStore<AppUserStore>()
-			.AddUserManager<UserManager<AppUser>>()
-			.AddRoleStore<AppRoleStore>()
-			.AddRoleManager<RoleManager<AppRole>>()
-			.AddSignInManager<SignInManager<AppUser>>()
-			.AddDefaultTokenProviders();
-
-			services.ConfigureApplicationCookie(opts =>
-			{
-				opts.LoginPath = "/account/login";
-				opts.ReturnUrlParameter = "returnurl";
-				opts.SlidingExpiration = true;
-			});
+			services.AddPlatformIdentity();
 
 			services.AddSingleton<WebLocalizer>(s => 
 				new WebLocalizer(s.GetService<IAppCodeProvider>(), "uk-UA")
-			);
-			services.AddSingleton<ILocalizer>(s => s.GetService<WebLocalizer>());
-			services.AddSingleton<IDataLocalizer>(s => s.GetService<WebLocalizer>());
+			)
+			.AddSingleton<ILocalizer>(s => s.GetService<WebLocalizer>())
+			.AddSingleton<IDataLocalizer>(s => s.GetService<WebLocalizer>());
 
 			services.AddSingleton<IAppCodeProvider>(s => 
 				CreateCodeProvider(Configuration, 
@@ -148,7 +117,6 @@ namespace A2v10.Core.Web.Site
 			if (env.IsDevelopment())
 			{
 				app.UseDeveloperExceptionPage();
-				//app.UseDatabaseErrorPage();
 			}
 			else
 			{

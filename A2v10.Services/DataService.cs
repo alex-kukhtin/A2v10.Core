@@ -53,28 +53,27 @@ namespace A2v10.Services
 			loadPrms.AppendIfNotExists(view.Parameters);
 			loadPrms.SetNotNull("Id", platformUrl.Id);
 
-			String loadProc = view.HasModel() ? view.LoadProcedure() : null;
-
 			IDataModel model = null;
 
-			if (loadProc != null)
+			if (view.HasModel())
 			{
-				ExpandoObject prms2 = loadPrms;
+				ExpandoObject prmsForLoad = loadPrms;
 				if (view.Indirect)
 				{
 					// for indirect - @TenantId, @UserId and @Id only
-					prms2 = new ExpandoObject();
-					prms2.SetNotNull("Id", platformUrl.Id);
+					prmsForLoad = new ExpandoObject();
+					prmsForLoad.SetNotNull("Id", platformUrl.Id);
 					if (loadPrms != null)
 					{
-						prms2.Set("UserId", loadPrms.Get<Int64>("UserId"));
-						prms2.Set("TenantId", loadPrms.Get<Int32>("TenantId"));
+						prmsForLoad.Set("UserId", loadPrms.Get<Int64>("UserId"));
+						prmsForLoad.Set("TenantId", loadPrms.Get<Int32>("TenantId"));
 					}
 				}
-				model = await _dbContext.LoadModelAsync(view.DataSource, loadProc, prms2);
+				model = await _dbContext.LoadModelAsync(view.DataSource, view.LoadProcedure(), prmsForLoad);
+
 				if (view.Merge != null)
 				{
-					var mergeModel = await _dbContext.LoadModelAsync(view.Merge.DataSource, view.Merge.LoadProcedure(), prms2);
+					var mergeModel = await _dbContext.LoadModelAsync(view.Merge.DataSource, view.Merge.LoadProcedure(), prmsForLoad);
 					model.Merge(mergeModel);
 				}
 
@@ -106,10 +105,6 @@ namespace A2v10.Services
 			}
 
 			SetReadOnly(model, loadPrms);
-
-			//dmv.Model = model;
-			//dmv.RequestView = rw;
-			//return dmv;
 
 			return new DataLoadResult() {
 				Model = model,
@@ -191,43 +186,44 @@ namespace A2v10.Services
 				model.SetReadOnly();
 		}
 
-		Task<IModelView> LoadIndirect(IModelView view, IDataModel innerModel, ExpandoObject loadPrms)
+		async Task<IModelView> LoadIndirect(IModelView view, IDataModel innerModel, ExpandoObject loadPrms)
 		{
-			/*
 			if (!view.Indirect)
 				return view;
-			if (!String.IsNullOrEmpty(rw.Target))
+
+			if (!String.IsNullOrEmpty(view.Target))
 			{
-				String targetUrl = innerModel.Root.Resolve(rw.Target);
-				if (String.IsNullOrEmpty(rw.targetId))
+				String targetUrl = innerModel.Root.Resolve(view.Target);
+				if (String.IsNullOrEmpty(view.TargetId))
 					throw new DataServiceException("targetId must be specified for indirect action");
-				targetUrl += "/" + innerModel.Root.Resolve(rw.TargetId);
-				var platformTargetUrl = new PlatformUrl(targetUrl);
+				targetUrl += "/" + innerModel.Root.Resolve(view.TargetId);
 
-				var rm = await RequestModel.CreateFromUrl(_codeProvider, rw.CurrentKind, targetUrl);
-				rw = rm.GetCurrentAction();
-				String loadProc = rw.LoadProcedure;
-				if (loadProc != null)
-				{
-					loadPrms.Set("Id", rw.Id);
-					loadPrms.AppendIfNotExists(view.Parameters);
+				// TODO: CurrentKind instead UrlKind.Page
+				var platformUrl = new PlatformUrl(UrlKind.Page, targetUrl);
+				view = await _modelReader.GetViewAsync(platformUrl);
 
-					var newModel = await _dbContext.LoadModelAsync(view.DataSource, loadProc, loadPrms);
+				//var rm = await RequestModel.CreateFromUrl(_codeProvider, rw.CurrentKind, targetUrl);
+				//rw = rm.GetCurrentAction();
+				if (view.HasModel()) { 
+					var indirectParams = loadPrms.Clone();
+					indirectParams.Set("Id", platformUrl.Id);
+					indirectParams.AppendIfNotExists(view.Parameters);
+
+					var newModel = await _dbContext.LoadModelAsync(view.DataSource, view.LoadProcedure(), indirectParams);
 					innerModel.Merge(newModel);
-
-					innerModel.System.Set("__indirectUrl__", rm.BaseUrl);
+					throw new NotImplementedException("Full URL is required");
+					//innerModel.System.Set("__indirectUrl__", view.BaseUrl);
 				}
 			}
 			else
 			{
 				// simple view/model redirect
-				if (rw.targetModel == null)
-				{
+				if (view.TargetModel == null)
 					throw new DataServiceException("'targetModel' must be specified for indirect action without 'target' property");
-
-				}
-				rw.model = innerModel.Root.Resolve(rw.targetModel.model);
-				rw.view = innerModel.Root.Resolve(rw.targetModel.view);
+				//TODO: view = view.Resolve(innerModel);
+				/*
+				rw.model = innerModel.Root.Resolve(view.targetModel.model);
+				rw.view = innerModel.Root.Resolve(view.targetModel.view);
 				rw.viewMobile = innerModel.Root.Resolve(rw.targetModel.viewMobile);
 				rw.schema = innerModel.Root.Resolve(rw.targetModel.schema);
 				if (String.IsNullOrEmpty(rw.schema))
@@ -235,17 +231,15 @@ namespace A2v10.Services
 				rw.template = innerModel.Root.Resolve(rw.targetModel.template);
 				if (String.IsNullOrEmpty(rw.template))
 					rw.template = null;
-				String loadProc = rw.LoadProcedure();
-				if (loadProc != null)
+				*/
+				if (view.HasModel()) 
 				{
-					loadPrms.Set("Id", rw.Id);
-					var newModel = await _dbContext.LoadModelAsync(view.DataSource, loadProc, loadPrms);
+					//loadPrms.Set("Id", platformUrl.Id);
+					var newModel = await _dbContext.LoadModelAsync(view.DataSource, view.LoadProcedure(), loadPrms);
 					innerModel.Merge(newModel);
 				}
 			}
 			return view;
-			*/
-			throw new NotImplementedException();
 		}
 
 	}

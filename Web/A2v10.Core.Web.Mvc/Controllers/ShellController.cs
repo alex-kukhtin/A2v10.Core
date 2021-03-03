@@ -44,7 +44,7 @@ namespace A2v10.Core.Web.Mvc
 		}
 
 		Int64 UserId => User.Identity.GetUserId<Int64>();
-		Int32 TenantId => 0; // TODO:
+		Int32 TenantId => User.Identity.GetUserTenantId();
 
 		public Boolean IsDebugConfiguration => _host.IsDebugConfiguration;
 
@@ -249,7 +249,6 @@ namespace A2v10.Core.Web.Mvc
 			defAppData.Set("version", _host.AppVersion);
 			defAppData.Set("title", "A2v10.Core Web Application");
 			defAppData.Set("copyright", _host.Copyright);
-			defAppData.Set("embedded", _host.Embedded);
 			return JsonConvert.SerializeObject(defAppData);
 		}
 	}

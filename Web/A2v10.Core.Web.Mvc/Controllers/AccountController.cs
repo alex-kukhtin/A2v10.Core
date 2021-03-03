@@ -44,7 +44,7 @@ namespace A2v10.Core.Web.Mvc.Controllers
 					returnUrl = "/";
 				return LocalRedirect(returnUrl);
 			}
-			throw new AccessViolationException();
+			throw new InvalidOperationException("Invalid login");
 		}
 
 		public async Task<IActionResult> Logoff()

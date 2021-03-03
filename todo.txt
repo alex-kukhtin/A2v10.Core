@@ -1,14 +1,28 @@
 
-8. Site sample
+8. Site mode sample
+
 9. Redirect
 12. Xaml. styles.xaml cache
+
 13. SetUserPassword
 14. Доделать AccountController
 15. LayoutPage from resources (no view)
-16. Проверить  CacheOutput из Data
-17. Authorization: Session lifetime, lockCounter, SlidingExpiration
+
 18. UserStore: options for DataSource, Schema
-19. PlatformURL  parse query
+
 20. IViewEngine
+
 21. DataController.Invoke
-22. 
+
+22. DataService.Load Indirect
+23. DataService.Load Merge
+
+24. UserStore. UpdateUser
+26. Не работает app/about. Только после F5.
+27.
+
+BOOKKEEPER
+==========
+1. Нет выбора фирмы
+2. LoadLazy with period (Accounting/bank_accounts)
+3. 

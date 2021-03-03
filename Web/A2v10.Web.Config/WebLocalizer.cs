@@ -14,7 +14,11 @@ namespace A2v10.Web.Config
 	class LocaleMapItem
 	{
 		public ConcurrentDictionary<String, String> Map { get; } = new ConcurrentDictionary<String, String>();
-		public Boolean Loaded { get; set; }
+
+		public LocaleMapItem(Action<ConcurrentDictionary<String, String>> action)
+		{
+			action(Map);
+		}
 	}
 
 	internal record LocalePath(String Path, Boolean IsFileSystem);
@@ -36,31 +40,30 @@ namespace A2v10.Web.Config
 
 		public IDictionary<String, String> GetLocalizerDictionary(String locale)
 		{
-			var map = GetCurrentMap(locale);
-			if (map.Loaded)
-				return map.Map;
-			map.Loaded = true;
-
-			foreach (var localePath in GetLocalizerFilePath(locale))
+			var localMap = GetCurrentMap(locale, (map) =>
 			{
-				foreach (var line in _appCodeProvider.FileReadAllLines(localePath.Path))
+				foreach (var localePath in GetLocalizerFilePath(locale))
 				{
-					if (String.IsNullOrWhiteSpace(line))
-						continue;
-					if (line.StartsWith(";"))
-						continue;
-					Int32 pos = line.IndexOf('=');
-					if (pos != -1)
+					foreach (var line in _appCodeProvider.FileReadAllLines(localePath.Path))
 					{
-						var key = line.Substring(0, pos);
-						var val = line[(pos + 1)..];
-						map.Map.AddOrUpdate(key, val, (k, oldVal) => val);
+						if (String.IsNullOrWhiteSpace(line))
+							continue;
+						if (line.StartsWith(";"))
+							continue;
+						Int32 pos = line.IndexOf('=');
+						if (pos != -1)
+						{
+							var key = line.Substring(0, pos);
+							var val = line[(pos + 1)..];
+							map.AddOrUpdate(key, val, (k, oldVal) => val);
+						}
+						else
+							throw new InvalidDataException($"Invalid dictionary string '{line}'");
 					}
-					else
-						throw new InvalidDataException($"Invalid dictionary string '{line}'");
 				}
-			}
-			return map.Map;
+			});
+
+			return localMap.Map;
 		}
 
 		IEnumerable<LocalePath> GetLocalizerFilePath(String locale)
@@ -104,16 +107,16 @@ namespace A2v10.Web.Config
 			}
 		}
 
-		LocaleMapItem GetCurrentMap(String locale)
+		LocaleMapItem GetCurrentMap(String locale, Action<ConcurrentDictionary<String, String>> action)
 		{
-			return _maps.GetOrAdd(locale, (key) => new LocaleMapItem());
+			return _maps.GetOrAdd(locale, (key) => new LocaleMapItem(action));
 		}
 
 		void CreateWatchers(IApplicationHost host, String dirPath, String appPath)
 		{
 			if (_watcher_system != null)
 				return;
-			if (!host.IsDebugConfiguration)
+			if (!host.IsDebugConfiguration || host.IsProductionEnvironment)
 				return;
 			if (!String.IsNullOrEmpty(dirPath))
 			{

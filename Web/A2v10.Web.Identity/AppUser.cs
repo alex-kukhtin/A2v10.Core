@@ -17,5 +17,8 @@ namespace A2v10.Web.Identity
 		public Int32 AccessFailedCount { get; set; }
 		public Boolean EmailConfirmed { get; set; }
 		public Boolean PhoneNumberConfirmed { get; set; }
+
+		public Int32 Tenant { get; set; }
+		public String Segment { get; set; }
 	}
 }

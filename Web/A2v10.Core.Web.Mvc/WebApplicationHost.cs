@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
 using System.Dynamic;
@@ -14,52 +14,46 @@ namespace A2v10.Core.Web.Mvc
 	{
 		private readonly IConfiguration _appSettings;
 		private Boolean _admin;
+		private readonly Boolean _debug;
+		private readonly String _environment;
 
 		public WebApplicationHost(IConfiguration config)
 		{
-			_appSettings = config.GetSection("appSetting");
+			_appSettings = config.GetSection("appSettings");
+			var conf = _appSettings.GetValue<String>("configuration");
+			// default configuration is 'debug'
+			_debug = String.IsNullOrEmpty(conf) || conf == "debug";
+			_environment = _appSettings.GetValue<String>("environment");
 		}
-
-		public String AppPath => throw new NotImplementedException();
-		public String AppKey => throw new NotImplementedException();
 
 		public Boolean IsMultiTenant => _appSettings.GetValue<Boolean>("multiTenant");
 		public Boolean IsMultiCompany => _appSettings.GetValue<Boolean>("multiCompany");
 
-		public Boolean IsDebugConfiguration
-		{
-			get
-			{
-				var conf = _appSettings.GetValue<String>("configuration");
-				if (String.IsNullOrEmpty(conf))
-					return true; // default is 'debug'
-				return conf == "debug";
-			}
-		}
+		public Boolean IsDebugConfiguration => _debug;
+		public Boolean IsProductionEnvironment => _environment == "production";
+
 		public Boolean IsUsePeriodAndCompanies => _appSettings.GetValue<Boolean>("custom");
 		public Boolean IsRegistrationEnabled => _appSettings.GetValue<Boolean>("registration");
 		public Boolean IsDTCEnabled => _appSettings.GetValue<Boolean>("enableDTC");
-		public String UseClaims => _appSettings.GetValue<String>("useClaims");
 
 		public Boolean Mobile { get; private set; }
-		public Boolean Embedded => false;
 
 		public Boolean IsAdminMode => _admin;
 
-		public String AppDescription => throw new NotImplementedException();
+		//public String AppDescription => throw new NotImplementedException();
 
-		public String AppHost => throw new NotImplementedException();
-		public String UserAppHost => throw new NotImplementedException();
+		//public String AppHost => throw new NotImplementedException();
+		//public String UserAppHost => throw new NotImplementedException();
 
-		public String SupportEmail => throw new NotImplementedException();
+		//public String SupportEmail => throw new NotImplementedException();
 		public ITheme Theme => throw new NotImplementedException();
 
-		public String HelpUrl => throw new NotImplementedException();
+		//public String HelpUrl => throw new NotImplementedException();
 
-		public String HostingPath => throw new NotImplementedException();
-		public String SmtpConfig => throw new NotImplementedException();
+		//public String HostingPath => throw new NotImplementedException();
+		//public String SmtpConfig => throw new NotImplementedException();
 
-		public String ScriptEngine => throw new NotImplementedException();
+		//public String ScriptEngine => throw new NotImplementedException();
 
 		public Boolean IsAdminAppPresent => false /*TODO:*/;
 

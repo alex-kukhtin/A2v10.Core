@@ -2,17 +2,17 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
-    <Copyright>Copyright © 2015-2020 Oleksandr Kukhtin. All rights reserved.</Copyright>
-    <AssemblyVersion>10.0.8000.0</AssemblyVersion>
-    <FileVersion>10.0.8000.0</FileVersion>
+    <Copyright>Copyright © 2015-2021 Oleksandr Kukhtin. All rights reserved.</Copyright>
+    <AssemblyVersion>10.0.8005.0</AssemblyVersion>
+    <FileVersion>10.0.8005.0</FileVersion>
     <Product>A2v10</Product>
-    <Version>10.0.8000</Version>
+    <Version>10.0.8005</Version>
     <Company>Olexandr Kukhtin</Company>
     <Authors>Oleksandr Kukhtin</Authors>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7252" />
+    <PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7254" />
   </ItemGroup>
 
   <ItemGroup>

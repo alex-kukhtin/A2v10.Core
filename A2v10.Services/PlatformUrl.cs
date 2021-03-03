@@ -1,8 +1,9 @@
-﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.Web;
 
 using A2v10.Infrastructure;
 
@@ -77,7 +78,35 @@ namespace A2v10.Services
 
 			BaseUrl = String.Join("/", baseArr);
 
-			//TODO: parse query 
+			if (!String.IsNullOrEmpty(query))
+			{
+				var eo = new ExpandoObject();
+				var nvc = HttpUtility.ParseQueryString(query);
+				foreach (var k in nvc.AllKeys)
+					AddQueryParam(eo, k, nvc[k]);
+				if (!eo.IsEmpty())
+					Query = eo;
+			}
+		}
+		void AddQueryParam(ExpandoObject eo, String key, String value)
+		{
+			if (!key.Equals("period", StringComparison.OrdinalIgnoreCase)) {
+				eo.Set(key.ToPascalCase(), value);
+			}
+			var ps = value.Split('-');
+			eo.RemoveKeys("From"); // replace prev value
+			eo.RemoveKeys("To");
+			if (ps[0].ToLowerInvariant() == "all")
+			{
+				// from js! utils.date.minDate/maxDate
+				eo.Set("From", "19010101");
+				eo.Set("To", "29991231");
+			}
+			else
+			{
+				eo.Set("From", ps[0]);
+				eo.Set("To", ps.Length == 2 ? ps[1] : ps[0]);
+			}
 		}
 	}
 }

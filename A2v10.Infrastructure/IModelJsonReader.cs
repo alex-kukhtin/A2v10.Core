@@ -20,8 +20,12 @@ namespace A2v10.Infrastructure
 	public interface IModelView: IModelBase
 	{
 		Boolean Copy { get; }
-		Boolean Indirect { get; }
 		String Template { get; }
+
+		Boolean Indirect { get; }
+		String Target { get; }
+		String TargetId { get; }
+		IModelView TargetModel { get; }
 
 		ExpandoObject Parameters { get; }
 
