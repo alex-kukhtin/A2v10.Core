@@ -2,31 +2,25 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
-using Newtonsoft.Json;
 
 namespace A2v10.Core.Web.Mvc
 {
 	public static class HostHelpers
 	{
-		public static String AppStyleSheetsLink(this IAppCodeProvider provider, String controllerName)
+		public static String AppStyleSheetsLink(this IAppCodeProvider provider)
 		{
-			// TODO:
-			return String.Empty;
-			/*
-			controllerName = controllerName ?? throw new ArgumentNullException(nameof(controllerName));
-			// TODO _host AssestsDistionary
 			var files = provider.EnumerateFiles("_assets", "*.css");
 			if (files == null)
 				return String.Empty;
 			// at least one file
 			foreach (var f in files)
-				return $"<link  href=\"/{controllerName.ToLowerInvariant()}/appstyles\" rel=\"stylesheet\" />";
+				return $"<link  href=\"/_shell/appstyles\" rel=\"stylesheet\" />";
 			return String.Empty;
-			*/
 		}
 
 		public static String AppLinks(this IAppCodeProvider provider)
@@ -60,13 +54,10 @@ namespace A2v10.Core.Web.Mvc
 			return String.Empty;
 		}
 
-		public static String CustomManifest(this IApplicationHost host)
+		public static String CustomManifest(this IAppCodeProvider provider)
 		{
-			return null;
-			/*
-			var manifestPath = Path.Combine(host.HostingPath, "manifest.json");
-			return File.Exists(manifestPath) ? "<link rel=\"manifest\" href=\"/manifest.json\">" : null;
-			*/
+			var manifestPath = provider.MapHostingPath("manifest.json");
+			return provider.FileExists(manifestPath) ? "<link rel=\"manifest\" href=\"/manifest.json\">" : null;
 		}
 
 		public static Task ProcessDbEvents(this IApplicationHost host, IDbContext dbContext)
@@ -90,6 +81,5 @@ namespace A2v10.Core.Web.Mvc
 			return tc;
 			*/
 		}
-
 	}
 }

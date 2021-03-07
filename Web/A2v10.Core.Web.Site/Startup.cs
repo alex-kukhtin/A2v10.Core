@@ -16,7 +16,6 @@ using A2v10.Data;
 using A2v10.Web.Identity;
 using A2v10.Core.Web.Mvc;
 using A2v10.Infrastructure;
-using A2v10.Web.Config;
 using A2v10.System.Xaml;
 using A2v10.Xaml;
 using A2v10.Services;
@@ -54,7 +53,6 @@ namespace A2v10.Core.Web.Site
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services)
 		{
-
 			var webMvcAssembly = typeof(ShellController).Assembly;
 			services.AddControllersWithViews()
 				.AddApplicationPart(webMvcAssembly);
@@ -64,8 +62,12 @@ namespace A2v10.Core.Web.Site
 
 			services.AddPlatformIdentity();
 
+			// TODO: GetLocalize
 			services.AddSingleton<WebLocalizer>(s => 
-				new WebLocalizer(s.GetService<IAppCodeProvider>(), "uk-UA")
+				new WebLocalizer(
+					s.GetService<IAppCodeProvider>(), 
+					s.GetService<IAppConfiguration>(),
+					"uk-UA")
 			)
 			.AddSingleton<ILocalizer>(s => s.GetService<WebLocalizer>())
 			.AddSingleton<IDataLocalizer>(s => s.GetService<WebLocalizer>());
@@ -85,13 +87,18 @@ namespace A2v10.Core.Web.Site
 			services.AddScoped<IDbContext>(s => 
 				new SqlDbContext(s.GetService<IDataProfiler>(), 
 					new DataConfiguration(Configuration), 
-					s.GetService<IDataLocalizer>())
+					s.GetService<IDataLocalizer>(),
+					s.GetService<ITenantManager>(),
+					s.GetService<ITokenProvider>()
+				)
 			);
 			services.AddScoped<IUserStateManager>(s => 
 				new WebUserStateManager(s.GetService<IHttpContextAccessor>()));
 
+			services.AddScoped<ITokenProvider, WebTokenProvider>();
 			services.AddScoped<IDataService, DataService>();
-			services.AddScoped<IModelJsonReader, ModelJsonReader>();
+			services.AddSingleton<IModelJsonReader, ModelJsonReader>();
+			services.AddSingleton<IAppConfiguration, AppConfiruation>();
 
 			services.AddSession();
 		}
@@ -101,6 +108,7 @@ namespace A2v10.Core.Web.Site
 			var appSection = config.GetSection("application");
 			var appPath = appSection.GetValue<String>("path");
 			var appKey = appSection.GetValue<String>("name");
+
 			if (appPath.StartsWith("db:"))
 				throw new NotImplementedException("DB: AppCodeProvider");
 			

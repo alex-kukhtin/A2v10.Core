@@ -1,4 +1,4 @@
-﻿// Copyright © 2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2021 Alex Kukhtin. All rights reserved.
 
 using A2v10.Data.Interfaces;
 using System;
@@ -26,7 +26,7 @@ namespace A2v10.Xaml
 			var dm = context.DataModel;
 			if (dm == null)
 				return;
-			var coll = dm.Eval<List<ExpandoObject>>(propertyName);
+
 			var rootMd = dm.Metadata["TRoot"];
 			if (!rootMd.Fields.ContainsKey(propertyName))
 				throw new XamlException($"Pproperty {propertyName} not found in the root of the data model");

@@ -1,15 +1,5 @@
 ﻿
 using System;
-using System.Dynamic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Web;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-
-using A2v10.Data.Interfaces;
-using A2v10.Infrastructure;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;

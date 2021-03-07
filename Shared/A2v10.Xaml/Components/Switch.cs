@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -12,7 +12,7 @@ namespace A2v10.Xaml
 		public UIElementCollection Children { get; set; } = new();
 		public String Value { get; set; }
 
-		public void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public void RenderElement(RenderContext context)
 		{
 			foreach (var c in Children)
 				c.RenderElement(context);

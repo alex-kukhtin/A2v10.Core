@@ -6,23 +6,29 @@
 
 13. SetUserPassword
 14. Доделать AccountController
-15. LayoutPage from resources (no view)
-
-18. UserStore: options for DataSource, Schema
 
 20. IViewEngine
-
-21. DataController.Invoke
 
 22. DataService.Load Indirect
 23. DataService.Load Merge
 
 24. UserStore. UpdateUser
 26. Не работает app/about. Только после F5.
-27.
+
+28. DataController.Invoke
+29. DataService.DbRemove
+31. DataController. ExportTo
+35. ReportController
+36. AttachmentController
+37. ApiV2 Authorization
+38. ImageController.SaveImage
+40. LoadImage from Azure
+41. Stimulsoft Proxy?
 
 BOOKKEEPER
 ==========
-1. Нет выбора фирмы
-2. LoadLazy with period (Accounting/bank_accounts)
-3. 
+7. AppScripts
+9. StaticImages (dashboard)
+10. 
+
+

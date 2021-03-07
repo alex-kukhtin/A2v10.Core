@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
 using System.IO;
@@ -39,7 +39,7 @@ namespace A2v10.Core.Web.Mvc.Controllers
 			_xamlReader = xamlReader;
 			_dataService = dataService;
 			_codeProvider = codeProvider;
-			_renderer = new XamlRenderer(_profiler, codeProvider, xamlReader);
+			_renderer = new XamlRenderer(_profiler, codeProvider, xamlReader, _localizer);
 			_scripter = new VueDataScripter(host, codeProvider, _localizer);
 		}
 
@@ -47,21 +47,21 @@ namespace A2v10.Core.Web.Mvc.Controllers
 		public Task Page(String pathInfo)
 		{
 			// {pagePath}/action/id
-			return Render(pathInfo, UrlKind.Page);
+			return Render(pathInfo + Request.QueryString, UrlKind.Page);
 		}
 
 		[Route("_dialog/{*pathInfo}")]
 		public Task Dialog(String pathInfo)
 		{
 			// {pagePath}/dialog/id
-			return Render(pathInfo, UrlKind.Dialog);
+			return Render(pathInfo + Request.QueryString, UrlKind.Dialog);
 		}
 
 		[Route("_popup/{*pathInfo}")]
 		public Task Popup(String pathInfo)
 		{
 			// {pagePath}/popup/id
-			return Render(pathInfo, UrlKind.Popup);
+			return Render(pathInfo + Request.QueryString, UrlKind.Popup);
 		}
 
 
@@ -70,7 +70,6 @@ namespace A2v10.Core.Web.Mvc.Controllers
 			try
 			{
 				var modelAndView = await _dataService.Load(kind, path, SetSqlQueryParams);
-
 				await Render(modelAndView);
 			} 
 			catch (Exception ex)
@@ -112,31 +111,36 @@ namespace A2v10.Core.Web.Mvc.Controllers
 			String modelScript = si.Script;
 
 			// try xaml
+
 			String fileName = rw.GetView(_host.Mobile) + ".xaml";
 			String basePath = rw.BaseUrl;
-
 			String filePath = _codeProvider.MakeFullPath(rw.Path, fileName);
+
+			//var renderer = _viewProvider.FindRenderer(fileName);
+			//if (renderer == null)
+				//throw new InvalidOperationException("ViewNotFound");
+			using var strWriter = new StringWriter();
+
+			// engine.Render(ri);
+
 
 			Boolean bRendered = false;
 			if (_codeProvider.FileExists(filePath))
 			{
 				// render XAML
-				using var strWriter = new StringWriter();
 				var ri = new RenderInfo()
 				{
 					RootId = rootId,
 					FileName = filePath,
 					FileTitle = fileName,
 					Path = basePath,
-					Writer = strWriter,
 					DataModel = model,
-					Localizer = _localizer,
 					//TypeChecker = typeChecker,
 					CurrentLocale = null,
 					IsDebugConfiguration = _host.IsDebugConfiguration,
 					SecondPhase = secondPhase
 				};
-				_renderer.Render(ri);
+				_renderer.Render(ri,strWriter);
 				// write markup
 				await HttpResponseWritingExtensions.WriteAsync(Response, strWriter.ToString(), Encoding.UTF8);
 				bRendered = true;

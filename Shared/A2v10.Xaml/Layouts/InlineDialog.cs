@@ -1,4 +1,4 @@
-﻿// Copyright © 2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2020-2021 Alex Kukhtin. All rights reserved.
 
 using System;
 

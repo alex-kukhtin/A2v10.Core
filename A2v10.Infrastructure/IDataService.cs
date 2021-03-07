@@ -13,6 +13,15 @@ namespace A2v10.Infrastructure
 		public IModelView View { get; }
 	}
 
+	public interface IBlobInfo
+	{
+		String Mime { get; }
+		String Name { get; }
+		Guid Token { get; }
+		Byte[] Stream { get; }
+		String BlobName { get; }
+	}
+
 	public interface IDataService
 	{
 		Task<IDataLoadResult> Load(UrlKind kind, String baseUrl, Action<ExpandoObject> setParams);
@@ -22,5 +31,8 @@ namespace A2v10.Infrastructure
 		Task<String> LoadLazy(String baseUrl, Object Id, String propertyName, Action<ExpandoObject> setParams);
 		Task<String> Expand(String baseUrl, Object id, Action<ExpandoObject> setParams);
 		Task<String> Save(String baseUrl, ExpandoObject data, Action<ExpandoObject> setParams);
+
+		Task<IBlobInfo> LoadBlobAsync(UrlKind kind, String baseUrl, Action<ExpandoObject> setParams, String suffix = null);
+		Task<IBlobInfo> StaticImage(String baseUrl);
 	}
 }

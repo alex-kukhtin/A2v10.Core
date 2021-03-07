@@ -9,6 +9,8 @@ namespace A2v10.Infrastructure
 {
 	public interface IAppCodeProvider
 	{
+		Boolean IsFileSystem { get; }
+
 		String MakeFullPath(String path, String fileName);
 
 		Boolean FileExists(String fullPath);

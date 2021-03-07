@@ -22,25 +22,12 @@ namespace A2v10.Xaml
 		}
 	}
 
-	public abstract class RootContainer : Container, IUriContext, IDisposable
+	public abstract class RootContainer : Container, IUriContext
 	{
 		#region IUriContext
 		public Uri BaseUri { get; set; }
 		#endregion
 
-		#region IDisposable
-		public void Dispose()
-		{
-			Dispose(true);
-		}
-
-		protected virtual void Dispose(Boolean dispoising)
-		{
-			if (dispoising)
-				OnDispose();
-		}
-
-		#endregion
 		protected ResourceDictionary _resources;
 
 		public ResourceDictionary Resources

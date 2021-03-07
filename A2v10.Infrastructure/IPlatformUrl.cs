@@ -10,7 +10,8 @@ namespace A2v10.Infrastructure
 		Undefined,
 		Page,
 		Dialog,
-		Popup
+		Popup,
+		Image
 	}
 
 	public interface IPlatformUrl
@@ -22,5 +23,6 @@ namespace A2v10.Infrastructure
 		String Id { get; }
 
 		ExpandoObject Query { get; }
+		void Redirect(String path);
 	}
 }

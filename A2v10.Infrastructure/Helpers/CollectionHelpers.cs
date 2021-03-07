@@ -20,5 +20,10 @@ namespace A2v10.Infrastructure
 			}
 			return dst;
 		}
+
+		public static String ToJsonObject(this IEnumerable<String> list)
+		{
+			return $"{{{String.Join(',', list)}}}";
+		}
 	}
 }

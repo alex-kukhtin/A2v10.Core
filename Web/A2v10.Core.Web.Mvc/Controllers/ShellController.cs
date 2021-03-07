@@ -34,13 +34,16 @@ namespace A2v10.Core.Web.Mvc
 		private readonly IDbContext _dbContext;
 		private readonly IUserStateManager _userStateManager;
 		private readonly IProfiler _profiler;
+		private readonly IAppCodeProvider _codeProvider;
 
-		public ShellController(IDbContext dbContext, IApplicationHost host, IUserStateManager userStateManager, IProfiler profiler)
+		public ShellController(IDbContext dbContext, IApplicationHost host, IUserStateManager userStateManager, IProfiler profiler,
+			IAppCodeProvider codeProvider)
 		{
 			_host = host;
 			_dbContext = dbContext;
 			_userStateManager = userStateManager;
 			_profiler = profiler;
+			_codeProvider = codeProvider;
 		}
 
 		Int64 UserId => User.Identity.GetUserId<Int64>();
@@ -77,6 +80,16 @@ namespace A2v10.Core.Web.Mvc
 				Response.StatusCode = 500;
 				await HttpResponseWritingExtensions.WriteAsync(Response, ex.ToString());
 			}
+		}
+
+
+		[AllowAnonymous]
+		public Task AppStyles()
+		{
+			Response.ContentType = MimeTypes.Text.Css;
+			using var textWriter = new StreamWriter(Response.BodyWriter.AsStream());
+			GetAppFiles("css", textWriter);
+			return Task.CompletedTask;
 		}
 
 		void SetSqlParams(ExpandoObject prms)
@@ -253,5 +266,25 @@ namespace A2v10.Core.Web.Mvc
 			};
 			return JsonConvert.SerializeObject(defAppData);
 		}
+
+		void GetAppFiles(String ext, TextWriter writer)
+		{
+			var files = _codeProvider.EnumerateFiles("_assets", $"*.{ext}");
+			if (files == null)
+				return;
+			foreach (var f in files)
+			{
+				var fileName = f.ToLowerInvariant();
+				if (!fileName.EndsWith($".min.{ext}"))
+				{
+					String minFile = fileName.Replace($".{ext}", $".min.{ext}");
+					if (_codeProvider.FileExists(minFile))
+						continue; // min.{ext} found
+				}
+				var txt = _codeProvider.FileReadAllText(fileName);
+				writer.Write(txt);
+			}
+		}
+
 	}
 }

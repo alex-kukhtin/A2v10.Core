@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2017 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
 using A2v10.System.Xaml;
@@ -67,7 +67,7 @@ namespace A2v10.Xaml
 			if (Filter != null)
 			{
 				_outer.MergeAttribute(":initial-filter", Filter.GetJsValue(context));
-				_outer.MergeAttribute(":persistent-filter", Filter.GetPersistentValue(context));
+				_outer.MergeAttribute(":persistent-filter", Filter.GetPersistentValue());
 				if (RunAt == RunMode.Client)
 				{
 					if (String.IsNullOrEmpty(FilterDelegate))
@@ -110,13 +110,6 @@ namespace A2v10.Xaml
 			base.OnSetStyles();
 			foreach (var ch in Children)
 				ch.OnSetStyles();
-		}
-
-		public override void OnDispose()
-		{
-			base.OnDispose();
-			foreach (var c in Children)
-				c.OnDispose();
 		}
 	}
 }

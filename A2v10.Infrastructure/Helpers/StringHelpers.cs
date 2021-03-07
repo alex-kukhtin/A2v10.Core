@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
 using System.Dynamic;
@@ -46,6 +46,11 @@ namespace A2v10.Infrastructure
 					bFirst = true;
 			}
 			return b.ToString();
+		}
+
+		public static String ToJsString(this String s)
+		{
+			return s.Replace("'", "\\'");
 		}
 
 		public static String ToKebabCase(this String s, String delim = "-")

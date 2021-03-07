@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2021 Alex Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -11,15 +11,15 @@ namespace A2v10.Services
 {
 	public class PlatformUrl : IPlatformUrl
 	{
-		public PlatformUrl(UrlKind kind, String url)
+		public PlatformUrl(UrlKind kind, String url, String id = null)
 		{
 			var nurl = NormalizePath(url);
 			Kind = kind;
 			var parts = ("_/" + nurl.Path).Split('/');
-			Construct(parts, nurl.Query);
+			Construct(parts, nurl.Query, id);
 		}
 
-		public PlatformUrl(String url)
+		public PlatformUrl(String url, String id = null)
 		{
 			var nurl = NormalizePath(url);
 
@@ -30,12 +30,13 @@ namespace A2v10.Services
 				"_page" => UrlKind.Page,
 				"_dialog" => UrlKind.Dialog,
 				"_popup" => UrlKind.Popup,
+				"_image" => UrlKind.Image,
 				_ => UrlKind.Undefined
 			};
-			Construct(parts, nurl.Query);
+			Construct(parts, nurl.Query, id);
 		}
 
-		public String LocalPath { get; private set; }
+		public String LocalPath { get; set; }
 		public String BaseUrl { get; private set; }
 
 		public UrlKind Kind { get; private set; }
@@ -43,6 +44,14 @@ namespace A2v10.Services
 		public String Id { get; private set; }
 
 		public ExpandoObject Query { get; private set; }
+
+
+		public void Redirect(String path)
+		{
+			if (LocalPath == path)
+				return;
+			LocalPath = path;
+		}
 
 		static (String Path, String Query) NormalizePath(String path)
 		{
@@ -60,12 +69,18 @@ namespace A2v10.Services
 			return (path, query);
 		}
 
-		void Construct(String[] parts, String query)
+		void Construct(String[] parts, String query, String id)
 		{
 			Int32 len = parts.Length;
 			Id = parts[len - 1];
-			if (String.IsNullOrEmpty(Id) || Id == "0" /*HACK?*/)
-				Id = null;
+			if (String.IsNullOrEmpty(id))
+			{
+				/* HACK? */
+				if (String.IsNullOrEmpty(Id) || Id == "0" || Id.Equals("new", StringComparison.OrdinalIgnoreCase))
+					Id = null;
+			}
+			else
+				Id = id;
 			Action = parts[len - 2];
 			var pathArr = new ArraySegment<String>(parts, 1, len - 3);
 			LocalPath = String.Join("/", pathArr);
@@ -93,22 +108,26 @@ namespace A2v10.Services
 
 		static void AddQueryParam(ExpandoObject eo, String key, String value)
 		{
-			if (!key.Equals("period", StringComparison.OrdinalIgnoreCase)) {
-				eo.Set(key.ToPascalCase(), value);
-			}
-			var ps = value.Split('-');
-			eo.RemoveKeys("From"); // replace prev value
-			eo.RemoveKeys("To");
-			if (ps[0].ToLowerInvariant() == "all")
+			if (!key.Equals("period", StringComparison.OrdinalIgnoreCase))
 			{
-				// from js! utils.date.minDate/maxDate
-				eo.Set("From", "19010101");
-				eo.Set("To", "29991231");
+				eo.Set(key.ToPascalCase(), value);
 			}
 			else
 			{
-				eo.Set("From", ps[0]);
-				eo.Set("To", ps.Length == 2 ? ps[1] : ps[0]);
+				var ps = value.Split('-');
+				eo.RemoveKeys("From"); // replace prev value
+				eo.RemoveKeys("To");
+				if (ps[0].ToLowerInvariant() == "all")
+				{
+					// from js! utils.date.minDate/maxDate
+					eo.Set("From", "19010101");
+					eo.Set("To", "29991231");
+				}
+				else
+				{
+					eo.Set("From", ps[0]);
+					eo.Set("To", ps.Length == 2 ? ps[1] : ps[0]);
+				}
 			}
 		}
 	}

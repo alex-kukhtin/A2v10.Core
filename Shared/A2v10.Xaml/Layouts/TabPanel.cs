@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
 using A2v10.System.Xaml;
@@ -132,13 +132,6 @@ namespace A2v10.Xaml
 			base.OnSetStyles();
 			foreach (var tab in Tabs)
 				tab.OnSetStyles();
-		}
-
-		public override void OnDispose()
-		{
-			base.OnDispose();
-			foreach (var tab in Tabs)
-				tab.OnDispose();
 		}
 	}
 }

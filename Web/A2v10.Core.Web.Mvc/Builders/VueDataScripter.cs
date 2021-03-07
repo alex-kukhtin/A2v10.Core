@@ -137,15 +137,11 @@ const vm = new DataModelController({
 			sb.AppendLine("function modelData(template, data) {");
 			sb.AppendLine("const cmn = require('std:datamodel');");
 			if (meta != null)
-			{
 				sb.Append(GetConstructors(meta));
-			}
 			sb.AppendLine("cmn.implementRoot(TRoot, template, ctors);");
 			sb.AppendLine("let root = new TRoot(data);");
 			sb.Append(SetModelInfo(helper, sys));
-			sb.AppendLine();
-			sb.AppendLine("return root;");
-			sb.AppendLine("}");
+			sb.AppendLine("return root;}");
 			return sb.ToString();
 		}
 
@@ -164,11 +160,11 @@ const vm = new DataModelController({
 			return sb.ToString();
 		}
 
-		static StringBuilder SetModelInfo(IDataHelper helper, IDictionary<String, Object> sys)
+		static String SetModelInfo(IDataHelper helper, IDictionary<String, Object> sys)
 		{
 			if (sys == null)
 				return null;
-			var sb = new StringBuilder("cmn.setModelInfo(root, {\n");
+			var list = new List<String>();
 			foreach (var k in sys)
 			{
 				var val = k.Value;
@@ -180,14 +176,12 @@ const vm = new DataModelController({
 					val = JsonConvert.SerializeObject(val);
 				else if (val is DateTime)
 					val = helper.DateTime2StringWrap(val);
-				sb.Append($"'{k.Key}': {val},");
+				list.Add($"'{k.Key}': {val}");
 			}
-			sb.RemoveTailComma();
-			sb.Append("}, rawData);");
-			return sb;
+			return $"cmn.setModelInfo(root, {list.ToJsonObject()}, rawData);";
 		}
 
-		static StringBuilder GetConstructors(IDictionary<String, IDataMetadata> meta)
+		static String GetConstructors(IDictionary<String, IDataMetadata> meta)
 		{
 			if (meta == null)
 				return null;
@@ -198,16 +192,15 @@ const vm = new DataModelController({
 				sb.AppendLine();
 			}
 			// make ctors
-			sb.Append("const ctors = {");
+			var list = new List<String>();
 			foreach (var re in meta)
 			{
-				sb.Append(re.Key).Append(',');
+				list.Add(re.Key);
 				if (re.Value.IsArrayType)
-					sb.Append(re.Key + "Array").Append(',');
+					list.Add($"{re.Key}Array");
 			}
-			sb.RemoveTailComma();
-			sb.AppendLine("};");
-			return sb;
+			sb.AppendLine($"const ctors = {list.ToJsonObject()};");
+			return sb.ToString();
 		}
 
 		static StringBuilder GetOneConstructor(String name, IDataMetadata ctor)
@@ -314,7 +307,7 @@ const vm = new DataModelController({
 			if (sb.Length == 0)
 				return null;
 			sb.RemoveTailComma();
-			return ",\n" + sb.ToString();
+			return ", " + sb.ToString();
 		}
 
 

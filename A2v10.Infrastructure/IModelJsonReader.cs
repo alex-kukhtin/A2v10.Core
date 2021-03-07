@@ -1,5 +1,6 @@
 ﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
+using A2v10.Data.Interfaces;
 using System;
 using System.Dynamic;
 using System.Threading.Tasks;
@@ -15,6 +16,14 @@ namespace A2v10.Infrastructure
 
 		String Path { get; }
 		String BaseUrl { get; }
+	}
+
+	public interface IModelBlob
+	{
+		String DataSource { get; }
+		String LoadProcedure();
+		String Id { get; }
+		String Key { get; }
 	}
 
 	public interface IModelView: IModelBase
@@ -37,6 +46,8 @@ namespace A2v10.Infrastructure
 		String ExpandProcedure();
 		String UpdateProcedure();
 		String LoadLazyProcedure(String property);
+
+		IModelView Resolve(IDataModel model);
 	}
 
 	public interface IModelCommand
@@ -46,5 +57,6 @@ namespace A2v10.Infrastructure
 	public interface IModelJsonReader
 	{
 		Task<IModelView> GetViewAsync(IPlatformUrl url);
+		Task<IModelBlob> GetBlobAsync(IPlatformUrl url, String suffix = null);
 	}
 }

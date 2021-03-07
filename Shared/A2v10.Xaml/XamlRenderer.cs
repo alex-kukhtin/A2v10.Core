@@ -1,6 +1,8 @@
-﻿using System;
-using A2v10.Infrastructure;
+﻿// Copyright © 2021 Alex Kukhtin. All rights reserved.
 
+using System;
+using System.IO;
+using A2v10.Infrastructure;
 using A2v10.System.Xaml;
 
 namespace A2v10.Xaml
@@ -10,16 +12,18 @@ namespace A2v10.Xaml
 		private readonly IProfiler _profile;
 		private readonly IAppCodeProvider _codeprovider;
 		private readonly IXamlReaderService _xamlReader;
+		private readonly ILocalizer _localizer;
 
 
-		public XamlRenderer(IProfiler profile, IAppCodeProvider provider, IXamlReaderService xamlReader)
+		public XamlRenderer(IProfiler profile, IAppCodeProvider provider, IXamlReaderService xamlReader, ILocalizer localizer)
 		{
 			_profile = profile;
 			_codeprovider = provider;
 			_xamlReader = xamlReader;
+			_localizer = localizer;
 		}
 
-		public void Render(RenderInfo info)
+		public void Render(IRenderInfo info, TextWriter writer)
 		{
 			if (String.IsNullOrEmpty(info.FileName))
 				throw new XamlException("No source for render");
@@ -69,7 +73,7 @@ namespace A2v10.Xaml
 
 			using (request.Start(ProfileAction.Render, $"render: {info.FileTitle}"))
 			{
-				RenderContext ctx = new(uiElem, info)
+				RenderContext ctx = new(uiElem, info, _localizer, writer)
 				{
 					RootId = info.RootId,
 					Path = info.Path

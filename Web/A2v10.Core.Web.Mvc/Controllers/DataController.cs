@@ -113,8 +113,9 @@ namespace A2v10.Core.Web.Mvc.Controllers
 		}
 
 		[HttpPost]
-		public IActionResult Invoke()
+		public async Task<IActionResult> Invoke()
 		{
+			var eo = await Request.ExpandoFromBodyAsync();
 			return Content("Invoke HERE");
 		}
 

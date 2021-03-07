@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
 using System.Text;
@@ -185,7 +185,7 @@ namespace A2v10.Xaml
 			header.RenderEnd(context);
 		}
 
-		void RenderLoadIndicator(RenderContext context)
+		static void RenderLoadIndicator(RenderContext context)
 		{
 			new TagBuilder("div", "load-indicator")
 				.MergeAttribute("v-show", "$isLoading")

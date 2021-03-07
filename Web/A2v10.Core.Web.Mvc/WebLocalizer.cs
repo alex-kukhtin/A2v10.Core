@@ -8,7 +8,7 @@ using System.IO;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 
-namespace A2v10.Web.Config
+namespace A2v10.Core.Web.Mvc
 {
 
 	class LocaleMapItem
@@ -32,10 +32,12 @@ namespace A2v10.Web.Config
 		FileSystemWatcher _watcher_app = null;
 
 		private readonly IAppCodeProvider _appCodeProvider;
+		private readonly Boolean _watch;
 
-		public WebDictionary(IAppCodeProvider appCodeProvider)
+		public WebDictionary(IAppCodeProvider appCodeProvider, Boolean watch)
 		{
 			_appCodeProvider = appCodeProvider;
+			_watch = watch;
 		}
 
 		public IDictionary<String, String> GetLocalizerDictionary(String locale)
@@ -82,7 +84,7 @@ namespace A2v10.Web.Config
 			if (dirPath == null && appPath == null)
 				yield break;
 
-			//CreateWatchers(host, dirPath, _appCodeProvider.IsFileSystem ? appPath : null);
+			CreateWatchers(dirPath, _appCodeProvider.IsFileSystem ? appPath : null);
 			if (dirPath != null)
 			{
 				foreach (var s in Directory.EnumerateFiles(dirPath, $"*.{locale}.txt"))
@@ -112,11 +114,9 @@ namespace A2v10.Web.Config
 			return _maps.GetOrAdd(locale, (key) => new LocaleMapItem(action));
 		}
 
-		void CreateWatchers(IApplicationHost host, String dirPath, String appPath)
+		void CreateWatchers(String dirPath, String appPath)
 		{
-			if (_watcher_system != null)
-				return;
-			if (!host.IsDebugConfiguration || host.IsProductionEnvironment)
+			if (!_watch)
 				return;
 			if (!String.IsNullOrEmpty(dirPath))
 			{
@@ -157,11 +157,12 @@ namespace A2v10.Web.Config
 
 		private readonly IAppCodeProvider _appCodeProvider;
 
-		public WebLocalizer(IAppCodeProvider appCodeProvider, String defaultLocale)
+		public WebLocalizer(IAppCodeProvider appCodeProvider, IAppConfiguration config, String defaultLocale)
 			: base(defaultLocale)
 		{
 			_appCodeProvider = appCodeProvider;
-			_webDictionary = new WebDictionary(_appCodeProvider);
+			_webDictionary = new WebDictionary(_appCodeProvider, config.Watch);
+
 		}
 
 		#region IDataLocalizer

@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2017 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
 
@@ -221,22 +221,6 @@ namespace A2v10.Xaml
 			if (_columns != null)
 				foreach (var c in Columns)
 					c.OnSetStyles();
-		}
-
-		public override void OnDispose()
-		{
-			base.OnDispose();
-			foreach (var c in Rows)
-				c.OnDispose();
-			if (_header != null)
-				foreach (var h in Header)
-					h.OnDispose();
-			if (_footer != null)
-				foreach (var f in Footer)
-					f.OnDispose();
-			if (_columns != null)
-				foreach (var c in Columns)
-					c.OnDispose();
 		}
 	}
 }

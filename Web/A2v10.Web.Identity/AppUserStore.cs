@@ -10,8 +10,8 @@ using Microsoft.AspNetCore.Identity;
 
 namespace A2v10.Web.Identity
 {
-	public sealed class AppUserStore : 
-		IUserStore<AppUser>, 
+	public sealed class AppUserStore :
+		IUserStore<AppUser>,
 		IUserLoginStore<AppUser>,
 		IUserEmailStore<AppUser>,
 		IUserPasswordStore<AppUser>,
@@ -20,12 +20,14 @@ namespace A2v10.Web.Identity
 	{
 		private readonly IDbContext _dbContext;
 
-		private String DataSource => null; //"Catalog"; // TODO
-		private String DbSchema => "a2security"; // TODO
+		private String DataSource { get; } 
+		private String DbSchema { get; }
 
-		public AppUserStore(IDbContext dbContext)
+		public AppUserStore(IDbContext dbContext, AppUserStoreOptions options)
 		{
 			_dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+			DataSource = options.DataSource;
+			DbSchema = options.Schema;
 		}
 
 		public Task<IdentityResult> CreateAsync(AppUser user, CancellationToken cancellationToken)

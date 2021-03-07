@@ -134,15 +134,15 @@ namespace A2v10.Xaml
 
 		readonly private String _currentLocale;
 
-		public RenderContext(UIElementBase root, RenderInfo ri)
+		public RenderContext(UIElementBase root, IRenderInfo ri, ILocalizer localizer, TextWriter writer)
 		{
-			Writer = ri.Writer;
+			Writer = writer;
 			_root = root;
 			_dataModel = ri.DataModel;
-			_localizer = ri.Localizer;
+			_localizer = localizer;
 			_currentLocale = ri.CurrentLocale;
-			_typeChecker = ri.TypeChecker;
-			IsDebugConfiguration = ri.IsDebugConfiguration;
+			//_typeChecker = ri.TypeChecker;
+			IsDebugConfiguration = true; // TODO: ri.IsDebugConfiguration;
 		}
 
 		public Boolean IsDialog => _root is Dialog;

@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
 using System;
@@ -181,7 +181,7 @@ namespace A2v10.Xaml
 					return "$requery()";
 
 				case CommandType.Save:
-					return $"$save({{toast: {GetToast(context)}, options:{GetOptionsValid(context)}}})";
+					return $"$save({{toast: {GetToast(context)}, options:{GetOptionsValid()}}})";
 
 				case CommandType.Clear:
 					return $"{CommandArgument(context)}.$empty()";
@@ -199,7 +199,7 @@ namespace A2v10.Xaml
 
 				case CommandType.SaveAndClose:
 					if (context.IsDialog)
-						return $"$modalSaveAndClose(true, {GetOptionsValid(context)})";
+						return $"$modalSaveAndClose(true, {GetOptionsValid()})";
 					return $"$saveAndClose({{toast: {GetToast(context)}}})";
 
 				case CommandType.OpenSelected:
@@ -209,7 +209,7 @@ namespace A2v10.Xaml
 					return $"$openSelectedFrame({CommandUrl(context, decorate: true)}, {CommandArgument(context)}, {UpdateAfterArgument(context)})";
 
 				case CommandType.Select:
-					return $"$modalSelect({CommandArgument(context)}, {GetOptionsValid(context)})";
+					return $"$modalSelect({CommandArgument(context)}, {GetOptionsValid()})";
 
 				case CommandType.SelectChecked:
 					return $"$modalSelectChecked({CommandArgument(context)})";
@@ -248,7 +248,7 @@ namespace A2v10.Xaml
 					if (indirect)
 					{
 						var argSting = "this";
-						if (!IsArgumentEmpty(context))
+						if (!IsArgumentEmpty())
 							argSting = CommandArgument(context);
 						// arg4 may contain a single quote!!!
 						return $"{{cmd:$navigate, eval: true, arg1:{CommandUrl(context, true)}, arg2:'{argSting}', arg3:{NewWindowJS}, arg4:{UpdateAfterArgument(context)}}}";
@@ -277,7 +277,7 @@ namespace A2v10.Xaml
 				case CommandType.Execute:
 					if (indirect)
 					{
-						var arg2 = IsArgumentEmpty(context) ? "this" : CommandArgument(context);
+						var arg2 = IsArgumentEmpty() ? "this" : CommandArgument(context);
 						return $"{{cmd:$exec, arg1:'{GetName()}', arg2:'{arg2}', arg3: {GetConfirm(context)}, arg4: {GetOptions(context)}}}";
 					}
 					if (argument != null)
@@ -298,7 +298,7 @@ namespace A2v10.Xaml
 					return $"$exportTo('{Format}', {CommandFileName(context)})";
 
 				case CommandType.File:
-					return $"$file({CommandUrl(context)}, {CommandArgument(context)}, {GetOptionsForFile(context)})";
+					return $"$file({CommandUrl(context)}, {CommandArgument(context)}, {GetOptionsForFile()})";
 
 				case CommandType.Dialog:
 					if (Action == DialogAction.Unknown)
@@ -310,7 +310,7 @@ namespace A2v10.Xaml
 					if (indirect)
 					{
 						String arg3 = "this";
-						if (!IsArgumentEmpty(context))
+						if (!IsArgumentEmpty())
 							arg3 = CommandArgument(context);
 						// command, url, data
 						return $"{{cmd:$dialog, isDialog:true, arg1:'{action}', arg2:{CommandUrl(context, decorate:true)}, arg3: '{arg3}'}}";
@@ -371,14 +371,14 @@ namespace A2v10.Xaml
 			return sb.ToString();
 		}
 
-		String GetOptionsForFile(RenderContext context)
+		String GetOptionsForFile()
 		{
 			if (FileAction == FileAction.Unknown)
 				return nullString;
 			return $"{{action: '{FileAction.ToString().ToLowerInvariant()}'}}";
 		}
 
-		String GetOptionsValid(RenderContext context)
+		String GetOptionsValid()
 		{
 			if (!ValidRequired)
 				return nullString;
@@ -445,7 +445,7 @@ namespace A2v10.Xaml
 			return Toast.GetJsValue(context);
 		}
 
-		Boolean IsArgumentEmpty(RenderContext context)
+		Boolean IsArgumentEmpty()
 		{
 			var argBind = GetBinding(nameof(Argument));
 			return argBind == null || String.IsNullOrEmpty(argBind.Path);
@@ -574,7 +574,7 @@ namespace A2v10.Xaml
 					{
 						var arg = GetBinding(nameof(Argument));
 						if (arg != null)
-							tag.MergeAttribute(":disabled", $"!$hasSelected({arg.GetPath(context)}, {GetOptionsValid(context)})", replaceExisting:true);
+							tag.MergeAttribute(":disabled", $"!$hasSelected({arg.GetPath(context)}, {GetOptionsValid()})", replaceExisting:true);
 					}
 					break;
 				case CommandType.RemoveSelected:
@@ -615,22 +615,21 @@ namespace A2v10.Xaml
 		{
 			if (CheckReadOnly)
 				return false; // always disable readonly commands
-			switch (Command)
+			return Command switch
 			{
-				case CommandType.Close:
-				case CommandType.Refresh:
-				case CommandType.Reload:
-				case CommandType.Export:
-				case CommandType.Report:
-				case CommandType.Requery:
-				case CommandType.MailTo:
-				case CommandType.Help:
-				case CommandType.Print:
-				case CommandType.Execute:
-				case CommandType.ExecuteSelected:
-					return true;
-			}
-			return false;
+				CommandType.Close or 
+				CommandType.Refresh or 
+				CommandType.Reload or 
+				CommandType.Export or 
+				CommandType.Report or 
+				CommandType.Requery or 
+				CommandType.MailTo or 
+				CommandType.Help or 
+				CommandType.Print or 
+				CommandType.Execute or 
+				CommandType.ExecuteSelected => true,
+				_ => false,
+			};
 		}
 	}
 }

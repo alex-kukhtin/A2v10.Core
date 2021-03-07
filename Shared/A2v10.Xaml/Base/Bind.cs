@@ -1,14 +1,14 @@
-﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Text.RegularExpressions;
 
 using A2v10.Infrastructure;
-using System;
-using System.ComponentModel;
-using System.Text;
-using System.Text.RegularExpressions;
 
 namespace A2v10.Xaml
 {
-	//[DefaultProperty("Path")]
 	public class Bind : BindBase, ISupportInitialize
 	{
 		public String Path { get; set; }
@@ -58,22 +58,18 @@ namespace A2v10.Xaml
 				maskBind == null 
 				&& !HideZeros)
 				return realPath;
-			var opts = new StringBuilder("{");
+			var opts = new List<String>();
 			if (DataType != DataType.String)
-				opts.Append($"dataType: '{DataType}',");
+				opts.Add($"dataType: '{DataType}'");
 			if (!String.IsNullOrEmpty(Format))
-				opts.Append($"format: '{context.Localize(Format.Replace("'", "\\'"))}',");
+				opts.Add($"format: '{context.Localize(Format.ToJsString())}'");
 			if (maskBind != null)
-			{
-				opts.Append($"mask: {maskBind.GetPathFormat(context)},");
-			}
+				opts.Add($"mask: {maskBind.GetPathFormat(context)}");
 			else if (!String.IsNullOrEmpty(Mask))
-				opts.Append($"mask: '{context.Localize(Mask.Replace("'", "\\'"))}',");
+				opts.Add($"mask: '{context.Localize(Mask.ToJsString())}'");
 			if (HideZeros)
-				opts.Append("hideZeros: true,");
-			opts.RemoveTailComma();
-			opts.Append('}');
-			return $"$format({realPath}, {opts})";
+				opts.Add("hideZeros: true");
+			return $"$format({realPath}, {opts.ToJsonObject()})";
 		}
 
 

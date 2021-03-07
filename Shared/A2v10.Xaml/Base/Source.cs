@@ -12,6 +12,12 @@ namespace A2v10.Xaml
 	{
 		public String Path { get; set; }
 
+
+		public Source()
+		{
+
+		}
+
 		public Source(String path)
 		{
 			Path = path;

@@ -907,12 +907,10 @@ namespace A2v10.Core.Web.Mvc
 			return mi;
 		}
 
-		static readonly Lazy<RedirectModule> _redirect = new (() => new RedirectModule(), isThreadSafe: true);
-
 		public static async Task<RequestModel> CreateFromUrl(IAppCodeProvider codeProvider, RequestUrlKind kind, String normalizedUrl)
 		{
 			var mi = GetModelInfo(kind, normalizedUrl);
-			String pathForLoad = _redirect.Value.Redirect(mi.path);
+			String pathForLoad = mi.path; // _redirect.Value.Redirect(mi.path);
 			String jsonText = await codeProvider.ReadTextFileAsync(pathForLoad, "model.json");
 			if (jsonText == null)
 				throw new FileNotFoundException($"File not found '{pathForLoad}/model.json'");

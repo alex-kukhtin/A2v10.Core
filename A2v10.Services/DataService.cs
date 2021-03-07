@@ -2,13 +2,13 @@
 
 using System;
 using System.Dynamic;
-using System.Linq;
 using System.Threading.Tasks;
 
 using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
+using System.Globalization;
 
 namespace A2v10.Services
 {
@@ -39,7 +39,8 @@ namespace A2v10.Services
 
 		public Task<IDataLoadResult> Load(String baseUrl, Action<ExpandoObject> setParams)
 		{
-			var platformBaseUrl = new PlatformUrl(baseUrl);
+			// with redirect here only!
+			var platformBaseUrl = new PlatformUrl(baseUrl, null);
 			return Load(platformBaseUrl, setParams);
 		}
 
@@ -47,28 +48,17 @@ namespace A2v10.Services
 		{
 			var view = await _modelReader.GetViewAsync(platformUrl);
 
-			var loadPrms = new ExpandoObject();
-			setParams?.Invoke(loadPrms);
-			loadPrms.Append(platformUrl.Query);
-			loadPrms.AppendIfNotExists(view.Parameters);
-			loadPrms.SetNotNull("Id", platformUrl.Id);
+			var loadPrms = ParameterBuilder.BuildParams(platformUrl, view.Parameters, setParams);
 
 			IDataModel model = null;
 
 			if (view.HasModel())
 			{
 				ExpandoObject prmsForLoad = loadPrms;
+
 				if (view.Indirect)
-				{
-					// for indirect - @TenantId, @UserId and @Id only
-					prmsForLoad = new ExpandoObject();
-					prmsForLoad.SetNotNull("Id", platformUrl.Id);
-					if (loadPrms != null)
-					{
-						prmsForLoad.Set("UserId", loadPrms.Get<Int64>("UserId"));
-						prmsForLoad.Set("TenantId", loadPrms.Get<Int32>("TenantId"));
-					}
-				}
+					prmsForLoad = ParameterBuilder.BuildIndirectParams(platformUrl, setParams);
+
 				model = await _dbContext.LoadModelAsync(view.DataSource, view.LoadProcedure(), prmsForLoad);
 
 				if (view.Merge != null)
@@ -95,14 +85,8 @@ namespace A2v10.Services
 			if (view.Indirect)
 				view = await LoadIndirect(view, model, loadPrms);
 
-			if (model?.Root != null)
-			{
-				// side effect!
-				//rw.view = model.Root.Resolve(rw.View);
-				//rw.viewMobile = model.Root.Resolve(rw.viewMobile);
-				//rw.template = model.Root.Resolve(rw.template);
-				//rw.checkTypes = model.Root.Resolve(rw.checkTypes);
-			}
+			if (model != null)
+				view = view.Resolve(model);
 
 			SetReadOnly(model, loadPrms);
 
@@ -118,11 +102,7 @@ namespace A2v10.Services
 			var view = await _modelReader.GetViewAsync(platformBaseUrl);
 			var expandProc = view.ExpandProcedure();
 
-			var execPrms = new ExpandoObject();
-			execPrms.Append(platformBaseUrl.Query);
-			setParams?.Invoke(execPrms);
-			execPrms.Set("Id", Id);
-			execPrms.Append(view.Parameters);
+			var execPrms = ParameterBuilder.BuildParams(platformBaseUrl, view.Parameters, setParams);
 
 			var model = await _dbContext.LoadModelAsync(view.DataSource, expandProc, execPrms);
 			return JsonConvert.SerializeObject(model.Root, JsonHelpers.DataSerializerSettings);
@@ -138,17 +118,16 @@ namespace A2v10.Services
 
 		public async Task<String> LoadLazy(String baseUrl, Object Id, String propertyName, Action<ExpandoObject> setParams)
 		{
-			var platformBaseUrl = new PlatformUrl(baseUrl);
+			String strId = Id != null ? Convert.ToString(Id, CultureInfo.InvariantCulture) : null;
+
+			var platformBaseUrl = new PlatformUrl(baseUrl, strId);
 			var view = await _modelReader.GetViewAsync(platformBaseUrl);
 
 			String loadProc = view.LoadLazyProcedure(propertyName.ToPascalCase());
+			var loadParams = ParameterBuilder.BuildParams(platformBaseUrl, null, setParams);
 
-			var execPrms = new ExpandoObject();
-			execPrms.Append(platformBaseUrl.Query);
-			setParams?.Invoke(execPrms);
-			execPrms.Set("Id", Id);
+			var model = await _dbContext.LoadModelAsync(view.DataSource, loadProc, loadParams);
 
-			var model = await _dbContext.LoadModelAsync(view.DataSource, loadProc, execPrms);
 			return JsonConvert.SerializeObject(model.Root, JsonHelpers.DataSerializerSettings);
 		}
 
@@ -157,9 +136,8 @@ namespace A2v10.Services
 			var platformBaseUrl = new PlatformUrl(baseUrl);
 			var view = await _modelReader.GetViewAsync(platformBaseUrl);
 
-			var savePrms = new ExpandoObject();
-			setParams?.Invoke(savePrms);
-			savePrms.Append(view.Parameters);
+			var savePrms = ParameterBuilder.BuildSaveParams(view.Parameters, setParams);
+
 			CheckUserState(savePrms);
 			
 			// TODO: HookHandler, invokeTarget, events
@@ -205,6 +183,7 @@ namespace A2v10.Services
 				//var rm = await RequestModel.CreateFromUrl(_codeProvider, rw.CurrentKind, targetUrl);
 				//rw = rm.GetCurrentAction();
 				if (view.HasModel()) { 
+					// TODO: ParameterBuilder
 					var indirectParams = loadPrms.Clone();
 					indirectParams.Set("Id", platformUrl.Id);
 					indirectParams.AppendIfNotExists(view.Parameters);
@@ -242,5 +221,24 @@ namespace A2v10.Services
 			return view;
 		}
 
+		public Task<IBlobInfo> StaticImage(String baseUrl)
+		{
+			//var platfromUrl = new PlatformUrl(baseUrl);
+			throw new Exception("DataService.StaticImage");
+		}
+
+		public async Task<IBlobInfo> LoadBlobAsync(UrlKind kind, String baseUrl, Action<ExpandoObject> setParams, String suffix = null)
+		{
+			var platfromUrl = new PlatformUrl(kind, baseUrl);
+			var blob = await _modelReader.GetBlobAsync(platfromUrl, suffix);
+			var prms = new ExpandoObject();
+			prms.Set("Id", blob.Id);
+			prms.Set("Key", blob.Key);
+			setParams?.Invoke(prms);
+			var bi = await _dbContext.LoadAsync<BlobInfo>(blob.DataSource, blob.LoadProcedure(), prms);
+			if (!String.IsNullOrEmpty(bi.BlobName))
+				throw new NotImplementedException("Load azure Storage blob");
+			return bi;
+		}
 	}
 }

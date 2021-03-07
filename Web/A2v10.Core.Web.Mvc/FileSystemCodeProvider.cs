@@ -20,6 +20,8 @@ namespace A2v10.Core.Web.Mvc
 		private String AppPath { get; }
 		private String AppKey { get; }
 
+		public Boolean IsFileSystem => true;
+
 		public FileSystemCodeProvider(IWebHostEnvironment webHost, String appPath, String appKey)
 		{
 			_webHost = webHost;

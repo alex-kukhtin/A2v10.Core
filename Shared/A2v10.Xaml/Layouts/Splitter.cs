@@ -76,8 +76,8 @@ namespace A2v10.Xaml
 				.MergeAttribute(Orientation == Orientation.Vertical ? "v-resize" : "h-resize", String.Empty)
 				//.MergeAttribute("key", Guid.NewGuid().ToString()) // disable vue reusing
 				.MergeAttribute("first-pane-width", p1w?.Value.ToString())
-				.MergeAttribute("data-min-width", GetMinWidth(Children[0])?.Value.ToString())
-				.MergeAttribute("second-min-width", GetMinWidth(Children[1])?.Value.ToString())
+				.MergeAttribute("data-min-width", GetMinWidth(Children[0])?.Value?.ToString())
+				.MergeAttribute("second-min-width", GetMinWidth(Children[1])?.Value?.ToString())
 				.Render(context);
 
 			// second part

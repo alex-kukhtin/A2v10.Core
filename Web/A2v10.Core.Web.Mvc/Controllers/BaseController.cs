@@ -31,8 +31,8 @@ namespace A2v10.Core.Web.Mvc
 			_profiler.Enabled = _host.IsDebugConfiguration;
 		}
 
-		Int64 UserId => User.Identity.GetUserId<Int64>();
-		Int32 TenantId => User.Identity.GetUserTenantId();
+		protected Int64 UserId => User.Identity.GetUserId<Int64>();
+		protected Int32 TenantId => User.Identity.GetUserTenantId();
 		Int64 CompanyId => _userStateManager.UserCompanyId(TenantId, UserId); 
 
 		protected void SetSqlQueryParamsWithoutCompany(ExpandoObject prms)

@@ -1,8 +1,8 @@
-﻿// Copyright © 2015-2017 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
-using System.ComponentModel;
 using System.Reflection;
+
 using A2v10.System.Xaml;
 
 namespace A2v10.Xaml
@@ -38,11 +38,6 @@ namespace A2v10.Xaml
 		public Bind GetBinding(String name)
 		{
 			return _bindImpl?.GetBinding(name);
-		}
-
-		void SetBinding(String name, BindBase bind)
-		{
-			_bindImpl.SetBinding(name, bind);
 		}
 
 		public BindCmd GetBindingCommand(String name)

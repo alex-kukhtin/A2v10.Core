@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2017 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
 using System.Text;
@@ -102,7 +102,7 @@ namespace A2v10.Xaml
 			return sb.ToString();
 		}
 
-		public String GetPersistentValue(RenderContext context)
+		public String GetPersistentValue()
 		{
 			var sb = new StringBuilder();
 			sb.Append('[');

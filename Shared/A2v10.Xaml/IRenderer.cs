@@ -1,30 +1,29 @@
-﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
 using System.IO;
+
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 
 namespace A2v10.Xaml
 {
-	public class RenderInfo
+	public class RenderInfo : IRenderInfo
 	{
-		public String RootId;
-		public String FileName;
-		public String FileTitle;
-		public String Path;
-		public String Text;
-		public TextWriter Writer;
-		public IDataModel DataModel;
-		public ILocalizer Localizer;
-		public ITypeChecker TypeChecker;
-		public String CurrentLocale;
-		public Boolean IsDebugConfiguration;
-		public Boolean SecondPhase;
+		public String RootId { get; init; }
+		public String FileName { get; init; }
+		public String FileTitle { get; init; }
+		public String Path { get; init; }
+		public String Text { get; init; }
+		public IDataModel DataModel { get; init; }
+		//public ITypeChecker TypeChecker
+		public String CurrentLocale { get; init; }
+		public Boolean IsDebugConfiguration { get; init; }
+		public Boolean SecondPhase { get; init; }
 	}
 
 	public interface IRenderer
 	{
-		void Render(RenderInfo info);
+		void Render(IRenderInfo info, TextWriter writer);
 	}
 }
