@@ -19,6 +19,7 @@ using A2v10.Infrastructure;
 using A2v10.System.Xaml;
 using A2v10.Xaml;
 using A2v10.Services;
+using A2v10.Stimulsoft.Interop;
 
 namespace A2v10.Core.Web.Site
 {
@@ -100,6 +101,8 @@ namespace A2v10.Core.Web.Site
 
 			services.AddScoped<ITokenProvider, WebTokenProvider>();
 			services.AddScoped<IDataService, DataService>();
+			services.AddScoped<IReportService, ReportService>();
+			services.AddScoped<IExternalReport, StimulsoftExternalReport>();
 			services.AddSingleton<IModelJsonReader, ModelJsonReader>();
 			services.AddSingleton<IAppConfiguration, AppConfiruation>();
 

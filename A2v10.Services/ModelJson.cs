@@ -191,7 +191,7 @@ namespace A2v10.Services
 			return $"[{CurrentSchema}].[{Procedure}]";
 		}
 
-		public IModelInvokeCommand GetCommand(IServiceProvider serviceProvider)
+		public IModelInvokeCommand GetCommandHandler(IServiceProvider serviceProvider)
 		{
 			return ServerCommandRegistry.GetCommand(Type, serviceProvider);
 		}
@@ -204,7 +204,7 @@ namespace A2v10.Services
 		json
 	}
 
-	public class ModelJsonReport : ModelJsonBase
+	public class ModelJsonReport : ModelJsonBase, IModelReport
 	{
 		public ModelJsonReportType Type { get; set; }
 		public String Report { get; set; }
@@ -213,12 +213,24 @@ namespace A2v10.Services
 		public String Encoding { get; set; }
 		public Boolean Validate { get; set; }
 
-		public String ReportProcedure()
+		public ExpandoObject Variables { get; set; }
+
+		public override String LoadProcedure()
 		{
 			var cm = CurrentModel;
 			if (String.IsNullOrEmpty(cm))
 				return null;
 			return $"[{CurrentSchema}].[{cm}.Report]";
+		}
+
+		public String ReportPath()
+		{
+			return Type == ModelJsonReportType.stimulsoft ? Report : null;
+		}
+
+		public IModelReportHandler GetReportHandler(IServiceProvider serviceProvider)
+		{
+			return ServerReportRegistry.GetReportHandler(Type, serviceProvider);
 		}
 	}
 
@@ -264,7 +276,7 @@ namespace A2v10.Services
 		{
 			if (Reports.TryGetValue(key, out ModelJsonReport report))
 				return report;
-			throw new ModelJsonException($"Dialog: {key} not found");
+			throw new ModelJsonException($"Report: {key} not found");
 		}
 
 		public ModelJsonCommand GetCommand(String key)

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
+    <ProjectReference Include="..\A2v10.Stimulsoft.Interop\A2v10.Stimulsoft.Interop.csproj" />
   </ItemGroup>
 
 </Project>

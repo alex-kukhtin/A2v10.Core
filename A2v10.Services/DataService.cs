@@ -171,7 +171,7 @@ namespace A2v10.Services
 			prms.Append(data);
 			setParams?.Invoke(prms);
 
-			var invokeCommand = cmd.GetCommand(_serviceProvider);
+			var invokeCommand = cmd.GetCommandHandler(_serviceProvider);
 			var result = await invokeCommand.ExecuteAsync(cmd, prms);
 			//await ProcessDbEvents();
 			return result;

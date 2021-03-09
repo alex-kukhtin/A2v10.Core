@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7257" />
+    <PackageReference Include="Stimulsoft.Reports.Web.NetCore" Version="2021.1.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

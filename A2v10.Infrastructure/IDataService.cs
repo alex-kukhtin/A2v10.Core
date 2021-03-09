@@ -24,9 +24,8 @@ namespace A2v10.Infrastructure
 
 	public interface IInvokeResult
 	{
-		String Body { get; }
+		Byte[] Body { get; }
 		String ContentType { get; }
-
 	}
 
 	public interface IDataService

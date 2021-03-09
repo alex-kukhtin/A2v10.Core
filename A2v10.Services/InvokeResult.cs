@@ -7,7 +7,7 @@ namespace A2v10.Services
 {
 	public class InvokeResult : IInvokeResult
 	{
-		public String Body { get; set; }
+		public Byte[] Body { get; set; }
 
 		public String ContentType { get; set; }
 	}

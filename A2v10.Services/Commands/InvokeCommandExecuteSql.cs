@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
+using System.Text;
 
 namespace A2v10.Services
 {
@@ -30,10 +31,12 @@ namespace A2v10.Services
 				clr.Invoke(invokeTarget, dataToExec); // after execute
 			}
 			*/
+			var strResult = model != null && model.Root != null ?
+				JsonConvert.SerializeObject(model.Root, JsonHelpers.DataSerializerSettings) : "{}";
+
 			var result = new InvokeResult()
 			{
-				Body = model != null && model.Root != null ? 
-					JsonConvert.SerializeObject(model.Root, JsonHelpers.DataSerializerSettings) : "{}",
+				Body = strResult != null ? Encoding.UTF8.GetBytes(strResult) : null,
 				ContentType = MimeTypes.Application.Json
 			};
 			return result;

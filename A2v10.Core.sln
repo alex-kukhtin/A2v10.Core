@@ -28,6 +28,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "A2v10.Infrastructure", "A2v
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "A2v10.Services", "A2v10.Services\A2v10.Services.csproj", "{DF3F42D6-C845-4084-B7F4-FC81D10E5BE8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "A2v10.Stimulsoft.Interop", "A2v10.Stimulsoft.Interop\A2v10.Stimulsoft.Interop.csproj", "{41997BF3-FD55-45CF-AD9A-F036C4A1C7C1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -62,6 +64,10 @@ Global
 		{DF3F42D6-C845-4084-B7F4-FC81D10E5BE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DF3F42D6-C845-4084-B7F4-FC81D10E5BE8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DF3F42D6-C845-4084-B7F4-FC81D10E5BE8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{41997BF3-FD55-45CF-AD9A-F036C4A1C7C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{41997BF3-FD55-45CF-AD9A-F036C4A1C7C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{41997BF3-FD55-45CF-AD9A-F036C4A1C7C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{41997BF3-FD55-45CF-AD9A-F036C4A1C7C1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

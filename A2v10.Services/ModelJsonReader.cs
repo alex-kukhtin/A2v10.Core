@@ -42,6 +42,12 @@ namespace A2v10.Services
 			return rm.GetCommand(command);
 		}
 
+		public async Task<IModelReport> GetReportAsync(IPlatformUrl url)
+		{
+			var rm = await Load(url);
+			return rm.GetReport(url.Action);
+		}
+
 		public async Task<IModelBlob> GetBlobAsync(IPlatformUrl url, String suffix = null)
 		{
 			var rm = await Load(url);

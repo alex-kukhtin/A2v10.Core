@@ -130,7 +130,7 @@ namespace A2v10.Core.Web.Mvc.Controllers
 
 				var result = await _dataService.InvokeAsync(baseUrl, cmd, data, SetSqlQueryParams);
 				Response.ContentType = result.ContentType;
-				await HttpResponseWritingExtensions.WriteAsync(Response, result.Body, Encoding.UTF8);
+				await Response.BodyWriter.WriteAsync(result.Body);
 			});
 		}
 

@@ -2,6 +2,7 @@
 
 using A2v10.Data.Interfaces;
 using System;
+using System.Collections.Generic;
 using System.Dynamic;
 using System.Threading.Tasks;
 
@@ -59,7 +60,29 @@ namespace A2v10.Infrastructure
 	public interface IModelCommand : IModelBase
 	{
 		ExpandoObject Parameters { get; }
-		IModelInvokeCommand GetCommand(IServiceProvider serviceProvider);
+		IModelInvokeCommand GetCommandHandler(IServiceProvider serviceProvider);
+	}
+
+	public enum ModelReportType
+	{
+		stimulsoft,
+		xml,
+		json
+	}
+
+	public interface IModelReportHandler
+	{
+		Task<IInvokeResult> ExportAsync(IModelReport report, ExportReportFormat format, Action<ExpandoObject> setParams);
+	}
+
+	public interface IModelReport : IModelBase
+	{
+		String Name { get; }
+		ExpandoObject Variables { get; }
+
+		String ReportPath();
+
+		IModelReportHandler GetReportHandler(IServiceProvider serviceProvider);
 	}
 
 	public interface IModelJsonReader
@@ -67,5 +90,6 @@ namespace A2v10.Infrastructure
 		Task<IModelView> GetViewAsync(IPlatformUrl url);
 		Task<IModelBlob> GetBlobAsync(IPlatformUrl url, String suffix = null);
 		Task<IModelCommand> GetCommandAsync(IPlatformUrl url, String command);
+		Task<IModelReport> GetReportAsync(IPlatformUrl url);
 	}
 }
