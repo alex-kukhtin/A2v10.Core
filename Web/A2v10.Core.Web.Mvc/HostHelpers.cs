@@ -3,6 +3,8 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Linq;
+
 using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
@@ -18,7 +20,7 @@ namespace A2v10.Core.Web.Mvc
 			if (files == null)
 				return String.Empty;
 			// at least one file
-			foreach (var f in files)
+			if (files.Any())
 				return $"<link  href=\"/_shell/appstyles\" rel=\"stylesheet\" />";
 			return String.Empty;
 		}
@@ -46,6 +48,9 @@ namespace A2v10.Core.Web.Mvc
 
 		public static String CustomAppScripts(this IAppCodeProvider provider)
 		{
+			var scripts = provider.ReadTextFile("_layout", "_scripts.html");
+			if (scripts == null)
+				return String.Empty;
 			// TODO:
 			/*
 			String scripts = provider.ReadTextFile("_layout", "_scripts.html");

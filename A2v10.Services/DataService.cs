@@ -20,12 +20,14 @@ namespace A2v10.Services
 
 	public class DataService : IDataService
 	{
+		private readonly IServiceProvider _serviceProvider;
 		private readonly IModelJsonReader _modelReader;
 		private readonly IDbContext _dbContext;
 		private readonly IUserStateManager _userStateManager;
 
-		public DataService(IModelJsonReader modelReader, IDbContext dbContext, IUserStateManager userStateManager)
+		public DataService(IServiceProvider serviceProvider, IModelJsonReader modelReader, IDbContext dbContext, IUserStateManager userStateManager)
 		{
+			_serviceProvider = serviceProvider;
 			_modelReader = modelReader;
 			_dbContext = dbContext;
 			_userStateManager = userStateManager;
@@ -96,19 +98,32 @@ namespace A2v10.Services
 			};
 		}
 
-		public async Task<String> Expand(String baseUrl, Object Id, Action<ExpandoObject> setParams)
+		public async Task<String> ExpandAsync(String baseUrl, Object Id, Action<ExpandoObject> setParams)
 		{
 			var platformBaseUrl = new PlatformUrl(baseUrl);
 			var view = await _modelReader.GetViewAsync(platformBaseUrl);
 			var expandProc = view.ExpandProcedure();
 
 			var execPrms = ParameterBuilder.BuildParams(platformBaseUrl, view.Parameters, setParams);
+			execPrms.SetNotNull("Id", Id);
 
 			var model = await _dbContext.LoadModelAsync(view.DataSource, expandProc, execPrms);
 			return JsonConvert.SerializeObject(model.Root, JsonHelpers.DataSerializerSettings);
 		}
 
-		public async Task<String> Reload(String baseUrl, Action<ExpandoObject> setParams)
+		public async Task DbRemoveAsync(String baseUrl, Object Id, String propertyName, Action<ExpandoObject> setParams)
+		{
+			var platformBaseUrl = new PlatformUrl(baseUrl);
+			var view = await _modelReader.GetViewAsync(platformBaseUrl);
+			var deleteProc = view.DeleteProcedure(propertyName);
+
+			var execPrms = ParameterBuilder.BuildParams(platformBaseUrl, view.Parameters, setParams);
+			execPrms.SetNotNull("Id", Id);
+
+			await _dbContext.ExecuteExpandoAsync(view.DataSource, deleteProc, execPrms);
+		}
+
+		public async Task<String> ReloadAsync(String baseUrl, Action<ExpandoObject> setParams)
 		{
 			var result = await Load(baseUrl, setParams);
 			if (result.Model != null)
@@ -116,7 +131,7 @@ namespace A2v10.Services
 			return "{}";
 		}
 
-		public async Task<String> LoadLazy(String baseUrl, Object Id, String propertyName, Action<ExpandoObject> setParams)
+		public async Task<String> LoadLazyAsync(String baseUrl, Object Id, String propertyName, Action<ExpandoObject> setParams)
 		{
 			String strId = Id != null ? Convert.ToString(Id, CultureInfo.InvariantCulture) : null;
 
@@ -131,7 +146,7 @@ namespace A2v10.Services
 			return JsonConvert.SerializeObject(model.Root, JsonHelpers.DataSerializerSettings);
 		}
 
-		public async Task<String> Save(String baseUrl, ExpandoObject data, Action<ExpandoObject> setParams)
+		public async Task<String> SaveAsync(String baseUrl, ExpandoObject data, Action<ExpandoObject> setParams)
 		{
 			var platformBaseUrl = new PlatformUrl(baseUrl);
 			var view = await _modelReader.GetViewAsync(platformBaseUrl);
@@ -144,6 +159,22 @@ namespace A2v10.Services
 
 			var model = await _dbContext.SaveModelAsync(view.DataSource, view.UpdateProcedure(), data, savePrms);
 			return JsonConvert.SerializeObject(model.Root, JsonHelpers.DataSerializerSettings);
+		}
+
+		public async Task<IInvokeResult> InvokeAsync(String baseUrl, String command, ExpandoObject data, Action<ExpandoObject> setParams)
+		{
+			var platformBaseUrl = new PlatformUrl(baseUrl);
+			var cmd = await _modelReader.GetCommandAsync(platformBaseUrl, command);
+
+			var prms = new ExpandoObject();
+			prms.Append(cmd.Parameters);
+			prms.Append(data);
+			setParams?.Invoke(prms);
+
+			var invokeCommand = cmd.GetCommand(_serviceProvider);
+			var result = await invokeCommand.ExecuteAsync(cmd, prms);
+			//await ProcessDbEvents();
+			return result;
 		}
 
 		void CheckUserState(ExpandoObject prms)

@@ -68,7 +68,7 @@ namespace A2v10.Core.Web.Mvc.Controllers
 			} 
 			catch (Exception ex)
 			{
-				WriteExceptionStatus(ex);
+				await WriteExceptionStatus(ex);
 			}
 		}
 
@@ -83,7 +83,7 @@ namespace A2v10.Core.Web.Mvc.Controllers
 			}
 			catch (Exception ex)
 			{
-				WriteExceptionStatus(ex);
+				await WriteExceptionStatus(ex);
 			}
 		}
 	}

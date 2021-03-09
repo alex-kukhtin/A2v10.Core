@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
 using System.Net;
@@ -15,7 +15,7 @@ using A2v10.Web.Identity;
 namespace A2v10.Core.Web.Mvc
 {
 
-	public class BaseController : Controller, IControllerProfiler
+	public class BaseController : Controller, IControllerProfiler, IControllerTenant
 	{
 		protected readonly IApplicationHost _host;
 		protected readonly ILocalizer _localizer;
@@ -33,6 +33,7 @@ namespace A2v10.Core.Web.Mvc
 
 		protected Int64 UserId => User.Identity.GetUserId<Int64>();
 		protected Int32 TenantId => User.Identity.GetUserTenantId();
+		protected String UserSegement => User.Identity.GetUserSegment();
 		Int64 CompanyId => _userStateManager.UserCompanyId(TenantId, UserId); 
 
 		protected void SetSqlQueryParamsWithoutCompany(ExpandoObject prms)
@@ -90,7 +91,7 @@ namespace A2v10.Core.Web.Mvc
 			}
 		}
 
-		public void WriteExceptionStatus(Exception ex, Int32 errorCode = 0)
+		public Task WriteExceptionStatus(Exception ex, Int32 errorCode = 0)
 		{
 			if (ex.InnerException != null)
 				ex = ex.InnerException;
@@ -104,7 +105,7 @@ namespace A2v10.Core.Web.Mvc
 			Response.StatusCode = errorCode; // CUSTOM ERROR!!!!
 			Response.ContentType = MimeTypes.Text.Plain;
 			//TODO::Response.StatusDescription = "Server error";
-			//Response.Body.Write(Localize(ex.Message));
+			return HttpResponseWritingExtensions.WriteAsync(Response, _localizer.Localize(null, ex.Message), Encoding.UTF8);
 		}
 
 		#region IControllerProfiler
@@ -119,6 +120,16 @@ namespace A2v10.Core.Web.Mvc
 		public void EndRequest(IProfileRequest request)
 		{
 			_profiler.EndRequest(request);
+		}
+		#endregion
+
+		#region IControllerTenant
+
+		public void StartTenant()
+		{
+			_host.TenantId = TenantId;
+			_host.UserId = UserId;
+			_host.UserSegment = UserSegement;
 		}
 		#endregion
 	}

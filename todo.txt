@@ -16,7 +16,6 @@
 26. Не работает app/about. Только после F5.
 
 28. DataController.Invoke
-29. DataService.DbRemove
 31. DataController. ExportTo
 35. ReportController
 36. AttachmentController

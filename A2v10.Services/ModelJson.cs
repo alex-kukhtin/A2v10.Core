@@ -116,6 +116,14 @@ namespace A2v10.Services
 			return $"[{CurrentSchema}].[{cm}.{action}]";
 		}
 
+		public String DeleteProcedure(String propName)
+		{
+			var cm = CurrentModel;
+			if (!String.IsNullOrEmpty(propName))
+				propName = "." + propName;
+			return $"[{CurrentSchema}].[{cm}{propName}.Delete]";
+		}
+
 		public String ExpandProcedure()
 		{
 			var cm = CurrentModel;
@@ -152,9 +160,41 @@ namespace A2v10.Services
 	{
 	}
 
-	public class ModelJsonCommand : ModelJsonBase
+	public enum ModelCommandType
 	{
+		none,
+		sql,
+		clr,
+		script,
+		javascript,
+		xml,
+		file,
+		callApi,
+		sendMessage,
+		processDbEvents
+	}
 
+	public class ModelJsonCommand : ModelJsonBase, IModelCommand
+	{
+		public ExpandoObject Parameters { get; set; }
+
+		public ModelCommandType Type { get; set; }
+		public String Procedure { get; set; }
+		public String File { get; set; }
+		public String ClrType { get; set; }
+		public Boolean Async { get; set; }
+
+		public override String LoadProcedure()
+		{
+			if (String.IsNullOrEmpty(Procedure))
+				throw new DataServiceException("A procedure must be specified for sql-type command");
+			return $"[{CurrentSchema}].[{Procedure}]";
+		}
+
+		public IModelInvokeCommand GetCommand(IServiceProvider serviceProvider)
+		{
+			return ServerCommandRegistry.GetCommand(Type, serviceProvider);
+		}
 	}
 
 	public enum ModelJsonReportType
@@ -225,6 +265,13 @@ namespace A2v10.Services
 			if (Reports.TryGetValue(key, out ModelJsonReport report))
 				return report;
 			throw new ModelJsonException($"Dialog: {key} not found");
+		}
+
+		public ModelJsonCommand GetCommand(String key)
+		{
+			if (Commands.TryGetValue(key, out ModelJsonCommand command))
+				return command;
+			throw new ModelJsonException($"Command: {key} not found");
 		}
 
 		public ModelJsonBlob GetBlob(String key, String suffix = null)

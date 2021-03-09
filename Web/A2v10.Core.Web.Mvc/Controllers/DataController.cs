@@ -41,16 +41,16 @@ namespace A2v10.Core.Web.Mvc.Controllers
 				if (baseUrl == null)
 					throw new InvalidReqestExecption(nameof(Reload));
 
-				String data = await _dataService.Reload(baseUrl, SetSqlQueryParams);
+				String data = await _dataService.ReloadAsync(baseUrl, SetSqlQueryParams);
 				Response.ContentType = MimeTypes.Application.Json;
 				await HttpResponseWritingExtensions.WriteAsync(Response, data, Encoding.UTF8);
 			});
 		}
 
 		[HttpPost]
-		public async Task Expand()
+		public Task Expand()
 		{
-			await TryCatch(async () =>
+			return TryCatch(async () =>
 			{
 				var eo = await Request.ExpandoFromBodyAsync();
 				if (eo == null)
@@ -58,11 +58,11 @@ namespace A2v10.Core.Web.Mvc.Controllers
 
 				var baseUrl = eo.Get<String>("baseUrl");
 				if (baseUrl == null)
-					throw new InvalidReqestExecption(nameof(Reload));
+					throw new InvalidReqestExecption(nameof(Expand));
 
 				Object id = eo.Get<Object>("id");
 
-				var expandData = await _dataService.Expand(baseUrl, id, SetSqlQueryParams);
+				var expandData = await _dataService.ExpandAsync(baseUrl, id, SetSqlQueryParams);
 
 				Response.ContentType = MimeTypes.Application.Json;
 				await HttpResponseWritingExtensions.WriteAsync(Response, expandData, Encoding.UTF8);
@@ -85,7 +85,7 @@ namespace A2v10.Core.Web.Mvc.Controllers
 				var id = eo.Get<Object>("id");
 				var prop = eo.Get<String>("prop");
 
-				var lazyData = await _dataService.LoadLazy(baseUrl, id, prop, SetSqlQueryParams);
+				var lazyData = await _dataService.LoadLazyAsync(baseUrl, id, prop, SetSqlQueryParams);
 
 				Response.ContentType = MimeTypes.Application.Json;
 				await HttpResponseWritingExtensions.WriteAsync(Response, lazyData, Encoding.UTF8);
@@ -105,7 +105,7 @@ namespace A2v10.Core.Web.Mvc.Controllers
 					throw new InvalidReqestExecption(nameof(Save));
 				ExpandoObject data = eo.Get<ExpandoObject>("data");
 
-				var savedData = await _dataService.Save(baseUrl, data, SetSqlQueryParams);
+				var savedData = await _dataService.SaveAsync(baseUrl, data, SetSqlQueryParams);
 
 				Response.ContentType = MimeTypes.Application.Json;
 				await HttpResponseWritingExtensions.WriteAsync(Response, savedData, Encoding.UTF8);
@@ -113,22 +113,54 @@ namespace A2v10.Core.Web.Mvc.Controllers
 		}
 
 		[HttpPost]
-		public async Task<IActionResult> Invoke()
+		public Task Invoke()
 		{
-			var eo = await Request.ExpandoFromBodyAsync();
-			return Content("Invoke HERE");
+			return TryCatch(async () =>
+			{
+				var eo = await Request.ExpandoFromBodyAsync();
+				if (eo == null)
+					throw new InvalidReqestExecption(Request.Path);
+				String baseUrl = eo.Get<String>("baseUrl");
+				if (baseUrl == null)
+					throw new InvalidReqestExecption(nameof(Invoke));
+				String cmd = eo.Get<String>("cmd");
+				if (cmd == null)
+					throw new InvalidReqestExecption(nameof(Invoke));
+				ExpandoObject data = eo.Get<ExpandoObject>("data");
+
+				var result = await _dataService.InvokeAsync(baseUrl, cmd, data, SetSqlQueryParams);
+				Response.ContentType = result.ContentType;
+				await HttpResponseWritingExtensions.WriteAsync(Response, result.Body, Encoding.UTF8);
+			});
 		}
 
 		[HttpPost]
-		public IActionResult DbRemove()
+		public Task DbRemove()
 		{
-			return Content("DbRemove");
+			return TryCatch(async () =>
+			{
+				var eo = await Request.ExpandoFromBodyAsync();
+				if (eo == null)
+					throw new InvalidReqestExecption(Request.Path);
+
+				var baseUrl = eo.Get<String>("baseUrl");
+				if (baseUrl == null)
+					throw new InvalidReqestExecption(nameof(DbRemove));
+
+				Object id = eo.Get<Object>("id");
+				String propName = eo.Get<String>("prop");
+
+				await _dataService.DbRemoveAsync(baseUrl, id,  propName, SetSqlQueryParams);
+
+				Response.ContentType = MimeTypes.Application.Json;
+				await HttpResponseWritingExtensions.WriteAsync(Response, "{\"status\": \"OK\"}", Encoding.UTF8);
+			});
 		}
 
 		[HttpPost]
 		public IActionResult ExportTo()
 		{
-			return Content("ExportTo");
+			throw new NotImplementedException("DataController.ExportTo");
 		}
 
 		private async Task TryCatch(Func<Task> action)
@@ -139,8 +171,7 @@ namespace A2v10.Core.Web.Mvc.Controllers
 			} 
 			catch (Exception ex)
 			{
-				Response.StatusCode = 500;
-				await HttpResponseWritingExtensions.WriteAsync(Response, ex.Message, Encoding.UTF8);
+				await WriteExceptionStatus(ex);
 			}
 		}
 	}

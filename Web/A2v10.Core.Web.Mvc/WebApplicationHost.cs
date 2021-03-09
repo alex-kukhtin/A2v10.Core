@@ -2,23 +2,31 @@
 
 using System;
 using System.Dynamic;
+using System.Threading.Tasks;
+using System.Text;
+using System.Data;
+using System.Data.SqlClient;
 
 using Microsoft.Extensions.Configuration;
 
 using A2v10.Infrastructure;
-using System.Text;
+using A2v10.Data.Interfaces;
+
+using SqlCommandType = System.Data.CommandType;
 
 namespace A2v10.Core.Web.Mvc
 {
-	public class WebApplicationHost : IApplicationHost
+	public class WebApplicationHost : IApplicationHost, ITenantManager
 	{
 		private readonly IConfiguration _appSettings;
+		private readonly IProfiler _profiler;
 		private Boolean _admin;
 		private readonly Boolean _debug;
 		private readonly String _environment;
 
-		public WebApplicationHost(IConfiguration config)
+		public WebApplicationHost(IConfiguration config, IProfiler profiler)
 		{
+			_profiler = profiler;
 			_appSettings = config.GetSection("appSettings");
 			var conf = _appSettings.GetValue<String>("configuration");
 			// default configuration is 'debug'
@@ -60,9 +68,9 @@ namespace A2v10.Core.Web.Mvc
 		public String CustomSecuritySchema => throw new NotImplementedException();
 
 
-		public int? TenantId { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+		public Int32? TenantId { get; set; }
 
-		public long? UserId { get; set; }
+		public Int64? UserId { get; set; }
 		public String UserSegment { get; set; }
 
 		public String CatalogDataSource => IsMultiTenant ? "Catalog" : null;
@@ -125,5 +133,38 @@ namespace A2v10.Core.Web.Mvc
 		{
 			throw new NotImplementedException();
 		}
+
+		#region ITenantManager
+
+		const String SET_TENANT_CMD = "[a2security].[SetTenantId]";
+
+		public async Task SetTenantIdAsync(IDbConnection cnn, String source)
+		{
+			if (!IsMultiTenant)
+				return;
+			if (source == CatalogDataSource)
+				return;
+			using var _ = _profiler.CurrentRequest.Start(ProfileAction.Sql, SET_TENANT_CMD);
+			using var cmd = cnn.CreateCommand() as SqlCommand;
+			cmd.CommandText = SET_TENANT_CMD;
+			cmd.CommandType = SqlCommandType.StoredProcedure;
+			cmd.Parameters.AddWithValue("@TenantId", TenantId);
+			await cmd.ExecuteNonQueryAsync();
+		}
+
+		public void SetTenantId(IDbConnection cnn, String source)
+		{
+			if (!IsMultiTenant)
+				return;
+			if (source == CatalogDataSource)
+				return;
+			using var _ = _profiler.CurrentRequest.Start(ProfileAction.Sql, SET_TENANT_CMD);
+			using var cmd = cnn.CreateCommand() as SqlCommand;
+			cmd.CommandText = SET_TENANT_CMD;
+			cmd.CommandType = SqlCommandType.StoredProcedure;
+			cmd.Parameters.AddWithValue("@TenantId", TenantId);
+			cmd.ExecuteNonQuery();
+		}
+		#endregion
 	}
 }

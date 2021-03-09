@@ -1,13 +1,15 @@
-﻿using System;
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+
+using System;
 using System.Threading.Tasks;
+using System.Text;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 
 using A2v10.Infrastructure;
 using A2v10.Data.Interfaces;
-using Microsoft.AspNetCore.Http;
-using System.Text;
 
 namespace A2v10.Core.Web.Mvc.Controllers
 {

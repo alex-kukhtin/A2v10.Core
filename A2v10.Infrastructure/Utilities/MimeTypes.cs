@@ -1,8 +1,6 @@
-﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+﻿using System;
 
-using System;
-
-namespace A2v10.Core.Web.Mvc
+namespace A2v10.Infrastructure
 {
 	public static class MimeTypes
 	{

@@ -46,17 +46,26 @@ namespace A2v10.Infrastructure
 		String ExpandProcedure();
 		String UpdateProcedure();
 		String LoadLazyProcedure(String property);
+		String DeleteProcedure(String property);
 
 		IModelView Resolve(IDataModel model);
 	}
 
-	public interface IModelCommand
+	public interface IModelInvokeCommand
 	{
+		Task<IInvokeResult> ExecuteAsync(IModelCommand command, ExpandoObject parameters);
+	}
+
+	public interface IModelCommand : IModelBase
+	{
+		ExpandoObject Parameters { get; }
+		IModelInvokeCommand GetCommand(IServiceProvider serviceProvider);
 	}
 
 	public interface IModelJsonReader
 	{
 		Task<IModelView> GetViewAsync(IPlatformUrl url);
 		Task<IModelBlob> GetBlobAsync(IPlatformUrl url, String suffix = null);
+		Task<IModelCommand> GetCommandAsync(IPlatformUrl url, String command);
 	}
 }

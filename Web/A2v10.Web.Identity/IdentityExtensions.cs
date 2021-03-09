@@ -86,10 +86,10 @@ namespace A2v10.Web.Identity
 				UserId = identity.GetUserId<Int64>()
 			};
 
-			var value = user?.FindFirst("Admin")?.Value;
+			var value = user?.FindFirst(WellKnownClims.Admin)?.Value;
 			ui.IsAdmin = value == "Admin";
 
-			value = user?.FindFirst("TenantAdmin")?.Value;
+			value = user?.FindFirst(WellKnownClims.TenantAdmin)?.Value;
 			ui.IsTenantAdmin = value == "TenantAdmin";
 			return ui;
 		}
@@ -110,11 +110,7 @@ namespace A2v10.Web.Identity
 
 		public static String GetUserSegment(this IIdentity identity)
 		{
-			if (identity == null)
-				return null;
-			if (identity is not ClaimsIdentity user)
-				return null;
-			return user.FindFirst("Segment").Value;
+			return identity.GetUserClaim(WellKnownClims.Segment);
 		}
 	}
 }

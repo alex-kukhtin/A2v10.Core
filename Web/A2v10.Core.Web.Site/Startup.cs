@@ -80,10 +80,13 @@ namespace A2v10.Core.Web.Site
 			services.AddSingleton<IXamlReaderService, AppXamlReaderService>();
 
 			services.AddScoped<WebProfiler>();
+			services.AddScoped<WebApplicationHost>();
+
 			services.AddScoped<IProfiler>(s => s.GetService<WebProfiler>());
 			services.AddScoped<IDataProfiler>(s=> s.GetService<WebProfiler>());
+			services.AddScoped<ITenantManager>(s => s.GetService<WebApplicationHost>());
+			services.AddScoped<IApplicationHost>( s=> s.GetService<WebApplicationHost>());
 
-			services.AddScoped<IApplicationHost, WebApplicationHost>();
 			services.AddScoped<IDbContext>(s => 
 				new SqlDbContext(s.GetService<IDataProfiler>(), 
 					new DataConfiguration(Configuration), 
