@@ -26,7 +26,7 @@ GitHub: https://github.com/alex-kukhtin/A2v10.Core
 	<script type="text/javascript" src="/scripts/d3.min.js?v=@ViewBag.__Build"></script>
 	<script type="text/javascript" src="/scripts/locale-@Html.Raw(ViewBag.__Locale + ".min.js")?v=$(Build)"></script>
 	<script type="text/javascript" src="/scripts/main.js?v=@ViewBag.__Build"></script>
-	@Html.Raw(codeProvider.CustomAppScripts())
+	@Html.Raw(codeProvider.AppScriptsLink())
 	<script type="text/javascript" src="/_shell/script"></script>
 	@ViewBag.__LayoutScripts
 </body>

@@ -75,14 +75,9 @@ namespace A2v10.Core.Web.Mvc.Controllers
 			catch (Exception ex)
 			{
 				if (ex.Message.StartsWith("UI:"))
-				{
-					var error = Localize(ex.Message[3..]);
-					WriteExceptionStatus(ex);
-				}
+					await WriteExceptionStatus(ex);
 				else
-				{
 					await WriteHtmlException(ex);
-				}
 			}
 		}
 
@@ -93,7 +88,7 @@ namespace A2v10.Core.Web.Mvc.Controllers
 			IDataModel model = modelAndView.Model;
 			var rw = modelAndView.View;
 
-			String rootId = "el" + Guid.NewGuid().ToString();
+			String rootId = $"el{Guid.NewGuid()}";
 
 			//var typeChecker = _host.CheckTypes(rw.Path, rw.checkTypes, model);
 

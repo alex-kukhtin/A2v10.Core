@@ -15,7 +15,6 @@
 24. UserStore. UpdateUser
 26. Не работает app/about. Только после F5.
 
-28. DataController.Invoke
 31. DataController. ExportTo
 35. ReportController
 36. AttachmentController
@@ -23,10 +22,11 @@
 38. ImageController.SaveImage
 40. LoadImage from Azure
 41. Stimulsoft Proxy?
+42. DataController.Invoke XML
+43. 
 
 BOOKKEEPER
 ==========
-7. AppScripts
 9. StaticImages (dashboard)
 10. 
 

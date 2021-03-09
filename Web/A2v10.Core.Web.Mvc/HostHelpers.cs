@@ -17,11 +17,18 @@ namespace A2v10.Core.Web.Mvc
 		public static String AppStyleSheetsLink(this IAppCodeProvider provider)
 		{
 			var files = provider.EnumerateFiles("_assets", "*.css");
-			if (files == null)
-				return String.Empty;
 			// at least one file
-			if (files.Any())
+			if (files != null && files.Any())
 				return $"<link  href=\"/_shell/appstyles\" rel=\"stylesheet\" />";
+			return String.Empty;
+		}
+
+
+		public static String AppScriptsLink(this IAppCodeProvider provider)
+		{
+			var files = provider.EnumerateFiles("_assets", "*.js");
+			if (files != null && files.Any())
+				return $"<script type=\"text/javascript\" src=\"/_shell/appscripts\"></script>";
 			return String.Empty;
 		}
 

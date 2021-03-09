@@ -82,6 +82,13 @@ namespace A2v10.Core.Web.Mvc
 			}
 		}
 
+		public Task AppScripts()
+		{
+			Response.ContentType = MimeTypes.Application.Javascript;
+			using var textWriter = new StreamWriter(Response.BodyWriter.AsStream());
+			GetAppFiles("js", textWriter);
+			return Task.CompletedTask;
+		}
 
 		[AllowAnonymous]
 		public Task AppStyles()
