@@ -57,7 +57,17 @@ namespace A2v10.Core.Web.Mvc.Controllers
 		[HttpGet]
 		public Task Print(String Id, String Base, String Rep)
 		{
-			throw new NotImplementedException(nameof(Print) + Id);
+			return TryCatch(async () =>
+			{
+				var path = Path.Combine(Base, Rep, Id);
+				var result = await _reportService.ExportAsync(path, ExportReportFormat.Pdf, (exp) => {
+					// TODO: from QueryString
+					exp.SetNotNull("Id", Id);
+					SetSqlQueryParams(exp);
+				});
+				Response.ContentType = result.ContentType;
+				await Response.BodyWriter.WriteAsync(result.Body);
+			});
 		}
 
 		// stimulsoft support

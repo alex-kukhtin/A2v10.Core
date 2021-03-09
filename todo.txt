@@ -16,14 +16,15 @@
 26. Не работает app/about. Только после F5.
 
 31. DataController. ExportTo
-35. ReportController
 36. AttachmentController
 37. ApiV2 Authorization
 38. ImageController.SaveImage
 40. LoadImage from Azure
-41. Stimulsoft Proxy?
 42. DataController.Invoke XML
-43. 
+43. Stimulsoft. Try license.
+44. ReportController. Viewer
+45. ReportController. OtherFormats, ContentDisposition, QueryString, Variables.
+46. 
 
 BOOKKEEPER
 ==========
