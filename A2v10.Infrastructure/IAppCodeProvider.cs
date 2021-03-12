@@ -20,8 +20,6 @@ namespace A2v10.Infrastructure
 		String ReadTextFile(String path, String fileName);
 
 		Stream FileStreamFullPathRO(String fullPath);
-		String FileReadAllText(String fullPath);
-		IEnumerable<String> FileReadAllLines(String fullPath);
 
 		IEnumerable<String> EnumerateFiles(String path, String searchPattern);
 

@@ -288,7 +288,9 @@ namespace A2v10.Core.Web.Mvc
 					if (_codeProvider.FileExists(minFile))
 						continue; // min.{ext} found
 				}
-				var txt = _codeProvider.FileReadAllText(fileName);
+				using var stream = _codeProvider.FileStreamFullPathRO(fileName);
+				using var sr = new StreamReader(stream);
+				var txt = sr.ReadToEnd();
 				writer.Write(txt);
 			}
 		}

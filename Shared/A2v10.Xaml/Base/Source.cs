@@ -1,6 +1,7 @@
 ﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
+using System.IO;
 using System.Reflection;
 
 using A2v10.Infrastructure;
@@ -56,20 +57,24 @@ namespace A2v10.Xaml
 			if (serviceProvider.GetService(typeof(IAppCodeProvider)) is not IAppCodeProvider appReader)
 				throw new XamlException("The IAppCodeProvider service not found");
 
-			String targetDir = appReader.ReplaceFileName(baseFileName, Path);
+			String targetFileName = appReader.ReplaceFileName(baseFileName, Path);
 
-			String ext = appReader.GetExtension(targetDir);
+			String ext = appReader.GetExtension(targetFileName);
 
 			if (ext == ".js" || ext == ".html")
 			{
-				if (appReader.FileExists(targetDir))
-					return appReader.FileReadAllText(targetDir);
+				if (appReader.FileExists(targetFileName))
+				{
+					using var stream = appReader.FileStreamFullPathRO(targetFileName);
+					using var rdr = new StreamReader(stream);
+					return rdr.ReadToEnd();
+				} 
 				else
 					throw new XamlException($"File not found {Path}");
 			}
 			else
 			{
-				String trgPath = appReader.ChangeExtension(targetDir, "xaml");
+				String trgPath = appReader.ChangeExtension(targetFileName, "xaml");
 
 				if (serviceProvider.GetService(typeof(IXamlReaderService)) is not IXamlReaderService xamlReader)
 					throw new XamlException("The IXamlReaderService service not found");

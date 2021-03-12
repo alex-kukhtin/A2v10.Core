@@ -14,6 +14,7 @@ namespace A2v10.Core.Web.Mvc
 {
 	public static class HostHelpers
 	{
+		// @Html.Raw
 		public static String AppStyleSheetsLink(this IAppCodeProvider provider)
 		{
 			var files = provider.EnumerateFiles("_assets", "*.css");
@@ -23,7 +24,7 @@ namespace A2v10.Core.Web.Mvc
 			return String.Empty;
 		}
 
-
+		// @Html.Raw
 		public static String AppScriptsLink(this IAppCodeProvider provider)
 		{
 			var files = provider.EnumerateFiles("_assets", "*.js");

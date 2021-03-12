@@ -40,18 +40,27 @@ namespace A2v10.Core.Web.Mvc
 			_watch = watch;
 		}
 
+		static IEnumerable<String> ReadLines(IAppCodeProvider codeProvider, String path)
+		{
+			using var stream = codeProvider.FileStreamFullPathRO(path);
+			using var rdr = new StreamReader(stream);
+			while (!rdr.EndOfStream)
+			{
+				var s = rdr.ReadLine();
+				if (String.IsNullOrEmpty(s) || s.StartsWith(";"))
+					continue;
+				yield return s;
+			}
+		}
+
 		public IDictionary<String, String> GetLocalizerDictionary(String locale)
 		{
 			var localMap = GetCurrentMap(locale, (map) =>
 			{
 				foreach (var localePath in GetLocalizerFilePath(locale))
 				{
-					foreach (var line in _appCodeProvider.FileReadAllLines(localePath.Path))
+					foreach (var line in ReadLines(_appCodeProvider, localePath.Path))
 					{
-						if (String.IsNullOrWhiteSpace(line))
-							continue;
-						if (line.StartsWith(";"))
-							continue;
 						Int32 pos = line.IndexOf('=');
 						if (pos != -1)
 						{

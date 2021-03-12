@@ -396,7 +396,10 @@ const vm = new DataModelController({
 				String filePath = _codeProvider.MakeFullPath(String.Empty, fileName.RemoveHeadSlash());
 				if (!_codeProvider.FileExists(filePath))
 					throw new FileNotFoundException(filePath);
-				String moduleText = _codeProvider.FileReadAllText(filePath);
+
+				using var stream = _codeProvider.FileStreamFullPathRO(filePath);
+				using var rdr = new StreamReader(stream);
+				String moduleText = rdr.ReadToEnd();
 
 				if (moduleText.Contains("define([\"require\", \"exports\"]"))
 				{

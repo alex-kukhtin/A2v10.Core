@@ -80,12 +80,6 @@ namespace A2v10.Core.Web.Mvc
 			return new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
 		}
 
-		public String FileReadAllText(String fullPath)
-		{
-			return File.ReadAllText(fullPath);
-		}
-
-
 		String GetFullPath(String path, String fileName)
 		{
 			String appKey = AppKey;
@@ -99,13 +93,6 @@ namespace A2v10.Core.Web.Mvc
 			String fullPath = Path.Combine($"{AppPath}{appKey}", path, fileName);
 
 			return Path.GetFullPath(fullPath);
-		}
-
-		public IEnumerable<String> FileReadAllLines(String fullPath)
-		{
-			if (String.IsNullOrEmpty(fullPath))
-				return Enumerable.Empty<String>();
-			return File.ReadAllLines(fullPath);
 		}
 
 		public IEnumerable<String> EnumerateFiles(String path, String searchPattern)
