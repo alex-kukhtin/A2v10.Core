@@ -20,25 +20,21 @@ namespace A2v10.Core.Web.Mvc
 	{
 		private readonly IConfiguration _appSettings;
 		private readonly IProfiler _profiler;
+		private readonly IAppConfiguration _appConfiguration;
 		private Boolean _admin;
-		private readonly Boolean _debug;
-		private readonly String _environment;
 
-		public WebApplicationHost(IConfiguration config, IProfiler profiler)
+		public WebApplicationHost(IConfiguration config, IProfiler profiler, IAppConfiguration appConfiguration)
 		{
 			_profiler = profiler;
+			_appConfiguration = appConfiguration;
+
 			_appSettings = config.GetSection("appSettings");
-			var conf = _appSettings.GetValue<String>("configuration");
-			// default configuration is 'debug'
-			_debug = String.IsNullOrEmpty(conf) || conf == "debug";
-			_environment = _appSettings.GetValue<String>("environment");
 		}
 
 		public Boolean IsMultiTenant => _appSettings.GetValue<Boolean>("multiTenant");
 		public Boolean IsMultiCompany => _appSettings.GetValue<Boolean>("multiCompany");
 
-		public Boolean IsDebugConfiguration => _debug;
-		public Boolean IsProductionEnvironment => _environment == "production";
+		public Boolean IsDebugConfiguration => _appConfiguration.Debug;
 
 		public Boolean IsUsePeriodAndCompanies => _appSettings.GetValue<Boolean>("custom");
 		public Boolean IsRegistrationEnabled => _appSettings.GetValue<Boolean>("registration");
@@ -85,10 +81,12 @@ namespace A2v10.Core.Web.Mvc
 			throw new NotImplementedException();
 		}
 
+		/*
 		public string ConnectionString(string source)
 		{
 			throw new NotImplementedException();
 		}
+		*/
 
 		public String GetAppSettings(string source)
 		{
@@ -119,20 +117,24 @@ namespace A2v10.Core.Web.Mvc
 			throw new NotImplementedException();
 		}
 
+		/*
 		public string MakeRelativePath(string path, string fileName)
 		{
 			throw new NotImplementedException();
 		}
+		*/
 
 		public void SetAdmin(Boolean bAdmin)
 		{
 			_admin = bAdmin;
 		}
 
+		/*
 		public void StartApplication(bool bAdmin)
 		{
 			throw new NotImplementedException();
 		}
+		*/
 
 		#region ITenantManager
 

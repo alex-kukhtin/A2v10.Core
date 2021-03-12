@@ -1,7 +1,9 @@
-﻿using System;
+﻿
+using System;
 using System.Dynamic;
 using System.Threading.Tasks;
 
+using Stimulsoft.Base;
 using Stimulsoft.Report;
 using Stimulsoft.Report.Mvc;
 
@@ -12,6 +14,12 @@ namespace A2v10.Stimulsoft.Interop
 {
 	public class StimulsoftExternalReport : IExternalReport
 	{
+		public StimulsoftExternalReport()
+		{
+			//String lic = "..."
+			//StiLicense.LoadFromString(lic);
+		}
+
 		static StiReport CreateReport(IExternalReportInfo reportInfo)
 		{
 			var rep = new StiReport();
@@ -82,6 +90,10 @@ namespace A2v10.Stimulsoft.Interop
 					StiNetCoreReportResponse.ResponseAsExcel2007(rep, StimulsoftReportSettings.ExcelExportSettings),
 				ExportReportFormat.Word =>
 					StiNetCoreReportResponse.ResponseAsWord2007(rep, StimulsoftReportSettings.WordExportSettings),
+				ExportReportFormat.OpenText =>
+					StiNetCoreReportResponse.ResponseAsOdt(rep, StimulsoftReportSettings.OdtExportSettings),
+				ExportReportFormat.OpenSheet =>
+					StiNetCoreReportResponse.ResponseAsOds(rep, StimulsoftReportSettings.OdsExportSettings),
 				_ =>
 					throw new NotImplementedException($"Format '{format}' is not supported in this version")
 			};
@@ -89,7 +101,8 @@ namespace A2v10.Stimulsoft.Interop
 			var res = new ExternalInvokeResult()
 			{
 				Body = result.Data,
-				ContentType = result.ContentType
+				ContentType = result.ContentType,
+				FileName = result.FileName
 			};
 			return Task.FromResult<IInvokeResult>(res);
 		}

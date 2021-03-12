@@ -21,7 +21,7 @@ namespace A2v10.Infrastructure
 		ITheme Theme { get; }
 
 		Boolean IsDebugConfiguration { get; }
-		Boolean IsProductionEnvironment { get; }
+		//Boolean IsProductionEnvironment { get; }
 		Boolean IsRegistrationEnabled { get; }
 		Boolean IsAdminAppPresent { get; }
 

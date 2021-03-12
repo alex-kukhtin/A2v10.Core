@@ -56,13 +56,7 @@ namespace A2v10.Core.Web.Mvc.Controllers
 				if (eo == null)
 					throw new InvalidReqestExecption(Request.Path);
 
-				var baseUrl = eo.Get<String>("baseUrl");
-				if (baseUrl == null)
-					throw new InvalidReqestExecption(nameof(Expand));
-
-				Object id = eo.Get<Object>("id");
-
-				var expandData = await _dataService.ExpandAsync(baseUrl, id, SetSqlQueryParams);
+				var expandData = await _dataService.ExpandAsync(eo, SetSqlQueryParams);
 
 				Response.ContentType = MimeTypes.Application.Json;
 				await HttpResponseWritingExtensions.WriteAsync(Response, expandData, Encoding.UTF8);
@@ -78,14 +72,7 @@ namespace A2v10.Core.Web.Mvc.Controllers
 				if (eo == null)
 					throw new InvalidReqestExecption(Request.Path);
 
-				var baseUrl = eo.Get<String>("baseUrl");
-				if (baseUrl == null)
-					throw new InvalidReqestExecption(nameof(LoadLazy));
-
-				var id = eo.Get<Object>("id");
-				var prop = eo.Get<String>("prop");
-
-				var lazyData = await _dataService.LoadLazyAsync(baseUrl, id, prop, SetSqlQueryParams);
+				var lazyData = await _dataService.LoadLazyAsync(eo, SetSqlQueryParams);
 
 				Response.ContentType = MimeTypes.Application.Json;
 				await HttpResponseWritingExtensions.WriteAsync(Response, lazyData, Encoding.UTF8);

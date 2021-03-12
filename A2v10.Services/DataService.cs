@@ -50,7 +50,7 @@ namespace A2v10.Services
 		{
 			var view = await _modelReader.GetViewAsync(platformUrl);
 
-			var loadPrms = ParameterBuilder.BuildParams(platformUrl, view.Parameters, setParams);
+			var loadPrms = view.CreateParameters(platformUrl, null, setParams);
 
 			IDataModel model = null;
 
@@ -85,17 +85,28 @@ namespace A2v10.Services
 				}
 			}
 			if (view.Indirect)
-				view = await LoadIndirect(view, model, loadPrms);
+				view = await LoadIndirect(view, model, setParams);
 
 			if (model != null)
 				view = view.Resolve(model);
 
 			SetReadOnly(model, loadPrms);
 
-			return new DataLoadResult() {
+			return new DataLoadResult()
+			{
 				Model = model,
 				View = view
 			};
+		}
+
+		public Task<String> ExpandAsync(ExpandoObject queryData, Action<ExpandoObject> setParams)
+		{
+			var baseUrl = queryData.Get<String>("baseUrl");
+			if (baseUrl == null)
+				throw new DataServiceException(nameof(ExpandAsync));
+
+			Object id = queryData.Get<Object>("id");
+			return ExpandAsync(baseUrl, id, setParams);
 		}
 
 		public async Task<String> ExpandAsync(String baseUrl, Object Id, Action<ExpandoObject> setParams)
@@ -104,7 +115,7 @@ namespace A2v10.Services
 			var view = await _modelReader.GetViewAsync(platformBaseUrl);
 			var expandProc = view.ExpandProcedure();
 
-			var execPrms = ParameterBuilder.BuildParams(platformBaseUrl, view.Parameters, setParams);
+			var execPrms = view.CreateParameters(platformBaseUrl, Id, setParams);
 			execPrms.SetNotNull("Id", Id);
 
 			var model = await _dbContext.LoadModelAsync(view.DataSource, expandProc, execPrms);
@@ -117,7 +128,7 @@ namespace A2v10.Services
 			var view = await _modelReader.GetViewAsync(platformBaseUrl);
 			var deleteProc = view.DeleteProcedure(propertyName);
 
-			var execPrms = ParameterBuilder.BuildParams(platformBaseUrl, view.Parameters, setParams);
+			var execPrms = view.CreateParameters(platformBaseUrl, Id, setParams);
 			execPrms.SetNotNull("Id", Id);
 
 			await _dbContext.ExecuteExpandoAsync(view.DataSource, deleteProc, execPrms);
@@ -131,6 +142,17 @@ namespace A2v10.Services
 			return "{}";
 		}
 
+		public Task<String> LoadLazyAsync(ExpandoObject queryData, Action<ExpandoObject> setParams)
+		{
+			var baseUrl = queryData.Get<String>("baseUrl");
+			if (baseUrl == null)
+				throw new DataServiceException(nameof(LoadLazyAsync));
+
+			var id = queryData.Get<Object>("id");
+			var prop = queryData.Get<String>("prop");
+			return LoadLazyAsync(baseUrl, id, prop, setParams);
+		}
+
 		public async Task<String> LoadLazyAsync(String baseUrl, Object Id, String propertyName, Action<ExpandoObject> setParams)
 		{
 			String strId = Id != null ? Convert.ToString(Id, CultureInfo.InvariantCulture) : null;
@@ -139,7 +161,7 @@ namespace A2v10.Services
 			var view = await _modelReader.GetViewAsync(platformBaseUrl);
 
 			String loadProc = view.LoadLazyProcedure(propertyName.ToPascalCase());
-			var loadParams = ParameterBuilder.BuildParams(platformBaseUrl, null, setParams);
+			var loadParams = view.CreateParameters(platformBaseUrl, Id, setParams);
 
 			var model = await _dbContext.LoadModelAsync(view.DataSource, loadProc, loadParams);
 
@@ -151,10 +173,10 @@ namespace A2v10.Services
 			var platformBaseUrl = new PlatformUrl(baseUrl);
 			var view = await _modelReader.GetViewAsync(platformBaseUrl);
 
-			var savePrms = ParameterBuilder.BuildSaveParams(view.Parameters, setParams);
+			var savePrms = view.CreateParameters(platformBaseUrl, null, setParams);
 
 			CheckUserState(savePrms);
-			
+
 			// TODO: HookHandler, invokeTarget, events
 
 			var model = await _dbContext.SaveModelAsync(view.DataSource, view.UpdateProcedure(), data, savePrms);
@@ -166,9 +188,13 @@ namespace A2v10.Services
 			var platformBaseUrl = new PlatformUrl(baseUrl);
 			var cmd = await _modelReader.GetCommandAsync(platformBaseUrl, command);
 
-			var prms = new ExpandoObject();
-			prms.Append(cmd.Parameters);
-			prms.Append(data);
+			var prms = cmd.CreateParameters(platformBaseUrl, null, (eo) =>
+				{
+					setParams?.Invoke(eo);
+					eo.Append(data);
+				}, 
+				IModelBase.ParametersFlags.SkipId
+			);
 			setParams?.Invoke(prms);
 
 			var invokeCommand = cmd.GetCommandHandler(_serviceProvider);
@@ -195,7 +221,7 @@ namespace A2v10.Services
 				model.SetReadOnly();
 		}
 
-		async Task<IModelView> LoadIndirect(IModelView view, IDataModel innerModel, ExpandoObject loadPrms)
+		async Task<IModelView> LoadIndirect(IModelView view, IDataModel innerModel, Action<ExpandoObject> setParams)
 		{
 			if (!view.Indirect)
 				return view;
@@ -213,11 +239,10 @@ namespace A2v10.Services
 
 				//var rm = await RequestModel.CreateFromUrl(_codeProvider, rw.CurrentKind, targetUrl);
 				//rw = rm.GetCurrentAction();
-				if (view.HasModel()) { 
+				if (view.HasModel())
+				{
 					// TODO: ParameterBuilder
-					var indirectParams = loadPrms.Clone();
-					indirectParams.Set("Id", platformUrl.Id);
-					indirectParams.AppendIfNotExists(view.Parameters);
+					var indirectParams = view.CreateParameters(platformUrl, setParams);
 
 					var newModel = await _dbContext.LoadModelAsync(view.DataSource, view.LoadProcedure(), indirectParams);
 					innerModel.Merge(newModel);
@@ -242,11 +267,11 @@ namespace A2v10.Services
 				if (String.IsNullOrEmpty(rw.template))
 					rw.template = null;
 				*/
-				if (view.HasModel()) 
+				if (view.HasModel())
 				{
 					//loadPrms.Set("Id", platformUrl.Id);
-					var newModel = await _dbContext.LoadModelAsync(view.DataSource, view.LoadProcedure(), loadPrms);
-					innerModel.Merge(newModel);
+					//var newModel = await _dbContext.LoadModelAsync(view.DataSource, view.LoadProcedure(), loadPrms);
+					//innerModel.Merge(newModel);
 				}
 			}
 			return view;

@@ -1,15 +1,22 @@
 ﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-using A2v10.Data.Interfaces;
 using System;
-using System.Collections.Generic;
 using System.Dynamic;
 using System.Threading.Tasks;
+
+using A2v10.Data.Interfaces;
 
 namespace A2v10.Infrastructure
 {
 	public interface IModelBase
 	{
+		[Flags]
+		enum ParametersFlags
+		{
+			None = 0x00,
+			SkipId = 0x01,
+		}
+
 		String DataSource { get; }
 
 		String LoadProcedure();
@@ -17,6 +24,8 @@ namespace A2v10.Infrastructure
 
 		String Path { get; }
 		String BaseUrl { get; }
+
+		ExpandoObject CreateParameters(IPlatformUrl url, Object id, Action<ExpandoObject> setParams = null, ParametersFlags flags = ParametersFlags.None);
 	}
 
 	public interface IModelBlob
@@ -36,8 +45,6 @@ namespace A2v10.Infrastructure
 		String Target { get; }
 		String TargetId { get; }
 		IModelView TargetModel { get; }
-
-		ExpandoObject Parameters { get; }
 
 		IModelBase Merge { get; }
 
@@ -59,7 +66,6 @@ namespace A2v10.Infrastructure
 
 	public interface IModelCommand : IModelBase
 	{
-		ExpandoObject Parameters { get; }
 		IModelInvokeCommand GetCommandHandler(IServiceProvider serviceProvider);
 	}
 
@@ -72,17 +78,19 @@ namespace A2v10.Infrastructure
 
 	public interface IModelReportHandler
 	{
-		Task<IInvokeResult> ExportAsync(IModelReport report, ExportReportFormat format, Action<ExpandoObject> setParams);
+		Task<IInvokeResult> ExportAsync(IModelReport report, ExportReportFormat format, ExpandoObject query, Action<ExpandoObject> setParams);
 	}
 
 	public interface IModelReport : IModelBase
 	{
 		String Name { get; }
-		ExpandoObject Variables { get; }
 
 		String ReportPath();
 
 		IModelReportHandler GetReportHandler(IServiceProvider serviceProvider);
+
+		ExpandoObject CreateParameters(ExpandoObject query, Action<ExpandoObject> setParams);
+		ExpandoObject CreateVariables(ExpandoObject query, Action<ExpandoObject> setParams);
 	}
 
 	public interface IModelJsonReader

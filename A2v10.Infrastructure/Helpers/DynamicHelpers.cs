@@ -26,6 +26,22 @@ namespace A2v10.Infrastructure
 			return default;
 		}
 
+		public static void Set(this ExpandoObject obj, String name, Object value)
+		{
+			if (obj is not IDictionary<String, Object> d)
+				return;
+			if (d.ContainsKey(name))
+				d[name] = value;
+			else
+				d.Add(name, value);
+		}
+
+		public static void SetNotNull(this ExpandoObject obj, String name, Object value)
+		{
+			if (value == null)
+				return;
+			obj.Set(name, value);
+		}
 
 		public static Object GetObject(this ExpandoObject obj, String name)
 		{
@@ -38,29 +54,12 @@ namespace A2v10.Infrastructure
 			return null;
 		}
 
-		public static void SetNotNull(this ExpandoObject obj, String name, Object value)
-		{
-			if (value == null)
-				return;
-			obj.Set(name, value);
-		}
-
 		public static ExpandoObject Add(this ExpandoObject obj, String name, Object value)
 		{
 			if (obj is not IDictionary<String, Object> d)
 				return obj;
 			d.Add(name, value);
 			return obj;
-		}
-
-		public static void Set(this ExpandoObject obj, String name, Object value)
-		{
-			if (obj is not IDictionary<String, Object> d)
-				return;
-			if (d.ContainsKey(name))
-				d[name] = value;
-			else
-				d.Add(name, value);
 		}
 
 		public static void SetIfNotExists(this ExpandoObject obj, String name, Object value)
@@ -116,6 +115,22 @@ namespace A2v10.Infrastructure
 					thatD.Add(k.Key, k.Value);
 				else if (replace)
 					thatD[k.Key] = k.Value;
+			}
+		}
+
+		public static void Append(this ExpandoObject that, ExpandoObject other, String[] exclude)
+		{
+			if (that == null)
+				return;
+			if (other == null)
+				return;
+			IDictionary<String, Object> thatD = that as IDictionary<String, Object>;
+			foreach (var (k, v) in other as IDictionary<String, Object>)
+			{
+				if (exclude.Any(x => x.Equals(k, StringComparison.OrdinalIgnoreCase)))
+					continue;
+				if (!thatD.ContainsKey(k))
+					thatD.Add(k, v);
 			}
 		}
 

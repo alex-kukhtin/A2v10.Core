@@ -11,7 +11,7 @@ namespace A2v10.Stimulsoft.Interop
 	public static class StimulsoftReportSettings
 	{
 		public static StiPdfExportSettings PdfExportSettings =>
-			new StiPdfExportSettings
+			new()
 			{
 				UseUnicode = true,
 				EmbeddedFonts = true,
@@ -20,13 +20,23 @@ namespace A2v10.Stimulsoft.Interop
 			};
 
 		public static StiExcel2007ExportSettings ExcelExportSettings =>
-			new StiExcel2007ExportSettings
+			new()
 			{
 				UseOnePageHeaderAndFooter = true
 			};
 
 		public static StiWord2007ExportSettings WordExportSettings =>
-			new StiWord2007ExportSettings()
+			new()
+			{
+			};
+
+		public static StiOdtExportSettings OdtExportSettings =>
+			new()
+			{
+			};
+
+		public static StiOdsExportSettings OdsExportSettings =>
+			new()
 			{
 			};
 	}

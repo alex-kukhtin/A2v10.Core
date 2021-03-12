@@ -1,19 +1,19 @@
 ﻿
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using System.IO;
+using System.Net.Http.Headers;
+using System.Dynamic;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 using A2v10.Infrastructure;
-using System.IO;
-using System.Web;
-using System.Net.Http.Headers;
 
 namespace A2v10.Core.Web.Mvc.Controllers
 {
+
 	[Route("report/[action]/{Id}")]
 	[ExecutingFilter]
 	[Authorize]
@@ -30,23 +30,28 @@ namespace A2v10.Core.Web.Mvc.Controllers
 		}
 
 		[HttpGet]
+		public Task Show(String Base, String Rep, String Id)
+		{
+			return Task.CompletedTask;
+		}
+
+
+		[HttpGet]
 		public Task Export(String Id, String Base, String Rep, String format = "pdf")
 		{
 			return TryCatch(async () =>
 			{
 				var path = Path.Combine(Base, Rep, Id);
 				var fmt = (ExportReportFormat)Enum.Parse(typeof(ExportReportFormat), format, ignoreCase: true);
-				var result = await _reportService.ExportAsync(path, fmt, (exp) => {
-					// TODO: from QueryString
+				var result = await _reportService.ExportAsync(path + Request.QueryString, fmt, (exp) => {
 					exp.SetNotNull("Id", Id);
 					SetSqlQueryParams(exp);
 				});
 				Response.ContentType = result.ContentType;
 
-				// TODO: //
 				var cdh = new ContentDispositionHeaderValue("attachment")
 				{
-					FileNameStar = "FILENAME.PDF"//  $"{_localizer.Localize(ri.Name)}.{err.Extension}"
+					FileNameStar = Localize(result.FileName)
 				};
 				Response.Headers.Add("Content-Disposition", cdh.ToString());
 
@@ -60,8 +65,7 @@ namespace A2v10.Core.Web.Mvc.Controllers
 			return TryCatch(async () =>
 			{
 				var path = Path.Combine(Base, Rep, Id);
-				var result = await _reportService.ExportAsync(path, ExportReportFormat.Pdf, (exp) => {
-					// TODO: from QueryString
+				var result = await _reportService.ExportAsync(path + Request.QueryString, ExportReportFormat.Pdf, (exp) => {
 					exp.SetNotNull("Id", Id);
 					SetSqlQueryParams(exp);
 				});
@@ -86,6 +90,21 @@ namespace A2v10.Core.Web.Mvc.Controllers
 			{
 				await WriteHtmlException(ex);
 			}
+		}
+
+		ExpandoObject ParseQueryString()
+		{
+			var eo = new ExpandoObject();
+
+			var disabledKeys = new String[] {"Base", "Rep", "Format" };
+
+			foreach (var (k, v) in Request.Query)
+			{
+				if (disabledKeys.Any(x => x.Equals(k, StringComparison.OrdinalIgnoreCase)))
+					continue;
+				eo.Set(k, v);
+			}
+			return eo.IsEmpty() ? null : eo;
 		}
 	}
 }

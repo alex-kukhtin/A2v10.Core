@@ -1,11 +1,11 @@
-﻿using A2v10.Data.Interfaces;
-using A2v10.Infrastructure;
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+
 using System;
-using System.Collections.Generic;
 using System.Dynamic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+
+using A2v10.Data.Interfaces;
+using A2v10.Infrastructure;
 
 namespace A2v10.Services
 {
@@ -22,18 +22,14 @@ namespace A2v10.Services
 			_dbContext = dbContext;
 		}
 
-		public async Task<IInvokeResult> ExportAsync(IModelReport report, ExportReportFormat format, Action<ExpandoObject> setParams)
+		public async Task<IInvokeResult> ExportAsync(IModelReport report, ExportReportFormat format, ExpandoObject query, Action<ExpandoObject> setParams)
 		{
-			ExpandoObject vars = new();
-			vars.Append(report.Variables);
-			//vars.Append(prms)
-
-			ExpandoObject prms = new();
-			setParams?.Invoke(prms);
+			var vars = report.CreateVariables(query, setParams);
+			var prms = report.CreateParameters(query, setParams);
 
 			String repPath = report.ReportPath();
 			if (repPath != null)
-				repPath = _appCodeProvider.MakeFullPath(report.BaseUrl, $"{repPath}.mrt");
+				repPath = _appCodeProvider.MakeFullPath(report.Path, $"{repPath}.mrt");
 
 			IDataModel dm = null;
 			if (report.HasModel())

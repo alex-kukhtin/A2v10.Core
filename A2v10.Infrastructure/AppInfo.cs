@@ -1,4 +1,4 @@
-﻿// Copyright © 2017-2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2017-2021 Alex Kukhtin. All rights reserved.
 
 using System;
 using System.Reflection;
@@ -25,13 +25,7 @@ namespace A2v10.Infrastructure
 
 	public class AppInfo
 	{
-		public static AssemblyDescription MainAssembly
-		{
-			get
-			{
-				return GetDescription(Assembly.GetExecutingAssembly());
-			}
-		}
+		public static AssemblyDescription MainAssembly => GetDescription(Assembly.GetExecutingAssembly());
 
 		static AssemblyDescription GetDescription(Assembly a)
 		{

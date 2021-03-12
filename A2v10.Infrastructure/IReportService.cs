@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿
+using System;
 using System.Dynamic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace A2v10.Infrastructure
@@ -11,7 +9,9 @@ namespace A2v10.Infrastructure
 	{
 		Pdf,
 		Excel,
-		Word
+		Word,
+		OpenSheet,
+		OpenText
 	};
 
 	public interface IReportService

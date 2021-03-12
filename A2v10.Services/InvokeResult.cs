@@ -5,10 +5,10 @@ using A2v10.Infrastructure;
 
 namespace A2v10.Services
 {
-	public class InvokeResult : IInvokeResult
+	public record InvokeResult : IInvokeResult
 	{
-		public Byte[] Body { get; set; }
-
-		public String ContentType { get; set; }
+		public Byte[] Body { get; init; }
+		public String ContentType { get; init; }
+		public String FileName { get; init; }
 	}
 }

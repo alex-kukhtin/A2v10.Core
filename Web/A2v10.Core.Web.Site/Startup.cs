@@ -102,7 +102,7 @@ namespace A2v10.Core.Web.Site
 			services.AddScoped<ITokenProvider, WebTokenProvider>();
 			services.AddScoped<IDataService, DataService>();
 			services.AddScoped<IReportService, ReportService>();
-			services.AddScoped<IExternalReport, StimulsoftExternalReport>();
+			services.AddSingleton<IExternalReport, StimulsoftExternalReport>();
 			services.AddSingleton<IModelJsonReader, ModelJsonReader>();
 			services.AddSingleton<IAppConfiguration, AppConfiruation>();
 

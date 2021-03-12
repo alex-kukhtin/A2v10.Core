@@ -7,5 +7,7 @@ namespace A2v10.Infrastructure
 	public interface IAppConfiguration
 	{
 		Boolean Watch { get; }
+		Boolean Debug { get; }
+		Boolean Release { get; }
 	}
 }

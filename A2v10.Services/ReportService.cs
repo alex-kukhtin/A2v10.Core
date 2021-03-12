@@ -27,7 +27,7 @@ namespace A2v10.Services
 			using var _ = _profiler.CurrentRequest.Start(ProfileAction.Report, $"export: {platrformUrl.Action}");
 			var rep = await _modelReader.GetReportAsync(platrformUrl);
 			var handler = rep.GetReportHandler(_serviceProvider);
-			return await handler.ExportAsync(rep, format, setParams);
+			return await handler.ExportAsync(rep, format, platrformUrl.Query, setParams);
 		}
 	}
 }

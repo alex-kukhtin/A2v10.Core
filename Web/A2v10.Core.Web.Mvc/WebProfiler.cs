@@ -150,8 +150,8 @@ namespace A2v10.Core.Web.Mvc
 		{
 			if (request != _request)
 				return;
-			SaveSession();
 			_request.Stop();
+			SaveSession();
 		}
 
 		void LoadSession()

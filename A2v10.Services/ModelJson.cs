@@ -1,12 +1,14 @@
-﻿using System;
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+
+using System;
 using System.Collections.Generic;
 using System.Dynamic;
+
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 
 namespace A2v10.Services
 {
-
 	public class ModelJsonBase : IModelBase
 	{
 		protected ModelJson _parent;
@@ -17,6 +19,8 @@ namespace A2v10.Services
 
 		public Int32 CommandTimeout;
 
+		public ExpandoObject Parameters { get; set; }
+
 		internal virtual void SetParent(ModelJson rm)
 		{
 			_parent = rm;
@@ -26,7 +30,7 @@ namespace A2v10.Services
 		public String CurrentModel => String.IsNullOrEmpty(Model) ? _parent.Model : Model;
 		public String CurrentSchema => String.IsNullOrEmpty(Schema) ? _parent.Schema : Schema;
 
-		public Boolean HasModel() => !String.IsNullOrEmpty(CurrentModel);
+		public Boolean HasModel() => Model != String.Empty && !String.IsNullOrEmpty(CurrentModel);
 
 		public virtual String LoadProcedure()
 		{
@@ -38,17 +42,30 @@ namespace A2v10.Services
 
 		public String Path => _parent.LocalPath;
 		public String BaseUrl => _parent.BaseUrl;
+
+		public virtual ExpandoObject CreateParameters(IPlatformUrl url, Object id,  Action<ExpandoObject> setParams = null, IModelBase.ParametersFlags flags = IModelBase.ParametersFlags.None)
+		{
+			// model.json, query, id, system
+			var eo = new ExpandoObject();
+			eo.Append(Parameters);
+			eo.Append(url.Query);
+			if (!flags.HasFlag(IModelBase.ParametersFlags.SkipId))
+			{
+				eo.SetNotNull("Id", url.Id);
+				eo.SetNotNull("Id", id);
+			}
+			setParams?.Invoke(eo);
+			return eo;
+		}
 	}
 
-	public class RequestBase : ModelJsonBase
+	public class ModelJsonViewBase : ModelJsonBase
 	{
 		#region JSON
 		public Boolean Index { get; set; }
 		public Boolean Copy { get; set; }
 
 		public ModelJsonBase Merge { get; set; }
-
-		public ExpandoObject Parameters { get; set; }
 		#endregion
 
 		internal override void SetParent(ModelJson rm)
@@ -58,7 +75,7 @@ namespace A2v10.Services
 		}
 	}
 
-	public class ModelJsonBlob : RequestBase, IModelBlob
+	public class ModelJsonBlob : ModelJsonViewBase, IModelBlob
 	{
 		public String Key { get; init; }
 		public String Id { get; init; }
@@ -71,7 +88,7 @@ namespace A2v10.Services
 		}
 	}
 
-	public class ModelJsonView : RequestBase, IModelView
+	public class ModelJsonView : ModelJsonViewBase, IModelView
 	{
 		// explicit
 		IModelBase IModelView.Merge => Merge;
@@ -176,8 +193,6 @@ namespace A2v10.Services
 
 	public class ModelJsonCommand : ModelJsonBase, IModelCommand
 	{
-		public ExpandoObject Parameters { get; set; }
-
 		public ModelCommandType Type { get; set; }
 		public String Procedure { get; set; }
 		public String File { get; set; }
@@ -232,6 +247,27 @@ namespace A2v10.Services
 		{
 			return ServerReportRegistry.GetReportHandler(Type, serviceProvider);
 		}
+
+		readonly String[] ExcludeParams = new String[] { "Rep", "Base", "Format" };
+
+		public ExpandoObject CreateParameters(ExpandoObject query, Action<ExpandoObject> setParams)
+		{
+			ExpandoObject prms = new();
+			prms.Append(Parameters);
+			prms.Append(query, ExcludeParams);
+			setParams?.Invoke(prms);
+			return prms;
+		}
+
+		public ExpandoObject CreateVariables(ExpandoObject query, Action<ExpandoObject> setParams)
+		{
+			ExpandoObject vars = new();
+			vars.Append(Variables);
+			vars.Append(Parameters);
+			vars.Append(query, ExcludeParams);
+			setParams?.Invoke(vars);
+			return vars;
+		}
 	}
 
 	public class ModelJson
@@ -251,7 +287,6 @@ namespace A2v10.Services
 		public Dictionary<String, ModelJsonFile> Files = new(StringComparer.InvariantCultureIgnoreCase);
 		public Dictionary<String, ModelJsonCommand> Commands = new(StringComparer.InvariantCultureIgnoreCase);
 		public Dictionary<String, ModelJsonReport> Reports = new(StringComparer.InvariantCultureIgnoreCase);
-
 		#endregion
 
 		public String LocalPath => _localPath;
