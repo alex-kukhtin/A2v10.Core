@@ -49,6 +49,5 @@ namespace A2v10.Infrastructure
 		Task<IInvokeResult> InvokeAsync(String baseUrl, String command, ExpandoObject data, Action<ExpandoObject> setParams);
 
 		Task<IBlobInfo> LoadBlobAsync(UrlKind kind, String baseUrl, Action<ExpandoObject> setParams, String suffix = null);
-		Task<IBlobInfo> StaticImage(String baseUrl);
 	}
 }

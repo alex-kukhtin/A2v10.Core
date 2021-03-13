@@ -15,6 +15,7 @@ namespace A2v10.Infrastructure
 		{
 			None = 0x00,
 			SkipId = 0x01,
+			SkipModelJsonParams = 0x02,
 		}
 
 		String DataSource { get; }

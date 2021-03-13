@@ -1,7 +1,8 @@
+== TODO: A2v10.Core Platform
+============================
 
 8. Site mode sample
 
-9. Redirect
 12. Xaml. styles.xaml cache
 
 13. SetUserPassword
@@ -24,15 +25,16 @@
 44. ReportController. Viewer
 46. ExportController
 47. AppLinks
-48. Feedback
 49. Убрать ViewBag.___
-50. 
+50. globalPeriod вместо custom в config.
+51. 
 
 BOOKKEEPER
 ==========
-9. StaticImages (dashboard)
-
-14. https://localhost:44382/purchase/partner - LazyLoad -> @Role is not a parameter for procedure Partner.Documents.
+15. Feedback
+16. ChangePassword (ApplicationCommands)
+17. ShowHelp
+18. 
 
 
 

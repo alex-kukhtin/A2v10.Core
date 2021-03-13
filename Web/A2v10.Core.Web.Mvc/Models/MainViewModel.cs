@@ -10,5 +10,6 @@ namespace A2v10.Core.Web.Mvc
 	{
 		public String PersonName { get; init; }
 		public Boolean Debug { get; init; }
+		public String HelpUrl { get; init; }
 	}
 }

@@ -1,10 +1,9 @@
-﻿
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using System.IO;
 using System.Net.Http.Headers;
-using System.Dynamic;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -42,7 +41,7 @@ namespace A2v10.Core.Web.Mvc.Controllers
 			return TryCatch(async () =>
 			{
 				var path = Path.Combine(Base, Rep, Id);
-				var fmt = (ExportReportFormat)Enum.Parse(typeof(ExportReportFormat), format, ignoreCase: true);
+				var fmt = Enum.Parse<ExportReportFormat>(format, ignoreCase: true);
 				var result = await _reportService.ExportAsync(path + Request.QueryString, fmt, (exp) => {
 					exp.SetNotNull("Id", Id);
 					SetSqlQueryParams(exp);
@@ -74,12 +73,6 @@ namespace A2v10.Core.Web.Mvc.Controllers
 			});
 		}
 
-		// stimulsoft support
-		public Task<IActionResult> GetReport()
-		{
-			throw new NotImplementedException(nameof(GetReport));
-		}
-
 		private async Task TryCatch(Func<Task> action)
 		{
 			try
@@ -92,19 +85,11 @@ namespace A2v10.Core.Web.Mvc.Controllers
 			}
 		}
 
-		ExpandoObject ParseQueryString()
+		// stimulsoft support
+		public Task<IActionResult> GetReport()
 		{
-			var eo = new ExpandoObject();
-
-			var disabledKeys = new String[] {"Base", "Rep", "Format" };
-
-			foreach (var (k, v) in Request.Query)
-			{
-				if (disabledKeys.Any(x => x.Equals(k, StringComparison.OrdinalIgnoreCase)))
-					continue;
-				eo.Set(k, v);
-			}
-			return eo.IsEmpty() ? null : eo;
+			throw new NotImplementedException(nameof(GetReport));
 		}
+
 	}
 }

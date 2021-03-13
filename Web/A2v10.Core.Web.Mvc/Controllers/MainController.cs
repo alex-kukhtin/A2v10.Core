@@ -1,4 +1,5 @@
-﻿
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+
 using System;
 
 using Microsoft.AspNetCore.Mvc;
@@ -26,7 +27,8 @@ namespace A2v10.Core.Web.Mvc.Controllers
 			var viewModel = new MainViewModel()
 			{
 				PersonName = User.Identity.GetUserPersonName(),
-				Debug = _appConfiguration.Debug
+				Debug = _appConfiguration.Debug,
+				HelpUrl = "http://TODO/HELP_URL"
 			};
 			ViewBag.__Locale = "uk";
 			ViewBag.__Build = 8000; // TODO: Build Value

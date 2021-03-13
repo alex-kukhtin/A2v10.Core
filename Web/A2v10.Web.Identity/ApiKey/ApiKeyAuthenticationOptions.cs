@@ -1,16 +1,15 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿// Copyright © 2020-2021 Alex Kukhtin. All rights reserved.
+
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
+using Microsoft.AspNetCore.Authentication;
 
 namespace A2v10.Web.Identity.ApiKey
 {
 	public class ApiKeyAuthenticationOptions : AuthenticationSchemeOptions
 	{
 		public const String DefaultScheme = "API Key";
-		public String Scheme => DefaultScheme;
-		public String AuthenticationType = DefaultScheme;
+		public const String Scheme = DefaultScheme;
+		public const String AuthenticationType = DefaultScheme;
 	}
 }

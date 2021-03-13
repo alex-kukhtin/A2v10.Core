@@ -22,7 +22,21 @@ namespace A2v10.Infrastructure
 		public static class Image
 		{
 			public const String Png = "image/png";
+			public const String Jpg = "image/jpeg";
 			public const String Svg = "image/svg+xml";
+			public const String Bmp = "image/bmp";
+			public const String Tif = "image/tiff";
+		}
+		public static String GetMimeMapping(String ext)
+		{
+			return ext.ToLowerInvariant() switch {
+				".png" => Image.Png,
+				".svg" => Image.Svg,
+				".bmp" => Image.Bmp,
+				".tif" or ".tiff" => Image.Tif,
+				".jpg" or ".jpeg" or ".jpe" => Image.Jpg,
+				_  => throw new ArgumentOutOfRangeException($"Invalid Mime for {ext}")
+			};
 		}
 	}
 }

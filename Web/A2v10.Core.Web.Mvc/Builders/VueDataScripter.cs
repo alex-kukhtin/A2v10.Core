@@ -509,9 +509,9 @@ const vm = new DataModelController({
 			String fileTemplateText;
 			if (msi.Template != null)
 			{
-				fileTemplateText = await _codeProvider.ReadTextFileAsync(msi.Path, msi.Template + ".js");
+				fileTemplateText = await _codeProvider.ReadTextFileAsync(msi.Path, $"{msi.Template}.js");;
 				if (fileTemplateText == null)
-					throw new FileNotFoundException($"Template file '{Path.Combine(msi.Path, msi.Template + ".js").Replace('\\', '/')}' not found.");
+					throw new FileNotFoundException($"Template file '{Path.Combine(msi.Path, $"{msi.Template}.js").Replace('\\', '/')}' not found.");
 				AddRequiredModules(sbRequired, fileTemplateText);
 				templateText = CreateTemplateForWrite(Localize(fileTemplateText));
 			}

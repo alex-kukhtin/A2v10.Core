@@ -13,8 +13,7 @@ namespace A2v10.Services
 		private readonly IServiceProvider _serviceProvider;
 		private readonly IProfiler _profiler;
 
-		public ReportService(IServiceProvider serviceProvider, IModelJsonReader modelReader, 
-			IExternalReport externalReport, IProfiler profiler)
+		public ReportService(IServiceProvider serviceProvider, IModelJsonReader modelReader, IProfiler profiler)
 		{
 			_serviceProvider = serviceProvider;
 			_modelReader = modelReader;

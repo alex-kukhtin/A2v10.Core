@@ -47,7 +47,8 @@ namespace A2v10.Services
 		{
 			// model.json, query, id, system
 			var eo = new ExpandoObject();
-			eo.Append(Parameters);
+			if (!flags.HasFlag(IModelBase.ParametersFlags.SkipModelJsonParams))
+				eo.Append(Parameters);
 			eo.Append(url.Query);
 			if (!flags.HasFlag(IModelBase.ParametersFlags.SkipId))
 			{

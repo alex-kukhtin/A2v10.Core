@@ -161,7 +161,7 @@ namespace A2v10.Services
 			var view = await _modelReader.GetViewAsync(platformBaseUrl);
 
 			String loadProc = view.LoadLazyProcedure(propertyName.ToPascalCase());
-			var loadParams = view.CreateParameters(platformBaseUrl, Id, setParams);
+			var loadParams = view.CreateParameters(platformBaseUrl, Id, setParams, IModelBase.ParametersFlags.SkipModelJsonParams);
 
 			var model = await _dbContext.LoadModelAsync(view.DataSource, loadProc, loadParams);
 
@@ -275,12 +275,6 @@ namespace A2v10.Services
 				}
 			}
 			return view;
-		}
-
-		public Task<IBlobInfo> StaticImage(String baseUrl)
-		{
-			//var platfromUrl = new PlatformUrl(baseUrl);
-			throw new Exception("DataService.StaticImage");
 		}
 
 		public async Task<IBlobInfo> LoadBlobAsync(UrlKind kind, String baseUrl, Action<ExpandoObject> setParams, String suffix = null)

@@ -3,6 +3,7 @@
 using System;
 using System.Threading.Tasks;
 using System.Text;
+using System.IO;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,13 +22,16 @@ namespace A2v10.Core.Web.Mvc.Controllers
 	{
 		private readonly IDataService _dataService;
 		private readonly ITokenProvider _tokenProvider;
+		private readonly IAppCodeProvider _appCodeProvider;
 
 		public ImageController(IApplicationHost host,
-			ILocalizer localizer, IUserStateManager userStateManager, IProfiler profiler, IDataService dataService, ITokenProvider tokenProvider)
+			ILocalizer localizer, IUserStateManager userStateManager, IProfiler profiler, 
+			IDataService dataService, ITokenProvider tokenProvider, IAppCodeProvider appCodeProvider)
 			: base(host, localizer, userStateManager, profiler)
 		{
 			_dataService = dataService;
 			_tokenProvider = tokenProvider;
+			_appCodeProvider = appCodeProvider;
 		}
 
 		[Route("_image/{*pathInfo}")]
@@ -58,17 +62,20 @@ namespace A2v10.Core.Web.Mvc.Controllers
 		[HttpGet]
 		public async Task StaticImage(String pathInfo)
 		{
-			//var bi = await _dataService.StaticImage(pathInfo, Response.BodyWriter.AsStream());
-			//Response.ContentType = bi.Mime;
-			//await Response.Body.WriteAsync(bi.Stream);
-			//Stream s;
-			//await s.CopyToAsync(Response.BodyWriter.AsStream());
-			//Response.BodyWriter
-			// {pagePath}/action/id
 			try
 			{
-				throw new NotImplementedException("ImageController.StaticImage");
-			} catch (Exception ex)
+				if (String.IsNullOrEmpty(pathInfo))
+					throw new ArgumentOutOfRangeException(nameof(pathInfo), nameof(StaticImage));
+				pathInfo = pathInfo.Replace('-', '.');
+				var fullPath = _appCodeProvider.MakeFullPath(pathInfo, String.Empty);
+				if (!_appCodeProvider.FileExists(fullPath))
+					throw new FileNotFoundException($"File not found '{pathInfo}'");
+				using var stream = _appCodeProvider.FileStreamFullPathRO(fullPath);
+				var ext = _appCodeProvider.GetExtension(fullPath);
+				Response.ContentType = MimeTypes.GetMimeMapping(ext);
+				await stream.CopyToAsync(Response.BodyWriter.AsStream());
+			} 
+			catch (Exception ex)
 			{
 				await WriteImageException(ex);
 			}
@@ -79,10 +86,11 @@ namespace A2v10.Core.Web.Mvc.Controllers
 			if (ex.InnerException != null)
 				ex = ex.InnerException;
 
+			var len = ex.Message.Length * 5;
 			var svg = 
-$@"<svg width='180px' height='40px' xmlns='http://www.w3.org/2000/svg'>
-	<rect width='180' height='40' fill='#f9f0f0' stroke='#a94442' />
-	<text x='90' y='25' fill='#a94442' font-size='11px' text-anchor='middle'>{ex.Message}</text>
+$@"<svg width='{len}px' height='40px' xmlns='http://www.w3.org/2000/svg'>
+	<rect width='{len}' height='40' fill='#fff0f5' stroke='#880000' stroke-width='1'/>
+	<text x='{len/2}' y='25' fill='#880000' font-size='11px' text-anchor='middle'>{ex.Message}</text>
 </svg>";
 
 			Response.Headers.SetCommaSeparatedValues("cache-control", "no-store", "no-cache");
