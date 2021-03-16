@@ -87,6 +87,7 @@ namespace A2v10.Core.Web.Site
 			services.AddScoped<IDataProfiler>(s=> s.GetService<WebProfiler>());
 			services.AddScoped<ITenantManager>(s => s.GetService<WebApplicationHost>());
 			services.AddScoped<IApplicationHost>( s=> s.GetService<WebApplicationHost>());
+			services.AddScoped<IRenderer, XamlRenderer>();
 
 			services.AddScoped<IDbContext>(s => 
 				new SqlDbContext(s.GetService<IDataProfiler>(), 
@@ -105,6 +106,15 @@ namespace A2v10.Core.Web.Site
 			services.AddSingleton<IExternalReport, StimulsoftExternalReport>();
 			services.AddSingleton<IModelJsonReader, ModelJsonReader>();
 			services.AddSingleton<IAppConfiguration, AppConfiruation>();
+
+			services.AddScoped<IViewEngineProvider>(s =>
+				new WebViewEngineProvider(s,
+					new ViewEngineDescriptor[] {
+						new ViewEngineDescriptor(".xaml", typeof(XamlViewEngine))
+					}
+				)
+			);
+			services.AddScoped<XamlViewEngine>();
 
 			services.AddSession();
 		}

@@ -35,15 +35,17 @@ namespace A2v10.Core.Web.Mvc
 		private readonly IUserStateManager _userStateManager;
 		private readonly IProfiler _profiler;
 		private readonly IAppCodeProvider _codeProvider;
+		private readonly ILocalizer _localizer;
 
 		public ShellController(IDbContext dbContext, IApplicationHost host, IUserStateManager userStateManager, IProfiler profiler,
-			IAppCodeProvider codeProvider)
+			IAppCodeProvider codeProvider, ILocalizer localizer)
 		{
 			_host = host;
 			_dbContext = dbContext;
 			_userStateManager = userStateManager;
 			_profiler = profiler;
 			_codeProvider = codeProvider;
+			_localizer = localizer;
 		}
 
 		Int64 UserId => User.Identity.GetUserId<Int64>();
@@ -104,7 +106,6 @@ namespace A2v10.Core.Web.Mvc
 			prms.Set("UserId", UserId);
 			if (_host.IsMultiTenant)
 				prms.Set("TenantId", TenantId);
-			//SetClaimsToParams(ExpandoObject prms)
 		}
 
 		async Task<String> BuildScript(bool bAdmin)
@@ -254,16 +255,12 @@ namespace A2v10.Core.Web.Mvc
 
 		String GetAppData()
 		{
-			/* TODO://
-			var appJson = _host.ApplicationReader.ReadTextFile(String.Empty, "app.json");
+			var appJson = _codeProvider.ReadTextFile(String.Empty, "app.json");
 			if (appJson != null)
 			{
-				// with validation
 				ExpandoObject app = JsonConvert.DeserializeObject<ExpandoObject>(appJson);
-				app.Set("embedded", _host.Embedded);
 				return _localizer.Localize(null, JsonConvert.SerializeObject(app));
 			}
-			*/
 
 			ExpandoObject defAppData = new()
 			{
@@ -294,6 +291,5 @@ namespace A2v10.Core.Web.Mvc
 				writer.Write(txt);
 			}
 		}
-
 	}
 }

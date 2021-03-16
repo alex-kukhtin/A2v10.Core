@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.IO;
 using System.Web;
 
 using A2v10.Infrastructure;
@@ -15,7 +16,7 @@ namespace A2v10.Services
 		{
 			var nurl = NormalizePath(url);
 			Kind = kind;
-			var parts = ("_/" + nurl.Path).Split('/');
+			var parts = ("_/" + nurl.Path).Split(new Char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
 			Construct(parts, nurl.Query, id);
 		}
 

@@ -132,5 +132,10 @@ namespace A2v10.Core.Web.Mvc
 			_host.UserSegment = UserSegement;
 		}
 		#endregion
+
+		public Task ProcessDbEvents(IModelView view)
+		{
+			return Task.CompletedTask;
+		}
 	}
 }

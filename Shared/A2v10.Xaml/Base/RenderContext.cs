@@ -142,7 +142,7 @@ namespace A2v10.Xaml
 			_localizer = localizer;
 			_currentLocale = ri.CurrentLocale;
 			//_typeChecker = ri.TypeChecker;
-			IsDebugConfiguration = true; // TODO: ri.IsDebugConfiguration;
+			IsDebugConfiguration =  true; // TODO: ri.IsDebugConfiguration;
 		}
 
 		public Boolean IsDialog => _root is Dialog;

@@ -15,8 +15,4 @@
     <PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7256" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Impl\" />
-  </ItemGroup>
-
 </Project>

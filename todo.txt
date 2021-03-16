@@ -8,8 +8,6 @@
 13. SetUserPassword
 14. Доделать AccountController
 
-20. IViewEngine
-
 22. DataService.Load Indirect
 23. DataService.Load Merge
 
@@ -22,12 +20,13 @@
 38. ImageController.SaveImage
 40. LoadImage from Azure
 42. DataController.Invoke XML
-44. ReportController. Viewer
+44. ReportController.Viewer
 46. ExportController
 47. AppLinks
 49. Убрать ViewBag.___
 50. globalPeriod вместо custom в config.
-51. 
+51. HtmlRenderer
+52. 
 
 BOOKKEEPER
 ==========

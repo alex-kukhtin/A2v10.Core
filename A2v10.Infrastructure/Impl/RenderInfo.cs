@@ -1,12 +1,11 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
-
+﻿using A2v10.Data.Interfaces;
 using System;
-using System.IO;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-using A2v10.Data.Interfaces;
-using A2v10.Infrastructure;
-
-namespace A2v10.Xaml
+namespace A2v10.Infrastructure
 {
 	public class RenderInfo : IRenderInfo
 	{
@@ -20,10 +19,5 @@ namespace A2v10.Xaml
 		public String CurrentLocale { get; init; }
 		public Boolean IsDebugConfiguration { get; init; }
 		public Boolean SecondPhase { get; init; }
-	}
-
-	public interface IRenderer
-	{
-		void Render(IRenderInfo info, TextWriter writer);
 	}
 }

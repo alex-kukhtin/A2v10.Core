@@ -11,9 +11,8 @@ using Microsoft.AspNetCore.Http;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
+
 using A2v10.Core.Web.Mvc.Builders;
-using A2v10.System.Xaml;
-using A2v10.Xaml;
 
 namespace A2v10.Core.Web.Mvc.Controllers
 {
@@ -22,31 +21,28 @@ namespace A2v10.Core.Web.Mvc.Controllers
 	[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 	public class PageController : BaseController
 	{
-
-		//public Boolean Admin => _host.IsAdminMode;
-
-		private readonly IXamlReaderService _xamlReader;
 		private readonly IDataService _dataService;
-		private readonly IRenderer _renderer;
 		private readonly IDataScripter _scripter;
 		private readonly IAppCodeProvider _codeProvider;
+		private readonly IViewEngineProvider _viewEngineProvider;
 
 		public PageController(IApplicationHost host, IAppCodeProvider codeProvider,
-			ILocalizer localizer, IUserStateManager userStateManager, IProfiler profiler, IXamlReaderService xamlReader,
-			IDataService dataService)
+			ILocalizer localizer, IUserStateManager userStateManager, IProfiler profiler,
+			IDataService dataService, IViewEngineProvider viewEngineProvider)
 			: base(host, localizer, userStateManager, profiler)
 		{
-			_xamlReader = xamlReader;
 			_dataService = dataService;
 			_codeProvider = codeProvider;
-			_renderer = new XamlRenderer(_profiler, codeProvider, xamlReader, _localizer);
 			_scripter = new VueDataScripter(host, codeProvider, _localizer);
+			_viewEngineProvider = viewEngineProvider;
 		}
 
 		[Route("_page/{*pathInfo}")]
 		public Task Page(String pathInfo)
 		{
 			// {pagePath}/action/id
+			if (pathInfo.StartsWith("app/", StringComparison.OrdinalIgnoreCase))
+				return RenderApplicationPage(UrlKind.Page, pathInfo);
 			return Render(pathInfo + Request.QueryString, UrlKind.Page);
 		}
 
@@ -54,6 +50,8 @@ namespace A2v10.Core.Web.Mvc.Controllers
 		public Task Dialog(String pathInfo)
 		{
 			// {pagePath}/dialog/id
+			if (pathInfo.StartsWith("app/", StringComparison.OrdinalIgnoreCase))
+				return RenderApplicationPage(UrlKind.Dialog, pathInfo);
 			return Render(pathInfo + Request.QueryString, UrlKind.Dialog);
 		}
 
@@ -63,7 +61,6 @@ namespace A2v10.Core.Web.Mvc.Controllers
 			// {pagePath}/popup/id
 			return Render(pathInfo + Request.QueryString, UrlKind.Popup);
 		}
-
 
 		async Task Render(String path, UrlKind kind)
 		{
@@ -101,72 +98,56 @@ namespace A2v10.Core.Web.Mvc.Controllers
 				Path = rw.Path,
 				BaseUrl = rw.BaseUrl
 			};
+
 			var si = await _scripter.GetModelScript(msi);
 
-			String modelScript = si.Script;
+			var viewName = _codeProvider.MakeFullPath(rw.Path, rw.GetView(_host.Mobile));
+			var viewEngine = _viewEngineProvider.FindViewEngine(viewName);
 
-			// try xaml
-
-			String fileName = rw.GetView(_host.Mobile) + ".xaml";
-			String basePath = rw.BaseUrl;
-			String filePath = _codeProvider.MakeFullPath(rw.Path, fileName);
-
-			//var renderer = _viewProvider.FindRenderer(fileName);
-			//if (renderer == null)
-				//throw new InvalidOperationException("ViewNotFound");
-			using var strWriter = new StringWriter();
-
-			// engine.Render(ri);
-
-
-			Boolean bRendered = false;
-			if (_codeProvider.FileExists(filePath))
+			// render XAML
+			var ri = new RenderInfo()
 			{
-				// render XAML
-				var ri = new RenderInfo()
-				{
-					RootId = rootId,
-					FileName = filePath,
-					FileTitle = fileName,
-					Path = basePath,
-					DataModel = model,
-					//TypeChecker = typeChecker,
-					CurrentLocale = null,
-					IsDebugConfiguration = _host.IsDebugConfiguration,
-					SecondPhase = secondPhase
-				};
-				_renderer.Render(ri,strWriter);
-				// write markup
-				await HttpResponseWritingExtensions.WriteAsync(Response, strWriter.ToString(), Encoding.UTF8);
-				bRendered = true;
-			}
-			else
+				RootId = rootId,
+				FileName = viewEngine.FileName,
+				FileTitle = rw.GetView(_host.Mobile),
+				Path = rw.BaseUrl,
+				DataModel = model,
+				//TypeChecker = typeChecker,
+				CurrentLocale = null,
+				IsDebugConfiguration = _host.IsDebugConfiguration,
+				SecondPhase = secondPhase
+			};
+
+			var result = await viewEngine.Engine.RenderAsync(ri);
+			Response.ContentType = result.ContentType;
+
+			await HttpResponseWritingExtensions.WriteAsync(Response, result.Body, Encoding.UTF8);
+			await ProcessDbEvents(rw);
+			await HttpResponseWritingExtensions.WriteAsync(Response, si.Script, Encoding.UTF8);
+		}
+
+		Task RenderApplicationPage(UrlKind urlKind, String pathInfo)
+		{
+			String exceptionInfo = $"Invald application url: '{pathInfo}'";
+			if (pathInfo == null)
+				throw new RequestModelException(exceptionInfo);
+			var info = pathInfo.Split(new Char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
+			if (info.Length < 2)
+				throw new RequestModelException(exceptionInfo);
+			var kind = info[1].ToLowerInvariant();
+			switch (kind)
 			{
-				// try html
-				fileName = rw.GetView(_host.Mobile) + ".html";
-				filePath = _codeProvider.MakeFullPath(rw.Path, fileName);
-				if (_codeProvider.FileExists(filePath))
-				{
-					using (_profiler.CurrentRequest.Start(ProfileAction.Render, $"render: {fileName}"))
-					{
-						using var tr = new StreamReader(filePath);
-						String htmlText = await tr.ReadToEndAsync();
-						htmlText = htmlText.Replace("$(RootId)", rootId);
-						htmlText = _localizer.Localize(null, htmlText, false);
-						await HttpResponseWritingExtensions.WriteAsync(Response, htmlText, Encoding.UTF8);
-						bRendered = true;
-					}
-				}
+				case "about":
+					throw new Exception("About");
+				case "changepassword":
+					if (urlKind != UrlKind.Dialog)
+						throw new RequestModelException(exceptionInfo);
+					throw new Exception("ChangePassword");
+				default:
+					if (urlKind != UrlKind.Page)
+						throw new RequestModelException(exceptionInfo);
+					throw new Exception($"Render Application page {kind}");
 			}
-			if (!bRendered)
-			{
-				//throw new RequestModelException($"The view '{rw.GetView(_host.Mobile)}' was not found. The following locations were searched:\n{rw.GetRelativePath(".xaml", _host.Mobile)}\n{rw.GetRelativePath(".html", _host.Mobile)}");
-				// TODO:
-				throw new RequestModelException($"The view '{rw.GetView(_host.Mobile)}' was not found. The following locations were searched:");
-				//\n{rw.GetRelativePath(".xaml", _host.Mobile)}\n{rw.GetRelativePath(".html", _host.Mobile)}");
-			}
-			//await ProcessDbEvents(rw);
-			await HttpResponseWritingExtensions.WriteAsync(Response, modelScript, Encoding.UTF8);
 		}
 	}
 }

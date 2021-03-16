@@ -1,13 +1,11 @@
-﻿using A2v10.Data.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using System;
 using System.Threading.Tasks;
+
+using A2v10.Data.Interfaces;
 
 namespace A2v10.Infrastructure
 {
+
 	public interface IRenderInfo
 	{
 		String RootId { get; }
@@ -21,8 +19,14 @@ namespace A2v10.Infrastructure
 		Boolean SecondPhase { get; }
 	}
 
+	public interface IRenderResult
+	{
+		String Body { get; }
+		String ContentType { get; }
+	}
+
 	public interface IViewEngine
 	{
-		void Render(IRenderInfo info, TextWriter writer);
+		Task<IRenderResult> RenderAsync(IRenderInfo renderInfo);
 	}
 }

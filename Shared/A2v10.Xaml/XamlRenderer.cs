@@ -14,7 +14,6 @@ namespace A2v10.Xaml
 		private readonly IXamlReaderService _xamlReader;
 		private readonly ILocalizer _localizer;
 
-
 		public XamlRenderer(IProfiler profile, IAppCodeProvider provider, IXamlReaderService xamlReader, ILocalizer localizer)
 		{
 			_profile = profile;
