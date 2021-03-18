@@ -17,6 +17,7 @@ namespace A2v10.Infrastructure
 		//public ITypeChecker TypeChecker;
 		String CurrentLocale { get; }
 		Boolean SecondPhase { get; }
+		Boolean Admin { get; }
 	}
 
 	public interface IRenderResult

@@ -18,20 +18,26 @@ namespace A2v10.Core.Web.Mvc
 		private readonly IWebHostEnvironment _webHost;
 
 		private String AppPath { get; }
-		private String AppKey { get; }
 
 		public Boolean IsFileSystem => true;
+
+		private readonly String _appKey;
 
 		public FileSystemCodeProvider(IWebHostEnvironment webHost, String appPath, String appKey)
 		{
 			_webHost = webHost;
 			AppPath = appPath;
-			AppKey = appKey;
+			_appKey = appKey;
 		}
 
-		public String MakeFullPath(String path, String fileName)
+		String GetAppKey(Boolean admin)
 		{
-			String appKey = AppKey;
+			return admin ? "Admin" : _appKey;
+		}
+
+		public String MakeFullPath(String path, String fileName, Boolean admin)
+		{
+			String appKey = GetAppKey(admin);
 			if (fileName.StartsWith("/"))
 			{
 				path = String.Empty;
@@ -44,9 +50,9 @@ namespace A2v10.Core.Web.Mvc
 			return Path.GetFullPath(fullPath);
 		}
 
-		public async Task<String> ReadTextFileAsync(String path, String fileName)
+		public async Task<String> ReadTextFileAsync(String path, String fileName, Boolean admin)
 		{
-			String fullPath = MakeFullPath(path, fileName);
+			String fullPath = MakeFullPath(path, fileName, admin);
 
 			if (!File.Exists(fullPath))
 				return null;
@@ -54,16 +60,6 @@ namespace A2v10.Core.Web.Mvc
 			using var tr = new StreamReader(fullPath);
 			return await tr.ReadToEndAsync();
 		}
-
-		public String ReadTextFile(String path, String fileName)
-		{
-			String fullPath = MakeFullPath(path, fileName);
-			if (!File.Exists(fullPath))
-				return null;
-			using var tr = new StreamReader(fullPath);
-			return tr.ReadToEnd();
-		}
-
 
 		public Boolean FileExists(String fullPath)
 		{
@@ -80,9 +76,9 @@ namespace A2v10.Core.Web.Mvc
 			return new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
 		}
 
-		String GetFullPath(String path, String fileName)
+		String GetFullPath(String path, String fileName, Boolean admin)
 		{
-			String appKey = AppKey;
+			String appKey = GetAppKey(admin);
 			if (fileName.StartsWith("/"))
 			{
 				path = String.Empty;
@@ -95,11 +91,11 @@ namespace A2v10.Core.Web.Mvc
 			return Path.GetFullPath(fullPath);
 		}
 
-		public IEnumerable<String> EnumerateFiles(String path, String searchPattern)
+		public IEnumerable<String> EnumerateFiles(String path, String searchPattern, Boolean admin)
 		{
 			if (String.IsNullOrEmpty(path))
 				return Enumerable.Empty<String>();
-			var fullPath = GetFullPath(path, String.Empty);
+			var fullPath = GetFullPath(path, String.Empty, admin);
 			if (!Directory.Exists(fullPath))
 				return Enumerable.Empty<String>();
 			return Directory.EnumerateFiles(fullPath, searchPattern);
@@ -125,7 +121,6 @@ namespace A2v10.Core.Web.Mvc
 		public String MapHostingPath(String path)
 		{
 			return Path.Combine(_webHost.WebRootPath, path);
-
 		}
 	}
 }

@@ -14,6 +14,7 @@ namespace A2v10.Core.Web.Mvc
 		const String _userCompanyKey = "_userCompany_";
 
 		private readonly IHttpContextAccessor _httpContextAccessor;
+		private Boolean _isAdmin = false;
 
 		public WebUserStateManager(IHttpContextAccessor httpContextAccessor)
 		{
@@ -45,5 +46,12 @@ namespace A2v10.Core.Web.Mvc
 				return 0;
 			return Int64.Parse(str);
 		}
+
+		public void SetAdmin()
+		{
+			_isAdmin = true;
+		}
+
+		public Boolean IsAdmin => _isAdmin;
 	}
 }

@@ -17,7 +17,7 @@ namespace A2v10.Core.Web.Mvc
 		// @Html.Raw
 		public static String AppStyleSheetsLink(this IAppCodeProvider provider)
 		{
-			var files = provider.EnumerateFiles("_assets", "*.css");
+			var files = provider.EnumerateFiles("_assets", "*.css", false);
 			// at least one file
 			if (files != null && files.Any())
 				return $"<link  href=\"/_shell/appstyles\" rel=\"stylesheet\" />";
@@ -27,15 +27,15 @@ namespace A2v10.Core.Web.Mvc
 		// @Html.Raw
 		public static String AppScriptsLink(this IAppCodeProvider provider)
 		{
-			var files = provider.EnumerateFiles("_assets", "*.js");
+			var files = provider.EnumerateFiles("_assets", "*.js", false);
 			if (files != null && files.Any())
 				return $"<script type=\"text/javascript\" src=\"/_shell/appscripts\"></script>";
 			return String.Empty;
 		}
 
-		public static String AppLinks(this IAppCodeProvider provider)
+		public static async Task<String> AppLinksAsync(this IAppCodeProvider provider)
 		{
-			String appLinks = provider.ReadTextFile(String.Empty, "links.json");
+			String appLinks = await provider.ReadTextFileAsync(String.Empty, "links.json", false);
 			if (appLinks != null)
 			{
 				// with validation
@@ -54,9 +54,9 @@ namespace A2v10.Core.Web.Mvc
 			return String.Empty;
 		}
 
-		public static String CustomAppScripts(this IAppCodeProvider provider)
+		public static async Task<String> CustomAppScripts(this IAppCodeProvider provider)
 		{
-			var scripts = provider.ReadTextFile("_layout", "_scripts.html");
+			var scripts = await provider.ReadTextFileAsync("_layout", "_scripts.html", false);
 			if (scripts == null)
 				return String.Empty;
 			// TODO:

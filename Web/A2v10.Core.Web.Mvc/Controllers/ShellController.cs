@@ -68,14 +68,25 @@ namespace A2v10.Core.Web.Mvc
 			}
 		}
 
-		public async Task Script()
+		public Task Script()
+		{
+			return DoScript(false);
+		}
+
+		public Task ScriptAdmin()
+		{
+			// TODO: is available?
+			return DoScript(true);
+		}
+
+		async Task DoScript(Boolean admin)
 		{
 			try
 			{
 				Response.ContentType = MimeTypes.Application.Javascript;
-				var script = await BuildScript(false);
+				var script = await BuildScript(admin);
 				await HttpResponseWritingExtensions.WriteAsync(Response, script, Encoding.UTF8);
-			} 
+			}
 			catch (Exception ex)
 			{
 				Response.ContentType = MimeTypes.Text.Plain;
@@ -83,6 +94,7 @@ namespace A2v10.Core.Web.Mvc
 				await HttpResponseWritingExtensions.WriteAsync(Response, ex.ToString());
 			}
 		}
+
 
 		public Task AppScripts()
 		{
@@ -118,15 +130,14 @@ namespace A2v10.Core.Web.Mvc
 			var userInfo = User.Identity.UserInfo();
 
 			var macros = new ExpandoObject();
-			Boolean isUserIsAdmin = userInfo.IsAdmin && _host.IsAdminAppPresent;
 
 			macros.Append(new Dictionary<String, Object>
 			{
 				{ "AppVersion", _host.AppVersion },
-				{ "Admin", isUserIsAdmin ? "true" : "false" },
+				{ "Admin", bAdmin ? "true" : "false" },
 				{ "TenantAdmin", userInfo.IsTenantAdmin ? "true" : "false" },
 				{ "Debug", IsDebugConfiguration ? "true" : "false" },
-				{ "AppData", GetAppData() },
+				{ "AppData", await GetAppData() },
 				{ "Companies", "null" },
 				{ "Period", "null" },
 			});
@@ -253,9 +264,9 @@ namespace A2v10.Core.Web.Mvc
 			_userStateManager.SetReadOnly(model.Eval<Boolean>("UserState.ReadOnly"));
 		}
 
-		String GetAppData()
+		async Task<String> GetAppData()
 		{
-			var appJson = _codeProvider.ReadTextFile(String.Empty, "app.json");
+			var appJson = await _codeProvider.ReadTextFileAsync(String.Empty, "app.json", false);
 			if (appJson != null)
 			{
 				ExpandoObject app = JsonConvert.DeserializeObject<ExpandoObject>(appJson);
@@ -273,7 +284,7 @@ namespace A2v10.Core.Web.Mvc
 
 		void GetAppFiles(String ext, TextWriter writer)
 		{
-			var files = _codeProvider.EnumerateFiles("_assets", $"*.{ext}");
+			var files = _codeProvider.EnumerateFiles("_assets", $"*.{ext}", false);
 			if (files == null)
 				return;
 			foreach (var f in files)

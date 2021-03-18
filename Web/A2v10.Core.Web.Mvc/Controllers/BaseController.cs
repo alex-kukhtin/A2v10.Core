@@ -15,7 +15,7 @@ using A2v10.Web.Identity;
 namespace A2v10.Core.Web.Mvc
 {
 
-	public class BaseController : Controller, IControllerProfiler, IControllerTenant
+	public class BaseController : Controller, IControllerProfiler, IControllerTenant, IControllerAdmin
 	{
 		protected readonly IApplicationHost _host;
 		protected readonly ILocalizer _localizer;
@@ -130,6 +130,13 @@ namespace A2v10.Core.Web.Mvc
 			_host.TenantId = TenantId;
 			_host.UserId = UserId;
 			_host.UserSegment = UserSegement;
+		}
+		#endregion
+
+		#region IControllerAdmin
+		public void SetAdmin()
+		{
+			_userStateManager.SetAdmin();
 		}
 		#endregion
 

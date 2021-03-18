@@ -34,6 +34,9 @@ namespace A2v10.Core.Web.Mvc.Controllers
 			ViewBag.__Build = 8000; // TODO: Build Value
 			ViewBag.__Minify = "min.";
 			ViewBag.__Theme = "classic";
+
+			if (pathInfo != null && pathInfo.StartsWith("admin", StringComparison.OrdinalIgnoreCase))
+				return View("Default.admin", viewModel);
 			return View(viewModel);
 		}
 	}

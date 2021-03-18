@@ -11,17 +11,14 @@ namespace A2v10.Infrastructure
 	{
 		Boolean IsFileSystem { get; }
 
-		String MakeFullPath(String path, String fileName);
+		String MakeFullPath(String path, String fileName, Boolean admin);
+		Task<String> ReadTextFileAsync(String path, String fileName, Boolean admin);
 
 		Boolean FileExists(String fullPath);
 		Boolean DirectoryExists(String fullPath);
-
-		Task<String> ReadTextFileAsync(String path, String fileName);
-		String ReadTextFile(String path, String fileName);
-
 		Stream FileStreamFullPathRO(String fullPath);
 
-		IEnumerable<String> EnumerateFiles(String path, String searchPattern);
+		IEnumerable<String> EnumerateFiles(String path, String searchPattern, Boolean admin);
 
 		// replaces
 		String ReplaceFileName(String baseFullName, String relativeName);

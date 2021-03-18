@@ -21,10 +21,14 @@ namespace A2v10.Core.Web.Mvc
 			if (filterContext.Controller is IControllerTenant iCtrlTenant)
 				iCtrlTenant.StartTenant();
 
-			if (filterContext.Controller is not IControllerProfiler iCtrlProfiler)
-				return;
+			if (filterContext.Controller is IControllerAdmin iCtrlAdmin)
+			{
+				if (filterContext.HttpContext.Request.Path.StartsWithSegments("/admin"))
+					iCtrlAdmin.SetAdmin();
+			}
 
-			_request = iCtrlProfiler.BeginRequest();
+			if (filterContext.Controller is IControllerProfiler iCtrlProfiler)
+				_request = iCtrlProfiler.BeginRequest();
 		}
 
 		public override void OnResultExecuted(ResultExecutedContext filterContext)

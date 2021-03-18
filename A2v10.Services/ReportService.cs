@@ -20,9 +20,15 @@ namespace A2v10.Services
 			_profiler = profiler;
 		}
 
+		IPlatformUrl CreatePlatformUrl(String baseUrl)
+		{
+			var url = new PlatformUrl(UrlKind.Report, baseUrl);
+			return url;
+		}
+
 		public async Task<IInvokeResult> ExportAsync(String url, ExportReportFormat format, Action<ExpandoObject> setParams)
 		{
-			var platrformUrl = new PlatformUrl(UrlKind.Report, url);
+			var platrformUrl = CreatePlatformUrl(url);
 			using var _ = _profiler.CurrentRequest.Start(ProfileAction.Report, $"export: {platrformUrl.Action}");
 			var rep = await _modelReader.GetReportAsync(platrformUrl);
 			var handler = rep.GetReportHandler(_serviceProvider);

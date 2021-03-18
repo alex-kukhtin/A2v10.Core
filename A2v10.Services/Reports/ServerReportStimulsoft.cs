@@ -14,12 +14,14 @@ namespace A2v10.Services
 		private readonly IExternalReport _externalReport;
 		private readonly IAppCodeProvider _appCodeProvider;
 		private readonly IDbContext _dbContext;
+		private readonly IUserStateManager _userStateManager;
 
-		public ServerReportStimulsoft(IExternalReport externalReport, IAppCodeProvider appCodeProvider, IDbContext dbContext)
+		public ServerReportStimulsoft(IExternalReport externalReport, IAppCodeProvider appCodeProvider, IDbContext dbContext, IUserStateManager userStateManager)
 		{
 			_externalReport = externalReport;
 			_appCodeProvider = appCodeProvider;
 			_dbContext = dbContext;
+			_userStateManager = userStateManager;
 		}
 
 		public async Task<IInvokeResult> ExportAsync(IModelReport report, ExportReportFormat format, ExpandoObject query, Action<ExpandoObject> setParams)
@@ -29,7 +31,7 @@ namespace A2v10.Services
 
 			String repPath = report.ReportPath();
 			if (repPath != null)
-				repPath = _appCodeProvider.MakeFullPath(report.Path, $"{repPath}.mrt");
+				repPath = _appCodeProvider.MakeFullPath(report.Path, $"{repPath}.mrt", _userStateManager.IsAdmin);
 
 			IDataModel dm = null;
 			if (report.HasModel())

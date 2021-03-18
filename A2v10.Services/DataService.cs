@@ -33,16 +33,26 @@ namespace A2v10.Services
 			_userStateManager = userStateManager;
 		}
 
-		public Task<IDataLoadResult> Load(UrlKind kind, String baseUrl, Action<ExpandoObject> setParams)
+		static IPlatformUrl CreatePlatformUrl(UrlKind kind, String baseUrl)
 		{
-			var platformBaseUrl = new PlatformUrl(kind, baseUrl);
+			return new PlatformUrl(kind, baseUrl, null);
+		}
+
+		static IPlatformUrl CreatePlatformUrl(String baseUrl, String id = null)
+		{
+			return new PlatformUrl(baseUrl, id);
+		}
+
+		public Task<IDataLoadResult> LoadAsync(UrlKind kind, String baseUrl, Action<ExpandoObject> setParams)
+		{
+			var platformBaseUrl = CreatePlatformUrl(kind, baseUrl);
 			return Load(platformBaseUrl, setParams);
 		}
 
-		public Task<IDataLoadResult> Load(String baseUrl, Action<ExpandoObject> setParams)
+		public Task<IDataLoadResult> LoadAsync(String baseUrl, Action<ExpandoObject> setParams)
 		{
 			// with redirect here only!
-			var platformBaseUrl = new PlatformUrl(baseUrl, null);
+			var platformBaseUrl = CreatePlatformUrl(baseUrl, null);
 			return Load(platformBaseUrl, setParams);
 		}
 
@@ -111,7 +121,7 @@ namespace A2v10.Services
 
 		public async Task<String> ExpandAsync(String baseUrl, Object Id, Action<ExpandoObject> setParams)
 		{
-			var platformBaseUrl = new PlatformUrl(baseUrl);
+			var platformBaseUrl = CreatePlatformUrl(baseUrl);
 			var view = await _modelReader.GetViewAsync(platformBaseUrl);
 			var expandProc = view.ExpandProcedure();
 
@@ -124,7 +134,7 @@ namespace A2v10.Services
 
 		public async Task DbRemoveAsync(String baseUrl, Object Id, String propertyName, Action<ExpandoObject> setParams)
 		{
-			var platformBaseUrl = new PlatformUrl(baseUrl);
+			var platformBaseUrl = CreatePlatformUrl(baseUrl);
 			var view = await _modelReader.GetViewAsync(platformBaseUrl);
 			var deleteProc = view.DeleteProcedure(propertyName);
 
@@ -136,7 +146,7 @@ namespace A2v10.Services
 
 		public async Task<String> ReloadAsync(String baseUrl, Action<ExpandoObject> setParams)
 		{
-			var result = await Load(baseUrl, setParams);
+			var result = await LoadAsync(baseUrl, setParams);
 			if (result.Model != null)
 				return JsonConvert.SerializeObject(result.Model.Root, JsonHelpers.DataSerializerSettings);
 			return "{}";
@@ -157,7 +167,7 @@ namespace A2v10.Services
 		{
 			String strId = Id != null ? Convert.ToString(Id, CultureInfo.InvariantCulture) : null;
 
-			var platformBaseUrl = new PlatformUrl(baseUrl, strId);
+			var platformBaseUrl = CreatePlatformUrl(baseUrl, strId);
 			var view = await _modelReader.GetViewAsync(platformBaseUrl);
 
 			String loadProc = view.LoadLazyProcedure(propertyName.ToPascalCase());
@@ -170,7 +180,7 @@ namespace A2v10.Services
 
 		public async Task<String> SaveAsync(String baseUrl, ExpandoObject data, Action<ExpandoObject> setParams)
 		{
-			var platformBaseUrl = new PlatformUrl(baseUrl);
+			var platformBaseUrl = CreatePlatformUrl(baseUrl);
 			var view = await _modelReader.GetViewAsync(platformBaseUrl);
 
 			var savePrms = view.CreateParameters(platformBaseUrl, null, setParams);
@@ -185,7 +195,7 @@ namespace A2v10.Services
 
 		public async Task<IInvokeResult> InvokeAsync(String baseUrl, String command, ExpandoObject data, Action<ExpandoObject> setParams)
 		{
-			var platformBaseUrl = new PlatformUrl(baseUrl);
+			var platformBaseUrl = CreatePlatformUrl(baseUrl);
 			var cmd = await _modelReader.GetCommandAsync(platformBaseUrl, command);
 
 			var prms = cmd.CreateParameters(platformBaseUrl, null, (eo) =>
@@ -234,7 +244,7 @@ namespace A2v10.Services
 				targetUrl += "/" + innerModel.Root.Resolve(view.TargetId);
 
 				// TODO: CurrentKind instead UrlKind.Page
-				var platformUrl = new PlatformUrl(UrlKind.Page, targetUrl);
+				var platformUrl = CreatePlatformUrl(UrlKind.Page, targetUrl);
 				view = await _modelReader.GetViewAsync(platformUrl);
 
 				//var rm = await RequestModel.CreateFromUrl(_codeProvider, rw.CurrentKind, targetUrl);
@@ -279,7 +289,7 @@ namespace A2v10.Services
 
 		public async Task<IBlobInfo> LoadBlobAsync(UrlKind kind, String baseUrl, Action<ExpandoObject> setParams, String suffix = null)
 		{
-			var platfromUrl = new PlatformUrl(kind, baseUrl);
+			var platfromUrl = CreatePlatformUrl(kind, baseUrl);
 			var blob = await _modelReader.GetBlobAsync(platfromUrl, suffix);
 			var prms = new ExpandoObject();
 			prms.Set("Id", blob.Id);

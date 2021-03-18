@@ -104,7 +104,7 @@ namespace A2v10.Core.Web.Site
 			services.AddScoped<IDataService, DataService>();
 			services.AddScoped<IReportService, ReportService>();
 			services.AddSingleton<IExternalReport, StimulsoftExternalReport>();
-			services.AddSingleton<IModelJsonReader, ModelJsonReader>();
+			services.AddScoped<IModelJsonReader, ModelJsonReader>();
 			services.AddSingleton<IAppConfiguration, AppConfiruation>();
 
 			services.AddScoped<IViewEngineProvider>(s =>

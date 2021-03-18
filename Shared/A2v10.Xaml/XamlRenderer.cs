@@ -54,7 +54,7 @@ namespace A2v10.Xaml
 					throw new XamlException("Xaml. Root is not 'UIElement'");
 
 				// TODO - StylesXaml cache
-				var stylesPath = _codeprovider.MakeFullPath(String.Empty, "styles.xaml");
+				var stylesPath = _codeprovider.MakeFullPath(String.Empty, "styles.xaml", info.Admin);
 				if (_codeprovider.FileExists(stylesPath))
 				{
 					using var stylesStream = _codeprovider.FileStreamFullPathRO(stylesPath);

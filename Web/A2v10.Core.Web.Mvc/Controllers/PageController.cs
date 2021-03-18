@@ -33,11 +33,12 @@ namespace A2v10.Core.Web.Mvc.Controllers
 		{
 			_dataService = dataService;
 			_codeProvider = codeProvider;
-			_scripter = new VueDataScripter(host, codeProvider, _localizer);
+			_scripter = new VueDataScripter(host, codeProvider, _localizer, userStateManager);
 			_viewEngineProvider = viewEngineProvider;
 		}
 
 		[Route("_page/{*pathInfo}")]
+		[Route("admin/_page/{*pathInfo}")]
 		public Task Page(String pathInfo)
 		{
 			// {pagePath}/action/id
@@ -47,6 +48,7 @@ namespace A2v10.Core.Web.Mvc.Controllers
 		}
 
 		[Route("_dialog/{*pathInfo}")]
+		[Route("admin/_dialog/{*pathInfo}")]
 		public Task Dialog(String pathInfo)
 		{
 			// {pagePath}/dialog/id
@@ -56,6 +58,7 @@ namespace A2v10.Core.Web.Mvc.Controllers
 		}
 
 		[Route("_popup/{*pathInfo}")]
+		[Route("admin/_popup/{*pathInfo}")]
 		public Task Popup(String pathInfo)
 		{
 			// {pagePath}/popup/id
@@ -66,7 +69,7 @@ namespace A2v10.Core.Web.Mvc.Controllers
 		{
 			try
 			{
-				var modelAndView = await _dataService.Load(kind, path, SetSqlQueryParams);
+				var modelAndView = await _dataService.LoadAsync(kind, path, SetSqlQueryParams);
 				await Render(modelAndView);
 			} 
 			catch (Exception ex)
@@ -101,7 +104,7 @@ namespace A2v10.Core.Web.Mvc.Controllers
 
 			var si = await _scripter.GetModelScript(msi);
 
-			var viewName = _codeProvider.MakeFullPath(rw.Path, rw.GetView(_host.Mobile));
+			var viewName = _codeProvider.MakeFullPath(rw.Path, rw.GetView(_host.Mobile), _userStateManager.IsAdmin);
 			var viewEngine = _viewEngineProvider.FindViewEngine(viewName);
 
 			// render XAML
@@ -115,7 +118,8 @@ namespace A2v10.Core.Web.Mvc.Controllers
 				//TypeChecker = typeChecker,
 				CurrentLocale = null,
 				IsDebugConfiguration = _host.IsDebugConfiguration,
-				SecondPhase = secondPhase
+				SecondPhase = secondPhase,
+				Admin = _userStateManager.IsAdmin
 			};
 
 			var result = await viewEngine.Engine.RenderAsync(ri);

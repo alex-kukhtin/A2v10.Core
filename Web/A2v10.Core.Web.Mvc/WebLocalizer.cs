@@ -82,7 +82,7 @@ namespace A2v10.Core.Web.Mvc
 			// locale may be "uk_UA"
 			var dirPath = _appCodeProvider.MapHostingPath("localization");
 
-			var appPath = _appCodeProvider.MakeFullPath("_localization", String.Empty);
+			var appPath = _appCodeProvider.MakeFullPath("_localization", String.Empty, false);
 
 			if (!Directory.Exists(dirPath))
 				dirPath = null;
@@ -100,7 +100,7 @@ namespace A2v10.Core.Web.Mvc
 					yield return new LocalePath(s, true);
 			}
 
-			foreach (var s in _appCodeProvider.EnumerateFiles(appPath, $"*.{locale}.txt"))
+			foreach (var s in _appCodeProvider.EnumerateFiles(appPath, $"*.{locale}.txt", false))
 				yield return new LocalePath(s, false);
 
 			// simple locale: uk
@@ -113,7 +113,7 @@ namespace A2v10.Core.Web.Mvc
 					foreach (var s in Directory.EnumerateFiles(dirPath, $"*.{locale}.txt"))
 						yield return new LocalePath(s, true);
 				}
-				foreach (var s in _appCodeProvider.EnumerateFiles(appPath, $"*.{locale}.txt"))
+				foreach (var s in _appCodeProvider.EnumerateFiles(appPath, $"*.{locale}.txt", false))
 					yield return new LocalePath(s, false);
 			}
 		}

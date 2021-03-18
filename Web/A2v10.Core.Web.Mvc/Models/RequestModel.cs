@@ -911,7 +911,7 @@ namespace A2v10.Core.Web.Mvc
 		{
 			var mi = GetModelInfo(kind, normalizedUrl);
 			String pathForLoad = mi.path; // _redirect.Value.Redirect(mi.path);
-			String jsonText = await codeProvider.ReadTextFileAsync(pathForLoad, "model.json");
+			String jsonText = await codeProvider.ReadTextFileAsync(pathForLoad, "model.json", false);
 			if (jsonText == null)
 				throw new FileNotFoundException($"File not found '{pathForLoad}/model.json'");
 

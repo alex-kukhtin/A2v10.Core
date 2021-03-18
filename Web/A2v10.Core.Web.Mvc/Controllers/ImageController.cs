@@ -67,7 +67,7 @@ namespace A2v10.Core.Web.Mvc.Controllers
 				if (String.IsNullOrEmpty(pathInfo))
 					throw new ArgumentOutOfRangeException(nameof(pathInfo), nameof(StaticImage));
 				pathInfo = pathInfo.Replace('-', '.');
-				var fullPath = _appCodeProvider.MakeFullPath(pathInfo, String.Empty);
+				var fullPath = _appCodeProvider.MakeFullPath(pathInfo, String.Empty, _userStateManager.IsAdmin);
 				if (!_appCodeProvider.FileExists(fullPath))
 					throw new FileNotFoundException($"File not found '{pathInfo}'");
 				using var stream = _appCodeProvider.FileStreamFullPathRO(fullPath);

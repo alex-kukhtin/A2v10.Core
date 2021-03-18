@@ -19,5 +19,6 @@ namespace A2v10.Infrastructure
 		public String CurrentLocale { get; init; }
 		public Boolean IsDebugConfiguration { get; init; }
 		public Boolean SecondPhase { get; init; }
+		public Boolean Admin { get; init; }
 	}
 }

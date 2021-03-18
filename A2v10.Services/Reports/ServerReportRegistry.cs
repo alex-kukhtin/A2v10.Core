@@ -21,7 +21,8 @@ namespace A2v10.Services
 					new ServerReportStimulsoft(
 						serviceProvider.GetService<IExternalReport>(),
 						serviceProvider.GetService<IAppCodeProvider>(),
-						serviceProvider.GetService<IDbContext>()
+						serviceProvider.GetService<IDbContext>(),
+						serviceProvider.GetService<IUserStateManager>()
 					),
 				_ => 
 				throw new NotImplementedException($"ReportHandler yet not implemented ({type})")

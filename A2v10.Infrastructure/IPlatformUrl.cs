@@ -19,6 +19,7 @@ namespace A2v10.Infrastructure
 	{
 		String LocalPath { get; }
 		String BaseUrl { get; }
+
 		UrlKind Kind { get; }
 		String Action { get; }
 		String Id { get; }
