@@ -58,6 +58,7 @@ namespace A2v10.Xaml
 
 		public UIElement EmptyPanel { get; set; }
 		public String EmptyPanelDelegate { get; set; }
+		public AutoSelectMode AutoSelect { get; set; }
 
 		GroupDescriptions _groupBy;
 		public GroupDescriptions GroupBy
@@ -146,13 +147,12 @@ namespace A2v10.Xaml
 
 			var groupByBind = GetBinding(nameof(GroupBy));
 			if (groupByBind != null)
-			{
 				dataGrid.MergeAttribute(":group-by", groupByBind.GetPath(context));
-			}
 			else if (_groupBy != null)
-			{
 				dataGrid.MergeAttribute(":group-by", _groupBy.GetJsValue(context));
-			}
+
+			if (AutoSelect != AutoSelectMode.None)
+				dataGrid.MergeAttribute("auto-select", AutoSelect.ToString().ToKebabCase());
 
 			dataGrid.RenderStart(context);
 			Int32 colIndex = 0;

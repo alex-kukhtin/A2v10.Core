@@ -179,9 +179,9 @@ app.modules['std:const'] = function () {
 
 
 
-// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-// 20200925-7708
+// 20210223-7751
 // services/utils.js
 
 app.modules['std:utils'] = function () {
@@ -717,8 +717,7 @@ app.modules['std:utils'] = function () {
 		var du = 0;
 		switch (unit) {
 			case 'year':
-				// TODO: check getTimezone
-				return new Date(dt.getFullYear() + nm, dt.getMonth(), dt.getDate(), 0, 0, 0, 0);
+				return new Date(Date.UTC(dt.getFullYear() + nm, dt.getMonth(), dt.getDate(), 0, 0, 0, 0));
 			case 'month':
 				// save day of month
 				let newMonth = dt.getMonth() + nm;
@@ -1968,9 +1967,9 @@ app.modules['std:console'] = function () {
 		}
 	}
 };
-// Copyright © 2015-2019 Alex Kukhtin. All rights reserved.
+// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-/*20191122-7587*/
+/*20210223-7751*/
 /*validators.js*/
 
 app.modules['std:validators'] = function () {
@@ -2113,6 +2112,9 @@ app.modules['std:validators'] = function () {
 				}
 				else if (utils.isString(vr)) {
 					retval.push({ msg: vr, severity: sev });
+				}
+				else if (utils.isObjectExact(vr)) {
+					retval.push({ msg: vr.msg, severity: vr.severity });
 				}
 				else if (!vr) {
 					retval.push({ msg: rule.msg, severity: sev });
@@ -3715,14 +3717,13 @@ app.modules['std:impl:array'] = function () {
 })();
 
 
-// Copyright © 2015-2018 Alex Kukhtin. All rights reserved.
+// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-// 20180319-7135
+// 20210302-7752
 // dataservice.js
 (function () {
 
 	let http = require('std:http');
-	let utils = require('std:utils');
 
 	function post(url, data, raw) {
 		return http.post(url, data, raw);
@@ -4895,9 +4896,9 @@ Vue.component('validator-control', {
     }
 });
 */
-// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-/*20200205-7625*/
+/*20200219-7749*/
 /*components/textbox.js*/
 
 /* password-- fake fields are a workaround for chrome autofill getting the wrong fields -->*/
@@ -4908,7 +4909,7 @@ Vue.component('validator-control', {
 	const mask = require('std:mask');
 
 	let textBoxTemplate =
-`<div :class="cssClass()" :test-id="testId">
+		`<div :class="cssClass()" :test-id="testId">
 	<label v-if="hasLabel"><span v-text="label"/><slot name="hint"/><slot name="link"></slot></label>
 	<div class="input-group">
 		<input v-if="password" type="text" class="fake-pwd-field" />
@@ -4927,7 +4928,7 @@ Vue.component('validator-control', {
 `;
 
 	let textAreaTemplate =
-`<div :class="cssClass()" :test-id="testId">
+		`<div :class="cssClass()" :test-id="testId">
 	<label v-if="hasLabel"><span v-text="label"/><slot name="hint"/><slot name="link"></slot></label>
 	<div class="input-group">
 		<textarea ref="input" v-focus v-auto-size="autoSize" v-bind:value="modelValue2" :style="areaStyle"
@@ -4944,7 +4945,7 @@ Vue.component('validator-control', {
 `;
 
 	let staticTemplate =
-`<div :class="cssClass()" :test-id="testId">
+		`<div :class="cssClass()" :test-id="testId">
 	<label v-if="hasLabel"><span v-text="label"/><slot name="hint"/><slot name="link"></slot></label>
 	<div class="input-group static">
 		<span v-focus v-text="textProp" :class="inputClass" :tabindex="tabIndex" class="static-input"/>
@@ -4963,7 +4964,7 @@ Vue.component('validator-control', {
 
 	let baseControl = component('control');
 
-	Vue.component('textbox', {
+	const textbox = {
 		extends: baseControl,
 		template: textBoxTemplate,
 		props: {
@@ -5011,15 +5012,18 @@ Vue.component('validator-control', {
 			},
 			onKey(event) {
 				if (!this.number) return;
-				if ((event.charCode < 48 || event.charCode > 57) && event.charCode !== 45 /*minus*/ ) {
+				if ((event.charCode < 48 || event.charCode > 57) && event.charCode !== 45 /*minus*/) {
 					event.preventDefault();
 					event.stopPropagation();
 				}
 			}
 		}
-	});
+	};
 
-	Vue.component('a2-textarea', {
+	Vue.component('textbox', textbox);
+	app.components['textbox'] = textbox;
+
+	const textarea = {
 		extends: baseControl,
 		template: textAreaTemplate,
 		props: {
@@ -5034,7 +5038,7 @@ Vue.component('validator-control', {
 			placeholder: String,
 			autoSize: Boolean,
 			rows: Number,
-			spellCheck: { type: Boolean, default:undefined },
+			spellCheck: { type: Boolean, default: undefined },
 			enterCommand: Function,
 			maxHeight: String
 		},
@@ -5083,9 +5087,9 @@ Vue.component('validator-control', {
 			}
 		}
 
-	});
+	};
 
-	Vue.component('static', {
+	const staticControl = {
 		extends: baseControl,
 		template: staticTemplate,
 		props: {
@@ -5098,7 +5102,7 @@ Vue.component('validator-control', {
 			itemToValidate: Object,
 			propToValidate: String,
 			text: [String, Number, Date]
-		}, 
+		},
 		computed: {
 			textProp() {
 				if (this.mask && this.text)
@@ -5106,7 +5110,17 @@ Vue.component('validator-control', {
 				return this.text;
 			}
 		}
-	});
+	};
+
+
+	Vue.component('textbox', textbox);
+	app.components['textbox'] = textbox;
+
+	Vue.component('a2-textarea', textarea);
+	app.components['a2-textarea', textarea];
+
+	Vue.component('static', staticControl);
+	app.components['static', staticControl];
 
 })();
 // Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
@@ -6345,7 +6359,7 @@ Vue.component('validator-control', {
 })();
 // Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-// 20210127-7744
+// 20210328-7760
 // components/datagrid.js*/
 
 (function () {
@@ -6878,7 +6892,8 @@ Vue.component('validator-control', {
 			isItemActive: Function,
 			hitItem: Function,
 			emptyPanelCallback: Function,
-			testId: String
+			testId: String,
+			autoSelect: String
 		},
 		template: dataGridTemplate,
 		components: {
@@ -7042,9 +7057,8 @@ Vue.component('validator-control', {
 		methods: {
 			selected() {
 				let src = this.itemsSource;
-				if (src.$origin) {
+				if (src.$origin)
 					src = src.$origin;
-				}
 				return src.$selected;
 			},
 			$addColumn(column) {
@@ -7154,6 +7168,17 @@ Vue.component('validator-control', {
 				for (var gr of this.$groups)
 					gr.expanded = gr.level < lev;
 			},
+			__autoSelect() {
+				if (!this.autoSelect || !this.$items || !this.$items.length) return;
+				if (this.$items.$selected) return;
+				switch (this.autoSelect) {
+					case 'first-item':
+						this.$items[0].$select();
+						break;
+					case 'last-item':
+						this.$items[this.$items.length - 1].$select();
+				}
+			},
 			__invoke__test__(args) {
 				args = args || {};
 				if (args.target !== 'datagrid')
@@ -7181,6 +7206,7 @@ Vue.component('validator-control', {
 				let tr = rows[ix].$refs.tr;
 				tr.scrollIntoViewCheck();
 			}
+			this.__autoSelect();
 		},
 		mounted() {
 			if (this.testId)
@@ -11158,7 +11184,7 @@ Vue.directive('resize', {
 
 // Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-/*20210131-7744*/
+/*20210326-7760*/
 // controllers/base.js
 
 (function () {
@@ -11595,12 +11621,14 @@ Vue.directive('resize', {
 				}
 				let fileUrl = urltools.combine(root, '_file', url, id);
 				let qry = {};
+				let action = (opts || {}).action;
 				if (token)
 					qry.token = token;
+				if (action == 'download')
+					qry.export = 1;
 				fileUrl += urltools.makeQueryString(qry);
-				switch ((opts || {}).action) {
+				switch (action) {
 					case 'download':
-						qry.export = 1;
 						htmlTools.downloadUrl(fileUrl);
 						break;
 					case 'print':
@@ -11870,6 +11898,7 @@ Vue.directive('resize', {
 							});
 						case 'edit-selected':
 							if (argIsNotAnArray()) return;
+							if (!arg.$selected) return;
 							return __runDialog(url, arg.$selected, query, (result) => {
 								arg.$selected.$merge(result);
 								arg.__fireChange__('selected');
