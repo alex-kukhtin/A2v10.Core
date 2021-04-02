@@ -116,9 +116,8 @@ namespace A2v10.Services
 			else
 			{
 				var ps = value.Split('-');
-				eo.RemoveKeys("From"); // replace prev value
-				eo.RemoveKeys("To");
-				if (ps[0].ToLowerInvariant() == "all")
+				eo.RemoveKeys("From,To"); // replace prev value
+				if ("all".Equals(ps[0], StringComparison.OrdinalIgnoreCase))
 				{
 					// from js! utils.date.minDate/maxDate
 					eo.Set("From", "19010101");

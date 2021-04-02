@@ -12,7 +12,7 @@ namespace A2v10.Services
 	public class RedirectModule
 	{
 		private readonly String _path;
-		private readonly ConcurrentDictionary<String, String> _dict = new(StringComparer.CurrentCultureIgnoreCase);
+		private readonly ConcurrentDictionary<String, String> _dict = new(StringComparer.OrdinalIgnoreCase);
 
 		public RedirectModule(String path, Boolean watch)
 		{
