@@ -1,8 +1,9 @@
 ﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-using A2v10.Infrastructure;
 using System;
 using System.Text;
+
+using A2v10.Infrastructure;
 
 /*
  * $exec(cmd, arg, confirm, opts) : $canExecute(cmd, arg, opts)
@@ -58,6 +59,7 @@ namespace A2v10.Xaml
 		Edit,
 		EditSelected,
 		Show,
+		ShowSelected,
 		Browse,
 		Append, // create in dialog and append to array,
 		New, // create in dialog and update selected in array;
@@ -141,14 +143,18 @@ namespace A2v10.Xaml
 
 		internal String GetHrefForCommand(RenderContext context)
 		{
-			return Command switch
+			switch (Command)
 			{
-				CommandType.Open   => $"$href({CommandUrl(context)}, {CommandArgument(context)})",
-				CommandType.MailTo => $"$mailto({CommandArgument(context)}, {GetData(context)})",
-				CommandType.Help   => $"$helpHref({CommandUrl(context)})",
-				CommandType.NavigateExternal => $"{CommandUrl(context, decorate: false, skipCheck: true)}",
-				_ => null,
-			};
+				case CommandType.Open:
+					return $"$href({CommandUrl(context)}, {CommandArgument(context)})";
+				case CommandType.MailTo:
+					return $"$mailto({CommandArgument(context)}, {GetData(context)})";
+				case CommandType.Help:
+					return $"$helpHref({CommandUrl(context)})";
+				case CommandType.NavigateExternal:
+					return $"{CommandUrl(context, decorate: false, skipCheck: true)}";
+			}
+			return null;
 		}
 
 		internal String NewWindowJS => NewWindow.ToString().ToLowerInvariant();
@@ -181,16 +187,17 @@ namespace A2v10.Xaml
 					return "$requery()";
 
 				case CommandType.Save:
-					return $"$save({{toast: {GetToast(context)}, options:{GetOptionsValid()}}})";
+					return $"$save({{toast: {GetToast(context)}, options:{GetOptionsValid(context)}}})";
 
 				case CommandType.Clear:
 					return $"{CommandArgument(context)}.$empty()";
 
 				case CommandType.Close:
-					if (src != null) {
+					if (src != null)
+					{
 						var inlineModal = src.FindParent<InlineDialog>();
 						if (inlineModal != null)
-						return $"$inlineClose('{inlineModal.Id}', false)";
+							return $"$inlineClose('{inlineModal.Id}', false)";
 					}
 					return context.IsDialog ? "$modalClose()" : "$close()";
 
@@ -199,7 +206,7 @@ namespace A2v10.Xaml
 
 				case CommandType.SaveAndClose:
 					if (context.IsDialog)
-						return $"$modalSaveAndClose(true, {GetOptionsValid()})";
+						return $"$modalSaveAndClose(true, {GetOptionsValid(context)})";
 					return $"$saveAndClose({{toast: {GetToast(context)}}})";
 
 				case CommandType.OpenSelected:
@@ -209,7 +216,7 @@ namespace A2v10.Xaml
 					return $"$openSelectedFrame({CommandUrl(context, decorate: true)}, {CommandArgument(context)}, {UpdateAfterArgument(context)})";
 
 				case CommandType.Select:
-					return $"$modalSelect({CommandArgument(context)}, {GetOptionsValid()})";
+					return $"$modalSelect({CommandArgument(context)}, {GetOptionsValid(context)})";
 
 				case CommandType.SelectChecked:
 					return $"$modalSelectChecked({CommandArgument(context)})";
@@ -230,7 +237,7 @@ namespace A2v10.Xaml
 					return $"$navigateSimple({CommandUrl(context)}, {NewWindowJS})";
 
 				case CommandType.NavigateExternal:
-					return $"$navigateExternal({CommandUrl(context, decorate:false, skipCheck:true)}, {NewWindowJS})";
+					return $"$navigateExternal({CommandUrl(context, decorate: false, skipCheck: true)}, {NewWindowJS})";
 
 				case CommandType.Download:
 					return $"$download({CommandUrl(context)})";
@@ -248,7 +255,7 @@ namespace A2v10.Xaml
 					if (indirect)
 					{
 						var argSting = "this";
-						if (!IsArgumentEmpty())
+						if (!IsArgumentEmpty(context))
 							argSting = CommandArgument(context);
 						// arg4 may contain a single quote!!!
 						return $"{{cmd:$navigate, eval: true, arg1:{CommandUrl(context, true)}, arg2:'{argSting}', arg3:{NewWindowJS}, arg4:{UpdateAfterArgument(context)}}}";
@@ -257,7 +264,7 @@ namespace A2v10.Xaml
 						return $"$navigate({CommandUrl(context)}, {CommandArgument(context)}, {NewWindowJS}, {UpdateAfterArgument(context)})";
 
 				case CommandType.Create:
-					return $"$navigate({CommandUrl(context)}, {CommandArgument(context, nullable:true)}, {NewWindowJS}, {UpdateAfterArgument(context)}, {GetOptions(context)})";
+					return $"$navigate({CommandUrl(context)}, {CommandArgument(context, nullable: true)}, {NewWindowJS}, {UpdateAfterArgument(context)}, {GetOptions(context)})";
 
 				case CommandType.Remove:
 					if (indirect)
@@ -277,7 +284,7 @@ namespace A2v10.Xaml
 				case CommandType.Execute:
 					if (indirect)
 					{
-						var arg2 = IsArgumentEmpty() ? "this" : CommandArgument(context);
+						var arg2 = IsArgumentEmpty(context) ? "this" : CommandArgument(context);
 						return $"{{cmd:$exec, arg1:'{GetName()}', arg2:'{arg2}', arg3: {GetConfirm(context)}, arg4: {GetOptions(context)}}}";
 					}
 					if (argument != null)
@@ -292,13 +299,13 @@ namespace A2v10.Xaml
 						$"{GetOptions(context)}, {CommandUrlOptional(context)}, {GetData(context)})";
 
 				case CommandType.Export:
-					return $"$export({CommandArgument(context, nullable:true)}, {CommandUrlOptional(context)}, {GetData(context)}, {GetOptions(context)})";
+					return $"$export({CommandArgument(context, nullable: true)}, {CommandUrlOptional(context)}, {GetData(context)}, {GetOptions(context)})";
 
 				case CommandType.ExportTo:
 					return $"$exportTo('{Format}', {CommandFileName(context)})";
 
 				case CommandType.File:
-					return $"$file({CommandUrl(context)}, {CommandArgument(context)}, {GetOptionsForFile()})";
+					return $"$file({CommandUrl(context)}, {CommandArgument(context)}, {GetOptionsForFile(context)})";
 
 				case CommandType.Dialog:
 					if (Action == DialogAction.Unknown)
@@ -310,12 +317,12 @@ namespace A2v10.Xaml
 					if (indirect)
 					{
 						String arg3 = "this";
-						if (!IsArgumentEmpty())
+						if (!IsArgumentEmpty(context))
 							arg3 = CommandArgument(context);
 						// command, url, data
-						return $"{{cmd:$dialog, isDialog:true, arg1:'{action}', arg2:{CommandUrl(context, decorate:true)}, arg3: '{arg3}'}}";
+						return $"{{cmd:$dialog, isDialog:true, arg1:'{action}', arg2:{CommandUrl(context, decorate: true)}, arg3: '{arg3}'}}";
 					}
-					return $"$dialog('{action}', {CommandUrl(context)}, {CommandArgument(context, bNullable)}, {GetData(context, func:true)}, {GetOptions(context)})";
+					return $"$dialog('{action}', {CommandUrl(context)}, {CommandArgument(context, bNullable)}, {GetData(context, func: true)}, {GetOptions(context)})";
 				case CommandType.EUSign:
 					return $"$eusign({CommandUrl(context)}, {CommandArgument(context)})";
 				default:
@@ -339,12 +346,12 @@ namespace A2v10.Xaml
 			return $"'{Report}'";
 		}
 
-		String GetOptions(RenderContext _/*context*/)
+		String GetOptions(RenderContext context)
 		{
-			if (!SaveRequired && !ValidRequired && !CheckReadOnly && !Export && !Print && !NewWindow 
+			if (!SaveRequired && !ValidRequired && !CheckReadOnly && !Export && !Print && !NewWindow
 				&& !CheckArgument && !ReloadAfter && Permission == Permission.None)
 				return nullString;
-			var sb = new StringBuilder("{");
+			StringBuilder sb = new StringBuilder("{");
 			if (SaveRequired)
 				sb.Append("saveRequired: true,");
 			if (ValidRequired)
@@ -367,26 +374,28 @@ namespace A2v10.Xaml
 			if (ReloadAfter)
 				sb.Append("reloadAfter: true,");
 			sb.RemoveTailComma();
-			sb.Append('}');
+			sb.Append("}");
 			return sb.ToString();
 		}
 
-		String GetOptionsForFile()
+		String GetOptionsForFile(RenderContext context)
 		{
 			if (FileAction == FileAction.Unknown)
 				return nullString;
 			return $"{{action: '{FileAction.ToString().ToLowerInvariant()}'}}";
 		}
 
-		String GetOptionsValid()
+		String GetOptionsValid(RenderContext context)
 		{
 			if (!ValidRequired)
 				return nullString;
-			var sb = new StringBuilder("{");
+			StringBuilder sb = new StringBuilder("{");
 			if (ValidRequired)
+			{
 				sb.Append("validRequired: true, ");
+			}
 			sb.RemoveTailComma();
-			sb.Append('}');
+			sb.Append("}");
 			return sb.ToString();
 		}
 
@@ -445,7 +454,7 @@ namespace A2v10.Xaml
 			return Toast.GetJsValue(context);
 		}
 
-		Boolean IsArgumentEmpty()
+		Boolean IsArgumentEmpty(RenderContext context)
 		{
 			var argBind = GetBinding(nameof(Argument));
 			return argBind == null || String.IsNullOrEmpty(argBind.Path);
@@ -518,12 +527,12 @@ namespace A2v10.Xaml
 			return $"'{Url}'";
 		}
 
-		public static void MergeDisabled(TagBuilder tag, String disabledVal)
+		internal void MergeDisabled(TagBuilder tag, String disabledVal)
 		{
 			var existingDisabled = tag.GetAttribute(":disabled");
 			if (!String.IsNullOrEmpty(existingDisabled))
 				disabledVal = $"{existingDisabled} || {disabledVal}";
-			tag.MergeAttribute(":disabled", disabledVal, replaceExisting:true);
+			tag.MergeAttribute(":disabled", disabledVal, replaceExisting: true);
 		}
 
 		internal void MergeCommandAttributes(TagBuilder tag, RenderContext context)
@@ -532,23 +541,25 @@ namespace A2v10.Xaml
 			{
 				case CommandType.Open:
 				case CommandType.Report:
-					if (CheckArgument) {
+					if (CheckArgument)
+					{
 						var arg = GetBinding(nameof(Argument));
 						if (arg != null)
-							tag.MergeAttribute(":disabled", $"!({arg.GetPath(context)})", replaceExisting:true);
-					} else if (CheckReadOnly)
-						tag.MergeAttribute(":disabled", $"$isReadOnly({GetOptions(context)})", replaceExisting:true);
+							tag.MergeAttribute(":disabled", $"!({arg.GetPath(context)})", replaceExisting: true);
+					}
+					else if (CheckReadOnly)
+						tag.MergeAttribute(":disabled", $"$isReadOnly({GetOptions(context)})", replaceExisting: true);
 					break;
 				case CommandType.Create:
 					if (CheckReadOnly)
-						tag.MergeAttribute(":disabled", $"$isReadOnly({GetOptions(context)})", replaceExisting:true);
+						tag.MergeAttribute(":disabled", $"$isReadOnly({GetOptions(context)})", replaceExisting: true);
 					break;
 				case CommandType.Save:
 				case CommandType.SaveAndClose:
 					if (context.IsDataModelIsReadOnly)
-						tag.MergeAttribute(":disabled", "true", replaceExisting:true);
+						tag.MergeAttribute(":disabled", "true", replaceExisting: true);
 					else
-						tag.MergeAttribute(":disabled", "!$canSave", replaceExisting:true);
+						tag.MergeAttribute(":disabled", "!$canSave", replaceExisting: true);
 					break;
 				case CommandType.Execute:
 					MergeDisabled(tag, $"!$canExecute('{CommandName}', {CommandArgument(context, true)}, {GetOptions(context)})");
@@ -557,13 +568,13 @@ namespace A2v10.Xaml
 				case CommandType.Prepend:
 				case CommandType.Remove:
 					if (context.IsDataModelIsReadOnly)
-						tag.MergeAttribute(":disabled", "true", replaceExisting:true);
+						tag.MergeAttribute(":disabled", "true", replaceExisting: true);
 					break;
 				case CommandType.SelectChecked:
 					{
 						var arg = GetBinding(nameof(Argument));
 						if (arg != null)
-							tag.MergeAttribute(":disabled", $"!$hasChecked({arg.GetPath(context)})", replaceExisting:true);
+							tag.MergeAttribute(":disabled", $"!$hasChecked({arg.GetPath(context)})", replaceExisting: true);
 					}
 					break;
 				case CommandType.OpenSelected:
@@ -574,39 +585,39 @@ namespace A2v10.Xaml
 					{
 						var arg = GetBinding(nameof(Argument));
 						if (arg != null)
-							tag.MergeAttribute(":disabled", $"!$hasSelected({arg.GetPath(context)}, {GetOptionsValid()})", replaceExisting:true);
+							tag.MergeAttribute(":disabled", $"!$hasSelected({arg.GetPath(context)}, {GetOptionsValid(context)})", replaceExisting: true);
 					}
 					break;
 				case CommandType.RemoveSelected:
 					if (context.IsDataModelIsReadOnly)
-						tag.MergeAttribute(":disabled", "true", replaceExisting:true);
+						tag.MergeAttribute(":disabled", "true", replaceExisting: true);
 					else
 					{
 						var arg = GetBinding(nameof(Argument));
 						if (arg != null)
-							tag.MergeAttribute(":disabled", $"!$hasSelected({arg.GetPath(context)})", replaceExisting:true);
+							tag.MergeAttribute(":disabled", $"!$hasSelected({arg.GetPath(context)})", replaceExisting: true);
 					}
 					break;
 				case CommandType.Dialog:
-					if (Action == DialogAction.EditSelected)
+					if (Action == DialogAction.EditSelected || Action == DialogAction.ShowSelected)
 					{
 						var arg = GetBinding(nameof(Argument));
 						if (arg != null)
-							tag.MergeAttribute(":disabled", $"!$hasSelected({arg.GetPath(context)})", replaceExisting:true);
+							tag.MergeAttribute(":disabled", $"!$hasSelected({arg.GetPath(context)})", replaceExisting: true);
 					}
 					else if (CheckArgument)
 					{
 						var arg = GetBinding(nameof(Argument));
 						if (arg != null)
-							tag.MergeAttribute(":disabled", $"!({arg.GetPath(context)})", replaceExisting:true);
+							tag.MergeAttribute(":disabled", $"!({arg.GetPath(context)})", replaceExisting: true);
 					}
 					break;
 				case CommandType.Clear:
 					{
 						var arg = GetBinding(nameof(Argument));
 						if (arg != null)
-							tag.MergeAttribute("v-if", $"!({arg.GetPath(context)}.$isEmpty)", replaceExisting:true);
-						}
+							tag.MergeAttribute("v-if", $"!({arg.GetPath(context)}.$isEmpty)", replaceExisting: true);
+					}
 					break;
 			}
 		}
@@ -615,21 +626,22 @@ namespace A2v10.Xaml
 		{
 			if (CheckReadOnly)
 				return false; // always disable readonly commands
-			return Command switch
+			switch (Command)
 			{
-				CommandType.Close or 
-				CommandType.Refresh or 
-				CommandType.Reload or 
-				CommandType.Export or 
-				CommandType.Report or 
-				CommandType.Requery or 
-				CommandType.MailTo or 
-				CommandType.Help or 
-				CommandType.Print or 
-				CommandType.Execute or 
-				CommandType.ExecuteSelected => true,
-				_ => false,
-			};
+				case CommandType.Close:
+				case CommandType.Refresh:
+				case CommandType.Reload:
+				case CommandType.Export:
+				case CommandType.Report:
+				case CommandType.Requery:
+				case CommandType.MailTo:
+				case CommandType.Help:
+				case CommandType.Print:
+				case CommandType.Execute:
+				case CommandType.ExecuteSelected:
+					return true;
+			}
+			return false;
 		}
 	}
 }
