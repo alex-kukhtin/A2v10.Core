@@ -199,6 +199,7 @@ namespace A2v10.Services
 		public String File { get; set; }
 		public String ClrType { get; set; }
 		public Boolean Async { get; set; }
+		public Boolean DebugOnly { get; set; } /*TODO: Implement me*/
 
 		public override String LoadProcedure()
 		{

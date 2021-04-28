@@ -1,4 +1,5 @@
-﻿
+﻿// Copyright © 2020-2021 Alex Kukhtin. All rights reserved.
+
 using System.Dynamic;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
