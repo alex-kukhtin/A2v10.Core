@@ -1,7 +1,8 @@
-﻿// Copyright © 2019 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2019-2021 Alex Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
+
 using A2v10.System.Xaml;
 
 namespace A2v10.Xaml

@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
 
@@ -30,6 +30,7 @@ namespace A2v10.Xaml
 		public Bind EnterCommand { get; set; }
 
 		public Accel Accel { get; set; }
+		public Boolean ShowClear { get; set; }
 
 		protected virtual String TagName => Multiline ? "a2-textarea" : "textbox";
 
@@ -37,11 +38,8 @@ namespace A2v10.Xaml
 		{
 			if (CheckDisabledModel(context))
 				return;
-
 			var input = new TagBuilder(TagName, null, IsInGrid);
-
 			onRender?.Invoke(input);
-
 			MergeAttributes(input, context);
 			MergeDisabled(input, context);
 			SetSize(input, nameof(TextBox));
@@ -66,9 +64,9 @@ namespace A2v10.Xaml
 
 			var enterCmd = GetBindingCommand(nameof(EnterCommand));
 			if (enterCmd != null)
-			{
 				input.MergeAttribute(":enter-command", $"() => {enterCmd.GetCommand(context)}"); // FUNCTION!!!
-			}
+			if (ShowClear)
+				input.MergeAttribute(":has-clear", "true");
 			MergeAlign(input, context, Align);
 			MergeBindingAttributeString(input, context, "placeholder", nameof(Placeholder), Placeholder);
 			MergeValue(input, context);

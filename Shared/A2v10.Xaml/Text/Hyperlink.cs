@@ -1,6 +1,7 @@
-﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
+
 using A2v10.System.Xaml;
 
 namespace A2v10.Xaml
@@ -17,7 +18,7 @@ namespace A2v10.Xaml
 		public Object Content { get; set; }
 		public ControlSize Size { get; set; }
 		public Icon Icon { get; set; }
-		public Boolean Highlight {get; set;}
+		public Boolean Highlight { get; set; }
 
 		public Command Command { get; set; }
 
@@ -49,7 +50,7 @@ namespace A2v10.Xaml
 				MergeAttributes(wrap, context, MergeAttrMode.Visibility);
 				wrap.RenderStart(context);
 				var hasAddOn = wrap.HasClass("add-on");
-				RenderHyperlink(context, false, null, inside:true, addOn:hasAddOn);
+				RenderHyperlink(context, false, null, inside: true, addOn: hasAddOn);
 				DropDown.RenderElement(context);
 				wrap.RenderEnd(context);
 			}
@@ -72,7 +73,7 @@ namespace A2v10.Xaml
 			Boolean bHasDropDown = DropDown != null;
 
 			var tag = new TagBuilder("a", "a2-hyperlink", inGrid);
-			tag.MergeAttribute("href", String.Empty);
+			tag.MergeAttribute("href", "javascript:void(0)");
 			onRender?.Invoke(tag);
 			var attrMode = MergeAttrMode.All;
 			if (inside)
