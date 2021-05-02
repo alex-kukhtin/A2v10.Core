@@ -2,6 +2,7 @@
 
 using System;
 using System.Text;
+
 using A2v10.Infrastructure;
 
 namespace A2v10.Xaml
@@ -14,7 +15,6 @@ namespace A2v10.Xaml
 		Large = 2,
 		Max = 3
 	}
-
 
 	public class Dialog : RootContainer, ISupportTwoPhaseRendering
 	{
@@ -39,6 +39,8 @@ namespace A2v10.Xaml
 
 		public UIElementCollection Buttons { get; set; } = new UIElementCollection();
 
+		public AccelCommandCollection AccelCommands { get; set; } = new AccelCommandCollection();
+
 		protected virtual void OnCreateContent(TagBuilder tag)
 		{
 		}
@@ -55,7 +57,7 @@ namespace A2v10.Xaml
 			if (AlwaysOk)
 				opts.Append("'alwaysOk': true,");
 			opts.RemoveTailComma();
-			opts.Append('}');
+			opts.Append("}");
 			return opts.ToString();
 		}
 
@@ -89,7 +91,7 @@ namespace A2v10.Xaml
 			RenderHeader(context);
 			RenderLoadIndicator(context);
 
-			
+
 			var content = new TagBuilder("div", "modal-content");
 			OnCreateContent(content);
 			if (Height != null)
@@ -122,6 +124,7 @@ namespace A2v10.Xaml
 			content.RenderEnd(context);
 
 			RenderFooter(context);
+			RenderAccelCommands(context);
 
 			dialog.RenderEnd(context);
 		}
@@ -148,7 +151,7 @@ namespace A2v10.Xaml
 			if (MinWidth != null)
 				sb.Append($"minWidth:'{MinWidth.Value}',");
 			sb.RemoveTailComma();
-			sb.Append('}');
+			sb.Append("}");
 			dialog.MergeAttribute("v-modal-width", sb.ToString());
 		}
 
@@ -185,11 +188,22 @@ namespace A2v10.Xaml
 			header.RenderEnd(context);
 		}
 
-		static void RenderLoadIndicator(RenderContext context)
+		void RenderLoadIndicator(RenderContext context)
 		{
 			new TagBuilder("div", "load-indicator")
 				.MergeAttribute("v-show", "$isLoading")
 				.Render(context);
+		}
+
+		protected virtual void RenderAccelCommands(RenderContext context)
+		{
+			if (AccelCommands == null || AccelCommands.Count == 0)
+				return;
+			var cmd = new TagBuilder("template");
+			cmd.RenderStart(context);
+			foreach (var ac in AccelCommands)
+				ac.RenderElement(context);
+			cmd.RenderEnd(context);
 		}
 
 		protected virtual void RenderFooter(RenderContext context)
@@ -238,7 +252,7 @@ namespace A2v10.Xaml
 		{
 			if (Children.Count != 1)
 				throw new XamlException("Invalid dialog for two-phase rendering");
-			if (Children[0] is not EUSignFrame eusignFrame)
+			if (!(Children[0] is EUSignFrame eusignFrame))
 				throw new XamlException("Invalid dialog for two-phase rendering");
 			eusignFrame.RenderTwoPhaseContent(context);
 		}

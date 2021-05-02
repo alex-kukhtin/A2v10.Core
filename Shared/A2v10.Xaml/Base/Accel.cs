@@ -1,6 +1,7 @@
-﻿// Copyright © 2019-2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2019-2021 Alex Kukhtin. All rights reserved.
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Text;
@@ -11,7 +12,7 @@ namespace A2v10.Xaml
 	public class Accel : XamlElement
 	{
 		public String Key { get; set; }
-		
+
 		// CASM - modifiers (control, alt, shift, meta)
 		// Ctrl + A => C___:KeyA
 		public String GetKeyCode()
@@ -20,8 +21,8 @@ namespace A2v10.Xaml
 			{
 				var modifiers = new StringBuilder("____:");
 				var x = Key.Split('+');
-				var keyName = KeyName2EventCode(x[^1]); // last char
-				for (Int32 i=0; i<x.Length - 1; i++)
+				var keyName = KeyName2EventCode(x[x.Length - 1]); // last char
+				for (Int32 i = 0; i < x.Length - 1; i++)
 				{
 					switch (x[i].Trim())
 					{
@@ -47,7 +48,7 @@ namespace A2v10.Xaml
 			return "____:" + KeyName2EventCode(Key);
 		}
 
-		private static String KeyName2EventCode(String keyName)
+		String KeyName2EventCode(String keyName)
 		{
 			keyName = keyName.Trim();
 			if (keyName.Length == 1 && keyName[0] >= 'A' && keyName[0] <= 'Z')
@@ -82,6 +83,57 @@ namespace A2v10.Xaml
 			else if (value is Accel)
 				return value as Accel;
 			throw new XamlException($"Invalid Accel value '{value}'");
+		}
+	}
+
+
+	public class AccelCommand : XamlElement
+	{
+		public Accel Accel { get; set; }
+		public Command Command { get; set; }
+
+		public void RenderElement(RenderContext context)
+		{
+			if (String.IsNullOrEmpty(Accel.Key))
+				return;
+			var cmd = GetBindingCommand(nameof(Command));
+			if (cmd == null)
+				return;
+			var ac = new TagBuilder("a2-accel-command");
+			ac.MergeAttribute("accel", Accel.GetKeyCode());
+			ac.MergeAttribute(":command", $"() => {cmd.GetCommand(context)}"); // FUNCTION!!!
+			ac.Render(context);
+		}
+	}
+
+
+	[TypeConverter(typeof(AccelCommandCollectionConverter))]
+	public class AccelCommandCollection : List<AccelCommand>
+	{
+	}
+
+	public class AccelCommandCollectionConverter : TypeConverter
+	{
+		public override Boolean CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+		{
+			if (sourceType == typeof(AccelCommand))
+				return true;
+			return base.CanConvertFrom(context, sourceType);
+		}
+
+		public override Object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, Object value)
+		{
+			if (value == null)
+				return null;
+			if (value is AccelCommand accelCommand)
+			{
+				var x = new AccelCommandCollection
+				{
+					accelCommand
+				};
+				return x;
+			}
+			return base.ConvertFrom(context, culture, value);
 		}
 	}
 }
