@@ -21,6 +21,8 @@ namespace A2v10.Services
 				ModelCommandType.javascript => throw new DataServiceException("javascript command yet not implemented"),
 				ModelCommandType.file => throw new DataServiceException("file command yet not implemented"),
 				ModelCommandType.xml => throw new DataServiceException("xml command yet not implemented"),
+				ModelCommandType.startProcess => throw new DataServiceException("startProcess command yet not implemented"),
+				ModelCommandType.resumeProcess => throw new DataServiceException("resumeProcess command yet not implemented"),
 				_ => throw new DataServiceException("Server command for '{command}' not found")
 			};
 		}

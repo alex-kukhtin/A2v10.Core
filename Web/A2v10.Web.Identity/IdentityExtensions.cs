@@ -25,6 +25,7 @@ namespace A2v10.Web.Identity
 		public const String ClientId = "ClientId";
 		public const String TenantId = "TenantId";
 		public const String Segment = "Segment";
+		public const String Locale = "Locale";
 	}
 
 	public static class IdentityExtensions
@@ -64,6 +65,11 @@ namespace A2v10.Web.Identity
 		public static String GetUserClientId(this IIdentity identity)
 		{
 			return identity.GetUserClaim(WellKnownClims.ClientId);
+		}
+
+		public static String GetUserLocale(this IIdentity identity)
+		{
+			return identity.GetUserClaim(WellKnownClims.Locale);
 		}
 
 		public static Boolean IsTenantAdmin(this IIdentity identity)

@@ -189,7 +189,9 @@ namespace A2v10.Services
 		file,
 		callApi,
 		sendMessage,
-		processDbEvents
+		processDbEvents,
+		startProcess,
+		resumeProcess
 	}
 
 	public class ModelJsonCommand : ModelJsonBase, IModelCommand

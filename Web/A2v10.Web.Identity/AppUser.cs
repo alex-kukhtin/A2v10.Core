@@ -20,5 +20,6 @@ namespace A2v10.Web.Identity
 
 		public Int32 Tenant { get; set; }
 		public String Segment { get; set; }
+		public String Locale { get; set; }
 	}
 }

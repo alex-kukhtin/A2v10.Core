@@ -28,7 +28,8 @@ namespace A2v10.Core.Web.Mvc
 
 	[Route("_shell/[action]")]
 	[Authorize]
-	public class ShellController : Controller // : BaseController
+	[ExecutingFilter]
+	public class ShellController : Controller, IControllerLocale
 	{
 		private readonly IApplicationHost _host;
 		private readonly IDbContext _dbContext;
@@ -36,16 +37,18 @@ namespace A2v10.Core.Web.Mvc
 		private readonly IProfiler _profiler;
 		private readonly IAppCodeProvider _codeProvider;
 		private readonly ILocalizer _localizer;
+		private readonly IUserLocale _userLocale;
 
 		public ShellController(IDbContext dbContext, IApplicationHost host, IUserStateManager userStateManager, IProfiler profiler,
-			IAppCodeProvider codeProvider, ILocalizer localizer)
+			IAppCodeProvider codeProvider, ILocalizer localizer, IUserLocale userLocale)
 		{
 			_host = host;
 			_dbContext = dbContext;
-			_userStateManager = userStateManager;
 			_profiler = profiler;
 			_codeProvider = codeProvider;
 			_localizer = localizer;
+			_userLocale = userLocale;
+			_userStateManager = userStateManager;
 		}
 
 		Int64 UserId => User.Identity.GetUserId<Int64>();
@@ -302,5 +305,13 @@ namespace A2v10.Core.Web.Mvc
 				writer.Write(txt);
 			}
 		}
+
+		#region IControllerLocale 
+		public void SetLocale()
+		{
+			var locale = User.Identity.GetUserLocale();
+			_userLocale.Locale = locale;
+		}
+		#endregion
 	}
 }

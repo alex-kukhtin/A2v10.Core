@@ -63,22 +63,14 @@ namespace A2v10.Core.Web.Site
 
 			services.AddPlatformIdentity();
 
-			// TODO: GetLocalize
-			services.AddSingleton<WebLocalizer>(s => 
-				new WebLocalizer(
-					s.GetService<IAppCodeProvider>(), 
-					s.GetService<IAppConfiguration>(),
-					"uk-UA")
-			)
-			.AddSingleton<ILocalizer>(s => s.GetService<WebLocalizer>())
-			.AddSingleton<IDataLocalizer>(s => s.GetService<WebLocalizer>());
-
 			services.AddSingleton<IAppCodeProvider>(s => 
 				CreateCodeProvider(Configuration, 
 				s.GetService<IWebHostEnvironment>())
 			);
-
+			services.AddSingleton<IAppConfiguration, AppConfiruation>();
 			services.AddSingleton<IXamlReaderService, AppXamlReaderService>();
+			services.AddSingleton<IExternalReport, StimulsoftExternalReport>();
+			services.AddSingleton<ILocalizerDictiorany, WebLocalizerDictiorany>();
 
 			services.AddScoped<WebProfiler>();
 			services.AddScoped<WebApplicationHost>();
@@ -88,6 +80,11 @@ namespace A2v10.Core.Web.Site
 			services.AddScoped<ITenantManager>(s => s.GetService<WebApplicationHost>());
 			services.AddScoped<IApplicationHost>( s=> s.GetService<WebApplicationHost>());
 			services.AddScoped<IRenderer, XamlRenderer>();
+
+			services.AddScoped<IUserLocale, WebUserLocale>()
+				.AddScoped<WebLocalizer>()
+				.AddScoped<ILocalizer>(s => s.GetService<WebLocalizer>())
+				.AddScoped<IDataLocalizer>(s => s.GetService<WebLocalizer>());
 
 			services.AddScoped<IDbContext>(s => 
 				new SqlDbContext(s.GetService<IDataProfiler>(), 
@@ -99,13 +96,11 @@ namespace A2v10.Core.Web.Site
 			);
 			services.AddScoped<IUserStateManager>(s => 
 				new WebUserStateManager(s.GetService<IHttpContextAccessor>()));
-
 			services.AddScoped<ITokenProvider, WebTokenProvider>();
+
 			services.AddScoped<IDataService, DataService>();
 			services.AddScoped<IReportService, ReportService>();
-			services.AddSingleton<IExternalReport, StimulsoftExternalReport>();
 			services.AddScoped<IModelJsonReader, ModelJsonReader>();
-			services.AddSingleton<IAppConfiguration, AppConfiruation>();
 
 			services.AddScoped<IViewEngineProvider>(s =>
 				new WebViewEngineProvider(s,
@@ -113,8 +108,8 @@ namespace A2v10.Core.Web.Site
 						new ViewEngineDescriptor(".xaml", typeof(XamlViewEngine))
 					}
 				)
-			);
-			services.AddScoped<XamlViewEngine>();
+			)
+				.AddScoped<XamlViewEngine>();
 
 			services.AddSession();
 		}

@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 namespace A2v10.Infrastructure
 {
@@ -10,19 +11,21 @@ namespace A2v10.Infrastructure
 	{
 		protected abstract IDictionary<String, String> GetLocalizerDictionary(String locale);
 
-		private readonly String _defaultLocale;
+		private readonly IUserLocale _userLocale;
 
-		public BaseLocalizer(String defaultLocale)
+		public BaseLocalizer(IUserLocale userLocale)
 		{
-			_defaultLocale = defaultLocale;
+			_userLocale = userLocale;
 		}
-
-		protected virtual String DefaultLocale => _defaultLocale;
 
 		String GetLocalizedValue(String locale, String key)
 		{
 			if (locale == null)
-				locale = DefaultLocale;
+			{
+				locale = _userLocale.Locale;
+				if (locale == null)
+					locale = Thread.CurrentThread.CurrentUICulture.Name;
+			}
 			var dict = GetLocalizerDictionary(locale);
 			if (dict.TryGetValue(key, out String value))
 				return value;

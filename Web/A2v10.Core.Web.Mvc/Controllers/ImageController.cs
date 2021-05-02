@@ -26,8 +26,8 @@ namespace A2v10.Core.Web.Mvc.Controllers
 
 		public ImageController(IApplicationHost host,
 			ILocalizer localizer, IUserStateManager userStateManager, IProfiler profiler, 
-			IDataService dataService, ITokenProvider tokenProvider, IAppCodeProvider appCodeProvider)
-			: base(host, localizer, userStateManager, profiler)
+			IDataService dataService, ITokenProvider tokenProvider, IAppCodeProvider appCodeProvider, IUserLocale userLocale)
+			: base(host, localizer, userStateManager, profiler, userLocale)
 		{
 			_dataService = dataService;
 			_tokenProvider = tokenProvider;

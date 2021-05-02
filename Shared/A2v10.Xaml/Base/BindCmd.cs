@@ -143,18 +143,14 @@ namespace A2v10.Xaml
 
 		internal String GetHrefForCommand(RenderContext context)
 		{
-			switch (Command)
+			return Command switch
 			{
-				case CommandType.Open:
-					return $"$href({CommandUrl(context)}, {CommandArgument(context)})";
-				case CommandType.MailTo:
-					return $"$mailto({CommandArgument(context)}, {GetData(context)})";
-				case CommandType.Help:
-					return $"$helpHref({CommandUrl(context)})";
-				case CommandType.NavigateExternal:
-					return $"{CommandUrl(context, decorate: false, skipCheck: true)}";
-			}
-			return null;
+				CommandType.Open => $"$href({CommandUrl(context)}, {CommandArgument(context)})",
+				CommandType.MailTo => $"$mailto({CommandArgument(context)}, {GetData(context)})",
+				CommandType.Help => $"$helpHref({CommandUrl(context)})",
+				CommandType.NavigateExternal => $"{CommandUrl(context, decorate: false, skipCheck: true)}",
+				_ => null,
+			};
 		}
 
 		internal String NewWindowJS => NewWindow.ToString().ToLowerInvariant();
@@ -351,7 +347,7 @@ namespace A2v10.Xaml
 			if (!SaveRequired && !ValidRequired && !CheckReadOnly && !Export && !Print && !NewWindow
 				&& !CheckArgument && !ReloadAfter && Permission == Permission.None)
 				return nullString;
-			StringBuilder sb = new StringBuilder("{");
+			StringBuilder sb = new("{");
 			if (SaveRequired)
 				sb.Append("saveRequired: true,");
 			if (ValidRequired)
@@ -389,13 +385,13 @@ namespace A2v10.Xaml
 		{
 			if (!ValidRequired)
 				return nullString;
-			StringBuilder sb = new StringBuilder("{");
+			StringBuilder sb = new("{");
 			if (ValidRequired)
 			{
 				sb.Append("validRequired: true, ");
 			}
 			sb.RemoveTailComma();
-			sb.Append("}");
+			sb.Append('}');
 			return sb.ToString();
 		}
 
@@ -626,22 +622,21 @@ namespace A2v10.Xaml
 		{
 			if (CheckReadOnly)
 				return false; // always disable readonly commands
-			switch (Command)
+			return Command switch
 			{
-				case CommandType.Close:
-				case CommandType.Refresh:
-				case CommandType.Reload:
-				case CommandType.Export:
-				case CommandType.Report:
-				case CommandType.Requery:
-				case CommandType.MailTo:
-				case CommandType.Help:
-				case CommandType.Print:
-				case CommandType.Execute:
-				case CommandType.ExecuteSelected:
-					return true;
-			}
-			return false;
+				CommandType.Close or 
+				CommandType.Refresh or 
+				CommandType.Reload or 
+				CommandType.Export or 
+				CommandType.Report or 
+				CommandType.Requery or 
+				CommandType.MailTo or 
+				CommandType.Help or 
+				CommandType.Print or 
+				CommandType.Execute or 
+				CommandType.ExecuteSelected => true,
+				_ => false,
+			};
 		}
 	}
 }

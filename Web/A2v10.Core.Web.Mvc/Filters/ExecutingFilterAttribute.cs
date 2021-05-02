@@ -1,11 +1,10 @@
-﻿using A2v10.Infrastructure;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
+﻿// Copyright © 2020-2021 Alex Kukhtin. All rights reserved.
+
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
+using Microsoft.AspNetCore.Mvc.Filters;
+
+using A2v10.Infrastructure;
 
 namespace A2v10.Core.Web.Mvc
 {
@@ -26,6 +25,9 @@ namespace A2v10.Core.Web.Mvc
 				if (filterContext.HttpContext.Request.Path.StartsWithSegments("/admin"))
 					iCtrlAdmin.SetAdmin();
 			}
+
+			if (filterContext.Controller is IControllerLocale iCtrlLocale)
+				iCtrlLocale.SetLocale();
 
 			if (filterContext.Controller is IControllerProfiler iCtrlProfiler)
 				_request = iCtrlProfiler.BeginRequest();

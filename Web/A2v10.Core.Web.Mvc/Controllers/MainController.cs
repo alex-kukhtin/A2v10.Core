@@ -11,14 +11,17 @@ using A2v10.Infrastructure;
 namespace A2v10.Core.Web.Mvc.Controllers
 {
 	[Authorize]
+	[ExecutingFilter]
 	[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-	public class MainController : Controller
+	public class MainController : Controller, IControllerLocale
 	{
 		private readonly IAppConfiguration _appConfiguration;
+		private readonly IUserLocale _userLocale;
 
-		public MainController(IAppConfiguration appConfiguration)
+		public MainController(IAppConfiguration appConfiguration, IUserLocale userLocale)
 		{
 			_appConfiguration = appConfiguration;
+			_userLocale = userLocale;
 		}
 
 		[Route("{*pathInfo}")]
@@ -39,5 +42,12 @@ namespace A2v10.Core.Web.Mvc.Controllers
 				return View("Default.admin", viewModel);
 			return View(viewModel);
 		}
+
+		#region IControllerLocale
+		public void SetLocale()
+		{
+			_userLocale.Locale = User.Identity.GetUserLocale();
+		}
+		#endregion
 	}
 }

@@ -28,8 +28,8 @@ namespace A2v10.Core.Web.Mvc.Controllers
 
 		public PageController(IApplicationHost host, IAppCodeProvider codeProvider,
 			ILocalizer localizer, IUserStateManager userStateManager, IProfiler profiler,
-			IDataService dataService, IViewEngineProvider viewEngineProvider)
-			: base(host, localizer, userStateManager, profiler)
+			IDataService dataService, IViewEngineProvider viewEngineProvider, IUserLocale userLocale)
+			: base(host, localizer, userStateManager, profiler, userLocale)
 		{
 			_dataService = dataService;
 			_codeProvider = codeProvider;
@@ -123,8 +123,8 @@ namespace A2v10.Core.Web.Mvc.Controllers
 			};
 
 			var result = await viewEngine.Engine.RenderAsync(ri);
-			Response.ContentType = result.ContentType;
 
+			Response.ContentType = result.ContentType;
 			await HttpResponseWritingExtensions.WriteAsync(Response, result.Body, Encoding.UTF8);
 			await ProcessDbEvents(rw);
 			await HttpResponseWritingExtensions.WriteAsync(Response, si.Script, Encoding.UTF8);

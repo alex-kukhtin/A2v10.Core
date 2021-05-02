@@ -15,19 +15,21 @@ using A2v10.Web.Identity;
 namespace A2v10.Core.Web.Mvc
 {
 
-	public class BaseController : Controller, IControllerProfiler, IControllerTenant, IControllerAdmin
+	public class BaseController : Controller, IControllerProfiler, IControllerTenant, IControllerAdmin, IControllerLocale
 	{
 		protected readonly IApplicationHost _host;
 		protected readonly ILocalizer _localizer;
 		protected readonly IUserStateManager _userStateManager;
 		protected readonly IProfiler _profiler;
+		protected readonly IUserLocale _userLocale;
 
-		public BaseController(IApplicationHost host, ILocalizer localizer, IUserStateManager userStateManager, IProfiler profiler)
+		public BaseController(IApplicationHost host, ILocalizer localizer, IUserStateManager userStateManager, IProfiler profiler, IUserLocale userLocale)
 		{
 			_host = host ?? throw new ArgumentNullException(nameof(host));
 			_localizer = localizer ?? throw new ArgumentNullException(nameof(localizer));
 			_userStateManager = userStateManager ?? throw new ArgumentNullException(nameof(userStateManager));
 			_profiler = profiler ?? throw new ArgumentNullException(nameof(profiler));
+			_userLocale = userLocale ?? throw new ArgumentNullException(nameof(userLocale));
 			_profiler.Enabled = _host.IsDebugConfiguration;
 		}
 
@@ -137,6 +139,13 @@ namespace A2v10.Core.Web.Mvc
 		public void SetAdmin()
 		{
 			_userStateManager.SetAdmin();
+		}
+		#endregion
+
+		#region IControllerLocale 
+		public void SetLocale()
+		{
+			_userLocale.Locale = User.Identity.GetUserLocale();
 		}
 		#endregion
 

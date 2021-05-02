@@ -173,8 +173,8 @@ namespace A2v10.Web.Identity
 			List<Claim> list = new()
 			{
 				new Claim(WellKnownClims.PersonName, user.PersonName ?? String.Empty),
-				//new Claim("Segment", user.Segment ?? String.Empty)
 			};
+
 			if (user.Tenant != 0)
 			{
 				list.Add(new Claim(WellKnownClims.TenantId, user.Tenant.ToString()));
@@ -183,9 +183,10 @@ namespace A2v10.Web.Identity
 			}
 			if (!String.IsNullOrEmpty(user.Segment))
 				list.Add(new Claim(WellKnownClims.Segment, user.Segment));
+			if (!String.IsNullOrEmpty(user.Locale))
+				list.Add(new Claim(WellKnownClims.Locale, user.Locale));
 
-
-			//if (user.IsAdmin)
+			//if (user.IsAdmin) // TODO
 			list.Add(new Claim("Admin", "Admin"));
 			/*
 			if (_host.IsMultiTenant)

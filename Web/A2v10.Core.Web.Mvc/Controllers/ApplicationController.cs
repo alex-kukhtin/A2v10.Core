@@ -28,8 +28,8 @@ namespace A2v10.Core.Web.Mvc.Controllers
 		private readonly IDbContext _dbContext;
 
 		public ApplicationController(IApplicationHost host,
-			ILocalizer localizer, IUserStateManager userStateManager, IProfiler profiler, IDbContext dbContext)
-			: base(host, localizer, userStateManager, profiler)
+			ILocalizer localizer, IUserStateManager userStateManager, IProfiler profiler, IDbContext dbContext, IUserLocale userLocale)
+			: base(host, localizer, userStateManager, profiler, userLocale)
 		{
 			_dbContext = dbContext;
 		}
