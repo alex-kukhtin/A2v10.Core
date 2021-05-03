@@ -790,6 +790,12 @@
 .ico-logo-nuget:before {
   content: "\ead2";
 }
+.ico-smile:before {
+  content: "\eaca";
+}
+.ico-smile-sad:before {
+  content: "\eacb";
+}
 * {
   box-sizing: border-box;
 }
@@ -1267,12 +1273,17 @@ html {
   padding: 0;
   height: 100%;
   width: 100%;
+  caret-color: transparent;
 }
 input,
 textarea,
 select,
 button {
   font-family: system, 'Segoe UI', Tahoma, Verdana, sans-serif;
+}
+input,
+textarea {
+  caret-color: auto;
 }
 body {
   overflow: hidden;
@@ -1385,15 +1396,22 @@ header .btn:hover,
 .header .btn:hover {
   background-color: #7186ab;
 }
+header .btn .caret,
+.header .btn .caret {
+  margin: 0 0.25em;
+}
 header .user-name .person-name,
 .header .user-name .person-name,
 header .company-name,
 .header .company-name {
-  display: inline-block;
-  vertical-align: bottom;
   overflow: hidden;
   max-width: 20rem;
   text-overflow: ellipsis;
+  user-select: text;
+}
+header .user-name .client-id,
+.header .user-name .client-id {
+  padding-left: 0.3rem;
   user-select: text;
 }
 header .company-menu-name,
@@ -2047,6 +2065,10 @@ pre.a2-code {
   border: 1px solid #dca7a7;
   box-shadow: 1px 4px 10px rgba(169, 68, 66, 0.3);
   white-space: pre;
+}
+.a2-hyperlink:focus,
+.a2-hyperlink:active {
+  outline: thin dotted #ccc;
 }
 .control-group {
   display: block;
@@ -5892,8 +5914,11 @@ TODO:
 .stack-panel.wrap {
   flex-wrap: wrap;
 }
+.align-stretch {
+  align-items: stretch !important;
+}
 .align-center {
-  align-items: center!important;
+  align-items: center !important;
 }
 .align-baseline {
   align-items: baseline!important;
@@ -6125,8 +6150,12 @@ TODO:
 .a2-include.full-height .partial {
   height: 100%;
 }
-.scrollable-pane {
+.scrollable-pane,
+.scroll {
   overflow: auto;
+}
+.no-scroll {
+  overflow: hidden;
 }
 .bordered-pane {
   border: 1px solid #ddd;
@@ -6231,6 +6260,9 @@ iframe.eusign-iframe {
 }
 .flex-list .flex-list-item {
   display: block;
+}
+.flex-list.wrap {
+  flex-wrap: wrap;
 }
 .flex-list.horizontal {
   flex-flow: row wrap;

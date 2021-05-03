@@ -97,6 +97,8 @@ namespace A2v10.Xaml
 			new TagBuilder("div", "page-canvas").MergeAttribute("id", "page-canvas").Render(context);
 			outer.RenderEnd(context);
 
+			RenderAccelCommands(context);
+
 			if (CollectionView != null)
 				CollectionView.RenderEnd(context);
 			else
@@ -159,16 +161,16 @@ namespace A2v10.Xaml
 
 		protected override T FindInside<T>()
 		{
-			if (this is T typeT)
-				return typeT;
-			else if (Toolbar is T toolbar)
-				return toolbar;
-			else if (CollectionView is T collectionView)
-				return collectionView;
-			else if (Taskpad is T taskpad)
-				return taskpad;
-			else if (Pager is T pager)
-				return pager;
+			if (this is T)
+				return this as T;
+			else if (Toolbar is T)
+				return Toolbar as T;
+			else if (CollectionView is T)
+				return CollectionView as T;
+			else if (Taskpad is T)
+				return Taskpad as T;
+			else if (Pager is T)
+				return Pager as T;
 			return null;
 		}
 	}

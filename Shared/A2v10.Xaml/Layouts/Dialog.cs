@@ -2,7 +2,6 @@
 
 using System;
 using System.Text;
-
 using A2v10.Infrastructure;
 
 namespace A2v10.Xaml
@@ -38,8 +37,6 @@ namespace A2v10.Xaml
 		public Boolean Overflow { get; set; }
 
 		public UIElementCollection Buttons { get; set; } = new UIElementCollection();
-
-		public AccelCommandCollection AccelCommands { get; set; } = new AccelCommandCollection();
 
 		protected virtual void OnCreateContent(TagBuilder tag)
 		{
@@ -193,17 +190,6 @@ namespace A2v10.Xaml
 			new TagBuilder("div", "load-indicator")
 				.MergeAttribute("v-show", "$isLoading")
 				.Render(context);
-		}
-
-		protected virtual void RenderAccelCommands(RenderContext context)
-		{
-			if (AccelCommands == null || AccelCommands.Count == 0)
-				return;
-			var cmd = new TagBuilder("template");
-			cmd.RenderStart(context);
-			foreach (var ac in AccelCommands)
-				ac.RenderElement(context);
-			cmd.RenderEnd(context);
 		}
 
 		protected virtual void RenderFooter(RenderContext context)

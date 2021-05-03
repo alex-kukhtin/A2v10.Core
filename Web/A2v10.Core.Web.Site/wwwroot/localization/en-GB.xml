@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<Localization language="English" description="English" cultureName="en">
+<Localization language="English (UK)" description="English (UK)" cultureName="en-GB">
   <A_WebViewer>
     <AbbreviatedDayFriday>Fr</AbbreviatedDayFriday>
     <AbbreviatedDayMonday>Mo</AbbreviatedDayMonday>
@@ -187,7 +187,7 @@
     <LabelMinorCount>Minor Count:</LabelMinorCount>
     <LabelOpenValueDataColumn>Open Value Data Column:</LabelOpenValueDataColumn>
     <Labels>Labels</Labels>
-    <LabelsCenter>Center</LabelsCenter>
+    <LabelsCenter>Centre</LabelsCenter>
     <LabelSeriesName>Series Name:</LabelSeriesName>
     <LabelsInside>Inside</LabelsInside>
     <LabelsInsideBase>Inside Base</LabelsInsideBase>
@@ -236,7 +236,7 @@
     <ScatterLine>Scatter Line</ScatterLine>
     <ScatterSpline>Scatter Spline</ScatterSpline>
     <Series>Series</Series>
-    <SeriesColorsCollectionForm>Series Colors</SeriesColorsCollectionForm>
+    <SeriesColorsCollectionForm>Series Colours</SeriesColorsCollectionForm>
     <SeriesEditorForm>Series Editor</SeriesEditorForm>
     <Serieses>Series</Serieses>
     <SparklinesArea>Area</SparklinesArea>
@@ -282,12 +282,12 @@
     <AxesXTopAxis>X Top Axis</AxesXTopAxis>
     <AxesYAxis>Y Axis</AxesYAxis>
     <AxesYRightAxis>Y Right Axis</AxesYRightAxis>
-    <CenterLabels>Center</CenterLabels>
+    <CenterLabels>Centre</CenterLabels>
     <ChangeType>Change Type</ChangeType>
     <GridLines>Grid Lines</GridLines>
     <GridLinesHorizontal>Grid Lines Horizontal</GridLinesHorizontal>
     <GridLinesVertical>Grid Lines Vertical</GridLinesVertical>
-    <HorAlCenter>&lt;b&gt;Overlay Legend at Center&lt;/b&gt;&lt;br&gt;Show Legend at center of the chart&lt;/br&gt;&lt;br&gt;without resizing&lt;/br&gt;</HorAlCenter>
+    <HorAlCenter>&lt;b&gt;Overlay Legend at Centre&lt;/b&gt;&lt;br&gt;Show Legend at centre of the chart&lt;/br&gt;&lt;br&gt;without resizing&lt;/br&gt;</HorAlCenter>
     <HorAlLeft>&lt;b&gt;Overlay Legend at Left&lt;/b&gt;&lt;br&gt;Show Legend at left of the chart&lt;/br&gt;&lt;br&gt;without resizing&lt;/br&gt;</HorAlLeft>
     <HorAlLeftOutside>&lt;b&gt;Show Legend at Left&lt;/b&gt;&lt;br&gt;Show Legend and align left&lt;/br&gt;</HorAlLeftOutside>
     <HorAlRight>&lt;b&gt;Overlay Legend at Right&lt;/b&gt;&lt;br&gt;Show Legend at right of the chart&lt;/br&gt;&lt;br&gt;without resizing&lt;/br&gt;</HorAlRight>
@@ -320,7 +320,7 @@
     <TwoColumnsPieLabels>Two Columns</TwoColumnsPieLabels>
     <VertAlBottom>&lt;b&gt;Overlay Legend at Bottom&lt;/b&gt;&lt;br&gt;Show Legend at bottom of the chart&lt;/br&gt;&lt;br&gt;without resizing&lt;/br&gt;</VertAlBottom>
     <VertAlBottomOutside>&lt;b&gt;Show Legend at Bottom&lt;/b&gt;&lt;br&gt;Show Legend and align bottom&lt;/br&gt;</VertAlBottomOutside>
-    <VertAlCenter>&lt;b&gt;Overlay Legend at Center&lt;/b&gt;&lt;br&gt;Show Legend at center of the chart&lt;/br&gt;&lt;br&gt;without resizing&lt;/br&gt;</VertAlCenter>
+    <VertAlCenter>&lt;b&gt;Overlay Legend at Centre&lt;/b&gt;&lt;br&gt;Show Legend at centre of the chart&lt;/br&gt;&lt;br&gt;without resizing&lt;/br&gt;</VertAlCenter>
     <VertAlTop>&lt;b&gt;Overlay Legend at Top&lt;/b&gt;&lt;br&gt;Show Legend at top of the chart&lt;/br&gt;&lt;br&gt;without resizing&lt;/br&gt;</VertAlTop>
     <VertAlTopOutside>&lt;b&gt;Show Legend at Top&lt;/b&gt;&lt;br&gt;Show Legend and align top&lt;/br&gt;</VertAlTopOutside>
     <VerticalMajor>&lt;b&gt;Major&lt;/b&gt;&lt;br&gt;Display Vertical Gridlines for Major units&lt;/br&gt;</VerticalMajor>
@@ -409,7 +409,7 @@
     <OperationDelete>Delete '{0}' from Server</OperationDelete>
     <OperationDownload>Download from Server</OperationDownload>
     <OperationGetList>Get List of Files from Server</OperationGetList>
-    <OperationLogin>Log In to Server</OperationLogin>
+    <OperationLogin>Log in to Server</OperationLogin>
     <OperationRename>Rename '{0}' to '{1}'</OperationRename>
     <OperationUpload>Upload '{0}' to Server</OperationUpload>
     <page>page</page>
@@ -593,10 +593,6 @@
     <StiZipCode>ZIP Code</StiZipCode>
   </Components>
   <Dashboard>
-    <AddRange>Add Range</AddRange>
-    <RangeMode>Range Mode</RangeMode>
-    <RangeType>Range Type</RangeType>
-    <ShowAllValue>Show (All) Value</ShowAllValue>
     <AfterGroupingData>Apply after grouping data</AfterGroupingData>
     <Blanks>(Blanks)</Blanks>
     <BooleanFilters>Boolean Filters</BooleanFilters>
@@ -604,7 +600,7 @@
     <ChangeChartType>Change Chart Type</ChangeChartType>
     <ChangeMapType>Change Map Type</ChangeMapType>
     <ClearFilterFrom>Clear Filter from '{0}'</ClearFilterFrom>
-    <ColorScale>Color Scale</ColorScale>
+    <ColorScale>Colour Scale</ColorScale>
     <CustomFilter>Custom &amp;Filter...</CustomFilter>
     <DataBars>Data Bars</DataBars>
     <DataNotDefined>Data is not defined</DataNotDefined>
@@ -815,7 +811,7 @@
     <AllowPrintDocument>Allow Print Document</AllowPrintDocument>
     <Auto>Auto</Auto>
     <BandsFilter>Bands Filter:</BandsFilter>
-    <Color>Color</Color>
+    <Color>Colour</Color>
     <Compressed>Compressed</Compressed>
     <CompressToArchive>Compress to Archive</CompressToArchive>
     <ContinuousPages>Continuous Pages</ContinuousPages>
@@ -1038,9 +1034,9 @@
     <title>Data Setup</title>
   </FormBand>
   <FormColorBoxPopup>
-    <Color>Color</Color>
+    <Color>Colour</Color>
     <Custom>Custom</Custom>
-    <NoColor>No Color</NoColor>
+    <NoColor>No Colour</NoColor>
     <Others>Others...</Others>
     <System>System</System>
     <Web>Web</Web>
@@ -1081,7 +1077,7 @@
     <ImportData>Import Data</ImportData>
     <InformixEdit>Edit Informix Connection</InformixEdit>
     <InformixNew>New Informix Connection</InformixNew>
-    <InitialCatalog>Initial Catalog:</InitialCatalog>
+    <InitialCatalog>Initial Catalogue:</InitialCatalog>
     <JsonEdit>Edit JSON Data</JsonEdit>
     <JsonNew>New JSON Data</JsonNew>
     <MySQLEdit>Edit MySQL Connection</MySQLEdit>
@@ -1303,7 +1299,7 @@
     <GridMode>Grid Mode</GridMode>
     <GridSize>Grid Size</GridSize>
     <groupAutoSaveOptions>Auto save options</groupAutoSaveOptions>
-    <groupColorScheme>Please select color scheme of GUI</groupColorScheme>
+    <groupColorScheme>Please select colour scheme of GUI</groupColorScheme>
     <groupGridDrawingOptions>Grid drawing options</groupGridDrawingOptions>
     <groupGridOptions>Grid options</groupGridOptions>
     <groupGridSize>Grid size</groupGridSize>
@@ -1312,7 +1308,7 @@
     <groupOptionsOfQuickInfo>Options of Quick Info</groupOptionsOfQuickInfo>
     <groupPleaseSelectTypeOfGui>Please, select the type of GUI</groupPleaseSelectTypeOfGui>
     <groupReportDisplayOptions>Report display options</groupReportDisplayOptions>
-    <labelColorScheme>Color Scheme:</labelColorScheme>
+    <labelColorScheme>Colour Scheme:</labelColorScheme>
     <labelInfoAutoSave>Change parameters of reports autosaving</labelInfoAutoSave>
     <labelInfoDrawing>Setting parameters of report drawing</labelInfoDrawing>
     <labelInfoGrid>How Grid is shown and used in a report</labelInfoGrid>
@@ -1333,7 +1329,7 @@
     <ShowDimensionLines>Show Dimension Lines</ShowDimensionLines>
     <ShowOldGaugeEditor>Show Old Gauge Editor</ShowOldGaugeEditor>
     <title>Options</title>
-    <UseComponentColor>Use Component Color for Filling</UseComponentColor>
+    <UseComponentColor>Use Component Colour for Filling</UseComponentColor>
     <UseLastFormat>Use Last Format</UseLastFormat>
   </FormOptions>
   <FormPageSetup>
@@ -1361,7 +1357,7 @@
     <labelPaperSourceOfFirstPage>Paper Source of First Page:</labelPaperSourceOfFirstPage>
     <labelPaperSourceOfOtherPages>Paper Source of Other Pages:</labelPaperSourceOfOtherPages>
     <labelSelectBrush>Select Brush:</labelSelectBrush>
-    <labelSelectColor>Select Color:</labelSelectColor>
+    <labelSelectColor>Select Colour:</labelSelectColor>
     <labelSelectFont>Select Font:</labelSelectFont>
     <labelSelectImage>Select Image:</labelSelectImage>
     <labelText>Text:</labelText>
@@ -1564,22 +1560,22 @@
     <barsys_autohide_tooltip>Auto-Hide</barsys_autohide_tooltip>
     <barsys_close_tooltip>Close</barsys_close_tooltip>
     <barsys_customize_tooltip>Customize</barsys_customize_tooltip>
-    <colorpicker_morecolors>&amp;More Colors...</colorpicker_morecolors>
+    <colorpicker_morecolors>&amp;More Colours...</colorpicker_morecolors>
     <colorpicker_nofill>&amp;No Fill</colorpicker_nofill>
-    <colorpicker_standardcolorslabel>Standard Colors</colorpicker_standardcolorslabel>
-    <colorpicker_themecolorslabel>Theme Colors</colorpicker_themecolorslabel>
+    <colorpicker_standardcolorslabel>Standard Colours</colorpicker_standardcolorslabel>
+    <colorpicker_themecolorslabel>Theme Colours</colorpicker_themecolorslabel>
     <colorpickerdialog_bluelabel>&amp;Blue:</colorpickerdialog_bluelabel>
     <colorpickerdialog_cancelbutton>Cancel</colorpickerdialog_cancelbutton>
-    <colorpickerdialog_caption>Colors</colorpickerdialog_caption>
-    <colorpickerdialog_colormodellabel>Color Model:</colorpickerdialog_colormodellabel>
+    <colorpickerdialog_caption>Colours</colorpickerdialog_caption>
+    <colorpickerdialog_colormodellabel>Colour Model:</colorpickerdialog_colormodellabel>
     <colorpickerdialog_currentcolorlabel>Current</colorpickerdialog_currentcolorlabel>
-    <colorpickerdialog_customcolorslabel>Colors:</colorpickerdialog_customcolorslabel>
+    <colorpickerdialog_customcolorslabel>Colours:</colorpickerdialog_customcolorslabel>
     <colorpickerdialog_greenlabel>&amp;Green:</colorpickerdialog_greenlabel>
     <colorpickerdialog_newcolorlabel>New</colorpickerdialog_newcolorlabel>
     <colorpickerdialog_okbutton>OK</colorpickerdialog_okbutton>
     <colorpickerdialog_redlabel>&amp;Red:</colorpickerdialog_redlabel>
     <colorpickerdialog_rgblabel>RGB</colorpickerdialog_rgblabel>
-    <colorpickerdialog_standardcolorslabel>Colors:</colorpickerdialog_standardcolorslabel>
+    <colorpickerdialog_standardcolorslabel>Colours:</colorpickerdialog_standardcolorslabel>
     <colorpickerdialog_tabcustom>Custom</colorpickerdialog_tabcustom>
     <colorpickerdialog_tabstandard>Standard</colorpickerdialog_tabstandard>
     <cust_btn_close>Close</cust_btn_close>
@@ -1671,7 +1667,7 @@
     <StiHeaderBand>This band is used to output headers. It is used together with the data band.</StiHeaderBand>
     <StiHierarchicalBand>This band is connected to the data source and output as many times as there are rows in the data source. Data are output as a tree.</StiHierarchicalBand>
     <StiHorizontalLinePrimitive>This component is used to output a line.</StiHorizontalLinePrimitive>
-    <StiImage>This component is used to output images.</StiImage>
+    <StiImage>This component is used to output images. It supports the following graphic formats, such as BMP, JPG, JPEG, GIF, TIFF, PNG, ICO, WMF, EMF.</StiImage>
     <StiImageElement>This element is used to output images. It supports the following graphic formats, such as BMP, JPG, JPEG, GIF, TIFF, PNG, ICO, WMF, EMF.</StiImageElement>
     <StiIndicatorElement>The element displays the difference in values between the input data.</StiIndicatorElement>
     <StiListBoxElement>The element allows selecting items from a list.</StiListBoxElement>
@@ -1685,7 +1681,7 @@
     <StiPanel>A rectangular region that can contain other components, including bands. When the panel is moved the components in it are moved too. A panel can be placed either on a band or on a page.</StiPanel>
     <StiPanelElement>A rectangular region that can contain other elements. When the panel is moved the elements in it are moved too.</StiPanelElement>
     <StiPivotTableElement>The pivot table element is used for the structured data representation as a table.</StiPivotTableElement>
-    <StiProgressElement>The element displays the ratio of the input data. It can be presented in different modes - a pie, donut, bars.</StiProgressElement>
+    <StiProgressElement>The element displays the ratio of the input data. It can be presented in different modes - a pie, doughnut, bars.</StiProgressElement>
     <StiRectanglePrimitive>This component is used to output rectangles.</StiRectanglePrimitive>
     <StiRegionMapElement>This element is used to display data that is geographically targeted.</StiRegionMapElement>
     <StiReportSummaryBand>This band is used to output summaries through the entire report. It is output once in the end of a report.</StiReportSummaryBand>
@@ -1710,15 +1706,15 @@
     <ActiveRelation>Sets the priority Relation to bind two tables. It is used in Data Transformation and Dashboards. Only one Relation in each Data Source can be active.</ActiveRelation>
     <Align>Change the location of selected components.</Align>
     <AlignBottom>Align the contents of a component to bottom.</AlignBottom>
-    <AlignCenter>Align the contents of a component to center.</AlignCenter>
+    <AlignCenter>Align the contents of a component to centre.</AlignCenter>
     <AlignComponentBottom>Allows you to align objects horizontally along the bottom edge of selected components.</AlignComponentBottom>
-    <AlignComponentCenter>Allows you to align objects horizontally along the center edge of selected components.</AlignComponentCenter>
+    <AlignComponentCenter>Allows you to align objects horizontally along the centre edge of selected components.</AlignComponentCenter>
     <AlignComponentLeft>Allows you to align objects vertically along the left edge of selected components.</AlignComponentLeft>
-    <AlignComponentMiddle>Allows you to align objects vertically along the center edge of selected components.</AlignComponentMiddle>
+    <AlignComponentMiddle>Allows you to align objects vertically along the centre edge of selected components.</AlignComponentMiddle>
     <AlignComponentRight>Allows you to align objects vertically along the right edge of selected components.</AlignComponentRight>
     <AlignComponentTop>Allows you to align objects horizontally along the top edge of selected components.</AlignComponentTop>
     <AlignLeft>Align the contents of a component to left.</AlignLeft>
-    <AlignMiddle>Center the contents by the top and bottom borders of a component.</AlignMiddle>
+    <AlignMiddle>Centre the contents by the top and bottom borders of a component.</AlignMiddle>
     <AlignRight>Align contents of a component to right.</AlignRight>
     <AlignToGrid>Align the selected components to grid nodes.</AlignToGrid>
     <AlignTop>Align the contents of a component to top.</AlignTop>
@@ -1727,7 +1723,7 @@
     <AngleWatermark>The watermark text rotation angle.</AngleWatermark>
     <Background>Change the background of the selected components.</Background>
     <biConditions>Control list of conditions of the selected components.</biConditions>
-    <BorderColor>Select the border color of the selected component.</BorderColor>
+    <BorderColor>Select the border colour of the selected component.</BorderColor>
     <BorderSidesAll>Switch on all borders sides of the selected components.</BorderSidesAll>
     <BorderSidesBottom>Switch on bottom border side of the selected components.</BorderSidesBottom>
     <BorderSidesLeft>Switch on left border side of the selected components.</BorderSidesLeft>
@@ -1773,7 +1769,7 @@
     <FormatNumber>It is used for general display of numbers.</FormatNumber>
     <FormatPercentage>Display a value as percentage. Numbers are multiplied by 100 to convert them to percentages.</FormatPercentage>
     <FormatTime>Display a value as time. The time format is based on the regional time settings.</FormatTime>
-    <FormNew>Create a new dialog form.</FormNew>
+    <FormNew>Create a new dialogue form.</FormNew>
     <GridMode>Show grid in lines or dots.</GridMode>
     <ImageAlignment>Put a watermark image on a page.</ImageAlignment>
     <ImageTransparency>Change the transparency of the watermark image.</ImageTransparency>
@@ -1801,7 +1797,7 @@
     <menuPreviewSettings>Call the Preview Settings editor of the current report. Settings will be applied only when viewing the current report.</menuPreviewSettings>
     <menuPrint>Select a printer, number of copies, and other printing options before printing.</menuPrint>
     <menuPrintPreview>Preview a report before printing.</menuPrintPreview>
-    <menuPrintQuick>Print a report directly to the default printer. The printing dialog is not displayed.</menuPrintQuick>
+    <menuPrintQuick>Print a report directly to the default printer. The printing dialogue is not displayed.</menuPrintQuick>
     <menuReportOptions>Setup the basic report options. All options can be changed using the Property panel.</menuReportOptions>
     <menuStyleDesigner>Call the Style Designer of the current report.</menuStyleDesigner>
     <menuSupport>Go to the support page to ask a question.</menuSupport>
@@ -1818,7 +1814,7 @@
     <Orientation>Switch the pages between portrait and landscape layouts.</Orientation>
     <PageDelete>Delete current page from a report.</PageDelete>
     <PageNew>Create a new page.</PageNew>
-    <PageSetup>Show the Page Setup dialog box.</PageSetup>
+    <PageSetup>Show the Page Setup dialogue box.</PageSetup>
     <PageSize>Choose the paper size for the current page of a report.</PageSize>
     <PagesManager>Run the Pages Manager.</PagesManager>
     <PressF1>Press F1 for More Details</PressF1>
@@ -1839,9 +1835,9 @@
     <StyleDesigner>Run Style Designer.</StyleDesigner>
     <TellMeMore>Tell me more</TellMeMore>
     <Text>Watermark text.</Text>
-    <TextBrush>Change the text color.</TextBrush>
-    <TextBrushWatermark>Change the text color of the watermark.</TextBrushWatermark>
-    <TextColor>Change the text color.</TextColor>
+    <TextBrush>Change the text colour.</TextBrush>
+    <TextBrushWatermark>Change the text colour of the watermark.</TextBrushWatermark>
+    <TextColor>Change the text colour.</TextColor>
     <TextFormat>Select the format of values.</TextFormat>
     <ToolbarStyle>Set selected style to all selected components.</ToolbarStyle>
     <Undo>Undo the latest change in a report.</Undo>
@@ -1856,7 +1852,7 @@
     <StiDateTimePickerControl>Represents the control that allows selecting the date and time. It also allows you to output the date and time in specified format.</StiDateTimePickerControl>
     <StiGridControl>Represents the Grid control that consist of rows and columns.</StiGridControl>
     <StiGroupBoxControl>Represents the control that creates a container with borders and a header for the UI content.</StiGroupBoxControl>
-    <StiLabelControl>A label is an user interface control which displays text on a form. It is usually a static control having no interactivity.</StiLabelControl>
+    <StiLabelControl>A label is a user interface control which displays text on a form. It is usually a static control having no interactivity.</StiLabelControl>
     <StiListBoxControl>Contains the list of elements for selection.</StiListBoxControl>
     <StiListViewControl>Represents the ListView control that shows the list of data elements.</StiListViewControl>
     <StiLookUpBoxControl>Contains the list of elements for selection.</StiLookUpBoxControl>
@@ -1911,7 +1907,7 @@
     <ImageQuality>Allows you to choose the ratio of the image quality/size of the file. The higher the quality is, the larger is the size of the finished file.</ImageQuality>
     <ImageQualityPdf>The option is available only in JPEG compression, and allows you to select the ratio of the image quality/size of the file. The higher the quality is, the larger is the size of the finished file.</ImageQualityPdf>
     <ImageResolution>The number of pixels per inch. The higher the number of pixels is, the better is the quality of the image. The size of the finished file is much larger.</ImageResolution>
-    <ImageType>The color scheme of the image: color - image after exporting will fully match the image in the viewer; gray – an image after exporting will be of the gray shade; monochrome - the images will be strictly black and white. At the same time, it should be considered that the monochrome has three modes None, Ordered, FloydSt.</ImageType>
+    <ImageType>The colour scheme of the image: colour - image after exporting will fully match the image in the viewer; gray – an image after exporting will be of the gray shade; monochrome - the images will be strictly black and white. At the same time, it should be considered that the monochrome has three modes None, Ordered, FloydSt.</ImageType>
     <KillSpaceLines>Remove blank lines (rows) in the document.</KillSpaceLines>
     <MultipleFiles>Each report page can be a separate file.</MultipleFiles>
     <Open>Open the previously saved report in the window of preview.</Open>
@@ -1963,9 +1959,9 @@
   </HelpViewer>
   <Interface>
     <Mouse>Mouse</Mouse>
-    <MouseDescription>Optimized for used with mouse</MouseDescription>
+    <MouseDescription>Optimized for using mouse</MouseDescription>
     <Touch>Touch</Touch>
-    <TouchDescription>Optimized for used with touch</TouchDescription>
+    <TouchDescription>Optimized for using touch</TouchDescription>
   </Interface>
   <MainMenu>
     <menuCheckIssues>Check for Issues</menuCheckIssues>
@@ -2087,6 +2083,12 @@
     <menuViewToolbars>Toolbars</menuViewToolbars>
   </MainMenu>
   <Map>
+    <GroupAsia>Asia</GroupAsia>
+    <GroupEurope>Europe</GroupEurope>
+    <GroupNorthAmerica>North America</GroupNorthAmerica>
+    <GroupOceania>Oceania</GroupOceania>
+    <GroupSouthAmerica>South America</GroupSouthAmerica>
+    <GroupWorld>World</GroupWorld>
     <LinkDataForm>Link Data</LinkDataForm>
     <MapEditorForm>Map Editor</MapEditorForm>
   </Map>
@@ -2110,7 +2112,7 @@
     <AccessDenied>Access Denied!</AccessDenied>
     <AccountLocked>Your account is locked! In order to resolve it, please send your request to sales@stimulsoft.com!</AccountLocked>
     <ActivationExpiriedBeforeFirstRelease>Your Subscription of Stimulsoft Reports.Ultimate expired earlier than the first version of our Stimulsoft Reports.Server was released!</ActivationExpiriedBeforeFirstRelease>
-    <ActivationLicenseIsNotCorrect>License file is not correct! Please contact our sales department at sales@stimulsoft.com!</ActivationLicenseIsNotCorrect>
+    <ActivationLicenseIsNotCorrect>The license file is not correct! Please contact our sales department at sales@stimulsoft.com!</ActivationLicenseIsNotCorrect>
     <ActivationLockedAccount>Your account is locked. Please contact our sales department at sales@stimulsoft.com!</ActivationLockedAccount>
     <ActivationMaxActivationsReached>You reached the maximum number of activations. Please contact our sales department at sales@stimulsoft.com!</ActivationMaxActivationsReached>
     <ActivationServerIsNotAvailableNow>Stimulsoft Activation Server is not available now! Please try again later.</ActivationServerIsNotAvailableNow>
@@ -2161,7 +2163,7 @@
     <IsRequiredFile>You should add at least one file!</IsRequiredFile>
     <ItemCantBeAttachedToItself>The item cannot be attached to itself!</ItemCantBeAttachedToItself>
     <ItemCantBeDeletedBecauseItemIsAttachedToOtherItems>The elements "{0}" cannot be deleted because they are attached to other elements!</ItemCantBeDeletedBecauseItemIsAttachedToOtherItems>
-    <ItemCantBeMovedToSpecifiedPlace>The item cannot be moved to a specified place!</ItemCantBeMovedToSpecifiedPlace>
+    <ItemCantBeMovedToSpecifiedPlace>The item cannot be moved to the specified place!</ItemCantBeMovedToSpecifiedPlace>
     <ItemDoesNotSupport>The item does not support "{0}"!</ItemDoesNotSupport>
     <KeyAndToKeyAreEqual>A Key and ToKey are equal!</KeyAndToKeyAreEqual>
     <MessageMaximumFileSizeExceeded>Attention! The size of the file that you are trying to add exceeds the maximum-allowed size. Do you want to add this file anyway (report processing may slow down significantly)?</MessageMaximumFileSizeExceeded>
@@ -2329,7 +2331,7 @@
     <ChartCategory>Chart</ChartCategory>
     <ChartMap>Map</ChartMap>
     <CheckCategory>Check</CheckCategory>
-    <ColorsCategory>Colors</ColorsCategory>
+    <ColorsCategory>Colours</ColorsCategory>
     <ColumnsCategory>Columns</ColumnsCategory>
     <ComboBoxCategory>Combo Box</ComboBoxCategory>
     <ControlCategory>Control</ControlCategory>
@@ -2342,10 +2344,10 @@
     <DisplayCategory>Display</DisplayCategory>
     <ExportCategory>Export</ExportCategory>
     <ExportEventsCategory>Export Events</ExportEventsCategory>
-    <FooterTableCategory>Footer Table</FooterTableCategory>
+    <FooterTableCategory>Table Footer</FooterTableCategory>
     <GaugeCategory>Gauge</GaugeCategory>
     <GridLinesCategory>Grid Lines</GridLinesCategory>
-    <HeaderTableCategory>Header Table</HeaderTableCategory>
+    <HeaderTableCategory>Table Header</HeaderTableCategory>
     <HierarchicalCategory>Hierarchical</HierarchicalCategory>
     <ImageAdditionalCategory>Image Additional</ImageAdditionalCategory>
     <ImageCategory>Image</ImageCategory>
@@ -2540,10 +2542,6 @@
     <YellowGreen>Yellow Green</YellowGreen>
   </PropertyColor>
   <PropertyEnum>
-    <StiGaugeRangeModePercentage>Percentage</StiGaugeRangeModePercentage>
-    <StiGaugeRangeModeValue>Value</StiGaugeRangeModeValue>
-    <StiGaugeRangeTypeNone>None</StiGaugeRangeTypeNone>
-    <StiGaugeRangeTypeColor>Color</StiGaugeRangeTypeColor>
     <boolFalse>False</boolFalse>
     <boolTrue>True</boolTrue>
     <BorderStyleFixed3D>Fixed 3D</BorderStyleFixed3D>
@@ -2558,13 +2556,13 @@
     <ComboBoxStyleDropDown>Drop Down</ComboBoxStyleDropDown>
     <ComboBoxStyleDropDownList>Drop Down List</ComboBoxStyleDropDownList>
     <ComboBoxStyleSimple>Simple</ComboBoxStyleSimple>
-    <ContentAlignmentBottomCenter>Bottom Center</ContentAlignmentBottomCenter>
+    <ContentAlignmentBottomCenter>Bottom Centre</ContentAlignmentBottomCenter>
     <ContentAlignmentBottomLeft>Bottom Left</ContentAlignmentBottomLeft>
     <ContentAlignmentBottomRight>Bottom Right</ContentAlignmentBottomRight>
-    <ContentAlignmentMiddleCenter>Middle Center</ContentAlignmentMiddleCenter>
+    <ContentAlignmentMiddleCenter>Middle Centre</ContentAlignmentMiddleCenter>
     <ContentAlignmentMiddleLeft>Middle Left</ContentAlignmentMiddleLeft>
     <ContentAlignmentMiddleRight>Middle Right</ContentAlignmentMiddleRight>
-    <ContentAlignmentTopCenter>Top Center</ContentAlignmentTopCenter>
+    <ContentAlignmentTopCenter>Top Centre</ContentAlignmentTopCenter>
     <ContentAlignmentTopLeft>Top Left</ContentAlignmentTopLeft>
     <ContentAlignmentTopRight>Top Right</ContentAlignmentTopRight>
     <DataGridLineStyleNone>None</DataGridLineStyleNone>
@@ -2585,15 +2583,15 @@
     <DuplexHorizontal>Horizontal</DuplexHorizontal>
     <DuplexSimplex>Simplex</DuplexSimplex>
     <DuplexVertical>Vertical</DuplexVertical>
-    <FormStartPositionCenterParent>Center Parent</FormStartPositionCenterParent>
-    <FormStartPositionCenterScreen>Center Screen</FormStartPositionCenterScreen>
+    <FormStartPositionCenterParent>Centre Parent</FormStartPositionCenterParent>
+    <FormStartPositionCenterScreen>Centre Screen</FormStartPositionCenterScreen>
     <FormStartPositionManual>Manual</FormStartPositionManual>
     <FormStartPositionWindowsDefaultBounds>Windows Default Bounds</FormStartPositionWindowsDefaultBounds>
     <FormStartPositionWindowsDefaultLocation>Windows Default Location</FormStartPositionWindowsDefaultLocation>
     <FormWindowStateMaximized>Maximized</FormWindowStateMaximized>
     <FormWindowStateMinimized>Minimized</FormWindowStateMinimized>
     <FormWindowStateNormal>Normal</FormWindowStateNormal>
-    <HorizontalAlignmentCenter>Center</HorizontalAlignmentCenter>
+    <HorizontalAlignmentCenter>Centre</HorizontalAlignmentCenter>
     <HorizontalAlignmentLeft>Left</HorizontalAlignmentLeft>
     <HorizontalAlignmentRight>Right</HorizontalAlignmentRight>
     <HotkeyPrefixHide>Hide</HotkeyPrefixHide>
@@ -2602,7 +2600,7 @@
     <LeftRightAlignmentLeft>Left</LeftRightAlignmentLeft>
     <LeftRightAlignmentRight>Right</LeftRightAlignmentRight>
     <PictureBoxSizeModeAutoSize>Auto Size</PictureBoxSizeModeAutoSize>
-    <PictureBoxSizeModeCenterImage>Center Image</PictureBoxSizeModeCenterImage>
+    <PictureBoxSizeModeCenterImage>Centre Image</PictureBoxSizeModeCenterImage>
     <PictureBoxSizeModeNormal>Normal</PictureBoxSizeModeNormal>
     <PictureBoxSizeModeStretchImage>Stretch Image</PictureBoxSizeModeStretchImage>
     <RelationDirectionChildToParent>Child-To-Parent</RelationDirectionChildToParent>
@@ -2681,11 +2679,11 @@
     <StiCode11CheckSumNone>None</StiCode11CheckSumNone>
     <StiCode11CheckSumOneDigit>One Digit</StiCode11CheckSumOneDigit>
     <StiCode11CheckSumTwoDigits>Two Digits</StiCode11CheckSumTwoDigits>
-    <StiColorScaleTypeColor2>2-Color Scale</StiColorScaleTypeColor2>
-    <StiColorScaleTypeColor3>3-Color Scale</StiColorScaleTypeColor3>
+    <StiColorScaleTypeColor2>2-Colour Scale</StiColorScaleTypeColor2>
+    <StiColorScaleTypeColor3>3-Colour Scale</StiColorScaleTypeColor3>
     <StiColumnDirectionAcrossThenDown>Across Then Down</StiColumnDirectionAcrossThenDown>
     <StiColumnDirectionDownThenAcross>Down Then Across</StiColumnDirectionDownThenAcross>
-    <StiCrossHorAlignmentCenter>Center</StiCrossHorAlignmentCenter>
+    <StiCrossHorAlignmentCenter>Centre</StiCrossHorAlignmentCenter>
     <StiCrossHorAlignmentLeft>Left</StiCrossHorAlignmentLeft>
     <StiCrossHorAlignmentNone>None</StiCrossHorAlignmentNone>
     <StiCrossHorAlignmentRight>Right</StiCrossHorAlignmentRight>
@@ -2761,7 +2759,7 @@
     <StiGroupSortDirectionAscending>Ascending</StiGroupSortDirectionAscending>
     <StiGroupSortDirectionDescending>Descending</StiGroupSortDirectionDescending>
     <StiGroupSortDirectionNone>None</StiGroupSortDirectionNone>
-    <StiHorAlignmentCenter>Center</StiHorAlignmentCenter>
+    <StiHorAlignmentCenter>Centre</StiHorAlignmentCenter>
     <StiHorAlignmentLeft>Left</StiHorAlignmentLeft>
     <StiHorAlignmentRight>Right</StiHorAlignmentRight>
     <StiImageProcessingDuplicatesTypeGlobalHide>Global Hide</StiImageProcessingDuplicatesTypeGlobalHide>
@@ -2791,16 +2789,31 @@
     <StiLegendDirectionLeftToRight>Left to Right</StiLegendDirectionLeftToRight>
     <StiLegendDirectionRightToLeft>Right to Left</StiLegendDirectionRightToLeft>
     <StiLegendDirectionTopToBottom>Top to Bottom</StiLegendDirectionTopToBottom>
-    <StiLegendHorAlignmentCenter>Center</StiLegendHorAlignmentCenter>
+    <StiLegendHorAlignmentCenter>Centre</StiLegendHorAlignmentCenter>
     <StiLegendHorAlignmentLeft>Left</StiLegendHorAlignmentLeft>
     <StiLegendHorAlignmentLeftOutside>Left Outside</StiLegendHorAlignmentLeftOutside>
     <StiLegendHorAlignmentRight>Right</StiLegendHorAlignmentRight>
     <StiLegendHorAlignmentRightOutside>Right Outside</StiLegendHorAlignmentRightOutside>
     <StiLegendVertAlignmentBottom>Bottom</StiLegendVertAlignmentBottom>
     <StiLegendVertAlignmentBottomOutside>Bottom Outside</StiLegendVertAlignmentBottomOutside>
-    <StiLegendVertAlignmentCenter>Center</StiLegendVertAlignmentCenter>
+    <StiLegendVertAlignmentCenter>Centre</StiLegendVertAlignmentCenter>
     <StiLegendVertAlignmentTop>Top</StiLegendVertAlignmentTop>
     <StiLegendVertAlignmentTopOutside>Top Outside</StiLegendVertAlignmentTopOutside>
+    <StiMapIDAustralia>Australia</StiMapIDAustralia>
+    <StiMapIDAustria>Austria</StiMapIDAustria>
+    <StiMapIDBrazil>Brazil</StiMapIDBrazil>
+    <StiMapIDCanada>Canada</StiMapIDCanada>
+    <StiMapIDChina>China</StiMapIDChina>
+    <StiMapIDEU>EU</StiMapIDEU>
+    <StiMapIDEurope>Europe</StiMapIDEurope>
+    <StiMapIDFrance>France</StiMapIDFrance>
+    <StiMapIDGermany>Germany</StiMapIDGermany>
+    <StiMapIDItaly>Italy</StiMapIDItaly>
+    <StiMapIDNetherlands>Netherlands</StiMapIDNetherlands>
+    <StiMapIDRussia>Russia</StiMapIDRussia>
+    <StiMapIDUK>UK</StiMapIDUK>
+    <StiMapIDUSA>USA</StiMapIDUSA>
+    <StiMapIDWorld>World</StiMapIDWorld>
     <StiMapModeChoropleth>Choropleth</StiMapModeChoropleth>
     <StiMapModeOnline>Online</StiMapModeOnline>
     <StiMapTypeGroup>Group</StiMapTypeGroup>
@@ -2879,10 +2892,10 @@
     <StiReportCacheModeAuto>Auto</StiReportCacheModeAuto>
     <StiReportCacheModeOff>Off</StiReportCacheModeOff>
     <StiReportCacheModeOn>On</StiReportCacheModeOn>
-    <StiReportUnitTypeCentimeters>Centimeters</StiReportUnitTypeCentimeters>
+    <StiReportUnitTypeCentimeters>Centimetres</StiReportUnitTypeCentimeters>
     <StiReportUnitTypeHundredthsOfInch>Hundredths of Inch</StiReportUnitTypeHundredthsOfInch>
     <StiReportUnitTypeInches>Inches</StiReportUnitTypeInches>
-    <StiReportUnitTypeMillimeters>Millimeters</StiReportUnitTypeMillimeters>
+    <StiReportUnitTypeMillimeters>Millimetres</StiReportUnitTypeMillimeters>
     <StiReportUnitTypePixels>Pixels</StiReportUnitTypePixels>
     <StiRestrictionsAll>All</StiRestrictionsAll>
     <StiRestrictionsAllowChange>Allow Change</StiRestrictionsAllowChange>
@@ -2923,9 +2936,9 @@
     <StiShowSeriesLabelsNone>None</StiShowSeriesLabelsNone>
     <StiShowXAxisBoth>Both</StiShowXAxisBoth>
     <StiShowXAxisBottom>Bottom</StiShowXAxisBottom>
-    <StiShowXAxisCenter>Center</StiShowXAxisCenter>
+    <StiShowXAxisCenter>Centre</StiShowXAxisCenter>
     <StiShowYAxisBoth>Both</StiShowYAxisBoth>
-    <StiShowYAxisCenter>Center</StiShowYAxisCenter>
+    <StiShowYAxisCenter>Centre</StiShowYAxisCenter>
     <StiShowYAxisLeft>Left</StiShowYAxisLeft>
     <StiSortDirectionAsc>Ascending</StiSortDirectionAsc>
     <StiSortDirectionDesc>Descending</StiSortDirectionDesc>
@@ -2957,12 +2970,12 @@
     <StiTableAutoWidthTypeFullTable>Full Table</StiTableAutoWidthTypeFullTable>
     <StiTableAutoWidthTypeLastColumns>Last Columns</StiTableAutoWidthTypeLastColumns>
     <StiTableAutoWidthTypeNone>None</StiTableAutoWidthTypeNone>
-    <StiTextHorAlignmentCenter>Center</StiTextHorAlignmentCenter>
+    <StiTextHorAlignmentCenter>Centre</StiTextHorAlignmentCenter>
     <StiTextHorAlignmentLeft>Left</StiTextHorAlignmentLeft>
     <StiTextHorAlignmentRight>Right</StiTextHorAlignmentRight>
     <StiTextHorAlignmentWidth>Width</StiTextHorAlignmentWidth>
-    <StiTextPositionCenterBottom>Center Bottom</StiTextPositionCenterBottom>
-    <StiTextPositionCenterTop>Center Top</StiTextPositionCenterTop>
+    <StiTextPositionCenterBottom>Centre Bottom</StiTextPositionCenterBottom>
+    <StiTextPositionCenterTop>Centre Top</StiTextPositionCenterTop>
     <StiTextPositionLeftBottom>Left Bottom</StiTextPositionLeftBottom>
     <StiTextPositionLeftTop>Left Top</StiTextPositionLeftTop>
     <StiTextPositionRightBottom>Right Bottom</StiTextPositionRightBottom>
@@ -2977,13 +2990,13 @@
     <StiTypeModeRange>Range</StiTypeModeRange>
     <StiTypeModeValue>Value</StiTypeModeValue>
     <StiVertAlignmentBottom>Bottom</StiVertAlignmentBottom>
-    <StiVertAlignmentCenter>Center</StiVertAlignmentCenter>
+    <StiVertAlignmentCenter>Centre</StiVertAlignmentCenter>
     <StiVertAlignmentTop>Top</StiVertAlignmentTop>
     <StiViewModeNormal>Normal</StiViewModeNormal>
     <StiViewModePageBreakPreview>Page Break Preview</StiViewModePageBreakPreview>
     <StiXmlTypeAdoNetXml>ADO.NET XML</StiXmlTypeAdoNetXml>
     <StiXmlTypeXml>XML</StiXmlTypeXml>
-    <StringAlignmentCenter>Center</StringAlignmentCenter>
+    <StringAlignmentCenter>Centre</StringAlignmentCenter>
     <StringAlignmentFar>Far</StringAlignmentFar>
     <StringAlignmentNear>Near</StringAlignmentNear>
     <StringTrimmingCharacter>Character</StringTrimmingCharacter>
@@ -3126,24 +3139,24 @@
     <AggregateFunctions>Aggregate Functions</AggregateFunctions>
     <Alias>Alias</Alias>
     <Alignment>Alignment</Alignment>
-    <AllowApplyBorderColor>Allow Apply Border Color</AllowApplyBorderColor>
+    <AllowApplyBorderColor>Allow Apply Border Colour</AllowApplyBorderColor>
     <AllowApplyBrush>Allow Apply Brush</AllowApplyBrush>
     <AllowApplyBrushNegative>Allow Apply Brush Negative</AllowApplyBrushNegative>
-    <AllowApplyColorNegative>Allow Apply Color Negative</AllowApplyColorNegative>
+    <AllowApplyColorNegative>Allow Apply Colour Negative</AllowApplyColorNegative>
     <AllowApplyStyle>Allow Apply Style</AllowApplyStyle>
     <AllowExpressions>Allow Expressions</AllowExpressions>
     <AllowHtmlTags>Allow HTML Tags</AllowHtmlTags>
     <AllowSeries>Allow Series</AllowSeries>
     <AllowSeriesElements>Allow Series Elements</AllowSeriesElements>
     <AllowSorting>Allow Sorting</AllowSorting>
-    <AllowUseBackColor>Allow Use Back Color</AllowUseBackColor>
+    <AllowUseBackColor>Allow Use Back Colour</AllowUseBackColor>
     <AllowUseBorder>Allow Use Border</AllowUseBorder>
     <AllowUseBorderFormatting>Allow Use Border Formatting</AllowUseBorderFormatting>
     <AllowUseBorderSides>Allow Use Border Sides</AllowUseBorderSides>
     <AllowUseBorderSidesFromLocation>Allow Use Border Sides from Location</AllowUseBorderSidesFromLocation>
     <AllowUseBrush>Allow Use Brush</AllowUseBrush>
     <AllowUseFont>Allow Use Font</AllowUseFont>
-    <AllowUseForeColor>Allow Use Fore Color</AllowUseForeColor>
+    <AllowUseForeColor>Allow Use Fore Colour</AllowUseForeColor>
     <AllowUseHorAlignment>Allow Use Hor Alignment</AllowUseHorAlignment>
     <AllowUseImage>Allow Use Image</AllowUseImage>
     <AllowUserValues>Allow User Values</AllowUserValues>
@@ -3151,7 +3164,7 @@
     <AllowUseTextOptions>Allow Use Text Options</AllowUseTextOptions>
     <AllowUseVertAlignment>Allow Use Vert Alignment</AllowUseVertAlignment>
     <AllowUsingAsSqlParameter>Allow using as SQL parameter</AllowUsingAsSqlParameter>
-    <AlternatingBackColor>Alternating Back Color</AlternatingBackColor>
+    <AlternatingBackColor>Alternating Back Colour</AlternatingBackColor>
     <Anchor>Anchor</Anchor>
     <Angle>Angle</Angle>
     <Antialiasing>Antialiasing</Antialiasing>
@@ -3172,27 +3185,27 @@
     <AutoRefresh>Auto Refresh</AutoRefresh>
     <AutoRotate>Auto Rotate</AutoRotate>
     <AutoScale>Auto Scale</AutoScale>
-    <AutoSeriesColorDataColumn>Auto Series Color Data Column</AutoSeriesColorDataColumn>
+    <AutoSeriesColorDataColumn>Auto Series Colour Data Column</AutoSeriesColorDataColumn>
     <AutoSeriesKeyDataColumn>Auto Series Key Data Column</AutoSeriesKeyDataColumn>
     <AutoSeriesTitleDataColumn>Auto Series Title Data Column</AutoSeriesTitleDataColumn>
     <AutoWidth>Auto Width</AutoWidth>
     <AutoWidthType>Auto Width Type</AutoWidthType>
     <AvailableInTheViewer>Available in the Viewer</AvailableInTheViewer>
-    <AxisLabelsColor>Labels Color</AxisLabelsColor>
-    <AxisLineColor>Line Color</AxisLineColor>
-    <AxisTitleColor>Title Color</AxisTitleColor>
+    <AxisLabelsColor>Labels Colour</AxisLabelsColor>
+    <AxisLineColor>Line Colour</AxisLineColor>
+    <AxisTitleColor>Title Colour</AxisTitleColor>
     <AxisValue>Axis Value</AxisValue>
-    <BackColor>Back Color</BackColor>
+    <BackColor>Back Colour</BackColor>
     <Background>Background</Background>
-    <BackgroundColor>Background Color</BackgroundColor>
+    <BackgroundColor>Background Colour</BackgroundColor>
     <BarCodeType>Bar Code Type</BarCodeType>
-    <BasicStyleColor>Basic Style Color</BasicStyleColor>
+    <BasicStyleColor>Basic Style Colour</BasicStyleColor>
     <Blend>Blend</Blend>
     <Bold>Bold</Bold>
     <Bookmark>Bookmark</Bookmark>
     <Border>Border</Border>
     <BorderBrush>Border Brush</BorderBrush>
-    <BorderColor>Border Color</BorderColor>
+    <BorderColor>Border Colour</BorderColor>
     <BorderColorNegative>Border Color Negative</BorderColorNegative>
     <Borders>Borders</Borders>
     <BorderSize>Border Size</BorderSize>
@@ -3221,9 +3234,9 @@
     <CellHeight>Cell Height</CellHeight>
     <CellType>Cell Type</CellType>
     <CellWidth>Cell Width</CellWidth>
-    <Center>Center</Center>
-    <CenterPoint>Center Point</CenterPoint>
-    <ChartAreaBorderColor>Border Color</ChartAreaBorderColor>
+    <Center>Centre</Center>
+    <CenterPoint>Centre Point</CenterPoint>
+    <ChartAreaBorderColor>Border Colour</ChartAreaBorderColor>
     <ChartAreaBrush>Area Brush</ChartAreaBrush>
     <ChartAreaShowShadow>Show Shadow</ChartAreaShowShadow>
     <ChartType>Chart Type</ChartType>
@@ -3249,12 +3262,12 @@
     <CollapsingEnabled>Collapsing Enabled</CollapsingEnabled>
     <Collate>Collate</Collate>
     <CollectionName>Collection Name</CollectionName>
-    <Color>Color</Color>
-    <ColorDataColumn>Color Data Column</ColorDataColumn>
-    <ColorEach>Color Each</ColorEach>
-    <ColorMeter>Color</ColorMeter>
-    <ColorScaleCondition>Color Scale Condition</ColorScaleCondition>
-    <ColorScaleType>Color Scale Type</ColorScaleType>
+    <Color>Colour</Color>
+    <ColorDataColumn>Colour Data Column</ColorDataColumn>
+    <ColorEach>Colour Each</ColorEach>
+    <ColorMeter>Colour</ColorMeter>
+    <ColorScaleCondition>Colour Scale Condition</ColorScaleCondition>
+    <ColorScaleType>Colour Scale Type</ColorScaleType>
     <Column>Column</Column>
     <ColumnCount>Column Count</ColumnCount>
     <ColumnDirection>Column Direction</ColumnDirection>
@@ -3273,7 +3286,7 @@
     <ConstantLines>Constant Lines</ConstantLines>
     <Container>Container</Container>
     <ContinuousText>Continuous Text</ContinuousText>
-    <ContourColor>Contour Color</ContourColor>
+    <ContourColor>Contour Colour</ContourColor>
     <Converting>Converting</Converting>
     <ConvertNulls>Convert Nulls</ConvertNulls>
     <Copies>Copies</Copies>
@@ -3305,14 +3318,14 @@
     <DateInfo>Date Info</DateInfo>
     <DateTimeStep>Date Time Step</DateTimeStep>
     <Default>Default</Default>
-    <DefaultColor>Default Color</DefaultColor>
+    <DefaultColor>Default Colour</DefaultColor>
     <DefaultHeightCell>Default Height of Cell</DefaultHeightCell>
     <DefaultNamespace>Default Namespace</DefaultNamespace>
     <DependentColumn>Dependent Column</DependentColumn>
     <DependentValue>Dependent Value</DependentValue>
     <Description>Description</Description>
     <DetectUrls>Detect URLs</DetectUrls>
-    <DialogResult>Dialog Result</DialogResult>
+    <DialogResult>Dialogue Result</DialogResult>
     <Diameter>Diameter</Diameter>
     <Direction>Direction</Direction>
     <Disabled>Disabled</Disabled>
@@ -3353,7 +3366,7 @@
     <EncodingMode>Encoding Mode</EncodingMode>
     <EncodingType>Encoding Type</EncodingType>
     <EndCap>End Cap</EndCap>
-    <EndColor>End Color</EndColor>
+    <EndColor>End Colour</EndColor>
     <EndValue>End Value</EndValue>
     <EndValues>End Values</EndValues>
     <EndWidth>End Width</EndWidth>
@@ -3374,10 +3387,10 @@
     <FieldIs>Field Is</FieldIs>
     <File>File</File>
     <Fill>Fill</Fill>
-    <FillColor>Fill Color</FillColor>
+    <FillColor>Fill Colour</FillColor>
     <Filter>Filter</Filter>
     <FilterElements>Filter Elements</FilterElements>
-    <FilterEngine>Filter Engine</FilterEngine>
+    <FilterEngine>FilterEngine</FilterEngine>
     <FilterMode>Filter Mode</FilterMode>
     <FilterOn>Filter On</FilterOn>
     <Filters>Filters</Filters>
@@ -3406,7 +3419,7 @@
     <FooterPrintOnEvenOddPages>Footer Print On Even Odd Pages</FooterPrintOnEvenOddPages>
     <FooterRowsCount>Footer Rows Count</FooterRowsCount>
     <Footers>Footers</Footers>
-    <ForeColor>Fore Color</ForeColor>
+    <ForeColor>Fore Colour</ForeColor>
     <Format>Format</Format>
     <From>From</From>
     <FullConvertExpression>Full Convert Expression</FullConvertExpression>
@@ -3414,24 +3427,24 @@
     <Functions>Functions</Functions>
     <GlobalizationStrings>Globalization Strings</GlobalizationStrings>
     <GlobalizedName>Globalized Name</GlobalizedName>
-    <GridLineColor>Grid Line Color</GridLineColor>
+    <GridLineColor>Grid Line Colour</GridLineColor>
     <GridLinesHor>Grid Lines Horizontal</GridLinesHor>
-    <GridLinesHorColor>Grid Lines Horizontal Color</GridLinesHorColor>
+    <GridLinesHorColor>Grid Lines Horizontal Colour</GridLinesHorColor>
     <GridLinesHorRight>Grid Lines Horizontal Right</GridLinesHorRight>
     <GridLineStyle>Grid Line Style</GridLineStyle>
     <GridLinesVert>Grid Lines Vertical</GridLinesVert>
-    <GridLinesVertColor>Grid Lines Vertical Color</GridLinesVertColor>
+    <GridLinesVertColor>Grid Lines Vertical Colour</GridLinesVertColor>
     <GridOutline>Grid Outline</GridOutline>
     <Group>Group</Group>
     <GroupDataColumn>Group Data Column</GroupDataColumn>
     <GroupMeter>Group</GroupMeter>
     <GrowToHeight>Grow to Height</GrowToHeight>
-    <HeaderBackColor>Header Back Color</HeaderBackColor>
+    <HeaderBackColor>Header Back Colour</HeaderBackColor>
     <HeaderCanBreak>Header Can Break</HeaderCanBreak>
     <HeaderCanGrow>Header Can Grow</HeaderCanGrow>
     <HeaderCanShrink>Header Can Shrink</HeaderCanShrink>
     <HeaderFont>Header Font</HeaderFont>
-    <HeaderForeColor>Header Fore Color</HeaderForeColor>
+    <HeaderForeColor>Header Fore Colour</HeaderForeColor>
     <HeaderPrintAtBottom>Header Print At Bottom</HeaderPrintAtBottom>
     <HeaderPrintIfEmpty>Header Print If Empty</HeaderPrintIfEmpty>
     <HeaderPrintOn>Header Print On</HeaderPrintOn>
@@ -3503,10 +3516,10 @@
     <KeyMeters>Keys</KeyMeters>
     <Keys>Keys</Keys>
     <Label>Label</Label>
-    <LabelColor>Label Color</LabelColor>
+    <LabelColor>Label Colour</LabelColor>
     <LabelRotationMode>Label Rotation Mode</LabelRotationMode>
     <Labels>Labels</Labels>
-    <LabelsColor>Labels Color</LabelsColor>
+    <LabelsColor>Labels Colour</LabelsColor>
     <LabelsOffset>Labels Offset</LabelsOffset>
     <Language>Language</Language>
     <LargeHeight>Large Height</LargeHeight>
@@ -3515,17 +3528,17 @@
     <Left>Left</Left>
     <LeftSide>Left Side</LeftSide>
     <Legend>Legend</Legend>
-    <LegendBorderColor>Border Color</LegendBorderColor>
+    <LegendBorderColor>Border Colour</LegendBorderColor>
     <LegendBrush>Legend Brush</LegendBrush>
-    <LegendLabelsColor>Labels Color</LegendLabelsColor>
-    <LegendTitleColor>Title Color</LegendTitleColor>
+    <LegendLabelsColor>Labels Colour</LegendLabelsColor>
+    <LegendTitleColor>Title Colour</LegendTitleColor>
     <LegendValueType>Legend Value Type</LegendValueType>
     <Length>Length</Length>
     <LengthUnderLabels>Length under Labels</LengthUnderLabels>
     <Lighting>Lighting</Lighting>
     <Linear>Linear</Linear>
-    <LineColor>Line Color</LineColor>
-    <LineColorNegative>Line Color Negative</LineColorNegative>
+    <LineColor>Line Colour</LineColor>
+    <LineColorNegative>Line Colour Negative</LineColorNegative>
     <LineLimit>Line Limit</LineLimit>
     <LineMarker>Line Marker</LineMarker>
     <LinesOfUnderline>Lines of Underline</LinesOfUnderline>
@@ -3562,7 +3575,7 @@
     <Marker>Marker</Marker>
     <MarkerAlignment>Marker Alignment</MarkerAlignment>
     <MarkerBorder>Marker Border</MarkerBorder>
-    <MarkerColor>Marker Color</MarkerColor>
+    <MarkerColor>Marker Colour</MarkerColor>
     <MarkerSize>Marker Size</MarkerSize>
     <MarkerType>Marker Type</MarkerType>
     <MarkerVisible>Marker Visible</MarkerVisible>
@@ -3587,7 +3600,7 @@
     <Minimum>Minimum</Minimum>
     <MinimumFontSize>Minimum Font Size</MinimumFontSize>
     <MinimumValue>Minimum Value</MinimumValue>
-    <MinorColor>Minor Color</MinorColor>
+    <MinorColor>Minor Colour</MinorColor>
     <MinorCount>Minor Count</MinorCount>
     <MinorInterval>Minor Interval</MinorInterval>
     <MinorLength>Minor Length</MinorLength>
@@ -3651,7 +3664,7 @@
     <PathSchema>Path Schema</PathSchema>
     <Placement>Placement</Placement>
     <PlaceOnToolbox>Place on Toolbox</PlaceOnToolbox>
-    <PointAtCenter>Point at Center</PointAtCenter>
+    <PointAtCenter>Point at Centre</PointAtCenter>
     <Position>Position</Position>
     <Positive>Positive</Positive>
     <PreferredColumnWidth>Preferred Column Width</PreferredColumnWidth>
@@ -3682,7 +3695,7 @@
     <Radius>Radius</Radius>
     <RadiusMode>Radius Mode</RadiusMode>
     <Range>Range</Range>
-    <RangeColorMode>Range Color Mode</RangeColorMode>
+    <RangeColorMode>Range Colour Mode</RangeColorMode>
     <RangeFrom>From</RangeFrom>
     <RangeScrollEnabled>Range Scroll Enabled</RangeScrollEnabled>
     <RangeTo>To</RangeTo>
@@ -3742,22 +3755,22 @@
     <SelectedKey>Selected Key</SelectedKey>
     <SelectedValue>Selected Value</SelectedValue>
     <Selection>Selection</Selection>
-    <SelectionBackColor>Selection Back Color</SelectionBackColor>
+    <SelectionBackColor>Selection Back Colour</SelectionBackColor>
     <SelectionEnabled>Selection Enabled</SelectionEnabled>
-    <SelectionForeColor>Selection Fore Color</SelectionForeColor>
+    <SelectionForeColor>Selection Fore Colour</SelectionForeColor>
     <SelectionMode>Selection Mode</SelectionMode>
     <SerialNumber>Serial Number</SerialNumber>
     <Series>Series</Series>
     <SeriesLabels>Series Labels</SeriesLabels>
-    <SeriesLabelsBorderColor>Border Color</SeriesLabelsBorderColor>
+    <SeriesLabelsBorderColor>Border Colour</SeriesLabelsBorderColor>
     <SeriesLabelsBrush>Labels Brush</SeriesLabelsBrush>
-    <SeriesLabelsColor>Labels Color</SeriesLabelsColor>
+    <SeriesLabelsColor>Labels Colour</SeriesLabelsColor>
     <SeriesLighting>Series Lighting</SeriesLighting>
     <SeriesShowShadow>Series Show Shadow</SeriesShowShadow>
     <SeriesTitle>Series Title</SeriesTitle>
     <Shadow>Shadow</Shadow>
     <ShadowBrush>Shadow Brush</ShadowBrush>
-    <ShadowColor>Shadow Color</ShadowColor>
+    <ShadowColor>Shadow Colour</ShadowColor>
     <ShadowSize>Shadow Size</ShadowSize>
     <ShapeType>Shape Type</ShapeType>
     <Shift>Shift</Shift>
@@ -3765,7 +3778,7 @@
     <ShortName>Short Name</ShortName>
     <ShortValue>Short Value</ShortValue>
     <ShowBehind>Show Behind</ShowBehind>
-    <ShowDialog>Show Dialog</ShowDialog>
+    <ShowDialog>Show Dialogue</ShowDialog>
     <ShowEdgeValues>Show Edge Values</ShowEdgeValues>
     <ShowImageBehind>Show Image Behind</ShowImageBehind>
     <ShowInLegend>Show in Legend</ShowInLegend>
@@ -3781,7 +3794,6 @@
     <ShowQuietZones>Show Quiet Zones</ShowQuietZones>
     <ShowScrollBar>Show Scroll Bar</ShowScrollBar>
     <ShowSelectAll>Show Select All</ShowSelectAll>
-    <ShowAllValue>Show All Value</ShowAllValue>
     <ShowSeriesLabels>Show Series Labels</ShowSeriesLabels>
     <ShowShadow>Show Shadow</ShowShadow>
     <ShowTotal>Show Total</ShowTotal>
@@ -3817,7 +3829,7 @@
     <SqlCommand>Sql Command</SqlCommand>
     <StartAngle>Start Angle</StartAngle>
     <StartCap>Start Cap</StartCap>
-    <StartColor>Start Color</StartColor>
+    <StartColor>Start Colour</StartColor>
     <StartFromZero>Start From Zero</StartFromZero>
     <StartMode>Start Mode</StartMode>
     <StartNewPage>Start New Page</StartNewPage>
@@ -3839,9 +3851,9 @@
     <StructuredAppendPosition>Structured Append Position</StructuredAppendPosition>
     <StructuredAppendTotal>Structured Append Total</StructuredAppendTotal>
     <Style>Style</Style>
-    <StyleColors>Style Colors</StyleColors>
+    <StyleColors>Style Colours</StyleColors>
     <Styles>Styles</Styles>
-    <SubReportPage>Sub Report</SubReportPage>
+    <SubReportPage>Sub Report Page</SubReportPage>
     <Summaries>Summaries</Summaries>
     <Summary>Summary</Summary>
     <SummaryExpression>Summary Expression</SummaryExpression>
@@ -3866,18 +3878,18 @@
     <TextAlignment>Text Alignment</TextAlignment>
     <TextBefore>Text Before</TextBefore>
     <TextBrush>Text Brush</TextBrush>
-    <TextColor>Text Color</TextColor>
+    <TextColor>Text Colour</TextColor>
     <TextFormat>Text Format</TextFormat>
     <TextOnly>Text Only</TextOnly>
     <TextOptions>Text Options</TextOptions>
     <TextQuality>Text Quality</TextQuality>
     <Ticks>Ticks</Ticks>
     <Title>Title</Title>
-    <TitleBeforeHeader>Title before Header</TitleBeforeHeader>
-    <TitleColor>Title Color</TitleColor>
+    <TitleBeforeHeader>Title Before Header</TitleBeforeHeader>
+    <TitleColor>Title Colour</TitleColor>
     <TitleDirection>TitleDirection</TitleDirection>
     <TitleFont>Title Font</TitleFont>
-    <TitleVisible>Title Visible</TitleVisible>
+    <TitleVisible>Visible</TitleVisible>
     <To>To</To>
     <Today>Today</Today>
     <ToolTip>Tool Tip</ToolTip>
@@ -3889,9 +3901,9 @@
     <TopSide>Top Side</TopSide>
     <Total>Total</Total>
     <Totals>Totals</Totals>
-    <TransparentColor>Transparent Color</TransparentColor>
+    <TransparentColor>Transparent Colour</TransparentColor>
     <TrendLine>Trend Line</TrendLine>
-    <TrendLineColor>Color</TrendLineColor>
+    <TrendLineColor>Colour</TrendLineColor>
     <TrendLineShowShadow>Show Shadow</TrendLineShowShadow>
     <TrimExcessData>Trim Excess Data</TrimExcessData>
     <Trimming>Trimming</Trimming>
@@ -3909,7 +3921,7 @@
     <UseParentStyles>Use Parent Styles</UseParentStyles>
     <UseRangeColor>Use Range Color</UseRangeColor>
     <UseRectangularSymbols>Use Rectangular Symbols</UseRectangularSymbols>
-    <UseSeriesColor>Use Series Color</UseSeriesColor>
+    <UseSeriesColor>Use Series Colour</UseSeriesColor>
     <UseStyleOfSummaryInColumnTotal>Use Style of Summary in Column Total</UseStyleOfSummaryInColumnTotal>
     <UseStyleOfSummaryInRowTotal>Use Style of Summary in Row Total</UseStyleOfSummaryInRowTotal>
     <UseValuesFromTheSpecifiedRange>Use Values From The Specified Range</UseValuesFromTheSpecifiedRange>
@@ -4064,7 +4076,6 @@
     <qnSynchronizeServices>Synchronized services?</qnSynchronizeServices>
   </Questions>
   <Report>
-    <Checking>Checking...</Checking>
     <ActiveRelation>Active Relation</ActiveRelation>
     <Address>Address</Address>
     <Alphabetical>Alphabetical</Alphabetical>
@@ -4085,7 +4096,7 @@
     <CreateNewReportPageForm>Create a new report, add a page, add a form</CreateNewReportPageForm>
     <CreatingReport>Creating Report</CreatingReport>
     <CrossBands>Cross</CrossBands>
-    <Dialogs>Dialogs</Dialogs>
+    <Dialogs>Dialogues</Dialogs>
     <EditStyles>[Edit Styles]</EditStyles>
     <Enhancements>Enhancements</Enhancements>
     <Errors>Errors</Errors>
@@ -4106,9 +4117,9 @@
     <LabelAuthor>Author:</LabelAuthor>
     <LabelBackground>Background:</LabelBackground>
     <LabelCategory>Category:</LabelCategory>
-    <LabelCentimeters>Centimeters:</LabelCentimeters>
+    <LabelCentimeters>Centimetres:</LabelCentimeters>
     <LabelCollectionName>Collection Name:</LabelCollectionName>
-    <LabelColor>Color:</LabelColor>
+    <LabelColor>Colour:</LabelColor>
     <LabelCountData>Count Data:</LabelCountData>
     <LabelDataBand>DataBand:</LabelDataBand>
     <LabelDataColumn>Data Column:</LabelDataColumn>
@@ -4119,7 +4130,7 @@
     <LabelFunction>Function:</LabelFunction>
     <LabelHundredthsOfInch>Hundredths of Inch:</LabelHundredthsOfInch>
     <LabelInches>Inches:</LabelInches>
-    <LabelMillimeters>Millimeters:</LabelMillimeters>
+    <LabelMillimeters>Millimetres:</LabelMillimeters>
     <LabelName>Name:</LabelName>
     <LabelNameInSource>Name in Source:</LabelNameInSource>
     <LabelNestedLevel>Nested Level:</LabelNestedLevel>
@@ -4298,7 +4309,7 @@
   <Toolbars>
     <Align>Align</Align>
     <AlignBottom>Align Bottom</AlignBottom>
-    <AlignCenter>Align Center</AlignCenter>
+    <AlignCenter>Align Centre</AlignCenter>
     <AlignLeft>Align Left</AlignLeft>
     <AlignMiddle>Align Middle</AlignMiddle>
     <AlignRight>Align Right</AlignRight>
@@ -4306,8 +4317,8 @@
     <AlignTop>Align Top</AlignTop>
     <AlignWidth>Justify</AlignWidth>
     <BringToFront>Bring to Front</BringToFront>
-    <CenterHorizontally>Center Horizontally</CenterHorizontally>
-    <CenterVertically>Center Vertically</CenterVertically>
+    <CenterHorizontally>Centre Horizontally</CenterHorizontally>
+    <CenterVertically>Centre Vertically</CenterVertically>
     <Conditions>Conditions</Conditions>
     <FontGrow>Grow Font</FontGrow>
     <FontName>Font Name</FontName>
