@@ -5,8 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7257" />
-    <PackageReference Include="Stimulsoft.Reports.Web.NetCore" Version="2021.1.2" />
+    <PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7259" />
+    <PackageReference Include="Stimulsoft.Reports.Web.NetCore" Version="2021.2.4" />
   </ItemGroup>
 
   <ItemGroup>

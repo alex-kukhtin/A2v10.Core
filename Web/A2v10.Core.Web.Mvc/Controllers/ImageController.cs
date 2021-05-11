@@ -46,7 +46,7 @@ namespace A2v10.Core.Web.Mvc.Controllers
 					throw new InvalidReqestExecption($"Image not found. ({pathInfo})");
 
 				if (!IsTokenValid(blob.Token, token))
-					return;
+					throw new InvalidReqestExecption("Invalid image token");
 
 				Response.ContentType = blob.Mime;
 				if (blob.Stream != null)
@@ -70,6 +70,7 @@ namespace A2v10.Core.Web.Mvc.Controllers
 				var fullPath = _appCodeProvider.MakeFullPath(pathInfo, String.Empty, _userStateManager.IsAdmin);
 				if (!_appCodeProvider.FileExists(fullPath))
 					throw new FileNotFoundException($"File not found '{pathInfo}'");
+
 				using var stream = _appCodeProvider.FileStreamFullPathRO(fullPath);
 				var ext = _appCodeProvider.GetExtension(fullPath);
 				Response.ContentType = MimeTypes.GetMimeMapping(ext);
@@ -88,11 +89,10 @@ namespace A2v10.Core.Web.Mvc.Controllers
 
 			var len = ex.Message.Length * 5;
 			var svg = 
-$@"<svg width='{len}px' height='40px' xmlns='http://www.w3.org/2000/svg'>
-	<rect width='{len}' height='40' fill='#fff0f5' stroke='#880000' stroke-width='1'/>
-	<text x='{len/2}' y='25' fill='#880000' font-size='11px' text-anchor='middle'>{ex.Message}</text>
-</svg>";
-
+			$@"<svg width='{len}px' height='40px' xmlns='http://www.w3.org/2000/svg'>
+				<rect width='{len}' height='40' fill='#fff0f5' stroke='#880000' stroke-width='1'/>
+				<text x='{len/2}' y='25' fill='#880000' font-size='11px' text-anchor='middle'>{ex.Message}</text>
+			</svg>";
 			Response.Headers.SetCommaSeparatedValues("cache-control", "no-store", "no-cache");
 			Response.ContentType = MimeTypes.Image.Svg;
 			await HttpResponseWritingExtensions.WriteAsync(Response, svg, Encoding.UTF8);

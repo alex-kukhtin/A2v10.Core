@@ -134,10 +134,10 @@ namespace A2v10.Core.Web.Mvc.Controllers
 		{
 			String exceptionInfo = $"Invald application url: '{pathInfo}'";
 			if (pathInfo == null)
-				throw new RequestModelException(exceptionInfo);
+				throw new InvalidReqestExecption(exceptionInfo);
 			var info = pathInfo.Split(new Char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
 			if (info.Length < 2)
-				throw new RequestModelException(exceptionInfo);
+				throw new InvalidReqestExecption(exceptionInfo);
 			var kind = info[1].ToLowerInvariant();
 			switch (kind)
 			{
@@ -145,11 +145,11 @@ namespace A2v10.Core.Web.Mvc.Controllers
 					throw new Exception("About");
 				case "changepassword":
 					if (urlKind != UrlKind.Dialog)
-						throw new RequestModelException(exceptionInfo);
+						throw new InvalidReqestExecption(exceptionInfo);
 					throw new Exception("ChangePassword");
 				default:
 					if (urlKind != UrlKind.Page)
-						throw new RequestModelException(exceptionInfo);
+						throw new InvalidReqestExecption(exceptionInfo);
 					throw new Exception($"Render Application page {kind}");
 			}
 		}
