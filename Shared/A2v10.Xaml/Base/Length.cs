@@ -1,8 +1,9 @@
-﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
 using System.ComponentModel;
 using System.Globalization;
+
 using System.Text.RegularExpressions;
 
 namespace A2v10.Xaml
@@ -54,6 +55,7 @@ namespace A2v10.Xaml
 		public static Length FromString(String strVal)
 		{
 			strVal = strVal.Trim();
+			Double dblVal = 0;
 			if (strVal == "Auto")
 				return new Length() { Value = "auto" };
 			if (strVal == "Fit")
@@ -63,8 +65,8 @@ namespace A2v10.Xaml
 			else if (strVal.StartsWith("Calc("))
 				return new Length() { Value = strVal };
 			else if (IsValidLength(strVal))
-				return new Length() { Value = strVal };
-			else if (Double.TryParse(strVal, out _))
+				return new Length() { Value = strVal.Replace(" ", "") };
+			else if (Double.TryParse(strVal, NumberStyles.Any, CultureInfo.InvariantCulture, out dblVal))
 				return new Length() { Value = strVal + "px" };
 			throw new XamlException($"Invalid length value '{strVal}'");
 		}
@@ -97,6 +99,7 @@ namespace A2v10.Xaml
 
 		public static GridLength FromString(String strVal)
 		{
+			Double dblVal = 0;
 			if (strVal == "Auto")
 				return new GridLength("auto");
 			else if (strVal.StartsWith("MinMax"))
@@ -107,13 +110,13 @@ namespace A2v10.Xaml
 					throw new XamlException($"Invalid grid length value '{strVal}'");
 				GridLength gl1 = GridLength.FromString(match.Groups[1].Value);
 				GridLength gl2 = GridLength.FromString(match.Groups[2].Value);
-				return new GridLength($"minmax({gl1},{gl2})");
+				return new GridLength($"minmax({gl1.ToString()},{gl2.ToString()})");
 			}
 			else if (Length.IsValidLength(strVal))
 				return new GridLength() { Value = strVal };
 			if (strVal.EndsWith("*"))
 				return new GridLength(strVal.Trim().Replace("*", "fr"));
-			else if (Double.TryParse(strVal, out _))
+			else if (Double.TryParse(strVal, NumberStyles.Any, CultureInfo.InvariantCulture, out dblVal))
 				return new GridLength(strVal + "px");
 			throw new XamlException($"Invalid grid length value '{strVal}'");
 		}
