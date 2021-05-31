@@ -1,6 +1,6 @@
-// Copyright © 2015-2019 Alex Kukhtin. All rights reserved.
+// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-// 20190813-7521
+// 20210529-7776
 // app.js
 
 "use strict";
@@ -10,11 +10,13 @@
 	window.app = {
 		modules: {},
 		components: {},
+		templates: {},
 		nextToken: nextToken
 	};
 
 	window.require = require;
 	window.component = component;
+	window.template = template;
 
 	// amd typescript support
 	window.define = define;
@@ -42,6 +44,14 @@
 		if (noerror)
 			return {};
 		throw new Error('component "' + name + '" not found');
+	}
+
+	function template(name, noerror) {
+		if (name in app.templates)
+			return app.templates[name];
+		if (noerror)
+			return {};
+		throw new Error('template "' + name + '" not found');
 	}
 
 	let currentToken = 1603;
@@ -181,7 +191,7 @@ app.modules['std:const'] = function () {
 
 // Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-// 20210414-7765
+// 20210531-7776
 // services/utils.js
 
 app.modules['std:utils'] = function () {
@@ -259,7 +269,8 @@ app.modules['std:utils'] = function () {
 			splitPath,
 			capitalize,
 			maxChars,
-			equalNoCase: stringEqualNoCase
+			equalNoCase: stringEqualNoCase,
+			applyFilters
 		},
 		currency: {
 			round: currencyRound,
@@ -789,6 +800,27 @@ app.modules['std:utils'] = function () {
 
 	function stringEqualNoCase(s1, s2) {
 		return (s1 || '').toLowerCase() === (s2 || '').toLowerCase();
+	}
+
+	function applyFilters(filters, value) {
+		if (!filters || !filters.length)
+			return;
+		if (!value)
+			return value;
+		value = '' + value;
+		for (let f of filters) {
+			switch (f) {
+				case 'trim':
+					value = value.trim();
+					break;
+				case 'upper':
+					value = value.toUpperCase();
+					break;
+				case 'lower':
+					value = value.toLowerCase();
+			}
+		}
+		return value;
 	}
 
 	function textContains(text, probe) {
@@ -4938,7 +4970,7 @@ Vue.component('validator-control', {
 */
 // Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-/*20210414-7765*/
+/*20210531-7776*/
 /*components/textbox.js*/
 
 /* password-- fake fields are a workaround for chrome autofill getting the wrong fields -->*/
@@ -5022,7 +5054,8 @@ Vue.component('validator-control', {
 			number: Boolean,
 			spellCheck: { type: Boolean, default: undefined },
 			enterCommand: Function,
-			hasClear: Boolean
+			hasClear: Boolean,
+			filters: Array
 		},
 		computed: {
 			controlType() {
@@ -5037,11 +5070,14 @@ Vue.component('validator-control', {
 			}
 		},
 		methods: {
+			doFilter(value) {
+				return utils.text.applyFilters(this.filters, value);
+			},
 			updateValue(value) {
 				if (this.mask)
-					this.item[this.prop] = mask.getUnmasked(this.mask, value);
+					this.item[this.prop] = mask.getUnmasked(this.mask, this.doFilter(value));
 				else
-					this.item[this.prop] = utils.parse(value, this.dataType);
+					this.item[this.prop] = utils.parse(this.doFilter(value), this.dataType);
 				let mv = this.modelValue;
 				if (this.$refs.input.value !== mv) {
 					this.$refs.input.value = mv;
@@ -5095,7 +5131,8 @@ Vue.component('validator-control', {
 			rows: Number,
 			spellCheck: { type: Boolean, default: undefined },
 			enterCommand: Function,
-			maxHeight: String
+			maxHeight: String,
+			filters: Array
 		},
 		computed: {
 			modelValue2() {
@@ -5110,6 +5147,7 @@ Vue.component('validator-control', {
 		},
 		methods: {
 			updateValue(value) {
+				value = utils.text.applyFilters(this.filters, value);
 				if (this.item[this.prop] === value) return;
 				this.item[this.prop] = value;
 				this.$emit('change', this.item[this.prop]);
@@ -8893,7 +8931,7 @@ TODO:
 
 // Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-// 20210414-7765
+// 20210512-7774
 // components/modal.js
 
 
@@ -8987,16 +9025,18 @@ TODO:
 			function onMouseMove(event) {
 				if (!opts.down)
 					return;
-				let dx = event.pageX - opts.offset.x;
-				let dy = event.pageY - opts.offset.y;
+				// flex centered window
+				let dx = (event.pageX - opts.offset.x) * 2;
+				let dy = (event.pageY - opts.offset.y) * 2;
 				let mx = opts.init.x + dx;
 				let my = opts.init.y + dy;
 				// fit
 				let maxX = window.innerWidth - opts.init.cx;
-				let maxY = window.innerHeight - opts.init.cy;
-				if (my < 0) my = 0;
-				if (mx < 0) mx = 0;
+				let maxY = window.innerHeight - opts.init.cy - 24 /*footer height*/;
+				//if (my < 0) my = 0;
+				if (mx < -maxX) mx = -maxX;
 				if (mx > maxX) mx = maxX;
+				if (my < -maxY) my = -maxY;
 				//if (my > maxY) my = maxY; // any value available
 				//console.warn(`dx:${dx}, dy:${dy}, mx:${mx}, my:${my}, cx:${opts.init.cx}`);
 				mw.style.marginLeft = mx + 'px';
@@ -9870,12 +9910,14 @@ Vue.component('a2-panel', {
 		}
 	}
 });
-// Copyright © 2020 Alex Kukhtin. All rights reserved.
+// Copyright © 2020-2021 Alex Kukhtin. All rights reserved.
 
-// 20201130-7634
+// 20201130-7773
 // components/inlinedialog.js
 (function () {
 	const eventBus = require('std:eventBus');
+
+	let __inlineStack = []; // for ESC support
 
 	Vue.component('a2-inline-dialog', {
 		template:
@@ -9908,9 +9950,13 @@ Vue.component('a2-panel', {
 			__keyUp(event) {
 				if (this.noClose) return;
 				if (event.which === 27) {
-					eventBus.$emit('inlineDialog', { cmd: 'close', id: this.dialogId });
 					event.stopPropagation();
 					event.preventDefault();
+					if (__inlineStack.length && __inlineStack[0] !== this.dialogId)
+						return;
+					setTimeout(() => {
+						eventBus.$emit('inlineDialog', { cmd: 'close', id: this.dialogId });
+					}, 1);
 				}
 			},
 			__inlineEvent(opts) {
@@ -9919,12 +9965,14 @@ Vue.component('a2-panel', {
 				switch (opts.cmd) {
 					case 'close':
 						if (window.__requestsCount__ > 0) return;
+						__inlineStack.shift();
 						this.open = false;
 						this.visible = false;
 						document.removeEventListener('keyup', this.__keyUp);
 						break;
 					case 'open':
 						this.visible = true;
+						__inlineStack.unshift(this.dialogId);
 						document.addEventListener('keyup', this.__keyUp);
 						setTimeout(() => {
 							this.open = true;
@@ -13035,27 +13083,14 @@ Vue.directive('resize', {
 		tabSideBar: a2TabSideBar
 	};
 })();	
-// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+// Copyright © 2021 Alex Kukhtin. All rights reserved.
 
-/*20210428-7771*/
-/* controllers/shell.js */
+/*20210529-7776*/
+/* controllers/appheader.js */
 
 (function () {
 
-	const store = component('std:store');
-	const eventBus = require('std:eventBus');
-	const modal = component('std:modal');
-	const toastr = component('std:toastr');
-	const popup = require('std:popup');
-	const urlTools = require('std:url');
-	const period = require('std:period');
-	const log = require('std:log');
-	const utils = require('std:utils');
 	const locale = window.$$locale;
-	const platform = require('std:platform');
-	const navBar = component('std:navbar');
-	const sideBar = component('std:sidebar');
-	const menu = component('std:navmenu');
 
 	const a2AppHeader = {
 		template: `
@@ -13169,6 +13204,29 @@ Vue.directive('resize', {
 		}
 	};
 
+	app.components['std:appHeader'] = a2AppHeader;
+})();	
+// Copyright © 2021 Alex Kukhtin. All rights reserved.
+
+/*20210529-7776*/
+/* controllers/mainview.js */
+
+(function () {
+
+	const store = component('std:store');
+	const period = require('std:period');
+	const eventBus = require('std:eventBus');
+
+	const modal = component('std:modal');
+	const toastr = component('std:toastr');
+	const utils = require('std:utils');
+
+	const platform = require('std:platform');
+	const navBar = component('std:navbar');
+	const sideBar = component('std:sidebar');
+	const urlTools = require('std:url');
+	const menu = component('std:navmenu');
+
 	const contentView = {
 		render(h) {
 			return h('div', {
@@ -13221,6 +13279,7 @@ Vue.directive('resize', {
 			});
 		}
 	};
+
 
 	const a2MainView = {
 		store,
@@ -13316,7 +13375,7 @@ Vue.directive('resize', {
 			},
 			pendingRequest() { return !this.hasModals && this.requestsCount > 0; },
 			hasModals() { return this.modals.length > 0; },
-			isNavBarMenu() {return this.navBarMode === 'Menu';}
+			isNavBarMenu() { return this.navBarMode === 'Menu'; }
 		},
 		methods: {
 			setupWrapper(dlg) {
@@ -13338,12 +13397,12 @@ Vue.directive('resize', {
 				this.showNavBar = false;
 			eventBus.$on('beginRequest', function () {
 				//if (me.hasModals)
-					//return;
+				//return;
 				me.requestsCount += 1;
 			});
 			eventBus.$on('endRequest', function () {
 				//if (me.hasModals)
-					//return;
+				//return;
 				me.requestsCount -= 1;
 			});
 
@@ -13369,7 +13428,7 @@ Vue.directive('resize', {
 				if (raw)
 					url = urlTools.combine(root, modal, id);
 				url = store.replaceUrlQuery(url, prms.query);
-				let dlg = { title: "dialog", url: url, prms: prms.data, wrap:false, rd: prms.rd };
+				let dlg = { title: "dialog", url: url, prms: prms.data, wrap: false, rd: prms.rd };
 				dlg.promise = new Promise(function (resolve, reject) {
 					dlg.resolve = resolve;
 				});
@@ -13381,7 +13440,7 @@ Vue.directive('resize', {
 			eventBus.$on('modaldirect', function (modal, prms) {
 				let root = window.$$rootUrl;
 				let url = urlTools.combine(root, '/_dialog', modal);
-				let dlg = { title: "dialog", url: url, prms: prms.data, wrap:false };
+				let dlg = { title: "dialog", url: url, prms: prms.data, wrap: false };
 				dlg.promise = new Promise(function (resolve, reject) {
 					dlg.resolve = resolve;
 				});
@@ -13449,7 +13508,7 @@ Vue.directive('resize', {
 				if (dlg.attrs.alwaysOk)
 					result = true;
 
-				if (dlg.attrs.canClose) { 
+				if (dlg.attrs.canClose) {
 					let canResult = dlg.attrs.canClose();
 					//console.dir(canResult);
 					if (canResult === true)
@@ -13538,10 +13597,25 @@ Vue.directive('resize', {
 		}
 	};
 
+	app.components['std:mainView'] = a2MainView;
+})();	
+// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+
+/*20210529-7776*/
+/* controllers/shell.js */
+
+(function () {
+
+	const store = component('std:store');
+	const eventBus = require('std:eventBus');
+	const popup = require('std:popup');
+	const period = require('std:period');
+	const log = require('std:log');
+	const locale = window.$$locale;
+	const menu = component('std:navmenu');
+
 	const shell = Vue.extend({
 		components: {
-			'a2-main-view': a2MainView,
-			'a2-app-header': a2AppHeader
 		},
 		store,
 		data() {

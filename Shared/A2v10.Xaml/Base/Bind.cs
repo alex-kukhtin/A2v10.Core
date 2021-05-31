@@ -1,6 +1,7 @@
 ﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text.RegularExpressions;
@@ -17,6 +18,7 @@ namespace A2v10.Xaml
 		public Boolean HideZeros { get; set; }
 		public String Mask { get; set; }
 		public Boolean NegativeRed { get; set; }
+		public FilterCollection Filters { get; set; }
 
 		private Boolean _wrapped;
 
@@ -74,6 +76,17 @@ namespace A2v10.Xaml
 
 
 		private static readonly Regex _selectedRegEx = new(@"([\w\.]+)\.Selected\((\w+)\)", RegexOptions.Compiled);
+
+		public Boolean HasFilters => Filters != null && Filters.Count > 0;
+
+		public String FiltersJS()
+		{
+			if (!HasFilters)
+				return String.Empty;
+			var fStrings = Filters.Select(x => $"'{x.ToString().ToLowerInvariant()}'");
+			return $"[{String.Join(",", fStrings)}]";
+		}
+
 
 		#region ISupportInitialize
 		public void BeginInit()
