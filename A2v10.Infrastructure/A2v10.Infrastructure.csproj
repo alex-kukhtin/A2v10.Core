@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7259" />
+    <PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7260" />
   </ItemGroup>
 
 </Project>

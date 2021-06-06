@@ -39,22 +39,24 @@ namespace A2v10.Core.Web.Mvc.Controllers
 
 		[Route("_page/{*pathInfo}")]
 		[Route("admin/_page/{*pathInfo}")]
-		public Task Page(String pathInfo)
+		public async Task<IActionResult> Page(String pathInfo)
 		{
 			// {pagePath}/action/id
 			if (pathInfo.StartsWith("app/", StringComparison.OrdinalIgnoreCase))
 				return RenderApplicationPage(UrlKind.Page, pathInfo);
-			return Render(pathInfo + Request.QueryString, UrlKind.Page);
+			await Render(pathInfo + Request.QueryString, UrlKind.Page);
+			return new EmptyResult();
 		}
 
 		[Route("_dialog/{*pathInfo}")]
 		[Route("admin/_dialog/{*pathInfo}")]
-		public Task Dialog(String pathInfo)
+		public async Task<IActionResult> Dialog(String pathInfo)
 		{
 			// {pagePath}/dialog/id
 			if (pathInfo.StartsWith("app/", StringComparison.OrdinalIgnoreCase))
 				return RenderApplicationPage(UrlKind.Dialog, pathInfo);
-			return Render(pathInfo + Request.QueryString, UrlKind.Dialog);
+			await Render(pathInfo + Request.QueryString, UrlKind.Dialog);
+			return new EmptyResult();
 		}
 
 		[Route("_popup/{*pathInfo}")]
@@ -130,7 +132,7 @@ namespace A2v10.Core.Web.Mvc.Controllers
 			await HttpResponseWritingExtensions.WriteAsync(Response, si.Script, Encoding.UTF8);
 		}
 
-		Task RenderApplicationPage(UrlKind urlKind, String pathInfo)
+		IActionResult RenderApplicationPage(UrlKind urlKind, String pathInfo)
 		{
 			String exceptionInfo = $"Invald application url: '{pathInfo}'";
 			if (pathInfo == null)
@@ -142,7 +144,7 @@ namespace A2v10.Core.Web.Mvc.Controllers
 			switch (kind)
 			{
 				case "about":
-					throw new Exception("About");
+					return View("About");
 				case "changepassword":
 					if (urlKind != UrlKind.Dialog)
 						throw new InvalidReqestExecption(exceptionInfo);
@@ -150,7 +152,9 @@ namespace A2v10.Core.Web.Mvc.Controllers
 				default:
 					if (urlKind != UrlKind.Page)
 						throw new InvalidReqestExecption(exceptionInfo);
-					throw new Exception($"Render Application page {kind}");
+					//var m = new AppPageModel();
+					ViewBag.PageKind = kind;
+					return View("Default" /*m*/);
 			}
 		}
 	}
