@@ -2,6 +2,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+
 using A2v10.System.Xaml;
 
 namespace A2v10.Xaml
@@ -42,15 +44,23 @@ namespace A2v10.Xaml
 			var expr = GetBinding(nameof(Expression));
 			if (expr == null)
 				throw new XamlException("Binding 'Expression' must be a Bind");
-			for (var i=0; i<Cases.Count; i++)
+
+			var cases = Cases.OrderBy(x => x is Else).ToList();
+
+			for (var i = 0; i < cases.Count; i++)
 			{
-				var itm = Cases[i];
+				var itm = cases[i];
 				var t = new TagBuilder("template");
 				var ifKey = (i == 0) ? "v-if " : "v-else-if";
 				if (itm is Else)
-					ifKey = "v-else";
-				// conver values to string!
-				t.MergeAttribute("v-if", $"('' + {expr.GetPathFormat(context)}) === '{itm.Value}'");
+				{
+					t.MergeAttribute("v-else", String.Empty);
+				}
+				else
+				{
+					// convert values to string!
+					t.MergeAttribute(ifKey, $"('' + {expr.GetPathFormat(context)}) === '{itm.Value}'");
+				}
 				t.RenderStart(context);
 				itm.RenderElement(context);
 				t.RenderEnd(context);
