@@ -2,10 +2,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using A2v10.Data.Interfaces;
+using A2v10.Infrastructure;
 using Microsoft.AspNetCore.Identity;
 
 namespace A2v10.Web.Identity
@@ -99,8 +101,14 @@ namespace A2v10.Web.Identity
 
 		public Task SetSecurityStampAsync(AppUser user, String stamp, CancellationToken cancellationToken)
 		{
-			// TODO:
-			//throw new NotImplementedException();
+			/*
+			var prm = new ExpandoObject()
+			{
+				{ "UserId",  user.Id },
+				{ "SecurityStamp",  stamp }
+			};
+			await _dbContext.ExecuteExpandoAsync(DataSource, "a2security.[User.SetSecurityStamp]", prm);
+			*/
 			user.SecurityStamp = stamp;
 			return Task.CompletedTask;
 		}
@@ -150,10 +158,17 @@ namespace A2v10.Web.Identity
 		#region IUserPasswordStore
 		public Task SetPasswordHashAsync(AppUser user, String passwordHash, CancellationToken cancellationToken)
 		{
-			//throw new NotImplementedException();
-			// TODO:
+			/*
+			var prm = new ExpandoObject()
+			{
+				{ "UserId",  user.Id },
+				{ "PasswordHash",  passwordHash }
+			};
+			await _dbContext.ExecuteExpandoAsync(DataSource, "a2security.[User.SetPasswordHash]", prm);
+			*/
 			user.PasswordHash = passwordHash;
 			return Task.CompletedTask;
+
 		}
 
 		public Task<String> GetPasswordHashAsync(AppUser user, CancellationToken cancellationToken)

@@ -7,7 +7,7 @@
   <ItemGroup>
     <PackageReference Include="A2v10.Data.Core" Version="10.0.7260" />
     <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="5.0.6" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="5.0.7" />
   </ItemGroup>
 
   <ItemGroup>
