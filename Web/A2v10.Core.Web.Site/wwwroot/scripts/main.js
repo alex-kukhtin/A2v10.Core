@@ -1563,7 +1563,7 @@ app.modules['std:modelInfo'] = function () {
 
 // Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-// 20210606-7781
+// 20210612-7783
 /* services/http.js */
 
 app.modules['std:http'] = function () {
@@ -1604,7 +1604,7 @@ app.modules['std:http'] = function () {
 				case 255:
 					let txt = response.statusText;
 					if (ct.startsWith('text/'))
-						txt = 'server error: ' + await response.text();
+						txt = await response.text();
 					throw txt;
 				case 473: /*non standard */
 					if (response.statusText === 'Unauthorized') {
@@ -1636,27 +1636,35 @@ app.modules['std:http'] = function () {
 		return doRequest('POST', url, data, raw, skipEvents);
 	}
 
-	function upload(url, data) {
-		return new Promise(function (resolve, reject) {
-			let xhr = new XMLHttpRequest();
-			xhr.onload = function (response) {
-				eventBus.$emit('endRequest', url);
-				if (xhr.status === 200) {
-					let xhrResult = xhr.responseText ? JSON.parse(xhr.responseText) : '';
-					resolve(xhrResult);
-				} else if (xhr.status === 255) {
-					reject(xhr.responseText || xhr.statusText);
-				}
-			};
-			xhr.onerror = function (response) {
-				alert('Error');
-			};
-			xhr.open("POST", url, true);
-			xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-			xhr.setRequestHeader('Accept', 'application/json');
-			eventBus.$emit('beginRequest', url);
-			xhr.send(data);
-		});
+	async function upload(url, data) {
+		eventBus.$emit('beginRequest', url);
+		try {
+			var response = await fetch(url, {
+				method: 'POST',
+				headers: {
+					'X-Requested-With': 'XMLHttpRequest',
+					'Accept': 'application/json'
+				},
+				body: data
+			});
+			let ct = response.headers.get("content-type");
+			switch (response.status) {
+				case 200:
+					if (ct.startsWith('application/json'))
+						return await response.json();
+					return await response.text();
+				case 255:
+					let txt = response.statusText;
+					if (ct.startsWith('text/'))
+						txt = await response.text();
+					throw txt;
+			}
+
+		} catch (err) {
+			alert(err);
+		} finally {
+			eventBus.$emit('endRequest', url);
+		}
 	}
 
 	function load(url, selector, baseUrl) {
@@ -7582,7 +7590,7 @@ Vue.component('popover', {
 		template: `
 <li @click.stop.prevent="doClick(item)" :title=title v-on:dblclick.stop.prevent="doDblClick(item)"
 	v-show=isItemVisible
-	:class="{expanded: isExpanded, collapsed:isCollapsed, active:isItemSelected, folder:isFolder, group: isItemGroup}" >
+	:class="[cssClass, {expanded: isExpanded, collapsed:isCollapsed, active:isItemSelected, folder:isFolder, group: isItemGroup}]" >
 	<div :class="{overlay:true, 'no-icons': !options.hasIcon}">
 		<a class="toggle" v-if="isFolder" href @click.stop.prevent=toggle></a>
 		<span v-else class="toggle"/>
@@ -7704,6 +7712,12 @@ Vue.component('popover', {
 			},
 			dataHref() {
 				return this.getHref ? this.getHref(this.item) : '';
+			},
+			cssClass() {
+				if (!this.options) return undefined;
+				let xname = this.options.xtraClass;
+				if (!xname) return undefined;
+				return this.item[xname] || undefined;
 			}
 		},
 		watch: {
@@ -8745,7 +8759,7 @@ TODO:
 	<template v-if="itemsSource">
 		<li class="a2-list-item" tabindex="1" :class="cssClass(listItem)" v-for="(listItem, listItemIndex) in source" :key="listItemIndex" 
 				@mousedown.prevent="select(listItem)" @keydown="keyDown" 
-				ref="li">
+				ref="li" v-on:dblclick.prevent="doDblClick">
 			<span v-if="listItem.__group" v-text="listItem.__group"></span>
 			<slot name="items" :item="listItem" v-if="!listItem.__group"/>
 		</li>
@@ -8770,7 +8784,8 @@ TODO:
 			hover: {
 				type: Boolean, default: true
 			},
-			groupBy: String
+			groupBy: String,
+			doubleclick: Function
 		},
 		computed: {
 			selectedSource() {
@@ -8909,6 +8924,11 @@ TODO:
 				}
 				e.preventDefault();
 				e.stopPropagation();
+			},
+			doDblClick($event) {
+				$event.stopImmediatePropagation();
+				if (this.doubleclick)
+					this.doubleclick();
 			}
 		},
 		created() {
@@ -13022,7 +13042,7 @@ Vue.directive('resize', {
 	<div class="side-bar-body" v-if="bodyIsVisible">
 		<tree-view :items="sideMenu" :is-active="isActive" :is-group="isGroup" :click="navigate" :get-href="itemHref"
 			:options="{folderSelect: folderSelect, label: 'Name', title: 'Description',
-			subitems: 'Menu', expandAll:true,
+			subitems: 'Menu', expandAll:true, xtraClass:'ClassName',
 			icon:'Icon', wrapLabel: true, hasIcon: true}">
 		</tree-view>
 	</div>

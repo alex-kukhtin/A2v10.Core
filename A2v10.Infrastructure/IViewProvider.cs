@@ -13,5 +13,6 @@ namespace A2v10.Infrastructure
 	public interface IViewEngineProvider
 	{
 		IViewEngineResult FindViewEngine(String fileName);
+		void RegisterEngine(String extension, Type engineType);
 	}
 }

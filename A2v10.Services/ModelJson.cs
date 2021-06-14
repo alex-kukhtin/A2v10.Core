@@ -183,15 +183,12 @@ namespace A2v10.Services
 		none,
 		sql,
 		clr,
-		script,
 		javascript,
 		xml,
 		file,
 		callApi,
 		sendMessage,
-		processDbEvents,
-		startProcess,
-		resumeProcess
+		processDbEvents
 	}
 
 	public class ModelJsonCommand : ModelJsonBase, IModelCommand

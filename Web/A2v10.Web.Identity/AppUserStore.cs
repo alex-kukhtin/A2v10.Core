@@ -96,21 +96,19 @@ namespace A2v10.Web.Identity
 		#region IUserSecurityStampStore
 		public Task<String> GetSecurityStampAsync(AppUser user, CancellationToken cancellationToken)
 		{
-			return Task.FromResult<String>(user.SecurityStamp);
+			// .net framework compatibility
+			return Task.FromResult<String>(user.SecurityStamp2 ?? user.SecurityStamp);
 		}
 
-		public Task SetSecurityStampAsync(AppUser user, String stamp, CancellationToken cancellationToken)
+		public async Task SetSecurityStampAsync(AppUser user, String stamp, CancellationToken cancellationToken)
 		{
-			/*
 			var prm = new ExpandoObject()
 			{
 				{ "UserId",  user.Id },
 				{ "SecurityStamp",  stamp }
 			};
 			await _dbContext.ExecuteExpandoAsync(DataSource, "a2security.[User.SetSecurityStamp]", prm);
-			*/
-			user.SecurityStamp = stamp;
-			return Task.CompletedTask;
+			user.SecurityStamp2 = stamp;
 		}
 		#endregion
 
@@ -156,24 +154,22 @@ namespace A2v10.Web.Identity
 		#endregion
 
 		#region IUserPasswordStore
-		public Task SetPasswordHashAsync(AppUser user, String passwordHash, CancellationToken cancellationToken)
+		public async Task SetPasswordHashAsync(AppUser user, String passwordHash, CancellationToken cancellationToken)
 		{
-			/*
 			var prm = new ExpandoObject()
 			{
 				{ "UserId",  user.Id },
 				{ "PasswordHash",  passwordHash }
 			};
 			await _dbContext.ExecuteExpandoAsync(DataSource, "a2security.[User.SetPasswordHash]", prm);
-			*/
-			user.PasswordHash = passwordHash;
-			return Task.CompletedTask;
+			user.PasswordHash2 = passwordHash;
 
 		}
 
 		public Task<String> GetPasswordHashAsync(AppUser user, CancellationToken cancellationToken)
 		{
-			return Task.FromResult<String>(user.PasswordHash);
+			// .net framework compatibility
+			return Task.FromResult<String>(user.PasswordHash2 ?? user.PasswordHash);
 		}
 
 		public Task<bool> HasPasswordAsync(AppUser user, CancellationToken cancellationToken)

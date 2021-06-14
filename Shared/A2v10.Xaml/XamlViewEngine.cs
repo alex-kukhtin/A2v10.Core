@@ -11,9 +11,15 @@ namespace A2v10.Xaml
 	{
 		private readonly IRenderer _renderer;
 
-		public XamlViewEngine(IRenderer renderer)
+		public XamlViewEngine(IProfiler profiler, IAppCodeProvider codeProvider, ILocalizer localizer, IViewEngineProvider engineProvider)
 		{
-			_renderer = renderer;
+			engineProvider.RegisterEngine(".xaml", typeof(XamlViewEngine));
+
+			_renderer = new XamlRenderer(profiler,
+				codeProvider,
+				new AppXamlReaderService(codeProvider),
+				localizer
+			);
 		}
 
 		public Task<IRenderResult> RenderAsync(IRenderInfo renderInfo)

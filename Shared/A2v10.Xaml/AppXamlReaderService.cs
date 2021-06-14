@@ -1,10 +1,7 @@
-﻿using A2v10.Infrastructure;
+﻿// Copyright © 2021 Alex Kukhtin. All rights reserved.
+
+using A2v10.Infrastructure;
 using A2v10.System.Xaml;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace A2v10.Xaml
 {

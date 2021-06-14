@@ -12,6 +12,8 @@ namespace A2v10.Web.Identity
 
 		public String PasswordHash { get; set; }
 		public String SecurityStamp { get; set; }
+		public String PasswordHash2 { get; set; }
+		public String SecurityStamp2 { get; set; }
 		public DateTimeOffset LockoutEndDateUtc { get; set; }
 		public Boolean LockoutEnabled { get; set; }
 		public Int32 AccessFailedCount { get; set; }

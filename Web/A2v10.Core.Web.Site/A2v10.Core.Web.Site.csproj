@@ -6,25 +6,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Data\Migrations\00000000000000_CreateIdentitySchema.cs" />
-    <Compile Remove="Data\Migrations\00000000000000_CreateIdentitySchema.Designer.cs" />
-    <Compile Remove="Data\Migrations\ApplicationDbContextModelSnapshot.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
     <ProjectReference Include="..\..\A2v10.Services\A2v10.Services.csproj" />
     <ProjectReference Include="..\..\A2v10.Stimulsoft.Interop\A2v10.Stimulsoft.Interop.csproj" />
+    <ProjectReference Include="..\..\Shared\A2v10.Xaml\A2v10.Xaml.csproj" />
     <ProjectReference Include="..\A2v10.Core.Web.Mvc\A2v10.Core.Web.Mvc.csproj" />
     <ProjectReference Include="..\A2v10.Web.Identity\A2v10.Web.Identity.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Data\Migrations\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="5.0.7" />
   </ItemGroup>
 
   <ItemGroup>

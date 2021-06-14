@@ -29,6 +29,7 @@
 52. Admin - CheckPermissions for view/scriptAdmin/etc
 53. Login layout
 55. Admin - Button on main interface
+56. _shell/script - exception - странное поведение
 
 BOOKKEEPER
 ==========

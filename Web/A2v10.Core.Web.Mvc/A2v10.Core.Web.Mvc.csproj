@@ -6,7 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="A2v10.Data.Core" Version="10.0.7260" />
+    <PackageReference Include="A2v10.Data.Core" Version="10.0.7261" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="5.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.TagHelpers" Version="2.2.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.2" />
@@ -17,7 +18,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\Shared\A2v10.Xaml\A2v10.Xaml.csproj" />
 	  <ProjectReference Include="..\A2v10.Web.Identity\A2v10.Web.Identity.csproj" />
 	</ItemGroup>
 
@@ -43,10 +43,6 @@
 	    <Generator>ResXFileCodeGenerator</Generator>
 	    <LastGenOutput>Resource.Designer.cs</LastGenOutput>
 	  </EmbeddedResource>
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="ViewEngines\" />
 	</ItemGroup>
 
 </Project>

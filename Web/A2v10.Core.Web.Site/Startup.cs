@@ -1,47 +1,23 @@
-
-using System;
-using System.IO;
+// Copyright © 2020-2021 Alex Kukhtin. All rights reserved.
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation;
-using Microsoft.Extensions.FileProviders;
-using Microsoft.AspNetCore.Http;
 
 using A2v10.Data.Interfaces;
 using A2v10.Data;
 using A2v10.Web.Identity;
 using A2v10.Core.Web.Mvc;
 using A2v10.Infrastructure;
-using A2v10.System.Xaml;
 using A2v10.Xaml;
 using A2v10.Services;
 using A2v10.Stimulsoft.Interop;
+using A2v10.Data.Config;
 
 namespace A2v10.Core.Web.Site
 {
-	public class DataConfiguration : IDataConfiguration
-	{
-		public TimeSpan CommandTimeout => TimeSpan.FromSeconds(30);
-
-		private readonly IConfiguration _config;
-
-		public DataConfiguration(IConfiguration config)
-		{
-			_config = config ?? throw new ArgumentNullException(nameof(config));
-		}
-
-		public String ConnectionString(String source)
-		{
-			if (String.IsNullOrEmpty(source))
-				source = "Default";
-			return _config.GetConnectionString(source);
-		}
-	}
-
 	public class Startup
 	{
 		public Startup(IConfiguration configuration)
@@ -54,80 +30,36 @@ namespace A2v10.Core.Web.Site
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services)
 		{
-			var webMvcAssembly = typeof(ShellController).Assembly;
-			services.AddControllersWithViews()
-				.AddApplicationPart(webMvcAssembly);
-
-			services.Configure<MvcRazorRuntimeCompilationOptions>(opts =>
-				opts.FileProviders.Add(new EmbeddedFileProvider(webMvcAssembly)));
+			services.AddPlatformCore();
 
 			services.AddPlatformIdentity();
 
-			services.AddSingleton<IAppCodeProvider>(s => 
-				CreateCodeProvider(Configuration, 
-				s.GetService<IWebHostEnvironment>())
-			);
-			services.AddSingleton<IAppConfiguration, AppConfiruation>();
-			services.AddSingleton<IXamlReaderService, AppXamlReaderService>();
-			services.AddSingleton<IExternalReport, StimulsoftExternalReport>();
-			services.AddSingleton<ILocalizerDictiorany, WebLocalizerDictiorany>();
+			services.AddViewEngines(x =>
+			{
+				x.RegisterEngine<XamlViewEngine>(".xaml");
+			});
 
-			services.AddScoped<WebProfiler>();
-			services.AddScoped<WebApplicationHost>();
-
-			services.AddScoped<IProfiler>(s => s.GetService<WebProfiler>());
-			services.AddScoped<IDataProfiler>(s=> s.GetService<WebProfiler>());
-			services.AddScoped<ITenantManager>(s => s.GetService<WebApplicationHost>());
-			services.AddScoped<IApplicationHost>( s=> s.GetService<WebApplicationHost>());
-			services.AddScoped<IRenderer, XamlRenderer>();
-
-			services.AddScoped<IUserLocale, WebUserLocale>()
-				.AddScoped<WebLocalizer>()
-				.AddScoped<ILocalizer>(s => s.GetService<WebLocalizer>())
-				.AddScoped<IDataLocalizer>(s => s.GetService<WebLocalizer>());
-
-			services.AddScoped<IDbContext>(s => 
-				new SqlDbContext(s.GetService<IDataProfiler>(), 
-					new DataConfiguration(Configuration), 
+			// Storage
+			services.AddScoped<IDbContext>(s =>
+				new SqlDbContext(s.GetService<IDataProfiler>(),
+					new DataConfiguration(Configuration, opts =>
+					{
+						opts.ConnectionStringName = "Default";
+					}),
 					s.GetService<IDataLocalizer>(),
 					s.GetService<ITenantManager>(),
 					s.GetService<ITokenProvider>()
 				)
 			);
-			services.AddScoped<IUserStateManager>(s => 
-				new WebUserStateManager(s.GetService<IHttpContextAccessor>()));
-			services.AddScoped<ITokenProvider, WebTokenProvider>();
 
+			// Services
+			services.AddSingleton<IAppConfiguration, AppConfiruation>();
 			services.AddScoped<IDataService, DataService>();
-			services.AddScoped<IReportService, ReportService>();
 			services.AddScoped<IModelJsonReader, ModelJsonReader>();
 
-			services.AddScoped<IViewEngineProvider>(s =>
-				new WebViewEngineProvider(s,
-					new ViewEngineDescriptor[] {
-						new ViewEngineDescriptor(".xaml", typeof(XamlViewEngine))
-					}
-				)
-			)
-				.AddScoped<XamlViewEngine>();
-
-			services.AddSession();
-		}
-
-		static IAppCodeProvider CreateCodeProvider(IConfiguration config, IWebHostEnvironment webHost)
-		{
-			var appSection = config.GetSection("application");
-			var appPath = appSection.GetValue<String>("path");
-			var appKey = appSection.GetValue<String>("name");
-
-			if (appPath.StartsWith("db:"))
-				throw new NotImplementedException("DB: AppCodeProvider");
-			
-			var zipFileName = Path.ChangeExtension(Path.Combine(appPath, appKey), "zip");
-			if (File.Exists(zipFileName))
-				throw new NotImplementedException("ZIP: AppCodeProvider");
-			
-			return new FileSystemCodeProvider(webHost, appPath, appKey);
+			// reports
+			services.AddScoped<IReportService, ReportService>();
+			services.AddSingleton<IExternalReport, StimulsoftExternalReport>();
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
