@@ -140,8 +140,9 @@ namespace A2v10.Core.Web.Mvc
 
 		const String SET_TENANT_CMD = "[a2security].[SetTenantId]";
 
-		public async Task SetTenantIdAsync(IDbConnection cnn, String source)
+		public Task SetTenantIdAsync(IDbConnection cnn, String source)
 		{
+			/*
 			if (!IsMultiTenant)
 				return;
 			if (source == CatalogDataSource)
@@ -152,6 +153,8 @@ namespace A2v10.Core.Web.Mvc
 			cmd.CommandType = SqlCommandType.StoredProcedure;
 			cmd.Parameters.AddWithValue("@TenantId", TenantId);
 			await cmd.ExecuteNonQueryAsync();
+			*/
+			return Task.CompletedTask;
 		}
 
 		public void SetTenantId(IDbConnection cnn, String source)
@@ -160,12 +163,14 @@ namespace A2v10.Core.Web.Mvc
 				return;
 			if (source == CatalogDataSource)
 				return;
+			/*
 			using var _ = _profiler.CurrentRequest.Start(ProfileAction.Sql, SET_TENANT_CMD);
 			using var cmd = cnn.CreateCommand() as SqlCommand;
 			cmd.CommandText = SET_TENANT_CMD;
 			cmd.CommandType = SqlCommandType.StoredProcedure;
 			cmd.Parameters.AddWithValue("@TenantId", TenantId);
 			cmd.ExecuteNonQuery();
+			*/
 		}
 		#endregion
 	}

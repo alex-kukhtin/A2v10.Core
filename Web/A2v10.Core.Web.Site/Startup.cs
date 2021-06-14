@@ -6,15 +6,14 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-using A2v10.Data.Interfaces;
-using A2v10.Data;
 using A2v10.Web.Identity;
 using A2v10.Core.Web.Mvc;
 using A2v10.Infrastructure;
 using A2v10.Xaml;
 using A2v10.Services;
+
 using A2v10.Stimulsoft.Interop;
-using A2v10.Data.Config;
+using A2v10.Storage.SqlServer;
 
 namespace A2v10.Core.Web.Site
 {
@@ -31,7 +30,6 @@ namespace A2v10.Core.Web.Site
 		public void ConfigureServices(IServiceCollection services)
 		{
 			services.AddPlatformCore();
-
 			services.AddPlatformIdentity();
 
 			services.AddViewEngines(x =>
@@ -39,6 +37,8 @@ namespace A2v10.Core.Web.Site
 				x.RegisterEngine<XamlViewEngine>(".xaml");
 			});
 
+			services.AddSqlServerStorage();
+			/*
 			// Storage
 			services.AddScoped<IDbContext>(s =>
 				new SqlDbContext(s.GetService<IDataProfiler>(),
@@ -51,6 +51,7 @@ namespace A2v10.Core.Web.Site
 					s.GetService<ITokenProvider>()
 				)
 			);
+			*/
 
 			// Services
 			services.AddSingleton<IAppConfiguration, AppConfiruation>();

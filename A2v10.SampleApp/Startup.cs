@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -11,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 
 using A2v10.Core.Web.Mvc;
 using A2v10.Web.Identity;
+using A2v10.Storage.SqlServer;
 
 namespace A2v10.SampleApp
 {
@@ -28,6 +25,8 @@ namespace A2v10.SampleApp
 		{
 			services.AddPlatformCore();
 			services.AddPlatformIdentity();
+
+			services.AddSqlServerStorage();
 			/*
 			services.AddViewEngines(x =>
 			{
@@ -52,6 +51,7 @@ namespace A2v10.SampleApp
 			app.UseRouting();
 
 			app.UseAuthorization();
+			app.UseAuthentication();
 
 			app.UseEndpoints(endpoints =>
 			{

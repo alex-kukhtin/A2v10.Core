@@ -10,6 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Storage\A2v10.Storage.SqlServer\A2v10.Storage.SqlServer.csproj" />
     <ProjectReference Include="..\Web\A2v10.Core.Web.Mvc\A2v10.Core.Web.Mvc.csproj" />
     <ProjectReference Include="..\Web\A2v10.Web.Identity\A2v10.Web.Identity.csproj" />
   </ItemGroup>

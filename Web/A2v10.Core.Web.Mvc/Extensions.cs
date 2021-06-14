@@ -1,4 +1,5 @@
 ﻿// Copyright © 2020-2021 Alex Kukhtin. All rights reserved.
+
 using System;
 using System.IO;
 
@@ -33,7 +34,6 @@ namespace A2v10.Core.Web.Mvc
 					s.GetService<IWebHostEnvironment>())
 			);
 
-			services.AddScoped<WebProfiler>();
 			services.AddScoped<WebApplicationHost>();
 
 			services.AddScoped<IUserLocale, WebUserLocale>()
@@ -41,8 +41,10 @@ namespace A2v10.Core.Web.Mvc
 				.AddScoped<ILocalizer>(s => s.GetService<WebLocalizer>())
 				.AddScoped<IDataLocalizer>(s => s.GetService<WebLocalizer>());
 
-			services.AddScoped<IProfiler>(s => s.GetService<WebProfiler>());
-			services.AddScoped<IDataProfiler>(s => s.GetService<WebProfiler>());
+			services.AddScoped<WebProfiler>()
+				.AddScoped<IProfiler>(s => s.GetService<WebProfiler>())
+				.AddScoped<IDataProfiler>(s => s.GetService<WebProfiler>());
+
 			services.AddScoped<IApplicationHost>(s => s.GetService<WebApplicationHost>());
 			services.AddSingleton<ILocalizerDictiorany, WebLocalizerDictiorany>();
 
