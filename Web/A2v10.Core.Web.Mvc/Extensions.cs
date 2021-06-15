@@ -19,8 +19,13 @@ namespace A2v10.Core.Web.Mvc
 
 	public static class ServiceExtensions
 	{
-		public static IMvcBuilder AddPlatformCore(this IServiceCollection services)
+		public static IMvcBuilder AddPlatformCore(this IServiceCollection services, Action<PlatformOptions> options = null)
 		{
+			var platformOptions = new PlatformOptions();
+			options?.Invoke(platformOptions);
+
+			services.AddSingleton<PlatformOptions>(s => platformOptions);
+
 			var webMvcAssembly = typeof(ShellController).Assembly;
 			var builder = services.AddControllersWithViews()
 				.AddApplicationPart(webMvcAssembly);

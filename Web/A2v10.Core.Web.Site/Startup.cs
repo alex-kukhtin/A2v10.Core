@@ -29,7 +29,13 @@ namespace A2v10.Core.Web.Site
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services)
 		{
-			services.AddPlatformCore();
+			services.AddPlatformCore(opts =>
+			{
+				// default values
+				opts.IsMultiTenant = false;
+				opts.IsMultiCompany = false;
+			});
+
 			services.AddPlatformIdentity();
 
 			services.AddViewEngines(x =>

@@ -5,14 +5,14 @@ using System.Dynamic;
 using System.Threading.Tasks;
 using System.Text;
 using System.Data;
-using System.Data.SqlClient;
+//using System.Data.SqlClient;
 
 using Microsoft.Extensions.Configuration;
 
 using A2v10.Infrastructure;
 using A2v10.Data.Interfaces;
 
-using SqlCommandType = System.Data.CommandType;
+//using SqlCommandType = System.Data.CommandType;
 
 namespace A2v10.Core.Web.Mvc
 {
@@ -21,18 +21,20 @@ namespace A2v10.Core.Web.Mvc
 		private readonly IConfiguration _appSettings;
 		private readonly IProfiler _profiler;
 		private readonly IAppConfiguration _appConfiguration;
+		private readonly PlatformOptions _options;
 		private Boolean _admin;
 
-		public WebApplicationHost(IConfiguration config, IProfiler profiler, IAppConfiguration appConfiguration)
+		public WebApplicationHost(IConfiguration config, IProfiler profiler, IAppConfiguration appConfiguration, PlatformOptions options)
 		{
 			_profiler = profiler;
 			_appConfiguration = appConfiguration;
 
 			_appSettings = config.GetSection("appSettings");
+			_options = options;
 		}
 
-		public Boolean IsMultiTenant => _appSettings.GetValue<Boolean>("multiTenant");
-		public Boolean IsMultiCompany => _appSettings.GetValue<Boolean>("multiCompany");
+		public Boolean IsMultiTenant => _options.IsMultiTenant;
+		public Boolean IsMultiCompany => _options.IsMultiCompany;
 
 		public Boolean IsDebugConfiguration => _appConfiguration.Debug;
 
