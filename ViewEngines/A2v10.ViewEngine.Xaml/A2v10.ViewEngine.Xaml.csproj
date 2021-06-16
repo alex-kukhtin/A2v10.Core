@@ -1,0 +1,51 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net5.0</TargetFramework>
+		<AssemblyName>A2v10.Xaml</AssemblyName>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<Version>10.1.8008</Version>
+		<Product>A2v10</Product>
+		<PackageId>A2v10.ViewEngine.Xaml</PackageId>
+		<Authors>Alex Kukthin</Authors>
+		<Company>Alex Kukthin</Company>
+		<Description>Xaml view engine for A2v10</Description>
+		<Copyright>Copyright © 2015-2021 Alex Kukhtin. All rights reserved.</Copyright>
+		<RepositoryType>github</RepositoryType>
+		<PackageTags>A2v10 Xaml</PackageTags>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="A2v10.System.Xaml" Version="10.1.8007" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Update="Properties\Resources.Designer.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Resources.resx</DependentUpon>
+		</Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Update="Properties\Resources.resx">
+			<Generator>ResXFileCodeGenerator</Generator>
+			<LastGenOutput>Resources.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+	</ItemGroup>
+
+	<PropertyGroup>
+		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference  Include = "Microsoft.SourceLink.GitHub"  Version = "1.0.0"  PrivateAssets = "All" />
+	</ItemGroup>
+</Project>

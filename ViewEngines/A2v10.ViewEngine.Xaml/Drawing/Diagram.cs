@@ -3,7 +3,7 @@
 using System;
 using A2v10.System.Xaml;
 
-using A2v10.Xaml.Properties;
+using A2v10.ViewEngine.Xaml.Properties;
 
 namespace A2v10.Xaml.Drawing
 {

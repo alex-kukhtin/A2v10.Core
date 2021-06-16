@@ -6,6 +6,23 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="App_Application\catalog\agent\edit.dialog.xaml" />
+    <None Remove="App_Application\catalog\agent\view.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Include="App_Application\catalog\agent\edit.dialog.xaml">
+      <Generator></Generator>
+    </Page>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Include="App_Application\catalog\agent\view.xaml">
+      <Generator></Generator>
+    </Page>
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="wwwroot\lib\" />
   </ItemGroup>
 

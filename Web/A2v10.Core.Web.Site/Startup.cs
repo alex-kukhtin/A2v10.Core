@@ -9,11 +9,11 @@ using Microsoft.Extensions.Hosting;
 using A2v10.Web.Identity;
 using A2v10.Core.Web.Mvc;
 using A2v10.Infrastructure;
-using A2v10.Xaml;
 using A2v10.Services;
 
 using A2v10.Stimulsoft.Interop;
 using A2v10.Storage.SqlServer;
+using A2v10.ViewEngine.Xaml;
 
 namespace A2v10.Core.Web.Site
 {

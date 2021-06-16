@@ -9,8 +9,8 @@
     <ProjectReference Include="..\..\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
     <ProjectReference Include="..\..\A2v10.Services\A2v10.Services.csproj" />
     <ProjectReference Include="..\..\A2v10.Stimulsoft.Interop\A2v10.Stimulsoft.Interop.csproj" />
-    <ProjectReference Include="..\..\Shared\A2v10.Xaml\A2v10.Xaml.csproj" />
     <ProjectReference Include="..\..\Storage\A2v10.Storage.SqlServer\A2v10.Storage.SqlServer.csproj" />
+    <ProjectReference Include="..\..\ViewEngines\A2v10.ViewEngine.Xaml\A2v10.ViewEngine.Xaml.csproj" />
     <ProjectReference Include="..\A2v10.Core.Web.Mvc\A2v10.Core.Web.Mvc.csproj" />
     <ProjectReference Include="..\A2v10.Web.Identity\A2v10.Web.Identity.csproj" />
   </ItemGroup>
