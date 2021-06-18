@@ -8,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using A2v10.Core.Web.Mvc;
 using A2v10.Web.Identity;
 using A2v10.Storage.SqlServer;
+using A2v10.ViewEngine.Xaml;
 
 namespace A2v10.SampleApp
 {
@@ -23,16 +24,15 @@ namespace A2v10.SampleApp
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services)
 		{
-			services.AddPlatformCore();
-			services.AddPlatformIdentity();
+			var builder = services.AddPlatformCore();
+			services.AddPlatformIdentity(builder);
 
 			services.AddSqlServerStorage();
-			/*
+
 			services.AddViewEngines(x =>
 			{
 				x.RegisterEngine<XamlViewEngine>(".xaml");
 			});
-			*/
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

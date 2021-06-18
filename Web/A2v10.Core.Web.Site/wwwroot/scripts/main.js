@@ -198,7 +198,7 @@ app.modules['std:const'] = function () {
 
 // Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-// 20210608-7782
+// 20210615-7784
 // services/utils.js
 
 app.modules['std:utils'] = function () {
@@ -211,7 +211,7 @@ app.modules['std:utils'] = function () {
 
 	const dateOptsDate = { timeZone: 'UTC', year: 'numeric', month: _2digit, day: _2digit };
 	const dateOptsTime = { timeZone: 'UTC', hour: _2digit, minute: _2digit };
-
+	
 	const formatDate = new Intl.DateTimeFormat(dateLocale, dateOptsDate).format;
 	const formatTime = new Intl.DateTimeFormat(dateLocale, dateOptsTime).format;
 
@@ -810,6 +810,26 @@ app.modules['std:utils'] = function () {
 		return (s1 || '').toLowerCase() === (s2 || '').toLowerCase();
 	}
 
+	function toLatin(v) {
+		v = v.toUpperCase();
+
+		let tbl = {
+			'Й': 'Q', 'Ц': 'W', 'У': 'E', 'К': 'R', 'Е': 'T', 'Н': 'Y', 'Г': 'U', 'Ш': 'I', 'Щ': 'O', 'З': 'P', 'Х': '[', 'Ъ': ']', 'Ї': ']',
+			'Ф': 'A', 'Ы': 'S', 'В': 'D', 'А': 'F', 'П': 'G', 'Р': 'H', 'О': 'J', 'Л': 'K', 'Д': 'L', 'І': 'S', 'Ж': ':', 'Э': '"', 'Є': '"',
+			'Я': 'Z', 'Ч': 'X', 'С': 'C', 'М': 'V', 'И': 'B', 'Т': 'N', 'Ь': 'M', 'Б': '<', 'Ю': '>'
+		};
+		
+		let r = '';
+		for (let i = 0; i < v.length; i++) {
+			let ch = tbl[v[i]];
+			if (ch)
+				r += ch;
+			else
+				r += v[i];
+		}
+		return r;
+	}
+
 	function applyFilters(filters, value) {
 		if (!filters || !filters.length)
 			return value;
@@ -826,6 +846,9 @@ app.modules['std:utils'] = function () {
 					break;
 				case 'lower':
 					value = value.toLowerCase();
+					break;
+				case 'barcode':
+					value = toLatin(value);
 			}
 		}
 		return value;
@@ -1563,7 +1586,7 @@ app.modules['std:modelInfo'] = function () {
 
 // Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-// 20210612-7783
+// 20210612-7785
 /* services/http.js */
 
 app.modules['std:http'] = function () {
@@ -1592,7 +1615,7 @@ app.modules['std:http'] = function () {
 				},
 				body: data
 			});
-			let ct = response.headers.get("content-type");
+			let ct = response.headers.get("content-type") || '';
 			switch (response.status) {
 				case 200:
 					if (raw)
@@ -1647,7 +1670,7 @@ app.modules['std:http'] = function () {
 				},
 				body: data
 			});
-			let ct = response.headers.get("content-type");
+			let ct = response.headers.get("content-type") || '';
 			switch (response.status) {
 				case 200:
 					if (ct.startsWith('application/json'))
@@ -4510,9 +4533,9 @@ app.modules['std:accel'] = function () {
 	}
 };
 
-// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-// 20200903-7705
+// 20210618-7785
 /*components/include.js*/
 
 (function () {
@@ -4579,7 +4602,10 @@ app.modules['std:accel'] = function () {
 				}, 1);
 			},
 			error(msg) {
-				msg = msg || '';
+				if (msg instanceof Error)
+					msg = msg.message;
+				else
+					msg = msg || '';
 				if (this.insideDialog)
 					eventBus.$emit('modalClose', false);
 				if (msg.indexOf('UI:') === 0) {

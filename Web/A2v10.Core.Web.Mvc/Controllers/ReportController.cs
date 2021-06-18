@@ -28,12 +28,6 @@ namespace A2v10.Core.Web.Mvc.Controllers
 			_reportService = reportService;
 		}
 
-		[HttpGet]
-		public Task Show(String Base, String Rep, String Id)
-		{
-			return Task.CompletedTask;
-		}
-
 
 		[HttpGet]
 		public Task Export(String Id, String Base, String Rep, String format = "pdf")
@@ -84,12 +78,5 @@ namespace A2v10.Core.Web.Mvc.Controllers
 				await WriteHtmlException(ex);
 			}
 		}
-
-		// stimulsoft support
-		public Task<IActionResult> GetReport()
-		{
-			throw new NotImplementedException(nameof(GetReport));
-		}
-
 	}
 }

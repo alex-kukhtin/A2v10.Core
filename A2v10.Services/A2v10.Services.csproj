@@ -13,8 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
-    <ProjectReference Include="..\A2v10.Stimulsoft.Interop\A2v10.Stimulsoft.Interop.csproj" />
+    <ProjectReference Include="..\Platform\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

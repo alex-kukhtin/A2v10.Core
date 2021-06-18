@@ -13,9 +13,11 @@ using Microsoft.Extensions.FileProviders;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
+using System.Collections.Generic;
 
 namespace A2v10.Core.Web.Mvc
 {
+
 
 	public static class ServiceExtensions
 	{
@@ -30,8 +32,9 @@ namespace A2v10.Core.Web.Mvc
 			var builder = services.AddControllersWithViews()
 				.AddApplicationPart(webMvcAssembly);
 
-			services.Configure<MvcRazorRuntimeCompilationOptions>(opts =>
-				opts.FileProviders.Add(new EmbeddedFileProvider(webMvcAssembly)));
+			services.Configure<MvcRazorRuntimeCompilationOptions>(opts => {
+				opts.FileProviders.Add(new EmbeddedFileProvider(webMvcAssembly));
+			});
 
 			services.AddSingleton<IAppCodeProvider>(s =>
 				CreateCodeProvider(
@@ -78,15 +81,30 @@ namespace A2v10.Core.Web.Mvc
 			return new FileSystemCodeProvider(webHost, appPath, appKey);
 		}
 
-		public static void AddViewEngines(this IServiceCollection services, Action<ViewEngineFactory> action)
+		public static IServiceCollection AddViewEngines(this IServiceCollection services, Action<ViewEngineFactory> action)
 		{
 			var viewEngineFactory = new ViewEngineFactory();
 			action.Invoke(viewEngineFactory);
 			foreach (var e in viewEngineFactory.Engines)
 				services.AddScoped(e.EngineType);
+
 			services.AddScoped<IViewEngineProvider>(s =>
 				new WebViewEngineProvider(s, viewEngineFactory.Engines)
 			);
+			return services;
+		}
+
+		public static IServiceCollection AddReportEngines(this IServiceCollection services, Action<ReportEngineFactory> action)
+		{
+			var reportEngineFactory = new ReportEngineFactory();
+			action.Invoke(reportEngineFactory);
+			foreach (var r in reportEngineFactory.Engines)
+				services.AddScoped(r.EngineType);
+
+			services.AddScoped<IReportEngineProvider>(s =>
+				new WebReportEngineProvider(s, reportEngineFactory.Engines)
+			);
+			return services;
 		}
 	}
 }

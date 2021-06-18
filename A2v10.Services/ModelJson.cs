@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Dynamic;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 
@@ -188,7 +190,10 @@ namespace A2v10.Services
 		file,
 		callApi,
 		sendMessage,
-		processDbEvents
+		processDbEvents,
+		startProcess,
+		resumeProcess,
+		script
 	}
 
 	public class ModelJsonCommand : ModelJsonBase, IModelCommand
@@ -213,16 +218,9 @@ namespace A2v10.Services
 		}
 	}
 
-	public enum ModelJsonReportType
-	{
-		stimulsoft,
-		xml,
-		json
-	}
-
 	public class ModelJsonReport : ModelJsonBase, IModelReport
 	{
-		public ModelJsonReportType Type { get; set; }
+		public String Type { get; set; }
 		public String Report { get; set; }
 		public String Procedure { get; set; }
 		public String Name { get; set; }
@@ -239,14 +237,14 @@ namespace A2v10.Services
 			return $"[{CurrentSchema}].[{cm}.Report]";
 		}
 
-		public String ReportPath()
-		{
-			return Type == ModelJsonReportType.stimulsoft ? Report : null;
-		}
-
 		public IModelReportHandler GetReportHandler(IServiceProvider serviceProvider)
 		{
-			return ServerReportRegistry.GetReportHandler(Type, serviceProvider);
+			var provider = serviceProvider.GetService<IReportEngineProvider>();
+
+			// default report type is "stimulsoft" (DotNet Framework compatibility);
+			return new ServerReport(provider.FindReportEngine(Type ?? "stimulsoft"),
+				serviceProvider.GetService<IDbContext>()
+			);
 		}
 
 		readonly String[] ExcludeParams = new String[] { "Rep", "Base", "Format" };

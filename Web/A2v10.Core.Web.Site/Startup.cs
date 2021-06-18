@@ -11,9 +11,10 @@ using A2v10.Core.Web.Mvc;
 using A2v10.Infrastructure;
 using A2v10.Services;
 
-using A2v10.Stimulsoft.Interop;
 using A2v10.Storage.SqlServer;
 using A2v10.ViewEngine.Xaml;
+
+using A2v10.ReportEngine.Stimulsoft;
 
 namespace A2v10.Core.Web.Site
 {
@@ -29,44 +30,40 @@ namespace A2v10.Core.Web.Site
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services)
 		{
-			services.AddPlatformCore(opts =>
+			var builder = services.AddPlatformCore(opts =>
 			{
 				// default values
-				opts.IsMultiTenant = false;
-				opts.IsMultiCompany = false;
+				//opts.MultiTenant = false;
+				//opts.MultiCompany = false;
+				//opts.GlobalPeriod = false;
 			});
 
-			services.AddPlatformIdentity();
+			services.AddPlatformIdentity(builder, opts =>
+			{
+				//opts.DataSource = "Catalog";
+				//opts.Schema = "mySchema";
+			});
+
+			services.AddSqlServerStorage();
 
 			services.AddViewEngines(x =>
 			{
 				x.RegisterEngine<XamlViewEngine>(".xaml");
 			});
 
-			services.AddSqlServerStorage();
-			/*
-			// Storage
-			services.AddScoped<IDbContext>(s =>
-				new SqlDbContext(s.GetService<IDataProfiler>(),
-					new DataConfiguration(Configuration, opts =>
-					{
-						opts.ConnectionStringName = "Default";
-					}),
-					s.GetService<IDataLocalizer>(),
-					s.GetService<ITenantManager>(),
-					s.GetService<ITokenProvider>()
-				)
-			);
-			*/
-
 			// Services
 			services.AddSingleton<IAppConfiguration, AppConfiruation>();
 			services.AddScoped<IDataService, DataService>();
 			services.AddScoped<IModelJsonReader, ModelJsonReader>();
+			services.AddScoped<IReportService, ReportService>();
+
+			services.AddStimulsoftViews(builder);
 
 			// reports
-			services.AddScoped<IReportService, ReportService>();
-			services.AddSingleton<IExternalReport, StimulsoftExternalReport>();
+			services.AddReportEngines(x =>
+			{
+				x.RegisterEngine<StimulsoftReportEngine>("stimulsoft");
+			});
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -83,39 +80,16 @@ namespace A2v10.Core.Web.Site
 				app.UseHsts();
 			}
 			app.UseHttpsRedirection();
+
 			app.UseStaticFiles();
-
 			app.UseRouting();
-
 			app.UseAuthentication();
 			app.UseAuthorization();
-
 			app.UseSession();
 
 			app.UseEndpoints(endpoints =>
 			{
 				endpoints.MapControllers();
-				/*
-				endpoints.MapControllerRoute(
-					name: "internal",
-					pattern: "_{controller}/{*pathInfo}",
-					defaults: new { action = "default" }
-				);
-
-				endpoints.MapControllerRoute(
-					name: "default",
-					pattern: "_shell/{action}/{*pathInfo}",
-					defaults: new { controller = "shell"}
-				);
-
-				endpoints.MapControllerRoute(
-					name: "default",
-					pattern: "{*pathInfo}",
-					defaults: new { controller="shell", action = "default" }
-				);
-				*/
-
-				//endpoints.MapRazorPages();
 			});
 		}
 	}

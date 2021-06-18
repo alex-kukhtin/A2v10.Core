@@ -15,7 +15,8 @@ namespace A2v10.Storage.SqlServer
 		{
 			// Storage
 			services.AddScoped<IDbContext>(s =>
-				new SqlDbContext(s.GetService<IDataProfiler>(),
+				new SqlDbContext(
+					s.GetService<IDataProfiler>(),
 					new DataConfiguration(s.GetService<IConfiguration>(), opts =>
 					{
 						opts.ConnectionStringName = "Default";

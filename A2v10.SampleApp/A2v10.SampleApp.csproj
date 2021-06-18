@@ -1,33 +1,14 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <CopyRefAssembliesToPublishDirectory>false</CopyRefAssembliesToPublishDirectory>
   </PropertyGroup>
 
-  <ItemGroup>
-    <None Remove="App_Application\catalog\agent\edit.dialog.xaml" />
-    <None Remove="App_Application\catalog\agent\view.xaml" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Page Include="App_Application\catalog\agent\edit.dialog.xaml">
-      <Generator></Generator>
-    </Page>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Page Include="App_Application\catalog\agent\view.xaml">
-      <Generator></Generator>
-    </Page>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="wwwroot\lib\" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Storage\A2v10.Storage.SqlServer\A2v10.Storage.SqlServer.csproj" />
+    <ProjectReference Include="..\ViewEngines\A2v10.ViewEngine.Xaml\A2v10.ViewEngine.Xaml.csproj" />
     <ProjectReference Include="..\Web\A2v10.Core.Web.Mvc\A2v10.Core.Web.Mvc.csproj" />
     <ProjectReference Include="..\Web\A2v10.Web.Identity\A2v10.Web.Identity.csproj" />
   </ItemGroup>

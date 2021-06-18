@@ -7,19 +7,32 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 
-using A2v10.Web.Identity.ApiKey;
+using A2v10.Web.Identity.Controllers;
 
 namespace A2v10.Web.Identity
 {
 	public static class ServicesExtensions
 	{
 		public static IServiceCollection AddPlatformIdentity(this IServiceCollection services,
-			Action<AppUserStoreOptions> options = null)
+			IMvcBuilder builder, Action<AppUserStoreOptions> options = null)
 		{
+			var assembly = typeof(AccountController).Assembly;
+
+			builder.AddApplicationPart(assembly);
+
+			/*
+			services.Configure<MvcRazorRuntimeCompilationOptions>(opts => {
+				opts.FileProviders.Add(new EmbeddedFileProvider(assembly));
+			});
+			*/
+
+			//builder.FileProviders.Add(new EmbeddedFileProvider(assembly));
+
 			services.AddIdentityCore<AppUser>(options =>
 			{
 				options.User.RequireUniqueEmail = true;
@@ -69,9 +82,6 @@ namespace A2v10.Web.Identity
 				{
 					OnValidatePrincipal = SecurityStampValidator.ValidatePrincipalAsync
 				};
-			})
-			.AddApiKeyAuthorization(options =>
-			{
 			})
 			.AddCookie(IdentityConstants.ExternalScheme, o =>
 			{

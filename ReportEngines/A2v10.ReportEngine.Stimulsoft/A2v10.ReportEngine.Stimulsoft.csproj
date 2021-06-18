@@ -1,39 +1,26 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net5.0</TargetFramework>
-		<AssemblyName>A2v10.Xaml</AssemblyName>
+		<AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+		<AssemblyName>A2v10.ReportEngine.Stimulsoft</AssemblyName>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<Version>10.1.8008</Version>
 		<Product>A2v10</Product>
-		<PackageId>A2v10.ViewEngine.Xaml</PackageId>
+		<PackageId>A2v10.ReportEngine.Stimulsoft</PackageId>
 		<Authors>Alex Kukthin</Authors>
 		<Company>Alex Kukthin</Company>
-		<Description>Xaml view engine for A2v10</Description>
-		<Copyright>Copyright © 2015-2021 Alex Kukhtin. All rights reserved.</Copyright>
+		<Description>Stimulsoft report engine for A2v10</Description>
+		<Copyright>Copyright © 2020-2021 Alex Kukhtin. All rights reserved.</Copyright>
 		<RepositoryType>github</RepositoryType>
-		<PackageTags>A2v10 Xaml</PackageTags>
+		<PackageTags>A2v10 Reports Stimulsoft</PackageTags>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.System.Xaml" Version="10.1.8007" />
+		<PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7261" />
+		<PackageReference Include="Stimulsoft.Reports.Web.NetCore" Version="2021.3.3" />
 	</ItemGroup>
-
-	<ItemGroup>
-		<Compile Update="Properties\Resources.Designer.cs">
-			<DesignTime>True</DesignTime>
-			<AutoGen>True</AutoGen>
-			<DependentUpon>Resources.resx</DependentUpon>
-		</Compile>
-	</ItemGroup>
-
-	<ItemGroup>
-		<EmbeddedResource Update="Properties\Resources.resx">
-			<Generator>ResXFileCodeGenerator</Generator>
-			<LastGenOutput>Resources.Designer.cs</LastGenOutput>
-		</EmbeddedResource>
-	</ItemGroup>
-
+	
 	<PropertyGroup>
 		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -48,4 +35,5 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\..\Platform\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
 	</ItemGroup>
+
 </Project>
