@@ -54,10 +54,12 @@ namespace A2v10.Core.Web.Mvc
 				.AddScoped<IDataProfiler>(s => s.GetService<WebProfiler>());
 
 			services.AddScoped<IApplicationHost>(s => s.GetService<WebApplicationHost>());
+
 			services.AddSingleton<ILocalizerDictiorany, WebLocalizerDictiorany>();
 
 			services.AddScoped<IUserStateManager>(s =>
 				new WebUserStateManager(s.GetService<IHttpContextAccessor>()));
+
 			services.AddScoped<ITokenProvider, WebTokenProvider>();
 
 			services.AddSession();

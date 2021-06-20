@@ -30,25 +30,30 @@ namespace A2v10.Core.Web.Site
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services)
 		{
-			var builder = services.AddPlatformCore(opts =>
+			services.AddPlatformCore(opts =>
 			{
 				// default values
 				//opts.MultiTenant = false;
 				//opts.MultiCompany = false;
 				//opts.GlobalPeriod = false;
-			});
-
-			services.AddPlatformIdentity(builder, opts =>
+			})
+			.AddPlatformIdentity(opts =>
 			{
 				//opts.DataSource = "Catalog";
 				//opts.Schema = "mySchema";
-			});
+			})
+			.AddDefaultIdentityUI()
+			.AddStimulsoftUI();
 
 			services.AddSqlServerStorage();
 
 			services.AddViewEngines(x =>
 			{
 				x.RegisterEngine<XamlViewEngine>(".xaml");
+			})
+			.AddReportEngines(x =>
+			{
+				x.RegisterEngine<StimulsoftReportEngine>("stimulsoft");
 			});
 
 			// Services
@@ -57,13 +62,6 @@ namespace A2v10.Core.Web.Site
 			services.AddScoped<IModelJsonReader, ModelJsonReader>();
 			services.AddScoped<IReportService, ReportService>();
 
-			services.AddStimulsoftViews(builder);
-
-			// reports
-			services.AddReportEngines(x =>
-			{
-				x.RegisterEngine<StimulsoftReportEngine>("stimulsoft");
-			});
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

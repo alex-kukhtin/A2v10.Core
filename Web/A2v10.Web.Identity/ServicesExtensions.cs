@@ -18,13 +18,9 @@ namespace A2v10.Web.Identity
 {
 	public static class ServicesExtensions
 	{
-		public static IServiceCollection AddPlatformIdentity(this IServiceCollection services,
-			IMvcBuilder builder, Action<AppUserStoreOptions> options = null)
+		public static IMvcBuilder AddPlatformIdentity(this IMvcBuilder builder,
+			Action<AppUserStoreOptions> options = null)
 		{
-			var assembly = typeof(AccountController).Assembly;
-
-			builder.AddApplicationPart(assembly);
-
 			/*
 			services.Configure<MvcRazorRuntimeCompilationOptions>(opts => {
 				opts.FileProviders.Add(new EmbeddedFileProvider(assembly));
@@ -33,7 +29,7 @@ namespace A2v10.Web.Identity
 
 			//builder.FileProviders.Add(new EmbeddedFileProvider(assembly));
 
-			services.AddIdentityCore<AppUser>(options =>
+			builder.Services.AddIdentityCore<AppUser>(options =>
 			{
 				options.User.RequireUniqueEmail = true;
 				options.Lockout.MaxFailedAccessAttempts = 5;
@@ -45,17 +41,18 @@ namespace A2v10.Web.Identity
 			.AddSignInManager<SignInManager<AppUser>>()
 			.AddDefaultTokenProviders();
 
-			services.AddScoped<IUserStore<AppUser>>(s =>
+			builder.Services.AddScoped<IUserStore<AppUser>>(s =>
 			{
 				var host = s.GetService<IApplicationHost>();
 				var opts = new AppUserStoreOptions()
 				{
-					Schema = "a2security"
+					Schema = "a2security",
 				};
 
 				if (host.IsMultiTenant)
 					opts.DataSource = "Catalog";
 				options?.Invoke(opts);
+
 				return new AppUserStore(
 					s.GetService<IDbContext>(), opts
 				);
@@ -64,7 +61,7 @@ namespace A2v10.Web.Identity
 			.AddScoped<ISecurityStampValidator, SecurityStampValidator<AppUser>>()
 			.AddScoped<ISystemClock, SystemClock>();
 
-			services.AddAuthentication(options =>
+			 builder.Services.AddAuthentication(options =>
 			{
 				options.DefaultAuthenticateScheme = IdentityConstants.ApplicationScheme;
 				options.DefaultChallengeScheme = IdentityConstants.ApplicationScheme;
@@ -96,7 +93,14 @@ namespace A2v10.Web.Identity
 				}
 			);
 
-			return services;
+			return builder;
+		}
+
+		public static IMvcBuilder AddDefaultIdentityUI(this IMvcBuilder builder)
+		{
+			var assembly = typeof(AccountController).Assembly;
+			builder.AddApplicationPart(assembly);
+			return builder;
 		}
 	}
 }

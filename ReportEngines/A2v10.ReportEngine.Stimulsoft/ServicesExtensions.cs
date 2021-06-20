@@ -8,11 +8,11 @@ namespace A2v10.ReportEngine.Stimulsoft
 {
 	public static class ServicesExtensions
 	{
-		public static IServiceCollection AddStimulsoftViews(this IServiceCollection services, IMvcBuilder builder)
+		public static IMvcBuilder AddStimulsoftUI(this IMvcBuilder builder)
 		{
 			var assembly = typeof(StimulsoftController).Assembly;
 			builder.AddApplicationPart(assembly);
-			return services;
+			return builder;
 		}
 	}
 }

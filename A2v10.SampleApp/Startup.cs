@@ -24,8 +24,8 @@ namespace A2v10.SampleApp
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services)
 		{
-			var builder = services.AddPlatformCore();
-			services.AddPlatformIdentity(builder);
+			var builder = services.AddPlatformCore()
+			.AddPlatformIdentity();
 
 			services.AddSqlServerStorage();
 
