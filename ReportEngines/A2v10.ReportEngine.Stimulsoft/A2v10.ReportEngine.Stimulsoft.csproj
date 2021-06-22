@@ -1,5 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk.Razor">
 	<PropertyGroup>
 		<TargetFramework>net5.0</TargetFramework>
 		<AddRazorSupportForMvc>true</AddRazorSupportForMvc>
@@ -14,13 +13,30 @@
 		<Copyright>Copyright © 2020-2021 Alex Kukhtin. All rights reserved.</Copyright>
 		<RepositoryType>github</RepositoryType>
 		<PackageTags>A2v10 Reports Stimulsoft</PackageTags>
+		<EnableDefaultContentItems>False</EnableDefaultContentItems>
 	</PropertyGroup>
+	<ItemGroup>
+	  <None Remove="StimulsoftReportEngine.cs~RF44de30.TMP" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Include="Views\Stimulsoft\Show.cshtml">
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+		<Content Include="Views\_ViewImports.cshtml">
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7262" />
 		<PackageReference Include="Stimulsoft.Reports.Web.NetCore" Version="2021.3.3" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="5.0.7" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.TagHelpers" Version="2.2.0" />
 	</ItemGroup>
-	
+
 	<PropertyGroup>
 		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -33,7 +49,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\Platform\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
+		<ProjectReference Include="..\..\Platform\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
 	</ItemGroup>
-
 </Project>

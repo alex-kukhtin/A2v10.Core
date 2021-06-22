@@ -73,6 +73,7 @@ namespace A2v10.Infrastructure
 	public interface IModelReportHandler
 	{
 		Task<IInvokeResult> ExportAsync(IModelReport report, ExportReportFormat format, ExpandoObject query, Action<ExpandoObject> setParams);
+		Task<IReportInfo> GetReportInfoAsync(IModelReport report, ExpandoObject query, Action<ExpandoObject> setParams);
 	}
 
 	public interface IModelReport : IModelBase

@@ -1,8 +1,7 @@
-== TODO: Packages
+п»ї== TODO: Packages
 ============================
-1. Identity UI
+1. Identity UI РІ РѕС‚РґРµР»СЊРЅСѓСЋ СЃР±РѕСЂРєСѓ
 2. Services
-3. Report Engines
 
 
 == TODO: A2v10.Core Platform
@@ -13,13 +12,13 @@
 12. Xaml. styles.xaml cache
 
 13. SetUserPassword
-14. Доделать AccountController
+14. Р”РѕРґРµР»Р°С‚СЊ AccountController
 
 22. DataService.Load Indirect
 23. DataService.Load Merge
 
 24. UserStore. UpdateUser
-26. Не работает app/about. Только после F5.
+26. РќРµ СЂР°Р±РѕС‚Р°РµС‚ app/about. РўРѕР»СЊРєРѕ РїРѕСЃР»Рµ F5.
 
 31. DataController. ExportTo (Export to Excel)
 36. AttachmentController
@@ -30,13 +29,20 @@
 44. ReportController.Viewer
 46. ExportController
 47. AppLinks
-49. Убрать ViewBag.___
-50. globalPeriod вместо custom в config.
+49. РЈР±СЂР°С‚СЊ ViewBag.___
+50. globalPeriod РІРјРµСЃС‚Рѕ custom РІ config.
 51. HtmlRenderer
 52. Admin - CheckPermissions for view/scriptAdmin/etc
 53. Login layout
 55. Admin - Button on main interface
-56. _shell/script - exception - странное поведение
+56. _shell/script - exception - СЃС‚СЂР°РЅРЅРѕРµ РїРѕРІРµРґРµРЅРёРµ
+
+-- ReportEngine
+60. BaseController РІ РѕС‚РґРµР»СЊРЅСѓСЋ СЃР±РѕСЂРєСѓ (SetParams, Filter, IControllerTenant)
+61. SetParams for StimulsoftController
+62. QueryString StimulsoftController
+63. РџСЂРѕРІРµСЂРёС‚СЊ Profiler
+64. РџСЂРѕРІРµСЂРёС‚СЊ CheckPeriod РґР»СЏ Stimulsoft Controller
 
 BOOKKEEPER
 ==========

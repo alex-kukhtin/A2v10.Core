@@ -34,5 +34,14 @@ namespace A2v10.Services
 			var handler = rep.GetReportHandler(_serviceProvider);
 			return await handler.ExportAsync(rep, format, platrformUrl.Query, setParams);
 		}
+
+		public async Task<IReportInfo> GetReportInfoAsync(String url, Action<ExpandoObject> setParams)
+		{
+			var platrformUrl = CreatePlatformUrl(url);
+			using var _ = _profiler.CurrentRequest.Start(ProfileAction.Report, $"export: {platrformUrl.Action}");
+			var rep = await _modelReader.GetReportAsync(platrformUrl);
+			var handler = rep.GetReportHandler(_serviceProvider);
+			return await handler.GetReportInfoAsync(rep, platrformUrl.Query, setParams);
+		}
 	}
 }

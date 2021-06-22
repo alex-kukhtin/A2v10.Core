@@ -128,6 +128,8 @@ namespace A2v10.Xaml
 
 		public Permission Permission { get; set; }
 
+		public String Viewer { get; set; }
+
 		public BindCmd()
 		{
 
@@ -345,7 +347,7 @@ namespace A2v10.Xaml
 		String GetOptions(RenderContext context)
 		{
 			if (!SaveRequired && !ValidRequired && !CheckReadOnly && !Export && !Print && !NewWindow
-				&& !CheckArgument && !ReloadAfter && Permission == Permission.None)
+				&& !CheckArgument && !ReloadAfter && Permission == Permission.None && String.IsNullOrEmpty(Viewer))
 				return nullString;
 			StringBuilder sb = new("{");
 			if (SaveRequired)
@@ -369,6 +371,8 @@ namespace A2v10.Xaml
 				sb.Append("newWindow: true,");
 			if (ReloadAfter)
 				sb.Append("reloadAfter: true,");
+			if (!String.IsNullOrEmpty(Viewer))
+				sb.Append($"viewer: '{Viewer.ToLowerInvariant()}',");
 			sb.RemoveTailComma();
 			sb.Append("}");
 			return sb.ToString();

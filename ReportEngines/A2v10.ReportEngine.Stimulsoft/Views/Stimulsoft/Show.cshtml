@@ -1,0 +1,42 @@
+﻿@{
+	Layout = null;
+}
+
+<div>
+@Html.StiNetCoreViewer(new StiNetCoreViewerOptions()
+{
+	Theme = StiViewerTheme.Office2013LightGrayBlue,
+	/*Localization*/
+	Server =
+	{
+		Controller = "StiReport",
+		RequestTimeout = 300,
+		UseRelativeUrls = true
+	},
+	Actions =
+	{
+		GetReport = "GetReport",
+		ViewerEvent = "ViewerEvent",
+		PrintReport = "PrintReport",
+		ExportReport = "ExportReport",
+		Interaction = "Interaction",
+	},
+	Appearance  =
+	{
+		BackgroundColor = System.Drawing.Color.FromArgb(0x00e3e3e3),
+		ShowTooltips = false,
+		FullScreenMode = true,
+		ScrollbarsMode = true
+	},
+	Toolbar =
+	{
+		MenuAnimation = false,
+		ShowFullScreenButton = false,
+		ShowMenuMode = StiShowMenuMode.Click,
+		ShowBookmarksButton = false,
+		ShowParametersButton = true,
+		ShowSendEmailButton = false
+	}
+});;
+
+</div>

@@ -44,7 +44,7 @@ namespace A2v10.Web.Identity
 
 		public void Dispose()
 		{
-			throw new NotImplementedException();
+			// do nothing?
 		}
 
 		public Task<AppUser> FindByIdAsync(String UserId, CancellationToken cancellationToken)

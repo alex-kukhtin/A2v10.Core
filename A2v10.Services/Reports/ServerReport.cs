@@ -22,6 +22,12 @@ namespace A2v10.Services
 
 		public async Task<IInvokeResult> ExportAsync(IModelReport report, ExportReportFormat format, ExpandoObject query, Action<ExpandoObject> setParams)
 		{
+			var info = await GetReportInfoAsync(report, query, setParams);
+			return await _engine.ExportAsync(info, format);
+		}
+
+		public async Task<IReportInfo> GetReportInfoAsync(IModelReport report, ExpandoObject query, Action<ExpandoObject> setParams)
+		{
 			var vars = report.CreateVariables(query, setParams);
 			var prms = report.CreateParameters(query, setParams);
 
@@ -29,7 +35,7 @@ namespace A2v10.Services
 			if (report.HasModel())
 				dm = await _dbContext.LoadModelAsync(report.DataSource, report.LoadProcedure(), prms);
 
-			var ri = new ExternalReportInfo()
+			return new ExternalReportInfo()
 			{
 				Path = report.Path,
 				Name = report.Name,
@@ -37,7 +43,6 @@ namespace A2v10.Services
 				DataModel = dm,
 				Variables = vars.IsEmpty() ? null : vars
 			};
-			return await _engine.ExportAsync(ri, format);
 		}
 	}
 }

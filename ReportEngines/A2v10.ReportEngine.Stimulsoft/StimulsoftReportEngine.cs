@@ -27,7 +27,7 @@ namespace A2v10.ReportEngine.Stimulsoft
 				StiLicense.LoadFromString(lic);
 		}
 
-		StiReport CreateReport(IReportInfo reportInfo)
+		internal StiReport CreateReport(IReportInfo reportInfo)
 		{
 			String reportPath = _appCodeProvider.MakeFullPath(reportInfo.Path, $"{reportInfo.Report}.mrt", _userStateManager.IsAdmin);
 
@@ -87,7 +87,6 @@ namespace A2v10.ReportEngine.Stimulsoft
 				}
 			}
 		}
-
 
 		public Task<IInvokeResult> ExportAsync(IReportInfo reportInfo, ExportReportFormat format)
 		{

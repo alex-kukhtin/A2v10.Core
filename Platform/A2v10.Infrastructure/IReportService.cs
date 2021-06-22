@@ -18,5 +18,6 @@ namespace A2v10.Infrastructure
 	public interface IReportService
 	{
 		Task<IInvokeResult> ExportAsync(String url, ExportReportFormat format, Action<ExpandoObject> setParams);
+		Task<IReportInfo> GetReportInfoAsync(String url, Action<ExpandoObject> setParams);
 	}
 }
