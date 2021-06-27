@@ -62,7 +62,7 @@ namespace A2v10.Services
 
 		public async Task<ModelJson> Load(IPlatformUrl url)
 		{
-			var localPath = _redirect.Redirect(url.LocalPath);
+			var localPath = _redirect?.Redirect(url.LocalPath);
 			url.Redirect(localPath);
 			String json = await _appCodeProvider.ReadTextFileAsync(url.LocalPath, "model.json", _userStateManager.IsAdmin);
 			var rm = JsonConvert.DeserializeObject<ModelJson>(json, JsonHelpers.CamelCaseSerializerSettings);

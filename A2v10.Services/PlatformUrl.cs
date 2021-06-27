@@ -49,7 +49,7 @@ namespace A2v10.Services
 
 		public void Redirect(String path)
 		{
-			if (LocalPath == path)
+			if (path == null || LocalPath == path)
 				return;
 			LocalPath = path;
 		}
