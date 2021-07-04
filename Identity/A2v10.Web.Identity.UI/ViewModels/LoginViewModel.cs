@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace A2v10.Web.Identity
+namespace A2v10.Web.Identity.UI
 {
 	public class LoginViewModel
 	{

@@ -19,13 +19,13 @@ namespace A2v10.Web.Identity
 	public static class WellKnownClims
 	{
 		public const String NameIdentifier =  "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier";
-		public const String PersonName = "PersonName";
-		public const String Admin = "Admin";
-		public const String TenantAdmin = "TenantAdmin";
-		public const String ClientId = "ClientId";
-		public const String TenantId = "TenantId";
-		public const String Segment = "Segment";
-		public const String Locale = "Locale";
+		public const String PersonName = nameof(PersonName);
+		public const String Admin = nameof(Admin);
+		public const String TenantAdmin = nameof(TenantAdmin);
+		public const String ClientId = nameof(ClientId);
+		public const String TenantId = nameof(TenantId);
+		public const String Segment = nameof(Segment);
+		public const String Locale = nameof(Locale);
 	}
 
 	public static class IdentityExtensions
@@ -76,7 +76,7 @@ namespace A2v10.Web.Identity
 		{
 			if (identity is not ClaimsIdentity user)
 				return false;
-			var value = user.FindFirst("TenantAdmin").Value;
+			var value = user.FindFirst(WellKnownClims.TenantAdmin).Value;
 			return value == "TenantAdmin";
 		}
 

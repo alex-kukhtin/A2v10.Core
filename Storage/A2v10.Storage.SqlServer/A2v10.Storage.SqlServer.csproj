@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>net5.0</TargetFramework>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		<Version>10.1.8008</Version>
+		<Version>10.1.8010</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Storage.SqlServer</PackageId>
 		<Authors>Alex Kukthin</Authors>
@@ -15,7 +15,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Data.Core" Version="10.0.7264" />
+		<PackageReference Include="A2v10.Data.Core" Version="10.0.7265" />
 	</ItemGroup>
 
 	<PropertyGroup>

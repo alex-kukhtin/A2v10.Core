@@ -15,7 +15,6 @@ using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
-using A2v10.Web.Identity;
 
 namespace A2v10.Core.Web.Mvc
 {

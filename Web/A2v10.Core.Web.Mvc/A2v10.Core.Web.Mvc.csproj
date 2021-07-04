@@ -25,7 +25,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\A2v10.Web.Identity\A2v10.Web.Identity.csproj" />
+	  <ProjectReference Include="..\..\Platform\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 
 using A2v10.Infrastructure;
-using A2v10.Web.Identity;
 
 namespace A2v10.Core.Web.Mvc
 {

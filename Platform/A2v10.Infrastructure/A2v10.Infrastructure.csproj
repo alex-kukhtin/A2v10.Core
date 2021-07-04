@@ -4,19 +4,19 @@
     <TargetFramework>net5.0</TargetFramework>
 	  <AssemblyName>A2v10.Infrastructure</AssemblyName>
 	  <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-	  <Version>10.1.8008</Version>
+	  <Version>10.1.8009</Version>
 	  <Product>A2v10</Product>
 	  <PackageId>A2v10.Infrastructure</PackageId>
 	  <Authors>Alex Kukthin</Authors>
 	  <Company>Alex Kukthin</Company>
 	  <Description>A2v10 Platform Abstractions</Description>
-	  <Copyright>Copyright © 2015-2021 Alex Kukhtin. All rights reserved.</Copyright>
+	  <Copyright>Copyright © 2015-2021 Oleksandr Kukhtin. All rights reserved.</Copyright>
 	  <RepositoryType>github</RepositoryType>
 	  <PackageTags>A2v10</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7264" />
+    <PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7265" />
   </ItemGroup>
 
 	<PropertyGroup>

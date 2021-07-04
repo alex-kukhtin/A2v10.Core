@@ -1,12 +1,14 @@
-﻿using System;
+﻿// Copyright © 2021 Alex Kukhtin. All rights reserved.
+
+using System;
 using System.Text;
 using System.Security.Cryptography;
 
-using A2v10.Data.Interfaces;
-using A2v10.Web.Identity;
-
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.AspNetCore.Http;
+
+using A2v10.Data.Interfaces;
+
 
 namespace A2v10.Core.Web.Mvc
 {
@@ -30,9 +32,7 @@ namespace A2v10.Core.Web.Mvc
 			String key = $":{sessionId}:{accessToken}:{userId}:";
 			using var algo = SHA256.Create();
 			var hash = algo.ComputeHash(Encoding.UTF8.GetBytes(key));
-			var xxxx = WebEncoders.Base64UrlEncode(hash);
 			return WebEncoders.Base64UrlEncode(hash);
-			//return HttpServerUtility.UrlTokenEncode(hash);
 		}
 	}
 }

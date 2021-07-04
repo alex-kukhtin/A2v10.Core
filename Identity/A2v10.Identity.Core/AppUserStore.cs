@@ -6,9 +6,11 @@ using System.Dynamic;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
+
+using Microsoft.AspNetCore.Identity;
+
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
-using Microsoft.AspNetCore.Identity;
 
 namespace A2v10.Web.Identity
 {
@@ -198,7 +200,7 @@ namespace A2v10.Web.Identity
 				list.Add(new Claim(WellKnownClims.Locale, user.Locale));
 
 			//if (user.IsAdmin) // TODO
-			list.Add(new Claim("Admin", "Admin"));
+			list.Add(new Claim(WellKnownClims.Admin, "Admin"));
 			/*
 			if (_host.IsMultiTenant)
 			{

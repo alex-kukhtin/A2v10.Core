@@ -11,8 +11,6 @@ using Microsoft.Extensions.DependencyInjection;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 
-using A2v10.Web.Identity.Controllers;
-
 namespace A2v10.Web.Identity
 {
 	public static class ServicesExtensions
@@ -25,12 +23,11 @@ namespace A2v10.Web.Identity
 				options.User.RequireUniqueEmail = true;
 				options.Lockout.MaxFailedAccessAttempts = 5;
 				options.SignIn.RequireConfirmedEmail = true;
-				options.SignIn.RequireConfirmedAccount = true;
 				options.Password.RequiredLength = 6;
 			})
 			.AddUserManager<UserManager<AppUser>>()
 			.AddSignInManager<SignInManager<AppUser>>()
-			.AddDefaultTokenProviders();
+			.AddDefaultTokenProviders(); // for change password, email & phone validation
 
 			builder.Services.AddScoped<IUserStore<AppUser>>(s =>
 			{
@@ -64,7 +61,7 @@ namespace A2v10.Web.Identity
 				o.Cookie.Name = IdentityConstants.ApplicationScheme;
 				o.LoginPath = new PathString("/account/login");
 				o.ReturnUrlParameter = "returnurl";
-				o.LogoutPath = "/account/logoff";
+				o.LogoutPath = "/account/logout";
 				o.SlidingExpiration = true;
 				o.ExpireTimeSpan = TimeSpan.FromDays(20);
 				o.Events = new CookieAuthenticationEvents()
@@ -84,13 +81,6 @@ namespace A2v10.Web.Identity
 					o.ExpireTimeSpan = TimeSpan.FromMinutes(5);
 				}
 			);
-			return builder;
-		}
-
-		public static IMvcBuilder AddDefaultIdentityUI(this IMvcBuilder builder)
-		{
-			var assembly = typeof(AccountController).Assembly;
-			builder.AddApplicationPart(assembly);
 			return builder;
 		}
 	}

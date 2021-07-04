@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
-namespace A2v10.Web.Identity.Controllers
+namespace A2v10.Web.Identity.UI
 {
 	[Route("account/[action]")]
 	public class AccountController : Controller

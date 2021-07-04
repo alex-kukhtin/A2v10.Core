@@ -7,6 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 using A2v10.Web.Identity;
+using A2v10.Web.Identity.UI;
+
 using A2v10.Core.Web.Mvc;
 using A2v10.Infrastructure;
 using A2v10.Services;

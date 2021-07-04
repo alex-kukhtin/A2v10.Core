@@ -5,7 +5,9 @@
 }
 
 <form method="post" novalidate=novalidate>
+	<label for="Login">login</label>
 	<input name="Login" type=text value="@Model.Login"/>
+	<label for="Password">password</label>
 	<input name="Password" type=password />
 	<input name="RememberMe" type="checkbox" value="@Model.RememberMe"/>
 	<button type=submit>Login</button>

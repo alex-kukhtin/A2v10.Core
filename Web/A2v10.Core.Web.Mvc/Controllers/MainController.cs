@@ -5,7 +5,6 @@ using System;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 
-using A2v10.Web.Identity;
 using A2v10.Infrastructure;
 
 namespace A2v10.Core.Web.Mvc.Controllers

@@ -49,6 +49,14 @@ namespace A2v10.Core.Web.Mvc
 		}
 	}
 
+	public record TenantInfo : ITenantInfo
+	{
+		public String Procedure => "[a2security].[SetTenantId]";
+		public String ParamName => "@TenantId";
+
+		public Int32 TenantId { get; init; }
+	}
+
 	public class WebApplicationHost : IApplicationHost, ITenantManager
 	{
 		private readonly IConfiguration _appSettings;
@@ -172,40 +180,18 @@ namespace A2v10.Core.Web.Mvc
 		*/
 
 		#region ITenantManager
-
-		const String SET_TENANT_CMD = "[a2security].[SetTenantId]";
-
-		public Task SetTenantIdAsync(IDbConnection cnn, String source)
-		{
-			/*
-			if (!IsMultiTenant)
-				return;
-			if (source == CatalogDataSource)
-				return;
-			using var _ = _profiler.CurrentRequest.Start(ProfileAction.Sql, SET_TENANT_CMD);
-			using var cmd = cnn.CreateCommand() as SqlCommand;
-			cmd.CommandText = SET_TENANT_CMD;
-			cmd.CommandType = SqlCommandType.StoredProcedure;
-			cmd.Parameters.AddWithValue("@TenantId", TenantId);
-			await cmd.ExecuteNonQueryAsync();
-			*/
-			return Task.CompletedTask;
-		}
-
-		public void SetTenantId(IDbConnection cnn, String source)
+		public ITenantInfo GetTenantInfo(String source)
 		{
 			if (!IsMultiTenant)
-				return;
+				return null;
 			if (source == CatalogDataSource)
-				return;
-			/*
-			using var _ = _profiler.CurrentRequest.Start(ProfileAction.Sql, SET_TENANT_CMD);
-			using var cmd = cnn.CreateCommand() as SqlCommand;
-			cmd.CommandText = SET_TENANT_CMD;
-			cmd.CommandType = SqlCommandType.StoredProcedure;
-			cmd.Parameters.AddWithValue("@TenantId", TenantId);
-			cmd.ExecuteNonQuery();
-			*/
+				return null;
+			if (TenantId == null)
+				throw new InvalidOperationException("There is no TenantId");
+			return new TenantInfo()
+			{
+				TenantId = this.TenantId.Value
+			};
 		}
 		#endregion
 	}

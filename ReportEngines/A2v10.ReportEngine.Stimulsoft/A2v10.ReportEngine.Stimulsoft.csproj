@@ -31,8 +31,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7264" />
-		<PackageReference Include="Stimulsoft.Reports.Web.NetCore" Version="2021.3.3" />
+		<PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7265" />
+		<PackageReference Include="Stimulsoft.Reports.Web.NetCore" Version="2021.3.4" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="5.0.7" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.TagHelpers" Version="2.2.0" />
 	</ItemGroup>
