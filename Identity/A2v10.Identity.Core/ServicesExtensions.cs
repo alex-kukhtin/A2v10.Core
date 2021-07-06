@@ -9,16 +9,15 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 
 using A2v10.Data.Interfaces;
-using A2v10.Infrastructure;
 
 namespace A2v10.Web.Identity
 {
 	public static class ServicesExtensions
 	{
-		public static IMvcBuilder AddPlatformIdentity(this IMvcBuilder builder,
+		public static IServiceCollection AddPlatformIdentityCore(this IServiceCollection services,
 			Action<AppUserStoreOptions> options = null)
 		{
-			builder.Services.AddIdentityCore<AppUser>(options =>
+			services.AddIdentityCore<AppUser>(options =>
 			{
 				options.User.RequireUniqueEmail = true;
 				options.Lockout.MaxFailedAccessAttempts = 5;
@@ -29,28 +28,25 @@ namespace A2v10.Web.Identity
 			.AddSignInManager<SignInManager<AppUser>>()
 			.AddDefaultTokenProviders(); // for change password, email & phone validation
 
-			builder.Services.AddScoped<IUserStore<AppUser>>(s =>
+			services.AddScoped<AppUserStore>()
+			.AddScoped<IUserStore<AppUser>>(s =>
 			{
-				var host = s.GetService<IApplicationHost>();
-				var opts = new AppUserStoreOptions()
-				{
-					Schema = "a2security",
-				};
-
-				if (host.IsMultiTenant)
-					opts.DataSource = "Catalog";
-
+				return s.GetService<AppUserStore>();
+			})
+			.AddScoped<AppUserStoreOptions>(s =>
+			{
+				var opts = new AppUserStoreOptions();
 				options?.Invoke(opts);
-
-				return new AppUserStore(
-					s.GetService<IDbContext>(), opts
-				);
-			}
-			)
+				return opts;
+			})
 			.AddScoped<ISecurityStampValidator, SecurityStampValidator<AppUser>>()
 			.AddScoped<ISystemClock, SystemClock>();
+			return services;
+		}
 
-			builder.Services.AddAuthentication(options =>
+		public static IServiceCollection AddPlatformAuthentication(this IServiceCollection services)
+		{
+			services.AddAuthentication(options =>
 			{
 				options.DefaultAuthenticateScheme = IdentityConstants.ApplicationScheme;
 				options.DefaultChallengeScheme = IdentityConstants.ApplicationScheme;
@@ -81,7 +77,7 @@ namespace A2v10.Web.Identity
 					o.ExpireTimeSpan = TimeSpan.FromMinutes(5);
 				}
 			);
-			return builder;
+			return services;
 		}
 	}
 }

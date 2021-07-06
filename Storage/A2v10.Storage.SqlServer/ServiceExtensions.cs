@@ -28,5 +28,12 @@ namespace A2v10.Storage.SqlServer
 			);
 			return services;
 		}
+
+		public static IServiceCollection AddSqlServerDefaultImpl(this IServiceCollection services)
+		{
+			services.AddSingleton<IDataProfiler, NullDataProfiler>()
+				.AddSingleton<IDataLocalizer, NullDataLocalizer>();
+			return services;
+		}
 	}
 }

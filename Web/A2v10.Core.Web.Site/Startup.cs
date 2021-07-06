@@ -39,13 +39,16 @@ namespace A2v10.Core.Web.Site
 				//opts.MultiCompany = false;
 				//opts.GlobalPeriod = false;
 			})
-			.AddPlatformIdentity(opts =>
+			.AddDefaultIdentityUI()
+			.AddStimulsoftUI();
+
+
+			services.AddPlatformIdentityCore(opts =>
 			{
 				//opts.DataSource = "Catalog";
 				//opts.Schema = "mySchema";
 			})
-			.AddDefaultIdentityUI()
-			.AddStimulsoftUI();
+			.AddPlatformAuthentication();
 
 			services.AddSqlServerStorage();
 

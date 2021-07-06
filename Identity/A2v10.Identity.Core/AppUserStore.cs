@@ -20,7 +20,8 @@ namespace A2v10.Web.Identity
 		IUserEmailStore<AppUser>,
 		IUserPasswordStore<AppUser>,
 		IUserSecurityStampStore<AppUser>,
-		IUserClaimStore<AppUser>
+		IUserClaimStore<AppUser>,
+		IUserAuthenticationTokenStore<AppUser>
 	{
 		private readonly IDbContext _dbContext;
 
@@ -109,7 +110,7 @@ namespace A2v10.Web.Identity
 				{ "UserId",  user.Id },
 				{ "SecurityStamp",  stamp }
 			};
-			await _dbContext.ExecuteExpandoAsync(DataSource, "a2security.[User.SetSecurityStamp]", prm);
+			await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.SetSecurityStamp]", prm);
 			user.SecurityStamp2 = stamp;
 		}
 		#endregion
@@ -163,7 +164,7 @@ namespace A2v10.Web.Identity
 				{ "UserId",  user.Id },
 				{ "PasswordHash",  passwordHash }
 			};
-			await _dbContext.ExecuteExpandoAsync(DataSource, "a2security.[User.SetPasswordHash]", prm);
+			await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.SetPasswordHash]", prm);
 			user.PasswordHash2 = passwordHash;
 
 		}
@@ -252,6 +253,31 @@ namespace A2v10.Web.Identity
 		}
 
 		public Task RemoveLoginAsync(AppUser user, String loginProvider, String providerKey, CancellationToken cancellationToken)
+		{
+			throw new NotImplementedException();
+		}
+
+		#endregion
+
+		#region IUserAuthenticationTokenStore
+		public async Task SetTokenAsync(AppUser user, String loginProvider, String name, String value, CancellationToken cancellationToken)
+		{
+			var prm = new ExpandoObject()
+			{
+				{ "UserId",  user.Id },
+				{ "Provider",  loginProvider},
+				{ "Name",  name},
+				{ "Value",  value}
+			};
+			await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.SetToken]", prm);
+		}
+
+		public Task RemoveTokenAsync(AppUser user, String loginProvider, String name, CancellationToken cancellationToken)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Task<String> GetTokenAsync(AppUser user, String loginProvider, String name, CancellationToken cancellationToken)
 		{
 			throw new NotImplementedException();
 		}
