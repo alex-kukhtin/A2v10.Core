@@ -5,11 +5,14 @@
     <CopyRefAssembliesToPublishDirectory>false</CopyRefAssembliesToPublishDirectory>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="A2v10.Storage.SqlServer" Version="10.1.8011" />
+	  <PackageReference Include="A2v10.Identity.Core" Version="10.1.8011" />
+  </ItemGroup>
+
 
   <ItemGroup>
-    <ProjectReference Include="..\Identity\A2v10.Identity.Core\A2v10.Identity.Core.csproj" />
     <ProjectReference Include="..\Identity\A2v10.Web.Identity.UI\A2v10.Web.Identity.UI.csproj" />
-    <ProjectReference Include="..\Storage\A2v10.Storage.SqlServer\A2v10.Storage.SqlServer.csproj" />
     <ProjectReference Include="..\ViewEngines\A2v10.ViewEngine.Xaml\A2v10.ViewEngine.Xaml.csproj" />
     <ProjectReference Include="..\Web\A2v10.Core.Web.Mvc\A2v10.Core.Web.Mvc.csproj" />
   </ItemGroup>

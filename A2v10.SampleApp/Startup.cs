@@ -6,8 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 using A2v10.Core.Web.Mvc;
-using A2v10.Web.Identity;
-using A2v10.Storage.SqlServer;
 using A2v10.ViewEngine.Xaml;
 
 namespace A2v10.SampleApp

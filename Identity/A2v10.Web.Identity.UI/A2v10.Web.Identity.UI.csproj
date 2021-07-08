@@ -5,15 +5,18 @@
 		<AddRazorSupportForMvc>true</AddRazorSupportForMvc>
 		<AssemblyName>A2v10.Identity.UI</AssemblyName>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		<Version>10.1.8011</Version>
+		<Version>10.1.8014</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Identity.UI</PackageId>
-		<Authors>Alex Kukthin</Authors>
-		<Company>Alex Kukthin</Company>
+		<Authors>Oleksandr Kukhtin</Authors>
+		<Company>Oleksandr Kukhtin</Company>
 		<Description>A2v10 Identity Core Services</Description>
 		<Copyright>Copyright © 2015-2021 Oleksandr Kukhtin. All rights reserved.</Copyright>
 		<RepositoryType>github</RepositoryType>
 		<PackageTags>A2v10</PackageTags>
+		<RepositoryUrl>https://github.com/alex-kukhtin/A2v10.Core</RepositoryUrl>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -22,7 +25,9 @@
 	</ItemGroup>
 
 	<PropertyGroup>
+		<Deterministic>true</Deterministic>
 		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+		<EmbedRazorGenerateSources>true</EmbedRazorGenerateSources>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
@@ -30,5 +35,9 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\A2v10.Identity.Core\A2v10.Identity.Core.csproj" />
 	</ItemGroup>
 </Project>

@@ -4,7 +4,7 @@
 		<TargetFramework>net5.0</TargetFramework>
 		<AssemblyName>A2v10.Identity.Jwt</AssemblyName>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		<Version>10.1.8011</Version>
+		<Version>10.1.8012</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Identity.Jwt</PackageId>
 		<Authors>Alex Kukthin</Authors>
@@ -28,6 +28,10 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\A2v10.Identity.Core\A2v10.Identity.Core.csproj" />
 	</ItemGroup>
 
 </Project>
