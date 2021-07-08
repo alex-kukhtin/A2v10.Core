@@ -1,16 +1,13 @@
 ﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
-
+using A2v10.Web.Identity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.DependencyInjection;
 
-using A2v10.Data.Interfaces;
-
-namespace A2v10.Web.Identity
+namespace Microsoft.Extensions.DependencyInjection
 {
 	public static class ServicesExtensions
 	{
@@ -44,9 +41,9 @@ namespace A2v10.Web.Identity
 			return services;
 		}
 
-		public static IServiceCollection AddPlatformAuthentication(this IServiceCollection services)
+		public static AuthenticationBuilder AddPlatformAuthentication(this IServiceCollection services)
 		{
-			services.AddAuthentication(options =>
+			var builder = services.AddAuthentication(options =>
 			{
 				options.DefaultAuthenticateScheme = IdentityConstants.ApplicationScheme;
 				options.DefaultChallengeScheme = IdentityConstants.ApplicationScheme;
@@ -77,7 +74,7 @@ namespace A2v10.Web.Identity
 					o.ExpireTimeSpan = TimeSpan.FromMinutes(5);
 				}
 			);
-			return services;
+			return builder;
 		}
 	}
 }

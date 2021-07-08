@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace A2v10.Web.Identity.UI
 {
 	[Route("account/[action]")]
+	[ApiExplorerSettings(IgnoreApi = true)]
 	public class AccountController : Controller
 	{
 		private readonly SignInManager<AppUser> _signInManager;
@@ -44,12 +45,20 @@ namespace A2v10.Web.Identity.UI
 			throw new InvalidOperationException("Invalid login");
 		}
 
-		public async Task<IActionResult> Logoff()
+
+		[HttpGet]
+		public async Task<IActionResult> Logout()
 		{
 			await _signInManager.SignOutAsync();
-			HttpContext.Session.Clear();
+			//HttpContext.Session.Clear(); ???
 			//ClearAllCookies(); // TODO:
 			return LocalRedirect("/");
+		}
+
+		[HttpGet]
+		public Task<IActionResult> Logoff()
+		{
+			return Logout();
 		}
 	}
 }

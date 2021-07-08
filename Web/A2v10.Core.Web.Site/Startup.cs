@@ -6,14 +6,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-using A2v10.Web.Identity;
-using A2v10.Web.Identity.UI;
-
 using A2v10.Core.Web.Mvc;
 using A2v10.Infrastructure;
 using A2v10.Services;
 
-using A2v10.Storage.SqlServer;
 using A2v10.ViewEngine.Xaml;
 
 using A2v10.ReportEngine.Stimulsoft;

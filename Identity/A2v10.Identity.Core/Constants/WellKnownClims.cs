@@ -1,12 +1,13 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2020-2021 Alex Kukhtin. All rights reserved.
 
 using System;
 
-namespace A2v10.Infrastructure
+namespace A2v10.Web.Identity
 {
 	public static class WellKnownClims
 	{
 		public const String NameIdentifier =  "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier";
+		public const String Name = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name";
 		public const String PersonName = nameof(PersonName);
 		public const String Admin = nameof(Admin);
 		public const String TenantAdmin = nameof(TenantAdmin);

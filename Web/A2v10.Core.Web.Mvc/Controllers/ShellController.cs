@@ -15,6 +15,7 @@ using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
+using A2v10.Web.Identity;
 
 namespace A2v10.Core.Web.Mvc
 {
@@ -133,7 +134,7 @@ namespace A2v10.Core.Web.Mvc
 
 			var macros = new ExpandoObject();
 
-			macros.Append(new Dictionary<String, Object>
+			_ = macros.Append(new Dictionary<String, Object>
 			{
 				{ "AppVersion", _host.AppVersion },
 				{ "Admin", bAdmin ? "true" : "false" },

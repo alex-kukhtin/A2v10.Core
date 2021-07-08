@@ -38,9 +38,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Identity", "Identity", "{2C
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "A2v10.Web.Identity.UI", "Identity\A2v10.Web.Identity.UI\A2v10.Web.Identity.UI.csproj", "{11C388D2-0FE7-4056-BA2E-2578F6D46A46}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Av10.Web.Identity.ApiKey", "Identity\Av10.Web.Identity.ApiKey\Av10.Web.Identity.ApiKey.csproj", "{765C576D-85CF-4E08-826C-31C7CDEEC9F8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Av10.Web.Identity.ApiKey", "Identity\Av10.Web.Identity.ApiKey\Av10.Web.Identity.ApiKey.csproj", "{765C576D-85CF-4E08-826C-31C7CDEEC9F8}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "A2v10.Identity.Core", "Identity\A2v10.Identity.Core\A2v10.Identity.Core.csproj", "{3FC3D2F6-2659-476E-BA4B-EF9B75A519E9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "A2v10.Identity.Jwt", "Identity\A2v10.Identity.Jwt\A2v10.Identity.Jwt.csproj", "{35372137-1612-40A6-B9FD-DE6E51A0827D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -92,6 +94,10 @@ Global
 		{3FC3D2F6-2659-476E-BA4B-EF9B75A519E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3FC3D2F6-2659-476E-BA4B-EF9B75A519E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3FC3D2F6-2659-476E-BA4B-EF9B75A519E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{35372137-1612-40A6-B9FD-DE6E51A0827D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35372137-1612-40A6-B9FD-DE6E51A0827D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35372137-1612-40A6-B9FD-DE6E51A0827D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35372137-1612-40A6-B9FD-DE6E51A0827D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -106,6 +112,7 @@ Global
 		{11C388D2-0FE7-4056-BA2E-2578F6D46A46} = {2CBEF95D-63EB-4570-8FE9-72C05A30A0F0}
 		{765C576D-85CF-4E08-826C-31C7CDEEC9F8} = {2CBEF95D-63EB-4570-8FE9-72C05A30A0F0}
 		{3FC3D2F6-2659-476E-BA4B-EF9B75A519E9} = {2CBEF95D-63EB-4570-8FE9-72C05A30A0F0}
+		{35372137-1612-40A6-B9FD-DE6E51A0827D} = {2CBEF95D-63EB-4570-8FE9-72C05A30A0F0}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D64A03C5-D2E1-49C8-A7A9-D6022941DE01}

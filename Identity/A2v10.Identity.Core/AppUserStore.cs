@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 
 using A2v10.Data.Interfaces;
-using A2v10.Infrastructure;
+using A2v10.Identity.Core.Helpers;
 
 namespace A2v10.Web.Identity
 {
@@ -20,8 +20,7 @@ namespace A2v10.Web.Identity
 		IUserEmailStore<AppUser>,
 		IUserPasswordStore<AppUser>,
 		IUserSecurityStampStore<AppUser>,
-		IUserClaimStore<AppUser>,
-		IUserAuthenticationTokenStore<AppUser>
+		IUserClaimStore<AppUser>
 	{
 		private readonly IDbContext _dbContext;
 
@@ -256,32 +255,45 @@ namespace A2v10.Web.Identity
 		{
 			throw new NotImplementedException();
 		}
-
 		#endregion
 
-		#region IUserAuthenticationTokenStore
-		public async Task SetTokenAsync(AppUser user, String loginProvider, String name, String value, CancellationToken cancellationToken)
+		#region Token support
+		public Task AddTokenAsync(AppUser user, String provider, String token, DateTime expires, String tokenToRemove = null)
 		{
-			var prm = new ExpandoObject()
+			var exp = new ExpandoObject()
 			{
-				{ "UserId",  user.Id },
-				{ "Provider",  loginProvider},
-				{ "Name",  name},
-				{ "Value",  value}
+				{ "UserId", user.Id },
+				{ "Provider", provider },
+				{ "Token", token },
+				{ "Expires", expires }
 			};
-			await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.SetToken]", prm);
+			if (!String.IsNullOrEmpty(tokenToRemove))
+				exp.Add("Remove", tokenToRemove);
+			return _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].AddToken", exp);
 		}
 
-		public Task RemoveTokenAsync(AppUser user, String loginProvider, String name, CancellationToken cancellationToken)
+		public async Task<String> GetTokenAsync(AppUser user, String provider, String token)
 		{
-			throw new NotImplementedException();
+			var exp = new ExpandoObject()
+			{
+				{ "UserId", user.Id },
+				{ "Provider", provider },
+				{ "Token", token }
+			};
+			var res = await _dbContext.LoadAsync<JwtToken>(DataSource, $"[{DbSchema}].GetToken", exp);
+			return res?.Token;
 		}
 
-		public Task<String> GetTokenAsync(AppUser user, String loginProvider, String name, CancellationToken cancellationToken)
+		public Task RemoveTokenAsync(AppUser user, String provider, String token)
 		{
-			throw new NotImplementedException();
+			var exp = new ExpandoObject()
+			{
+				{ "UserId", user.Id },
+				{ "Provider", provider },
+				{ "Token", token }
+			};
+			return _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].RemoveToken", exp);
 		}
 		#endregion
-
 	}
 }

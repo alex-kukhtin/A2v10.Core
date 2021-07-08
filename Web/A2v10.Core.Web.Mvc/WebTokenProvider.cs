@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.AspNetCore.Http;
 
 using A2v10.Data.Interfaces;
-
+using A2v10.Web.Identity;
 
 namespace A2v10.Core.Web.Mvc
 {

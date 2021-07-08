@@ -1,13 +1,12 @@
 ﻿// Copyright © 2021 Alex Kukhtin. All rights reserved.
 
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 
 using A2v10.Data;
 using A2v10.Data.Config;
 using A2v10.Data.Interfaces;
 
-namespace A2v10.Storage.SqlServer
+namespace Microsoft.Extensions.DependencyInjection
 {
 	public static class ServiceExtensions
 	{
