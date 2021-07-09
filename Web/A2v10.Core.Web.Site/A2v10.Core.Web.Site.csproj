@@ -16,9 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Update="wwwroot\App_application\main\test\test.view.xaml">
-      <Generator></Generator>
-    </Content>
+    <Content Update="wwwroot\App_application\main\test\test.view.xaml" />
   </ItemGroup>
 
 </Project>

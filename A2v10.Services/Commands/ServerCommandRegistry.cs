@@ -21,6 +21,9 @@ namespace A2v10.Services
 				ModelCommandType.javascript => throw new DataServiceException("javascript command yet not implemented"),
 				ModelCommandType.file => throw new DataServiceException("file command yet not implemented"),
 				ModelCommandType.xml => throw new DataServiceException("xml command yet not implemented"),
+				ModelCommandType.callApi => throw new DataServiceException("callApi command yet not implemented"),
+				ModelCommandType.startProcess or ModelCommandType.resumeProcess => throw new DataServiceException("Workflow commands are not supported in this version"),
+				ModelCommandType.script => throw new DataServiceException("script command is not supported"),
 				_ => throw new DataServiceException("Server command for '{command}' not found")
 			};
 		}
