@@ -6,13 +6,11 @@
 
 	<ItemGroup>
 		<PackageReference Include="A2v10.Storage.SqlServer" Version="10.1.8011" />
-		<PackageReference Include="A2v10.Identity.Core" Version="10.1.8011" />
+		<PackageReference Include="A2v10.Identity.UI" Version="10.1.8014" />
 		<PackageReference Include="A2v10.ViewEngine.Xaml" Version="10.1.8012" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\Identity\A2v10.Web.Identity.UI\A2v10.Web.Identity.UI.csproj" />
-	  <ProjectReference Include="..\Platform\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
 	  <ProjectReference Include="..\Web\A2v10.Core.Web.Mvc\A2v10.Core.Web.Mvc.csproj" />
 	</ItemGroup>
 

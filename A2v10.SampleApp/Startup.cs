@@ -23,7 +23,7 @@ namespace A2v10.SampleApp
 		public void ConfigureServices(IServiceCollection services)
 		{
 			var builder = services.AddPlatformCore()
-				.AddDefaultIdentityUI();
+			.AddDefaultIdentityUI();
 
 			services.AddPlatformIdentityCore()
 			.AddPlatformAuthentication();
