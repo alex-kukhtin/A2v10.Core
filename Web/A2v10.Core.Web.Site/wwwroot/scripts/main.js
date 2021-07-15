@@ -8396,9 +8396,9 @@ const maccel = require('std:accel');
 		},
 	});
 })();
-// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-// 20201106-7720
+// 20210704-7793
 // components/upload.js
 
 (function () {
@@ -8406,6 +8406,8 @@ const maccel = require('std:accel');
 	const url = require('std:url');
 	const http = require('std:http');
 	const tools = require('std:tools');
+	const utils = require('std:utils');
+
 
 	const locale = window.$$locale;
 
@@ -8466,6 +8468,8 @@ const maccel = require('std:accel');
 			uploadImage(ev) {
 				let root = window.$$rootUrl;
 				let id = this.item[this.prop];
+				if (utils.isObjectExact(id))
+					id = id.$id;
 				let imgUrl = url.combine(root, '_image', this.base, this.prop, id);
 				var fd = new FormData();
 				for (let file of ev.target.files) {
@@ -8492,8 +8496,14 @@ const maccel = require('std:accel');
 								ni[token] = elem.Token;
 							}
 						} else {
-							this.item[this.prop] = result.elems[0].Id;
-							this.item[token] = result.elems[0].Token;
+							let elem = this.item[this.prop];
+							if (utils.isObjectExact(elem)) {
+								elem[elem._meta_.$id] = result.elems[0].Id;
+								elem[elem._meta_.$token] = result.elems[0].Token;
+							} else {
+								this.item[this.prop] = result.elems[0].Id;
+								this.item[token] = result.elems[0].Token;
+							}
 						}
 					}
 				}).catch(msg => {
@@ -9571,9 +9581,9 @@ TODO:
 
 	app.components['std:toastr'] = toastrComponent;
 })();
-// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-// 20201119-7731
+// 20210704-7793
 // components/image.js
 
 (function () {
@@ -9626,12 +9636,10 @@ TODO:
 				if (this.newItem)
 					return undefined;
 				let root = window.$$rootUrl;
-				let id = this.item[this.prop];
-				if (!id) return undefined;
-				let qry = {};
-				if (this.item._meta_ && this.item._meta_.$token)
-					qry.token = this.item[this.item._meta_.$token];
-				return url.combine(root, '_image', this.base, this.prop, id) + url.makeQueryString(qry);
+				let elem = this.imageOjb;
+				if (!elem || !elem.id)
+					return undefined;
+				return url.combine(root, '_image', this.base, this.prop, elem.id) + url.makeQueryString({ token: elem.token });
 			},
 			tip() {
 				if (this.readOnly) return this.placeholder;
@@ -9657,7 +9665,16 @@ TODO:
 				if (this.newItem) return true;
 				if (this.readOnly)
 					return !this.hasImage;
-				return !this.inArray && !this.item[this.prop];
+				return !this.inArray && !this.hasImage;
+			},
+			imageOjb() {
+				let elem = this.item[this.prop];
+				if (!elem)
+					return undefined;
+				if (utils.isObjectExact(elem))
+					return { id: elem.$id, token: elem[elem._meta_.$token] };
+				else
+					return { id: elem, token: this.item[this.item._meta_.$token] };
 			},
 			itemForUpload() {
 				return this.newItem ? this.newElem : this.item;
@@ -9667,8 +9684,13 @@ TODO:
 			removeImage: function () {
 				if (this.inArray)
 					this.item.$remove();
-				else
-					this.item[this.prop] = undefined;
+				else {
+					let elem = this.item[this.prop];
+					if (utils.isObjectExact(elem))
+						elem.$empty();
+					else
+						this.item[this.prop] = undefined;
+				}
 			},
 			clickOnImage: function () {
 				//alert('click on image');
@@ -13168,7 +13190,7 @@ Vue.directive('resize', {
 })();	
 // Copyright © 2021 Alex Kukhtin. All rights reserved.
 
-/*20210606-7781*/
+/*20210713-7795*/
 /* controllers/appheader.js */
 
 (function () {
@@ -13208,7 +13230,7 @@ Vue.directive('resize', {
 		</button>
 		<div class="dropdown-menu menu down-left">
 			<a v-if="!isSinglePage " v-for="(itm, itmIndex) in profileItems" @click.prevent="doProfileMenu(itm)" class="dropdown-item" tabindex="-1"><i class="ico" :class="'ico-' + itm.icon"></i> <span v-text="itm.title" :key="itmIndex"></span></a>
-			<a @click.prevent="changePassword" class="dropdown-item" tabindex="-1"><i class="ico ico-access"></i> <span v-text="locale.$ChangePassword"></span></a>
+			<a v-if="isChangePasswordEnabled" @click.prevent="changePassword" class="dropdown-item" tabindex="-1"><i class="ico ico-access"></i> <span v-text="locale.$ChangePassword"></span></a>
 			<div class="divider"></div>
 			<form id="logoutForm" method="post" action="/account/logoff">
 				<a href="javascript:document.getElementById('logoutForm').submit()" tabindex="-1" class="dropdown-item"><i class="ico ico-exit"></i> <span v-text="locale.$Quit"></span></a>
@@ -13238,6 +13260,9 @@ Vue.directive('resize', {
 		computed: {
 			isSinglePage() {
 				return !!this.singlePage;
+			},
+			isChangePasswordEnabled() {
+				return this.changePassword != undefined;
 			},
 			locale() { return locale; },
 			notifyText() {
@@ -13699,7 +13724,7 @@ Vue.directive('resize', {
 })();	
 // Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-/*20210529-7776*/
+/*20210713-7795*/
 /* controllers/shell.js */
 
 (function () {
@@ -13738,6 +13763,11 @@ Vue.directive('resize', {
 				if (menu.isSeparatePage(this.pages, seg0))
 					return seg0;
 				return undefined;
+			},
+			changePassword() {
+				if (this.userIsExternal)
+					return undefined;
+				return this.doChangePassword;
 			}
 		},
 		watch: {
@@ -13789,7 +13819,9 @@ Vue.directive('resize', {
 			changeUser() {
 				alert('change user');
 			},
-			changePassword() {
+			doChangePassword() {
+				if (this.userIsExternal)
+					return undefined;
 				if (window.cefHost) {
 					this.$alert(locale.$DesktopNotSupported);
 					return;
