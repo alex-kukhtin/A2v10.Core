@@ -2,10 +2,7 @@
 
 using System;
 using System.Dynamic;
-using System.Threading.Tasks;
 using System.Text;
-using System.Data;
-//using System.Data.SqlClient;
 
 using Microsoft.Extensions.Configuration;
 
@@ -104,8 +101,6 @@ namespace A2v10.Core.Web.Mvc
 
 		public Boolean IsAdminAppPresent => false /*TODO:*/;
 
-		public String CustomSecuritySchema => throw new NotImplementedException();
-
 
 		public Int32? TenantId { get; set; }
 
@@ -123,13 +118,6 @@ namespace A2v10.Core.Web.Mvc
 		{
 			throw new NotImplementedException();
 		}
-
-		/*
-		public string ConnectionString(string source)
-		{
-			throw new NotImplementedException();
-		}
-		*/
 
 		public String GetAppSettings(string source)
 		{

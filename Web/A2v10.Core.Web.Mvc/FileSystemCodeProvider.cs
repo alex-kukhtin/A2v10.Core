@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 
 using A2v10.Infrastructure;
 
@@ -22,6 +23,14 @@ namespace A2v10.Core.Web.Mvc
 		public Boolean IsFileSystem => true;
 
 		private readonly String _appKey;
+
+		public FileSystemCodeProvider(IWebHostEnvironment webHost, IConfiguration config)
+		{
+			_webHost = webHost;
+			var appSection = config.GetSection("application");
+			AppPath = appSection.GetValue<String>("path");
+			_appKey = appSection.GetValue<String>("name");
+		}
 
 		public FileSystemCodeProvider(IWebHostEnvironment webHost, String appPath, String appKey)
 		{

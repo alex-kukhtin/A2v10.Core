@@ -1,12 +1,13 @@
 // Copyright © 2020-2021 Alex Kukhtin. All rights reserved.
 
+using System;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-using A2v10.Core.Web.Mvc;
 using A2v10.Infrastructure;
 using A2v10.Services;
 
@@ -28,6 +29,9 @@ namespace A2v10.Core.Web.Site
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services)
 		{
+			var sect = Configuration.GetSection("A2v10:configuration");
+			var mt = sect.GetValue<Boolean>("multiTenant");
+
 			services.AddPlatformCore(opts =>
 			{
 				// default values
@@ -37,7 +41,6 @@ namespace A2v10.Core.Web.Site
 			})
 			.AddDefaultIdentityUI()
 			.AddStimulsoftUI();
-
 
 			services.AddPlatformIdentityCore(opts =>
 			{
