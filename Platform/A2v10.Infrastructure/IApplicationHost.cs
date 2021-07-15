@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
 using System.Dynamic;
@@ -35,10 +35,6 @@ namespace A2v10.Infrastructure
 
 		String CatalogDataSource { get; }
 		String TenantDataSource { get; }
-
-		String AppVersion { get; }
-		String AppBuild { get; }
-		String Copyright { get; }
 
 		String GetAppSettings(String source);
 		ExpandoObject GetEnvironmentObject(String key);

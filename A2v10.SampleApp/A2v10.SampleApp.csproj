@@ -6,7 +6,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="A2v10.Storage.SqlServer" Version="10.1.8011" />
-		<PackageReference Include="A2v10.Identity.UI" Version="10.1.8014" />
+		<PackageReference Include="A2v10.Identity.UI" Version="10.1.8015" />
 		<PackageReference Include="A2v10.ViewEngine.Xaml" Version="10.1.8012" />
 	</ItemGroup>
 

@@ -38,9 +38,10 @@ namespace A2v10.Core.Web.Mvc
 		private readonly IAppCodeProvider _codeProvider;
 		private readonly ILocalizer _localizer;
 		private readonly IUserLocale _userLocale;
+		private readonly IAppVersion _appVersion;
 
 		public ShellController(IDbContext dbContext, IApplicationHost host, IUserStateManager userStateManager, IProfiler profiler,
-			IAppCodeProvider codeProvider, ILocalizer localizer, IUserLocale userLocale)
+			IAppCodeProvider codeProvider, ILocalizer localizer, IUserLocale userLocale, IAppVersion appVersion)
 		{
 			_host = host;
 			_dbContext = dbContext;
@@ -49,6 +50,7 @@ namespace A2v10.Core.Web.Mvc
 			_localizer = localizer;
 			_userLocale = userLocale;
 			_userStateManager = userStateManager;
+			_appVersion = appVersion;
 		}
 
 		Int64 UserId => User.Identity.GetUserId<Int64>();
@@ -136,7 +138,7 @@ namespace A2v10.Core.Web.Mvc
 
 			_ = macros.Append(new Dictionary<String, Object>
 			{
-				{ "AppVersion", _host.AppVersion },
+				{ "AppVersion", _appVersion.AppVersion },
 				{ "Admin", bAdmin ? "true" : "false" },
 				{ "TenantAdmin", userInfo.IsTenantAdmin ? "true" : "false" },
 				{ "Debug", IsDebugConfiguration ? "true" : "false" },
@@ -278,9 +280,9 @@ namespace A2v10.Core.Web.Mvc
 
 			ExpandoObject defAppData = new()
 			{
-				{ "version", _host.AppVersion },
+				{ "version", _appVersion.AppVersion },
 				{ "title", "A2v10.Core Web Application" },
-				{ "copyright", _host.Copyright }
+				{ "copyright", _appVersion.Copyright }
 			};
 			return JsonConvert.SerializeObject(defAppData);
 		}

@@ -33,8 +33,6 @@ namespace A2v10.Core.Web.Mvc.Controllers
 				Debug = _appConfiguration.Debug,
 				HelpUrl = "http://TODO/HELP_URL"
 			};
-			ViewBag.__Locale = _userLocale.Language;
-			ViewBag.__Build = 8000; // TODO: Build Value
 			ViewBag.__Minify = "min.";
 			ViewBag.__Theme = "classic";
 
