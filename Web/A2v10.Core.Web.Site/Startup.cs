@@ -65,7 +65,6 @@ namespace A2v10.Core.Web.Site
 			services.AddScoped<IDataService, DataService>();
 			services.AddScoped<IModelJsonReader, ModelJsonReader>();
 			services.AddScoped<IReportService, ReportService>();
-
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

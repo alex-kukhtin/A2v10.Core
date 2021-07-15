@@ -47,6 +47,7 @@ namespace A2v10.Web.Identity.UI
 
 
 		[HttpGet]
+		[HttpPost]
 		public async Task<IActionResult> Logout()
 		{
 			await _signInManager.SignOutAsync();
@@ -56,6 +57,7 @@ namespace A2v10.Web.Identity.UI
 		}
 
 		[HttpGet]
+		[HttpPost]
 		public Task<IActionResult> Logoff()
 		{
 			return Logout();
