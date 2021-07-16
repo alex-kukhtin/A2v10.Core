@@ -1,12 +1,9 @@
+// Copyright © 2020-2021 Alex Kukhtin. All rights reserved.
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-
-using A2v10.Core.Web.Mvc;
-using A2v10.ViewEngine.Xaml;
 
 namespace A2v10.SampleApp
 {
@@ -19,45 +16,14 @@ namespace A2v10.SampleApp
 
 		public IConfiguration Configuration { get; }
 
-		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services)
 		{
-			var builder = services.AddPlatformCore()
-			.AddDefaultIdentityUI();
-
-			services.AddPlatformIdentityCore()
-			.AddPlatformAuthentication();
-
-			services.AddSqlServerStorage();
-
-			services.AddViewEngines(x =>
-			{
-				x.RegisterEngine<XamlViewEngine>(".xaml");
-			});
+			services.UsePlatform(Configuration);
 		}
 
-		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
 		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 		{
-			if (env.IsDevelopment())
-			{
-				app.UseDeveloperExceptionPage();
-			}
-			else
-			{
-				app.UseExceptionHandler("/Error");
-			}
-
-			app.UseStaticFiles();
-			app.UseRouting();
-
-			app.UseAuthorization();
-			app.UseAuthentication();
-
-			app.UseEndpoints(endpoints =>
-			{
-				endpoints.MapControllers();
-			});
+			app.ConfigurePlatform(env);
 		}
 	}
 }

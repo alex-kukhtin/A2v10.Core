@@ -1,0 +1,51 @@
+﻿@{
+	Layout = "_Layout";
+}
+@model MainViewModel
+@inject ILocalizer localizer
+@inject IApplicationHost host
+
+<div id="shell" class="shell @(Model.Debug ? "debug" : "release")" v-cloak>
+	<a2-app-header :title="title" :subtitle="subtitle" :user-state=userState :single-page=singlePage
+				   :menu=menu :new-menu=newMenu :settings-menu=settingsMenu :app-data="appData"
+				   person-name="@Model.PersonName" :user-is-admin="userIsAdmin" :show-feedback="showFeedback"
+				   :feedback-visible="feedbackVisible" :change-password="changePassword" :nav-bar-mode=navBarMode>
+		@if (host.IsMultiCompany)
+		{
+			<a2-company-button :source="companies.menu" :links="companies.links"></a2-company-button>
+		}
+	</a2-app-header>
+	<a2-main-view :menu="menu" :side-bar-mode="sideBarMode" :nav-bar-mode=navBarMode :period="globalPeriod" :pages="pages" :title="title"></a2-main-view>
+	<a2-debug :model-stack="modelStack" :model-visible="debugShowModel" v-if="isDebug"
+			  :trace-visible="debugShowTrace" :counter="dataCounter" :close="debugClose"></a2-debug>
+	<a2-feedback v-if="hasFeedback" :model-stack="modelStack" :visible="feedbackVisible" :close="feedbackClose" :source="feedback"></a2-feedback>
+	<footer class="footer">
+		<div :class="{spinner: true, active:processing}"></div>
+
+		<span class="divider"></span>
+
+		<div class="app-links">
+			<a href="/app/about" v-on:click.prevent="about" tabindex="-1">@localizer.Localize(null, "@[About]")</a>
+			<a v-for="(lnk, lx) in appLinks" :href="lnk.url" :key="lx" v-on:click.prevent="appLink(lnk)" tabindex="-1" v-text="lnk.title"></a>
+		</div>
+
+		<span class="divider"></span>
+
+		<span class="version-info">
+			@localizer.Localize(null, "@[Version]") <span v-text="version"></span>
+		</span>
+		<div class="debug-btn dropdown dir-up" v-dropdown v-if="isDebug">
+			<button class="btn btn-debug" toggle>@localizer.Localize(null, "@[Debug]")<span class="caret up"></span></button>
+			<div class="dropdown-menu menu up-left">
+				<a v-on:click.prevent="debugModel" class="dropdown-item" tabindex="-1"><i class="ico ico-database"></i> @localizer.Localize(null, "@[DataModel]")</a>
+				<a v-on:click.prevent="debugTrace" class="dropdown-item" tabindex="-1"><i class="ico ico-chart-stacked-line"></i> @localizer.Localize(null, "@[Profiling]")</a>
+				<div class="divider"></div>
+				<label class="checkbox">
+					<input type="checkbox" v-model="traceEnabled" />
+					<span>@localizer.Localize(null, "@[Tracing]")</span>
+				</label>
+			</div>
+		</div>
+	</footer>
+	<a2-iframe-target></a2-iframe-target>
+</div>

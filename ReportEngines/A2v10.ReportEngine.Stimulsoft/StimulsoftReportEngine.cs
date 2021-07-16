@@ -10,6 +10,7 @@ using Stimulsoft.Report.Mvc;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using Stimulsoft.Base;
+using Microsoft.Extensions.Configuration;
 
 namespace A2v10.ReportEngine.Stimulsoft
 {
@@ -22,9 +23,6 @@ namespace A2v10.ReportEngine.Stimulsoft
 		{
 			_appCodeProvider = appCodeProvider;
 			_userStateManager = userStateManager;
-			String lic = "";
-			if (!String.IsNullOrEmpty(lic))
-				StiLicense.LoadFromString(lic);
 		}
 
 		internal StiReport CreateReport(IReportInfo reportInfo)

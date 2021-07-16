@@ -1,0 +1,75 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+	  <Version>10.1.8021</Version>
+	  <Product>A2v10</Product>
+	  <PackageId>A2v10.Plaform</PackageId>
+	  <Authors>Oleksandr Kukthin</Authors>
+	  <Company>Oleksandr Kukthin</Company>
+	  <Description>A2v10 Platform core</Description>
+	  <Copyright>Copyright © 2015-2021 Oleksandr Kukthin. All rights reserved.</Copyright>
+	  <RepositoryType>github</RepositoryType>
+	  <PackageTags>A2v10 Platform</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="wwwroot\css\classic.css" />
+    <None Remove="wwwroot\css\classic.min.css" />
+    <None Remove="wwwroot\css\fonts\A2v10.eot" />
+    <None Remove="wwwroot\css\fonts\A2v10.svg" />
+    <None Remove="wwwroot\css\fonts\A2v10.ttf" />
+    <None Remove="wwwroot\css\fonts\A2v10.woff" />
+    <None Remove="wwwroot\css\fonts\A2v10.woff2" />
+    <None Remove="wwwroot\localization\default.de.txt" />
+    <None Remove="wwwroot\localization\default.en.txt" />
+    <None Remove="wwwroot\localization\default.ru.txt" />
+    <None Remove="wwwroot\localization\default.uk.txt" />
+    <None Remove="wwwroot\scripts\d3.min.js" />
+    <None Remove="wwwroot\scripts\locale-de.min.js" />
+    <None Remove="wwwroot\scripts\locale-en.min.js" />
+    <None Remove="wwwroot\scripts\locale-ru.min.js" />
+    <None Remove="wwwroot\scripts\locale-uk.min.js" />
+    <None Remove="wwwroot\scripts\main.js" />
+    <None Remove="wwwroot\scripts\vue.min.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="wwwroot\css\classic.css" />
+    <Content Include="wwwroot\css\classic.min.css" />
+    <Content Include="wwwroot\css\fonts\A2v10.eot" />
+    <Content Include="wwwroot\css\fonts\A2v10.svg" />
+    <Content Include="wwwroot\css\fonts\A2v10.ttf" />
+    <Content Include="wwwroot\css\fonts\A2v10.woff" />
+    <Content Include="wwwroot\css\fonts\A2v10.woff2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="wwwroot\localization\default.de.txt" />
+    <Content Include="wwwroot\localization\default.en.txt" />
+    <Content Include="wwwroot\localization\default.ru.txt" />
+    <Content Include="wwwroot\localization\default.uk.txt" />
+    <Content Include="wwwroot\scripts\d3.min.js" />
+    <Content Include="wwwroot\scripts\locale-de.min.js" />
+    <Content Include="wwwroot\scripts\locale-en.min.js" />
+    <Content Include="wwwroot\scripts\locale-ru.min.js" />
+    <Content Include="wwwroot\scripts\locale-uk.min.js" />
+    <Content Include="wwwroot\scripts\main.js" />
+    <Content Include="wwwroot\scripts\vue.min.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Identity\A2v10.Identity.Core\A2v10.Identity.Core.csproj" />
+    <ProjectReference Include="..\..\Identity\A2v10.Web.Identity.UI\A2v10.Web.Identity.UI.csproj" />
+    <ProjectReference Include="..\..\ReportEngines\A2v10.ReportEngine.Stimulsoft\A2v10.ReportEngine.Stimulsoft.csproj" />
+    <ProjectReference Include="..\..\Storage\A2v10.Storage.SqlServer\A2v10.Storage.SqlServer.csproj" />
+    <ProjectReference Include="..\..\ViewEngines\A2v10.ViewEngine.Xaml\A2v10.ViewEngine.Xaml.csproj" />
+    <ProjectReference Include="..\A2v10.Platform.Web\A2v10.Platform.Web.csproj" />
+    <ProjectReference Include="..\A2v10.Services\A2v10.Services.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+
+</Project>

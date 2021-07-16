@@ -4,7 +4,7 @@
 		<AddRazorSupportForMvc>true</AddRazorSupportForMvc>
 		<AssemblyName>A2v10.ReportEngine.Stimulsoft</AssemblyName>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		<Version>10.1.8015</Version>
+		<Version>10.1.8020</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.ReportEngine.Stimulsoft</PackageId>
 		<Authors>Alex Kukthin</Authors>
@@ -15,9 +15,6 @@
 		<PackageTags>A2v10 Reports Stimulsoft</PackageTags>
 		<EnableDefaultContentItems>False</EnableDefaultContentItems>
 	</PropertyGroup>
-	<ItemGroup>
-	  <None Remove="StimulsoftReportEngine.cs~RF44de30.TMP" />
-	</ItemGroup>
 
 	<ItemGroup>
 		<Content Include="Views\Stimulsoft\Show.cshtml">

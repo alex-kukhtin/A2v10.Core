@@ -2,16 +2,11 @@
 
 	<PropertyGroup>
 		<TargetFramework>net5.0</TargetFramework>
+		<UserSecretsId>026c35e2-9db2-463c-8431-b202b1a68b5e</UserSecretsId>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Storage.SqlServer" Version="10.1.8011" />
-		<PackageReference Include="A2v10.Identity.UI" Version="10.1.8015" />
-		<PackageReference Include="A2v10.ViewEngine.Xaml" Version="10.1.8012" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <ProjectReference Include="..\Web\A2v10.Core.Web.Mvc\A2v10.Core.Web.Mvc.csproj" />
+	  <PackageReference Include="A2v10.Plaform" Version="10.1.8021" />
 	</ItemGroup>
 
 	<!--

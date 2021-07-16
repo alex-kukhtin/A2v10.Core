@@ -33,7 +33,6 @@ namespace Microsoft.Extensions.DependencyInjection
 			services.AddSingleton<IAppCodeProvider, FileSystemCodeProvider>();
 
 			services.AddScoped<WebApplicationHost>();
-			services.AddSingleton<IAppVersion, WebAppVersion>();
 
 			services.AddScoped<IUserLocale, WebUserLocale>()
 				.AddScoped<WebLocalizer>()

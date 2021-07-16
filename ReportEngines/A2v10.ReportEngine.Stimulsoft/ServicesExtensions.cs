@@ -3,9 +3,7 @@
 using Microsoft.Extensions.DependencyInjection;
 
 using A2v10.ReportEngine.Stimulsoft.Controllers;
-using Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation;
-using Microsoft.Extensions.FileProviders;
-using Microsoft.AspNetCore.Mvc.ApplicationParts;
+using Microsoft.Extensions.Configuration;
 
 namespace A2v10.ReportEngine.Stimulsoft
 {
@@ -17,13 +15,13 @@ namespace A2v10.ReportEngine.Stimulsoft
 
 			builder.AddApplicationPart(assembly);
 
-			/*
-			builder.Services.Configure<MvcRazorRuntimeCompilationOptions>(opts => {
-				opts.FileProviders.Add(new EmbeddedFileProvider(assembly));
-			});
-			*/
-
 			return builder;
+		}
+
+		public static IServiceCollection AddStimulsoftLicense(this IServiceCollection services, IConfiguration config)
+		{
+			StimulsoftLicenseManager.SetLicense(config);
+			return services;
 		}
 	}
 }

@@ -5,7 +5,7 @@
 		<AddRazorSupportForMvc>true</AddRazorSupportForMvc>
 		<Version>10.1.8012</Version>
 		<Product>A2v10</Product>
-		<PackageId>A2v10.Plaform</PackageId>
+		<PackageId>A2v10.Plaform.Test</PackageId>
 		<Authors>Alex Kukthin</Authors>
 		<Company>Alex Kukthin</Company>
 		<Description>A2v10 Platform core</Description>
