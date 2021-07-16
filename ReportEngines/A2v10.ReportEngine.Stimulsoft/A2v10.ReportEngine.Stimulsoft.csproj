@@ -4,7 +4,7 @@
 		<AddRazorSupportForMvc>true</AddRazorSupportForMvc>
 		<AssemblyName>A2v10.ReportEngine.Stimulsoft</AssemblyName>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		<Version>10.1.8014</Version>
+		<Version>10.1.8015</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.ReportEngine.Stimulsoft</PackageId>
 		<Authors>Alex Kukthin</Authors>
@@ -32,8 +32,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7265" />
-		<PackageReference Include="Stimulsoft.Reports.Web.NetCore" Version="2021.3.4" />
-		<PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="5.0.7" />
+		<PackageReference Include="Stimulsoft.Reports.Web.NetCore" Version="2021.3.5" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="5.0.8" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.TagHelpers" Version="2.2.0" />
 	</ItemGroup>
 
