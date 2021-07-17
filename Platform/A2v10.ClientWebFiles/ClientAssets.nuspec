@@ -1,0 +1,24 @@
+﻿<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata>
+		<id>A2v10.Web.Assets</id>
+		<version>10.1.8032</version>
+		<title>A2v10.Platform Client WebFiles</title>
+		<authors>Oleksandr Kukthin</authors>
+		<owners>Oleksandr Kukthin</owners>
+		<projectUrl>https://a2v10.com</projectUrl>
+		<requireLicenseAcceptance>false</requireLicenseAcceptance>
+		<description>A2v10 Platform (Client Web Files)</description>
+		<releaseNotes>Current NUGET release</releaseNotes>
+		<copyright>Copyright © 2020-2021 Oleksandr Kukthin. All rights reserved.</copyright>
+		<tags>A2v10 Platform</tags>
+		<repository type="git" url="https://github.com/alex-kukhtin/A2v10.Core" branch="master"/>
+		<contentFiles>
+			<files include="**/*" buildAction="Content"/>
+		</contentFiles>
+	</metadata>
+	<files>
+		<file src="A2v10.Web.Assets.targets" target="build/A2v10.Web.Assets.targets" />
+		<file src="wwwroot/**/*" target="content/assets"/>
+	</files>
+</package>

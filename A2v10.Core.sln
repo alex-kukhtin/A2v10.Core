@@ -46,6 +46,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "A2v10.Services", "Platform\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "A2v10.Platform.Web", "Platform\A2v10.Platform.Web\A2v10.Platform.Web.csproj", "{721A74D2-0391-4863-ABA8-5CA386732B36}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ClientAssets", "ClientAssets", "{80E326BE-2F62-4C0E-97F7-81FB662D9EAA}"
+	ProjectSection(SolutionItems) = preProject
+		Platform\A2v10.ClientWebFiles\A2v10.Web.Assets.targets = Platform\A2v10.ClientWebFiles\A2v10.Web.Assets.targets
+		Platform\A2v10.ClientWebFiles\ClientAssets.nuspec = Platform\A2v10.ClientWebFiles\ClientAssets.nuspec
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -121,6 +127,7 @@ Global
 		{D9A67550-9494-467C-B3E7-A6FF319EE8ED} = {FAC17E50-040A-4C01-A4DC-DC21B61DA444}
 		{603926E4-F656-459C-92A3-B7354BF952FA} = {FAC17E50-040A-4C01-A4DC-DC21B61DA444}
 		{721A74D2-0391-4863-ABA8-5CA386732B36} = {FAC17E50-040A-4C01-A4DC-DC21B61DA444}
+		{80E326BE-2F62-4C0E-97F7-81FB662D9EAA} = {FAC17E50-040A-4C01-A4DC-DC21B61DA444}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D64A03C5-D2E1-49C8-A7A9-D6022941DE01}

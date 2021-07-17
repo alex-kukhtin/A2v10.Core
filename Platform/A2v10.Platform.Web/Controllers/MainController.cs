@@ -24,7 +24,8 @@ namespace A2v10.Platform.Web.Controllers
 			_userLocale = userLocale;
 		}
 
-		[Route("{*pathInfo}")]
+		[Route("")]
+		[HttpGet("{pathInfo?}")]
 		public IActionResult Default(String pathInfo)
 		{
 			var viewModel = new MainViewModel()

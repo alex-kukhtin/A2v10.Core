@@ -6,14 +6,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="A2v10.Plaform" Version="10.1.8021" />
+	  <Folder Include="wwwroot\" />
 	</ItemGroup>
 
-	<!--
 	<ItemGroup>
-		<ProjectReference Include="..\Identity\A2v10.Web.Identity.UI\A2v10.Web.Identity.UI.csproj" />
-		<ProjectReference Include="..\Web\A2v10.Core.Web.Mvc\A2v10.Core.Web.Mvc.csproj" />
+	  <PackageReference Include="A2v10.Web.Assets" Version="10.1.8032" />
 	</ItemGroup>
-	-->
 
 </Project>
