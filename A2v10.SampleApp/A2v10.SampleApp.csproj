@@ -10,7 +10,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="A2v10.Web.Assets" Version="10.1.8032" />
+	  <PackageReference Include="A2v10.Plaform" Version="10.1.8033" />
 	</ItemGroup>
 
 </Project>

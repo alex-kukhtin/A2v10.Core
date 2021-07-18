@@ -4,11 +4,11 @@
     <TargetFramework>net5.0</TargetFramework>
 	  <AssemblyName>A2v10.Infrastructure</AssemblyName>
 	  <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-	  <Version>10.1.8023</Version>
+	  <Version>10.1.8033</Version>
 	  <Product>A2v10</Product>
 	  <PackageId>A2v10.Infrastructure</PackageId>
-	  <Authors>Alex Kukthin</Authors>
-	  <Company>Alex Kukthin</Company>
+	  <Authors>Oleksandr Kukhtin</Authors>
+	  <Company>Oleksandr Kukhtin</Company>
 	  <Description>A2v10 Platform Abstractions</Description>
 	  <Copyright>Copyright © 2015-2021 Oleksandr Kukhtin. All rights reserved.</Copyright>
 	  <RepositoryType>github</RepositoryType>

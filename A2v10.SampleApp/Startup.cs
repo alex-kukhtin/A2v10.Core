@@ -18,13 +18,13 @@ namespace A2v10.SampleApp
 
 		public void ConfigureServices(IServiceCollection services)
 		{
-			//services.UsePlatform(Configuration);
+			services.UsePlatform(Configuration);
 
 		}
 
 		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 		{
-			//app.ConfigurePlatform(env);
+			app.ConfigurePlatform(env);
 		}
 	}
 }

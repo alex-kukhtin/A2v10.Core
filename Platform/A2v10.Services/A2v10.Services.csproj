@@ -4,7 +4,7 @@
     <TargetFramework>net5.0</TargetFramework>
 	  <AssemblyName>A2v10.Services</AssemblyName>
 	  <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-	  <Version>10.1.8023</Version>
+	  <Version>10.1.8033</Version>
 	  <Product>A2v10</Product>
 	  <PackageId>A2v10.Services</PackageId>
 	  <Authors>Oleksandr Kukhtin</Authors>

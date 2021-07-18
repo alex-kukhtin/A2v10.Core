@@ -4,7 +4,7 @@
 		<AddRazorSupportForMvc>true</AddRazorSupportForMvc>
 		<AssemblyName>A2v10.ReportEngine.Stimulsoft</AssemblyName>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		<Version>10.1.8023</Version>
+		<Version>10.1.8033</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.ReportEngine.Stimulsoft</PackageId>
 		<Authors>Alex Kukthin</Authors>
