@@ -15,15 +15,16 @@ using A2v10.Web.Identity;
 namespace A2v10.Platform.Web
 {
 
-	public class BaseController : Controller, IControllerProfiler, IControllerTenant, IControllerAdmin, IControllerLocale
+	public class BaseController : Controller, IControllerProfiler, IControllerLocale
 	{
 		protected readonly IApplicationHost _host;
 		protected readonly ILocalizer _localizer;
 		protected readonly IUserStateManager _userStateManager;
 		protected readonly IProfiler _profiler;
 		protected readonly IUserLocale _userLocale;
+		protected readonly ICurrentUser _currentUser;
 
-		public BaseController(IApplicationHost host, ILocalizer localizer, IUserStateManager userStateManager, IProfiler profiler, IUserLocale userLocale)
+		public BaseController(IApplicationHost host, ILocalizer localizer, ICurrentUser currentUser, IUserStateManager userStateManager, IProfiler profiler, IUserLocale userLocale)
 		{
 			_host = host ?? throw new ArgumentNullException(nameof(host));
 			_localizer = localizer ?? throw new ArgumentNullException(nameof(localizer));
@@ -31,12 +32,12 @@ namespace A2v10.Platform.Web
 			_profiler = profiler ?? throw new ArgumentNullException(nameof(profiler));
 			_userLocale = userLocale ?? throw new ArgumentNullException(nameof(userLocale));
 			_profiler.Enabled = _host.IsDebugConfiguration;
+			_currentUser = currentUser;
 		}
 
-		protected Int64 UserId => User.Identity.GetUserId<Int64>();
-		protected Int32 TenantId => User.Identity.GetUserTenantId();
-		protected String UserSegement => User.Identity.GetUserSegment();
-		Int64 CompanyId => _userStateManager.UserCompanyId(TenantId, UserId); 
+		protected Int64? UserId => _currentUser.Identity.Id; // User.Identity.GetUserId<Int64>();
+		protected Int32? TenantId => _currentUser.Identity.Tenant; //  User.Identity.GetUserTenantId();
+		protected Int64? CompanyId => _currentUser.State.Company; // _userStateManager.UserCompanyId(TenantId, UserId); 
 
 		protected void SetSqlQueryParamsWithoutCompany(ExpandoObject prms)
 		{
@@ -122,23 +123,6 @@ namespace A2v10.Platform.Web
 		public void EndRequest(IProfileRequest request)
 		{
 			_profiler.EndRequest(request);
-		}
-		#endregion
-
-		#region IControllerTenant
-
-		public void StartTenant()
-		{
-			_host.TenantId = TenantId;
-			_host.UserId = UserId;
-			_host.UserSegment = UserSegement;
-		}
-		#endregion
-
-		#region IControllerAdmin
-		public void SetAdmin()
-		{
-			_userStateManager.SetAdmin();
 		}
 		#endregion
 

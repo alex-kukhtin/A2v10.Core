@@ -1,5 +1,6 @@
 ﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
+using A2v10.Infrastructure;
 using System;
 using System.Globalization;
 using System.Security.Claims;
@@ -18,7 +19,12 @@ namespace A2v10.Web.Identity
 			var claim = user?.FindFirst(WellKnownClims.NameIdentifier)?.Value;
 			if (claim == null)
 				return default;
-			return (T)Convert.ChangeType(claim, typeof(T), CultureInfo.InvariantCulture);
+			var tp = typeof(T);
+			if (tp.IsNullableType())
+			{
+				tp = Nullable.GetUnderlyingType(tp);
+			}
+			return (T) Convert.ChangeType(claim, tp, CultureInfo.InvariantCulture);
 		}
 
 		public static String GetUserClaim(this IIdentity identity, String claim)
@@ -54,22 +60,24 @@ namespace A2v10.Web.Identity
 		{
 			if (identity is not ClaimsIdentity user)
 				return false;
-			var value = user.FindFirst(WellKnownClims.TenantAdmin).Value;
+			var value = user.FindFirst(WellKnownClims.TenantAdmin)?.Value;
+			if (value == null)
+				return false;
 			return value == WellKnownClims.TenantAdmin;
 		}
 
-		public static Int32 GetUserTenantId(this IIdentity identity)
+		public static Int32? GetUserTenantId(this IIdentity identity)
 		{
 			if (identity == null)
-				return 0;
+				return null;
 			if (identity is not ClaimsIdentity user)
-				return 0;
+				return null;
 			var value = user.FindFirst(WellKnownClims.TenantId)?.Value;
 			if (value == null)
-				return 0;
+				return null;
 			if (Int32.TryParse(value, out Int32 tenantId))
 				return tenantId;
-			return 0;
+			return null;
 		}
 
 		public static String GetUserSegment(this IIdentity identity)

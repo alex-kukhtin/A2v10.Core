@@ -1,18 +1,17 @@
-A2v10.Platform
+*A2v10.Platform (8033)
 	A2v10.Web.Assets (8033)
-	A2v10.Identity.Core (8011)
-	A2v10.Web.Identity.UI (8016)
-	A2v10.Infrastructure (8033)
-	A2v10.ReportEngine.Stimulsoft
+	*A2v10.Identity.Core (8011)
+	*A2v10.Infrastructure (8033)
+	*A2v10.ReportEngine.Stimulsoft
 		A2v10.Infrastructure (8033)
 	A2v10.Storage.SqlServer (8011)
 	A2v10.ViewEngine.Xaml (8033)
 		A2v10.System.Xaml (8007)
 		A2v10.Infrastructure (8033)
-	A2v10.Platform.Web (8033)
+	*A2v10.Platform.Web (8033)
 		A2v10.Identity.Core (8011)
 		A2v10.Infrastructure (8033)
-	A2v10.Services
+	*A2v10.Services
 		A2v10.Infrastructure (8033)
 		A2v10.Platform.Web (8033)
 	A2v10.Identity.UI (8016)

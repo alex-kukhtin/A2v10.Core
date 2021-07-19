@@ -13,14 +13,14 @@ namespace A2v10.Services
 	public class ModelJsonReader : IModelJsonReader
 	{
 		private readonly IAppCodeProvider _appCodeProvider;
-		private readonly IUserStateManager _userStateManager;
+		private readonly ICurrentUser _currentUser;
 
 		private readonly RedirectModule _redirect;
 
-		public ModelJsonReader(IAppCodeProvider appCodeProvider, IAppConfiguration appConig, IUserStateManager userStateManager)
+		public ModelJsonReader(IAppCodeProvider appCodeProvider, IAppConfiguration appConig, ICurrentUser currentUser)
 		{
 			_appCodeProvider = appCodeProvider;
-			_userStateManager = userStateManager;
+			_currentUser = currentUser;
 			var redPath = _appCodeProvider.MakeFullPath(String.Empty, "redirect.json", false);
 			if (appCodeProvider.FileExists(redPath))
 				_redirect = new RedirectModule(redPath, appConig.Watch);
@@ -64,7 +64,7 @@ namespace A2v10.Services
 		{
 			var localPath = _redirect?.Redirect(url.LocalPath);
 			url.Redirect(localPath);
-			String json = await _appCodeProvider.ReadTextFileAsync(url.LocalPath, "model.json", _userStateManager.IsAdmin);
+			String json = await _appCodeProvider.ReadTextFileAsync(url.LocalPath, "model.json", _currentUser.IsAdminApplication);
 			var rm = JsonConvert.DeserializeObject<ModelJson>(json, JsonHelpers.CamelCaseSerializerSettings);
 			rm.OnEndInit(url);
 			return rm;

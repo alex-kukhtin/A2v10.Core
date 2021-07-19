@@ -25,9 +25,9 @@ namespace A2v10.Platform.Web.Controllers
 		private readonly IAppCodeProvider _appCodeProvider;
 
 		public ImageController(IApplicationHost host,
-			ILocalizer localizer, IUserStateManager userStateManager, IProfiler profiler, 
+			ILocalizer localizer, ICurrentUser currentUser, IUserStateManager userStateManager, IProfiler profiler, 
 			IDataService dataService, ITokenProvider tokenProvider, IAppCodeProvider appCodeProvider, IUserLocale userLocale)
-			: base(host, localizer, userStateManager, profiler, userLocale)
+			: base(host, localizer, currentUser, userStateManager, profiler, userLocale)
 		{
 			_dataService = dataService;
 			_tokenProvider = tokenProvider;
@@ -67,7 +67,7 @@ namespace A2v10.Platform.Web.Controllers
 				if (String.IsNullOrEmpty(pathInfo))
 					throw new ArgumentOutOfRangeException(nameof(pathInfo), nameof(StaticImage));
 				pathInfo = pathInfo.Replace('-', '.');
-				var fullPath = _appCodeProvider.MakeFullPath(pathInfo, String.Empty, _userStateManager.IsAdmin);
+				var fullPath = _appCodeProvider.MakeFullPath(pathInfo, String.Empty, _currentUser.IsAdminApplication);
 				if (!_appCodeProvider.FileExists(fullPath))
 					throw new FileNotFoundException($"File not found '{pathInfo}'");
 

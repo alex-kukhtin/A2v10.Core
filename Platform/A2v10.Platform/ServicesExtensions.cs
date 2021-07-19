@@ -9,7 +9,7 @@ using A2v10.Infrastructure;
 using A2v10.ReportEngine.Stimulsoft;
 using A2v10.Services;
 using A2v10.ViewEngine.Xaml;
-
+using A2v10.Platform.Web;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -78,6 +78,17 @@ namespace Microsoft.Extensions.DependencyInjection
 			app.UseAuthentication();
 			app.UseAuthorization();
 			app.UseSession();
+
+
+			app.UseMiddleware<CurrentUserMiddleware>();
+			/*
+			app.Use(async (context, next) =>
+			{
+				//var scope = context.RequestServices.CreateScope();
+				var identity = context.User.Identity;
+				await next.Invoke();
+			});
+			*/
 
 			app.UseEndpoints(endpoints =>
 			{

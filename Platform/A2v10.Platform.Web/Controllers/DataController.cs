@@ -24,8 +24,8 @@ namespace A2v10.Platform.Web.Controllers
 		private readonly IDataService _dataService;
 
 		public DataController(IApplicationHost host,
-			ILocalizer localizer, IUserStateManager userStateManager, IProfiler profiler, IDataService dataService, IUserLocale userLocale)
-			: base(host, localizer, userStateManager, profiler, userLocale)
+			ILocalizer localizer, ICurrentUser currentUser, IUserStateManager userStateManager, IProfiler profiler, IDataService dataService, IUserLocale userLocale)
+			: base(host, localizer, currentUser, userStateManager, profiler, userLocale)
 		{
 			_dataService = dataService;
 		}

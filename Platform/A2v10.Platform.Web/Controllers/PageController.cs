@@ -25,13 +25,13 @@ namespace A2v10.Platform.Web.Controllers
 		private readonly IViewEngineProvider _viewEngineProvider;
 
 		public PageController(IApplicationHost host, IAppCodeProvider codeProvider,
-			ILocalizer localizer, IUserStateManager userStateManager, IProfiler profiler,
+			ILocalizer localizer, ICurrentUser currentUser, IUserStateManager userStateManager, IProfiler profiler,
 			IDataService dataService, IViewEngineProvider viewEngineProvider, IUserLocale userLocale)
-			: base(host, localizer, userStateManager, profiler, userLocale)
+			: base(host, localizer, currentUser, userStateManager, profiler, userLocale)
 		{
 			_dataService = dataService;
 			_codeProvider = codeProvider;
-			_scripter = new VueDataScripter(host, codeProvider, _localizer, userStateManager);
+			_scripter = new VueDataScripter(host, codeProvider, _localizer, currentUser);
 			_viewEngineProvider = viewEngineProvider;
 		}
 
@@ -104,7 +104,7 @@ namespace A2v10.Platform.Web.Controllers
 
 			var si = await _scripter.GetModelScript(msi);
 
-			var viewName = _codeProvider.MakeFullPath(rw.Path, rw.GetView(_host.Mobile), _userStateManager.IsAdmin);
+			var viewName = _codeProvider.MakeFullPath(rw.Path, rw.GetView(_host.Mobile), _currentUser.IsAdminApplication);
 			var viewEngine = _viewEngineProvider.FindViewEngine(viewName);
 
 			// render XAML
@@ -119,7 +119,7 @@ namespace A2v10.Platform.Web.Controllers
 				CurrentLocale = null,
 				IsDebugConfiguration = _host.IsDebugConfiguration,
 				SecondPhase = secondPhase,
-				Admin = _userStateManager.IsAdmin
+				Admin = _currentUser.IsAdminApplication
 			};
 
 			var result = await viewEngine.Engine.RenderAsync(ri);

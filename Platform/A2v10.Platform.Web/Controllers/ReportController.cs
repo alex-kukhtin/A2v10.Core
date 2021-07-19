@@ -22,8 +22,8 @@ namespace A2v10.Platform.Web.Controllers
 		private readonly IReportService _reportService;
 
 		public ReportController(IApplicationHost host,
-			ILocalizer localizer, IUserStateManager userStateManager, IProfiler profiler, IReportService reportService, IUserLocale userLocale)
-			: base(host, localizer, userStateManager, profiler, userLocale)
+			ILocalizer localizer, ICurrentUser currentUser, IUserStateManager userStateManager, IProfiler profiler, IReportService reportService, IUserLocale userLocale)
+			: base(host, localizer, currentUser, userStateManager, profiler, userLocale)
 		{
 			_reportService = reportService;
 		}

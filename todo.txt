@@ -1,7 +1,10 @@
-﻿== TODO: Packages
+﻿== TODO: Architecture
+1. IModelJsonReader, IPlatformUrl в A2v10.Services
+2. IControllerLocale - убрать.
+3. IUserStateManager, IUserLocale - убрать
+
+== TODO: Packages
 ============================
-1. Identity UI в отдельную сборку
-2. Services
 
 
 == TODO: A2v10.Core Platform
@@ -18,7 +21,6 @@
 23. DataService.Load Merge
 
 24. UserStore. UpdateUser
-26. Не работает app/about. Только после F5.
 
 31. DataController. ExportTo (Export to Excel)
 36. AttachmentController
@@ -26,7 +28,6 @@
 38. ImageController.SaveImage
 40. LoadImage from Azure
 42. DataController.Invoke XML
-44. ReportController.Viewer
 46. ExportController
 47. AppLinks
 49. Убрать ViewBag.___
@@ -37,7 +38,6 @@
 55. Admin - Button on main interface
 56. _shell/script - exception - странное поведение
 
--- ReportEngine
 60. BaseController в отдельную сборку (SetParams, Filter, IControllerTenant)
 61. SetParams for StimulsoftController
 62. QueryString StimulsoftController

@@ -52,6 +52,12 @@ namespace Microsoft.Extensions.DependencyInjection
 
 			services.AddScoped<ITokenProvider, WebTokenProvider>();
 
+			services.AddScoped<CurrentUser>();
+			services.AddScoped<ICurrentUser>(s =>
+			{
+				return s.GetService<CurrentUser>();
+			});
+
 			services.AddSession();
 
 			return builder;

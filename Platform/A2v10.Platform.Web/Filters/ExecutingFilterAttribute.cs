@@ -17,15 +17,6 @@ namespace A2v10.Platform.Web
 		{
 			base.OnActionExecuting(filterContext);
 			
-			if (filterContext.Controller is IControllerTenant iCtrlTenant)
-				iCtrlTenant.StartTenant();
-
-			if (filterContext.Controller is IControllerAdmin iCtrlAdmin)
-			{
-				if (filterContext.HttpContext.Request.Path.StartsWithSegments("/admin"))
-					iCtrlAdmin.SetAdmin();
-			}
-
 			if (filterContext.Controller is IControllerLocale iCtrlLocale)
 				iCtrlLocale.SetLocale();
 

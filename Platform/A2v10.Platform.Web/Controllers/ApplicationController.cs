@@ -28,8 +28,8 @@ namespace A2v10.Platform.Web.Controllers
 		private readonly IDbContext _dbContext;
 
 		public ApplicationController(IApplicationHost host,
-			ILocalizer localizer, IUserStateManager userStateManager, IProfiler profiler, IDbContext dbContext, IUserLocale userLocale)
-			: base(host, localizer, userStateManager, profiler, userLocale)
+			ILocalizer localizer, ICurrentUser currentUser, IUserStateManager userStateManager, IProfiler profiler, IDbContext dbContext, IUserLocale userLocale)
+			: base(host, localizer, currentUser, userStateManager, profiler, userLocale)
 		{
 			_dbContext = dbContext;
 		}
@@ -49,8 +49,8 @@ namespace A2v10.Platform.Web.Controllers
 				{
 					var saveModel = new SwitchToCompanySaveModel()
 					{
-						UserId = UserId,
-						TenantId = TenantId,
+						UserId = UserId.Value,
+						TenantId = TenantId.HasValue ? TenantId.Value : 0,
 						CompanyId = CompanyIdToSet
 					};
 					await _dbContext.ExecuteAsync<SwitchToCompanySaveModel>(null, "a2security_tenant.SwitchToCompany", saveModel);
@@ -59,7 +59,7 @@ namespace A2v10.Platform.Web.Controllers
 				{
 					var saveModel = new SwitchToCompanySaveModel()
 					{
-						UserId = UserId,
+						UserId = UserId.Value,
 						CompanyId = CompanyIdToSet
 					};
 					await _dbContext.ExecuteAsync<SwitchToCompanySaveModel>(null, "a2security.[User.SwitchToCompany]", saveModel);

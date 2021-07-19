@@ -34,13 +34,14 @@ namespace A2v10.Platform.Web
 		private readonly IApplicationHost _host;
 		private readonly IDbContext _dbContext;
 		private readonly IUserStateManager _userStateManager;
+		private readonly ICurrentUser _currentUser;
 		private readonly IProfiler _profiler;
 		private readonly IAppCodeProvider _codeProvider;
 		private readonly ILocalizer _localizer;
 		private readonly IUserLocale _userLocale;
 		private readonly IAppVersion _appVersion;
 
-		public ShellController(IDbContext dbContext, IApplicationHost host, IUserStateManager userStateManager, IProfiler profiler,
+		public ShellController(IDbContext dbContext, IApplicationHost host, ICurrentUser currentUser, IUserStateManager userStateManager, IProfiler profiler,
 			IAppCodeProvider codeProvider, ILocalizer localizer, IUserLocale userLocale, IAppVersion appVersion)
 		{
 			_host = host;
@@ -50,11 +51,12 @@ namespace A2v10.Platform.Web
 			_localizer = localizer;
 			_userLocale = userLocale;
 			_userStateManager = userStateManager;
+			_currentUser = currentUser;
 			_appVersion = appVersion;
 		}
 
-		Int64 UserId => User.Identity.GetUserId<Int64>();
-		Int32 TenantId => User.Identity.GetUserTenantId();
+		Int64? UserId => User.Identity.GetUserId<Int64?>();
+		Int32? TenantId => User.Identity.GetUserTenantId();
 
 		public Boolean IsDebugConfiguration => _host.IsDebugConfiguration;
 
@@ -120,8 +122,9 @@ namespace A2v10.Platform.Web
 
 		void SetSqlParams(ExpandoObject prms)
 		{
-			prms.Set("UserId", UserId);
-			if (_host.IsMultiTenant)
+			if (UserId.HasValue)
+				prms.Set("UserId", UserId.Value);
+			if (_host.IsMultiTenant && TenantId.HasValue)
 				prms.Set("TenantId", TenantId);
 		}
 
@@ -132,15 +135,13 @@ namespace A2v10.Platform.Web
 			ExpandoObject loadPrms = new();
 			SetSqlParams(loadPrms);
 
-			var userInfo = User.Identity.UserInfo();
-
 			var macros = new ExpandoObject();
 
 			_ = macros.Append(new Dictionary<String, Object>
 			{
 				{ "AppVersion", _appVersion.AppVersion },
 				{ "Admin", bAdmin ? "true" : "false" },
-				{ "TenantAdmin", userInfo.IsTenantAdmin ? "true" : "false" },
+				{ "TenantAdmin", _currentUser.Identity.IsTenantAdmin ? "true" : "false" },
 				{ "Debug", IsDebugConfiguration ? "true" : "false" },
 				{ "AppData", await GetAppData() },
 				{ "Companies", "null" },

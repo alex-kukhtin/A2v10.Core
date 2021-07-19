@@ -17,17 +17,17 @@ namespace A2v10.ReportEngine.Stimulsoft
 	public class StimulsoftReportEngine : IReportEngine
 	{
 		private readonly IAppCodeProvider _appCodeProvider;
-		private readonly IUserStateManager _userStateManager;
+		private readonly ICurrentUser _currentUser;
 
-		public StimulsoftReportEngine(IAppCodeProvider appCodeProvider, IUserStateManager userStateManager)
+		public StimulsoftReportEngine(IAppCodeProvider appCodeProvider, ICurrentUser currentUser)
 		{
 			_appCodeProvider = appCodeProvider;
-			_userStateManager = userStateManager;
+			_currentUser = currentUser;
 		}
 
 		internal StiReport CreateReport(IReportInfo reportInfo)
 		{
-			String reportPath = _appCodeProvider.MakeFullPath(reportInfo.Path, $"{reportInfo.Report}.mrt", _userStateManager.IsAdmin);
+			String reportPath = _appCodeProvider.MakeFullPath(reportInfo.Path, $"{reportInfo.Report}.mrt", _currentUser.IsAdminApplication);
 
 			var rep = new StiReport();
 			if (!String.IsNullOrEmpty(reportPath))

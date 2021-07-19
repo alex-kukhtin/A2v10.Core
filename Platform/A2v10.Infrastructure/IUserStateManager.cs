@@ -13,8 +13,5 @@ namespace A2v10.Infrastructure
 
 		void SetUserCompanyId(Int64 CompanyId);
 		Int64 UserCompanyId(Int32 TenantId, Int64 UserId);
-
-		void SetAdmin();
-		Boolean IsAdmin { get; }
 	}
 }

@@ -118,14 +118,14 @@ const vm = new DataModelController({
 		private readonly IAppCodeProvider _codeProvider;
 		private readonly ILocalizer _localizer;
 		private readonly IApplicationHost _host;
-		private readonly IUserStateManager _userStateManager;
+		private readonly ICurrentUser _currentUser;
 
-		public VueDataScripter(IApplicationHost host, IAppCodeProvider codeProvider, ILocalizer localizer, IUserStateManager userStateManager)
+		public VueDataScripter(IApplicationHost host, IAppCodeProvider codeProvider, ILocalizer localizer, ICurrentUser currentUser)
 		{
 			_codeProvider = codeProvider ?? throw new ArgumentNullException(nameof(codeProvider));
 			_localizer = localizer ?? throw new ArgumentNullException(nameof(localizer));
 			_host = host ?? throw new ArgumentNullException(nameof(host));
-			_userStateManager = userStateManager;
+			_currentUser = currentUser;
 		}
 
 		public String CreateDataModelScript(IDataModel model)
@@ -395,7 +395,7 @@ const vm = new DataModelController({
 				if (_modulesWritten.Contains(moduleName))
 					continue;
 				var fileName = moduleName.AddExtension("js");
-				String filePath = _codeProvider.MakeFullPath(String.Empty, fileName.RemoveHeadSlash(), _userStateManager.IsAdmin);
+				String filePath = _codeProvider.MakeFullPath(String.Empty, fileName.RemoveHeadSlash(), _currentUser.IsAdminApplication);
 				if (!_codeProvider.FileExists(filePath))
 					throw new FileNotFoundException(filePath);
 
@@ -511,7 +511,7 @@ const vm = new DataModelController({
 			String fileTemplateText;
 			if (msi.Template != null)
 			{
-				fileTemplateText = await _codeProvider.ReadTextFileAsync(msi.Path, $"{msi.Template}.js", _userStateManager.IsAdmin);
+				fileTemplateText = await _codeProvider.ReadTextFileAsync(msi.Path, $"{msi.Template}.js", _currentUser.IsAdminApplication);
 				if (fileTemplateText == null)
 					throw new FileNotFoundException($"Template file '{Path.Combine(msi.Path, $"{msi.Template}.js").Replace('\\', '/')}' not found.");
 				AddRequiredModules(sbRequired, fileTemplateText);
@@ -558,7 +558,7 @@ const vm = new DataModelController({
 			String templateText = "{}";
 			if (msi.Template != null)
 			{
-				String fileTemplateText = await _codeProvider.ReadTextFileAsync(msi.Path, msi.Template + ".js", _userStateManager.IsAdmin);
+				String fileTemplateText = await _codeProvider.ReadTextFileAsync(msi.Path, msi.Template + ".js", _currentUser.IsAdminApplication);
 				if (fileTemplateText == null)
 					throw new FileNotFoundException($"File not found. '{Path.Combine(msi.Path, msi.Template)}'");
 				sbRequired = new StringBuilder();

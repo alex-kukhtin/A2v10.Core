@@ -26,15 +26,17 @@ namespace A2v10.Platform.Web
 		private readonly IProfiler _profiler;
 		private readonly IAppConfiguration _appConfiguration;
 		private readonly PlatformOptions _options;
+		private readonly ICurrentUser _currentUser;
 		private Boolean _admin;
 
-		public WebApplicationHost(IConfiguration config, IProfiler profiler, IAppConfiguration appConfiguration, PlatformOptions options)
+		public WebApplicationHost(IConfiguration config, IProfiler profiler, IAppConfiguration appConfiguration, PlatformOptions options, ICurrentUser currentUser)
 		{
 			_profiler = profiler;
 			_appConfiguration = appConfiguration;
 
 			_appSettings = config.GetSection("appSettings");
 			_options = options;
+			_currentUser = currentUser;
 		}
 
 		public Boolean IsMultiTenant => _options.MultiTenant;
@@ -68,10 +70,9 @@ namespace A2v10.Platform.Web
 		public Boolean IsAdminAppPresent => false /*TODO:*/;
 
 
-		public Int32? TenantId { get; set; }
-
-		public Int64? UserId { get; set; }
-		public String UserSegment { get; set; }
+		private Int32? TenantId => _currentUser.Identity.Tenant;
+		private Int64? UserId => _currentUser.Identity.Id;
+		private String UserSegment => _currentUser.Identity.Segment;
 
 		public String CatalogDataSource => IsMultiTenant ? "Catalog" : null;
 		public String TenantDataSource => String.IsNullOrEmpty(UserSegment) ? null : UserSegment;

@@ -46,12 +46,5 @@ namespace A2v10.Platform.Web
 				return 0;
 			return Int64.Parse(str);
 		}
-
-		public void SetAdmin()
-		{
-			_isAdmin = true;
-		}
-
-		public Boolean IsAdmin => _isAdmin;
 	}
 }
