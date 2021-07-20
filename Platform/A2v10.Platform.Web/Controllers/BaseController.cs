@@ -10,34 +10,28 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 
 using A2v10.Infrastructure;
-using A2v10.Web.Identity;
 
-namespace A2v10.Platform.Web
+namespace A2v10.Platform.Web.Controllers
 {
-
-	public class BaseController : Controller, IControllerProfiler, IControllerLocale
+	public class BaseController : Controller, IControllerProfiler
 	{
 		protected readonly IApplicationHost _host;
 		protected readonly ILocalizer _localizer;
-		protected readonly IUserStateManager _userStateManager;
 		protected readonly IProfiler _profiler;
-		protected readonly IUserLocale _userLocale;
 		protected readonly ICurrentUser _currentUser;
 
-		public BaseController(IApplicationHost host, ILocalizer localizer, ICurrentUser currentUser, IUserStateManager userStateManager, IProfiler profiler, IUserLocale userLocale)
+		public BaseController(IApplicationHost host, ILocalizer localizer, ICurrentUser currentUser, IProfiler profiler)
 		{
 			_host = host ?? throw new ArgumentNullException(nameof(host));
 			_localizer = localizer ?? throw new ArgumentNullException(nameof(localizer));
-			_userStateManager = userStateManager ?? throw new ArgumentNullException(nameof(userStateManager));
 			_profiler = profiler ?? throw new ArgumentNullException(nameof(profiler));
-			_userLocale = userLocale ?? throw new ArgumentNullException(nameof(userLocale));
 			_profiler.Enabled = _host.IsDebugConfiguration;
 			_currentUser = currentUser;
 		}
 
-		protected Int64? UserId => _currentUser.Identity.Id; // User.Identity.GetUserId<Int64>();
-		protected Int32? TenantId => _currentUser.Identity.Tenant; //  User.Identity.GetUserTenantId();
-		protected Int64? CompanyId => _currentUser.State.Company; // _userStateManager.UserCompanyId(TenantId, UserId); 
+		protected Int64? UserId => _currentUser.Identity.Id;
+		protected Int32? TenantId => _currentUser.Identity.Tenant;
+		protected Int64? CompanyId => _currentUser.State.Company;
 
 		protected void SetSqlQueryParamsWithoutCompany(ExpandoObject prms)
 		{
@@ -73,7 +67,7 @@ namespace A2v10.Platform.Web
 			return _localizer.Localize(null, content);
 		}
 
-		public async Task WriteHtmlException(Exception ex)
+		public IActionResult WriteHtmlException(Exception ex)
 		{
 			if (ex.InnerException != null)
 				ex = ex.InnerException;
@@ -83,18 +77,18 @@ namespace A2v10.Platform.Web
 			if (_host.IsDebugConfiguration)
 			{
 				var text = $"<div class=\"app-exception\"><div class=\"message\">{msg}</div><div class=\"stack-trace\">{stackTrace}</div></div>";
-				await HttpResponseWritingExtensions.WriteAsync(Response, text, Encoding.UTF8);
+				return new WebActionResult(text, MimeTypes.Text.HtmlUtf8);
 			}
 			else
 			{
 				msg = Localize("@[Error.Exception]");
 				var link = Localize("@[Error.Link]");
 				var text = $"<div class=\"app-exception\"><div class=message>{msg}</div><a class=link href=\"/\">{@link}</a></div>";
-				await HttpResponseWritingExtensions.WriteAsync(Response, text, Encoding.UTF8);
+				return new WebActionResult(text, MimeTypes.Text.HtmlUtf8);
 			}
 		}
 
-		public Task WriteExceptionStatus(Exception ex, Int32 errorCode = 0)
+		public IActionResult WriteExceptionStatus(Exception ex, Int32 errorCode = 0)
 		{
 			if (ex.InnerException != null)
 				ex = ex.InnerException;
@@ -104,11 +98,7 @@ namespace A2v10.Platform.Web
 			
 			ProfileException(ex);
 
-			//TODO::Response.SuppressContent = false;
-			Response.StatusCode = errorCode; // CUSTOM ERROR!!!!
-			Response.ContentType = MimeTypes.Text.Plain;
-			//TODO::Response.StatusDescription = "Server error";
-			return HttpResponseWritingExtensions.WriteAsync(Response, _localizer.Localize(null, ex.Message), Encoding.UTF8);
+			return new WebExceptionResult(errorCode, _localizer.Localize(null, ex.Message));
 		}
 
 		#region IControllerProfiler
@@ -123,13 +113,6 @@ namespace A2v10.Platform.Web
 		public void EndRequest(IProfileRequest request)
 		{
 			_profiler.EndRequest(request);
-		}
-		#endregion
-
-		#region IControllerLocale 
-		public void SetLocale()
-		{
-			_userLocale.Locale = User.Identity.GetUserLocale();
 		}
 		#endregion
 

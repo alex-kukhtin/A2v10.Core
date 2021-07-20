@@ -22,15 +22,15 @@ namespace A2v10.Platform.Web.Controllers
 		private readonly IReportService _reportService;
 
 		public ReportController(IApplicationHost host,
-			ILocalizer localizer, ICurrentUser currentUser, IUserStateManager userStateManager, IProfiler profiler, IReportService reportService, IUserLocale userLocale)
-			: base(host, localizer, currentUser, userStateManager, profiler, userLocale)
+			ILocalizer localizer, ICurrentUser currentUser, IProfiler profiler, IReportService reportService)
+			: base(host, localizer, currentUser, profiler)
 		{
 			_reportService = reportService;
 		}
 
 
 		[HttpGet]
-		public Task Export(String Id, String Base, String Rep, String format = "pdf")
+		public Task<IActionResult> Export(String Id, String Base, String Rep, String format = "pdf")
 		{
 			return TryCatch(async () =>
 			{
@@ -40,20 +40,20 @@ namespace A2v10.Platform.Web.Controllers
 					exp.SetNotNull("Id", Id);
 					SetSqlQueryParams(exp);
 				});
+
+				var res = new WebBinaryActionResult(result.Body, result.ContentType);
 				Response.ContentType = result.ContentType;
 
 				var cdh = new ContentDispositionHeaderValue("attachment")
 				{
 					FileNameStar = Localize(result.FileName)
 				};
-				Response.Headers.Add("Content-Disposition", cdh.ToString());
-
-				await Response.BodyWriter.WriteAsync(result.Body);
+				return res;
 			});
 		}
 
 		[HttpGet]
-		public Task Print(String Id, String Base, String Rep)
+		public Task<IActionResult> Print(String Id, String Base, String Rep)
 		{
 			return TryCatch(async () =>
 			{
@@ -62,20 +62,19 @@ namespace A2v10.Platform.Web.Controllers
 					exp.SetNotNull("Id", Id);
 					SetSqlQueryParams(exp);
 				});
-				Response.ContentType = result.ContentType;
-				await Response.BodyWriter.WriteAsync(result.Body);
+				return new WebBinaryActionResult(result.Body, result.ContentType);
 			});
 		}
 
-		private async Task TryCatch(Func<Task> action)
+		private async Task<IActionResult> TryCatch(Func<Task<IActionResult>> action)
 		{
 			try
 			{
-				await action();
+				return await action();
 			}
 			catch (Exception ex)
 			{
-				await WriteHtmlException(ex);
+				return WriteHtmlException(ex);
 			}
 		}
 	}

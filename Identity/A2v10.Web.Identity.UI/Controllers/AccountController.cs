@@ -2,7 +2,7 @@
 
 using System;
 using System.Threading.Tasks;
-
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -40,6 +40,7 @@ namespace A2v10.Web.Identity.UI
 				var returnUrl = (TempData["ReturnUrl"] ?? "/").ToString().ToLowerInvariant();
 				if (returnUrl.StartsWith("/account"))
 					returnUrl = "/";
+				HttpContext.Response.Cookies.Delete(AntiforgeryOptions.DefaultCookiePrefix);
 				return LocalRedirect(returnUrl);
 			}
 			throw new InvalidOperationException("Invalid login");

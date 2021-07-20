@@ -1,7 +1,7 @@
 ﻿== TODO: Architecture
-1. IModelJsonReader, IPlatformUrl в A2v10.Services
-2. IControllerLocale - убрать.
-3. IUserStateManager, IUserLocale - убрать
+
+7. Identity.State IsValid???
+8. Session for ITokenProvider?? - убрать сессию?
 
 == TODO: Packages
 ============================

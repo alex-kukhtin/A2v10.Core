@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Http;
 
 using A2v10.Infrastructure;
 using A2v10.Web.Identity;
+using System.Threading;
+using Newtonsoft.Json;
+using Microsoft.AspNetCore.DataProtection;
 
 namespace A2v10.Platform.Web
 {
@@ -24,21 +27,56 @@ namespace A2v10.Platform.Web
 
 	public record UserState : IUserState
 	{
-		public Int64? Company { get; init; }
-		public Boolean IsReadOnly { get; init; }
+		public Int64? Company { get; set; }
+		public Boolean IsReadOnly { get; set; }
+
+		// TODO: isValud???
+		public Boolean Invalid { get; set; }
+	}
+
+	public record UserLocale : IUserLocale
+	{
+		public String Locale { get; init; }
+
+		public String Language
+		{
+			get
+			{
+				var loc = Locale;
+				if (loc != null)
+					return loc.Substring(0, 2);
+				else
+					return Thread.CurrentThread.CurrentUICulture.TwoLetterISOLanguageName;
+			}
+		}
 	}
 
 	public class CurrentUser : ICurrentUser
 	{
+		const String DefaultCookieName = "Identity.State";
+
 		public IUserIdentity Identity { get; private set; }
-		public IUserState State {get; private set;}
+		public UserState State {get; private set;}
+		public IUserLocale Locale { get; private set; }
+
+		IUserState ICurrentUser.State => State;
 
 		public Boolean IsAdminApplication { get; private set; }
+
+		private readonly IHttpContextAccessor _httpContextAccessor;
+		private readonly IDataProtector _protector;
+
+		public CurrentUser(IHttpContextAccessor httpContextAccessor, IDataProtectionProvider dataProtectionProvider)
+		{
+			_httpContextAccessor = httpContextAccessor;
+			_protector = dataProtectionProvider.CreateProtector("State");
+		}
 
 		public void Setup(HttpContext context)
 		{
 			SetupUserIdentity(context);
 			SetupUserState(context);
+			SetupUserLocale(context);
 			IsAdminApplication = context.Request.Path.StartsWithSegments("/admin");
 		}
 
@@ -65,17 +103,66 @@ namespace A2v10.Platform.Web
 
 		void SetupUserState(HttpContext context)
 		{
+			var state = context.Request.Cookies[DefaultCookieName];
+			if (String.IsNullOrEmpty(state))
+			{
+				State = new UserState()
+				{
+					Invalid = true
+				};
+			}
+			else
+			{
+				try
+				{
+					State = JsonConvert.DeserializeObject<UserState>(_protector.Unprotect(state));
+				} 
+				catch (Exception ex)
+				{
+					State = new UserState()
+					{
+						Invalid = true
+					};
+				}
+			}
+		}
+
+		void SetupUserLocale(HttpContext context)
+		{
 			var ident = context.User.Identity;
 			var userLoc = ident.GetUserLocale();
 			if (context.Request.Query.ContainsKey("lang"))
 			{
 				var lang = context.Request.Query["lang"];
-
+				// TODO: check available locales
 			}
-			State = new UserState()
+			Locale = new UserLocale()
 			{
-
+				Locale = userLoc
 			};
+		}
+
+		public void SetCompanyId(Int64 id)
+		{
+			if (State == null)
+				throw new InvalidProgramException("There is no current user state");
+			State.Company = id;
+			StoreState();
+		}
+
+		public void SetReadOnly(Boolean readOnly)
+		{
+			if (State == null)
+				throw new InvalidProgramException("There is no current user state");
+			State.IsReadOnly = readOnly;
+			StoreState();
+		}
+
+		void StoreState()
+		{
+			var stateJson = JsonConvert.SerializeObject(State);
+			_httpContextAccessor.HttpContext.Response.Cookies.Append(DefaultCookieName, _protector.Protect(stateJson));
 		}
 	}
 }
+

@@ -11,6 +11,7 @@ using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
+using Microsoft.AspNetCore.DataProtection;
 
 namespace A2v10.Platform.Web
 {
@@ -105,7 +106,7 @@ namespace A2v10.Platform.Web
 
 	public sealed class WebProfiler : IProfiler, IDataProfiler, IDisposable
 	{
-		const String SESSION_KEY = "_Profile_";
+		const String COOKIE_NAME = "Application.Profile";
 		const Int32 REQUEST_COUNT = 50;
 
 		private LinkedList<ProfileRequest> _requestList;
@@ -115,10 +116,12 @@ namespace A2v10.Platform.Web
 
 
 		private readonly IHttpContextAccessor _httpContext;
+		private readonly IDataProtector _protector;
 
-		public WebProfiler(IHttpContextAccessor httpContext)
+		public WebProfiler(IHttpContextAccessor httpContext, IDataProtectionProvider protectionProvider)
 		{
 			_httpContext = httpContext;
+			_protector = protectionProvider.CreateProtector("Session");
 		}
 
 		public void Dispose()
@@ -157,31 +160,25 @@ namespace A2v10.Platform.Web
 
 		void LoadSession()
 		{
-			var session = _httpContext.HttpContext.Session;
-			var json = session.GetString(SESSION_KEY);
-			if (String.IsNullOrEmpty(json))
+			var protectedData = _httpContext.HttpContext.Request.Cookies[COOKIE_NAME];
+			if (String.IsNullOrEmpty(protectedData))
 				_requestList = new LinkedList<ProfileRequest>();
 			else
-				_requestList = JsonConvert.DeserializeObject<LinkedList<ProfileRequest>>(json);
+				_requestList = JsonConvert.DeserializeObject<LinkedList<ProfileRequest>>(_protector.Unprotect(protectedData));
 		}
 
 		void SaveSession()
 		{
 			String json = JsonConvert.SerializeObject(_requestList);
-			var session = _httpContext.HttpContext.Session;
-			session.SetString(SESSION_KEY, json);
+			_httpContext.HttpContext.Response.Cookies.Append(COOKIE_NAME, _protector.Protect(json));
 		}
 
 		public String GetJson()
 		{
-			var currentContext = _httpContext.HttpContext;
-			if (currentContext == null)
+			var protectedData = _httpContext.HttpContext.Request.Cookies[COOKIE_NAME];
+			if (protectedData == null)
 				return null;
-			var session = _httpContext.HttpContext.Session;
-			var json = session.GetString(SESSION_KEY);
-			if (String.IsNullOrEmpty(json))
-				return null;
-			return json;
+			return _protector.Unprotect(protectedData);
 		}
 
 		#region IDataProfiler

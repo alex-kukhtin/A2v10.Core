@@ -4,7 +4,7 @@ using System;
 
 namespace A2v10.Infrastructure
 {
-	public interface IUserLocale
+	public interface I22UserLocale222
 	{
 		String Locale { get; set; }
 		String Language { get; }

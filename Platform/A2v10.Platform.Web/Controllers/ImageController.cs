@@ -25,9 +25,9 @@ namespace A2v10.Platform.Web.Controllers
 		private readonly IAppCodeProvider _appCodeProvider;
 
 		public ImageController(IApplicationHost host,
-			ILocalizer localizer, ICurrentUser currentUser, IUserStateManager userStateManager, IProfiler profiler, 
-			IDataService dataService, ITokenProvider tokenProvider, IAppCodeProvider appCodeProvider, IUserLocale userLocale)
-			: base(host, localizer, currentUser, userStateManager, profiler, userLocale)
+			ILocalizer localizer, ICurrentUser currentUser, IProfiler profiler, 
+			IDataService dataService, ITokenProvider tokenProvider, IAppCodeProvider appCodeProvider)
+			: base(host, localizer, currentUser, profiler)
 		{
 			_dataService = dataService;
 			_tokenProvider = tokenProvider;
@@ -36,7 +36,7 @@ namespace A2v10.Platform.Web.Controllers
 
 		[Route("_image/{*pathInfo}")]
 		[HttpGet]
-		public async Task Image(String pathInfo)
+		public async Task<IActionResult> Image(String pathInfo)
 		{
 			try
 			{
@@ -48,19 +48,17 @@ namespace A2v10.Platform.Web.Controllers
 				if (!IsTokenValid(blob.Token, token))
 					throw new InvalidReqestExecption("Invalid image token");
 
-				Response.ContentType = blob.Mime;
-				if (blob.Stream != null)
-					await Response.BodyWriter.WriteAsync(blob.Stream);
+				return new WebBinaryActionResult(blob.Stream, blob.Mime);
 			}
 			catch (Exception ex)
 			{
-				await WriteImageException(ex);
+				return WriteImageException(ex);
 			}
 		}
 
 		[Route("_static_image/{*pathInfo}")]
 		[HttpGet]
-		public async Task StaticImage(String pathInfo)
+		public IActionResult StaticImage(String pathInfo)
 		{
 			try
 			{
@@ -73,16 +71,15 @@ namespace A2v10.Platform.Web.Controllers
 
 				using var stream = _appCodeProvider.FileStreamFullPathRO(fullPath);
 				var ext = _appCodeProvider.GetExtension(fullPath);
-				Response.ContentType = MimeTypes.GetMimeMapping(ext);
-				await stream.CopyToAsync(Response.BodyWriter.AsStream());
+				return new FileStreamResult(stream, MimeTypes.GetMimeMapping(ext));
 			} 
 			catch (Exception ex)
 			{
-				await WriteImageException(ex);
+				return WriteImageException(ex);
 			}
 		}
 
-		async Task WriteImageException(Exception ex)
+		IActionResult WriteImageException(Exception ex)
 		{
 			if (ex.InnerException != null)
 				ex = ex.InnerException;
@@ -93,9 +90,9 @@ namespace A2v10.Platform.Web.Controllers
 				<rect width='{len}' height='40' fill='#fff0f5' stroke='#880000' stroke-width='1'/>
 				<text x='{len/2}' y='25' fill='#880000' font-size='11px' text-anchor='middle'>{ex.Message}</text>
 			</svg>";
-			Response.Headers.SetCommaSeparatedValues("cache-control", "no-store", "no-cache");
-			Response.ContentType = MimeTypes.Image.Svg;
-			await HttpResponseWritingExtensions.WriteAsync(Response, svg, Encoding.UTF8);
+			var res = new WebActionResult(svg, MimeTypes.Image.Svg);
+			res.AddHeader("cache-control", "no-store,no-cache");
+			return res;
 		}
 
 		Boolean IsTokenValid(Guid dbToken, String token)

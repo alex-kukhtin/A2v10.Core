@@ -23,10 +23,20 @@ namespace A2v10.Infrastructure
 		Boolean IsReadOnly { get; }
 	}
 
+	public interface IUserLocale
+	{
+		String Locale { get; }
+		String Language { get; }
+	}
+
 	public interface ICurrentUser
 	{
 		public IUserIdentity Identity { get; }
 		public IUserState State { get; }
+		public IUserLocale Locale { get; }
 		public Boolean IsAdminApplication { get; }
+
+		void SetCompanyId(Int64 id);
+		void SetReadOnly(Boolean readOnly);
 	}
 }

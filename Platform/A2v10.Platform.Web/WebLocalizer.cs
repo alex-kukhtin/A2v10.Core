@@ -12,8 +12,8 @@ namespace A2v10.Platform.Web
 	{
 		private readonly ILocalizerDictiorany _dictionary;
 
-		public WebLocalizer(ILocalizerDictiorany dictiorany, IUserLocale userLocale)
-			:base(userLocale)
+		public WebLocalizer(ILocalizerDictiorany dictiorany, ICurrentUser user)
+			:base(user)
 		{
 			_dictionary = dictiorany;
 		}

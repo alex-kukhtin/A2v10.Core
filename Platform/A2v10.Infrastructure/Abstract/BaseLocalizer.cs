@@ -11,18 +11,18 @@ namespace A2v10.Infrastructure
 	{
 		protected abstract IDictionary<String, String> GetLocalizerDictionary(String locale);
 
-		private readonly IUserLocale _userLocale;
+		private readonly ICurrentUser _user;
 
-		public BaseLocalizer(IUserLocale userLocale)
+		public BaseLocalizer(ICurrentUser user)
 		{
-			_userLocale = userLocale;
+			_user = user;
 		}
 
 		String GetLocalizedValue(String locale, String key)
 		{
 			if (locale == null)
 			{
-				locale = _userLocale.Locale;
+				locale = _user.Locale.Locale;
 				if (locale == null)
 					locale = Thread.CurrentThread.CurrentUICulture.Name;
 			}

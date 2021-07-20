@@ -13,15 +13,13 @@ namespace A2v10.Platform.Web.Controllers
 	[Authorize]
 	[ExecutingFilter]
 	[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-	public class MainController : Controller, IControllerLocale
+	public class MainController : Controller
 	{
 		private readonly IAppConfiguration _appConfiguration;
-		private readonly IUserLocale _userLocale;
 
-		public MainController(IAppConfiguration appConfiguration, IUserLocale userLocale)
+		public MainController(IAppConfiguration appConfiguration)
 		{
 			_appConfiguration = appConfiguration;
-			_userLocale = userLocale;
 		}
 
 		[Route("{*pathInfo}")]
@@ -41,12 +39,5 @@ namespace A2v10.Platform.Web.Controllers
 				return View("Default.admin", viewModel);
 			return View(viewModel);
 		}
-
-		#region IControllerLocale
-		public void SetLocale()
-		{
-			_userLocale.Locale = User.Identity.GetUserLocale();
-		}
-		#endregion
 	}
 }

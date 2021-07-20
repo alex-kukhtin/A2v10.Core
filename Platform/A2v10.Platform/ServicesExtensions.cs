@@ -79,16 +79,8 @@ namespace Microsoft.Extensions.DependencyInjection
 			app.UseAuthorization();
 			app.UseSession();
 
-
 			app.UseMiddleware<CurrentUserMiddleware>();
-			/*
-			app.Use(async (context, next) =>
-			{
-				//var scope = context.RequestServices.CreateScope();
-				var identity = context.User.Identity;
-				await next.Invoke();
-			});
-			*/
+
 
 			app.UseEndpoints(endpoints =>
 			{

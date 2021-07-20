@@ -2,14 +2,15 @@
 
 using System;
 
-using Microsoft.AspNetCore.Http;
 
 using Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation;
 using Microsoft.Extensions.FileProviders;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
+
 using A2v10.Platform.Web;
+using A2v10.Platform.Web.Controllers;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -34,8 +35,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
 			services.AddScoped<WebApplicationHost>();
 
-			services.AddScoped<IUserLocale, WebUserLocale>()
-				.AddScoped<WebLocalizer>()
+			services.AddScoped<WebLocalizer>()
 				.AddScoped<ILocalizer>(s => s.GetService<WebLocalizer>())
 				.AddScoped<IDataLocalizer>(s => s.GetService<WebLocalizer>());
 
@@ -47,17 +47,12 @@ namespace Microsoft.Extensions.DependencyInjection
 
 			services.AddSingleton<ILocalizerDictiorany, WebLocalizerDictiorany>();
 
-			services.AddScoped<IUserStateManager>(s =>
-				new WebUserStateManager(s.GetService<IHttpContextAccessor>()));
-
 			services.AddScoped<ITokenProvider, WebTokenProvider>();
 
-			services.AddScoped<CurrentUser>();
-			services.AddScoped<ICurrentUser>(s =>
-			{
-				return s.GetService<CurrentUser>();
-			});
+			services.AddScoped<CurrentUser>()
+				.AddScoped<ICurrentUser>(s => s.GetService<CurrentUser>());
 
+			services.AddDistributedMemoryCache();
 			services.AddSession();
 
 			return builder;

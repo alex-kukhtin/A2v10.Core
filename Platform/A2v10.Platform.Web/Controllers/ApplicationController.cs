@@ -28,14 +28,14 @@ namespace A2v10.Platform.Web.Controllers
 		private readonly IDbContext _dbContext;
 
 		public ApplicationController(IApplicationHost host,
-			ILocalizer localizer, ICurrentUser currentUser, IUserStateManager userStateManager, IProfiler profiler, IDbContext dbContext, IUserLocale userLocale)
-			: base(host, localizer, currentUser, userStateManager, profiler, userLocale)
+			ILocalizer localizer, ICurrentUser currentUser, IProfiler profiler, IDbContext dbContext)
+			: base(host, localizer, currentUser, profiler)
 		{
 			_dbContext = dbContext;
 		}
 
 		[HttpPost]
-		public async Task SwitchToCompany()
+		public async Task<IActionResult> SwitchToCompany()
 		{
 			try
 			{
@@ -64,26 +64,28 @@ namespace A2v10.Platform.Web.Controllers
 					};
 					await _dbContext.ExecuteAsync<SwitchToCompanySaveModel>(null, "a2security.[User.SwitchToCompany]", saveModel);
 				}
-				_userStateManager.SetUserCompanyId(CompanyIdToSet);
+				_currentUser.SetCompanyId(CompanyIdToSet);
+				return new WebActionResult("{\"status\":\"success\"}");
 			} 
 			catch (Exception ex)
 			{
-				await WriteExceptionStatus(ex);
+				return WriteExceptionStatus(ex);
 			}
 		}
 
 		[HttpPost]
-		public async Task SetPeriod()
+		public async Task<IActionResult> SetPeriod()
 		{
 			try
 			{
 				var dataToSet = await Request.ExpandoFromBodyAsync();
 				SetSqlQueryParams(dataToSet);
 				await _dbContext.ExecuteExpandoAsync(null, "a2user_state.SetGlobalPeriod", dataToSet);
+				return new WebActionResult("{\"status\":\"success\"}");
 			}
 			catch (Exception ex)
 			{
-				await WriteExceptionStatus(ex);
+				return WriteExceptionStatus (ex);
 			}
 		}
 	}

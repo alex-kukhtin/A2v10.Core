@@ -1,9 +1,12 @@
 ﻿@model MainViewModel
 
 @inject IAppCodeProvider codeProvider
-@inject IUserLocale userLocale
+@inject ICurrentUser currentUser
 @inject IAppVersion appVersion
 
+@{ 
+	IUserLocale userLocale = currentUser.Locale;
+}
 <!DOCTYPE html>
 <!--
 A2v10 platform. (ADMIN MODE)

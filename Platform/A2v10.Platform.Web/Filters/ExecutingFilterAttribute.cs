@@ -17,19 +17,16 @@ namespace A2v10.Platform.Web
 		{
 			base.OnActionExecuting(filterContext);
 			
-			if (filterContext.Controller is IControllerLocale iCtrlLocale)
-				iCtrlLocale.SetLocale();
-
 			if (filterContext.Controller is IControllerProfiler iCtrlProfiler)
 				_request = iCtrlProfiler.BeginRequest();
 		}
 
-		public override void OnResultExecuted(ResultExecutedContext filterContext)
+		public override void OnResultExecuting(ResultExecutingContext context)
 		{
-			base.OnResultExecuted(filterContext);
-			if (filterContext.Controller is not IControllerProfiler iCtrlProfiler)
+			if (context.Controller is not IControllerProfiler iCtrlProfiler)
 				return;
 			iCtrlProfiler.EndRequest(_request);
+			base.OnResultExecuting(context);
 		}
 	}
 }

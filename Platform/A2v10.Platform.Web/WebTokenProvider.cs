@@ -28,6 +28,8 @@ namespace A2v10.Platform.Web
 			if (ctx == null)
 				return null;
 			var sessionId = ctx.Session.Id;
+			// TODO:??? Session Id???
+			ctx.Session.SetString("SessID", Guid.NewGuid().ToString());
 			var userId = ctx.User.Identity.GetUserId<Int64>();
 			String key = $":{sessionId}:{accessToken}:{userId}:";
 			using var algo = SHA256.Create();

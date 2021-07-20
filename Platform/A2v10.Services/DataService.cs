@@ -23,14 +23,14 @@ namespace A2v10.Services
 		private readonly IServiceProvider _serviceProvider;
 		private readonly IModelJsonReader _modelReader;
 		private readonly IDbContext _dbContext;
-		private readonly IUserStateManager _userStateManager;
+		private readonly ICurrentUser _currentUser;
 
-		public DataService(IServiceProvider serviceProvider, IModelJsonReader modelReader, IDbContext dbContext, IUserStateManager userStateManager)
+		public DataService(IServiceProvider serviceProvider, IModelJsonReader modelReader, IDbContext dbContext, ICurrentUser currentUser)
 		{
 			_serviceProvider = serviceProvider;
 			_modelReader = modelReader;
 			_dbContext = dbContext;
-			_userStateManager = userStateManager;
+			_currentUser = currentUser;
 		}
 
 		static IPlatformUrl CreatePlatformUrl(UrlKind kind, String baseUrl)
@@ -215,19 +215,14 @@ namespace A2v10.Services
 
 		void CheckUserState(ExpandoObject prms)
 		{
-			if (_userStateManager == null)
-				return;
-			Int64 userId = prms.Get<Int64>("UserId");
-			if (_userStateManager.IsReadOnly(userId))
+
+			if (_currentUser.State.IsReadOnly)
 				throw new DataServiceException("UI:@[Error.DataReadOnly]");
 		}
 
 		void SetReadOnly(IDataModel model, ExpandoObject loadPrms)
 		{
-			if (_userStateManager == null || model == null)
-				return;
-			Int64 userId = loadPrms.Get<Int64>("UserId");
-			if (_userStateManager.IsReadOnly(userId))
+			if (_currentUser.State.IsReadOnly)
 				model.SetReadOnly();
 		}
 

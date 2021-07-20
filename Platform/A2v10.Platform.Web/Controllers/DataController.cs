@@ -24,16 +24,16 @@ namespace A2v10.Platform.Web.Controllers
 		private readonly IDataService _dataService;
 
 		public DataController(IApplicationHost host,
-			ILocalizer localizer, ICurrentUser currentUser, IUserStateManager userStateManager, IProfiler profiler, IDataService dataService, IUserLocale userLocale)
-			: base(host, localizer, currentUser, userStateManager, profiler, userLocale)
+			ILocalizer localizer, ICurrentUser currentUser, IProfiler profiler, IDataService dataService)
+			: base(host, localizer, currentUser, profiler)
 		{
 			_dataService = dataService;
 		}
 
 		[HttpPost]
-		public async Task Reload()
+		public async Task<IActionResult> Reload()
 		{
-			await TryCatch(async () =>
+			return await TryCatch(async () =>
 			{ 
 				var eo = await Request.ExpandoFromBodyAsync();
 				if (eo == null)
@@ -43,13 +43,12 @@ namespace A2v10.Platform.Web.Controllers
 					throw new InvalidReqestExecption(nameof(Reload));
 
 				String data = await _dataService.ReloadAsync(baseUrl, SetSqlQueryParams);
-				Response.ContentType = MimeTypes.Application.Json;
-				await HttpResponseWritingExtensions.WriteAsync(Response, data, Encoding.UTF8);
+				return new WebActionResult(data);
 			});
 		}
 
 		[HttpPost]
-		public Task Expand()
+		public Task<IActionResult> Expand()
 		{
 			return TryCatch(async () =>
 			{
@@ -59,15 +58,14 @@ namespace A2v10.Platform.Web.Controllers
 
 				var expandData = await _dataService.ExpandAsync(eo, SetSqlQueryParams);
 
-				Response.ContentType = MimeTypes.Application.Json;
-				await HttpResponseWritingExtensions.WriteAsync(Response, expandData, Encoding.UTF8);
+				return new WebActionResult(expandData);
 			});
 		}
 
 		[HttpPost]
-		public async Task LoadLazy()
+		public Task<IActionResult> LoadLazy()
 		{
-			await TryCatch(async () =>
+			return TryCatch(async () =>
 			{
 				var eo = await Request.ExpandoFromBodyAsync();
 				if (eo == null)
@@ -75,13 +73,12 @@ namespace A2v10.Platform.Web.Controllers
 
 				var lazyData = await _dataService.LoadLazyAsync(eo, SetSqlQueryParams);
 
-				Response.ContentType = MimeTypes.Application.Json;
-				await HttpResponseWritingExtensions.WriteAsync(Response, lazyData, Encoding.UTF8);
+				return new WebActionResult(lazyData);
 			});
 		}
 
 		[HttpPost]
-		public Task Save()
+		public Task<IActionResult> Save()
 		{
 			return TryCatch(async () =>
 			{
@@ -95,13 +92,12 @@ namespace A2v10.Platform.Web.Controllers
 
 				var savedData = await _dataService.SaveAsync(baseUrl, data, SetSqlQueryParams);
 
-				Response.ContentType = MimeTypes.Application.Json;
-				await HttpResponseWritingExtensions.WriteAsync(Response, savedData, Encoding.UTF8);
+				return new WebActionResult(savedData);
 			});
 		}
 
 		[HttpPost]
-		public Task Invoke()
+		public Task<IActionResult> Invoke()
 		{
 			return TryCatch(async () =>
 			{
@@ -117,13 +113,12 @@ namespace A2v10.Platform.Web.Controllers
 				ExpandoObject data = eo.Get<ExpandoObject>("data");
 
 				var result = await _dataService.InvokeAsync(baseUrl, cmd, data, SetSqlQueryParams);
-				Response.ContentType = result.ContentType;
-				await Response.BodyWriter.WriteAsync(result.Body);
+				return new WebBinaryActionResult(result.Body, result.ContentType);
 			});
 		}
 
 		[HttpPost]
-		public Task DbRemove()
+		public Task<IActionResult> DbRemove()
 		{
 			return TryCatch(async () =>
 			{
@@ -140,8 +135,7 @@ namespace A2v10.Platform.Web.Controllers
 
 				await _dataService.DbRemoveAsync(baseUrl, id,  propName, SetSqlQueryParams);
 
-				Response.ContentType = MimeTypes.Application.Json;
-				await HttpResponseWritingExtensions.WriteAsync(Response, "{\"status\": \"OK\"}", Encoding.UTF8);
+				return new WebActionResult("{\"status\": \"OK\"}");
 			});
 		}
 
@@ -151,15 +145,15 @@ namespace A2v10.Platform.Web.Controllers
 			throw new NotImplementedException("DataController.ExportTo");
 		}
 
-		private async Task TryCatch(Func<Task> action)
+		private async Task<IActionResult> TryCatch(Func<Task<IActionResult>> action)
 		{
 			try
 			{
-				await action();
+				return await action();
 			} 
 			catch (Exception ex)
 			{
-				await WriteExceptionStatus(ex);
+				return WriteExceptionStatus(ex);
 			}
 		}
 	}

@@ -14,7 +14,7 @@
 	*A2v10.Services
 		A2v10.Infrastructure (8033)
 		A2v10.Platform.Web (8033)
-	A2v10.Identity.UI (8016)
+	*A2v10.Identity.UI (8016)
 		A2v10.Identity.Core (8011)
 
 

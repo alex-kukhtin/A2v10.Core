@@ -17,7 +17,7 @@ using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Web.Identity;
 
-namespace A2v10.Platform.Web
+namespace A2v10.Platform.Web.Controllers
 {
 
 	public class MultiTenantParamJson
@@ -29,28 +29,24 @@ namespace A2v10.Platform.Web
 	[Route("_shell/[action]")]
 	[Authorize]
 	[ExecutingFilter]
-	public class ShellController : Controller, IControllerLocale
+	public class ShellController : Controller
 	{
 		private readonly IApplicationHost _host;
 		private readonly IDbContext _dbContext;
-		private readonly IUserStateManager _userStateManager;
 		private readonly ICurrentUser _currentUser;
 		private readonly IProfiler _profiler;
 		private readonly IAppCodeProvider _codeProvider;
 		private readonly ILocalizer _localizer;
-		private readonly IUserLocale _userLocale;
 		private readonly IAppVersion _appVersion;
 
-		public ShellController(IDbContext dbContext, IApplicationHost host, ICurrentUser currentUser, IUserStateManager userStateManager, IProfiler profiler,
-			IAppCodeProvider codeProvider, ILocalizer localizer, IUserLocale userLocale, IAppVersion appVersion)
+		public ShellController(IDbContext dbContext, IApplicationHost host, ICurrentUser currentUser, IProfiler profiler,
+			IAppCodeProvider codeProvider, ILocalizer localizer, IAppVersion appVersion)
 		{
 			_host = host;
 			_dbContext = dbContext;
 			_profiler = profiler;
 			_codeProvider = codeProvider;
 			_localizer = localizer;
-			_userLocale = userLocale;
-			_userStateManager = userStateManager;
 			_currentUser = currentUser;
 			_appVersion = appVersion;
 		}
@@ -60,13 +56,12 @@ namespace A2v10.Platform.Web
 
 		public Boolean IsDebugConfiguration => _host.IsDebugConfiguration;
 
-		public async Task Trace()
+		public IActionResult Trace()
 		{
 			try
 			{
 				String json = _profiler.GetJson() ?? "{}";
-				Response.ContentType = MimeTypes.Application.Json;
-				await HttpResponseWritingExtensions.WriteAsync(Response, json, Encoding.UTF8);
+				return new WebActionResult(json);
 			}
 			catch (Exception /*ex*/)
 			{
@@ -75,30 +70,28 @@ namespace A2v10.Platform.Web
 			}
 		}
 
-		public Task Script()
+		public Task<IActionResult> Script()
 		{
 			return DoScript(false);
 		}
 
-		public Task ScriptAdmin()
+		public Task<IActionResult> ScriptAdmin()
 		{
 			// TODO: is available?
 			return DoScript(true);
 		}
 
-		async Task DoScript(Boolean admin)
+		async Task<IActionResult> DoScript(Boolean admin)
 		{
 			try
 			{
 				Response.ContentType = MimeTypes.Application.Javascript;
 				var script = await BuildScript(admin);
-				await HttpResponseWritingExtensions.WriteAsync(Response, script, Encoding.UTF8);
+				return new WebActionResult(script);
 			}
 			catch (Exception ex)
 			{
-				Response.ContentType = MimeTypes.Text.Plain;
-				Response.StatusCode = 500;
-				await HttpResponseWritingExtensions.WriteAsync(Response, ex.ToString());
+				return new WebExceptionResult(500, ex.ToString());
 			}
 		}
 
@@ -192,7 +185,7 @@ namespace A2v10.Platform.Web
 				var menuJson = JsonConvert.SerializeObject(comps);
 				macros.Set("Companies", $"{{menu:{menuJson}, links:null}}");
 
-				_userStateManager.SetUserCompanyId(currComp.Get<Int64>("Id"));
+				_currentUser.SetCompanyId(currComp.Get<Int64>("Id"));
 
 			}
 
@@ -211,7 +204,7 @@ namespace A2v10.Platform.Web
 			// current company id
 			Int64 currentCompanyId = root.Eval<Int64>("CurrentCompany.Id");
 			if (currentCompanyId != 0)
-				_userStateManager.SetUserCompanyId(currentCompanyId);
+				_currentUser.SetCompanyId(currentCompanyId);
 
 			// get keys and features
 			StringBuilder strKeys = new();
@@ -265,9 +258,7 @@ namespace A2v10.Platform.Web
 
 		void SetUserStatePermission(IDataModel model)
 		{
-			if (_userStateManager == null)
-				return;
-			_userStateManager.SetReadOnly(model.Eval<Boolean>("UserState.ReadOnly"));
+			_currentUser.SetReadOnly(model.Eval<Boolean>("UserState.ReadOnly"));
 		}
 
 		async Task<String> GetAppData()
@@ -308,13 +299,5 @@ namespace A2v10.Platform.Web
 				writer.Write(txt);
 			}
 		}
-
-		#region IControllerLocale 
-		public void SetLocale()
-		{
-			var locale = User.Identity.GetUserLocale();
-			_userLocale.Locale = locale;
-		}
-		#endregion
 	}
 }

@@ -14,6 +14,26 @@ using A2v10.Infrastructure;
 
 namespace A2v10.Platform.Web.Controllers
 {
+	public class PageActionResult : IActionResult
+	{
+		IRenderResult _render;
+		String _script;
+
+		public PageActionResult(IRenderResult render, String script)
+		{
+			_render = render;
+			_script = script;
+		}
+
+		public async Task ExecuteResultAsync(ActionContext context)
+		{
+			var resp = context.HttpContext.Response;
+			resp.ContentType = _render.ContentType;
+			await resp.WriteAsync(_render.Body, Encoding.UTF8);
+			await resp.WriteAsync(_script, Encoding.UTF8);
+		}
+	}
+
 	[ExecutingFilter]
 	[Authorize]
 	[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
@@ -25,9 +45,9 @@ namespace A2v10.Platform.Web.Controllers
 		private readonly IViewEngineProvider _viewEngineProvider;
 
 		public PageController(IApplicationHost host, IAppCodeProvider codeProvider,
-			ILocalizer localizer, ICurrentUser currentUser, IUserStateManager userStateManager, IProfiler profiler,
-			IDataService dataService, IViewEngineProvider viewEngineProvider, IUserLocale userLocale)
-			: base(host, localizer, currentUser, userStateManager, profiler, userLocale)
+			ILocalizer localizer, ICurrentUser currentUser, IProfiler profiler, IDataService dataService, 
+			IViewEngineProvider viewEngineProvider)
+			: base(host, localizer, currentUser, profiler)
 		{
 			_dataService = dataService;
 			_codeProvider = codeProvider;
@@ -42,8 +62,7 @@ namespace A2v10.Platform.Web.Controllers
 			// {pagePath}/action/id
 			if (pathInfo.StartsWith("app/", StringComparison.OrdinalIgnoreCase))
 				return RenderApplicationPage(UrlKind.Page, pathInfo);
-			await Render(pathInfo + Request.QueryString, UrlKind.Page);
-			return new EmptyResult();
+			return await Render(pathInfo + Request.QueryString, UrlKind.Page);
 		}
 
 		[Route("_dialog/{*pathInfo}")]
@@ -53,35 +72,34 @@ namespace A2v10.Platform.Web.Controllers
 			// {pagePath}/dialog/id
 			if (pathInfo.StartsWith("app/", StringComparison.OrdinalIgnoreCase))
 				return RenderApplicationPage(UrlKind.Dialog, pathInfo);
-			await Render(pathInfo + Request.QueryString, UrlKind.Dialog);
-			return new EmptyResult();
+			return await Render(pathInfo + Request.QueryString, UrlKind.Dialog);
 		}
 
 		[Route("_popup/{*pathInfo}")]
 		[Route("admin/_popup/{*pathInfo}")]
-		public Task Popup(String pathInfo)
+		public Task<IActionResult> Popup(String pathInfo)
 		{
 			// {pagePath}/popup/id
 			return Render(pathInfo + Request.QueryString, UrlKind.Popup);
 		}
 
-		async Task Render(String path, UrlKind kind)
+		async Task<IActionResult> Render(String path, UrlKind kind)
 		{
 			try
 			{
 				var modelAndView = await _dataService.LoadAsync(kind, path, SetSqlQueryParams);
-				await Render(modelAndView);
+				return await Render(modelAndView);
 			} 
 			catch (Exception ex)
 			{
 				if (ex.Message.StartsWith("UI:"))
-					await WriteExceptionStatus(ex);
+					return WriteExceptionStatus(ex);
 				else
-					await WriteHtmlException(ex);
+					return WriteHtmlException(ex);
 			}
 		}
 
-		async Task Render(IDataLoadResult modelAndView, Boolean secondPhase = false)
+		async Task<IActionResult> Render(IDataLoadResult modelAndView, Boolean secondPhase = false)
 		{
 			Response.ContentType = MimeTypes.Text.HtmlUtf8;
 
@@ -124,10 +142,8 @@ namespace A2v10.Platform.Web.Controllers
 
 			var result = await viewEngine.Engine.RenderAsync(ri);
 
-			Response.ContentType = result.ContentType;
-			await HttpResponseWritingExtensions.WriteAsync(Response, result.Body, Encoding.UTF8);
 			await ProcessDbEvents(rw);
-			await HttpResponseWritingExtensions.WriteAsync(Response, si.Script, Encoding.UTF8);
+			return new PageActionResult(result, si.Script);
 		}
 
 		IActionResult RenderApplicationPage(UrlKind urlKind, String pathInfo)
