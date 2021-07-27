@@ -9,8 +9,9 @@ namespace A2v10.Web.Identity.UI
 	{
 		public String Login { get; set; }
 		public String Password { get; set; }
-		public String RememberMe { get; set; }
+		public Boolean RememberMe { get; set; }
+		public String RequestToken { get; set; }
 
-		public Boolean IsPersistent => RememberMe != null && RememberMe.Equals("on", StringComparison.OrdinalIgnoreCase);
+		public Boolean IsPersistent => RememberMe;
 	}
 }

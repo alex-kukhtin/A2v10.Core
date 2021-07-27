@@ -15,6 +15,7 @@ namespace A2v10.Platform.Web
 	public class WebTokenProvider : ITokenProvider
 	{
 		private readonly IHttpContextAccessor _httpContext;
+
 		public WebTokenProvider(IHttpContextAccessor httpContext)
 		{
 			_httpContext = httpContext;
@@ -29,7 +30,7 @@ namespace A2v10.Platform.Web
 				return null;
 			var sessionId = ctx.Session.Id;
 			// TODO:??? Session Id???
-			ctx.Session.SetString("SessID", Guid.NewGuid().ToString());
+			ctx.Session.SetString("SessionID", sessionId);
 			var userId = ctx.User.Identity.GetUserId<Int64>();
 			String key = $":{sessionId}:{accessToken}:{userId}:";
 			using var algo = SHA256.Create();

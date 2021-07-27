@@ -38,5 +38,10 @@ namespace A2v10.Infrastructure
 				_  => throw new ArgumentOutOfRangeException($"Invalid Mime for {ext}")
 			};
 		}
+
+		public static Boolean IsImage(String mime)
+		{
+			return mime != null && mime.StartsWith("image", StringComparison.OrdinalIgnoreCase);
+		}
 	}
 }

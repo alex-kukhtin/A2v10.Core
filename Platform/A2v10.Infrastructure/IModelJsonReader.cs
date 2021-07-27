@@ -35,6 +35,7 @@ namespace A2v10.Infrastructure
 		String LoadProcedure();
 		String Id { get; }
 		String Key { get; }
+		String Procedure { get; }
 	}
 
 	public interface IModelView: IModelBase

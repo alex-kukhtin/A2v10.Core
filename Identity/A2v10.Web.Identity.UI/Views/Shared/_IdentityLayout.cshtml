@@ -1,0 +1,50 @@
+﻿@inject ICurrentUser currentUser
+@inject IAppVersion appVersion
+
+<!DOCTYPE html>
+<!--
+A2v10 platform.
+Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+Site: https://a2v10.com
+GitHub: https://github.com/alex-kukhtin/A2v10.Core
+-->
+<html lang="uk">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta name="format-detection" content="telephone=no" />
+	<meta name="google" content="notranslate" />
+	<title></title>
+	<link href="/css/classic.min.css?v=@appVersion.AppBuild" rel="stylesheet" />
+	<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+	<link rel="icon" href="/favicon.ico" type="image/x-icon" />
+</head>
+<body>
+	<div id="app" class="shell" v-cloak>
+		<header class="header">
+			<a class="h-block">
+
+			</a>
+		</header>
+		<div class="main-view">
+			<div class="content-view full-view">
+				@RenderBody()
+			</div>
+		</div>
+		<footer class=footer style="padding-right:8px">
+			<div class=divider></div>
+			<span>
+				<a target=_blank tabindex="-1" href="https://a2v10.com"><i class="ico ico-a2logo a2logo-layout"></i></a>
+				<span>version</span>&nbsp;
+				<span>@appVersion.AppVersion</span>
+			</span>
+		</footer>
+	</div>
+	<script type="text/javascript" src="/scripts/vue.min.js?v=2.6.12"></script>
+	<script type="text/javascript">
+		@Html.Partial("/Views/Shared/_UtilsScript.cshtml")
+	</script>
+	@RenderSection("scripts", required: false)
+</body>
+</html>

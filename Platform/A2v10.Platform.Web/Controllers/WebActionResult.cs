@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Net.Http.Headers;
 
 using A2v10.Infrastructure;
 
@@ -51,6 +52,7 @@ namespace A2v10.Platform.Web.Controllers
 		List<Byte[]> _data = new List<Byte[]>();
 		Dictionary<String, String> _headers = new Dictionary<String, String>();
 		String _contentType;
+		Boolean _cache;
 
 		public WebBinaryActionResult(Byte[] data, String contentType = MimeTypes.Application.Json)
 		{
@@ -59,10 +61,16 @@ namespace A2v10.Platform.Web.Controllers
 			_contentType = contentType;
 		}
 
+		public WebBinaryActionResult EnableCache(Boolean bEnable = true)
+		{
+			_cache = bEnable;
+			return this;
+		}
 
-		public void AddHeader(String name, String value)
+		public WebBinaryActionResult AddHeader(String name, String value)
 		{
 			_headers.Add(name, value);
+			return this;
 		}
 
 		public async Task ExecuteResultAsync(ActionContext context)
@@ -73,6 +81,16 @@ namespace A2v10.Platform.Web.Controllers
 			{
 				resp.Headers.Remove(k);
 				resp.Headers.Add(k, v);
+			}
+
+			if (_cache)
+			{
+				resp.GetTypedHeaders().CacheControl =
+				new CacheControlHeaderValue()
+				{
+					Private = true,
+					MaxAge = TimeSpan.FromDays(30)
+				};
 			}
 
 			for (int i = 0; i < _data.Count; i++)

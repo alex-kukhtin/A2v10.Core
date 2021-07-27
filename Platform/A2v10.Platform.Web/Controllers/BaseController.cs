@@ -2,12 +2,10 @@
 
 using System;
 using System.Net;
-using System.Text;
 using System.Dynamic;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
 
 using A2v10.Infrastructure;
 
@@ -119,6 +117,22 @@ namespace A2v10.Platform.Web.Controllers
 		public Task ProcessDbEvents(IModelView view)
 		{
 			return Task.CompletedTask;
+		}
+
+		public IActionResult WriteImageException(Exception ex)
+		{
+			if (ex.InnerException != null)
+				ex = ex.InnerException;
+
+			var len = ex.Message.Length * 5;
+			var svg =
+			$@"<svg width='{len}px' height='40px' xmlns='http://www.w3.org/2000/svg'>
+				<rect width='{len}' height='40' fill='#fff0f5' stroke='#880000' stroke-width='1'/>
+				<text x='{len / 2}' y='25' fill='#880000' font-size='11px' text-anchor='middle'>{ex.Message}</text>
+			</svg>";
+			var res = new WebActionResult(svg, MimeTypes.Image.Svg);
+			res.AddHeader("cache-control", "no-store,no-cache");
+			return res;
 		}
 	}
 }

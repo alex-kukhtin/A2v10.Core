@@ -4,13 +4,13 @@
 		<AddRazorSupportForMvc>true</AddRazorSupportForMvc>
 		<AssemblyName>A2v10.ReportEngine.Stimulsoft</AssemblyName>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		<Version>10.1.8033</Version>
+		<Version>10.1.8034</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.ReportEngine.Stimulsoft</PackageId>
-		<Authors>Alex Kukthin</Authors>
-		<Company>Alex Kukthin</Company>
+		<Authors>Oleksandr Kukhtin</Authors>
+		<Company>Oleksandr Kukhtin</Company>
 		<Description>Stimulsoft report engine for A2v10</Description>
-		<Copyright>Copyright © 2020-2021 Alex Kukhtin. All rights reserved.</Copyright>
+		<Copyright>Copyright © 2020-2021 Oleksandr Kukhtin. All rights reserved.</Copyright>
 		<RepositoryType>github</RepositoryType>
 		<PackageTags>A2v10 Reports Stimulsoft</PackageTags>
 		<EnableDefaultContentItems>False</EnableDefaultContentItems>

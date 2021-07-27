@@ -4,7 +4,7 @@
     <TargetFramework>net5.0</TargetFramework>
 	  <AssemblyName>A2v10.Infrastructure</AssemblyName>
 	  <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-	  <Version>10.1.8033</Version>
+	  <Version>10.1.8034</Version>
 	  <Product>A2v10</Product>
 	  <PackageId>A2v10.Infrastructure</PackageId>
 	  <Authors>Oleksandr Kukhtin</Authors>

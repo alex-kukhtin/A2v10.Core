@@ -12,7 +12,8 @@ namespace A2v10.Infrastructure
 		Dialog,
 		Popup,
 		Image,
-		Report
+		Report,
+		File
 	}
 
 	public interface IPlatformUrl

@@ -56,6 +56,7 @@ namespace A2v10.Services
 			return url.Kind switch
 			{
 				UrlKind.Image => rm.GetBlob(url.Action, suffix),
+				UrlKind.File => rm.GetFile(url.Action),
 				_ => null
 			};
 		}

@@ -4,7 +4,7 @@
 	<TargetFramework>net5.0</TargetFramework>
 	  <AssemblyName>A2v10.Identity.Core</AssemblyName>
 	  <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-	  <Version>10.1.8011</Version>
+	  <Version>10.1.8034</Version>
 	  <Product>A2v10</Product>
 	  <PackageId>A2v10.Identity.Core</PackageId>
 	  <Authors>Alex Kukthin</Authors>

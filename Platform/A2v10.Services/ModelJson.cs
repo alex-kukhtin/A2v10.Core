@@ -83,9 +83,12 @@ namespace A2v10.Services
 		public String Key { get; init; }
 		public String Id { get; init; }
 		public String Suffix { get; init; }
+		public String Procedure { get; init; }
 
 		public override String LoadProcedure()
 		{
+			if (!String.IsNullOrEmpty(Procedure))
+				return Procedure;
 			var suffix = Suffix ?? "Load";
 			return $"[{Schema}].[{Model}.{Key}.{suffix}]";
 		}
@@ -333,6 +336,23 @@ namespace A2v10.Services
 			};
 			blob.SetParent(this);
 			return blob;
+		}
+
+		public ModelJsonBlob GetFile(String key)
+		{
+			if (!Files.TryGetValue(key, out ModelJsonFile file))
+				throw new ModelJsonException($"File: {key} not found");
+
+			var blob = new ModelJsonBlob()
+			{
+				Id = _id,
+				Schema = this.Schema,
+				Source = this.Source,
+				Procedure = file.LoadProcedure()
+			};
+			blob.SetParent(this);
+			return blob;
+
 		}
 
 		public ModelJsonView GetPopup(String key)

@@ -14,10 +14,12 @@ namespace A2v10.Web.Identity.UI
 	public class AccountController : Controller
 	{
 		private readonly SignInManager<AppUser> _signInManager;
+		private readonly IAntiforgery _antiforgery;
 
-		public AccountController(SignInManager<AppUser> signInManager)
+		public AccountController(SignInManager<AppUser> signInManager, IAntiforgery antiforgery)
 		{
 			_signInManager = signInManager;
+			_antiforgery = antiforgery;
 		}
 
 		[AllowAnonymous]
@@ -25,15 +27,17 @@ namespace A2v10.Web.Identity.UI
 		public IActionResult Login(String returnUrl)
 		{
 			var m = new LoginViewModel();
+			m.RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken;
 			TempData["ReturnUrl"] = returnUrl;
 			return View(m);
 		}
 
 		[AllowAnonymous]
 		[HttpPost]
-		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> Login(LoginViewModel model)
+		public async Task<IActionResult> Login([FromForm] LoginViewModel model)
 		{
+			var isValid = await _antiforgery.IsRequestValidAsync(HttpContext);
+			//_antiforgery.ValidateRequestAsync
 			var result = await _signInManager.PasswordSignInAsync(model.Login, model.Password, model.IsPersistent, lockoutOnFailure: true);
 			if (result.Succeeded)
 			{
