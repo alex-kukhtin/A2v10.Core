@@ -10,6 +10,7 @@ using A2v10.ReportEngine.Stimulsoft;
 using A2v10.Services;
 using A2v10.ViewEngine.Xaml;
 using A2v10.Platform.Web;
+using System.Globalization;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -86,6 +87,12 @@ namespace Microsoft.Extensions.DependencyInjection
 			{
 				endpoints.MapControllers();
 			});
+
+			// TODO: use settings?
+			var cultureInfo = new CultureInfo("uk-UA");
+
+			CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
+			CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 		}
 	}
 }

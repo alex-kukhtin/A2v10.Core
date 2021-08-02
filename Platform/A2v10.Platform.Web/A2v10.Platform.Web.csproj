@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>net5.0</TargetFramework>
 		<AddRazorSupportForMvc>true</AddRazorSupportForMvc>
-		<Version>10.1.8034</Version>
+		<Version>10.1.8040</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Plaform.Web</PackageId>
 		<Authors>Oleksandr Kukthin</Authors>

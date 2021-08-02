@@ -7,9 +7,9 @@
 
 <div id="shell" class="shell @(Model.Debug ? "debug" : "release")" v-cloak>
 	<a2-app-header :title="title" :subtitle="subtitle" :user-state=userState :single-page=singlePage
-				   :menu=menu :new-menu=newMenu :settings-menu=settingsMenu :app-data="appData"
-				   person-name="@Model.PersonName" :user-is-admin="userIsAdmin" :show-feedback="showFeedback"
-				   :feedback-visible="feedbackVisible" :change-password="changePassword" :nav-bar-mode=navBarMode>
+			:menu=menu :new-menu=newMenu :settings-menu=settingsMenu :app-data="appData"
+			person-name="@Model.PersonName" :user-is-admin="userIsAdmin" :show-feedback="showFeedback"
+			:feedback-visible="feedbackVisible" :change-password="changePassword" :nav-bar-mode=navBarMode>
 		@if (host.IsMultiCompany)
 		{
 			<a2-company-button :source="companies.menu" :links="companies.links"></a2-company-button>

@@ -22,10 +22,20 @@ namespace A2v10.Xaml
 		}
 	}
 
-	public abstract class RootContainer : Container, IUriContext
+	public abstract class RootContainer : Container, IUriContext, IRootContainer
 	{
 		#region IUriContext
 		public Uri BaseUri { get; set; }
+		#endregion
+
+
+		#region IRootContainer
+		public void SetStyles(Styles styles)
+		{
+			Styles = styles;
+			OnSetStyles();
+		}
+
 		#endregion
 
 		protected ResourceDictionary _resources;

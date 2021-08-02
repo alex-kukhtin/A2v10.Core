@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
 using System.Linq;
@@ -127,14 +127,14 @@ namespace A2v10.Xaml
 		private readonly Stack<GridRowCol> _stackGrid = new();
 		private readonly Stack<ScopeElem> _stackScope = new();
 
-		readonly private UIElementBase _root;
+		readonly private IXamlElement _root;
 		private readonly IDataModel _dataModel;
 		private readonly ILocalizer _localizer;
 		private readonly ITypeChecker _typeChecker;
 
 		readonly private String _currentLocale;
 
-		public RenderContext(UIElementBase root, IRenderInfo ri, ILocalizer localizer, TextWriter writer)
+		public RenderContext(IXamlElement root, IRenderInfo ri, ILocalizer localizer, TextWriter writer)
 		{
 			Writer = writer;
 			_root = root;

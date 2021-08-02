@@ -3,8 +3,10 @@
 7. Identity.State IsValid???
 8. Session for ITokenProvider?? - убрать сессию?
 
+
 == TODO: Packages
 ============================
+sql.targets в A2v10.Platform
 
 
 == TODO: A2v10.Core Platform

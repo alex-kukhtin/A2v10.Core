@@ -7,5 +7,6 @@ namespace A2v10.Infrastructure
 	public interface ILocalizer
 	{
 		String Localize(String locale, String content, Boolean replaceNewLine = true);
+		String Localize(String content);
 	}
 }

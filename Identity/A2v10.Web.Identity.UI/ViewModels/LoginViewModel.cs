@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+
+using System;
 
 namespace A2v10.Web.Identity.UI
 {
-	public class LoginViewModel
+	public class LoginViewModel : IIdentityViewModel
 	{
 		public String Login { get; set; }
 		public String Password { get; set; }
@@ -13,5 +12,7 @@ namespace A2v10.Web.Identity.UI
 		public String RequestToken { get; set; }
 
 		public Boolean IsPersistent => RememberMe;
+
+		public AppTitleModel Title { get; init; }
 	}
 }

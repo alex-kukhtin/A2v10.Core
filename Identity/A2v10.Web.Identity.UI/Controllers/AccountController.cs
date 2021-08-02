@@ -2,6 +2,8 @@
 
 using System;
 using System.Threading.Tasks;
+using A2v10.Data.Interfaces;
+using A2v10.Infrastructure;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -15,18 +17,33 @@ namespace A2v10.Web.Identity.UI
 	{
 		private readonly SignInManager<AppUser> _signInManager;
 		private readonly IAntiforgery _antiforgery;
+		private readonly IDbContext _dbContext;
+		private readonly IApplicationHost _host;
 
-		public AccountController(SignInManager<AppUser> signInManager, IAntiforgery antiforgery)
+		public AccountController(SignInManager<AppUser> signInManager, IAntiforgery antiforgery, IApplicationHost host, IDbContext dbContext)
 		{
 			_signInManager = signInManager;
 			_antiforgery = antiforgery;
+			_dbContext = dbContext;
+			_host = host;
+
+		}
+
+		void RemoveAllCookies()
+		{
+			Response.Cookies.Delete(CookieNames.Application.Profile);
+			Response.Cookies.Delete(CookieNames.Identity.State);
 		}
 
 		[AllowAnonymous]
 		[HttpGet]
-		public IActionResult Login(String returnUrl)
+		public async Task<IActionResult> Login(String returnUrl)
 		{
-			var m = new LoginViewModel();
+			RemoveAllCookies();
+			var m = new LoginViewModel()
+			{
+				Title = await _dbContext.LoadAsync<AppTitleModel>(_host.CatalogDataSource, "a2ui.[AppTitle.Load]")
+			};
 			m.RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken;
 			TempData["ReturnUrl"] = returnUrl;
 			return View(m);
@@ -44,7 +61,6 @@ namespace A2v10.Web.Identity.UI
 				var returnUrl = (TempData["ReturnUrl"] ?? "/").ToString().ToLowerInvariant();
 				if (returnUrl.StartsWith("/account"))
 					returnUrl = "/";
-				HttpContext.Response.Cookies.Delete(AntiforgeryOptions.DefaultCookiePrefix);
 				return LocalRedirect(returnUrl);
 			}
 			throw new InvalidOperationException("Invalid login");
@@ -52,12 +68,19 @@ namespace A2v10.Web.Identity.UI
 
 
 		[HttpGet]
+		[AllowAnonymous]
+		public IActionResult Register()
+		{
+			return new EmptyResult();
+		}
+
+		[HttpGet]
 		[HttpPost]
 		public async Task<IActionResult> Logout()
 		{
 			await _signInManager.SignOutAsync();
 			//HttpContext.Session.Clear(); ???
-			//ClearAllCookies(); // TODO:
+			RemoveAllCookies(); // TODO:
 			return LocalRedirect("/");
 		}
 

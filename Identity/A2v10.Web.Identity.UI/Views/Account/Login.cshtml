@@ -1,14 +1,14 @@
 ﻿
 @model LoginViewModel
-@inject ILocalizer _localizer
+@inject ILocalizer _loc
 
 <div class="center-page">
 	<div class="initial-form">
-		<h3 class="a2-header text-center">Login to system</h3>
+		<h3 class="a2-header text-center">@_loc.Localize("@[LoginPrompt]")</h3>
 		<hr style="margin-top:1rem" />
 		<form method=post novalidate=novalidate>
 			<div class="control-group" v-class="{invalid: !validEmail}">
-				<label for="login" style="grid-row:1; grid-column:1" class="a2-label required">E-mail</label>
+				<label for="login" style="grid-row:1; grid-column:1" class="a2-label required">@_loc.Localize("@[Email]")</label>
 				<div class="input-group">
 					<input v-focus class="control" id="login" name="email" type="text" v-model="email" tabindex="1" v-on:keyup.enter="onLoginEnter" autocomplete="email" spellcheck="false" />
 					<div class="validator">
@@ -17,7 +17,7 @@
 				</div>
 			</div>
 			<div class="control-group" v-class="{invalid: !validPassword}">
-				<label v-for="password" style="grid-row:2; grid-column:1" class="a2-label required">Password</label>
+				<label v-for="password" style="grid-row:2; grid-column:1" class="a2-label required">@_loc.Localize("@[Password]")</label>
 				<div class="input-group">
 					<input class="control" v-focus type="password" id="password" name="password" v-model="password" autocomplete="current-password" tabindex="2" v-on:keydown.enter.stop.prevent="onPwdEnter" ref="pwd" />
 					<div class="validator" v-if="false">
@@ -27,10 +27,10 @@
 			</div>
 			<label class="checkbox">
 				<input type="checkbox" v-model="rememberMe" tabindex="3" />
-				<span>Stay signed in</span>
+				<span>@_loc.Localize("@[RememberCredentials]")</span>
 			</label>
 
-			<button v-on:click.stop.prevent="submit" class="btn btn-default" ref="submit" tabindex="4">Login</button>
+			<button v-on:click.stop.prevent="submit" class="btn btn-default" ref="submit" tabindex="4">@_loc.Localize("@[Login]")</button>
 		</form>
 	</div>
 </div>

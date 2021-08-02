@@ -106,7 +106,6 @@ namespace A2v10.Platform.Web
 
 	public sealed class WebProfiler : IProfiler, IDataProfiler, IDisposable
 	{
-		const String COOKIE_NAME = "Application.Profile";
 		const Int32 REQUEST_COUNT = 50;
 
 		private LinkedList<ProfileRequest> _requestList;
@@ -160,7 +159,7 @@ namespace A2v10.Platform.Web
 
 		void LoadSession()
 		{
-			var protectedData = _httpContext.HttpContext.Request.Cookies[COOKIE_NAME];
+			var protectedData = _httpContext.HttpContext.Request.Cookies[CookieNames.Application.Profile];
 			if (String.IsNullOrEmpty(protectedData))
 				_requestList = new LinkedList<ProfileRequest>();
 			else
@@ -170,12 +169,12 @@ namespace A2v10.Platform.Web
 		void SaveSession()
 		{
 			String json = JsonConvert.SerializeObject(_requestList);
-			_httpContext.HttpContext.Response.Cookies.Append(COOKIE_NAME, _protector.Protect(json));
+			_httpContext.HttpContext.Response.Cookies.Append(CookieNames.Application.Profile, _protector.Protect(json));
 		}
 
 		public String GetJson()
 		{
-			var protectedData = _httpContext.HttpContext.Request.Cookies[COOKIE_NAME];
+			var protectedData = _httpContext.HttpContext.Request.Cookies[CookieNames.Application.Profile];
 			if (protectedData == null)
 				return null;
 			return _protector.Unprotect(protectedData);

@@ -53,8 +53,6 @@ namespace A2v10.Platform.Web
 
 	public class CurrentUser : ICurrentUser
 	{
-		const String DefaultCookieName = "Identity.State";
-
 		public IUserIdentity Identity { get; private set; }
 		public UserState State {get; private set;}
 		public IUserLocale Locale { get; private set; }
@@ -103,7 +101,7 @@ namespace A2v10.Platform.Web
 
 		void SetupUserState(HttpContext context)
 		{
-			var state = context.Request.Cookies[DefaultCookieName];
+			var state = context.Request.Cookies[CookieNames.Identity.State];
 			if (String.IsNullOrEmpty(state))
 			{
 				State = new UserState()
@@ -161,7 +159,7 @@ namespace A2v10.Platform.Web
 		void StoreState()
 		{
 			var stateJson = JsonConvert.SerializeObject(State);
-			_httpContextAccessor.HttpContext.Response.Cookies.Append(DefaultCookieName, _protector.Protect(stateJson));
+			_httpContextAccessor.HttpContext.Response.Cookies.Append(CookieNames.Identity.State, _protector.Protect(stateJson));
 		}
 	}
 }

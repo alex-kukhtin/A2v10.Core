@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFramework>net5.0</TargetFramework>
-		<Version>10.1.8035</Version>
+		<Version>10.1.8040</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Plaform</PackageId>
 		<Authors>Oleksandr Kukthin</Authors>
@@ -14,15 +14,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="A2v10.Web.Assets" Version="10.1.8033" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<ProjectReference Include="..\..\Identity\A2v10.Identity.Core\A2v10.Identity.Core.csproj" />
 		<ProjectReference Include="..\..\Identity\A2v10.Web.Identity.UI\A2v10.Web.Identity.UI.csproj" />
 		<ProjectReference Include="..\..\ReportEngines\A2v10.ReportEngine.Stimulsoft\A2v10.ReportEngine.Stimulsoft.csproj" />
 		<ProjectReference Include="..\..\Storage\A2v10.Storage.SqlServer\A2v10.Storage.SqlServer.csproj" />
 		<ProjectReference Include="..\..\ViewEngines\A2v10.ViewEngine.Xaml\A2v10.ViewEngine.Xaml.csproj" />
+		<ProjectReference Include="..\A2v10.Platform.Web\A2v10.Platform.Web.csproj" />
 		<ProjectReference Include="..\A2v10.Services\A2v10.Services.csproj" />
 	</ItemGroup>
 

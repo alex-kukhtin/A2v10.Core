@@ -4,7 +4,7 @@
 	<TargetFramework>net5.0</TargetFramework>
 	  <AssemblyName>A2v10.Identity.Core</AssemblyName>
 	  <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-	  <Version>10.1.8034</Version>
+	  <Version>10.1.8040</Version>
 	  <Product>A2v10</Product>
 	  <PackageId>A2v10.Identity.Core</PackageId>
 	  <Authors>Alex Kukthin</Authors>
@@ -31,10 +31,6 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <ProjectReference Include="..\..\Platform\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
 	</ItemGroup>
 
 </Project>

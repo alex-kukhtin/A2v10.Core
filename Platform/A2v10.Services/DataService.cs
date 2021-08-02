@@ -75,7 +75,8 @@ namespace A2v10.Services
 
 				if (view.Merge != null)
 				{
-					var mergeModel = await _dbContext.LoadModelAsync(view.Merge.DataSource, view.Merge.LoadProcedure(), prmsForLoad);
+					var prmsForMerge = view.Merge.CreateMergeParameters(model, prmsForLoad);
+					var mergeModel = await _dbContext.LoadModelAsync(view.Merge.DataSource, view.Merge.LoadProcedure(), prmsForMerge);
 					model.Merge(mergeModel);
 				}
 

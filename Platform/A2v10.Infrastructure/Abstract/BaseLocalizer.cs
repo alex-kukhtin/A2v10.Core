@@ -32,6 +32,11 @@ namespace A2v10.Infrastructure
 			return key;
 		}
 
+		public String Localize(String content)
+		{
+			return Localize(null, content);
+		}
+
 		public String Localize(String locale, String content, Boolean replaceNewLine = true)
 		{
 			if (content == null)

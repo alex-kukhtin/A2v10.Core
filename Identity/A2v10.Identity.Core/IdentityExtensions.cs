@@ -1,6 +1,6 @@
 ﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-using A2v10.Infrastructure;
+//using A2v10.Infrastructure;
 using System;
 using System.Globalization;
 using System.Security.Claims;
@@ -10,6 +10,12 @@ namespace A2v10.Web.Identity
 {
 	public static class IdentityExtensions
 	{
+
+		public static Boolean IsNullableType(this Type type)
+		{
+			return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
+		}
+
 		public static T GetUserId<T>(this IIdentity identity)
 		{
 			if (identity == null)

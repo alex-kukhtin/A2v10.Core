@@ -38,6 +38,11 @@ namespace A2v10.Infrastructure
 		String Procedure { get; }
 	}
 
+	public interface IModelMerge : IModelBase
+	{
+		ExpandoObject CreateMergeParameters(IDataModel model, ExpandoObject prms);
+	}
+
 	public interface IModelView: IModelBase
 	{
 		Boolean Copy { get; }
@@ -48,7 +53,7 @@ namespace A2v10.Infrastructure
 		String TargetId { get; }
 		IModelView TargetModel { get; }
 
-		IModelBase Merge { get; }
+		IModelMerge Merge { get; }
 
 		String GetView(Boolean bMobile);
 		Boolean IsDialog { get; }

@@ -62,13 +62,31 @@ namespace A2v10.Services
 		}
 	}
 
+	public class ModelJsonMerge : ModelJsonBase, IModelMerge
+	{
+		public ExpandoObject CreateMergeParameters(IDataModel model, ExpandoObject prms)
+		{
+			if (Parameters == null || Parameters.IsEmpty())
+				return prms;
+			var result = prms.Clone();
+			foreach (var (k, v) in Parameters)
+			{
+				if (v is String strVal && strVal.StartsWith("{{", StringComparison.Ordinal))
+					result.Set(k, model.Root.Resolve(strVal));
+				else
+					result.Set(k, v);
+			}
+			return result;
+		}
+	}
+
 	public class ModelJsonViewBase : ModelJsonBase
 	{
 		#region JSON
 		public Boolean Index { get; set; }
 		public Boolean Copy { get; set; }
 
-		public ModelJsonBase Merge { get; set; }
+		public ModelJsonMerge Merge { get; set; }
 		#endregion
 
 		internal override void SetParent(ModelJson rm)
@@ -97,7 +115,7 @@ namespace A2v10.Services
 	public class ModelJsonView : ModelJsonViewBase, IModelView
 	{
 		// explicit
-		IModelBase IModelView.Merge => Merge;
+		IModelMerge IModelView.Merge => Merge;
 		IModelView IModelView.TargetModel => TargetModel;
 
 		public String View { get; set; }

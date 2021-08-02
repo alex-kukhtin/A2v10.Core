@@ -6,7 +6,7 @@ using A2v10.Infrastructure;
 
 namespace A2v10.Xaml
 {
-	public abstract class UIElementBase : XamlElement
+	public abstract class UIElementBase : XamlElement, IXamlElement
 	{
 		public Boolean? If { get; set; }
 		public Boolean? Show { get; set; }
