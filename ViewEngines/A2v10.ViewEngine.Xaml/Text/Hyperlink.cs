@@ -88,6 +88,9 @@ namespace A2v10.Xaml
 			if (IsNavigateExternal())
 				tag.MergeAttribute("rel", "noopener");
 
+			if (Render == RenderMode.Show)
+				tag.AddCssClass("rendershow");
+
 			if (Size != ControlSize.Default)
 			{
 				switch (Size)
