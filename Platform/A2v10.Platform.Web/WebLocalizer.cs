@@ -3,12 +3,11 @@
 using System;
 using System.Collections.Generic;
 
-using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 
 namespace A2v10.Platform.Web
 {
-	public class WebLocalizer : BaseLocalizer, IDataLocalizer
+	public class WebLocalizer : BaseLocalizer
 	{
 		private readonly ILocalizerDictiorany _dictionary;
 
@@ -17,13 +16,6 @@ namespace A2v10.Platform.Web
 		{
 			_dictionary = dictiorany;
 		}
-
-		#region IDataLocalizer
-		public String Localize(String content)
-		{
-			return Localize(null, content, true);
-		}
-		#endregion
 
 		protected override IDictionary<String, String> GetLocalizerDictionary(String locale)
 		{

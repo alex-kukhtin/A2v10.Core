@@ -30,18 +30,18 @@ namespace A2v10.Platform.Web
 
 		internal const String DATAFUNC =
 		@"
-	function() {
-		$(RequiredModules)
+function() {
+	$(RequiredModules)
 
-		const rawData = $(DataModelText);
-		const template = $(TemplateText);
+	const rawData = $(DataModelText);
+	const template = $(TemplateText);
 
-		$(ModelScript)
+	$(ModelScript)
 		
-		return {
-			dataModel: modelData(template, rawData)
-		};
-	}
+	return {
+		dataModel: modelData(template, rawData)
+	};
+}
 ";
 
 		internal const String DATAFUNC_SERVER =
@@ -100,12 +100,12 @@ const vm = new DataModelController({
 	}
 });
 
-	vm.$data._host_ = {
-		$viewModel: vm,
-		$ctrl: vm.__createController__(vm)
-	};
+vm.$data._host_ = {
+	$viewModel: vm,
+	$ctrl: vm.__createController__(vm)
+};
 
-	vm.__doInit__('$(BaseUrl)');
+vm.__doInit__('$(BaseUrl)');
 
 })();
 </script>
@@ -149,17 +149,17 @@ const vm = new DataModelController({
 
 		static String CreateEmptyStript()
 		{
-			var sb = new StringBuilder();
-			sb.AppendLine("function modelData(template, data) {");
-			sb.AppendLine("const cmn = require('std:datamodel');");
-			sb.AppendLine("function TRoot(source, path, parent) {");
-			sb.AppendLine("cmn.createObject(this, source, path, parent);}");
-			sb.AppendLine("cmn.defineObject(TRoot, { props: { } }, false);");
-			sb.AppendLine("const ctors = {TRoot};");
-			sb.AppendLine("cmn.implementRoot(TRoot, template, ctors);");
-			sb.AppendLine("let root = new TRoot(data);");
-			sb.AppendLine("cmn.setModelInfo(root, {}, rawData); return root;}");
-			return sb.ToString();
+			return @"
+function modelData(template, data) {
+	const cmn = require('std:datamodel');
+	function TRoot(source, path, parent) { cmn.createObject(this, source, path, parent);}
+	cmn.defineObject(TRoot, { props: { } }, false);
+	cmn.implementRoot(TRoot, template, {TRoot});
+	let root = new TRoot(data);
+	cmn.setModelInfo(root, {}, rawData); 
+	return root;
+}
+";
 		}
 
 		static String SetModelInfo(IDataHelper helper, IDictionary<String, Object> sys)

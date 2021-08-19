@@ -1,5 +1,6 @@
 ﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
+using A2v10.Data.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -7,7 +8,7 @@ using System.Threading;
 
 namespace A2v10.Infrastructure
 {
-	public abstract class BaseLocalizer : ILocalizer
+	public abstract class BaseLocalizer : ILocalizer, IDataLocalizer
 	{
 		protected abstract IDictionary<String, String> GetLocalizerDictionary(String locale);
 
