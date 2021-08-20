@@ -4,11 +4,11 @@
 	<TargetFramework>net5.0</TargetFramework>
 	  <AssemblyName>A2v10.Identity.Core</AssemblyName>
 	  <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-	  <Version>10.1.8040</Version>
+	  <Version>10.1.8041</Version>
 	  <Product>A2v10</Product>
 	  <PackageId>A2v10.Identity.Core</PackageId>
-	  <Authors>Alex Kukthin</Authors>
-	  <Company>Alex Kukthin</Company>
+	  <Authors>Oleksandr Kukhtin</Authors>
+	  <Company>Oleksandr Kukhtin</Company>
 	  <Description>A2v10 Identity Core Services</Description>
 	  <Copyright>Copyright © 2015-2021 Oleksandr Kukhtin. All rights reserved.</Copyright>
 	  <RepositoryType>github</RepositoryType>

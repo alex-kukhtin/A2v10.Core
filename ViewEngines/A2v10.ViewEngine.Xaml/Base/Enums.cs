@@ -306,6 +306,7 @@ namespace A2v10.Xaml
 		Download,
 		Edit,
 		Ellipsis,
+		EllipsisBottom,
 		EllipsisVertical,
 		Error,
 		ErrorOutline,

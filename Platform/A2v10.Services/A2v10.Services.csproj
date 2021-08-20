@@ -4,7 +4,7 @@
     <TargetFramework>net5.0</TargetFramework>
 	  <AssemblyName>A2v10.Services</AssemblyName>
 	  <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-	  <Version>10.1.8040</Version>
+	  <Version>10.1.8041</Version>
 	  <Product>A2v10</Product>
 	  <PackageId>A2v10.Services</PackageId>
 	  <Authors>Oleksandr Kukhtin</Authors>
@@ -16,7 +16,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DocumentFormat.OpenXml" Version="2.13.0" />
+    <PackageReference Include="DocumentFormat.OpenXml" Version="2.13.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2" />
