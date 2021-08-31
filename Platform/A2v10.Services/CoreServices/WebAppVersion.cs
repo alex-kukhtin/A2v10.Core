@@ -28,7 +28,7 @@ namespace A2v10.Services
 
 	public class AppInfo
 	{
-		public static AssemblyDescription MainAssembly => GetDescription(Assembly.GetExecutingAssembly());
+		public static AssemblyDescription MainAssembly => GetDescription(Assembly.Load("A2v10.Platform"));
 
 		static AssemblyDescription GetDescription(Assembly a)
 		{

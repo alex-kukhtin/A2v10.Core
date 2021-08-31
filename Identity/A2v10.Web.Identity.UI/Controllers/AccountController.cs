@@ -2,12 +2,14 @@
 
 using System;
 using System.Threading.Tasks;
-using A2v10.Data.Interfaces;
-using A2v10.Infrastructure;
+
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+
+using A2v10.Data.Interfaces;
+using A2v10.Infrastructure;
 
 namespace A2v10.Web.Identity.UI
 {
