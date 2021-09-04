@@ -40,7 +40,7 @@ sql.targets в A2v10.Platform
 55. Admin - Button on main interface
 56. _shell/script - exception - странное поведение
 
-60. BaseController в отдельную сборку (SetParams, Filter, IControllerTenant)
+60. BaseController в отдельную сборку (SetParams, Filter)
 61. SetParams for StimulsoftController
 62. QueryString StimulsoftController
 63. Проверить Profiler

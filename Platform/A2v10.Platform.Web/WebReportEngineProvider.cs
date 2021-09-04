@@ -5,7 +5,6 @@ using System.Linq;
 using System.Collections.Generic;
 
 using A2v10.Infrastructure;
-using Microsoft.Extensions.Configuration;
 
 namespace A2v10.Platform.Web
 {

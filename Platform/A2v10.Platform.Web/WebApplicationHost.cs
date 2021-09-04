@@ -26,10 +26,10 @@ namespace A2v10.Platform.Web
 		private readonly IProfiler _profiler;
 		private readonly IAppConfiguration _appConfiguration;
 		private readonly PlatformOptions _options;
-		private readonly ICurrentUser _currentUser;
+		private readonly IDbIdentity _currentUser;
 		private Boolean _admin;
 
-		public WebApplicationHost(IConfiguration config, IProfiler profiler, IAppConfiguration appConfiguration, PlatformOptions options, ICurrentUser currentUser)
+		public WebApplicationHost(IConfiguration config, IProfiler profiler, IAppConfiguration appConfiguration, PlatformOptions options, IDbIdentity currentUser)
 		{
 			_profiler = profiler;
 			_appConfiguration = appConfiguration;
@@ -67,15 +67,11 @@ namespace A2v10.Platform.Web
 
 		//public String ScriptEngine => throw new NotImplementedException();
 
-		public Boolean IsAdminAppPresent => false /*TODO:*/;
+		public Boolean IsAdminAppPresent => true /*TODO:*/;
 
-
-		private Int32? TenantId => _currentUser.Identity.Tenant;
-		private Int64? UserId => _currentUser.Identity.Id;
-		private String UserSegment => _currentUser.Identity.Segment;
 
 		public String CatalogDataSource => IsMultiTenant ? "Catalog" : null;
-		public String TenantDataSource => String.IsNullOrEmpty(UserSegment) ? null : UserSegment;
+		public String TenantDataSource => String.IsNullOrEmpty(_currentUser.Segment) ? null : _currentUser.Segment;
 
 		public void CheckIsMobile(string host)
 		{
@@ -137,11 +133,11 @@ namespace A2v10.Platform.Web
 				return null;
 			if (source == CatalogDataSource)
 				return null;
-			if (TenantId == null)
+			if (!_currentUser.TenantId.HasValue)
 				throw new InvalidOperationException("There is no TenantId");
 			return new TenantInfo()
 			{
-				TenantId = this.TenantId.Value
+				TenantId = _currentUser.TenantId.Value
 			};
 		}
 		#endregion

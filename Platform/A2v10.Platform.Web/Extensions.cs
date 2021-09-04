@@ -50,7 +50,8 @@ namespace Microsoft.Extensions.DependencyInjection
 			services.AddScoped<ITokenProvider, WebTokenProvider>();
 
 			services.AddScoped<CurrentUser>()
-				.AddScoped<ICurrentUser>(s => s.GetService<CurrentUser>());
+				.AddScoped<ICurrentUser>(s => s.GetService<CurrentUser>())
+				.AddScoped<IDbIdentity>(s => s.GetService<CurrentUser>());
 
 			services.AddDistributedMemoryCache();
 			services.AddSession();

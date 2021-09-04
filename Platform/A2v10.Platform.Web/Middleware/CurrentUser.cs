@@ -1,14 +1,18 @@
 ﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
+using System.Threading;
 
 using Microsoft.AspNetCore.Http;
 
-using A2v10.Infrastructure;
-using A2v10.Web.Identity;
-using System.Threading;
-using Newtonsoft.Json;
 using Microsoft.AspNetCore.DataProtection;
+
+using Newtonsoft.Json;
+
+using A2v10.Infrastructure;
+using A2v10.Data.Interfaces;
+
+using A2v10.Web.Identity;
 
 namespace A2v10.Platform.Web
 {
@@ -51,11 +55,17 @@ namespace A2v10.Platform.Web
 		}
 	}
 
-	public class CurrentUser : ICurrentUser
+	public class CurrentUser : ICurrentUser, IDbIdentity
 	{
 		public IUserIdentity Identity { get; private set; }
 		public UserState State {get; private set;}
 		public IUserLocale Locale { get; private set; }
+
+		#region IDbIdentity
+		public Int32? TenantId => Identity?.Tenant;
+		public Int64? UserId => Identity?.Id;
+		public String Segment => Identity?.Segment;
+		#endregion
 
 		IUserState ICurrentUser.State => State;
 

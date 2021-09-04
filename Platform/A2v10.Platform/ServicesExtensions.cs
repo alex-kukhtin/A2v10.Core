@@ -1,5 +1,7 @@
 ﻿// Copyright © 2021 Alex Kukhtin. All rights reserved.
 
+using System.Globalization;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -10,7 +12,6 @@ using A2v10.ReportEngine.Stimulsoft;
 using A2v10.Services;
 using A2v10.ViewEngine.Xaml;
 using A2v10.Platform.Web;
-using System.Globalization;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
