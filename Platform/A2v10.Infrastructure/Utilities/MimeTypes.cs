@@ -9,6 +9,7 @@ namespace A2v10.Infrastructure
 			public const String Json = "application/json";
 			public const String Javascript = "application/javascript";
 			public const String OctetBinary = "application/octet-binary";
+			public const String OctetStream = "application/octet-stream";
 		}
 
 		public static class Text

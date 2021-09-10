@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using A2v10.Infrastructure;
 using A2v10.Data.Interfaces;
 using System.Net.Http.Headers;
+using Microsoft.AspNetCore.StaticFiles;
 
 namespace A2v10.Platform.Web.Controllers
 {
@@ -88,6 +89,29 @@ namespace A2v10.Platform.Web.Controllers
 			if (generated == token)
 				return;
 			throw new InvalidReqestExecption("Invalid image token");
+		}
+
+		[Route("file/{*pathInfo}")]
+		[HttpGet]
+		public IActionResult LoadFile(String pathInfo)
+		{
+			try
+			{
+				Int32 ix = pathInfo.LastIndexOf('-');
+				if (ix != -1)
+					pathInfo = pathInfo.Substring(0, ix) + "." + pathInfo[(ix + 1)..];
+				String fullPath = _appCodeProvider.MakeFullPath(Path.Combine("_files/", pathInfo), String.Empty, _currentUser.IsAdminApplication);
+				if (!_appCodeProvider.FileExists(fullPath))
+					throw new FileNotFoundException($"File not found '{pathInfo}'");
+				if (!new FileExtensionContentTypeProvider().TryGetContentType(fullPath, out String contentType))
+					contentType = MimeTypes.Application.OctetStream;
+				var stream = _appCodeProvider.FileStreamFullPathRO(fullPath);
+				return File(stream, contentType, Path.GetFileName(fullPath));
+			}
+			catch (Exception ex)
+			{
+				return WriteHtmlException(ex);
+			}
 		}
 	}
 }
