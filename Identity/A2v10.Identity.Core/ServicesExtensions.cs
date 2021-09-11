@@ -1,11 +1,12 @@
 ﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
-using A2v10.Web.Identity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+
+using A2v10.Web.Identity;
 
 namespace Microsoft.Extensions.DependencyInjection
 {

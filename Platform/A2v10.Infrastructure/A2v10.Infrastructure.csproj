@@ -4,7 +4,7 @@
     <TargetFramework>net5.0</TargetFramework>
 	  <AssemblyName>A2v10.Infrastructure</AssemblyName>
 	  <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-	  <Version>10.1.8041</Version>
+	  <Version>10.1.8044</Version>
 	  <Product>A2v10</Product>
 	  <PackageId>A2v10.Infrastructure</PackageId>
 	  <Authors>Oleksandr Kukhtin</Authors>
@@ -16,7 +16,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7266" />
+    <PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7268" />
   </ItemGroup>
 
 	<PropertyGroup>
