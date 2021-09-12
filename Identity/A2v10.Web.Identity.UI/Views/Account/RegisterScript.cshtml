@@ -1,0 +1,47 @@
+﻿@inject ILocalizer _localizer
+@model RegisterViewModel
+
+"use strict";
+(function() {
+
+new Vue({
+el:"#app",
+data: {
+	email:'@Model.Login',
+	password:'',
+	submitted: false,
+	emailError: '',
+	serverError: ''
+},
+computed: {
+	validEmail() {
+		return true;
+	},
+	validPassword() {
+		return true;
+	}
+},
+methods: {
+	onLoginEnter: function() {
+		this.$refs.pwd.focus();
+	},
+	onPwdEnter: function(ev) {
+		this.submit();
+	},
+	async submit() {
+		let formData = new URLSearchParams();
+		formData.append('Login', this.email);
+		formData.append('Password', this.password);
+		formData.append('__RequestVerificationToken', '@Model.RequestToken');
+		let resp = await fetch('/account/register', {
+			method: 'POST',
+			body: formData
+		});
+		if (resp.redirected)
+			window.location.assign(resp.url);
+		else if (!resp.ok)
+			alert('invalid login or password');
+	}
+}
+});
+})();

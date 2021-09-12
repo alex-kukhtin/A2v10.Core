@@ -34,9 +34,15 @@ namespace A2v10.Web.Identity
 			DbSchema = options.Schema;
 		}
 
-		public Task<IdentityResult> CreateAsync(AppUser user, CancellationToken cancellationToken)
+		public async Task<IdentityResult> CreateAsync(AppUser user, CancellationToken cancellationToken)
 		{
-			throw new NotImplementedException();
+			if (user.PasswordHash == null)
+				user.PasswordHash = user.PasswordHash2;
+			if (user.SecurityStamp == null)
+				user.SecurityStamp = user.SecurityStamp2;
+
+			await _dbContext.ExecuteAsync<AppUser>(DataSource, $"[{DbSchema}].[CreateUser]", user);
+			return IdentityResult.Success;
 		}
 
 		public Task<IdentityResult> DeleteAsync(AppUser user, CancellationToken cancellationToken)
@@ -78,7 +84,7 @@ namespace A2v10.Web.Identity
 
 		public Task SetNormalizedUserNameAsync(AppUser user, String normalizedName, CancellationToken cancellationToken)
 		{
-			user.UserName = normalizedName.ToLowerInvariant();
+			user.UserName = normalizedName?.ToLowerInvariant();
 			return Task.CompletedTask;
 		}
 
@@ -104,12 +110,14 @@ namespace A2v10.Web.Identity
 
 		public async Task SetSecurityStampAsync(AppUser user, String stamp, CancellationToken cancellationToken)
 		{
-			var prm = new ExpandoObject()
-			{
-				{ "UserId",  user.Id },
-				{ "SecurityStamp",  stamp }
-			};
-			await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.SetSecurityStamp]", prm);
+			if (user.Id != 0) {
+				var prm = new ExpandoObject()
+				{
+					{ "UserId",  user.Id },
+					{ "SecurityStamp",  stamp }
+				};
+				await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.SetSecurityStamp]", prm);
+			}
 			user.SecurityStamp2 = stamp;
 		}
 		#endregion
@@ -139,7 +147,7 @@ namespace A2v10.Web.Identity
 
 		public Task<AppUser> FindByEmailAsync(String normalizedEmail, CancellationToken cancellationToken)
 		{
-			var Email = normalizedEmail.ToLowerInvariant(); // A2v10
+			var Email = normalizedEmail?.ToLowerInvariant(); // A2v10
 			return _dbContext.LoadAsync<AppUser>(DataSource, $"[{DbSchema}].[FindUserByEmail]", new { Email });
 		}
 
@@ -150,7 +158,7 @@ namespace A2v10.Web.Identity
 
 		public Task SetNormalizedEmailAsync(AppUser user, String normalizedEmail, CancellationToken cancellationToken)
 		{
-			user.Email = normalizedEmail.ToLowerInvariant();
+			user.Email = normalizedEmail?.ToLowerInvariant();
 			return Task.CompletedTask;
 		}
 		#endregion
@@ -158,14 +166,16 @@ namespace A2v10.Web.Identity
 		#region IUserPasswordStore
 		public async Task SetPasswordHashAsync(AppUser user, String passwordHash, CancellationToken cancellationToken)
 		{
-			var prm = new ExpandoObject()
+			if (user.Id != 0)
 			{
-				{ "UserId",  user.Id },
-				{ "PasswordHash",  passwordHash }
-			};
-			await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.SetPasswordHash]", prm);
+				var prm = new ExpandoObject()
+				{
+					{ "UserId",  user.Id },
+					{ "PasswordHash",  passwordHash }
+				};
+				await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.SetPasswordHash]", prm);
+			}
 			user.PasswordHash2 = passwordHash;
-
 		}
 
 		public Task<String> GetPasswordHashAsync(AppUser user, CancellationToken cancellationToken)

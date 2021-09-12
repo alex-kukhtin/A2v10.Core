@@ -18,13 +18,15 @@ namespace A2v10.Web.Identity.UI
 	public class AccountController : Controller
 	{
 		private readonly SignInManager<AppUser> _signInManager;
+		private readonly UserManager<AppUser> _userManager;
 		private readonly IAntiforgery _antiforgery;
 		private readonly IDbContext _dbContext;
 		private readonly IApplicationHost _host;
 
-		public AccountController(SignInManager<AppUser> signInManager, IAntiforgery antiforgery, IApplicationHost host, IDbContext dbContext)
+		public AccountController(SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IAntiforgery antiforgery, IApplicationHost host, IDbContext dbContext)
 		{
 			_signInManager = signInManager;
+			_userManager = userManager;
 			_antiforgery = antiforgery;
 			_dbContext = dbContext;
 			_host = host;
@@ -71,9 +73,36 @@ namespace A2v10.Web.Identity.UI
 
 		[HttpGet]
 		[AllowAnonymous]
-		public IActionResult Register()
+		public async Task<IActionResult> Register()
 		{
-			return new EmptyResult();
+			RemoveAllCookies();
+			var m = new RegisterViewModel()
+			{
+				Title = await _dbContext.LoadAsync<AppTitleModel>(_host.CatalogDataSource, "a2ui.[AppTitle.Load]")
+			};
+			m.RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken;
+			return View(m);
+		}
+
+		[AllowAnonymous]
+		[HttpPost]
+		public async Task<IActionResult> Register([FromForm] RegisterViewModel model)
+		{
+			try
+			{
+				var isValid = await _antiforgery.IsRequestValidAsync(HttpContext);
+				var user = new AppUser()
+				{
+					UserName = model.Login,
+				};
+				var result = await _userManager.CreateAsync(user, model.Password);
+				if (result.Succeeded)
+					return Redirect("/");
+				return Redirect("/account/register");
+			} catch (Exception ex)
+			{
+				return new EmptyResult();
+			}
 		}
 
 		[HttpGet]
