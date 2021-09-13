@@ -17,7 +17,6 @@
 		<ProjectReference Include="..\..\Identity\A2v10.Identity.Core\A2v10.Identity.Core.csproj" />
 		<ProjectReference Include="..\..\Identity\A2v10.Web.Identity.UI\A2v10.Web.Identity.UI.csproj" />
 		<ProjectReference Include="..\..\ReportEngines\A2v10.ReportEngine.Stimulsoft\A2v10.ReportEngine.Stimulsoft.csproj" />
-		<ProjectReference Include="..\..\Storage\A2v10.Storage.SqlServer\A2v10.Storage.SqlServer.csproj" />
 		<ProjectReference Include="..\..\ViewEngines\A2v10.ViewEngine.Xaml\A2v10.ViewEngine.Xaml.csproj" />
 		<ProjectReference Include="..\A2v10.Platform.Web\A2v10.Platform.Web.csproj" />
 		<ProjectReference Include="..\A2v10.Services\A2v10.Services.csproj" />
@@ -31,6 +30,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="A2v10.Data.Core" Version="10.0.7268" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
 	</ItemGroup>
 
