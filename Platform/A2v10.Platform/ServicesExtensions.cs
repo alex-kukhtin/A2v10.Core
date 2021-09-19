@@ -7,13 +7,13 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 
+using A2v10.Data;
+using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.ReportEngine.Stimulsoft;
 using A2v10.Services;
 using A2v10.ViewEngine.Xaml;
 using A2v10.Platform.Web;
-using A2v10.Data;
-using A2v10.Data.Interfaces;
 
 namespace Microsoft.Extensions.DependencyInjection
 {

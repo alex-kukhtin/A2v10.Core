@@ -12,7 +12,7 @@ namespace A2v10.Platform.Web
 
 	public class ReportEngineFactory
 	{
-		private IList<ReportEngineDescriptor> _list = new List<ReportEngineDescriptor>();
+		private readonly IList<ReportEngineDescriptor> _list = new List<ReportEngineDescriptor>();
 
 		public IList<ReportEngineDescriptor> Engines => _list;
 

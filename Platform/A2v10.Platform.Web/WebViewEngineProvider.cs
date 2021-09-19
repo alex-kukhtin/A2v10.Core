@@ -13,7 +13,7 @@ namespace A2v10.Platform.Web
 
 	public class ViewEngineFactory
 	{
-		private IList<ViewEngineDescriptor> _list = new List<ViewEngineDescriptor>();
+		private readonly IList<ViewEngineDescriptor> _list = new List<ViewEngineDescriptor>();
 
 		public IList<ViewEngineDescriptor> Engines => _list;
 

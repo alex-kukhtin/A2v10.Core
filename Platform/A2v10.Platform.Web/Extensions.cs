@@ -84,5 +84,34 @@ namespace Microsoft.Extensions.DependencyInjection
 			);
 			return services;
 		}
+
+		public static IServiceCollection AddInvokeTargets(this IServiceCollection services, Action<InvokeEngineFactory> action)
+		{
+			var invokeEngineFactory = new InvokeEngineFactory();
+			action.Invoke(invokeEngineFactory);
+
+			foreach (var r in invokeEngineFactory.Engines)
+			{
+				switch (r.Scope)
+				{
+					case InvokeScope.Scoped:
+						services.AddScoped(r.EngineType);
+						break;
+					case InvokeScope.Singleton:
+						services.AddSingleton(r.EngineType);
+						break;
+					case InvokeScope.Transient:
+						services.AddTransient(r.EngineType);
+						break;
+					default:
+						throw new InvalidProgramException($"Invalid Invoke scope: {r.Scope}");
+				}
+			}
+
+			services.AddScoped<IInvokeEngineProvider>(s =>
+				new WebInvokeEngineProvider(s, invokeEngineFactory.Engines)
+			);
+			return services;
+		}
 	}
 }

@@ -214,12 +214,13 @@ namespace A2v10.Services
 		processDbEvents,
 		startProcess,
 		resumeProcess,
-		script
+		script,
+		invokeTarget
 	}
 
 	public class ModelJsonCommand : ModelJsonBase, IModelCommand
 	{
-		public ModelCommandType Type { get; set; }
+		public ModelCommandType Type { get; init; }
 		public String Procedure { get; set; }
 		public String File { get; set; }
 		public String ClrType { get; set; }
@@ -237,6 +238,7 @@ namespace A2v10.Services
 		{
 			return ServerCommandRegistry.GetCommand(Type, serviceProvider);
 		}
+		public String Target { get; init; }
 	}
 
 	public class ModelJsonReport : ModelJsonBase, IModelReport
