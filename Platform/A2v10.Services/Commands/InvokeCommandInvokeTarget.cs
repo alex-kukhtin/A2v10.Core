@@ -31,6 +31,8 @@ namespace A2v10.Services
 			if (target.Length != 2)
 				throw new InvalidOperationException($"Invalid target: {command.Target}");
 			var engine = _engineProvider.FindEngine(target[0]);
+			if (engine == null)
+				throw new InvalidOperationException($"InvokeTarget '{target[0]}' not found");
 			var res = await engine.InvokeAsync(target[1], parameters);
 			return new InvokeResult()
 			{

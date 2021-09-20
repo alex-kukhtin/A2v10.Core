@@ -5,6 +5,7 @@ using System.Linq;
 using System.Collections.Generic;
 
 using A2v10.Infrastructure;
+using A2v10.Runtime.Interfaces;
 
 namespace A2v10.Platform.Web
 {

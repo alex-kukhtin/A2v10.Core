@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7268" />
+    <PackageReference Include="A2v10.Runtime.Interfaces" Version="10.1.8020" />
   </ItemGroup>
 
 	<PropertyGroup>
