@@ -33,12 +33,19 @@ namespace A2v10.Services
 			var engine = _engineProvider.FindEngine(target[0]);
 			if (engine == null)
 				throw new InvalidOperationException($"InvokeTarget '{target[0]}' not found");
-			var res = await engine.InvokeAsync(target[1], parameters);
-			return new InvokeResult()
+			try
 			{
-				Body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(res)),
-				ContentType = MimeTypes.Application.Json
-			};
+				var res = await engine.InvokeAsync(target[1], parameters);
+				return new InvokeResult()
+				{
+					Body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(res)),
+					ContentType = MimeTypes.Application.Json
+				};
+			} 
+			catch (Exception ex)
+			{
+				throw new InvalidOperationException(ex.Message, ex);
+			}
 		}
 	}
 }

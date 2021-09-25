@@ -66,6 +66,8 @@ namespace A2v10.Services
 			var localPath = _redirect?.Redirect(url.LocalPath);
 			url.Redirect(localPath);
 			String json = await _appCodeProvider.ReadTextFileAsync(url.LocalPath, "model.json", _currentUser.IsAdminApplication);
+			if (json == null)
+				throw new ModelJsonException($"File not found '{url.LocalPath}/model.json'");
 			var rm = JsonConvert.DeserializeObject<ModelJson>(json, JsonHelpers.CamelCaseSerializerSettings);
 			rm.OnEndInit(url);
 			return rm;

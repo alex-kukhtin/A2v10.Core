@@ -13,7 +13,7 @@
 	*A2v10.Identity.UI (8045)
 		A2v10.Identity.Core (8045)
 		*A2v10.Infrastructure (8044)
-A2v10.Web.Assets (8045)
+*A2v10.Web.Assets (8045) - make!
 
 A2v10.Identity.Jwt (8046)
 	A2v10.Identity.Core (8045)

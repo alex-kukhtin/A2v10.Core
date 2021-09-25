@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2020-2021 Alex Kukhtin
 
-Last updated : 15 sep 2021
-module version : 8032
+Last updated : 21 sep 2021
+module version : 8033
 */
 ------------------------------------------------
 set nocount on;
@@ -194,16 +194,15 @@ begin
 	set transaction isolation level read committed;
 
 	declare @hash nvarchar(255);
-	declare @id nvarchar(255);
 	declare @version int;
 	begin tran;
-		select top(1) @hash = [Hash], @id = [Id], @version=[Version] 
+		select top(1) @hash = [Hash], @version=[Version] 
 		from a2wf.Workflows 
-		where Id=@Id order by [Version] desc;
+		where Id = @Id order by [Version] desc;
 
-		if (select [Hash] from a2wf.[Catalog] where Id=@Id) = @hash
+		if (select [Hash] from a2wf.[Catalog] where Id = @Id) = @hash
 		begin
-			select Id, [Version] from a2wf.Workflows where Id=@Id and [Version]=@version;
+			select Id, [Version] from a2wf.Workflows where Id = @Id and [Version] = @version;
 		end
 		else
 		begin
