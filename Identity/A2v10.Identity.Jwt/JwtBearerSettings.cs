@@ -24,7 +24,7 @@ namespace A2v10.Identity.Jwt
 		public String Audience { get; init; }
 		public Int32 ExpireMinutes { get; init; }
 
-		public SymmetricSecurityKey _securityKey { get; init; }
+		public SymmetricSecurityKey SecurityKey { get; init; }
 
 		private JwtBearerSettings()
 		{
@@ -47,7 +47,7 @@ namespace A2v10.Identity.Jwt
 				Audience = cfg.Audience,
 				Issuer = cfg.Issuer,
 				ExpireMinutes = cfg.ExpireMinutes,
-				_securityKey = new SymmetricSecurityKey(key)
+				SecurityKey = new SymmetricSecurityKey(key)
 			};
 		}
 
@@ -72,14 +72,14 @@ namespace A2v10.Identity.Jwt
 		}
 
 		public TokenValidationParameters DefaultValidationParameters =>
-			new TokenValidationParameters()
+			new ()
 			{
 				ValidateIssuerSigningKey = true,
 				ValidateIssuer = false,
 				ValidateAudience = false,
 				ValidateActor = false,
 				ValidateLifetime = true,
-				IssuerSigningKey = _securityKey,
+				IssuerSigningKey = SecurityKey,
 				ClockSkew = TimeSpan.Zero,
 			};
 	}

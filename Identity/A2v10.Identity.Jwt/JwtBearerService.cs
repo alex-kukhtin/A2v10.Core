@@ -36,7 +36,7 @@ namespace A2v10.Identity.Jwt
 				claims: claims,
 				expires: expires,
 				signingCredentials: new SigningCredentials(
-					_settings._securityKey,
+					_settings.SecurityKey,
 					SecurityAlgorithms.HmacSha256
 				)
 			);
@@ -56,7 +56,7 @@ namespace A2v10.Identity.Jwt
 			};
 		}
 
-		public String GenerateRefreshToken()
+		public static String GenerateRefreshToken()
 		{
 			using var rndGen = RandomNumberGenerator.Create();
 			var randomBytes = new Byte[64];
