@@ -6,6 +6,9 @@ using System.Text;
 
 using Microsoft.Extensions.Configuration;
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+
 using A2v10.Infrastructure;
 using A2v10.Data.Interfaces;
 
@@ -104,7 +107,10 @@ namespace A2v10.Platform.Web
 
 		public ExpandoObject GetEnvironmentObject(string key)
 		{
-			throw new NotImplementedException();
+			var val = _appSettings.GetValue<String>(key);
+			if (val == null)
+				throw new InvalidOperationException($"Configuration parameter 'appSettings/{key}' not defined");
+			return JsonConvert.DeserializeObject<ExpandoObject>(val, new ExpandoObjectConverter());
 		}
 
 		/*

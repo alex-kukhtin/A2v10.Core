@@ -16,13 +16,11 @@ namespace A2v10.Services
 	{
 		private readonly IServiceProvider _serviceProvider;
 		private readonly IInvokeEngineProvider _engineProvider;
-		private readonly ICurrentUser _currentUser;
 
 		public InvokeCommandInvokeTarget(IServiceProvider serviceProvider)
 		{
 			_serviceProvider = serviceProvider;
 			_engineProvider = _serviceProvider.GetService<IInvokeEngineProvider>();
-			_currentUser = _serviceProvider.GetService<ICurrentUser>();
 		}
 
 		public async Task<IInvokeResult> ExecuteAsync(IModelCommand command, ExpandoObject parameters)

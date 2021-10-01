@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// Copyright © 2020-2021 Alex Kukhtin. All rights reserved.
+
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using System.Collections.Generic;
 
 namespace A2v10.Services
 {
@@ -31,6 +29,21 @@ namespace A2v10.Services
 				DateTimeZoneHandling = DateTimeZoneHandling.Utc,
 				NullValueHandling = NullValueHandling.Ignore,
 				DefaultValueHandling = DefaultValueHandling.Ignore
+			};
+
+		public static readonly JsonSerializerSettings CompactSerializerSettings =
+			new()
+			{
+				Formatting = Formatting.None,
+				StringEscapeHandling = StringEscapeHandling.Default,
+				DateFormatHandling = DateFormatHandling.IsoDateFormat,
+				DateTimeZoneHandling = DateTimeZoneHandling.Utc,
+				NullValueHandling = NullValueHandling.Ignore,
+				DefaultValueHandling = DefaultValueHandling.Ignore,
+				Converters = new List<JsonConverter>
+				{
+					new JsonDoubleConverter()
+				}
 			};
 	}
 }

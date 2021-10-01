@@ -74,7 +74,10 @@ namespace A2v10.Infrastructure
 	public interface IModelCommand : IModelBase
 	{
 		IModelInvokeCommand GetCommandHandler(IServiceProvider serviceProvider);
+
 		String Target { get; }
+		String File { get; }
+		ExpandoObject Args { get; }
 	}
 
 	public interface IModelReportHandler

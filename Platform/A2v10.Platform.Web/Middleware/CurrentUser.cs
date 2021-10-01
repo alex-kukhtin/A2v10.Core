@@ -36,6 +36,7 @@ namespace A2v10.Platform.Web
 
 		// TODO: isValud???
 		public Boolean Invalid { get; set; }
+		public String Message { get; init; }
 	}
 
 	public record UserLocale : IUserLocale
@@ -129,7 +130,8 @@ namespace A2v10.Platform.Web
 				{
 					State = new UserState()
 					{
-						Invalid = true
+						Invalid = true,
+						Message = ex.Message
 					};
 				}
 			}

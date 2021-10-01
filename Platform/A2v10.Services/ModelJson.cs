@@ -226,6 +226,7 @@ namespace A2v10.Services
 		public String ClrType { get; set; }
 		public Boolean Async { get; set; }
 		public Boolean DebugOnly { get; set; } /*TODO: Implement me*/
+		public ExpandoObject Args { get; init; }
 
 		public override String LoadProcedure()
 		{

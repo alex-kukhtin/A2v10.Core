@@ -100,7 +100,7 @@ namespace A2v10.Web.Identity.UI
 					return Redirect("/");
 				return Redirect("/account/register");
 			} 
-			catch (Exception ex)
+			catch (Exception)
 			{
 				return new EmptyResult();
 			}

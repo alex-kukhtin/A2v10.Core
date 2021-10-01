@@ -19,7 +19,7 @@ namespace A2v10.Services
 					),
 				ModelCommandType.invokeTarget => new InvokeCommandInvokeTarget(serviceProvider),
 				ModelCommandType.clr => throw new DataServiceException("CLR yet not implemented"),
-				ModelCommandType.javascript => throw new DataServiceException("javascript command yet not implemented"),
+				ModelCommandType.javascript => new InvokeCommandJavascript(serviceProvider),
 				ModelCommandType.file => throw new DataServiceException("file command yet not implemented"),
 				ModelCommandType.xml => throw new DataServiceException("xml command yet not implemented"),
 				ModelCommandType.callApi => throw new DataServiceException("callApi command yet not implemented"),
