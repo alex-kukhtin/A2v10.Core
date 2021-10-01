@@ -108,9 +108,17 @@ namespace A2v10.Platform.Web
 		public ExpandoObject GetEnvironmentObject(string key)
 		{
 			var val = _appSettings.GetValue<String>(key);
-			if (val == null)
-				throw new InvalidOperationException($"Configuration parameter 'appSettings/{key}' not defined");
-			return JsonConvert.DeserializeObject<ExpandoObject>(val, new ExpandoObjectConverter());
+			if (val != null)
+				return JsonConvert.DeserializeObject<ExpandoObject>(val, new ExpandoObjectConverter());
+			var valObj = _appSettings.GetSection(key);
+			if (valObj != null)
+			{
+				var eo = new ExpandoObject();
+				foreach (var v in valObj.GetChildren())
+					eo.Add(v.Key, v.Value);
+				return eo;
+			}
+			throw new InvalidOperationException($"Configuration parameter 'appSettings/{key}' not defined");
 		}
 
 		/*
