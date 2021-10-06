@@ -9,7 +9,7 @@
 		*A2v10.Infrastructure (8044)
 	*A2v10.ViewEngine.Xaml (8045)
 		A2v10.System.Xaml (8007)
-		*A2v10.Infrastructure (8044)
+		*A2v10.Infrastructure (8047)
 	*A2v10.Identity.UI (8045)
 		A2v10.Identity.Core (8045)
 		*A2v10.Infrastructure (8044)

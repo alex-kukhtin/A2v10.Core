@@ -5,20 +5,10 @@ using System.Dynamic;
 
 namespace A2v10.Infrastructure
 {
-
-	public interface ITheme
-	{
-		String Name { get; }
-		String FileName { get; }
-		String ColorScheme { get; }
-	}
-
 	public interface IApplicationHost
 	{
 		Boolean Mobile { get; }
 		Boolean IsAdminMode { get; }
-
-		ITheme Theme { get; }
 
 		Boolean IsDebugConfiguration { get; }
 		//Boolean IsProductionEnvironment { get; }

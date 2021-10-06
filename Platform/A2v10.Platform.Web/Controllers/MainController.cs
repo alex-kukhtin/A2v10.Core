@@ -30,7 +30,7 @@ namespace A2v10.Platform.Web.Controllers
 			{
 				PersonName = User.Identity.GetUserPersonName(),
 				Debug = _appConfiguration.Debug,
-				HelpUrl = "http://TODO/HELP_URL"
+				HelpUrl = "http://TODO/HELP_URL",
 			};
 			ViewBag.__Minify = "min.";
 			ViewBag.__Theme = "classic";

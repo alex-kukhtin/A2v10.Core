@@ -130,6 +130,9 @@ namespace A2v10.Services
 		public String TargetId { get; set; }
 		public ModelJsonView TargetModel { get; }
 
+		public IEnumerable<String> Scripts { get; } = new List<String>();
+		public IEnumerable<String> Styles { get; } = new List<String>();
+
 		public String GetView(Boolean mobile)
 		{
 			if (mobile && !String.IsNullOrEmpty(ViewMobile))

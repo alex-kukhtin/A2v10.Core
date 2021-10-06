@@ -1,6 +1,7 @@
 ﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using System;
+using System.Collections.Generic;
 using System.Dynamic;
 using System.Threading.Tasks;
 
@@ -43,7 +44,7 @@ namespace A2v10.Infrastructure
 		ExpandoObject CreateMergeParameters(IDataModel model, ExpandoObject prms);
 	}
 
-	public interface IModelView: IModelBase
+	public interface IModelView : IModelBase
 	{
 		Boolean Copy { get; }
 		String Template { get; }
@@ -54,6 +55,9 @@ namespace A2v10.Infrastructure
 		IModelView TargetModel { get; }
 
 		IModelMerge Merge { get; }
+
+		IEnumerable<String> Scripts { get; }
+		IEnumerable<String> Styles { get; }
 
 		String GetView(Boolean bMobile);
 		Boolean IsDialog { get; }
