@@ -28,6 +28,7 @@ GitHub: https://github.com/alex-kukhtin/A2v10.Core
 	@Html.Raw(codeProvider.AppStyleSheetsLink())
 	<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
 	<link rel="icon" href="/favicon.ico" type="image/x-icon" />
+	@Html.Raw(Model.ModelStyles)
 </head>
 <body>
 	@RenderBody()
@@ -36,6 +37,7 @@ GitHub: https://github.com/alex-kukhtin/A2v10.Core
 	<script type="text/javascript" src="/scripts/locale-@Html.Raw(userLocale.Language + ".min.js")?v=@appVersion.AppBuild"></script>
 	<script type="text/javascript" src="/scripts/main.js?v=@appVersion.AppBuild"></script>
 	@Html.Raw(codeProvider.AppScriptsLink())
+	@Html.Raw(Model.ModelScripts)
 	<script type="text/javascript" src="/_shell/script"></script>
 	@ViewBag.__LayoutScripts
 </body>

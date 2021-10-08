@@ -30,6 +30,12 @@ namespace A2v10.Infrastructure
 		String FileName { get; }
 	}
 
+	public interface ILayoutDescription
+	{
+		String ModelScripts { get; }
+		String ModelStyles { get; }
+	}
+
 	public interface IDataService
 	{
 		Task<IDataLoadResult> LoadAsync(UrlKind kind, String baseUrl, Action<ExpandoObject> setParams);
@@ -49,5 +55,6 @@ namespace A2v10.Infrastructure
 
 		Task<IInvokeResult> InvokeAsync(String baseUrl, String command, ExpandoObject data, Action<ExpandoObject> setParams);
 
+		Task<ILayoutDescription> GetLayoutDescriptionAsync(String baseUrl);
 	}
 }

@@ -56,8 +56,8 @@ namespace A2v10.Infrastructure
 
 		IModelMerge Merge { get; }
 
-		IEnumerable<String> Scripts { get; }
-		IEnumerable<String> Styles { get; }
+		List<String> Scripts { get; }
+		List<String> Styles { get; }
 
 		String GetView(Boolean bMobile);
 		Boolean IsDialog { get; }
@@ -103,6 +103,7 @@ namespace A2v10.Infrastructure
 
 	public interface IModelJsonReader
 	{
+		Task<IModelView> TryGetViewAsync(IPlatformUrl url);
 		Task<IModelView> GetViewAsync(IPlatformUrl url);
 		Task<IModelBlob> GetBlobAsync(IPlatformUrl url, String suffix = null);
 		Task<IModelCommand> GetCommandAsync(IPlatformUrl url, String command);

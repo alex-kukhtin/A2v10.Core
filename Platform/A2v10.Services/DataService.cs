@@ -3,12 +3,14 @@
 using System;
 using System.Dynamic;
 using System.Threading.Tasks;
+using System.Globalization;
+using System.Collections.Generic;
 
 using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
-using System.Globalization;
+using System.Text;
 
 namespace A2v10.Services
 {
@@ -16,6 +18,30 @@ namespace A2v10.Services
 	{
 		public IDataModel Model { get; init; }
 		public IModelView View { get; init; }
+	}
+
+	public class LayoutDescription : ILayoutDescription
+	{
+		public LayoutDescription(List<String> styles, List<String> scripts)
+		{
+			if (styles != null && styles.Count > 0)
+			{
+				var sb = new StringBuilder();
+				foreach (var s in styles)
+					sb.Append($"<link href=\"{s}\" rel=\"stylesheet\" />\n");
+				ModelStyles = sb.ToString();
+			}
+			if (scripts != null && scripts.Count > 0)
+			{
+				var sb = new StringBuilder();
+				foreach (var s in scripts)
+					sb.Append($"<script type=\"text/javascript\" src=\"{s}\"></script>\n");
+				ModelScripts = sb.ToString();
+			}
+		}
+
+		public String ModelScripts { get; init; }
+		public String ModelStyles { get; init; }
 	}
 
 	public class DataService : IDataService
@@ -101,7 +127,7 @@ namespace A2v10.Services
 			if (model != null)
 				view = view.Resolve(model);
 
-			SetReadOnly(model, loadPrms);
+			SetReadOnly(model);
 
 			return new DataLoadResult()
 			{
@@ -186,7 +212,7 @@ namespace A2v10.Services
 
 			var savePrms = view.CreateParameters(platformBaseUrl, null, setParams);
 
-			CheckUserState(savePrms);
+			CheckUserState();
 
 			// TODO: HookHandler, invokeTarget, events
 
@@ -214,14 +240,13 @@ namespace A2v10.Services
 			return result;
 		}
 
-		void CheckUserState(ExpandoObject prms)
+		void CheckUserState()
 		{
-
 			if (_currentUser.State.IsReadOnly)
 				throw new DataServiceException("UI:@[Error.DataReadOnly]");
 		}
 
-		void SetReadOnly(IDataModel model, ExpandoObject loadPrms)
+		void SetReadOnly(IDataModel model)
 		{
 			if (_currentUser.State.IsReadOnly)
 				model.SetReadOnly();
@@ -295,6 +320,19 @@ namespace A2v10.Services
 			if (!String.IsNullOrEmpty(bi.BlobName))
 				throw new NotImplementedException("Load azure Storage blob");
 			return bi;
+		}
+
+		public async Task<ILayoutDescription> GetLayoutDescriptionAsync(String baseUrl)
+		{
+			if (baseUrl == null)
+				return null;
+			var platformUrl = CreatePlatformUrl(UrlKind.Page, baseUrl);
+			var view = await _modelReader.TryGetViewAsync(platformUrl);
+			if (view == null)
+				return null;
+			if (view.Styles == null && view.Scripts == null)
+				return null;
+			return new LayoutDescription(view.Styles, view.Scripts);
 		}
 	}
 }

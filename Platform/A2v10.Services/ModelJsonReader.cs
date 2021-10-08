@@ -26,6 +26,16 @@ namespace A2v10.Services
 				_redirect = new RedirectModule(redPath, appConig.Watch);
 		}
 
+		public async Task<IModelView> TryGetViewAsync(IPlatformUrl url)
+		{
+			if (url.Kind != UrlKind.Page)
+				return null;
+			var rm = await TryLoad(url);
+			if (rm == null)
+				return null;
+			return rm.GetAction(url.Action);
+		}
+
 		public async Task<IModelView> GetViewAsync(IPlatformUrl url)
 		{
 			var rm = await Load(url);
@@ -61,13 +71,18 @@ namespace A2v10.Services
 			};
 		}
 
-		public async Task<ModelJson> Load(IPlatformUrl url)
+		public Task<ModelJson> Load(IPlatformUrl url)
+		{
+			return TryLoad(url) ?? throw new ModelJsonException($"File not found '{url.LocalPath}/model.json'");
+		}
+
+		public async Task<ModelJson> TryLoad(IPlatformUrl url)
 		{
 			var localPath = _redirect?.Redirect(url.LocalPath);
 			url.Redirect(localPath);
 			String json = await _appCodeProvider.ReadTextFileAsync(url.LocalPath, "model.json", _currentUser.IsAdminApplication);
 			if (json == null)
-				throw new ModelJsonException($"File not found '{url.LocalPath}/model.json'");
+				return null;
 			var rm = JsonConvert.DeserializeObject<ModelJson>(json, JsonHelpers.CamelCaseSerializerSettings);
 			rm.OnEndInit(url);
 			return rm;
