@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 using A2v10.Infrastructure;
-
+using System.IO;
 
 namespace A2v10.Platform.Web.Controllers
 {
@@ -140,9 +140,21 @@ namespace A2v10.Platform.Web.Controllers
 		}
 
 		[HttpPost]
-		public IActionResult ExportTo()
+		public async Task<IActionResult> ExportTo()
 		{
-			throw new NotImplementedException("DataController.ExportTo");
+			var eo = await Request.ExpandoFromBodyAsync();
+			if (eo == null)
+				throw new InvalidReqestExecption(Request.Path);
+			try
+			{
+				//String format = eo.Get<String>("format");
+				var data = _dataService.Html2Excel(eo.Get<String>("html"));
+				return new WebBinaryActionResult(data, MimeTypes.Application.OctetBinary);
+			} 
+			catch (Exception ex)
+			{
+				return WriteExceptionStatus(ex);
+			}
 		}
 
 		private async Task<IActionResult> TryCatch(Func<Task<IActionResult>> action)

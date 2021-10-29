@@ -11,6 +11,8 @@ using Newtonsoft.Json;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using System.Text;
+using A2v10.Services.Interop.ExportTo;
+using System.IO;
 
 namespace A2v10.Services
 {
@@ -229,7 +231,7 @@ namespace A2v10.Services
 				{
 					setParams?.Invoke(eo);
 					eo.Append(data);
-				}, 
+				},
 				IModelBase.ParametersFlags.SkipId
 			);
 			setParams?.Invoke(prms);
@@ -333,6 +335,12 @@ namespace A2v10.Services
 			if (view.Styles == null && view.Scripts == null)
 				return null;
 			return new LayoutDescription(view.Styles, view.Scripts);
+		}
+
+		public Byte[] Html2Excel(String html)
+		{
+			var h = new Html2Excel(_currentUser.Locale.Locale);
+			return h.ConvertHtmlToExcel(html);
 		}
 	}
 }
