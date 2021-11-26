@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
 	  <AssemblyName>A2v10.Infrastructure</AssemblyName>
 	  <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 	  <Version>10.1.8047</Version>
@@ -16,8 +16,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7269" />
-    <PackageReference Include="A2v10.Runtime.Interfaces" Version="10.1.8020" />
+    <PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7301" />
+    <PackageReference Include="A2v10.Runtime.Interfaces" Version="10.1.8030" />
   </ItemGroup>
 
 	<PropertyGroup>
@@ -28,7 +28,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
 	</ItemGroup>
 
 </Project>

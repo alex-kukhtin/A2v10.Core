@@ -30,7 +30,7 @@ namespace A2v10.Xaml
 			String fileName = String.Empty;
 			IXamlElement uiElem = null;
 
-			var xamlServiceOptions = new XamlServicesOptions()
+			var xamlServiceOptions = new XamlServicesOptions(Array.Empty<NamespaceDef>())
 			{
 				OnCreateReader = (rdr) =>
 				{

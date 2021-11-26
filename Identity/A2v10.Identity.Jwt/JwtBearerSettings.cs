@@ -12,19 +12,19 @@ namespace A2v10.Identity.Jwt
 {
 	public record JwtBearerConfig
 	{
-		public String Issuer { get; init; }
-		public String Audience { get; init; }
+		public String? Issuer { get; init; }
+		public String? Audience { get; init; }
 		public Int32 ExpireMinutes { get; init; }
-		public String SecurityKey { get; init; }
+		public String? SecurityKey { get; init; }
 	}
 
 	public class JwtBearerSettings
 	{
-		public String Issuer { get; init; }
-		public String Audience { get; init; }
+		public String? Issuer { get; init; }
+		public String? Audience { get; init; }
 		public Int32 ExpireMinutes { get; init; }
 
-		public SymmetricSecurityKey SecurityKey { get; init; }
+		public SymmetricSecurityKey? SecurityKey { get; init; }
 
 		private JwtBearerSettings()
 		{

@@ -55,7 +55,7 @@ namespace A2v10.Services.Javascript
 			if (query == null || query.IsEmpty())
 				return String.Empty;
 			var elems = (query as IDictionary<String, Object>)
-				.Select(x => $"{x.Key}={Uri.EscapeUriString(x.Value.ToString())}");
+				.Select(x => $"{x.Key}={Uri.EscapeDataString(x.Value.ToString())}");
 			var ts = String.Join("&", elems);
 			if (String.IsNullOrEmpty(ts))
 				return String.Empty;

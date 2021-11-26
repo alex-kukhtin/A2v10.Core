@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2020-2021 Alex Kukhtin
 
-Last updated : 21 sep 2021
-module version : 8033
+Last updated : 13 nov 2021
+module version : 8055
 */
 ------------------------------------------------
 set nocount on;
@@ -11,6 +11,28 @@ if not exists(select * from INFORMATION_SCHEMA.SCHEMATA where SCHEMA_NAME=N'a2wf
 go
 ------------------------------------------------
 grant execute on schema ::a2wf to public;
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2wf' and TABLE_NAME=N'Versions')
+begin
+	create table a2wf.[Versions]
+	(
+		[Module] nvarchar(32) not null,
+		[Version] int not null,
+		constraint PK_Versions primary key clustered (Module)
+	);
+end
+go
+------------------------------------------------
+begin
+	set nocount on;
+	declare @version int;
+	set @version = 8055;
+	if exists(select * from a2wf.Versions where Module = N'main')
+		update a2wf.Versions set [Version] = @version where Module = N'main';
+	else
+		insert into a2wf.Versions (Module, [Version]) values (N'main', @version);
+end
 go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2wf' and TABLE_NAME=N'Catalog')
@@ -22,7 +44,7 @@ begin
 		[Body] nvarchar(max) null,
 		[Thumb] varbinary(max) null,
 		ThumbFormat nvarchar(32) null,
-		[Hash] nvarchar(255) null,
+		[Hash] varbinary(64) null,
 		DateCreated datetime not null constraint DF_Catalog_DateCreated default(getutcdate()),
 		constraint PK_Catalog primary key clustered (Id)
 	);
@@ -37,7 +59,7 @@ begin
 		[Version] int not null,
 		[Format] nvarchar(32) not null,
 		[Text] nvarchar(max) null,
-		[Hash] nvarchar(255) null,
+		[Hash] varbinary(64) null,
 		DateCreated datetime not null constraint DF_Workflows_DateCreated default(getutcdate()),
 		constraint PK_Workflows primary key clustered (Id, [Version]) with (fillfactor = 70)
 	);
@@ -167,20 +189,23 @@ create or alter procedure a2wf.[Catalog.Save]
 @UserId bigint = null,
 @Id nvarchar(255),
 @Body nvarchar(max),
-@Format nvarchar(32),
-@Hash nvarchar(255)
+@Format nvarchar(32)
 as
 begin
 	set nocount on;
 	set transaction isolation level read committed;
-	declare @savedHash nvarchar(255);
+
+	declare @savedHash varbinary(64);
+	declare @newHash varbinary(64);
+
 	begin tran;
-		select @savedHash = [Hash] from a2wf.[Catalog] where Id=@Id;
+		select @savedHash = hashbytes(N'SHA2_256', Body) from a2wf.[Catalog] where Id=@Id;
+		select @newHash = hashbytes(N'SHA2_256', @Body);
 		if @savedHash is null
 			insert into a2wf.[Catalog] (Id, [Format], Body, [Hash]) 
-			values (@Id, @Format, @Body, @Hash)
-		else if @savedHash <> @Hash
-			update a2wf.[Catalog] set Body = @Body, [Hash]=@Hash where Id=@Id;
+			values (@Id, @Format, @Body, @newHash)
+		else if @savedHash <> @newHash
+			update a2wf.[Catalog] set Body = @Body, [Hash]=@newHash where Id=@Id;
 	commit tran;
 end
 go
@@ -193,7 +218,7 @@ begin
 	set nocount on;
 	set transaction isolation level read committed;
 
-	declare @hash nvarchar(255);
+	declare @hash varbinary(64);
 	declare @version int;
 	begin tran;
 		select top(1) @hash = [Hash], @version=[Version] 
@@ -215,6 +240,19 @@ begin
 			select Id, [Version] from @retval;
 		end
 	commit tran;
+end
+go
+------------------------------------------------
+create or alter procedure a2wf.[Catalog.SaveAndPublish]
+@Id nvarchar(255),
+@Body nvarchar(max),
+@Format nvarchar(32)
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+	exec a2wf.[Catalog.Save] null, @Id=@Id, @Body=@Body, @Format=@Format;
+	exec a2wf.[Catalog.Publish] null, @Id = @Id;
 end
 go
 ------------------------------------------------
@@ -542,6 +580,10 @@ begin
 		inner join @Events sib on sib.ParentGUID=si.[GUID]
 	) as s
 	on t.[Event] = s.[Event] and t.InstanceId = s.InstanceId and t.WorkflowId = s.WorkflowId and t.Kind = s.Kind
+	when matched then update set
+		t.Pending = s.Pending,
+		t.[Name] = s.[Name],
+		t.[Text] = s.[Text]
 	when not matched by target then insert
 		(InstanceId, [Kind], [Event], WorkflowId, Pending, [Name], [Text]) values
 		(s.InstanceId, s.[Kind], s.[Event], s.WorkflowId, Pending, [Name], [Text])
@@ -569,3 +611,39 @@ begin
 	values (@InstanceId, @Kind, @Action, @Message, 0);
 end
 go
+------------------------------------------------
+create or alter procedure a2wf.[Engine.Version]
+@Module nvarchar(32) = N'main'
+as
+begin
+	set nocount on;
+	set transaction isolation level read uncommitted;
+	select [Version] from a2wf.Versions where Module = @Module;
+end
+go
+------------------------------------------------
+create or alter procedure a2wf.[Instance.Pending.Load]
+as
+begin
+	set nocount on;
+	set transaction isolation level read uncommitted;
+	-- timers
+	select InstanceId, EventKey = ev.[Event] , ev.Kind
+	from a2wf.InstanceEvents ev
+		inner join a2wf.Instances i on ev.InstanceId = i.Id
+	where ev.Pending <= getutcdate() and ev.Kind=N'T' and i.Lock is null
+	order by ev.Pending;
+end
+go
+
+/*
+drop table a2wf.InstanceBookmarks;
+drop table a2wf.InstanceTrack;
+drop table a2wf.InstanceEvents;
+drop table a2wf.InstanceVariablesGuid;
+drop table a2wf.InstanceVariablesString;
+drop table a2wf.InstanceVariablesInt;
+drop table a2wf.Instances;
+drop table a2wf.Workflows;
+drop table a2wf.Catalog;
+*/

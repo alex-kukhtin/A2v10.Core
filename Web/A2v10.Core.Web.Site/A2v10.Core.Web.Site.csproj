@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <UserSecretsId>aspnet-A2v10.Core.Web.Site-3AAA4AB7-4DED-4E64-815B-F75EEDCF167E</UserSecretsId>
   </PropertyGroup>
 
@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="A2v10.Workflow.Engine" Version="10.1.8051" />
+    <PackageReference Include="A2v10.Workflow.Engine" Version="10.1.8070" />
   </ItemGroup>
 
   <ItemGroup>

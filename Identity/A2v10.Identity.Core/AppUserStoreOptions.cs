@@ -11,7 +11,7 @@ namespace A2v10.Web.Identity
 			Schema = "a2security";
 		}
 
-		public String DataSource { get; set; }
+		public String? DataSource { get; set; }
 		public String Schema { get; set; }
 	}
 }

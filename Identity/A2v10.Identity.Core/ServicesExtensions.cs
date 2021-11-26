@@ -13,7 +13,7 @@ namespace Microsoft.Extensions.DependencyInjection
 	public static class ServicesExtensions
 	{
 		public static IServiceCollection AddPlatformIdentityCore(this IServiceCollection services,
-			Action<AppUserStoreOptions> options = null)
+			Action<AppUserStoreOptions>? options = null)
 		{
 			services.AddIdentityCore<AppUser>(options =>
 			{

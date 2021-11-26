@@ -24,7 +24,7 @@ namespace A2v10.Web.Identity
 	{
 		private readonly IDbContext _dbContext;
 
-		private String DataSource { get; } 
+		private String? DataSource { get; } 
 		private String DbSchema { get; }
 
 		public AppUserStore(IDbContext dbContext, AppUserStoreOptions options)
@@ -77,9 +77,9 @@ namespace A2v10.Web.Identity
 			return Task.FromResult<String>(user.Id.ToString());
 		}
 
-		public Task<String> GetUserNameAsync(AppUser user, CancellationToken cancellationToken)
+		public Task<String?> GetUserNameAsync(AppUser user, CancellationToken cancellationToken)
 		{
-			return Task.FromResult<String>(user.UserName);
+			return Task.FromResult<String?>(user.UserName);
 		}
 
 		public Task SetNormalizedUserNameAsync(AppUser user, String normalizedName, CancellationToken cancellationToken)
@@ -129,9 +129,9 @@ namespace A2v10.Web.Identity
 			return Task.CompletedTask;
 		}
 
-		public Task<string> GetEmailAsync(AppUser user, CancellationToken cancellationToken)
+		public Task<String?> GetEmailAsync(AppUser user, CancellationToken cancellationToken)
 		{
-			return Task.FromResult<String>(user.Email);
+			return Task.FromResult<String?>(user.Email);
 		}
 
 		public Task<Boolean> GetEmailConfirmedAsync(AppUser user, CancellationToken cancellationToken)
@@ -268,7 +268,7 @@ namespace A2v10.Web.Identity
 		#endregion
 
 		#region Token support
-		public Task AddTokenAsync(AppUser user, String provider, String token, DateTime expires, String tokenToRemove = null)
+		public Task AddTokenAsync(AppUser user, String provider, String token, DateTime expires, String? tokenToRemove = null)
 		{
 			var exp = new ExpandoObject()
 			{
@@ -282,7 +282,7 @@ namespace A2v10.Web.Identity
 			return _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].AddToken", exp);
 		}
 
-		public async Task<String> GetTokenAsync(AppUser user, String provider, String token)
+		public async Task<String?> GetTokenAsync(AppUser user, String provider, String token)
 		{
 			var exp = new ExpandoObject()
 			{

@@ -20,8 +20,8 @@ namespace A2v10.Services.Javascript
 
 		public ScriptEnvironment(IServiceProvider serviceProvider)
 		{
-			_dbContext = serviceProvider.GetService<IDbContext>();
-			_config = new ScriptConfig(serviceProvider.GetService<IApplicationHost>());
+			_dbContext = serviceProvider.GetRequiredService<IDbContext>();
+			_config = new ScriptConfig(serviceProvider.GetRequiredService<IApplicationHost>());
 		}
 
 #pragma warning disable IDE1006 // Naming Styles
