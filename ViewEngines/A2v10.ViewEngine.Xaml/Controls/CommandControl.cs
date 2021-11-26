@@ -7,7 +7,7 @@ namespace A2v10.Xaml
 {
 	public abstract class CommandControl : ContentControl
 	{
-		public Command Command { get; set; }
+		public Command? Command { get; set; }
 
 		public override void MergeAttributes(TagBuilder tag, RenderContext context, MergeAttrMode mode = MergeAttrMode.All)
 		{

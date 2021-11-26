@@ -18,12 +18,12 @@ namespace A2v10.Xaml
 	public class TagBuilder
 	{
 		public String TagName { get; }
-		public String InnerText { get; set; }
+		public String? InnerText { get; set; }
 
 		Boolean _bRender = false;
 		readonly Boolean _inGrid = false;
 
-		public TagBuilder(String tagName = "div", String classes = null, Boolean inGrid = false)
+		public TagBuilder(String tagName = "div", String? classes = null, Boolean inGrid = false)
 		{
 			TagName = tagName ?? "div";
 			_inGrid = inGrid;
@@ -42,23 +42,23 @@ namespace A2v10.Xaml
 				throw new InvalidOperationException($"The element <{TagName}> is already rendered!");
 		}
 
-		HashSet<String> _cssClasses = null;
-		IDictionary<String, String> _attributes = null;
-		IDictionary<String, String> _styles = null;
+		HashSet<String>? _cssClasses = null;
+		IDictionary<String, String>? _attributes = null;
+		IDictionary<String, String>? _styles = null;
 
-		public TagBuilder SetInnerText(String text)
+		public TagBuilder SetInnerText(String? text)
 		{
 			CheckRendered();
+			if (text == null)
+				return this;
 			InnerText = text;
 			return this;
 
 		}
 
-		public Boolean HasClass(String className)
+		public Boolean HasClass(String? className)
 		{
-			if (_cssClasses == null)
-				return false;
-			if (className == null)
+			if (_cssClasses == null || className == null)
 				return false;
 			return _cssClasses.Contains(className);
 		}
@@ -84,7 +84,7 @@ namespace A2v10.Xaml
 			return AddCssClass(bAdd.Value ? value : "no-" + value);
 		}
 
-		public TagBuilder AddCssClass(String value)
+		public TagBuilder AddCssClass(String? value)
 		{
 			if (String.IsNullOrEmpty(value))
 				return this;
@@ -95,7 +95,7 @@ namespace A2v10.Xaml
 			return this;
 		}
 
-		public TagBuilder MergeStyles(String styles)
+		public TagBuilder MergeStyles(String? styles)
 		{
 			if (String.IsNullOrEmpty(styles))
 				return this;
@@ -109,7 +109,7 @@ namespace A2v10.Xaml
 		}
 
 
-		public TagBuilder MergeStyleUnit(String key, String value)
+		public TagBuilder MergeStyleUnit(String key, String? value)
 		{
 			if (String.IsNullOrEmpty(value))
 				return this;
@@ -118,7 +118,7 @@ namespace A2v10.Xaml
 			return MergeStyle(key, value);
 		}
 
-		public TagBuilder MergeStyle(String key, String value)
+		public TagBuilder MergeStyle(String key, String? value)
 		{
 			CheckRendered();
 			if (value == null)
@@ -132,7 +132,7 @@ namespace A2v10.Xaml
 			return this;
 		}
 
-		public TagBuilder MergeStyles(IEnumerable<StringKeyValuePair> pairs)
+		public TagBuilder MergeStyles(IEnumerable<StringKeyValuePair>? pairs)
 		{
 			if (pairs == null)
 				return this;
@@ -141,11 +141,11 @@ namespace A2v10.Xaml
 			return this;
 		}
 
-		public String GetAttribute(String key)
+		public String? GetAttribute(String key)
 		{
 			if (_attributes == null)
 				return null;
-			if (_attributes.TryGetValue(key, out String attr))
+			if (_attributes.TryGetValue(key, out String? attr))
 				return attr;
 			return null;
 		}
@@ -165,7 +165,7 @@ namespace A2v10.Xaml
 			return MergeAttribute(key, value.Value.ToString(), replaceExisting);
 		}
 
-		public TagBuilder MergeAttribute(String key, String value, Boolean replaceExisting = false)
+		public TagBuilder MergeAttribute(String key, String? value, Boolean replaceExisting = false)
 		{
 			CheckRendered();
 			if (value == null)
@@ -274,7 +274,7 @@ namespace A2v10.Xaml
 			return sb.ToString();
 		}
 
-		public static void RenderSpanText(RenderContext context, String cssClass, Bind binding, String value = null)
+		public static void RenderSpanText(RenderContext context, String cssClass, Bind? binding, String? value = null)
 		{
 			if (binding == null && value == null)
 				return;

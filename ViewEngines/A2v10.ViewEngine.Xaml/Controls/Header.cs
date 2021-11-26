@@ -9,11 +9,11 @@ namespace A2v10.Xaml
 		public ControlSize Size { get; set; }
 		public TextAlign Align { get; set; }
 
-		public String Badge { get; set; }
+		public String? Badge { get; set; }
 
 		public Boolean? Bold { get; set; }
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			if (SkipRender(context))
 				return;

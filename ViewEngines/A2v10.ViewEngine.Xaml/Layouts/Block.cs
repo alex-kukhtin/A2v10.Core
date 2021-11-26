@@ -12,8 +12,8 @@ namespace A2v10.Xaml
 
 		public UIElementCollection Children { get; set; } = new UIElementCollection();
 
-		public Length Height { get; set; }
-		public Length Width { get; set; }
+		public Length? Height { get; set; }
+		public Length? Width { get; set; }
 		public Boolean Border { get; set; }
 		public Boolean? Scroll { get; set; }
 		public Boolean Relative { get; set; }
@@ -21,7 +21,7 @@ namespace A2v10.Xaml
 		public TextColor Color { get; set; }
 		public BackgroundStyle Background { get; set; }
 		public ShadowStyle DropShadow { get; set; }
-		public Length MaxWidth { get; set; }
+		public Length? MaxWidth { get; set; }
 
 		internal virtual void RenderChildren(RenderContext context)
 		{
@@ -44,7 +44,7 @@ namespace A2v10.Xaml
 		}
 		*/
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			if (SkipRender(context))
 				return;

@@ -15,7 +15,7 @@ namespace A2v10.Xaml
 		internal override String ControlType => Style == RadioButtonStyle.CheckBox ? "checkbox" : "radio";
 		internal override String InputControlType => "radio";
 
-		public Object CheckedValue { get; set; }
+		public Object? CheckedValue { get; set; }
 
 		public RadioButtonStyle Style { get; set; }
 

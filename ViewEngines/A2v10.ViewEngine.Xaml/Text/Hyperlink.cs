@@ -15,22 +15,22 @@ namespace A2v10.Xaml
 	[ContentProperty("Content")]
 	public class Hyperlink : Inline
 	{
-		public Object Content { get; set; }
+		public Object? Content { get; set; }
 		public ControlSize Size { get; set; }
 		public Icon Icon { get; set; }
 		public Boolean Highlight { get; set; }
 
-		public Command Command { get; set; }
+		public Command? Command { get; set; }
 
-		public UIElementBase DropDown { get; set; }
+		public UIElementBase? DropDown { get; set; }
 
 		public HyperlinkStyle Style { get; set; }
 		public Boolean HideCaret { get; set; }
-		public String TestId { get; set; }
+		public String? TestId { get; set; }
 
 		public Popover Hint { get; set; }
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			if (SkipRender(context))
 				return;
@@ -51,7 +51,7 @@ namespace A2v10.Xaml
 				wrap.RenderStart(context);
 				var hasAddOn = wrap.HasClass("add-on");
 				RenderHyperlink(context, false, null, inside: true, addOn: hasAddOn);
-				DropDown.RenderElement(context);
+				DropDown?.RenderElement(context);
 				wrap.RenderEnd(context);
 			}
 			else
@@ -68,7 +68,7 @@ namespace A2v10.Xaml
 			return c.Command == CommandType.NavigateExternal;
 		}
 
-		void RenderHyperlink(RenderContext context, Boolean inGrid, Action<TagBuilder> onRender = null, Boolean inside = false, Boolean addOn = false)
+		void RenderHyperlink(RenderContext context, Boolean inGrid, Action<TagBuilder>? onRender = null, Boolean inside = false, Boolean addOn = false)
 		{
 			Boolean bHasDropDown = DropDown != null;
 
@@ -125,9 +125,9 @@ namespace A2v10.Xaml
 					.MergeAttribute("v-text", cbind.GetPathFormat(context))
 					.Render(context);
 			}
-			else if (Content is UIElementBase)
+			else if (Content is UIElementBase uiElemBase)
 			{
-				(Content as UIElementBase).RenderElement(context);
+				uiElemBase.RenderElement(context);
 			}
 			else if (Content != null)
 			{

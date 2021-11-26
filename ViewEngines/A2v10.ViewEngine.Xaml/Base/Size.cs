@@ -1,6 +1,5 @@
 ﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-using System;
 using System.ComponentModel;
 using System.Globalization;
 
@@ -10,12 +9,12 @@ namespace A2v10.Xaml
 	[TypeConverter(typeof(SizeConverter))]
 	public class Size
 	{
-		public Length Width { get; set; }
-		public Length Height { get; set; }
+		public Length Width { get; set; } = new();
+		public Length Height { get; set; } = new();
 
 		public Boolean IsEmpty => Width.IsEmpty && Height.IsEmpty;
 
-		public static Size FromString(String str)
+		public static Size? FromString(String str)
 		{
 			if (String.IsNullOrEmpty(str))
 				return null;
@@ -38,9 +37,9 @@ namespace A2v10.Xaml
 			return t;
 		}
 
-		public String ToAttribute()
+		public String? ToAttribute()
 		{
-			if (Width == null && Height == null)
+			if (Width.IsEmpty && Height.IsEmpty)
 				return null;
 			if (Width == Height)
 				return Width.ToString();
@@ -51,7 +50,7 @@ namespace A2v10.Xaml
 
 	public class SizeConverter : TypeConverter
 	{
-		public override Boolean CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+		public override Boolean CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
 		{
 			if (sourceType == typeof(String))
 				return true;
@@ -60,13 +59,12 @@ namespace A2v10.Xaml
 			return false;
 		}
 
-		public override Object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, Object value)
+		public override Object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, Object value)
 		{
 			if (value == null)
 				return null;
-			if (value is String)
+			if (value is String strVal)
 			{
-				String strVal = value.ToString();
 				return Size.FromString(strVal);
 			}
 			throw new XamlException($"Invalid Size value '{value}'");

@@ -13,7 +13,7 @@ namespace A2v10.Xaml
 			tag.AddCssClass("wizard");
 		}
 
-		public override void RenderChildren(RenderContext context, Action<TagBuilder> onRenderStatic = null)
+		public override void RenderChildren(RenderContext context, Action<TagBuilder>? onRenderStatic = null)
 		{
 			var wiz = new TagBuilder("a2-wizard-panel");
 			MergeCommand(wiz, context);

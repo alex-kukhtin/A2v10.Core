@@ -11,7 +11,7 @@ namespace A2v10.Xaml
 		public SheetCells Cells { get; } = new SheetCells();
 		public Object ItemsSource { get; set; }
 
-		public void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			var isBind = GetBinding(nameof(ItemsSource));
 			if (isBind != null)

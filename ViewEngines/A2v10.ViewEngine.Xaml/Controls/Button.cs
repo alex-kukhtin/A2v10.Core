@@ -30,12 +30,12 @@ namespace A2v10.Xaml
 	public class Button : CommandControl
 	{
 		public Icon Icon { get; set; }
-		public UIElementBase DropDown { get; set; }
+		public UIElementBase? DropDown { get; set; }
 		public ButtonStyle Style { get; set; }
 		public IconAlign IconAlign { get; set; }
 		public Boolean Rounded { get; set; }
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			if (CheckDisabledModel(context))
 				return;
@@ -60,7 +60,7 @@ namespace A2v10.Xaml
 
 				wrap.RenderStart(context);
 				RenderButton(context, true, bDropUp, onRender);
-				DropDown.RenderElement(context);
+				DropDown?.RenderElement(context);
 				wrap.RenderEnd(context);
 			}
 			else
@@ -86,7 +86,7 @@ namespace A2v10.Xaml
 
 		}
 
-		void RenderButton(RenderContext context, Boolean hasDropDown, Boolean bDropUp, Action<TagBuilder> onRender)
+		void RenderButton(RenderContext context, Boolean hasDropDown, Boolean bDropUp, Action<TagBuilder>? onRender)
 		{
 			var parentCB = IsParentCommandBar;
 			var parentTB = IsParentToolBar;

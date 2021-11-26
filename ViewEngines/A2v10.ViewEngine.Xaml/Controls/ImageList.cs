@@ -13,7 +13,7 @@ namespace A2v10.Xaml
 
 		public Image ItemTemplate { get; set; }
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			if (SkipRender(context))
 				return;
@@ -24,7 +24,7 @@ namespace A2v10.Xaml
 			MergeAttributes(list, context);
 			String source = isBind.GetPath(context);
 			list.RenderStart(context);
-			TagBuilder itemTag = null;
+			TagBuilder? itemTag = null;
 			if (ItemTemplate != null)
 			{
 				using (new ScopeContext(context, "img", isBind.Path))

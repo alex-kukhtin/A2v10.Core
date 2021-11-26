@@ -25,16 +25,16 @@ namespace A2v10.Xaml
 		public TextAlign Align { get; set; }
 		public UpdateTrigger UpdateTrigger { get; set; }
 		public Boolean? SpellCheck { get; set; }
-		public Length MaxHeight { get; set; }
+		public Length? MaxHeight { get; set; }
 
-		public Bind EnterCommand { get; set; }
+		public Bind? EnterCommand { get; set; }
 
-		public Accel Accel { get; set; }
+		public Accel? Accel { get; set; }
 		public Boolean ShowClear { get; set; }
 
 		protected virtual String TagName => Multiline ? "a2-textarea" : "textbox";
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			if (CheckDisabledModel(context))
 				return;

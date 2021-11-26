@@ -13,13 +13,13 @@ namespace A2v10.Xaml
 
 	public class Graphics : UIElementBase
 	{
-		public String Delegate { get; set; }
-		public Object Argument { get; set; }
+		public String? Delegate { get; set; }
+		public Object? Argument { get; set; }
 		public WatchMode Watch { get; set; }
 		public Boolean CenterContent { get; set; }
-		public Length Height { get; set; }
+		public Length? Height { get; set; }
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			if (SkipRender(context))
 				return;

@@ -19,30 +19,30 @@ namespace A2v10.Xaml
 	[ContentProperty("Content")]
 	public class List : Control, ITableControl
 	{
-		public Object ItemsSource { get; set; }
+		public Object? ItemsSource { get; set; }
 		public UIElementCollection Content { get; set; } = new UIElementCollection();
 		public AutoSelectMode AutoSelect { get; set; }
 		public Boolean Striped { get; set; }
 		public Boolean? Select { get; set; }
-		public Object Mark { get; set; }
+		public Object? Mark { get; set; }
 		public RowMarkerStyle MarkerStyle { get; set; }
 		public Boolean Border { get; set; }
 		public Boolean Flush { get; set; }
 		public Boolean Compact { get; set; }
 		public BorderStyle BorderStyle { get; set; }
 
-		public Length Height { get; set; }
-		public Length MaxHeight { get; set; }
+		public Length? Height { get; set; }
+		public Length? MaxHeight { get; set; }
 		public BackgroundStyle Background { get; set; }
 
 		public ListStyle Style { get; set; }
-		public String GroupBy { get; set; }
+		public String? GroupBy { get; set; }
 
-		public UIElement EmptyPanel { get; set; }
+		public UIElement? EmptyPanel { get; set; }
 
-		public Command DoubleClick { get; set; }
+		public Command? DoubleClick { get; set; }
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			if (SkipRender(context))
 				return;

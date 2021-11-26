@@ -61,7 +61,7 @@ namespace A2v10.Xaml
 		public Boolean ShowOnHover { get; set; }
 
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			if (SkipRender(context))
 				return;
@@ -107,9 +107,9 @@ namespace A2v10.Xaml
 				cont.MergeAttribute("v-text", cntBind.GetPathFormat(context));
 				cont.Render(context);
 			}
-			else if (Content is UIElementBase)
+			else if (Content is UIElementBase uiElemBase)
 			{
-				(Content as UIElementBase).RenderElement(context);
+				uiElemBase.RenderElement(context);
 			}
 			else if (Content != null)
 			{
@@ -141,7 +141,7 @@ namespace A2v10.Xaml
 
 	internal class PopoverConverter : TypeConverter
 	{
-		public override Boolean CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+		public override Boolean CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
 		{
 			if (sourceType == typeof(String))
 				return true;
@@ -152,7 +152,7 @@ namespace A2v10.Xaml
 			return false;
 		}
 
-		public override Object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, Object value)
+		public override Object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, Object value)
 		{
 			if (value == null)
 				return null;

@@ -34,7 +34,7 @@ namespace A2v10.Xaml
 		public Boolean? IsFolder { get; set; }
 		public Boolean? IsGroup { get; set; }
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			throw new NotImplementedException(nameof(RenderElement));
 		}
@@ -97,24 +97,24 @@ namespace A2v10.Xaml
 		public AutoSelectMode AutoSelect { get; set; }
 
 		public Boolean ExpandFirstItem { get; set; }
-		public Length Height { get; set; }
+		public Length? Height { get; set; }
 
 		public TreeViewStyle Style { get; set; }
 		public Boolean? Indent { get; set; }
-		public Command DoubleClick { get; set; }
+		public Command? DoubleClick { get; set; }
 
 		public TreeViewItemCollection Children { get; set; } = new TreeViewItemCollection();
 
-		public DropDownMenu ContextMenu { get; set; }
+		public DropDownMenu? ContextMenu { get; set; }
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			if (SkipRender(context))
 				return;
 			var cont = new TagBuilder("tree-view", null, IsInGrid);
 			MergeAttributes(cont, context);
 
-			String contextId = null;
+			String? contextId = null;
 			if (ContextMenu != null)
 			{
 				contextId = $"ctx-{Guid.NewGuid()}";

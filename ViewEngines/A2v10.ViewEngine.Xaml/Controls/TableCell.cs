@@ -25,16 +25,16 @@ namespace A2v10.Xaml
 
 		//public Boolean Validate { get; set; }
 
-		public Object ItemsSource { get; set; }
+		public Object? ItemsSource { get; set; }
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			if (SkipRender(context))
 				return;
 			var td = new TagBuilder("td");
 			onRender?.Invoke(td);
 
-			Bind isBind = GetBinding(nameof(ItemsSource));
+			Bind? isBind = GetBinding(nameof(ItemsSource));
 			if (isBind != null)
 			{
 				td.MergeAttribute("v-for", $"(cell, cellIndex) in {isBind.GetPath(context)}");

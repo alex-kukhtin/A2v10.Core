@@ -6,17 +6,17 @@ namespace A2v10.Xaml
 {
 	public class UploadFile : UIElementBase
 	{
-		public String Url { get; set; }
-		public String Accept { get; set; }
+		public String? Url { get; set; }
+		public String? Accept { get; set; }
 
-		public String Delegate { get; set; }
-		public String ErrorDelegate { get; set; }
+		public String? Delegate { get; set; }
+		public String? ErrorDelegate { get; set; }
 
-		public Object Argument { get; set; }
+		public Object? Argument { get; set; }
 
 		public Int32 Limit { get; set; }
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			if (SkipRender(context))
 				return;

@@ -82,13 +82,13 @@ namespace A2v10.Xaml
 		}
 
 
-		TableRowCollection _header;
-		TableRowCollection _footer;
-		TableColumnCollection _columns;
+		TableRowCollection? _header;
+		TableRowCollection? _footer;
+		TableColumnCollection? _columns;
 
-		public Object ItemsSource { get; set; }
+		public Object? ItemsSource { get; set; }
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			if (SkipRender(context))
 				return;
@@ -110,7 +110,7 @@ namespace A2v10.Xaml
 			table.AddCssClassBool(Hover, "hover");
 			table.AddCssClassBool(Striped, "striped");
 
-			Bind isBind = GetBinding(nameof(ItemsSource));
+			Bind? isBind = GetBinding(nameof(ItemsSource));
 			if (isBind != null)
 				table.MergeAttribute("v-lazy", isBind.GetPath(context));
 

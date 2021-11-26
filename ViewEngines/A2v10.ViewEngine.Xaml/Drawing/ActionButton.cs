@@ -10,11 +10,11 @@ namespace A2v10.Xaml.Drawing
 	{
 		public Icon Icon { get; set; }
 
-		public Size Size { get; set; }
-		public Point Pos { get; set; }
+		public Size? Size { get; set; }
+		public Point? Pos { get; set; }
 
-		public Object Content { get; set; }
-		public Command Command { get; set; }
+		public Object? Content { get; set; }
+		public Command? Command { get; set; }
 
 		internal override void RenderElement(RenderContext context)
 		{

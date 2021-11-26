@@ -21,7 +21,7 @@ namespace A2v10.Xaml
 
 		public Icon Icon { get; set; }
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			if (SkipRender(context))
 				return;
@@ -51,12 +51,12 @@ namespace A2v10.Xaml
 
 	public class FileImage : UIElementBase
 	{
-		public String Url { get; set; }
-		public Length Width { get; set; }
-		public Length Height { get; set; }
-		public Object Value { get; set; }
+		public String? Url { get; set; }
+		public Length? Width { get; set; }
+		public Length? Height { get; set; }
+		public Object? Value { get; set; }
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			if (SkipRender(context))
 				return;

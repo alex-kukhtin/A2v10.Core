@@ -14,8 +14,8 @@ namespace A2v10.Xaml
 
 	public class FilterItem : XamlElement
 	{
-		public String Property { get; set; }
-		public Object Value { get; set; }
+		public String? Property { get; set; }
+		public Object? Value { get; set; }
 		public DataType DataType { get; set; }
 		public Boolean Persistent { get; set; }
 
@@ -119,7 +119,7 @@ namespace A2v10.Xaml
 
 	internal class FilterDescriptionConverter : TypeConverter
 	{
-		public override Boolean CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+		public override Boolean CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
 		{
 			if (sourceType == typeof(String))
 				return true;
@@ -128,12 +128,12 @@ namespace A2v10.Xaml
 			return false;
 		}
 
-		public override Object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, Object value)
+		public override Object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, Object value)
 		{
 			if (value == null)
 				return null;
-			if (value is String)
-				return new FilterDescription(value.ToString());
+			if (value is String strVal)
+				return new FilterDescription(strVal);
 			else if (value is FilterDescription)
 				return value;
 			throw new XamlException($"Invalid FilterDescription value '{value}'");

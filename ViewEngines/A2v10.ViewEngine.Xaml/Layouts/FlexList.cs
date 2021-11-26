@@ -23,7 +23,7 @@ namespace A2v10.Xaml
 		public Length MinWidth { get; set; }
 		public GapSize Gap { get; set; }
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			if (SkipRender(context))
 				return;
@@ -47,7 +47,7 @@ namespace A2v10.Xaml
 			list.RenderEnd(context);
 		}
 
-		public override void RenderChildren(RenderContext context, Action<TagBuilder> onRenderStatic = null)
+		public override void RenderChildren(RenderContext context, Action<TagBuilder>? onRenderStatic = null)
 		{
 			foreach (var c in Children)
 			{

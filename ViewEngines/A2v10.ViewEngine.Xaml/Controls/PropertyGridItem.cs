@@ -18,14 +18,14 @@ namespace A2v10.Xaml
 	[ContentProperty("Content")]
 	public class PropertyGridItem : UIElementBase
 	{
-		public String Name { get; set; }
-		public Object Content { get; set; }
+		public String? Name { get; set; }
+		public Object? Content { get; set; }
 
 		public Boolean? Bold { get; set; }
 
 		public Boolean HideEmpty { get; set; }
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			if (SkipRender(context))
 				return;

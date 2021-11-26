@@ -20,10 +20,10 @@ namespace A2v10.Xaml
 		/* TODO: 
          * 3. Grouping
          */
-		public Object ItemsSource { get; set; }
+		public Object? ItemsSource { get; set; }
 		public Boolean Compact { get; set; }
 		public Boolean Striped { get; set; }
-		public String TestId { get; set; }
+		public String? TestId { get; set; }
 		public PropertyGridStyle Style { get; set; }
 
 		public Boolean NoWrapName { get; set; }
@@ -31,7 +31,7 @@ namespace A2v10.Xaml
 		public PropertyGridItems Children { get; set; } = new PropertyGridItems();
 		public GridLinesVisibility GridLines { get; set; }
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			if (SkipRender(context))
 				return;

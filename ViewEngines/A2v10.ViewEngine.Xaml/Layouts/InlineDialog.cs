@@ -15,7 +15,7 @@ namespace A2v10.Xaml
 
 		public UIElementCollection Buttons { get; set; } = new UIElementCollection();
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			if (String.IsNullOrEmpty(Id))
 				throw new XamlException("Id is required for Inline Dialog");

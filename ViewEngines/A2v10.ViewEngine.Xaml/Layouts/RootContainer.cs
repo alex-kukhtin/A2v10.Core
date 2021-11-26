@@ -25,7 +25,7 @@ namespace A2v10.Xaml
 	public abstract class RootContainer : Container, IUriContext, IRootContainer
 	{
 		#region IUriContext
-		public Uri BaseUri { get; set; }
+		public Uri? BaseUri { get; set; }
 		#endregion
 
 
@@ -38,7 +38,7 @@ namespace A2v10.Xaml
 
 		#endregion
 
-		protected ResourceDictionary _resources;
+		protected ResourceDictionary? _resources;
 
 		public ResourceDictionary Resources
 		{
@@ -55,16 +55,16 @@ namespace A2v10.Xaml
 		}
 		public AccelCommandCollection AccelCommands { get; set; } = new AccelCommandCollection();
 
-		public Object FindResource(String key)
+		public Object? FindResource(String key)
 		{
 			if (_resources == null)
 				return null;
-			if (_resources.TryGetValue(key, out Object resrc))
+			if (_resources.TryGetValue(key, out Object? resrc))
 				return resrc;
 			return null;
 		}
 
-		internal Styles Styles { get; set; }
+		internal Styles? Styles { get; set; }
 
 		protected virtual void RenderAccelCommands(RenderContext context)
 		{
@@ -77,7 +77,7 @@ namespace A2v10.Xaml
 			cmd.RenderEnd(context);
 		}
 
-		private List<Action> _contextMenus = new List<Action>();
+		private readonly List<Action> _contextMenus = new List<Action>();
 		public void RegisterContextMenu(Action action)
 		{
 			_contextMenus.Add(action);

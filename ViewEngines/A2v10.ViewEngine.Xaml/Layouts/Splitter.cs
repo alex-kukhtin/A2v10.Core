@@ -10,8 +10,8 @@ namespace A2v10.Xaml
 	public class Splitter : Container
 	{
 		public Orientation Orientation { get; set; }
-		public Length Height { get; set; }
-		public Length MinWidth { get; set; }
+		public Length? Height { get; set; }
+		public Length? MinWidth { get; set; }
 
 		private readonly IAttachedPropertyManager _attachedPropertyManager;
 
@@ -27,7 +27,7 @@ namespace A2v10.Xaml
 			var prop = _attachedPropertyManager.GetProperty<Object>("Splitter.Width", obj);
 			if (prop == null)
 				return new GridLength();
-			return GridLength.FromString(prop.ToString());
+			return GridLength.FromString(prop.ToString()!);
 		}
 
 
@@ -36,12 +36,12 @@ namespace A2v10.Xaml
 			var prop = _attachedPropertyManager.GetProperty<Object>("Splitter.MinWidth", obj);
 			if (prop == null)
 				return new Length();
-			return Length.FromString(prop.ToString());
+			return Length.FromString(prop.ToString()!);
 		}
 
 		#endregion
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			/* TODO: 
              * 1. Horizontal splitter

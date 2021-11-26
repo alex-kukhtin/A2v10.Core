@@ -1,17 +1,15 @@
 ﻿// Copyright © 2015-2019 Alex Kukhtin. All rights reserved.
 
-using System;
-
 namespace A2v10.Xaml
 {
 	public class IFrame : UIElementBase
 	{
 
-		public Size Size { get; set; }
-		public String Source { get; set; }
-		public Length Height { get; set; }
+		public Size? Size { get; set; }
+		public String? Source { get; set; }
+		public Length? Height { get; set; }
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			if (SkipRender(context))
 				return;

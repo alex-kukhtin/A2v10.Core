@@ -11,22 +11,22 @@ namespace A2v10.Xaml
 	public class Page : RootContainer
 	{
 
-		public UIElementBase Toolbar { get; set; }
-		public UIElementBase Taskpad { get; set; }
-		public Pager Pager { get; set; }
-		public String Title { get; set; }
+		public UIElementBase? Toolbar { get; set; }
+		public UIElementBase? Taskpad { get; set; }
+		public Pager? Pager { get; set; }
+		public String? Title { get; set; }
 		//public Double Zoom { get; set; }
 
-		public PrintPage PrintPage { get; set; }
+		public PrintPage? PrintPage { get; set; }
 
 		public BackgroundStyle Background { get; set; }
-		public CollectionView CollectionView { get; set; }
+		public CollectionView? CollectionView { get; set; }
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			if (SkipRender(context))
 				return;
-			TagBuilder page = null;
+			TagBuilder? page = null;
 			Boolean isGridPage = (Toolbar != null) || (Taskpad != null) || (Pager != null);
 
 			// render page OR colleciton view
@@ -133,7 +133,7 @@ namespace A2v10.Xaml
 
 		void RenderTitle(RenderContext context)
 		{
-			Bind titleBind = GetBinding(nameof(Title));
+			Bind? titleBind = GetBinding(nameof(Title));
 			if (titleBind != null || !String.IsNullOrEmpty(Title))
 			{
 				var dt = new TagBuilder("a2-document-title");

@@ -53,7 +53,7 @@ namespace A2v10.Xaml
 		public ToolbarBorderStyle Border { get; set; }
 		public AlignItems AlignItems { get; set; }
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			if (SkipRender(context))
 				return;
@@ -71,7 +71,7 @@ namespace A2v10.Xaml
 			tb.RenderEnd(context);
 		}
 
-		public override void RenderChildren(RenderContext context, Action<TagBuilder> onRenderStatic = null)
+		public override void RenderChildren(RenderContext context, Action<TagBuilder>? onRenderStatic = null)
 		{
 			var rightList = new List<UIElementBase>();
 			Boolean bFirst = true;

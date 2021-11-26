@@ -17,19 +17,19 @@ namespace A2v10.Xaml
 
 	public class Dialog : RootContainer, ISupportTwoPhaseRendering
 	{
-		public String Title { get; set; }
-		public String HelpUrl { get; set; }
-		public String TestId { get; set; }
+		public String? Title { get; set; }
+		public String? HelpUrl { get; set; }
+		public String? TestId { get; set; }
 
-		public UIElementBase TitleInfo { get; set; }
+		public UIElementBase? TitleInfo { get; set; }
 
 		public DialogSize Size { get; set; }
-		public Length Width { get; set; }
-		public Length MinWidth { get; set; }
-		public Length Height { get; set; }
-		public String CanCloseDelegate { get; set; }
+		public Length? Width { get; set; }
+		public Length? MinWidth { get; set; }
+		public Length? Height { get; set; }
+		public String? CanCloseDelegate { get; set; }
 		public Boolean AlwaysOk { get; set; }
-		public UIElementBase Taskpad { get; set; }
+		public UIElementBase? Taskpad { get; set; }
 		public Boolean ShowWaitCursor { get; set; }
 		public BackgroundStyle Background { get; set; }
 		public Boolean Maximize { get; set; }
@@ -58,7 +58,7 @@ namespace A2v10.Xaml
 			return opts.ToString();
 		}
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			var dialog = new TagBuilder("div", "modal");
 			dialog.MergeAttribute("id", context.RootId);
@@ -127,7 +127,7 @@ namespace A2v10.Xaml
 			dialog.RenderEnd(context);
 		}
 
-		public override void RenderChildren(RenderContext context, Action<TagBuilder> onRenderStatic = null)
+		public override void RenderChildren(RenderContext context, Action<TagBuilder>? onRenderStatic = null)
 		{
 			// static without wrapper
 			foreach (var c in Children)

@@ -99,15 +99,15 @@ namespace A2v10.Xaml
 		private const String nullString = "null";
 
 		public CommandType Command { get; set; }
-		public String Argument { get; set; }
-		public String UpdateAfter { get; set; }
-		public String Url { get; set; }
+		public String? Argument { get; set; }
+		public String? UpdateAfter { get; set; }
+		public String? Url { get; set; }
 		public DialogAction Action { get; set; }
 		public FileAction FileAction { get; set; }
 
-		public String Execute { get; set; } /* not used */
-		public String CommandName { get; set; }
-		public String Report { get; set; }
+		public String? Execute { get; set; } /* not used */
+		public String? CommandName { get; set; }
+		public String? Report { get; set; }
 
 		public Boolean SaveRequired { get; set; }
 		public Boolean ValidRequired { get; set; }
@@ -118,17 +118,17 @@ namespace A2v10.Xaml
 		public Boolean Print { get; set; }
 		public Boolean ReloadAfter { get; set; }
 
-		public Confirm Confirm { get; set; }
-		public Toast Toast { get; set; }
+		public Confirm? Confirm { get; set; }
+		public Toast? Toast { get; set; }
 
-		public String Data { get; set; }
+		public String? Data { get; set; }
 
 		public ExportToFormat Format { get; set; }
-		public String FileName { get; set; }
+		public String? FileName { get; set; }
 
 		public Permission Permission { get; set; }
 
-		public String Viewer { get; set; }
+		public String? Viewer { get; set; }
 
 		public BindCmd()
 		{
@@ -143,7 +143,7 @@ namespace A2v10.Xaml
 			Command = cmdType;
 		}
 
-		internal String GetHrefForCommand(RenderContext context)
+		internal String? GetHrefForCommand(RenderContext context)
 		{
 			return Command switch
 			{
@@ -155,7 +155,7 @@ namespace A2v10.Xaml
 			};
 		}
 
-		internal String NewWindowJS => NewWindow.ToString().ToLowerInvariant();
+		internal String? NewWindowJS => NewWindow.ToString().ToLowerInvariant();
 
 		Boolean IsIndirectSupported
 		{
@@ -166,7 +166,7 @@ namespace A2v10.Xaml
 			}
 		}
 
-		internal String GetCommand(RenderContext context, Boolean indirect = false, String argument = null, XamlElement src = null)
+		internal String GetCommand(RenderContext context, Boolean indirect = false, String? argument = null, XamlElement? src = null)
 		{
 			if (indirect)
 			{
@@ -229,9 +229,9 @@ namespace A2v10.Xaml
 					return $"$dbRemoveSelected({CommandArgument(context)}, {GetConfirm(context)}, {GetOptions(context)})";
 
 				case CommandType.MailTo:
-					return null;
+                    return String.Empty;
 
-				case CommandType.Navigate:
+                case CommandType.Navigate:
 					return $"$navigateSimple({CommandUrl(context)}, {NewWindowJS})";
 
 				case CommandType.NavigateExternal:
@@ -410,7 +410,7 @@ namespace A2v10.Xaml
 
 		String CommandArgument(RenderContext context, Boolean nullable = false)
 		{
-			String arg = null;
+			String? arg = null;
 			if (Argument != null)
 				return $"'{Argument}'";
 			if (nullable)
@@ -492,6 +492,8 @@ namespace A2v10.Xaml
 					return $"'{{{fnBind.Path}}}'";
 				return fnBind.GetPath(context);
 			}
+			if (FileName == null)
+				return "''";
 			return $"'{context.Localize(FileName)}'";
 		}
 

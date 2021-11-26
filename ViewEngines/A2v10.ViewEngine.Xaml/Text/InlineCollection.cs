@@ -18,8 +18,8 @@ namespace A2v10.Xaml
 					continue;
 				if (x is String)
 					context.Writer.Write(context.LocalizeCheckApostrophe(x.ToString()));
-				else if (x is Inline)
-					(x as Inline).RenderElement(context);
+				else if (x is Inline inline)
+					inline.RenderElement(context);
 				else
 					throw new XamlException($"Invalid inline element '{x.GetType()}'");
 			}
@@ -28,7 +28,7 @@ namespace A2v10.Xaml
 
 	public class InlineCollectionConverter : TypeConverter
 	{
-		public override Boolean CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+		public override Boolean CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
 		{
 			if (sourceType == typeof(String))
 				return true;
@@ -37,21 +37,21 @@ namespace A2v10.Xaml
 			return base.CanConvertFrom(context, sourceType);
 		}
 
-		public override Object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, Object value)
+		public override Object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, Object value)
 		{
 			if (value == null)
 				return null;
-			if (value is String)
+			if (value is String strVal)
 			{
 				var x = new InlineCollection
 				{
-					value
+					strVal
 				};
 				return x;
 			}
-			else if (value is InlineCollection)
+			else if (value is InlineCollection inlineColl)
 			{
-				return value;
+				return inlineColl;
 			}
 			return base.ConvertFrom(context, culture, value);
 		}

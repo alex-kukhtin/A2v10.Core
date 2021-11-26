@@ -12,9 +12,9 @@ namespace A2v10.Xaml
 
 		public SheetSections Sections { get; set; } = new SheetSections();
 
-		SheetRows _header;
-		SheetRows _footer;
-		SheetColumnCollection _columns;
+		SheetRows? _header;
+		SheetRows? _footer;
+		SheetColumnCollection? _columns;
 		public SheetRows Header
 		{
 			get
@@ -61,13 +61,13 @@ namespace A2v10.Xaml
 		public Boolean Hover { get; set; }
 		public Boolean Striped { get; set; }
 		public Boolean? Border { get; set; }
-		public Length Width { get; set; }
+		public Length? Width { get; set; }
 		public Boolean Compact { get; set; }
 		public Boolean FitWidth { get; set; }
 
-		public SheetAutoGenerate AutoGenerate { get; set; }
+		public SheetAutoGenerate? AutoGenerate { get; set; }
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			if (SkipRender(context))
 				return;

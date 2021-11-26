@@ -55,23 +55,23 @@ namespace A2v10.Xaml
 
 	internal class GroupDescriptionsConverter : TypeConverter
 	{
-		public override Boolean CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+		public override Boolean CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
 		{
 			if (sourceType == typeof(String))
 				return true;
 			return false;
 		}
 
-		public override Object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, Object value)
+		public override Object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, Object value)
 		{
 			if (value == null)
 				return null;
-			if (value is String)
+			if (value is String strVal)
 			{
 				var coll = new GroupDescriptions();
 				var gd = new GroupDescription
 				{
-					GroupBy = value.ToString(),
+					GroupBy = strVal,
 					Count = true
 				};
 				coll.Add(gd);

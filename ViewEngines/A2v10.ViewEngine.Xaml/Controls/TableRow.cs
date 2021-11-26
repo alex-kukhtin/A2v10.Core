@@ -30,7 +30,7 @@ namespace A2v10.Xaml
 		public VerticalAlign VAlign { get; set; }
 		public TextAlign Align { get; set; }
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			if (SkipRender(context))
 				return;
@@ -89,7 +89,7 @@ namespace A2v10.Xaml
 
 	public class TableRowDivider : TableRow
 	{
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			if (SkipRender(context))
 				return;
@@ -103,23 +103,23 @@ namespace A2v10.Xaml
 
 	public class TableRowCollectionConverter : TypeConverter
 	{
-		public override Boolean CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+		public override Boolean CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
 		{
 			if (sourceType == typeof(String))
 				return true;
 			return false;
 		}
 
-		public override Object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, Object value)
+		public override Object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, Object value)
 		{
 			if (value == null)
 				return null;
-			if (value is String)
+			if (value is String strVal)
 			{
 				var trc = new TableRowCollection();
 				var row = new TableRow();
 				trc.Add(row);
-				foreach (var st in value.ToString().Split(','))
+				foreach (var st in strVal.Split(','))
 				{
 					var s = st.Trim();
 					var cell = new TableCell();

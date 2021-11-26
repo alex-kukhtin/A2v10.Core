@@ -14,7 +14,7 @@ namespace A2v10.Xaml
 	[TypeConverter(typeof(SheetAutoGenerateConverter))]
 	public class SheetAutoGenerate
 	{
-		public String PropertyName { get; set; }
+		public String? PropertyName { get; set; }
 		public SheetAutoGenerateMode Mode { get; set; }
 
 		public static SheetAutoGenerate FromString(String str)
@@ -29,20 +29,19 @@ namespace A2v10.Xaml
 
 	public class SheetAutoGenerateConverter : TypeConverter
 	{
-		public override Boolean CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+		public override Boolean CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
 		{
 			if (sourceType == typeof(String))
 				return true;
 			return false;
 		}
 
-		public override Object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, Object value)
+		public override Object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, Object value)
 		{
 			if (value == null)
 				return null;
-			if (value is String)
+			if (value is String strVal)
 			{
-				String strVal = value.ToString();
 				return SheetAutoGenerate.FromString(strVal);
 			}
 			throw new XamlException($"Invalid  SheetAutoGenerate '{value}'");

@@ -32,7 +32,7 @@ namespace A2v10.Xaml.Drawing
 
 	public class SizeConverter : TypeConverter
 	{
-		public override Boolean CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+		public override Boolean CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
 		{
 			if (sourceType == typeof(String))
 				return true;
@@ -41,13 +41,13 @@ namespace A2v10.Xaml.Drawing
 			return base.CanConvertFrom(context, sourceType);
 		}
 
-		public override Object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, Object value)
+		public override Object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, Object value)
 		{
 			if (value == null)
 				return null;
-			if (value is String)
+			if (value is String strVal)
 			{
-				return new Size(value.ToString());
+				return new Size(strVal);
 			}
 			else if (value is Size)
 			{

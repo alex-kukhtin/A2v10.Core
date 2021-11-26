@@ -9,10 +9,10 @@ namespace A2v10.Xaml
 	[ContentProperty("Content")]
 	public class ComboBoxItem : UIElementBase
 	{
-		public String Content { get; set; }
-		public Object Value { get; set; }
+		public String? Content { get; set; }
+		public Object? Value { get; set; }
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			if (SkipRender(context))
 				return;
@@ -20,13 +20,13 @@ namespace A2v10.Xaml
 			MergeAttributes(option, context, MergeAttrMode.Visibility);
 			if (Value != null)
 			{
-				if (Value is IJavaScriptSource)
+				if (Value is IJavaScriptSource valJsSource)
 				{
-					var jsValue = (Value as IJavaScriptSource).GetJsValue(context);
+					var jsValue = valJsSource.GetJsValue(context);
 					option.MergeAttribute(":value", jsValue);
 				}
 				else
-					option.MergeAttribute("value", Value.ToString());
+					option.MergeAttribute("value", Value?.ToString());
 			}
 			else
 			{
@@ -53,13 +53,13 @@ namespace A2v10.Xaml
 	[ContentProperty("Children")]
 	public class ComboBox : ValuedControl, ITableControl
 	{
-		public Object ItemsSource { get; set; }
-		public String DisplayProperty { get; set; }
+		public Object? ItemsSource { get; set; }
+		public String? DisplayProperty { get; set; }
 		public Boolean ShowValue { get; set; }
 		public TextAlign Align { get; set; }
 		public ComboBoxStyle Style { get; set; }
 
-		ComboBoxItems _children;
+		ComboBoxItems? _children;
 
 		public ComboBoxItems Children
 		{
@@ -75,7 +75,7 @@ namespace A2v10.Xaml
 			}
 		}
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			if (CheckDisabledModel(context))
 				return;

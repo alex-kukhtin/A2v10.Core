@@ -29,7 +29,7 @@ namespace A2v10.Xaml
 		public Object ItemsSource { get; set; }
 		public TabBarStyle Style { get; set; }
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			if (SkipRender(context))
 				return;

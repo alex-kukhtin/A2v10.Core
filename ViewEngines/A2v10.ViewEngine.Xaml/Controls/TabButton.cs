@@ -1,9 +1,7 @@
 ﻿// Copyright © 2019-2021 Alex Kukhtin. All rights reserved.
 
-using System;
 using System.Collections.Generic;
 
-using A2v10.System.Xaml;
 
 namespace A2v10.Xaml
 {
@@ -15,17 +13,17 @@ namespace A2v10.Xaml
 	[ContentProperty("Content")]
 	public class TabButton : UIElementBase
 	{
-		public Object Content { get; set; }
-		public Object Description { get; set; }
+		public Object? Content { get; set; }
+		public Object? Description { get; set; }
 
-		public String ActiveValue { get; set; }
+		public String? ActiveValue { get; set; }
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			throw new NotImplementedException(nameof(RenderElement));
 		}
 
-		private String GetActiveValueArg(RenderContext context)
+		private String? GetActiveValueArg(RenderContext context)
 		{
 			var activeValueArg = $"'{ActiveValue}'";
 			var avBind = GetBinding(nameof(ActiveValue));

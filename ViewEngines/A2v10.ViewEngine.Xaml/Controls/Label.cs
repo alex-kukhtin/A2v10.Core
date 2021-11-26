@@ -13,7 +13,7 @@ namespace A2v10.Xaml
 		public Boolean Required { get; set; }
 		public ControlSize Size { get; set; }
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			if (SkipRender(context))
 				return;

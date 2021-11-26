@@ -1,6 +1,5 @@
 ﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -8,7 +7,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 
 using A2v10.Infrastructure;
-using A2v10.System.Xaml;
 
 namespace A2v10.Xaml
 {
@@ -100,7 +98,7 @@ namespace A2v10.Xaml
 			}
 		}
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			if (SkipRender(context))
 				return;
@@ -141,7 +139,7 @@ namespace A2v10.Xaml
 			grid.RenderEnd(context);
 		}
 
-		public override void RenderChildren(RenderContext context, Action<TagBuilder> onRenderStatic = null)
+		public override void RenderChildren(RenderContext context, Action<TagBuilder>? onRenderStatic = null)
 		{
 			foreach (var ch in Children)
 			{
@@ -174,7 +172,7 @@ namespace A2v10.Xaml
 
 	public class RowDefinition
 	{
-		public GridLength Height { get; set; }
+		public GridLength? Height { get; set; }
 	}
 
 	[TypeConverter(typeof(RowDefinitionsConverter))]
@@ -206,7 +204,7 @@ namespace A2v10.Xaml
 
 	public class ColumnDefinition
 	{
-		public GridLength Width { get; set; }
+		public GridLength? Width { get; set; }
 	}
 
 	[TypeConverter(typeof(ColumnDefinitionsConverter))]
@@ -256,7 +254,7 @@ namespace A2v10.Xaml
 
 	public class RowDefinitionsConverter : TypeConverter
 	{
-		public override Boolean CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+		public override Boolean CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
 		{
 			if (sourceType == typeof(String))
 				return true;
@@ -265,15 +263,15 @@ namespace A2v10.Xaml
 			return false;
 		}
 
-		public override Object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, Object value)
+		public override Object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, Object value)
 		{
 			if (value == null)
 				return null;
 			if (value is RowDefinitions)
 				return value;
-			else if (value is String)
+			else if (value is String strValue)
 			{
-				return RowDefinitions.FromString(value.ToString());
+				return RowDefinitions.FromString(strValue);
 			}
 			return base.ConvertFrom(context, culture, value);
 		}
@@ -281,7 +279,7 @@ namespace A2v10.Xaml
 
 	public class ColumnDefinitionsConverter : TypeConverter
 	{
-		public override Boolean CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+		public override Boolean CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
 		{
 			if (sourceType == typeof(String))
 				return true;
@@ -290,15 +288,15 @@ namespace A2v10.Xaml
 			return false;
 		}
 
-		public override Object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, Object value)
+		public override Object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, Object value)
 		{
 			if (value == null)
 				return null;
 			if (value is ColumnDefinitions)
 				return value;
-			else if (value is String)
+			else if (value is String strVal)
 			{
-				return ColumnDefinitions.FromString(value.ToString());
+				return ColumnDefinitions.FromString(strVal);
 			}
 			return base.ConvertFrom(context, culture, value);
 		}

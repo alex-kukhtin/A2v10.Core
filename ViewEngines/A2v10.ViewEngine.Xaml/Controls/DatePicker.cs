@@ -22,7 +22,7 @@ namespace A2v10.Xaml
 
 		public String YearCutOff { get; set; }
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder> onRender = null)
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
 			if (CheckDisabledModel(context))
 				return;

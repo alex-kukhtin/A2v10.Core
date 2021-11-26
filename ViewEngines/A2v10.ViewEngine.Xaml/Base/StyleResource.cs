@@ -1,20 +1,18 @@
 ﻿// Copyright © 2015-2017 Alex Kukhtin. All rights reserved.
 
-using System;
-using A2v10.System.Xaml;
 
 namespace A2v10.Xaml
 {
 	public class StyleDescriptor
 	{
-		public RootContainer Root;
-		public String StyleName;
+		public RootContainer? Root;
+		public String? StyleName;
 
 		public void Set(XamlElement elem)
 		{
-			if (Root.Styles == null)
+			if (Root?.Styles == null)
 				return;
-			if (Root.Styles.TryGetValue(StyleName, out Style style))
+			if (Root.Styles.TryGetValue(StyleName, out Style? style))
 				style.Set(elem);
 			else
 				throw new XamlException($"Style '{StyleName}' not found");

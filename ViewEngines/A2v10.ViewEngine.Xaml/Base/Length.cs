@@ -24,9 +24,9 @@ namespace A2v10.Xaml
 	[TypeConverter(typeof(LengthConverter))]
 	public class Length
 	{
-		public String Value;
+		public String? Value;
 
-		public override String ToString()
+		public override String? ToString()
 		{
 			return Value;
 		}
@@ -74,7 +74,7 @@ namespace A2v10.Xaml
 	[TypeConverter(typeof(GridLengthConverter))]
 	public class GridLength
 	{
-		public String Value;
+		public String? Value;
 
 		public GridLength()
 		{
@@ -86,7 +86,7 @@ namespace A2v10.Xaml
 			Value = value;
 		}
 
-		public override String ToString()
+		public override String? ToString()
 		{
 			return Value;
 		}
@@ -131,13 +131,12 @@ namespace A2v10.Xaml
 			return false;
 		}
 
-		public override Object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, Object value)
+		public override Object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, Object value)
 		{
 			if (value == null)
 				return null;
-			if (value is String)
+			if (value is String strVal)
 			{
-				String strVal = value.ToString();
 				return Length.FromString(strVal);
 			}
 			throw new XamlException($"Invalid length value '{value}'");
@@ -146,7 +145,7 @@ namespace A2v10.Xaml
 
 	public class GridLengthConverter : TypeConverter
 	{
-		public override Boolean CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+		public override Boolean CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
 		{
 			if (sourceType == typeof(String))
 				return true;
@@ -155,13 +154,12 @@ namespace A2v10.Xaml
 			return false;
 		}
 
-		public override Object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, Object value)
+		public override Object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, Object value)
 		{
 			if (value == null)
 				return null;
-			if (value is String)
+			if (value is String strVal)
 			{
-				String strVal = value.ToString();
 				return GridLength.FromString(strVal);
 			}
 			throw new XamlException($"Invalid length value '{value}'");

@@ -9,12 +9,12 @@ namespace A2v10.Xaml
 	[TypeConverter(typeof(ThicknessConverter))]
 	public class Thickness
 	{
-		public Length Top { get; set; }
-		public Length Right { get; set; }
-		public Length Bottom { get; set; }
-		public Length Left { get; set; }
+		public Length? Top { get; set; }
+		public Length? Right { get; set; }
+		public Length? Bottom { get; set; }
+		public Length? Left { get; set; }
 
-		public static Thickness FromString(String str)
+		public static Thickness? FromString(String str)
 		{
 			if (String.IsNullOrEmpty(str))
 				return null;
@@ -80,7 +80,7 @@ namespace A2v10.Xaml
 
 	public class ThicknessConverter : TypeConverter
 	{
-		public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+		public override Boolean CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
 		{
 			if (sourceType == typeof(String))
 				return true;
@@ -89,15 +89,12 @@ namespace A2v10.Xaml
 			return false;
 		}
 
-		public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+		public override Object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, object value)
 		{
 			if (value == null)
 				return null;
-			if (value is String)
-			{
-				String strVal = value.ToString();
+			if (value is String strVal)
 				return Thickness.FromString(strVal);
-			}
 			throw new XamlException($"Invalid Thickness value '{value}'");
 		}
 	}
