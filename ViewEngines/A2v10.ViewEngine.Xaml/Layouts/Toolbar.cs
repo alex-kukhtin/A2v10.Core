@@ -1,9 +1,10 @@
 ﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-using System;
 using System.Collections.Generic;
+
+using Microsoft.Extensions.DependencyInjection;
+
 using A2v10.Infrastructure;
-using A2v10.System.Xaml;
 
 namespace A2v10.Xaml
 {
@@ -37,7 +38,7 @@ namespace A2v10.Xaml
 
 		public Toolbar(IServiceProvider serviceProvider)
 		{
-			_attachedPropertyManager = serviceProvider.GetService(typeof(IAttachedPropertyManager)) as IAttachedPropertyManager;
+			_attachedPropertyManager = serviceProvider.GetRequiredService<IAttachedPropertyManager>(); 
 		}
 
 		#region Attached Properties

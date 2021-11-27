@@ -15,102 +15,101 @@ using A2v10.Services;
 using A2v10.ViewEngine.Xaml;
 using A2v10.Platform.Web;
 
-namespace Microsoft.Extensions.DependencyInjection
+namespace Microsoft.Extensions.DependencyInjection;
+public static class ServicesExtensions
 {
-	public static class ServicesExtensions
+	public static IServiceCollection UseSqlServerStorage(this IServiceCollection services)
 	{
-		public static IServiceCollection UseSqlServerStorage(this IServiceCollection services)
+		// Storage
+		services.AddOptions<DataConfigurationOptions>();
+
+		services.AddScoped<IDbContext, SqlDbContext>()
+		.AddSingleton<IDataConfiguration, DataConfiguration>();
+
+		services.Configure<DataConfigurationOptions>(opts =>
 		{
-			// Storage
-			services.AddOptions<DataConfigurationOptions>();
+			opts.ConnectionStringName = "Default";
+		});
+		return services;
+	}
 
-			services.AddScoped<IDbContext, SqlDbContext>()
-			.AddSingleton<IDataConfiguration, DataConfiguration>();
-
-			services.Configure<DataConfigurationOptions>(opts =>
-			{
-				opts.ConnectionStringName = "Default";
-			});
-			return services;
-		}
-
-		public static IServiceCollection UsePlatform(this IServiceCollection services, IConfiguration configuration)
+	public static IServiceCollection UsePlatform(this IServiceCollection services, IConfiguration configuration)
+	{
+		services.AddPlatformCore(opts =>
 		{
-			services.AddPlatformCore(opts =>
-			{
-				// default values
-				//opts.MultiTenant = false;
-				//opts.MultiCompany = false;
-				//opts.GlobalPeriod = false;
-			})
-			.AddDefaultIdentityUI()
-			.AddStimulsoftUI();
+			// default values
+			//opts.MultiTenant = false;
+			//opts.MultiCompany = false;
+			//opts.GlobalPeriod = false;
+		})
+		.AddDefaultIdentityUI()
+		.AddStimulsoftUI();
 
-			services.AddPlatformIdentityCore(opts =>
-			{
-				//opts.DataSource = "Catalog";
-				//opts.Schema = "mySchema";
-			})
-			.AddPlatformAuthentication();
-
-			services.UseSqlServerStorage();
-
-			services.AddViewEngines(x =>
-			{
-				x.RegisterEngine<XamlViewEngine>(".xaml");
-			})
-			.AddReportEngines(x =>
-			{
-				x.RegisterEngine<StimulsoftReportEngine>("stimulsoft");
-			})
-			.AddStimulsoftLicense(configuration);
-
-			// Platform services
-			services.AddSingleton<IAppConfiguration, AppConfiruation>();
-			services.AddScoped<IDataService, DataService>();
-			services.AddScoped<IModelJsonReader, ModelJsonReader>();
-			services.AddScoped<IReportService, ReportService>();
-
-			// platfrom core services
-			services.AddSingleton<IAppVersion, PlatformAppVersion>();
-
-			return services;
-		}
-
-		public static void ConfigurePlatform(this IApplicationBuilder app, IWebHostEnvironment env)
+		services.AddPlatformIdentityCore(opts =>
 		{
-			if (env.IsDevelopment())
-			{
-				app.UseDeveloperExceptionPage();
-			}
-			else
-			{
-				app.UseExceptionHandler("/home/error");
-				// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-				app.UseHsts();
-			}
-			app.UseHttpsRedirection();
+			//opts.DataSource = "Catalog";
+			//opts.Schema = "mySchema";
+		})
+		.AddPlatformAuthentication();
 
-			app.UseStaticFiles();
+		services.UseSqlServerStorage();
 
-			app.UseRouting();
-			app.UseAuthentication();
-			app.UseAuthorization();
-			app.UseSession();
+		services.AddViewEngines(x =>
+		{
+			x.RegisterEngine<XamlViewEngine>(".xaml");
+		})
+		.AddReportEngines(x =>
+		{
+			x.RegisterEngine<StimulsoftReportEngine>("stimulsoft");
+		})
+		.AddStimulsoftLicense(configuration);
 
-			app.UseMiddleware<CurrentUserMiddleware>();
+		// Platform services
+		services.AddSingleton<IAppConfiguration, AppConfiruation>();
+		services.AddScoped<IDataService, DataService>();
+		services.AddScoped<IModelJsonReader, ModelJsonReader>();
+		services.AddScoped<IReportService, ReportService>();
 
+		// platfrom core services
+		services.AddSingleton<IAppVersion, PlatformAppVersion>();
 
-			app.UseEndpoints(endpoints =>
-			{
-				endpoints.MapControllers();
-			});
+		return services;
+	}
 
-			// TODO: use settings?
-			var cultureInfo = new CultureInfo("uk-UA");
-
-			CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
-			CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
+	public static void ConfigurePlatform(this IApplicationBuilder app, IWebHostEnvironment env)
+	{
+		if (env.IsDevelopment())
+		{
+			app.UseDeveloperExceptionPage();
 		}
+		else
+		{
+			app.UseExceptionHandler("/home/error");
+			// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+			app.UseHsts();
+		}
+		app.UseHttpsRedirection();
+
+		app.UseStaticFiles();
+
+		app.UseRouting();
+		app.UseAuthentication();
+		app.UseAuthorization();
+		app.UseSession();
+
+		app.UseMiddleware<CurrentUserMiddleware>();
+
+
+		app.UseEndpoints(endpoints =>
+		{
+			endpoints.MapControllers();
+		});
+
+		// TODO: use settings?
+		var cultureInfo = new CultureInfo("uk-UA");
+
+		CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
+		CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 	}
 }
+

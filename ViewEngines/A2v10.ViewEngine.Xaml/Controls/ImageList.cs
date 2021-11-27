@@ -9,9 +9,9 @@ namespace A2v10.Xaml
 	[ContentProperty("ItemTemplate")]
 	public class ImageList : UIElement
 	{
-		public Object ItemsSource { get; set; }
+		public Object? ItemsSource { get; set; }
 
-		public Image ItemTemplate { get; set; }
+		public Image? ItemTemplate { get; set; }
 
 		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
@@ -41,8 +41,8 @@ namespace A2v10.Xaml
 				var ni = new TagBuilder("a2-image");
 				ni.MergeAttribute(":new-item", "true");
 				ni.MergeAttribute(":source", source);
-				ni.MergeAttribute("base", itemTag.GetAttribute("base"));
-				ni.MergeAttribute("prop", itemTag.GetAttribute("prop"));
+				ni.MergeAttribute("base", itemTag?.GetAttribute("base"));
+				ni.MergeAttribute("prop", itemTag?.GetAttribute("prop"));
 				ni.Render(context);
 			}
 			list.RenderEnd(context);

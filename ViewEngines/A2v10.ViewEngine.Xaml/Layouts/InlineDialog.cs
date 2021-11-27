@@ -6,10 +6,10 @@ namespace A2v10.Xaml
 {
 	public class InlineDialog : Container
 	{
-		public String Id { get; set; }
+		public String? Id { get; set; }
 
-		public String Title { get; set; }
-		public Length Width { get; set; }
+		public String? Title { get; set; }
+		public Length? Width { get; set; }
 		public Boolean NoClose { get; set; }
 		public Boolean ShowWaitCursor { get; set; }
 

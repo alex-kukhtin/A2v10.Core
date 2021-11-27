@@ -8,14 +8,14 @@ namespace A2v10.Infrastructure
 
 	public interface IRenderInfo
 	{
-		String RootId { get; }
-		String FileName { get; }
-		String FileTitle { get; }
-		String Path { get; }
-		String Text { get; }
-		IDataModel DataModel { get; }
+		String? RootId { get; }
+		String? FileName { get; }
+		String? FileTitle { get; }
+		String? Path { get; }
+		String? Text { get; }
+		IDataModel? DataModel { get; }
 		//public ITypeChecker TypeChecker;
-		String CurrentLocale { get; }
+		String? CurrentLocale { get; }
 		Boolean SecondPhase { get; }
 		Boolean Admin { get; }
 	}

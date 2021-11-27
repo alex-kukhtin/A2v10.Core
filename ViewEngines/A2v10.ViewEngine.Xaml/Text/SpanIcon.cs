@@ -9,7 +9,7 @@ namespace A2v10.Xaml
 	public class SpanIcon : Inline
 	{
 		public Icon Icon { get; set; }
-		public Length Size { get; set; }
+		public Length? Size { get; set; }
 		public Boolean Gray { get; set; }
 
 		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)

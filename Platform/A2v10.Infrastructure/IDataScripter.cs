@@ -10,21 +10,21 @@ namespace A2v10.Interfaces
 {
 	public class ScriptInfo
 	{
-		public String Script;
-		public String DataScript;
+		public String? Script;
+		public String? DataScript;
 	}
 
 	public class ModelScriptInfo
 	{
 		public Boolean Admin;
-		public String Template;
-		public String Path;
-		public String BaseUrl;
-		public IDataModel DataModel;
+		public String? Template;
+		public String? Path;
+		public String? BaseUrl;
+		public IDataModel? DataModel;
 
-		public String RootId;
+		public String? RootId;
 		public Boolean IsDialog;
-		public String RawData;
+		public String? RawData;
 	}
 
 	public interface IDataScripter

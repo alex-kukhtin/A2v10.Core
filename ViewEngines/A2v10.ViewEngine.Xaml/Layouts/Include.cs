@@ -1,14 +1,12 @@
-﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
-
-using System;
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 namespace A2v10.Xaml
 {
 	public class Include : UIElementBase
 	{
-		public String Source { get; set; }
-		public Object Argument { get; set; }
-		public Object Data { get; set; }
+		public String? Source { get; set; }
+		public Object? Argument { get; set; }
+		public Object? Data { get; set; }
 
 		public Boolean FullHeight { get; set; }
 

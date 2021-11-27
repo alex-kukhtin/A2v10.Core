@@ -16,15 +16,15 @@ namespace A2v10.Xaml
 		public Boolean Underline { get; set; }
 		public Boolean Vertical { get; set; }
 
-		public String CssClass { get; set; }
-		public String CssStyle { get; set; }
-		public Length MinWidth { get; set; }
+		public String? CssClass { get; set; }
+		public String? CssStyle { get; set; }
+		public Length? MinWidth { get; set; }
 
 		public DataType? DataType { get; set; }
 
 		public Boolean GroupIndent { get; set; } // ???
 
-		public String Fill { get; set; }
+		public String? Fill { get; set; }
 
 		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
@@ -45,9 +45,9 @@ namespace A2v10.Xaml
 				td.MergeAttribute("rowspan", RowSpan);
 
 			if (Align != null)
-				td.AddCssClass("text-" + Align.ToString().ToLowerInvariant());
+				td.AddCssClass("text-" + Align.ToString()!.ToLowerInvariant());
 			if (VAlign != VerticalAlign.Default)
-				td.AddCssClass($"valign-{VAlign.ToString().ToLowerInvariant()}");
+				td.AddCssClass($"valign-{VAlign.ToString()!.ToLowerInvariant()}");
 			if (GroupIndent && IsInTreeSection)
 			{
 				td.MergeAttribute(":class", "row.indentCssClass()");
@@ -82,7 +82,7 @@ namespace A2v10.Xaml
 			}
 		}
 
-		protected static void RenderContentVert(RenderContext context, Object content)
+		protected static void RenderContentVert(RenderContext context, Object? content)
 		{
 			// if it's a binding, it will be added via MergeAttribute
 			if (content == null)
@@ -93,7 +93,7 @@ namespace A2v10.Xaml
 			{
 				context.Writer.Write(
 					context.LocalizeCheckApostrophe(
-						content.ToString()
+						content.ToString()!
 						.Replace("\\n", "<br>")
 						.Replace(" ", "&#xa0;")
 					)

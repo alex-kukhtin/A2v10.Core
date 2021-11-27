@@ -12,13 +12,13 @@ namespace A2v10.Xaml
 {
 	public class Bind : BindBase, ISupportInitialize
 	{
-		public String Path { get; set; }
-		public String Format { get; set; }
+		public String? Path { get; set; }
+		public String? Format { get; set; }
 		public DataType DataType { get; set; }
 		public Boolean HideZeros { get; set; }
-		public String Mask { get; set; }
+		public String? Mask { get; set; }
 		public Boolean NegativeRed { get; set; }
-		public FilterCollection Filters { get; set; }
+		public FilterCollection? Filters { get; set; }
 
 		private Boolean _wrapped;
 
@@ -83,7 +83,7 @@ namespace A2v10.Xaml
 		{
 			if (!HasFilters)
 				return String.Empty;
-			var fStrings = Filters.Select(x => $"'{x.ToString().ToLowerInvariant()}'");
+			var fStrings = Filters!.Select(x => $"'{x.ToString().ToLowerInvariant()}'");
 			return $"[{String.Join(",", fStrings)}]";
 		}
 

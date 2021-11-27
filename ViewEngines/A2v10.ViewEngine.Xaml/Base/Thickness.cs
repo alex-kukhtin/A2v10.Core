@@ -51,30 +51,30 @@ namespace A2v10.Xaml
 		internal void MergeStyles(String styleProp, TagBuilder tag)
 		{
 			if (Left == Right && Left == Top && Left == Bottom)
-				tag.MergeStyle(styleProp, Left.Value);
+				tag.MergeStyle(styleProp, Left?.Value);
 			else if (Left == Right && Top == Bottom)
-				tag.MergeStyle(styleProp, $"{Top.Value} {Left.Value}");
+				tag.MergeStyle(styleProp, $"{Top?.Value} {Left?.Value}");
 			else
-				tag.MergeStyle(styleProp, $"{Top.Value} {Right.Value} {Bottom.Value} {Left.Value}");
+				tag.MergeStyle(styleProp, $"{Top?.Value} {Right?.Value} {Bottom?.Value} {Left?.Value}");
 		}
 
-		public override string ToString()
+		public override String? ToString()
 		{
 			if (Left == Right && Left == Top && Left == Bottom)
-				return Left.Value;
+				return Left?.Value;
 			else if (Left == Right && Top == Bottom)
-				return $"{Top.Value} {Left.Value}";
+				return $"{Top?.Value} {Left?.Value}";
 			else
-				return $"{Top.Value} {Right.Value} {Bottom.Value} {Left.Value}";
+				return $"{Top?.Value} {Right?.Value} {Bottom?.Value} {Left?.Value}";
 		}
 
 		internal void MergeAbsolute(TagBuilder tag)
 		{
 			tag.MergeStyle("position", "absolute");
-			tag.MergeStyle("top", Top.Value);
-			tag.MergeStyle("left", Left.Value);
-			tag.MergeStyle("bottom", Bottom.Value);
-			tag.MergeStyle("right", Right.Value);
+			tag.MergeStyle("top", Top?.Value);
+			tag.MergeStyle("left", Left?.Value);
+			tag.MergeStyle("bottom", Bottom?.Value);
+			tag.MergeStyle("right", Right?.Value);
 		}
 	}
 

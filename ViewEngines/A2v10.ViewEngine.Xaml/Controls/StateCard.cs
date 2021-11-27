@@ -17,12 +17,12 @@ namespace A2v10.Xaml
 	[ContentProperty("Content")]
 	public class StateCard : UiContentElement
 	{
-		public Object Header { get; set; }
-		public Object Footer { get; set; }
-		public Object Text { get; set; }
+		public Object? Header { get; set; }
+		public Object? Footer { get; set; }
+		public Object? Text { get; set; }
 		public CardStyle Style {get; set;}
 		public Boolean Compact { get; set; }
-		public Length MinWidth { get; set; }
+		public Length? MinWidth { get; set; }
 
 		public ShadowStyle DropShadow { get; set; }
 

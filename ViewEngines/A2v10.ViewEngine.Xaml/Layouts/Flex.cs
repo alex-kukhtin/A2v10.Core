@@ -7,7 +7,7 @@ namespace A2v10.Xaml
 	public class Flex : Container
 	{
 		public Orientation Orientation { get; set; }
-		public GapSize Gap { get; set; }
+		public GapSize? Gap { get; set; }
 		public JustifyItems JustifyItems { get; set; }
 
 		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)

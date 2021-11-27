@@ -16,7 +16,7 @@ namespace A2v10.Xaml
 	[ContentProperty("Content")]
 	public class Span : Inline
 	{
-		public Object Content { get; set; }
+		public Object? Content { get; set; }
 		public Boolean Small { get; set; }
 		public Boolean Big { get; set; }
 		public SpaceMode Space { get; set; }

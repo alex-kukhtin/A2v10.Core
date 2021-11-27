@@ -8,7 +8,7 @@ namespace A2v10.Xaml
 	[ContentProperty("Content")]
 	public abstract class UiContentElement : UIElementBase
 	{
-		public Object Content { get; set; }
+		public Object? Content { get; set; }
 
 		protected virtual void MergeContent(TagBuilder tag, RenderContext context)
 		{

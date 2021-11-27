@@ -7,17 +7,17 @@ namespace A2v10.Xaml
 {
 	public class Image : UIElementBase
 	{
-		public Object Source { get; set; }
-		public String Base { get; set; }
+		public Object? Source { get; set; }
+		public String? Base { get; set; }
 
-		public Length Width { get; set; }
-		public Length Height { get; set; }
+		public Length? Width { get; set; }
+		public Length? Height { get; set; }
 
 		public Boolean ReadOnly { get; set; }
 
 		public Int32 Limit { get; set; }
 
-		public String Placeholder { get; set; }
+		public String? Placeholder { get; set; }
 
 		public Icon Icon { get; set; }
 

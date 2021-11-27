@@ -310,7 +310,7 @@ namespace A2v10.Services
 			return view;
 		}
 
-		public async Task<IBlobInfo> LoadBlobAsync(UrlKind kind, String baseUrl, Action<ExpandoObject> setParams, String suffix = null)
+		public async Task<IBlobInfo> LoadBlobAsync(UrlKind kind, String baseUrl, Action<ExpandoObject> setParams, String? suffix = null)
 		{
 			var platfromUrl = CreatePlatformUrl(kind, baseUrl);
 			var blob = await _modelReader.GetBlobAsync(platfromUrl, suffix);

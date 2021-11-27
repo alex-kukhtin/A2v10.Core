@@ -1,15 +1,12 @@
-﻿// Copyright © 2015-2017 Alex Kukhtin. All rights reserved.
-
-using System;
-using A2v10.System.Xaml;
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 namespace A2v10.Xaml
 {
 	[ContentProperty("Content")]
 	public class EUSignFrame : UIElementBase
 	{
-		public UIElement Content { get; set; }
-		public Length Height { get; set; }
+		public UIElement? Content { get; set; }
+		public Length? Height { get; set; }
 
 		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
@@ -29,7 +26,7 @@ namespace A2v10.Xaml
 			div.MergeAttribute("id", context.RootId);
 			div.RenderStart(context);
 
-			Content.RenderElement(context);
+			Content?.RenderElement(context);
 
 			var loader = new TagBuilder("div", "eusign-loader");
 			loader.MergeAttribute("v-if", "$isLoading");

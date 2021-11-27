@@ -38,7 +38,7 @@ namespace A2v10.Xaml
 			return $"{{'active': {activeValueArg} == {valuePath}}}";
 		}
 
-		internal void RenderMe(RenderContext context, String valuePath)
+		internal void RenderMe(RenderContext context, String? valuePath)
 		{
 			if (SkipRender(context))
 				return;

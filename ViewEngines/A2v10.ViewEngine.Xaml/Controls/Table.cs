@@ -142,7 +142,7 @@ namespace A2v10.Xaml
 			if (Rows.Count == 0)
 				return;
 			var tbody = new TagBuilder("tbody").RenderStart(context);
-			Bind isBind = GetBinding(nameof(ItemsSource));
+			Bind? isBind = GetBinding(nameof(ItemsSource));
 			if (isBind != null)
 			{
 				var repeatAttr = $"(row, rowIndex) in {isBind.GetPath(context)}";

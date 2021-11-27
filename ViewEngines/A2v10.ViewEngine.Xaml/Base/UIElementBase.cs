@@ -177,12 +177,12 @@ public abstract class UIElementBase : XamlElement, IXamlElement
 		if (ix != -1)
 		{
 			result.Prop = path[(ix + 1)..];
-			result.Path = path.Substring(0, ix);
+			result.Path = path[..ix];
 		}
 		return result;
 	}
 
-	protected void RenderBadge(RenderContext context, String badge)
+	protected void RenderBadge(RenderContext context, String? badge)
 	{
 		var badgeBind = GetBinding("Badge");
 		if (badgeBind != null)

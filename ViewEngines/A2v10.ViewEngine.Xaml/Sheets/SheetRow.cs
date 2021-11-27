@@ -59,7 +59,7 @@ namespace A2v10.Xaml
 			if (Style != RowStyle.Default)
 				tr.AddCssClass("row-" + Style.ToString().ToKebabCase());
 			if (Align != null)
-				tr.AddCssClass("text-" + Align.ToString().ToLowerInvariant());
+				tr.AddCssClass("text-" + Align.ToString()!.ToLowerInvariant());
 			tr.RenderStart(context);
 			foreach (var c in Cells)
 				c.RenderElement(context);

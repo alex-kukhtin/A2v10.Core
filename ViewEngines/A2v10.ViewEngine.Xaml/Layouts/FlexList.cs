@@ -20,8 +20,8 @@ namespace A2v10.Xaml
 		public BorderStyle BorderStyle { get; set; }
 		public AlignItems AlignItems { get; set; }
 		public JustifyItems JustifyItems { get; set; }
-		public Length MinWidth { get; set; }
-		public GapSize Gap { get; set; }
+		public Length? MinWidth { get; set; }
+		public GapSize? Gap { get; set; }
 
 		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{

@@ -12,7 +12,7 @@ namespace A2v10.Xaml
 		public AlignItems AlignItems { get; set; }
 		public JustifyItems JustifyItems { get; set; }
 		public Boolean Inline { get; set; }
-		public GapSize Gap { get; set; }
+		public GapSize? Gap { get; set; }
 
 		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{

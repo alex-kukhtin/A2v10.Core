@@ -6,7 +6,7 @@ namespace A2v10.Xaml
 {
 	public class Wizard : Dialog
 	{
-		public Command FinishCommand { get; set; }
+		public Command? FinishCommand { get; set; }
 
 		protected override void OnCreateContent(TagBuilder tag)
 		{
@@ -23,7 +23,7 @@ namespace A2v10.Xaml
 			wiz.RenderStart(context);
 			foreach (var p in Children)
 			{
-				if (!(p is WizardPage))
+				if (p is not WizardPage)
 					throw new XamlException("The child elements of the Wizard can only be WizardPages");
 				p.RenderElement(context);
 			}
@@ -42,7 +42,7 @@ namespace A2v10.Xaml
 		{
 			if (!HasHelp) return;
 			var hbind = GetBinding(nameof(HelpUrl));
-			String hPath = null;
+			String? hPath = null;
 			if (hbind != null)
 			{
 				hPath = hbind.GetPathFormat(context);

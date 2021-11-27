@@ -21,7 +21,7 @@ namespace A2v10.Xaml
 	[TypeConverter(typeof(ValidatorConverter))]
 	public class Validator : XamlElement
 	{
-		public Length Width { get; set; }
+		public Length? Width { get; set; }
 		public ValidatorPlacement? Placement { get; set; }
 
 		public static Validator FromString(String value)

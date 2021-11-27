@@ -27,16 +27,16 @@ namespace A2v10.Infrastructure
 		String Path { get; }
 		String BaseUrl { get; }
 
-		ExpandoObject CreateParameters(IPlatformUrl url, Object id, Action<ExpandoObject> setParams = null, ParametersFlags flags = ParametersFlags.None);
+		ExpandoObject CreateParameters(IPlatformUrl url, Object id, Action<ExpandoObject>? setParams = null, ParametersFlags flags = ParametersFlags.None);
 	}
 
 	public interface IModelBlob
 	{
-		String DataSource { get; }
-		String LoadProcedure();
 		String Id { get; }
 		String Key { get; }
-		String Procedure { get; }
+
+		String? DataSource { get; }
+		String LoadProcedure();
 	}
 
 	public interface IModelMerge : IModelBase
@@ -47,17 +47,17 @@ namespace A2v10.Infrastructure
 	public interface IModelView : IModelBase
 	{
 		Boolean Copy { get; }
-		String Template { get; }
+		String? Template { get; }
 
 		Boolean Indirect { get; }
-		String Target { get; }
-		String TargetId { get; }
-		IModelView TargetModel { get; }
+		String? Target { get; }
+		String? TargetId { get; }
+		IModelView? TargetModel { get; }
 
 		IModelMerge Merge { get; }
 
-		List<String> Scripts { get; }
-		List<String> Styles { get; }
+		List<String>? Scripts { get; }
+		List<String>? Styles { get; }
 
 		String GetView(Boolean bMobile);
 		Boolean IsDialog { get; }
@@ -79,9 +79,9 @@ namespace A2v10.Infrastructure
 	{
 		IModelInvokeCommand GetCommandHandler(IServiceProvider serviceProvider);
 
-		String Target { get; }
-		String File { get; }
-		ExpandoObject Args { get; }
+		String? Target { get; }
+		String? File { get; }
+		ExpandoObject? Args { get; }
 	}
 
 	public interface IModelReportHandler
@@ -103,9 +103,9 @@ namespace A2v10.Infrastructure
 
 	public interface IModelJsonReader
 	{
-		Task<IModelView> TryGetViewAsync(IPlatformUrl url);
-		Task<IModelView> GetViewAsync(IPlatformUrl url);
-		Task<IModelBlob> GetBlobAsync(IPlatformUrl url, String suffix = null);
+		Task<IModelView?> TryGetViewAsync(IPlatformUrl url);
+		Task<IModelView?> GetViewAsync(IPlatformUrl url);
+		Task<IModelBlob?> GetBlobAsync(IPlatformUrl url, String? suffix = null);
 		Task<IModelCommand> GetCommandAsync(IPlatformUrl url, String command);
 		Task<IModelReport> GetReportAsync(IPlatformUrl url);
 	}

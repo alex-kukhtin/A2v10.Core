@@ -22,7 +22,7 @@ namespace A2v10.Xaml
 
 	public class Panel : Container, ITableControl
 	{
-		public Object Header { get; set; }
+		public Object? Header { get; set; }
 
 		public Boolean Collapsible { get; set; }
 		public Boolean? Collapsed { get; set; }
@@ -33,12 +33,12 @@ namespace A2v10.Xaml
 		public BackgroundStyle Background { get; set; }
 
 		public ShadowStyle DropShadow { get; set; }
-		public Length Height { get; set; }
+		public Length? Height { get; set; }
 		public Boolean Compact { get; set; }
 
-		public Popover Hint { get; set; }
+		public Popover? Hint { get; set; }
 
-		public String TestId { get; set; }
+		public String? TestId { get; set; }
 
 		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
@@ -96,9 +96,9 @@ namespace A2v10.Xaml
 				span.MergeAttribute("v-text", hBind.GetPathFormat(context));
 				span.Render(context);
 			}
-			else if (Header is UIElementBase)
+			else if (Header is UIElementBase uiElemBase)
 			{
-				(Header as UIElementBase).RenderElement(context);
+				uiElemBase.RenderElement(context);
 			}
 			else if (Header != null)
 			{

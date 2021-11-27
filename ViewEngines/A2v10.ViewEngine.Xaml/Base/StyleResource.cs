@@ -6,7 +6,7 @@ namespace A2v10.Xaml
 	public class StyleDescriptor
 	{
 		public RootContainer? Root;
-		public String? StyleName;
+		public String StyleName { get; set; }= String.Empty;	
 
 		public void Set(XamlElement elem)
 		{
@@ -23,10 +23,10 @@ namespace A2v10.Xaml
 	//[DefaultProperty("Member")]
 	public class StyleResource : MarkupExtension
 	{
-		public String Member { get; set; }
+		public String Member { get; set; } = String.Empty;
 
 		public StyleResource()
-		{
+		{ 
 		}
 
 		public StyleResource(String member)
@@ -34,7 +34,7 @@ namespace A2v10.Xaml
 			Member = member;
 		}
 
-		public override Object ProvideValue(IServiceProvider serviceProvider)
+		public override Object? ProvideValue(IServiceProvider serviceProvider)
 		{
 			if (serviceProvider.GetService(typeof(IRootObjectProvider)) is not IRootObjectProvider iRoot)
 				throw new InvalidOperationException("StyleResource.ProvideValue. IRootObjectProvider is null");

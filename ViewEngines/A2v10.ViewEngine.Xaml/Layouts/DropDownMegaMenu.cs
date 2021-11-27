@@ -1,7 +1,6 @@
 ﻿
 // Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
 
-using System;
 using A2v10.Infrastructure;
 
 namespace A2v10.Xaml
@@ -11,9 +10,9 @@ namespace A2v10.Xaml
 		public DropDownDirection Direction { get; set; }
 		public BackgroundStyle Background { get; set; }
 
-		public String GroupBy { get; set; }
+		public String? GroupBy { get; set; }
 		public Int32 Columns { get; set; }
-		public Length Width { get; set; }
+		public Length? Width { get; set; }
 		public Boolean Separate { get; set; }
 
 		public Boolean IsDropUp => (Direction == DropDownDirection.UpLeft) || (Direction == DropDownDirection.UpRight);

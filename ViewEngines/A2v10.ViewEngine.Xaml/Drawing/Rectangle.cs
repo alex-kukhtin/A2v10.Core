@@ -6,8 +6,8 @@ namespace A2v10.Xaml.Drawing
 {
 	public class Rectangle : DrawingElement, IHasPositionAndSize
 	{
-		public Size Size { get; set; }
-		public Point Pos { get; set; }
+		public Size? Size { get; set; }
+		public Point? Pos { get; set; }
 		public RectStyle Style { get; set; }
 		public BorderStyle Border { get; set; }
 

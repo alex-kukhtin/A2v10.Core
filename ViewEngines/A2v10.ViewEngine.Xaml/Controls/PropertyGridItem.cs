@@ -61,8 +61,8 @@ namespace A2v10.Xaml
 					valCell.MergeAttribute(":class", $"$getNegativeRedClass({contBind.GetPath(context)})");
 			}
 			valCell.RenderStart(context);
-			if (Content is UIElementBase)
-				(Content as UIElementBase).RenderElement(context);
+			if (Content is UIElementBase uiElemBase)
+				uiElemBase.RenderElement(context);
 			else if (Content != null)
 				context.Writer.Write(context.LocalizeCheckApostrophe(Content.ToString()));
 			valCell.RenderEnd(context);

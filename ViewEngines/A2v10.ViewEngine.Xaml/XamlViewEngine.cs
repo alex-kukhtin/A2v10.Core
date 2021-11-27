@@ -27,11 +27,10 @@ namespace A2v10.ViewEngine.Xaml
 		{
 			using var sw = new StringWriter();
 			_renderer.Render(renderInfo, sw);
-			var rr = new RenderResult()
-			{
-				Body = sw.ToString(),
-				ContentType = MimeTypes.Text.HtmlUtf8
-			};
+			var rr = new RenderResult(
+				body: sw.ToString(),
+				contentType: MimeTypes.Text.HtmlUtf8
+			);
 			return Task.FromResult<IRenderResult>(rr);
 		}
 	}

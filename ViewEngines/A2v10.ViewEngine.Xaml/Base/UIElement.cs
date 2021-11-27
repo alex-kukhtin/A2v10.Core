@@ -1,6 +1,5 @@
 ﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-using System;
 using System.Text;
 
 using A2v10.Infrastructure;
@@ -11,7 +10,7 @@ namespace A2v10.Xaml
 	{
 		public Boolean? Bold { get; set; }
 		public Boolean? Italic { get; set; }
-		public String CssClass { get; set; }
+		public String? CssClass { get; set; }
 		public Boolean? UserSelect { get; set; }
 		public Boolean? Print { get; set; }
 

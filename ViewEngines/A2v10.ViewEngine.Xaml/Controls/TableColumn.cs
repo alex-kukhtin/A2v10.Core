@@ -11,7 +11,7 @@ namespace A2v10.Xaml
 	public class TableColumn : XamlElement
 	{
 		public Boolean Fit { get; set; }
-		public Length Width { get; set; }
+		public Length? Width { get; set; }
 		public ColumnBackgroundStyle Background { get; set; }
 
 		public Boolean? If { get; set; }

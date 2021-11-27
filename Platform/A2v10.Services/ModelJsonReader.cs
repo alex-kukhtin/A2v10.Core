@@ -15,7 +15,7 @@ namespace A2v10.Services
 		private readonly IAppCodeProvider _appCodeProvider;
 		private readonly ICurrentUser _currentUser;
 
-		private readonly RedirectModule _redirect;
+		private readonly RedirectModule? _redirect;
 
 		public ModelJsonReader(IAppCodeProvider appCodeProvider, IAppConfiguration appConig, ICurrentUser currentUser)
 		{
@@ -26,7 +26,7 @@ namespace A2v10.Services
 				_redirect = new RedirectModule(redPath, appConig.Watch);
 		}
 
-		public async Task<IModelView> TryGetViewAsync(IPlatformUrl url)
+		public async Task<IModelView?> TryGetViewAsync(IPlatformUrl url)
 		{
 			if (url.Kind != UrlKind.Page)
 				return null;
@@ -36,7 +36,7 @@ namespace A2v10.Services
 			return rm.GetAction(url.Action);
 		}
 
-		public async Task<IModelView> GetViewAsync(IPlatformUrl url)
+		public async Task<IModelView?> GetViewAsync(IPlatformUrl url)
 		{
 			var rm = await Load(url);
 			return url.Kind switch
@@ -60,7 +60,7 @@ namespace A2v10.Services
 			return rm.GetReport(url.Action);
 		}
 
-		public async Task<IModelBlob> GetBlobAsync(IPlatformUrl url, String suffix = null)
+		public async Task<IModelBlob?> GetBlobAsync(IPlatformUrl url, String? suffix = null)
 		{
 			var rm = await Load(url);
 			return url.Kind switch
@@ -76,7 +76,7 @@ namespace A2v10.Services
 			return TryLoad(url) ?? throw new ModelJsonException($"File not found '{url.LocalPath}/model.json'");
 		}
 
-		public async Task<ModelJson> TryLoad(IPlatformUrl url)
+		public async Task<ModelJson?> TryLoad(IPlatformUrl url)
 		{
 			var localPath = _redirect?.Redirect(url.LocalPath);
 			url.Redirect(localPath);
@@ -84,7 +84,7 @@ namespace A2v10.Services
 			if (json == null)
 				return null;
 			var rm = JsonConvert.DeserializeObject<ModelJson>(json, JsonHelpers.CamelCaseSerializerSettings);
-			rm.OnEndInit(url);
+			rm?.OnEndInit(url);
 			return rm;
 		}
 	}

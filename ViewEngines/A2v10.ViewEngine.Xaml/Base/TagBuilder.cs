@@ -23,7 +23,7 @@ namespace A2v10.Xaml
 		Boolean _bRender = false;
 		readonly Boolean _inGrid = false;
 
-		public TagBuilder(String tagName = "div", String? classes = null, Boolean inGrid = false)
+		public TagBuilder(String? tagName = "div", String? classes = null, Boolean inGrid = false)
 		{
 			TagName = tagName ?? "div";
 			_inGrid = inGrid;

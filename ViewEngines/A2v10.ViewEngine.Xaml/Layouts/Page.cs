@@ -160,18 +160,18 @@ namespace A2v10.Xaml
 			CollectionView?.OnSetStyles();
 		}
 
-		protected override T FindInside<T>()
+		protected override T? FindInside<T>() where T : class
 		{
-			if (this is T)
-				return this as T;
-			else if (Toolbar is T)
-				return Toolbar as T;
-			else if (CollectionView is T)
-				return CollectionView as T;
-			else if (Taskpad is T)
-				return Taskpad as T;
-			else if (Pager is T)
-				return Pager as T;
+			if (this is T tT)
+				return tT;
+			else if (Toolbar is T toolbar)
+				return toolbar;
+			else if (CollectionView is T collectionView)
+				return collectionView;
+			else if (Taskpad is T taskPad)
+				return taskPad;
+			else if (Pager is T pager)
+				return pager;
 			return null;
 		}
 	}

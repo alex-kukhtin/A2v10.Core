@@ -13,7 +13,7 @@ namespace A2v10.Xaml
 
 	public class TextBox : ValuedControl, ITableControl
 	{
-		public String Placeholder { get; set; }
+		public String? Placeholder { get; set; }
 
 
 		public Int32? Rows { get; set; }

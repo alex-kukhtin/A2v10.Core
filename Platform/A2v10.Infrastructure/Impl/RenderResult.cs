@@ -6,7 +6,13 @@ namespace A2v10.Infrastructure
 {
 	public class RenderResult : IRenderResult
 	{
-		public String Body { get; init; }
-		public String ContentType { get; init; }
+		public RenderResult(String body, String contentType)
+        {
+			Body = body;
+			ContentType = contentType;
+        }
+
+		public String Body { get;}
+		public String ContentType { get;}
 	}
 }

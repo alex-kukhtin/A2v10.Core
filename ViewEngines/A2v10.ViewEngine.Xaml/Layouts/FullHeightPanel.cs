@@ -1,9 +1,9 @@
 ﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 
-using System;
 using System.Text;
-using A2v10.System.Xaml;
+
+using Microsoft.Extensions.DependencyInjection;
 
 namespace A2v10.Xaml
 {
@@ -14,7 +14,7 @@ namespace A2v10.Xaml
 
 		public FullHeightPanel(IServiceProvider serviceProvider)
 		{
-			_attachedPropertyManager = serviceProvider.GetService(typeof(IAttachedPropertyManager)) as IAttachedPropertyManager;
+			_attachedPropertyManager = serviceProvider.GetRequiredService<IAttachedPropertyManager>();
 		}
 
 		#region Attached Properties
@@ -32,7 +32,7 @@ namespace A2v10.Xaml
 
 		#endregion
 
-		public Length MinWidth { get; set; }
+		public Length? MinWidth { get; set; }
 
 		String GetRows()
 		{

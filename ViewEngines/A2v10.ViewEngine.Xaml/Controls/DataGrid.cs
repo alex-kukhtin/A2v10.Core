@@ -171,7 +171,7 @@ public class DataGrid : Control
 		}
 		RenderRowDetails(context);
 		RenderEmptyPanel(context);
-		RenderFooter(context);
+		//RenderFooter(context);
 		RenderContextMenu(ContextMenu, context, contextId);
 		dataGrid.RenderEnd(context);
 	}
@@ -203,9 +203,10 @@ public class DataGrid : Control
 		panel.RenderEnd(context);
 	}
 
+	/*
 	void RenderFooter(RenderContext context)
 	{
-		/*TODO: do it!
+		/* -- TODO: do it!
 		var templ = new TagBuilder("template");
 		templ.MergeAttribute("slot", "footer");
 		templ.RenderStart(context);
@@ -214,8 +215,8 @@ public class DataGrid : Control
 		context.Writer.Write("<tr><td colspan=\"3\">11</td><td>22</td><td>33</td></tr>");
 		tfoot.RenderEnd(context);
 		templ.RenderEnd(context);
-		*/
 	}
+	*/
 
 	protected override void OnEndInit()
 	{

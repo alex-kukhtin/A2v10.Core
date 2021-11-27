@@ -1,16 +1,13 @@
 ﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-using System;
-using A2v10.System.Xaml;
-
 namespace A2v10.Xaml
 {
 	[ContentProperty("Children")]
 	public abstract class Container : UIElement
 	{
-		public UIElementCollection Children { get; set; } = new UIElementCollection();
+		public UIElementCollection Children { get; set; } = new();
 
-		public Object ItemsSource { get; set; }
+		public Object? ItemsSource { get; set; }
 
 		public virtual void RenderChildren(RenderContext context, Action<TagBuilder>? onRenderStatic = null)
 		{

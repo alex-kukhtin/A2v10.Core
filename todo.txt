@@ -4,6 +4,9 @@
 8. Session for ITokenProvider?? - убрать сессию?
 
 
+== TODO: Xaml
+1. Tests for Length, Size, Thickness => Records, Values
+
 == TODO: Packages
 ============================
 sql.targets в A2v10.Platform

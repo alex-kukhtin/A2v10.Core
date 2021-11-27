@@ -11,7 +11,7 @@ namespace A2v10.Xaml;
 public class Case : XamlElement
 {
 	public UIElementCollection Children { get; set; } = new();
-	public String Value { get; set; }
+	public String? Value { get; set; }
 
 	public void RenderElement(RenderContext context)
 	{

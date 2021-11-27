@@ -16,10 +16,10 @@ namespace A2v10.Xaml
 
 	public class Tab : Container
 	{
-		public Object Header { get; set; }
-		public String Badge { get; set; }
+		public Object? Header { get; set; }
+		public String? Badge { get; set; }
 
-		public Length Height { get; set; }
+		public Length? Height { get; set; }
 		public Boolean FullHeight { get; set; }
 
 		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)

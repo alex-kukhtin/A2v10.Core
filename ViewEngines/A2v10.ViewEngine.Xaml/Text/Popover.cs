@@ -44,20 +44,20 @@ namespace A2v10.Xaml
 	public class Popover : Inline
 	{
 		public PopupPlacement Placement { get; set; }
-		public Object Content { get; set; }
-		public String Text { get; set; }
+		public Object? Content { get; set; }
+		public String? Text { get; set; }
 		public Icon Icon { get; set; }
-		public Length Width { get; set; }
-		public Length Top { get; set; }
+		public Length? Width { get; set; }
+		public Length? Top { get; set; }
 
-		public String Url { get; set; }
-		public Length OffsetX { get; set; }
+		public String? Url { get; set; }
+		public Length? OffsetX { get; set; }
 
 		public PopoverUnderlineMode Underline { get; set; }
 
 		public PopoverBackgroundStyle Background { get; set; }
 
-		public String Badge { get; set; }
+		public String? Badge { get; set; }
 		public Boolean ShowOnHover { get; set; }
 
 

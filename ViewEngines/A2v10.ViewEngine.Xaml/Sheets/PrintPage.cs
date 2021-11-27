@@ -23,8 +23,8 @@ namespace A2v10.Xaml
 	public class PrintPage
 	{
 		public PageOrientation Orientation { get; set; }
-		public Thickness Margin { get; set; }
-		public ZoomValue Zoom { get; set; }
+		public Thickness? Margin { get; set; }
+		public ZoomValue? Zoom { get; set; }
 
 		public String ToJson()
 		{

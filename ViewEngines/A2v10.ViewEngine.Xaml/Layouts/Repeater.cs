@@ -1,15 +1,12 @@
-﻿// Copyright © 2015-2017 Alex Kukhtin. All rights reserved.
-
-using System;
-using A2v10.System.Xaml;
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 namespace A2v10.Xaml
 {
 	[ContentProperty("Content")]
 	public class Repeater : UIElement
 	{
-		public Object ItemsSource { get; set; }
-		public UIElementBase Content { get; set; }
+		public Object? ItemsSource { get; set; }
+		public UIElementBase? Content { get; set; }
 
 		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{

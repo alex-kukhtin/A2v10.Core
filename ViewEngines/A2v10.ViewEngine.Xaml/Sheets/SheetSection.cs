@@ -9,7 +9,7 @@ namespace A2v10.Xaml
 	[ContentProperty("Children")]
 	public class SheetSection : UIElement
 	{
-		public Object ItemsSource { get; set; }
+		public Object? ItemsSource { get; set; }
 
 		public SheetRows Children { get; } = new SheetRows();
 

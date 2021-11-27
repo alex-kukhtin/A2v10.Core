@@ -1,6 +1,5 @@
 ﻿// Copyright © 2015-2017 Alex Kukhtin. All rights reserved.
 
-using System;
 using System.ComponentModel;
 using System.Globalization;
 
@@ -17,12 +16,12 @@ namespace A2v10.Xaml
 	[TypeConverter(typeof(ToastConverter))]
 	public class Toast : XamlElement
 	{
-		public String Text { get; set; }
+		public String? Text { get; set; }
 		public ToastStyle Style { get; set; }
 
 		internal String GetJsValue(RenderContext context)
 		{
-			String text = GetBindingString(context, nameof(Text), Text);
+			String? text = GetBindingString(context, nameof(Text), Text);
 			String style = Style.ToString().ToLowerInvariant();
 			return $"{{text: {text}, style: '{style}'}}";
 		}

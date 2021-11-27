@@ -6,8 +6,8 @@ namespace A2v10.Xaml
 {
 	public class Popup : RootContainer
 	{
-		public Length Width { get; set; }
-		public Length MinWidth { get; set; }
+		public Length? Width { get; set; }
+		public Length? MinWidth { get; set; }
 
 		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{

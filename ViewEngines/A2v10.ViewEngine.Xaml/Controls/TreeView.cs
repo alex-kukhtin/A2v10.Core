@@ -28,9 +28,9 @@ namespace A2v10.Xaml
 	[ContentProperty("Label")]
 	public class TreeViewItem : UIElement
 	{
-		public Object ItemsSource { get; set; }
+		public Object? ItemsSource { get; set; }
 		public Icon Icon { get; set; }
-		public String Label { get; set; }
+		public String? Label { get; set; }
 		public Boolean? IsFolder { get; set; }
 		public Boolean? IsGroup { get; set; }
 
@@ -86,7 +86,7 @@ namespace A2v10.Xaml
 	[ContentProperty("Children")]
 	public class TreeView : Control
 	{
-		public Object ItemsSource { get; set; }
+		public Object? ItemsSource { get; set; }
 
 		public Boolean FolderSelect { get; set; }
 		public Boolean WrapLabel { get; set; }

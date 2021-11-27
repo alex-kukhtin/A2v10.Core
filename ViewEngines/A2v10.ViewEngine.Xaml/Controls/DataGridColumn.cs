@@ -26,20 +26,20 @@ namespace A2v10.Xaml
 	[ContentProperty("Content")]
 	public class DataGridColumn : XamlElement
 	{
-		public Object Content { get; set; }
+		public Object? Content { get; set; }
 		//TODO: may be UIElement
-		public String Header { get; set; }
+		public String? Header { get; set; }
 		public TextAlign Align { get; set; }
 		public Boolean Fit { get; set; }
 		public Boolean Editable { get; set; }
-		public Command Command { get; set; }
+		public Command? Command { get; set; }
 		public ColumnControlType ControlType { get; set; }
-		public Object Mark { get; set; }
-		public Length Width { get; set; }
+		public Object? Mark { get; set; }
+		public Length? Width { get; set; }
 		public Icon Icon { get; set; }
 		public WrapMode Wrap { get; set; }
 		public Boolean? Sort { get; set; }
-		public String SortProperty { get; set; }
+		public String? SortProperty { get; set; }
 		public Boolean? Small { get; set; }
 		public Boolean? Bold { get; set; }
 
@@ -96,7 +96,7 @@ namespace A2v10.Xaml
 			CreateEditable();
 
 			Boolean isTemplate = Content is UIElementBase;
-			String tmlId = null;
+			String? tmlId = null;
 			if (!isTemplate)
 			{
 				// always content without a SEMICOLON!
@@ -115,7 +115,7 @@ namespace A2v10.Xaml
 					throw new XamlException($"The Content property must be a binding ({Content})");
 			}
 
-			Bind ctBind = GetBinding(nameof(ControlType));
+			Bind? ctBind = GetBinding(nameof(ControlType));
 			if (ctBind != null)
 				column.MergeAttribute(":control-type", ctBind.Path /*!without context!*/);
 			else if (ControlType != ColumnControlType.Default)
@@ -146,20 +146,21 @@ namespace A2v10.Xaml
 				templ.RenderStart(context);
 				using (var ctx = new ScopeContext(context, "cell.row", null))
 				{
-					(Content as UIElementBase).RenderElement(context);
+					if (Content is UIElementBase uiElemBase)
+						uiElemBase.RenderElement(context);
 
 				}
 				templ.RenderEnd(context);
 			}
 		}
 
-		void MergeBindingAttribute(RenderContext context, TagBuilder tag, String attr, String propName, Object propValue)
+		void MergeBindingAttribute(RenderContext context, TagBuilder tag, String attr, String propName, Object? propValue)
 		{
 			var bindProp = GetBinding(propName);
 			if (bindProp != null)
 				tag.MergeAttribute(":" + attr, bindProp.GetPath(context));
 			else if (propValue != null)
-				tag.MergeAttribute(attr, context.Localize(propValue.ToString()));
+				tag.MergeAttribute(attr, context.Localize(propValue.ToString()!));
 		}
 
 		void SetColumnRole(TagBuilder column)

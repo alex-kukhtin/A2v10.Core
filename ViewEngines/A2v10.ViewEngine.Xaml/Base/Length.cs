@@ -22,7 +22,7 @@ namespace A2v10.Xaml
 	}
 
 	[TypeConverter(typeof(LengthConverter))]
-	public class Length
+	public record Length
 	{
 		public String? Value;
 
@@ -72,13 +72,12 @@ namespace A2v10.Xaml
 	}
 
 	[TypeConverter(typeof(GridLengthConverter))]
-	public class GridLength
+	public record GridLength
 	{
 		public String? Value;
 
 		public GridLength()
 		{
-
 		}
 
 		public GridLength(String value)
@@ -122,7 +121,7 @@ namespace A2v10.Xaml
 
 	public class LengthConverter : TypeConverter
 	{
-		public override Boolean CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+		public override Boolean CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
 		{
 			if (sourceType == typeof(String))
 				return true;
@@ -136,9 +135,7 @@ namespace A2v10.Xaml
 			if (value == null)
 				return null;
 			if (value is String strVal)
-			{
 				return Length.FromString(strVal);
-			}
 			throw new XamlException($"Invalid length value '{value}'");
 		}
 	}
@@ -159,9 +156,7 @@ namespace A2v10.Xaml
 			if (value == null)
 				return null;
 			if (value is String strVal)
-			{
 				return GridLength.FromString(strVal);
-			}
 			throw new XamlException($"Invalid length value '{value}'");
 		}
 	}

@@ -28,7 +28,7 @@ namespace A2v10.Xaml
 				throw new XamlException("No source for render");
 			IProfileRequest request = _profile.CurrentRequest;
 			String fileName = String.Empty;
-			IXamlElement uiElem = null;
+			IXamlElement? uiElem = null;
 
 			var xamlServiceOptions = new XamlServicesOptions(Array.Empty<NamespaceDef>())
 			{

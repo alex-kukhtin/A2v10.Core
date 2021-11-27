@@ -11,7 +11,7 @@ namespace A2v10.Xaml
 	{
 		public void GenerateSheet(RenderContext context)
 		{
-			if (AutoGenerate == null)
+			if (AutoGenerate == null || String.IsNullOrEmpty(AutoGenerate.PropertyName))
 				return;
 			switch (AutoGenerate.Mode)
 			{

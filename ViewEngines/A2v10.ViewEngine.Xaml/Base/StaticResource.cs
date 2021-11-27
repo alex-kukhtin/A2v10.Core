@@ -7,7 +7,7 @@ namespace A2v10.Xaml
 {
 	public class StaticResource : MarkupExtension
 	{
-		public String Member { get; set; }
+		public String Member { get; set; } = String.Empty;
 
 		public StaticResource()
 		{
@@ -18,13 +18,13 @@ namespace A2v10.Xaml
 			Member = member;
 		}
 
-		public override Object ProvideValue(IServiceProvider serviceProvider)
+		public override Object? ProvideValue(IServiceProvider serviceProvider)
 		{
 			if (serviceProvider.GetService(typeof(IRootObjectProvider)) is not IRootObjectProvider iRoot)
 				throw new InvalidOperationException("StaticResource.ProvideValue. IRootObjectProvider is null");
 			if (iRoot.RootObject is not RootContainer root)
 				return null;
-			Object resrc = root.FindResource(Member);
+			Object? resrc = root.FindResource(Member);
 			if (resrc == null)
 				throw new XamlException($"Resource '{Member}' not found");
 			return resrc;

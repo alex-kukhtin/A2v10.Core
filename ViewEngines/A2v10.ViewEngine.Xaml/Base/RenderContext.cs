@@ -56,7 +56,7 @@ public struct GridRowCol
 
 		if (_vAlign != null)
 		{
-			String vAlign = _vAlign.Value.AlignSelf();
+			String? vAlign = _vAlign.Value.AlignSelf();
 			if (vAlign != null)
 				rv.Add(new StringKeyValuePair() { Key = "align-self", Value = vAlign });
 			if (vAlign == "stretch")
@@ -127,11 +127,11 @@ public class RenderContext
 	private readonly Stack<ScopeElem> _stackScope = new();
 
 	readonly private IXamlElement _root;
-	private readonly IDataModel _dataModel;
+	private readonly IDataModel? _dataModel;
 	private readonly ILocalizer _localizer;
-	private readonly ITypeChecker? _typeChecker;
+	//private readonly ITypeChecker? _typeChecker;
 
-	readonly private String _currentLocale;
+	readonly private String? _currentLocale;
 
 	public RenderContext(IXamlElement root, IRenderInfo ri, ILocalizer localizer, TextWriter writer)
 	{
@@ -148,7 +148,7 @@ public class RenderContext
 	public Boolean IsWizard => _root is Wizard;
 
 
-	public IDataModel DataModel => _dataModel;
+	public IDataModel? DataModel => _dataModel;
 
 	public Boolean IsDataModelIsReadOnly
 	{
@@ -160,9 +160,9 @@ public class RenderContext
 		}
 	}
 
-	public Object? CalcDataModelExpression(String expression)
+	public Object? CalcDataModelExpression(String? expression)
 	{
-		if (_dataModel == null)
+		if (_dataModel == null || expression == null)
 			return null;
 		return _dataModel.CalcExpression<Object>(expression);
 	}
@@ -213,7 +213,7 @@ public class RenderContext
 		return rowCol.GetGridAttributes();
 	}
 
-	internal String GetNormalizedPath(String path, Boolean isWrapped = false)
+	internal String GetNormalizedPath(String? path, Boolean isWrapped = false)
 	{
 		// check for invert
 		if (path == null)
@@ -221,13 +221,13 @@ public class RenderContext
 		if (path.StartsWith("!"))
 			return "!" + GetNormalizedPathInternal(path[1..]);
 
-		if (_typeChecker != null)
-			_typeChecker.CheckXamlExpression(GetExpressionForChecker(path));
+		//if (_typeChecker != null)
+			//_typeChecker.CheckXamlExpression(GetExpressionForChecker(path));
 
 		return GetNormalizedPathInternal(path, isWrapped);
 	}
 
-	internal String GetTypedNormalizedPath(String path, TypeCheckerTypeCode typeCode, Boolean isWrapped = false)
+	internal String GetTypedNormalizedPath(String? path, TypeCheckerTypeCode typeCode, Boolean isWrapped = false)
 	{
 		// check for invert
 		if (path == null)
@@ -235,8 +235,8 @@ public class RenderContext
 		if (path.StartsWith("!"))
 			return "!" + GetNormalizedPathInternal(path[1..]);
 
-		if (_typeChecker != null && typeCode != TypeCheckerTypeCode.Skip)
-			_typeChecker.CheckTypedXamlExpression(GetExpressionForChecker(path), typeCode);
+		//if (_typeChecker != null && typeCode != TypeCheckerTypeCode.Skip)
+			//_typeChecker.CheckTypedXamlExpression(GetExpressionForChecker(path), typeCode);
 
 		return GetNormalizedPathInternal(path, isWrapped);
 	}

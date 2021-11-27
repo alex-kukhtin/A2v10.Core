@@ -15,14 +15,14 @@ namespace A2v10.Xaml
 	[ContentProperty("Tabs")]
 	public class TabPanel : UIElement
 	{
-		public Object ItemsSource { get; set; }
+		public Object? ItemsSource { get; set; }
 
-		public Object Header { get; set; }
+		public Object? Header { get; set; }
 
 		public Boolean Border { get; set; }
 
 		public Boolean FullPage { get; set; }
-		public Length MinHeight { get; set; }
+		public Length? MinHeight { get; set; }
 		public Boolean Overflow { get; set; }
 
 		public TabPosition TabPosition { get; set; }

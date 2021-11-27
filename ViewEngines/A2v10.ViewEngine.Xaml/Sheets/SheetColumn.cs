@@ -11,7 +11,7 @@ namespace A2v10.Xaml
 	public class SheetColumn : XamlElement
 	{
 		public Boolean Fit { get; set; }
-		public Length Width { get; set; }
+		public Length? Width { get; set; }
 		public ColumnBackgroundStyle Background { get; set; }
 
 		public SheetColumn()
@@ -33,7 +33,7 @@ namespace A2v10.Xaml
 					'A' => ColumnBackgroundStyle.Gray,
 					_ => throw new XamlException($"Invalid BackgroundColor for SheetColumn ('{color}')"),
 				};
-				definition = definition.Substring(0, len - 2);
+				definition = definition[..(len - 2)];
 			}
 			if (definition == "Fit")
 				Fit = true;

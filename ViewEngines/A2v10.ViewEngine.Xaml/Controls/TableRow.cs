@@ -26,7 +26,7 @@ namespace A2v10.Xaml
 	{
 		public TableCellCollection Cells { get; set; } = new TableCellCollection();
 
-		public Object Mark { get; set; }
+		public Object? Mark { get; set; }
 		public VerticalAlign VAlign { get; set; }
 		public TextAlign Align { get; set; }
 
@@ -93,7 +93,8 @@ namespace A2v10.Xaml
 		{
 			if (SkipRender(context))
 				return;
-			var table = (this.Parent as Table);
+			if (Parent is not Table table)
+				return;
 			var cols = Math.Max(table.Columns.Count, 1);
 			var tr = new TagBuilder("tr").RenderStart(context);
 			new TagBuilder("td", "row-divider").MergeAttribute("colspan", cols).Render(context);

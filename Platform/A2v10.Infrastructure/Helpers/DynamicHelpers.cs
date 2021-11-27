@@ -14,11 +14,11 @@ namespace A2v10.Infrastructure
 {
 	public static class DynamicHelpers
 	{
-		public static T Get<T>(this ExpandoObject obj, String name)
+		public static T? Get<T>(this ExpandoObject obj, String name)
 		{
 			if (obj is not IDictionary<String, Object> d)
 				return default;
-			if (d.TryGetValue(name, out Object result))
+			if (d.TryGetValue(name, out Object? result))
 			{
 				if (result is T t)
 					return t;
@@ -26,9 +26,21 @@ namespace A2v10.Infrastructure
 			return default;
 		}
 
+		public static T GetNotNull<T>(this ExpandoObject obj, String name)
+		{
+			if (obj is not IDictionary<String, Object?> d)
+				throw new KeyNotFoundException(name);
+			if (d.TryGetValue(name, out Object? result))
+			{
+				if (result is T t)
+					return t;
+			}
+			throw new KeyNotFoundException(name);
+		}
+
 		public static void Set(this ExpandoObject obj, String name, Object value)
 		{
-			if (obj is not IDictionary<String, Object> d)
+			if (obj is not IDictionary<String, Object?> d)
 				return;
 			if (d.ContainsKey(name))
 				d[name] = value;
@@ -36,18 +48,18 @@ namespace A2v10.Infrastructure
 				d.Add(name, value);
 		}
 
-		public static void SetNotNull(this ExpandoObject obj, String name, Object value)
+		public static void SetNotNull(this ExpandoObject obj, String name, Object? value)
 		{
 			if (value == null)
 				return;
 			obj.Set(name, value);
 		}
 
-		public static Object GetObject(this ExpandoObject obj, String name)
+		public static Object? GetObject(this ExpandoObject obj, String name)
 		{
-			if (obj is not IDictionary<String, Object> d)
+			if (obj is not IDictionary<String, Object?> d)
 				return null;
-			if (d.TryGetValue(name, out Object result))
+			if (d.TryGetValue(name, out Object? result))
 			{
 				return result;
 			}
@@ -56,7 +68,7 @@ namespace A2v10.Infrastructure
 
 		public static ExpandoObject Add(this ExpandoObject obj, String name, Object value)
 		{
-			if (obj is not IDictionary<String, Object> d)
+			if (obj is not IDictionary<String, Object?> d)
 				return obj;
 			d.Add(name, value);
 			return obj;
@@ -72,7 +84,7 @@ namespace A2v10.Infrastructure
 
 		public static void RemoveKeys(this ExpandoObject obj, String keys)
 		{
-			if (obj is not IDictionary<String, Object> d)
+			if (obj is not IDictionary<String, Object?> d)
 				return;
 			foreach (var key in keys.Split(','))
 			{
@@ -83,16 +95,16 @@ namespace A2v10.Infrastructure
 
 		public static Boolean HasProperty(this ExpandoObject obj, String name)
 		{
-			if (obj is not IDictionary<String, Object> d)
+			if (obj is not IDictionary<String, Object?> d)
 				return false;
 			return d.ContainsKey(name);
 		}
 
-		public static void Append(this ExpandoObject obj, NameValueCollection coll, Boolean toPascalCase = false)
+		public static void Append(this ExpandoObject obj, NameValueCollection? coll, Boolean toPascalCase = false)
 		{
 			if (coll == null)
 				return;
-			var d = obj as IDictionary<String, Object>;
+			var d = obj as IDictionary<String, Object?>;
 			foreach (var key in coll.Keys)
 			{
 				var skey = key.ToString();
@@ -195,7 +207,7 @@ namespace A2v10.Infrastructure
 			return obj;
 		}
 
-		public static Object EvalExpression(this ExpandoObject root, String expression, Boolean throwIfError = false)
+		public static Object? EvalExpression(this ExpandoObject root, String expression, Boolean throwIfError = false)
 		{
 			Object currentContext = root;
 			var arrRegEx = new Regex(@"(\w+)\[(\d+)\]{1}");
@@ -237,12 +249,12 @@ namespace A2v10.Infrastructure
 		}
 
 		// for workflow
-		public static Object EvalObject(this ExpandoObject root, String expression)
+		public static Object? EvalObject(this ExpandoObject root, String expression)
 		{
 			return root.Eval<Object>(expression, null, true);
 		}
 
-		public static ExpandoObject Clone(this ExpandoObject elem, String[] exclude = null)
+		public static ExpandoObject Clone(this ExpandoObject elem, String[]? exclude = null)
 		{
 			var eo = new ExpandoObject();
 			foreach (var v in elem as IDictionary<String, Object>)
@@ -259,7 +271,7 @@ namespace A2v10.Infrastructure
 			return that == null || that is not IDictionary<String, Object> dict || dict.Count == 0;
 		}
 
-		public static T Eval<T>(this ExpandoObject root, String expression, T fallback = default, Boolean throwIfError = false)
+		public static T? Eval<T>(this ExpandoObject root, String? expression, T? fallback = default, Boolean throwIfError = false)
 		{
 			if (expression == null)
 				return fallback;
@@ -271,7 +283,7 @@ namespace A2v10.Infrastructure
 			return fallback;
 		}
 
-		public static String Resolve(this ExpandoObject This, String source)
+		public static String? Resolve(this ExpandoObject This, String? source)
 		{
 			if (source == null)
 				return null;
@@ -283,14 +295,14 @@ namespace A2v10.Infrastructure
 			foreach (Match m in ms)
 			{
 				String key = m.Groups[1].Value;
-				String val = This.EvalExpression(key)?.ToString();
+				String? val = This.EvalExpression(key)?.ToString();
 				sb.Replace(m.Value, val);
 			}
 			return sb.ToString();
 		}
 
 
-		public static Dictionary<String, Object> Object2Dictionary(Object obj)
+		public static Dictionary<String, Object>? Object2Dictionary(Object? obj)
 		{
 			if (obj == null)
 				return null;

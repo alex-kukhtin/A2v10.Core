@@ -16,7 +16,7 @@ namespace A2v10.Infrastructure
 			return This + '.' + append;
 		}
 
-		public static String ToCamelCase(this String s)
+		public static String? ToCamelCase(this String? s)
 		{
 			if (String.IsNullOrEmpty(s))
 				return null;
@@ -27,7 +27,7 @@ namespace A2v10.Infrastructure
 			return b.ToString();
 		}
 
-		public static String ToPascalCase(this String s)
+		public static String? ToPascalCase(this String? s)
 		{
 			if (String.IsNullOrEmpty(s))
 				return null;
@@ -53,7 +53,7 @@ namespace A2v10.Infrastructure
 			return s.Replace("'", "\\'");
 		}
 
-		public static String ToKebabCase(this String s, String delim = "-")
+		public static String? ToKebabCase(this String? s, String delim = "-")
 		{
 			if (String.IsNullOrEmpty(s))
 				return null;
@@ -74,7 +74,7 @@ namespace A2v10.Infrastructure
 			return b.ToString();
 		}
 
-		public static String EncodeJs(this String s)
+		public static String? EncodeJs(this String? s)
 		{
 			if (String.IsNullOrEmpty(s))
 				return null;
@@ -108,7 +108,7 @@ namespace A2v10.Infrastructure
 			return sb;
 		}
 
-		public static String ResolveMacros(this String source, ExpandoObject macros)
+		public static String? ResolveMacros(this String? source, ExpandoObject macros)
 		{
 			if (source == null)
 				return null;
@@ -120,13 +120,13 @@ namespace A2v10.Infrastructure
 			foreach (Match m in ms)
 			{
 				String key = m.Groups[1].Value;
-				String val = macros.Get<String>(key);
+				String? val = macros.Get<String>(key);
 				sb.Replace(m.Value, val);
 			}
 			return sb.ToString();
 		}
 
-		public static String TemplateExpression(this String source)
+		public static String? TemplateExpression(this String? source)
 		{
 			if (String.IsNullOrEmpty(source))
 				return null;

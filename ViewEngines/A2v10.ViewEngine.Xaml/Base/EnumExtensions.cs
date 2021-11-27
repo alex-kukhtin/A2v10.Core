@@ -1,12 +1,10 @@
 ﻿// Copyright © 2015-2017 Alex Kukhtin. All rights reserved.
 
-using System;
-
 namespace A2v10.Xaml
 {
 	public static class EnumExtensions
 	{
-		public static String AlignSelf(this AlignItem vAlign)
+		public static String? AlignSelf(this AlignItem vAlign)
 		{
 			return vAlign switch
 			{

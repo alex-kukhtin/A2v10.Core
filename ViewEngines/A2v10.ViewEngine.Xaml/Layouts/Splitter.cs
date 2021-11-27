@@ -1,7 +1,6 @@
 ﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-using System;
-using A2v10.System.Xaml;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace A2v10.Xaml
 {
@@ -17,7 +16,7 @@ namespace A2v10.Xaml
 
 		public Splitter(IServiceProvider serviceProvider)
 		{
-			_attachedPropertyManager = serviceProvider.GetService(typeof(IAttachedPropertyManager)) as IAttachedPropertyManager;
+			_attachedPropertyManager = serviceProvider.GetRequiredService<IAttachedPropertyManager>();
 		}
 
 		#region Attached Properties
@@ -75,7 +74,7 @@ namespace A2v10.Xaml
 			new TagBuilder("div", "spl-handle")
 				.MergeAttribute(Orientation == Orientation.Vertical ? "v-resize" : "h-resize", String.Empty)
 				//.MergeAttribute("key", Guid.NewGuid().ToString()) // disable vue reusing
-				.MergeAttribute("first-pane-width", p1w?.Value.ToString())
+				.MergeAttribute("first-pane-width", p1w?.Value?.ToString())
 				.MergeAttribute("data-min-width", GetMinWidth(Children[0])?.Value?.ToString())
 				.MergeAttribute("second-min-width", GetMinWidth(Children[1])?.Value?.ToString())
 				.Render(context);

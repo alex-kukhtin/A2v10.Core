@@ -62,7 +62,7 @@ namespace A2v10.Services.Javascript
 			return "?" + ts;
 		}
 
-		static ExpandoObject GetResponseHeaders(WebHeaderCollection headers)
+		static ExpandoObject? GetResponseHeaders(WebHeaderCollection headers)
 		{
 			if (headers == null)
 				return null;

@@ -28,7 +28,7 @@ namespace A2v10.Xaml
 		public Boolean HideCaret { get; set; }
 		public String? TestId { get; set; }
 
-		public Popover Hint { get; set; }
+		public Popover? Hint { get; set; }
 
 		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{

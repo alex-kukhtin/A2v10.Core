@@ -44,7 +44,7 @@ namespace A2v10.Xaml
 
 		internal Boolean IsContentIsIFrame => Children?.Count == 1 && Children[0] is IFrame;
 
-		String GetControllerAttributes()
+		String? GetControllerAttributes()
 		{
 			if (String.IsNullOrEmpty(CanCloseDelegate) && !AlwaysOk)
 				return null;

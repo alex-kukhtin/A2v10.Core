@@ -1,8 +1,6 @@
 ﻿// Copyright © 2015-2018 Alex Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
-using System;
-using A2v10.System.Xaml;
 
 namespace A2v10.Xaml
 {
@@ -10,10 +8,10 @@ namespace A2v10.Xaml
 	public class Taskpad : Container
 	{
 
-		public Length Width { get; set; }
+		public Length? Width { get; set; }
 		public BackgroundStyle Background { get; set; }
 		public Boolean? Collapsible { get; set; }
-		public String Title { get; set; }
+		public String? Title { get; set; }
 		public Boolean Overflow { get; set; }
 		public Boolean Collapsed { get; set; }
 

@@ -1,17 +1,15 @@
 ﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-using System;
 using System.IO;
 using System.Reflection;
 
 using A2v10.Infrastructure;
-using A2v10.System.Xaml;
 
 namespace A2v10.Xaml
 {
 	public class Source : MarkupExtension
 	{
-		public String Path { get; set; }
+		public String? Path { get; set; }
 
 
 		public Source()
@@ -24,7 +22,7 @@ namespace A2v10.Xaml
 			Path = path;
 		}
 
-		public override Object ProvideValue(IServiceProvider serviceProvider)
+		public override Object? ProvideValue(IServiceProvider serviceProvider)
 		{
 			try
 			{

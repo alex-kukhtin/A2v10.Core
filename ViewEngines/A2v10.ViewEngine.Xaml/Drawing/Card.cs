@@ -1,19 +1,17 @@
 ﻿// Copyright © 2015-2017 Alex Kukhtin. All rights reserved.
 
-using System;
-
 
 namespace A2v10.Xaml.Drawing
 {
 	public class Card : DrawingElement, IHasPositionAndSize
 	{
-		public Size Size { get; set; }
-		public Point Pos { get; set; }
+		public Size? Size { get; set; }
+		public Point? Pos { get; set; }
 		public RectStyle Style { get; set; }
 		public Icon Icon { get; set; }
-		public String Header { get; set; }
-		public Object Text { get; set; }
-		public Popover Hint { get; set; }
+		public String? Header { get; set; }
+		public Object? Text { get; set; }
+		public Popover? Hint { get; set; }
 
 		internal override void RenderElement(RenderContext context)
 		{

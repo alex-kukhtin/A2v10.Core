@@ -17,19 +17,19 @@ namespace A2v10.Xaml
 	public class Selector : ValuedControl, ITableControl
 	{
 		public TextAlign Align { get; set; }
-		public String Delegate { get; set; }
-		public String SetDelegate { get; set; }
-		public String DisplayProperty { get; set; }
-		public String Placeholder { get; set; }
+		public String? Delegate { get; set; }
+		public String? SetDelegate { get; set; }
+		public String? DisplayProperty { get; set; }
+		public String? Placeholder { get; set; }
 
-		public Size ListSize { get; set; }
-		public UIElementBase NewPane { get; set; }
-		public Command CreateNewCommand { get; set; }
+		public Size? ListSize { get; set; }
+		public UIElementBase? NewPane { get; set; }
+		public Command? CreateNewCommand { get; set; }
 
-		public Object TextValue { get; set; }
+		public Object? TextValue { get; set; }
 
-		public Object ItemsSource { get; set; }
-		public UIElementBase ItemsPanel { get; set; }
+		public Object? ItemsSource { get; set; }
+		public UIElementBase? ItemsPanel { get; set; }
 		public DropDownPlacement PanelPlacement { get; set; }
 
 		public Boolean? ShowCaret { get; set; }
@@ -113,9 +113,8 @@ namespace A2v10.Xaml
 		{
 			if (ItemsPanel == null)
 				return;
-			if (!(ItemsPanel is DataGrid))
+			if (ItemsPanel is not DataGrid dg)
 				throw new XamlException("Only DataGrid panel is supported");
-			var dg = ItemsPanel as DataGrid;
 			var tml = new TagBuilder("template");
 			tml.MergeAttribute("slot", "pane");
 			tml.MergeAttribute("slot-scope", "root");

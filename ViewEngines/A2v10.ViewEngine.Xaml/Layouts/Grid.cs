@@ -6,6 +6,8 @@ using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using A2v10.Infrastructure;
 
 namespace A2v10.Xaml
@@ -27,7 +29,7 @@ namespace A2v10.Xaml
 
 		public Grid(IServiceProvider serviceProvider)
 		{
-			_attachedPropertyManager = serviceProvider.GetService(typeof(IAttachedPropertyManager)) as IAttachedPropertyManager;
+			_attachedPropertyManager = serviceProvider.GetRequiredService<IAttachedPropertyManager>(); 
 		}
 
 		#region Attached Properties
@@ -60,15 +62,15 @@ namespace A2v10.Xaml
 		#endregion
 
 
-		public Length Height { get; set; }
+		public Length? Height { get; set; }
 		public BackgroundStyle Background { get; set; }
 		public ShadowStyle DropShadow { get; set; }
 		public AutoFlowMode AutoFlow { get; set; }
 		public AlignItem AlignItems { get; set; }
-		public GapSize Gap { get; set; }
+		public GapSize? Gap { get; set; }
 
-		RowDefinitions _rows;
-		ColumnDefinitions _columns;
+		RowDefinitions? _rows;
+		ColumnDefinitions? _columns;
 
 		public RowDefinitions Rows
 		{
@@ -196,7 +198,7 @@ namespace A2v10.Xaml
 			var sb = new StringBuilder();
 			foreach (var w in this)
 			{
-				sb.Append(w.Height.Value).Append(' ');
+				sb.Append(w.Height?.Value).Append(' ');
 			}
 			return sb.ToString();
 		}
@@ -246,7 +248,7 @@ namespace A2v10.Xaml
 			var sb = new StringBuilder();
 			foreach (var w in this)
 			{
-				sb.Append(w.Width.Value).Append(' ');
+				sb.Append(w?.Width?.Value).Append(' ');
 			}
 			return sb.ToString();
 		}

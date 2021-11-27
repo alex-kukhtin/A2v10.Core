@@ -8,7 +8,7 @@ namespace A2v10.Xaml
 	{
 		public Boolean Multiline { get; set; }
 
-		public Length Height { get; set; }
+		public Length? Height { get; set; }
 
 		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{

@@ -10,7 +10,7 @@ namespace A2v10.Xaml
 	public class SheetColumnGroup : SheetColumn
 	{
 		public SheetColumnCollection Columns { get; } = new SheetColumnCollection();
-		public Object ItemsSource { get; set; }
+		public Object? ItemsSource { get; set; }
 
 		public override void Render(RenderContext context)
 		{

@@ -9,7 +9,7 @@ namespace A2v10.Xaml
 	public class SheetCellGroup : XamlElement, ISheetCell
 	{
 		public SheetCells Cells { get; } = new SheetCells();
-		public Object ItemsSource { get; set; }
+		public Object? ItemsSource { get; set; }
 
 		public void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{
