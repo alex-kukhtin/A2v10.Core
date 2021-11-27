@@ -192,9 +192,9 @@ namespace A2v10.Services
 			return LoadLazyAsync(baseUrl, id, prop, setParams);
 		}
 
-		public async Task<String> LoadLazyAsync(String baseUrl, Object Id, String propertyName, Action<ExpandoObject> setParams)
+		public async Task<String> LoadLazyAsync(String baseUrl, Object? Id, String propertyName, Action<ExpandoObject> setParams)
 		{
-			String strId = Id != null ? Convert.ToString(Id, CultureInfo.InvariantCulture) : null;
+			String? strId = Id != null ? Convert.ToString(Id, CultureInfo.InvariantCulture) : null;
 
 			var platformBaseUrl = CreatePlatformUrl(baseUrl, strId);
 			var view = await _modelReader.GetViewAsync(platformBaseUrl);
@@ -319,12 +319,12 @@ namespace A2v10.Services
 			prms.Set("Key", blob.Key);
 			setParams?.Invoke(prms);
 			var bi = await _dbContext.LoadAsync<BlobInfo>(blob.DataSource, blob.LoadProcedure(), prms);
-			if (!String.IsNullOrEmpty(bi.BlobName))
+			if (!String.IsNullOrEmpty(bi?.BlobName))
 				throw new NotImplementedException("Load azure Storage blob");
 			return bi;
 		}
 
-		public async Task<ILayoutDescription> GetLayoutDescriptionAsync(String baseUrl)
+		public async Task<ILayoutDescription?> GetLayoutDescriptionAsync(String baseUrl)
 		{
 			if (baseUrl == null)
 				return null;

@@ -44,7 +44,7 @@ public class ModelJsonBase : IModelBase
 	public String Path => _parent.LocalPath;
 	public String BaseUrl => _parent.BaseUrl;
 
-	public virtual ExpandoObject CreateParameters(IPlatformUrl url, Object id,  Action<ExpandoObject> setParams = null, IModelBase.ParametersFlags flags = IModelBase.ParametersFlags.None)
+	public virtual ExpandoObject CreateParameters(IPlatformUrl url, Object id,  Action<ExpandoObject>? setParams = null, IModelBase.ParametersFlags flags = IModelBase.ParametersFlags.None)
 	{
 		// model.json, query, id, system
 		var eo = new ExpandoObject();
@@ -246,14 +246,14 @@ public class ModelJsonCommand : ModelJsonBase, IModelCommand
 
 public class ModelJsonReport : ModelJsonBase, IModelReport
 {
-	public String Type { get; set; }
-	public String Report { get; set; }
-	public String Procedure { get; set; }
-	public String Name { get; set; }
-	public String Encoding { get; set; }
+	public String? Type { get; set; }
+	public String? Report { get; set; }
+	public String? Procedure { get; set; }
+	public String? Name { get; set; }
+	public String? Encoding { get; set; }
 	public Boolean Validate { get; set; }
 
-	public ExpandoObject Variables { get; set; }
+	public ExpandoObject? Variables { get; set; }
 
 	public override String LoadProcedure()
 	{
@@ -265,7 +265,7 @@ public class ModelJsonReport : ModelJsonBase, IModelReport
 
 	public IModelReportHandler GetReportHandler(IServiceProvider serviceProvider)
 	{
-		var provider = serviceProvider.GetService<IReportEngineProvider>();
+		var provider = serviceProvider.GetRequiredService<IReportEngineProvider>();
 
 		// default report type is "stimulsoft" (DotNet Framework compatibility);
 		return new ServerReport(provider.FindReportEngine(Type ?? "stimulsoft"),
@@ -351,7 +351,7 @@ public class ModelJson
 		throw new ModelJsonException($"Command: {key} not found");
 	}
 
-	public ModelJsonBlob GetBlob(String key, String suffix = null)
+	public ModelJsonBlob GetBlob(String key, String? suffix = null)
 	{
 		var blob = new ModelJsonBlob()
 		{

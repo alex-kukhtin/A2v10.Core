@@ -19,7 +19,7 @@ namespace A2v10.Infrastructure
 			SkipModelJsonParams = 0x02,
 		}
 
-		String DataSource { get; }
+		String? DataSource { get; }
 
 		String LoadProcedure();
 		Boolean HasModel();

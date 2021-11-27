@@ -16,10 +16,10 @@ namespace A2v10.Infrastructure
 			return This + '.' + append;
 		}
 
-		public static String? ToCamelCase(this String? s)
+		public static String ToCamelCase(this String? s)
 		{
 			if (String.IsNullOrEmpty(s))
-				return null;
+				return String.Empty;
 			var b = new StringBuilder(s);
 			Char ch = b[0];
 			if (Char.IsUpper(ch))
@@ -27,10 +27,10 @@ namespace A2v10.Infrastructure
 			return b.ToString();
 		}
 
-		public static String? ToPascalCase(this String? s)
+		public static String ToPascalCase(this String? s)
 		{
 			if (String.IsNullOrEmpty(s))
-				return null;
+				return String.Empty;
 			var b = new StringBuilder(s);
 			Boolean bFirst = true;
 			for (var i = 0; i < s.Length; i++)

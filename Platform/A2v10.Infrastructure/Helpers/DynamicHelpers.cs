@@ -177,7 +177,7 @@ namespace A2v10.Infrastructure
 		}
 
 
-		public static ExpandoObject RemoveEmptyArrays(this ExpandoObject obj)
+		public static ExpandoObject? RemoveEmptyArrays(this ExpandoObject obj)
 		{
 			if (obj == null)
 				return obj;
@@ -199,9 +199,9 @@ namespace A2v10.Infrastructure
 						}
 					}
 				}
-				else if (val is ExpandoObject)
+				else if (val is ExpandoObject expVal)
 				{
-					(val as ExpandoObject).RemoveEmptyArrays();
+					expVal.RemoveEmptyArrays();
 				}
 			}
 			return obj;

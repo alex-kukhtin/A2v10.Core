@@ -12,7 +12,7 @@ namespace A2v10.Services
 {
 	public class PlatformUrl : IPlatformUrl
 	{
-		public PlatformUrl(UrlKind kind, String url, String id = null)
+		public PlatformUrl(UrlKind kind, String url, String? id = null)
 		{
 			var nurl = NormalizePath(url);
 			Kind = kind;
@@ -20,7 +20,7 @@ namespace A2v10.Services
 			Construct(parts, nurl.Query, id);
 		}
 
-		public PlatformUrl(String url, String id = null)
+		public PlatformUrl(String url, String? id = null)
 		{
 			var nurl = NormalizePath(url);
 
@@ -47,7 +47,7 @@ namespace A2v10.Services
 		public ExpandoObject Query { get; private set; }
 
 
-		public void Redirect(String path)
+		public void Redirect(String? path)
 		{
 			if (path == null || LocalPath == path)
 				return;
@@ -56,7 +56,7 @@ namespace A2v10.Services
 
 		static (String Path, String Query) NormalizePath(String path)
 		{
-			String query = null;
+			String query = String.Empty;
 			if (path.Contains('?'))
 			{
 				var px = path.Split('?');
