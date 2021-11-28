@@ -9,21 +9,20 @@ namespace A2v10.Services.Interop.ExportTo
 {
 	public class HtmlReader
 	{
-		ExSheet _sheet;
-
+		private readonly ExSheet _sheet;
 		private readonly IFormatProvider _currentFormat;
 
 		public HtmlReader(IFormatProvider currentFormat)
 		{
 			_currentFormat = currentFormat;
+			_sheet = new ExSheet(_currentFormat);
 		}
 
 		public ExSheet ReadHtmlSheet(String html)
 		{
-			_sheet = new ExSheet(_currentFormat);
 			var doc = GetXmlFromHtml(html);
 			var table = doc.FirstChild;
-			if (table.Name != "table")
+			if (table?.Name != "table")
 				throw new ExportToExcelException("Invalid element for Html2Excel. Expected '<table>'.");
 
 			var bodyRowNo = 0;
@@ -31,7 +30,8 @@ namespace A2v10.Services.Interop.ExportTo
 			var footerRowNo = 0;
 			foreach (var n in table.ChildNodes)
 			{
-				var nd = n as XmlNode;
+				if (n is not XmlNode nd)
+					continue;
 				if (nd.NodeType != XmlNodeType.Element)
 					continue;
 				switch (nd.Name)
@@ -41,7 +41,7 @@ namespace A2v10.Services.Interop.ExportTo
 							AddColumn(col);
 						break;
 					case "tbody":
-						var bodyClassAttr = nd.Attributes["class"];
+						var bodyClassAttr = nd.Attributes?["class"];
 						if (bodyClassAttr?.Value == "col-shadow")
 							continue; // skip shadows
 						foreach (var row in nd.ChildNodes.OfType<XmlNode>().Where(node => node.Name == "tr"))
@@ -76,13 +76,15 @@ namespace A2v10.Services.Interop.ExportTo
 				return node.InnerText;
 			foreach (var ch in node.ChildNodes.OfType<XmlNode>().Where(n => n.NodeType == XmlNodeType.Element))
 			{
+				if (ch.Attributes == null || ch.Attributes.Count == 0)
+					return node.InnerText;
 				var classAttr = ch.Attributes["class"];
 				if (classAttr == null)
 					return node.InnerText;
 				if (classAttr.Value.Contains("popover-wrapper"))
-					return ch.FirstChild?.InnerText;
+					return ch.FirstChild?.InnerText ?? String.Empty;
 				else if (classAttr.Value.Contains("hlink-dd-wrapper"))
-					return ch.FirstChild?.FirstChild?.InnerText;
+					return ch.FirstChild?.FirstChild?.InnerText ?? String.Empty;
 			}
 			return node.InnerText;
 		}
@@ -90,33 +92,40 @@ namespace A2v10.Services.Interop.ExportTo
 		void AddRow(XmlNode src, RowKind kind, Int32 rowNo)
 		{
 			ExRow row = _sheet.GetRow(rowNo, kind);
-			var classAttr = src.Attributes["class"];
-			if (classAttr != null)
-				row.SetRoleAndStyle(classAttr.Value);
-			var heightAttr = src.Attributes["data-row-height"];
-			if (heightAttr != null)
+			if (src.Attributes != null)
 			{
-				if (UInt32.TryParse(heightAttr.Value, out UInt32 height))
-					row.Height = height;
+				var classAttr = src.Attributes["class"];
+				if (classAttr != null)
+					row.SetRoleAndStyle(classAttr.Value);
+				var heightAttr = src.Attributes["data-row-height"];
+				if (heightAttr != null)
+				{
+					if (UInt32.TryParse(heightAttr.Value, out UInt32 height))
+						row.Height = height;
+				}
 			}
 			foreach (var cn in src.ChildNodes.OfType<XmlNode>().Where(node => node.Name == "td"))
 			{
-				var colSpanAttr = cn.Attributes["colspan"];
-				var rowSpanAttr = cn.Attributes["rowspan"];
+				String? dataType = null;
+				String cellClass = String.Empty;
 				var span = new CellSpan();
-				if (colSpanAttr != null)
-					span.Col = Int32.Parse(colSpanAttr.Value);
-				if (rowSpanAttr != null)
-					span.Row = Int32.Parse(rowSpanAttr.Value);
 
-				var dataTypeAttr = cn.Attributes["data-type"];
-				String dataType = null;
-				if (dataTypeAttr != null)
-					dataType = dataTypeAttr.Value;
-				var cellClassAttr = cn.Attributes["class"];
-				String cellClass = null;
-				if (cellClassAttr != null)
-					cellClass = cellClassAttr.Value;
+				if (cn.Attributes != null)
+				{
+					var colSpanAttr = cn.Attributes["colspan"];
+					var rowSpanAttr = cn.Attributes["rowspan"];
+					if (colSpanAttr != null)
+						span.Col = Int32.Parse(colSpanAttr.Value);
+					if (rowSpanAttr != null)
+						span.Row = Int32.Parse(rowSpanAttr.Value);
+
+					var dataTypeAttr = cn.Attributes["data-type"];
+					if (dataTypeAttr != null)
+						dataType = dataTypeAttr.Value;
+					var cellClassAttr = cn.Attributes["class"];
+					if (cellClassAttr != null)
+						cellClass = cellClassAttr.Value;
+				}
 
 				String cellText = GetNodeText(cn);
 				_sheet.AddCell(rowNo, row, span, cellText, dataType, cellClass);
@@ -125,6 +134,8 @@ namespace A2v10.Services.Interop.ExportTo
 
 		void AddColumn(XmlNode src)
 		{
+			if (src.Attributes == null)
+				return;
 			var classAttr = src.Attributes["class"];
 			var widthAttr = src.Attributes["data-col-width"];
 			ExColumn col = _sheet.AddColumn();

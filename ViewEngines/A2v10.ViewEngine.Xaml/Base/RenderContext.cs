@@ -292,7 +292,7 @@ public class RenderContext
 		return result;
 	}
 
-	public String Localize(String text, Boolean replaceNewLine = true)
+	public String? Localize(String? text, Boolean replaceNewLine = true)
 	{
 		if (_localizer == null)
 			return text;

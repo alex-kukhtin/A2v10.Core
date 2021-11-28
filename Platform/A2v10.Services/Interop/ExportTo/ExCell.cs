@@ -22,7 +22,7 @@ namespace A2v10.Services.Interop.ExportTo
 	public class ExCell
 	{
 		public CellSpan Span { get; set; }
-		public String Value { get; set; }
+		public String Value { get; set; } = String.Empty;
 
 		public CellKind Kind { get; set; }
 
@@ -88,9 +88,9 @@ namespace A2v10.Services.Interop.ExportTo
 			};
 		}
 
-		public void SetValue(String text, String dataType, IFormatProvider format)
+		public void SetValue(String text, String? dataType, IFormatProvider format)
 		{
-			if (text.Contains("\n"))
+			if (text.Contains('\n'))
 				dataType = "string";
 			switch (dataType)
 			{
@@ -141,7 +141,7 @@ namespace A2v10.Services.Interop.ExportTo
 				return "" + (Char)((Int32)'A' + index);
 		}
 
-		public String MergeReference(Int32 row, Int32 col)
+		public String? MergeReference(Int32 row, Int32 col)
 		{
 			if (Span.Col <= 1 && Span.Row <= 1)
 				return null;

@@ -1,18 +1,15 @@
 ﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-using System;
-using System.Collections.Generic;
-using System.Dynamic;
 
 using Microsoft.Extensions.DependencyInjection;
 
 using A2v10.Data.Interfaces;
-using A2v10.Infrastructure;
 
 namespace A2v10.Services;
 public class ModelJsonBase : IModelBase
 {
 	protected ModelJson? _parent;
+	protected ModelJson Parent => _parent ?? throw new ModelJsonException("Parent is null");
 
 	public String? Source;
 	public String? Schema;
@@ -27,9 +24,9 @@ public class ModelJsonBase : IModelBase
 		_parent = rm;
 	}
 
-	public String? DataSource => String.IsNullOrEmpty(Source) ? _parent?.Source : Source;
-	public String CurrentModel => String.IsNullOrEmpty(Model) ? _parent.Model : Model;
-	public String CurrentSchema => String.IsNullOrEmpty(Schema) ? _parent.Schema : Schema;
+	public String? DataSource => String.IsNullOrEmpty(Source) ? Parent?.Source : Source;
+	public String CurrentModel => String.IsNullOrEmpty(Model) ? Parent.Model : Model;
+	public String CurrentSchema => String.IsNullOrEmpty(Schema) ? Parent.Schema : Schema;
 
 	public Boolean HasModel() => Model != String.Empty && !String.IsNullOrEmpty(CurrentModel);
 
@@ -41,14 +38,14 @@ public class ModelJsonBase : IModelBase
 		return $"[{CurrentSchema}].[{cm}.Load]";
 	}
 
-	public String Path => _parent.LocalPath;
-	public String BaseUrl => _parent.BaseUrl;
+	public String Path => Parent.LocalPath;
+	public String BaseUrl => Parent.BaseUrl;
 
-	public virtual ExpandoObject CreateParameters(IPlatformUrl url, Object id,  Action<ExpandoObject>? setParams = null, IModelBase.ParametersFlags flags = IModelBase.ParametersFlags.None)
+	public virtual ExpandoObject CreateParameters(IPlatformUrl url, Object? id,  Action<ExpandoObject>? setParams = null, IModelBase.ParametersFlags flags = IModelBase.ParametersFlags.None)
 	{
 		// model.json, query, id, system
 		var eo = new ExpandoObject();
-		if (!flags.HasFlag(IModelBase.ParametersFlags.SkipModelJsonParams))
+		if (!flags.HasFlag(IModelBase.ParametersFlags.SkipModelJsonParams) && Parameters != null)
 			eo.Append(Parameters);
 		eo.Append(url.Query);
 		if (!flags.HasFlag(IModelBase.ParametersFlags.SkipId))
@@ -114,7 +111,7 @@ public class ModelJsonBlob : ModelJsonViewBase, IModelBlob
 public class ModelJsonView : ModelJsonViewBase, IModelView
 {
 	// explicit
-	IModelMerge IModelView.Merge => Merge;
+	IModelMerge? IModelView.Merge => Merge;
 	IModelView? IModelView.TargetModel => TargetModel;
 
 	public String? View { get; set; }
@@ -129,8 +126,8 @@ public class ModelJsonView : ModelJsonViewBase, IModelView
 	public String? TargetId { get; init; }
 	public ModelJsonView? TargetModel { get; }
 
-	public List<String> Scripts { get; init; } 
-	public List<String> Styles { get; init; }
+	public List<String>? Scripts { get; init; } 
+	public List<String>? Styles { get; init; }
 
 	public String GetView(Boolean mobile)
 	{
@@ -269,7 +266,7 @@ public class ModelJsonReport : ModelJsonBase, IModelReport
 
 		// default report type is "stimulsoft" (DotNet Framework compatibility);
 		return new ServerReport(provider.FindReportEngine(Type ?? "stimulsoft"),
-			serviceProvider.GetService<IDbContext>()
+			serviceProvider.GetRequiredService<IDbContext>()
 		);
 	}
 
@@ -297,9 +294,9 @@ public class ModelJsonReport : ModelJsonBase, IModelReport
 
 public class ModelJson
 {
-	private String _localPath;
-	private String _baseUrl;
-	private String _id;
+	private String? _localPath;
+	private String? _baseUrl;
+	private String? _id;
 
 	#region JSON
 	public String? Source { get; set; }

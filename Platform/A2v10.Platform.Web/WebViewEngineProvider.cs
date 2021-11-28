@@ -48,11 +48,11 @@ namespace A2v10.Platform.Web
 				String fileName = $"{viewName}{engine.Extension}";
 				if (_codeProvider.FileExists(fileName))
 				{
-					return new ViewEngineResult()
-					{
-						Engine = _serviceProvider.GetService(engine.EngineType) as IViewEngine,
-						FileName = fileName
-					};
+					return new ViewEngineResult
+					(
+						engine : _serviceProvider.GetService(engine.EngineType) as IViewEngine,
+						fileName : fileName
+					);
 				}
 			}
 			throw new InvalidReqestExecption($"View engine not found for {viewName}");

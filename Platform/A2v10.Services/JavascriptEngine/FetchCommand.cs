@@ -15,7 +15,7 @@ namespace A2v10.Services.Javascript
 {
 	public static class FetchCommand
 	{
-		static void SetHeaders(HttpWebRequest wr, ExpandoObject headers)
+		static void SetHeaders(HttpWebRequest wr, ExpandoObject? headers)
 		{
 			if (headers == null)
 				return;
@@ -24,7 +24,7 @@ namespace A2v10.Services.Javascript
 				wr.Headers.Add(hp.Key, hp.Value.ToString());
 		}
 
-		static void AddAuthorization(HttpWebRequest wr, ExpandoObject auth)
+		static void AddAuthorization(HttpWebRequest wr, ExpandoObject? auth)
 		{
 			if (auth == null)
 				return;
@@ -50,7 +50,7 @@ namespace A2v10.Services.Javascript
 			}
 		}
 
-		static String CreateQueryString(ExpandoObject query)
+		static String CreateQueryString(ExpandoObject? query)
 		{
 			if (query == null || query.IsEmpty())
 				return String.Empty;
@@ -62,7 +62,7 @@ namespace A2v10.Services.Javascript
 			return "?" + ts;
 		}
 
-		static ExpandoObject? GetResponseHeaders(WebHeaderCollection headers)
+		static ExpandoObject? GetResponseHeaders(WebHeaderCollection? headers)
 		{
 			if (headers == null)
 				return null;
@@ -74,7 +74,7 @@ namespace A2v10.Services.Javascript
 			return eo;
 		}
 
-		public static FetchResponse Execute(String url, ExpandoObject prms)
+		public static FetchResponse Execute(String url, ExpandoObject? prms)
 		{
 			try
 			{
@@ -88,7 +88,7 @@ namespace A2v10.Services.Javascript
 				{
 					httpWebRequest.Method = mtd;
 					var bodyObj = prms?.Get<Object>("body");
-					String bodyStr = null;
+					String? bodyStr = null;
 
 					switch (bodyObj)
 					{

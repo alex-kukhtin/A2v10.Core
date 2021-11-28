@@ -38,7 +38,7 @@ namespace A2v10.Infrastructure
 			throw new KeyNotFoundException(name);
 		}
 
-		public static void Set(this ExpandoObject obj, String name, Object value)
+		public static void Set(this ExpandoObject obj, String name, Object? value)
 		{
 			if (obj is not IDictionary<String, Object?> d)
 				return;
@@ -107,14 +107,16 @@ namespace A2v10.Infrastructure
 			var d = obj as IDictionary<String, Object?>;
 			foreach (var key in coll.Keys)
 			{
-				var skey = key.ToString();
+				if (key == null)
+					continue;
+				var skey = key.ToString()!;
 				if (toPascalCase)
 					skey = skey.ToPascalCase();
 				d.Add(skey, coll[key.ToString()]);
 			}
 		}
 
-		public static void Append(this ExpandoObject that, ExpandoObject other, bool replace = true)
+		public static void Append(this ExpandoObject? that, ExpandoObject? other, bool replace = true)
 		{
 			if (that == null)
 				return;
@@ -130,7 +132,7 @@ namespace A2v10.Infrastructure
 			}
 		}
 
-		public static void Append(this ExpandoObject that, ExpandoObject other, String[] exclude)
+		public static void Append(this ExpandoObject? that, ExpandoObject? other, String[]? exclude)
 		{
 			if (that == null)
 				return;
@@ -139,14 +141,14 @@ namespace A2v10.Infrastructure
 			IDictionary<String, Object> thatD = that as IDictionary<String, Object>;
 			foreach (var (k, v) in other as IDictionary<String, Object>)
 			{
-				if (exclude.Any(x => x.Equals(k, StringComparison.OrdinalIgnoreCase)))
+				if (exclude != null && exclude.Any(x => x.Equals(k, StringComparison.OrdinalIgnoreCase)))
 					continue;
 				if (!thatD.ContainsKey(k))
 					thatD.Add(k, v);
 			}
 		}
 
-		public static void AppendAndReplace(this ExpandoObject that, ExpandoObject other)
+		public static void AppendAndReplace(this ExpandoObject? that, ExpandoObject? other)
 		{
 			if (that == null)
 				return;
@@ -162,7 +164,7 @@ namespace A2v10.Infrastructure
 			}
 		}
 
-		public static void AppendIfNotExists(this ExpandoObject that, ExpandoObject other)
+		public static void AppendIfNotExists(this ExpandoObject? that, ExpandoObject? other)
 		{
 			if (that == null)
 				return;
@@ -177,11 +179,11 @@ namespace A2v10.Infrastructure
 		}
 
 
-		public static ExpandoObject? RemoveEmptyArrays(this ExpandoObject obj)
+		public static ExpandoObject? RemoveEmptyArrays(this ExpandoObject? obj)
 		{
 			if (obj == null)
 				return obj;
-			var dict = obj as IDictionary<String, Object>;
+			var dict = obj as IDictionary<String, Object?>;
 			var arr = dict.Keys.ToList();
 			foreach (var key in arr)
 			{
@@ -216,8 +218,8 @@ namespace A2v10.Infrastructure
 				if (currentContext == null)
 					return null;
 				String prop = exp.Trim();
-				var d = currentContext as IDictionary<String, Object>;
-				if (prop.Contains("["))
+				var d = currentContext as IDictionary<String, Object?>;
+				if (prop.Contains('['))
 				{
 					var match = arrRegEx.Match(prop);
 					prop = match.Groups[1].Value;
@@ -236,7 +238,7 @@ namespace A2v10.Infrastructure
 				else
 				{
 					if ((d != null) && d.ContainsKey(prop))
-						currentContext = d[prop];
+						currentContext = d[prop]!;
 					else
 					{
 						if (throwIfError)
@@ -275,7 +277,7 @@ namespace A2v10.Infrastructure
 		{
 			if (expression == null)
 				return fallback;
-			Object result = root.EvalExpression(expression, throwIfError);
+			Object? result = root.EvalExpression(expression, throwIfError);
 			if (result == null)
 				return fallback;
 			if (result is T t)

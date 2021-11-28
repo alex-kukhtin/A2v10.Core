@@ -21,8 +21,8 @@ namespace A2v10.Services
 
 		public InvokeCommandJavascript(IServiceProvider service)
 		{
-			_appCodeProvider = service.GetService<IAppCodeProvider>();
-			_currentUser = service.GetService<ICurrentUser>();
+			_appCodeProvider = service.GetRequiredService<IAppCodeProvider>();
+			_currentUser = service.GetRequiredService<ICurrentUser>();
 			_engine = new JavaScriptEngine(service);
 		}
 

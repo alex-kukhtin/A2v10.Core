@@ -1,18 +1,14 @@
 ﻿// Copyright © 2020-2021 Alex Kukhtin. All rights reserved.
 
-using System;
-using System.Dynamic;
 using System.Net;
 
 using Newtonsoft.Json;
-
-using A2v10.Infrastructure;
 
 namespace A2v10.Services.Javascript
 {
 	public class FetchResponse
 	{
-		internal FetchResponse(HttpStatusCode status, String contentType, String body, ExpandoObject headers, String statusText = "OK")
+		internal FetchResponse(HttpStatusCode status, String contentType, String body, ExpandoObject? headers, String statusText = "OK")
 		{
 			this.status = status;
 			this.contentType = contentType;
@@ -28,7 +24,7 @@ namespace A2v10.Services.Javascript
 		public String contentType { get; }
 		public String body { get; }
 		public Boolean isJson => contentType.StartsWith(MimeTypes.Application.Json);
-		public ExpandoObject headers { get; }
+		public ExpandoObject? headers { get; }
 #pragma warning restore IDE1006 // Naming Styles
 
 #pragma warning disable IDE1006 // Naming Styles

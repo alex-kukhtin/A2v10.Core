@@ -3,7 +3,6 @@
 using System;
 
 
-using Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation;
 using Microsoft.Extensions.FileProviders;
 
 using A2v10.Data.Interfaces;
@@ -27,9 +26,11 @@ namespace Microsoft.Extensions.DependencyInjection
 			var builder = services.AddControllersWithViews()
 				.AddApplicationPart(webMvcAssembly);
 
+			/*
 			services.Configure<MvcRazorRuntimeCompilationOptions>(opts => {
 				opts.FileProviders.Add(new EmbeddedFileProvider(webMvcAssembly));
 			});
+			*/
 
 			services.AddSingleton<IAppCodeProvider, FileSystemCodeProvider>();
 

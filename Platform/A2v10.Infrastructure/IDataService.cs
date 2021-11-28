@@ -27,13 +27,13 @@ namespace A2v10.Infrastructure
 	{
 		Byte[] Body { get; }
 		String ContentType { get; }
-		String FileName { get; }
+		String? FileName { get; }
 	}
 
 	public interface ILayoutDescription
 	{
-		String ModelScripts { get; }
-		String ModelStyles { get; }
+		String? ModelScripts { get; }
+		String? ModelStyles { get; }
 	}
 
 	public interface IDataService

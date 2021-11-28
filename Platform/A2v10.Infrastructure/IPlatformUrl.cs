@@ -23,9 +23,9 @@ namespace A2v10.Infrastructure
 
 		UrlKind Kind { get; }
 		String Action { get; }
-		String Id { get; }
+		String? Id { get; }
 
-		ExpandoObject Query { get; }
-		void Redirect(String path);
+		ExpandoObject? Query { get; }
+		void Redirect(String? path);
 	}
 }

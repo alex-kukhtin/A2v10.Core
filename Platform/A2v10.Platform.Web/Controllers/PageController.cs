@@ -16,8 +16,8 @@ namespace A2v10.Platform.Web.Controllers
 {
 	public class PageActionResult : IActionResult
 	{
-		IRenderResult _render;
-		String _script;
+		private readonly IRenderResult _render;
+		private readonly String _script;
 
 		public PageActionResult(IRenderResult render, String script)
 		{

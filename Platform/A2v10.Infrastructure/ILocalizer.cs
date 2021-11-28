@@ -2,11 +2,10 @@
 
 using System;
 
-namespace A2v10.Infrastructure
+namespace A2v10.Infrastructure;
+public interface ILocalizer
 {
-	public interface ILocalizer
-	{
-		String Localize(String locale, String content, Boolean replaceNewLine = true);
-		String Localize(String content);
-	}
+	String? Localize(String? locale, String? content, Boolean replaceNewLine = true);
+	String? Localize(String? content);
 }
+

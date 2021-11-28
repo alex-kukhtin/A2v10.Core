@@ -20,7 +20,7 @@ namespace A2v10.Services
 		public InvokeCommandInvokeTarget(IServiceProvider serviceProvider)
 		{
 			_serviceProvider = serviceProvider;
-			_engineProvider = _serviceProvider.GetService<IInvokeEngineProvider>();
+			_engineProvider = _serviceProvider.GetRequiredService<IInvokeEngineProvider>();
 		}
 
 		public async Task<IInvokeResult> ExecuteAsync(IModelCommand command, ExpandoObject parameters)
@@ -34,11 +34,10 @@ namespace A2v10.Services
 			try
 			{
 				var res = await engine.InvokeAsync(target[1], parameters);
-				return new InvokeResult()
-				{
-					Body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(res)),
-					ContentType = MimeTypes.Application.Json
-				};
+				return new InvokeResult(
+					body: Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(res)),
+					contentType: MimeTypes.Application.Json
+				);
 			} 
 			catch (Exception ex)
 			{

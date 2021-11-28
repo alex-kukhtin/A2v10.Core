@@ -24,16 +24,13 @@ namespace A2v10.Services.Interop.ExportTo
 
 		public ExRow GetRow(Int32 rowNo, RowKind kind)
 		{
-			IList<ExRow> _rows = null;
-			switch (kind)
-			{
-				case RowKind.Header:
-					_rows = _header; break;
-				case RowKind.Footer:
-					_rows = _footer; break;
-				case RowKind.Body:
-					_rows = _body; break;
-			}
+			IList<ExRow> _rows = kind switch
+            {
+				RowKind.Header => _header,
+				RowKind.Footer => _footer,
+				RowKind.Body   => _body,
+				_ => throw new DataServiceException($"Invalid RowKind '{kind}'")
+            };
 			while (_rows.Count <= rowNo)
 				_rows.Add(new ExRow() { Kind = kind });
 			return _rows[rowNo];
@@ -45,7 +42,7 @@ namespace A2v10.Services.Interop.ExportTo
 			return r.SetSpanCell(col);
 		}
 
-		public ExCell AddCell(Int32 rowNo, ExRow exRow, CellSpan span, String value, String dataType, String cellClass)
+		public ExCell AddCell(Int32 rowNo, ExRow exRow, CellSpan span, String value, String? dataType, String cellClass)
 		{
 			// first empty cell
 			var row = GetRow(rowNo, exRow.Kind);

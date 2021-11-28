@@ -7,20 +7,19 @@ using System.Threading.Tasks;
 
 using A2v10.Data.Interfaces;
 
-namespace A2v10.Infrastructure
+namespace A2v10.Infrastructure;
+public interface IReportInfo
 {
-	public interface IReportInfo
-	{
-		Stream Stream { get; }
-		String Name { get; }
-		String Path { get; }
-		String Report { get; }
-		IDataModel DataModel { get; }
-		ExpandoObject Variables { get; }
-	}
-
-	public interface IReportEngine
-	{
-		Task<IInvokeResult> ExportAsync(IReportInfo reportInfo, ExportReportFormat format);
-	}
+	Stream Stream { get; }
+	String Name { get; }
+	String Path { get; }
+	String Report { get; }
+	IDataModel? DataModel { get; }
+	ExpandoObject? Variables { get; }
 }
+
+public interface IReportEngine
+{
+	Task<IInvokeResult> ExportAsync(IReportInfo reportInfo, ExportReportFormat format);
+}
+

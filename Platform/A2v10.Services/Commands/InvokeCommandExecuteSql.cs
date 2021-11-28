@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using System.Text;
+using System;
 
 namespace A2v10.Services
 {
@@ -35,11 +36,10 @@ namespace A2v10.Services
 			var strResult = model != null && model.Root != null ?
 				JsonConvert.SerializeObject(model.Root, JsonHelpers.DataSerializerSettings) : "{}";
 
-			var result = new InvokeResult()
-			{
-				Body = strResult != null ? Encoding.UTF8.GetBytes(strResult) : null,
-				ContentType = MimeTypes.Application.Json
-			};
+			var result = new InvokeResult(
+				body: strResult != null ? Encoding.UTF8.GetBytes(strResult) : Array.Empty<Byte>(),
+				contentType: MimeTypes.Application.Json
+			);
 			return result;
 		}
 	}

@@ -308,7 +308,7 @@ namespace A2v10.Xaml
 				case CommandType.Dialog:
 					if (Action == DialogAction.Unknown)
 						throw new XamlException($"Action required for {Command} command");
-					String action = Action.ToString().ToKebabCase();
+					String action = Action.ToString().ToKebabCase()!;
 					Boolean bNullable = false;
 					if (Action == DialogAction.Show)
 						bNullable = true; // Nullable actions ???
@@ -374,18 +374,18 @@ namespace A2v10.Xaml
 			if (!String.IsNullOrEmpty(Viewer))
 				sb.Append($"viewer: '{Viewer.ToLowerInvariant()}',");
 			sb.RemoveTailComma();
-			sb.Append("}");
+			sb.Append('}');
 			return sb.ToString();
 		}
 
-		String GetOptionsForFile(RenderContext context)
+		String GetOptionsForFile(RenderContext _)
 		{
 			if (FileAction == FileAction.Unknown)
 				return nullString;
 			return $"{{action: '{FileAction.ToString().ToLowerInvariant()}'}}";
 		}
 
-		String GetOptionsValid(RenderContext context)
+		String GetOptionsValid(RenderContext _)
 		{
 			if (!ValidRequired)
 				return nullString;
@@ -454,7 +454,7 @@ namespace A2v10.Xaml
 			return Toast.GetJsValue(context);
 		}
 
-		Boolean IsArgumentEmpty(RenderContext context)
+		Boolean IsArgumentEmpty(RenderContext _)
 		{
 			var argBind = GetBinding(nameof(Argument));
 			return argBind == null || String.IsNullOrEmpty(argBind.Path);
@@ -529,7 +529,7 @@ namespace A2v10.Xaml
 			return $"'{Url}'";
 		}
 
-		internal void MergeDisabled(TagBuilder tag, String disabledVal)
+		internal static void MergeDisabled(TagBuilder tag, String disabledVal)
 		{
 			var existingDisabled = tag.GetAttribute(":disabled");
 			if (!String.IsNullOrEmpty(existingDisabled))

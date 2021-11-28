@@ -37,14 +37,14 @@ namespace A2v10.Services
 			Construct(parts, nurl.Query, id);
 		}
 
-		public String LocalPath { get; set; }
-		public String BaseUrl { get; private set; }
+		public String LocalPath { get; set; } = String.Empty;
+		public String BaseUrl { get; private set; } = String.Empty;
 
 		public UrlKind Kind { get; private set; }
-		public String Action { get; private set; }
-		public String Id { get; private set; }
+		public String Action { get; private set; } = String.Empty;
+		public String? Id { get; private set; }
 
-		public ExpandoObject Query { get; private set; }
+		public ExpandoObject? Query { get; private set; }
 
 
 		public void Redirect(String? path)
@@ -70,7 +70,7 @@ namespace A2v10.Services
 			return (path, query);
 		}
 
-		void Construct(String[] parts, String query, String id)
+		void Construct(String[] parts, String query, String? id)
 		{
 			Int32 len = parts.Length;
 			Id = parts[len - 1];
@@ -101,14 +101,19 @@ namespace A2v10.Services
 				var eo = new ExpandoObject();
 				var nvc = HttpUtility.ParseQueryString(query);
 				foreach (var k in nvc.AllKeys)
-					AddQueryParam(eo, k, nvc[k]);
+				{
+					if (k != null)
+						AddQueryParam(eo, k, nvc[k]);
+				}
 				if (!eo.IsEmpty())
 					Query = eo;
 			}
 		}
 
-		static void AddQueryParam(ExpandoObject eo, String key, String value)
+		static void AddQueryParam(ExpandoObject eo, String key, String? value)
 		{
+			if (value == null)
+				return;
 			if (!key.Equals("period", StringComparison.OrdinalIgnoreCase))
 			{
 				eo.Set(key.ToPascalCase(), value);

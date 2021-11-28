@@ -4,86 +4,84 @@ using System.IO;
 using System.Reflection;
 
 using A2v10.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace A2v10.Xaml
+namespace A2v10.Xaml;
+public class Source : MarkupExtension
 {
-	public class Source : MarkupExtension
+	public String Path { get; set; } = String.Empty;
+
+
+	public Source()
 	{
-		public String? Path { get; set; }
+	}
 
+	public Source(String path)
+	{
+		Path = path;
+	}
 
-		public Source()
+	public override Object? ProvideValue(IServiceProvider serviceProvider)
+	{
+		try
 		{
-
-		}
-
-		public Source(String path)
-		{
-			Path = path;
-		}
-
-		public override Object? ProvideValue(IServiceProvider serviceProvider)
-		{
-			try
-			{
-				if (serviceProvider.GetService(typeof(IProvideValueTarget)) is not IProvideValueTarget iTarget)
-					return null;
-
-				var targetProp = iTarget.TargetProperty as PropertyInfo;
-
-				if (targetProp == null)
-					return null;
-
-				if (targetProp.PropertyType != typeof(Object) && targetProp.PropertyType != typeof(UIElementBase))
-					throw new XamlException("The 'Source' markup extension can only be used for properties that are of type 'System.Object' or 'A2v10.Xaml.UIElementBase'");
-
-				if (serviceProvider.GetService(typeof(IUriContext)) is IUriContext root && root.BaseUri != null)
-				{
-					String baseFileName = root.BaseUri.PathAndQuery;
-					return Load(baseFileName, serviceProvider);
-				}
+			if (serviceProvider.GetService(typeof(IProvideValueTarget)) is not IProvideValueTarget iTarget)
 				return null;
-			}
-			catch (Exception ex)
+
+			var targetProp = iTarget.TargetProperty as PropertyInfo;
+
+			if (targetProp == null)
+				return null;
+
+			if (targetProp.PropertyType != typeof(Object) && targetProp.PropertyType != typeof(UIElementBase))
+				throw new XamlException("The 'Source' markup extension can only be used for properties that are of type 'System.Object' or 'A2v10.Xaml.UIElementBase'");
+
+			if (serviceProvider.GetService(typeof(IUriContext)) is IUriContext root && root.BaseUri != null)
 			{
-				return new Span() { CssClass = "xaml-exception", Content = ex.Message };
+				String baseFileName = root.BaseUri.PathAndQuery;
+				return Load(baseFileName, serviceProvider);
 			}
+			return null;
 		}
-
-		Object Load(String baseFileName, IServiceProvider serviceProvider)
+		catch (Exception ex)
 		{
-			if (serviceProvider.GetService(typeof(IAppCodeProvider)) is not IAppCodeProvider appReader)
-				throw new XamlException("The IAppCodeProvider service not found");
+			return new Span() { CssClass = "xaml-exception", Content = ex.Message };
+		}
+	}
 
-			String targetFileName = appReader.ReplaceFileName(baseFileName, Path);
+	Object Load(String baseFileName, IServiceProvider serviceProvider)
+	{
+		var appReader = serviceProvider.GetRequiredService<IAppCodeProvider>();
 
-			String ext = appReader.GetExtension(targetFileName);
+		String targetFileName = appReader.ReplaceFileName(baseFileName, Path);
 
-			if (ext == ".js" || ext == ".html")
+		String ext = appReader.GetExtension(targetFileName);
+
+		if (ext == ".js" || ext == ".html")
+		{
+			if (appReader.FileExists(targetFileName))
 			{
-				if (appReader.FileExists(targetFileName))
-				{
-					using var stream = appReader.FileStreamFullPathRO(targetFileName);
-					using var rdr = new StreamReader(stream);
-					return rdr.ReadToEnd();
-				} 
-				else
-					throw new XamlException($"File not found {Path}");
+				using var stream = appReader.FileStreamFullPathRO(targetFileName);
+				using var rdr = new StreamReader(stream);
+				return rdr.ReadToEnd();
+			} 
+			else
+				throw new XamlException($"File not found {Path}");
+		}
+		else
+		{
+			String trgPath = appReader.ChangeExtension(targetFileName, "xaml");
+
+			var xamlReader = serviceProvider.GetRequiredService<IXamlReaderService>();
+
+			if (appReader.FileExists(trgPath))
+			{
+				using var stream = appReader.FileStreamFullPathRO(trgPath);
+				return xamlReader.Load(stream, new Uri(trgPath));
 			}
 			else
-			{
-				String trgPath = appReader.ChangeExtension(targetFileName, "xaml");
-
-				if (serviceProvider.GetService(typeof(IXamlReaderService)) is not IXamlReaderService xamlReader)
-					throw new XamlException("The IXamlReaderService service not found");
-				if (appReader.FileExists(trgPath))
-				{
-					using var stream = appReader.FileStreamFullPathRO(trgPath);
-					return xamlReader.Load(stream, new Uri(trgPath));
-				}
-				else
-					throw new XamlException($"File not found {Path}");
-			}
+				throw new XamlException($"File not found {Path}");
 		}
 	}
 }
+

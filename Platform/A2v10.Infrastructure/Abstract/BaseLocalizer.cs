@@ -1,72 +1,72 @@
 ﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-using A2v10.Data.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 
-namespace A2v10.Infrastructure
+using A2v10.Data.Interfaces;
+
+namespace A2v10.Infrastructure;
+public abstract class BaseLocalizer : ILocalizer, IDataLocalizer
 {
-	public abstract class BaseLocalizer : ILocalizer, IDataLocalizer
+	protected abstract IDictionary<String, String> GetLocalizerDictionary(String locale);
+
+	private readonly ICurrentUser _user;
+
+	public BaseLocalizer(ICurrentUser user)
 	{
-		protected abstract IDictionary<String, String> GetLocalizerDictionary(String locale);
+		_user = user;
+	}
 
-		private readonly ICurrentUser _user;
-
-		public BaseLocalizer(ICurrentUser user)
+	String GetLocalizedValue(String? locale, String key)
+	{
+		if (locale == null)
 		{
-			_user = user;
-		}
-
-		String GetLocalizedValue(String locale, String key)
-		{
+			locale = _user.Locale.Locale;
 			if (locale == null)
-			{
-				locale = _user.Locale.Locale;
-				if (locale == null)
-					locale = Thread.CurrentThread.CurrentUICulture.Name;
-			}
-			var dict = GetLocalizerDictionary(locale);
-			if (dict.TryGetValue(key, out String value))
-				return value;
-			return key;
+				locale = Thread.CurrentThread.CurrentUICulture.Name;
 		}
+		var dict = GetLocalizerDictionary(locale);
+		if (dict.TryGetValue(key, out String? value))
+			return value;
+		return key;
+	}
 
-		public String Localize(String content)
+	public String? Localize(String? content)
+	{
+		return Localize(null, content);
+	}
+
+	public String? Localize(String? locale, String? content, Boolean replaceNewLine = true)
+	{
+		if (content == null)
+			return null;
+		String s = content;
+		if (replaceNewLine)
+			s = content.Replace("\\n", "\n");
+		var sb = new StringBuilder();
+		Int32 xpos = 0;
+		String key;
+		do
 		{
-			return Localize(null, content);
-		}
+			Int32 start = s.IndexOf("@[", xpos);
+			if (start == -1)
+				break;
+			Int32 end = s.IndexOf("]", start + 2);
+			if (end == -1)
+				break;
+			else
+				key = $"@{s.Substring(start + 2, end - start - 2)}";
 
-		public String Localize(String locale, String content, Boolean replaceNewLine = true)
-		{
-			if (content == null)
-				return null;
-			String s = content;
-			if (replaceNewLine)
-				s = content.Replace("\\n", "\n");
-			var sb = new StringBuilder();
-			Int32 xpos = 0;
-			String key;
-			do
-			{
-				Int32 start = s.IndexOf("@[", xpos);
-				if (start == -1)
-					break;
-				Int32 end = s.IndexOf("]", start + 2);
-				if (end == -1)
-					break;
-				else
-					key = "@" + s.Substring(start + 2, end - start - 2);
-
-				var value = GetLocalizedValue(locale, key);
-				sb.Append(s[xpos..start]);
-				sb.Append(value);
-				xpos = end + 1;
-			} while (true);
-			// tail!
-			sb.Append(s[xpos..]);
-			return sb.ToString();
-		}
+			var value = GetLocalizedValue(locale, key);
+			sb.Append(s[xpos..start]);
+			sb.Append(value);
+			xpos = end + 1;
+		} while (true);
+		// tail!
+		sb.Append(s[xpos..]);
+		return sb.ToString();
 	}
 }
+

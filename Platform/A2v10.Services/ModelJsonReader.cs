@@ -36,7 +36,7 @@ namespace A2v10.Services
 			return rm.GetAction(url.Action);
 		}
 
-		public async Task<IModelView?> GetViewAsync(IPlatformUrl url)
+		public async Task<IModelView> GetViewAsync(IPlatformUrl url)
 		{
 			var rm = await Load(url);
 			return url.Kind switch
@@ -44,7 +44,7 @@ namespace A2v10.Services
 				UrlKind.Page => rm.GetAction(url.Action),
 				UrlKind.Dialog => rm.GetDialog(url.Action),
 				UrlKind.Popup => rm.GetPopup(url.Action),
-				_ => null,
+				_ => throw new ModelJsonException($"Invalid view kind 'url.Kind'"),
 			};
 		}
 
@@ -71,9 +71,9 @@ namespace A2v10.Services
 			};
 		}
 
-		public Task<ModelJson> Load(IPlatformUrl url)
+		public async Task<ModelJson> Load(IPlatformUrl url)
 		{
-			return TryLoad(url) ?? throw new ModelJsonException($"File not found '{url.LocalPath}/model.json'");
+			return await TryLoad(url) ?? throw new ModelJsonException($"File not found '{url.LocalPath}/model.json'");
 		}
 
 		public async Task<ModelJson?> TryLoad(IPlatformUrl url)

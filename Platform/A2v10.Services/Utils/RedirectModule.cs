@@ -1,8 +1,6 @@
 ﻿// Copyright © 2021 Alex Kukhtin. All rights reserved.
 
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
 
 using Newtonsoft.Json;
@@ -52,7 +50,7 @@ namespace A2v10.Services
 
 		public String Redirect(String path)
 		{
-			if (_dict.TryGetValue(path, out String outPath))
+			if (_dict.TryGetValue(path, out String? outPath))
 				return outPath;
 			return path;
 		}

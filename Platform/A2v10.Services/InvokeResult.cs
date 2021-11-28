@@ -1,28 +1,30 @@
 ﻿// Copyright © 2020-2021 Alex Kukhtin. All rights reserved.
 
-using System;
 using System.Text;
 
 using Newtonsoft.Json;
 
-using A2v10.Infrastructure;
-
-namespace A2v10.Services
+namespace A2v10.Services;
+public record InvokeResult : IInvokeResult
 {
-	public record InvokeResult : IInvokeResult
-	{
-		public Byte[] Body { get; init; }
-		public String ContentType { get; init; }
-		public String FileName { get; init; }
+    public InvokeResult(Byte[] body, String contentType, String? fileName = null)
+    {
+        Body = body;
+        ContentType = contentType;
+        FileName = fileName;
+    }
 
-		public static InvokeResult JsonFromObject(Object obj)
-		{
-			var json = JsonConvert.SerializeObject(obj, JsonHelpers.CompactSerializerSettings);
-			return new InvokeResult()
-			{
-				ContentType = MimeTypes.Application.Json,
-				Body = Encoding.UTF8.GetBytes(json)
-			};
-		}
+    public Byte[] Body { get; }
+	public String ContentType { get; }
+	public String? FileName { get; }
+
+	public static InvokeResult JsonFromObject(Object obj)
+	{
+		var json = JsonConvert.SerializeObject(obj, JsonHelpers.CompactSerializerSettings);
+		return new InvokeResult(
+			body: Encoding.UTF8.GetBytes(json),
+			contentType: MimeTypes.Application.Json
+		);
 	}
 }
+
