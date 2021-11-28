@@ -5,54 +5,56 @@ using System.IO;
 
 using Newtonsoft.Json;
 
-namespace A2v10.Services
+namespace A2v10.Services;
+public class RedirectModule
 {
-	public class RedirectModule
+	private readonly String _path;
+	private readonly ConcurrentDictionary<String, String> _dict = new(StringComparer.OrdinalIgnoreCase);
+
+	public RedirectModule(String path, Boolean watch)
 	{
-		private readonly String _path;
-		private readonly ConcurrentDictionary<String, String> _dict = new(StringComparer.OrdinalIgnoreCase);
+		_path = path;
+		Read();
+		if (watch)
+			CreateWatcher();
+	}
 
-		public RedirectModule(String path, Boolean watch)
+	private void Read()
+	{
+		var jsonText = File.ReadAllText(_path);
+		if (String.IsNullOrEmpty(jsonText))
+			return;
+		var d = JsonConvert.DeserializeObject<Dictionary<String, String>>(jsonText);
+		foreach (var (k, v) in d)
 		{
-			_path = path;
-			Read();
-			if (watch)
-				CreateWatcher();
-		}
-
-		private void Read()
-		{
-			var jsonText = File.ReadAllText(_path);
-			if (String.IsNullOrEmpty(jsonText))
-				return;
-			var d = JsonConvert.DeserializeObject<Dictionary<String, String>>(jsonText);
-			foreach (var (k, v) in d)
-			{
-				_dict.TryAdd(k, v);
-			}
-		}
-
-		private FileSystemWatcher CreateWatcher()
-		{
-			// redirect file name in 8.3 format!
-			var redirectWatcher = new FileSystemWatcher(Path.GetDirectoryName(_path), "*.*")
-			{
-				NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.Attributes
-			};
-			redirectWatcher.Changed += (sender, e) =>
-			{
-				_dict.Clear();
-				Read();
-			};
-			redirectWatcher.EnableRaisingEvents = true;
-			return redirectWatcher;
-		}
-
-		public String Redirect(String path)
-		{
-			if (_dict.TryGetValue(path, out String? outPath))
-				return outPath;
-			return path;
+			_dict.TryAdd(k, v);
 		}
 	}
+
+	private FileSystemWatcher CreateWatcher()
+	{
+		// redirect file name in 8.3 format!
+		var dirname = Path.GetDirectoryName(_path);
+		if (dirname == null)
+			throw new InvalidProgramException("Directory is null");
+		var redirectWatcher = new FileSystemWatcher(dirname, "*.*")
+		{
+			NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.Attributes
+		};
+		redirectWatcher.Changed += (sender, e) =>
+		{
+			_dict.Clear();
+			Read();
+		};
+		redirectWatcher.EnableRaisingEvents = true;
+		return redirectWatcher;
+	}
+
+	public String Redirect(String path)
+	{
+		if (_dict.TryGetValue(path, out String? outPath))
+			return outPath;
+		return path;
+	}
 }
+

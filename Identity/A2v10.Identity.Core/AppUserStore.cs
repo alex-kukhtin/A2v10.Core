@@ -103,7 +103,7 @@ public sealed class AppUserStore :
 	public Task<String> GetSecurityStampAsync(AppUser user, CancellationToken cancellationToken)
 	{
 		// .net framework compatibility
-		return Task.FromResult<String>(user.SecurityStamp2 ?? user.SecurityStamp);
+		return Task.FromResult<String>(user.SecurityStamp2 ?? user.SecurityStamp ?? String.Empty);
 	}
 
 	public async Task SetSecurityStampAsync(AppUser user, String stamp, CancellationToken cancellationToken)

@@ -225,8 +225,10 @@ namespace A2v10.Infrastructure
 					prop = match.Groups[1].Value;
 					if ((d != null) && d.ContainsKey(prop))
 					{
-						var x = d[prop] as IList<ExpandoObject>;
-						currentContext = x[Int32.Parse(match.Groups[2].Value)];
+						if (d[prop] is IList<ExpandoObject> list)
+							currentContext = list[Int32.Parse(match.Groups[2].Value)];
+						else
+							throw new ArgumentException($"Error in expression '{expression}'. Property '{prop}' is not a list");
 					}
 					else
 					{

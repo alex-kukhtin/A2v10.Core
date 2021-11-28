@@ -11,7 +11,7 @@ using A2v10.Services.Interop.ExportTo;
 
 namespace A2v10.Services;
 
-public record DataLoadResult(IDataModel Model, IModelView View) : IDataLoadResult;
+public record DataLoadResult(IDataModel? Model, IModelView View) : IDataLoadResult;
 
 public class LayoutDescription : ILayoutDescription
 {
@@ -180,7 +180,7 @@ public class DataService : IDataService
 			throw new DataServiceException(nameof(LoadLazyAsync));
 
 		var id = queryData.Get<Object>("id");
-		var prop = queryData.Get<String>("prop");
+		var prop = queryData.GetNotNull<String>("prop");
 		return LoadLazyAsync(baseUrl, id, prop, setParams);
 	}
 

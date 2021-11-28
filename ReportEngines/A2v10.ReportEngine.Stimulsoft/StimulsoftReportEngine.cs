@@ -9,8 +9,6 @@ using Stimulsoft.Report.Mvc;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
-using Stimulsoft.Base;
-using Microsoft.Extensions.Configuration;
 
 namespace A2v10.ReportEngine.Stimulsoft
 {
@@ -55,7 +53,7 @@ namespace A2v10.ReportEngine.Stimulsoft
 			rep.ReferencedAssemblies = ra;
 		}
 
-		static public void AddDataModel(StiReport report, IDataModel dm)
+		static public void AddDataModel(StiReport report, IDataModel? dm)
 		{
 			if (dm == null)
 				return;
@@ -64,17 +62,18 @@ namespace A2v10.ReportEngine.Stimulsoft
 				report.RegBusinessObject(x.Key, x.Value);
 		}
 
-		static public void AddVariables(StiReport report, ExpandoObject vars)
+		static public void AddVariables(StiReport report, ExpandoObject? vars)
 		{
 			if (vars == null)
 				return;
-			if (report?.Dictionary?.Variables?.Items == null)
+			var items = report?.Dictionary?.Variables?.Items;
+			if (items == null)
 				return;
 			foreach (var vp in vars)
 			{
 				if (vp.Value != null)
 				{
-					foreach (var xs in report?.Dictionary?.Variables?.Items)
+					foreach (var xs in items)
 					{
 						if (xs.Name == vp.Key)
 						{
@@ -105,12 +104,11 @@ namespace A2v10.ReportEngine.Stimulsoft
 					throw new NotImplementedException($"Format '{format}' is not supported in this version")
 			};
 
-			var res = new StimulsoftInvokeResult()
-			{
-				Body = result.Data,
-				ContentType = result.ContentType,
-				FileName = result.FileName
-			};
+			var res = new StimulsoftInvokeResult(
+				Body: result.Data,
+				ContentType: result.ContentType,
+				FileName: result.FileName
+			);
 			return Task.FromResult<IInvokeResult>(res);
 		}
 	}

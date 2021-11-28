@@ -114,12 +114,12 @@ namespace A2v10.Platform.Web.Controllers
 		}
 		#endregion
 
-		public Task ProcessDbEvents(IModelView view)
+		public Task ProcessDbEvents(IModelView _)
 		{
 			return Task.CompletedTask;
 		}
 
-		public IActionResult WriteImageException(Exception ex)
+		public static IActionResult WriteImageException(Exception ex)
 		{
 			if (ex.InnerException != null)
 				ex = ex.InnerException;

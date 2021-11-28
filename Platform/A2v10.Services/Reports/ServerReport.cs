@@ -16,13 +16,13 @@ public class ServerReport : IModelReportHandler
 		_dbContext = dbContext;
 	}
 
-	public async Task<IInvokeResult> ExportAsync(IModelReport report, ExportReportFormat format, ExpandoObject query, Action<ExpandoObject> setParams)
+	public async Task<IInvokeResult> ExportAsync(IModelReport report, ExportReportFormat format, ExpandoObject? query, Action<ExpandoObject> setParams)
 	{
 		var info = await GetReportInfoAsync(report, query, setParams);
 		return await _engine.ExportAsync(info, format);
 	}
 
-	public async Task<IReportInfo> GetReportInfoAsync(IModelReport report, ExpandoObject query, Action<ExpandoObject> setParams)
+	public async Task<IReportInfo> GetReportInfoAsync(IModelReport report, ExpandoObject? query, Action<ExpandoObject> setParams)
 	{
 		var vars = report.CreateVariables(query, setParams);
 		var prms = report.CreateParameters(query, setParams);

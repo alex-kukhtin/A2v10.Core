@@ -15,9 +15,9 @@ namespace A2v10.Platform.Web.Controllers
 {
 	public class WebActionResult : IActionResult
 	{
-		List<String> _data = new List<String>();
-		Dictionary<String, String> _headers = new Dictionary<String, String>();
-		String _contentType;
+		private readonly List<String> _data = new();
+		private readonly Dictionary<String, String> _headers = new();
+		private readonly String _contentType;
 
 		public WebActionResult(String data, String contentType = MimeTypes.Application.Json)
 		{
@@ -49,9 +49,10 @@ namespace A2v10.Platform.Web.Controllers
 
 	public class WebBinaryActionResult : IActionResult
 	{
-		List<Byte[]> _data = new List<Byte[]>();
-		Dictionary<String, String> _headers = new Dictionary<String, String>();
-		String _contentType;
+		private readonly List<Byte[]> _data = new();
+		private readonly Dictionary<String, String> _headers = new();
+		private readonly String _contentType;
+		
 		Boolean _cache;
 
 		public WebBinaryActionResult(Byte[] data, String contentType = MimeTypes.Application.Json)
@@ -100,8 +101,8 @@ namespace A2v10.Platform.Web.Controllers
 
 	public class WebExceptionResult : IActionResult
 	{
-		Int32 _errorCode;
-		String _message;
+		private readonly Int32 _errorCode;
+		private readonly String _message;
 
 		public WebExceptionResult(Int32 errorCode, String message)
 		{

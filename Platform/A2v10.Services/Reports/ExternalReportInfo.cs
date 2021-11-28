@@ -7,7 +7,7 @@ using A2v10.Data.Interfaces;
 namespace A2v10.Services;
 public record ExternalReportInfo : IReportInfo
 {
-	public Stream Stream { get; init; }
+	public Stream? Stream { get; init; }
 	public String Name { get; init; }
 	public String Path { get; init; }
 	public String Report { get; init; }

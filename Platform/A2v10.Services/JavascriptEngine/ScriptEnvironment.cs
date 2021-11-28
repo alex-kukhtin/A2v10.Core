@@ -97,7 +97,7 @@ public class ScriptEnvironment
 	}
 
 #pragma warning disable IDE1006 // Naming Styles
-	public FetchResponse fetch(String url, ExpandoObject? prms)
+	public static FetchResponse fetch(String url, ExpandoObject? prms)
 #pragma warning restore IDE1006 // Naming Styles
 	{
 		try

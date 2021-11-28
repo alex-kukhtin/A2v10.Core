@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
 	<PropertyGroup>
 		<TargetFramework>net6.0</TargetFramework>
+		<Nullable>enable</Nullable>
 		<AddRazorSupportForMvc>true</AddRazorSupportForMvc>
 		<AssemblyName>A2v10.ReportEngine.Stimulsoft</AssemblyName>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
@@ -28,7 +29,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7301" />
+		<PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7302" />
 		<PackageReference Include="Stimulsoft.Reports.Web.NetCore" Version="2021.4.4" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.TagHelpers" Version="2.2.0" />
 	</ItemGroup>

@@ -50,7 +50,7 @@ namespace A2v10.Platform.Web.Controllers
 					var saveModel = new SwitchToCompanySaveModel()
 					{
 						UserId = UserId.Value,
-						TenantId = TenantId.HasValue ? TenantId.Value : 0,
+						TenantId = TenantId ?? 0,
 						CompanyId = CompanyIdToSet
 					};
 					await _dbContext.ExecuteAsync<SwitchToCompanySaveModel>(null, "a2security_tenant.SwitchToCompany", saveModel);

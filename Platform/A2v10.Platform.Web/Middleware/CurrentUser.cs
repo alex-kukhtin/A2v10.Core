@@ -49,7 +49,7 @@ namespace A2v10.Platform.Web
 			{
 				var loc = Locale;
 				if (loc != null)
-					return loc.Substring(0, 2);
+					return loc[..2];
 				else
 					return Thread.CurrentThread.CurrentUICulture.TwoLetterISOLanguageName;
 			}

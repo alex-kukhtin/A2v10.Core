@@ -58,7 +58,7 @@ namespace A2v10.Infrastructure
 			}
 		}
 
-		readonly String text = null;
+		private readonly String text;
 		Int32 textPos = 0;
 		readonly Int32 textLen = 0;
 		Char ch;

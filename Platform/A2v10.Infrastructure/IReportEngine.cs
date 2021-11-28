@@ -10,7 +10,7 @@ using A2v10.Data.Interfaces;
 namespace A2v10.Infrastructure;
 public interface IReportInfo
 {
-	Stream Stream { get; }
+	Stream? Stream { get; }
 	String Name { get; }
 	String Path { get; }
 	String Report { get; }

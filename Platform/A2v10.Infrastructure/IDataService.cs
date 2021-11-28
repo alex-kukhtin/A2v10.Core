@@ -10,7 +10,7 @@ namespace A2v10.Infrastructure
 {
 	public interface IDataLoadResult
 	{
-		public IDataModel Model { get; }
+		public IDataModel? Model { get; }
 		public IModelView View { get; }
 	}
 

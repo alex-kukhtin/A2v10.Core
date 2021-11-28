@@ -86,19 +86,19 @@ namespace A2v10.Infrastructure
 
 	public interface IModelReportHandler
 	{
-		Task<IInvokeResult> ExportAsync(IModelReport report, ExportReportFormat format, ExpandoObject query, Action<ExpandoObject> setParams);
-		Task<IReportInfo> GetReportInfoAsync(IModelReport report, ExpandoObject query, Action<ExpandoObject> setParams);
+		Task<IInvokeResult> ExportAsync(IModelReport report, ExportReportFormat format, ExpandoObject? query, Action<ExpandoObject> setParams);
+		Task<IReportInfo> GetReportInfoAsync(IModelReport report, ExpandoObject? query, Action<ExpandoObject> setParams);
 	}
 
 	public interface IModelReport : IModelBase
 	{
-		String Name { get; }
-		String Report { get; }
+		String? Name { get; }
+		String? Report { get; }
 
 		IModelReportHandler GetReportHandler(IServiceProvider serviceProvider);
 
-		ExpandoObject CreateParameters(ExpandoObject query, Action<ExpandoObject> setParams);
-		ExpandoObject CreateVariables(ExpandoObject query, Action<ExpandoObject> setParams);
+		ExpandoObject CreateParameters(ExpandoObject? query, Action<ExpandoObject> setParams);
+		ExpandoObject CreateVariables(ExpandoObject? query, Action<ExpandoObject> setParams);
 	}
 
 	public interface IModelJsonReader

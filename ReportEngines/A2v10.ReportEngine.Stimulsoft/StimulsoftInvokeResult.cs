@@ -6,10 +6,5 @@ using A2v10.Infrastructure;
 
 namespace A2v10.ReportEngine.Stimulsoft
 {
-	public record StimulsoftInvokeResult : IInvokeResult
-	{
-		public Byte[] Body { get; init; }
-		public String ContentType { get; init; }
-		public String FileName { get; init; }
-	}
+	public record StimulsoftInvokeResult(Byte[] Body, String ContentType, String FileName) : IInvokeResult;
 }

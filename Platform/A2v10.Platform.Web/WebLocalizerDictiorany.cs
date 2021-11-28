@@ -64,7 +64,7 @@ namespace A2v10.Platform.Web
 						Int32 pos = line.IndexOf('=');
 						if (pos != -1)
 						{
-							var key = line.Substring(0, pos);
+							var key = line[..pos];
 							var val = line[(pos + 1)..];
 							map.AddOrUpdate(key, val, (k, oldVal) => val);
 						}
@@ -106,7 +106,7 @@ namespace A2v10.Platform.Web
 			// simple locale: uk
 			if (locale.Length > 2)
 			{
-				locale = locale.Substring(0, 2);
+				locale = locale[..2];
 				if (dirPath != null)
 				{
 					// System.IO!

@@ -47,7 +47,7 @@ namespace A2v10.Platform.Web
 		public String MakeFullPath(String path, String fileName, Boolean admin)
 		{
 			String appKey = GetAppKey(admin);
-			if (fileName.StartsWith("/"))
+			if (fileName.StartsWith('/'))
 			{
 				path = String.Empty;
 				fileName = fileName.Remove(0, 1);

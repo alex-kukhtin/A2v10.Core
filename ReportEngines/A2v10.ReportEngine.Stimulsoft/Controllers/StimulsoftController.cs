@@ -50,7 +50,7 @@ namespace A2v10.ReportEngine.Stimulsoft.Controllers
 
 				// TODO: QueryString 
 				var keys = rqprms.AllKeys.Where(x => {
-					var k = x.ToLowerInvariant();
+					var k = x?.ToLowerInvariant();
 					return k != "rep" && k != "base" && !k.StartsWith("sti_");
 				});
 				var queryString = QueryString.Create(keys.Select(k => KeyValuePair.Create(k, rqprms[k])));
@@ -73,7 +73,7 @@ namespace A2v10.ReportEngine.Stimulsoft.Controllers
 				String msg = ex.Message;
 				Int32 x = msg.IndexOf(": error");
 				if (x != -1)
-					msg = msg.Substring(x + 7).Trim();
+					msg = msg[(x + 7)..].Trim();
 				return StatusCode(500, msg);
 			}
 		}

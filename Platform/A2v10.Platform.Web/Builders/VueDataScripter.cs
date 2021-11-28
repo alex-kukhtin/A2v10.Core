@@ -174,8 +174,8 @@ function modelData(template, data) {
 					val = val.ToString().ToLowerInvariant();
 				else if (val is String)
 					val = $"'{val}'";
-				else if (val is Object)
-					val = JsonConvert.SerializeObject(val);
+				else if (val is Object valObj)
+					val = JsonConvert.SerializeObject(valObj);
 				else if (val is DateTime)
 					val = helper.DateTime2StringWrap(val);
 				list.Add($"'{k.Key}': {val}");

@@ -99,7 +99,7 @@ namespace A2v10.Platform.Web.Controllers
 			{
 				Int32 ix = pathInfo.LastIndexOf('-');
 				if (ix != -1)
-					pathInfo = pathInfo.Substring(0, ix) + "." + pathInfo[(ix + 1)..];
+					pathInfo = pathInfo[..ix] + "." + pathInfo[(ix + 1)..];
 				String fullPath = _appCodeProvider.MakeFullPath(Path.Combine("_files/", pathInfo), String.Empty, _currentUser.IsAdminApplication);
 				if (!_appCodeProvider.FileExists(fullPath))
 					throw new FileNotFoundException($"File not found '{pathInfo}'");

@@ -133,7 +133,7 @@ public class ModelJsonView : ModelJsonViewBase, IModelView
 	{
 		if (mobile && !String.IsNullOrEmpty(ViewMobile))
 			return ViewMobile;
-		return View;
+		return View ?? throw new InvalidProgramException("View not defined");
 	}
 
 	public IModelView Resolve(IDataModel model)
@@ -272,7 +272,7 @@ public class ModelJsonReport : ModelJsonBase, IModelReport
 
 	readonly String[] ExcludeParams = new String[] { "Rep", "Base", "Format" };
 
-	public ExpandoObject CreateParameters(ExpandoObject query, Action<ExpandoObject> setParams)
+	public ExpandoObject CreateParameters(ExpandoObject? query, Action<ExpandoObject> setParams)
 	{
 		ExpandoObject prms = new();
 		prms.Append(Parameters);
@@ -281,7 +281,7 @@ public class ModelJsonReport : ModelJsonBase, IModelReport
 		return prms;
 	}
 
-	public ExpandoObject CreateVariables(ExpandoObject query, Action<ExpandoObject> setParams)
+	public ExpandoObject CreateVariables(ExpandoObject? query, Action<ExpandoObject> setParams)
 	{
 		ExpandoObject vars = new();
 		vars.Append(Variables);
@@ -311,8 +311,8 @@ public class ModelJson
 	public Dictionary<String, ModelJsonReport> Reports = new(StringComparer.InvariantCultureIgnoreCase);
 	#endregion
 
-	public String LocalPath => _localPath;
-	public String BaseUrl => _baseUrl;
+	public String LocalPath => _localPath ?? throw new InvalidProgramException("LocalPath is null");
+	public String BaseUrl => _baseUrl ?? throw new InvalidProgramException("BaseUrl is null");
 
 	public ModelJsonView? TryGetAction(String key)
 	{
