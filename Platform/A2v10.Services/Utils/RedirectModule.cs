@@ -25,6 +25,8 @@ public class RedirectModule
 		if (String.IsNullOrEmpty(jsonText))
 			return;
 		var d = JsonConvert.DeserializeObject<Dictionary<String, String>>(jsonText);
+		if (d == null)
+			return;
 		foreach (var (k, v) in d)
 		{
 			_dict.TryAdd(k, v);

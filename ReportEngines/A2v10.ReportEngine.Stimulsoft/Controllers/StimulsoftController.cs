@@ -25,11 +25,13 @@ namespace A2v10.ReportEngine.Stimulsoft.Controllers
 
 		private readonly IReportService _reportService;
 		private readonly StimulsoftReportEngine _reportEngine;
+		private readonly ICurrentUser _currentUser;
 
-		public StimulsoftController(IReportService reportService, StimulsoftReportEngine reportEngine)
+		public StimulsoftController(IReportService reportService, StimulsoftReportEngine reportEngine, ICurrentUser currentUser)
 		{
 			_reportService = reportService;
 			_reportEngine = reportEngine;
+			_currentUser = currentUser;
 		}
 
 
@@ -49,19 +51,22 @@ namespace A2v10.ReportEngine.Stimulsoft.Controllers
 				var Id = vrp.Routes["id"];
 
 				// TODO: QueryString 
-				var keys = rqprms.AllKeys.Where(x => {
-					var k = x?.ToLowerInvariant();
+				var keys = rqprms.AllKeys.Where(x =>
+				{
+					var k = x?.ToLowerInvariant() ?? String.Empty;
 					return k != "rep" && k != "base" && !k.StartsWith("sti_");
 				});
 				var queryString = QueryString.Create(keys.Select(k => KeyValuePair.Create(k, rqprms[k])));
 
+				if (Base is null || Rep is null || Id is null)
+					throw new InvalidOperationException("Rep or Base or Id is null");
 
 				var url = Path.Combine(Base, Rep, Id); // + queryString;
 
 				var reportInfo = await _reportService.GetReportInfoAsync(url, (prms) =>
 				{
 					// TODO:!!!! set Params
-					prms.Set("UserId", 99);
+					prms.Set("UserId", _currentUser.Identity.Id);
 					prms.Set("Id", Int64.Parse(Id));
 				});
 

@@ -31,11 +31,12 @@ public class ServerReport : IModelReportHandler
 		if (report.HasModel())
 			dm = await _dbContext.LoadModelAsync(report.DataSource, report.LoadProcedure(), prms);
 
-		return new ExternalReportInfo()
+		if (String.IsNullOrEmpty(report.Report))
+			throw new DataServiceException("Report is null");
+
+		return new ExternalReportInfo(report: report.Report, path: report.Path)
 		{
-			Path = report.Path,
 			Name = report.Name,
-			Report = report.Report,
 			DataModel = dm,
 			Variables = vars.IsEmpty() ? null : vars
 		};

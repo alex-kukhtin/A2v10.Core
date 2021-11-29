@@ -307,10 +307,10 @@ public class DataService : IDataService
 		var platfromUrl = CreatePlatformUrl(kind, baseUrl);
 		var blob = await _modelReader.GetBlobAsync(platfromUrl, suffix);
 		var prms = new ExpandoObject();
-		prms.Set("Id", blob.Id);
-		prms.Set("Key", blob.Key);
+		prms.Set("Id", blob?.Id);
+		prms.Set("Key", blob?.Key);
 		setParams?.Invoke(prms);
-		var bi = await _dbContext.LoadAsync<BlobInfo>(blob.DataSource, blob.LoadProcedure(), prms);
+		var bi = await _dbContext.LoadAsync<BlobInfo>(blob?.DataSource, blob.LoadProcedure(), prms);
 		if (!String.IsNullOrEmpty(bi?.BlobName))
 			throw new NotImplementedException("Load azure Storage blob");
 		return bi;

@@ -25,6 +25,8 @@ namespace A2v10.Services
 
 		public async Task<IInvokeResult> ExecuteAsync(IModelCommand command, ExpandoObject parameters)
 		{
+			if (command.Target == null)
+				throw new InvalidOperationException("Command.Target is null");
 			var target = command.Target.Split('.');
 			if (target.Length != 2)
 				throw new InvalidOperationException($"Invalid target: {command.Target}");
