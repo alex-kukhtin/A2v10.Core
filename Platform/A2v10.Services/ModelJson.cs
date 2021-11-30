@@ -256,7 +256,7 @@ public class ModelJsonReport : ModelJsonBase, IModelReport
 	{
 		var cm = CurrentModel;
 		if (String.IsNullOrEmpty(cm))
-			return null;
+			throw new ModelJsonException("The model is empty (Report))");
 		return $"[{CurrentSchema}].[{cm}.Report]";
 	}
 

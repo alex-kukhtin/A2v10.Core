@@ -165,19 +165,19 @@ function modelData(template, data) {
 		static String SetModelInfo(IDataHelper helper, IDictionary<String, Object> sys)
 		{
 			if (sys == null)
-				return null;
+				return String.Empty;
 			var list = new List<String>();
 			foreach (var k in sys)
 			{
 				var val = k.Value;
-				if (val is Boolean)
-					val = val.ToString().ToLowerInvariant();
+				if (val is Boolean bVal)
+					val = bVal ? "true" : "false";
 				else if (val is String)
 					val = $"'{val}'";
 				else if (val is Object valObj)
 					val = JsonConvert.SerializeObject(valObj);
-				else if (val is DateTime)
-					val = helper.DateTime2StringWrap(val);
+				else if (val is DateTime dateTimeObj)
+					val = helper.DateTime2StringWrap(dateTimeObj);
 				list.Add($"'{k.Key}': {val}");
 			}
 			return $"cmn.setModelInfo(root, {list.ToJsonObject()}, rawData);";
@@ -186,7 +186,7 @@ function modelData(template, data) {
 		static String GetConstructors(IDictionary<String, IDataMetadata> meta)
 		{
 			if (meta == null)
-				return null;
+				return String.Empty;
 			var sb = new StringBuilder();
 			foreach (var m in meta)
 			{
@@ -307,7 +307,7 @@ function modelData(template, data) {
 				sb.Append($"$lazy: [{lazyFields}]");
 			}
 			if (sb.Length == 0)
-				return null;
+				return String.Empty;
 			sb.RemoveTailComma();
 			return ", " + sb.ToString();
 		}
@@ -424,19 +424,19 @@ function modelData(template, data) {
 			}
 		}
 
-		public static String FindModuleNameFromString(String text, ref Int32 pos)
+		public static String? FindModuleNameFromString(String text, ref Int32 pos)
 		{
 			String funcName = "require";
 			Int32 rPos = text.IndexOf(funcName, pos);
 			if (rPos == -1)
-				return null; // не продолжаем, ничего не нашли
+				return null; // we do not continue, we did not find anything
 			pos = rPos + funcName.Length;
-			// проверим, что мы не в комментарии
+			// check that we are not in the comment
 			Int32 oc = text.LastIndexOf("/*", rPos);
 			Int32 cc = text.LastIndexOf("*/", rPos);
 			if (oc != -1)
 			{
-				// есть открывающий комментарий
+				// there is an opening comment
 				if (cc == -1)
 				{
 					return String.Empty; // нет закрывающего
@@ -451,7 +451,7 @@ function modelData(template, data) {
 			if ((oc != 1) && (oc > startLine))
 				return String.Empty; // есть однострочный и он после начала строки
 
-			Tokenizer tokenizer = null;
+			Tokenizer? tokenizer = null;
 			try
 			{
 				// проверим точку, как предыдущий токен

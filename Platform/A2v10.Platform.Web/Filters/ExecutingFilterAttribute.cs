@@ -11,7 +11,7 @@ namespace A2v10.Platform.Web
 	[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
 	public sealed class ExecutingFilterAttribute : ActionFilterAttribute
 	{
-		IProfileRequest _request;
+		IProfileRequest? _request;
 
 		public override void OnActionExecuting(ActionExecutingContext filterContext)
 		{

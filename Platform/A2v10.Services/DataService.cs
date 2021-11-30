@@ -302,7 +302,7 @@ public class DataService : IDataService
 		return view;
 	}
 
-	public async Task<IBlobInfo> LoadBlobAsync(UrlKind kind, String baseUrl, Action<ExpandoObject> setParams, String? suffix = null)
+	public async Task<IBlobInfo?> LoadBlobAsync(UrlKind kind, String baseUrl, Action<ExpandoObject> setParams, String? suffix = null)
 	{
 		var platfromUrl = CreatePlatformUrl(kind, baseUrl);
 		var blob = await _modelReader.GetBlobAsync(platfromUrl, suffix);
@@ -310,7 +310,10 @@ public class DataService : IDataService
 		prms.Set("Id", blob?.Id);
 		prms.Set("Key", blob?.Key);
 		setParams?.Invoke(prms);
-		var bi = await _dbContext.LoadAsync<BlobInfo>(blob?.DataSource, blob.LoadProcedure(), prms);
+		var loadProc = blob?.LoadProcedure();
+		if (String.IsNullOrEmpty(loadProc))
+			throw new DataServiceException($"LoadProcedure is null");
+		var bi = await _dbContext.LoadAsync<BlobInfo>(blob?.DataSource, loadProc, prms);
 		if (!String.IsNullOrEmpty(bi?.BlobName))
 			throw new NotImplementedException("Load azure Storage blob");
 		return bi;

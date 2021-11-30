@@ -16,11 +16,11 @@ namespace A2v10.Infrastructure
 
 	public interface IBlobInfo
 	{
-		String Mime { get; }
-		String Name { get; }
+		String? Mime { get; }
+		String? Name { get; }
 		Guid Token { get; }
-		Byte[] Stream { get; }
-		String BlobName { get; }
+		Byte[]? Stream { get; }
+		String? BlobName { get; }
 	}
 
 	public interface IInvokeResult
@@ -40,7 +40,7 @@ namespace A2v10.Infrastructure
 	{
 		Task<IDataLoadResult> LoadAsync(UrlKind kind, String baseUrl, Action<ExpandoObject> setParams);
 		Task<IDataLoadResult> LoadAsync(String baseUrl, Action<ExpandoObject> setParams);
-		Task<IBlobInfo> LoadBlobAsync(UrlKind kind, String baseUrl, Action<ExpandoObject> setParams, String? suffix = null);
+		Task<IBlobInfo?> LoadBlobAsync(UrlKind kind, String baseUrl, Action<ExpandoObject> setParams, String? suffix = null);
 
 		Task<String> ReloadAsync(String baseUrl, Action<ExpandoObject> setParams);
 		

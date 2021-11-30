@@ -7,7 +7,7 @@ namespace A2v10.Platform.Web
 	public interface IControllerProfiler
 	{
 		IProfiler Profiler { get; }
-		IProfileRequest BeginRequest();
-		void EndRequest(IProfileRequest request);
+		IProfileRequest? BeginRequest();
+		void EndRequest(IProfileRequest? request);
 	}
 }

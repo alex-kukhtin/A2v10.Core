@@ -53,8 +53,8 @@ namespace A2v10.Services.Interop.ExportTo
 					wsPart.Worksheet.Append(mc);
 				}
 
-				Sheets sheets = doc.WorkbookPart.Workbook.AppendChild<Sheets>(new Sheets());
-				Sheet sheet = new() { Id = doc.WorkbookPart.GetIdOfPart(wsPart), SheetId = 1, Name = "Sheet1" };
+				Sheets sheets = wbPart.Workbook.AppendChild<Sheets>(new Sheets());
+				Sheet sheet = new() { Id = wbPart.GetIdOfPart(wsPart), SheetId = 1, Name = "Sheet1" };
 				sheets.Append(sheet);
 
 				wbPart.Workbook.Save();

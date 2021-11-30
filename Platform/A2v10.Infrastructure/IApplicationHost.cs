@@ -22,7 +22,7 @@ namespace A2v10.Infrastructure
 		String CatalogDataSource { get; }
 		String TenantDataSource { get; }
 
-		String GetAppSettings(String source);
+		String? GetAppSettings(String? source);
 		ExpandoObject GetEnvironmentObject(String key);
 
 		void CheckIsMobile(String host);
