@@ -85,10 +85,10 @@ namespace A2v10.Platform.Web.Controllers
 				var eo = await Request.ExpandoFromBodyAsync();
 				if (eo == null)
 					throw new InvalidReqestExecption(Request.Path);
-				String baseUrl = eo.Get<String>("baseUrl");
+				String? baseUrl = eo.Get<String>("baseUrl");
 				if (baseUrl == null)
 					throw new InvalidReqestExecption(nameof(Save));
-				ExpandoObject data = eo.Get<ExpandoObject>("data");
+				ExpandoObject data = eo.GetNotNull<ExpandoObject>("data");
 
 				var savedData = await _dataService.SaveAsync(baseUrl, data, SetSqlQueryParams);
 
@@ -104,13 +104,13 @@ namespace A2v10.Platform.Web.Controllers
 				var eo = await Request.ExpandoFromBodyAsync();
 				if (eo == null)
 					throw new InvalidReqestExecption(Request.Path);
-				String baseUrl = eo.Get<String>("baseUrl");
+				String? baseUrl = eo.Get<String>("baseUrl");
 				if (baseUrl == null)
 					throw new InvalidReqestExecption(nameof(Invoke));
-				String cmd = eo.Get<String>("cmd");
+				String? cmd = eo.Get<String>("cmd");
 				if (cmd == null)
 					throw new InvalidReqestExecption(nameof(Invoke));
-				ExpandoObject data = eo.Get<ExpandoObject>("data");
+				ExpandoObject? data = eo.Get<ExpandoObject>("data");
 
 				var result = await _dataService.InvokeAsync(baseUrl, cmd, data, SetSqlQueryParams);
 				return new WebBinaryActionResult(result.Body, result.ContentType);

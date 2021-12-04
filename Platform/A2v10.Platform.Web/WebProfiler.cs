@@ -92,7 +92,7 @@ internal class ProfileRequest : ProfileTimer, IProfileRequest, IDisposable
 
 internal class DummyRequest : IProfileRequest
 {
-	public IDisposable Start(ProfileAction kind, String description)
+	public IDisposable? Start(ProfileAction kind, String description)
 	{
 		return null;
 	}
@@ -107,7 +107,7 @@ public sealed class WebProfiler : IProfiler, IDataProfiler, IDisposable
 	const Int32 REQUEST_COUNT = 50;
 
 	private LinkedList<ProfileRequest>? _requestList;
-	private ProfileRequest _request;
+	private ProfileRequest? _request;
 
 	public Boolean Enabled { get; set; }
 
@@ -133,7 +133,7 @@ public sealed class WebProfiler : IProfiler, IDataProfiler, IDisposable
 
 	public IProfileRequest CurrentRequest => _request ?? new DummyRequest() as IProfileRequest;
 
-	public IProfileRequest BeginRequest(String address, String session)
+	public IProfileRequest? BeginRequest(String address, String session)
 	{
 		if (!Enabled)
 			return null;
@@ -151,7 +151,7 @@ public sealed class WebProfiler : IProfiler, IDataProfiler, IDisposable
 	{
 		if (request != _request)
 			return;
-		_request.Stop();
+		_request?.Stop();
 		SaveSession();
 	}
 

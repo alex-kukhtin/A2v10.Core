@@ -6,7 +6,7 @@ namespace A2v10.Web.Identity.UI
 {
 	public class AppTitleModel
 	{
-		public String AppTitle { get; set; }
-		public String AppSubTitle { get; set; }
+		public String? AppTitle { get; set; }
+		public String? AppSubTitle { get; set; }
 	}
 }

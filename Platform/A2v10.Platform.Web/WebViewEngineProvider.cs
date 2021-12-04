@@ -7,55 +7,57 @@ using Microsoft.Extensions.DependencyInjection;
 using A2v10.Infrastructure;
 using System.Collections.Generic;
 
-namespace A2v10.Platform.Web
+namespace A2v10.Platform.Web;
+public record ViewEngineDescriptor(String Extension, Type EngineType);
+
+public class ViewEngineFactory
 {
-	public record ViewEngineDescriptor(String Extension, Type EngineType);
+	private readonly IList<ViewEngineDescriptor> _list = new List<ViewEngineDescriptor>();
 
-	public class ViewEngineFactory
+	public IList<ViewEngineDescriptor> Engines => _list;
+
+	public void RegisterEngine<T>(String extension)
 	{
-		private readonly IList<ViewEngineDescriptor> _list = new List<ViewEngineDescriptor>();
+		_list.Add(new ViewEngineDescriptor(extension, typeof(T)));
+	}
+}
 
-		public IList<ViewEngineDescriptor> Engines => _list;
+public class WebViewEngineProvider : IViewEngineProvider
+{
+	private readonly IList<ViewEngineDescriptor> _engines;
+	private readonly IAppCodeProvider _codeProvider;
+	private readonly IServiceProvider _serviceProvider;
 
-		public void RegisterEngine<T>(String extension)
-		{
-			_list.Add(new ViewEngineDescriptor(extension, typeof(T)));
-		}
+	public WebViewEngineProvider(IServiceProvider serviceProvider, IList<ViewEngineDescriptor> engines)
+	{
+		_serviceProvider = serviceProvider;
+		_codeProvider = _serviceProvider.GetRequiredService<IAppCodeProvider>();
+		_engines = engines;
 	}
 
-	public class WebViewEngineProvider : IViewEngineProvider
+	public void RegisterEngine(String extension, Type engineType)
 	{
-		private readonly IList<ViewEngineDescriptor> _engines;
-		private readonly IAppCodeProvider _codeProvider;
-		private readonly IServiceProvider _serviceProvider;
+		_engines.Add(new ViewEngineDescriptor(extension, engineType));
+	}
 
-		public WebViewEngineProvider(IServiceProvider serviceProvider, IList<ViewEngineDescriptor> engines)
+	public IViewEngineResult FindViewEngine(String viewName)
+	{
+		foreach (var engine in _engines)
 		{
-			_serviceProvider = serviceProvider;
-			_codeProvider = _serviceProvider.GetService<IAppCodeProvider>();
-			_engines = engines;
-		}
-
-		public void RegisterEngine(String extension, Type engineType)
-		{
-			_engines.Add(new ViewEngineDescriptor(extension, engineType));
-		}
-
-		public IViewEngineResult FindViewEngine(String viewName)
-		{
-			foreach (var engine in _engines)
+			String fileName = $"{viewName}{engine.Extension}";
+			if (_codeProvider.FileExists(fileName))
 			{
-				String fileName = $"{viewName}{engine.Extension}";
-				if (_codeProvider.FileExists(fileName))
+				if (_serviceProvider.GetService(engine.EngineType) is IViewEngine viewEngine)
 				{
 					return new ViewEngineResult
 					(
-						engine : _serviceProvider.GetService(engine.EngineType) as IViewEngine,
-						fileName : fileName
+						engine: viewEngine,
+						fileName: fileName
 					);
 				}
 			}
-			throw new InvalidReqestExecption($"View engine not found for {viewName}");
 		}
+		throw new InvalidReqestExecption($"View engine not found for {viewName}");
 	}
 }
+

@@ -214,7 +214,7 @@ public class DataService : IDataService
 		return JsonConvert.SerializeObject(model.Root, JsonHelpers.DataSerializerSettings);
 	}
 
-	public async Task<IInvokeResult> InvokeAsync(String baseUrl, String command, ExpandoObject data, Action<ExpandoObject> setParams)
+	public async Task<IInvokeResult> InvokeAsync(String baseUrl, String command, ExpandoObject? data, Action<ExpandoObject> setParams)
 	{
 		var platformBaseUrl = CreatePlatformUrl(baseUrl);
 		var cmd = await _modelReader.GetCommandAsync(platformBaseUrl, command);

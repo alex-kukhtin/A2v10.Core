@@ -33,9 +33,11 @@ namespace A2v10.Platform.Web.Controllers
 				return NotFound();
 			var layoutDescr = await _dataService.GetLayoutDescriptionAsync(pathInfo);
 
+			if (User.Identity == null)
+				throw new ApplicationException("Invalid User");
 			var viewModel = new MainViewModel()
 			{
-				PersonName = User.Identity.GetUserPersonName(),
+				PersonName = User.Identity.GetUserPersonName() ?? User.Identity.Name ?? throw new ApplicationException("Invalid UserName"),
 				Debug = _appConfiguration.Debug,
 				HelpUrl = "http://TODO/HELP_URL",
 				ModelStyles = layoutDescr?.ModelStyles,

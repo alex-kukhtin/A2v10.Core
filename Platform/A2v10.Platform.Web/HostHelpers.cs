@@ -38,7 +38,7 @@ public static class HostHelpers
 		if (appLinks != null)
 		{
 			// with validation
-			Object links = JsonConvert.DeserializeObject<List<Object>>(appLinks);
+			Object? links = JsonConvert.DeserializeObject<List<Object>>(appLinks);
 			return JsonConvert.SerializeObject(links);
 		}
 		return "[]";
@@ -79,7 +79,7 @@ public static class HostHelpers
 		//return ProcessDbEventsCommand.ProcessDbEvents(dbContext, host.CatalogDataSource, host.IsAdminMode);
 	}
 
-	public static ITypeChecker CheckTypes(this IApplicationHost host, String path, String typesFile, IDataModel model)
+	public static ITypeChecker? CheckTypes(this IApplicationHost host, String path, String typesFile, IDataModel model)
 	{
 		// TODO:
 		if (!host.IsDebugConfiguration)

@@ -17,9 +17,9 @@ namespace A2v10.Platform.Web.Controllers
 	public class PageActionResult : IActionResult
 	{
 		private readonly IRenderResult _render;
-		private readonly String _script;
+		private readonly String? _script;
 
-		public PageActionResult(IRenderResult render, String script)
+		public PageActionResult(IRenderResult render, String? script)
 		{
 			_render = render;
 			_script = script;
@@ -30,7 +30,8 @@ namespace A2v10.Platform.Web.Controllers
 			var resp = context.HttpContext.Response;
 			resp.ContentType = _render.ContentType;
 			await resp.WriteAsync(_render.Body, Encoding.UTF8);
-			await resp.WriteAsync(_script, Encoding.UTF8);
+			if (_script != null)
+				await resp.WriteAsync(_script, Encoding.UTF8);
 		}
 	}
 

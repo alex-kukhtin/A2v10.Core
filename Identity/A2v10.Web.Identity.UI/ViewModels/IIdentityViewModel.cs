@@ -2,11 +2,10 @@
 
 using System;
 
-namespace A2v10.Web.Identity.UI
+namespace A2v10.Web.Identity.UI;
+public interface IIdentityViewModel
 {
-	public interface IIdentityViewModel
-	{
-		String RequestToken { get; }
-		AppTitleModel Title { get; }
-	}
+	String? RequestToken { get; }
+	AppTitleModel? Title { get; }
 }
+

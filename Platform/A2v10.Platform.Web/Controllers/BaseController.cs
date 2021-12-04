@@ -59,7 +59,7 @@ public class BaseController : Controller, IControllerProfiler
 		using var _ = _profiler.CurrentRequest.Start(ProfileAction.Exception, ex.Message);
 	}
 
-	protected String Localize(String content)
+	protected String? Localize(String? content)
 	{
 		return _localizer.Localize(null, content);
 	}

@@ -259,7 +259,7 @@ function modelData(template, data) {
 		static String GetCrossProperties(IDataMetadata meta)
 		{
 			var sb = new StringBuilder("{");
-			foreach (var c in meta.Cross)
+			foreach (var c in meta.Cross!)
 			{
 				sb.Append($"{c.Key}: [");
 				if (c.Value != null)
@@ -331,7 +331,7 @@ function modelData(template, data) {
 			return sb.ToString();
 		}
 
-		static String CreateTemplateForWrite(String fileTemplateText)
+		static String CreateTemplateForWrite(String? fileTemplateText)
 		{
 			if (fileTemplateText != null && fileTemplateText.Contains("define([\"require\", \"exports\"]"))
 			{
@@ -381,7 +381,7 @@ function modelData(template, data) {
 			Int32 iIndex = 0;
 			while (true)
 			{
-				String moduleName = FindModuleNameFromString(clientScript, ref iIndex);
+				String? moduleName = FindModuleNameFromString(clientScript, ref iIndex);
 				if (moduleName == null)
 					return; // not found
 				if (String.IsNullOrEmpty(moduleName))
@@ -493,9 +493,9 @@ function modelData(template, data) {
 			}
 		}
 
-		private String Localize(String source)
+		private String? Localize(String? source)
 		{
-			String result = _localizer.Localize(null, source, replaceNewLine: false);
+			String? result = _localizer.Localize(null, source, replaceNewLine: false);
 			return _host.GetAppSettings(result);
 		}
 
@@ -511,6 +511,8 @@ function modelData(template, data) {
 			String fileTemplateText;
 			if (msi.Template != null)
 			{
+				if (msi.Path == null)
+					throw new InvalidOperationException("Model.Path is null");
 				fileTemplateText = await _codeProvider.ReadTextFileAsync(msi.Path, $"{msi.Template}.js", _currentUser.IsAdminApplication);
 				if (fileTemplateText == null)
 					throw new FileNotFoundException($"Template file '{Path.Combine(msi.Path, $"{msi.Template}.js").Replace('\\', '/')}' not found.");
@@ -568,7 +570,7 @@ function modelData(template, data) {
 			var sb = new StringBuilder(SCRIPT_PARTS.DATAFUNC_SERVER);
 			sb.Replace("$(TemplateText)", templateText);
 			sb.Replace("$(RequiredModules)", sbRequired?.ToString());
-			String modelScript = msi.DataModel.CreateScript(this);
+			String? modelScript = msi.DataModel?.CreateScript(this);
 			String rawData = JsonConvert.SerializeObject(msi.DataModel.Root, 
 				JsonHelpers.ConfigSerializerSettings(_host.IsDebugConfiguration));
 			sb.Replace("$(DataModelText)", rawData);

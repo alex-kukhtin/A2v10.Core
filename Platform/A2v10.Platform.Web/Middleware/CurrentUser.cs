@@ -36,12 +36,12 @@ namespace A2v10.Platform.Web
 
 		// TODO: isValud???
 		public Boolean Invalid { get; set; }
-		public String Message { get; init; }
+		public String? Message { get; init; }
 	}
 
 	public record UserLocale : IUserLocale
 	{
-		public String Locale { get; init; }
+		public String? Locale { get; init; }
 
 		public String Language
 		{
@@ -65,7 +65,7 @@ namespace A2v10.Platform.Web
 		#region IDbIdentity
 		public Int32? TenantId => Identity?.Tenant;
 		public Int64? UserId => Identity?.Id;
-		public String Segment => Identity?.Segment;
+		public String? Segment => Identity?.Segment;
 		#endregion
 
 		IUserState ICurrentUser.State => State;

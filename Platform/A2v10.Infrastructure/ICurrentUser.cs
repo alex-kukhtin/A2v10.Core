@@ -25,7 +25,7 @@ namespace A2v10.Infrastructure
 
 	public interface IUserLocale
 	{
-		String Locale { get; }
+		String? Locale { get; }
 		String Language { get; }
 	}
 
