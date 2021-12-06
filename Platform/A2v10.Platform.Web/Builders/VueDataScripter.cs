@@ -133,7 +133,7 @@ vm.__doInit__('$(BaseUrl)');
 			return model != null ? model.CreateScript(this) : CreateEmptyStript();
 		}
 
-		public String CreateScript(IDataHelper helper, IDictionary<String, Object> sys, IDictionary<String, IDataMetadata> meta)
+		public String CreateScript(IDataHelper helper, IDictionary<String, Object?>? sys, IDictionary<String, IDataMetadata> meta)
 		{
 			var sb = new StringBuilder();
 			sb.AppendLine("function modelData(template, data) {");
@@ -162,7 +162,7 @@ function modelData(template, data) {
 ";
 		}
 
-		static String SetModelInfo(IDataHelper helper, IDictionary<String, Object> sys)
+		static String SetModelInfo(IDataHelper helper, IDictionary<String, Object>? sys)
 		{
 			if (sys == null)
 				return String.Empty;
@@ -556,8 +556,10 @@ function modelData(template, data) {
 
 		public async Task<ScriptInfo> GetServerScriptAsync(ModelScriptInfo msi)
 		{
-			StringBuilder sbRequired = null;
+			StringBuilder? sbRequired = null;
 			String templateText = "{}";
+			if (msi.Path == null)
+				throw new InvalidProgramException("ModelScriptInfo.Path is null");
 			if (msi.Template != null)
 			{
 				String fileTemplateText = await _codeProvider.ReadTextFileAsync(msi.Path, msi.Template + ".js", _currentUser.IsAdminApplication);
@@ -571,8 +573,9 @@ function modelData(template, data) {
 			sb.Replace("$(TemplateText)", templateText);
 			sb.Replace("$(RequiredModules)", sbRequired?.ToString());
 			String? modelScript = msi.DataModel?.CreateScript(this);
-			String rawData = JsonConvert.SerializeObject(msi.DataModel.Root, 
-				JsonHelpers.ConfigSerializerSettings(_host.IsDebugConfiguration));
+			String? rawData = msi.DataModel != null ? JsonConvert.SerializeObject(msi.DataModel.Root, 
+				JsonHelpers.ConfigSerializerSettings(_host.IsDebugConfiguration))
+				: null;
 			sb.Replace("$(DataModelText)", rawData);
 			sb.Replace("$(RawDataText)", msi.RawData ?? "{}");
 			sb.Replace("$(ModelScript)", modelScript);

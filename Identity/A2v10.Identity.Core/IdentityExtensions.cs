@@ -12,7 +12,7 @@ public static class IdentityExtensions
 		return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
 	}
 
-	public static T? GetUserId<T>(this IIdentity identity)
+	public static T? GetUserId<T>(this IIdentity? identity)
 	{
 		if (identity == null)
 			return default;
@@ -27,36 +27,36 @@ public static class IdentityExtensions
 		return (T) Convert.ChangeType(claim, tp!, CultureInfo.InvariantCulture);
 	}
 
-	public static String? GetUserClaim(this IIdentity identity, String claim)
+	public static String? GetUserClaim(this IIdentity? identity, String claim)
 	{
 		if (identity is not ClaimsIdentity user)
 			return null;
 		return user.FindFirst(claim)?.Value;
 	}
 
-	public static String? GetUserPersonName(this IIdentity identity)
+	public static String? GetUserPersonName(this IIdentity? identity)
 	{
 		var claim = identity.GetUserClaim(WellKnownClims.PersonName);
-		return String.IsNullOrEmpty(claim) ? identity.Name : claim;
+		return String.IsNullOrEmpty(claim) ? identity?.Name : claim;
 	}
 
-	public static Boolean IsUserAdmin(this IIdentity identity)
+	public static Boolean IsUserAdmin(this IIdentity? identity)
 	{
-		var claim = identity.GetUserClaim(WellKnownClims.Admin);
+		var claim = identity?.GetUserClaim(WellKnownClims.Admin);
 		return claim == WellKnownClims.Admin;
 	}
 
-	public static String? GetUserClientId(this IIdentity identity)
+	public static String? GetUserClientId(this IIdentity? identity)
 	{
-		return identity.GetUserClaim(WellKnownClims.ClientId);
+		return identity?.GetUserClaim(WellKnownClims.ClientId);
 	}
 
-	public static String? GetUserLocale(this IIdentity identity)
+	public static String? GetUserLocale(this IIdentity? identity)
 	{
-		return identity.GetUserClaim(WellKnownClims.Locale);
+		return identity?.GetUserClaim(WellKnownClims.Locale);
 	}
 
-	public static Boolean IsTenantAdmin(this IIdentity identity)
+	public static Boolean IsTenantAdmin(this IIdentity? identity)
 	{
 		if (identity is not ClaimsIdentity user)
 			return false;
@@ -66,7 +66,7 @@ public static class IdentityExtensions
 		return value == WellKnownClims.TenantAdmin;
 	}
 
-	public static Int32? GetUserTenantId(this IIdentity identity)
+	public static Int32? GetUserTenantId(this IIdentity? identity)
 	{
 		if (identity == null)
 			return null;
@@ -80,9 +80,9 @@ public static class IdentityExtensions
 		return null;
 	}
 
-	public static String? GetUserSegment(this IIdentity identity)
+	public static String? GetUserSegment(this IIdentity? identity)
 	{
-		return identity.GetUserClaim(WellKnownClims.Segment);
+		return identity?.GetUserClaim(WellKnownClims.Segment);
 	}
 }
 

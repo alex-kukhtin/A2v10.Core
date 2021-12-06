@@ -27,11 +27,11 @@ namespace A2v10.Platform.Web
 				throw new InvalidProgramException("AccessToken for GenerateToken is empty");
 			var ctx = _httpContext.HttpContext;
 			if (ctx == null)
-				return null;
+				throw new InvalidProgramException("Context is null");
 			var sessionId = ctx.Session.Id;
 			// TODO:??? Session Id???
 			ctx.Session.SetString("SessionID", sessionId);
-			var userId = ctx.User.Identity.GetUserId<Int64>();
+			var userId = ctx?.User?.Identity.GetUserId<Int64>();
 			String key = $":{sessionId}:{accessToken}:{userId}:";
 			using var algo = SHA256.Create();
 			var hash = algo.ComputeHash(Encoding.UTF8.GetBytes(key));

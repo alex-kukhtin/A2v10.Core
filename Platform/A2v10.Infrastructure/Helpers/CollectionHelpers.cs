@@ -3,27 +3,26 @@
 using System;
 using System.Collections.Generic;
 
-namespace A2v10.Infrastructure
+namespace A2v10.Infrastructure;
+public static class CollectionHelpers
 {
-	public static class CollectionHelpers
+	public static IDictionary<TKey, TValue> Append<TKey, TValue>(this IDictionary<TKey, TValue> dst, IDictionary<TKey, TValue>? src, Boolean replaceExisiting = false)
 	{
-		public static IDictionary<TKey, TValue> Append<TKey, TValue>(this IDictionary<TKey, TValue> dst, IDictionary<TKey, TValue> src, Boolean replaceExisiting = false)
-		{
-			if (src == null)
-				return dst;
-			foreach (var c in src)
-			{
-				if (!dst.ContainsKey(c.Key))
-					dst.Add(c.Key, c.Value);
-				if (replaceExisiting)
-					dst[c.Key] = c.Value;
-			}
+		if (src == null)
 			return dst;
-		}
-
-		public static String ToJsonObject(this IEnumerable<String> list)
+		foreach (var c in src)
 		{
-			return $"{{{String.Join(',', list)}}}";
+			if (!dst.ContainsKey(c.Key))
+				dst.Add(c.Key, c.Value);
+			if (replaceExisiting)
+				dst[c.Key] = c.Value;
 		}
+		return dst;
+	}
+
+	public static String ToJsonObject(this IEnumerable<String> list)
+	{
+		return $"{{{String.Join(',', list)}}}";
 	}
 }
+

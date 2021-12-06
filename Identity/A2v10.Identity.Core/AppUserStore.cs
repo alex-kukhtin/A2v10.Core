@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Security.Claims;
 using System.Threading;
-using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Identity;
 
@@ -53,16 +52,18 @@ public sealed class AppUserStore :
 		// do nothing?
 	}
 
-	public Task<AppUser> FindByIdAsync(String UserId, CancellationToken cancellationToken)
+	public async Task<AppUser> FindByIdAsync(String UserId, CancellationToken cancellationToken)
 	{
 		var Id = Int64.Parse(UserId);
-		return _dbContext.LoadAsync<AppUser>(DataSource, $"[{DbSchema}].[FindUserById]", new { Id });
+		return await _dbContext.LoadAsync<AppUser>(DataSource, $"[{DbSchema}].[FindUserById]", new { Id }) 
+			?? throw new IdentityCoreException($"User not found (Id='{UserId}')");
 	}
 
-	public Task<AppUser> FindByNameAsync(String normalizedUserName, CancellationToken cancellationToken)
+	public async Task<AppUser> FindByNameAsync(String normalizedUserName, CancellationToken cancellationToken)
 	{
 		var UserName = normalizedUserName.ToLowerInvariant(); // A2v10
-		return _dbContext.LoadAsync<AppUser>(DataSource, $"[{DbSchema}].[FindUserByName]", new { UserName });
+		return await _dbContext.LoadAsync<AppUser>(DataSource, $"[{DbSchema}].[FindUserByName]", new { UserName })
+			?? throw new IdentityCoreException($"User not found (Name='{UserName}')");
 	}
 
 	public Task<String> GetNormalizedUserNameAsync(AppUser user, CancellationToken cancellationToken)
@@ -143,15 +144,16 @@ public sealed class AppUserStore :
 		return Task.CompletedTask;
 	}
 
-	public Task<AppUser> FindByEmailAsync(String normalizedEmail, CancellationToken cancellationToken)
+	public async Task<AppUser> FindByEmailAsync(String normalizedEmail, CancellationToken cancellationToken)
 	{
 		var Email = normalizedEmail?.ToLowerInvariant(); // A2v10
-		return _dbContext.LoadAsync<AppUser>(DataSource, $"[{DbSchema}].[FindUserByEmail]", new { Email });
+		return await _dbContext.LoadAsync<AppUser>(DataSource, $"[{DbSchema}].[FindUserByEmail]", new { Email })
+			?? throw new IdentityCoreException($"User not found (Emali='{Email}')");
 	}
 
-	public Task<string> GetNormalizedEmailAsync(AppUser user, CancellationToken cancellationToken)
-	{
-		throw new NotImplementedException();
+	public Task<String> GetNormalizedEmailAsync(AppUser user, CancellationToken cancellationToken)
+    {
+        return Task.FromResult<String>(user.Email?.ToLowerInvariant() ?? String.Empty);
 	}
 
 	public Task SetNormalizedEmailAsync(AppUser user, String normalizedEmail, CancellationToken cancellationToken)
@@ -179,7 +181,7 @@ public sealed class AppUserStore :
 	public Task<String> GetPasswordHashAsync(AppUser user, CancellationToken cancellationToken)
 	{
 		// .net framework compatibility
-		return Task.FromResult<String>(user.PasswordHash2 ?? user.PasswordHash);
+		return Task.FromResult<String>(user.PasswordHash2 ?? user.PasswordHash ?? String.Empty);
 	}
 
 	public Task<bool> HasPasswordAsync(AppUser user, CancellationToken cancellationToken)

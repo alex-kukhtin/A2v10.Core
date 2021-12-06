@@ -109,7 +109,9 @@ namespace A2v10.Services.Javascript
 					}
 				}
 
-				using var resp = httpWebRequest.GetResponse() as HttpWebResponse;
+				using var respRaw = httpWebRequest.GetResponse();
+				if (respRaw is not HttpWebResponse resp)
+					throw new InvalidProgramException("Invalid response type");
 				var contentType = resp.ContentType;
 				var headers = resp.Headers;
 				using var rs = resp.GetResponseStream();

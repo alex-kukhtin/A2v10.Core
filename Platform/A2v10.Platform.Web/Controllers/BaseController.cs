@@ -26,7 +26,7 @@ public class BaseController : Controller, IControllerProfiler
 		_currentUser = currentUser;
 	}
 
-	protected Int64? UserId => _currentUser.Identity.Id;
+	protected Int64 UserId => _currentUser?.Identity?.Id ?? throw new InvalidProgramException("UserId is null");
 	protected Int32? TenantId => _currentUser.Identity.Tenant;
 	protected Int64? CompanyId => _currentUser.State.Company;
 

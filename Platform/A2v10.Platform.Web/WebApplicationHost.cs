@@ -72,8 +72,8 @@ public class WebApplicationHost : IApplicationHost, ITenantManager
 	public Boolean IsAdminAppPresent => true /*TODO:*/;
 
 
-	public String CatalogDataSource => IsMultiTenant ? "Catalog" : null;
-	public String TenantDataSource => String.IsNullOrEmpty(_currentUser.Segment) ? null : _currentUser.Segment;
+	public String? CatalogDataSource => IsMultiTenant ? "Catalog" : null;
+	public String? TenantDataSource => String.IsNullOrEmpty(_currentUser.Segment) ? null : _currentUser.Segment;
 
 	public void CheckIsMobile(string host)
 	{
@@ -140,7 +140,7 @@ public class WebApplicationHost : IApplicationHost, ITenantManager
 	*/
 
 	#region ITenantManager
-	public ITenantInfo GetTenantInfo(String source)
+	public ITenantInfo? GetTenantInfo(String? source)
 	{
 		if (!IsMultiTenant)
 			return null;

@@ -104,10 +104,10 @@ namespace A2v10.Platform.Web.Controllers
 		private readonly Int32 _errorCode;
 		private readonly String _message;
 
-		public WebExceptionResult(Int32 errorCode, String message)
+		public WebExceptionResult(Int32 errorCode, String? message)
 		{
 			_errorCode = errorCode;
-			_message = message;
+			_message = message ?? String.Empty;
 		}
 
 		public Task ExecuteResultAsync(ActionContext context)

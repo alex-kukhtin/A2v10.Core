@@ -59,7 +59,7 @@ namespace A2v10.Platform.Web
 			return Path.GetFullPath(fullPath);
 		}
 
-		public async Task<String> ReadTextFileAsync(String path, String fileName, Boolean admin)
+		public async Task<String?> ReadTextFileAsync(String path, String fileName, Boolean admin)
 		{
 			String fullPath = MakeFullPath(path, fileName, admin);
 

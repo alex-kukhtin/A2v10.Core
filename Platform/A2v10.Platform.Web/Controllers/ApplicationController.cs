@@ -41,15 +41,16 @@ namespace A2v10.Platform.Web.Controllers
 			{
 				if (!_host.IsMultiCompany)
 					throw new InvalidReqestExecption("SwitchToCompany");
-				var data = await Request.ExpandoFromBodyAsync();
-				Int64 CompanyIdToSet = data.Get<Int64>("company");
+				var data = await Request.ExpandoFromBodyAsync() 
+					?? throw new InvalidProgramException("Switch to company. Data is null");
+				Int64 CompanyIdToSet = data.GetNotNull<Int64>("company");
 				if (CompanyIdToSet == 0)
 					throw new InvalidReqestExecption("Unable to switch to company with id='0'");
 				if (_host.IsMultiTenant)
 				{
 					var saveModel = new SwitchToCompanySaveModel()
 					{
-						UserId = UserId.Value,
+						UserId = UserId,
 						TenantId = TenantId ?? 0,
 						CompanyId = CompanyIdToSet
 					};
@@ -59,7 +60,7 @@ namespace A2v10.Platform.Web.Controllers
 				{
 					var saveModel = new SwitchToCompanySaveModel()
 					{
-						UserId = UserId.Value,
+						UserId = UserId,
 						CompanyId = CompanyIdToSet
 					};
 					await _dbContext.ExecuteAsync<SwitchToCompanySaveModel>(null, "a2security.[User.SwitchToCompany]", saveModel);
@@ -78,7 +79,8 @@ namespace A2v10.Platform.Web.Controllers
 		{
 			try
 			{
-				var dataToSet = await Request.ExpandoFromBodyAsync();
+				var dataToSet = await Request.ExpandoFromBodyAsync()
+					?? throw new InvalidProgramException("SetPeriod. Body is null");
 				SetSqlQueryParams(dataToSet);
 				await _dbContext.ExecuteExpandoAsync(null, "a2user_state.SetGlobalPeriod", dataToSet);
 				return new WebActionResult("{\"status\":\"success\"}");

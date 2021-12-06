@@ -46,7 +46,7 @@ namespace A2v10.Platform.Web.Controllers
 				if (token.Count == 0)
 					throw new InvalidReqestExecption("Invalid image token");
 				var blob = await _dataService.LoadBlobAsync(UrlKind.File, pathInfo, SetSqlQueryParams);
-				if (blob == null)
+				if (blob == null || blob.Stream == null)
 					throw new InvalidReqestExecption($"Image not found. ({pathInfo})");
 
 				ValidateToken(blob.Token, token);

@@ -62,7 +62,7 @@ namespace A2v10.Web.Identity.UI
 			var result = await _signInManager.PasswordSignInAsync(model.Login, model.Password, model.IsPersistent, lockoutOnFailure: true);
 			if (result.Succeeded)
 			{
-				var returnUrl = (TempData["ReturnUrl"] ?? "/").ToString().ToLowerInvariant();
+				var returnUrl = (TempData["ReturnUrl"] ?? "/").ToString()!.ToLowerInvariant();
 				if (returnUrl.StartsWith("/account"))
 					returnUrl = "/";
 				return LocalRedirect(returnUrl);

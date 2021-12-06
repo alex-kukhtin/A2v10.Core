@@ -80,7 +80,7 @@ internal class ProfileRequest : ProfileTimer, IProfileRequest, IDisposable
 	public IDisposable Start(ProfileAction kind, String description)
 	{
 		var itm = new ProfileItem(description);
-		if (!Items.TryGetValue(kind, out ProfileItems elems))
+		if (!Items.TryGetValue(kind, out ProfileItems? elems))
 		{
 			elems = new ProfileItems();
 			Items.Add(kind, elems);
@@ -181,7 +181,7 @@ public sealed class WebProfiler : IProfiler, IDataProfiler, IDisposable
 	}
 
 	#region IDataProfiler
-	IDisposable IDataProfiler.Start(String command)
+	IDisposable? IDataProfiler.Start(String command)
 	{
 		return CurrentRequest.Start(ProfileAction.Sql, command);
 	}

@@ -130,8 +130,8 @@ namespace A2v10.Platform.Web.Controllers
 				if (baseUrl == null)
 					throw new InvalidReqestExecption(nameof(DbRemove));
 
-				Object id = eo.Get<Object>("id");
-				String propName = eo.Get<String>("prop");
+				Object id = eo.GetNotNull<Object>("id");
+				String propName = eo.GetNotNull<String>("prop");
 
 				await _dataService.DbRemoveAsync(baseUrl, id,  propName, SetSqlQueryParams);
 
@@ -148,7 +148,7 @@ namespace A2v10.Platform.Web.Controllers
 			try
 			{
 				//String format = eo.Get<String>("format");
-				var data = _dataService.Html2Excel(eo.Get<String>("html"));
+				var data = _dataService.Html2Excel(eo.GetNotNull<String>("html"));
 				return new WebBinaryActionResult(data, MimeTypes.Application.OctetBinary);
 			} 
 			catch (Exception ex)

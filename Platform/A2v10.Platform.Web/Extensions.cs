@@ -15,7 +15,7 @@ namespace Microsoft.Extensions.DependencyInjection
 {
 	public static class ServiceExtensions
 	{
-		public static IMvcBuilder AddPlatformCore(this IServiceCollection services, Action<PlatformOptions> options = null)
+		public static IMvcBuilder AddPlatformCore(this IServiceCollection services, Action<PlatformOptions>? options = null)
 		{
 			var platformOptions = new PlatformOptions();
 			options?.Invoke(platformOptions);
@@ -37,22 +37,22 @@ namespace Microsoft.Extensions.DependencyInjection
 			services.AddScoped<WebApplicationHost>();
 
 			services.AddScoped<WebLocalizer>()
-				.AddScoped<ILocalizer>(s => s.GetService<WebLocalizer>())
-				.AddScoped<IDataLocalizer>(s => s.GetService<WebLocalizer>());
+				.AddScoped<ILocalizer>(s => s.GetRequiredService<WebLocalizer>())
+				.AddScoped<IDataLocalizer>(s => s.GetRequiredService<WebLocalizer>());
 
 			services.AddScoped<WebProfiler>()
-				.AddScoped<IProfiler>(s => s.GetService<WebProfiler>())
-				.AddScoped<IDataProfiler>(s => s.GetService<WebProfiler>());
+				.AddScoped<IProfiler>(s => s.GetRequiredService<WebProfiler>())
+				.AddScoped<IDataProfiler>(s => s.GetRequiredService<WebProfiler>());
 
-			services.AddScoped<IApplicationHost>(s => s.GetService<WebApplicationHost>());
+			services.AddScoped<IApplicationHost>(s => s.GetRequiredService<WebApplicationHost>());
 
 			services.AddSingleton<ILocalizerDictiorany, WebLocalizerDictiorany>();
 
 			services.AddScoped<ITokenProvider, WebTokenProvider>();
 
 			services.AddScoped<CurrentUser>()
-				.AddScoped<ICurrentUser>(s => s.GetService<CurrentUser>())
-				.AddScoped<IDbIdentity>(s => s.GetService<CurrentUser>());
+				.AddScoped<ICurrentUser>(s => s.GetRequiredService<CurrentUser>())
+				.AddScoped<IDbIdentity>(s => s.GetRequiredService<CurrentUser>());
 
 			services.AddDistributedMemoryCache();
 			services.AddSession();
