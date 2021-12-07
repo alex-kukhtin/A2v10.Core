@@ -40,7 +40,7 @@ namespace A2v10.Infrastructure
 			};
 		}
 
-		public static Boolean IsImage(String mime)
+		public static Boolean IsImage(String? mime)
 		{
 			return mime != null && mime.StartsWith("image", StringComparison.OrdinalIgnoreCase);
 		}

@@ -34,7 +34,7 @@ public static class HostHelpers
 
 	public static async Task<String> AppLinksAsync(this IAppCodeProvider provider)
 	{
-		String appLinks = await provider.ReadTextFileAsync(String.Empty, "links.json", false);
+		String? appLinks = await provider.ReadTextFileAsync(String.Empty, "links.json", false);
 		if (appLinks != null)
 		{
 			// with validation
@@ -66,7 +66,7 @@ public static class HostHelpers
 		return String.Empty;
 	}
 
-	public static String CustomManifest(this IAppCodeProvider provider)
+	public static String? CustomManifest(this IAppCodeProvider provider)
 	{
 		var manifestPath = provider.MapHostingPath("manifest.json");
 		return provider.FileExists(manifestPath) ? "<link rel=\"manifest\" href=\"/manifest.json\">" : null;

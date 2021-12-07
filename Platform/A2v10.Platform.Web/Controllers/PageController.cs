@@ -104,7 +104,7 @@ namespace A2v10.Platform.Web.Controllers
 		{
 			Response.ContentType = MimeTypes.Text.HtmlUtf8;
 
-			IDataModel model = modelAndView.Model;
+			IDataModel? model = modelAndView.Model;
 			var rw = modelAndView.View;
 
 			String rootId = $"el{Guid.NewGuid()}";

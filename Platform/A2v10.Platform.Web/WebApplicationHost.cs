@@ -108,7 +108,8 @@ public class WebApplicationHost : IApplicationHost, ITenantManager
 	{
 		var val = _appSettings.GetValue<String>(key);
 		if (val != null)
-			return JsonConvert.DeserializeObject<ExpandoObject>(val, new ExpandoObjectConverter());
+			return JsonConvert.DeserializeObject<ExpandoObject>(val, new ExpandoObjectConverter()) 
+				?? new ExpandoObject();
 		var valObj = _appSettings.GetSection(key);
 		if (valObj != null)
 		{

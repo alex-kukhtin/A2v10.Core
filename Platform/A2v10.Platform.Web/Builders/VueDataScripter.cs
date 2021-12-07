@@ -128,7 +128,7 @@ vm.__doInit__('$(BaseUrl)');
 			_currentUser = currentUser;
 		}
 
-		public String CreateDataModelScript(IDataModel model)
+		public String CreateDataModelScript(IDataModel? model)
 		{
 			return model != null ? model.CreateScript(this) : CreateEmptyStript();
 		}
@@ -162,7 +162,7 @@ function modelData(template, data) {
 ";
 		}
 
-		static String SetModelInfo(IDataHelper helper, IDictionary<String, Object>? sys)
+		static String SetModelInfo(IDataHelper helper, IDictionary<String, Object?>? sys)
 		{
 			if (sys == null)
 				return String.Empty;
@@ -508,7 +508,7 @@ function modelData(template, data) {
 			var sbRequired = new StringBuilder();
 
 			// write model script
-			String fileTemplateText;
+			String? fileTemplateText;
 			if (msi.Template != null)
 			{
 				if (msi.Path == null)
@@ -562,7 +562,7 @@ function modelData(template, data) {
 				throw new InvalidProgramException("ModelScriptInfo.Path is null");
 			if (msi.Template != null)
 			{
-				String fileTemplateText = await _codeProvider.ReadTextFileAsync(msi.Path, msi.Template + ".js", _currentUser.IsAdminApplication);
+				String? fileTemplateText = await _codeProvider.ReadTextFileAsync(msi.Path, msi.Template + ".js", _currentUser.IsAdminApplication);
 				if (fileTemplateText == null)
 					throw new FileNotFoundException($"File not found. '{Path.Combine(msi.Path, msi.Template)}'");
 				sbRequired = new StringBuilder();

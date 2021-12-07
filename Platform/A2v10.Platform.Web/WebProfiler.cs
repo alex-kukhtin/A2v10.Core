@@ -133,7 +133,7 @@ public sealed class WebProfiler : IProfiler, IDataProfiler, IDisposable
 
 	public IProfileRequest CurrentRequest => _request ?? new DummyRequest() as IProfileRequest;
 
-	public IProfileRequest? BeginRequest(String address, String session)
+	public IProfileRequest? BeginRequest(String address, String? session)
 	{
 		if (!Enabled)
 			return null;

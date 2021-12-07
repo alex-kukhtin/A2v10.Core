@@ -260,7 +260,7 @@ public class ShellController : Controller
 		var appJson = await _codeProvider.ReadTextFileAsync(String.Empty, "app.json", false);
 		if (appJson != null)
 		{
-			ExpandoObject app = JsonConvert.DeserializeObject<ExpandoObject>(appJson);
+			ExpandoObject? app = JsonConvert.DeserializeObject<ExpandoObject>(appJson);
 			return _localizer.Localize(null, JsonConvert.SerializeObject(app));
 		}
 

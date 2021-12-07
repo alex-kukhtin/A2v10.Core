@@ -26,8 +26,8 @@ namespace A2v10.Platform.Web
 	{
 		private readonly ConcurrentDictionary<String, LocaleMapItem> _maps = new();
 
-		FileSystemWatcher _watcher_system = null;
-		FileSystemWatcher _watcher_app = null;
+		FileSystemWatcher? _watcher_system = null;
+		FileSystemWatcher? _watcher_app = null;
 
 
 
@@ -123,7 +123,7 @@ namespace A2v10.Platform.Web
 			return _maps.GetOrAdd(locale, (key) => new LocaleMapItem(action));
 		}
 
-		void CreateWatchers(String dirPath, String appPath)
+		void CreateWatchers(String? dirPath, String? appPath)
 		{
 			if (!_watch)
 				return;

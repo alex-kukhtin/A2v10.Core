@@ -1,26 +1,21 @@
 ﻿// Copyright © 2020-2021 Alex Kukhtin. All rights reserved.
 
-using System;
-using System.Dynamic;
 
-using A2v10.Infrastructure;
-
-namespace A2v10.Services.Javascript
+namespace A2v10.Services.Javascript;
+public class ScriptConfig
 {
-	public class ScriptConfig
-	{
-		private readonly IApplicationHost _host;
+	private readonly IApplicationHost _host;
 
-		public ScriptConfig(IApplicationHost host)
-		{
-			_host = host;
-		}
+	public ScriptConfig(IApplicationHost host)
+	{
+		_host = host;
+	}
 
 #pragma warning disable IDE1006 // Naming Styles
-		public ExpandoObject appSettings(String name)
+	public ExpandoObject appSettings(String name)
 #pragma warning restore IDE1006 // Naming Styles
-		{
-			return _host.GetEnvironmentObject(name);
-		}
+	{
+		return _host.GetEnvironmentObject(name);
 	}
 }
+
