@@ -24,7 +24,7 @@ public interface IUserState
 
 public interface IUserLocale
 {
-	String? Locale { get; }
+	String Locale { get; }
 	String Language { get; }
 }
 

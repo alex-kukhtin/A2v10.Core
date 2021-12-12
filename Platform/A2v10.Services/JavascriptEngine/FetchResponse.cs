@@ -32,7 +32,7 @@ namespace A2v10.Services.Javascript
 #pragma warning restore IDE1006 // Naming Styles
 		{
 			if (isJson)
-				return JsonConvert.DeserializeObject<ExpandoObject>(body);
+				return JsonConvert.DeserializeObject<ExpandoObject>(body) ?? new ExpandoObject();
 			throw new InvalidOperationException($"The answer is not in {MimeTypes.Application.Json} format");
 		}
 

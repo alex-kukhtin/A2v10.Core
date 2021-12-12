@@ -106,7 +106,7 @@ public sealed class WebProfiler : IProfiler, IDataProfiler, IDisposable
 {
 	const Int32 REQUEST_COUNT = 50;
 
-	private LinkedList<ProfileRequest>? _requestList;
+	private LinkedList<ProfileRequest> _requestList = new();
 	private ProfileRequest? _request;
 
 	public Boolean Enabled { get; set; }
@@ -158,12 +158,9 @@ public sealed class WebProfiler : IProfiler, IDataProfiler, IDisposable
 	void LoadSession()
 	{
 		var protectedData = _httpContext.HttpContext?.Request.Cookies[CookieNames.Application.Profile];
-		if (String.IsNullOrEmpty(protectedData))
-			_requestList = new LinkedList<ProfileRequest>();
-		else
-			_requestList = JsonConvert.DeserializeObject<LinkedList<ProfileRequest>>(_protector.Unprotect(protectedData));
-		if (_requestList == null)
-			throw new NullReferenceException(nameof(_requestList));
+		if (!String.IsNullOrEmpty(protectedData))
+			_requestList = JsonConvert.DeserializeObject<LinkedList<ProfileRequest>>(_protector.Unprotect(protectedData))
+				?? throw new InvalidProgramException("Invalid RequestList");
 	}
 
 	void SaveSession()

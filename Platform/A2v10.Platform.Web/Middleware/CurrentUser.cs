@@ -40,26 +40,20 @@ public record UserState : IUserState
 
 public record UserLocale : IUserLocale
 {
-	public String? Locale { get; init; }
-
-	public String Language
-	{
-		get
-		{
-			var loc = Locale;
-			if (loc != null)
-				return loc[..2];
-			else
-				return Thread.CurrentThread.CurrentUICulture.TwoLetterISOLanguageName;
-		}
-	}
+	public UserLocale(String? locale = null)
+    {
+		Locale = locale ??
+			Thread.CurrentThread.CurrentUICulture.Name;
+    }
+	public String Locale { get; }
+	public String Language => Locale[..2];
 }
 
 public class CurrentUser : ICurrentUser, IDbIdentity
 {
 	public IUserIdentity Identity { get; private set; } = new UserIdentity();
 	public UserState State {get; private set;}
-	public IUserLocale Locale { get; private set; }
+	public IUserLocale Locale { get; private set; } = new UserLocale();
 
 	#region IDbIdentity
 	public Int32? TenantId => Identity?.Tenant;
@@ -82,6 +76,7 @@ public class CurrentUser : ICurrentUser, IDbIdentity
 		{
 			Invalid = true
 		};
+
 	}
 
 	public void Setup(HttpContext context)
@@ -138,10 +133,7 @@ public class CurrentUser : ICurrentUser, IDbIdentity
 			var lang = context.Request.Query["lang"];
 			// TODO: check available locales
 		}
-		Locale = new UserLocale()
-		{
-			Locale = userLoc
-		};
+		Locale = new UserLocale(userLoc);
 	}
 
 	public void SetCompanyId(Int64 id)

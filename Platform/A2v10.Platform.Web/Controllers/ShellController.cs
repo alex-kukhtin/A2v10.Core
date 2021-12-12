@@ -255,7 +255,7 @@ public class ShellController : Controller
 		_currentUser.SetReadOnly(model.Eval<Boolean>("UserState.ReadOnly"));
 	}
 
-	async Task<String> GetAppData()
+	async Task<String?> GetAppData()
 	{
 		var appJson = await _codeProvider.ReadTextFileAsync(String.Empty, "app.json", false);
 		if (appJson != null)

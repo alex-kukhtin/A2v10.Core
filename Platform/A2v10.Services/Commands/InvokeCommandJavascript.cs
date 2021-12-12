@@ -33,7 +33,9 @@ namespace A2v10.Services
 				throw new DataServiceException("'file' must be specified for the javascript command");
 			String file = "server.module".AddExtension("js");
 			var text = await _appCodeProvider.ReadTextFileAsync(command.Path, file, _currentUser.IsAdminApplication);
-			var result = _engine.Execute(text, parameters, command.Args);
+			if (text == null)
+				throw new DataServiceException($"Script not found '{file}'");
+			var result = _engine.Execute(text, parameters, command.Args ?? new ExpandoObject());
 			return InvokeResult.JsonFromObject(result);
 		}
 		#endregion

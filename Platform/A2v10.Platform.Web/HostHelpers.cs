@@ -44,11 +44,11 @@ public static class HostHelpers
 		return "[]";
 	}
 
-	public static String CustomAppHead(this IAppCodeProvider provider)
+	public static async Task<String> CustomAppHead(this IAppCodeProvider provider)
 	{
+		String? head = await provider.ReadTextFileAsync("_layout", "_head.html", false);
 		/* TODO:
 		String head = provider.ReadTextFile("_layout", "_head.html");
-		return head != null ? host.GetAppSettings(head) : String.Empty;
 		*/
 		return String.Empty;
 	}
