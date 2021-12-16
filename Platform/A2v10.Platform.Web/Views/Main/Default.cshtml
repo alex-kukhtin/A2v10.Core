@@ -5,7 +5,7 @@
 @inject ILocalizer localizer
 @inject IApplicationHost host
 
-<div id="shell" class="shell @(Model.Debug ? "debug" : "release")" v-cloak>
+<div id="shell" class="shell @(Model!.Debug ? "debug" : "release")" v-cloak>
 	<a2-app-header :title="title" :subtitle="subtitle" :user-state=userState :single-page=singlePage
 			:menu=menu :new-menu=newMenu :settings-menu=settingsMenu :app-data="appData"
 			person-name="@Model.PersonName" :user-is-admin="userIsAdmin" :show-feedback="showFeedback"
