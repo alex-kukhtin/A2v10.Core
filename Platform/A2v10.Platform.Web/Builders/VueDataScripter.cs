@@ -88,6 +88,7 @@ const vm = new DataModelController({
 	el:'#$(RootId)',
 	props: {
 		inDialog: {type: Boolean, default: $(IsDialog)},
+        isIndex: {type: Boolean, default: $(IsIndex)},
 		pageTitle: {type: String}
 	},
 	data: currentModule().dataModel,
@@ -501,7 +502,6 @@ function modelData(template, data) {
 
 		public async Task<ScriptInfo> GetModelScript(ModelScriptInfo msi)
 		{
-			var result = new ScriptInfo();
 			var output = new StringBuilder();
 			String dataModelText = "{}";
 			String templateText = "{}";
@@ -534,7 +534,6 @@ function modelData(template, data) {
 			modelFunc.Replace("$(DataModelText)", dataModelText);
 			String modelScript = CreateDataModelScript(msi.DataModel);
 			modelFunc.Replace("$(ModelScript)", modelScript);
-			result.DataScript = modelFunc.ToString();
 
 			header.Replace("$(CurrentModule)", modelFunc.ToString());
 			output.Append(header);
@@ -543,10 +542,13 @@ function modelData(template, data) {
 			footer.Replace("$(RootId)", msi.RootId);
 			footer.Replace("$(BaseUrl)", msi.BaseUrl);
 			footer.Replace("$(IsDialog)", msi.IsDialog.ToString().ToLowerInvariant());
+			footer.Replace("$(IsIndex)", msi.IsIndex.ToString().ToLowerInvariant());
 			output.Append(footer);
-			result.Script = output.ToString();
 
-			return result;
+			return new ScriptInfo(
+				Script:output.ToString(),	
+				DataScript:modelFunc.ToString()
+            );
 		}
 
 		public ScriptInfo GetServerScript(ModelScriptInfo msi)
@@ -580,10 +582,11 @@ function modelData(template, data) {
 			sb.Replace("$(RawDataText)", msi.RawData ?? "{}");
 			sb.Replace("$(ModelScript)", modelScript);
 
-			return new ScriptInfo()
-			{
-				Script = sb.ToString()
-			};
+			return new ScriptInfo
+			(
+				Script: sb.ToString(),
+				DataScript: null
+			);
 		}
 	}
 }

@@ -116,6 +116,7 @@ namespace A2v10.Platform.Web.Controllers
 				DataModel = model,
 				RootId = rootId,
 				IsDialog = rw.IsDialog,
+				IsIndex = rw.IsIndex,
 				Template = rw.Template,
 				Path = rw.Path,
 				BaseUrl = rw.BaseUrl

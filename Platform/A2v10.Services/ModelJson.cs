@@ -120,6 +120,7 @@ public class ModelJsonView : ModelJsonViewBase, IModelView
 	public String? CheckTypes { get; set; }
 
 	public virtual Boolean IsDialog => false;
+	public Boolean IsIndex => Index;
 
 	public Boolean Indirect { get; init; }
 	public String? Target { get; init; }

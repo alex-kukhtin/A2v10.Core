@@ -60,6 +60,7 @@ public interface IModelView : IModelBase
 
 	String GetView(Boolean bMobile);
 	Boolean IsDialog { get; }
+	Boolean IsIndex { get; }
 
 	String ExpandProcedure();
 	String UpdateProcedure();
