@@ -1,35 +1,32 @@
 ﻿
 // Copyright © 2020 Alex Kukhtin. All rights reserved.
 
-using System;
-using A2v10.System.Xaml;
+namespace A2v10.Xaml;
 
-namespace A2v10.Xaml
+[ContentProperty("Content")]
+public class EmptyPanel : ContentControl
 {
-	[ContentProperty("Content")]
-	public class EmptyPanel : ContentControl
+	public Icon Icon { get; set; }
+
+	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
-		public Icon Icon { get; set; }
+		if (SkipRender(context))
+			return;
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
-		{
-			if (SkipRender(context))
-				return;
+		var block = new TagBuilder("div", "empty-panel", IsInGrid);
+		onRender?.Invoke(block);
 
-			var block = new TagBuilder("div", "empty-panel");
-			onRender?.Invoke(block);
+		MergeAttributes(block, context);
+		block.RenderStart(context);
 
-			MergeAttributes(block, context);
-			block.RenderStart(context);
+		RenderIcon(context, Icon);
 
-			RenderIcon(context, Icon);
+		var cont = new TagBuilder("div", "empty-panel-content");
+		cont.RenderStart(context);
+		RenderContent(context);
+		cont.RenderEnd(context);
 
-			var cont = new TagBuilder("div", "empty-panel-content");
-			cont.RenderStart(context);
-			RenderContent(context);
-			cont.RenderEnd(context);
-
-			block.RenderEnd(context);
-		}
+		block.RenderEnd(context);
 	}
 }
+
