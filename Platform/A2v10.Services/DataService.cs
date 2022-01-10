@@ -319,7 +319,7 @@ public class DataService : IDataService
 		return bi;
 	}
 
-	public async Task<ILayoutDescription?> GetLayoutDescriptionAsync(String baseUrl)
+	public async Task<ILayoutDescription?> GetLayoutDescriptionAsync(String? baseUrl)
 	{
 		if (baseUrl == null)
 			return null;

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using A2v10.Infrastructure;
 using A2v10.Web.Identity;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace A2v10.Platform.Web.Controllers
 {
@@ -25,13 +26,25 @@ namespace A2v10.Platform.Web.Controllers
 			_dataService = dataService;
 		}
 
+		String? NormalizePathInfo(String? pathInfo)
+        {
+			if (String.IsNullOrEmpty(pathInfo))
+				return null;
+			var parts = pathInfo.Split(new Char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
+			if (parts.Length == 1)
+				return $"{pathInfo}{Path.DirectorySeparatorChar}index{Path.DirectorySeparatorChar}0";
+			return pathInfo;
+		}
+
 		[Route("{*pathInfo}")]
 		[HttpGet]
-		public async Task<IActionResult> Default(String pathInfo)
+		public async Task<IActionResult> Default(String? pathInfo)
 		{
 			if (IsStaticFile())
 				return NotFound();
-			var layoutDescr = await _dataService.GetLayoutDescriptionAsync(pathInfo);
+
+			// TODO: modelStyles, ModelScripts
+			var layoutDescr = await _dataService.GetLayoutDescriptionAsync(NormalizePathInfo(pathInfo));
 
 			if (User.Identity == null)
 				throw new ApplicationException("Invalid User");

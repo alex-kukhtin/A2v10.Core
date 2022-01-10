@@ -56,6 +56,6 @@ namespace A2v10.Infrastructure
 		Task<IInvokeResult> InvokeAsync(String baseUrl, String command, ExpandoObject? data, Action<ExpandoObject> setParams);
 		Byte[] Html2Excel(String html);
 
-		Task<ILayoutDescription?> GetLayoutDescriptionAsync(String baseUrl);
+		Task<ILayoutDescription?> GetLayoutDescriptionAsync(String? baseUrl);
 	}
 }
