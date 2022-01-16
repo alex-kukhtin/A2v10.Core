@@ -11,7 +11,7 @@
 		<Authors>Oleksandr Kukhtin</Authors>
 		<Company>Oleksandr Kukhtin</Company>
 		<Description>Stimulsoft report engine for A2v10</Description>
-		<Copyright>Copyright © 2020-2021 Oleksandr Kukhtin. All rights reserved.</Copyright>
+		<Copyright>Copyright © 2020-2022 Oleksandr Kukhtin. All rights reserved.</Copyright>
 		<RepositoryType>github</RepositoryType>
 		<PackageTags>A2v10 Reports Stimulsoft</PackageTags>
 		<EnableDefaultContentItems>False</EnableDefaultContentItems>
@@ -29,8 +29,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7304" />
-		<PackageReference Include="Stimulsoft.Reports.Web.NetCore" Version="2022.1.2" />
+		<PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7305" />
+		<PackageReference Include="Stimulsoft.Reports.Web.NetCore" Version="2022.1.4" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.TagHelpers" Version="2.2.0" />
 	</ItemGroup>
 

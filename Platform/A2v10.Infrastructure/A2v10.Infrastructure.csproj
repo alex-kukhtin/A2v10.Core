@@ -11,13 +11,13 @@
 		<Authors>Oleksandr Kukhtin</Authors>
 		<Company>Oleksandr Kukhtin</Company>
 		<Description>A2v10 Platform Abstractions</Description>
-		<Copyright>Copyright © 2015-2021 Oleksandr Kukhtin. All rights reserved.</Copyright>
+		<Copyright>Copyright © 2015-2022 Oleksandr Kukhtin. All rights reserved.</Copyright>
 		<RepositoryType>github</RepositoryType>
 		<PackageTags>A2v10</PackageTags>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7304" />
+		<PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7305" />
 		<PackageReference Include="A2v10.Runtime.Interfaces" Version="10.1.8030" />
 	</ItemGroup>
 

@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2020-2021 Alex Kukhtin
 
-Last updated : 04 dec 2021
-module version : 8072
+Last updated : 30 dec 2021
+module version : 8079
 */
 ------------------------------------------------
 set nocount on;
@@ -27,7 +27,7 @@ go
 begin
 	set nocount on;
 	declare @version int;
-	set @version = 8072;
+	set @version = 8079;
 	if exists(select * from a2wf.Versions where Module = N'main')
 		update a2wf.Versions set [Version] = @version where Module = N'main';
 	else
@@ -307,6 +307,22 @@ begin
 	select i.Id, [WorkflowId], [Version], [State], ExecutionStatus, Lock, Parent
 	from @inst t inner join a2wf.Instances i on t.Id = i.Id
 	where t.Id = @Id;
+end
+go
+------------------------------------------------
+create or alter procedure a2wf.[Instance.LoadRaw]
+@UserId bigint = null,
+@Id uniqueidentifier
+as
+begin
+	set nocount on;
+	set transaction isolation level read uncommitted;
+
+	declare @inst table(Id uniqueidentifier);
+
+	select i.Id, [WorkflowId], [Version], [State], ExecutionStatus, Lock, Parent
+	from a2wf.Instances i
+	where i.Id = @Id;
 end
 go
 ------------------------------------------------
