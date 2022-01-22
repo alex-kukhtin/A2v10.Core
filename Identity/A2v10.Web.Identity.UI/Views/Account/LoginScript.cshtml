@@ -7,7 +7,7 @@
 new Vue({
 el:"#app",
 data: {
-	email:'@Model.Login',
+	email:'@Model?.Login',
 	password:'',
 	rememberMe: true,
 	submitted: false,
@@ -34,7 +34,7 @@ methods: {
 		formData.append('Login', this.email);
 		formData.append('Password', this.password);
 		formData.append('RememberMe', this.rememberMe);
-		formData.append('__RequestVerificationToken', '@Model.RequestToken');
+		formData.append('__RequestVerificationToken', '@Model?.RequestToken');
 		let resp = await fetch('/account/login', {
 			method: 'POST',
 			body: formData

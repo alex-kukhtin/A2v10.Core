@@ -1,6 +1,6 @@
 ﻿
 /* Copyright © 2019-2021 Alex Kukhtin. All rights reserved. */
-/* Version 10.0.7782 */
+/* Version 10.0.7807 */
 
 
 declare function require(url: string): any;
@@ -255,6 +255,7 @@ interface IController {
 	$showDialog(url: string, data?: object, query?: object): Promise<any>;
 	$inlineOpen(id: string): void;
 	$inlineClose(id: string, result?: any): void;
+	$inlineDepth(): number;
 	$saveModified(msg?: string, title?: string): boolean;
 	$asyncValid(cmd: string, arg: object): any | Promise<any>;
 	$toast(text: string, style?: CommonStyle): void;
@@ -266,6 +267,7 @@ interface IController {
 	$expand(elem: ITreeElement, prop: string, value: boolean): Promise<any>;
 	$focus(htmlid: string): void;
 	$report(report: string, arg: object, opts?: { export?: Boolean, attach?: Boolean, print?: Boolean, format?: ReportFormat }, url?: string, data?: object): void;
+	$upload(url: string, accept?: string): Promise<any>;
 }
 
 interface IMessage {

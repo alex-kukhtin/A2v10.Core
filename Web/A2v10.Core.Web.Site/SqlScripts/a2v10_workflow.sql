@@ -1,8 +1,8 @@
 ﻿/*
-Copyright © 2020-2021 Alex Kukhtin
+Copyright © 2020-2022 Alex Kukhtin
 
-Last updated : 30 dec 2021
-module version : 8079
+Last updated : 17 jan 2022
+module version : 8080
 */
 ------------------------------------------------
 set nocount on;
@@ -27,7 +27,7 @@ go
 begin
 	set nocount on;
 	declare @version int;
-	set @version = 8079;
+	set @version = 8080;
 	if exists(select * from a2wf.Versions where Module = N'main')
 		update a2wf.Versions set [Version] = @version where Module = N'main';
 	else
@@ -509,12 +509,6 @@ begin
 	set transaction isolation level read committed;
 	set xact_abort on;
 
-	/*
-	declare @xml nvarchar(max);
-	set @xml = (select * from @TrackRecords for xml auto);
-	throw 60000, @xml, 0;
-	*/
-
 	begin tran;
 	
 	declare @defuid uniqueidentifier;
@@ -724,6 +718,56 @@ begin
 	where Id=@Id;
 end
 go
+/*
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2wf' and TABLE_NAME=N'Inbox')
+begin
+	create table a2wf.[Inbox]
+	(
+		Id uniqueidentifier not null,
+		InstanceId uniqueidentifier not null,
+		Bookmark nvarchar(255) not null,
+		DateCreated datetime not null
+			constraint DF_Inbox_DateCreated default(getutcdate()),
+		DateRemoved datetime null
+		Void bit,
+		-- other fields
+		constraint PK_Inbox primary key clustered(Id, InstanceId)
+	);
+end
+go
+------------------------------------------------
+create or alter procedure a2wf.[Instance.Inbox.Create]
+@UserId bigint = null,
+@Id uniqueidentifier,
+@InstanceId uniqueidentifier,
+@Bookmark nvarchar(255),
+... -- other parametets
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+	set xact_abort on;
+
+	insert into a2wf.[Inbox] (Id, InstanceId, Bookmark, ...)
+	values (@Id, @InstanceId, @Bookmark, ...);
+end
+go
+------------------------------------------------
+create or alter procedure a2wf.[Instance.Inbox.Remove]
+@UserId bigint = null,
+@Id uniqueidentifier,
+@InstanceId uniqueidentifier
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+	set xact_abort on;
+
+	update a2wf.Inbox set Void = 1, DateRemoved = getutcdate() where Id=@Id and InstanceId=@InstanceId;
+end
+go*/
+
 /*
 drop table a2wf.InstanceBookmarks;
 drop table a2wf.InstanceTrack;
