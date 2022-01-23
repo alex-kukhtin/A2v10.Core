@@ -8,7 +8,7 @@ namespace A2v10.Services.Javascript
 {
 	public class FetchResponse
 	{
-		internal FetchResponse(HttpStatusCode status, String contentType, String body, ExpandoObject? headers, String statusText = "OK")
+		internal FetchResponse(HttpStatusCode status, String? contentType, String? body, ExpandoObject? headers, String statusText = "OK")
 		{
 			this.status = status;
 			this.contentType = contentType;
@@ -21,9 +21,9 @@ namespace A2v10.Services.Javascript
 		public Boolean ok => ((int)status >= 200) && ((int)status <= 299);
 		public String statusText { get; }
 		public HttpStatusCode status { get; }
-		public String contentType { get; }
-		public String body { get; }
-		public Boolean isJson => contentType.StartsWith(MimeTypes.Application.Json);
+		public String? contentType { get; }
+		public String? body { get; }
+		public Boolean isJson => contentType != null && contentType.StartsWith(MimeTypes.Application.Json);
 		public ExpandoObject? headers { get; }
 #pragma warning restore IDE1006 // Naming Styles
 
@@ -32,7 +32,11 @@ namespace A2v10.Services.Javascript
 #pragma warning restore IDE1006 // Naming Styles
 		{
 			if (isJson)
+			{
+				if (body == null)
+					return new ExpandoObject();
 				return JsonConvert.DeserializeObject<ExpandoObject>(body) ?? new ExpandoObject();
+			}
 			throw new InvalidOperationException($"The answer is not in {MimeTypes.Application.Json} format");
 		}
 
@@ -40,7 +44,7 @@ namespace A2v10.Services.Javascript
 		public String text()
 #pragma warning restore IDE1006 // Naming Styles
 		{
-			return body;
+			return body ?? String.Empty;
 		}
 	}
 }

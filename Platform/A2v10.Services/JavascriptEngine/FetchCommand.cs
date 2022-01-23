@@ -1,7 +1,9 @@
 ﻿// Copyright © 2020-2021 Alex Kukhtin. All rights reserved.
 
 using System.IO;
-using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Text;
 
 using Newtonsoft.Json;
@@ -9,7 +11,7 @@ using Newtonsoft.Json;
 namespace A2v10.Services.Javascript;
 public static class FetchCommand
 {
-	static void SetHeaders(HttpWebRequest wr, ExpandoObject? headers)
+	static void SetHeaders(HttpRequestMessage wr, ExpandoObject? headers)
 	{
 		if (headers == null)
 			return;
@@ -18,7 +20,7 @@ public static class FetchCommand
 			wr.Headers.Add(hp.Key, hp.Value.ToString());
 	}
 
-	static void AddAuthorization(HttpWebRequest wr, ExpandoObject? auth)
+	static void AddAuthorization(HttpRequestMessage wr, ExpandoObject? auth)
 	{
 		if (auth == null)
 			return;
@@ -56,86 +58,57 @@ public static class FetchCommand
 		return "?" + ts;
 	}
 
-	static ExpandoObject? GetResponseHeaders(WebHeaderCollection? headers)
+	static ExpandoObject? GetResponseHeaders(HttpResponseHeaders? headers)
 	{
 		if (headers == null)
 			return null;
 		var eo = new ExpandoObject();
-		foreach (var key in headers.AllKeys)
-		{
-			eo.Set(key, headers[key]);
-		}
+		foreach (var (key, value) in headers)
+			eo.Set(key, value);
 		return eo;
 	}
 
-	public static FetchResponse Execute(String url, ExpandoObject? prms)
+	public static FetchResponse Execute(IHttpClientFactory factory, String url, ExpandoObject? prms)
 	{
-		try
+		using var client = factory.CreateClient();
+
+		String mtdString = prms?.Get<String>("method")?.ToUpperInvariant() ?? "get";
+
+		HttpMethod mtd = new(mtdString);
+		String requestUrl = url + CreateQueryString(prms?.Get<ExpandoObject>("query"));
+		var requestMessage = new HttpRequestMessage(mtd, requestUrl);
+
+		AddAuthorization(requestMessage, prms?.Get<ExpandoObject>("authorization"));
+		SetHeaders(requestMessage, prms?.Get<ExpandoObject>("headers"));
+
+		if (mtd == HttpMethod.Post)
 		{
-			var httpWebRequest = WebRequest.CreateHttp(url + CreateQueryString(prms?.Get<ExpandoObject>("query")));
+			requestMessage.Method = mtd;
+			var bodyObj = prms?.Get<Object>("body");
 
-			String mtd = prms?.Get<String>("method")?.ToUpperInvariant() ?? "GET";
-			AddAuthorization(httpWebRequest, prms?.Get<ExpandoObject>("authorization"));
-			SetHeaders(httpWebRequest, prms?.Get<ExpandoObject>("headers"));
-
-			if (mtd == "POST")
+			switch (bodyObj)
 			{
-				httpWebRequest.Method = mtd;
-				var bodyObj = prms?.Get<Object>("body");
-				String? bodyStr = null;
-
-				switch (bodyObj)
-				{
-					case String strObj:
-						bodyStr = strObj;
-						break;
-					case ExpandoObject eoObj:
-						bodyStr = JsonConvert.SerializeObject(eoObj, new JsonDoubleConverter());
-						httpWebRequest.ContentType = MimeTypes.Application.Json;
-						break;
-				}
-
-				if (bodyStr != null)
-				{
-					var bytes = Encoding.GetEncoding("UTF-8").GetBytes(bodyStr);
-					using var rqs = httpWebRequest.GetRequestStream();
-					rqs.Write(bytes, 0, bytes.Length);
-				}
+				case String strObj:
+					requestMessage.Content = new StringContent(strObj);
+					break;
+				case ExpandoObject eoObj:
+					var bodyStr = JsonConvert.SerializeObject(eoObj, new JsonDoubleConverter());
+					requestMessage.Content = JsonContent.Create(bodyStr);
+					break;
 			}
+		}
 
-			using var respRaw = httpWebRequest.GetResponse();
-			if (respRaw is not HttpWebResponse resp)
-				throw new InvalidProgramException("Invalid response type");
-			var contentType = resp.ContentType;
-			var headers = resp.Headers;
-			using var rs = resp.GetResponseStream();
-			using var ms = new StreamReader(rs);
-			String strResult = ms.ReadToEnd();
-			return new FetchResponse(
-				resp.StatusCode,
-				contentType,
-				strResult,
-				GetResponseHeaders(headers),
-				resp.StatusDescription);
-		}
-		catch (WebException wex)
-		{
-			if (wex.Response != null && wex.Response is HttpWebResponse webResp)
-			{
-				using var rs = new StreamReader(wex.Response.GetResponseStream());
-				String strError = rs.ReadToEnd();
-				var headers = wex.Response.Headers;
-				// set headers
-				return new FetchResponse(
-					webResp.StatusCode,
-					wex.Response.ContentType,
-					strError,
-					GetResponseHeaders(headers),
-					webResp.StatusDescription);
-			}
-			else
-				throw;
-		}
+		using HttpResponseMessage resp = client.Send(requestMessage);
+		var contentType = resp.Content.Headers.ContentType?.ToString();
+		using var rs = resp.Content.ReadAsStream();
+		using var ms = new StreamReader(rs);
+		return new FetchResponse
+		(
+			resp.StatusCode,
+			contentType,
+			ms.ReadToEnd(),
+			GetResponseHeaders(resp.Headers)
+		);
 	}
 }
 

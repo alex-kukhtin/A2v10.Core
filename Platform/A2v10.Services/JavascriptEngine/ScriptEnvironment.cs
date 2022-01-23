@@ -1,6 +1,6 @@
-﻿
-using System;
-using System.Dynamic;
+﻿// Copyright © 2021-2022 Alex Kukhtin. All rights reserved.
+
+using System.Net.Http;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -8,18 +8,19 @@ using Jint.Native;
 using Jint.Runtime;
 
 using A2v10.Data.Interfaces;
-using A2v10.Infrastructure;
 
 namespace A2v10.Services.Javascript;
 public class ScriptEnvironment
 {
 	private readonly IDbContext _dbContext;
 	private readonly ScriptConfig _config;
+	private readonly IHttpClientFactory _httpClientFactory;
 
 	public ScriptEnvironment(IServiceProvider serviceProvider)
 	{
 		_dbContext = serviceProvider.GetRequiredService<IDbContext>();
 		_config = new ScriptConfig(serviceProvider.GetRequiredService<IApplicationHost>());
+		_httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
 	}
 
 #pragma warning disable IDE1006 // Naming Styles
@@ -97,12 +98,12 @@ public class ScriptEnvironment
 	}
 
 #pragma warning disable IDE1006 // Naming Styles
-	public static FetchResponse fetch(String url, ExpandoObject? prms)
+	public FetchResponse fetch(String url, ExpandoObject? prms)
 #pragma warning restore IDE1006 // Naming Styles
 	{
 		try
 		{
-			return FetchCommand.Execute(url, prms);
+			return FetchCommand.Execute(_httpClientFactory, url, prms);
 		}
 		catch (Exception ex)
 		{

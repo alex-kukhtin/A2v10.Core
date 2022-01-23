@@ -113,7 +113,7 @@ public class BaseController : Controller, IControllerProfiler
 	}
 	#endregion
 
-	public Task ProcessDbEvents(IModelView _)
+	public static Task ProcessDbEvents(IModelView _)
 	{
 		return Task.CompletedTask;
 	}

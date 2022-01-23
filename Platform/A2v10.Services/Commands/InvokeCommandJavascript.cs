@@ -31,7 +31,7 @@ namespace A2v10.Services
 		{
 			if (String.IsNullOrEmpty(command.File))
 				throw new DataServiceException("'file' must be specified for the javascript command");
-			String file = "server.module".AddExtension("js");
+			String file = command.File.AddExtension("js");
 			var text = await _appCodeProvider.ReadTextFileAsync(command.Path, file, _currentUser.IsAdminApplication);
 			if (text == null)
 				throw new DataServiceException($"Script not found '{file}'");

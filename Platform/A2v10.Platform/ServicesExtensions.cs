@@ -73,6 +73,8 @@ public static class ServicesExtensions
 		// platfrom core services
 		services.AddSingleton<IAppVersion, PlatformAppVersion>();
 
+		services.AddHttpClient();
+
 		return services;
 	}
 

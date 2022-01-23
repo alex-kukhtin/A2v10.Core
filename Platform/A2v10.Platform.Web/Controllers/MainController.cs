@@ -26,7 +26,7 @@ namespace A2v10.Platform.Web.Controllers
 			_dataService = dataService;
 		}
 
-		String? NormalizePathInfo(String? pathInfo)
+		static String? NormalizePathInfo(String? pathInfo)
         {
 			if (String.IsNullOrEmpty(pathInfo))
 				return null;

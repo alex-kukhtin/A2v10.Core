@@ -20,10 +20,9 @@ namespace A2v10.Services
 			_profiler = profiler;
 		}
 
-		IPlatformUrl CreatePlatformUrl(String baseUrl)
+		static IPlatformUrl CreatePlatformUrl(String baseUrl)
 		{
-			var url = new PlatformUrl(UrlKind.Report, baseUrl);
-			return url;
+			return new PlatformUrl(UrlKind.Report, baseUrl);
 		}
 
 		public async Task<IInvokeResult> ExportAsync(String url, ExportReportFormat format, Action<ExpandoObject> setParams)
