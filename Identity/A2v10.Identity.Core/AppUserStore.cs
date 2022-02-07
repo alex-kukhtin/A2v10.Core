@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
 using System.Dynamic;
@@ -15,6 +15,7 @@ public sealed class AppUserStore :
 	IUserStore<AppUser>,
 	IUserLoginStore<AppUser>,
 	IUserEmailStore<AppUser>,
+	IUserPhoneNumberStore<AppUser>,
 	IUserPasswordStore<AppUser>,
 	IUserSecurityStampStore<AppUser>,
 	IUserClaimStore<AppUser>
@@ -265,6 +266,33 @@ public sealed class AppUserStore :
 	{
 		throw new NotImplementedException();
 	}
+	#endregion
+
+	#region IUserPhoneNumberStore
+	public Task SetPhoneNumberAsync(AppUser user, String phoneNumber, CancellationToken cancellationToken)
+    {
+		return Task.CompletedTask;
+    }
+
+	public Task<String> GetPhoneNumberAsync(AppUser user, CancellationToken cancellationToken)
+    {
+		return Task.FromResult(user.PhoneNumber ?? throw new InvalidOperationException("Phone number is null"));
+    }
+
+	public Task<Boolean> GetPhoneNumberConfirmedAsync(AppUser user, CancellationToken cancellationToken)
+    {
+		return Task.FromResult(user.PhoneNumberConfirmed);
+    }
+
+	public async Task SetPhoneNumberConfirmedAsync(AppUser user, Boolean confirmed, CancellationToken cancellationToken)
+    {
+		var prm = new ExpandoObject()
+		{
+			{ "UserId",  user.Id },
+			{ "Confirmed",  confirmed}
+		};
+		await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.SetPhoneNumberConfirmed]", prm);
+    }
 	#endregion
 
 	#region Token support

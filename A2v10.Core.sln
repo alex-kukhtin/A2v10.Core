@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30611.23
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32112.339
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Web", "Web", "{1823B559-E142-4E96-B927-DF861817AF4E}"
 EndProject
@@ -48,6 +48,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "A2v10.Web.Assets", "A2v10.W
 		Platform\A2v10.Web.Assets\A2v10.Web.Assets.nuspec = Platform\A2v10.Web.Assets\A2v10.Web.Assets.nuspec
 		Platform\A2v10.Web.Assets\A2v10.Web.Assets.targets = Platform\A2v10.Web.Assets\A2v10.Web.Assets.targets
 	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Implementation", "Implementation", "{78F20842-546F-4A01-B76E-AE2016E9708D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "A2v10.Ip2Sms", "Implementation\A2v10.Ip2Sms\A2v10.Ip2Sms\A2v10.Ip2Sms.csproj", "{251D4E67-3DCB-4E38-9631-AB79891586C4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -103,6 +107,10 @@ Global
 		{721A74D2-0391-4863-ABA8-5CA386732B36}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{721A74D2-0391-4863-ABA8-5CA386732B36}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{721A74D2-0391-4863-ABA8-5CA386732B36}.Release|Any CPU.Build.0 = Release|Any CPU
+		{251D4E67-3DCB-4E38-9631-AB79891586C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{251D4E67-3DCB-4E38-9631-AB79891586C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{251D4E67-3DCB-4E38-9631-AB79891586C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{251D4E67-3DCB-4E38-9631-AB79891586C4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -120,6 +128,7 @@ Global
 		{603926E4-F656-459C-92A3-B7354BF952FA} = {FAC17E50-040A-4C01-A4DC-DC21B61DA444}
 		{721A74D2-0391-4863-ABA8-5CA386732B36} = {FAC17E50-040A-4C01-A4DC-DC21B61DA444}
 		{80E326BE-2F62-4C0E-97F7-81FB662D9EAA} = {FAC17E50-040A-4C01-A4DC-DC21B61DA444}
+		{251D4E67-3DCB-4E38-9631-AB79891586C4} = {78F20842-546F-4A01-B76E-AE2016E9708D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D64A03C5-D2E1-49C8-A7A9-D6022941DE01}

@@ -12,6 +12,7 @@ using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 
 namespace A2v10.Web.Identity.UI;
+
 [Route("account/[action]")]
 [ApiExplorerSettings(IgnoreApi = true)]
 public class AccountController : Controller
@@ -29,7 +30,6 @@ public class AccountController : Controller
 		_antiforgery = antiforgery;
 		_dbContext = dbContext;
 		_host = host;
-
 	}
 
 	void RemoveAllCookies()
