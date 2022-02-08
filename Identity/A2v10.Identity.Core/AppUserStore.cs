@@ -56,15 +56,15 @@ public sealed class AppUserStore :
 	public async Task<AppUser> FindByIdAsync(String UserId, CancellationToken cancellationToken)
 	{
 		var Id = Int64.Parse(UserId);
-		return await _dbContext.LoadAsync<AppUser>(DataSource, $"[{DbSchema}].[FindUserById]", new { Id }) 
-			?? throw new IdentityCoreException($"User not found (Id='{UserId}')");
+		return await _dbContext.LoadAsync<AppUser>(DataSource, $"[{DbSchema}].[FindUserById]", new { Id })
+			?? new AppUser();
 	}
 
 	public async Task<AppUser> FindByNameAsync(String normalizedUserName, CancellationToken cancellationToken)
 	{
 		var UserName = normalizedUserName.ToLowerInvariant(); // A2v10
 		return await _dbContext.LoadAsync<AppUser>(DataSource, $"[{DbSchema}].[FindUserByName]", new { UserName })
-			?? throw new IdentityCoreException($"User not found (Name='{UserName}')");
+			?? new AppUser();
 	}
 
 	public Task<String> GetNormalizedUserNameAsync(AppUser user, CancellationToken cancellationToken)
@@ -149,7 +149,7 @@ public sealed class AppUserStore :
 	{
 		var Email = normalizedEmail?.ToLowerInvariant(); // A2v10
 		return await _dbContext.LoadAsync<AppUser>(DataSource, $"[{DbSchema}].[FindUserByEmail]", new { Email })
-			?? throw new IdentityCoreException($"User not found (Emali='{Email}')");
+			?? new AppUser();
 	}
 
 	public Task<String> GetNormalizedEmailAsync(AppUser user, CancellationToken cancellationToken)

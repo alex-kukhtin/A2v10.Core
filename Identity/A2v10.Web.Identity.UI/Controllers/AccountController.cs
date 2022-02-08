@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
+using System.Threading;
 
 namespace A2v10.Web.Identity.UI;
 
@@ -19,15 +20,17 @@ public class AccountController : Controller
 {
 	private readonly SignInManager<AppUser> _signInManager;
 	private readonly UserManager<AppUser> _userManager;
+	private readonly AppUserStore _userStore;
 	private readonly IAntiforgery _antiforgery;
 	private readonly IDbContext _dbContext;
 	private readonly IApplicationHost _host;
 
-	public AccountController(SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, IAntiforgery antiforgery, IApplicationHost host, IDbContext dbContext)
+	public AccountController(SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, AppUserStore userStore, IAntiforgery antiforgery, IApplicationHost host, IDbContext dbContext)
 	{
 		_signInManager = signInManager;
 		_userManager = userManager;
 		_antiforgery = antiforgery;
+		_userStore = userStore;
 		_dbContext = dbContext;
 		_host = host;
 	}
@@ -93,13 +96,20 @@ public class AccountController : Controller
 			var user = new AppUser()
 			{
 				UserName = model.Login,
+				PhoneNumber = Guid.NewGuid().ToString(),
 			};
 			var result = await _userManager.CreateAsync(user, model.Password);
 			if (result.Succeeded)
+			{
+				var token = await _userManager.GenerateTwoFactorTokenAsync(user, TokenOptions.DefaultPhoneProvider);
+				var user2 = await _userManager.FindByNameAsync(user.UserName);
+                var verified = await _userManager.VerifyTwoFactorTokenAsync(user2, TokenOptions.DefaultPhoneProvider, token);
+                await _userStore.SetPhoneNumberConfirmedAsync(user, true, new CancellationToken());
 				return Redirect("/");
+			}
 			return Redirect("/account/register");
 		} 
-		catch (Exception)
+		catch (Exception ex)
 		{
 			return new EmptyResult();
 		}

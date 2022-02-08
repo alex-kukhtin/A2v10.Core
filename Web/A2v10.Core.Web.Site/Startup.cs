@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using A2v10.Infrastructure;
 using A2v10.WorkflowEngine;
+using Microsoft.AspNetCore.Identity;
 
 namespace A2v10.Core.Web.Site
 {
@@ -23,7 +24,6 @@ namespace A2v10.Core.Web.Site
 		{
 			services.UsePlatform(Configuration);
 
-			/*
 			services.Configure<IdentityOptions>(opts =>
 			{
 				var pwd = opts.Password;
@@ -36,12 +36,11 @@ namespace A2v10.Core.Web.Site
 				var si = opts.SignIn;
 				si.RequireConfirmedEmail = false;
 				si.RequireConfirmedAccount = false;
-				si.RequireConfirmedPhoneNumber = false;
+				si.RequireConfirmedPhoneNumber = true;
 
 				var us = opts.User;
 				us.RequireUniqueEmail = false;
 			});
-			*/
 
 			services.UseWorkflowEngine();
 			services.AddInvokeTargets(a =>

@@ -11,14 +11,20 @@ namespace Microsoft.Extensions.DependencyInjection;
 public static class ServicesExtensions
 {
 	public static IServiceCollection AddPlatformIdentityCore(this IServiceCollection services,
-		Action<AppUserStoreOptions>? options = null)
+		Action<AppUserStoreOptions>? options = null, Action<IdentityOptions>? identityOptions = null)
 	{
 		services.AddIdentityCore<AppUser>(options =>
 		{
-			options.User.RequireUniqueEmail = true;
-			options.Lockout.MaxFailedAccessAttempts = 5;
-			options.SignIn.RequireConfirmedEmail = true;
-			options.Password.RequiredLength = 6;
+			if (identityOptions != null)
+				identityOptions(options);
+			else
+			{
+				// default behaviour
+				options.User.RequireUniqueEmail = true;
+				options.Lockout.MaxFailedAccessAttempts = 5;
+				options.SignIn.RequireConfirmedEmail = true;
+				options.Password.RequiredLength = 6;
+			}
 		})
 		.AddUserManager<UserManager<AppUser>>()
 		.AddSignInManager<SignInManager<AppUser>>()
