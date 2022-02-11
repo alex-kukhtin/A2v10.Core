@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="A2v10.Workflow.Engine" Version="10.1.8083" />
+    <PackageReference Include="A2v10.Workflow.Engine" Version="10.1.8084" />
   </ItemGroup>
 
   <ItemGroup>
