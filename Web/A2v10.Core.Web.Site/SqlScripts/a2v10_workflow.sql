@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2020-2022 Alex Kukhtin
 
-Last updated : 17 jan 2022
-module version : 8080
+Last updated : 16 feb 2022
+module version : 8088
 */
 ------------------------------------------------
 set nocount on;
@@ -27,7 +27,7 @@ go
 begin
 	set nocount on;
 	declare @version int;
-	set @version = 8080;
+	set @version = 8088;
 	if exists(select * from a2wf.Versions where Module = N'main')
 		update a2wf.Versions set [Version] = @version where Module = N'main';
 	else
@@ -82,11 +82,16 @@ begin
 		DateModified datetime not null constraint DF_Workflows_Modified default(getutcdate()),
 		Lock uniqueidentifier null,
 		LockDate datetime null,
+		CorrelationId nvarchar(255) null,
 		constraint FK_Instances_WorkflowId_Workflows foreign key (WorkflowId, [Version]) 
 			references a2wf.Workflows(Id, [Version])
 	);
 	create unique index IDX_Instances_WorkflowId_Id on a2wf.Instances (WorkflowId, Id) with (fillfactor = 70);
 end
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA=N'a2wf' and TABLE_NAME=N'Instances' and COLUMN_NAME=N'CorrelationId')
+	alter table a2wf.Instances add CorrelationId nvarchar(255) null;
 go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2wf' and TABLE_NAME=N'InstanceVariablesInt')
@@ -304,7 +309,7 @@ begin
 	output inserted.Id into @inst(Id)
 	where Id=@Id and Lock is null;
 
-	select i.Id, [WorkflowId], [Version], [State], ExecutionStatus, Lock, Parent
+	select i.Id, [WorkflowId], [Version], [State], ExecutionStatus, Lock, Parent, CorrelationId
 	from @inst t inner join a2wf.Instances i on t.Id = i.Id
 	where t.Id = @Id;
 end
@@ -320,7 +325,7 @@ begin
 
 	declare @inst table(Id uniqueidentifier);
 
-	select i.Id, [WorkflowId], [Version], [State], ExecutionStatus, Lock, Parent
+	select i.Id, [WorkflowId], [Version], [State], ExecutionStatus, Lock, Parent, CorrelationId
 	from a2wf.Instances i
 	where i.Id = @Id;
 end
@@ -341,7 +346,7 @@ begin
 	from a2wf.Instances i inner join a2wf.InstanceBookmarks b on i.Id = b.InstanceId and i.WorkflowId = b.WorkflowId
 	where b.Bookmark=@Bookmark and Lock is null;
 
-	select i.Id, [WorkflowId], [Version], [State], ExecutionStatus, Lock, Parent
+	select i.Id, [WorkflowId], [Version], [State], ExecutionStatus, Lock, Parent, CorrelationId
 	from @inst t inner join a2wf.Instances i on t.Id = i.Id;
 end
 go
@@ -352,14 +357,15 @@ create or alter procedure a2wf.[Instance.Create]
 @Parent uniqueidentifier,
 @Version int = 0,
 @WorkflowId nvarchar(255),
-@ExecutionStatus nvarchar(255)
+@ExecutionStatus nvarchar(255),
+@CorrelationId nvarchar(255) = null
 as
 begin
 	set nocount on;
 	set transaction isolation level read committed;
 	set xact_abort on;
-	insert into a2wf.Instances(Id, Parent, WorkflowId, [Version], ExecutionStatus)
-	values (@Id, @Parent, @WorkflowId, @Version, @ExecutionStatus);
+	insert into a2wf.Instances(Id, Parent, WorkflowId, [Version], ExecutionStatus, CorrelationId)
+	values (@Id, @Parent, @WorkflowId, @Version, @ExecutionStatus, @CorrelationId);
 end
 go
 ------------------------------------------------
@@ -377,6 +383,7 @@ create type a2wf.[Instance.TableType] as table
 	WorkflowId nvarchar(255),
 	[ExecutionStatus] nvarchar(255) null,
 	Lock uniqueidentifier,
+	CorrelationId nvarchar(255),
 	[State] nvarchar(max)
 )
 go
@@ -515,7 +522,7 @@ begin
 	set @defuid = newid();
 	declare @rtable table (id uniqueidentifier);
 	with ti as (
-		select t.Id, t.[State], t.DateModified, t.ExecutionStatus, t.Lock, t.LockDate
+		select t.Id, t.[State], t.DateModified, t.ExecutionStatus, t.Lock, t.LockDate, t.CorrelationId
 		from a2wf.Instances t
 		inner join @Instance p on p.Id = t.Id and isnull(t.Lock, @defuid) = isnull(p.Lock, @defuid)
 	)
@@ -526,6 +533,7 @@ begin
 		t.[State] = s.[State],
 		t.DateModified = getutcdate(),
 		t.ExecutionStatus = s.ExecutionStatus,
+		t.CorrelationId = isnull(t.CorrelationId, s.CorrelationId),
 		t.Lock = null,
 		t.LockDate = null
 	output inserted.Id into @rtable;
@@ -540,7 +548,7 @@ begin
 	with t as (
 		select tt.*
 		from a2wf.InstanceVariablesInt tt
-		inner join @Instance si on si.Id = tt.InstanceId
+		inner join @Instance si on si.Id = tt.InstanceId and si.WorkflowId = tt.WorkflowId
 	)
 	merge t
 	using (
@@ -560,7 +568,7 @@ begin
 	with t as (
 		select tt.*
 		from a2wf.InstanceVariablesGuid tt
-		inner join @Instance si on si.Id=tt.InstanceId
+		inner join @Instance si on si.Id=tt.InstanceId and si.WorkflowId = tt.WorkflowId
 	)
 	merge t
 	using (
@@ -580,7 +588,7 @@ begin
 	with t as (
 		select tt.*
 		from a2wf.InstanceVariablesString tt
-		inner join @Instance si on si.Id=tt.InstanceId
+		inner join @Instance si on si.Id=tt.InstanceId and si.WorkflowId = tt.WorkflowId
 	)
 	merge t
 	using (

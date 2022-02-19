@@ -42,7 +42,7 @@ namespace A2v10.Core.Web.Site
 				us.RequireUniqueEmail = false;
 			});
 
-			services.UseWorkflowEngine();
+			services.AddWorkflowEngine();
 			services.AddInvokeTargets(a =>
 			{
 				a.RegisterEngine<WorkflowInvokeTarget>("Workflow", InvokeScope.Scoped);
