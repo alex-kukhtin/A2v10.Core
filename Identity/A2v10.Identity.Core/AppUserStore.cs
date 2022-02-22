@@ -25,14 +25,16 @@ public sealed class AppUserStore :
 	private String? DataSource { get; } 
 	private String DbSchema { get; }
 
+	private readonly Func<AppUser, IEnumerable<KeyValuePair<String, String>>>? _addClaims;
 	public AppUserStore(IDbContext dbContext, AppUserStoreOptions options)
 	{
 		_dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
 		DataSource = options.DataSource;
 		DbSchema = options.Schema;
-	}
+		_addClaims = options.Claims;
+    }
 
-	public async Task<IdentityResult> CreateAsync(AppUser user, CancellationToken cancellationToken)
+    public async Task<IdentityResult> CreateAsync(AppUser user, CancellationToken cancellationToken)
 	{
 		if (user.PasswordHash == null)
 			user.PasswordHash = user.PasswordHash2;
@@ -194,11 +196,21 @@ public sealed class AppUserStore :
 	#region IUserClaimStore
 	public Task<IList<Claim>> GetClaimsAsync(AppUser user, CancellationToken cancellationToken)
 	{
-		List<Claim> list = new()
+		List<Claim> list = new();
+		if (_addClaims != null)
 		{
-			new Claim(WellKnownClims.PersonName, user.PersonName ?? String.Empty),
-		};
+			foreach (var (k, v) in _addClaims(user))
+				list.Add(new Claim(k, v));
+		}
+		else
+			AddDefaultClaims(user, list);
+		return Task.FromResult<IList<Claim>>(list);
+	}
 
+
+	private static void AddDefaultClaims(AppUser user, List<Claim> list)
+	{
+		list.Add(new Claim(WellKnownClims.PersonName, user.PersonName ?? String.Empty));
 		if (user.Tenant != 0)
 		{
 			list.Add(new Claim(WellKnownClims.TenantId, user.Tenant.ToString()));
@@ -222,7 +234,6 @@ public sealed class AppUserStore :
 				list.Add(new Claim("TenantAdmin", "TenantAdmin"));
 		}
 		*/
-		return Task.FromResult<IList<Claim>>(list);
 	}
 
 	public Task AddClaimsAsync(AppUser user, IEnumerable<Claim> claims, CancellationToken cancellationToken)

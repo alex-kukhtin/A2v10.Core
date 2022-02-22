@@ -1,4 +1,4 @@
-﻿// Copyright © 2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2021-2022 Alex Kukhtin. All rights reserved.
 
 using System.Globalization;
 
@@ -14,6 +14,9 @@ using A2v10.ReportEngine.Stimulsoft;
 using A2v10.Services;
 using A2v10.ViewEngine.Xaml;
 using A2v10.Platform.Web;
+using System.Collections.Generic;
+using System;
+using A2v10.Web.Identity;
 
 namespace Microsoft.Extensions.DependencyInjection;
 public static class ServicesExtensions
@@ -49,6 +52,13 @@ public static class ServicesExtensions
 		{
 			//opts.DataSource = "Catalog";
 			//opts.Schema = "mySchema";
+			/*
+			opts.Claims = (user) =>
+				new Dictionary<String, String>()
+				{
+					{WellKnownClims.TenantId, user.Tenant.ToString() }
+				};
+			*/
 		})
 		.AddPlatformAuthentication();
 
