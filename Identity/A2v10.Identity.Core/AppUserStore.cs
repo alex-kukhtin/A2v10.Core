@@ -27,8 +27,11 @@ public sealed class AppUserStore :
 
 	private static class ParamNames
     {
-		public const string UserId = nameof(UserId);
-    }
+		public const String UserId = nameof(UserId);
+		public const String Provider = nameof(Provider);
+		public const String Token = nameof(Token);
+		public const String PasswordHash = nameof(PasswordHash);
+	}
 	public AppUserStore(IDbContext dbContext, AppUserStoreOptions options)
 	{
 		_dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
@@ -177,7 +180,7 @@ public sealed class AppUserStore :
 			var prm = new ExpandoObject()
 			{
 				{ ParamNames.UserId,  user.Id },
-				{ "PasswordHash",  passwordHash }
+				{ ParamNames.PasswordHash,  passwordHash }
 			};
 			await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.SetPasswordHash]", prm);
 		}
@@ -260,6 +263,9 @@ public sealed class AppUserStore :
 
 			switch (claim.Type)
             {
+				case WellKnownClims.TenantId:
+					user.Tenant = Int32.Parse(claim.Value);
+					break;
 				case WellKnownClims.Organization:
 					user.Organization = Int64.Parse(claim.Value);
 					break;
@@ -344,8 +350,8 @@ public sealed class AppUserStore :
 		var exp = new ExpandoObject()
 		{
 			{ ParamNames.UserId, user.Id },
-			{ "Provider", provider },
-			{ "Token", token },
+			{ ParamNames.Provider, provider },
+			{ ParamNames.Token, token },
 			{ "Expires", expires }
 		};
 		if (!String.IsNullOrEmpty(tokenToRemove))
@@ -358,8 +364,8 @@ public sealed class AppUserStore :
 		var exp = new ExpandoObject()
 		{
 			{ ParamNames.UserId, user.Id },
-			{ "Provider", provider },
-			{ "Token", token }
+			{ ParamNames.Provider, provider },
+			{ ParamNames.Token, token }
 		};
 		var res = await _dbContext.LoadAsync<JwtToken>(DataSource, $"[{DbSchema}].GetToken", exp);
 		return res?.Token;
@@ -370,8 +376,8 @@ public sealed class AppUserStore :
 		var exp = new ExpandoObject()
 		{
 			{ ParamNames.UserId, user.Id },
-			{ "Provider", provider },
-			{ "Token", token }
+			{ ParamNames.Provider, provider },
+			{ ParamNames.Token, token }
 		};
 		return _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].RemoveToken", exp);
 	}
