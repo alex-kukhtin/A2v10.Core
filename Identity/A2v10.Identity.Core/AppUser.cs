@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
 namespace A2v10.Web.Identity;
 
@@ -21,6 +21,8 @@ public class AppUser
 	public Int32 Tenant { get; set; }
 	public String? Segment { get; set; }
 	public String? Locale { get; set; }
+
+	public Int64 Organization { get; set; }
 
 	// for .net framework compatibility
 	public String? PasswordHash2 { get; set; }

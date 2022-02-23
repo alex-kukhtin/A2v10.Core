@@ -21,11 +21,14 @@ public sealed class AppUserStore :
 	IUserClaimStore<AppUser>
 {
 	private readonly IDbContext _dbContext;
-
 	private String? DataSource { get; } 
 	private String DbSchema { get; }
+	private readonly Func<AppUser, IEnumerable<KeyValuePair<String, String?>>>? _addClaims;
 
-	private readonly Func<AppUser, IEnumerable<KeyValuePair<String, String>>>? _addClaims;
+	private static class ParamNames
+    {
+		public const string UserId = nameof(UserId);
+    }
 	public AppUserStore(IDbContext dbContext, AppUserStoreOptions options)
 	{
 		_dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
@@ -71,7 +74,7 @@ public sealed class AppUserStore :
 
 	public Task<String> GetNormalizedUserNameAsync(AppUser user, CancellationToken cancellationToken)
 	{
-		throw new NotImplementedException();
+		return Task.FromResult<String>(user.UserName?.ToLowerInvariant() ?? String.Empty);
 	}
 
 	public Task<String> GetUserIdAsync(AppUser user, CancellationToken cancellationToken)
@@ -115,7 +118,7 @@ public sealed class AppUserStore :
 		if (user.Id != 0) {
 			var prm = new ExpandoObject()
 			{
-				{ "UserId",  user.Id },
+				{ ParamNames.UserId,  user.Id },
 				{ "SecurityStamp",  stamp }
 			};
 			await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.SetSecurityStamp]", prm);
@@ -173,7 +176,7 @@ public sealed class AppUserStore :
 		{
 			var prm = new ExpandoObject()
 			{
-				{ "UserId",  user.Id },
+				{ ParamNames.UserId,  user.Id },
 				{ "PasswordHash",  passwordHash }
 			};
 			await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.SetPasswordHash]", prm);
@@ -200,7 +203,10 @@ public sealed class AppUserStore :
 		if (_addClaims != null)
 		{
 			foreach (var (k, v) in _addClaims(user))
-				list.Add(new Claim(k, v));
+			{
+				if (v != null)
+					list.Add(new Claim(k, v));
+			}
 		}
 		else
 			AddDefaultClaims(user, list);
@@ -221,9 +227,11 @@ public sealed class AppUserStore :
 			list.Add(new Claim(WellKnownClims.Segment, user.Segment));
 		if (!String.IsNullOrEmpty(user.Locale))
 			list.Add(new Claim(WellKnownClims.Locale, user.Locale));
+		if (user.Organization != 0)
+			list.Add(new Claim(WellKnownClims.Organization, user.Organization.ToString()));
 
 		//if (user.IsAdmin) // TODO
-		list.Add(new Claim(WellKnownClims.Admin, "Admin"));
+		//list.Add(new Claim(WellKnownClims.Admin, "Admin"));
 		/*
 		if (_host.IsMultiTenant)
 		{
@@ -236,9 +244,33 @@ public sealed class AppUserStore :
 		*/
 	}
 
-	public Task AddClaimsAsync(AppUser user, IEnumerable<Claim> claims, CancellationToken cancellationToken)
+	public async Task AddClaimsAsync(AppUser user, IEnumerable<Claim> claims, CancellationToken cancellationToken)
 	{
-		throw new NotImplementedException(nameof(AddClaimsAsync));
+		// dynamically added 
+		foreach (var claim in claims)
+        {
+			if (claim.Value == null)
+				continue;
+			var prm = new ExpandoObject()
+					{
+						{ ParamNames.UserId,  user.Id },
+						{ claim.Type,  claim.Value}
+					};
+			await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.Claim.{claim.Type}]", prm);
+
+			switch (claim.Type)
+            {
+				case WellKnownClims.Organization:
+					user.Organization = Int64.Parse(claim.Value);
+					break;
+				case WellKnownClims.Locale:
+					user.Locale = claim.Value;
+					break;
+				case WellKnownClims.PersonName:
+					user.PersonName = claim.Value;
+					break;
+			}
+		}
 	}
 
 	public Task ReplaceClaimAsync(AppUser user, Claim claim, Claim newClaim, CancellationToken cancellationToken)
@@ -299,7 +331,7 @@ public sealed class AppUserStore :
     {
 		var prm = new ExpandoObject()
 		{
-			{ "UserId",  user.Id },
+			{ ParamNames.UserId,  user.Id },
 			{ "Confirmed",  confirmed}
 		};
 		await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.SetPhoneNumberConfirmed]", prm);
@@ -311,7 +343,7 @@ public sealed class AppUserStore :
 	{
 		var exp = new ExpandoObject()
 		{
-			{ "UserId", user.Id },
+			{ ParamNames.UserId, user.Id },
 			{ "Provider", provider },
 			{ "Token", token },
 			{ "Expires", expires }
@@ -325,7 +357,7 @@ public sealed class AppUserStore :
 	{
 		var exp = new ExpandoObject()
 		{
-			{ "UserId", user.Id },
+			{ ParamNames.UserId, user.Id },
 			{ "Provider", provider },
 			{ "Token", token }
 		};
@@ -337,7 +369,7 @@ public sealed class AppUserStore :
 	{
 		var exp = new ExpandoObject()
 		{
-			{ "UserId", user.Id },
+			{ ParamNames.UserId, user.Id },
 			{ "Provider", provider },
 			{ "Token", token }
 		};

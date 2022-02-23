@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
 using System.Globalization;
 using System.Security.Claims;
@@ -7,7 +7,7 @@ using System.Security.Principal;
 namespace A2v10.Web.Identity;
 public static class IdentityExtensions
 { 
-	public static Boolean IsNullableType(this Type type)
+	private static Boolean IsNullableType(this Type type)
 	{
 		return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
 	}
@@ -31,7 +31,7 @@ public static class IdentityExtensions
 	{
 		if (identity is not ClaimsIdentity user)
 			return null;
-		return user.FindFirst(claim)?.Value;
+		return user?.FindFirst(claim)?.Value;
 	}
 
 	public static String? GetUserPersonName(this IIdentity? identity)
@@ -68,21 +68,27 @@ public static class IdentityExtensions
 
 	public static Int32? GetUserTenantId(this IIdentity? identity)
 	{
-		if (identity == null)
+		var tenant = identity?.GetUserClaim(WellKnownClims.Segment);
+		if (tenant == null)
 			return null;
-		if (identity is not ClaimsIdentity user)
-			return null;
-		var value = user.FindFirst(WellKnownClims.TenantId)?.Value;
-		if (value == null)
-			return null;
-		if (Int32.TryParse(value, out Int32 tenantId))
-			return tenantId;
+		if (Int32.TryParse(tenant, out Int32 tenantId))
+			return tenantId == 0 ? null : tenantId;
 		return null;
 	}
 
 	public static String? GetUserSegment(this IIdentity? identity)
 	{
 		return identity?.GetUserClaim(WellKnownClims.Segment);
+	}
+
+	public static Int64 GetUserOrganization(this IIdentity? identity)
+	{
+		var org = identity?.GetUserClaim(WellKnownClims.Organization);
+		if (String.IsNullOrEmpty(org))
+			return 0;
+		if (Int64.TryParse(org, out Int64 result))
+			return result;
+		return 0;
 	}
 }
 

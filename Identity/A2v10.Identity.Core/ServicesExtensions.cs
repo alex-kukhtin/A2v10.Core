@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -31,10 +31,7 @@ public static class ServicesExtensions
 		.AddDefaultTokenProviders(); // for change password, email & phone validation
 
 		services.AddScoped<AppUserStore>()
-		.AddScoped<IUserStore<AppUser>>(s =>
-		{
-			return s.GetService<AppUserStore>();
-		})
+		.AddScoped<IUserStore<AppUser>>(s => s.GetRequiredService<AppUserStore>())
 		.AddScoped<AppUserStoreOptions>(s =>
 		{
 			var opts = new AppUserStoreOptions();

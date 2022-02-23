@@ -64,6 +64,11 @@ public class AccountController : Controller
 		var result = await _signInManager.PasswordSignInAsync(model.Login, model.Password, model.IsPersistent, lockoutOnFailure: true);
 		if (result.Succeeded)
 		{
+			/* refresh claims!
+			var user = await _userManager.FindByNameAsync(model.Login);
+			await _userManager.AddClaimAsync(user, new System.Security.Claims.Claim("Organization", "234563"));
+			await _signInManager.RefreshSignInAsync(user);
+			*/
 			var returnUrl = (TempData["ReturnUrl"] ?? "/").ToString()!.ToLowerInvariant();
 			if (returnUrl.StartsWith("/account"))
 				returnUrl = "/";
