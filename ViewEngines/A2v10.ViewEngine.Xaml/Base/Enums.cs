@@ -1,5 +1,5 @@
 ﻿
-// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+// Copyright © 2015-2022 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Xaml
 {
@@ -413,6 +413,7 @@ namespace A2v10.Xaml
 		SendOutline,
 		Server,
 		Share,
+		Shopping,
 		Smile,
 		SmileSad,
 		Square,
