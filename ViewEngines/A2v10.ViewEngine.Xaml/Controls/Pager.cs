@@ -17,6 +17,7 @@ public class Pager : UIElementBase
 
 	public String? EmptyText { get; set; }
 	public String? TemplateText { get; set; }
+	public String? CssClass { get; set; }
 
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
@@ -26,6 +27,7 @@ public class Pager : UIElementBase
 		var pager = new TagBuilder("a2-pager", null, IsInGrid);
 		if (Style != PagerStyle.Default)
 			pager.AddCssClass(Style.ToString().ToLowerInvariant());
+		pager.AddCssClass(CssClass);
 		MergeAttributes(pager, context, MergeAttrMode.Margin);
 		onRender?.Invoke(pager);
 		var source = GetBinding(nameof(Source));
