@@ -178,6 +178,7 @@ public class Dialog : RootContainer, ISupportTwoPhaseRendering
 			span.RenderEnd(context);
 		}
 		var close = new TagBuilder("button", "btnclose");
+		close.MergeAttribute("tabindex", "-1");
 		close.MergeAttribute("@click.prevent", "$modalClose(false)");
 		close.SetInnerText("&#x2715;");
 		close.Render(context);

@@ -23,6 +23,14 @@ namespace A2v10.Xaml
 		BottomShadow
 	}
 
+	public class ToolbarAligner : UIElementBase
+	{
+		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
+		{
+			new TagBuilder("div", "aligner").Render(context);
+		}
+	}
+
 	[AttachedProperties("Align")]
 	public class Toolbar : Container
 	{
