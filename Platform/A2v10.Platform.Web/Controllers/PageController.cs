@@ -117,6 +117,7 @@ namespace A2v10.Platform.Web.Controllers
 				RootId = rootId,
 				IsDialog = rw.IsDialog,
 				IsIndex = rw.IsIndex,
+				IsSkipDataStack = rw.IsSkipDataStack,
 				Template = rw.Template,
 				Path = rw.Path,
 				BaseUrl = rw.BaseUrl
