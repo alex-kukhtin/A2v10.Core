@@ -1,13 +1,16 @@
 // Copyright © 2020-2021 Alex Kukhtin. All rights reserved.
 
+using System;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Identity;
 
 using A2v10.Infrastructure;
 using A2v10.WorkflowEngine;
-using Microsoft.AspNetCore.Identity;
+using A2v10.Web.Identity;
 
 namespace A2v10.Core.Web.Site
 {
@@ -24,6 +27,13 @@ namespace A2v10.Core.Web.Site
 		{
 			services.UsePlatform(Configuration);
 
+			services.AddOptions<AppUserStoreOptions>();
+			services.Configure<AppUserStoreOptions>(opts =>
+			{
+				opts.Schema = Configuration.GetValue<String>("Identity:UserStore:Schema");
+			});
+
+			/*
 			services.Configure<IdentityOptions>(opts =>
 			{
 				var pwd = opts.Password;
@@ -34,13 +44,14 @@ namespace A2v10.Core.Web.Site
 				pwd.RequireNonAlphanumeric = false;
 
 				var si = opts.SignIn;
-				si.RequireConfirmedEmail = false;
-				si.RequireConfirmedAccount = false;
-				si.RequireConfirmedPhoneNumber = true;
+				si.RequireConfirmedEmail = true;
+				si.RequireConfirmedAccount = true;
+				si.RequireConfirmedPhoneNumber = false;
 
 				var us = opts.User;
-				us.RequireUniqueEmail = false;
+				us.RequireUniqueEmail = true;
 			});
+			*/
 
 			services.AddWorkflowEngine();
 			services.AddInvokeTargets(a =>

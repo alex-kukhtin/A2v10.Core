@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Threading;
 
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 
 using A2v10.Data.Interfaces;
 using A2v10.Identity.Core.Helpers;
@@ -32,12 +33,12 @@ public sealed class AppUserStore :
 		public const String Token = nameof(Token);
 		public const String PasswordHash = nameof(PasswordHash);
 	}
-	public AppUserStore(IDbContext dbContext, AppUserStoreOptions options)
+	public AppUserStore(IDbContext dbContext, IOptions<AppUserStoreOptions> options)
 	{
 		_dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-		DataSource = options.DataSource;
-		DbSchema = options.Schema;
-		_addClaims = options.Claims;
+		DataSource = options.Value?.DataSource;
+		DbSchema = options.Value?.Schema ?? "a2security";
+		_addClaims = options.Value?.Claims;
     }
 
     public async Task<IdentityResult> CreateAsync(AppUser user, CancellationToken cancellationToken)

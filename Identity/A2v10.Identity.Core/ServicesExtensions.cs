@@ -11,7 +11,7 @@ namespace Microsoft.Extensions.DependencyInjection;
 public static class ServicesExtensions
 {
 	public static IServiceCollection AddPlatformIdentityCore(this IServiceCollection services,
-		Action<AppUserStoreOptions>? options = null, Action<IdentityOptions>? identityOptions = null)
+		Action<IdentityOptions>? identityOptions = null)
 	{
 		services.AddIdentityCore<AppUser>(options =>
 		{
@@ -32,12 +32,6 @@ public static class ServicesExtensions
 
 		services.AddScoped<AppUserStore>()
 		.AddScoped<IUserStore<AppUser>>(s => s.GetRequiredService<AppUserStore>())
-		.AddScoped<AppUserStoreOptions>(s =>
-		{
-			var opts = new AppUserStoreOptions();
-			options?.Invoke(opts);
-			return opts;
-		})
 		.AddScoped<ISecurityStampValidator, SecurityStampValidator<AppUser>>()
 		.AddScoped<ISystemClock, SystemClock>();
 		return services;

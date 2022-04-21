@@ -5,7 +5,7 @@
 		<Nullable>enable</Nullable>
 		<AssemblyName>A2v10.Infrastructure</AssemblyName>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		<Version>10.1.8050</Version>
+		<Version>10.1.8056</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Infrastructure</PackageId>
 		<Authors>Oleksandr Kukhtin</Authors>
