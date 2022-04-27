@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 
 using A2v10.Web.Identity;
+using Microsoft.Extensions.Configuration;
 
 namespace Microsoft.Extensions.DependencyInjection;
 public static class ServicesExtensions
@@ -72,5 +73,24 @@ public static class ServicesExtensions
 		);
 		return builder;
 	}
+
+
+	public static IServiceCollection AddIdentityConfiguration(this IServiceCollection services, IConfiguration configuration)
+    {
+		var sect = configuration.GetSection(AppUserStoreConfiguration.ConfigurationKey);
+		if (sect == null)
+			return services;
+		var storeConfig = new AppUserStoreConfiguration();
+		sect.Bind(storeConfig);
+
+		services.AddOptions<AppUserStoreOptions>();
+		services.Configure<AppUserStoreOptions>(opts =>
+		{
+			opts.Schema = storeConfig.Schema;
+			opts.DataSource = storeConfig.DataSource;
+		});
+
+		return services;
+    }
 }
 

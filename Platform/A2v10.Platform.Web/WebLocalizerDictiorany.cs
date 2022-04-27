@@ -5,6 +5,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 
+using Microsoft.Extensions.Options;
+
 using A2v10.Infrastructure;
 
 namespace A2v10.Platform.Web
@@ -34,10 +36,10 @@ namespace A2v10.Platform.Web
 		private readonly IAppCodeProvider _appCodeProvider;
 		private readonly Boolean _watch;
 
-		public WebLocalizerDictiorany(IAppCodeProvider appCodeProvider, IAppConfiguration configuration)
+		public WebLocalizerDictiorany(IAppCodeProvider appCodeProvider, IOptions<AppOptions> appOptions)
 		{
 			_appCodeProvider = appCodeProvider;
-			_watch = configuration.Watch;
+			_watch = appOptions.Value.Environment.Watch;
 		}
 
 		static IEnumerable<String> ReadLines(IAppCodeProvider codeProvider, String path)

@@ -14,5 +14,6 @@ namespace A2v10.Web.Identity.UI
 		public Boolean IsPersistent => RememberMe;
 
 		public AppTitleModel? Title { get; init; }
+		public String Theme { get; init; } = String.Empty;
 	}
 }

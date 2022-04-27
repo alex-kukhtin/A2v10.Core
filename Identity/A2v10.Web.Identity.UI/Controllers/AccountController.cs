@@ -24,8 +24,9 @@ public class AccountController : Controller
 	private readonly IAntiforgery _antiforgery;
 	private readonly IDbContext _dbContext;
 	private readonly IApplicationHost _host;
+	private readonly IApplicationTheme _appTheme;
 
-	public AccountController(SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, AppUserStore userStore, IAntiforgery antiforgery, IApplicationHost host, IDbContext dbContext)
+	public AccountController(SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, AppUserStore userStore, IAntiforgery antiforgery, IApplicationHost host, IDbContext dbContext, IApplicationTheme appTheme)
 	{
 		_signInManager = signInManager;
 		_userManager = userManager;
@@ -33,6 +34,7 @@ public class AccountController : Controller
 		_userStore = userStore;
 		_dbContext = dbContext;
 		_host = host;
+		_appTheme = appTheme;
 	}
 
 	void RemoveAllCookies()
@@ -48,7 +50,8 @@ public class AccountController : Controller
 		RemoveAllCookies();
 		var m = new LoginViewModel()
 		{
-			Title = await _dbContext.LoadAsync<AppTitleModel>(_host.CatalogDataSource, "a2ui.[AppTitle.Load]")
+			Title = await _dbContext.LoadAsync<AppTitleModel>(_host.CatalogDataSource, "a2ui.[AppTitle.Load]"),
+			Theme = _appTheme.MakeTheme()
 		};
 		m.RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken;
 		TempData["ReturnUrl"] = returnUrl;
@@ -85,7 +88,8 @@ public class AccountController : Controller
 		RemoveAllCookies();
 		var m = new RegisterViewModel()
 		{
-			Title = await _dbContext.LoadAsync<AppTitleModel>(_host.CatalogDataSource, "a2ui.[AppTitle.Load]")
+			Title = await _dbContext.LoadAsync<AppTitleModel>(_host.CatalogDataSource, "a2ui.[AppTitle.Load]"),
+			Theme = _appTheme.MakeTheme()
 		};
 		m.RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken;
 		return View(m);

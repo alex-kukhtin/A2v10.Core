@@ -2,18 +2,9 @@
 
 using System;
 
-namespace A2v10.Infrastructure
+namespace A2v10.Infrastructure;
+
+public interface IApplicationTheme
 {
-	public interface ITheme
-	{
-		String Name { get; }
-		String FileName { get; }
-		String ColorScheme { get; }
-	}
-
-
-	public interface IApplicationTheme
-	{
-		ITheme Theme { get; }
-	}
+	String MakeTheme();
 }

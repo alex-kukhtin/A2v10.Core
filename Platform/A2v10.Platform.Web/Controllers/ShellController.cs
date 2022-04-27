@@ -16,6 +16,7 @@ using Newtonsoft.Json;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Web.Identity;
+using Microsoft.Extensions.Options;
 
 namespace A2v10.Platform.Web.Controllers;
 
@@ -33,9 +34,10 @@ public class ShellController : Controller
 	private readonly IAppCodeProvider _codeProvider;
 	private readonly ILocalizer _localizer;
 	private readonly IAppVersion _appVersion;
+	private readonly AppOptions _appOptions;
 
 	public ShellController(IDbContext dbContext, IApplicationHost host, ICurrentUser currentUser, IProfiler profiler,
-		IAppCodeProvider codeProvider, ILocalizer localizer, IAppVersion appVersion)
+		IAppCodeProvider codeProvider, ILocalizer localizer, IAppVersion appVersion, IOptions<AppOptions> appOptions)
 	{
 		_host = host;
 		_dbContext = dbContext;
@@ -44,12 +46,13 @@ public class ShellController : Controller
 		_localizer = localizer;
 		_currentUser = currentUser;
 		_appVersion = appVersion;
+		_appOptions = appOptions.Value;
 	}
 
 	Int64? UserId => User.Identity.GetUserId<Int64?>();
 	Int32? TenantId => User.Identity.GetUserTenantId();
 
-	public Boolean IsDebugConfiguration => _host.IsDebugConfiguration;
+	public Boolean IsDebugConfiguration => _appOptions.Environment.IsDebug;
 
 	public IActionResult Trace()
 	{
@@ -116,6 +119,7 @@ public class ShellController : Controller
 			prms.Set("TenantId", TenantId);
 	}
 
+
 	async Task<String> BuildScript(bool bAdmin)
 	{
 		String shell = bAdmin ? Resource.shellAdmin : Resource.shell;
@@ -159,7 +163,14 @@ public class ShellController : Controller
 
 
 		String proc = bAdmin ? "a2admin.[Menu.Admin.Load]" : "a2ui.[Menu.User.Load]";
-		IDataModel dm = await _dbContext.LoadModelAsync(_host.CatalogDataSource, proc, loadPrms);
+		String? ds = _host.CatalogDataSource;
+
+		if (_appOptions.IsCustomUserMenu)
+        {
+			proc = _appOptions.UserMenu!;
+			ds = _host.TenantDataSource;
+        }
+		IDataModel dm = await _dbContext.LoadModelAsync(ds, proc, loadPrms);
 
 		ExpandoObject? menuRoot = dm.Root.RemoveEmptyArrays();
 		SetUserStatePermission(dm);

@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 
 using A2v10.Infrastructure;
+using Microsoft.Extensions.Options;
 
 namespace A2v10.Platform.Web;
 public class FileSystemCodeProvider : IAppCodeProvider
@@ -23,19 +24,11 @@ public class FileSystemCodeProvider : IAppCodeProvider
 
 	private readonly String _appKey;
 
-	public FileSystemCodeProvider(IWebHostEnvironment webHost, IConfiguration config)
+	public FileSystemCodeProvider(IWebHostEnvironment webHost, IOptions<AppOptions> appOptions)
 	{
 		_webHost = webHost;
-		var appSection = config.GetSection("application");
-		AppPath = appSection.GetValue<String>("path");
-		_appKey = appSection.GetValue<String>("name");
-	}
-
-	public FileSystemCodeProvider(IWebHostEnvironment webHost, String appPath, String appKey)
-	{
-		_webHost = webHost;
-		AppPath = appPath;
-		_appKey = appKey;
+		AppPath = appOptions.Value.Path;
+		_appKey = appOptions.Value.AppName;
 	}
 
 	String GetAppKey(Boolean admin)

@@ -4681,29 +4681,30 @@ table.hover > tbody > tr:hover {
 table.hover > tbody > tr.active:hover {
   background-color: var(--activeBk) !important;
 }
-.grid-vertical > tbody > tr > td,
-.grid-both > tbody > tr > td,
-.grid-vertical > thead > tr > td,
-.grid-both > thead > tr > td,
-.grid-vertical > tfoot > tr > td,
-.grid-both > tfoot > tr > td {
-  border-left: 1px solid #ddd;
+.grid-vertical td,
+.grid-both td {
   border-right: 1px solid #ddd;
 }
-.grid-horizontal > tbody > tr > td,
-.grid-both > tbody > tr > td,
-.grid-horizontal > thead > tr > td,
-.grid-both > thead > tr > td,
-.grid-horizontal > tfoot > tr > td,
-.grid-both > tfoot > tr > td {
+.grid-vertical td:first-child,
+.grid-both td:first-child {
+  border-left: 1px solid #ddd;
+}
+.grid-horizontal td,
+.grid-both td {
   border-bottom: 1px solid #ddd;
+}
+.grid-horizontal thead > tr:first-child > td,
+.grid-both thead > tr:first-child > td {
   border-top: 1px solid #ddd;
 }
 .grid-horizontal td > .control-group > .input-group,
 .grid-vertical td > .control-group > .input-group,
 .grid-both td > .control-group > .input-group {
   border-color: transparent;
-  margin: 0.1px 0;
+}
+.a2-table {
+  border-collapse: separate;
+  border-spacing: 0;
 }
 .a2-table.striped > tbody > tr:nth-of-type(even) {
   background-color: rgba(208, 208, 208, 0.15);
@@ -4711,7 +4712,6 @@ table.hover > tbody > tr.active:hover {
 .a2-table.bordered {
   margin: 1px;
   outline: 1px solid #ddd;
-  max-width: calc(100% - 2px);
 }
 .a2-table > tbody > tr {
   vertical-align: top;
@@ -4817,6 +4817,12 @@ table.hover > tbody > tr.active:hover {
 .a2-table tr.gray > td {
   background-color: rgba(208, 208, 208, 0.15);
 }
+.a2-table .control-group .input-group {
+  line-height: inherit;
+}
+.a2-table .control-group .input-group a {
+  line-height: 2;
+}
 .a2-table.compact {
   line-height: normal;
 }
@@ -4884,11 +4890,6 @@ table.hover > tbody > tr.active:hover {
 .a2-table.compact tfoot > tr > td.ctrl .radio > span {
   padding-left: 18px;
 }
-.a2-table.compact > tbody > tr > td.ctrl .control-group .input-group > a,
-.a2-table.compact thead > tr > td.ctrl .control-group .input-group > a,
-.a2-table.compact tfoot > tr > td.ctrl .control-group .input-group > a {
-  line-height: 1.67rem;
-}
 .a2-table.bk-paper {
   background-color: #fcfaf6;
 }
@@ -4924,6 +4925,20 @@ table.hover > tbody > tr.active:hover {
 }
 .bordered-pane .a2-table tr > td:first-child {
   border-left-style: none;
+}
+.a2-sticky-container {
+  overflow: auto;
+}
+table.a2-table.sticky thead,
+table.a2-table.sticky tfoot {
+  position: sticky;
+  z-index: 1094;
+}
+table.a2-table.sticky thead {
+  top: 0;
+}
+table.a2-table.sticky tfoot {
+  bottom: 0;
 }
 table.prop-grid {
   width: 100%;

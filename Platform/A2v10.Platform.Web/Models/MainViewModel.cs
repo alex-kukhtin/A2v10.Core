@@ -10,5 +10,7 @@ public class MainViewModel
 	public String? HelpUrl { get; init; }
 	public String? ModelStyles { get; init; }
 	public String? ModelScripts { get; init; }
+
+	public String Theme { get; init; } = String.Empty;
 }
 

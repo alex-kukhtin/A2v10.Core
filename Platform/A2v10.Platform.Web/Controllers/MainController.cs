@@ -1,14 +1,16 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
 using System;
 
+using System.Threading.Tasks;
+using System.IO;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Options;
 
 using A2v10.Infrastructure;
 using A2v10.Web.Identity;
-using System.Threading.Tasks;
-using System.IO;
 
 namespace A2v10.Platform.Web.Controllers
 {
@@ -17,13 +19,15 @@ namespace A2v10.Platform.Web.Controllers
 	[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 	public class MainController : Controller
 	{
-		private readonly IAppConfiguration _appConfiguration;
+		private readonly AppOptions _appOptions;
 		private readonly IDataService _dataService;
+		private readonly IApplicationTheme _appTheme;
 
-		public MainController(IAppConfiguration appConfiguration, IDataService dataService)
+		public MainController(IDataService dataService, IOptions<AppOptions> appOptions, IApplicationTheme appTheme)
 		{
-			_appConfiguration = appConfiguration;
+			_appOptions = appOptions.Value;
 			_dataService = dataService;
+			_appTheme = appTheme;
 		}
 
 		static String? NormalizePathInfo(String? pathInfo)
@@ -43,7 +47,6 @@ namespace A2v10.Platform.Web.Controllers
 			if (IsStaticFile())
 				return NotFound();
 
-			// TODO: modelStyles, ModelScripts
 			var layoutDescr = await _dataService.GetLayoutDescriptionAsync(NormalizePathInfo(pathInfo));
 
 			if (User.Identity == null)
@@ -51,19 +54,19 @@ namespace A2v10.Platform.Web.Controllers
 			var viewModel = new MainViewModel()
 			{
 				PersonName = User.Identity.GetUserPersonName() ?? User.Identity.Name ?? throw new ApplicationException("Invalid UserName"),
-				Debug = _appConfiguration.Debug,
+				Debug = _appOptions.Environment.IsDebug,
 				HelpUrl = "http://TODO/HELP_URL",
 				ModelStyles = layoutDescr?.ModelStyles,
-				ModelScripts = layoutDescr?.ModelScripts
+				ModelScripts = layoutDescr?.ModelScripts,
+				Theme = _appTheme.MakeTheme()
 			};
 			ViewBag.__Minify = "min.";
-			ViewBag.__Theme = "classic";
-
 
 			if (pathInfo != null && pathInfo.StartsWith("admin", StringComparison.OrdinalIgnoreCase))
 				return View("Default.admin", viewModel);
 			return View(viewModel);
 		}
+
 
 		public Boolean IsStaticFile()
 		{

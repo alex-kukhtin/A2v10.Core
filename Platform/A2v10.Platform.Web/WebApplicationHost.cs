@@ -11,6 +11,7 @@ using Newtonsoft.Json.Converters;
 
 using A2v10.Infrastructure;
 using A2v10.Data.Interfaces;
+using Microsoft.Extensions.Options;
 
 namespace A2v10.Platform.Web;
 
@@ -26,15 +27,15 @@ public class WebApplicationHost : IApplicationHost, ITenantManager
 {
 	private readonly IConfiguration _appSettings;
 	private readonly IProfiler _profiler;
-	private readonly IAppConfiguration _appConfiguration;
+	private readonly AppOptions _appOptions;
 	private readonly PlatformOptions _options;
 	private readonly IDbIdentity _currentUser;
 	private Boolean _admin;
 
-	public WebApplicationHost(IConfiguration config, IProfiler profiler, IAppConfiguration appConfiguration, PlatformOptions options, IDbIdentity currentUser)
+	public WebApplicationHost(IConfiguration config, IProfiler profiler, IOptions<AppOptions> appOptions, PlatformOptions options, IDbIdentity currentUser)
 	{
 		_profiler = profiler;
-		_appConfiguration = appConfiguration;
+		_appOptions = appOptions.Value;
 
 		_appSettings = config.GetSection("appSettings");
 		_options = options;
@@ -44,7 +45,7 @@ public class WebApplicationHost : IApplicationHost, ITenantManager
 	public Boolean IsMultiTenant => _options.MultiTenant;
 	public Boolean IsMultiCompany => _options.MultiCompany;
 
-	public Boolean IsDebugConfiguration => _appConfiguration.Debug;
+	public Boolean IsDebugConfiguration => _appOptions.Environment.IsDebug;
 
 	public Boolean IsUsePeriodAndCompanies => _appSettings.GetValue<Boolean>("custom");
 	public Boolean IsRegistrationEnabled => _appSettings.GetValue<Boolean>("registration");
@@ -60,7 +61,6 @@ public class WebApplicationHost : IApplicationHost, ITenantManager
 	//public String UserAppHost => throw new NotImplementedException();
 
 	//public String SupportEmail => throw new NotImplementedException();
-	public ITheme Theme => throw new NotImplementedException();
 
 	//public String HelpUrl => throw new NotImplementedException();
 

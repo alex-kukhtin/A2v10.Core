@@ -7,5 +7,7 @@ public interface IIdentityViewModel
 {
 	String? RequestToken { get; }
 	AppTitleModel? Title { get; }
+
+	String Theme { get; }
 }
 

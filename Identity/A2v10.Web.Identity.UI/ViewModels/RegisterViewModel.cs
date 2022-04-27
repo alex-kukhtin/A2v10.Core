@@ -12,5 +12,6 @@ namespace A2v10.Web.Identity.UI
 		public String? RequestToken { get; set; }
 
 		public AppTitleModel? Title { get; init; }
+		public String Theme { get; init; } = String.Empty;
 	}
 }

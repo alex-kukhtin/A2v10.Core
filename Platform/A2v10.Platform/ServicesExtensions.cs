@@ -46,6 +46,7 @@ public static class ServicesExtensions
 		.AddStimulsoftUI();
 
 		services.AddPlatformIdentityCore()
+		.AddIdentityConfiguration(configuration)
 		.AddPlatformAuthentication();
 
 		services.UseSqlServerStorage();
@@ -57,11 +58,15 @@ public static class ServicesExtensions
 		.AddReportEngines(x =>
 		{
 			x.RegisterEngine<StimulsoftReportEngine>("stimulsoft");
-		})
-		.AddStimulsoftLicense(configuration);
+		});
+
+		services.AddStimulsoftLicense(configuration);
 
 		// Platform services
-		services.AddSingleton<IAppConfiguration, AppConfiruation>();
+		services.Configure<AppOptions>(
+			configuration.GetSection("Application")
+		);
+
 		services.AddScoped<IDataService, DataService>();
 		services.AddScoped<IModelJsonReader, ModelJsonReader>();
 		services.AddScoped<IReportService, ReportService>();

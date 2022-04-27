@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
 
 using A2v10.Infrastructure;
@@ -108,6 +108,15 @@ public abstract class UIElementBase : XamlElement, IXamlElement
 			tag.MergeAttribute($":{attrName}", attrBind.GetPath(context));
 		else if (propValue != null)
 			tag.MergeAttribute($":{attrName}", propValue.ToString()!);
+	}
+
+	protected void AddBindingCssClass(TagBuilder tag, RenderContext context, String? propValue)
+	{
+		var cssBind = GetBinding("CssClass");
+		if (cssBind != null)
+			tag.MergeAttribute(":class", cssBind.GetPath(context));
+		else 
+			tag.AddCssClass(propValue);
 	}
 
 	protected void MergeValueItemProp(TagBuilder input, RenderContext context, String valueName)

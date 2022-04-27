@@ -7,7 +7,6 @@ public record AppUserStoreOptions
 {
 	public String? DataSource { get; set; }
 	public String? Schema { get; set; }
-
 	public Func<AppUser, IEnumerable<KeyValuePair<String, String?>>>? Claims { get; set; } 
 }
 

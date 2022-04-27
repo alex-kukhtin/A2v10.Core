@@ -32,9 +32,11 @@ namespace Microsoft.Extensions.DependencyInjection
 			});
 			*/
 
+			services.AddSingleton<IApplicationTheme, WebApplicationTheme>();
 			services.AddSingleton<IAppCodeProvider, FileSystemCodeProvider>();
 
 			services.AddScoped<WebApplicationHost>();
+
 
 			services.AddScoped<WebLocalizer>()
 				.AddScoped<ILocalizer>(s => s.GetRequiredService<WebLocalizer>())

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 using A2v10.Infrastructure;
+using Microsoft.Extensions.Options;
 
 namespace A2v10.Services
 {
@@ -17,13 +18,13 @@ namespace A2v10.Services
 
 		private readonly RedirectModule? _redirect;
 
-		public ModelJsonReader(IAppCodeProvider appCodeProvider, IAppConfiguration appConig, ICurrentUser currentUser)
+		public ModelJsonReader(IAppCodeProvider appCodeProvider, IOptions<AppOptions> appOptions, ICurrentUser currentUser)
 		{
 			_appCodeProvider = appCodeProvider;
 			_currentUser = currentUser;
 			var redPath = _appCodeProvider.MakeFullPath(String.Empty, "redirect.json", false);
 			if (appCodeProvider.FileExists(redPath))
-				_redirect = new RedirectModule(redPath, appConig.Watch);
+				_redirect = new RedirectModule(redPath, appOptions.Value.Environment.Watch);
 		}
 
 		public async Task<IModelView?> TryGetViewAsync(IPlatformUrl url)

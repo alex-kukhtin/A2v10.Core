@@ -27,12 +27,6 @@ namespace A2v10.Core.Web.Site
 		{
 			services.UsePlatform(Configuration);
 
-			services.AddOptions<AppUserStoreOptions>();
-			services.Configure<AppUserStoreOptions>(opts =>
-			{
-				opts.Schema = Configuration.GetValue<String>("Identity:UserStore:Schema");
-			});
-
 			/*
 			services.Configure<IdentityOptions>(opts =>
 			{
