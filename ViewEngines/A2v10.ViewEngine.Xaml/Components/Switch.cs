@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
 using System.Linq;
@@ -15,8 +15,23 @@ public class Case : XamlElement
 
 	public void RenderElement(RenderContext context)
 	{
-		foreach (var c in Children)
-			c.RenderElement(context);
+		var parentGrid = FindParent<Grid>();
+		if (parentGrid != null)
+		{
+			foreach (var c in Children)
+			{
+				c.IsInGrid = true;
+				using (context.GridContext(c, parentGrid))
+				{
+					c.RenderElement(context);
+				}
+			}
+		}
+		else
+		{
+			foreach (var c in Children)
+				c.RenderElement(context);
+        }
 	}
 }
 

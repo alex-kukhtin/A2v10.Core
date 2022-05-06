@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2019 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
 using System;
@@ -22,7 +22,7 @@ namespace A2v10.Xaml
 		public Boolean? Bold { get; set; }
 		public Boolean? Italic { get; set; }
 		public Boolean Gray { get; set; }
-
+		public Boolean? FirstInRow { get; set; }
 		//public Boolean Validate { get; set; }
 
 		public Object? ItemsSource { get; set; }
@@ -33,6 +33,9 @@ namespace A2v10.Xaml
 				return;
 			var td = new TagBuilder("td");
 			onRender?.Invoke(td);
+
+			if (FirstInRow.HasValue && !FirstInRow.Value)
+				td.AddCssClass("no-first");
 
 			Bind? isBind = GetBinding(nameof(ItemsSource));
 			if (isBind != null)

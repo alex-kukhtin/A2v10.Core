@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
 using System.Linq;
 using System.Collections.Generic;
@@ -175,6 +175,12 @@ public class RenderContext
 	public void RenderNbSpace()
 	{
 		Writer.Write("&#xa;");
+	}
+
+	public GridContext GridContext(Object elem, Grid parentGrid)
+	{
+		var rowCol = new GridRowCol(parentGrid.GetRow(elem), parentGrid.GetCol(elem), parentGrid.GetRowSpan(elem), parentGrid.GetColSpan(elem), parentGrid.GetVAlign(elem));
+		return new GridContext(this, rowCol);
 	}
 
 	public GridContext GridContext(Int32? row, Int32? col, Int32? rowSpan, Int32? colSpan, AlignItem? vAlign)

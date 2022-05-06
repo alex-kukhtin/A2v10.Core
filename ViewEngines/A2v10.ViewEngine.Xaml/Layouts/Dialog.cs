@@ -37,6 +37,8 @@ public class Dialog : RootContainer, ISupportTwoPhaseRendering
 
 	public UIElementCollection Buttons { get; set; } = new UIElementCollection();
 
+	public CollectionView? CollectionView { get; set; }
+
 	protected virtual void OnCreateContent(TagBuilder tag)
 	{
 	}
@@ -86,6 +88,12 @@ public class Dialog : RootContainer, ISupportTwoPhaseRendering
 				.Render(context, TagRenderMode.Normal);
 
 
+		if (CollectionView != null)
+			CollectionView.RenderStart(context, tag =>
+			{
+				tag.AddCssClass("cw-dialog");
+			});
+
 		RenderHeader(context);
 		RenderLoadIndicator(context);
 
@@ -122,6 +130,10 @@ public class Dialog : RootContainer, ISupportTwoPhaseRendering
 		content.RenderEnd(context);
 
 		RenderFooter(context);
+
+		if (CollectionView != null)
+			CollectionView.RenderEnd(context);
+
 		RenderAccelCommands(context);
 		RenderContextMenus();
 
