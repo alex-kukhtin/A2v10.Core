@@ -416,6 +416,9 @@
 .ico-folder-outline:before {
   content: "\e95a";
 }
+.ico-folders-outline:before {
+  content: "\e959";
+}
 .ico-folder-query:before {
   content: "\ea24";
   color: #dcb67a;
@@ -1586,6 +1589,7 @@ header .dropdown.separate.show .btn.btn-success,
 .page.partial {
   height: auto;
   min-height: 100%;
+  position: relative;
 }
 .page.inital-page {
   overflow: auto;
@@ -3432,6 +3436,9 @@ table.data-grid > tbody > tr.bold > td {
   border-bottom: none !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
 }
+.toolbar > .control-group.first-elem {
+  margin-left: 0 !important;
+}
 .toolbar > .control-group.first-elem label {
   margin-left: 6px;
 }
@@ -3486,7 +3493,6 @@ table.data-grid > tbody > tr.bold > td {
 .toolbar > .control-group {
   display: inline-flex;
   background-color: transparent;
-  margin: 0 4px !important;
 }
 .toolbar > .control-group .input-group {
   height: 2.2em;
@@ -3498,6 +3504,12 @@ table.data-grid > tbody > tr.bold > td {
   margin: 0 0.5rem;
   font-size: 100%;
   white-space: nowrap;
+}
+.toolbar > .control-group:not(:last-child) {
+  margin-right: 4px;
+}
+.toolbar > .control-group:not(:first-child) {
+  margin-left: 4px;
 }
 .toolbar .control-group + .control-group {
   margin-left: 6px;
@@ -4663,17 +4675,20 @@ table tr.overline {
 table td.wrap {
   word-break: break-word;
 }
-.table-separate-border {
+.a2-table.table-separate-border {
   border-collapse: separate;
 }
-.table-cell-spacing-small {
+.a2-table.table-cell-spacing-small {
   border-spacing: 2px;
+  border-collapse: separate;
 }
-.table-cell-spacing-medium {
+.a2-table.table-cell-spacing-medium {
   border-spacing: 6px;
+  border-collapse: separate;
 }
-.table-cell-spacing-large {
+.a2-table.table-cell-spacing-large {
   border-spacing: 10px;
+  border-collapse: separate;
 }
 table.hover > tbody > tr:hover {
   background-color: var(--hoverBk) !important;
@@ -4685,8 +4700,8 @@ table.hover > tbody > tr.active:hover {
 .grid-both td {
   border-right: 1px solid #ddd;
 }
-.grid-vertical td:first-child,
-.grid-both td:first-child {
+.grid-vertical td:first-child:not(.no-first),
+.grid-both td:first-child:not(.no-first) {
   border-left: 1px solid #ddd;
 }
 .grid-horizontal td,
@@ -4694,7 +4709,9 @@ table.hover > tbody > tr.active:hover {
   border-bottom: 1px solid #ddd;
 }
 .grid-horizontal thead > tr:first-child > td,
-.grid-both thead > tr:first-child > td {
+.grid-both thead > tr:first-child > td,
+.grid-horizontal tfoot > tr:first-child > td,
+.grid-both tfoot > tr:first-child > td {
   border-top: 1px solid #ddd;
 }
 .grid-horizontal td > .control-group > .input-group,
@@ -4705,6 +4722,7 @@ table.hover > tbody > tr.active:hover {
 .a2-table {
   border-collapse: separate;
   border-spacing: 0;
+  line-height: 1.8;
 }
 .a2-table.striped > tbody > tr:nth-of-type(even) {
   background-color: rgba(208, 208, 208, 0.15);
@@ -4717,7 +4735,7 @@ table.hover > tbody > tr.active:hover {
   vertical-align: top;
 }
 .a2-table > tbody > tr > td {
-  padding: 4px 6px;
+  padding: 0 6px;
   border-color: #ddd;
 }
 .a2-table > tbody > tr > td label {
@@ -4729,13 +4747,17 @@ table.hover > tbody > tr.active:hover {
 .a2-table > tbody > tr > td .a2-table {
   margin: -1px;
 }
+.a2-table > thead,
+.a2-table > tfoot {
+  line-height: 2;
+}
 .a2-table > thead > tr,
 .a2-table > tfoot > tr {
   vertical-align: middle;
 }
 .a2-table > thead > tr > td,
 .a2-table > tfoot > tr > td {
-  padding: 4px 6px;
+  padding: 0 6px;
   background-color: #f5f5f5;
   border-color: #ddd;
 }
@@ -4821,73 +4843,56 @@ table.hover > tbody > tr.active:hover {
   line-height: inherit;
 }
 .a2-table .control-group .input-group a {
-  line-height: 2;
+  line-height: inherit;
+}
+.a2-table .control-group .input-group .popover-title {
+  line-height: inherit;
+}
+.a2-sticky-bottom {
+  height: 1px;
+  background-color: white;
+  position: relative;
+  top: -1px;
 }
 .a2-table.compact {
   line-height: normal;
+  line-height: 1.52;
 }
-.a2-table.compact > tbody > tr > td,
-.a2-table.compact thead > tr > td,
-.a2-table.compact tfoot > tr > td {
-  padding: 2px 4px;
+.a2-table.compact > thead,
+.a2-table.compact > tfoot {
+  line-height: 1.67em;
 }
-.a2-table.compact > tbody > tr > td .input-group,
-.a2-table.compact thead > tr > td .input-group,
-.a2-table.compact tfoot > tr > td .input-group {
+.a2-table.compact input,
+.a2-table.compact select {
+  height: 1.67em;
+}
+.a2-table.compact td {
+  padding: 0 4px;
+}
+.a2-table.compact td .input-group {
   padding: 0;
 }
-.a2-table.compact > tbody > tr > td .input-group input,
-.a2-table.compact thead > tr > td .input-group input,
-.a2-table.compact tfoot > tr > td .input-group input {
-  height: 1.67rem;
+.a2-table.compact td .input-group.static > span {
+  line-height: 1.67em;
+  min-height: 1.67em;
+  height: 1.67em;
 }
-.a2-table.compact > tbody > tr > td .input-group.static > span,
-.a2-table.compact thead > tr > td .input-group.static > span,
-.a2-table.compact tfoot > tr > td .input-group.static > span {
-  line-height: 1.67rem;
-  min-height: 1.67rem;
-  height: 1.67rem;
-}
-.a2-table.compact > tbody > tr > td.row-divider,
-.a2-table.compact thead > tr > td.row-divider,
-.a2-table.compact tfoot > tr > td.row-divider {
-  padding: 0;
-  height: 1px;
-}
-.a2-table.compact > tbody > tr > td.ctrl,
-.a2-table.compact thead > tr > td.ctrl,
-.a2-table.compact tfoot > tr > td.ctrl {
+.a2-table.compact td.ctrl {
   padding: 0;
 }
-.a2-table.compact > tbody > tr > td.ctrl .checkbox,
-.a2-table.compact thead > tr > td.ctrl .checkbox,
-.a2-table.compact tfoot > tr > td.ctrl .checkbox,
-.a2-table.compact > tbody > tr > td.ctrl .radio,
-.a2-table.compact thead > tr > td.ctrl .radio,
-.a2-table.compact tfoot > tr > td.ctrl .radio {
+.a2-table.compact td.ctrl .checkbox,
+.a2-table.compact td.ctrl .radio {
   margin: 0 6px 0 4px;
 }
-.a2-table.compact > tbody > tr > td.ctrl .checkbox :before,
-.a2-table.compact thead > tr > td.ctrl .checkbox :before,
-.a2-table.compact tfoot > tr > td.ctrl .checkbox :before,
-.a2-table.compact > tbody > tr > td.ctrl .radio :before,
-.a2-table.compact thead > tr > td.ctrl .radio :before,
-.a2-table.compact tfoot > tr > td.ctrl .radio :before,
-.a2-table.compact > tbody > tr > td.ctrl .checkbox :after,
-.a2-table.compact thead > tr > td.ctrl .checkbox :after,
-.a2-table.compact tfoot > tr > td.ctrl .checkbox :after,
-.a2-table.compact > tbody > tr > td.ctrl .radio :after,
-.a2-table.compact thead > tr > td.ctrl .radio :after,
-.a2-table.compact tfoot > tr > td.ctrl .radio :after {
+.a2-table.compact td.ctrl .checkbox :before,
+.a2-table.compact td.ctrl .radio :before,
+.a2-table.compact td.ctrl .checkbox :after,
+.a2-table.compact td.ctrl .radio :after {
   width: 13px;
   height: 13px;
 }
-.a2-table.compact > tbody > tr > td.ctrl .checkbox > span,
-.a2-table.compact thead > tr > td.ctrl .checkbox > span,
-.a2-table.compact tfoot > tr > td.ctrl .checkbox > span,
-.a2-table.compact > tbody > tr > td.ctrl .radio > span,
-.a2-table.compact thead > tr > td.ctrl .radio > span,
-.a2-table.compact tfoot > tr > td.ctrl .radio > span {
+.a2-table.compact td.ctrl .checkbox > span,
+.a2-table.compact td.ctrl .radio > span {
   padding-left: 18px;
 }
 .a2-table.bk-paper {
@@ -4932,7 +4937,7 @@ table.hover > tbody > tr.active:hover {
 table.a2-table.sticky thead,
 table.a2-table.sticky tfoot {
   position: sticky;
-  z-index: 1094;
+  z-index: 7;
 }
 table.a2-table.sticky thead {
   top: 0;
@@ -5364,7 +5369,7 @@ TODO:
 }
 .dropdown.show > .btn-caret {
   border-left-style: none;
-  padding-left: 7px;
+  padding-left: 9px;
 }
 .hlink-dd-wrapper {
   /*
@@ -5977,6 +5982,20 @@ TODO:
 .panel.panel-cut .panel-content {
   overflow: visible;
 }
+.panel.panel-transparent {
+  background-color: transparent;
+  border: none;
+}
+.panel.panel-transparent .panel-header {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  color: var(--themeLight);
+  font-size: 115%;
+}
+.panel.panel-transparent .panel-header .panel-collapse-handle {
+  color: inherit;
+}
 .field-set {
   margin: 0;
   padding: 0.4rem 0.6rem 0.6rem 0.6rem;
@@ -6010,6 +6029,9 @@ TODO:
   top: 0;
   right: 0;
   bottom: 0;
+}
+.full-height {
+  height: 100%;
 }
 .full-height-panel {
   display: grid;
@@ -6405,6 +6427,22 @@ table > colgroup col.blue {
 		margin: @page-margin;
 	}
 	*/
+}
+.sheet.grid-vertical > tbody > tr > td,
+.sheet.grid-both > tbody > tr > td,
+.sheet.grid-vertical > thead > tr > td,
+.sheet.grid-both > thead > tr > td,
+.sheet.grid-vertical > tfoot > tr > td,
+.sheet.grid-both > tfoot > tr > td {
+  border-left: 1px solid #ddd;
+}
+.sheet.grid-horizontal > tbody > tr > td,
+.sheet.grid-both > tbody > tr > td,
+.sheet.grid-horizontal > thead > tr > td,
+.sheet.grid-both > thead > tr > td,
+.sheet.grid-horizontal > tfoot > tr > td,
+.sheet.grid-both > tfoot > tr > td {
+  border-top: 1px solid #ddd;
 }
 .app-exception {
   margin: 50px auto;

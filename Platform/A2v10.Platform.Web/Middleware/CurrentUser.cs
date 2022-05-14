@@ -76,7 +76,6 @@ public class CurrentUser : ICurrentUser, IDbIdentity
 		{
 			Invalid = true
 		};
-
 	}
 
 	public void Setup(HttpContext context)

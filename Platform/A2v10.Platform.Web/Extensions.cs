@@ -15,13 +15,8 @@ namespace Microsoft.Extensions.DependencyInjection
 {
 	public static class ServiceExtensions
 	{
-		public static IMvcBuilder AddPlatformCore(this IServiceCollection services, Action<PlatformOptions>? options = null)
+		public static IMvcBuilder AddPlatformCore(this IServiceCollection services)
 		{
-			var platformOptions = new PlatformOptions();
-			options?.Invoke(platformOptions);
-
-			services.AddSingleton<PlatformOptions>(s => platformOptions);
-
 			var webMvcAssembly = typeof(ShellController).Assembly;
 			var builder = services.AddControllersWithViews()
 				.AddApplicationPart(webMvcAssembly);
@@ -35,8 +30,8 @@ namespace Microsoft.Extensions.DependencyInjection
 			services.AddSingleton<IApplicationTheme, WebApplicationTheme>();
 			services.AddSingleton<IAppCodeProvider, FileSystemCodeProvider>();
 
-			services.AddScoped<WebApplicationHost>();
-
+			services.AddScoped<IApplicationHost, WebApplicationHost>();
+			services.AddScoped<ITenantManager, WebTenantManager>();
 
 			services.AddScoped<WebLocalizer>()
 				.AddScoped<ILocalizer>(s => s.GetRequiredService<WebLocalizer>())
@@ -45,8 +40,6 @@ namespace Microsoft.Extensions.DependencyInjection
 			services.AddScoped<WebProfiler>()
 				.AddScoped<IProfiler>(s => s.GetRequiredService<WebProfiler>())
 				.AddScoped<IDataProfiler>(s => s.GetRequiredService<WebProfiler>());
-
-			services.AddScoped<IApplicationHost>(s => s.GetRequiredService<WebApplicationHost>());
 
 			services.AddSingleton<ILocalizerDictiorany, WebLocalizerDictiorany>();
 

@@ -20,7 +20,7 @@
   font-family: 'A2v10';
   font-display: fallback;
   src: url('/css/fonts/A2v10.eot');
-  src: url('/css/fonts/A2v10.eot?#iefix') format('eot'), url('/css/fonts/A2v10.woff?v=7819') format('woff'), url('/css/fonts/A2v10.ttf?v=7819') format('truetype'), url('/css/fonts/A2v10.svg#A2v10') format('svg');
+  src: url('/css/fonts/A2v10.eot?#iefix') format('eot'), url('/css/fonts/A2v10.woff?v=7830') format('woff'), url('/css/fonts/A2v10.ttf?v=7830') format('truetype'), url('/css/fonts/A2v10.svg#A2v10') format('svg');
   font-weight: normal;
   font-style: normal;
 }
@@ -170,6 +170,15 @@
 }
 .ico-flame:before {
   content: "\ea1a";
+}
+.ico-truck:before {
+  content: "\ea1b";
+}
+.ico-cart:before {
+  content: "\ea1c";
+}
+.ico-shopping:before {
+  content: "\ea1d";
 }
 .ico-camera:before {
   content: "\e9a1";
@@ -406,6 +415,9 @@
 }
 .ico-folder-outline:before {
   content: "\e95a";
+}
+.ico-folders-outline:before {
+  content: "\e959";
 }
 .ico-folder-query:before {
   content: "\ea24";
@@ -1706,6 +1718,7 @@ header .dropdown.separate.show .btn.btn-success,
 .page.partial {
   height: auto;
   min-height: 100%;
+  position: relative;
 }
 .page.inital-page {
   overflow: auto;
@@ -4698,7 +4711,7 @@ ul.news-list > li {
   position: absolute;
   top: 0;
   left: -10px;
-  border: 38px / 2 solid transparent;
+  border: 19px solid transparent;
   border-color: inherit;
   border-right-width: 0;
   border-left-color: transparent;
@@ -4710,7 +4723,7 @@ ul.news-list > li {
   position: absolute;
   top: 0;
   left: 100%;
-  border: 38px / 2 solid transparent;
+  border: 19px solid transparent;
   border-right-width: 0;
   border-left-color: inherit;
   border-left-width: 10px;

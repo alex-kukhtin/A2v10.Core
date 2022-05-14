@@ -35,13 +35,7 @@ public static class ServicesExtensions
 
 	public static IServiceCollection UsePlatform(this IServiceCollection services, IConfiguration configuration)
 	{
-		services.AddPlatformCore(opts =>
-		{
-			// default values
-			//opts.MultiTenant = false;
-			//opts.MultiCompany = false;
-			//opts.GlobalPeriod = false;
-		})
+		services.AddPlatformCore()
 		.AddDefaultIdentityUI()
 		.AddStimulsoftUI();
 

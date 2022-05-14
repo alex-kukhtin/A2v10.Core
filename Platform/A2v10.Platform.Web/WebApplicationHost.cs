@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
 using System;
 using System.Dynamic;
@@ -10,40 +10,28 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 using A2v10.Infrastructure;
-using A2v10.Data.Interfaces;
 using Microsoft.Extensions.Options;
 
 namespace A2v10.Platform.Web;
 
-public record TenantInfo : ITenantInfo
-{
-	public String Procedure => "[a2security].[SetTenantId]";
-	public String ParamName => "@TenantId";
-
-	public Int32 TenantId { get; init; }
-}
-
-public class WebApplicationHost : IApplicationHost, ITenantManager
+public class WebApplicationHost : IApplicationHost
 {
 	private readonly IConfiguration _appSettings;
 	private readonly IProfiler _profiler;
 	private readonly AppOptions _appOptions;
-	private readonly PlatformOptions _options;
-	private readonly IDbIdentity _currentUser;
-	private Boolean _admin;
-
-	public WebApplicationHost(IConfiguration config, IProfiler profiler, IOptions<AppOptions> appOptions, PlatformOptions options, IDbIdentity currentUser)
+	private readonly ICurrentUser _currentUser;
+	
+	public WebApplicationHost(IConfiguration config, IProfiler profiler, IOptions<AppOptions> appOptions, ICurrentUser currentUser)
 	{
 		_profiler = profiler;
 		_appOptions = appOptions.Value;
 
 		_appSettings = config.GetSection("appSettings");
-		_options = options;
 		_currentUser = currentUser;
 	}
 
-	public Boolean IsMultiTenant => _options.MultiTenant;
-	public Boolean IsMultiCompany => _options.MultiCompany;
+	public Boolean IsMultiTenant => _appOptions.MultiTenant;
+	public Boolean IsMultiCompany => _appOptions.MultiCompany;
 
 	public Boolean IsDebugConfiguration => _appOptions.Environment.IsDebug;
 
@@ -53,7 +41,7 @@ public class WebApplicationHost : IApplicationHost, ITenantManager
 
 	public Boolean Mobile { get; private set; }
 
-	public Boolean IsAdminMode => _admin;
+	public Boolean IsAdminMode => false;
 
 	//public String AppDescription => throw new NotImplementedException();
 
@@ -73,7 +61,7 @@ public class WebApplicationHost : IApplicationHost, ITenantManager
 
 
 	public String? CatalogDataSource => IsMultiTenant ? "Catalog" : null;
-	public String? TenantDataSource => String.IsNullOrEmpty(_currentUser.Segment) ? null : _currentUser.Segment;
+	public String? TenantDataSource => String.IsNullOrEmpty(_currentUser.Identity.Segment) ? null : _currentUser.Identity.Segment;
 
 	public void CheckIsMobile(string host)
 	{
@@ -128,32 +116,11 @@ public class WebApplicationHost : IApplicationHost, ITenantManager
 	}
 	*/
 
-	public void SetAdmin(Boolean bAdmin)
-	{
-		_admin = bAdmin;
-	}
-
 	/*
 	public void StartApplication(bool bAdmin)
 	{
 		throw new NotImplementedException();
 	}
 	*/
-
-	#region ITenantManager
-	public ITenantInfo? GetTenantInfo(String? source)
-	{
-		if (!IsMultiTenant)
-			return null;
-		if (source == CatalogDataSource)
-			return null;
-		if (!_currentUser.TenantId.HasValue)
-			throw new InvalidOperationException("There is no TenantId");
-		return new TenantInfo()
-		{
-			TenantId = _currentUser.TenantId.Value
-		};
-	}
-	#endregion
 }
 

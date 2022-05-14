@@ -141,6 +141,7 @@ public class ShellController : Controller
 		});
 
 		Boolean setCompany = false;
+		/*
 		if (_host.IsMultiTenant || _host.IsUsePeriodAndCompanies)
 		{
 			// for all users (include features)
@@ -157,6 +158,7 @@ public class ShellController : Controller
 		{
 			setCompany = true;
 		}
+		*/
 
 		if (_host.Mobile)
 			loadPrms.Set("Mobile", true);

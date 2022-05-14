@@ -68,7 +68,7 @@ public static class IdentityExtensions
 
 	public static Int32? GetUserTenantId(this IIdentity? identity)
 	{
-		var tenant = identity?.GetUserClaim(WellKnownClims.Segment);
+		var tenant = identity?.GetUserClaim(WellKnownClims.TenantId);
 		if (tenant == null)
 			return null;
 		if (Int32.TryParse(tenant, out Int32 tenantId))

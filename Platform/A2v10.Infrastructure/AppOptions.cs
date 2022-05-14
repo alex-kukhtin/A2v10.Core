@@ -19,7 +19,8 @@ public record AppOptions
 	public String AppName { get; set; } = String.Empty;
 	public String? UserMenu { get; set; }
 	public String? Theme { get; set; }
-
+	public Boolean MultiTenant { get; set; }
+	public Boolean MultiCompany { get; set; }
 	public AppEnvironment Environment { get; } = new AppEnvironment();
 	public Boolean IsCustomUserMenu => !String.IsNullOrEmpty(UserMenu);
 }
