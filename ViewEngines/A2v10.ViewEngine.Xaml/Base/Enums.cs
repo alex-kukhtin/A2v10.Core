@@ -309,6 +309,7 @@ public enum Icon
 	Ellipsis,
 	EllipsisBottom,
 	EllipsisVertical,
+	Energy,
 	Error,
 	ErrorOutline,
 	Exit,
