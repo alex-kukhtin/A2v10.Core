@@ -5,19 +5,20 @@
 		<Nullable>enable</Nullable>
 		<AssemblyName>A2v10.Xaml</AssemblyName>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		<Version>10.1.8057</Version>
+		<Version>10.1.8058</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.ViewEngine.Xaml</PackageId>
 		<Authors>Oleksandr Kukthin</Authors>
 		<Company>Oleksandr Kukthin</Company>
 		<Description>Xaml view engine for A2v10</Description>
 		<Copyright>Copyright © 2015-2022 Oleksandr  Kukhtin. All rights reserved.</Copyright>
-		<RepositoryType>github</RepositoryType>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/alex-kukhtin/A2v10.Core</RepositoryUrl>
 		<PackageTags>A2v10 Xaml</PackageTags>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.System.Xaml" Version="10.1.8010" />
+		<PackageReference Include="A2v10.System.Xaml" Version="10.1.8011" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
 	</ItemGroup>
 

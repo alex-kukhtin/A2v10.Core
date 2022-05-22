@@ -5,14 +5,15 @@
 		<AddRazorSupportForMvc>true</AddRazorSupportForMvc>
 		<AssemblyName>A2v10.ReportEngine.Stimulsoft</AssemblyName>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		<Version>10.1.8057</Version>
+		<Version>10.1.8058</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.ReportEngine.Stimulsoft</PackageId>
 		<Authors>Oleksandr Kukhtin</Authors>
 		<Company>Oleksandr Kukhtin</Company>
 		<Description>Stimulsoft report engine for A2v10</Description>
 		<Copyright>Copyright © 2020-2022 Oleksandr Kukhtin. All rights reserved.</Copyright>
-		<RepositoryType>github</RepositoryType>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/alex-kukhtin/A2v10.Core</RepositoryUrl>
 		<PackageTags>A2v10 Reports Stimulsoft</PackageTags>
 		<EnableDefaultContentItems>False</EnableDefaultContentItems>
 	</PropertyGroup>
@@ -30,7 +31,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7308" />
-		<PackageReference Include="Stimulsoft.Reports.Web.NetCore" Version="2022.2.4" />
+		<PackageReference Include="Stimulsoft.Reports.Web.NetCore" Version="2022.2.5" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.TagHelpers" Version="2.2.0" />
 	</ItemGroup>
 

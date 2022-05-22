@@ -2,14 +2,15 @@
 
 	<PropertyGroup>
 		<TargetFramework>net6.0</TargetFramework>
-		<Version>10.1.8057</Version>
+		<Version>10.1.8058</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Plaform</PackageId>
 		<Authors>Oleksandr Kukthin</Authors>
 		<Company>Oleksandr Kukthin</Company>
 		<Description>A2v10 Platform core</Description>
 		<Copyright>Copyright © 2015-2022 Oleksandr Kukthin. All rights reserved.</Copyright>
-		<RepositoryType>github</RepositoryType>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/alex-kukhtin/A2v10.Core</RepositoryUrl>
 		<PackageTags>A2v10 Platform</PackageTags>
 	</PropertyGroup>
 
