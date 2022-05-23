@@ -36,12 +36,27 @@ public static class ServicesExtensions
 	public static IServiceCollection UsePlatform(this IServiceCollection services, IConfiguration configuration)
 	{
 		services.AddPlatformCore()
-		.AddDefaultIdentityUI()
-		.AddStimulsoftUI();
+			.AddDefaultIdentityUI()
+			.AddStimulsoftUI();
 
 		services.AddPlatformIdentityCore()
-		.AddIdentityConfiguration(configuration)
-		.AddPlatformAuthentication();
+			.AddIdentityConfiguration(configuration)
+			.AddPlatformAuthentication();
+
+		if (true /* Is File System */)
+		{
+			services.AddSingleton<IAppCodeProvider, FileSystemCodeProvider>();
+			services.AddScoped<IModelJsonPartProvider, ModelJsonPartProviderFile>();
+			//services.AddSingleton<IXamlPartProvider, XamlPartProviderFile>();
+		}
+		/* TODO:
+		else if (false)
+		{
+			services.AddSingleton<IModelJsonPartProvider, ModelJsonPartProviderClr>();
+			services.AddSingleton<IXamlPartProvider, XamlPartProviderClr>();
+		}
+		*/
+
 
 		services.UseSqlServerStorage();
 

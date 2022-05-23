@@ -224,11 +224,11 @@ public enum ModelCommandType
 public class ModelJsonCommand : ModelJsonBase, IModelCommand
 {
 	public ModelCommandType Type { get; init; }
-	public String? Procedure { get; set; }
-	public String? File { get; set; }
-	public String? ClrType { get; set; }
-	public Boolean Async { get; set; }
-	public Boolean DebugOnly { get; set; } /*TODO: Implement me*/
+	public String? Procedure { get; init; }
+	public String? File { get; init; }
+	public String? ClrType { get; init; }
+	public Boolean Async { get; init; }
+	public Boolean DebugOnly { get; init; } /*TODO: Implement me*/
 	public ExpandoObject? Args { get; init; }
 
 	public override String LoadProcedure()
@@ -247,14 +247,14 @@ public class ModelJsonCommand : ModelJsonBase, IModelCommand
 
 public class ModelJsonReport : ModelJsonBase, IModelReport
 {
-	public String? Type { get; set; }
-	public String? Report { get; set; }
-	public String? Procedure { get; set; }
-	public String? Name { get; set; }
-	public String? Encoding { get; set; }
-	public Boolean Validate { get; set; }
+	public String? Type { get; init; }
+	public String? Report { get; init; }
+	public String? Procedure { get; init; }
+	public String? Name { get; init; }
+	public String? Encoding { get; init; }
+	public Boolean Validate { get; init; }
 
-	public ExpandoObject? Variables { get; set; }
+	public ExpandoObject? Variables { get; init; }
 
 	public override String LoadProcedure()
 	{
@@ -303,9 +303,9 @@ public class ModelJson
 	private String? _id;
 
 	#region JSON
-	public String? Source { get; set; }
-	public String Schema { get; set; } = String.Empty;
-	public String Model { get; set; } = String.Empty;
+	public String? Source { get; init; }
+	public String Schema { get; init; } = String.Empty;
+	public String Model { get; init; } = String.Empty;
 
 	public Dictionary<String, ModelJsonView> Actions = new(StringComparer.OrdinalIgnoreCase);
 	public Dictionary<String, ModelJsonDialog> Dialogs = new(StringComparer.OrdinalIgnoreCase);

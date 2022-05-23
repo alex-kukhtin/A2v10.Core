@@ -1,46 +1,43 @@
-﻿// Copyright © 2020-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2020-2022 Alex Kukhtin. All rights reserved.
 
-using System.Dynamic;
+using System.Text;
 using System.Threading.Tasks;
+
 using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
-using A2v10.Infrastructure;
-using System.Text;
-using System;
 
-namespace A2v10.Services
+namespace A2v10.Services;
+
+public class InvokeCommandExecuteSql : IModelInvokeCommand
 {
-	public class InvokeCommandExecuteSql : IModelInvokeCommand
+	private readonly IDbContext _dbContext;
+
+	public InvokeCommandExecuteSql(IDbContext dbContext)
 	{
-		private readonly IDbContext _dbContext;
+		_dbContext = dbContext;
+	}
 
-		public InvokeCommandExecuteSql(IDbContext dbContext)
+	public async Task<IInvokeResult> ExecuteAsync(IModelCommand command, ExpandoObject parameters)
+	{
+		var model = await _dbContext.LoadModelAsync(command.DataSource, command.LoadProcedure(), parameters);
+
+		/*_host.CheckTypes(cmd.Path, cmd.checkTypes, model);
+		String invokeTarget = command.GetInvokeTarget();
+		if (invokeTarget != null)
 		{
-			_dbContext = dbContext;
+			var clr = new ClrInvoker();
+			clr.EnableThrow();
+			clr.Invoke(invokeTarget, dataToExec); // after execute
 		}
+		*/
+		var strResult = model != null && model.Root != null ?
+			JsonConvert.SerializeObject(model.Root, JsonHelpers.DataSerializerSettings) : "{}";
 
-		public async Task<IInvokeResult> ExecuteAsync(IModelCommand command, ExpandoObject parameters)
-		{
-			var model = await _dbContext.LoadModelAsync(command.DataSource, command.LoadProcedure(), parameters);
-
-			/*_host.CheckTypes(cmd.Path, cmd.checkTypes, model);
-			String invokeTarget = command.GetInvokeTarget();
-			if (invokeTarget != null)
-			{
-				var clr = new ClrInvoker();
-				clr.EnableThrow();
-				clr.Invoke(invokeTarget, dataToExec); // after execute
-			}
-			*/
-			var strResult = model != null && model.Root != null ?
-				JsonConvert.SerializeObject(model.Root, JsonHelpers.DataSerializerSettings) : "{}";
-
-			var result = new InvokeResult(
-				body: strResult != null ? Encoding.UTF8.GetBytes(strResult) : Array.Empty<Byte>(),
-				contentType: MimeTypes.Application.Json
-			);
-			return result;
-		}
+		var result = new InvokeResult(
+			body: strResult != null ? Encoding.UTF8.GetBytes(strResult) : Array.Empty<Byte>(),
+			contentType: MimeTypes.Application.Json
+		);
+		return result;
 	}
 }
