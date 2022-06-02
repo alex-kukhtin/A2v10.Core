@@ -7,14 +7,14 @@ public class AppXamlReaderService : XamlReaderService
 {
 	private readonly XamlServicesOptions _options;
 
-	public AppXamlReaderService(IXamlPartProvider partProvider)
+	public AppXamlReaderService(IXamlPartProvider partProvider, IAppCodeProvider codeProvider)
 	{
 		_options = new XamlServicesOptions(Array.Empty<NamespaceDef>())
 		{
 			OnCreateReader = (rdr) =>
 			{
 				rdr.InjectService<IXamlPartProvider>(partProvider);
-				rdr.InjectService<IXamlReaderService>(this);
+				rdr.InjectService<IAppCodeProvider>(codeProvider);
 			}
 		};
 	}

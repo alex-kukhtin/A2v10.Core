@@ -17,7 +17,7 @@ sql.targets в A2v10.Platform
 
 8. Site mode sample
 
-12. Xaml. styles.xaml cache
+12. Xaml. styles.xaml cache - depends on develop/release?
 
 13. SetUserPassword
 14. Доделать AccountController

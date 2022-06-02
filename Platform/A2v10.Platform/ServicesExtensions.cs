@@ -47,7 +47,7 @@ public static class ServicesExtensions
 		{
 			services.AddSingleton<IAppCodeProvider, FileSystemCodeProvider>();
 			services.AddScoped<IModelJsonPartProvider, ModelJsonPartProviderFile>();
-			//services.AddSingleton<IXamlPartProvider, XamlPartProviderFile>();
+			services.AddSingleton<IXamlPartProvider, XamlPartProviderFile>();
 		}
 		/* TODO:
 		else if (false)
@@ -67,8 +67,6 @@ public static class ServicesExtensions
 		{
 			x.RegisterEngine<StimulsoftReportEngine>("stimulsoft");
 		});
-
-		services.AddScoped<IXamlPartProvider, XamlPartProviderFile>();
 
 		services.AddStimulsoftLicense(configuration);
 

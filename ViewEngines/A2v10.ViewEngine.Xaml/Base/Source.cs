@@ -72,12 +72,10 @@ public class Source : MarkupExtension
 		{
 			String trgPath = appReader.ChangeExtension(targetFileName, "xaml");
 
-			var xamlReader = serviceProvider.GetRequiredService<IXamlReaderService>();
-
 			if (appReader.FileExists(trgPath))
 			{
-				using var stream = appReader.FileStreamFullPathRO(trgPath);
-				return xamlReader.Load(stream, new Uri(trgPath));
+				var xamPartProvider = serviceProvider.GetRequiredService<IXamlPartProvider>();
+				return xamPartProvider.GetXamlPart(trgPath);
 			}
 			else
 				throw new XamlException($"File not found {Path}");
