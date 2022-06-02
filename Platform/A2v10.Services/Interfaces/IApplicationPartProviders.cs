@@ -8,8 +8,3 @@ public interface IModelJsonPartProvider
 {
 	Task<ModelJson?> GetModelJsonAsync(IPlatformUrl url);
 }
-
-public interface IXamlPartProvider
-{
-	Task<Object?> GetXamlPartAsync(String path);
-}

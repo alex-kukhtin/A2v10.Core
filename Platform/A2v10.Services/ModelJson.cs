@@ -4,6 +4,7 @@
 using Microsoft.Extensions.DependencyInjection;
 
 using A2v10.Data.Interfaces;
+using System.Text.Json.Serialization;
 
 namespace A2v10.Services;
 public class ModelJsonBase : IModelBase
@@ -25,8 +26,8 @@ public class ModelJsonBase : IModelBase
 	}
 
 	public String? DataSource => String.IsNullOrEmpty(Source) ? Parent?.Source : Source;
-	public String CurrentModel => String.IsNullOrEmpty(Model) ? Parent.Model : Model;
-	public String CurrentSchema => String.IsNullOrEmpty(Schema) ? Parent.Schema : Schema;
+	public String? CurrentModel => String.IsNullOrEmpty(Model) ? Parent.Model : Model;
+	public String CurrentSchema => (String.IsNullOrEmpty(Schema) ? Parent.Schema : Schema) ?? "dbo";
 
 	public Boolean HasModel() => Model != String.Empty && !String.IsNullOrEmpty(CurrentModel);
 
@@ -304,18 +305,19 @@ public class ModelJson
 
 	#region JSON
 	public String? Source { get; init; }
-	public String Schema { get; init; } = String.Empty;
-	public String Model { get; init; } = String.Empty;
+	public String? Schema { get; init; }
+	public String? Model { get; init; }
 
-	public Dictionary<String, ModelJsonView> Actions = new(StringComparer.OrdinalIgnoreCase);
-	public Dictionary<String, ModelJsonDialog> Dialogs = new(StringComparer.OrdinalIgnoreCase);
-	public Dictionary<String, ModelJsonView> Popups = new(StringComparer.OrdinalIgnoreCase);
-	public Dictionary<String, ModelJsonFile> Files = new(StringComparer.InvariantCultureIgnoreCase);
-	public Dictionary<String, ModelJsonCommand> Commands = new(StringComparer.InvariantCultureIgnoreCase);
-	public Dictionary<String, ModelJsonReport> Reports = new(StringComparer.InvariantCultureIgnoreCase);
+	public Dictionary<String, ModelJsonView> Actions { get; init; } = new(StringComparer.OrdinalIgnoreCase);
+	public Dictionary<String, ModelJsonDialog> Dialogs { get; init; } = new(StringComparer.OrdinalIgnoreCase);
+	public Dictionary<String, ModelJsonView> Popups { get; init;  } = new(StringComparer.OrdinalIgnoreCase);
+	public Dictionary<String, ModelJsonFile> Files { get; init; } = new(StringComparer.InvariantCultureIgnoreCase);
+	public Dictionary<String, ModelJsonCommand> Commands { get; init; } = new(StringComparer.InvariantCultureIgnoreCase);
+	public Dictionary<String, ModelJsonReport> Reports { get; init; } = new(StringComparer.InvariantCultureIgnoreCase);
 	#endregion
 
 	public String LocalPath => _localPath ?? throw new InvalidProgramException("LocalPath is null");
+
 	public String BaseUrl => _baseUrl ?? throw new InvalidProgramException("BaseUrl is null");
 
 	public ModelJsonView? TryGetAction(String key)

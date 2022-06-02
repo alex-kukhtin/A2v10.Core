@@ -8,16 +8,14 @@ namespace A2v10.Xaml;
 public class XamlRenderer : IRenderer
 {
 	private readonly IProfiler _profile;
-	private readonly IAppCodeProvider _codeprovider;
-	private readonly IXamlReaderService _xamlReader;
 	private readonly ILocalizer _localizer;
+	private readonly IXamlPartProvider _partProvider;
 
-	public XamlRenderer(IProfiler profile, IAppCodeProvider provider, IXamlReaderService xamlReader, ILocalizer localizer)
+	public XamlRenderer(IProfiler profile, IXamlPartProvider partProvider, ILocalizer localizer)
 	{
 		_profile = profile;
-		_codeprovider = provider;
-		_xamlReader = xamlReader;
 		_localizer = localizer;
+		_partProvider = partProvider;
 	}
 
 	public void Render(IRenderInfo info, TextWriter writer)
@@ -32,7 +30,7 @@ public class XamlRenderer : IRenderer
 		{
 			OnCreateReader = (rdr) =>
 			{
-				rdr.InjectService<IAppCodeProvider>(_codeprovider);
+				rdr.InjectService<IXamlPartProvider>(_partProvider);
 			}
 		};
 
@@ -41,22 +39,19 @@ public class XamlRenderer : IRenderer
 			// XamlServices.Load sets IUriContext
 			if (!String.IsNullOrEmpty(info.FileName))
 			{
-				using var fileStream = _codeprovider.FileStreamFullPathRO(info.FileName);
-				uiElem = _xamlReader.Load(fileStream, new Uri(info.FileName)) as IXamlElement;
+				uiElem = _partProvider.GetXamlPart(info.FileName) as IXamlElement; 
 			}
-			else if (!String.IsNullOrEmpty(info.Text))
-				uiElem = _xamlReader.ParseXml(info.Text) as IXamlElement;
+			//else if (!String.IsNullOrEmpty(info.Text))
+				//uiElem = _xamlReader.ParseXml(info.Text) as IXamlElement;
 			else
 				throw new XamlException("Xaml. There must be either a 'FileName' or a 'Text' property");
 			if (uiElem == null)
 				throw new XamlException("Xaml. Root is not 'IXamlElement'");
 
-			// TODO - StylesXaml cache
-			var stylesPath = _codeprovider.MakeFullPath(String.Empty, "styles.xaml", info.Admin);
-			if (_codeprovider.FileExists(stylesPath))
+			var stylesPart = _partProvider.GetXamlPart("styles.xaml");
+			if (stylesPart != null)
 			{
-				using var stylesStream = _codeprovider.FileStreamFullPathRO(stylesPath);
-				if (_xamlReader.Load(stylesStream, new Uri(stylesPath)) is not Styles styles)
+				if (stylesPart is not Styles styles)
 					throw new XamlException("Xaml. Styles is not 'Styles'");
 				if (uiElem is IRootContainer root)
 				{

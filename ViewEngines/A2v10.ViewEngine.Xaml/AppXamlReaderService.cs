@@ -1,21 +1,19 @@
-﻿// Copyright © 2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2021-2022 Alex Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
 
-namespace A2v10.Xaml;
+namespace A2v10.ViewEngine.Xaml;
 public class AppXamlReaderService : XamlReaderService
 {
-	private readonly IAppCodeProvider _codeProvider;
 	private readonly XamlServicesOptions _options;
 
-	public AppXamlReaderService(IAppCodeProvider codeProvider)
+	public AppXamlReaderService(IXamlPartProvider partProvider)
 	{
-		_codeProvider = codeProvider;
 		_options = new XamlServicesOptions(Array.Empty<NamespaceDef>())
 		{
 			OnCreateReader = (rdr) =>
 			{
-				rdr.InjectService<IAppCodeProvider>(_codeProvider);
+				rdr.InjectService<IXamlPartProvider>(partProvider);
 				rdr.InjectService<IXamlReaderService>(this);
 			}
 		};

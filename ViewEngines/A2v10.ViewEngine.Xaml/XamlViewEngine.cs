@@ -12,13 +12,12 @@ public class XamlViewEngine : IViewEngine
 {
 	private readonly IRenderer _renderer;
 
-	public XamlViewEngine(IProfiler profiler, IAppCodeProvider codeProvider, ILocalizer localizer, IViewEngineProvider engineProvider)
+	public XamlViewEngine(IProfiler profiler, IXamlPartProvider xamlPartProvider, ILocalizer localizer, IViewEngineProvider engineProvider)
 	{
 		engineProvider.RegisterEngine(".xaml", typeof(XamlViewEngine));
 
 		_renderer = new XamlRenderer(profiler,
-			codeProvider,
-			new AppXamlReaderService(codeProvider),
+			xamlPartProvider,
 			localizer
 		);
 	}

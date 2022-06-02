@@ -12,7 +12,7 @@ namespace A2v10.Infrastructure
 		String? FileName { get; }
 		String? FileTitle { get; }
 		String? Path { get; }
-		String? Text { get; }
+		// String? Text { get; }
 		IDataModel? DataModel { get; }
 		//public ITypeChecker TypeChecker;
 		String? CurrentLocale { get; }

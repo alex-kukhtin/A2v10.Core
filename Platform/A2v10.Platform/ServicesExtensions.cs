@@ -57,7 +57,6 @@ public static class ServicesExtensions
 		}
 		*/
 
-
 		services.UseSqlServerStorage();
 
 		services.AddViewEngines(x =>
@@ -68,6 +67,8 @@ public static class ServicesExtensions
 		{
 			x.RegisterEngine<StimulsoftReportEngine>("stimulsoft");
 		});
+
+		services.AddScoped<IXamlPartProvider, XamlPartProviderFile>();
 
 		services.AddStimulsoftLicense(configuration);
 

@@ -33,6 +33,20 @@ public class Case : XamlElement
 				c.RenderElement(context);
         }
 	}
+
+	protected override void OnEndInit()
+	{
+		base.OnEndInit();
+		foreach (var c in Children)
+			c.SetParent(this);
+	}
+
+	public override void OnSetStyles()
+	{
+		base.OnSetStyles();
+		foreach (var c in Children)
+			c.OnSetStyles();
+	}
 }
 
 public class Else : Case
@@ -79,6 +93,20 @@ public class Switch : UIElementBase
 			itm.RenderElement(context);
 			t.RenderEnd(context);
 		}
+	}
+
+	protected override void OnEndInit()
+	{
+		base.OnEndInit();
+		foreach (var c in Cases)
+			c.SetParent(this);
+	}
+
+	public override void OnSetStyles()
+	{
+		base.OnSetStyles();
+		foreach (var ch in Cases)
+			ch.OnSetStyles();
 	}
 }
 
