@@ -61,6 +61,17 @@ public class FileSystemCodeProvider : IAppCodeProvider
 		return await tr.ReadToEndAsync();
 	}
 
+	public String? ReadTextFile(String path, String fileName, Boolean admin)
+	{
+		String fullPath = MakeFullPath(path, fileName, admin);
+
+		if (!File.Exists(fullPath))
+			return null;
+
+		using var tr = new StreamReader(fullPath);
+		return tr.ReadToEnd();
+	}
+
 	public Boolean FileExists(String fullPath)
 	{
 		return File.Exists(fullPath);

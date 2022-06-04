@@ -12,7 +12,7 @@ public interface IAppCodeProvider
 
 	String MakeFullPath(String path, String fileName, Boolean admin);
 	Task<String?> ReadTextFileAsync(String path, String fileName, Boolean admin);
-
+	String? ReadTextFile(String path, String fileName, Boolean admin);
 	Boolean FileExists(String fullPath);
 	Boolean DirectoryExists(String fullPath);
 	Stream FileStreamFullPathRO(String fullPath);

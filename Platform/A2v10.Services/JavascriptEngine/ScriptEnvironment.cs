@@ -8,6 +8,7 @@ using Jint.Native;
 using Jint.Runtime;
 
 using A2v10.Data.Interfaces;
+using Jint;
 
 namespace A2v10.Services.Javascript;
 public class ScriptEnvironment
@@ -15,12 +16,22 @@ public class ScriptEnvironment
 	private readonly IDbContext _dbContext;
 	private readonly ScriptConfig _config;
 	private readonly IHttpClientFactory _httpClientFactory;
+	private readonly IAppCodeProvider _appCodeProvider;
+	private readonly Engine _engine;
 
-	public ScriptEnvironment(IServiceProvider serviceProvider)
+	private String _currentPath = String.Empty;
+	public ScriptEnvironment(Engine engine, IServiceProvider serviceProvider)
 	{
 		_dbContext = serviceProvider.GetRequiredService<IDbContext>();
 		_config = new ScriptConfig(serviceProvider.GetRequiredService<IApplicationHost>());
 		_httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
+		_appCodeProvider = serviceProvider.GetRequiredService<IAppCodeProvider>();
+		_engine = engine;
+	}
+
+	public void SetPath(String path)
+	{
+		_currentPath = path;
 	}
 
 #pragma warning disable IDE1006 // Naming Styles
@@ -113,5 +124,25 @@ public class ScriptEnvironment
 			throw new JavaScriptException(js);
 		}
 	}
+
+#pragma warning disable IDE1006 // Naming Styles
+	public JsValue require(String fileName, ExpandoObject prms, ExpandoObject args)
+#pragma warning restore IDE1006 // Naming Styles
+	{
+		var script = _appCodeProvider.ReadTextFile(_currentPath, fileName, false);
+
+		String code = $@"
+return (function(prms, args) {{
+const module = {{exports:null }};
+{script};
+const __exp__ = module.exports;
+return function(_this) {{
+	return __exp__.call(_this, prms, args);
+}};
+}})(prms, args);";
+		var func = _engine.Evaluate(code);
+		return _engine.Invoke(func, this, prms, args);
+	}
 }
+
 

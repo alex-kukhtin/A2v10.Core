@@ -35,6 +35,7 @@ namespace A2v10.Services
 			var text = await _appCodeProvider.ReadTextFileAsync(command.Path, file, _currentUser.IsAdminApplication);
 			if (text == null)
 				throw new DataServiceException($"Script not found '{file}'");
+			_engine.SetPath(command.Path);
 			var result = _engine.Execute(text, parameters, command.Args ?? new ExpandoObject());
 			return InvokeResult.JsonFromObject(result);
 		}

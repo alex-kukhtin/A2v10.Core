@@ -1,35 +1,38 @@
-﻿// Copyright © 2020-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2020-2022 Alex Kukhtin. All rights reserved.
 
-using System;
-using System.Dynamic;
 
 using Newtonsoft.Json;
 
 using Jint;
 
-namespace A2v10.Services.Javascript
+namespace A2v10.Services.Javascript;
+
+public class JavaScriptEngine
 {
-	public class JavaScriptEngine
+	private readonly Engine _engine;
+	private readonly ScriptEnvironment _environment;
+
+	public JavaScriptEngine(IServiceProvider serviceProvider)
 	{
-		private readonly Engine _engine;
-		private readonly ScriptEnvironment _environment;
-
-		public JavaScriptEngine(IServiceProvider serviceProvider)
+		_engine = new Engine((opts) =>
 		{
-			_engine = new Engine((opts) =>
-			{
-				opts.Strict(true);
-			});
-			_environment = new ScriptEnvironment(serviceProvider);
-		}
+			opts.Strict(true);
+		});
+		_environment = new ScriptEnvironment(_engine, serviceProvider);
+	}
 
-		public Object Execute(String script, ExpandoObject prms, ExpandoObject args)
-		{
+	public void SetPath(String path)
+	{
+		_environment.SetPath(path);
+	}
 
-			var strPrms = JsonConvert.ToString(JsonConvert.SerializeObject(prms), '\'', StringEscapeHandling.Default);
-			var strArgs = JsonConvert.ToString(JsonConvert.SerializeObject(args), '\'', StringEscapeHandling.Default);
+	public Object Execute(String script, ExpandoObject prms, ExpandoObject args)
+	{
 
-			String code = $@"
+		var strPrms = JsonConvert.ToString(JsonConvert.SerializeObject(prms), '\'', StringEscapeHandling.Default);
+		var strArgs = JsonConvert.ToString(JsonConvert.SerializeObject(args), '\'', StringEscapeHandling.Default);
+
+		String code = $@"
 return (function() {{
 const __params__ = JSON.parse({strPrms});
 const __args__ = JSON.parse({strArgs});
@@ -45,10 +48,9 @@ return function(_this) {{
 
 }})();";
 
-			var func = _engine.Evaluate(code);
-			var result = _engine.Invoke(func, _environment);
+		var func = _engine.Evaluate(code);
+		var result = _engine.Invoke(func, _environment);
 
-			return result.ToObject();
-		}
+		return result.ToObject();
 	}
 }
