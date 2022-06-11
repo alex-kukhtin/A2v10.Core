@@ -12,12 +12,10 @@ public class ModelJsonPartProviderFile : IModelJsonPartProvider
 {
 	private readonly IAppCodeProvider _appCodeProvider;
 	private readonly RedirectModule? _redirect;
-	private readonly ICurrentUser _currentUser;
 
-	public ModelJsonPartProviderFile(IAppCodeProvider appCodeProvider, IOptions<AppOptions> appOptions, ICurrentUser currentUser)
+	public ModelJsonPartProviderFile(IAppCodeProvider appCodeProvider, IOptions<AppOptions> appOptions)
 	{
 		_appCodeProvider = appCodeProvider;
-		_currentUser = currentUser;
 		var redPath = _appCodeProvider.MakeFullPath(String.Empty, "redirect.json", false);
 		if (appCodeProvider.FileExists(redPath))
 			_redirect = new RedirectModule(redPath, appOptions.Value.Environment.Watch);
@@ -27,7 +25,7 @@ public class ModelJsonPartProviderFile : IModelJsonPartProvider
 	{
 		var localPath = _redirect?.Redirect(url.LocalPath);
 		url.Redirect(localPath);
-		String? json = await _appCodeProvider.ReadTextFileAsync(url.LocalPath, "model.json", _currentUser.IsAdminApplication);
+		String? json = await _appCodeProvider.ReadTextFileAsync(url.LocalPath, "model.json", false);
 		if (json == null)
 			return null;
 		var rm = JsonConvert.DeserializeObject<ModelJson>(json, JsonHelpers.CamelCaseSerializerSettings);

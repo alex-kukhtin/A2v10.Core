@@ -24,7 +24,7 @@ public static class ServicesExtensions
 		services.AddOptions<DataConfigurationOptions>();
 
 		services.AddScoped<IDbContext, SqlDbContext>()
-		.AddSingleton<IDataConfiguration, DataConfiguration>();
+			.AddSingleton<IDataConfiguration, DataConfiguration>();
 
 		services.Configure<DataConfigurationOptions>(opts =>
 		{
@@ -46,7 +46,7 @@ public static class ServicesExtensions
 		if (true /* Is File System */)
 		{
 			services.AddSingleton<IAppCodeProvider, FileSystemCodeProvider>();
-			services.AddScoped<IModelJsonPartProvider, ModelJsonPartProviderFile>();
+			services.AddSingleton<IModelJsonPartProvider, ModelJsonPartProviderFile>();
 			services.AddSingleton<IXamlPartProvider, XamlPartProviderFile>();
 		}
 		/* TODO:

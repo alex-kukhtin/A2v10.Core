@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2020-2022 Alex Kukhtin
 
-Last updated : 16 feb 2022
-module version : 8088
+Last updated : 09 jun 2022
+module version : 8091
 */
 ------------------------------------------------
 set nocount on;
@@ -14,25 +14,34 @@ grant execute on schema ::a2wf to public;
 go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2wf' and TABLE_NAME=N'Versions')
-begin
-	create table a2wf.[Versions]
-	(
-		[Module] nvarchar(32) not null,
-		[Version] int not null,
-		constraint PK_Versions primary key clustered (Module)
-	);
-end
+create table a2wf.[Versions]
+(
+	[Module] nvarchar(32) not null,
+	[Version] int not null,
+	constraint PK_Versions primary key clustered (Module)
+);
 go
 ------------------------------------------------
 begin
 	set nocount on;
 	declare @version int;
-	set @version = 8088;
+	set @version = 8091;
 	if exists(select * from a2wf.Versions where Module = N'main')
 		update a2wf.Versions set [Version] = @version where Module = N'main';
 	else
 		insert into a2wf.Versions (Module, [Version]) values (N'main', @version);
 end
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2wf' and TABLE_NAME=N'CurrentDate')
+create table a2wf.[CurrentDate]
+(
+	[Date] date null
+);
+go
+------------------------------------------------
+if not exists(select * from a2wf.CurrentDate)
+	insert into a2wf.CurrentDate ([Date]) values (null);
 go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2wf' and TABLE_NAME=N'Catalog')
@@ -191,21 +200,24 @@ end
 go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2wf' and TABLE_NAME=N'AutoStart')
-begin
-	create table a2wf.[AutoStart]
-	(
-		[Id] bigint identity(100, 1) not null
-			constraint PK_AutoStart primary key clustered,
-		[WorkflowId] nvarchar(255) not null,
-		[Version] int not null
-			constraint DF_AutoStart_Version default(0),
-		Params nvarchar(max) null,
-		Lock uniqueidentifier null,
-		DateCreated datetime not null constraint DF_AutoStart_DateCreated default(getutcdate()),
-		InstanceId uniqueidentifier null,
-		DateStarted datetime null
-	);
-end
+create table a2wf.[AutoStart]
+(
+	[Id] bigint identity(100, 1) not null
+		constraint PK_AutoStart primary key clustered,
+	[WorkflowId] nvarchar(255) not null,
+	[Version] int not null
+		constraint DF_AutoStart_Version default(0),
+	Params nvarchar(max) null,
+	StartAt datetime null,
+	Lock uniqueidentifier null,
+	DateCreated datetime not null constraint DF_AutoStart_DateCreated default(getutcdate()),
+	InstanceId uniqueidentifier null,
+	DateStarted datetime null
+);
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA=N'a2wf' and TABLE_NAME=N'AutoStart' and COLUMN_NAME=N'StartAt')
+	alter table a2wf.AutoStart add StartAt datetime null;
 go
 ------------------------------------------------
 create or alter procedure a2wf.[Catalog.Save]
@@ -677,22 +689,41 @@ begin
 end
 go
 ------------------------------------------------
+create or alter function a2wf.[fn_CurrentDate.Get]()
+returns datetime
+as
+begin
+	declare @retval datetime;
+	select @retval = [Date] from a2wf.CurrentDate;
+	if @retval is null
+		set @retval = getutcdate();
+	else
+		set @retval = @retval + cast(cast(getutcdate() as time) as datetime);
+	return @retval;
+end
+go
+------------------------------------------------
 create or alter procedure a2wf.[Instance.Pending.Load]
 as
 begin
 	set nocount on;
 	set transaction isolation level read committed;
+
+	declare @now datetime;
+	set @now = a2wf.[fn_CurrentDate.Get]();
 	-- timers
 	select [Pending!TPend!Array] = null, InstanceId, EventKey = ev.[Event] , ev.Kind
 	from a2wf.InstanceEvents ev
 		inner join a2wf.Instances i on ev.InstanceId = i.Id
-	where ev.Pending <= getutcdate() and ev.Kind=N'T' and i.Lock is null
+	where ev.Pending <= @now and ev.Kind=N'T' and i.Lock is null
 	order by ev.Pending;
 
+	-- autostart
 	declare @AutoStartTable table(Id bigint);
 	update a2wf.AutoStart set Lock = newid() 
 	output inserted.Id into @AutoStartTable(Id)
-	where Lock is null and InstanceId is null and DateStarted is null;
+	where Lock is null and InstanceId is null and DateStarted is null and 
+		(StartAt is null or StartAt <= @now);
 
 	select [AutoStart!TAutoStart!Array] = null, [Id!!Id]= a.Id,  
 		WorkflowId, [Version], [Params!!Json] = Params
@@ -704,14 +735,15 @@ go
 create or alter procedure a2wf.[AutoStart.Create]
 @WorkflowId nvarchar(255),
 @Version int = 0,
-@Params nvarchar(max) = null
+@Params nvarchar(max) = null,
+@StartAt datetime = null
 as
 begin
 	set nocount on;
 	set transaction isolation level read committed;
 
-	insert into a2wf.AutoStart(WorkflowId, [Version], [Params]) 
-	values (@WorkflowId, @Version, @Params);
+	insert into a2wf.AutoStart(WorkflowId, [Version], [Params], StartAt) 
+	values (@WorkflowId, @Version, @Params, @StartAt);
 end
 go
 ------------------------------------------------
@@ -724,6 +756,36 @@ begin
 	set transaction isolation level read committed;
 	update a2wf.AutoStart set InstanceId = @InstanceId, DateStarted = getutcdate() 
 	where Id=@Id;
+end
+go
+------------------------------------------------
+create or alter procedure a2wf.[Version.Get]
+as
+begin
+	set nocount on;
+	set transaction isolation level read uncommitted;
+
+	select [Version] from a2wf.Versions where Module = N'main';
+end
+go
+------------------------------------------------
+create or alter procedure a2wf.[CurrentDate.Get]
+as
+begin
+	set nocount on;
+	set transaction isolation level read uncommitted;
+
+	select CurrentDate = a2wf.[fn_CurrentDate.Get]();
+end
+go
+------------------------------------------------
+create or alter procedure a2wf.[CurrentDate.Set]
+@Date date
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+	update a2wf.CurrentDate set [Date] = @Date;
 end
 go
 /*
