@@ -1,10 +1,9 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
 
 using Microsoft.Extensions.DependencyInjection;
 
 using A2v10.Data.Interfaces;
-using System.Text.Json.Serialization;
 
 namespace A2v10.Services;
 public class ModelJsonBase : IModelBase
