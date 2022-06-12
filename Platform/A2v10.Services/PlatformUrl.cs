@@ -42,11 +42,17 @@ public class PlatformUrl : IPlatformUrl
 	public ExpandoObject? Query { get; private set; }
 
 
+
 	public void Redirect(String? path)
 	{
 		if (path == null || LocalPath == path)
 			return;
 		LocalPath = path;
+	}
+
+	public String NormalizedLocal(String fileName)
+	{
+		return Path.GetRelativePath(".", Path.Combine(LocalPath, fileName)).NormalizeSlash();
 	}
 
 	static (String Path, String Query) NormalizePath(String path)

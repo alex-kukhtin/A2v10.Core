@@ -1,5 +1,6 @@
 ﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
+using System.IO;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Options;

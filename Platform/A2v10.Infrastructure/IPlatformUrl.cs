@@ -27,5 +27,7 @@ namespace A2v10.Infrastructure
 
 		ExpandoObject? Query { get; }
 		void Redirect(String? path);
+
+		String NormalizedLocal(String fileName);
 	}
 }

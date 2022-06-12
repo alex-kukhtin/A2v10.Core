@@ -310,9 +310,9 @@ public class ModelJson
 	public Dictionary<String, ModelJsonView> Actions { get; init; } = new(StringComparer.OrdinalIgnoreCase);
 	public Dictionary<String, ModelJsonDialog> Dialogs { get; init; } = new(StringComparer.OrdinalIgnoreCase);
 	public Dictionary<String, ModelJsonView> Popups { get; init;  } = new(StringComparer.OrdinalIgnoreCase);
-	public Dictionary<String, ModelJsonFile> Files { get; init; } = new(StringComparer.InvariantCultureIgnoreCase);
-	public Dictionary<String, ModelJsonCommand> Commands { get; init; } = new(StringComparer.InvariantCultureIgnoreCase);
-	public Dictionary<String, ModelJsonReport> Reports { get; init; } = new(StringComparer.InvariantCultureIgnoreCase);
+	public Dictionary<String, ModelJsonFile> Files { get; init; } = new(StringComparer.OrdinalIgnoreCase);
+	public Dictionary<String, ModelJsonCommand> Commands { get; init; } = new(StringComparer.OrdinalIgnoreCase);
+	public Dictionary<String, ModelJsonReport> Reports { get; init; } = new(StringComparer.OrdinalIgnoreCase);
 	#endregion
 
 	public String LocalPath => _localPath ?? throw new InvalidProgramException("LocalPath is null");

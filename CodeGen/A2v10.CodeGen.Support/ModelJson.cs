@@ -118,9 +118,9 @@ public class ModelJson
 	public Dictionary<String, ModelJsonView> Actions { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 	public Dictionary<String, ModelJsonDialog> Dialogs { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 	public Dictionary<String, ModelJsonView> Popups { get; set; } = new(StringComparer.OrdinalIgnoreCase);
-	public Dictionary<String, ModelJsonFile> Files { get; set; } = new(StringComparer.InvariantCultureIgnoreCase);
-	public Dictionary<String, ModelJsonCommand> Commands { get; set; } = new(StringComparer.InvariantCultureIgnoreCase);
-	public Dictionary<String, ModelJsonReport> Reports { get; set; } = new(StringComparer.InvariantCultureIgnoreCase);
+	public Dictionary<String, ModelJsonFile> Files { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+	public Dictionary<String, ModelJsonCommand> Commands { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+	public Dictionary<String, ModelJsonReport> Reports { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 	#endregion
 }
 

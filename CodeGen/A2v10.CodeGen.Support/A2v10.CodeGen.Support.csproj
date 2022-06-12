@@ -6,7 +6,7 @@
 		<Nullable>enable</Nullable>
 		<AssemblyName>A2v10.CodeGen.Support</AssemblyName>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		<Version>10.1.8060</Version>
+		<Version>10.1.8062</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.CodeGen.Support</PackageId>
 		<Authors>Oleksandr Kukhtin</Authors>

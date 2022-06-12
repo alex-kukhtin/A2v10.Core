@@ -26,6 +26,13 @@ namespace A2v10.Infrastructure
 			return This;
 		}
 
+		public static String NormalizeSlash(this String This)
+		{
+			if (String.IsNullOrEmpty(This))
+				return This;
+			return This.Replace('\\', '/');
+		}
+
 		public static String RemoveEOL(this String This)
 		{
 			if (String.IsNullOrEmpty(This))

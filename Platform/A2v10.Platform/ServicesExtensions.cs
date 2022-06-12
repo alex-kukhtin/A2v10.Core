@@ -1,5 +1,6 @@
 ﻿// Copyright © 2021-2022 Alex Kukhtin. All rights reserved.
 
+using System;
 using System.Globalization;
 
 using Microsoft.Extensions.Configuration;
@@ -43,19 +44,22 @@ public static class ServicesExtensions
 			.AddIdentityConfiguration(configuration)
 			.AddPlatformAuthentication();
 
-		if (true /* Is File System */)
+		var appPath = configuration.GetValue<String>("application:path").Trim();
+		Boolean isClr = appPath.StartsWith("clr-type:");
+
+		if (isClr)
+		{
+			services.AddSingleton<IAppProvider, AppProvider>();
+			services.AddSingleton<IAppCodeProvider, FileSystemCodeProvider>();
+			services.AddSingleton<IModelJsonPartProvider, ModelJsonPartProviderClr>();
+			services.AddSingleton<IXamlPartProvider, XamlPartProviderFile>();
+		}
+		else /* Is File System */
 		{
 			services.AddSingleton<IAppCodeProvider, FileSystemCodeProvider>();
 			services.AddSingleton<IModelJsonPartProvider, ModelJsonPartProviderFile>();
 			services.AddSingleton<IXamlPartProvider, XamlPartProviderFile>();
 		}
-		/* TODO:
-		else if (false)
-		{
-			services.AddSingleton<IModelJsonPartProvider, ModelJsonPartProviderClr>();
-			services.AddSingleton<IXamlPartProvider, XamlPartProviderClr>();
-		}
-		*/
 
 		services.UseSqlServerStorage();
 
