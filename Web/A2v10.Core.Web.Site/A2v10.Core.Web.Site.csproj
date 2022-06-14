@@ -18,6 +18,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="MainApp">
+      <HintPath>..\..\..\A2v10.App.Compiler\MainApp\bin\Debug\net6.0\MainApp.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Update="wwwroot\App_application\main\test\test.view.xaml" />
   </ItemGroup>
 

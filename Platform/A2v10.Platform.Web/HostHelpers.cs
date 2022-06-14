@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
+using System.IO;
 
 namespace A2v10.Platform.Web;
 public static class HostHelpers
@@ -66,10 +67,10 @@ public static class HostHelpers
 		return String.Empty;
 	}
 
-	public static String? CustomManifest(this IAppCodeProvider provider)
+	public static String? CustomManifest(this IWebHostFilesProvider provider)
 	{
 		var manifestPath = provider.MapHostingPath("manifest.json");
-		return provider.FileExists(manifestPath) ? "<link rel=\"manifest\" href=\"/manifest.json\">" : null;
+		return File.Exists(manifestPath) ? "<link rel=\"manifest\" href=\"/manifest.json\">" : null;
 	}
 
 	public static Task ProcessDbEvents(this IApplicationHost host, IDbContext dbContext)

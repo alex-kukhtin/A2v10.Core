@@ -23,8 +23,5 @@ public interface IAppCodeProvider
 	String ReplaceFileName(String baseFullName, String relativeName);
 	String GetExtension(String fullName);
 	String ChangeExtension(String fullName, String extension);
-
-	// new
-	String MapHostingPath(String path);
 }
 

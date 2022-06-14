@@ -47,12 +47,13 @@ public static class ServicesExtensions
 		var appPath = configuration.GetValue<String>("application:path").Trim();
 		Boolean isClr = appPath.StartsWith("clr-type:");
 
+		services.AddSingleton<IWebHostFilesProvider, WebHostFilesProvider>();
 		if (isClr)
 		{
 			services.AddSingleton<IAppProvider, AppProvider>();
-			services.AddSingleton<IAppCodeProvider, FileSystemCodeProvider>();
+			services.AddSingleton<IAppCodeProvider, ClrCodeProvider>();
 			services.AddSingleton<IModelJsonPartProvider, ModelJsonPartProviderClr>();
-			services.AddSingleton<IXamlPartProvider, XamlPartProviderFile>();
+			services.AddSingleton<IXamlPartProvider, XamlPartProviderClr>();
 		}
 		else /* Is File System */
 		{

@@ -49,7 +49,7 @@ public class Source : MarkupExtension
 		}
 	}
 
-	Object Load(String baseFileName, IServiceProvider serviceProvider)
+	Object? Load(String baseFileName, IServiceProvider serviceProvider)
 	{
 		var appReader = serviceProvider.GetRequiredService<IAppCodeProvider>();
 

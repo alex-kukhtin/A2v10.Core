@@ -25,7 +25,9 @@ public class ModelJsonPartProviderClr : IModelJsonPartProvider
 		var localPath = _redirect?.Redirect(url.LocalPath);
 		url.Redirect(localPath);
 		var relativeFileName = url.NormalizedLocal("model.json");
-		var ms = _appContainer.GetModelJson(relativeFileName);
+		var ms = _appContainer.GetModelJson<ModelJson>(relativeFileName);
+		if (ms == null)
+			return Task.FromResult<ModelJson?>(null);
 		ms?.OnEndInit(url);
 		return Task.FromResult<ModelJson?>(ms);
 	}

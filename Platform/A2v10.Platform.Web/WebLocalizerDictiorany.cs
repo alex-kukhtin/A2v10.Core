@@ -21,7 +21,7 @@ class LocaleMapItem
 	}
 }
 
-internal record LocalePath(String Path, Boolean IsFileSystem);
+internal record LocalePath(String Path, Boolean IsHostFile);
 
 public class WebLocalizerDictiorany : ILocalizerDictiorany
 {
@@ -33,23 +33,24 @@ public class WebLocalizerDictiorany : ILocalizerDictiorany
 
 
 	private readonly IAppCodeProvider _appCodeProvider;
+	private readonly IWebHostFilesProvider _hostFilesProvider;
 	private readonly Boolean _watch;
 
-	public WebLocalizerDictiorany(IAppCodeProvider appCodeProvider, IOptions<AppOptions> appOptions)
+	public WebLocalizerDictiorany(IWebHostFilesProvider hostFilesProvider, IAppCodeProvider appCodeProvider, IOptions<AppOptions> appOptions)
 	{
 		_appCodeProvider = appCodeProvider;
+		_hostFilesProvider = hostFilesProvider;
 		_watch = appOptions.Value.Environment.Watch;
 	}
 
-	static IEnumerable<String> ReadLines(IAppCodeProvider codeProvider, String path)
+	IEnumerable<String> ReadLines(String path)
 	{
-		using var stream = codeProvider.FileStreamFullPathRO(path);
+		using var stream = _appCodeProvider.FileStreamFullPathRO(path);
 		using var rdr = new StreamReader(stream);
 		while (!rdr.EndOfStream)
 		{
 			var s = rdr.ReadLine();
-			if (String.IsNullOrEmpty(s) || s.StartsWith(";"))
-				continue;
+			if (s == null) continue;
 			yield return s;
 		}
 	}
@@ -60,13 +61,16 @@ public class WebLocalizerDictiorany : ILocalizerDictiorany
 		{
 			foreach (var localePath in GetLocalizerFilePath(locale))
 			{
-				foreach (var line in ReadLines(_appCodeProvider, localePath.Path))
+				foreach (var line in
+					localePath.IsHostFile ? File.ReadLines(localePath.Path) : ReadLines(localePath.Path))
 				{
+					if (String.IsNullOrEmpty(line) || line.StartsWith(";"))
+						continue;
 					Int32 pos = line.IndexOf('=');
 					if (pos != -1)
 					{
-						var key = line[..pos];
-						var val = line[(pos + 1)..];
+						var key = line[..pos].Trim();
+						var val = line[(pos + 1)..].Trim();
 						map.AddOrUpdate(key, val, (k, oldVal) => val);
 					}
 					else
@@ -81,11 +85,10 @@ public class WebLocalizerDictiorany : ILocalizerDictiorany
 	IEnumerable<LocalePath> GetLocalizerFilePath(String locale)
 	{
 		// locale may be "uk-UA"
-		var dirPath = _appCodeProvider.MapHostingPath("localization");
+		var dirPath = _hostFilesProvider.MapHostingPath("localization");
+		var appPath = _appCodeProvider.MakeFullPath("_localization", String.Empty, admin: false);
 
-		var appPath = _appCodeProvider.MakeFullPath("_localization", String.Empty, admin:false);
-
-		if (!Directory.Exists(dirPath))
+		if (!Directory.Exists(dirPath)) // FILE SYSTEM
 			dirPath = null;
 
 		if (!_appCodeProvider.DirectoryExists(appPath))
@@ -97,6 +100,7 @@ public class WebLocalizerDictiorany : ILocalizerDictiorany
 		CreateWatchers(dirPath, _appCodeProvider.IsFileSystem ? appPath : null);
 		if (dirPath != null)
 		{
+			// System.IO
 			foreach (var s in Directory.EnumerateFiles(dirPath, $"*.{locale}.txt"))
 				yield return new LocalePath(s, true);
 		}

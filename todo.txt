@@ -1,4 +1,10 @@
-﻿== TODO: Architecture
+﻿== TODO: Compiler
+
+104. Сжатие текстов?
+105. Проверить GetLayoutDescriptionAsync - Styles/Scripts для внешнего окна.
+
+
+== TODO: Architecture
 
 7. Identity.State IsValid???
 8. Session for ITokenProvider?? - убрать сессию?

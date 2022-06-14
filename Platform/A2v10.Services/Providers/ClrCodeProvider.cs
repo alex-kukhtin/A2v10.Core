@@ -1,33 +1,31 @@
 ﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
+using System.Text;
 
-using Microsoft.AspNetCore.Hosting;
-
-using A2v10.Infrastructure;
 using Microsoft.Extensions.Options;
 
-namespace A2v10.Platform.Web;
-public class FileSystemCodeProvider : IAppCodeProvider
+
+namespace A2v10.Services;
+
+public class ClrCodeProvider : IAppCodeProvider
 {
 
-	private readonly IWebHostEnvironment _webHost;
+	private readonly IAppContainer _appContainer;
 
 	private String AppPath { get; }
 
-	public Boolean IsFileSystem => true;
+	public Boolean IsFileSystem => false;
 
 	private readonly String _appKey;
 
-	public FileSystemCodeProvider(IWebHostEnvironment webHost, IOptions<AppOptions> appOptions)
+	public ClrCodeProvider(IOptions<AppOptions> appOptions,
+		IAppProvider appProvider)
 	{
-		_webHost = webHost;
 		AppPath = appOptions.Value.Path;
 		_appKey = appOptions.Value.AppName;
+		_appContainer = appProvider.Container;
 	}
 
 	String GetAppKey(Boolean admin)
@@ -37,54 +35,34 @@ public class FileSystemCodeProvider : IAppCodeProvider
 
 	public String MakeFullPath(String path, String fileName, Boolean admin)
 	{
-		String appKey = GetAppKey(admin);
-		if (fileName.StartsWith('/'))
-		{
-			path = String.Empty;
-			fileName = fileName.Remove(0, 1);
-		}
-		if (appKey != null)
-			appKey = "/" + appKey;
-		String fullPath = Path.Combine($"{AppPath}{appKey}", path, fileName);
-
-		return Path.GetFullPath(fullPath);
+		return Path.GetRelativePath(".", Path.Combine(path, fileName)).NormalizeSlash();
 	}
 
-	public async Task<String?> ReadTextFileAsync(String path, String fileName, Boolean admin)
+	public Task<String?> ReadTextFileAsync(String path, String fileName, Boolean admin)
 	{
 		String fullPath = MakeFullPath(path, fileName, admin);
-
-		if (!File.Exists(fullPath))
-			return null;
-
-		using var tr = new StreamReader(fullPath);
-		return await tr.ReadToEndAsync();
+		return Task.FromResult<String?>(_appContainer.GetText(fullPath));
 	}
 
 	public String? ReadTextFile(String path, String fileName, Boolean admin)
 	{
 		String fullPath = MakeFullPath(path, fileName, admin);
-
-		if (!File.Exists(fullPath))
-			return null;
-
-		using var tr = new StreamReader(fullPath);
-		return tr.ReadToEnd();
+		return _appContainer.GetText(fullPath);
 	}
 
 	public Boolean FileExists(String fullPath)
 	{
-		return File.Exists(fullPath);
+		return !String.IsNullOrEmpty(_appContainer.GetText(fullPath));
 	}
 
 	public Boolean DirectoryExists(String fullPath)
 	{
-		return Directory.Exists(fullPath);
+		return _appContainer.EnumerateFiles(fullPath, "").Any();
 	}
 
 	public Stream FileStreamFullPathRO(String fullPath)
 	{
-		return new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+		return new MemoryStream(Encoding.UTF8.GetBytes(_appContainer.GetText(fullPath) ?? String.Empty));
 	}
 
 	String GetFullPath(String path, String fileName, Boolean admin)
@@ -106,17 +84,16 @@ public class FileSystemCodeProvider : IAppCodeProvider
 	{
 		if (String.IsNullOrEmpty(path))
 			return Enumerable.Empty<String>();
-		var fullPath = GetFullPath(path, String.Empty, admin);
-		if (!Directory.Exists(fullPath))
-			return Enumerable.Empty<String>();
-		return Directory.EnumerateFiles(fullPath, searchPattern);
+		if (searchPattern.StartsWith('*'))
+			searchPattern = searchPattern[1..];
+		return _appContainer.EnumerateFiles(path, searchPattern);
 	}
 
 
 	public String ReplaceFileName(String baseFullName, String relativeName)
     {
         String dir = Path.GetDirectoryName(baseFullName) ?? String.Empty;
-        return Path.GetFullPath(Path.Combine(dir, relativeName));
+		return Path.GetRelativePath(".", Path.Combine(dir, relativeName)).NormalizeSlash();
 	}
 
 	public String GetExtension(String fullName)
@@ -127,11 +104,6 @@ public class FileSystemCodeProvider : IAppCodeProvider
 	public String ChangeExtension(String fullName, String extension)
 	{
 		return Path.ChangeExtension(fullName, extension);
-	}
-
-	public String MapHostingPath(String path)
-	{
-		return Path.Combine(_webHost.WebRootPath, path);
 	}
 }
 

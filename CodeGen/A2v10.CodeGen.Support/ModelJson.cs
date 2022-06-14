@@ -9,11 +9,10 @@ namespace A2v10.Services;
 public class ModelJsonBase
 {
 
-	public String? Source;
-	public String? Schema;
-	public String? Model;
-
-	public Int32 CommandTimeout;
+	public String? Source { get; set; }
+	public String? Schema { get; set; }
+	public String? Model { get; set; }
+	public Int32 CommandTimeout { get; set; }
 
 	public ExpandoObject? Parameters { get; set; }
 }
