@@ -20,7 +20,7 @@
   font-family: 'A2v10';
   font-display: fallback;
   src: url('/css/fonts/A2v10.eot');
-  src: url('/css/fonts/A2v10.eot?#iefix') format('eot'), url('/css/fonts/A2v10.woff?v=7830') format('woff'), url('/css/fonts/A2v10.ttf?v=7830') format('truetype'), url('/css/fonts/A2v10.svg#A2v10') format('svg');
+  src: url('/css/fonts/A2v10.eot?#iefix') format('eot'), url('/css/fonts/A2v10.woff?v=7847') format('woff'), url('/css/fonts/A2v10.ttf?v=7847') format('truetype'), url('/css/fonts/A2v10.svg#A2v10') format('svg');
   font-weight: normal;
   font-style: normal;
 }
@@ -179,6 +179,9 @@
 }
 .ico-shopping:before {
   content: "\ea1d";
+}
+.ico-energy:before {
+  content: "\ea1e";
 }
 .ico-camera:before {
   content: "\e9a1";
@@ -2277,6 +2280,7 @@ pre.a2-code {
 }
 .control-group.combo-hyperlink .input-group {
   border-style: none;
+  background-color: transparent;
 }
 .control-group.combo-hyperlink .input-group .select-wrapper {
   right: auto;
@@ -2884,13 +2888,13 @@ pre.a2-code {
 }
 .period-picker.pp-hyperlink .input-group {
   border-style: none;
+  background-color: transparent;
 }
 .period-picker.pp-hyperlink .input-group .period-text {
   min-height: auto;
   border-bottom: 1px dotted var(--link);
   color: var(--link);
   padding: 0;
-  line-height: normal;
 }
 .period-picker.pp-hyperlink .input-group .caret {
   display: none;
@@ -2999,6 +3003,10 @@ pre.a2-code {
   display: block;
   border-top: 1px solid #ddd;
   background-color: var(--neutralBkLight);
+}
+.input-group > .selector-pane table.data-grid tr.dg-row > td {
+  line-height: 1;
+  padding: 0.6rem;
 }
 .control-group.selector-hyperlink .input-group {
   border: none;
@@ -3417,7 +3425,8 @@ table.data-grid > tbody > tr.bold > td {
   padding: 4px;
   overflow: visible;
   background-color: var(--neutralBk);
-  z-index: 1;
+  z-index: 8;
+  row-gap: 4px;
 }
 .toolbar input,
 .toolbar select {
@@ -3454,7 +3463,7 @@ table.data-grid > tbody > tr.bold > td {
 }
 .toolbar.transparent .dropdown.show .btn {
   background: white;
-  border: 1px dotted #ccc;
+  outline: 1px dotted #ccc !important;
 }
 .toolbar.light {
   background-color: white;
@@ -3493,6 +3502,7 @@ table.data-grid > tbody > tr.bold > td {
 .toolbar > .control-group {
   display: inline-flex;
   background-color: transparent;
+  margin-bottom: 0;
 }
 .toolbar > .control-group .input-group {
   height: 2.2em;
@@ -4934,6 +4944,9 @@ table.hover > tbody > tr.active:hover {
 .a2-sticky-container {
   overflow: auto;
 }
+table.a2-table.sticky {
+  width: 100%;
+}
 table.a2-table.sticky thead,
 table.a2-table.sticky tfoot {
   position: sticky;
@@ -6256,11 +6269,11 @@ table.sheet tr.row-title td:last-child {
   padding-right: 0;
 }
 table.sheet tr.row-no-border td {
-  border-style: none;
-  background-color: white;
+  border-style: none!important;
+  background-color: white!important;
 }
 table.sheet tr.row-no-border td.underline {
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid #ddd !important;
   height: 30px;
 }
 table.sheet tr.row-page-header td {

@@ -54,6 +54,21 @@ public class ImageController : BaseController
 		}
 	}
 
+
+	[Route("_image/{*pathInfo}")]
+	[HttpPost]
+	public async Task<IActionResult> ImagePost(String pathInfo)
+	{
+		try
+		{
+
+		} catch (Exception ex)
+		{
+
+		}
+		return BadRequest("Yet not implemented");
+	}
+
 	[Route("_static_image/{*pathInfo}")]
 	[HttpGet]
 	public IActionResult StaticImage(String pathInfo)

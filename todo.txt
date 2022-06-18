@@ -1,7 +1,7 @@
 ﻿== TODO: Compiler
 
-104. Сжатие текстов?
 105. Проверить GetLayoutDescriptionAsync - Styles/Scripts для внешнего окна.
+106. 
 
 
 == TODO: Architecture
