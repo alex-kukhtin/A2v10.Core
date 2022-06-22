@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-namespace A2v10.Xaml
+namespace A2v10.Xaml;
+
+interface ISupportTwoPhaseRendering
 {
-	interface ISupportTwoPhaseRendering
-	{
-		void RenderSecondPhase(RenderContext context);
-	}
+	void RenderSecondPhase(RenderContext context);
 }

@@ -1,52 +1,54 @@
-﻿// Copyright © 2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2021-2022 Alex Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 
-namespace A2v10.Xaml
+namespace A2v10.Xaml;
+
+public enum Filter
 {
-	public enum Filter
+	None,
+	Trim,
+	Upper,
+	Lower,
+	Barcode,
+	Fract3,
+	Fract2,
+	Eval
+}
+
+[TypeConverter(typeof(FilterColllectionConverter))]
+public class FilterCollection : List<Filter>
+{
+}
+
+public class FilterColllectionConverter : TypeConverter
+{
+	public override Boolean CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
 	{
-		None,
-		Trim,
-		Upper,
-		Lower,
-		Barcode
+		if (sourceType == typeof(String))
+			return true;
+		return false;
 	}
 
-	[TypeConverter(typeof(FilterColllectionConverter))]
-	public class FilterCollection : List<Filter>
+	public override Object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, Object value)
 	{
-	}
-
-	public class FilterColllectionConverter : TypeConverter
-	{
-		public override Boolean CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
+		if (value == null)
+			return null;
+		if (value is String strVal)
 		{
-			if (sourceType == typeof(String))
-				return true;
-			return false;
-		}
-
-		public override Object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, Object value)
-		{
-			if (value == null)
-				return null;
-			if (value is String strVal)
+			var r = new FilterCollection();
+			var vals = strVal.Split(',');
+			foreach (var v in vals)
 			{
-				var r = new FilterCollection();
-				var vals = strVal.Split(',');
-				foreach (var v in vals)
-				{
-					if (Enum.TryParse<Filter>(v.Trim(), out Filter filter))
-						r.Add(filter);
-					else
-						throw new XamlException($"Invalid filter value '{v}'");
-				}
-				return r;
+				if (Enum.TryParse<Filter>(v.Trim(), out Filter filter))
+					r.Add(filter);
+				else
+					throw new XamlException($"Invalid filter value '{v}'");
 			}
-			throw new XamlException($"Invalid FilterCollection value '{value}'");
+			return r;
 		}
+		throw new XamlException($"Invalid FilterCollection value '{value}'");
 	}
 }
