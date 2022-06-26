@@ -451,6 +451,7 @@ public enum Icon
 	UserImage,
 	UserMinus,
 	UserPlus,
+	UserRole,
 	Users,
 	Waiting,
 	WaitingOutline,

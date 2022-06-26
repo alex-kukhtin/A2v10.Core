@@ -19,6 +19,7 @@ namespace A2v10.Xaml
 		public TextAlign Align { get; set; }
 		public String? Delegate { get; set; }
 		public String? SetDelegate { get; set; }
+		public String? Fetch { get; set; }
 		public String? DisplayProperty { get; set; }
 		public String? Placeholder { get; set; }
 
@@ -47,6 +48,8 @@ namespace A2v10.Xaml
 				input.MergeAttribute(":fetch", $"$delegate('{Delegate}')");
 			if (!String.IsNullOrEmpty(SetDelegate))
 				input.MergeAttribute(":hitfunc", $"$delegate('{SetDelegate}')");
+			if (!String.IsNullOrEmpty(Fetch))
+				input.MergeAttribute("fetch-command", Fetch);
 			input.MergeAttribute("display", DisplayProperty);
 			if (PanelPlacement != DropDownPlacement.BottomLeft)
 				input.MergeAttribute("placement", PanelPlacement.ToString().ToKebabCase());
