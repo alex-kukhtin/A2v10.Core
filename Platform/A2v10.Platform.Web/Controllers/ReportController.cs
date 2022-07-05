@@ -29,6 +29,12 @@ public class ReportController : BaseController
 
 
 	[HttpGet]
+	public Task<IActionResult> Show(String Id, String Base, String Rep, String format = "pdf")
+	{
+		return Task.FromResult<IActionResult>(Ok());
+	}
+
+	[HttpGet]
 	public Task<IActionResult> Export(String Id, String Base, String Rep, String format = "pdf")
 	{
 		return TryCatch(async () =>

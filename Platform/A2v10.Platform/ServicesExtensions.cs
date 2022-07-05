@@ -11,7 +11,6 @@ using Microsoft.Extensions.Hosting;
 using A2v10.Data;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
-using A2v10.ReportEngine.Stimulsoft;
 using A2v10.Services;
 using A2v10.ViewEngine.Xaml;
 using A2v10.Platform.Web;
@@ -34,11 +33,10 @@ public static class ServicesExtensions
 		return services;
 	}
 
-	public static IServiceCollection UsePlatform(this IServiceCollection services, IConfiguration configuration)
+	public static IMvcBuilder UsePlatform(this IServiceCollection services, IConfiguration configuration)
 	{
-		services.AddPlatformCore()
-			.AddDefaultIdentityUI()
-			.AddStimulsoftUI();
+		var builder = services.AddPlatformCore()
+			.AddDefaultIdentityUI();
 
 		services.AddPlatformIdentityCore()
 			.AddIdentityConfiguration(configuration)
@@ -67,13 +65,17 @@ public static class ServicesExtensions
 		services.AddViewEngines(x =>
 		{
 			x.RegisterEngine<XamlViewEngine>(".xaml");
-		})
+		});
+
+		/*
+		services
 		.AddReportEngines(x =>
 		{
 			x.RegisterEngine<StimulsoftReportEngine>("stimulsoft");
 		});
 
 		services.AddStimulsoftLicense(configuration);
+		*/
 
 		// Platform services
 		services.Configure<AppOptions>(
@@ -89,7 +91,7 @@ public static class ServicesExtensions
 
 		services.AddHttpClient();
 
-		return services;
+		return builder;
 	}
 
 	public static void ConfigurePlatform(this IApplicationBuilder app, IWebHostEnvironment env)

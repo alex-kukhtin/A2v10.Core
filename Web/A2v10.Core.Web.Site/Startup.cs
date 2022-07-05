@@ -21,7 +21,11 @@ public class Startup
 
 	public void ConfigureServices(IServiceCollection services)
 	{
-		services.UsePlatform(Configuration);
+		var appBuilder = services.UsePlatform(Configuration);
+
+		services.AddReportEngines(factory =>
+		{
+		});
 
 		/*
 		services.Configure<IdentityOptions>(opts =>

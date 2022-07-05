@@ -188,6 +188,11 @@ public abstract class UIElementBase : XamlElement, IXamlElement
 			result.Prop = path[(ix + 1)..];
 			result.Path = path[..ix];
 		}
+		else
+		{
+			result.Prop = path;
+			result.Path = "$data";
+		}
 		return result;
 	}
 

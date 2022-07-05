@@ -1,4 +1,13 @@
-﻿== TODO: Compiler
+﻿Допилки для NovaEra.
+
+1. ReportEngine.Pdf
+2. About.Page
+3. ChangePassword
+4. С++/CLR with NET.CORE
+5. 
+
+
+== TODO: Compiler
 
 105. Проверить GetLayoutDescriptionAsync - Styles/Scripts для внешнего окна.
 106. 
@@ -8,7 +17,6 @@
 
 7. Identity.State IsValid???
 8. Session for ITokenProvider?? - убрать сессию?
-
 
 == TODO: Xaml
 1. Tests for Length, Size, Thickness => Records, Values
@@ -50,10 +58,8 @@ sql.targets в A2v10.Platform
 56. _shell/script - exception - странное поведение
 
 60. BaseController в отдельную сборку (SetParams, Filter)
-61. SetParams for StimulsoftController
-62. QueryString StimulsoftController
+
 63. Проверить Profiler
-64. Проверить CheckPeriod для Stimulsoft Controller
 
 BOOKKEEPER
 ==========
