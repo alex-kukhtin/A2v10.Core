@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Platform\A2v10.Platform\A2v10.Platform.csproj" />
+    <ProjectReference Include="..\..\ReportEngines\A2v10.ReportEngine.Pdf\A2v10.ReportEngine.Pdf.csproj" />
   </ItemGroup>
 
   <ItemGroup>

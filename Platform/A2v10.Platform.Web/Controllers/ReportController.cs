@@ -31,7 +31,7 @@ public class ReportController : BaseController
 	[HttpGet]
 	public Task<IActionResult> Show(String Id, String Base, String Rep, String format = "pdf")
 	{
-		return Task.FromResult<IActionResult>(Ok());
+		return Export(Id, Base, Rep, format);
 	}
 
 	[HttpGet]

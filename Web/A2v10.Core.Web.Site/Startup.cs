@@ -1,4 +1,4 @@
-// Copyright © 2020-2021 Alex Kukhtin. All rights reserved.
+// Copyright © 2020-2022 Oleksandr Kukhtin. All rights reserved.
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using A2v10.Infrastructure;
 using A2v10.WorkflowEngine;
+using A2v10.ReportEngine.Pdf;
 
 namespace A2v10.Core.Web.Site;
 
@@ -25,6 +26,7 @@ public class Startup
 
 		services.AddReportEngines(factory =>
 		{
+			factory.RegisterEngine<PdfReportEngine>("pdf");
 		});
 
 		/*

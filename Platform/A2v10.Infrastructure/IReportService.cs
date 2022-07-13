@@ -1,4 +1,4 @@
-﻿// Copyright © 2021-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2021-2022 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Dynamic;
@@ -8,6 +8,7 @@ namespace A2v10.Infrastructure;
 
 public enum ExportReportFormat
 {
+	Undefined,
 	Pdf,
 	Excel,
 	Word,

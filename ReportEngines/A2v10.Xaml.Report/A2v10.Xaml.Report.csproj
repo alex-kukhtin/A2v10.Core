@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+	  <LangVersion>10.0</LangVersion>
+	  <Nullable>enable</Nullable>
+	  <AssemblyName>A2v10.Xaml.Report</AssemblyName>
+	  <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+	  <Version>10.1.8070</Version>
+	  <Product>A2v10</Product>
+	  <PackageId>A2v10.Xaml.Report</PackageId>
+	  <Authors>Oleksandr Kukhtin</Authors>
+	  <Company>Oleksandr Kukhtin</Company>
+	  <Description>PDF reports for A2v10</Description>
+	  <Copyright>Copyright © 2020-2022 Oleksandr Kukhtin. All rights reserved.</Copyright>
+	  <RepositoryType>git</RepositoryType>
+	  <RepositoryUrl>https://github.com/alex-kukhtin/A2v10.Core</RepositoryUrl>
+	  <PackageTags>A2v10 Reports Xaml Pdf</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="A2v10.System.Xaml" Version="10.1.8012" />
+  </ItemGroup>
+
+</Project>

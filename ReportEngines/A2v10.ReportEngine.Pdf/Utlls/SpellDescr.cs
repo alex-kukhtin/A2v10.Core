@@ -1,0 +1,108 @@
+﻿// Copyright © 2022 Oleksandr Kukhtin. All rights reserved.
+
+using System;
+using System.Globalization;
+
+namespace A2v10.ReportEngine.Pdf;
+
+internal abstract class LangNumbers
+{
+	protected abstract String[] _hundred { get; }
+	protected abstract String[] _ten { get; }
+	protected abstract String[] _unit { get; }
+	protected abstract String[] _name { get; }
+	protected abstract String[] _unitMale { get; }
+	protected abstract String[] _unitFemale { get; }
+	protected abstract String[] _unitNeutral { get; }
+
+	public LangNumbers()
+	{
+		if (_hundred.Length != 10)
+			throw new InvalidOperationException(nameof(_hundred));
+		if (_ten.Length != 10)
+			throw new InvalidOperationException(nameof(_ten));
+		if (_unit.Length != 20)
+			throw new InvalidOperationException(nameof(_unit));
+		if (_name.Length != 15)
+			throw new InvalidOperationException(nameof(_name));
+		if (_unitMale.Length != 3)
+			throw new InvalidOperationException(nameof(_unitMale));
+		if (_unitFemale.Length != 3)
+			throw new InvalidOperationException(nameof(_unitFemale));
+		if (_unitNeutral.Length != 3)
+			throw new InvalidOperationException(nameof(_unitNeutral));
+	}
+	public String Hundred(Int32 index)
+	{
+		if (index < 0 || index >= _hundred.Length)
+			throw new ArgumentOutOfRangeException(nameof(Hundred));
+		return _hundred[index];
+	}
+	public String Ten(Int32 index)
+	{
+		if (index < 0 || index >= _ten.Length)
+			throw new ArgumentOutOfRangeException(nameof(Ten));
+		return _ten[index];
+	}
+
+	public String Null(SpellGender gender)
+	{
+		return _unit[0];
+	}
+
+	public String Unit(Int32 index, SpellGender gender)
+	{
+		if (index < 0 || index >= _unit.Length)
+			throw new ArgumentOutOfRangeException(nameof(Unit));
+		if (index < 3)
+			return UnitGender(gender, index);
+		return _unit[index];
+	}
+
+	public String Name(Int32 scale, Int32 index)
+	{
+		Int32 ix = index + scale * 5;
+		if (ix < 0 || ix >= _name.Length)
+			throw new ArgumentOutOfRangeException(nameof(Name));
+		return _name[ix];
+	}
+
+	private String UnitGender(SpellGender gender, Int32 index)
+	{
+		return gender switch
+		{
+			SpellGender.Female => _unitFemale[index],
+			SpellGender.Male => _unitMale[index],
+			SpellGender.Neutral => _unitNeutral[index],
+			_ => throw new ArgumentOutOfRangeException(nameof(gender))
+		};
+	}
+
+	public static LangNumbers FromCulture(CultureInfo culture)
+	{
+		return culture.TwoLetterISOLanguageName switch
+		{
+			"uk" => new LangNumbersUA(),
+			 _ => throw new InvalidOperationException($"Spell for '{culture.Name}' yet not supported")
+		};
+	}
+}
+
+internal class LangNumbersUA : LangNumbers
+{
+	private static String[] _hundredUa = ",сто ,двісті ,триста ,чотириста ,п’ятсот ,шістсот ,сімсот ,вісімсот ,дев’ятсот ".Split(',');
+	private static String[] _tenUa = ",,двадцять ,тридцять ,сорок ,п’ятдесят ,шістдесят ,сімдесят ,вісімдесят ,дев’яносто ".Split(',');
+	private static String[] _unitUa = "нуль ,один ,два ,три ,чотири ,п’ять ,шість ,сім ,вісім ,дев’ять ,десять ,одинадцять ,двaнадцять ,тринадцять ,чотирнадцять ,п’ятнадцять ,шістнадцять ,сімнадцять ,вісімнадцять ,дев’ятнадцять ".Split(',');
+	private static String[] _nameUA = ",тисяча ,мільйон ,мільярд ,трильйон ,,тисячі ,мільйона ,мільярда ,трильйона ,,тисяч ,мільйонів ,мільярдів ,трильйонів ".Split(',');
+	private static String[] _unitFemaleUa = ",одна ,дві ".Split(',');
+	private static String[] _unitNeutralUa = ",одне ,два ".Split(',');
+	private static String[] _unitMaleUa = ",один ,два ".Split(',');
+	protected override String[] _hundred => _hundredUa;
+	protected override String[] _ten => _tenUa;
+	protected override String[] _unit => _unitUa;
+	protected override String[] _name => _nameUA;
+	protected override String[] _unitFemale => _unitFemaleUa;
+	protected override String[] _unitMale => _unitMaleUa;
+	protected override String[] _unitNeutral => _unitNeutralUa;
+}
+
