@@ -23,23 +23,26 @@ public class PdfReportEngine : IReportEngine
 		_localizer = new PdfReportLocalizer(user.Locale.Locale, localizer);
 	}
 
+	private Page ReadTemplate(IReportInfo reportInfo)
+	{
+		String reportPath = _appCodeProvider.MakeFullPath(reportInfo.Path, $"{reportInfo.Report}.xaml", false);
+		using var stream = _appCodeProvider.FileStreamFullPathRO(reportPath);
+		return new TemplateReader().ReadReport(stream);
+	}
 	public Task<IInvokeResult> ExportAsync(IReportInfo reportInfo, ExportReportFormat format)
 	{
-		String reportPath = _appCodeProvider.MakeFullPath(reportInfo.Path, $"{reportInfo.Report}.xaml",false);
+		Page page = ReadTemplate(reportInfo);
 
-		Page page;
-		using (var stream = _appCodeProvider.FileStreamFullPathRO(reportPath))
-		{
-			page = new TemplateReader().ReadReport(stream);
-		}
+		var name = reportInfo.DataModel?.Root?.Resolve(reportInfo.Name) ?? "report";
 
 		var model = reportInfo.DataModel?.Root ?? new ExpandoObject();
 		var context = new RenderContext(_localizer, model, page.Code);
 		var doc = new ReportDocument(page, context);
 
 		using MemoryStream outputStream = new();
+
 		doc.GeneratePdf(outputStream);
-		var result = new PdfInvokeResult(outputStream.ToArray(), null);
+		var result = new PdfInvokeResult(outputStream.ToArray(), name + ".pdf");
 		return Task.FromResult<IInvokeResult>(result);
 	}
 }

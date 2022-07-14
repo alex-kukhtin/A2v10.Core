@@ -18,14 +18,6 @@ internal class LineComposer : FlowElementComposer
 		_context = context;
 	}
 
-	void ApplyRuntimeStyle(TextDescriptor descr)
-	{
-	}
-
-	void ApplyRuntimeStyle(TextSpanDescriptor descr, ContentElement elem)
-	{
-	}
-
 	internal override void Compose(IContainer container)
 	{
 		container.ApplyDecoration(_line.RuntimeStyle).LineHorizontal(_line.Thickness.Value, _line.Thickness.Unit.ToUnit());

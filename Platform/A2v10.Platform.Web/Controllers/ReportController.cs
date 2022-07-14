@@ -12,6 +12,21 @@ using A2v10.Infrastructure;
 
 namespace A2v10.Platform.Web.Controllers;
 
+
+public class RenderReportResult
+{
+	public IActionResult ActionResult { get; }
+	public String ContentType { get; }
+	public String FileName { get; }
+	public RenderReportResult(IActionResult result, String contentType, String fileName)
+	{
+		ActionResult = result;
+		ContentType = contentType;
+		FileName = fileName;
+	}
+}
+
+
 [Route("report/[action]/{Id}")]
 [ExecutingFilter]
 [Authorize]
@@ -29,9 +44,11 @@ public class ReportController : BaseController
 
 
 	[HttpGet]
-	public Task<IActionResult> Show(String Id, String Base, String Rep, String format = "pdf")
+	public async Task<IActionResult> Show(String Id, String Base, String Rep, String format = "pdf")
 	{
-		return Export(Id, Base, Rep, format);
+		var res = await Render(Id, Base, Rep, format);
+		Response.ContentType = res.ContentType;
+		return res.ActionResult;
 	}
 
 	[HttpGet]
@@ -39,21 +56,16 @@ public class ReportController : BaseController
 	{
 		return TryCatch(async () =>
 		{
-			var path = Path.Combine(Base, Rep, Id);
-			var fmt = Enum.Parse<ExportReportFormat>(format, ignoreCase: true);
-			var result = await _reportService.ExportAsync(path + Request.QueryString, fmt, (exp) => {
-				exp.SetNotNull("Id", Id);
-				SetSqlQueryParams(exp);
-			});
 
-			var res = new WebBinaryActionResult(result.Body, result.ContentType);
-			Response.ContentType = result.ContentType;
+			var res = await Render(Id, Base, Rep, format);
+			Response.ContentType = res.ContentType;
 
 			var cdh = new ContentDispositionHeaderValue("attachment")
 			{
-				FileNameStar = Localize(result.FileName)
+				FileNameStar = Localize(res.FileName)
 			};
-			return res;
+			Response.Headers.Add("Content-Disposition", cdh.ToString());
+			return res.ActionResult;
 		});
 	}
 
@@ -62,12 +74,7 @@ public class ReportController : BaseController
 	{
 		return TryCatch(async () =>
 		{
-			var path = Path.Combine(Base, Rep, Id);
-			var result = await _reportService.ExportAsync(path + Request.QueryString, ExportReportFormat.Pdf, (exp) => {
-				exp.SetNotNull("Id", Id);
-				SetSqlQueryParams(exp);
-			});
-			return new WebBinaryActionResult(result.Body, result.ContentType);
+			return (await Render(Id, Base, Rep, "pdf")).ActionResult;
 		});
 	}
 
@@ -81,5 +88,18 @@ public class ReportController : BaseController
 		{
 			return WriteHtmlException(ex);
 		}
+	}
+
+	async Task<RenderReportResult> Render(String Id, String Base, String Rep, String format)
+	{
+		var path = Path.Combine(Base, Rep, Id);
+		var fmt = Enum.Parse<ExportReportFormat>(format, ignoreCase: true);
+		var result = await _reportService.ExportAsync(path + Request.QueryString, fmt, (exp) => {
+			exp.SetNotNull("Id", Id);
+			SetSqlQueryParams(exp);
+		});
+
+		var res = new WebBinaryActionResult(result.Body, result.ContentType);
+		return new RenderReportResult(res, result.ContentType, result.FileName ?? Rep);
 	}
 }

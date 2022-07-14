@@ -1,11 +1,14 @@
 ﻿Допилки для NovaEra.
 
-1. ReportEngine.Pdf
-2. About.Page
 3. ChangePassword
 4. С++/CLR with NET.CORE
 5. 
 
+== TODO: Identity
+==================================
+1. User.Identity.IsUserOpenId()
+2. AppUser.ChangePasswordEnabled
+3.
 
 == TODO: Compiler
 

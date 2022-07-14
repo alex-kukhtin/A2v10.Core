@@ -18,7 +18,6 @@ public record Thickness
 	{
 		if (String.IsNullOrEmpty(str))
 			return new Thickness();
-		var t = new Thickness();
 		var elems = str.Split(',');
 		if (elems.Length == 1)
 		{

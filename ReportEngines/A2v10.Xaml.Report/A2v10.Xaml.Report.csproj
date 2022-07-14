@@ -6,7 +6,7 @@
 	  <Nullable>enable</Nullable>
 	  <AssemblyName>A2v10.Xaml.Report</AssemblyName>
 	  <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-	  <Version>10.1.8070</Version>
+	  <Version>10.1.8071</Version>
 	  <Product>A2v10</Product>
 	  <PackageId>A2v10.Xaml.Report</PackageId>
 	  <Authors>Oleksandr Kukhtin</Authors>

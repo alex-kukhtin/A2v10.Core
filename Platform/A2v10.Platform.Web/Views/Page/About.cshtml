@@ -1,7 +1,94 @@
-﻿@{
-	Layout = null;
-}
+﻿@inject ILocalizer _localizer
+@model AboutViewModel
 
-<div>
-	ABOUT PAGE HERE
+@{
+	Layout = null;
+	var pageGuid = "el" + Guid.NewGuid().ToString();
+}
+<div class="page absolute page-grid" id="@pageGuid">
+	<a2-document-title page-title="@_localizer.Localize("@[About]")"></a2-document-title>
+	<div class="toolbar page-toolbar">
+		<button class="btn btn-tb" v-on:click.prevent="$requery"><i class="ico ico-reload"></i> @_localizer.Localize("@[Refresh]")</button>
+		<div class="aligner"></div>
+		<button class="btn btn-tb" v-on:click.prevent="$close"><i class="ico ico-close"></i> @_localizer.Localize("@[Close]")</button>
+	</div>
+	<div class="page-content">
+		<div class="grid app-page">
+			<h3 class="a2-header" v-text="appData.title"></h3>
+
+			<h4 class="a2-header" v-text="appData.copyright"></h4>
+			<h4 class="a2-header">@_localizer.Localize("@[Version]") {{appData.version}}</h4>
+
+			<div>
+				<span v-text="locale.$CreatedOpenSource"></span>
+				<ul class="about-source-list">
+					<li><span class="bold">A2v10</span> Copyright © 2014-2022 Oleksandr Kukhtin <a target="_blank" href="https://a2v10.com" v-text="locale.$HomePage"></a></li>
+					<li><span class="bold">A2v10.Data</span> Copyright © 2014-2022 Oleksandr Kukhtin <a target="_blank" href="https://github.com/alex-kukhtin/A2v10.Data" v-text="locale.$HomePage"></a></li>
+					<li><span class="bold">A2v10.IconFont</span> Copyright © 2017-2022 Oleksandr Kukhtin <a target="_blank" href="https://github.com/alex-kukhtin/A2v10.IconFont" v-text="locale.$HomePage"></a></li>
+					<li v-if="appData.embedded">
+						<span class="bold">Chromium Embedded Framework (CEF)</span> Copyright © 2008-2020 Marshall A. Greenblatt. Portions Copyright © 2006-2009 Google Inc.
+						<a v-text="locale.$License" target="_blank" href="https://bitbucket.org/chromiumembedded/cef/src/543178ce676f83e813a4e4973798d966efdff088/LICENSE.txt?fileviewer=file-view-default"></a>
+						<a v-text="locale.$HomePage" target="_blank" href="https://bitbucket.org/chromiumembedded/cef/src/master/"></a>
+					</li>
+					<li><span class="bold">Json.NET</span> Copyright © 2007 James Newton-King <a target="_blank" href="https://github.com/JamesNK/Newtonsoft.Json/blob/master/LICENSE.md" v-text="locale.$License"></a><a target="_blank" href="https://www.newtonsoft.com/json" v-text="locale.$HomePage"></a></li>
+					<li><span class="bold">Jint</span> Copyright © 2013, Sebastien Ros <a target="_blank" href="https://github.com/sebastienros/jint/blob/dev/LICENSE.txt" v-text="locale.$License"></a><a target="_blank" href="https://github.com/sebastienros/jint" v-text="locale.$HomePage"></a></li>
+					<li><span class="bold">Chakra Core</span> Copyright © 2021 Microsoft Corporation <a target="_blank" href="https://github.com/Microsoft/ChakraCore/blob/master/LICENSE.txt" v-text="locale.$License"></a><a target="_blank" href="https://github.com/Microsoft/ChakraCore" v-text="locale.$HomePage"></a></li>
+					<li><span class="bold">QRCoder</span> Copyright © 2013-2018 Raffael Herrmann <a target="_blank" href="https://github.com/codebude/QRCoder/blob/master/LICENSE.txt" v-text="locale.$License"></a><a target="_blank" href="https://github.com/codebude/QRCoder" v-text="locale.$HomePage"></a></li>
+					<li><span class="bold">Vue.js</span> Copyright © 2013-2022 Yuxi (Evan) You <a target="_blank" href="https://github.com/vuejs/vue/blob/dev/LICENSE" v-text="locale.$License"></a><a target="_blank" href="https://vuejs.org" v-text="locale.$HomePage"></a></li>
+					<li><span class="bold">Vuex.js</span> Copyright © 2015-2022 Evan You <a target="_blank" href="https://github.com/vuejs/vuex/blob/dev/LICENSE" v-text="locale.$License"></a><a target="_blank" href="https://github.com/vuejs/vuex" v-text="locale.$HomePage"></a></li>
+					<li><span class="bold">D3</span> Copyright © 2010-2020 Mike Bostock <a target="_blank" href="https://github.com/d3/d3/blob/master/LICENSE" v-text="locale.$License"></a><a target="_blank" href="https://d3js.org" v-text="locale.$HomePage"></a></li>
+					<li><span class="bold">QuestPDF</span> Copyright © 2020 - present Marcin Ziąbek CodeFlint <a target="_blank" href="https://github.com/QuestPDF/QuestPDF/blob/main/LICENSE" v-text="locale.$License"></a><a target="_blank" href="https://www.questpdf.com" v-text="locale.$HomePage"></a></li>
+				</ul>
+			</div>
+		</div>
+
+		<!--
+	<div>
+		<pre v-text="appData"></pre>
+	</div>
+		-->
+	</div>
 </div>
+<script type="text/javascript">
+(function () {
+
+	'use strict';
+
+	const eventBus = require('std:eventBus');
+
+	const store = component('std:store');
+	const documentTitle = component("std:doctitle");
+
+
+	const vm = new Vue({
+		el: "#@pageGuid",
+		store: store,
+		data: {
+			appData: @Html.Raw(Model.AppData)
+		},
+		components: {
+			'a2-document-title': documentTitle
+		},
+		computed: {
+			hasLogo() {
+				return this.appData && this.appData.appLogo;
+			},
+			logoSrc() {
+				return this.appData.appLogo;
+			},
+			locale() {
+				return window.$$locale;
+			}
+		},
+		methods: {
+			$close() {
+				this.$store.commit("close");
+			},
+			$requery() {
+				eventBus.$emit('requery');
+			}
+		},
+	});
+
+})();
+</script>

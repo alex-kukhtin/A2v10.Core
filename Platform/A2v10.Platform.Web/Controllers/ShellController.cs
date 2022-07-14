@@ -32,20 +32,18 @@ public class ShellController : Controller
 	private readonly ICurrentUser _currentUser;
 	private readonly IProfiler _profiler;
 	private readonly IAppCodeProvider _codeProvider;
-	private readonly ILocalizer _localizer;
-	private readonly IAppVersion _appVersion;
+	private readonly IAppDataProvider _appDataProvider;
 	private readonly AppOptions _appOptions;
 
 	public ShellController(IDbContext dbContext, IApplicationHost host, ICurrentUser currentUser, IProfiler profiler,
-		IAppCodeProvider codeProvider, ILocalizer localizer, IAppVersion appVersion, IOptions<AppOptions> appOptions)
+		IAppCodeProvider codeProvider, IAppDataProvider appDataProvider, IOptions<AppOptions> appOptions)
 	{
 		_host = host;
 		_dbContext = dbContext;
 		_profiler = profiler;
 		_codeProvider = codeProvider;
-		_localizer = localizer;
 		_currentUser = currentUser;
-		_appVersion = appVersion;
+		_appDataProvider = appDataProvider;
 		_appOptions = appOptions.Value;
 	}
 
@@ -131,11 +129,11 @@ public class ShellController : Controller
 
 		_ = macros.Append(new Dictionary<String, Object?>
 		{
-			{ "AppVersion", _appVersion.AppVersion },
+			{ "AppVersion", _appDataProvider.AppVersion },
 			{ "Admin", bAdmin ? "true" : "false" },
 			{ "TenantAdmin", _currentUser.Identity.IsTenantAdmin ? "true" : "false" },
 			{ "Debug", IsDebugConfiguration ? "true" : "false" },
-			{ "AppData", await GetAppData() },
+			{ "AppData", await _appDataProvider.GetAppDataAsStringAsync() },
 			{ "Companies", "null" },
 			{ "Period", "null" },
 		});
@@ -266,24 +264,6 @@ public class ShellController : Controller
 	void SetUserStatePermission(IDataModel model)
 	{
 		_currentUser.SetReadOnly(model.Eval<Boolean>("UserState.ReadOnly"));
-	}
-
-	async Task<String?> GetAppData()
-	{
-		var appJson = await _codeProvider.ReadTextFileAsync(String.Empty, "app.json", false);
-		if (appJson != null)
-		{
-			ExpandoObject? app = JsonConvert.DeserializeObject<ExpandoObject>(appJson);
-			return _localizer.Localize(null, JsonConvert.SerializeObject(app));
-		}
-
-		ExpandoObject defAppData = new()
-		{
-			{ "version", _appVersion.AppVersion },
-			{ "title", "A2v10.Core Web Application" },
-			{ "copyright", _appVersion.Copyright }
-		};
-		return JsonConvert.SerializeObject(defAppData);
 	}
 
 	void GetAppFiles(String ext, TextWriter writer)

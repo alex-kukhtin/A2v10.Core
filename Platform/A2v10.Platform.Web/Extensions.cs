@@ -39,6 +39,7 @@ public static class ServiceExtensions
 			.AddScoped<IDataProfiler>(s => s.GetRequiredService<WebProfiler>());
 
 		services.AddSingleton<ILocalizerDictiorany, WebLocalizerDictiorany>();
+		services.AddScoped<IAppDataProvider, WebAppDataProvider>();
 
 		services.AddScoped<ITokenProvider, WebTokenProvider>();
 

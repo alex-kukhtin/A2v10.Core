@@ -23,7 +23,7 @@ namespace A2v10.Xaml
 	public enum IconAlign
 	{
 		Default = 0,
-		Left = 0,
+		Left = Default,
 		Top = 1,
 	}
 

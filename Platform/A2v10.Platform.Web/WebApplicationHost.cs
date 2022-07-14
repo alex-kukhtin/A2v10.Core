@@ -17,13 +17,11 @@ namespace A2v10.Platform.Web;
 public class WebApplicationHost : IApplicationHost
 {
 	private readonly IConfiguration _appSettings;
-	private readonly IProfiler _profiler;
 	private readonly AppOptions _appOptions;
 	private readonly ICurrentUser _currentUser;
 	
-	public WebApplicationHost(IConfiguration config, IProfiler profiler, IOptions<AppOptions> appOptions, ICurrentUser currentUser)
+	public WebApplicationHost(IConfiguration config, IOptions<AppOptions> appOptions, ICurrentUser currentUser)
 	{
-		_profiler = profiler;
 		_appOptions = appOptions.Value;
 
 		_appSettings = config.GetSection("appSettings");

@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
 using System;
 using System.Threading.Tasks;
@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using System.Threading;
+using System.Security;
 
 namespace A2v10.Web.Identity.UI;
 
@@ -51,9 +52,9 @@ public class AccountController : Controller
 		var m = new LoginViewModel()
 		{
 			Title = await _dbContext.LoadAsync<AppTitleModel>(_host.CatalogDataSource, "a2ui.[AppTitle.Load]"),
-			Theme = _appTheme.MakeTheme()
+			Theme = _appTheme.MakeTheme(),
+			RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken
 		};
-		m.RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken;
 		TempData["ReturnUrl"] = returnUrl;
 		return View(m);
 	}
@@ -89,14 +90,15 @@ public class AccountController : Controller
 		var m = new RegisterViewModel()
 		{
 			Title = await _dbContext.LoadAsync<AppTitleModel>(_host.CatalogDataSource, "a2ui.[AppTitle.Load]"),
-			Theme = _appTheme.MakeTheme()
+			Theme = _appTheme.MakeTheme(),
+			RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken
 		};
-		m.RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken;
 		return View(m);
 	}
 
 	[AllowAnonymous]
 	[HttpPost]
+	//[AjaxOnly]
 	public async Task<IActionResult> Register([FromForm] RegisterViewModel model)
 	{
 		try
@@ -112,12 +114,12 @@ public class AccountController : Controller
 			{
 				var token = await _userManager.GenerateTwoFactorTokenAsync(user, TokenOptions.DefaultPhoneProvider);
 				var user2 = await _userManager.FindByNameAsync(user.UserName);
-                var verified = await _userManager.VerifyTwoFactorTokenAsync(user2, TokenOptions.DefaultPhoneProvider, token);
-                await _userStore.SetPhoneNumberConfirmedAsync(user, true, new CancellationToken());
+				var verified = await _userManager.VerifyTwoFactorTokenAsync(user2, TokenOptions.DefaultPhoneProvider, token);
+				await _userStore.SetPhoneNumberConfirmedAsync(user, true, new CancellationToken());
 				return Redirect("/");
 			}
 			return Redirect("/account/register");
-		} 
+		}
 		catch (Exception ex)
 		{
 			return new EmptyResult();
@@ -139,6 +141,52 @@ public class AccountController : Controller
 	public Task<IActionResult> Logoff()
 	{
 		return Logout();
+	}
+
+	[HttpPost]
+	public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordViewModel model)
+	{
+		try
+		{
+			if (User.Identity == null)
+				throw new SecurityException("User not found");
+
+			//if (User.Identity.IsUserOpenId())
+			//throw new SecurityException("Invalid User type (openId?)");
+
+			var user = await _userManager.FindByIdAsync(User.Identity.Name);
+			if (user == null)
+				throw new SecurityException("User not found");
+
+			//if (!user.ChangePasswordEnabled)
+				//throw new SecurityException("Change password not allowed");
+
+			var ir = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
+			if (ir.Succeeded)
+			{
+				await _userManager.UpdateAsync(user);
+				return Json(new JsonResponse()
+				{
+					Success = true
+				});
+			}
+			else
+			{
+				return Json(new JsonResponse()
+				{
+					Success = false,
+					Message = String.Join(", ", ir.Errors)
+				});
+			}
+		}
+		catch (Exception ex)
+		{
+			return Json(new JsonResponse()
+			{
+				Success = false,
+				Message = ex.Message
+			});
+		}
 	}
 }
 

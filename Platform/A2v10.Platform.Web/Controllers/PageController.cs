@@ -44,16 +44,18 @@ public class PageController : BaseController
 	private readonly IDataScripter _scripter;
 	private readonly IAppCodeProvider _codeProvider;
 	private readonly IViewEngineProvider _viewEngineProvider;
+	private readonly IAppDataProvider _appDataProvider;
 
 	public PageController(IApplicationHost host, IAppCodeProvider codeProvider,
 		ILocalizer localizer, ICurrentUser currentUser, IProfiler profiler, IDataService dataService, 
-		IViewEngineProvider viewEngineProvider)
+		IViewEngineProvider viewEngineProvider, IAppDataProvider appDataProvider)
 		: base(host, localizer, currentUser, profiler)
 	{
 		_dataService = dataService;
 		_codeProvider = codeProvider;
 		_scripter = new VueDataScripter(host, codeProvider, _localizer, currentUser);
 		_viewEngineProvider = viewEngineProvider;
+		_appDataProvider = appDataProvider;
 	}
 
 	[Route("_page/{*pathInfo}")]
@@ -62,7 +64,7 @@ public class PageController : BaseController
 	{
 		// {pagePath}/action/id
 		if (pathInfo.StartsWith("app/", StringComparison.OrdinalIgnoreCase))
-			return RenderApplicationPage(UrlKind.Page, pathInfo);
+			return await RenderApplicationPage(UrlKind.Page, pathInfo);
 		return await Render(pathInfo + Request.QueryString, UrlKind.Page);
 	}
 
@@ -72,7 +74,7 @@ public class PageController : BaseController
 	{
 		// {pagePath}/dialog/id
 		if (pathInfo.StartsWith("app/", StringComparison.OrdinalIgnoreCase))
-			return RenderApplicationPage(UrlKind.Dialog, pathInfo);
+			return await RenderApplicationPage(UrlKind.Dialog, pathInfo);
 		return await Render(pathInfo + Request.QueryString, UrlKind.Dialog);
 	}
 
@@ -149,7 +151,7 @@ public class PageController : BaseController
 		return new PageActionResult(result, si.Script);
 	}
 
-	IActionResult RenderApplicationPage(UrlKind urlKind, String pathInfo)
+	async Task<IActionResult> RenderApplicationPage(UrlKind urlKind, String pathInfo)
 	{
 		String exceptionInfo = $"Invald application url: '{pathInfo}'";
 		if (pathInfo == null)
@@ -161,11 +163,11 @@ public class PageController : BaseController
 		switch (kind)
 		{
 			case "about":
-				return View("About");
+				return View("About", new AboutViewModel() { AppData = await _appDataProvider.GetAppDataAsStringAsync()});
 			case "changepassword":
 				if (urlKind != UrlKind.Dialog)
 					throw new InvalidReqestExecption(exceptionInfo);
-				throw new Exception("ChangePassword");
+				return View("ChangePassword");
 			default:
 				if (urlKind != UrlKind.Page)
 					throw new InvalidReqestExecption(exceptionInfo);
