@@ -18,7 +18,7 @@ using A2v10.Platform.Web;
 namespace Microsoft.Extensions.DependencyInjection;
 public static class ServicesExtensions
 {
-	public static IServiceCollection UseSqlServerStorage(this IServiceCollection services)
+	public static IServiceCollection UseSqlServerStorage(this IServiceCollection services, IConfiguration configuration)
 	{
 		// Storage
 		services.AddOptions<DataConfigurationOptions>();
@@ -29,6 +29,7 @@ public static class ServicesExtensions
 		services.Configure<DataConfigurationOptions>(opts =>
 		{
 			opts.ConnectionStringName = "Default";
+			opts.DisableWriteMetadataCaching = !configuration.GetValue<Boolean>("Data:MetadataCache");
 		});
 		return services;
 	}
@@ -60,7 +61,7 @@ public static class ServicesExtensions
 			services.AddSingleton<IXamlPartProvider, XamlPartProviderFile>();
 		}
 
-		services.UseSqlServerStorage();
+		services.UseSqlServerStorage(configuration);
 
 		services.AddViewEngines(x =>
 		{
