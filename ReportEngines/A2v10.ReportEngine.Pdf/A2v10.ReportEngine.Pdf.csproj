@@ -28,8 +28,16 @@
 		<ProjectReference Include="..\A2v10.Xaml.Report\A2v10.Xaml.Report.csproj" />
 	</ItemGroup>
 
+	<PropertyGroup>
+		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<NeutralLanguage>en</NeutralLanguage>
+	</PropertyGroup>
+
 	<ItemGroup>
-	  <Folder Include="PdfWriter\" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
 	</ItemGroup>
 
 </Project>

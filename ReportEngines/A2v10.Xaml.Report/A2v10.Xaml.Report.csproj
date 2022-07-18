@@ -18,7 +18,19 @@
 	  <PackageTags>A2v10 Reports Xaml Pdf</PackageTags>
   </PropertyGroup>
 
-  <ItemGroup>
+	<PropertyGroup>
+		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<NeutralLanguage>en</NeutralLanguage>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+	</ItemGroup>
+
+	<ItemGroup>
     <PackageReference Include="A2v10.System.Xaml" Version="10.1.8012" />
   </ItemGroup>
 
