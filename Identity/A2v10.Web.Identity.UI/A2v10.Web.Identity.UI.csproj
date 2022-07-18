@@ -6,7 +6,7 @@
 		<AddRazorSupportForMvc>true</AddRazorSupportForMvc>
 		<AssemblyName>A2v10.Identity.UI</AssemblyName>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		<Version>10.1.8071</Version>
+		<Version>10.1.8073</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Identity.UI</PackageId>
 		<Authors>Oleksandr Kukhtin</Authors>

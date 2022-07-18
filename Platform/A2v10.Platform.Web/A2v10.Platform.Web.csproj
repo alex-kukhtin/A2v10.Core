@@ -4,7 +4,7 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<AddRazorSupportForMvc>true</AddRazorSupportForMvc>
-		<Version>10.1.8071</Version>
+		<Version>10.1.8073</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Plaform.Web</PackageId>
 		<Authors>Oleksandr Kukthin</Authors>

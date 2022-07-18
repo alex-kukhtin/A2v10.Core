@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
+using A2v10.ReportEngine.Pdf;
+
 namespace A2v10.SampleApp;
 
 public class Startup
@@ -22,6 +24,7 @@ public class Startup
 
 		services.AddReportEngines(factory =>
 		{
+			factory.RegisterEngine<PdfReportEngine>("pdf");
 		});
 	}
 

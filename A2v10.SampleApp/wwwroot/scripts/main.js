@@ -198,7 +198,7 @@ app.modules['std:const'] = function () {
 
 // Copyright © 2015-2022 Oleksandr Kukhtin. All rights reserved.
 
-// 20220416-7838
+// 20220416-7851
 // services/utils.js
 
 app.modules['std:utils'] = function () {
@@ -875,6 +875,22 @@ app.modules['std:utils'] = function () {
 					break;
 				case 'barcode':
 					value = toLatin(value);
+					break;
+				case 'fract3':
+					value = currencyRound(toNumber(value), 3);
+					break;
+				case 'fract2':
+					value = currencyRound(toNumber(value), 2);
+					break;
+				case 'eval':
+					if (value.startsWith('=')) {
+						try {
+							value = eval(value.replace(/[^0-9\s\+\-\*\/\,\.\,]/g, '').replaceAll(',', '.'));
+						} catch (err) {
+							value = '';
+						}
+					}
+					break;
 			}
 		}
 		return value;
@@ -967,9 +983,9 @@ app.modules['std:utils'] = function () {
 	}
 };
 
-// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
-/*20211027-7807*/
+/*20220626-7852*/
 /* services/url.js */
 
 app.modules['std:url'] = function () {
@@ -993,7 +1009,8 @@ app.modules['std:url'] = function () {
 		helpHref,
 		replaceSegment,
 		removeFirstSlash,
-		isNewPath
+		isNewPath,
+		splitCommand
 	};
 
 	function normalize(elem) {
@@ -1198,6 +1215,15 @@ app.modules['std:url'] = function () {
 		if (isDialogPath(url) && url.endsWith('/0'))
 			return true;
 		return false;
+	}
+
+	function splitCommand(url) {
+		let seg = url.split('/');
+		let action = seg.pop();
+		return {
+			action,
+			url: seg.join('/')
+		};
 	}
 };
 
@@ -6251,9 +6277,9 @@ Vue.component('validator-control', {
 })();
 
 
-// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
-/*20210127-7744*/
+/*20220626-7852*/
 // components/selector.js
 
 /*TODO*/
@@ -6322,7 +6348,8 @@ Vue.component('validator-control', {
 			placement: String,
 			caret: Boolean,
 			hasClear: Boolean,
-			mode: String
+			mode: String,
+			fetchCommand: String
 		},
 		data() {
 			return {
@@ -6615,13 +6642,18 @@ Vue.component('validator-control', {
 				}
 			},
 			fetchData(text, all) {
-				if (!this.fetch)
-					console.error('Selector. Fetch not defined');
 				all = all || false;
 				let elem = this.item[this.prop];
 				if (elem && !('$vm' in elem))
 					elem.$vm = this.$root; // plain object hack
-				return this.fetch.call(this.item.$root, elem, text, all);
+				if (this.fetch) {
+					return this.fetch.call(this.item.$root, elem, text, all);
+				} else if (this.fetchCommand) {
+					let fc = this.fetchCommand.split('/');
+					let action = fc.pop();
+					return elem.$vm.$invoke(action, {Text: text}, fc.join('/'));
+				}
+				console.error('Selector. Fetch or Delegate not defined');
 			},
 			doNew() {
 				this.isOpen = false;
@@ -10019,9 +10051,9 @@ TODO:
 		}
 	});
 })();
-// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
-// 20200111-7611
+// 20200111-7850
 // components/taskpad.js
 
 Vue.component("a2-taskpad", {
@@ -10039,7 +10071,8 @@ Vue.component("a2-taskpad", {
 `,
 	props: {
 		title: String,
-		initialCollapsed: Boolean
+		initialCollapsed: Boolean,
+		position: String
 	},
 	data() {
 		return {
@@ -10050,7 +10083,9 @@ Vue.component("a2-taskpad", {
 	computed: {
 		cssClass() {
 			let cls = "taskpad";
+			cls += ' position-' + this.position;
 			if (this.expanded) cls += ' expanded'; else cls += ' collapsed';
+
 			return cls;
 		},
 		tasksText() {
@@ -10064,8 +10099,12 @@ Vue.component("a2-taskpad", {
 			let topStyle = this.$el.parentElement.style;
 			if (this.expanded)
 				topStyle.gridTemplateColumns = this.__savedCols;
-			else
-				topStyle.gridTemplateColumns = "1fr 36px"; // TODO: ???
+			else {
+				if (this.position === 'left')
+					topStyle.gridTemplateColumns = "36px 1fr"; // TODO: ???
+				else
+					topStyle.gridTemplateColumns = "1fr 36px"; // TODO: ???
+			}
 		},
 		toggle() {
 			this.setExpanded(!this.expanded);
@@ -11557,7 +11596,7 @@ Vue.directive('resize', {
 
 // Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
-/*20220420-7840*/
+/*20220626-7852*/
 // controllers/base.js
 
 (function () {
@@ -11698,6 +11737,27 @@ Vue.directive('resize', {
 				}
 				const root = this.$data;
 				return root._exec_(cmd, arg, confirm, opts);
+			},
+
+			async $invokeServer(url, arg, confirm, opts) {
+				if (this.$isReadOnly(opts)) return;
+				if (this.$isLoading) return;
+				const root = this.$data;
+				if (confirm)
+					await this.$confirm(confirm);
+				if (opts && opts.saveRequired && this.$isDirty)
+					await this.$save();
+				if (opts && opts.validRequired && root.$invalid) { 
+					this.$alert(locale.$MakeValidFirst);
+					return;
+				}
+				let data = { Id: arg.$id };
+				let cmd = urltools.splitCommand(url);
+				await this.$invoke(cmd.action, data, cmd.url);
+				if (opts && opts.requeryAfter)
+					await this.$requery();
+				else if (opts && opts.reloadAfter)
+					await this.$reload();
 			},
 
 			$toJson(data) {
