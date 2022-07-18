@@ -24,12 +24,21 @@ public static class ServicesExtensions
 		services.AddOptions<DataConfigurationOptions>();
 
 		services.AddScoped<IDbContext, SqlDbContext>()
+			.AddSingleton<MetadataCache>()
 			.AddSingleton<IDataConfiguration, DataConfiguration>();
 
 		services.Configure<DataConfigurationOptions>(opts =>
 		{
 			opts.ConnectionStringName = "Default";
 			opts.DisableWriteMetadataCaching = !configuration.GetValue<Boolean>("Data:MetadataCache");
+			var to = configuration.GetValue<String>("Data:CommandTimeout");
+			if (to != null)
+			{
+				if (TimeSpan.TryParse(to, out TimeSpan timeout))
+					opts.DefaultCommandTimeout = timeout;
+				else
+					throw new FormatException("Data:CommandTimeout. Invalid TimeSpan format");
+			}
 		});
 		return services;
 	}
