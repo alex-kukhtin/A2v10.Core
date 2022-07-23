@@ -198,7 +198,7 @@ app.modules['std:const'] = function () {
 
 // Copyright © 2015-2022 Oleksandr Kukhtin. All rights reserved.
 
-// 20220416-7851
+// 20220723-7874
 // services/utils.js
 
 app.modules['std:utils'] = function () {
@@ -978,7 +978,8 @@ app.modules['std:utils'] = function () {
 			validators: assign(src.validators, tml.validators),
 			events: assign(src.events, tml.events),
 			defaults: assign(src.defaults, tml.defaults),
-			commands: assign(src.commands, tml.commands)
+			commands: assign(src.commands, tml.commands),
+			delegates: assign(src.delegates, tml.delegates)
 		});
 	}
 };
@@ -5371,7 +5372,7 @@ Vue.component('validator-control', {
 })();
 // Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
-/*20220404-7834*/
+/*20220627-7853*/
 /*components/combobox.js */
 
 (function () {
@@ -5388,7 +5389,12 @@ Vue.component('validator-control', {
 		</div>
 		<select v-focus v-model="cmbValue" :disabled="disabled" :tabindex="tabIndex" ref="sel" :title="getWrapText()">
 			<slot>
-				<option v-for="(cmb, cmbIndex) in itemsSource" :key="cmbIndex" 
+				<optgroup v-for="(grp, grpIndex) in itemsSourceGroup" :key="grpIndex" v-if="groupby"
+					:label="grp.name">
+					<option v-for="(cmb, cmbIndex) in grp.items" :key="grpIndex + '_' + cmbIndex"
+						v-text="getName(cmb, true)" :value="getValue(cmb)"></option>
+				</optgroup>
+				<option v-for="(cmb, cmbIndex) in itemsSource" :key="cmbIndex" v-if="!groupby"
 					v-text="getName(cmb, true)" :value="getValue(cmb)"></option>
 			</slot>
 		</select>
@@ -5423,7 +5429,8 @@ Vue.component('validator-control', {
 			nameProp: String,
 			valueProp: String,
 			showvalue: Boolean,
-			align: String
+			align: String,
+			groupby : String
 		},
 		computed: {
 			cmbValue: {
@@ -5438,6 +5445,13 @@ Vue.component('validator-control', {
 				set(value) {
 					if (this.item) this.item[this.prop] = value;
 				}
+			},
+			itemsSourceGroup() {
+				if (!this.groupby) return this.itemsSource;
+				let prop = this.groupby;
+				let items = this.itemsSource;
+				let set = new Set(items.map(x => utils.eval(x, prop)));
+				return Array.from(set).map(key => { return { name: key, items: items.filter(val => key == utils.eval(val, prop)) }; });
 			},
 			wrapClass() {
 				let cls = '';
@@ -7789,7 +7803,7 @@ Vue.component('popover', {
 
 // Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
-/*20220601-7848*/
+/*20220627-7853*/
 // components/treeview.js
 
 (function () {
@@ -7832,6 +7846,11 @@ Vue.component('popover', {
 			getHref: Function,
 			doubleclick: Function
 		},
+		data() { 
+			return {
+				_toggling: false
+			};
+		},
 		methods: {
 			isFolderSelect(item) {
 				let fs = this.options.folderSelect;
@@ -7863,10 +7882,14 @@ Vue.component('popover', {
 				eventBus.$emit('closeAllPopups');
 				if (!this.isFolder)
 					return;
+				this._toggling = true;
 				this.expandItem(!this.item.$expanded);
 				if (this.expand) {
 					this.expand(this.item, this.options.subitems);
 				}
+				this.$nextTick(() => {
+					this._toggling = false;
+				})
 			},
 			expandItem(val) {
 				platform.set(this.item, '$expanded', val);
@@ -7942,8 +7965,8 @@ Vue.component('popover', {
 			}
 		},
 		updated(x) {
-			// close expanded when reloaded
-			if (this.options.initialExpand)
+			// open expanded when reloaded
+			if (!this._toggling && this.options.initialExpand)
 				this.item.$expanded = true;
 			if (this.item.$expanded) {
 				if (this.item.$hasChildren) {
@@ -10280,9 +10303,9 @@ Vue.component('a2-panel', {
 	});
 
 })();
-/*! Copyright © 2015-2021 Alex Kukhtin. All rights reserved.*/
+/*! Copyright © 2015-2022 Alex Kukhtin. All rights reserved.*/
 
-// 20210831-7801
+// 20220627-7853
 // components/sheet.js
 
 (function () {
@@ -10314,8 +10337,10 @@ Vue.component('a2-panel', {
 				let elem = arr[i];
 				elem.$level = lev;
 				yield elem;
-				if (!elem.$collapsed)
-					yield* traverse(elem, prop, lev + 1);
+				if (!elem.$collapsed) {
+					let newprop = elem._meta_.$items || prop;
+					yield* traverse(elem, newprop, lev + 1);
+				}
 			}
 		}
 	}
@@ -10370,7 +10395,8 @@ Vue.component('a2-panel', {
 			}
 
 			function hasChildren() {
-				let chElems = this.item[prop];
+				let np = this.item._meta_.$items || prop;
+				let chElems = this.item[np];
 				return chElems && chElems.length > 0;
 			}
 
@@ -11596,7 +11622,7 @@ Vue.directive('resize', {
 
 // Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
-/*20220626-7852*/
+/*20220626-7866*/
 // controllers/base.js
 
 (function () {
@@ -12524,7 +12550,7 @@ Vue.directive('resize', {
 			$report(rep, arg, opts, repBaseUrl, data) {
 				if (this.$isReadOnly(opts)) return;
 				if (this.$isLoading) return;
-
+				eventBus.$emit('closeAllPopups');
 				let cmd = 'show';
 				let fmt = '';
 				let viewer = 'report';

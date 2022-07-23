@@ -42,63 +42,33 @@ public class ScriptEnvironment
 	public ExpandoObject loadModel(ExpandoObject prms)
 #pragma warning restore IDE1006 // Naming Styles
 	{
-		try
-		{
-			String? source = prms.Get<String>("source");
-			String command = prms.GetNotNull<String>("procedure");
-			ExpandoObject? dmParams = prms.Get<ExpandoObject>("parameters");
-			var dm = _dbContext.LoadModel(source, command, dmParams);
-			return dm.Root;
-		}
-		catch (Exception ex)
-		{
-			if (ex.InnerException != null)
-				ex = ex.InnerException;
-			var js = new JsString(ex.Message);
-			throw new JavaScriptException(js);
-		}
+		String? source = prms.Get<String>("source");
+		String command = prms.GetNotNull<String>("procedure");
+		ExpandoObject? dmParams = prms.Get<ExpandoObject>("parameters");
+		var dm = _dbContext.LoadModel(source, command, dmParams);
+		return dm.Root;
 	}
 
 #pragma warning disable IDE1006 // Naming Styles
 	public ExpandoObject saveModel(ExpandoObject prms)
 #pragma warning restore IDE1006 // Naming Styles
 	{
-		try
-		{
-			String? source = prms.Get<String>("source");
-			String command = prms.GetNotNull<String>("procedure");
-			ExpandoObject data = prms.GetNotNull<ExpandoObject>("data");
-			ExpandoObject? dmParams = prms.Get<ExpandoObject>("parameters");
-			var dm = _dbContext.SaveModel(source, command, data, dmParams);
-			return dm.Root;
-		}
-		catch (Exception ex)
-		{
-			if (ex.InnerException != null)
-				ex = ex.InnerException;
-			var js = new JsString(ex.Message);
-			throw new JavaScriptException(js);
-		}
+		String? source = prms.Get<String>("source");
+		String command = prms.GetNotNull<String>("procedure");
+		ExpandoObject data = prms.GetNotNull<ExpandoObject>("data");
+		ExpandoObject? dmParams = prms.Get<ExpandoObject>("parameters");
+		var dm = _dbContext.SaveModel(source, command, data, dmParams);
+		return dm.Root;
 	}
 
 #pragma warning disable IDE1006 // Naming Styles
 	public ExpandoObject? executeSql(ExpandoObject prms)
 #pragma warning restore IDE1006 // Naming Styles
 	{
-		try
-		{
-			String? source = prms.Get<String>("source");
-			String command = prms.GetNotNull<String>("procedure");
-			ExpandoObject? dmParams = prms.Get<ExpandoObject>("parameters");
-			return _dbContext.ReadExpando(source, command, dmParams);
-		}
-		catch (Exception ex)
-		{
-			if (ex.InnerException != null)
-				ex = ex.InnerException;
-			var js = new JsString(ex.Message);
-			throw new JavaScriptException(js);
-		}
+		String? source = prms.Get<String>("source");
+		String command = prms.GetNotNull<String>("procedure");
+		ExpandoObject? dmParams = prms.Get<ExpandoObject>("parameters");
+		return _dbContext.ReadExpando(source, command, dmParams);
 	}
 
 #pragma warning disable IDE1006 // Naming Styles
@@ -112,17 +82,7 @@ public class ScriptEnvironment
 	public FetchResponse fetch(String url, ExpandoObject? prms)
 #pragma warning restore IDE1006 // Naming Styles
 	{
-		try
-		{
-			return FetchCommand.Execute(_httpClientFactory, url, prms);
-		}
-		catch (Exception ex)
-		{
-			if (ex.InnerException != null)
-				ex = ex.InnerException;
-			var js = new JsString(ex.Message);
-			throw new JavaScriptException(js);
-		}
+		return FetchCommand.Execute(_httpClientFactory, url, prms);
 	}
 
 #pragma warning disable IDE1006 // Naming Styles
@@ -132,14 +92,14 @@ public class ScriptEnvironment
 		var script = _appCodeProvider.ReadTextFile(_currentPath, fileName, false);
 
 		String code = $@"
-return (function(prms, args) {{
+return (function() {{
 const module = {{exports:null }};
 {script};
 const __exp__ = module.exports;
-return function(_this) {{
+return function(_this, prms, args) {{
 	return __exp__.call(_this, prms, args);
 }};
-}})(prms, args);";
+}})();";
 		var func = _engine.Evaluate(code);
 		return _engine.Invoke(func, this, prms, args);
 	}

@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
 using System;
 using A2v10.System.Xaml;
@@ -24,6 +24,20 @@ namespace A2v10.Xaml
 		internal void RenderContent(RenderContext context)
 		{
 			RenderContent(context, Content);
+		}
+
+		public override void OnSetStyles()
+		{
+			base.OnSetStyles();
+			if (Content is XamlElement xamlCont)
+				xamlCont.OnSetStyles();
+		}
+
+		protected override void OnEndInit()
+		{
+			base.OnEndInit();
+			if (Content is XamlElement xamlCont)
+				xamlCont.SetParent(this);
 		}
 	}
 }
