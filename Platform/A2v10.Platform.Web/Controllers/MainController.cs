@@ -23,7 +23,8 @@ public class MainController : Controller
 	private readonly IDataService _dataService;
 	private readonly IApplicationTheme _appTheme;
 
-	public MainController(IDataService dataService, IOptions<AppOptions> appOptions, IApplicationTheme appTheme)
+	public MainController(IDataService dataService, IOptions<AppOptions> appOptions, 
+		IApplicationTheme appTheme)
 	{
 		_appOptions = appOptions.Value;
 		_dataService = dataService;

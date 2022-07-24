@@ -54,6 +54,8 @@ public class Startup
 		{
 			a.RegisterEngine<WorkflowInvokeTarget>("Workflow", InvokeScope.Scoped);
 		});
+
+		services.AddScoped<IAppStartManager, AppStartManager>();
 	}
 
 	public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
