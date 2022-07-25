@@ -34,10 +34,9 @@ public class ShellController : Controller
 	private readonly IAppCodeProvider _codeProvider;
 	private readonly IAppDataProvider _appDataProvider;
 	private readonly AppOptions _appOptions;
-	private readonly IAppStartManager _appStartManager;
 
 	public ShellController(IDbContext dbContext, IApplicationHost host, ICurrentUser currentUser, IProfiler profiler,
-		IAppCodeProvider codeProvider, IAppDataProvider appDataProvider, IOptions<AppOptions> appOptions, IAppStartManager appStartManager)
+		IAppCodeProvider codeProvider, IAppDataProvider appDataProvider, IOptions<AppOptions> appOptions)
 	{
 		_host = host;
 		_dbContext = dbContext;
@@ -46,7 +45,6 @@ public class ShellController : Controller
 		_currentUser = currentUser;
 		_appDataProvider = appDataProvider;
 		_appOptions = appOptions.Value;
-		_appStartManager = appStartManager;	
 	}
 
 	Int64? UserId => User.Identity.GetUserId<Int64?>();
@@ -159,14 +157,8 @@ public class ShellController : Controller
 			setCompany = true;
 		}
 		*/
-		var rootMenuId = await _appStartManager.GetRootMenuId();
-
 		if (_host.Mobile)
 			loadPrms.Set("Mobile", true);
-
-		if (rootMenuId != null)
-			loadPrms.Set("Root", rootMenuId.Value);
-
 
 		String proc = bAdmin ? "a2admin.[Menu.Admin.Load]" : "a2ui.[Menu.User.Load]";
 		String? ds = _host.CatalogDataSource;

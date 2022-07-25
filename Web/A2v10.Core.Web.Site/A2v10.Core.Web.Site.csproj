@@ -29,4 +29,8 @@
 		<Content Update="wwwroot\App_application\main\test\test.view.xaml" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="AppStart\" />
+	</ItemGroup>
+
 </Project>
