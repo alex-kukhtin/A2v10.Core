@@ -243,6 +243,7 @@ public enum Icon
 	Bank,
 	BankAccount,
 	BankUah,
+	Barcode,
 	Bell,
 	BrandExcel,
 	Calc,
