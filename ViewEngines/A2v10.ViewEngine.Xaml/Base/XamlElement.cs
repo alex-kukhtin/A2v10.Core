@@ -5,7 +5,7 @@ using System.ComponentModel;
 using A2v10.Infrastructure;
 
 namespace A2v10.Xaml;
-public class XamlElement : ISupportInitialize, ISupportBinding
+public class XamlElement : ISupportBinding, IInitComplete
 {
 
 	internal XamlElement? Parent { get; private set; }
@@ -58,6 +58,7 @@ public class XamlElement : ISupportInitialize, ISupportBinding
 	public void SetParent(XamlElement parent)
 	{
 		Parent = parent;
+		OnEndInit();
 	}
 
 	protected virtual T? FindInside<T>() where T: class
@@ -158,13 +159,8 @@ public class XamlElement : ISupportInitialize, ISupportBinding
 		return true;
 	}
 
-	#region ISupportInitialize
-	public void BeginInit()
-	{
-		// do nothing
-	}
-
-	public void EndInit()
+	#region IInitComplete
+	public void InitComplete()
 	{
 		OnEndInit();
 	}

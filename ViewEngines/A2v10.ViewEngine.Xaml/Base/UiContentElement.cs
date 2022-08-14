@@ -1,43 +1,39 @@
 ﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
-using System;
-using A2v10.System.Xaml;
+namespace A2v10.Xaml;
 
-namespace A2v10.Xaml
+[ContentProperty("Content")]
+public abstract class UiContentElement : UIElementBase
 {
-	[ContentProperty("Content")]
-	public abstract class UiContentElement : UIElementBase
+	public Object? Content { get; set; }
+
+	protected virtual void MergeContent(TagBuilder tag, RenderContext context)
 	{
-		public Object? Content { get; set; }
-
-		protected virtual void MergeContent(TagBuilder tag, RenderContext context)
+		var contBind = GetBinding(nameof(Content));
+		if (contBind != null)
 		{
-			var contBind = GetBinding(nameof(Content));
-			if (contBind != null)
-			{
-				tag.MergeAttribute("v-text", contBind.GetPathFormat(context));
-				if (contBind.NegativeRed)
-					tag.MergeAttribute(":class", $"$getNegativeRedClass({contBind.GetPath(context)})");
-			}
+			tag.MergeAttribute("v-text", contBind.GetPathFormat(context));
+			if (contBind.NegativeRed)
+				tag.MergeAttribute(":class", $"$getNegativeRedClass({contBind.GetPath(context)})");
 		}
+	}
 
-		internal void RenderContent(RenderContext context)
-		{
-			RenderContent(context, Content);
-		}
+	internal void RenderContent(RenderContext context)
+	{
+		RenderContent(context, Content);
+	}
 
-		public override void OnSetStyles()
-		{
-			base.OnSetStyles();
-			if (Content is XamlElement xamlCont)
-				xamlCont.OnSetStyles();
-		}
+	public override void OnSetStyles()
+	{
+		base.OnSetStyles();
+		if (Content is XamlElement xamlCont)
+			xamlCont.OnSetStyles();
+	}
 
-		protected override void OnEndInit()
-		{
-			base.OnEndInit();
-			if (Content is XamlElement xamlCont)
-				xamlCont.SetParent(this);
-		}
+	protected override void OnEndInit()
+	{
+		base.OnEndInit();
+		if (Content is XamlElement xamlCont)
+			xamlCont.SetParent(this);
 	}
 }
