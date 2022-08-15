@@ -33,6 +33,6 @@ public class SelectorSimple : Selector
 			this.BindImpl.SetBinding(nameof(FetchData), dat);
 		}
 		hlink.BindImpl.SetBinding("Command", cmd);
-		AddOns.Add(hlink);
+		AddOns.Insert(0, hlink);
 	}
 }
