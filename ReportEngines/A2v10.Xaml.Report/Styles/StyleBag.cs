@@ -15,13 +15,13 @@ public class StyleBag
 
 		_styles.Add("Page", new RuntimeStyle()
 		{
-			FontSize = 10F,
+			FontSize = 9F,
 			Margin = Thickness.FromString("20mm,10mm")
 		}); 
 
 		_styles.Add("Text.Title", new RuntimeStyle()
 		{
-			FontSize = 14F,
+			FontSize = 12F,
 		});
 
 		_styles.Add("Table.Details", new RuntimeStyle()

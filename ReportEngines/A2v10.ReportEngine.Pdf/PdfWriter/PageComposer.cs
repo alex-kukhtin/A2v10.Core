@@ -45,7 +45,7 @@ internal class PageComposer
 		}
 
 		page.DefaultTextStyle(ts => {
-			ts.FontFamily(Fonts.Verdana);
+			ts = ts.FontFamily(Fonts.Verdana);
 			if (rs != null && rs.FontSize != null)
 				ts = ts.FontSize(rs.FontSize.Value);
 			else
