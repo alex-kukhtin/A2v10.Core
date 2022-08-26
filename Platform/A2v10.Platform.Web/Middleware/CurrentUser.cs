@@ -154,7 +154,13 @@ public class CurrentUser : ICurrentUser, IDbIdentity
 	void StoreState()
 	{
 		var stateJson = JsonConvert.SerializeObject(State);
-		_httpContextAccessor?.HttpContext?.Response.Cookies.Append(CookieNames.Identity.State, _protector.Protect(stateJson));
+		_httpContextAccessor?.HttpContext?.Response.Cookies.Append(CookieNames.Identity.State, _protector.Protect(stateJson), 
+			new CookieOptions()
+			{
+				SameSite = SameSiteMode.Strict,
+				Secure = true,
+				HttpOnly = true,
+			});
 	}
 }
 

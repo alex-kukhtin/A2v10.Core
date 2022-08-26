@@ -49,6 +49,7 @@ public static class ServicesExtensions
 		.AddCookie(IdentityConstants.ApplicationScheme, o =>
 		{
 			o.Cookie.Name = IdentityConstants.ApplicationScheme;
+			o.Cookie.SameSite = SameSiteMode.Strict;
 			o.LoginPath = new PathString("/account/login");
 			o.ReturnUrlParameter = "returnurl";
 			o.LogoutPath = "/account/logout";
@@ -62,12 +63,14 @@ public static class ServicesExtensions
 		.AddCookie(IdentityConstants.ExternalScheme, o =>
 		{
 			o.Cookie.Name = IdentityConstants.ExternalScheme;
+			o.Cookie.SameSite = SameSiteMode.Strict;
 			o.ExpireTimeSpan = TimeSpan.FromMinutes(5);
 		})
 		.AddCookie(IdentityConstants.TwoFactorUserIdScheme,
 			o =>
 			{
 				o.Cookie.Name = IdentityConstants.TwoFactorUserIdScheme;
+				o.Cookie.SameSite = SameSiteMode.Strict;
 				o.ExpireTimeSpan = TimeSpan.FromMinutes(5);
 			}
 		);

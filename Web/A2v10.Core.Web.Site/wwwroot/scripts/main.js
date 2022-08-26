@@ -2715,7 +2715,7 @@ app.modules['std:impl:array'] = function () {
 
 /* Copyright © 2015-2022 Alex Kukhtin. All rights reserved.*/
 
-/*20220414-7837*/
+/*20220825-7883*/
 // services/datamodel.js
 
 /*
@@ -2991,8 +2991,15 @@ app.modules['std:impl:array'] = function () {
 			elem.$selected = false;
 
 		if (elem._meta_.$items) {
-			elem.$expanded = false; // tree elem
-			elem.$collapsed = false; // sheet elem
+			let exp = false;
+			let clps = false;
+			if (elem._meta_.$expanded) {
+				let val = source[elem._meta_.$expanded];
+				exp = !!val;
+				clps = !val;
+			}
+			elem.$expanded = exp; // tree elem
+			elem.$collapsed = clps; // sheet elem
 			elem.$level = 0;
 			addTreeMethods(elem);
 		}
@@ -11157,6 +11164,93 @@ Vue.component('a2-panel', {
 		}
 	});
 })();
+// Copyright © 2022 Alex Kukhtin. All rights reserved.
+
+// 20220825-7883
+// components/treegrid.js
+
+(function () {
+
+	let gridTemplate = `
+<table>
+	<thead><tr><slot name="header"></slot></tr></thead>
+	<tbody>
+		<tr v-for="(itm, ix) in rows" :class="rowClass(itm)" 
+				@click.stop.prevent="select(itm)" v-on:dblclick.prevent="dblClick($event, itm)">
+			<slot name="row" v-bind:itm="itm.elem" v-bind:that="that"></slot>
+		</tr>
+	</tbody>
+</table>
+`;
+
+	Vue.component('tree-grid', {
+		template: gridTemplate,
+		props: {
+			root: [Object, Array],
+			item: String,
+			folderStyle: String,
+			doubleclick: Function
+		},
+		computed: {
+			rows() {
+				let arr = [];
+				let collect = (pa, lev) => {
+					for (let i = 0; i < pa.length; i++) {
+						let el = pa[i];
+						let ch = el[this.item];
+						arr.push({ elem: el, level: lev });
+						if (ch && el.$expanded)
+							collect(ch, lev + 1);
+					}
+				};
+				if (Array.isArray(this.root))
+					collect(this.root, 0);
+				else
+					collect(this.root[this.item], 0);
+				return arr;
+			},
+			that() {
+				return this;
+			}
+		},
+		watch: {
+			root() {
+				console.dir('whatch items');
+			}
+		},
+		methods: {
+			toggle(itm) {
+				itm.$expanded = !itm.$expanded;
+			},
+			select(itm) {
+				itm.elem.$select(this.root);
+			},
+			dblClick(evt, itm) {
+				evt.stopImmediatePropagation();
+				window.getSelection().removeAllRanges();
+				if (this.doubleclick)
+					this.doubleclick();
+			},
+			hasChildren(itm) {
+				let ch = itm[this.item];
+				return ch && ch.length > 0;
+			},
+			rowClass(itm) {
+				let cls = `lev lev-${itm.level}`;
+				if (itm.elem.$selected)
+					cls += ' active';
+				if (this.hasChildren(itm.elem) && this.folderStyle !== 'none')
+					cls += ' ' + this.folderStyle;
+					
+				return cls;
+			},
+			toggleClass(itm) {
+				return itm.$expanded ? 'expanded' : 'collapsed';
+			}
+		}
+	});
+})();
+
 // Copyright © 2015-2019 Alex Kukhtin. All rights reserved.
 
 /*20190308-7461*/
@@ -11228,9 +11322,9 @@ Vue.directive('disable', {
 });
 
 
-// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
-/*20210627-7788*/
+/*20220823-7883*/
 /* directives/dropdown.js */
 
 (function () {
@@ -11257,6 +11351,12 @@ Vue.directive('disable', {
 					el._hide();
 				el.classList.remove('show');
 			};
+
+			el.addEventListener('mouseup', (ev) => {
+				// from children elements
+				eventBus.$emit('closeAllPopups');
+				ev.stopPropagation();
+			});
 
 			el.addEventListener('click', function (event) {
 				let trg = event.target;
@@ -11671,7 +11771,7 @@ Vue.directive('resize', {
 
 // Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
-/*20220626-7866*/
+/*20220823-7883*/
 // controllers/base.js
 
 (function () {
@@ -11810,6 +11910,7 @@ Vue.directive('resize', {
 					this.$alert(locale.$PermissionDenied);
 					return;
 				}
+				eventBus.$emit('closeAllPopups');
 				const root = this.$data;
 				return root._exec_(cmd, arg, confirm, opts);
 			},
@@ -11817,6 +11918,7 @@ Vue.directive('resize', {
 			async $invokeServer(url, arg, confirm, opts) {
 				if (this.$isReadOnly(opts)) return;
 				if (this.$isLoading) return;
+				eventBus.$emit('closeAllPopups');
 				const root = this.$data;
 				if (confirm)
 					await this.$confirm(confirm);
@@ -11852,6 +11954,7 @@ Vue.directive('resize', {
 					console.error('Invalid argument for $execSelected');
 					return;
 				}
+				eventBus.$emit('closeAllPopups');
 				if (!confirm)
 					root._exec_(cmd, arg.$selected);
 				else
@@ -11885,6 +11988,7 @@ Vue.directive('resize', {
 					return;
 				if (!this.$data.$dirty)
 					return;
+				eventBus.$emit('closeAllPopups');
 				let mainObjectName = this.$data._meta_.$main;
 				let self = this;
 				let root = window.$$rootUrl;
@@ -12028,6 +12132,7 @@ Vue.directive('resize', {
 
 			$reload(args) {
 				//console.dir('$reload was called for' + this.$baseUrl);
+				eventBus.$emit('closeAllPopups');
 				let self = this;
 				if (utils.isArray(args) && args.$isLazy()) {
 					// reload lazy
@@ -12092,6 +12197,7 @@ Vue.directive('resize', {
 			$remove(item, confirm) {
 				if (this.$data.$readOnly) return;
 				if (this.$isLoading) return;
+				eventBus.$emit('closeAllPopups');
 				if (!confirm)
 					item.$remove();
 				else
@@ -12131,6 +12237,7 @@ Vue.directive('resize', {
 					this.$store.commit('navigate', { url: urlToNavigate });
 			},
 			$navigateSimple(url, newWindow, update) {
+				eventBus.$emit('closeAllPopups');
 				if (newWindow === true) {
 					let nwin = window.open(url, "_blank");
 					if (nwin)
@@ -12141,6 +12248,7 @@ Vue.directive('resize', {
 			},
 
 			$navigateExternal(url, newWindow) {
+				eventBus.$emit('closeAllPopups');
 				if (newWindow === true) {
 					window.open(url, "_blank");
 				}
@@ -12149,12 +12257,14 @@ Vue.directive('resize', {
 			},
 
 			$download(url) {
+				eventBus.$emit('closeAllPopups');
 				const root = window.$$rootUrl;
 				url = urltools.combine('/file', url.replace('.', '-'));
 				window.location = root + url;
 			},
 
 			async $upload(url, accept) {
+				eventBus.$emit('closeAllPopups');
 				let root = window.$$rootUrl;
 				try {
 					let file = await htmlTools.uploadFile(accept, url);
@@ -12173,6 +12283,7 @@ Vue.directive('resize', {
 			},
 
 			$file(url, arg, opts) {
+				eventBus.$emit('closeAllPopups');
 				const root = window.$$rootUrl;
 				let id = arg;
 				let token = undefined;
@@ -12202,6 +12313,7 @@ Vue.directive('resize', {
 			},
 
 			$attachment(url, arg, opts) {
+				eventBus.$emit('closeAllPopups');
 				const root = window.$$rootUrl;
 				let cmd = opts && opts.export ? 'export' : 'show';
 				let id = arg;
@@ -12252,6 +12364,8 @@ Vue.directive('resize', {
 					return;
 				}
 				if (this.$isLoading) return;
+				eventBus.$emit('closeAllPopups');
+
 				let id = elem.$id;
 				let lazy = elem.$parent.$isLazy ? elem.$parent.$isLazy() : false;
 				let root = window.$$rootUrl;
@@ -12291,6 +12405,7 @@ Vue.directive('resize', {
 
 			$dbRemoveSelected(arr, confirm, opts) {
 				if (this.$isLoading) return;
+				eventBus.$emit('closeAllPopups');
 				let sel = arr.$selected;
 				if (!sel)
 					return;
@@ -12307,6 +12422,7 @@ Vue.directive('resize', {
 			},
 
 			$openSelected(url, arr, newwin, update) {
+				eventBus.$emit('closeAllPopups');
 				url = url || '';
 				let sel = arr.$selected;
 				if (!sel)
@@ -13152,9 +13268,9 @@ Vue.directive('resize', {
 
 	app.components['baseController'] = base;
 })();
-// Copyright © 2020 Alex Kukhtin. All rights reserved.
+// Copyright © 2020-2022 Alex Kukhtin. All rights reserved.
 
-/*20200604-7671*/
+/*20220816-7880*/
 /* controllers/navmenu.js */
 
 (function () {
@@ -13205,6 +13321,8 @@ Vue.directive('resize', {
 			am = menu.find((mi) => mi.Url === seg1);
 		if (!am) {
 			// no segments - find first active menu
+			if (seg1)
+				return url; // invalid segment -> invalid url
 			let parentMenu = { Url: '' };
 			am = findMenu(menu, (mi) => mi.Url && !mi.Menu, parentMenu);
 			if (am) {

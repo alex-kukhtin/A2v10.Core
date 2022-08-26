@@ -167,7 +167,16 @@ public sealed class WebProfiler : IProfiler, IDataProfiler, IDisposable
 	void SaveSession()
 	{
 		String json = JsonConvert.SerializeObject(_requestList);
-		_httpContext.HttpContext?.Response.Cookies.Append(CookieNames.Application.Profile, _protector.Protect(json));
+		_httpContext.HttpContext?.Response.Cookies.Append(
+			CookieNames.Application.Profile, 
+			_protector.Protect(json),
+			new CookieOptions()
+			{
+				SameSite = SameSiteMode.Strict,
+				Secure = true,
+				HttpOnly = true,
+			}
+		);
 	}
 
 	public String? GetJson()
