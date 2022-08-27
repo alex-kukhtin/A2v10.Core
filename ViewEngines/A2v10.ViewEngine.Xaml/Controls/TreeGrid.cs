@@ -1,9 +1,5 @@
 ﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
-using System;
-using System.Windows.Markup;
-
-
 namespace A2v10.Xaml;
 
 public enum FolderStyle
@@ -25,7 +21,7 @@ public class TreeGrid : Control, ITableControl
 	public Object? ItemsSource { get; set; }
 	public String? ItemsProperty { get; set; }
 	public Length? MinWidth { get; set; }
-
+	public DropDownMenu? ContextMenu { get; set; }
 	public Command? DoubleClick { get; set; }
 
 	public TreeGridColumnCollection Columns { get; set; } = new TreeGridColumnCollection();
@@ -73,6 +69,13 @@ public class TreeGrid : Control, ITableControl
 		if (MinWidth != null)
 			treeGrid.MergeStyle("min-width", MinWidth.Value);
 
+		String? contextId = null;
+		if (ContextMenu != null)
+		{
+			contextId = $"ctx-{Guid.NewGuid()}";
+			treeGrid.MergeAttribute("v-contextmenu", $"'{contextId}'");
+		}
+
 		var rootBind = GetBinding(nameof(ItemsSource));
 		if (rootBind == null)
 			throw new XamlException("TreeGrid. ItemsSource must be a Bind");
@@ -109,6 +112,7 @@ public class TreeGrid : Control, ITableControl
 			col.RenderColumn("th", context, SetGridlines);
 		}
 		hdr.RenderEnd(context);
+		RenderContextMenu(ContextMenu, context, contextId);
 		treeGrid.RenderEnd(context);
 	}
 
