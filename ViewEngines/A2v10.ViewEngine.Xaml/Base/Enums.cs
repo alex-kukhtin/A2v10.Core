@@ -331,6 +331,7 @@ public enum Icon
 	Flag2,
 	File,
 	FileContent,
+	FileDownloadPdf,
 	FileError,
 	FileFailure,
 	FileImage,
