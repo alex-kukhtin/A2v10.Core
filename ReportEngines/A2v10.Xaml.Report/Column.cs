@@ -9,7 +9,7 @@ namespace A2v10.Xaml.Report;
 
 
 [ContentProperty("Children")]
-public class Column : XamlElement
+public class Column : FlowElement
 {
 	public FlowElementCollection Children { get; set; } = new FlowElementCollection();
 

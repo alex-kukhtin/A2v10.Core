@@ -17,6 +17,7 @@ public class RuntimeStyle
 	public Thickness? Margin { get; set; }
 	public Thickness? Padding { get; set; }
 	public Thickness? Border { get; set; }
+	public String? Color { get; set; }
 
 	public RuntimeStyle Clone()
 	{
@@ -30,7 +31,8 @@ public class RuntimeStyle
 			Border = this.Border,
 			Background = this.Background,
 			Bold = this.Bold,
-			Italic = this.Italic
+			Italic = this.Italic,
+			Color = this.Color
 		};
 	}
 }

@@ -26,11 +26,12 @@ internal class ScriptEngine
 			opts.Culture(cultureInfo);
 		});
 		if (!String.IsNullOrEmpty(code))
-			_engine.Evaluate(code);
+			_engine.Evaluate(code!);
 
 		// all properties as Root objects
 		foreach (var item in model)
-			_engine.SetValue(item.Key, item.Value);
+			if (item.Value != null)
+				_engine.SetValue(item.Key, item.Value);
 
 		_engine.SetValue("spellMoney", SpellMoney);
 		_engine.SetValue("formatDate", FormatDate);
@@ -56,9 +57,11 @@ internal class ScriptEngine
 		return _engine.Evaluate($"_elem_ => _elem_.{expression}");
 	}
 
-	public Object Invoke(JsValue func, ExpandoObject? data)
+	public Object? Invoke(JsValue func, ExpandoObject? data)
 	{
-		return _engine.Invoke(func, data).ToObject();
+		if (data != null)
+			return _engine.Invoke(func, data).ToObject();
+		return null;
 	}
 
 	String SpellMoney(Object value, String currencyCode)

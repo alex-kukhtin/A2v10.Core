@@ -54,13 +54,25 @@ internal class PageComposer
 		});
 
 		// header
-		// TODO:
+		if (_page.Header != null)
+			page.Header().Element(ComposeHeader);
 
 		// content
 		page.Content().Element(ComposeContent);
 
-		// footer
-		// TODO
+		if (_page.Footer != null)
+			page.Footer().Element(ComposeFooter);
+	}
+
+	void ComposeHeader(IContainer container)
+	{
+		if (_page.Header == null)
+			return;
+		container.Column(column =>
+		{
+			var cc = new ColumnComposer(_page.Header, _context);
+			cc.Compose(column);
+		});
 	}
 
 	void ComposeContent(IContainer container)
@@ -73,5 +85,16 @@ internal class PageComposer
 				cc.Compose(column);
 			});
 		}
+	}
+
+	void ComposeFooter(IContainer container)
+	{
+		if (_page.Footer == null)
+			return;
+		container.Column(column =>
+		{
+			var cc = new ColumnComposer(_page.Footer, _context);
+			cc.Compose(column);
+		});
 	}
 }

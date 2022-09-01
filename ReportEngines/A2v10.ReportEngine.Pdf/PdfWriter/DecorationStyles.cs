@@ -1,12 +1,12 @@
 ﻿// Copyright © 2022 Oleksandr Kukhtin. All rights reserved.
 
-using QuestPDF.Infrastructure;
+using System;
 
+using QuestPDF.Infrastructure;
 using QuestPDF.Fluent;
 using QuestPDF.Elements.Table;
 
 using A2v10.Xaml.Report;
-
 
 namespace A2v10.ReportEngine.Pdf;
 
@@ -112,8 +112,12 @@ internal static class DecorationStyles
 		if (style == null)
 			return;
 		if (style.FontSize != null)
-			container.FontSize(style.FontSize.Value);
+			container = container.FontSize(style.FontSize.Value);
 		if (style.Bold != null && style.Bold.Value)
-			container.Bold();
+			container = container.Bold();
+		if (style.Italic != null && style.Italic.Value)
+			container = container.Italic();
+		if (!String.IsNullOrEmpty(style.Color))
+			container = container.FontColor(style.Color!);
 	}
 }

@@ -2,7 +2,6 @@
 
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
-using QuestPDF.Helpers;
 
 using A2v10.Xaml.Report;
 
@@ -27,6 +26,15 @@ internal class ImageComposer : FlowElementComposer
 	{
 		container = container.ApplyDecoration(_image.RuntimeStyle);
 		if (_context.IsVisible(_image))
-			container.Image(Placeholders.Image(100, 100), ImageScaling.FitArea);
+		{
+			var stream = _context.GetValueAsByteArray(_image, "Source");
+			if (stream == null)
+				return;
+			if (_image.Width != null)
+				container = container.Width(_image.Width.Value, _image.Width.Unit.ToUnit());
+			if (_image.Height != null)
+				container = container.Width(_image.Height.Value, _image.Height.Unit.ToUnit());
+			container.Image(stream, ImageScaling.FitArea);
+		}
 	}
 }
