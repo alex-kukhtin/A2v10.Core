@@ -11,7 +11,10 @@ public class PdfViewer : UIElementBase
 		if (SkipRender(context))
 			return;
 		var tag = new TagBuilder("object");
+		
 		tag.MergeAttribute("type", "application/pdf");
+		MergeAttributes(tag, context);
+
 		if (Size != null)
 		{
 			if (!Size.Width.IsEmpty)
