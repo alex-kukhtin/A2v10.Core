@@ -1,10 +1,10 @@
 ﻿
-// Copyright © 2021 Alex Kukhtin. All rights reserved.
+// Copyright © 2021-2022 Alex Kukhtin. All rights reserved.
 
-namespace A2v10.Xaml
+namespace A2v10.Xaml;
+
+public interface IRootContainer
 {
-	public interface IRootContainer
-	{
-		void SetStyles(Styles styles);
-	}
+	void SetStyles(Styles styles);
+	XamlElement? FindComponent(String name);
 }

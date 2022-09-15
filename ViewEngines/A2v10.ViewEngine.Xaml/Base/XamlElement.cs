@@ -50,7 +50,7 @@ public class XamlElement : ISupportBinding, IInitComplete
 	{
 	}
 
-	public virtual void OnSetStyles()
+	public virtual void OnSetStyles(RootContainer root)
 	{
 
 	}

@@ -61,8 +61,10 @@ public class ImageController : BaseController
 	{
 		try
 		{
+			var files = Request.Form.Files;
 
-		} catch (Exception ex)
+		}
+		catch (Exception ex)
 		{
 
 		}

@@ -157,13 +157,13 @@ public class Page : RootContainer
 		CollectionView?.SetParent(this);
 	}
 
-	public override void OnSetStyles()
+	public override void OnSetStyles(RootContainer root)
 	{
-		base.OnSetStyles();
-		Toolbar?.OnSetStyles();
-		Taskpad?.OnSetStyles();
-		Pager?.OnSetStyles();
-		CollectionView?.OnSetStyles();
+		base.OnSetStyles(root);
+		Toolbar?.OnSetStyles(root);
+		Taskpad?.OnSetStyles(root);
+		Pager?.OnSetStyles(root);
+		CollectionView?.OnSetStyles(root);
 	}
 
 	protected override T? FindInside<T>() where T : class

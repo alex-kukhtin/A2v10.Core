@@ -31,7 +31,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-    <PackageReference Include="A2v10.System.Xaml" Version="10.1.8014" />
+    <PackageReference Include="A2v10.System.Xaml" Version="10.1.8015" />
   </ItemGroup>
 
 </Project>

@@ -48,7 +48,7 @@ public class XamlRenderer : IRenderer
 			if (uiElem == null)
 				throw new XamlException("Xaml. Root is not 'IXamlElement'");
 
-			var stylesPart = _partProvider.GetXamlPart("styles.xaml");
+			var stylesPart = _partProvider.GetCachedXamlPart("styles.xaml");
 			if (stylesPart != null)
 			{
 				if (stylesPart is not Styles styles)

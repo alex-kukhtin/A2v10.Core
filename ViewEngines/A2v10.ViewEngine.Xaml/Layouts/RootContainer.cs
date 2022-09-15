@@ -19,7 +19,9 @@ public abstract class RootContainer : Container, IUriContext, IRootContainer
 	public void SetStyles(Styles styles)
 	{
 		Styles = styles;
-		OnSetStyles();
+		OnSetStyles(this);
+		foreach (var c in Components)
+			c.Value.OnSetStyles(this);
 	}
 
 	#endregion
@@ -40,6 +42,16 @@ public abstract class RootContainer : Container, IUriContext, IRootContainer
 		}
 	}
 	public AccelCommandCollection AccelCommands { get; set; } = new AccelCommandCollection();
+
+
+	public ComponentDictionary Components { get; set; } = new ComponentDictionary();
+
+	public XamlElement? FindComponent(String name)
+	{
+		if (Components.TryGetValue(name, out XamlElement? comp))
+			return comp;
+		return null;
+	}
 
 	public Object? FindResource(String key)
 	{

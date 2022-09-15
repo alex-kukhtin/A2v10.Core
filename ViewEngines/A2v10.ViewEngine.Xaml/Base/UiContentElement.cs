@@ -23,11 +23,11 @@ public abstract class UiContentElement : UIElementBase
 		RenderContent(context, Content);
 	}
 
-	public override void OnSetStyles()
+	public override void OnSetStyles(RootContainer root)
 	{
-		base.OnSetStyles();
+		base.OnSetStyles(root);
 		if (Content is XamlElement xamlCont)
-			xamlCont.OnSetStyles();
+			xamlCont.OnSetStyles(root);
 	}
 
 	protected override void OnEndInit()

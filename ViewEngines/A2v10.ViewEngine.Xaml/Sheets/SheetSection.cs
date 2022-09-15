@@ -1,66 +1,63 @@
-﻿// Copyright © 2015-2017 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
-using System;
 using System.Collections.Generic;
-using A2v10.System.Xaml;
 
-namespace A2v10.Xaml
+namespace A2v10.Xaml;
+
+[ContentProperty("Children")]
+public class SheetSection : UIElement
 {
-	[ContentProperty("Children")]
-	public class SheetSection : UIElement
+	public Object? ItemsSource { get; set; }
+
+	public SheetRows Children { get; } = new SheetRows();
+
+	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
-		public Object? ItemsSource { get; set; }
-
-		public SheetRows Children { get; } = new SheetRows();
-
-		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
+		if (SkipRender(context))
+			return;
+		var sect = new TagBuilder("a2-sheet-section");
+		MergeAttributes(sect, context);
+		sect.RenderStart(context);
+		var tml = new TagBuilder("template");
+		var isBind = GetBinding(nameof(ItemsSource));
+		if (isBind != null)
 		{
-			if (SkipRender(context))
-				return;
-			var sect = new TagBuilder("a2-sheet-section");
-			MergeAttributes(sect, context);
-			sect.RenderStart(context);
-			var tml = new TagBuilder("template");
-			var isBind = GetBinding(nameof(ItemsSource));
-			if (isBind != null)
+			tml.MergeAttribute("v-for", $"(item, itemIndex) of {isBind.GetPath(context)}");
+			tml.RenderStart(context);
+			using (var scope = new ScopeContext(context, "item", isBind.Path))
 			{
-				tml.MergeAttribute("v-for", $"(item, itemIndex) of {isBind.GetPath(context)}");
-				tml.RenderStart(context);
-				using (var scope = new ScopeContext(context, "item", isBind.Path))
-				{
-					foreach (var r in Children)
-						r.RenderElement(context);
-				}
-				tml.RenderEnd(context);
-			}
-			else
-			{
-				tml.RenderStart(context);
 				foreach (var r in Children)
 					r.RenderElement(context);
-				tml.RenderEnd(context);
 			}
-			sect.RenderEnd(context);
+			tml.RenderEnd(context);
 		}
-
-		protected override void OnEndInit()
+		else
 		{
-			base.OnEndInit();
+			tml.RenderStart(context);
 			foreach (var r in Children)
-				r.SetParent(this);
+				r.RenderElement(context);
+			tml.RenderEnd(context);
 		}
-
-		public override void OnSetStyles()
-		{
-			base.OnSetStyles();
-			foreach (var r in Children)
-				r.OnSetStyles();
-		}
+		sect.RenderEnd(context);
 	}
 
-	public class SheetSections : List<SheetSection>
+	protected override void OnEndInit()
 	{
-
+		base.OnEndInit();
+		foreach (var r in Children)
+			r.SetParent(this);
 	}
+
+	public override void OnSetStyles(RootContainer root)
+	{
+		base.OnSetStyles(root);
+		foreach (var r in Children)
+			r.OnSetStyles(root);
+	}
+}
+
+public class SheetSections : List<SheetSection>
+{
 
 }
+

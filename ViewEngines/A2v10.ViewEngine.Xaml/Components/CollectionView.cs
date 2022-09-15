@@ -101,11 +101,11 @@ public class CollectionView : UIElementBase
 			ch.SetParent(this);
 	}
 
-	public override void OnSetStyles()
+	public override void OnSetStyles(RootContainer root)
 	{
-		base.OnSetStyles();
+		base.OnSetStyles(root);
 		foreach (var ch in Children)
-			ch.OnSetStyles();
+			ch.OnSetStyles(root);
 	}
 }
 

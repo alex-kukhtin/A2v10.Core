@@ -229,19 +229,19 @@ public class Table : Control, ITableControl
 				c.SetParent(this);
 	}
 
-	public override void OnSetStyles()
+	public override void OnSetStyles(RootContainer root)
 	{
-		base.OnSetStyles();
+		base.OnSetStyles(root);
 		foreach (var c in Rows)
-			c.OnSetStyles();
+			c.OnSetStyles(root);
 		if (_header != null)
 			foreach (var h in Header)
-				h.OnSetStyles();
+				h.OnSetStyles(root);
 		if (_footer != null)
 			foreach (var f in Footer)
-				f.OnSetStyles();
+				f.OnSetStyles(root);
 		if (_columns != null)
 			foreach (var c in Columns)
-				c.OnSetStyles();
+				c.OnSetStyles(root);
 	}
 }

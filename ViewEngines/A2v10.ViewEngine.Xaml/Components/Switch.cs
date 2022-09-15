@@ -41,11 +41,11 @@ public class Case : XamlElement
 			c.SetParent(this);
 	}
 
-	public override void OnSetStyles()
+	public override void OnSetStyles(RootContainer root)
 	{
-		base.OnSetStyles();
+		base.OnSetStyles(root);
 		foreach (var c in Children)
-			c.OnSetStyles();
+			c.OnSetStyles(root);
 	}
 }
 
@@ -102,11 +102,11 @@ public class Switch : UIElementBase
 			c.SetParent(this);
 	}
 
-	public override void OnSetStyles()
+	public override void OnSetStyles(RootContainer root)
 	{
-		base.OnSetStyles();
+		base.OnSetStyles(root);
 		foreach (var ch in Cases)
-			ch.OnSetStyles();
+			ch.OnSetStyles(root);
 	}
 }
 

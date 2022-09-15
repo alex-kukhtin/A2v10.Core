@@ -1,5 +1,6 @@
 ﻿// Copyright © 2022 Oleksandr Kukhtin. All rights reserved.
 
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using A2v10.Infrastructure;
@@ -12,8 +13,7 @@ public class XamlPartProviderClr : IXamlPartProvider
 	private readonly XamlReaderService _readerService;
 	private readonly IAppCodeProvider _codeProvider;
 
-	private Object? _xamlStyles = null;
-	private Boolean _stylesLoaded = false;
+	private Dictionary<String, Object?> _cache = new(StringComparer.InvariantCultureIgnoreCase);
 
 	public XamlPartProviderClr(IAppCodeProvider codeProvider)
 	{
@@ -21,23 +21,17 @@ public class XamlPartProviderClr : IXamlPartProvider
 		_codeProvider = codeProvider;
 	}
 
-	Object? LoadStyles()
+	public Object? GetCachedXamlPart(String path)
 	{
-		if (_stylesLoaded)
-			return _xamlStyles;
-		_stylesLoaded = true;
-		var fullPath = _codeProvider.MakeFullPath(String.Empty, "styles.xaml", false);
-		using var stream = _codeProvider.FileStreamFullPathRO(fullPath);
-		_xamlStyles = _readerService.Load(stream, new Uri("app:" + fullPath));
-		return _xamlStyles;
-
+		if (_cache.TryGetValue(path, out var obj))
+			return obj;
+		var res = GetXamlPart(path);
+		_cache.Add(path, res);
+		return res;
 	}
 
 	public Object? GetXamlPart(String path)
 	{
-		if (path == "styles.xaml")
-			return LoadStyles();
-	
 		var fullPath = _codeProvider.MakeFullPath(String.Empty, path, false);
 		using var stream = _codeProvider.FileStreamFullPathRO(fullPath);
 		return _readerService.Load(stream, new Uri("app:" + fullPath));
