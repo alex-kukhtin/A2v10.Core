@@ -57,9 +57,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CodeGen", "CodeGen", "{362A
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "A2v10.CodeGen.Support", "CodeGen\A2v10.CodeGen.Support\A2v10.CodeGen.Support.csproj", "{AB599125-8A46-4453-B1A7-6328408239AC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "A2v10.ReportEngine.Pdf", "ReportEngines\A2v10.ReportEngine.Pdf\A2v10.ReportEngine.Pdf.csproj", "{6C119F41-2986-4111-B9E2-9E9E493F597E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "A2v10.ReportEngine.Pdf", "ReportEngines\A2v10.ReportEngine.Pdf\A2v10.ReportEngine.Pdf.csproj", "{6C119F41-2986-4111-B9E2-9E9E493F597E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "A2v10.Xaml.Report", "ReportEngines\A2v10.Xaml.Report\A2v10.Xaml.Report.csproj", "{A00C0296-1819-4944-9D0E-EDF72C80E282}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "A2v10.Xaml.Report", "ReportEngines\A2v10.Xaml.Report\A2v10.Xaml.Report.csproj", "{A00C0296-1819-4944-9D0E-EDF72C80E282}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "A2v10.ViewEngine.Html", "ViewEngines\A2v10.ViewEngine.Html\A2v10.ViewEngine.Html.csproj", "{683C4524-E19C-416C-9695-B5E247B500EB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -131,6 +133,10 @@ Global
 		{A00C0296-1819-4944-9D0E-EDF72C80E282}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A00C0296-1819-4944-9D0E-EDF72C80E282}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A00C0296-1819-4944-9D0E-EDF72C80E282}.Release|Any CPU.Build.0 = Release|Any CPU
+		{683C4524-E19C-416C-9695-B5E247B500EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{683C4524-E19C-416C-9695-B5E247B500EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{683C4524-E19C-416C-9695-B5E247B500EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{683C4524-E19C-416C-9695-B5E247B500EB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -152,6 +158,7 @@ Global
 		{AB599125-8A46-4453-B1A7-6328408239AC} = {362A9E7C-45ED-45C0-887B-E9FB00FE190B}
 		{6C119F41-2986-4111-B9E2-9E9E493F597E} = {A1D69499-3CCF-4BBC-AE6E-0281286A1F3F}
 		{A00C0296-1819-4944-9D0E-EDF72C80E282} = {A1D69499-3CCF-4BBC-AE6E-0281286A1F3F}
+		{683C4524-E19C-416C-9695-B5E247B500EB} = {E8C95F64-3001-4F08-B774-A6A89EB2945D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D64A03C5-D2E1-49C8-A7A9-D6022941DE01}

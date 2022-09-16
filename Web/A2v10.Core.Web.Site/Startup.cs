@@ -49,6 +49,17 @@ public class Startup
 		});
 		*/
 
+		/*
+		services
+		.AddReportEngines(x =>
+		{
+			x.RegisterEngine<StimulsoftReportEngine>("stimulsoft");
+		});
+
+		services.AddStimulsoftLicense(configuration);
+		*/
+
+
 		services.AddWorkflowEngineScoped();
 		services.AddInvokeTargets(a =>
 		{

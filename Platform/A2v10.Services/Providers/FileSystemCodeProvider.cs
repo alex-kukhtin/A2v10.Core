@@ -29,6 +29,9 @@ public class FileSystemCodeProvider : IAppCodeProvider
 
 	public String MakeFullPath(String path, String fileName, Boolean admin)
 	{
+		if (path.StartsWith("$"))
+			path = path.Replace("$", "../");
+
 		String appKey = GetAppKey(admin);
 		if (fileName.StartsWith('/'))
 		{
@@ -79,26 +82,11 @@ public class FileSystemCodeProvider : IAppCodeProvider
 		return new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
 	}
 
-	String GetFullPath(String path, String fileName, Boolean admin)
-	{
-		String appKey = GetAppKey(admin);
-		if (fileName.StartsWith("/"))
-		{
-			path = String.Empty;
-			fileName = fileName.Remove(0, 1);
-		}
-		if (appKey != null)
-			appKey = "/" + appKey;
-		String fullPath = Path.Combine($"{AppPath}{appKey}", path, fileName);
-
-		return Path.GetFullPath(fullPath);
-	}
-
 	public IEnumerable<String> EnumerateFiles(String? path, String searchPattern, Boolean admin)
 	{
 		if (String.IsNullOrEmpty(path))
 			return Enumerable.Empty<String>();
-		var fullPath = GetFullPath(path, String.Empty, admin);
+		var fullPath = MakeFullPath(path, String.Empty, admin);
 		if (!Directory.Exists(fullPath))
 			return Enumerable.Empty<String>();
 		return Directory.EnumerateFiles(fullPath, searchPattern);

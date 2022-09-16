@@ -399,6 +399,7 @@ public enum Icon
 	Power,
 	Print,
 	Process,
+	Qrcode,
 	Query,
 	Queue,
 	Refresh,

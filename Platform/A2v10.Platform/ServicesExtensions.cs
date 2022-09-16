@@ -12,7 +12,10 @@ using A2v10.Data;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Services;
+
 using A2v10.ViewEngine.Xaml;
+using A2v10.ViewEngine.Html;
+
 using A2v10.Platform.Web;
 
 namespace Microsoft.Extensions.DependencyInjection;
@@ -75,17 +78,8 @@ public static class ServicesExtensions
 		services.AddViewEngines(x =>
 		{
 			x.RegisterEngine<XamlViewEngine>(".xaml");
+			x.RegisterEngine<HtmlViewEngine>(".html");
 		});
-
-		/*
-		services
-		.AddReportEngines(x =>
-		{
-			x.RegisterEngine<StimulsoftReportEngine>("stimulsoft");
-		});
-
-		services.AddStimulsoftLicense(configuration);
-		*/
 
 		// Platform services
 		services.Configure<AppOptions>(

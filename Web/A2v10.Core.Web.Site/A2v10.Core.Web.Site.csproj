@@ -7,6 +7,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="AppStart\**" />
+	  <Content Remove="AppStart\**" />
+	  <EmbeddedResource Remove="AppStart\**" />
+	  <None Remove="AppStart\**" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<Content Remove="C:\Users\alexk\.nuget\packages\a2v10.workflow.engine\10.1.8044\contentFiles\any\net5.0\SqlScripts\a2v10_workflow.sql" />
 	</ItemGroup>
 
@@ -27,10 +34,6 @@
 
 	<ItemGroup>
 		<Content Update="wwwroot\App_application\main\test\test.view.xaml" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="AppStart\" />
 	</ItemGroup>
 
 </Project>

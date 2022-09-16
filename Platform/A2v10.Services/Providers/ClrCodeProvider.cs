@@ -35,6 +35,8 @@ public class ClrCodeProvider : IAppCodeProvider
 
 	public String MakeFullPath(String path, String fileName, Boolean admin)
 	{
+		if (path.StartsWith("$"))
+			path = path.Replace("$", "../");
 		return Path.GetRelativePath(".", Path.Combine(path, fileName)).NormalizeSlash();
 	}
 
