@@ -12,11 +12,18 @@ public class Include : UIElementBase
 
 	public String? CssClass { get; set; }
 
+	public Boolean Queued { get; set; }
+
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
 		if (SkipRender(context))
 			return;
-		var div = new TagBuilder("a2-include", null, IsInGrid);
+		var tagName = ("a2-include");
+		if (Queued)
+			tagName = "a2-queued-include";
+
+		var div = new TagBuilder(tagName, null, IsInGrid);
+
 		MergeAttributes(div, context);
 
 		AddBindingCssClass(div, context, CssClass);
