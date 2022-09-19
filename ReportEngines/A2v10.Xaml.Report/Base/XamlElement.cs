@@ -19,6 +19,7 @@ public class XamlElement : ISupportBinding
 	public Thickness? Padding { get; init; }
 	public Thickness? Border { get; init; }
 	public String? Color { get; init; }
+	public String? Background { get; init; }
 
 	public Boolean? If { get; init; }
 
@@ -77,6 +78,8 @@ public class XamlElement : ISupportBinding
 			GetRuntimeStyle().FontSize = FontSize;
 		if (Color != null)
 			GetRuntimeStyle().Color = Color;
+		if (Background != null)
+			GetRuntimeStyle().Background = Background;
 	}
 
 	public virtual void ApplyStyles(String selector, StyleBag styles)
