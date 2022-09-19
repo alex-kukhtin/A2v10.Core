@@ -9,5 +9,6 @@ public class Image : FlowElement
 	public Object? Source { get; set; }
 	public Length? Width { get; set; }
 	public Length? Height { get; set; }
+	public String? FileName { get; set; }
 }
 

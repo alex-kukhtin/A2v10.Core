@@ -16,27 +16,29 @@ public class PdfReportEngine : IReportEngine
 {
 	private readonly IAppCodeProvider _appCodeProvider;
 	private readonly IReportLocalizer _localizer;
+	private readonly String _rootPath;
 
 	public PdfReportEngine(IAppCodeProvider appCodeProvider, ILocalizer localizer, ICurrentUser user)
 	{
 		_appCodeProvider = appCodeProvider;
 		_localizer = new PdfReportLocalizer(user.Locale.Locale, localizer);
+		_rootPath = _appCodeProvider.MakeFullPath(String.Empty, String.Empty, false);
 	}
 
-	private Page ReadTemplate(IReportInfo reportInfo)
+	private Page ReadTemplate(IReportInfo reportInfo, String reportPath)
 	{
-		String reportPath = _appCodeProvider.MakeFullPath(reportInfo.Path, $"{reportInfo.Report}.xaml", false);
 		using var stream = _appCodeProvider.FileStreamFullPathRO(reportPath);
 		return new TemplateReader().ReadReport(stream);
 	}
 	public Task<IInvokeResult> ExportAsync(IReportInfo reportInfo, ExportReportFormat format)
 	{
-		Page page = ReadTemplate(reportInfo);
+		String reportPath = _appCodeProvider.MakeFullPath(reportInfo.Path, $"{reportInfo.Report}.xaml", false);
+		Page page = ReadTemplate(reportInfo, reportPath);
 
 		var name = reportInfo.DataModel?.Root?.Resolve(reportInfo.Name) ?? "report";
 
 		var model = reportInfo.DataModel?.Root ?? new ExpandoObject();
-		var context = new RenderContext(_localizer, model, page.Code);
+		var context = new RenderContext(_rootPath, reportPath, _localizer, model, page.Code);
 		var doc = new ReportDocument(page, context);
 
 		using MemoryStream outputStream = new();

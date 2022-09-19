@@ -4,6 +4,7 @@ using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
 
 using A2v10.Xaml.Report;
+using System;
 
 namespace A2v10.ReportEngine.Pdf;
 
@@ -27,7 +28,11 @@ internal class ImageComposer : FlowElementComposer
 		container = container.ApplyDecoration(_image.RuntimeStyle);
 		if (_context.IsVisible(_image))
 		{
-			var stream = _context.GetValueAsByteArray(_image, "Source");
+			Byte[]? stream;
+			if (!String.IsNullOrEmpty(_image.FileName))
+				stream = _context.GetFileAsByteArray(_image.FileName);
+			else
+				stream = _context.GetValueAsByteArray(_image, "Source");
 			if (stream == null)
 				return;
 			if (_image.Width != null)
