@@ -7,31 +7,31 @@ using A2v10.Xaml.Report;
 
 namespace A2v10.ReportEngine.Pdf;
 
-internal class ColumnComposer : FlowElementComposer
+internal class InlinedComposer : FlowElementComposer
 {
-	private readonly Column _column;
+	private readonly Inlined _inlined;
 	private readonly RenderContext _context;
 
-	internal ColumnComposer(Column column, RenderContext context)
+	internal InlinedComposer(Inlined inlined, RenderContext context)
 	{
-		_column = column;
+		_inlined = inlined;
 		_context = context;
 	}
 
 	internal override void Compose(IContainer container)
 	{
-		if (!_context.IsVisible(_column))
+		if (!_context.IsVisible(_inlined))
 			return;
-		container.ApplyDecoration(_column.RuntimeStyle).Column(Compose);
+		container.ApplyDecoration(_inlined.RuntimeStyle).Inlined(Compose);
 	}
 
-	public void Compose(ColumnDescriptor column)
+	public void Compose(InlinedDescriptor inl)
 	{
-		foreach (var ch in _column.Children)
+		foreach (var ch in _inlined.Children)
 		{
-			column.Item().Element(cont =>
+			inl.Item().Element(elem =>
 			{
-				ComposeElement(cont, ch);
+				ComposeElement(elem, ch);
 			});
 		}
 	}

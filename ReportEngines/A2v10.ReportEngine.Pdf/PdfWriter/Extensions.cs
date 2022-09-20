@@ -20,6 +20,7 @@ internal static class Extensions
 			Image image => new ImageComposer(image, context),
 			Line line => new LineComposer(line, context),
 			List list => new ListComposer(list, context),
+			Inlined inlined => new InlinedComposer(inlined, context),
 			_ => throw new InvalidOperationException($"There is no composer for {elem.GetType()}")
 		};
 	}

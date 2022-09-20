@@ -94,6 +94,8 @@ internal class TableComposer : FlowElementComposer
 
 	private void ComposeCell(CellKind kind, TableCell cell, Func<ITableCellContainer> createCell, ExpandoObject? data = null)
 	{
+		if (!_context.IsVisible(cell))
+			return;
 		var cellCont = createCell();
 		if (cell.RowSpan > 1)
 			cellCont = cellCont.RowSpan(cell.RowSpan);
