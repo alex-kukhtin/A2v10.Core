@@ -15,4 +15,15 @@ public static class EnumExtensions
 			_ => null,
 		};
 	}
+
+	public static String? ToClass(this Overflow? overflow)
+	{
+		return overflow switch
+		{
+			Overflow.Visible or Overflow.True => "of-visible",
+			Overflow.Hidden or Overflow.False => "of-hidden",
+			Overflow.Auto => "of-auto",
+			_ => null
+		};
+	}
 }

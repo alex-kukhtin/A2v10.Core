@@ -32,6 +32,15 @@ public enum JustifyItems
 	SpaceBetween
 }
 
+public enum Overflow
+{
+	Visible,
+	Hidden,
+	Auto,
+	True = Visible,
+	False = Hidden,
+}
+
 public enum TextColor
 {
 	Default = 0,

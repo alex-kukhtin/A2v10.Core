@@ -6,6 +6,7 @@ public class PartialBlock : RootContainer
 {
 	public Boolean FullHeight { get; set; }
 	public Length? Height { get; set; }
+	public Overflow? Overflow { get; set; }
 
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
@@ -14,6 +15,7 @@ public class PartialBlock : RootContainer
 		var block = new TagBuilder("div", "partial-block");
 		block.MergeAttribute("id", context.RootId);
 		MergeAttributes(block, context, MergeAttrMode.Margin);
+		block.AddCssClass(Overflow.ToClass());
 
 		if (Height != null)
 			block.MergeStyle("height", Height.Value);
