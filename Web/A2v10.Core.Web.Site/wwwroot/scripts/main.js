@@ -9427,6 +9427,14 @@ TODO:
 		}
 	}
 
+	const modalPlacementComponent = {
+		inserted(el, binding) {
+			let mw = el.closest('.modal-window');
+			if (mw && mw.__vue__ && mw.__vue__.$data && binding.value)
+				mw.__vue__.$data.placement = binding.value;
+		}
+	}
+
 	const dragDialogDirective = {
 		inserted(el, binding) {
 			const mw = el.closest('.modal-window');
@@ -9488,6 +9496,8 @@ TODO:
 
 	Vue.directive('maximize', maximizeComponent);
 
+	Vue.directive("modal-placement", modalPlacementComponent)
+
 	const modalComponent = {
 		template: modalTemplate,
 		props: {
@@ -9497,6 +9507,7 @@ TODO:
 			// always need a new instance of function (modal stack)
 			return {
 				modalCreated: false,
+				placement: '',
 				keyUpHandler: function (event) {
 					// escape
 					if (event.which === 27) {
@@ -9546,7 +9557,8 @@ TODO:
 				return !!this.dialog.url;
 			},
 			mwClass() {
-				return this.modalCreated ? 'loaded' : '';
+				console.dir(this.placement);
+				return this.placement + ' ' + (this.modalCreated ? 'loaded' : '');
 			},
 			hasIcon() {
 				return !!this.dialog.style;
@@ -11610,10 +11622,8 @@ Vue.component('a2-panel', {
 				let rowSize = parseFloat(rs.gridTemplateRows.split(' ')[0]);
 				let colGap = parseFloat(rs.gridColumnGap);
 				let rowGap = parseFloat(rs.gridRowGap);
-				//console.log(colGap, rowGap);
 				img.style.width = (colSize * el.colSpan + (el.colSpan - 1) * colGap) + 'px';
 				img.style.height = (rowSize * el.rowSpan + (el.rowSpan - 1) * rowGap) + 'px';
-				//console.log(img.style.width, img.style.height);
 				return img;
 			},
 			$setHover(el, val) {
@@ -12204,7 +12214,7 @@ Vue.directive('resize', {
 
 // Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
-/*20220910-7886*/
+/*20221002-7894*/
 // controllers/base.js
 
 (function () {
@@ -12619,7 +12629,11 @@ Vue.directive('resize', {
 					});
 				});
 			},
-
+			async $nodirty(callback) {
+				let wasDirty = this.$data.$dirty;
+				await callback();
+				this.$defer(() => this.$data.$setDirty(wasDirty));
+			},
 			$requery() {
 				if (this.inDialog)
 					eventBus.$emit('modalRequery', this.$baseUrl);
@@ -13574,7 +13588,8 @@ Vue.directive('resize', {
 					$report: this.$report,
 					$upload: this.$upload,
 					$emitCaller: this.$emitCaller,
-					$emitSaveEvent: this.$emitSaveEvent
+					$emitSaveEvent: this.$emitSaveEvent,
+					$nodirty: this.$nodirty
 				};
 				Object.defineProperty(ctrl, "$isDirty", {
 					enumerable: true,
@@ -13615,6 +13630,8 @@ Vue.directive('resize', {
 				if (json.saveEvent) {
 					this.__saveEvent__ = json.saveEvent;
 				}
+				if (json.placement)
+					result.placement = json.placement;
 				return result;
 			},
 			__isModalRequery() {

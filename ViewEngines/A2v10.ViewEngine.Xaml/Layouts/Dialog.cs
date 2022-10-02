@@ -12,6 +12,13 @@ public enum DialogSize
 	Large = 2,
 	Max = 3
 }
+public enum DialogPlacement
+{
+	Default,
+	SideBarRight,
+	SideBarLeft,
+	FullScreen
+}
 
 public class Dialog : RootContainer, ISupportTwoPhaseRendering
 {
@@ -34,6 +41,7 @@ public class Dialog : RootContainer, ISupportTwoPhaseRendering
 	public Boolean Maximize { get; set; }
 	public Boolean ButtonOnTop { get; set; }
 	public Boolean Overflow { get; set; }
+	public DialogPlacement Placement { get; set; }
 
 	public UIElementCollection Buttons { get; set; } = new UIElementCollection();
 
@@ -79,6 +87,9 @@ public class Dialog : RootContainer, ISupportTwoPhaseRendering
 			dialog.MergeAttribute("v-maximize", "true");
 		else
 			SetSize(dialog);
+
+		if (Placement != DialogPlacement.Default)
+			dialog.MergeAttribute("v-modal-placement", $"'{Placement.ToString().ToKebabCase()}'");
 
 		dialog.RenderStart(context);
 
