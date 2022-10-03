@@ -135,6 +135,12 @@ public abstract class UIElementBase : XamlElement, IXamlElement
 			input.MergeAttribute("data-type", valBind.DataType.ToString());
 		if (!String.IsNullOrEmpty(valBind.Format))
 			input.MergeAttribute("format", valBind.Format);
+		else
+		{
+			var valBindFormat = valBind.GetBinding("Format");
+			if (valBindFormat != null)
+				input.MergeAttribute(":format", valBindFormat.GetPath(context));
+		}
 		var maskBind = valBind.GetBinding("Mask");
 		if (maskBind != null)
 			input.MergeAttribute(":mask", maskBind.GetPathFormat(context));
