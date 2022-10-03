@@ -14,13 +14,14 @@
 @focus-index: auto;
 @hover-index: auto;
 */
+/* @modal-wrapper-index + 2 */
 /* mixins */
 /* icon colors */
 @font-face {
   font-family: 'A2v10';
   font-display: fallback;
   src: url('/css/fonts/A2v10.eot');
-  src: url('/css/fonts/A2v10.eot?#iefix') format('eot'), url('/css/fonts/A2v10.woff?v=7891') format('woff'), url('/css/fonts/A2v10.ttf?v=7891') format('truetype'), url('/css/fonts/A2v10.svg#A2v10') format('svg');
+  src: url('/css/fonts/A2v10.eot?#iefix') format('eot'), url('/css/fonts/A2v10.woff?v=7895') format('woff'), url('/css/fonts/A2v10.ttf?v=7895') format('truetype'), url('/css/fonts/A2v10.svg#A2v10') format('svg');
   font-weight: normal;
   font-style: normal;
 }
@@ -111,6 +112,9 @@
 }
 .ico-qrcode:before {
   content: "\ea0e";
+}
+.ico-factory:before {
+  content: "\ea0f";
 }
 .ico-ban-red:before {
   content: "\ea0a";
@@ -848,6 +852,7 @@
 @focus-index: auto;
 @hover-index: auto;
 */
+/* @modal-wrapper-index + 2 */
 * {
   box-sizing: border-box;
 }
@@ -1489,7 +1494,7 @@ header .dropdown.separate.show .btn.btn-success,
   top: 0;
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.2);
-  z-index: 25;
+  z-index: 1052;
 }
 .menu-navbar {
   width: 320px;
@@ -4399,6 +4404,9 @@ ul.news-list > li {
   overflow: auto;
   display: flex;
 }
+.modal-stack .modal-wrapper[data-placement=full-screen] {
+  margin-top: 42px;
+}
 .modal-stack .modal-wrapper .modal-window {
   position: relative;
   margin: auto;
@@ -4407,23 +4415,24 @@ ul.news-list > li {
   height: auto;
   background-color: white;
 }
-.modal-stack .modal-wrapper .modal-window.side-bar-right {
+.modal-stack .modal-wrapper .modal-window.with-placement {
   position: absolute;
-  right: 0;
   top: 0;
   bottom: 0;
 }
-.modal-stack .modal-wrapper .modal-window.side-bar-right .modal-header {
+.modal-stack .modal-wrapper .modal-window.with-placement .modal-header {
   display: none;
+}
+.modal-stack .modal-wrapper .modal-window.side-bar-right {
+  right: 0;
 }
 .modal-stack .modal-wrapper .modal-window.side-bar-left {
-  position: absolute;
   left: 0;
-  top: 0;
-  bottom: 0;
 }
-.modal-stack .modal-wrapper .modal-window.side-bar-left .modal-header {
-  display: none;
+.modal-stack .modal-wrapper .modal-window.full-screen {
+  right: 0;
+  left: 0;
+  width: auto !important;
 }
 .modal-stack .modal-wrapper .modal-window .modal-body-content {
   width: 100%;

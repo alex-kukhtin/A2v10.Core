@@ -329,6 +329,7 @@ public enum Icon
 	Eye,
 	EyeDisabled,
 	EyeDisabledRed,
+	Factory,
 	Failure,
 	FailureRed,
 	FailureOutline,

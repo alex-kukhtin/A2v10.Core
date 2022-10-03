@@ -1938,9 +1938,9 @@ app.modules['std:http'] = function () {
 
 
 
-// Copyright © 2015-2018 Alex Kukhtin. All rights reserved.
+// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
-// 20181121-7364
+// 20221002-7894
 /* platform/routex.js */
 
 (function () {
@@ -2004,6 +2004,8 @@ app.modules['std:http'] = function () {
 		},
 		mutations: {
 			navigate: function (state, to) { // to: {url, query, title}
+				eventBus.$emit('closeAllPopups');
+				eventBus.$emit('modalCloseAll');
 				let root = window.$$rootUrl;
 				let oldUrl = root + state.route + urlTools.makeQueryString(state.query);
 				state.route = to.url.toLowerCase();
@@ -9364,9 +9366,9 @@ TODO:
 	});
 })();
 
-// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
-// 20211028-7807
+// 20221002-7894
 // components/modal.js
 
 
@@ -9429,9 +9431,16 @@ TODO:
 
 	const modalPlacementComponent = {
 		inserted(el, binding) {
+			if (!binding.value)
+				return;
 			let mw = el.closest('.modal-window');
-			if (mw && mw.__vue__ && mw.__vue__.$data && binding.value)
-				mw.__vue__.$data.placement = binding.value;
+			if (!mw || !mw.__vue__)
+				return;
+			if (mw.__vue__.$data)
+				mw.__vue__.$data.placement = ' with-placement ' + binding.value;
+			let mf = mw.closest('.modal-wrapper')
+			if (mf)
+				mf.setAttribute('data-placement', binding.value);
 		}
 	}
 
@@ -9557,8 +9566,7 @@ TODO:
 				return !!this.dialog.url;
 			},
 			mwClass() {
-				console.dir(this.placement);
-				return this.placement + ' ' + (this.modalCreated ? 'loaded' : '');
+				return this.placement + (this.modalCreated ? ' loaded' : '');
 			},
 			hasIcon() {
 				return !!this.dialog.style;
@@ -13043,7 +13051,7 @@ Vue.directive('resize', {
 							return __runDialog(url, arg, query, (result) => {
 								if (arg.$merge) {
 									arg.$merge(result);
-								} else {
+								} else if (result !== false) {
 									simpleMerge(arg, result);
 								}
 							});
