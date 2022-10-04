@@ -281,8 +281,23 @@ public class Dialog : RootContainer, ISupportTwoPhaseRendering
 	protected override void OnEndInit()
 	{
 		base.OnEndInit();
+		CollectionView?.SetParent(this);
+		Taskpad?.SetParent(this);
+		TitleInfo?.SetParent(this);
+		foreach (var b in Buttons)
+			b.SetParent(this);
 		if (Size == DialogSize.Max)
 			Maximize = true;
+	}
+
+	public override void OnSetStyles(RootContainer root)
+	{
+		base.OnSetStyles(root);
+		CollectionView?.OnSetStyles(root);
+		Taskpad?.OnSetStyles(root);
+		TitleInfo?.OnSetStyles(root);
+		foreach (var b in Buttons)
+			b.OnSetStyles(this);
 	}
 }
 
