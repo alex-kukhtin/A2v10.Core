@@ -31,7 +31,13 @@ internal class ImageComposer : FlowElementComposer
 		if (_context.IsVisible(_image))
 		{
 			Byte[]? stream;
-			if (!String.IsNullOrEmpty(_image.FileName))
+			var rtBind = _image.GetBindRuntime("FileName");
+			if (rtBind != null)
+			{
+				var fileName = _context.Engine.EvaluateValue(rtBind.Expression)?.ToString();
+				stream = _context.GetFileAsByteArray(fileName);
+			}
+			else if (!String.IsNullOrEmpty(_image.FileName))
 				stream = _context.GetFileAsByteArray(_image.FileName);
 			else
 				stream = _context.GetValueAsByteArray(_image, "Source");
