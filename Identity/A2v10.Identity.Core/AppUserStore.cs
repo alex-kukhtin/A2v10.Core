@@ -220,6 +220,7 @@ public sealed class AppUserStore :
 
 	private static void AddDefaultClaims(AppUser user, List<Claim> list)
 	{
+		list.Add(new Claim(WellKnownClims.NameIdentifier, user.Id.ToString()));
 		list.Add(new Claim(WellKnownClims.PersonName, user.PersonName ?? String.Empty));
 		if (user.Tenant != 0)
 		{
@@ -302,9 +303,18 @@ public sealed class AppUserStore :
 		throw new NotImplementedException();
 	}
 
-	public Task<AppUser> FindByLoginAsync(String loginProvider, String providerKey, CancellationToken cancellationToken)
+	public async Task<AppUser> FindByLoginAsync(String loginProvider, String providerKey, CancellationToken cancellationToken)
 	{
-		throw new NotImplementedException();
+		if (loginProvider == "ApiKey")
+		{
+			var prms = new ExpandoObject()
+			{
+				{ "ApiKey", providerKey }
+			};
+			return await _dbContext.LoadAsync<AppUser>(DataSource, $"[{DbSchema}].[FindApiUserByApiKey]", prms)
+				?? new AppUser();
+		}
+		throw new NotImplementedException(loginProvider);
 	}
 
 	public Task<IList<UserLoginInfo>> GetLoginsAsync(AppUser user, CancellationToken cancellationToken)

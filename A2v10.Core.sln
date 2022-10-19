@@ -61,7 +61,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "A2v10.ReportEngine.Pdf", "R
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "A2v10.Xaml.Report", "ReportEngines\A2v10.Xaml.Report\A2v10.Xaml.Report.csproj", "{A00C0296-1819-4944-9D0E-EDF72C80E282}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "A2v10.ViewEngine.Html", "ViewEngines\A2v10.ViewEngine.Html\A2v10.ViewEngine.Html.csproj", "{683C4524-E19C-416C-9695-B5E247B500EB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "A2v10.ViewEngine.Html", "ViewEngines\A2v10.ViewEngine.Html\A2v10.ViewEngine.Html.csproj", "{683C4524-E19C-416C-9695-B5E247B500EB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "A2v10.ApiHost", "A2v10.ApiHost\A2v10.ApiHost.csproj", "{0D9C9E3E-24BB-4AB8-99D9-E72F4269BBBB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -137,6 +139,10 @@ Global
 		{683C4524-E19C-416C-9695-B5E247B500EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{683C4524-E19C-416C-9695-B5E247B500EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{683C4524-E19C-416C-9695-B5E247B500EB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0D9C9E3E-24BB-4AB8-99D9-E72F4269BBBB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D9C9E3E-24BB-4AB8-99D9-E72F4269BBBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D9C9E3E-24BB-4AB8-99D9-E72F4269BBBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D9C9E3E-24BB-4AB8-99D9-E72F4269BBBB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

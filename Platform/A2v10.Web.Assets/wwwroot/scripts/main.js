@@ -198,7 +198,7 @@ app.modules['std:const'] = function () {
 
 // Copyright © 2015-2022 Oleksandr Kukhtin. All rights reserved.
 
-// 20220815-7879
+// 20221014-7900
 // services/utils.js
 
 app.modules['std:utils'] = function () {
@@ -386,6 +386,9 @@ app.modules['std:utils'] = function () {
 					break;
 				case 'string':
 					obj[key] = '';
+					break;
+				case 'object':
+					clearObject(obj[key]);
 					break;
 				default:
 					console.error(`utils.clearObject. Unknown property type ${typeof (val)}`);
@@ -6427,10 +6430,8 @@ Vue.component('validator-control', {
 
 // Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
-/*20220815-7879*/
+/*20221006-7899*/
 // components/selector.js
-
-/*TODO*/
 
 (function selector_component() {
 	const popup = require('std:popup');
@@ -6452,10 +6453,10 @@ Vue.component('validator-control', {
 		<div v-if="isCombo" class="selector-combo" @click.stop.prevent="open"><span tabindex="-1" class="select-text" v-text="valueText" @keydown="keyDown" ref="xcombo"/></div>
 		<input v-focus v-model="query" :class="inputClass" :placeholder="placeholder" v-else
 			@input="debouncedUpdate" @blur.stop="blur" @keydown="keyDown" @keyup="keyUp" ref="input" 
-			:disabled="disabled" @click="clickInput($event)"/>
+			:disabled="disabled" @click="clickInput($event)" :tabindex="tabIndex"/>
 		<slot></slot>
 		<a class="selector-open" href="" @click.stop.prevent="open" v-if="caret"><span class="caret"></span></a>
-		<a class="selector-clear" href="" @click.stop.prevent="clear" v-if="clearVisible">&#x2715</a>
+		<a class="selector-clear" href="" @click.stop.prevent="clear" v-if="clearVisible" tabindex="-1">&#x2715</a>
 		<validator :invalid="invalid" :errors="errors" :options="validatorOptions"></validator>
 		<div class="selector-pane" v-if="isOpen" ref="pane" :class="paneClass">
 			<div class="selector-body" :style="bodyStyle">
@@ -10475,9 +10476,9 @@ Vue.component('a2-panel', {
 	});
 
 })();
-/*! Copyright © 2015-2022 Alex Kukhtin. All rights reserved.*/
+/* Copyright © 2015-2022 Alex Kukhtin. All rights reserved.*/
 
-// 20220627-7853
+// 20221004-7897
 // components/sheet.js
 
 (function () {
@@ -11775,13 +11776,12 @@ Vue.directive('disable', {
 
 // Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
-/*20220823-7883*/
+/*20221004-7897*/
 /* directives/dropdown.js */
 
 (function () {
 
 	const popup = require('std:popup');
-	const eventBus = require('std:eventBus');
 
 	Vue.directive('dropdown', {
 		bind(el, binding, vnode) {
@@ -11802,12 +11802,6 @@ Vue.directive('disable', {
 					el._hide();
 				el.classList.remove('show');
 			};
-
-			el.addEventListener('mouseup', (ev) => {
-				// from children elements
-				eventBus.$emit('closeAllPopups');
-				ev.stopPropagation();
-			});
 
 			el.addEventListener('click', function (event) {
 				let trg = event.target;
@@ -12718,15 +12712,17 @@ Vue.directive('resize', {
 				window.location = root + url;
 			},
 
-			async $upload(url, accept) {
+			async $upload(url, accept, data) {
 				eventBus.$emit('closeAllPopups');
 				let root = window.$$rootUrl;
 				try {
 					let file = await htmlTools.uploadFile(accept, url);
 					var dat = new FormData();
 					dat.append('file', file, file.name);
+					if (data)
+						dat.append('Key', data.Key || null);
 					let uploadUrl = urltools.combine(root, '_file', url);
-					uploadUrl = urltools.createUrlForNavigate(uploadUrl);
+					uploadUrl = urltools.createUrlForNavigate(uploadUrl, data);
 					return await httpTools.upload(uploadUrl, dat);
 				} catch (err) {
 					err = err || 'unknown error';

@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>580a6d9d-a2ff-4956-a914-ba75141ad6b8</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="A2v10.Data.Core" Version="10.0.7313" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Identity\A2v10.Identity.Core\A2v10.Identity.Core.csproj" />
+    <ProjectReference Include="..\Identity\Av10.Web.Identity.ApiKey\Av10.Web.Identity.ApiKey.csproj" />
+  </ItemGroup>
+
+</Project>

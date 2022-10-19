@@ -33,6 +33,8 @@ public static class ServicesExtensions
 
 		services.AddScoped<AppUserStore>()
 		.AddScoped<IUserStore<AppUser>>(s => s.GetRequiredService<AppUserStore>())
+		.AddScoped<IUserLoginStore<AppUser>>(s => s.GetRequiredService<AppUserStore>())
+		.AddScoped<IUserClaimStore<AppUser>>(s => s.GetRequiredService<AppUserStore>())
 		.AddScoped<ISecurityStampValidator, SecurityStampValidator<AppUser>>()
 		.AddScoped<ISystemClock, SystemClock>();
 		return services;
