@@ -14,13 +14,15 @@
 	A2v10.ViewEngine.Xaml (8070)
 		A2v10.System.Xaml (8007)
 		A2v10.Infrastructure (8070)
+	A2v10.ViewEngine.Html (8070)
 	A2v10.Identity.UI (8070)
-		A2v10.Identity.Core (8070)
+		A2v10.Identity.Core (8076)
 		A2v10.Infrastructure (8070)
 A2v10.Web.Assets (8070)
 
-A2v10.Identity.Jwt (8070)
-	A2v10.Identity.Core (8070)
+A2v10.Identity.ApiKey (8076)
+A2v10.Identity.Jwt    (8076)
+	A2v10.Identity.Core (8076)
 
 A2v10.CodeGen.Support (8070)
 
