@@ -2,17 +2,50 @@
 using A2v10.Web.Identity.ApiKey;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Dynamic;
 
 namespace A2v10.ApiHost.Controllers;
 
+public class ResponseFail
+{
+	public Boolean status;
+}
+
+public class ResponseSuccess
+{
+	public Boolean success { get; set; }
+	public ExpandoObject? data { get; set; }
+}
+
 [ApiController]
 [Authorize(AuthenticationSchemes = ApiKeyAuthenticationOptions.Scheme)]
-[Route("[controller]/[action]")]
+[Route("api/[action]")]
+[Produces("application/json")]
+[ProducesResponseType(typeof(ResponseSuccess), StatusCodes.Status200OK)]
+[ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
 public class ApiController : ControllerBase
 {
-	[HttpGet]
+	/// <summary>
+	/// Повертає список варіантів
+	/// </summary>
+	/// <param name="id">Id або UID параметру</param>
+	/// <returns></returns>
+	/// <remarks>
+	/// Sample request:
+	///
+	///	POST /Todo
+	///		{
+	///			"id": 1,
+	///			"name": "Item #1",
+	///			"isComplete": true
+	///     }
+	///     
+	/// </remarks>
+	/// <response code="200">Returns the newly created item</response>
+	/// <response code="401">If the item is null</response>	
+	[HttpGet("{id:string}")]
 	[ActionName("getforecast")]
-	public IEnumerable<WeatherForecast> Get()
+	public IEnumerable<WeatherForecast> Get([FromRoute] String id)
 	{
 		var userId = User.Identity.GetUserId<Int64>();
 		var tenantId = User.Identity.GetUserTenantId();	

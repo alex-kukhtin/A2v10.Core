@@ -19,8 +19,6 @@ namespace A2v10.Web.Identity.ApiKey;
 
 public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthenticationOptions>
 {
-	private const string ApiKeyHeaderName = "X-Api-Key";
-
 	private readonly IUserLoginStore<AppUser> _userLoginStore;
 	private readonly IUserClaimStore<AppUser> _userClaimStore;
 	public ApiKeyAuthenticationHandler(IOptionsMonitor<ApiKeyAuthenticationOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock, 
@@ -33,7 +31,7 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
 
 	protected async override Task<AuthenticateResult> HandleAuthenticateAsync()
 	{
-		if (!Request.Headers.TryGetValue(ApiKeyHeaderName, out var apiKeyHeaderValues))
+		if (!Request.Headers.TryGetValue(ApiKeyAuthenticationOptions.HeaderName, out var apiKeyHeaderValues))
 			return AuthenticateResult.NoResult();
 		if (apiKeyHeaderValues.Count == 0)
 			return AuthenticateResult.NoResult();

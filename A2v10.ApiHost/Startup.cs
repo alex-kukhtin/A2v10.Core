@@ -1,6 +1,8 @@
 ﻿
 using A2v10.Web.Identity.ApiKey;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
+using System.Reflection;
 
 namespace A2v10.ApiHost;
 
@@ -37,26 +39,30 @@ public class Startup
 		services.AddEndpointsApiExplorer();
 		services.AddSwaggerGen(c =>
 		{
-			c.SwaggerDoc("v1", new OpenApiInfo { Title = API_NAME, Version = "v1" });
-			c.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme()
+			c.SwaggerDoc("v1", new OpenApiInfo()
 			{
-				Type = SecuritySchemeType.ApiKey,
-				In = ParameterLocation.Header,				
-				Name = "X-Api-Key",
-				Scheme = "ApiKeyScheme"
-			});
-			var key = new OpenApiSecurityScheme()
-			{
-				Reference = new OpenApiReference()
+				Title = API_NAME,
+				Version = "v1",
+				Description = "Api description",
+				TermsOfService = new Uri("https://example.com/terms"),
+				Contact = new OpenApiContact()
 				{
-					Type = ReferenceType.SecurityScheme,
-					Id = "ApiKey"
+					Name = "Contact1",
+					Email = "mail@mail.com",
+					Url = new Uri("https://example.com/contacts")
+				},
+				License = new OpenApiLicense()
+				{
+					Name = "Example License",
+					Url = new Uri("https://example.com/license")
 				}
-			};
-			var rq = new OpenApiSecurityRequirement() {
-				{ key, new List<String>() }
-			};
-			c.AddSecurityRequirement(rq);
+			});
+
+			c.AddSecurityDefinition(ApiKeyAuthenticationOptions.Scheme, ApiKeyAuthenticationOptions.OpenApiSecurityScheme);
+			c.AddSecurityRequirement(ApiKeyAuthenticationOptions.OpenApiSecurityRequirement);
+
+			var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+			c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 		});
 
 		services.AddAuthentication(options =>
