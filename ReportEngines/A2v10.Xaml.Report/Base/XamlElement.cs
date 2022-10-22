@@ -20,8 +20,8 @@ public class XamlElement : ISupportBinding
 	public Thickness? Border { get; init; }
 	public String? Color { get; init; }
 	public String? Background { get; init; }
-
 	public Boolean? If { get; init; }
+	public Boolean ShowEntire { get; init; }
 
 	BindImpl? _bindImpl;
 

@@ -34,39 +34,48 @@ internal class TableComposer : FlowElementComposer
 		_context = context;
 	}
 
-	internal override void Compose(IContainer container)
+	internal override void Compose(IContainer container, Object? value = null)
 	{
 		if (!_context.IsVisible(_table))
 			return;
-		container.ApplyDecoration(_table.RuntimeStyle).Table(tblDescr =>
-		{
-			tblDescr.ColumnsDefinition(columns =>
+		container
+			.ApplyLayoutOptions(_table)
+			.ApplyDecoration(_table.RuntimeStyle)
+			.Table(tblDescr =>
 			{
-				if (_table.Columns.Count == 0)
-					columns.RelativeColumn();
-				else
-					foreach (var cx in _table.Columns)
-						columns.TableColumn(cx);
-			});
+				tblDescr.ColumnsDefinition(columns =>
+				{
+					if (_table.Columns.Count == 0)
+						columns.RelativeColumn();
+					else
+						foreach (var cx in _table.Columns)
+							columns.TableColumn(cx);
+				});
 
-			if (_table.Header.Count != 0)
-				tblDescr.Header(ComposeHeader);
+				if (_table.Header.Count != 0)
+					tblDescr.Header(ComposeHeader);
 
-			var isbind = _table.GetBindRuntime("ItemsSource");
-			if (isbind != null && isbind.Expression != null)
-			{
 				CreateAccessFunc(_table.Body);
-				var coll = _context.Engine.EvaluateCollection(isbind.Expression);
+				IList<ExpandoObject>? coll = null;
+				if (value != null && value is IList<ExpandoObject> list)
+					coll = list;
+				else
+				{
+					var isbind = _table.GetBindRuntime("ItemsSource");
+					if (isbind != null && isbind.Expression != null)
+					{
+						coll = _context.Engine.EvaluateCollection(isbind.Expression);
+					}
+				}
 				if (coll != null)
 					foreach (var elem in coll)
 						ComposeRowCollection(CellKind.Body, tblDescr, _table.Body, elem);
-			}
-			else
-				ComposeRowCollection(CellKind.Body, tblDescr, _table.Body);
+				else
+					ComposeRowCollection(CellKind.Body, tblDescr, _table.Body);
 
-			// not footer! inside body
-			ComposeRowCollection(CellKind.Footer, tblDescr, _table.Footer);
-		});
+				// not footer! inside body
+				ComposeRowCollection(CellKind.Footer, tblDescr, _table.Footer);
+			});
 	}
 
 
@@ -87,6 +96,15 @@ internal class TableComposer : FlowElementComposer
 				{
 					var func = _context.Engine.CreateAccessFunction(cont.Expression);
 					_accessFuncs.Add(cell, func);
+				}
+				else if (cell.Content is FlowElement flowElem)
+				{
+					var isbind = flowElem.GetBindRuntime("ItemsSource");
+					if (isbind != null && isbind.Expression != null)
+					{
+						var func = _context.Engine.CreateAccessFunction(isbind.Expression);
+						_accessFuncs.Add(cell, func);
+					}
 				}
 			}
 		}
@@ -122,7 +140,9 @@ internal class TableComposer : FlowElementComposer
 		if (_accessFuncs.TryGetValue(cell, out var contentFunc))
 		{
 			var value = _context.Engine.Invoke(contentFunc, data);
-			if (value != null)
+			if (cell.Content is FlowElement nestedFlow)
+				nestedFlow.CreateComposer(_context).Compose(ci, value);
+			else if (value != null)
 				ci.Text(_context.ValueToString(value, cellDataType, cellFormat)).ApplyText(cell.RuntimeStyle);
 			return;
 		}

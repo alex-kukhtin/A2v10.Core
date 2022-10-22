@@ -55,6 +55,21 @@ public class StyleBag
 		{
 			//Padding = Thickness.FromString("1pt,0")
 		});
+
+
+		_styles.Add("Table.Simple>Body>Row>Cell", new RuntimeStyle()
+		{
+			Padding = Thickness.FromString("1pt,4pt"),
+			Border = Thickness.FromString(THIN_BORDER),
+		});
+		_styles.Add("Table.Simple>Header>Row>Cell", new RuntimeStyle()
+		{
+			Padding = Thickness.FromString("1pt,4pt"),
+			VAlign = VertAlign.Middle,
+			Border = Thickness.FromString(THIN_BORDER),
+			Background = "#f5f5f5"
+		});
+
 	}
 
 	public RuntimeStyle? GetRuntimeStyle(String selector)

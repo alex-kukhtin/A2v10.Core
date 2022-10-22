@@ -9,7 +9,8 @@ namespace A2v10.Xaml.Report;
 public enum TableStyle
 {
 	Default,
-	Details
+	Details,
+	Simple
 }
 
 [ContentProperty("Body")]

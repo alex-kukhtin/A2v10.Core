@@ -100,6 +100,13 @@ internal static class DecorationStyles
 		return container;
 	}
 
+	public static IContainer ApplyLayoutOptions(this IContainer container, XamlElement elem)
+	{
+		if (elem.ShowEntire)
+			return container.ShowEntire();
+		return container;
+	}
+
 	public static IContainer ApplyCellDecoration(this ITableCellContainer container, RuntimeStyle? style)
 	{
 		if (style == null)

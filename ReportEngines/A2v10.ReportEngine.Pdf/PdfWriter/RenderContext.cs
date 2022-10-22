@@ -46,7 +46,7 @@ internal class RenderContext
 		if (!String.IsNullOrEmpty(format))
 			return String.Format(_formatProvider, $"{{0:{format}}}", value);
 
-		return dataType switch
+		var result = dataType switch
 		{
 			DataType.Currency => String.Format(_formatProvider, "{0:#,##0.00##}", value),
 			DataType.Number => String.Format(_formatProvider, "{0:#,##0.########}", value),
@@ -55,6 +55,8 @@ internal class RenderContext
 			DataType.DateTime => String.Format(_formatProvider, "{0:g}", value),
 			_ => _localizer.Localize(value.ToString()) ?? String.Empty,
 		};
+		result = result.Replace("\\n", "\n");
+		return result;
 	}
 
 	public Byte[]? GetFileAsByteArray(String? fileName)

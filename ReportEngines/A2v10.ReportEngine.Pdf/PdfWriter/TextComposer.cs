@@ -55,7 +55,7 @@ internal class TextComposer : FlowElementComposer
 		return descr;
 	}
 
-	internal override void Compose(IContainer container)
+	internal override void Compose(IContainer container, Object? value = null)
 	{
 		if (!_context.IsVisible(_text))
 			return;

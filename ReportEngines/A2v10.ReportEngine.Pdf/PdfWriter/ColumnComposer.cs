@@ -1,5 +1,7 @@
 ﻿// Copyright © 2022 Oleksandr Kukhtin. All rights reserved.
 
+using System;
+
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
 
@@ -18,11 +20,13 @@ internal class ColumnComposer : FlowElementComposer
 		_context = context;
 	}
 
-	internal override void Compose(IContainer container)
+	internal override void Compose(IContainer container, Object? value = null)
 	{
 		if (!_context.IsVisible(_column))
 			return;
-		container.ApplyDecoration(_column.RuntimeStyle).Column(Compose);
+		container
+			.ApplyLayoutOptions(_column)
+			.ApplyDecoration(_column.RuntimeStyle).Column(Compose);
 	}
 
 	public void Compose(ColumnDescriptor column)
