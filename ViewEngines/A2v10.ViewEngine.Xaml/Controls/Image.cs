@@ -75,3 +75,29 @@ public class FileImage : UIElementBase
 		tag.Render(context);
 	}
 }
+
+public class SiteImage : UIElementBase
+{
+	public String? Url { get; set; }
+	public Length? Width { get; set; }
+	public Length? Height { get; set; }
+
+	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
+	{
+		if (SkipRender(context))
+			return;
+		var tag = new TagBuilder("img", null, IsInGrid);
+		onRender?.Invoke(tag);
+		MergeAttributes(tag, context);
+		var urlBind = GetBinding(nameof(Url));
+		if (urlBind != null)
+			tag.MergeAttribute(":src", urlBind.GetPathFormat(context));
+		else if (!String.IsNullOrEmpty(Url))
+			tag.MergeAttribute("src", Url);
+		if (Width != null)
+			tag.MergeAttribute("width", Width.Value);
+		if (Height != null)
+			tag.MergeAttribute("height", Height.Value);
+		tag.Render(context);
+	}
+}

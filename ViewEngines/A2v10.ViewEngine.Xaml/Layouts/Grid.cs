@@ -68,6 +68,7 @@ public class Grid : Container
 	public AutoFlowMode AutoFlow { get; set; }
 	public AlignItem AlignItems { get; set; }
 	public GapSize? Gap { get; set; }
+	public Length? MinWidth { get; set; }
 
 	RowDefinitions? _rows;
 	ColumnDefinitions? _columns;
@@ -109,6 +110,8 @@ public class Grid : Container
 		MergeAttributes(grid, context);
 		if (Height != null)
 			grid.MergeStyle("height", Height.Value);
+		if (MinWidth != null)
+			grid.MergeStyle("min-width", MinWidth.ToString());
 		if (_rows != null)
 			grid.MergeStyle("grid-template-rows", _rows.ToAttribute());
 		if (_columns != null)
