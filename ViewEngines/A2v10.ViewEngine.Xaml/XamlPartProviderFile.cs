@@ -1,9 +1,11 @@
 ﻿// Copyright © 2022 Oleksandr Kukhtin. All rights reserved.
 
-using System.Collections.Generic;
+using System.IO;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
 
 using A2v10.Infrastructure;
+using Microsoft.Extensions.Options;
 
 namespace A2v10.ViewEngine.Xaml;
 
@@ -13,12 +15,28 @@ public class XamlPartProviderFile : IXamlPartProvider
 	private readonly XamlReaderService _readerService;
 	private readonly IAppCodeProvider _codeProvider;
 
-	private Dictionary<String, Object?> _cache = new(StringComparer.InvariantCultureIgnoreCase);
+	private ConcurrentDictionary<String, Object?> _cache = new(StringComparer.InvariantCultureIgnoreCase);
 
-	public XamlPartProviderFile(IAppCodeProvider codeProvider)
+	private FileSystemWatcher? _watcher;
+
+	public XamlPartProviderFile(IAppCodeProvider codeProvider, IOptions<AppOptions> appOptions)
 	{
 		_readerService = new AppXamlReaderService(this, codeProvider);
 		_codeProvider = codeProvider;
+		if (codeProvider.IsFileSystem && appOptions.Value.Environment.Watch) {
+			var path = _codeProvider.MakeFullPath(String.Empty, String.Empty, false);
+			_watcher = new FileSystemWatcher(path, "*.*") /*8.3 file name !!!*/
+			{
+				NotifyFilter = NotifyFilters.LastWrite //| NotifyFilters.Size | NotifyFilters.Attributes
+			};
+			_watcher.Changed += Watcher_Changed;
+			_watcher.EnableRaisingEvents = true;
+		}
+	}
+
+	private void Watcher_Changed(object sender, FileSystemEventArgs e)
+	{
+		_cache.Clear();
 	}
 
 	public Object? GetCachedXamlPart(String path)
@@ -26,7 +44,7 @@ public class XamlPartProviderFile : IXamlPartProvider
 		if (_cache.TryGetValue(path, out var obj))
 			return obj;
 		var res = GetXamlPart(path);
-		_cache.Add(path, res);
+		_cache.TryAdd(path, res);
 		return res;
 	}
 

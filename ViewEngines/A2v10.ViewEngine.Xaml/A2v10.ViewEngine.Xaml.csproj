@@ -20,6 +20,7 @@
 	<ItemGroup>
 		<PackageReference Include="A2v10.System.Xaml" Version="10.1.8015" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Options" Version="2.2.0" />
 	</ItemGroup>
 
 	<ItemGroup>
