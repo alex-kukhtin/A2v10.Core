@@ -107,9 +107,9 @@ public class DataGrid : Control
 			dataGrid.MergeAttribute("row-details-activate", RowDetails.Activate.ToString().ToLowerInvariant());
 			var vBind = RowDetails.GetBinding("Visible");
 			if (vBind != null)
-			{
 				dataGrid.MergeAttribute("row-details-visible", vBind.Path /*!without context!*/);
-			}
+			else
+				dataGrid.MergeAttribute(":row-details-visible", RowDetails.Visible.ToString().ToLowerInvariant());
 		}
 		var isb = GetBinding(nameof(ItemsSource));
 		if (isb != null)

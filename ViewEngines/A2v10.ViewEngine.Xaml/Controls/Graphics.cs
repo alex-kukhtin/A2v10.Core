@@ -1,56 +1,53 @@
-﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
-using System;
+namespace A2v10.Xaml;
 
-namespace A2v10.Xaml
+public enum WatchMode
 {
-	public enum WatchMode
+	None,
+	Watch,
+	Deep
+}
+
+public class Graphics : UIElementBase
+{
+	public String? Delegate { get; set; }
+	public Object? Argument { get; set; }
+	public WatchMode Watch { get; set; }
+	public Boolean CenterContent { get; set; }
+	public Length? Height { get; set; }
+
+	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
-		None,
-		Watch,
-		Deep
-	}
+		if (SkipRender(context))
+			return;
+		var g = new TagBuilder("a2-graphics", null, IsInGrid);
+		MergeAttributes(g, context);
+		if (CenterContent)
+			g.AddCssClass("center-content");
 
-	public class Graphics : UIElementBase
-	{
-		public String? Delegate { get; set; }
-		public Object? Argument { get; set; }
-		public WatchMode Watch { get; set; }
-		public Boolean CenterContent { get; set; }
-		public Length? Height { get; set; }
+		if (!String.IsNullOrEmpty(Delegate))
+			g.MergeAttribute(":render", $"$delegate('{Delegate}')");
+		else
+			throw new XamlException("Graphics. Delegate must be specified");
+		g.MergeAttribute("watchmode", Watch.ToString().ToLowerInvariant());
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
-		{
-			if (SkipRender(context))
-				return;
-			var g = new TagBuilder("a2-graphics", null, IsInGrid);
-			MergeAttributes(g, context);
-			if (CenterContent)
-				g.AddCssClass("center-content");
+		if (Height != null)
+			g.MergeStyle("height", Height.Value);
 
-			if (!String.IsNullOrEmpty(Delegate))
-				g.MergeAttribute(":render", $"$delegate('{Delegate}')");
-			else
-				throw new XamlException("Graphics. Delegate must be specified");
-			g.MergeAttribute("watchmode", Watch.ToString().ToLowerInvariant());
+		/*
+		Guid guid = Guid.NewGuid();
+		String id = $"el{guid.ToString()}";
+		g.MergeAttribute("id", id);
+		*/
 
-			if (Height != null)
-				g.MergeStyle("height", Height.Value);
+		var arg = GetBinding(nameof(Argument));
+		if (arg != null)
+			g.MergeAttribute(":arg", arg.GetPathFormat(context));
+		else if (Argument != null)
+			g.MergeAttribute("arg", Argument.ToString());
 
-			/*
-			Guid guid = Guid.NewGuid();
-			String id = $"el{guid.ToString()}";
-			g.MergeAttribute("id", id);
-			*/
-
-			var arg = GetBinding(nameof(Argument));
-			if (arg != null)
-				g.MergeAttribute(":arg", arg.GetPathFormat(context));
-			else if (Argument != null)
-				g.MergeAttribute("arg", Argument.ToString());
-
-			g.RenderStart(context);
-			g.RenderEnd(context);
-		}
+		g.RenderStart(context);
+		g.RenderEnd(context);
 	}
 }
