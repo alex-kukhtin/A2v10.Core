@@ -20,7 +20,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Jint" Version="3.0.0-beta-2042" />
-		<PackageReference Include="QuestPDF" Version="2022.9.1" />
+		<PackageReference Include="QuestPDF" Version="2022.11.0" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -148,7 +148,7 @@ internal class TableComposer : FlowElementComposer
 		}
 
 		if (cell.Content is FlowElement flowElem)
-			flowElem.CreateComposer(_context).Compose(ci);
+			flowElem.CreateComposer(_context).Compose(ci, data);
 		else
 		{
 			var val = _context.GetValueAsString(cell);
