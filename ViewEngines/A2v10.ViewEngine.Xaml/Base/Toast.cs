@@ -43,7 +43,7 @@ public class ToastConverter : TypeConverter
 		if (value == null)
 			return null;
 		if (value is String strVal)
-			return new Toast() { Text = strVal, Style= ToastStyle.Success };
+			return new Toast() { Text = strVal, Style = ToastStyle.Success };
 		else if (value is Toast toastVal)
 			return toastVal;
 		throw new XamlException($"Invalid Toast value '{value}'");

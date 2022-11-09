@@ -7,14 +7,13 @@ namespace A2v10.Xaml;
 
 public abstract class BindBase : MarkupExtension, ISupportBinding
 {
-	BindImpl? _bindImpl;
+	private BindImpl? _bindImpl;
 
 	public BindImpl BindImpl
 	{
 		get
 		{
-			if (_bindImpl == null)
-				_bindImpl = new BindImpl();
+			_bindImpl ??= new BindImpl();
 			return _bindImpl;
 		}
 	}

@@ -22,7 +22,7 @@ public class ListItem : UIElement
 		var div = new TagBuilder("div", "generic-list-item", IsInGrid);
 		onRender?.Invoke(div);
 		MergeAttributes(div, context);
-		MergeCommandAttribute(div, context, withHref:false);
+		MergeCommandAttribute(div, context, withHref: false);
 		div.RenderStart(context);
 		RenderIconBlock(context);
 		RenderBody(context);
@@ -99,13 +99,11 @@ public class ListItem : UIElement
 			}
 			fTag.RenderEnd(context);
 		}
-		if (CommandBar != null)
-		{
-			CommandBar.RenderElement(context, tag =>
+		CommandBar?.RenderElement(context, tag =>
 			{
 				tag.AddCssClass("list-item-commands");
-			});
-		}
+			}
+		);
 	}
 }
 

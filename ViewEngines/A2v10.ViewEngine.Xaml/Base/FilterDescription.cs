@@ -1,11 +1,10 @@
 ﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
-using System.Text;
-using System.Collections.Generic;
-
 using A2v10.Infrastructure;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
+using System.Text;
 
 namespace A2v10.Xaml;
 
@@ -45,7 +44,7 @@ public class FilterItem : XamlElement
 			case DataType.Date:
 				if (Value == null)
 					return "utils.date.zero()";
-				DateTime dt = (DateTime) Value;
+				DateTime dt = (DateTime)Value;
 				return $"utils.date.create({dt.Year}, {dt.Month}, {dt.Day})";
 			case DataType.Period:
 				if (Value == null)

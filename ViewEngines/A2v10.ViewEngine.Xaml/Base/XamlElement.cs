@@ -1,7 +1,5 @@
 ﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-using System.ComponentModel;
-
 using A2v10.Infrastructure;
 
 namespace A2v10.Xaml;
@@ -17,8 +15,7 @@ public class XamlElement : ISupportBinding, IInitComplete
 	{
 		get
 		{
-			if (_bindImpl == null)
-				_bindImpl = new BindImpl();
+			_bindImpl ??= new BindImpl();
 			return _bindImpl;
 		}
 	}
@@ -61,14 +58,14 @@ public class XamlElement : ISupportBinding, IInitComplete
 		OnEndInit();
 	}
 
-	protected virtual T? FindInside<T>() where T: class
+	protected virtual T? FindInside<T>() where T : class
 	{
 		if (this is T tT)
 			return tT;
 		return null;
 	}
 
-	internal T? FindParent<T>() where T:class
+	internal T? FindParent<T>() where T : class
 	{
 		var p = Parent;
 		while (p != null)
@@ -138,7 +135,7 @@ public class XamlElement : ISupportBinding, IInitComplete
 		if (cmd == null)
 			return;
 		cmd.MergeCommandAttributes(tag, context);
-		tag.MergeAttribute("@click.stop.prevent", cmd.GetCommand(context, indirect:false, argument:null, src:this));
+		tag.MergeAttribute("@click.stop.prevent", cmd.GetCommand(context, indirect: false, argument: null, src: this));
 		if (withHref)
 			tag.MergeAttribute(":href", cmd.GetHrefForCommand(context));
 	}

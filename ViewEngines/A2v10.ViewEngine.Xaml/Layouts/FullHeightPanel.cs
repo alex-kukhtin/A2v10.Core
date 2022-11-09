@@ -1,9 +1,8 @@
 ﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
 
-using System.Text;
-
 using Microsoft.Extensions.DependencyInjection;
+using System.Text;
 
 namespace A2v10.Xaml;
 
@@ -37,7 +36,7 @@ public class FullHeightPanel : Container
 
 	String GetRows()
 	{
-		var sb = new StringBuilder(); 
+		var sb = new StringBuilder();
 		foreach (var c in Children)
 		{
 			var skip = GetSkip(c);

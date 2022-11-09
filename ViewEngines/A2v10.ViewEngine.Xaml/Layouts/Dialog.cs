@@ -1,7 +1,7 @@
 ﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
-using System.Text;
 using A2v10.Infrastructure;
+using System.Text;
 
 namespace A2v10.Xaml;
 public enum DialogSize
@@ -99,8 +99,7 @@ public class Dialog : RootContainer, ISupportTwoPhaseRendering
 				.Render(context, TagRenderMode.Normal);
 
 
-		if (CollectionView != null)
-			CollectionView.RenderStart(context, tag =>
+		CollectionView?.RenderStart(context, tag =>
 			{
 				tag.AddCssClass("cw-dialog");
 			});
@@ -113,8 +112,7 @@ public class Dialog : RootContainer, ISupportTwoPhaseRendering
 		OnCreateContent(content);
 		if (Height != null)
 			content.MergeStyle("min-height", Height.Value);
-		if (Padding != null)
-			Padding.MergeStyles("padding", content);
+		Padding?.MergeStyles("padding", content);
 		content.AddCssClassBool(IsContentIsIFrame, "content-iframe"); // bug fix (3px height)
 		if (Background != BackgroundStyle.Default)
 			content.AddCssClass("background-" + Background.ToString().ToKebabCase());
@@ -153,8 +151,7 @@ public class Dialog : RootContainer, ISupportTwoPhaseRendering
 
 		RenderFooter(context);
 
-		if (CollectionView != null)
-			CollectionView.RenderEnd(context);
+		CollectionView?.RenderEnd(context);
 
 		RenderAccelCommands(context);
 		RenderContextMenus();

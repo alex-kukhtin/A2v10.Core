@@ -1,14 +1,13 @@
 ﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
-using System.Linq;
-using System.Collections.Generic;
-using System.IO;
-
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace A2v10.Xaml;
-public struct GridRowCol
+public readonly struct GridRowCol
 {
 	private readonly Int32? _row;
 	private readonly Int32? _col;
@@ -100,7 +99,7 @@ public sealed class ScopeContext : IDisposable
 	}
 }
 
-internal struct ScopeElem
+internal readonly struct ScopeElem
 {
 	public readonly String Scope;
 	public readonly String? Path;
@@ -141,7 +140,7 @@ public class RenderContext
 		_localizer = localizer;
 		_currentLocale = ri.CurrentLocale;
 		//_typeChecker = ri.TypeChecker;
-		IsDebugConfiguration =  true; // TODO: ri.IsDebugConfiguration;
+		IsDebugConfiguration = true; // TODO: ri.IsDebugConfiguration;
 	}
 
 	public Boolean IsDialog => _root is Dialog;
@@ -229,13 +228,12 @@ public class RenderContext
 	internal String GetNormalizedPath(String? path, Boolean isWrapped = false)
 	{
 		// check for invert
-		if (path == null)
-			path = String.Empty;
+		path ??= String.Empty;
 		if (path.StartsWith("!"))
 			return "!" + GetNormalizedPathInternal(path[1..]);
 
 		//if (_typeChecker != null)
-			//_typeChecker.CheckXamlExpression(GetExpressionForChecker(path));
+		//_typeChecker.CheckXamlExpression(GetExpressionForChecker(path));
 
 		return GetNormalizedPathInternal(path, isWrapped);
 	}
@@ -243,13 +241,12 @@ public class RenderContext
 	internal String GetTypedNormalizedPath(String? path, TypeCheckerTypeCode typeCode, Boolean isWrapped = false)
 	{
 		// check for invert
-		if (path == null)
-			path = String.Empty;
+		path ??= String.Empty;
 		if (path.StartsWith("!"))
 			return "!" + GetNormalizedPathInternal(path[1..]);
 
 		//if (_typeChecker != null && typeCode != TypeCheckerTypeCode.Skip)
-			//_typeChecker.CheckTypedXamlExpression(GetExpressionForChecker(path), typeCode);
+		//_typeChecker.CheckTypedXamlExpression(GetExpressionForChecker(path), typeCode);
 
 		return GetNormalizedPathInternal(path, isWrapped);
 	}
@@ -317,7 +314,7 @@ public class RenderContext
 		if (text == null)
 			return null;
 		var txt = Localize(text);
-		if (txt == null) 
+		if (txt == null)
 			return null;
 		return txt.Replace("\\'", "'");
 	}

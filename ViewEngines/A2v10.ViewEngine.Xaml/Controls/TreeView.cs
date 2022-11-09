@@ -1,9 +1,8 @@
 ﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
+using A2v10.Infrastructure;
 using System.Collections.Generic;
 using System.Text;
-
-using A2v10.Infrastructure;
 
 namespace A2v10.Xaml;
 
@@ -62,8 +61,7 @@ public class TreeViewItem : UIElement
 
 		// visible => if or show
 		var showBind = GetBinding(nameof(Show));
-		if (showBind == null)
-			showBind = GetBinding(nameof(If));
+		showBind ??= GetBinding(nameof(If));
 		if (showBind != null)
 			sb.Append($"isVisible: '{showBind.Path}',"); // GetTypedPath(context, TypeCheckerTypeCode.Skip)}',");
 	}

@@ -1,11 +1,10 @@
 ﻿// Copyright © 2022 Alex Kukhtin. All rights reserved.
 
-using System;
+using A2v10.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using A2v10.Infrastructure;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace A2v10.Xaml;
 

@@ -1,14 +1,12 @@
 ﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
+using A2v10.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
-
-using Microsoft.Extensions.DependencyInjection;
-
-using A2v10.Infrastructure;
 
 namespace A2v10.Xaml;
 
@@ -18,7 +16,7 @@ public enum AutoFlowMode
 	Row,
 	Column,
 	RowDense,
-	ColumnDense 
+	ColumnDense
 }
 
 [AttachedProperties("Col,Row,ColSpan,RowSpan,VAlign")]
@@ -29,7 +27,7 @@ public class Grid : Container
 
 	public Grid(IServiceProvider serviceProvider)
 	{
-		_attachedPropertyManager = serviceProvider.GetRequiredService<IAttachedPropertyManager>(); 
+		_attachedPropertyManager = serviceProvider.GetRequiredService<IAttachedPropertyManager>();
 	}
 
 	#region Attached Properties
@@ -77,8 +75,7 @@ public class Grid : Container
 	{
 		get
 		{
-			if (_rows == null)
-				_rows = new RowDefinitions();
+			_rows ??= new RowDefinitions();
 			return _rows;
 		}
 		set
@@ -91,8 +88,7 @@ public class Grid : Container
 	{
 		get
 		{
-			if (_columns == null)
-				_columns = new ColumnDefinitions();
+			_columns ??= new ColumnDefinitions();
 			return _columns;
 		}
 		set
@@ -127,7 +123,7 @@ public class Grid : Container
 			grid.MergeStyle("grid-gap", Gap.ToString());
 
 		if (AutoFlow != AutoFlowMode.Default)
-			grid.MergeStyle("grid-auto-flow", AutoFlow.ToString().ToKebabCase(delim:" "));
+			grid.MergeStyle("grid-auto-flow", AutoFlow.ToString().ToKebabCase(delim: " "));
 
 		if (AlignItems != AlignItem.Default)
 		{

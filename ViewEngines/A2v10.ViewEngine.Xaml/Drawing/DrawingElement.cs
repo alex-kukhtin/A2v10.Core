@@ -1,7 +1,5 @@
 ﻿// Copyright © 2018 Alex Kukhtin. All rights reserved.
 
-using System;
-
 namespace A2v10.Xaml.Drawing
 {
 	public abstract class DrawingElement : XamlElement

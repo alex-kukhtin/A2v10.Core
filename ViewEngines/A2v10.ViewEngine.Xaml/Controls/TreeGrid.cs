@@ -30,7 +30,7 @@ public class TreeGrid : Control, ITableControl
 		if (SkipRender(context))
 			return;
 
-		if(StickyHeaders)
+		if (StickyHeaders)
 		{
 			var outTag = new TagBuilder("div", "a2-sticky-container", IsInGrid);
 			MergeAttributes(outTag, context, MergeAttrMode.Visibility);

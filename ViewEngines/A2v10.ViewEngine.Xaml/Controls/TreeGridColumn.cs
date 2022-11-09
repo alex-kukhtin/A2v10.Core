@@ -1,9 +1,8 @@
 ﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
+using A2v10.Infrastructure;
 using System.Collections.Generic;
 using System.Text;
-
-using A2v10.Infrastructure;
 
 namespace A2v10.Xaml;
 
@@ -57,7 +56,7 @@ public class TreeGridColumn : UiContentElement
 			if (italicBind != null)
 				sb.Append($"italic: {italicBind.GetPath(context)}, ");
 			sb.RemoveTailComma();
-			sb.Append("}");
+			sb.Append('}');
 			td.MergeAttribute(":class", sb.ToString());
 		}
 		td.AddCssClassBoolNo(Bold, "bold");

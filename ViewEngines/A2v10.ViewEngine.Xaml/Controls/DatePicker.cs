@@ -30,7 +30,7 @@ public class DatePicker : ValuedControl, ITableControl
 		MergeAlign(input, context, Align);
 		input.MergeAttribute("year-cut-off", YearCutOff);
 		SetSize(input, nameof(DatePicker));
-		if (Placement  != DropDownPlacement.BottomLeft)
+		if (Placement != DropDownPlacement.BottomLeft)
 			input.AddCssClass("drop-" + Placement.ToString().ToKebabCase());
 		CheckValueType(context, TypeCheckerTypeCode.Date);
 		MergeValue(input, context);

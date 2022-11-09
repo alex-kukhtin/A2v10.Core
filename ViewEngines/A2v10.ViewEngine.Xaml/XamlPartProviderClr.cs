@@ -1,9 +1,8 @@
 ﻿// Copyright © 2022 Oleksandr Kukhtin. All rights reserved.
 
+using A2v10.Infrastructure;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-
-using A2v10.Infrastructure;
 
 namespace A2v10.ViewEngine.Xaml;
 
@@ -13,7 +12,7 @@ public class XamlPartProviderClr : IXamlPartProvider
 	private readonly XamlReaderService _readerService;
 	private readonly IAppCodeProvider _codeProvider;
 
-	private Dictionary<String, Object?> _cache = new(StringComparer.InvariantCultureIgnoreCase);
+	private readonly Dictionary<String, Object?> _cache = new(StringComparer.InvariantCultureIgnoreCase);
 
 	public XamlPartProviderClr(IAppCodeProvider codeProvider)
 	{

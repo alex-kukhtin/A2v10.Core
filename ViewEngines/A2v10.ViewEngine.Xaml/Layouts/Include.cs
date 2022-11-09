@@ -35,7 +35,7 @@ public class Include : UIElementBase
 			div.MergeAttribute("source", Source);
 		else
 			throw new XamlException("Partial. Source must be specified");
-		var arg =  GetBinding(nameof(Argument));
+		var arg = GetBinding(nameof(Argument));
 		if (arg != null)
 			div.MergeAttribute(":arg", arg.GetPathFormat(context));
 		else if (Argument != null)

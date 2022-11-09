@@ -1,8 +1,8 @@
 ﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
-using System.Collections.Generic;
 
 namespace A2v10.Xaml;
 

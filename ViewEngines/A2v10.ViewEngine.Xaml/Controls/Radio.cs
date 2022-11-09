@@ -1,7 +1,5 @@
 ﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
 
-using System;
-
 namespace A2v10.Xaml
 {
 	public enum RadioButtonStyle
@@ -23,7 +21,8 @@ namespace A2v10.Xaml
 		{
 			base.MergeCheckBoxAttributes(tag, context);
 			var chv = GetBinding(nameof(CheckedValue));
-			if (chv != null) {
+			if (chv != null)
+			{
 				tag.MergeAttribute(":value", chv.GetPathFormat(context));
 			}
 			else if (CheckedValue != null)

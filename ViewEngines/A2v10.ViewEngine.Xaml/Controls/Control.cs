@@ -81,7 +81,7 @@ public abstract class Control : UIElement
 		tag.RenderEnd(context);
 	}
 
-	protected void SetSize(TagBuilder input, String controlName )
+	protected void SetSize(TagBuilder input, String controlName)
 	{
 		switch (Size)
 		{

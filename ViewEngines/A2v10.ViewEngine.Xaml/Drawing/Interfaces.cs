@@ -4,7 +4,7 @@ namespace A2v10.Xaml.Drawing
 {
 	public interface IHasPositionAndSize
 	{
-		Size? Size { get;}
+		Size? Size { get; }
 		Point? Pos { get; }
 	}
 

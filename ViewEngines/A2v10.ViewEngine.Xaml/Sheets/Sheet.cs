@@ -1,8 +1,5 @@
 ﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
 
-using System;
-using A2v10.System.Xaml;
-
 namespace A2v10.Xaml
 {
 
@@ -19,8 +16,7 @@ namespace A2v10.Xaml
 		{
 			get
 			{
-				if (_header == null)
-					_header = new SheetRows();
+				_header ??= new SheetRows();
 				return _header;
 			}
 			set
@@ -33,8 +29,7 @@ namespace A2v10.Xaml
 		{
 			get
 			{
-				if (_footer == null)
-					_footer = new SheetRows();
+				_footer ??= new SheetRows();
 				return _footer;
 			}
 			set
@@ -47,8 +42,7 @@ namespace A2v10.Xaml
 		{
 			get
 			{
-				if (_columns == null)
-					_columns = new SheetColumnCollection();
+				_columns ??= new SheetColumnCollection();
 				return _columns;
 			}
 			set

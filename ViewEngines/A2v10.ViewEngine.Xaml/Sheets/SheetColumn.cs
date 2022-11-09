@@ -1,7 +1,6 @@
 ﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -22,7 +21,8 @@ namespace A2v10.Xaml
 		public SheetColumn(String definition)
 		{
 			var len = definition.Length;
-			if (definition.IndexOf('+') == len - 2) {
+			if (definition.IndexOf('+') == len - 2)
+			{
 				var color = definition[len - 1];
 				Background = color switch
 				{

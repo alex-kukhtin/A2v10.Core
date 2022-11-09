@@ -1,6 +1,5 @@
 ﻿// Copyright © 2018 Alex Kukhtin. All rights reserved.
 
-using System;
 using System.ComponentModel;
 using System.Globalization;
 
@@ -23,7 +22,8 @@ namespace A2v10.Xaml.Drawing
 			{
 				Width = Int32.Parse(arr[0]);
 				Height = Int32.Parse(arr[1]);
-			} else
+			}
+			else
 			{
 				throw new XamlException($"Invalid point value '{str}'");
 			}

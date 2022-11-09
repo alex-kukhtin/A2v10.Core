@@ -63,8 +63,7 @@ public class DataGrid : Control
 	{
 		get
 		{
-			if (_groupBy == null)
-				_groupBy = new GroupDescriptions();
+			_groupBy ??= new GroupDescriptions();
 			return _groupBy;
 		}
 		set { _groupBy = value; }

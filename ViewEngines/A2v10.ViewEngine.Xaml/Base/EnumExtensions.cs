@@ -8,9 +8,9 @@ public static class EnumExtensions
 	{
 		return vAlign switch
 		{
-			AlignItem.Top    or AlignItem.Start  => "start",
+			AlignItem.Top or AlignItem.Start => "start",
 			AlignItem.Middle or AlignItem.Center => "center",
-			AlignItem.Bottom or AlignItem.End    => "end",
+			AlignItem.Bottom or AlignItem.End => "end",
 			AlignItem.Stretch => "stretch",
 			_ => null,
 		};

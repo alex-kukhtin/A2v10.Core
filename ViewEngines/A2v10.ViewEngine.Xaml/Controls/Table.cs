@@ -45,8 +45,7 @@ public class Table : Control, ITableControl
 	{
 		get
 		{
-			if (_header == null)
-				_header = new TableRowCollection();
+			_header ??= new TableRowCollection();
 			return _header;
 		}
 		set
@@ -59,8 +58,7 @@ public class Table : Control, ITableControl
 	{
 		get
 		{
-			if (_footer == null)
-				_footer = new TableRowCollection();
+			_footer ??= new TableRowCollection();
 			return _footer;
 		}
 		set { _footer = value; }
@@ -70,8 +68,7 @@ public class Table : Control, ITableControl
 	{
 		get
 		{
-			if (_columns == null)
-				_columns = new TableColumnCollection();
+			_columns ??= new TableColumnCollection();
 			return _columns;
 		}
 		set
@@ -88,13 +85,13 @@ public class Table : Control, ITableControl
 	public Object? ItemsSource { get; set; }
 
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
-    {
+	{
 		if (SkipRender(context))
 			return;
 		if (StickyHeaders)
 		{
 			var outTag = new TagBuilder("div", "a2-sticky-container", IsInGrid);
-			MergeAttributes(outTag, context, MergeAttrMode.Visibility);
+			MergeAttributes(outTag, context, MergeAttrMode.Visibility | MergeAttrMode.Margin);
 			if (Height != null)
 				outTag.MergeStyle("height", Height.Value);
 			outTag.RenderStart(context);

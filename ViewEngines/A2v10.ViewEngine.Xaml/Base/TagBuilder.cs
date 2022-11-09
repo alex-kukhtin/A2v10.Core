@@ -1,6 +1,5 @@
 ﻿// Copyright © 2015-2017 Alex Kukhtin. All rights reserved.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -89,8 +88,7 @@ namespace A2v10.Xaml
 			if (String.IsNullOrEmpty(value))
 				return this;
 			CheckRendered();
-			if (_cssClasses == null)
-				_cssClasses = new HashSet<String>();
+			_cssClasses ??= new HashSet<String>();
 			_cssClasses.UnionWith(value.Split(' '));
 			return this;
 		}
@@ -123,8 +121,7 @@ namespace A2v10.Xaml
 			CheckRendered();
 			if (value == null)
 				return this;
-			if (_styles == null)
-				_styles = new Dictionary<String, String>();
+			_styles ??= new Dictionary<String, String>();
 			if (!_styles.ContainsKey(key))
 				_styles.Add(key, value);
 			else
@@ -170,8 +167,7 @@ namespace A2v10.Xaml
 			CheckRendered();
 			if (value == null)
 				return this;
-			if (_attributes == null)
-				_attributes = new Dictionary<String, String>();
+			_attributes ??= new Dictionary<String, String>();
 			if (!_attributes.ContainsKey(key))
 			{
 				_attributes.Add(key, value);

@@ -22,7 +22,7 @@ public abstract class CheckBoxBase : ValuedControl, ITableControl
 			// MergeAttrMode.NoTabIndex = Visibility | Margin | Wrap | Tip | Content,
 			MergeAttributes(div, context, MergeAttrMode.Visibility | MergeAttrMode.Margin);
 			div.RenderStart(context);
-			RenderControl(context, null, MergeAttrMode.Wrap | MergeAttrMode.Tip | MergeAttrMode.Content );
+			RenderControl(context, null, MergeAttrMode.Wrap | MergeAttrMode.Tip | MergeAttrMode.Content);
 			RenderCheckboxHint(context);
 			div.RenderEnd(context);
 		}
@@ -33,7 +33,7 @@ public abstract class CheckBoxBase : ValuedControl, ITableControl
 	}
 
 	void RenderControl(RenderContext context, Action<TagBuilder>? onRender, MergeAttrMode mode)
-	{ 
+	{
 		var tag = new TagBuilder("label", ControlType, IsInGrid);
 		onRender?.Invoke(tag);
 		MergeAttributes(tag, context, mode);

@@ -1,8 +1,6 @@
 ﻿// Copyright © 2015-2017 Alex Kukhtin. All rights reserved.
 
-using System;
 using System.Collections.Generic;
-using A2v10.System.Xaml;
 
 namespace A2v10.Xaml
 {
@@ -36,7 +34,7 @@ namespace A2v10.Xaml
 			onRender?.Invoke(tr);
 			MergeAttributes(tr, context);
 
-			if (HideEmpty && GetBinding(nameof(If)) == null &&  contBind != null)
+			if (HideEmpty && GetBinding(nameof(If)) == null && contBind != null)
 			{
 				tr.MergeAttribute("v-if", contBind.GetPathFormat(context));
 			}

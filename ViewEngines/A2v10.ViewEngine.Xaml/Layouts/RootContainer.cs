@@ -32,8 +32,7 @@ public abstract class RootContainer : Container, IUriContext, IRootContainer
 	{
 		get
 		{
-			if (_resources == null)
-				_resources = new ResourceDictionary();
+			_resources ??= new ResourceDictionary();
 			return _resources;
 		}
 		set

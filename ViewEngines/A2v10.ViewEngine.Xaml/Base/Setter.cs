@@ -1,10 +1,8 @@
 ﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
 
+using A2v10.Infrastructure;
 using System.Collections.Generic;
 using System.Reflection;
-
-using A2v10.Infrastructure;
-
 using TypeDescriptor = System.ComponentModel.TypeDescriptor;
 
 namespace A2v10.Xaml;

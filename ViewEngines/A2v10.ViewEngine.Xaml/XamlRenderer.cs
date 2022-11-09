@@ -1,8 +1,7 @@
 ﻿// Copyright © 2021 Alex Kukhtin. All rights reserved.
 
-using System.IO;
-
 using A2v10.Infrastructure;
+using System.IO;
 
 namespace A2v10.Xaml;
 public class XamlRenderer : IRenderer
@@ -39,10 +38,10 @@ public class XamlRenderer : IRenderer
 			// XamlServices.Load sets IUriContext
 			if (!String.IsNullOrEmpty(info.FileName))
 			{
-				uiElem = _partProvider.GetXamlPart(info.FileName) as IXamlElement; 
+				uiElem = _partProvider.GetXamlPart(info.FileName) as IXamlElement;
 			}
 			//else if (!String.IsNullOrEmpty(info.Text))
-				//uiElem = _xamlReader.ParseXml(info.Text) as IXamlElement;
+			//uiElem = _xamlReader.ParseXml(info.Text) as IXamlElement;
 			else
 				throw new XamlException("Xaml. There must be either a 'FileName' or a 'Text' property");
 			if (uiElem == null)

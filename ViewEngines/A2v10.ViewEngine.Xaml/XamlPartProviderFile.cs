@@ -1,11 +1,10 @@
 ﻿// Copyright © 2022 Oleksandr Kukhtin. All rights reserved.
 
-using System.IO;
-using System.Collections.Concurrent;
-using System.Threading.Tasks;
-
 using A2v10.Infrastructure;
 using Microsoft.Extensions.Options;
+using System.Collections.Concurrent;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace A2v10.ViewEngine.Xaml;
 
@@ -15,15 +14,16 @@ public class XamlPartProviderFile : IXamlPartProvider
 	private readonly XamlReaderService _readerService;
 	private readonly IAppCodeProvider _codeProvider;
 
-	private ConcurrentDictionary<String, Object?> _cache = new(StringComparer.InvariantCultureIgnoreCase);
+	private readonly ConcurrentDictionary<String, Object?> _cache = new(StringComparer.InvariantCultureIgnoreCase);
 
-	private FileSystemWatcher? _watcher;
+	private readonly FileSystemWatcher? _watcher;
 
 	public XamlPartProviderFile(IAppCodeProvider codeProvider, IOptions<AppOptions> appOptions)
 	{
 		_readerService = new AppXamlReaderService(this, codeProvider);
 		_codeProvider = codeProvider;
-		if (codeProvider.IsFileSystem && appOptions.Value.Environment.Watch) {
+		if (codeProvider.IsFileSystem && appOptions.Value.Environment.Watch)
+		{
 			var path = _codeProvider.MakeFullPath(String.Empty, String.Empty, false);
 			_watcher = new FileSystemWatcher(path, "*.*") /*8.3 file name !!!*/
 			{

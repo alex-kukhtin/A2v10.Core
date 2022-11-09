@@ -197,7 +197,8 @@ public enum BackgroundStyle
 	LightYellow
 }
 
-public enum ColumnBackgroundStyle {
+public enum ColumnBackgroundStyle
+{
 	None,
 	Yellow,
 	Green,

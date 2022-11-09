@@ -18,8 +18,7 @@ namespace A2v10.Xaml
 		internal void CheckValueType(RenderContext context, TypeCheckerTypeCode typeCode)
 		{
 			var valBind = GetBinding(nameof(Value));
-			if (valBind != null)
-				valBind.GetTypedPath(context, typeCode);
+			valBind?.GetTypedPath(context, typeCode);
 		}
 	}
 }

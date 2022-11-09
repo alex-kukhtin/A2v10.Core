@@ -6,7 +6,7 @@ namespace A2v10.Xaml;
 public class StyleDescriptor
 {
 	public RootContainer? Root;
-	public String StyleName { get; set; }= String.Empty;	
+	public String StyleName { get; set; } = String.Empty;
 
 	public void Set(XamlElement elem, RootContainer rootContainer)
 	{
@@ -29,7 +29,7 @@ public class StyleResource : MarkupExtension
 	public String Member { get; set; } = String.Empty;
 
 	public StyleResource()
-	{ 
+	{
 	}
 
 	public StyleResource(String member)

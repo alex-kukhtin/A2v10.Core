@@ -24,7 +24,8 @@ public class Point
 		{
 			X = Int32.Parse(arr[0]);
 			Y = Int32.Parse(arr[1]);
-		} else
+		}
+		else
 		{
 			throw new XamlException($"Invalid point value '{str}'");
 		}
@@ -38,7 +39,7 @@ public class PointCollection : List<Point>
 	{
 		var p = new PointCollection();
 		var arr = value.Split(';');
-		for (var i=0; i<arr.Length; i++)
+		for (var i = 0; i < arr.Length; i++)
 		{
 			p.Add(new Point(arr[i]));
 		}
@@ -48,7 +49,7 @@ public class PointCollection : List<Point>
 	public String ToPath()
 	{
 		var sb = new StringBuilder();
-		for (var i=0; i<this.Count; i++)
+		for (var i = 0; i < this.Count; i++)
 		{
 			var p = this[i];
 			var cmd = i == 0 ? 'M' : 'L';

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 
 namespace A2v10.Xaml;
-public class TabButtonCollection : List<TabButton> {}
+public class TabButtonCollection : List<TabButton> { }
 
 [ContentProperty("Content")]
 public class TabButton : UIElementBase

@@ -1,8 +1,7 @@
 ﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
-using System.Collections.Generic;
-
 using A2v10.Infrastructure;
+using System.Collections.Generic;
 
 namespace A2v10.Xaml;
 
@@ -134,7 +133,7 @@ public class DataGridColumn : XamlElement
 
 		var cmdBind = GetBindingCommand(nameof(Command));
 		if (cmdBind != null)
-			column.MergeAttribute(":command", cmdBind.GetCommand(context, indirect:true));
+			column.MergeAttribute(":command", cmdBind.GetCommand(context, indirect: true));
 		column.RenderStart(context);
 		column.RenderEnd(context);
 		if (isTemplate)

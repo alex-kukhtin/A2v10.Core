@@ -1,7 +1,5 @@
 ﻿// Copyright © 2015-2019 Alex Kukhtin. All rights reserved.
 
-using System;
-
 namespace A2v10.Xaml
 {
 	public class FieldSet : Container, ITableControl
@@ -9,7 +7,7 @@ namespace A2v10.Xaml
 		public Orientation Orientation { get; set; }
 		public String? Title { get; set; }
 		public Popover? Hint { get; set; }
-		public Boolean Disabled {get;set;}
+		public Boolean Disabled { get; set; }
 
 		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{

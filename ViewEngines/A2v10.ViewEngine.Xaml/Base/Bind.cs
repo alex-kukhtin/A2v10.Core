@@ -1,11 +1,10 @@
 ﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
-using System.Linq;
+using A2v10.Infrastructure;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Text.RegularExpressions;
-
-using A2v10.Infrastructure;
 
 namespace A2v10.Xaml;
 
@@ -54,9 +53,9 @@ public class Bind : BindBase, ISupportInitialize
 		String realPath = context.GetNormalizedPath(Path, _wrapped);
 		var maskBind = GetBinding(nameof(Mask));
 		var formatBind = GetBinding(nameof(Format));
-		if (String.IsNullOrEmpty(Format) && 
-			DataType == DataType.String && 
-			String.IsNullOrEmpty(Mask) && 
+		if (String.IsNullOrEmpty(Format) &&
+			DataType == DataType.String &&
+			String.IsNullOrEmpty(Mask) &&
 			maskBind == null &&
 			formatBind == null &&
 			!HideZeros)

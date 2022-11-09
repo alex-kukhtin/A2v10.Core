@@ -16,7 +16,7 @@ public class Diagram : UIElementBase
 		var div = new TagBuilder("div", "diagram");
 		MergeAttributes(div, context);
 		//if (Size != null)
-			//div.MergeStyle("width", $"{Size.Width.ToString()}px");
+		//div.MergeStyle("width", $"{Size.Width.ToString()}px");
 		div.RenderStart(context);
 		RenderDiagram(context);
 		div.RenderEnd(context);
@@ -26,7 +26,7 @@ public class Diagram : UIElementBase
 	{
 		var svg = new TagBuilder("svg");
 		svg.MergeAttribute("xmlns", "http://www.w3.org/2000/svg");
-		svg.MergeAttribute("shape-rendering","geometricPrecision");
+		svg.MergeAttribute("shape-rendering", "geometricPrecision");
 		if (Size != null)
 		{
 			svg.MergeAttribute("width", Size.Width.ToString());

@@ -1,8 +1,5 @@
 ﻿// Copyright © 2018-2020 Alex Kukhtin. All rights reserved.
 
-using System;
-using A2v10.System.Xaml;
-
 namespace A2v10.Xaml
 {
 	[ContentProperty("Columns")]

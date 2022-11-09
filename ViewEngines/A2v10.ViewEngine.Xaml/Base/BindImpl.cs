@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2017 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
 
@@ -9,8 +9,7 @@ public class BindImpl
 
 	public BindBase SetBinding(String name, BindBase bind)
 	{
-		if (_bindings == null)
-			_bindings = new Dictionary<String, BindBase>();
+		_bindings ??= new Dictionary<String, BindBase>();
 		if (_bindings.ContainsKey(name))
 			_bindings[name] = bind;
 		else
@@ -20,7 +19,7 @@ public class BindImpl
 
 	public void RemoveBinding(String name)
 	{
-		if (_bindings == null) 
+		if (_bindings == null)
 			return;
 		if (_bindings.ContainsKey(name))
 			_bindings.Remove(name);

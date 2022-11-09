@@ -31,7 +31,7 @@ public class Case : XamlElement
 		{
 			foreach (var c in Children)
 				c.RenderElement(context);
-        }
+		}
 	}
 
 	protected override void OnEndInit()

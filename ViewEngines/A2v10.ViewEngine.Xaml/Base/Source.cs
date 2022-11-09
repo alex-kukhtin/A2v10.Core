@@ -1,10 +1,9 @@
 ﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 
-using System.IO;
-using System.Reflection;
-
 using A2v10.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
+using System.IO;
+using System.Reflection;
 
 namespace A2v10.Xaml;
 public class Source : MarkupExtension
@@ -64,7 +63,7 @@ public class Source : MarkupExtension
 				using var stream = appReader.FileStreamFullPathRO(targetFileName);
 				using var rdr = new StreamReader(stream);
 				return rdr.ReadToEnd();
-			} 
+			}
 			else
 				throw new XamlException($"File not found {Path}");
 		}

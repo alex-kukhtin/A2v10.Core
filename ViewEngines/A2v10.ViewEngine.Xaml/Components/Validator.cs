@@ -1,11 +1,9 @@
 ﻿// Copyright © 2015-2019 Alex Kukhtin. All rights reserved.
 
-using System;
+using A2v10.Infrastructure;
 using System.ComponentModel;
 using System.Globalization;
 using System.Text;
-
-using A2v10.Infrastructure;
 
 namespace A2v10.Xaml
 {
@@ -48,7 +46,7 @@ namespace A2v10.Xaml
 		static ValidatorPlacement PlacementFromString(String val)
 		{
 			if (Enum.TryParse<ValidatorPlacement>(val, out ValidatorPlacement pl))
-				return pl ;
+				return pl;
 			else
 				throw new XamlException($"Invalid ValidatorPlacement value '{val}'");
 

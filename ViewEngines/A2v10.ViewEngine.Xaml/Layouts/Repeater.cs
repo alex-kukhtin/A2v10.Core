@@ -24,7 +24,7 @@ namespace A2v10.Xaml
 			{
 				using (new ScopeContext(context, "elem", isBind.Path))
 				{
-					Content.RenderElement(context, (tag)=> 
+					Content.RenderElement(context, (tag) =>
 					{
 						onRender?.Invoke(tag);
 						tag.MergeAttribute(":key", "elemIndex");

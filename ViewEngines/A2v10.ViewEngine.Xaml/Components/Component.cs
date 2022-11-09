@@ -18,7 +18,7 @@ public class Component : UIElementBase
 		var comp = context.FindComponent(Name);
 		if (comp == null)
 			throw new XamlException($"Component '{Name}' not found");
-		if (!(comp is UIElementBase compUi))
+		if (comp is not UIElementBase compUi)
 			throw new XamlException($"The component '{Name}' is not an UIElement");
 		var scopeBind = GetBinding(nameof(Scope));
 		if (scopeBind == null)

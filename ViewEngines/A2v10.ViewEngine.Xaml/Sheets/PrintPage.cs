@@ -1,10 +1,9 @@
 ﻿// Copyright © 2020 Alex Kukhtin. All rights reserved.
 
-using System;
+using A2v10.Infrastructure;
 using System.ComponentModel;
 using System.Globalization;
 using System.Text;
-using A2v10.Infrastructure;
 
 namespace A2v10.Xaml
 {

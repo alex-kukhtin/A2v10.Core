@@ -6,7 +6,7 @@ namespace A2v10.Xaml;
 public enum PropertyGridStyle
 {
 	Default,
-	Compact, 
+	Compact,
 	Small
 }
 

@@ -1,8 +1,7 @@
 ﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
-using System.Text;
-
 using A2v10.Infrastructure;
+using System.Text;
 
 /*
  * $exec(cmd, arg, confirm, opts) : $canExecute(cmd, arg, opts)
@@ -234,7 +233,7 @@ public class BindCmd : BindBase
 			case CommandType.CallPhone:
 				return String.Empty;
 
-                case CommandType.Navigate:
+			case CommandType.Navigate:
 				return $"$navigateSimple({CommandUrl(context)}, {NewWindowJS})";
 
 			case CommandType.NavigateExternal:
@@ -638,17 +637,17 @@ public class BindCmd : BindBase
 			return false; // always disable readonly commands
 		return Command switch
 		{
-			CommandType.Close or 
-			CommandType.Refresh or 
-			CommandType.Reload or 
-			CommandType.Export or 
-			CommandType.Report or 
-			CommandType.Requery or 
-			CommandType.MailTo or 
+			CommandType.Close or
+			CommandType.Refresh or
+			CommandType.Reload or
+			CommandType.Export or
+			CommandType.Report or
+			CommandType.Requery or
+			CommandType.MailTo or
 			CommandType.CallPhone or
-			CommandType.Help or 
-			CommandType.Print or 
-			CommandType.Execute or 
+			CommandType.Help or
+			CommandType.Print or
+			CommandType.Execute or
 			CommandType.ExecuteSelected or
 			CommandType.Invoke => true,
 			_ => false,

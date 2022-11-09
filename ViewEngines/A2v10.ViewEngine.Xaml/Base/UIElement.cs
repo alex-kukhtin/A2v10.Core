@@ -1,8 +1,7 @@
 ﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
-using System.Text;
-
 using A2v10.Infrastructure;
+using System.Text;
 
 namespace A2v10.Xaml;
 

@@ -63,7 +63,7 @@ public class TabPanel : UIElement
 			tml.MergeAttribute("slot", "items");
 			tml.MergeAttribute("slot-scope", "tabitem");
 			tml.RenderStart(context);
-			using (var cts = new ScopeContext(context, "tabitem.item", isBind.Path,ReplaceScope))
+			using (var cts = new ScopeContext(context, "tabitem.item", isBind.Path, ReplaceScope))
 			{
 				Tabs[0].RenderTemplate(context);
 			}
