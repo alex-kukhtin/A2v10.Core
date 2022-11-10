@@ -5,6 +5,7 @@ using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 
 using A2v10.Xaml.Report;
+using System;
 
 namespace A2v10.ReportEngine.Pdf;
 
@@ -45,11 +46,14 @@ internal class PageComposer
 		}
 
 		page.DefaultTextStyle(ts => {
-			ts = ts.FontFamily(Fonts.Verdana);
+			if (!String.IsNullOrEmpty(_page.FontFamily))
+				ts = ts.FontFamily(_page.FontFamily!);
+			else
+				ts = ts.FontFamily(Fonts.Verdana);
 			if (rs != null && rs.FontSize != null)
 				ts = ts.FontSize(rs.FontSize.Value);
 			else
-				ts.FontSize(10F);
+				ts = ts.FontSize(10F);
 			return ts;
 		});
 

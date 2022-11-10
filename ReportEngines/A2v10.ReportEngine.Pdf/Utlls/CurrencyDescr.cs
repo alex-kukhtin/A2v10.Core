@@ -7,7 +7,9 @@ namespace A2v10.ReportEngine.Pdf;
 
 internal abstract class CurrencyDescr
 {
+#pragma warning disable IDE1006 // Naming Styles
 	protected abstract CurrencyDef _descr { get; }
+#pragma warning restore IDE1006 // Naming Styles
 
 	public String NameCeil(SpellType unit)
 	{
@@ -32,7 +34,7 @@ internal abstract class CurrencyDescr
 	}
 }
 
-internal struct CurrencyDef
+internal readonly struct CurrencyDef
 {
 	public String[] Ceils { get; init; }
 	public String[] Fracts { get; init; }
@@ -42,8 +44,8 @@ internal struct CurrencyDef
 
 internal class CurrencyDescrUA : CurrencyDescr
 {
-	CurrencyDef _current;
-	private static CurrencyDef _uah_ua = new CurrencyDef()
+	readonly CurrencyDef _current;
+	private static readonly CurrencyDef _uah_ua = new()
 	{
 		Ceils = "гривень|гривня|гривні".Split('|'),
 		CeilGender = SpellGender.Female,
@@ -51,7 +53,7 @@ internal class CurrencyDescrUA : CurrencyDescr
 		FractGender = SpellGender.Female
 	};
 
-	private static CurrencyDef _uah_usd = new CurrencyDef()
+	private static readonly CurrencyDef _uah_usd = new()
 	{
 		Ceils = "доларів|долар|долари".Split('|'),
 		CeilGender = SpellGender.Male,
@@ -59,7 +61,7 @@ internal class CurrencyDescrUA : CurrencyDescr
 		FractGender = SpellGender.Male
 	};
 
-	private static CurrencyDef _uah_eur = new CurrencyDef()
+	private static readonly CurrencyDef _uah_eur = new()
 	{
 		Ceils = "євро|євро|євро".Split('|'),
 		CeilGender = SpellGender.Male,

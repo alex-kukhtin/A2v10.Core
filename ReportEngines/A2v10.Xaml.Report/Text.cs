@@ -44,6 +44,19 @@ public class Span : ContentElement
 	}
 }
 
+public class Space : ContentElement
+{
+	public Length? Width { get; init; }
+}
+
+public class Break : ContentElement
+{
+	public Break()
+	{
+		this.Content = "\n";
+	}
+}
+
 
 [TypeConverter(typeof(InlineCollectionConverter))]
 public sealed class InlineCollection : List<Object>

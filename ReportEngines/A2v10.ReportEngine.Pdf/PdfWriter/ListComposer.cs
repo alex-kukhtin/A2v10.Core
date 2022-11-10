@@ -62,6 +62,13 @@ internal class ListComposer : FlowElementComposer
 					}
 				}
 			}
+			else
+			{
+				foreach (var itm in _list.Items)
+				{
+					column.Item().Row(row => ComposeRow(itm, null, row));
+				}
+			}
 			/*
 			foreach (var i in Enumerable.Range(1, 8))
 			{
@@ -94,7 +101,7 @@ internal class ListComposer : FlowElementComposer
 		}
 	}
 
-	void ComposeBullet(ListItem item, ExpandoObject elem, RowDescriptor row)
+	void ComposeBullet(ListItem item, ExpandoObject? elem, RowDescriptor row)
 	{
 		if (_accessFuncs.TryGetValue(item, out var accessFunc))
 		{
@@ -109,7 +116,7 @@ internal class ListComposer : FlowElementComposer
 			row.AutoItem().Text(item.Bullet.ToString());
 	}
 
-	void ComposeRow(ListItem item, ExpandoObject elem, RowDescriptor row)
+	void ComposeRow(ListItem item, ExpandoObject? elem, RowDescriptor row)
 	{
 		if (_list.Spacing != 0)
 			row.Spacing(_list.Spacing);

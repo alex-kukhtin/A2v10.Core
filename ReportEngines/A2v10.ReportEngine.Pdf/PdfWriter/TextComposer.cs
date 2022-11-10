@@ -73,6 +73,12 @@ internal class TextComposer : FlowElementComposer
 			for (var i = 0; i < _text.Inlines.Count; i++)
 			{
 				var elem = _text.Inlines[i];
+				if (elem is Space elemSpace)
+				{
+					if (elemSpace.Width != null)
+						txt.Element().MinWidth(elemSpace.Width.Value, elemSpace.Width.Unit.ToUnit());
+					continue;
+				}
 				var val = _context.GetValueAsString(elem);
 				if (val != null)
 				{

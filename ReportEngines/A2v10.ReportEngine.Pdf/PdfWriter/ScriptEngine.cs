@@ -55,7 +55,7 @@ internal class ScriptEngine
 	public JsValue CreateAccessFunction(String expression)
 	{
 		var exp = $"_elem_ => _elem_.{expression}";
-		if (expression.Contains("(")) // call function
+		if (expression.Contains('(')) // call function
 			exp = $"_elem_ => {expression.Replace("this", "_elem_").Replace("Root.", "")}";
 		else if (expression.StartsWith("Root."))
 			exp = $"_elem_ => {expression.Replace("Root.", "")}";
