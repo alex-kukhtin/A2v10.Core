@@ -12,6 +12,7 @@ public class XamlElement : ISupportBinding
 
 	public Boolean? Bold { get; init; }
 	public Boolean? Italic { get; init; }
+	public Boolean? Underline { get; init; }
 
 	public Single? FontSize { get; init; }
 
@@ -68,6 +69,8 @@ public class XamlElement : ISupportBinding
 			GetRuntimeStyle().Bold = Bold;
 		if (Italic != null)
 			GetRuntimeStyle().Italic = Italic;
+		if (Underline != null)
+			GetRuntimeStyle().Underline = Underline;
 		if (Margin != null)
 			GetRuntimeStyle().Margin = Margin;
 		if (Padding != null)

@@ -32,6 +32,8 @@ internal class TextComposer : FlowElementComposer
 			ts = ts.Bold();
 		if (rs.Italic != null && rs.Italic.Value)
 			ts = ts.Italic();
+		if (rs.Underline != null && rs.Underline.Value)
+			ts = ts.Underline();
 		if (!String.IsNullOrEmpty(rs.Color))
 			ts = ts.FontColor(rs.Color!);
 		descr.DefaultTextStyle(ts);
@@ -50,8 +52,12 @@ internal class TextComposer : FlowElementComposer
 			descr = descr.Bold();
 		if (rs.Italic != null && rs.Italic.Value)
 			descr = descr.Italic();
+		if (rs.Underline != null && rs.Underline.Value)
+			descr = descr.Underline();
 		if (!String.IsNullOrEmpty(rs.Color))
 			descr = descr.FontColor(rs.Color!);
+		if (!String.IsNullOrEmpty(rs.Background))
+			descr = descr.BackgroundColor(rs.Background!);
 		return descr;
 	}
 

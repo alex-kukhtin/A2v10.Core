@@ -124,6 +124,8 @@ internal static class DecorationStyles
 			container = container.Bold();
 		if (style.Italic != null && style.Italic.Value)
 			container = container.Italic();
+		if (style.Underline != null && style.Underline.Value)
+			container = container.Underline();
 		if (!String.IsNullOrEmpty(style.Color))
 			container = container.FontColor(style.Color!);
 	}

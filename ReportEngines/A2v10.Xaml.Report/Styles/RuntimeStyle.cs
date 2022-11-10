@@ -13,6 +13,7 @@ public class RuntimeStyle
 	public String? Background {get; set;}
 	public Boolean? Bold { get; set; }
 	public Boolean? Italic { get; set;}
+	public Boolean? Underline { get; set; }
 
 	public Thickness? Margin { get; set; }
 	public Thickness? Padding { get; set; }
@@ -32,6 +33,7 @@ public class RuntimeStyle
 			Background = this.Background,
 			Bold = this.Bold,
 			Italic = this.Italic,
+			Underline = this.Underline,
 			Color = this.Color
 		};
 	}
