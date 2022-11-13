@@ -1,10 +1,11 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2022 Oleksandr Kukhtin. All rights reserved.
 
-using A2v10.Infrastructure;
+using System.Linq;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Text.RegularExpressions;
+
+using A2v10.Infrastructure;
 
 namespace A2v10.Xaml;
 
@@ -65,7 +66,7 @@ public class Bind : BindBase, ISupportInitialize
 			opts.Add($"dataType: '{DataType}'");
 
 		if (formatBind != null)
-			opts.Append($"format: {formatBind.GetPathFormat(context)},");
+			opts.Add($"format: {formatBind.GetPathFormat(context)},");
 		else if (!String.IsNullOrEmpty(Format))
 			opts.Add($"format: '{context.Localize(Format.ToJsString())}'");
 

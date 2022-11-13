@@ -21,10 +21,10 @@ public class TreeGrid : Control, ITableControl
 	public Object? ItemsSource { get; set; }
 	public String? ItemsProperty { get; set; }
 	public Length? MinWidth { get; set; }
-	public DropDownMenu? ContextMenu { get; set; }
 	public Command? DoubleClick { get; set; }
-
+	public DropDownMenu? ContextMenu { get; set; }
 	public TreeGridColumnCollection Columns { get; set; } = new TreeGridColumnCollection();
+	public Boolean Sort { get; set; }
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
 		if (SkipRender(context))
@@ -56,7 +56,7 @@ public class TreeGrid : Control, ITableControl
 
 	private void RenderGrid(RenderContext context, String tblClass, Boolean inGrid, Boolean mergeAttrs, Action<TagBuilder>? onRender)
 	{
-		var treeGrid = new TagBuilder("tree-grid", tblClass, IsInGrid);
+		var treeGrid = new TagBuilder("tree-grid", tblClass, inGrid);
 		onRender?.Invoke(treeGrid);
 		if (mergeAttrs)
 			MergeAttributes(treeGrid, context);
@@ -99,24 +99,35 @@ public class TreeGrid : Control, ITableControl
 		{
 			foreach (var col in Columns)
 			{
-				col.RenderCell("td", context, SetGridlines);
+				col.RenderCell("td", context, SetGridLines);
 			}
 		}
 		slot.RenderEnd(context);
 		// render header
 		var hdr = new TagBuilder("template");
-		hdr.MergeAttribute("v-slot:header", "hrd");
+		hdr.MergeAttribute("v-slot:header", "hdr");
 		hdr.RenderStart(context);
 		foreach (var col in Columns)
 		{
-			col.RenderColumn("th", context, SetGridlines);
+			col.RenderColumn("th", context, Sort, SetGridLines);
 		}
 		hdr.RenderEnd(context);
+
+		// render columns
+		var cols = new TagBuilder("template");
+		cols.MergeAttribute("v-slot:columns", "cols");
+		cols.RenderStart(context);
+		foreach (var col in Columns)
+		{
+			col.RenderColumnTag(context);
+		}
+		cols.RenderEnd(context);
+
 		RenderContextMenu(ContextMenu, context, contextId);
 		treeGrid.RenderEnd(context);
 	}
 
-	private void SetGridlines(TagBuilder tag)
+	private void SetGridLines(TagBuilder tag)
 	{
 		switch (GridLines)
 		{

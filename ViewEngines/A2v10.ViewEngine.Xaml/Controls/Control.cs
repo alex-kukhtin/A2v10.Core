@@ -46,10 +46,7 @@ public abstract class Control : UIElement
 		MergeBindingAttributeString(tag, context, "label", nameof(Label), Label);
 		MergeBindingAttributeString(tag, context, "description", nameof(Description), Description);
 		MergeBoolAttribute(tag, context, nameof(Required), Required);
-		if (Validator != null)
-		{
-			Validator.MergeAttributes(tag);
-		}
+		Validator?.MergeAttributes(tag);
 	}
 
 	protected void RenderAddOns(RenderContext context)

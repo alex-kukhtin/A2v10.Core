@@ -20,14 +20,14 @@ public class TreeGridColumn : UiContentElement
 
 	public VerticalAlign VAlign { get; set; }
 	public TextAlign Align { get; set; }
-
 	public Boolean ShowButton { get; set; }
-
 	public Length? Width { get; set; }
-
 	public Boolean Fit { get; set; }
-
+	public Length? MinWidth { get; set; }
 	public String? Header { get; set; }
+	public UInt32 MaxChars { get; set; }
+	public Boolean? Sort { get; set; }
+	public String? SortProperty { get; set; }
 
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
@@ -42,10 +42,18 @@ public class TreeGridColumn : UiContentElement
 		onRender?.Invoke(td);
 		RenderCell(td, context);
 	}
+
+	public void AddAligns(TagBuilder td)
+	{
+		if (Align != TextAlign.Left)
+			td.AddCssClass("text-" + Align.ToString().ToLowerInvariant());
+
+		if (VAlign != VerticalAlign.Default)
+			td.AddCssClass($"valign-{VAlign.ToString().ToLowerInvariant()}");
+	}
 	void RenderCell(TagBuilder td, RenderContext context)
 	{
 		MergeAttributes(td, context);
-
 		var boldBind = GetBinding(nameof(Bold));
 		var italicBind = GetBinding(nameof(Italic));
 		if (boldBind != null || italicBind != null)
@@ -66,11 +74,7 @@ public class TreeGridColumn : UiContentElement
 		if (Width != null)
 			td.MergeStyle("width", Width.Value);
 
-		if (Align != TextAlign.Left)
-			td.AddCssClass("text-" + Align.ToString().ToLowerInvariant());
-
-		if (VAlign != VerticalAlign.Default)
-			td.AddCssClass($"valign-{VAlign.ToString().ToLowerInvariant()}");
+		AddAligns(td);
 
 		if (Content is ITableControl)
 			td.AddCssClass("ctrl");
@@ -107,21 +111,64 @@ public class TreeGridColumn : UiContentElement
 		}
 		td.RenderEnd(context);
 	}
-	public void RenderColumn(String tagName, RenderContext context, Action<TagBuilder>? onRender = null)
+
+	protected override void MergeContent(TagBuilder tag, RenderContext context)
+	{
+		var contBind = GetBinding(nameof(Content));
+		if (contBind != null)
+		{
+			tag.MergeAttribute("v-text", MaxChars > 0 ? $"$maxChars({contBind.GetPathFormat(context)}, {MaxChars})" : contBind.GetPathFormat(context));
+			if (contBind.NegativeRed)
+				tag.MergeAttribute(":class", $"$getNegativeRedClass({contBind.GetPath(context)})");
+		}
+	}
+
+	public void RenderColumn(String tagName, RenderContext context, Boolean sort, Action<TagBuilder>? onRender = null)
 	{
 		if (SkipRender(context))
 			return;
 		var td = new TagBuilder(tagName);
 		onRender?.Invoke(td);
+		AddAligns(td);
+		MergeAttributes(td, context, MergeAttrMode.Wrap);
 		if (Fit)
 			td.AddCssClass("fit");
 		else if (Width != null)
 			td.MergeStyle("width", Width.Value);
 		if (Align != TextAlign.Left)
 			td.AddCssClass("text-" + Align.ToString().ToLowerInvariant());
+
+		Boolean canSort = sort && (Sort == null || Sort.Value);
+		if (canSort)
+		{
+			var prop = SortProperty;
+			if (String.IsNullOrEmpty(prop))
+				prop = GetBinding(nameof(Content))?.Path;
+			if (!String.IsNullOrEmpty(prop))
+			{
+				td.AddCssClass("sortable");
+				td.MergeAttribute(":class", $"hdr.that.headerClass('{prop}')");
+				td.MergeAttribute("@click.stop.prevent", $"hdr.that.doSort('{prop}')");
+			}
+		}
+
 		td.RenderStart(context);
+		var span = new TagBuilder(null, "h-holder");
+		span.RenderStart(context);
 		if (Header != null)
 			context.Writer.Write(context.LocalizeCheckApostrophe(Header.Replace("\\n", "<br>")));
+		span.RenderEnd(context);
 		td.RenderEnd(context);
+	}
+
+	public void RenderColumnTag(RenderContext context)
+	{
+		var col = new TagBuilder("col");
+		var hd = GetBinding(nameof(Content));
+		if (hd != null)
+			col.MergeAttribute(":class", $"cols.that.columnClass('{hd.Path}', {Fit.ToString().ToLowerInvariant()})");
+		if (MinWidth != null)
+			col.MergeStyle("min-width", MinWidth.Value);
+		col.Render(context);
 	}
 }

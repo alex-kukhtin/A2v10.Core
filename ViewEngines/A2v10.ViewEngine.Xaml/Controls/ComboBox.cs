@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2022 Oleksandr Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
 
@@ -64,8 +64,7 @@ public class ComboBox : ValuedControl, ITableControl
 	{
 		get
 		{
-			if (_children == null)
-				_children = new ComboBoxItems();
+			_children ??= new ComboBoxItems();
 			return _children;
 		}
 		set

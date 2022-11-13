@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2022 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -24,8 +24,7 @@ public abstract class BaseLocalizer : ILocalizer, IDataLocalizer
 		if (locale == null)
 		{
 			locale = _user.Locale.Locale;
-			if (locale == null)
-				locale = Thread.CurrentThread.CurrentUICulture.Name;
+			locale ??= Thread.CurrentThread.CurrentUICulture.Name;
 		}
 		var dict = GetLocalizerDictionary(locale);
 		if (dict.TryGetValue(key, out String? value))

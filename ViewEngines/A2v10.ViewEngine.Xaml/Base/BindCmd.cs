@@ -349,7 +349,7 @@ public class BindCmd : BindBase
 		return $"'{Report}'";
 	}
 
-	String GetOptions(RenderContext context)
+	String GetOptions(RenderContext _)
 	{
 		if (!SaveRequired && !ValidRequired && !CheckReadOnly && !Export && !Print && !NewWindow
 			&& !CheckArgument && !ReloadAfter && !RequeryAfter && Permission == Permission.None && String.IsNullOrEmpty(Viewer))

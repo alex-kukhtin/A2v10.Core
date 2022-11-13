@@ -56,7 +56,7 @@ public class Components : MarkupExtension
 		return dict;
 	}
 
-	ComponentDictionary LoadOneFile(IServiceProvider serviceProvider, IAppCodeProvider appReader, String basePath, String path)
+	static ComponentDictionary LoadOneFile(IServiceProvider serviceProvider, IAppCodeProvider appReader, String basePath, String path)
 	{
 		String targetPath = appReader.MakeFullPath(basePath, path, false) + ".xaml";
 		if (!appReader.FileExists(targetPath))

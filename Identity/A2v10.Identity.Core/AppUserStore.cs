@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2022 Oleksandr Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
 using System.Dynamic;
@@ -43,10 +43,8 @@ public sealed class AppUserStore :
 
     public async Task<IdentityResult> CreateAsync(AppUser user, CancellationToken cancellationToken)
 	{
-		if (user.PasswordHash == null)
-			user.PasswordHash = user.PasswordHash2;
-		if (user.SecurityStamp == null)
-			user.SecurityStamp = user.SecurityStamp2;
+		user.PasswordHash ??= user.PasswordHash2;
+		user.SecurityStamp ??= user.SecurityStamp2;
 
 		await _dbContext.ExecuteAsync<AppUser>(DataSource, $"[{DbSchema}].[CreateUser]", user);
 		return IdentityResult.Success;

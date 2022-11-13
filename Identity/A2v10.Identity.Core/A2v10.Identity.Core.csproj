@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>
 		<Nullable>enable</Nullable>
 		<AssemblyName>A2v10.Identity.Core</AssemblyName>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<Version>10.1.8076</Version>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<Version>10.1.8077</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Identity.Core</PackageId>
 		<Authors>Oleksandr Kukhtin</Authors>
