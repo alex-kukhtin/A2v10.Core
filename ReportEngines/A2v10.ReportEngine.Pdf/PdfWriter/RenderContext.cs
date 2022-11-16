@@ -134,6 +134,8 @@ internal class RenderContext
 		var val = Engine.EvaluateValue(ifbind.Expression);
 		if (val is Boolean boolVal)
 			return boolVal;
+		else if (val == null)
+			return false;
 		return true;
 	}
 

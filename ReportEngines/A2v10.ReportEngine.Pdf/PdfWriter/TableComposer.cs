@@ -139,7 +139,7 @@ internal class TableComposer : FlowElementComposer
 
 		if (_accessFuncs.TryGetValue(cell, out var contentFunc))
 		{
-			var value = _context.Engine.Invoke(contentFunc, data);
+			var value = _context.Engine.Invoke(contentFunc, data, bind?.Expression);
 			if (cell.Content is FlowElement nestedFlow)
 				nestedFlow.CreateComposer(_context).Compose(ci, value);
 			else if (value != null)

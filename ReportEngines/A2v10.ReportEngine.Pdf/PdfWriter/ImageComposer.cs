@@ -39,7 +39,7 @@ internal class ImageComposer : FlowElementComposer
 				String? fileName;
 				var accessFunc = _context.Engine.CreateAccessFunction(rtBind.Expression);
 				if (accessFunc != null && value is ExpandoObject eoValue)
-					fileName = _context.Engine.Invoke(accessFunc, eoValue)?.ToString();
+					fileName = _context.Engine.Invoke(accessFunc, eoValue, rtBind?.Expression)?.ToString();
 				else
 					fileName = _context.Engine.EvaluateValue(rtBind.Expression)?.ToString();
 				if (fileName != null)

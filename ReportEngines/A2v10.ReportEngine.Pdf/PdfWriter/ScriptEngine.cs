@@ -62,10 +62,12 @@ internal class ScriptEngine
 		return _engine.Evaluate(exp);
 	}
 
-	public Object? Invoke(JsValue func, ExpandoObject? data)
+	public Object? Invoke(JsValue func, ExpandoObject? data, String? expression)
 	{
 		if (data != null)
 			return _engine.Invoke(func, data).ToObject();
+		else if (!String.IsNullOrEmpty(expression))
+			return _engine.Evaluate(expression!)?.ToObject();
 		return null;
 	}
 
