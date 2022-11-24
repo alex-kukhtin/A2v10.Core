@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2022 Oleksandr Kukhtin. All rights reserved.
 
 
 namespace A2v10.Xaml;
@@ -34,6 +34,7 @@ public class Button : CommandControl
 	public ButtonStyle Style { get; set; }
 	public IconAlign IconAlign { get; set; }
 	public Boolean Rounded { get; set; }
+	public String? Badge { get; set; }
 
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
@@ -138,7 +139,11 @@ public class Button : CommandControl
 			if (!hasCommand)
 				RenderCaret(context, bDropUp);
 		}
+
+		RenderBadge(context, Badge, "btn-badge");
+
 		button.RenderEnd(context);
+
 		if (hasDropDown && hasCommand)
 		{
 			var open = new TagBuilder("button", "btn btn-caret")
