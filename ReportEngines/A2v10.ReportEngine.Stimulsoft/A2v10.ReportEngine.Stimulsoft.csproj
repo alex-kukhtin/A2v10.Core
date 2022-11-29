@@ -30,8 +30,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7315" />
-		<PackageReference Include="Stimulsoft.Reports.Web.NetCore" Version="2022.4.4" />
+		<PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7317" />
+		<PackageReference Include="Stimulsoft.Reports.Web.NetCore" Version="2022.4.5" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.TagHelpers" Version="2.2.0" />
 	</ItemGroup>
 

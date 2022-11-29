@@ -65,7 +65,10 @@ internal class TextComposer : FlowElementComposer
 	{
 		if (!_context.IsVisible(_text))
 			return;
-		container.ApplyDecoration(_text.RuntimeStyle).Text(txt =>
+		container
+		.ApplyLayoutOptions(_text)
+		.ApplyDecoration(_text.RuntimeStyle)
+		.Text(txt =>
 		{
 			//_context.ApplyTextStyle(txt, _text.Style);
 			ApplyRuntimeStyle(txt);
