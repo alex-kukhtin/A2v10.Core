@@ -5,7 +5,7 @@
 		<LangVersion>10.0</LangVersion>
 		<Nullable>enable</Nullable>
 		<AssemblyName>A2v10.ReportEngine.Pdf</AssemblyName>
-		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<Version>10.1.8074</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.ReportEngine.Pdf</PackageId>

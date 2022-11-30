@@ -33,7 +33,7 @@ public record Length
 		if (strVal.Length >= 3)
 		{
 			var ext = strVal.Substring(strVal.Length - 2, 2);
-			var val = strVal.Substring(0, strVal.Length - 2);
+			var val = strVal[..^2];
 			if (ValidLength.Any(x => x == ext) && Single.TryParse(val, NumberStyles.Any, CultureInfo.InvariantCulture, out Single snglVal))
 				return new Length() { Value = snglVal, Unit = ext };
 		}

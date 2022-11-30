@@ -28,7 +28,7 @@ public class PdfReportEngine : IReportEngine
 	private Page ReadTemplate(IReportInfo reportInfo, String reportPath)
 	{
 		using var stream = _appCodeProvider.FileStreamFullPathRO(reportPath);
-		return new TemplateReader().ReadReport(stream);
+		return TemplateReader.ReadReport(stream);
 	}
 	public Task<IInvokeResult> ExportAsync(IReportInfo reportInfo, ExportReportFormat format)
 	{

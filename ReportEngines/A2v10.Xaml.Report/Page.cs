@@ -23,10 +23,8 @@ public class Page : XamlElement
 		_runtimeStyle = styles.GetRuntimeStyle(sel);
 		foreach (var col in Columns)
 			col.ApplyStyles(sel, styles);
-		if (Header != null)
-			Header.ApplyStyles(sel, styles);
-		if (Footer != null)
-			Footer.ApplyStyles(sel, styles);
+		Header?.ApplyStyles(sel, styles);
+		Footer?.ApplyStyles(sel, styles);
 		ApplyStylesSelf();
 	}
 }

@@ -15,8 +15,7 @@ public class Bind : MarkupExtension, ISupportBinding
 	{
 		get
 		{
-			if (_bindImpl == null)
-				_bindImpl = new BindImpl();
+			_bindImpl ??= new BindImpl();
 			return _bindImpl;
 		}
 	}

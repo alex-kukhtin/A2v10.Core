@@ -31,8 +31,7 @@ public class XamlElement : ISupportBinding
 	{
 		get
 		{
-			if (_bindImpl == null)
-				_bindImpl = new BindImpl();
+			_bindImpl ??= new BindImpl();
 			return _bindImpl;
 		}
 	}
@@ -43,8 +42,7 @@ public class XamlElement : ISupportBinding
 
 	public RuntimeStyle GetRuntimeStyle()
 	{
-		if (_runtimeStyle == null)
-			_runtimeStyle = new RuntimeStyle();
+		_runtimeStyle ??= new RuntimeStyle();
 		return _runtimeStyle;
 	}
 

@@ -11,8 +11,7 @@ public class BindImpl
 
 	public Bind SetBinding(String name, Bind bind)
 	{
-		if (_bindings == null)
-			_bindings = new Dictionary<String, Bind>();
+		_bindings ??= new Dictionary<String, Bind>();
 		if (_bindings.ContainsKey(name))
 			_bindings[name] = bind;
 		else

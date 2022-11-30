@@ -14,7 +14,7 @@ public class TemplateReader
 		throw new NotImplementedException("ReadReport from file");
 	}
 
-	public Page ReadReport(Stream stream)
+	public static Page ReadReport(Stream stream)
 	{
 		var xamlReader = new XamlReaderService();
 		var obj = xamlReader.Load(stream);
