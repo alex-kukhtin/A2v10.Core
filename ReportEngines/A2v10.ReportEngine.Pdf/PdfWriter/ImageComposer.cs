@@ -21,10 +21,6 @@ internal class ImageComposer : FlowElementComposer
 		_context = context;
 	}
 
-	void ApplyRuntimeStyle(TextSpanDescriptor descr, ContentElement elem)
-	{
-	}
-
 	internal override void Compose(IContainer container, Object? value = null)
 	{
 		if (!_context.IsVisible(_image))

@@ -21,6 +21,7 @@ internal static class Extensions
 			Line line => new LineComposer(line, context),
 			List list => new ListComposer(list, context),
 			Inlined inlined => new InlinedComposer(inlined, context),
+			Checkbox checkbox => new CheckboxComposer(checkbox, context),
 			_ => throw new InvalidOperationException($"There is no composer for {elem.GetType()}")
 		};
 	}
