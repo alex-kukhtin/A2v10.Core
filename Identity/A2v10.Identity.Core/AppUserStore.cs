@@ -62,8 +62,7 @@ public sealed class AppUserStore<T>:
 
 	public async Task<AppUser<T>> FindByIdAsync(String UserId, CancellationToken cancellationToken)
 	{
-		var Id = Int64.Parse(UserId);
-		return await _dbContext.LoadAsync<AppUser<T>>(DataSource, $"[{DbSchema}].[FindUserById]", new { Id })
+		return await _dbContext.LoadAsync<AppUser<T>>(DataSource, $"[{DbSchema}].[FindUserById]", new { UserId })
 			?? new AppUser<T>();
 	}
 
