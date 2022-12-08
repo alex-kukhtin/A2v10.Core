@@ -117,6 +117,11 @@ public sealed class AppUserStore<T>:
 
 	public async Task SetSecurityStampAsync(AppUser<T> user, String stamp, CancellationToken cancellationToken)
 	{
+		if (EqualityComparer<T>.Default.Equals(user.Id, default))
+		{
+			user.SecurityStamp2 = stamp;
+			return;
+		}
 		var prm = new ExpandoObject()
 		{
 			{ ParamNames.UserId,  user.Id },
@@ -144,10 +149,15 @@ public sealed class AppUserStore<T>:
 		return Task.FromResult<Boolean>(user.EmailConfirmed);
 	}
 
-	public Task SetEmailConfirmedAsync(AppUser<T> user, Boolean confirmed, CancellationToken cancellationToken)
+	public async Task SetEmailConfirmedAsync(AppUser<T> user, Boolean confirmed, CancellationToken cancellationToken)
 	{
+		var prm = new ExpandoObject()
+		{
+			{ ParamNames.UserId,  user.Id },
+			{ "Confirmed",  confirmed}
+		};
+		await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.SetEMailConfirmed]", prm);
 		user.EmailConfirmed = confirmed;
-		return Task.CompletedTask;
 	}
 
 	public async Task<AppUser<T>> FindByEmailAsync(String normalizedEmail, CancellationToken cancellationToken)
@@ -172,6 +182,11 @@ public sealed class AppUserStore<T>:
 	#region IUserPasswordStore
 	public async Task SetPasswordHashAsync(AppUser<T> user, String passwordHash, CancellationToken cancellationToken)
 	{
+		if (EqualityComparer<T>.Default.Equals(user.Id, default))
+		{
+			user.PasswordHash2 = passwordHash;
+			return;
+		}
 		var prm = new ExpandoObject()
 		{
 			{ ParamNames.UserId,  user.Id },
@@ -345,6 +360,7 @@ public sealed class AppUserStore<T>:
 			{ "Confirmed",  confirmed}
 		};
 		await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.SetPhoneNumberConfirmed]", prm);
+		user.PhoneNumberConfirmed = confirmed;
     }
 	#endregion
 
