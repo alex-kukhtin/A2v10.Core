@@ -5,7 +5,7 @@
 		<Nullable>enable</Nullable>
 		<AssemblyName>A2v10.Infrastructure</AssemblyName>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-		<Version>10.1.8074</Version>
+		<Version>10.1.8078</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Infrastructure</PackageId>
 		<Authors>Oleksandr Kukhtin</Authors>
@@ -17,7 +17,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7317" />
+		<PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7318" />
 		<PackageReference Include="A2v10.Runtime.Interfaces" Version="10.1.8030" />
 	</ItemGroup>
 

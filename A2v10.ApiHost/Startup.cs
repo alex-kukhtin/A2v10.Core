@@ -30,10 +30,10 @@ public class Startup
 		});
 
 		// Identity
-		services.AddPlatformIdentityCore(options =>
+		services.AddPlatformIdentityCore<Int64>(options =>
 		{
 		})
-		.AddIdentityConfiguration(Configuration);
+		.AddIdentityConfiguration<Int64>(Configuration);
 
 		// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 		services.AddEndpointsApiExplorer();
@@ -70,7 +70,7 @@ public class Startup
 			options.DefaultAuthenticateScheme = ApiKeyAuthenticationOptions.DefaultScheme;
 			options.DefaultChallengeScheme = ApiKeyAuthenticationOptions.DefaultScheme;
 		})
-		.AddApiKeyAuthorization(options => {
+		.AddApiKeyAuthorization<Int64>(options => {
 		});
 
 	}

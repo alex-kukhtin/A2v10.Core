@@ -17,12 +17,13 @@ using Microsoft.Extensions.Options;
 
 namespace A2v10.Web.Identity.ApiKey;
 
-public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthenticationOptions>
+public class ApiKeyAuthenticationHandler<T> : AuthenticationHandler<ApiKeyAuthenticationOptions>
+		where T:struct
 {
-	private readonly IUserLoginStore<AppUser> _userLoginStore;
-	private readonly IUserClaimStore<AppUser> _userClaimStore;
+	private readonly IUserLoginStore<AppUser<T>> _userLoginStore;
+	private readonly IUserClaimStore<AppUser<T>> _userClaimStore;
 	public ApiKeyAuthenticationHandler(IOptionsMonitor<ApiKeyAuthenticationOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock, 
-			IUserLoginStore<AppUser> userStore, IUserClaimStore<AppUser> claimStore)
+			IUserLoginStore<AppUser<T>> userStore, IUserClaimStore<AppUser<T>> claimStore)
 		: base(options, logger, encoder, clock)
 	{
 		_userLoginStore = userStore;
@@ -39,7 +40,7 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
 		if (String.IsNullOrEmpty(apiKey))
 			return AuthenticateResult.NoResult();
 		var appUser = await _userLoginStore.FindByLoginAsync("ApiKey", apiKey, CancellationToken.None);
-		if (appUser == null || appUser.Id == 0)
+		if (appUser == null)
 			return AuthenticateResult.NoResult();
 		var claims = await _userClaimStore.GetClaimsAsync(appUser, CancellationToken.None);
 

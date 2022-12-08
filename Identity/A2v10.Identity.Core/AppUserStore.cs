@@ -12,19 +12,19 @@ using A2v10.Data.Interfaces;
 using A2v10.Identity.Core.Helpers;
 
 namespace A2v10.Web.Identity;
-public sealed class AppUserStore :
-	IUserStore<AppUser>,
-	IUserLoginStore<AppUser>,
-	IUserEmailStore<AppUser>,
-	IUserPhoneNumberStore<AppUser>,
-	IUserPasswordStore<AppUser>,
-	IUserSecurityStampStore<AppUser>,
-	IUserClaimStore<AppUser>
+public sealed class AppUserStore<T>:
+	IUserStore<AppUser<T>>,
+	IUserLoginStore<AppUser<T>>,
+	IUserEmailStore<AppUser<T>>,
+	IUserPhoneNumberStore<AppUser<T>>,
+	IUserPasswordStore<AppUser<T>>,
+	IUserSecurityStampStore<AppUser<T>>,
+	IUserClaimStore<AppUser<T>> where T : struct
 {
 	private readonly IDbContext _dbContext;
 	private String? DataSource { get; } 
 	private String DbSchema { get; }
-	private readonly Func<AppUser, IEnumerable<KeyValuePair<String, String?>>>? _addClaims;
+	private readonly Func<AppUser<T>, IEnumerable<KeyValuePair<String, String?>>>? _addClaims;
 
 	private static class ParamNames
     {
@@ -33,7 +33,7 @@ public sealed class AppUserStore :
 		public const String Token = nameof(Token);
 		public const String PasswordHash = nameof(PasswordHash);
 	}
-	public AppUserStore(IDbContext dbContext, IOptions<AppUserStoreOptions> options)
+	public AppUserStore(IDbContext dbContext, IOptions<AppUserStoreOptions<T>> options)
 	{
 		_dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
 		DataSource = options.Value?.DataSource;
@@ -41,16 +41,16 @@ public sealed class AppUserStore :
 		_addClaims = options.Value?.Claims;
     }
 
-    public async Task<IdentityResult> CreateAsync(AppUser user, CancellationToken cancellationToken)
+    public async Task<IdentityResult> CreateAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
 		user.PasswordHash ??= user.PasswordHash2;
 		user.SecurityStamp ??= user.SecurityStamp2;
 
-		await _dbContext.ExecuteAsync<AppUser>(DataSource, $"[{DbSchema}].[CreateUser]", user);
+		await _dbContext.ExecuteAsync<AppUser<T>>(DataSource, $"[{DbSchema}].[CreateUser]", user);
 		return IdentityResult.Success;
 	}
 
-	public Task<IdentityResult> DeleteAsync(AppUser user, CancellationToken cancellationToken)
+	public Task<IdentityResult> DeleteAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();
 	}
@@ -60,48 +60,48 @@ public sealed class AppUserStore :
 		// do nothing?
 	}
 
-	public async Task<AppUser> FindByIdAsync(String UserId, CancellationToken cancellationToken)
+	public async Task<AppUser<T>> FindByIdAsync(String UserId, CancellationToken cancellationToken)
 	{
 		var Id = Int64.Parse(UserId);
-		return await _dbContext.LoadAsync<AppUser>(DataSource, $"[{DbSchema}].[FindUserById]", new { Id })
-			?? new AppUser();
+		return await _dbContext.LoadAsync<AppUser<T>>(DataSource, $"[{DbSchema}].[FindUserById]", new { Id })
+			?? new AppUser<T>();
 	}
 
-	public async Task<AppUser> FindByNameAsync(String normalizedUserName, CancellationToken cancellationToken)
+	public async Task<AppUser<T>> FindByNameAsync(String normalizedUserName, CancellationToken cancellationToken)
 	{
 		var UserName = normalizedUserName.ToLowerInvariant(); // A2v10
-		return await _dbContext.LoadAsync<AppUser>(DataSource, $"[{DbSchema}].[FindUserByName]", new { UserName })
-			?? new AppUser();
+		var user = await _dbContext.LoadAsync<AppUser<T>>(DataSource, $"[{DbSchema}].[FindUserByName]", new { UserName });
+		return user ?? new AppUser<T>();
 	}
 
-	public Task<String> GetNormalizedUserNameAsync(AppUser user, CancellationToken cancellationToken)
+	public Task<String> GetNormalizedUserNameAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
 		return Task.FromResult<String>(user.UserName?.ToLowerInvariant() ?? String.Empty);
 	}
 
-	public Task<String> GetUserIdAsync(AppUser user, CancellationToken cancellationToken)
+	public Task<String> GetUserIdAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
-		return Task.FromResult<String>(user.Id.ToString());
+		return Task.FromResult<String>(user.Id.ToString()!);
 	}
 
-	public Task<String?> GetUserNameAsync(AppUser user, CancellationToken cancellationToken)
+	public Task<String?> GetUserNameAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
 		return Task.FromResult<String?>(user.UserName);
 	}
 
-	public Task SetNormalizedUserNameAsync(AppUser user, String normalizedName, CancellationToken cancellationToken)
+	public Task SetNormalizedUserNameAsync(AppUser<T> user, String normalizedName, CancellationToken cancellationToken)
 	{
 		user.UserName = normalizedName?.ToLowerInvariant();
 		return Task.CompletedTask;
 	}
 
-	public Task SetUserNameAsync(AppUser user, String userName, CancellationToken cancellationToken)
+	public Task SetUserNameAsync(AppUser<T> user, String userName, CancellationToken cancellationToken)
 	{
 		user.UserName = userName;
 		return Task.CompletedTask;
 	}
 
-	public Task<IdentityResult> UpdateAsync(AppUser user, CancellationToken cancellationToken)
+	public Task<IdentityResult> UpdateAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
 		//throw new NotImplementedException();
 		// TODO: Update user
@@ -109,62 +109,60 @@ public sealed class AppUserStore :
 	}
 
 	#region IUserSecurityStampStore
-	public Task<String> GetSecurityStampAsync(AppUser user, CancellationToken cancellationToken)
+	public Task<String> GetSecurityStampAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
 		// .net framework compatibility
 		return Task.FromResult<String>(user.SecurityStamp2 ?? user.SecurityStamp ?? String.Empty);
 	}
 
-	public async Task SetSecurityStampAsync(AppUser user, String stamp, CancellationToken cancellationToken)
+	public async Task SetSecurityStampAsync(AppUser<T> user, String stamp, CancellationToken cancellationToken)
 	{
-		if (user.Id != 0) {
-			var prm = new ExpandoObject()
-			{
-				{ ParamNames.UserId,  user.Id },
-				{ "SecurityStamp",  stamp }
-			};
-			await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.SetSecurityStamp]", prm);
-		}
+		var prm = new ExpandoObject()
+		{
+			{ ParamNames.UserId,  user.Id },
+			{ "SecurityStamp",  stamp }
+		};
+		await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.SetSecurityStamp]", prm);
 		user.SecurityStamp2 = stamp;
 	}
 	#endregion
 
 	#region IUserEmailStore
-	public Task SetEmailAsync(AppUser user, String email, CancellationToken cancellationToken)
+	public Task SetEmailAsync(AppUser<T> user, String email, CancellationToken cancellationToken)
 	{
 		user.Email = email;
 		return Task.CompletedTask;
 	}
 
-	public Task<String?> GetEmailAsync(AppUser user, CancellationToken cancellationToken)
+	public Task<String?> GetEmailAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
 		return Task.FromResult<String?>(user.Email);
 	}
 
-	public Task<Boolean> GetEmailConfirmedAsync(AppUser user, CancellationToken cancellationToken)
+	public Task<Boolean> GetEmailConfirmedAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
 		return Task.FromResult<Boolean>(user.EmailConfirmed);
 	}
 
-	public Task SetEmailConfirmedAsync(AppUser user, Boolean confirmed, CancellationToken cancellationToken)
+	public Task SetEmailConfirmedAsync(AppUser<T> user, Boolean confirmed, CancellationToken cancellationToken)
 	{
 		user.EmailConfirmed = confirmed;
 		return Task.CompletedTask;
 	}
 
-	public async Task<AppUser> FindByEmailAsync(String normalizedEmail, CancellationToken cancellationToken)
+	public async Task<AppUser<T>> FindByEmailAsync(String normalizedEmail, CancellationToken cancellationToken)
 	{
 		var Email = normalizedEmail?.ToLowerInvariant(); // A2v10
-		return await _dbContext.LoadAsync<AppUser>(DataSource, $"[{DbSchema}].[FindUserByEmail]", new { Email })
-			?? new AppUser();
+		return await _dbContext.LoadAsync<AppUser<T>>(DataSource, $"[{DbSchema}].[FindUserByEmail]", new { Email })
+			?? new AppUser<T>();
 	}
 
-	public Task<String> GetNormalizedEmailAsync(AppUser user, CancellationToken cancellationToken)
+	public Task<String> GetNormalizedEmailAsync(AppUser<T> user, CancellationToken cancellationToken)
     {
         return Task.FromResult<String>(user.Email?.ToLowerInvariant() ?? String.Empty);
 	}
 
-	public Task SetNormalizedEmailAsync(AppUser user, String normalizedEmail, CancellationToken cancellationToken)
+	public Task SetNormalizedEmailAsync(AppUser<T> user, String normalizedEmail, CancellationToken cancellationToken)
 	{
 		user.Email = normalizedEmail?.ToLowerInvariant();
 		return Task.CompletedTask;
@@ -172,34 +170,31 @@ public sealed class AppUserStore :
 	#endregion
 
 	#region IUserPasswordStore
-	public async Task SetPasswordHashAsync(AppUser user, String passwordHash, CancellationToken cancellationToken)
+	public async Task SetPasswordHashAsync(AppUser<T> user, String passwordHash, CancellationToken cancellationToken)
 	{
-		if (user.Id != 0)
+		var prm = new ExpandoObject()
 		{
-			var prm = new ExpandoObject()
-			{
-				{ ParamNames.UserId,  user.Id },
-				{ ParamNames.PasswordHash,  passwordHash }
-			};
-			await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.SetPasswordHash]", prm);
-		}
+			{ ParamNames.UserId,  user.Id },
+			{ ParamNames.PasswordHash,  passwordHash }
+		};
+		await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.SetPasswordHash]", prm);
 		user.PasswordHash2 = passwordHash;
 	}
 
-	public Task<String> GetPasswordHashAsync(AppUser user, CancellationToken cancellationToken)
+	public Task<String> GetPasswordHashAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
 		// .net framework compatibility
 		return Task.FromResult<String>(user.PasswordHash2 ?? user.PasswordHash ?? String.Empty);
 	}
 
-	public Task<bool> HasPasswordAsync(AppUser user, CancellationToken cancellationToken)
+	public Task<bool> HasPasswordAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();
 	}
 	#endregion
 
 	#region IUserClaimStore
-	public Task<IList<Claim>> GetClaimsAsync(AppUser user, CancellationToken cancellationToken)
+	public Task<IList<Claim>> GetClaimsAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
 		List<Claim> list = new();
 		if (_addClaims != null)
@@ -216,13 +211,13 @@ public sealed class AppUserStore :
 	}
 
 
-	private static void AddDefaultClaims(AppUser user, List<Claim> list)
+	private static void AddDefaultClaims(AppUser<T> user, List<Claim> list)
 	{
-		list.Add(new Claim(WellKnownClims.NameIdentifier, user.Id.ToString()));
+		list.Add(new Claim(WellKnownClims.NameIdentifier, user.Id.ToString()!));
 		list.Add(new Claim(WellKnownClims.PersonName, user.PersonName ?? String.Empty));
-		if (user.Tenant != 0)
+		if (user.Tenant != null)
 		{
-			list.Add(new Claim(WellKnownClims.TenantId, user.Tenant.ToString()));
+			list.Add(new Claim(WellKnownClims.TenantId, user.Tenant.ToString()!));
 			//if (user.IsTenantAdmin)
 				//list.Add(new Claim("TenantAdmin", "TenantAdmin"));
 		}
@@ -230,8 +225,8 @@ public sealed class AppUserStore :
 			list.Add(new Claim(WellKnownClims.Segment, user.Segment));
 		if (!String.IsNullOrEmpty(user.Locale))
 			list.Add(new Claim(WellKnownClims.Locale, user.Locale));
-		if (user.Organization != 0)
-			list.Add(new Claim(WellKnownClims.Organization, user.Organization.ToString()));
+		if (user.Organization != null)
+			list.Add(new Claim(WellKnownClims.Organization, user.Organization.ToString()!));
 
 		//if (user.IsAdmin) // TODO
 		//list.Add(new Claim(WellKnownClims.Admin, "Admin"));
@@ -247,7 +242,7 @@ public sealed class AppUserStore :
 		*/
 	}
 
-	public async Task AddClaimsAsync(AppUser user, IEnumerable<Claim> claims, CancellationToken cancellationToken)
+	public async Task AddClaimsAsync(AppUser<T> user, IEnumerable<Claim> claims, CancellationToken cancellationToken)
 	{
 		// dynamically added 
 		foreach (var claim in claims)
@@ -264,10 +259,10 @@ public sealed class AppUserStore :
 			switch (claim.Type)
             {
 				case WellKnownClims.TenantId:
-					user.Tenant = Int32.Parse(claim.Value);
+					user.Tenant = (T)Convert.ChangeType(claim.Value, typeof(T));
 					break;
 				case WellKnownClims.Organization:
-					user.Organization = Int64.Parse(claim.Value);
+					user.Organization = (T) Convert.ChangeType(claim.Value, typeof(T));
 					break;
 				case WellKnownClims.Locale:
 					user.Locale = claim.Value;
@@ -279,29 +274,29 @@ public sealed class AppUserStore :
 		}
 	}
 
-	public Task ReplaceClaimAsync(AppUser user, Claim claim, Claim newClaim, CancellationToken cancellationToken)
+	public Task ReplaceClaimAsync(AppUser<T> user, Claim claim, Claim newClaim, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException(nameof(ReplaceClaimAsync));
 	}
 
-	public Task RemoveClaimsAsync(AppUser user, IEnumerable<Claim> claims, CancellationToken cancellationToken)
+	public Task RemoveClaimsAsync(AppUser<T> user, IEnumerable<Claim> claims, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();
 	}
 
-	public Task<IList<AppUser>> GetUsersForClaimAsync(Claim claim, CancellationToken cancellationToken)
+	public Task<IList<AppUser<T>>> GetUsersForClaimAsync(Claim claim, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();
 	}
 	#endregion
 
 	#region IUserLoginStore
-	public Task AddLoginAsync(AppUser user, UserLoginInfo login, CancellationToken cancellationToken)
+	public Task AddLoginAsync(AppUser<T> user, UserLoginInfo login, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();
 	}
 
-	public async Task<AppUser> FindByLoginAsync(String loginProvider, String providerKey, CancellationToken cancellationToken)
+	public async Task<AppUser<T>> FindByLoginAsync(String loginProvider, String providerKey, CancellationToken cancellationToken)
 	{
 		if (loginProvider == "ApiKey")
 		{
@@ -309,40 +304,40 @@ public sealed class AppUserStore :
 			{
 				{ "ApiKey", providerKey }
 			};
-			return await _dbContext.LoadAsync<AppUser>(DataSource, $"[{DbSchema}].[FindApiUserByApiKey]", prms)
-				?? new AppUser();
+			return await _dbContext.LoadAsync<AppUser<T>>(DataSource, $"[{DbSchema}].[FindApiUserByApiKey]", prms)
+				?? new AppUser<T>();
 		}
 		throw new NotImplementedException(loginProvider);
 	}
 
-	public Task<IList<UserLoginInfo>> GetLoginsAsync(AppUser user, CancellationToken cancellationToken)
+	public Task<IList<UserLoginInfo>> GetLoginsAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();
 	}
 
-	public Task RemoveLoginAsync(AppUser user, String loginProvider, String providerKey, CancellationToken cancellationToken)
+	public Task RemoveLoginAsync(AppUser<T> user, String loginProvider, String providerKey, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();
 	}
 	#endregion
 
 	#region IUserPhoneNumberStore
-	public Task SetPhoneNumberAsync(AppUser user, String phoneNumber, CancellationToken cancellationToken)
+	public Task SetPhoneNumberAsync(AppUser<T> user, String phoneNumber, CancellationToken cancellationToken)
     {
 		return Task.CompletedTask;
     }
 
-	public Task<String> GetPhoneNumberAsync(AppUser user, CancellationToken cancellationToken)
+	public Task<String> GetPhoneNumberAsync(AppUser<T> user, CancellationToken cancellationToken)
     {
 		return Task.FromResult(user.PhoneNumber ?? throw new InvalidOperationException("Phone number is null"));
     }
 
-	public Task<Boolean> GetPhoneNumberConfirmedAsync(AppUser user, CancellationToken cancellationToken)
+	public Task<Boolean> GetPhoneNumberConfirmedAsync(AppUser<T> user, CancellationToken cancellationToken)
     {
 		return Task.FromResult(user.PhoneNumberConfirmed);
     }
 
-	public async Task SetPhoneNumberConfirmedAsync(AppUser user, Boolean confirmed, CancellationToken cancellationToken)
+	public async Task SetPhoneNumberConfirmedAsync(AppUser<T> user, Boolean confirmed, CancellationToken cancellationToken)
     {
 		var prm = new ExpandoObject()
 		{
@@ -354,7 +349,7 @@ public sealed class AppUserStore :
 	#endregion
 
 	#region Token support
-	public Task AddTokenAsync(AppUser user, String provider, String token, DateTime expires, String? tokenToRemove = null)
+	public Task AddTokenAsync(AppUser<T> user, String provider, String token, DateTime expires, String? tokenToRemove = null)
 	{
 		var exp = new ExpandoObject()
 		{
@@ -368,7 +363,7 @@ public sealed class AppUserStore :
 		return _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].AddToken", exp);
 	}
 
-	public async Task<String?> GetTokenAsync(AppUser user, String provider, String token)
+	public async Task<String?> GetTokenAsync(AppUser<T> user, String provider, String token)
 	{
 		var exp = new ExpandoObject()
 		{
@@ -380,7 +375,7 @@ public sealed class AppUserStore :
 		return res?.Token;
 	}
 
-	public Task RemoveTokenAsync(AppUser user, String provider, String token)
+	public Task RemoveTokenAsync(AppUser<T> user, String provider, String token)
 	{
 		var exp = new ExpandoObject()
 		{

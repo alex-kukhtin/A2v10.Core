@@ -21,14 +21,14 @@ public class JwtBearerService
 		_settings = settings;
 	}
 
-	public JwtTokenResult BuildToken(AppUser user)
+	public JwtTokenResult BuildToken<T>(AppUser<T> user) where T : struct
 	{
 		if (String.IsNullOrEmpty(user.UserName))
 			throw new SecurityTokenException("UserName is null");
 
 		var claims = new List<Claim>() {
 			new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-			new Claim(WellKnownClims.NameIdentifier, user.Id.ToString()),
+			new Claim(WellKnownClims.NameIdentifier, user.Id.ToString()!),
 			new Claim(WellKnownClims.Name, user.UserName)
 		};
 		var expires = DateTime.UtcNow.AddMinutes(_settings.ExpireMinutes);
@@ -65,7 +65,7 @@ public class JwtBearerService
 		return Convert.ToBase64String(randomBytes);
 	}
 
-	public AppUser ExtractPrincipalFromToken(String token)
+	public AppUser<T> ExtractPrincipalFromToken<T>(String token) where T : struct
 	{
 		var handler = new JwtSecurityTokenHandler();
 
@@ -79,9 +79,9 @@ public class JwtBearerService
 
 		if (principal != null && principal.Identity != null)
 		{
-			return new AppUser()
+			return new AppUser<T>()
 			{
-				Id = principal.Identity.GetUserId<Int64>(),
+				Id = principal.Identity.GetUserId<T>(),
 				UserName = principal.Identity.GetUserClaim(WellKnownClims.Name)
 			};
 		}

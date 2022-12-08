@@ -51,8 +51,8 @@ public static class ServicesExtensions
 		var builder = services.AddPlatformCore()
 			.AddDefaultIdentityUI();
 
-		services.AddPlatformIdentityCore()
-			.AddIdentityConfiguration(configuration)
+		services.AddPlatformIdentityCore<Int64>()
+			.AddIdentityConfiguration<Int64>(configuration)
 			.AddPlatformAuthentication();
 
 		var appPath = configuration.GetValue<String>("application:path").Trim();

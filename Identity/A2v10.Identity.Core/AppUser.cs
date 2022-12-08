@@ -2,9 +2,9 @@
 
 namespace A2v10.Web.Identity;
 
-public class AppUser
+public class AppUser<T> where T : struct
 {
-	public Int64 Id { get; set; }
+	public T Id { get; set; }
 	public String? UserName { get; set; }
 	public String? PersonName { get; set; }
 	public String? Email { get; set; }
@@ -18,14 +18,16 @@ public class AppUser
 	public Boolean EmailConfirmed { get; set; }
 	public Boolean PhoneNumberConfirmed { get; set; }
 
-	public Int32 Tenant { get; set; }
+	public T? Tenant { get; set; }
 	public String? Segment { get; set; }
 	public String? Locale { get; set; }
 
-	public Int64 Organization { get; set; }
+	public T? Organization { get; set; }
+	public Boolean SetPassword { get; set; }
 
 	// for .net framework compatibility
 	public String? PasswordHash2 { get; set; }
 	public String? SecurityStamp2 { get; set; }
+
 }
 

@@ -8,13 +8,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Data.Core" Version="10.0.7317" />
+		<PackageReference Include="A2v10.Data.Core" Version="10.0.7318" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\Identity\A2v10.Identity.Core\A2v10.Identity.Core.csproj" />
-		<ProjectReference Include="..\Identity\Av10.Web.Identity.ApiKey\Av10.Web.Identity.ApiKey.csproj" />
+		<ProjectReference Include="..\Identity\A2v10.Web.Identity.ApiKey\A2v10.Web.Identity.ApiKey.csproj" />
 	</ItemGroup>
 
 	<PropertyGroup>

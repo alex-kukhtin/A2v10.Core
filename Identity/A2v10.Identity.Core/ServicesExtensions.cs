@@ -11,10 +11,10 @@ using Microsoft.Extensions.Configuration;
 namespace Microsoft.Extensions.DependencyInjection;
 public static class ServicesExtensions
 {
-	public static IServiceCollection AddPlatformIdentityCore(this IServiceCollection services,
-		Action<IdentityOptions>? identityOptions = null)
+	public static IServiceCollection AddPlatformIdentityCore<T>(this IServiceCollection services,
+		Action<IdentityOptions>? identityOptions = null) where T : struct
 	{
-		services.AddIdentityCore<AppUser>(options =>
+		services.AddIdentityCore<AppUser<T>>(options =>
 		{
 			if (identityOptions != null)
 				identityOptions(options);
@@ -27,15 +27,15 @@ public static class ServicesExtensions
 				options.Password.RequiredLength = 6;
 			}
 		})
-		.AddUserManager<UserManager<AppUser>>()
-		.AddSignInManager<SignInManager<AppUser>>()
+		.AddUserManager<UserManager<AppUser<T>>>()
+		.AddSignInManager<SignInManager<AppUser<T>>>()
 		.AddDefaultTokenProviders(); // for change password, email & phone validation
 
-		services.AddScoped<AppUserStore>()
-		.AddScoped<IUserStore<AppUser>>(s => s.GetRequiredService<AppUserStore>())
-		.AddScoped<IUserLoginStore<AppUser>>(s => s.GetRequiredService<AppUserStore>())
-		.AddScoped<IUserClaimStore<AppUser>>(s => s.GetRequiredService<AppUserStore>())
-		.AddScoped<ISecurityStampValidator, SecurityStampValidator<AppUser>>()
+		services.AddScoped<AppUserStore<T>>()
+		.AddScoped<IUserStore<AppUser<T>>>(s => s.GetRequiredService<AppUserStore<T>>())
+		.AddScoped<IUserLoginStore<AppUser<T>>>(s => s.GetRequiredService<AppUserStore<T>>())
+		.AddScoped<IUserClaimStore<AppUser<T>>>(s => s.GetRequiredService<AppUserStore<T>>())
+		.AddScoped<ISecurityStampValidator, SecurityStampValidator<AppUser<T>>>()
 		.AddScoped<ISystemClock, SystemClock>();
 		return services;
 	}
@@ -80,7 +80,8 @@ public static class ServicesExtensions
 	}
 
 
-	public static IServiceCollection AddIdentityConfiguration(this IServiceCollection services, IConfiguration configuration)
+	public static IServiceCollection AddIdentityConfiguration<T>(this IServiceCollection services, IConfiguration configuration)
+		where T: struct
     {
 		var sect = configuration.GetSection(AppUserStoreConfiguration.ConfigurationKey);
 		if (sect == null)
@@ -88,8 +89,8 @@ public static class ServicesExtensions
 		var storeConfig = new AppUserStoreConfiguration();
 		sect.Bind(storeConfig);
 
-		services.AddOptions<AppUserStoreOptions>();
-		services.Configure<AppUserStoreOptions>(opts =>
+		services.AddOptions<AppUserStoreOptions<T>>();
+		services.Configure<AppUserStoreOptions<T>>(opts =>
 		{
 			opts.Schema = storeConfig.Schema;
 			opts.DataSource = storeConfig.DataSource;

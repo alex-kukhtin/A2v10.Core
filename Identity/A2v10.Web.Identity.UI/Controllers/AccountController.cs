@@ -19,15 +19,15 @@ namespace A2v10.Web.Identity.UI;
 [ApiExplorerSettings(IgnoreApi = true)]
 public class AccountController : Controller
 {
-	private readonly SignInManager<AppUser> _signInManager;
-	private readonly UserManager<AppUser> _userManager;
-	private readonly AppUserStore _userStore;
+	private readonly SignInManager<AppUser<Int64>> _signInManager;
+	private readonly UserManager<AppUser<Int64>> _userManager;
+	private readonly AppUserStore<Int64> _userStore;
 	private readonly IAntiforgery _antiforgery;
 	private readonly IDbContext _dbContext;
 	private readonly IApplicationHost _host;
 	private readonly IApplicationTheme _appTheme;
 
-	public AccountController(SignInManager<AppUser> signInManager, UserManager<AppUser> userManager, AppUserStore userStore, IAntiforgery antiforgery, IApplicationHost host, IDbContext dbContext, IApplicationTheme appTheme)
+	public AccountController(SignInManager<AppUser<Int64>> signInManager, UserManager<AppUser<Int64>> userManager, AppUserStore<Int64> userStore, IAntiforgery antiforgery, IApplicationHost host, IDbContext dbContext, IApplicationTheme appTheme)
 	{
 		_signInManager = signInManager;
 		_userManager = userManager;
@@ -104,7 +104,7 @@ public class AccountController : Controller
 		try
 		{
 			var isValid = await _antiforgery.IsRequestValidAsync(HttpContext);
-			var user = new AppUser()
+			var user = new AppUser<Int64>()
 			{
 				UserName = model.Login,
 				PhoneNumber = Guid.NewGuid().ToString(),

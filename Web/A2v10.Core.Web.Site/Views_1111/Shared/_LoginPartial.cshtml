@@ -1,7 +1,7 @@
 ﻿@using A2v10.Web.Identity
 @using Microsoft.AspNetCore.Identity
-@inject SignInManager<AppUser> SignInManager
-@inject UserManager<AppUser> UserManager
+@inject SignInManager<AppUser<Int64>> SignInManager
+@inject UserManager<AppUser<Int64>> UserManager
 
 <ul class="navbar-nav">
 @if (SignInManager.IsSignedIn(User))
