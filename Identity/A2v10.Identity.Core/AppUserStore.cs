@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 
 using A2v10.Data.Interfaces;
 using A2v10.Identity.Core.Helpers;
+using System.ComponentModel;
 
 namespace A2v10.Web.Identity;
 public sealed class AppUserStore<T>:
@@ -256,6 +257,37 @@ public sealed class AppUserStore<T>:
 		*/
 	}
 
+	private T? ConvertTo(String value)
+	{
+		return (T)TypeDescriptor.GetConverter(typeof(T)).ConvertFromInvariantString(value); 
+	}
+
+	private async Task UpdateClaim(AppUser<T> user, Claim claim)
+	{
+		var prm = new ExpandoObject()
+					{
+						{ ParamNames.UserId,  user.Id },
+						{ claim.Type,  claim.Value}
+					};
+		await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.Claim.{claim.Type}]", prm);
+
+		switch (claim.Type)
+		{
+			case WellKnownClims.TenantId:
+				user.Tenant = ConvertTo(claim.Value);
+				break;
+			case WellKnownClims.Organization:
+				user.Organization = ConvertTo(claim.Value);
+				break;
+			case WellKnownClims.Locale:
+				user.Locale = claim.Value;
+				break;
+			case WellKnownClims.PersonName:
+				user.PersonName = claim.Value;
+				break;
+		}
+	}
+
 	public async Task AddClaimsAsync(AppUser<T> user, IEnumerable<Claim> claims, CancellationToken cancellationToken)
 	{
 		// dynamically added 
@@ -263,34 +295,15 @@ public sealed class AppUserStore<T>:
         {
 			if (claim.Value == null)
 				continue;
-			var prm = new ExpandoObject()
-					{
-						{ ParamNames.UserId,  user.Id },
-						{ claim.Type,  claim.Value}
-					};
-			await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.Claim.{claim.Type}]", prm);
-
-			switch (claim.Type)
-            {
-				case WellKnownClims.TenantId:
-					user.Tenant = (T)Convert.ChangeType(claim.Value, typeof(T));
-					break;
-				case WellKnownClims.Organization:
-					user.Organization = (T) Convert.ChangeType(claim.Value, typeof(T));
-					break;
-				case WellKnownClims.Locale:
-					user.Locale = claim.Value;
-					break;
-				case WellKnownClims.PersonName:
-					user.PersonName = claim.Value;
-					break;
-			}
+			await UpdateClaim(user, claim);
 		}
 	}
 
+
+
 	public Task ReplaceClaimAsync(AppUser<T> user, Claim claim, Claim newClaim, CancellationToken cancellationToken)
 	{
-		throw new NotImplementedException(nameof(ReplaceClaimAsync));
+		return UpdateClaim(user, claim);
 	}
 
 	public Task RemoveClaimsAsync(AppUser<T> user, IEnumerable<Claim> claims, CancellationToken cancellationToken)
