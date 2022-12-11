@@ -257,9 +257,9 @@ public sealed class AppUserStore<T>:
 		*/
 	}
 
-	private T? ConvertTo(String value)
+	private static T? ConvertTo(String value)
 	{
-		return (T)TypeDescriptor.GetConverter(typeof(T)).ConvertFromInvariantString(value); 
+		return (T?) TypeDescriptor.GetConverter(typeof(T)).ConvertFromInvariantString(value); 
 	}
 
 	private async Task UpdateClaim(AppUser<T> user, Claim claim)

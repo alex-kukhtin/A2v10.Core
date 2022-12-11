@@ -11,10 +11,14 @@ using A2v10.Infrastructure;
 
 public record TenantInfo : ITenantInfo
 {
-	public String Procedure => "[a2security].[SetTenantId]";
+    public TenantInfo(Object tenantId)
+	{
+		TenantId = tenantId;
+	}
+    public String Procedure => "[a2security].[SetTenantId]";
 	public String ParamName => "@TenantId";
 
-	public Int32 TenantId { get; init; }
+	public Object TenantId { get; init; }
 }
 
 
@@ -37,10 +41,7 @@ public class WebTenantManager : ITenantManager
 			return null;
 		if (!_currentUser.Identity.Tenant.HasValue)
 			throw new InvalidOperationException("There is no TenantId");
-		return new TenantInfo()
-		{
-			TenantId = _currentUser.Identity.Tenant.Value
-		};
+		return new TenantInfo(_currentUser.Identity.Tenant.Value);
 	}
 	#endregion
 }
