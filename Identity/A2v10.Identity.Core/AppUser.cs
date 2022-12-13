@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2022 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Web.Identity;
 
@@ -17,12 +17,11 @@ public class AppUser<T> where T : struct
 	public Int32 AccessFailedCount { get; set; }
 	public Boolean EmailConfirmed { get; set; }
 	public Boolean PhoneNumberConfirmed { get; set; }
-
 	public T? Tenant { get; set; }
 	public String? Segment { get; set; }
 	public String? Locale { get; set; }
-
 	public T? Organization { get; set; }
+	public String? OrganizationKey { get; set; }
 	public Boolean SetPassword { get; set; }
 
 	// for .net framework compatibility

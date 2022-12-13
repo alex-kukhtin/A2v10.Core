@@ -40,7 +40,8 @@ public static class ServicesExtensions
 		return services;
 	}
 
-	public static AuthenticationBuilder AddPlatformAuthentication(this IServiceCollection services)
+	public static AuthenticationBuilder AddPlatformAuthentication(this IServiceCollection services,
+		Action<CookieAuthenticationEvents>? cockieEvents = null)
 	{
 		var builder = services.AddAuthentication(options =>
 		{
@@ -61,6 +62,7 @@ public static class ServicesExtensions
 			{
 				OnValidatePrincipal = SecurityStampValidator.ValidatePrincipalAsync
 			};
+			cockieEvents?.Invoke(o.Events);
 		})
 		.AddCookie(IdentityConstants.ExternalScheme, o =>
 		{
