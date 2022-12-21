@@ -1,4 +1,4 @@
-﻿// Copyright © 2020-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2020-2022 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Web.Identity;
 public static class WellKnownClims
@@ -13,5 +13,6 @@ public static class WellKnownClims
 	public const String Segment = nameof(Segment);
 	public const String Locale = nameof(Locale);
 	public const String Organization = nameof(Organization);
+    public const String OrganizationKey = nameof(OrganizationKey);
 }
 
