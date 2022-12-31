@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 
 namespace A2v10.Xaml;
@@ -22,6 +22,7 @@ public class TabPanel : UIElement
 	public Length? MinHeight { get; set; }
 	public Boolean Overflow { get; set; }
 	public Length? Width { get; set; }
+	public Length? Height { get; set; }
 
 	public TabPosition TabPosition { get; set; }
 
@@ -50,6 +51,9 @@ public class TabPanel : UIElement
 
 		if (Width != null)
 			panel.MergeStyle("width", Width.Value);
+
+		if (Height != null)
+			panel.MergeStyleUnit("height", Height.Value);
 
 
 		var isBind = GetBinding(nameof(ItemsSource));
