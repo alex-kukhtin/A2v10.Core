@@ -8,7 +8,7 @@
 ==================================
 1. User.Identity.IsUserOpenId()
 2. AppUser.ChangePasswordEnabled
-3.
+3. Add Licence & readme for A2v10.Identity.Core
 
 == TODO: Compiler
 

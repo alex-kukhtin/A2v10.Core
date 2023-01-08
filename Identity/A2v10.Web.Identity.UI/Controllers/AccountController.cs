@@ -71,7 +71,8 @@ public class AccountController : Controller
 			/* refresh claims!
 			var user = await _userManager.FindByNameAsync(model.Login);
 			await _userManager.AddClaimAsync(user, new System.Security.Claims.Claim("Organization", "234563"));
-			await _signInManager.RefreshSignInAsync(user);
+			// sign in again!
+			await _signInManager.SignInAsync(user);
 			*/
 			var returnUrl = (TempData["ReturnUrl"] ?? "/").ToString()!.ToLowerInvariant();
 			if (returnUrl.StartsWith("/account"))

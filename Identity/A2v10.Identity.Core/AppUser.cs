@@ -1,4 +1,6 @@
-﻿// Copyright © 2015-2022 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+
+using System;
 
 namespace A2v10.Web.Identity;
 
@@ -23,6 +25,7 @@ public class AppUser<T> where T : struct
 	public T? Organization { get; set; }
 	public String? OrganizationKey { get; set; }
 	public Boolean SetPassword { get; set; }
+	public Boolean IsPersistent { get; set; }
 
 	// for .net framework compatibility
 	public String? PasswordHash2 { get; set; }

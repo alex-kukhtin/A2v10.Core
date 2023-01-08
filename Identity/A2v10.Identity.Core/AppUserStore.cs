@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
 using System.Dynamic;
@@ -242,6 +242,10 @@ public sealed class AppUserStore<T>:
 			list.Add(new Claim(WellKnownClims.Locale, user.Locale));
 		if (user.Organization != null)
 			list.Add(new Claim(WellKnownClims.Organization, user.Organization.ToString()!));
+		if (user.OrganizationKey != null)
+			list.Add(new Claim(WellKnownClims.OrganizationKey, user.OrganizationKey));
+		if (user.IsPersistent)
+			list.Add(new Claim(WellKnownClims.IsPersistent, "true"));
 
 		//if (user.IsAdmin) // TODO
 		//list.Add(new Claim(WellKnownClims.Admin, "Admin"));
