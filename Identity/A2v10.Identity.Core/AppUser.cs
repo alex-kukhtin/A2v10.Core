@@ -1,6 +1,6 @@
 ﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
-using System;
+using System.Collections.Generic;
 
 namespace A2v10.Web.Identity;
 
@@ -30,6 +30,8 @@ public class AppUser<T> where T : struct
 	// for .net framework compatibility
 	public String? PasswordHash2 { get; set; }
 	public String? SecurityStamp2 { get; set; }
+
+	public Boolean IsEmpty => EqualityComparer<T>.Default.Equals(Id, default);
 
 }
 

@@ -1,4 +1,4 @@
-﻿// Copyright © 2020-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2020-2023 Alex Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -40,7 +40,7 @@ public class ApiKeyAuthenticationHandler<T> : AuthenticationHandler<ApiKeyAuthen
 		if (String.IsNullOrEmpty(apiKey))
 			return AuthenticateResult.NoResult();
 		var appUser = await _userLoginStore.FindByLoginAsync("ApiKey", apiKey, CancellationToken.None);
-		if (appUser == null)
+		if (appUser == null || appUser.IsEmpty)
 			return AuthenticateResult.NoResult();
 		var claims = await _userClaimStore.GetClaimsAsync(appUser, CancellationToken.None);
 

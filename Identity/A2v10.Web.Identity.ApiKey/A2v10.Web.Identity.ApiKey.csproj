@@ -5,13 +5,13 @@
 		<Nullable>enable</Nullable>
 		<AssemblyName>A2v10.Identity.ApiKey</AssemblyName>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-		<Version>10.1.8078</Version>
+		<Version>10.1.8083</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Identity.ApiKey</PackageId>
 		<Authors>Oleksandr Kukhtin</Authors>
 		<Company>Oleksandr Kukhtin</Company>
 		<Description>A2v10 Identity ApiKey</Description>
-		<Copyright>Copyright © 2021-2022 Oleksandr Kukhtin. All rights reserved.</Copyright>
+		<Copyright>Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.</Copyright>
 		<RepositoryType>github</RepositoryType>
 		<PackageTags>A2v10</PackageTags>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
