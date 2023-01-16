@@ -24,6 +24,7 @@ public class AppUser<T> where T : struct
 	public String? Locale { get; set; }
 	public T? Organization { get; set; }
 	public String? OrganizationKey { get; set; }
+	public DateOnly BirthDate { get; set; }
 	public Boolean SetPassword { get; set; }
 	public Boolean IsPersistent { get; set; }
 
