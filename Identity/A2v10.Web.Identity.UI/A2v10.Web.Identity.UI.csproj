@@ -5,8 +5,8 @@
 		<Nullable>enable</Nullable>
 		<AddRazorSupportForMvc>true</AddRazorSupportForMvc>
 		<AssemblyName>A2v10.Identity.UI</AssemblyName>
-		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		<Version>10.1.8074</Version>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<Version>10.1.8084</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Identity.UI</PackageId>
 		<Authors>Oleksandr Kukhtin</Authors>

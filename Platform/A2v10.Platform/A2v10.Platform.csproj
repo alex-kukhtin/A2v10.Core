@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFramework>net6.0</TargetFramework>
-		<Version>10.1.8074</Version>
+		<Version>10.1.8084</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Plaform</PackageId>
 		<Authors>Oleksandr Kukthin</Authors>
@@ -12,6 +12,7 @@
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/alex-kukhtin/A2v10.Core</RepositoryUrl>
 		<PackageTags>A2v10 Platform</PackageTags>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 	</PropertyGroup>
 
 	<ItemGroup>

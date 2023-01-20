@@ -5,7 +5,7 @@
 		<Nullable>enable</Nullable>
 		<AssemblyName>A2v10.Xaml</AssemblyName>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		<Version>10.1.8074</Version>
+		<Version>10.1.8084</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.ViewEngine.Xaml</PackageId>
 		<Authors>Oleksandr Kukthin</Authors>
@@ -15,6 +15,7 @@
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/alex-kukhtin/A2v10.Core</RepositoryUrl>
 		<PackageTags>A2v10 Xaml</PackageTags>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 	</PropertyGroup>
 
 	<ItemGroup>

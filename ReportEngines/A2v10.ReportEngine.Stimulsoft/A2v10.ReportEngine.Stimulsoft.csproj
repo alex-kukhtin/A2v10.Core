@@ -4,8 +4,8 @@
 		<Nullable>enable</Nullable>
 		<AddRazorSupportForMvc>true</AddRazorSupportForMvc>
 		<AssemblyName>A2v10.ReportEngine.Stimulsoft</AssemblyName>
-		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		<Version>10.1.8074</Version>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<Version>10.1.8084</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.ReportEngine.Stimulsoft</PackageId>
 		<Authors>Oleksandr Kukhtin</Authors>
