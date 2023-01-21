@@ -41,8 +41,9 @@ public static class ServicesExtensions
 	}
 
 	public static AuthenticationBuilder AddPlatformAuthentication(this IServiceCollection services,
-		Action<CookieAuthenticationEvents>? cockieEvents = null)
+		String? cookiePrefix = null, Action<CookieAuthenticationEvents>? cockieEvents = null)
 	{
+		String px = !String.IsNullOrEmpty(cookiePrefix) ? $"{cookiePrefix}." : String.Empty;
 		var builder = services.AddAuthentication(options =>
 		{
 			options.DefaultAuthenticateScheme = IdentityConstants.ApplicationScheme;
@@ -51,7 +52,7 @@ public static class ServicesExtensions
 		})
 		.AddCookie(IdentityConstants.ApplicationScheme, o =>
 		{
-			o.Cookie.Name = IdentityConstants.ApplicationScheme;
+			o.Cookie.Name = px + IdentityConstants.ApplicationScheme;
 			o.Cookie.SameSite = SameSiteMode.Strict;
 			o.LoginPath = new PathString("/account/login");
 			o.ReturnUrlParameter = "returnurl";
@@ -66,14 +67,14 @@ public static class ServicesExtensions
 		})
 		.AddCookie(IdentityConstants.ExternalScheme, o =>
 		{
-			o.Cookie.Name = IdentityConstants.ExternalScheme;
+			o.Cookie.Name = px + IdentityConstants.ExternalScheme;
 			o.Cookie.SameSite = SameSiteMode.Strict;
 			o.ExpireTimeSpan = TimeSpan.FromMinutes(5);
 		})
 		.AddCookie(IdentityConstants.TwoFactorUserIdScheme,
 			o =>
 			{
-				o.Cookie.Name = IdentityConstants.TwoFactorUserIdScheme;
+				o.Cookie.Name = px + IdentityConstants.TwoFactorUserIdScheme;
 				o.Cookie.SameSite = SameSiteMode.Strict;
 				o.ExpireTimeSpan = TimeSpan.FromMinutes(5);
 			}

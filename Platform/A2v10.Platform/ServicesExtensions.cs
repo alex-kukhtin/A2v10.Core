@@ -51,12 +51,14 @@ public static class ServicesExtensions
 		var builder = services.AddPlatformCore()
 			.AddDefaultIdentityUI();
 
-		services.AddPlatformIdentityCore<Int64>()
-			.AddIdentityConfiguration<Int64>(configuration)
-			.AddPlatformAuthentication();
-
 		var appPath = configuration.GetValue<String>("application:path").Trim();
 		Boolean isClr = appPath.StartsWith("clr-type:");
+
+		var cookiePrefix = configuration.GetValue<String>("identity:cookiePrefix").Trim();
+	
+		services.AddPlatformIdentityCore<Int64>()
+			.AddIdentityConfiguration<Int64>(configuration)
+			.AddPlatformAuthentication(cookiePrefix);
 
 		services.AddSingleton<IWebHostFilesProvider, WebHostFilesProvider>();
 		if (isClr)
