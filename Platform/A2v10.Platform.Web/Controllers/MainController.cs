@@ -22,13 +22,15 @@ public class MainController : Controller
 	private readonly AppOptions _appOptions;
 	private readonly IDataService _dataService;
 	private readonly IApplicationTheme _appTheme;
+	private readonly IAppCodeProvider _codeProvider;
 
 	public MainController(IDataService dataService, IOptions<AppOptions> appOptions, 
-		IApplicationTheme appTheme)
+		IApplicationTheme appTheme, IAppCodeProvider codeProvider)
 	{
 		_appOptions = appOptions.Value;
 		_dataService = dataService;
 		_appTheme = appTheme;
+		_codeProvider = codeProvider;
 	}
 
 	static String? NormalizePathInfo(String? pathInfo)
@@ -59,6 +61,7 @@ public class MainController : Controller
 			HelpUrl = "http://TODO/HELP_URL",
 			ModelStyles = layoutDescr?.ModelStyles,
 			ModelScripts = layoutDescr?.ModelScripts,
+			HasNavPane = HasNavPane(),
 			Theme = _appTheme.MakeTheme()
 		};
 		ViewBag.__Minify = "min.";
@@ -68,7 +71,11 @@ public class MainController : Controller
 		return View(viewModel);
 	}
 
-
+	private Boolean HasNavPane()
+	{
+		String path = _codeProvider.MakeFullPath("_navpane", "model.json", false);
+		return _codeProvider.FileExists(path);
+	}
 	public Boolean IsStaticFile()
 	{
 		var path = Request?.Path.ToString();

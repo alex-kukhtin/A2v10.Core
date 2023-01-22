@@ -5,7 +5,7 @@
 		<Nullable>enable</Nullable>
 		<AssemblyName>A2v10.Identity.Core</AssemblyName>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-		<Version>10.1.8084</Version>
+		<Version>10.1.8085</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Identity.Core</PackageId>
 		<Authors>Oleksandr Kukhtin</Authors>
@@ -18,7 +18,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7320" />
+		<PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7321" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication" Version="2.2.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.2.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />

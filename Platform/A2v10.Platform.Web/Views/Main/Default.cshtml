@@ -10,6 +10,10 @@
 			:menu=menu :new-menu=newMenu :settings-menu=settingsMenu :app-data="appData"
 			person-name="@Model.PersonName" :user-is-admin="userIsAdmin" :show-feedback="showFeedback"
 			:feedback-visible="feedbackVisible" :change-password="changePassword" :nav-bar-mode=navBarMode>
+		@if (Model.HasNavPane)
+		{
+			<include class=nav-pane src="/_page/_navpane/index/0" :hide-indicator="true"></include>
+		}
 		@if (host.IsMultiCompany)
 		{
 			<a2-company-button :source="companies.menu" :links="companies.links"></a2-company-button>
@@ -50,4 +54,7 @@
 		</div>
 	</footer>
 	<a2-iframe-target></a2-iframe-target>
+	<div class="side-pane-frame" v-if="sidePaneVisible">
+		<include :src="sidePaneUrl" :hide-indicator="true"></include>
+	</div>
 </div>

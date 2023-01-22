@@ -6,7 +6,7 @@
 		<Nullable>enable</Nullable>
 		<AssemblyName>A2v10.ReportEngine.Pdf</AssemblyName>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<Version>10.1.8084</Version>
+		<Version>10.1.8085</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.ReportEngine.Pdf</PackageId>
 		<Authors>Oleksandr Kukhtin</Authors>
@@ -20,7 +20,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="HarfBuzzSharp" Version="2.8.2.3" />
-		<PackageReference Include="Jint" Version="3.0.0-beta-2044" />
+		<PackageReference Include="Jint" Version="3.0.0-beta-2046" />
 		<PackageReference Include="QuestPDF" Version="2022.12.1" />
 		<PackageReference Include="SkiaSharp" Version="2.88.3" />
 		<PackageReference Include="SkiaSharp.HarfBuzz" Version="2.88.3" />

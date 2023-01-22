@@ -1,4 +1,4 @@
-﻿// Copyright © 2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 
@@ -10,7 +10,7 @@ public class MainViewModel
 	public String? HelpUrl { get; init; }
 	public String? ModelStyles { get; init; }
 	public String? ModelScripts { get; init; }
-
+	public Boolean HasNavPane { get; init; }
 	public String Theme { get; init; } = String.Empty;
 }
 

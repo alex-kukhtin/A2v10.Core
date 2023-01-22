@@ -63,7 +63,10 @@ public sealed class AppUserStore<T>:
 
 	public async Task<AppUser<T>> FindByIdAsync(String UserId, CancellationToken cancellationToken)
 	{
-		return await _dbContext.LoadAsync<AppUser<T>>(DataSource, $"[{DbSchema}].[FindUserById]", new { UserId })
+		T? typedUserId = (T?) TypeDescriptor.GetConverter(typeof(T)).ConvertFromInvariantString(UserId);
+		if (typedUserId == null)
+			return new AppUser<T>();
+		return await _dbContext.LoadAsync<AppUser<T>>(DataSource, $"[{DbSchema}].[FindUserById]", new { Id = typedUserId })
 			?? new AppUser<T>();
 	}
 
