@@ -218,7 +218,9 @@ public enum ModelCommandType
 	startProcess,
 	resumeProcess,
 	script,
-	invokeTarget
+	invokeTarget,
+	// new
+	csharp
 }
 
 public class ModelJsonCommand : ModelJsonBase, IModelCommand
