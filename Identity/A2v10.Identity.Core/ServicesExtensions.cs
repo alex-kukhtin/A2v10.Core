@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -38,6 +38,14 @@ public static class ServicesExtensions
 		.AddScoped<ISecurityStampValidator, SecurityStampValidator<AppUser<T>>>()
 		.AddScoped<ISystemClock, SystemClock>();
 		return services;
+	}
+
+	public static IServiceCollection AddPlatformIdentityApi<T>(this IServiceCollection services) where T : struct
+	{
+		return services.AddScoped<AppUserStore<T>>()
+		.AddScoped<IUserStore<AppUser<T>>>(s => s.GetRequiredService<AppUserStore<T>>())
+		.AddScoped<IUserLoginStore<AppUser<T>>>(s => s.GetRequiredService<AppUserStore<T>>())
+		.AddScoped<IUserClaimStore<AppUser<T>>>(s => s.GetRequiredService<AppUserStore<T>>());
 	}
 
 	public static AuthenticationBuilder AddPlatformAuthentication(this IServiceCollection services,

@@ -1,6 +1,5 @@
 ﻿
 using A2v10.Web.Identity.ApiKey;
-using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
 
@@ -30,10 +29,8 @@ public class Startup
 		});
 
 		// Identity
-		services.AddPlatformIdentityCore<Int64>(options =>
-		{
-		})
-		.AddIdentityConfiguration<Int64>(Configuration);
+		services.AddPlatformIdentityApi<Int64>()
+			.AddIdentityConfiguration<Int64>(Configuration);
 
 		// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 		services.AddEndpointsApiExplorer();
@@ -72,7 +69,6 @@ public class Startup
 		})
 		.AddApiKeyAuthorization<Int64>(options => {
 		});
-
 	}
 
 	public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -87,10 +83,12 @@ public class Startup
 
 		app.UseHttpsRedirection();
 
-		app.UseAuthentication();
 
 		app.UseRouting();
+
+		app.UseAuthentication();
 		app.UseAuthorization();
+
 		app.UseEndpoints(endpoints =>
 			endpoints.MapControllers()
 		);

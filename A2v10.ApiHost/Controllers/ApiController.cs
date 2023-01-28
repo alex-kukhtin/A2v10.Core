@@ -18,7 +18,8 @@ public class ResponseSuccess
 }
 
 [ApiController]
-[Authorize(AuthenticationSchemes = ApiKeyAuthenticationOptions.Scheme)]
+//[Authorize(AuthenticationSchemes = ApiKeyAuthenticationOptions.Scheme)]
+[Authorize]
 [Route("api/[action]")]
 [Produces("application/json")]
 [ProducesResponseType(typeof(ResponseSuccess), StatusCodes.Status200OK)]
@@ -43,10 +44,12 @@ public class ApiController : ControllerBase
 	/// </remarks>
 	/// <response code="200">Returns the newly created item</response>
 	/// <response code="401">If the item is null</response>	
-	[HttpGet("{id:string}")]
+	//[HttpGet("{id:guid}")]
+	[HttpGet("{id}")]
 	[ActionName("getforecast")]
 	public IEnumerable<WeatherForecast> Get([FromRoute] String id)
 	{
+		// constraints: Microsoft.AspNetCore.Routing.RouteOptions
 		var userId = User.Identity.GetUserId<Int64>();
 		var tenantId = User.Identity.GetUserTenantId();	
 		

@@ -65,6 +65,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "A2v10.ApiHost", "A2v10.ApiH
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "A2v10.Web.Identity.ApiKey", "Identity\A2v10.Web.Identity.ApiKey\A2v10.Web.Identity.ApiKey.csproj", "{694FF0D7-ECD5-448C-B78B-F15D986D2D6F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiHost.Tests", "ApiHost.Tests\ApiHost.Tests.csproj", "{79058D2F-D88F-452C-8172-AEE8139EF6CC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -143,6 +145,10 @@ Global
 		{694FF0D7-ECD5-448C-B78B-F15D986D2D6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{694FF0D7-ECD5-448C-B78B-F15D986D2D6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{694FF0D7-ECD5-448C-B78B-F15D986D2D6F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{79058D2F-D88F-452C-8172-AEE8139EF6CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{79058D2F-D88F-452C-8172-AEE8139EF6CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{79058D2F-D88F-452C-8172-AEE8139EF6CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{79058D2F-D88F-452C-8172-AEE8139EF6CC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
