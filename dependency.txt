@@ -20,9 +20,9 @@
 		A2v10.Infrastructure (8070)
 A2v10.Web.Assets (8070)
 
-A2v10.Identity.ApiKey (8076)
-A2v10.Identity.Jwt    (8076)
-	A2v10.Identity.Core (8076)
+A2v10.Identity.ApiKey (8085)
+A2v10.Identity.Jwt    (8085)
+	A2v10.Identity.Core (8085)
 
 A2v10.CodeGen.Support (8070)
 

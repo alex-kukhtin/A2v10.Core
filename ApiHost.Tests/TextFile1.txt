@@ -1,6 +1,8 @@
 ﻿
 == appsettings + user secrets
 =============================
-
+1. Add secrets.json
+2. builder.AddUserSecrets<ApiTestAppFactory>();
+3. _factory.Services.GetService<IConfiguration>(); 
 
 
