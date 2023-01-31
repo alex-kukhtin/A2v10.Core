@@ -1,18 +1,21 @@
 ﻿# About
+A2v10.IdentityCore is a set of basic identity services 
+for the A2v10 platform applications.
+
 
 # How to use
 
 ```csharp
+// T - type of user identifier
 
-	// Add api identity
-	services.AddPlatformIdentityApi<Int64>()
-		.AddIdentityConfiguration<Int64>(Configuration);
-
+services.AddPlatformIdentityCore<T>()
+.AddIdentityConfiguration<T>(configuration)
+.AddPlatformAuthentication(cookiePrefix);
 ```
 
 # Related Packages
 
-* [A2v10.Web.Identity.ApiKey](https://www.nuget.org/packages/A2v10.Identity.ApiKey)
+* [A2v10.Identity.ApiKey](https://www.nuget.org/packages/A2v10.Identity.ApiKey)
 
 
 # Feedback

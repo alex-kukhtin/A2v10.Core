@@ -5,7 +5,7 @@
 		<Nullable>enable</Nullable>
 		<AssemblyName>A2v10.Identity.ApiKey</AssemblyName>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-		<Version>10.1.8086</Version>
+		<Version>10.1.8087</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Identity.ApiKey</PackageId>
 		<Authors>Oleksandr Kukhtin</Authors>
@@ -15,6 +15,7 @@
 		<RepositoryType>github</RepositoryType>
 		<PackageTags>A2v10</PackageTags>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -35,5 +36,9 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\A2v10.Identity.Core\A2v10.Identity.Core.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="README.md" Pack="true" PackagePath="\"/>
 	</ItemGroup>
 </Project>

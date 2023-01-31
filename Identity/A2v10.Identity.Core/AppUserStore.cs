@@ -13,6 +13,7 @@ using A2v10.Identity.Core.Helpers;
 using System.ComponentModel;
 
 namespace A2v10.Web.Identity;
+
 public sealed class AppUserStore<T>:
 	IUserStore<AppUser<T>>,
 	IUserLoginStore<AppUser<T>>,
@@ -29,10 +30,13 @@ public sealed class AppUserStore<T>:
 
 	private static class ParamNames
     {
-		public const String UserId = nameof(UserId);
+		public const String Id = nameof(Id);
 		public const String Provider = nameof(Provider);
 		public const String Token = nameof(Token);
 		public const String PasswordHash = nameof(PasswordHash);
+		public const String SecurityStamp = nameof(SecurityStamp);
+		public const String Confirmed = nameof(Confirmed);
+		public const String Expires = nameof(Expires);
 	}
 	public AppUserStore(IDbContext dbContext, IOptions<AppUserStoreOptions<T>> options)
 	{
@@ -127,8 +131,8 @@ public sealed class AppUserStore<T>:
 		}
 		var prm = new ExpandoObject()
 		{
-			{ ParamNames.UserId,  user.Id },
-			{ "SecurityStamp",  stamp }
+			{ ParamNames.Id,  user.Id },
+			{ ParamNames.SecurityStamp,  stamp }
 		};
 		await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.SetSecurityStamp]", prm);
 		user.SecurityStamp2 = stamp;
@@ -156,8 +160,8 @@ public sealed class AppUserStore<T>:
 	{
 		var prm = new ExpandoObject()
 		{
-			{ ParamNames.UserId,  user.Id },
-			{ "Confirmed",  confirmed}
+			{ ParamNames.Id,  user.Id },
+			{ ParamNames.Confirmed,  confirmed}
 		};
 		await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.SetEMailConfirmed]", prm);
 		user.EmailConfirmed = confirmed;
@@ -192,7 +196,7 @@ public sealed class AppUserStore<T>:
 		}
 		var prm = new ExpandoObject()
 		{
-			{ ParamNames.UserId,  user.Id },
+			{ ParamNames.Id,  user.Id },
 			{ ParamNames.PasswordHash,  passwordHash }
 		};
 		await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.SetPasswordHash]", prm);
@@ -272,10 +276,10 @@ public sealed class AppUserStore<T>:
 	private async Task UpdateClaim(AppUser<T> user, Claim claim)
 	{
 		var prm = new ExpandoObject()
-					{
-						{ ParamNames.UserId,  user.Id },
-						{ claim.Type,  claim.Value}
-					};
+		{
+			{ ParamNames.Id,  user.Id },
+			{ claim.Type,  claim.Value}
+		};
 		await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.Claim.{claim.Type}]", prm);
 
 		switch (claim.Type)
@@ -327,6 +331,7 @@ public sealed class AppUserStore<T>:
 	#region IUserLoginStore
 	public Task AddLoginAsync(AppUser<T> user, UserLoginInfo login, CancellationToken cancellationToken)
 	{
+		// ParamName: UserId
 		throw new NotImplementedException();
 	}
 
@@ -375,8 +380,8 @@ public sealed class AppUserStore<T>:
     {
 		var prm = new ExpandoObject()
 		{
-			{ ParamNames.UserId,  user.Id },
-			{ "Confirmed",  confirmed}
+			{ ParamNames.Id,  user.Id },
+			{ ParamNames.Confirmed,  confirmed}
 		};
 		await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.SetPhoneNumberConfirmed]", prm);
 		user.PhoneNumberConfirmed = confirmed;
@@ -388,10 +393,10 @@ public sealed class AppUserStore<T>:
 	{
 		var exp = new ExpandoObject()
 		{
-			{ ParamNames.UserId, user.Id },
+			{ ParamNames.Id, user.Id },
 			{ ParamNames.Provider, provider },
 			{ ParamNames.Token, token },
-			{ "Expires", expires }
+			{ ParamNames.Expires, expires }
 		};
 		if (!String.IsNullOrEmpty(tokenToRemove))
 			exp.Add("Remove", tokenToRemove);
@@ -402,7 +407,7 @@ public sealed class AppUserStore<T>:
 	{
 		var exp = new ExpandoObject()
 		{
-			{ ParamNames.UserId, user.Id },
+			{ ParamNames.Id, user.Id },
 			{ ParamNames.Provider, provider },
 			{ ParamNames.Token, token }
 		};
@@ -414,7 +419,7 @@ public sealed class AppUserStore<T>:
 	{
 		var exp = new ExpandoObject()
 		{
-			{ ParamNames.UserId, user.Id },
+			{ ParamNames.Id, user.Id },
 			{ ParamNames.Provider, provider },
 			{ ParamNames.Token, token }
 		};
