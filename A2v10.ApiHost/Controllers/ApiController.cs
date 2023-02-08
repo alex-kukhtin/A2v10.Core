@@ -51,7 +51,7 @@ public class ApiController : ControllerBase
 	{
 		// constraints: Microsoft.AspNetCore.Routing.RouteOptions
 		var userId = User.Identity.GetUserId<Int64>();
-		var tenantId = User.Identity.GetUserTenantId();	
+		var tenantId = User.Identity.GetUserTenant<Int32>();	
 		
 		return Enumerable.Range(1, 5).Select(index => new WeatherForecast
 		{

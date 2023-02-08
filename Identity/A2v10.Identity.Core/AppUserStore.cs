@@ -235,24 +235,24 @@ public sealed class AppUserStore<T>:
 
 	private static void AddDefaultClaims(AppUser<T> user, List<Claim> list)
 	{
-		list.Add(new Claim(WellKnownClims.NameIdentifier, user.Id.ToString()!));
-		list.Add(new Claim(WellKnownClims.PersonName, user.PersonName ?? String.Empty));
+		list.Add(new Claim(WellKnownClaims.NameIdentifier, user.Id.ToString()!));
+		list.Add(new Claim(WellKnownClaims.PersonName, user.PersonName ?? String.Empty));
 		if (user.Tenant != null)
 		{
-			list.Add(new Claim(WellKnownClims.TenantId, user.Tenant.ToString()!));
+			list.Add(new Claim(WellKnownClaims.Tenant, user.Tenant.ToString()!));
 			//if (user.IsTenantAdmin)
 				//list.Add(new Claim("TenantAdmin", "TenantAdmin"));
 		}
 		if (!String.IsNullOrEmpty(user.Segment))
-			list.Add(new Claim(WellKnownClims.Segment, user.Segment));
+			list.Add(new Claim(WellKnownClaims.Segment, user.Segment));
 		if (!String.IsNullOrEmpty(user.Locale))
-			list.Add(new Claim(WellKnownClims.Locale, user.Locale));
+			list.Add(new Claim(WellKnownClaims.Locale, user.Locale));
 		if (user.Organization != null)
-			list.Add(new Claim(WellKnownClims.Organization, user.Organization.ToString()!));
+			list.Add(new Claim(WellKnownClaims.Organization, user.Organization.ToString()!));
 		if (user.OrganizationKey != null)
-			list.Add(new Claim(WellKnownClims.OrganizationKey, user.OrganizationKey));
+			list.Add(new Claim(WellKnownClaims.OrganizationKey, user.OrganizationKey));
 		if (user.IsPersistent)
-			list.Add(new Claim(WellKnownClims.IsPersistent, "true"));
+			list.Add(new Claim(WellKnownClaims.IsPersistent, "true"));
 
 		//if (user.IsAdmin) // TODO
 		//list.Add(new Claim(WellKnownClims.Admin, "Admin"));
@@ -284,16 +284,16 @@ public sealed class AppUserStore<T>:
 
 		switch (claim.Type)
 		{
-			case WellKnownClims.TenantId:
+			case WellKnownClaims.Tenant:
 				user.Tenant = ConvertTo(claim.Value);
 				break;
-			case WellKnownClims.Organization:
+			case WellKnownClaims.Organization:
 				user.Organization = ConvertTo(claim.Value);
 				break;
-			case WellKnownClims.Locale:
+			case WellKnownClaims.Locale:
 				user.Locale = claim.Value;
 				break;
-			case WellKnownClims.PersonName:
+			case WellKnownClaims.PersonName:
 				user.PersonName = claim.Value;
 				break;
 		}

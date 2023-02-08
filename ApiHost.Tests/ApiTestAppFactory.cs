@@ -48,7 +48,7 @@ namespace ApiHost.Tests
 		}
 		protected override void ConfigureClient(HttpClient client)
 		{
-			var config = Services.GetService<IConfiguration>();
+			var config = Services.GetRequiredService<IConfiguration>();
 			var apiKey = config.GetValue<String>("TestRun:ApiKey");
 			client.DefaultRequestHeaders.Add("X-Api-Key", apiKey);
 		}

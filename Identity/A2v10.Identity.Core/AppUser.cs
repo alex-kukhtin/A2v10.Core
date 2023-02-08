@@ -27,6 +27,7 @@ public class AppUser<T> where T : struct
 	public DateOnly BirthDate { get; set; }
 	public Boolean SetPassword { get; set; }
 	public Boolean IsPersistent { get; set; }
+	public String? Roles { get; set; }
 
 	// for .net framework compatibility
 	public String? PasswordHash2 { get; set; }

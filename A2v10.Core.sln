@@ -65,7 +65,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "A2v10.ApiHost", "A2v10.ApiH
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "A2v10.Web.Identity.ApiKey", "Identity\A2v10.Web.Identity.ApiKey\A2v10.Web.Identity.ApiKey.csproj", "{694FF0D7-ECD5-448C-B78B-F15D986D2D6F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiHost.Tests", "ApiHost.Tests\ApiHost.Tests.csproj", "{79058D2F-D88F-452C-8172-AEE8139EF6CC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApiHost.Tests", "ApiHost.Tests\ApiHost.Tests.csproj", "{79058D2F-D88F-452C-8172-AEE8139EF6CC}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{B2D38948-4CBF-49BB-8708-A508012D6FC2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -28,8 +28,8 @@ public class JwtBearerService
 
 		var claims = new List<Claim>() {
 			new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-			new Claim(WellKnownClims.NameIdentifier, user.Id.ToString()!),
-			new Claim(WellKnownClims.Name, user.UserName)
+			new Claim(WellKnownClaims.NameIdentifier, user.Id.ToString()!),
+			new Claim(WellKnownClaims.Name, user.UserName)
 		};
 		var expires = DateTime.UtcNow.AddMinutes(_settings.ExpireMinutes);
 
@@ -82,7 +82,7 @@ public class JwtBearerService
 			return new AppUser<T>()
 			{
 				Id = principal.Identity.GetUserId<T>(),
-				UserName = principal.Identity.GetUserClaim(WellKnownClims.Name)
+				UserName = principal.Identity.GetUserClaim(WellKnownClaims.Name)
 			};
 		}
 		throw new SecurityTokenValidationException();

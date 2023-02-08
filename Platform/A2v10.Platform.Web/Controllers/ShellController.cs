@@ -48,7 +48,7 @@ public class ShellController : Controller
 	}
 
 	Int64? UserId => User.Identity.GetUserId<Int64?>();
-	Int32? TenantId => User.Identity.GetUserTenantId();
+	Int32? TenantId => User.Identity.GetUserTenant<Int32>();
 
 	public Boolean IsDebugConfiguration => _appOptions.Environment.IsDebug;
 

@@ -1,6 +1,7 @@
 ﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
-using System.Globalization;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Security.Claims;
 using System.Security.Principal;
 
@@ -14,17 +15,22 @@ public static class IdentityExtensions
 
 	public static T? GetUserId<T>(this IIdentity? identity)
 	{
+		return identity.GetClaimValue<T>(WellKnownClaims.NameIdentifier);
+	}
+
+	public static T? GetClaimValue<T>(this IIdentity? identity, String claimName)
+	{
 		if (identity == null)
 			return default;
 		if (identity is not ClaimsIdentity user)
 			return default;
-		var claim = user?.FindFirst(WellKnownClims.NameIdentifier)?.Value;
-		if (claim == null)
-			return default;
+		var claim = user?.FindFirst(claimName)?.Value;
 		var tp = typeof(T);
 		if (tp.IsNullableType())
 			tp = Nullable.GetUnderlyingType(tp);
-		return (T) Convert.ChangeType(claim, tp!, CultureInfo.InvariantCulture);
+		if (claim == null)
+			return default;
+		return (T?) TypeDescriptor.GetConverter(tp!).ConvertFromInvariantString(claim); 
 	}
 
 	public static String? GetUserClaim(this IIdentity? identity, String claim)
@@ -36,59 +42,67 @@ public static class IdentityExtensions
 
 	public static String? GetUserPersonName(this IIdentity? identity)
 	{
-		var claim = identity.GetUserClaim(WellKnownClims.PersonName);
+		var claim = identity.GetUserClaim(WellKnownClaims.PersonName);
 		return String.IsNullOrEmpty(claim) ? identity?.Name : claim;
 	}
 
 	public static Boolean IsUserAdmin(this IIdentity? identity)
 	{
-		var claim = identity?.GetUserClaim(WellKnownClims.Admin);
-		return claim == WellKnownClims.Admin;
+		var claim = identity?.GetUserClaim(WellKnownClaims.Admin);
+		return claim == WellKnownClaims.Admin;
 	}
 
 	public static String? GetUserClientId(this IIdentity? identity)
 	{
-		return identity?.GetUserClaim(WellKnownClims.ClientId);
+		return identity?.GetUserClaim(WellKnownClaims.ClientId);
+	}
+
+	public static String? GetUserRoles(this IIdentity? identity)
+	{
+		return identity?.GetUserClaim(WellKnownClaims.Roles);
+	}
+
+	public static IEnumerable<String> GetUserRolesList(this IIdentity? identity, Char separator = ',')
+	{
+		var roles = identity?.GetUserClaim(WellKnownClaims.Roles);
+		if (String.IsNullOrEmpty(roles))
+			yield break;
+		foreach (var r in roles.Split(separator))
+			yield return r;
 	}
 
 	public static String? GetUserLocale(this IIdentity? identity)
 	{
-		return identity?.GetUserClaim(WellKnownClims.Locale);
+		return identity?.GetUserClaim(WellKnownClaims.Locale);
 	}
 
 	public static Boolean IsTenantAdmin(this IIdentity? identity)
 	{
 		if (identity is not ClaimsIdentity user)
 			return false;
-		var value = user.FindFirst(WellKnownClims.TenantAdmin)?.Value;
+		var value = user.FindFirst(WellKnownClaims.TenantAdmin)?.Value;
 		if (value == null)
 			return false;
-		return value == WellKnownClims.TenantAdmin;
+		return value == WellKnownClaims.TenantAdmin;
 	}
 
-	public static Int32? GetUserTenantId(this IIdentity? identity)
+	public static T? GetUserTenant<T>(this IIdentity? identity)
 	{
-		var tenant = identity?.GetUserClaim(WellKnownClims.TenantId);
-		if (tenant == null)
-			return null;
-		if (Int32.TryParse(tenant, out Int32 tenantId))
-			return tenantId == 0 ? null : tenantId;
-		return null;
+		return identity.GetClaimValue<T>(WellKnownClaims.Tenant);
+	}
+	public static T? GetUserOrganization<T>(this IIdentity? identity)
+	{
+		return identity.GetClaimValue<T>(WellKnownClaims.Organization);
+	}
+
+	public static String? GetUserOrganizationKey(this IIdentity? identity)
+	{
+		return identity?.GetUserClaim(WellKnownClaims.OrganizationKey);
 	}
 
 	public static String? GetUserSegment(this IIdentity? identity)
 	{
-		return identity?.GetUserClaim(WellKnownClims.Segment);
-	}
-
-	public static Int64 GetUserOrganization(this IIdentity? identity)
-	{
-		var org = identity?.GetUserClaim(WellKnownClims.Organization);
-		if (String.IsNullOrEmpty(org))
-			return 0;
-		if (Int64.TryParse(org, out Int64 result))
-			return result;
-		return 0;
+		return identity?.GetUserClaim(WellKnownClaims.Segment);
 	}
 }
 

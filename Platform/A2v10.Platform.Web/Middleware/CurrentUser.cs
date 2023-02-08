@@ -93,7 +93,7 @@ public class CurrentUser : ICurrentUser, IDbIdentity
 			Identity = new UserIdentity()
 			{
 				Id = ident.GetUserId<Int64>(),
-				Tenant = ident.GetUserTenantId(),
+				Tenant = ident.GetUserTenant<Int32>(),
 				Name = ident.Name,
 				PersonName = ident.GetUserPersonName(),
 				Segment = ident.GetUserSegment(),
