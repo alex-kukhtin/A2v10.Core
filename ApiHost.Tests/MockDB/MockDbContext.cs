@@ -92,6 +92,11 @@ public class MockDbContext : IDbContext
 		throw new NotImplementedException();
 	}
 
+	public Task<T> LoadTypedModelAsync<T>(string? source, string command, object? prms, int commandTimeout = 0) where T : new()
+	{
+		throw new NotImplementedException();
+	}
+
 	public ExpandoObject? ReadExpando(string? source, string command, ExpandoObject? prms = null)
 	{
 		throw new NotImplementedException();
