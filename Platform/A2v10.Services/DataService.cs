@@ -199,12 +199,32 @@ public class DataService : IDataService
 		return JsonConvert.SerializeObject(model.Root, JsonHelpers.DataSerializerSettings);
 	}
 
+	void ResolveParams(ExpandoObject prms, ExpandoObject data)
+	{
+		if (prms == null || data == null)
+			return;
+		var vals = new Dictionary<String, String?>();
+		foreach (var (k, v) in prms)
+		{
+			if (v != null && v is String strVal && strVal.StartsWith("{{"))
+			{
+				vals.Add(k, data.Resolve(strVal));
+			}
+		}
+		foreach (var (k, v) in vals)
+		{
+			prms.Set(k, v);
+		}
+	}
+
 	public async Task<String> SaveAsync(String baseUrl, ExpandoObject data, Action<ExpandoObject> setParams)
 	{
 		var platformBaseUrl = CreatePlatformUrl(baseUrl);
 		var view = await _modelReader.GetViewAsync(platformBaseUrl);
 
 		var savePrms = view.CreateParameters(platformBaseUrl, null, setParams);
+
+		ResolveParams(savePrms, data);
 
 		CheckUserState();
 
