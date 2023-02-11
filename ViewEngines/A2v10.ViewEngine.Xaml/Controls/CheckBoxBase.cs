@@ -37,6 +37,7 @@ public abstract class CheckBoxBase : ValuedControl, ITableControl
 		var tag = new TagBuilder("label", ControlType, IsInGrid);
 		onRender?.Invoke(tag);
 		MergeAttributes(tag, context, mode);
+		SetSize(tag, ControlType);
 		if (IsLabelEmpty)
 			tag.AddCssClass("no-label");
 		if (Color != TextColor.Default)
