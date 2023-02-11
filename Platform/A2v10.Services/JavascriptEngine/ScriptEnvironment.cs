@@ -1,14 +1,15 @@
-﻿// Copyright © 2021-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.
 
+using System.Text;
 using System.Net.Http;
+using System.Security.Cryptography;
 
 using Microsoft.Extensions.DependencyInjection;
 
+using Jint;
 using Jint.Native;
-using Jint.Runtime;
 
 using A2v10.Data.Interfaces;
-using Jint;
 
 namespace A2v10.Services.Javascript;
 public class ScriptEnvironment
@@ -83,6 +84,36 @@ public class ScriptEnvironment
 #pragma warning restore IDE1006 // Naming Styles
 	{
 		return FetchCommand.Execute(_httpClientFactory, url, prms);
+	}
+
+#pragma warning disable IDE1006 // Naming Styles
+	public FetchResponse invokeCommand(String cmd, String baseUrl, ExpandoObject parameters)
+#pragma warning restore IDE1006 // Naming Styles
+	{
+		throw new NotImplementedException();
+	}
+
+#pragma warning disable IDE1006 // Naming Styles
+	public String generateApiKey()
+#pragma warning restore IDE1006 // Naming Styles
+	{
+		Int32 size = 48;
+		Byte[] data = RandomNumberGenerator.GetBytes(size);
+		String res = Convert.ToBase64String(data);
+		res = res.Remove(res.Length - 2);
+		return res;
+	}
+
+#pragma warning disable IDE1006 // Naming Styles
+	public String toBase64(String source, int codePage, bool safe)
+#pragma warning restore IDE1006 // Naming Styles
+	{
+		var enc = Encoding.GetEncoding(codePage, new EncoderReplacementFallback(String.Empty), DecoderFallback.ReplacementFallback);
+		var bytes = enc.GetBytes(source);
+		var res = Convert.ToBase64String(bytes);
+		if (safe)
+			res = res.Replace('+', '-').Replace('/', '_').TrimEnd('=');
+		return res;
 	}
 
 #pragma warning disable IDE1006 // Naming Styles
