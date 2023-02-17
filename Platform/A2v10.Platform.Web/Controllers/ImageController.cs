@@ -45,7 +45,6 @@ public class ImageController : BaseController
 				throw new InvalidReqestExecption($"Invalid mime type for image. ({pathInfo})");
 			if (!IsTokenValid(blob.Token, token))
 				throw new InvalidReqestExecption("Invalid image token");
-
 			return new WebBinaryActionResult(blob.Stream, blob.Mime);
 		}
 		catch (Exception ex)
@@ -62,6 +61,9 @@ public class ImageController : BaseController
 		try
 		{
 			var files = Request.Form.Files;
+			foreach (var f in files)
+			{
+			}
 
 		}
 		catch (Exception ex)

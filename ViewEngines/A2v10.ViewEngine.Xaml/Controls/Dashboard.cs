@@ -1,4 +1,4 @@
-﻿// Copyright © 2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2022-2023 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Xaml;
 
@@ -17,8 +17,9 @@ public class Dashboard : UIElementBase
 	public UIElementBase? ListTemplate { get; set; }
 	public UIElement? EmptyPanel { get; set; }
 	public String? CssClass { get; set; }
+    public String? GroupBy { get; set; }
 
-	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
+    public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
 		if (SkipRender(context))
 			return;
@@ -31,7 +32,8 @@ public class Dashboard : UIElementBase
 			throw new XamlException("ItemsSource binding is required for the Dashboard element");
 		MergeBindingAttributeBool(tag, context, ":editable", nameof(Editable), Editable);
 		MergeBindingAttributeBool(tag, context, ":edit-mode", nameof(EditMode), EditMode);
-		tag.MergeAttribute(":items", sourceBind.GetPath(context));
+        tag.MergeAttribute("group-by", GroupBy);
+        tag.MergeAttribute(":items", sourceBind.GetPath(context));
 		if (CellWidth != null || CellHeight != null)
 		{
 			var cx = "Auto";
