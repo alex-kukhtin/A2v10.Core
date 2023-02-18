@@ -1,13 +1,14 @@
-﻿// Copyright © 2021 Alex Kukhtin. All rights reserved.
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
 
 using System;
 using System.Collections.Generic;
 
-
 namespace A2v10.Infrastructure
 {
-	public interface ILocalizerDictiorany
-	{
-		IDictionary<String, String> GetLocalizerDictionary(String locale);
-	}
+    public interface ILocalizerDictiorany
+    {
+        IDictionary<String, String> GetLocalizerDictionary(String locale);
+    }
 }

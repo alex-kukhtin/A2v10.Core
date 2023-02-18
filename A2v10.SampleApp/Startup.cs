@@ -26,7 +26,7 @@ public class Startup
 		{
 			factory.RegisterEngine<PdfReportEngine>("pdf");
 		});
-	}
+    }
 
 	public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 	{

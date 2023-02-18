@@ -14,7 +14,7 @@ Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
 Site: https://a2v10.com
 GitHub: https://github.com/alex-kukhtin/A2v10.Core
 -->
-<html lang="@userLocale.Locale">
+<html lang="@userLocale.Language">
 <head>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1">
@@ -30,7 +30,7 @@ GitHub: https://github.com/alex-kukhtin/A2v10.Core
 <body>
 	@RenderBody()
 	<script type="text/javascript" src="/scripts/vue.@Html.Raw(ViewBag.__Minify)js?v=@appVersion.AppBuild"></script>
-	<script type="text/javascript" src="/scripts/locale-@Html.Raw(userLocale.Locale + ".min.js")?v=@appVersion.AppBuild"></script>
+    <script type="text/javascript" src="/scripts/locale-@Html.Raw(userLocale.Language + ".min.js")?v=@appVersion.AppBuild"></script>
 	<script type="text/javascript" src="/scripts/main.js?v=@appVersion.AppBuild"></script>
 	<script type="text/javascript" src="/_shell/scriptadmin"></script>
 </body>

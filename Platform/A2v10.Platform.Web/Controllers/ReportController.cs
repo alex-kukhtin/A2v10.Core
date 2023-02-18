@@ -1,4 +1,6 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
 
 using System;
 using System.Threading.Tasks;
@@ -12,20 +14,18 @@ using A2v10.Infrastructure;
 
 namespace A2v10.Platform.Web.Controllers;
 
-
 public class RenderReportResult
 {
-	public IActionResult ActionResult { get; }
-	public String ContentType { get; }
-	public String FileName { get; }
-	public RenderReportResult(IActionResult result, String contentType, String fileName)
-	{
-		ActionResult = result;
-		ContentType = contentType;
-		FileName = fileName;
-	}
+    public IActionResult ActionResult { get; }
+    public String ContentType { get; }
+    public String FileName { get; }
+    public RenderReportResult(IActionResult result, String contentType, String fileName)
+    {
+        ActionResult = result;
+        ContentType = contentType;
+        FileName = fileName;
+    }
 }
-
 
 [Route("report/[action]/{Id}")]
 [ExecutingFilter]
@@ -33,73 +33,73 @@ public class RenderReportResult
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 public class ReportController : BaseController
 {
-	private readonly IReportService _reportService;
+    private readonly IReportService _reportService;
 
-	public ReportController(IApplicationHost host,
-		ILocalizer localizer, ICurrentUser currentUser, IProfiler profiler, IReportService reportService)
-		: base(host, localizer, currentUser, profiler)
-	{
-		_reportService = reportService;
-	}
+    public ReportController(IApplicationHost host,
+        ILocalizer localizer, ICurrentUser currentUser, IProfiler profiler, IReportService reportService)
+        : base(host, localizer, currentUser, profiler)
+    {
+        _reportService = reportService;
+    }
 
+    [HttpGet]
+    public async Task<IActionResult> Show(String Id, String Base, String Rep, String format = "pdf")
+    {
+        var res = await Render(Id, Base, Rep, format);
+        Response.ContentType = res.ContentType;
+        return res.ActionResult;
+    }
 
-	[HttpGet]
-	public async Task<IActionResult> Show(String Id, String Base, String Rep, String format = "pdf")
-	{
-		var res = await Render(Id, Base, Rep, format);
-		Response.ContentType = res.ContentType;
-		return res.ActionResult;
-	}
+    [HttpGet]
+    public Task<IActionResult> Export(String Id, String Base, String Rep, String format = "pdf")
+    {
+        return TryCatch(async () =>
+        {
 
-	[HttpGet]
-	public Task<IActionResult> Export(String Id, String Base, String Rep, String format = "pdf")
-	{
-		return TryCatch(async () =>
-		{
+            var res = await Render(Id, Base, Rep, format);
+            Response.ContentType = res.ContentType;
 
-			var res = await Render(Id, Base, Rep, format);
-			Response.ContentType = res.ContentType;
+            var cdh = new ContentDispositionHeaderValue("attachment")
+            {
+                FileNameStar = Localize(res.FileName)
+            };
+            Response.Headers.Add("Content-Disposition", cdh.ToString());
+            return res.ActionResult;
+        });
+    }
 
-			var cdh = new ContentDispositionHeaderValue("attachment")
-			{
-				FileNameStar = Localize(res.FileName)
-			};
-			Response.Headers.Add("Content-Disposition", cdh.ToString());
-			return res.ActionResult;
-		});
-	}
+    [HttpGet]
+    public Task<IActionResult> Print(String Id, String Base, String Rep)
+    {
+        return TryCatch(async () =>
+        {
+            return (await Render(Id, Base, Rep, "pdf")).ActionResult;
+        });
+    }
 
-	[HttpGet]
-	public Task<IActionResult> Print(String Id, String Base, String Rep)
-	{
-		return TryCatch(async () =>
-		{
-			return (await Render(Id, Base, Rep, "pdf")).ActionResult;
-		});
-	}
+    private async Task<IActionResult> TryCatch(Func<Task<IActionResult>> action)
+    {
+        try
+        {
+            return await action();
+        }
+        catch (Exception ex)
+        {
+            return WriteHtmlException(ex);
+        }
+    }
 
-	private async Task<IActionResult> TryCatch(Func<Task<IActionResult>> action)
-	{
-		try
-		{
-			return await action();
-		}
-		catch (Exception ex)
-		{
-			return WriteHtmlException(ex);
-		}
-	}
+    async Task<RenderReportResult> Render(String Id, String Base, String Rep, String format)
+    {
+        var path = Path.Combine(Base, Rep, Id);
+        var fmt = Enum.Parse<ExportReportFormat>(format, ignoreCase: true);
+        var result = await _reportService.ExportAsync(path + Request.QueryString, fmt, (exp) =>
+        {
+            exp.SetNotNull("Id", Id);
+            SetSqlQueryParams(exp);
+        });
 
-	async Task<RenderReportResult> Render(String Id, String Base, String Rep, String format)
-	{
-		var path = Path.Combine(Base, Rep, Id);
-		var fmt = Enum.Parse<ExportReportFormat>(format, ignoreCase: true);
-		var result = await _reportService.ExportAsync(path + Request.QueryString, fmt, (exp) => {
-			exp.SetNotNull("Id", Id);
-			SetSqlQueryParams(exp);
-		});
-
-		var res = new WebBinaryActionResult(result.Body, result.ContentType);
-		return new RenderReportResult(res, result.ContentType, result.FileName ?? Rep);
-	}
+        var res = new WebBinaryActionResult(result.Body, result.ContentType);
+        return new RenderReportResult(res, result.ContentType, result.FileName ?? Rep);
+    }
 }

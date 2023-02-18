@@ -7,11 +7,18 @@
 	const Shell = component('std:shellController');
 	const locale = window.$$locale;
 
+    const AppHeader = component('std:appHeader');
+    const MainView = component('std:mainView');
+
 	const menu = $(Menu);
 	const menucomp = component('std:navmenu');
 
 	const shell = new Shell({
 		el: '#shell',
+        components: {
+            'a2-app-header': AppHeader,
+            'a2-main-view': MainView
+        },
 		data: {
 			title: menu.SysParams ? menu.SysParams.AppTitle : '',
 			subtitle: locale.$Admin,

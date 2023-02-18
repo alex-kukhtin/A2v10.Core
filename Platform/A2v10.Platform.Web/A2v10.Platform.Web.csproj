@@ -28,6 +28,7 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\..\Identity\A2v10.Identity.Core\A2v10.Identity.Core.csproj" />
 	  <ProjectReference Include="..\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
+	  <ProjectReference Include="..\A2v10.Services\A2v10.Services.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

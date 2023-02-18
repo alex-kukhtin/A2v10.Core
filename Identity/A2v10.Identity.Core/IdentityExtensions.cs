@@ -86,7 +86,17 @@ public static class IdentityExtensions
 		return value == WellKnownClaims.TenantAdmin;
 	}
 
-	public static T? GetUserTenant<T>(this IIdentity? identity)
+    public static Int32? GetUserTenantId(this IIdentity? identity)
+    {
+        var tenant = identity?.GetUserClaim(WellKnownClaims.Tenant);
+        if (tenant == null)
+            return null;
+        if (Int32.TryParse(tenant, out Int32 tenantId))
+            return tenantId == 0 ? null : tenantId;
+        return null;
+    }
+
+    public static T? GetUserTenant<T>(this IIdentity? identity)
 	{
 		return identity.GetClaimValue<T>(WellKnownClaims.Tenant);
 	}

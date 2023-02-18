@@ -1,4 +1,6 @@
-﻿// Copyright © 2021-2022 Alex Kukhtin. All rights reserved.
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
 
 using System;
 using System.Globalization;
@@ -21,119 +23,121 @@ using A2v10.Platform.Web;
 namespace Microsoft.Extensions.DependencyInjection;
 public static class ServicesExtensions
 {
-	public static IServiceCollection UseSqlServerStorage(this IServiceCollection services, IConfiguration configuration)
-	{
-		// Storage
-		services.AddOptions<DataConfigurationOptions>();
+    public static IServiceCollection UseSqlServerStorage(this IServiceCollection services, IConfiguration configuration)
+    {
+        // Storage
+        services.AddOptions<DataConfigurationOptions>();
 
-		services.AddScoped<IDbContext, SqlDbContext>()
-			.AddSingleton<MetadataCache>()
-			.AddSingleton<IDataConfiguration, DataConfiguration>();
+        services.AddScoped<IDbContext, SqlDbContext>()
+            .AddSingleton<MetadataCache>()
+            .AddSingleton<IDataConfiguration, DataConfiguration>();
 
-		services.Configure<DataConfigurationOptions>(opts =>
-		{
-			opts.ConnectionStringName = "Default";
-			opts.DisableWriteMetadataCaching = !configuration.GetValue<Boolean>("Data:MetadataCache");
-			var to = configuration.GetValue<String>("Data:CommandTimeout");
-			if (to != null)
-			{
-				if (TimeSpan.TryParse(to, out TimeSpan timeout))
-					opts.DefaultCommandTimeout = timeout;
-				else
-					throw new FormatException("Data:CommandTimeout. Invalid TimeSpan format");
-			}
-		});
-		return services;
-	}
+        services.Configure<DataConfigurationOptions>(opts =>
+        {
+            opts.ConnectionStringName = "Default";
+            opts.DisableWriteMetadataCaching = !configuration.GetValue<Boolean>("Data:MetadataCache");
+            var to = configuration.GetValue<String>("Data:CommandTimeout");
+            if (to != null)
+            {
+                if (TimeSpan.TryParse(to, out TimeSpan timeout))
+                    opts.DefaultCommandTimeout = timeout;
+                else
+                    throw new FormatException("Data:CommandTimeout. Invalid TimeSpan format");
+            }
+        });
+        return services;
+    }
 
-	public static IMvcBuilder UsePlatform(this IServiceCollection services, IConfiguration configuration)
-	{
-		var builder = services.AddPlatformCore()
-			.AddDefaultIdentityUI();
+    public static IMvcBuilder UsePlatform(this IServiceCollection services, IConfiguration configuration)
+    {
+        var builder = services.AddPlatformCore()
+            .AddDefaultIdentityUI();
 
-		var appPath = configuration.GetValue<String>("application:path").Trim();
-		Boolean isClr = appPath.StartsWith("clr-type:");
+        var appPath = configuration.GetValue<String>("application:path").Trim();
+        Boolean isClr = appPath.StartsWith("clr-type:");
 
-		var cookiePrefix = configuration.GetValue<String>("identity:cookiePrefix").Trim();
-	
-		services.AddPlatformIdentityCore<Int64>()
-			.AddIdentityConfiguration<Int64>(configuration)
-			.AddPlatformAuthentication(cookiePrefix);
+        var cookiePrefix = configuration.GetValue<String>("identity:cookiePrefix").Trim();
 
-		services.AddSingleton<IWebHostFilesProvider, WebHostFilesProvider>();
-		if (isClr)
-		{
-			services.AddSingleton<IAppProvider, AppProvider>();
-			services.AddSingleton<IAppCodeProvider, ClrCodeProvider>();
-			services.AddSingleton<IModelJsonPartProvider, ModelJsonPartProviderClr>();
-			services.AddSingleton<IXamlPartProvider, XamlPartProviderClr>();
-		}
-		else /* Is File System */
-		{
-			services.AddSingleton<IAppCodeProvider, FileSystemCodeProvider>();
-			services.AddSingleton<IModelJsonPartProvider, ModelJsonPartProviderFile>();
-			services.AddSingleton<IXamlPartProvider, XamlPartProviderFile>();
-		}
+        services.AddPlatformIdentityCore<Int64>()
+            .AddIdentityConfiguration<Int64>(configuration)
+            .AddPlatformAuthentication(cookiePrefix);
 
-		services.UseSqlServerStorage(configuration);
+        services.AddSingleton<IWebHostFilesProvider, WebHostFilesProvider>();
+        if (isClr)
+        {
+            services.AddSingleton<IAppProvider, AppProvider>();
+            services.AddSingleton<IAppCodeProvider, ClrCodeProvider>();
+            services.AddSingleton<IModelJsonPartProvider, ModelJsonPartProviderClr>();
+            services.AddSingleton<IXamlPartProvider, XamlPartProviderClr>();
+        }
+        else /* Is File System */
+        {
+            services.AddSingleton<IAppCodeProvider, FileSystemCodeProvider>();
+            services.AddSingleton<IModelJsonPartProvider, ModelJsonPartProviderFile>();
+            services.AddSingleton<IXamlPartProvider, XamlPartProviderFile>();
+        }
 
-		services.AddViewEngines(x =>
-		{
-			x.RegisterEngine<XamlViewEngine>(".xaml");
-			x.RegisterEngine<HtmlViewEngine>(".html");
-		});
+        services.UseSqlServerStorage(configuration);
 
-		// Platform services
-		services.Configure<AppOptions>(
-			configuration.GetSection("Application")
-		);
+        services.AddViewEngines(x =>
+        {
+            x.RegisterEngine<XamlViewEngine>(".xaml");
+            x.RegisterEngine<HtmlViewEngine>(".html");
+        });
 
-		services.AddScoped<IDataService, DataService>();
-		services.AddScoped<IModelJsonReader, ModelJsonReader>();
-		services.AddScoped<IReportService, ReportService>();
+        // Platform services
+        services.Configure<AppOptions>(
+            configuration.GetSection("Application")
+        );
 
-		// platfrom core services
-		services.AddSingleton<IAppVersion, PlatformAppVersion>();
+        services.AddScoped<IDataService, DataService>();
+        services.AddScoped<IModelJsonReader, ModelJsonReader>();
+        services.AddScoped<IReportService, ReportService>();
 
-		services.AddHttpClient();
+        // platfrom core services
+        services.AddSingleton<IAppVersion, PlatformAppVersion>();
 
-		return builder;
-	}
+        services.AddHttpClient();
 
-	public static void ConfigurePlatform(this IApplicationBuilder app, IWebHostEnvironment env)
-	{
-		if (env.IsDevelopment())
-		{
-			app.UseDeveloperExceptionPage();
-		}
-		else
-		{
-			app.UseExceptionHandler("/home/error");
-			// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-			app.UseHsts();
-		}
-		app.UseHttpsRedirection();
+        IServiceLocator serviceLocator = new ServiceLocator(services);
+        ServiceLocator.GetCurrentLocator = () => serviceLocator;
 
-		app.UseStaticFiles();
+        return builder;
+    }
 
-		app.UseRouting();
-		app.UseAuthentication();
-		app.UseAuthorization();
-		app.UseSession();
+    public static void ConfigurePlatform(this IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        if (env.IsDevelopment())
+        {
+            app.UseDeveloperExceptionPage();
+        }
+        else
+        {
+            app.UseExceptionHandler("/home/error");
+            // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+            app.UseHsts();
+        }
+        app.UseHttpsRedirection();
 
-		app.UseMiddleware<CurrentUserMiddleware>();
+        app.UseStaticFiles();
 
+        app.UseRouting();
+        app.UseAuthentication();
+        app.UseAuthorization();
+        app.UseSession();
 
-		app.UseEndpoints(endpoints =>
-		{
-			endpoints.MapControllers();
-		});
+        app.UseMiddleware<CurrentUserMiddleware>();
 
-		// TODO: use settings?
-		var cultureInfo = new CultureInfo("uk-UA");
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapControllers();
+        });
 
-		CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
-		CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
-	}
+        // TODO: use settings?
+        var cultureInfo = new CultureInfo("uk-UA");
+
+        CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
+        CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
+    }
 }
 

@@ -1,4 +1,6 @@
-﻿// Copyright © 2022-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
 
 using System;
 using System.Collections.Generic;
@@ -13,44 +15,44 @@ namespace A2v10.Platform.Web;
 
 public record TenantInfo : ITenantInfo
 {
-	private readonly String _schema;
-	private readonly Object _tenantId;
-	public TenantInfo(Object tenantId, String? schema)
-	{
-		_tenantId = tenantId;
-		_schema = schema ?? "a2security";
-	}
-	public String Procedure => $"[{_schema}].[SetTenantId]";
+    private readonly String _schema;
+    private readonly Object _tenantId;
+    public TenantInfo(Object tenantId, String? schema)
+    {
+        _tenantId = tenantId;
+        _schema = schema ?? "a2security";
+    }
+    public String Procedure => $"[{_schema}].[SetTenantId]";
 
-	public IEnumerable<TenantInfoParam> Params =>
-		new List<TenantInfoParam>() {
-			new TenantInfoParam("@TenantId", _tenantId)
-		};
+    public IEnumerable<TenantInfoParam> Params =>
+        new List<TenantInfoParam>() {
+            new TenantInfoParam("@TenantId", _tenantId)
+        };
 }
 
 public class WebTenantManager : ITenantManager
 {
-	private readonly ICurrentUser _currentUser;
-	private readonly AppOptions _appOptions;
-	private readonly AppUserStoreOptions<Int64> _userStoreOptions;
-	public WebTenantManager(ICurrentUser currentUser, IOptions<AppOptions> appOptions,
-		IOptions<AppUserStoreOptions<Int64>> userStoreOptions)
+    private readonly ICurrentUser _currentUser;
+    private readonly AppOptions _appOptions;
+    private readonly AppUserStoreOptions<Int64> _userStoreOptions;
+    public WebTenantManager(ICurrentUser currentUser, IOptions<AppOptions> appOptions,
+        IOptions<AppUserStoreOptions<Int64>> userStoreOptions)
     {
-		_currentUser = currentUser;
-		_appOptions = appOptions.Value;
-		_userStoreOptions = userStoreOptions.Value;
-	}
+        _currentUser = currentUser;
+        _appOptions = appOptions.Value;
+        _userStoreOptions = userStoreOptions.Value;
+    }
 
-	#region ITenantManager
-	public ITenantInfo? GetTenantInfo(String? source)
-	{
-		if (!_appOptions.MultiTenant)
-			return null;
-		if (source == "Catalog") //TODO: ???
-			return null;
-		if (!_currentUser.Identity.Tenant.HasValue)
-			throw new InvalidOperationException("There is no TenantId");
-		return new TenantInfo(_currentUser.Identity.Tenant.Value, _userStoreOptions.Schema);
-	}
-	#endregion
+    #region ITenantManager
+    public ITenantInfo? GetTenantInfo(String? source)
+    {
+        if (!_appOptions.MultiTenant)
+            return null;
+        if (source == "Catalog") //TODO: ???
+            return null;
+        if (!_currentUser.Identity.Tenant.HasValue)
+            throw new InvalidOperationException("There is no TenantId");
+        return new TenantInfo(_currentUser.Identity.Tenant.Value, _userStoreOptions.Schema);
+    }
+    #endregion
 }

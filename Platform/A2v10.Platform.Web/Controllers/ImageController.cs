@@ -1,14 +1,21 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
 
 using System;
 using System.Threading.Tasks;
 using System.IO;
+using System.Dynamic;
+using System.Collections.Generic;
+
+using A2v10.Infrastructure;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Primitives;
 
-using A2v10.Infrastructure;
-using A2v10.Data.Interfaces;
+using Newtonsoft.Json;
 
 namespace A2v10.Platform.Web.Controllers;
 
@@ -17,93 +24,107 @@ namespace A2v10.Platform.Web.Controllers;
 [ResponseCache(Duration = 2592000, Location = ResponseCacheLocation.Client)]
 public class ImageController : BaseController
 {
-	private readonly IDataService _dataService;
-	private readonly ITokenProvider _tokenProvider;
-	private readonly IAppCodeProvider _appCodeProvider;
+    private readonly IDataService _dataService;
+    private readonly IAppCodeProvider _appCodeProvider;
 
-	public ImageController(IApplicationHost host,
-		ILocalizer localizer, ICurrentUser currentUser, IProfiler profiler, 
-		IDataService dataService, ITokenProvider tokenProvider, IAppCodeProvider appCodeProvider)
-		: base(host, localizer, currentUser, profiler)
-	{
-		_dataService = dataService;
-		_tokenProvider = tokenProvider;
-		_appCodeProvider = appCodeProvider;
-	}
+    public ImageController(IApplicationHost host,
+        ILocalizer localizer, ICurrentUser currentUser, IProfiler profiler,
+        IDataService dataService, IAppCodeProvider appCodeProvider)
+        : base(host, localizer, currentUser, profiler)
+    {
+        _dataService = dataService;
+        _appCodeProvider = appCodeProvider;
+    }
 
-	[Route("_image/{*pathInfo}")]
-	[HttpGet]
-	public async Task<IActionResult> Image(String pathInfo)
-	{
-		try
-		{
-			var token = Request.Query["token"];
-			var blob = await _dataService.LoadBlobAsync(UrlKind.Image, pathInfo, SetSqlQueryParams);
-			if (blob == null || blob.Stream == null)
-				throw new InvalidReqestExecption($"Image not found. ({pathInfo})");
-			if (blob.Mime is null)
-				throw new InvalidReqestExecption($"Invalid mime type for image. ({pathInfo})");
-			if (!IsTokenValid(blob.Token, token))
-				throw new InvalidReqestExecption("Invalid image token");
-			return new WebBinaryActionResult(blob.Stream, blob.Mime);
-		}
-		catch (Exception ex)
-		{
-			return WriteImageException(ex);
-		}
-	}
+    [Route("_image/{*pathInfo}")]
+    [HttpGet]
+    public async Task<IActionResult> Image(String pathInfo)
+    {
+        try
+        {
+            StringValues token = Request.Query[key: "token"];
+            IBlobInfo? blob = await _dataService.LoadBlobAsync(UrlKind.Image, pathInfo, SetSqlQueryParams);
 
+            #region Check blob value
+            if (blob == null || blob.Stream == null)
+            {
+                throw new InvalidRequestException(message: $"Image not found. ({pathInfo})");
+            }
+            else if (blob.Mime is null)
+            {
+                throw new InvalidRequestException($"Invalid mime type for image. ({pathInfo})");
+            }
+            else if (!IsTokenValid(blob.Token, token))
+            {
+                throw new InvalidRequestException("Invalid image token");
+            }
+            #endregion
 
-	[Route("_image/{*pathInfo}")]
-	[HttpPost]
-	public async Task<IActionResult> ImagePost(String pathInfo)
-	{
-		try
-		{
-			var files = Request.Form.Files;
-			foreach (var f in files)
-			{
-			}
+            WebBinaryActionResult result = new(blob.Stream, blob.Mime);
+            result.EnableCache();
 
-		}
-		catch (Exception ex)
-		{
+            return result;
+        }
+        catch (Exception ex)
+        {
+            return WriteImageException(ex);
+        }
+    }
 
-		}
-		return BadRequest("Yet not implemented");
-	}
+    [Route("_image/{*pathInfo}")]
+    [HttpPost]
+    public async Task<IActionResult> ImagePost(String pathInfo)
+    {
+        try
+        {
+            IFormFileCollection files = Request.Form.Files;
 
-	[Route("_static_image/{*pathInfo}")]
-	[HttpGet]
-	public IActionResult StaticImage(String pathInfo)
-	{
-		try
-		{
-			if (String.IsNullOrEmpty(pathInfo))
-				throw new ArgumentOutOfRangeException(nameof(pathInfo), nameof(StaticImage));
-			pathInfo = pathInfo.Replace('-', '.');
-			var fullPath = _appCodeProvider.MakeFullPath(pathInfo, String.Empty, _currentUser.IsAdminApplication);
-			if (!_appCodeProvider.FileExists(fullPath))
-				throw new FileNotFoundException($"File not found '{pathInfo}'");
+            List<AttachmentUpdateIdToken> savedAttachments = await SaveAttachments(TenantId, pathInfo, UrlKind.Image, files, UserId, CompanyId);
+            ExpandoObject resultAsExpandoObj = new();
+            resultAsExpandoObj.Set(name: "status", value: "OK");
+            resultAsExpandoObj.Set("elems", savedAttachments);
 
-			using var stream = _appCodeProvider.FileStreamFullPathRO(fullPath);
-			var ext = _appCodeProvider.GetExtension(fullPath);
-			return new FileStreamResult(stream, MimeTypes.GetMimeMapping(ext));
-		} 
-		catch (Exception ex)
-		{
-			return WriteImageException(ex);
-		}
-	}
+            String resultJson = JsonConvert.SerializeObject(resultAsExpandoObj, JsonHelpers.StandardSerializerSettings);
 
-	Boolean IsTokenValid(Guid dbToken, String token)
-	{
-		var generated = _tokenProvider.GenerateToken(dbToken);
-		if (generated == token)
-			return true;
-		Response.ContentType = MimeTypes.Text.Plain;
-		Response.StatusCode = 403;
-		return false;
-	}
+            WebActionResult postResult = new(resultJson);
+            return postResult;
+        }
+        catch (Exception ex)
+        {
+            return WriteExceptionStatus(ex);
+        }
+    }
 
+    [Route("_static_image/{*pathInfo}")]
+    [HttpGet]
+    public IActionResult StaticImage(String pathInfo)
+    {
+        try
+        {
+            if (String.IsNullOrEmpty(pathInfo))
+                throw new ArgumentOutOfRangeException(nameof(pathInfo), nameof(StaticImage));
+            pathInfo = pathInfo.Replace('-', '.');
+            var fullPath = _appCodeProvider.MakeFullPath(pathInfo, String.Empty, _currentUser.IsAdminApplication);
+            if (!_appCodeProvider.FileExists(fullPath))
+                throw new FileNotFoundException($"File not found '{pathInfo}'");
+
+            using var stream = _appCodeProvider.FileStreamFullPathRO(fullPath);
+            var ext = _appCodeProvider.GetExtension(fullPath);
+            return new FileStreamResult(stream, MimeTypes.GetMimeMapping(ext));
+        }
+        catch (Exception ex)
+        {
+            return WriteImageException(ex);
+        }
+    }
+
+    private Boolean IsTokenValid(Guid dbToken, String token)
+    {
+        var generated = _tokenProvider.GenerateToken(dbToken);
+        if (generated == token)
+            return true;
+        Response.ContentType = MimeTypes.Text.Plain;
+        Response.StatusCode = 403;
+        return false;
+    }
 }

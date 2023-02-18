@@ -1,4 +1,6 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
 
 using System;
 using System.Collections.Generic;
@@ -15,106 +17,106 @@ namespace A2v10.Platform.Web.Controllers;
 
 public class WebActionResult : IActionResult
 {
-	private readonly List<String> _data = new();
-	private readonly Dictionary<String, String> _headers = new();
-	private readonly String _contentType;
+    private readonly List<String> _data = new();
+    private readonly Dictionary<String, String> _headers = new();
+    private readonly String _contentType;
 
-	public WebActionResult(String data, String contentType = MimeTypes.Application.Json)
-	{
-		if (data != null)
-			_data.Add(data);
-		_contentType = contentType;
-	}
+    public WebActionResult(String data, String contentType = MimeTypes.Application.Json)
+    {
+        if (data != null)
+            _data.Add(data);
+        _contentType = contentType;
+    }
 
-	public void AddHeader(String name, String value)
-	{
-		_headers.Add(name, value);
-	}
+    public void AddHeader(String name, String value)
+    {
+        _headers.Add(name, value);
+    }
 
-	public async Task ExecuteResultAsync(ActionContext context)
-	{
-		var resp = context.HttpContext.Response;
-		resp.ContentType = _contentType;
+    public async Task ExecuteResultAsync(ActionContext context)
+    {
+        var resp = context.HttpContext.Response;
+        resp.ContentType = _contentType;
 
-		foreach (var (k, v) in _headers)
-		{
-			resp.Headers.Remove(k);
-			resp.Headers.Add(k, v);
-		}
+        foreach (var (k, v) in _headers)
+        {
+            resp.Headers.Remove(k);
+            resp.Headers.Add(k, v);
+        }
 
-		for (int i=0; i<_data.Count; i++)
-			await resp.WriteAsync(_data[i], Encoding.UTF8);
-	}
+        for (int i = 0; i < _data.Count; i++)
+            await resp.WriteAsync(_data[i], Encoding.UTF8);
+    }
 }
 
 public class WebBinaryActionResult : IActionResult
 {
-	private readonly List<Byte[]> _data = new();
-	private readonly Dictionary<String, String> _headers = new();
-	private readonly String _contentType;
-	
-	Boolean _cache;
+    private readonly List<Byte[]> _data = new();
+    private readonly Dictionary<String, String> _headers = new();
+    private readonly String _contentType;
 
-	public WebBinaryActionResult(Byte[] data, String contentType = MimeTypes.Application.Json)
-	{
-		if (data != null)
-			_data.Add(data);
-		_contentType = contentType;
-	}
+    Boolean _cache;
 
-	public WebBinaryActionResult EnableCache(Boolean bEnable = true)
-	{
-		_cache = bEnable;
-		return this;
-	}
+    public WebBinaryActionResult(Byte[] data, String contentType = MimeTypes.Application.Json)
+    {
+        if (data != null)
+            _data.Add(data);
+        _contentType = contentType;
+    }
 
-	public WebBinaryActionResult AddHeader(String name, String value)
-	{
-		_headers.Add(name, value);
-		return this;
-	}
+    public WebBinaryActionResult EnableCache(Boolean bEnable = true)
+    {
+        _cache = bEnable;
+        return this;
+    }
 
-	public async Task ExecuteResultAsync(ActionContext context)
-	{
-		var resp = context.HttpContext.Response;
-		resp.ContentType = _contentType;
-		foreach (var (k, v) in _headers)
-		{
-			resp.Headers.Remove(k);
-			resp.Headers.Add(k, v);
-		}
+    public WebBinaryActionResult AddHeader(String name, String value)
+    {
+        _headers.Add(name, value);
+        return this;
+    }
 
-		if (_cache)
-		{
-			resp.GetTypedHeaders().CacheControl =
-			new CacheControlHeaderValue()
-			{
-				Private = true,
-				MaxAge = TimeSpan.FromDays(30)
-			};
-		}
+    public async Task ExecuteResultAsync(ActionContext context)
+    {
+        var resp = context.HttpContext.Response;
+        resp.ContentType = _contentType;
+        foreach (var (k, v) in _headers)
+        {
+            resp.Headers.Remove(k);
+            resp.Headers.Add(k, v);
+        }
 
-		for (int i = 0; i < _data.Count; i++)
-			await resp.BodyWriter.WriteAsync(_data[i]);
-	}
+        if (_cache)
+        {
+            resp.GetTypedHeaders().CacheControl =
+            new CacheControlHeaderValue()
+            {
+                Private = true,
+                MaxAge = TimeSpan.FromDays(30)
+            };
+        }
+
+        for (int i = 0; i < _data.Count; i++)
+            await resp.BodyWriter.WriteAsync(_data[i]);
+    }
 }
 
 public class WebExceptionResult : IActionResult
 {
-	private readonly Int32 _errorCode;
-	private readonly String _message;
+    private readonly Int32 _errorCode;
+    private readonly String _message;
 
-	public WebExceptionResult(Int32 errorCode, String? message)
-	{
-		_errorCode = errorCode;
-		_message = message ?? String.Empty;
-	}
+    public WebExceptionResult(Int32 errorCode, String? message)
+    {
+        _errorCode = errorCode;
+        _message = message ?? String.Empty;
+    }
 
-	public Task ExecuteResultAsync(ActionContext context)
-	{
-		var resp = context.HttpContext.Response;
-		resp.ContentType = MimeTypes.Text.Plain;
-		resp.StatusCode = _errorCode;
-		return resp.WriteAsync(_message, Encoding.UTF8);
-	}
+    public Task ExecuteResultAsync(ActionContext context)
+    {
+        var resp = context.HttpContext.Response;
+        resp.ContentType = MimeTypes.Text.Plain;
+        resp.StatusCode = _errorCode;
+        return resp.WriteAsync(_message, Encoding.UTF8);
+    }
 }
