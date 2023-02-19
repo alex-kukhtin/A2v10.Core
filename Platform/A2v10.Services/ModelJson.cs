@@ -108,6 +108,14 @@ public class ModelJsonBlob : ModelJsonViewBase, IModelBlob
 		var suffix = Suffix ?? "Load";
 		return $"[{Schema}].[{Model}.{Key}.{suffix}]";
 	}
+
+    public String UpdateProcedure()
+    {
+        if (!String.IsNullOrEmpty(Procedure))
+            return Procedure;
+        var suffix = Suffix ?? "Update";
+        return $"[{Schema}].[{Model}.{Key}.{suffix}]";
+    }
 }
 
 public class ModelJsonView : ModelJsonViewBase, IModelView

@@ -17,7 +17,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7323" />
+		<PackageReference Include="A2v10.Data.Interfaces" Version="10.0.7325" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
 	</ItemGroup>
 

@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Services.Interop.ExportTo;
+using DocumentFormat.OpenXml.Drawing;
 
 namespace A2v10.Services;
 
@@ -199,7 +200,7 @@ public class DataService : IDataService
 		return JsonConvert.SerializeObject(model.Root, JsonHelpers.DataSerializerSettings);
 	}
 
-	void ResolveParams(ExpandoObject prms, ExpandoObject data)
+	static void ResolveParams(ExpandoObject prms, ExpandoObject data)
 	{
 		if (prms == null || data == null)
 			return;
@@ -324,8 +325,8 @@ public class DataService : IDataService
 
 	public async Task<IBlobInfo?> LoadBlobAsync(UrlKind kind, String baseUrl, Action<ExpandoObject> setParams, String? suffix = null)
 	{
-		var platfromUrl = CreatePlatformUrl(kind, baseUrl);
-		var blob = await _modelReader.GetBlobAsync(platfromUrl, suffix);
+		var platformUrl = CreatePlatformUrl(kind, baseUrl);
+		var blob = await _modelReader.GetBlobAsync(platformUrl, suffix);
 		var prms = new ExpandoObject();
 		prms.Set("Id", blob?.Id);
 		prms.Set("Key", blob?.Key);
@@ -339,7 +340,26 @@ public class DataService : IDataService
 		return bi;
 	}
 
-	public async Task<ILayoutDescription?> GetLayoutDescriptionAsync(String? baseUrl)
+	public async Task<IBlobUpdateOutput> SaveBlobAsync(UrlKind kind, String baseUrl, Action<IBlobUpdateInfo> setBlob, String? suffix = null)
+	{
+		var platformUrl = CreatePlatformUrl(kind, baseUrl);
+		var blobModel = await _modelReader.GetBlobAsync(platformUrl, suffix);
+		var saveProc = blobModel?.UpdateProcedure();
+		if (saveProc == null)
+			throw new DataServiceException($"UpdateProcedure is null");
+		var blob = new BlobUpdateInfo()
+		{
+			Key = blobModel?.Key,
+			Id = blobModel?.Id
+		};
+		setBlob(blob);
+		var result = await _dbContext.ExecuteAndLoadAsync<BlobUpdateInfo, BlobUpdateOutput>(blobModel?.DataSource, saveProc, blob);
+		if (result == null)
+			throw new InvalidOperationException("SaveBlobAsync. Result is null");
+		return result;
+    }
+
+    public async Task<ILayoutDescription?> GetLayoutDescriptionAsync(String? baseUrl)
 	{
 		if (baseUrl == null)
 			return null;

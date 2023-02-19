@@ -9,8 +9,20 @@ using Microsoft.AspNetCore.Mvc;
 
 using A2v10.Infrastructure;
 using A2v10.Data.Interfaces;
+using System.Collections.Generic;
+using Newtonsoft.Json;
+using System.Dynamic;
+using Microsoft.AspNetCore.Http;
 
 namespace A2v10.Platform.Web.Controllers;
+
+public class BlobUpdateIdToken
+{
+    public Object? Id { get; set; }
+    public String? Mime { get; set; }
+    public String? Name { get; set; }
+    public String? Token { get; set; }
+}
 
 [ExecutingFilter]
 [Authorize]
@@ -56,24 +68,50 @@ public class ImageController : BaseController
 
 	[Route("_image/{*pathInfo}")]
 	[HttpPost]
-	public async Task<IActionResult> ImagePost(String pathInfo)
+    public async Task<IActionResult> ImagePost(String pathInfo)
 	{
 		try
 		{
 			var files = Request.Form.Files;
+			var retList = new List<BlobUpdateIdToken>();
 			foreach (var f in files)
 			{
-			}
-
-		}
-		catch (Exception ex)
+				Stream stream = f.OpenReadStream();
+				var name = Path.GetFileName(f.FileName);
+                var saved = await _dataService.SaveBlobAsync(UrlKind.Image, pathInfo, bi =>
+				{
+					bi.UserId = this.UserId;
+                    if (_host.IsMultiTenant)
+                        bi.TenantId = this.TenantId;
+                    if (_host.IsMultiCompany)
+                        bi.CompanyId = this.CompanyId;
+                    bi.Name = name;
+                    bi.Mime = f.ContentType;
+                    bi.Stream = stream;
+                });
+				stream.Close();
+				var res = new BlobUpdateIdToken()
+				{
+					Id = saved.Id,
+					Name = name,
+					Mime= f.ContentType,
+					Token = saved.Token.HasValue ? _tokenProvider.GenerateToken(saved.Token.Value) : null
+				};
+				retList.Add(res);
+            }
+            var rval = new ExpandoObject();
+            rval.Set("status", "OK");
+            rval.Set("elems", retList);
+            String result = JsonConvert.SerializeObject(rval, JsonHelpers.StandardSerializerSettings);
+			return Content(result, MimeTypes.Application.Json);
+        }
+        catch (Exception ex)
 		{
+            return WriteExceptionStatus(ex);
+        }
+    }
 
-		}
-		return BadRequest("Yet not implemented");
-	}
-
-	[Route("_static_image/{*pathInfo}")]
+    [Route("_static_image/{*pathInfo}")]
 	[HttpGet]
 	public IActionResult StaticImage(String pathInfo)
 	{

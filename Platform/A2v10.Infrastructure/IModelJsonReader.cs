@@ -36,6 +36,7 @@ public interface IModelBlob
 
 	String? DataSource { get; }
 	String LoadProcedure();
+	String UpdateProcedure();
 }
 
 public interface IModelMerge : IModelBase
