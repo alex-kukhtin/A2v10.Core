@@ -189,9 +189,9 @@ public class BindCmd : BindBase
 				return $"$save({{toast: {GetToast(context)}, options:{GetOptionsValid(context)}}})";
 
 			case CommandType.Clear:
-				return $"{CommandArgument(context)}.$empty()";
+                return $"$clearObject({CommandArgument(context)})";
 
-			case CommandType.Close:
+            case CommandType.Close:
 				if (src != null)
 				{
 					var inlineModal = src.FindParent<InlineDialog>();
