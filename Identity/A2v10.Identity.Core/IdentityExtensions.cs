@@ -46,6 +46,16 @@ public static class IdentityExtensions
 		return String.IsNullOrEmpty(claim) ? identity?.Name : claim;
 	}
 
+	public static String? GetUserFirstName(this IIdentity? identity)
+	{
+		return identity.GetUserClaim(WellKnownClaims.FirstName);
+	}
+
+	public static String? GetUserLastName(this IIdentity? identity)
+	{
+		return identity.GetUserClaim(WellKnownClaims.LastName);
+	}
+
 	public static Boolean IsUserAdmin(this IIdentity? identity)
 	{
 		var claim = identity?.GetUserClaim(WellKnownClaims.Admin);

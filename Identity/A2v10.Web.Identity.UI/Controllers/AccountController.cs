@@ -155,12 +155,11 @@ public class AccountController : Controller
 			//if (User.Identity.IsUserOpenId())
 			//throw new SecurityException("Invalid User type (openId?)");
 
-			var user = await _userManager.FindByIdAsync(User.Identity.Name);
-			if (user == null)
-				throw new SecurityException("User not found");
+			var user = await _userManager.FindByIdAsync(User.Identity.Name) 
+				?? throw new SecurityException("User not found");
 
 			//if (!user.ChangePasswordEnabled)
-				//throw new SecurityException("Change password not allowed");
+			//throw new SecurityException("Change password not allowed");
 
 			var ir = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
 			if (ir.Succeeded)

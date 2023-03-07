@@ -238,6 +238,10 @@ public sealed class AppUserStore<T>:
 	{
 		list.Add(new Claim(WellKnownClaims.NameIdentifier, user.Id.ToString()!));
 		list.Add(new Claim(WellKnownClaims.PersonName, user.PersonName ?? String.Empty));
+		if (!String.IsNullOrEmpty(user.FirstName))
+			list.Add(new Claim(WellKnownClaims.FirstName, user.FirstName));
+		if (!String.IsNullOrEmpty(user.LastName))
+			list.Add(new Claim(WellKnownClaims.LastName, user.LastName));
 		if (user.Tenant != null)
 		{
 			list.Add(new Claim(WellKnownClaims.Tenant, user.Tenant.ToString()!));

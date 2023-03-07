@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Threading;
@@ -20,7 +20,8 @@ public record UserIdentity : IUserIdentity
 	public Int64? Id { get; init; }
 	public String? Name { get; init; }
 	public String? PersonName { get; init; }
-
+	public String? FirstName { get; init; }
+	public String? LastName { get; init; }
 	public Int32? Tenant { get; init; }
 	public String? Segment { get; init; }
 
@@ -96,6 +97,8 @@ public class CurrentUser : ICurrentUser, IDbIdentity
 				Tenant = ident.GetUserTenant<Int32>(),
 				Name = ident.Name,
 				PersonName = ident.GetUserPersonName(),
+				FirstName = ident.GetUserFirstName(),
+				LastName = ident.GetUserLastName(),
 				Segment = ident.GetUserSegment(),
 				IsAdmin = ident.IsUserAdmin(),
 				IsTenantAdmin = ident.IsTenantAdmin()
