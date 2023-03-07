@@ -55,9 +55,10 @@ public sealed class AppUserStore<T>:
 		return IdentityResult.Success;
 	}
 
-	public Task<IdentityResult> DeleteAsync(AppUser<T> user, CancellationToken cancellationToken)
+	public async Task<IdentityResult> DeleteAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
-		throw new NotImplementedException();
+		await _dbContext.ExecuteAsync<AppUser<T>>(DataSource, $"[{DbSchema}].[DeleteUser]", user);
+		return IdentityResult.Success;
 	}
 
 	public void Dispose()
@@ -296,6 +297,12 @@ public sealed class AppUserStore<T>:
 			case WellKnownClaims.PersonName:
 				user.PersonName = claim.Value;
 				break;
+			case WellKnownClaims.FirstName:
+				user.FirstName = claim.Value;
+				break;
+			case WellKnownClaims.LastName:
+				user.LastName = claim.Value;
+				break;
 		}
 	}
 
@@ -345,6 +352,20 @@ public sealed class AppUserStore<T>:
 			};
 			return await _dbContext.LoadAsync<AppUser<T>>(DataSource, $"[{DbSchema}].[FindApiUserByApiKey]", prms)
 				?? new AppUser<T>();
+		}
+		else if (loginProvider == "PhoneNumber")
+		{
+			var prms = new ExpandoObject()
+			{
+				{ "PhoneNumber", providerKey }
+			};
+			return await _dbContext.LoadAsync<AppUser<T>>(DataSource, $"[{DbSchema}].[FindUserByPhoneNumber]", prms)
+				?? new AppUser<T>();
+
+		}
+		else if (loginProvider == "Email")
+		{
+			return await FindByEmailAsync(providerKey, cancellationToken);
 		}
 		throw new NotImplementedException(loginProvider);
 	}
