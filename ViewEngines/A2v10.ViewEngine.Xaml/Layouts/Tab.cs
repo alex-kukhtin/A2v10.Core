@@ -1,64 +1,63 @@
-﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
 
-namespace A2v10.Xaml
-{
-	public class TabCollection : List<Tab>
-	{
-	}
+namespace A2v10.Xaml;
 
-	/*
+public class TabCollection : List<Tab>
+{
+}
+
+/*
      * TODO:
      * 1. Можно добавить раскраску. атрибут tab-style="yellow", а в Tab.less есть такой класс
      */
 
-	public class Tab : Container
+public class Tab : Container
+{
+	public Object? Header { get; set; }
+	public String? Badge { get; set; }
+
+	public Length? Height { get; set; }
+	public Boolean FullHeight { get; set; }
+
+	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
-		public Object? Header { get; set; }
-		public String? Badge { get; set; }
+		if (SkipRender(context))
+			return;
+		var tab = new TagBuilder("a2-tab-item");
+		onRender?.Invoke(tab);
+		// tab.MergeAttribute("tab-style", "yellow");
+		tab.AddCssClassBool(FullHeight, "full-height");
+		MergeAttributes(tab, context, MergeAttrMode.SpecialTab);
+		var headerBind = GetBinding(nameof(Header));
+		if (headerBind != null)
+			tab.MergeAttribute(":header", headerBind.GetPathFormat(context));
+		else if (Header is String)
+			tab.MergeAttribute("header", context.LocalizeCheckApostrophe(Header?.ToString()));
+		var badgeBind = GetBinding(nameof(Badge));
+		if (badgeBind != null)
+			tab.MergeAttribute(":badge", badgeBind.GetPathFormat(context));
+		else if (Badge != null)
+			tab.MergeAttribute("badge", Badge);
+		if (Height != null)
+			tab.MergeStyle("height", Height.Value);
 
-		public Length? Height { get; set; }
-		public Boolean FullHeight { get; set; }
+		// show/hide support
+		MergeBindingAttributeBool(tab, context, ":tab-show", nameof(Show), Show);
+		// emulate v-hide
+		MergeBindingAttributeBool(tab, context, ":tab-show", nameof(Hide), Hide, bInvert: true);
 
-		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
-		{
-			if (SkipRender(context))
-				return;
-			var tab = new TagBuilder("a2-tab-item");
-			onRender?.Invoke(tab);
-			// tab.MergeAttribute("tab-style", "yellow");
-			tab.AddCssClassBool(FullHeight, "full-height");
-			MergeAttributes(tab, context, MergeAttrMode.SpecialTab);
-			var headerBind = GetBinding(nameof(Header));
-			if (headerBind != null)
-				tab.MergeAttribute(":header", headerBind.GetPathFormat(context));
-			else if (Header is String)
-				tab.MergeAttribute("header", context.LocalizeCheckApostrophe(Header?.ToString()));
-			var badgeBind = GetBinding(nameof(Badge));
-			if (badgeBind != null)
-				tab.MergeAttribute(":badge", badgeBind.GetPathFormat(context));
-			else if (Badge != null)
-				tab.MergeAttribute("badge", Badge);
-			if (Height != null)
-				tab.MergeStyle("height", Height.Value);
+		tab.RenderStart(context);
 
-			// show/hide support
-			MergeBindingAttributeBool(tab, context, ":tab-show", nameof(Show), Show);
-			// emulate v-hide
-			MergeBindingAttributeBool(tab, context, ":tab-show", nameof(Hide), Hide, bInvert: true);
+		RenderChildren(context);
 
-			tab.RenderStart(context);
+		tab.RenderEnd(context);
+	}
 
-			RenderChildren(context);
-
-			tab.RenderEnd(context);
-		}
-
-		internal void RenderTemplate(RenderContext context)
-		{
-			// without outer tag
-			RenderChildren(context);
-		}
+	internal void RenderTemplate(RenderContext context)
+	{
+		// without outer tag
+		RenderChildren(context);
 	}
 }
