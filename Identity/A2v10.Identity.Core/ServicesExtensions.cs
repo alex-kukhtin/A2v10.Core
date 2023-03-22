@@ -1,5 +1,7 @@
 ﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
+namespace Microsoft.Extensions.DependencyInjection;
+
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
@@ -8,7 +10,6 @@ using Microsoft.AspNetCore.Identity;
 using A2v10.Web.Identity;
 using Microsoft.Extensions.Configuration;
 
-namespace Microsoft.Extensions.DependencyInjection;
 public static class ServicesExtensions
 {
 	public static IServiceCollection AddPlatformIdentityCore<T>(this IServiceCollection services,
@@ -105,6 +106,7 @@ public static class ServicesExtensions
 		{
 			opts.Schema = storeConfig.Schema;
 			opts.DataSource = storeConfig.DataSource;
+			opts.MultiTenant = storeConfig.MultiTenant;
 		});
 
 		return services;

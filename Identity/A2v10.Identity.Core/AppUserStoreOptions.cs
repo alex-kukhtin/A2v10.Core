@@ -1,4 +1,4 @@
-﻿// Copyright © 2021-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
 
@@ -7,6 +7,7 @@ public record AppUserStoreOptions<T> where T: struct
 {
 	public String? DataSource { get; set; }
 	public String? Schema { get; set; }
+	public Boolean? MultiTenant { get; set; }
 	public Func<AppUser<T>, IEnumerable<KeyValuePair<String, String?>>>? Claims { get; set; } 
 }
 

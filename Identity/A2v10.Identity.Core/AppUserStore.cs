@@ -1,5 +1,7 @@
 ﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
+namespace A2v10.Web.Identity;
+
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Security.Claims;
@@ -12,8 +14,6 @@ using Microsoft.Extensions.Options;
 using A2v10.Data.Interfaces;
 using A2v10.Identity.Core.Helpers;
 
-namespace A2v10.Web.Identity;
-
 public sealed class AppUserStore<T>:
 	IUserStore<AppUser<T>>,
 	IUserLoginStore<AppUser<T>>,
@@ -24,8 +24,10 @@ public sealed class AppUserStore<T>:
 	IUserClaimStore<AppUser<T>> where T : struct
 {
 	private readonly IDbContext _dbContext;
-	private String? DataSource { get; } 
-	private String DbSchema { get; }
+	private readonly String? _dataSource;
+	private readonly String _dbSchema;
+	private readonly Boolean _multiTenant;
+
 	private readonly Func<AppUser<T>, IEnumerable<KeyValuePair<String, String?>>>? _addClaims;
 
 	private static class ParamNames
@@ -37,13 +39,15 @@ public sealed class AppUserStore<T>:
 		public const String SecurityStamp = nameof(SecurityStamp);
 		public const String Confirmed = nameof(Confirmed);
 		public const String Expires = nameof(Expires);
+		public const String PhoneNumber = nameof(PhoneNumber);
 	}
 	public AppUserStore(IDbContext dbContext, IOptions<AppUserStoreOptions<T>> options)
 	{
 		_dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-		DataSource = options.Value?.DataSource;
-		DbSchema = options.Value?.Schema ?? "a2security";
+		_dataSource = options.Value?.DataSource;
+		_dbSchema = options.Value?.Schema ?? "a2security";
 		_addClaims = options.Value?.Claims;
+		_multiTenant = options.Value?.MultiTenant ?? false;
     }
 
     public async Task<IdentityResult> CreateAsync(AppUser<T> user, CancellationToken cancellationToken)
@@ -51,13 +55,13 @@ public sealed class AppUserStore<T>:
 		user.PasswordHash ??= user.PasswordHash2;
 		user.SecurityStamp ??= user.SecurityStamp2;
 
-		await _dbContext.ExecuteAsync<AppUser<T>>(DataSource, $"[{DbSchema}].[CreateUser]", user);
+		await _dbContext.ExecuteAsync<AppUser<T>>(_dataSource, $"[{_dbSchema}].[CreateUser]", user);
 		return IdentityResult.Success;
 	}
 
 	public async Task<IdentityResult> DeleteAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
-		await _dbContext.ExecuteAsync<AppUser<T>>(DataSource, $"[{DbSchema}].[DeleteUser]", user);
+		await _dbContext.ExecuteAsync<AppUser<T>>(_dataSource, $"[{_dbSchema}].[DeleteUser]", user);
 		return IdentityResult.Success;
 	}
 
@@ -71,14 +75,14 @@ public sealed class AppUserStore<T>:
 		T? typedUserId = (T?) TypeDescriptor.GetConverter(typeof(T)).ConvertFromInvariantString(UserId);
 		if (typedUserId == null)
 			return new AppUser<T>();
-		return await _dbContext.LoadAsync<AppUser<T>>(DataSource, $"[{DbSchema}].[FindUserById]", new { Id = typedUserId })
+		return await _dbContext.LoadAsync<AppUser<T>>(_dataSource, $"[{_dbSchema}].[FindUserById]", new { Id = typedUserId })
 			?? new AppUser<T>();
 	}
 
 	public async Task<AppUser<T>> FindByNameAsync(String normalizedUserName, CancellationToken cancellationToken)
 	{
 		var UserName = normalizedUserName.ToLowerInvariant(); // A2v10
-		var user = await _dbContext.LoadAsync<AppUser<T>>(DataSource, $"[{DbSchema}].[FindUserByName]", new { UserName });
+		var user = await _dbContext.LoadAsync<AppUser<T>>(_dataSource, $"[{_dbSchema}].[FindUserByName]", new { UserName });
 		return user ?? new AppUser<T>();
 	}
 
@@ -135,7 +139,7 @@ public sealed class AppUserStore<T>:
 			{ ParamNames.Id,  user.Id },
 			{ ParamNames.SecurityStamp,  stamp }
 		};
-		await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.SetSecurityStamp]", prm);
+		await _dbContext.ExecuteExpandoAsync(_dataSource, $"[{_dbSchema}].[User.SetSecurityStamp]", prm);
 		user.SecurityStamp2 = stamp;
 	}
 	#endregion
@@ -164,14 +168,14 @@ public sealed class AppUserStore<T>:
 			{ ParamNames.Id,  user.Id },
 			{ ParamNames.Confirmed,  confirmed}
 		};
-		await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.SetEMailConfirmed]", prm);
+		await _dbContext.ExecuteExpandoAsync(_dataSource, $"[{_dbSchema}].[User.SetEMailConfirmed]", prm);
 		user.EmailConfirmed = confirmed;
 	}
 
 	public async Task<AppUser<T>> FindByEmailAsync(String normalizedEmail, CancellationToken cancellationToken)
 	{
 		var Email = normalizedEmail?.ToLowerInvariant(); // A2v10
-		return await _dbContext.LoadAsync<AppUser<T>>(DataSource, $"[{DbSchema}].[FindUserByEmail]", new { Email })
+		return await _dbContext.LoadAsync<AppUser<T>>(_dataSource, $"[{_dbSchema}].[FindUserByEmail]", new { Email })
 			?? new AppUser<T>();
 	}
 
@@ -200,7 +204,7 @@ public sealed class AppUserStore<T>:
 			{ ParamNames.Id,  user.Id },
 			{ ParamNames.PasswordHash,  passwordHash }
 		};
-		await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.SetPasswordHash]", prm);
+		await _dbContext.ExecuteExpandoAsync(_dataSource, $"[{_dbSchema}].[User.SetPasswordHash]", prm);
 		user.PasswordHash2 = passwordHash;
 	}
 
@@ -285,7 +289,7 @@ public sealed class AppUserStore<T>:
 			{ ParamNames.Id,  user.Id },
 			{ claim.Type,  claim.Value}
 		};
-		await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.Claim.{claim.Type}]", prm);
+		await _dbContext.ExecuteExpandoAsync(_dataSource, $"[{_dbSchema}].[User.Claim.{claim.Type}]", prm);
 
 		switch (claim.Type)
 		{
@@ -354,7 +358,7 @@ public sealed class AppUserStore<T>:
 			{
 				{ "ApiKey", providerKey }
 			};
-			return await _dbContext.LoadAsync<AppUser<T>>(DataSource, $"[{DbSchema}].[FindApiUserByApiKey]", prms)
+			return await _dbContext.LoadAsync<AppUser<T>>(_dataSource, $"[{_dbSchema}].[FindApiUserByApiKey]", prms)
 				?? new AppUser<T>();
 		}
 		else if (loginProvider == "PhoneNumber")
@@ -363,7 +367,7 @@ public sealed class AppUserStore<T>:
 			{
 				{ "PhoneNumber", providerKey }
 			};
-			return await _dbContext.LoadAsync<AppUser<T>>(DataSource, $"[{DbSchema}].[FindUserByPhoneNumber]", prms)
+			return await _dbContext.LoadAsync<AppUser<T>>(_dataSource, $"[{_dbSchema}].[FindUserByPhoneNumber]", prms)
 				?? new AppUser<T>();
 
 		}
@@ -388,6 +392,7 @@ public sealed class AppUserStore<T>:
 	#region IUserPhoneNumberStore
 	public Task SetPhoneNumberAsync(AppUser<T> user, String phoneNumber, CancellationToken cancellationToken)
     {
+		user.PhoneNumber = phoneNumber;
 		return Task.CompletedTask;
     }
 
@@ -406,10 +411,17 @@ public sealed class AppUserStore<T>:
 		var prm = new ExpandoObject()
 		{
 			{ ParamNames.Id,  user.Id },
+			{ ParamNames.PhoneNumber, user.PhoneNumber 
+				?? throw new InvalidOperationException("PhoneNumber is null") },
 			{ ParamNames.Confirmed,  confirmed}
 		};
-		await _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].[User.SetPhoneNumberConfirmed]", prm);
-		user.PhoneNumberConfirmed = confirmed;
+		await _dbContext.ExecuteExpandoAsync(_dataSource, $"[{_dbSchema}].[User.SetPhoneNumberConfirmed]", prm);
+
+		if (_multiTenant) // update segment!
+            await _dbContext.ExecuteExpandoAsync(user.Segment, $"[{_dbSchema}].[User.SetPhoneNumberConfirmed]", prm);
+
+        user.PhoneNumberConfirmed = confirmed;
+
     }
 	#endregion
 
@@ -425,7 +437,7 @@ public sealed class AppUserStore<T>:
 		};
 		if (!String.IsNullOrEmpty(tokenToRemove))
 			exp.Add("Remove", tokenToRemove);
-		return _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].AddToken", exp);
+		return _dbContext.ExecuteExpandoAsync(_dataSource, $"[{_dbSchema}].AddToken", exp);
 	}
 
 	public async Task<String?> GetTokenAsync(AppUser<T> user, String provider, String token)
@@ -436,7 +448,7 @@ public sealed class AppUserStore<T>:
 			{ ParamNames.Provider, provider },
 			{ ParamNames.Token, token }
 		};
-		var res = await _dbContext.LoadAsync<JwtToken>(DataSource, $"[{DbSchema}].GetToken", exp);
+		var res = await _dbContext.LoadAsync<JwtToken>(_dataSource, $"[{_dbSchema}].GetToken", exp);
 		return res?.Token;
 	}
 
@@ -448,7 +460,7 @@ public sealed class AppUserStore<T>:
 			{ ParamNames.Provider, provider },
 			{ ParamNames.Token, token }
 		};
-		return _dbContext.ExecuteExpandoAsync(DataSource, $"[{DbSchema}].RemoveToken", exp);
+		return _dbContext.ExecuteExpandoAsync(_dataSource, $"[{_dbSchema}].RemoveToken", exp);
 	}
 	#endregion
 }

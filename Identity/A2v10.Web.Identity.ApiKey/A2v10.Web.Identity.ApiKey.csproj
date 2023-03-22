@@ -5,7 +5,7 @@
 		<Nullable>enable</Nullable>
 		<AssemblyName>A2v10.Identity.ApiKey</AssemblyName>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-		<Version>10.1.8092</Version>
+		<Version>10.1.8093</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Identity.ApiKey</PackageId>
 		<Authors>Oleksandr Kukhtin</Authors>

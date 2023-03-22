@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Threading.Tasks;
@@ -55,7 +55,8 @@ public class AccountController : Controller
 			Theme = _appTheme.MakeTheme(),
 			RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken
 		};
-		TempData["ReturnUrl"] = returnUrl;
+        // TODO: ReturnUrl to model
+        TempData["ReturnUrl"] = returnUrl;
 		return View(m);
 	}
 
@@ -68,6 +69,14 @@ public class AccountController : Controller
 		var result = await _signInManager.PasswordSignInAsync(model.Login, model.Password, model.IsPersistent, lockoutOnFailure: true);
 		if (result.Succeeded)
 		{
+
+			var user = await _userManager.FindByNameAsync(model.Login);
+			user.PhoneNumber = "PHONENUMBER";
+
+            var token = await _userManager.GenerateChangePhoneNumberTokenAsync(user, "PHONENUMBER");
+			var verified = await _userManager.VerifyChangePhoneNumberTokenAsync(user, token, "PHONENUMBER");
+			await _userManager.ChangePhoneNumberAsync(user, "PHONENUMBER", token);
+			//
 			/* refresh claims!
 			var user = await _userManager.FindByNameAsync(model.Login);
 			await _userManager.AddClaimAsync(user, new System.Security.Claims.Claim("Organization", "234563"));
