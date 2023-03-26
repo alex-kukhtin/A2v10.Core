@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Xaml;
 
@@ -21,9 +21,7 @@ public class StaticResource : MarkupExtension
 			throw new InvalidOperationException("StaticResource.ProvideValue. IRootObjectProvider is null");
 		if (iRoot.RootObject is not RootContainer root)
 			return null;
-		Object? resrc = root.FindResource(Member);
-		if (resrc == null)
+		return root.FindResource(Member) ??
 			throw new XamlException($"Resource '{Member}' not found");
-		return resrc;
 	}
 }

@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Xaml;
 
@@ -12,11 +12,9 @@ public class Lazy : UIElementBase
 	{
 		if (SkipRender(context))
 			return;
-		var isBind = GetBinding(nameof(ItemsSource));
-		if (isBind == null)
-			throw new XamlException("ItemsSource must be specified for Lazy component");
-
-		var tag = new TagBuilder("div", null, IsInGrid);
+		var isBind = GetBinding(nameof(ItemsSource)) 
+			?? throw new XamlException("ItemsSource must be specified for Lazy component");
+        var tag = new TagBuilder("div", null, IsInGrid);
 		onRender?.Invoke(tag);
 
 		MergeAttributes(tag, context);

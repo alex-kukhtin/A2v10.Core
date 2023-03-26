@@ -15,11 +15,9 @@ namespace A2v10.Xaml
 		{
 			if (SkipRender(context))
 				return;
-			var scopeBind = GetBinding(nameof(Scope));
-			if (scopeBind == null)
-				throw new XamlException("Scope must be specified for Slot component");
-
-			String slotItem = $"{SLOT_ITEM}{context.ScopeLevel}";
+			var scopeBind = GetBinding(nameof(Scope)) 
+				?? throw new XamlException("Scope must be specified for Slot component");
+            String slotItem = $"{SLOT_ITEM}{context.ScopeLevel}";
 
 			var tag = new TagBuilder("template", null, IsInGrid);
 			tag.MergeAttribute("v-if", $"!!{scopeBind.GetPathFormat(context)}");

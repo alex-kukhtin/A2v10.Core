@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
 
@@ -27,10 +27,11 @@ public class Image : UIElementBase
 		var tag = new TagBuilder("a2-image", null, IsInGrid);
 		onRender?.Invoke(tag);
 		MergeAttributes(tag, context);
-		var contBind = GetBinding(nameof(Source));
-		if (contBind == null)
-			throw new XamlException("Source binding is required for the Image element");
-		if (Width != null)
+
+		var _ = GetBinding(nameof(Source))
+			?? throw new XamlException("Source binding is required for the Image element");
+
+        if (Width != null)
 			tag.MergeAttribute("width", Width.Value);
 		if (Height != null)
 			tag.MergeAttribute("height", Height.Value);

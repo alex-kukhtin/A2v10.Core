@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
 using System.Collections.Generic;
@@ -33,10 +33,9 @@ public class Setter : XamlElement
 		}
 		else if (prop.PropertyType.IsClass)
 		{
-			var converter = TypeDescriptor.GetConverter(prop.PropertyType);
-			if (converter == null)
-				throw new XamlException($"Could not find converter for '{prop.PropertyType}'");
-			var classVal = converter.ConvertFromString(Value.ToString()!);
+			var converter = TypeDescriptor.GetConverter(prop.PropertyType) 
+				?? throw new XamlException($"Could not find converter for '{prop.PropertyType}'");
+            var classVal = converter.ConvertFromString(Value.ToString()!);
 			prop.SetValue(elem, classVal);
 		}
 		else

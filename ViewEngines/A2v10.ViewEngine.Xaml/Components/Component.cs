@@ -1,4 +1,4 @@
-﻿// Copyright © 2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2022-2023 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Xaml;
 
@@ -15,10 +15,9 @@ public class Component : UIElementBase
 			return;
 		if (Name == null)
 			return;
-		var comp = context.FindComponent(Name);
-		if (comp == null)
-			throw new XamlException($"Component '{Name}' not found");
-		if (comp is not UIElementBase compUi)
+		var comp = context.FindComponent(Name) 
+			?? throw new XamlException($"Component '{Name}' not found");
+        if (comp is not UIElementBase compUi)
 			throw new XamlException($"The component '{Name}' is not an UIElement");
 		var scopeBind = GetBinding(nameof(Scope));
 		if (scopeBind == null)

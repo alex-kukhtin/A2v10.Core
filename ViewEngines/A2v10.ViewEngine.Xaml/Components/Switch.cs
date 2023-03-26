@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
 using System.Linq;
@@ -69,11 +69,9 @@ public class Switch : UIElementBase
 
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
-		var expr = GetBinding(nameof(Expression));
-		if (expr == null)
-			throw new XamlException("Binding 'Expression' must be a Bind");
-
-		var cases = Cases.OrderBy(x => x is Else).ToList();
+		var expr = GetBinding(nameof(Expression)) 
+			?? throw new XamlException("Binding 'Expression' must be a Bind");
+        var cases = Cases.OrderBy(x => x is Else).ToList();
 
 		for (var i = 0; i < cases.Count; i++)
 		{

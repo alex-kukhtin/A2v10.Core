@@ -27,10 +27,9 @@ public class Dashboard : UIElementBase
 		onRender?.Invoke(tag);
 		MergeAttributes(tag, context);
 		tag.AddCssClass(CssClass);
-		var sourceBind = GetBinding(nameof(ItemsSource));
-		if (sourceBind == null)
-			throw new XamlException("ItemsSource binding is required for the Dashboard element");
-		MergeBindingAttributeBool(tag, context, ":editable", nameof(Editable), Editable);
+		var sourceBind = GetBinding(nameof(ItemsSource)) 
+			?? throw new XamlException("ItemsSource binding is required for the Dashboard element");
+        MergeBindingAttributeBool(tag, context, ":editable", nameof(Editable), Editable);
 		MergeBindingAttributeBool(tag, context, ":edit-mode", nameof(EditMode), EditMode);
         tag.MergeAttribute("group-by", GroupBy);
         tag.MergeAttribute(":items", sourceBind.GetPath(context));

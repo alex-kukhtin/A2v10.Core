@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
 
@@ -102,14 +102,12 @@ public class ComboBox : ValuedControl, ITableControl
 					throw new XamlException("The ComboBox with the specified ItemsSource must have only one ComboBoxItem element");
 				}
 				var elem = Children[0];
-				var contBind = elem.GetBinding("Content");
-				if (contBind == null)
-					throw new XamlException("ComboBoxItem. Content binging must be specified");
-				combo.MergeAttribute(":name-prop", $"'{contBind.Path}'"); /*without context!*/
-				var valBind = elem.GetBinding("Value");
-				if (valBind == null)
-					throw new XamlException("ComboBoxItem. Value binging must be specified");
-				combo.MergeAttribute(":value-prop", $"'{valBind.Path}'");  /*without context!*/
+				var contBind = elem.GetBinding("Content") 
+					?? throw new XamlException("ComboBoxItem. Content binging must be specified");
+                combo.MergeAttribute(":name-prop", $"'{contBind.Path}'"); /*without context!*/
+				var valBind = elem.GetBinding("Value") 
+					?? throw new XamlException("ComboBoxItem. Value binging must be specified");
+                combo.MergeAttribute(":value-prop", $"'{valBind.Path}'");  /*without context!*/
 			}
 		}
 		MergeValue(combo, context);
