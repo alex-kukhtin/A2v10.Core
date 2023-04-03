@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -34,14 +34,16 @@ public class ShellController : Controller
 	private readonly IAppCodeProvider _codeProvider;
 	private readonly IAppDataProvider _appDataProvider;
 	private readonly AppOptions _appOptions;
+	private readonly ILocalizer _localizer;
 
 	public ShellController(IDbContext dbContext, IApplicationHost host, ICurrentUser currentUser, IProfiler profiler,
-		IAppCodeProvider codeProvider, IAppDataProvider appDataProvider, IOptions<AppOptions> appOptions)
+		ILocalizer localizer, IAppCodeProvider codeProvider, IAppDataProvider appDataProvider, IOptions<AppOptions> appOptions)
 	{
 		_host = host;
 		_dbContext = dbContext;
 		_profiler = profiler;
 		_codeProvider = codeProvider;
+		_localizer = localizer;
 		_currentUser = currentUser;
 		_appDataProvider = appDataProvider;
 		_appOptions = appOptions.Value;
@@ -281,6 +283,8 @@ public class ShellController : Controller
 			using var stream = _codeProvider.FileStreamFullPathRO(fileName);
 			using var sr = new StreamReader(stream);
 			var txt = sr.ReadToEnd();
+			if (txt.StartsWith("/*@localize*/"))
+				txt = _localizer.Localize(null, txt, false);
 			writer.Write(txt);
 		}
 	}
