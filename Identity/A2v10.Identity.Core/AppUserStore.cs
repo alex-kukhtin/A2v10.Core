@@ -44,6 +44,8 @@ public sealed class AppUserStore<T>:
 		public const String FirstName = nameof(FirstName);
 		public const String LastName = nameof(LastName);
 		public const String EmailConfirmed = nameof(EmailConfirmed);
+		public const String PhoneNumberConfirmed = nameof(PhoneNumberConfirmed);	
+		public const String Email = nameof(Email);
 	}
 	public AppUserStore(IDbContext dbContext, IOptions<AppUserStoreOptions<T>> options)
 	{
@@ -125,6 +127,8 @@ public sealed class AppUserStore<T>:
 		};
 		if (user.Flags.HasFlag(UpdateFlags.PhoneNumber))
 			prm.Add(ParamNames.PhoneNumber, user.PhoneNumber);
+		if (user.Flags.HasFlag(UpdateFlags.Email))
+			prm.Add(ParamNames.Email, user.Email);
 		if (user.Flags.HasFlag(UpdateFlags.PersonName))
 			prm.Add(ParamNames.PersonName, user.PersonName);
 		if (user.Flags.HasFlag(UpdateFlags.FirstName))
@@ -133,6 +137,8 @@ public sealed class AppUserStore<T>:
 			prm.Add(ParamNames.LastName, user.LastName);
 		if (user.Flags.HasFlag(UpdateFlags.EmailConfirmed))
 			prm.Add(ParamNames.EmailConfirmed, user.EmailConfirmed);
+		if (user.Flags.HasFlag(UpdateFlags.PhoneNumberConfirmed))
+			prm.Add(ParamNames.PhoneNumberConfirmed, user.PhoneNumberConfirmed);
 
 		await _dbContext.ExecuteExpandoAsync(_dataSource, $"[{_dbSchema}].[User.UpdateParts]", prm);
 
@@ -191,6 +197,8 @@ public sealed class AppUserStore<T>:
 			{ ParamNames.Confirmed,  confirmed}
 		};
 		await _dbContext.ExecuteExpandoAsync(_dataSource, $"[{_dbSchema}].[User.SetEMailConfirmed]", prm);
+		if (_multiTenant)
+			await _dbContext.ExecuteExpandoAsync(user.Segment, $"[{_dbSchema}].[User.SetEMailConfirmed]", prm);
 		user.EmailConfirmed = confirmed;
 	}
 
