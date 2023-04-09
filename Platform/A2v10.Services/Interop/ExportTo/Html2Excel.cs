@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Alex Kukhtin. All rights reserved.
 
 using System.IO;
 
@@ -53,7 +53,6 @@ public class Html2Excel
 			sheets.Append(sheet);
 
 			wbPart.Workbook.Save();
-			doc.Close();
 		};
 		return ms.ToArray();
 	}

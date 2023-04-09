@@ -6,9 +6,11 @@ using System.Dynamic;
 namespace A2v10.Identity.Core.Helpers;
 public static class ExpandoObjectExtensions
 {
-	public static ExpandoObject Add(this ExpandoObject obj, String name, Object value)
+	public static ExpandoObject Add(this ExpandoObject obj, String name, Object ?value)
 	{
 		if (obj is not IDictionary<String, Object?> d)
+			return obj;
+		if (value == null)
 			return obj;
 		d.Add(name, value);
 		return obj;

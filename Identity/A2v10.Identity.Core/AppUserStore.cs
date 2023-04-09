@@ -40,6 +40,10 @@ public sealed class AppUserStore<T>:
 		public const String Confirmed = nameof(Confirmed);
 		public const String Expires = nameof(Expires);
 		public const String PhoneNumber = nameof(PhoneNumber);
+		public const String PersonName = nameof(PersonName);
+		public const String FirstName = nameof(FirstName);
+		public const String LastName = nameof(LastName);
+		public const String EmailConfirmed = nameof(EmailConfirmed);
 	}
 	public AppUserStore(IDbContext dbContext, IOptions<AppUserStoreOptions<T>> options)
 	{
@@ -113,11 +117,29 @@ public sealed class AppUserStore<T>:
 		return Task.CompletedTask;
 	}
 
-	public Task<IdentityResult> UpdateAsync(AppUser<T> user, CancellationToken cancellationToken)
+	public async Task<IdentityResult> UpdateAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
-		//throw new NotImplementedException();
-		// TODO: Update user
-		return Task.FromResult<IdentityResult>(IdentityResult.Success);
+		var prm = new ExpandoObject()
+		{
+			{ ParamNames.Id,  user.Id }
+		};
+		if (user.Flags.HasFlag(UpdateFlags.PhoneNumber))
+			prm.Add(ParamNames.PhoneNumber, user.PhoneNumber);
+		if (user.Flags.HasFlag(UpdateFlags.PersonName))
+			prm.Add(ParamNames.PersonName, user.PersonName);
+		if (user.Flags.HasFlag(UpdateFlags.FirstName))
+			prm.Add(ParamNames.FirstName, user.FirstName);
+		if (user.Flags.HasFlag(UpdateFlags.LastName))
+			prm.Add(ParamNames.LastName, user.LastName);
+		if (user.Flags.HasFlag(UpdateFlags.EmailConfirmed))
+			prm.Add(ParamNames.EmailConfirmed, user.EmailConfirmed);
+
+		await _dbContext.ExecuteExpandoAsync(_dataSource, $"[{_dbSchema}].[User.UpdateParts]", prm);
+
+		if (_multiTenant) // update segment!
+			await _dbContext.ExecuteExpandoAsync(user.Segment, $"[{_dbSchema}].[User.UpdateParts]", prm);
+
+		return IdentityResult.Success;
 	}
 
 	#region IUserSecurityStampStore

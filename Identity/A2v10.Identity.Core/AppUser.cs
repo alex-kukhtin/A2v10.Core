@@ -4,6 +4,18 @@ using System.Collections.Generic;
 
 namespace A2v10.Web.Identity;
 
+
+[Flags]
+public enum UpdateFlags
+{
+	PersonName = 0x1,
+	Email = 0x2,
+	FirstName = 0x4,
+	LastName = 0x8,
+	PhoneNumber = 0x10,
+	EmailConfirmed = 0x20,
+	PhoneNumberConfirmed = 0x40,
+}
 public class AppUser<T> where T : struct
 {
 	public T Id { get; set; }
@@ -36,6 +48,7 @@ public class AppUser<T> where T : struct
 	public String? SecurityStamp2 { get; set; }
 
 	public Boolean IsEmpty => EqualityComparer<T>.Default.Equals(Id, default);
+	public UpdateFlags Flags { get; set; }
 
 }
 
