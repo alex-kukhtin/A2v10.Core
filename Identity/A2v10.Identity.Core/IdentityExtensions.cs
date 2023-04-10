@@ -104,6 +104,10 @@ public static class IdentityExtensions
 	{
 		return identity.GetClaimValue<T>(WellKnownClaims.Organization);
 	}
+	public static T? GetUserBranch<T>(this IIdentity? identity)
+	{
+		return identity.GetClaimValue<T>(WellKnownClaims.Branch);
+	}
 
 	public static String? GetUserOrganizationKey(this IIdentity? identity)
 	{

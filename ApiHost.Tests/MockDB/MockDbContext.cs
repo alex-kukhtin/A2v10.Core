@@ -92,6 +92,16 @@ public class MockDbContext : IDbContext
 		throw new NotImplementedException();
 	}
 
+	public void LoadRaw(string? source, string procedure, ExpandoObject prms, Action<int, IDataReader> action)
+	{
+		throw new NotImplementedException();
+	}
+
+	public Task LoadRawAsync(string? source, string procedure, ExpandoObject prms, Action<int, IDataReader> action)
+	{
+		throw new NotImplementedException();
+	}
+
 	public Task<T> LoadTypedModelAsync<T>(string? source, string command, object? prms, int commandTimeout = 0) where T : new()
 	{
 		throw new NotImplementedException();

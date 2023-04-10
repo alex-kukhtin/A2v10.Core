@@ -55,7 +55,7 @@ public static class ServicesExtensions
 		Boolean isClr = appPath.StartsWith("clr-type:");
 
 		var cookiePrefix = configuration.GetValue<String>("identity:cookiePrefix").Trim();
-	
+
 		services.AddPlatformIdentityCore<Int64>()
 			.AddIdentityConfiguration<Int64>(configuration)
 			.AddPlatformAuthentication(cookiePrefix);

@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Identity;
 
 using A2v10.Web.Identity;
 using Microsoft.Extensions.Configuration;
-
 public static class ServicesExtensions
 {
 	public static IServiceCollection AddPlatformIdentityCore<T>(this IServiceCollection services,
@@ -30,14 +29,21 @@ public static class ServicesExtensions
 		})
 		.AddUserManager<UserManager<AppUser<T>>>()
 		.AddSignInManager<SignInManager<AppUser<T>>>()
+		//.AddRoles<AppRole<T>>() /*TODO*/
 		.AddDefaultTokenProviders(); // for change password, email & phone validation
 
 		services.AddScoped<AppUserStore<T>>()
 		.AddScoped<IUserStore<AppUser<T>>>(s => s.GetRequiredService<AppUserStore<T>>())
 		.AddScoped<IUserLoginStore<AppUser<T>>>(s => s.GetRequiredService<AppUserStore<T>>())
 		.AddScoped<IUserClaimStore<AppUser<T>>>(s => s.GetRequiredService<AppUserStore<T>>())
+		//.AddScoped<IUserRoleStore<AppUser<T>>>(s => s.GetRequiredService<AppUserStore<T>>())
 		.AddScoped<ISecurityStampValidator, SecurityStampValidator<AppUser<T>>>()
 		.AddScoped<ISystemClock, SystemClock>();
+
+		/* 
+		services.AddScoped<AppRoleStore<T>>()
+			.AddScoped<IRoleStore<AppRole<T>>>(s => s.GetRequiredService<AppRoleStore<T>>());
+		*/
 		return services;
 	}
 

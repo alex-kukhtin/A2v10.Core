@@ -15,6 +15,8 @@ public enum UpdateFlags
 	PhoneNumber = 0x10,
 	EmailConfirmed = 0x20,
 	PhoneNumberConfirmed = 0x40,
+	Roles = 0x80,
+	Bracnh = 0x100,
 }
 public class AppUser<T> where T : struct
 {
@@ -37,6 +39,7 @@ public class AppUser<T> where T : struct
 	public String? Segment { get; set; }
 	public String? Locale { get; set; }
 	public T? Organization { get; set; }
+	public T? Branch { get; set; }
 	public String? OrganizationKey { get; set; }
 	public DateOnly BirthDate { get; set; }
 	public Boolean SetPassword { get; set; }

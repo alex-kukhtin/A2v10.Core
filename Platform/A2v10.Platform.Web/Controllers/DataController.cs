@@ -32,13 +32,10 @@ public class DataController : BaseController
 	{
 		return await TryCatch(async () =>
 		{ 
-			var eo = await Request.ExpandoFromBodyAsync();
-			if (eo == null)
-				throw new InvalidReqestExecption(Request.Path);
-			var baseUrl = eo.Get<String>("baseUrl");
-			if (baseUrl == null)
-				throw new InvalidReqestExecption(nameof(Reload));
-
+			var eo = await Request.ExpandoFromBodyAsync() 
+				?? throw new InvalidReqestExecption(Request.Path);
+			var baseUrl = eo.Get<String>("baseUrl") 
+				?? throw new InvalidReqestExecption(nameof(Reload));
 			String data = await _dataService.ReloadAsync(baseUrl, SetSqlQueryParams);
 			return new WebActionResult(data);
 		});
@@ -49,10 +46,8 @@ public class DataController : BaseController
 	{
 		return TryCatch(async () =>
 		{
-			var eo = await Request.ExpandoFromBodyAsync();
-			if (eo == null)
-				throw new InvalidReqestExecption(Request.Path);
-
+			var eo = await Request.ExpandoFromBodyAsync() 
+				?? throw new InvalidReqestExecption(Request.Path);
 			var expandData = await _dataService.ExpandAsync(eo, SetSqlQueryParams);
 
 			return new WebActionResult(expandData);
@@ -64,10 +59,8 @@ public class DataController : BaseController
 	{
 		return TryCatch(async () =>
 		{
-			var eo = await Request.ExpandoFromBodyAsync();
-			if (eo == null)
-				throw new InvalidReqestExecption(Request.Path);
-
+			var eo = await Request.ExpandoFromBodyAsync() 
+				?? throw new InvalidReqestExecption(Request.Path);
 			var lazyData = await _dataService.LoadLazyAsync(eo, SetSqlQueryParams);
 
 			return new WebActionResult(lazyData);
@@ -79,12 +72,10 @@ public class DataController : BaseController
 	{
 		return TryCatch(async () =>
 		{
-			var eo = await Request.ExpandoFromBodyAsync();
-			if (eo == null)
-				throw new InvalidReqestExecption(Request.Path);
-			String? baseUrl = eo.Get<String>("baseUrl");
-			if (baseUrl == null)
-				throw new InvalidReqestExecption(nameof(Save));
+			var eo = await Request.ExpandoFromBodyAsync() 
+				?? throw new InvalidReqestExecption(Request.Path);
+			String? baseUrl = eo.Get<String>("baseUrl") 
+				?? throw new InvalidReqestExecption(nameof(Save));
 			ExpandoObject data = eo.GetNotNull<ExpandoObject>("data");
 
 			var savedData = await _dataService.SaveAsync(baseUrl, data, SetSqlQueryParams);
@@ -98,15 +89,12 @@ public class DataController : BaseController
 	{
 		return TryCatch(async () =>
 		{
-			var eo = await Request.ExpandoFromBodyAsync();
-			if (eo == null)
-				throw new InvalidReqestExecption(Request.Path);
-			String? baseUrl = eo.Get<String>("baseUrl");
-			if (baseUrl == null)
-				throw new InvalidReqestExecption(nameof(Invoke));
-			String? cmd = eo.Get<String>("cmd");
-			if (cmd == null)
-				throw new InvalidReqestExecption(nameof(Invoke));
+			var eo = await Request.ExpandoFromBodyAsync() 
+				?? throw new InvalidReqestExecption(Request.Path);
+			String? baseUrl = eo.Get<String>("baseUrl") 
+				?? throw new InvalidReqestExecption(nameof(Invoke));
+			String? cmd = eo.Get<String>("cmd") 
+				?? throw new InvalidReqestExecption(nameof(Invoke));
 			ExpandoObject? data = eo.Get<ExpandoObject>("data");
 
 			var result = await _dataService.InvokeAsync(baseUrl, cmd, data, SetSqlQueryParams);
@@ -119,14 +107,10 @@ public class DataController : BaseController
 	{
 		return TryCatch(async () =>
 		{
-			var eo = await Request.ExpandoFromBodyAsync();
-			if (eo == null)
-				throw new InvalidReqestExecption(Request.Path);
-
-			var baseUrl = eo.Get<String>("baseUrl");
-			if (baseUrl == null)
-				throw new InvalidReqestExecption(nameof(DbRemove));
-
+			var eo = await Request.ExpandoFromBodyAsync() 
+				?? throw new InvalidReqestExecption(Request.Path);
+			var baseUrl = eo.Get<String>("baseUrl") 
+				?? throw new InvalidReqestExecption(nameof(DbRemove));
 			Object id = eo.GetNotNull<Object>("id");
 			String propName = eo.GetNotNull<String>("prop");
 
@@ -139,9 +123,8 @@ public class DataController : BaseController
 	[HttpPost]
 	public async Task<IActionResult> ExportTo()
 	{
-		var eo = await Request.ExpandoFromBodyAsync();
-		if (eo == null)
-			throw new InvalidReqestExecption(Request.Path);
+		var eo = await Request.ExpandoFromBodyAsync() 
+			?? throw new InvalidReqestExecption(Request.Path);
 		try
 		{
 			//String format = eo.Get<String>("format");

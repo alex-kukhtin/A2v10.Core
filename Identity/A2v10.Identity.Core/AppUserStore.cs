@@ -13,25 +13,29 @@ using Microsoft.Extensions.Options;
 
 using A2v10.Data.Interfaces;
 using A2v10.Identity.Core.Helpers;
+using System.Linq;
 
-public sealed class AppUserStore<T>:
+public sealed class AppUserStore<T> :
 	IUserStore<AppUser<T>>,
 	IUserLoginStore<AppUser<T>>,
 	IUserEmailStore<AppUser<T>>,
 	IUserPhoneNumberStore<AppUser<T>>,
 	IUserPasswordStore<AppUser<T>>,
 	IUserSecurityStampStore<AppUser<T>>,
-	IUserClaimStore<AppUser<T>> where T : struct
+	IUserClaimStore<AppUser<T>>,
+	IUserRoleStore<AppUser<T>>
+	where T : struct
 {
 	private readonly IDbContext _dbContext;
 	private readonly String? _dataSource;
 	private readonly String _dbSchema;
 	private readonly Boolean _multiTenant;
+	private readonly RolesMode _rolesMode;
 
 	private readonly Func<AppUser<T>, IEnumerable<KeyValuePair<String, String?>>>? _addClaims;
 
 	private static class ParamNames
-    {
+	{
 		public const String Id = nameof(Id);
 		public const String Provider = nameof(Provider);
 		public const String Token = nameof(Token);
@@ -44,8 +48,11 @@ public sealed class AppUserStore<T>:
 		public const String FirstName = nameof(FirstName);
 		public const String LastName = nameof(LastName);
 		public const String EmailConfirmed = nameof(EmailConfirmed);
-		public const String PhoneNumberConfirmed = nameof(PhoneNumberConfirmed);	
+		public const String PhoneNumberConfirmed = nameof(PhoneNumberConfirmed);
 		public const String Email = nameof(Email);
+		public const String Roles = nameof(Roles);
+		public const String Branch = nameof(Branch);
+
 	}
 	public AppUserStore(IDbContext dbContext, IOptions<AppUserStoreOptions<T>> options)
 	{
@@ -54,9 +61,10 @@ public sealed class AppUserStore<T>:
 		_dbSchema = options.Value?.Schema ?? "a2security";
 		_addClaims = options.Value?.Claims;
 		_multiTenant = options.Value?.MultiTenant ?? false;
-    }
+		_rolesMode = options.Value?.UseRoles ?? RolesMode.None;
+	}
 
-    public async Task<IdentityResult> CreateAsync(AppUser<T> user, CancellationToken cancellationToken)
+	public async Task<IdentityResult> CreateAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
 		user.PasswordHash ??= user.PasswordHash2;
 		user.SecurityStamp ??= user.SecurityStamp2;
@@ -78,7 +86,7 @@ public sealed class AppUserStore<T>:
 
 	public async Task<AppUser<T>> FindByIdAsync(String UserId, CancellationToken cancellationToken)
 	{
-		T? typedUserId = (T?) TypeDescriptor.GetConverter(typeof(T)).ConvertFromInvariantString(UserId);
+		T? typedUserId = (T?)TypeDescriptor.GetConverter(typeof(T)).ConvertFromInvariantString(UserId);
 		if (typedUserId == null)
 			return new AppUser<T>();
 		return await _dbContext.LoadAsync<AppUser<T>>(_dataSource, $"[{_dbSchema}].[FindUserById]", new { Id = typedUserId })
@@ -139,6 +147,10 @@ public sealed class AppUserStore<T>:
 			prm.Add(ParamNames.EmailConfirmed, user.EmailConfirmed);
 		if (user.Flags.HasFlag(UpdateFlags.PhoneNumberConfirmed))
 			prm.Add(ParamNames.PhoneNumberConfirmed, user.PhoneNumberConfirmed);
+		if (user.Flags.HasFlag(UpdateFlags.Roles))
+			prm.Add(ParamNames.Roles, user.Roles);
+		if (user.Flags.HasFlag(UpdateFlags.Bracnh))
+			prm.Add(ParamNames.Branch, user.Branch);
 
 		await _dbContext.ExecuteExpandoAsync(_dataSource, $"[{_dbSchema}].[User.UpdateParts]", prm);
 
@@ -210,8 +222,8 @@ public sealed class AppUserStore<T>:
 	}
 
 	public Task<String> GetNormalizedEmailAsync(AppUser<T> user, CancellationToken cancellationToken)
-    {
-        return Task.FromResult<String>(user.Email?.ToLowerInvariant() ?? String.Empty);
+	{
+		return Task.FromResult<String>(user.Email?.ToLowerInvariant() ?? String.Empty);
 	}
 
 	public Task SetNormalizedEmailAsync(AppUser<T> user, String normalizedEmail, CancellationToken cancellationToken)
@@ -280,7 +292,7 @@ public sealed class AppUserStore<T>:
 		{
 			list.Add(new Claim(WellKnownClaims.Tenant, user.Tenant.ToString()!));
 			//if (user.IsTenantAdmin)
-				//list.Add(new Claim("TenantAdmin", "TenantAdmin"));
+			//list.Add(new Claim("TenantAdmin", "TenantAdmin"));
 		}
 		if (!String.IsNullOrEmpty(user.Segment))
 			list.Add(new Claim(WellKnownClaims.Segment, user.Segment));
@@ -288,6 +300,8 @@ public sealed class AppUserStore<T>:
 			list.Add(new Claim(WellKnownClaims.Locale, user.Locale));
 		if (user.Organization != null)
 			list.Add(new Claim(WellKnownClaims.Organization, user.Organization.ToString()!));
+		if (user.Branch != null)
+			list.Add(new Claim(WellKnownClaims.Branch, user.Branch.ToString()!));
 		if (user.OrganizationKey != null)
 			list.Add(new Claim(WellKnownClaims.OrganizationKey, user.OrganizationKey));
 		if (user.IsPersistent)
@@ -309,7 +323,7 @@ public sealed class AppUserStore<T>:
 
 	private static T? ConvertTo(String value)
 	{
-		return (T?) TypeDescriptor.GetConverter(typeof(T)).ConvertFromInvariantString(value); 
+		return (T?)TypeDescriptor.GetConverter(typeof(T)).ConvertFromInvariantString(value);
 	}
 
 	private async Task UpdateClaim(AppUser<T> user, Claim claim)
@@ -328,6 +342,9 @@ public sealed class AppUserStore<T>:
 				break;
 			case WellKnownClaims.Organization:
 				user.Organization = ConvertTo(claim.Value);
+				break;
+			case WellKnownClaims.Branch:
+				user.Branch = ConvertTo(claim.Value);
 				break;
 			case WellKnownClaims.Locale:
 				user.Locale = claim.Value;
@@ -348,14 +365,12 @@ public sealed class AppUserStore<T>:
 	{
 		// dynamically added 
 		foreach (var claim in claims)
-        {
+		{
 			if (claim.Value == null)
 				continue;
 			await UpdateClaim(user, claim);
 		}
 	}
-
-
 
 	public Task ReplaceClaimAsync(AppUser<T> user, Claim claim, Claim newClaim, CancellationToken cancellationToken)
 	{
@@ -421,38 +436,38 @@ public sealed class AppUserStore<T>:
 
 	#region IUserPhoneNumberStore
 	public Task SetPhoneNumberAsync(AppUser<T> user, String phoneNumber, CancellationToken cancellationToken)
-    {
+	{
 		user.PhoneNumber = phoneNumber;
 		return Task.CompletedTask;
-    }
+	}
 
 	public Task<String> GetPhoneNumberAsync(AppUser<T> user, CancellationToken cancellationToken)
-    {
+	{
 		return Task.FromResult(user.PhoneNumber ?? throw new InvalidOperationException("Phone number is null"));
-    }
+	}
 
 	public Task<Boolean> GetPhoneNumberConfirmedAsync(AppUser<T> user, CancellationToken cancellationToken)
-    {
+	{
 		return Task.FromResult(user.PhoneNumberConfirmed);
-    }
+	}
 
 	public async Task SetPhoneNumberConfirmedAsync(AppUser<T> user, Boolean confirmed, CancellationToken cancellationToken)
-    {
+	{
 		var prm = new ExpandoObject()
 		{
 			{ ParamNames.Id,  user.Id },
-			{ ParamNames.PhoneNumber, user.PhoneNumber 
+			{ ParamNames.PhoneNumber, user.PhoneNumber
 				?? throw new InvalidOperationException("PhoneNumber is null") },
 			{ ParamNames.Confirmed,  confirmed}
 		};
 		await _dbContext.ExecuteExpandoAsync(_dataSource, $"[{_dbSchema}].[User.SetPhoneNumberConfirmed]", prm);
 
 		if (_multiTenant) // update segment!
-            await _dbContext.ExecuteExpandoAsync(user.Segment, $"[{_dbSchema}].[User.SetPhoneNumberConfirmed]", prm);
+			await _dbContext.ExecuteExpandoAsync(user.Segment, $"[{_dbSchema}].[User.SetPhoneNumberConfirmed]", prm);
 
-        user.PhoneNumberConfirmed = confirmed;
+		user.PhoneNumberConfirmed = confirmed;
 
-    }
+	}
 	#endregion
 
 	#region Token support
@@ -492,5 +507,38 @@ public sealed class AppUserStore<T>:
 		};
 		return _dbContext.ExecuteExpandoAsync(_dataSource, $"[{_dbSchema}].RemoveToken", exp);
 	}
+	#endregion
+
+	#region IUserRoleStore
+	public Task AddToRoleAsync(AppUser<T> user, String roleName, CancellationToken cancellationToken)
+	{
+		throw new NotImplementedException();
+	}
+
+	public Task RemoveFromRoleAsync(AppUser<T> user, String roleName, CancellationToken cancellationToken)
+	{
+		throw new NotImplementedException();
+	}
+
+	public Task<IList<String>> GetRolesAsync(AppUser<T> user, CancellationToken cancellationToken)
+	{
+		List<String> list = new List<String>();
+		if (_rolesMode == RolesMode.Claims && user.Roles != null)
+			list.AddRange(user.Roles.Split(",")); 
+		else if (_rolesMode == RolesMode.Database)
+			throw new NotImplementedException();
+		return Task.FromResult(list as IList<String>);	
+	}
+
+	public Task<Boolean> IsInRoleAsync(AppUser<T> user, string roleName, CancellationToken cancellationToken)
+	{
+		throw new NotImplementedException();
+	}
+
+	public Task<IList<AppUser<T>>> GetUsersInRoleAsync(String roleName, CancellationToken cancellationToken)
+	{
+		throw new NotImplementedException();
+	}
+
 	#endregion
 }
