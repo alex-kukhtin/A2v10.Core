@@ -1,5 +1,5 @@
 ﻿
-// Copyright © 2015-2022 Oleksandr Kukhtin. All rights reserved.
+// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Xaml;
 
@@ -255,6 +255,7 @@ public enum Icon
 	BankUah,
 	Barcode,
 	Bell,
+	Board,
 	BrandExcel,
 	Calc,
 	Calendar,
