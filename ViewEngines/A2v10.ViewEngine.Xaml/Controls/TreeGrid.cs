@@ -1,4 +1,6 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Alex Kukhtin. All rights reserved.
+
+using A2v10.Infrastructure;
 
 namespace A2v10.Xaml;
 
@@ -23,6 +25,9 @@ public class TreeGrid : Control, ITableControl
 	public Length? MinWidth { get; set; }
 	public Command? DoubleClick { get; set; }
 	public DropDownMenu? ContextMenu { get; set; }
+	public Object? IsFolder { get; set; }
+	public RowMarkerStyle MarkerStyle { get; set; }
+	public MarkStyle Mark { get; set; }
 	public TreeGridColumnCollection Columns { get; set; } = new TreeGridColumnCollection();
 	public Boolean Sort { get; set; }
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
@@ -65,6 +70,24 @@ public class TreeGrid : Control, ITableControl
 		treeGrid.AddCssClassBool(Striped, "striped");
 
 		treeGrid.MergeAttribute("folder-style", FolderStyle.ToString().ToLowerInvariant());
+
+		treeGrid.MergeAttribute("grid-lines", MarkGridLines);
+
+		var isfldbind = GetBinding(nameof(IsFolder));
+
+		if (isfldbind != null)
+			treeGrid.MergeAttribute("is-folder", isfldbind.GetPath(context));
+		else if (IsFolder != null)
+			throw new XamlException("TreeGrid. The IsFolder property must be a binding");
+
+		if (MarkerStyle != RowMarkerStyle.None)
+			treeGrid.MergeAttribute("mark-style", MarkerStyle.ToString().ToKebabCase());
+
+		var mbind = GetBinding(nameof(Mark));
+		if (mbind != null)
+			treeGrid.MergeAttribute("mark", mbind.Path); // without context!!!
+		else if (Mark != MarkStyle.Default)
+			throw new XamlException("TreeGrid. The Mark property must be a binding");
 
 		if (MinWidth != null)
 			treeGrid.MergeStyle("min-width", MinWidth.Value);
@@ -126,6 +149,15 @@ public class TreeGrid : Control, ITableControl
 		RenderContextMenu(ContextMenu, context, contextId);
 		treeGrid.RenderEnd(context);
 	}
+	private String MarkGridLines =>
+		GridLines switch
+		{
+			GridLinesVisibility.Vertical => "gl-v",
+			GridLinesVisibility.Horizontal => "gl-h",
+			GridLinesVisibility.Both => "gl-h gl-v",
+			_ => ""
+		};
+
 
 	private void SetGridLines(TagBuilder tag)
 	{

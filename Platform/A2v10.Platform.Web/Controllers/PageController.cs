@@ -119,6 +119,7 @@ public class PageController : BaseController
 			RootId = rootId,
 			IsDialog = rw.IsDialog,
 			IsIndex = rw.IsIndex,
+			IsPlain = rw.IsPlain,
 			IsSkipDataStack = rw.IsSkipDataStack,
 			Template = rw.Template,
 			Path = rw.Path,

@@ -82,6 +82,7 @@ public class ModelJsonViewBase : ModelJsonBase
 	public Boolean Index { get; set; }
 
 	public Boolean SkipDataStack { get; set; }
+	public Boolean Plain { get; set; }
 	public Boolean Copy { get; set; }
 
 	public ModelJsonMerge? Merge { get; set; }
@@ -132,7 +133,7 @@ public class ModelJsonView : ModelJsonViewBase, IModelView
 	public virtual Boolean IsDialog => false;
 	public Boolean IsIndex => Index;
 	public Boolean IsSkipDataStack => SkipDataStack;
-
+	public Boolean IsPlain => Plain;
 	public Boolean Indirect { get; init; }
 	public String? Target { get; init; }
 	public String? TargetId { get; init; }

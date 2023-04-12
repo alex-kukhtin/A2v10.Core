@@ -27,6 +27,7 @@ public class ModelJsonViewBase : ModelJsonBase
 	public Boolean Index { get; set; }
 
 	public Boolean SkipDataStack { get; set; }
+	public Boolean Plain { get; set; }
 	public Boolean Copy { get; set; }
 
 	public ModelJsonMerge? Merge { get; set; }

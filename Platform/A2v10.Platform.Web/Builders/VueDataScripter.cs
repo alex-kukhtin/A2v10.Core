@@ -130,9 +130,13 @@ public class VueDataScripter : IDataScripter
 		_currentUser = currentUser;
 	}
 
-	public String CreateDataModelScript(IDataModel? model)
+	public String CreateDataModelScript(IDataModel? model, Boolean isPlain)
 	{
-		return model != null ? model.CreateScript(this) : CreateEmptyStript();
+		if (model == null) 
+			return CreateEmptyStript();
+		if (isPlain)
+			return CreatePlainScript();
+		return model.CreateScript(this);
 	}
 
 	public String CreateScript(IDataHelper helper, IDictionary<String, Object?>? sys, IDictionary<String, IDataMetadata> meta)
@@ -147,6 +151,15 @@ public class VueDataScripter : IDataScripter
 		sb.Append(SetModelInfo(helper, sys));
 		sb.AppendLine("return root;}");
 		return sb.ToString();
+	}
+
+	String CreatePlainScript()
+	{
+		return @"
+function modelData(template, data) {
+	return rawData;
+}
+";
 	}
 
 	static String CreateEmptyStript()
@@ -536,7 +549,7 @@ function modelData(template, data) {
 		modelFunc.Replace("$(RequiredModules)", sbRequired?.ToString());
 		modelFunc.Replace("$(TemplateText)", Localize(templateText));
 		modelFunc.Replace("$(DataModelText)", dataModelText);
-		String modelScript = CreateDataModelScript(msi.DataModel);
+		String modelScript = CreateDataModelScript(msi.DataModel, msi.IsPlain);
 		modelFunc.Replace("$(ModelScript)", modelScript);
 
 		header.Replace("$(CurrentModule)", modelFunc.ToString());
