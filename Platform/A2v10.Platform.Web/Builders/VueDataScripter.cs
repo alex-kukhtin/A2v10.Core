@@ -155,9 +155,18 @@ public class VueDataScripter : IDataScripter
 
 	String CreatePlainScript()
 	{
+		// as empty 
 		return @"
 function modelData(template, data) {
-	return rawData;
+	const cmn = require('std:datamodel');
+	function TRoot(source, path, parent) { cmn.createObject(this, source, path, parent);}
+	cmn.defineObject(TRoot, { props: { } }, false);
+	cmn.implementRoot(TRoot, template, {TRoot});
+	let root = new TRoot(data);
+	cmn.setModelInfo(root, {}, rawData); 
+	if (template.loaded)
+		template.loaded(rawData);
+	return root;
 }
 ";
 	}
@@ -189,10 +198,10 @@ function modelData(template, data) {
 				val = bVal ? "true" : "false";
 			else if (val is String)
 				val = $"'{val}'";
-			else if (val is Object valObj)
-				val = JsonConvert.SerializeObject(valObj);
 			else if (val is DateTime dateTimeObj)
 				val = helper.DateTime2StringWrap(dateTimeObj);
+			else if (val is Object valObj)
+				val = JsonConvert.SerializeObject(valObj);
 			list.Add($"'{k.Key}': {val}");
 		}
 		return $"cmn.setModelInfo(root, {list.ToJsonObject()}, rawData);";
