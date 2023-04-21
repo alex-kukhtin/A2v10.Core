@@ -1,18 +1,17 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Alex Kukhtin. All rights reserved.
 
 using System;
 using System.Threading.Tasks;
 using System.IO;
+using Newtonsoft.Json;
+using System.Dynamic;
+using System.Collections.Generic;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 using A2v10.Infrastructure;
 using A2v10.Data.Interfaces;
-using System.Collections.Generic;
-using Newtonsoft.Json;
-using System.Dynamic;
-using Microsoft.AspNetCore.Http;
 
 namespace A2v10.Platform.Web.Controllers;
 
@@ -120,12 +119,10 @@ public class ImageController : BaseController
 			if (String.IsNullOrEmpty(pathInfo))
 				throw new ArgumentOutOfRangeException(nameof(pathInfo), nameof(StaticImage));
 			pathInfo = pathInfo.Replace('-', '.');
-			var fullPath = _appCodeProvider.MakeFullPath(pathInfo, String.Empty, _currentUser.IsAdminApplication);
-			if (!_appCodeProvider.FileExists(fullPath))
+			String fullPath = _appCodeProvider.MakeFullPathCheck(pathInfo, String.Empty) ??
 				throw new FileNotFoundException($"File not found '{pathInfo}'");
-
 			using var stream = _appCodeProvider.FileStreamFullPathRO(fullPath);
-			var ext = _appCodeProvider.GetExtension(fullPath);
+			var ext = PathHelpers.GetExtension(fullPath);
 			return new FileStreamResult(stream, MimeTypes.GetMimeMapping(ext));
 		} 
 		catch (Exception ex)

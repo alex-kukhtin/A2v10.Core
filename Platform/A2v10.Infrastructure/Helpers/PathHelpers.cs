@@ -48,5 +48,14 @@ namespace A2v10.Infrastructure
 			var root = Path.GetFullPath(dirSep);
 			return combined[root.Length..];
 		}
-	}
+
+        public static String ChangeExtension(String fullName, String extension)
+		{
+            return Path.ChangeExtension(fullName, extension);
+        }
+        public static String GetExtension(String fullName)
+        {
+            return Path.GetExtension(fullName);
+        }
+    }
 }

@@ -102,12 +102,17 @@ public class MockDbContext : IDbContext
 		throw new NotImplementedException();
 	}
 
-	public Task<T> LoadTypedModelAsync<T>(string? source, string command, object? prms, int commandTimeout = 0) where T : new()
+	public Task<T> LoadTypedModelAsync<T>(string? _1/*source*/, string _2/*command*/, object? _3/*prms*/, int _4/*commandTimeout*/ = 0) where T : new()
 	{
 		throw new NotImplementedException();
 	}
 
-	public ExpandoObject? ReadExpando(string? source, string command, ExpandoObject? prms = null)
+    public Task<T?> LoadTypedModelAsync<T>(string? source, string command, object? prms = null) where T : new()
+    {
+        throw new NotImplementedException();
+    }
+
+    public ExpandoObject? ReadExpando(string? source, string command, ExpandoObject? prms = null)
 	{
 		throw new NotImplementedException();
 	}
@@ -141,4 +146,9 @@ public class MockDbContext : IDbContext
 	{
 		throw new NotImplementedException();
 	}
+
+    public Task<TOut?> SaveTypedModelAsync<TIn, TOut>(string? source, string command, TIn data, object? prms = null) where TOut : new()
+    {
+        throw new NotImplementedException();
+    }
 }

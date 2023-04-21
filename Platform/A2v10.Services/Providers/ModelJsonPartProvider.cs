@@ -9,12 +9,12 @@ using Newtonsoft.Json;
 
 namespace A2v10.Services;
 
-public class ModelJsonPartProviderFile : IModelJsonPartProvider
+public class ModelJsonPartProvider : IModelJsonPartProvider
 {
 	private readonly IAppCodeProvider _appCodeProvider;
 	private readonly RedirectModule? _redirect;
 
-	public ModelJsonPartProviderFile(IAppCodeProvider appCodeProvider, IOptions<AppOptions> appOptions)
+	public ModelJsonPartProvider(IAppCodeProvider appCodeProvider, IOptions<AppOptions> appOptions)
 	{
 		_appCodeProvider = appCodeProvider;
 		var redPath = _appCodeProvider.MakeFullPath(String.Empty, "redirect.json", false);

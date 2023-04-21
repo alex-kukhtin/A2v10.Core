@@ -17,8 +17,10 @@ using A2v10.ViewEngine.Xaml;
 using A2v10.ViewEngine.Html;
 
 using A2v10.Platform.Web;
+using System.Linq;
 
 namespace Microsoft.Extensions.DependencyInjection;
+
 public static class ServicesExtensions
 {
 	public static IServiceCollection UseSqlServerStorage(this IServiceCollection services, IConfiguration configuration)
@@ -51,29 +53,17 @@ public static class ServicesExtensions
 		var builder = services.AddPlatformCore()
 			.AddDefaultIdentityUI();
 
-		var appPath = configuration.GetValue<String>("application:path").Trim();
-		Boolean isClr = appPath.StartsWith("clr-type:");
+        services.AddSingleton<IAppCodeProvider, AppCodeProvider>();
+        services.AddSingleton<IModelJsonPartProvider, ModelJsonPartProvider>();
+        services.AddSingleton<IXamlPartProvider, XamlPartProviderFile>();
 
-		var cookiePrefix = configuration.GetValue<String>("identity:cookiePrefix").Trim();
+        var cookiePrefix = configuration.GetValue<String>("identity:cookiePrefix").Trim();
 
 		services.AddPlatformIdentityCore<Int64>()
 			.AddIdentityConfiguration<Int64>(configuration)
 			.AddPlatformAuthentication(cookiePrefix);
 
 		services.AddSingleton<IWebHostFilesProvider, WebHostFilesProvider>();
-		if (isClr)
-		{
-			services.AddSingleton<IAppProvider, AppProvider>();
-			services.AddSingleton<IAppCodeProvider, ClrCodeProvider>();
-			services.AddSingleton<IModelJsonPartProvider, ModelJsonPartProviderClr>();
-			services.AddSingleton<IXamlPartProvider, XamlPartProviderClr>();
-		}
-		else /* Is File System */
-		{
-			services.AddSingleton<IAppCodeProvider, FileSystemCodeProvider>();
-			services.AddSingleton<IModelJsonPartProvider, ModelJsonPartProviderFile>();
-			services.AddSingleton<IXamlPartProvider, XamlPartProviderFile>();
-		}
 
 		services.UseSqlServerStorage(configuration);
 
@@ -84,9 +74,19 @@ public static class ServicesExtensions
 		});
 
 		// Platform services
-		services.Configure<AppOptions>(
-			configuration.GetSection("Application")
-		);
+		services.Configure<AppOptions>(opts =>
+		{
+			configuration.GetSection("application").Bind(opts);
+			opts.Modules = configuration.GetSection("application:modules")
+				.GetChildren().ToDictionary<IConfigurationSection, String, ModuleInfo>(
+					x => x.Key,
+					x => {
+						var mi = new ModuleInfo();
+						x.Bind(mi);
+						return mi;
+					},
+					StringComparer.InvariantCultureIgnoreCase);
+        });
 
 		services.AddScoped<IDataService, DataService>();
 		services.AddScoped<IModelJsonReader, ModelJsonReader>();

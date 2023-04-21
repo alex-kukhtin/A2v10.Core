@@ -153,7 +153,7 @@ public class VueDataScripter : IDataScripter
 		return sb.ToString();
 	}
 
-	String CreatePlainScript()
+	static String CreatePlainScript()
 	{
 		// as empty 
 		return @"
@@ -422,8 +422,8 @@ function modelData(template, data) {
 			if (_modulesWritten.Contains(moduleName))
 				continue;
 			var fileName = moduleName.AddExtension("js");
-			String filePath = _codeProvider.MakeFullPath(String.Empty, fileName.RemoveHeadSlash(), _currentUser.IsAdminApplication);
-			if (!_codeProvider.FileExists(filePath))
+			var filePath = _codeProvider.MakeFullPathCheck(String.Empty, fileName.RemoveHeadSlash());
+			if (filePath == null)
 				throw new FileNotFoundException(filePath);
 
 			using var stream = _codeProvider.FileStreamFullPathRO(filePath);
@@ -591,10 +591,9 @@ function modelData(template, data) {
 			throw new InvalidProgramException("ModelScriptInfo.Path is null");
 		if (msi.Template != null)
 		{
-			String? fileTemplateText = await _codeProvider.ReadTextFileAsync(msi.Path, msi.Template + ".js", _currentUser.IsAdminApplication);
-			if (fileTemplateText == null)
-				throw new FileNotFoundException($"File not found. '{Path.Combine(msi.Path, msi.Template)}'");
-			sbRequired = new StringBuilder();
+			String? fileTemplateText = await _codeProvider.ReadTextFileAsync(msi.Path, msi.Template + ".js", _currentUser.IsAdminApplication) 
+				?? throw new FileNotFoundException($"File not found. '{Path.Combine(msi.Path, msi.Template)}'");
+            sbRequired = new StringBuilder();
 			AddRequiredModules(sbRequired, fileTemplateText);
 			templateText = CreateTemplateForWrite(Localize(fileTemplateText));
 		}

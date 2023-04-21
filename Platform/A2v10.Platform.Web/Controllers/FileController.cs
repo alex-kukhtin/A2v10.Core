@@ -97,9 +97,8 @@ public class FileController : BaseController
 			Int32 ix = pathInfo.LastIndexOf('-');
 			if (ix != -1)
 				pathInfo = pathInfo[..ix] + "." + pathInfo[(ix + 1)..];
-			String fullPath = _appCodeProvider.MakeFullPath(Path.Combine("_files/", pathInfo), String.Empty, _currentUser.IsAdminApplication);
-			if (!_appCodeProvider.FileExists(fullPath))
-				throw new FileNotFoundException($"File not found '{pathInfo}'");
+			String fullPath = _appCodeProvider.MakeFullPathCheck(Path.Combine("_files/", pathInfo), String.Empty) 
+				?? throw new FileNotFoundException($"File not found '{pathInfo}'");
 			if (!new FileExtensionContentTypeProvider().TryGetContentType(fullPath, out String? contentType))
 				contentType = MimeTypes.Application.OctetStream;
 			var stream = _appCodeProvider.FileStreamFullPathRO(fullPath);

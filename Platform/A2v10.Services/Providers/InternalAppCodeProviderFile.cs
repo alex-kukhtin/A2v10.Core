@@ -1,51 +1,49 @@
 ﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
+using DocumentFormat.OpenXml.Spreadsheet;
 using System.IO;
 using System.Threading.Tasks;
 
-
-using Microsoft.Extensions.Options;
-
 namespace A2v10.Services;
 
-public class FileSystemCodeProvider : IAppCodeProvider
+public class InternalAppCodeProviderFile : IAppCodeProvider
 {
 	private String AppPath { get; }
 
 	public Boolean IsFileSystem => true;
 
-	private readonly String _appKey;
-
-	public FileSystemCodeProvider(IOptions<AppOptions> appOptions)
+	public InternalAppCodeProviderFile(String path)
 	{
-		AppPath = appOptions.Value.Path;
-		_appKey = appOptions.Value.AppName;
-	}
-
-	String GetAppKey(Boolean admin)
-	{
-		return admin ? "Admin" : _appKey;
+		AppPath = path;
 	}
 
 	public String MakeFullPath(String path, String fileName, Boolean admin)
 	{
 		if (path.StartsWith("$"))
-			path = path.Replace("$", "../");
+		{
+			int ix = path.IndexOf("/");
+			path = path[(ix + 1)..];
+		}
 
-		String appKey = GetAppKey(admin);
-		if (fileName.StartsWith('/'))
+        if (fileName.StartsWith('/'))
 		{
 			path = String.Empty;
 			fileName = fileName.Remove(0, 1);
 		}
-		if (appKey != null)
-			appKey = "/" + appKey;
-		String fullPath = Path.Combine($"{AppPath}{appKey}", path, fileName);
+		String fullPath = Path.Combine($"{AppPath}", path, fileName);
 
 		return Path.GetFullPath(fullPath);
 	}
 
-	public async Task<String?> ReadTextFileAsync(String path, String fileName, Boolean admin)
+    public String? MakeFullPathCheck(String path, String fileName)
+	{
+		var fullPath = MakeFullPath(path, fileName, false);
+		if (File.Exists(fullPath))
+			return fullPath;
+		return null;
+	}
+
+    public async Task<String?> ReadTextFileAsync(String path, String fileName, Boolean admin)
 	{
 		String fullPath = MakeFullPath(path, fileName, admin);
 
@@ -65,9 +63,15 @@ public class FileSystemCodeProvider : IAppCodeProvider
 
 		using var tr = new StreamReader(fullPath);
 		return tr.ReadToEnd();
-	}
+    }
 
-	public Boolean FileExists(String fullPath)
+    public Boolean IsFileExists(String path, String fileName)
+	{
+		var fullPath = MakeFullPath(path, fileName, false);
+        return File.Exists(fullPath);
+    }
+
+    public Boolean FileExists(String fullPath)
 	{
 		return File.Exists(fullPath);
 	}
@@ -97,16 +101,6 @@ public class FileSystemCodeProvider : IAppCodeProvider
     {
         String dir = Path.GetDirectoryName(baseFullName) ?? String.Empty;
         return Path.GetFullPath(Path.Combine(dir, relativeName));
-	}
-
-	public String GetExtension(String fullName)
-	{
-		return Path.GetExtension(fullName);
-	}
-		
-	public String ChangeExtension(String fullName, String extension)
-	{
-		return Path.ChangeExtension(fullName, extension);
 	}
 }
 

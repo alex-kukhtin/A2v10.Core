@@ -115,7 +115,7 @@ public class ShellController : Controller
 	{
 		if (UserId.HasValue)
 			prms.Set("UserId", UserId.Value);
-		if (_host.IsMultiTenant && TenantId.HasValue)
+		if (_appOptions.MultiTenant && TenantId.HasValue)
 			prms.Set("TenantId", TenantId);
 	}
 
@@ -181,14 +181,9 @@ public class ShellController : Controller
 		if (setCompany)
 		{
 			var comps = dm.Root.Get<List<ExpandoObject>>("Companies");
-			var currComp = comps?.Find(c => c.Get<Boolean>("Current"));
-
-			if (currComp == null)
-			{
-				throw new InvalidDataException("There is no current company");
-			}
-
-			var menuJson = JsonConvert.SerializeObject(comps);
+			var currComp = (comps?.Find(c => c.Get<Boolean>("Current"))) 
+				?? throw new InvalidDataException("There is no current company");
+            var menuJson = JsonConvert.SerializeObject(comps);
 			macros.Set("Companies", $"{{menu:{menuJson}, links:null}}");
 
 			_currentUser.SetCompanyId(currComp.Get<Int64>("Id"));

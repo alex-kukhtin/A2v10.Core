@@ -25,7 +25,7 @@ public class PdfReportEngine : IReportEngine
 		_rootPath = _appCodeProvider.MakeFullPath(String.Empty, String.Empty, false);
 	}
 
-	private Page ReadTemplate(IReportInfo reportInfo, String reportPath)
+	private Page ReadTemplate(IReportInfo _1/*reportInfo*/, String reportPath)
 	{
 		using var stream = _appCodeProvider.FileStreamFullPathRO(reportPath);
 		return TemplateReader.ReadReport(stream);

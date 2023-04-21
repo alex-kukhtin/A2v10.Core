@@ -40,16 +40,14 @@ public class Components : MarkupExtension
 
 	Object? Load(String baseFileName, IServiceProvider serviceProvider)
 	{
+        if (String.IsNullOrEmpty(Pathes))
+            return null;
+        
 		var appReader = serviceProvider.GetRequiredService<IAppCodeProvider>();
 
-		String? basePath = Path.GetDirectoryName(baseFileName);
-		if (basePath == null)
+        String basePath = Path.GetDirectoryName(baseFileName) ??
 			throw new XamlException("Invalid Base path");
-		if (appReader == null)
-			throw new XamlException("Invalid ApplicationReader");
 
-		if (String.IsNullOrEmpty(Pathes))
-			return null;
 		var dict = new ComponentDictionary();
 		foreach (var path in Pathes.Split(','))
 			dict.Append(LoadOneFile(serviceProvider, appReader, basePath, path));

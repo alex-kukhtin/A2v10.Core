@@ -54,7 +54,7 @@ public class Source : MarkupExtension
 
 		String targetFileName = appReader.ReplaceFileName(baseFileName, Path);
 
-		String ext = appReader.GetExtension(targetFileName);
+		String ext = PathHelpers.GetExtension(targetFileName);
 
 		if (ext == ".js" || ext == ".html")
 		{
@@ -69,7 +69,7 @@ public class Source : MarkupExtension
 		}
 		else
 		{
-			String trgPath = appReader.ChangeExtension(targetFileName, "xaml");
+			String trgPath = PathHelpers.ChangeExtension(targetFileName, "xaml");
 
 			if (appReader.FileExists(trgPath))
 			{
