@@ -1,61 +1,65 @@
-﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.IO;
 
-namespace A2v10.Infrastructure
+namespace A2v10.Infrastructure;
+
+public static class PathHelpers
 {
-	public static class PathHelpers
-	{
-		public static String AddExtension(this String This, String extension)
-		{
-			if (String.IsNullOrEmpty(This))
-				return This;
-			String ext = "." + extension;
-			if (This.EndsWith(ext))
-				return This;
-			return This + ext;
-		}
+    public static String AddExtension(this String This, String extension)
+    {
+        if (String.IsNullOrEmpty(This))
+            return This;
+        String ext = "." + extension;
+        if (This.EndsWith(ext))
+            return This;
+        return This + ext;
+    }
 
-		public static String RemoveHeadSlash(this String This)
-		{
-			if (String.IsNullOrEmpty(This))
-				return This;
-			if (This.StartsWith("/"))
-				return This[1..];
-			return This;
-		}
+    public static String RemoveHeadSlash(this String This)
+    {
+        if (String.IsNullOrEmpty(This))
+            return This;
+        if (This.StartsWith("/"))
+            return This[1..];
+        return This;
+    }
 
-		public static String NormalizeSlash(this String This)
-		{
-			if (String.IsNullOrEmpty(This))
-				return This;
-			return This.Replace('\\', '/');
-		}
+    public static String NormalizeSlash(this String This)
+    {
+        if (String.IsNullOrEmpty(This))
+            return This;
+        return This.Replace('\\', '/');
+    }
 
-		public static String RemoveEOL(this String This)
-		{
-			if (String.IsNullOrEmpty(This))
-				return This;
-			return This.Replace("\n", "").Replace("\r", "");
-		}
+    public static String RemoveEOL(this String This)
+    {
+        if (String.IsNullOrEmpty(This))
+            return This;
+        return This.Replace("\n", "").Replace("\r", "");
+    }
 
 
-		public static String CombineRelative(String path1, String path2)
-		{
-			var dirSep = new String(Path.DirectorySeparatorChar, 1);
-			var combined = Path.GetFullPath(Path.Combine(dirSep, path1, path2));
-			var root = Path.GetFullPath(dirSep);
-			return combined[root.Length..];
-		}
+    public static String CombineRelative(String path1, String path2)
+    {
+        var dirSep = new String(Path.DirectorySeparatorChar, 1);
+        var combined = Path.GetFullPath(Path.Combine(dirSep, path1, path2));
+        var root = Path.GetFullPath(dirSep);
+        return combined[root.Length..];
+    }
 
-        public static String ChangeExtension(String fullName, String extension)
-		{
-            return Path.ChangeExtension(fullName, extension);
-        }
-        public static String GetExtension(String fullName)
-        {
-            return Path.GetExtension(fullName);
-        }
+    public static String ChangeExtension(String fullName, String extension)
+    {
+        return Path.ChangeExtension(fullName, extension);
+    }
+    public static String GetExtension(String fullName)
+    {
+        return Path.GetExtension(fullName);
+    }
+    public static String ReplaceFileName(String baseFullName, String relativeName)
+    {
+        String dir = Path.GetDirectoryName(baseFullName) ?? String.Empty;
+        return Path.GetRelativePath(".", Path.Combine(dir, relativeName));
     }
 }

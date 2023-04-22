@@ -1,10 +1,10 @@
 ﻿APP COMPILER & MODULES
 1. Remove IAppCodeProvider.FileStreamFullPathRO
 2. Почистить весь IAppCodeProvider
-	2.1. Xaml.Source
 	2.2. Static Image
-	2.3. WebLocalizerDictionary
-
+	2.4. ImageController
+	2.5. FileController
+3. PdfReportEngine - Images
 
 
 Допилки для NovaEra.

@@ -25,7 +25,8 @@ public class PdfReportEngine : IReportEngine
 
 	private Page ReadTemplate(String path)
 	{
-		using var stream = _appCodeProvider.FileStreamRO(path);
+		using var stream = _appCodeProvider.FileStreamRO(path)
+			?? throw new InvalidOperationException($"File not found '{path}'");
 		return TemplateReader.ReadReport(stream);
 	}
 	public Task<IInvokeResult> ExportAsync(IReportInfo reportInfo, ExportReportFormat format)

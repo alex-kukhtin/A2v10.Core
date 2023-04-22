@@ -423,7 +423,8 @@ function modelData(template, data) {
 				continue;
 			var fileName = moduleName.RemoveHeadSlash().AddExtension("js");
 
-			using var stream = _codeProvider.FileStreamRO(fileName);
+			using var stream = _codeProvider.FileStreamRO(fileName) 
+				?? throw new InvalidOperationException($"File not found '{fileName}'");
 			using var rdr = new StreamReader(stream);
 			String moduleText = rdr.ReadToEnd();
 
@@ -536,9 +537,13 @@ function modelData(template, data) {
 		{
 			if (msi.Path == null)
 				throw new InvalidOperationException("Model.Path is null");
-			fileTemplateText = await _codeProvider.ReadTextFileAsync(msi.Path, $"{msi.Template}.js", _currentUser.IsAdminApplication);
+			var pathToRead = Path.Combine(msi.Path, $"{msi.Template}.js").Replace('\\', '/');
+            using var stream = _codeProvider.FileStreamRO(pathToRead)
+                ?? throw new FileNotFoundException($"Template file '{pathToRead}' not found.");
+            using var sr = new StreamReader(stream);
+			fileTemplateText = await sr.ReadToEndAsync(); 
 			if (fileTemplateText == null)
-				throw new FileNotFoundException($"Template file '{Path.Combine(msi.Path, $"{msi.Template}.js").Replace('\\', '/')}' not found.");
+				throw new FileNotFoundException($"Template file '{pathToRead}' not found.");
 			AddRequiredModules(sbRequired, fileTemplateText);
 			templateText = CreateTemplateForWrite(Localize(fileTemplateText));
 		}
@@ -588,8 +593,11 @@ function modelData(template, data) {
 			throw new InvalidProgramException("ModelScriptInfo.Path is null");
 		if (msi.Template != null)
 		{
-			String? fileTemplateText = await _codeProvider.ReadTextFileAsync(msi.Path, msi.Template + ".js", _currentUser.IsAdminApplication) 
-				?? throw new FileNotFoundException($"File not found. '{Path.Combine(msi.Path, msi.Template)}'");
+			var fileTemplatePath = Path.Combine(msi.Path, msi.Template + ".js");
+			using Stream stream = _codeProvider.FileStreamRO(fileTemplatePath)
+				?? throw new FileNotFoundException($"File not found. '{fileTemplatePath}'");
+			using var sr = new StreamReader(stream);
+			var fileTemplateText = await sr.ReadToEndAsync();
             sbRequired = new StringBuilder();
 			AddRequiredModules(sbRequired, fileTemplateText);
 			templateText = CreateTemplateForWrite(Localize(fileTemplateText));

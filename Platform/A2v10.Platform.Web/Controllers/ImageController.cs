@@ -119,10 +119,10 @@ public class ImageController : BaseController
 			if (String.IsNullOrEmpty(pathInfo))
 				throw new ArgumentOutOfRangeException(nameof(pathInfo), nameof(StaticImage));
 			pathInfo = pathInfo.Replace('-', '.');
-			String fullPath = _appCodeProvider.MakeFullPathCheck(pathInfo, String.Empty) ??
-				throw new FileNotFoundException($"File not found '{pathInfo}'");
-			using var stream = _appCodeProvider.FileStreamFullPathRO(fullPath);
-			var ext = PathHelpers.GetExtension(fullPath);
+			// without using! The FileStreamResult will close stream
+			var stream = _appCodeProvider.FileStreamRO(pathInfo)
+                ?? throw new FileNotFoundException($"File not found '{pathInfo}'");
+            var ext = PathHelpers.GetExtension(pathInfo);
 			return new FileStreamResult(stream, MimeTypes.GetMimeMapping(ext));
 		} 
 		catch (Exception ex)

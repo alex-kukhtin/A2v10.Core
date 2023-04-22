@@ -1,6 +1,7 @@
 ﻿// Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System.Text;
+using System.IO;
 using System.Net.Http;
 using System.Security.Cryptography;
 
@@ -120,7 +121,11 @@ public class ScriptEnvironment
 	public JsValue require(String fileName, ExpandoObject prms, ExpandoObject args)
 #pragma warning restore IDE1006 // Naming Styles
 	{
-		var script = _appCodeProvider.ReadTextFile(_currentPath, fileName, false);
+		var fileToRead = Path.Combine(_currentPath, fileName);
+		var stream = _appCodeProvider.FileStreamRO(fileName) 
+			?? throw new InvalidOperationException($"File not found '{fileName}'");
+		var sr = new StreamReader(stream);
+		var script = sr.ReadToEnd();
 
 		String code = $@"
 return (function() {{

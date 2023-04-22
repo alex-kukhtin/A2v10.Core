@@ -1,7 +1,6 @@
 ﻿// Copyright © 2015-2023 Alex Kukhtin. All rights reserved.
 
 using System.IO;
-using System.Threading.Tasks;
 
 using Microsoft.Extensions.Options;
 
@@ -11,8 +10,6 @@ namespace A2v10.Services;
 
 public class AppCodeProvider : IAppCodeProvider
 {
-	public Boolean IsFileSystem => false;
-
 	private readonly Dictionary<String, IAppCodeProviderImpl> _providers = new(StringComparer.InvariantCultureIgnoreCase);
 	public AppCodeProvider(IOptions<AppOptions> appOptions)
 	{
@@ -60,47 +57,15 @@ public class AppCodeProvider : IAppCodeProvider
         throw new InvalidOperationException($"Provider for '{key}' not found");
 	}
 
-	public String MakeFullPath(String path, String fileName, Boolean admin)
-	{
-		return GetProvider(path).MakeFullPath(path, fileName, admin);
-	}
-
-    public String? MakeFullPathCheck(String path, String fileName)
-	{
-		return GetProvider(path).MakeFullPathCheck(path, fileName);
-    }
-
-    public Task<String?> ReadTextFileAsync(String path, String fileName, Boolean admin)
-	{
-		return GetProvider(path).ReadTextFileAsync(path, fileName, admin);
-	}
-
-	public String? ReadTextFile(String path, String fileName, Boolean admin)
-	{
-		return GetProvider(path).ReadTextFile(path, fileName, admin);	
-	}
-
     public Boolean IsFileExists(String path, String fileName)
 	{
         return GetProvider(path).IsFileExists(path, fileName);
     }
 
-    public Boolean FileExists(String fullPath)
-	{
-		return File.Exists(fullPath);
-	}
-
-	public Boolean DirectoryExists(String fullPath)
-	{
-		return Directory.Exists(fullPath);
-	}
-
-	public Stream FileStreamFullPathRO(String fullPath)
-	{
-		return new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
-	}
-    public Stream FileStreamRO(String path)
+    public Stream? FileStreamRO(String path, Boolean primaryOnly = false)
     {
+		if (primaryOnly)
+			GetProvider("_").FileStreamRO(path);	
         return GetProvider(path).FileStreamRO(path);
     }
 
@@ -112,11 +77,20 @@ public class AppCodeProvider : IAppCodeProvider
 				yield return file;
 		}
     }
-
-	public String ReplaceFileName(String baseFullName, String relativeName)
-    {
-        String dir = Path.GetDirectoryName(baseFullName) ?? String.Empty;
-        return Path.GetFullPath(Path.Combine(dir, relativeName));
+    public IEnumerable<String> EnumerateWatchedDirs(String path, String searchPattern)
+	{
+        foreach (var (_, v) in _providers)
+        {
+			if (!v.IsFileSystem)
+				continue;
+			var files = v.EnumerateFiles(path, searchPattern);
+			var en = files.GetEnumerator();
+			if (en.MoveNext())
+			{
+				var f = v.MakeFullPath(en.Current, "", false);
+				yield return Path.GetDirectoryName(f) ?? String.Empty;
+			}
+		}
 	}
 }
 

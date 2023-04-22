@@ -1,11 +1,16 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2022 Oleksandr Kukhtin. All rights reserved.
+
+using System.Reflection;
+using System.IO;
+
+using Microsoft.Extensions.DependencyInjection;
 
 using A2v10.Infrastructure;
-using Microsoft.Extensions.DependencyInjection;
-using System.IO;
-using System.Reflection;
+
+using PathIO = System.IO.Path;
 
 namespace A2v10.Xaml;
+
 public class Source : MarkupExtension
 {
 	public String Path { get; set; } = String.Empty;
@@ -37,7 +42,7 @@ public class Source : MarkupExtension
 
 			if (serviceProvider.GetService(typeof(IUriContext)) is IUriContext root && root.BaseUri != null)
 			{
-				String baseFileName = root.BaseUri.PathAndQuery;
+				String baseFileName = root.BaseUri.ToString();
 				return Load(baseFileName, serviceProvider);
 			}
 			return null;
@@ -52,15 +57,16 @@ public class Source : MarkupExtension
 	{
 		var appReader = serviceProvider.GetRequiredService<IAppCodeProvider>();
 
-		String targetFileName = appReader.ReplaceFileName(baseFileName, Path);
+
+		String targetFileName = PathHelpers.ReplaceFileName(baseFileName, Path);
 
 		String ext = PathHelpers.GetExtension(targetFileName);
 
 		if (ext == ".js" || ext == ".html")
 		{
-			if (appReader.FileExists(targetFileName))
+            using var stream = appReader.FileStreamRO(targetFileName);
+            if (stream != null)
 			{
-				using var stream = appReader.FileStreamFullPathRO(targetFileName);
 				using var rdr = new StreamReader(stream);
 				return rdr.ReadToEnd();
 			}
@@ -71,7 +77,7 @@ public class Source : MarkupExtension
 		{
 			String trgPath = PathHelpers.ChangeExtension(targetFileName, "xaml");
 
-			if (appReader.FileExists(trgPath))
+			if (appReader.IsFileExists(trgPath, String.Empty))
 			{
 				var xamPartProvider = serviceProvider.GetRequiredService<IXamlPartProvider>();
 				return xamPartProvider.GetXamlPart(trgPath);

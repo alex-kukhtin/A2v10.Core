@@ -1,9 +1,10 @@
-﻿// Copyright © 2021-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 using Microsoft.Extensions.Options;
 
@@ -28,7 +29,7 @@ public class WebLocalizerDictiorany : ILocalizerDictiorany
 	private readonly ConcurrentDictionary<String, LocaleMapItem> _maps = new();
 
 	FileSystemWatcher? _watcher_system = null;
-	FileSystemWatcher? _watcher_app = null;
+	List<FileSystemWatcher>? _watchers_app = null;
 
 
 
@@ -46,6 +47,8 @@ public class WebLocalizerDictiorany : ILocalizerDictiorany
 	IEnumerable<String> ReadLines(String path)
 	{
 		using var stream = _appCodeProvider.FileStreamRO(path);
+		if (stream == null)
+			yield break;
 		using var rdr = new StreamReader(stream);
 		while (!rdr.EndOfStream)
 		{
@@ -88,18 +91,15 @@ public class WebLocalizerDictiorany : ILocalizerDictiorany
 		const String LocalizationPath = "_localization";
 
         var dirPath = _hostFilesProvider.MapHostingPath("localization");
-		var appPath = _appCodeProvider.MakeFullPath(LocalizationPath, String.Empty, admin: false);
+		var appPathes = _appCodeProvider.EnumerateWatchedDirs(LocalizationPath, "*.txt");
 
 		if (!Directory.Exists(dirPath)) // FILE SYSTEM
 			dirPath = null;
 
-		if (!_appCodeProvider.DirectoryExists(appPath))
-			appPath = null;
-
-		if (dirPath == null && appPath == null)
+		if (dirPath == null && !appPathes.Any())
 			yield break;
 
-		CreateWatchers(dirPath, _appCodeProvider.IsFileSystem ? appPath : null);
+		CreateWatchers(dirPath, appPathes);
 		if (dirPath != null)
 		{
 			// System.IO
@@ -130,7 +130,7 @@ public class WebLocalizerDictiorany : ILocalizerDictiorany
 		return _maps.GetOrAdd(locale, (key) => new LocaleMapItem(action));
 	}
 
-	void CreateWatchers(String? dirPath, String? appPath)
+	void CreateWatchers(String? dirPath, IEnumerable<String> appPathes)
 	{
 		if (!_watch)
 			return;
@@ -147,18 +147,20 @@ public class WebLocalizerDictiorany : ILocalizerDictiorany
 			_watcher_system.EnableRaisingEvents = true;
 		}
 
-		if (!String.IsNullOrEmpty(appPath))
+		foreach (var appPath in appPathes)
 		{
 			// FileName can be in 8.3 format!
-			_watcher_app = new FileSystemWatcher(appPath, "*.*")
+			var watcher = new FileSystemWatcher(appPath, "*.*")
 			{
 				NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.Attributes
 			};
-			_watcher_app.Changed += Watcher_Changed;
-			_watcher_app.Created += Watcher_Changed;
-			_watcher_app.Deleted += Watcher_Changed;
-			_watcher_app.EnableRaisingEvents = true;
-		}
+			watcher.Changed += Watcher_Changed;
+			watcher.Created += Watcher_Changed;
+			watcher.Deleted += Watcher_Changed;
+			watcher.EnableRaisingEvents = true;
+			_watchers_app ??= new List<FileSystemWatcher>();
+            _watchers_app.Add(watcher);
+        }
 	}
 
 	private void Watcher_Changed(Object sender, FileSystemEventArgs e)

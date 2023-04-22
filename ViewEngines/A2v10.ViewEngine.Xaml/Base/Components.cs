@@ -1,10 +1,12 @@
-﻿// Copyright © 2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2022-2023 Alex Kukhtin. All rights reserved.
 
-using A2v10.Infrastructure;
-using Microsoft.Extensions.DependencyInjection;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+
+using Microsoft.Extensions.DependencyInjection;
+
+using A2v10.Infrastructure;
 
 namespace A2v10.Xaml;
 
@@ -57,9 +59,9 @@ public class Components : MarkupExtension
 		String targetPath = Path.Combine(basePath, path) + ".xaml";
 		targetPath= Path.GetRelativePath(".", targetPath);
 		var xamPartProvider = serviceProvider.GetRequiredService<IXamlPartProvider>();
-		var x = xamPartProvider.GetXamlPart(targetPath);
-		if (x is ComponentDictionary dict)
+		var xmlPart = xamPartProvider.GetXamlPart(targetPath);
+		if (xmlPart is ComponentDictionary dict)
 			return dict;
-		throw new XamlException("Invalid ApplicationReader");
+		throw new XamlException("Root element is not a ComponentDictionary");
 	}
 }

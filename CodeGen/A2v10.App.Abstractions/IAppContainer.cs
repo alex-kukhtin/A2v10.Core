@@ -1,4 +1,4 @@
-﻿// Copyright © 2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2022-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -9,4 +9,5 @@ public interface IAppContainer
 {
     String? GetText(String path);
     IEnumerable<String> EnumerateFiles(String prefix, String pattern);
+    Guid ModuleId { get; }
 }

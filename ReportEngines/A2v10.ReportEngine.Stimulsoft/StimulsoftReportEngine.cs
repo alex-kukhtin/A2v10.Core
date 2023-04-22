@@ -1,8 +1,9 @@
-﻿// Copyright © 2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2021-2023 Olekdsandr Kukhtin. All rights reserved.
 
 using System;
 using System.Dynamic;
 using System.Threading.Tasks;
+using System.IO;
 
 using Stimulsoft.Report;
 using Stimulsoft.Report.Mvc;
@@ -25,15 +26,14 @@ public class StimulsoftReportEngine : IReportEngine
 
 	internal StiReport CreateReport(IReportInfo reportInfo)
 	{
-		String reportPath = _appCodeProvider.MakeFullPath(reportInfo.Path, $"{reportInfo.Report}.mrt", _currentUser.IsAdminApplication);
-
+		var repstream = _appCodeProvider.FileStreamRO(Path.Combine(reportInfo.Path, $"{reportInfo.Report}.mrt"));
 		var rep = new StiReport();
-		if (!String.IsNullOrEmpty(reportPath))
-			rep.Load(reportPath);
+		if (repstream != null)
+			rep.Load(repstream);
 		else if (reportInfo.Stream != null)
 			rep.Load(reportInfo.Stream);
 		else
-			throw new InvalidOperationException("Тeither Path nor Stream is defined");
+			throw new InvalidOperationException("Neither Path nor Stream is defined");
 		AddReferencedAssemblies(rep);
 		//rep.SubstDataSources();
 		if (!String.IsNullOrEmpty(reportInfo.Name))

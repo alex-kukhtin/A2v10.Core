@@ -35,39 +35,44 @@ public static class HostHelpers
 
 	public static async Task<String> AppLinksAsync(this IAppCodeProvider provider)
 	{
-		String? appLinks = await provider.ReadTextFileAsync(String.Empty, "links.json", false);
-		if (appLinks != null)
+		using var stream = provider.FileStreamRO("links.json", primaryOnly: true);
+		if (stream != null)
 		{
-			// with validation
-			Object? links = JsonConvert.DeserializeObject<List<Object>>(appLinks);
-			return JsonConvert.SerializeObject(links);
+			using var sr = new StreamReader(stream);
+			var appLinks = await sr.ReadToEndAsync();
+			if (!String.IsNullOrEmpty(appLinks))
+			{
+				// with validation
+				Object? links = JsonConvert.DeserializeObject<List<Object>>(appLinks);
+				return JsonConvert.SerializeObject(links);
+			}
 		}
 		return "[]";
 	}
 
-	public static async Task<String> CustomAppHead(this IAppCodeProvider provider)
+	public static Task<String> CustomAppHead(this IAppCodeProvider provider)
 	{
-		String? head = await provider.ReadTextFileAsync("_layout", "_head.html", false);
-		/* TODO:
+        /* TODO: From main module?
 		String head = provider.ReadTextFile("_layout", "_head.html");
+		String? head = await provider.ReadTextFileAsync("_layout", "_head.html", false);
 		*/
-		return String.Empty;
+        return Task.FromResult<String>(String.Empty);
 	}
 
-	public static async Task<String> CustomAppScripts(this IAppCodeProvider provider)
+	public static Task<String> CustomAppScripts(this IAppCodeProvider provider)
 	{
-		var scripts = await provider.ReadTextFileAsync("_layout", "_scripts.html", false);
-		if (scripts == null)
-			return String.Empty;
-		// TODO:
-		/*
+        // TODO: From main module?
+        /*
+        var scripts = await provider.ReadTextFileAsync("_layout", "_scripts.html", false);
+        if (scripts == null)
+            return String.Empty;
 		String scripts = provider.ReadTextFile("_layout", "_scripts.html");
 		return scripts != null ? host.GetAppSettings(scripts) : String.Empty;
 		*/
-		return String.Empty;
-	}
+        return Task.FromResult<String>(String.Empty);
+    }
 
-	public static String? CustomManifest(this IWebHostFilesProvider provider)
+    public static String? CustomManifest(this IWebHostFilesProvider provider)
 	{
 		var manifestPath = provider.MapHostingPath("manifest.json");
 		return File.Exists(manifestPath) ? "<link rel=\"manifest\" href=\"/manifest.json\">" : null;

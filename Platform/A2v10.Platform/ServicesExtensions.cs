@@ -55,7 +55,7 @@ public static class ServicesExtensions
 
         services.AddSingleton<IAppCodeProvider, AppCodeProvider>();
         services.AddSingleton<IModelJsonPartProvider, ModelJsonPartProvider>();
-        services.AddSingleton<IXamlPartProvider, XamlPartProviderFile>();
+        services.AddSingleton<IXamlPartProvider, XamlPartProvider>();
 
         var cookiePrefix = configuration.GetValue<String>("identity:cookiePrefix").Trim();
 

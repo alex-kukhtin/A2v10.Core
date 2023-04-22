@@ -36,10 +36,9 @@ public class RedirectModule
 	private FileSystemWatcher CreateWatcher()
 	{
 		// redirect file name in 8.3 format!
-		var dirname = Path.GetDirectoryName(_path);
-		if (dirname == null)
-			throw new InvalidProgramException("Directory is null");
-		var redirectWatcher = new FileSystemWatcher(dirname, "*.*")
+		var dirname = Path.GetDirectoryName(_path) 
+			?? throw new InvalidProgramException("Directory is null");
+        var redirectWatcher = new FileSystemWatcher(dirname, "*.*")
 		{
 			NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.Attributes
 		};

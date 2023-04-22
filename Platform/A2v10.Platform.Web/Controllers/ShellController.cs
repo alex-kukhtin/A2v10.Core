@@ -193,69 +193,6 @@ public class ShellController : Controller
 		return shell.ResolveMacros(macros) ?? String.Empty;
 	}
 
-	async Task<MultiTenantParamJson?> ProcessMultiTenantParams(ExpandoObject prms)
-	{
-		var permssionModel = await _dbContext.LoadModelAsync(_host.TenantDataSource, "a2security_tenant.[Permission.LoadMenu]", prms);
-		if (permssionModel == null)
-			return null;
-		var root = permssionModel.Root;
-		if (root == null)
-			return null;
-
-		// current company id
-		Int64 currentCompanyId = root.Eval<Int64>("CurrentCompany.Id");
-		if (currentCompanyId != 0)
-			_currentUser.SetCompanyId(currentCompanyId);
-
-		// get keys and features
-		StringBuilder strKeys = new();
-		StringBuilder strFeatures = new();
-		var modules = root.Eval<List<ExpandoObject>>("Modules");
-		var features = root.Eval<List<ExpandoObject>>("Features");
-		if (modules != null)
-		{
-			modules.ForEach(m =>
-			{
-				var key = m.Eval<String>("Module");
-				if (key != null)
-					strKeys.Append(key).Append(',');
-			});
-			if (strKeys.Length > 0)
-				prms.Set("Keys", strKeys.RemoveTailComma().ToString());
-			else
-				prms.Set("Keys", "none"); // disable all
-		}
-		if (features != null)
-		{
-			features.ForEach(f =>
-			{
-				var feature = f.Eval<String>("Feature");
-				if (feature != null)
-					strFeatures.Append(feature).Append(',');
-			});
-			if (strFeatures.Length > 0)
-				prms.Set("Features", strFeatures.RemoveTailComma().ToString());
-			else
-				prms.Set("Features", "____"); // all features disabled
-		}
-
-		// avaliable companies & xtra links
-		var companies = root.Eval<List<ExpandoObject>>("Companies");
-		var links = root.Eval<List<ExpandoObject>>("CompaniesLinks");
-		var period = root.Eval<Object>("Period");
-		if (companies != null || period != null)
-		{
-			String jsonCompanies = JsonConvert.SerializeObject(new { menu = companies, links },
-				JsonHelpers.StandardSerializerSettings);
-			String jsonPeriod = JsonConvert.SerializeObject(period, JsonHelpers.ConfigSerializerSettings(_host.IsDebugConfiguration));
-			return new MultiTenantParamJson(
-				Companies: jsonCompanies,
-				Period: jsonPeriod
-			);
-		}
-		return null;
-	}
-
 	void SetUserStatePermission(IDataModel model)
 	{
 		_currentUser.SetReadOnly(model.Eval<Boolean>("UserState.ReadOnly"));
@@ -275,7 +212,8 @@ public class ShellController : Controller
 				if (_codeProvider.IsFileExists(minFile, String.Empty))
 					continue; // min.{ext} found
 			}
-			using var stream = _codeProvider.FileStreamRO(fileName);
+			using var stream = _codeProvider.FileStreamRO(fileName)
+				?? throw new InvalidOperationException($"File not found '{fileName}'");
 			using var sr = new StreamReader(stream);
 			var txt = sr.ReadToEnd();
 			if (txt.StartsWith("/*@localize*/"))

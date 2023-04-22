@@ -97,12 +97,15 @@ public class FileController : BaseController
 			Int32 ix = pathInfo.LastIndexOf('-');
 			if (ix != -1)
 				pathInfo = pathInfo[..ix] + "." + pathInfo[(ix + 1)..];
-			String fullPath = _appCodeProvider.MakeFullPathCheck(Path.Combine("_files/", pathInfo), String.Empty) 
-				?? throw new FileNotFoundException($"File not found '{pathInfo}'");
-			if (!new FileExtensionContentTypeProvider().TryGetContentType(fullPath, out String? contentType))
+			if (!new FileExtensionContentTypeProvider().TryGetContentType(pathInfo, out String? contentType))
 				contentType = MimeTypes.Application.OctetStream;
-			var stream = _appCodeProvider.FileStreamFullPathRO(fullPath);
-			return File(stream, contentType, Path.GetFileName(fullPath));
+            // without using! The FileStreamResult will close stream
+            var stream = _appCodeProvider.FileStreamRO(Path.Combine("_files/", pathInfo))
+                ?? throw new FileNotFoundException($"File not found '{pathInfo}'");
+			return new FileStreamResult(stream, contentType)
+			{
+				FileDownloadName = Path.GetFileName(pathInfo)
+			};
 		}
 		catch (Exception ex)
 		{
