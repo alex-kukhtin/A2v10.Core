@@ -73,8 +73,7 @@ public class MainController : Controller
 
 	private Boolean HasNavPane()
 	{
-		String? path = _codeProvider.MakeFullPathCheck("_navpane", "model.json");
-		return path != null;
+		return _codeProvider.IsFileExists("_navpane", "model.json");
 	}
 	public Boolean IsStaticFile()
 	{

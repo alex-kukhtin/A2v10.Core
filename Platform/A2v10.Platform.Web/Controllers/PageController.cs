@@ -128,8 +128,8 @@ public class PageController : BaseController
 
 		var si = await _scripter.GetModelScript(msi);
 
-		var viewName = _codeProvider.MakeFullPath(rw.Path, rw.GetView(_host.Mobile), _currentUser.IsAdminApplication);
-		var viewEngine = _viewEngineProvider.FindViewEngine(viewName);
+		var viewName = rw.GetView(_host.Mobile);
+		var viewEngine = _viewEngineProvider.FindViewEngine(rw.Path, viewName);
 
 		// render XAML
 		var ri = new RenderInfo()
@@ -137,7 +137,7 @@ public class PageController : BaseController
 			RootId = rootId,
 			FileName = viewEngine.FileName,
 			FileTitle = rw.GetView(_host.Mobile),
-			Path = rw.BaseUrl,
+			Path = rw.Path,
 			DataModel = model,
 			//TypeChecker = typeChecker,
 			CurrentLocale = null,

@@ -1,12 +1,11 @@
 ﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
 
-using DocumentFormat.OpenXml.Spreadsheet;
 using System.IO;
 using System.Threading.Tasks;
 
 namespace A2v10.Services;
 
-public class InternalAppCodeProviderFile : IAppCodeProvider
+public class InternalAppCodeProviderFile : IAppCodeProviderImpl
 {
 	private String AppPath { get; }
 
@@ -81,22 +80,24 @@ public class InternalAppCodeProviderFile : IAppCodeProvider
 		return Directory.Exists(fullPath);
 	}
 
-	public Stream FileStreamFullPathRO(String fullPath)
+    public Stream FileStreamRO(String path)
 	{
-		return new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
-	}
-
-	public IEnumerable<String> EnumerateFiles(String? path, String searchPattern, Boolean admin)
+		var fullPath = MakeFullPath(path, "", false);
+        return new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+    }
+    public IEnumerable<String> EnumerateFiles(String? path, String searchPattern)
 	{
 		if (String.IsNullOrEmpty(path))
-			return Enumerable.Empty<String>();
-		var fullPath = MakeFullPath(path, String.Empty, admin);
+			yield break;
+		var fullPath = MakeFullPath(path, String.Empty, false);
 		if (!Directory.Exists(fullPath))
-			return Enumerable.Empty<String>();
-		return Directory.EnumerateFiles(fullPath, searchPattern);
+			yield break;
+		foreach (var f in Directory.EnumerateFiles(fullPath, searchPattern))
+		{
+			var relPath = Path.GetRelativePath(AppPath, f);
+			yield return relPath;
+		}
 	}
-
-
 	public String ReplaceFileName(String baseFullName, String relativeName)
     {
         String dir = Path.GetDirectoryName(baseFullName) ?? String.Empty;

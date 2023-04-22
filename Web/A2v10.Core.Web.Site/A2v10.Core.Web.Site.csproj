@@ -27,6 +27,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Reference Include="AppPersonnel">
+		  <HintPath>..\..\..\..\Projects\NovaEra.Core\AppPersonnel\bin\Debug\net6.0\AppPersonnel.dll</HintPath>
+		</Reference>
 		<Reference Include="MainApp">
 			<HintPath>..\..\..\A2v10.App.Compiler\MainApp\bin\Debug\net6.0\MainApp.dll</HintPath>
 		</Reference>

@@ -51,9 +51,8 @@ public class XamlPartProviderFile : IXamlPartProvider
 
 	public Object? GetXamlPart(String path)
 	{
-		var fullPath = _codeProvider.MakeFullPath(String.Empty, path, false);
-		using var stream = _codeProvider.FileStreamFullPathRO(fullPath);
-		return _readerService.Load(stream, new Uri(fullPath));
+		using var stream = _codeProvider.FileStreamRO(path);
+		return _readerService.Load(stream, new Uri(path, UriKind.Relative));
 	}
 
 	public Task<Object?> GetXamlPartAsync(String path)

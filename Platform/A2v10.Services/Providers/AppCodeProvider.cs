@@ -1,9 +1,11 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Alex Kukhtin. All rights reserved.
 
 using System.IO;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Options;
+
+using A2v10.App.Abstractions;
 
 namespace A2v10.Services;
 
@@ -11,7 +13,7 @@ public class AppCodeProvider : IAppCodeProvider
 {
 	public Boolean IsFileSystem => false;
 
-	private readonly Dictionary<String, IAppCodeProvider> _providers = new(StringComparer.InvariantCultureIgnoreCase);
+	private readonly Dictionary<String, IAppCodeProviderImpl> _providers = new(StringComparer.InvariantCultureIgnoreCase);
 	public AppCodeProvider(IOptions<AppOptions> appOptions)
 	{
 		var opts = appOptions.Value ?? throw new ArgumentNullException(nameof(appOptions));
@@ -29,7 +31,7 @@ public class AppCodeProvider : IAppCodeProvider
 		}
 	}
 
-	static IAppCodeProvider CreateProvider(String path) 
+	static IAppCodeProviderImpl CreateProvider(String path) 
 	{
         if (ClrHelpers.IsClrPath(path))
             return new InternalAppCodeProviderClr(CreateContainer(path));
@@ -47,7 +49,7 @@ public class AppCodeProvider : IAppCodeProvider
             throw new ArgumentException("Invalid application container");
 
     }
-    IAppCodeProvider GetProvider(String path)
+    IAppCodeProviderImpl GetProvider(String path)
 	{
 		if (!path.StartsWith("$"))
 			return _providers["_"];
@@ -78,6 +80,11 @@ public class AppCodeProvider : IAppCodeProvider
 		return GetProvider(path).ReadTextFile(path, fileName, admin);	
 	}
 
+    public Boolean IsFileExists(String path, String fileName)
+	{
+        return GetProvider(path).IsFileExists(path, fileName);
+    }
+
     public Boolean FileExists(String fullPath)
 	{
 		return File.Exists(fullPath);
@@ -92,13 +99,19 @@ public class AppCodeProvider : IAppCodeProvider
 	{
 		return new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
 	}
+    public Stream FileStreamRO(String path)
+    {
+        return GetProvider(path).FileStreamRO(path);
+    }
 
-	public IEnumerable<String> EnumerateFiles(String? path, String searchPattern, Boolean admin)
-	{
-        if (String.IsNullOrEmpty(path))
-            return Enumerable.Empty<String>();
-        return GetProvider(path).EnumerateFiles(path, searchPattern, admin);
-	}
+    public IEnumerable<String> EnumerateAllFiles(String path, String searchPattern)
+    {
+		foreach (var (k, v) in _providers)
+		{
+			foreach (var file in v.EnumerateFiles(path, searchPattern))
+				yield return file;
+		}
+    }
 
 	public String ReplaceFileName(String baseFullName, String relativeName)
     {

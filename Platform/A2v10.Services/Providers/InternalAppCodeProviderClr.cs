@@ -4,9 +4,11 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Text;
 
+using A2v10.App.Abstractions;
+
 namespace A2v10.Services;
 
-public class InternalAppCodeProviderClr : IAppCodeProvider
+public class InternalAppCodeProviderClr : IAppCodeProviderImpl
 {
 
 	private readonly IAppContainer _appContainer;
@@ -19,10 +21,23 @@ public class InternalAppCodeProviderClr : IAppCodeProvider
 		_appContainer = appContainer;
     }
 
-	public String MakeFullPath(String path, String fileName, Boolean admin)
+    public static String MakeFullPath(String path)
+	{
+        if (path.StartsWith("$"))
+        {
+            int ix = path.IndexOf("/");
+            path =  path[(ix + 1)..];
+        }
+		return path.NormalizeSlash();
+    }
+
+    public String MakeFullPath(String path, String fileName, Boolean admin)
 	{
 		if (path.StartsWith("$"))
-			path = path.Replace("$", "../");
+		{
+			int ix = path.IndexOf("/");
+			path = path[(ix+1).. ];
+		}
 		return Path.GetRelativePath(".", Path.Combine(path, fileName)).NormalizeSlash();
 	}
 
@@ -32,6 +47,12 @@ public class InternalAppCodeProviderClr : IAppCodeProvider
 		if (FileExists(fullPath))
 			return fullPath;
 		return null;
+	}
+
+    public Boolean IsFileExists(String path, String fileName)
+	{
+        var fullPath = MakeFullPath(path, fileName, false);
+        return FileExists(fullPath);
 	}
 
 
@@ -57,12 +78,13 @@ public class InternalAppCodeProviderClr : IAppCodeProvider
 		return _appContainer.EnumerateFiles(fullPath, "").Any();
 	}
 
-	public Stream FileStreamFullPathRO(String fullPath)
+    public Stream FileStreamRO(String path)
 	{
-		return new MemoryStream(Encoding.UTF8.GetBytes(_appContainer.GetText(fullPath) ?? String.Empty));
-	}
+		var fullPath = MakeFullPath(path);
+        return new MemoryStream(Encoding.UTF8.GetBytes(_appContainer.GetText(fullPath) ?? String.Empty));
+    }
 
-	public IEnumerable<String> EnumerateFiles(String? path, String searchPattern, Boolean admin)
+    public IEnumerable<String> EnumerateFiles(String? path, String searchPattern)
 	{
 		if (String.IsNullOrEmpty(path))
 			return Enumerable.Empty<String>();

@@ -15,14 +15,13 @@ internal class RenderContext
 	private readonly IReportLocalizer _localizer;
 
 	private readonly CultureInfo _formatProvider;
-	private readonly String _rootPath;
 	private readonly String _templatePath;
 
-	public RenderContext(String rootPath, String templatePath, IReportLocalizer localizer, ExpandoObject model, String? code)
+	public RenderContext(String templatePath, IReportLocalizer localizer, ExpandoObject model, String? code)
 	{
 		_localizer = localizer;
-		_rootPath = rootPath;
-		_templatePath = templatePath;
+        // TODO: replace _templatePath to _appCodeReader;
+        _templatePath = templatePath;
 		DataModel = model;
 		var  clone = _localizer.CurrentCulture.Clone();
 		if (clone is CultureInfo cloneCI && cloneCI != null)
@@ -68,8 +67,6 @@ internal class RenderContext
 		var templDir = Path.GetDirectoryName(_templatePath) ?? String.Empty;
 		var fullPath = Path.GetFullPath(Path.Combine(templDir, fileName));
 		var pathDir = Path.GetDirectoryName(fullPath) ?? String.Empty;
-		if (!pathDir.StartsWith(_rootPath, StringComparison.InvariantCultureIgnoreCase))
-			throw new InvalidDataException("Invalid path. You can place files in the application folder only.");
 		return File.ReadAllBytes(fullPath);
 	}
 

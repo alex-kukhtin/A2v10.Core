@@ -421,12 +421,9 @@ function modelData(template, data) {
 				continue;
 			if (_modulesWritten.Contains(moduleName))
 				continue;
-			var fileName = moduleName.AddExtension("js");
-			var filePath = _codeProvider.MakeFullPathCheck(String.Empty, fileName.RemoveHeadSlash());
-			if (filePath == null)
-				throw new FileNotFoundException(filePath);
+			var fileName = moduleName.RemoveHeadSlash().AddExtension("js");
 
-			using var stream = _codeProvider.FileStreamFullPathRO(filePath);
+			using var stream = _codeProvider.FileStreamRO(fileName);
 			using var rdr = new StreamReader(stream);
 			String moduleText = rdr.ReadToEnd();
 

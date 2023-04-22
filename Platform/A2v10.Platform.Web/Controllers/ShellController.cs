@@ -263,7 +263,7 @@ public class ShellController : Controller
 
 	void GetAppFiles(String ext, TextWriter writer)
 	{
-		var files = _codeProvider.EnumerateFiles("_assets", $"*.{ext}", false);
+		var files = _codeProvider.EnumerateAllFiles("_assets", $"*.{ext}");
 		if (files == null)
 			return;
 		foreach (var f in files)
@@ -272,10 +272,10 @@ public class ShellController : Controller
 			if (!fileName.EndsWith($".min.{ext}"))
 			{
 				String minFile = fileName.Replace($".{ext}", $".min.{ext}");
-				if (_codeProvider.FileExists(minFile))
+				if (_codeProvider.IsFileExists(minFile, String.Empty))
 					continue; // min.{ext} found
 			}
-			using var stream = _codeProvider.FileStreamFullPathRO(fileName);
+			using var stream = _codeProvider.FileStreamRO(fileName);
 			using var sr = new StreamReader(stream);
 			var txt = sr.ReadToEnd();
 			if (txt.StartsWith("/*@localize*/"))

@@ -40,19 +40,20 @@ public class WebViewEngineProvider : IViewEngineProvider
 		_engines.Add(new ViewEngineDescriptor(extension, engineType));
 	}
 
-	public IViewEngineResult FindViewEngine(String viewName)
+	public IViewEngineResult FindViewEngine(String path, String viewName)
 	{
 		foreach (var engine in _engines)
 		{
 			String fileName = $"{viewName}{engine.Extension}";
-			if (_codeProvider.FileExists(fileName))
+			if (_codeProvider.IsFileExists(path, fileName))
 			{
 				if (_serviceProvider.GetService(engine.EngineType) is IViewEngine viewEngine)
 				{
 					return new ViewEngineResult
 					(
 						engine: viewEngine,
-						fileName: fileName
+						path: path,
+						viewName = fileName
 					);
 				}
 			}

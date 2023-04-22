@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace A2v10.Infrastructure;
 
-public interface IAppContainer
+public interface IAppContainer234
 {
 	T? GetModelJson<T>(String path);
 	String? GetText(String path);

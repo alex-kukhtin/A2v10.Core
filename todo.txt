@@ -1,4 +1,13 @@
-﻿Допилки для NovaEra.
+﻿APP COMPILER & MODULES
+1. Remove IAppCodeProvider.FileStreamFullPathRO
+2. Почистить весь IAppCodeProvider
+	2.1. Xaml.Source
+	2.2. Static Image
+	2.3. WebLocalizerDictionary
+
+
+
+Допилки для NovaEra.
 
 3. ChangePassword
 4. С++/CLR with NET.CORE

@@ -16,9 +16,12 @@ public interface IAppCodeProvider
     Task<String?> ReadTextFileAsync(String path, String fileName, Boolean admin);
 	String? ReadTextFile(String path, String fileName, Boolean admin);
 	Boolean FileExists(String fullPath);
+    Boolean IsFileExists(String path, String fileName);
     Boolean DirectoryExists(String fullPath);
 	Stream FileStreamFullPathRO(String fullPath);
-	IEnumerable<String> EnumerateFiles(String? path, String searchPattern, Boolean admin);
+    Stream FileStreamRO(String path);
 	String ReplaceFileName(String baseFullName, String relativeName);
+
+    IEnumerable<String> EnumerateAllFiles(String path, String searchPattern);
 }
 

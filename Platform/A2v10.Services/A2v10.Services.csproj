@@ -4,7 +4,7 @@
     <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
 	  <Nullable>enable</Nullable>
 	  <AssemblyName>A2v10.Services</AssemblyName>
-	  <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+	  <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
 	  <Version>10.1.8085</Version>
 	  <Product>A2v10</Product>
 	  <PackageId>A2v10.Services</PackageId>
@@ -27,6 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\CodeGen\A2v10.App.Abstractions\A2v10.App.Abstractions.csproj" />
     <ProjectReference Include="..\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
   </ItemGroup>
 

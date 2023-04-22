@@ -4,8 +4,8 @@
 		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>
 		<Nullable>enable</Nullable>
 		<AssemblyName>A2v10.Identity.Core</AssemblyName>
-		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-		<Version>10.1.8096</Version>
+		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+		<Version>10.1.8097</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Identity.Core</PackageId>
 		<Authors>Oleksandr Kukhtin</Authors>

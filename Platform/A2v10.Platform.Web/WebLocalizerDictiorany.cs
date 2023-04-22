@@ -45,7 +45,7 @@ public class WebLocalizerDictiorany : ILocalizerDictiorany
 
 	IEnumerable<String> ReadLines(String path)
 	{
-		using var stream = _appCodeProvider.FileStreamFullPathRO(path);
+		using var stream = _appCodeProvider.FileStreamRO(path);
 		using var rdr = new StreamReader(stream);
 		while (!rdr.EndOfStream)
 		{
@@ -85,8 +85,10 @@ public class WebLocalizerDictiorany : ILocalizerDictiorany
 	IEnumerable<LocalePath> GetLocalizerFilePath(String locale)
 	{
 		// locale may be "uk-UA"
-		var dirPath = _hostFilesProvider.MapHostingPath("localization");
-		var appPath = _appCodeProvider.MakeFullPath("_localization", String.Empty, admin: false);
+		const String LocalizationPath = "_localization";
+
+        var dirPath = _hostFilesProvider.MapHostingPath("localization");
+		var appPath = _appCodeProvider.MakeFullPath(LocalizationPath, String.Empty, admin: false);
 
 		if (!Directory.Exists(dirPath)) // FILE SYSTEM
 			dirPath = null;
@@ -105,7 +107,7 @@ public class WebLocalizerDictiorany : ILocalizerDictiorany
 				yield return new LocalePath(s, true);
 		}
 
-		foreach (var s in _appCodeProvider.EnumerateFiles(appPath, $"*.{locale}.txt", false))
+		foreach (var s in _appCodeProvider.EnumerateAllFiles(LocalizationPath, $"*.{locale}.txt"))
 			yield return new LocalePath(s, false);
 
 		// simple locale: uk
@@ -118,7 +120,7 @@ public class WebLocalizerDictiorany : ILocalizerDictiorany
 				foreach (var s in Directory.EnumerateFiles(dirPath, $"*.{locale}.txt"))
 					yield return new LocalePath(s, true);
 			}
-			foreach (var s in _appCodeProvider.EnumerateFiles(appPath, $"*.{locale}.txt", false))
+			foreach (var s in _appCodeProvider.EnumerateAllFiles(LocalizationPath, $"*.{locale}.txt"))
 				yield return new LocalePath(s, false);
 		}
 	}

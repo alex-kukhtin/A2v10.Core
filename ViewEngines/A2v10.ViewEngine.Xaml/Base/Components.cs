@@ -32,7 +32,7 @@ public class Components : MarkupExtension
 			throw new XamlException("The 'Components' markup extension can only be used for properties that are of type 'ComponentDictionary'");
 		if (serviceProvider.GetService(typeof(IUriContext)) is IUriContext root && root.BaseUri != null)
 		{
-			String baseFileName = root.BaseUri.PathAndQuery;
+			String baseFileName = root.BaseUri.ToString();
 			return Load(baseFileName, serviceProvider);
 		}
 		return null;
@@ -43,22 +43,19 @@ public class Components : MarkupExtension
         if (String.IsNullOrEmpty(Pathes))
             return null;
         
-		var appReader = serviceProvider.GetRequiredService<IAppCodeProvider>();
-
         String basePath = Path.GetDirectoryName(baseFileName) ??
 			throw new XamlException("Invalid Base path");
 
 		var dict = new ComponentDictionary();
 		foreach (var path in Pathes.Split(','))
-			dict.Append(LoadOneFile(serviceProvider, appReader, basePath, path));
+			dict.Append(LoadOneFile(serviceProvider, basePath, path));
 		return dict;
 	}
 
-	static ComponentDictionary LoadOneFile(IServiceProvider serviceProvider, IAppCodeProvider appReader, String basePath, String path)
+	static ComponentDictionary LoadOneFile(IServiceProvider serviceProvider, String basePath, String path)
 	{
-		String targetPath = appReader.MakeFullPath(basePath, path, false) + ".xaml";
-		if (!appReader.FileExists(targetPath))
-			throw new XamlException($"File not found {path}");
+		String targetPath = Path.Combine(basePath, path) + ".xaml";
+		targetPath= Path.GetRelativePath(".", targetPath);
 		var xamPartProvider = serviceProvider.GetRequiredService<IXamlPartProvider>();
 		var x = xamPartProvider.GetXamlPart(targetPath);
 		if (x is ComponentDictionary dict)

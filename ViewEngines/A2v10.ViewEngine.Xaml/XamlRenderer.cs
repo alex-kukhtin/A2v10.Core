@@ -38,7 +38,7 @@ public class XamlRenderer : IRenderer
 			// XamlServices.Load sets IUriContext
 			if (!String.IsNullOrEmpty(info.FileName))
 			{
-				uiElem = _partProvider.GetXamlPart(info.FileName) as IXamlElement;
+				uiElem = _partProvider.GetXamlPart(Path.Combine(info.Path,info.FileName)) as IXamlElement;
 			}
 			//else if (!String.IsNullOrEmpty(info.Text))
 			//uiElem = _xamlReader.ParseXml(info.Text) as IXamlElement;

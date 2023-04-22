@@ -17,7 +17,7 @@ public static class HostHelpers
 	// @Html.Raw
 	public static String AppStyleSheetsLink(this IAppCodeProvider provider)
 	{
-		var files = provider.EnumerateFiles("_assets", "*.css", false);
+		var files = provider.EnumerateAllFiles("_assets", "*.css");
 		// at least one file
 		if (files != null && files.Any())
 			return $"<link  href=\"/_shell/appstyles\" rel=\"stylesheet\" />";
@@ -27,7 +27,7 @@ public static class HostHelpers
 	// @Html.Raw
 	public static String AppScriptsLink(this IAppCodeProvider provider)
 	{
-		var files = provider.EnumerateFiles("_assets", "*.js", false);
+		var files = provider.EnumerateAllFiles("_assets", "*.js");
 		if (files != null && files.Any())
 			return $"<script type=\"text/javascript\" src=\"/_shell/appscripts\"></script>";
 		return String.Empty;

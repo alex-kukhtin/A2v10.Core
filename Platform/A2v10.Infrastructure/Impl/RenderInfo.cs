@@ -8,7 +8,7 @@ public class RenderInfo : IRenderInfo
 	public String? RootId { get; init; }
 	public String? FileName { get; init; }
 	public String? FileTitle { get; init; }
-	public String? Path { get; init; }
+	public String Path { get; init; } = String.Empty;
 	public String? Text { get; init; }
 	public IDataModel? DataModel { get; init; }
 	//public ITypeChecker TypeChecker
