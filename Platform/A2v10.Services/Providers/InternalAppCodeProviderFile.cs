@@ -15,40 +15,36 @@ public class InternalAppCodeProviderFile : IAppCodeProviderImpl
 		AppPath = path;
 	}
 
-	public String MakeFullPath(String path, String fileName, Boolean admin)
+	public String NormalizePath(String path)
 	{
-		if (path.StartsWith("$"))
-		{
-			int ix = path.IndexOf("/");
-			path = path[(ix + 1)..];
-		}
+        if (path.StartsWith("$"))
+        {
+            int ix = path.IndexOf("/");
+            path = path[(ix + 1)..];
+        }
 
-        if (fileName.StartsWith('/'))
-		{
-			path = String.Empty;
-			fileName = fileName.Remove(0, 1);
-		}
-		String fullPath = Path.Combine($"{AppPath}", path, fileName);
+        String fullPath = Path.Combine($"{AppPath}", path);
 
-		return Path.GetFullPath(fullPath);
-	}
+        return Path.GetFullPath(fullPath);
+    }
 
-    public Boolean IsFileExists(String path, String fileName)
+   
+    public Boolean IsFileExists(String path)
 	{
-		var fullPath = MakeFullPath(path, fileName, false);
+		var fullPath = NormalizePath(path);
         return File.Exists(fullPath);
     }
 
     public Stream? FileStreamRO(String path)
 	{
-		var fullPath = MakeFullPath(path, "", false);
+		var fullPath = NormalizePath(path);
 		if (!File.Exists(fullPath))
 			return null;
         return new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
     }
     public IEnumerable<String> EnumerateFiles(String path, String searchPattern)
 	{
-		var fullPath = MakeFullPath(path, String.Empty, false);
+		var fullPath = NormalizePath(path);
 		if (!Directory.Exists(fullPath))
 			yield break;
 		foreach (var f in Directory.EnumerateFiles(fullPath, searchPattern))

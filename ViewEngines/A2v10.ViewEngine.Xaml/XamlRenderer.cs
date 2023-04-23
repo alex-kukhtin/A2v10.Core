@@ -9,13 +9,17 @@ public class XamlRenderer : IRenderer
 	private readonly IProfiler _profile;
 	private readonly ILocalizer _localizer;
 	private readonly IXamlPartProvider _partProvider;
+	private readonly IAppCodeProvider _appCodeProvider;
 
-	public XamlRenderer(IProfiler profile, IXamlPartProvider partProvider, ILocalizer localizer)
+
+    public XamlRenderer(IProfiler profile, IXamlPartProvider partProvider, ILocalizer localizer, IAppCodeProvider appCodeProvider)
 	{
 		_profile = profile;
 		_localizer = localizer;
 		_partProvider = partProvider;
-	}
+        _appCodeProvider = appCodeProvider;
+
+    }
 
 	public void Render(IRenderInfo info, TextWriter writer)
 	{
@@ -38,7 +42,8 @@ public class XamlRenderer : IRenderer
 			// XamlServices.Load sets IUriContext
 			if (!String.IsNullOrEmpty(info.FileName))
 			{
-				uiElem = _partProvider.GetXamlPart(Path.Combine(info.Path,info.FileName)) as IXamlElement;
+				var filePath = _appCodeProvider.MakePath(info.Path, info.FileName);
+				uiElem = _partProvider.GetXamlPart(filePath) as IXamlElement;
 			}
 			//else if (!String.IsNullOrEmpty(info.Text))
 			//uiElem = _xamlReader.ParseXml(info.Text) as IXamlElement;

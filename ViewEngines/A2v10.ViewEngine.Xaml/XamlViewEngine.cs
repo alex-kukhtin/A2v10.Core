@@ -1,4 +1,4 @@
-﻿// Copyright © 2021-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
 using A2v10.Xaml;
@@ -11,13 +11,15 @@ public class XamlViewEngine : IViewEngine
 {
 	private readonly IRenderer _renderer;
 
-	public XamlViewEngine(IProfiler profiler, IXamlPartProvider xamlPartProvider, ILocalizer localizer, IViewEngineProvider engineProvider)
+	public XamlViewEngine(IProfiler profiler, IXamlPartProvider xamlPartProvider, ILocalizer localizer, IViewEngineProvider engineProvider,
+		IAppCodeProvider codeProvider)
 	{
 		engineProvider.RegisterEngine(".xaml", typeof(XamlViewEngine));
 
 		_renderer = new XamlRenderer(profiler,
 			xamlPartProvider,
-			localizer
+			localizer,
+			codeProvider
 		);
 	}
 

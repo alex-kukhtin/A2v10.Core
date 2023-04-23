@@ -9,5 +9,6 @@ public interface IAppContainer
 {
     String? GetText(String path);
     IEnumerable<String> EnumerateFiles(String prefix, String pattern);
+    Boolean FileExists(String path);
     Guid ModuleId { get; }
 }

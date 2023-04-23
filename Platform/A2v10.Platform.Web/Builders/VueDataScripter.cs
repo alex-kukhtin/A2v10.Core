@@ -537,7 +537,7 @@ function modelData(template, data) {
 		{
 			if (msi.Path == null)
 				throw new InvalidOperationException("Model.Path is null");
-			var pathToRead = Path.Combine(msi.Path, $"{msi.Template}.js").Replace('\\', '/');
+			var pathToRead = _codeProvider.MakePath(msi.Path, $"{msi.Template}.js");
             using var stream = _codeProvider.FileStreamRO(pathToRead)
                 ?? throw new FileNotFoundException($"Template file '{pathToRead}' not found.");
             using var sr = new StreamReader(stream);
@@ -593,7 +593,7 @@ function modelData(template, data) {
 			throw new InvalidProgramException("ModelScriptInfo.Path is null");
 		if (msi.Template != null)
 		{
-			var fileTemplatePath = Path.Combine(msi.Path, msi.Template + ".js");
+			var fileTemplatePath = _codeProvider.MakePath(msi.Path, msi.Template + ".js");
 			using Stream stream = _codeProvider.FileStreamRO(fileTemplatePath)
 				?? throw new FileNotFoundException($"File not found. '{fileTemplatePath}'");
 			using var sr = new StreamReader(stream);

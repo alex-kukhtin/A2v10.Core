@@ -2,7 +2,6 @@
 
 using System.IO;
 using System.Threading.Tasks;
-using Jint.Runtime.Debugger;
 using Microsoft.Extensions.Options;
 
 using Newtonsoft.Json;
@@ -28,7 +27,8 @@ public class ModelJsonPartProvider : IModelJsonPartProvider
 	{
 		//var localPath = _redirect?.Redirect(url.LocalPath);
 		//url.Redirect(localPath);
-		using var stream = _appCodeProvider.FileStreamRO(Path.Combine(url.LocalPath, "model.json"));
+		var modelPath = _appCodeProvider.MakePath(url.LocalPath, "model.json");
+		using var stream = _appCodeProvider.FileStreamRO(modelPath);
 		if (stream == null)
 			return null;
 		using var sr = new StreamReader(stream);

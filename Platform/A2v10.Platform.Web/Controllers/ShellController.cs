@@ -209,7 +209,7 @@ public class ShellController : Controller
 			if (!fileName.EndsWith($".min.{ext}"))
 			{
 				String minFile = fileName.Replace($".{ext}", $".min.{ext}");
-				if (_codeProvider.IsFileExists(minFile, String.Empty))
+				if (_codeProvider.IsFileExists(minFile))
 					continue; // min.{ext} found
 			}
 			using var stream = _codeProvider.FileStreamRO(fileName)

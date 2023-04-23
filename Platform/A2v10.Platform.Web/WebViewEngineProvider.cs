@@ -45,14 +45,15 @@ public class WebViewEngineProvider : IViewEngineProvider
 		foreach (var engine in _engines)
 		{
 			String fileName = $"{viewName}{engine.Extension}";
-			if (_codeProvider.IsFileExists(path, fileName))
+			String fullPath = _codeProvider.MakePath(path, fileName);
+			if (_codeProvider.IsFileExists(fullPath))
 			{
 				if (_serviceProvider.GetService(engine.EngineType) is IViewEngine viewEngine)
 				{
 					return new ViewEngineResult
 					(
 						engine: viewEngine,
-						path: path,
+						path: fullPath,
 						viewName = fileName
 					);
 				}

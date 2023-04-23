@@ -77,7 +77,7 @@ public class Source : MarkupExtension
 		{
 			String trgPath = PathHelpers.ChangeExtension(targetFileName, "xaml");
 
-			if (appReader.IsFileExists(trgPath, String.Empty))
+			if (appReader.IsFileExists(trgPath))
 			{
 				var xamPartProvider = serviceProvider.GetRequiredService<IXamlPartProvider>();
 				return xamPartProvider.GetXamlPart(trgPath);

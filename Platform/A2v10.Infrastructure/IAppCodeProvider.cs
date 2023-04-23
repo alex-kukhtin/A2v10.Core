@@ -8,7 +8,8 @@ namespace A2v10.Infrastructure;
 
 public interface IAppCodeProvider
 {
-    Boolean IsFileExists(String path, String fileName);
+    String MakePath(String path, String fileName);
+    Boolean IsFileExists(String path);
     Stream? FileStreamRO(String path, Boolean primaryOnly = false);
 
     IEnumerable<String> EnumerateAllFiles(String path, String searchPattern);

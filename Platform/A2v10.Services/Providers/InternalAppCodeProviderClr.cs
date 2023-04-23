@@ -20,46 +20,26 @@ public class InternalAppCodeProviderClr : IAppCodeProviderImpl
 		_appContainer = appContainer;
     }
 
-    public static String MakeFullPath(String path)
-	{
-        if (path.StartsWith("$"))
-        {
-            int ix = path.IndexOf("/");
-            path =  path[(ix + 1)..];
-        }
-		return path.NormalizeSlash();
-    }
-
-    public String MakeFullPath(String path, String fileName, Boolean admin)
+    public String NormalizePath(String path)
 	{
 		if (path.StartsWith("$"))
 		{
 			int ix = path.IndexOf("/");
 			path = path[(ix+1).. ];
 		}
-		return Path.GetRelativePath(".", Path.Combine(path, fileName)).NormalizeSlash();
+		return path;
 	}
 
-    public Boolean IsFileExists(String path, String fileName)
+    public Boolean IsFileExists(String path)
 	{
-        var fullPath = MakeFullPath(path, fileName, false);
-        return FileExists(fullPath);
-	}
-
-	public Boolean FileExists(String fullPath)
-	{
-		return !String.IsNullOrEmpty(_appContainer.GetText(fullPath));
-	}
-
-	public Boolean DirectoryExists(String fullPath)
-	{
-		return _appContainer.EnumerateFiles(fullPath, "").Any();
+		var fullPath = NormalizePath(path);	
+		return _appContainer.FileExists(fullPath);
 	}
 
     public Stream? FileStreamRO(String path)
 	{
-		var fullPath = MakeFullPath(path);
-		if (!File.Exists(fullPath))
+		var fullPath = NormalizePath(path);
+		if (!_appContainer.FileExists(fullPath))
 			return null;
         return new MemoryStream(Encoding.UTF8.GetBytes(_appContainer.GetText(fullPath) ?? String.Empty));
     }

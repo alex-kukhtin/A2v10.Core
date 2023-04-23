@@ -54,12 +54,23 @@ public class AppCodeProvider : IAppCodeProvider
 		var key = path[1..fx];
         if (_providers.TryGetValue(key, out var proivder))
 			return proivder;
-        throw new InvalidOperationException($"Provider for '{key}' not found");
+        throw new InvalidOperationException($"Module '{key}' not found");
 	}
 
-    public Boolean IsFileExists(String path, String fileName)
+	public String MakePath(String path, String fileName) 
 	{
-        return GetProvider(path).IsFileExists(path, fileName);
+        var relative = Path.GetRelativePath(".", Path.Combine(path, fileName)).NormalizeSlash();
+        if (path.StartsWith("$") && !relative.StartsWith("$"))
+        {
+            int fpos = relative.IndexOf('/');
+            relative = relative[(fpos + 1)..];
+        }
+		return relative;
+    }
+
+    public Boolean IsFileExists(String path)
+	{
+        return GetProvider(path).IsFileExists(path);
     }
 
     public Stream? FileStreamRO(String path, Boolean primaryOnly = false)
@@ -87,7 +98,7 @@ public class AppCodeProvider : IAppCodeProvider
 			var en = files.GetEnumerator();
 			if (en.MoveNext())
 			{
-				var f = v.MakeFullPath(en.Current, "", false);
+				var f = v.NormalizePath(en.Current);
 				yield return Path.GetDirectoryName(f) ?? String.Empty;
 			}
 		}
