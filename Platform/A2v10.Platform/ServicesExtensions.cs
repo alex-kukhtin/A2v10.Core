@@ -77,6 +77,7 @@ public static class ServicesExtensions
 		services.Configure<AppOptions>(opts =>
 		{
 			configuration.GetSection("application").Bind(opts);
+			opts.CookiePrefix = cookiePrefix;
 			opts.Modules = configuration.GetSection("application:modules")
 				.GetChildren().ToDictionary<IConfigurationSection, String, ModuleInfo>(
 					x => x.Key,

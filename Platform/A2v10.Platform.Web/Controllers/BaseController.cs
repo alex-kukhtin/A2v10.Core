@@ -35,6 +35,7 @@ public class BaseController : Controller, IControllerProfiler
 		SetUserTenantToParams(prms);
 	}
 
+
 	protected void SetSqlQueryParams(ExpandoObject prms)
 	{
 		SetUserTenantToParams(prms);

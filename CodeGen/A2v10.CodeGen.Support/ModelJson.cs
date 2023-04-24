@@ -107,7 +107,7 @@ public class ModelJsonReport : ModelJsonBase
 	public ExpandoObject? Variables { get; set; }
 }
 
-public class ModelJson
+public class ModelJson234
 {
 
 	#region JSON

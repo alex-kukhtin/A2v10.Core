@@ -12,6 +12,8 @@ using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using System.Threading;
 using System.Security;
+using Microsoft.Extensions.Options;
+using System.Linq;
 
 namespace A2v10.Web.Identity.UI;
 
@@ -27,7 +29,10 @@ public class AccountController : Controller
 	private readonly IApplicationHost _host;
 	private readonly IApplicationTheme _appTheme;
 
-	public AccountController(SignInManager<AppUser<Int64>> signInManager, UserManager<AppUser<Int64>> userManager, AppUserStore<Int64> userStore, IAntiforgery antiforgery, IApplicationHost host, IDbContext dbContext, IApplicationTheme appTheme)
+	public AccountController(SignInManager<AppUser<Int64>> signInManager, UserManager<AppUser<Int64>> userManager, 
+			AppUserStore<Int64> userStore, 
+			IAntiforgery antiforgery, IApplicationHost host, IDbContext dbContext, 
+			IApplicationTheme appTheme)
 	{
 		_signInManager = signInManager;
 		_userManager = userManager;
@@ -40,11 +45,17 @@ public class AccountController : Controller
 
 	void RemoveAllCookies()
 	{
-		Response.Cookies.Delete(CookieNames.Application.Profile);
-		Response.Cookies.Delete(CookieNames.Identity.State);
+		foreach (var key in Request.Cookies.Keys)
+			Response.Cookies.Delete(key);
 	}
+    void RemoveAntiforgeryCookie()
+	{
+        foreach (var key in Request.Cookies.Keys.Where(x => x.Contains("Antiforgery")))
+            Response.Cookies.Delete(key);
+    }
 
-	[AllowAnonymous]
+
+    [AllowAnonymous]
 	[HttpGet]
 	public async Task<IActionResult> Login(String returnUrl)
 	{
@@ -65,17 +76,21 @@ public class AccountController : Controller
 	public async Task<IActionResult> Login([FromForm] LoginViewModel model)
 	{
 		var isValid = await _antiforgery.IsRequestValidAsync(HttpContext);
-		//_antiforgery.ValidateRequestAsync
-		var result = await _signInManager.PasswordSignInAsync(model.Login, model.Password, model.IsPersistent, lockoutOnFailure: true);
+
+		RemoveAntiforgeryCookie();
+
+        var result = await _signInManager.PasswordSignInAsync(model.Login, model.Password, model.IsPersistent, lockoutOnFailure: true);
 		if (result.Succeeded)
 		{
 
+			/* 
+			 * CHANGE PHONE NUMBER
 			var user = await _userManager.FindByNameAsync(model.Login);
 			user.PhoneNumber = "PHONENUMBER";
-
             var token = await _userManager.GenerateChangePhoneNumberTokenAsync(user, "PHONENUMBER");
 			var verified = await _userManager.VerifyChangePhoneNumberTokenAsync(user, token, "PHONENUMBER");
 			await _userManager.ChangePhoneNumberAsync(user, "PHONENUMBER", token);
+			*/
 			//
 			/* refresh claims!
 			var user = await _userManager.FindByNameAsync(model.Login);
@@ -83,6 +98,10 @@ public class AccountController : Controller
 			// sign in again!
 			await _signInManager.SignInAsync(user);
 			*/
+			/*
+			 * LICENSE MANAGER
+			 * _licenseManager.LoadModules()	
+			 */
 			var returnUrl = (TempData["ReturnUrl"] ?? "/").ToString()!.ToLowerInvariant();
 			if (returnUrl.StartsWith("/account"))
 				returnUrl = "/";

@@ -174,6 +174,7 @@ public class ShellController : Controller
 
 		ExpandoObject? menuRoot = dm.Root.RemoveEmptyArrays();
 		SetUserStatePermission(dm);
+		SetUserStateModules(dm);
 
 		String jsonMenu = JsonConvert.SerializeObject(menuRoot, JsonHelpers.ConfigSerializerSettings(_host.IsDebugConfiguration));
 		macros.Set("Menu", jsonMenu);
@@ -198,7 +199,12 @@ public class ShellController : Controller
 		_currentUser.SetReadOnly(model.Eval<Boolean>("UserState.ReadOnly"));
 	}
 
-	void GetAppFiles(String ext, TextWriter writer)
+    void SetUserStateModules(IDataModel dm)
+	{
+		_currentUser.AddModules(new Guid[] { new Guid("50515D21-BB5B-4280-89AB-500671E94D8C") });
+	}
+
+    void GetAppFiles(String ext, TextWriter writer)
 	{
 		var files = _codeProvider.EnumerateAllFiles("_assets", $"*.{ext}");
 		if (files == null)

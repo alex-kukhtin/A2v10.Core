@@ -1,6 +1,7 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+using System.Collections.Generic;
 
 namespace A2v10.Infrastructure;
 public interface IUserIdentity
@@ -20,6 +21,7 @@ public interface IUserState
 {
 	Int64? Company { get; }
 	Boolean IsReadOnly { get; }
+	IEnumerable<Guid> Modules { get; }
 }
 
 public interface IUserLocale
@@ -37,5 +39,6 @@ public interface ICurrentUser
 
 	void SetCompanyId(Int64 id);
 	void SetReadOnly(Boolean readOnly);
+	void AddModules(IEnumerable<Guid> modules);
 }
 

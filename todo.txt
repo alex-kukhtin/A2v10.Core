@@ -1,10 +1,12 @@
 ﻿APP COMPILER & MODULES
-1. Remove IAppCodeProvider.FileStreamFullPathRO
-2. Почистить весь IAppCodeProvider
-	2.2. Static Image
-	2.4. ImageController
-	2.5. FileController
+======================
 3. PdfReportEngine - Images
+
+
+LICENSING
+=========
+1. License Manager
+2. 
 
 
 Допилки для NovaEra.
@@ -18,6 +20,8 @@
 1. User.Identity.IsUserOpenId()
 2. AppUser.ChangePasswordEnabled
 3. Add Licence & readme for A2v10.Identity.Core
+4. Remove AntiForgeryCookie after login
+5. 
 
 == TODO: Compiler
 
@@ -70,8 +74,6 @@ sql.targets в A2v10.Platform
 56. _shell/script - exception - странное поведение
 
 60. BaseController в отдельную сборку (SetParams, Filter)
-
-63. Проверить Profiler
 
 BOOKKEEPER
 ==========

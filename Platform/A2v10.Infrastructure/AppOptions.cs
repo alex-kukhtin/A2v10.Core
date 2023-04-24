@@ -28,7 +28,8 @@ public record AppOptions
 	public String? Theme { get; set; }
 	public Boolean MultiTenant { get; set; }
 	public Boolean MultiCompany { get; set; }
-	public AppEnvironment Environment { get; } = new AppEnvironment();
+	public String? CookiePrefix { get; set; }
+    public AppEnvironment Environment { get; } = new AppEnvironment();
 	public Dictionary<String, ModuleInfo>? Modules { get; set; }
 	public Boolean IsCustomUserMenu => !String.IsNullOrEmpty(UserMenu);
 
