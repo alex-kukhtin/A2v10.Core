@@ -11,4 +11,5 @@ public interface IAppContainer
     IEnumerable<String> EnumerateFiles(String prefix, String pattern);
     Boolean FileExists(String path);
     Guid ModuleId { get; }
+    Boolean IsLicensed { get; } 
 }

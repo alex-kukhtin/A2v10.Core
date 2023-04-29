@@ -103,6 +103,8 @@ public class AppCodeProvider : IAppCodeProvider
 			}
 		}
 	}
+
+	public Boolean HasLicensedModules => _providers.Values.Any(p => p.IsLicensed);
 }
 
 

@@ -77,4 +77,5 @@ public interface IDataService
 	Byte[] Html2Excel(String html);
 
 	Task<ILayoutDescription?> GetLayoutDescriptionAsync(String? baseUrl);
+	Task<String> LoadLicenseAsync();
 }

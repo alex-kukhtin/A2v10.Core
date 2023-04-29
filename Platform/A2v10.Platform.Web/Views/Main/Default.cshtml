@@ -8,8 +8,8 @@
 <div id="shell" class="shell @(Model!.Debug ? "debug" : "release")" v-cloak>
 	<a2-app-header :title="title" :subtitle="subtitle" :user-state=userState :single-page=singlePage
 			:menu=menu :new-menu=newMenu :settings-menu=settingsMenu :app-data="appData"
-			person-name="@Model.PersonName" :user-is-admin="userIsAdmin" :show-feedback="showFeedback"
-			:feedback-visible="feedbackVisible" :change-password="changePassword" :nav-bar-mode=navBarMode>
+			person-name="@Model.PersonName" :user-is-admin="userIsAdmin"
+			:change-password="changePassword" :nav-bar-mode=navBarMode>
 		@if (Model.HasNavPane)
 		{
 			<include class=nav-pane src="/_page/_navpane/index/0" :hide-indicator="true"></include>
@@ -22,7 +22,6 @@
 	<a2-main-view :menu="menu" :side-bar-mode="sideBarMode" :nav-bar-mode=navBarMode :period="globalPeriod" :pages="pages" :title="title"></a2-main-view>
 	<a2-debug :model-stack="modelStack" :model-visible="debugShowModel" v-if="isDebug"
 			  :trace-visible="debugShowTrace" :counter="dataCounter" :close="debugClose"></a2-debug>
-	<a2-feedback v-if="hasFeedback" :model-stack="modelStack" :visible="feedbackVisible" :close="feedbackClose" :source="feedback"></a2-feedback>
 	<footer class="footer">
 		<div :class="{spinner: true, active:processing}"></div>
 

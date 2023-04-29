@@ -50,6 +50,9 @@ public class MainController : Controller
 		if (IsStaticFile())
 			return NotFound();
 
+		if (!await CheckLicenseAsync())
+			return new EmptyResult();	
+
 		var layoutDescr = await _dataService.GetLayoutDescriptionAsync(NormalizePathInfo(pathInfo));
 
 		if (User.Identity == null)
@@ -84,4 +87,12 @@ public class MainController : Controller
 			path.EndsWith(".js", StringComparison.OrdinalIgnoreCase);
 	}
 
+	private async Task<Boolean> CheckLicenseAsync()
+	{
+		if (!_codeProvider.HasLicensedModules)
+			return false;
+		var licText = await _dataService.LoadLicenseAsync();
+		//Response.Redirect("/account/license");
+		return true;
+	}
 }

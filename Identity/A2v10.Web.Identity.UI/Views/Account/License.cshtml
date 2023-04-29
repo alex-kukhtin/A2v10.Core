@@ -1,0 +1,17 @@
+﻿@model SimpleIdentityViewModel
+@inject ILocalizer _loc
+
+<div class="center-page">
+	<div class="initial-form">
+		<h3 class="a2-header text-center">@_loc.Localize("@[License]")</h3>
+		<hr style="margin-top:1rem" />
+		<p>License not found</p>
+	</div>
+</div>
+
+@section Scripts
+	{
+	<script type="text/javascript">
+		@Html.Partial("~/Views/Account/LicenseScript.cshtml")
+	</script>
+}

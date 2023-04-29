@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using A2v10.Data.Interfaces;
 using A2v10.Services.Interop.ExportTo;
 using DocumentFormat.OpenXml.Drawing;
+using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace A2v10.Services;
 
@@ -133,10 +134,8 @@ public class DataService : IDataService
 
 	public Task<String> ExpandAsync(ExpandoObject queryData, Action<ExpandoObject> setParams)
 	{
-		var baseUrl = queryData.Get<String>("baseUrl");
-		if (baseUrl == null)
-			throw new DataServiceException(nameof(ExpandAsync));
-
+		var baseUrl = queryData.Get<String>("baseUrl") 
+			?? throw new DataServiceException(nameof(ExpandAsync));
 		Object? id = queryData.Get<Object>("id");
 		return ExpandAsync(baseUrl, id, setParams);
 	}
@@ -176,10 +175,8 @@ public class DataService : IDataService
 
 	public Task<String> LoadLazyAsync(ExpandoObject queryData, Action<ExpandoObject> setParams)
 	{
-		var baseUrl = queryData.Get<String>("baseUrl");
-		if (baseUrl == null)
-			throw new DataServiceException(nameof(LoadLazyAsync));
-
+		var baseUrl = queryData.Get<String>("baseUrl") 
+			?? throw new DataServiceException(nameof(LoadLazyAsync));
 		var id = queryData.Get<Object>("id");
 		var prop = queryData.GetNotNull<String>("prop");
 		return LoadLazyAsync(baseUrl, id, prop, setParams);
@@ -344,18 +341,16 @@ public class DataService : IDataService
 	{
 		var platformUrl = CreatePlatformUrl(kind, baseUrl);
 		var blobModel = await _modelReader.GetBlobAsync(platformUrl, suffix);
-		var saveProc = blobModel?.UpdateProcedure();
-		if (saveProc == null)
-			throw new DataServiceException($"UpdateProcedure is null");
+		var saveProc = (blobModel?.UpdateProcedure()) 
+			?? throw new DataServiceException($"UpdateProcedure is null");
 		var blob = new BlobUpdateInfo()
 		{
 			Key = blobModel?.Key,
 			Id = blobModel?.Id
 		};
 		setBlob(blob);
-		var result = await _dbContext.ExecuteAndLoadAsync<BlobUpdateInfo, BlobUpdateOutput>(blobModel?.DataSource, saveProc, blob);
-		if (result == null)
-			throw new InvalidOperationException("SaveBlobAsync. Result is null");
+		var result = await _dbContext.ExecuteAndLoadAsync<BlobUpdateInfo, BlobUpdateOutput>(blobModel?.DataSource, saveProc, blob) 
+			?? throw new InvalidOperationException("SaveBlobAsync. Result is null");
 		return result;
     }
 
@@ -376,6 +371,14 @@ public class DataService : IDataService
 	{
 		var h = new Html2Excel(_currentUser.Locale.Locale);
 		return h.ConvertHtmlToExcel(html);
+	}
+
+	public Task<String> LoadLicenseAsync()
+	{
+		var licText = System.IO.File.ReadAllText("C:\\Temp\\TestSignature2\\license.signed.json");
+		var ok = new LicenseManager().VerifyLicense(licText);
+		//var model = await _dbContext.Load(_currentUser.Identity.Segment, "a2sys.[License.Load]");
+		return Task.FromResult("LICENSE TEXT HERE");
 	}
 }
 

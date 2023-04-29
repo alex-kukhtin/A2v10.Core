@@ -14,6 +14,7 @@ public class InternalAppCodeProviderClr : IAppCodeProviderImpl
 
 	public Boolean IsFileSystem => false;
 
+	public Boolean IsLicensed => _appContainer.IsLicensed;
 
 	public InternalAppCodeProviderClr(IAppContainer appContainer)
 	{

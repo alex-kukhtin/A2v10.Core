@@ -1,20 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-	  <LangVersion>10.0</LangVersion>
-	  <Nullable>enable</Nullable>
-	  <AssemblyName>A2v10.App.Abstractions</AssemblyName>
-	  <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-	  <Version>10.1.8093</Version>
-	  <Product>A2v10</Product>
-	  <PackageId>A2v10.App.Abstractions</PackageId>
-	  <Authors>Oleksandr Kukhtin</Authors>
-	  <Company>Oleksandr Kukhtin</Company>
-	  <Description>A2v10 Platform Abstractions</Description>
-	  <Copyright>Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.</Copyright>
-	  <RepositoryType>github</RepositoryType>
-	  <PackageTags>A2v10</PackageTags>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<LangVersion>10.0</LangVersion>
+		<Nullable>enable</Nullable>
+		<AssemblyName>A2v10.App.Abstractions</AssemblyName>
+		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+		<Version>10.1.8093</Version>
+		<Product>A2v10</Product>
+		<PackageId>A2v10.App.Abstractions</PackageId>
+		<Authors>Oleksandr Kukhtin</Authors>
+		<Company>Oleksandr Kukhtin</Company>
+		<Description>A2v10 Platform Abstractions</Description>
+		<Copyright>Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.</Copyright>
+		<RepositoryType>github</RepositoryType>
+		<PackageTags>A2v10</PackageTags>
+	</PropertyGroup>
 
 </Project>

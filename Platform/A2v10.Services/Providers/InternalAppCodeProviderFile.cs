@@ -9,6 +9,7 @@ public class InternalAppCodeProviderFile : IAppCodeProviderImpl
 	private String AppPath { get; }
 
 	public Boolean IsFileSystem => true;
+	public Boolean IsLicensed => false;	
 
 	public InternalAppCodeProviderFile(String path)
 	{

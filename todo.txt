@@ -77,7 +77,6 @@ sql.targets в A2v10.Platform
 
 BOOKKEEPER
 ==========
-15. Feedback
 16. ChangePassword (ApplicationCommands)
 17. ShowHelp
 18. 

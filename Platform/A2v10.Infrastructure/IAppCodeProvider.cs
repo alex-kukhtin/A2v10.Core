@@ -14,5 +14,7 @@ public interface IAppCodeProvider
 
     IEnumerable<String> EnumerateAllFiles(String path, String searchPattern);
     IEnumerable<String> EnumerateWatchedDirs(String path, String searchPattern);
+
+    Boolean HasLicensedModules { get; }
 }
 

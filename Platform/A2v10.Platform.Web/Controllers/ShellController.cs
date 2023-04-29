@@ -201,7 +201,6 @@ public class ShellController : Controller
 
     void SetUserStateModules(IDataModel dm)
 	{
-		_currentUser.AddModules(new Guid[] { new Guid("50515D21-BB5B-4280-89AB-500671E94D8C") });
 	}
 
     void GetAppFiles(String ext, TextWriter writer)

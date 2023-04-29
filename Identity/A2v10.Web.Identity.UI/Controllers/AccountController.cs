@@ -216,5 +216,16 @@ public class AccountController : Controller
 			});
 		}
 	}
+
+	[HttpGet]
+	public async Task<IActionResult> License()
+	{
+		var m = new SimpleIdentityViewModel()
+		{
+			Title = await _dbContext.LoadAsync<AppTitleModel>(_host.CatalogDataSource, "a2sys.[AppTitle.Load]"),
+			Theme = _appTheme.MakeTheme()
+		};
+		return View(m);
+	}
 }
 
