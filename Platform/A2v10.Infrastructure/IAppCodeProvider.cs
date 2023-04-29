@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksand Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -16,5 +16,6 @@ public interface IAppCodeProvider
     IEnumerable<String> EnumerateWatchedDirs(String path, String searchPattern);
 
     Boolean HasLicensedModules { get; }
+    IEnumerable<Guid> LicensedModules { get; }
 }
 

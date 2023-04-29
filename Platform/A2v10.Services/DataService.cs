@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System.Text;
 using System.Threading.Tasks;
@@ -8,8 +8,6 @@ using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Services.Interop.ExportTo;
-using DocumentFormat.OpenXml.Drawing;
-using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace A2v10.Services;
 
@@ -371,14 +369,6 @@ public class DataService : IDataService
 	{
 		var h = new Html2Excel(_currentUser.Locale.Locale);
 		return h.ConvertHtmlToExcel(html);
-	}
-
-	public Task<String> LoadLicenseAsync()
-	{
-		var licText = System.IO.File.ReadAllText("C:\\Temp\\TestSignature2\\license.signed.json");
-		var ok = new LicenseManager().VerifyLicense(licText);
-		//var model = await _dbContext.Load(_currentUser.Identity.Segment, "a2sys.[License.Load]");
-		return Task.FromResult("LICENSE TEXT HERE");
 	}
 }
 

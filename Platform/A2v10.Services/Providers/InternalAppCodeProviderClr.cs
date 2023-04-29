@@ -16,6 +16,8 @@ public class InternalAppCodeProviderClr : IAppCodeProviderImpl
 
 	public Boolean IsLicensed => _appContainer.IsLicensed;
 
+	public Guid? ModuleId => _appContainer.ModuleId;
+
 	public InternalAppCodeProviderClr(IAppContainer appContainer)
 	{
 		_appContainer = appContainer;

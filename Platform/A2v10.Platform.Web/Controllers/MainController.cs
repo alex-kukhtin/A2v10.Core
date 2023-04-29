@@ -11,6 +11,7 @@ using Microsoft.Extensions.Options;
 
 using A2v10.Infrastructure;
 using A2v10.Web.Identity;
+using A2v10.App.Abstractions;
 
 namespace A2v10.Platform.Web.Controllers;
 
@@ -23,14 +24,19 @@ public class MainController : Controller
 	private readonly IDataService _dataService;
 	private readonly IApplicationTheme _appTheme;
 	private readonly IAppCodeProvider _codeProvider;
+	private readonly ILicenseManager _licenseManager;
+	private readonly ICurrentUser _currentUser;
 
 	public MainController(IDataService dataService, IOptions<AppOptions> appOptions, 
-		IApplicationTheme appTheme, IAppCodeProvider codeProvider)
+		IApplicationTheme appTheme, IAppCodeProvider codeProvider, ILicenseManager licenseManager,
+		ICurrentUser currentUser)
 	{
 		_appOptions = appOptions.Value;
 		_dataService = dataService;
 		_appTheme = appTheme;
 		_codeProvider = codeProvider;
+		_licenseManager = licenseManager;
+		_currentUser = currentUser;
 	}
 
 	static String? NormalizePathInfo(String? pathInfo)
@@ -91,8 +97,8 @@ public class MainController : Controller
 	{
 		if (!_codeProvider.HasLicensedModules)
 			return false;
-		var licText = await _dataService.LoadLicenseAsync();
-		//Response.Redirect("/account/license");
-		return true;
+		return await _licenseManager.VerifyLicensesAsync(
+			_currentUser.Identity.Segment, _currentUser.Identity.Tenant, 
+			_codeProvider.LicensedModules);
 	}
 }

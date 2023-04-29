@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System.IO;
 
@@ -23,75 +23,75 @@ public class AppCodeProvider : IAppCodeProvider
 				var key = k.ToLowerInvariant();
 				if (v.Default)
 					key = "_";
-				_providers.Add(key, CreateProvider(v.Path ?? throw new InvalidOperationException("Path is null")));	
+				_providers.Add(key, CreateProvider(v.Path ?? throw new InvalidOperationException("Path is null")));
 			}
 		}
 	}
 
-	static IAppCodeProviderImpl CreateProvider(String path) 
+	static IAppCodeProviderImpl CreateProvider(String path)
 	{
-        if (ClrHelpers.IsClrPath(path))
-            return new InternalAppCodeProviderClr(CreateContainer(path));
-        else
-            return new InternalAppCodeProviderFile(path);
-    }
+		if (ClrHelpers.IsClrPath(path))
+			return new InternalAppCodeProviderClr(CreateContainer(path));
+		else
+			return new InternalAppCodeProviderFile(path);
+	}
 
 	static IAppContainer CreateContainer(String path)
 	{
-        var assembly = ClrHelpers.ParseClrType(path);
-        var container = Activator.CreateInstance(assembly.assembly, assembly.type)?.Unwrap();
-        if (container is IAppContainer appContainer)
-            return appContainer;
-        else
-            throw new ArgumentException("Invalid application container");
+		var assembly = ClrHelpers.ParseClrType(path);
+		var container = Activator.CreateInstance(assembly.assembly, assembly.type)?.Unwrap();
+		if (container is IAppContainer appContainer)
+			return appContainer;
+		else
+			throw new ArgumentException("Invalid application container");
 
-    }
-    IAppCodeProviderImpl GetProvider(String path)
+	}
+	IAppCodeProviderImpl GetProvider(String path)
 	{
 		if (!path.StartsWith("$"))
 			return _providers["_"];
 		var fx = path.IndexOf('/');
 		var key = path[1..fx];
-        if (_providers.TryGetValue(key, out var proivder))
+		if (_providers.TryGetValue(key, out var proivder))
 			return proivder;
-        throw new InvalidOperationException($"Module '{key}' not found");
+		throw new InvalidOperationException($"Module '{key}' not found");
 	}
 
-	public String MakePath(String path, String fileName) 
+	public String MakePath(String path, String fileName)
 	{
-        var relative = Path.GetRelativePath(".", Path.Combine(path, fileName)).NormalizeSlash();
-        if (path.StartsWith("$") && !relative.StartsWith("$"))
-        {
-            int fpos = relative.IndexOf('/');
-            relative = relative[(fpos + 1)..];
-        }
+		var relative = Path.GetRelativePath(".", Path.Combine(path, fileName)).NormalizeSlash();
+		if (path.StartsWith("$") && !relative.StartsWith("$"))
+		{
+			int fpos = relative.IndexOf('/');
+			relative = relative[(fpos + 1)..];
+		}
 		return relative;
-    }
+	}
 
-    public Boolean IsFileExists(String path)
+	public Boolean IsFileExists(String path)
 	{
-        return GetProvider(path).IsFileExists(path);
-    }
+		return GetProvider(path).IsFileExists(path);
+	}
 
-    public Stream? FileStreamRO(String path, Boolean primaryOnly = false)
-    {
+	public Stream? FileStreamRO(String path, Boolean primaryOnly = false)
+	{
 		if (primaryOnly)
-			GetProvider("_").FileStreamRO(path);	
-        return GetProvider(path).FileStreamRO(path);
-    }
+			GetProvider("_").FileStreamRO(path);
+		return GetProvider(path).FileStreamRO(path);
+	}
 
-    public IEnumerable<String> EnumerateAllFiles(String path, String searchPattern)
-    {
+	public IEnumerable<String> EnumerateAllFiles(String path, String searchPattern)
+	{
 		foreach (var (k, v) in _providers)
 		{
 			foreach (var file in v.EnumerateFiles(path, searchPattern))
 				yield return file;
 		}
-    }
-    public IEnumerable<String> EnumerateWatchedDirs(String path, String searchPattern)
+	}
+	public IEnumerable<String> EnumerateWatchedDirs(String path, String searchPattern)
 	{
-        foreach (var (_, v) in _providers)
-        {
+		foreach (var (_, v) in _providers)
+		{
 			if (!v.IsFileSystem)
 				continue;
 			var files = v.EnumerateFiles(path, searchPattern);
@@ -105,6 +105,9 @@ public class AppCodeProvider : IAppCodeProvider
 	}
 
 	public Boolean HasLicensedModules => _providers.Values.Any(p => p.IsLicensed);
+
+	public IEnumerable<Guid> LicensedModules => _providers.Values.Where(p => p.IsLicensed)
+		.Select(p => p.ModuleId ?? throw new InvalidOperationException("ModuleId is null"));
 }
 
 

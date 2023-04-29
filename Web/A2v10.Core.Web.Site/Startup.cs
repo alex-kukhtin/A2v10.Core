@@ -6,8 +6,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 using A2v10.Infrastructure;
+using A2v10.App.Abstractions;
 using A2v10.WorkflowEngine;
 using A2v10.ReportEngine.Pdf;
+using A2v10.Services;
 
 namespace A2v10.Core.Web.Site;
 
@@ -59,6 +61,8 @@ public class Startup
 		services.AddStimulsoftLicense(configuration);
 		*/
 
+		services.AddScoped<ILicenseManager, EmptyLicenseManager>();
+		//services.AddScoped<ILicenseManager, A2v10.LicenseManager.LicenseVerifier>();
 
 		services.AddWorkflowEngineScoped();
 		services.AddInvokeTargets(a =>
