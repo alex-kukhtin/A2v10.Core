@@ -1,6 +1,7 @@
 ﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
 using System.Threading.Tasks;
@@ -77,5 +78,4 @@ public interface IDataService
 	Byte[] Html2Excel(String html);
 
 	Task<ILayoutDescription?> GetLayoutDescriptionAsync(String? baseUrl);
-	Task<String> LoadLicenseAsync();
 }

@@ -3,7 +3,7 @@
 using System.IO;
 using System.Text;
 
-using A2v10.App.Abstractions;
+using A2v10.Module.Infrastructure;
 
 namespace A2v10.Services;
 
@@ -15,6 +15,8 @@ public class InternalAppCodeProviderClr : IAppCodeProviderImpl
 	public Boolean IsFileSystem => false;
 
 	public Boolean IsLicensed => _appContainer.IsLicensed;
+
+	public Guid? ModuleId => _appContainer.Id;
 
 	public InternalAppCodeProviderClr(IAppContainer appContainer)
 	{

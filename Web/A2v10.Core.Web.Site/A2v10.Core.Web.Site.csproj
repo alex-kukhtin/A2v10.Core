@@ -27,6 +27,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Reference Include="A2v10.LicenseManager">
+		  <HintPath>..\..\..\A2v10.LicenseManager\bin\Debug\net6.0\A2v10.LicenseManager.dll</HintPath>
+		</Reference>
 		<Reference Include="AppPersonnel">
 		  <HintPath>..\..\..\..\Projects\NovaEra.Core\AppPersonnel\bin\Debug\net6.0\AppPersonnel.dll</HintPath>
 		</Reference>

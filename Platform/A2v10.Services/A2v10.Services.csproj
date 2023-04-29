@@ -27,7 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\CodeGen\A2v10.App.Abstractions\A2v10.App.Abstractions.csproj" />
+    <ProjectReference Include="..\..\CodeGen\A2v10.Module.Infrastructure\A2v10.Module.Infrastructure.csproj" />
     <ProjectReference Include="..\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
   </ItemGroup>
 

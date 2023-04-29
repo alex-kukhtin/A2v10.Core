@@ -9,7 +9,8 @@ public class InternalAppCodeProviderFile : IAppCodeProviderImpl
 	private String AppPath { get; }
 
 	public Boolean IsFileSystem => true;
-	public Boolean IsLicensed => false;	
+	public Boolean IsLicensed => false;
+	public Guid? ModuleId => null;	
 
 	public InternalAppCodeProviderFile(String path)
 	{

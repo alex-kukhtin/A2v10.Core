@@ -27,7 +27,10 @@ del /q ReportEngines\A2v10.Xaml.Report\bin\Release\*.snupkg
 del /q ReportEngines\A2v10.ReportEngine.Stimulsoft\bin\Release\*.nupkg
 del /q ReportEngines\A2v10.ReportEngine.Stimulsoft\bin\Release\*.snupkg
 
-dotnet build -c Release
+del /q CodeGen\A2v10.Module.Infrastructure\bin\Release\*.nupkg
+del /q CodeGen\A2v10.Module.Infrastructure\bin\Release\*.snupkg
+
+dotnet pack -c Release
 
 del /q ..\NuGet.local\*.*
 
@@ -69,5 +72,8 @@ copy ReportEngines\A2v10.Xaml.Report\bin\Release\*.snupkg ..\NuGet.local
 
 copy ReportEngines\A2v10.ReportEngine.Stimulsoft\bin\Release\*.nupkg ..\NuGet.local
 copy ReportEngines\A2v10.ReportEngine.Stimulsoft\bin\Release\*.snupkg ..\NuGet.local
+
+copy CodeGen\A2v10.Module.Infrastructure\bin\Release\*.nupkg ..\NuGet.local
+copy CodeGen\A2v10.Module.Infrastructure\bin\Release\*.snupkg ..\NuGet.local
 
 pause

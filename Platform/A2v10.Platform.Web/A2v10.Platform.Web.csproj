@@ -26,6 +26,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\..\CodeGen\A2v10.Module.Infrastructure\A2v10.Module.Infrastructure.csproj" />
 	  <ProjectReference Include="..\..\Identity\A2v10.Identity.Core\A2v10.Identity.Core.csproj" />
 	  <ProjectReference Include="..\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
 	</ItemGroup>
