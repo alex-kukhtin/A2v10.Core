@@ -338,4 +338,6 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
+
+/Platform/A2v10.Services/Utils/LicenseManagerKeys.cs
 /Platform/A2v10.Services/Utils/LicenseManagerKeys.cs
