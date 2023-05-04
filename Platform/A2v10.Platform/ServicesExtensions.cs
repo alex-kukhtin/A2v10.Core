@@ -1,12 +1,15 @@
-﻿// Copyright © 2021-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Globalization;
+using System.Linq;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.CookiePolicy;
+using Microsoft.AspNetCore.Http;
 
 using A2v10.Data;
 using A2v10.Data.Interfaces;
@@ -17,7 +20,6 @@ using A2v10.ViewEngine.Xaml;
 using A2v10.ViewEngine.Html;
 
 using A2v10.Platform.Web;
-using System.Linq;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -121,6 +123,13 @@ public static class ServicesExtensions
 		app.UseAuthentication();
 		app.UseAuthorization();
 		app.UseSession();
+
+		app.UseCookiePolicy(new CookiePolicyOptions()
+		{
+			HttpOnly = HttpOnlyPolicy.Always,
+			Secure = CookieSecurePolicy.Always,
+			MinimumSameSitePolicy = SameSiteMode.Strict
+		});
 
 		app.UseMiddleware<CurrentUserMiddleware>();
 

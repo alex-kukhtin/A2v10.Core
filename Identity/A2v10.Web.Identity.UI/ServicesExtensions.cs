@@ -1,17 +1,22 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
+
+using Microsoft.AspNetCore.Http;
 
 using A2v10.Web.Identity.UI;
 
-namespace Microsoft.Extensions.DependencyInjection
+namespace Microsoft.Extensions.DependencyInjection;
+
+public static class ServicesExtensions
 {
-	public static class ServicesExtensions
+	public static IMvcBuilder AddDefaultIdentityUI(this IMvcBuilder builder)
 	{
-		public static IMvcBuilder AddDefaultIdentityUI(this IMvcBuilder builder)
+		var assembly = typeof(AccountController).Assembly;
+		builder.AddApplicationPart(assembly);
+		builder.Services.AddAntiforgery(opts =>
 		{
-			var assembly = typeof(AccountController).Assembly;
-			builder.AddApplicationPart(assembly);
-			return builder;
-		}
+			opts.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+		});
+		return builder;
 	}
 }
