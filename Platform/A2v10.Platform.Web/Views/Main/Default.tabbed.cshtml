@@ -1,0 +1,28 @@
+﻿@{
+	Layout = "_Layout.tabbed";
+}
+@model MainViewModel
+@inject ILocalizer localizer
+@inject IApplicationHost host
+
+<div id="shell" class="mdi-shell @(Model!.Debug ? "debug" : "release")" v-cloak>
+	<a2-mdi-header :title="title"></a2-mdi-header>
+	<a2-mdi-navbar :menu="menu"></a2-mdi-navbar>
+	<ul class="mdi-tabs">
+		<li v-for="t in tabs" :class="{active: isTabActive(t)}">
+			<a href="" v-on:click.stop.prevent="selectTab(t)" v-text="t.title"></a>
+			<a class="close" href="" v-on:click.stop.prevent="closeTab(t)">×</a>
+		</li>
+	</ul>
+	<div class="mdi-main">
+		<div class="mdi-view" v-for="t in tabs" v-show="isTabActive(t)">
+			<a2-include :source="t.source"></a2-include>
+		</div>
+	</div>
+	<div class="mdi-footer">FOOTER</div>
+	<div class=modal-stack v-if=hasModals>
+		<div class="modal-wrapper modal-animation-frame" v-for="dlg in modals" :class="{show: dlg.wrap}">
+			<a2-modal :dialog=dlg></a2-modal>
+		</div>
+	</div>
+</div>

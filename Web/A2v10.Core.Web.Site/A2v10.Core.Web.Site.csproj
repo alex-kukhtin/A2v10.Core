@@ -14,7 +14,14 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Content Remove="bundleconfig.json" />
 		<Content Remove="C:\Users\alexk\.nuget\packages\a2v10.workflow.engine\10.1.8044\contentFiles\any\net5.0\SqlScripts\a2v10_workflow.sql" />
+		<Content Remove="compilerconfig.json" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="bundleconfig.json" />
+	  <None Include="compilerconfig.json" />
 	</ItemGroup>
 
 	<ItemGroup>

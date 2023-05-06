@@ -70,6 +70,8 @@ public class ShellController : Controller
 
 	public Task<IActionResult> Script()
 	{
+		if (!String.IsNullOrEmpty(_appOptions.Layout))
+			return DoScriptPlain();
 		return DoScript(false);
 	}
 
@@ -93,6 +95,19 @@ public class ShellController : Controller
 		}
 	}
 
+	async Task<IActionResult> DoScriptPlain()
+	{
+		try
+		{
+			Response.ContentType = MimeTypes.Application.Javascript;
+			var script = await BuildScriptPlain();
+			return new WebActionResult(script);
+		}
+		catch (Exception ex)
+		{
+			return new WebExceptionResult(500, ex.ToString());
+		}
+	}
 
 	public Task AppScripts()
 	{
@@ -119,6 +134,41 @@ public class ShellController : Controller
 			prms.Set("TenantId", TenantId);
 	}
 
+
+	async Task<String> BuildScriptPlain()
+	{
+		String shell = Resource.shellPlain;
+
+		ExpandoObject loadPrms = new();
+		SetSqlParams(loadPrms);
+
+		ExpandoObject macros = new();
+
+		_ = macros.Append(new Dictionary<String, Object?>
+		{
+			{ "AppVersion", _appDataProvider.AppVersion },
+			{ "Debug", IsDebugConfiguration ? "true" : "false" },
+			{ "AppData", await _appDataProvider.GetAppDataAsStringAsync() }
+		});
+
+		String proc = String.Empty;
+		String? ds = _host.TenantDataSource;
+
+		if (_appOptions.IsCustomUserMenu)
+		{
+			proc = _appOptions.UserMenu!;
+		}
+		IDataModel dm = await _dbContext.LoadModelAsync(ds, proc, loadPrms);
+
+		ExpandoObject? menuRoot = dm.Root.RemoveEmptyArrays();
+		SetUserStatePermission(dm);
+		SetUserStateModules(dm);
+
+		String jsonMenu = JsonConvert.SerializeObject(menuRoot, JsonHelpers.ConfigSerializerSettings(_host.IsDebugConfiguration));
+		macros.Set("Menu", jsonMenu);
+
+		return shell.ResolveMacros(macros) ?? String.Empty;
+	}
 
 	async Task<String> BuildScript(bool bAdmin)
 	{

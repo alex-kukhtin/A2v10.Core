@@ -19,7 +19,7 @@ namespace A2v10.Platform.Web {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resource {
@@ -121,6 +121,43 @@ namespace A2v10.Platform.Web {
         internal static string shellAdmin {
             get {
                 return ResourceManager.GetString("shellAdmin", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 
+        ////*20230506-8086*/
+        ///
+        ///(function () {
+        ///
+        ///	const menu = $(Menu);
+        ///
+        ///	const sp = menu.SysParams || {};
+        ///
+        ///	const shell = new Vue({
+        ///		el: &apos;#shell&apos;,
+        ///		data: {
+        ///			version: &apos;$(AppVersion)&apos;,
+        ///			menu: menu.Menu ? menu.Menu[0].Menu : null,
+        ///			title: sp.AppTitle || &apos;&apos;,
+        ///			subtitle: sp.AppSubTitle || &apos;&apos;,
+        ///			userState: menu.UserState,
+        ///			isDebug: $(Debug),
+        ///			appData: $(AppData)
+        ///		},
+        ///		computed: {
+        ///		},
+        ///		methods: {
+        ///		}
+        ///	});
+        ///
+        ///	window.$$rootUrl = &apos;&apos;;
+        ///	window.$$debug = $(Debug);
+        ///})();.
+        /// </summary>
+        internal static string shellPlain {
+            get {
+                return ResourceManager.GetString("shellPlain", resourceCulture);
             }
         }
     }

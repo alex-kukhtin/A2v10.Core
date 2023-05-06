@@ -26,6 +26,7 @@ public record AppOptions
 	public String AppName { get; set; } = String.Empty;
 	public String? UserMenu { get; set; }
 	public String? Theme { get; set; }
+	public String? Layout { get; set; }
 	public Boolean MultiTenant { get; set; }
 	public Boolean MultiCompany { get; set; }
 	public String? CookiePrefix { get; set; }

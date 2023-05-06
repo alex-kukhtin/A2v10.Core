@@ -1,0 +1,11 @@
+[
+  {
+    "outputFileName": "wwwroot/scripts/tabbed.js",
+    "inputFiles": [
+        "Scripts/appheader.js",
+        "Scripts/navbar.js",
+        "Scripts/shell.js"
+    ],
+    "minify": {"enabled": false}
+  }
+]

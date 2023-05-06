@@ -1,0 +1,62 @@
+﻿
+.mdi-shell {
+	display:grid;
+	grid-template-rows:auto auto 1fr auto;
+	grid-template-columns:auto 1fr;
+	grid-template-areas: 
+		"header header"
+		"navbar tabs"
+		"navbar main"
+		"footer footer";
+	height:100%;
+	overflow:hidden;
+	width:100%;
+}
+
+.mdi-header {
+	grid-area: header;
+}
+
+.mdi-tabs {
+	grid-area:tabs;
+	display:flex;
+	flex-direction:row;
+	padding:0;
+	margin:0;
+	background-color:#f3f3f3;
+	li {
+		list-style:none;
+		padding:4px 8px;
+		border:1px solid #ccc;
+		border-radius: 4px 4px 0 0;
+		display:inline-block;
+		&.active {
+			background-color:white;
+			border-bottom-color:transparent;
+		}
+	}
+}
+
+.mdi-footer {
+	grid-area: footer;
+}
+
+.mdi-navbar {
+	grid-area: navbar;
+}
+
+.mdi-main {
+	grid-area: main;
+	overflow:hidden;
+}
+
+.mdi-view {
+	height:100%;
+	.a2-include {
+		height:100%;
+	}
+}
+
+.page.absolute {
+	position:relative;
+}
