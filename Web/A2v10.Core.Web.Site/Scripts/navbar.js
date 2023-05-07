@@ -1,20 +1,22 @@
 ﻿
+(function () {
 
-Vue.component("a2-mdi-navbar", {
-	template: `
+	const popup = require('std:popup');
+
+	Vue.component("a2-mdi-navbar", {
+		template: `
 <div class="mdi-navbar">
-	<ul>
-	  <li v-for="m in menu">
-		<a v-text=m.Name href="" @click.stop.prevent=clickMenu(m)></a>
-	  </li>
+	<ul class="bar">
+		<li v-for="m in menu" @click.stop.prevent=clickMenu(m) :title=m.Name>
+			<i class="ico" :class="menuIcon(m)"></i>
+		</li>
 	</ul>
-	<div class="mdi-menu" v-if=isMenuVisible>
+	<div class="mdi-menu" v-if="isMenuVisible">
 		<ul>
-			<li v-for="m in activeMenu.Menu">
-				<span v-text="m.Name"></span>
+			<li v-for="m in activeMenu.Menu" class="level-0">
+				<span class="folder" v-text="m.Name"></span>
 				<ul v-if="!!m.Menu">
-					<li v-for="im in m.Menu">
-						<a v-text="im.Name" @click.stop.prevent="clickSubMenu(im)"></a>
+					<li v-for="im in m.Menu" class="level-1" @click.stop.prevent="clickSubMenu(im)" v-text="im.Name">
 					</li>
 				</ul>
 			</li>
@@ -22,34 +24,48 @@ Vue.component("a2-mdi-navbar", {
 	</div>
 </div>
 	`,
-	props: {
-		menu: Array,
-	},
-	data() { 
-		return {
-			activeMenu: null
-		};
-	},
-	computed:{
-		isMenuVisible() {
-			return !!this.activeMenu;
-		}
-	},
-	methods: {
-		clickMenu(m) {
-			const shell = this.$parent;
-			if (!m.Menu)
-				shell.$emit('navigate', { title: m.Name, url: m.Url });
-			else
-				this.activeMenu = m;
+		props: {
+			menu: Array,
 		},
-		clickSubMenu(m1) {
-			const shell = this.$parent;
-			shell.$emit('navigate', { title: m1.Name, url: `${this.activeMenu.Url}/${m1.Url}` });
+		data() {
+			return {
+				activeMenu: null,
+				popupVisible: false
+			};
+		},
+		computed: {
+			isMenuVisible() {
+				return !!this.activeMenu && this.popupVisible;
+			}
+		},
+		methods: {
+			clickMenu(m) {
+				const shell = this.$parent;
+				if (!m.Menu) {
+					this.popupVisible = false;
+					shell.$emit('navigate', { title: m.Name, url: m.Url });
+				} else if (this.activeMenu === m && this.popupVisible) {
+					this.popupVisible = false;
+				} else {
+					this.popupVisible = true;
+					this.activeMenu = m;
+				}
+			},
+			clickSubMenu(m1) {
+				const shell = this.$parent;
+				this.popupVisible = false;
+				shell.$emit('navigate', { title: m1.Name, url: `${this.activeMenu.Url}/${m1.Url}` });
+			},
+			menuIcon(m) {
+				return 'ico-' + m.Icon;
+			},
+			__clickOutside() {
+				this.popupVisible = false;
+			}
+		},
+		mounted() {
+			popup.registerPopup(this.$el);
+			this.$el._close = this.__clickOutside;
 		}
-	},
-	mounted() {
-		console.dir('navbar mounted');
-		console.dir(this.menu)
-	}
-});
+	});
+})();

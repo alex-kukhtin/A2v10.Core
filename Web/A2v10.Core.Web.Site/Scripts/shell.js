@@ -4,6 +4,7 @@
 	const popup = require('std:popup');
 	const utils = require('std:utils');
 	const urlTools = require('std:url');
+	const log = require('std:log');
 
 	const modalComponent = component('std:modal');
 	const toastr = component('std:toastr');
@@ -14,14 +15,21 @@
 				tabs: [],
 				activeTab: null,
 				modals: [],
-				modalRequeryUrl: ''
+				modalRequeryUrl: '',
+				traceEnabled: log.traceEnabled(),
+				debugShowTrace: false,
+				debugShowModel: false,
+				dataCounter: 0,
+				sidePaneUrl: '',
 			};
 		},
 		components: {
 			"a2-modal": modalComponent
 		},
 		computed: {
+			modelStack() { return this.__dataStack__; },
 			hasModals() { return this.modals.length > 0; },
+			sidePaneVisible() { return !!this.sidePaneUrl; },
 		},
 		methods: {
 			navigate(m) {
@@ -42,7 +50,9 @@
 				let tabIndex = this.tabs.indexOf(tab);
 				if (tabIndex == -1)
 					return;
-				if (tabIndex > 0)
+				if (tab !== this.activeTab)
+					; // do nothing
+				else if (tabIndex > 0)
 					this.activeTab = this.tabs[tabIndex - 1];
 				else if (this.tabs.length > 1)
 					this.activeTab = this.tabs[tabIndex + 1];
@@ -131,12 +141,53 @@
 					let dlg = this.modals.pop();
 					dlg.resolve(false);
 				}
+			},
+			debugTrace() {
+				if (!window.$$debug) return;
+				this.debugShowModel = false;
+				this.debugShowTrace = !this.debugShowTrace;
+			},
+			debugModel() {
+				if (!window.$$debug) return;
+				this.debugShowTrace = false;
+				this.debugShowModel = !this.debugShowModel;
+			},
+			debugClose() {
+				this.debugShowModel = false;
+				this.feedbackVisible = false;
+			},
+			registerData(component, out) {
+				this.dataCounter += 1;
+				if (component) {
+					if (this.__dataStack__.length > 0)
+						out.caller = this.__dataStack__[0];
+					this.__dataStack__.unshift(component);
+				} else {
+					this.__dataStack__.shift(component);
+				}
+			},
+			showSidePane(url) {
+				if (!url) {
+					this.sidePaneUrl = '';
+				} else {
+					let newurl = '/_page' + url;
+					if (this.sidePaneUrl === newurl)
+						this.sidePaneUrl = '';
+					else
+						this.sidePaneUrl = newurl;
+				}
+			}
+		},
+		watch: {
+			traceEnabled(val) {
+				log.enableTrace(val);
 			}
 		},
 		mounted() {
 		},
 		created() {
 			const me = this;
+			me.__dataStack__ = [];
 			popup.startService();
 			this.$on('navigate', this.navigate);
 			eventBus.$on('closeAllPopups', popup.closeAll);
@@ -144,6 +195,8 @@
 			eventBus.$on('modalCreated', this.modalCreated);
 			eventBus.$on('modalClose', this.modalClose);
 			eventBus.$on('modalCloseAll', this.modalCloseAll);
+			eventBus.$on('registerData', this.registerData);
+			eventBus.$on('showSidePane', this.showSidePane);
 		}
 	});
 })();

@@ -3,7 +3,9 @@
 Vue.component("a2-mdi-header", {
 	template: `
 <div class="mdi-header">
-<span v-text=title></span>
+	<span v-text=title></span>
+	<div class="aligner"></div>
+	<slot></slot>
 </div>
 	`,
 	props: {
@@ -17,22 +19,24 @@ Vue.component("a2-mdi-header", {
 });
 
 
+(function () {
 
-Vue.component("a2-mdi-navbar", {
-	template: `
+	const popup = require('std:popup');
+
+	Vue.component("a2-mdi-navbar", {
+		template: `
 <div class="mdi-navbar">
-	<ul>
-	  <li v-for="m in menu">
-		<a v-text=m.Name href="" @click.stop.prevent=clickMenu(m)></a>
-	  </li>
+	<ul class="bar">
+		<li v-for="m in menu" @click.stop.prevent=clickMenu(m) :title=m.Name>
+			<i class="ico" :class="menuIcon(m)"></i>
+		</li>
 	</ul>
-	<div class="mdi-menu" v-if=isMenuVisible>
+	<div class="mdi-menu" v-if="isMenuVisible">
 		<ul>
-			<li v-for="m in activeMenu.Menu">
-				<span v-text="m.Name"></span>
+			<li v-for="m in activeMenu.Menu" class="level-0">
+				<span class="folder" v-text="m.Name"></span>
 				<ul v-if="!!m.Menu">
-					<li v-for="im in m.Menu">
-						<a v-text="im.Name" @click.stop.prevent="clickSubMenu(im)"></a>
+					<li v-for="im in m.Menu" class="level-1" @click.stop.prevent="clickSubMenu(im)" v-text="im.Name">
 					</li>
 				</ul>
 			</li>
@@ -40,44 +44,58 @@ Vue.component("a2-mdi-navbar", {
 	</div>
 </div>
 	`,
-	props: {
-		menu: Array,
-	},
-	data() { 
-		return {
-			activeMenu: null
-		};
-	},
-	computed:{
-		isMenuVisible() {
-			return !!this.activeMenu;
-		}
-	},
-	methods: {
-		clickMenu(m) {
-			const shell = this.$parent;
-			if (!m.Menu)
-				shell.$emit('navigate', { title: m.Name, url: m.Url });
-			else
-				this.activeMenu = m;
+		props: {
+			menu: Array,
 		},
-		clickSubMenu(m1) {
-			const shell = this.$parent;
-			shell.$emit('navigate', { title: m1.Name, url: `${this.activeMenu.Url}/${m1.Url}` });
+		data() {
+			return {
+				activeMenu: null,
+				popupVisible: false
+			};
+		},
+		computed: {
+			isMenuVisible() {
+				return !!this.activeMenu && this.popupVisible;
+			}
+		},
+		methods: {
+			clickMenu(m) {
+				const shell = this.$parent;
+				if (!m.Menu) {
+					this.popupVisible = false;
+					shell.$emit('navigate', { title: m.Name, url: m.Url });
+				} else if (this.activeMenu === m && this.popupVisible) {
+					this.popupVisible = false;
+				} else {
+					this.popupVisible = true;
+					this.activeMenu = m;
+				}
+			},
+			clickSubMenu(m1) {
+				const shell = this.$parent;
+				this.popupVisible = false;
+				shell.$emit('navigate', { title: m1.Name, url: `${this.activeMenu.Url}/${m1.Url}` });
+			},
+			menuIcon(m) {
+				return 'ico-' + m.Icon;
+			},
+			__clickOutside() {
+				this.popupVisible = false;
+			}
+		},
+		mounted() {
+			popup.registerPopup(this.$el);
+			this.$el._close = this.__clickOutside;
 		}
-	},
-	mounted() {
-		console.dir('navbar mounted');
-		console.dir(this.menu)
-	}
-});
-
+	});
+})();
 
 (function () {
 	const eventBus = require('std:eventBus');
 	const popup = require('std:popup');
 	const utils = require('std:utils');
 	const urlTools = require('std:url');
+	const log = require('std:log');
 
 	const modalComponent = component('std:modal');
 	const toastr = component('std:toastr');
@@ -88,14 +106,21 @@ Vue.component("a2-mdi-navbar", {
 				tabs: [],
 				activeTab: null,
 				modals: [],
-				modalRequeryUrl: ''
+				modalRequeryUrl: '',
+				traceEnabled: log.traceEnabled(),
+				debugShowTrace: false,
+				debugShowModel: false,
+				dataCounter: 0,
+				sidePaneUrl: '',
 			};
 		},
 		components: {
 			"a2-modal": modalComponent
 		},
 		computed: {
+			modelStack() { return this.__dataStack__; },
 			hasModals() { return this.modals.length > 0; },
+			sidePaneVisible() { return !!this.sidePaneUrl; },
 		},
 		methods: {
 			navigate(m) {
@@ -116,7 +141,9 @@ Vue.component("a2-mdi-navbar", {
 				let tabIndex = this.tabs.indexOf(tab);
 				if (tabIndex == -1)
 					return;
-				if (tabIndex > 0)
+				if (tab !== this.activeTab)
+					; // do nothing
+				else if (tabIndex > 0)
 					this.activeTab = this.tabs[tabIndex - 1];
 				else if (this.tabs.length > 1)
 					this.activeTab = this.tabs[tabIndex + 1];
@@ -205,12 +232,53 @@ Vue.component("a2-mdi-navbar", {
 					let dlg = this.modals.pop();
 					dlg.resolve(false);
 				}
+			},
+			debugTrace() {
+				if (!window.$$debug) return;
+				this.debugShowModel = false;
+				this.debugShowTrace = !this.debugShowTrace;
+			},
+			debugModel() {
+				if (!window.$$debug) return;
+				this.debugShowTrace = false;
+				this.debugShowModel = !this.debugShowModel;
+			},
+			debugClose() {
+				this.debugShowModel = false;
+				this.feedbackVisible = false;
+			},
+			registerData(component, out) {
+				this.dataCounter += 1;
+				if (component) {
+					if (this.__dataStack__.length > 0)
+						out.caller = this.__dataStack__[0];
+					this.__dataStack__.unshift(component);
+				} else {
+					this.__dataStack__.shift(component);
+				}
+			},
+			showSidePane(url) {
+				if (!url) {
+					this.sidePaneUrl = '';
+				} else {
+					let newurl = '/_page' + url;
+					if (this.sidePaneUrl === newurl)
+						this.sidePaneUrl = '';
+					else
+						this.sidePaneUrl = newurl;
+				}
+			}
+		},
+		watch: {
+			traceEnabled(val) {
+				log.enableTrace(val);
 			}
 		},
 		mounted() {
 		},
 		created() {
 			const me = this;
+			me.__dataStack__ = [];
 			popup.startService();
 			this.$on('navigate', this.navigate);
 			eventBus.$on('closeAllPopups', popup.closeAll);
@@ -218,6 +286,8 @@ Vue.component("a2-mdi-navbar", {
 			eventBus.$on('modalCreated', this.modalCreated);
 			eventBus.$on('modalClose', this.modalClose);
 			eventBus.$on('modalCloseAll', this.modalCloseAll);
+			eventBus.$on('registerData', this.registerData);
+			eventBus.$on('showSidePane', this.showSidePane);
 		}
 	});
 })();

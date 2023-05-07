@@ -6,12 +6,17 @@
 @inject IApplicationHost host
 
 <div id="shell" class="mdi-shell @(Model!.Debug ? "debug" : "release")" v-cloak>
-	<a2-mdi-header :title="title"></a2-mdi-header>
+	<a2-mdi-header :title="title">
+		@if (Model.HasNavPane)
+		{
+			<include class=nav-pane src="/_page/_navpane/index/0" :hide-indicator="true"></include>
+		}
+	</a2-mdi-header>
 	<a2-mdi-navbar :menu="menu"></a2-mdi-navbar>
 	<ul class="mdi-tabs">
-		<li v-for="t in tabs" :class="{active: isTabActive(t)}">
-			<a href="" v-on:click.stop.prevent="selectTab(t)" v-text="t.title"></a>
-			<a class="close" href="" v-on:click.stop.prevent="closeTab(t)">×</a>
+		<li v-for="t in tabs" :class="{active: isTabActive(t)}" v-on:click.stop.prevent="selectTab(t)">
+			<span v-text="t.title"></span>
+			<span class="close ico ico-clear" v-on:click.stop.prevent="closeTab(t)"></span>
 		</li>
 	</ul>
 	<div class="mdi-main">
@@ -19,10 +24,35 @@
 			<a2-include :source="t.source"></a2-include>
 		</div>
 	</div>
-	<div class="mdi-footer">FOOTER</div>
+	<div class="mdi-footer">
+		<span class="divider"></span>
+
+		<span class="version-info">
+			<a target="_blank" tabindex="-1" href="https://a2v10.com"><i class="ico ico-a2logo a2logo-layout"></i></a>
+			@localizer.Localize(null, "@[Version]")
+			<span v-text="version"></span>
+		</span>
+		<div class="debug-btn dropdown dir-up" v-dropdown v-if="isDebug">
+			<button class="btn btn-debug" toggle>@localizer.Localize(null, "@[Debug]")<span class="caret up"></span></button>
+			<div class="dropdown-menu menu up-left">
+				<a v-on:click.prevent="debugModel" class="dropdown-item" tabindex="-1"><i class="ico ico-database"></i> @localizer.Localize(null, "@[DataModel]")</a>
+				<a v-on:click.prevent="debugTrace" class="dropdown-item" tabindex="-1"><i class="ico ico-chart-stacked-line"></i> @localizer.Localize(null, "@[Profiling]")</a>
+				<div class="divider"></div>
+				<label class="checkbox">
+					<input type="checkbox" v-model="traceEnabled" />
+					<span>@localizer.Localize(null, "@[Tracing]")</span>
+				</label>
+			</div>
+		</div>
+	</div>
+	<a2-debug :model-stack="modelStack" :model-visible="debugShowModel" v-if="isDebug"
+			  :trace-visible="debugShowTrace" :counter="dataCounter" :close="debugClose"></a2-debug>
 	<div class=modal-stack v-if=hasModals>
 		<div class="modal-wrapper modal-animation-frame" v-for="dlg in modals" :class="{show: dlg.wrap}">
 			<a2-modal :dialog=dlg></a2-modal>
 		</div>
+	</div>
+	<div class="side-pane-frame" v-if="sidePaneVisible">
+		<include :src="sidePaneUrl" :hide-indicator="true"></include>
 	</div>
 </div>

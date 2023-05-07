@@ -60,7 +60,6 @@ sql.targets в A2v10.Platform
 31. DataController. ExportTo (Export to Excel)
 36. AttachmentController
 37. ApiV2 Authorization
-38. ImageController.SaveImage
 40. LoadImage from Azure
 42. DataController.Invoke XML
 46. ExportController
@@ -72,6 +71,7 @@ sql.targets в A2v10.Platform
 53. Login layout
 55. Admin - Button on main interface
 56. _shell/script - exception - странное поведение
+67. Admin Layout - убрать его вообще
 
 60. BaseController в отдельную сборку (SetParams, Filter)
 
@@ -83,3 +83,11 @@ BOOKKEEPER
 
 
 
+TABBED LAYOUT
+=============
+1. Menu FullUrl for navigate
+2. Special Vue.Store (without URL)
+3. SidePanel
+4. Footer: About, Footer.AppLinks
+5. Header: UserName and DropDownMenu
+6. 
