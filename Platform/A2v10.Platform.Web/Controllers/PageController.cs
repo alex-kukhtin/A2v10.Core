@@ -59,7 +59,6 @@ public class PageController : BaseController
 	}
 
 	[Route("_page/{*pathInfo}")]
-	[Route("admin/_page/{*pathInfo}")]
 	public async Task<IActionResult> Page(String pathInfo)
 	{
 		// {pagePath}/action/id
@@ -69,7 +68,6 @@ public class PageController : BaseController
 	}
 
 	[Route("_dialog/{*pathInfo}")]
-	[Route("admin/_dialog/{*pathInfo}")]
 	public async Task<IActionResult> Dialog(String pathInfo)
 	{
 		// {pagePath}/dialog/id
@@ -79,7 +77,6 @@ public class PageController : BaseController
 	}
 
 	[Route("_popup/{*pathInfo}")]
-	[Route("admin/_popup/{*pathInfo}")]
 	public Task<IActionResult> Popup(String pathInfo)
 	{
 		// {pagePath}/popup/id
@@ -143,7 +140,6 @@ public class PageController : BaseController
 			CurrentLocale = null,
 			IsDebugConfiguration = _host.IsDebugConfiguration,
 			SecondPhase = secondPhase,
-			Admin = _currentUser.IsAdminApplication
 		};
 
 		var result = await viewEngine.Engine.RenderAsync(ri);

@@ -17,7 +17,6 @@ public interface IRenderInfo
 	IDataModel? DataModel { get; }
 	String? CurrentLocale { get; }
 	Boolean SecondPhase { get; }
-	Boolean Admin { get; }
 }
 
 public interface IRenderResult

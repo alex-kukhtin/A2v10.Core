@@ -78,8 +78,6 @@ public class MainController : Controller
 		if (!String.IsNullOrEmpty(_appOptions.Layout))
 			return View($"Default.{_appOptions.Layout}", viewModel);
 
-		if (pathInfo != null && pathInfo.StartsWith("admin", StringComparison.OrdinalIgnoreCase))
-			return View("Default.admin", viewModel);
 		return View(viewModel);
 	}
 

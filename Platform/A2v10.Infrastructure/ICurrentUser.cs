@@ -35,8 +35,6 @@ public interface ICurrentUser
 	public IUserIdentity Identity { get; }
 	public IUserState State { get; }
 	public IUserLocale Locale { get; }
-	public Boolean IsAdminApplication { get; }
-
 	void SetCompanyId(Int64 id);
 	void SetReadOnly(Boolean readOnly);
 	void AddModules(IEnumerable<Guid> modules);

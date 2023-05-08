@@ -39,32 +39,8 @@ public class WebApplicationHost : IApplicationHost
 
 	public Boolean Mobile { get; private set; }
 
-	public Boolean IsAdminMode => false;
-
-	//public String AppDescription => throw new NotImplementedException();
-
-	//public String AppHost => throw new NotImplementedException();
-	//public String UserAppHost => throw new NotImplementedException();
-
-	//public String SupportEmail => throw new NotImplementedException();
-
-	//public String HelpUrl => throw new NotImplementedException();
-
-	//public String HostingPath => throw new NotImplementedException();
-	//public String SmtpConfig => throw new NotImplementedException();
-
-	//public String ScriptEngine => throw new NotImplementedException();
-
-	public Boolean IsAdminAppPresent => true /*TODO:*/;
-
-
 	public String? CatalogDataSource => IsMultiTenant ? "Catalog" : null;
 	public String? TenantDataSource => String.IsNullOrEmpty(_currentUser.Identity.Segment) ? null : _currentUser.Identity.Segment;
-
-	public void CheckIsMobile(string host)
-	{
-		throw new NotImplementedException();
-	}
 
 	public String? GetAppSettings(String? source)
 	{

@@ -68,7 +68,6 @@ public class CurrentUser : ICurrentUser, IDbIdentity
 
 	IUserState ICurrentUser.State => State;
 
-	public Boolean IsAdminApplication { get; private set; }
 	public String CookiePrefix { get; } = String.Empty;
 
 	private readonly IHttpContextAccessor _httpContextAccessor;
@@ -89,7 +88,6 @@ public class CurrentUser : ICurrentUser, IDbIdentity
 		SetupUserIdentity(context);
 		SetupUserState(context);
 		SetupUserLocale(context);
-		IsAdminApplication = context.Request.Path.StartsWithSegments("/admin");
 	}
 
 	void SetupUserIdentity(HttpContext context) 

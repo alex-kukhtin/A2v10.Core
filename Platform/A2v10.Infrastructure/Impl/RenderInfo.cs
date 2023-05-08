@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+
+using System;
 
 using A2v10.Data.Interfaces;
 
@@ -15,6 +17,5 @@ public class RenderInfo : IRenderInfo
 	public String? CurrentLocale { get; init; }
 	public Boolean IsDebugConfiguration { get; init; }
 	public Boolean SecondPhase { get; init; }
-	public Boolean Admin { get; init; }
 }
 

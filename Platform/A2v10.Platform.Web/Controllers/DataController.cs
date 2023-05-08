@@ -12,7 +12,6 @@ using A2v10.Infrastructure;
 namespace A2v10.Platform.Web.Controllers;
 
 [Route("_data/[action]")]
-[Route("admin/_data/[action]")]
 [ExecutingFilter]
 [Authorize]
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
