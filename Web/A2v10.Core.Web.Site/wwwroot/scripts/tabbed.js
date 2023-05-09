@@ -13,8 +13,6 @@ Vue.component("a2-mdi-header", {
 		subTitle: String
 	},
 	mounted() {
-		console.dir('header mounted');
-		console.dir(this.title);
 	}
 });
 
@@ -22,6 +20,7 @@ Vue.component("a2-mdi-header", {
 (function () {
 
 	const popup = require('std:popup');
+	const eventBus = require('std:eventBus');
 
 	Vue.component("a2-mdi-navbar", {
 		template: `
@@ -60,9 +59,10 @@ Vue.component("a2-mdi-header", {
 		},
 		methods: {
 			clickMenu(m) {
+				eventBus.$emit('closeAllPopups');
 				const shell = this.$parent;
 				if (!m.Menu) {
-					this.popupVisible = false;
+					this.popupVisible = false;				
 					shell.$emit('navigate', { title: m.Name, url: m.Url });
 				} else if (this.activeMenu === m && this.popupVisible) {
 					this.popupVisible = false;
@@ -72,9 +72,10 @@ Vue.component("a2-mdi-header", {
 				}
 			},
 			clickSubMenu(m1) {
+				eventBus.$emit('closeAllPopups');
 				const shell = this.$parent;
 				this.popupVisible = false;
-				shell.$emit('navigate', { title: m1.Name, url: `${this.activeMenu.Url}/${m1.Url}` });
+				shell.$emit('navigate', { title: m1.Name, url: m1.Url });
 			},
 			menuIcon(m) {
 				return 'ico-' + m.Icon;
@@ -104,6 +105,7 @@ Vue.component("a2-mdi-header", {
 		data() {
 			return {
 				tabs: [],
+				closedTabs: [],
 				activeTab: null,
 				modals: [],
 				modalRequeryUrl: '',
@@ -112,6 +114,7 @@ Vue.component("a2-mdi-header", {
 				debugShowModel: false,
 				dataCounter: 0,
 				sidePaneUrl: '',
+				tabPopupOpen: false
 			};
 		},
 		components: {
@@ -126,30 +129,91 @@ Vue.component("a2-mdi-header", {
 			navigate(m) {
 				let tab = this.tabs.find(tab => tab.url == m.url);
 				if (!tab) {
-					tab = { title: m.title, url: m.url, source: `${m.url}/index` };
+					tab = { title: m.title, url: m.url, loaded: true };
 					this.tabs.push(tab);
 				}
+				tab.loaded = true;
 				this.activeTab = tab;
+				if (this.tabs.length > 10)
+					this.tabs.splice(0, 1);
+				this.storeTabs();
 			},
 			isTabActive(tab) {
 				return tab === this.activeTab;
 			},
-			selectTab(tab) {
+			tabSource(tab) {
+				return tab.loaded ? tab.url : null;
+			},
+			selectTab(tab, noStore) {
+				this.tabPopupOpen = false;
+				tab.loaded = true;
 				this.activeTab = tab;
+				if (noStore)
+					return;
+				this.storeTabs();
+			},
+			reopenTab(tab) {
+				this.tabPopupOpen = false;
+				this.navigate(tab);
+				let ix = this.closedTabs.indexOf(tab);
+				this.closedTabs.splice(ix, 1);
+				this.storeTabs();
 			},
 			closeTab(tab) {
+				this.tabPopupOpen = false;
 				let tabIndex = this.tabs.indexOf(tab);
 				if (tabIndex == -1)
 					return;
 				if (tab !== this.activeTab)
 					; // do nothing
 				else if (tabIndex > 0)
-					this.activeTab = this.tabs[tabIndex - 1];
+					this.selectTab(this.tabs[tabIndex - 1], true);
 				else if (this.tabs.length > 1)
-					this.activeTab = this.tabs[tabIndex + 1];
+					this.selectTab(this.tabs[tabIndex + 1], true);
 				else
 					this.activeTab = null;
-				this.tabs.splice(tabIndex, 1);
+				let rt = this.tabs.splice(tabIndex, 1);
+				if (rt.length) {
+					this.closedTabs.unshift(rt[0]);
+					if (this.closedTabs.length > 10)
+						this.closedTabs.pop();
+				}
+				this.storeTabs();
+			},
+			storeTabs() {
+				var mapTab = (t) => { return { title: t.title, url: t.url }; };
+				let ix = this.tabs.indexOf(this.activeTab);
+				let tabs = JSON.stringify({
+					index: ix,
+					tabs: this.tabs.map(mapTab),
+					closedTabs: this.closedTabs.map(mapTab),
+				});
+				window.localStorage.setItem("_tabs", tabs);
+			},
+			restoreTabs() {
+				let tabs = window.localStorage.getItem("_tabs");
+				if (!tabs)
+					return;
+				try {
+					let elems = JSON.parse(tabs);
+					let ix = elems.index;
+					if (ix < 0) ix = 0;
+					for (let i = 0; i < elems.tabs.length; i++) {
+						let t = elems.tabs[i];
+						this.tabs.push({ title: t.title, url: t.url, loaded: ix === i });
+					}
+					for (let i = 0; i < elems.closedTabs.length; i++) {
+						let t = elems.closedTabs[i];
+						this.closedTabs.push({ title: t.title, url: t.url, loaded: true });
+					}
+					if (ix >= 0 && ix < this.tabs.length)
+						this.activeTab = this.tabs[ix];
+				} catch (err) {
+				}
+			},
+			toggleTabPopup() {
+				eventBus.$emit('closeAllPopups');
+				this.tabPopupOpen = !this.tabPopupOpen;
 			},
 			showModal(modal, prms) {
 				let id = utils.getStringId(prms ? prms.data : null);
@@ -189,7 +253,7 @@ Vue.component("a2-mdi-header", {
 				if (!dlg) return;
 				dlg.instance = instance;
 			},
-			modalClose(result) {
+			_eventModalClose(result) {
 				if (!this.modals.length) return;
 
 				const dlg = this.modals[this.modals.length - 1];
@@ -227,11 +291,21 @@ Vue.component("a2-mdi-header", {
 					closeImpl(result);
 				}
 			},
-			modalCloseAll() {
+			_eventModalCloseAll() {
 				while (this.modals.length) {
 					let dlg = this.modals.pop();
 					dlg.resolve(false);
 				}
+			},
+			_eventConfirm(prms) {
+				let dlg = prms.data;
+				dlg.wrap = false;
+				dlg.promise = new Promise(function (resolve) {
+					dlg.resolve = resolve;
+				});
+				prms.promise = dlg.promise;
+				this.modals.push(dlg);
+				this.setupWrapper(dlg);
 			},
 			debugTrace() {
 				if (!window.$$debug) return;
@@ -267,6 +341,9 @@ Vue.component("a2-mdi-header", {
 					else
 						this.sidePaneUrl = newurl;
 				}
+			},
+			__clickOutside() {
+				this.tabPopupOpen = false;
 			}
 		},
 		watch: {
@@ -275,6 +352,9 @@ Vue.component("a2-mdi-header", {
 			}
 		},
 		mounted() {
+			popup.registerPopup(this.$el);
+			this.$el._close = this.__clickOutside;
+			this.restoreTabs();
 		},
 		created() {
 			const me = this;
@@ -284,10 +364,12 @@ Vue.component("a2-mdi-header", {
 			eventBus.$on('closeAllPopups', popup.closeAll);
 			eventBus.$on('modal', this.showModal);
 			eventBus.$on('modalCreated', this.modalCreated);
-			eventBus.$on('modalClose', this.modalClose);
-			eventBus.$on('modalCloseAll', this.modalCloseAll);
+			eventBus.$on('modalClose', this._eventModalClose);
+			eventBus.$on('modalCloseAll', this._eventModalCloseAll);
 			eventBus.$on('registerData', this.registerData);
 			eventBus.$on('showSidePane', this.showSidePane);
+			eventBus.$on('confirm', this._eventConfirm);
+
 		}
 	});
 })();

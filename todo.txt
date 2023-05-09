@@ -84,13 +84,10 @@ BOOKKEEPER
 
 TABBED LAYOUT
 =============
-1. Menu FullUrl for navigate
-2. Special Vue.Store (without URL)
 4. Footer: About, Footer.AppLinks
 5. Header: UserName and DropDownMenu
-6. Сохранять Tab'ы в LocalStorage - грузить по необходимости.
 7. Сделать новую тему интерфейса tabbed
-8. Менюшка закрытых вкладок (как в Chrome)
 9. Не закрывающийся основной Tab. /_homepage/index
 10. SaveClosed для документов
-11. 
+11. Loading indicator on main page
+13. 

@@ -36,15 +36,19 @@
   background-color: #7f7f7f;
   color: gold;
 }
-.mdi-tabs {
+.mdi-tabs-container {
   grid-area: tabs;
+  display: flex;
+  background-color: #f3f3f3;
+  justify-content: space-between;
+}
+.mdi-tabs-container .mdi-tabs {
   display: flex;
   flex-direction: row;
   padding: 0;
   margin: 0;
-  background-color: #f3f3f3;
 }
-.mdi-tabs li {
+.mdi-tabs-container .mdi-tabs li {
   list-style: none;
   height: 35px;
   padding-left: 20px;
@@ -58,7 +62,7 @@
   align-items: center;
   color: #333;
 }
-.mdi-tabs li .close {
+.mdi-tabs-container .mdi-tabs li .close {
   color: inherit;
   visibility: hidden;
   padding: 0.5em;
@@ -66,18 +70,53 @@
   border-radius: 4px;
   margin: 0 4px;
 }
-.mdi-tabs li .close:hover {
+.mdi-tabs-container .mdi-tabs li .close:hover {
   background-color: #e0e0e0;
 }
-.mdi-tabs li:hover .close {
+.mdi-tabs-container .mdi-tabs li:hover .close {
   visibility: visible;
 }
-.mdi-tabs li.active {
+.mdi-tabs-container .mdi-tabs li.active {
   background-color: white;
   border-bottom-color: transparent;
 }
-.mdi-tabs li.active .close {
+.mdi-tabs-container .mdi-tabs li.active .close {
   visibility: visible;
+}
+.mdi-tabs-container .mdi-tabs-menu {
+  position: relative;
+}
+.mdi-tabs-container .mdi-tabs-menu .mdi-tabs-popup {
+  position: absolute;
+  padding: 4px;
+  margin: 0;
+  right: 0;
+  background-color: white;
+  z-index: 71;
+  min-width: 250px;
+}
+.mdi-tabs-container .mdi-tabs-menu .mdi-tabs-popup li {
+  list-style: none;
+  padding: 7px 14px;
+  white-space: nowrap;
+  border-radius: 4px;
+}
+.mdi-tabs-container .mdi-tabs-menu .mdi-tabs-popup li:not(.group):hover {
+  background-color: #f3f3f3;
+}
+.mdi-tabs-container .mdi-tabs-menu .mdi-tabs-popup li.group {
+  text-transform: uppercase;
+  padding: 8px 8px;
+  font-size: 0.8rem;
+  color: #999;
+}
+.mdi-tabs-container .mdi-tabs-menu .open-menu {
+  display: block;
+  line-height: 35px;
+  padding: 0 10px;
+}
+.mdi-tabs-container .mdi-tabs-menu .open-menu:hover {
+  background-color: #e8e8e8;
 }
 .mdi-footer {
   grid-area: footer;
@@ -103,6 +142,7 @@
   grid-area: navbar;
   background-color: #7f7f7f;
   position: relative;
+  min-width: 60px;
 }
 .mdi-navbar .bar {
   margin: 0;
@@ -179,4 +219,7 @@
 }
 .page-content .grid {
   padding: 0.5rem;
+}
+@media (max-width: 1000px) {
+  /* TODO adjust tab size */
 }

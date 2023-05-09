@@ -1,4 +1,5 @@
 ﻿@light-gray: #f3f3f3;
+@tab-height: 35px;
 
 .mdi-shell {
 	display:grid;
@@ -44,52 +45,100 @@
 	}
 }
 
-.mdi-tabs {
+.mdi-tabs-container {
 	grid-area: tabs;
 	display: flex;
-	flex-direction: row;
-	padding: 0;
-	margin: 0;
 	background-color: @light-gray;
+	justify-content: space-between;
 
-	li {
-		list-style: none;
-		height: 35px;
-		padding-left: 20px;
-		border-right: 1px solid white;
-		display: inline-flex;
-		background-color: #f0f0f0;
-		white-space: nowrap;
-		color: black;
-		pointer-events: all;
-		cursor: pointer;
-		display: inline-flex;
-		align-items: center;
-		color: #333;
+	.mdi-tabs {
+		display: flex;
+		flex-direction: row;
+		padding: 0;
+		margin: 0;
 
-		.close {
-			color: inherit;
-			visibility: hidden;
-			padding:.5em;
-			font-size:.7em;
-			border-radius:4px;
-			margin:0 4px;
+		li {
+			list-style: none;
+			height: @tab-height;
+			padding-left: 20px;
+			border-right: 1px solid white;
+			display: inline-flex;
+			background-color: #f0f0f0;
+			white-space: nowrap;
+			color: black;
+			pointer-events: all;
+			cursor: pointer;
+			display: inline-flex;
+			align-items: center;
+			color: #333;
+
+			.close {
+				color: inherit;
+				visibility: hidden;
+				padding: .5em;
+				font-size: .7em;
+				border-radius: 4px;
+				margin: 0 4px;
+
+				&:hover {
+					background-color: #e0e0e0;
+				}
+			}
+
 			&:hover {
-				background-color: #e0e0e0;
+				.close {
+					visibility: visible;
+				}
+			}
+
+			&.active {
+				background-color: white;
+				border-bottom-color: transparent;
+
+				.close {
+					visibility: visible;
+				}
 			}
 		}
+	}
 
-		&:hover {
-			.close {
-				visibility: visible;
-			}
-		}
+	.mdi-tabs-menu {
+		position: relative;
 
-		&.active {
+		.mdi-tabs-popup {
+			position: absolute;
+			padding: 4px;
+			margin: 0;
+			right: 0;
 			background-color: white;
-			border-bottom-color: transparent;
-			.close {
-				visibility:visible;
+			z-index: 71;
+			min-width:250px;
+
+			li {
+				list-style: none;
+				padding: 7px 14px;
+				white-space: nowrap;
+				border-radius: 4px;
+
+				&:not(.group):hover {
+					background-color: #f3f3f3;
+				}
+
+				&.group {
+					text-transform: uppercase;
+					padding: 8px 8px;
+					font-size:.8rem;
+					color:#999;
+				}
+			}
+		}
+
+		.open-menu {
+			display:block;
+			line-height: @tab-height;
+			padding:0 10px;
+			&:hover {
+				background-color:#e8e8e8;
 			}
 		}
 	}
@@ -123,7 +172,7 @@
 	grid-area: navbar;
 	background-color: #7f7f7f;
 	position: relative;
-
+	min-width:60px;
 	.bar {
 		margin: 0;
 		padding: 4px;
@@ -215,4 +264,8 @@
 	.grid {
 		padding:0.5rem;
 	}
+}
+
+@media (max-width:1000px) {
+	/* TODO adjust tab size */
 }

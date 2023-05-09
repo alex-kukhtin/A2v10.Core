@@ -13,15 +13,31 @@
 		}
 	</a2-mdi-header>
 	<a2-mdi-navbar :menu="menu"></a2-mdi-navbar>
-	<ul class="mdi-tabs">
-		<li v-for="t in tabs" :class="{active: isTabActive(t)}" v-on:click.stop.prevent="selectTab(t)">
-			<span v-text="t.title"></span>
-			<span class="close ico ico-clear" v-on:click.stop.prevent="closeTab(t)"></span>
-		</li>
-	</ul>
+	<div class="mdi-tabs-container">
+		<ul class="mdi-tabs">
+			<li v-for="t in tabs" :key="t.url"
+			:class="{active: isTabActive(t)}" v-on:click.stop.prevent="selectTab(t)">
+				<span v-text="t.title"></span>
+				<span class="close ico ico-clear" v-on:click.stop.prevent="closeTab(t)"></span>
+			</li>
+		</ul>
+		<div class="mdi-tabs-menu">
+			<span class="open-menu ico ico-chevron-down" v-on:click.stop.prevent="toggleTabPopup"></span>
+			<ul class="mdi-tabs-popup menu" v-if="tabPopupOpen" ref="tabPopup">
+				<li class="group">Open tabs</li>
+				<li v-for="t in tabs" v-on:click.stop.prevent="selectTab(t)">
+					<span v-text="t.title"></span>
+				</li>
+				<li class="group">Recently closed</li>
+				<li v-for="t in closedTabs" v-on:click.stop.prevent="reopenTab(t)">
+					<span v-text="t.title"></span>
+				</li>
+			</ul>
+		</div>
+	</div>
 	<div class="mdi-main">
-		<div class="mdi-view" v-for="t in tabs" v-show="isTabActive(t)">
-			<a2-include :source="t.source"></a2-include>
+		<div class="mdi-view" v-for="t in tabs" v-show="isTabActive(t)" :key="t.url">
+			<a2-include :source="tabSource(t)"></a2-include>
 		</div>
 	</div>
 	<div class="mdi-footer">
