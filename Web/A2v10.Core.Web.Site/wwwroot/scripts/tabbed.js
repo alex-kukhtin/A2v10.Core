@@ -13,9 +13,10 @@ Vue.component("a2-mdi-header", {
 		subTitle: String
 	},
 	mounted() {
+		console.dir('header mounted');
+		console.dir(this.title);
 	}
 });
-
 
 (function () {
 
@@ -62,7 +63,7 @@ Vue.component("a2-mdi-header", {
 				eventBus.$emit('closeAllPopups');
 				const shell = this.$parent;
 				if (!m.Menu) {
-					this.popupVisible = false;				
+					this.popupVisible = false;
 					shell.$emit('navigate', { title: m.Name, url: m.Url });
 				} else if (this.activeMenu === m && this.popupVisible) {
 					this.popupVisible = false;
@@ -101,6 +102,8 @@ Vue.component("a2-mdi-header", {
 	const modalComponent = component('std:modal');
 	const toastr = component('std:toastr');
 
+	let tabKey = 77;
+
 	app.components["std:shellPlain"] = Vue.extend({
 		data() {
 			return {
@@ -114,7 +117,9 @@ Vue.component("a2-mdi-header", {
 				debugShowModel: false,
 				dataCounter: 0,
 				sidePaneUrl: '',
-				tabPopupOpen: false
+				tabPopupOpen: false,
+				navigatingUrl: '',
+				lockRoute: false
 			};
 		},
 		components: {
@@ -129,14 +134,41 @@ Vue.component("a2-mdi-header", {
 			navigate(m) {
 				let tab = this.tabs.find(tab => tab.url == m.url);
 				if (!tab) {
-					tab = { title: m.title, url: m.url, loaded: true };
+					tab = { title: m.title, url: m.url, loaded: true, key: tabKey++ };
 					this.tabs.push(tab);
+					var cti = this.closedTabs.findIndex(t => t.url === m.url);
+					if (cti >= 0)
+						this.closedTabs.splice(cti, 1);
 				}
 				tab.loaded = true;
 				this.activeTab = tab;
 				if (this.tabs.length > 10)
 					this.tabs.splice(0, 1);
 				this.storeTabs();
+			},
+			navigateTo(to) {
+				this.navigatingUrl = to.url;
+				this.navigate({ url: to.url, title: '' });
+			},
+			setDocTitle(title) {
+				let tab = this.activeTab;
+				if (!tab && this.navigatingUrl)
+					tab = this.tabs.find(tab => tab.url === this.navigatingUrl);
+				if (tab)
+					tab.title = title;
+			},
+			setNewId(route) {
+				let tab = this.tabs.find(tab => tab.url === route.from);
+				if (!tab) return;
+				this.lockRoute = true;
+				tab.url = route.to;
+				Vue.nextTick(() => {
+					this.lockRoute = false;
+				});
+				this.storeTabs();
+			},
+			tabLoadComplete(src) {
+				this.navigatingUrl = '';
 			},
 			isTabActive(tab) {
 				return tab === this.activeTab;
@@ -200,11 +232,14 @@ Vue.component("a2-mdi-header", {
 					if (ix < 0) ix = 0;
 					for (let i = 0; i < elems.tabs.length; i++) {
 						let t = elems.tabs[i];
-						this.tabs.push({ title: t.title, url: t.url, loaded: ix === i });
+						let loaded = ix === i;
+						if (loaded)
+							this.navigatingUrl = t.url;
+						this.tabs.push({ title: t.title, url: t.url, loaded, key: tabKey++ });
 					}
 					for (let i = 0; i < elems.closedTabs.length; i++) {
 						let t = elems.closedTabs[i];
-						this.closedTabs.push({ title: t.title, url: t.url, loaded: true });
+						this.closedTabs.push({ title: t.title, url: t.url, loaded: true, key: tabKey++ });
 					}
 					if (ix >= 0 && ix < this.tabs.length)
 						this.activeTab = this.tabs[ix];
@@ -361,6 +396,9 @@ Vue.component("a2-mdi-header", {
 			me.__dataStack__ = [];
 			popup.startService();
 			this.$on('navigate', this.navigate);
+			eventBus.$on('navigateto', this.navigateTo);
+			eventBus.$on('setdoctitle', this.setDocTitle);
+			eventBus.$on('setnewid', this.setNewId);
 			eventBus.$on('closeAllPopups', popup.closeAll);
 			eventBus.$on('modal', this.showModal);
 			eventBus.$on('modalCreated', this.modalCreated);

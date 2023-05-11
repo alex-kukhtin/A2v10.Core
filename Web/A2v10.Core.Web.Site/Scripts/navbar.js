@@ -1,7 +1,7 @@
-﻿
-(function () {
+﻿(function () {
 
 	const popup = require('std:popup');
+	const eventBus = require('std:eventBus');
 
 	Vue.component("a2-mdi-navbar", {
 		template: `
@@ -40,6 +40,7 @@
 		},
 		methods: {
 			clickMenu(m) {
+				eventBus.$emit('closeAllPopups');
 				const shell = this.$parent;
 				if (!m.Menu) {
 					this.popupVisible = false;
@@ -52,9 +53,10 @@
 				}
 			},
 			clickSubMenu(m1) {
+				eventBus.$emit('closeAllPopups');
 				const shell = this.$parent;
 				this.popupVisible = false;
-				shell.$emit('navigate', { title: m1.Name, url: `${this.activeMenu.Url}/${m1.Url}` });
+				shell.$emit('navigate', { title: m1.Name, url: m1.Url });
 			},
 			menuIcon(m) {
 				return 'ico-' + m.Icon;

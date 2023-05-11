@@ -97,7 +97,7 @@ public class MainController : Controller
 	private async Task<Boolean> CheckLicenseAsync()
 	{
 		if (!_codeProvider.HasLicensedModules)
-			return false;
+			return true;
 		return await _licenseManager.VerifyLicensesAsync(
 			_currentUser.Identity.Segment, _currentUser.Identity.Tenant, 
 			_codeProvider.LicensedModules);

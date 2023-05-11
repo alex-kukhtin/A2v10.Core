@@ -188,12 +188,12 @@
 }
 .mdi-navbar .mdi-menu li.level-0 .folder {
   font-size: 1.2rem;
-  color: #ccc;
+  color: #e0e0e0;
   line-height: 2.5rem;
 }
 .mdi-navbar .mdi-menu li.level-1 {
   list-style: none;
-  color: #eee;
+  color: white;
   padding: 0 1rem 0 24px;
   font-size: 1rem;
   line-height: 2.5rem;

@@ -10,4 +10,5 @@ public interface IXamlPartProvider
 	Task<Object?> GetXamlPartAsync(String path);
 	Object? GetXamlPart(String path);
 	Object? GetCachedXamlPart(String path);
+	Object? GetCachedXamlPartOrNull(String path);
 }

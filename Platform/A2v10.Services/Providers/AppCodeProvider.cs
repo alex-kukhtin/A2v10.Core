@@ -14,7 +14,7 @@ public class AppCodeProvider : IAppCodeProvider
 	public AppCodeProvider(IOptions<AppOptions> appOptions)
 	{
 		var opts = appOptions.Value ?? throw new ArgumentNullException(nameof(appOptions));
-		if (opts.Modules == null)
+		if (opts.Modules == null || !opts.Modules.Any())
 			_providers.Add("_", CreateProvider(opts.Path));
 		else
 		{
