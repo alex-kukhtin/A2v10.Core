@@ -5,12 +5,11 @@
 
 LICENSING
 =========
-1. License Manager
-2. 
+2. License Manager - Decode and Show
 
 
-Допилки для NovaEra.
-
+== NOVA ERA
+==================================
 3. ChangePassword
 4. С++/CLR with NET.CORE
 5. 
@@ -20,14 +19,12 @@ LICENSING
 1. User.Identity.IsUserOpenId()
 2. AppUser.ChangePasswordEnabled
 3. Add Licence & readme for A2v10.Identity.Core
-4. Remove AntiForgeryCookie after login
 5. 
 
 == TODO: Compiler
 
 105. Проверить GetLayoutDescriptionAsync - Styles/Scripts для внешнего окна.
 106. 
-
 
 == TODO: Architecture
 
@@ -90,4 +87,7 @@ TABBED LAYOUT
 9. Не закрывающийся основной Tab. /_homepage/index
 10. SaveClosed для документов
 11. Loading indicator on main page
-13. 
+13. LocalStorage.SavedTabs - добавить какой-то appId/appName чтобы не грузить чужие
+14. shell. $toast
+15. Сделать упрощенный platform.sql
+16. Переключение DataModel в панели debug
