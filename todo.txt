@@ -72,12 +72,6 @@ sql.targets в A2v10.Platform
 
 60. BaseController в отдельную сборку (SetParams, Filter)
 
-BOOKKEEPER
-==========
-16. ChangePassword (ApplicationCommands)
-17. ShowHelp
-18. 
-
 
 TABBED LAYOUT
 =============
@@ -90,4 +84,5 @@ TABBED LAYOUT
 13. LocalStorage.SavedTabs - добавить какой-то appId/appName чтобы не грузить чужие
 14. shell. $toast
 15. Сделать упрощенный platform.sql
-16. Переключение DataModel в панели debug
+17. При удалении tab сбивается __modelStack__
+

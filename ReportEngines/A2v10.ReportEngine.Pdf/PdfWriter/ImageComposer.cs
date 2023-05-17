@@ -1,4 +1,4 @@
-﻿// Copyright © 2022 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2022-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Dynamic;
@@ -6,9 +6,9 @@ using System.Dynamic;
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
 
-using A2v10.Xaml.Report;
-
 namespace A2v10.ReportEngine.Pdf;
+
+using Image = A2v10.Xaml.Report.Image;
 
 internal class ImageComposer : FlowElementComposer
 {
@@ -51,7 +51,7 @@ internal class ImageComposer : FlowElementComposer
 				container = container.Width(_image.Width.Value, _image.Width.Unit.ToUnit());
 			if (_image.Height != null)
 				container = container.Width(_image.Height.Value, _image.Height.Unit.ToUnit());
-			container.Image(stream, ImageScaling.FitArea);
+			container.Image(stream).FitArea();
 		}
 	}
 }

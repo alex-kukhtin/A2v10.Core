@@ -134,7 +134,7 @@ Vue.component("a2-mdi-header", {
 			navigate(m) {
 				let tab = this.tabs.find(tab => tab.url == m.url);
 				if (!tab) {
-					tab = { title: m.title, url: m.url, loaded: true, key: tabKey++ };
+					tab = { title: m.title, url: m.url, loaded: true, key: tabKey++, root: null };
 					this.tabs.push(tab);
 					var cti = this.closedTabs.findIndex(t => t.url === m.url);
 					if (cti >= 0)
@@ -235,7 +235,7 @@ Vue.component("a2-mdi-header", {
 						let loaded = ix === i;
 						if (loaded)
 							this.navigatingUrl = t.url;
-						this.tabs.push({ title: t.title, url: t.url, loaded, key: tabKey++ });
+						this.tabs.push({ title: t.title, url: t.url, loaded, key: tabKey++, root:null });
 					}
 					for (let i = 0; i < elems.closedTabs.length; i++) {
 						let t = elems.closedTabs[i];
@@ -362,9 +362,18 @@ Vue.component("a2-mdi-header", {
 					if (this.__dataStack__.length > 0)
 						out.caller = this.__dataStack__[0];
 					this.__dataStack__.unshift(component);
+					if (this.activeTab)
+						this.activeTab.root = component;
 				} else {
 					this.__dataStack__.shift(component);
 				}
+			},
+			updateModelStack(root) {
+				let ix = this.__dataStack__.indexOf(root);
+				if (ix <= 0) return;
+				let comp = this.__dataStack__.splice(ix, 1)[0];
+				this.__dataStack__.unshift(comp);
+				this.dataCounter += 1; // refresh
 			},
 			showSidePane(url) {
 				if (!url) {
@@ -384,6 +393,10 @@ Vue.component("a2-mdi-header", {
 		watch: {
 			traceEnabled(val) {
 				log.enableTrace(val);
+			},
+			activeTab(newtab) {
+				if (newtab && newtab.root)
+					this.updateModelStack(newtab.root)
 			}
 		},
 		mounted() {

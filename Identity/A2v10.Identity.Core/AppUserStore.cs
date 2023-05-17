@@ -8,12 +8,12 @@ using System.Security.Claims;
 using System.Threading;
 using System.ComponentModel;
 
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Identity;
 
 using A2v10.Data.Interfaces;
 using A2v10.Identity.Core.Helpers;
-using System.Linq;
+using System.Diagnostics.CodeAnalysis;
 
 public sealed class AppUserStore<T> :
 	IUserStore<AppUser<T>>,
@@ -84,7 +84,12 @@ public sealed class AppUserStore<T> :
 		// do nothing?
 	}
 
+	[return: NotNull]
+#if NET6_0
 	public async Task<AppUser<T>> FindByIdAsync(String UserId, CancellationToken cancellationToken)
+#elif NET7_0_OR_GREATER
+	public async Task<AppUser<T>?> FindByIdAsync(String UserId, CancellationToken cancellationToken)
+#endif
 	{
 		T? typedUserId = (T?)TypeDescriptor.GetConverter(typeof(T)).ConvertFromInvariantString(UserId);
 		if (typedUserId == null)
@@ -93,16 +98,21 @@ public sealed class AppUserStore<T> :
 			?? new AppUser<T>();
 	}
 
+	[return: NotNull]
+#if NET6_0
 	public async Task<AppUser<T>> FindByNameAsync(String normalizedUserName, CancellationToken cancellationToken)
+#elif NET7_0_OR_GREATER
+	public async Task<AppUser<T>?> FindByNameAsync(String normalizedUserName, CancellationToken cancellationToken)
+#endif
 	{
 		var UserName = normalizedUserName.ToLowerInvariant(); // A2v10
 		var user = await _dbContext.LoadAsync<AppUser<T>>(_dataSource, $"[{_dbSchema}].[FindUserByName]", new { UserName });
 		return user ?? new AppUser<T>();
 	}
 
-	public Task<String> GetNormalizedUserNameAsync(AppUser<T> user, CancellationToken cancellationToken)
+	public Task<String?> GetNormalizedUserNameAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
-		return Task.FromResult<String>(user.UserName?.ToLowerInvariant() ?? String.Empty);
+		return Task.FromResult<String?>(user.UserName?.ToLowerInvariant() ?? String.Empty);
 	}
 
 	public Task<String> GetUserIdAsync(AppUser<T> user, CancellationToken cancellationToken)
@@ -115,15 +125,15 @@ public sealed class AppUserStore<T> :
 		return Task.FromResult<String?>(user.UserName);
 	}
 
-	public Task SetNormalizedUserNameAsync(AppUser<T> user, String normalizedName, CancellationToken cancellationToken)
+	public Task SetNormalizedUserNameAsync(AppUser<T> user, String? normalizedName, CancellationToken cancellationToken)
 	{
 		user.UserName = normalizedName?.ToLowerInvariant();
 		return Task.CompletedTask;
 	}
 
-	public Task SetUserNameAsync(AppUser<T> user, String userName, CancellationToken cancellationToken)
+	public Task SetUserNameAsync(AppUser<T> user, String? userName, CancellationToken cancellationToken)
 	{
-		user.UserName = userName;
+		user.UserName = userName ?? throw new ArgumentNullException(nameof(userName));
 		return Task.CompletedTask;
 	}
 
@@ -161,10 +171,10 @@ public sealed class AppUserStore<T> :
 	}
 
 	#region IUserSecurityStampStore
-	public Task<String> GetSecurityStampAsync(AppUser<T> user, CancellationToken cancellationToken)
+	public Task<String?> GetSecurityStampAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
 		// .net framework compatibility
-		return Task.FromResult<String>(user.SecurityStamp2 ?? user.SecurityStamp ?? String.Empty);
+		return Task.FromResult<String?>(user.SecurityStamp2 ?? user.SecurityStamp ?? String.Empty);
 	}
 
 	public async Task SetSecurityStampAsync(AppUser<T> user, String stamp, CancellationToken cancellationToken)
@@ -185,7 +195,7 @@ public sealed class AppUserStore<T> :
 	#endregion
 
 	#region IUserEmailStore
-	public Task SetEmailAsync(AppUser<T> user, String email, CancellationToken cancellationToken)
+	public Task SetEmailAsync(AppUser<T> user, String? email, CancellationToken cancellationToken)
 	{
 		user.Email = email;
 		return Task.CompletedTask;
@@ -214,27 +224,32 @@ public sealed class AppUserStore<T> :
 		user.EmailConfirmed = confirmed;
 	}
 
+	[return: NotNull]
+#if NET6_0
 	public async Task<AppUser<T>> FindByEmailAsync(String normalizedEmail, CancellationToken cancellationToken)
+#elif NET7_0_OR_GREATER
+	public async Task<AppUser<T>?> FindByEmailAsync(String normalizedEmail, CancellationToken cancellationToken)
+#endif
 	{
 		var Email = normalizedEmail?.ToLowerInvariant(); // A2v10
 		return await _dbContext.LoadAsync<AppUser<T>>(_dataSource, $"[{_dbSchema}].[FindUserByEmail]", new { Email })
 			?? new AppUser<T>();
 	}
 
-	public Task<String> GetNormalizedEmailAsync(AppUser<T> user, CancellationToken cancellationToken)
+	public Task<String?> GetNormalizedEmailAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
-		return Task.FromResult<String>(user.Email?.ToLowerInvariant() ?? String.Empty);
+		return Task.FromResult<String?>(user.Email?.ToLowerInvariant() ?? String.Empty);
 	}
 
-	public Task SetNormalizedEmailAsync(AppUser<T> user, String normalizedEmail, CancellationToken cancellationToken)
+	public Task SetNormalizedEmailAsync(AppUser<T> user, String? normalizedEmail, CancellationToken cancellationToken)
 	{
 		user.Email = normalizedEmail?.ToLowerInvariant();
 		return Task.CompletedTask;
 	}
-	#endregion
+#endregion
 
 	#region IUserPasswordStore
-	public async Task SetPasswordHashAsync(AppUser<T> user, String passwordHash, CancellationToken cancellationToken)
+	public async Task SetPasswordHashAsync(AppUser<T> user, String? passwordHash, CancellationToken cancellationToken)
 	{
 		if (EqualityComparer<T>.Default.Equals(user.Id, default))
 		{
@@ -250,10 +265,10 @@ public sealed class AppUserStore<T> :
 		user.PasswordHash2 = passwordHash;
 	}
 
-	public Task<String> GetPasswordHashAsync(AppUser<T> user, CancellationToken cancellationToken)
+	public Task<String?> GetPasswordHashAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
 		// .net framework compatibility
-		return Task.FromResult<String>(user.PasswordHash2 ?? user.PasswordHash ?? String.Empty);
+		return Task.FromResult<String?>(user.PasswordHash2 ?? user.PasswordHash ?? String.Empty);
 	}
 
 	public Task<bool> HasPasswordAsync(AppUser<T> user, CancellationToken cancellationToken)
@@ -395,7 +410,12 @@ public sealed class AppUserStore<T> :
 		throw new NotImplementedException();
 	}
 
+	[return: NotNull]
+#if NET6_0
 	public async Task<AppUser<T>> FindByLoginAsync(String loginProvider, String providerKey, CancellationToken cancellationToken)
+#elif NET7_0_OR_GREATER
+	public async Task<AppUser<T>?> FindByLoginAsync(String loginProvider, String providerKey, CancellationToken cancellationToken)
+#endif
 	{
 		if (loginProvider == "ApiKey")
 		{
@@ -432,18 +452,18 @@ public sealed class AppUserStore<T> :
 	{
 		throw new NotImplementedException();
 	}
-	#endregion
+#endregion
 
 	#region IUserPhoneNumberStore
-	public Task SetPhoneNumberAsync(AppUser<T> user, String phoneNumber, CancellationToken cancellationToken)
+	public Task SetPhoneNumberAsync(AppUser<T> user, String? phoneNumber, CancellationToken cancellationToken)
 	{
 		user.PhoneNumber = phoneNumber;
 		return Task.CompletedTask;
 	}
 
-	public Task<String> GetPhoneNumberAsync(AppUser<T> user, CancellationToken cancellationToken)
+	public Task<String?> GetPhoneNumberAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
-		return Task.FromResult(user.PhoneNumber ?? throw new InvalidOperationException("Phone number is null"));
+		return Task.FromResult<String?>(user.PhoneNumber ?? throw new InvalidOperationException("Phone number is null"));
 	}
 
 	public Task<Boolean> GetPhoneNumberConfirmedAsync(AppUser<T> user, CancellationToken cancellationToken)
@@ -522,7 +542,7 @@ public sealed class AppUserStore<T> :
 
 	public Task<IList<String>> GetRolesAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
-		List<String> list = new List<String>();
+		List<String> list = new();
 		if (_rolesMode == RolesMode.Claims && user.Roles != null)
 			list.AddRange(user.Roles.Split(",")); 
 		else if (_rolesMode == RolesMode.Database)

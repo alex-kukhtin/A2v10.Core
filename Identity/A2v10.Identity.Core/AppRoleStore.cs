@@ -1,5 +1,6 @@
 ﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 
 using Microsoft.AspNetCore.Identity;
@@ -22,17 +23,28 @@ public sealed class AppRoleStore<T> : IRoleStore<AppRole<T>> where T : struct
 	{
 	}
 
+
+	[return : NotNull]
+#if NET6_0
 	public Task<AppRole<T>> FindByIdAsync(String roleId, CancellationToken cancellationToken)
+#elif NET7_0_OR_GREATER
+	public Task<AppRole<T>?> FindByIdAsync(String roleId, CancellationToken cancellationToken)
+#endif
 	{
 		throw new NotImplementedException();
 	}
 
+	[return: NotNull]
+#if NET6_0
 	public Task<AppRole<T>> FindByNameAsync(String normalizedRoleName, CancellationToken cancellationToken)
+#elif NET7_0_OR_GREATER
+	public Task<AppRole<T>?> FindByNameAsync(String normalizedRoleName, CancellationToken cancellationToken)
+#endif
 	{
 		throw new NotImplementedException();
 	}
 
-	public Task<string> GetNormalizedRoleNameAsync(AppRole<T> role, CancellationToken cancellationToken)
+	public Task<String?> GetNormalizedRoleNameAsync(AppRole<T> role, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();
 	}
@@ -42,17 +54,17 @@ public sealed class AppRoleStore<T> : IRoleStore<AppRole<T>> where T : struct
 		throw new NotImplementedException();
 	}
 
-	public Task<String> GetRoleNameAsync(AppRole<T> role, CancellationToken cancellationToken)
+	public Task<String?> GetRoleNameAsync(AppRole<T> role, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();
 	}
 
-	public Task SetNormalizedRoleNameAsync(AppRole<T> role, String normalizedName, CancellationToken cancellationToken)
+	public Task SetNormalizedRoleNameAsync(AppRole<T> role, String? normalizedName, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();
 	}
 
-	public Task SetRoleNameAsync(AppRole<T> role, String roleName, CancellationToken cancellationToken)
+	public Task SetRoleNameAsync(AppRole<T> role, String? roleName, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();
 	}
