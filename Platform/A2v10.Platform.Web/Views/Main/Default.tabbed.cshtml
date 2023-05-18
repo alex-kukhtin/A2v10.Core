@@ -6,7 +6,7 @@
 @inject IApplicationHost host
 
 <div id="shell" class="mdi-shell @(Model!.Debug ? "debug" : "release")" v-cloak>
-	<a2-mdi-header :title="title">
+	<a2-mdi-header :title="title" person-name="@Model.PersonName">
 		@if (Model.HasNavPane)
 		{
 			<include class=nav-pane src="/_page/_navpane/index/0" :hide-indicator="true"></include>
@@ -68,6 +68,7 @@
 			<a2-modal :dialog=dlg></a2-modal>
 		</div>
 	</div>
+	<a2-toastr></a2-toastr>
 	<div class="side-pane-frame" v-if="sidePaneVisible">
 		<include :src="sidePaneUrl" :hide-indicator="true"></include>
 	</div>

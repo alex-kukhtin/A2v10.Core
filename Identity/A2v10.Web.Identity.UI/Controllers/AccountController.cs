@@ -2,6 +2,9 @@
 
 using System;
 using System.Threading.Tasks;
+using System.Threading;
+using System.Security;
+using System.Linq;
 
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authorization;
@@ -10,10 +13,6 @@ using Microsoft.AspNetCore.Mvc;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
-using System.Threading;
-using System.Security;
-using Microsoft.Extensions.Options;
-using System.Linq;
 
 namespace A2v10.Web.Identity.UI;
 
@@ -149,7 +148,7 @@ public class AccountController : Controller
 			}
 			return Redirect("/account/register");
 		}
-		catch (Exception ex)
+		catch (Exception tex)
 		{
 			return new EmptyResult();
 		}
@@ -170,6 +169,16 @@ public class AccountController : Controller
 	public Task<IActionResult> Logoff()
 	{
 		return Logout();
+	}
+
+
+	[HttpPost]
+	public async Task<IActionResult> Logout2()
+	{
+		await _signInManager.SignOutAsync();
+		//HttpContext.Session.Clear(); ???
+		RemoveAllCookies(); // TODO:
+		return Content("{}", MimeTypes.Application.Json);
 	}
 
 	[HttpPost]

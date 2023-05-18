@@ -11,6 +11,7 @@ namespace A2v10.Services;
 public class AppCodeProvider : IAppCodeProvider
 {
 	private readonly Dictionary<String, IAppCodeProviderImpl> _providers = new(StringComparer.InvariantCultureIgnoreCase);
+	private readonly String _appId;
 	public AppCodeProvider(IOptions<AppOptions> appOptions)
 	{
 		var opts = appOptions.Value ?? throw new ArgumentNullException(nameof(appOptions));
@@ -26,6 +27,7 @@ public class AppCodeProvider : IAppCodeProvider
 				_providers.Add(key, CreateProvider(v.Path ?? throw new InvalidOperationException("Path is null")));
 			}
 		}
+		_appId = opts.AppId;
 	}
 
 	static IAppCodeProviderImpl CreateProvider(String path)
@@ -108,6 +110,8 @@ public class AppCodeProvider : IAppCodeProvider
 
 	public IEnumerable<Guid> LicensedModules => _providers.Values.Where(p => p.IsLicensed)
 		.Select(p => p.ModuleId ?? throw new InvalidOperationException("ModuleId is null"));
+
+	public String AppId => _appId;
 }
 
 

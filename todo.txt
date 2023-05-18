@@ -76,13 +76,13 @@ sql.targets в A2v10.Platform
 TABBED LAYOUT
 =============
 4. Footer: About, Footer.AppLinks
-5. Header: UserName and DropDownMenu
 7. Сделать новую тему интерфейса tabbed
-9. Не закрывающийся основной Tab. /_homepage/index
-10. SaveClosed для документов
+9. Не закрывающийся основной Tab. /_home/index ???
 11. Loading indicator on main page
-13. LocalStorage.SavedTabs - добавить какой-то appId/appName чтобы не грузить чужие
-14. shell. $toast
 15. Сделать упрощенный platform.sql
-17. При удалении tab сбивается __modelStack__
-
+19. $emitTab('event', data)
+21. Проверить $popover для __dataStack__
+23. Проверить InlineDialog
+24. Tabs. show $dirty
+25. Header.UserMenu. ChangePassword
+26. 

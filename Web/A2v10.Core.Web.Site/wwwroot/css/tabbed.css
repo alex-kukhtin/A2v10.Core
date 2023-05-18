@@ -12,13 +12,15 @@
   background-color: black;
   height: 40px;
   color: white;
-  line-height: 40px;
-  font-size: 18px;
-  padding: 0 15px;
+  padding-left: 15px;
   display: flex;
   align-items: center;
   flex-direction: row;
   white-space: nowrap;
+}
+.mdi-header .app-title {
+  font-size: 18px;
+  line-height: 40px;
 }
 .mdi-header .include.nav-pane {
   width: auto;
@@ -35,6 +37,25 @@
 .mdi-header .include.nav-pane .partial-block .btn:hover {
   background-color: #7f7f7f;
   color: gold;
+}
+.mdi-header .dropdown {
+  height: 100%;
+  display: inline-block;
+  line-height: 1;
+}
+.mdi-header .dropdown .user-name {
+  height: 100%;
+  padding: 0 12px;
+  border-radius: 0;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  color: white;
+  background-color: black;
+}
+.mdi-header .dropdown .user-name:hover {
+  color: gold;
+  background-color: #6f6f6f;
 }
 .mdi-tabs-container {
   grid-area: tabs;
@@ -125,6 +146,7 @@
   height: 2rem;
   align-items: center;
   gap: 12px;
+  text-transform: lowercase;
 }
 .mdi-footer .version-info {
   font-size: 0.9rem;
@@ -133,8 +155,10 @@
   height: 100%;
 }
 .mdi-footer .debug-btn .btn-debug {
+  text-transform: inherit;
+  border-radius: 0;
   font-size: 0.9rem;
-  background-color: indianred;
+  background-color: #b94e4c;
   color: white;
   padding: 0 12px;
 }

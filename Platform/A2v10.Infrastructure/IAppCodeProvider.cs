@@ -8,6 +8,7 @@ namespace A2v10.Infrastructure;
 
 public interface IAppCodeProvider
 {
+    String AppId { get; }
     String MakePath(String path, String fileName);
     Boolean IsFileExists(String path);
     Stream? FileStreamRO(String path, Boolean primaryOnly = false);

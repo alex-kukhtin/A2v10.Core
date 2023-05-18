@@ -22,6 +22,7 @@ public record ModuleInfo
 
 public record AppOptions
 {
+	public String AppId { get; set; } = "app.main";
 	public String Path { get; set; } = "undefined";
 	public String AppName { get; set; } = String.Empty;
 	public String? UserMenu { get; set; }
