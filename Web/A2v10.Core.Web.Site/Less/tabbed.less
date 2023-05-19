@@ -88,10 +88,10 @@
 		li {
 			list-style: none;
 			height: @tab-height;
-			padding-left: 20px;
+			padding-left: 16px;
 			border-right: 1px solid white;
 			display: inline-flex;
-			background-color: #f0f0f0;
+			background-color: #e7e7e7;
 			white-space: nowrap;
 			color: black;
 			pointer-events: all;
@@ -99,6 +99,12 @@
 			display: inline-flex;
 			align-items: center;
 			color: #333;
+
+			.tab-title {
+				max-width:160px;
+				overflow:hidden;
+				text-overflow:ellipsis;
+			}
 
 			.close {
 				color: inherit;
@@ -180,6 +186,7 @@
 	align-items: center;
 	gap: 12px;
 	text-transform:lowercase;
+	padding-left:8px;
 
 	.version-info {
 		font-size: 0.9rem;
@@ -208,13 +215,16 @@
 	.bar {
 		margin: 0;
 		padding: 4px;
+		display:flex;
+		flex-direction:column;
+		height:100%;
 
 		li {
 			list-style: none;
 			padding: 12px;
 			color: white;
 			border-radius: 4px;
-			display: flex;
+			display: inline-flex;
 			flex-direction: column;
 			align-items: center;
 			gap: 6px;
@@ -224,9 +234,13 @@
 				font-size: 2rem;
 			}
 
-			&:hover {
+			&:hover:not(.grow) {
 				background-color: black;
 				color: gold;
+			}
+
+			&.grow {
+				flex-grow:2;
 			}
 		}
 	}

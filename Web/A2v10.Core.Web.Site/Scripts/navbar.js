@@ -7,7 +7,7 @@
 		template: `
 <div class="mdi-navbar">
 	<ul class="bar">
-		<li v-for="m in menu" @click.stop.prevent=clickMenu(m) :title=m.Name>
+		<li v-for="m in menu" @click.stop.prevent=clickMenu(m) :title=m.Name :class="m.ClassName"">
 			<i class="ico" :class="menuIcon(m)"></i>
 		</li>
 	</ul>
@@ -42,6 +42,8 @@
 			clickMenu(m) {
 				eventBus.$emit('closeAllPopups');
 				const shell = this.$parent;
+				if (m.ClassName === 'grow')
+					return;
 				if (!m.Menu) {
 					this.popupVisible = false;
 					shell.$emit('navigate', { title: m.Name, url: m.Url });

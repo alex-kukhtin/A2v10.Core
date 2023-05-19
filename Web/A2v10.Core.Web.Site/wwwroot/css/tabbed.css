@@ -72,9 +72,9 @@
 .mdi-tabs-container .mdi-tabs li {
   list-style: none;
   height: 35px;
-  padding-left: 20px;
+  padding-left: 16px;
   border-right: 1px solid white;
-  background-color: #f0f0f0;
+  background-color: #e7e7e7;
   white-space: nowrap;
   color: black;
   pointer-events: all;
@@ -82,6 +82,11 @@
   display: inline-flex;
   align-items: center;
   color: #333;
+}
+.mdi-tabs-container .mdi-tabs li .tab-title {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .mdi-tabs-container .mdi-tabs li .close {
   color: inherit;
@@ -147,6 +152,7 @@
   align-items: center;
   gap: 12px;
   text-transform: lowercase;
+  padding-left: 8px;
 }
 .mdi-footer .version-info {
   font-size: 0.9rem;
@@ -171,13 +177,16 @@
 .mdi-navbar .bar {
   margin: 0;
   padding: 4px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 .mdi-navbar .bar li {
   list-style: none;
   padding: 12px;
   color: white;
   border-radius: 4px;
-  display: flex;
+  display: inline-flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
@@ -186,9 +195,12 @@
   color: inherit;
   font-size: 2rem;
 }
-.mdi-navbar .bar li:hover {
+.mdi-navbar .bar li:hover:not(.grow) {
   background-color: black;
   color: gold;
+}
+.mdi-navbar .bar li.grow {
+  flex-grow: 2;
 }
 .mdi-navbar .mdi-menu {
   position: absolute;

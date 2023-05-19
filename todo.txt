@@ -68,7 +68,6 @@ sql.targets в A2v10.Platform
 53. Login layout
 55. Admin - Button on main interface
 56. _shell/script - exception - странное поведение
-67. Admin Layout - убрать его вообще
 
 60. BaseController в отдельную сборку (SetParams, Filter)
 
@@ -78,11 +77,7 @@ TABBED LAYOUT
 4. Footer: About, Footer.AppLinks
 7. Сделать новую тему интерфейса tabbed
 9. Не закрывающийся основной Tab. /_home/index ???
-11. Loading indicator on main page
 15. Сделать упрощенный platform.sql
-19. $emitTab('event', data)
-21. Проверить $popover для __dataStack__
-23. Проверить InlineDialog
-24. Tabs. show $dirty
 25. Header.UserMenu. ChangePassword
-26. 
+27. Header -> Search in interface
+29. 

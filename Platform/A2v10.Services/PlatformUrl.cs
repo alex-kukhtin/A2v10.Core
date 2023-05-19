@@ -1,4 +1,4 @@
-﻿// Copyright © 2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System.IO;
 using System.Web;
@@ -74,6 +74,8 @@ public class PlatformUrl : IPlatformUrl
 	void Construct(String[] parts, String query, String? id)
 	{
 		Int32 len = parts.Length;
+		if (len == 0)
+			throw new InvalidOperationException($"Invalid URL {String.Join('/', parts)}");
 		Id = parts[len - 1];
 		if (String.IsNullOrEmpty(id))
 		{
@@ -84,6 +86,8 @@ public class PlatformUrl : IPlatformUrl
 		else
 			Id = id;
 		Action = parts[len - 2];
+		if (len < 3)
+			throw new InvalidOperationException($"Invalid URL {String.Join('/', parts)}");
 		var pathArr = new ArraySegment<String>(parts, 1, len - 3);
 		LocalPath = String.Join("/", pathArr);
 		// baseUrl with action and id

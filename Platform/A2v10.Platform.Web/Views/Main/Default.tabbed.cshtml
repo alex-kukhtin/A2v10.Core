@@ -12,12 +12,13 @@
 			<include class=nav-pane src="/_page/_navpane/index/0" :hide-indicator="true"></include>
 		}
 	</a2-mdi-header>
+	<div class="load-indicator" v-show="processing"></div>
 	<a2-mdi-navbar :menu="menu"></a2-mdi-navbar>
 	<div class="mdi-tabs-container">
 		<ul class="mdi-tabs">
 			<li v-for="t in tabs" :key="t.url" :title="t.url"
 			:class="{active: isTabActive(t)}" v-on:click.stop.prevent="selectTab(t)">
-				<span v-text="t.title"></span>
+				<span v-text="tabTitle(t)" class="tab-title"></span>
 				<span class="close ico ico-clear" v-on:click.stop.prevent="closeTab(t)"></span>
 			</li>
 		</ul>
@@ -41,6 +42,7 @@
 		</div>
 	</div>
 	<div class="mdi-footer">
+		<div :class="{spinner: true, active:processing}"></div>
 		<span class="divider"></span>
 
 		<span class="version-info">

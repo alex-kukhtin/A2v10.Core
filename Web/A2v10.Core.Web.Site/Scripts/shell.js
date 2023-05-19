@@ -25,7 +25,8 @@
 				sidePaneUrl: '',
 				tabPopupOpen: false,
 				navigatingUrl: '',
-				lockRoute: false
+				lockRoute: false,
+				requestsCount: 0
 			};
 		},
 		components: {
@@ -36,7 +37,8 @@
 			modelStack() { return this.__dataStack__; },
 			hasModals() { return this.modals.length > 0; },
 			sidePaneVisible() { return !!this.sidePaneUrl; },
-			storageKey() { return this.appData.appId + '_tabs'; }
+			storageKey() { return this.appData.appId + '_tabs'; },
+			processing() { return !this.hasModals && this.requestsCount > 0; },
 		},
 		methods: {
 			navigate(m) {
@@ -94,6 +96,13 @@
 			isTabActive(tab) {
 				return tab === this.activeTab;
 			},
+			tabTitle(tab) {
+				let star = '';
+				if (tab.root && tab.root.$isDirty)
+					star = '* ';
+				return star + tab.title;
+				
+			},
 			tabSource(tab) {
 				return tab.loaded ? tab.url : null;
 			},
@@ -126,7 +135,7 @@
 					return;
 				if (tab !== this.activeTab)
 					; // do nothing
-				if (tab.root.$close)
+				if (tab.root && tab.root.$close)
 					tab.root.$close();
 				else
 					this.removeTab(tabIndex);
@@ -275,6 +284,13 @@
 				this.modals.push(dlg);
 				this.setupWrapper(dlg);
 			},
+			_eventToParentTab(ev) {
+				let tab = this.tabs.find(t => t.root === ev.source);
+				if (!tab || !tab.root || !tab.parentUrl) return;
+				let ptab = this.tabs.find(t => t.url === tab.parentUrl);
+				if (ptab && ptab.root)
+					ptab.root.$data.$emit(ev.event, ev.data);
+			},
 			debugTrace() {
 				if (!window.$$debug) return;
 				this.debugShowModel = false;
@@ -287,7 +303,7 @@
 			},
 			debugClose() {
 				this.debugShowModel = false;
-				this.feedbackVisible = false;
+				this.debugShowTrace = false;
 			},
 			registerData(component, out) {
 				this.dataCounter += 1;
@@ -295,8 +311,6 @@
 					if (this.__dataStack__.length > 0)
 						out.caller = this.__dataStack__[0];
 					this.__dataStack__.unshift(component);
-					if (this.activeTab && !component.inDialog)
-						this.activeTab.root = component;
 				}
 				else if (this.__dataStack__.length > 1)
 					this.__dataStack__.shift();
@@ -334,6 +348,7 @@
 		},
 		mounted() {
 			popup.registerPopup(this.$el);
+			// home page here this.tabs.push({})
 			this.$el._close = this.__clickOutside;
 			this.restoreTabs();
 		},
@@ -354,6 +369,15 @@
 			eventBus.$on('showSidePane', this.showSidePane);
 			eventBus.$on('confirm', this._eventConfirm);
 			eventBus.$on('closePlain', this.closeTabFromStore);
+			eventBus.$on('toParentTab', this._eventToParentTab);
+			eventBus.$on('beginRequest', () => {
+				me.requestsCount += 1;
+				window.__requestsCount__ = me.requestsCount;
+			});
+			eventBus.$on('endRequest', () => {
+				me.requestsCount -= 1;
+				window.__requestsCount__ = me.requestsCount;
+			});
 
 		}
 	});
