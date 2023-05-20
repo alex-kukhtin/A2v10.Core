@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+	<ItemGroup>
+		<SourceAssetsAppSchemas Include="$(MSBuildThisFileDirectory)..\content\assets\Application\@schemas\*" />
+		<SourceAssetsAppTypes Include="$(MSBuildThisFileDirectory)..\content\assets\Application\@types\*" />
+		<SourceAssetsAppRoot Include="$(MSBuildThisFileDirectory)..\content\assets\Application\*" />
+	</ItemGroup>
+	<Target Name="CopyAssetsToProject" BeforeTargets="Build">
+		<Copy SourceFiles="@(SourceAssetsAppSchemas)" DestinationFolder="$(ProjectDir)\@schemas"/>
+		<Copy SourceFiles="@(SourceAssetsAppTypes)" DestinationFolder="$(ProjectDir)\@types"/>
+		<Copy SourceFiles="@(SourceAssetsAppRoot)" DestinationFolder="$(ProjectDir)"/>
+	</Target>
+</Project>
