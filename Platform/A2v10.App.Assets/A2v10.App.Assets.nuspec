@@ -2,17 +2,18 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>A2v10.App.Assets</id>
-		<version>10.1.8092</version>
-		<title>A2v10.Platform Application Support</title>
+		<version>10.1.8102</version>
+		<title>A2v10.Platform Application Assets</title>
 		<authors>Oleksandr Kukthin</authors>
 		<owners>Oleksandr Kukthin</owners>
 		<projectUrl>https://a2v10.com</projectUrl>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
-		<description>A2v10 Platform (application support files)</description>
+		<description>A2v10 Platform (application assets files)</description>
 		<releaseNotes>Current NUGET release</releaseNotes>
 		<copyright>Copyright © 2020-2023 Oleksandr Kukthin. All rights reserved.</copyright>
 		<tags>A2v10 Platform</tags>
 		<repository type="git" url="https://github.com/alex-kukhtin/A2v10.Core" branch="master"/>
+		<license type="expression">MIT</license>
 		<contentFiles>
 			<files include="**/*" buildAction="Content"/>
 		</contentFiles>

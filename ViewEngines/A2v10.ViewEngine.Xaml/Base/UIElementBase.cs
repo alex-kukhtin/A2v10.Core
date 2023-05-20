@@ -280,8 +280,8 @@ public abstract class UIElementBase : XamlElement, IXamlElement
 				st.Set(this);
 				break;
 			case null:
-				if (root.Styles != null && root.Styles.TryGetValue(this.GetType().Name, out Style defaultStyle))
-					defaultStyle.Set(this);
+				if (root.Styles != null && root.Styles.TryGetValue(this.GetType().Name, out Style? defaultStyle))
+					defaultStyle?.Set(this);
 				break;
 		}
 	}
