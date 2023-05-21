@@ -4,15 +4,31 @@
 		<SourceAssetsAppSchemas Include="$(MSBuildThisFileDirectory)..\content\assets\Application\@schemas\*" />
 		<SourceAssetsAppTypes Include="$(MSBuildThisFileDirectory)..\content\assets\Application\@types\*" />
 		<SourceAssetsAppRoot Include="$(MSBuildThisFileDirectory)..\content\assets\Application\*" />
+		<SourceAssetsAssemblies Include="$(MSBuildThisFileDirectory)..\content\assemblies\*" />
 	</ItemGroup>
 	<Target Name="CopyAssetsToProject" BeforeTargets="Build">
 		<Copy SourceFiles="@(SourceAssetsAppSchemas)" DestinationFolder="$(ProjectDir)\@schemas"/>
 		<Copy SourceFiles="@(SourceAssetsAppTypes)" DestinationFolder="$(ProjectDir)\@types"/>
 		<Copy SourceFiles="@(SourceAssetsAppRoot)" DestinationFolder="$(ProjectDir)"/>
+		<Copy SourceFiles="@(SourceAssetsAssemblies)" DestinationFolder="$(ProjectDir)\assemblies"/>
 	</Target>
 	<ItemGroup>
 		<Content Include="**\*.json" Exclude="bin\**\*;obj\**\*"/>
 		<Content Include="**\*.js"/>
 		<Content Include="**\*.xaml"/>
+	</ItemGroup>
+	<ItemGroup>
+		<None Remove="assemblies\*" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Reference Include="A2v10.Xaml" PrivateAssets="All" ReferenceOutputAssembly="False">
+			<HintPath>assemblies\A2v10.Xaml.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+		<Reference Include="System.Xaml" PrivateAssets="All" ReferenceOutputAssembly="False">
+			<HintPath>assemblies\System.Xaml.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
 	</ItemGroup>
 </Project>

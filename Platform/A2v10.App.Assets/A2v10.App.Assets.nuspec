@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>A2v10.App.Assets</id>
-		<version>10.1.8102</version>
+		<version>10.1.8103</version>
 		<title>A2v10.Platform Application Assets</title>
 		<authors>Oleksandr Kukthin</authors>
 		<owners>Oleksandr Kukthin</owners>
@@ -17,9 +17,12 @@
 		<contentFiles>
 			<files include="**/*" buildAction="Content"/>
 		</contentFiles>
+		<readme>docs\README.md</readme>
 	</metadata>
 	<files>
 		<file src="A2v10.App.Assets.targets" target="build/A2v10.App.Assets.targets" />
 		<file src="Application/**/*" target="content/assets"/>
+		<file src="assemblies/**/*" target="content"/>
+		<file src="README.md" target="docs\" />
 	</files>
 </package>

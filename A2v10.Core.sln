@@ -71,6 +71,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "A2v10.App.Assets", "A2v10.A
 	ProjectSection(SolutionItems) = preProject
 		Platform\A2v10.App.Assets\A2v10.App.Assets.nuspec = Platform\A2v10.App.Assets\A2v10.App.Assets.nuspec
 		Platform\A2v10.App.Assets\A2v10.App.Assets.targets = Platform\A2v10.App.Assets\A2v10.App.Assets.targets
+		Platform\A2v10.App.Assets\README.md = Platform\A2v10.App.Assets\README.md
 	EndProjectSection
 EndProject
 Global
