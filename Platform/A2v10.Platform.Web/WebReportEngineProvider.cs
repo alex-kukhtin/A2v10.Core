@@ -41,10 +41,9 @@ namespace A2v10.Platform.Web
 
 		public IReportEngine FindReportEngine(String name)
 		{
-			var engine = _engines.FirstOrDefault(x => x.Name == name);
-			if (engine == null)
-				throw new InvalidReqestExecption($"Report engine for '{name}' not found");
-			var rs = _serviceProvider.GetRequiredService(engine.EngineType);
+			var engine = _engines.FirstOrDefault(x => x.Name == name) 
+				?? throw new InvalidReqestExecption($"Report engine for '{name}' not found");
+            var rs = _serviceProvider.GetRequiredService(engine.EngineType);
 			if (rs is IReportEngine re)
 				return re;
 			throw new InvalidReqestExecption($"Report engine '{engine.EngineType}' is not an IReportEngine");

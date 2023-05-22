@@ -47,7 +47,7 @@ namespace A2v10.Infrastructure
 			public String Text;
 			public Int32 pos;
 
-			public String UnquotedText
+			public readonly String UnquotedText
 			{
 				get
 				{

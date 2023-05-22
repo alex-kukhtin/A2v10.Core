@@ -30,10 +30,9 @@ public class Pager : UIElementBase
 		pager.AddCssClass(CssClass);
 		MergeAttributes(pager, context, MergeAttrMode.Margin);
 		onRender?.Invoke(pager);
-		var source = GetBinding(nameof(Source));
-		if (source == null)
-			throw new XamlException("Pager has no Source binding");
-		pager.MergeAttribute(":source", source.GetPath(context));
+		var source = GetBinding(nameof(Source)) 
+			?? throw new XamlException("Pager has no Source binding");
+        pager.MergeAttribute(":source", source.GetPath(context));
 		MergeBindingAttributeString(pager, context, "empty-text", nameof(EmptyText), EmptyText);
 		MergeBindingAttributeString(pager, context, "template-text", nameof(TemplateText), TemplateText);
 		pager.Render(context, TagRenderMode.Normal);

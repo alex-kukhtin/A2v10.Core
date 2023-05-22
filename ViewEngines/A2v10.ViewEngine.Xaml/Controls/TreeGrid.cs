@@ -99,10 +99,9 @@ public class TreeGrid : Control, ITableControl
 			treeGrid.MergeAttribute("v-contextmenu", $"'{contextId}'");
 		}
 
-		var rootBind = GetBinding(nameof(ItemsSource));
-		if (rootBind == null)
-			throw new XamlException("TreeGrid. ItemsSource must be a Bind");
-		treeGrid.MergeAttribute(":root", rootBind.GetPath(context));
+		var rootBind = GetBinding(nameof(ItemsSource)) 
+			?? throw new XamlException("TreeGrid. ItemsSource must be a Bind");
+        treeGrid.MergeAttribute(":root", rootBind.GetPath(context));
 
 		treeGrid.MergeAttribute("item", ItemsProperty);
 

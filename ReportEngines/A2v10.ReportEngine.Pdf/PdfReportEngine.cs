@@ -1,14 +1,16 @@
 ﻿// Copyright © 2022-2023 Oleksandr Kukhtin. All rights reserved.
 
-using System.Dynamic;
+using System;
 using System.IO;
+using System.Dynamic;
 using System.Threading.Tasks;
 
+using QuestPDF;
 using QuestPDF.Fluent;
+using QuestPDF.Infrastructure;
 
 using A2v10.Infrastructure;
 using A2v10.Xaml.Report;
-using System;
 
 namespace A2v10.ReportEngine.Pdf;
 
@@ -19,7 +21,8 @@ public class PdfReportEngine : IReportEngine
 
 	public PdfReportEngine(IAppCodeProvider appCodeProvider, ILocalizer localizer, ICurrentUser user)
 	{
-		_appCodeProvider = appCodeProvider;
+        Settings.License ??= LicenseType.Community;
+        _appCodeProvider = appCodeProvider;
 		_localizer = new PdfReportLocalizer(user.Locale.Locale, localizer);
 	}
 

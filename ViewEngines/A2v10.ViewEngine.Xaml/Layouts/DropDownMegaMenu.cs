@@ -27,11 +27,9 @@ namespace A2v10.Xaml
 				menu.AddCssClass(Direction.ToString().ToKebabCase());
 			if (Background != BackgroundStyle.Default)
 				menu.AddCssClass("background-" + Background.ToString().ToKebabCase());
-			var itms = GetBinding(nameof(ItemsSource));
-			if (itms == null)
-				throw new XamlException("DropDownMegaMenu. ItemsSource binging must be specified");
-
-			menu.MergeAttribute(":items-source", itms.GetPath(context));
+			var itms = GetBinding(nameof(ItemsSource)) 
+				?? throw new XamlException("DropDownMegaMenu. ItemsSource binging must be specified");
+            menu.MergeAttribute(":items-source", itms.GetPath(context));
 			menu.MergeAttribute("group-by", GroupBy);
 			menu.MergeAttribute(":columns", Columns.ToString());
 			if (Width != null)

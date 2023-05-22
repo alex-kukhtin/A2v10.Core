@@ -141,7 +141,11 @@
 					this.removeTab(tabIndex);
 			},
 			removeTab(tabIndex) {
-				if (tabIndex > 0)
+				let currentTab = this.tabs[tabIndex];
+				let parent = this.tabs.find(t => t.url === currentTab.parentUrl);
+				if (parent)
+					this.selectTab(parent, true);
+				else if (tabIndex > 0)
 					this.selectTab(this.tabs[tabIndex - 1], true);
 				else if (this.tabs.length > 1)
 					this.selectTab(this.tabs[tabIndex + 1], true);

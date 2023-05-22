@@ -1,0 +1,238 @@
+﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+
+@import "Variables.less";
+
+@toggle-size: 18px;
+
+@tg-hover-bg-color: @hover-bg-color-light;
+@tg-active-bg-color: @active-bg-color-light;
+
+@tg-padding-v: .5rem;
+@tg-padding-h: .5rem;
+
+@tg-header-bg-color: #f5f5f5;
+@tg-header-hover-color: darken(@tg-header-bg-color, 10%);
+@tg-header-sort-bg-color: #eee;
+
+table.tree-grid {
+	border-collapse: separate;
+	border-spacing: 0;
+
+	&.sticky {
+		width: 100%;
+
+		thead, tfoot {
+			position: sticky;
+			z-index: @sticky-index;
+		}
+
+		thead {
+			top: 0;
+		}
+
+		tfoot {
+			bottom: 0;
+		}
+	}
+
+	td, th {
+		padding: @tg-padding-v @tg-padding-h;
+		border-color: @data-grid-border-color;
+		border-style: solid;
+		border-width: 0;
+		font-weight: inherit;
+		font-style: inherit;
+		vertical-align: top;
+
+		&.c-m {
+			min-width: 6px;
+			padding: 0;
+			border-left:none!important;
+		}
+	}
+
+	th {
+		background-color: @tg-header-bg-color;
+		color: @dark-gray-text-color;
+
+		&.fit {
+			width: 1px;
+		}
+
+		&.sortable {
+			cursor: pointer;
+
+			&:hover {
+				background-color: @tg-header-hover-color;
+			}
+
+			&.asc, &.desc {
+				background-color: @tg-header-sort-bg-color;
+			}
+
+			.h-holder {
+				white-space: nowrap;
+			}
+
+			.h-holder:after {
+				border: 5px solid transparent;
+				margin-left: 5px;
+			}
+
+			&.asc .h-holder:after {
+				content: '';
+				display: inline-block;
+				border-bottom-color: #999;
+				vertical-align: 2px;
+			}
+
+			&.desc .h-holder:after {
+				content: '';
+				display: inline-block;
+				border-top-color: #999;
+				vertical-align: bottom;
+			}
+		}
+	}
+
+	td {
+		&.c-m {
+			background-color: @tg-header-bg-color;
+			opacity: .5;
+
+			&.red, &.danger, &.error {
+				background-color: @mark-danger-brd-color;
+			}
+
+			&.green, &.success {
+				background-color: @mark-success-brd-color;
+			}
+
+			&.warning, &.orange {
+				background-color: @mark-warning-brd-color;
+			}
+
+			&.info, &.cyan {
+				background-color: @mark-info-brd-color;
+			}
+		}
+	}
+
+
+	tr.warning, tr.orange {
+		> td {
+			background-color: @mark-warning-bg-color;
+		}
+	}
+
+	tr.danger, tr.error, tr.red {
+		> td {
+			background-color: @mark-danger-bg-color;
+		}
+	}
+
+	tr.success, tr.green {
+		> td {
+			background-color: @mark-success-bg-color;
+		}
+	}
+
+	tr.info, tr.cyan {
+		> td {
+			background-color: @mark-info-bg-color;
+		}
+	}
+
+
+	.gl-v {
+		border-right-width: 1px;
+	}
+
+	tr:first-child {
+		th.gl-h {
+			border-top-width: 1px;
+		}
+	}
+
+	td:first-child.gl-v, th:first-child.gl-v {
+		border-left-width: 1px;
+	}
+
+	.gl-h {
+		border-bottom-width: 1px;
+	}
+
+	td.ctrl {
+		padding: 0;
+		vertical-align: middle;
+
+		.commandbar {
+			margin: 0 .5rem;
+		}
+	}
+
+	.overlay {
+		display: inline-flex;
+		flex-direction: row;
+		line-height: inherit;
+		align-items: baseline;
+	}
+
+	.mark {
+		min-width: @toggle-size;
+		margin-right: @tg-padding-h;
+		text-align: right;
+	}
+
+	&.hover {
+		tr:hover:not(.active) {
+			background-color: @tg-hover-bg-color;
+		}
+	}
+
+	&.striped tbody {
+		> tr:nth-child(even):not(.active) {
+			background-color: @alter-bg-color;
+		}
+	}
+
+	tr.active {
+		background-color: @tg-active-bg-color;
+	}
+
+	tr.lev-1 .mark {
+		min-width: @toggle-size * 2;
+	}
+
+	tr.lev-2 .mark {
+		min-width: @toggle-size * 3;
+	}
+
+	tr.lev-3 .mark {
+		min-width: @toggle-size * 4;
+	}
+
+	tr.lev-4 .mark {
+		min-width: @toggle-size * 5;
+	}
+
+	tr.lev-5 .mark {
+		min-width: @toggle-size * 6;
+	}
+
+	a.toggle {
+		display: inline-block;
+		font-family: "A2v10";
+		color: @tv-icon-color;
+		text-align: center;
+		font-size: 125%;
+
+		&.collapsed:after {
+			content: "\e9a5"; /*chevron-right*/
+		}
+
+		&.expanded:after {
+			content: "\e9a4"; /*chevron-down*/
+		}
+	}
+}

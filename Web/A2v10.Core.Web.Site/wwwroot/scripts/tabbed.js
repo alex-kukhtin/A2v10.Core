@@ -61,11 +61,13 @@
 		</li>
 	</ul>
 	<div class="mdi-menu" v-if="isMenuVisible">
+		<div class="menu-title" v-text=activeMenu.Name></div>
 		<ul>
 			<li v-for="m in activeMenu.Menu" class="level-0">
 				<span class="folder" v-text="m.Name"></span>
 				<ul v-if="!!m.Menu">
-					<li v-for="im in m.Menu" class="level-1" @click.stop.prevent="clickSubMenu(im)" v-text="im.Name">
+					<li v-for="im in m.Menu" class="level-1" @click.stop.prevent="clickSubMenu(im)">
+						<span v-text="im.Name"></span><button class="btn-plus ico ico-plus-circle" title="Створити"></button>
 					</li>
 				</ul>
 			</li>
@@ -266,7 +268,11 @@
 					this.removeTab(tabIndex);
 			},
 			removeTab(tabIndex) {
-				if (tabIndex > 0)
+				let currentTab = this.tabs[tabIndex];
+				let parent = this.tabs.find(t => t.url === currentTab.parentUrl);
+				if (parent)
+					this.selectTab(parent, true);
+				else if (tabIndex > 0)
 					this.selectTab(this.tabs[tabIndex - 1], true);
 				else if (this.tabs.length > 1)
 					this.selectTab(this.tabs[tabIndex + 1], true);

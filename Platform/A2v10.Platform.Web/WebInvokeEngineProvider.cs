@@ -40,10 +40,9 @@ public class WebInvokeEngineProvider : IInvokeEngineProvider
 	#region IInvokeEngineProvider
 	public IRuntimeInvokeTarget FindEngine(String name)
 	{
-		var engine = Engines.FirstOrDefault(x => x.Name == name);
-		if (engine == null)
-			throw new InvalidReqestExecption($"Invoke engine not found for '{name}' not found");
-		return _serviceProvider.GetRequiredService(engine.EngineType) as IRuntimeInvokeTarget ?? 
+		var engine = Engines.FirstOrDefault(x => x.Name == name) 
+			?? throw new InvalidReqestExecption($"Invoke engine not found for '{name}' not found");
+        return _serviceProvider.GetRequiredService(engine.EngineType) as IRuntimeInvokeTarget ?? 
 			throw new InvalidProgramException($"Service {engine.EngineType} is not an IRuntimeInvokeTarget");
 	}
 	#endregion

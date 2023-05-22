@@ -1,6 +1,9 @@
 ﻿@light-gray: #f3f3f3;
 @tab-height: 35px;
 
+@dark0: var(--gray900);
+@dark1: var(--gray700);
+
 .mdi-shell {
 	display:grid;
 	grid-template-rows:auto auto 1fr auto;
@@ -17,7 +20,7 @@
 
 .mdi-header {
 	grid-area: header;
-	background-color: black;
+	background-color: @dark0;
 	height: 40px;
 	color: white;
 	padding-left: 15px;
@@ -215,9 +218,9 @@
 	.bar {
 		margin: 0;
 		padding: 4px;
-		display:flex;
-		flex-direction:column;
-		height:100%;
+		display: flex;
+		flex-direction: column;
+		height: 100%;
 
 		li {
 			list-style: none;
@@ -240,7 +243,7 @@
 			}
 
 			&.grow {
-				flex-grow:2;
+				flex-grow: 2;
 			}
 		}
 	}
@@ -257,6 +260,14 @@
 		z-index: 70;
 		box-shadow: 3px 3px 10px 0 rgba(174,174,174,.5), 0 5px 40px 0 rgba(0,0,0,.15);
 		overflow: auto;
+
+		.menu-title {
+			font-size: 20px;
+			padding: 0 0 .5rem 0;
+			margin: 0 0 1rem 0;
+			color: #e0e0e0;
+			border-bottom: 1px solid white;
+		}
 
 		ul {
 			padding: 0;
@@ -276,15 +287,35 @@
 		li.level-1 {
 			list-style: none;
 			color: white;
-			padding: 0 1rem 0 24px;
+			padding: 0 10px 0 24px;
 			font-size: 1rem;
 			line-height: 2.5rem;
 			cursor: pointer;
+			display: flex;
+			justify-content: space-between;
+			border-radius: 4px;
+
+			.btn-plus {
+				display: none;
+				background-color: transparent;
+				border-radius: 50%;
+				padding: 0;
+				align-self: center;
+				color: white;
+				font-size: 1.3rem;
+
+				&:hover {
+					color: gold;
+				}
+			}
 
 			&:hover {
 				background-color: black;
-				border-radius: 4px;
 				color: gold;
+
+				.btn-plus {
+					display: block;
+				}
 			}
 		}
 	}
