@@ -17,8 +17,10 @@
 			<li v-for="m in activeMenu.Menu" class="level-0">
 				<span class="folder" v-text="m.Name"></span>
 				<ul v-if="!!m.Menu">
-					<li v-for="im in m.Menu" class="level-1" @click.stop.prevent="clickSubMenu(im)">
-						<span v-text="im.Name"></span><button class="btn-plus ico ico-plus-circle" title="Створити"></button>
+					<li v-for="im in m.Menu" class="level-1" @click.stop.prevent="clickSubMenu(im.Url, im.Name)">
+						<span v-text="im.Name"></span>
+						<button v-if="im.CreateUrl" class="btn-plus ico ico-plus-circle" 
+							:title="im.CreateTooltip" @click.stop.prevent="clickSubMenu(im.CreateUrl, im.CreateTooltip)"></button>
 					</li>
 				</ul>
 			</li>
@@ -56,11 +58,16 @@
 					this.activeMenu = m;
 				}
 			},
-			clickSubMenu(m1) {
+			clickSubMenu(url, title) {
 				eventBus.$emit('closeAllPopups');
 				const shell = this.$parent;
 				this.popupVisible = false;
-				shell.$emit('navigate', { title: m1.Name, url: m1.Url });
+				if (url.startsWith("page:"))
+					shell.$emit('navigate', { title: title, url: url.substring(5) });
+				else if (url.startsWith("dialog:")) {
+					const dlgData = { promise: null, rd: true, direct:true };
+					eventBus.$emit('modal', url.substring(7), dlgData);
+				}
 			},
 			menuIcon(m) {
 				return 'ico-' + m.Icon;

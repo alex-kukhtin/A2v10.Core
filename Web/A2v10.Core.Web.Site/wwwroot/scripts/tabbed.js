@@ -66,8 +66,10 @@
 			<li v-for="m in activeMenu.Menu" class="level-0">
 				<span class="folder" v-text="m.Name"></span>
 				<ul v-if="!!m.Menu">
-					<li v-for="im in m.Menu" class="level-1" @click.stop.prevent="clickSubMenu(im)">
-						<span v-text="im.Name"></span><button class="btn-plus ico ico-plus-circle" title="Створити"></button>
+					<li v-for="im in m.Menu" class="level-1" @click.stop.prevent="clickSubMenu(im.Url, im.Name)">
+						<span v-text="im.Name"></span>
+						<button v-if="im.CreateUrl" class="btn-plus ico ico-plus-circle" 
+							:title="im.CreateTooltip" @click.stop.prevent="clickSubMenu(im.CreateUrl, im.CreateTooltip)"></button>
 					</li>
 				</ul>
 			</li>
@@ -105,11 +107,16 @@
 					this.activeMenu = m;
 				}
 			},
-			clickSubMenu(m1) {
+			clickSubMenu(url, title) {
 				eventBus.$emit('closeAllPopups');
 				const shell = this.$parent;
 				this.popupVisible = false;
-				shell.$emit('navigate', { title: m1.Name, url: m1.Url });
+				if (url.startsWith("page:"))
+					shell.$emit('navigate', { title: title, url: url.substring(5) });
+				else if (url.startsWith("dialog:")) {
+					const dlgData = { promise: null, rd: true, direct:true };
+					eventBus.$emit('modal', url.substring(7), dlgData);
+				}
 			},
 			menuIcon(m) {
 				return 'ico-' + m.Icon;
@@ -212,16 +219,21 @@
 			tabLoadComplete(page) {
 				if (page) {
 					let tab = this.tabs.find(t => t.url == page.src);
-					tab.root = page.root;
-					if (page.root) {
-						page.root.__tabUrl__ = tab.url;
-						page.root.$store.commit('setroute', tab.url);
+					if (tab) {
+						tab.root = page.root;
+						if (page.root) {
+							page.root.__tabUrl__ = tab.url;
+							page.root.$store.commit('setroute', tab.url);
+						}
 					}
 				}
 				this.navigatingUrl = '';
 			},
 			isTabActive(tab) {
 				return tab === this.activeTab;
+			},
+			isHomeActive() {
+				return !this.activeTab;
 			},
 			tabTitle(tab) {
 				let star = '';
@@ -232,6 +244,15 @@
 			},
 			tabSource(tab) {
 				return tab.loaded ? tab.url : null;
+			},		
+			homeSource() {
+				return '/_home/index/0';
+			},
+			selectHome(noStore) {
+				this.activeTab = null;
+				if (noStore)
+					return;
+				this.storeTabs();
 			},
 			selectTab(tab, noStore) {
 				eventBus.$emit('closeAllPopups');
@@ -277,7 +298,7 @@
 				else if (this.tabs.length > 1)
 					this.selectTab(this.tabs[tabIndex + 1], true);
 				else
-					this.activeTab = null;
+					this.selectHome(true);
 				let rt = this.tabs.splice(tabIndex, 1);
 				if (rt.length) {
 					this.closedTabs.unshift(rt[0]);
@@ -303,7 +324,6 @@
 				try {
 					let elems = JSON.parse(tabs);
 					let ix = elems.index;
-					if (ix < 0) ix = 0;
 					for (let i = 0; i < elems.tabs.length; i++) {
 						let t = elems.tabs[i];
 						let loaded = ix === i;
@@ -317,6 +337,8 @@
 					}
 					if (ix >= 0 && ix < this.tabs.length)
 						this.activeTab = this.tabs[ix];
+					else
+						this.selectHome(true);
 				} catch (err) {
 				}
 			},
@@ -326,10 +348,13 @@
 			showModal(modal, prms) {
 				let id = utils.getStringId(prms ? prms.data : null);
 				let raw = prms && prms.raw;
+				let direct = prms && prms.direct;
 				let root = window.$$rootUrl;
 				let url = urlTools.combine(root, '/_dialog', modal, id);
 				if (raw)
 					url = urlTools.combine(root, modal, id);
+				else if (direct)
+					url = urlTools.combine(root, '/_dialog', modal);
 				//url = store.replaceUrlQuery(url, prms.query);
 				let dlg = { title: "dialog", url: url, prms: prms.data, wrap: false, rd: prms.rd };
 				dlg.promise = new Promise(function (resolve, reject) {

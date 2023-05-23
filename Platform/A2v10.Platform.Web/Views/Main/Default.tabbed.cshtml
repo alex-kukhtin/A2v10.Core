@@ -16,8 +16,11 @@
 	<a2-mdi-navbar :menu="menu"></a2-mdi-navbar>
 	<div class="mdi-tabs-container">
 		<ul class="mdi-tabs">
+			<li title="Home" v-on:click.stop.prevent="selectHome()" class="tab-home" :class="{active: isHomeActive()}">
+				<span class="ico ico-home"></span>
+			</li>
 			<li v-for="t in tabs" :key="t.url" :title="t.url"
-			:class="{active: isTabActive(t)}" v-on:click.stop.prevent="selectTab(t)">
+				:class="{active: isTabActive(t)}" v-on:click.stop.prevent="selectTab(t)">
 				<span v-text="tabTitle(t)" class="tab-title"></span>
 				<span class="close ico ico-clear" v-on:click.stop.prevent="closeTab(t)"></span>
 			</li>
@@ -37,6 +40,7 @@
 		</div>
 	</div>
 	<div class="mdi-main">
+		<a2-include :source="homeSource()" :complete="tabLoadComplete" :lock="lockRoute" v-show="isHomeActive()"></a2-include>
 		<div class="mdi-view" v-for="(t, tx) in tabs" v-show="isTabActive(t)" :key="t.key">
 			<a2-include :source="tabSource(t)" :complete="tabLoadComplete" :lock="lockRoute"></a2-include>
 		</div>

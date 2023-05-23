@@ -1,8 +1,12 @@
-﻿@light-gray: #f3f3f3;
+﻿@import "Variables.less";
+
+@light-gray: #f3f3f3;
 @tab-height: 35px;
+
 
 @dark0: var(--gray900);
 @dark1: var(--gray700);
+@accent-color: #f5cc84;
 
 .mdi-shell {
 	display:grid;
@@ -21,7 +25,7 @@
 .mdi-header {
 	grid-area: header;
 	background-color: @dark0;
-	height: 40px;
+	height: @header-height;
 	color: white;
 	padding-left: 15px;
 	display: flex;
@@ -31,7 +35,7 @@
 
 	.app-title {
 		font-size: 18px;
-		line-height: 40px;
+		line-height: @header-height;
 	}
 
 	.include.nav-pane {
@@ -48,7 +52,7 @@
 
 				&:hover {
 					background-color: #7f7f7f;
-					color: gold;
+					color: @accent-color;
 				}
 			}
 		}
@@ -61,16 +65,17 @@
 
 		.user-name {
 			height: 100%;
-			padding:0 12px;
+			padding: 0 12px;
 			border-radius: 0;
 			display: inline-flex;
 			gap: 8px;
 			align-items: center;
-			color:white;
-			background-color:black;
+			color: white;
+			background-color: black;
+
 			&:hover {
-				color:gold;
-				background-color:#6f6f6f;
+				color: @accent-color;
+				background-color: #6f6f6f;
 			}
 		}
 	}
@@ -96,12 +101,10 @@
 			display: inline-flex;
 			background-color: #e7e7e7;
 			white-space: nowrap;
-			color: black;
 			pointer-events: all;
 			cursor: pointer;
 			display: inline-flex;
 			align-items: center;
-			color: #333;
 
 			.tab-title {
 				max-width:160px;
@@ -136,6 +139,10 @@
 					visibility: visible;
 				}
 			}
+		}
+
+		.tab-home {
+			padding-right:16px;
 		}
 	}
 
@@ -239,7 +246,7 @@
 
 			&:hover:not(.grow) {
 				background-color: black;
-				color: gold;
+				color: @accent-color;
 			}
 
 			&.grow {
@@ -305,13 +312,13 @@
 				font-size: 1.3rem;
 
 				&:hover {
-					color: gold;
+					color: @accent-color;
 				}
 			}
 
 			&:hover {
 				background-color: black;
-				color: gold;
+				color: @accent-color;
 
 				.btn-plus {
 					display: block;

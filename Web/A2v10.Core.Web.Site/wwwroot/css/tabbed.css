@@ -1336,9 +1336,9 @@ header,
   left: 0;
   top: 0;
   right: 0;
-  height: 42px;
+  height: 40px;
   padding: 0 0 0 8px;
-  background-color: var(--themeDark);
+  background-color: black;
   color: white;
   display: flex;
   align-content: flex-start;
@@ -1483,45 +1483,12 @@ header .include.nav-pane .partial-block,
 }
 header .include.nav-pane .partial-block .btn-icon,
 .header .include.nav-pane .partial-block .btn-icon {
-  width: 42px;
+  width: 40px;
 }
 header .include.nav-pane .partial-block .control-group,
 .header .include.nav-pane .partial-block .control-group {
   margin-bottom: 0;
   align-self: center;
-}
-.content-view {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 2rem;
-}
-.content-view.partial-page {
-  left: 278px;
-  top: 74px;
-}
-.nav-bar-menu .content-view.partial-page {
-  top: 42px;
-}
-.content-view.full-page {
-  top: 74px;
-}
-.content-view.full-view,
-.nav-bar-menu .content-view.full-page {
-  top: 42px;
-}
-.side-bar-position-left.collapsed .content-view.partial-page {
-  left: 42px;
-}
-.side-bar-position-top .content-view.partial-page,
-.side-bar-position-top .content-view.full-page {
-  top: 86px;
-  left: 0;
-}
-.side-bar-position-top.side-bar-hidden .content-view.partial-page,
-.side-bar-position-top.side-bar-hidden .content-view.full-page {
-  top: 42px;
 }
 .include {
   width: 100%;
@@ -1545,6 +1512,7 @@ header .include.nav-pane .partial-block .control-group,
   grid-column: 1 / span 2;
   grid-row: 1;
   border-bottom: 1px solid var(--neutralBkDarker);
+  padding: 0.5rem;
 }
 .page.page-grid .page-taskpad {
   grid-column: 2;
@@ -3464,9 +3432,7 @@ table.data-grid > tbody > tr.bold > td {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  padding: 4px;
   overflow: visible;
-  background-color: var(--neutralBk);
   z-index: 8;
   row-gap: 4px;
 }
@@ -4345,7 +4311,7 @@ ul.news-list > li {
   display: flex;
 }
 .modal-stack .modal-wrapper[data-placement=full-screen] {
-  margin-top: 42px;
+  margin-top: 40px;
 }
 .modal-stack .modal-wrapper .modal-window {
   position: relative;
@@ -6540,11 +6506,11 @@ table > colgroup col.blue {
   position: absolute;
   left: 0;
   right: 0;
-  top: 38px;
+  top: 36px;
   height: 4px;
   width: 100%;
   overflow: hidden;
-  background-color: var(--neutralBkDarker);
+  background-color: var(--gray600);
 }
 .load-indicator:before {
   content: '';
@@ -6553,10 +6519,9 @@ table > colgroup col.blue {
   left: 0;
   width: 50%;
   height: 4px;
-  background-color: #2c5edd;
+  background-color: gold;
   animation: loading 2s linear infinite;
   border-radius: 12px;
-  opacity: 0.75;
 }
 @keyframes loading {
   from {
@@ -6652,6 +6617,20 @@ table > colgroup col.blue {
   display: inline;
   background-color: #da533f;
 }
+.side-pane-frame {
+  position: absolute;
+  top: 40px;
+  bottom: 2rem;
+  right: 0;
+  z-index: 78;
+  background-color: var(--background);
+  box-shadow: -5px 0 10px 0 rgba(0, 0, 0, 0.2);
+}
+.shell,
+.main-view,
+.full-view {
+  height: 100%;
+}
 .about-source-list {
   list-style-position: inside;
   font-size: 0.96rem;
@@ -6717,7 +6696,7 @@ table > colgroup col.blue {
 }
 .mdi-header .include.nav-pane .partial-block .btn:hover {
   background-color: #7f7f7f;
-  color: gold;
+  color: #f5cc84;
 }
 .mdi-header .dropdown {
   height: 100%;
@@ -6735,7 +6714,7 @@ table > colgroup col.blue {
   background-color: black;
 }
 .mdi-header .dropdown .user-name:hover {
-  color: gold;
+  color: #f5cc84;
   background-color: #6f6f6f;
 }
 .mdi-tabs-container {
@@ -6757,12 +6736,10 @@ table > colgroup col.blue {
   border-right: 1px solid white;
   background-color: #e7e7e7;
   white-space: nowrap;
-  color: black;
   pointer-events: all;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  color: #333;
 }
 .mdi-tabs-container .mdi-tabs li .tab-title {
   max-width: 160px;
@@ -6789,6 +6766,9 @@ table > colgroup col.blue {
 }
 .mdi-tabs-container .mdi-tabs li.active .close {
   visibility: visible;
+}
+.mdi-tabs-container .mdi-tabs .tab-home {
+  padding-right: 16px;
 }
 .mdi-tabs-container .mdi-tabs-menu {
   position: relative;
@@ -6878,7 +6858,7 @@ table > colgroup col.blue {
 }
 .mdi-navbar .bar li:hover:not(.grow) {
   background-color: black;
-  color: gold;
+  color: #f5cc84;
 }
 .mdi-navbar .bar li.grow {
   flex-grow: 2;
@@ -6936,11 +6916,11 @@ table > colgroup col.blue {
   font-size: 1.3rem;
 }
 .mdi-navbar .mdi-menu li.level-1 .btn-plus:hover {
-  color: gold;
+  color: #f5cc84;
 }
 .mdi-navbar .mdi-menu li.level-1:hover {
   background-color: black;
-  color: gold;
+  color: #f5cc84;
 }
 .mdi-navbar .mdi-menu li.level-1:hover .btn-plus {
   display: block;

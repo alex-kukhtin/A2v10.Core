@@ -1,4 +1,6 @@
-﻿
+﻿@import "Variables.less";
+
+
 html {
 	font-family: @font-family;
 	font-size: @font-size;
@@ -52,7 +54,7 @@ header, .header {
 	right: 0;
 	height: @header-height;
 	padding: 0 0 0 8px;
-	background-color: @brand-bk-color;
+	background-color: @header-bg-color;
 	color: white;
 	display: flex;
 	align-content: flex-start;
@@ -208,58 +210,6 @@ header, .header {
 	}
 }
 
-.content-view {
-	position: absolute;
-	left: 0;
-	right: 0;
-	top: 0;
-	bottom: @footer-height;
-}
-
-.content-view.partial-page {
-	left: @side-bar-width;
-	top:  @header-height + @navbar-height;
-	//background-color:aliceblue;
-	//transition: left .1s ease-out; // если разрешить - некрасиво при переходах из full-page (без SideBar)
-}
-
-.nav-bar-menu .content-view.partial-page {
-	top:@header-height;
-}
-
-.content-view.full-page {
-	top: @header-height + @navbar-height;
-}
-
-.content-view.full-view, .nav-bar-menu .content-view.full-page {
-	top: @header-height;
-}
-
-.side-bar-position-left {
-	&.expanded {
-	}
-
-	&.collapsed {
-		.content-view.partial-page {
-			left: @side-bar-collapsed-width;
-		}
-	}
-}
-
-.side-bar-position-top {
-
-	.content-view.partial-page, .content-view.full-page {
-		top: @header-height+ @sidebar-tab-height + 2px;
-		left: 0;
-	}
-
-
-	&.side-bar-hidden {
-		.content-view.partial-page, .content-view.full-page {
-			top: @header-height;
-		}
-	}
-}
 
 .include {
 	width: 100%;
@@ -486,7 +436,7 @@ pre.a2-code {
 		background-color: @progress-bar-color;
 		animation: loading 2s linear infinite;
 		border-radius: @progress-bar-height * 3;
-		opacity: .75;
+		//opacity: .75;
 	}
 }
 
@@ -598,6 +548,21 @@ pre.a2-code {
 		display: inline;
 		background-color: @danger-base-color;
 	}
+}
+
+.side-pane-frame {
+	position: absolute;
+	top: @header-height;
+	bottom: @footer-height;
+	right: 0;
+	z-index: @pane-z-index;
+	background-color: @background-color;
+	box-shadow: -5px 0 10px 0 rgb(0 0 0 / 20%);
+}
+
+// compatible with old layouts 
+.shell, .main-view, .full-view {
+		  height:100%;
 }
 
 @import "AppPages.less";

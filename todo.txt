@@ -75,14 +75,16 @@ sql.targets в A2v10.Platform
 TABBED LAYOUT
 =============
 4. Footer: About, Footer.AppLinks
-9. Не закрывающийся основной Tab. /_home/index ???
 15. Сделать упрощенный platform.sql
 25. Header.UserMenu. ChangePassword
 27. Header -> Search in interface
-29. LeftMenu кнопка создать
-	29.1 Правильный тултип (Из базы)
-	29.2 Сделать в меню CreateUrl и отображать только если он есть
 30. LeftMenu - поиск
 31. Catalog - перевести на Guid.
-32. Сделать поиск по интерфейсу - Одниці виміру -> /sales/catalog/index/{guid}
-34.
+32. Сделать поиск по интерфейсу - Пример: Одниці виміру -> /sales/catalog/index/{guid}
+34. Tabbed. rightMenu. Закрывать вкладку прямо из меню.
+34. Tabbed. contextMenu. Закрыть все вкладки.
+36. Попробовать модули
+37. Попробовать отчет с динамической группировкой.
+38. MultiTeanant On/Off
+39. Deploy to dev (CORE!)
+40. 

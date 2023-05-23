@@ -12885,7 +12885,7 @@ Vue.directive('resize', {
 
 	function __runDialog(url, arg, query, cb) {
 		return new Promise(function (resolve, reject) {
-			const dlgData = { promise: null, data: arg, query: query, rd:true };
+			const dlgData = { promise: null, data: arg, query: query };
 			eventBus.$emit('modal', url, dlgData);
 			dlgData.promise.then(function (result) {
 				cb(result);

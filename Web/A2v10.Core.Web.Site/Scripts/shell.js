@@ -85,16 +85,21 @@
 			tabLoadComplete(page) {
 				if (page) {
 					let tab = this.tabs.find(t => t.url == page.src);
-					tab.root = page.root;
-					if (page.root) {
-						page.root.__tabUrl__ = tab.url;
-						page.root.$store.commit('setroute', tab.url);
+					if (tab) {
+						tab.root = page.root;
+						if (page.root) {
+							page.root.__tabUrl__ = tab.url;
+							page.root.$store.commit('setroute', tab.url);
+						}
 					}
 				}
 				this.navigatingUrl = '';
 			},
 			isTabActive(tab) {
 				return tab === this.activeTab;
+			},
+			isHomeActive() {
+				return !this.activeTab;
 			},
 			tabTitle(tab) {
 				let star = '';
@@ -105,6 +110,15 @@
 			},
 			tabSource(tab) {
 				return tab.loaded ? tab.url : null;
+			},		
+			homeSource() {
+				return '/_home/index/0';
+			},
+			selectHome(noStore) {
+				this.activeTab = null;
+				if (noStore)
+					return;
+				this.storeTabs();
 			},
 			selectTab(tab, noStore) {
 				eventBus.$emit('closeAllPopups');
@@ -150,7 +164,7 @@
 				else if (this.tabs.length > 1)
 					this.selectTab(this.tabs[tabIndex + 1], true);
 				else
-					this.activeTab = null;
+					this.selectHome(true);
 				let rt = this.tabs.splice(tabIndex, 1);
 				if (rt.length) {
 					this.closedTabs.unshift(rt[0]);
@@ -176,7 +190,6 @@
 				try {
 					let elems = JSON.parse(tabs);
 					let ix = elems.index;
-					if (ix < 0) ix = 0;
 					for (let i = 0; i < elems.tabs.length; i++) {
 						let t = elems.tabs[i];
 						let loaded = ix === i;
@@ -190,6 +203,8 @@
 					}
 					if (ix >= 0 && ix < this.tabs.length)
 						this.activeTab = this.tabs[ix];
+					else
+						this.selectHome(true);
 				} catch (err) {
 				}
 			},
@@ -199,10 +214,13 @@
 			showModal(modal, prms) {
 				let id = utils.getStringId(prms ? prms.data : null);
 				let raw = prms && prms.raw;
+				let direct = prms && prms.direct;
 				let root = window.$$rootUrl;
 				let url = urlTools.combine(root, '/_dialog', modal, id);
 				if (raw)
 					url = urlTools.combine(root, modal, id);
+				else if (direct)
+					url = urlTools.combine(root, '/_dialog', modal);
 				//url = store.replaceUrlQuery(url, prms.query);
 				let dlg = { title: "dialog", url: url, prms: prms.data, wrap: false, rd: prms.rd };
 				dlg.promise = new Promise(function (resolve, reject) {
