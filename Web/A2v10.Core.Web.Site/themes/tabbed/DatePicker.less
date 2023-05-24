@@ -4,12 +4,12 @@
 
 .input-group > .calendar {
 	display: flex;
-	font-size:1rem;
+	font-size: 1rem;
 	flex-direction: row;
 	border: 1px solid @dropdown-brd-color;
 	position: absolute;
 	//background-color: #f5f5f5;
-	background-color: white;
+	background-color: @background-color;
 	left: 0;
 	top: 100%;
 	z-index: @popup-index !important;
@@ -18,13 +18,13 @@
 	padding: @elem-margin;
 	box-shadow: @dropdown-shadow;
 	color: @text-color;
-	line-height:normal;
+	line-height: normal;
 }
 
 
 .calendar-pane {
 	td {
-		background-color: white;
+		background-color: @background-color;
 	}
 
 	td, th {
@@ -72,7 +72,7 @@
 		&.today > a {
 			//background-color: @tb-active-bg-color;
 			font-weight: 500;
-			background-color: @tb-active-bg-color!important;
+			background-color: @tb-active-bg-color !important;
 		}
 
 		&.active > a {
@@ -157,7 +157,7 @@
 	&.open {
 		.input-group {
 			input, a {
-				background-color: white;
+				background-color: @background-color;
 				z-index: @popup-index + 1;
 			}
 		}
@@ -179,7 +179,7 @@
 
 	&.open:not(.pp-navbar):not(.pp-hyperlink) .period-text {
 		z-index: @popup-index + 1;
-		background-color: white;
+		background-color: @background-color;
 	}
 
 	.caret {
@@ -268,7 +268,7 @@
 	&.pp-hyperlink {
 		.input-group {
 			border-style: none;
-			background-color:transparent;
+			background-color: transparent;
 
 			.period-text {
 				min-height: auto;

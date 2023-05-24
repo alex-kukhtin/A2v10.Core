@@ -35,6 +35,8 @@ public class ShellController : Controller
 	private readonly AppOptions _appOptions;
 	private readonly ILocalizer _localizer;
 
+	const String MENU_PROC = "a2ui.[Menu.User.Load]";
+
 	public ShellController(IDbContext dbContext, IApplicationHost host, ICurrentUser currentUser, IProfiler profiler,
 		ILocalizer localizer, IAppCodeProvider codeProvider, IAppDataProvider appDataProvider, IOptions<AppOptions> appOptions)
 	{
@@ -71,26 +73,20 @@ public class ShellController : Controller
 	{
 		if (!String.IsNullOrEmpty(_appOptions.Layout))
 			return DoScriptPlain();
-		return DoScript(false);
+		return DoScript();
 	}
 
-	public Task<IActionResult> ScriptAdmin()
-	{
-		// TODO: is available?
-		return DoScript(true);
-	}
-
-	async Task<IActionResult> DoScript(Boolean admin)
+	async Task<IActionResult> DoScript()
 	{
 		try
 		{
 			Response.ContentType = MimeTypes.Application.Javascript;
-			var script = await BuildScript(admin);
+			var script = await BuildScript();
 			return new WebActionResult(script);
 		}
 		catch (Exception ex)
 		{
-			return new WebExceptionResult(500, ex.ToString());
+			return new WebExceptionResult(500, ex.Message);
 		}
 	}
 
@@ -104,7 +100,7 @@ public class ShellController : Controller
 		}
 		catch (Exception ex)
 		{
-			return new WebExceptionResult(500, ex.ToString());
+			return new WebExceptionResult(500, ex.Message);
 		}
 	}
 
@@ -150,14 +146,11 @@ public class ShellController : Controller
 			{ "AppData", await _appDataProvider.GetAppDataAsStringAsync() }
 		});
 
-		String proc = String.Empty;
-		String? ds = _host.TenantDataSource;
+		String proc = MENU_PROC;
 
 		if (_appOptions.IsCustomUserMenu)
-		{
 			proc = _appOptions.UserMenu!;
-		}
-		IDataModel dm = await _dbContext.LoadModelAsync(ds, proc, loadPrms);
+		IDataModel dm = await _dbContext.LoadModelAsync(_host.TenantDataSource, proc, loadPrms);
 
 		ExpandoObject? menuRoot = dm.Root.RemoveEmptyArrays();
 		SetUserStatePermission(dm);
@@ -169,9 +162,9 @@ public class ShellController : Controller
 		return shell.ResolveMacros(macros) ?? String.Empty;
 	}
 
-	async Task<String> BuildScript(bool bAdmin)
+	async Task<String> BuildScript()
 	{
-		String shell = bAdmin ? Resource.shellAdmin : Resource.shell;
+		String shell = Resource.shell;
 
 		ExpandoObject loadPrms = new();
 		SetSqlParams(loadPrms);
@@ -181,7 +174,6 @@ public class ShellController : Controller
 		_ = macros.Append(new Dictionary<String, Object?>
 		{
 			{ "AppVersion", _appDataProvider.AppVersion },
-			{ "Admin", bAdmin ? "true" : "false" },
 			{ "TenantAdmin", _currentUser.Identity.IsTenantAdmin ? "true" : "false" },
 			{ "Debug", IsDebugConfiguration ? "true" : "false" },
 			{ "AppData", await _appDataProvider.GetAppDataAsStringAsync() },
@@ -211,15 +203,12 @@ public class ShellController : Controller
 		if (_host.Mobile)
 			loadPrms.Set("Mobile", true);
 
-		String proc = bAdmin ? "a2admin.[Menu.Admin.Load]" : "a2ui.[Menu.User.Load]";
-		String? ds = _host.CatalogDataSource;
+		String proc = MENU_PROC;
 
 		if (_appOptions.IsCustomUserMenu)
-        {
 			proc = _appOptions.UserMenu!;
-			ds = _host.TenantDataSource;
-        }
-		IDataModel dm = await _dbContext.LoadModelAsync(ds, proc, loadPrms);
+
+		IDataModel dm = await _dbContext.LoadModelAsync(_host.TenantDataSource, proc, loadPrms);
 
 		ExpandoObject? menuRoot = dm.Root.RemoveEmptyArrays();
 		SetUserStatePermission(dm);

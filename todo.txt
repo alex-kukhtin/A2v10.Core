@@ -75,7 +75,6 @@ sql.targets в A2v10.Platform
 TABBED LAYOUT
 =============
 4. Footer: About, Footer.AppLinks
-15. Сделать упрощенный platform.sql
 25. Header.UserMenu. ChangePassword
 27. Header -> Search in interface
 30. LeftMenu - поиск
@@ -88,3 +87,9 @@ TABBED LAYOUT
 38. MultiTeanant On/Off
 39. Deploy to dev (CORE!)
 40. globalUpdate event -> base.js eventBus.$on
+41. input-group disabled для textarea:disabled
+42. Похоже не работает $requery ($reload работает)
+44. Tabbed. rightMenu - Hover, Grouping styling
+46. NovaEra2023 - проблемы с тегами. Видно по контрагентам. {{Params.For}}
+47. Проверить AppAssets/$sql
+48.

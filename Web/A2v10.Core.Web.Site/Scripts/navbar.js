@@ -20,7 +20,7 @@
 					<li v-for="im in m.Menu" class="level-1" @click.stop.prevent="clickSubMenu(im.Url, im.Name)">
 						<span v-text="im.Name"></span>
 						<button v-if="im.CreateUrl" class="btn-plus ico ico-plus-circle" 
-							:title="im.CreateTooltip" @click.stop.prevent="clickSubMenu(im.CreateUrl, im.CreateTooltip)"></button>
+							:title="im.CreateName" @click.stop.prevent="clickSubMenu(im.CreateUrl, im.CreateName)"></button>
 					</li>
 				</ul>
 			</li>

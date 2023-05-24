@@ -1,8 +1,7 @@
 ﻿
 @import "Variables.less";
 
-@control-border: @default-brd-color;
-@control-bg-color: white;
+@control-bg-color: @background-color;
 
 @validator-arrow-size: 8px;
 
@@ -255,8 +254,8 @@
 	}
 
 	.input-group {
-		border: 1px solid @control-border;
-		border-radius:2px;
+		border: 1px solid @control-brd-color;
+		border-radius:@control-brd-radius;
 		display: flex;
 		align-items: stretch;
 		background-color: @control-bg-color;
@@ -298,6 +297,7 @@
 		&.static {
 			background-color: @whitesmoke-gray-bg-color;
 			user-select: text;
+			border-color:@control-disabled-brd-color;
 
 			> span {
 				padding: 0 5px;
@@ -343,6 +343,10 @@
 			font-size: 1px;
 			z-index: -10;
 		}
+
+		.add-on:last-child {
+			border-radius:0 @control-brd-radius @control-brd-radius 0;
+		}
 	}
 
 	&.lg {
@@ -374,7 +378,7 @@
 	}
 	/* можно запретить :hover */
 	&:hover .input-group.static {
-		//border-color: @control-border !important;
+		//border-color: @control-brd-color !important;
 		//border-color: red !important;
 		//box-shadow: none;
 	}

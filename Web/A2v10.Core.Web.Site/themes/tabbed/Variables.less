@@ -3,7 +3,7 @@
 
 @font-family: system, 'Segoe UI', Tahoma, Verdana, sans-serif;
 @monospace-font: Consolas, 'Courier New', Courier, monospace;
-@font-size: ~"var(--fontSize)";
+@font-size: var(--fontSize);
 
 @font-size-small:0.925rem;
 
@@ -62,6 +62,10 @@
 @cmn-success-brd-color: #89e489;
 @cmn-info-brd-color: #72eaea;
 /* controls */
+@control-brd-radius: 4px;
+@control-brd-color: var(--gray400);
+@control-disabled-brd-color:var(--gray200);
+
 //@control-height: 1.851em; // FF magic number ???
 //@control-height:1.6158em;
 @control-height:2em;
@@ -219,3 +223,10 @@
 @mark-success-brd-color: @cmn-success-brd-color;
 @mark-info-bg-color: rgba(114, 234, 234, 0.07);
 @mark-info-brd-color: @cmn-info-brd-color;
+
+
+/* grid */
+@grid-padding: .5rem;
+@grid-gap: .5rem;
+@grid-modal-padding:1rem;
+@grid-modal-gap:.5rem;

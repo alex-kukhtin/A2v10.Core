@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
 
@@ -63,6 +63,18 @@ public class XamlElement : ISupportBinding, IInitComplete
 		if (this is T tT)
 			return tT;
 		return null;
+	}
+
+	internal T? FindParentExact<T>() where T : class
+	{
+		var p = Parent;
+		while (p != null)
+		{
+			if (p is T tT)
+				return tT;
+			p = p.Parent;
+		}
+		return default;
 	}
 
 	internal T? FindParent<T>() where T : class
