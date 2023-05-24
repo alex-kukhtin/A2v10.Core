@@ -43,6 +43,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "A2v10.Web.Assets", "A2v10.W
 	ProjectSection(SolutionItems) = preProject
 		Platform\A2v10.Web.Assets\A2v10.Web.Assets.nuspec = Platform\A2v10.Web.Assets\A2v10.Web.Assets.nuspec
 		Platform\A2v10.Web.Assets\A2v10.Web.Assets.targets = Platform\A2v10.Web.Assets\A2v10.Web.Assets.targets
+		Platform\A2v10.Web.Assets\README.md = Platform\A2v10.Web.Assets\README.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Implementation", "Implementation", "{78F20842-546F-4A01-B76E-AE2016E9708D}"

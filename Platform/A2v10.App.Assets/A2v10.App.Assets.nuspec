@@ -12,7 +12,7 @@
 		<releaseNotes>Current NUGET release</releaseNotes>
 		<copyright>Copyright © 2020-2023 Oleksandr Kukthin. All rights reserved.</copyright>
 		<tags>A2v10 Platform</tags>
-		<repository type="git" url="https://github.com/alex-kukhtin/A2v10.Core" branch="master"/>
+		<repository type="git" url="https://github.com/alex-kukhtin/A2v10.Core/tree/master/Platform/A2v10.App.Assets" branch="master"/>
 		<license type="expression">MIT</license>
 		<contentFiles>
 			<files include="**/*" buildAction="Content"/>

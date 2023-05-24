@@ -16,10 +16,11 @@
 		<contentFiles>
 			<files include="**/*" buildAction="Content"/>
 		</contentFiles>
+		<readme>docs\README.md</readme>
 	</metadata>
 	<files>
 		<file src="A2v10.Web.Assets.targets" target="build/A2v10.Web.Assets.targets" />
 		<file src="wwwroot/**/*" target="content/assets"/>
-		<file src="App_application/**/*" target="content/assets"/>
+		<file src="README.md" target="docs\" />
 	</files>
 </package>
