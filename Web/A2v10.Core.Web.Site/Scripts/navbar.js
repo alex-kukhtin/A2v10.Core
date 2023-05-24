@@ -65,9 +65,10 @@
 				if (url.startsWith("page:"))
 					shell.$emit('navigate', { title: title, url: url.substring(5) });
 				else if (url.startsWith("dialog:")) {
-					const dlgData = { promise: null, rd: true, direct:true };
+					const dlgData = { promise: null, rd: true, direct: true };
 					eventBus.$emit('modal', url.substring(7), dlgData);
-				}
+				} else
+					alert('invalid menu url: ' + url);
 			},
 			menuIcon(m) {
 				return 'ico-' + m.Icon;

@@ -87,4 +87,4 @@ TABBED LAYOUT
 37. Попробовать отчет с динамической группировкой.
 38. MultiTeanant On/Off
 39. Deploy to dev (CORE!)
-40. 
+40. globalUpdate event -> base.js eventBus.$on
