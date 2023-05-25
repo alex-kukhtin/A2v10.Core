@@ -1842,66 +1842,6 @@ header .include.nav-pane .partial-block .control-group,
   border-bottom-style: none;
   cursor: default;
 }
-footer,
-.footer {
-  position: absolute;
-  display: flex;
-  align-items: center;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  height: 2rem;
-  background-color: var(--neutralBk);
-  border-top: 1px solid var(--neutralBkDark);
-  padding: 0 0 0 8px;
-  font-size: 0.925rem;
-  text-transform: lowercase;
-}
-footer span,
-.footer span {
-  white-space: nowrap;
-  word-break: normal;
-}
-footer .debug-btn,
-.footer .debug-btn {
-  display: inline;
-  height: 100%;
-}
-footer .menu,
-.footer .menu {
-  margin-bottom: 1px;
-  font-size: 1rem;
-  text-transform: none;
-}
-footer .version-info,
-.footer .version-info {
-  margin-right: 1rem;
-  white-space: nowrap;
-}
-footer button,
-.footer button {
-  background-color: #b94e4c;
-  font-size: inherit;
-  padding: 0 0.25rem 0 0.75rem;
-  line-height: 1.8rem;
-  color: white;
-  text-transform: lowercase;
-  vertical-align: baseline;
-  border-radius: 0;
-}
-footer button:focus,
-.footer button:focus {
-  outline-style: none;
-}
-footer .app-links,
-.footer .app-links {
-  white-space: nowrap;
-}
-footer .app-links a,
-.footer .app-links a {
-  display: inline-block;
-  margin: 0 10px;
-}
 .spinner {
   box-sizing: content-box;
   width: 0.8rem;
@@ -6670,9 +6610,9 @@ table > colgroup col.blue {
 }
 .mdi-shell {
   display: grid;
-  grid-template-rows: auto auto 1fr auto;
+  grid-template-rows: auto auto auto 1fr auto;
   grid-template-columns: auto 1fr;
-  grid-template-areas: "header header" "navbar tabs" "navbar main" "footer footer";
+  grid-template-areas: "header header" "banner banner" "navbar tabs" "navbar main" "footer footer";
   height: 100%;
   overflow: hidden;
   width: 100%;
@@ -6839,6 +6779,9 @@ table > colgroup col.blue {
   color: white;
   padding: 0 12px;
 }
+.mdi-footer .menu {
+  text-transform: none;
+}
 .mdi-navbar {
   grid-area: navbar;
   background-color: #7f7f7f;
@@ -6950,6 +6893,12 @@ table > colgroup col.blue {
 }
 .page-content .grid {
   padding: 0.5rem;
+}
+.mdi-banner {
+  grid-area: banner;
+  padding: 10px;
+  background-color: antiquewhite;
+  display: none;
 }
 @media (max-width: 1000px) {
   /* TODO adjust tab size */

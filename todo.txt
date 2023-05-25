@@ -78,7 +78,7 @@ TABBED LAYOUT
 25. Header.UserMenu. ChangePassword
 27. Header -> Search in interface
 30. LeftMenu - поиск
-31. Catalog - перевести на Guid.
+*31. NovaEra2023. Catalog - перевести на Guid.
 32. Сделать поиск по интерфейсу - Пример: Одниці виміру -> /sales/catalog/index/{guid}
 34. Tabbed. rightMenu. Закрывать вкладку прямо из меню.
 34. Tabbed. contextMenu. Закрыть все вкладки.
@@ -86,10 +86,9 @@ TABBED LAYOUT
 37. Попробовать отчет с динамической группировкой.
 38. MultiTeanant On/Off
 39. Deploy to dev (CORE!)
-40. globalUpdate event -> base.js eventBus.$on
 41. input-group disabled для textarea:disabled
-42. Похоже не работает $requery ($reload работает)
 44. Tabbed. rightMenu - Hover, Grouping styling
-46. NovaEra2023 - проблемы с тегами. Видно по контрагентам. {{Params.For}}
 47. Проверить AppAssets/$sql
-48.
+48. NovaEra2023. Order. Нету контрагента - include - GPF
+*49. NovaEra2023. Forms - перевести на Guid
+51. 

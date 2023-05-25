@@ -10,10 +10,11 @@
 
 .mdi-shell {
 	display:grid;
-	grid-template-rows:auto auto 1fr auto;
+	grid-template-rows:auto auto auto 1fr auto;
 	grid-template-columns:auto 1fr;
 	grid-template-areas: 
 		"header header"
+		"banner banner" 
 		"navbar tabs"
 		"navbar main"
 		"footer footer";
@@ -214,6 +215,10 @@
 			padding: 0 12px;
 		}
 	}
+
+	.menu {
+		text-transform:none;
+	}
 }
 
 .mdi-navbar {
@@ -348,6 +353,13 @@
 	.grid {
 		padding:0.5rem;
 	}
+}
+
+.mdi-banner {
+	grid-area:banner;
+	padding:10px;
+	background-color:antiquewhite;
+	display:none;
 }
 
 @media (max-width:1000px) {

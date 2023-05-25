@@ -42,8 +42,11 @@
 	<div class="mdi-main">
 		<a2-include :source="homeSource()" :complete="tabLoadComplete" :lock="lockRoute" v-show="isHomeActive()"></a2-include>
 		<div class="mdi-view" v-for="(t, tx) in tabs" v-show="isTabActive(t)" :key="t.key">
-			<a2-include :source="tabSource(t)" :complete="tabLoadComplete" :lock="lockRoute"></a2-include>
+			<a2-include :source="tabSource(t)" :complete="tabLoadComplete" :lock="lockRoute" :reload="t.reload"></a2-include>
 		</div>
+	</div>
+	<div class="mdi-banner">
+		Attention! I am the banner!
 	</div>
 	<div class="mdi-footer">
 		<div :class="{spinner: true, active:processing}"></div>

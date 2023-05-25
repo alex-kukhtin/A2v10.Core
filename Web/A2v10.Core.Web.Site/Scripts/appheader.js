@@ -1,11 +1,11 @@
-﻿
+﻿// Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
+
+/*20230535-8100*/
+/* tabbled:appheader.js */
 (function () {
 
 	const locale = window.$$locale;
 	const http = require("std:http");
-	console.dir(http);
-
-
 
 	Vue.component("a2-mdi-header", {
 		template: `
@@ -42,8 +42,6 @@
 			}
 		},
 		mounted() {
-			console.dir('header mounted');
-			console.dir(this.title);
 		}
 	});
 })();

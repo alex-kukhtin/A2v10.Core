@@ -1,4 +1,8 @@
-﻿(function () {
+﻿// Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
+
+/*20230535-8100*/
+/* tabbled:shell.js */
+(function () {
 	const eventBus = require('std:eventBus');
 	const popup = require('std:popup');
 	const utils = require('std:utils');
@@ -7,6 +11,7 @@
 
 	const modalComponent = component('std:modal');
 	const toastrComponent = component('std:toastr');
+	const store = component('std:store');
 
 	let tabKey = 77;
 
@@ -47,7 +52,7 @@
 					let parentUrl = '';
 					if (this.activeTab)
 						parentUrl = this.activeTab.url || '';
-					tab = { title: m.title, url: m.url, loaded: true, key: tabKey++, root: null, parentUrl: parentUrl };
+					tab = { title: m.title, url: m.url, loaded: true, key: tabKey++, root: null, parentUrl: parentUrl, reload:0 };
 					this.tabs.push(tab);
 					var cti = this.closedTabs.findIndex(t => t.url === m.url);
 					if (cti >= 0)
@@ -195,7 +200,7 @@
 						let loaded = ix === i;
 						if (loaded)
 							this.navigatingUrl = t.url;
-						this.tabs.push({ title: t.title, url: t.url, loaded, key: tabKey++, root: null, parentUrl: t.parentUrl });
+						this.tabs.push({ title: t.title, url: t.url, loaded, key: tabKey++, root: null, parentUrl: t.parentUrl, reload:0 });
 					}
 					for (let i = 0; i < elems.closedTabs.length; i++) {
 						let t = elems.closedTabs[i];
@@ -221,7 +226,7 @@
 					url = urlTools.combine(root, modal, id);
 				else if (direct)
 					url = urlTools.combine(root, '/_dialog', modal);
-				//url = store.replaceUrlQuery(url, prms.query);
+				url = store.replaceUrlQuery(url, prms.query);
 				let dlg = { title: "dialog", url: url, prms: prms.data, wrap: false, rd: prms.rd };
 				dlg.promise = new Promise(function (resolve, reject) {
 					dlg.resolve = resolve;
@@ -237,18 +242,31 @@
 					//console.dir("wrap:" + dlg.wrap);
 				}, 50); // same as modal
 			},
-			modalCreated(instance) {
-				const findRealDialog = () => {
-					// skip alerts, confirm, etc
-					for (let i = this.modals.length - 1; i >= 0; --i) {
-						let md = this.modals[i];
-						if (md.rd)
-							return md;
-					}
-					return null;
+			_requery(vm) {
+				if (!vm || !vm.__tabUrl__)
+					return;
+				let t = this.tabs.find(t => t.url === vm.__tabUrl__);
+				if (t)
+					t.reload += 1;
+			},
+			_isModalRequery(arg) {
+				if (arg.url && this.modalRequeryUrl && this.modalRequeryUrl === arg.url)
+					arg.result = true;
+			},
+			_modalRequery(baseUrl) {
+				let dlg = this._findRealDialog();
+				if (!dlg) return;
+				let inst = dlg.instance; // include instance
+				if (inst && inst.modalRequery) {
+					if (baseUrl)
+						dlg.url = baseUrl;
+					this.modalRequeryUrl = dlg.url;
+					inst.modalRequery();
 				}
+			},
+			_modalCreated(instance) {
 				// include instance!
-				let dlg = findRealDialog();
+				let dlg = this._findRealDialog();
 				if (!dlg) return;
 				dlg.instance = instance;
 			},
@@ -312,6 +330,16 @@
 				let ptab = this.tabs.find(t => t.url === tab.parentUrl);
 				if (ptab && ptab.root)
 					ptab.root.$data.$emit(ev.event, ev.data);
+			},
+			_findRealDialog() {
+				// skip alerts, confirm, etc
+				for (let i = this.modals.length - 1; i >= 0; --i) {
+					let md = this.modals[i];
+					if (md.rd) {
+						return md;
+					}
+				}
+				return null;
 			},
 			debugTrace() {
 				if (!window.$$debug) return;
@@ -384,7 +412,10 @@
 			eventBus.$on('setnewid', this.setNewId);
 			eventBus.$on('closeAllPopups', popup.closeAll);
 			eventBus.$on('modal', this.showModal);
-			eventBus.$on('modalCreated', this.modalCreated);
+			eventBus.$on('modalCreated', this._modalCreated);
+			eventBus.$on('requery', this._requery);
+			eventBus.$on('isModalRequery', this._isModalRequery);
+			eventBus.$on('modalRequery', this._modalRequery);
 			eventBus.$on('modalClose', this._eventModalClose);
 			eventBus.$on('modalCloseAll', this._eventModalCloseAll);
 			eventBus.$on('registerData', this.registerData);
