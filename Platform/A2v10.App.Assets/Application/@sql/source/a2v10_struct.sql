@@ -1,7 +1,7 @@
 ﻿/*
 Copyright © 2008-2023 Oleksandr Kukhtin
 
-Last updated : 24 may 2023
+Last updated : 26 may 2023
 module version : 8100
 */
 ------------------------------------------------
@@ -112,21 +112,43 @@ go
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2ui' and TABLE_NAME=N'Modules')
 create table a2ui.Modules
 (
-	TenantId int not null,
 	Id uniqueidentifier not null,
 	Parent uniqueidentifier null,
 	[Name] nvarchar(255),
 	[Memo] nvarchar(255),
-	constraint PK_Modules primary key (TenantId, Id),
-	constraint FK_Modules_Parent_Modules foreign key (TenantId, Parent) references a2ui.Modules(TenantId, Id)
+	constraint PK_Modules primary key (Id),
+	constraint FK_Modules_Parent_Modules foreign key (Parent) references a2ui.Modules(Id)
 );
 go
-
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2ui' and TABLE_NAME=N'TenantModules')
+create table a2ui.TenantModules
+(
+	Tenant int not null,
+	Module uniqueidentifier not null,
+	UtcDateCreated datetime not null constraint 
+		DF_TenantModules_UtcDateCreated default(getutcdate()),
+	constraint PK_TenantModules primary key (Tenant, Module),
+	constraint FK_TenantModules_Tenant_Tenants foreign key (Tenant) references a2security.Tenants(Id),
+	constraint FK_TenantModules_Module_Modules foreign key (Module) references a2ui.Modules(Id)
+);
+go
+-------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2ui' and TABLE_NAME=N'ModuleInitProcedures')
+create table a2ui.[ModuleInitProcedures]
+(
+	[Procedure] sysname,
+	Module  uniqueidentifier not null,
+	Memo nvarchar(255),
+	constraint PK_ModuleInitProcedures primary key (Module, [Procedure]),
+	constraint FK_ModuleInitProcedures_Module_Modules foreign key (Module) references a2ui.Modules(Id)
+);
+go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2ui' and TABLE_NAME=N'Menu')
 create table a2ui.Menu
 (
-	TenantId int not null,
+	Tenant int not null,
 	Id uniqueidentifier not null,
 	Module uniqueidentifier not null,
 	Parent uniqueidentifier,
@@ -137,8 +159,9 @@ create table a2ui.Menu
 	Icon nvarchar(255),
 	[Order] int not null constraint DF_Menu_Order default(0),
 	[ClassName] nvarchar(255) null,
-	constraint PK_Menu primary key (TenantId, Id),
-	constraint FK_Menu_Parent_Menu foreign key (TenantId, Parent) references a2ui.Menu(TenantId, Id),
-	constraint FK_Menu_Module_Modules foreign key (TenantId, Module) references a2ui.Modules(TenantId, Id)
+	constraint PK_Menu primary key (Tenant, Id),
+	constraint FK_Menu_Parent_Menu foreign key (Tenant, Parent) references a2ui.Menu(Tenant, Id),
+	constraint FK_Menu_Module_Modules foreign key (Module) references a2ui.Modules(Id),
+	constraint FK_Menu_Tenant_Module_TenantModules foreign key (Tenant, Module) references a2ui.TenantModules(Tenant, Module)
 );
 go

@@ -1325,7 +1325,7 @@ body.waiting * {
   cursor: wait;
 }
 [v-cloak] {
-  display: none;
+  display: none!important;
 }
 hr {
   margin: 0.8rem 0;

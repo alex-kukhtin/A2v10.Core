@@ -78,7 +78,6 @@ TABBED LAYOUT
 25. Header.UserMenu. ChangePassword
 27. Header -> Search in interface
 30. LeftMenu - поиск
-*31. NovaEra2023. Catalog - перевести на Guid.
 32. Сделать поиск по интерфейсу - Пример: Одниці виміру -> /sales/catalog/index/{guid}
 34. Tabbed. rightMenu. Закрывать вкладку прямо из меню.
 34. Tabbed. contextMenu. Закрыть все вкладки.
@@ -88,7 +87,12 @@ TABBED LAYOUT
 39. Deploy to dev (CORE!)
 41. input-group disabled для textarea:disabled
 44. Tabbed. rightMenu - Hover, Grouping styling
-47. Проверить AppAssets/$sql
 48. NovaEra2023. Order. Нету контрагента - include - GPF
-*49. NovaEra2023. Forms - перевести на Guid
-51. 
+*49. NovaEra2023. Forms - перевести на Guid и сделать как каталог
+51. Menu. border-top как :before
+52. Нет видов договоров
+53. Catalog.Other - сделать какой-то title, чтобы было видно откуда оно открывалось
+54. Создание группировки объектов учета. Добавлять root = 1, если его еще нету.
+55. SelectorSimple - DropDown - MaxChars
+56. Модули и привязку к тенантам - привязать к лицензии.
+57. 
