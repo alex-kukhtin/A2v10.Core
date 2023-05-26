@@ -36,7 +36,7 @@ public class TreeViewItem : UIElement
 		throw new NotImplementedException(nameof(RenderElement));
 	}
 
-	internal void AppendJsValues(StringBuilder sb, RenderContext context)
+	internal void AppendJsValues(StringBuilder sb, RenderContext _1/*context*/)
 	{
 		var isBind = GetBinding(nameof(ItemsSource));
 		if (isBind != null)

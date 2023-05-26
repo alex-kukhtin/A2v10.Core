@@ -2,7 +2,8 @@
 <Project>
 	<ItemGroup>
 		<SourceAssetsAppSchemas Include="$(MSBuildThisFileDirectory)..\content\assets\Application\@schemas\*" />
-		<SourceAssetsAppSql Include="$(MSBuildThisFileDirectory)..\content\assets\Application\@sql\**\*" />
+		<SourceAssetsAppSqlSource Include="$(MSBuildThisFileDirectory)..\content\assets\Application\@sql\source\*" />
+		<SourceAssetsAppSql Include="$(MSBuildThisFileDirectory)..\content\assets\Application\@sql\*" />
 		<SourceAssetsAppTypes Include="$(MSBuildThisFileDirectory)..\content\assets\Application\@types\*" />
 		<SourceAssetsAppRoot Include="$(MSBuildThisFileDirectory)..\content\assets\Application\*" />
 		<SourceAssetsAssemblies Include="$(MSBuildThisFileDirectory)..\content\assemblies\*" />
@@ -10,6 +11,7 @@
 	<Target Name="CopyAssetsToProject" BeforeTargets="Build">
 		<Copy SourceFiles="@(SourceAssetsAppSchemas)" DestinationFolder="$(ProjectDir)\@schemas"/>
 		<Copy SourceFiles="@(SourceAssetsAppTypes)" DestinationFolder="$(ProjectDir)\@types"/>
+		<Copy SourceFiles="@(SourceAssetsAppSqlSource)" DestinationFolder="$(ProjectDir)\@sql\source"/>
 		<Copy SourceFiles="@(SourceAssetsAppSql)" DestinationFolder="$(ProjectDir)\@sql"/>
 		<Copy SourceFiles="@(SourceAssetsAppRoot)" DestinationFolder="$(ProjectDir)"/>
 		<Copy SourceFiles="@(SourceAssetsAssemblies)" DestinationFolder="$(ProjectDir)\@assemblies"/>

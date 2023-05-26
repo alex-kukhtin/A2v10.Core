@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
 using System.Text;
@@ -111,7 +111,10 @@ public class Dialog : RootContainer, ISupportTwoPhaseRendering
 		var content = new TagBuilder("div", "modal-content");
 		OnCreateContent(content);
 		if (Height != null)
+		{
 			content.MergeStyle("min-height", Height.Value);
+			content.MergeStyle("height", Height.Value);
+		}
 		Padding?.MergeStyles("padding", content);
 		content.AddCssClassBool(IsContentIsIFrame, "content-iframe"); // bug fix (3px height)
 		if (Background != BackgroundStyle.Default)
