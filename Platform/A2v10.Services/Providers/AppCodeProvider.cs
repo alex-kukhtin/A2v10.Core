@@ -87,7 +87,12 @@ public class AppCodeProvider : IAppCodeProvider
 		foreach (var (k, v) in _providers)
 		{
 			foreach (var file in v.EnumerateFiles(path, searchPattern))
-				yield return file;
+			{
+				if (k != "_")
+					yield return $"${k}/{file}";
+				else
+					yield return file;
+			}
 		}
 	}
 	public IEnumerable<String> EnumerateWatchedDirs(String path, String searchPattern)
