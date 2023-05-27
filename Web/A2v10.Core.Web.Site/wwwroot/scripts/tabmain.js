@@ -198,7 +198,7 @@ app.modules['std:const'] = function () {
 
 // Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
-// 20230525-7935
+// 20230527-7936
 // services/utils.js
 
 app.modules['std:utils'] = function () {
@@ -243,6 +243,7 @@ app.modules['std:utils'] = function () {
 		eval: evaluate,
 		simpleEval: simpleEval,
 		format: format,
+		convertToString,
 		toNumber,
 		parse: parse,
 		getStringId,
@@ -520,6 +521,15 @@ app.modules['std:utils'] = function () {
 		return formatDate(date);
 	}
 
+	function convertToString(obj) {
+		if (!obj)
+			return '';
+		if (isObjectExact(obj) && 'Name' in obj)
+			return obj.Name;
+		else if (isDate(obj))
+			return formatDate(obj);
+		return '' + val;
+	}
 
 	function format(obj, dataType, opts) {
 		opts = opts || {};
@@ -4794,7 +4804,7 @@ app.modules['std:barcode'] = function () {
 
 // Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
-// 20230525-7935
+// 20230527-7936
 /*components/includeplain.js*/
 
 (function () {
@@ -4939,11 +4949,12 @@ app.modules['std:barcode'] = function () {
 			dat: undefined,
 			complete: Function,
 			lock: Boolean,
-			reload: Number,
+			reload: Number
 		},
 		data() {
 			return {
-				needLoad: 0
+				needLoad: 0,
+				addRun: false
 			};
 		},
 		methods: {
@@ -4965,6 +4976,12 @@ app.modules['std:barcode'] = function () {
 				let url = urlTools.combine('_page', this.source, arg);
 				if (this.dat)
 					url += urlTools.makeQueryString(this.dat);
+				if (this.addRun) {
+					if (url.indexOf('?') !== -1)
+						url += '&run=true'
+					else
+						url += '?run=true'
+				}
 				return url;
 			},
 			load() {
@@ -4991,7 +5008,10 @@ app.modules['std:barcode'] = function () {
 				if (utils.isEqual(newVal, oldVal)) return;
 				this.needLoad += 1;
 			},
-			reload() {
+			reload(newVal, oldVal) {
+				this.addRun = false;
+				if (newVal - oldVal == 7)
+					this.addRun = true;
 				this.needLoad += 1;
 			},
 			needLoad() {
@@ -9230,9 +9250,9 @@ TODO:
 	});
 
 })();
-// Copyright © 2015-2019 Alex Kukhtin. All rights reserved.
+// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
-// 20190328-7473
+// 20230527-7936
 // components/list.js
 
 /* TODO:
@@ -9251,7 +9271,7 @@ TODO:
 <ul class="a2-list" v-lazy="itemsSource">
 	<template v-if="itemsSource">
 		<li class="a2-list-item" tabindex="1" :class="cssClass(listItem)" v-for="(listItem, listItemIndex) in source" :key="listItemIndex" 
-				@mousedown.prevent="select(listItem)" @keydown="keyDown" 
+				@mousedown="select(listItem)" @keydown="keyDown" 
 				ref="li" v-on:dblclick.prevent="doDblClick">
 			<span v-if="listItem.__group" v-text="listItem.__group"></span>
 			<slot name="items" :item="listItem" v-if="!listItem.__group"/>
@@ -12398,7 +12418,7 @@ Vue.directive('resize', {
 
 // Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
-/*20230525-7935*/
+/*20230527-7936*/
 // controllers/base.js
 
 (function () {
@@ -12625,6 +12645,30 @@ Vue.directive('resize', {
 						obj[k] = null;
 				}
 			},
+			$savePart(dataToSave, urlToSave, dialog) {
+				if (this.$data.$readOnly)
+					return;
+				eventBus.$emit('closeAllPopups');
+				let self = this;
+				let root = window.$$rootUrl;
+				const routing = require('std:routing'); // defer loading
+
+				let url = `${root}/${routing.dataUrl()}/save`;
+				return new Promise(function (resolve, reject) {
+					let baseUrl = urltools.combine(dialog ? '/_dialog' : '/_page', urlToSave);
+					let jsonData = utils.toJson({ baseUrl: baseUrl, data: dataToSave });
+					dataservice.post(url, jsonData).then(function (data) {
+						if (self.__destroyed__) return;
+						if (dataToSave.$merge)
+							dataToSave.$merge(data, true, true /*only exists*/);
+						resolve(dataToSave); // merged
+					}).catch(function (msg) {
+						if (msg === __blank__)
+							return;
+						self.$alertUi(msg);
+					});
+				});
+			},
 			$save(opts) {
 				if (this.$data.$readOnly)
 					return;
@@ -12841,11 +12885,11 @@ Vue.directive('resize', {
 				await callback();
 				this.$defer(() => this.$data.$setDirty(wasDirty));
 			},
-			$requery() {
+			$requery(run) {
 				if (this.inDialog)
 					eventBus.$emit('modalRequery', this.$baseUrl);
 				else
-					eventBus.$emit('requery', this);
+					eventBus.$emit('requery', this, run);
 			},
 
 			$remove(item, confirm) {
@@ -13555,6 +13599,8 @@ Vue.directive('resize', {
 					opts = { dataType: opts };
 				if (!opts.format && !opts.dataType && !opts.mask)
 					return value;
+				if (opts.format === 'ToString')
+					return utils.convertToString(value, opts);
 				if (opts.mask)
 					return value ? mask.getMasked(opts.mask, value) : value;
 				if (opts.dataType)
@@ -13787,6 +13833,7 @@ Vue.directive('resize', {
 			__createController__() {
 				let ctrl = {
 					$save: this.$save,
+					$savePart: this.$savePart,
 					$invoke: this.$invoke,
 					$close: this.$close,
 					$modalClose: this.$modalClose,

@@ -375,12 +375,12 @@
 					//console.dir("wrap:" + dlg.wrap);
 				}, 50); // same as modal
 			},
-			_requery(vm) {
+			_requery(vm, run) {
 				if (!vm || !vm.__tabUrl__)
 					return;
 				let t = this.tabs.find(t => t.url === vm.__tabUrl__);
-				if (t)
-					t.reload += 1;
+				if (!t) return;
+				t.reload += run ? 7 : 1;
 			},
 			_isModalRequery(arg) {
 				if (arg.url && this.modalRequeryUrl && this.modalRequeryUrl === arg.url)

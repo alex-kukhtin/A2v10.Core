@@ -15,6 +15,9 @@ public partial class Sheet
 			case SheetAutoGenerateMode.FromDataModel:
 				GenerateFromDataModel(context, AutoGenerate.PropertyName);
 				break;
+			case SheetAutoGenerateMode.FromReportInfo:
+				GenerateFromReportInfo(context, AutoGenerate.PropertyName);
+				break;
 		}
 	}
 
@@ -26,7 +29,7 @@ public partial class Sheet
 
 		var rootMd = dm.Metadata["TRoot"];
 		if (!rootMd.Fields.ContainsKey(propertyName))
-			throw new XamlException($"Pproperty {propertyName} not found in the root of the data model");
+			throw new XamlException($"Property {propertyName} not found in the root of the data model");
 		var fieldData = rootMd.Fields[propertyName];
 		var fieldsMD = dm.Metadata[fieldData.RefObject];
 
