@@ -19,17 +19,18 @@
 			<li title="Home" v-on:click.stop.prevent="selectHome()" class="tab-home" :class="{active: isHomeActive()}">
 				<span class="ico ico-home"></span>
 			</li>
-			<li v-for="t in tabs" :key="t.url" :title="t.url"
-				:class="{active: isTabActive(t)}" v-on:click.stop.prevent="selectTab(t)">
+			<li v-for="t in tabs" :key="t.url" :title="t.title" v-on:mouseleave="t.debug = false"
+				:class="{active: isTabActive(t)}" v-on:click.stop.prevent="selectTab(t, false, $event)">
 				<span v-text="tabTitle(t)" class="tab-title"></span>
 				<span class="close ico ico-clear" v-on:click.stop.prevent="closeTab(t)"></span>
+				<span class="tab-tooltip" v-if="t.debug" v-text="t.url"></span>
 			</li>
 		</ul>
 		<div class="mdi-tabs-menu">
 			<span class="open-menu ico ico-chevron-down" v-on:click.stop.prevent="toggleTabPopup"></span>
 			<ul class="mdi-tabs-popup menu" v-if="tabPopupOpen" ref="tabPopup">
 				<li class="group">Open tabs</li>
-				<li v-for="t in tabs" v-on:click.stop.prevent="selectTab(t)">
+				<li v-for="t in tabs" v-on:click.stop.prevent="selectTab(t, false, $event)">
 					<span v-text="t.title"></span>
 				</li>
 				<li class="group">Recently closed</li>

@@ -6656,11 +6656,22 @@ table > colgroup col.blue {
   cursor: pointer;
   display: inline-flex;
   align-items: center;
+  position: relative;
 }
 .mdi-tabs-container .mdi-tabs li .tab-title {
   max-width: 160px;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.mdi-tabs-container .mdi-tabs li .tab-tooltip {
+  position: absolute;
+  background-color: white;
+  top: 90%;
+  z-index: 8;
+  left: 20%;
+  padding: 3px;
+  border: 1px solid black;
+  font-size: 12px;
 }
 .mdi-tabs-container .mdi-tabs li .close {
   color: inherit;

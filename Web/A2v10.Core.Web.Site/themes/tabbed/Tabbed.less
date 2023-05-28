@@ -106,11 +106,23 @@
 			cursor: pointer;
 			display: inline-flex;
 			align-items: center;
+			position:relative;
 
 			.tab-title {
 				max-width:160px;
 				overflow:hidden;
 				text-overflow:ellipsis;
+			}
+
+			.tab-tooltip {
+				position:absolute;
+				background-color:white;
+				top:90%;
+				z-index:8;
+				left:20%;
+				padding:3px;
+				border:1px solid black;
+				font-size:12px;
 			}
 
 			.close {

@@ -148,6 +148,8 @@
 
 	let tabKey = 77;
 
+	const tabUrlKey = tab => `${tab.url}:${tab.key}`;
+
 	app.components["std:shellPlain"] = Vue.extend({
 		data() {
 			return {
@@ -185,7 +187,7 @@
 					let parentUrl = '';
 					if (this.activeTab)
 						parentUrl = this.activeTab.url || '';
-					tab = { title: m.title, url: m.url, loaded: true, key: tabKey++, root: null, parentUrl: parentUrl, reload:0 };
+					tab = { title: m.title, url: m.url, loaded: true, key: tabKey++, root: null, parentUrl: parentUrl, reload:0, debug:false };
 					this.tabs.push(tab);
 					var cti = this.closedTabs.findIndex(t => t.url === m.url);
 					if (cti >= 0)
@@ -214,7 +216,7 @@
 				this.lockRoute = true;
 				tab.url = route.to;
 				if (tab.root)
-					tab.root.__tabUrl__ = tab.url;
+					tab.root.__tabUrl__ = tabUrlKey(tab);
 				Vue.nextTick(() => {
 					this.lockRoute = false;
 				});
@@ -222,11 +224,11 @@
 			},
 			tabLoadComplete(page) {
 				if (page) {
-					let tab = this.tabs.find(t => t.url == page.src);
+					let tab = this.activeTab || this.tabs.find(t => t.url == page.src);
 					if (tab) {
 						tab.root = page.root;
 						if (page.root) {
-							page.root.__tabUrl__ = tab.url;
+							page.root.__tabUrl__ = tabUrlKey(tab);
 							page.root.$store.commit('setroute', tab.url);
 						}
 					}
@@ -258,8 +260,12 @@
 					return;
 				this.storeTabs();
 			},
-			selectTab(tab, noStore) {
+			selectTab(tab, noStore, ev) {
 				eventBus.$emit('closeAllPopups');
+				if (ev && ev.ctrlKey) {
+					tab.debug = true;
+					return;
+				}
 				tab.loaded = true;
 				this.activeTab = tab;
 				if (noStore)
@@ -276,7 +282,7 @@
 			closeTabFromStore(state) {
 				if (!state || !state.root) return;
 				let route = state.root.__tabUrl__;
-				let tabIndex = this.tabs.findIndex(t => t.url === route);
+				let tabIndex = this.tabs.findIndex(t => tabUrlKey(t) === route);
 				if (tabIndex >= 0)
 					this.removeTab(tabIndex);
 			},
@@ -333,7 +339,7 @@
 						let loaded = ix === i;
 						if (loaded)
 							this.navigatingUrl = t.url;
-						this.tabs.push({ title: t.title, url: t.url, loaded, key: tabKey++, root: null, parentUrl: t.parentUrl, reload:0 });
+						this.tabs.push({ title: t.title, url: t.url, loaded, key: tabKey++, root: null, parentUrl: t.parentUrl, reload:0, debug:false });
 					}
 					for (let i = 0; i < elems.closedTabs.length; i++) {
 						let t = elems.closedTabs[i];
@@ -375,12 +381,21 @@
 					//console.dir("wrap:" + dlg.wrap);
 				}, 50); // same as modal
 			},
-			_requery(vm, run) {
+			_requery(vm, data) {
 				if (!vm || !vm.__tabUrl__)
 					return;
-				let t = this.tabs.find(t => t.url === vm.__tabUrl__);
+				let t = this.tabs.find(t => tabUrlKey(t) === vm.__tabUrl__);
 				if (!t) return;
+				let run = data ? data.Run : false;
+				if (data)
+					data.Run = undefined;
+				if (!t.loaded)
+					return;
+				t.url = urlTools.replaceUrlQuery(t.url, data)
+				if (t.root)
+					t.root.__tabUrl__ = tabUrlKey(t);
 				t.reload += run ? 7 : 1;
+				this.storeTabs();
 			},
 			_isModalRequery(arg) {
 				if (arg.url && this.modalRequeryUrl && this.modalRequeryUrl === arg.url)
