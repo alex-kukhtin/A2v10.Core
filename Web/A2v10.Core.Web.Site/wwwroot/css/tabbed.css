@@ -1151,6 +1151,7 @@ h5,
 .a2-alert {
   display: flex;
   padding: 0.8rem;
+  border-radius: 4px;
   color: #999;
   border: 1px solid var(--neutralBkDark);
   border-left-width: 6px;
@@ -1231,6 +1232,9 @@ h5,
 }
 .a2-alert.light hr {
   border-color: #eee;
+}
+.toolbar .a2-alert {
+  padding: 0.4rem 0.8rem;
 }
 .text-color-gray,
 .text-color-label {
@@ -4232,6 +4236,7 @@ ul.news-list > li {
   width: 500px;
   height: auto;
   background-color: white;
+  border-radius: 4px;
 }
 .modal-stack .modal-wrapper .modal-window.with-placement {
   position: absolute;
@@ -4280,7 +4285,7 @@ ul.news-list > li {
   width: 800px;
 }
 .modal-stack .modal-wrapper .load-indicator {
-  top: 3rem;
+  top: 2.4rem;
   margin-top: -4px;
   background-color: var(--neutralBkDarker);
 }
@@ -4328,16 +4333,17 @@ ul.news-list > li {
   padding: 0.5em 0.5em 0.5em 1rem;
   cursor: move;
   font-weight: 600;
-  min-height: 3rem;
-  line-height: 1.9rem;
+  min-height: 2.4rem;
+  line-height: 1.7rem;
+  border-radius: 4px 4px 0 0;
 }
 .modal-header .modal-title-info {
   margin-left: 1rem;
 }
 .modal-header .btnclose {
   float: right;
-  width: 1.9rem;
-  height: 1.9rem;
+  width: 1.7rem;
+  height: 1.7rem;
 }
 .modal-header .btnclose:not([disabled]):hover,
 .modal-header .btnclose:not([disabled]):active,
@@ -4351,8 +4357,8 @@ ul.news-list > li {
 .modal-header .btn-help {
   float: right;
   color: rgba(2, 2, 2, 0.4);
-  width: 1.9rem;
-  height: 1.9rem;
+  width: 1.7rem;
+  height: 1.7rem;
   text-align: center;
   padding-top: 2px;
 }
@@ -4365,11 +4371,11 @@ ul.news-list > li {
 .modal-footer {
   padding: 1rem;
   background-color: var(--neutralBkLight);
-  border-top: 1px solid var(--neutralBkDark);
   display: flex;
   justify-content: flex-end;
   align-items: center;
   gap: 1rem;
+  border-radius: 0 0 4px 4px;
 }
 .modal-footer .btn {
   min-width: 6rem;
@@ -6149,7 +6155,7 @@ table.sheet tr {
 }
 table.sheet td,
 table.sheet th {
-  padding: 6px 6px;
+  padding: 5px 5px;
   vertical-align: baseline;
 }
 table.sheet td {
@@ -6180,7 +6186,7 @@ table.sheet tr.row-title {
 table.sheet tr.row-title td {
   border-style: none !important;
   font-weight: 600;
-  padding: 0 6px 6px, 6px;
+  padding: 0 6px 5px, 5px;
   background-color: var(--background);
 }
 table.sheet tr.row-title td:first-child {
@@ -6203,6 +6209,9 @@ table.sheet tr.row-page-header td {
   height: 3rem;
   border-style: none;
 }
+table.sheet tr.row-divider {
+  height: 10px;
+}
 table.sheet tr.row-parameter td,
 table.sheet tr.row-last-parameter td {
   border-style: none !important;
@@ -6216,8 +6225,11 @@ table.sheet tr.row-parameter td:last-child,
 table.sheet tr.row-last-parameter td:last-child {
   padding-right: 0;
 }
+table.sheet .row-parameter tr:last-child td {
+  background-color: red!important;
+}
 table.sheet tr.row-last-parameter td {
-  padding-bottom: 18px;
+  padding-bottom: 15px;
 }
 table.sheet tr.row-header {
   background-color: rgba(231, 231, 231, 0.25);
@@ -6243,6 +6255,8 @@ table.sheet tr.group td {
 }
 table.sheet .group-cell {
   padding: 4px 2px;
+  max-width: 20px;
+  width: 20px;
 }
 table.sheet .group-cell > div {
   cursor: pointer;
@@ -7756,6 +7770,12 @@ td.vert > .vcell {
   .a2-tab-bar,
   .taskpad,
   .a2-alert {
+    display: none;
+  }
+  .mdi-header,
+  .mdi-navbar,
+  .mdi-tabs-container,
+  .mdi-footer {
     display: none;
   }
   .page.absolute {

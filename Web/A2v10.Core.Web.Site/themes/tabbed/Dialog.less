@@ -2,8 +2,8 @@
 
 @modal-padding: @padding-default;
 
-@modal-header-height: 3rem;
-@modal-header-line: 1.9rem;
+@modal-header-height: 2.4rem;
+@modal-header-line: 1.7rem;
 
 @modal-footer-bg-color: var(--neutralBkLight);
 @modal-border-color: var(--neutralBkDark);
@@ -42,6 +42,7 @@
 			width: @modal-width-medium;
 			height: auto;
 			background-color: white;
+			border-radius:@control-brd-radius;
 
 			&.with-placement {
 				position: absolute;
@@ -163,6 +164,7 @@
 	font-weight: @font-bold;
 	min-height: @modal-header-height;
 	line-height: @modal-header-line;
+	border-radius:@control-brd-radius @control-brd-radius 0 0;
 
 	.modal-title-info {
 		margin-left: 1rem;
@@ -206,11 +208,11 @@
 .modal-footer {
 	padding: @modal-padding;
 	background-color: @modal-footer-bg-color;
-	border-top: 1px solid @modal-border-color;
 	display: flex;
 	justify-content: flex-end;
 	align-items: center;
 	gap: @modal-padding;
+	border-radius:0 0 @control-brd-radius @control-brd-radius;
 
 	.btn {
 		min-width: 6rem;

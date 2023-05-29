@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Xaml;
 
@@ -151,6 +151,23 @@ public partial class Sheet : UIElement
 		tfoot.RenderEnd(context);
 	}
 
+    public void GenerateSheet(RenderContext context)
+    {
+        if (AutoGenerate == null || String.IsNullOrEmpty(AutoGenerate.PropertyName))
+            return;
+		ISheetGenerator? generator = AutoGenerate.Mode switch
+		{
+			SheetAutoGenerateMode.FromDataModel => new SheetGeneratorDataModel(this),
+			SheetAutoGenerateMode.FromReportInfo => new SheetGeneratorReportInfo(this),
+			_ => throw new NotImplementedException(nameof(GenerateSheet))
+		};
+		generator.Generate(context, AutoGenerate.PropertyName);
+    }
+
+    public void EndInit()
+	{
+		OnEndInit();	
+	}
 	protected override void OnEndInit()
 	{
 		base.OnEndInit();

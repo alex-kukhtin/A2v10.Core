@@ -1,11 +1,10 @@
-﻿// Copyright © 2015-2017 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 
 namespace A2v10.Xaml;
 public class Code : ContentControl
 {
 	public Boolean Multiline { get; set; }
-
 	public Length? Height { get; set; }
 
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
@@ -17,8 +16,11 @@ public class Code : ContentControl
 		if (Multiline)
 			code.AddCssClass("pre-scrollable");
 		if (Height != null)
+		{
 			code.MergeStyle("max-height", Height.Value);
-		code.AddCssClass("a2-code");
+            code.MergeStyle("height", Height.Value);
+        }
+        code.AddCssClass("a2-code");
 		MergeAttributes(code, context);
 		code.RenderStart(context);
 		RenderContent(context);

@@ -1,6 +1,6 @@
 ﻿// Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
 
-/*20230535-8100*/
+/*20230525-8100*/
 /* tabbled:appheader.js */
 (function () {
 

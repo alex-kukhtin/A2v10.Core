@@ -1,27 +1,17 @@
-﻿// Copyright © 2021-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.Data.Interfaces;
 
 namespace A2v10.Xaml;
 
-public partial class Sheet
+public class SheetGeneratorDataModel : ISheetGenerator
 {
-	public void GenerateSheet(RenderContext context)
+	protected readonly Sheet _sheet;
+    public SheetGeneratorDataModel(Sheet sheet)
 	{
-		if (AutoGenerate == null || String.IsNullOrEmpty(AutoGenerate.PropertyName))
-			return;
-		switch (AutoGenerate.Mode)
-		{
-			case SheetAutoGenerateMode.FromDataModel:
-				GenerateFromDataModel(context, AutoGenerate.PropertyName);
-				break;
-			case SheetAutoGenerateMode.FromReportInfo:
-				GenerateFromReportInfo(context, AutoGenerate.PropertyName);
-				break;
-		}
-	}
-
-	void GenerateFromDataModel(RenderContext context, String propertyName)
+        _sheet = sheet;
+    }
+	public void Generate(RenderContext context, String propertyName)
 	{
 		var dm = context.DataModel;
 		if (dm == null)
@@ -35,15 +25,15 @@ public partial class Sheet
 
 		var header = new SheetRow() { Style = RowStyle.Header };
 		var dataRow = new SheetRow();
-		Header.Add(header);
+		_sheet.Header.Add(header);
 
 		var dataSect = new SheetSection();
 		dataSect.SetBinding(nameof(dataSect.ItemsSource), new Bind(propertyName));
 		dataSect.Children.Add(dataRow);
-		Sections.Add(dataSect);
+        _sheet.Sections.Add(dataSect);
 
 		var cols = new SheetColumnCollection();
-		Columns = cols;
+        _sheet.Columns = cols;
 
 		foreach (var field in fieldsMD.Fields)
 		{

@@ -1,6 +1,6 @@
 // Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
 
-/*20230535-8100*/
+/*20230525-8100*/
 /* tabbled:appheader.js */
 (function () {
 
@@ -45,6 +45,10 @@
 		}
 	});
 })();
+// Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
+
+/*20230529-8100*/
+/* tabbled:navbar.js */
 (function () {
 
 	const popup = require('std:popup');
@@ -109,6 +113,10 @@
 				eventBus.$emit('closeAllPopups');
 				const shell = this.$parent;
 				this.popupVisible = false;
+				if (url.endsWith('{genrandom}')) {
+					let randomString = Math.random().toString(36).substring(2);
+					url = url.replace('{genrandom}', randomString);
+				}
 				if (url.startsWith("page:"))
 					shell.$emit('navigate', { title: title, url: url.substring(5) });
 				else if (url.startsWith("dialog:")) {
