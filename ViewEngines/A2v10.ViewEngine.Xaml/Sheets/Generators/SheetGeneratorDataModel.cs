@@ -11,7 +11,12 @@ public class SheetGeneratorDataModel : ISheetGenerator
 	{
         _sheet = sheet;
     }
-	public void Generate(RenderContext context, String propertyName)
+
+    public void ApplySheetPageProps(RenderContext context, SheetPage page, String propertyName)
+    {
+    }
+
+    public void Generate(RenderContext context, String propertyName)
 	{
 		var dm = context.DataModel;
 		if (dm == null)

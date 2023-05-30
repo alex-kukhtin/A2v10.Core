@@ -88,8 +88,11 @@ public abstract class Control : UIElement
 			case ControlSize.Large:
 				input.AddCssClass($"lg");
 				break;
-			default:
-				throw new XamlException($"Only ControlSize.Normal or ControlSize.Large are supported for the {controlName}");
+            case ControlSize.Small:
+                input.AddCssClass($"sm");
+                break;
+            default:
+				throw new XamlException($"Only ControlSize.Normal or ControlSize.Large or ControlSize.Small are supported for the {controlName}");
 		}
 	}
 

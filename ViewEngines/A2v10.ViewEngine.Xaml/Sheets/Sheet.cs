@@ -2,6 +2,18 @@
 
 namespace A2v10.Xaml;
 
+record SheetGeneratorWrapper(ISheetGenerator Generator, String PropertyName)
+{
+	public void Generate(RenderContext context)
+	{
+		Generator.Generate(context, PropertyName);
+	}
+	public void ApplySheetPageProps(RenderContext context, SheetPage page)
+	{
+		Generator.ApplySheetPageProps(context, page, PropertyName);
+	}
+}
+
 
 [ContentProperty("Sections")]
 public partial class Sheet : UIElement
@@ -61,6 +73,7 @@ public partial class Sheet : UIElement
 
 	public SheetAutoGenerate? AutoGenerate { get; set; }
 
+	private SheetGeneratorWrapper? _generatorWrapper;
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
 		if (SkipRender(context))
@@ -153,15 +166,8 @@ public partial class Sheet : UIElement
 
     public void GenerateSheet(RenderContext context)
     {
-        if (AutoGenerate == null || String.IsNullOrEmpty(AutoGenerate.PropertyName))
-            return;
-		ISheetGenerator? generator = AutoGenerate.Mode switch
-		{
-			SheetAutoGenerateMode.FromDataModel => new SheetGeneratorDataModel(this),
-			SheetAutoGenerateMode.FromReportInfo => new SheetGeneratorReportInfo(this),
-			_ => throw new NotImplementedException(nameof(GenerateSheet))
-		};
-		generator.Generate(context, AutoGenerate.PropertyName);
+		var generator = CreateGenerator();
+		generator?.Generate(context);
     }
 
     public void EndInit()
@@ -192,5 +198,26 @@ public partial class Sheet : UIElement
 				f.OnSetStyles(root);
 		foreach (var s in Sections)
 			s.OnSetStyles(root);
+	}
+
+    SheetGeneratorWrapper? CreateGenerator()
+	{
+		if (_generatorWrapper != null)
+			return _generatorWrapper;
+        if (AutoGenerate == null || String.IsNullOrEmpty(AutoGenerate.PropertyName))
+            return null;
+        ISheetGenerator? generator = AutoGenerate.Mode switch
+        {
+            SheetAutoGenerateMode.FromDataModel => new SheetGeneratorDataModel(this),
+            SheetAutoGenerateMode.FromReportInfo => new SheetGeneratorReportInfo(this),
+            _ => throw new NotImplementedException(nameof(GenerateSheet))
+        };
+        _generatorWrapper = new SheetGeneratorWrapper(generator, AutoGenerate.PropertyName);
+		return _generatorWrapper;
+    }
+
+    public void ApplySheetPageProps(RenderContext context, SheetPage page)
+	{
+		CreateGenerator()?.ApplySheetPageProps(context, page);
 	}
 }

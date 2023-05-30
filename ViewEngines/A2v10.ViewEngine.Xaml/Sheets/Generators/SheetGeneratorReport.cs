@@ -162,17 +162,24 @@ public class SheetGeneratorReportInfo : ISheetGenerator
 
 	SheetRow CreateParamRow(FieldInfo field)
 	{
-		var row = new SheetRow();
-		row.Style = RowStyle.Parameter;
-		var title = new SheetCell();
-        title.ColSpan = 2;
-        title.Content = field.Title;
-		row.Cells.Add(title);
-		var val = new SheetCell();
-		val.ColSpan = 3;
+        var row = new SheetRow
+        {
+            Style = RowStyle.Parameter
+        };
+        var title = new SheetCell
+        {
+            ColSpan = 2,
+            Content = field.Title
+        };
+        row.Cells.Add(title);
 
-		// TODO: always name?
-		var bind = new Bind($"Filter.{field.Name}.Name");
+        var val = new SheetCell
+        {
+            ColSpan = 3
+        };
+
+        // TODO: always name?
+        var bind = new Bind($"Filter.{field.Name}.Name");
 		val.SetBinding(nameof(val.Content), bind);
 
 		if (field.HasId)
@@ -243,4 +250,19 @@ public class SheetGeneratorReportInfo : ISheetGenerator
 		dCell.SetBinding(nameof(dCell.Content), GetBindFromData(field, field.Name));
 		return dCell;
 	}
+
+    public void ApplySheetPageProps(RenderContext context, SheetPage page, String propertyName)
+    {
+        var dm = context.DataModel;
+        if (dm == null)
+            return;
+        var repInfo = dm.Eval<ExpandoObject>(propertyName)
+            ?? throw new XamlException($"Property {propertyName} not found in the root of the data model");
+        var landscape = repInfo.Eval<Boolean>("Landscape");
+        if (landscape)
+        {
+            if (page != null)
+                page.Orientation = PageOrientation.Landscape;
+        }
+    }
 }

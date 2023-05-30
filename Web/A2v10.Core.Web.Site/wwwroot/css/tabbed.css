@@ -2185,6 +2185,9 @@ pre.a2-code {
 .control-group.lg {
   font-size: 1.3rem;
 }
+.control-group.sm {
+  font-size: 0.9rem;
+}
 .control-group.with-width .input-group {
   width: 100%;
 }
