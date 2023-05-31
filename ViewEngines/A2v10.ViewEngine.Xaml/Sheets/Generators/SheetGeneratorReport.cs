@@ -9,16 +9,17 @@ using A2v10.Infrastructure;
 
 namespace A2v10.Xaml;
 
-record FieldInfo(String Name, String? DataType, String? Title, String? Func)
+record FieldInfo(String Name, String? DataType, String? Title, String? Func, Boolean Wide)
 {
 	public static FieldInfo FromExpando(ExpandoObject eo)
 	{
 		return new FieldInfo(
-			Name: eo.Get<String>("Name")
+			Name: eo.Get<String>(nameof(Name))
 				?? throw new InvalidOperationException("Field.Name not found"),
-			DataType: eo.Get<String>("DataType"),
-			Title: eo.Get<String>("Title") ?? eo.Get<String>("Name"),
-			Func: eo.Get<String>("Func")
+			DataType: eo.Get<String>(nameof(DataType)),
+			Title: eo.Get<String>(nameof(Title)) ?? eo.Get<String>(nameof(Name)),
+			Func: eo.Get<String>(nameof(Func)),
+			Wide: eo.Get<Boolean>(nameof(Wide))
 		);
 	}
 	public Boolean HasId =>
@@ -63,8 +64,14 @@ public class SheetGeneratorReportInfo : ISheetGenerator
 			.Select(f => FieldInfo.FromExpando(f));
 
 		// columns
+
 		var hasGroupCell = groupingFields.Count() > 1;
-		var headerColSpan = 3;
+
+		var colCount = visibleFields.Count(f => f.Wide) + 1;
+		var wideColWidth = Length.FromString($"{Math.Round(100.0 / colCount, 2)}%");
+		var autoColWidth = Length.FromString("Auto");
+
+        var headerColSpan = 3;
 		if (hasGroupCell)
 		{
             var col = new SheetColumn() { Width = Length.FromString("16px") };
@@ -74,11 +81,11 @@ public class SheetGeneratorReportInfo : ISheetGenerator
 		{
 			_sheet.Columns.Add(new SheetColumn() { Width = Length.FromString("4rem") });
 			if (hasGroupCell)
-				_sheet.Columns.Add(new SheetColumn() { Width = Length.FromString("100%"), MinWidth = Length.FromString("Auto") });
+				_sheet.Columns.Add(new SheetColumn() { Width = wideColWidth, MinWidth = autoColWidth });
 			else
 			{
-                _sheet.Columns.Add(new SheetColumn() { Width = Length.FromString("Auto") });
-                _sheet.Columns.Add(new SheetColumn() { Width = Length.FromString("100%"), MinWidth = Length.FromString("Auto") });
+                _sheet.Columns.Add(new SheetColumn() { Width = autoColWidth });
+                _sheet.Columns.Add(new SheetColumn() { Width = wideColWidth, MinWidth = autoColWidth });
             }
         }
         foreach (var f in visibleFields) {
@@ -92,7 +99,11 @@ public class SheetGeneratorReportInfo : ISheetGenerator
 					col.Fit = true;
 					break;
 			}
-
+			if (f.Wide)
+			{
+				col.Width = wideColWidth;
+				col.MinWidth = autoColWidth;
+            }
             _sheet.Columns.Add(col);
         }
 

@@ -5704,7 +5704,7 @@ TODO:
 }
 .grid {
   display: grid !important;
-  padding: 0.5rem;
+  padding: 1rem;
   grid-gap: 0.5rem;
   align-items: flex-end;
   grid-template-columns: auto;
@@ -6886,7 +6886,7 @@ table > colgroup col.blue {
   position: relative;
 }
 .page-content .grid {
-  padding: 0.5rem;
+  padding: 0.5rem 1rem;
 }
 .mdi-banner {
   grid-area: banner;

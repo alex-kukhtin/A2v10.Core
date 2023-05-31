@@ -76,7 +76,7 @@ TABBED LAYOUT
 38. MultiTeanant On/Off
 39. Deploy to dev (CORE!)
 41. input-group disabled для textarea:disabled
-44. Tabbed. rightMenu - Hover, Grouping styling
+44. Tabbed. rightMenu - Hover, Sections (OPEN, RECENTLY CLOSED) styling
 *48. NovaEra2023. Order. Нету контрагента - include - GPF
 *49. NovaEra2023. Forms - перевести на Guid и сделать как каталог
 51. Menu. border-top как :before
@@ -90,23 +90,29 @@ TABBED LAYOUT
 	а должен говорить что искал и где.
 60. Красивый TabBar
 64. Sheet. Сделать таки padding для колонки SheetLevelCell
-65. 
+65. *NovaEra.2023. Item. Нажимаем "Налаштувати варіанти" -> Infinity Loop.
+66. Доделать выгрузку в Excel
+67. Tabbed: Drag'n'drop tabs
+68. Tabbed.SelectTab => setDocTitle ?
+69. 
 
 Dynamic Reports
 ===============
 2. Сделать аргегаты First, Last
-5. Возможность менять Title.
+
 11. Выключить все группировки. В root показывает неправильные данные.
 	  Запретить строить отчет если нет хотя-бы одной группировки
-14. AutoRun ??? RunOnLoad
+
 15. Data.Core (dynamic grouping): Все же чистить поля если есть дочерние записи. Но только если нету детей!
+
 16. Grouping.Field - Grouping mode - например для даты только first/last. Зависит от типа.
+
 17. platform_simple.sql -> User/Tenants развязать. Как в qela.
+
 18. RepInfo - варианты
 		Два набора. Один текущий, связанный с id из меню. Другой - варианты.
 		Варианты сохраняет пользователь.
 		Если не указан вариант - берем из меню.
-19. AutoGenerate все-же проверить ColSpan (особенно для имен параметров)
-20. AutoGenerate - если есть колонки с длинным именем (пометить?) - то ширина должна быть 100% / n
-	чтобы они были пропорционально разбиты (учесть что все группировки в одной колонке!!!)
-21. 
+
+23. Хитрые группировки по дате - месяц, год, неделя, день недели
+24. 
