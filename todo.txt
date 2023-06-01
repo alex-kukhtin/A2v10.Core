@@ -78,7 +78,6 @@ TABBED LAYOUT
 41. input-group disabled для textarea:disabled
 44. Tabbed. rightMenu - Hover, Sections (OPEN, RECENTLY CLOSED) styling
 *48. NovaEra2023. Order. Нету контрагента - include - GPF
-*49. NovaEra2023. Forms - перевести на Guid и сделать как каталог
 51. Menu. border-top как :before
 52. Нет видов договоров
 53. Catalog.Other - сделать какой-то title, чтобы было видно откуда оно открывалось
@@ -93,8 +92,8 @@ TABBED LAYOUT
 65. *NovaEra.2023. Item. Нажимаем "Налаштувати варіанти" -> Infinity Loop.
 66. Доделать выгрузку в Excel
 67. Tabbed: Drag'n'drop tabs
-68. Tabbed.SelectTab => setDocTitle ?
-69. 
+69. NovaEra2023. Привязка операций к меню.
+71.
 
 Dynamic Reports
 ===============
@@ -109,10 +108,6 @@ Dynamic Reports
 
 17. platform_simple.sql -> User/Tenants развязать. Как в qela.
 
-18. RepInfo - варианты
-		Два набора. Один текущий, связанный с id из меню. Другой - варианты.
-		Варианты сохраняет пользователь.
-		Если не указан вариант - берем из меню.
-
 23. Хитрые группировки по дате - месяц, год, неделя, день недели
+
 24. 

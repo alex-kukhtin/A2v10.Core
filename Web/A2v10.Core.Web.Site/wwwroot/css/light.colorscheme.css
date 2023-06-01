@@ -23,7 +23,6 @@
   --activeBkLight: #cde6f7;
   --dialogHeaderBkColor: #fff29d;
   --dialogHeaderBkColorDark: #ede193;
-  --gray900: #212121;
   --gray800: #5c5c5c;
   --gray700: #888888;
   --gray600: #a4a4a4;
@@ -33,4 +32,9 @@
   --gray200: #eeeeee;
   --gray100: #f5f5f5;
   --gray50: #fafafa;
+  /* neutral */
+  --neutral900: #212121;
+  --neutral700: #888888;
+  --neutral800: #5c5c5c;
+  --neutral100: #f5f5f5;
 }

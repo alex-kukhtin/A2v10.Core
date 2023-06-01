@@ -1668,7 +1668,7 @@ header .include.nav-pane .partial-block .control-group,
   text-decoration: none;
 }
 .taskpad .taskpad-collapse-handle:hover {
-  background-color: var(--neutralBkLight);
+  background-color: var(--neutral100);
 }
 .taskpad.no-collapsible .taskpad-collapse-handle {
   display: none;
@@ -1680,19 +1680,18 @@ header .include.nav-pane .partial-block .control-group,
   content: "\e9a3";
 }
 .taskpad.collapsed {
-  background-color: var(--neutralBkLight);
+  background-color: var(--neutral100);
 }
 .taskpad.collapsed .taskpad-collapse-handle:before {
   content: "\e9a5";
 }
 .taskpad .taskpad-title {
-  background-color: var(--neutralBkLight);
+  background-color: var(--neutral100);
   white-space: nowrap;
   height: 100%;
   cursor: pointer;
   font-size: 16px;
   padding-left: 2px;
-  padding-top: 24px;
   color: #999;
 }
 .taskpad .taskpad-title .taskpad-label {
@@ -6602,7 +6601,7 @@ table > colgroup col.blue {
 }
 .mdi-header {
   grid-area: header;
-  background-color: var(--gray900);
+  background-color: var(--neutral900);
   height: 40px;
   color: white;
   padding-left: 15px;
@@ -7693,6 +7692,7 @@ td.vert > .vcell {
 .debug-panel .toolbar {
   min-height: 3rem;
   border-bottom: 1px solid var(--neutralBkDark);
+  padding: 0 2px;
 }
 .debug-panel .debug-body {
   overflow: auto;

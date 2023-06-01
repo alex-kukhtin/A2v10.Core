@@ -173,6 +173,7 @@
 				sidePaneUrl: '',
 				tabPopupOpen: false,
 				navigatingUrl: '',
+				homePageTitle: '',
 				lockRoute: false,
 				requestsCount: 0
 			};
@@ -215,8 +216,13 @@
 				let tab = this.activeTab;
 				if (!tab && this.navigatingUrl)
 					tab = this.tabs.find(tab => tab.url === this.navigatingUrl);
-				if (tab)
+				if (tab) {
 					tab.title = title;
+					document.title = title;
+				} else {
+					this.homePageTitle = title;
+					document.title = title;
+				}
 			},
 			setNewId(route) {
 				let tab = this.tabs.find(tab => tab.url === route.from);
@@ -264,6 +270,7 @@
 			},
 			selectHome(noStore) {
 				this.activeTab = null;
+				document.title = this.homePageTitle;
 				if (noStore)
 					return;
 				this.storeTabs();
@@ -276,6 +283,7 @@
 				}
 				tab.loaded = true;
 				this.activeTab = tab;
+				document.title = tab.title;
 				if (noStore)
 					return;
 				this.storeTabs();
