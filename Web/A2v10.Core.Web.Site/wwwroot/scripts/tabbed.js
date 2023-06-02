@@ -141,7 +141,7 @@
 
 // Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
 
-/*20230535-8100*/
+/*20230602-8100*/
 /* tabbled:shell.js */
 (function () {
 	const eventBus = require('std:eventBus');
@@ -159,6 +159,7 @@
 	const tabUrlKey = tab => `${tab.url}:${tab.key}`;
 
 	app.components["std:shellPlain"] = Vue.extend({
+		store,
 		data() {
 			return {
 				tabs: [],
@@ -174,6 +175,7 @@
 				tabPopupOpen: false,
 				navigatingUrl: '',
 				homePageTitle: '',
+				homeLoaded: false,
 				lockRoute: false,
 				requestsCount: 0
 			};
@@ -241,6 +243,7 @@
 					let tab = this.activeTab || this.tabs.find(t => t.url == page.src);
 					if (tab) {
 						tab.root = page.root;
+						document.title = tab.title;
 						if (page.root) {
 							page.root.__tabUrl__ = tabUrlKey(tab);
 							page.root.$store.commit('setroute', tab.url);
@@ -266,9 +269,10 @@
 				return tab.loaded ? tab.url : null;
 			},		
 			homeSource() {
-				return '/_home/index/0';
+				return this.homeLoaded ? '/_home/index/0' : null;
 			},
 			selectHome(noStore) {
+				this.homeLoaded = true;
 				this.activeTab = null;
 				document.title = this.homePageTitle;
 				if (noStore)

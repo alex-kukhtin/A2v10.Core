@@ -73,7 +73,7 @@ public class MainController : Controller
 			HasNavPane = HasNavPane(),
 			Theme = _appTheme.MakeTheme()
 		};
-		ViewBag.__Minify = "min.";
+		ViewBag.__Minify = ""; // "min.";
 
 		if (!String.IsNullOrEmpty(_appOptions.Layout))
 			return View($"Default.{_appOptions.Layout}", viewModel);

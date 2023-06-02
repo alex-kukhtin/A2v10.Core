@@ -82,18 +82,19 @@ TABBED LAYOUT
 52. Нет видов договоров
 53. Catalog.Other - сделать какой-то title, чтобы было видно откуда оно открывалось
 54. Создание группировки объектов учета. Добавлять root = 1, если его еще нету.
-55. Platform4.8: SelectorSimple - DropDown - MaxChars
+*55. Platform4.8: SelectorSimple - DropDown - MaxChars
 56. Модули и привязку к тенантам - привязать к лицензии.
 57. Автонумерация документов
 59. Если не найден файл view, говорит View engine not found for ..., 
 	а должен говорить что искал и где.
 60. Красивый TabBar
 64. Sheet. Сделать таки padding для колонки SheetLevelCell
-65. *NovaEra.2023. Item. Нажимаем "Налаштувати варіанти" -> Infinity Loop.
 66. Доделать выгрузку в Excel
 67. Tabbed: Drag'n'drop tabs
-69. NovaEra2023. Привязка операций к меню.
-71.
+71. tabbed: Левая панель - подсвечивать открытый пункт меню.
+73. NovaEra2023. Отчет в бухгалтерии. Оборотка по счету с группировками.
+74. Левая панель - текст в меню nowrap, ellipsis
+75. 
 
 Dynamic Reports
 ===============

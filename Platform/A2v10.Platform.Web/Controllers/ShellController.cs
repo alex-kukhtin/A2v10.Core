@@ -175,6 +175,7 @@ public class ShellController : Controller
 		{
 			{ "AppVersion", _appDataProvider.AppVersion },
 			{ "TenantAdmin", _currentUser.Identity.IsTenantAdmin ? "true" : "false" },
+			{ "Admin", "false" },
 			{ "Debug", IsDebugConfiguration ? "true" : "false" },
 			{ "AppData", await _appDataProvider.GetAppDataAsStringAsync() },
 			{ "Companies", "null" },

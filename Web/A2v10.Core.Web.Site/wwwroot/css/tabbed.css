@@ -4238,7 +4238,7 @@ ul.news-list > li {
   width: 500px;
   height: auto;
   background-color: white;
-  border-radius: 4px;
+  border-radius: 8px;
 }
 .modal-stack .modal-wrapper .modal-window.with-placement {
   position: absolute;
@@ -4337,7 +4337,7 @@ ul.news-list > li {
   font-weight: 600;
   min-height: 2.4rem;
   line-height: 1.7rem;
-  border-radius: 4px 4px 0 0;
+  border-radius: 8px 8px 0 0;
 }
 .modal-header .modal-title-info {
   margin-left: 1rem;
@@ -4377,7 +4377,7 @@ ul.news-list > li {
   justify-content: flex-end;
   align-items: center;
   gap: 1rem;
-  border-radius: 0 0 4px 4px;
+  border-radius: 0 0 8px 8px;
 }
 .modal-footer .btn {
   min-width: 6rem;
