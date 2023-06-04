@@ -20,6 +20,7 @@ using A2v10.ViewEngine.Xaml;
 using A2v10.ViewEngine.Html;
 
 using A2v10.Platform.Web;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -99,6 +100,7 @@ public static class ServicesExtensions
 		services.AddSingleton<IAppVersion, PlatformAppVersion>();
 
 		services.AddHttpClient();
+		services.AddSignalR();
 
 		return builder;
 	}
@@ -137,7 +139,8 @@ public static class ServicesExtensions
 		app.UseEndpoints(endpoints =>
 		{
 			endpoints.MapControllers();
-		});
+			endpoints.MapHub<ClientHub>("/_clienthub");
+        });
 
 		// TODO: use settings?
 		var cultureInfo = new CultureInfo("uk-UA");
