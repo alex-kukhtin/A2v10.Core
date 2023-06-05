@@ -1,3 +1,36 @@
+// Copyright � 2023 Oleksandr Kukhtin. All rights reserved.
+
+/*20230605-8107*/
+app.modules['std:signalR'] = function () {
+
+	const eventBus = require('std:eventBus')
+
+	const connection = new signalR.HubConnectionBuilder()
+		.withUrl("/_userhub")
+		.withAutomaticReconnect()
+		.configureLogging(signalR.LogLevel.Information)
+		.build();
+
+	connection.on('signal', (event, data) => {
+		console.log(event, data);
+		eventBus.$emit('signalEvent', { event, data })
+	});
+
+	return {
+		startService,
+	};
+
+	async function startService() {
+		try {
+			await connection.start();
+			console.log("SignalR Connected.");
+		} catch (err) {
+			console.log(err);
+			setTimeout(start, 5000);
+		}
+	}
+};
+
 // Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
 
 /*20230525-8100*/
@@ -141,7 +174,7 @@
 
 // Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
 
-/*20230602-8100*/
+/*20230605-8100*/
 /* tabbled:shell.js */
 (function () {
 	const eventBus = require('std:eventBus');
@@ -149,6 +182,7 @@
 	const utils = require('std:utils');
 	const urlTools = require('std:url');
 	const log = require('std:log');
+	const signalR = require('std:signalR');
 
 	const modalComponent = component('std:modal');
 	const toastrComponent = component('std:toastr');
@@ -599,7 +633,7 @@
 				me.requestsCount -= 1;
 				window.__requestsCount__ = me.requestsCount;
 			});
-
+			signalR.startService();
 		}
 	});
 })();

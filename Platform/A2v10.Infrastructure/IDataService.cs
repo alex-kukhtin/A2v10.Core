@@ -43,17 +43,32 @@ public interface IBlobUpdateOutput
 
 }
 
+public interface ISignalResult
+{
+	Int64 UserId { get; }
+	String Message { get; }
+	ExpandoObject? Data { get; }
+}
+
 public interface IInvokeResult
 {
 	Byte[] Body { get; }
 	String ContentType { get; }
 	String? FileName { get; }
+	ISignalResult? Signal { get; } 
 }
 
 public interface ILayoutDescription
 {
 	String? ModelScripts { get; }
 	String? ModelStyles { get; }
+}
+
+public interface ISaveResult
+{
+	String Data { get; }
+	ISignalResult? SignalResult { get; }
+
 }
 
 public interface IDataService
@@ -71,7 +86,7 @@ public interface IDataService
 	Task<String> ExpandAsync(String baseUrl, Object id, Action<ExpandoObject> setParams);
 	Task<String> ExpandAsync(ExpandoObject queryData, Action<ExpandoObject> setParams);
 
-	Task<String> SaveAsync(String baseUrl, ExpandoObject data, Action<ExpandoObject> setParams);
+	Task<ISaveResult> SaveAsync(String baseUrl, ExpandoObject data, Action<ExpandoObject> setParams);
 	Task DbRemoveAsync(String baseUrl, Object Id, String propertyName, Action<ExpandoObject> setParams);
 
 	Task<IInvokeResult> InvokeAsync(String baseUrl, String command, ExpandoObject? data, Action<ExpandoObject> setParams);

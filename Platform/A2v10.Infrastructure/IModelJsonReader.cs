@@ -20,6 +20,8 @@ public interface IModelBase
 
 	String? DataSource { get; }
 
+	Boolean Signal { get; }
+
 	String LoadProcedure();
 	Boolean HasModel();
 

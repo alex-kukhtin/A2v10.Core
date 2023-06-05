@@ -14,6 +14,7 @@ public class ModelJsonBase : IModelBase
 	public String? Source;
 	public String? Schema;
 	public String? Model;
+	public Boolean Signal { get; init; }
 
 	public Int32 CommandTimeout;
 
@@ -229,7 +230,8 @@ public enum ModelCommandType
 	script,
 	invokeTarget,
 	// new
-	csharp
+	csharp,
+	signal
 }
 
 public class ModelJsonCommand : ModelJsonBase, IModelCommand
@@ -241,7 +243,6 @@ public class ModelJsonCommand : ModelJsonBase, IModelCommand
 	public Boolean Async { get; init; }
 	public Boolean DebugOnly { get; init; } /*TODO: Implement me*/
 	public ExpandoObject? Args { get; init; }
-
 	public override String LoadProcedure()
 	{
 		if (String.IsNullOrEmpty(Procedure))

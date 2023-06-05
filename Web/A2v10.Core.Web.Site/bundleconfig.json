@@ -2,6 +2,7 @@
 	{
 		"outputFileName": "wwwroot/scripts/tabbed.js",
 		"inputFiles": [
+			"Scripts/signalr.js",
 			"Scripts/appheader.js",
 			"Scripts/navbar.js",
 			"Scripts/shell.js"

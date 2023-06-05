@@ -37,6 +37,12 @@ public class LayoutDescription : ILayoutDescription
 	public String? ModelStyles { get; init; }
 }
 
+public class SaveResult : ISaveResult
+{
+	public String Data { get; init; } = "{}";
+	public ISignalResult? SignalResult { get; init; }
+
+}
 public class DataService : IDataService
 {
 	private readonly IServiceProvider _serviceProvider;
@@ -213,7 +219,7 @@ public class DataService : IDataService
 		}
 	}
 
-	public async Task<String> SaveAsync(String baseUrl, ExpandoObject data, Action<ExpandoObject> setParams)
+	public async Task<ISaveResult> SaveAsync(String baseUrl, ExpandoObject data, Action<ExpandoObject> setParams)
 	{
 		var platformBaseUrl = CreatePlatformUrl(baseUrl);
 		var view = await _modelReader.GetViewAsync(platformBaseUrl);
@@ -227,7 +233,22 @@ public class DataService : IDataService
 		// TODO: HookHandler, invokeTarget, events
 
 		var model = await _dbContext.SaveModelAsync(view.DataSource, view.UpdateProcedure(), data, savePrms);
-		return JsonConvert.SerializeObject(model.Root, JsonHelpers.DataSerializerSettings);
+
+		ISignalResult? signalResult = null;
+		if (view.Signal)
+		{
+			var signal = model.Root.Get<ExpandoObject>("Signal");
+			model.Root.Set("Signal", null);
+			if (signal != null)
+				signalResult = SignalResult.FromData(signal);
+		}
+
+		var result = new SaveResult()
+		{
+			Data = JsonConvert.SerializeObject(model.Root, JsonHelpers.DataSerializerSettings),
+			SignalResult = signalResult
+		};
+		return result;
 	}
 
 	public async Task<IInvokeResult> InvokeAsync(String baseUrl, String command, ExpandoObject? data, Action<ExpandoObject> setParams)

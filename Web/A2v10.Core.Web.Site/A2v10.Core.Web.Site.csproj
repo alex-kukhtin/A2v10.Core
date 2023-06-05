@@ -18,6 +18,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <None Include="..\..\Platform\A2v10.App.Assets\Application\%40sql\a2v10_platform.sql" Link="a2v10_platform.sql" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="A2v10.Workflow.Engine" Version="10.1.8102" />
 	</ItemGroup>
 

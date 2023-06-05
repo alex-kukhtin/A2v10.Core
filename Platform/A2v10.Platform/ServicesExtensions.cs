@@ -20,7 +20,7 @@ using A2v10.ViewEngine.Xaml;
 using A2v10.ViewEngine.Html;
 
 using A2v10.Platform.Web;
-using Microsoft.AspNetCore.SignalR;
+using System.Threading.Tasks;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -120,7 +120,6 @@ public static class ServicesExtensions
 		app.UseHttpsRedirection();
 
 		app.UseStaticFiles();
-
 		app.UseRouting();
 		app.UseAuthentication();
 		app.UseAuthorization();
@@ -139,7 +138,7 @@ public static class ServicesExtensions
 		app.UseEndpoints(endpoints =>
 		{
 			endpoints.MapControllers();
-			endpoints.MapHub<ClientHub>("/_clienthub");
+			endpoints.MapHub<DefaultHub>("/_userhub");
         });
 
 		// TODO: use settings?
@@ -149,4 +148,5 @@ public static class ServicesExtensions
 		CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 	}
 }
+
 

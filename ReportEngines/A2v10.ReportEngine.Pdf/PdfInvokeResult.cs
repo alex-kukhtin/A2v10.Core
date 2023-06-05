@@ -17,4 +17,6 @@ public record PdfInvokeResult : IInvokeResult
 	public Byte[] Body { get; init; }
 	public String ContentType => MimeTypes.Application.Pdf;
 	public String? FileName{ get; init; }
+
+	public ISignalResult? Signal => null; 
 }

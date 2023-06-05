@@ -23,6 +23,7 @@ public static class ServerCommandRegistry
 			ModelCommandType.sendMessage => throw new DataServiceException("sendMessage command yet not implemented"),
 			// new
 			ModelCommandType.csharp => new InvokeCommandCSharp(serviceProvider),
+			ModelCommandType.signal => new InvokeCommandSignal(serviceProvider),
 			// deprectated
 			ModelCommandType.startProcess or ModelCommandType.resumeProcess => throw new DataServiceException("Workflow commands are not supported in this version"),
 			ModelCommandType.script => throw new DataServiceException("script command is not supported"),

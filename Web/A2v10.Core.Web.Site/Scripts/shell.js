@@ -1,6 +1,6 @@
 ﻿// Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
 
-/*20230602-8100*/
+/*20230605-8100*/
 /* tabbled:shell.js */
 (function () {
 	const eventBus = require('std:eventBus');
@@ -8,6 +8,7 @@
 	const utils = require('std:utils');
 	const urlTools = require('std:url');
 	const log = require('std:log');
+	const signalR = require('std:signalR');
 
 	const modalComponent = component('std:modal');
 	const toastrComponent = component('std:toastr');
@@ -458,7 +459,7 @@
 				me.requestsCount -= 1;
 				window.__requestsCount__ = me.requestsCount;
 			});
-
+			signalR.startService();
 		}
 	});
 })();

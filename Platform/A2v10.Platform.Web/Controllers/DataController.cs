@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 using A2v10.Infrastructure;
+using Microsoft.AspNetCore.SignalR;
 
 namespace A2v10.Platform.Web.Controllers;
 
@@ -18,12 +19,15 @@ namespace A2v10.Platform.Web.Controllers;
 public class DataController : BaseController
 {
 	private readonly IDataService _dataService;
+	private readonly IHubContext<DefaultHub> _hubContext;
 
 	public DataController(IApplicationHost host,
-		ILocalizer localizer, ICurrentUser currentUser, IProfiler profiler, IDataService dataService)
+		ILocalizer localizer, ICurrentUser currentUser, IProfiler profiler, IDataService dataService, 
+		IHubContext<DefaultHub> hubContext)
 		: base(host, localizer, currentUser, profiler)
 	{
 		_dataService = dataService;
+		_hubContext = hubContext;
 	}
 
 	[HttpPost]
@@ -36,6 +40,7 @@ public class DataController : BaseController
 			var baseUrl = eo.Get<String>("baseUrl") 
 				?? throw new InvalidReqestExecption(nameof(Reload));
 			String data = await _dataService.ReloadAsync(baseUrl, SetSqlQueryParams);
+
 			return new WebActionResult(data);
 		});
 	}
@@ -79,7 +84,10 @@ public class DataController : BaseController
 
 			var savedData = await _dataService.SaveAsync(baseUrl, data, SetSqlQueryParams);
 
-			return new WebActionResult(savedData);
+			if (savedData.SignalResult != null)
+				await _hubContext.SignalAsync(savedData.SignalResult);
+
+			return new WebActionResult(savedData.Data);
 		});
 	}
 
@@ -97,6 +105,10 @@ public class DataController : BaseController
 			ExpandoObject? data = eo.Get<ExpandoObject>("data");
 
 			var result = await _dataService.InvokeAsync(baseUrl, cmd, data, SetSqlQueryParams);
+
+			if (result.Signal != null)
+				await _hubContext.SignalAsync(result.Signal);
+
 			return new WebBinaryActionResult(result.Body, result.ContentType);
 		});
 	}

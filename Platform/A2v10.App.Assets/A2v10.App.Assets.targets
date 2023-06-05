@@ -29,6 +29,10 @@
 			<HintPath>@assemblies\A2v10.Xaml.dll</HintPath>
 			<Private>False</Private>
 		</Reference>
+		<Reference Include="A2v10.Xaml.Report" PrivateAssets="All" ReferenceOutputAssembly="False">
+			<HintPath>@assemblies\A2v10.Xaml.Report.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
 		<Reference Include="System.Xaml" PrivateAssets="All" ReferenceOutputAssembly="False">
 			<HintPath>@assemblies\System.Xaml.dll</HintPath>
 			<Private>False</Private>
