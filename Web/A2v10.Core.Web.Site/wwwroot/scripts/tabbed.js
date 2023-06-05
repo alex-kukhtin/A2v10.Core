@@ -1,6 +1,6 @@
 // Copyright � 2023 Oleksandr Kukhtin. All rights reserved.
 
-/*20230605-8107*/
+/*20230605-8109*/
 app.modules['std:signalR'] = function () {
 
 	const eventBus = require('std:eventBus')
@@ -12,7 +12,6 @@ app.modules['std:signalR'] = function () {
 		.build();
 
 	connection.on('signal', (event, data) => {
-		console.log(event, data);
 		eventBus.$emit('signalEvent', { event, data })
 	});
 

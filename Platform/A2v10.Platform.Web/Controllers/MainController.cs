@@ -53,7 +53,7 @@ public class MainController : Controller
 	[HttpGet]
 	public async Task<IActionResult> Default(String? pathInfo)
 	{
-		if (IsStaticFile())
+		if (IsStaticFile() || (pathInfo != null && pathInfo.StartsWith('_')))
 			return NotFound();
 
 		if (!await CheckLicenseAsync())
