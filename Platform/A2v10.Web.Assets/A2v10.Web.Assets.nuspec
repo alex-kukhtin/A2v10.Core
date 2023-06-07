@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>A2v10.Web.Assets</id>
-		<version>10.1.8084</version>
+		<version>10.1.8108</version>
 		<title>A2v10.Platform Client WebFiles</title>
 		<authors>Oleksandr Kukthin</authors>
 		<owners>Oleksandr Kukthin</owners>
@@ -13,6 +13,7 @@
 		<copyright>Copyright © 2020-2023 Oleksandr Kukthin. All rights reserved.</copyright>
 		<tags>A2v10 Platform</tags>
 		<repository type="git" url="https://github.com/alex-kukhtin/A2v10.Core" branch="master"/>
+		<license type="expression">MIT</license>
 		<contentFiles>
 			<files include="**/*" buildAction="Content"/>
 		</contentFiles>

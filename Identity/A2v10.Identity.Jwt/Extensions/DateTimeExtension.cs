@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿// Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.
 
-namespace A2v10.Identity.Jwt
+using System;
+
+namespace A2v10.Identity.Jwt;
+
+public static class DateTimeExtension
 {
-	public static class DateTimeExtension
+	public static Int64 ToUnixTime(this DateTime date)
 	{
-		public static Int64 ToUnixTime(this DateTime date)
-		{
-			return new DateTimeOffset(date.ToUniversalTime()).ToUnixTimeSeconds();
-		}
+		return new DateTimeOffset(date.ToUniversalTime()).ToUnixTimeSeconds();
 	}
 }
