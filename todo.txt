@@ -72,10 +72,9 @@ TABBED LAYOUT
 32. Сделать поиск по интерфейсу - Пример: Одниці виміру -> /sales/catalog/index/{guid}
 34. Tabbed. rightMenu. Закрывать вкладку прямо из меню.
 34. Tabbed. contextMenu. Закрыть все вкладки.
-36. Попробовать модули
 38. MultiTeanant On/Off
 39. Deploy to dev (CORE!)
-41. input-group disabled для textarea:disabled
+*41. Platform4.8: input-group disabled для textarea:disabled
 44. Tabbed. rightMenu - Hover, Sections (OPEN, RECENTLY CLOSED) styling
 *48. NovaEra2023. Order. Нету контрагента - include - GPF
 51. Menu. border-top как :before
