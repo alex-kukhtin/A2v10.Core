@@ -26,6 +26,7 @@ public class Startup
 		{
 			factory.RegisterEngine<PdfReportEngine>("pdf");
 		});
+		//services.AddScoped<ILicenseManager, EmptyLicenseManager>();
 	}
 
 	public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

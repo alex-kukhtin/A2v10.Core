@@ -5722,8 +5722,10 @@ TODO:
   margin-bottom: 0;
 }
 .grid .grid-divider {
-  background-color: #ddd;
+  background-color: var(--gray200);
   align-self: stretch;
+  justify-self: center;
+  width: 1px;
 }
 .stack-panel {
   display: flex !important;
@@ -6627,7 +6629,7 @@ table > colgroup col.blue {
   color: white;
 }
 .mdi-header .include.nav-pane .partial-block .btn:hover {
-  background-color: #7f7f7f;
+  background-color: var(--neutral800);
   color: #f5cc84;
 }
 .mdi-header .dropdown {
@@ -6643,16 +6645,16 @@ table > colgroup col.blue {
   gap: 8px;
   align-items: center;
   color: white;
-  background-color: black;
+  background-color: var(--neutral900);
 }
 .mdi-header .dropdown .user-name:hover {
   color: #f5cc84;
-  background-color: #6f6f6f;
+  background-color: var(--neutral800);
 }
 .mdi-tabs-container {
   grid-area: tabs;
   display: flex;
-  background-color: #f3f3f3;
+  background-color: var(--neutral100);
   justify-content: space-between;
 }
 .mdi-tabs-container .mdi-tabs {
@@ -6666,7 +6668,7 @@ table > colgroup col.blue {
   height: 2.5rem;
   padding-left: 16px;
   border-right: 1px solid white;
-  background-color: #e7e7e7;
+  background-color: var(--neutral300);
   white-space: nowrap;
   pointer-events: all;
   cursor: pointer;
@@ -6686,7 +6688,7 @@ table > colgroup col.blue {
   z-index: 8;
   left: 20%;
   padding: 3px;
-  border: 1px solid black;
+  border: 1px solid var(--neutral900);
   font-size: 12px;
 }
 .mdi-tabs-container .mdi-tabs li .close {
@@ -6698,7 +6700,7 @@ table > colgroup col.blue {
   margin: 0 4px;
 }
 .mdi-tabs-container .mdi-tabs li .close:hover {
-  background-color: #e0e0e0;
+  background-color: var(--neutral300);
 }
 .mdi-tabs-container .mdi-tabs li:hover .close {
   visibility: visible;
@@ -6750,7 +6752,7 @@ table > colgroup col.blue {
 }
 .mdi-footer {
   grid-area: footer;
-  background-color: #f3f3f3;
+  background-color: var(--neutral100);
   display: flex;
   height: 2rem;
   align-items: center;
@@ -6777,7 +6779,7 @@ table > colgroup col.blue {
 }
 .mdi-navbar {
   grid-area: navbar;
-  background-color: #7f7f7f;
+  background-color: var(--neutral700);
   position: relative;
   min-width: 60px;
 }
@@ -6797,17 +6799,42 @@ table > colgroup col.blue {
   flex-direction: column;
   align-items: center;
   gap: 6px;
+  position: relative;
 }
 .mdi-navbar .bar li .ico {
   color: inherit;
   font-size: 2rem;
 }
 .mdi-navbar .bar li:hover:not(.grow) {
-  background-color: black;
+  background-color: var(--neutral900);
   color: #f5cc84;
 }
 .mdi-navbar .bar li.grow {
   flex-grow: 2;
+}
+.mdi-navbar .bar li.border-top {
+  margin-top: 8px;
+}
+.mdi-navbar .bar li.border-top:before {
+  position: absolute;
+  top: -4px;
+  content: "";
+  width: 100%;
+  height: 1px;
+  background-color: var(--neutral300);
+  display: block;
+}
+.mdi-navbar .bar li.border-bottom {
+  margin-bottom: 8px;
+}
+.mdi-navbar .bar li.border-bottom:after {
+  position: absolute;
+  bottom: -4px;
+  content: "";
+  width: 100%;
+  height: 1px;
+  background-color: var(--neutral300);
+  display: block;
 }
 .mdi-navbar .mdi-menu {
   position: absolute;
@@ -6815,7 +6842,7 @@ table > colgroup col.blue {
   left: 100%;
   top: 0;
   bottom: 0;
-  background-color: #6f6f6f;
+  background-color: var(--neutral800);
   color: white;
   min-width: 250px;
   z-index: 70;
@@ -6826,8 +6853,8 @@ table > colgroup col.blue {
   font-size: 20px;
   padding: 0 0 0.5rem 0;
   margin: 0 0 1rem 0;
-  color: #e0e0e0;
-  border-bottom: 1px solid white;
+  color: var(--neutral300);
+  border-bottom: 1px solid var(--neutral300);
 }
 .mdi-navbar .mdi-menu ul {
   padding: 0;
@@ -6838,7 +6865,7 @@ table > colgroup col.blue {
 }
 .mdi-navbar .mdi-menu li.level-0 .folder {
   font-size: 1.2rem;
-  color: #e0e0e0;
+  color: var(--neutral300);
   line-height: 2.5rem;
 }
 .mdi-navbar .mdi-menu li.level-1 {
@@ -6865,7 +6892,7 @@ table > colgroup col.blue {
   color: #f5cc84;
 }
 .mdi-navbar .mdi-menu li.level-1:hover {
-  background-color: black;
+  background-color: var(--neutral900);
   color: #f5cc84;
 }
 .mdi-navbar .mdi-menu li.level-1:hover .btn-plus {

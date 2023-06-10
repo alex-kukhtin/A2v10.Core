@@ -11,6 +11,7 @@
 			A2v10.Infrastructure (8070)
 	A2v10.Services (8070)
 		A2v10.Infrastructure (8070)
+		A2v10.Module.Infrastructure (8070)
 	A2v10.ViewEngine.Xaml (8070)
 		A2v10.System.Xaml (8007)
 		A2v10.Infrastructure (8070)
