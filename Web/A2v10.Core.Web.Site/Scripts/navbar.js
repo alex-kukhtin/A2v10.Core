@@ -11,7 +11,7 @@
 		template: `
 <div class="mdi-navbar">
 	<ul class="bar">
-		<li v-for="m in menu" @click.stop.prevent=clickMenu(m) :title=m.Name :class="m.ClassName"">
+		<li v-for="m in menu" @click.stop.prevent=clickMenu(m) :title=m.Name :class="menuClass(m)">
 			<i class="ico" :class="menuIcon(m)"></i>
 		</li>
 	</ul>
@@ -37,35 +37,34 @@
 		},
 		data() {
 			return {
-				activeMenu: null,
-				popupVisible: false
+				activeMenu: null
 			};
 		},
 		computed: {
 			isMenuVisible() {
-				return !!this.activeMenu && this.popupVisible;
+				return !!this.activeMenu;
 			}
 		},
 		methods: {
 			clickMenu(m) {
+				let am = this.activeMenu;
 				eventBus.$emit('closeAllPopups');
 				const shell = this.$parent;
 				if (m.ClassName === 'grow')
 					return;
 				if (!m.Menu) {
-					this.popupVisible = false;
+					this.activeMenu = null;
 					shell.$emit('navigate', { title: m.Name, url: m.Url });
-				} else if (this.activeMenu === m && this.popupVisible) {
-					this.popupVisible = false;
+				} else if (am === m) {
+					this.activeMenu = null;
 				} else {
-					this.popupVisible = true;
 					this.activeMenu = m;
 				}
 			},
 			clickSubMenu(url, title) {
 				eventBus.$emit('closeAllPopups');
 				const shell = this.$parent;
-				this.popupVisible = false;
+				this.activeMenu = null;
 				if (url.endsWith('{genrandom}')) {
 					let randomString = Math.random().toString(36).substring(2);
 					url = url.replace('{genrandom}', randomString);
@@ -78,11 +77,14 @@
 				} else
 					alert('invalid menu url: ' + url);
 			},
+			menuClass(m) {
+				return (m.ClassName ? m.ClassName : '') + ((m === this.activeMenu) ? ' active' : '');
+			},
 			menuIcon(m) {
 				return 'ico-' + m.Icon;
 			},
 			__clickOutside() {
-				this.popupVisible = false;
+				this.activeMenu = null;
 			}
 		},
 		mounted() {

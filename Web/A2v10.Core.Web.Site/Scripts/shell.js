@@ -131,6 +131,9 @@
 			homeSource() {
 				return this.homeLoaded ? '/_home/index/0' : null;
 			},
+			tabsContextMenu() {
+				//alert('context menu');
+			},
 			selectHome(noStore) {
 				this.homeLoaded = true;
 				this.activeTab = null;
