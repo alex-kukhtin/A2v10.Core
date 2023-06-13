@@ -65,7 +65,7 @@
 				<a v-on:click.prevent="debugTrace" class="dropdown-item" tabindex="-1"><i class="ico ico-chart-stacked-line"></i> @localizer.Localize(null, "@[Profiling]")</a>
 				<div class="divider"></div>
 				<label class="checkbox">
-					<input type="checkbox" v-model="traceEnabled" />
+					<input type="checkbox" v-model="traceEnabled" name="trace"/>
 					<span>@localizer.Localize(null, "@[Tracing]")</span>
 				</label>
 			</div>
