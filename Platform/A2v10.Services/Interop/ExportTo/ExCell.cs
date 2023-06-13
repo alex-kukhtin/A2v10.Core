@@ -33,9 +33,9 @@ public class ExCell
 		if (Decimal.TryParse(number, NumberStyles.Number, format, out Decimal result))
 			return result.ToString(CultureInfo.InvariantCulture);
 		if (number.IndexOf(".") != -1)
-			return new Regex(@"[\s,]").Replace(number, String.Empty);
+			return Regex.Replace(number, @"[\s,]", String.Empty);
 		else
-			return new Regex(@"[\s]").Replace(number, String.Empty).Replace(",", ".");
+			return Regex.Replace(number, @"[\s]", String.Empty).Replace(",", ".");
 	}
 
 	static String NormalizeDate(String text)

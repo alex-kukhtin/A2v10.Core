@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System.IO;
 
@@ -246,6 +246,11 @@ public class Html2Excel
 		if (exrow.Height != 0)
 		{
 			row.Height = ConvertToPoints(exrow.Height);
+			row.CustomHeight = true;
+		}
+		else if (exrow.Role == RowRole.Divider)
+		{
+			row.Height = 8.25;
 			row.CustomHeight = true;
 		}
 		for (var col = 0; col < exrow.Cells.Count; col++)

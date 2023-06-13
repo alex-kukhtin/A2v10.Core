@@ -9,18 +9,6 @@ public enum RowKind
 	Body
 }
 
-public enum ExRowStyle
-{
-	Default,
-	Title,
-	Parameter,
-	LastParameter,
-	Header,
-	LightHeader,
-	Footer,
-	Total
-}
-
 public class ExRow
 {
 	public RowRole Role { get; set; }

@@ -60,10 +60,11 @@ namespace A2v10.Services.Interop.ExportTo
 			return _sheet;
 		}
 
+		private static readonly Regex s_colRegEx = new("<col ([\\w=\"\\s:%;-]+)>");
+
 		static XmlDocument GetXmlFromHtml(String html)
 		{
-			var reg = new Regex("<col ([\\w=\"\\s:%;-]+)>");
-			var xml = reg.Replace(html, (math) => $"<col {math.Groups[1].Value} />")
+			var xml = s_colRegEx.Replace(html, (math) => $"<col {math.Groups[1].Value} />")
 				.Replace("&nbsp;", "&#160;").Replace("<br>", "&#10;");
 			var doc = new XmlDocument();
 			doc.LoadXml(xml);
