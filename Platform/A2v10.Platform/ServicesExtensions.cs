@@ -61,7 +61,7 @@ public static class ServicesExtensions
         services.AddSingleton<IXamlPartProvider, XamlPartProvider>();
 
 		var cookiePrefix = configuration.GetValue<String>("identity:cookiePrefix")?.Trim()
-			?? "A2v10.Identity";
+			?? "A2v10Platform";
 
 		services.AddPlatformIdentityCore<Int64>()
 			.AddIdentityConfiguration<Int64>(configuration)

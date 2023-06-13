@@ -6347,7 +6347,6 @@ table > colgroup col.blue {
 }
 @media print {
   .sheet-page-wrapper {
-    background-color: white;
     padding: 0 !important;
     margin: 0;
   }
@@ -6371,7 +6370,7 @@ table > colgroup col.blue {
     min-height: 19cm;
   }
   .sheet-page-wrapper .sheet-page .a2-hyperlink {
-    border-bottom: none!important;
+    border-bottom: none !important;
   }
   /*
 	@page {
@@ -7808,6 +7807,10 @@ td.vert > .vcell {
   .mdi-tabs-container,
   .mdi-footer {
     display: none;
+  }
+  .mdi-shell,
+  .mdi-main {
+    overflow: unset;
   }
   .page.absolute {
     position: static;

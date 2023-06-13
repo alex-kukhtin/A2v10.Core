@@ -1,6 +1,6 @@
 ﻿// Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
 
-/*20230605-8100*/
+/*20230613-8110*/
 /* tabbled:shell.js */
 (function () {
 	const eventBus = require('std:eventBus');
@@ -212,8 +212,10 @@
 			},
 			restoreTabs() {
 				let tabs = window.localStorage.getItem(this.storageKey);
-				if (!tabs)
+				if (!tabs) {
+					this.selectHome(true);
 					return;
+				}
 				try {
 					let elems = JSON.parse(tabs);
 					let ix = elems.index;
