@@ -20,7 +20,7 @@ using A2v10.ViewEngine.Xaml;
 using A2v10.ViewEngine.Html;
 
 using A2v10.Platform.Web;
-using System.Threading.Tasks;
+using A2v10.Module.Infrastructure;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -60,7 +60,8 @@ public static class ServicesExtensions
         services.AddSingleton<IModelJsonPartProvider, ModelJsonPartProvider>();
         services.AddSingleton<IXamlPartProvider, XamlPartProvider>();
 
-        var cookiePrefix = configuration.GetValue<String>("identity:cookiePrefix").Trim();
+		var cookiePrefix = configuration.GetValue<String>("identity:cookiePrefix")?.Trim()
+			?? "A2v10.Identity";
 
 		services.AddPlatformIdentityCore<Int64>()
 			.AddIdentityConfiguration<Int64>(configuration)
@@ -103,6 +104,12 @@ public static class ServicesExtensions
 		services.AddSignalR();
 
 		return builder;
+	}
+
+	public static IServiceCollection UseDefaultLicenseManager(this IServiceCollection services)
+	{
+		services.AddScoped<ILicenseManager, EmptyLicenseManager>();
+		return services;
 	}
 
 	public static void ConfigurePlatform(this IApplicationBuilder app, IWebHostEnvironment env)

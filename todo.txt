@@ -109,3 +109,6 @@ Dynamic Reports
 23. Хитрые группировки по дате - месяц, год, неделя, день недели
 
 24. 
+
+-- DEPLOY
+WebAssets: vue.js, tabmain.js

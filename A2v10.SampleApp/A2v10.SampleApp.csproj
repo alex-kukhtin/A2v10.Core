@@ -6,9 +6,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="A2v10.Plaform" Version="10.1.8084" />
-	  <PackageReference Include="A2v10.ReportEngine.Pdf" Version="10.1.8084" />
-	  <PackageReference Include="A2v10.Web.Assets" Version="10.1.8108" />
+	  <PackageReference Include="A2v10.Plaform" Version="10.1.8109" />
+	  <PackageReference Include="A2v10.ReportEngine.Pdf" Version="10.1.8109" />
+	  <PackageReference Include="A2v10.Web.Assets" Version="10.1.8109" />
 	</ItemGroup>
 
 </Project>
