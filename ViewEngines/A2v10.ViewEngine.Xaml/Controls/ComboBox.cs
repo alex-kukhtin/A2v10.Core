@@ -9,12 +9,20 @@ public class ComboBoxItem : UIElementBase
 {
 	public String? Content { get; set; }
 	public Object? Value { get; set; }
+	public Boolean Bold { get; set; }
 
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
 		if (SkipRender(context))
 			return;
 		var option = new TagBuilder("option");
+
+		var boldBind = GetBinding("Bold");
+		if (boldBind != null)
+			option.MergeAttribute(":class", $"{{bold: {boldBind.GetPathFormat(context)}}} ");
+		else if (Bold)
+			option.AddCssClass("bold");
+
 		MergeAttributes(option, context, MergeAttrMode.Visibility);
 		if (Value != null)
 		{
@@ -108,6 +116,9 @@ public class ComboBox : ValuedControl, ITableControl
 				var valBind = elem.GetBinding("Value") 
 					?? throw new XamlException("ComboBoxItem. Value binging must be specified");
                 combo.MergeAttribute(":value-prop", $"'{valBind.Path}'");  /*without context!*/
+				var boldBind = elem.GetBinding("Bold");
+				if (boldBind != null)
+					combo.MergeAttribute(":bold-prop", $"'{boldBind.Path}'"); /*without context!*/
 			}
 		}
 		MergeValue(combo, context);

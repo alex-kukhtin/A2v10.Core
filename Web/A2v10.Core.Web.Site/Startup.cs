@@ -61,7 +61,7 @@ public class Startup
 		services.AddStimulsoftLicense(configuration);
 		*/
 
-		services.AddScoped<ILicenseManager, EmptyLicenseManager>();
+		//services.AddScoped<ILicenseManager, EmptyLicenseManager>();
 		services.AddScoped<ILicenseManager, A2v10.LicenseManager.LicenseVerifier>();
 
 		services.AddWorkflowEngineScoped();

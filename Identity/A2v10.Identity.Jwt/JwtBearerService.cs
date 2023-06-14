@@ -1,6 +1,7 @@
 ﻿// Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -20,7 +21,6 @@ public class JwtBearerService
 	{
 		_settings = settings;
 	}
-
 	public JwtTokenResult BuildToken<T>(AppUser<T> user) where T : struct
 	{
 		if (String.IsNullOrEmpty(user.UserName))
@@ -31,6 +31,14 @@ public class JwtBearerService
 			new Claim(WellKnownClaims.NameIdentifier, user.Id.ToString()!),
 			new Claim(WellKnownClaims.Name, user.UserName)
 		};
+
+		if (user.Tenant != null)
+			claims.Add(new Claim(WellKnownClaims.Tenant, user.Tenant.ToString()!));
+		if (user.Organization != null)
+			claims.Add(new Claim(WellKnownClaims.Organization, user.Organization.ToString()!));
+		if (!String.IsNullOrEmpty(user.Segment))
+			claims.Add(new Claim(WellKnownClaims.Segment, user.Segment));
+
 		var expires = DateTime.UtcNow.AddMinutes(_settings.ExpireMinutes);
 
 		var token = new JwtSecurityToken(
@@ -82,7 +90,9 @@ public class JwtBearerService
 			return new AppUser<T>()
 			{
 				Id = principal.Identity.GetUserId<T>(),
-				UserName = principal.Identity.GetUserClaim(WellKnownClaims.Name)
+				UserName = principal.Identity.GetUserClaim(WellKnownClaims.Name),
+				Tenant = principal.Identity.GetUserTenant<T>(),
+				Organization = principal.Identity.GetUserOrganization<T>()
 			};
 		}
 		throw new SecurityTokenValidationException();
