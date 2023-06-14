@@ -12,12 +12,9 @@ namespace A2v10.ReportEngine.Pdf;
 internal class LineComposer : FlowElementComposer
 {
 	private readonly Line _line;
-	private readonly RenderContext _context;
-
-	public LineComposer(Line line, RenderContext context)
+	public LineComposer(Line line)
 	{
 		_line = line;
-		_context = context;
 	}
 
 	internal override void Compose(IContainer container, Object? value = null	)

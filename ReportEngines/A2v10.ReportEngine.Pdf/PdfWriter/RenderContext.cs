@@ -1,4 +1,4 @@
-﻿// Copyright © 2022 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2022-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Dynamic;
@@ -66,7 +66,6 @@ internal class RenderContext
 			throw new InvalidDataException("Invalid path. The path must be relative");
 		var templDir = Path.GetDirectoryName(_templatePath) ?? String.Empty;
 		var fullPath = Path.GetFullPath(Path.Combine(templDir, fileName));
-		var pathDir = Path.GetDirectoryName(fullPath) ?? String.Empty;
 		return File.ReadAllBytes(fullPath);
 	}
 
@@ -121,7 +120,7 @@ internal class RenderContext
 
 	public Boolean IsVisible(XamlElement elem)
 	{
-		var ifbind = elem.GetBindRuntime("If");
+		var ifbind = elem.GetBindRuntime(nameof(elem.If));
 		if (ifbind == null)
 		{
 			if (elem.If != null && !elem.If.Value)
@@ -134,9 +133,5 @@ internal class RenderContext
 		else if (val == null)
 			return false;
 		return true;
-	}
-
-	public void ApplyTextStyle(TextStyle textStyle)
-	{
 	}
 }

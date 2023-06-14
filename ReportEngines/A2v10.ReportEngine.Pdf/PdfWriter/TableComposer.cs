@@ -110,7 +110,7 @@ internal class TableComposer : FlowElementComposer
 		}
 	}
 
-	private void ComposeCell(CellKind kind, TableCell cell, Func<ITableCellContainer> createCell, ExpandoObject? data = null)
+	private void ComposeCell(CellKind _1/*kind*/, TableCell cell, Func<ITableCellContainer> createCell, ExpandoObject? data = null)
 	{
 		if (!_context.IsVisible(cell))
 			return;

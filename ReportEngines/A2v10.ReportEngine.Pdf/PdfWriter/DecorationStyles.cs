@@ -114,10 +114,10 @@ internal static class DecorationStyles
 		return container.ApplyDecoration(style);
 	}
 
-	public static void ApplyText(this TextSpanDescriptor container, RuntimeStyle? style)
+	public static TextSpanDescriptor ApplyText(this TextSpanDescriptor container, RuntimeStyle? style)
 	{
 		if (style == null)
-			return;
+			return container;
 		if (style.FontSize != null)
 			container = container.FontSize(style.FontSize.Value);
 		if (style.Bold != null && style.Bold.Value)
@@ -128,5 +128,6 @@ internal static class DecorationStyles
 			container = container.Underline();
 		if (!String.IsNullOrEmpty(style.Color))
 			container = container.FontColor(style.Color!);
+		return container;
 	}
 }
