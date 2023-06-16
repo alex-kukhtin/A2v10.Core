@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2008-2023 Oleksandr Kukhtin
 
-Last updated : 24 may 2023
-module version : 8100
+Last updated : 15 jun 2023
+module version : 8101
 */
 ------------------------------------------------
 create or alter procedure a2security.FindUserById
@@ -111,6 +111,40 @@ begin
 	set nocount on;
 	set transaction isolation level read committed;
 	update a2security.ViewUsers set PhoneNumber = @PhoneNumber, PhoneNumberConfirmed = @Confirmed where Id = @Id;
+end
+go
+------------------------------------------------
+create or alter procedure a2security.FindApiUserByApiKey
+@Host nvarchar(255) = null,
+@ApiKey nvarchar(255) = null
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+
+	declare @status nvarchar(255);
+	declare @code int;
+
+	set @status = N'ApiKey=' + @ApiKey;
+	set @code = 65; /*fail*/
+
+	declare @user table(Id bigint, Tenant int, Segment nvarchar(255), [Name] nvarchar(255), ClientId nvarchar(255), AllowIP nvarchar(255));
+	insert into @user(Id, Tenant, Segment, [Name], ClientId, AllowIP)
+	select top(1) u.Id, u.Tenant, Segment, [Name]=u.UserName, s.ClientId, s.AllowIP 
+	from a2security.Users u inner join a2security.ApiUserLogins s on u.Id = s.[User] and u.Tenant = s.Tenant
+	where u.Void=0 and s.Mode = N'ApiKey' and s.ApiKey=@ApiKey;
+	
+	if @@rowcount > 0 
+	begin
+		set @code = 64 /*sucess*/;
+		update a2security.Users set LastLoginDate=getutcdate(), LastLoginHost=@Host
+		from @user t inner join a2security.Users u on t.Id = u.Id;
+	end
+
+	--insert into a2security.[Log] (UserId, Severity, Code, Host, [Message])
+		--values (0, N'I', @code, @Host, @status);
+
+	select * from @user;
 end
 go
 

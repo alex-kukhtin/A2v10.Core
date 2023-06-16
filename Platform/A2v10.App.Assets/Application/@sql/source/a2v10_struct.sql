@@ -98,6 +98,25 @@ create table a2security.Users
 );
 go
 ------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2security' and TABLE_NAME=N'ApiUserLogins')
+create table a2security.ApiUserLogins
+(
+	[User] bigint not null,
+	Tenant int not null, 
+	[Mode] nvarchar(16) not null, -- ApiKey, OAuth2, JWT
+	[ClientId] nvarchar(255),
+	[ClientSecret] nvarchar(255),
+	[ApiKey] nvarchar(255),
+	[AllowIP] nvarchar(1024),
+	Memo nvarchar(255),
+	RedirectUrl nvarchar(255),
+	[UtcDateModified] datetime not null constraint DF_ApiUserLogins_DateModified default(getutcdate()),
+	constraint PK_ApiUserLogins primary key clustered ([User], Tenant, Mode) with (fillfactor = 70),
+	constraint FK_ApiUserLogins_User_Users foreign key (Tenant, [User]) references a2security.Users(Tenant, Id)
+
+);
+go
+------------------------------------------------
 create or alter view a2security.ViewUsers
 as
 	select Id, UserName, DomainUser, PasswordHash, SecurityStamp, Email, PhoneNumber,
