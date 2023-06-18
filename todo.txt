@@ -86,11 +86,14 @@ TABBED LAYOUT
 59. Если не найден файл view, говорит View engine not found for ..., 
 	а должен говорить что искал и где.
 64. Sheet. Сделать таки padding для колонки SheetLevelCell
-66. Доделать выгрузку в Excel
 67. Tabbed: Drag'n'drop tabs
-73. NovaEra2023. Отчет в бухгалтерии. Оборотка по счету с группировками.
+73. (!) NovaEra2023. Отчет в бухгалтерии. Оборотка по счету с группировками.
 74. Левая панель - текст в меню nowrap, ellipsis
-77. 
+78. SimpleSecurity: развязать User/Tenant
+79. Красивость. Если Search заполнен - подсвечивать его каким-то цветом.
+80.
+
+
 
 Dynamic Reports
 ===============

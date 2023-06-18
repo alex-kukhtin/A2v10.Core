@@ -1,6 +1,6 @@
 ﻿// Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
 
-/*20230613-8110*/
+/*20230618-8110*/
 /* tabbled:shell.js */
 (function () {
 	const eventBus = require('std:eventBus');
@@ -126,7 +126,7 @@
 				
 			},
 			tabSource(tab) {
-				return tab.loaded ? tab.url : null;
+				return tab.loaded ? (tab.url  + (tab.query || '')) : null;
 			},		
 			homeSource() {
 				return this.homeLoaded ? '/_home/index/0' : null;
@@ -201,7 +201,7 @@
 				this.storeTabs();
 			},
 			storeTabs() {
-				var mapTab = (t) => { return { title: t.title, url: t.url, parentUrl: t.parentUrl }; };
+				var mapTab = (t) => { return { title: t.title, url: t.url, query: t.query || '', parentUrl: t.parentUrl }; };
 				let ix = this.tabs.indexOf(this.activeTab);
 				let tabs = JSON.stringify({
 					index: ix,
@@ -224,11 +224,11 @@
 						let loaded = ix === i;
 						if (loaded)
 							this.navigatingUrl = t.url;
-						this.tabs.push({ title: t.title, url: t.url, loaded, key: tabKey++, root: null, parentUrl: t.parentUrl, reload:0, debug:false });
+						this.tabs.push({ title: t.title, url: t.url, query: t.query, loaded, key: tabKey++, root: null, parentUrl: t.parentUrl, reload: 0, debug: false });
 					}
 					for (let i = 0; i < elems.closedTabs.length; i++) {
 						let t = elems.closedTabs[i];
-						this.closedTabs.push({ title: t.title, url: t.url, loaded: true, key: tabKey++ });
+						this.closedTabs.push({ title: t.title, url: t.url, query: t.query, loaded: true, key: tabKey++ });
 					}
 					if (ix >= 0 && ix < this.tabs.length)
 						this.activeTab = this.tabs[ix];
@@ -357,6 +357,18 @@
 				this.modals.push(dlg);
 				this.setupWrapper(dlg);
 			},
+			_pageReloaded(path) {
+				if (!path) return;
+				let seg = path.split('?');
+				if (seg.length < 2) return;
+				let tab = this.tabs.find(t => '/_page' + t.url === seg[0]);
+				let q = '';
+				if (seg[1])
+					q = '?' + seg[1];
+				if (tab.query === q) return;
+				tab.query = q;
+				this.storeTabs();
+			},
 			_eventToParentTab(ev) {
 				let tab = this.tabs.find(t => t.root === ev.source);
 				if (!tab || !tab.root || !tab.parentUrl) return;
@@ -455,6 +467,7 @@
 			eventBus.$on('showSidePane', this.showSidePane);
 			eventBus.$on('confirm', this._eventConfirm);
 			eventBus.$on('closePlain', this.closeTabFromStore);
+			eventBus.$on('pageReloaded', this._pageReloaded);
 			eventBus.$on('toParentTab', this._eventToParentTab);
 			eventBus.$on('beginRequest', () => {
 				me.requestsCount += 1;
