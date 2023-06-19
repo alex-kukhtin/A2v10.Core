@@ -16,7 +16,6 @@ LICENSING
 ==================================
 1. User.Identity.IsUserOpenId()
 2. AppUser.ChangePasswordEnabled
-3. Add Licence & readme for A2v10.Identity.Core
 5. 
 
 == TODO: Architecture
@@ -87,11 +86,11 @@ TABBED LAYOUT
 	а должен говорить что искал и где.
 64. Sheet. Сделать таки padding для колонки SheetLevelCell
 67. Tabbed: Drag'n'drop tabs
-73. (!) NovaEra2023. Отчет в бухгалтерии. Оборотка по счету с группировками.
 74. Левая панель - текст в меню nowrap, ellipsis
 78. SimpleSecurity: развязать User/Tenant
 79. Красивость. Если Search заполнен - подсвечивать его каким-то цветом.
-80.
+*80. NovaEra2023. Перенести отчеты из test_dynamic_report в основную ветку
+81. NovaEra2023. ItemRole для контрагента? 361/362 для покупателей
 
 
 

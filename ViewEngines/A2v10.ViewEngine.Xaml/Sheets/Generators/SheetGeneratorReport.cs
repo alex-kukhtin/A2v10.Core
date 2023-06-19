@@ -9,7 +9,7 @@ using A2v10.Infrastructure;
 
 namespace A2v10.Xaml;
 
-record HeaderField(String TopName, String BottomName, Int32 TopSpan)
+record HeaderField(String TopName, String BottomName, Int32 TopSpan, Boolean IsSingle)
 {
 	public static HeaderField FromString(String val)
 	{
@@ -25,7 +25,7 @@ record HeaderField(String TopName, String BottomName, Int32 TopSpan)
 		};
 		if (spl.Length == 2)
 			bottomName = spl[1];
-		return new HeaderField(topName, bottomName, topSpan);
+		return new HeaderField(topName, bottomName, topSpan, !val.Contains('|'));
 	}
 	public Boolean IsTop => !String.IsNullOrEmpty(TopName);
 	public Boolean IsBottom => !String.IsNullOrEmpty(BottomName);
@@ -116,6 +116,7 @@ public class SheetGeneratorReportInfo : ISheetGenerator
 				_sheet.Columns.Add(new SheetColumn() { Width = wideColWidth, MinWidth = autoColWidth });
 			}
 		}
+		Boolean nextGray = false;
 		foreach (var f in visibleFields)
 		{
 			var col = new SheetColumn();
@@ -133,7 +134,21 @@ public class SheetGeneratorReportInfo : ISheetGenerator
 				col.Width = wideColWidth;
 				col.MinWidth = autoColWidth;
 			}
-			_sheet.Columns.Add(col);
+			if (nextGray)
+			{
+				col.Background = ColumnBackgroundStyle.Gray;
+				nextGray = false;	
+			}
+			if (f.IsCross)
+			{
+				var cg = new SheetColumnGroup();
+				cg.SetBinding(nameof(SheetColumnGroup.ItemsSource), new Bind($"RepData.Items.$cross.{f.CrossCrossName}.length"));
+				nextGray = true;
+				cg.Columns.Add(col);
+				_sheet.Columns.Add(cg);
+			} 
+			else
+				_sheet.Columns.Add(col);
 		}
 
 		var hasCross = visibleFields.Any(f => f.IsCross);
@@ -172,6 +187,8 @@ public class SheetGeneratorReportInfo : ISheetGenerator
 					else
 					{
 						headerCell.ColSpan = hf.TopSpan;
+						if (hf.IsSingle)
+							headerCell.RowSpan = 2;
 					}
 					headerRow.Cells.Add(headerCell);
 				}
@@ -189,8 +206,10 @@ public class SheetGeneratorReportInfo : ISheetGenerator
 						grp.Cells.Add(grpCell);
 						headerRow2.Cells.Add(grp);
 					}
-                    else
+					else if (!hf.IsSingle)
+					{
 						headerRow2.Cells.Add(CreateHeaderCellFromData(context, hf.BottomName));
+					}
 				}
 			}
 			else
@@ -213,7 +232,7 @@ public class SheetGeneratorReportInfo : ISheetGenerator
 			{
 				if (field.IsCross)
 				{
-					CreateGroupCellFromData(field, $"RepData.Items.${field.CrossCrossName}Totals", field.CrossFieldName);
+					totalRow.Cells.Add(CreateGroupCellFromData(field, $"RepData.Items.${field.CrossCrossName}Totals", field.CrossFieldName));
 				}
 				else
 					totalRow.Cells.Add(CreateTotalCellFromData(field));

@@ -6771,7 +6771,7 @@ table > colgroup col.blue {
   font-size: 0.9rem;
   background-color: #b94e4c;
   color: white;
-  padding: 0 12px;
+  padding: 0 6px 0 18px;
 }
 .mdi-footer .menu {
   text-transform: none;
