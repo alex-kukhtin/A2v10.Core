@@ -1006,7 +1006,7 @@ a:active {
 pre {
   font-family: Consolas, 'Courier New', Courier, monospace;
   font-size: 0.85em;
-  background-color: var(--neutralBkLight);
+  background-color: var(--neutral50);
   padding: 6px;
   white-space: pre-wrap;
   word-break: break-all;
@@ -1628,7 +1628,7 @@ header .include.nav-pane .partial-block .control-group,
   pointer-events: none;
 }
 .splitter .spl-handle:hover {
-  background-color: var(--neutralBkLight);
+  background-color: var(--neutral50);
 }
 .splitter.vertical .spl-handle {
   border-left: 1px solid var(--neutralLight);
@@ -2098,7 +2098,7 @@ pre.a2-code {
   cursor: pointer;
 }
 .control-group .input-group {
-  border: 1px solid var(--gray400);
+  border: 1px solid var(--neutral400);
   border-radius: 4px;
   display: flex;
   align-items: stretch;
@@ -2134,9 +2134,9 @@ pre.a2-code {
   margin: 0.9em 0.2em 0 0.5em;
 }
 .control-group .input-group.static {
-  background-color: var(--neutralBkLight);
+  background-color: var(--gray50);
   user-select: text;
-  border-color: var(--gray200);
+  border-color: var(--neutral300);
 }
 .control-group .input-group.static > span {
   padding: 0 5px;
@@ -2294,7 +2294,8 @@ pre.a2-code {
   background-color: #fff8f8;
 }
 .control-group.disabled .input-group {
-  background-color: #fafafa;
+  background-color: var(--gray50);
+  border-color: var(--neutral300);
 }
 .control-group.disabled a:not(.rendershow) {
   pointer-events: none;
@@ -2966,7 +2967,7 @@ pre.a2-code {
   padding: 4px;
   display: block;
   border-top: 1px solid var(--neutralBkDarker);
-  background-color: var(--neutralBkLight);
+  background-color: var(--neutral50);
 }
 .input-group > .selector-pane table.data-grid tr.dg-row > td {
   line-height: 1;
@@ -3454,7 +3455,7 @@ table.data-grid > tbody > tr.bold > td {
   flex-grow: 0;
   display: inline-block;
   width: 2px;
-  border-right: 1px solid var(--neutralBkLight);
+  border-right: 1px solid var(--neutral50);
   align-self: stretch;
   background-color: var(--neutralBkDarker);
   margin: 0.25rem;
@@ -3746,7 +3747,7 @@ tr:hover .commandbar.visible-hover {
   padding-top: 6px;
   align-self: stretch;
   overflow: auto;
-  background-color: var(--neutralBkLight);
+  background-color: var(--neutral50);
   grid-gap: 0;
   align-items: stretch;
   height: 100%;
@@ -3798,7 +3799,7 @@ tr:hover .commandbar.visible-hover {
   grid-row: 1;
 }
 .tab-panel .tab-header {
-  background-color: var(--neutralBkLight);
+  background-color: var(--neutral50);
   margin: 0;
   padding: 0 6px 0;
   grid-column: 1;
@@ -3941,7 +3942,7 @@ tr:hover .commandbar.visible-hover {
 .a2-tab-bar.tab-bar-tab {
   border-bottom: 1px solid #ddd;
   border-top: 3px solid transparent;
-  background-color: var(--neutralBkLight);
+  background-color: var(--neutral50);
   margin: 0;
 }
 .a2-tab-bar.tab-bar-tab .a2-tab-bar-item {
@@ -4372,7 +4373,7 @@ ul.news-list > li {
 }
 .modal-footer {
   padding: 1rem;
-  background-color: var(--neutralBkLight);
+  background-color: var(--neutral50);
   display: flex;
   justify-content: flex-end;
   align-items: center;
@@ -4507,7 +4508,7 @@ ul.news-list > li {
   list-style: none;
   display: flex;
   grid-row: 1;
-  background-color: var(--neutralBkLight);
+  background-color: var(--neutral50);
 }
 .wizard-header li {
   padding: 0 0.7rem;
@@ -4643,7 +4644,7 @@ table tr.bold > td {
   font-weight: 600;
 }
 table td.gray {
-  background-color: var(--neutralBkLight);
+  background-color: var(--neutral50);
 }
 table tr.overline {
   border-top: 2px solid var(--neutralBkDarker);
@@ -4914,7 +4915,7 @@ table.hover > tbody > tr.active:hover {
   background-color: #fff8f8;
 }
 .a2-table.bk-white-smoke {
-  background-color: var(--neutralBkLight);
+  background-color: var(--neutral50);
 }
 .a2-table.bk-white {
   background-color: var(--background);
@@ -5101,11 +5102,11 @@ label.checkbox.lg {
 }
 .a2-pager button[disabled] {
   color: #ccc;
-  background-color: var(--neutralBkLight);
+  background-color: var(--neutral50);
   cursor: not-allowed;
 }
 .a2-pager button[disabled]:hover {
-  background-color: var(--neutralBkLight);
+  background-color: var(--neutral50);
 }
 .a2-pager button.active {
   background-color: var(--activeBk);
@@ -5722,7 +5723,7 @@ TODO:
   margin-bottom: 0;
 }
 .grid .grid-divider {
-  background-color: var(--gray200);
+  background-color: var(--neutral200);
   align-self: stretch;
   justify-self: center;
   width: 1px;
@@ -6012,7 +6013,7 @@ TODO:
   background-color: #e9e9e9 !important;
 }
 .background-white-smoke {
-  background-color: var(--neutralBkLight) !important;
+  background-color: var(--neutral50) !important;
 }
 .background-light-yellow {
   background-color: ivory!important;
@@ -7184,7 +7185,7 @@ table.tree-grid a.toggle.expanded:after {
   overflow: auto;
 }
 .dashboard-container .dashboard-list .widget-list .dashboard-item {
-  background-color: var(--neutralBkLight);
+  background-color: var(--neutral50);
 }
 .dashboard-container .dashboard-list .widget-list-grouping {
   margin: 0;
@@ -7217,7 +7218,7 @@ table.tree-grid a.toggle.expanded:after {
   width: 100%;
   height: 100%;
   border: 1px solid var(--neutralBkDark);
-  background-color: var(--neutralBkLight);
+  background-color: var(--neutral50);
 }
 .dashboard-container .dashboard-placeholder.hover {
   background-color: #ddd;
@@ -7366,7 +7367,7 @@ table.tree-grid a.toggle.expanded:after {
   cursor: pointer;
 }
 .tags-control .tags-pane .tags-pane-items li:hover {
-  background-color: var(--neutralBkLight);
+  background-color: var(--neutral50);
   box-shadow: 0px 1px 2px currentColor;
 }
 .tags-control .tags-pane .tags-settings {
@@ -7380,7 +7381,7 @@ table.tree-grid a.toggle.expanded:after {
   border-radius: 2px;
 }
 .tags-control .tags-pane .btn-settings:hover {
-  background-color: var(--neutralBkLight);
+  background-color: var(--neutral50);
 }
 .tags-list {
   display: flex;
@@ -7407,7 +7408,7 @@ table.tree-grid a.toggle.expanded:after {
   margin-left: 2px;
 }
 .tag-md-close .btn-close:hover {
-  background-color: var(--neutralBkLight);
+  background-color: var(--neutral50);
 }
 .tag-body {
   font-size: 0.85rem;
@@ -7500,7 +7501,7 @@ table.tree-grid a.toggle.expanded:after {
   border-bottom: 2px solid var(--neutralBkDarker);
 }
 .kanban .lane {
-  background-color: var(--neutralBkLight);
+  background-color: var(--neutral50);
   padding: 8px;
   width: var(--lane-width);
   min-width: var(--lane-min-width);
@@ -7678,7 +7679,7 @@ td.vert > .vcell {
   bottom: 2rem;
   right: 0;
   z-index: 110;
-  background-color: var(--neutralBkLight);
+  background-color: var(--neutral50);
   border-left: 1px solid var(--neutralBkDarker);
   width: 390px;
   box-shadow: -5px 0 10px 0 rgba(0, 0, 0, 0.2);
@@ -7723,7 +7724,7 @@ td.vert > .vcell {
 }
 .debug-panel .debug-body {
   overflow: auto;
-  background-color: var(--neutralBkLight);
+  background-color: var(--neutral50);
   user-select: text;
 }
 .debug-panel .debug-model pre {

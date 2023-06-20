@@ -63,7 +63,7 @@
 		margin-bottom: .2em;
 		display: block;
 		font-weight: normal;
-		font-size:90%;
+		font-size: 90%;
 	}
 
 	.control-link {
@@ -255,7 +255,7 @@
 
 	.input-group {
 		border: 1px solid @control-brd-color;
-		border-radius:@control-brd-radius;
+		border-radius: @control-brd-radius;
 		display: flex;
 		align-items: stretch;
 		background-color: @control-bg-color;
@@ -295,9 +295,9 @@
 		}
 
 		&.static {
-			background-color: @whitesmoke-gray-bg-color;
+			background-color: @disabled-bg-color;
 			user-select: text;
-			border-color:@control-disabled-brd-color;
+			border-color: @control-disabled-brd-color;
 
 			> span {
 				padding: 0 5px;
@@ -345,7 +345,7 @@
 		}
 
 		.add-on:last-child {
-			border-radius:0 @control-brd-radius @control-brd-radius 0;
+			border-radius: 0 @control-brd-radius @control-brd-radius 0;
 		}
 	}
 
@@ -354,7 +354,7 @@
 	}
 
 	&.sm {
-		font-size:.9rem;
+		font-size: .9rem;
 	}
 
 	&.with-width {
@@ -516,6 +516,7 @@
 .control-group.disabled {
 	.input-group {
 		background-color: @disabled-bg-color;
+		border-color: @control-disabled-brd-color;
 	}
 
 	a:not(.rendershow) {
