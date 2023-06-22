@@ -31,7 +31,7 @@ public class ExCell
 	static String NormalizeNumber(String number, IFormatProvider format)
 	{
 		if (String.IsNullOrEmpty(number))
-			return number;
+			return String.Empty;
 		if (Decimal.TryParse(number, NumberStyles.Number, format, out Decimal result))
 			return result.ToString(CultureInfo.InvariantCulture);
 		if (number.IndexOf(".") != -1)
