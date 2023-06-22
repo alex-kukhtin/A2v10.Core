@@ -1580,6 +1580,7 @@ header .include.nav-pane .partial-block .control-group,
   padding: 1.5em;
   background-color: white;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
 }
 .center-page .initial-form .control-group {
   margin: 1em 0;

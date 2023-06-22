@@ -48,7 +48,16 @@ public class Html2Excel
 				wsPart.Worksheet.Append(mc);
 			}
 
-			Sheets sheets = wbPart.Workbook.AppendChild<Sheets>(new Sheets());
+            wsPart.Worksheet.AddChild(new IgnoredErrors(
+                new IgnoredError()
+                {
+                    NumberStoredAsText = true,
+                    SequenceOfReferences = new ListValue<StringValue>(
+                        new List<StringValue>() { new StringValue("A1:WZZ999999") })
+                }
+            ));
+
+            Sheets sheets = wbPart.Workbook.AppendChild<Sheets>(new Sheets());
 			Sheet sheet = new() { Id = wbPart.GetIdOfPart(wsPart), SheetId = 1, Name = "Sheet1" };
 			sheets.Append(sheet);
 
@@ -78,7 +87,7 @@ public class Html2Excel
 
 		var borders = new Borders(
 				new Border(), // index 0 default
-				new Border( // index 1 black border
+				new Border(   // index 1 black border
 					new LeftBorder(autoColor()) { Style = BorderStyleValues.Thin },
 					new RightBorder(autoColor()) { Style = BorderStyleValues.Thin },
 					new TopBorder(autoColor()) { Style = BorderStyleValues.Thin },
@@ -93,7 +102,28 @@ public class Html2Excel
 			);
 
 		var fills = new Fills(
-				new Fill(new PatternFill() { PatternType = PatternValues.None }));
+				//index 0 - default
+				new Fill(new PatternFill() { PatternType = PatternValues.None }),
+                //index 1 - skip
+                new Fill(new PatternFill()
+				{
+					PatternType = PatternValues.Gray0625,
+				}),
+                //index 2 - lighth gold (total)
+                new Fill(new PatternFill()
+                {
+                    PatternType = PatternValues.Solid,
+                    ForegroundColor = new ForegroundColor() { Rgb = "FFFFFCED" },
+                    BackgroundColor = new BackgroundColor() { Indexed = (UInt32Value) 64U }
+                }),
+                //index 3 - Light gray (total)
+                new Fill(new PatternFill()
+                {
+                    PatternType = PatternValues.Solid,
+                    ForegroundColor = new ForegroundColor() { Rgb = "FFF8F8F8" },
+                    BackgroundColor = new BackgroundColor() { Indexed = (UInt32Value)64U }
+                })
+            );
 
 		var numFormats = new NumberingFormats(
 				/*date*/     new NumberingFormat() { FormatCode = "dd\\.mm\\.yyyy;@", NumberFormatId = 166 },
@@ -171,8 +201,20 @@ public class Html2Excel
 			cf.ApplyBorder = true;
 		}
 
-		// align
-		if (style.DataType == DataType.Date || style.DataType == DataType.DateTime)
+		// fill
+		if (style.RowRole == RowRole.Header) 
+		{ 
+			cf.FillId = 3; 
+			cf.ApplyFill = true;
+		} 
+		else if (style.RowRole == RowRole.Total)
+		{
+            cf.FillId = 2;
+            cf.ApplyFill = true;
+        }
+
+        // align
+        if (style.DataType == DataType.Date || style.DataType == DataType.DateTime)
 		{
 			cf.Alignment.Horizontal = HorizontalAlignmentValues.Center;
 		}

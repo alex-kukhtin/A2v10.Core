@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System.Globalization;
 using System.Text.RegularExpressions;
@@ -30,6 +30,8 @@ public class ExCell
 
 	static String NormalizeNumber(String number, IFormatProvider format)
 	{
+		if (String.IsNullOrEmpty(number))
+			return number;
 		if (Decimal.TryParse(number, NumberStyles.Number, format, out Decimal result))
 			return result.ToString(CultureInfo.InvariantCulture);
 		if (number.IndexOf(".") != -1)
