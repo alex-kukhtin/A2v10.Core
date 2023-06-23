@@ -1,10 +1,12 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net6.0</TargetFrameworks>
+		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>
 		<Version>10.1.8109</Version>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<Nullable>enable</Nullable>
 		<Product>A2v10</Product>
-		<PackageId>A2v10.Plaform</PackageId>
+		<PackageId>A2v10.MailClient</PackageId>
 		<Authors>Oleksandr Kukthin</Authors>
 		<Company>Oleksandr Kukthin</Company>
 		<Description>A2v10 Platform core</Description>
@@ -15,25 +17,26 @@
 		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\..\Identity\A2v10.Identity.Core\A2v10.Identity.Core.csproj" />
-		<ProjectReference Include="..\..\Identity\A2v10.Web.Identity.UI\A2v10.Web.Identity.UI.csproj" />
-		<ProjectReference Include="..\..\ViewEngines\A2v10.ViewEngine.Html\A2v10.ViewEngine.Html.csproj" />
-		<ProjectReference Include="..\..\ViewEngines\A2v10.ViewEngine.Xaml\A2v10.ViewEngine.Xaml.csproj" />
-		<ProjectReference Include="..\A2v10.Platform.Web\A2v10.Platform.Web.csproj" />
-		<ProjectReference Include="..\A2v10.Services\A2v10.Services.csproj" />
-	</ItemGroup>
-
 	<PropertyGroup>
 		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 	</PropertyGroup>
+	
+	<ItemGroup>
+	  <PackageReference Include="MailKit" Version="4.1.0" />
+	  <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="7.0.4" />
+	  <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
+	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Data.Core" Version="10.1.7334" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <ProjectReference Include="..\..\Platform\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
 	</ItemGroup>
 
 </Project>

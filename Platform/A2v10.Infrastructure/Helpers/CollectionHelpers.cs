@@ -1,9 +1,10 @@
-﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
 
 namespace A2v10.Infrastructure;
+
 public static class CollectionHelpers
 {
 	public static IDictionary<TKey, TValue> Append<TKey, TValue>(this IDictionary<TKey, TValue> dst, IDictionary<TKey, TValue>? src, Boolean replaceExisiting = false)

@@ -1,4 +1,4 @@
-// Copyright © 2020-2022 Oleksandr Kukhtin. All rights reserved.
+// Copyright © 2020-2023 Oleksandr Kukhtin. All rights reserved.
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -6,10 +6,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 using A2v10.Infrastructure;
-using A2v10.Module.Infrastructure;
+
 using A2v10.WorkflowEngine;
 using A2v10.ReportEngine.Pdf;
-using A2v10.Services;
 
 namespace A2v10.Core.Web.Site;
 
@@ -24,7 +23,11 @@ public class Startup
 
 	public void ConfigureServices(IServiceCollection services)
 	{
-		var appBuilder = services.UsePlatform(Configuration);
+		//!!!Before Use Platform. It has a default implementation 
+		services.UseMailClient();
+		services.UseLicenseManager();
+
+		services.UsePlatform(Configuration);
 
 		services.AddReportEngines(factory =>
 		{
@@ -50,19 +53,6 @@ public class Startup
 			us.RequireUniqueEmail = true;
 		});
 		*/
-
-		/*
-		services
-		.AddReportEngines(x =>
-		{
-			x.RegisterEngine<StimulsoftReportEngine>("stimulsoft");
-		});
-
-		services.AddStimulsoftLicense(configuration);
-		*/
-
-		//services.AddScoped<ILicenseManager, EmptyLicenseManager>();
-		services.AddScoped<ILicenseManager, A2v10.LicenseManager.LicenseVerifier>();
 
 		services.AddWorkflowEngineScoped();
 		services.AddInvokeTargets(a =>

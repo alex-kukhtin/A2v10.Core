@@ -132,9 +132,11 @@ namespace A2v10.Platform.Web {
         ///
         ///	const menu = $(Menu);
         ///
+        ///	const Shell = component(&apos;std:shellPlain&apos;)
+        ///
         ///	const sp = menu.SysParams || {};
         ///
-        ///	const shell = new Vue({
+        ///	const elem = new Shell({
         ///		el: &apos;#shell&apos;,
         ///		data: {
         ///			version: &apos;$(AppVersion)&apos;,
@@ -143,11 +145,7 @@ namespace A2v10.Platform.Web {
         ///			subtitle: sp.AppSubTitle || &apos;&apos;,
         ///			userState: menu.UserState,
         ///			isDebug: $(Debug),
-        ///			appData: $(AppData)
-        ///		},
-        ///		computed: {
-        ///		},
-        ///		methods: {
+        ///			appData: $(AppData),
         ///		}
         ///	});
         ///

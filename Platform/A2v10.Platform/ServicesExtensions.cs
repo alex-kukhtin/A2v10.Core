@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 using A2v10.Data;
 using A2v10.Data.Interfaces;
@@ -60,6 +61,10 @@ public static class ServicesExtensions
         services.AddSingleton<IModelJsonPartProvider, ModelJsonPartProvider>();
         services.AddSingleton<IXamlPartProvider, XamlPartProvider>();
 
+		// default implementations
+		services.TryAddSingleton<IMailService, NullMailService>();
+		services.TryAddScoped<ILicenseManager, EmptyLicenseManager>();
+
 		var cookiePrefix = configuration.GetValue<String>("identity:cookiePrefix")?.Trim()
 			?? "A2v10Platform";
 
@@ -104,12 +109,6 @@ public static class ServicesExtensions
 		services.AddSignalR();
 
 		return builder;
-	}
-
-	public static IServiceCollection UseDefaultLicenseManager(this IServiceCollection services)
-	{
-		services.AddScoped<ILicenseManager, EmptyLicenseManager>();
-		return services;
 	}
 
 	public static void ConfigurePlatform(this IApplicationBuilder app, IWebHostEnvironment env)

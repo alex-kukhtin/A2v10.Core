@@ -5,6 +5,7 @@ using System;
 using A2v10.Data.Interfaces;
 
 namespace A2v10.Infrastructure;
+
 public class RenderInfo : IRenderInfo
 {
 	public String? RootId { get; init; }

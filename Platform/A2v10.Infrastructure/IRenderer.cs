@@ -1,11 +1,10 @@
-﻿// Copyright © 2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System.IO;
 
-namespace A2v10.Infrastructure
+namespace A2v10.Infrastructure;
+
+public interface IRenderer
 {
-	public interface IRenderer
-	{
-		void Render(IRenderInfo info, TextWriter writer);
-	}
+	void Render(IRenderInfo info, TextWriter writer);
 }

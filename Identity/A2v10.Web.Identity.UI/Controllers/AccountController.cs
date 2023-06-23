@@ -27,11 +27,12 @@ public class AccountController : Controller
 	private readonly IDbContext _dbContext;
 	private readonly IApplicationHost _host;
 	private readonly IApplicationTheme _appTheme;
+	private readonly IMailService _mailService;
 
 	public AccountController(SignInManager<AppUser<Int64>> signInManager, UserManager<AppUser<Int64>> userManager, 
 			AppUserStore<Int64> userStore, 
 			IAntiforgery antiforgery, IApplicationHost host, IDbContext dbContext, 
-			IApplicationTheme appTheme)
+			IApplicationTheme appTheme, IMailService mailService)
 	{
 		_signInManager = signInManager;
 		_userManager = userManager;
@@ -40,6 +41,7 @@ public class AccountController : Controller
 		_dbContext = dbContext;
 		_host = host;
 		_appTheme = appTheme;
+		_mailService = mailService;
 	}
 
 	void RemoveAllCookies()
@@ -151,6 +153,7 @@ public class AccountController : Controller
 			var result = await _userManager.CreateAsync(user, model.Password);
 			if (result.Succeeded)
 			{
+				RemoveAntiforgeryCookie();
 				var token = await _userManager.GenerateTwoFactorTokenAsync(user, TokenOptions.DefaultPhoneProvider);
 				var user2 = await _userManager.FindByNameAsync(user.UserName);
 				var verified = await _userManager.VerifyTwoFactorTokenAsync(user2, TokenOptions.DefaultPhoneProvider, token);
