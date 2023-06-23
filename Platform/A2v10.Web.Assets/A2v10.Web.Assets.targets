@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
 	<ItemGroup>
+		<SourceRoot Include="$(MSBuildThisFileDirectory)..\content\assets\wwwroot\*" />
 		<SourceAssetsJs Include="$(MSBuildThisFileDirectory)..\content\assets\wwwroot\scripts\*" />
 		<SourceAssetsCss Include="$(MSBuildThisFileDirectory)..\content\assets\wwwroot\css\*" />
 		<SourceAssetsFonts Include="$(MSBuildThisFileDirectory)..\content\assets\wwwroot\css\fonts\*" />
 		<SourceAssetsLoc Include="$(MSBuildThisFileDirectory)..\content\assets\wwwroot\localization\*" />
 	</ItemGroup>
 	<Target Name="CopyAssetsToProject" BeforeTargets="Build">
+		<Copy SourceFiles="@(SourceRoot)" DestinationFolder="$(ProjectDir)\wwwroot"/>
 		<Copy SourceFiles="@(SourceAssetsJs)" DestinationFolder="$(ProjectDir)\wwwroot\scripts"/>
 		<Copy SourceFiles="@(SourceAssetsCss)" DestinationFolder="$(ProjectDir)\wwwroot\css"/>
 		<Copy SourceFiles="@(SourceAssetsFonts)" DestinationFolder="$(ProjectDir)\wwwroot\css\fonts"/>

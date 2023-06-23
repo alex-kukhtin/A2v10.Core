@@ -62,18 +62,28 @@ begin
 end
 go
 ------------------------------------------------
-create or alter procedure a2security.UpdateUserLockout
+create or alter procedure a2security.[User.SetAccessFailedCount]
 @Id bigint,
-@AccessFailedCount int,
-@LockoutEndDateUtc datetimeoffset
+@AccessFailedCount int
 as
 begin
 	set nocount on;
 	set transaction isolation level read committed;
 
-	update a2security.ViewUsers set 
-		AccessFailedCount = @AccessFailedCount, LockoutEndDateUtc = @LockoutEndDateUtc
+	update a2security.ViewUsers set AccessFailedCount = @AccessFailedCount
 	where Id=@Id;
+end
+go
+------------------------------------------------
+create or alter procedure a2security.[User.SetLockoutEndDate]
+@Id bigint,
+@LockoutEndDate datetimeoffset
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+
+	update a2security.ViewUsers set LockoutEndDateUtc = @LockoutEndDate where Id=@Id;
 end
 go
 

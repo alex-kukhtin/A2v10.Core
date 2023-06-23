@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 
@@ -15,4 +15,5 @@ public class LoginViewModel : IIdentityViewModel
 
 	public AppTitleModel? Title { get; init; }
 	public String Theme { get; init; } = String.Empty;
+	public String? ReturnUrl { get; init; }
 }

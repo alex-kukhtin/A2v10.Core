@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Identity;
 
 using A2v10.Data.Interfaces;
 using A2v10.Identity.Core.Helpers;
+
 using System.Diagnostics.CodeAnalysis;
 
 public sealed class AppUserStore<T> :
@@ -23,7 +24,8 @@ public sealed class AppUserStore<T> :
 	IUserPasswordStore<AppUser<T>>,
 	IUserSecurityStampStore<AppUser<T>>,
 	IUserClaimStore<AppUser<T>>,
-	IUserRoleStore<AppUser<T>>
+	IUserRoleStore<AppUser<T>>,
+	IUserLockoutStore<AppUser<T>>
 	where T : struct
 {
 	private readonly IDbContext _dbContext;
@@ -52,7 +54,8 @@ public sealed class AppUserStore<T> :
 		public const String Email = nameof(Email);
 		public const String Roles = nameof(Roles);
 		public const String Branch = nameof(Branch);
-
+		public const String AccessFailedCount = nameof(AccessFailedCount);
+		public const String LockoutEndDate = nameof(LockoutEndDate);
 	}
 	public AppUserStore(IDbContext dbContext, IOptions<AppUserStoreOptions<T>> options)
 	{
@@ -555,10 +558,69 @@ public sealed class AppUserStore<T> :
 		throw new NotImplementedException();
 	}
 
+
 	public Task<IList<AppUser<T>>> GetUsersInRoleAsync(String roleName, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();
 	}
+	#endregion
 
+	#region IUserLockoutStore
+	public Task<DateTimeOffset?> GetLockoutEndDateAsync(AppUser<T> user, CancellationToken cancellationToken)
+	{
+		return Task.FromResult<DateTimeOffset?>(user.LockoutEndDateUtc);
+	}
+
+	public async Task SetLockoutEndDateAsync(AppUser<T> user, DateTimeOffset? lockoutEnd, CancellationToken cancellationToken)
+	{
+		user.LockoutEndDateUtc = lockoutEnd;	
+		var prm = new ExpandoObject()
+		{
+			{ ParamNames.Id,  user.Id },
+			{ ParamNames.LockoutEndDate,  user.LockoutEndDateUtc }
+		};
+		await _dbContext.ExecuteExpandoAsync(_dataSource, $"[{_dbSchema}].[User.SetLockoutEndDate]", prm);
+	}
+
+	public async Task<Int32> IncrementAccessFailedCountAsync(AppUser<T> user, CancellationToken cancellationToken)
+	{
+		user.AccessFailedCount++;
+		var prm = new ExpandoObject()
+		{
+			{ ParamNames.Id,  user.Id },
+			{ ParamNames.AccessFailedCount,  user.AccessFailedCount }
+		};
+		await _dbContext.ExecuteExpandoAsync(_dataSource, $"[{_dbSchema}].[User.SetAccessFailedCount]", prm);
+		return user.AccessFailedCount;
+	}
+
+	public async Task ResetAccessFailedCountAsync(AppUser<T> user, CancellationToken cancellationToken)
+	{
+		if (user.AccessFailedCount == 0)
+			return;
+		user.AccessFailedCount = 0;
+		var prm = new ExpandoObject()
+		{
+			{ ParamNames.Id,  user.Id },
+			{ ParamNames.AccessFailedCount,  user.AccessFailedCount }
+		};
+		await _dbContext.ExecuteExpandoAsync(_dataSource, $"[{_dbSchema}].[User.SetAccessFailedCount]", prm);
+	}
+
+	public Task<Int32> GetAccessFailedCountAsync(AppUser<T> user, CancellationToken cancellationToken)
+	{
+		return Task.FromResult(user.AccessFailedCount);
+	}
+
+	public Task<Boolean> GetLockoutEnabledAsync(AppUser<T> user, CancellationToken cancellationToken)
+	{
+		return Task.FromResult(user.LockoutEnabled);
+	}
+
+	public Task SetLockoutEnabledAsync(AppUser<T> user, bool enabled, CancellationToken cancellationToken)
+	{
+		user.LockoutEnabled = enabled;
+		return Task.CompletedTask;
+	}
 	#endregion
 }

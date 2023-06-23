@@ -63,12 +63,28 @@ public class AccountController : Controller
 		{
 			Title = await _dbContext.LoadAsync<AppTitleModel>(_host.CatalogDataSource, "a2sys.[AppTitle.Load]"),
 			Theme = _appTheme.MakeTheme(),
-			RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken
+			RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken,
+			ReturnUrl = returnUrl
 		};
-        // TODO: ReturnUrl to model
-        TempData["ReturnUrl"] = returnUrl;
 		return View(m);
 	}
+
+	/*
+			* CHANGE PHONE NUMBER
+		var user = await _userManager.FindByNameAsync(model.Login);
+		user.PhoneNumber = "PHONENUMBER";
+        var token = await _userManager.GenerateChangePhoneNumberTokenAsync(user, "PHONENUMBER");
+		var verified = await _userManager.VerifyChangePhoneNumberTokenAsync(user, token, "PHONENUMBER");
+		await _userManager.ChangePhoneNumberAsync(user, "PHONENUMBER", token);
+		//
+		/* refresh claims!
+		var user = await _userManager.FindByNameAsync(model.Login);
+		await _userManager.AddClaimAsync(user, new System.Security.Claims.Claim("Organization", "234563"));
+		// sign in again!
+		await _signInManager.SignInAsync(user);
+			* LICENSE MANAGER
+			* _licenseManager.LoadModules()	
+	 */
 
 	[AllowAnonymous]
 	[HttpPost]
@@ -76,37 +92,32 @@ public class AccountController : Controller
 	{
 		var isValid = await _antiforgery.IsRequestValidAsync(HttpContext);
 
-		RemoveAntiforgeryCookie();
+		if (!isValid)
+			return new JsonResult(JsonResponse.Error("AntiForgery"));
 
-        var result = await _signInManager.PasswordSignInAsync(model.Login, model.Password, model.IsPersistent, lockoutOnFailure: true);
+		var user = await _userManager.FindByNameAsync(model.Login);
+		if (user == null || user.IsEmpty)
+			return new JsonResult(JsonResponse.Error("Failed"));
+		if (!user.EmailConfirmed)
+			return new JsonResult(JsonResponse.Error("EmailNotConfirmed"));
+
+		if (user.SetPassword)
+			return new JsonResult(JsonResponse.Ok("SetPassword"));
+
+		var result = await _signInManager.PasswordSignInAsync(model.Login, model.Password, model.IsPersistent, lockoutOnFailure: true);
 		if (result.Succeeded)
 		{
 
-			/* 
-			 * CHANGE PHONE NUMBER
-			var user = await _userManager.FindByNameAsync(model.Login);
-			user.PhoneNumber = "PHONENUMBER";
-            var token = await _userManager.GenerateChangePhoneNumberTokenAsync(user, "PHONENUMBER");
-			var verified = await _userManager.VerifyChangePhoneNumberTokenAsync(user, token, "PHONENUMBER");
-			await _userManager.ChangePhoneNumberAsync(user, "PHONENUMBER", token);
-			*/
-			//
-			/* refresh claims!
-			var user = await _userManager.FindByNameAsync(model.Login);
-			await _userManager.AddClaimAsync(user, new System.Security.Claims.Claim("Organization", "234563"));
-			// sign in again!
-			await _signInManager.SignInAsync(user);
-			*/
-			/*
-			 * LICENSE MANAGER
-			 * _licenseManager.LoadModules()	
-			 */
-			var returnUrl = (TempData["ReturnUrl"] ?? "/").ToString()!.ToLowerInvariant();
+			RemoveAntiforgeryCookie();
+			var returnUrl = model.ReturnUrl!.ToLowerInvariant();
 			if (returnUrl.StartsWith("/account"))
 				returnUrl = "/";
 			return LocalRedirect(returnUrl);
 		}
-		throw new InvalidOperationException("Invalid login");
+		else
+		{
+			return new JsonResult(JsonResponse.Error(result.ToString()));
+		}
 	}
 
 
@@ -146,12 +157,26 @@ public class AccountController : Controller
 				await _userStore.SetPhoneNumberConfirmedAsync(user, true, new CancellationToken());
 				return Redirect("/");
 			}
-			return Redirect("/account/register");
+			return Redirect("/account/login");
 		}
 		catch (Exception tex)
 		{
 			return new EmptyResult();
 		}
+	}
+
+	[HttpGet]
+	[AllowAnonymous]
+	public async Task<IActionResult> ForgotPassword()
+	{
+		RemoveAllCookies();
+		var m = new SimpleIdentityViewModel()
+		{
+			Title = await _dbContext.LoadAsync<AppTitleModel>(_host.CatalogDataSource, "a2sys.[AppTitle.Load]"),
+			Theme = _appTheme.MakeTheme(),
+			RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken
+		};
+		return View(m);
 	}
 
 	[HttpGet]

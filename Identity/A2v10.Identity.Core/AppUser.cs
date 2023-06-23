@@ -30,7 +30,7 @@ public class AppUser<T> where T : struct
 
 	public String? PasswordHash { get; set; }
 	public String? SecurityStamp { get; set; }
-	public DateTimeOffset LockoutEndDateUtc { get; set; }
+	public DateTimeOffset? LockoutEndDateUtc { get; set; }
 	public Boolean LockoutEnabled { get; set; }
 	public Int32 AccessFailedCount { get; set; }
 	public Boolean EmailConfirmed { get; set; }

@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 
@@ -7,5 +7,6 @@ public interface ILocalizer
 {
 	String? Localize(String? locale, String? content, Boolean replaceNewLine = true);
 	String? Localize(String? content);
+	String? this[String? index] { get; }
 }
 

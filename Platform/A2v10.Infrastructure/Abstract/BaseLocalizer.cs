@@ -36,6 +36,7 @@ public abstract class BaseLocalizer : ILocalizer, IDataLocalizer
 	{
 		return Localize(null, content);
 	}
+	public String? this[String? index] => Localize($"@[{index}]");
 
 	public String? Localize(String? locale, String? content, Boolean replaceNewLine = true)
 	{
