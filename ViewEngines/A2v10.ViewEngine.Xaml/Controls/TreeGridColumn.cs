@@ -76,9 +76,6 @@ public class TreeGridColumn : UiContentElement
 
 		AddAligns(td);
 
-		if (Content is ITableControl)
-			td.AddCssClass("ctrl");
-
 		if (ShowButton)
 			td.AddCssClass("indent");
 		else
