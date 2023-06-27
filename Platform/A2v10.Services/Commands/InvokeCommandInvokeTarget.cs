@@ -1,49 +1,45 @@
-﻿// Copyright © 2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.
 
-using System;
-using System.Dynamic;
+using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using A2v10.Infrastructure;
 using Newtonsoft.Json;
-using System.Text;
 
-namespace A2v10.Services
+namespace A2v10.Services;
+
+public class InvokeCommandInvokeTarget : IModelInvokeCommand
 {
-	public class InvokeCommandInvokeTarget : IModelInvokeCommand
+	private readonly IServiceProvider _serviceProvider;
+	private readonly IInvokeEngineProvider _engineProvider;
+
+	public InvokeCommandInvokeTarget(IServiceProvider serviceProvider)
 	{
-		private readonly IServiceProvider _serviceProvider;
-		private readonly IInvokeEngineProvider _engineProvider;
+		_serviceProvider = serviceProvider;
+		_engineProvider = _serviceProvider.GetRequiredService<IInvokeEngineProvider>();
+	}
 
-		public InvokeCommandInvokeTarget(IServiceProvider serviceProvider)
-		{
-			_serviceProvider = serviceProvider;
-			_engineProvider = _serviceProvider.GetRequiredService<IInvokeEngineProvider>();
-		}
-
-		public async Task<IInvokeResult> ExecuteAsync(IModelCommand command, ExpandoObject parameters)
-		{
-			if (command.Target == null)
-				throw new InvalidOperationException("Command.Target is null");
-			var target = command.Target.Split('.');
-			if (target.Length != 2)
-				throw new InvalidOperationException($"Invalid target: {command.Target}");
-			var engine = _engineProvider.FindEngine(target[0]) 
-				?? throw new InvalidOperationException($"InvokeTarget '{target[0]}' not found");
+	public async Task<IInvokeResult> ExecuteAsync(IModelCommand command, ExpandoObject parameters)
+	{
+		if (command.Target == null)
+			throw new InvalidOperationException("Command.Target is null");
+		var target = command.Target.Split('.');
+		if (target.Length != 2)
+			throw new InvalidOperationException($"Invalid target: {command.Target}");
+		var engine = _engineProvider.FindEngine(target[0]) 
+			?? throw new InvalidOperationException($"InvokeTarget '{target[0]}' not found");
             try
             {
-				var res = await engine.InvokeAsync(target[1], parameters);
-				return new InvokeResult(
-					body: Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(res)),
-					contentType: MimeTypes.Application.Json
-				);
-			} 
-			catch (Exception ex)
-			{
-				throw new InvalidOperationException(ex.Message, ex);
-			}
+			var res = await engine.InvokeAsync(target[1], parameters);
+			return new InvokeResult(
+				body: Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(res)),
+				contentType: MimeTypes.Application.Json
+			);
+		} 
+		catch (Exception ex)
+		{
+			throw new InvalidOperationException(ex.Message, ex);
 		}
 	}
 }

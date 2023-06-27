@@ -1,9 +1,10 @@
 ﻿/*
 Copyright © 2008-2023 Oleksandr Kukhtin
 
-Last updated : 15 jun 2023
-module version : 8101
+Last updated : 27 jun 2023
+module version : 8102
 */
+-- SECURITY
 ------------------------------------------------
 create or alter procedure a2security.FindUserById
 @Id bigint
@@ -157,4 +158,64 @@ begin
 	select * from @user;
 end
 go
+------------------------------------------------
+create or alter function a2security.fn_GetCurrentSegment()
+returns nvarchar(32)
+as
+begin
+	declare @ret nvarchar(32);
+	select @ret = null;
+	return @ret;
+end
+go
 
+------------------------------------------------
+create or alter procedure a2security.CreateUser 
+@Tenant int = 1, -- default value
+@UserName nvarchar(255),
+@PasswordHash nvarchar(max) = null,
+@SecurityStamp nvarchar(max),
+@Email nvarchar(255) = null,
+@PhoneNumber nvarchar(255) = null,
+@PersonName nvarchar(255) = null,
+@Memo nvarchar(255) = null,
+@Locale nvarchar(255) = null,
+@RetId bigint output
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+	set xact_abort on;
+
+	set @Tenant = isnull(@Tenant, 1); -- default value
+	set @Locale = isnull(@Locale, N'uk-UA');
+
+	declare @tenants table(Id int);
+	declare @users table(Id bigint);
+	declare @userId bigint;
+	declare @tenantCreated bit = 0;
+
+	begin tran;
+
+	if @Tenant = -1
+	begin
+		insert into a2security.Tenants ([Admin], Locale)
+		output inserted.Id into @tenants(Id)
+		values (null, @Locale);
+		select top(1) @Tenant = Id from @tenants;
+		set @tenantCreated = 1;
+	end
+
+	insert into a2security.Users(Tenant, UserName, PersonName, Email, PhoneNumber, SecurityStamp, PasswordHash,
+		Segment, Locale, Memo)
+	output inserted.Id into @users(Id)
+	values (@Tenant, @UserName, @PersonName, @Email, @PhoneNumber, @SecurityStamp, @PasswordHash, 
+		a2security.fn_GetCurrentSegment(), @Locale, @Memo);
+	select top(1) @userId = Id from @users;
+
+	if @tenantCreated = 1
+		update a2security.Tenants set [Admin] = @userId where Id = @Tenant;
+
+	commit tran;
+end
+go

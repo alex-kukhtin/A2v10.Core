@@ -117,5 +117,27 @@ public static class ServicesExtensions
 
 		return services;
     }
+
+	public static IServiceCollection UseSimpleIdentityOptions(this IServiceCollection services)
+	{
+		services.Configure<IdentityOptions>(opts =>
+		{
+			var pwd = opts.Password;
+			pwd.RequireDigit = false;
+			pwd.RequiredLength = 1;
+			pwd.RequireLowercase = false;
+			pwd.RequireUppercase = false;
+			pwd.RequireNonAlphanumeric = false;
+
+			var si = opts.SignIn;
+			si.RequireConfirmedEmail = true;
+			si.RequireConfirmedAccount = true;
+			si.RequireConfirmedPhoneNumber = false;
+
+			var us = opts.User;
+			us.RequireUniqueEmail = true;
+		});
+		return services;
+	}
 }
 

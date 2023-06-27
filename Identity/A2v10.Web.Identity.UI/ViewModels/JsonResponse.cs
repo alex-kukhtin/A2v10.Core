@@ -13,6 +13,10 @@ public class JsonResponse
 	{
 		return new JsonResponse { Success = false, Message = message };
 	}
+	public static JsonResponse Error(Exception ex)
+	{
+		return new JsonResponse { Success = false, Message = ex.Message };
+	}
 	public static JsonResponse Ok(String message)
 	{
 		return new JsonResponse { Success = true, Message = message };

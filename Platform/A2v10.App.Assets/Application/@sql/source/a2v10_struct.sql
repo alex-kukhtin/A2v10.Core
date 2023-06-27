@@ -84,7 +84,7 @@ create table a2security.Users
 	LockoutEnabled	bit	not null constraint DF_Users_LockoutEnabled default(1),
 	LockoutEndDateUtc datetimeoffset null,
 	AccessFailedCount int not null constraint DF_Users_AccessFailedCount default(0),
-	[Locale] nvarchar(32) not null constraint DF_Users_Locale2 default('uk-UA'),
+	[Locale] nvarchar(32) not null constraint DF_Users_Locale2 default(N'uk-UA'),
 	PersonName nvarchar(255) null,
 	LastLoginDate datetime null, /*UTC*/
 	LastLoginHost nvarchar(255) null,

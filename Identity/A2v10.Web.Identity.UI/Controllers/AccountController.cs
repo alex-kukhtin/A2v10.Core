@@ -2,8 +2,6 @@
 
 using System;
 using System.Threading.Tasks;
-using System.Threading;
-using System.Security;
 using System.Linq;
 
 using Microsoft.AspNetCore.Antiforgery;
@@ -18,6 +16,8 @@ namespace A2v10.Web.Identity.UI;
 
 [Route("account/[action]")]
 [ApiExplorerSettings(IgnoreApi = true)]
+[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+[AllowAnonymous]
 public class AccountController : Controller
 {
 	private readonly SignInManager<AppUser<Int64>> _signInManager;
@@ -56,11 +56,9 @@ public class AccountController : Controller
     }
 
 
-    [AllowAnonymous]
 	[HttpGet]
 	public async Task<IActionResult> Login(String returnUrl)
 	{
-		RemoveAllCookies();
 		var m = new LoginViewModel()
 		{
 			Title = await _dbContext.LoadAsync<AppTitleModel>(_host.CatalogDataSource, "a2sys.[AppTitle.Load]"),
@@ -88,7 +86,6 @@ public class AccountController : Controller
 			* _licenseManager.LoadModules()	
 	 */
 
-	[AllowAnonymous]
 	[HttpPost]
 	public async Task<IActionResult> Login([FromForm] LoginViewModel model)
 	{
@@ -96,6 +93,9 @@ public class AccountController : Controller
 
 		if (!isValid)
 			return new JsonResult(JsonResponse.Error("AntiForgery"));
+
+		if (model.Login == null || model.Password == null)
+			return new JsonResult(JsonResponse.Error("Failed"));
 
 		var user = await _userManager.FindByNameAsync(model.Login);
 		if (user == null || user.IsEmpty)
@@ -109,10 +109,9 @@ public class AccountController : Controller
 		var result = await _signInManager.PasswordSignInAsync(model.Login, model.Password, model.IsPersistent, lockoutOnFailure: true);
 		if (result.Succeeded)
 		{
-
 			RemoveAntiforgeryCookie();
-			var returnUrl = model.ReturnUrl!.ToLowerInvariant();
-			if (returnUrl.StartsWith("/account"))
+			var returnUrl = model.ReturnUrl?.ToLowerInvariant();
+			if (returnUrl == null || returnUrl.StartsWith("/account"))
 				returnUrl = "/";
 			return LocalRedirect(returnUrl);
 		}
@@ -122,12 +121,9 @@ public class AccountController : Controller
 		}
 	}
 
-
 	[HttpGet]
-	[AllowAnonymous]
 	public async Task<IActionResult> Register()
 	{
-		RemoveAllCookies();
 		var m = new RegisterViewModel()
 		{
 			Title = await _dbContext.LoadAsync<AppTitleModel>(_host.CatalogDataSource, "a2sys.[AppTitle.Load]"),
@@ -137,42 +133,70 @@ public class AccountController : Controller
 		return View(m);
 	}
 
-	[AllowAnonymous]
+	async Task SendConfirmCode(AppUser<Int64> user)
+	{
+		String emailConfirmLink = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+		String emailConfirmCode = await _userManager.GenerateTwoFactorTokenAsync(user, TokenOptions.DefaultEmailProvider);
+		String subject = "subject";
+		String body = "body";
+		if (user.UserName == null)
+			throw new InvalidOperationException();
+		await _mailService.SendAsync(user.UserName, subject, body);
+	}
+
 	[HttpPost]
-	//[AjaxOnly]
 	public async Task<IActionResult> Register([FromForm] RegisterViewModel model)
 	{
 		try
 		{
 			var isValid = await _antiforgery.IsRequestValidAsync(HttpContext);
+			if (!isValid)
+				return new JsonResult(JsonResponse.Error("AntiForgery"));
+
+			if (model.Password == null || model.Login == null)
+				return new JsonResult(JsonResponse.Error("Failed"));
 			var user = new AppUser<Int64>()
 			{
 				UserName = model.Login,
-				PhoneNumber = Guid.NewGuid().ToString(),
+				PersonName = model.PersonName,
+				Email = model.Login,
+				PhoneNumber = model.Phone
 			};
+
+			if (_host.IsMultiTenant)
+				user.Tenant = -1; // tenant will be created
+
 			var result = await _userManager.CreateAsync(user, model.Password);
 			if (result.Succeeded)
 			{
 				RemoveAntiforgeryCookie();
+				await SendConfirmCode(user);
+				return LocalRedirect("/account/confirmcode");
+				/*
 				var token = await _userManager.GenerateTwoFactorTokenAsync(user, TokenOptions.DefaultPhoneProvider);
-				var user2 = await _userManager.FindByNameAsync(user.UserName);
+				var user2 = await _userManager.FindByNameAsync(user.UserName)
+					?? throw new InvalidOperationException("Internal error");
 				var verified = await _userManager.VerifyTwoFactorTokenAsync(user2, TokenOptions.DefaultPhoneProvider, token);
 				await _userStore.SetPhoneNumberConfirmedAsync(user, true, new CancellationToken());
-				return Redirect("/");
+				*/
 			}
-			return Redirect("/account/login");
+			else
+			{
+				// "DuplicateUserName", "DuplicateEmail", 
+				if (result.Errors.Any(e => e.Code == "DuplicateUserName"))
+					return new JsonResult(JsonResponse.Error("DuplicateUserName"));
+				return new JsonResult(JsonResponse.Error(String.Join(", ", result.Errors.Select(x => x.Description))));
+			}
 		}
 		catch (Exception tex)
 		{
-			return new EmptyResult();
+			return new JsonResult(JsonResponse.Error(tex));
 		}
 	}
 
 	[HttpGet]
-	[AllowAnonymous]
 	public async Task<IActionResult> ForgotPassword()
 	{
-		RemoveAllCookies();
 		var m = new SimpleIdentityViewModel()
 		{
 			Title = await _dbContext.LoadAsync<AppTitleModel>(_host.CatalogDataSource, "a2sys.[AppTitle.Load]"),
@@ -209,19 +233,23 @@ public class AccountController : Controller
 		return Content("{}", MimeTypes.Application.Json);
 	}
 
+	[Authorize]
 	[HttpPost]
 	public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordViewModel model)
 	{
 		try
 		{
-			if (User.Identity == null)
-				throw new SecurityException("User not found");
+			if (User.Identity == null || User.Identity.Name == null)
+				throw new InvalidOperationException("User not found");
+
+			if (model.OldPassword == null || model.NewPassword == null)
+				throw new InvalidOperationException("Invalid model");
 
 			//if (User.Identity.IsUserOpenId())
 			//throw new SecurityException("Invalid User type (openId?)");
 
 			var user = await _userManager.FindByIdAsync(User.Identity.Name) 
-				?? throw new SecurityException("User not found");
+				?? throw new InvalidOperationException("User not found");
 
 			//if (!user.ChangePasswordEnabled)
 			//throw new SecurityException("Change password not allowed");
@@ -230,32 +258,31 @@ public class AccountController : Controller
 			if (ir.Succeeded)
 			{
 				await _userManager.UpdateAsync(user);
-				return Json(new JsonResponse()
-				{
-					Success = true
-				});
+				return new JsonResult(JsonResponse.Ok(String.Empty));
 			}
 			else
 			{
-				return Json(new JsonResponse()
-				{
-					Success = false,
-					Message = String.Join(", ", ir.Errors)
-				});
+				return new JsonResult(JsonResponse.Error(String.Join(", ", ir.Errors)));
 			}
 		}
 		catch (Exception ex)
 		{
-			return Json(new JsonResponse()
-			{
-				Success = false,
-				Message = ex.Message
-			});
+			return new JsonResult(JsonResponse.Error(ex));
 		}
 	}
 
 	[HttpGet]
 	public async Task<IActionResult> License()
+	{
+		var m = new SimpleIdentityViewModel()
+		{
+			Title = await _dbContext.LoadAsync<AppTitleModel>(_host.CatalogDataSource, "a2sys.[AppTitle.Load]"),
+			Theme = _appTheme.MakeTheme()
+		};
+		return View(m);
+	}
+	[HttpGet]
+	public async Task<IActionResult> ConfirmCode()
 	{
 		var m = new SimpleIdentityViewModel()
 		{

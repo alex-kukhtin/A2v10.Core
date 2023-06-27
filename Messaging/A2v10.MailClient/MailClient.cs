@@ -75,7 +75,8 @@ public class MailClient : IMailService
 		if (_mailSettings.PickupDirectoryLocation == null)
 			throw new InvalidOperationException("PickupDirectoryLocation is null");
 		var mm = CreateMimeMessage(message);
-		var path = Path.Combine(_mailSettings.PickupDirectoryLocation, $"{Guid.NewGuid().ToString()}.eml");
+		var dir = _mailSettings.PickupDirectoryLocation.Replace("\\", "/");
+		var path = Path.GetFullPath(Path.Combine(dir, $"{Guid.NewGuid().ToString()}.eml"));
 		var file = new FileStream(path, FileMode.Create);
 		await mm.WriteToAsync(new FormatOptions() { International = true }, file);
 	}

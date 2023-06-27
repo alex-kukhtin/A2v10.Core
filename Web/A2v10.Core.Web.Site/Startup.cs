@@ -29,30 +29,13 @@ public class Startup
 
 		services.UsePlatform(Configuration);
 
+		services.UseSimpleIdentityOptions();
+
 		services.AddReportEngines(factory =>
 		{
 			factory.RegisterEngine<PdfReportEngine>("pdf");
 		});
 
-		/*
-		services.Configure<IdentityOptions>(opts =>
-		{
-			var pwd = opts.Password;
-			pwd.RequireDigit = false;
-			pwd.RequiredLength = 1;
-			pwd.RequireLowercase = false;
-			pwd.RequireUppercase = false;
-			pwd.RequireNonAlphanumeric = false;
-
-			var si = opts.SignIn;
-			si.RequireConfirmedEmail = true;
-			si.RequireConfirmedAccount = true;
-			si.RequireConfirmedPhoneNumber = false;
-
-			var us = opts.User;
-			us.RequireUniqueEmail = true;
-		});
-		*/
 
 		services.AddWorkflowEngineScoped();
 		services.AddInvokeTargets(a =>

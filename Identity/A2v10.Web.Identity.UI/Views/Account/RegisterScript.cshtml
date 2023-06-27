@@ -4,33 +4,66 @@
 "use strict";
 (function() {
 
+const maskTools = maskTool();
+
+const currentMask = '+38 (0##) ###-##-##';
+
 new Vue({
 el:"#app",
 data: {
 	email:'@Model?.Login',
+	name:'',
 	password:'',
+	phone: '',
+	confirm:'',
 	submitted: false,
 	emailError: '',
-	serverError: ''
+	serverError: '',
+	processing: false
 },
 computed: {
+	maskedPhone() {
+		return this.phone ?
+			maskTools.getMasked(currentMask, this.phone) : this.phone;
+	},
 	validEmail() {
 		return true;
 	},
+	validName() {
+		return this.submitted ? !!this.name : true;
+	},
 	validPassword() {
+		if (!this.submitted) return true;
 		return true;
+	},
+	validConfirm() {
+		return this.submitted ? !!this.confirm && (this.password === this.confirm) : true;
+	},
+	valid() {
+		if (!this.submitted) return;
+		return this.validEmail && this.validName && this.validPassword && this.validConfirm;
 	}
 },
 methods: {
-	onLoginEnter: function() {
-		this.$refs.pwd.focus();
-	},
-	onPwdEnter: function(ev) {
-		this.submit();
+	onPhoneChange: function(value) {
+		this.phone = maskTools.getUnmasked(currentMask, value);
+		if (this.$refs.phoneInput.value !== this.maskedPhone) {
+			this.$refs.phoneInput.value = this.maskedPhone;
+			this.$emit('change', this.phone);
+		}
 	},
 	async submit() {
+		if (this.processing) return;
+		this.submitted = true;
+		this.serverError = '';
+		this.email = this.email.trim();
+		if (!this.valid)
+			return;
 		let formData = new URLSearchParams();
 		formData.append('Login', this.email);
+		formData.append('PersonName', this.name);
+		formData.append('Phone', this.phone);
+		formData.append('Email', this.email);
 		formData.append('Password', this.password);
 		formData.append('__RequestVerificationToken', '@Model?.RequestToken');
 		let resp = await fetch('/account/register', {
@@ -39,9 +72,17 @@ methods: {
 		});
 		if (resp.redirected)
 			window.location.assign(resp.url);
-		else if (!resp.ok)
-			alert('invalid login or password');
+		else if (resp.ok) {
+			let result = await resp.json();
+			alert(JSON.stringify(result));
+		}			
+		else
+			alert(await resp.text());
 	}
+},
+mounted() {
+	maskTools.mountElement(this.$refs.phoneInput, currentMask);
+	document.addEventListener('keypress', this.__keyUp);
 }
 });
 })();
