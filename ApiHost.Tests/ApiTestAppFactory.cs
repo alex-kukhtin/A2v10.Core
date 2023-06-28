@@ -21,7 +21,7 @@ namespace ApiHost.Tests
 	{
 		protected override IHostBuilder? CreateHostBuilder()
 		{
-			return base.CreateHostBuilder()
+			return base.CreateHostBuilder()!
 				.ConfigureAppConfiguration(builder =>
 			{
 				builder.AddUserSecrets<ApiTestAppFactory>();

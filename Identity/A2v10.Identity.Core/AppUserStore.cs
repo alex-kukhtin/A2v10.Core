@@ -162,7 +162,7 @@ public sealed class AppUserStore<T> :
 			prm.Add(ParamNames.PhoneNumberConfirmed, user.PhoneNumberConfirmed);
 		if (user.Flags.HasFlag(UpdateFlags.Roles))
 			prm.Add(ParamNames.Roles, user.Roles);
-		if (user.Flags.HasFlag(UpdateFlags.Bracnh))
+		if (user.Flags.HasFlag(UpdateFlags.Branch))
 			prm.Add(ParamNames.Branch, user.Branch);
 
 		await _dbContext.ExecuteExpandoAsync(_dataSource, $"[{_dbSchema}].[User.UpdateParts]", prm);

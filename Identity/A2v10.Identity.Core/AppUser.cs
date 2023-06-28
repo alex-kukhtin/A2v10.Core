@@ -4,7 +4,6 @@ using System.Collections.Generic;
 
 namespace A2v10.Web.Identity;
 
-
 [Flags]
 public enum UpdateFlags
 {
@@ -16,7 +15,7 @@ public enum UpdateFlags
 	EmailConfirmed = 0x20,
 	PhoneNumberConfirmed = 0x40,
 	Roles = 0x80,
-	Bracnh = 0x100,
+	Branch = 0x100,
 }
 public class AppUser<T> where T : struct
 {
@@ -44,6 +43,7 @@ public class AppUser<T> where T : struct
 	public DateOnly BirthDate { get; set; }
 	public Boolean SetPassword { get; set; }
 	public Boolean IsPersistent { get; set; }
+	public Boolean ChangePasswordEnabled { get; set; }
 	public String? Roles { get; set; }
 
 	// for .net framework compatibility

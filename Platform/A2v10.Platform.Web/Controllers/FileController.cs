@@ -42,11 +42,14 @@ public class FileController : BaseController
 			var token = Request.Query["token"];
 			if (token.Count == 0)
 				throw new InvalidReqestExecption("Invalid image token");
+			var strToken = token[0] ??
+				throw new InvalidReqestExecption("Invalid image token");
+
 			var blob = await _dataService.LoadBlobAsync(UrlKind.File, pathInfo, SetSqlQueryParams);
 			if (blob == null || blob.Stream == null)
 				throw new InvalidReqestExecption($"Image not found. ({pathInfo})");
 
-			ValidateToken(blob.Token, token);
+			ValidateToken(blob.Token, strToken);
 
 			var ar = new WebBinaryActionResult(blob.Stream, blob.Mime ?? MimeTypes.Text.Plain);
 			if (Request.Query["export"].Count > 0)

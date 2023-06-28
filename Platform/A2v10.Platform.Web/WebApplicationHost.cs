@@ -77,7 +77,8 @@ public class WebApplicationHost : IApplicationHost
 		{
 			var eo = new ExpandoObject();
 			foreach (var v in valObj.GetChildren())
-				eo.Add(v.Key, v.Value);
+				if (v != null && v.Value != null)
+					eo.Add(v.Key, v.Value);
 			return eo;
 		}
 		throw new InvalidOperationException($"Configuration parameter 'appSettings/{key}' not defined");

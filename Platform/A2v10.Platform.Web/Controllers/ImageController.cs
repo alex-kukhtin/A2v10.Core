@@ -49,12 +49,18 @@ public class ImageController : BaseController
 		try
 		{
 			var token = Request.Query["token"];
+
+			if (token.Count == 0)
+				throw new InvalidReqestExecption("Invalid image token");
+			var strToken = token[0] ??
+				throw new InvalidReqestExecption("Invalid image token");
+
 			var blob = await _dataService.LoadBlobAsync(UrlKind.Image, pathInfo, SetSqlQueryParams);
 			if (blob == null || blob.Stream == null)
 				throw new InvalidReqestExecption($"Image not found. ({pathInfo})");
 			if (blob.Mime is null)
 				throw new InvalidReqestExecption($"Invalid mime type for image. ({pathInfo})");
-			if (!IsTokenValid(blob.Token, token))
+			if (!IsTokenValid(blob.Token, strToken))
 				throw new InvalidReqestExecption("Invalid image token");
 			return new WebBinaryActionResult(blob.Stream, blob.Mime);
 		}

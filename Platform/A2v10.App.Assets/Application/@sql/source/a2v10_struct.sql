@@ -53,7 +53,7 @@ create table a2security.Tenants
 	[State] nvarchar(128) null,
 	UserSince datetime null,
 	LastPaymentDate datetime null,
-	[Locale] nvarchar(32) not null constraint DF_Tenants_Locale default('uk-UA')
+	[Locale] nvarchar(32) not null constraint DF_Tenants_Locale default(N'uk-UA')
 );
 go
 ------------------------------------------------
