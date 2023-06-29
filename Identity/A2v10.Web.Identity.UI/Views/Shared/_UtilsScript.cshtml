@@ -1,4 +1,8 @@
-﻿Vue.directive('focus', {
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+
+/*20230629 - 8110*/
+
+Vue.directive('focus', {
 	bind: function(el, binding, vnode) {
 
 		el.addEventListener("focus", function (event) {
@@ -28,12 +32,6 @@
 		}
 	}
 });
-
-
-// Copyright © 2015-2018 Alex Kukhtin. All rights reserved.
-
-/*20180821-7279*/
-/* services/mask.js */
 
 function maskTool() {
 
@@ -369,8 +367,14 @@ function maskTool() {
 
 
 	function fireChange(input) {
-		var evt = document.createEvent('HTMLEvents');
-		evt.initEvent('change', false, true);
+		let evt = new Event('change', { bubbles: false, cancelable : true});
 		input.dispatchEvent(evt);
 	}
 }
+
+window.__validEmail = function(addr) {
+	// from chromium ? https://stackoverflow.com/questions/46155/how-to-validate-an-email-address-in-javascript
+	const EMAIL_REGEXP= /^(([^<>()\[\]\.,;:\s@@\"]+(\.[^<>()\[\]\.,;:\s@@\"]+)*)|(\".+\"))@@(([^<>()[\]\.,;:\s@@\"]+\.)+[^<>()[\]\.,;:\s@@\"]{2,})$/i;
+	return addr === '' || EMAIL_REGEXP.test(addr);
+}
+

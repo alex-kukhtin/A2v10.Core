@@ -4,8 +4,8 @@
 
 <div class="center-page">
 	<div class="initial-form">
-		<h3 class="a2-header text-center">@Html.Raw(_loc["ForgotPrompt"])</h3>
-		<hr />
+		<h3 class="a2-header text-center">@Html.Raw(_loc["ConfirmCode"])</h3>
+		<hr style="margin-top:1rem" />
 		<div v-if="serverError" class="validation-summary" style="margin-top:10px">
 			<span class="error" v-text="serverError"></span>
 		</div>
@@ -69,6 +69,6 @@
 @section Scripts
 {
 <script type="text/javascript">
-	@Html.Partial("~/Views/Account/ForgotPasswordScript.cshtml")
+	@Html.Partial("~/Views/Account/ConfirmCodeScript.cshtml")
 </script>
 }

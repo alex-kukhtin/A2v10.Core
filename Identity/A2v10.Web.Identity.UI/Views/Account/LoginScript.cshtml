@@ -4,11 +4,7 @@
 "use strict";
 (function() {
 
-function validEmail(addr) {
-	// from chromium ? https://stackoverflow.com/questions/46155/how-to-validate-an-email-address-in-javascript
-	const EMAIL_REGEXP= /^(([^<>()\[\]\.,;:\s@@\"]+(\.[^<>()\[\]\.,;:\s@@\"]+)*)|(\".+\"))@@(([^<>()[\]\.,;:\s@@\"]+\.)+[^<>()[\]\.,;:\s@@\"]{2,})$/i;
-	return addr === '' || EMAIL_REGEXP.test(addr);
-}
+const validEmail = window.__validEmail;
 
 new Vue({
 el:"#app",

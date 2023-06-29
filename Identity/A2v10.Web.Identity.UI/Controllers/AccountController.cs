@@ -22,26 +22,25 @@ public class AccountController : Controller
 {
 	private readonly SignInManager<AppUser<Int64>> _signInManager;
 	private readonly UserManager<AppUser<Int64>> _userManager;
-	private readonly AppUserStore<Int64> _userStore;
 	private readonly IAntiforgery _antiforgery;
 	private readonly IDbContext _dbContext;
 	private readonly IApplicationHost _host;
 	private readonly IApplicationTheme _appTheme;
 	private readonly IMailService _mailService;
+	private readonly ILocalizer _localizer;	
 
 	public AccountController(SignInManager<AppUser<Int64>> signInManager, UserManager<AppUser<Int64>> userManager, 
-			AppUserStore<Int64> userStore, 
 			IAntiforgery antiforgery, IApplicationHost host, IDbContext dbContext, 
-			IApplicationTheme appTheme, IMailService mailService)
+			IApplicationTheme appTheme, IMailService mailService, ILocalizer localizer)
 	{
 		_signInManager = signInManager;
 		_userManager = userManager;
 		_antiforgery = antiforgery;
-		_userStore = userStore;
 		_dbContext = dbContext;
 		_host = host;
 		_appTheme = appTheme;
 		_mailService = mailService;
+		_localizer = localizer;
 	}
 
 	void RemoveAllCookies()
@@ -55,10 +54,17 @@ public class AccountController : Controller
             Response.Cookies.Delete(key);
     }
 
+	void RemoveNonAntiforgeryCookies()
+	{
+		foreach (var key in Request.Cookies.Keys.Where(x => !x.Contains("Antiforgery")))
+			Response.Cookies.Delete(key);
+	}
 
 	[HttpGet]
 	public async Task<IActionResult> Login(String returnUrl)
 	{
+		RemoveNonAntiforgeryCookies();
+
 		var m = new LoginViewModel()
 		{
 			Title = await _dbContext.LoadAsync<AppTitleModel>(_host.CatalogDataSource, "a2sys.[AppTitle.Load]"),
@@ -124,6 +130,7 @@ public class AccountController : Controller
 	[HttpGet]
 	public async Task<IActionResult> Register()
 	{
+		RemoveNonAntiforgeryCookies();
 		var m = new RegisterViewModel()
 		{
 			Title = await _dbContext.LoadAsync<AppTitleModel>(_host.CatalogDataSource, "a2sys.[AppTitle.Load]"),
@@ -135,12 +142,19 @@ public class AccountController : Controller
 
 	async Task SendConfirmCode(AppUser<Int64> user)
 	{
-		String emailConfirmLink = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-		String emailConfirmCode = await _userManager.GenerateTwoFactorTokenAsync(user, TokenOptions.DefaultEmailProvider);
-		String subject = "subject";
-		String body = "body";
 		if (user.UserName == null)
 			throw new InvalidOperationException();
+
+		String emailConfirmLink = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+		String emailConfirmCode = await _userManager.GenerateTwoFactorTokenAsync(user, TokenOptions.DefaultEmailProvider);
+
+		String subject = _localizer.Localize("@[ConfirmEMail]") ??
+			throw new InvalidOperationException("ConfirmEMail body not found");
+		String body = _localizer.Localize("@[ConfirmEMailBody]") ??
+			throw new InvalidOperationException("ConfirmEMailBody body not found");
+		body = body.Replace("{0}", emailConfirmCode)
+			.Replace("{1}", emailConfirmLink);
+
 		await _mailService.SendAsync(user.UserName, subject, body);
 	}
 
@@ -197,6 +211,7 @@ public class AccountController : Controller
 	[HttpGet]
 	public async Task<IActionResult> ForgotPassword()
 	{
+		RemoveNonAntiforgeryCookies();
 		var m = new SimpleIdentityViewModel()
 		{
 			Title = await _dbContext.LoadAsync<AppTitleModel>(_host.CatalogDataSource, "a2sys.[AppTitle.Load]"),
@@ -206,13 +221,18 @@ public class AccountController : Controller
 		return View(m);
 	}
 
+	private async Task DoLogout()
+	{
+		await _signInManager.SignOutAsync();
+		HttpContext.Session.Clear();
+		RemoveAllCookies();
+	}
+
 	[HttpGet]
 	[HttpPost]
 	public async Task<IActionResult> Logout()
 	{
-		await _signInManager.SignOutAsync();
-		//HttpContext.Session.Clear(); ???
-		RemoveAllCookies(); // TODO:
+		await DoLogout();
 		return LocalRedirect("/");
 	}
 
@@ -227,9 +247,7 @@ public class AccountController : Controller
 	[HttpPost]
 	public async Task<IActionResult> Logout2()
 	{
-		await _signInManager.SignOutAsync();
-		//HttpContext.Session.Clear(); ???
-		RemoveAllCookies(); // TODO:
+		await DoLogout();
 		return Content("{}", MimeTypes.Application.Json);
 	}
 
@@ -281,15 +299,23 @@ public class AccountController : Controller
 		};
 		return View(m);
 	}
+
 	[HttpGet]
 	public async Task<IActionResult> ConfirmCode()
 	{
 		var m = new SimpleIdentityViewModel()
 		{
 			Title = await _dbContext.LoadAsync<AppTitleModel>(_host.CatalogDataSource, "a2sys.[AppTitle.Load]"),
-			Theme = _appTheme.MakeTheme()
+			Theme = _appTheme.MakeTheme(),
+			RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken
 		};
 		return View(m);
+	}
+
+	[HttpPost]
+	public Task<IActionResult> ConfirmCode([FromForm] ConfirmCodeViewModel model)
+	{
+		throw new NotImplementedException();	
 	}
 }
 

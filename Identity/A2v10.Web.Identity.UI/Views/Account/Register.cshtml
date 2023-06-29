@@ -5,12 +5,12 @@
 <div class="center-page">
 	<div class="initial-form">
 		<h3 class="a2-header text-center">@_loc["RegisterPrompt"]</h3>
-		<hr style="margin-top:1rem" />
+		<hr />
 		<div v-if="serverError" class="validation-summary" style="margin-top:10px">
 			<span class="error" v-text="serverError"></span>
 		</div>
 		<div novalidate=novalidate>
-			<div class="control-group" v-bind:class="{invalid: !validEmail}">
+			<div class="control-group" v-bind:class="{invalid: invalidEmail}">
 				<label for="login" style="grid-row:1; grid-column:1" class="a2-label required">@_loc["Email"]</label>
 				<div class="input-group">
 					<input v-focus class="control" id="login" name="email" type="text" 
@@ -20,7 +20,7 @@
 					</div>
 				</div>
 			</div>
-			<div class="control-group" v-bind:class="{invalid: !validName}">
+			<div class="control-group" v-bind:class="{invalid: invalidName}">
 				<label for="name" class="a2-label required">@_loc["UserName"]</label>
 				<div class="input-group">
 					<input v-focus class="control" type="text" name="name" v-model="name" tabindex="2" autocomplete="off" maxlength="128" />
@@ -40,7 +40,7 @@
 					</div>
 				</div>
 			</div>
-			<div class="control-group" v-bind:class="{invalid: !validPassword}">
+			<div class="control-group" v-bind:class="{invalid: invalidPassword}">
 				<label for="password" style="grid-row:2; grid-column:1" class="a2-label required">@_loc["Password"]</label>
 				<div class="input-group">
 					<input class="control" v-focus type="password" name="password" 
@@ -50,7 +50,7 @@
 					</div>
 				</div>
 			</div>
-			<div class="control-group" v-bind:class="{invalid: !validConfirm}">
+			<div class="control-group" v-bind:class="{invalid: invalidConfirm}">
 				<label class="a2-label required">@_loc["Confirm"]</label>
 				<div class="input-group">
 					<input class="control" v-focus type="password" v-model="confirm" autocomplete="off"

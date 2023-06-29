@@ -6751,7 +6751,8 @@ table > colgroup col.blue {
 .mdi-tabs-container .mdi-tabs-menu .open-menu:hover {
   background-color: #e8e8e8;
 }
-.mdi-footer {
+.mdi-footer,
+.footer {
   grid-area: footer;
   background-color: var(--neutral100);
   display: flex;
@@ -6761,13 +6762,16 @@ table > colgroup col.blue {
   text-transform: lowercase;
   padding-left: 8px;
 }
-.mdi-footer .version-info {
+.mdi-footer .version-info,
+.footer .version-info {
   font-size: 0.9rem;
 }
-.mdi-footer .debug-btn {
+.mdi-footer .debug-btn,
+.footer .debug-btn {
   height: 100%;
 }
-.mdi-footer .debug-btn .btn-debug {
+.mdi-footer .debug-btn .btn-debug,
+.footer .debug-btn .btn-debug {
   text-transform: inherit;
   border-radius: 0;
   font-size: 0.9rem;
@@ -6775,7 +6779,8 @@ table > colgroup col.blue {
   color: white;
   padding: 0 6px 0 18px;
 }
-.mdi-footer .menu {
+.mdi-footer .menu,
+.footer .menu {
   text-transform: none;
 }
 .mdi-navbar {
@@ -6924,6 +6929,20 @@ table > colgroup col.blue {
 }
 @media (max-width: 1000px) {
   /* TODO adjust tab size */
+}
+.login-shell {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas: "header" "main" "footer";
+  height: 100%;
+  overflow: hidden;
+  width: 100%;
+}
+.login-shell .header {
+  grid-area: header;
+}
+.login-shell .main-view {
+  grid-area: main;
 }
 .a2-new-btn .btn {
   padding: 0 1em;

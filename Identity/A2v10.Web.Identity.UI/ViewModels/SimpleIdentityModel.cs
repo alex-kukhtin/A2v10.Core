@@ -4,7 +4,7 @@ using System;
 
 namespace A2v10.Web.Identity.UI;
 
-public class SimpleIdentityViewModel : IIdentityViewModel
+public record SimpleIdentityViewModel : IIdentityViewModel
 {
 	public String? RequestToken { get; set; }
 

@@ -1,5 +1,5 @@
 ﻿@inject ILocalizer _loc
-@model SimpleIdentityViewModel
+@model ConfirmCodeViewModel
 
 "use strict";
 (function() {
@@ -9,6 +9,7 @@ const validEmail = window.__validEmail;
 new Vue({
 el:"#app",
 data: {
+	code:'',
 	email:'',
 	password:'',
 	confirm:'',
@@ -42,7 +43,7 @@ methods: {
 		this.submitted = true;
 		if (this.emailError) return;
 		let formData = new URLSearchParams();
-		formData.append('Login', this.email);
+		formData.append('Code', this.code);
 		formData.append('__RequestVerificationToken', '@Model?.RequestToken');
 		alert('yet not implemented');
 	},

@@ -1,10 +1,11 @@
-﻿@inject ILocalizer _localizer
+﻿@inject ILocalizer _loc
 @model RegisterViewModel
 
 "use strict";
 (function() {
 
 const maskTools = maskTool();
+const validEmail = window.__validEmail;
 
 const currentMask = '+38 (0##) ###-##-##';
 
@@ -17,7 +18,6 @@ data: {
 	phone: '',
 	confirm:'',
 	submitted: false,
-	emailError: '',
 	serverError: '',
 	processing: false
 },
@@ -26,22 +26,30 @@ computed: {
 		return this.phone ?
 			maskTools.getMasked(currentMask, this.phone) : this.phone;
 	},
-	validEmail() {
-		return true;
+	invalidEmail() {
+		if (!this.submitted) return false;
+		return !!this.emailError;
 	},
-	validName() {
-		return this.submitted ? !!this.name : true;
+	emailError() {
+		if (!this.submitted) return '';
+		if (!this.email) return '@Html.Raw(_loc["EnterEMail"])';
+		if (!validEmail(this.email)) return '@Html.Raw(_loc["InvalidEMail"])';
 	},
-	validPassword() {
-		if (!this.submitted) return true;
-		return true;
+	invalidName() {
+		if (!this.submitted) return false;
+		return !this.name;
 	},
-	validConfirm() {
-		return this.submitted ? !!this.confirm && (this.password === this.confirm) : true;
+	invalidPassword() {
+		if (!this.submitted) return false;
+		return !this.password;
+	},
+	invalidConfirm() {
+		if (!this.submitted) return false;
+		return !this.confirm || (this.password !== this.confirm);
 	},
 	valid() {
 		if (!this.submitted) return;
-		return this.validEmail && this.validName && this.validPassword && this.validConfirm;
+		return !this.invalidEmail && !this.invalidPassword && !this.invalidName && !this.invalidConfirm;
 	}
 },
 methods: {
@@ -50,6 +58,22 @@ methods: {
 		if (this.$refs.phoneInput.value !== this.maskedPhone) {
 			this.$refs.phoneInput.value = this.maskedPhone;
 			this.$emit('change', this.phone);
+		}
+	},
+	success(code) {
+		alert(code + ": Yet not implemented");
+	},
+	fail(code) {
+		switch (code) {
+			case 'AntiForgery':
+				this.serverError = '@Html.Raw(_loc["AntiForgery"])';
+				break;
+			case 'DuplicateUserName':
+				this.serverError = '@Html.Raw(_loc["AlreadyTaken"])'.replace('{0}', this.email);
+				break;
+			default:
+				this.serverError = code;
+				break;
 		}
 	},
 	async submit() {
@@ -74,8 +98,11 @@ methods: {
 			window.location.assign(resp.url);
 		else if (resp.ok) {
 			let result = await resp.json();
-			alert(JSON.stringify(result));
-		}			
+			if (result.success)
+				this.success(result.message);
+			else
+				this.fail(result.message);
+		}
 		else
 			alert(await resp.text());
 	}

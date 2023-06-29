@@ -32,8 +32,7 @@ namespace A2v10.Platform.Web
 			ctx.Session.SetString("SessionID", sessionId);
 			var userId = ctx?.User?.Identity.GetUserId<Int64>();
 			String key = $":{sessionId}:{accessToken}:{userId}:";
-			using var algo = SHA256.Create();
-			var hash = algo.ComputeHash(Encoding.UTF8.GetBytes(key));
+			var hash = SHA256.HashData(Encoding.UTF8.GetBytes(key));
 			return WebEncoders.Base64UrlEncode(hash);
 		}
 	}

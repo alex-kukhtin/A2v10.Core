@@ -204,7 +204,7 @@
 	}
 }
 
-.mdi-footer {
+.mdi-footer, .footer {
 	grid-area: footer;
 	background-color: @light0;
 	display: flex;
@@ -408,4 +408,23 @@
 
 @media (max-width:1000px) {
 	/* TODO adjust tab size */
+}
+
+.login-shell {
+	display: grid;
+	grid-template-rows: auto 1fr auto;
+	grid-template-areas:
+		"header" 
+		"main"
+		"footer";
+	height: 100%;
+	overflow: hidden;
+	width: 100%;
+
+	.header {
+		grid-area:header;
+	}
+	.main-view {
+		grid-area:main;
+	}
 }
