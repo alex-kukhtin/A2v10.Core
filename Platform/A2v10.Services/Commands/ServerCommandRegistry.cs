@@ -15,7 +15,7 @@ public static class ServerCommandRegistry
 					serviceProvider.GetRequiredService<IDbContext>()
 				),
 			ModelCommandType.invokeTarget => new InvokeCommandInvokeTarget(serviceProvider),
-			ModelCommandType.clr => throw new DataServiceException("CLR yet not implemented"),
+			ModelCommandType.clr => new InvokeCommandInvokeClr(serviceProvider),
 			ModelCommandType.javascript => new InvokeCommandJavascript(serviceProvider),
 			ModelCommandType.file => new InvokeCommandFile(serviceProvider),
 			ModelCommandType.xml => throw new DataServiceException("xml command yet not implemented"),

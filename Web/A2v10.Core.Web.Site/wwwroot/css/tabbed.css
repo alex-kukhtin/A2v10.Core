@@ -4289,7 +4289,7 @@ ul.news-list > li {
   width: 800px;
 }
 .modal-stack .modal-wrapper .load-indicator {
-  top: 2.4rem;
+  top: 2.8rem;
   margin-top: -4px;
   background-color: var(--neutralBkDarker);
 }
