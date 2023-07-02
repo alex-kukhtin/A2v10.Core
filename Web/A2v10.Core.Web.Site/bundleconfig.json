@@ -16,6 +16,7 @@
 			"../../Platform/A2v10.App.Assets/Application/@sql/source/a2v10_system.sql",
 			"../../Platform/A2v10.App.Assets/Application/@sql/source/a2v10_security.sql",
 			"../../Platform/A2v10.App.Assets/Application/@sql/source/a2v10_ui.sql",
+			"../../Platform/A2v10.App.Assets/Application/@sql/source/a2v10_init.sql",
 			"../../Platform/A2v10.App.Assets/Application/@sql/source/a2v10_admin.sql"
 		],
 		"minify": { "enabled": false }
@@ -36,7 +37,7 @@
 			"../../Platform/A2v10.App.Assets/Application/@sql/source/a2v10_system.sql",
 			"../../Platform/A2v10.App.Assets/Application/@sql/source/a2v10_security_segment.sql",
 			"../../Platform/A2v10.App.Assets/Application/@sql/source/a2v10_ui.sql",
-			"../../Platform/A2v10.App.Assets/Application/@sql/source/a2v10_admin.sql"
+			"../../Platform/A2v10.App.Assets/Application/@sql/source/a2v10_init.sql"
 		],
 		"minify": { "enabled": false }
 	}

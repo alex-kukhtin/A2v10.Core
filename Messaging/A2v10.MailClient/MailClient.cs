@@ -77,7 +77,7 @@ public class MailClient : IMailService
 		var mm = CreateMimeMessage(message);
 		var dir = _mailSettings.PickupDirectoryLocation.Replace("\\", "/");
 		var path = Path.GetFullPath(Path.Combine(dir, $"{Guid.NewGuid()}.eml"));
-		var file = new FileStream(path, FileMode.Create);
+		using var file = new FileStream(path, FileMode.Create);
 		await mm.WriteToAsync(new FormatOptions() { International = true }, file);
 	}
 }

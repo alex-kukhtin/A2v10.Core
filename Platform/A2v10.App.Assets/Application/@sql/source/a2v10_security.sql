@@ -219,3 +219,16 @@ begin
 	commit tran;
 end
 go
+------------------------------------------------
+create or alter procedure a2security.[User.RegisterComplete]
+@Id bigint
+as
+begin
+	set nocount on;
+	set transaction isolation level read uncommitted;
+
+	update a2security.Users set EmailConfirmed = 1, LastLoginDate = getutcdate()
+
+	select * from a2security.ViewUsers where Id=@Id;
+end
+go

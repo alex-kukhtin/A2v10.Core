@@ -9,52 +9,33 @@ const validEmail = window.__validEmail;
 new Vue({
 el:"#app",
 data: {
-	code:'',
-	email:'',
-	password:'',
-	confirm:'',
+	token: '@Model.Token',
+	email: '@Model.Email',
+	confirmCode:'',
 	submitted: false,
 	serverError: '',
-	mode: ''
 },
 computed: {
-	emailVisible() { return this.mode === ''; },
-	codeVisible() { return this.mode === 'code'; },
-	passwordVisible() { return this.mode === 'password';},
-	invalidEmail() {
-		if (!this.submitted) return false;
-		return !!this.emailError;
-	},
-	invalidPassword() {
-		if (!this.submitted) return false;
-		return !this.password;
-	},
-	emailError() {
-		if (!this.submitted) return '';
-		if (!this.email) return '@Html.Raw(_loc["EnterEMail"])';
-		if (!validEmail(this.email)) return '@Html.Raw(_loc["InvalidEMail"])';
-	},
 	valid() {
-		return !this.invalidEmail && !this.invalidPassword;
+		return !!this.confirmCode;
 	}
 },
 methods: {
-	sendMail() {
-		this.submitted = true;
-		if (this.emailError) return;
-		let formData = new URLSearchParams();
-		formData.append('Code', this.code);
-		formData.append('__RequestVerificationToken', '@Model?.RequestToken');
-		alert('yet not implemented');
+	success(msg) {
+		alert(msg);
 	},
-	async submit() {
+	fail(msg) {
+		alert(msg);
+	},
+	async submitCode() {
 		this.submitted = true;
 		if (!this.valid) return;
 		let formData = new URLSearchParams();
-		formData.append('Login', this.email);
-		formData.append('Password', this.password);
+		formData.append('Email', this.email);
+		formData.append('Code', this.confirmCode);
+		formData.append('Token', this.token);
 		formData.append('__RequestVerificationToken', '@Model?.RequestToken');
-		let resp = await fetch('/account/forgotpassword', {
+		let resp = await fetch('/account/confirmcode', {
 			method: 'POST',
 			body: formData
 		});

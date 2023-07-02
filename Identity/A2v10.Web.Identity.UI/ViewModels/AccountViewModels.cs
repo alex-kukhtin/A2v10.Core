@@ -24,4 +24,6 @@ public record RegisterViewModel : SimpleIdentityViewModel
 public record ConfirmCodeViewModel : SimpleIdentityViewModel
 {
 	public String Code { get; init; } = String.Empty;
+	public String? Email { get; set; } = String.Empty;
+	public String? Token { get; set;}
 }

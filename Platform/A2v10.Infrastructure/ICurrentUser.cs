@@ -15,6 +15,8 @@ public interface IUserIdentity
 
 	Boolean IsAdmin { get; }
 	Boolean IsTenantAdmin { get; }
+
+	void SetInitialTenantId(Int32 tenant);
 }
 
 public interface IUserState
@@ -36,6 +38,7 @@ public interface ICurrentUser
 	public IUserState State { get; }
 	public IUserLocale Locale { get; }
 	void SetCompanyId(Int64 id);
+	void SetInitialTenantId(Int32 tenantId);
 	void SetReadOnly(Boolean readOnly);
 	void AddModules(IEnumerable<Guid> modules);
 }

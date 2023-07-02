@@ -27,8 +27,9 @@ public static class ServiceExtensions
 
 		services.AddSingleton<IApplicationTheme, WebApplicationTheme>();
 
-		services.AddScoped<IApplicationHost, WebApplicationHost>();
-		services.AddScoped<ITenantManager, WebTenantManager>();
+		services.AddScoped<IApplicationHost, WebApplicationHost>()
+		.AddScoped<ITenantManager, WebTenantManager>()
+		.AddScoped<IAppTenantManager, AppTenantManager>();
 
 		services.AddScoped<WebLocalizer>()
 			.AddScoped<ILocalizer>(s => s.GetRequiredService<WebLocalizer>())

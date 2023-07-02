@@ -24,11 +24,16 @@ public record UserIdentity : IUserIdentity
 	public String? PersonName { get; init; }
 	public String? FirstName { get; init; }
 	public String? LastName { get; init; }
-	public Int32? Tenant { get; init; }
+	public Int32? Tenant { get; set; }
 	public String? Segment { get; init; }
 
 	public Boolean IsAdmin { get; init; }
 	public Boolean IsTenantAdmin { get; init; }
+
+	public void SetInitialTenantId(Int32 tenant)
+	{
+		Tenant = tenant;
+	}
 }
 
 public record UserState : IUserState
@@ -158,7 +163,11 @@ public class CurrentUser : ICurrentUser, IDbIdentity
         StoreState();
     }
 
-    public void SetReadOnly(Boolean readOnly)
+	public void SetInitialTenantId(Int32 tenantId)
+	{
+		Identity.SetInitialTenantId(tenantId);
+	}
+	public void SetReadOnly(Boolean readOnly)
 	{
 		if (State == null)
 			throw new InvalidProgramException("There is no current user state");

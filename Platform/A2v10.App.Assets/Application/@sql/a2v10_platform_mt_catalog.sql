@@ -53,7 +53,7 @@ create table a2security.Tenants
 	[State] nvarchar(128) null,
 	UserSince datetime null,
 	LastPaymentDate datetime null,
-	[Locale] nvarchar(32) not null constraint DF_Tenants_Locale default('uk-UA')
+	[Locale] nvarchar(32) not null constraint DF_Tenants_Locale default(N'uk-UA')
 );
 go
 ------------------------------------------------
@@ -84,7 +84,7 @@ create table a2security.Users
 	LockoutEnabled	bit	not null constraint DF_Users_LockoutEnabled default(1),
 	LockoutEndDateUtc datetimeoffset null,
 	AccessFailedCount int not null constraint DF_Users_AccessFailedCount default(0),
-	[Locale] nvarchar(32) not null constraint DF_Users_Locale2 default('uk-UA'),
+	[Locale] nvarchar(32) not null constraint DF_Users_Locale2 default(N'uk-UA'),
 	PersonName nvarchar(255) null,
 	LastLoginDate datetime null, /*UTC*/
 	LastLoginHost nvarchar(255) null,
@@ -229,6 +229,7 @@ Copyright © 2008-2023 Oleksandr Kukhtin
 Last updated : 27 jun 2023
 module version : 8102
 */
+-- SECURITY
 ------------------------------------------------
 create or alter procedure a2security.FindUserById
 @Id bigint
@@ -410,6 +411,9 @@ begin
 	set nocount on;
 	set transaction isolation level read committed;
 	set xact_abort on;
+
+	set @Tenant = isnull(@Tenant, 1); -- default value
+	set @Locale = isnull(@Locale, N'uk-UA');
 
 	declare @tenants table(Id int);
 	declare @users table(Id bigint);

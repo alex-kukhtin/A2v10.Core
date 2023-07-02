@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Mvc;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Http.Extensions;
 
 namespace A2v10.Web.Identity.UI;
 
@@ -27,11 +29,14 @@ public class AccountController : Controller
 	private readonly IApplicationHost _host;
 	private readonly IApplicationTheme _appTheme;
 	private readonly IMailService _mailService;
-	private readonly ILocalizer _localizer;	
+	private readonly ILocalizer _localizer;
+	private readonly IDataProtector _protector;
+	private readonly IAppTenantManager _appTenantManager;
 
 	public AccountController(SignInManager<AppUser<Int64>> signInManager, UserManager<AppUser<Int64>> userManager, 
 			IAntiforgery antiforgery, IApplicationHost host, IDbContext dbContext, 
-			IApplicationTheme appTheme, IMailService mailService, ILocalizer localizer)
+			IApplicationTheme appTheme, IMailService mailService, ILocalizer localizer,
+			IDataProtectionProvider protectionProvider, IAppTenantManager appTenantManager)
 	{
 		_signInManager = signInManager;
 		_userManager = userManager;
@@ -41,6 +46,8 @@ public class AccountController : Controller
 		_appTheme = appTheme;
 		_mailService = mailService;
 		_localizer = localizer;
+		_appTenantManager = appTenantManager;
+		_protector = protectionProvider.CreateProtector("Login");
 	}
 
 	void RemoveAllCookies()
@@ -148,12 +155,14 @@ public class AccountController : Controller
 		String emailConfirmLink = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 		String emailConfirmCode = await _userManager.GenerateTwoFactorTokenAsync(user, TokenOptions.DefaultEmailProvider);
 
+		var callbackUrl = Url.Action("confirmemaillink", "account", new { userId = user.Id, code = emailConfirmLink });
+
 		String subject = _localizer.Localize("@[ConfirmEMail]") ??
 			throw new InvalidOperationException("ConfirmEMail body not found");
 		String body = _localizer.Localize("@[ConfirmEMailBody]") ??
 			throw new InvalidOperationException("ConfirmEMailBody body not found");
 		body = body.Replace("{0}", emailConfirmCode)
-			.Replace("{1}", emailConfirmLink);
+			.Replace("{1}", callbackUrl);
 
 		await _mailService.SendAsync(user.UserName, subject, body);
 	}
@@ -185,7 +194,8 @@ public class AccountController : Controller
 			{
 				RemoveAntiforgeryCookie();
 				await SendConfirmCode(user);
-				return LocalRedirect("/account/confirmcode");
+				var tok = _protector.Protect(user.UserName);
+				return LocalRedirect($"/account/confirmcode?token={tok}");
 				/*
 				var token = await _userManager.GenerateTwoFactorTokenAsync(user, TokenOptions.DefaultPhoneProvider);
 				var user2 = await _userManager.FindByNameAsync(user.UserName)
@@ -301,10 +311,15 @@ public class AccountController : Controller
 	}
 
 	[HttpGet]
-	public async Task<IActionResult> ConfirmCode()
+	public async Task<IActionResult> ConfirmCode([FromQuery] String? Token)
 	{
-		var m = new SimpleIdentityViewModel()
+		if (Token == null)
+			return LocalRedirect("/account/login");
+		var email = _protector.Unprotect(Token);
+		var m = new ConfirmCodeViewModel()
 		{
+			Email = email,
+			Token = Token,
 			Title = await _dbContext.LoadAsync<AppTitleModel>(_host.CatalogDataSource, "a2sys.[AppTitle.Load]"),
 			Theme = _appTheme.MakeTheme(),
 			RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken
@@ -313,9 +328,40 @@ public class AccountController : Controller
 	}
 
 	[HttpPost]
-	public Task<IActionResult> ConfirmCode([FromForm] ConfirmCodeViewModel model)
+	public async Task<IActionResult> ConfirmCode([FromForm] ConfirmCodeViewModel model)
 	{
-		throw new NotImplementedException();	
+		try
+		{
+			var isValid = await _antiforgery.IsRequestValidAsync(HttpContext);
+
+			if (!isValid)
+				return new JsonResult(JsonResponse.Error("AntiForgery"));
+			if (String.IsNullOrEmpty(model.Token))
+				return new JsonResult(JsonResponse.Error("Failed"));
+
+			var userName = _protector.Unprotect(model.Token);
+			if (userName != model.Email)
+				return new JsonResult(JsonResponse.Error("Failed"));
+			var user = await _userManager.FindByNameAsync(userName);
+
+			if (user == null)
+				return new JsonResult(JsonResponse.Error("Failed"));
+
+			if (user.EmailConfirmed)
+				return new JsonResult(JsonResponse.Error("AlreadyConfirmed"));
+
+			var verified = await _userManager.VerifyTwoFactorTokenAsync(user, TokenOptions.DefaultEmailProvider, model.Code);
+			if (!verified)
+				return new JsonResult(JsonResponse.Error("InvalidConfirmCode"));
+
+			await _appTenantManager.RegisterUserComplete(user.Id);
+			await _signInManager.SignInAsync(user, isPersistent: true);
+			return LocalRedirect("/");
+		}
+		catch (Exception ex)
+		{
+			return new JsonResult(JsonResponse.Error(ex));
+		}
 	}
 }
 
