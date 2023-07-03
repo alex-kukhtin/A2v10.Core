@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2008-2023 Oleksandr Kukhtin
 
-Last updated : 27 jun 2023
-module version : 8102
+Last updated : 03 jul 2023
+module version : 8110
 */
 -- SECURITY
 ------------------------------------------------
@@ -215,7 +215,7 @@ begin
 
 	if @tenantCreated = 1
 		update a2security.Tenants set [Admin] = @userId where Id = @Tenant;
-
+	set @RetId = @userId;
 	commit tran;
 end
 go

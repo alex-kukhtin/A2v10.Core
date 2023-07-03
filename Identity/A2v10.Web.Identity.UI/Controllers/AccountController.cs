@@ -8,11 +8,10 @@ using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.DataProtection;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
-using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.Http.Extensions;
 
 namespace A2v10.Web.Identity.UI;
 
@@ -33,8 +32,8 @@ public class AccountController : Controller
 	private readonly IDataProtector _protector;
 	private readonly IAppTenantManager _appTenantManager;
 
-	public AccountController(SignInManager<AppUser<Int64>> signInManager, UserManager<AppUser<Int64>> userManager, 
-			IAntiforgery antiforgery, IApplicationHost host, IDbContext dbContext, 
+	public AccountController(SignInManager<AppUser<Int64>> signInManager, UserManager<AppUser<Int64>> userManager,
+			IAntiforgery antiforgery, IApplicationHost host, IDbContext dbContext,
 			IApplicationTheme appTheme, IMailService mailService, ILocalizer localizer,
 			IDataProtectionProvider protectionProvider, IAppTenantManager appTenantManager)
 	{
@@ -55,11 +54,11 @@ public class AccountController : Controller
 		foreach (var key in Request.Cookies.Keys)
 			Response.Cookies.Delete(key);
 	}
-    void RemoveAntiforgeryCookie()
+	void RemoveAntiforgeryCookie()
 	{
-        foreach (var key in Request.Cookies.Keys.Where(x => x.Contains("Antiforgery")))
-            Response.Cookies.Delete(key);
-    }
+		foreach (var key in Request.Cookies.Keys.Where(x => x.Contains("Antiforgery")))
+			Response.Cookies.Delete(key);
+	}
 
 	void RemoveNonAntiforgeryCookies()
 	{
@@ -152,10 +151,12 @@ public class AccountController : Controller
 		if (user.UserName == null)
 			throw new InvalidOperationException();
 
-		String emailConfirmLink = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 		String emailConfirmCode = await _userManager.GenerateTwoFactorTokenAsync(user, TokenOptions.DefaultEmailProvider);
+		String emailConfirmLink = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 
-		var callbackUrl = Url.Action("confirmemaillink", "account", new { userId = user.Id, code = emailConfirmLink });
+		var token = _protector.Protect($"{user.Id}\t{emailConfirmLink}");
+
+		var callbackUrl = Url.ActionLink("confirmemail", "account", new { token });
 
 		String subject = _localizer.Localize("@[ConfirmEMail]") ??
 			throw new InvalidOperationException("ConfirmEMail body not found");
@@ -276,7 +277,7 @@ public class AccountController : Controller
 			//if (User.Identity.IsUserOpenId())
 			//throw new SecurityException("Invalid User type (openId?)");
 
-			var user = await _userManager.FindByIdAsync(User.Identity.Name) 
+			var user = await _userManager.FindByIdAsync(User.Identity.Name)
 				?? throw new InvalidOperationException("User not found");
 
 			//if (!user.ChangePasswordEnabled)
@@ -350,7 +351,7 @@ public class AccountController : Controller
 			if (user.EmailConfirmed)
 				return new JsonResult(JsonResponse.Error("AlreadyConfirmed"));
 
-			var verified = await _userManager.VerifyTwoFactorTokenAsync(user, TokenOptions.DefaultEmailProvider, model.Code);
+			var verified = await _userManager.VerifyTwoFactorTokenAsync(user, TokenOptions.DefaultEmailProvider, model.Code.Trim());
 			if (!verified)
 				return new JsonResult(JsonResponse.Error("InvalidConfirmCode"));
 
@@ -361,6 +362,36 @@ public class AccountController : Controller
 		catch (Exception ex)
 		{
 			return new JsonResult(JsonResponse.Error(ex));
+		}
+	}
+
+	[HttpGet]
+	[ActionName("confirmemail")]
+	public async Task<IActionResult> ConfirmEmail([FromQuery] String Token)
+	{
+		try
+		{
+			var tok = _protector.Unprotect(Token).Split('\t');
+			var user = await _userManager.FindByIdAsync(tok[0]);
+			if (user == null || user.IsEmpty)
+				return NotFound();
+			if (user.EmailConfirmed)
+				return LocalRedirect("/");
+			var verified = await _userManager.VerifyUserTokenAsync(user,
+					_userManager.Options.Tokens.EmailConfirmationTokenProvider,
+					UserManager<AppUser<Int64>>.ConfirmEmailTokenPurpose,
+				tok[1]);
+			if (verified)
+			{
+				await _appTenantManager.RegisterUserComplete(user.Id);
+				await _signInManager.SignInAsync(user, isPersistent:true); 
+				return LocalRedirect("/");
+			}
+			return NotFound();
+		} 
+		catch (Exception ex)
+		{
+			return NotFound(ex.Message);
 		}
 	}
 }

@@ -8,6 +8,7 @@ const maskTools = maskTool();
 const validEmail = window.__validEmail;
 
 const currentMask = '+38 (0##) ###-##-##';
+const pwdLength = 6;
 
 new Vue({
 el:"#app",
@@ -34,6 +35,14 @@ computed: {
 		if (!this.submitted) return '';
 		if (!this.email) return '@Html.Raw(_loc["EnterEMail"])';
 		if (!validEmail(this.email)) return '@Html.Raw(_loc["InvalidEMail"])';
+		return '';
+	},
+	passwordError() {
+		if (!this.submitted) return '';
+		if (!this.password) return '@Html.Raw(_loc["EnterPassword"])';
+		if (this.password.length < pwdLength)
+			return '@Html.Raw(_loc["PasswordLength"])'
+		return '';
 	},
 	invalidName() {
 		if (!this.submitted) return false;
@@ -41,7 +50,7 @@ computed: {
 	},
 	invalidPassword() {
 		if (!this.submitted) return false;
-		return !this.password;
+		return !!this.passwordError;
 	},
 	invalidConfirm() {
 		if (!this.submitted) return false;

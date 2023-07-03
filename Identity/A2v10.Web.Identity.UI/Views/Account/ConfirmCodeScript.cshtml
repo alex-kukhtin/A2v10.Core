@@ -16,23 +16,41 @@ data: {
 	serverError: '',
 },
 computed: {
+	invalidCode() {
+		if (!this.submitted) return false;
+		return !this.confirmCode;
+	},
 	valid() {
-		return !!this.confirmCode;
+		return !this.invalidCode;
 	}
 },
 methods: {
 	success(msg) {
 		alert(msg);
 	},
+
 	fail(msg) {
-		alert(msg);
+		switch (msg) {
+			case 'AlreadyConfirmed':
+				this.serverError = '@Html.Raw(_loc["EMailAlreadyConfirmed"])';
+				break;
+			case 'InvalidConfirmCode':
+				this.serverError = '@Html.Raw(_loc["InvalidConfirmCode"])';
+				break;
+			case 'AntiForgery':
+				this.serverError = '@Html.Raw(_loc["AntiForgery"])';
+				break;
+			default:
+				this.serverError = '@Html.Raw(_loc["ErrorText"])';
+				break;
+		}
 	},
 	async submitCode() {
 		this.submitted = true;
 		if (!this.valid) return;
 		let formData = new URLSearchParams();
 		formData.append('Email', this.email);
-		formData.append('Code', this.confirmCode);
+		formData.append('Code', this.confirmCode.trim());
 		formData.append('Token', this.token);
 		formData.append('__RequestVerificationToken', '@Model?.RequestToken');
 		let resp = await fetch('/account/confirmcode', {

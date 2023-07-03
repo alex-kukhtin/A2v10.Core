@@ -11,6 +11,26 @@ using A2v10.Web.Identity;
 using Microsoft.Extensions.Configuration;
 public static class ServicesExtensions
 {
+	public static void ConfigureDefaultIdentityOptions(IdentityOptions options)
+	{
+		var lockout = options.Lockout;
+		lockout.MaxFailedAccessAttempts = 5;
+
+		var pwd = options.Password;
+		pwd.RequireDigit = false;
+		pwd.RequiredLength = 6;
+		pwd.RequireLowercase = false;
+		pwd.RequireUppercase = false;
+		pwd.RequireNonAlphanumeric = false;
+
+		var si = options.SignIn;
+		si.RequireConfirmedEmail = true;
+		si.RequireConfirmedAccount = true;
+		si.RequireConfirmedPhoneNumber = false;
+
+		var us = options.User;
+		us.RequireUniqueEmail = true;
+	}
 	public static IServiceCollection AddPlatformIdentityCore<T>(this IServiceCollection services,
 		Action<IdentityOptions>? identityOptions = null) where T : struct
 	{
@@ -21,10 +41,7 @@ public static class ServicesExtensions
 			else
 			{
 				// default behaviour
-				options.User.RequireUniqueEmail = true;
-				options.Lockout.MaxFailedAccessAttempts = 5;
-				options.SignIn.RequireConfirmedEmail = true;
-				options.Password.RequiredLength = 6;
+				ConfigureDefaultIdentityOptions(options);
 			}
 		})
 		.AddUserManager<UserManager<AppUser<T>>>()
@@ -117,27 +134,5 @@ public static class ServicesExtensions
 
 		return services;
     }
-
-	public static IServiceCollection UseSimpleIdentityOptions(this IServiceCollection services)
-	{
-		services.Configure<IdentityOptions>(opts =>
-		{
-			var pwd = opts.Password;
-			pwd.RequireDigit = false;
-			pwd.RequiredLength = 1;
-			pwd.RequireLowercase = false;
-			pwd.RequireUppercase = false;
-			pwd.RequireNonAlphanumeric = false;
-
-			var si = opts.SignIn;
-			si.RequireConfirmedEmail = true;
-			si.RequireConfirmedAccount = true;
-			si.RequireConfirmedPhoneNumber = false;
-
-			var us = opts.User;
-			us.RequireUniqueEmail = true;
-		});
-		return services;
-	}
 }
 

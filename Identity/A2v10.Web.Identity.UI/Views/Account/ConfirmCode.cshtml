@@ -11,10 +11,13 @@
 		<div>
 			<p>@Html.Raw(_loc["ConfirmRegister"]?.Replace("{0}", Model.Email))</p>
 
-			<div class="control-group" style="width:15rem;margin:auto">
+			<div class="control-group" style="width:15rem;margin:auto" v-bind:class="{invalid: invalidCode}">
 				<label class="a2-label required">@Html.Raw(_loc["ConfirmCode"])</label>
 				<div class="input-group">
 					<input v-focus class="control text-center" type="text" v-model="confirmCode" tabindex="1" spellcheck="false" />
+					<div class="validator" v-if="invalidCode">
+						<span class="error">@Html.Raw(_loc["EnterConfirmCode"])</span>
+					</div>
 				</div>
 			</div>
 

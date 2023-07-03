@@ -46,7 +46,7 @@
 					<input class="control" v-focus type="password" name="password" 
 						v-model="password" autocomplete="current-password" tabindex="5" ref="pwd" />
 					<div class="validator">
-						<span class="error">@_loc["EnterPassword"]</span>
+						<span class="error" v-text="passwordError"></span>
 					</div>
 				</div>
 			</div>

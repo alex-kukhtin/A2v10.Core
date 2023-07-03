@@ -29,8 +29,6 @@ public class Startup
 
 		services.UsePlatform(Configuration);
 
-		services.UseSimpleIdentityOptions();
-
 		services.AddReportEngines(factory =>
 		{
 			factory.RegisterEngine<PdfReportEngine>("pdf");

@@ -2,13 +2,13 @@
 
 using System;
 using System.Threading.Tasks;
+using System.Dynamic;
 
 using Microsoft.Extensions.Options;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Web.Identity;
-using System.Data.Common;
 
 namespace A2v10.Platform.Web;
 
@@ -29,7 +29,9 @@ public class AppTenantManager : IAppTenantManager
 	}
 	public async Task RegisterUserComplete(Int64 userId)
 	{
-		var appUser = await _dbContext.LoadAsync<AppUser<Int64>>(_dataSource, $"[{_dbSchema}].[User.RegisterComplete]", new { Id = userId })
+		var appUser = await _dbContext.LoadAsync<AppUser<Int64>>(_dataSource, 
+				$"[{_dbSchema}].[User.RegisterComplete]",
+				new ExpandoObject() { { "Id", userId } })
 			 ?? throw new InvalidOperationException("User not found");
 		_currentUser.SetInitialTenantId((Int32) (appUser.Tenant ?? 1));
 		await _dbContext.ExecuteAsync<AppUser<Int64>>(appUser.Segment, $"[{_dbSchema}].[User.CreateTenant]", appUser);
