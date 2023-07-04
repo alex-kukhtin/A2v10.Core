@@ -163,6 +163,17 @@ create table a2ui.[ModuleInitProcedures]
 	constraint FK_ModuleInitProcedures_Module_Modules foreign key (Module) references a2ui.Modules(Id)
 );
 go
+-------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2ui' and TABLE_NAME=N'TenantInitProcedures')
+create table a2ui.[TenantInitProcedures]
+(
+	[Procedure] sysname,
+	Module  uniqueidentifier not null,
+	Memo nvarchar(255),
+	constraint PK_TenantInitProcedures primary key (Module, [Procedure]),
+	constraint FK_TenantInitProcedures_Module_Modules foreign key (Module) references a2ui.Modules(Id)
+);
+go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2ui' and TABLE_NAME=N'Menu')
 create table a2ui.Menu

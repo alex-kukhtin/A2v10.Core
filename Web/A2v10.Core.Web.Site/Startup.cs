@@ -25,7 +25,7 @@ public class Startup
 	{
 		//!!!Before Use Platform. It has a default implementation 
 		services.UseMailClient();
-		services.UseLicenseManager();
+		//services.UseLicenseManager();
 
 		services.UsePlatform(Configuration);
 

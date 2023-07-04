@@ -42,7 +42,8 @@ begin
 
 	update a2security.Tenants set [Admin] = @Id where Id = @Tenant;
 
-	-- INIT TENANTS HERE
+	-- INIT TENANT
+	exec a2ui.[InvokeTenantInitProcedures] @TenantId = @Tenant;
 
 	commit tran;
 end

@@ -5,18 +5,6 @@ Last updated : 26 may 2023
 module version : 8100
 */
 ------------------------------------------------
-create or alter procedure a2ui.[Menu.User.Load]
-@TenantId int = 1,
-@UserId bigint
-as
-begin
-	set nocount on;
-	set transaction isolation level read uncommitted;
-
-	select * from a2security.ViewUsers where Id = @UserId;
-end
-go
-------------------------------------------------
 drop procedure if exists a2ui.[Menu.Merge];
 drop type if exists a2ui.[Menu.TableType]
 go
@@ -77,6 +65,7 @@ begin
 	set nocount on;
 	set transaction isolation level read uncommitted;
 
+	set @TenantId = 1; -- TODO: TEMPORARY!!!!
 	declare @RootId uniqueidentifier = N'00000000-0000-0000-0000-000000000000';
 	with RT as (
 		select Id=m0.Id, ParentId = m0.Parent, [Level] = 0
@@ -134,7 +123,19 @@ begin
 		insert into a2ui.ModuleInitProcedures(Module, [Procedure]) values (@Module, @Procedure);
 end
 go
+------------------------------------------------
+create or alter procedure a2ui.[RegisterTenantInitProcedure]
+@Module uniqueidentifier,
+@Procedure sysname
+as
+begin 
+	set nocount on;
+	set transaction isolation level read committed;
 
+	if not exists(select * from a2ui.TenantInitProcedures where [Procedure] = @Procedure and Module = @Module)
+		insert into a2ui.TenantInitProcedures(Module, [Procedure]) values (@Module, @Procedure);
+end
+go
 ------------------------------------------------
 create or alter procedure a2ui.[InvokeInitProcedures]
 @TenantId int
@@ -166,4 +167,34 @@ begin
 end
 go
 
+------------------------------------------------
+create or alter procedure a2ui.[InvokeTenantInitProcedures]
+@TenantId int
+as
+begin 
+	set nocount on;
+	set transaction isolation level read committed;
+
+	declare @procName sysname;
+	declare @moduleId uniqueidentifier;
+	declare @prms nvarchar(255);
+	declare @sql nvarchar(255);
+	set @prms = N'@TenantId int, @ModuleId uniqueidentifier';
+	declare #crs cursor local fast_forward read_only for
+		select [Procedure], tm.Module from a2ui.TenantModules tm
+		inner join a2ui.TenantInitProcedures mip on tm.Module = mip.Module
+		where tm.Tenant = @TenantId
+		group by [Procedure], tm.[Module];
+	open #crs;
+	fetch next from #crs into @procName, @moduleId;
+	while @@fetch_status = 0
+	begin
+		set @sql = N'exec ' + @procName + N' @TenantId = @TenantId, @ModuleId = @ModuleId';
+		exec sp_executesql @sql, @prms, @TenantId, @moduleId;
+		fetch next from #crs into @procName,@moduleId;
+	end
+	close #crs;
+	deallocate #crs;
+end
+go
 

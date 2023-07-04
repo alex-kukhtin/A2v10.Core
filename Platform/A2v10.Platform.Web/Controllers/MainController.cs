@@ -91,6 +91,7 @@ public class MainController : Controller
 		if (path == null)
 			return false;
 		return path.EndsWith(".css", StringComparison.OrdinalIgnoreCase) ||
+			path.EndsWith(".ico", StringComparison.OrdinalIgnoreCase) ||
 			path.EndsWith(".js", StringComparison.OrdinalIgnoreCase) ||
 			path.EndsWith(".map", StringComparison.OrdinalIgnoreCase);
 	}
