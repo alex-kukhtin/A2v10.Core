@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
 	<ItemGroup>
-		<SourceRoot Include="$(MSBuildThisFileDirectory)..\content\assets\wwwroot\*" />
+		<SourceIcon Include="$(MSBuildThisFileDirectory)..\content\assets\wwwroot\favicon.ico" />
 		<SourceAssetsJs Include="$(MSBuildThisFileDirectory)..\content\assets\wwwroot\scripts\*" />
 		<SourceAssetsCss Include="$(MSBuildThisFileDirectory)..\content\assets\wwwroot\css\*" />
 		<SourceAssetsFonts Include="$(MSBuildThisFileDirectory)..\content\assets\wwwroot\css\fonts\*" />
 		<SourceAssetsLoc Include="$(MSBuildThisFileDirectory)..\content\assets\wwwroot\localization\*" />
 	</ItemGroup>
 	<Target Name="CopyAssetsToProject" BeforeTargets="Build">
-		<Copy SourceFiles="@(SourceRoot)" DestinationFolder="$(ProjectDir)\wwwroot"/>
-		<Copy SourceFiles="@(SourceAssetsJs)" DestinationFolder="$(ProjectDir)\wwwroot\scripts"/>
-		<Copy SourceFiles="@(SourceAssetsCss)" DestinationFolder="$(ProjectDir)\wwwroot\css"/>
-		<Copy SourceFiles="@(SourceAssetsFonts)" DestinationFolder="$(ProjectDir)\wwwroot\css\fonts"/>
-		<Copy SourceFiles="@(SourceAssetsLoc)" DestinationFolder="$(ProjectDir)\wwwroot\localization"/>
+		<Copy SourceFiles="@(SourceIcon)" DestinationFiles="$(ProjectDir)\wwwroot\favicon.ico" SkipUnchangedFiles="true"/>
+		<Copy SourceFiles="@(SourceAssetsJs)" DestinationFolder="$(ProjectDir)\wwwroot\scripts" SkipUnchangedFiles="true"/>
+		<Copy SourceFiles="@(SourceAssetsCss)" DestinationFolder="$(ProjectDir)\wwwroot\css" SkipUnchangedFiles="true"/>
+		<Copy SourceFiles="@(SourceAssetsFonts)" DestinationFolder="$(ProjectDir)\wwwroot\css\fonts" SkipUnchangedFiles="true"/>
+		<Copy SourceFiles="@(SourceAssetsLoc)" DestinationFolder="$(ProjectDir)\wwwroot\localization" SkipUnchangedFiles="true"/>
 	</Target>
 </Project>
