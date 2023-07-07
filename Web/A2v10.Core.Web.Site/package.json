@@ -1,0 +1,9 @@
+{
+	"name": "a2v10.core.site",
+	"version": "10.1.0",
+	"devDependencies": {
+		"grunt": "^1.6.1",
+		"grunt-terser": "^2.0.0",
+		"grunt-contrib-watch": "^1.1.0"
+	}
+}

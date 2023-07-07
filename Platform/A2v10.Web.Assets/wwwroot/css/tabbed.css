@@ -1897,7 +1897,7 @@ pre.a2-code {
   color: #a94442;
   border: 1px solid #dca7a7;
   box-shadow: 1px 4px 10px rgba(169, 68, 66, 0.3);
-  white-space: pre;
+  white-space: pre-line;
 }
 .a2-hyperlink {
   display: inline-flex;
@@ -4289,7 +4289,7 @@ ul.news-list > li {
   width: 800px;
 }
 .modal-stack .modal-wrapper .load-indicator {
-  top: 2.4rem;
+  top: 2.8rem;
   margin-top: -4px;
   background-color: var(--neutralBkDarker);
 }
@@ -4434,6 +4434,9 @@ ul.news-list > li {
   overflow: visible;
 }
 .modal-content.overflow .tab-panel .tab-item {
+  overflow: visible;
+}
+.modal-content.overflow .dialog-grid-content {
   overflow: visible;
 }
 .modal-content .dialog-grid {
@@ -6751,7 +6754,8 @@ table > colgroup col.blue {
 .mdi-tabs-container .mdi-tabs-menu .open-menu:hover {
   background-color: #e8e8e8;
 }
-.mdi-footer {
+.mdi-footer,
+.footer {
   grid-area: footer;
   background-color: var(--neutral100);
   display: flex;
@@ -6761,13 +6765,16 @@ table > colgroup col.blue {
   text-transform: lowercase;
   padding-left: 8px;
 }
-.mdi-footer .version-info {
+.mdi-footer .version-info,
+.footer .version-info {
   font-size: 0.9rem;
 }
-.mdi-footer .debug-btn {
+.mdi-footer .debug-btn,
+.footer .debug-btn {
   height: 100%;
 }
-.mdi-footer .debug-btn .btn-debug {
+.mdi-footer .debug-btn .btn-debug,
+.footer .debug-btn .btn-debug {
   text-transform: inherit;
   border-radius: 0;
   font-size: 0.9rem;
@@ -6775,7 +6782,8 @@ table > colgroup col.blue {
   color: white;
   padding: 0 6px 0 18px;
 }
-.mdi-footer .menu {
+.mdi-footer .menu,
+.footer .menu {
   text-transform: none;
 }
 .mdi-navbar {
@@ -6847,7 +6855,7 @@ table > colgroup col.blue {
   background-color: var(--neutral800);
   color: white;
   min-width: 250px;
-  z-index: 70;
+  z-index: 1040;
   box-shadow: 3px 3px 10px 0 rgba(174, 174, 174, 0.5), 0 5px 40px 0 rgba(0, 0, 0, 0.15);
   overflow: auto;
 }
@@ -6924,6 +6932,20 @@ table > colgroup col.blue {
 }
 @media (max-width: 1000px) {
   /* TODO adjust tab size */
+}
+.login-shell {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas: "header" "main" "footer";
+  height: 100%;
+  overflow: hidden;
+  width: 100%;
+}
+.login-shell .header {
+  grid-area: header;
+}
+.login-shell .main-view {
+  grid-area: main;
 }
 .a2-new-btn .btn {
   padding: 0 1em;
