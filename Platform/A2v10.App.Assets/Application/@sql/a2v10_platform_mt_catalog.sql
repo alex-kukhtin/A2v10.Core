@@ -163,6 +163,17 @@ create table a2ui.[ModuleInitProcedures]
 	constraint FK_ModuleInitProcedures_Module_Modules foreign key (Module) references a2ui.Modules(Id)
 );
 go
+-------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2ui' and TABLE_NAME=N'TenantInitProcedures')
+create table a2ui.[TenantInitProcedures]
+(
+	[Procedure] sysname,
+	Module  uniqueidentifier not null,
+	Memo nvarchar(255),
+	constraint PK_TenantInitProcedures primary key (Module, [Procedure]),
+	constraint FK_TenantInitProcedures_Module_Modules foreign key (Module) references a2ui.Modules(Id)
+);
+go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2ui' and TABLE_NAME=N'Menu')
 create table a2ui.Menu
@@ -226,8 +237,8 @@ go
 /*
 Copyright © 2008-2023 Oleksandr Kukhtin
 
-Last updated : 27 jun 2023
-module version : 8102
+Last updated : 03 jul 2023
+module version : 8110
 */
 -- SECURITY
 ------------------------------------------------
@@ -440,7 +451,20 @@ begin
 
 	if @tenantCreated = 1
 		update a2security.Tenants set [Admin] = @userId where Id = @Tenant;
-
+	set @RetId = @userId;
 	commit tran;
+end
+go
+------------------------------------------------
+create or alter procedure a2security.[User.RegisterComplete]
+@Id bigint
+as
+begin
+	set nocount on;
+	set transaction isolation level read uncommitted;
+
+	update a2security.Users set EmailConfirmed = 1, LastLoginDate = getutcdate()
+
+	select * from a2security.ViewUsers where Id=@Id;
 end
 go

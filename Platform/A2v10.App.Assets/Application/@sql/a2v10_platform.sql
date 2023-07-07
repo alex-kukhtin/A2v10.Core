@@ -163,6 +163,17 @@ create table a2ui.[ModuleInitProcedures]
 	constraint FK_ModuleInitProcedures_Module_Modules foreign key (Module) references a2ui.Modules(Id)
 );
 go
+-------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2ui' and TABLE_NAME=N'TenantInitProcedures')
+create table a2ui.[TenantInitProcedures]
+(
+	[Procedure] sysname,
+	Module  uniqueidentifier not null,
+	Memo nvarchar(255),
+	constraint PK_TenantInitProcedures primary key (Module, [Procedure]),
+	constraint FK_TenantInitProcedures_Module_Modules foreign key (Module) references a2ui.Modules(Id)
+);
+go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2ui' and TABLE_NAME=N'Menu')
 create table a2ui.Menu
@@ -226,8 +237,8 @@ go
 /*
 Copyright © 2008-2023 Oleksandr Kukhtin
 
-Last updated : 27 jun 2023
-module version : 8102
+Last updated : 03 jul 2023
+module version : 8110
 */
 -- SECURITY
 ------------------------------------------------
@@ -440,8 +451,21 @@ begin
 
 	if @tenantCreated = 1
 		update a2security.Tenants set [Admin] = @userId where Id = @Tenant;
-
+	set @RetId = @userId;
 	commit tran;
+end
+go
+------------------------------------------------
+create or alter procedure a2security.[User.RegisterComplete]
+@Id bigint
+as
+begin
+	set nocount on;
+	set transaction isolation level read uncommitted;
+
+	update a2security.Users set EmailConfirmed = 1, LastLoginDate = getutcdate()
+
+	select * from a2security.ViewUsers where Id=@Id;
 end
 go
 
@@ -451,18 +475,6 @@ Copyright © 2008-2023 Oleksandr Kukhtin
 Last updated : 26 may 2023
 module version : 8100
 */
-------------------------------------------------
-create or alter procedure a2ui.[Menu.User.Load]
-@TenantId int = 1,
-@UserId bigint
-as
-begin
-	set nocount on;
-	set transaction isolation level read uncommitted;
-
-	select * from a2security.ViewUsers where Id = @UserId;
-end
-go
 ------------------------------------------------
 drop procedure if exists a2ui.[Menu.Merge];
 drop type if exists a2ui.[Menu.TableType]
@@ -524,6 +536,7 @@ begin
 	set nocount on;
 	set transaction isolation level read uncommitted;
 
+	set @TenantId = 1; -- TODO: TEMPORARY!!!!
 	declare @RootId uniqueidentifier = N'00000000-0000-0000-0000-000000000000';
 	with RT as (
 		select Id=m0.Id, ParentId = m0.Parent, [Level] = 0
@@ -581,7 +594,19 @@ begin
 		insert into a2ui.ModuleInitProcedures(Module, [Procedure]) values (@Module, @Procedure);
 end
 go
+------------------------------------------------
+create or alter procedure a2ui.[RegisterTenantInitProcedure]
+@Module uniqueidentifier,
+@Procedure sysname
+as
+begin 
+	set nocount on;
+	set transaction isolation level read committed;
 
+	if not exists(select * from a2ui.TenantInitProcedures where [Procedure] = @Procedure and Module = @Module)
+		insert into a2ui.TenantInitProcedures(Module, [Procedure]) values (@Module, @Procedure);
+end
+go
 ------------------------------------------------
 create or alter procedure a2ui.[InvokeInitProcedures]
 @TenantId int
@@ -613,6 +638,36 @@ begin
 end
 go
 
+------------------------------------------------
+create or alter procedure a2ui.[InvokeTenantInitProcedures]
+@TenantId int
+as
+begin 
+	set nocount on;
+	set transaction isolation level read committed;
+
+	declare @procName sysname;
+	declare @moduleId uniqueidentifier;
+	declare @prms nvarchar(255);
+	declare @sql nvarchar(255);
+	set @prms = N'@TenantId int, @ModuleId uniqueidentifier';
+	declare #crs cursor local fast_forward read_only for
+		select [Procedure], tm.Module from a2ui.TenantModules tm
+		inner join a2ui.TenantInitProcedures mip on tm.Module = mip.Module
+		where tm.Tenant = @TenantId
+		group by [Procedure], tm.[Module];
+	open #crs;
+	fetch next from #crs into @procName, @moduleId;
+	while @@fetch_status = 0
+	begin
+		set @sql = N'exec ' + @procName + N' @TenantId = @TenantId, @ModuleId = @ModuleId';
+		exec sp_executesql @sql, @prms, @TenantId, @moduleId;
+		fetch next from #crs into @procName,@moduleId;
+	end
+	close #crs;
+	deallocate #crs;
+end
+go
 
 
 /*
