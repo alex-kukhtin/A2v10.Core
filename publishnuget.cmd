@@ -14,6 +14,7 @@ del /q Platform\A2v10.Platform.Web\bin\Release\*.nupkg
 del /q Platform\A2v10.Platform.Web\bin\Release\*.snupkg
 del /q Platform\A2v10.Services\bin\Release\*.nupkg
 del /q Platform\A2v10.Services\bin\Release\*.snupkg
+del /q Platform\A2v10.Services\bin\Release\*.nupkg
 
 del /q ViewEngines\A2v10.ViewEngine.Xaml\bin\Release\*.nupkg
 del /q ViewEngines\A2v10.ViewEngine.Xaml\bin\Release\*.snupkg
@@ -29,6 +30,9 @@ del /q ReportEngines\A2v10.ReportEngine.Stimulsoft\bin\Release\*.snupkg
 
 del /q CodeGen\A2v10.Module.Infrastructure\bin\Release\*.nupkg
 del /q CodeGen\A2v10.Module.Infrastructure\bin\Release\*.snupkg
+
+del /q Messaging\A2v10.MailClient\bin\Release\*.nupkg
+del /q Messaging\A2v10.MailClient\bin\Release\*.snupkg
 
 dotnet pack -c Release
 
@@ -75,5 +79,8 @@ copy ReportEngines\A2v10.ReportEngine.Stimulsoft\bin\Release\*.snupkg ..\NuGet.l
 
 copy CodeGen\A2v10.Module.Infrastructure\bin\Release\*.nupkg ..\NuGet.local
 copy CodeGen\A2v10.Module.Infrastructure\bin\Release\*.snupkg ..\NuGet.local
+
+copy Messaging\A2v10.MailClient\bin\Release\*.nupkg ..\NuGet.local
+copy Messaging\A2v10.MailClient\bin\Release\*.snupkg ..\NuGet.local
 
 pause

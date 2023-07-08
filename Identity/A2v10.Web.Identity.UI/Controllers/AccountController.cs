@@ -101,37 +101,44 @@ public class AccountController : Controller
 	[HttpPost]
 	public async Task<IActionResult> Login([FromForm] LoginViewModel model)
 	{
-		var isValid = await _antiforgery.IsRequestValidAsync(HttpContext);
-
-		if (!isValid)
-			return new JsonResult(JsonResponse.Error("AntiForgery"));
-
-		if (model.Login == null || model.Password == null)
-			return new JsonResult(JsonResponse.Error("Failed"));
-
-		var user = await _userManager.FindByNameAsync(model.Login);
-		if (user == null || user.IsEmpty)
-			return new JsonResult(JsonResponse.Error("Failed"));
-		if (!user.EmailConfirmed)
-			return new JsonResult(JsonResponse.Error("EmailNotConfirmed"));
-
-		if (user.SetPassword)
-			return new JsonResult(JsonResponse.Ok("SetPassword"));
-
-		var result = await _signInManager.PasswordSignInAsync(model.Login, model.Password, model.IsPersistent, lockoutOnFailure: true);
-		if (result.Succeeded)
+		try
 		{
-			RemoveAntiforgeryCookie();
-			var returnUrl = model.ReturnUrl?.ToLowerInvariant();
-			if (returnUrl == null || returnUrl.StartsWith("/account"))
-				returnUrl = "/";
-			return LocalRedirect(returnUrl);
-		}
-		else
+			var isValid = await _antiforgery.IsRequestValidAsync(HttpContext);
+
+			if (!isValid)
+				return new JsonResult(JsonResponse.Error("AntiForgery"));
+
+			if (model.Login == null || model.Password == null)
+				return new JsonResult(JsonResponse.Error("Failed"));
+
+			var user = await _userManager.FindByNameAsync(model.Login);
+			if (user == null || user.IsEmpty)
+				return new JsonResult(JsonResponse.Error("Failed"));
+			if (!user.EmailConfirmed)
+				return new JsonResult(JsonResponse.Error("EmailNotConfirmed"));
+
+			if (user.SetPassword)
+				return new JsonResult(JsonResponse.Ok("SetPassword"));
+
+			var result = await _signInManager.PasswordSignInAsync(model.Login, model.Password, model.IsPersistent, lockoutOnFailure: true);
+			if (result.Succeeded)
+			{
+				RemoveAntiforgeryCookie();
+				var returnUrl = model.ReturnUrl?.ToLowerInvariant();
+				if (returnUrl == null || returnUrl.StartsWith("/account"))
+					returnUrl = "/";
+				return LocalRedirect(returnUrl);
+			}
+			else
+			{
+				return new JsonResult(JsonResponse.Error(result.ToString()));
+			}
+		} 
+		catch (Exception ex) 
 		{
-			return new JsonResult(JsonResponse.Error(result.ToString()));
-		}
-	}
+            return new JsonResult(JsonResponse.Error(ex));
+        }
+    }
 
 	[HttpGet]
 	public async Task<IActionResult> Register()

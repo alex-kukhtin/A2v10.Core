@@ -12,6 +12,8 @@ using Microsoft.Extensions.Options;
 using A2v10.Infrastructure;
 using A2v10.Web.Identity;
 using A2v10.Module.Infrastructure;
+using Microsoft.AspNetCore.Diagnostics;
+using System.Diagnostics;
 
 namespace A2v10.Platform.Web.Controllers;
 
@@ -81,7 +83,37 @@ public class MainController : Controller
 		return View(viewModel);
 	}
 
-	private Boolean HasNavPane()
+
+	[Route("main/error")]
+	[HttpGet]
+	[AllowAnonymous]
+	public IActionResult Error(String? pathInfo)
+	{
+        var RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+
+        var exceptionHandlerPathFeature =
+            HttpContext.Features.Get<IExceptionHandlerPathFeature>();
+
+		String? ExceptionMessage = String.Empty;
+
+        if (exceptionHandlerPathFeature?.Error is FileNotFoundException)
+        {
+            ExceptionMessage = "The file was not found.";
+        }
+		else if (exceptionHandlerPathFeature?.Error is Exception ex)
+		{
+			ExceptionMessage = ex.Message;
+		}
+
+        if (exceptionHandlerPathFeature?.Path == "/")
+        {
+            ExceptionMessage ??= string.Empty;
+            ExceptionMessage += " Page: Home.";
+        }
+        return View();
+	}
+
+    private Boolean HasNavPane()
 	{
 		return _codeProvider.IsFileExists("_navpane/model.json");
 	}

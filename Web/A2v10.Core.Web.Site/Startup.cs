@@ -9,8 +9,20 @@ using A2v10.Infrastructure;
 
 using A2v10.WorkflowEngine;
 using A2v10.ReportEngine.Pdf;
+using A2v10.Module.Infrastructure;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System;
 
 namespace A2v10.Core.Web.Site;
+
+public class NullLicenseManager : ILicenseManager
+{
+    public Task<bool> VerifyLicensesAsync(string? dataSource, int? tenantId, IEnumerable<Guid> modules)
+    {
+        return Task.FromResult(true);
+    }
+}
 
 public class Startup
 {
@@ -26,6 +38,7 @@ public class Startup
 		//!!!Before Use Platform. It has a default implementation 
 		services.UseMailClient();
 		//services.UseLicenseManager();
+		services.AddScoped<ILicenseManager, NullLicenseManager>();
 
 		services.UsePlatform(Configuration);
 

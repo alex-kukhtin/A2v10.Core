@@ -381,10 +381,10 @@ create or alter procedure a2ui.[RegisterModule]
 @Name nvarchar(255)
 as
 begin
-	if not exists(select * from a2ui.Modules where [Id] = @moduleId)
-		insert into a2ui.Modules ([Id], [Name]) values (@moduleId, @Name);
+	if not exists(select * from a2ui.Modules where [Id] = @ModuleId)
+		insert into a2ui.Modules ([Id], [Name]) values (@ModuleId, @Name);
 	else
-		update a2ui.Modules set [Name] = @Name where [Id] = @moduleId;
+		update a2ui.Modules set [Name] = @Name where [Id] = @ModuleId;
 end
 go
 ------------------------------------------------

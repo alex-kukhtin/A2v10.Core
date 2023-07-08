@@ -30,7 +30,7 @@ public class InternalAppCodeProviderClr : IAppCodeProviderImpl
 			int ix = path.IndexOf("/");
 			path = path[(ix+1).. ];
 		}
-		return path;
+		return path.Replace('\\', '/');
 	}
 
     public Boolean IsFileExists(String path)

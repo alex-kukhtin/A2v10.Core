@@ -37,11 +37,11 @@
 		<Reference Include="A2v10.LicenseManager">
 		  <HintPath>..\..\..\A2v10.LicenseManager\bin\Debug\net6.0\A2v10.LicenseManager.dll</HintPath>
 		</Reference>
+		<Reference Include="AppMain">
+		  <HintPath>..\..\..\..\Projects\NovaEra.2023\AppMain\bin\Debug\net6.0\AppMain.dll</HintPath>
+		</Reference>
 		<Reference Include="AppPersonnel">
 		  <HintPath>..\..\..\..\Projects\NovaEra.2023\AppPersonnel\bin\Debug\net6.0\AppPersonnel.dll</HintPath>
-		</Reference>
-		<Reference Include="MainApp">
-			<HintPath>..\..\..\A2v10.App.Compiler\MainApp\bin\Debug\net6.0\MainApp.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 
