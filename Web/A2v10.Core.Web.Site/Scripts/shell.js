@@ -1,6 +1,6 @@
 ﻿// Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
 
-/*20230618-8110*/
+/*20230708-8116*/
 /* tabbled:shell.js */
 (function () {
 	const eventBus = require('std:eventBus');
@@ -362,6 +362,7 @@
 				let seg = path.split('?');
 				if (seg.length < 2) return;
 				let tab = this.tabs.find(t => '/_page' + t.url === seg[0]);
+				if (!tab) return;
 				let q = '';
 				if (seg[1])
 					q = '?' + seg[1];

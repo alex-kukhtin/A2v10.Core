@@ -5625,7 +5625,7 @@ Vue.component('validator-control', {
 })();
 // Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
-/*20230613-7937*/
+/*20230713-7939*/
 /*components/combobox.js */
 
 (function () {
@@ -5691,7 +5691,7 @@ Vue.component('validator-control', {
 				get() {
 					if (this.itemsSource.length === 0 && this.item) {
 						let itemval = this.item[this.prop];
-						if (itemval && itemval.$empty)
+						if (itemval && itemval.$empty && !itemval.$isEmpty)
 							itemval.$empty();
 					}
 					return this.getComboValue();
