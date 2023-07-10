@@ -239,7 +239,44 @@ public class AccountController : Controller
 		return View(m);
 	}
 
-	private async Task DoLogout()
+    [HttpPost]
+    public async Task<IActionResult> ForgotPassword([FromForm] ForgotPasswordViewModel model)
+    {
+        try
+        {
+            var isValid = await _antiforgery.IsRequestValidAsync(HttpContext);
+            if (!isValid)
+                return new JsonResult(JsonResponse.Error("AntiForgery"));
+
+            if (model.Login == null)
+                return new JsonResult(JsonResponse.Error("Failed"));
+            var user = await _userManager.FindByNameAsync(model.Login);
+
+            if (user == null || !user.EmailConfirmed || user.UserName == null)
+                return new JsonResult(JsonResponse.Ok("Success"));
+
+			if (!user.ChangePasswordEnabled)
+                return new JsonResult(JsonResponse.Error("NotAllowed"));
+
+            String code = await _userManager.GenerateTwoFactorTokenAsync(user, TokenOptions.DefaultEmailProvider);
+
+            String subject = _localizer.Localize(null, "@[ResetPassword]") ??
+	            throw new InvalidOperationException("ConfirmEMail body not found");
+
+			String body = _localizer.Localize(null, "@[ResetPasswordBody]") ??
+                throw new InvalidOperationException("ResetPasswordBody body not found");
+                body = body.Replace("{0}", code);
+
+            await _mailService.SendAsync(user.UserName, subject, body);
+            return new JsonResult(JsonResponse.Ok("Success"));
+        }
+        catch (Exception tex)
+        {
+            return new JsonResult(JsonResponse.Error(tex));
+        }
+    }
+
+    private async Task DoLogout()
 	{
 		await _signInManager.SignOutAsync();
 		HttpContext.Session.Clear();

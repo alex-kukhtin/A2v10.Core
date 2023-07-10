@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 
 namespace A2v10.Xaml;
@@ -30,8 +30,9 @@ public class TextBox : ValuedControl, ITableControl
 	public Accel? Accel { get; set; }
 	public Boolean ShowClear { get; set; }
 	public Boolean ShowFilter { get; set; }
+    public Boolean ShowSearch { get; set; }
 
-	protected virtual String TagName => Multiline ? "a2-textarea" : "textbox";
+    protected virtual String TagName => Multiline ? "a2-textarea" : "textbox";
 
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
@@ -68,7 +69,9 @@ public class TextBox : ValuedControl, ITableControl
 			input.MergeAttribute(":has-clear", "true");
 		if (ShowFilter)
 			input.MergeAttribute(":has-filter", "true");
-		MergeAlign(input, context, Align);
+        if (ShowSearch)
+            input.MergeAttribute(":has-search", "true");
+        MergeAlign(input, context, Align);
 		MergeBindingAttributeString(input, context, "placeholder", nameof(Placeholder), Placeholder);
 		MergeValue(input, context);
 		input.RenderStart(context);

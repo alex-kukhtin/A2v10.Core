@@ -27,3 +27,8 @@ public record ConfirmCodeViewModel : SimpleIdentityViewModel
 	public String? Email { get; set; } = String.Empty;
 	public String? Token { get; set;}
 }
+
+public record ForgotPasswordViewModel : SimpleIdentityViewModel
+{
+    public String? Login { get; set; }
+}
