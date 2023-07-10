@@ -35,8 +35,8 @@
 		"inputFiles": [
 			"../../Platform/A2v10.App.Assets/Application/@sql/source/a2v10_struct.sql",
 			"../../Platform/A2v10.App.Assets/Application/@sql/source/a2v10_system.sql",
-			"../../Platform/A2v10.App.Assets/Application/@sql/source/a2v10_security_segment.sql",
 			"../../Platform/A2v10.App.Assets/Application/@sql/source/a2v10_ui.sql",
+			"../../Platform/A2v10.App.Assets/Application/@sql/source/a2v10_security_segment.sql",
 			"../../Platform/A2v10.App.Assets/Application/@sql/source/a2v10_init.sql"
 		],
 		"minify": { "enabled": false }

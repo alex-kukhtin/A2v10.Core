@@ -166,10 +166,9 @@ begin
 	deallocate #crs;
 end
 go
-
 ------------------------------------------------
 create or alter procedure a2ui.[InvokeTenantInitProcedures]
-@TenantId int
+@Tenants a2sys.[Id.TableType] readonly
 as
 begin 
 	set nocount on;
@@ -179,22 +178,33 @@ begin
 	declare @moduleId uniqueidentifier;
 	declare @prms nvarchar(255);
 	declare @sql nvarchar(255);
-	set @prms = N'@TenantId int, @ModuleId uniqueidentifier';
+	set @prms = N'@Tenants a2sys.[Id.TableType] readonly, @ModuleId uniqueidentifier';
 	declare #crs cursor local fast_forward read_only for
-		select [Procedure], tm.Module from a2ui.TenantModules tm
-		inner join a2ui.TenantInitProcedures mip on tm.Module = mip.Module
-		where tm.Tenant = @TenantId
-		group by [Procedure], tm.[Module];
+		select [Procedure], Module = m.Id
+		from a2ui.Modules m
+			inner join a2ui.TenantInitProcedures mip on m.Id = mip.Module
+		group by [Procedure], m.[Id];
 	open #crs;
 	fetch next from #crs into @procName, @moduleId;
 	while @@fetch_status = 0
 	begin
-		set @sql = N'exec ' + @procName + N' @TenantId = @TenantId, @ModuleId = @ModuleId';
-		exec sp_executesql @sql, @prms, @TenantId, @moduleId;
+		set @sql = N'exec ' + @procName + N' @Tenants = @Tenants, @ModuleId = @ModuleId';
+		exec sp_executesql @sql, @prms, @Tenants, @moduleId;
 		fetch next from #crs into @procName,@moduleId;
 	end
 	close #crs;
 	deallocate #crs;
 end
 go
-
+------------------------------------------------
+create or alter procedure a2ui.[InvokeTenantInitProcedures.All]
+as
+begin 
+	set nocount on;
+	set transaction isolation level read committed;
+	declare @Tenants a2sys.[Id.TableType];
+	insert into @Tenants(Id)
+		select Id from a2security.Tenants where Id <> 0;
+	exec a2ui.[InvokeTenantInitProcedures] @Tenants;
+end
+go

@@ -237,57 +237,6 @@ go
 /*
 Copyright © 2008-2023 Oleksandr Kukhtin
 
-Last updated : 02 jul 2023
-module version : 8110
-*/
-
--- SECURITY SEGMENT
-------------------------------------------------
-create or alter procedure a2security.SetTenantId
-@TenantId int
-as
-begin
-	exec sp_set_session_context @key=N'TenantId', @value=@TenantId, @read_only=0;   
-end
-go
-------------------------------------------------
-create or alter procedure a2security.[User.CreateTenant]
-@Id bigint,
-@Tenant int,
-@UserName nvarchar(255),
-@Email nvarchar(255) = null,
-@PhoneNumber nvarchar(255) = null,
-@PersonName nvarchar(255) = null,
-@Memo nvarchar(255) = null,
-@Locale nvarchar(255) = null
-as
-begin
-	set nocount on;
-	set transaction isolation level read committed;
-	set xact_abort on;
-
-	begin tran;
-
-	insert into a2security.Tenants (Id, [Admin], Locale)
-	values (@Tenant, null, @Locale);
-
-	insert into a2security.Users(Id, Tenant, UserName, PersonName, Email, EmailConfirmed, PhoneNumber,
-		Locale, Memo, SecurityStamp, SecurityStamp2, PasswordHash, PasswordHash2)
-	values (@Id, @Tenant, @UserName, @PersonName, @Email, 1, @PhoneNumber, 
-		@Locale, @Memo, N'', N'', N'', N'');
-
-	update a2security.Tenants set [Admin] = @Id where Id = @Tenant;
-
-	-- INIT TENANT
-	exec a2ui.[InvokeTenantInitProcedures] @TenantId = @Tenant;
-
-	commit tran;
-end
-go
-
-/*
-Copyright © 2008-2023 Oleksandr Kukhtin
-
 Last updated : 26 may 2023
 module version : 8100
 */
@@ -453,10 +402,9 @@ begin
 	deallocate #crs;
 end
 go
-
 ------------------------------------------------
 create or alter procedure a2ui.[InvokeTenantInitProcedures]
-@TenantId int
+@Tenants a2sys.[Id.TableType] readonly
 as
 begin 
 	set nocount on;
@@ -466,25 +414,90 @@ begin
 	declare @moduleId uniqueidentifier;
 	declare @prms nvarchar(255);
 	declare @sql nvarchar(255);
-	set @prms = N'@TenantId int, @ModuleId uniqueidentifier';
+	set @prms = N'@Tenants a2sys.[Id.TableType] readonly, @ModuleId uniqueidentifier';
 	declare #crs cursor local fast_forward read_only for
-		select [Procedure], tm.Module from a2ui.TenantModules tm
-		inner join a2ui.TenantInitProcedures mip on tm.Module = mip.Module
-		where tm.Tenant = @TenantId
-		group by [Procedure], tm.[Module];
+		select [Procedure], Module = m.Id
+		from a2ui.Modules m
+			inner join a2ui.TenantInitProcedures mip on m.Id = mip.Module
+		group by [Procedure], m.[Id];
 	open #crs;
 	fetch next from #crs into @procName, @moduleId;
 	while @@fetch_status = 0
 	begin
-		set @sql = N'exec ' + @procName + N' @TenantId = @TenantId, @ModuleId = @ModuleId';
-		exec sp_executesql @sql, @prms, @TenantId, @moduleId;
+		set @sql = N'exec ' + @procName + N' @Tenants = @Tenants, @ModuleId = @ModuleId';
+		exec sp_executesql @sql, @prms, @Tenants, @moduleId;
 		fetch next from #crs into @procName,@moduleId;
 	end
 	close #crs;
 	deallocate #crs;
 end
 go
+------------------------------------------------
+create or alter procedure a2ui.[InvokeTenantInitProcedures.All]
+as
+begin 
+	set nocount on;
+	set transaction isolation level read committed;
+	declare @Tenants a2sys.[Id.TableType];
+	insert into @Tenants(Id)
+		select Id from a2security.Tenants where Id <> 0;
+	exec a2ui.[InvokeTenantInitProcedures] @Tenants;
+end
+go
 
+/*
+Copyright © 2008-2023 Oleksandr Kukhtin
+
+Last updated : 02 jul 2023
+module version : 8110
+*/
+
+-- SECURITY SEGMENT
+------------------------------------------------
+create or alter procedure a2security.SetTenantId
+@TenantId int
+as
+begin
+	exec sp_set_session_context @key=N'TenantId', @value=@TenantId, @read_only=0;   
+end
+go
+------------------------------------------------
+create or alter procedure a2security.[User.CreateTenant]
+@Id bigint,
+@Tenant int,
+@UserName nvarchar(255),
+@Email nvarchar(255) = null,
+@PhoneNumber nvarchar(255) = null,
+@PersonName nvarchar(255) = null,
+@Memo nvarchar(255) = null,
+@Locale nvarchar(255) = null
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+	set xact_abort on;
+
+	begin tran;
+
+	insert into a2security.Tenants (Id, [Admin], Locale)
+	values (@Tenant, null, @Locale);
+
+	insert into a2security.Users(Id, Tenant, UserName, PersonName, Email, EmailConfirmed, PhoneNumber,
+		Locale, Memo, SecurityStamp, SecurityStamp2, PasswordHash, PasswordHash2)
+	values (@Id, @Tenant, @UserName, @PersonName, @Email, 1, @PhoneNumber, 
+		@Locale, @Memo, N'', N'', N'', N'');
+
+	update a2security.Tenants set [Admin] = @Id where Id = @Tenant;
+
+	-- INIT TENANT
+	declare @tenants a2sys.[Id.TableType];
+	insert into @tenants(Id) values (@Tenant);
+
+	exec a2ui.[InvokeTenantInitProcedures] @Tenants = @tenants;
+
+	commit tran;
+end
+go
 
 /*
 Copyright © 2008-2023 Oleksandr Kukhtin

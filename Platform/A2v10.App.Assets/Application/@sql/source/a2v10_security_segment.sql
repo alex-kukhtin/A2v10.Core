@@ -43,7 +43,10 @@ begin
 	update a2security.Tenants set [Admin] = @Id where Id = @Tenant;
 
 	-- INIT TENANT
-	exec a2ui.[InvokeTenantInitProcedures] @TenantId = @Tenant;
+	declare @tenants a2sys.[Id.TableType];
+	insert into @tenants(Id) values (@Tenant);
+
+	exec a2ui.[InvokeTenantInitProcedures] @Tenants = @tenants;
 
 	commit tran;
 end
