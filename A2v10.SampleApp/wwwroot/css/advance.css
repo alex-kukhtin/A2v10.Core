@@ -2160,7 +2160,7 @@ pre.a2-code {
   color: #a94442;
   border: 1px solid #dca7a7;
   box-shadow: 1px 4px 10px rgba(169, 68, 66, 0.3);
-  white-space: pre;
+  white-space: pre-line;
 }
 .a2-hyperlink {
   display: inline-flex;
@@ -6482,7 +6482,7 @@ table.sheet tr.row-title td:last-child {
   padding-right: 0;
 }
 table.sheet tr.row-no-border td {
-  border-style: none!important;
+  border-style: none !important;
   background-color: var(--background) !important;
 }
 table.sheet tr.row-no-border td.underline {
@@ -6494,6 +6494,9 @@ table.sheet tr.row-page-header td {
   color: #999;
   height: 3rem;
   border-style: none;
+}
+table.sheet tr.row-divider {
+  height: 12px;
 }
 table.sheet tr.row-parameter td,
 table.sheet tr.row-last-parameter td {

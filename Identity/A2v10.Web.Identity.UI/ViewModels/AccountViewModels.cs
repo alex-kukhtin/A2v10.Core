@@ -32,3 +32,16 @@ public record ForgotPasswordViewModel : SimpleIdentityViewModel
 {
     public String? Login { get; set; }
 }
+
+public record ForgotPasswordCodeViewModel : SimpleIdentityViewModel
+{
+    public String? Login { get; set; }
+    public String Code { get; init; } = String.Empty;
+}
+
+public record ForgotPasswordChangeViewModel : SimpleIdentityViewModel
+{
+    public String? Login { get; set; }
+    public String Code { get; init; } = String.Empty;
+    public String Password { get; init; } = String.Empty;
+}

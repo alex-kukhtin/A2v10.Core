@@ -142,6 +142,9 @@ public sealed class AppUserStore<T> :
 
 	public async Task<IdentityResult> UpdateAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
+		if (user.Flags == 0)
+			return IdentityResult.Success;
+
 		var prm = new ExpandoObject()
 		{
 			{ ParamNames.Id,  user.Id }

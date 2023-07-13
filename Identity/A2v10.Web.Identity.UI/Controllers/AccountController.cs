@@ -276,6 +276,52 @@ public class AccountController : Controller
         }
     }
 
+    [HttpPost]
+    public async Task<IActionResult> CheckForgotPasswordCode(ForgotPasswordCodeViewModel model)
+    {
+        var isValid = await _antiforgery.IsRequestValidAsync(HttpContext);
+        if (!isValid)
+            return new JsonResult(JsonResponse.Error("AntiForgery"));
+        if (model.Login == null)
+            return new JsonResult(JsonResponse.Error("Failed"));
+        var user = await _userManager.FindByNameAsync(model.Login);
+        if (user == null)
+            return new JsonResult(JsonResponse.Error("Failed"));
+        var result = await _userManager.VerifyTwoFactorTokenAsync(user, TokenOptions.DefaultEmailProvider, model.Code);
+        if (result)
+            return new JsonResult(JsonResponse.Ok());
+        else
+            return new JsonResult(JsonResponse.Error("InvalidCode"));
+    }
+
+	[HttpPost]
+	public async Task<IActionResult> ResetPassword(ForgotPasswordChangeViewModel model)
+	{
+		try
+		{
+            var isValid = await _antiforgery.IsRequestValidAsync(HttpContext);
+            if (!isValid)
+                return new JsonResult(JsonResponse.Error("AntiForgery"));
+            if (model.Login == null)
+                return new JsonResult(JsonResponse.Error("Failed"));
+            var user = await _userManager.FindByNameAsync(model.Login);
+            if (user == null)
+                return new JsonResult(JsonResponse.Error("Failed"));
+            var result = await _userManager.VerifyTwoFactorTokenAsync(user, TokenOptions.DefaultEmailProvider, model.Code);
+            if (!result)
+                return new JsonResult(JsonResponse.Error("Failed"));
+			var changePasswordToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+			var identityResult = await _userManager.ResetPasswordAsync(user, changePasswordToken, model.Password);
+			if (identityResult.Succeeded)
+				return LocalRedirect("/account/login");
+            return new JsonResult(JsonResponse.Error(String.Join(", ", identityResult.Errors)));
+        }
+        catch (Exception ex)
+		{
+            return new JsonResult(JsonResponse.Error(ex));
+        }
+    }
+
     private async Task DoLogout()
 	{
 		await _signInManager.SignOutAsync();
@@ -330,7 +376,6 @@ public class AccountController : Controller
 			var ir = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
 			if (ir.Succeeded)
 			{
-				await _userManager.UpdateAsync(user);
 				return new JsonResult(JsonResponse.Ok(String.Empty));
 			}
 			else

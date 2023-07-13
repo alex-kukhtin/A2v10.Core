@@ -17,7 +17,7 @@ public class JsonResponse
 	{
 		return new JsonResponse { Success = false, Message = ex.Message };
 	}
-	public static JsonResponse Ok(String message)
+	public static JsonResponse Ok(String? message = null)
 	{
 		return new JsonResponse { Success = true, Message = message };
 	}
