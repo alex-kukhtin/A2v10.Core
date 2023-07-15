@@ -6666,6 +6666,8 @@ table > colgroup col.blue {
   display: flex;
   background-color: var(--neutral100);
   justify-content: space-between;
+  overflow-x: hidden;
+  overflow-y: visible;
 }
 .mdi-tabs-container .mdi-tabs {
   display: flex;
@@ -6694,12 +6696,13 @@ table > colgroup col.blue {
 .mdi-tabs-container .mdi-tabs li .tab-tooltip {
   position: absolute;
   background-color: white;
-  top: 90%;
+  top: 10px;
   z-index: 8;
-  left: 20%;
-  padding: 3px;
+  left: 30px;
+  padding: 3px 8px;
   border: 1px solid var(--neutral900);
   font-size: 12px;
+  background-color: #fffcd5;
 }
 .mdi-tabs-container .mdi-tabs li .close {
   color: inherit;

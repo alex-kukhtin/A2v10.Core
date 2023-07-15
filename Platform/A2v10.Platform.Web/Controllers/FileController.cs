@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Threading.Tasks;
@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
 
+using Newtonsoft.Json;
+
 using A2v10.Infrastructure;
 using A2v10.Data.Interfaces;
 
@@ -16,7 +18,6 @@ namespace A2v10.Platform.Web.Controllers;
 
 [ExecutingFilter]
 [Authorize]
-[ResponseCache(Duration = 2592000, Location = ResponseCacheLocation.Client)]
 public class FileController : BaseController
 {
 	private readonly IDataService _dataService;
@@ -39,17 +40,14 @@ public class FileController : BaseController
 	{
 		try
 		{
-			var token = Request.Query["token"];
-			if (token.Count == 0)
-				throw new InvalidReqestExecption("Invalid image token");
-			var strToken = token[0] ??
-				throw new InvalidReqestExecption("Invalid image token");
+			var blob = await _dataService.LoadBlobAsync(UrlKind.File, pathInfo, SetSqlQueryParams)
+				?? throw new InvalidOperationException("Blob not found");
 
-			var blob = await _dataService.LoadBlobAsync(UrlKind.File, pathInfo, SetSqlQueryParams);
-			if (blob == null || blob.Stream == null)
-				throw new InvalidReqestExecption($"Image not found. ({pathInfo})");
+            if (blob.CheckToken)
+                ValidateToken(blob.Token);
 
-			ValidateToken(blob.Token, strToken);
+            if (blob.Stream == null)
+				throw new InvalidReqestExecption($"Blob not found. ({pathInfo})");
 
 			var ar = new WebBinaryActionResult(blob.Stream, blob.Mime ?? MimeTypes.Text.Plain);
 			if (Request.Query["export"].Count > 0)
@@ -78,12 +76,46 @@ public class FileController : BaseController
 
 	[Route("_file/{*pathInfo}")]
 	[HttpPost]
-	public IActionResult DefaultPost(String pathInfo)
+	public async Task<IActionResult> DefaultPost(String pathInfo)
 	{
-		throw new NotImplementedException("_file/post. Yet not implemented");
+		try
+		{
+			var files = Request.Form.Files;
+			if (files.Count == 0)
+				throw new InvalidOperationException("No files");
+			var file = files[0];
+
+			using var fileStream = file.OpenReadStream();
+            var name = Path.GetFileName(file.FileName);
+
+            var result = await _dataService.SaveFileAsync(pathInfo, (blob) =>
+				{
+					blob.Stream = fileStream;
+					blob.Name = name;
+					blob.Mime = file.ContentType;
+				}, 
+				SetSqlQueryParams
+			);
+            String json = JsonConvert.SerializeObject(result, JsonHelpers.StandardSerializerSettings);
+            return Content(json, MimeTypes.Application.Json);
+        }
+        catch (Exception ex)
+		{
+			return WriteExceptionStatus(ex);
+		}
 	}
 
-	void ValidateToken(Guid dbToken, String token)
+	void ValidateToken(Guid dbToken)
+	{
+		var token = Request.Query["token"];
+		if (token.Count == 0)
+			throw new InvalidReqestExecption("Invalid token");
+		var strToken = token[0] ??
+			throw new InvalidReqestExecption("Invalid token");
+		ValidateToken(dbToken, strToken);
+	}
+
+    void ValidateToken(Guid dbToken, String token)
 	{
 		var generated = _tokenProvider.GenerateToken(dbToken);
 		if (generated == token)
@@ -91,7 +123,8 @@ public class FileController : BaseController
 		throw new InvalidReqestExecption("Invalid image token");
 	}
 
-	[Route("file/{*pathInfo}")]
+    [ResponseCache(Duration = 2592000, Location = ResponseCacheLocation.Client)]
+    [Route("file/{*pathInfo}")]
 	[HttpGet]
 	public IActionResult LoadFile(String pathInfo)
 	{

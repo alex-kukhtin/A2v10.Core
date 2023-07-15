@@ -44,4 +44,20 @@ public static class JsonHelpers
 				new JsonDoubleConverter()
 			}
 		};
+
+    public static readonly JsonSerializerSettings IndentedSerializerSettings =
+        new()
+        {
+            Formatting = Formatting.Indented,
+            StringEscapeHandling = StringEscapeHandling.EscapeHtml,
+            DateFormatHandling = DateFormatHandling.IsoDateFormat,
+            DateTimeZoneHandling = DateTimeZoneHandling.Utc,
+            NullValueHandling = NullValueHandling.Ignore,
+            DefaultValueHandling = DefaultValueHandling.Ignore,
+			Converters = new List<JsonConverter>()
+			{
+				new JsonDoubleConverter(),
+				new IgnoreNullValueExpandoObjectConverter()
+			}
+        };
 }

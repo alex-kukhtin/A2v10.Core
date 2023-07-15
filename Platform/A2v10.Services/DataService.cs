@@ -8,6 +8,8 @@ using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Services.Interop.ExportTo;
+using Esprima.Ast;
+using System.IO;
 
 namespace A2v10.Services;
 
@@ -342,21 +344,107 @@ public class DataService : IDataService
 	public async Task<IBlobInfo?> LoadBlobAsync(UrlKind kind, String baseUrl, Action<ExpandoObject> setParams, String? suffix = null)
 	{
 		var platformUrl = CreatePlatformUrl(kind, baseUrl);
-		var blob = await _modelReader.GetBlobAsync(platformUrl, suffix);
-		var prms = new ExpandoObject();
-		prms.Set("Id", blob?.Id);
-		prms.Set("Key", blob?.Key);
+		IModelBlob blob = await _modelReader.GetBlobAsync(platformUrl, suffix)
+            ?? throw new DataServiceException($"Blob is null");
+
+        var prms = new ExpandoObject();
+		prms.Set("Id", blob.Id);
+		prms.Set("Key", blob.Key);
 		setParams?.Invoke(prms);
-		var loadProc = blob?.LoadProcedure();
-		if (String.IsNullOrEmpty(loadProc))
-			throw new DataServiceException($"LoadProcedure is null");
-		var bi = await _dbContext.LoadAsync<BlobInfo>(blob?.DataSource, loadProc, prms);
-		if (!String.IsNullOrEmpty(bi?.BlobName))
-			throw new NotImplementedException("Load azure Storage blob");
-		return bi;
+
+        return blob.Type switch
+        {
+            ModelBlobType.sql => await LoadBlobSql(blob, prms),
+            ModelBlobType.json => await LoadBlobJson(blob, prms),
+            _ => throw new NotImplementedException(blob.Type.ToString()),
+        };
+    }
+
+	private Task<BlobInfo?> LoadBlobSql(IModelBlob blob, ExpandoObject prms)
+	{
+        var loadProc = blob.LoadProcedure();
+        if (String.IsNullOrEmpty(loadProc))
+            throw new DataServiceException($"LoadProcedure is null");
+        return _dbContext.LoadAsync<BlobInfo>(blob?.DataSource, loadProc, prms);
+    }
+
+    private async Task<BlobInfo?> LoadBlobJson(IModelBlob modelBlob, ExpandoObject prms)
+    {
+        var loadProc = modelBlob.LoadProcedure();
+        if (String.IsNullOrEmpty(loadProc))
+            throw new DataServiceException($"LoadProcedure is null");
+        var dm = await _dbContext.LoadModelAsync(modelBlob.DataSource, loadProc, prms);
+        var settings = JsonHelpers.IndentedSerializerSettings;
+        var json = JsonConvert.SerializeObject(dm.Root, settings);
+        Byte[]? stream;
+        String mime = MimeTypes.Application.Json;
+        if (modelBlob.Zip)
+        {
+            mime = MimeTypes.Application.Zip;
+            stream = ZipUtils.CompressText(json);
+        }
+        else
+        {
+			stream = Encoding.UTF8.GetBytes(json);
+		}
+		return new BlobInfo()
+		{
+			SkipToken = true,
+			Mime = mime,
+			Stream = stream,
+			Name = modelBlob.OutputFileName
+        };
+    }
+
+	public async Task<ExpandoObject> SaveFileAsync(String baseUrl, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams)
+	{
+		var platformUrl = CreatePlatformUrl(UrlKind.File, baseUrl);
+		var blobModel = await _modelReader.GetBlobAsync(platformUrl)
+            ?? throw new DataServiceException($"Blob is null");
+		return blobModel.Type switch
+		{
+			ModelBlobType.parse => await ParseFile(blobModel, setBlob, setParams),
+			_ =>
+				throw new NotImplementedException(blobModel.Type.ToString())
+		};
+    }
+
+	private Task<ExpandoObject> ParseFile(IModelBlob blobModel, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams)
+	{
+		return blobModel.Parse switch
+		{
+			ModelParseType.json => ParseJson(blobModel, setBlob, setParams),
+			_ => throw new NotImplementedException(blobModel.Parse.ToString())
+        };
 	}
 
-	public async Task<IBlobUpdateOutput> SaveBlobAsync(UrlKind kind, String baseUrl, Action<IBlobUpdateInfo> setBlob, String? suffix = null)
+    private async Task<ExpandoObject> ParseJson(IModelBlob blobModel, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams)
+	{
+		BlobUpdateInfo blobInfo = new();
+		setBlob(blobInfo);
+		if (blobInfo.Stream == null)
+			throw new InvalidOperationException("Stream is null");
+		String? json;
+		if (blobModel.Zip)
+			json = ZipUtils.DecompressText(blobInfo.Stream);
+		else
+		{
+			using var sr = new StreamReader(blobInfo.Stream);
+			json = sr.ReadToEnd();
+		}
+		if (json == null)
+            throw new InvalidOperationException("Json is null");
+        var data = JsonConvert.DeserializeObject<ExpandoObject>(json) ??
+			throw new InvalidOperationException("Data is null");
+		var prms = new ExpandoObject();
+		if (blobModel.Id != null)
+			prms.Add("Id", blobModel.Id);
+		setParams?.Invoke(prms);
+        var res = await _dbContext.SaveModelAsync(blobModel.DataSource, blobModel.UpdateProcedure(), data, prms, null, blobModel.CommandTimeout);
+        return res.Root;
+    }
+
+    public async Task<IBlobUpdateOutput> SaveBlobAsync(UrlKind kind, String baseUrl, Action<IBlobUpdateInfo> setBlob, String? suffix = null)
 	{
 		var platformUrl = CreatePlatformUrl(kind, baseUrl);
 		var blobModel = await _modelReader.GetBlobAsync(platformUrl, suffix);

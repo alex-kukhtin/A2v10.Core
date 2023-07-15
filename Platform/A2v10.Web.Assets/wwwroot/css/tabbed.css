@@ -2093,6 +2093,7 @@ pre.a2-code {
   width: 100%;
   background-color: transparent;
   min-width: 32px;
+  border-radius: 4px;
 }
 .control-group select {
   opacity: 0;
@@ -4664,14 +4665,17 @@ table td.wrap {
 .a2-table.table-cell-spacing-small {
   border-spacing: 2px;
   border-collapse: separate;
+  margin: -2px;
 }
 .a2-table.table-cell-spacing-medium {
   border-spacing: 6px;
   border-collapse: separate;
+  margin: -6px;
 }
 .a2-table.table-cell-spacing-large {
   border-spacing: 10px;
   border-collapse: separate;
+  margin: -10px;
 }
 table.hover > tbody > tr:hover {
   background-color: var(--hoverBk) !important;
@@ -6662,6 +6666,8 @@ table > colgroup col.blue {
   display: flex;
   background-color: var(--neutral100);
   justify-content: space-between;
+  overflow-x: hidden;
+  overflow-y: visible;
 }
 .mdi-tabs-container .mdi-tabs {
   display: flex;
@@ -6690,12 +6696,13 @@ table > colgroup col.blue {
 .mdi-tabs-container .mdi-tabs li .tab-tooltip {
   position: absolute;
   background-color: white;
-  top: 90%;
+  top: 10px;
   z-index: 8;
-  left: 20%;
-  padding: 3px;
+  left: 30px;
+  padding: 3px 8px;
   border: 1px solid var(--neutral900);
   font-size: 12px;
+  background-color: #fffcd5;
 }
 .mdi-tabs-container .mdi-tabs li .close {
   color: inherit;

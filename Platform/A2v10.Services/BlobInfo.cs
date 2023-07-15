@@ -5,11 +5,13 @@ using System.IO;
 namespace A2v10.Services;
 public class BlobInfo : IBlobInfo
 {
-	public String? Mime { get; set; }
-	public String? Name { get; set; }
-	public Guid Token { get; set; }
-	public Byte[]? Stream { get; set; }
-	public String? BlobName { get; set; }
+	public String? Mime { get; init; }
+	public String? Name { get; init; }
+	public Guid Token { get; init; }
+	public Byte[]? Stream { get; init; }
+	public String? BlobName { get; init; }
+    public Boolean SkipToken { get; init; }
+    public Boolean CheckToken => !SkipToken;
 }
 
 public record BlobUpdateInfo : IBlobUpdateInfo

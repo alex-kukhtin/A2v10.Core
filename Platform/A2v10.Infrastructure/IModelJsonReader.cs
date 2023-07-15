@@ -23,22 +23,44 @@ public interface IModelBase
 	Boolean Signal { get; }
 
 	String LoadProcedure();
-	Boolean HasModel();
+    String UpdateProcedure();
+    Boolean HasModel();
 
 	String Path { get; }
 	String BaseUrl { get; }
 
+	Int32 CommandTimeout { get; }
+
 	ExpandoObject CreateParameters(IPlatformUrl url, Object? id, Action<ExpandoObject>? setParams = null, ParametersFlags flags = ParametersFlags.None);
+}
+
+public enum ModelBlobType
+{
+    sql,
+    json,
+	clr,
+	parse,
+	azureBlob
+}
+
+public enum ModelParseType
+{
+    json
 }
 
 public interface IModelBlob
 {
 	String? Id { get; }
-	String? Key { get; }
-
-	String? DataSource { get; }
-	String LoadProcedure();
+	String? Key { get; }    
+	ModelBlobType Type { get; }	
+	ModelParseType Parse { get; }
+    String? DataSource { get; }
+	String? OutputFileName { get; }
+	Boolean Zip { get; }
+    Int32 CommandTimeout { get; }
+    String LoadProcedure();
 	String UpdateProcedure();
+    
 }
 
 public interface IModelMerge : IModelBase
@@ -70,7 +92,6 @@ public interface IModelView : IModelBase
 	Boolean IsPlain { get; }
 
 	String ExpandProcedure();
-	String UpdateProcedure();
 	String LoadLazyProcedure(String property);
 	String DeleteProcedure(String property);
 

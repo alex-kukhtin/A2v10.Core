@@ -1,4 +1,4 @@
-// Copyright � 2023 Oleksandr Kukhtin. All rights reserved.
+// Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
 
 /*20230605-8109*/
 app.modules['std:signalR'] = function () {

@@ -89,6 +89,8 @@
 	display: flex;
 	background-color: @light0;
 	justify-content: space-between;
+	overflow-x: hidden;
+	overflow-y: visible;
 
 	.mdi-tabs {
 		display: flex;
@@ -119,12 +121,13 @@
 			.tab-tooltip {
 				position: absolute;
 				background-color: white;
-				top: 90%;
+				top: 10px;
 				z-index: 8;
-				left: 20%;
-				padding: 3px;
+				left: 30px;
+				padding: 3px 8px;
 				border: 1px solid @dark0;
 				font-size: 12px;
+				background-color: #fffcd5;
 			}
 
 			.close {
