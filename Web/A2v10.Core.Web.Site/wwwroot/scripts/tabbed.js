@@ -175,7 +175,7 @@ app.modules['std:signalR'] = function () {
 
 // Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
 
-/*20230708-8116*/
+/*20230716-8119*/
 /* tabbled:shell.js */
 (function () {
 	const eventBus = require('std:eventBus');
@@ -542,7 +542,11 @@ app.modules['std:signalR'] = function () {
 				if (seg[1])
 					q = '?' + seg[1];
 				if (tab.query === q) return;
+				this.lockRoute = true;
 				tab.query = q;
+				Vue.nextTick(() => {
+					this.lockRoute = false;
+				});
 				this.storeTabs();
 			},
 			_eventToParentTab(ev) {
