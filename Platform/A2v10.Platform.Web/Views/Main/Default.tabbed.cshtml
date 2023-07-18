@@ -16,7 +16,7 @@
 	<a2-mdi-navbar :menu="menu"></a2-mdi-navbar>
 	<div class="mdi-tabs-container" v-on:contextmenu.stop.prevent="tabsContextMenu">
 		<ul class="mdi-tabs">
-			<li v-on:click.stop.prevent="selectHome()" class="tab-home" :class="{active: isHomeActive()}">
+			<li v-on:click.stop.prevent="selectHome()" class="tab-home" v-bind:class="{active: isHomeActive()}">
 				<span class="ico ico-home"></span>
 			</li>
 			<li v-for="t in tabs" :key="t.url" :title="t.title" v-on:mouseleave="t.debug = false"
@@ -74,7 +74,7 @@
 	<a2-debug :model-stack="modelStack" :model-visible="debugShowModel" v-if="isDebug"
 			  :trace-visible="debugShowTrace" :counter="dataCounter" :close="debugClose"></a2-debug>
 	<div class=modal-stack v-if=hasModals>
-		<div class="modal-wrapper modal-animation-frame" v-for="dlg in modals" :class="{show: dlg.wrap}">
+		<div class="modal-wrapper modal-animation-frame" v-for="dlg in modals" v-bind:class="{show: dlg.wrap}">
 			<a2-modal :dialog=dlg></a2-modal>
 		</div>
 	</div>

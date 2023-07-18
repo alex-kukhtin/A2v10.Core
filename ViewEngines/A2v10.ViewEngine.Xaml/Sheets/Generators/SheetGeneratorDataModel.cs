@@ -53,7 +53,7 @@ public class SheetGeneratorDataModel : ISheetGenerator
 				break;
 		}
 	}
-	private SheetCell CreateCell(String key, IDataFieldMetadata meta)
+	private static SheetCell CreateCell(String key, IDataFieldMetadata meta)
 	{
 		var cellBind = new Bind(key);
 		cellBind.SetWrapped();
