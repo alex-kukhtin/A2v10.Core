@@ -1,11 +1,9 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
-using System;
 
-namespace A2v10.Services.Interop.ExportTo
+namespace A2v10.Services.Interop;
+
+internal class ExColumn
 {
-	public class ExColumn
-	{
-		public UInt32 Width { get; set; }
-	}
+	public UInt32 Width { get; set; }
 }

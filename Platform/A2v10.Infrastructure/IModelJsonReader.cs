@@ -45,7 +45,14 @@ public enum ModelBlobType
 
 public enum ModelParseType
 {
-    json
+	none,
+    json,
+	xlsx,
+	excel,
+	csv,
+	dbf,
+	xml,
+	auto
 }
 
 public interface IModelBlob

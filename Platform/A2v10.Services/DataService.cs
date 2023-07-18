@@ -3,13 +3,13 @@
 using System.Text;
 using System.Threading.Tasks;
 using System.Globalization;
+using System.IO;
 
 using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
-using A2v10.Services.Interop.ExportTo;
-using Esprima.Ast;
-using System.IO;
+
+using A2v10.Services.Interop;
 
 namespace A2v10.Services;
 
@@ -413,12 +413,35 @@ public class DataService : IDataService
 	{
 		return blobModel.Parse switch
 		{
+			ModelParseType.xlsx or ModelParseType.excel => ParseXlsx(blobModel, setBlob, setParams),
 			ModelParseType.json => ParseJson(blobModel, setBlob, setParams),
+			ModelParseType.auto => ParseAuto(blobModel, setBlob, setParams),
+			ModelParseType.csv => ParseCsv(blobModel, setBlob, setParams),
+			ModelParseType.dbf => ParseDbf(blobModel, setBlob, setParams),
+			ModelParseType.xml => ParseXml(blobModel, setBlob, setParams),
 			_ => throw new NotImplementedException(blobModel.Parse.ToString())
-        };
+		};
 	}
 
-    private async Task<ExpandoObject> ParseJson(IModelBlob blobModel, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams)
+	private Task<ExpandoObject> ParseAuto(IModelBlob blobModel, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams)
+	{
+		BlobUpdateInfo blobInfo = new();
+		setBlob(blobInfo);
+		if (blobInfo.Name == null)
+			throw new InvalidOperationException("Name is null");
+		var ext = Path.GetExtension(blobInfo.Name).ToLowerInvariant();
+		return ext switch
+		{
+			".xlsx" => ParseXlsx(blobModel, setBlob, setParams),
+			".json" => ParseJson(blobModel, setBlob, setParams),
+			".csv" => ParseCsv(blobModel, setBlob, setParams),
+			".dbf" => ParseDbf(blobModel, setBlob, setParams),
+			".xml" => ParseXml(blobModel, setBlob, setParams),
+			_ => throw new NotImplementedException()
+		};
+	}
+
+	private async Task<ExpandoObject> ParseJson(IModelBlob blobModel, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams)
 	{
 		BlobUpdateInfo blobInfo = new();
 		setBlob(blobInfo);
@@ -444,7 +467,38 @@ public class DataService : IDataService
         return res.Root;
     }
 
-    public async Task<IBlobUpdateOutput> SaveBlobAsync(UrlKind kind, String baseUrl, Action<IBlobUpdateInfo> setBlob, String? suffix = null)
+	private async Task<ExpandoObject> ParseXlsx(IModelBlob blobModel, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams)
+	{
+		BlobUpdateInfo blobInfo = new();
+		setBlob(blobInfo);
+		if (blobInfo.Stream == null)
+			throw new InvalidOperationException("Stream is null");
+		using var xp = new ExcelParser();
+		var dm = xp.CreateDataModel(blobInfo.Stream);
+
+		var prms = new ExpandoObject();
+		if (blobModel.Id != null)
+			prms.Add("Id", blobModel.Id);
+		setParams?.Invoke(prms);
+		var res = await _dbContext.SaveModelAsync(blobModel.DataSource, blobModel.UpdateProcedure(), dm.Data, prms, null, blobModel.CommandTimeout);
+		return res.Root;
+	}
+	private Task<ExpandoObject> ParseCsv(IModelBlob blobModel, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams)
+	{
+		throw new NotImplementedException();
+	}
+
+	private Task<ExpandoObject> ParseDbf(IModelBlob blobModel, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams)
+	{
+		throw new NotImplementedException();
+	}
+
+	private Task<ExpandoObject> ParseXml(IModelBlob blobModel, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams)
+	{
+		throw new NotImplementedException();
+	}
+
+	public async Task<IBlobUpdateOutput> SaveBlobAsync(UrlKind kind, String baseUrl, Action<IBlobUpdateInfo> setBlob, String? suffix = null)
 	{
 		var platformUrl = CreatePlatformUrl(kind, baseUrl);
 		var blobModel = await _modelReader.GetBlobAsync(platformUrl, suffix);

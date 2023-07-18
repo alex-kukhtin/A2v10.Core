@@ -3,7 +3,7 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
 
-namespace A2v10.Services.Interop.ExportTo;
+namespace A2v10.Services.Interop;
 
 public enum CellKind
 {

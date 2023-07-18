@@ -6,8 +6,9 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Spreadsheet;
 
-namespace A2v10.Services.Interop.ExportTo;
-public class Html2Excel
+namespace A2v10.Services.Interop;
+
+internal class Html2Excel
 {
 	private readonly IFormatProvider _currentFormat;
 
