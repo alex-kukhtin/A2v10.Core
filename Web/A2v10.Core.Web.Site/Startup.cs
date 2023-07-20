@@ -13,6 +13,7 @@ using A2v10.Module.Infrastructure;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System;
+using A2v10.Scheduling;
 
 namespace A2v10.Core.Web.Site;
 
@@ -53,6 +54,8 @@ public class Startup
 		{
 			a.RegisterEngine<WorkflowInvokeTarget>("Workflow", InvokeScope.Scoped);
 		});
+
+		services.UseScheduling(Configuration);
 	}
 
 	public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
