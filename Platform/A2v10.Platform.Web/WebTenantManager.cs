@@ -46,11 +46,11 @@ public class WebTenantManager : ITenantManager
 	{
 		if (!_appOptions.MultiTenant)
 			return null;
-		if (source == "Catalog") //TODO: ???
+		if (source == _userStoreOptions.DataSource)
 			return null;
-		if (!_currentUser.Identity.Tenant.HasValue)
-			throw new InvalidOperationException("There is no TenantId");
-		return new TenantInfo(_currentUser.Identity.Tenant.Value, _userStoreOptions.Schema);
+		if (_currentUser.Identity.Tenant.HasValue)
+			return new TenantInfo(_currentUser.Identity.Tenant.Value, _userStoreOptions.Schema);
+		return null; // not tenant info, system processor
 	}
 	#endregion
 }

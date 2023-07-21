@@ -121,7 +121,6 @@ public class ScriptEnvironment
 	public JsValue require(String fileName, ExpandoObject prms, ExpandoObject args)
 #pragma warning restore IDE1006 // Naming Styles
 	{
-		var fileToRead = Path.Combine(_currentPath, fileName);
 		var stream = _appCodeProvider.FileStreamRO(fileName) 
 			?? throw new InvalidOperationException($"File not found '{fileName}'");
 		var sr = new StreamReader(stream);

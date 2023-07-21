@@ -13,8 +13,10 @@ public class ResponseFail
 
 public class ResponseSuccess
 {
-	public Boolean success { get; set; }
-	public ExpandoObject? data { get; set; }
+#pragma warning disable IDE1006 // Naming Styles
+    public Boolean success { get; set; }
+    public ExpandoObject? data { get; set; }
+#pragma warning restore IDE1006 // Naming Styles
 }
 
 [ApiController]

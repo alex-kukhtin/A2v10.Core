@@ -44,7 +44,7 @@ internal class ExcelParser : IDisposable
 		return ParseFile(stream, table);
 	}
 
-	String ReplaceUnacceptableChars(String str)
+	static String ReplaceUnacceptableChars(String str)
 	{
 		return str.Replace('.', '_').Replace('!', '_');
 	}

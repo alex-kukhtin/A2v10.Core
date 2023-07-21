@@ -90,11 +90,13 @@ public class Tokenizer
 		ch = textPos < textLen ? text[textPos] : '\0';
 	}
 
+	/*
 	void PrevChar()
 	{
 		if (textPos > 0) textPos--;
 		ch = textPos > 0 ? text[textPos] : '\0';
 	}
+	*/
 
 	Boolean IsCrLf()
 	{

@@ -6,7 +6,7 @@
 	  <ImplicitUsings>disable</ImplicitUsings>
 	  <AssemblyName>A2v10.Services</AssemblyName>
 	  <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-	  <Version>10.1.8120</Version>
+	  <Version>10.1.8121</Version>
 	  <Product>A2v10</Product>
 	  <PackageId>A2v10.Services</PackageId>
 	  <Authors>Oleksandr Kukhtin</Authors>
@@ -29,6 +29,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\CodeGen\A2v10.Module.Infrastructure\A2v10.Module.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Extensions\A2v10.Scheduling.Infrastructure\A2v10.Scheduling.Infrastructure.csproj" />
     <ProjectReference Include="..\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
   </ItemGroup>
 

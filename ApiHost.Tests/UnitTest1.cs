@@ -18,7 +18,7 @@ public class UnitTest1 : IClassFixture<ApiTestAppFactory>
 	public UnitTest1(ApiTestAppFactory factory)
 	{
 		_factory = factory;
-		var dbContext = _factory.Services.GetService<IDbContext>();
+		// var dbContext = _factory.Services.GetService<IDbContext>();
 	}
 
 	[Fact]

@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System;
 using A2v10.Scheduling;
+using A2v10.Services;
 
 namespace A2v10.Core.Web.Site;
 
@@ -49,14 +50,22 @@ public class Startup
 		});
 
 
-		services.AddWorkflowEngineScoped();
-		services.AddInvokeTargets(a =>
+		services.AddWorkflowEngineScoped()
+		.AddInvokeTargets(a =>
 		{
 			a.RegisterEngine<WorkflowInvokeTarget>("Workflow", InvokeScope.Scoped);
 		});
 
-		services.UseScheduling(Configuration);
-	}
+		services.UseScheduling(Configuration, factory =>
+		{
+			// job handlers
+			factory.RegisterJobHandler<ExecuteSqlJobHandler>("ExecuteSql");
+            factory.RegisterJobHandler<ProcessCommandsJobHandler>("ProcessCommands");
+            // commands
+            factory.RegisterCommand<ScheduledSendMailCommand>("SendMail");
+            factory.RegisterCommand<ScheduledExecuteSqlCommand>("ExecuteSql");
+        });
+    }
 
 	public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 	{

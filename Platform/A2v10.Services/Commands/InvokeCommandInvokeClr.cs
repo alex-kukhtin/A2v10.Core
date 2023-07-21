@@ -3,7 +3,6 @@
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-
 using Newtonsoft.Json;
 
 namespace A2v10.Services;
@@ -40,7 +39,7 @@ public class InvokeCommandInvokeClr : IModelInvokeCommand
 					JsonHelpers.DataSerializerSettings));
 				return new InvokeResult(body, MimeTypes.Application.Json);
 			}
-			throw new NotImplementedException($"InvokeCommandInvokeClr for {invokeResult.GetType()} yet not implemented");
+            return new InvokeResult(Encoding.UTF8.GetBytes("{}"), MimeTypes.Application.Json);
 		}
 		catch (Exception ex)
 		{
