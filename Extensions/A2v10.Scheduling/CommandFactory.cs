@@ -10,14 +10,16 @@ public class AddSchedulerHandlerFactory
     private readonly Dictionary<String, Type> _handlers = new();
 
     public IDictionary<String, Type> Commands => _commands;
-    public void RegisterCommand<T>(String name)
+    public AddSchedulerHandlerFactory RegisterCommand<T>(String name)
     {
         _commands.Add(name, typeof(T));
+        return this;
     }
 
-    public void RegisterJobHandler<T>(String name)
+    public AddSchedulerHandlerFactory RegisterJobHandler<T>(String name)
     {
         _handlers.Add(name, typeof(T));
+        return this;
     }
 
     public Type FindHandler(String name)

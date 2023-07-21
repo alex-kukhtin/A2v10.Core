@@ -19,6 +19,10 @@ services.UseScheduling(Configuration, factory =>
 
 * [A2v10.Scheduling.Infrastructure](https://www.nuget.org/packages/A2v10.Scheduling.Infrastructure)
 
+# Hosting Website using IIS 
+
+Application Pool / Advanced Settings / Start Mode = AlwaysRunning
+Site | Advanced Settings | Preload Enabled = True
 
 # Feedback
 

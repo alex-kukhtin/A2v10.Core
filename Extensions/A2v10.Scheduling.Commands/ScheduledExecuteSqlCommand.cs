@@ -1,15 +1,17 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
 
+using System.Dynamic;
 using System.Threading.Tasks;
+using System;
 
 using Microsoft.Extensions.Logging;
-
 using Newtonsoft.Json;
 
-using A2v10.Scheduling.Infrastructure;
 using A2v10.Data.Interfaces;
+using A2v10.Infrastructure;
+using A2v10.Scheduling.Infrastructure;
 
-namespace A2v10.Services;
+namespace A2v10.Scheduling.Commands;
 
 public class ScheduledExecuteSqlCommand : IScheduledCommand
 {
@@ -24,8 +26,8 @@ public class ScheduledExecuteSqlCommand : IScheduledCommand
     {
         _logger.LogInformation("ExecuteSqlCommand at {Time}, Data = {Data}", DateTime.Now, Data);
         if (Data == null || String.IsNullOrEmpty("Data"))
-                throw new InvalidOperationException("ExecuteSqlCommand. Data is empty");
-        var dat = JsonConvert.DeserializeObject<ExpandoObject>(Data) 
+            throw new InvalidOperationException("ExecuteSqlCommand. Data is empty");
+        var dat = JsonConvert.DeserializeObject<ExpandoObject>(Data)
             ?? throw new InvalidOperationException("ExecuteSqlCommand. Invalid json");
         String proc = dat.Get<String>("Procedure") ??
                 throw new InvalidOperationException("ExecuteSqlCommand. Procedure is null");

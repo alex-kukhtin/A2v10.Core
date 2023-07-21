@@ -1,14 +1,14 @@
-﻿using A2v10.Scheduling.Infrastructure;
+﻿// Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
+
+using System;
+using System.Threading.Tasks;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Quartz;
-using System;
-using System.Collections.Generic;
-using System.Dynamic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+
+using A2v10.Scheduling.Infrastructure;
 
 namespace A2v10.Scheduling;
 

@@ -5,7 +5,7 @@
 		<Version>10.1.8121</Version>
 		<Nullable>enable</Nullable>
 		<Product>A2v10</Product>
-		<PackageId>A2v10.Scheduling</PackageId>
+		<PackageId>A2v10.Scheduling.Commands</PackageId>
 		<Authors>Oleksandr Kukthin</Authors>
 		<Company>Oleksandr Kukthin</Company>
 		<Description>A2v10 Background processing</Description>
@@ -19,24 +19,15 @@
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
 
-
 	<ItemGroup>
-		<Content Include="sql\a2_scheduling.sql" Pack="true" PackagePath="\sql" />
-	</ItemGroup>
-	
-	<ItemGroup>
-		<None Include="README.md" Pack="true" PackagePath="\" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<PackageReference Include="A2v10.Data.Interfaces" Version="10.1.7334" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="7.0.4" />
-		<PackageReference Include="Quartz.AspNetCore" Version="3.6.3" />
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
-	</ItemGroup>
-
-	<ItemGroup>
+		<ProjectReference Include="..\..\Platform\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
 		<ProjectReference Include="..\A2v10.Scheduling.Infrastructure\A2v10.Scheduling.Infrastructure.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.1" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 	</ItemGroup>
 
 	<PropertyGroup>
@@ -45,4 +36,9 @@
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
+
 </Project>

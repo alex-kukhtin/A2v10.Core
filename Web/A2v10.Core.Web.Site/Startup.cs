@@ -1,20 +1,20 @@
 // Copyright © 2020-2023 Oleksandr Kukhtin. All rights reserved.
 
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 using A2v10.Infrastructure;
-
-using A2v10.WorkflowEngine;
-using A2v10.ReportEngine.Pdf;
 using A2v10.Module.Infrastructure;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using System;
+using A2v10.ReportEngine.Pdf;
+using A2v10.Workflow.Engine;
 using A2v10.Scheduling;
-using A2v10.Services;
+using A2v10.Scheduling.Commands;
 
 namespace A2v10.Core.Web.Site;
 
@@ -59,11 +59,12 @@ public class Startup
 		services.UseScheduling(Configuration, factory =>
 		{
 			// job handlers
-			factory.RegisterJobHandler<ExecuteSqlJobHandler>("ExecuteSql");
-            factory.RegisterJobHandler<ProcessCommandsJobHandler>("ProcessCommands");
+			factory.RegisterJobHandler<ExecuteSqlJobHandler>("ExecuteSql")
+            .RegisterJobHandler<ProcessCommandsJobHandler>("ProcessCommands")
+            .RegisterJobHandler<WorkflowPendingJobHandler>("WorkflowPending");
             // commands
-            factory.RegisterCommand<ScheduledSendMailCommand>("SendMail");
-            factory.RegisterCommand<ScheduledExecuteSqlCommand>("ExecuteSql");
+            factory.RegisterCommand<ScheduledSendMailCommand>("SendMail")
+            .RegisterCommand<ScheduledExecuteSqlCommand>("ExecuteSql");
         });
     }
 
