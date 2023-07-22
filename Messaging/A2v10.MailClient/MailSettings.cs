@@ -10,14 +10,24 @@ public enum MailDeliveryMethod
 	Smtp,
 }
 
+public enum MailSecureOptions
+{
+    None,
+    Auto,
+    SslOnConnect,
+    StartTls,
+    StartTlsWhenAvailable
+}
+
 public record MailSettings
 {
 	public String Host { get; init; } = String.Empty;
 	public Int32 Port { get; init; }
 	public String From { get; init; } = String.Empty;
+	public String FromName { get; init; } = String.Empty;
 	public String UserName { get; init; } = String.Empty;
 	public String Password { get; init; } = String.Empty;
-	public Boolean EnableSsl { get; init; }
+	public MailSecureOptions Secure { get; init; }
 	public Boolean SkipCertificateValidation { get; set; }
 	public MailDeliveryMethod DeliveryMethod { get; init; }
 	public String? PickupDirectoryLocation { get; init; }

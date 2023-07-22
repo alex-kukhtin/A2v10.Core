@@ -1,9 +1,10 @@
 ﻿// Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.
 
-using A2v10.Infrastructure;
-using A2v10.Xaml;
 using System.IO;
 using System.Threading.Tasks;
+
+using A2v10.Infrastructure;
+using A2v10.Xaml;
 
 namespace A2v10.ViewEngine.Xaml;
 
@@ -14,8 +15,6 @@ public class XamlViewEngine : IViewEngine
 	public XamlViewEngine(IProfiler profiler, IXamlPartProvider xamlPartProvider, ILocalizer localizer, IViewEngineProvider engineProvider,
 		IAppCodeProvider codeProvider)
 	{
-		engineProvider.RegisterEngine(".xaml", typeof(XamlViewEngine));
-
 		_renderer = new XamlRenderer(profiler,
 			xamlPartProvider,
 			localizer,

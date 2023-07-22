@@ -30,7 +30,7 @@ public interface IMailMessage
 	IEnumerable<IMailMessageAddress> Bcc { get; }
 	IEnumerable<IMailMessageAttachment> Attachments { get; }
 
-	IMailMessageAddress From { get; }
+	IMailMessageAddress? From { get; }
 
 	void AddTo(String address, String? displayName = null);
 	void AddCc(String address, String? displayName = null);

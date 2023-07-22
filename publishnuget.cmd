@@ -34,6 +34,13 @@ del /q CodeGen\A2v10.Module.Infrastructure\bin\Release\*.snupkg
 del /q Messaging\A2v10.MailClient\bin\Release\*.nupkg
 del /q Messaging\A2v10.MailClient\bin\Release\*.snupkg
 
+del /q Extensions\A2v10.Scheduling\bin\Release\*.nupkg
+del /q Extensions\A2v10.Scheduling\bin\Release\*.snupkg
+del /q Extensions\A2v10.Scheduling.Commands\bin\Release\*.nupkg
+del /q Extensions\A2v10.Scheduling.Commands\bin\Release\*.snupkg
+del /q Extensions\A2v10.Scheduling.Infrastructure\bin\Release\*.nupkg
+del /q Extensions\A2v10.Scheduling.Infrastructure\bin\Release\*.snupkg
+
 dotnet pack -c Release
 
 del /q ..\NuGet.local\*.*
@@ -82,5 +89,14 @@ copy CodeGen\A2v10.Module.Infrastructure\bin\Release\*.snupkg ..\NuGet.local
 
 copy Messaging\A2v10.MailClient\bin\Release\*.nupkg ..\NuGet.local
 copy Messaging\A2v10.MailClient\bin\Release\*.snupkg ..\NuGet.local
+
+copy Extensions\A2v10.Scheduling\bin\Release\*.nupkg ..\NuGet.local
+copy Extensions\A2v10.Scheduling\bin\Release\*.snupkg ..\NuGet.local
+
+copy Extensions\A2v10.Scheduling.Commands\bin\Release\*.nupkg ..\NuGet.local
+copy Extensions\A2v10.Scheduling.Commands\bin\Release\*.snupkg ..\NuGet.local
+
+copy Extensions\A2v10.Scheduling.Infrastructure\bin\Release\*.nupkg ..\NuGet.local
+copy Extensions\A2v10.Scheduling.Infrastructure\bin\Release\*.snupkg ..\NuGet.local
 
 pause

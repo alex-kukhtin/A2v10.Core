@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using A2v10.Infrastructure;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace A2v10.Platform.Web;
 public record ViewEngineDescriptor(String Extension, Type EngineType);
@@ -59,7 +60,9 @@ public class WebViewEngineProvider : IViewEngineProvider
 				}
 			}
 		}
-		throw new InvalidReqestExecption($"View engine not found for {viewName}");
+		var locations = String.Join('\n', _engines.Select(e => $"/{path}/{viewName}{e.Extension}"));
+
+        throw new InvalidReqestExecption($"The view '{viewName}' was not found. The following locations were searched:\n{locations} ");
 	}
 }
 

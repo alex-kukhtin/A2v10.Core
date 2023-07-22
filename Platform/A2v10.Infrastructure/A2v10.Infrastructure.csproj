@@ -5,7 +5,7 @@
 		<Nullable>enable</Nullable>
 		<AssemblyName>A2v10.Infrastructure</AssemblyName>
 		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-		<Version>10.1.8120</Version>
+		<Version>10.1.8122</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Infrastructure</PackageId>
 		<Authors>Oleksandr Kukhtin</Authors>
@@ -15,6 +15,7 @@
 		<RepositoryType>github</RepositoryType>
 		<PackageTags>A2v10</PackageTags>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -33,4 +34,7 @@
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<None Include="README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
 </Project>

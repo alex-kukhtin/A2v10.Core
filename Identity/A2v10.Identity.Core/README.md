@@ -13,9 +13,24 @@ services.AddPlatformIdentityCore<T>()
 .AddPlatformAuthentication(cookiePrefix);
 ```
 
+# appsettings.json section
+
+```json
+"Identity": {
+	"UserStore": {
+		"DataSource": "ConnectionStringName",
+		"MultiTenant": false
+	},
+	"CookiePrefix": "Cookie_Prefix"
+}
+```
+
+All values are optional.
+
 # Related Packages
 
 * [A2v10.Identity.ApiKey](https://www.nuget.org/packages/A2v10.Identity.ApiKey)
+* [A2v10.Identity.Jwt](https://www.nuget.org/packages/A2v10.Identity.Jwt)
 
 
 # Feedback
