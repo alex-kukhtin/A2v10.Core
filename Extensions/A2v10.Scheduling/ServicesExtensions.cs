@@ -55,9 +55,11 @@ public static class ServicesExtensions
 
     static void RegisterCommands(AddSchedulerHandlerFactory factory, IServiceCollection services)
 	{
-		if (factory.Commands.Count == 0)
+		// always
+        services.AddSingleton<ScheduledCommandProvider>(new ScheduledCommandProvider(factory.Commands));
+
+        if (factory.Commands.Count == 0)
 			return;
-		services.AddSingleton<ScheduledCommandProvider>(new ScheduledCommandProvider(factory.Commands));
 		foreach (var (_, type) in factory.Commands)
 		{
             if (!type.IsAssignableTo(typeof(IScheduledCommand)))
