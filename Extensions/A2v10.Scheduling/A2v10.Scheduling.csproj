@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>
-		<Version>10.1.8123</Version>
+		<Version>10.1.8125</Version>
 		<Nullable>enable</Nullable>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Scheduling</PackageId>
@@ -21,9 +21,12 @@
 
 
 	<ItemGroup>
-		<Content Include="sql\a2_scheduling.sql" Pack="true" PackagePath="\sql" />
+		<Content Include="sql/a2_scheduling.sql" Pack="true" PackagePath="contentFiles/sql">
+			<PackageCopyToOutput>true</PackageCopyToOutput>		
+		</Content>
+		<Content Include="A2v10.Scheduling.targets"  Pack="True" PackagePath="build/A2v10.Scheduling.targets"/>
 	</ItemGroup>
-	
+
 	<ItemGroup>
 		<None Include="README.md" Pack="true" PackagePath="\" />
 	</ItemGroup>

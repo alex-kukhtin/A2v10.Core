@@ -1,0 +1,8 @@
+﻿<Project>
+	<ItemGroup>
+		<Files Include="$(MSBuildThisFileDirectory)/../contentFiles/sql/*" />
+	</ItemGroup>
+	<Target Name="CopyFiles" AfterTargets="Build">
+		<Copy SourceFiles="@(Files)" DestinationFolder="$(ProjectDir)/_assets/sql" SkipUnchangedFiles="true"/>
+	</Target>
+</Project>

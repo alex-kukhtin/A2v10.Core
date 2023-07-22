@@ -17,6 +17,7 @@
 	  <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
 	  <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 	  <IsPackable>true</IsPackable>
+	  <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
 	<ItemGroup>
@@ -29,4 +30,8 @@
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
 </Project>

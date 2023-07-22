@@ -18,26 +18,28 @@ services.UseScheduling(Configuration, factory =>
 ## appsettings.json section
 
 ```json
-	"Scheduler": {
-		"Jobs": [
-			{
-				"Id": "JobId",
-				"Handler": "HandlerName",
-				"Cron": "0 * * ? * *",
-				"DataSource": "ConnectionStringName",
-				"Procedure": "dbo.[Sql_procedure]",
-				"Parameters": {
-					...
-				}
-			},
-		]
-	}
+"Scheduler": {
+  "Jobs": [
+    {
+        "Id": "JobId",
+        "Handler": "HandlerName",
+        "Cron": "0 * * ? * *",
+        "DataSource": "ConnectionStringName",
+        "Procedure": "dbo.[Sql_procedure]",
+        "Parameters": {
+          ...
+        }
+    },
+  ]
+}
 ```
 
 "Id", "Handler", and "Cron" are required.
 Rest parameters depend on the handler type.
 
-[Cron Trigger Tutorial](http://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html)
+# See also
+
+* [Cron Trigger Tutorial](http://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html)
 
 
 # Related Packages
