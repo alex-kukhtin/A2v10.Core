@@ -9,8 +9,8 @@ for the A2v10 platform applications.
 // T - type of user identifier
 
 services.AddPlatformIdentityCore<T>()
-.AddIdentityConfiguration<T>(configuration)
-.AddPlatformAuthentication(cookiePrefix);
+  .AddIdentityConfiguration<T>(configuration)
+  .AddPlatformAuthentication(cookiePrefix);
 ```
 
 # appsettings.json section
@@ -19,7 +19,8 @@ services.AddPlatformIdentityCore<T>()
 "Identity": {
 	"UserStore": {
 		"DataSource": "ConnectionStringName",
-		"MultiTenant": false
+		"MultiTenant": false,
+		"ValidationInterval": "00:05:00"
 	},
 	"CookiePrefix": "Cookie_Prefix"
 }

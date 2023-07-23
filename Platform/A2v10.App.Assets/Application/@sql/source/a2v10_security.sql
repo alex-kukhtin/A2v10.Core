@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2008-2023 Oleksandr Kukhtin
 
-Last updated : 03 jul 2023
-module version : 8110
+Last updated : 23 jul 2023
+module version : 8115
 */
 -- SECURITY
 ------------------------------------------------
@@ -52,14 +52,14 @@ go
 ------------------------------------------------
 create or alter procedure a2security.UpdateUserLogin
 @Id bigint,
-@LastLoginDate datetime,
 @LastLoginHost nvarchar(255)
 as
 begin
 	set nocount on;
 	set transaction isolation level read committed;
-	update a2security.ViewUsers set LastLoginDate = @LastLoginDate, LastLoginHost = @LastLoginHost 
-	where Id=@Id;
+
+	update a2security.ViewUsers set LastLoginDate = getutcdate(), LastLoginHost = @LastLoginHost 
+	where Id = @Id;
 end
 go
 ------------------------------------------------
@@ -228,7 +228,22 @@ begin
 	set transaction isolation level read uncommitted;
 
 	update a2security.Users set EmailConfirmed = 1, LastLoginDate = getutcdate()
+	where Id = @Id;
 
-	select * from a2security.ViewUsers where Id=@Id;
+	select * from a2security.ViewUsers where Id = @Id;
+end
+go
+------------------------------------------------
+create or alter procedure a2security.[User.Void]
+@Id bigint
+as
+begin
+	set nocount on;
+	set transaction isolation level read uncommitted;
+
+	update a2security.Users set Void = 1, UserName = N'#' + UserName, Email = N'#' + Email, PhoneNumber = N'#' + PhoneNumber,
+		EmailConfirmed = 0, PhoneNumberConfirmed = 0,
+		SecurityStamp = cast(newid() as nvarchar(255)), SecurityStamp2 = cast(newid() as nvarchar(255))
+	where Id = @Id;
 end
 go

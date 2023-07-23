@@ -8,5 +8,6 @@ public class AppUserStoreConfiguration
 	public String? DataSource { get; set; }
 	public String? Schema { get; set; }
 	public Boolean? MultiTenant { get; set; }
+	public TimeSpan? ValidationInterval { get; set; }	
 }
 

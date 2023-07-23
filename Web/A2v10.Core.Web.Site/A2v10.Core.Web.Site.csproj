@@ -48,11 +48,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Content Update="web.config">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		  <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-		  <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-		</Content>
 		<Content Update="wwwroot\App_application\main\test\test.view.xaml" />
 	</ItemGroup>
 

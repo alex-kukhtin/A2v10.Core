@@ -3,6 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>net6.0</TargetFramework>
 		<UserSecretsId>026c35e2-9db2-463c-8431-b202b1a68b5e</UserSecretsId>
+		<AddRazorSupportForMvc>false</AddRazorSupportForMvc>
 	</PropertyGroup>
 
 	<ItemGroup>

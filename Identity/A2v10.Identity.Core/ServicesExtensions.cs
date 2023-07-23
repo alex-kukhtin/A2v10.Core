@@ -49,7 +49,7 @@ public static class ServicesExtensions
 		//.AddRoles<AppRole<T>>() /*TODO*/
 		.AddDefaultTokenProviders(); // for change password, email & phone validation
 
-		services.AddScoped<AppUserStore<T>>()
+        services.AddScoped<AppUserStore<T>>()
 		.AddScoped<IUserStore<AppUser<T>>>(s => s.GetRequiredService<AppUserStore<T>>())
 		.AddScoped<IUserLoginStore<AppUser<T>>>(s => s.GetRequiredService<AppUserStore<T>>())
 		.AddScoped<IUserClaimStore<AppUser<T>>>(s => s.GetRequiredService<AppUserStore<T>>())
@@ -132,7 +132,17 @@ public static class ServicesExtensions
 			opts.MultiTenant = storeConfig.MultiTenant;
 		});
 
-		return services;
+		TimeSpan validationInterval = TimeSpan.FromSeconds(60 * 5);
+		if (storeConfig.ValidationInterval != null)
+			validationInterval = storeConfig.ValidationInterval.Value;
+
+
+        services.Configure<SecurityStampValidatorOptions>(opts =>
+        {
+			opts.ValidationInterval = validationInterval; 
+        });
+
+        return services;
     }
 }
 

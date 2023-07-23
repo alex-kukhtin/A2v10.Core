@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.DataProtection;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
+using System.Dynamic;
 
 namespace A2v10.Web.Identity.UI;
 
@@ -123,6 +124,12 @@ public class AccountController : Controller
 			var result = await _signInManager.PasswordSignInAsync(model.Login, model.Password, model.IsPersistent, lockoutOnFailure: true);
 			if (result.Succeeded)
 			{
+				var llprms = new ExpandoObject()
+				{
+					{ "Id", user.Id },
+					{ "LastLoginHost", Request.Host.Host }
+				};
+                await _dbContext.ExecuteExpandoAsync(_host.CatalogDataSource, "a2security.UpdateUserLogin", llprms);
 				RemoveAntiforgeryCookie();
 				var returnUrl = model.ReturnUrl?.ToLowerInvariant();
 				if (returnUrl == null || returnUrl.StartsWith("/account"))
