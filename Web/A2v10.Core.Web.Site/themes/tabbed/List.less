@@ -1,6 +1,10 @@
-﻿
+﻿@import "Variables.less";
+
 @list-body-color: #999;
 @chat-gap: .5rem;
+
+@group-bk-color: var(--neutral100);
+@group-brd-color: var(--neutral300);
 
 .a2-list {
 	list-style-type: none;
@@ -58,16 +62,20 @@
 		}
 
 		&.group {
-			background-color: #f9f9f9;
+			background-color: @group-bk-color;
 			color: @label-color;
-			border-bottom: 1px solid @light-gray-color;
-			border-top: 1px solid @light-gray-color;
+			border-bottom: 1px solid @group-brd-color;
+			border-top: 1px solid @group-brd-color;
 			cursor: default;
 
 			&:hover {
-				background-color: #f9f9f9 !important;
+				background-color: @group-bk-color !important;
 			}
 		}
+	}
+
+	.a2-list-item:not(.group) {
+		border-radius: @control-brd-radius;
 	}
 
 	&.striped {
