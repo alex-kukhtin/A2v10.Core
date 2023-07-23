@@ -6454,7 +6454,7 @@ table > colgroup col.blue {
   height: 4px;
   width: 100%;
   overflow: hidden;
-  background-color: var(--gray600);
+  background-color: var(--neutral600);
 }
 .load-indicator:before {
   content: '';
@@ -6666,14 +6666,24 @@ table > colgroup col.blue {
   display: flex;
   background-color: var(--neutral100);
   justify-content: space-between;
-  overflow-x: hidden;
-  overflow-y: visible;
 }
 .mdi-tabs-container .mdi-tabs {
   display: flex;
   flex-direction: row;
   padding: 0;
   margin: 0;
+  overflow: auto;
+  width: 100%;
+  max-width: calc(100vw - 96px);
+}
+.mdi-tabs-container .mdi-tabs::-webkit-scrollbar {
+  height: 4px;
+  width: 4px;
+  background-color: var(--neutral300);
+}
+.mdi-tabs-container .mdi-tabs::-webkit-scrollbar-thumb {
+  background-color: var(--neutral500);
+  border-radius: 8px;
 }
 .mdi-tabs-container .mdi-tabs li {
   list-style: none;
@@ -6696,9 +6706,9 @@ table > colgroup col.blue {
 .mdi-tabs-container .mdi-tabs li .tab-tooltip {
   position: absolute;
   background-color: white;
-  top: 10px;
+  top: 4px;
   z-index: 8;
-  left: 30px;
+  left: 10px;
   padding: 3px 8px;
   border: 1px solid var(--neutral900);
   font-size: 12px;

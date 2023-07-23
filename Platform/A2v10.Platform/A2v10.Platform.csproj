@@ -4,7 +4,7 @@
 		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>
 		<Version>10.1.8122</Version>
 		<Product>A2v10</Product>
-		<PackageId>A2v10.Plaform</PackageId>
+		<PackageId>A2v10.Platform</PackageId>
 		<Authors>Oleksandr Kukthin</Authors>
 		<Company>Oleksandr Kukthin</Company>
 		<Description>A2v10 Platform core</Description>
