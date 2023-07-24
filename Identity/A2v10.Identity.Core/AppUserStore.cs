@@ -519,7 +519,7 @@ public sealed class AppUserStore<T> :
 			{ ParamNames.Provider, provider },
 			{ ParamNames.Token, token }
 		};
-		var res = await _dbContext.LoadAsync<JwtToken>(_dataSource, $"[{_dbSchema}].GetToken", exp);
+		var res = await _dbContext.LoadAsync<JwtToken<T>>(_dataSource, $"[{_dbSchema}].GetToken", exp);
 		return res?.Token;
 	}
 

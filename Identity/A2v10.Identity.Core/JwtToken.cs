@@ -1,9 +1,9 @@
-﻿// Copyright © 2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Web.Identity;
-public class JwtToken
+public class JwtToken<T>
 {
 	public String? Token { get; set; }
-	public Int64 UserId { get; set; }
+	public T? UserId { get; set; }
 	public DateTime Expires { get; set; }
 }
