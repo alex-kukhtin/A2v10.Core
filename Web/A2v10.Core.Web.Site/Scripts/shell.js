@@ -1,6 +1,6 @@
 ﻿// Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
 
-/*20230725-8124*/
+/*20230725-8126*/
 /* tabbled:shell.js */
 (function () {
 	const eventBus = require('std:eventBus');
@@ -61,7 +61,7 @@
 					let parentUrl = '';
 					if (this.activeTab)
 						parentUrl = this.activeTab.url || '';
-					tab = { title: m.title, url: m.url, loaded: true, key: tabKey++, root: null, parentUrl: parentUrl, reload:0, debug:false };
+					tab = { title: m.title, url: m.url, query: m.query || '', loaded: true, key: tabKey++, root: null, parentUrl: parentUrl, reload:0, debug:false };
 					this.tabs.push(tab);
 					var cti = this.closedTabs.findIndex(t => t.url === m.url);
 					if (cti >= 0)
