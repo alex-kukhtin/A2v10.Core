@@ -16,11 +16,11 @@
 	<a2-mdi-navbar :menu="menu"></a2-mdi-navbar>
 	<div class="mdi-tabs-container" v-on:contextmenu.stop.prevent="tabsContextMenu">
 		<ul class="mdi-tabs">
-			<li v-on:click.stop.prevent="selectHome()" class="tab-home" v-bind:class="{active: isHomeActive()}">
+			<li v-on:click.stop.prevent="selectHome()" tab-key="10" class="tab-home" v-bind:class="{active: isHomeActive()}">
 				<span class="ico ico-home"></span>
 			</li>
-			<li v-for="t in tabs" :key="t.url" :title="t.title" v-on:mouseleave="t.debug = false"
-				:class="{active: isTabActive(t)}" v-on:click.stop.prevent="selectTab(t, false, $event)">
+			<li v-for="t in tabs" :key="t.url" :tab-key="t.key" :title="t.title" v-on:mouseleave="t.debug = false"
+				:class="{active: isTabActive(t)}" v-on:click.stop.prevent="selectTab(t, false, $event)" v-on:mouseup.middle="closeTab(t)">
 				<span v-text="tabTitle(t)" class="tab-title"></span>
 				<span class="close ico ico-clear" v-on:click.stop.prevent="closeTab(t)"></span>
 				<span class="tab-tooltip" v-if="t.debug" v-text="t.url"></span>
@@ -81,5 +81,13 @@
 	<a2-toastr></a2-toastr>
 	<div class="side-pane-frame" v-if="sidePaneVisible">
 		<include :src="sidePaneUrl" :hide-indicator="true"></include>
+	</div>
+	<div id="ctx-tabs-popup" class="contextmenu">
+		<div class="dropdown-menu menu" role="menu">
+			<button class="dropdown-item" v-on:click="popupClose" v-bind:disabled="!canPopupClose"><span>Close</span></button>
+			<button class="dropdown-item" v-on:click="popupCloseOther" v-bind:disabled="!contextTabKey"><span>Close other tabs</span></button>
+			<button class="dropdown-item" v-on:click="popupCloseRight" v-bind:disabled="!canPopupCloseRight"><span>Close tabs to the right</span></button>
+			<button class="dropdown-item" v-on:click="popupCloseAll"><span>Close all tabs</span></button>
+		</div>
 	</div>
 </div>

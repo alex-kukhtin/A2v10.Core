@@ -67,9 +67,6 @@ TABBED LAYOUT
 30. LeftMenu - поиск
 32. Сделать поиск по интерфейсу - Пример: Одниці виміру -> /sales/catalog/index/{guid}
 34. Tabbed. rightMenu. Закрывать вкладку прямо из меню.
-34. Tabbed. contextMenu. Закрыть все вкладки.
-38. MultiTeanant On/Off
-39. Deploy to dev (CORE!)
 *41. Platform4.8: input-group disabled для textarea:disabled
 44. Tabbed. rightMenu - Hover, Sections (OPEN, RECENTLY CLOSED) styling
 *48. NovaEra2023. Order. Нету контрагента - include - GPF
@@ -86,8 +83,6 @@ TABBED LAYOUT
 74. Левая панель - текст в меню nowrap, ellipsis
 78. SimpleSecurity: развязать User/Tenant
 79. Красивость. Если Search заполнен - подсвечивать его каким-то цветом.
-*80. NovaEra2023. Перенести отчеты из test_dynamic_report в основную ветку
-81. NovaEra2023. ItemRole для контрагента? 361/362 для покупателей
 82. NovaEra2023. Что-то с сохранением вариантов после изменения шаблона.
 83. NovaEra2023. Динамическая оборотка - придумать что-то со сворачиванием сальдо.
 84. NovaEra2023: OperationKinds и устанвка Bind, BindFactor (картинка для Order)
