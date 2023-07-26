@@ -3,6 +3,7 @@
 using System;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Dynamic;
 
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authorization;
@@ -12,7 +13,6 @@ using Microsoft.AspNetCore.DataProtection;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
-using System.Dynamic;
 
 namespace A2v10.Web.Identity.UI;
 
@@ -361,7 +361,7 @@ public class AccountController : Controller
 
 	[Authorize]
 	[HttpPost]
-	public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordViewModel model)
+	public async Task<IActionResult> ChangePassword([FromForm] ChangePasswordViewModel model)
 	{
 		try
 		{
@@ -374,11 +374,11 @@ public class AccountController : Controller
 			//if (User.Identity.IsUserOpenId())
 			//throw new SecurityException("Invalid User type (openId?)");
 
-			var user = await _userManager.FindByIdAsync(User.Identity.Name)
+			var user = await _userManager.FindByNameAsync(User.Identity.Name)
 				?? throw new InvalidOperationException("User not found");
 
-			//if (!user.ChangePasswordEnabled)
-			//throw new SecurityException("Change password not allowed");
+			if (!user.ChangePasswordEnabled)
+				throw new InvalidOperationException("Change password not allowed");
 
 			var ir = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
 			if (ir.Succeeded)
@@ -387,7 +387,7 @@ public class AccountController : Controller
 			}
 			else
 			{
-				return new JsonResult(JsonResponse.Error(String.Join(", ", ir.Errors)));
+				return new JsonResult(JsonResponse.Error(String.Join(", ", ir.Errors.Select(e => e.Code))));
 			}
 		}
 		catch (Exception ex)

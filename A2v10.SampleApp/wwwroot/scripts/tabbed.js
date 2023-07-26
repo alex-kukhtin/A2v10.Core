@@ -175,7 +175,7 @@ app.modules['std:signalR'] = function () {
 
 // Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
 
-/*20230716-8119*/
+/*20230725-8126*/
 /* tabbled:shell.js */
 (function () {
 	const eventBus = require('std:eventBus');
@@ -212,7 +212,8 @@ app.modules['std:signalR'] = function () {
 				homePageTitle: '',
 				homeLoaded: false,
 				lockRoute: false,
-				requestsCount: 0
+				requestsCount: 0,
+				contextTabKey: 0
 			};
 		},
 		components: {
@@ -225,6 +226,8 @@ app.modules['std:signalR'] = function () {
 			sidePaneVisible() { return !!this.sidePaneUrl; },
 			storageKey() { return this.appData.appId + '_tabs'; },
 			processing() { return !this.hasModals && this.requestsCount > 0; },
+			canPopupClose() { return this.contextTabKey > 10; /* 10 - home */ },
+			canPopupCloseRight() { return this.contextTabKey && this.tabs.some(v => v.key > this.contextTabKey); }
 		},
 		methods: {
 			navigate(m) {
@@ -233,7 +236,7 @@ app.modules['std:signalR'] = function () {
 					let parentUrl = '';
 					if (this.activeTab)
 						parentUrl = this.activeTab.url || '';
-					tab = { title: m.title, url: m.url, loaded: true, key: tabKey++, root: null, parentUrl: parentUrl, reload:0, debug:false };
+					tab = { title: m.title, url: m.url, query: m.query || '', loaded: true, key: tabKey++, root: null, parentUrl: parentUrl, reload:0, debug:false };
 					this.tabs.push(tab);
 					var cti = this.closedTabs.findIndex(t => t.url === m.url);
 					if (cti >= 0)
@@ -306,9 +309,6 @@ app.modules['std:signalR'] = function () {
 			homeSource() {
 				return this.homeLoaded ? '/_home/index/0' : null;
 			},
-			tabsContextMenu() {
-				//alert('context menu');
-			},
 			selectHome(noStore) {
 				this.homeLoaded = true;
 				this.activeTab = null;
@@ -333,9 +333,6 @@ app.modules['std:signalR'] = function () {
 			reopenTab(tab) {
 				eventBus.$emit('closeAllPopups');
 				this.navigate(tab);
-				let ix = this.closedTabs.indexOf(tab);
-				this.closedTabs.splice(ix, 1);
-				this.storeTabs();
 			},
 			closeTabFromStore(state) {
 				if (!state || !state.root) return;
@@ -355,6 +352,27 @@ app.modules['std:signalR'] = function () {
 					tab.root.$close();
 				else
 					this.removeTab(tabIndex);
+			},
+			removeTabs(ta) {
+				if (!ta || !ta.length) return;
+				ta.forEach(tab => {
+					let ix = this.tabs.indexOf(tab);
+					if (ix == -1) return;
+					let rt = this.tabs.splice(ix, 1);
+					if (rt.length) {
+						this.closedTabs.unshift(rt[0]);
+						if (this.closedTabs.length > 10)
+							this.closedTabs.pop();
+					}
+				});
+				if (!this.tabs.length)
+					this.selectHome(true);
+				else {
+					let currentTab = this.tabs.find(t => t.key === this.contextTabKey);
+					if (this.activeTab !== currentTab)
+						this.selectTab(currentTab, true);
+				}
+				this.storeTabs();
 			},
 			removeTab(tabIndex) {
 				let currentTab = this.tabs[tabIndex];
@@ -414,6 +432,39 @@ app.modules['std:signalR'] = function () {
 			},
 			toggleTabPopup() {
 				this.tabPopupOpen = !this.tabPopupOpen;
+			},
+			// context menu
+			tabsContextMenu(ev) {
+				this.contextTabKey = 0;
+				let li = ev.target.closest('li');
+				if (li)
+					this.contextTabKey = +(li.getAttribute('tab-key') || 0);
+				let menu = document.querySelector('#ctx-tabs-popup');
+				let br = menu.parentNode.getBoundingClientRect();
+				let style = menu.style;
+				style.top = (ev.clientY - br.top) + 'px';
+				style.left = (ev.clientX - br.left) + 'px';
+				menu.classList.add('show');
+				console.dir(this.contextTabKey);
+			},
+			popupClose() {
+				let t = this.tabs.find(t => t.key === this.contextTabKey);
+				if (t) this.closeTab(t);
+			},
+			popupCloseOther() {
+				if (!this.contextTabKey) return;
+				let tabs = this.tabs.filter(t => t.key !== this.contextTabKey);
+				this.removeTabs(tabs);
+			},
+			popupCloseRight() {
+				if (!this.contextTabKey) return;
+				let tabs = this.tabs.filter(t => t.key > this.contextTabKey);
+				this.removeTabs(tabs);
+			},
+			popupCloseAll() {
+				this.selectHome(true);
+				let tabs = this.tabs.filter(t => t.key > 10);
+				this.removeTabs(tabs);
 			},
 			showModal(modal, prms) {
 				let id = utils.getStringId(prms ? prms.data : null);

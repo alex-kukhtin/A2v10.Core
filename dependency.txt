@@ -1,3 +1,11 @@
+2023-07-26
+XamlView
+Platform.Web
+Identity.UI
+Web.Assets
+App.Assets
+
+
 *A2v10.Platform (8070)
 	A2v10.Identity.Core (8070)
 	A2v10.Platform.Web (8070)

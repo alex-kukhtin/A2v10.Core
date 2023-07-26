@@ -73,6 +73,7 @@ public class MainController : Controller
 			ModelStyles = layoutDescr?.ModelStyles,
 			ModelScripts = layoutDescr?.ModelScripts,
 			HasNavPane = HasNavPane(),
+			HasProfile = HasProfile(),
 			Theme = _appTheme.MakeTheme()
 		};
 		ViewBag.__Minify = ""; // "min.";
@@ -116,6 +117,10 @@ public class MainController : Controller
     private Boolean HasNavPane()
 	{
 		return _codeProvider.IsFileExists("_navpane/model.json");
+	}
+	private Boolean HasProfile()
+	{
+		return _codeProvider.IsFileExists("_profile/model.json");
 	}
 	public Boolean IsStaticFile()
 	{

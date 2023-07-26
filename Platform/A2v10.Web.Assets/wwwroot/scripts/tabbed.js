@@ -38,6 +38,7 @@ app.modules['std:signalR'] = function () {
 
 	const locale = window.$$locale;
 	const http = require("std:http");
+	const eventBus = require("std:eventBus");
 
 	Vue.component("a2-mdi-header", {
 		template: `
@@ -51,10 +52,14 @@ app.modules['std:signalR'] = function () {
 				<span class="caret"></span>
 			</button>
 			<div class="dropdown-menu menu down-left">
-				<a href="" @click.stop.prevent="logout" tabindex="-1" class="dropdown-item">
+				<button v-if=hasProfile @click=profile tabindex="-1" class="dropdown-item">
+					<i class="ico ico-user"></i> 
+					<span v-text="profileText"></span>
+				</button>
+				<button @click=logout tabindex="-1" class="dropdown-item">
 					<i class="ico ico-logout"></i> 
 					<span v-text="locale.$Quit"></span>
-				</a>
+				</button>
 			</div>
 		</div>
 	</div>
@@ -62,7 +67,9 @@ app.modules['std:signalR'] = function () {
 		props: {
 			title: String,
 			subTitle: String,
-			personName: String
+			personName: String,
+			hasProfile: Boolean,
+			profileText: String
 		},
 		computed: {
 			locale() { return locale; }
@@ -71,6 +78,9 @@ app.modules['std:signalR'] = function () {
 			async logout() {
 				await http.post('/account/logout2');
 				window.location.assign('/account/login');
+			},
+			profile() {
+				eventBus.$emit('navigateto', { url: '/_profile/index/0'});
 			}
 		},
 		mounted() {

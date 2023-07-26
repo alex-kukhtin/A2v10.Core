@@ -11,6 +11,7 @@ public class MainViewModel
 	public String? ModelStyles { get; init; }
 	public String? ModelScripts { get; init; }
 	public Boolean HasNavPane { get; init; }
+	public Boolean HasProfile { get; init; }
 	public String Theme { get; init; } = String.Empty;
 }
 

@@ -23,7 +23,7 @@
   font-family: 'A2v10';
   font-display: fallback;
   src: url('/css/fonts/A2v10.eot');
-  src: url('/css/fonts/A2v10.eot?#iefix') format('eot'), url('/css/fonts/A2v10.woff?v=7930') format('woff'), url('/css/fonts/A2v10.ttf?v=7930') format('truetype'), url('/css/fonts/A2v10.svg#A2v10') format('svg');
+  src: url('/css/fonts/A2v10.eot?#iefix') format('eot'), url('/css/fonts/A2v10.woff?v=7931') format('woff'), url('/css/fonts/A2v10.ttf?v=7931') format('truetype'), url('/css/fonts/A2v10.svg#A2v10') format('svg');
   font-weight: normal;
   font-style: normal;
 }
@@ -3218,8 +3218,8 @@ table.data-grid th.group-cell a + a {
 }
 table.data-grid tr.group td {
   background-color: #efefef;
-  border-bottom: 1px solid #ddd;
-  border-top: 1px solid #ddd;
+  border-bottom: 1px solid var(--neutral300);
+  border-top: 1px solid var(--neutral300);
   cursor: pointer;
   color: var(--text);
   padding-left: 0;
@@ -3595,6 +3595,7 @@ tr:hover .commandbar.visible-hover {
   align-items: baseline;
   width: 100%;
   padding: 7px 0;
+  border-radius: 4px;
 }
 .tree-view li > .overlay .tv-folder {
   font-weight: 600;
@@ -4019,14 +4020,17 @@ tr:hover .commandbar.visible-hover {
   border-left-color: transparent;
 }
 .a2-list .a2-list-item.group {
-  background-color: #f9f9f9;
+  background-color: var(--neutral100);
   color: #999;
-  border-bottom: 1px solid #ddd;
-  border-top: 1px solid #ddd;
+  border-bottom: 1px solid var(--neutral300);
+  border-top: 1px solid var(--neutral300);
   cursor: default;
 }
 .a2-list .a2-list-item.group:hover {
-  background-color: #f9f9f9 !important;
+  background-color: var(--neutral100) !important;
+}
+.a2-list .a2-list-item:not(.group) {
+  border-radius: 4px;
 }
 .a2-list.striped .a2-list-item:nth-of-type(even) {
   background-color: rgba(224, 224, 224, 0.1);

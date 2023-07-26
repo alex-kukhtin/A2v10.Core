@@ -1,12 +1,13 @@
-﻿@{
+﻿@model MainViewModel
+@{
 	Layout = "_Layout.tabbed";
 }
-@model MainViewModel
-@inject ILocalizer localizer
+@inject ILocalizer loc
 @inject IApplicationHost host
 
 <div id="shell" class="mdi-shell @(Model!.Debug ? "debug" : "release")" v-cloak>
-	<a2-mdi-header :title="title" person-name="@Model.PersonName">
+	<a2-mdi-header :title="title" person-name="@Model.PersonName" :has-profile="@Model.HasProfile.ToString().ToLowerInvariant()"
+				   profile-text="@loc["Profile"]">
 		@if (Model.HasNavPane)
 		{
 			<include class=nav-pane src="/_page/_navpane/index/0" :hide-indicator="true"></include>
@@ -55,18 +56,18 @@
 
 		<span class="version-info">
 			<a target="_blank" tabindex="-1" href="https://a2v10.com"><i class="ico ico-a2logo a2logo-layout"></i></a>
-			@localizer.Localize(null, "@[Version]")
+			@loc.Localize(null, "@[Version]")
 			<span v-text="version"></span>
 		</span>
 		<div class="debug-btn dropdown dir-up" v-dropdown v-if="isDebug">
-			<button class="btn btn-debug" toggle>@localizer.Localize(null, "@[Debug]")<span class="caret up"></span></button>
+			<button class="btn btn-debug" toggle>@loc.Localize(null, "@[Debug]")<span class="caret up"></span></button>
 			<div class="dropdown-menu menu up-left">
-				<a v-on:click.prevent="debugModel" class="dropdown-item" tabindex="-1"><i class="ico ico-database"></i> @localizer.Localize(null, "@[DataModel]")</a>
-				<a v-on:click.prevent="debugTrace" class="dropdown-item" tabindex="-1"><i class="ico ico-chart-stacked-line"></i> @localizer.Localize(null, "@[Profiling]")</a>
+				<a v-on:click.prevent="debugModel" class="dropdown-item" tabindex="-1"><i class="ico ico-database"></i> @loc.Localize(null, "@[DataModel]")</a>
+				<a v-on:click.prevent="debugTrace" class="dropdown-item" tabindex="-1"><i class="ico ico-chart-stacked-line"></i> @loc.Localize(null, "@[Profiling]")</a>
 				<div class="divider"></div>
 				<label class="checkbox">
 					<input type="checkbox" v-model="traceEnabled" name="trace"/>
-					<span>@localizer.Localize(null, "@[Tracing]")</span>
+					<span>@loc.Localize(null, "@[Tracing]")</span>
 				</label>
 			</div>
 		</div>
