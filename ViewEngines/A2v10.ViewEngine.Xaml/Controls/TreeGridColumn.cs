@@ -1,8 +1,9 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
-using A2v10.Infrastructure;
 using System.Collections.Generic;
 using System.Text;
+
+using A2v10.Infrastructure;
 
 namespace A2v10.Xaml;
 
@@ -127,7 +128,7 @@ public class TreeGridColumn : UiContentElement
 		var td = new TagBuilder(tagName);
 		onRender?.Invoke(td);
 		AddAligns(td);
-		MergeAttributes(td, context, MergeAttrMode.Wrap);
+		MergeAttributes(td, context, MergeAttrMode.Wrap | MergeAttrMode.Visibility);
 		if (Fit)
 			td.AddCssClass("fit");
 		else if (Width != null)
@@ -161,6 +162,7 @@ public class TreeGridColumn : UiContentElement
 	public void RenderColumnTag(RenderContext context)
 	{
 		var col = new TagBuilder("col");
+		MergeAttributes(col, context, MergeAttrMode.Visibility);
 		var hd = GetBinding(nameof(Content));
 		if (hd != null)
 			col.MergeAttribute(":class", $"cols.that.columnClass('{hd.Path}', {Fit.ToString().ToLowerInvariant()})");

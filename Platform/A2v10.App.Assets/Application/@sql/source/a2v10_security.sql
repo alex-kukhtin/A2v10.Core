@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2008-2023 Oleksandr Kukhtin
 
-Last updated : 23 jul 2023
-module version : 8124
+Last updated : 26 jul 2023
+module version : 8125
 */
 -- SECURITY
 ------------------------------------------------
@@ -245,5 +245,14 @@ begin
 		EmailConfirmed = 0, PhoneNumberConfirmed = 0,
 		SecurityStamp = cast(newid() as nvarchar(255)), SecurityStamp2 = cast(newid() as nvarchar(255))
 	where Id = @Id;
+end
+go
+------------------------------------------------
+create or alter procedure a2security.GetUserGroups
+@UserId bigint
+as
+begin
+	set nocount on;
+	set transaction isolation level read uncommitted;
 end
 go
