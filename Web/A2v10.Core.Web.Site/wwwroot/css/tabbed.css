@@ -6949,9 +6949,10 @@ table > colgroup col.blue {
 }
 .mdi-banner {
   grid-area: banner;
-  padding: 10px;
-  background-color: antiquewhite;
   display: none;
+}
+.mdi-banner.show {
+  display: block;
 }
 @media (max-width: 1000px) {
   /* TODO adjust tab size */

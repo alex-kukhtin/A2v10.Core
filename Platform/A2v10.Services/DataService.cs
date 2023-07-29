@@ -4,11 +4,11 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 
 using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
-
 using A2v10.Services.Interop;
 
 namespace A2v10.Services;
@@ -352,12 +352,13 @@ public class DataService : IDataService
 		prms.Set("Key", blob.Key);
 		setParams?.Invoke(prms);
 
-        return blob.Type switch
-        {
-            ModelBlobType.sql => await LoadBlobSql(blob, prms),
-            ModelBlobType.json => await LoadBlobJson(blob, prms),
-            _ => throw new NotImplementedException(blob.Type.ToString()),
-        };
+		return blob.Type switch
+		{
+			ModelBlobType.sql => await LoadBlobSql(blob, prms),
+			ModelBlobType.json => await LoadBlobJson(blob, prms),
+			ModelBlobType.clr => await LoadBlobClr(blob, prms),
+			_ => throw new NotImplementedException(blob.Type.ToString()),
+		}; ;
     }
 
 	private Task<BlobInfo?> LoadBlobSql(IModelBlob blob, ExpandoObject prms)
@@ -366,6 +367,28 @@ public class DataService : IDataService
         if (String.IsNullOrEmpty(loadProc))
             throw new DataServiceException($"LoadProcedure is null");
         return _dbContext.LoadAsync<BlobInfo>(blob?.DataSource, loadProc, prms);
+    }
+	private async Task<BlobInfo?> LoadBlobClr(IModelBlob modelBlob, ExpandoObject prms)
+	{
+        if (String.IsNullOrEmpty(modelBlob.ClrType))
+            throw new DataServiceException($"ClrType is null");
+        var (assembly, clrType) = ClrHelpers.ParseClrType(modelBlob.ClrType);
+        var ass = Assembly.Load(assembly);
+        var tp = ass.GetType(clrType)
+            ?? throw new InvalidOperationException("Type not found");
+        var ctor = tp.GetConstructor(new Type[] { typeof(IServiceProvider) })
+            ?? throw new InvalidOperationException($"ctor(IServiceProvider) not found in {clrType}");
+        var elem = ctor.Invoke(new Object[] { _serviceProvider })
+            ?? throw new InvalidOperationException($"Unable to create element of {clrType}");
+        if (elem is not IClrInvokeBlob invokeBlob)
+            throw new InvalidOperationException($"The type '{clrType}' must implement the interface IClrInvokeBlob");
+		var result = await invokeBlob.InvokeAsync(prms);
+		return new BlobInfo()
+		{
+			Name = result.Name,
+			Mime = result.Mime,
+			Stream = result.Stream
+		};
     }
 
     private async Task<BlobInfo?> LoadBlobJson(IModelBlob modelBlob, ExpandoObject prms)

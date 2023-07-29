@@ -63,6 +63,7 @@ public static class ServicesExtensions
 
 		// default implementations
 		services.TryAddSingleton<IMailService, NullMailService>();
+		services.TryAddScoped<IUserBannerProvider, NullUserBannerProvider>();
 		services.TryAddScoped<ILicenseManager, EmptyLicenseManager>();
 
 		var cookiePrefix = configuration.GetValue<String>("identity:cookiePrefix")?.Trim()

@@ -62,7 +62,8 @@ public interface IModelBlob
 	ModelBlobType Type { get; }	
 	ModelParseType Parse { get; }
     String? DataSource { get; }
-	String? OutputFileName { get; }
+    String? ClrType { get; }
+    String? OutputFileName { get; }
 	Boolean Zip { get; }
     Int32 CommandTimeout { get; }
     String LoadProcedure();

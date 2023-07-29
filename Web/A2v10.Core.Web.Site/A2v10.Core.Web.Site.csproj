@@ -3,6 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>net6.0</TargetFramework>
 		<Nullable>enable</Nullable>
+		<LangVersion>Latest</LangVersion>
 		<UserSecretsId>aspnet-A2v10.Core.Web.Site-3AAA4AB7-4DED-4E64-815B-F75EEDCF167E</UserSecretsId>
 	</PropertyGroup>
 

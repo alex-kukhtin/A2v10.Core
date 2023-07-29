@@ -4,6 +4,12 @@
 }
 @inject ILocalizer loc
 @inject IApplicationHost host
+@inject IUserBannerProvider userBanner
+
+@{
+	var bannerText = await userBanner.GetHtmlAsync();
+	var isBannerVisible = !String.IsNullOrEmpty(bannerText);
+}
 
 <div id="shell" class="mdi-shell @(Model!.Debug ? "debug" : "release")" v-cloak>
 	<a2-mdi-header :title="title" person-name="@Model.PersonName" :has-profile="@Model.HasProfile.ToString().ToLowerInvariant()"
@@ -47,8 +53,8 @@
 			<a2-include :source="tabSource(t)" :complete="tabLoadComplete" :lock="lockRoute" :reload="t.reload"></a2-include>
 		</div>
 	</div>
-	<div class="mdi-banner">
-		Attention! I am the banner!
+	<div class="mdi-banner @(isBannerVisible ? "show" : "")">
+		@Html.Raw(bannerText)
 	</div>
 	<div class="mdi-footer">
 		<div :class="{spinner: true, active:processing}"></div>
@@ -67,7 +73,7 @@
 				<div class="divider"></div>
 				<label class="checkbox">
 					<input type="checkbox" v-model="traceEnabled" name="trace"/>
-					<span>@loc.Localize(null, "@[Tracing]")</span>
+					<span>@loc["Tracing"]</span>
 				</label>
 			</div>
 		</div>

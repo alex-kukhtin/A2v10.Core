@@ -15,6 +15,7 @@ using A2v10.ReportEngine.Pdf;
 using A2v10.Workflow.Engine;
 using A2v10.Scheduling;
 using A2v10.Scheduling.Commands;
+using A2v10.Core.Web.Site.TestServices;
 
 namespace A2v10.Core.Web.Site;
 
@@ -39,10 +40,13 @@ public class Startup
 	{
 		//!!!Before Use Platform. It has a default implementation 
 		services.UseMailClient();
+		services.AddScoped<IUserBannerProvider, TestBannerProvider>();
 		//services.UseLicenseManager();
 		services.AddScoped<ILicenseManager, NullLicenseManager>();
 
 		services.UsePlatform(Configuration);
+
+		services.AddSingleton<TestBusinessAppProvider>();
 
 		services.AddReportEngines(factory =>
 		{

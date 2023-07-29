@@ -15,6 +15,7 @@ using A2v10.Data.Interfaces;
 using A2v10.Web.Identity;
 using System.Collections.Generic;
 using Microsoft.Extensions.Options;
+using System.Dynamic;
 
 namespace A2v10.Platform.Web;
 public record UserIdentity : IUserIdentity
@@ -173,6 +174,16 @@ public class CurrentUser : ICurrentUser, IDbIdentity
 			throw new InvalidProgramException("There is no current user state");
 		State.IsReadOnly = readOnly;
 		StoreState();
+	}
+
+	public ExpandoObject DefaultParams()
+	{
+		var prms = new ExpandoObject();
+		if (Identity.Id != null)
+			prms.Add("UserId", Identity.Id);
+		if (Identity.Tenant != null)
+			prms.Add("TenantId", Identity.Tenant);
+		return prms;
 	}
 
 	void StoreState()

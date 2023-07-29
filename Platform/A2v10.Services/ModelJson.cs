@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 
 using Microsoft.Extensions.DependencyInjection;
@@ -109,6 +109,7 @@ public class ModelJsonBlob : ModelJsonViewBase, IModelBlob
 	public String? Id => _parent?.Id;
 	public String? Suffix { get; init; }
     public String? OutputFileName { get; init; }
+    public String? ClrType { get; init; }
     public Boolean Zip { get; init; }
     public ModelBlobType Type { get; init; }
 	public ModelParseType Parse { get; init; }

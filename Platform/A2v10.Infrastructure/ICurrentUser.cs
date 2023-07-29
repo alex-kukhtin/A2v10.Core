@@ -2,6 +2,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Dynamic;
 
 namespace A2v10.Infrastructure;
 public interface IUserIdentity
@@ -41,5 +43,6 @@ public interface ICurrentUser
 	void SetInitialTenantId(Int32 tenantId);
 	void SetReadOnly(Boolean readOnly);
 	void AddModules(IEnumerable<Guid> modules);
+	ExpandoObject DefaultParams();
 }
 
