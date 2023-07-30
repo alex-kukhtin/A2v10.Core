@@ -38,7 +38,7 @@ public class Startup
 
 	public void ConfigureServices(IServiceCollection services)
 	{
-		//!!!Before Use Platform. It has a default implementation 
+		//!!!Before UsePlatform(). It has a default implementation.
 		services.UseMailClient();
 		services.AddScoped<IUserBannerProvider, TestBannerProvider>();
 		//services.UseLicenseManager();

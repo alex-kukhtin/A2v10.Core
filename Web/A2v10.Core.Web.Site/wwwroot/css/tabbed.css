@@ -7335,6 +7335,8 @@ table.tree-grid a.toggle.expanded:after {
   border: 1px solid var(--neutralBkDarker);
   max-height: 280px;
   overflow: auto;
+  box-shadow: 3px 3px 10px 0 rgba(174, 174, 174, 0.5), 0 5px 40px 0 rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
 }
 .color-picker .color-picker-pane .color-picker-list {
   display: flex;
@@ -7367,7 +7369,7 @@ table.tree-grid a.toggle.expanded:after {
 .tags-control .input-group {
   display: flex;
   min-height: 30px;
-  border-color: var(--neutralBkDarker);
+  border-color: var(--neutral400);
   padding: 4px;
   cursor: pointer;
 }
@@ -7399,6 +7401,7 @@ table.tree-grid a.toggle.expanded:after {
   z-index: 1070 !important;
   box-shadow: 3px 3px 10px 0 rgba(174, 174, 174, 0.5), 0 5px 40px 0 rgba(0, 0, 0, 0.15);
   clip-path: inset(0px -40px -40px -40px);
+  border-radius: 4px;
 }
 .tags-control .tags-pane .tags-pane-items {
   margin: 0;
@@ -7420,7 +7423,7 @@ table.tree-grid a.toggle.expanded:after {
 .tags-control .tags-pane .tags-settings {
   margin-top: 0.5rem;
   padding-top: 0.5rem;
-  border-top: 1px solid var(--neutralBkDarker);
+  border-top: 1px solid var(--neutral400);
 }
 .tags-control .tags-pane .btn-settings {
   background-color: transparent;

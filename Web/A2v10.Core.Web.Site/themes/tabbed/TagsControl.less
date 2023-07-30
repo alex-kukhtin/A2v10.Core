@@ -1,6 +1,6 @@
 ﻿@import "Variables.less";
 
-@control-border: @default-brd-color;
+@control-border: @control-brd-color;
 
 .tags-control {
 	.input-group {
@@ -42,7 +42,7 @@
 		z-index: @popup-index !important;
 		box-shadow: @dropdown-shadow;
 		clip-path: inset(0px -40px -40px -40px);
-
+		border-radius: @control-brd-radius;
 		.tags-pane-items {
 			margin: 0;
 			padding: 0;
@@ -66,7 +66,7 @@
 		.tags-settings {
 			margin-top: .5rem;
 			padding-top: .5rem;
-			border-top: 1px solid @default-brd-color;
+			border-top: 1px solid @control-border;
 		}
 
 		.btn-settings {
