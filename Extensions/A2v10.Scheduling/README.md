@@ -8,8 +8,8 @@ for the A2v10 platform applications.
 ```csharp
 services.UseScheduling(Configuration, factory =>
 {
-	// job handlers
-	factory.RegisterJobHandler<T>("HandlerName");
+    // job handlers
+    factory.RegisterJobHandler<T>("HandlerName");
     // commands
     factory.RegisterCommand<T>("CommandName");
 });
@@ -21,14 +21,14 @@ services.UseScheduling(Configuration, factory =>
 "Scheduler": {
   "Jobs": [
     {
-        "Id": "JobId",
-        "Handler": "HandlerName",
-        "Cron": "0 * * ? * *",
-        "DataSource": "ConnectionStringName",
-        "Procedure": "dbo.[Sql_procedure]",
-        "Parameters": {
-          ...
-        }
+       "Id": "JobId",
+       "Handler": "HandlerName",
+       "Cron": "0 * * ? * *",
+       "DataSource": "ConnectionStringName",
+       "Procedure": "dbo.[Sql_procedure]",
+       "Parameters": {
+         ...
+       }
     },
   ]
 }
