@@ -58,7 +58,8 @@ public class ProcessCommandsJobHandler : IScheduledJob
         }
         catch (Exception ex)
         {
-            await WriteComplete(dataSource, job, false, ex);
+			_logger.LogCritical("Failed to command '{cmd}'. {ex}", job.Command, ex);
+			await WriteComplete(dataSource, job, false, ex);
         }
     }
 

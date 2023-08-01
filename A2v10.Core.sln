@@ -85,7 +85,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Extensions", "Extensions", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "A2v10.Scheduling.Infrastructure", "Extensions\A2v10.Scheduling.Infrastructure\A2v10.Scheduling.Infrastructure.csproj", "{FE67964D-EFED-4AD9-B7D3-9C28FF6FDCAD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "A2v10.Scheduling.Commands", "Extensions\A2v10.Scheduling.Commands\A2v10.Scheduling.Commands.csproj", "{2C7BB597-B497-4340-A260-77ED7A72BBD0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "A2v10.Scheduling.Commands", "Extensions\A2v10.Scheduling.Commands\A2v10.Scheduling.Commands.csproj", "{2C7BB597-B497-4340-A260-77ED7A72BBD0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

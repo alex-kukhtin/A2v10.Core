@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 
 namespace A2v10.Xaml;
@@ -28,7 +28,7 @@ public class Pager : UIElementBase
 		if (Style != PagerStyle.Default)
 			pager.AddCssClass(Style.ToString().ToLowerInvariant());
 		pager.AddCssClass(CssClass);
-		MergeAttributes(pager, context, MergeAttrMode.Margin);
+		MergeAttributes(pager, context, MergeAttrMode.Margin | MergeAttrMode.Visibility);
 		onRender?.Invoke(pager);
 		var source = GetBinding(nameof(Source)) 
 			?? throw new XamlException("Pager has no Source binding");
