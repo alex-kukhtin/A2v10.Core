@@ -43,6 +43,7 @@ public class DataGridColumn : XamlElement
 	public Boolean? If { get; set; }
 	public ColumnRole Role { get; set; }
 	public Int32 MaxChars { get; set; }
+	public String? CheckAll { get; set; }
 
 	Boolean _noPadding;
 
@@ -68,6 +69,12 @@ public class DataGridColumn : XamlElement
 			column.MergeAttribute(":small", Small.Value.ToString().ToLowerInvariant());
 		if (MaxChars != 0)
 			column.MergeAttribute(":max-chars", MaxChars);
+
+		var checkAllBind = GetBinding(nameof(CheckAll));
+		if (checkAllBind != null)
+			column.MergeAttribute("check-all", checkAllBind.Path);
+		else if (CheckAll != null)
+			throw new XamlException($"The CheckAll property must be a binding ({Content})");
 
 		var boldBind = GetBinding(nameof(Bold));
 		if (boldBind != null)
