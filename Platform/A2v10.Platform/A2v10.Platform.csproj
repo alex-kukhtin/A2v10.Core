@@ -13,6 +13,8 @@
 		<RepositoryUrl>https://github.com/alex-kukhtin/A2v10.Core</RepositoryUrl>
 		<PackageTags>A2v10 Platform</PackageTags>
 		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -34,6 +36,10 @@
 	<ItemGroup>
 		<PackageReference Include="A2v10.Data.Core" Version="10.1.7334" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="README.md" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
 </Project>
