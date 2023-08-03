@@ -6,10 +6,10 @@ using System.Dynamic;
 using System.Collections.Generic;
 
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
 using A2v10.Data.Interfaces;
 using A2v10.Scheduling.Infrastructure;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace A2v10.Scheduling;
 
@@ -41,7 +41,7 @@ public class ProcessCommandsJobHandler : IScheduledJob
         }
         catch (Exception ex)
         {
-            await WriteException(jobInfo.DataSource, jobInfo.Id, ex);
+            await jobInfo.WriteException(_dbContext, ex);
             _logger.LogCritical("Failed to execute {ex}", ex);
         }
     }
@@ -77,18 +77,5 @@ public class ProcessCommandsJobHandler : IScheduledJob
             prms.TryAdd("Error", ex.Message);
         }
         return _dbContext.ExecuteExpandoAsync(dataSource, "a2sch.[Command.Complete]", prms);
-    }
-
-    public Task WriteException(String? dataSource, String? id, Exception ex)
-    {
-        if (ex.InnerException != null)
-            ex = ex.InnerException;
-        String message = ex.Message;
-        if (message.Length > 255)
-            message = message[..255];
-        var prms = new ExpandoObject();
-        prms.TryAdd("JobId", id ?? "command");
-        prms.TryAdd("Message", message);
-        return _dbContext.ExecuteExpandoAsync(dataSource, "a2sch.[Exception]", prms);
     }
 }

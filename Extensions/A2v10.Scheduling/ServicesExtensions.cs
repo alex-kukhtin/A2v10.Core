@@ -53,7 +53,7 @@ public static class ServicesExtensions
 		return services;
 	}
 
-    static void RegisterCommands(AddSchedulerHandlerFactory factory, IServiceCollection services)
+    private static void RegisterCommands(AddSchedulerHandlerFactory factory, IServiceCollection services)
 	{
 		// always
         services.AddSingleton<ScheduledCommandProvider>(new ScheduledCommandProvider(factory.Commands));
