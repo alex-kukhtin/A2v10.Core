@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.DataProtection;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
+using Microsoft.Extensions.Options;
 
 namespace A2v10.Web.Identity.UI;
 
@@ -26,29 +27,34 @@ public class AccountController : Controller
 	private readonly UserManager<AppUser<Int64>> _userManager;
 	private readonly IAntiforgery _antiforgery;
 	private readonly IDbContext _dbContext;
-	private readonly IApplicationHost _host;
 	private readonly IApplicationTheme _appTheme;
 	private readonly IMailService _mailService;
 	private readonly ILocalizer _localizer;
 	private readonly IDataProtector _protector;
 	private readonly IAppTenantManager _appTenantManager;
+	private readonly AppUserStoreOptions<Int64> _userStoreOptions;
 
-	public AccountController(SignInManager<AppUser<Int64>> signInManager, UserManager<AppUser<Int64>> userManager,
-			IAntiforgery antiforgery, IApplicationHost host, IDbContext dbContext,
+    public AccountController(SignInManager<AppUser<Int64>> signInManager, UserManager<AppUser<Int64>> userManager,
+			IAntiforgery antiforgery, IDbContext dbContext,
 			IApplicationTheme appTheme, IMailService mailService, ILocalizer localizer,
-			IDataProtectionProvider protectionProvider, IAppTenantManager appTenantManager)
+			IDataProtectionProvider protectionProvider, IAppTenantManager appTenantManager,
+			IOptions<AppUserStoreOptions<Int64>> userStoreOptions)
 	{
 		_signInManager = signInManager;
 		_userManager = userManager;
 		_antiforgery = antiforgery;
 		_dbContext = dbContext;
-		_host = host;
 		_appTheme = appTheme;
 		_mailService = mailService;
 		_localizer = localizer;
 		_appTenantManager = appTenantManager;
 		_protector = protectionProvider.CreateProtector("Login");
-	}
+		_userStoreOptions = userStoreOptions.Value;
+
+    }
+
+	private Boolean IsMultiTenant => _userStoreOptions.MultiTenant ?? false;
+	private String? CatalogDataSource => _userStoreOptions.DataSource; 
 
 	void RemoveAllCookies()
 	{
@@ -74,7 +80,7 @@ public class AccountController : Controller
 
 		var m = new LoginViewModel()
 		{
-			Title = await _dbContext.LoadAsync<AppTitleModel>(_host.CatalogDataSource, "a2sys.[AppTitle.Load]"),
+			Title = await _dbContext.LoadAsync<AppTitleModel>(CatalogDataSource, "a2sys.[AppTitle.Load]"),
 			Theme = _appTheme.MakeTheme(),
 			RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken,
 			ReturnUrl = returnUrl
@@ -129,7 +135,7 @@ public class AccountController : Controller
 					{ "Id", user.Id },
 					{ "LastLoginHost", Request.Host.Host }
 				};
-                await _dbContext.ExecuteExpandoAsync(_host.CatalogDataSource, "a2security.UpdateUserLogin", llprms);
+                await _dbContext.ExecuteExpandoAsync(CatalogDataSource, "a2security.UpdateUserLogin", llprms);
 				RemoveAntiforgeryCookie();
 				var returnUrl = model.ReturnUrl?.ToLowerInvariant();
 				if (returnUrl == null || returnUrl.StartsWith("/account"))
@@ -153,7 +159,7 @@ public class AccountController : Controller
 		RemoveNonAntiforgeryCookies();
 		var m = new RegisterViewModel()
 		{
-			Title = await _dbContext.LoadAsync<AppTitleModel>(_host.CatalogDataSource, "a2sys.[AppTitle.Load]"),
+			Title = await _dbContext.LoadAsync<AppTitleModel>(CatalogDataSource, "a2sys.[AppTitle.Load]"),
 			Theme = _appTheme.MakeTheme(),
 			RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken
 		};
@@ -201,7 +207,7 @@ public class AccountController : Controller
 				PhoneNumber = model.Phone
 			};
 
-			if (_host.IsMultiTenant)
+			if (IsMultiTenant)
 				user.Tenant = -1; // tenant will be created
 
 			var result = await _userManager.CreateAsync(user, model.Password);
@@ -239,7 +245,7 @@ public class AccountController : Controller
 		RemoveNonAntiforgeryCookies();
 		var m = new SimpleIdentityViewModel()
 		{
-			Title = await _dbContext.LoadAsync<AppTitleModel>(_host.CatalogDataSource, "a2sys.[AppTitle.Load]"),
+			Title = await _dbContext.LoadAsync<AppTitleModel>(CatalogDataSource, "a2sys.[AppTitle.Load]"),
 			Theme = _appTheme.MakeTheme(),
 			RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken
 		};
@@ -344,7 +350,7 @@ public class AccountController : Controller
         var m = new InviteViewModel()
 		{
 			Login = user,
-            Title = await _dbContext.LoadAsync<AppTitleModel>(_host.CatalogDataSource, "a2sys.[AppTitle.Load]"),
+            Title = await _dbContext.LoadAsync<AppTitleModel>(CatalogDataSource, "a2sys.[AppTitle.Load]"),
             Theme = _appTheme.MakeTheme(),
 			Token = token,
             RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken
@@ -377,7 +383,8 @@ public class AccountController : Controller
             if (!resetPasswordResult.Succeeded)
                 return new JsonResult(JsonResponse.Error(String.Join(", ", resetPasswordResult.Errors.Select(x => x.Code))));
 
-            await _appTenantManager.RegisterUserComplete(user.Id);
+			if (IsMultiTenant)
+				await _dbContext.ExecuteAsync<AppUser<Int64>>(user.Segment, "a2security.[User.InviteComplete]", user);
 
             user.PersonName = model.PersonName;
             user.PhoneNumber = model.Phone;
@@ -469,7 +476,7 @@ public class AccountController : Controller
 	{
 		var m = new SimpleIdentityViewModel()
 		{
-			Title = await _dbContext.LoadAsync<AppTitleModel>(_host.CatalogDataSource, "a2sys.[AppTitle.Load]"),
+			Title = await _dbContext.LoadAsync<AppTitleModel>(CatalogDataSource, "a2sys.[AppTitle.Load]"),
 			Theme = _appTheme.MakeTheme()
 		};
 		return View(m);
@@ -485,7 +492,7 @@ public class AccountController : Controller
 		{
 			Email = email,
 			Token = Token,
-			Title = await _dbContext.LoadAsync<AppTitleModel>(_host.CatalogDataSource, "a2sys.[AppTitle.Load]"),
+			Title = await _dbContext.LoadAsync<AppTitleModel>(CatalogDataSource, "a2sys.[AppTitle.Load]"),
 			Theme = _appTheme.MakeTheme(),
 			RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken
 		};

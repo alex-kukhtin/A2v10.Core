@@ -4,14 +4,15 @@ using System;
 using System.Dynamic;
 using System.Linq;
 using System.Net;
-using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 
-using A2v10.Infrastructure;
-using A2v10.Web.Identity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+
+using A2v10.Infrastructure;
+using A2v10.Web.Identity;
 
 namespace A2v10.Identity.UI;
 
@@ -21,12 +22,14 @@ public class InviteUserHandler : IClrInvokeTarget
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IMailService _mailService;
     private readonly ILocalizer _localizer;
+    private readonly AppUserStoreOptions<Int64> _userStoreOptions;
     public InviteUserHandler(IServiceProvider serviceProvider)
     {
         _userManager = serviceProvider.GetRequiredService<UserManager<AppUser<Int64>>>();
         _httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();   
         _mailService = serviceProvider.GetRequiredService<IMailService>();
         _localizer = serviceProvider.GetRequiredService<ILocalizer>();
+        _userStoreOptions = serviceProvider.GetRequiredService<IOptions<AppUserStoreOptions<Int64>>>().Value;
     }
 
     public async Task<object> InvokeAsync(ExpandoObject args)
@@ -38,6 +41,10 @@ public class InviteUserHandler : IClrInvokeTarget
             UserName = userName,
             Email = userName    
         };
+
+        if (_userStoreOptions.MultiTenant ?? false)
+            user.Tenant = args.Get<Int32>("TenantId");
+
         var identityResult = await _userManager.CreateAsync(user);
         if (!identityResult.Succeeded)
             return Error(String.Join(",", identityResult.Errors.Select(e => e.Code)));

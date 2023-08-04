@@ -1,15 +1,12 @@
 2023-08-04
-Web.Assets
-App.Assets
-Platform.Web
-Identity.UI
-Platform
+==========
 
 
-*A2v10.Platform (8070)
+
+*A2v10.Platform (8132)
 	A2v10.Identity.Core (8070)
-	A2v10.Platform.Web (8070)
-		A2v10.Identity.Core (8070)
+	A2v10.Platform.Web (8131)
+		A2v10.Identity.Core (8124)
 		A2v10.Infrastructure (8070)
 	A2v10.ReportEngine.Stimulsoft (8070)
 		A2v10.Infrastructure (8070)
@@ -24,14 +21,15 @@ Platform
 		A2v10.System.Xaml (8007)
 		A2v10.Infrastructure (8070)
 	A2v10.ViewEngine.Html (8070)
-	A2v10.Identity.UI (8070)
-		A2v10.Identity.Core (8076)
+	A2v10.Identity.UI (8132)
+		A2v10.Identity.Core (8124)
 		A2v10.Infrastructure (8070)
-A2v10.Web.Assets (8070)
+A2v10.Web.Assets (8131)
+A2v10.App.Assets (8132)
 
 A2v10.Identity.ApiKey (8085)
 A2v10.Identity.Jwt    (8085)
-	A2v10.Identity.Core (8085)
+	A2v10.Identity.Core (8124)
 
 A2v10.CodeGen.Support (8070)
 
