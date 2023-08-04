@@ -237,8 +237,8 @@ go
 /*
 Copyright © 2008-2023 Oleksandr Kukhtin
 
-Last updated : 26 jul 2023
-module version : 8125
+Last updated : 04 aug 2023
+module version : 8131
 */
 -- SECURITY
 ------------------------------------------------
@@ -308,6 +308,19 @@ begin
 	set transaction isolation level read committed;
 
 	update a2security.ViewUsers set AccessFailedCount = @AccessFailedCount
+	where Id=@Id;
+end
+go
+------------------------------------------------
+create or alter procedure a2security.[User.SetEMailConfirmed]
+@Id bigint,
+@Confirmed bit
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+
+	update a2security.ViewUsers set EmailConfirmed = @Confirmed
 	where Id=@Id;
 end
 go
@@ -490,5 +503,25 @@ as
 begin
 	set nocount on;
 	set transaction isolation level read uncommitted;
+end
+go
+------------------------------------------------
+create or alter procedure a2security.[User.UpdateParts]
+@Id bigint,
+@PhoneNumber nvarchar(255) = null,
+@PersonName nvarchar(255) = null,
+@EmailConfirmed bit = null,
+@FirstName nvarchar(255) = null,
+@LastName nvarchar(255) = null
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+
+	update a2security.Users set 
+		PhoneNumber = isnull(@PhoneNumber, PhoneNumber),
+		PersonName = isnull(@PersonName, PersonName),
+		EmailConfirmed = isnull(@EmailConfirmed, EmailConfirmed)
+	where Id = @Id;
 end
 go

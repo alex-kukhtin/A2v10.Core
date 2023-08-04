@@ -17,12 +17,14 @@ public class AppTenantManager : IAppTenantManager
 	private readonly IDbContext _dbContext;
 	private readonly String _dbSchema;
 	private readonly String? _dataSource;
-	private readonly ICurrentUser _currentUser;	
+	private readonly ICurrentUser _currentUser;
+	private readonly Boolean _multiTenant;
 	public AppTenantManager(IDbContext dbContext, IOptions<AppUserStoreOptions<Int64>> userStoreOptions,
 		ICurrentUser currentUser)
 	{
 		_dbContext = dbContext;
 		var options = userStoreOptions.Value;
+		_multiTenant = options.MultiTenant ?? false;
 		_dbSchema = options.Schema ?? "a2security";
 		_dataSource = options.DataSource;
 		_currentUser = currentUser;	
@@ -34,6 +36,7 @@ public class AppTenantManager : IAppTenantManager
 				new ExpandoObject() { { "Id", userId } })
 			 ?? throw new InvalidOperationException("User not found");
 		_currentUser.SetInitialTenantId((Int32) (appUser.Tenant ?? 1));
-		await _dbContext.ExecuteAsync<AppUser<Int64>>(appUser.Segment, $"[{_dbSchema}].[User.CreateTenant]", appUser);
+		if (_multiTenant)
+			await _dbContext.ExecuteAsync<AppUser<Int64>>(appUser.Segment, $"[{_dbSchema}].[User.CreateTenant]", appUser);
 	}
 }

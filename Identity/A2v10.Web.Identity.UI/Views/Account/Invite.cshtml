@@ -1,0 +1,72 @@
+﻿
+@model InviteViewModel
+@inject ILocalizer _loc
+
+<div class="center-page">
+	<div class="initial-form">
+		<h3 class="a2-header text-center">@_loc["RegisterPrompt"]</h3>
+		<hr />
+		<div v-if="serverError" class="validation-summary" style="margin-top:10px">
+			<span class="error" v-text="serverError"></span>
+		</div>
+		<div novalidate=novalidate>
+			<div class="control-group disabled">
+				<label for="login" style="grid-row:1; grid-column:1" class="a2-label">@_loc["Email"]</label>
+				<div class="input-group">
+					<input v-focus class="control" id="login" name="email" type="text" disabled
+						v-model="email" spellcheck="false" />
+				</div>
+			</div>
+			<div class="control-group" v-bind:class="{invalid: invalidName}">
+				<label for="name" class="a2-label required">@_loc["UserName"]</label>
+				<div class="input-group">
+					<input v-focus class="control" tabindex="1" type="text" name="name" v-model="name" autocomplete="off" maxlength="128" />
+					<div class="validator">
+						<span class="error">@_loc["EnterName"]</span>
+					</div>
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="a2-label">@_loc["Phone"]</label>
+				<div class="input-group">
+					<input v-focus class="control" type="text" name="phone" v-model="maskedPhone"
+						   v-on:change="onPhoneChange($event.target.value)"
+						   tabindex="3" autocomplete="tel" ref="phoneInput" placeholder="+38 (000) 000-00-00" />
+					<div class="validator">
+						<span class="error">@_loc["EnterPhone"]</span>
+					</div>
+				</div>
+			</div>
+			<div class="control-group" v-bind:class="{invalid: invalidPassword}">
+				<label for="password" style="grid-row:2; grid-column:1" class="a2-label required">@_loc["Password"]</label>
+				<div class="input-group">
+					<input class="control" v-focus type="password" name="password" 
+						v-model="password" autocomplete="current-password" tabindex="5" ref="pwd" />
+					<div class="validator">
+						<span class="error" v-text="passwordError"></span>
+					</div>
+				</div>
+			</div>
+			<div class="control-group" v-bind:class="{invalid: invalidConfirm}">
+				<label class="a2-label required">@_loc["Confirm"]</label>
+				<div class="input-group">
+					<input class="control" v-focus type="password" v-model="confirm" autocomplete="off"
+						   tabindex="6" title="@_loc["PasswordTip"]" />
+					<div class="validator">
+						<span class="error">@_loc["MatchError"]</span>
+					</div>
+				</div>
+			</div>
+
+			<button v-on:click.stop.prevent="submit" class="btn btn-default" ref="submit" tabindex="7">@_loc["Register"]</button>
+			<a class="a2-hyperlink" href="/account/login" tabindex="8">@Html.Raw(_loc["Login"])</a>
+		</div>
+	</div>
+</div>
+
+@section Scripts
+{
+<script type="text/javascript">
+	@Html.Partial("~/Views/Account/InviteScript.cshtml")
+</script>
+}

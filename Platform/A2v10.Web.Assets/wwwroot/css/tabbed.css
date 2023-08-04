@@ -2313,6 +2313,13 @@ pre.a2-code {
 .data-grid .control-group {
   margin: 0;
 }
+.control-group.no-wrap .input-group.static > span.static-input {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline;
+  line-height: inherit;
+  white-space: nowrap;
+}
 .hlink-dd-wrapper + .hlink-dd-wrapper {
   margin-left: 0.4rem;
 }
@@ -3099,6 +3106,9 @@ table.data-grid > thead > tr > th {
 table.data-grid > thead > tr > th .h-holder {
   position: relative;
   padding: 0.5rem;
+}
+table.data-grid > thead > tr > th .h-holder > span {
+  word-break: unset;
 }
 table.data-grid > thead > tr > th.sort {
   cursor: pointer;

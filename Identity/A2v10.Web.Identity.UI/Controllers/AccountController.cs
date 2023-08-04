@@ -329,6 +329,74 @@ public class AccountController : Controller
         }
     }
 
+    [HttpGet]
+    public async Task<IActionResult> Invite(String token, String user)
+    {
+        RemoveNonAntiforgeryCookies();
+		var appuser = await _userManager.FindByNameAsync(user);
+		if (appuser == null || appuser.IsEmpty)
+			return NotFound();
+		if (token == null)
+            return NotFound();
+        var verified = await _userManager.VerifyUserTokenAsync(appuser, _userManager.Options.Tokens.EmailConfirmationTokenProvider, UserManager<AppUser<Int64>>.ConfirmEmailTokenPurpose, token);
+		if (!verified)
+            return NotFound();
+        var m = new InviteViewModel()
+		{
+			Login = user,
+            Title = await _dbContext.LoadAsync<AppTitleModel>(_host.CatalogDataSource, "a2sys.[AppTitle.Load]"),
+            Theme = _appTheme.MakeTheme(),
+			Token = token,
+            RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken
+        };
+        return View(m);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Invite([FromForm] InviteViewModel model)
+    {
+        try
+        {
+            var isValid = await _antiforgery.IsRequestValidAsync(HttpContext);
+            if (!isValid)
+                return new JsonResult(JsonResponse.Error("AntiForgery"));
+
+            if (model.Password == null || model.Login == null || model.Token == null)
+                return new JsonResult(JsonResponse.Error("Failed"));
+
+            var user = await _userManager.FindByNameAsync(model.Login);
+			if (user == null || user.IsEmpty)
+                return new JsonResult(JsonResponse.Error("Failed"));
+
+            var confirmResult = await _userManager.ConfirmEmailAsync(user, model.Token);
+            if (!confirmResult.Succeeded)
+                return new JsonResult(JsonResponse.Error(String.Join(", ", confirmResult.Errors.Select(x => x.Code))));
+
+            var changePasswordToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var resetPasswordResult = await _userManager.ResetPasswordAsync(user, changePasswordToken, model.Password);
+            if (!resetPasswordResult.Succeeded)
+                return new JsonResult(JsonResponse.Error(String.Join(", ", resetPasswordResult.Errors.Select(x => x.Code))));
+
+            await _appTenantManager.RegisterUserComplete(user.Id);
+
+            user.PersonName = model.PersonName;
+            user.PhoneNumber = model.Phone;
+            user.Flags = UpdateFlags.PersonName | UpdateFlags.PhoneNumber;
+
+            var updateResult = await _userManager.UpdateAsync(user);
+            if (!updateResult.Succeeded)
+                return new JsonResult(JsonResponse.Error(String.Join(", ", updateResult.Errors.Select(x => x.Code))));
+
+            await _signInManager.SignInAsync(user, isPersistent: true);
+            RemoveAntiforgeryCookie();
+			return LocalRedirect("/");
+        }
+        catch (Exception tex)
+        {
+            return new JsonResult(JsonResponse.Error(tex));
+        }
+    }
+
     private async Task DoLogout()
 	{
 		await _signInManager.SignOutAsync();

@@ -21,6 +21,15 @@ public record RegisterViewModel : SimpleIdentityViewModel
 	public String? Phone { get; set; }
 }
 
+public record InviteViewModel : SimpleIdentityViewModel
+{
+    public String? Login { get; set; }
+    public String? PersonName { get; set; }
+    public String? Password { get; set; }
+    public String? Phone { get; set; }
+	public String? Token { get; set;}
+}
+
 public record ConfirmCodeViewModel : SimpleIdentityViewModel
 {
 	public String Code { get; init; } = String.Empty;
