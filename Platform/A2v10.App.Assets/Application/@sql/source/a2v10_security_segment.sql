@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2008-2023 Oleksandr Kukhtin
 
-Last updated : 04 jul 2023
-module version : 8110
+Last updated : 04 aug 2023
+module version : 8133
 */
 
 -- SECURITY SEGMENT
@@ -72,5 +72,39 @@ begin
 		Locale, Memo, SecurityStamp, SecurityStamp2, PasswordHash, PasswordHash2)
 	values (@Id, @Tenant, @UserName, @PersonName, @Email, 1, @PhoneNumber, 
 		@Locale, @Memo, N'', N'', N'', N'');
+end
+go
+
+------------------------------------------------
+create or alter procedure a2security.[User.SetEMailConfirmed]
+@Id bigint,
+@Confirmed bit
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+
+	update a2security.ViewUsers set EmailConfirmed = @Confirmed
+	where Id=@Id;
+end
+go
+------------------------------------------------
+create or alter procedure a2security.[User.UpdateParts]
+@Id bigint,
+@PhoneNumber nvarchar(255) = null,
+@PersonName nvarchar(255) = null,
+@EmailConfirmed bit = null,
+@FirstName nvarchar(255) = null,
+@LastName nvarchar(255) = null
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+
+	update a2security.Users set 
+		PhoneNumber = isnull(@PhoneNumber, PhoneNumber),
+		PersonName = isnull(@PersonName, PersonName),
+		EmailConfirmed = isnull(@EmailConfirmed, EmailConfirmed)
+	where Id = @Id;
 end
 go
