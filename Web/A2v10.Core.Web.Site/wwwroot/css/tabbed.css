@@ -1639,7 +1639,7 @@ header .include.nav-pane .partial-block .control-group,
   background-color: var(--neutral50);
 }
 .splitter.vertical .spl-handle {
-  border-left: 1px solid var(--neutralLight);
+  border-left: 1px solid var(--neutral300);
   grid-row: 1;
 }
 .splitter.vertical .spl-handle,
@@ -1708,7 +1708,7 @@ header .include.nav-pane .partial-block .control-group,
   transform: rotate(90deg);
 }
 .taskpad.position-right {
-  border-left: 1px solid #ddd;
+  border-left: 1px solid var(--neutral300);
 }
 .taskpad.position-right .taskpad-collapse-handle {
   left: -12px;
@@ -1720,7 +1720,7 @@ header .include.nav-pane .partial-block .control-group,
   content: "\e9a3";
 }
 .taskpad.position-left {
-  border-right: 1px solid #ddd;
+  border-right: 1px solid var(--neutral300);
 }
 .taskpad.position-left .taskpad-collapse-handle {
   right: -12px;
@@ -3481,7 +3481,7 @@ table.data-grid > tbody > tr.bold > td {
   width: 2px;
   border-right: 1px solid var(--neutral50);
   align-self: stretch;
-  background-color: var(--neutralBkDarker);
+  background-color: var(--neutral300);
   margin: 0.25rem;
 }
 .toolbar > .control-group {
@@ -4375,6 +4375,7 @@ ul.news-list > li {
   float: right;
   width: 1.7rem;
   height: 1.7rem;
+  border-radius: 4px;
 }
 .modal-header .btnclose:not([disabled]):hover,
 .modal-header .btnclose:not([disabled]):active,
@@ -4392,6 +4393,8 @@ ul.news-list > li {
   height: 1.7rem;
   text-align: center;
   padding-top: 2px;
+  border-radius: 4px;
+  margin: 0 2px;
 }
 .modal-header .btn-help .ico {
   font-size: 120%;
@@ -4524,6 +4527,22 @@ ul.news-list > li {
   transform: scale(1, 1);
   box-shadow: 0px 11px 15px -7px rgba(0, 0, 0, 0.2), 0px 24px 38px 3px rgba(0, 0, 0, 0.14), 0px 9px 46px 8px rgba(0, 0, 0, 0.12);
   opacity: 1;
+}
+.modal-header-menu {
+  float: right;
+  cursor: pointer;
+}
+.modal-header-menu .modal-menu-link {
+  color: var(--text);
+  display: inline-block;
+  width: 1.7rem;
+  height: 1.7rem;
+  margin: 0 2px;
+  text-align: center;
+  border-radius: 4px;
+}
+.modal-header-menu .modal-menu-link:hover {
+  background-color: rgba(128, 128, 128, 0.15);
 }
 .wizard-panel {
   display: grid;
@@ -5145,7 +5164,7 @@ label.like-checkbox.indeterminate > span::before {
   padding: 1rem 0 0 0;
   display: flex;
   align-items: center;
-  border-top: 1px solid var(--neutralLight);
+  border-top: 1px solid var(--neutral300);
 }
 .a2-pager button {
   padding: 3px;
@@ -5783,7 +5802,7 @@ TODO:
   margin-bottom: 0;
 }
 .grid .grid-divider {
-  background-color: var(--neutral200);
+  background-color: var(--neutral300);
   align-self: stretch;
   justify-self: center;
   width: 1px;
@@ -6928,8 +6947,17 @@ table > colgroup col.blue {
   box-shadow: 3px 3px 10px 0 rgba(174, 174, 174, 0.5), 0 5px 40px 0 rgba(0, 0, 0, 0.15);
   overflow: auto;
 }
+.mdi-navbar .mdi-menu::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+  background-color: var(--neutral700);
+}
+.mdi-navbar .mdi-menu::-webkit-scrollbar-thumb {
+  background-color: var(--neutral400);
+  border-radius: 8px;
+}
 .mdi-navbar .mdi-menu .menu-title {
-  font-size: 20px;
+  font-size: 1.5rem;
   padding: 0 0 0.5rem 0;
   margin: 0 0 1rem 0;
   color: var(--neutral300);
@@ -6939,20 +6967,21 @@ table > colgroup col.blue {
   padding: 0;
   margin: 0;
 }
+.mdi-navbar .mdi-menu li {
+  line-height: 2.25rem;
+}
 .mdi-navbar .mdi-menu li.level-0 {
   list-style: none;
 }
 .mdi-navbar .mdi-menu li.level-0 .folder {
   font-size: 1.2rem;
   color: var(--neutral300);
-  line-height: 2.5rem;
 }
 .mdi-navbar .mdi-menu li.level-1 {
   list-style: none;
   color: white;
   padding: 0 10px 0 24px;
   font-size: 1rem;
-  line-height: 2.5rem;
   cursor: pointer;
   display: flex;
   justify-content: space-between;

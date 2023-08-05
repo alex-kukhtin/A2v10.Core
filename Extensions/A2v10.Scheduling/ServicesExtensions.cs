@@ -34,7 +34,6 @@ public static class ServicesExtensions
 
 		services.AddQuartz(q =>
 		{
-			q.UseMicrosoftDependencyInjectionJobFactory();
 			foreach (var job in sc.Jobs)
 			{
                 var handlerType = factory.FindHandler(job.Handler);

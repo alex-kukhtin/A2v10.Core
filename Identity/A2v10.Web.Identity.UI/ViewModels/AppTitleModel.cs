@@ -2,7 +2,7 @@
 
 using System;
 
-namespace A2v10.Web.Identity.UI
+namespace A2v10.Identity.UI
 {
 	public class AppTitleModel
 	{

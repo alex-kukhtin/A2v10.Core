@@ -49,8 +49,9 @@ public class AppUser<T> where T : struct
 	// for .net framework compatibility
 	public String? PasswordHash2 { get; set; }
 	public String? SecurityStamp2 { get; set; }
+    public String? Memo { get; set; }
 
-	public Boolean IsEmpty => EqualityComparer<T>.Default.Equals(Id, default);
+    public Boolean IsEmpty => EqualityComparer<T>.Default.Equals(Id, default);
 	public UpdateFlags Flags { get; set; }
 
 }

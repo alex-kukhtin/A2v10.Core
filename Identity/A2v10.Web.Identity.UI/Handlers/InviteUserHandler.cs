@@ -13,6 +13,7 @@ using Microsoft.Extensions.Options;
 
 using A2v10.Infrastructure;
 using A2v10.Web.Identity;
+using A2v10.Data.Interfaces;
 
 namespace A2v10.Identity.UI;
 
@@ -23,6 +24,7 @@ public class InviteUserHandler : IClrInvokeTarget
     private readonly IMailService _mailService;
     private readonly ILocalizer _localizer;
     private readonly AppUserStoreOptions<Int64> _userStoreOptions;
+    private readonly IDbContext _dbContext;
     public InviteUserHandler(IServiceProvider serviceProvider)
     {
         _userManager = serviceProvider.GetRequiredService<UserManager<AppUser<Int64>>>();
@@ -30,7 +32,10 @@ public class InviteUserHandler : IClrInvokeTarget
         _mailService = serviceProvider.GetRequiredService<IMailService>();
         _localizer = serviceProvider.GetRequiredService<ILocalizer>();
         _userStoreOptions = serviceProvider.GetRequiredService<IOptions<AppUserStoreOptions<Int64>>>().Value;
+        _dbContext = serviceProvider.GetRequiredService<IDbContext>();  
     }
+
+    Boolean IsMultiTenant => _userStoreOptions.MultiTenant ?? false;
 
     public async Task<object> InvokeAsync(ExpandoObject args)
     {
@@ -42,12 +47,20 @@ public class InviteUserHandler : IClrInvokeTarget
             Email = userName    
         };
 
-        if (_userStoreOptions.MultiTenant ?? false)
+        if (IsMultiTenant)
             user.Tenant = args.Get<Int32>("TenantId");
 
         var identityResult = await _userManager.CreateAsync(user);
         if (!identityResult.Succeeded)
             return Error(String.Join(",", identityResult.Errors.Select(e => e.Code)));
+
+        if (IsMultiTenant) {
+            // create tenant user
+            var createdUser = await _userManager.FindByIdAsync(user.Id.ToString())
+                ?? throw new InvalidOperationException("Create user failed");
+            await _dbContext.ExecuteAsync<AppUser<Int64>>(user.Segment, "a2security.[User.Invite]", createdUser);
+        }
+
         var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 
         var verified = await _userManager.VerifyUserTokenAsync(user, _userManager.Options.Tokens.EmailConfirmationTokenProvider, UserManager<AppUser<Int64>>.ConfirmEmailTokenPurpose, token);
@@ -79,7 +92,7 @@ public class InviteUserHandler : IClrInvokeTarget
         var rq = ctx.Request;
         return $"{rq.Scheme}://{rq.Host}/account/invite?user={user}&token={WebUtility.UrlEncode(token)}";
     }
-    ExpandoObject Error(String error)
+    static ExpandoObject Error(String error)
     {
         return new ExpandoObject()
         {

@@ -10,12 +10,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.Options;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
-using Microsoft.Extensions.Options;
+using A2v10.Web.Identity;
 
-namespace A2v10.Web.Identity.UI;
+namespace A2v10.Identity.UI;
 
 [Route("account/[action]")]
 [ApiExplorerSettings(IgnoreApi = true)]
@@ -382,9 +383,6 @@ public class AccountController : Controller
             var resetPasswordResult = await _userManager.ResetPasswordAsync(user, changePasswordToken, model.Password);
             if (!resetPasswordResult.Succeeded)
                 return new JsonResult(JsonResponse.Error(String.Join(", ", resetPasswordResult.Errors.Select(x => x.Code))));
-
-			if (IsMultiTenant)
-				await _dbContext.ExecuteAsync<AppUser<Int64>>(user.Segment, "a2security.[User.InviteComplete]", user);
 
             user.PersonName = model.PersonName;
             user.PhoneNumber = model.Phone;

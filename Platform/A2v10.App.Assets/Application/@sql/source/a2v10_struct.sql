@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2008-2023 Oleksandr Kukhtin
 
-Last updated : 26 jul 2023
-module version : 8128
+Last updated : 05 aug 2023
+module version : 8134
 */
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.SCHEMATA where SCHEMA_NAME=N'a2sys')
@@ -93,6 +93,7 @@ create table a2security.Users
 	RegisterHost nvarchar(255) null,
 	Segment nvarchar(32) null,
 	SetPassword bit,
+	IsApiUser bit constraint DF_UsersIsApiUser default(0),
 	UtcDateCreated datetime not null constraint DF_Users_UtcDateCreated default(getutcdate()),
 	constraint PK_Users primary key (Tenant, Id)
 );
@@ -195,3 +196,9 @@ create table a2ui.Menu
 	constraint FK_Menu_Tenant_Module_TenantModules foreign key (Tenant, Module) references a2ui.TenantModules(Tenant, Module)
 );
 go
+-- migrations
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = N'a2security' and TABLE_NAME = N'Users' and COLUMN_NAME = N'IsApiUser')
+	alter table a2security.Users add IsApiUser bit constraint DF_UsersIsApiUser default(0) with values;
+go
+

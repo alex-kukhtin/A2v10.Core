@@ -6,7 +6,7 @@
 	  <ImplicitUsings>disable</ImplicitUsings>
 	  <AssemblyName>A2v10.Services</AssemblyName>
 	  <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-	  <Version>10.1.8128</Version>
+	  <Version>10.1.8134</Version>
 	  <Product>A2v10</Product>
 	  <PackageId>A2v10.Services</PackageId>
 	  <Authors>Oleksandr Kukhtin</Authors>
@@ -15,6 +15,8 @@
 	  <Copyright>Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.</Copyright>
 	  <RepositoryType>github</RepositoryType>
 	  <PackageTags>A2v10</PackageTags>
+	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
+	  <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -42,6 +44,10 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="README.md" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
 </Project>

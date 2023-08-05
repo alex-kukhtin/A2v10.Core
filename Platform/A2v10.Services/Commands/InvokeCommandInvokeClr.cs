@@ -45,6 +45,12 @@ public class InvokeCommandInvokeClr : IModelInvokeCommand
 					blobResult.Stream ?? Array.Empty<Byte>(), 
 					blobResult.Mime ?? MimeTypes.Application.Json
 				);
+			else if (invokeResult != null)
+			{
+                var body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(invokeResult,
+                    JsonHelpers.DataSerializerSettings));
+                return new InvokeResult(body, MimeTypes.Application.Json);
+            }
 
             return new InvokeResult(Encoding.UTF8.GetBytes("{}"), MimeTypes.Application.Json);
 		}

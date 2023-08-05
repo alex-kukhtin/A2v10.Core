@@ -3,7 +3,7 @@
 
 using Microsoft.AspNetCore.Http;
 
-using A2v10.Web.Identity.UI;
+using A2v10.Identity.UI;
 
 namespace Microsoft.Extensions.DependencyInjection;
 

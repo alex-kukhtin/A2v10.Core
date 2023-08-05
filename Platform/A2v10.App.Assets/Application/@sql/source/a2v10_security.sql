@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2008-2023 Oleksandr Kukhtin
 
-Last updated : 04 aug 2023
-module version : 8131
+Last updated : 05 aug 2023
+module version : 8134
 */
 -- SECURITY
 ------------------------------------------------
@@ -287,5 +287,66 @@ begin
 		PersonName = isnull(@PersonName, PersonName),
 		EmailConfirmed = isnull(@EmailConfirmed, EmailConfirmed)
 	where Id = @Id;
+end
+go
+------------------------------------------------
+create or alter procedure a2security.[User.CreateApiUser]
+@UserId bigint,
+@TenantId int = 1,
+@ApiKey nvarchar(255),
+@Name nvarchar(255) = null,
+@Memo nvarchar(255) = null
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+	set xact_abort on;
+
+	-- TODO: isTenantAdmin
+
+	declare @users table(Id bigint);
+	declare @newid bigint;
+
+	set @TenantId = isnull(@TenantId, 1);
+
+	begin tran;
+		insert into a2security.Users(Tenant, IsApiUser, UserName, Memo, Segment, Locale, SecurityStamp, SecurityStamp2)
+		output inserted.Id into @users(Id)
+		select @TenantId, 1, @Name, @Memo, u.Segment, u.Locale, N'', N''
+		from a2security.Users u where Tenant = @TenantId and Id = @UserId;
+
+		select top(1) @newid = Id from @users;
+
+		insert into a2security.ApiUserLogins(Tenant, [User], Mode, ApiKey) values
+			(@TenantId, @newid, N'ApiKey', @ApiKey);
+	commit tran;
+
+	select Id, UserName, Memo, Segment, Locale from a2security.ViewUsers where Id = @newid and Tenant = @TenantId;
+end
+go
+
+------------------------------------------------
+create or alter procedure a2security.[User.DeleteApiUser]
+@UserId bigint,
+@TenantId int = 1,
+@Id bigint
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+	set xact_abort on;
+
+	-- TODO: isTenantAdmin
+
+	set @TenantId = isnull(@TenantId, 1);
+
+	begin tran
+	update a2security.Users set Void = 1, UserName = cast(newid() as nvarchar(255)) + N'_' + UserName 
+		where Tenant = @TenantId and Id = @Id;
+	delete from a2security.ApiUserLogins where Tenant = @TenantId and [User] = @Id;
+	commit tran;
+
+	-- We can't use ViewUsers (Void = 0)
+	select Id, Segment, UserName from a2security.Users where Id = @Id and Tenant = @TenantId;
 end
 go

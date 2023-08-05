@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2008-2023 Oleksandr Kukhtin
 
-Last updated : 04 aug 2023
-module version : 8133
+Last updated : 05 aug 2023
+module version : 8134
 */
 
 -- SECURITY SEGMENT
@@ -53,7 +53,7 @@ end
 go
 
 ------------------------------------------------
-create or alter procedure a2security.[User.InviteComplete]
+create or alter procedure a2security.[User.Invite]
 @Id bigint,
 @Tenant int,
 @UserName nvarchar(255),
@@ -89,6 +89,18 @@ begin
 end
 go
 ------------------------------------------------
+create or alter procedure a2security.[User.SetPhoneNumberConfirmed]
+@Id bigint,
+@PhoneNumber nvarchar(255),
+@Confirmed bit
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+	update a2security.ViewUsers set PhoneNumber = @PhoneNumber, PhoneNumberConfirmed = @Confirmed where Id = @Id;
+end
+go
+------------------------------------------------
 create or alter procedure a2security.[User.UpdateParts]
 @Id bigint,
 @PhoneNumber nvarchar(255) = null,
@@ -108,3 +120,39 @@ begin
 	where Id = @Id;
 end
 go
+
+------------------------------------------------
+create or alter procedure a2security.[User.Tenant.CreateApiUser]
+@TenantId int = 1,
+@UserName nvarchar(255) = null,
+@Memo nvarchar(255) = null,
+@Locale nvarchar(255) = null
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+
+
+	set @TenantId = isnull(@TenantId, 1);
+	set @Locale = isnull(@Locale, N'');
+
+	insert into a2security.Users(Tenant, IsApiUser, UserName, Memo, Segment, Locale, SecurityStamp, SecurityStamp2)
+	select @TenantId, 1, @UserName, @Memo, N'', @Locale, N'', N'';
+
+end
+go
+------------------------------------------------
+create or alter procedure a2security.[User.Tenant.DeleteApiUser]
+@TenantId int = 1,
+@Id bigint,
+@UserName nvarchar(255)
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+
+	update a2security.Users set Void = 1, UserName = @UserName
+		where Tenant = @TenantId and Id = @Id;
+end
+go
+

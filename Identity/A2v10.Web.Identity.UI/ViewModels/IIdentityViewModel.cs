@@ -1,8 +1,8 @@
-﻿// Copyright © 2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 
-namespace A2v10.Web.Identity.UI;
+namespace A2v10.Identity.UI;
 public interface IIdentityViewModel
 {
 	String? RequestToken { get; }
