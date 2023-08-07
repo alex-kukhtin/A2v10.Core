@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Dynamic;
@@ -33,13 +33,8 @@ public class WebApplicationHost : IApplicationHost
 
 	public Boolean IsDebugConfiguration => _appOptions.Environment.IsDebug;
 
-	public Boolean IsUsePeriodAndCompanies => _appSettings.GetValue<Boolean>("custom");
-	public Boolean IsRegistrationEnabled => _appSettings.GetValue<Boolean>("registration");
-	public Boolean IsDTCEnabled => _appSettings.GetValue<Boolean>("enableDTC");
-
 	public Boolean Mobile { get; private set; }
 
-	public String? CatalogDataSource => IsMultiTenant ? "Catalog" : null;
 	public String? TenantDataSource => String.IsNullOrEmpty(_currentUser.Identity.Segment) ? null : _currentUser.Identity.Segment;
 
 	public String? GetAppSettings(String? source)

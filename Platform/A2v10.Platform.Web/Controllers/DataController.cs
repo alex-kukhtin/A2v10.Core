@@ -123,7 +123,7 @@ public class DataController : BaseController
 			var baseUrl = eo.Get<String>("baseUrl") 
 				?? throw new InvalidReqestExecption(nameof(DbRemove));
 			Object id = eo.GetNotNull<Object>("id");
-			String propName = eo.GetNotNull<String>("prop");
+			String? propName = eo.Get<String>("prop");
 
 			await _dataService.DbRemoveAsync(baseUrl, id,  propName, SetSqlQueryParams);
 

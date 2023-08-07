@@ -1,4 +1,4 @@
-﻿// Copyright © 2022-2023 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2022-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System.IO;
 using System.Threading.Tasks;
@@ -13,7 +13,7 @@ public class HtmlViewEngine : IViewEngine
 	private readonly ILocalizer _localizer;
 	private readonly IAppCodeProvider _appCodeProvider;
 
-    public HtmlViewEngine(IAppCodeProvider appCodeProvider, IProfiler profiler, IViewEngineProvider engineProvider, ILocalizer localizer)
+    public HtmlViewEngine(IAppCodeProvider appCodeProvider, IProfiler profiler, IViewEngineProvider _1/*engineProvider*/, ILocalizer localizer)
 	{
         _profiler = profiler;
         _localizer = localizer;

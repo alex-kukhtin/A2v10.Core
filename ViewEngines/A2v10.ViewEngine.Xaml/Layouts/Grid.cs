@@ -1,12 +1,14 @@
-﻿// Copyright © 2015-2023 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
-using A2v10.Infrastructure;
-using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
+
+using Microsoft.Extensions.DependencyInjection;
+
+using A2v10.Infrastructure;
 
 namespace A2v10.Xaml;
 

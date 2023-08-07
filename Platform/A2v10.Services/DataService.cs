@@ -159,7 +159,7 @@ public class DataService : IDataService
 		return JsonConvert.SerializeObject(model.Root, JsonHelpers.DataSerializerSettings);
 	}
 
-	public async Task DbRemoveAsync(String baseUrl, Object Id, String propertyName, Action<ExpandoObject> setParams)
+	public async Task DbRemoveAsync(String baseUrl, Object Id, String? propertyName, Action<ExpandoObject> setParams)
 	{
 		var platformBaseUrl = CreatePlatformUrl(baseUrl);
 		var view = await _modelReader.GetViewAsync(platformBaseUrl);

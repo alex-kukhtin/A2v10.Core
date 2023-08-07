@@ -1,5 +1,6 @@
 ﻿// Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.
 
+
 using System.IO;
 using System.Threading.Tasks;
 
@@ -12,7 +13,7 @@ public class XamlViewEngine : IViewEngine
 {
 	private readonly IRenderer _renderer;
 
-	public XamlViewEngine(IProfiler profiler, IXamlPartProvider xamlPartProvider, ILocalizer localizer, IViewEngineProvider engineProvider,
+	public XamlViewEngine(IProfiler profiler, IXamlPartProvider xamlPartProvider, ILocalizer localizer, IViewEngineProvider _1/*engineProvider*/,
 		IAppCodeProvider codeProvider)
 	{
 		_renderer = new XamlRenderer(profiler,

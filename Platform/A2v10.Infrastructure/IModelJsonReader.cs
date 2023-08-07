@@ -101,7 +101,7 @@ public interface IModelView : IModelBase
 
 	String ExpandProcedure();
 	String LoadLazyProcedure(String property);
-	String DeleteProcedure(String property);
+	String DeleteProcedure(String? property);
 
 	IModelView Resolve(IDataModel model);
 }

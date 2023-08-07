@@ -10,12 +10,9 @@ public interface IApplicationHost
 
 	Boolean IsDebugConfiguration { get; }
 	//Boolean IsProductionEnvironment { get; }
-	Boolean IsRegistrationEnabled { get; }
 	Boolean IsMultiTenant { get; }
 	Boolean IsMultiCompany { get; }
-	Boolean IsUsePeriodAndCompanies { get; }
 
-	String? CatalogDataSource { get; }
 	String? TenantDataSource { get; }
 
 	String? GetAppSettings(String? source);

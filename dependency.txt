@@ -1,15 +1,7 @@
-2023-08-05 (8134)
+2023-08-07 (8135)
 ==========
-A2v10.Identity.UI
-A2v10.AppAssets
-A2v10.Platform
-A2v10.Services
 A2v10.WebAssets
-A2v10.ViewEngine.Xaml
-A2v10.Platform.Web
-A2v10.Identity.Core
-A2v10.Identity.Api
-A2v10.Identity.Jwt
+A2v10.Infrastructure +
 
 
 *A2v10.Platform (8132)

@@ -238,7 +238,7 @@ public class ShellController : Controller
 		_currentUser.SetReadOnly(model.Eval<Boolean>("UserState.ReadOnly"));
 	}
 
-    void SetUserStateModules(IDataModel dm)
+    static void SetUserStateModules(IDataModel _1/*dm*/)
 	{
 	}
 

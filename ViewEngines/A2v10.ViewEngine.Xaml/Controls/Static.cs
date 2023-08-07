@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Xaml;
 
@@ -24,8 +24,10 @@ public class Static : ValuedControl, ITableControl
 			input.MergeAttribute(":text", MaxChars > 0 ? $"$maxChars({valBind.GetPathFormat(context)}, {MaxChars})" : valBind.GetPathFormat(context));
 			if (valBind.NegativeRed)
 				input.MergeAttribute(":class", $"$getNegativeRedClass({valBind.GetPath(context)})");
-		}
-		input.RenderStart(context);
+            if (MaxChars > 0)
+                input.MergeAttribute(":title", valBind.GetPathFormat(context));
+        }
+        input.RenderStart(context);
 		RenderAddOns(context);
 		input.RenderEnd(context);
 	}

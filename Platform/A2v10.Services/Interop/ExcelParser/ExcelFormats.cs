@@ -74,7 +74,9 @@ internal static class ExcelFormats
 	{
 		if (numberFormatId is null)
 			return null;
-		return DateFormatDictionary.ContainsKey(numberFormatId.Value) ? DateFormatDictionary[numberFormatId.Value] : null;
+		if (DateFormatDictionary.TryGetValue(numberFormatId.Value, out String? format))
+			return format;
+		return null;
 	}
 
 	public static Boolean IsNumberFormat(UInt32Value? numberFormatId)

@@ -179,7 +179,7 @@ public class ModelJsonView : ModelJsonViewBase, IModelView
 		return $"[{CurrentSchema}].[{cm}.{action}]";
 	}
 
-	public String DeleteProcedure(String propName)
+	public String DeleteProcedure(String? propName)
 	{
 		var cm = CurrentModel;
 		if (!String.IsNullOrEmpty(propName))

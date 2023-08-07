@@ -13,6 +13,10 @@ using Jint.Native;
 using A2v10.Data.Interfaces;
 
 namespace A2v10.Services.Javascript;
+
+#pragma warning disable IDE1006 // Naming Styles
+#pragma warning disable CA1822 // Mark members as static
+
 public class ScriptEnvironment
 {
 	private readonly IDbContext _dbContext;
@@ -36,13 +40,9 @@ public class ScriptEnvironment
 		_currentPath = path;
 	}
 
-#pragma warning disable IDE1006 // Naming Styles
 	public ScriptConfig config => _config;
-#pragma warning restore IDE1006 // Naming Styles
 
-#pragma warning disable IDE1006 // Naming Styles
 	public ExpandoObject loadModel(ExpandoObject prms)
-#pragma warning restore IDE1006 // Naming Styles
 	{
 		String? source = prms.Get<String>("source");
 		String command = prms.GetNotNull<String>("procedure");
@@ -51,9 +51,7 @@ public class ScriptEnvironment
 		return dm.Root;
 	}
 
-#pragma warning disable IDE1006 // Naming Styles
 	public ExpandoObject saveModel(ExpandoObject prms)
-#pragma warning restore IDE1006 // Naming Styles
 	{
 		String? source = prms.Get<String>("source");
 		String command = prms.GetNotNull<String>("procedure");
@@ -63,9 +61,7 @@ public class ScriptEnvironment
 		return dm.Root;
 	}
 
-#pragma warning disable IDE1006 // Naming Styles
 	public ExpandoObject? executeSql(ExpandoObject prms)
-#pragma warning restore IDE1006 // Naming Styles
 	{
 		String? source = prms.Get<String>("source");
 		String command = prms.GetNotNull<String>("procedure");
@@ -73,31 +69,23 @@ public class ScriptEnvironment
 		return _dbContext.ReadExpando(source, command, dmParams);
 	}
 
-#pragma warning disable IDE1006 // Naming Styles
 	public FetchResponse fetch(String url)
-#pragma warning restore IDE1006 // Naming Styles
 	{
 		return fetch(url, null);
 	}
 
-#pragma warning disable IDE1006 // Naming Styles
 	public FetchResponse fetch(String url, ExpandoObject? prms)
-#pragma warning restore IDE1006 // Naming Styles
 	{
 		return FetchCommand.Execute(_httpClientFactory, url, prms);
 	}
 
-#pragma warning disable IDE1006 // Naming Styles
 	public FetchResponse invokeCommand(String cmd, String baseUrl, ExpandoObject parameters)
-#pragma warning restore IDE1006 // Naming Styles
 	{
 		throw new NotImplementedException();
 	}
 
-#pragma warning disable IDE1006 // Naming Styles
-	public String generateApiKey()
-#pragma warning restore IDE1006 // Naming Styles
-	{
+    public String generateApiKey()
+    {
 		Int32 size = 48;
 		Byte[] data = RandomNumberGenerator.GetBytes(size);
 		String res = Convert.ToBase64String(data);
@@ -105,9 +93,7 @@ public class ScriptEnvironment
 		return res;
 	}
 
-#pragma warning disable IDE1006 // Naming Styles
 	public String toBase64(String source, int codePage, bool safe)
-#pragma warning restore IDE1006 // Naming Styles
 	{
 		var enc = Encoding.GetEncoding(codePage, new EncoderReplacementFallback(String.Empty), DecoderFallback.ReplacementFallback);
 		var bytes = enc.GetBytes(source);
@@ -117,9 +103,7 @@ public class ScriptEnvironment
 		return res;
 	}
 
-#pragma warning disable IDE1006 // Naming Styles
 	public JsValue require(String fileName, ExpandoObject prms, ExpandoObject args)
-#pragma warning restore IDE1006 // Naming Styles
 	{
 		var stream = _appCodeProvider.FileStreamRO(fileName) 
 			?? throw new InvalidOperationException($"File not found '{fileName}'");
@@ -140,4 +124,6 @@ return function(_this, prms, args) {{
 	}
 }
 
+#pragma warning restore CA1822 // Mark members as static
+#pragma warning restore IDE1006 // Naming Styles
 

@@ -1,15 +1,14 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
+using System.IO;
 
 using Newtonsoft.Json;
 
-using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
-using System.IO;
 
 namespace A2v10.Platform.Web;
 public static class HostHelpers
@@ -50,7 +49,7 @@ public static class HostHelpers
 		return "[]";
 	}
 
-	public static Task<String> CustomAppHead(this IAppCodeProvider provider)
+	public static Task<String> CustomAppHead(this IAppCodeProvider _1/*provider*/)
 	{
         /* TODO: From main module?
 		String head = provider.ReadTextFile("_layout", "_head.html");
@@ -59,7 +58,7 @@ public static class HostHelpers
         return Task.FromResult<String>(String.Empty);
 	}
 
-	public static Task<String> CustomAppScripts(this IAppCodeProvider provider)
+	public static Task<String> CustomAppScripts(this IAppCodeProvider _1/*provider*/)
 	{
         // TODO: From main module?
         /*
@@ -76,28 +75,6 @@ public static class HostHelpers
 	{
 		var manifestPath = provider.MapHostingPath("manifest.json");
 		return File.Exists(manifestPath) ? "<link rel=\"manifest\" href=\"/manifest.json\">" : null;
-	}
-
-	public static Task ProcessDbEvents(this IApplicationHost host, IDbContext dbContext)
-	{
-		// TODO:
-		throw new NotImplementedException(nameof(ProcessDbEvents));
-		//return ProcessDbEventsCommand.ProcessDbEvents(dbContext, host.CatalogDataSource, host.IsAdminMode);
-	}
-
-	public static ITypeChecker? CheckTypes(this IApplicationHost host, String path, String typesFile, IDataModel model)
-	{
-		// TODO:
-		if (!host.IsDebugConfiguration)
-			return null;
-		if (String.IsNullOrEmpty(typesFile))
-			return null;
-		return null;
-		/*
-		var tc = new TypeChecker(host.ApplicationReader, path);
-		tc.CreateChecker(typesFile, model);
-		return tc;
-		*/
 	}
 }
 
