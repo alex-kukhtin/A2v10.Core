@@ -44,11 +44,15 @@ public class ReportController : BaseController
 
 
 	[HttpGet]
-	public async Task<IActionResult> Show(String Id, String Base, String Rep, String format = "pdf")
+	public Task<IActionResult> Show(String Id, String Base, String Rep, String format = "pdf")
 	{
-		var res = await Render(Id, Base, Rep, format);
-		Response.ContentType = res.ContentType;
-		return res.ActionResult;
+		return TryCatch(async () =>
+		{
+
+			var res = await Render(Id, Base, Rep, format);
+			Response.ContentType = res.ContentType;
+			return res.ActionResult;
+		});
 	}
 
 	[HttpGet]

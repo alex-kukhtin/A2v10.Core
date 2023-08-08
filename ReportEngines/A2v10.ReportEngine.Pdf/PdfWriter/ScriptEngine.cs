@@ -1,4 +1,4 @@
-﻿// Copyright © 2022 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2022-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -34,7 +34,8 @@ internal class ScriptEngine
 				_engine.SetValue(item.Key, item.Value);
 
 		_engine.SetValue("spellMoney", SpellMoney);
-		_engine.SetValue("formatDate", FormatDate);
+        _engine.SetValue("spellMoneyEn", SpellMoneyEn);
+        _engine.SetValue("formatDate", FormatDate);
 	}
 
 	public IList<ExpandoObject> EvaluateCollection(String expression)
@@ -79,7 +80,15 @@ internal class ScriptEngine
 		return SpellString.SpellCurrency(d, _culture, currencyCode);
 	}
 
-	String FormatDate(Object value, String format)
+    String SpellMoneyEn(Object value, String currencyCode)
+    {
+        if (String.IsNullOrEmpty(currencyCode))
+            currencyCode = "980";
+        var d = Convert.ToDecimal(value);
+        return SpellString.SpellCurrencyEn(d, currencyCode);
+    }
+
+    String FormatDate(Object value, String format)
 	{
 		if (value is DateTime valDate)
 			return valDate.ToString(format, _culture);

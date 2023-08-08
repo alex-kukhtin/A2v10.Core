@@ -87,6 +87,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "A2v10.Scheduling.Infrastruc
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "A2v10.Scheduling.Commands", "Extensions\A2v10.Scheduling.Commands\A2v10.Scheduling.Commands.csproj", "{2C7BB597-B497-4340-A260-77ED7A72BBD0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.PdfReportEngine", "ReportEngines\Test.PdfReportEngine\Test.PdfReportEngine.csproj", "{1C657994-E862-46E6-9E2E-5EC2589EDDDB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -181,6 +183,10 @@ Global
 		{2C7BB597-B497-4340-A260-77ED7A72BBD0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2C7BB597-B497-4340-A260-77ED7A72BBD0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2C7BB597-B497-4340-A260-77ED7A72BBD0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1C657994-E862-46E6-9E2E-5EC2589EDDDB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C657994-E862-46E6-9E2E-5EC2589EDDDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C657994-E862-46E6-9E2E-5EC2589EDDDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C657994-E862-46E6-9E2E-5EC2589EDDDB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -207,6 +213,7 @@ Global
 		{7867A3AC-22BC-4D6D-BD38-7AE678336712} = {A86F5B8A-8988-404B-A8D5-4B7A9998C51C}
 		{FE67964D-EFED-4AD9-B7D3-9C28FF6FDCAD} = {A86F5B8A-8988-404B-A8D5-4B7A9998C51C}
 		{2C7BB597-B497-4340-A260-77ED7A72BBD0} = {A86F5B8A-8988-404B-A8D5-4B7A9998C51C}
+		{1C657994-E862-46E6-9E2E-5EC2589EDDDB} = {A1D69499-3CCF-4BBC-AE6E-0281286A1F3F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D64A03C5-D2E1-49C8-A7A9-D6022941DE01}

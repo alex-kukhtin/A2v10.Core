@@ -1,6 +1,7 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
-using A2v10.ViewEngine.Xaml.Properties;
+using System.IO;
+using System.Reflection;
 
 namespace A2v10.Xaml.Drawing;
 
@@ -47,8 +48,12 @@ public class Diagram : UIElementBase
 
 	static void RenderDefs(RenderContext context)
 	{
-		var defs = Resources.svgdefs;
-		context.Writer.Write(defs);
+		var assembly = Assembly.GetExecutingAssembly();
+        var resName = "A2v10.ViewEngine.Xaml.Drawing.Resources.svgdefs.html";
+        using var stream = assembly.GetManifestResourceStream(resName)
+            ?? throw new InvalidOperationException($"The resource '{resName}' not found. Did you remember to set 'Build Action' to 'Embedded resource'?");
+        using var sr = new StreamReader(stream);
+        context.Writer.Write(sr.ReadToEnd());
 	}
 }
 

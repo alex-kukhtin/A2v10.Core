@@ -24,8 +24,12 @@ public class Static : ValuedControl, ITableControl
 			input.MergeAttribute(":text", MaxChars > 0 ? $"$maxChars({valBind.GetPathFormat(context)}, {MaxChars})" : valBind.GetPathFormat(context));
 			if (valBind.NegativeRed)
 				input.MergeAttribute(":class", $"$getNegativeRedClass({valBind.GetPath(context)})");
-            if (MaxChars > 0)
-                input.MergeAttribute(":title", valBind.GetPathFormat(context));
+			if (MaxChars > 0)
+			{
+				if (Tip != null || GetBinding(nameof(Tip)) != null)
+					throw new XamlException("Static control. Tip and MaxChars cannot be used together.");
+				input.MergeAttribute(":title", valBind.GetPathFormat(context));
+			}
         }
         input.RenderStart(context);
 		RenderAddOns(context);

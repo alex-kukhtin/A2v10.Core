@@ -260,7 +260,7 @@ public class ShellController : Controller
 				?? throw new InvalidOperationException($"File not found '{fileName}'");
 			using var sr = new StreamReader(stream);
 			var txt = sr.ReadToEnd();
-			if (txt.StartsWith("/*@localize*/"))
+			if (txt.StartsWith("/*!@localize*/"))
 				txt = _localizer.Localize(null, txt, false);
 			writer.Write(txt);
 		}

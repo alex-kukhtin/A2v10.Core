@@ -1140,6 +1140,13 @@ h5,
 .tag-label.teal.outline {
   color: #00b5ad;
 }
+.tag-label.white {
+  background-color: white;
+  color: black;
+}
+.tag-label.transparent {
+  background-color: transparent;
+}
 .tag-label.outline {
   background-color: white;
   border: 1px solid currentColor;
@@ -1632,7 +1639,7 @@ header .include.nav-pane .partial-block .control-group,
   background-color: var(--neutral50);
 }
 .splitter.vertical .spl-handle {
-  border-left: 1px solid var(--neutralLight);
+  border-left: 1px solid var(--neutral300);
   grid-row: 1;
 }
 .splitter.vertical .spl-handle,
@@ -1701,7 +1708,7 @@ header .include.nav-pane .partial-block .control-group,
   transform: rotate(90deg);
 }
 .taskpad.position-right {
-  border-left: 1px solid #ddd;
+  border-left: 1px solid var(--neutral300);
 }
 .taskpad.position-right .taskpad-collapse-handle {
   left: -12px;
@@ -1713,7 +1720,7 @@ header .include.nav-pane .partial-block .control-group,
   content: "\e9a3";
 }
 .taskpad.position-left {
-  border-right: 1px solid #ddd;
+  border-right: 1px solid var(--neutral300);
 }
 .taskpad.position-left .taskpad-collapse-handle {
   right: -12px;
@@ -2305,6 +2312,13 @@ pre.a2-code {
 }
 .data-grid .control-group {
   margin: 0;
+}
+.control-group.no-wrap .input-group.static > span.static-input {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline;
+  line-height: inherit;
+  white-space: nowrap;
 }
 .hlink-dd-wrapper + .hlink-dd-wrapper {
   margin-left: 0.4rem;
@@ -3093,6 +3107,9 @@ table.data-grid > thead > tr > th .h-holder {
   position: relative;
   padding: 0.5rem;
 }
+table.data-grid > thead > tr > th .h-holder > span {
+  word-break: unset;
+}
 table.data-grid > thead > tr > th.sort {
   cursor: pointer;
   white-space: nowrap;
@@ -3328,6 +3345,9 @@ table.data-grid > tbody > tr.bold > td {
   opacity: 0;
   white-space: nowrap;
 }
+.data-grid-container.fixed-header > .data-grid-body.fixed-header > table > thead > tr > th.check-all > .h-fill {
+  width: 26px;
+}
 .data-grid-container.fixed-header > .data-grid-body.fixed-header > table > thead > tr > th.sort > .h-fill:after {
   content: '';
   border: 5px solid transparent;
@@ -3461,7 +3481,7 @@ table.data-grid > tbody > tr.bold > td {
   width: 2px;
   border-right: 1px solid var(--neutral50);
   align-self: stretch;
-  background-color: var(--neutralBkDarker);
+  background-color: var(--neutral300);
   margin: 0.25rem;
 }
 .toolbar > .control-group {
@@ -4355,6 +4375,7 @@ ul.news-list > li {
   float: right;
   width: 1.7rem;
   height: 1.7rem;
+  border-radius: 4px;
 }
 .modal-header .btnclose:not([disabled]):hover,
 .modal-header .btnclose:not([disabled]):active,
@@ -4372,6 +4393,8 @@ ul.news-list > li {
   height: 1.7rem;
   text-align: center;
   padding-top: 2px;
+  border-radius: 4px;
+  margin: 0 2px;
 }
 .modal-header .btn-help .ico {
   font-size: 120%;
@@ -4504,6 +4527,22 @@ ul.news-list > li {
   transform: scale(1, 1);
   box-shadow: 0px 11px 15px -7px rgba(0, 0, 0, 0.2), 0px 24px 38px 3px rgba(0, 0, 0, 0.14), 0px 9px 46px 8px rgba(0, 0, 0, 0.12);
   opacity: 1;
+}
+.modal-header-menu {
+  float: right;
+  cursor: pointer;
+}
+.modal-header-menu .modal-menu-link {
+  color: var(--text);
+  display: inline-block;
+  width: 1.7rem;
+  height: 1.7rem;
+  margin: 0 2px;
+  text-align: center;
+  border-radius: 4px;
+}
+.modal-header-menu .modal-menu-link:hover {
+  background-color: rgba(128, 128, 128, 0.15);
 }
 .wizard-panel {
   display: grid;
@@ -5095,11 +5134,37 @@ label.radio.lg,
 label.checkbox.lg {
   font-size: 1.21em;
 }
+label.like-checkbox {
+  display: inline-flex;
+  position: relative;
+  top: 2px;
+  cursor: pointer;
+}
+label.like-checkbox > span {
+  display: inline-block;
+}
+label.like-checkbox > span:before {
+  display: inline-block;
+  content: '';
+  width: 1em;
+  height: 1em;
+  border: 1px solid #999;
+  border-radius: 1px;
+  background-color: white;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+label.like-checkbox.checked > span:before {
+  background-image: url("data:image/svg+xml,%EF%BB%BF%3Csvg%20viewBox%3D'0%200%2020%2020'%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%3E%0D%0A%09%3Cpath%20fill%3D'none'%20%0D%0A%09%09stroke%3D'%23555'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%20stroke-width%3D'3'%0D%0A%09d%3D'M6%2010l3%203l6-6'%2F%3E%0D%0A%3C%2Fsvg%3E");
+}
+label.like-checkbox.indeterminate > span::before {
+  background-image: url("data:image/svg+xml,%EF%BB%BF%3Csvg%20viewBox%3D'0%200%2020%2020'%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%3E%0D%0A%09%3Cpath%20fill%3D'none'%20%0D%0A%09%09stroke%3D'%23555'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%20stroke-width%3D'3'%0D%0A%09d%3D'M6%2010h8'%2F%3E%0D%0A%3C%2Fsvg%3E%0D%0A%0D%0A");
+}
 .a2-pager {
   padding: 1rem 0 0 0;
   display: flex;
   align-items: center;
-  border-top: 1px solid var(--neutralLight);
+  border-top: 1px solid var(--neutral300);
 }
 .a2-pager button {
   padding: 3px;
@@ -5737,7 +5802,7 @@ TODO:
   margin-bottom: 0;
 }
 .grid .grid-divider {
-  background-color: var(--neutral200);
+  background-color: var(--neutral300);
   align-self: stretch;
   justify-self: center;
   width: 1px;
@@ -6882,8 +6947,17 @@ table > colgroup col.blue {
   box-shadow: 3px 3px 10px 0 rgba(174, 174, 174, 0.5), 0 5px 40px 0 rgba(0, 0, 0, 0.15);
   overflow: auto;
 }
+.mdi-navbar .mdi-menu::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+  background-color: var(--neutral700);
+}
+.mdi-navbar .mdi-menu::-webkit-scrollbar-thumb {
+  background-color: var(--neutral400);
+  border-radius: 8px;
+}
 .mdi-navbar .mdi-menu .menu-title {
-  font-size: 20px;
+  font-size: 1.5rem;
   padding: 0 0 0.5rem 0;
   margin: 0 0 1rem 0;
   color: var(--neutral300);
@@ -6893,20 +6967,21 @@ table > colgroup col.blue {
   padding: 0;
   margin: 0;
 }
+.mdi-navbar .mdi-menu li {
+  line-height: 2.25rem;
+}
 .mdi-navbar .mdi-menu li.level-0 {
   list-style: none;
 }
 .mdi-navbar .mdi-menu li.level-0 .folder {
   font-size: 1.2rem;
   color: var(--neutral300);
-  line-height: 2.5rem;
 }
 .mdi-navbar .mdi-menu li.level-1 {
   list-style: none;
   color: white;
   padding: 0 10px 0 24px;
   font-size: 1rem;
-  line-height: 2.5rem;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
@@ -7335,12 +7410,13 @@ table.tree-grid a.toggle.expanded:after {
   border: 1px solid var(--neutralBkDarker);
   max-height: 280px;
   overflow: auto;
+  box-shadow: 3px 3px 10px 0 rgba(174, 174, 174, 0.5), 0 5px 40px 0 rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
 }
 .color-picker .color-picker-pane .color-picker-list {
   display: flex;
   flex-direction: column;
   padding: 2px;
-  gap: 2px;
 }
 .color-picker .color-picker-wrapper {
   padding: 0;
@@ -7353,8 +7429,10 @@ table.tree-grid a.toggle.expanded:after {
 .color-picker .color-picker-wrapper:focus-visible {
   outline: none;
 }
-.color-picker .tag-label {
+.color-picker .color-picker-wrapper .tag-label {
   width: 100%;
+}
+.color-picker .tag-label {
   line-height: 2em;
   height: 1.994em;
   margin: 2px;
@@ -7367,7 +7445,7 @@ table.tree-grid a.toggle.expanded:after {
 .tags-control .input-group {
   display: flex;
   min-height: 30px;
-  border-color: var(--neutralBkDarker);
+  border-color: var(--neutral400);
   padding: 4px;
   cursor: pointer;
 }
@@ -7399,6 +7477,7 @@ table.tree-grid a.toggle.expanded:after {
   z-index: 1070 !important;
   box-shadow: 3px 3px 10px 0 rgba(174, 174, 174, 0.5), 0 5px 40px 0 rgba(0, 0, 0, 0.15);
   clip-path: inset(0px -40px -40px -40px);
+  border-radius: 4px;
 }
 .tags-control .tags-pane .tags-pane-items {
   margin: 0;
@@ -7420,7 +7499,7 @@ table.tree-grid a.toggle.expanded:after {
 .tags-control .tags-pane .tags-settings {
   margin-top: 0.5rem;
   padding-top: 0.5rem;
-  border-top: 1px solid var(--neutralBkDarker);
+  border-top: 1px solid var(--neutral400);
 }
 .tags-control .tags-pane .btn-settings {
   background-color: transparent;

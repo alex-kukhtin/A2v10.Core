@@ -1032,13 +1032,14 @@ h5,
 .tag-label {
   background-color: #8f94b0;
   color: white;
-  font-size: 0.86rem;
-  padding: 0 0.25rem 0.1rem 0.25rem;
+  font-size: 0.85rem;
+  padding: 0 6px 1px 6px;
   border-radius: 2px;
   display: inline-block;
   margin: 1px;
   line-height: normal;
   white-space: nowrap;
+  border-radius: 4px;
 }
 .tag-label.success,
 .tag-label.green {

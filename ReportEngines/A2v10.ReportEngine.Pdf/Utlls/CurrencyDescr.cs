@@ -29,6 +29,7 @@ internal abstract class CurrencyDescr
 		return culture.TwoLetterISOLanguageName switch
 		{
 			"uk" => new CurrencyDescrUA(currencyCode),
+			"en" => new CurrencyDescrEN(currencyCode),
 			_ => throw new InvalidOperationException($"Spell for '{culture.Name}' yet not supported")
 		};
 	}
@@ -80,5 +81,46 @@ internal class CurrencyDescrUA : CurrencyDescr
 		};
 	}
 	protected override CurrencyDef _descr => _current;
+}
+
+internal class CurrencyDescrEN : CurrencyDescr
+{
+    private readonly CurrencyDef _current;
+    private readonly static CurrencyDef _uah_ua = new()
+    {
+        Ceils = "hryvnias|hryvnia|".Split('|'),
+        CeilGender = SpellGender.Female,
+        Fracts = "kopecks|kopeck|".Split('|'),
+        FractGender = SpellGender.Female
+    };
+
+    private readonly static CurrencyDef _uah_usd = new()
+    {
+        Ceils = "dollars|dollar|".Split('|'),
+        CeilGender = SpellGender.Male,
+        Fracts = "cents|cent|".Split('|'),
+        FractGender = SpellGender.Male
+    };
+
+    private readonly static CurrencyDef _uah_eur = new()
+    {
+        Ceils = "euro|euro|".Split('|'),
+        CeilGender = SpellGender.Male,
+        Fracts = "cents|cent|".Split('|'),
+        FractGender = SpellGender.Male
+    };
+
+    public CurrencyDescrEN(String currencyCode)
+    {
+        _current = currencyCode switch
+        {
+            "980" => _uah_ua,
+            "978" => _uah_eur,
+            "840" => _uah_usd,
+            _ => throw new ArgumentOutOfRangeException($"Currency descriptor for '{currencyCode}' yet not implemented")
+        };
+    }
+
+    protected override CurrencyDef _descr => _current;
 }
 
