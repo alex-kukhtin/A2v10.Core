@@ -5,7 +5,7 @@
 		<Nullable>enable</Nullable>
 		<AssemblyName>A2v10.Xaml</AssemblyName>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		<Version>10.1.8134</Version>
+		<Version>10.1.8136</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.ViewEngine.Xaml</PackageId>
 		<Authors>Oleksandr Kukthin</Authors>
@@ -55,6 +55,5 @@
 
 	<ItemGroup>
 	  <Folder Include="Properties\" />
-	  <Folder Include="Resources\" />
 	</ItemGroup>
 </Project>

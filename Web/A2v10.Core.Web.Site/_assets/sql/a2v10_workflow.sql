@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2020-2023 Alex Kukhtin
 
-Last updated : 09 jun 2022
-module version : 8091
+Last updated : 23 jul 2023
+module version : 8105
 */
 ------------------------------------------------
 set nocount on;
@@ -45,34 +45,30 @@ if not exists(select * from a2wf.CurrentDate)
 go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2wf' and TABLE_NAME=N'Catalog')
-begin
-	create table a2wf.[Catalog]
-	(
-		[Id] nvarchar(255) not null,
-		[Format] nvarchar(32) not null,
-		[Body] nvarchar(max) null,
-		[Thumb] varbinary(max) null,
-		ThumbFormat nvarchar(32) null,
-		[Hash] varbinary(64) null,
-		DateCreated datetime not null constraint DF_Catalog_DateCreated default(getutcdate()),
-		constraint PK_Catalog primary key clustered (Id)
-	);
-end
+create table a2wf.[Catalog]
+(
+	[Id] nvarchar(255) not null,
+	[Format] nvarchar(32) not null,
+	[Body] nvarchar(max) null,
+	[Thumb] varbinary(max) null,
+	ThumbFormat nvarchar(32) null,
+	[Hash] varbinary(64) null,
+	DateCreated datetime not null constraint DF_Catalog_DateCreated default(getutcdate()),
+	constraint PK_Catalog primary key clustered (Id)
+);
 go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2wf' and TABLE_NAME=N'Workflows')
-begin
-	create table a2wf.Workflows
-	(
-		[Id] nvarchar(255) not null,
-		[Version] int not null,
-		[Format] nvarchar(32) not null,
-		[Text] nvarchar(max) null,
-		[Hash] varbinary(64) null,
-		DateCreated datetime not null constraint DF_Workflows_DateCreated default(getutcdate()),
-		constraint PK_Workflows primary key clustered (Id, [Version]) with (fillfactor = 70)
-	);
-end
+create table a2wf.Workflows
+(
+	[Id] nvarchar(255) not null,
+	[Version] int not null,
+	[Format] nvarchar(32) not null,
+	[Text] nvarchar(max) null,
+	[Hash] varbinary(64) null,
+	DateCreated datetime not null constraint DF_Workflows_DateCreated default(getutcdate()),
+	constraint PK_Workflows primary key clustered (Id, [Version]) with (fillfactor = 70)
+);
 go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2wf' and TABLE_NAME=N'Instances')

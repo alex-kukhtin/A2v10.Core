@@ -87,7 +87,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "A2v10.Scheduling.Infrastruc
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "A2v10.Scheduling.Commands", "Extensions\A2v10.Scheduling.Commands\A2v10.Scheduling.Commands.csproj", "{2C7BB597-B497-4340-A260-77ED7A72BBD0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.PdfReportEngine", "ReportEngines\Test.PdfReportEngine\Test.PdfReportEngine.csproj", "{1C657994-E862-46E6-9E2E-5EC2589EDDDB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.PdfReportEngine", "ReportEngines\Test.PdfReportEngine\Test.PdfReportEngine.csproj", "{1C657994-E862-46E6-9E2E-5EC2589EDDDB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
