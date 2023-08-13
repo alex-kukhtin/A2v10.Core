@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2008-2023 Oleksandr Kukhtin
 
-Last updated : 26 may 2023
-module version : 8100
+Last updated : 13 aug 2023
+module version : 8137
 */
 ------------------------------------------------
 drop procedure if exists a2ui.[Menu.Merge];
@@ -19,7 +19,8 @@ create type a2ui.[Menu.TableType] as table
 	[Order] int,
 	ClassName nvarchar(255),
 	CreateName nvarchar(255),
-	CreateUrl nvarchar(255)
+	CreateUrl nvarchar(255),
+	IsDevelopment bit
 );
 go
 

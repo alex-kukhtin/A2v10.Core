@@ -40,7 +40,7 @@ public class TestBannerProvider : IUserBannerProvider
     <span>Поточна версія: {currentVer}</span>&nbsp;
     <span>Доступна версія: {newVer}</span>&nbsp;
     <span>Версія бізнес-застосунку потребує оновлення</span>&nbsp;
-    <a v-on:click.stop.prevent="navigateUrl('/admin/application/index/0')">Відкрити сторінку оновлення</a>    
+    <a v-on:click.stop.prevent="navigateUrl('/_home/application/0')">Відкрити сторінку оновлення</a>    
 </div>
 """;
     }

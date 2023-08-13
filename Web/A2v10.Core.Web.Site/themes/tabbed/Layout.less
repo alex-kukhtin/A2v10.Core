@@ -398,41 +398,44 @@ iframe.eusign-iframe {
 @flex-padding:1.25rem;
 
 .card {
-    background-color: white;
-    display: flex;
-    flex-flow: column nowrap;
+	background-color: white;
+	display: flex;
+	flex-flow: column nowrap;
+	border-radius: @control-brd-radius;
 
-    .card-header {
-        padding: 0 @card-padding;
-        border-bottom: 1px solid #ddd;
-        font-weight: 500;
-        color: var(--themeLight);
-        font-size: 14px;
-        line-height: @header-line-height-normal;
-        text-align: left;
-    }
+	.card-header {
+		padding: 0 @card-padding;
+		border-bottom: 1px solid @control-brd-light-color;
+		font-weight: 500;
+		color: var(--themeLight);
+		font-size: 14px;
+		line-height: @header-line-height-normal;
+		text-align: left;
+		border-radius: @control-brd-radius @control-brd-radius 0 0;
+	}
 
-    .card-body {
-        padding: @card-padding;
-    }
+	.card-body {
+		padding: @card-padding;
+	}
 
-    .card-footer {
-        padding: 0 @card-padding;
-        border-top: 1px solid #ddd;
-        line-height: @header-line-height-normal;
-    }
+	.card-footer {
+		padding: 0 @card-padding;
+		border-top: 1px solid @control-brd-light-color;
+		line-height: @header-line-height-normal;
+		border-radius: 0 0 @control-brd-radius @control-brd-radius;
+	}
 
-    &.compact {
-        .card-header, .card-footer {
-            padding: 0 @card-padding / 2;
-            font-size: @font-size;
-            line-height: @header-ling-height-compact;
-        }
-    }
+	&.compact {
+		.card-header, .card-footer {
+			padding: 0 @card-padding / 2;
+			font-size: @font-size;
+			line-height: @header-ling-height-compact;
+		}
+	}
 
-    .a2-list.compact .a2-list-item {
-        padding: 6px 6px 6px 12px;
-    }
+	.a2-list.compact .a2-list-item {
+		padding: 6px 6px 6px 12px;
+	}
 }
 
 .flex {

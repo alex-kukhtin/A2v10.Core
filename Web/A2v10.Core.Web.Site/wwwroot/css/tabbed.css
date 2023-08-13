@@ -2185,7 +2185,7 @@ pre.a2-code {
 .control-group .input-group > .dropdown > a:hover {
   text-decoration: none;
   color: var(--link);
-  background-color: #f8f8f8;
+  background-color: var(--neutral100);
 }
 .control-group .input-group .a2-inline {
   margin-left: 0 !important;
@@ -2200,7 +2200,7 @@ pre.a2-code {
   font-size: 1px;
   z-index: -10;
 }
-.control-group .input-group .add-on:last-child {
+.control-group .input-group > a:last-of-type {
   border-radius: 0 4px 4px 0;
 }
 .control-group.lg {
@@ -2311,6 +2311,7 @@ pre.a2-code {
   border: 4px solid #a94442;
   border-left-color: transparent;
   border-bottom-color: transparent;
+  border-radius: 0 4px 0 0;
 }
 .control-group.invalid .input-group .control {
   background-color: #fff8f8;
@@ -5743,6 +5744,7 @@ TODO:
   color: #aaa;
   padding: 0.7rem;
   line-height: 1;
+  border-radius: 4px;
 }
 .a2-state-card .a2-state-card-text {
   font-size: 2rem;
@@ -6158,23 +6160,26 @@ iframe.eusign-iframe {
   background-color: white;
   display: flex;
   flex-flow: column nowrap;
+  border-radius: 4px;
 }
 .card .card-header {
   padding: 0 1.25rem;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--neutral300);
   font-weight: 500;
   color: var(--themeLight);
   font-size: 14px;
   line-height: 2.6rem;
   text-align: left;
+  border-radius: 4px 4px 0 0;
 }
 .card .card-body {
   padding: 1.25rem;
 }
 .card .card-footer {
   padding: 0 1.25rem;
-  border-top: 1px solid #ddd;
+  border-top: 1px solid var(--neutral300);
   line-height: 2.6rem;
+  border-radius: 0 0 4px 4px;
 }
 .card.compact .card-header,
 .card.compact .card-footer {

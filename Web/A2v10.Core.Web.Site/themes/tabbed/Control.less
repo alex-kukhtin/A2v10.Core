@@ -2,6 +2,7 @@
 @import "Variables.less";
 
 @control-bg-color: @background-color;
+@hover-color: var(--neutral100);
 
 @validator-arrow-size: 8px;
 
@@ -327,7 +328,7 @@
 			&:hover {
 				text-decoration: none;
 				color: @control-focus-color;
-				background-color: #f8f8f8;
+				background-color: @hover-color;
 			}
 		}
 
@@ -346,7 +347,7 @@
 			z-index: -10;
 		}
 
-		.add-on:last-child {
+		> a:last-of-type {
 			border-radius: 0 @control-brd-radius @control-brd-radius 0;
 		}
 	}
@@ -507,6 +508,7 @@
 			border: 4px solid @danger-txt-color;
 			border-left-color: transparent;
 			border-bottom-color: transparent;
+			border-radius: 0 @control-brd-radius 0 0;
 		}
 
 		.control {

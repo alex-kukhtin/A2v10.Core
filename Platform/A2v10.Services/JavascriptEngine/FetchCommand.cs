@@ -1,10 +1,9 @@
-﻿// Copyright © 2020-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2020-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Text;
 
 using Newtonsoft.Json;
 
@@ -86,7 +85,7 @@ public static class FetchCommand
 			requestMessage.Method = mtd;
 			var bodyObj = prms?.Get<Object>("body");
 
-			switch (bodyObj)
+            switch (bodyObj)
 			{
 				case String strObj:
 					requestMessage.Content = new StringContent(strObj);
@@ -96,9 +95,9 @@ public static class FetchCommand
 					requestMessage.Content = JsonContent.Create(bodyStr);
 					break;
 			}
-		}
+        }
 
-		using HttpResponseMessage resp = client.Send(requestMessage);
+        using HttpResponseMessage resp = client.Send(requestMessage);
 		var contentType = resp.Content.Headers.ContentType?.ToString();
 		using var rs = resp.Content.ReadAsStream();
 		using var ms = new StreamReader(rs);

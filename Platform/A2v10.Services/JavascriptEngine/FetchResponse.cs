@@ -25,26 +25,38 @@ namespace A2v10.Services.Javascript
 		public String? body { get; }
 		public Boolean isJson => contentType != null && contentType.StartsWith(MimeTypes.Application.Json);
 		public ExpandoObject? headers { get; }
-#pragma warning restore IDE1006 // Naming Styles
-
-#pragma warning disable IDE1006 // Naming Styles
-		public ExpandoObject json()
-#pragma warning restore IDE1006 // Naming Styles
+		public Object json()
 		{
 			if (isJson)
 			{
 				if (body == null)
 					return new ExpandoObject();
-				return JsonConvert.DeserializeObject<ExpandoObject>(body) ?? new ExpandoObject();
+				if (IsBodyArray())
+                    return JsonConvert.DeserializeObject<List<ExpandoObject>>(body)
+						?? new List<ExpandoObject>();
+                return JsonConvert.DeserializeObject<ExpandoObject>(body) ?? new ExpandoObject();
 			}
 			throw new InvalidOperationException($"The answer is not in {MimeTypes.Application.Json} format");
 		}
 
-#pragma warning disable IDE1006 // Naming Styles
-		public String text()
-#pragma warning restore IDE1006 // Naming Styles
+        private Boolean IsBodyArray()
+        {
+			if (body == null)
+				return false;
+            for (int i = 0; i < body.Length; i++)
+            {
+                if (body[i] == '[')
+                    return true;
+                else if (body[i] == '{')
+                    return false;
+            }
+            return false;
+        }
+
+        public String text()
 		{
 			return body ?? String.Empty;
 		}
-	}
+#pragma warning restore IDE1006 // Naming Styles
+    }
 }

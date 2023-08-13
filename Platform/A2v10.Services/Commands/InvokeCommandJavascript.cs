@@ -1,4 +1,4 @@
-﻿// Copyright © 2020-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2020-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System.IO;
 using System.Threading.Tasks;
@@ -12,13 +12,11 @@ namespace A2v10.Services;
 public class InvokeCommandJavascript : IModelInvokeCommand
 {
 	private readonly IAppCodeProvider _appCodeProvider;
-	private readonly ICurrentUser _currentUser;
 	private readonly JavaScriptEngine _engine;
 
 	public InvokeCommandJavascript(IServiceProvider service)
 	{
 		_appCodeProvider = service.GetRequiredService<IAppCodeProvider>();
-		_currentUser = service.GetRequiredService<ICurrentUser>();
 		_engine = new JavaScriptEngine(service);
 	}
 

@@ -1,7 +1,5 @@
-2023-08-07 (8135)
+2023-08-07 (next: 8139)
 ==========
-A2v10.WebAssets
-A2v10.Infrastructure +
 
 
 *A2v10.Platform (8132)

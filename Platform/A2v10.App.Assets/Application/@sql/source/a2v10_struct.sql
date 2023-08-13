@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2008-2023 Oleksandr Kukhtin
 
-Last updated : 05 aug 2023
-module version : 8134
+Last updated : 13 aug 2023
+module version : 8137
 */
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.SCHEMATA where SCHEMA_NAME=N'a2sys')
@@ -26,7 +26,7 @@ go
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2sys' and TABLE_NAME=N'SysParams')
 create table a2sys.SysParams
 (
-	Name sysname not null constraint PK_SysParams primary key,
+	[Name] sysname not null constraint PK_SysParams primary key,
 	StringValue nvarchar(255) null,
 	IntValue int null,
 	DateValue datetime null,
@@ -127,6 +127,22 @@ as
 		SecurityStamp2, PasswordHash2, SetPassword
 	from a2security.Users u
 	where Void = 0 and Id <> 0;
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2sys' and TABLE_NAME=N'Applications')
+create table a2sys.[Applications]
+(
+	TenantId int not null,
+	Id int not null,
+	[Uid] uniqueidentifier not null,
+	[Name] sysname not null,
+	[Version] int not null,
+	[Description] nvarchar(255),
+	[Copyright] nvarchar(255),
+	IsDevelopment bit not null,
+	constraint PK_Applications primary key (TenantId, Id),
+	constraint FK_Applications_TenantId_Tenants foreign key (TenantId) references a2security.Tenants(Id)
+);
 go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2ui' and TABLE_NAME=N'Modules')

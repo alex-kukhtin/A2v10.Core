@@ -23,31 +23,44 @@ public class ScriptEnvironment
 	private readonly ScriptConfig _config;
 	private readonly IHttpClientFactory _httpClientFactory;
 	private readonly IAppCodeProvider _appCodeProvider;
+	private readonly ICurrentUser _currentUser;
 	private readonly Engine _engine;
+	private readonly ScriptUser _currentScriptUser;
 
-	private String _currentPath = String.Empty;
+	//private String _currentPath = String.Empty;
 	public ScriptEnvironment(Engine engine, IServiceProvider serviceProvider)
 	{
 		_dbContext = serviceProvider.GetRequiredService<IDbContext>();
 		_config = new ScriptConfig(serviceProvider.GetRequiredService<IApplicationHost>());
 		_httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
 		_appCodeProvider = serviceProvider.GetRequiredService<IAppCodeProvider>();
-		_engine = engine;
-	}
+        _currentUser = serviceProvider.GetRequiredService<ICurrentUser>();
+        _engine = engine;
+		_currentScriptUser = new ScriptUser(_currentUser);
 
-	public void SetPath(String path)
+    }
+
+	public void SetPath(String _/*path*/)
 	{
-		_currentPath = path;
+		//_currentPath = path;
 	}
 
 	public ScriptConfig config => _config;
+    public ScriptUser currentUser => _currentScriptUser;
 
-	public ExpandoObject loadModel(ExpandoObject prms)
+    public ExpandoObject loadModel(ExpandoObject prms)
 	{
 		String? source = prms.Get<String>("source");
 		String command = prms.GetNotNull<String>("procedure");
-		ExpandoObject? dmParams = prms.Get<ExpandoObject>("parameters");
-		var dm = _dbContext.LoadModel(source, command, dmParams);
+		Boolean forCurrentUser = prms.Get<Boolean>("forCurrentUser");
+		ExpandoObject? dmParams = prms.Get<ExpandoObject>("parameters")
+			?? new ExpandoObject();
+		if (forCurrentUser)
+		{
+			SetCurrentUserParams(dmParams);
+            source = _currentUser.Identity.Segment;
+        }
+        var dm = _dbContext.LoadModel(source, command, dmParams);
 		return dm.Root;
 	}
 
@@ -56,7 +69,16 @@ public class ScriptEnvironment
 		String? source = prms.Get<String>("source");
 		String command = prms.GetNotNull<String>("procedure");
 		ExpandoObject data = prms.GetNotNull<ExpandoObject>("data");
-		ExpandoObject? dmParams = prms.Get<ExpandoObject>("parameters");
+
+        Boolean forCurrentUser = prms.Get<Boolean>("forCurrentUser");
+        ExpandoObject? dmParams = prms.Get<ExpandoObject>("parameters")
+            ?? new ExpandoObject();
+		if (forCurrentUser)
+		{
+			SetCurrentUserParams(dmParams);
+			source = _currentUser.Identity.Segment;
+		}
+        
 		var dm = _dbContext.SaveModel(source, command, data, dmParams);
 		return dm.Root;
 	}
@@ -65,8 +87,15 @@ public class ScriptEnvironment
 	{
 		String? source = prms.Get<String>("source");
 		String command = prms.GetNotNull<String>("procedure");
-		ExpandoObject? dmParams = prms.Get<ExpandoObject>("parameters");
-		return _dbContext.ReadExpando(source, command, dmParams);
+        Boolean forCurrentUser = prms.Get<Boolean>("forCurrentUser");
+        ExpandoObject? dmParams = prms.Get<ExpandoObject>("parameters")
+            ?? new ExpandoObject();
+		if (forCurrentUser)
+		{
+			SetCurrentUserParams(dmParams);
+            source = _currentUser.Identity.Segment;
+        }
+        return _dbContext.ReadExpando(source, command, dmParams);
 	}
 
 	public FetchResponse fetch(String url)
@@ -105,7 +134,9 @@ public class ScriptEnvironment
 
 	public JsValue require(String fileName, ExpandoObject prms, ExpandoObject args)
 	{
-		var stream = _appCodeProvider.FileStreamRO(fileName) 
+		fileName = fileName.RemoveHeadSlash().AddExtension("js");
+
+        var stream = _appCodeProvider.FileStreamRO(fileName) 
 			?? throw new InvalidOperationException($"File not found '{fileName}'");
 		var sr = new StreamReader(stream);
 		var script = sr.ReadToEnd();
@@ -122,6 +153,12 @@ return function(_this, prms, args) {{
 		var func = _engine.Evaluate(code);
 		return _engine.Invoke(func, this, prms, args);
 	}
+
+    private void SetCurrentUserParams(ExpandoObject dbPrms)
+	{
+		dbPrms.SetNotNull("UserId", _currentUser.Identity.Id);
+        dbPrms.SetNotNull("TenantId", _currentUser.Identity.Tenant);
+    }
 }
 
 #pragma warning restore CA1822 // Mark members as static

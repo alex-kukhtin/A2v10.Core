@@ -4,6 +4,7 @@
 using Newtonsoft.Json;
 
 using Jint;
+using TypeReference = Jint.Runtime.Interop.TypeReference;
 
 namespace A2v10.Services.Javascript;
 
@@ -18,6 +19,7 @@ public class JavaScriptEngine
 		{
 			opts.Strict(true);
 		});
+		_engine.SetValue("DateUtils", TypeReference.CreateTypeReference(_engine, typeof(DateUtils)));
 		_environment = new ScriptEnvironment(_engine, serviceProvider);
 	}
 
