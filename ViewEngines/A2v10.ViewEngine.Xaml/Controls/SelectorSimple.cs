@@ -12,6 +12,19 @@ public class SelectorSimple : Selector
 	{
 		base.OnEndInit();
 
+		if (AddOns.Count > 0)
+		{
+			for (int i = 0; i < AddOns.Count; i++)
+			{
+				var command = AddOns[i].GetBindingCommand(nameof(Command));
+				if (command != null)
+				{
+					if (command.Command == CommandType.Browse && command.Url == $"{Url}/browse")
+						return;
+				}
+            }
+        }
+
 		if (String.IsNullOrEmpty(DisplayProperty))
 			DisplayProperty = "Name";
 
