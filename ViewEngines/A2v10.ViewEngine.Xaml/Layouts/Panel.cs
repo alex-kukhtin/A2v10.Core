@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
 
@@ -37,8 +37,9 @@ public class Panel : Container, ITableControl
 	public Boolean Compact { get; set; }
 
 	public Popover? Hint { get; set; }
+    public GapSize? Gap { get; set; }
 
-	public String? TestId { get; set; }
+    public String? TestId { get; set; }
 
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
@@ -71,7 +72,11 @@ public class Panel : Container, ITableControl
 		RenderHeader(context);
 		var content = new TagBuilder("div", "panel-content");
 		MergeAttributes(content, context, MergeAttrMode.Margin | MergeAttrMode.Wrap | MergeAttrMode.Tip);
-		content.RenderStart(context);
+
+        if (Gap != null)
+            content.MergeStyle("gap", Gap.ToString());
+
+        content.RenderStart(context);
 		RenderChildren(context);
 		content.RenderEnd(context);
 		panel.RenderEnd(context);

@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿
 @import "Variables.less";
 
 @header-line-height-normal:2.6rem;
@@ -79,14 +79,13 @@
 	margin-bottom: 12px;
 	background-color: white;
 	// flex: prevent margin collapse
-	display:flex;
-	flex-direction:column;
+	display: flex;
+	flex-direction: column;
 
-	/* ???
 	.panel-content {
-		height:100%; //TODO:???
+		display: flex;
+		flex-direction: column;
 	}
-	*/
 
 	.panel-header {
 		padding: 0 .625rem;
@@ -94,7 +93,7 @@
 		display: flex;
 		justify-content: space-between;
 		cursor: pointer;
-		height:2rem;
+		height: 2rem;
 
 		.ico {
 			//font-size: 1.2rem;
@@ -110,16 +109,17 @@
 				content: "\e9a2"; // chevron-up
 			}
 		}
+
 		.a2-header {
-			font-weight:normal;
-			margin:0;
-			color:currentColor;
+			font-weight: normal;
+			margin: 0;
+			color: currentColor;
 		}
 	}
 
 	&.compact {
 		.panel-header {
-			line-height:@header-ling-height-compact;
+			line-height: @header-ling-height-compact;
 		}
 	}
 }

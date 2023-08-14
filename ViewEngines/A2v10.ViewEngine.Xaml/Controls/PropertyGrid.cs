@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 
 namespace A2v10.Xaml;
@@ -27,6 +27,8 @@ public class PropertyGrid : UIElement, ITableControl
 
 	public PropertyGridItems Children { get; set; } = new PropertyGridItems();
 	public GridLinesVisibility GridLines { get; set; }
+
+	public UInt32 MaxChars { get; set; }
 
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
@@ -95,4 +97,11 @@ public class PropertyGrid : UIElement, ITableControl
 				break;
 		}
 	}
+
+    protected override void OnEndInit()
+    {
+        base.OnEndInit();
+        foreach (var c in Children)
+            c.SetParent(this);
+    }
 }
