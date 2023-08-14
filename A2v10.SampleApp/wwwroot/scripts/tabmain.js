@@ -2388,7 +2388,7 @@ app.modules['std:validators'] = function () {
 
 // Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
-/*20230801-7940*/
+/*20230807-7941*/
 /* services/impl/array.js */
 
 app.modules['std:impl:array'] = function () {
@@ -2491,14 +2491,19 @@ app.modules['std:impl:array'] = function () {
 
 	function addResize(arr) {
 
-		arr.$empty = function () {
-			if (this.$root.isReadOnly)
-				return this;
-			this._root_.$setDirty(true);
+		arr.__empty__ = function () {
+			// without dirty
 			this.splice(0, this.length);
 			if ('$RowCount' in this)
 				this.$RowCount = 0;
 			return this;
+		}
+
+		arr.$empty = function () {
+			if (this.$root.isReadOnly)
+				return this;
+			this._root_.$setDirty(true);
+			return this.__empty__();
 		};
 
 		arr.$append = function (src) {
@@ -2786,7 +2791,7 @@ app.modules['std:impl:array'] = function () {
 
 /* Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.*/
 
-/*20230705-7939*/
+/*20230807-7941*/
 // services/datamodel.js
 
 /*
@@ -3804,6 +3809,7 @@ app.modules['std:impl:array'] = function () {
 	}
 
 	function setDirty(val, path, prop) {
+		if (val === this.$dirty) return;
 		if (this.$root.$readOnly)
 			return;
 		this.$root.$emit('Model.dirty.change', val, `${path}.${prop}`);
@@ -5813,9 +5819,9 @@ Vue.component('validator-control', {
 		}
 	});
 })();
-// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
-// 20200109-7704
+// 20230809-7941
 // components/calendar.js
 
 (function () {
@@ -5860,7 +5866,8 @@ Vue.component('validator-control', {
 			setDay: Function,
 			getDayClass: Function,
 			hover: Function,
-			view: String
+			view: String,
+			currentModel: Date
 		},
 		computed: {
 			isDayView() {
@@ -5967,7 +5974,8 @@ Vue.component('validator-control', {
 			},
 			monthClass(day) {
 				let cls = '';
-				if (day.getFullYear() === this.model.getFullYear() && day.getMonth() === this.model.getMonth())
+				let cm = this.currentModel || this.model;
+				if (day.getFullYear() === cm.getFullYear() && day.getMonth() === cm.getMonth())
 					cls += ' active';
 				return cls;
 			},
@@ -5981,11 +5989,10 @@ Vue.component('validator-control', {
 		}
 	});
 })();
-// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
-// 20221027-7902
+// 20230810-7942
 // components/datepicker.js
-
 
 (function () {
 
@@ -6007,7 +6014,7 @@ Vue.component('validator-control', {
 		<a href @click.stop.prevent="toggle($event)" tabindex="-1"><i class="ico ico-calendar"></i></a>
 		<validator :invalid="invalid" :errors="errors" :options="validatorOptions"></validator>
 		<div class="calendar" v-if="isOpen">		
-			<a2-calendar :model="modelDate" :view="view"
+			<a2-calendar :model="viewDate" :view="view" :current-model="modelDate"
 				:set-month="setMonth" :set-day="selectDay" :get-day-class="dayClass"/>
 		</div>
 	</div>
@@ -6026,8 +6033,14 @@ Vue.component('validator-control', {
 		},
 		data() {
 			return {
-				isOpen: false
+				isOpen: false,
+				viewDate: null
 			};
+		},
+		watch: {
+			modelDate() {
+				this.viewDate = this.modelDate;
+			}
 		},
 		methods: {
 			toggle(ev) {
@@ -6036,9 +6049,13 @@ Vue.component('validator-control', {
 					// close other popups
 					eventBus.$emit('closeAllPopups');
 					if (utils.date.isZero(this.modelDate))
-						this.item[this.prop] = utils.date.today();
+						this.updateModel(utils.date.today());
 				}
 				this.isOpen = !this.isOpen;
+			},
+			updateModel(date) {
+				this.item[this.prop] = date;
+				this.viewDate = date;
 			},
 			fitDate(dt) {
 				let du = utils.date;
@@ -6058,15 +6075,11 @@ Vue.component('validator-control', {
 				}
 			},
 			setMonth(dt) {
-				this.setDate(dt);
+				this.viewDate = dt;
 			},
 			selectDay(day) {
-				let oldMonth = this.modelDate.getUTCMonth();
 				var dt = new Date(Date.UTC(day.getFullYear(), day.getMonth(), day.getDate(), 0, 0, 0, 0));
 				this.setDate(dt);
-				let newMonth = this.modelDate.getUTCMonth();
-				if (newMonth != oldMonth)
-					return;
 				this.isOpen = false;
 			},
 			setDate(d) {
@@ -6074,7 +6087,7 @@ Vue.component('validator-control', {
 				let md = this.modelDate;
 				let nd = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), md.getUTCHours(), md.getUTCMinutes(), 0, 0));
 				nd = this.fitDate(nd);
-				this.item[this.prop] = nd;
+				this.updateModel(nd);
 			},
 			dayClass(day) {
 				let cls = '';
@@ -6083,7 +6096,7 @@ Vue.component('validator-control', {
 					cls += ' today';
 				if (tls.equal(day, this.modelDate))
 					cls += ' active';
-				if (day.getMonth() !== this.modelDate.getMonth())
+				if (day.getMonth() !== this.viewDate.getMonth())
 					cls += " other";
 				return cls;
 			},
@@ -6117,7 +6130,7 @@ Vue.component('validator-control', {
 					let md = utils.date.parse(str, this.yearCutOff);
 					md = this.fitDate(md);
 					if (utils.date.isZero(md)) {
-						this.item[this.prop] = md;
+						this.updateModel(md);
 						this.isOpen = false;
 					} else {
 						this.setDate(md);
@@ -6126,6 +6139,7 @@ Vue.component('validator-control', {
 			}
 		},
 		mounted() {
+			this.viewDate = this.modelDate;
 			popup.registerPopup(this.$el);
 			this.$el._close = this.__clickOutside;
 		},
@@ -7249,7 +7263,7 @@ Vue.component('validator-control', {
 })();
 // Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
-// 20230802-7940
+// 20230807-7941
 // components/datagrid.js*/
 
 (function () {
@@ -8109,9 +8123,11 @@ Vue.component('validator-control', {
 					else
 						unchecked += 1;
 				});
-				if (checked === 0) return 0;
-				else if (unchecked == 0) return 1;
-				return checked != unchecked ? 2 : 0;
+				if (checked === 0)
+					return 0;
+				else if (unchecked === 0)
+					return 1;
+				return 2;
 			},
 			__autoSelect() {
 				if (!this.autoSelect || !this.$items || !this.$items.length) return;
@@ -9472,11 +9488,8 @@ TODO:
 })();
 // Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
-// 20230527-7936
+// 20230811-7943
 // components/list.js
-
-/* TODO:
-*/
 
 (function () {
 
@@ -9608,13 +9621,13 @@ TODO:
 						console.error('Id not found in Root.modelInfo');
 						return;
 					}
-					let fe = src.find(itm => itm.$id === rootId);
-					if (!fe) {
-						console.error(`Element with id=${rootId} not found`);
-						fe = src[0];
+					let fe = src[0];
+					if (rootId) {
+						fe = src.find(itm => itm.$id === rootId);
+						if (!fe) 
+							console.error(`Element with id=${rootId} not found`);
 					}
-					if (fe)
-						this.select(fe);
+					if (fe) this.select(fe);
 				}
 			},
 			keyDown(e) {
@@ -11431,7 +11444,7 @@ Vue.component('a2-panel', {
 
 // Copyright © 2022-2023 Oleksandr Kukhtin. All rights reserved.
 
-// 20220917-7920
+// 20230807-7941
 // components/dashboard.js
 
 (function () {
@@ -11722,8 +11735,8 @@ Vue.component('a2-panel', {
 				let rs = window.getComputedStyle(this.$refs.dash);
 				let colSize = parseFloat(rs.gridTemplateColumns.split(' ')[0]);
 				let rowSize = parseFloat(rs.gridTemplateRows.split(' ')[0]);
-				let colGap = parseFloat(rs.gridColumnGap);
-				let rowGap = parseFloat(rs.gridRowGap);
+				let colGap = parseFloat(rs.columnGap);
+				let rowGap = parseFloat(rs.rowGap);
 				img.style.width = (colSize * el.colSpan + (el.colSpan - 1) * colGap) + 'px';
 				img.style.height = (rowSize * el.rowSpan + (el.rowSpan - 1) * rowGap) + 'px';
 				return img;
@@ -12051,7 +12064,7 @@ Vue.component('a2-panel', {
 
 // Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
 
-// 20230325-7923
+// 20230809-7941
 // components/kanban.js
 
 (function () {
@@ -12105,6 +12118,10 @@ Vue.component('a2-panel', {
 				return this.items.filter(itm => itm[this.stateProp].$id === id);
 			},
 			dragStart(ev, card) {
+				if (!this.dropDelegate) {
+					ev.preventDefault();
+					return;
+				}
 				ev.dataTransfer.effectAllowed = "move";
 				this.currentElem = card;
 			},
@@ -13926,7 +13943,7 @@ Vue.directive('resize', {
 					dataservice.post(url, jsonData).then(function (data) {
 						if (self.__destroyed__) return;
 						if (propName in data) {
-							arr.$empty();
+							arr.__empty__();
 							for (let el of data[propName])
 								arr.push(arr.$new(el));
 							let rcName = propName + '.$RowCount';
