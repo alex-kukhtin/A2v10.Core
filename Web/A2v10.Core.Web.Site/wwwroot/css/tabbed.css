@@ -1258,7 +1258,7 @@ h5,
 }
 .text-color-gray,
 .text-color-label {
-  color: #999;
+  color: var(--text-light);
 }
 .text-color-light-gray {
   color: #ccc;
@@ -1713,7 +1713,7 @@ header .include.nav-pane .partial-block .control-group,
   cursor: pointer;
   font-size: 16px;
   padding-left: 2px;
-  color: #999;
+  color: var(--text-light);
 }
 .taskpad .taskpad-title .taskpad-label {
   display: block;
@@ -1942,7 +1942,7 @@ pre.a2-code {
   font-size: 1em;
 }
 .control-group label {
-  color: #999;
+  color: var(--text-light);
   margin-bottom: 0.2em;
   display: block;
   font-weight: normal;
@@ -1955,7 +1955,7 @@ pre.a2-code {
   display: inline-block;
   font-size: 0.95em;
   margin-bottom: 0.25em;
-  color: #999;
+  color: var(--text-light);
 }
 .control-group .validator {
   position: absolute;
@@ -2177,7 +2177,7 @@ pre.a2-code {
 }
 .control-group .input-group > a,
 .control-group .input-group > .dropdown > a {
-  color: #999;
+  color: var(--text-light);
   padding: 0 0.4em;
   display: inline-block;
 }
@@ -2372,7 +2372,7 @@ pre.a2-code {
 }
 .a2-label {
   display: block;
-  color: #999;
+  color: var(--text-light);
   align-self: center;
 }
 .a2-label.required:before {
@@ -3403,12 +3403,12 @@ table.data-grid > tbody > tr.bold > td {
   height: calc(100% - 36px);
 }
 .data-grid-container.data-grid-light table.data-grid th {
-  color: #999;
+  color: var(--text-light);
   border-style: none;
 }
 .data-grid-container.data-grid-light table.data-grid tr.group td {
   background-color: #f9f9f9;
-  color: #999;
+  color: var(--text-light);
 }
 .data-grid-container.data-grid-light table.data-grid.grid-horizontal th .h-holder {
   border-left: none !important;
@@ -3547,7 +3547,7 @@ table.data-grid > tbody > tr.bold > td {
 .btn-tb > i.ico {
   display: inline-block;
   margin-right: 2px;
-  color: var(--neutralSecondary);
+  color: var(--icon-color);
 }
 .dropdown.show {
   /*:not(.separate)*/
@@ -3653,7 +3653,7 @@ tr:hover .commandbar.visible-hover {
 .tree-view li > .overlay i.ico {
   flex-shrink: 0;
   /*fixed*/
-  color: var(--neutralSecondary);
+  color: var(--icon-color);
   font-size: 1.2rem;
   width: 2rem;
 }
@@ -3859,7 +3859,7 @@ tr:hover .commandbar.visible-hover {
   user-select: none;
 }
 .tab-panel .tab-header > li > .ico {
-  color: var(--neutralSecondary);
+  color: var(--icon-color);
 }
 .tab-panel .tab-header > li .badge {
   vertical-align: middle;
@@ -3942,10 +3942,10 @@ tr:hover .commandbar.visible-hover {
   font-size: 1.1rem;
   display: block;
   padding: 0.65rem 0;
-  color: #999;
+  color: var(--text-light);
 }
 .a2-tab-button.active {
-  border-bottom-color: #999;
+  border-bottom-color: var(--text-light);
   color: var(--text);
   font-weight: 500;
 }
@@ -3953,7 +3953,7 @@ tr:hover .commandbar.visible-hover {
   white-space: nowrap;
 }
 .a2-tab-description {
-  color: #999;
+  color: var(--text-light);
 }
 .a2-tab-bar.tab-bar-button-group {
   margin: 0;
@@ -4055,7 +4055,7 @@ tr:hover .commandbar.visible-hover {
 }
 .a2-list .a2-list-item.group {
   background-color: var(--neutral100);
-  color: #999;
+  color: var(--text-light);
   border-bottom: 1px solid var(--neutral300);
   border-top: 1px solid var(--neutral300);
   cursor: default;
@@ -4134,7 +4134,7 @@ tr:hover .commandbar.visible-hover {
   align-items: baseline;
 }
 .list-item-simple .list-item-simple-icon {
-  color: var(--neutralSecondary);
+  color: var(--neutral800);
   font-size: 1.2rem;
   min-width: 2rem;
 }
@@ -5035,7 +5035,7 @@ table.prop-grid col.prop-name {
   width: 1px;
 }
 table.prop-grid td.prop-name {
-  color: #999;
+  color: var(--text-light);
 }
 table.prop-grid.no-wrap-name td.prop-name {
   white-space: nowrap;
@@ -5259,7 +5259,7 @@ TODO:
   font-size: 1.077em;
 }
 .menu .dropdown-item > .ico:before {
-  color: var(--neutralSecondary);
+  color: var(--icon-color);
 }
 .menu .dropdown-item[disabled] {
   cursor: not-allowed;
@@ -5269,7 +5269,7 @@ TODO:
   background-color: transparent;
 }
 .menu .dropdown-item:hover {
-  background-color: var(--hoverBk);
+  background-color: var(--menu-hover);
 }
 .menu .divider {
   flex-grow: 0;
@@ -5486,6 +5486,7 @@ TODO:
   text-align: left;
   box-shadow: 3px 3px 10px 0 rgba(174, 174, 174, 0.5), 0 5px 40px 0 rgba(0, 0, 0, 0.15);
   z-index: 1070;
+  border-radius: 4px;
 }
 .popover-wrapper > .popup-body > .arrow {
   position: absolute;
@@ -6042,7 +6043,7 @@ TODO:
 }
 .field-set legend {
   font-size: 0.95rem;
-  color: #999;
+  color: var(--text-light);
 }
 .field-set.vertical .field-set-item {
   display: block;
@@ -6563,7 +6564,7 @@ table > colgroup col.blue {
 }
 .a2-header {
   margin: 0 0 0.8rem 0;
-  color: #999;
+  color: var(--text-light);
   font-weight: bold;
   font-family: inherit;
   word-break: break-word;
@@ -6843,7 +6844,7 @@ table > colgroup col.blue {
   border-radius: 4px;
 }
 .mdi-tabs-container .mdi-tabs-menu .mdi-tabs-popup li:not(.group):hover {
-  background-color: #f3f3f3;
+  background-color: var(--menu-hover);
 }
 .mdi-tabs-container .mdi-tabs-menu .mdi-tabs-popup li.group {
   text-transform: uppercase;
@@ -7480,7 +7481,7 @@ table.tree-grid a.toggle.expanded:after {
 .tags-control .tags-placeholder {
   flex-grow: 1;
   line-height: 1.5;
-  color: #999;
+  color: var(--text-light);
 }
 .tags-control .tags-pane {
   position: absolute;

@@ -38,11 +38,11 @@
 			<ul class="mdi-tabs-popup menu" v-if="tabPopupOpen" ref="tabPopup">
 				<li class="group">Open tabs</li>
 				<li v-for="t in tabs" v-on:click.stop.prevent="selectTab(t, false, $event)">
-					<span v-text="t.title"></span>
+					<span v-text="fitText(t.title)"></span>
 				</li>
 				<li class="group">Recently closed</li>
 				<li v-for="t in closedTabs" v-on:click.stop.prevent="reopenTab(t)">
-					<span v-text="t.title"></span>
+					<span v-text="fitText(t.title)"></span>
 				</li>
 			</ul>
 		</div>
@@ -91,6 +91,7 @@
 	</div>
 	<div id="ctx-tabs-popup" class="contextmenu">
 		<div class="dropdown-menu menu" role="menu">
+			<button class="dropdown-item" v-on:click="reopenClosedTab" v-bind:disabled="!canReopenClosed"><span>Reopen closed tab</span></button>
 			<button class="dropdown-item" v-on:click="popupClose" v-bind:disabled="!canPopupClose"><span>Close</span></button>
 			<button class="dropdown-item" v-on:click="popupCloseOther" v-bind:disabled="!contextTabKey"><span>Close other tabs</span></button>
 			<button class="dropdown-item" v-on:click="popupCloseRight" v-bind:disabled="!canPopupCloseRight"><span>Close tabs to the right</span></button>

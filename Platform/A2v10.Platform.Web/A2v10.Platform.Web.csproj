@@ -4,7 +4,7 @@
 		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>
 		<Nullable>enable</Nullable>
 		<AddRazorSupportForMvc>true</AddRazorSupportForMvc>
-		<Version>10.1.8136</Version>
+		<Version>10.1.8140</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Platform.Web</PackageId>
 		<Authors>Oleksandr Kukthin</Authors>
@@ -69,10 +69,6 @@
 	    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
 	    <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
 	  </Content>
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Properties\" />
 	</ItemGroup>
 
 	<ItemGroup>

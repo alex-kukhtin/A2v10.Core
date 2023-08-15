@@ -1,6 +1,12 @@
 2023-08-14 (next: 8140)
 ==========
-
+A2v10.ViewEngine.Xaml
+A2v10.Platform
+A2v10.Web.Assets
+A2v10.App.Assets
+A2v10.Xaml.Report
+A2v10.ReportEngine.Pdf
+A2v10.Platform.Web
 
 
 *A2v10.Platform (8132)
@@ -11,9 +17,8 @@
 	A2v10.ReportEngine.Stimulsoft (8070)
 		A2v10.Infrastructure (8070)
 	A2v10.ReportEngine.Pdf (8071)
-		A2v10.ReportEngine.Pdf (8070)
-			A2v10.Xaml.Report (8070)
-			A2v10.Infrastructure (8070)
+		A2v10.Xaml.Report (8070)
+		A2v10.Infrastructure (8070)
 	A2v10.Services (8070)
 		A2v10.Infrastructure (8070)
 		A2v10.Module.Infrastructure (8070)
@@ -24,8 +29,8 @@
 	A2v10.Identity.UI (8132)
 		A2v10.Identity.Core (8124)
 		A2v10.Infrastructure (8070)
-A2v10.Web.Assets (8131)
-A2v10.App.Assets (8132)
+A2v10.Web.Assets
+A2v10.App.Assets
 
 A2v10.Identity.ApiKey (8085)
 A2v10.Identity.Jwt    (8085)

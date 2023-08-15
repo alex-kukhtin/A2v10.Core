@@ -18,7 +18,7 @@
 @light-brd-color: var(--neutralBkDark); // #e5e4e3
 @light-brd-color2: #ddd;
 
-@icon-color: var(--neutralSecondary);
+@icon-color: var(--icon-color);
 @light-gray-color:#ddd;
 @light-gray-bg-color: #e9e9e9;
 @whitesmoke-gray-bg-color: var(--neutral50);
@@ -69,10 +69,10 @@
 @input-padding: 5px;
 @select-padding: 2px;
 @placeholder-color: @gray-text-color;
-@label-color: @dark-gray-text-color;
+@label-color: var(--text-light);
 
 @control-focus-color: @link-color; //#208cf8; // TODO: variable?
-@header-text-color: @dark-gray-text-color;
+@header-text-color: var(--text-light);
 
 @disabled-bg-color: var(--gray50);
 
@@ -137,6 +137,7 @@
 
 @dropdown-brd-color: @default-brd-color;
 @dropdown-bg-color: #eaf0ff;
+@menu-hover-color: var(--menu-hover);
 /* z-index */
 // TODO: убрать ????
 @invalid-hover-index: auto; //98;

@@ -52,7 +52,8 @@
 			storageKey() { return this.appData.appId + '_tabs'; },
 			processing() { return !this.hasModals && this.requestsCount > 0; },
 			canPopupClose() { return this.contextTabKey > 10; /* 10 - home */ },
-			canPopupCloseRight() { return this.contextTabKey && this.tabs.some(v => v.key > this.contextTabKey); }
+			canPopupCloseRight() { return this.contextTabKey && this.tabs.some(v => v.key > this.contextTabKey); },
+			canReopenClosed() { return this.closedTabs.length > 0 }
 		},
 		methods: {
 			navigate(m) {
@@ -124,6 +125,10 @@
 			},
 			isHomeActive() {
 				return !this.activeTab;
+			},
+			fitText(t) {
+				if (!t) return 'untitled';
+				return t.length > 30 ? t.substring(0, 30) + '…' : t;
 			},
 			tabTitle(tab) {
 				let star = '';
@@ -260,6 +265,7 @@
 				}
 			},
 			toggleTabPopup() {
+				eventBus.$emit('closeAllPopups');
 				this.tabPopupOpen = !this.tabPopupOpen;
 			},
 			// context menu
@@ -279,6 +285,11 @@
 			popupClose() {
 				let t = this.tabs.find(t => t.key === this.contextTabKey);
 				if (t) this.closeTab(t);
+			},
+			reopenClosedTab() {
+				if (this.closedTabs.length <= 0) return;
+				let t = this.closedTabs[0];
+				this.reopenTab(t);
 			},
 			popupCloseOther() {
 				if (!this.contextTabKey) return;
