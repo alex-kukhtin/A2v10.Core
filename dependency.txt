@@ -1,12 +1,5 @@
-2023-08-14 (next: 8140)
+2023-08-18 (next: 8142)
 ==========
-A2v10.ViewEngine.Xaml
-A2v10.Platform
-A2v10.Web.Assets
-A2v10.App.Assets
-A2v10.Xaml.Report
-A2v10.ReportEngine.Pdf
-A2v10.Platform.Web
 
 
 *A2v10.Platform (8132)

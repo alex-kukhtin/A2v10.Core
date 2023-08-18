@@ -33,18 +33,18 @@ public class Page : RootContainer
 			if (!isGridPage)
 				return;
 			tag.AddCssClass("page-grid");
-			if (Taskpad != null)
+
+			var tp = GetTaskpad();
+
+			if (tp != null && tp.Width != null)
 			{
-				if (Taskpad is Taskpad tp && tp.Width != null)
+				if (tp.Position == TaskpadPosition.Left)
 				{
-					if (tp.Position == TaskpadPosition.Left)
-					{
-						tag.AddCssClass("taskpad-left");
-						tag.MergeStyle("grid-template-columns", $"{tp.Width.Value} 1fr");
-					}
-					else
-						tag.MergeStyle("grid-template-columns", $"1fr {tp.Width.Value}");
+					tag.AddCssClass("taskpad-left");
+					tag.MergeStyle("grid-template-columns", $"{tp.Width.Value} 1fr");
 				}
+				else
+					tag.MergeStyle("grid-template-columns", $"1fr {tp.Width.Value}");
 			}
 		}
 
@@ -114,6 +114,17 @@ public class Page : RootContainer
 	}
 
 	public Boolean ChildHasWrapper => Children != null && Children.Count == 1 && Children[0] is IHasWrapper;
+
+	private Taskpad? GetTaskpad()
+	{
+		if (Taskpad == null) 
+			return null;
+		if (Taskpad is Taskpad tp)
+			return tp;
+		if (Taskpad is ContentControl cc && cc?.Content is Taskpad tpc)
+			return tpc;
+		return null;
+	}
 
 	void AddAttributes(TagBuilder tag)
 	{

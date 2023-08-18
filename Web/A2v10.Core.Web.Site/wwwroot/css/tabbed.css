@@ -1597,7 +1597,7 @@ header .include.nav-pane .partial-block .control-group,
 .center-page .initial-form {
   width: 28rem;
   max-width: 90vw;
-  padding: 1.5em;
+  padding: 1.5em 2rem;
   background-color: white;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
   border-radius: 8px;
@@ -2278,11 +2278,11 @@ pre.a2-code {
 .control-group.open .input-group.focus {
   z-index: auto !important;
 }
-.control-group.required label:before {
+.control-group.required label:after {
   content: '\2731';
   display: inline-block;
   color: #dca7a7;
-  margin-right: 2px;
+  margin-left: 3px;
   vertical-align: 1px;
   font-size: 75%;
 }
@@ -2375,11 +2375,11 @@ pre.a2-code {
   color: var(--text-light);
   align-self: center;
 }
-.a2-label.required:before {
+.a2-label.required:after {
   content: '\2731';
   display: inline-block;
   color: #dca7a7;
-  margin-right: 2px;
+  margin-left: 3px;
   vertical-align: 1px;
   font-size: 75%;
 }
@@ -4823,7 +4823,7 @@ table.hover > tbody > tr.active:hover {
 }
 .a2-table > thead,
 .a2-table > tfoot {
-  line-height: 2;
+  line-height: 2rem;
 }
 .a2-table > thead > tr,
 .a2-table > tfoot > tr {
@@ -4832,7 +4832,7 @@ table.hover > tbody > tr.active:hover {
 .a2-table > thead > tr > td,
 .a2-table > tfoot > tr > td {
   padding: 0 6px;
-  background-color: #f5f5f5;
+  background-color: var(--neutral50);
   border-color: var(--neutralBkDarker);
 }
 .a2-table td.ctrl {
@@ -5246,6 +5246,7 @@ TODO:
   background-color: transparent;
   width: 100%;
   text-align: left;
+  border-radius: 4px;
 }
 .menu .dropdown-item:hover {
   text-decoration: none;

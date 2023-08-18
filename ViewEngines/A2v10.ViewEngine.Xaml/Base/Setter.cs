@@ -27,12 +27,18 @@ public class Setter : XamlElement
 			return;
 		if (prop.PropertyType.IsEnum)
 		{
-			var converter = TypeDescriptor.GetConverter(prop.PropertyType);
+            var oldVal = prop.GetValue(elem);
+			if (oldVal != null && (Int32)oldVal != 0)
+				return;
+            var converter = TypeDescriptor.GetConverter(prop.PropertyType);
 			var enumVal = converter.ConvertFromString(Value.ToString()!);
 			prop.SetValue(elem, enumVal);
 		}
 		else if (prop.PropertyType.IsClass)
 		{
+			var oldVal = prop.GetValue(elem);
+			if (oldVal != null)
+				return;
 			var converter = TypeDescriptor.GetConverter(prop.PropertyType) 
 				?? throw new XamlException($"Could not find converter for '{prop.PropertyType}'");
             var classVal = converter.ConvertFromString(Value.ToString()!);

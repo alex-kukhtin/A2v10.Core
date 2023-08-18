@@ -1,8 +1,8 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 @import "Variables.less";
 
-@table-hdr-bg-color: #f5f5f5;
+@table-hdr-bg-color: var(--neutral50);
 
 @a2-table-brd-color: @table-brd-color;
 
@@ -146,7 +146,7 @@ table.hover {
 	}
 
 	> thead, > tfoot {
-		line-height:2;
+		line-height:2rem;
 	}
 
 	> thead > tr, > tfoot > tr {
