@@ -4,7 +4,7 @@ using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-
+using System.Text;
 using Newtonsoft.Json;
 
 namespace A2v10.Services.Javascript;
@@ -85,15 +85,20 @@ public static class FetchCommand
 			requestMessage.Method = mtd;
 			var bodyObj = prms?.Get<Object>("body");
 
-            switch (bodyObj)
+			if (bodyObj != null)
 			{
-				case String strObj:
-					requestMessage.Content = new StringContent(strObj);
-					break;
-				case ExpandoObject eoObj:
-					var bodyStr = JsonConvert.SerializeObject(eoObj, new JsonDoubleConverter());
-					requestMessage.Content = JsonContent.Create(bodyStr);
-					break;
+				switch (bodyObj)
+				{
+					case String strObj:
+						requestMessage.Content = new StringContent(strObj);
+						break;
+					case ExpandoObject eoObj:
+						var bodyStr = JsonConvert.SerializeObject(eoObj, new JsonDoubleConverter());
+						requestMessage.Content = new StringContent(bodyStr, Encoding.UTF8, MimeTypes.Application.Json);
+						break;
+					default:
+						throw new InvalidOperationException($"Invalid body type '{bodyObj?.GetType()}'");
+				}
 			}
         }
 

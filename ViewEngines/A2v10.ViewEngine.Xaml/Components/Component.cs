@@ -23,6 +23,7 @@ public class Component : UIElementBase
 		if (scopeBind == null)
 		{
 			compUi.SetParent(this);
+			compUi.IsInGrid = IsInGrid;
 			compUi.RenderElement(context, onRender);
 			return;
 		}
