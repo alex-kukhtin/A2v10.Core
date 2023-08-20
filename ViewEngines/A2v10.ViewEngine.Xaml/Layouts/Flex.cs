@@ -32,9 +32,33 @@ public class Flex : Container
 
 	public override void RenderChildren(RenderContext context, Action<TagBuilder>? onRenderStatic = null)
 	{
-		foreach (var ch in Children)
+		var isBind = GetBinding(nameof(ItemsSource));
+		if (isBind != null)
 		{
-			ch.RenderElement(context);
+			var tml = new TagBuilder("template");
+			onRenderStatic?.Invoke(tml);
+			MergeAttributes(tml, context, MergeAttrMode.Visibility);
+			tml.MergeAttribute("v-for", $"(xelem, xIndex) in {isBind.GetPath(context)}");
+			tml.RenderStart(context);
+			using (new ScopeContext(context, "xelem", isBind.Path))
+			{
+				foreach (var c in Children)
+				{
+					c.RenderElement(context, (tag) =>
+					{
+						onRenderStatic?.Invoke(tag);
+						tag.MergeAttribute(":key", "xIndex");
+					});
+				}
+			}
+			tml.RenderEnd(context);
+		}
+		else
+		{
+			foreach (var ch in Children)
+			{
+				ch.RenderElement(context);
+			}
 		}
 	}
 }
