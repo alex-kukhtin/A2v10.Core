@@ -36,11 +36,11 @@
 		<div class="mdi-tabs-menu">
 			<span class="open-menu ico ico-chevron-down" v-on:click.stop.prevent="toggleTabPopup"></span>
 			<ul class="mdi-tabs-popup menu" v-if="tabPopupOpen" ref="tabPopup">
-				<li class="group">Open tabs</li>
+				<li class="group">@loc["OpenTabs"]</li>
 				<li v-for="t in tabs" v-on:click.stop.prevent="selectTab(t, false, $event)">
 					<span v-text="fitText(t.title)"></span>
 				</li>
-				<li class="group">Recently closed</li>
+				<li class="group">@loc["RecentlyClosedTabs"]</li>
 				<li v-for="t in closedTabs" v-on:click.stop.prevent="reopenTab(t)">
 					<span v-text="fitText(t.title)"></span>
 				</li>
@@ -91,11 +91,11 @@
 	</div>
 	<div id="ctx-tabs-popup" class="contextmenu">
 		<div class="dropdown-menu menu" role="menu">
-			<button class="dropdown-item" v-on:click="reopenClosedTab" v-bind:disabled="!canReopenClosed"><span>Reopen closed tab</span></button>
-			<button class="dropdown-item" v-on:click="popupClose" v-bind:disabled="!canPopupClose"><span>Close</span></button>
-			<button class="dropdown-item" v-on:click="popupCloseOther" v-bind:disabled="!contextTabKey"><span>Close other tabs</span></button>
-			<button class="dropdown-item" v-on:click="popupCloseRight" v-bind:disabled="!canPopupCloseRight"><span>Close tabs to the right</span></button>
-			<button class="dropdown-item" v-on:click="popupCloseAll"><span>Close all tabs</span></button>
+			<button class="dropdown-item" v-on:click="reopenClosedTab" v-bind:disabled="!canReopenClosed"><span>@loc["ReopenClosedTab"]</span></button>
+			<button class="dropdown-item" v-on:click="popupClose" v-bind:disabled="!canPopupClose"><span>@loc["Close"]</span></button>
+			<button class="dropdown-item" v-on:click="popupCloseOther" v-bind:disabled="!contextTabKey"><span>@loc["CloseOtherTabs"]</span></button>
+			<button class="dropdown-item" v-on:click="popupCloseRight" v-bind:disabled="!canPopupCloseRight"><span>@loc["CloseTabsRight"]</span></button>
+			<button class="dropdown-item" v-on:click="popupCloseAll"><span>@loc["CloseAllTabs"]</span></button>
 		</div>
 	</div>
 </div>

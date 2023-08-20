@@ -1,7 +1,12 @@
-2023-08-19 (next: 8143)
+2023-08-20 (next: 8143)
 ==========
+A2v10.Web.Assets
+A2v10.App.Assets
+A2v10.Identity.UI
+A2v10.Platform
 
-*A2v10.Platform (8132)
+
+A2v10.Platform (8132)
 	A2v10.Identity.Core (8070)
 	A2v10.Platform.Web (8131)
 		A2v10.Identity.Core (8124)

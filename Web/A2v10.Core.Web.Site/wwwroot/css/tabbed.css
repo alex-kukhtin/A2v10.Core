@@ -5301,6 +5301,7 @@ TODO:
   text-align: left;
   min-width: 100%;
   padding: 3px;
+  border-radius: 4px;
 }
 .dropdown-menu > .checkbox {
   float: left;
@@ -6843,6 +6844,7 @@ table > colgroup col.blue {
   background-color: white;
   z-index: 71;
   min-width: 250px;
+  border-radius: 4px;
 }
 .mdi-tabs-container .mdi-tabs-menu .mdi-tabs-popup li {
   list-style: none;

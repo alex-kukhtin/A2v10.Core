@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿// Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
+
+using System;
 using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace A2v10.Identity.UI;
 

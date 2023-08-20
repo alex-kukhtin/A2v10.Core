@@ -13,18 +13,11 @@ using A2v10.Web.Identity;
 
 namespace A2v10.Identity.UI;
 
-public record DeleteUserParams
-{
-    public Int64 UserId { get; init; } 
-    public Int32? TenantId { get; init; }
-    public Int64 Id { get; init; }
-}
-
-public class DeleteApiUserHandler : IClrInvokeTarget
+public class DeleteUserHandler : IClrInvokeTarget
 {
     private readonly AppUserStoreOptions<Int64> _userStoreOptions;
     private readonly IDbContext _dbContext;
-    public DeleteApiUserHandler(IServiceProvider serviceProvider)
+    public DeleteUserHandler(IServiceProvider serviceProvider)
     {
         _userStoreOptions = serviceProvider.GetRequiredService<IOptions<AppUserStoreOptions<Int64>>>().Value;
         _dbContext = serviceProvider.GetRequiredService<IDbContext>();
@@ -45,11 +38,11 @@ public class DeleteApiUserHandler : IClrInvokeTarget
             Id = Id
         };
 
-        var deletedUser = await _dbContext.ExecuteAndLoadAsync<DeleteUserParams, AppUser<Int64>>(_userStoreOptions.DataSource, "a2security.[User.DeleteApiUser]", deletePrms)
-            ?? throw new InvalidOperationException("Error deleting API user");
+        var deletedUser = await _dbContext.ExecuteAndLoadAsync<DeleteUserParams, AppUser<Int64>>(_userStoreOptions.DataSource, "a2security.[User.DeleteUser]", deletePrms)
+            ?? throw new InvalidOperationException("Error deleting user");
 
         if (IsMultiTenant)
-            await _dbContext.ExecuteAsync(deletedUser.Segment, "a2security.[User.Tenant.DeleteApiUser]", deletedUser);
+            await _dbContext.ExecuteAsync(deletedUser.Segment, "a2security.[User.Tenant.DeleteUser]", deletedUser);
 
         return new ExpandoObject()
         {

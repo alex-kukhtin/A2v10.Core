@@ -3,11 +3,13 @@
 using System;
 using System.Dynamic;
 using System.Threading.Tasks;
+
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Web.Identity;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 
 namespace A2v10.Identity.UI;
 
@@ -17,7 +19,8 @@ public record CreateUserParams
     public Int32? TenantId { get; init; }
     public String? ApiKey { get; init; }
     public String? Name { get; init; }
-    public String? Memo { get; init; }
+	public String? PersonName { get; init; }
+	public String? Memo { get; init; }
 }
 
 public class CreateApiUserHandler : IClrInvokeTarget
@@ -37,13 +40,16 @@ public class CreateApiUserHandler : IClrInvokeTarget
 
         var apiKey = HandlerHelpers.GenerateApiKey();
 
+        var userName = Guid.NewGuid().ToString();
+
         var createPrms = new CreateUserParams()
         {
             UserId = args.Get<Int64>("UserId"),
             TenantId = TenantId,
             ApiKey = apiKey,
-            Name = args.Get<String>("Name"),    
-            Memo = args.Get<String>("Memo")
+            Name = userName,
+			PersonName = args.Get<String>("Name"),
+			Memo = args.Get<String>("Memo")
         };
 
         var createdUser = await _dbContext.ExecuteAndLoadAsync<CreateUserParams, AppUser<Int64>>(_userStoreOptions.DataSource, "a2security.[User.CreateApiUser]", createPrms)
