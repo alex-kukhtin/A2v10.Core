@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2008-2023 Oleksandr Kukhtin
 
-Last updated : 21 jul 2023
-module version : 8121
+Last updated : 21 aug 2023
+module version : 8135
 */
 
 /*
@@ -77,24 +77,6 @@ begin
 end
 go
 ------------------------------------------------
-create or alter procedure a2sch.[Command.Queue]
-@Command nvarchar(64),
-@Data nvarchar(1024) = null,
-@UtcRunAt datetime = null
-as
-begin
-	set nocount on;
-	set transaction isolation level read committed;
-
-	declare @rtable table(id bigint);
-	insert a2sch.Commands (Command, UtcRunAt, [Data], Complete)
-	output inserted.Id into @rtable(id)
-	values (@Command, @UtcRunAt, @Data, 0);
-
-	select [Id] = id from @rtable;
-end
-go
-------------------------------------------------
 create or alter procedure a2sch.[Command.Complete]
 @Id bigint,
 @Lock uniqueidentifier,
@@ -119,5 +101,48 @@ begin
 	set nocount on;
 	set transaction isolation level read committed;
 	insert into a2sch.Exceptions([JobId], [Message]) values (@JobId, @Message);
+end
+go
+------------------------------------------------
+drop procedure if exists a2sch.[Command.Collection.Queue];
+drop type if exists a2sch.[Command.TableType];
+go
+------------------------------------------------
+create type a2sch.[Command.TableType] as table
+(
+	Command nvarchar(64),
+    [Data] nvarchar(max),
+	UtcRunAt datetime
+)
+go
+------------------------------------------------
+create or alter procedure a2sch.[Command.Queue]
+@Command nvarchar(64),
+@Data nvarchar(1024) = null,
+@UtcRunAt datetime = null
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+
+	declare @rtable table(id bigint);
+	insert a2sch.Commands (Command, UtcRunAt, [Data], Complete)
+	output inserted.Id into @rtable(id)
+	values (@Command, @UtcRunAt, @Data, 0);
+
+	select [Id] = id from @rtable;
+end
+go
+------------------------------------------------
+create or alter procedure a2sch.[Command.Collection.Queue]
+@Commands a2sch.[Command.TableType] readonly
+as
+begin
+	set nocount on;
+	set transaction isolation level read uncommitted;
+
+	insert a2sch.Commands (Command, [Data], UtcRunAt, Complete)
+	select Command, [Data], UtcRunAt, 0
+	from @Commands;
 end
 go

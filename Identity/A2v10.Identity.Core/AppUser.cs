@@ -16,6 +16,7 @@ public enum UpdateFlags
 	PhoneNumberConfirmed = 0x40,
 	Roles = 0x80,
 	Branch = 0x100,
+	ZipCode = 0x200,
 }
 public class AppUser<T> where T : struct
 {
@@ -45,9 +46,11 @@ public class AppUser<T> where T : struct
 	public Boolean IsPersistent { get; set; }
 	public Boolean ChangePasswordEnabled { get; set; }
 	public String? Roles { get; set; }
+    public String? ZipCode { get; set; }
+    public Boolean IsBlocked { get; set; }
 
-	// for .net framework compatibility
-	public String? PasswordHash2 { get; set; }
+    // for .net framework compatibility
+    public String? PasswordHash2 { get; set; }
 	public String? SecurityStamp2 { get; set; }
     public String? Memo { get; set; }
 

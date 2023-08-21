@@ -54,7 +54,8 @@ public sealed class AppUserStore<T> :
 		public const String Email = nameof(Email);
 		public const String Roles = nameof(Roles);
 		public const String Branch = nameof(Branch);
-		public const String AccessFailedCount = nameof(AccessFailedCount);
+        public const String ZipCode = nameof(ZipCode);
+        public const String AccessFailedCount = nameof(AccessFailedCount);
 		public const String LockoutEndDate = nameof(LockoutEndDate);
 	}
 	public AppUserStore(IDbContext dbContext, IOptions<AppUserStoreOptions<T>> options)
@@ -167,8 +168,10 @@ public sealed class AppUserStore<T> :
 			prm.Add(ParamNames.Roles, user.Roles);
 		if (user.Flags.HasFlag(UpdateFlags.Branch))
 			prm.Add(ParamNames.Branch, user.Branch);
+        if (user.Flags.HasFlag(UpdateFlags.ZipCode))
+            prm.Add(ParamNames.ZipCode, user.ZipCode);
 
-		await _dbContext.ExecuteExpandoAsync(_dataSource, $"[{_dbSchema}].[User.UpdateParts]", prm);
+        await _dbContext.ExecuteExpandoAsync(_dataSource, $"[{_dbSchema}].[User.UpdateParts]", prm);
 
 		if (_multiTenant) // update segment!
 			await _dbContext.ExecuteExpandoAsync(user.Segment, $"[{_dbSchema}].[User.UpdateParts]", prm);
