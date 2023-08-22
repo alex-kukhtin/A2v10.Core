@@ -1,13 +1,5 @@
-2023-08-20 (next: 8143)
+2023-08-22 (next: 8144)
 ==========
-A2v10.Web.Assets
-A2v10.App.Assets
-A2v10.Identity.Core
-A2v10.Identity.UI
-A2v10.Identity.ApiKey
-A2v10.Identity.Jwt
-A2v10.ViewEngine.Xaml
-A2v10.Platform
 
 
 A2v10.Platform (8132)

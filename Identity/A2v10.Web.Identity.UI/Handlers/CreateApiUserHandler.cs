@@ -20,7 +20,13 @@ public record CreateUserParams
     public String? ApiKey { get; init; }
     public String? Name { get; init; }
 	public String? PersonName { get; init; }
-	public String? Memo { get; init; }
+    public String? PhoneNumber { get; init; }
+    public String? Memo { get; init; }
+}
+
+public record EditUserParams : CreateUserParams
+{
+    public Int64 Id { get; init; }
 }
 
 public class CreateApiUserHandler : IClrInvokeTarget
@@ -48,7 +54,7 @@ public class CreateApiUserHandler : IClrInvokeTarget
             TenantId = TenantId,
             ApiKey = apiKey,
             Name = userName,
-			PersonName = args.Get<String>("Name"),
+			PersonName = args.Get<String>("PersonName"),
 			Memo = args.Get<String>("Memo")
         };
 

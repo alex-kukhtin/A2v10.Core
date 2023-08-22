@@ -118,6 +118,23 @@ create table a2security.ApiUserLogins
 );
 go
 ------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2security' and TABLE_NAME=N'DeletedUsers')
+create table a2security.DeletedUsers
+(
+	Id	bigint not null,
+	Tenant int not null 
+		constraint FK_DeletedUsers_Tenant_Tenants foreign key references a2security.Tenants(Id),
+	UserName nvarchar(255) not null,
+	DomainUser nvarchar(255) null,
+	Email nvarchar(255) null,
+	PhoneNumber nvarchar(255) null,
+	DeletedByUser bigint not null,
+	UtcDateDeleted datetime not null constraint DF_Users_UtcDateDeleted default(getutcdate()),
+	constraint PK_DeletedUsers primary key (Tenant, Id),
+	constraint FK_DeletedUsers_DeletedByUser_Users foreign key (Tenant, DeletedByUser) references a2security.Users(Tenant, Id)
+);
+go
+------------------------------------------------
 create or alter view a2security.ViewUsers
 as
 	select Id, UserName, DomainUser, PasswordHash, SecurityStamp, Email, PhoneNumber,
@@ -596,6 +613,7 @@ go
 create or alter procedure a2security.[User.Tenant.CreateApiUser]
 @TenantId int = 1,
 @UserName nvarchar(255) = null,
+@PersonName nvarchar(255) = null,
 @Memo nvarchar(255) = null,
 @Locale nvarchar(255) = null
 as
@@ -607,26 +625,60 @@ begin
 	set @TenantId = isnull(@TenantId, 1);
 	set @Locale = isnull(@Locale, N'');
 
-	insert into a2security.Users(Tenant, IsApiUser, UserName, Memo, Segment, Locale, SecurityStamp, SecurityStamp2)
-	select @TenantId, 1, @UserName, @Memo, N'', @Locale, N'', N'';
+	insert into a2security.Users(Tenant, IsApiUser, UserName, PersonName, Memo, Segment, Locale, SecurityStamp, SecurityStamp2)
+	select @TenantId, 1, @UserName, @PersonName, @Memo, N'', @Locale, N'', N'';
 
 end
 go
 ------------------------------------------------
 create or alter procedure a2security.[User.Tenant.DeleteApiUser]
 @TenantId int = 1,
-@Id bigint,
-@UserName nvarchar(255)
+@UserId bigint = null,
+@Id bigint
 as
 begin
 	set nocount on;
 	set transaction isolation level read committed;
 
-	update a2security.Users set Void = 1, UserName = @UserName
+	update a2security.Users set Void = 1 where Tenant = @TenantId and Id = @Id;
+end
+go
+------------------------------------------------
+create or alter procedure a2security.[User.Tenant.DeleteUser]
+@TenantId int = 1,
+@UserId bigint = null,
+@Id bigint,
+@UserName nvarchar(255) = null,
+@Email nvarchar(255) = null,
+@PhoneNumber nvarchar(255) = null,
+@DomainUser nvarchar(255) = null
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+
+	update a2security.Users set Void = 1, UserName = @UserName, @Email = @Email, PhoneNumber = @PhoneNumber,
+		DomainUser = @DomainUser, EmailConfirmed = 0, PhoneNumberConfirmed = 0
+	where Tenant = @TenantId and Id = @Id;
+
+end
+go
+------------------------------------------------
+create or alter procedure a2security.[User.Tenant.EditUser]
+@TenantId int = 1,
+@Id bigint,
+@PersonName nvarchar(255) = null,
+@PhoneNumber nvarchar(255) = null,
+@Memo nvarchar(255) = null
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+
+	update a2security.Users set PersonName = @PersonName, Memo = @Memo, PhoneNumber = @PhoneNumber
 		where Tenant = @TenantId and Id = @Id;
 end
 go
-
 
 /*
 Copyright © 2008-2023 Oleksandr Kukhtin

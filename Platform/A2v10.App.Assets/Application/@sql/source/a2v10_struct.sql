@@ -118,6 +118,23 @@ create table a2security.ApiUserLogins
 );
 go
 ------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2security' and TABLE_NAME=N'DeletedUsers')
+create table a2security.DeletedUsers
+(
+	Id	bigint not null,
+	Tenant int not null 
+		constraint FK_DeletedUsers_Tenant_Tenants foreign key references a2security.Tenants(Id),
+	UserName nvarchar(255) not null,
+	DomainUser nvarchar(255) null,
+	Email nvarchar(255) null,
+	PhoneNumber nvarchar(255) null,
+	DeletedByUser bigint not null,
+	UtcDateDeleted datetime not null constraint DF_Users_UtcDateDeleted default(getutcdate()),
+	constraint PK_DeletedUsers primary key (Tenant, Id),
+	constraint FK_DeletedUsers_DeletedByUser_Users foreign key (Tenant, DeletedByUser) references a2security.Users(Tenant, Id)
+);
+go
+------------------------------------------------
 create or alter view a2security.ViewUsers
 as
 	select Id, UserName, DomainUser, PasswordHash, SecurityStamp, Email, PhoneNumber,

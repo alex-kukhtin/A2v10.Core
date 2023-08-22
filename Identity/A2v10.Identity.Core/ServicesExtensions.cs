@@ -110,8 +110,15 @@ public static class ServicesExtensions
 				o.Cookie.SameSite = SameSiteMode.Strict;
 				o.ExpireTimeSpan = TimeSpan.FromMinutes(5);
 			}
-		);
-		return builder;
+		).
+		AddCookie(IdentityConstants.TwoFactorRememberMeScheme, o =>
+		{
+            o.Cookie.Name = px + IdentityConstants.TwoFactorRememberMeScheme;
+            o.Cookie.SameSite = SameSiteMode.Strict;
+            o.ExpireTimeSpan = TimeSpan.FromDays(30);
+        });
+
+        return builder;
 	}
 
 

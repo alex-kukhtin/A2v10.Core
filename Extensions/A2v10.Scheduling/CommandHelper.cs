@@ -8,10 +8,10 @@ using A2v10.Data.Interfaces;
 
 namespace A2v10.Scheduling;
 
-public class CommandHelper
+public class ScheduledCommandHelper
 {
     private readonly IDbContext _dbContext;
-    public CommandHelper(IDbContext dbContext)
+    public ScheduledCommandHelper(IDbContext dbContext)
     {
         _dbContext = dbContext;
     }
