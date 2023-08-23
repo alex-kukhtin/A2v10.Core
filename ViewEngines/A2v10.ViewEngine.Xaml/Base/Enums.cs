@@ -288,6 +288,7 @@ public enum Icon
 	Circle,
 	CircleSmall,
 	Clear,
+	Clip,
 	Close,
 	Cloud,
 	CloudOutline,
