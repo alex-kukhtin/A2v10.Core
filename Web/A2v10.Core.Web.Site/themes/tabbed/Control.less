@@ -3,6 +3,7 @@
 
 @control-bg-color: @background-color;
 @hover-color: var(--neutral100);
+@control-disabled-opacity: .8;
 
 @validator-arrow-size: 8px;
 
@@ -521,6 +522,7 @@
 	.input-group {
 		background-color: @disabled-bg-color;
 		border-color: @control-disabled-brd-color;
+		opacity:@control-disabled-opacity;
 	}
 
 	a:not(.rendershow) {
