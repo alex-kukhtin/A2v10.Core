@@ -37,6 +37,14 @@ services.UseScheduling(Configuration, factory =>
 "Id", "Handler", and "Cron" are required.
 Rest parameters depend on the handler type.
 
+
+# Hanlder types in this package
+
+* **ExecuteSqlJobHandler** - executes a stored procedure
+* **ProcessCommandsJobHandler** - processes the command queue
+
+
+
 # See also
 
 * [Cron Trigger Tutorial](http://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html)
@@ -45,6 +53,8 @@ Rest parameters depend on the handler type.
 # Related Packages
 
 * [A2v10.Scheduling.Infrastructure](https://www.nuget.org/packages/A2v10.Scheduling.Infrastructure)
+* [A2v10.Data.Interfaces](https://www.nuget.org/packages/A2v10.Data.Interfaces)
+
 * [Quartz.AspNetCore](https://www.nuget.org/packages/Quartz.AspNetCore)
 
 # If your site is hosted using IIS 
@@ -56,5 +66,5 @@ Make sure the site is always running.
 
 # Feedback
 
-A2v10.Scheduling is released as open source under the MIT license. 
+A2v10.Scheduling is released as open source under the Apache-2.0 license. 
 Bug reports and contributions are welcome at the GitHub repository.
