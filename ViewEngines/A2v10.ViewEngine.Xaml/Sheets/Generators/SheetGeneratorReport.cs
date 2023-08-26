@@ -105,9 +105,9 @@ public class SheetGeneratorReportInfo : ISheetGenerator
 			var col = new SheetColumn() { Width = Length.FromString("16px") };
 			_sheet.Columns.Add(col);
 		}
+		_sheet.Columns.Add(new SheetColumn() { Width = Length.FromString("4rem") });
 		if (groupingFields.Any())
 		{
-			_sheet.Columns.Add(new SheetColumn() { Width = Length.FromString("4rem") });
 			if (hasGroupCell)
 				_sheet.Columns.Add(new SheetColumn() { Width = wideColWidth, MinWidth = autoColWidth });
 			else
@@ -115,6 +115,11 @@ public class SheetGeneratorReportInfo : ISheetGenerator
 				_sheet.Columns.Add(new SheetColumn() { Width = autoColWidth });
 				_sheet.Columns.Add(new SheetColumn() { Width = wideColWidth, MinWidth = autoColWidth });
 			}
+		}
+		else
+		{
+			_sheet.Columns.Add(new SheetColumn() { Width = autoColWidth });
+			_sheet.Columns.Add(new SheetColumn() { Width = wideColWidth, MinWidth = autoColWidth });
 		}
 		Boolean nextGray = false;
 		foreach (var f in visibleFields)
