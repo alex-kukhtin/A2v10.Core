@@ -2,9 +2,7 @@
 
 @import "Variables.less";
 
-@table-hdr-bg-color: var(--neutral50);
-
-@a2-table-brd-color: @table-brd-color;
+@table-hdr-bg-color: var(--neutral100);
 
 @compact-ctrl-height:1.67em;
 
@@ -28,7 +26,7 @@ table {
 	}
 
 	tr.overline {
-		border-top: 2px solid @a2-table-brd-color;
+		border-top: 2px solid @table-brd-color;
 	}
 
 	td.wrap {
@@ -76,14 +74,14 @@ table.hover {
 	> tbody, > thead, > tfoot {
 		> tr {
 			> td, > th {
-				border-right: 1px solid @a2-table-brd-color;
+				border-right: 1px solid @table-brd-color;
 			}
 		}
 	}
 
 	> tbody, > thead, > tfoot {
 		> tr > td:first-child:not(.no-first), > tr > th:first-child:not(.no-first) {
-			border-left: 1px solid @a2-table-brd-color;
+			border-left: 1px solid @table-brd-color;
 		}
 	}
 }
@@ -92,13 +90,13 @@ table.hover {
 	> tbody, > thead, > tfoot {
 		> tr {
 			> td, > th {
-				border-bottom: 1px solid @a2-table-brd-color;
+				border-bottom: 1px solid @table-brd-color;
 			}
 		}
 	}
 
 	> thead > tr:first-child > td, tfoot > tr:first-child > td {
-		border-top: 1px solid @a2-table-brd-color;
+		border-top: 1px solid @table-brd-color;
 	}
 }
 
@@ -121,7 +119,7 @@ table.hover {
 
 	&.bordered {
 		margin: 1px;
-		outline: 1px solid @a2-table-brd-color;
+		outline: 1px solid @table-brd-color;
 	}
 
 	> tbody > tr {
@@ -130,7 +128,7 @@ table.hover {
 
 	> tbody > tr > td {
 		padding: 0 6px;
-		border-color: @a2-table-brd-color;
+		border-color: @table-brd-color;
 
 		label {
 			display: inline-block;
@@ -156,7 +154,7 @@ table.hover {
 	> thead > tr > td, > tfoot > tr > td {
 		padding: 0 @cell-vert-padding;
 		background-color: @table-hdr-bg-color;
-		border-color: @a2-table-brd-color;
+		border-color: @table-brd-color;
 	}
 
 	td.ctrl {
@@ -171,7 +169,7 @@ table.hover {
 			align-items: baseline;
 
 			.control-group + .control-group {
-				border-left: 1px solid @a2-table-brd-color;
+				border-left: 1px solid @table-brd-color;
 			}
 		}
 	}
@@ -217,7 +215,7 @@ table.hover {
 	td.row-divider {
 		padding: 0;
 		height: 1px;
-		background-color: @a2-table-brd-color;
+		background-color: @table-brd-color;
 	}
 
 	tr:last-child td.row-divider {

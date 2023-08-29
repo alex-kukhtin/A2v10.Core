@@ -1261,7 +1261,7 @@ h5,
 }
 .text-color-gray,
 .text-color-label {
-  color: var(--text-light);
+  color: var(--text-label);
 }
 .text-color-light-gray {
   color: #ccc;
@@ -1340,7 +1340,7 @@ body {
   height: 100%;
   width: 100%;
   padding: 0;
-  background-color: var(--background);
+  background-color: var(--bgPrimary);
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -1355,7 +1355,7 @@ body.waiting * {
 }
 hr {
   margin: 0.8rem 0;
-  border: 1px solid var(--neutralBkDarker);
+  border: 1px solid var(--neutral300);
   border-bottom-style: none;
 }
 header,
@@ -1539,7 +1539,7 @@ header .include.nav-pane .partial-block .control-group,
 .page.page-grid .page-toolbar {
   grid-column: 1 / span 2;
   grid-row: 1;
-  border-bottom: 1px solid var(--neutralBkDarker);
+  border-bottom: 1px solid var(--neutral300);
   padding: 0.5rem;
 }
 .page.page-grid .page-taskpad {
@@ -1716,7 +1716,7 @@ header .include.nav-pane .partial-block .control-group,
   cursor: pointer;
   font-size: 16px;
   padding-left: 2px;
-  color: var(--text-light);
+  color: var(--text-label);
 }
 .taskpad .taskpad-title .taskpad-label {
   display: block;
@@ -1765,7 +1765,7 @@ header .include.nav-pane .partial-block .control-group,
   text-align: center;
 }
 .a2-image .remove-image:hover {
-  background-color: var(--hoverBk);
+  background-color: var(--menu-hover);
 }
 .a2-image .remove-image:active {
   background-color: #fff29d;
@@ -1784,9 +1784,9 @@ header .include.nav-pane .partial-block .control-group,
   display: block;
   padding: 0;
   background-color: lemonchiffon;
-  border: 2px dotted var(--neutralBkDarker);
+  border: 2px dotted var(--neutral300);
   position: relative;
-  color: var(--neutralBkDarker);
+  color: var(--neutral300);
 }
 .file-upload.hover {
   border-color: gold;
@@ -1945,7 +1945,7 @@ pre.a2-code {
   font-size: 1em;
 }
 .control-group label {
-  color: var(--text-light);
+  color: var(--text-label);
   margin-bottom: 0.2em;
   display: block;
   font-weight: normal;
@@ -1958,7 +1958,7 @@ pre.a2-code {
   display: inline-block;
   font-size: 0.95em;
   margin-bottom: 0.25em;
-  color: var(--text-light);
+  color: var(--text-label);
 }
 .control-group .validator {
   position: absolute;
@@ -1971,6 +1971,7 @@ pre.a2-code {
   top: 100%;
   bottom: auto;
   padding: 2px 6px 4px 6px;
+  border-radius: 4px;
   background-color: #f2dede;
   color: #a94442;
   border: 1px solid #dca7a7;
@@ -2127,7 +2128,7 @@ pre.a2-code {
   border-radius: 4px;
   display: flex;
   align-items: stretch;
-  background-color: var(--background);
+  background-color: var(--bgControl);
   width: auto;
   position: relative;
   line-height: 2em;
@@ -2159,9 +2160,8 @@ pre.a2-code {
   margin: 0.9em 0.2em 0 0.5em;
 }
 .control-group .input-group.static {
-  background-color: var(--neutral50);
+  background-color: var(--bgPrimary);
   user-select: text;
-  border-color: var(--neutral300);
 }
 .control-group .input-group.static > span {
   padding: 0 5px;
@@ -2180,7 +2180,7 @@ pre.a2-code {
 }
 .control-group .input-group > a,
 .control-group .input-group > .dropdown > a {
-  color: var(--text-light);
+  color: var(--text-label);
   padding: 0 0.4em;
   display: inline-block;
 }
@@ -2320,9 +2320,8 @@ pre.a2-code {
   background-color: #fff8f8;
 }
 .control-group.disabled .input-group {
-  background-color: var(--neutral50);
-  border-color: var(--neutral300);
-  opacity: 0.8;
+  background-color: var(--bgPrimary);
+  opacity: 0.85;
 }
 .control-group.disabled a:not(.rendershow) {
   pointer-events: none;
@@ -2376,7 +2375,7 @@ pre.a2-code {
 }
 .a2-label {
   display: block;
-  color: var(--text-light);
+  color: var(--text-label);
   align-self: center;
 }
 .a2-label.required:after {
@@ -2661,10 +2660,10 @@ pre.a2-code {
   background-color: transparent;
 }
 .btn-toolbar:hover {
-  background-color: var(--neutralBkDark);
+  background-color: var(--menu-hover);
 }
 .btn-toolbar:not([disabled]):active {
-  background-color: var(--neutralBkDarker);
+  background-color: var(--menu-hover);
 }
 .btn-outline {
   background-color: transparent;
@@ -2690,9 +2689,9 @@ pre.a2-code {
   display: flex;
   font-size: 1rem;
   flex-direction: row;
-  border: 1px solid var(--neutralBkDarker);
+  border: 1px solid var(--neutral300);
   position: absolute;
-  background-color: var(--background);
+  background-color: var(--bgControl);
   left: 0;
   top: 100%;
   z-index: 1070 !important;
@@ -2702,9 +2701,10 @@ pre.a2-code {
   box-shadow: 3px 3px 10px 0 rgba(174, 174, 174, 0.5), 0 5px 40px 0 rgba(0, 0, 0, 0.15);
   color: var(--text);
   line-height: normal;
+  border-radius: 4px;
 }
 .calendar-pane td {
-  background-color: var(--background);
+  background-color: var(--bgControl);
 }
 .calendar-pane td,
 .calendar-pane th {
@@ -2713,6 +2713,9 @@ pre.a2-code {
 }
 .calendar-pane .h-btn {
   width: 27px;
+}
+.calendar-pane .h-btn a {
+  border-radius: 4px;
 }
 .calendar-pane .calendar-footer {
   text-align: center;
@@ -2737,7 +2740,7 @@ pre.a2-code {
   color: var(--text);
 }
 .calendar-pane a:hover {
-  background-color: var(--hoverBk) !important;
+  background-color: var(--menu-hover) !important;
 }
 .calendar-pane tbody td.today > a {
   font-weight: 500;
@@ -2773,9 +2776,10 @@ pre.a2-code {
 }
 .calendar-pane a.today {
   text-transform: lowercase;
+  border-radius: 4px;
 }
 .calendar-pane tr.weekdays th {
-  border-bottom: 1px solid var(--neutral50);
+  border-bottom: 1px solid var(--neutral300);
   padding: 2px 0;
 }
 .time-picker-pane {
@@ -2790,7 +2794,7 @@ pre.a2-code {
 }
 .time-picker-pane th {
   font-weight: 500;
-  border-bottom: 1px solid var(--neutral50) !important;
+  border-bottom: 1px solid var(--neutral300) !important;
   color: #555;
   padding: 0 0 7px 0;
 }
@@ -2801,7 +2805,7 @@ pre.a2-code {
 }
 .date-picker.open .input-group input,
 .date-picker.open .input-group a {
-  background-color: var(--background);
+  background-color: var(--bgControl);
   z-index: 1071;
 }
 .period-picker {
@@ -2817,7 +2821,7 @@ pre.a2-code {
 }
 .period-picker.open:not(.pp-navbar):not(.pp-hyperlink) .period-text {
   z-index: 1071;
-  background-color: var(--background);
+  background-color: var(--bgPrimary);
 }
 .period-picker .caret {
   margin: 0.9em 0.6em 0.5em 0.5em;
@@ -2825,8 +2829,12 @@ pre.a2-code {
 .period-picker .period-menu {
   margin: 0;
   padding: 0;
-  border-right: 1px solid var(--neutral50);
+  border-right: 1px solid var(--neutral300);
+  padding-right: 0.8rem;
   list-style: none;
+}
+.period-picker .period-menu li {
+  border-radius: 4px;
 }
 .period-picker .period-menu li > a {
   display: block;
@@ -2837,7 +2845,7 @@ pre.a2-code {
   color: var(--text);
 }
 .period-picker .period-menu li:hover {
-  background-color: var(--hoverBk);
+  background-color: var(--menu-hover);
 }
 .period-picker .period-menu li.active {
   background-color: var(--activeBk);
@@ -2848,6 +2856,7 @@ pre.a2-code {
   font-size: 1rem;
   font-weight: normal;
   font-style: normal;
+  border-radius: 4px;
 }
 .period-picker .current-period {
   font-weight: 500;
@@ -2876,7 +2885,7 @@ pre.a2-code {
   display: flex;
   align-items: center;
   padding-top: 0.8em;
-  border-top: 1px solid var(--neutral50);
+  border-top: 1px solid var(--neutral300);
 }
 .period-picker .period-footer .btn {
   padding: 0.3em 0.5em;
@@ -2939,8 +2948,9 @@ pre.a2-code {
 }
 .input-group > .selector-pane {
   border: 1px solid var(--link);
+  border-radius: 4px;
   position: absolute;
-  background-color: #fff;
+  background-color: var(--bgMenu);
   left: 0;
   top: 100%;
   min-width: calc(100% + 2px);
@@ -2992,7 +3002,7 @@ pre.a2-code {
   line-height: 1.1rem;
 }
 .input-group > .selector-pane ul.selector-ul li:hover {
-  background-color: var(--hoverBk);
+  background-color: var(--menu-hover);
 }
 .input-group > .selector-pane ul.selector-ul li.active {
   background-color: var(--activeBk);
@@ -3000,7 +3010,7 @@ pre.a2-code {
 .input-group > .selector-pane a.create-elem {
   padding: 4px;
   display: block;
-  border-top: 1px solid var(--neutralBkDarker);
+  border-top: 1px solid var(--neutral300);
   background-color: var(--neutral50);
 }
 .input-group > .selector-pane table.data-grid tr.dg-row > td {
@@ -3042,9 +3052,18 @@ pre.a2-code {
   overflow-x: hidden;
   overflow-y: auto;
   position: relative;
+  background-color: var(--bgControl);
 }
 .data-grid-container.bordered {
-  border: 1px solid var(--neutralBkDarker);
+  border: 1px solid var(--neutral300);
+  border-radius: 4px;
+}
+.data-grid-container.bordered th:first-child,
+.data-grid-container.bordered .h-holder {
+  border-radius: 4px 0 0 0;
+}
+.data-grid-container.bordered tr.group:first-child td {
+  border-top: none;
 }
 .data-grid-container .data-grid-header-border {
   position: absolute;
@@ -3067,7 +3086,7 @@ table.data-grid.striped > tbody > tr.even {
   background-color: rgba(224, 224, 224, 0.1);
 }
 table.data-grid:not(.no-hover) > tbody > tr:hover {
-  background-color: var(--hoverBkLight);
+  background-color: var(--menu-hover);
 }
 table.data-grid:not(.no-hover) > tbody > tr.active:hover {
   background-color: var(--activeBkLight);
@@ -3107,7 +3126,7 @@ table.data-grid td.cell-validator {
   width: 23px;
 }
 table.data-grid colgroup > col.sorted {
-  background-color: rgba(238, 238, 238, 0.45);
+  background-color: rgba(238, 238, 238, 0.25);
 }
 table.data-grid > thead > tr > th {
   border-color: var(--neutral300);
@@ -3279,7 +3298,7 @@ table.data-grid tr.group td .grtitle {
 table.data-grid tr.group td .grcount {
   float: right;
   font-size: 85%;
-  background-color: #bbb;
+  background-color: var(--neutral500);
   color: white;
   padding: 2px 4px;
   border-radius: 10rem;
@@ -3294,7 +3313,7 @@ table.data-grid td.group-marker {
   border-style: none;
 }
 table.data-grid tr.dg-row:last-child > td {
-  border-bottom: 1px solid var(--neutralBkDarker);
+  border-bottom: 1px solid var(--neutral300);
 }
 table.data-grid.compact {
   font-size: 0.95rem;
@@ -3407,12 +3426,12 @@ table.data-grid > tbody > tr.bold > td {
   height: calc(100% - 36px);
 }
 .data-grid-container.data-grid-light table.data-grid th {
-  color: rgba(0, 0, 0, 0.7);
+  color: var(--text-label);
   border-style: none;
 }
 .data-grid-container.data-grid-light table.data-grid tr.group td {
-  background-color: #f9f9f9;
-  color: var(--text-light);
+  background-color: var(--neutral100);
+  color: var(--text-label);
 }
 .data-grid-container.data-grid-light table.data-grid.grid-horizontal th .h-holder {
   border-left: none !important;
@@ -3455,7 +3474,7 @@ table.data-grid > tbody > tr.bold > td {
   margin-left: 6px;
 }
 .toolbar .dropdown.show .btn {
-  background-color: var(--neutralBkDarker);
+  background-color: var(--menu-hover);
 }
 .toolbar.transparent {
   background-color: transparent;
@@ -3465,28 +3484,29 @@ table.data-grid > tbody > tr.bold > td {
   color: var(--link);
 }
 .toolbar.transparent .dropdown.show .btn {
-  background: var(--background);
+  background: var(--bgPrimary);
   outline: 1px dotted #ccc !important;
 }
 .toolbar.light {
-  background-color: var(--background);
+  background-color: var(--bgPrimary);
 }
 .toolbar.light > .divider {
   border-right-color: #ececec;
   background-color: #fcfcfc;
 }
 .toolbar.light .dropdown.show .btn {
-  background-color: var(--background);
+  background-color: var(--bgPrimary);
   outline: 1px dotted #ccc !important;
 }
 .toolbar > .dropdown > .btn-caret {
-  border-left-color: #ccc;
+  border-left-color: var(--neutral300);
+  border-radius: 0 4px 4px 0;
 }
 .toolbar .btn-caret {
   background-color: transparent;
 }
 .toolbar .btn-caret:hover {
-  background-color: var(--neutralBkDark);
+  background-color: var(--menu-hover);
   outline: none;
 }
 .toolbar .a2-header {
@@ -3537,11 +3557,11 @@ table.data-grid > tbody > tr.bold > td {
   outline-offset: -2px;
 }
 .btn-tb:hover {
-  background-color: var(--neutralBkDark);
+  background-color: var(--menu-hover);
   outline: none;
 }
 .btn-tb:active {
-  background-color: var(--neutralBkDarker);
+  background-color: var(--menu-hover);
   box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2) inset;
   outline: none;
 }
@@ -3578,11 +3598,11 @@ table.data-grid > tbody > tr.bold > td {
   outline-offset: -2px;
 }
 .commandbar .btn-cb:hover {
-  background-color: var(--neutralBkDark);
+  background-color: var(--menu-hover);
   outline: none;
 }
 .commandbar .btn-cb:active {
-  background-color: var(--neutralBkDarker);
+  background-color: var(--menu-hover);
   box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2) inset;
   outline: none;
 }
@@ -3652,7 +3672,7 @@ tr:hover .commandbar.visible-hover {
   text-align: center;
 }
 .tree-view li > .overlay:hover {
-  background-color: var(--hoverBk);
+  background-color: var(--menu-hover);
 }
 .tree-view li > .overlay i.ico {
   flex-shrink: 0;
@@ -3933,7 +3953,7 @@ tr:hover .commandbar.visible-hover {
 .a2-tab-bar {
   display: flex;
   gap: 1rem;
-  border-bottom: 3px solid #eee;
+  border-bottom: 3px solid var(--neutral300);
   align-items: baseline;
   margin: 0.65rem 0;
 }
@@ -3941,15 +3961,15 @@ tr:hover .commandbar.visible-hover {
   padding-left: 0;
 }
 .a2-tab-button {
-  border-bottom: 3px solid #eee;
+  border-bottom: 3px solid var(--neutral300);
   margin-bottom: -3px;
   font-size: 1.1rem;
   display: block;
   padding: 0.65rem 0;
-  color: var(--text-light);
+  color: var(--text);
 }
 .a2-tab-button.active {
-  border-bottom-color: var(--text-light);
+  border-bottom-color: var(--text);
   color: var(--text);
   font-weight: 500;
 }
@@ -3957,7 +3977,7 @@ tr:hover .commandbar.visible-hover {
   white-space: nowrap;
 }
 .a2-tab-description {
-  color: var(--text-light);
+  color: var(--text-label);
 }
 .a2-tab-bar.tab-bar-button-group {
   margin: 0;
@@ -4000,7 +4020,7 @@ tr:hover .commandbar.visible-hover {
   margin: 0;
 }
 .a2-tab-bar.tab-bar-tab .a2-tab-button.active {
-  background-color: var(--background);
+  background-color: var(--bgPrimary);
   border-top: 3px solid gold;
   border-left-color: var(--neutral50);
   border-right-color: var(--neutral50);
@@ -4018,7 +4038,7 @@ tr:hover .commandbar.visible-hover {
   border-left: 4px solid transparent;
 }
 .a2-list .a2-list-item:hover {
-  background-color: var(--hoverBk) !important;
+  background-color: var(--menu-hover) !important;
 }
 .a2-list .a2-list-item:hover .commandbar.visible-hover {
   visibility: visible;
@@ -4059,7 +4079,7 @@ tr:hover .commandbar.visible-hover {
 }
 .a2-list .a2-list-item.group {
   background-color: var(--neutral100);
-  color: var(--text-light);
+  color: var(--text-label);
   border-bottom: 1px solid var(--neutral300);
   border-top: 1px solid var(--neutral300);
   cursor: default;
@@ -4284,7 +4304,7 @@ ul.news-list > li {
   /*center at h and v*/
   width: 500px;
   height: auto;
-  background-color: white;
+  background-color: var(--bgPrimary);
   border-radius: 8px;
 }
 .modal-stack .modal-wrapper .modal-window.with-placement {
@@ -4336,7 +4356,7 @@ ul.news-list > li {
 .modal-stack .modal-wrapper .load-indicator {
   top: 2.8rem;
   margin-top: -4px;
-  background-color: var(--neutralBkDarker);
+  background-color: var(--neutral300);
 }
 .modal-stack .modal-wrapper:not(:last-child) .load-indicator {
   display: none;
@@ -4422,7 +4442,7 @@ ul.news-list > li {
 }
 .modal-footer {
   padding: 1rem;
-  background-color: var(--neutral50);
+  background-color: var(--neutral100);
   display: flex;
   justify-content: flex-end;
   align-items: center;
@@ -4707,7 +4727,7 @@ table col.fit {
   width: 0.1%;
 }
 table col.sorted {
-  background-color: rgba(238, 238, 238, 0.45);
+  background-color: rgba(238, 238, 238, 0.25);
 }
 table tr.bold > td {
   font-weight: 600;
@@ -4716,7 +4736,7 @@ table td.gray {
   background-color: var(--neutral50);
 }
 table tr.overline {
-  border-top: 2px solid var(--neutralBkDarker);
+  border-top: 2px solid var(--neutral300);
 }
 table td.wrap {
   word-break: break-word;
@@ -4740,7 +4760,7 @@ table td.wrap {
   margin: -10px;
 }
 table.hover > tbody > tr:hover {
-  background-color: var(--hoverBk) !important;
+  background-color: var(--menu-hover) !important;
 }
 table.hover > tbody > tr.active:hover {
   background-color: var(--activeBk) !important;
@@ -4757,7 +4777,7 @@ table.hover > tbody > tr.active:hover {
 .grid-both > thead > tr > th,
 .grid-vertical > tfoot > tr > th,
 .grid-both > tfoot > tr > th {
-  border-right: 1px solid var(--neutralBkDarker);
+  border-right: 1px solid var(--neutral300);
 }
 .grid-vertical > tbody > tr > td:first-child:not(.no-first),
 .grid-both > tbody > tr > td:first-child:not(.no-first),
@@ -4771,7 +4791,7 @@ table.hover > tbody > tr.active:hover {
 .grid-both > thead > tr > th:first-child:not(.no-first),
 .grid-vertical > tfoot > tr > th:first-child:not(.no-first),
 .grid-both > tfoot > tr > th:first-child:not(.no-first) {
-  border-left: 1px solid var(--neutralBkDarker);
+  border-left: 1px solid var(--neutral300);
 }
 .grid-horizontal > tbody > tr > td,
 .grid-both > tbody > tr > td,
@@ -4785,13 +4805,13 @@ table.hover > tbody > tr.active:hover {
 .grid-both > thead > tr > th,
 .grid-horizontal > tfoot > tr > th,
 .grid-both > tfoot > tr > th {
-  border-bottom: 1px solid var(--neutralBkDarker);
+  border-bottom: 1px solid var(--neutral300);
 }
 .grid-horizontal > thead > tr:first-child > td,
 .grid-both > thead > tr:first-child > td,
 .grid-horizontal tfoot > tr:first-child > td,
 .grid-both tfoot > tr:first-child > td {
-  border-top: 1px solid var(--neutralBkDarker);
+  border-top: 1px solid var(--neutral300);
 }
 .grid-horizontal td > .control-group > .input-group,
 .grid-vertical td > .control-group > .input-group,
@@ -4808,14 +4828,14 @@ table.hover > tbody > tr.active:hover {
 }
 .a2-table.bordered {
   margin: 1px;
-  outline: 1px solid var(--neutralBkDarker);
+  outline: 1px solid var(--neutral300);
 }
 .a2-table > tbody > tr {
   vertical-align: top;
 }
 .a2-table > tbody > tr > td {
   padding: 0 6px;
-  border-color: var(--neutralBkDarker);
+  border-color: var(--neutral300);
 }
 .a2-table > tbody > tr > td label {
   display: inline-block;
@@ -4837,8 +4857,8 @@ table.hover > tbody > tr.active:hover {
 .a2-table > thead > tr > td,
 .a2-table > tfoot > tr > td {
   padding: 0 6px;
-  background-color: var(--neutral50);
-  border-color: var(--neutralBkDarker);
+  background-color: var(--neutral100);
+  border-color: var(--neutral300);
 }
 .a2-table td.ctrl {
   padding: 0;
@@ -4852,7 +4872,7 @@ table.hover > tbody > tr.active:hover {
   align-items: baseline;
 }
 .a2-table td.ctrl .stack-panel.horizontal .control-group + .control-group {
-  border-left: 1px solid var(--neutralBkDarker);
+  border-left: 1px solid var(--neutral300);
 }
 .a2-table td.marker-cell {
   padding: 0 !important;
@@ -4893,7 +4913,7 @@ table.hover > tbody > tr.active:hover {
 .a2-table td.row-divider {
   padding: 0;
   height: 1px;
-  background-color: var(--neutralBkDarker);
+  background-color: var(--neutral300);
 }
 .a2-table tr:last-child td.row-divider {
   display: none;
@@ -4929,7 +4949,7 @@ table.hover > tbody > tr.active:hover {
 }
 .a2-sticky-bottom {
   height: 1px;
-  background-color: var(--background);
+  background-color: var(--bgPrimary);
   position: relative;
   top: -1px;
 }
@@ -4990,7 +5010,7 @@ table.hover > tbody > tr.active:hover {
   background-color: var(--neutral50);
 }
 .a2-table.bk-white {
-  background-color: var(--background);
+  background-color: var(--bgPrimary);
 }
 .app-link-table {
   border-collapse: collapse;
@@ -5031,7 +5051,7 @@ table.prop-grid {
   width: 100%;
 }
 table.prop-grid td {
-  border-color: var(--neutralBkDarker);
+  border-color: var(--neutral300);
   line-height: normal;
   padding: 4px 6px;
   vertical-align: baseline;
@@ -5040,7 +5060,7 @@ table.prop-grid col.prop-name {
   width: 1px;
 }
 table.prop-grid td.prop-name {
-  color: var(--text-light);
+  color: var(--text-label);
 }
 table.prop-grid.no-wrap-name td.prop-name {
   white-space: nowrap;
@@ -5180,14 +5200,12 @@ label.like-checkbox.indeterminate > span::before {
   background-image: url("data:image/svg+xml,%EF%BB%BF%3Csvg%20viewBox%3D'0%200%2020%2020'%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%3E%0D%0A%09%3Cpath%20fill%3D'none'%20%0D%0A%09%09stroke%3D'%23555'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%20stroke-width%3D'3'%0D%0A%09d%3D'M6%2010h8'%2F%3E%0D%0A%3C%2Fsvg%3E%0D%0A%0D%0A");
 }
 .a2-pager {
-  padding: 1rem 0 0 0;
   display: flex;
   align-items: center;
-  border-top: 1px solid var(--neutral300);
 }
 .a2-pager button {
   padding: 3px;
-  background-color: var(--background);
+  background-color: var(--bgControl);
   border: 1px solid #ccc;
   min-width: 2em;
   min-height: 2em;
@@ -5196,7 +5214,7 @@ label.like-checkbox.indeterminate > span::before {
   margin-right: 4px;
 }
 .a2-pager button:hover {
-  background-color: #e0e0e0;
+  background-color: var(--menu-hover);
 }
 .a2-pager button[disabled] {
   color: #ccc;
@@ -5238,7 +5256,7 @@ TODO:
   top: 100%;
   min-width: 160px;
   box-shadow: 3px 3px 10px 0 rgba(174, 174, 174, 0.5), 0 5px 40px 0 rgba(0, 0, 0, 0.15);
-  border: 1px solid var(--neutralBkDarker);
+  border: 1px solid var(--neutral300);
   font-weight: normal;
 }
 .menu .dropdown-item {
@@ -5281,12 +5299,12 @@ TODO:
   flex-grow: 0;
   height: 1px;
   margin: 0.5em;
-  background-color: var(--neutralBkDarker);
+  background-color: var(--neutral300);
 }
 .menu .group-title {
   color: #8591a2;
   padding-bottom: 2px;
-  border-bottom: 1px solid var(--neutralBkDarker);
+  border-bottom: 1px solid var(--neutral300);
   font-weight: 500;
   margin-bottom: 4px;
 }
@@ -5294,7 +5312,7 @@ TODO:
   display: none;
   position: absolute;
   z-index: 1070;
-  background-color: var(--background);
+  background-color: var(--bgMenu);
   border-radius: 2px;
   width: auto;
   height: auto;
@@ -5391,26 +5409,26 @@ TODO:
 }
 .dropdown .btn-caret.btn-green,
 .dropdown .btn-caret.btn-success {
-  border-left-color: var(--background);
+  border-left-color: var(--bgPrimary);
   background-color: #4c9d41;
 }
 .dropdown .btn-caret.btn-primary {
-  border-left-color: var(--background);
+  border-left-color: var(--bgPrimary);
   background-color: #2b5c94;
 }
 .dropdown .btn-caret.btn-red,
 .dropdown .btn-caret.btn-danger {
-  border-left-color: var(--background);
+  border-left-color: var(--bgPrimary);
   background-color: #c93c27;
 }
 .dropdown .btn-caret.btn-info,
 .dropdown .btn-caret.btn-cyan {
-  border-left-color: var(--background);
+  border-left-color: var(--bgPrimary);
   background-color: #3dacdf;
 }
 .dropdown .btn-caret.btn-warning,
 .dropdown .btn-caret.btn-orange {
-  border-left-color: var(--background);
+  border-left-color: var(--bgPrimary);
   background-color: #ffa624;
 }
 .dropdown.show .btn {
@@ -6050,12 +6068,12 @@ TODO:
 .field-set {
   margin: 0;
   padding: 0.4rem 0.6rem 0.6rem 0.6rem;
-  border: 1px solid var(--neutralBkDarker);
+  border: 1px solid var(--neutral300);
   text-align: left;
 }
 .field-set legend {
   font-size: 0.95rem;
-  color: var(--text-light);
+  color: var(--text-label);
 }
 .field-set.vertical .field-set-item {
   display: block;
@@ -6113,7 +6131,7 @@ TODO:
   overflow: hidden;
 }
 .bordered-pane {
-  border: 1px solid var(--neutralBkDarker);
+  border: 1px solid var(--neutral300);
 }
 .background-light-gray {
   background-color: #e9e9e9 !important;
@@ -6273,7 +6291,7 @@ table.sheet th {
   vertical-align: baseline;
 }
 table.sheet td {
-  border-color: var(--neutralBkDarker);
+  border-color: var(--neutral300);
 }
 table.sheet td.indent.lev-2 {
   padding-left: 18px;
@@ -6301,7 +6319,7 @@ table.sheet tr.row-title td {
   border-style: none !important;
   font-weight: 600;
   padding: 0 6px 5px, 5px;
-  background-color: var(--background);
+  background-color: var(--bgSheet);
 }
 table.sheet tr.row-title td:first-child {
   padding-left: 0;
@@ -6311,10 +6329,10 @@ table.sheet tr.row-title td:last-child {
 }
 table.sheet tr.row-no-border td {
   border-style: none!important;
-  background-color: var(--background) !important;
+  background-color: var(--bgSheet) !important;
 }
 table.sheet tr.row-no-border td.underline {
-  border-bottom: 1px solid var(--neutralBkDarker) !important;
+  border-bottom: 1px solid var(--neutral300) !important;
   height: 30px;
 }
 table.sheet tr.row-page-header td {
@@ -6329,7 +6347,7 @@ table.sheet tr.row-divider {
 table.sheet tr.row-parameter td,
 table.sheet tr.row-last-parameter td {
   border-style: none !important;
-  background-color: var(--background);
+  background-color: var(--bgSheet);
 }
 table.sheet tr.row-parameter td:first-child,
 table.sheet tr.row-last-parameter td:first-child {
@@ -6440,7 +6458,7 @@ table > colgroup col.blue {
 }
 .sheet-page-wrapper .sheet-page {
   margin: 0 auto;
-  background-color: var(--background);
+  background-color: var(--bgSheet);
   padding: 1cm;
   border: 1px solid #999;
   box-shadow: 2px 2px 2px 0 rgba(0, 0, 0, 0.25);
@@ -6495,7 +6513,7 @@ table > colgroup col.blue {
 .sheet.grid-both > thead > tr > td,
 .sheet.grid-vertical > tfoot > tr > td,
 .sheet.grid-both > tfoot > tr > td {
-  border-left: 1px solid var(--neutralBkDarker);
+  border-left: 1px solid var(--neutral300);
 }
 .sheet.grid-horizontal > tbody > tr > td,
 .sheet.grid-both > tbody > tr > td,
@@ -6503,7 +6521,7 @@ table > colgroup col.blue {
 .sheet.grid-both > thead > tr > td,
 .sheet.grid-horizontal > tfoot > tr > td,
 .sheet.grid-both > tfoot > tr > td {
-  border-top: 1px solid var(--neutralBkDarker);
+  border-top: 1px solid var(--neutral300);
 }
 .app-exception {
   margin: 50px auto;
@@ -6576,7 +6594,7 @@ table > colgroup col.blue {
 }
 .a2-header {
   margin: 0 0 0.8rem 0;
-  color: var(--text-light);
+  color: var(--text-header);
   font-weight: bold;
   font-family: inherit;
   word-break: break-word;
@@ -6639,8 +6657,8 @@ table > colgroup col.blue {
 .tooltip {
   position: absolute;
   padding: 6px;
-  background-color: var(--background);
-  border: 1px solid var(--neutralBkDarker);
+  background-color: var(--bgPrimary);
+  border: 1px solid var(--neutral300);
 }
 .title-notify {
   animation: pulse 1s infinite ease-out;
@@ -6666,7 +6684,7 @@ table > colgroup col.blue {
   bottom: 2rem;
   right: 0;
   z-index: 78;
-  background-color: var(--background);
+  background-color: var(--bgPrimary);
   box-shadow: -5px 0 10px 0 rgba(0, 0, 0, 0.2);
 }
 .shell,
@@ -6828,7 +6846,7 @@ table > colgroup col.blue {
   visibility: visible;
 }
 .mdi-tabs-container .mdi-tabs li.active {
-  background-color: white;
+  background-color: var(--bgPrimary);
   border-bottom-color: transparent;
 }
 .mdi-tabs-container .mdi-tabs li.active .close {
@@ -6883,6 +6901,7 @@ table > colgroup col.blue {
   gap: 12px;
   text-transform: lowercase;
   padding-left: 8px;
+  border-top: 1px solid var(--neutral300);
 }
 .mdi-footer .version-info,
 .footer .version-info {
@@ -7124,7 +7143,7 @@ table.tree-grid.sticky tfoot {
 table.tree-grid td,
 table.tree-grid th {
   padding: 0.5rem 0.5rem;
-  border-color: var(--neutralBkDarker);
+  border-color: var(--neutral300);
   border-style: solid;
   border-width: 0;
   font-weight: inherit;
@@ -7243,7 +7262,7 @@ table.tree-grid .mark {
   text-align: right;
 }
 table.tree-grid.hover tr:hover:not(.active) {
-  background-color: var(--hoverBkLight);
+  background-color: var(--menu-hover);
 }
 table.tree-grid.striped tbody > tr:nth-child(even):not(.active) {
   background-color: rgba(224, 224, 224, 0.1);
@@ -7286,7 +7305,7 @@ table.tree-grid a.toggle.expanded:after {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background-color: var(--background);
+  background-color: var(--bgPrimary);
 }
 .dashboard-container.editing .dashboard {
   margin-right: 320px;
@@ -7340,7 +7359,7 @@ table.tree-grid a.toggle.expanded:after {
   overflow: auto;
 }
 .dashboard-container .dashboard-list .widget-list .dashboard-item {
-  background-color: var(--background);
+  background-color: var(--bgControl);
 }
 .dashboard-container .dashboard-list .widget-list-grouping {
   margin: 0;
@@ -7407,7 +7426,7 @@ table.tree-grid a.toggle.expanded:after {
   opacity: 0.9;
 }
 .dashboard-item {
-  background-color: var(--background);
+  background-color: var(--bgPrimary);
   border: 1px solid var(--neutral300);
   position: relative;
   border-radius: 4px;
@@ -7440,7 +7459,7 @@ table.tree-grid a.toggle.expanded:after {
   background: white;
   top: 100%;
   width: 100%;
-  border: 1px solid var(--neutralBkDarker);
+  border: 1px solid var(--neutral300);
   max-height: 280px;
   overflow: auto;
   box-shadow: 3px 3px 10px 0 rgba(174, 174, 174, 0.5), 0 5px 40px 0 rgba(0, 0, 0, 0.15);
@@ -7475,6 +7494,12 @@ table.tree-grid a.toggle.expanded:after {
 .color-picker .caret {
   margin: 4px 6px 0 5px;
 }
+.color-picker.disabled .color-picker-wrapper {
+  pointer-events: none;
+}
+.color-picker.disabled .caret {
+  opacity: 0.5;
+}
 .tags-control .input-group {
   display: flex;
   min-height: 30px;
@@ -7496,7 +7521,7 @@ table.tree-grid a.toggle.expanded:after {
 .tags-control .tags-placeholder {
   flex-grow: 1;
   line-height: 1.5;
-  color: var(--text-light);
+  color: var(--text-label);
 }
 .tags-control .tags-pane {
   position: absolute;
@@ -7571,7 +7596,7 @@ table.tree-grid a.toggle.expanded:after {
 }
 .tag-body {
   font-size: 0.85rem;
-  background-color: var(--background);
+  background-color: var(--bgPrimary);
   border: 1px solid currentColor;
   border-radius: 4px;
   white-space: nowrap;
@@ -7655,12 +7680,12 @@ table.tree-grid a.toggle.expanded:after {
 .kanban .lane-header {
   width: var(--lane-width);
   min-width: var(--lane-min-width);
-  background: var(--background);
+  background: var(--bgMenu);
   display: flex;
-  border-bottom: 2px solid var(--neutralBkDarker);
+  border-bottom: 1px solid var(--neutral300);
 }
 .kanban .lane {
-  background-color: var(--neutral50);
+  background-color: var(--neutral100);
   padding: 8px;
   width: var(--lane-width);
   min-width: var(--lane-min-width);
@@ -7672,8 +7697,8 @@ table.tree-grid a.toggle.expanded:after {
 .kanban .lane-footer {
   width: var(--lane-width);
   min-width: var(--lane-min-width);
-  background: var(--background);
-  border-top: 1px solid var(--neutralBkDarker);
+  background: var(--bgPrimary);
+  border-top: 1px solid var(--neutral300);
 }
 .kanban .card-list {
   margin: 0;
@@ -7691,11 +7716,11 @@ table.tree-grid a.toggle.expanded:after {
 }
 .kanban .kanban-card .kanban-card-header {
   padding: 4px 8px;
-  border-bottom: 1px solid var(--neutralBkDarker);
+  border-bottom: 1px solid var(--neutral300);
 }
 .kanban .kanban-card .kanban-card-footer {
   padding: 4px 8px;
-  border-top: 1px solid var(--neutralBkDarker);
+  border-top: 1px solid var(--neutral300);
 }
 .block {
   display: block!important;
@@ -7839,7 +7864,7 @@ td.vert > .vcell {
   right: 0;
   z-index: 110;
   background-color: var(--neutral50);
-  border-left: 1px solid var(--neutralBkDarker);
+  border-left: 1px solid var(--neutral300);
   width: 390px;
   box-shadow: -5px 0 10px 0 rgba(0, 0, 0, 0.2);
   overflow: hidden;
@@ -7853,7 +7878,7 @@ td.vert > .vcell {
   left: 0;
   right: auto;
   border-left: none;
-  border-right: 1px solid var(--neutralBkDarker);
+  border-right: 1px solid var(--neutral300);
   box-shadow: 5px 0 10px 0 rgba(0, 0, 0, 0.2);
 }
 .debug-panel .debug-pane-header {

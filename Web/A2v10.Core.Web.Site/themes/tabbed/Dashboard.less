@@ -13,7 +13,7 @@
 	width: 100%;
 	height: 100%;
 	overflow: hidden;
-	background-color: var(--background);
+	background-color: @bk-primary;
 
 	&.editing .dashboard {
 		margin-right: @panel-width;
@@ -73,7 +73,7 @@
 			overflow: auto;
 
 			.dashboard-item {
-				background-color: var(--background);
+				background-color: @bk-control;
 			}
 		}
 
@@ -159,7 +159,7 @@
 }
 
 .dashboard-item {
-	background-color: var(--background);
+	background-color: @bk-primary;
 	border: 1px solid @control-brd-light-color;
 	position: relative;
 	border-radius: @control-brd-radius;
@@ -178,7 +178,7 @@
 		position: absolute;
 		top: 3px;
 		right: 3px;
-		line-height:1.5em;
+		line-height: 1.5em;
 		background-color: var(--neutralBk);
 
 		&:hover {

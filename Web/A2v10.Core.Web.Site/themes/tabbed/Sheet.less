@@ -15,6 +15,7 @@ table.sheet {
 	.user-select();
 	width: auto;
 	border-collapse: collapse;
+
 	//margin: 0 1px 0 0; /*border-collapse bug*/
 	tr {
 		page-break-inside: avoid;
@@ -59,7 +60,7 @@ table.sheet {
 			border-style: none !important;
 			font-weight: @font-bold;
 			padding: 0 @table-cell-padding-h @cell-padding-v, @cell-padding-h;
-			background-color: @background-color;
+			background-color: @bk-sheet;
 		}
 
 		td:first-child {
@@ -74,7 +75,7 @@ table.sheet {
 	tr.row-no-border {
 		td {
 			border-style: none!important;
-			background-color: @background-color!important;
+			background-color: @bk-sheet!important;
 		}
 
 		td.underline {
@@ -100,7 +101,7 @@ table.sheet {
 	tr.row-parameter, tr.row-last-parameter {
 		td {
 			border-style: none !important;
-			background-color: @background-color;
+			background-color: @bk-sheet;
 		}
 
 		td:first-child {
@@ -252,7 +253,7 @@ table > colgroup {
 
 	.sheet-page {
 		margin: 0 auto;
-		background-color: @background-color;
+		background-color: @bk-sheet;
 		padding: @page-margin;
 		border: 1px solid #999;
 		box-shadow: 2px 2px 2px 0 rgba(0,0,0, 0.25);
@@ -313,12 +314,12 @@ table > colgroup {
 
 .sheet.grid-vertical, .sheet.grid-both {
 	> tbody > tr > td, > thead > tr > td, > tfoot > tr > td {
-		border-left: 1px solid @a2-table-brd-color;
+		border-left: 1px solid @table-brd-color;
 	}
 }
 
 .sheet.grid-horizontal, .sheet.grid-both {
 	> tbody > tr > td, > thead > tr > td, > tfoot > tr > td {
-		border-top: 1px solid @a2-table-brd-color;
+		border-top: 1px solid @table-brd-color;
 	}
 }

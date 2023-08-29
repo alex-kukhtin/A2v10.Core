@@ -1,6 +1,10 @@
 ﻿/* https://materialui.co/colors/ */
 :root {
-  --background: #ffff;
+  --bgPrimary: #fbfbfb;
+  --bgControl: #fff;
+  --bgMenu: #fff;
+  --bgSheet: #fff;
+  /* */
   --text: #000;
   --fontSize: 14px;
   --themeDark: #2573a8;
@@ -35,6 +39,9 @@
   /*neutral800*/
   --menu-hover: #eeeeee;
   /*neutral200*/
-  --text-light: #888888;
+  --text-light: #5c5c5c;
   /*neutral800*/
+  --text-header: #00000090;
+  --text-label: #000000d0;
+  /* */
 }

@@ -8,13 +8,11 @@
 @font-size-small:0.925rem;
 
 @border-light: var(--neutral300);
-@text-color:var(--text);
-@background-color: var(--background);
 @text-color-opacity40:rgba(2,2,2,0.4);
 @gray-text-color: #ccc;
 @dark-gray-text-color:#999;
 
-@default-brd-color: var(--neutralBkDarker); //#bdc5d8;
+@default-brd-color: var(--neutral300); //#bdc5d8;
 @light-brd-color: var(--neutralBkDark); // #e5e4e3
 @light-brd-color2: #ddd;
 
@@ -32,9 +30,9 @@
 @a2v10-brand-color:#dd2c5e;
 
 @brand-hover-color: ~ "var(--themeDarker)";
-@hover-bg-color: var(--hoverBk);
+@hover-bg-color: @menu-hover-color; // var(--hoverBk);
 @active-bg-color: var(--activeBk);
-@hover-bg-color-light: var(--hoverBkLight);
+@hover-bg-color-light: @menu-hover-color; //var(--hoverBkLight);
 @active-bg-color-light: var(--activeBkLight);
 
 @alter-bg-color: rgba(224, 224, 224, .1);
@@ -69,12 +67,12 @@
 @input-padding: 5px;
 @select-padding: 2px;
 @placeholder-color: @gray-text-color;
-@label-color: var(--text-light);
+@label-color: var(--text-label);
 
 @control-focus-color: @link-color; //#208cf8; // TODO: variable?
-@header-text-color: var(--text-light);
+@header-text-color: var(--text-header);
 
-@disabled-bg-color: var(--neutral50);
+@disabled-bg-color: var(--bgPrimary);
 
 
 /* header-footer */
@@ -109,14 +107,15 @@
 @side-bar-compact-scroll-bg-color: #8196bb;
 /* data grid */
 @data-grid-border-color:@default-brd-color;
-@sort-bg-color: rgba(238,238,238, 0.45);
+@sort-bg-color: rgba(238,238,238, 0.25);
 /* toolbar */
 @tb-active-bg-color: #fff29d;
-@tb-hover-brd-color: #e5c365;
-@toolbar-bg-color: var(--neutralBk);
-@toolbar-hover: var(--neutralBkDark);
-@toolbar-active: var(--neutralBkDarker);
+
+@toolbar-bg-color: @bk-primary;
+@toolbar-hover: @menu-hover-color;
+@toolbar-active: @menu-hover-color;
 @toolbar-txt-color: @text-color;
+
 /* table */
 @table-brd-color: @default-brd-color;
 @table-hdr-brd-color: var(--neutral300); //#cbcdda;

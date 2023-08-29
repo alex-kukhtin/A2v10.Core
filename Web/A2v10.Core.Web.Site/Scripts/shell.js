@@ -1,6 +1,6 @@
 ﻿// Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
 
-/*20230729-8128*/
+/*20230829-8146*/
 /* tabbled:shell.js */
 (function () {
 	const eventBus = require('std:eventBus');
@@ -53,7 +53,8 @@
 			processing() { return !this.hasModals && this.requestsCount > 0; },
 			canPopupClose() { return this.contextTabKey > 10; /* 10 - home */ },
 			canPopupCloseRight() { return this.contextTabKey && this.tabs.some(v => v.key > this.contextTabKey); },
-			canReopenClosed() { return this.closedTabs.length > 0 }
+			canReopenClosed() { return this.closedTabs.length > 0 },
+			hasModified() { return this.tabs.some(t => t.root && t.root.$isDirty); }
 		},
 		methods: {
 			navigate(m) {
@@ -280,7 +281,7 @@
 				style.top = (ev.clientY - br.top) + 'px';
 				style.left = (ev.clientX - br.left) + 'px';
 				menu.classList.add('show');
-				console.dir(this.contextTabKey);
+				//console.dir(this.contextTabKey);
 			},
 			popupClose() {
 				let t = this.tabs.find(t => t.key === this.contextTabKey);
@@ -549,6 +550,15 @@
 				window.__requestsCount__ = me.requestsCount;
 			});
 			signalR.startService();
+
+			window.addEventListener("beforeunload", (ev) => {
+				if (!this.hasModified)
+					return;
+				ev.preventDefault();
+				if (ev) ev.returnValue = true;
+				return true;
+			});
+
 		}
 	});
 })();

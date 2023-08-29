@@ -6464,7 +6464,7 @@ Vue.component('validator-control', {
 })();
 // Copyright © 2019-2023 Oleksandr Kukhtin. All rights reserved.
 
-// 20230801-7940
+// 20230829-7945
 // components/colorcombobox.js*/
 
 (function () {
@@ -6551,6 +6551,7 @@ Vue.component('validator-control', {
 			},
 			keydown(event) {
 				event.stopPropagation();
+				if (this.disabled) return;
 				let items = this.itemsSource;
 				switch (event.which) {
 					case 40: // down
@@ -6572,6 +6573,7 @@ Vue.component('validator-control', {
 				}
 			},
 			toggle() {
+				if (this.disabled) return;
 				if (!this.isOpen) {
 					eventBus.$emit('closeAllPopups');
 				}

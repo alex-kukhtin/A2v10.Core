@@ -8,8 +8,7 @@
 	flex-direction: row;
 	border: 1px solid @dropdown-brd-color;
 	position: absolute;
-	//background-color: #f5f5f5;
-	background-color: @background-color;
+	background-color: @bk-control;
 	left: 0;
 	top: 100%;
 	z-index: @popup-index !important;
@@ -19,12 +18,13 @@
 	box-shadow: @dropdown-shadow;
 	color: @text-color;
 	line-height: normal;
+	border-radius:@control-brd-radius;
 }
 
 
 .calendar-pane {
 	td {
-		background-color: @background-color;
+		background-color: @bk-control;
 	}
 
 	td, th {
@@ -34,6 +34,10 @@
 
 	.h-btn {
 		width: 27px;
+
+		a {
+			border-radius: @control-brd-radius;
+		}
 	}
 
 	.calendar-footer {
@@ -64,13 +68,12 @@
 		color: @text-color;
 
 		&:hover {
-			background-color: @hover-bg-color !important;
+			background-color: @toolbar-hover !important;
 		}
 	}
 
 	tbody td {
 		&.today > a {
-			//background-color: @tb-active-bg-color;
 			font-weight: 500;
 			background-color: @tb-active-bg-color !important;
 		}
@@ -104,7 +107,6 @@
 	}
 
 	thead th, tfoot td {
-		//background-color: #f5f5f5;
 		border-style: none;
 		color: #555;
 
@@ -116,10 +118,11 @@
 
 	a.today {
 		text-transform: lowercase;
+		border-radius: @control-brd-radius;
 	}
 
 	tr.weekdays th {
-		border-bottom: 1px solid @light-gray-color;
+		border-bottom: 1px solid @brd-light;
 		padding: 2px 0;
 	}
 }
@@ -136,13 +139,13 @@
 	}
 
 	th {
-		font-weight:500;
+		font-weight: 500;
 		//line-height:1.5rem;
 		//text-align:center;
 		//border:none;
-		border-bottom:1px solid @light-gray-color!important;
-		color:#555;
-		padding:0 0 7px 0;
+		border-bottom: 1px solid @brd-light!important;
+		color: #555;
+		padding: 0 0 7px 0;
 	}
 }
 
@@ -157,7 +160,7 @@
 	&.open {
 		.input-group {
 			input, a {
-				background-color: @background-color;
+				background-color: @bk-control;
 				z-index: @popup-index + 1;
 			}
 		}
@@ -189,9 +192,13 @@
 	.period-menu {
 		margin: 0;
 		padding: 0;
-		border-right: 1px solid @light-gray-color;
+		border-right: 1px solid @default-brd-color;
+		padding-right: .8rem;
 		list-style: none;
 
+		li {
+			border-radius: @control-brd-radius;
+		}
 
 		li > a {
 			display: block;
@@ -203,7 +210,7 @@
 		}
 
 		li:hover {
-			background-color: @hover-bg-color;
+			background-color: @toolbar-hover;
 		}
 
 		li.active {
@@ -217,6 +224,7 @@
 		font-size: 1rem;
 		font-weight: normal;
 		font-style: normal;
+		border-radius: @control-brd-radius;
 	}
 
 	.current-period {
@@ -231,7 +239,7 @@
 	.custom-period {
 		display: inline-flex;
 		align-items: baseline;
-		padding-right: .8em;
+		padding-right: @elem-margin;
 
 		span {
 			padding: 0 .3em;
@@ -254,7 +262,7 @@
 		display: flex;
 		align-items: center;
 		padding-top: @elem-margin;
-		border-top: 1px solid @light-gray-color;
+		border-top: 1px solid @border-light;
 
 		.btn {
 			padding: .3em .5em;

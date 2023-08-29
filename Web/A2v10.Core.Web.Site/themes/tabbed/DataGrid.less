@@ -29,9 +29,19 @@
 	overflow-x: hidden;
 	overflow-y: auto;
 	position: relative;
+	background-color: @bk-control;
 
 	&.bordered {
 		border: 1px solid @data-grid-border-color;
+		border-radius: @control-brd-radius;
+
+		th:first-child, .h-holder {
+			border-radius: @control-brd-radius 0 0 0;
+		}
+
+		tr.group:first-child td {
+			border-top:none;
+		}
 	}
 
 	.data-grid-header-border {
@@ -314,7 +324,7 @@ table.data-grid {
 			.grcount {
 				float: right;
 				font-size: 85%;
-				background-color: #bbb; //@dg-bage-bg-color;
+				background-color: var(--neutral500); //@dg-bage-bg-color;
 				color: white;
 				padding: 2px 4px;
 				border-radius: 10rem;
@@ -505,14 +515,14 @@ table.data-grid > tbody {
 
 	table.data-grid {
 		th {
-			color: rgba(0,0,0,.7);
+			color: var(--text-label);
 			border-style: none;
 		}
 		//tr.dg-row:last-child > td {
 		//border-bottom-style: none;
 		//}
 		tr.group td {
-			background-color: #f9f9f9;
+			background-color: var(--neutral100);
 			color: @label-color;
 		}
 

@@ -4,8 +4,8 @@
 @lane-min-width:200px;
 @kanban-gap: 8px;
 @lane-gap: 6px;
-@back-color: var(--neutral50);
-@border-color: var(--neutralBkDarker);
+@lane-color: var(--neutral100);
+@border-color: @default-brd-color;
 
 .kanban {
 	overflow: auto;
@@ -40,13 +40,13 @@
 		//padding: @kanban-gap 0 @kanban-gap @kanban-gap;
 		width: var(--lane-width);
 		min-width: var(--lane-min-width);
-		background: @background-color;
+		background: @bk-menu;
 		display: flex;
-		border-bottom: 2px solid @border-color;
+		border-bottom: 1px solid @border-color;
 	}
 
 	.lane {
-		background-color: @back-color;
+		background-color: @lane-color;
 		padding: @kanban-gap;
 		width: var(--lane-width);
 		min-width: var(--lane-min-width);
