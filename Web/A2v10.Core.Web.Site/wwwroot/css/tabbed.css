@@ -4356,7 +4356,7 @@ ul.news-list > li {
 .modal-stack .modal-wrapper .load-indicator {
   top: 2.8rem;
   margin-top: -4px;
-  background-color: var(--neutral300);
+  background-color: var(--neutral400);
 }
 .modal-stack .modal-wrapper:not(:last-child) .load-indicator {
   display: none;

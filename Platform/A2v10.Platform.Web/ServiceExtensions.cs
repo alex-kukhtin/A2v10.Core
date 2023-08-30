@@ -51,6 +51,8 @@ public static class ServiceExtensions
 		services.AddDistributedMemoryCache();
 		services.AddSession();
 
+		services.AddSingleton<ISignalSender, SignalSender>();
+
 		return builder;
 	}
 
