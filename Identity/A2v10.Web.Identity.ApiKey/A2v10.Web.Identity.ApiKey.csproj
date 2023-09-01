@@ -5,7 +5,7 @@
 		<Nullable>enable</Nullable>
 		<AssemblyName>A2v10.Identity.ApiKey</AssemblyName>
 		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-		<Version>10.1.8143</Version>
+		<Version>10.1.8147</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Identity.ApiKey</PackageId>
 		<Authors>Oleksandr Kukhtin</Authors>
@@ -19,7 +19,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.OpenApi" Version="1.6.6" />
+		<PackageReference Include="Microsoft.OpenApi" Version="1.6.7" />
 	</ItemGroup>
 
 	<PropertyGroup>

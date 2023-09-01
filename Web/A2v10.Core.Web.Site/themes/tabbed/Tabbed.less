@@ -6,7 +6,8 @@
 @dark0: var(--neutral900);
 @dark1: var(--neutral800);
 @dark2: var(--neutral700);
-@light0: var(--neutral100);
+//@light0: var(--neutral100);
+@light0: #f0f0f0; 
 @light1: var(--neutral300);
 @accent-color: #ffda00;
 
@@ -114,7 +115,6 @@
 			list-style: none;
 			height: @tab-height;
 			padding-left: 16px;
-			border-right: 1px solid white;
 			display: inline-flex;
 			background-color: @light1;
 			white-space: nowrap;
@@ -169,6 +169,10 @@
 					visibility: visible;
 				}
 			}
+		}
+
+		li:not(:last-child) {
+			border-right: 1px solid @bk-primary;
 		}
 
 		.tab-home {

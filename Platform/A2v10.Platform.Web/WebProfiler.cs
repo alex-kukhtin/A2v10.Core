@@ -105,7 +105,7 @@ internal class DummyRequest : IProfileRequest
 public sealed class WebProfiler : IProfiler, IDataProfiler, IDisposable
 {
 	// TODO: ???? COOCKIE SIZE!!!!
-	const Int32 REQUEST_COUNT = 10;
+	const Int32 REQUEST_COUNT = 7;
 
 	private LinkedList<ProfileRequest> _requestList = new();
 	private ProfileRequest? _request;

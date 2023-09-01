@@ -6781,7 +6781,7 @@ table > colgroup col.blue {
 .mdi-tabs-container {
   grid-area: tabs;
   display: flex;
-  background-color: var(--neutral100);
+  background-color: #f0f0f0;
   justify-content: space-between;
 }
 .mdi-tabs-container .mdi-tabs {
@@ -6806,7 +6806,6 @@ table > colgroup col.blue {
   list-style: none;
   height: 2.5rem;
   padding-left: 16px;
-  border-right: 1px solid white;
   background-color: var(--neutral300);
   white-space: nowrap;
   pointer-events: all;
@@ -6852,6 +6851,9 @@ table > colgroup col.blue {
 .mdi-tabs-container .mdi-tabs li.active .close {
   visibility: visible;
 }
+.mdi-tabs-container .mdi-tabs li:not(:last-child) {
+  border-right: 1px solid var(--bgPrimary);
+}
 .mdi-tabs-container .mdi-tabs .tab-home {
   padding-right: 16px;
 }
@@ -6894,7 +6896,7 @@ table > colgroup col.blue {
 .mdi-footer,
 .footer {
   grid-area: footer;
-  background-color: var(--neutral100);
+  background-color: #f0f0f0;
   display: flex;
   height: 2rem;
   align-items: center;
