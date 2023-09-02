@@ -6937,16 +6937,6 @@ table > colgroup col.blue {
   background-color: #757575;
   position: relative;
   min-width: 80px;
-  overflow: auto;
-}
-.mdi-navbar::-webkit-scrollbar {
-  height: 4px;
-  width: 4px;
-  background-color: var(--neutral300);
-}
-.mdi-navbar::-webkit-scrollbar-thumb {
-  background-color: var(--neutral500);
-  border-radius: 8px;
 }
 .mdi-navbar .bar {
   margin: 0;
@@ -6954,6 +6944,16 @@ table > colgroup col.blue {
   display: flex;
   flex-direction: column;
   height: 100%;
+  overflow: auto;
+}
+.mdi-navbar .bar::-webkit-scrollbar {
+  height: 4px;
+  width: 4px;
+  background-color: var(--neutral300);
+}
+.mdi-navbar .bar::-webkit-scrollbar-thumb {
+  background-color: var(--neutral500);
+  border-radius: 8px;
 }
 .mdi-navbar .bar li {
   list-style: none;
