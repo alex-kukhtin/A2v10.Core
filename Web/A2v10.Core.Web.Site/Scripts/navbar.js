@@ -1,6 +1,6 @@
 ﻿// Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
 
-/*20230529-8100*/
+/*20230901-8147*/
 /* tabbled:navbar.js */
 (function () {
 
@@ -13,6 +13,7 @@
 	<ul class="bar">
 		<li v-for="m in menu" @click.stop.prevent=clickMenu(m) :title=m.Name :class="menuClass(m)">
 			<i class="ico" :class="menuIcon(m)"></i>
+			<span v-text="m.Name" class="menu-text"></span>
 		</li>
 	</ul>
 	<div class="mdi-menu" v-if="isMenuVisible">

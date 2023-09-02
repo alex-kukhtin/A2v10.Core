@@ -31,15 +31,19 @@
 	background-color: @dark0;
 	height: @header-height;
 	color: white;
-	padding-left: 15px;
 	display: flex;
 	align-items: center;
 	flex-direction: row;
 	white-space: nowrap;
 
 	.app-title {
+		margin-left:18px;
 		font-size: 18px;
 		line-height: @header-height;
+	}
+
+	.app-logo {
+		display: inline-flex;
 	}
 
 	.include.nav-pane {
@@ -55,7 +59,7 @@
 				color: white;
 
 				&:hover {
-					background-color: @dark1;
+					background-color: @dark2;
 					color: @accent-color;
 				}
 			}
@@ -79,7 +83,10 @@
 
 			&:hover {
 				color: @accent-color;
-				background-color: @dark1;
+				background-color: @dark2;
+			}
+			.caret {
+				margin:5px 0 0 0;
 			}
 		}
 	}
@@ -259,9 +266,21 @@
 
 .mdi-navbar {
 	grid-area: navbar;
-	background-color: @dark2;
+	background-color: #757575;
 	position: relative;
-	min-width: 60px;
+	min-width: 80px;
+	overflow: auto;
+
+	&::-webkit-scrollbar {
+		height: 4px;
+		width: 4px;
+		background-color: var(--neutral300);
+	}
+
+	&::-webkit-scrollbar-thumb {
+		background-color: var(--neutral500);
+		border-radius: 8px;
+	}
 
 	.bar {
 		margin: 0;
@@ -272,19 +291,26 @@
 
 		li {
 			list-style: none;
-			padding: 12px;
+			padding: 11px 0;
 			color: white;
 			border-radius: 4px;
 			display: inline-flex;
 			flex-direction: column;
 			align-items: center;
-			gap: 6px;
+			gap: 4px;
 			position: relative;
-			margin-bottom:1px;
+			margin-bottom: 1px;
+			max-width: 70px;
 
 			.ico {
 				color: inherit;
 				font-size: 2rem;
+			}
+
+			.menu-text {
+				font-size: 10px;
+				text-align: center;
+				line-height: 1;
 			}
 
 			&:hover:not(.grow), &.active {
@@ -365,7 +391,7 @@
 
 		li {
 			line-height: 2.25rem;
-			white-space:nowrap;
+			white-space: nowrap;
 		}
 
 		li.level-0 {

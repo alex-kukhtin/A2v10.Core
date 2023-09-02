@@ -51,4 +51,12 @@ public class WebApplicationTheme : IApplicationTheme
 		}
 		return sb.ToString();
 	}
+
+	public String LogoUrl()
+	{
+        var fi = _webHostEnviromnent.WebRootFileProvider.GetFileInfo($"img/applogo.svg");
+		if (fi == null || !fi.Exists)
+			return String.Empty;
+		return "/img/applogo.svg";
+    }
 }

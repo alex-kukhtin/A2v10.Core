@@ -11,7 +11,10 @@
 	Vue.component("a2-mdi-header", {
 		template: `
 	<div class="mdi-header">
-		<div class="app-title" v-text=title></div>
+		<div class="app-logo" v-if="hasLogo">
+			<img :src="logo"></img>
+		</div>
+		<div v-else class="app-title" v-text=title></div>
 		<div class="aligner"></div>
 		<slot></slot>
 		<div class="dropdown dir-down separate" v-dropdown>
@@ -37,10 +40,12 @@
 			subTitle: String,
 			personName: String,
 			hasProfile: Boolean,
-			profileText: String
+			profileText: String,
+			logo: String
 		},
 		computed: {
-			locale() { return locale; }
+			locale() { return locale; },
+			hasLogo() { return !!this.logo; }
 		},
 		methods: {
 			async logout() {

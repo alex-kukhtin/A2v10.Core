@@ -43,7 +43,10 @@ app.modules['std:signalR'] = function () {
 	Vue.component("a2-mdi-header", {
 		template: `
 	<div class="mdi-header">
-		<div class="app-title" v-text=title></div>
+		<div class="app-logo" v-if="hasLogo">
+			<img :src="logo"></img>
+		</div>
+		<div v-else class="app-title" v-text=title></div>
 		<div class="aligner"></div>
 		<slot></slot>
 		<div class="dropdown dir-down separate" v-dropdown>
@@ -69,10 +72,12 @@ app.modules['std:signalR'] = function () {
 			subTitle: String,
 			personName: String,
 			hasProfile: Boolean,
-			profileText: String
+			profileText: String,
+			logo: String
 		},
 		computed: {
-			locale() { return locale; }
+			locale() { return locale; },
+			hasLogo() { return !!this.logo; }
 		},
 		methods: {
 			async logout() {
@@ -89,7 +94,7 @@ app.modules['std:signalR'] = function () {
 })();
 // Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
 
-/*20230529-8100*/
+/*20230901-8147*/
 /* tabbled:navbar.js */
 (function () {
 
@@ -102,6 +107,7 @@ app.modules['std:signalR'] = function () {
 	<ul class="bar">
 		<li v-for="m in menu" @click.stop.prevent=clickMenu(m) :title=m.Name :class="menuClass(m)">
 			<i class="ico" :class="menuIcon(m)"></i>
+			<span v-text="m.Name" class="menu-text"></span>
 		</li>
 	</ul>
 	<div class="mdi-menu" v-if="isMenuVisible">
