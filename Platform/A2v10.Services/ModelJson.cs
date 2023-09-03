@@ -152,6 +152,15 @@ public class ModelJsonView : ModelJsonViewBase, IModelView
 	public List<String>? Scripts { get; init; } 
 	public List<String>? Styles { get; init; }
 
+	public String? SqlTextKey()
+	{
+		var cm = CurrentModel;
+		if (cm == null)
+			return null;
+		if (cm.StartsWith("@sql:"))
+			return cm[5..];
+		return null;
+	}
 	public String GetView(Boolean mobile)
 	{
 		if (mobile && !String.IsNullOrEmpty(ViewMobile))

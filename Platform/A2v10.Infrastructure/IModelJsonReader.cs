@@ -98,7 +98,7 @@ public interface IModelView : IModelBase
 	Boolean IsSkipDataStack { get; }
 
 	Boolean IsPlain { get; }
-
+	String? SqlTextKey();
 	String ExpandProcedure();
 	String LoadLazyProcedure(String property);
 	String DeleteProcedure(String? property);

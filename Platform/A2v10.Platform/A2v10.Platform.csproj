@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>
-		<Version>10.1.8147</Version>
+		<Version>10.1.8150</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Platform</PackageId>
 		<Authors>Oleksandr Kukthin</Authors>
@@ -34,7 +34,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Data.Core" Version="10.1.7337" />
+		<PackageReference Include="A2v10.Data.Core" Version="10.1.7338" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
 	</ItemGroup>
 

@@ -44,6 +44,8 @@ public class Startup
 		//services.UseLicenseManager();
 		services.AddScoped<ILicenseManager, NullLicenseManager>();
 
+		services.AddScoped<ISqlQueryTextProvider, SqlQueryTextProvider>();
+
 		services.UsePlatform(Configuration);
 
 		services.AddSingleton<TestBusinessAppProvider>();

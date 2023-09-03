@@ -5110,6 +5110,7 @@ label.radio > span {
   white-space: normal;
   gap: 1ch;
   align-items: baseline;
+  line-height: 1.15rem;
 }
 label.checkbox > span::before,
 label.radio > span::before {
@@ -6963,7 +6964,7 @@ table > colgroup col.blue {
   display: inline-flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   position: relative;
   margin-bottom: 1px;
   max-width: 70px;
@@ -6976,6 +6977,7 @@ table > colgroup col.blue {
   font-size: 10px;
   text-align: center;
   line-height: 1;
+  color: #ffffffd0;
 }
 .mdi-navbar .bar li:hover:not(.grow),
 .mdi-navbar .bar li.active {
@@ -7339,7 +7341,6 @@ table.tree-grid a.toggle.expanded:after {
   align-self: start;
   justify-self: end;
   position: relative;
-  right: -8px;
 }
 .dashboard-container .start-toolbar.no-items {
   position: absolute;
@@ -7509,9 +7510,10 @@ table.tree-grid a.toggle.expanded:after {
   width: 100%;
 }
 .color-picker .tag-label {
-  line-height: 2em;
-  height: 1.994em;
-  margin: 2px;
+  font-size: 1rem;
+  height: 1.75em;
+  margin: 0.125em;
+  line-height: 1.9;
   padding: 0 5px;
   cursor: pointer;
 }
@@ -7528,7 +7530,7 @@ table.tree-grid a.toggle.expanded:after {
   display: flex;
   min-height: 30px;
   border-color: var(--neutral400);
-  padding: 4px;
+  padding: 1px;
   cursor: pointer;
 }
 .tags-control .tags-items {
@@ -7544,8 +7546,9 @@ table.tree-grid a.toggle.expanded:after {
 }
 .tags-control .tags-placeholder {
   flex-grow: 1;
-  line-height: 1.5;
   color: var(--text-label);
+  margin: 0 4px;
+  line-height: 1.8;
 }
 .tags-control .tags-pane {
   position: absolute;

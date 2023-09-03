@@ -12663,7 +12663,7 @@ Vue.directive('resize', {
 
 // Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
-/*20230827-7945*/
+/*20230830-7947*/
 // controllers/base.js
 
 (function () {
@@ -13092,7 +13092,7 @@ Vue.directive('resize', {
 					// try to get first $ModelInfo
 					let modInfo = this.$data._findRootModelInfo();
 					if (modInfo) {
-						mi = modelInfo.get(this.$data, modInfo);
+						mi = modelInfo.get.call(this.$data, modInfo);
 					}
 				}
 
@@ -14174,11 +14174,11 @@ Vue.directive('resize', {
 				this.$data._fireGlobalPeriodChanged_(period);
 			},
 			__signalAppEvent__(data) {
-				if (this.$data._fireSignalAppEvent_)
+				if (this.$data && this.$data._fireSignalAppEvent_)
 					this.$data._fireSignalAppEvent_(data);
 			},
 			__globalAppEvent__(data) {
-				if (this.$data._fireGlobalAppEvent_)
+				if (this.$data && this.$data._fireGlobalAppEvent_)
 					this.$data._fireGlobalAppEvent_(data);
 			}
 		},

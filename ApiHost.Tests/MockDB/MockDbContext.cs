@@ -92,7 +92,17 @@ public class MockDbContext : IDbContext
 		throw new NotImplementedException();
 	}
 
-	public void LoadRaw(string? source, string procedure, ExpandoObject prms, Action<int, IDataReader> action)
+    public IDataModel LoadModelSql(string? source, string sqlString, object? prms = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<IDataModel> LoadModelSqlAsync(string? source, string sqlString, object? prms = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void LoadRaw(string? source, string procedure, ExpandoObject prms, Action<int, IDataReader> action)
 	{
 		throw new NotImplementedException();
 	}

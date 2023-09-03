@@ -51,14 +51,18 @@ public class DataService : IDataService
 	private readonly IModelJsonReader _modelReader;
 	private readonly IDbContext _dbContext;
 	private readonly ICurrentUser _currentUser;
+	private readonly ISqlQueryTextProvider _sqlQueryTextProvider;
 
-	public DataService(IServiceProvider serviceProvider, IModelJsonReader modelReader, IDbContext dbContext, ICurrentUser currentUser)
+    public DataService(IServiceProvider serviceProvider, IModelJsonReader modelReader, IDbContext dbContext, ICurrentUser currentUser,
+        ISqlQueryTextProvider sqlQueryTextProvider)
 	{
 		_serviceProvider = serviceProvider;
 		_modelReader = modelReader;
 		_dbContext = dbContext;
 		_currentUser = currentUser;
-	}
+		_sqlQueryTextProvider = sqlQueryTextProvider;
+
+    }
 
 	static IPlatformUrl CreatePlatformUrl(UrlKind kind, String baseUrl)
 	{
@@ -98,9 +102,16 @@ public class DataService : IDataService
 			if (view.Indirect)
 				prmsForLoad = ParameterBuilder.BuildIndirectParams(platformUrl, setParams);
 
-			model = await _dbContext.LoadModelAsync(view.DataSource, view.LoadProcedure(), prmsForLoad);
+			var sqlTextKey = view.SqlTextKey();
+			if (sqlTextKey == null)
+				model = await _dbContext.LoadModelAsync(view.DataSource, view.LoadProcedure(), prmsForLoad);
+			else
+			{
+				var sqlText = _sqlQueryTextProvider.GetSqlText(sqlTextKey, prmsForLoad);
+				model = await _dbContext.LoadModelSqlAsync(view.DataSource, sqlText, prmsForLoad);
+			}
 
-			if (view.Merge != null)
+            if (view.Merge != null)
 			{
 				var prmsForMerge = view.Merge.CreateMergeParameters(model, prmsForLoad);
 				var mergeModel = await _dbContext.LoadModelAsync(view.Merge.DataSource, view.Merge.LoadProcedure(), prmsForMerge);

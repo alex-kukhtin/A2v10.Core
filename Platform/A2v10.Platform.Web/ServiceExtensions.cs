@@ -82,7 +82,7 @@ public static class ServiceExtensions
 		return services;
 	}
 
-	public static IServiceCollection AddInvokeTargets(this IServiceCollection services, Action<InvokeEngineFactory> action)
+    public static IServiceCollection AddInvokeTargets(this IServiceCollection services, Action<InvokeEngineFactory> action)
 	{
 		var invokeEngineFactory = new InvokeEngineFactory();
 		action.Invoke(invokeEngineFactory);

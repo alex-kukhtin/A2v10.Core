@@ -57,14 +57,15 @@ public static class ServicesExtensions
 		var builder = services.AddPlatformCore()
 			.AddDefaultIdentityUI();
 
-        services.AddSingleton<IAppCodeProvider, AppCodeProvider>();
-        services.AddSingleton<IModelJsonPartProvider, ModelJsonPartProvider>();
-        services.AddSingleton<IXamlPartProvider, XamlPartProvider>();
+		services.AddSingleton<IAppCodeProvider, AppCodeProvider>();
+		services.AddSingleton<IModelJsonPartProvider, ModelJsonPartProvider>();
+		services.AddSingleton<IXamlPartProvider, XamlPartProvider>();
 
 		// default implementations
 		services.TryAddSingleton<IMailService, NullMailService>();
 		services.TryAddScoped<IUserBannerProvider, NullUserBannerProvider>();
 		services.TryAddScoped<ILicenseManager, EmptyLicenseManager>();
+		services.TryAddSingleton<ISqlQueryTextProvider, NullSqlQueryTextProvider>();
 
 		var cookiePrefix = configuration.GetValue<String>("identity:cookiePrefix")?.Trim()
 			?? "A2v10Platform";
@@ -91,13 +92,14 @@ public static class ServicesExtensions
 			opts.Modules = configuration.GetSection("application:modules")
 				.GetChildren().ToDictionary<IConfigurationSection, String, ModuleInfo>(
 					x => x.Key,
-					x => {
+					x =>
+					{
 						var mi = new ModuleInfo();
 						x.Bind(mi);
 						return mi;
 					},
 					StringComparer.InvariantCultureIgnoreCase);
-        });
+		});
 
 		services.AddScoped<IDataService, DataService>();
 		services.AddScoped<IModelJsonReader, ModelJsonReader>();
@@ -146,7 +148,7 @@ public static class ServicesExtensions
 		{
 			endpoints.MapControllers();
 			endpoints.MapHub<DefaultHub>("/_userhub");
-        });
+		});
 
 		// TODO: use settings?
 		var cultureInfo = new CultureInfo("uk-UA");

@@ -7,7 +7,7 @@
 		display: flex;
 		min-height: 30px;
 		border-color: @control-border;
-		padding: 4px;
+		padding: 1px;
 		cursor: pointer;
 	}
 
@@ -26,8 +26,9 @@
 
 	.tags-placeholder {
 		flex-grow: 1;
-		line-height: 1.5;
 		color: @label-color;
+		margin: 0 4px;
+		line-height: 1.8;
 	}
 
 	.tags-pane {
@@ -43,6 +44,7 @@
 		box-shadow: @dropdown-shadow;
 		clip-path: inset(0px -40px -40px -40px);
 		border-radius: @control-brd-radius;
+
 		.tags-pane-items {
 			margin: 0;
 			padding: 0;

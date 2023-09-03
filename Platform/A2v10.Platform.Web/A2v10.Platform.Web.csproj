@@ -4,7 +4,7 @@
 		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>
 		<Nullable>enable</Nullable>
 		<AddRazorSupportForMvc>true</AddRazorSupportForMvc>
-		<Version>10.1.8147</Version>
+		<Version>10.1.8150</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Platform.Web</PackageId>
 		<Authors>Oleksandr Kukthin</Authors>
@@ -19,7 +19,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Data.Interfaces" Version="10.1.7334" />
+		<PackageReference Include="A2v10.Data.Interfaces" Version="10.1.7338" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 	</ItemGroup>
 
