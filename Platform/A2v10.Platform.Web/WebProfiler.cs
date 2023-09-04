@@ -1,4 +1,4 @@
-﻿// Copyright © 2020-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2020-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -10,7 +10,7 @@ using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
-using Microsoft.AspNetCore.DataProtection;
+using System.Collections.Concurrent;
 
 namespace A2v10.Platform.Web;
 
@@ -102,24 +102,34 @@ internal class DummyRequest : IProfileRequest
 	}
 }
 
+public sealed class WebProfilerStorage
+{
+	private readonly ConcurrentDictionary<String, LinkedList<ProfileRequest>> _map = new();
+
+	internal LinkedList<ProfileRequest> Get(String key)
+	{
+		if (_map.TryGetValue(key, out var list))
+			return list;
+		list = new LinkedList<ProfileRequest>();
+		_map[key] = list;
+		return list;
+	}
+}
+
 public sealed class WebProfiler : IProfiler, IDataProfiler, IDisposable
 {
-	// TODO: ???? COOCKIE SIZE!!!!
-	const Int32 REQUEST_COUNT = 7;
+	const Int32 REQUEST_COUNT = 15;
 
-	private LinkedList<ProfileRequest> _requestList = new();
 	private ProfileRequest? _request;
-
 	public Boolean Enabled { get; set; }
 
-
 	private readonly IHttpContextAccessor _httpContext;
-	private readonly IDataProtector _protector;
+	private readonly WebProfilerStorage _storage;
 
-	public WebProfiler(IHttpContextAccessor httpContext, IDataProtectionProvider protectionProvider)
+    public WebProfiler(IHttpContextAccessor httpContext, WebProfilerStorage storage)
 	{
 		_httpContext = httpContext;
-		_protector = protectionProvider.CreateProtector("Session");
+		_storage = storage;
 	}
 
 	public void Dispose()
@@ -140,51 +150,45 @@ public sealed class WebProfiler : IProfiler, IDataProfiler, IDisposable
 			return null;
 		if (address.ToLowerInvariant().EndsWith("/_shell/trace"))
 			return null;
-		LoadSession();
+		var requestList = _storage.Get(SessionId());
 		_request = new ProfileRequest(address);
-		_requestList.AddFirst(_request);
-		while (_requestList.Count > REQUEST_COUNT)
-			_requestList.RemoveLast();
+		requestList.AddFirst(_request);
+		while (requestList.Count > REQUEST_COUNT)
+			requestList.RemoveLast();
 		return _request;
 	}
 
-	public void EndRequest(IProfileRequest? request)
+	private String SessionId()
+	{
+        var sessionKey = _httpContext.HttpContext?.Request.Cookies[CookieNames.Application.Profile];
+		if (sessionKey != null)	
+			return sessionKey;
+		sessionKey = Guid.NewGuid().ToString();
+        _httpContext.HttpContext?.Response.Cookies.Append(
+            CookieNames.Application.Profile,
+            sessionKey,
+            new CookieOptions()
+            {
+                SameSite = SameSiteMode.Strict,
+                Secure = true,
+                HttpOnly = true,
+            }
+        );
+		return sessionKey;
+    }
+
+    public void EndRequest(IProfileRequest? request)
 	{
 		if (request != _request)
 			return;
 		_request?.Stop();
-		SaveSession();
 	}
 
-	void LoadSession()
-	{
-		var protectedData = _httpContext.HttpContext?.Request.Cookies[CookieNames.Application.Profile];
-		if (!String.IsNullOrEmpty(protectedData))
-			_requestList = JsonConvert.DeserializeObject<LinkedList<ProfileRequest>>(_protector.Unprotect(protectedData))
-				?? throw new InvalidProgramException("Invalid RequestList");
-	}
-
-	void SaveSession()
-	{
-		String json = JsonConvert.SerializeObject(_requestList);
-		_httpContext.HttpContext?.Response.Cookies.Append(
-			CookieNames.Application.Profile, 
-			_protector.Protect(json),
-			new CookieOptions()
-			{
-				SameSite = SameSiteMode.Strict,
-				Secure = true,
-				HttpOnly = true,
-			}
-		);
-	}
 
 	public String? GetJson()
 	{
-		var protectedData = _httpContext.HttpContext?.Request.Cookies[CookieNames.Application.Profile];
-		if (protectedData == null)
-			return null;
-		return _protector.Unprotect(protectedData);
+		var requestList = _storage.Get(SessionId());
+        return JsonConvert.SerializeObject(requestList);
 	}
 
 	#region IDataProfiler

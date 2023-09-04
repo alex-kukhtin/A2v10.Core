@@ -1,6 +1,12 @@
 ﻿@inject ICurrentUser currentUser
 @inject IAppVersion appVersion
+@inject IApplicationTheme appTheme
+@inject IAppCodeProvider codeProvider
 @model IIdentityViewModel
+@{
+	var logoUrl = appTheme.LogoUrl();
+	var hasLogo = !String.IsNullOrEmpty(logoUrl);
+}
 
 <!DOCTYPE html>
 <!--
@@ -18,6 +24,7 @@ GitHub: https://github.com/alex-kukhtin/A2v10.Core
 	<meta name="google" content="notranslate" />
 	<title></title>
 	@Html.Raw(Model.Theme)
+	@Html.Raw(codeProvider.AppStyleSheetsLink())
 	<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
 	<link rel="icon" href="/favicon.ico" type="image/x-icon" />
 </head>
@@ -25,8 +32,12 @@ GitHub: https://github.com/alex-kukhtin/A2v10.Core
 	<div id="app" class="shell login-shell" v-cloak>
 		<header class="header">
 			<a class="h-block" href="/">
-				<span class=app-title>@Model?.Title?.AppTitle</span>
-				<span class=app-subtitle>@Model?.Title?.AppSubTitle</span>
+				@if (hasLogo) {
+					<div class="app-logo"><img src="@logoUrl"/></div>
+				} else {
+					<span class=app-title>@Model?.Title?.AppTitle</span>
+					<span class=app-subtitle>@Model?.Title?.AppSubTitle</span>
+				}
 			</a>
 		</header>
 		<div class="main-view">

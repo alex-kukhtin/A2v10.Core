@@ -1,5 +1,9 @@
 2023-09-03 (next: 8151)
 ==========
+A2v10.Platform.Web
+A2v10.Identity.UI
+A2v10.Platform
+
 
 A2v10.Platform (8132)
 	A2v10.Identity.Core (8070)

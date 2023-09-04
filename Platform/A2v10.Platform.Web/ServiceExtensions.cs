@@ -35,7 +35,8 @@ public static class ServiceExtensions
 			.AddScoped<ILocalizer>(s => s.GetRequiredService<WebLocalizer>())
 			.AddScoped<IDataLocalizer>(s => s.GetRequiredService<WebLocalizer>());
 
-		services.AddScoped<WebProfiler>()
+		services.AddSingleton<WebProfilerStorage>()
+			.AddScoped<WebProfiler>()
 			.AddScoped<IProfiler>(s => s.GetRequiredService<WebProfiler>())
 			.AddScoped<IDataProfiler>(s => s.GetRequiredService<WebProfiler>());
 
