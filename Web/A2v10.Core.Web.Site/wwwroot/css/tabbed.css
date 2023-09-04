@@ -4446,6 +4446,7 @@ ul.news-list > li {
   align-items: center;
   gap: 1rem;
   border-radius: 0 0 8px 8px;
+  border-top: 1px solid var(--neutral300);
 }
 .modal-footer .btn {
   min-width: 6rem;

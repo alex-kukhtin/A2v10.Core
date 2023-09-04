@@ -1358,6 +1358,16 @@ hr {
   border: 1px solid var(--neutral300);
   border-bottom-style: none;
 }
+.app-title {
+  font-size: 20px;
+  display: inline-block;
+  margin-left: 10px;
+  padding-bottom: 3px;
+}
+.app-logo {
+  display: inline-flex;
+  height: 40px;
+}
 header,
 .header {
   position: absolute;
@@ -1365,7 +1375,7 @@ header,
   top: 0;
   right: 0;
   height: 40px;
-  padding: 0 0 0 8px;
+  padding: 0;
   background-color: black;
   color: white;
   display: flex;
@@ -1388,18 +1398,6 @@ header .h-block:hover,
 .header .h-block:hover {
   text-decoration: none;
   color: inherit;
-}
-header .h-block .app-title,
-.header .h-block .app-title {
-  font-size: 18px;
-}
-header .h-block .app-logo,
-.header .h-block .app-logo {
-  padding-right: 12px;
-}
-header .h-block .app-logo > img,
-.header .h-block .app-logo > img {
-  display: block;
 }
 header .h-block .app-subtitle,
 .header .h-block .app-subtitle {
@@ -4448,6 +4446,7 @@ ul.news-list > li {
   align-items: center;
   gap: 1rem;
   border-radius: 0 0 8px 8px;
+  border-top: 1px solid var(--neutral300);
 }
 .modal-footer .btn {
   min-width: 6rem;
@@ -6738,14 +6737,6 @@ table > colgroup col.blue {
   align-items: center;
   flex-direction: row;
   white-space: nowrap;
-}
-.mdi-header .app-title {
-  margin-left: 18px;
-  font-size: 18px;
-  line-height: 40px;
-}
-.mdi-header .app-logo {
-  display: inline-flex;
 }
 .mdi-header .include.nav-pane {
   width: auto;

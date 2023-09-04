@@ -1,8 +1,5 @@
-2023-09-03 (next: 8151)
+2023-09-04 (next: 8152)
 ==========
-A2v10.Platform.Web
-A2v10.Identity.UI
-A2v10.Platform
 
 
 A2v10.Platform (8132)
