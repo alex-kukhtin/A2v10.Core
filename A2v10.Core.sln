@@ -102,6 +102,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "source", "source", "{39B995
 		Platform\A2v10.App.Assets\Application\@sql\source\a2v10_ui.sql = Platform\A2v10.App.Assets\Application\@sql\source\a2v10_ui.sql
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "legacy", "legacy", "{BCE575AC-2286-405C-A782-8AEF5C2F5938}"
+	ProjectSection(SolutionItems) = preProject
+		Platform\A2v10.App.Assets\Application\@sql\legacy\a2v10admin.sql = Platform\A2v10.App.Assets\Application\@sql\legacy\a2v10admin.sql
+		Platform\A2v10.App.Assets\Application\@sql\legacy\a2v10platform.sql = Platform\A2v10.App.Assets\Application\@sql\legacy\a2v10platform.sql
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -229,6 +235,7 @@ Global
 		{1C657994-E862-46E6-9E2E-5EC2589EDDDB} = {A1D69499-3CCF-4BBC-AE6E-0281286A1F3F}
 		{29A69FE9-79CF-479C-9ADC-42EFC1C3D765} = {67735C81-ECA7-477D-A608-9C34AE3EF2D1}
 		{39B995EC-E237-4910-A05F-5A579C76EF36} = {29A69FE9-79CF-479C-9ADC-42EFC1C3D765}
+		{BCE575AC-2286-405C-A782-8AEF5C2F5938} = {29A69FE9-79CF-479C-9ADC-42EFC1C3D765}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D64A03C5-D2E1-49C8-A7A9-D6022941DE01}

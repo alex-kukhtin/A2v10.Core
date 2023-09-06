@@ -3,6 +3,7 @@
 	<ItemGroup>
 		<SourceAssetsAppSchemas Include="$(MSBuildThisFileDirectory)..\content\assets\Application\@schemas\*" />
 		<SourceAssetsAppSqlSource Include="$(MSBuildThisFileDirectory)..\content\assets\Application\@sql\source\*" />
+		<SourceAssetsAppSqlLegacy Include="$(MSBuildThisFileDirectory)..\content\assets\Application\@sql\legacy\*" />
 		<SourceAssetsAppSql Include="$(MSBuildThisFileDirectory)..\content\assets\Application\@sql\*" />
 		<SourceAssetsAppTypes Include="$(MSBuildThisFileDirectory)..\content\assets\Application\@types\*" />
 		<SourceAssetsAppRoot Include="$(MSBuildThisFileDirectory)..\content\assets\Application\*" />
@@ -12,6 +13,7 @@
 		<Copy SourceFiles="@(SourceAssetsAppSchemas)" DestinationFolder="$(ProjectDir)\@schemas"/>
 		<Copy SourceFiles="@(SourceAssetsAppTypes)" DestinationFolder="$(ProjectDir)\@types"/>
 		<Copy SourceFiles="@(SourceAssetsAppSqlSource)" DestinationFolder="$(ProjectDir)\@sql\source"/>
+		<Copy SourceFiles="@(SourceAssetsAppSqlLegacy)" DestinationFolder="$(ProjectDir)\@sql\legacy"/>
 		<Copy SourceFiles="@(SourceAssetsAppSql)" DestinationFolder="$(ProjectDir)\@sql"/>
 		<Copy SourceFiles="@(SourceAssetsAppRoot)" DestinationFolder="$(ProjectDir)"/>
 		<Copy SourceFiles="@(SourceAssetsAssemblies)" DestinationFolder="$(ProjectDir)\@assemblies"/>
