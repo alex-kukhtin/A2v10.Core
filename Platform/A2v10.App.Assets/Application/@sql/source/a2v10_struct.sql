@@ -223,6 +223,7 @@ create table a2ui.Menu
 	Icon nvarchar(255),
 	[Order] int not null constraint DF_Menu_Order default(0),
 	[ClassName] nvarchar(255) null,
+	[IsDevelopment] bit constraint DF_Menu_IsDevelopment default(0),
 	constraint PK_Menu primary key (Tenant, Id),
 	constraint FK_Menu_Parent_Menu foreign key (Tenant, Parent) references a2ui.Menu(Tenant, Id),
 	constraint FK_Menu_Module_Modules foreign key (Module) references a2ui.Modules(Id),
@@ -233,5 +234,8 @@ go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = N'a2security' and TABLE_NAME = N'Users' and COLUMN_NAME = N'IsApiUser')
 	alter table a2security.Users add IsApiUser bit constraint DF_UsersIsApiUser default(0) with values;
+go
+if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = N'a2ui' and TABLE_NAME = N'Menu' and COLUMN_NAME = N'IsDevelopment')
+	alter table a2ui.Menu add [IsDevelopment] bit constraint DF_Menu_IsDevelopment default(0) with values;
 go
 

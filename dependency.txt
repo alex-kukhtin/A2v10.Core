@@ -1,6 +1,7 @@
 2023-09-04 (next: 8152)
 ==========
 A2v10.Web.Assets
+A2v10.App.Assets
 
 
 A2v10.Platform (8132)

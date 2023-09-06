@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2008-2023 Oleksandr Kukhtin
 
-Last updated : 13 aug 2023
-module version : 8137
+Last updated : 06 sep 2023
+module version : 8152
 */
 ------------------------------------------------
 drop procedure if exists a2ui.[Menu.Merge];
@@ -66,7 +66,12 @@ begin
 	set nocount on;
 	set transaction isolation level read uncommitted;
 
+	declare @isDevelopment bit;
+	select @isDevelopment = IsDevelopment from a2sys.Applications where TenantId = @TenantId and Id = 1;
+	set @isDevelopment = isnull(@isDevelopment, 0);
+
 	set @TenantId = 1; -- TODO: TEMPORARY!!!!
+
 	declare @RootId uniqueidentifier = N'00000000-0000-0000-0000-000000000000';
 	with RT as (
 		select Id=m0.Id, ParentId = m0.Parent, [Level] = 0
@@ -81,6 +86,7 @@ begin
 		m.[Name], m.Url, m.Icon, m.ClassName, m.CreateUrl, m.CreateName
 	from RT 
 		inner join a2ui.Menu m on m.Tenant = @TenantId and RT.Id=m.Id
+	where IsDevelopment = 0 or IsDevelopment = @isDevelopment
 	order by RT.[Level], m.[Order], RT.[Id];
 
 	-- system parameters
