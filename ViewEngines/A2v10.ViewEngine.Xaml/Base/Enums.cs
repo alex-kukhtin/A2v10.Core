@@ -380,6 +380,7 @@ public enum Icon
 	Image,
 	Import,
 	Items,
+	Lead,
 	Link,
 	List,
 	ListBullet,

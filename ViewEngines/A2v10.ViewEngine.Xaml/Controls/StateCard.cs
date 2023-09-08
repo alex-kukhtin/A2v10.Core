@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Xaml;
 
@@ -47,7 +47,14 @@ public class StateCard : UiContentElement
 			panel.AddCssClass("drop-shadow");
 			panel.AddCssClass(DropShadow.ToString().ToLowerInvariant());
 		}
-		if (Style != CardStyle.Default)
+
+        var styleBind = GetBinding(nameof(Style));
+        if (styleBind != null)
+        {
+            panel.AddCssClass("a2-state-card-styled");
+            panel.MergeAttribute(":class", $"'a2-state-card-' + {styleBind.GetPathFormat(context)}");
+        }
+        else if (Style != CardStyle.Default)
 		{
 			panel.AddCssClass("a2-state-card-styled");
 			panel.AddCssClass("a2-state-card-" + Style.ToString().ToLowerInvariant());
