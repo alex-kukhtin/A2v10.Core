@@ -39,6 +39,7 @@ public static class HostHelpers
 		{
 			using var sr = new StreamReader(stream);
 			var appLinks = await sr.ReadToEndAsync();
+			stream.Close();
 			if (!String.IsNullOrEmpty(appLinks))
 			{
 				// with validation
@@ -58,17 +59,32 @@ public static class HostHelpers
         return Task.FromResult<String>(String.Empty);
 	}
 
-	public static Task<String> CustomAppScripts(this IAppCodeProvider _1/*provider*/)
+	public static String LayoutStyles(this IAppCodeProvider provider)
 	{
-        // TODO: From main module?
-        /*
-        var scripts = await provider.ReadTextFileAsync("_layout", "_scripts.html", false);
-        if (scripts == null)
-            return String.Empty;
-		String scripts = provider.ReadTextFile("_layout", "_scripts.html");
-		return scripts != null ? host.GetAppSettings(scripts) : String.Empty;
-		*/
-        return Task.FromResult<String>(String.Empty);
+		// primary only
+		var text = String.Empty;
+		using (var stream = provider.FileStreamRO("_layout/_styles.html", true))
+		{
+			if (stream == null)
+				return text;
+			using var rdr = new StreamReader(stream);
+			text = rdr.ReadToEnd();
+		}
+		return text;
+	}
+
+	public static String LayoutScripts(this IAppCodeProvider provider)
+	{
+		// primary only
+		var text = String.Empty;
+		using (var stream = provider.FileStreamRO("_layout/_scripts.html", true))
+		{
+			if (stream == null)
+				return text;
+			using var rdr = new StreamReader(stream);
+			text = rdr.ReadToEnd();
+		}
+		return text;
     }
 
     public static String? CustomManifest(this IWebHostFilesProvider provider)
