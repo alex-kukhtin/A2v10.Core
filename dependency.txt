@@ -4,7 +4,7 @@ A2v10.Web.Assets
 A2v10.App.Assets
 A2v10.ViewEngine.Xaml
 A2v10.Platform
-
+A2v10.Platform.Web
 
 A2v10.Platform (8132)
 	A2v10.Identity.Core (8070)
