@@ -25,7 +25,7 @@ GitHub: https://github.com/alex-kukhtin/A2v10.Core
 	<meta name="rootUrl" content="" />
 	<title></title>
 	@Html.Raw(Model?.Theme)
-	@Html.Raw(codeProvider.LayoutStyles())
+	@Html.Raw(await codeProvider.LayoutStyles())
 	@Html.Raw(codeProvider.AppStyleSheetsLink())
 	<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
 	<link rel="icon" href="/favicon.ico" type="image/x-icon" />
@@ -34,7 +34,7 @@ GitHub: https://github.com/alex-kukhtin/A2v10.Core
 <body>
 	@RenderBody()
 	<script type="text/javascript" src="/scripts/vue.@Html.Raw(ViewBag.__Minify)js?v=2.7.14"></script>
-	@Html.Raw(codeProvider.LayoutScripts());
+	@Html.Raw(await codeProvider.LayoutScripts());
 	<script type="text/javascript" src="/scripts/signalr.min.js?v=6.0.16"></script>
 	<script type="text/javascript" src="/scripts/locale-@Html.Raw(userLocale.Language + ".min.js")?v=@appVersion.AppBuild"></script>
 	<script type="text/javascript" src="/scripts/tabmain.js?v=@appVersion.AppBuild"></script>

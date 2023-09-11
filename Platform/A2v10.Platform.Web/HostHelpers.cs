@@ -59,32 +59,24 @@ public static class HostHelpers
         return Task.FromResult<String>(String.Empty);
 	}
 
-	public static String LayoutStyles(this IAppCodeProvider provider)
+	public static async Task<String> LayoutStyles(this IAppCodeProvider provider)
 	{
 		// primary only
-		var text = String.Empty;
-		using (var stream = provider.FileStreamRO("_layout/_styles.html", true))
-		{
-			if (stream == null)
-				return text;
-			using var rdr = new StreamReader(stream);
-			text = rdr.ReadToEnd();
-		}
-		return text;
+		using var stream = provider.FileStreamRO("_layout/_styles.html", true);
+		if (stream == null)
+			return String.Empty;
+		using var rdr = new StreamReader(stream);
+		return await rdr.ReadToEndAsync();
 	}
 
-	public static String LayoutScripts(this IAppCodeProvider provider)
+	public static async Task<String> LayoutScripts(this IAppCodeProvider provider)
 	{
 		// primary only
-		var text = String.Empty;
-		using (var stream = provider.FileStreamRO("_layout/_scripts.html", true))
-		{
-			if (stream == null)
-				return text;
-			using var rdr = new StreamReader(stream);
-			text = rdr.ReadToEnd();
-		}
-		return text;
+		using var stream = provider.FileStreamRO("_layout/_scripts.html", true);
+		if (stream == null)
+			return String.Empty;
+		using var rdr = new StreamReader(stream);
+		return await rdr.ReadToEndAsync();
     }
 
     public static String? CustomManifest(this IWebHostFilesProvider provider)

@@ -1,9 +1,9 @@
 /*
 ------------------------------------------------
-Copyright © 2008-2022 Alex Kukhtin
+Copyright © 2008-2023 Oleksandr Kukhtin
 
-Last updated : 30 jan 2022
-module version : 7753
+Last updated : 11 sep 2023
+module version : 7944
 */
 ------------------------------------------------
 exec a2sys.SetVersion N'std:admin', 7753;
@@ -31,45 +31,6 @@ begin
 		throw 60000, N'The current user is not an administrator', 0;
 end
 go
-------------------------------------------------
-if exists (select * from INFORMATION_SCHEMA.ROUTINES where ROUTINE_SCHEMA=N'a2admin' and ROUTINE_NAME=N'Menu.Admin.Load')
-	drop procedure a2admin.[Menu.Admin.Load]
-go
-------------------------------------------------
-create procedure a2admin.[Menu.Admin.Load]
-@TenantId int = null,
-@UserId bigint
-as
-begin
-	set nocount on;
-	set transaction isolation level read uncommitted;
-
-	exec a2admin.[Ensure.Admin] @TenantId, @UserId;
-	declare @RootId bigint;
-	select @RootId = Id from a2ui.Menu where Parent is null and [Name] = N'Admin';
-
-	with RT as (
-		select Id=m0.Id, ParentId = m0.Parent, [Level]=0
-			from a2ui.Menu m0
-			where m0.Id = @RootId
-		union all
-		select m1.Id, m1.Parent, RT.[Level]+1
-			from RT inner join a2ui.Menu m1 on m1.Parent = RT.Id
-	)
-	select [Menu!TMenu!Tree] = null, [Id!!Id]=RT.Id, [!TMenu.Menu!ParentId]=RT.ParentId,
-		[Menu!TMenu!Array] = null,
-		m.Name, m.Url, m.Icon, m.[Description], m.Help, m.Params
-	from RT 
-		inner join a2ui.Menu m on RT.Id=m.Id
-	order by RT.[Level], m.[Order], RT.[Id];
-
-	-- system parameters
-	select [SysParams!TParam!Object]= null, [AppTitle], [AppSubTitle]
-	from (select Name, Value=StringValue from a2sys.SysParams) as s
-		pivot (min(Value) for Name in ([AppTitle], [AppSubTitle])) as p;
-end
-go
-
 ------------------------------------------------
 if exists (select * from INFORMATION_SCHEMA.ROUTINES where ROUTINE_SCHEMA=N'a2admin' and ROUTINE_NAME=N'User.Index')
 	drop procedure [a2admin].[User.Index]
@@ -823,35 +784,6 @@ begin
 end
 go
 ------------------------------------------------
-begin
-	-- create admin menu
-	declare @menu table(id bigint, p0 bigint, [name] nvarchar(255), [url] nvarchar(255), icon nvarchar(255), [order] int);
-	insert into @menu(id, p0, [name], [url], icon, [order])
-	values
-		(900, null,	N'Admin',       null,			null,		0),
-		(901, 900,	N'@[Users]',	N'identity',	null,		10),
-		(910, 901,	N'@[Users]',	N'user',		N'user',	10),
-		(911, 901,	N'@[Groups]',	N'group',		N'users',	20),
-		(912, 901,	N'@[Roles]',	N'role',		N'users',	30),
-		(913, 901,	N'@[ApiUsers]',	N'api',			N'external',40);
-			
-	merge a2ui.Menu as target
-	using @menu as source
-	on target.Id=source.id and target.Id >= 900 and target.Id < 1000
-	when matched then
-		update set
-			target.Id = source.id,
-			target.[Name] = source.[name],
-			target.[Url] = source.[url],
-			target.[Icon] = source.icon,
-			target.[Order] = source.[order]
-	when not matched by target then
-		insert(Id, Parent, [Name], [Url], Icon, [Order]) values (id, p0, [name], [url], icon, [order])
-	when not matched by source and target.Id >= 900 and target.Id < 1000 then 
-		delete;
-end
-go
-------------------------------------------------
 if exists (select * from INFORMATION_SCHEMA.ROUTINES where ROUTINE_SCHEMA=N'a2admin' and ROUTINE_NAME=N'ApiUser.Index')
 	drop procedure [a2admin].[ApiUser.Index]
 go
@@ -1000,7 +932,6 @@ begin
 	exec a2admin.[ApiUser.Load] @TenantId = @TenantId, @UserId = @UserId, @Id = @RetId;
 end
 go
-
 ------------------------------------------------
 if not exists(select * from a2security.Users where Id <> 0)
 begin

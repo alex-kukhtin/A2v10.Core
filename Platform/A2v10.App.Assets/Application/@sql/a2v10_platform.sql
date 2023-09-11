@@ -223,6 +223,7 @@ create table a2ui.Menu
 	Icon nvarchar(255),
 	[Order] int not null constraint DF_Menu_Order default(0),
 	[ClassName] nvarchar(255) null,
+	[IsDevelopment] bit constraint DF_Menu_IsDevelopment default(0),
 	constraint PK_Menu primary key (Tenant, Id),
 	constraint FK_Menu_Parent_Menu foreign key (Tenant, Parent) references a2ui.Menu(Tenant, Id),
 	constraint FK_Menu_Module_Modules foreign key (Module) references a2ui.Modules(Id),
@@ -233,6 +234,9 @@ go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = N'a2security' and TABLE_NAME = N'Users' and COLUMN_NAME = N'IsApiUser')
 	alter table a2security.Users add IsApiUser bit constraint DF_UsersIsApiUser default(0) with values;
+go
+if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = N'a2ui' and TABLE_NAME = N'Menu' and COLUMN_NAME = N'IsDevelopment')
+	alter table a2ui.Menu add [IsDevelopment] bit constraint DF_Menu_IsDevelopment default(0) with values;
 go
 
 
@@ -669,8 +673,8 @@ go
 /*
 Copyright © 2008-2023 Oleksandr Kukhtin
 
-Last updated : 13 aug 2023
-module version : 8137
+Last updated : 06 sep 2023
+module version : 8152
 */
 ------------------------------------------------
 drop procedure if exists a2ui.[Menu.Merge];
@@ -734,7 +738,12 @@ begin
 	set nocount on;
 	set transaction isolation level read uncommitted;
 
+	declare @isDevelopment bit;
+	select @isDevelopment = IsDevelopment from a2sys.Applications where TenantId = @TenantId and Id = 1;
+	set @isDevelopment = isnull(@isDevelopment, 0);
+
 	set @TenantId = 1; -- TODO: TEMPORARY!!!!
+
 	declare @RootId uniqueidentifier = N'00000000-0000-0000-0000-000000000000';
 	with RT as (
 		select Id=m0.Id, ParentId = m0.Parent, [Level] = 0
@@ -749,6 +758,7 @@ begin
 		m.[Name], m.Url, m.Icon, m.ClassName, m.CreateUrl, m.CreateName
 	from RT 
 		inner join a2ui.Menu m on m.Tenant = @TenantId and RT.Id=m.Id
+	where IsDevelopment = 0 or IsDevelopment = @isDevelopment
 	order by RT.[Level], m.[Order], RT.[Id];
 
 	-- system parameters
