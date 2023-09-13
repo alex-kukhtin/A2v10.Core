@@ -5989,7 +5989,7 @@ Vue.component('validator-control', {
 })();
 // Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
-// 20230810-7942
+// 20230911-7946
 // components/datepicker.js
 
 (function () {
@@ -6008,7 +6008,8 @@ Vue.component('validator-control', {
 <div :class="cssClass2()" class="date-picker" :test-id="testId">
 	<label v-if="hasLabel"><span v-text="label"/><slot name="hint"/><slot name="link"></slot></label>
 	<div class="input-group"  @click="clickInput($event)">
-		<input v-focus v-model.lazy="model" :class="inputClass" :disabled="inputDisabled"/>
+		<input v-focus v-model.lazy="model" v-if="!isMonth" :class="inputClass" :readonly="inputDisabled"/>
+		<div class="month-wrapper" v-if=isMonth v-text=model></div>
 		<a href @click.stop.prevent="toggle($event)" tabindex="-1"><i class="ico ico-calendar"></i></a>
 		<validator :invalid="invalid" :errors="errors" :options="validatorOptions"></validator>
 		<div class="calendar" v-if="isOpen">		
@@ -6111,6 +6112,9 @@ Vue.component('validator-control', {
 		computed: {
 			modelDate() {
 				return this.item[this.prop];
+			},
+			isMonth() {
+				return this.view === 'month';
 			},
 			inputDisabled() {
 				return this.disabled || this.view === 'month';
@@ -12298,7 +12302,7 @@ Vue.component('a2-panel', {
 })();
 // Copyright © 2019-2023 Oleksandr Kukhtin. All rights reserved.
 
-// 20230122-7918
+// 20230903-7941
 // components/tagscontrol.js*/
 
 (function () {
@@ -12315,9 +12319,9 @@ Vue.component('a2-panel', {
 		<div class="tags-placeholder" v-else v-text="placeholder"></div>
 		<div class="tags-pane" v-if=isOpen>
 			<ul class="tags-pane-items">
-				<li v-for="(itm, ix) in actualItemsSource" :key="ix" class="tag-body tag-md" :class="tagColor(itm)">
-					<span v-text="tagName(itm)" 
-						@click.stop.prevent="addTag(itm)"/>
+				<li v-for="(itm, ix) in actualItemsSource" :key="ix" class="tag-body tag-md" :class="tagColor(itm)"
+					@click.stop.prevent="addTag(itm)">
+					<span v-text="tagName(itm)"/>
 				</li>
 			</ul>
 			<div class="tags-settings" v-if="!disabled">
@@ -12349,9 +12353,9 @@ Vue.component('a2-panel', {
 		<div class="tags-placeholder" v-else v-text="placeholder"></div>
 		<div class="tags-pane" v-if=isOpen>
 			<ul class="tags-pane-items">
-				<li v-for="(itm, ix) in actualItemsSource" :key="ix" class="tag-body tag-md" :class="tagColor(itm)">
-					<span v-text="tagName(itm)" 
-						@click.stop.prevent="addTag(itm)"/>
+				<li v-for="(itm, ix) in actualItemsSource" :key="ix" class="tag-body tag-md" :class="tagColor(itm)"
+						@click.stop.prevent="addTag(itm)">
+					<span v-text="tagName(itm)"/>
 				</li>
 			</ul>
 		</div>
@@ -12776,7 +12780,7 @@ Vue.directive('disable', {
 	});
 
 })();
-// Copyright © 2015-2019 Alex Kukhtin. All rights reserved.
+// Copyright © 2015-2019 Oleksandr Kukhtin. All rights reserved.
 
 /*20190721-7507*/
 /* directives/focus.js */

@@ -1,5 +1,6 @@
-2023-09-11 (next: 8153)
+2023-09-11 (next: 8155)
 ==========
+A2v10.Identity.Jwt
 
 A2v10.Platform (8132)
 	A2v10.Identity.Core (8070)
