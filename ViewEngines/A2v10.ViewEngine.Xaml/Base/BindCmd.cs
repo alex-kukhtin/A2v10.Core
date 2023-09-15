@@ -1,7 +1,8 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Alex Kukhtin. All rights reserved.
+
+using System.Text;
 
 using A2v10.Infrastructure;
-using System.Text;
 
 /*
  * $exec(cmd, arg, confirm, opts) : $canExecute(cmd, arg, opts)
@@ -308,7 +309,7 @@ public class BindCmd : BindBase
 				return $"$exportTo('{Format}', {CommandFileName(context)})";
 
 			case CommandType.File:
-				return $"$file({CommandUrl(context)}, {CommandArgument(context)}, {GetOptionsForFile(context)})";
+				return $"$file({CommandUrl(context)}, {CommandArgument(context)}, {GetOptionsForFile(context)}, {GetData(context)})";
 
 			case CommandType.Dialog:
 				if (Action == DialogAction.Unknown)
