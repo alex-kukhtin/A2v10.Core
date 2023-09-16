@@ -15,6 +15,7 @@
 @hover-index: auto;
 */
 /* @modal-wrapper-index + 2 */
+/* validator + 1*/
 /* marker */
 /* grid */
 /* mixins */
@@ -891,6 +892,7 @@
 @hover-index: auto;
 */
 /* @modal-wrapper-index + 2 */
+/* validator + 1*/
 /* marker */
 /* grid */
 * {
@@ -3463,7 +3465,7 @@ table.data-grid > tbody > tr.bold > td {
   height: auto;
 }
 .toolbar .checkbox {
-  margin: 0 6px;
+  margin: 1px 6px 0 6px;
 }
 .toolbar.no-wrap {
   flex-wrap: nowrap;
@@ -4857,7 +4859,7 @@ table.hover > tbody > tr.active:hover {
 }
 .a2-table > thead,
 .a2-table > tfoot {
-  line-height: 2rem;
+  line-height: 1;
 }
 .a2-table > thead > tr,
 .a2-table > tfoot > tr {
@@ -4865,7 +4867,7 @@ table.hover > tbody > tr.active:hover {
 }
 .a2-table > thead > tr > td,
 .a2-table > tfoot > tr > td {
-  padding: 0 6px;
+  padding: 4px 6px;
   background-color: var(--neutral100);
   border-color: var(--neutral300);
 }
@@ -6693,7 +6695,7 @@ table > colgroup col.blue {
   top: 40px;
   bottom: 2rem;
   right: 0;
-  z-index: 78;
+  z-index: 1031;
   background-color: var(--bgPrimary);
   box-shadow: -5px 0 10px 0 rgba(0, 0, 0, 0.2);
 }
@@ -7481,7 +7483,7 @@ table.tree-grid a.toggle.expanded:after {
 }
 .color-picker .color-picker-pane {
   position: absolute;
-  z-index: 78;
+  z-index: 1031;
   background: white;
   top: 100%;
   width: 100%;

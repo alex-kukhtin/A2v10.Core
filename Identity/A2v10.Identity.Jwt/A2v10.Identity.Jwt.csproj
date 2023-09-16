@@ -5,7 +5,7 @@
 		<Nullable>enable</Nullable>
 		<AssemblyName>A2v10.Identity.Jwt</AssemblyName>
 		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-		<Version>10.1.8150</Version>
+		<Version>10.1.8155</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Identity.Jwt</PackageId>
 		<Authors>Oleksandr Kukhtin</Authors>

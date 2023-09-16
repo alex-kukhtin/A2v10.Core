@@ -6,7 +6,8 @@
 
 @compact-ctrl-height:1.67em;
 
-@cell-vert-padding: 6px;
+@cell-vert-padding: 4px;
+@cell-horz-padding: 6px;
 
 table {
 	col.fit {
@@ -144,7 +145,7 @@ table.hover {
 	}
 
 	> thead, > tfoot {
-		line-height:2rem;
+		line-height:1;
 	}
 
 	> thead > tr, > tfoot > tr {
@@ -152,7 +153,7 @@ table.hover {
 	}
 
 	> thead > tr > td, > tfoot > tr > td {
-		padding: 0 @cell-vert-padding;
+		padding: @cell-vert-padding @cell-horz-padding;
 		background-color: @table-hdr-bg-color;
 		border-color: @table-brd-color;
 	}
