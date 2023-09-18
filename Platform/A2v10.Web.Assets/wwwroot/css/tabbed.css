@@ -3966,6 +3966,7 @@ tr:hover .commandbar.visible-hover {
   border-bottom: 3px solid var(--neutral300);
   align-items: baseline;
   margin: 0.65rem 0;
+  color: var(--text);
 }
 .a2-tab-bar-item:first-child {
   padding-left: 0;
@@ -3978,10 +3979,13 @@ tr:hover .commandbar.visible-hover {
   padding: 0.65rem 0;
   color: var(--text);
 }
+.a2-tab-button:hover {
+  text-shadow: 0.5px 0 0 var(--text);
+  color: var(--text);
+}
 .a2-tab-button.active {
   border-bottom-color: var(--text);
-  color: var(--text);
-  font-weight: 500;
+  text-shadow: 0.5px 0 0 var(--text);
 }
 .a2-tab-button .content {
   white-space: nowrap;
@@ -4884,6 +4888,9 @@ table.hover > tbody > tr.active:hover {
 }
 .a2-table td.ctrl .stack-panel.horizontal .control-group + .control-group {
   border-left: 1px solid var(--neutral300);
+}
+.a2-table td.ctrl .input-group.static {
+  line-height: 2em;
 }
 .a2-table td.marker-cell {
   padding: 0 !important;
@@ -6851,10 +6858,14 @@ table > colgroup col.blue {
 .mdi-tabs-container .mdi-tabs li .close:hover {
   background-color: var(--neutral300);
 }
+.mdi-tabs-container .mdi-tabs li:hover {
+  text-shadow: 0.5px 0 0 var(--text);
+}
 .mdi-tabs-container .mdi-tabs li:hover .close {
   visibility: visible;
 }
 .mdi-tabs-container .mdi-tabs li.active {
+  text-shadow: 0.5px 0 0 var(--text);
   background-color: var(--bgPrimary);
   border-bottom-color: transparent;
 }

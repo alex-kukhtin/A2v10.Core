@@ -9,7 +9,6 @@
 @tabbar-font-bold:500;
 
 @tabbar-link-color: var(--text);
-@tabbar-link-hover-color: var(--link);
 //@tabbar-link-hover-background: var(--neutral_Lighter_Alt) #faf9f8;
 
 .a2-tab-bar {
@@ -18,6 +17,7 @@
 	border-bottom: @tabbar-border-height solid @tabbar-border-color;
 	align-items: baseline;
 	margin: @tabbar-padding 0;
+	color: var(--text);
 }
 
 .a2-tab-bar-item {
@@ -37,16 +37,16 @@
 	font-size: 1.1rem;
 	display: block;
 	padding: @tabbar-padding 0;
-	color: @tabbar-link-color;
+	color: @text-color;
 
 	&:hover {
-		//color: @tabbar-link-hover-color;
+		text-shadow: .5px 0 0 @text-color;
+		color: @text-color;
 	}
 
 	&.active {
 		border-bottom-color: @tabbar-link-color;
-		color: var(--text);
-		font-weight: @tabbar-font-bold;
+		text-shadow: .5px 0 0 @text-color;
 	}
 
 	.content {
