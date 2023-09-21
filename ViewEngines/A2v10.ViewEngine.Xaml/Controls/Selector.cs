@@ -34,7 +34,8 @@ public class Selector : ValuedControl, ITableControl
 
 	public Boolean? ShowCaret { get; set; }
 	public Boolean ShowClear { get; set; }
-	public SelectorStyle Style { get; set; }
+    public Boolean UseAll { get; set; }
+    public SelectorStyle Style { get; set; }
 	public Int32 MaxChars { get; set; }
 
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
@@ -68,7 +69,12 @@ public class Selector : ValuedControl, ITableControl
 			input.MergeAttribute(":caret", "true");
 		if (ShowClear)
 			input.MergeAttribute(":has-clear", "true");
-		if (MaxChars != 0)
+        if (UseAll)
+        {
+            input.MergeAttribute(":has-clear", "true");
+            input.MergeAttribute(":use-all", "true");
+        }
+        if (MaxChars != 0)
 			input.MergeAttribute(":max-chars", MaxChars.ToString());
 
 		var isBind = GetBinding(nameof(ItemsSource));
