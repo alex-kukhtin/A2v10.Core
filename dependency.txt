@@ -1,32 +1,29 @@
-2023-09-21 (next: 8158)
+2023-09-22 (next: 8159)
 ==========
 
-
-A2v10.Platform (8132)
-	A2v10.Identity.Core (8070)
-	A2v10.Platform.Web (8131)
-		A2v10.Identity.Core (8124)
-		A2v10.Infrastructure (8070)
-	A2v10.ReportEngine.Stimulsoft (8070)
-		A2v10.Infrastructure (8070)
-	A2v10.ReportEngine.Pdf (8071)
-		A2v10.Xaml.Report (8070)
-		A2v10.Infrastructure (8070)
-	A2v10.Services (8070)
-		A2v10.Infrastructure (8070)
-		A2v10.Module.Infrastructure (8070)
-	A2v10.ViewEngine.Xaml (8070)
-		A2v10.System.Xaml (8007)
-		A2v10.Infrastructure (8070)
-	A2v10.ViewEngine.Html (8070)
-	A2v10.Identity.UI (8132)
-		A2v10.Identity.Core (8124)
-		A2v10.Infrastructure (8070)
+A2v10.Platform
+	A2v10.Identity.Core
+	A2v10.Platform.Web
+		A2v10.Identity.Core
+		A2v10.Infrastructure
+	A2v10.ReportEngine.Pdf
+		A2v10.Xaml.Report
+		A2v10.Infrastructure
+	A2v10.Services
+		A2v10.Infrastructure
+		A2v10.Module.Infrastructure
+	A2v10.ViewEngine.Xaml
+		A2v10.System.Xaml
+		A2v10.Infrastructure
+	A2v10.ViewEngine.Html
+	A2v10.Identity.UI
+		A2v10.Identity.Core
+		A2v10.Infrastructure
 A2v10.Web.Assets
 A2v10.App.Assets
 
-A2v10.Identity.ApiKey (8085)
-A2v10.Identity.Jwt    (8085)
-	A2v10.Identity.Core (8124)
+A2v10.Identity.ApiKey
+A2v10.Identity.Jwt
+	A2v10.Identity.Core
 
-A2v10.CodeGen.Support (8070)
+A2v10.CodeGen.Support

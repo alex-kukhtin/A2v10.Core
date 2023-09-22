@@ -240,7 +240,7 @@ app.modules['std:signalR'] = function () {
 			modelStack() { return this.__dataStack__; },
 			hasModals() { return this.modals.length > 0; },
 			sidePaneVisible() { return !!this.sidePaneUrl; },
-			storageKey() { return this.appData.appId + '_tabs'; },
+			storageKey() { return `${this.appData.appId}_${this.appData.userId}_tabs`; },
 			processing() { return !this.hasModals && this.requestsCount > 0; },
 			canPopupClose() { return this.contextTabKey > 10; /* 10 - home */ },
 			canPopupCloseRight() { return this.contextTabKey && this.tabs.some(v => v.key > this.contextTabKey); },
@@ -418,6 +418,17 @@ app.modules['std:signalR'] = function () {
 						this.closedTabs.pop();
 				}
 				this.storeTabs();
+			},
+			clearLocalStorage() {
+				let keys = [];
+				for (let f in window.localStorage) {
+					if (window.localStorage.hasOwnProperty(f) && f.endsWith('_tabs')) {
+						if (f != this.storageKey)
+							keys.push(f);
+					}
+				}
+				if (keys.length > 10)
+					keys.forEach(f => window.localStorage.removeItem(f));
 			},
 			storeTabs() {
 				var mapTab = (t) => { return { title: t.title, url: t.url, query: t.query || '', parentUrl: t.parentUrl }; };
@@ -708,6 +719,7 @@ app.modules['std:signalR'] = function () {
 			popup.registerPopup(this.$el);
 			// home page here this.tabs.push({})
 			this.$el._close = this.__clickOutside;
+			this.clearLocalStorage();
 			this.restoreTabs();
 		},
 		created() {
@@ -749,7 +761,6 @@ app.modules['std:signalR'] = function () {
 				if (ev) ev.returnValue = true;
 				return true;
 			});
-
 		}
 	});
 })();
