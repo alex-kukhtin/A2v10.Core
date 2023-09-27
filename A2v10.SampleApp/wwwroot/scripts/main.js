@@ -198,7 +198,7 @@ app.modules['std:const'] = function () {
 
 // Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
-// 20230915-7947
+// 20230922-7948
 // services/utils.js
 
 app.modules['std:utils'] = function () {
@@ -991,7 +991,7 @@ app.modules['std:utils'] = function () {
 
 	function currencyRound(n, digits) {
 		if (isNaN(n))
-			return Nan;
+			return NaN;
 		if (!isDefined(digits))
 			digits = 2;
 		let m = false;
@@ -2406,7 +2406,7 @@ app.modules['std:validators'] = function () {
 
 // Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
-/*20230807-7941*/
+/*20230922-7948*/
 /* services/impl/array.js */
 
 app.modules['std:impl:array'] = function () {
@@ -2457,6 +2457,16 @@ app.modules['std:impl:array'] = function () {
 			}
 			return null;
 		}
+
+		/* generator */
+		arr.$allItems = function* () {
+			for (let i = 0; i < this.length; i++) {
+				let el = this[i];
+				yield el;
+				if ('$items' in el)
+					yield* el.$items.$allItems();
+			}
+		};
 
 		arr.$sort = function (compare) {
 			this.sort(compare);
@@ -6853,7 +6863,7 @@ Vue.component('validator-control', {
 
 // Copyright © 2015-2023 Alex Kukhtin. All rights reserved.
 
-/*20230613-7937*/
+/*20230613-7948*/
 // components/selector.js
 
 (function selector_component() {
@@ -6920,6 +6930,7 @@ Vue.component('validator-control', {
 			placement: String,
 			caret: Boolean,
 			hasClear: Boolean,
+			useAll: Boolean,
 			mode: String,
 			fetchCommand: String,
 			fetchCommandData: Object,
@@ -6960,6 +6971,7 @@ Vue.component('validator-control', {
 				if (!to) return false;
 				if (utils.isDefined(to.$isEmpty))
 					return !to.$isEmpty;
+				if (this.useAll && to.Id === -1) return false;
 				return !utils.isPlainObjectEmpty(to);
 			},
 			hasText() { return !!this.textProp; },
@@ -7158,6 +7170,12 @@ Vue.component('validator-control', {
 				this.isOpen = false;
 				this.isOpenNew = false;
 				let obj = this.item[this.prop];
+				if (!obj) return;
+				if (this.useAll) {
+					obj.Id = -1;
+					obj.Name = '';
+					return;
+				} 
 				if (obj.$empty)
 					obj.$empty();
 				else if (utils.isObjectExact(obj))
