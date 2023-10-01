@@ -66,18 +66,24 @@
 			@loc.Localize(null, "@[Version]")
 			<span v-text="version"></span>
 		</span>
-		<div class="debug-btn dropdown dir-up" v-dropdown v-if="isDebug">
-			<button class="btn btn-debug" toggle>@loc.Localize(null, "@[Debug]")<span class="caret up"></span></button>
-			<div class="dropdown-menu menu up-left">
-				<a v-on:click.prevent="debugModel" class="dropdown-item" tabindex="-1"><i class="ico ico-database"></i> @loc.Localize(null, "@[DataModel]")</a>
-				<a v-on:click.prevent="debugTrace" class="dropdown-item" tabindex="-1"><i class="ico ico-chart-stacked-line"></i> @loc.Localize(null, "@[Profiling]")</a>
-				<div class="divider"></div>
-				<label class="checkbox">
-					<input type="checkbox" v-model="traceEnabled" name="trace"/>
-					<span>@loc["Tracing"]</span>
-				</label>
+		@if (host.IsDebugConfiguration)
+		{
+			<div class="debug-btn dropdown dir-up" v-dropdown>
+				<button class="btn btn-debug" toggle>@loc.Localize(null, "@[Debug]")<span class="caret up"></span></button>
+				<div class="dropdown-menu menu up-left">
+					<a v-on:click.prevent="debugModel" class="dropdown-item" tabindex="-1"><i class="ico ico-database"></i> @loc.Localize(null, "@[DataModel]")</a>
+					<a v-on:click.prevent="debugTrace" class="dropdown-item" tabindex="-1"><i class="ico ico-chart-stacked-line"></i> @loc.Localize(null, "@[Profiling]")</a>
+					<div class="divider"></div>
+					<label class="checkbox">
+						<input type="checkbox" v-model="traceEnabled" name="trace"/>
+						<span>@loc["Tracing"]</span>
+					</label>
+				</div>
 			</div>
-		</div>
+		} else {
+			@* use gap:12px*@
+			<div></div>
+		}
 	</div>
 	<a2-debug :model-stack="modelStack" :model-visible="debugShowModel" v-if="isDebug"
 			  :trace-visible="debugShowTrace" :counter="dataCounter" :close="debugClose"></a2-debug>

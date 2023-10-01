@@ -1,5 +1,10 @@
 2023-09-22 (next: 8160)
 ==========
+A2v10.Web.Assets
+A2v10.App.Assets
+A2v10.Platform.Web
+A2v10.Platform
+A2v10.ReportEngine.Pdf
 
 A2v10.Platform
 	A2v10.Identity.Core
