@@ -563,5 +563,17 @@ public class AccountController : Controller
 			return NotFound(ex.Message);
 		}
 	}
+
+	[HttpGet]
+	[ActionName("signin-google")]
+	public async Task<IActionResult> SignInGoogle([FromQuery] String code, String scope, String authuser, String prompt)
+	{
+		/* Let's exchange the code for a token, 
+		   get information about the user using the token, create a user if necessary, 
+		   log in, and redirect to '/'
+		 */
+		await Task.Delay(1);
+		return View();
+	}
 }
 
