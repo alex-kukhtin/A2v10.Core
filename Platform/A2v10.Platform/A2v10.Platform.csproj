@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>
-		<Version>10.1.8161</Version>
+		<Version>10.1.8162</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Platform</PackageId>
 		<Authors>Oleksandr Kukthin</Authors>

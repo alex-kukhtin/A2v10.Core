@@ -68,14 +68,16 @@ public class XamlPartProvider : IXamlPartProvider
 	}
 
 	public Object? GetXamlPart(String path)
-	{
-		using var stream = _codeProvider.FileStreamRO(path)
+    {
+		path = path.Replace('\\', '/'); // (!)
+        using var stream = _codeProvider.FileStreamRO(path)
 			?? throw new XamlException($"File not found '{path}'");
 		return _readerService.Load(stream, new Uri(path, UriKind.Relative));
 	}
 	public Object? GetXamlPartOrNull(String path)
 	{
-		using var stream = _codeProvider.FileStreamRO(path);
+        path = path.Replace('\\', '/'); // (!)
+        using var stream = _codeProvider.FileStreamRO(path);
 		if (stream == null)
 			return null;
 		return _readerService.Load(stream, new Uri(path, UriKind.Relative));
