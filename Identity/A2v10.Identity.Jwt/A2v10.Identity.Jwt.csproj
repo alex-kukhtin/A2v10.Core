@@ -5,7 +5,7 @@
 		<Nullable>enable</Nullable>
 		<AssemblyName>A2v10.Identity.Jwt</AssemblyName>
 		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-		<Version>10.1.8155</Version>
+		<Version>10.1.8162</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Identity.Jwt</PackageId>
 		<Authors>Oleksandr Kukhtin</Authors>
@@ -19,8 +19,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.11" Condition="'$(TargetFramework)' == 'net7.0'"/>
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.22" Condition="'$(TargetFramework)' == 'net6.0'"/>
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.12" Condition="'$(TargetFramework)' == 'net7.0'"/>
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.23" Condition="'$(TargetFramework)' == 'net6.0'"/>
 	</ItemGroup>
 
 	<PropertyGroup>
