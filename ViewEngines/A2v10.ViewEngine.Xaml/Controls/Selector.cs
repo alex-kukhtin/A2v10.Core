@@ -48,8 +48,13 @@ public class Selector : ValuedControl, ITableControl
 			input.MergeAttribute(":fetch", $"$delegate('{Delegate}')");
 		if (!String.IsNullOrEmpty(SetDelegate))
 			input.MergeAttribute(":hitfunc", $"$delegate('{SetDelegate}')");
-		if (!String.IsNullOrEmpty(Fetch))
-			input.MergeAttribute("fetch-command", Fetch);
+
+        var fetchBind = GetBinding(nameof(Fetch));
+        if (fetchBind != null)
+            input.MergeAttribute(":fetch-command", fetchBind.GetPathFormat(context));
+        else if (!String.IsNullOrEmpty(Fetch))
+            input.MergeAttribute("fetch-command", Fetch);
+
 		input.MergeAttribute("display", DisplayProperty);
 		if (PanelPlacement != DropDownPlacement.BottomLeft)
 			input.MergeAttribute("placement", PanelPlacement.ToString().ToKebabCase());
