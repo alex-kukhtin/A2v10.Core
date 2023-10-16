@@ -7,6 +7,7 @@
 @compact-ctrl-height:1.67em;
 
 @cell-vert-padding: 4px;
+@cell-vert-padding-x2: 8px;
 @cell-horz-padding: 6px;
 
 table {
@@ -153,7 +154,7 @@ table.hover {
 	}
 
 	> thead > tr > td, > tfoot > tr > td {
-		padding: @cell-vert-padding @cell-horz-padding;
+		padding: @cell-vert-padding-x2 @cell-horz-padding;
 		background-color: @table-hdr-bg-color;
 		border-color: @table-brd-color;
 	}
