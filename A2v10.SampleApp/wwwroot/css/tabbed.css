@@ -4874,7 +4874,7 @@ table.hover > tbody > tr.active:hover {
 }
 .a2-table > thead > tr > td,
 .a2-table > tfoot > tr > td {
-  padding: 4px 6px;
+  padding: 8px 6px;
   background-color: var(--neutral100);
   border-color: var(--neutral300);
 }
