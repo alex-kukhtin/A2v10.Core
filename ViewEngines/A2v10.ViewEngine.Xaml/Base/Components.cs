@@ -50,7 +50,7 @@ public class Components : MarkupExtension
 
 		var dict = new ComponentDictionary();
 		foreach (var path in Pathes.Split(','))
-			dict.Append(LoadOneFile(serviceProvider, basePath, path));
+			dict.Append(LoadOneFile(serviceProvider, basePath, path.Trim()));
 		return dict;
 	}
 
