@@ -61,6 +61,11 @@ public class AppCodeProvider : IAppCodeProvider
 
 	public String MakePath(String path, String fileName)
 	{
+		if (fileName.StartsWith("/$main/"))
+		{
+			fileName = fileName[7..];
+			path = String.Empty;
+		}
 		var relative = Path.GetRelativePath(".", Path.Combine(path, fileName)).NormalizeSlash();
 		if (path.StartsWith("$") && !relative.StartsWith("$"))
 		{

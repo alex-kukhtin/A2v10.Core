@@ -6,7 +6,7 @@
 	  <ImplicitUsings>disable</ImplicitUsings>
 	  <AssemblyName>A2v10.Services</AssemblyName>
 	  <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-	  <Version>10.1.8158</Version>
+	  <Version>10.1.8166</Version>
 	  <Product>A2v10</Product>
 	  <PackageId>A2v10.Services</PackageId>
 	  <Authors>Oleksandr Kukhtin</Authors>
@@ -21,7 +21,7 @@
 
   <ItemGroup>
     <PackageReference Include="DocumentFormat.OpenXml" Version="2.20.0" />
-    <PackageReference Include="Jint" Version="3.0.0-beta-2052" />
+    <PackageReference Include="Jint" Version="3.0.0-beta-2053" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="7.0.4" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
