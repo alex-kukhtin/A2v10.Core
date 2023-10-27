@@ -64,7 +64,7 @@ public class XamlRenderer : IRenderer
 			}
 		}
 
-		using (request.Start(ProfileAction.Render, $"Render: {info.FileTitle}"))
+		using (request.Start(ProfileAction.Render, $"render: {info.FileTitle}"))
 		{
 			RenderContext ctx = new(uiElem, info, _localizer, writer)
 			{
