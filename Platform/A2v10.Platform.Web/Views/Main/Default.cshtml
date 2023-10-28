@@ -18,6 +18,10 @@
 		{
 			<a2-company-button :source="companies.menu" :links="companies.links"></a2-company-button>
 		}
+		@if (Model.HasSettings)
+		{
+			<a class="nav-admin" href="/settings/index/0" tabindex="-1"><i class="ico ico-gear-outline"></i></a>
+		}
 	</a2-app-header>
 	<a2-main-view :menu="menu" :side-bar-mode="sideBarMode" :nav-bar-mode=navBarMode :period="globalPeriod" :pages="pages" :title="title"></a2-main-view>
 	<a2-debug :model-stack="modelStack" :model-visible="debugShowModel" v-if="isDebug"

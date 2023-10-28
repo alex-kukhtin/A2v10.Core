@@ -74,7 +74,8 @@ public class MainController : Controller
 			ModelScripts = layoutDescr?.ModelScripts,
 			HasNavPane = HasNavPane(),
 			HasProfile = HasProfile(),
-			Theme = _appTheme.MakeTheme()
+			Theme = _appTheme.MakeTheme(),
+			HasSettings = _currentUser.Identity.IsAdmin && HasSettings()
 		};
 		ViewBag.__Minify = ""; // "min.";
 
@@ -117,6 +118,10 @@ public class MainController : Controller
     private Boolean HasNavPane()
 	{
 		return _codeProvider.IsFileExists("_navpane/model.json");
+	}
+	private Boolean HasSettings()
+	{
+		return _codeProvider.IsFileExists("settings/model.json");
 	}
 	private Boolean HasProfile()
 	{

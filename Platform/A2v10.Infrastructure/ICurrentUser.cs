@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Dynamic;
 
 namespace A2v10.Infrastructure;
@@ -19,6 +18,7 @@ public interface IUserIdentity
 	Boolean IsTenantAdmin { get; }
 
 	void SetInitialTenantId(Int32 tenant);
+	IEnumerable<String>? Roles { get; }
 }
 
 public interface IUserState

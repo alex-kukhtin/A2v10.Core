@@ -1005,7 +1005,6 @@ begin
 	alter table a2security.Referrals add constraint DF_Referrals_DateCreated2 default(a2sys.fn_getCurrentDate()) for DateCreated with values;
 end
 go
-
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS where CONSTRAINT_SCHEMA = N'a2security' and CONSTRAINT_NAME = N'FK_Users_Referral_Referrals')
 begin
@@ -1013,13 +1012,7 @@ begin
 end
 go
 ------------------------------------------------
-if exists(select * from INFORMATION_SCHEMA.VIEWS where TABLE_SCHEMA=N'a2security' and TABLE_NAME=N'ViewUsers')
-begin
-	drop view a2security.ViewUsers;
-end
-go
-------------------------------------------------
-create view a2security.ViewUsers
+create or alter view a2security.ViewUsers
 as
 	select Id, UserName, DomainUser, PasswordHash, SecurityStamp, Email, PhoneNumber,
 		LockoutEnabled, AccessFailedCount, LockoutEndDateUtc, TwoFactorEnabled, [Locale],
@@ -1027,7 +1020,9 @@ as
 		PhoneNumberConfirmed, RegisterHost, ChangePasswordEnabled, TariffPlan, Segment,
 		IsAdmin = cast(case when ug.GroupId = 77 /*predefined: admins*/ then 1 else 0 end as bit),
 		IsTenantAdmin = cast(case when exists(select * from a2security.Tenants where [Admin] = u.Id) then 1 else 0 end as bit),
-		SecurityStamp2, PasswordHash2, Company, SetPassword
+		SecurityStamp2, PasswordHash2, Company, SetPassword,
+		Roles = (select string_agg(r.[Key], N',') 
+			from a2security.UserRoles ur inner join a2security.Roles r on ur.RoleId = r.Id where ur.UserId = u.Id)
 	from a2security.Users u
 		left join a2security.UserGroups ug on u.Id = ug.UserId and ug.GroupId=77 /*predefined: admins*/
 	where Void=0 and Id <> 0 and ApiUser = 0;
@@ -1056,7 +1051,7 @@ returns bit
 as
 begin
 	return case when 
-		exists(select * from a2security.UserGroups where GroupId=77 /*predefined: admins */ and UserId = @UserId) then 1 
+		exists(select * from a2security.UserRoles where RoleId=99 /*predefined: Admin */ and UserId = @UserId) then 1 
 	else 0 end;
 end
 go

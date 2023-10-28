@@ -15,6 +15,7 @@ public class ModelJsonBase : IModelBase
 	public String? Schema { get; init; }
 	public String? Model { get; init; }	
 	public Boolean Signal { get; init; }
+	public List<String>? Roles { get; init; }	
 
 	public Int32 CommandTimeout { get; init; }
 
@@ -25,10 +26,23 @@ public class ModelJsonBase : IModelBase
 		_parent = rm;
 	}
 
+	public Boolean CheckRoles(IEnumerable<String>? roles)
+	{
+		if (CurrentRoles == null) 
+			return true;
+		if (roles == null)
+			return false;
+		foreach (var r in CurrentRoles)
+		{
+			if (roles.FirstOrDefault(x => x == r) != null)
+				return true;	
+		}
+		return false;
+	}
 	public String? DataSource => String.IsNullOrEmpty(Source) ? Parent?.Source : Source;
 	public String? CurrentModel => String.IsNullOrEmpty(Model) ? Parent.Model : Model;
 	public String CurrentSchema => (String.IsNullOrEmpty(Schema) ? Parent.Schema : Schema) ?? "dbo";
-
+	public IEnumerable<String>? CurrentRoles => Roles ?? Parent.Roles;
 	public Boolean HasModel() => Model != String.Empty && !String.IsNullOrEmpty(CurrentModel);
 
 	public virtual String LoadProcedure()
@@ -334,6 +348,7 @@ public class ModelJson
 	public String? Source { get; init; }
 	public String? Schema { get; init; }
 	public String? Model { get; init; }
+	public List<String>? Roles { get; init; }
 
 	public Dictionary<String, ModelJsonView> Actions { get; init; } = new(StringComparer.OrdinalIgnoreCase);
 	public Dictionary<String, ModelJsonDialog> Dialogs { get; init; } = new(StringComparer.OrdinalIgnoreCase);

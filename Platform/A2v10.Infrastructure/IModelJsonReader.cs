@@ -26,6 +26,7 @@ public interface IModelBase
     String UpdateProcedure();
     Boolean HasModel();
 
+	Boolean CheckRoles(IEnumerable<String>? roles);
 	String Path { get; }
 	String BaseUrl { get; }
 

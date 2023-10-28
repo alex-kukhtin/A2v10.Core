@@ -1,6 +1,8 @@
-2023-10-22 (next: 8167)
+2023-10-28 (next: 8168)
 ==========
 A2v10.ViewEngine.Xaml
+A2v10.Identity.Core + dependent libs
+A2v10.Infrastructure + dependent libs
 
 
 A2v10.Platform

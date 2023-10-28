@@ -47,7 +47,7 @@
 
 			.toggle {
 				display: inline-block;
-				flex-shrink: 0; /*fixed*/
+				flex-shrink: 0; // fixed
 				font-size: 1.2rem;
 				min-width: @tree-ident;
 				font-family: "A2v10";
@@ -60,7 +60,7 @@
 			}
 
 			i.ico {
-				flex-shrink: 0; /*fixed*/
+				flex-shrink: 0; // fixed
 				color: @icon-color;
 				font-size: 1.2rem;
 				width: 2rem;
@@ -79,14 +79,14 @@
 
 		> ul {
 			margin: 0;
-			padding-left: @tree-ident; /*indentation*/
+			padding-left: @tree-ident; // indentation
 		}
 
 		&.collapsed {
 			> .overlay > .toggle {
 
 				&:after {
-					content: "\e9a5"; /*chevron-right*/
+					content: "\e9a5"; // chevron-right
 				}
 			}
 
@@ -98,7 +98,7 @@
 		&.expanded {
 			> .overlay > .toggle {
 				&:after {
-					content: "\e9a4"; /*chevron-down*/
+					content: "\e9a4"; // chevron-down
 				}
 			}
 		}

@@ -16,6 +16,7 @@ using A2v10.Web.Identity;
 using System.Collections.Generic;
 using Microsoft.Extensions.Options;
 using System.Dynamic;
+using System.Linq;
 
 namespace A2v10.Platform.Web;
 public record UserIdentity : IUserIdentity
@@ -30,6 +31,7 @@ public record UserIdentity : IUserIdentity
 
 	public Boolean IsAdmin { get; init; }
 	public Boolean IsTenantAdmin { get; init; }
+	public IEnumerable<String>? Roles { get; init; }
 
 	public void SetInitialTenantId(Int32 tenant)
 	{
@@ -110,9 +112,10 @@ public class CurrentUser : ICurrentUser, IDbIdentity
 				LastName = ident.GetUserLastName(),
 				Segment = ident.GetUserSegment(),
 				IsAdmin = ident.IsUserAdmin(),
-				IsTenantAdmin = ident.IsTenantAdmin()
+				IsTenantAdmin = ident.IsTenantAdmin(),
+				Roles = ident.GetUserRolesList().ToList()
 			};
-		} 
+		}
 	}
 
 	private String CookieName => $"{CookiePrefix}{CookieNames.Identity.State}";

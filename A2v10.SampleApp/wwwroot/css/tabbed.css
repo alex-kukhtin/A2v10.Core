@@ -6871,6 +6871,9 @@ table > colgroup col.blue {
   text-shadow: 0.5px 0 0 var(--text);
   background-color: var(--bgPrimary);
   border-bottom-color: transparent;
+  box-shadow: 0 0 5px #bbb;
+  border-right-color: transparent;
+  z-index: 2;
 }
 .mdi-tabs-container .mdi-tabs li.active .close {
   visibility: visible;

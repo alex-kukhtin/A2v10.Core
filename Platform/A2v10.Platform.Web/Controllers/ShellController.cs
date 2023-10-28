@@ -16,6 +16,7 @@ using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Web.Identity;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
 
 namespace A2v10.Platform.Web.Controllers;
 
@@ -34,11 +35,14 @@ public class ShellController : Controller
 	private readonly IAppDataProvider _appDataProvider;
 	private readonly AppOptions _appOptions;
 	private readonly ILocalizer _localizer;
+	private readonly ILogger<ShellController> _logger;
 
-	const String MENU_PROC = "a2ui.[Menu.User.Load]";
+
+    const String MENU_PROC = "a2ui.[Menu.User.Load]";
 
 	public ShellController(IDbContext dbContext, IApplicationHost host, ICurrentUser currentUser, IProfiler profiler,
-		ILocalizer localizer, IAppCodeProvider codeProvider, IAppDataProvider appDataProvider, IOptions<AppOptions> appOptions)
+		ILocalizer localizer, IAppCodeProvider codeProvider, IAppDataProvider appDataProvider, IOptions<AppOptions> appOptions,
+		ILogger<ShellController> logger)
 	{
 		_host = host;
 		_dbContext = dbContext;
@@ -48,7 +52,9 @@ public class ShellController : Controller
 		_currentUser = currentUser;
 		_appDataProvider = appDataProvider;
 		_appOptions = appOptions.Value;
-	}
+		_logger = logger;
+
+    }
 
 	Int64? UserId => User.Identity.GetUserId<Int64?>();
 	Int32? TenantId => User.Identity.GetUserTenant<Int32>();
@@ -209,7 +215,10 @@ public class ShellController : Controller
 		if (_appOptions.IsCustomUserMenu)
 			proc = _appOptions.UserMenu!;
 
-		IDataModel dm = await _dbContext.LoadModelAsync(_host.TenantDataSource, proc, loadPrms);
+		_logger.LogInformation("AppPath: {path}", _appOptions.Path);
+        _logger.LogInformation("Menu procedure: {proc}", proc);
+
+        IDataModel dm = await _dbContext.LoadModelAsync(_host.TenantDataSource, proc, loadPrms);
 
 		ExpandoObject? menuRoot = dm.Root.RemoveEmptyArrays();
 		SetUserStatePermission(dm);

@@ -15,6 +15,7 @@ using A2v10.Data.Interfaces;
 using A2v10.Identity.Core.Helpers;
 
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 public sealed class AppUserStore<T> :
 	IUserStore<AppUser<T>>,
@@ -330,8 +331,14 @@ public sealed class AppUserStore<T> :
 			list.Add(new Claim(WellKnownClaims.OrganizationKey, user.OrganizationKey));
 		if (user.IsPersistent)
 			list.Add(new Claim(WellKnownClaims.IsPersistent, "true"));
+		if (!String.IsNullOrEmpty(user.Roles))
+		{
+			list.Add(new Claim(WellKnownClaims.Roles, user.Roles));
+			if (user.Roles.Split(',').Any(x => x == WellKnownClaims.Admin))
+				list.Add(new Claim(WellKnownClaims.Admin, WellKnownClaims.Admin));
+		}
 
-		//if (user.IsAdmin) // TODO
+		//if (user.IsAdmin) // TODO ?? IsAdmin
 		//list.Add(new Claim(WellKnownClims.Admin, "Admin"));
 		/*
 		if (_host.IsMultiTenant)
