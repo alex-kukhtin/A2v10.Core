@@ -3,6 +3,7 @@
 A2v10.ViewEngine.Xaml
 A2v10.Identity.Core + dependent libs
 A2v10.Infrastructure + dependent libs
+App.Assets - model.json + roles
 
 
 A2v10.Platform
