@@ -10,7 +10,6 @@ using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Services.Interop;
-using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace A2v10.Services;
 
@@ -94,10 +93,16 @@ public class DataService : IDataService
 			throw new DataServiceException("Access denied");
 	}
 
-	async Task<IDataLoadResult> Load(IPlatformUrl platformUrl, Action<ExpandoObject> setParams)
+	async Task<IModelView> LoadViewAsync(IPlatformUrl platformUrl)
 	{
 		var view = await _modelReader.GetViewAsync(platformUrl);
 		CheckRoles(view);
+		return view;
+	}
+
+	async Task<IDataLoadResult> Load(IPlatformUrl platformUrl, Action<ExpandoObject> setParams)
+	{
+		var view = await LoadViewAsync(platformUrl);
 
 		var loadPrms = view.CreateParameters(platformUrl, null, setParams);
 
@@ -168,8 +173,7 @@ public class DataService : IDataService
 	public async Task<String> ExpandAsync(String baseUrl, Object? Id, Action<ExpandoObject> setParams)
 	{
 		var platformBaseUrl = CreatePlatformUrl(baseUrl);
-		var view = await _modelReader.GetViewAsync(platformBaseUrl);
-		CheckRoles(view);	
+		var view = await LoadViewAsync(platformBaseUrl);
 		var expandProc = view.ExpandProcedure();
 
 		var execPrms = view.CreateParameters(platformBaseUrl, Id, setParams);
@@ -182,8 +186,7 @@ public class DataService : IDataService
 	public async Task DbRemoveAsync(String baseUrl, Object Id, String? propertyName, Action<ExpandoObject> setParams)
 	{
 		var platformBaseUrl = CreatePlatformUrl(baseUrl);
-		var view = await _modelReader.GetViewAsync(platformBaseUrl);
-		CheckRoles(view);
+		var view = await LoadViewAsync(platformBaseUrl);
 		var deleteProc = view.DeleteProcedure(propertyName);
 
 		var execPrms = view.CreateParameters(platformBaseUrl, Id, setParams);
@@ -214,8 +217,7 @@ public class DataService : IDataService
 		String? strId = Id != null ? Convert.ToString(Id, CultureInfo.InvariantCulture) : null;
 
 		var platformBaseUrl = CreatePlatformUrl(baseUrl, strId);
-		var view = await _modelReader.GetViewAsync(platformBaseUrl);
-		CheckRoles(view);	
+		var view = await LoadViewAsync(platformBaseUrl);
 
 		String loadProc = view.LoadLazyProcedure(propertyName.ToPascalCase());
 		var loadParams = view.CreateParameters(platformBaseUrl, Id, setParams, IModelBase.ParametersFlags.SkipModelJsonParams);
@@ -246,8 +248,7 @@ public class DataService : IDataService
 	public async Task<ISaveResult> SaveAsync(String baseUrl, ExpandoObject data, Action<ExpandoObject> setParams)
 	{
 		var platformBaseUrl = CreatePlatformUrl(baseUrl);
-		var view = await _modelReader.GetViewAsync(platformBaseUrl);
-		CheckRoles(view);
+		var view = await LoadViewAsync(platformBaseUrl);
 
 		var savePrms = view.CreateParameters(platformBaseUrl, null, setParams);
 
@@ -323,8 +324,7 @@ public class DataService : IDataService
 
 			// TODO: CurrentKind instead UrlKind.Page
 			var platformUrl = CreatePlatformUrl(UrlKind.Page, targetUrl);
-			view = await _modelReader.GetViewAsync(platformUrl);
-			CheckRoles(view);
+			view = await LoadViewAsync(platformUrl);
 
 			//var rm = await RequestModel.CreateFromUrl(_codeProvider, rw.CurrentKind, targetUrl);
 			//rw = rm.GetCurrentAction();
@@ -571,7 +571,6 @@ public class DataService : IDataService
 		var view = await _modelReader.TryGetViewAsync(platformUrl);
 		if (view == null)
 			return null;
-		CheckRoles(view);
 		if (view.Styles == null && view.Scripts == null)
 			return null;
 		return new LayoutDescription(view.Styles, view.Scripts);
