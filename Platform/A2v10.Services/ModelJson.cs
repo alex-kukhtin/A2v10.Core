@@ -4,6 +4,8 @@
 using Microsoft.Extensions.DependencyInjection;
 
 using A2v10.Data.Interfaces;
+using Newtonsoft.Json;
+using System.Text;
 
 namespace A2v10.Services;
 public class ModelJsonBase : IModelBase
@@ -143,18 +145,44 @@ public class ModelJsonBlob : ModelJsonViewBase, IModelBlob
     }
 }
 
+public class ModelJsonExport : IModelExport
+{
+    public String? FileName { get; init; }
+    public String? Template { get; init; }
+    public ModelJsonExportFormat Format { get; init; }
+    public String? Encoding { get; init; }
+
+    public String? GetTemplateExpression()
+    {
+        return Template?.TemplateExpression();
+    }
+
+    public Encoding GetEncoding()
+    {
+        return Encoding switch
+        {
+            "1251" => System.Text.Encoding.GetEncoding(1251),
+            "866" => System.Text.Encoding.GetEncoding(866),
+            "utf8" => System.Text.Encoding.UTF8,
+            _ => throw new ModelJsonException($"Invalid encoding value '{Encoding}'. Possible values are 'utf8', '1251', '866'"),
+        };
+    }
+}
+
 public class ModelJsonView : ModelJsonViewBase, IModelView
 {
 	// explicit
 	IModelMerge? IModelView.Merge => Merge;
 	IModelView? IModelView.TargetModel => TargetModel;
+    IModelExport? IModelView.Export => Export;
 
-	public String? View { get; set; }
+    public String? View { get; set; }
 	public String? ViewMobile { get; set; }
 	public String? Template { get; set; }
 	public String? CheckTypes { get; set; }
+    public ModelJsonExport? Export { get; set; }
 
-	public virtual Boolean IsDialog => false;
+    public virtual Boolean IsDialog => false;
 	public Boolean IsIndex => Index;
 	public Boolean IsSkipDataStack => SkipDataStack;
 	public Boolean IsPlain => Plain;
@@ -166,7 +194,7 @@ public class ModelJsonView : ModelJsonViewBase, IModelView
 	public List<String>? Scripts { get; init; } 
 	public List<String>? Styles { get; init; }
 
-	public String? SqlTextKey()
+    public String? SqlTextKey()
 	{
 		var cm = CurrentModel;
 		if (cm == null)

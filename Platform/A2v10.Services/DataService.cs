@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Services.Interop;
+using DocumentFormat.OpenXml.Packaging;
 
 namespace A2v10.Services;
 
@@ -52,16 +53,17 @@ public class DataService : IDataService
 	private readonly IDbContext _dbContext;
 	private readonly ICurrentUser _currentUser;
 	private readonly ISqlQueryTextProvider _sqlQueryTextProvider;
+	private readonly IAppCodeProvider _codeProvider;
 
     public DataService(IServiceProvider serviceProvider, IModelJsonReader modelReader, IDbContext dbContext, ICurrentUser currentUser,
-        ISqlQueryTextProvider sqlQueryTextProvider)
+        ISqlQueryTextProvider sqlQueryTextProvider, IAppCodeProvider codeProvider)
 	{
 		_serviceProvider = serviceProvider;
 		_modelReader = modelReader;
 		_dbContext = dbContext;
 		_currentUser = currentUser;
 		_sqlQueryTextProvider = sqlQueryTextProvider;
-
+		_codeProvider = codeProvider;
     }
 
 	static IPlatformUrl CreatePlatformUrl(UrlKind kind, String baseUrl)
@@ -87,7 +89,36 @@ public class DataService : IDataService
 		return Load(platformBaseUrl, setParams);
 	}
 
-	private void CheckRoles(IModelBase modelBase)
+    public async Task<IDataLoadResult> ExportAsync(String baseUrl, Action<ExpandoObject> setParams)
+    {
+        var platformUrl = CreatePlatformUrl(UrlKind.Page, baseUrl);
+        var view = await _modelReader.GetViewAsync(platformUrl);
+        if (view.Export == null)
+			throw new DataServiceException("Export not found");
+        var loadPrms = view.CreateParameters(platformUrl, null, setParams);
+        var dm = await _dbContext.LoadModelAsync(view.DataSource, view.LoadProcedure(), loadPrms);
+		var export = view.Export;
+        Stream? stream = null;
+        var templExpr = export.GetTemplateExpression();
+        if (!String.IsNullOrEmpty(templExpr))
+        {
+            var bytes = dm.Eval<Byte[]>(templExpr)
+                ?? throw new DataServiceException($"Template stream not found or its format is invalid. ({templExpr})");
+            stream = new MemoryStream(bytes);
+        }
+        else if (!String.IsNullOrEmpty(export.Template))
+        {
+            var fileName = export.Template.AddExtension(export.Format.ToString());
+            var pathToRead = _codeProvider.MakePath(view.Path, fileName);
+            stream = _codeProvider.FileStreamRO(pathToRead) ??
+                throw new DataServiceException($"Template file not found ({fileName})");
+        }
+        else
+			throw new DataServiceException($"Export template not defined");
+        throw new DataServiceException($"Export not implemented 22");
+    }
+
+    private void CheckRoles(IModelBase modelBase)
 	{
 		if (!modelBase.CheckRoles(_currentUser.Identity.Roles))
 			throw new DataServiceException("Access denied");

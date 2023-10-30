@@ -75,7 +75,8 @@ public interface IDataService
 {
 	Task<IDataLoadResult> LoadAsync(UrlKind kind, String baseUrl, Action<ExpandoObject> setParams);
 	Task<IDataLoadResult> LoadAsync(String baseUrl, Action<ExpandoObject> setParams);
-	Task<IBlobInfo?> LoadBlobAsync(UrlKind kind, String baseUrl, Action<ExpandoObject> setParams, String? suffix = null);
+    Task<IDataLoadResult> ExportAsync(String baseUrl, Action<ExpandoObject> setParams);
+    Task<IBlobInfo?> LoadBlobAsync(UrlKind kind, String baseUrl, Action<ExpandoObject> setParams, String? suffix = null);
 	Task<IBlobUpdateOutput> SaveBlobAsync(UrlKind kind, String baseUrl, Action<IBlobUpdateInfo> setBlob, String? suffix = null);
     Task<ExpandoObject> SaveFileAsync(String baseUrl, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams);
     Task<String> ReloadAsync(String baseUrl, Action<ExpandoObject> setParams);	

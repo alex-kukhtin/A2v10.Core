@@ -67,7 +67,15 @@ public class PageController : BaseController
 		return await Render(pathInfo + Request.QueryString, UrlKind.Page);
 	}
 
-	[Route("_dialog/{*pathInfo}")]
+    [Route("_export/{*pathInfo}")]
+    public async Task<IActionResult> Export(String pathInfo)
+    {
+        // {pagePath}/action/id
+        var res = await _dataService.ExportAsync(pathInfo, SetSqlQueryParams);
+		throw new InvalidOperationException("Export is not implemented");
+    }
+
+    [Route("_dialog/{*pathInfo}")]
 	public async Task<IActionResult> Dialog(String pathInfo)
 	{
 		// {pagePath}/dialog/id

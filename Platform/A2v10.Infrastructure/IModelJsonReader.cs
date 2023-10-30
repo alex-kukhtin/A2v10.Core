@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.Text;
 using System.Threading.Tasks;
 
 using A2v10.Data.Interfaces;
@@ -77,12 +78,31 @@ public interface IModelMerge : IModelBase
 	ExpandoObject CreateMergeParameters(IDataModel model, ExpandoObject prms);
 }
 
+public enum ModelJsonExportFormat
+{
+    unknown,
+    xlsx,
+    dbf,
+    csv
+}
+
+public interface IModelExport
+{
+    String? FileName { get;  }
+    String? Template { get; }
+	ModelJsonExportFormat Format { get; }
+    String? Encoding { get; }
+	String? GetTemplateExpression();
+	Encoding GetEncoding();
+}
+
 public interface IModelView : IModelBase
 {
 	Boolean Copy { get; }
 	String? Template { get; }
 
-	Boolean Indirect { get; }
+    IModelExport? Export { get; }
+    Boolean Indirect { get; }
 	String? Target { get; }
 	String? TargetId { get; }
 	IModelView? TargetModel { get; }
