@@ -115,6 +115,18 @@ public class DataService : IDataService
         }
         else
 			throw new DataServiceException($"Export template not defined");
+		switch (export.Format)
+		{
+			case ModelJsonExportFormat.xlsx:
+				{
+					var rep = new ExcelReportGenerator(stream);
+					rep.GenerateReport(dm);
+					if (rep.ResultFile == null)
+						throw new DataServiceException("Generate file error");
+					var bytes = await File.ReadAllBytesAsync(rep.ResultFile);
+                }
+				break;
+		}
         throw new DataServiceException($"Export not implemented 22");
     }
 

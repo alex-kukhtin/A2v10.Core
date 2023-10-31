@@ -152,7 +152,7 @@ public class ExcelReportGenerator : IDisposable
             _sharedStringTable = doc?.WorkbookPart?.SharedStringTablePart?.SharedStringTable
                 ?? throw new InteropException("SharedStringTable is null");
 
-            PrepareSharedStringTable();
+            PrepareSharedStringTable(_sharedStringTable);
 
             var workBook = doc.WorkbookPart.Workbook;
             var dataSetRows = CreateDataSetRows(workBook);
@@ -166,9 +166,10 @@ public class ExcelReportGenerator : IDisposable
                     ?? throw new InteropException("Sheet Data not found");
 
                 var relationshipId = doc.WorkbookPart.GetIdOfPart(workSheetPart);
-                var sheet = workBook?.Sheets?.Elements<Sheet>().First(s => s.Id == relationshipId);
+                var sheet = workBook?.Sheets?.Elements<Sheet>().First(s => s.Id == relationshipId)
+                         ?? throw new InteropException("Sheet not found");
 
-                dataSetRows.TryGetValue(sheet.Name, out var ds);
+                dataSetRows.TryGetValue((sheet.Name), out var ds);
                 var modified = ProcessData(ds, sheetData);
 
                 foreach (var row in sheetData.Elements<Row>())
@@ -199,9 +200,9 @@ public class ExcelReportGenerator : IDisposable
         _resultFile = tempFileName;
     }
 
-    void PrepareSharedStringTable()
+    void PrepareSharedStringTable(SharedStringTable table)
     {
-        var sslist = _sharedStringTable.Elements<SharedStringItem>().ToList();
+        var sslist = table.Elements<SharedStringItem>().ToList();
         for (Int32 i = 0; i < sslist.Count; i++)
         {
             var ssitem = sslist[i];
