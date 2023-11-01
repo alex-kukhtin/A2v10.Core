@@ -10,7 +10,6 @@ using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Services.Interop;
-using DocumentFormat.OpenXml.Packaging;
 
 namespace A2v10.Services;
 
@@ -89,7 +88,7 @@ public class DataService : IDataService
 		return Load(platformBaseUrl, setParams);
 	}
 
-    public async Task<IDataLoadResult> ExportAsync(String baseUrl, Action<ExpandoObject> setParams)
+    public async Task<IInvokeResult> ExportAsync(String baseUrl, Action<ExpandoObject> setParams)
     {
         var platformUrl = CreatePlatformUrl(UrlKind.Page, baseUrl);
         var view = await _modelReader.GetViewAsync(platformUrl);
@@ -115,7 +114,10 @@ public class DataService : IDataService
         }
         else
 			throw new DataServiceException($"Export template not defined");
-		switch (export.Format)
+		var resultFileName = $"{export.FileName}.{export.Format}";
+		var resultMime = MimeTypes.GetMimeMapping($".{export.Format}");
+
+        switch (export.Format)
 		{
 			case ModelJsonExportFormat.xlsx:
 				{
@@ -124,10 +126,11 @@ public class DataService : IDataService
 					if (rep.ResultFile == null)
 						throw new DataServiceException("Generate file error");
 					var bytes = await File.ReadAllBytesAsync(rep.ResultFile);
+					return new InvokeResult(bytes, resultMime, resultFileName);
                 }
-				break;
-		}
-        throw new DataServiceException($"Export not implemented 22");
+			default:
+                throw new DataServiceException($"Export not implemented for {export.Format}");
+        }
     }
 
     private void CheckRoles(IModelBase modelBase)

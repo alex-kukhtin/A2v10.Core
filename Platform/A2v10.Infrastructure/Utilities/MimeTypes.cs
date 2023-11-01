@@ -25,9 +25,10 @@ public static class MimeTypes
 		public const String Xml = "text/xml";
 		public const String HtmlUtf8 = "text/html; charset=UTF-8";
 		public const String Css = "text/css";
-	}
+        public const String Csv = "text/csv";
+    }
 
-	public static class Image
+    public static class Image
 	{
 		public const String Png = "image/png";
 		public const String Jpg = "image/jpeg";
@@ -45,7 +46,9 @@ public static class MimeTypes
 			".webp" => Image.Webp,
 			".tif" or ".tiff" => Image.Tif,
 			".jpg" or ".jpeg" or ".jpe" => Image.Jpg,
-			_  => throw new ArgumentOutOfRangeException($"Invalid Mime for {ext}")
+			".xlsx" => Application.Xlsx,
+			".csv" => Text.Csv,
+            _  => throw new ArgumentOutOfRangeException($"Invalid Mime for {ext}")
 		};
 	}
 

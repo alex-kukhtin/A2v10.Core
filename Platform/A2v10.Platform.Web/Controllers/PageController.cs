@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using System.Text;
+using System.Net.Http.Headers;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
@@ -72,7 +73,16 @@ public class PageController : BaseController
     {
         // {pagePath}/action/id
         var res = await _dataService.ExportAsync(pathInfo, SetSqlQueryParams);
-		throw new InvalidOperationException("Export is not implemented");
+
+		var result = new WebBinaryActionResult(res.Body, res.ContentType);
+		Response.ContentType = res.ContentType;
+
+		var cdh = new ContentDispositionHeaderValue("attachment")
+		{
+			FileNameStar = Localize(res.FileName)
+        };
+        Response.Headers.Add("Content-Disposition", cdh.ToString());
+        return result;
     }
 
     [Route("_dialog/{*pathInfo}")]
