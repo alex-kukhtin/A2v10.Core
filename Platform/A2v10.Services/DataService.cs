@@ -97,7 +97,7 @@ public class DataService : IDataService
         var loadPrms = view.CreateParameters(platformUrl, null, setParams);
         var dm = await _dbContext.LoadModelAsync(view.DataSource, view.LoadProcedure(), loadPrms);
 		var export = view.Export;
-        Stream? stream = null;
+        Stream? stream;
         var templExpr = export.GetTemplateExpression();
         if (!String.IsNullOrEmpty(templExpr))
         {

@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Dynamic;
@@ -113,8 +113,8 @@ public static class StringHelpers
 	{
 		if (source == null)
 			return null;
-		var r = new Regex("\\$\\((.+?)\\)");
-		var ms = r.Matches(source);
+		var pattern = "\\$\\((.+?)\\)";
+		var ms = Regex.Matches(source, pattern);
 		if (ms.Count == 0)
 			return source;
 		var sb = new StringBuilder(source);

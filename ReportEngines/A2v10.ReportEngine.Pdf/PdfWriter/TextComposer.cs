@@ -39,7 +39,7 @@ internal class TextComposer : FlowElementComposer
 		descr.DefaultTextStyle(ts);
 	}
 
-	TextSpanDescriptor? ApplyRuntimeStyle(TextSpanDescriptor? descr, ContentElement elem)
+	static TextSpanDescriptor? ApplyRuntimeStyle(TextSpanDescriptor? descr, ContentElement elem)
 	{
 		if (descr == null)
 			return descr;

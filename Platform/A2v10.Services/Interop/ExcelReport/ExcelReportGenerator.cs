@@ -15,8 +15,8 @@ class RowSetDef
 {
     internal String? SheetName;
     internal String? PropertyName;
-    internal IList<Row>? Rows;
-    internal IList<Row>? RowsForClone;
+    internal IList<Row?>? Rows;
+    internal IList<Row?>? RowsForClone;
     internal UInt32 FirstRow;
     internal UInt32 RowCount;
     internal UInt32 LastRow;
@@ -85,6 +85,7 @@ public class ExcelReportGenerator : IDisposable
     public void Dispose()
     {
         Dispose(true);
+        GC.SuppressFinalize(this);
     }
 
     protected virtual void Dispose(Boolean disposing)
@@ -102,7 +103,7 @@ public class ExcelReportGenerator : IDisposable
 
     public String? ResultFile => _resultFile;
 
-    private Dictionary<String, Dictionary<String, RowSetDef>> CreateDataSetRows(Workbook workbook)
+    private static Dictionary<String, Dictionary<String, RowSetDef>> CreateDataSetRows(Workbook workbook)
     {
         var result = new Dictionary<String, Dictionary<String, RowSetDef>>();
 
@@ -169,8 +170,12 @@ public class ExcelReportGenerator : IDisposable
                 var sheet = workBook?.Sheets?.Elements<Sheet>().First(s => s.Id == relationshipId)
                          ?? throw new InteropException("Sheet not found");
 
-                dataSetRows.TryGetValue((sheet.Name), out var ds);
-                var modified = ProcessData(ds, sheetData);
+                var sheetName = sheet.Name;
+                Boolean modified = false;
+                if (sheetName != null && sheetName.Value != null) { 
+                    if (dataSetRows.TryGetValue(sheetName.Value, out var ds))
+                        modified = ProcessData(ds, sheetData);
+                }
 
                 foreach (var row in sheetData.Elements<Row>())
                 {
@@ -206,8 +211,10 @@ public class ExcelReportGenerator : IDisposable
         for (Int32 i = 0; i < sslist.Count; i++)
         {
             var ssitem = sslist[i];
-            String str = ssitem.Text.Text;
-            if (!str.StartsWith("{"))
+            if (ssitem == null) 
+                continue;
+            String? str = ssitem.Text?.Text;
+            if (str == null || !str.StartsWith("{"))
                 continue;
             _sharedStringMap ??= new Dictionary<String, SharedStringDef>();
             _sharedStringIndexMap ??= new Dictionary<Int32, SharedStringDef>();
@@ -217,7 +224,7 @@ public class ExcelReportGenerator : IDisposable
         }
     }
 
-    RowSetDef? GetDefinedName(DefinedName? dn)
+    static RowSetDef? GetDefinedName(DefinedName? dn)
     {
         if (dn == null)
             return null;
@@ -262,9 +269,10 @@ public class ExcelReportGenerator : IDisposable
         };
     }
 
-    Boolean ProcessData(Dictionary<String, RowSetDef> datasetRows, SheetData sheetData)
+    Boolean ProcessData(Dictionary<String, RowSetDef>? datasetRows, SheetData sheetData)
     {
-
+        if (datasetRows == null)
+            return false;
         ProcessPlainTable(datasetRows, sheetData);
 
         if (datasetRows != null)
@@ -274,7 +282,7 @@ public class ExcelReportGenerator : IDisposable
         return false;
     }
 
-    Boolean IsRowInRange(Dictionary<String, RowSetDef> datasetRows, UInt32 rowIndex)
+    static Boolean IsRowInRange(Dictionary<String, RowSetDef> datasetRows, UInt32 rowIndex)
     {
         if (datasetRows == null)
             return false;
@@ -297,9 +305,7 @@ public class ExcelReportGenerator : IDisposable
             if (IsRowInRange(datasetRows, row.RowIndex ?? 0))
                 continue;
             foreach (var cell in row.Elements<Cell>())
-            {
                 SetCellData(cell, _dataModel.Root);
-            }
         }
     }
 
@@ -345,10 +351,10 @@ public class ExcelReportGenerator : IDisposable
             return;
         foreach (var r in def.Rows)
         {
+            if (r == null)
+                continue;
             foreach (var c in r.Elements<Cell>())
-            {
                 SetCellData(c, data);
-            }
         }
     }
 
@@ -371,7 +377,7 @@ public class ExcelReportGenerator : IDisposable
             return;
         if (ssd.Parse())
         {
-            Object? dat = _dataModel.Eval<Object>(data, ssd.Expression ?? String.Empty);
+            Object? dat = _dataModel?.Eval<Object>(data, ssd.Expression ?? String.Empty);
             SetCellValueData(cell, dat);
         }
     }
@@ -440,39 +446,43 @@ public class ExcelReportGenerator : IDisposable
     {
         var ssi = new SharedStringItem();
         ssi.Append(new Text(Value));
-        _sharedStringTable.Append(ssi);
+        _sharedStringTable?.Append(ssi);
         _sharedStringModified = true;
         return (_sharedStringCount++).ToString();
     }
 
 
-    Row? InsertRowFromTemplate(SheetData sheetData, RowSetDef rd, ref UInt32 count)
+    static Row? InsertRowFromTemplate(SheetData sheetData, RowSetDef rd, ref UInt32 count)
     {
         Row? lastRow = null;
         if (rd.Rows == null)
         {
             // find row first
             var row = sheetData.Elements<Row>().First<Row>(r => (r.RowIndex ?? 0) == rd.FirstRow);
-            rd.Rows = new List<Row>();
-            rd.RowsForClone = new List<Row>();
+            rd.Rows = new List<Row?>();
+            rd.RowsForClone = new List<Row?>();
             for (Int32 i = 0; i < rd.RowCount; i++)
             {
                 rd.Rows.Add(row);
-                rd.RowsForClone.Add(row.Clone() as Row); // and for cloning too!
-                row = row.NextSibling<Row>();
+                rd.RowsForClone.Add(row?.Clone() as Row); // and for cloning too!
+                row = row?.NextSibling<Row>();
                 lastRow = row;
             }
         }
         else
         {
             // The line was already there, you need to clone it and insert it below
+            if (rd.RowsForClone == null || rd.Rows == null || rd.Rows.Count == 0)
+                throw new InvalidProgramException("InsertRowFromTemplate");
             lastRow = rd.Rows[rd.Rows.Count - 1];
             // next row index
-            UInt32 nri = rd.Rows[0].RowIndex.Value + rd.RowCount;
+            var rowIndex = rd.Rows[0]?.RowIndex?.Value ?? 0;
+            UInt32 nri = rowIndex + rd.RowCount;
             for (Int32 i = 0; i < rd.Rows.Count; i++)
             {
                 var sr = rd.RowsForClone[i];
-                var nr = sr.Clone() as Row;
+                Row nr = sr?.Clone() as Row 
+                   ?? throw new InvalidProgramException("Invalid Row Clone");
                 nr.RowIndex = nri++;
                 var insertedRow = sheetData.InsertAfter<Row>(nr, lastRow);
                 CorrectRowIndex(insertedRow);
@@ -483,27 +493,28 @@ public class ExcelReportGenerator : IDisposable
         }
         return lastRow;
     }
-    void CorrectRowIndex(Row insertedRow)
+    static void CorrectRowIndex(Row insertedRow)
     {
         if (insertedRow == null)
             return;
         var nextRow = insertedRow.NextSibling<Row>();
         while (nextRow != null)
         {
+            nextRow.RowIndex = insertedRow.RowIndex ?? new UInt32Value();
             nextRow.RowIndex += 1;
             nextRow = nextRow.NextSibling<Row>();
         }
     }
 
-
-    void CorrectCellAddresses(Row row)
+    static void CorrectCellAddresses(Row row)
     {
         foreach (var c in row.ChildElements)
         {
-            var clch = c as Cell;
-            var cr = clch.CellReference.ToString();
+            if (c is not Cell clch || clch.CellReference == null)
+                continue;
+            var cr = clch.CellReference.ToString() ?? String.Empty; 
             var crn = new String(cr.Where(Char.IsLetter).ToArray());
-            clch.CellReference = crn + row.RowIndex.ToString();
+            clch.CellReference = crn + row.RowIndex?.ToString();
         }
     }
 }

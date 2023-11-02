@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System.ComponentModel;
 using System.Globalization;
@@ -100,8 +100,8 @@ public record GridLength
 			return new GridLength("auto");
 		else if (strVal.StartsWith("MinMax"))
 		{
-			var re = new Regex(@"MinMax\(([\w\.]+[%\*\.]?);([\w\.]+[%\*\.]?)\)");
-			var match = re.Match(strVal.Replace(" ", String.Empty));
+			var pattern = @"MinMax\(([\w\.]+[%\*\.]?);([\w\.]+[%\*\.]?)\)";
+			var match = Regex.Match(strVal.Replace(" ", String.Empty), pattern);
 			if (match.Groups.Count != 3)
 				throw new XamlException($"Invalid grid length value '{strVal}'");
 			GridLength gl1 = GridLength.FromString(match.Groups[1].Value);

@@ -1,5 +1,5 @@
 ﻿
-// Copyright © 2021-2022 Alex Kukhtin. All rights reserved.
+// Copyright © 2021-2022 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Xaml;
 

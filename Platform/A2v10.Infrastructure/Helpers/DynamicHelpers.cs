@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -212,7 +212,7 @@ public static class DynamicHelpers
 	public static Object? EvalExpression(this ExpandoObject root, String expression, Boolean throwIfError = false)
 	{
 		Object currentContext = root;
-		var arrRegEx = new Regex(@"(\w+)\[(\d+)\]{1}");
+		var pattern = @"(\w+)\[(\d+)\]{1}";
 		foreach (var exp in expression.Split('.'))
 		{
 			if (currentContext == null)
@@ -221,7 +221,7 @@ public static class DynamicHelpers
 			var d = currentContext as IDictionary<String, Object?>;
 			if (prop.Contains('['))
 			{
-				var match = arrRegEx.Match(prop);
+				var match = Regex.Match(prop, pattern);
 				prop = match.Groups[1].Value;
 				if ((d != null) && d.ContainsKey(prop))
 				{
@@ -291,8 +291,8 @@ public static class DynamicHelpers
 	{
 		if (source == null)
 			return null;
-		var r = new Regex("\\{\\{(.+?)\\}\\}");
-		var ms = r.Matches(source);
+		var pattern = "\\{\\{(.+?)\\}\\}";
+		var ms = Regex.Matches(source, pattern);
 		if (ms.Count == 0)
 			return source;
 		var sb = new StringBuilder(source);

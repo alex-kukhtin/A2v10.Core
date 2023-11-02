@@ -1,9 +1,8 @@
-﻿// Copyright © 2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.
 
-namespace A2v10.Xaml
+namespace A2v10.Xaml;
+
+public interface IXamlElement
 {
-	public interface IXamlElement
-	{
-		void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null);
-	}
+	void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null);
 }

@@ -13,7 +13,7 @@ public class ModelJsonPartProvider : IModelJsonPartProvider
 	private readonly IAppCodeProvider _appCodeProvider;
 	//private readonly RedirectModule? _redirect;
 
-	public ModelJsonPartProvider(IAppCodeProvider appCodeProvider, IOptions<AppOptions> appOptions)
+	public ModelJsonPartProvider(IAppCodeProvider appCodeProvider /*, IOptions<AppOptions> appOptions*/)
 	{
 		_appCodeProvider = appCodeProvider;
 		/*
