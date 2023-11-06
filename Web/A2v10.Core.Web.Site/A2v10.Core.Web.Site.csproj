@@ -25,7 +25,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Workflow.Engine" Version="10.1.8109" />
+		<PackageReference Include="A2v10.Workflow.Engine" Version="10.1.8110" />
 	</ItemGroup>
 
 	<ItemGroup>
