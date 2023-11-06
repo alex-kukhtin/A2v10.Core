@@ -1,26 +1,4 @@
-﻿/* controls */
-/* header-footer */
-/* nav bar */
-/* side bar */
-/* data grid */
-/* toolbar */
-/* table */
-/* tree-view*/
-/* dialog */
-/* z-index */
-/*
-@hover-open-index: auto;
-@invalid-index: auto;
-@focus-index: auto;
-@hover-index: auto;
-*/
-/* @modal-wrapper-index + 2 */
-/* validator + 1*/
-/* marker */
-/* grid */
-/* mixins */
-/* icon colors */
-@font-face {
+﻿@font-face {
   font-family: 'A2v10';
   font-display: fallback;
   src: url('/css/fonts/A2v10.eot');
@@ -37,7 +15,6 @@
   font-variant: normal;
   text-transform: none;
   line-height: 1;
-  /* Better Font Rendering =========== */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -836,7 +813,6 @@
 .ico-currency-euro:before {
   content: "\e91c";
 }
-/* d,e reserved */
 .ico-currency-other:before {
   content: "\e91f";
 }
@@ -875,26 +851,6 @@
 .ico-smile-sad:before {
   content: "\eacb";
 }
-/* controls */
-/* header-footer */
-/* nav bar */
-/* side bar */
-/* data grid */
-/* toolbar */
-/* table */
-/* tree-view*/
-/* dialog */
-/* z-index */
-/*
-@hover-open-index: auto;
-@invalid-index: auto;
-@focus-index: auto;
-@hover-index: auto;
-*/
-/* @modal-wrapper-index + 2 */
-/* validator + 1*/
-/* marker */
-/* grid */
 * {
   box-sizing: border-box;
 }
@@ -1911,11 +1867,6 @@ pre.a2-code {
   max-height: 300px;
   margin: 0;
 }
-/*TODO: 
-    2. v-focus-parent directive
-    3. .validator width
-    4. .validator arrows
-*/
 .validation-summary {
   font-size: 0.95rem;
   padding: 4px 6px;
@@ -3677,7 +3628,6 @@ tr:hover .commandbar.visible-hover {
 .tree-view li > .overlay .toggle {
   display: inline-block;
   flex-shrink: 0;
-  /*fixed*/
   font-size: 1.2rem;
   min-width: 2rem;
   font-family: "A2v10";
@@ -3689,7 +3639,6 @@ tr:hover .commandbar.visible-hover {
 }
 .tree-view li > .overlay i.ico {
   flex-shrink: 0;
-  /*fixed*/
   color: var(--icon-color);
   font-size: 1.2rem;
   width: 2rem;
@@ -3705,18 +3654,15 @@ tr:hover .commandbar.visible-hover {
 .tree-view li > ul {
   margin: 0;
   padding-left: 2rem;
-  /*indentation*/
 }
 .tree-view li.collapsed > .overlay > .toggle:after {
   content: "\e9a5";
-  /*chevron-right*/
 }
 .tree-view li.collapsed ul {
   display: none;
 }
 .tree-view li.expanded > .overlay > .toggle:after {
   content: "\e9a4";
-  /*chevron-down*/
 }
 .tree-view.no-indent li > ul {
   padding-left: 0;

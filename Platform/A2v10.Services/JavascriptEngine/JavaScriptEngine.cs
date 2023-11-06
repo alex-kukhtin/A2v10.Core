@@ -53,6 +53,6 @@ return function(_this) {{
 		var func = _engine.Evaluate(code);
 		var result = _engine.Invoke(func, _environment);
 
-		return result.ToObject();
+		return result?.ToObject() ?? new Object();
 	}
 }

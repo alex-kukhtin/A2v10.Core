@@ -1766,8 +1766,7 @@ begin
 	when matched then update set
 		[Name]=s.[Name]
 	when not matched by target then insert 
-		(Code, [Name]) values (s.Code, s.[Name])
-	when not matched by source then delete;
+		(Code, [Name]) values (s.Code, s.[Name]);
 end
 go
 ------------------------------------------------
