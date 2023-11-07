@@ -4,8 +4,9 @@ using System;
 
 namespace A2v10.Platform.Web;
 
-public class AboutViewModel
+public class ChangePasswordViewModel
 {
-	public String AppData { get; init; } = "{}";
+	public Int64 UserId { get; init; }	
+	public String? UserName { get; init; }
 }
 

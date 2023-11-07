@@ -53,7 +53,7 @@ public class InviteUserHandler : IClrInvokeTarget
             // create tenant user
             var createdUser = await _userManager.FindByIdAsync(user.Id.ToString())
                 ?? throw new InvalidOperationException("Create user failed");
-            await _dbContext.ExecuteAsync<AppUser<Int64>>(user.Segment, "a2security.[User.Invite]", createdUser);
+            await _dbContext.ExecuteAsync<AppUser<Int64>>(user.Segment, $"[{_userStoreOptions.SecuritySchema()}].[User.Invite]", createdUser);
         }
 
         await _emailSender.SendInviteEMail(user);

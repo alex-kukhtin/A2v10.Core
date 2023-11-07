@@ -55,9 +55,11 @@ public class AccountController : Controller
     }
 
 	private Boolean IsMultiTenant => _userStoreOptions.MultiTenant ?? false;
-	private String? CatalogDataSource => _userStoreOptions.DataSource; 
+	private String? CatalogDataSource => _userStoreOptions.DataSource;
+	private String? SecuritySchema => _userStoreOptions.SecuritySchema();
 
-	void RemoveAllCookies()
+
+    void RemoveAllCookies()
 	{
 		foreach (var key in Request.Cookies.Keys)
 			Response.Cookies.Delete(key);
@@ -136,7 +138,7 @@ public class AccountController : Controller
 					{ "Id", user.Id },
 					{ "LastLoginHost", Request.Host.Host }
 				};
-                await _dbContext.ExecuteExpandoAsync(CatalogDataSource, "a2security.UpdateUserLogin", llprms);
+                await _dbContext.ExecuteExpandoAsync(CatalogDataSource, $"[{SecuritySchema}].[UpdateUserLogin]", llprms);
 				RemoveAntiforgeryCookie();
 				var returnUrl = model.ReturnUrl?.ToLowerInvariant();
 				if (returnUrl == null || returnUrl.StartsWith("/account"))
@@ -451,7 +453,7 @@ public class AccountController : Controller
 				?? throw new InvalidOperationException("User not found");
 
 			if (!user.ChangePasswordEnabled)
-				throw new InvalidOperationException("Change password not allowed");
+				throw new InvalidOperationException("ChangePasswordNotAllowed");
 
 			var ir = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
 			if (ir.Succeeded)

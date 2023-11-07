@@ -182,7 +182,7 @@ public class PageController : BaseController
 			case "changepassword":
 				if (urlKind != UrlKind.Dialog)
 					throw new InvalidReqestExecption(exceptionInfo);
-				return View("ChangePassword");
+				return View("ChangePassword", new ChangePasswordViewModel { UserName = _currentUser.Identity.Name});
 			default:
 				if (urlKind != UrlKind.Page)
 					throw new InvalidReqestExecption(exceptionInfo);

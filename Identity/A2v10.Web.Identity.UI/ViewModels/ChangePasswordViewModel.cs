@@ -8,5 +8,4 @@ public class ChangePasswordViewModel
 {
 	public String? OldPassword { get; set; }
 	public String? NewPassword { get; set; }
-	public String? RequestToken { get; set; }
 }
