@@ -82,6 +82,12 @@ public class ShellController : Controller
 		return DoScript();
 	}
 
+	public IActionResult Locale()
+	{
+		var x = JsonConvert.SerializeObject(_localizer.Dictionary, Formatting.None);
+		return new WebActionResult($"app.modules[\"app:locale\"] = {x}", MimeTypes.Application.Javascript);
+	}
+
 	async Task<IActionResult> DoScript()
 	{
 		try

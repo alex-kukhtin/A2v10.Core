@@ -6,7 +6,7 @@
 		<Nullable>enable</Nullable>
 		<AssemblyName>A2v10.ReportEngine.Pdf</AssemblyName>
 		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-		<Version>10.1.8168</Version>
+		<Version>10.1.8171</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.ReportEngine.Pdf</PackageId>
 		<Authors>Oleksandr Kukhtin</Authors>

@@ -19,6 +19,15 @@ public abstract class BaseLocalizer : ILocalizer, IDataLocalizer
 		_user = user;
 	}
 
+	public IDictionary<String, String> Dictionary
+	{ 
+		get {
+			String locale = _user.Locale.Locale;
+			locale ??= Thread.CurrentThread.CurrentUICulture.Name;
+			return GetLocalizerDictionary(locale);	
+		}
+	}
+
 	String GetLocalizedValue(String? locale, String key)
 	{
 		if (locale == null)
