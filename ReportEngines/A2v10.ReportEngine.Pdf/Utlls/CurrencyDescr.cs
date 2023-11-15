@@ -43,9 +43,15 @@ internal readonly struct CurrencyDef
 	public SpellGender FractGender { get; init; }
 }
 
-internal class CurrencyDescrUA : CurrencyDescr
+internal class CurrencyDescrUA(String currencyCode) : CurrencyDescr
 {
-	readonly CurrencyDef _current;
+	readonly CurrencyDef _current = currencyCode switch
+    {
+        "980" => _uah_ua,
+        "978" => _uah_eur,
+        "840" => _uah_usd,
+        _ => throw new ArgumentOutOfRangeException($"Currency descriptor for '{currencyCode}' yet not implemented")
+    };
 	private static readonly CurrencyDef _uah_ua = new()
 	{
 		Ceils = "гривень|гривня|гривні".Split('|'),
@@ -70,22 +76,18 @@ internal class CurrencyDescrUA : CurrencyDescr
 		FractGender = SpellGender.Male
 	};
 
-	public CurrencyDescrUA(String currencyCode)
-	{
-		_current = currencyCode switch
-		{
-			"980" => _uah_ua,
-			"978" => _uah_eur,
-			"840" => _uah_usd,
-			_ => throw new ArgumentOutOfRangeException($"Currency descriptor for '{currencyCode}' yet not implemented")
-		};
-	}
-	protected override CurrencyDef _descr => _current;
+    protected override CurrencyDef _descr => _current;
 }
 
-internal class CurrencyDescrEN : CurrencyDescr
+internal class CurrencyDescrEN(String currencyCode) : CurrencyDescr
 {
-    private readonly CurrencyDef _current;
+    private readonly CurrencyDef _current = currencyCode switch
+    {
+        "980" => _uah_ua,
+        "978" => _uah_eur,
+        "840" => _uah_usd,
+        _ => throw new ArgumentOutOfRangeException($"Currency descriptor for '{currencyCode}' yet not implemented")
+    };
     private readonly static CurrencyDef _uah_ua = new()
     {
         Ceils = "hryvnias|hryvnia|".Split('|'),
@@ -109,17 +111,6 @@ internal class CurrencyDescrEN : CurrencyDescr
         Fracts = "cents|cent|".Split('|'),
         FractGender = SpellGender.Male
     };
-
-    public CurrencyDescrEN(String currencyCode)
-    {
-        _current = currencyCode switch
-        {
-            "980" => _uah_ua,
-            "978" => _uah_eur,
-            "840" => _uah_usd,
-            _ => throw new ArgumentOutOfRangeException($"Currency descriptor for '{currencyCode}' yet not implemented")
-        };
-    }
 
     protected override CurrencyDef _descr => _current;
 }

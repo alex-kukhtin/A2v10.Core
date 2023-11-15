@@ -25,5 +25,5 @@ internal record ConfigJob
 
 internal class SchedulerConfig
 {
-	public ConfigJob[] Jobs { get; set; } = Array.Empty<ConfigJob>();
+	public ConfigJob[] Jobs { get; set; } = [];
 }

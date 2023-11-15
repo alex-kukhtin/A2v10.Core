@@ -13,17 +13,12 @@ using A2v10.Web.Identity;
 
 namespace A2v10.Identity.UI;
 
-public class EditUserHandler : IClrInvokeTarget
+public class EditUserHandler(IServiceProvider serviceProvider) : IClrInvokeTarget
 {
-    private readonly AppUserStoreOptions<Int64> _userStoreOptions;
-    private readonly IDbContext _dbContext;
-    private readonly ICurrentUser _currentUser;
-    public EditUserHandler(IServiceProvider serviceProvider)
-    {
-        _userStoreOptions = serviceProvider.GetRequiredService<IOptions<AppUserStoreOptions<Int64>>>().Value;
-        _dbContext = serviceProvider.GetRequiredService<IDbContext>();
-        _currentUser = serviceProvider.GetRequiredService<ICurrentUser>();
-    }
+    private readonly AppUserStoreOptions<Int64> _userStoreOptions = serviceProvider.GetRequiredService<IOptions<AppUserStoreOptions<Int64>>>().Value;
+    private readonly IDbContext _dbContext = serviceProvider.GetRequiredService<IDbContext>();
+    private readonly ICurrentUser _currentUser = serviceProvider.GetRequiredService<ICurrentUser>();
+
     Boolean IsMultiTenant => _userStoreOptions.MultiTenant ?? false;
 
     public async Task<Object> InvokeAsync(ExpandoObject args)

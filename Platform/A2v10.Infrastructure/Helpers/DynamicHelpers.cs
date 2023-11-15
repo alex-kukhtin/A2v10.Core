@@ -223,9 +223,9 @@ public static class DynamicHelpers
 			{
 				var match = Regex.Match(prop, pattern);
 				prop = match.Groups[1].Value;
-				if ((d != null) && d.ContainsKey(prop))
+				if ((d != null) && d.TryGetValue(prop, out Object? value))
 				{
-					if (d[prop] is IList<ExpandoObject> list)
+					if (value is IList<ExpandoObject> list)
 						currentContext = list[Int32.Parse(match.Groups[2].Value)];
 					else
 						throw new ArgumentException($"Error in expression '{expression}'. Property '{prop}' is not a list");
@@ -239,8 +239,8 @@ public static class DynamicHelpers
 			}
 			else
 			{
-				if ((d != null) && d.ContainsKey(prop))
-					currentContext = d[prop]!;
+				if ((d != null) && d.TryGetValue(prop, out Object? value))
+					currentContext = value!;
 				else
 				{
 					if (throwIfError)

@@ -7,7 +7,7 @@ namespace A2v10.Xaml.Report;
 
 public class StyleBag
 {
-	public Dictionary<String, RuntimeStyle> _styles = new();
+	public Dictionary<String, RuntimeStyle> _styles = [];
 
 	const String THIN_BORDER = ".2pt";
 	public StyleBag()

@@ -7,20 +7,13 @@ using A2v10.Infrastructure;
 
 namespace A2v10.Services
 {
-	public class ReportService  : IReportService
+	public class ReportService(IServiceProvider serviceProvider, IModelJsonReader modelReader, IProfiler profiler) : IReportService
 	{
-		private readonly IModelJsonReader _modelReader;
-		private readonly IServiceProvider _serviceProvider;
-		private readonly IProfiler _profiler;
+		private readonly IModelJsonReader _modelReader = modelReader;
+		private readonly IServiceProvider _serviceProvider = serviceProvider;
+		private readonly IProfiler _profiler = profiler;
 
-		public ReportService(IServiceProvider serviceProvider, IModelJsonReader modelReader, IProfiler profiler)
-		{
-			_serviceProvider = serviceProvider;
-			_modelReader = modelReader;
-			_profiler = profiler;
-		}
-
-		static IPlatformUrl CreatePlatformUrl(String baseUrl)
+        static PlatformUrl CreatePlatformUrl(String baseUrl)
 		{
 			return new PlatformUrl(UrlKind.Report, baseUrl);
 		}

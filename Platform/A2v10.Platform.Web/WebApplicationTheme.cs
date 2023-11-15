@@ -12,16 +12,10 @@ using A2v10.Infrastructure;
 
 namespace A2v10.Platform.Web;
 
-public class WebApplicationTheme : IApplicationTheme
+public class WebApplicationTheme(IWebHostEnvironment webHostEnviromnent, IOptions<AppOptions> options) : IApplicationTheme
 {
-    private readonly IWebHostEnvironment _webHostEnviromnent;
-	private readonly AppOptions _appOptions;
-	public WebApplicationTheme(IWebHostEnvironment webHostEnviromnent, IOptions<AppOptions> options)
-    {
-        _webHostEnviromnent = webHostEnviromnent;
-		_appOptions = options.Value;
-
-	}
+    private readonly IWebHostEnvironment _webHostEnviromnent = webHostEnviromnent;
+	private readonly AppOptions _appOptions = options.Value;
 
     public String MakeTheme()
     {

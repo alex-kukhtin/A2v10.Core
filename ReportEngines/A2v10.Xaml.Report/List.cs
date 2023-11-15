@@ -34,7 +34,7 @@ public class List : FlowElement
 
 	public Single Spacing { get; init; }
 
-	public ListItemCollection Items { get; init; } = new ListItemCollection();
+	public ListItemCollection Items { get; init; } = [];
 
 	public override void ApplyStyles(string selector, StyleBag styles)
 	{

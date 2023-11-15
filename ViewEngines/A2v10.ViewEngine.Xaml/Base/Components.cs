@@ -40,7 +40,7 @@ public class Components : MarkupExtension
 		return null;
 	}
 
-	Object? Load(String baseFileName, IServiceProvider serviceProvider)
+	ComponentDictionary? Load(String baseFileName, IServiceProvider serviceProvider)
 	{
         if (String.IsNullOrEmpty(Pathes))
             return null;

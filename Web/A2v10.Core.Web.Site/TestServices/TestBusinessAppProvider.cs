@@ -1,15 +1,16 @@
-﻿using Newtonsoft.Json;
+﻿
 using System.Collections.Generic;
 using System.Reflection;
 using System;
-using A2v10.Infrastructure;
 using System.IO;
+
+using Newtonsoft.Json;
 
 namespace A2v10.Core.Web.Site.TestServices;
 
 public class TestBusinessAppProvider
 {
-	private readonly List<BusinessApplication> _businessApplications = new();
+	private readonly List<BusinessApplication> _businessApplications = [];
 	private readonly String _appDirectory;
 	public TestBusinessAppProvider()
 	{

@@ -10,7 +10,7 @@ namespace A2v10.Xaml.Report;
 [ContentProperty("Cells")]
 public class TableRow : XamlElement
 {
-	public TableCellCollection Cells { get; set; } = new TableCellCollection();
+	public TableCellCollection Cells { get; set; } = [];
 
 	public override void ApplyStyles(String selector, StyleBag styles)
 	{

@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 
@@ -20,32 +20,22 @@ namespace A2v10.Platform.Web.Controllers;
 [Authorize]
 [ExecutingFilter]
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-public class MainController : Controller
+public class MainController(IDataService dataService, IOptions<AppOptions> appOptions,
+    IApplicationTheme appTheme, IAppCodeProvider codeProvider, ILicenseManager licenseManager,
+    ICurrentUser currentUser) : Controller
 {
-	private readonly AppOptions _appOptions;
-	private readonly IDataService _dataService;
-	private readonly IApplicationTheme _appTheme;
-	private readonly IAppCodeProvider _codeProvider;
-	private readonly ILicenseManager _licenseManager;
-	private readonly ICurrentUser _currentUser;
+	private readonly AppOptions _appOptions = appOptions.Value;
+	private readonly IDataService _dataService = dataService;
+	private readonly IApplicationTheme _appTheme = appTheme;
+	private readonly IAppCodeProvider _codeProvider = codeProvider;
+	private readonly ILicenseManager _licenseManager = licenseManager;
+	private readonly ICurrentUser _currentUser = currentUser;
 
-	public MainController(IDataService dataService, IOptions<AppOptions> appOptions, 
-		IApplicationTheme appTheme, IAppCodeProvider codeProvider, ILicenseManager licenseManager,
-		ICurrentUser currentUser)
-	{
-		_appOptions = appOptions.Value;
-		_dataService = dataService;
-		_appTheme = appTheme;
-		_codeProvider = codeProvider;
-		_licenseManager = licenseManager;
-		_currentUser = currentUser;
-	}
-
-	static String? NormalizePathInfo(String? pathInfo)
+    static String? NormalizePathInfo(String? pathInfo)
         {
 		if (String.IsNullOrEmpty(pathInfo))
 			return null;
-		var parts = pathInfo.Split(new Char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
+		var parts = pathInfo.Split([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar]);
 		if (parts.Length == 1)
 			return $"{pathInfo}{Path.DirectorySeparatorChar}index{Path.DirectorySeparatorChar}0";
 		return pathInfo;
@@ -89,9 +79,9 @@ public class MainController : Controller
 	[Route("main/error")]
 	[HttpGet]
 	[AllowAnonymous]
-	public IActionResult Error(String? pathInfo)
+	public IActionResult Error(String? _1/*pathInfo*/)
 	{
-        var RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+        //var RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
 
         var exceptionHandlerPathFeature =
             HttpContext.Features.Get<IExceptionHandlerPathFeature>();
@@ -112,7 +102,7 @@ public class MainController : Controller
             ExceptionMessage ??= string.Empty;
             ExceptionMessage += " Page: Home.";
         }
-        return View();
+        return View("Error", ExceptionMessage);
 	}
 
     private Boolean HasNavPane()

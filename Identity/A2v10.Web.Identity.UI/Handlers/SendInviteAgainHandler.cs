@@ -10,13 +10,9 @@ using A2v10.Infrastructure;
 
 namespace A2v10.Identity.UI;
 
-public class SendInviteAgainHandler : IClrInvokeTarget
+public class SendInviteAgainHandler(IServiceProvider serviceProvider) : IClrInvokeTarget
 {
-    private readonly EmailSender _emailSender;
-    public SendInviteAgainHandler(IServiceProvider serviceProvider)
-    {
-        _emailSender = new EmailSender(serviceProvider);
-	}
+    private readonly EmailSender _emailSender = new(serviceProvider);
 
     public async Task<object> InvokeAsync(ExpandoObject args)
     {

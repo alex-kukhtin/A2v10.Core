@@ -26,23 +26,15 @@ public class BlobUpdateIdToken
 [ExecutingFilter]
 [Authorize]
 [ResponseCache(Duration = 2592000, Location = ResponseCacheLocation.Client)]
-public class ImageController : BaseController
+public class ImageController(IApplicationHost host,
+    ILocalizer localizer, ICurrentUser currentUser, IProfiler profiler,
+    IDataService dataService, ITokenProvider tokenProvider, IAppCodeProvider appCodeProvider) : BaseController(host, localizer, currentUser, profiler)
 {
-	private readonly IDataService _dataService;
-	private readonly ITokenProvider _tokenProvider;
-	private readonly IAppCodeProvider _appCodeProvider;
+	private readonly IDataService _dataService = dataService;
+	private readonly ITokenProvider _tokenProvider = tokenProvider;
+	private readonly IAppCodeProvider _appCodeProvider = appCodeProvider;
 
-	public ImageController(IApplicationHost host,
-		ILocalizer localizer, ICurrentUser currentUser, IProfiler profiler, 
-		IDataService dataService, ITokenProvider tokenProvider, IAppCodeProvider appCodeProvider)
-		: base(host, localizer, currentUser, profiler)
-	{
-		_dataService = dataService;
-		_tokenProvider = tokenProvider;
-		_appCodeProvider = appCodeProvider;
-	}
-
-	[Route("_image/{*pathInfo}")]
+    [Route("_image/{*pathInfo}")]
 	[HttpGet]
 	public async Task<IActionResult> Image(String pathInfo)
 	{

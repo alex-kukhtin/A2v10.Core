@@ -8,16 +8,11 @@ using Newtonsoft.Json;
 
 namespace A2v10.Services;
 
-public class InvokeCommandInvokeClr : IModelInvokeCommand
+public class InvokeCommandInvokeClr(IServiceProvider serviceProvider) : IModelInvokeCommand
 {
-	private readonly IServiceProvider _serviceProvider;
+	private readonly IServiceProvider _serviceProvider = serviceProvider;
 
-	public InvokeCommandInvokeClr(IServiceProvider serviceProvider)
-	{
-		_serviceProvider = serviceProvider;
-	}
-
-	public async Task<IInvokeResult> ExecuteAsync(IModelCommand command, ExpandoObject parameters)
+    public async Task<IInvokeResult> ExecuteAsync(IModelCommand command, ExpandoObject parameters)
 	{
 		if (command.ClrType == null)
 			throw new InvalidOperationException("Command.ClrType is null");
@@ -27,7 +22,7 @@ public class InvokeCommandInvokeClr : IModelInvokeCommand
 			var ass = Assembly.Load(assembly);
 			var tp = ass.GetType(clrType)
 				?? throw new InvalidOperationException("Type not found");
-			var ctor = tp.GetConstructor(new Type[] { typeof(IServiceProvider) })
+			var ctor = tp.GetConstructor([typeof(IServiceProvider)])
 				?? throw new InvalidOperationException($"ctor(IServiceProvider) not found in {clrType}");
 			var elem = ctor.Invoke(new Object[] { _serviceProvider })
 				?? throw new InvalidOperationException($"Unable to create element of {clrType}");
@@ -42,7 +37,7 @@ public class InvokeCommandInvokeClr : IModelInvokeCommand
 			}
 			else if (invokeResult is InvokeBlobResult blobResult)
                 return new InvokeResult(
-					blobResult.Stream ?? Array.Empty<Byte>(), 
+					blobResult.Stream ?? [], 
 					blobResult.Mime ?? MimeTypes.Application.Json
 				);
 			else if (invokeResult != null)

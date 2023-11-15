@@ -1,4 +1,4 @@
-﻿// Copyright © 2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Linq;
@@ -13,7 +13,7 @@ namespace A2v10.Platform.Web
 
 	public class ReportEngineFactory
 	{
-		private readonly IList<ReportEngineDescriptor> _list = new List<ReportEngineDescriptor>();
+		private readonly List<ReportEngineDescriptor> _list = [];
 
 		public IList<ReportEngineDescriptor> Engines => _list;
 
@@ -23,18 +23,12 @@ namespace A2v10.Platform.Web
 		}
 	}
 
-	public class WebReportEngineProvider : IReportEngineProvider
+	public class WebReportEngineProvider(IServiceProvider serviceProvider, IList<ReportEngineDescriptor> engines) : IReportEngineProvider
 	{
-		private readonly IList<ReportEngineDescriptor> _engines;
-		private readonly IServiceProvider _serviceProvider;
+		private readonly IList<ReportEngineDescriptor> _engines = engines;
+		private readonly IServiceProvider _serviceProvider = serviceProvider;
 
-		public WebReportEngineProvider(IServiceProvider serviceProvider, IList<ReportEngineDescriptor> engines)
-		{
-			_serviceProvider = serviceProvider;
-			_engines = engines;
-		}
-
-		public void RegisterEngine(String name, Type engineType)
+        public void RegisterEngine(String name, Type engineType)
 		{
 			_engines.Add(new ReportEngineDescriptor(name, engineType));
 		}

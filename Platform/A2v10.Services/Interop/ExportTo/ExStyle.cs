@@ -34,8 +34,8 @@ public struct Style
 
 public class StylesDictionary
 {
-	private readonly Dictionary<Style, UInt32> _hash = new();
-	public List<Style> List { get; } = new List<Style>();
+	private readonly Dictionary<Style, UInt32> _hash = [];
+	public List<Style> List { get; } = [];
 
 	public StylesDictionary()
 	{

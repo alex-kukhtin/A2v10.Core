@@ -7,20 +7,13 @@ using A2v10.Infrastructure;
 
 namespace A2v10.ViewEngine.Html;
 
-public class HtmlViewEngine : IViewEngine
+public class HtmlViewEngine(IAppCodeProvider appCodeProvider, IProfiler profiler, /*IViewEngineProvider _engineProvider*/ ILocalizer localizer) : IViewEngine
 {
-	private readonly IProfiler _profiler;
-	private readonly ILocalizer _localizer;
-	private readonly IAppCodeProvider _appCodeProvider;
+	private readonly IProfiler _profiler = profiler;
+	private readonly ILocalizer _localizer = localizer;
+	private readonly IAppCodeProvider _appCodeProvider = appCodeProvider;
 
-    public HtmlViewEngine(IAppCodeProvider appCodeProvider, IProfiler profiler, IViewEngineProvider _1/*engineProvider*/, ILocalizer localizer)
-	{
-        _profiler = profiler;
-        _localizer = localizer;
-        _appCodeProvider = appCodeProvider;	
-    }
-
-	public async Task<IRenderResult> RenderAsync(IRenderInfo renderInfo)
+    public async Task<IRenderResult> RenderAsync(IRenderInfo renderInfo)
 	{
         IProfileRequest request = _profiler.CurrentRequest;
 

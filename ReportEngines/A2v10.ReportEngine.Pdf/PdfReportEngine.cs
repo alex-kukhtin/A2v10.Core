@@ -39,7 +39,7 @@ public class PdfReportEngine : IReportEngine
 
 		var name = reportInfo.DataModel?.Root?.Resolve(reportInfo.Name) ?? "report";
 
-		var model = reportInfo.DataModel?.Root ?? new ExpandoObject();
+		var model = reportInfo.DataModel?.Root ?? [];
 		var context = new RenderContext(repPath, _localizer, model, page.Code);
 		var doc = new ReportDocument(page, context);
 

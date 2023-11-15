@@ -24,10 +24,10 @@ public enum SpellType
 
 public static class SpellString
 {
-	static readonly SpellType[] _intTypes = new SpellType[5] 
-	{
-		SpellType.zero ,SpellType.one, SpellType.two, SpellType.two, SpellType.two,
-	};
+	static readonly SpellType[] _intTypes =
+    [
+        SpellType.zero ,SpellType.one, SpellType.two, SpellType.two, SpellType.two,
+	];
 
 
 	public static String Spell(Decimal val, CultureInfo culture, SpellGender gender)

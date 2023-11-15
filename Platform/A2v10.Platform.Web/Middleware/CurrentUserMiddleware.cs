@@ -6,16 +6,11 @@ using Microsoft.AspNetCore.Http;
 
 namespace A2v10.Platform.Web;
 
-public class CurrentUserMiddleware
+public class CurrentUserMiddleware(RequestDelegate next)
 {
-	private readonly RequestDelegate _next;
+	private readonly RequestDelegate _next = next;
 
-	public CurrentUserMiddleware(RequestDelegate next)
-	{
-		_next = next;
-	}
-
-	public async Task Invoke(HttpContext context, CurrentUser currentUser)
+    public async Task Invoke(HttpContext context, CurrentUser currentUser)
 	{
 		currentUser.Setup(context);
 		await _next(context);

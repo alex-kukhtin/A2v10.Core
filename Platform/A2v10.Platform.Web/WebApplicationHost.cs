@@ -14,21 +14,13 @@ using Microsoft.Extensions.Options;
 
 namespace A2v10.Platform.Web;
 
-public class WebApplicationHost : IApplicationHost
+public class WebApplicationHost(IConfiguration config, IOptions<AppOptions> appOptions, ICurrentUser currentUser) : IApplicationHost
 {
-	private readonly IConfiguration _appSettings;
-	private readonly AppOptions _appOptions;
-	private readonly ICurrentUser _currentUser;
-	
-	public WebApplicationHost(IConfiguration config, IOptions<AppOptions> appOptions, ICurrentUser currentUser)
-	{
-		_appOptions = appOptions.Value;
+	private readonly IConfiguration _appSettings = config.GetSection("appSettings");
+	private readonly AppOptions _appOptions = appOptions.Value;
+	private readonly ICurrentUser _currentUser = currentUser;
 
-		_appSettings = config.GetSection("appSettings");
-		_currentUser = currentUser;
-	}
-
-	public Boolean IsMultiTenant => _appOptions.MultiTenant;
+    public Boolean IsMultiTenant => _appOptions.MultiTenant;
 	public Boolean IsMultiCompany => _appOptions.MultiCompany;
 
 	public Boolean IsDebugConfiguration => _appOptions.Environment.IsDebug;
@@ -49,7 +41,7 @@ public class WebApplicationHost : IApplicationHost
 		{
 			Int32 start = source.IndexOf("@{AppSettings.", xpos);
 			if (start == -1) break;
-			Int32 end = source.IndexOf("}", start + 14);
+			Int32 end = source.IndexOf('}', start + 14);
 			if (end == -1) break;
 			var key = source.Substring(start + 14, end - start - 14);
 			var value = _appSettings.GetValue<String>(key) ?? String.Empty;
@@ -66,7 +58,7 @@ public class WebApplicationHost : IApplicationHost
 		var val = _appSettings.GetValue<String>(key);
 		if (val != null)
 			return JsonConvert.DeserializeObject<ExpandoObject>(val, new ExpandoObjectConverter()) 
-				?? new ExpandoObject();
+				?? [];
 		var valObj = _appSettings.GetSection(key);
 		if (valObj != null)
 		{

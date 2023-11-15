@@ -114,23 +114,15 @@ vm.__doInit__('$(BaseUrl)');
 ";
 }
 
-public class VueDataScripter : IDataScripter
+public class VueDataScripter(IApplicationHost host, IAppCodeProvider codeProvider, ILocalizer localizer, ICurrentUser currentUser) : IDataScripter
 {
 
-	private readonly IAppCodeProvider _codeProvider;
-	private readonly ILocalizer _localizer;
-	private readonly IApplicationHost _host;
-	private readonly ICurrentUser _currentUser;
+	private readonly IAppCodeProvider _codeProvider = codeProvider ?? throw new ArgumentNullException(nameof(codeProvider));
+	private readonly ILocalizer _localizer = localizer ?? throw new ArgumentNullException(nameof(localizer));
+	private readonly IApplicationHost _host = host ?? throw new ArgumentNullException(nameof(host));
+	private readonly ICurrentUser _currentUser = currentUser;
 
-	public VueDataScripter(IApplicationHost host, IAppCodeProvider codeProvider, ILocalizer localizer, ICurrentUser currentUser)
-	{
-		_codeProvider = codeProvider ?? throw new ArgumentNullException(nameof(codeProvider));
-		_localizer = localizer ?? throw new ArgumentNullException(nameof(localizer));
-		_host = host ?? throw new ArgumentNullException(nameof(host));
-		_currentUser = currentUser;
-	}
-
-	public String CreateDataModelScript(IDataModel? model, Boolean isPlain)
+    public String CreateDataModelScript(IDataModel? model, Boolean isPlain)
 	{
 		if (model == null) 
 			return CreateEmptyStript();
@@ -413,11 +405,11 @@ function modelData(template, data) {
 				return; // not found
 			if (String.IsNullOrEmpty(moduleName))
 				continue;
-			if (moduleName.ToLowerInvariant().StartsWith("global/"))
+			if (moduleName.StartsWith("global/", StringComparison.InvariantCultureIgnoreCase))
 				continue;
-			if (moduleName.ToLowerInvariant().StartsWith("std:"))
+			if (moduleName.StartsWith("std:", StringComparison.InvariantCultureIgnoreCase))
 				continue;
-			if (moduleName.ToLowerInvariant().StartsWith("app:"))
+			if (moduleName.StartsWith("app:", StringComparison.InvariantCultureIgnoreCase))
 				continue;
 			if (_modulesWritten.Contains(moduleName))
 				continue;
@@ -471,7 +463,7 @@ function modelData(template, data) {
 				return String.Empty; // закрывающий левее открывающего, мы внутри
 			}
 		}
-		Int32 startLine = text.LastIndexOfAny(new Char[] { '\r', '\n' }, rPos);
+		Int32 startLine = text.LastIndexOfAny(['\r', '\n'], rPos);
 		oc = text.LastIndexOf("//", rPos);
 		if ((oc != 1) && (oc > startLine))
 			return String.Empty; // есть однострочный и он после начала строки

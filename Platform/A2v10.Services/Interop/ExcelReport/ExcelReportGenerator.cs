@@ -46,7 +46,7 @@ class SharedStringDef
             return true;
 
         String str = Item.Text?.Text ?? String.Empty;
-        if (str.StartsWith("{") && str.EndsWith("}"))
+        if (str.StartsWith('{') && str.EndsWith('}'))
         {
             Expression = str[1..^1];
             bParsed = true;
@@ -118,9 +118,9 @@ public class ExcelReportGenerator : IDisposable
                 continue;
             if (!result.TryGetValue(df.SheetName ?? String.Empty, out var rdict))
             {
-                rdict = new Dictionary<String, RowSetDef>();
+                rdict = [];
                 var sheetName = df.SheetName ?? String.Empty;
-                if (sheetName.StartsWith("'") && sheetName.EndsWith("'"))
+                if (sheetName.StartsWith('\'') && sheetName.EndsWith('\''))
                     sheetName = sheetName[1..^1];
                 result.Add(sheetName, rdict);
             }
@@ -187,7 +187,7 @@ public class ExcelReportGenerator : IDisposable
                     {
                         NumberStoredAsText = true,
                         SequenceOfReferences = new ListValue<StringValue>(
-                            new List<StringValue>() { new StringValue("A1:WZZ999999") })
+                            new List<StringValue>() { new("A1:WZZ999999") })
                     }
                 ));
 
@@ -214,10 +214,10 @@ public class ExcelReportGenerator : IDisposable
             if (ssitem == null) 
                 continue;
             String? str = ssitem.Text?.Text;
-            if (str == null || !str.StartsWith("{"))
+            if (str == null || !str.StartsWith('{'))
                 continue;
-            _sharedStringMap ??= new Dictionary<String, SharedStringDef>();
-            _sharedStringIndexMap ??= new Dictionary<Int32, SharedStringDef>();
+            _sharedStringMap ??= [];
+            _sharedStringIndexMap ??= [];
             var ssd = new SharedStringDef(ssitem, i);
             _sharedStringMap.Add(str, ssd);
             _sharedStringIndexMap.Add(i, ssd);
@@ -229,7 +229,7 @@ public class ExcelReportGenerator : IDisposable
         if (dn == null)
             return null;
         String? name = dn.Name;
-        if (name == null || !name.StartsWith("_") || !name.EndsWith("_"))
+        if (name == null || !name.StartsWith('_') || !name.EndsWith('_'))
             return null;
         String propName = name[1..^1];
         String showRef = dn.Text;

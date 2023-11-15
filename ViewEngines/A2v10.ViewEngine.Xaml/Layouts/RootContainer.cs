@@ -32,7 +32,7 @@ public abstract class RootContainer : Container, IUriContext, IRootContainer
 	{
 		get
 		{
-			_resources ??= new ResourceDictionary();
+			_resources ??= [];
 			return _resources;
 		}
 		set
@@ -40,10 +40,10 @@ public abstract class RootContainer : Container, IUriContext, IRootContainer
 			_resources = value;
 		}
 	}
-	public AccelCommandCollection AccelCommands { get; set; } = new AccelCommandCollection();
+	public AccelCommandCollection AccelCommands { get; set; } = [];
 
 
-	public ComponentDictionary Components { get; set; } = new ComponentDictionary();
+	public ComponentDictionary Components { get; set; } = [];
 
 	public XamlElement? FindComponent(String name)
 	{
@@ -74,7 +74,7 @@ public abstract class RootContainer : Container, IUriContext, IRootContainer
 		cmd.RenderEnd(context);
 	}
 
-	private readonly List<Action> _contextMenus = new();
+	private readonly List<Action> _contextMenus = [];
 	public void RegisterContextMenu(Action action)
 	{
 		_contextMenus.Add(action);

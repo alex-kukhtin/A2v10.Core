@@ -1,8 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>
-		<Version>10.1.8150</Version>
+		<TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
+		<Version>10.1.8180</Version>
+		<LangVersion>Latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Scheduling</PackageId>
@@ -32,8 +33,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Data.Interfaces" Version="10.1.7338" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="7.0.4" />
+		<PackageReference Include="A2v10.Data.Interfaces" Version="10.1.7340" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.0" />
 		<PackageReference Include="Quartz.AspNetCore" Version="3.7.0" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
 	</ItemGroup>

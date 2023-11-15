@@ -12,14 +12,8 @@ namespace A2v10.Platform.Web.Controllers;
 [ExecutingFilter]
 [Authorize]
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-public class ApplicationController : BaseController
+public class ApplicationController(IApplicationHost host,
+        ILocalizer localizer, ICurrentUser currentUser, IProfiler profiler /*IDbContext dbContext*/) : BaseController(host, localizer, currentUser, profiler)
 {
-	private readonly IDbContext _dbContext;
-
-    public ApplicationController(IApplicationHost host,
-		ILocalizer localizer, ICurrentUser currentUser, IProfiler profiler, IDbContext dbContext)
-		: base(host, localizer, currentUser, profiler)
-	{
-		_dbContext = dbContext;
-	}
+	//private readonly IDbContext _dbContext = dbContext;
 }

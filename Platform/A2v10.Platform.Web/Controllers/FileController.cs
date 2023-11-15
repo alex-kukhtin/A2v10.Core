@@ -18,23 +18,15 @@ namespace A2v10.Platform.Web.Controllers;
 
 [ExecutingFilter]
 [Authorize]
-public class FileController : BaseController
+public class FileController(IApplicationHost host,
+    ILocalizer localizer, ICurrentUser currentUser, IProfiler profiler,
+    IDataService dataService, ITokenProvider tokenProvider, IAppCodeProvider appCodeProvider) : BaseController(host, localizer, currentUser, profiler)
 {
-	private readonly IDataService _dataService;
-	private readonly ITokenProvider _tokenProvider;
-	private readonly IAppCodeProvider _appCodeProvider;
+	private readonly IDataService _dataService = dataService;
+	private readonly ITokenProvider _tokenProvider = tokenProvider;
+	private readonly IAppCodeProvider _appCodeProvider = appCodeProvider;
 
-	public FileController(IApplicationHost host,
-		ILocalizer localizer, ICurrentUser currentUser, IProfiler profiler, 
-		IDataService dataService, ITokenProvider tokenProvider, IAppCodeProvider appCodeProvider)
-		: base(host, localizer, currentUser, profiler)
-	{
-		_dataService = dataService;
-		_tokenProvider = tokenProvider;
-		_appCodeProvider = appCodeProvider;
-	}
-
-	[Route("_file/{*pathInfo}")]
+    [Route("_file/{*pathInfo}")]
 	[HttpGet]
 	public async Task<IActionResult> DefaultGet(String pathInfo)
 	{

@@ -22,39 +22,24 @@ namespace A2v10.Identity.UI;
 [ApiExplorerSettings(IgnoreApi = true)]
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 [AllowAnonymous]
-public class AccountController : Controller
+public class AccountController(SignInManager<AppUser<Int64>> signInManager, UserManager<AppUser<Int64>> userManager,
+            IAntiforgery antiforgery, IDbContext dbContext,
+            IApplicationTheme appTheme, IMailService mailService, ILocalizer localizer,
+            IDataProtectionProvider protectionProvider, IAppTenantManager appTenantManager,
+            IOptions<AppUserStoreOptions<Int64>> userStoreOptions) : Controller
 {
-	private readonly SignInManager<AppUser<Int64>> _signInManager;
-	private readonly UserManager<AppUser<Int64>> _userManager;
-	private readonly IAntiforgery _antiforgery;
-	private readonly IDbContext _dbContext;
-	private readonly IApplicationTheme _appTheme;
-	private readonly IMailService _mailService;
-	private readonly ILocalizer _localizer;
-	private readonly IDataProtector _protector;
-	private readonly IAppTenantManager _appTenantManager;
-	private readonly AppUserStoreOptions<Int64> _userStoreOptions;
+	private readonly SignInManager<AppUser<Int64>> _signInManager = signInManager;
+	private readonly UserManager<AppUser<Int64>> _userManager = userManager;
+	private readonly IAntiforgery _antiforgery = antiforgery;
+	private readonly IDbContext _dbContext = dbContext;
+	private readonly IApplicationTheme _appTheme = appTheme;
+	private readonly IMailService _mailService = mailService;
+	private readonly ILocalizer _localizer = localizer;
+	private readonly IDataProtector _protector = protectionProvider.CreateProtector("Login");
+	private readonly IAppTenantManager _appTenantManager = appTenantManager;
+	private readonly AppUserStoreOptions<Int64> _userStoreOptions = userStoreOptions.Value;
 
-    public AccountController(SignInManager<AppUser<Int64>> signInManager, UserManager<AppUser<Int64>> userManager,
-			IAntiforgery antiforgery, IDbContext dbContext,
-			IApplicationTheme appTheme, IMailService mailService, ILocalizer localizer,
-			IDataProtectionProvider protectionProvider, IAppTenantManager appTenantManager,
-			IOptions<AppUserStoreOptions<Int64>> userStoreOptions)
-	{
-		_signInManager = signInManager;
-		_userManager = userManager;
-		_antiforgery = antiforgery;
-		_dbContext = dbContext;
-		_appTheme = appTheme;
-		_mailService = mailService;
-		_localizer = localizer;
-		_appTenantManager = appTenantManager;
-		_protector = protectionProvider.CreateProtector("Login");
-		_userStoreOptions = userStoreOptions.Value;
-
-    }
-
-	private Boolean IsMultiTenant => _userStoreOptions.MultiTenant ?? false;
+    private Boolean IsMultiTenant => _userStoreOptions.MultiTenant ?? false;
 	private String? CatalogDataSource => _userStoreOptions.DataSource;
 	private String? SecuritySchema => _userStoreOptions.SecuritySchema();
 

@@ -9,17 +9,12 @@ using A2v10.Xaml.Report;
 
 namespace A2v10.ReportEngine.Pdf;
 
-internal class ReportDocument : IDocument
+internal class ReportDocument(Page page, RenderContext context) : IDocument
 {
-	private readonly Page _page;
-	private readonly RenderContext _context;
-	public ReportDocument(Page page, RenderContext context)
-	{
-		_page = page;
-		_context = context;
-	}
+	private readonly Page _page = page;
+	private readonly RenderContext _context = context;
 
-	public void Compose(IDocumentContainer container)
+    public void Compose(IDocumentContainer container)
 	{
 		container.Page(page =>
 		{

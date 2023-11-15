@@ -17,7 +17,7 @@ using A2v10.Identity.Core.Helpers;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
-public sealed class AppUserStore<T> :
+public sealed class AppUserStore<T>(IDbContext dbContext, IOptions<AppUserStoreOptions<T>> options) :
 	IUserStore<AppUser<T>>,
 	IUserLoginStore<AppUser<T>>,
 	IUserEmailStore<AppUser<T>>,
@@ -29,13 +29,13 @@ public sealed class AppUserStore<T> :
 	IUserLockoutStore<AppUser<T>>
 	where T : struct
 {
-	private readonly IDbContext _dbContext;
-	private readonly String? _dataSource;
-	private readonly String _dbSchema;
-	private readonly Boolean _multiTenant;
-	private readonly RolesMode _rolesMode;
+	private readonly IDbContext _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+	private readonly String? _dataSource = options.Value?.DataSource;
+	private readonly String _dbSchema = options.Value?.Schema ?? "a2security";
+	private readonly Boolean _multiTenant = options.Value?.MultiTenant ?? false;
+	private readonly RolesMode _rolesMode = options.Value?.UseRoles ?? RolesMode.None;
 
-	private readonly Func<AppUser<T>, IEnumerable<KeyValuePair<String, String?>>>? _addClaims;
+	private readonly Func<AppUser<T>, IEnumerable<KeyValuePair<String, String?>>>? _addClaims = options.Value?.Claims;
 
 	private static class ParamNames
 	{
@@ -59,17 +59,8 @@ public sealed class AppUserStore<T> :
         public const String AccessFailedCount = nameof(AccessFailedCount);
 		public const String LockoutEndDate = nameof(LockoutEndDate);
 	}
-	public AppUserStore(IDbContext dbContext, IOptions<AppUserStoreOptions<T>> options)
-	{
-		_dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-		_dataSource = options.Value?.DataSource;
-		_dbSchema = options.Value?.Schema ?? "a2security";
-		_addClaims = options.Value?.Claims;
-		_multiTenant = options.Value?.MultiTenant ?? false;
-		_rolesMode = options.Value?.UseRoles ?? RolesMode.None;
-	}
 
-	public async Task<IdentityResult> CreateAsync(AppUser<T> user, CancellationToken cancellationToken)
+    public async Task<IdentityResult> CreateAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
 		user.PasswordHash ??= user.PasswordHash2;
 		user.SecurityStamp ??= user.SecurityStamp2;
@@ -290,7 +281,7 @@ public sealed class AppUserStore<T> :
 	#region IUserClaimStore
 	public Task<IList<Claim>> GetClaimsAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
-		List<Claim> list = new();
+		List<Claim> list = [];
 		if (_addClaims != null)
 		{
 			foreach (var (k, v) in _addClaims(user))
@@ -558,7 +549,7 @@ public sealed class AppUserStore<T> :
 
 	public Task<IList<String>> GetRolesAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
-		List<String> list = new();
+		List<String> list = [];
 		if (_rolesMode == RolesMode.Claims && user.Roles != null)
 			list.AddRange(user.Roles.Split(",")); 
 		else if (_rolesMode == RolesMode.Database)

@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>
+		<TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
+		<Version>10.1.8180</Version>
 		<Nullable>enable</Nullable>
 		<AssemblyName>A2v10.Identity.ApiKey</AssemblyName>
 		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-		<Version>10.1.8171</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Identity.ApiKey</PackageId>
 		<Authors>Oleksandr Kukhtin</Authors>

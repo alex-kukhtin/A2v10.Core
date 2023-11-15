@@ -1,11 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>
+		<TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
+		<Version>10.1.8180</Version>
 		<Nullable>enable</Nullable>
+		<LangVersion>Latest</LangVersion>
 		<AssemblyName>A2v10.Xaml</AssemblyName>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		<Version>10.1.8171</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.ViewEngine.Xaml</PackageId>
 		<Authors>Oleksandr Kukthin</Authors>
@@ -29,9 +30,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.System.Xaml" Version="10.1.8020" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Options" Version="7.0.1" />
+		<PackageReference Include="A2v10.System.Xaml" Version="10.1.8021" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Options" Version="8.0.0" />
 	</ItemGroup>
 
 	<PropertyGroup>

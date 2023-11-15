@@ -53,8 +53,7 @@ public class ScriptEnvironment
 		String? source = prms.Get<String>("source");
 		String command = prms.GetNotNull<String>("procedure");
 		Boolean forCurrentUser = prms.Get<Boolean>("forCurrentUser");
-		ExpandoObject? dmParams = prms.Get<ExpandoObject>("parameters")
-			?? new ExpandoObject();
+		ExpandoObject? dmParams = prms.Get<ExpandoObject>("parameters") ?? [];
 		if (forCurrentUser)
 		{
 			SetCurrentUserParams(dmParams);
@@ -72,7 +71,7 @@ public class ScriptEnvironment
 
         Boolean forCurrentUser = prms.Get<Boolean>("forCurrentUser");
         ExpandoObject? dmParams = prms.Get<ExpandoObject>("parameters")
-            ?? new ExpandoObject();
+            ?? [];
 		if (forCurrentUser)
 		{
 			SetCurrentUserParams(dmParams);
@@ -88,8 +87,7 @@ public class ScriptEnvironment
 		String? source = prms.Get<String>("source");
 		String command = prms.GetNotNull<String>("procedure");
         Boolean forCurrentUser = prms.Get<Boolean>("forCurrentUser");
-        ExpandoObject? dmParams = prms.Get<ExpandoObject>("parameters")
-            ?? new ExpandoObject();
+        ExpandoObject? dmParams = prms.Get<ExpandoObject>("parameters") ?? [];
 		if (forCurrentUser)
 		{
 			SetCurrentUserParams(dmParams);

@@ -8,16 +8,10 @@ using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace A2v10.Services.Interop;
 
-internal class Html2Excel
+internal class Html2Excel(String locale)
 {
-	private readonly IFormatProvider _currentFormat;
-
-	public Html2Excel(String locale)
-	{
-		_currentFormat = System.Globalization.CultureInfo.CreateSpecificCulture(locale);
-	}
-
-	private readonly List<String> _mergeCells = new();
+	private readonly IFormatProvider _currentFormat = System.Globalization.CultureInfo.CreateSpecificCulture(locale);
+    private readonly List<String> _mergeCells = [];
 
 	public Byte[] ConvertHtmlToExcel(String html)
 	{
@@ -54,7 +48,7 @@ internal class Html2Excel
                 {
                     NumberStoredAsText = true,
                     SequenceOfReferences = new ListValue<StringValue>(
-                        new List<StringValue>() { new StringValue("A1:WZZ999999") })
+                        new List<StringValue>() { new("A1:WZZ999999") })
                 }
             ));
 
@@ -303,7 +297,7 @@ internal class Html2Excel
 				continue;
 			var cell = new Cell();
 			SetCellValue(cell, c /*, exrow*/);
-			cell.CellReference = c.Reference(rowNo, col);
+			cell.CellReference = ExCell.Reference(rowNo, col);
 			var mergeRef = c.MergeReference(rowNo, col);
 			if (mergeRef != null)
 				_mergeCells.Add(mergeRef);

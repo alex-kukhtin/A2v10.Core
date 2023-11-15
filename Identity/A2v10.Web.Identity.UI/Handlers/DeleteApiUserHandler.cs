@@ -20,15 +20,11 @@ public record DeleteUserParams
     public Int64 Id { get; init; }
 }
 
-public class DeleteApiUserHandler : IClrInvokeTarget
+public class DeleteApiUserHandler(IServiceProvider serviceProvider) : IClrInvokeTarget
 {
-    private readonly AppUserStoreOptions<Int64> _userStoreOptions;
-    private readonly IDbContext _dbContext;
-    public DeleteApiUserHandler(IServiceProvider serviceProvider)
-    {
-        _userStoreOptions = serviceProvider.GetRequiredService<IOptions<AppUserStoreOptions<Int64>>>().Value;
-        _dbContext = serviceProvider.GetRequiredService<IDbContext>();
-    }
+    private readonly AppUserStoreOptions<Int64> _userStoreOptions = serviceProvider.GetRequiredService<IOptions<AppUserStoreOptions<Int64>>>().Value;
+    private readonly IDbContext _dbContext = serviceProvider.GetRequiredService<IDbContext>();
+
     Boolean IsMultiTenant => _userStoreOptions.MultiTenant ?? false;
 
     public async Task<Object> InvokeAsync(ExpandoObject args)

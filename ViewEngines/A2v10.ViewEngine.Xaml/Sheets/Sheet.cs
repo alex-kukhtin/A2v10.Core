@@ -19,7 +19,7 @@ record SheetGeneratorWrapper(ISheetGenerator Generator, String PropertyName)
 public partial class Sheet : UIElement
 {
 
-	public SheetSections Sections { get; set; } = new SheetSections();
+	public SheetSections Sections { get; set; } = [];
 
 	SheetRows? _header;
 	SheetRows? _footer;
@@ -28,7 +28,7 @@ public partial class Sheet : UIElement
 	{
 		get
 		{
-			_header ??= new SheetRows();
+			_header ??= [];
 			return _header;
 		}
 		set
@@ -41,7 +41,7 @@ public partial class Sheet : UIElement
 	{
 		get
 		{
-			_footer ??= new SheetRows();
+			_footer ??= [];
 			return _footer;
 		}
 		set
@@ -54,7 +54,7 @@ public partial class Sheet : UIElement
 	{
 		get
 		{
-			_columns ??= new SheetColumnCollection();
+			_columns ??= [];
 			return _columns;
 		}
 		set

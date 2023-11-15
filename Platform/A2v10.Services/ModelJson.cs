@@ -342,11 +342,11 @@ public class ModelJsonReport : ModelJsonBase, IModelReport
 		);
 	}
 
-	readonly String[] ExcludeParams = new String[] { "Rep", "Base", "Format" };
+	readonly String[] ExcludeParams = ["Rep", "Base", "Format"];
 
 	public ExpandoObject CreateParameters(ExpandoObject? query, Action<ExpandoObject> setParams)
 	{
-		ExpandoObject prms = new();
+		ExpandoObject prms = [];
 		prms.Append(Parameters);
 		prms.Append(query, ExcludeParams);
 		setParams?.Invoke(prms);
@@ -355,7 +355,7 @@ public class ModelJsonReport : ModelJsonBase, IModelReport
 
 	public ExpandoObject CreateVariables(ExpandoObject? query, Action<ExpandoObject> setParams)
 	{
-		ExpandoObject vars = new();
+		ExpandoObject vars = [];
 		vars.Append(Variables);
 		vars.Append(Parameters);
 		vars.Append(query, ExcludeParams);

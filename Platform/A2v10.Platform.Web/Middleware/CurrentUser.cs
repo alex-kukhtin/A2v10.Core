@@ -47,7 +47,7 @@ public record UserState : IUserState
 	// TODO: isValud???
 	public Boolean Invalid { get; set; }
 	public String? Message { get; init; }
-	public List<Guid> Modules { get; init; } = new();
+	public List<Guid> Modules { get; init; } = [];
 	IEnumerable<Guid> IUserState.Modules => Modules;
 }
 
@@ -146,7 +146,7 @@ public class CurrentUser : ICurrentUser, IDbIdentity
 		var userLoc = ident.GetUserLocale();
 		if (context.Request.Query.ContainsKey("lang"))
 		{
-			var lang = context.Request.Query["lang"];
+			//var lang = context.Request.Query["lang"];
 			// TODO: check available locales
 		}
 		Locale = new UserLocale(userLoc);

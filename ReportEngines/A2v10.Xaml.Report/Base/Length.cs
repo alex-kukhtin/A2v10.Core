@@ -13,7 +13,7 @@ public record Length
 	public Single Value { get; init; } = 1;
 	public String Unit { get; init; } = "fr";
 
-	static readonly String[] ValidLength = { "mm", "cm", "pt", "in", "fr" };
+	static readonly String[] ValidLength = ["mm", "cm", "pt", "in", "fr"];
 
 	public Boolean IsEmpty()
 	{

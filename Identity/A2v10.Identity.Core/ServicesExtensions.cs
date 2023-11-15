@@ -49,13 +49,18 @@ public static class ServicesExtensions
 		//.AddRoles<AppRole<T>>() /*TODO*/
 		.AddDefaultTokenProviders(); // for change password, email & phone validation
 
-        services.AddScoped<AppUserStore<T>>()
+		services.AddScoped<AppUserStore<T>>()
 		.AddScoped<IUserStore<AppUser<T>>>(s => s.GetRequiredService<AppUserStore<T>>())
 		.AddScoped<IUserLoginStore<AppUser<T>>>(s => s.GetRequiredService<AppUserStore<T>>())
 		.AddScoped<IUserClaimStore<AppUser<T>>>(s => s.GetRequiredService<AppUserStore<T>>())
 		//.AddScoped<IUserRoleStore<AppUser<T>>>(s => s.GetRequiredService<AppUserStore<T>>())
-		.AddScoped<ISecurityStampValidator, SecurityStampValidator<AppUser<T>>>()
-		.AddScoped<ISystemClock, SystemClock>();
+		.AddScoped<ISecurityStampValidator, SecurityStampValidator<AppUser<T>>>();
+
+#if NET8_0_OR_GREATER
+		// do nothing
+#else
+		services.AddScoped<ISystemClock, SystemClock>();
+#endif
 
 		/* 
 		services.AddScoped<AppRoleStore<T>>()

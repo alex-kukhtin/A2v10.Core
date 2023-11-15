@@ -42,8 +42,8 @@ namespace A2v10.Xaml
 		}
 
 		HashSet<String>? _cssClasses = null;
-		IDictionary<String, String>? _attributes = null;
-		IDictionary<String, String>? _styles = null;
+		Dictionary<String, String>? _attributes = null;
+		Dictionary<String, String>? _styles = null;
 
 		public TagBuilder SetInnerText(String? text)
 		{
@@ -88,7 +88,7 @@ namespace A2v10.Xaml
 			if (String.IsNullOrEmpty(value))
 				return this;
 			CheckRendered();
-			_cssClasses ??= new HashSet<String>();
+			_cssClasses ??= [];
 			_cssClasses.UnionWith(value.Split(' '));
 			return this;
 		}
@@ -121,7 +121,7 @@ namespace A2v10.Xaml
 			CheckRendered();
 			if (value == null)
 				return this;
-			_styles ??= new Dictionary<String, String>();
+			_styles ??= [];
 			if (!_styles.ContainsKey(key))
 				_styles.Add(key, value);
 			else
@@ -148,11 +148,8 @@ namespace A2v10.Xaml
 		}
 		public TagBuilder RemoveAttribute(String key)
 		{
-			if (_attributes == null)
-				return this;
-			if (_attributes.ContainsKey(key))
-				_attributes.Remove(key);
-			return this;
+            _attributes?.Remove(key);
+            return this;
 		}
 
 		public TagBuilder MergeAttribute(String key, Int32? value, Boolean replaceExisting = false)
@@ -167,7 +164,7 @@ namespace A2v10.Xaml
 			CheckRendered();
 			if (value == null)
 				return this;
-			_attributes ??= new Dictionary<String, String>();
+			_attributes ??= [];
 			if (!_attributes.ContainsKey(key))
 			{
 				_attributes.Add(key, value);
@@ -189,7 +186,7 @@ namespace A2v10.Xaml
 		String GetCssClasses()
 		{
 			if (_cssClasses != null)
-				return " class=\"" + String.Join(" ", _cssClasses.ToArray()) + "\"";
+				return " class=\"" + String.Join(" ", [.. _cssClasses]) + "\"";
 			return String.Empty;
 		}
 

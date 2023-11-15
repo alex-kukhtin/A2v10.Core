@@ -19,7 +19,7 @@ public class TableRowCollection : List<TableRow>
 [ContentProperty("Cells")]
 public class TableRow : UIElement
 {
-	public TableCellCollection Cells { get; set; } = new TableCellCollection();
+	public TableCellCollection Cells { get; set; } = [];
 
 	public Object? Mark { get; set; }
 	public VerticalAlign VAlign { get; set; }

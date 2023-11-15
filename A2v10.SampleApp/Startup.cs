@@ -9,16 +9,11 @@ using A2v10.ReportEngine.Pdf;
 
 namespace A2v10.SampleApp;
 
-public class Startup
+public class Startup(IConfiguration configuration)
 {
-	public Startup(IConfiguration configuration)
-	{
-		Configuration = configuration;
-	}
+    public IConfiguration Configuration { get; } = configuration;
 
-	public IConfiguration Configuration { get; }
-
-	public void ConfigureServices(IServiceCollection services)
+    public void ConfigureServices(IServiceCollection services)
 	{
 		services.UsePlatform(Configuration);
 

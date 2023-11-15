@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Xaml;
 public enum RunMode
@@ -17,7 +17,7 @@ public class CollectionView : UIElementBase
 
 	public RunMode RunAt { get; set; }
 
-	public UIElementCollection Children { get; set; } = new UIElementCollection();
+	public UIElementCollection Children { get; set; } = [];
 
 	public SortDescription? Sort { get; set; }
 

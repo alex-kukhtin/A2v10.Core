@@ -4,7 +4,7 @@ namespace A2v10.Xaml.Drawing;
 
 public class Path : DrawingElement, IHasMarkers
 {
-	public PointCollection Points { get; set; } = new PointCollection();
+	public PointCollection Points { get; set; } = [];
 
 	public LineMarkerStyle MarkerStart { get; set; }
 	public LineMarkerStyle MarkerEnd { get; set; }

@@ -15,18 +15,12 @@ using A2v10.Infrastructure;
 
 namespace A2v10.Platform.Web.Controllers;
 
-public class PageActionResult : IActionResult
+public class PageActionResult(IRenderResult render, String? script) : IActionResult
 {
-	private readonly IRenderResult _render;
-	private readonly String? _script;
+	private readonly IRenderResult _render = render;
+	private readonly String? _script = script;
 
-	public PageActionResult(IRenderResult render, String? script)
-	{
-		_render = render;
-		_script = script;
-	}
-
-	public async Task ExecuteResultAsync(ActionContext context)
+    public async Task ExecuteResultAsync(ActionContext context)
 	{
 		var resp = context.HttpContext.Response;
 		resp.ContentType = _render.ContentType;
@@ -42,7 +36,7 @@ public class PageActionResult : IActionResult
 public class PageController : BaseController
 {
 	private readonly IDataService _dataService;
-	private readonly IDataScripter _scripter;
+	private readonly VueDataScripter _scripter;
 	private readonly IAppCodeProvider _codeProvider;
 	private readonly IViewEngineProvider _viewEngineProvider;
 	private readonly IAppDataProvider _appDataProvider;
@@ -81,7 +75,7 @@ public class PageController : BaseController
 		{
 			FileNameStar = Localize(res.FileName)
         };
-        Response.Headers.Add("Content-Disposition", cdh.ToString());
+        Response.Headers.Append("Content-Disposition", cdh.ToString());
         return result;
     }
 
@@ -171,7 +165,7 @@ public class PageController : BaseController
 		String exceptionInfo = $"Invald application url: '{pathInfo}'";
 		if (pathInfo == null)
 			throw new InvalidReqestExecption(exceptionInfo);
-		var info = pathInfo.Split(new Char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
+		var info = pathInfo.Split([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar]);
 		if (info.Length < 2)
 			throw new InvalidReqestExecption(exceptionInfo);
 		var kind = info[1].ToLowerInvariant();

@@ -7,11 +7,11 @@ namespace A2v10.Xaml.Report;
 
 public class BindImpl
 {
-	IDictionary<String, Bind>? _bindings;
+	Dictionary<String, Bind>? _bindings;
 
 	public Bind SetBinding(String name, Bind bind)
 	{
-		_bindings ??= new Dictionary<String, Bind>();
+		_bindings ??= [];
 		if (_bindings.ContainsKey(name))
 			_bindings[name] = bind;
 		else

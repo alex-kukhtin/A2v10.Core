@@ -1,4 +1,6 @@
-﻿namespace A2v10.Xaml;
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+
+namespace A2v10.Xaml;
 
 [ContentProperty("Card")]
 public class KanbanBoard : UIElement
@@ -8,9 +10,9 @@ public class KanbanBoard : UIElement
     public String? StateProperty { get; set; }
     public String? DropDelegate { get; set; }
 
-    public UIElementCollection Header { get; set; } = new UIElementCollection();
-    public UIElementCollection Footer { get; set; } = new UIElementCollection();
-    public UIElementCollection Card { get; set; } = new UIElementCollection();
+    public UIElementCollection Header { get; set; } = [];
+    public UIElementCollection Footer { get; set; } = [];
+    public UIElementCollection Card { get; set; } = [];
 
     public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
     {

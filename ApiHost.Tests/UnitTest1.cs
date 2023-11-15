@@ -11,17 +11,11 @@ using System.Net.Http.Headers;
 
 namespace ApiHost.Tests;
 
-public class UnitTest1 : IClassFixture<ApiTestAppFactory>
+public class UnitTest1(ApiTestAppFactory factory) : IClassFixture<ApiTestAppFactory>
 {
-	private readonly ApiTestAppFactory _factory;
+	private readonly ApiTestAppFactory _factory = factory;
 
-	public UnitTest1(ApiTestAppFactory factory)
-	{
-		_factory = factory;
-		// var dbContext = _factory.Services.GetService<IDbContext>();
-	}
-
-	[Fact]
+    [Fact]
 	[Trait("Api", "Simple")]
 	public async Task Test1()
 	{

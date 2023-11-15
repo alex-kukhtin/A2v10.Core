@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
 
@@ -28,7 +28,7 @@ public class Table : Control, ITableControl
 {
 	public GridLinesVisibility GridLines { get; set; }
 
-	public TableRowCollection Rows { get; set; } = new TableRowCollection();
+	public TableRowCollection Rows { get; set; } = [];
 
 	public Boolean Border { get; set; }
 	public Boolean Compact { get; set; }
@@ -45,7 +45,7 @@ public class Table : Control, ITableControl
 	{
 		get
 		{
-			_header ??= new TableRowCollection();
+			_header ??= [];
 			return _header;
 		}
 		set
@@ -58,7 +58,7 @@ public class Table : Control, ITableControl
 	{
 		get
 		{
-			_footer ??= new TableRowCollection();
+			_footer ??= [];
 			return _footer;
 		}
 		set { _footer = value; }
@@ -68,7 +68,7 @@ public class Table : Control, ITableControl
 	{
 		get
 		{
-			_columns ??= new TableColumnCollection();
+			_columns ??= [];
 			return _columns;
 		}
 		set

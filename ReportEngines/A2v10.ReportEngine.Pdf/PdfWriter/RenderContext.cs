@@ -27,7 +27,7 @@ internal class RenderContext
 		if (clone is CultureInfo cloneCI && cloneCI != null)
 			_formatProvider = cloneCI;
 		else
-			throw new ArgumentNullException(nameof(_localizer), "Invalid Current culture");
+			throw new InvalidOperationException("Invalid Current culture");
 		_formatProvider.NumberFormat.CurrencyGroupSeparator = "\u00A0";
 		_formatProvider.NumberFormat.NumberGroupSeparator = "\u00A0";
 

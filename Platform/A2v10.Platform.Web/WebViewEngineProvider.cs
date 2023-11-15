@@ -1,4 +1,4 @@
-﻿// Copyright © 2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 
@@ -13,7 +13,7 @@ public record ViewEngineDescriptor(String Extension, Type EngineType);
 
 public class ViewEngineFactory
 {
-	private readonly IList<ViewEngineDescriptor> _list = new List<ViewEngineDescriptor>();
+	private readonly List<ViewEngineDescriptor> _list = [];
 
 	public IList<ViewEngineDescriptor> Engines => _list;
 

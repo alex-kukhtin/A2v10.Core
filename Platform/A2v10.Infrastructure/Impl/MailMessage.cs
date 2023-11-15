@@ -27,9 +27,9 @@ public record MessageAddress : IMailMessageAddress
 
 public record MailMessage : IMailMessage
 {
-	private readonly List<MessageAddress> _to = new();
-	private readonly List<MessageAddress> _cc = new();
-	private readonly List<MessageAddress> _bcc = new();
+	private readonly List<MessageAddress> _to = [];
+	private readonly List<MessageAddress> _cc = [];
+	private readonly List<MessageAddress> _bcc = [];
 	private readonly MessageAddress? _from;
 	public MailMessage(String? from, String subject, String body)
 	{

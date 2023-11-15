@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
 
@@ -18,7 +18,7 @@ public enum ListStyle
 public class List : Control, ITableControl
 {
 	public Object? ItemsSource { get; set; }
-	public UIElementCollection Content { get; set; } = new UIElementCollection();
+	public UIElementCollection Content { get; set; } = [];
 	public AutoSelectMode AutoSelect { get; set; }
 	public Boolean Striped { get; set; }
 	public Boolean? Select { get; set; }

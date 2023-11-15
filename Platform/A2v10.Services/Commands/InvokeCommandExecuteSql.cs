@@ -9,16 +9,11 @@ using A2v10.Data.Interfaces;
 
 namespace A2v10.Services;
 
-public class InvokeCommandExecuteSql : IModelInvokeCommand
+public class InvokeCommandExecuteSql(IDbContext dbContext) : IModelInvokeCommand
 {
-	private readonly IDbContext _dbContext;
+	private readonly IDbContext _dbContext = dbContext;
 
-	public InvokeCommandExecuteSql(IDbContext dbContext)
-	{
-		_dbContext = dbContext;
-	}
-
-	public async Task<IInvokeResult> ExecuteAsync(IModelCommand command, ExpandoObject parameters)
+    public async Task<IInvokeResult> ExecuteAsync(IModelCommand command, ExpandoObject parameters)
 	{
 		var model = await _dbContext.LoadModelAsync(command.DataSource, command.LoadProcedure(), parameters);
 
@@ -35,7 +30,7 @@ public class InvokeCommandExecuteSql : IModelInvokeCommand
 			JsonConvert.SerializeObject(model.Root, JsonHelpers.DataSerializerSettings) : "{}";
 
 		var result = new InvokeResult(
-			body: strResult != null ? Encoding.UTF8.GetBytes(strResult) : Array.Empty<Byte>(),
+			body: strResult != null ? Encoding.UTF8.GetBytes(strResult) : [],
 			contentType: MimeTypes.Application.Json
 		);
 		return result;

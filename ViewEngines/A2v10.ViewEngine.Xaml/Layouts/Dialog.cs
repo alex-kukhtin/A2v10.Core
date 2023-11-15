@@ -42,7 +42,7 @@ public class Dialog : RootContainer, ISupportTwoPhaseRendering
 	public Boolean ButtonOnTop { get; set; }
 	public Boolean Overflow { get; set; }
 	public DialogPlacement Placement { get; set; }
-	public UIElementCollection Buttons { get; set; } = new UIElementCollection();
+	public UIElementCollection Buttons { get; set; } = [];
 	public CollectionView? CollectionView { get; set; }
 	public DropDownMenu? HeaderMenu { get; set; }	
 

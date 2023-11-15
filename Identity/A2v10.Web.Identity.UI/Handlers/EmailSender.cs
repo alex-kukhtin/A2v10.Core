@@ -13,22 +13,14 @@ using A2v10.Web.Identity;
 
 namespace A2v10.Identity.UI;
 
-internal class EmailSender
+internal class EmailSender(IServiceProvider serviceProvider)
 {
-	private readonly UserManager<AppUser<Int64>> _userManager;
-	private readonly IMailService _mailService;
-	private readonly ILocalizer _localizer;
-	private readonly IHttpContextAccessor _httpContextAccessor;
+	private readonly UserManager<AppUser<Int64>> _userManager = serviceProvider.GetRequiredService<UserManager<AppUser<Int64>>>();
+	private readonly IMailService _mailService = serviceProvider.GetRequiredService<IMailService>();
+	private readonly ILocalizer _localizer = serviceProvider.GetRequiredService<ILocalizer>();
+	private readonly IHttpContextAccessor _httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
 
-	public EmailSender(IServiceProvider serviceProvider)
-	{
-		_userManager = serviceProvider.GetRequiredService<UserManager<AppUser<Int64>>>();
-		_mailService = serviceProvider.GetRequiredService<IMailService>();
-		_httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
-		_localizer = serviceProvider.GetRequiredService<ILocalizer>();
-	}
-
-	public async Task SendInviteEMail(AppUser<Int64> user)
+    public async Task SendInviteEMail(AppUser<Int64> user)
 	{
 		var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 

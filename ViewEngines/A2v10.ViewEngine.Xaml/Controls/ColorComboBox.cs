@@ -33,7 +33,7 @@ public class ColorComboBox : ValuedControl, ITableControl
 	{
 		get
 		{
-			_children ??= new ColorComboBoxItems();
+			_children ??= [];
 			return _children;
 		}
 		set

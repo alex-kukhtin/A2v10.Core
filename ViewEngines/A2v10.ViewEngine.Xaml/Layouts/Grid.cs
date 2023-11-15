@@ -22,19 +22,14 @@ public enum AutoFlowMode
 }
 
 [AttachedProperties("Col,Row,ColSpan,RowSpan,VAlign")]
-public class Grid : Container
+public class Grid(IServiceProvider serviceProvider) : Container
 {
 
-	private readonly IAttachedPropertyManager _attachedPropertyManager;
+	private readonly IAttachedPropertyManager _attachedPropertyManager = serviceProvider.GetRequiredService<IAttachedPropertyManager>();
 
-	public Grid(IServiceProvider serviceProvider)
-	{
-		_attachedPropertyManager = serviceProvider.GetRequiredService<IAttachedPropertyManager>();
-	}
+    #region Attached Properties
 
-	#region Attached Properties
-
-	public Int32? GetCol(Object obj)
+    public Int32? GetCol(Object obj)
 	{
 		return _attachedPropertyManager.GetProperty<Int32?>("Grid.Col", obj);
 	}
@@ -77,7 +72,7 @@ public class Grid : Container
 	{
 		get
 		{
-			_rows ??= new RowDefinitions();
+			_rows ??= [];
 			return _rows;
 		}
 		set
@@ -90,7 +85,7 @@ public class Grid : Container
 	{
 		get
 		{
-			_columns ??= new ColumnDefinitions();
+			_columns ??= [];
 			return _columns;
 		}
 		set

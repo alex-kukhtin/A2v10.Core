@@ -11,23 +11,15 @@ using A2v10.Infrastructure;
 
 namespace A2v10.Platform.Web;
 
-public class WebAppDataProvider : IAppDataProvider
+public class WebAppDataProvider(IAppCodeProvider codeProvider, ILocalizer localizer, IAppVersion appVersion,
+        ICurrentUser currentUser) : IAppDataProvider
 {
-	private readonly IAppCodeProvider _codeProvider;
-	private readonly ILocalizer _localizer;
-	private readonly IAppVersion _appVersion;
-    private readonly ICurrentUser _currentUser;
+	private readonly IAppCodeProvider _codeProvider = codeProvider;
+	private readonly ILocalizer _localizer = localizer;
+	private readonly IAppVersion _appVersion = appVersion;
+    private readonly ICurrentUser _currentUser = currentUser;
 
-    public WebAppDataProvider(IAppCodeProvider codeProvider, ILocalizer localizer, IAppVersion appVersion,
-		ICurrentUser currentUser)
-	{
-		_codeProvider = codeProvider;
-		_localizer = localizer;
-		_appVersion = appVersion;
-		_currentUser = currentUser;
-	}
-
-	public String AppVersion => _appVersion.AppVersion;
+    public String AppVersion => _appVersion.AppVersion;
 
 	public async Task<ExpandoObject> GetAppDataAsync()
 	{
@@ -39,7 +31,7 @@ public class WebAppDataProvider : IAppDataProvider
 		{
 			using var sr = new StreamReader(stream);
 			var appJson = await sr.ReadToEndAsync();
-			var result = JsonConvert.DeserializeObject<ExpandoObject>(appJson) ?? new ExpandoObject();
+			var result = JsonConvert.DeserializeObject<ExpandoObject>(appJson) ?? [];
 			result.Add("appId", _codeProvider.AppId);
 			if (userId != 0)
 				result.Add("userId", userId);

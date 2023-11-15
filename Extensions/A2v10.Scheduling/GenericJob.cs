@@ -12,15 +12,11 @@ using A2v10.Scheduling.Infrastructure;
 
 namespace A2v10.Scheduling;
 
-internal class GenericJob : IJob
+internal class GenericJob(ILogger<GenericJob> logger, IServiceProvider serviceProvider) : IJob
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger _logger;
-    public GenericJob(ILogger<GenericJob> logger, IServiceProvider serviceProvider)
-    {
-        _serviceProvider = serviceProvider;
-        _logger = logger;
-    }
+    private readonly IServiceProvider _serviceProvider = serviceProvider;
+    private readonly ILogger _logger = logger;
+
     public async Task Execute(IJobExecutionContext context)
     {
         var handler = context.MergedJobDataMap.Get("HandlerType") as Type;

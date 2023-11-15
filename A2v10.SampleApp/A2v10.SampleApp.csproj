@@ -1,14 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework>net8.0</TargetFramework>
 		<UserSecretsId>026c35e2-9db2-463c-8431-b202b1a68b5e</UserSecretsId>
 		<AddRazorSupportForMvc>false</AddRazorSupportForMvc>
 	</PropertyGroup>
 
 	<ItemGroup>
 	  <PackageReference Include="A2v10.Platform" Version="10.1.8172" />
-	  <PackageReference Include="A2v10.ReportEngine.Pdf" Version="10.1.8172" />
+	  <PackageReference Include="A2v10.ReportEngine.Pdf" Version="10.1.8173" />
 	  <PackageReference Include="A2v10.Web.Assets" Version="10.1.8171" />
 	</ItemGroup>
 

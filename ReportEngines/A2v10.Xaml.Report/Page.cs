@@ -11,7 +11,7 @@ public class Page : XamlElement
 {
 	public String? Title { get; init; }
 	public String? Code { get; init; }
-	public ColumnCollection Columns { get; set; } = new ColumnCollection();
+	public ColumnCollection Columns { get; set; } = [];
 	public Column? Header { get; init; }
 	public Column? Footer { get; init; }
 	public String? FontFamily { get; init; }

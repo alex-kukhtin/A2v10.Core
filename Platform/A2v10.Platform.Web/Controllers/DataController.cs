@@ -16,21 +16,14 @@ namespace A2v10.Platform.Web.Controllers;
 [ExecutingFilter]
 [Authorize]
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-public class DataController : BaseController
+public class DataController(IApplicationHost host,
+    ILocalizer localizer, ICurrentUser currentUser, IProfiler profiler, IDataService dataService,
+    IHubContext<DefaultHub> hubContext) : BaseController(host, localizer, currentUser, profiler)
 {
-	private readonly IDataService _dataService;
-	private readonly IHubContext<DefaultHub> _hubContext;
+	private readonly IDataService _dataService = dataService;
+	private readonly IHubContext<DefaultHub> _hubContext = hubContext;
 
-	public DataController(IApplicationHost host,
-		ILocalizer localizer, ICurrentUser currentUser, IProfiler profiler, IDataService dataService, 
-		IHubContext<DefaultHub> hubContext)
-		: base(host, localizer, currentUser, profiler)
-	{
-		_dataService = dataService;
-		_hubContext = hubContext;
-	}
-
-	[HttpPost]
+    [HttpPost]
 	public async Task<IActionResult> Reload()
 	{
 		return await TryCatch(async () =>

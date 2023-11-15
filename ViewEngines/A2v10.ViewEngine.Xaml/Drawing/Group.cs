@@ -5,7 +5,7 @@ namespace A2v10.Xaml.Drawing;
 [ContentProperty("Content")]
 public class Group : DrawingElement
 {
-	public DrawingElementCollection Content { get; set; } = new DrawingElementCollection();
+	public DrawingElementCollection Content { get; set; } = [];
 
 	public Boolean DropShadow { get; set; }
 

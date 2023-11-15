@@ -14,7 +14,7 @@ public record InvokeEngineDescriptor(String Name, Type EngineType, InvokeScope S
 
 public class InvokeEngineFactory
 {
-	private readonly IList<InvokeEngineDescriptor> _list = new List<InvokeEngineDescriptor>();
+	private readonly List<InvokeEngineDescriptor> _list = [];
 
 	public IList<InvokeEngineDescriptor> Engines => _list;
 
@@ -24,18 +24,12 @@ public class InvokeEngineFactory
 	}
 }
 
-public class WebInvokeEngineProvider : IInvokeEngineProvider
+public class WebInvokeEngineProvider(IServiceProvider serviceProvider, IList<InvokeEngineDescriptor> engines) : IInvokeEngineProvider
 {
-	private readonly IServiceProvider _serviceProvider;
-	private readonly IList<InvokeEngineDescriptor> _engines;
+	private readonly IServiceProvider _serviceProvider = serviceProvider;
+	private readonly IList<InvokeEngineDescriptor> _engines = engines;
 
-	public WebInvokeEngineProvider(IServiceProvider serviceProvider, IList<InvokeEngineDescriptor> engines)
-	{
-		_serviceProvider = serviceProvider;
-		_engines = engines;
-	}
-
-	public IList<InvokeEngineDescriptor> Engines => _engines;
+    public IList<InvokeEngineDescriptor> Engines => _engines;
 
 	#region IInvokeEngineProvider
 	public IRuntimeInvokeTarget FindEngine(String name)

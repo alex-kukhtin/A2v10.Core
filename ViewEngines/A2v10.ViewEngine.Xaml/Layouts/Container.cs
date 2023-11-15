@@ -5,7 +5,7 @@ namespace A2v10.Xaml;
 [ContentProperty("Children")]
 public abstract class Container : UIElement
 {
-	public UIElementCollection Children { get; set; } = new();
+	public UIElementCollection Children { get; set; } = [];
 
 	public Object? ItemsSource { get; set; }
 

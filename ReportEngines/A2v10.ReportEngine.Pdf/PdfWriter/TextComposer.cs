@@ -9,18 +9,12 @@ using A2v10.Xaml.Report;
 
 namespace A2v10.ReportEngine.Pdf;
 
-internal class TextComposer : FlowElementComposer
+internal class TextComposer(Text text, RenderContext context) : FlowElementComposer
 {
-	private readonly Text _text;
-	private readonly RenderContext _context;
+	private readonly Text _text = text;
+	private readonly RenderContext _context = context;
 
-	public TextComposer(Text text, RenderContext context)
-	{
-		_text = text;
-		_context = context;
-	}
-
-	void ApplyRuntimeStyle(TextDescriptor descr)
+    void ApplyRuntimeStyle(TextDescriptor descr)
 	{
 		var rs = _text.RuntimeStyle;
 		if (rs == null)

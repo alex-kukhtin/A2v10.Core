@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Threading.Tasks;
@@ -7,23 +7,18 @@ using System.Net.Http.Headers;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 
 using A2v10.Infrastructure;
 
 namespace A2v10.Platform.Web.Controllers;
 
 
-public class RenderReportResult
+public class RenderReportResult(IActionResult result, String contentType, String fileName)
 {
-	public IActionResult ActionResult { get; }
-	public String ContentType { get; }
-	public String FileName { get; }
-	public RenderReportResult(IActionResult result, String contentType, String fileName)
-	{
-		ActionResult = result;
-		ContentType = contentType;
-		FileName = fileName;
-	}
+    public IActionResult ActionResult { get; } = result;
+    public String ContentType { get; } = contentType;
+    public String FileName { get; } = fileName;
 }
 
 
@@ -31,19 +26,12 @@ public class RenderReportResult
 [ExecutingFilter]
 [Authorize]
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-public class ReportController : BaseController
+public class ReportController(IApplicationHost host,
+    ILocalizer localizer, ICurrentUser currentUser, IProfiler profiler, IReportService reportService) : BaseController(host, localizer, currentUser, profiler)
 {
-	private readonly IReportService _reportService;
+	private readonly IReportService _reportService = reportService;
 
-	public ReportController(IApplicationHost host,
-		ILocalizer localizer, ICurrentUser currentUser, IProfiler profiler, IReportService reportService)
-		: base(host, localizer, currentUser, profiler)
-	{
-		_reportService = reportService;
-	}
-
-
-	[HttpGet]
+    [HttpGet]
 	public Task<IActionResult> Show(String Id, String Base, String Rep, String format = "pdf")
 	{
 		return TryCatch(async () =>
@@ -68,7 +56,7 @@ public class ReportController : BaseController
 			{
 				FileNameStar = Localize(res.FileName)
 			};
-			Response.Headers.Add("Content-Disposition", cdh.ToString());
+			Response.Headers.Append("Content-Disposition", cdh.ToString());
 			return res.ActionResult;
 		});
 	}

@@ -13,7 +13,7 @@ internal class FlatTableHandler : ITableDescription
 
 	public FlatTableHandler()
 	{
-		_list = new List<Object>();
+		_list = [];
 	}
 
 	public ExpandoObject NewRow()

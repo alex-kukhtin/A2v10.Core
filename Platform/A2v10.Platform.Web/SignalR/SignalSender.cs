@@ -9,14 +9,10 @@ using A2v10.Infrastructure;
 
 namespace A2v10.Platform.Web;
 
-public class SignalSender : ISignalSender
+public class SignalSender(IHubContext<DefaultHub> hubContext) : ISignalSender
 {
-    private readonly IHubContext<DefaultHub> _hubContext;
+    private readonly IHubContext<DefaultHub> _hubContext = hubContext;
 
-    public SignalSender(IHubContext<DefaultHub> hubContext)
-    {
-        _hubContext = hubContext;
-    }
     public Task SendAsync(ISignalResult message)
     {
         return _hubContext.SignalAsync(message);

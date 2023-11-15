@@ -12,18 +12,12 @@ using A2v10.Xaml.Report;
 
 namespace A2v10.ReportEngine.Pdf;
 
-internal class CheckboxComposer : FlowElementComposer
+internal class CheckboxComposer(Checkbox checkbox, RenderContext context) : FlowElementComposer
 {
-	private readonly Checkbox _checkbox;
-	private readonly RenderContext _context;
+	private readonly Checkbox _checkbox = checkbox;
+	private readonly RenderContext _context = context;
 
-	public CheckboxComposer(Checkbox checkbox, RenderContext context)
-	{
-		_checkbox = checkbox;
-		_context = context;
-	}
-
-	internal override void Compose(IContainer container, Object? value = null)
+    internal override void Compose(IContainer container, Object? value = null)
 	{
 		if (!_context.IsVisible(_checkbox))
 			return;
@@ -55,12 +49,12 @@ internal class CheckboxComposer : FlowElementComposer
 						StrokeCap = SKStrokeCap.Round
 					};
 					rect.Inflate(-rect.Width / 4, -rect.Height / 4);
-					SKPoint[] markPoints = new SKPoint[]
-					{
-						new SKPoint(rect.Left, rect.Top + rect.Height / 2),
-						new SKPoint(rect.Left + rect.Width / 3, rect.Bottom),
-						new SKPoint(rect.Right, rect.Top)
-					};
+					SKPoint[] markPoints =
+                    [
+                        new(rect.Left, rect.Top + rect.Height / 2),
+						new(rect.Left + rect.Width / 3, rect.Bottom),
+						new(rect.Right, rect.Top)
+					];
 
 					canvas.DrawPoints(SKPointMode.Polygon, markPoints, markPaint);
 				}

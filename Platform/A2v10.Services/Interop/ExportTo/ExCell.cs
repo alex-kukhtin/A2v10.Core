@@ -34,7 +34,7 @@ public class ExCell
 			return String.Empty;
 		if (Decimal.TryParse(number, NumberStyles.Number, format, out Decimal result))
 			return result.ToString(CultureInfo.InvariantCulture);
-		if (number.IndexOf(".") != -1)
+		if (number.Contains('.'))
 			return Regex.Replace(number, @"[\s,]", String.Empty);
 		else
 			return Regex.Replace(number, @"[\s]", String.Empty).Replace(",", ".");
@@ -127,12 +127,12 @@ public class ExCell
 		}
 	}
 
-	public String Reference(Int32 row, Int32 col)
+	public static String Reference(Int32 row, Int32 col)
 	{
 		return $"{Index2Col(col)}{row + 1}";
 	}
 
-	String Index2Col(Int32 index)
+	static String Index2Col(Int32 index)
 	{
 		Int32 q = index / 26;
 

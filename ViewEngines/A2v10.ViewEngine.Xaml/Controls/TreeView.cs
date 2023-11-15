@@ -97,7 +97,7 @@ public class TreeView : Control
 	public Boolean? Indent { get; set; }
 	public Command? DoubleClick { get; set; }
 
-	public TreeViewItemCollection Children { get; set; } = new TreeViewItemCollection();
+	public TreeViewItemCollection Children { get; set; } = [];
 
 	public DropDownMenu? ContextMenu { get; set; }
 

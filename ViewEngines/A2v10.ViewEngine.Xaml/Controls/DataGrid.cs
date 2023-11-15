@@ -40,7 +40,7 @@ public class DataGrid : Control
 
 	public Object? ItemsSource { get; set; }
 
-	public DataGridColumnCollection Columns { get; set; } = new DataGridColumnCollection();
+	public DataGridColumnCollection Columns { get; set; } = [];
 
 	public RowMarkerStyle MarkerStyle { get; set; }
 
@@ -63,7 +63,7 @@ public class DataGrid : Control
 	{
 		get
 		{
-			_groupBy ??= new GroupDescriptions();
+			_groupBy ??= [];
 			return _groupBy;
 		}
 		set { _groupBy = value; }

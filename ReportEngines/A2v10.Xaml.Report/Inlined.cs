@@ -8,7 +8,7 @@ namespace A2v10.Xaml.Report;
 [ContentProperty("Children")]
 public class Inlined : FlowElement
 {
-	public FlowElementCollection Children { get; set; } = new FlowElementCollection();
+	public FlowElementCollection Children { get; set; } = [];
 
 	public override void ApplyStyles(String selector, StyleBag styles)
 	{

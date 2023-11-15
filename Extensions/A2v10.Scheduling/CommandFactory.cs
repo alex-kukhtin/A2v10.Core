@@ -7,8 +7,8 @@ namespace A2v10.Scheduling;
 
 public class AddSchedulerHandlerFactory
 {
-    private readonly Dictionary<String, Type> _commands = new();
-    private readonly Dictionary<String, Type> _handlers = new();
+    private readonly Dictionary<String, Type> _commands = [];
+    private readonly Dictionary<String, Type> _handlers = [];
 
     public IDictionary<String, Type> Commands => _commands;
     public AddSchedulerHandlerFactory RegisterCommand<T>(String name)

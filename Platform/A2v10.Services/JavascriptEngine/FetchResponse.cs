@@ -32,9 +32,8 @@ namespace A2v10.Services.Javascript
 				if (body == null)
 					return new ExpandoObject();
 				if (IsBodyArray())
-                    return JsonConvert.DeserializeObject<List<ExpandoObject>>(body)
-						?? new List<ExpandoObject>();
-                return JsonConvert.DeserializeObject<ExpandoObject>(body) ?? new ExpandoObject();
+                    return JsonConvert.DeserializeObject<List<ExpandoObject>>(body) ?? [];
+                return JsonConvert.DeserializeObject<ExpandoObject>(body) ?? [];
 			}
 			throw new InvalidOperationException($"The answer is not in {MimeTypes.Application.Json} format");
 		}

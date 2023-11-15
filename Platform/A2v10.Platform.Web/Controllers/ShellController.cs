@@ -25,38 +25,24 @@ public record MultiTenantParamJson(String Companies, String Period);
 [Route("_shell/[action]")]
 [Authorize]
 [ExecutingFilter]
-public class ShellController : Controller
+public class ShellController(IDbContext dbContext, IApplicationHost host, ICurrentUser currentUser, IProfiler profiler,
+    ILocalizer localizer, IAppCodeProvider codeProvider, IAppDataProvider appDataProvider, IOptions<AppOptions> appOptions,
+    ILogger<ShellController> logger) : Controller
 {
-	private readonly IApplicationHost _host;
-	private readonly IDbContext _dbContext;
-	private readonly ICurrentUser _currentUser;
-	private readonly IProfiler _profiler;
-	private readonly IAppCodeProvider _codeProvider;
-	private readonly IAppDataProvider _appDataProvider;
-	private readonly AppOptions _appOptions;
-	private readonly ILocalizer _localizer;
-	private readonly ILogger<ShellController> _logger;
+	private readonly IApplicationHost _host = host;
+	private readonly IDbContext _dbContext = dbContext;
+	private readonly ICurrentUser _currentUser = currentUser;
+	private readonly IProfiler _profiler = profiler;
+	private readonly IAppCodeProvider _codeProvider = codeProvider;
+	private readonly IAppDataProvider _appDataProvider = appDataProvider;
+	private readonly AppOptions _appOptions = appOptions.Value;
+	private readonly ILocalizer _localizer = localizer;
+	private readonly ILogger<ShellController> _logger = logger;
 
 
     const String MENU_PROC = "a2ui.[Menu.User.Load]";
 
-	public ShellController(IDbContext dbContext, IApplicationHost host, ICurrentUser currentUser, IProfiler profiler,
-		ILocalizer localizer, IAppCodeProvider codeProvider, IAppDataProvider appDataProvider, IOptions<AppOptions> appOptions,
-		ILogger<ShellController> logger)
-	{
-		_host = host;
-		_dbContext = dbContext;
-		_profiler = profiler;
-		_codeProvider = codeProvider;
-		_localizer = localizer;
-		_currentUser = currentUser;
-		_appDataProvider = appDataProvider;
-		_appOptions = appOptions.Value;
-		_logger = logger;
-
-    }
-
-	Int64? UserId => User.Identity.GetUserId<Int64?>();
+    Int64? UserId => User.Identity.GetUserId<Int64?>();
 	Int32? TenantId => User.Identity.GetUserTenant<Int32>();
 
 	public Boolean IsDebugConfiguration => _appOptions.Environment.IsDebug;
@@ -146,10 +132,10 @@ public class ShellController : Controller
 	{
 		String shell = Resource.shellPlain;
 
-		ExpandoObject loadPrms = new();
+		ExpandoObject loadPrms = [];
 		SetSqlParams(loadPrms);
 
-		ExpandoObject macros = new();
+		ExpandoObject macros = [];
 
 		_ = macros.Append(new Dictionary<String, Object?>
 		{
@@ -178,10 +164,10 @@ public class ShellController : Controller
 	{
 		String shell = Resource.shell;
 
-		ExpandoObject loadPrms = new();
+		ExpandoObject loadPrms = [];
 		SetSqlParams(loadPrms);
 
-		ExpandoObject macros = new();
+		ExpandoObject macros = [];
 
 		_ = macros.Append(new Dictionary<String, Object?>
 		{

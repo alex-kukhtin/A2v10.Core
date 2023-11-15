@@ -10,18 +10,12 @@ namespace A2v10.ReportEngine.Pdf;
 
 using Image = A2v10.Xaml.Report.Image;
 
-internal class ImageComposer : FlowElementComposer
+internal class ImageComposer(Image image, RenderContext context) : FlowElementComposer
 {
-	private readonly Image _image;
-	private readonly RenderContext _context;
+	private readonly Image _image = image;
+	private readonly RenderContext _context = context;
 
-	public ImageComposer(Image image, RenderContext context)
-	{
-		_image = image;
-		_context = context;
-	}
-
-	internal override void Compose(IContainer container, Object? value = null)
+    internal override void Compose(IContainer container, Object? value = null)
 	{
 		if (!_context.IsVisible(_image))
 			return;

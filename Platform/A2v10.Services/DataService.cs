@@ -45,32 +45,22 @@ public class SaveResult : ISaveResult
 	public ISignalResult? SignalResult { get; init; }
 
 }
-public class DataService : IDataService
+public class DataService(IServiceProvider serviceProvider, IModelJsonReader modelReader, IDbContext dbContext, ICurrentUser currentUser,
+    ISqlQueryTextProvider sqlQueryTextProvider, IAppCodeProvider codeProvider) : IDataService
 {
-	private readonly IServiceProvider _serviceProvider;
-	private readonly IModelJsonReader _modelReader;
-	private readonly IDbContext _dbContext;
-	private readonly ICurrentUser _currentUser;
-	private readonly ISqlQueryTextProvider _sqlQueryTextProvider;
-	private readonly IAppCodeProvider _codeProvider;
+	private readonly IServiceProvider _serviceProvider = serviceProvider;
+	private readonly IModelJsonReader _modelReader = modelReader;
+	private readonly IDbContext _dbContext = dbContext;
+	private readonly ICurrentUser _currentUser = currentUser;
+	private readonly ISqlQueryTextProvider _sqlQueryTextProvider = sqlQueryTextProvider;
+	private readonly IAppCodeProvider _codeProvider = codeProvider;
 
-    public DataService(IServiceProvider serviceProvider, IModelJsonReader modelReader, IDbContext dbContext, ICurrentUser currentUser,
-        ISqlQueryTextProvider sqlQueryTextProvider, IAppCodeProvider codeProvider)
-	{
-		_serviceProvider = serviceProvider;
-		_modelReader = modelReader;
-		_dbContext = dbContext;
-		_currentUser = currentUser;
-		_sqlQueryTextProvider = sqlQueryTextProvider;
-		_codeProvider = codeProvider;
-    }
-
-	static IPlatformUrl CreatePlatformUrl(UrlKind kind, String baseUrl)
+    static PlatformUrl CreatePlatformUrl(UrlKind kind, String baseUrl)
 	{
 		return new PlatformUrl(kind, baseUrl, null);
 	}
 
-	static IPlatformUrl CreatePlatformUrl(String baseUrl, String? id = null)
+	static PlatformUrl CreatePlatformUrl(String baseUrl, String? id = null)
 	{
 		return new PlatformUrl(baseUrl, id);
 	}
@@ -447,7 +437,7 @@ public class DataService : IDataService
         var ass = Assembly.Load(assembly);
         var tp = ass.GetType(clrType)
             ?? throw new InvalidOperationException("Type not found");
-        var ctor = tp.GetConstructor(new Type[] { typeof(IServiceProvider) })
+        var ctor = tp.GetConstructor([typeof(IServiceProvider)])
             ?? throw new InvalidOperationException($"ctor(IServiceProvider) not found in {clrType}");
         var elem = ctor.Invoke(new Object[] { _serviceProvider })
             ?? throw new InvalidOperationException($"Unable to create element of {clrType}");

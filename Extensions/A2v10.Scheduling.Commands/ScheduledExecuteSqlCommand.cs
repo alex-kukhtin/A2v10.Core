@@ -13,15 +13,11 @@ using A2v10.Scheduling.Infrastructure;
 
 namespace A2v10.Scheduling.Commands;
 
-public class ScheduledExecuteSqlCommand : IScheduledCommand
+public class ScheduledExecuteSqlCommand(ILogger<ScheduledExecuteSqlCommand> logger, IDbContext dbContext) : IScheduledCommand
 {
-    private readonly ILogger<ScheduledExecuteSqlCommand> _logger;
-    private readonly IDbContext _dbContext;
-    public ScheduledExecuteSqlCommand(ILogger<ScheduledExecuteSqlCommand> logger, IDbContext dbContext)
-    {
-        _logger = logger;
-        _dbContext = dbContext;
-    }
+    private readonly ILogger<ScheduledExecuteSqlCommand> _logger = logger;
+    private readonly IDbContext _dbContext = dbContext;
+
     public async Task ExecuteAsync(String? Data)
     {
         _logger.LogInformation("ExecuteSqlCommand at {Time}, Data = {Data}", DateTime.Now, Data);
@@ -32,6 +28,6 @@ public class ScheduledExecuteSqlCommand : IScheduledCommand
         String proc = dat.Get<String>("Procedure") ??
                 throw new InvalidOperationException("ExecuteSqlCommand. Procedure is null");
         await _dbContext.ExecuteExpandoAsync(dat.Get<String>("DataSource"),
-            proc, dat.Get<ExpandoObject>("Parameters") ?? new ExpandoObject());
+            proc, dat.Get<ExpandoObject>("Parameters") ?? []);
     }
 }

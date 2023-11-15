@@ -8,7 +8,7 @@ namespace A2v10.Xaml;
 public class Block : UIElement, ITableControl
 {
 
-	public UIElementCollection Children { get; set; } = new UIElementCollection();
+	public UIElementCollection Children { get; set; } = [];
 
 	public Length? Height { get; set; }
 	public Length? Width { get; set; }

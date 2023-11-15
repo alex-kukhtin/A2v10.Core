@@ -21,19 +21,13 @@ internal record AccessFuncItem
 	internal String? BulletExpression;
 }
 
-internal class ListComposer : FlowElementComposer
+internal class ListComposer(List list, RenderContext context) : FlowElementComposer
 {
-	private readonly List _list;
-	private readonly RenderContext _context;
-	private readonly Dictionary<ListItem, AccessFuncItem> _accessFuncs = new();
+	private readonly List _list = list;
+	private readonly RenderContext _context = context;
+	private readonly Dictionary<ListItem, AccessFuncItem> _accessFuncs = [];
 
-	public ListComposer(List list, RenderContext context)
-	{
-		_list = list;
-		_context = context;
-	}
-
-	internal override void Compose(IContainer container, Object? value = null)
+    internal override void Compose(IContainer container, Object? value = null)
 	{
 		if (!_context.IsVisible(_list))
 			return;

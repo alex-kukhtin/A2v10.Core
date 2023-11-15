@@ -18,7 +18,7 @@ public enum TextStyle
 [ContentProperty("Inlines")]
 public class Text : FlowElement
 {
-	public InlineCollection Inlines { get; set; } = new InlineCollection();
+	public InlineCollection Inlines { get; set; } = [];
 
 	public TextStyle Style { get; init; }
 

@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -22,6 +23,16 @@ public class ApiKeyAuthenticationHandler<T> : AuthenticationHandler<ApiKeyAuthen
 {
 	private readonly IUserLoginStore<AppUser<T>> _userLoginStore;
 	private readonly IUserClaimStore<AppUser<T>> _userClaimStore;
+
+#if NET8_0_OR_GREATER
+    public ApiKeyAuthenticationHandler(IOptionsMonitor<ApiKeyAuthenticationOptions> options, ILoggerFactory logger, UrlEncoder encoder,
+            IUserLoginStore<AppUser<T>> userStore, IUserClaimStore<AppUser<T>> claimStore)
+        : base(options, logger, encoder)
+    {
+        _userLoginStore = userStore;
+        _userClaimStore = claimStore;
+    }
+#else
 	public ApiKeyAuthenticationHandler(IOptionsMonitor<ApiKeyAuthenticationOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock, 
 			IUserLoginStore<AppUser<T>> userStore, IUserClaimStore<AppUser<T>> claimStore)
 		: base(options, logger, encoder, clock)
@@ -29,8 +40,9 @@ public class ApiKeyAuthenticationHandler<T> : AuthenticationHandler<ApiKeyAuthen
 		_userLoginStore = userStore;
 		_userClaimStore = claimStore;
 	}
+#endif
 
-	protected async override Task<AuthenticateResult> HandleAuthenticateAsync()
+    protected async override Task<AuthenticateResult> HandleAuthenticateAsync()
 	{
 		if (!Request.Headers.TryGetValue(ApiKeyAuthenticationOptions.HeaderName, out var apiKeyHeaderValues))
 			return AuthenticateResult.NoResult();
@@ -49,7 +61,7 @@ public class ApiKeyAuthenticationHandler<T> : AuthenticationHandler<ApiKeyAuthen
 		var principal = new ClaimsPrincipal(identities);
 		var ticket = new AuthenticationTicket(principal, ApiKeyAuthenticationOptions.DefaultScheme);
 
-		Response.Headers.Add("WWW-Authenticate", apiKey);
+		Response.Headers.Append("WWW-Authenticate", apiKey);
 		return AuthenticateResult.Success(ticket);	
 	}
 

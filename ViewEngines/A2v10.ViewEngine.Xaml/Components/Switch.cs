@@ -10,7 +10,7 @@ namespace A2v10.Xaml;
 [ContentProperty("Children")]
 public class Case : XamlElement
 {
-	public UIElementCollection Children { get; set; } = new();
+	public UIElementCollection Children { get; set; } = [];
 	public String? Value { get; set; }
 
 	public void RenderElement(RenderContext context)
@@ -65,7 +65,7 @@ public class Switch : UIElementBase
 {
 	public Object? Expression { get; set; }
 
-	public CaseCollection Cases { get; set; } = new CaseCollection();
+	public CaseCollection Cases { get; set; } = [];
 
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{

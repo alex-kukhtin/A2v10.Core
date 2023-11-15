@@ -21,14 +21,14 @@ public class DynamicHelpers
                 } },
                 {
                 "Rows", new List<ExpandoObject>() {
-                    new ExpandoObject() {
+                    new() {
                         {"Item", new ExpandoObject()
                         {
                             { "Id", 99 },
                             { "Name", "Item 99"}
                         } }
                     },
-                    new ExpandoObject() {
+                    new() {
                         {"Item", new ExpandoObject()
                         {
                             { "Id", 23 },

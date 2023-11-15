@@ -8,18 +8,13 @@ using System.Threading;
 using A2v10.Data.Interfaces;
 
 namespace A2v10.Infrastructure;
-public abstract class BaseLocalizer : ILocalizer, IDataLocalizer
+public abstract class BaseLocalizer(ICurrentUser user) : ILocalizer, IDataLocalizer
 {
 	protected abstract IDictionary<String, String> GetLocalizerDictionary(String locale);
 
-	private readonly ICurrentUser _user;
+	private readonly ICurrentUser _user = user;
 
-	public BaseLocalizer(ICurrentUser user)
-	{
-		_user = user;
-	}
-
-	public IDictionary<String, String> Dictionary
+    public IDictionary<String, String> Dictionary
 	{ 
 		get {
 			String locale = _user.Locale.Locale;
@@ -62,7 +57,7 @@ public abstract class BaseLocalizer : ILocalizer, IDataLocalizer
 			Int32 start = s.IndexOf("@[", xpos);
 			if (start == -1)
 				break;
-			Int32 end = s.IndexOf("]", start + 2);
+			Int32 end = s.IndexOf(']', start + 2);
 			if (end == -1)
 				break;
 			else

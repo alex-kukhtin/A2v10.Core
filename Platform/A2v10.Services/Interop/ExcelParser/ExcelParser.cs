@@ -26,7 +26,7 @@ internal class ExcelParser : IDisposable
 {
 
 	public String? ErrorMessage { get; set; }
-	public List<ExcelFormatError> Errors { get; } = new();
+	public List<ExcelFormatError> Errors { get; } = [];
 
 	public void Dispose()
 	{
@@ -66,12 +66,11 @@ internal class ExcelParser : IDisposable
 
 	ExeclParseResult ParseFileImpl(Stream stream, ITableDescription table)
 	{
-		if (table == null)
-			throw new ArgumentNullException(nameof(table));
+        ArgumentNullException.ThrowIfNull(table, nameof(table));
 
 		var rv = new List<ExpandoObject>();
 
-		List<String> columns = new();
+		List<String> columns = [];
 
 		using (var doc = SpreadsheetDocument.Open(stream, isEditable: false))
 		{

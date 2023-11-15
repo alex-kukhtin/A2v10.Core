@@ -8,13 +8,10 @@ using A2v10.Data.Interfaces;
 
 namespace A2v10.Scheduling;
 
-public class ScheduledCommandHelper
+public class ScheduledCommandHelper(IDbContext dbContext)
 {
-    private readonly IDbContext _dbContext;
-    public ScheduledCommandHelper(IDbContext dbContext)
-    {
-        _dbContext = dbContext;
-    }
+    private readonly IDbContext _dbContext = dbContext;
+
     public Task QueueCommandAsync(String? dataSource, ScheduledCommand command)
     {
         return _dbContext.ExecuteAsync<ScheduledCommand>(dataSource, "a2sch.[Command.Queue]", command);

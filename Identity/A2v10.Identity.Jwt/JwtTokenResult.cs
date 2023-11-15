@@ -8,9 +8,7 @@ namespace A2v10.Identity.Jwt;
 public record JwtTokenResponse(String accessToken, String refreshToken, Int64 validTo, String user, Boolean success = true );
 public record JwtTokenError(String message)
 {
-#pragma warning disable CA1822 // Mark members as static
     public Boolean success => false;
-#pragma warning restore CA1822 // Mark members as static
 }
 #pragma warning restore IDE1006 // Naming Styles
 

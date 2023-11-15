@@ -24,7 +24,7 @@ class LocaleMapItem
 
 internal record LocalePath(String Path, Boolean IsHostFile);
 
-public class WebLocalizerDictiorany : ILocalizerDictiorany
+public class WebLocalizerDictiorany(IWebHostFilesProvider hostFilesProvider, IAppCodeProvider appCodeProvider, IOptions<AppOptions> appOptions) : ILocalizerDictiorany
 {
 	private readonly ConcurrentDictionary<String, LocaleMapItem> _maps = new();
 
@@ -33,18 +33,11 @@ public class WebLocalizerDictiorany : ILocalizerDictiorany
 
 
 
-	private readonly IAppCodeProvider _appCodeProvider;
-	private readonly IWebHostFilesProvider _hostFilesProvider;
-	private readonly Boolean _watch;
+	private readonly IAppCodeProvider _appCodeProvider = appCodeProvider;
+	private readonly IWebHostFilesProvider _hostFilesProvider = hostFilesProvider;
+	private readonly Boolean _watch = appOptions.Value.Environment.Watch;
 
-	public WebLocalizerDictiorany(IWebHostFilesProvider hostFilesProvider, IAppCodeProvider appCodeProvider, IOptions<AppOptions> appOptions)
-	{
-		_appCodeProvider = appCodeProvider;
-		_hostFilesProvider = hostFilesProvider;
-		_watch = appOptions.Value.Environment.Watch;
-	}
-
-	IEnumerable<String> ReadLines(String path)
+    IEnumerable<String> ReadLines(String path)
 	{
 		using var stream = _appCodeProvider.FileStreamRO(path);
 		if (stream == null)
@@ -67,7 +60,7 @@ public class WebLocalizerDictiorany : ILocalizerDictiorany
 				foreach (var line in
 					localePath.IsHostFile ? File.ReadLines(localePath.Path) : ReadLines(localePath.Path))
 				{
-					if (String.IsNullOrEmpty(line) || line.StartsWith(";"))
+					if (String.IsNullOrEmpty(line) || line.StartsWith(';'))
 						continue;
 					Int32 pos = line.IndexOf('=');
 					if (pos != -1)
@@ -158,7 +151,7 @@ public class WebLocalizerDictiorany : ILocalizerDictiorany
 			watcher.Created += Watcher_Changed;
 			watcher.Deleted += Watcher_Changed;
 			watcher.EnableRaisingEvents = true;
-			_watchers_app ??= new List<FileSystemWatcher>();
+			_watchers_app ??= [];
             _watchers_app.Add(watcher);
         }
 	}

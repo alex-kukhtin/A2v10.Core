@@ -1,4 +1,4 @@
-﻿// Copyright © 2022 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2022-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 
@@ -18,13 +18,13 @@ public class Table : FlowElement
 {
 	public Object? ItemsSource { get; init; }
 
-	public TableColumnCollection Columns { get; set; } = new TableColumnCollection();
+	public TableColumnCollection Columns { get; set; } = [];
 
-	public TableRowCollection Header { get; set; } = new TableRowCollection();
+	public TableRowCollection Header { get; set; } = [];
 
-	public TableRowCollection Footer { get; set; } = new TableRowCollection();
+	public TableRowCollection Footer { get; set; } = [];
 
-	public TableRowCollection Body { get; set; } = new TableRowCollection();
+	public TableRowCollection Body { get; set; } = [];
 
 	public TableStyle Style { get; init; }
 

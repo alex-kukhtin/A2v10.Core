@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
@@ -61,7 +62,7 @@ public class JwtBearerSettings
 			{
 				if (ctx.Exception is SecurityTokenExpiredException ex)
 				{
-					ctx.Response.Headers.Add("Token-Expired", "true");
+					ctx.Response.Headers.Append("Token-Expired", "true");
 				}
 				return Task.CompletedTask;
 			}

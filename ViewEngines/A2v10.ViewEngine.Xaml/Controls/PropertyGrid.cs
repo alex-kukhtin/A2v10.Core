@@ -25,7 +25,7 @@ public class PropertyGrid : UIElement, ITableControl
 
 	public Boolean NoWrapName { get; set; }
 
-	public PropertyGridItems Children { get; set; } = new PropertyGridItems();
+	public PropertyGridItems Children { get; set; } = [];
 	public GridLinesVisibility GridLines { get; set; }
 
 	public UInt32 NameMaxChars { get; set; }

@@ -21,7 +21,7 @@ public static class PathHelpers
     {
         if (String.IsNullOrEmpty(This))
             return This;
-        if (This.StartsWith("/"))
+        if (This.StartsWith('/'))
             return This[1..];
         return This;
     }

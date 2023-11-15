@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿// Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.
+
+using System.Collections.Generic;
 
 namespace A2v10.Xaml;
 
@@ -15,9 +17,9 @@ public class HtmlAttributeCollection : List<HtmlAttribute>
 [ContentProperty("Children")]
 public class HtmlElement : UIElementBase
 {
-	public HtmlAttributeCollection Attributes { get; set; } = new HtmlAttributeCollection();
+	public HtmlAttributeCollection Attributes { get; set; } = [];
 	public String? TagName { get; set; }
-	public UIElementCollection Children { get; set; } = new UIElementCollection();
+	public UIElementCollection Children { get; set; } = [];
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
 		var tag = new TagBuilder(TagName, null, IsInGrid);

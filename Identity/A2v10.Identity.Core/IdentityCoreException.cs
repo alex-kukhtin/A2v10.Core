@@ -1,10 +1,7 @@
-﻿// Copyright © 2021 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Web.Identity;
 
-public sealed class IdentityCoreException : Exception
+public sealed class IdentityCoreException(String message) : Exception(message)
 {
-    public IdentityCoreException(String message)
-        : base(message) { 
-    }
 }

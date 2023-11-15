@@ -13,23 +13,19 @@ using A2v10.Web.Identity;
 
 namespace A2v10.Identity.Jwt;
 
-public class JwtBearerService
+public class JwtBearerService(JwtBearerSettings settings)
 {
-	private readonly JwtBearerSettings _settings;
+	private readonly JwtBearerSettings _settings = settings;
 
-	public JwtBearerService(JwtBearerSettings settings)
-	{
-		_settings = settings;
-	}
-	public JwtTokenResult BuildToken<T>(AppUser<T> user) where T : struct
+    public JwtTokenResult BuildToken<T>(AppUser<T> user) where T : struct
 	{
 		if (String.IsNullOrEmpty(user.UserName))
 			throw new SecurityTokenException("UserName is null");
 
 		var claims = new List<Claim>() {
-			new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-			new Claim(WellKnownClaims.NameIdentifier, user.Id.ToString()!),
-			new Claim(WellKnownClaims.Name, user.UserName)
+			new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+			new(WellKnownClaims.NameIdentifier, user.Id.ToString()!),
+			new(WellKnownClaims.Name, user.UserName)
 		};
 
 		if (user.Tenant != null)

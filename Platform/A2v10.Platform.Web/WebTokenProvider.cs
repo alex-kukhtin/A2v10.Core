@@ -12,16 +12,11 @@ using A2v10.Web.Identity;
 
 namespace A2v10.Platform.Web
 {
-	public class WebTokenProvider : ITokenProvider
+	public class WebTokenProvider(IHttpContextAccessor httpContext) : ITokenProvider
 	{
-		private readonly IHttpContextAccessor _httpContext;
+		private readonly IHttpContextAccessor _httpContext = httpContext;
 
-		public WebTokenProvider(IHttpContextAccessor httpContext)
-		{
-			_httpContext = httpContext;
-		}
-
-		public String GenerateToken(Guid accessToken)
+        public String GenerateToken(Guid accessToken)
 		{
 			if (accessToken == Guid.Empty)
 				throw new InvalidProgramException("AccessToken for GenerateToken is empty");

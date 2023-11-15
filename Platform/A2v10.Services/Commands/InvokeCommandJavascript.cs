@@ -9,19 +9,13 @@ using A2v10.Services.Javascript;
 
 namespace A2v10.Services;
 
-public class InvokeCommandJavascript : IModelInvokeCommand
+public class InvokeCommandJavascript(IServiceProvider service) : IModelInvokeCommand
 {
-	private readonly IAppCodeProvider _appCodeProvider;
-	private readonly JavaScriptEngine _engine;
+	private readonly IAppCodeProvider _appCodeProvider = service.GetRequiredService<IAppCodeProvider>();
+	private readonly JavaScriptEngine _engine = new(service);
 
-	public InvokeCommandJavascript(IServiceProvider service)
-	{
-		_appCodeProvider = service.GetRequiredService<IAppCodeProvider>();
-		_engine = new JavaScriptEngine(service);
-	}
-
-	#region IModelInvokeCommand
-	public async Task<IInvokeResult> ExecuteAsync(IModelCommand command, ExpandoObject parameters)
+    #region IModelInvokeCommand
+    public async Task<IInvokeResult> ExecuteAsync(IModelCommand command, ExpandoObject parameters)
 	{
 		if (String.IsNullOrEmpty(command.File))
 			throw new DataServiceException("'file' must be specified for the javascript command");
@@ -34,7 +28,7 @@ public class InvokeCommandJavascript : IModelInvokeCommand
 		if (String.IsNullOrEmpty(text))
 			throw new DataServiceException($"Script is empty '{file}'");
 		_engine.SetPath(command.Path);
-		var result = _engine.Execute(text, parameters, command.Args ?? new ExpandoObject());
+		var result = _engine.Execute(text, parameters, command.Args ?? []);
 		return InvokeResult.JsonFromObject(result);
 	}
 	#endregion

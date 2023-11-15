@@ -12,7 +12,7 @@ public class InlineDialog : Container
 	public Boolean ShowWaitCursor { get; set; }
 	public Boolean Overflow { get; set; }
 
-	public UIElementCollection Buttons { get; set; } = new UIElementCollection();
+	public UIElementCollection Buttons { get; set; } = [];
 
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{

@@ -15,19 +15,12 @@ using A2v10.Data.Interfaces;
 
 namespace A2v10.Identity.UI;
 
-public class InviteUserHandler : IClrInvokeTarget
+public class InviteUserHandler(IServiceProvider serviceProvider) : IClrInvokeTarget
 {
-    private readonly UserManager<AppUser<Int64>> _userManager;
-    private readonly AppUserStoreOptions<Int64> _userStoreOptions;
-    private readonly IDbContext _dbContext;
-    private readonly EmailSender _emailSender;
-    public InviteUserHandler(IServiceProvider serviceProvider)
-    {
-        _userManager = serviceProvider.GetRequiredService<UserManager<AppUser<Int64>>>();
-        _userStoreOptions = serviceProvider.GetRequiredService<IOptions<AppUserStoreOptions<Int64>>>().Value;
-        _dbContext = serviceProvider.GetRequiredService<IDbContext>();
-        _emailSender = new EmailSender(serviceProvider);
-	}
+    private readonly UserManager<AppUser<Int64>> _userManager = serviceProvider.GetRequiredService<UserManager<AppUser<Int64>>>();
+    private readonly AppUserStoreOptions<Int64> _userStoreOptions = serviceProvider.GetRequiredService<IOptions<AppUserStoreOptions<Int64>>>().Value;
+    private readonly IDbContext _dbContext = serviceProvider.GetRequiredService<IDbContext>();
+    private readonly EmailSender _emailSender = new(serviceProvider);
 
     Boolean IsMultiTenant => _userStoreOptions.MultiTenant ?? false;
 

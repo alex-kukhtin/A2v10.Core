@@ -28,7 +28,7 @@ public class TreeGrid : Control, ITableControl
 	public Object? IsFolder { get; set; }
 	public RowMarkerStyle MarkerStyle { get; set; }
 	public MarkStyle Mark { get; set; }
-	public TreeGridColumnCollection Columns { get; set; } = new TreeGridColumnCollection();
+	public TreeGridColumnCollection Columns { get; set; } = [];
 	public Boolean Sort { get; set; }
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
