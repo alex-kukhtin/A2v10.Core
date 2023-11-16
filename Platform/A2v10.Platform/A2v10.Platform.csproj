@@ -35,8 +35,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Data.Core" Version="10.1.7340" />
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+		<PackageReference Include="A2v10.Data.Core" Version="10.1.7342" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
 	</ItemGroup>
 
 	<ItemGroup>

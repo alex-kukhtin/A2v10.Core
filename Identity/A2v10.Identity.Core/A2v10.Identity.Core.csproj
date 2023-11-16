@@ -22,7 +22,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Data.Interfaces" Version="10.1.7340" />
+		<PackageReference Include="A2v10.Data.Interfaces" Version="10.1.7342" />
 	</ItemGroup>
 
 	<PropertyGroup>
@@ -33,7 +33,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
 	</ItemGroup>
 
 	<ItemGroup>
