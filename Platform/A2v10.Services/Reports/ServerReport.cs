@@ -1,22 +1,16 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System.Threading.Tasks;
 
 using A2v10.Data.Interfaces;
 
 namespace A2v10.Services;
-public class ServerReport : IModelReportHandler
+public class ServerReport(IReportEngine engine, IDbContext dbContext) : IModelReportHandler
 {
-	private readonly IReportEngine _engine;
-	private readonly IDbContext _dbContext;
+	private readonly IReportEngine _engine = engine;
+	private readonly IDbContext _dbContext = dbContext;
 
-	public ServerReport(IReportEngine engine, IDbContext dbContext)
-	{
-		_engine = engine;
-		_dbContext = dbContext;
-	}
-
-	public async Task<IInvokeResult> ExportAsync(IModelReport report, ExportReportFormat format, ExpandoObject? query, Action<ExpandoObject> setParams)
+    public async Task<IInvokeResult> ExportAsync(IModelReport report, ExportReportFormat format, ExpandoObject? query, Action<ExpandoObject> setParams)
 	{
 		var info = await GetReportInfoAsync(report, query, setParams);
 		return await _engine.ExportAsync(info, format);

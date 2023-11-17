@@ -4,13 +4,9 @@ using A2v10.Data.Interfaces;
 
 namespace A2v10.Xaml;
 
-public class SheetGeneratorDataModel : ISheetGenerator
+public class SheetGeneratorDataModel(Sheet sheet) : ISheetGenerator
 {
-	protected readonly Sheet _sheet;
-    public SheetGeneratorDataModel(Sheet sheet)
-	{
-        _sheet = sheet;
-    }
+	protected readonly Sheet _sheet = sheet;
 
     public void ApplySheetPageProps(RenderContext context, SheetPage page, String propertyName)
     {
@@ -70,9 +66,9 @@ public class SheetGeneratorDataModel : ISheetGenerator
 			return;
 
 		var rootMd = dm.Metadata["TRoot"];
-		if (!rootMd.Fields.ContainsKey(propertyName))
+		if (!rootMd.Fields.TryGetValue(propertyName, out IDataFieldMetadata? fieldData))
 			throw new XamlException($"Property {propertyName} not found in the root of the data model");
-		var fieldData = rootMd.Fields[propertyName];
+
 		var fieldsMD = dm.Metadata[fieldData.RefObject];
 
 		var header = new SheetRow() { Style = RowStyle.Header };

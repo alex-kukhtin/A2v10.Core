@@ -13,19 +13,8 @@ using A2v10.Scheduling.Infrastructure;
 
 namespace A2v10.Scheduling;
 
-public class ProcessCommandsJobHandler : IScheduledJob
+public class ProcessCommandsJobHandler(ILogger<ProcessCommandsJobHandler> _logger, IServiceProvider _serviceProvider, ScheduledCommandProvider _commandProvider, IDbContext _dbContext) : IScheduledJob
 {
-    private readonly ILogger<ProcessCommandsJobHandler> _logger;
-    private readonly IDbContext _dbContext;
-    private readonly ScheduledCommandProvider _commandProvider;
-    private readonly IServiceProvider _serviceProvider;
-    public ProcessCommandsJobHandler(ILogger<ProcessCommandsJobHandler> logger, IServiceProvider serviceProvider, ScheduledCommandProvider commandProvider, IDbContext dbContext)
-    {
-        _logger = logger;
-        _dbContext = dbContext;
-        _commandProvider = commandProvider;
-        _serviceProvider = serviceProvider; 
-    }
     public async Task ExecuteAsync(ScheduledJobInfo jobInfo)
     {
         try

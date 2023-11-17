@@ -2,17 +2,10 @@
 
 namespace A2v10.Services.Javascript;
 
-public class ScriptUser
+public class ScriptUser(ICurrentUser currentUser)
 {
 #pragma warning disable IDE1006 // Naming Styles
-    public Int32 tenantId { get; }
-    public Int64 userId { get; }
-    public String segment { get; }
-#pragma warning restore IDE1006 // Naming Styles
-    public ScriptUser(ICurrentUser currentUser)
-    {
-        tenantId = currentUser.Identity.Tenant ?? 1;
-        userId = currentUser.Identity.Id ?? 0;
-        segment = currentUser.Identity.Segment ?? String.Empty;
-    }
+    public Int32 tenantId { get; } = currentUser.Identity.Tenant ?? 1;
+    public Int64 userId { get; } = currentUser.Identity.Id ?? 0;
+    public String segment { get; } = currentUser.Identity.Segment ?? String.Empty;
 }

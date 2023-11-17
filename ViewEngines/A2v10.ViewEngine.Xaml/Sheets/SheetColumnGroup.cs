@@ -1,4 +1,4 @@
-﻿// Copyright © 2018-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2018-2022 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Xaml;
 
@@ -6,7 +6,7 @@ namespace A2v10.Xaml;
 
 public class SheetColumnGroup : SheetColumn
 {
-	public SheetColumnCollection Columns { get; } = new SheetColumnCollection();
+	public SheetColumnCollection Columns { get; } = [];
 	public Object? ItemsSource { get; set; }
 
 	public override void Render(RenderContext context)

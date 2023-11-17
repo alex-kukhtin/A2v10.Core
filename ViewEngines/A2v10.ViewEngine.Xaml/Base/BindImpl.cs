@@ -10,10 +10,8 @@ public class BindImpl
 	public BindBase SetBinding(String name, BindBase bind)
 	{
 		_bindings ??= [];
-		if (_bindings.ContainsKey(name))
+		if (!_bindings.TryAdd(name, bind))
 			_bindings[name] = bind;
-		else
-			_bindings.Add(name, bind);
 		return bind;
 	}
 

@@ -25,7 +25,7 @@ namespace A2v10.Xaml
 	[ContentProperty("Cells")]
 	public class SheetRow : UIElement
 	{
-		public SheetCells Cells { get; } = new SheetCells();
+		public SheetCells Cells { get; } = [];
 
 		public RowStyle Style { get; set; }
 		public TextAlign? Align { get; set; }

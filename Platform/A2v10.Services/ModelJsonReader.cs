@@ -4,16 +4,9 @@ using System.Threading.Tasks;
 
 namespace A2v10.Services;
 
-public class ModelJsonReader : IModelJsonReader
+public class ModelJsonReader(IModelJsonPartProvider _partProvider) : IModelJsonReader
 {
-	private readonly IModelJsonPartProvider _partProvider;
-
-	public ModelJsonReader(IModelJsonPartProvider partProvider)
-	{
-		_partProvider = partProvider;
-	}
-
-	public async Task<IModelView?> TryGetViewAsync(IPlatformUrl url)
+    public async Task<IModelView?> TryGetViewAsync(IPlatformUrl url)
 	{
 		if (url.Kind != UrlKind.Page)
 			return null;

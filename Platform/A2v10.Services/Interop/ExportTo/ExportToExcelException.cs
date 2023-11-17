@@ -3,10 +3,6 @@
 
 namespace A2v10.Services.Interop;
 
-public sealed class ExportToExcelException : Exception
+public sealed class ExportToExcelException(String message) : Exception(message)
 {
-	public ExportToExcelException(String message)
-		: base(message)
-	{
-	}
 }

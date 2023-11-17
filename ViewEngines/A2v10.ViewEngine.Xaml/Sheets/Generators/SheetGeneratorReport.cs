@@ -58,14 +58,9 @@ record FieldInfo(String Name, String? DataType, String Title, String? Func, Bool
 	public String CrossFieldName => IsCross ? Name.Split('#')[1] : throw new InvalidOperationException("Invalid cross field");
 }
 
-public class SheetGeneratorReportInfo : ISheetGenerator
+public class SheetGeneratorReportInfo(Sheet _sheet) : ISheetGenerator
 {
-	private readonly Sheet _sheet;
-	public SheetGeneratorReportInfo(Sheet sheet)
-	{
-		_sheet = sheet;
-	}
-	public void Generate(RenderContext context, String propertyName)
+    public void Generate(RenderContext context, String propertyName)
 	{
 		var dm = context.DataModel;
 		if (dm == null)

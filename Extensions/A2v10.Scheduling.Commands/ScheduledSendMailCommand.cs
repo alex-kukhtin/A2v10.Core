@@ -13,15 +13,8 @@ using A2v10.Scheduling.Infrastructure;
 
 namespace A2v10.Scheduling.Commands;
 
-public class ScheduledSendMailCommand : IScheduledCommand
+public class ScheduledSendMailCommand(ILogger<ScheduledSendMailCommand> _logger, IMailService _mailService) : IScheduledCommand
 {
-    private readonly ILogger<ScheduledSendMailCommand> _logger;
-    private readonly IMailService _mailService;
-    public ScheduledSendMailCommand(ILogger<ScheduledSendMailCommand> logger, IMailService mailService)
-    {
-        _logger = logger;
-        _mailService = mailService;
-    }
     public Task ExecuteAsync(String? Data)
     {
         _logger.LogInformation("ScheduledSendMail at {Time}, Data = {Data}", DateTime.Now, Data);

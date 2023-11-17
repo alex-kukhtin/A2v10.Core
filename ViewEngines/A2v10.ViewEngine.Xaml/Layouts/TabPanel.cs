@@ -26,7 +26,7 @@ public class TabPanel : UIElement
 
 	public TabPosition TabPosition { get; set; }
 
-	public TabCollection Tabs { get; set; } = new TabCollection();
+	public TabCollection Tabs { get; set; } = [];
 
 	static String ReplaceScope(String path)
 	{

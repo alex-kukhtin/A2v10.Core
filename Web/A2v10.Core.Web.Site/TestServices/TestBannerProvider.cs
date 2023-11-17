@@ -8,18 +8,11 @@ using System.Threading.Tasks;
 
 namespace A2v10.Core.Web.Site;
 
-public class TestBannerProvider : IUserBannerProvider
+public class TestBannerProvider(IDbContext dbContext, ICurrentUser currentUser, TestBusinessAppProvider businessAppProvider) : IUserBannerProvider
 {
-    private readonly TestBusinessAppProvider _businessAppProvider;
-    private readonly IDbContext _dbContext;
-    private readonly ICurrentUser _currentUser;
-	public TestBannerProvider(IDbContext dbContext, ICurrentUser currentUser, TestBusinessAppProvider businessAppProvider)
-    {
-        _businessAppProvider = businessAppProvider;
-		_dbContext = dbContext;
-		_currentUser = currentUser;
-	}
-
+    private readonly TestBusinessAppProvider _businessAppProvider = businessAppProvider;
+    private readonly IDbContext _dbContext = dbContext;
+    private readonly ICurrentUser _currentUser = currentUser;
 
     public async Task<String?> GetHtmlAsync()
     {

@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2017 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Xaml
 {
@@ -9,7 +9,7 @@ namespace A2v10.Xaml
 
 		public Object? Scope { get; set; }
 		public UIElementBase? Fallback { get; set; }
-		public UIElementCollection Children { get; set; } = new UIElementCollection();
+		public UIElementCollection Children { get; set; } = [];
 
 		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 		{

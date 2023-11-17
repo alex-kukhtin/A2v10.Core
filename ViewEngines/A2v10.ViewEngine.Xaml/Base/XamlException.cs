@@ -1,13 +1,7 @@
-﻿// Copyright © 2015-2017 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
-namespace A2v10.Xaml
+namespace A2v10.Xaml;
+
+public sealed class XamlException(String msg) : Exception(msg)
 {
-	[Serializable]
-	public class XamlException : Exception
-	{
-		public XamlException(String msg)
-			: base(msg)
-		{
-		}
-	}
 }

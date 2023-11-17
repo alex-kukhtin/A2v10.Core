@@ -1,30 +1,15 @@
 ﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
-using A2v10.Data.Interfaces;
-using A2v10.Infrastructure;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+
+using A2v10.Data.Interfaces;
+using A2v10.Infrastructure;
 
 namespace A2v10.Xaml;
-public readonly struct GridRowCol
+public readonly struct GridRowCol(Int32? _row, Int32? _col, Int32? _rowSpan, Int32? _colSpan, AlignItem? _vAlign)
 {
-	private readonly Int32? _row;
-	private readonly Int32? _col;
-	private readonly Int32? _rowSpan;
-	private readonly Int32? _colSpan;
-	private readonly AlignItem? _vAlign;
-
-	public GridRowCol(Int32? row, Int32? col, Int32? rowSpan, Int32? colSpan, AlignItem? vAlign)
-	{
-		_row = row;
-		_col = col;
-		_rowSpan = rowSpan;
-		_colSpan = colSpan;
-		_vAlign = vAlign;
-	}
-
-	public IList<StringKeyValuePair> GetGridAttributes()
+    public IList<StringKeyValuePair> GetGridAttributes()
 	{
 		var rv = new List<StringKeyValuePair>();
 		String? row = null;
@@ -99,51 +84,31 @@ public sealed class ScopeContext : IDisposable
 	}
 }
 
-internal readonly struct ScopeElem
+internal readonly struct ScopeElem(String scope, String? path, Func<String, String>? replace)
 {
-	public readonly String Scope;
-	public readonly String? Path;
-	public readonly Func<String, String>? Replace;
-
-	public ScopeElem(String scope, String? path, Func<String, String>? replace)
-	{
-		Scope = scope;
-		Path = path;
-		Replace = replace;
-	}
+	public readonly String Scope { get; } = scope;
+	public readonly String? Path { get; } = path;
+	public readonly Func<String, String>? Replace { get; } = replace;
 }
 
-public class RenderContext
+public class RenderContext(IXamlElement _root, IRenderInfo _ri, ILocalizer _localizer, TextWriter writer)
 {
 	public String? RootId { get; set; }
 	public String? Path { get; set; }
 
-	public TextWriter Writer { get; private set; }
+    public TextWriter Writer { get; private set; } = writer;
 
-	public Boolean IsDebugConfiguration { get; }
+    public Boolean IsDebugConfiguration { get; } = true; // TODO: ri.IsDebugConfiguration;
 
-	private readonly Stack<GridRowCol> _stackGrid = new();
+    private readonly Stack<GridRowCol> _stackGrid = new();
 	private readonly Stack<ScopeElem> _stackScope = new();
 
-	readonly private IXamlElement _root;
-	private readonly IDataModel? _dataModel;
-	private readonly ILocalizer _localizer;
+	private readonly IDataModel? _dataModel = _ri.DataModel;
 	//private readonly ITypeChecker? _typeChecker;
 
-	readonly private String? _currentLocale;
+	readonly private String? _currentLocale = _ri.CurrentLocale;
 
-	public RenderContext(IXamlElement root, IRenderInfo ri, ILocalizer localizer, TextWriter writer)
-	{
-		Writer = writer;
-		_root = root;
-		_dataModel = ri.DataModel;
-		_localizer = localizer;
-		_currentLocale = ri.CurrentLocale;
-		//_typeChecker = ri.TypeChecker;
-		IsDebugConfiguration = true; // TODO: ri.IsDebugConfiguration;
-	}
-
-	public Boolean IsDialog => _root is Dialog;
+    public Boolean IsDialog => _root is Dialog;
 	public Boolean IsWizard => _root is Wizard;
 
 
@@ -229,7 +194,7 @@ public class RenderContext
 	{
 		// check for invert
 		path ??= String.Empty;
-		if (path.StartsWith("!"))
+		if (path.StartsWith('!'))
 			return "!" + GetNormalizedPathInternal(path[1..]);
 
 		//if (_typeChecker != null)
@@ -242,7 +207,7 @@ public class RenderContext
 	{
 		// check for invert
 		path ??= String.Empty;
-		if (path.StartsWith("!"))
+		if (path.StartsWith('!'))
 			return "!" + GetNormalizedPathInternal(path[1..]);
 
 		//if (_typeChecker != null && typeCode != TypeCheckerTypeCode.Skip)
@@ -253,8 +218,7 @@ public class RenderContext
 
 	private String GetNormalizedPathInternal(String path, Boolean isWrapped = false)
 	{
-		if (path == null)
-			throw new ArgumentNullException(nameof(path));
+		ArgumentNullException.ThrowIfNull(path, nameof(path));
 
 		const String rootKey = "Root.";
 		if (_stackScope.Count == 0)

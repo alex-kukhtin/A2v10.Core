@@ -72,7 +72,7 @@ public class ComboBox : ValuedControl, ITableControl
 	{
 		get
 		{
-			_children ??= new ComboBoxItems();
+			_children ??= [];
 			return _children;
 		}
 		set

@@ -2,7 +2,7 @@
 
 
 namespace A2v10.Services.Interop;
-internal class ExSheet
+internal class ExSheet(IFormatProvider _currentFormat)
 {
 	readonly IList<ExRow> _body = new List<ExRow>();
 	readonly IList<ExRow> _header = new List<ExRow>();
@@ -11,15 +11,7 @@ internal class ExSheet
 	public IList<ExColumn> Columns { get; } = new List<ExColumn>();
 	public StylesDictionary Styles { get; } = new StylesDictionary();
 
-	private readonly IFormatProvider _currentFormat;
-
-	public ExSheet(IFormatProvider currentFormat)
-	{
-		_currentFormat = currentFormat;
-	}
-
-
-	public ExRow GetRow(Int32 rowNo, RowKind kind)
+    public ExRow GetRow(Int32 rowNo, RowKind kind)
 	{
 		IList<ExRow> _rows = kind switch
         {

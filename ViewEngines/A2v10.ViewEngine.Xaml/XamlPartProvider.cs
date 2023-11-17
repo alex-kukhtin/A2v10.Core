@@ -37,7 +37,7 @@ public class XamlPartProvider : IXamlPartProvider
 				};
                 watcher.Changed += Watcher_Changed;
                 watcher.EnableRaisingEvents = true;
-				_watchers ??= new List<FileSystemWatcher>();
+				_watchers ??= [];
                 _watchers.Add(watcher);
 
             }

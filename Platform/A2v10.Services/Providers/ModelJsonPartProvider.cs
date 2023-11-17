@@ -8,22 +8,9 @@ using Newtonsoft.Json;
 
 namespace A2v10.Services;
 
-public class ModelJsonPartProvider : IModelJsonPartProvider
+public class ModelJsonPartProvider(IAppCodeProvider _appCodeProvider /*, IOptions<AppOptions> appOptions*/) : IModelJsonPartProvider
 {
-	private readonly IAppCodeProvider _appCodeProvider;
-	//private readonly RedirectModule? _redirect;
-
-	public ModelJsonPartProvider(IAppCodeProvider appCodeProvider /*, IOptions<AppOptions> appOptions*/)
-	{
-		_appCodeProvider = appCodeProvider;
-		/*
-		var redPath = _appCodeProvider.MakeFullPath(String.Empty, "redirect.json", false);
-		if (appCodeProvider.FileExists(redPath))
-			_redirect = new RedirectModule(redPath, appOptions.Value.Environment.Watch);
-		*/
-	}
-
-	public async Task<ModelJson?> GetModelJsonAsync(IPlatformUrl url)
+    public async Task<ModelJson?> GetModelJsonAsync(IPlatformUrl url)
 	{
 		//var localPath = _redirect?.Redirect(url.LocalPath);
 		//url.Redirect(localPath);

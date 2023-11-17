@@ -9,21 +9,16 @@ using A2v10.Xaml;
 
 namespace A2v10.ViewEngine.Xaml;
 
-public class XamlViewEngine : IViewEngine
+public class XamlViewEngine(IProfiler profiler, IXamlPartProvider xamlPartProvider, ILocalizer localizer,
+    IAppCodeProvider codeProvider) : IViewEngine
 {
-	private readonly IRenderer _renderer;
+	private readonly XamlRenderer _renderer = new(profiler,
+            xamlPartProvider,
+            localizer,
+            codeProvider
+        );
 
-	public XamlViewEngine(IProfiler profiler, IXamlPartProvider xamlPartProvider, ILocalizer localizer, IViewEngineProvider _1/*engineProvider*/,
-		IAppCodeProvider codeProvider)
-	{
-		_renderer = new XamlRenderer(profiler,
-			xamlPartProvider,
-			localizer,
-			codeProvider
-		);
-	}
-
-	public Task<IRenderResult> RenderAsync(IRenderInfo renderInfo)
+    public Task<IRenderResult> RenderAsync(IRenderInfo renderInfo)
 	{
 		using var sw = new StringWriter();
 		_renderer.Render(renderInfo, sw);

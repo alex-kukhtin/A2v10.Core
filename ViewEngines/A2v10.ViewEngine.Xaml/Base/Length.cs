@@ -35,7 +35,7 @@ public record Length
 
 	internal static Boolean IsValidLength(String strVal)
 	{
-		return (strVal.EndsWith("%") ||
+		return (strVal.EndsWith('%') ||
 				strVal.EndsWith("px") ||
 				strVal.EndsWith("vh") ||
 				strVal.EndsWith("vw") ||
@@ -110,7 +110,7 @@ public record GridLength
 		}
 		else if (Length.IsValidLength(strVal))
 			return new GridLength() { Value = strVal };
-		if (strVal.EndsWith("*"))
+		if (strVal.EndsWith('*'))
 			return new GridLength(strVal.Trim().Replace("*", "fr"));
 		else if (Double.TryParse(strVal, NumberStyles.Any, CultureInfo.InvariantCulture, out Double _))
 			return new GridLength(strVal + "px");

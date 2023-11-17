@@ -1,4 +1,4 @@
-﻿// Copyright © 2019 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2019-2023 Oleksandr Kukhtin. All rights reserved.
 
 
 using A2v10.Infrastructure;
@@ -18,7 +18,7 @@ namespace A2v10.Xaml
 	[ContentProperty("Buttons")]
 	public class TabBar : UIElement
 	{
-		public TabButtonCollection Buttons { get; set; } = new TabButtonCollection();
+		public TabButtonCollection Buttons { get; set; } = [];
 		public Object? Value { get; set; }
 		public ShadowStyle DropShadow { get; set; }
 		public Object? Description { get; set; }

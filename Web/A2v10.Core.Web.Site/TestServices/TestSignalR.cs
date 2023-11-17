@@ -8,17 +8,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace A2v10.Core.Web.Site;
 
-public class TSignalR : IClrInvokeTarget
+public class TSignalR(IServiceProvider serviceProvider) : IClrInvokeTarget
 {
-    private readonly ICurrentUser _currentUser;
-    private readonly ISignalSender _signalSender;
-
-    public TSignalR(IServiceProvider serviceProvider)
-    {
-		_currentUser =  serviceProvider.GetRequiredService<ICurrentUser>();
-        _signalSender = serviceProvider.GetRequiredService<ISignalSender>();
-
-    }
+    private readonly ICurrentUser _currentUser = serviceProvider.GetRequiredService<ICurrentUser>();
+    private readonly ISignalSender _signalSender = serviceProvider.GetRequiredService<ISignalSender>();
 
     public async Task<Object> InvokeAsync(ExpandoObject args)
     {

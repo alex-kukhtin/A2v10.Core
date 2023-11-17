@@ -1,4 +1,4 @@
-﻿// Copyright © 2019-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2019-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -58,7 +58,7 @@ namespace A2v10.Xaml
 				return $"Digit{keyName}";
 			else if (keyName == "Left" || keyName == "Right" || keyName == "Up" || keyName == "Down")
 				return $"Arrow{keyName}";
-			else if (keyName.Length > 1 && keyName.StartsWith("F"))
+			else if (keyName.Length > 1 && keyName.StartsWith('F'))
 				return keyName;
 			return keyName;
 		}

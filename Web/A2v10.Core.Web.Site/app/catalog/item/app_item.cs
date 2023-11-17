@@ -9,14 +9,9 @@ public class ServerResult
 
 }
 
-public class Item
+public class Item(IServiceProvider serviceProvider)
 {
-	public Item(IServiceProvider serviceProvider)
-	{
-
-	}
-
-	public Task<ServerResult> Method1(Int64 TenantId, Int64 UserId, ExpandoObject prms)
+    public Task<ServerResult> Method1(Int64 TenantId, Int64 UserId, ExpandoObject prms)
 	{
 		throw new NotImplementedException();
 	}

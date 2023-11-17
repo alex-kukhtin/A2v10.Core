@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 
 namespace A2v10.Xaml;
@@ -6,7 +6,7 @@ namespace A2v10.Xaml;
 [ContentProperty("Cells")]
 public class SheetCellGroup : XamlElement, ISheetCell
 {
-	public SheetCells Cells { get; } = new SheetCells();
+	public SheetCells Cells { get; } = [];
 	public Object? ItemsSource { get; set; }
 	public Boolean? If { get; set; }
 

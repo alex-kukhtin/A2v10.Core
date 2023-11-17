@@ -7,10 +7,8 @@ using A2v10.Module.Infrastructure;
 
 namespace A2v10.Services;
 
-public class InternalAppCodeProviderClr : IAppCodeProviderImpl
+public class InternalAppCodeProviderClr(IAppContainer _appContainer) : IAppCodeProviderImpl
 {
-
-	private readonly IAppContainer _appContainer;
 
 	public Boolean IsFileSystem => false;
 
@@ -18,16 +16,11 @@ public class InternalAppCodeProviderClr : IAppCodeProviderImpl
 
 	public Guid? ModuleId => _appContainer.Id;
 
-	public InternalAppCodeProviderClr(IAppContainer appContainer)
-	{
-		_appContainer = appContainer;
-    }
-
     public String NormalizePath(String path)
 	{
-		if (path.StartsWith("$"))
+		if (path.StartsWith('$'))
 		{
-			int ix = path.IndexOf("/");
+			int ix = path.IndexOf('/');
 			path = path[(ix+1).. ];
 		}
 		return path.Replace('\\', '/');

@@ -1,14 +1,7 @@
-﻿// Copyright © 2020-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2020-2023 Oleksandr Kukhtin. All rights reserved.
 
-using System;
+namespace A2v10.Services;
 
-namespace A2v10.Services
+public sealed class ModelJsonException(String msg) : Exception(msg)
 {
-	public sealed class ModelJsonException : Exception
-	{
-		public ModelJsonException(String msg)
-			:base(msg)
-		{
-		}
-	}
 }

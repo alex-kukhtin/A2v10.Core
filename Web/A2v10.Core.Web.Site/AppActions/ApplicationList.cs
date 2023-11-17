@@ -11,13 +11,10 @@ using Newtonsoft.Json;
 
 namespace A2v10.Core.Web.Site.AppActions;
 
-internal class ApplicationList : IClrInvokeTarget
+internal class ApplicationList(IServiceProvider serviceProvider) : IClrInvokeTarget
 {
-    private readonly TestBusinessAppProvider _appProvider; 
-    public ApplicationList(IServiceProvider serviceProvider) 
-    {
-        _appProvider = serviceProvider.GetRequiredService<TestBusinessAppProvider>();
-    }
+    private readonly TestBusinessAppProvider _appProvider = serviceProvider.GetRequiredService<TestBusinessAppProvider>();
+
     public Task<Object> InvokeAsync(ExpandoObject args)
     {
         var apps = _appProvider.AllApplications;

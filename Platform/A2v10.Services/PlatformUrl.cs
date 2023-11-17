@@ -11,7 +11,7 @@ public class PlatformUrl : IPlatformUrl
 	{
 		var nurl = NormalizePath(url);
 		Kind = kind;
-		var parts = ("_/" + nurl.Path).Split(new Char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
+		var parts = ("_/" + nurl.Path).Split([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar]);
 		Construct(parts, nurl.Query, id);
 	}
 

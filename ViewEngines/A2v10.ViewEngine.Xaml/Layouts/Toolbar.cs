@@ -36,7 +36,7 @@ namespace A2v10.Xaml
 	}
 
 	[AttachedProperties("Align")]
-	public class Toolbar : Container
+	public class Toolbar(IServiceProvider serviceProvider) : Container
 	{
 
 		public enum ToolbarAlign
@@ -46,16 +46,11 @@ namespace A2v10.Xaml
 		}
 
 
-		private readonly IAttachedPropertyManager _attachedPropertyManager;
+		private readonly IAttachedPropertyManager _attachedPropertyManager = serviceProvider.GetRequiredService<IAttachedPropertyManager>();
 
-		public Toolbar(IServiceProvider serviceProvider)
-		{
-			_attachedPropertyManager = serviceProvider.GetRequiredService<IAttachedPropertyManager>();
-		}
+        #region Attached Properties
 
-		#region Attached Properties
-
-		public ToolbarAlign GetAlgin(Object obj)
+        public ToolbarAlign GetAlgin(Object obj)
 		{
 			return _attachedPropertyManager.GetProperty<ToolbarAlign>("Toolbar.Align", obj);
 		}

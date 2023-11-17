@@ -6,22 +6,17 @@ namespace A2v10.Xaml;
 
 
 [AttachedProperties("Width,MinWidth")]
-public class Splitter : Container
+public class Splitter(IServiceProvider serviceProvider) : Container
 {
 	public Orientation Orientation { get; set; }
 	public Length? Height { get; set; }
 	public Length? MinWidth { get; set; }
 
-	private readonly IAttachedPropertyManager _attachedPropertyManager;
+	private readonly IAttachedPropertyManager _attachedPropertyManager = serviceProvider.GetRequiredService<IAttachedPropertyManager>();
 
-	public Splitter(IServiceProvider serviceProvider)
-	{
-		_attachedPropertyManager = serviceProvider.GetRequiredService<IAttachedPropertyManager>();
-	}
+    #region Attached Properties
 
-	#region Attached Properties
-
-	public GridLength GetWidth(Object obj)
+    public GridLength GetWidth(Object obj)
 	{
 		var prop = _attachedPropertyManager.GetProperty<Object>("Splitter.Width", obj);
 		if (prop == null)

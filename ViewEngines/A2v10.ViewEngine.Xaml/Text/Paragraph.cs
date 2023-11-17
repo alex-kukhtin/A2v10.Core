@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
 
@@ -7,7 +7,7 @@ namespace A2v10.Xaml;
 [ContentProperty("Inlines")]
 public class Paragraph : UIElement
 {
-	public InlineCollection Inlines { get; set; } = new InlineCollection();
+	public InlineCollection Inlines { get; set; } = [];
 
 	public Boolean Small { get; set; }
 	public TextColor Color { get; set; }

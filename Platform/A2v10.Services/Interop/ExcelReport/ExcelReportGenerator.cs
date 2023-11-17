@@ -370,9 +370,8 @@ public class ExcelReportGenerator : IDisposable
         // this is the line number from SharedStrings
         if (!Int32.TryParse(addr, out Int32 strIndex))
             return;
-        if (!_sharedStringIndexMap.ContainsKey(strIndex))
+        if (!_sharedStringIndexMap.TryGetValue(strIndex, out SharedStringDef? ssd))
             return;
-        SharedStringDef ssd = _sharedStringIndexMap[strIndex];
         if (ssd == null)
             return;
         if (ssd.Parse())

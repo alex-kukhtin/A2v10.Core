@@ -7,19 +7,13 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace A2v10.Services;
 
-public class InvokeCommandFile : IModelInvokeCommand
+public class InvokeCommandFile(IServiceProvider services) : IModelInvokeCommand
 {
-	private readonly IServiceProvider _serivceProvider;
-	private readonly ICurrentUser _currentUser;
+	private readonly IServiceProvider _serivceProvider = services;
+	private readonly ICurrentUser _currentUser = services.GetRequiredService<ICurrentUser>();
 
-	public InvokeCommandFile(IServiceProvider services)
-	{
-		_serivceProvider = services;
-		_currentUser = services.GetRequiredService<ICurrentUser>();
-	}
-
-	#region IModelInvokeCommand
-	public Task<IInvokeResult> ExecuteAsync(IModelCommand command, ExpandoObject parameters)
+    #region IModelInvokeCommand
+    public Task<IInvokeResult> ExecuteAsync(IModelCommand command, ExpandoObject parameters)
 	{
 		throw new NotImplementedException();
 	}

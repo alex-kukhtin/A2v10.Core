@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2017 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
 using System.Linq;
@@ -122,9 +122,7 @@ namespace A2v10.Xaml
 			if (value == null)
 				return this;
 			_styles ??= [];
-			if (!_styles.ContainsKey(key))
-				_styles.Add(key, value);
-			else
+			if (!_styles.TryAdd(key, value))
 				_styles[key] = value;
 			return this;
 		}
@@ -165,9 +163,8 @@ namespace A2v10.Xaml
 			if (value == null)
 				return this;
 			_attributes ??= [];
-			if (!_attributes.ContainsKey(key))
+			if (_attributes.TryAdd(key, value))
 			{
-				_attributes.Add(key, value);
 				return this;
 			}
 			if (replaceExisting)

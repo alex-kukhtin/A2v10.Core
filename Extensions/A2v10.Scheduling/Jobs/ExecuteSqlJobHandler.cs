@@ -10,15 +10,8 @@ using A2v10.Scheduling.Infrastructure;
 
 namespace A2v10.Scheduling;
 
-public class ExecuteSqlJobHandler : IScheduledJob
+public class ExecuteSqlJobHandler(ILogger<ExecuteSqlJobHandler> _logger, IDbContext _dbContext) : IScheduledJob
 {
-	private readonly ILogger<ExecuteSqlJobHandler> _logger;
-	private readonly IDbContext _dbContext;
-	public ExecuteSqlJobHandler(ILogger<ExecuteSqlJobHandler> logger, IDbContext dbContext)
-	{
-		_logger = logger;
-		_dbContext = dbContext;
-	}
     public async Task ExecuteAsync(ScheduledJobInfo info)
     {
         try

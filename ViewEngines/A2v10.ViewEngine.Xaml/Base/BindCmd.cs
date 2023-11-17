@@ -512,7 +512,7 @@ public class BindCmd : BindBase
 			return urlBind.GetPath(context);
 		else if (String.IsNullOrEmpty(Url))
 			return nullString;
-		if (!Url.StartsWith("/"))
+		if (!Url.StartsWith('/'))
 			throw new NotImplementedException($"Url '{Url}' must start with '/'");
 		return $"'{Url}'";
 	}
@@ -531,7 +531,7 @@ public class BindCmd : BindBase
 		// TODO: check URL format
 		if (!skipCheck)
 		{
-			if (!Url.StartsWith("/"))
+			if (!Url.StartsWith('/'))
 				throw new NotImplementedException($"Url '{Url}' must start with '/'");
 		}
 		return $"'{Url}'";

@@ -1,27 +1,12 @@
-﻿// Copyright © 2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
 using System.IO;
 
 namespace A2v10.Xaml;
-public class XamlRenderer : IRenderer
+public class XamlRenderer(IProfiler _profile, IXamlPartProvider _partProvider, ILocalizer _localizer, IAppCodeProvider _appCodeProvider) : IRenderer
 {
-	private readonly IProfiler _profile;
-	private readonly ILocalizer _localizer;
-	private readonly IXamlPartProvider _partProvider;
-	private readonly IAppCodeProvider _appCodeProvider;
-
-
-    public XamlRenderer(IProfiler profile, IXamlPartProvider partProvider, ILocalizer localizer, IAppCodeProvider appCodeProvider)
-	{
-		_profile = profile;
-		_localizer = localizer;
-		_partProvider = partProvider;
-        _appCodeProvider = appCodeProvider;
-
-    }
-
-	public void Render(IRenderInfo info, TextWriter writer)
+    public void Render(IRenderInfo info, TextWriter writer)
 	{
 		if (String.IsNullOrEmpty(info.FileName))
 			throw new XamlException("No source for render");
@@ -29,7 +14,7 @@ public class XamlRenderer : IRenderer
 		String fileName = String.Empty;
 		IXamlElement? uiElem = null;
 
-		var xamlServiceOptions = new XamlServicesOptions(Array.Empty<NamespaceDef>())
+		var xamlServiceOptions = new XamlServicesOptions([])
 		{
 			OnCreateReader = (rdr) =>
 			{

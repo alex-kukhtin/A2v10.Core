@@ -37,7 +37,7 @@ public class ExCell
 		if (number.Contains('.'))
 			return Regex.Replace(number, @"[\s,]", String.Empty);
 		else
-			return Regex.Replace(number, @"[\s]", String.Empty).Replace(",", ".");
+			return Regex.Replace(number, @"[\s]", String.Empty).Replace(',', '.');
 	}
 
 	static String NormalizeDate(String text)
@@ -148,7 +148,6 @@ public class ExCell
 			return null;
 		var colDelta = Span.Col > 1 ? Span.Col - 1 : 0;
 		var rowDelta = Span.Row > 1 ? Span.Row - 1 : 0;
-		//var rs = Span.Row - 1;
 		return $"{Index2Col(col)}{row + 1}:{Index2Col(col + colDelta)}{row + 1 + rowDelta}";
 	}
 }

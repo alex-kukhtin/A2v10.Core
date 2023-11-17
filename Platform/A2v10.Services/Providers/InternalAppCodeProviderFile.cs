@@ -4,24 +4,19 @@ using System.IO;
 
 namespace A2v10.Services;
 
-public class InternalAppCodeProviderFile : IAppCodeProviderImpl
+public class InternalAppCodeProviderFile(String path) : IAppCodeProviderImpl
 {
-	private String AppPath { get; }
+    private String AppPath { get; } = path;
 
-	public Boolean IsFileSystem => true;
+    public Boolean IsFileSystem => true;
 	public Boolean IsLicensed => false;
-	public Guid? ModuleId => null;	
+	public Guid? ModuleId => null;
 
-	public InternalAppCodeProviderFile(String path)
+    public String NormalizePath(String path)
 	{
-		AppPath = path;
-	}
-
-	public String NormalizePath(String path)
-	{
-        if (path.StartsWith("$"))
+        if (path.StartsWith('$'))
         {
-            int ix = path.IndexOf("/");
+            int ix = path.IndexOf('/');
             path = path[(ix + 1)..];
         }
 

@@ -1,12 +1,8 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Services.Interop;
 
-public sealed class InteropException : Exception
+public sealed class InteropException(String message) : Exception(message)
 {
-	public InteropException(String message)
-		: base(message)
-	{
-	}
 }
 

@@ -58,7 +58,7 @@ public class FileController(IApplicationHost host,
 		}
 		catch (Exception ex)
 		{
-			var accept = Request.Headers["Accept"].ToString();
+			var accept = Request.Headers.Accept.ToString();
 			if (accept != null && accept.Trim().StartsWith("image", StringComparison.OrdinalIgnoreCase))
 				return WriteImageException(ex);
 			else

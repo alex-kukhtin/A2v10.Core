@@ -1,4 +1,4 @@
-﻿// Copyright © 2022 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2022-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -12,31 +12,23 @@ public class BindImpl
 	public Bind SetBinding(String name, Bind bind)
 	{
 		_bindings ??= [];
-		if (_bindings.ContainsKey(name))
-			_bindings[name] = bind;
-		else
-			_bindings.Add(name, bind);
+		if (_bindings.TryAdd(name, bind))
+			return bind;
+		_bindings[name] = bind;
 		return bind;
 	}
 
 	public void RemoveBinding(String name)
 	{
-		if (_bindings == null) 
-			return;
-		if (_bindings.ContainsKey(name))
-			_bindings.Remove(name);
-	}
+        _bindings?.Remove(name);
+    }
 
 	public Bind? GetBinding(String name)
 	{
 		if (_bindings == null)
 			return null;
 		if (_bindings.TryGetValue(name, out Bind? bind))
-		{
-			if (bind is Bind iBind)
-				return iBind;
-			throw new XamlException($"Binding '{name}' must be a Bind");
-		}
+			return bind;
 		return null;
 	}
 
