@@ -10,6 +10,8 @@ services.UseScheduling(Configuration, factory =>
 {
     // job handlers
     factory.RegisterJobHandler<T>("HandlerName");
+    // or (the name will be equal typeof(T).FullName)
+    factory.RegisterJobHandler<T>(); 
     // commands
     factory.RegisterCommand<T>("CommandName");
 });
@@ -40,8 +42,8 @@ Rest parameters depend on the handler type.
 
 # Hanlder types in this package
 
-* **ExecuteSqlJobHandler** - executes a stored procedure
-* **ProcessCommandsJobHandler** - processes the command queue
+* **A2v10.Scheduling.ExecuteSqlJobHandler** - executes a stored procedure
+* **A2v10.Scheduling.ProcessCommandsJobHandler** - processes the command queue
 
 
 

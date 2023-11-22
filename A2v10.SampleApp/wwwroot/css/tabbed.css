@@ -7740,14 +7740,15 @@ table.tree-grid a.toggle.expanded:after {
 .no-italic {
   font-style: italic;
 }
-.text-left {
+.text-left,
+.text-default {
   text-align: left;
 }
 .text-right {
   text-align: right;
 }
 .text-center {
-  text-align: center;
+  text-align: ce nter;
 }
 .text-small {
   font-size: 0.9rem;

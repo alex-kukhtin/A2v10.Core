@@ -22,6 +22,12 @@ public class AddSchedulerHandlerFactory
         _handlers.Add(name, typeof(T));
         return this;
     }
+    public AddSchedulerHandlerFactory RegisterJobHandler<T>()
+    {
+        _handlers.Add(typeof(T).FullName ?? throw new InvalidOperationException("Handler doesn't have FullName"), 
+            typeof(T));
+        return this;
+    }
 
     public Type FindHandler(String name)
     {

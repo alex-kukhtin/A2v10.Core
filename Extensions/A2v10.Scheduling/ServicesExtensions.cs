@@ -5,6 +5,7 @@ using System.Configuration;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 using Quartz;
 
@@ -39,7 +40,7 @@ public static class ServicesExtensions
                 var handlerType = factory.FindHandler(job.Handler);
                 if (!handlerType.IsAssignableTo(typeof(IScheduledJob)))
                     throw new InvalidOperationException($"Type {handlerType} does not implement ISchedulingJob");
-				services.AddScoped(handlerType);
+				services.TryAddScoped(handlerType);
                 AddJob(q, job, handlerType);
 			}
 		});

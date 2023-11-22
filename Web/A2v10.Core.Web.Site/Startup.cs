@@ -63,6 +63,7 @@ public class Startup(IConfiguration configuration)
 			factory.RegisterJobHandler<ExecuteSqlJobHandler>("ExecuteSql")
             .RegisterJobHandler<ProcessCommandsJobHandler>("ProcessCommands")
             .RegisterJobHandler<WorkflowPendingJobHandler>("WorkflowPending");
+			factory.RegisterJobHandler<ExecuteSqlJobHandler>();
             // commands
             factory.RegisterCommand<ScheduledSendMailCommand>("SendMail")
             .RegisterCommand<ScheduledExecuteSqlCommand>("ExecuteSql");
