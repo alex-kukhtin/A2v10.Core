@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
-		<Version>10.1.8180</Version>
+		<Version>10.1.8183</Version>
 		<Nullable>enable</Nullable>
 		<AssemblyName>A2v10.Identity.ApiKey</AssemblyName>
 		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
@@ -19,7 +19,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.OpenApi" Version="1.6.10" />
+		<PackageReference Include="Microsoft.OpenApi" Version="1.6.11" />
 	</ItemGroup>
 
 	<PropertyGroup>
