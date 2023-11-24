@@ -39,6 +39,12 @@ public class InternalAppCodeProviderFile(String path) : IAppCodeProviderImpl
 			return null;
         return new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
     }
+
+    public Stream? FileStreamResource(String path)
+    {
+        return FileStreamRO(path);
+    }
+
     public IEnumerable<String> EnumerateFiles(String path, String searchPattern)
 	{
 		var fullPath = NormalizePath(path);

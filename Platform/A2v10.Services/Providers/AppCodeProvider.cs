@@ -87,7 +87,14 @@ public class AppCodeProvider : IAppCodeProvider
 		return GetProvider(path).FileStreamRO(path);
 	}
 
-	public IEnumerable<String> EnumerateAllFiles(String path, String searchPattern)
+    public Stream? FileStreamResource(String path, Boolean primaryOnly = false)
+    {
+        if (primaryOnly)
+            GetProvider("_").FileStreamResource(path);
+        return GetProvider(path).FileStreamResource(path);
+    }
+
+    public IEnumerable<String> EnumerateAllFiles(String path, String searchPattern)
 	{
 		foreach (var (k, v) in _providers)
 		{

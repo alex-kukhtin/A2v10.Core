@@ -83,9 +83,9 @@ public class DataService(IServiceProvider serviceProvider, IModelJsonReader mode
         var platformUrl = CreatePlatformUrl(UrlKind.Page, baseUrl);
         var view = await _modelReader.GetViewAsync(platformUrl);
         if (view.Export == null)
-			throw new DataServiceException("Export not found");
+			throw new DataServiceException("model.json. export element not found");
         var loadPrms = view.CreateParameters(platformUrl, null, setParams);
-        var dm = await _dbContext.LoadModelAsync(view.DataSource, view.LoadProcedure(), loadPrms);
+        var dm = await _dbContext.LoadModelAsync(view.DataSource, view.ExportProcedure(), loadPrms);
 		var export = view.Export;
         Stream? stream;
         var templExpr = export.GetTemplateExpression();
@@ -99,7 +99,7 @@ public class DataService(IServiceProvider serviceProvider, IModelJsonReader mode
         {
             var fileName = export.Template.AddExtension(export.Format.ToString());
             var pathToRead = _codeProvider.MakePath(view.Path, fileName);
-            stream = _codeProvider.FileStreamRO(pathToRead) ??
+            stream = _codeProvider.FileStreamResource(pathToRead) ??
                 throw new DataServiceException($"Template file not found ({fileName})");
         }
         else

@@ -10,5 +10,6 @@ internal interface IAppCodeProviderImpl
     String NormalizePath(String path);
     Boolean IsFileExists(String path);
     Stream? FileStreamRO(String path);
+    Stream? FileStreamResource(String path);
     IEnumerable<String> EnumerateFiles(String path, String searchPattern);
 }

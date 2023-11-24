@@ -54,6 +54,15 @@ public class ModelJsonBase : IModelBase
 			throw new ModelJsonException("The model is empty (Load))");
 		return $"[{CurrentSchema}].[{cm}.Load]";
 	}
+
+    public virtual String ExportProcedure()
+    {
+        var cm = CurrentModel;
+        if (String.IsNullOrEmpty(cm))
+            throw new ModelJsonException("The model is empty (Load.Export))");
+        return $"[{CurrentSchema}].[{cm}.Load.Export]";
+    }
+
     public virtual String UpdateProcedure()
     {
         var cm = CurrentModel;
@@ -230,7 +239,16 @@ public class ModelJsonView : ModelJsonViewBase, IModelView
 		return $"[{CurrentSchema}].[{cm}.{action}]";
 	}
 
-	public String DeleteProcedure(String? propName)
+    public override String ExportProcedure()
+    {
+        var cm = CurrentModel;
+        String action = Index ? "Index" : "Load";
+        if (String.IsNullOrEmpty(cm))
+            throw new ModelJsonException($"The model is empty ({action})");
+        return $"[{CurrentSchema}].[{cm}.{action}.Export]";
+    }
+
+    public String DeleteProcedure(String? propName)
 	{
 		var cm = CurrentModel;
 		if (!String.IsNullOrEmpty(propName))

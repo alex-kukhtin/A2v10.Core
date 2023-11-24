@@ -35,7 +35,7 @@ public class Startup(IConfiguration configuration)
 	{
 		//!!!Before UsePlatform(). It has a default implementation.
 		services.UseMailClient();
-		services.AddScoped<IUserBannerProvider, TestBannerProvider>();
+		//services.AddScoped<IUserBannerProvider, TestBannerProvider>();
 		//services.UseLicenseManager();
 		services.AddScoped<ILicenseManager, NullLicenseManager>();
 

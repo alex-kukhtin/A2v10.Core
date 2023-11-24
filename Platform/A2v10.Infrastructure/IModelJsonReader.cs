@@ -24,6 +24,7 @@ public interface IModelBase
 	Boolean Signal { get; }
 
 	String LoadProcedure();
+    String ExportProcedure();
     String UpdateProcedure();
     Boolean HasModel();
 

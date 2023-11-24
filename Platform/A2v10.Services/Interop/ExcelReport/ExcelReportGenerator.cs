@@ -387,57 +387,62 @@ public class ExcelReportGenerator : IDisposable
         {
             cell.DataType = null;
             cell.CellValue = null;
+            return;
         }
-        else if (obj is String strVal)
+        switch (obj)
         {
-            cell.DataType = CellValues.SharedString;
-            cell.CellValue = new CellValue(NewSharedString(strVal));
-        }
-        else if (obj is DateTime dt)
-        {
-            var cv = new CellValue
-            {
-                Text = dt.ToOADate().ToString(CultureInfo.InvariantCulture)
-            };
-            // CellValues.Date supported in Office2010 only
-            cell.DataType = CellValues.Number;
-            cell.CellValue = cv;
-        }
-        else if (obj is TimeSpan ts)
-        {
-            cell.DataType = CellValues.Date;
-            DateTime dtv = new(ts.Ticks);
-            cell.CellValue = new CellValue(dtv.ToOADate().ToString(CultureInfo.InvariantCulture));
-        }
-        else if (obj is Double dblVal)
-        {
-            cell.DataType = CellValues.Number;
-            cell.CellValue = new CellValue(dblVal.ToString(CultureInfo.InvariantCulture));
-        }
-        else if (obj is Decimal decVal)
-        {
-            cell.DataType = CellValues.Number;
-            cell.CellValue = new CellValue(decVal.ToString(CultureInfo.InvariantCulture));
-        }
-        else if (obj is Int64 int64Val)
-        {
-            cell.DataType = CellValues.Number;
-            cell.CellValue = new CellValue(int64Val.ToString());
-        }
-        else if (obj is Int32 int32Val)
-        {
-            cell.DataType = CellValues.Number;
-            cell.CellValue = new CellValue(int32Val.ToString());
-        }
-        else if (obj is Int16 int16Val)
-        {
-            cell.DataType = CellValues.Number;
-            cell.CellValue = new CellValue(int16Val.ToString());
-        }
-        else if (obj is Boolean boolVal)
-        {
-            cell.DataType = CellValues.Boolean;
-            cell.CellValue = new CellValue(boolVal.ToString());
+            case String strVal:
+                cell.DataType = CellValues.SharedString;
+                cell.CellValue = new CellValue(NewSharedString(strVal));
+                break;
+            case DateTime dt:
+                {
+                    var cv = new CellValue
+                    {
+                        Text = dt.ToOADate().ToString(CultureInfo.InvariantCulture)
+                    };
+                    // CellValues.Date supported in Office2010 only
+                    cell.DataType = CellValues.Number;
+                    cell.CellValue = cv;
+                }
+                break;
+            case TimeSpan ts:
+                {
+                    cell.DataType = CellValues.Date;
+                    DateTime dtv = new(ts.Ticks);
+                    cell.CellValue = new CellValue(dtv.ToOADate().ToString(CultureInfo.InvariantCulture));
+                }
+                break;
+            case Double dblVal:
+                cell.DataType = CellValues.Number;
+                cell.CellValue = new CellValue(dblVal.ToString(CultureInfo.InvariantCulture));
+                break;
+            case Decimal decVal:
+                cell.DataType = CellValues.Number;
+                cell.CellValue = new CellValue(decVal.ToString(CultureInfo.InvariantCulture));
+                break;
+            case Int64 int64Val:
+                cell.DataType = CellValues.Number;
+                cell.CellValue = new CellValue(int64Val.ToString());
+                break;
+            case Int32 int32Val:
+                cell.DataType = CellValues.Number;
+                cell.CellValue = new CellValue(int32Val.ToString());
+                break;
+            case Int16 int16Val:
+                cell.DataType = CellValues.Number;
+                cell.CellValue = new CellValue(int16Val.ToString());
+                break;
+            case Boolean boolVal:
+                cell.DataType = CellValues.Boolean;
+                cell.CellValue = new CellValue(boolVal.ToString());
+                break;
+            case Guid guidVal:
+                cell.DataType = CellValues.String;
+                cell.CellValue = new CellValue(guidVal.ToString());
+                break;
+            default:
+                throw new InvalidOperationException($"Unknown data type {obj.GetType()}");
         }
     }
 

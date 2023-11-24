@@ -1,6 +1,7 @@
 ﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System.IO;
+using System.Reflection;
 using System.Text;
 
 using A2v10.Module.Infrastructure;
@@ -38,6 +39,15 @@ public class InternalAppCodeProviderClr(IAppContainer _appContainer) : IAppCodeP
 		if (!_appContainer.FileExists(fullPath))
 			return null;
         return new MemoryStream(Encoding.UTF8.GetBytes(_appContainer.GetText(fullPath) ?? String.Empty));
+    }
+
+    public Stream? FileStreamResource(String path)
+    {
+		var mainType = _appContainer.GetType();
+		var assembly = Assembly.GetAssembly(mainType)
+			?? throw new InvalidOperationException($"Assembly with type '{mainType}' not found");
+		var resourceName = $"{mainType.Namespace}.{path.Replace('/', '.')}";
+		return assembly.GetManifestResourceStream(resourceName);
     }
 
     public IEnumerable<String> EnumerateFiles(String? path, String searchPattern)
