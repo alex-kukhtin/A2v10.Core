@@ -128,7 +128,7 @@ public class FileController(IApplicationHost host,
 			if (!new FileExtensionContentTypeProvider().TryGetContentType(pathInfo, out String? contentType))
 				contentType = MimeTypes.Application.OctetStream;
             // without using! The FileStreamResult will close stream
-            var stream = _appCodeProvider.FileStreamRO(_appCodeProvider.MakePath("_files/", pathInfo))
+            var stream = _appCodeProvider.FileStreamResource(_appCodeProvider.MakePath("_files/", pathInfo))
                 ?? throw new FileNotFoundException($"File not found '{pathInfo}'");
 			return new FileStreamResult(stream, contentType)
 			{

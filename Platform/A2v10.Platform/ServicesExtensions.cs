@@ -22,6 +22,7 @@ using A2v10.ViewEngine.Html;
 
 using A2v10.Platform.Web;
 using A2v10.Module.Infrastructure;
+using A2v10.Data.Providers;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -104,6 +105,7 @@ public static class ServicesExtensions
 		services.AddScoped<IDataService, DataService>();
 		services.AddScoped<IModelJsonReader, ModelJsonReader>();
 		services.AddScoped<IReportService, ReportService>();
+		services.AddScoped<IExternalDataProvider, ExternalDataContext>();
 
 		// platfrom core services
 		services.AddSingleton<IAppVersion, PlatformAppVersion>();

@@ -45,16 +45,10 @@ public class SaveResult : ISaveResult
 	public ISignalResult? SignalResult { get; init; }
 
 }
-public class DataService(IServiceProvider serviceProvider, IModelJsonReader modelReader, IDbContext dbContext, ICurrentUser currentUser,
-    ISqlQueryTextProvider sqlQueryTextProvider, IAppCodeProvider codeProvider) : IDataService
+public class DataService(IServiceProvider _serviceProvider, IModelJsonReader _modelReader, IDbContext _dbContext, ICurrentUser _currentUser,
+    ISqlQueryTextProvider _sqlQueryTextProvider, IAppCodeProvider _codeProvider,
+    IExternalDataProvider _externalDataProvider, ILocalizer _localizer) : IDataService
 {
-	private readonly IServiceProvider _serviceProvider = serviceProvider;
-	private readonly IModelJsonReader _modelReader = modelReader;
-	private readonly IDbContext _dbContext = dbContext;
-	private readonly ICurrentUser _currentUser = currentUser;
-	private readonly ISqlQueryTextProvider _sqlQueryTextProvider = sqlQueryTextProvider;
-	private readonly IAppCodeProvider _codeProvider = codeProvider;
-
     static PlatformUrl CreatePlatformUrl(UrlKind kind, String baseUrl)
 	{
 		return new PlatformUrl(kind, baseUrl, null);
@@ -104,7 +98,9 @@ public class DataService(IServiceProvider serviceProvider, IModelJsonReader mode
         }
         else
 			throw new DataServiceException($"Export template not defined");
-		var resultFileName = $"{export.FileName}.{export.Format}";
+		var fn = _localizer.Localize(dm.ResolveDataModel(export.FileName));
+
+        var resultFileName = $"{fn}.{export.Format}";
 		var resultMime = MimeTypes.GetMimeMapping($".{export.Format}");
 
         switch (export.Format)
@@ -117,6 +113,16 @@ public class DataService(IServiceProvider serviceProvider, IModelJsonReader mode
 						throw new DataServiceException("Generate file error");
 					var bytes = await File.ReadAllBytesAsync(rep.ResultFile);
 					return new InvokeResult(bytes, resultMime, resultFileName);
+                }
+			case ModelJsonExportFormat.dbf:
+			case ModelJsonExportFormat.csv:
+				{
+					var fmt = export.Format.ToString().ToLowerInvariant();
+                    var extDataProvider = _externalDataProvider.GetWriter(dm, fmt, export.GetEncoding())
+                        ?? throw new DataServiceException($"There is no data provider for '{fmt}' files");
+					using var ms = new MemoryStream();
+                    extDataProvider.Write(ms);
+					return new InvokeResult(ms.GetBuffer(), resultMime, resultFileName);
                 }
 			default:
                 throw new DataServiceException($"Export not implemented for {export.Format}");
