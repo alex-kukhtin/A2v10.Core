@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2008-2023 Oleksandr Kukhtin
 
-Last updated : 05 aug 2023
-module version : 8134
+Last updated : 29 nov 2023
+module version : 8186
 */
 -- SECURITY
 ------------------------------------------------
@@ -262,7 +262,8 @@ create or alter procedure a2security.[User.UpdateParts]
 @PersonName nvarchar(255) = null,
 @EmailConfirmed bit = null,
 @FirstName nvarchar(255) = null,
-@LastName nvarchar(255) = null
+@LastName nvarchar(255) = null,
+@Locale nvarchar(32) = null
 as
 begin
 	set nocount on;
@@ -271,7 +272,8 @@ begin
 	update a2security.Users set 
 		PhoneNumber = isnull(@PhoneNumber, PhoneNumber),
 		PersonName = isnull(@PersonName, PersonName),
-		EmailConfirmed = isnull(@EmailConfirmed, EmailConfirmed)
+		EmailConfirmed = isnull(@EmailConfirmed, EmailConfirmed),
+		Locale = isnull(@Locale, Locale)
 	where Id = @Id;
 end
 go

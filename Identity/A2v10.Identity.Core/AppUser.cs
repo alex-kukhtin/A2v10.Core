@@ -17,6 +17,7 @@ public enum UpdateFlags
 	Roles = 0x80,
 	Branch = 0x100,
 	ZipCode = 0x200,
+	Locale = 0x400
 }
 public class AppUser<T> where T : struct
 {

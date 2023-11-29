@@ -58,7 +58,8 @@ public sealed class AppUserStore<T>(IDbContext dbContext, IOptions<AppUserStoreO
         public const String ZipCode = nameof(ZipCode);
         public const String AccessFailedCount = nameof(AccessFailedCount);
 		public const String LockoutEndDate = nameof(LockoutEndDate);
-	}
+        public const String Locale = nameof(Locale);
+    }
 
     public async Task<IdentityResult> CreateAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
@@ -162,6 +163,8 @@ public sealed class AppUserStore<T>(IDbContext dbContext, IOptions<AppUserStoreO
 			prm.Add(ParamNames.Branch, user.Branch);
         if (user.Flags.HasFlag(UpdateFlags.ZipCode))
             prm.Add(ParamNames.ZipCode, user.ZipCode);
+        if (user.Flags.HasFlag(UpdateFlags.Locale))
+            prm.Add(ParamNames.Locale, user.Locale);
 
         await _dbContext.ExecuteExpandoAsync(_dataSource, $"[{_dbSchema}].[User.UpdateParts]", prm);
 
