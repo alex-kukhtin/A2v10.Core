@@ -116,7 +116,7 @@ public static class ServicesExtensions
 		return builder;
 	}
 
-	public static void ConfigurePlatform(this IApplicationBuilder app, IWebHostEnvironment env)
+	public static void ConfigurePlatform(this IApplicationBuilder app, IWebHostEnvironment env, IConfiguration configuration = null)
 	{
 		if (env.IsDevelopment())
 		{
@@ -152,8 +152,13 @@ public static class ServicesExtensions
 			endpoints.MapHub<DefaultHub>("/_userhub");
 		});
 
-		// TODO: use settings?
-		var cultureInfo = new CultureInfo("uk-UA");
+        var cultureInfo = new CultureInfo("uk-UA");
+        if (configuration != null)
+		{
+			var ci = configuration.GetValue<String>("Globalization:Locale");
+			if (!String.IsNullOrEmpty(ci))
+				cultureInfo = new CultureInfo(ci);
+		}
 
 		CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
 		CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;

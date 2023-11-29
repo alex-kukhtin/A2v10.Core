@@ -73,6 +73,6 @@ public class Startup(IConfiguration configuration)
 
 	public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 	{
-		app.ConfigurePlatform(env);
+		app.ConfigurePlatform(env, Configuration);
 	}
 }
