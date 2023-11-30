@@ -2,7 +2,7 @@
 Copyright © 2008-2023 Oleksandr Kukhtin
 
 Last updated : 05 aug 2023
-module version : 8134
+module version : 8186
 */
 
 -- SECURITY SEGMENT
