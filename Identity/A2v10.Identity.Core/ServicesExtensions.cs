@@ -81,7 +81,10 @@ public static class ServicesExtensions
 		String? cookiePrefix = null, Action<CookieAuthenticationEvents>? cockieEvents = null)
 	{
 		String px = !String.IsNullOrEmpty(cookiePrefix) ? $"{cookiePrefix}." : String.Empty;
-		var builder = services.AddAuthentication(options =>
+
+		SameSiteMode cookieMode = SameSiteMode.Lax;   /* Required for GOOGLE Auth*/
+
+        var builder = services.AddAuthentication(options =>
 		{
 			options.DefaultAuthenticateScheme = IdentityConstants.ApplicationScheme;
 			options.DefaultChallengeScheme = IdentityConstants.ApplicationScheme;
@@ -90,7 +93,7 @@ public static class ServicesExtensions
 		.AddCookie(IdentityConstants.ApplicationScheme, o =>
 		{
 			o.Cookie.Name = px + IdentityConstants.ApplicationScheme;
-			o.Cookie.SameSite = SameSiteMode.Strict;
+			o.Cookie.SameSite = cookieMode;
 			o.LoginPath = new PathString("/account/login");
 			o.ReturnUrlParameter = "returnurl";
 			o.LogoutPath = "/account/logout";
@@ -105,21 +108,21 @@ public static class ServicesExtensions
 		.AddCookie(IdentityConstants.ExternalScheme, o =>
 		{
 			o.Cookie.Name = px + IdentityConstants.ExternalScheme;
-			o.Cookie.SameSite = SameSiteMode.Strict;
+			o.Cookie.SameSite = cookieMode;
 			o.ExpireTimeSpan = TimeSpan.FromMinutes(5);
 		})
 		.AddCookie(IdentityConstants.TwoFactorUserIdScheme,
 			o =>
 			{
 				o.Cookie.Name = px + IdentityConstants.TwoFactorUserIdScheme;
-				o.Cookie.SameSite = SameSiteMode.Strict;
+				o.Cookie.SameSite = cookieMode;
 				o.ExpireTimeSpan = TimeSpan.FromMinutes(5);
 			}
 		).
 		AddCookie(IdentityConstants.TwoFactorRememberMeScheme, o =>
 		{
             o.Cookie.Name = px + IdentityConstants.TwoFactorRememberMeScheme;
-            o.Cookie.SameSite = SameSiteMode.Strict;
+            o.Cookie.SameSite = cookieMode;
             o.ExpireTimeSpan = TimeSpan.FromDays(30);
         });
 

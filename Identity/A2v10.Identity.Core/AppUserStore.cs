@@ -40,7 +40,8 @@ public sealed class AppUserStore<T>(IDbContext dbContext, IOptions<AppUserStoreO
 	private static class ParamNames
 	{
 		public const String Id = nameof(Id);
-		public const String Provider = nameof(Provider);
+        public const String Tenant = nameof(Tenant);
+        public const String Provider = nameof(Provider);
 		public const String Token = nameof(Token);
 		public const String PasswordHash = nameof(PasswordHash);
 		public const String SecurityStamp = nameof(SecurityStamp);
@@ -59,6 +60,8 @@ public sealed class AppUserStore<T>(IDbContext dbContext, IOptions<AppUserStoreO
         public const String AccessFailedCount = nameof(AccessFailedCount);
 		public const String LockoutEndDate = nameof(LockoutEndDate);
         public const String Locale = nameof(Locale);
+		public const String LoginProvider = nameof(LoginProvider);
+        public const String ProviderKey = nameof(ProviderKey);
     }
 
     public async Task<IdentityResult> CreateAsync(AppUser<T> user, CancellationToken cancellationToken)
@@ -383,8 +386,11 @@ public sealed class AppUserStore<T>(IDbContext dbContext, IOptions<AppUserStoreO
 			case WellKnownClaims.LastName:
 				user.LastName = claim.Value;
 				break;
-		}
-	}
+            case WellKnownClaims.Roles:
+                user.Roles = claim.Value;
+				break;
+        }
+    }
 
 	public async Task AddClaimsAsync(AppUser<T> user, IEnumerable<Claim> claims, CancellationToken cancellationToken)
 	{
@@ -414,15 +420,22 @@ public sealed class AppUserStore<T>(IDbContext dbContext, IOptions<AppUserStoreO
 	#endregion
 
 	#region IUserLoginStore
-	public Task AddLoginAsync(AppUser<T> user, UserLoginInfo login, CancellationToken cancellationToken)
+	public async Task AddLoginAsync(AppUser<T> user, UserLoginInfo login, CancellationToken cancellationToken)
 	{
-		// ParamName: UserId
-		throw new NotImplementedException();
+        var prm = new ExpandoObject()
+        {
+            { ParamNames.Id,  user.Id },
+			{ ParamNames.Tenant, user.Tenant },
+            { ParamNames.LoginProvider, login.LoginProvider },
+            { ParamNames.ProviderKey,  login.ProviderKey}
+        };
+        await _dbContext.ExecuteExpandoAsync(_dataSource, $"[{_dbSchema}].[User.AddExternalLogin]", prm);
 	}
 
 	[return: NotNull]
 #if NET6_0
-	public async Task<AppUser<T>> FindByLoginAsync(String loginProvider, String providerKey, CancellationToken cancellationToken)
+#pragma warning disable CS8603 // Possible null reference return.
+    public async Task<AppUser<T>> FindByLoginAsync(String loginProvider, String providerKey, CancellationToken cancellationToken)
 #elif NET7_0_OR_GREATER
 	public async Task<AppUser<T>?> FindByLoginAsync(String loginProvider, String providerKey, CancellationToken cancellationToken)
 #endif
@@ -433,27 +446,35 @@ public sealed class AppUserStore<T>(IDbContext dbContext, IOptions<AppUserStoreO
 			{
 				{ "ApiKey", providerKey }
 			};
-			return await _dbContext.LoadAsync<AppUser<T>>(_dataSource, $"[{_dbSchema}].[FindApiUserByApiKey]", prms)
-				?? new AppUser<T>();
-		}
+            return await _dbContext.LoadAsync<AppUser<T>>(_dataSource, $"[{_dbSchema}].[FindApiUserByApiKey]", prms);
+        }
 		else if (loginProvider == "PhoneNumber")
 		{
 			var prms = new ExpandoObject()
 			{
 				{ "PhoneNumber", providerKey }
 			};
-			return await _dbContext.LoadAsync<AppUser<T>>(_dataSource, $"[{_dbSchema}].[FindUserByPhoneNumber]", prms)
-				?? new AppUser<T>();
+			return await _dbContext.LoadAsync<AppUser<T>>(_dataSource, $"[{_dbSchema}].[FindUserByPhoneNumber]", prms);
 
 		}
 		else if (loginProvider == "Email")
 		{
 			return await FindByEmailAsync(providerKey, cancellationToken);
 		}
-		throw new NotImplementedException(loginProvider);
-	}
-
-	public Task<IList<UserLoginInfo>> GetLoginsAsync(AppUser<T> user, CancellationToken cancellationToken)
+		else
+		{
+			var prms = new ExpandoObject()
+				{
+					{ "LoginProvider", loginProvider },
+					{ "ProviderKey", providerKey },
+				};
+			return await _dbContext.LoadAsync<AppUser<T>>(_dataSource, $"[{_dbSchema}].[FindUserByExternalLogin]", prms);
+		}
+    }
+#if NET6_0
+#pragma warning restore CS8603 // Possible null reference return.
+#endif
+    public Task<IList<UserLoginInfo>> GetLoginsAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();
 	}

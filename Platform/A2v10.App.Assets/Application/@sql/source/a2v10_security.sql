@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2008-2023 Oleksandr Kukhtin
 
-Last updated : 29 nov 2023
-module version : 8186
+Last updated : 08 dec 2023
+module version : 8188
 */
 -- SECURITY
 ------------------------------------------------
@@ -169,6 +169,34 @@ begin
 		--values (0, N'I', @code, @Host, @status);
 
 	select * from @user;
+end
+go
+------------------------------------------------
+create or alter procedure a2security.FindUserByExternalLogin
+@LoginProvider nvarchar(255),
+@ProviderKey nvarchar(1024)
+as
+begin
+	set nocount on;
+	set transaction isolation level read uncommitted;
+
+	select u.* from a2security.ExternalUserLogins e
+	inner join a2security.ViewUsers u on e.[User] = u.Id and e.Tenant = u.Tenant
+	where LoginProvider=@LoginProvider and ProviderKey = @ProviderKey;
+end
+go
+------------------------------------------------
+create or alter procedure a2security.[User.AddExternalLogin]
+@Tenant int = 1,
+@Id bigint,
+@LoginProvider nvarchar(255),
+@ProviderKey nvarchar(1024)
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+	insert into a2security.ExternalUserLogins(Tenant, [User], LoginProvider, ProviderKey)
+	values (@Tenant, @Id, @LoginProvider, @ProviderKey);
 end
 go
 ------------------------------------------------

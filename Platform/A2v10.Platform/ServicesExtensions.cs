@@ -23,9 +23,11 @@ using A2v10.ViewEngine.Html;
 using A2v10.Platform.Web;
 using A2v10.Module.Infrastructure;
 using A2v10.Data.Providers;
+using Microsoft.AspNetCore.Authentication;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
+public record Builders(IMvcBuilder MvcBuilder, AuthenticationBuilder AuthenticationBuilder);
 public static class ServicesExtensions
 {
 	public static IServiceCollection UseSqlServerStorage(this IServiceCollection services, IConfiguration configuration)
@@ -53,7 +55,7 @@ public static class ServicesExtensions
 		return services;
 	}
 
-	public static IMvcBuilder UsePlatform(this IServiceCollection services, IConfiguration configuration)
+	public static Builders UsePlatform(this IServiceCollection services, IConfiguration configuration)
 	{
 		var builder = services.AddPlatformCore()
 			.AddDefaultIdentityUI();
@@ -71,11 +73,12 @@ public static class ServicesExtensions
 		var cookiePrefix = configuration.GetValue<String>("identity:cookiePrefix")?.Trim()
 			?? "A2v10Platform";
 
-		services.AddPlatformIdentityCore<Int64>()
+		var authBuilder = services.AddPlatformIdentityCore<Int64>()
 			.AddIdentityConfiguration<Int64>(configuration)
 			.AddPlatformAuthentication(cookiePrefix);
 
-		services.AddSingleton<IWebHostFilesProvider, WebHostFilesProvider>();
+
+        services.AddSingleton<IWebHostFilesProvider, WebHostFilesProvider>();
 
 		services.UseSqlServerStorage(configuration);
 
@@ -113,7 +116,7 @@ public static class ServicesExtensions
 		services.AddHttpClient();
 		services.AddSignalR();
 
-		return builder;
+		return new Builders(builder, authBuilder);
 	}
 
 	public static void ConfigurePlatform(this IApplicationBuilder app, IWebHostEnvironment env, IConfiguration configuration = null)
@@ -140,7 +143,7 @@ public static class ServicesExtensions
 		{
 			HttpOnly = HttpOnlyPolicy.Always,
 			Secure = CookieSecurePolicy.Always,
-			MinimumSameSitePolicy = SameSiteMode.Strict
+			MinimumSameSitePolicy = SameSiteMode.Lax /* Required for GOOGLE Auth*/
 		});
 
 		app.UseMiddleware<CurrentUserMiddleware>();

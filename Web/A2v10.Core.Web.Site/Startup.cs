@@ -41,7 +41,15 @@ public class Startup(IConfiguration configuration)
 
 		services.AddScoped<ISqlQueryTextProvider, SqlQueryTextProvider>();
 
-		services.UsePlatform(Configuration);
+		var builders = services.UsePlatform(Configuration);
+
+        builders.AuthenticationBuilder.AddGoogle(opts =>
+		{
+			opts.ClientId = Configuration.GetValue<String>("Identity:Google:ClientId")
+				?? throw new InvalidOperationException("Identity:Google:ClientId not found");
+			opts.ClientSecret = Configuration.GetValue<String>("Identity:Google:ClientSecret")
+				?? throw new InvalidOperationException("Identity:Google:ClientSecret not found");
+	    });
 
 		services.AddSingleton<TestBusinessAppProvider>();
 

@@ -22,21 +22,15 @@ namespace A2v10.Identity.UI;
 [ApiExplorerSettings(IgnoreApi = true)]
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 [AllowAnonymous]
-public class AccountController(SignInManager<AppUser<Int64>> signInManager, UserManager<AppUser<Int64>> userManager,
-            IAntiforgery antiforgery, IDbContext dbContext,
-            IApplicationTheme appTheme, IMailService mailService, ILocalizer localizer,
-            IDataProtectionProvider protectionProvider, IAppTenantManager appTenantManager,
+public class AccountController(SignInManager<AppUser<Int64>> _signInManager, 
+			UserManager<AppUser<Int64>> _userManager,
+            IAntiforgery _antiforgery, IDbContext _dbContext,
+            IApplicationTheme _appTheme, IMailService _mailService, ILocalizer _localizer,
+            IAppTenantManager _appTenantManager, 
+			IDataProtectionProvider protectionProvider,
             IOptions<AppUserStoreOptions<Int64>> userStoreOptions) : Controller
 {
-	private readonly SignInManager<AppUser<Int64>> _signInManager = signInManager;
-	private readonly UserManager<AppUser<Int64>> _userManager = userManager;
-	private readonly IAntiforgery _antiforgery = antiforgery;
-	private readonly IDbContext _dbContext = dbContext;
-	private readonly IApplicationTheme _appTheme = appTheme;
-	private readonly IMailService _mailService = mailService;
-	private readonly ILocalizer _localizer = localizer;
-	private readonly IDataProtector _protector = protectionProvider.CreateProtector("Login");
-	private readonly IAppTenantManager _appTenantManager = appTenantManager;
+    private readonly IDataProtector _protector = protectionProvider.CreateProtector("Login");
 	private readonly AppUserStoreOptions<Int64> _userStoreOptions = userStoreOptions.Value;
 
     private Boolean IsMultiTenant => _userStoreOptions.MultiTenant ?? false;
@@ -64,9 +58,14 @@ public class AccountController(SignInManager<AppUser<Int64>> signInManager, User
 	[HttpGet]
 	public async Task<IActionResult> Login(String returnUrl)
 	{
-		RemoveNonAntiforgeryCookies();
+		var x = await _signInManager.GetExternalAuthenticationSchemesAsync();
+		var redirectUrl = "https://localhost:5001/account/loginexternal";
+        var loginInfo = _signInManager.ConfigureExternalAuthenticationProperties("Google", redirectUrl);
+		return new ChallengeResult("Google", loginInfo);
 
-		var m = new LoginViewModel()
+        RemoveNonAntiforgeryCookies();
+
+        var m = new LoginViewModel()
 		{
 			Title = await _dbContext.LoadAsync<AppTitleModel>(CatalogDataSource, "a2sys.[AppTitle.Load]"),
 			Theme = _appTheme.MakeTheme(),
@@ -552,15 +551,52 @@ public class AccountController(SignInManager<AppUser<Int64>> signInManager, User
 	}
 
 	[HttpGet]
-	[ActionName("signin-google")]
-	public async Task<IActionResult> SignInGoogle([FromQuery] String code, String scope, String authuser, String prompt)
+    [AllowAnonymous]
+    public async Task<IActionResult> LoginExternal(String? returnUrl, String? remoteError = null)
 	{
-		/* Let's exchange the code for a token, 
-		   get information about the user using the token, create a user if necessary, 
-		   log in, and redirect to '/'
+        // https://github.com/dotnet/aspnetcore/blob/2728435cacd711dfebf0f7ea1a531752631329f2/src/Identity/UI/src/Areas/Identity/Pages/V5/Account/ExternalLogin.cshtml.cs
+		/*
+		 * Create user: UserName, Email, EmailConfirmed, IsExternalUser ??
 		 */
-		await Task.Delay(1);
-		return View();
+
+        var info = await _signInManager.GetExternalLoginInfoAsync();
+		if (info == null)
+		{
+			// TODO: error view
+            throw new InvalidOperationException($"Invalid external login info, Error: {remoteError}");
+        }
+
+		var email = info.Principal.Identity.GetClaimValue<String>(WellKnownClaims.OAuthEmail)
+			?? throw new InvalidOperationException("Email not found");
+
+		var user = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
+		if (user == null || user.IsEmpty)
+		{
+			// not found by login, try to create external login
+			user = await _userManager.FindByNameAsync(email);
+			if (user == null || user.IsEmpty)
+			{
+				throw new InvalidOperationException("User not found");
+			}
+			await _userManager.AddLoginAsync(user, new UserLoginInfo(info.LoginProvider, info.ProviderKey, null));
+        }
+
+        // check user name
+        var name = info.Principal.Identity.GetClaimValue<String>(WellKnownClaims.Name);
+        if (name != user.PersonName)
+        {
+            user.PersonName = name;
+            user.Flags |= UpdateFlags.PersonName;
+            await _userManager.UpdateAsync(user);
+        }
+
+
+        var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
+
+		if (!result.Succeeded)
+			throw new InvalidOperationException("Invalid login");
+
+		return Redirect("/");
 	}
 }
 

@@ -19,5 +19,8 @@ public static class WellKnownClaims
 	public const String Branch = nameof(Branch);
 	public const String Roles = nameof(Roles);
 	public const String IsPersistent = nameof(IsPersistent);
+	public const String OAuthEmail = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress";
+    public const String OAuthGivenName = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname";
+    public const String OAuthSurName = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname";
 }
 
