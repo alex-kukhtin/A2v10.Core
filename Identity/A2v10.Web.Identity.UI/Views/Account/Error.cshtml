@@ -1,0 +1,32 @@
+﻿@model ErrorViewModel
+@inject ILocalizer _loc
+
+<div class="center-page">
+	<div class="initial-form">
+		<h3 class="a2-header text-center">Login</h3>
+		<hr />
+		<div class="error" style="margin:40px 0">
+			<span class="error">@Model.Message</span>
+		</div>
+		<div>
+			<a class="btn btn-primary" style="width:60%" href="/account/login" tabindex="1">Try again</a>
+		</div>
+	</div>
+</div>
+@section Scripts
+{
+	<script type="text/javascript">
+		"use strict";
+		(function () {
+
+			new Vue({
+				el: "#app",
+				data: {
+				},
+				computed: {
+				},
+				methods: {
+				}
+			});
+		})();</script>
+}

@@ -22,7 +22,8 @@ services.AddPlatformIdentityCore<T>()
 		"MultiTenant": false,
 		"ValidationInterval": "00:05:00"
 	},
-	"CookiePrefix": "Cookie_Prefix"
+	"CookiePrefix": "Cookie_Prefix",
+	"Providers": "Local,..."
 }
 ```
 
@@ -32,6 +33,7 @@ All values are optional.
 
 * [A2v10.Identity.ApiKey](https://www.nuget.org/packages/A2v10.Identity.ApiKey)
 * [A2v10.Identity.Jwt](https://www.nuget.org/packages/A2v10.Identity.Jwt)
+* [A2v10.Identity.UI](https://www.nuget.org/packages/A2v10.Identity.UI)
 
 
 # Feedback

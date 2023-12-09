@@ -15,6 +15,7 @@ using Microsoft.Extensions.Options;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Web.Identity;
+using Microsoft.Extensions.Configuration;
 
 namespace A2v10.Identity.UI;
 
@@ -26,7 +27,7 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
 			UserManager<AppUser<Int64>> _userManager,
             IAntiforgery _antiforgery, IDbContext _dbContext,
             IApplicationTheme _appTheme, IMailService _mailService, ILocalizer _localizer,
-            IAppTenantManager _appTenantManager, 
+            IConfiguration _configuration, IAppTenantManager _appTenantManager, 
 			IDataProtectionProvider protectionProvider,
             IOptions<AppUserStoreOptions<Int64>> userStoreOptions) : Controller
 {
@@ -55,15 +56,39 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
 			Response.Cookies.Delete(key);
 	}
 
-	[HttpGet]
+	private async Task<IActionResult?> SingleExternalAuthenticationSchemesAsync()
+	{
+        var providers = _configuration.GetValue<String>("Identity:Providers");
+		if (providers == null)
+			return null;
+		var splitted = providers.Split(',');
+        var availableSchemes = await _signInManager.GetExternalAuthenticationSchemesAsync();
+        foreach (var scheme in splitted.Where(s => s != "Local"))
+		{
+			if (!availableSchemes.Any(s => s.Name == scheme))
+				throw new InvalidOperationException($"External Authentication Scheme '{scheme}' not found");
+		}
+		if (splitted.Length == 1)
+		{
+			var scheme = splitted[0];
+			if (availableSchemes.Any(s => s.Name == scheme))
+			{
+                var redirectUrl = Url.ActionLink("loginexternal");
+                var loginInfo = _signInManager.ConfigureExternalAuthenticationProperties(scheme, redirectUrl);
+                return new ChallengeResult(scheme, loginInfo);
+            }
+        }
+		return null;
+    }
+
+    [HttpGet]
 	public async Task<IActionResult> Login(String returnUrl)
 	{
-		var x = await _signInManager.GetExternalAuthenticationSchemesAsync();
-		var redirectUrl = "https://localhost:5001/account/loginexternal";
-        var loginInfo = _signInManager.ConfigureExternalAuthenticationProperties("Google", redirectUrl);
-		return new ChallengeResult("Google", loginInfo);
-
         RemoveNonAntiforgeryCookies();
+        
+		var external = await SingleExternalAuthenticationSchemesAsync();
+		if (external != null)
+			return external;
 
         var m = new LoginViewModel()
 		{
@@ -550,21 +575,34 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
 		}
 	}
 
-	[HttpGet]
-    [AllowAnonymous]
-    public async Task<IActionResult> LoginExternal(String? returnUrl, String? remoteError = null)
+	private async Task<IActionResult> Error(String message)
 	{
-        // https://github.com/dotnet/aspnetcore/blob/2728435cacd711dfebf0f7ea1a531752631329f2/src/Identity/UI/src/Areas/Identity/Pages/V5/Account/ExternalLogin.cshtml.cs
+		var model = new ErrorViewModel()
+		{
+			Title = await _dbContext.LoadAsync<AppTitleModel>(CatalogDataSource, "a2sys.[AppTitle.Load]"),
+			Theme = _appTheme.MakeTheme(),
+			RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken,
+			Message = message	
+		};
+		return View("Error", model);
+	}
+
+	[HttpGet]
+	[ActionName("loginexternal")]
+    [AllowAnonymous]
+    public async Task<IActionResult> LoginExternal([FromQuery] String? remoteError = null)
+	{
+		// https://github.com/dotnet/aspnetcore/blob/2728435cacd711dfebf0f7ea1a531752631329f2/src/Identity/UI/src/Areas/Identity/Pages/V5/Account/ExternalLogin.cshtml.cs
 		/*
 		 * Create user: UserName, Email, EmailConfirmed, IsExternalUser ??
 		 */
 
+		if (!String.IsNullOrEmpty(remoteError))
+			return await Error(remoteError);
+
         var info = await _signInManager.GetExternalLoginInfoAsync();
 		if (info == null)
-		{
-			// TODO: error view
-            throw new InvalidOperationException($"Invalid external login info, Error: {remoteError}");
-        }
+			return await Error($"Invalid external login info");
 
 		var email = info.Principal.Identity.GetClaimValue<String>(WellKnownClaims.OAuthEmail)
 			?? throw new InvalidOperationException("Email not found");
@@ -576,7 +614,7 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
 			user = await _userManager.FindByNameAsync(email);
 			if (user == null || user.IsEmpty)
 			{
-				throw new InvalidOperationException("User not found");
+				return await Error($"User '{email}' is not registered in the system. Contact your administrator.");
 			}
 			await _userManager.AddLoginAsync(user, new UserLoginInfo(info.LoginProvider, info.ProviderKey, null));
         }
@@ -594,7 +632,7 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
         var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
 
 		if (!result.Succeeded)
-			throw new InvalidOperationException("Invalid login");
+			return await Error($"Invalid login for {email}");
 
 		return Redirect("/");
 	}
