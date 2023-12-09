@@ -1,8 +1,8 @@
 /*
 Copyright © 2008-2023 Oleksandr Kukhtin
 
-Last updated : 13 aug 2023
-module version : 8137
+Last updated : 09 dec 2023
+module version : 8188
 */
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.SCHEMATA where SCHEMA_NAME=N'a2sys')
@@ -115,6 +115,20 @@ create table a2security.ApiUserLogins
 	constraint PK_ApiUserLogins primary key clustered ([User], Tenant, Mode) with (fillfactor = 70),
 	constraint FK_ApiUserLogins_User_Users foreign key (Tenant, [User]) references a2security.Users(Tenant, Id)
 
+);
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2security' and TABLE_NAME=N'ExternalUserLogins')
+create table a2security.ExternalUserLogins
+(
+	[User] bigint not null,
+	Tenant int not null 
+		constraint FK_ExternalUserLogins_Tenant_Tenants foreign key references a2security.Tenants(Id),
+	[LoginProvider] nvarchar(255) not null,
+	[ProviderKey] nvarchar(max) not null,
+	[UtcDateModified] datetime not null constraint DF_ExternalUserLogins_DateModified default(getutcdate()),
+	constraint PK_ExternalUserLogins primary key clustered ([User], Tenant, LoginProvider) with (fillfactor = 70),
+	constraint FK_ExternalUserLogins_User_Users foreign key (Tenant, [User]) references a2security.Users(Tenant, Id)
 );
 go
 ------------------------------------------------
@@ -500,7 +514,7 @@ go
 Copyright © 2008-2023 Oleksandr Kukhtin
 
 Last updated : 05 aug 2023
-module version : 8134
+module version : 8186
 */
 
 -- SECURITY SEGMENT
