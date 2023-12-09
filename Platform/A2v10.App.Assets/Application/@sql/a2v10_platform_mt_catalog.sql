@@ -296,8 +296,9 @@ go
 Copyright © 2008-2023 Oleksandr Kukhtin
 
 Last updated : 08 dec 2023
-module version : 8188
+module version : 8190
 */
+
 -- SECURITY
 ------------------------------------------------
 create or alter procedure a2security.FindUserById
@@ -474,9 +475,14 @@ begin
 	set nocount on;
 	set transaction isolation level read uncommitted;
 
-	select u.* from a2security.ExternalUserLogins e
-	inner join a2security.ViewUsers u on e.[User] = u.Id and e.Tenant = u.Tenant
+	declare @userId bigint;
+	select @userId = [User] from a2security.ExternalUserLogins e
 	where LoginProvider=@LoginProvider and ProviderKey = @ProviderKey;
+
+	update a2security.Users set LastLoginDate = getutcdate() where Id = @userId;
+
+	select u.* from a2security.ViewUsers u
+	where Id = @userId
 end
 go
 ------------------------------------------------
@@ -489,8 +495,15 @@ as
 begin
 	set nocount on;
 	set transaction isolation level read committed;
+	set xact_abort on;
+
+	begin tran;
+	delete from a2security.ExternalUserLogins where 
+		Tenant = @Tenant and [User] = @Id and LoginProvider = @LoginProvider;
+
 	insert into a2security.ExternalUserLogins(Tenant, [User], LoginProvider, ProviderKey)
 	values (@Tenant, @Id, @LoginProvider, @ProviderKey);
+	commit tran;
 end
 go
 ------------------------------------------------
