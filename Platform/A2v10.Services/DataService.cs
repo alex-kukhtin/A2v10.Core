@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Services.Interop;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace A2v10.Services;
 
@@ -419,13 +420,18 @@ public class DataService(IServiceProvider _serviceProvider, IModelJsonReader _mo
 		prms.Set("Key", blob.Key);
 		setParams?.Invoke(prms);
 
-		return blob.Type switch
+		var blobInfo = blob.Type switch
 		{
 			ModelBlobType.sql => await LoadBlobSql(blob, prms),
 			ModelBlobType.json => await LoadBlobJson(blob, prms),
 			ModelBlobType.clr => await LoadBlobClr(blob, prms),
+			ModelBlobType.azureBlob => await LoadBlobAzure(blob, prms),
 			_ => throw new NotImplementedException(blob.Type.ToString()),
-		}; ;
+		}; ; 
+		if (String.IsNullOrEmpty(blobInfo?.BlobName))
+			return blobInfo;
+		// Load blob from BlobService
+		return LoadBlobFromService(blob, blobInfo);
     }
 
 	private Task<BlobInfo?> LoadBlobSql(IModelBlob blob, ExpandoObject prms)
@@ -435,6 +441,26 @@ public class DataService(IServiceProvider _serviceProvider, IModelJsonReader _mo
             throw new DataServiceException($"LoadProcedure is null");
         return _dbContext.LoadAsync<BlobInfo>(blob?.DataSource, loadProc, prms);
     }
+	private async Task<BlobInfo?> LoadBlobAzure(IModelBlob blob, ExpandoObject prms)
+	{
+		var blobEngine = _serviceProvider.GetRequiredService<IBlobStorageProvider>();
+		var engine = blobEngine.FindBlobStorage("AzureStorage");
+
+		var blobInfo = await LoadBlobSql(blob, prms);
+		var blobName = blobInfo?.BlobName
+			?? throw new InvalidOperationException("BlobName is null");
+		await engine.LoadAsync(blobName);
+
+		return new BlobInfo()
+		{
+			Mime = blobInfo.Mime,
+			Name = blobInfo.Name,
+			SkipToken = blobInfo.SkipToken,
+			Token = blobInfo.Token,
+			BlobName = blobName,
+			Stream = null
+		};
+	}
 	private async Task<BlobInfo?> LoadBlobClr(IModelBlob modelBlob, ExpandoObject prms)
 	{
         if (String.IsNullOrEmpty(modelBlob.ClrType))
@@ -454,7 +480,8 @@ public class DataService(IServiceProvider _serviceProvider, IModelJsonReader _mo
 		{
 			Name = result.Name,
 			Mime = result.Mime,
-			Stream = result.Stream
+			Stream = result.Stream,
+			BlobName = result.BlobName
 		};
     }
 
@@ -486,6 +513,11 @@ public class DataService(IServiceProvider _serviceProvider, IModelJsonReader _mo
         };
     }
 
+	IBlobInfo LoadBlobFromService(IModelBlob model, IBlobInfo info)
+	{
+		throw new NotImplementedException();
+	}
+
 	public async Task<ExpandoObject> SaveFileAsync(String baseUrl, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams)
 	{
 		var platformUrl = CreatePlatformUrl(UrlKind.File, baseUrl);
@@ -494,10 +526,31 @@ public class DataService(IServiceProvider _serviceProvider, IModelJsonReader _mo
 		return blobModel.Type switch
 		{
 			ModelBlobType.parse => await ParseFile(blobModel, setBlob, setParams),
+			ModelBlobType.sql => await SaveBlobSql(blobModel, setBlob, setParams),
+			ModelBlobType.azureBlob => await SaveBlobAzure(blobModel, setBlob, setParams),
 			_ =>
 				throw new NotImplementedException(blobModel.Type.ToString())
 		};
     }
+
+	private Task<ExpandoObject> SaveBlobSql(IModelBlob blobModel, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams)
+	{
+		throw new InvalidOperationException();
+	}
+	private async Task<ExpandoObject> SaveBlobAzure(IModelBlob blobModel, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams)
+	{
+		BlobUpdateInfo blobInfo = new();
+		setBlob(blobInfo);
+		if (blobInfo.Stream == null)
+			throw new InvalidOperationException("Stream is null");
+		var blobEngine = _serviceProvider.GetRequiredService<IBlobStorageProvider>();
+		var storage = blobEngine.FindBlobStorage("AzureStorage");
+		if (blobModel.AzureSource == null)
+			throw new InvalidOperationException("AzureSource is null");
+		await storage.SaveAsync(blobModel.AzureSource, blobInfo);
+
+		throw new InvalidOperationException();
+	}
 
 	private Task<ExpandoObject> ParseFile(IModelBlob blobModel, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams)
 	{
@@ -512,7 +565,6 @@ public class DataService(IServiceProvider _serviceProvider, IModelJsonReader _mo
 			_ => throw new NotImplementedException(blobModel.Parse.ToString())
 		};
 	}
-
 	private Task<ExpandoObject> ParseAuto(IModelBlob blobModel, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams)
 	{
 		BlobUpdateInfo blobInfo = new();

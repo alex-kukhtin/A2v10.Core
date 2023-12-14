@@ -1,11 +1,10 @@
 ﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
+using System.Text;
 
 using Microsoft.Extensions.DependencyInjection;
 
 using A2v10.Data.Interfaces;
-using Newtonsoft.Json;
-using System.Text;
 
 namespace A2v10.Services;
 public class ModelJsonBase : IModelBase
@@ -135,7 +134,8 @@ public class ModelJsonBlob : ModelJsonViewBase, IModelBlob
 	public String? Suffix { get; init; }
     public String? OutputFileName { get; init; }
     public String? ClrType { get; init; }
-    public Boolean Zip { get; init; }
+	public String? AzureSource { get; init; }
+	public Boolean Zip { get; init; }
     public ModelBlobType Type { get; init; }
 	public ModelParseType Parse { get; init; }
 

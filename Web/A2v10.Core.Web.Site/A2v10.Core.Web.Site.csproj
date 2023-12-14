@@ -30,6 +30,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\..\BlobStorages\AzureBlobStorage\AzureBlobStorage.csproj" />
 		<ProjectReference Include="..\..\Extensions\A2v10.Scheduling.Commands\A2v10.Scheduling.Commands.csproj" />
 		<ProjectReference Include="..\..\Extensions\A2v10.Scheduling\A2v10.Scheduling.csproj" />
 		<ProjectReference Include="..\..\Messaging\A2v10.MailClient\A2v10.MailClient.csproj" />

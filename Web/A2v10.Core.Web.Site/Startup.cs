@@ -17,6 +17,8 @@ using A2v10.Scheduling;
 using A2v10.Scheduling.Commands;
 using A2v10.Core.Web.Site.TestServices;
 
+using A2v10.AzureBlob;
+
 namespace A2v10.Core.Web.Site;
 
 public class NullLicenseManager : ILicenseManager
@@ -56,6 +58,11 @@ public class Startup(IConfiguration configuration)
 		services.AddReportEngines(factory =>
 		{
 			factory.RegisterEngine<PdfReportEngine>("pdf");
+		});
+
+		services.AddBlobStorages(factory =>
+		{
+			factory.RegisterStorage<AzureBlobStorage>("AzureStorage");
 		});
 
 

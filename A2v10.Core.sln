@@ -110,7 +110,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "legacy", "legacy", "{BCE575
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestInfrastructure", "Tests\TestInfrastructure\TestInfrastructure.csproj", "{7D07DFA9-283E-4631-8ABB-546148298A69}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XamlViewEngineTests", "ViewEngines\XamlViewEngineTests\XamlViewEngineTests.csproj", "{D19D50DE-FE50-4FD5-8A1D-FDAFECB18557}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XamlViewEngineTests", "ViewEngines\XamlViewEngineTests\XamlViewEngineTests.csproj", "{D19D50DE-FE50-4FD5-8A1D-FDAFECB18557}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BlobStorages", "BlobStorages", "{CC97614A-5CDD-40F8-B82E-7471EE110AEC}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzureBlobStorage", "BlobStorages\AzureBlobStorage\AzureBlobStorage.csproj", "{7077A931-7247-4CCA-AE1C-D24BFBD84600}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -218,6 +222,10 @@ Global
 		{D19D50DE-FE50-4FD5-8A1D-FDAFECB18557}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D19D50DE-FE50-4FD5-8A1D-FDAFECB18557}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D19D50DE-FE50-4FD5-8A1D-FDAFECB18557}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7077A931-7247-4CCA-AE1C-D24BFBD84600}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7077A931-7247-4CCA-AE1C-D24BFBD84600}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7077A931-7247-4CCA-AE1C-D24BFBD84600}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7077A931-7247-4CCA-AE1C-D24BFBD84600}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -250,6 +258,7 @@ Global
 		{BCE575AC-2286-405C-A782-8AEF5C2F5938} = {29A69FE9-79CF-479C-9ADC-42EFC1C3D765}
 		{7D07DFA9-283E-4631-8ABB-546148298A69} = {B2D38948-4CBF-49BB-8708-A508012D6FC2}
 		{D19D50DE-FE50-4FD5-8A1D-FDAFECB18557} = {E8C95F64-3001-4F08-B774-A6A89EB2945D}
+		{7077A931-7247-4CCA-AE1C-D24BFBD84600} = {CC97614A-5CDD-40F8-B82E-7471EE110AEC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D64A03C5-D2E1-49C8-A7A9-D6022941DE01}

@@ -12,6 +12,8 @@ public record InvokeBlobResult
 	public String? Name { get; init; }
     public String? Mime { get; init; }
     public Byte[]? Stream { get; init; }
+
+	public String? BlobName { get; init; }
 }
 
 public interface IClrInvokeBlob
