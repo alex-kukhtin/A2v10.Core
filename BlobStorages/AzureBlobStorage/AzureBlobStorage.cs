@@ -1,30 +1,50 @@
-﻿
+﻿// Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
-using System.Data;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
 
 using A2v10.Infrastructure;
 using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Specialized;
+using Microsoft.Extensions.Configuration;
 
 namespace A2v10.AzureBlob;
 
-public class AzureBlobStorage : IBlobStorage
+public class AzureBlobStorage(IConfiguration _configuration) : IBlobStorage
 {
-	public AzureBlobStorage()
+	private readonly ConcurrentDictionary<String, BlobContainerClient> _containers = new();
+
+	private const String DefaultConnectionString = "AzureStorage";
+	private const String DefaultContainerName = "default";	
+
+	private BlobContainerClient GetClient(String? source, String? container)
 	{
-		var client = new BlobContainerClient("cnnstr", "container");
-		client.Create();
-		int z = 5;
+		if (String.IsNullOrEmpty(source))
+			source = DefaultConnectionString;
+		if (String.IsNullOrEmpty(container))
+			container = DefaultContainerName;
+		var key = $"{source}:{container}";
+		if (_containers.TryGetValue(key, out BlobContainerClient? client))
+			return client;
+		var cnnStr = _configuration.GetConnectionString(source)
+			?? throw new InvalidOperationException($"Connection String {source} not found");
+		var serviceClient = new BlobServiceClient(cnnStr);
+			//"DefaultEndpointsProtocol=https;AccountName=atest112205;AccountKey=yI43erlV9VX0iNhK4qJ3rEC1mtFI7UpWF5L+CGuGmiXoo9gC8wKYnxRCxFuVCmj8wc4M71P5iclywLx/BzupKQ==;EndpointSuffix=core.windows.net");
+		client = serviceClient.GetBlobContainerClient(container);
+		_containers.TryAdd(key, client);
+		return client;
+	}
+	public async Task<ReadOnlyMemory<Byte>> LoadAsync(String? source, String? container, String blobName)
+	{
+		var client = GetClient(source, container);
+		var content = await client.GetBlobClient(blobName).DownloadContentAsync();
+		return content.Value.Content.ToMemory();
 	}
 
-	public Task LoadAsync(String blobName)
+	public async Task SaveAsync(String? source, String? container, IBlobUpdateInfo blobInfo)
 	{
-		throw new NotImplementedException();
-	}
-
-	public Task SaveAsync(String source, IBlobUpdateInfo blobInfo)
-	{
-		throw new NotImplementedException();
+		var client = GetClient(source, container);
+		await client.UploadBlobAsync(blobInfo.BlobName, blobInfo.Stream);
 	}
 }

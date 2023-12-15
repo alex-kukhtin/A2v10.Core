@@ -69,7 +69,9 @@ public interface IModelBlob
     String? OutputFileName { get; }
 	Boolean Zip { get; }
 	String? AzureSource { get; }
-    Int32 CommandTimeout { get; }
+	String? Container { get; }
+	ExpandoObject? Parameters { get; }
+	Int32 CommandTimeout { get; }
     String LoadProcedure();
 	String UpdateProcedure();
     

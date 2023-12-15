@@ -135,6 +135,7 @@ public class ModelJsonBlob : ModelJsonViewBase, IModelBlob
     public String? OutputFileName { get; init; }
     public String? ClrType { get; init; }
 	public String? AzureSource { get; init; }
+	public String? Container { get; init; }
 	public Boolean Zip { get; init; }
     public ModelBlobType Type { get; init; }
 	public ModelParseType Parse { get; init; }

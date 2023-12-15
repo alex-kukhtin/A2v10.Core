@@ -13,6 +13,7 @@ using Newtonsoft.Json;
 
 using A2v10.Infrastructure;
 using A2v10.Data.Interfaces;
+using System.Dynamic;
 
 namespace A2v10.Platform.Web.Controllers;
 
@@ -20,20 +21,21 @@ namespace A2v10.Platform.Web.Controllers;
 [Authorize]
 public class FileController(IApplicationHost host,
     ILocalizer localizer, ICurrentUser currentUser, IProfiler profiler,
-    IDataService dataService, ITokenProvider tokenProvider, IAppCodeProvider appCodeProvider) : BaseController(host, localizer, currentUser, profiler)
+    IDataService _dataService, ITokenProvider _tokenProvider, IAppCodeProvider _appCodeProvider) : BaseController(host, localizer, currentUser, profiler)
 {
-	private readonly IDataService _dataService = dataService;
-	private readonly ITokenProvider _tokenProvider = tokenProvider;
-	private readonly IAppCodeProvider _appCodeProvider = appCodeProvider;
-
-    [Route("_file/{*pathInfo}")]
+	// always Cached!
+	[ResponseCache(Duration = 2592000, Location = ResponseCacheLocation.Client)]
+	[Route("_file/{*pathInfo}")]
 	[HttpGet]
 	public async Task<IActionResult> DefaultGet(String pathInfo)
 	{
 		try
 		{
-			var blob = await _dataService.LoadBlobAsync(UrlKind.File, pathInfo, SetSqlQueryParams)
-				?? throw new InvalidOperationException("Blob not found");
+			var blob = await _dataService.LoadBlobAsync(UrlKind.File, pathInfo, (prms) =>
+			{
+				SetSqlQueryParams(prms);
+				SetRequestQueryKey(prms);
+			}) ?? throw new InvalidOperationException("Blob not found");
 
             if (blob.CheckToken)
                 ValidateToken(blob.Token);
@@ -49,10 +51,6 @@ public class FileController(IApplicationHost host,
 					FileNameStar = _localizer.Localize(null, blob.Name)
 				};
 				ar.AddHeader("Content-Disposition", cdh.ToString());
-			}
-			else if (MimeTypes.IsImage(blob.Mime))
-			{
-				ar.EnableCache();
 			}
 			return ar;
 		}
@@ -86,8 +84,17 @@ public class FileController(IApplicationHost host,
 					blob.Name = name;
 					blob.Mime = file.ContentType;
 				}, 
-				SetSqlQueryParams
+				(prms) => {
+					SetSqlQueryParams(prms);
+					SetRequestQueryKey(prms);
+				}
 			);
+			result.ReplaceValue("Token", (v) =>
+			{
+				if (v is Guid guid)
+					return _tokenProvider.GenerateToken(guid);
+				return v;
+			});
             String json = JsonConvert.SerializeObject(result, JsonHelpers.StandardSerializerSettings);
             return Content(json, MimeTypes.Application.Json);
         }
@@ -95,6 +102,14 @@ public class FileController(IApplicationHost host,
 		{
 			return WriteExceptionStatus(ex);
 		}
+	}
+
+	void SetRequestQueryKey(ExpandoObject prms)
+	{
+		var key = Request.Query["Key"].ToString();
+		if (!String.IsNullOrEmpty(key))
+			prms.Set("Key", key);
+
 	}
 
 	void ValidateToken(Guid dbToken)

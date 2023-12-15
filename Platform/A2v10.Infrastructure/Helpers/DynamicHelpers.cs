@@ -6,6 +6,7 @@ using System.Collections.Specialized;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -303,6 +304,15 @@ public static class DynamicHelpers
 			sb.Replace(m.Value, val);
 		}
 		return sb.ToString();
+	}
+
+	public static void ReplaceValue(this ExpandoObject This, String key, Func<Object, Object> replacement)
+	{
+		var d = This as IDictionary<String, Object>;
+		if (d.ContainsKey(key))
+		{
+			d[key] = replacement(d[key]);
+		}
 	}
 
 

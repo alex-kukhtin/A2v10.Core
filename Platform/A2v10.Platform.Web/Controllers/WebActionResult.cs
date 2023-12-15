@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Net.Http.Headers;
 
 using A2v10.Infrastructure;
+using Microsoft.AspNetCore.ResponseCaching;
 
 namespace A2v10.Platform.Web.Controllers;
 
@@ -86,12 +87,13 @@ public class WebBinaryActionResult : IActionResult
 
 		if (_cache)
 		{
-			resp.GetTypedHeaders().CacheControl =
-			new CacheControlHeaderValue()
+			var cc = new CacheControlHeaderValue()
 			{
-				Private = true,
-				MaxAge = TimeSpan.FromDays(30)
+				Private = true,				
+				MaxAge = TimeSpan.FromDays(30),
 			};
+			resp.GetTypedHeaders().CacheControl = cc;
+
 		}
 
 		for (int i = 0; i < _data.Count; i++)

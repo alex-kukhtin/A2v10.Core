@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace A2v10.Infrastructure;
 public interface IBlobStorage
 {
-	Task LoadAsync(String blobName);
-	Task SaveAsync(String source, IBlobUpdateInfo blobInfo);
+	Task<ReadOnlyMemory<Byte>> LoadAsync(String? source, String? container, String blobName);
+	Task SaveAsync(String? source, String? container, IBlobUpdateInfo blobInfo);
 }
 

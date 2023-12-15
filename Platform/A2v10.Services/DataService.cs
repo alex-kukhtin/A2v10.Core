@@ -417,7 +417,8 @@ public class DataService(IServiceProvider _serviceProvider, IModelJsonReader _mo
 
         var prms = new ExpandoObject();
 		prms.Set("Id", blob.Id);
-		prms.Set("Key", blob.Key);
+		if (!String.IsNullOrEmpty(blob.Key))
+			prms.Set("Key", blob.Key);
 		setParams?.Invoke(prms);
 
 		var blobInfo = blob.Type switch
@@ -427,11 +428,8 @@ public class DataService(IServiceProvider _serviceProvider, IModelJsonReader _mo
 			ModelBlobType.clr => await LoadBlobClr(blob, prms),
 			ModelBlobType.azureBlob => await LoadBlobAzure(blob, prms),
 			_ => throw new NotImplementedException(blob.Type.ToString()),
-		}; ; 
-		if (String.IsNullOrEmpty(blobInfo?.BlobName))
-			return blobInfo;
-		// Load blob from BlobService
-		return LoadBlobFromService(blob, blobInfo);
+		};
+		return blobInfo;
     }
 
 	private Task<BlobInfo?> LoadBlobSql(IModelBlob blob, ExpandoObject prms)
@@ -443,23 +441,19 @@ public class DataService(IServiceProvider _serviceProvider, IModelJsonReader _mo
     }
 	private async Task<BlobInfo?> LoadBlobAzure(IModelBlob blob, ExpandoObject prms)
 	{
-		var blobEngine = _serviceProvider.GetRequiredService<IBlobStorageProvider>();
-		var engine = blobEngine.FindBlobStorage("AzureStorage");
-
 		var blobInfo = await LoadBlobSql(blob, prms);
 		var blobName = blobInfo?.BlobName
 			?? throw new InvalidOperationException("BlobName is null");
-		await engine.LoadAsync(blobName);
+		if (blobInfo.Stream != null)
+			return blobInfo;
 
-		return new BlobInfo()
-		{
-			Mime = blobInfo.Mime,
-			Name = blobInfo.Name,
-			SkipToken = blobInfo.SkipToken,
-			Token = blobInfo.Token,
-			BlobName = blobName,
-			Stream = null
-		};
+		var blobEngine = _serviceProvider.GetRequiredService<IBlobStorageProvider>();
+		var engine = blobEngine.FindBlobStorage("AzureStorage");
+
+		var bytes = await engine.LoadAsync(blob.AzureSource, blob.Container, blobName);
+
+		blobInfo.Stream = bytes.ToArray();
+		return blobInfo;
 	}
 	private async Task<BlobInfo?> LoadBlobClr(IModelBlob modelBlob, ExpandoObject prms)
 	{
@@ -513,11 +507,6 @@ public class DataService(IServiceProvider _serviceProvider, IModelJsonReader _mo
         };
     }
 
-	IBlobInfo LoadBlobFromService(IModelBlob model, IBlobInfo info)
-	{
-		throw new NotImplementedException();
-	}
-
 	public async Task<ExpandoObject> SaveFileAsync(String baseUrl, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams)
 	{
 		var platformUrl = CreatePlatformUrl(UrlKind.File, baseUrl);
@@ -535,21 +524,59 @@ public class DataService(IServiceProvider _serviceProvider, IModelJsonReader _mo
 
 	private Task<ExpandoObject> SaveBlobSql(IModelBlob blobModel, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams)
 	{
-		throw new InvalidOperationException();
+		BlobUpdateInfo blobInfo = new()
+		{
+			Id = blobModel.Id
+		};
+		setBlob(blobInfo);
+		return SaveBlobInt(blobInfo, blobModel, setParams);
+
+	}
+	private async Task<ExpandoObject> SaveBlobInt(BlobUpdateInfo blobInfo, IModelBlob blobModel, Action<ExpandoObject>? setParams) 
+	{ 
+		ExpandoObject savePrms = [];
+		setParams?.Invoke(savePrms);
+
+		blobInfo.UserId = savePrms.Get<Int64>("UserId"); // required
+		blobInfo.TenantId = savePrms.Get<Int32?>("TenantId"); // optional
+		var key = savePrms.Get<String>("Key");
+		if (!String.IsNullOrEmpty(key))
+			blobInfo.Key = key; // optional
+
+		var saveProc = (blobModel?.UpdateProcedure())
+			?? throw new DataServiceException($"UpdateProcedure is null");
+
+		var output = await _dbContext.ExecuteAndLoadAsync<BlobUpdateInfo, BlobUpdateOutput>(blobModel.DataSource, saveProc, blobInfo)
+			?? throw new InvalidOperationException("Update result is null");
+
+		var result = new ExpandoObject()
+		{
+			{ "Id",    output.Id },
+			{ "Name",  blobInfo.Name ?? String.Empty },
+			{ "Mime",  blobInfo.Mime ?? String.Empty },
+		};
+		if (output.Token != null)
+			result.Add("Token", output.Token);
+		return result;
 	}
 	private async Task<ExpandoObject> SaveBlobAzure(IModelBlob blobModel, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams)
 	{
-		BlobUpdateInfo blobInfo = new();
+		BlobUpdateInfo blobInfo = new()
+		{
+			Id = blobModel.Id
+		};
 		setBlob(blobInfo);
 		if (blobInfo.Stream == null)
 			throw new InvalidOperationException("Stream is null");
+
+		var folder = DateTime.UtcNow.ToString("yyyyMMdd");
+		blobInfo.BlobName = $"{folder}/{Guid.NewGuid()}_{blobInfo.Name}";
 		var blobEngine = _serviceProvider.GetRequiredService<IBlobStorageProvider>();
 		var storage = blobEngine.FindBlobStorage("AzureStorage");
-		if (blobModel.AzureSource == null)
-			throw new InvalidOperationException("AzureSource is null");
-		await storage.SaveAsync(blobModel.AzureSource, blobInfo);
+		await storage.SaveAsync(blobModel.AzureSource, blobModel.Container, blobInfo);
 
-		throw new InvalidOperationException();
+		blobInfo.Stream = null; // not stream in SQL
+		return await SaveBlobInt(blobInfo, blobModel, setParams);
 	}
 
 	private Task<ExpandoObject> ParseFile(IModelBlob blobModel, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams)

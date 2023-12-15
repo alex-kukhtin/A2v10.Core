@@ -38,7 +38,7 @@ public interface IBlobUpdateInfo
 
 public interface IBlobUpdateOutput
 {
-    public Object? Id { get; set; }
+    public Object Id { get; set; }
     public Guid? Token { get; set; }
 
 }
