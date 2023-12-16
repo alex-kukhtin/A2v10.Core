@@ -2,14 +2,14 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
-		<Version>10.1.8184</Version>
+		<Version>10.1.8191</Version>
 		<LangVersion>Latest</LangVersion>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<AssemblyName>A2v10.AzureBlobStorage</AssemblyName>
+		<AssemblyName>A2v10.BlobStorage.Azure</AssemblyName>
 		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
 		<Product>A2v10</Product>
-		<PackageId>A2v10.AzureBlobStorage</PackageId>
+		<PackageId>A2v10.BlobStorage.Azure</PackageId>
 		<Authors>Oleksandr Kukhtin</Authors>
 		<Company>Oleksandr Kukhtin</Company>
 		<Description>Azure Blob Storage for A2v10</Description>

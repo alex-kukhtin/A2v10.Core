@@ -4,10 +4,12 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 
-using A2v10.Infrastructure;
-using Azure.Storage.Blobs;
-using Azure.Storage.Blobs.Specialized;
 using Microsoft.Extensions.Configuration;
+
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
+
+using A2v10.Infrastructure;
 
 namespace A2v10.AzureBlob;
 
@@ -46,5 +48,11 @@ public class AzureBlobStorage(IConfiguration _configuration) : IBlobStorage
 	{
 		var client = GetClient(source, container);
 		await client.UploadBlobAsync(blobInfo.BlobName, blobInfo.Stream);
+	}
+
+	public Task DeleteAsync(String? source, String? container, String blobName)
+	{
+		var client = GetClient(source, container);
+		return client.GetBlobClient(blobName).DeleteAsync(DeleteSnapshotsOption.IncludeSnapshots);
 	}
 }

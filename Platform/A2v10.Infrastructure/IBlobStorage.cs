@@ -8,5 +8,6 @@ public interface IBlobStorage
 {
 	Task<ReadOnlyMemory<Byte>> LoadAsync(String? source, String? container, String blobName);
 	Task SaveAsync(String? source, String? container, IBlobUpdateInfo blobInfo);
+	Task DeleteAsync(String? source, String? container, String blobName);
 }
 

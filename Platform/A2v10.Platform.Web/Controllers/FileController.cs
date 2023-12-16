@@ -78,11 +78,12 @@ public class FileController(IApplicationHost host,
 			using var fileStream = file.OpenReadStream();
             var name = Path.GetFileName(file.FileName);
 
-            var result = await _dataService.SaveFileAsync(pathInfo, (blob) =>
+            var result = await _dataService.SaveBlobAsync(pathInfo, (blob) =>
 				{
 					blob.Stream = fileStream;
 					blob.Name = name;
 					blob.Mime = file.ContentType;
+					blob.TenantId = _host.IsMultiTenant ? TenantId : null;
 				}, 
 				(prms) => {
 					SetSqlQueryParams(prms);
@@ -99,6 +100,22 @@ public class FileController(IApplicationHost host,
             return Content(json, MimeTypes.Application.Json);
         }
         catch (Exception ex)
+		{
+			return WriteExceptionStatus(ex);
+		}
+	}
+
+	[Route("_file/_delete/{*pathInfo}")]
+	[HttpGet]
+	public async Task<IActionResult> DeleteFile(String pathInfo)
+	{
+		try
+		{
+			var result = await _dataService.DeleteBlobAsync(pathInfo, SetSqlQueryParams);
+			String json = JsonConvert.SerializeObject(result, JsonHelpers.StandardSerializerSettings);
+			return Content(json, MimeTypes.Application.Json);
+		}
+		catch (Exception ex)
 		{
 			return WriteExceptionStatus(ex);
 		}

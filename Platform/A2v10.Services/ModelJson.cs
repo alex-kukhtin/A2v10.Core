@@ -153,6 +153,13 @@ public class ModelJsonBlob : ModelJsonViewBase, IModelBlob
         var strKey = Key != null ? $"{Key}." : String.Empty;
         return $"[{CurrentSchema}].[{CurrentModel}.{strKey}{strSuffix}]";
     }
+
+	public String DeleteProcedure()
+	{
+		var strSuffix = "Delete";
+		var strKey = Key != null ? $"{Key}." : String.Empty;
+		return $"[{CurrentSchema}].[{CurrentModel}.{strKey}{strSuffix}]";
+	}
 }
 
 public class ModelJsonExport : IModelExport

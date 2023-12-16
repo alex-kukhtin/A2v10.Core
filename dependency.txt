@@ -1,4 +1,4 @@
-2023-12-09 (next: 8189)
+2023-12-16 (next: 8192)
 ==========
 
 
@@ -20,8 +20,8 @@ A2v10.Platform
 	A2v10.Identity.UI
 		A2v10.Identity.Core
 		A2v10.Infrastructure
-A2v10.Web.Assets
-A2v10.App.Assets
+A2v10.BlobStorage.Azure
+		A2v10.Infrastructure
 
 A2v10.Identity.ApiKey
 A2v10.Identity.Jwt
@@ -30,5 +30,8 @@ A2v10.Identity.Jwt
 A2v10.Scheduling.Commands
 	A2v10.Infrastructure
 	A2v10.Scheduling.Infrastructure
+
+A2v10.Web.Assets
+A2v10.App.Assets
 
 A2v10.CodeGen.Support

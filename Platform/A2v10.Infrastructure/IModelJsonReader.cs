@@ -74,6 +74,7 @@ public interface IModelBlob
 	Int32 CommandTimeout { get; }
     String LoadProcedure();
 	String UpdateProcedure();
+	String DeleteProcedure();
     
 }
 
