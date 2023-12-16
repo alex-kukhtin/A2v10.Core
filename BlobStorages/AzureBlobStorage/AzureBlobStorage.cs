@@ -11,7 +11,7 @@ using Azure.Storage.Blobs.Models;
 
 using A2v10.Infrastructure;
 
-namespace A2v10.AzureBlob;
+namespace A2v10.BlobStorage.Azure;
 
 public class AzureBlobStorage(IConfiguration _configuration) : IBlobStorage
 {

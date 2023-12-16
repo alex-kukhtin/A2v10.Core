@@ -17,7 +17,7 @@ using A2v10.Scheduling;
 using A2v10.Scheduling.Commands;
 using A2v10.Core.Web.Site.TestServices;
 
-using A2v10.AzureBlob;
+using A2v10.BlobStorage.Azure;
 
 namespace A2v10.Core.Web.Site;
 
