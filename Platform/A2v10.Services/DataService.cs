@@ -4,18 +4,16 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Globalization;
 using System.IO;
-using System.Reflection;
-
-using Microsoft.Extensions.DependencyInjection;
 
 using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Services.Interop;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace A2v10.Services;
 
-public record DataLoadResult(IDataModel? Model, IModelView View) : IDataLoadResult;
+public record DataLoadResult(IDataModel? Model, IModelView? View, String? ActionResult = null) : IDataLoadResult;
 
 public class LayoutDescription : ILayoutDescription
 {
@@ -147,6 +145,14 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 	async Task<IDataLoadResult> Load(IPlatformUrl platformUrl, Action<ExpandoObject> setParams)
 	{
 		var view = await LoadViewAsync(platformUrl);
+
+		if (!String.IsNullOrEmpty(view.EndpointHandler))
+		{
+			var handler = _serviceProvider.GetRequiredService<IEndpointHandler>();
+			var prms = view.CreateParameters(platformUrl, null, setParams);
+			var result = handler.RenderResult(platformUrl, view, prms);
+			return new DataLoadResult(null, null, result);
+		}
 
 		var loadPrms = view.CreateParameters(platformUrl, null, setParams);
 

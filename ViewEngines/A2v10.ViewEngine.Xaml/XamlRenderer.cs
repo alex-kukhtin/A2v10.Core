@@ -8,7 +8,7 @@ public class XamlRenderer(IProfiler _profile, IXamlPartProvider _partProvider, I
 {
     public void Render(IRenderInfo info, TextWriter writer)
 	{
-		if (String.IsNullOrEmpty(info.FileName))
+		if (String.IsNullOrEmpty(info.FileName) && String.IsNullOrEmpty(info.Text))
 			throw new XamlException("No source for render");
 		IProfileRequest request = _profile.CurrentRequest;
 		String fileName = String.Empty;
@@ -30,8 +30,11 @@ public class XamlRenderer(IProfiler _profile, IXamlPartProvider _partProvider, I
 				var filePath = _appCodeProvider.MakePath(info.Path, info.FileName);
 				uiElem = _partProvider.GetXamlPart(filePath) as IXamlElement;
 			}
-			//else if (!String.IsNullOrEmpty(info.Text))
-			//uiElem = _xamlReader.ParseXml(info.Text) as IXamlElement;
+			else if (!String.IsNullOrEmpty(info.Text))
+			{
+				var filePath = _appCodeProvider.MakePath(info.Path, "dummy.xaml");
+				uiElem = _partProvider.GetXamlPartText(info.Text, filePath) as IXamlElement;
+			}
 			else
 				throw new XamlException("Xaml. There must be either a 'FileName' or a 'Text' property");
 			if (uiElem == null)

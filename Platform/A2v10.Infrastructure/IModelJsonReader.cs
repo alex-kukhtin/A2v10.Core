@@ -105,7 +105,7 @@ public interface IModelView : IModelBase
 {
 	Boolean Copy { get; }
 	String? Template { get; }
-
+	String? EndpointHandler { get; }
     IModelExport? Export { get; }
     Boolean Indirect { get; }
 	String? Target { get; }

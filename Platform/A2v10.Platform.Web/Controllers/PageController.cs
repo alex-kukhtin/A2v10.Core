@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
+using System.Dynamic;
 
 namespace A2v10.Platform.Web.Controllers;
 
@@ -113,14 +114,50 @@ public class PageController : BaseController
 
 	async Task<IActionResult> Render(IDataLoadResult modelAndView, Boolean secondPhase = false)
 	{
+		if (modelAndView.ActionResult != null)
+			return Content(modelAndView.ActionResult, MimeTypes.Text.HtmlUtf8);
+
 		Response.ContentType = MimeTypes.Text.HtmlUtf8;
 
 		IDataModel? model = modelAndView.Model;
-		var rw = modelAndView.View;
+		var rw = modelAndView.View ?? 
+			throw new InvalidOperationException("IModelView is null");
 
 		String rootId = $"el{Guid.NewGuid()}";
 
 		//var typeChecker = _host.CheckTypes(rw.Path, rw.checkTypes, model);
+
+		var viewName = rw.GetView(_host.Mobile);
+		var templateName = rw.Template;
+		String? viewText = null;
+		String? templateText = null;
+
+		if (viewName == "@Model.View" || templateName == "@Model.Template")
+		{
+			var modelModel = model?.Eval<ExpandoObject>("Model")
+				?? throw new InvalidOperationException("Model element not found");
+			Boolean removeView = false;
+			Boolean removeTemplate = false;
+			if (viewName == "@Model.View") {
+				viewText = modelModel.Get<String>("View") ??
+					throw new InvalidOperationException("Model.View not found");
+				modelModel.RemoveKeys("View");
+				removeView = true;
+			}
+			if (templateName == "@Model.Template")
+			{
+				templateText = modelModel.Get<String>("Template") ??
+					throw new InvalidOperationException("Model.Template not found");
+				modelModel.RemoveKeys("Template");
+				removeTemplate = true;
+			}
+			if (removeView && removeTemplate)
+			{
+				model.Metadata.Remove("TModel");
+				model.Metadata["TRoot"].Fields.Remove("Model");
+				model.Root.RemoveKeys("Model");
+			}
+		}
 
 		var msi = new ModelScriptInfo()
 		{
@@ -130,32 +167,30 @@ public class PageController : BaseController
 			IsIndex = rw.IsIndex,
 			IsPlain = rw.IsPlain,
 			IsSkipDataStack = rw.IsSkipDataStack,
-			Template = rw.Template,
-			Path = rw.Path,
+			Template = templateText ?? rw.Template,
+			Path = templateText != null ? "@Model.Template" : rw.Path,
 			BaseUrl = rw.BaseUrl
 		};
 
 		var si = await _scripter.GetModelScript(msi);
 
-		var viewName = rw.GetView(_host.Mobile);
 		var viewEngine = _viewEngineProvider.FindViewEngine(rw.Path, viewName);
 
 		// render XAML
 		var ri = new RenderInfo()
 		{
 			RootId = rootId,
-			FileName = viewEngine.FileName,
+			FileName = (viewText == null) ? viewEngine.FileName : null,
 			FileTitle = rw.GetView(_host.Mobile),
 			Path = rw.Path,
 			DataModel = model,
+			Text = viewText,
 			//TypeChecker = typeChecker,
 			CurrentLocale = null,
 			IsDebugConfiguration = _host.IsDebugConfiguration,
 			SecondPhase = secondPhase,
 		};
-
 		var result = await viewEngine.Engine.RenderAsync(ri);
-
 		await ProcessDbEvents(rw);
 		return new PageActionResult(result, si.Script);
 	}

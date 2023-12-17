@@ -14,6 +14,7 @@ public interface IRenderInfo
 	String? FileName { get; }
 	String? FileTitle { get; }
 	String Path { get; }
+	String? Text { get; }
 	IDataModel? DataModel { get; }
 	String? CurrentLocale { get; }
 	Boolean SecondPhase { get; }

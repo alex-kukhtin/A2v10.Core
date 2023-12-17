@@ -42,6 +42,7 @@ public class Startup(IConfiguration configuration)
 		services.AddScoped<ILicenseManager, NullLicenseManager>();
 
 		services.AddScoped<ISqlQueryTextProvider, SqlQueryTextProvider>();
+		services.AddScoped<IEndpointHandler, TestPageHandler>();
 
 		var builders = services.UsePlatform(Configuration);
 

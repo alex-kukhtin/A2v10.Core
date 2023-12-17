@@ -43,6 +43,16 @@ public class WebViewEngineProvider : IViewEngineProvider
 
 	public IViewEngineResult FindViewEngine(String path, String viewName)
 	{
+		if (viewName == "@Model.View") {
+			var xamlEngineDescriptor = _engines.First(x => x.Extension == ".xaml");
+			var viewEngine = _serviceProvider.GetService(xamlEngineDescriptor.EngineType) as IViewEngine
+				?? throw new InvalidOperationException("Invalid xaml engine type");
+			return new ViewEngineResult( 
+				engine: viewEngine,
+				path: path,
+				fileName: viewName
+			);
+		}
 		foreach (var engine in _engines)
 		{
 			String fileName = $"{viewName}{engine.Extension}";
@@ -55,7 +65,7 @@ public class WebViewEngineProvider : IViewEngineProvider
 					(
 						engine: viewEngine,
 						path: fullPath,
-						viewName = fileName
+						fileName: fileName
 					);
 				}
 			}

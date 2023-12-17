@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using Microsoft.Extensions.Options;
 
 using A2v10.Infrastructure;
+using System.Text;
 
 namespace A2v10.ViewEngine.Xaml;
 
@@ -74,6 +75,13 @@ public class XamlPartProvider : IXamlPartProvider
 			?? throw new XamlException($"File not found '{path}'");
 		return _readerService.Load(stream, new Uri(path, UriKind.Relative));
 	}
+
+	public Object? GetXamlPartText(String text, String path)
+	{
+		using var ms = new MemoryStream(Encoding.UTF8.GetBytes(text));
+		return _readerService.Load(ms, new Uri(path, UriKind.Relative));
+	}
+
 	public Object? GetXamlPartOrNull(String path)
 	{
         path = path.Replace('\\', '/'); // (!)

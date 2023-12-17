@@ -12,7 +12,8 @@ namespace A2v10.Infrastructure;
 public interface IDataLoadResult
 {
 	public IDataModel? Model { get; }
-	public IModelView View { get; }
+	public IModelView? View { get; }
+	public String? ActionResult { get; }
 }
 
 public interface IBlobInfo

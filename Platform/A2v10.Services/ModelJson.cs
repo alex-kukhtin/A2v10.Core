@@ -192,7 +192,7 @@ public class ModelJsonView : ModelJsonViewBase, IModelView
 	IModelMerge? IModelView.Merge => Merge;
 	IModelView? IModelView.TargetModel => TargetModel;
     IModelExport? IModelView.Export => Export;
-
+	public String? EndpointHandler { get; set; }
     public String? View { get; set; }
 	public String? ViewMobile { get; set; }
 	public String? Template { get; set; }

@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -527,15 +527,19 @@ function modelData(template, data) {
 		String? fileTemplateText;
 		if (msi.Template != null)
 		{
-			if (msi.Path == null)
-				throw new InvalidOperationException("Model.Path is null");
-			var pathToRead = _codeProvider.MakePath(msi.Path, $"{msi.Template}.js");
-            using var stream = _codeProvider.FileStreamRO(pathToRead)
-                ?? throw new FileNotFoundException($"Template file '{pathToRead}' not found.");
-            using var sr = new StreamReader(stream);
-			fileTemplateText = await sr.ReadToEndAsync(); 
-			if (fileTemplateText == null)
-				throw new FileNotFoundException($"Template file '{pathToRead}' not found.");
+			if (msi.Path == "@Model.Template")
+				fileTemplateText = msi.Template;
+			else
+			{
+				if (msi.Path == null)
+					throw new InvalidOperationException("Model.Path is null");
+				var pathToRead = _codeProvider.MakePath(msi.Path, $"{msi.Template}.js");
+				using var stream = _codeProvider.FileStreamRO(pathToRead)
+					?? throw new FileNotFoundException($"Template file '{pathToRead}' not found.");
+				using var sr = new StreamReader(stream);
+				fileTemplateText = await sr.ReadToEndAsync() ??
+					throw new FileNotFoundException($"Template file '{pathToRead}' not found.");
+			}
 			AddRequiredModules(sbRequired, fileTemplateText);
 			templateText = CreateTemplateForWrite(Localize(fileTemplateText));
 		}
