@@ -3,6 +3,7 @@
 A2v10.Identity.UI
 A2v10.Platform.Web
 A2v10.Platform
+A2v10.App.Assets
 
 A2v10.Platform
 	A2v10.Identity.Core
