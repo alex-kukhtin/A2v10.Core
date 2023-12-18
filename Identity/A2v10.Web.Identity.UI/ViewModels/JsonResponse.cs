@@ -9,6 +9,8 @@ public class JsonResponse
 	public Boolean Success { get; init; }
 	public String? Message { get; init; }
 
+	public String? Url { get; init; }
+
     public static JsonResponse Error(String message)
 	{
 		return new JsonResponse { Success = false, Message = message };
@@ -20,6 +22,10 @@ public class JsonResponse
 	public static JsonResponse Ok(String? message = null)
 	{
 		return new JsonResponse { Success = true, Message = message };
+	}
+	public static JsonResponse Redirect(String? url = null)
+	{
+		return new JsonResponse { Success = true, Message = "Redirect", Url = url };
 	}
 }
 

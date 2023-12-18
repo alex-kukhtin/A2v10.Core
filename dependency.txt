@@ -1,6 +1,8 @@
 2023-12-17 (next: 8194)
 ==========
-
+A2v10.Identity.UI
+A2v10.Platform.Web
+A2v10.Platform
 
 A2v10.Platform
 	A2v10.Identity.Core

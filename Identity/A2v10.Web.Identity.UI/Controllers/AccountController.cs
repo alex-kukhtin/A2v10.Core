@@ -4,6 +4,8 @@ using System;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Dynamic;
+using System.Text;
+using System.Text.Json;
 
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authorization;
@@ -11,13 +13,19 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Logging;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Web.Identity;
-using Microsoft.Extensions.Configuration;
 
 namespace A2v10.Identity.UI;
+
+//TODO: remove LOCAL REDIRECT from REGISTER & INVITE POST actions
+// like InitPassword 
+
 
 [Route("account/[action]")]
 [ApiExplorerSettings(IgnoreApi = true)]
@@ -28,6 +36,7 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
             IAntiforgery _antiforgery, IDbContext _dbContext,
             IApplicationTheme _appTheme, IMailService _mailService, ILocalizer _localizer,
             IConfiguration _configuration, IAppTenantManager _appTenantManager, 
+			ILogger<AccountController> _logger,
 			IDataProtectionProvider protectionProvider,
             IOptions<AppUserStoreOptions<Int64>> userStoreOptions) : Controller
 {
@@ -81,10 +90,17 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
 		return null;
     }
 
-    [HttpGet]
+	Task<AppTitleModel?> LoadTitleAsync()
+	{
+		return _dbContext.LoadAsync<AppTitleModel>(CatalogDataSource, "a2sys.[AppTitle.Load]");
+	}
+
+	[HttpGet]
 	public async Task<IActionResult> Login(String returnUrl)
 	{
-        RemoveNonAntiforgeryCookies();
+		_logger.LogInformation("Login");
+
+		RemoveNonAntiforgeryCookies();
         
 		var external = await SingleExternalAuthenticationSchemesAsync();
 		if (external != null)
@@ -92,7 +108,7 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
 
         var m = new LoginViewModel()
 		{
-			Title = await _dbContext.LoadAsync<AppTitleModel>(CatalogDataSource, "a2sys.[AppTitle.Load]"),
+			Title = await LoadTitleAsync(),
 			Theme = _appTheme.MakeTheme(),
 			RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken,
 			ReturnUrl = returnUrl
@@ -136,12 +152,16 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
 			if (!user.EmailConfirmed)
 				return new JsonResult(JsonResponse.Error("EmailNotConfirmed"));
 
-			if (user.SetPassword)
-				return new JsonResult(JsonResponse.Ok("SetPassword"));
-
 			var result = await _signInManager.PasswordSignInAsync(model.Login, model.Password, model.IsPersistent, lockoutOnFailure: true);
 			if (result.Succeeded)
 			{
+				if (user.SetPassword)
+				{
+					var changePasswordToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+					var token = GetInitPasswordToken(user, changePasswordToken);
+					return new JsonResult(JsonResponse.Redirect($"/account/initpassword?token={token}"));
+				}
+
 				var llprms = new ExpandoObject()
 				{
 					{ "Id", user.Id },
@@ -152,7 +172,7 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
 				var returnUrl = model.ReturnUrl?.ToLowerInvariant();
 				if (returnUrl == null || returnUrl.StartsWith("/account"))
 					returnUrl = "/";
-				return LocalRedirect(returnUrl);
+				return new JsonResult(JsonResponse.Redirect(returnUrl));
 			}
 			else
 			{
@@ -165,13 +185,14 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
         }
     }
 
+
 	[HttpGet]
 	public async Task<IActionResult> Register()
 	{
 		RemoveNonAntiforgeryCookies();
 		var m = new RegisterViewModel()
 		{
-			Title = await _dbContext.LoadAsync<AppTitleModel>(CatalogDataSource, "a2sys.[AppTitle.Load]"),
+			Title = await LoadTitleAsync(),
 			Theme = _appTheme.MakeTheme(),
 			RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken
 		};
@@ -257,7 +278,7 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
 		RemoveNonAntiforgeryCookies();
 		var m = new SimpleIdentityViewModel()
 		{
-			Title = await _dbContext.LoadAsync<AppTitleModel>(CatalogDataSource, "a2sys.[AppTitle.Load]"),
+			Title = await LoadTitleAsync(),
 			Theme = _appTheme.MakeTheme(),
 			RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken
 		};
@@ -293,7 +314,9 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
                 body = body.Replace("{0}", code);
 
             await _mailService.SendAsync(user.UserName, subject, body);
-            return new JsonResult(JsonResponse.Ok("Success"));
+			_logger.LogInformation($"A letter has been sent to {user}", user.UserName);
+
+			return new JsonResult(JsonResponse.Ok("Success"));
         }
         catch (Exception tex)
         {
@@ -338,7 +361,7 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
 			var changePasswordToken = await _userManager.GeneratePasswordResetTokenAsync(user);
 			var identityResult = await _userManager.ResetPasswordAsync(user, changePasswordToken, model.Password);
 			if (identityResult.Succeeded)
-				return LocalRedirect("/account/login");
+				return new JsonResult(JsonResponse.Redirect("/account/login"));
             return new JsonResult(JsonResponse.Error(String.Join(", ", identityResult.Errors)));
         }
         catch (Exception ex)
@@ -362,8 +385,8 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
         var m = new InviteViewModel()
 		{
 			Login = user,
-            Title = await _dbContext.LoadAsync<AppTitleModel>(CatalogDataSource, "a2sys.[AppTitle.Load]"),
-            Theme = _appTheme.MakeTheme(),
+			Title = await LoadTitleAsync(),
+			Theme = _appTheme.MakeTheme(),
 			Token = token,
             RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken
         };
@@ -466,13 +489,9 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
 
 			var ir = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
 			if (ir.Succeeded)
-			{
 				return new JsonResult(JsonResponse.Ok(String.Empty));
-			}
 			else
-			{
 				return new JsonResult(JsonResponse.Error(String.Join(", ", ir.Errors.Select(e => e.Code))));
-			}
 		}
 		catch (Exception ex)
 		{
@@ -485,7 +504,7 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
 	{
 		var m = new SimpleIdentityViewModel()
 		{
-			Title = await _dbContext.LoadAsync<AppTitleModel>(CatalogDataSource, "a2sys.[AppTitle.Load]"),
+			Title = await LoadTitleAsync(),
 			Theme = _appTheme.MakeTheme()
 		};
 		return View(m);
@@ -501,7 +520,7 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
 		{
 			Email = email,
 			Token = Token,
-			Title = await _dbContext.LoadAsync<AppTitleModel>(CatalogDataSource, "a2sys.[AppTitle.Load]"),
+			Title = await LoadTitleAsync(),
 			Theme = _appTheme.MakeTheme(),
 			RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken
 		};
@@ -579,7 +598,7 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
 	{
 		var model = new ErrorViewModel()
 		{
-			Title = await _dbContext.LoadAsync<AppTitleModel>(CatalogDataSource, "a2sys.[AppTitle.Load]"),
+			Title = await LoadTitleAsync(),
 			Theme = _appTheme.MakeTheme(),
 			RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken,
 			Message = message	
@@ -635,6 +654,105 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
 			return await Error($"Invalid login for {email}");
 
 		return Redirect("/");
+	}
+
+    private String GetInitPasswordToken(AppUser<Int64> user, String token)
+    {
+		var tokenData = new InitPasswordModel(
+			UserId: user.Id,
+			Token: token,
+			Time: DateTime.UtcNow);
+        var dataBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(tokenData));
+        var protectedData = _protector.Protect(dataBytes);
+		return WebEncoders.Base64UrlEncode(protectedData);
+    }
+
+
+	InitPasswordModel GetModelFromToken(String token)
+	{
+		var byteData = WebEncoders.Base64UrlDecode(token);
+		var data = _protector.Unprotect(byteData);
+		var strJson = Encoding.UTF8.GetString(data);
+		var result = JsonSerializer.Deserialize<InitPasswordModel>(strJson)
+			?? throw new InvalidOperationException("Token is null");
+		return result;
+	}
+
+	[HttpGet]
+	public async Task<IActionResult> InitPassword([FromQuery] String? token)
+	{
+		_logger.LogInformation("Login");
+
+		if (token == null)
+			return NotFound();
+		try
+		{
+			var model = GetModelFromToken(token);
+
+			if (model.Time - DateTime.UtcNow > TimeSpan.FromMinutes(5))
+				return NotFound();
+
+			var user = await _userManager.FindByIdAsync(model.UserId.ToString())
+				?? throw new InvalidOperationException("User not found");
+
+			if (!user.SetPassword)
+				return NotFound();
+
+			var vm = new InitPasswordViewModel()
+			{
+				Title = await LoadTitleAsync(),
+				Theme = _appTheme.MakeTheme(),
+				Login = user.UserName,
+				Token = token,
+				RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken
+			};
+			return View(vm);
+		}
+		catch (Exception)
+		{
+			RemoveAllCookies();
+			return NotFound();
+		}
+	}
+
+	[HttpPost]
+	public async Task<IActionResult> InitPassword([FromForm] InitPasswordViewModel model)
+	{
+		var isValid = await _antiforgery.IsRequestValidAsync(HttpContext);
+
+		if (!isValid)
+			return new JsonResult(JsonResponse.Error("AntiForgery"));
+
+		try
+		{
+			var initPwd = GetModelFromToken(model.Token);
+
+			var user = await _userManager.FindByIdAsync(initPwd.UserId.ToString())
+				?? throw new InvalidOperationException("User not found");
+
+			if (!user.SetPassword)
+				throw new InvalidOperationException("Invalid user");
+
+			var identityResult = await _userManager.ResetPasswordAsync(user, initPwd.Token, model.Password);
+
+			if (identityResult.Succeeded)
+			{
+				var llprms = new ExpandoObject()
+				{
+					{ "Id", user.Id },
+					{ "Set", false }
+				};
+				await _dbContext.ExecuteExpandoAsync(CatalogDataSource, $"[{SecuritySchema}].[User.SetSetPassword]", llprms);
+				RemoveAntiforgeryCookie();
+				return new JsonResult(JsonResponse.Redirect("/"));
+			}
+			else
+				return new JsonResult(JsonResponse.Error(String.Join(", ", identityResult.Errors.Select(e => e.Code))));
+		}
+		catch (Exception ex) 
+		{
+			return new JsonResult(JsonResponse.Error(ex));
+		}
 	}
 }
 

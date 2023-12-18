@@ -54,3 +54,13 @@ public record ForgotPasswordChangeViewModel : SimpleIdentityViewModel
     public String Code { get; init; } = String.Empty;
     public String Password { get; init; } = String.Empty;
 }
+
+public record InitPasswordModel(Int64 UserId, String Token, DateTime Time);
+
+
+public record InitPasswordViewModel : SimpleIdentityViewModel
+{
+	public String? Login { get; set; }
+	public String Token { get; init; } = String.Empty;
+	public String Password { get; init; } = String.Empty;
+}

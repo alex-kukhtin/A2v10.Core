@@ -143,6 +143,8 @@ public class CurrentUser : ICurrentUser, IDbIdentity
 	void SetupUserLocale(HttpContext context)
 	{
 		var ident = context.User.Identity;
+		if (ident == null || !ident.IsAuthenticated)
+			return;
 		var userLoc = ident.GetUserLocale();
 		if (context.Request.Query.ContainsKey("lang"))
 		{
