@@ -295,8 +295,8 @@ go
 /*
 Copyright © 2008-2023 Oleksandr Kukhtin
 
-Last updated : 08 dec 2023
-module version : 8190
+Last updated : 19 dec 2023
+module version : 8195
 */
 
 -- SECURITY
@@ -355,6 +355,18 @@ begin
 
 	update a2security.ViewUsers set LastLoginDate = getutcdate(), LastLoginHost = @LastLoginHost 
 	where Id = @Id;
+end
+go
+------------------------------------------------
+create or alter procedure a2security.[User.SetSetPassword]
+@Id bigint,
+@Set bit = 0
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+
+	update a2security.ViewUsers set SetPassword = @Set where Id = @Id;
 end
 go
 ------------------------------------------------

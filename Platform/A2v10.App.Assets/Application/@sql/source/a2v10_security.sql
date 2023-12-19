@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2008-2023 Oleksandr Kukhtin
 
-Last updated : 18 dec 2023
-module version : 8194
+Last updated : 19 dec 2023
+module version : 8195
 */
 
 -- SECURITY

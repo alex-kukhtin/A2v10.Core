@@ -1,6 +1,8 @@
 ﻿/*
-version: 10.0.7910
-generated: 22.08.2023 09:06:48
+Copyright © 2008-2023 Oleksandr Kukhtin
+
+Last updated : 19 dec 2023
+module version : 8195
 */
 
 set nocount on;
@@ -2305,6 +2307,18 @@ begin
 
 	update a2security.ViewUsers set AccessFailedCount = @AccessFailedCount
 	where Id=@Id;
+end
+go
+------------------------------------------------
+create or alter procedure a2security.[User.SetSetPassword]
+@Id bigint,
+@Set bit = 0
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+
+	update a2security.ViewUsers set SetPassword = @Set where Id = @Id;
 end
 go
 ------------------------------------------------
