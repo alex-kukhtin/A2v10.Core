@@ -10,6 +10,15 @@
 		<div v-if="serverError" class="validation-summary" style="margin-top:10px">
 			<span class="error" v-text="serverError"></span>
 		</div>
+		<div v-if="hasExternalProviders">
+			<div class="external-providers">
+				<a v-for="ep in externalProviders" :href="providerHref(ep)"
+						class="btn btn btn-outline btn-logo">
+					<img :src="providerLogo(ep)" /><span>@Html.Raw(_loc["SignInWith"])&nbsp;<span v-text="ep" class="provider-name"></span></span>
+				</a>
+			</div>
+			<div class="or-line"><span class="or-span">@Html.Raw(_loc["Or"])</span></div>
+		</div>
 		<div>
 			<div class="control-group" v-bind:class="{invalid: invalidEmail}">
 				<label for="login" style="grid-row:1; grid-column:1" class="a2-label required">@Html.Raw(_loc["Email"])</label>
@@ -36,11 +45,12 @@
 
 			<button v-on:click.stop.prevent="submit" class="btn btn-default" ref="submit" tabindex="4">@Html.Raw(_loc["Login"])</button>
 			<a class="a2-hyperlink" href="/account/forgotpassword" tabindex="6">@Html.Raw(_loc["ForgotPassword"])</a>
-			@if (_appOptions.Value.Registration)
-			{
-				<a class="a2-hyperlink" href="/account/register" tabindex="7">@Html.Raw(_loc["RegisterLink"])</a>
-			}
 		</div>
+
+		@if (_appOptions.Value.Registration)
+		{
+			<a class="a2-hyperlink" href="/account/register" tabindex="7">@Html.Raw(_loc["RegisterLink"])</a>
+		}
 	</div>
 </div>
 

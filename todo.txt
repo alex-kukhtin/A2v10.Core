@@ -32,18 +32,12 @@ LICENSING
 
 8. Site mode sample
 
-13. SetUserPassword
 14. Доделать AccountController
 
 22. DataService.Load Indirect
 23. DataService.Load Merge
 
-24. UserStore. UpdateUser
-
-31. DataController. ExportTo (Export to Excel)
 36. AttachmentController
-37. ApiV2 Authorization
-40. LoadImage from Azure
 42. DataController.Invoke XML
 46. ExportController
 47. AppLinks

@@ -9,6 +9,7 @@ public record LoginViewModel : SimpleIdentityViewModel
 	public String? Login { get; set; }
 	public String? Password { get; set; }
 	public Boolean RememberMe { get; set; }
+	public String? LoginProviders { get; set; }
 	public Boolean IsPersistent => RememberMe;
 	public String? ReturnUrl { get; init; }
 }

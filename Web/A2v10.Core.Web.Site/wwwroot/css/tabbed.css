@@ -1557,10 +1557,10 @@ header .include.nav-pane .partial-block .control-group,
   overflow: auto;
 }
 .center-page .initial-form {
-  width: 28rem;
+  width: 30rem;
   max-width: 90vw;
   padding: 1.5em 2rem;
-  background-color: white;
+  background-color: var(--bgPrimary);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
   border-radius: 8px;
 }
@@ -2621,7 +2621,7 @@ pre.a2-code {
 }
 .btn-outline {
   background-color: transparent;
-  border: 1px solid var(--neutralBk);
+  border: 1px solid var(--neutral300);
 }
 .btn-outline:hover {
   border-color: var(--neutralBkDark);
@@ -7714,6 +7714,50 @@ table.tree-grid a.toggle.expanded:after {
 .kanban .kanban-card .kanban-card-footer {
   padding: 4px 8px;
   border-top: 1px solid var(--neutral300);
+}
+.initial-form .external-providers {
+  display: flex;
+  gap: 6px;
+}
+.initial-form .external-providers a.btn-logo {
+  display: inline-flex;
+  white-space: nowrap;
+  gap: 6px;
+  background-color: #fff;
+}
+.initial-form .external-providers a.btn-logo img {
+  width: 18px;
+}
+.initial-form .external-providers a.btn-logo .provider-name {
+  font-weight: 500;
+}
+.initial-form .or-line {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  position: relative;
+  margin: 12px 0 0 0;
+}
+.initial-form .or-line .or-span {
+  padding: 0 10px;
+  z-index: 1;
+  display: inline-flex;
+  background-color: var(--bgPrimary);
+}
+.initial-form .or-line:before,
+.initial-form .or-line:after {
+  content: '';
+  position: absolute;
+  height: 1px;
+  width: 50%;
+  top: 50%;
+  background-color: var(--neutral400);
+}
+.initial-form .or-line:before {
+  left: 0;
+}
+.initial-form .or-line:after {
+  right: 0;
 }
 .block {
   display: block!important;

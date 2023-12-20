@@ -65,12 +65,10 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
 			Response.Cookies.Delete(key);
 	}
 
-	private async Task<IActionResult?> SingleExternalAuthenticationSchemesAsync()
+	private async Task<IActionResult?> SingleExternalAuthenticationSchemesAsync(String[]? splitted)
 	{
-        var providers = _configuration.GetValue<String>("Identity:Providers");
-		if (providers == null)
+		if (splitted == null)
 			return null;
-		var splitted = providers.Split(',');
         var availableSchemes = await _signInManager.GetExternalAuthenticationSchemesAsync();
         foreach (var scheme in splitted.Where(s => s != "Local"))
 		{
@@ -96,13 +94,27 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
 	}
 
 	[HttpGet]
+	public async Task<IActionResult> OpenIdLogin(String provider)
+	{
+		var availableSchemes = await _signInManager.GetExternalAuthenticationSchemesAsync();
+		var scheme = availableSchemes.First(x => x.Name == provider);
+		if (scheme == null)	
+			throw new InvalidOperationException($"Provider {provider} not found");
+		var redirectUrl = Url.ActionLink("loginexternal");
+		var loginInfo = _signInManager.ConfigureExternalAuthenticationProperties(scheme.Name, redirectUrl);
+		return new ChallengeResult(scheme.Name, loginInfo);
+	}
+
+	[HttpGet]
 	public async Task<IActionResult> Login(String returnUrl)
 	{
 		_logger.LogInformation("Login");
 
 		RemoveNonAntiforgeryCookies();
-        
-		var external = await SingleExternalAuthenticationSchemesAsync();
+
+		var providers = _configuration.GetValue<String>("Identity:Providers")?.Split(',');
+
+		var external = await SingleExternalAuthenticationSchemesAsync(providers);
 		if (external != null)
 			return external;
 
@@ -111,6 +123,7 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
 			Title = await LoadTitleAsync(),
 			Theme = _appTheme.MakeTheme(),
 			RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken,
+			LoginProviders = providers != null ? String.Join(',', providers) : "Local",
 			ReturnUrl = returnUrl
 		};
 		return View(m);

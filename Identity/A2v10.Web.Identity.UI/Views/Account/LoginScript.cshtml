@@ -14,6 +14,7 @@ data: {
 	rememberMe: true,
 	submitted: false,
 	serverError: '',
+	providers: '@Model?.LoginProviders'.split(','),
 	returnUrl: '@Model?.ReturnUrl'
 },
 computed: {
@@ -32,9 +33,21 @@ computed: {
 	},
 	valid() {
 		return !this.invalidEmail && !this.invalidPassword;
+	},
+	externalProviders() {
+		return this.providers.filter(x => x !== 'Local');
+	},
+	hasExternalProviders() {
+		return this.externalProviders.length > 0;
 	}
 },
 methods: {
+	providerLogo(provider) {
+		return `/img/logo/${provider.toLowerCase()}.svg`;
+	},
+	providerHref(provider) {
+		return `/account/openidlogin?provider=${provider}`;
+	},
 	onLoginEnter: function() {
 		this.$refs.pwd.focus();
 	},
