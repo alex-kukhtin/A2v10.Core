@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2008-2023 Oleksandr Kukhtin
 
-Last updated : 20 dec 2023
-module version : 8196
+Last updated : 21 dec 2023
+module version : 8198
 */
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.SCHEMATA where SCHEMA_NAME=N'a2sys')
@@ -108,7 +108,7 @@ create table a2security.ApiUserLogins
 	[Mode] nvarchar(16) not null, -- ApiKey, OAuth2, JWT
 	[ClientId] nvarchar(255),
 	[ClientSecret] nvarchar(255),
-	[ApiKey] nvarchar(255),
+	[ApiKey] nvarchar(1023),
 	[AllowIP] nvarchar(1024),
 	Memo nvarchar(255),
 	RedirectUrl nvarchar(255),
@@ -147,6 +147,20 @@ create table a2security.DeletedUsers
 	UtcDateDeleted datetime not null constraint DF_Users_UtcDateDeleted default(getutcdate()),
 	constraint PK_DeletedUsers primary key (Tenant, Id),
 	constraint FK_DeletedUsers_DeletedByUser_Users foreign key (Tenant, DeletedByUser) references a2security.Users(Tenant, Id)
+);
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2security' and TABLE_NAME=N'RefreshTokens')
+create table a2security.RefreshTokens
+(
+	UserId bigint not null,
+	Tenant int not null 
+		constraint FK_RefreshTokens_Tenant_Tenants foreign key references a2security.Tenants(Id),
+	[Provider] nvarchar(64) not null,
+	[Token] nvarchar(255) not null,
+	Expires datetime not null,
+		constraint FK_RefreshTokens_UserId_Users foreign key (Tenant, UserId) references a2security.Users(Tenant, Id),
+	constraint PK_RefreshTokens primary key (Tenant, UserId, [Provider], Token) with (fillfactor = 70),
 );
 go
 ------------------------------------------------
@@ -246,7 +260,10 @@ create table a2ui.Menu
 );
 go
 -- migrations
-------------------------------------------------
+-------------------------------------------------
+if (exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = N'a2security' and TABLE_NAME = N'ApiUserLogins' and COLUMN_NAME = N'ApiKey' and CHARACTER_MAXIMUM_LENGTH <> 1023))
+	alter table a2security.ApiUserLogins alter column ApiKey nvarchar(1023);
+go
 if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = N'a2security' and TABLE_NAME = N'Users' and COLUMN_NAME = N'IsApiUser')
 	alter table a2security.Users add IsApiUser bit constraint DF_UsersIsApiUser default(0) with values;
 go

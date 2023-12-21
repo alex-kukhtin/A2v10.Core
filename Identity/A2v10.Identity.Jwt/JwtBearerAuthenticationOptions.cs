@@ -3,24 +3,23 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
 
-namespace A2v10.Web.Identity.ApiKey;
+namespace A2v10.Identity.Jwt;
 
-public class ApiKeyAuthenticationOptions : AuthenticationSchemeOptions
+public class JwtBearerAuthenticationOptions : AuthenticationSchemeOptions
 {
-	public const String DefaultScheme = ApiKeyDefaults.AuthenticationScheme;
+	public const String DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
 	public const String Scheme = DefaultScheme;
 	public const String AuthenticationType = DefaultScheme;
-	public const String HeaderName = "X-Api-Key";
 
 	public static OpenApiSecurityScheme OpenApiSecurityScheme =>
 		new ()
 		{
-			Type = SecuritySchemeType.ApiKey,
+			Type = SecuritySchemeType.Http,
 			In = ParameterLocation.Header,
-			Name = HeaderName,
-			Scheme = Scheme
+			Scheme = JwtBearerDefaults.AuthenticationScheme
 		};
 	public static OpenApiSecurityRequirement OpenApiSecurityRequirement
 	{

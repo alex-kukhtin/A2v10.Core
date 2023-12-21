@@ -69,6 +69,11 @@ public class Startup
 		})
 		.AddApiKeyAuthorization<Int64>(options => {
 		});
+
+		services.Configure<ApiKeyConfigurationOptions>(options =>
+		{
+			options.Configure<Int64>(KeyType.EncodedClaims, Configuration);
+		});
 	}
 
 	public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

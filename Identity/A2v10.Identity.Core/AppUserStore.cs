@@ -531,6 +531,8 @@ public sealed class AppUserStore<T>(IDbContext dbContext, IOptions<AppUserStoreO
 			{ ParamNames.Token, token },
 			{ ParamNames.Expires, expires }
 		};
+		if (_multiTenant && user.Tenant != null)
+			exp.Add(ParamNames.Tenant, user.Tenant);
 		if (!String.IsNullOrEmpty(tokenToRemove))
 			exp.Add("Remove", tokenToRemove);
 		return _dbContext.ExecuteExpandoAsync(_dataSource, $"[{_dbSchema}].AddToken", exp);
@@ -544,6 +546,8 @@ public sealed class AppUserStore<T>(IDbContext dbContext, IOptions<AppUserStoreO
 			{ ParamNames.Provider, provider },
 			{ ParamNames.Token, token }
 		};
+		if (_multiTenant && user.Tenant != null)
+			exp.Add(ParamNames.Tenant, user.Tenant);
 		var res = await _dbContext.LoadAsync<JwtToken<T>>(_dataSource, $"[{_dbSchema}].GetToken", exp);
 		return res?.Token;
 	}
@@ -556,6 +560,8 @@ public sealed class AppUserStore<T>(IDbContext dbContext, IOptions<AppUserStoreO
 			{ ParamNames.Provider, provider },
 			{ ParamNames.Token, token }
 		};
+		if (_multiTenant && user.Tenant != null)
+			exp.Add(ParamNames.Tenant, user.Tenant);
 		return _dbContext.ExecuteExpandoAsync(_dataSource, $"[{_dbSchema}].RemoveToken", exp);
 	}
 	#endregion

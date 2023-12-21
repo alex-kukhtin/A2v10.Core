@@ -1,4 +1,5 @@
-﻿using A2v10.Web.Identity;
+﻿using A2v10.Identity.Core;
+using A2v10.Web.Identity;
 using A2v10.Web.Identity.ApiKey;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -26,7 +27,7 @@ public class ResponseSuccess
 [Produces("application/json")]
 [ProducesResponseType(typeof(ResponseSuccess), StatusCodes.Status200OK)]
 [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
-public class ApiController : ControllerBase
+public class ApiController(IConfiguration _configuration) : ControllerBase
 {
 	/// <summary>
 	/// Повертає список варіантів
@@ -58,8 +59,25 @@ public class ApiController : ControllerBase
 		return Enumerable.Range(1, 5).Select(index => new WeatherForecast
 		{
 			Date = DateTime.Now.AddDays(index),
-			TemperatureC = Random.Shared.Next(-20, 55)
+			TemperatureC = Random.Shared.Next(-20, 55),
+			UserId = userId
 		})
 		.ToArray();
+	}
+
+	[HttpGet]
+	[ActionName("generatekey")]
+	[AllowAnonymous]
+	public Object GenerateApiKey()
+	{
+		AppUser<Int64> user = new()
+		{
+			Id = 99,
+			Tenant = 1,
+			Segment = "Segment",
+			Email = "2222",
+			Locale = "es-ES"
+		};
+		return new { Key = ApiKeyUserHelper<Int64>.GenerateApiKey(user, _configuration) };
 	}
 }
