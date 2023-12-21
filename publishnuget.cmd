@@ -25,8 +25,8 @@ del /q ReportEngines\A2v10.ReportEngine.Pdf\bin\Release\*.nupkg
 del /q ReportEngines\A2v10.ReportEngine.Pdf\bin\Release\*.snupkg
 del /q ReportEngines\A2v10.Xaml.Report\bin\Release\*.nupkg
 del /q ReportEngines\A2v10.Xaml.Report\bin\Release\*.snupkg
-del /q ReportEngines\A2v10.ReportEngine.Stimulsoft\bin\Release\*.nupkg
-del /q ReportEngines\A2v10.ReportEngine.Stimulsoft\bin\Release\*.snupkg
+rem del /q ReportEngines\A2v10.ReportEngine.Stimulsoft\bin\Release\*.nupkg
+rem del /q ReportEngines\A2v10.ReportEngine.Stimulsoft\bin\Release\*.snupkg
 
 del /q CodeGen\A2v10.Module.Infrastructure\bin\Release\*.nupkg
 del /q CodeGen\A2v10.Module.Infrastructure\bin\Release\*.snupkg
@@ -42,6 +42,7 @@ del /q Extensions\A2v10.Scheduling.Infrastructure\bin\Release\*.nupkg
 del /q Extensions\A2v10.Scheduling.Infrastructure\bin\Release\*.snupkg
 
 del /q BlobStorages\AzureBlobStorage\bin\Release\*.nupkg
+del /q BlobStorages\AzureBlobStorage\bin\Release\*.snupkg
 
 dotnet pack -c Release
 

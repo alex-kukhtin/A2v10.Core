@@ -5,15 +5,11 @@ using System.Reflection;
 
 namespace A2v10.ApiHost;
 
-public class Startup
+public class Startup(IConfiguration configuration)
 {
 	public const String API_NAME = "A2v10.Api.Host";
-	public Startup(IConfiguration configuration)
-	{
-		Configuration = configuration;
-	}
 
-	public IConfiguration Configuration { get; }
+	public IConfiguration Configuration { get; } = configuration;
 
 	public void ConfigureServices(IServiceCollection services)
 	{
@@ -73,6 +69,7 @@ public class Startup
 		services.Configure<ApiKeyConfigurationOptions>(options =>
 		{
 			options.Configure<Int64>(KeyType.EncodedClaims, Configuration);
+			options.SkipCheckUser = true;
 		});
 	}
 
