@@ -52,7 +52,14 @@ public class Startup(IConfiguration configuration)
 				?? throw new InvalidOperationException("Identity:Google:ClientId not found");
 			opts.ClientSecret = Configuration.GetValue<String>("Identity:Google:ClientSecret")
 				?? throw new InvalidOperationException("Identity:Google:ClientSecret not found");
-	    });
+	    })
+		.AddMicrosoftAccount(opts =>
+		{
+			opts.ClientId = Configuration.GetValue<String>("Identity:Microsoft:ClientId")
+				?? throw new InvalidOperationException("Identity:Microsoft:ClientId not found");
+			opts.ClientSecret = Configuration.GetValue<String>("Identity:Microsoft:ClientSecret")
+				?? throw new InvalidOperationException("Identity:Microsoft:ClientSecret not found");
+		});
 
 		services.AddSingleton<TestBusinessAppProvider>();
 

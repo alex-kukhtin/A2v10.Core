@@ -99,7 +99,7 @@ public class MailClient : IMailService
 	{
 		if (_mailSettings.PickupDirectoryLocation == null)
 			throw new InvalidOperationException("PickupDirectoryLocation is null");
-        _logger.LogInformation("Sending mail using FileSystem. From {from} to {to}", message.From, message.To);
+        _logger.LogInformation("Sending mail using FileSystem ({pickupDirectoryLocation}). From {from} to {to}", _mailSettings.PickupDirectoryLocation, message.From, message.To);
         var mm = CreateMimeMessage(message);
 		var dir = _mailSettings.PickupDirectoryLocation.Replace("\\", "/");
 		var path = Path.GetFullPath(Path.Combine(dir, $"{Guid.NewGuid()}.eml"));
