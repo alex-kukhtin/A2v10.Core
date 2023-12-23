@@ -1,8 +1,5 @@
-2023-12-21 (next: 8199)
+2023-12-23 (next: 8200)
 ==========
-A2v10.Identity.UI
-A2v10.MailClient
-A2v10.Platform
 
 A2v10.Platform
 	A2v10.Identity.Core

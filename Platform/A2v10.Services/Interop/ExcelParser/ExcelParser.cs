@@ -7,6 +7,7 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 
 using A2v10.Data.Interfaces;
+using System.Text.RegularExpressions;
 
 namespace A2v10.Services.Interop;
 
@@ -64,6 +65,17 @@ internal class ExcelParser : IDisposable
 		}
 	}
 
+
+	const String DateFormatPattern = "d{1,4}|m{1,5}|y{2,4}|h{1,2}";
+	Boolean IsDateFormat(NumberingFormat? format)
+	{
+		if (format == null || format.FormatCode == null)
+			return false;
+		var fc = format.FormatCode.Value;
+		if (String.IsNullOrEmpty(fc))
+			return false;
+		return Regex.Match(fc, DateFormatPattern).Success;
+	}
 	ExeclParseResult ParseFileImpl(Stream stream, ITableDescription table)
 	{
         ArgumentNullException.ThrowIfNull(table, nameof(table));
@@ -151,11 +163,16 @@ internal class ExcelParser : IDisposable
 						Int32 ix = (Int32) c.StyleIndex.Value; // Int32.Parse(c.StyleIndex);
 						var cellFormat = workBookPart.WorkbookStylesPart?.Stylesheet?.CellFormats?.ChildElements[ix] as CellFormat;
 						var fmtId = cellFormat?.NumberFormatId?.ToString();
-						if (fmtId is not null && numFormats != null && numFormats.ContainsKey(fmtId))
+						if (fmtId is not null && numFormats != null && numFormats.TryGetValue(fmtId, out NumberingFormat? nf))
 						{
 							// number
 							if (Double.TryParse(c.CellValue.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out Double dblVal))
+							{
+								if (IsDateFormat(nf)) {
+									table.SetValue(dataRow, columns[colIndex], DateTime.FromOADate(dblVal));
+								}
 								table.SetValue(dataRow, columns[colIndex], dblVal);
+							}
 							else
 								throw new InteropException($"invalid cell value '{c.CellValue.Text}' for format '{cellFormat?.InnerText}'");
 						}
