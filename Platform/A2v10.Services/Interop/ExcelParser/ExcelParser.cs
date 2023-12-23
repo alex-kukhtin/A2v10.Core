@@ -168,10 +168,10 @@ internal class ExcelParser : IDisposable
 							// number
 							if (Double.TryParse(c.CellValue.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out Double dblVal))
 							{
-								if (IsDateFormat(nf)) {
+								if (IsDateFormat(nf))
 									table.SetValue(dataRow, columns[colIndex], DateTime.FromOADate(dblVal));
-								}
-								table.SetValue(dataRow, columns[colIndex], dblVal);
+								else
+									table.SetValue(dataRow, columns[colIndex], dblVal);
 							}
 							else
 								throw new InteropException($"invalid cell value '{c.CellValue.Text}' for format '{cellFormat?.InnerText}'");
