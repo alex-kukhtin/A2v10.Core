@@ -669,8 +669,12 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
             await _userManager.UpdateAsync(user);
         }
 
+		if (user.IsBlocked)
+		{
+			return await Error($"User '{email}' is blocked. Contact your administrator.");
+		}
 
-        var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
+		var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
 
 		if (!result.Succeeded)
 			return await Error($"Invalid login for {email}");

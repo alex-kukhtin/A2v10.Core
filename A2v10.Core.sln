@@ -90,6 +90,12 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.PdfReportEngine", "ReportEngines\Test.PdfReportEngine\Test.PdfReportEngine.csproj", "{1C657994-E862-46E6-9E2E-5EC2589EDDDB}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "@sql", "@sql", "{29A69FE9-79CF-479C-9ADC-42EFC1C3D765}"
+	ProjectSection(SolutionItems) = preProject
+		Platform\A2v10.App.Assets\Application\@sql\a2v10_platform.sql = Platform\A2v10.App.Assets\Application\@sql\a2v10_platform.sql
+		Platform\A2v10.App.Assets\Application\@sql\a2v10_platform_mt_catalog.sql = Platform\A2v10.App.Assets\Application\@sql\a2v10_platform_mt_catalog.sql
+		Platform\A2v10.App.Assets\Application\@sql\a2v10_platform_mt_segment.sql = Platform\A2v10.App.Assets\Application\@sql\a2v10_platform_mt_segment.sql
+		Platform\A2v10.App.Assets\Application\@sql\a2v10_platform_mt_segment_final.sql = Platform\A2v10.App.Assets\Application\@sql\a2v10_platform_mt_segment_final.sql
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "source", "source", "{39B995EC-E237-4910-A05F-5A579C76EF36}"
 	ProjectSection(SolutionItems) = preProject
