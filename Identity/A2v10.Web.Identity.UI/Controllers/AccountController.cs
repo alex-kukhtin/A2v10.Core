@@ -439,6 +439,14 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
 
             await _signInManager.SignInAsync(user, isPersistent: true);
             RemoveAntiforgeryCookie();
+
+			var llprms = new ExpandoObject()
+				{
+					{ "Id", user.Id },
+					{ "LastLoginHost", Request.Host.Host }
+				};
+			await _dbContext.ExecuteExpandoAsync(CatalogDataSource, $"[{SecuritySchema}].[UpdateUserLogin]", llprms);
+
 			return LocalRedirect("/");
         }
         catch (Exception tex)
