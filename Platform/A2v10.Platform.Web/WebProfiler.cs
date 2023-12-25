@@ -11,6 +11,7 @@ using Newtonsoft.Json;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using System.Collections.Concurrent;
+using Microsoft.IdentityModel.Tokens;
 
 namespace A2v10.Platform.Web;
 
@@ -169,6 +170,8 @@ public sealed class WebProfiler(IHttpContextAccessor httpContext, WebProfilerSto
 	public String? GetJson()
 	{
 		var requestList = _storage.Get(SessionId());
+		if (requestList.IsNullOrEmpty()) 
+			return "[]";
         return JsonConvert.SerializeObject(requestList);
 	}
 

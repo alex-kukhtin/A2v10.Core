@@ -32,7 +32,8 @@ public class InviteUserHandler(IServiceProvider serviceProvider) : IClrInvokeTar
         {
             UserName = userName,
             Email = userName,
-            Roles = args.Eval<String>("User.Roles")
+            Roles = args.Eval<String>("User.Roles"),
+            Locale = args.Eval<String>("User.Locale")
 	    };
 
         if (IsMultiTenant)
