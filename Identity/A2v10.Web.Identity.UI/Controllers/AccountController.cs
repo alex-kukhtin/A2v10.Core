@@ -97,9 +97,8 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
 	public async Task<IActionResult> OpenIdLogin(String provider)
 	{
 		var availableSchemes = await _signInManager.GetExternalAuthenticationSchemesAsync();
-		var scheme = availableSchemes.First(x => x.Name == provider);
-		if (scheme == null)	
-			throw new InvalidOperationException($"Provider {provider} not found");
+		var scheme = availableSchemes.First(x => x.Name == provider) 
+			?? throw new InvalidOperationException($"Provider {provider} not found");
 		var redirectUrl = Url.ActionLink("loginexternal");
 		var loginInfo = _signInManager.ConfigureExternalAuthenticationProperties(scheme.Name, redirectUrl);
 		return new ChallengeResult(scheme.Name, loginInfo);
@@ -327,7 +326,7 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
                 body = body.Replace("{0}", code);
 
             await _mailService.SendAsync(user.UserName, subject, body);
-			_logger.LogInformation($"A letter has been sent to {user}", user.UserName);
+			_logger.LogInformation("A letter has been sent to {user}", user.UserName);
 
 			return new JsonResult(JsonResponse.Ok("Success"));
         }
@@ -386,7 +385,6 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
     [HttpGet]
     public async Task<IActionResult> Invite(String token, String user)
     {
-        RemoveNonAntiforgeryCookies();
 		var appuser = await _userManager.FindByNameAsync(user);
 		if (appuser == null || appuser.IsEmpty)
 			return NotFound();
@@ -648,8 +646,11 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
 			{
 				return await Error($"User '{email}' is not registered in the system. Contact your administrator.");
 			}
+			if (user.IsBlocked)
+				return await Error($"User '{email}' is blocked. Contact your administrator.");
 			await _userManager.AddLoginAsync(user, new UserLoginInfo(info.LoginProvider, info.ProviderKey, null));
         }
+
 
         // check user name
         var name = info.Principal.Identity.GetClaimValue<String>(WellKnownClaims.Name);
