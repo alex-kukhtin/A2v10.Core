@@ -6950,6 +6950,11 @@ table > colgroup col.blue {
   background-color: var(--neutral900);
   color: #ffda00;
 }
+.mdi-navbar .bar li:hover:not(.grow) .menu-text,
+.mdi-navbar .bar li.active .menu-text {
+  color: #ffda00;
+  opacity: 0.95;
+}
 .mdi-navbar .bar li.grow {
   flex-grow: 2;
 }
