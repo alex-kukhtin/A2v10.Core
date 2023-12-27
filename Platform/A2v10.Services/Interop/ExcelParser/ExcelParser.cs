@@ -2,12 +2,12 @@
 
 using System.Globalization;
 using System.IO;
+using System.Text.RegularExpressions;
 
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 
 using A2v10.Data.Interfaces;
-using System.Text.RegularExpressions;
 
 namespace A2v10.Services.Interop;
 
@@ -67,7 +67,7 @@ internal class ExcelParser : IDisposable
 
 
 	const String DateFormatPattern = "d{1,4}|m{1,5}|y{2,4}|h{1,2}";
-	Boolean IsDateFormat(NumberingFormat? format)
+	static Boolean IsDateFormat(NumberingFormat? format)
 	{
 		if (format == null || format.FormatCode == null)
 			return false;

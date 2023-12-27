@@ -1,12 +1,15 @@
 ﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
-using A2v10.Services.Interop;
-using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
 using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+
+using Microsoft.Extensions.DependencyInjection;
+
+using Newtonsoft.Json;
+
+using A2v10.Services.Interop;
 
 namespace A2v10.Services;
 
@@ -58,20 +61,27 @@ public partial class DataService
 		blobInfo.Stream = bytes.ToArray();
 		return blobInfo;
 	}
-	private async Task<BlobInfo?> LoadBlobClr(IModelBlob modelBlob, ExpandoObject prms)
+
+	private Object CreateClrObject(String? strClrType)
 	{
-		if (String.IsNullOrEmpty(modelBlob.ClrType))
+		if (String.IsNullOrEmpty(strClrType))
 			throw new DataServiceException($"ClrType is null");
-		var (assembly, clrType) = ClrHelpers.ParseClrType(modelBlob.ClrType);
+		var (assembly, clrType) = ClrHelpers.ParseClrType(strClrType);
 		var ass = Assembly.Load(assembly);
 		var tp = ass.GetType(clrType)
 			?? throw new InvalidOperationException("Type not found");
 		var ctor = tp.GetConstructor([typeof(IServiceProvider)])
-			?? throw new InvalidOperationException($"ctor(IServiceProvider) not found in {clrType}");
+			?? throw new InvalidOperationException($"ctor(IServiceProvider) not found in {strClrType}");
 		var elem = ctor.Invoke(new Object[] { _serviceProvider })
-			?? throw new InvalidOperationException($"Unable to create element of {clrType}");
+			?? throw new InvalidOperationException($"Unable to create element of {strClrType}");
+		return elem;
+	}
+
+	private async Task<BlobInfo?> LoadBlobClr(IModelBlob modelBlob, ExpandoObject prms)
+	{
+		var elem = CreateClrObject(modelBlob.ClrType);
 		if (elem is not IClrInvokeBlob invokeBlob)
-			throw new InvalidOperationException($"The type '{clrType}' must implement the interface IClrInvokeBlob");
+			throw new InvalidOperationException($"The type '{modelBlob.ClrType}' must implement the interface IClrInvokeBlob");
 		var result = await invokeBlob.InvokeAsync(prms);
 		return new BlobInfo()
 		{
@@ -120,9 +130,32 @@ public partial class DataService
 			ModelBlobType.parse => await ParseFile(blobModel, setBlob, setParams),
 			ModelBlobType.sql => await SaveBlobSql(blobModel, setBlob, setParams),
 			ModelBlobType.azureBlob => await SaveBlobAzure(blobModel, setBlob, setParams),
+			ModelBlobType.clr => await SaveBlobClr(blobModel, setBlob, setParams),
 			_ =>
 				throw new NotImplementedException(blobModel.Type.ToString())
 		};
+	}
+
+	private async Task<ExpandoObject> SaveBlobClr(IModelBlob blobModel, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams)
+	{
+		BlobUpdateInfo blobInfo = new()
+		{
+			Id = blobModel.Id
+		};
+		setBlob(blobInfo);
+		var args = new ExpandoObject();
+		setParams?.Invoke(args);
+		args.Add("Blob", blobInfo);
+
+		var obj = CreateClrObject(blobModel.ClrType);
+		if (obj is not IClrInvokeTarget clrInvokeTarget)
+			throw new InvalidOperationException($"The type '{blobModel.ClrType}' must implement the interface clrInvokeTarget");
+
+		var result = await clrInvokeTarget.InvokeAsync(args);
+
+		if (result is not ExpandoObject eoResult)
+			throw new InvalidOperationException($"{blobModel.ClrType}. The return type of the must be an ExpandoObject");
+		return eoResult;
 	}
 
 	private Task<ExpandoObject> SaveBlobSql(IModelBlob blobModel, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams)
