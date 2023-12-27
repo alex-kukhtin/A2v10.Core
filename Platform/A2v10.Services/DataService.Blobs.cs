@@ -69,7 +69,7 @@ public partial class DataService
 		var (assembly, clrType) = ClrHelpers.ParseClrType(strClrType);
 		var ass = Assembly.Load(assembly);
 		var tp = ass.GetType(clrType)
-			?? throw new InvalidOperationException("Type not found");
+			?? throw new InvalidOperationException($"Type {strClrType} not found");
 		var ctor = tp.GetConstructor([typeof(IServiceProvider)])
 			?? throw new InvalidOperationException($"ctor(IServiceProvider) not found in {strClrType}");
 		var elem = ctor.Invoke(new Object[] { _serviceProvider })
