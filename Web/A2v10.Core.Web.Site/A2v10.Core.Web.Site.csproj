@@ -15,17 +15,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Content Remove="C:\Users\alexk\.nuget\packages\a2v10.workflow.engine\10.1.8102\contentFiles\any\net6.0\SqlScripts\a2v10_workflow.sql" />
-	</ItemGroup>
-
-	<ItemGroup>
 	  <None Include="..\..\Platform\A2v10.App.Assets\Application\%40sql\a2v10_platform.sql" Link="a2v10_platform.sql" />
 	  <None Include="..\..\Platform\A2v10.App.Assets\Application\%40sql\a2v10_platform_mt_catalog.sql" Link="a2v10_platform_mt_catalog.sql" />
 	  <None Include="..\..\Platform\A2v10.App.Assets\Application\%40sql\a2v10_platform_mt_segment.sql" Link="a2v10_platform_mt_segment.sql" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Workflow.Engine" Version="10.1.8123" />
+		<PackageReference Include="A2v10.Workflow.Engine" Version="10.1.8124" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="8.0.0" />
 	</ItemGroup>
