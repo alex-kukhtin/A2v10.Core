@@ -1,7 +1,7 @@
 ﻿// Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
 
 /*20230525-8100*/
-/* tabbled:appheader.js */
+/* tabbed:appheader.js */
 (function () {
 
 	const locale = window.$$locale;

@@ -33,7 +33,7 @@ app.modules['std:signalR'] = function () {
 // Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
 
 /*20230525-8100*/
-/* tabbled:appheader.js */
+/* tabbed:appheader.js */
 (function () {
 
 	const locale = window.$$locale;
@@ -95,7 +95,7 @@ app.modules['std:signalR'] = function () {
 // Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
 
 /*20230901-8147*/
-/* tabbled:navbar.js */
+/* tabbed:navbar.js */
 (function () {
 
 	const popup = require('std:popup');
@@ -192,7 +192,7 @@ app.modules['std:signalR'] = function () {
 // Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
 
 /*20230829-8146*/
-/* tabbled:shell.js */
+/* tabbed:shell.js */
 (function () {
 	const eventBus = require('std:eventBus');
 	const popup = require('std:popup');

@@ -1,7 +1,7 @@
 ﻿// Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
 
 /*20230901-8147*/
-/* tabbled:navbar.js */
+/* tabbed:navbar.js */
 (function () {
 
 	const popup = require('std:popup');

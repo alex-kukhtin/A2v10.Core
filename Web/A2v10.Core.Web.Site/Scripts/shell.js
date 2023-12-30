@@ -1,7 +1,7 @@
 ﻿// Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
 
 /*20230829-8146*/
-/* tabbled:shell.js */
+/* tabbed:shell.js */
 (function () {
 	const eventBus = require('std:eventBus');
 	const popup = require('std:popup');

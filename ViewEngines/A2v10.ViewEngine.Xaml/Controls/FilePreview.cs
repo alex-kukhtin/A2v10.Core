@@ -1,10 +1,8 @@
 ﻿// Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
 
-using A2v10.Xaml;
+namespace A2v10.Xaml;
 
-namespace A2v10.ViewEngine.Xaml;
-
-internal class FilePreview : UIElementBase
+public class FilePreview : UIElementBase
 {
 	public String? Url { get; set; }
 	public Length? Width { get; set; }

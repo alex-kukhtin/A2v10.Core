@@ -151,8 +151,7 @@ public sealed class WebProfiler(IHttpContextAccessor httpContext, WebProfilerSto
             sessionKey,
             new CookieOptions()
             {
-                SameSite = SameSiteMode.Strict,
-                Secure = true,
+                SameSite = SameSiteMode.Lax,
                 HttpOnly = true,
             }
         );
