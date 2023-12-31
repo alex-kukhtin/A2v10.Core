@@ -11,6 +11,8 @@ public static class ApiKeyUserHelper<T> where T : struct
 {
 	public const String ConfigKey = "AesEncrypt:Key";
 	public const String ConfigVector = "AesEncrypt:Vector";
+
+	private static JsonSerializerOptions DefaultSerializerOptions => new() { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault};
 	public static String GenerateApiKey(AppUser<T> appUser, String key, String vector)
 	{
 		var user = new AppUser<T> { 
@@ -20,7 +22,7 @@ public static class ApiKeyUserHelper<T> where T : struct
 			Locale = appUser.Locale,
 			UserName = Guid.NewGuid().ToString()	
 		};
-		var jsonUser = JsonSerializer.Serialize(user, new JsonSerializerOptions() { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault});
+		var jsonUser = JsonSerializer.Serialize(user, DefaultSerializerOptions);
 		return AesEncrypt.EncryptString(jsonUser, key, vector);
 	}
 

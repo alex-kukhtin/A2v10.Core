@@ -32,7 +32,6 @@ public class AzureBlobStorage(IConfiguration _configuration) : IBlobStorage
 		var cnnStr = _configuration.GetConnectionString(source)
 			?? throw new InvalidOperationException($"Connection String {source} not found");
 		var serviceClient = new BlobServiceClient(cnnStr);
-			//"DefaultEndpointsProtocol=https;AccountName=atest112205;AccountKey=yI43erlV9VX0iNhK4qJ3rEC1mtFI7UpWF5L+CGuGmiXoo9gC8wKYnxRCxFuVCmj8wc4M71P5iclywLx/BzupKQ==;EndpointSuffix=core.windows.net");
 		client = serviceClient.GetBlobContainerClient(container);
 		_containers.TryAdd(key, client);
 		return client;

@@ -52,20 +52,12 @@ public class XamlPartProvider : IXamlPartProvider
 
 	public Object? GetCachedXamlPart(String path)
 	{
-		if (_cache.TryGetValue(path, out var obj))
-			return obj;
-		var res = GetXamlPart(path);
-		_cache.TryAdd(path, res);
-		return res;
+		return _cache.GetOrAdd(path, path => GetXamlPart(path));
 	}
 
 	public Object? GetCachedXamlPartOrNull(String path)
 	{
-		if (_cache.TryGetValue(path, out var obj))
-			return obj;
-		var res = GetXamlPartOrNull(path);
-		_cache.TryAdd(path, res); // add null too
-		return res;
+		return _cache.GetOrAdd(path, path => GetXamlPartOrNull(path));
 	}
 
 	public Object? GetXamlPart(String path)

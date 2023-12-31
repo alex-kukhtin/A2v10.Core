@@ -96,11 +96,7 @@ public sealed class WebProfilerStorage
 
 	internal LinkedList<ProfileRequest> Get(String key)
 	{
-		if (_map.TryGetValue(key, out var list))
-			return list;
-		list = new LinkedList<ProfileRequest>();
-		_map[key] = list;
-		return list;
+		return _map.GetOrAdd(key, (key) => new LinkedList<ProfileRequest>());
 	}
 }
 
