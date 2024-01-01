@@ -4,7 +4,9 @@ using System.Dynamic;
 
 namespace A2v10.Core.Web.Site.TestServices
 {
-	public class TestPageHandler(IViewEngineProvider _viewEngineProvider) : IEndpointHandler
+#pragma warning disable CS9113 // Parameter is unread.
+	public class TestPageHandler(IViewEngineProvider _) : IEndpointHandler
+#pragma warning restore CS9113 // Parameter is unread.
 	{
 		public string RenderResult(IPlatformUrl platformUrl, IModelView modelView, ExpandoObject prms)
 		{

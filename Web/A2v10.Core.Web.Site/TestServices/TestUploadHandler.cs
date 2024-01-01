@@ -1,11 +1,14 @@
-﻿using A2v10.Infrastructure;
-using System;
+﻿using System;
 using System.Dynamic;
 using System.Threading.Tasks;
 
+using A2v10.Infrastructure;
+
 namespace A2v10.Core.Web.Site;
 
-public class TestUploadHandler(IServiceProvider _serviceProvider) : IClrInvokeTarget
+#pragma warning disable CS9113 // Parameter is unread.
+public class TestUploadHandler(IServiceProvider _) : IClrInvokeTarget
+#pragma warning restore CS9113 // Parameter is unread.
 {
 	public Task<object> InvokeAsync(ExpandoObject args)
 	{

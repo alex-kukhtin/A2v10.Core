@@ -1,3 +1,5 @@
+// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+
 using System.Dynamic;
 
 using A2v10.Infrastructure;
@@ -67,4 +69,18 @@ public class DynamicHelpers
         Assert.AreEqual("Item 99 = 99", doc.Resolve("{{Rows[0].Item.Name}} = {{Rows[0].Item.Id}}"));
         Assert.AreEqual("Item 23 = 23", doc.Resolve("{{Rows[1].Item.Name}} = {{Rows[1].Item.Id}}"));
     }
+
+    [TestMethod]
+    public void ReplaceValue()
+    {
+        var x = new ExpandoObject()
+        {
+            { "Id", 23 },
+            { "Name", "Item 23"}
+        };
+        x.ReplaceValue("Id", x => ((Int32)x) + 100);
+        x.ReplaceValue("Name", s => s.ToString()!.Replace("23", "77"));
+		Assert.AreEqual(123, x.Get<Int32>("Id"));
+		Assert.AreEqual("Item 77", x.Get<String>("Name"));
+	}
 }

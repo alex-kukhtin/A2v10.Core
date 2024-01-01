@@ -15,7 +15,6 @@ using A2v10.Data.Interfaces;
 namespace A2v10.Services.Javascript;
 
 #pragma warning disable IDE1006 // Naming Styles
-#pragma warning disable CA1822 // Mark members as static
 
 public class ScriptEnvironment
 {
@@ -159,6 +158,5 @@ return function(_this, prms, args) {{
     }
 }
 
-#pragma warning restore CA1822 // Mark members as static
 #pragma warning restore IDE1006 // Naming Styles
 

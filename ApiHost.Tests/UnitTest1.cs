@@ -21,7 +21,8 @@ public class UnitTest1(ApiTestAppFactory factory) : IClassFixture<ApiTestAppFact
 	{
 		var client = _factory.CreateClient();
 
-		var resp = await client.GetAsync("/api/getforecast/2CDFFA2F-5A04-4C5A-A676-0A1B1434F39D");
+		//var resp = 
+		await client.GetAsync("/api/getforecast/2CDFFA2F-5A04-4C5A-A676-0A1B1434F39D");
 
         // Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
 

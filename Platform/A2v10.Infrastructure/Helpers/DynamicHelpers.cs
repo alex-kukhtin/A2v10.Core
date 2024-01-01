@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -6,14 +6,12 @@ using System.Collections.Specialized;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 
-
 namespace A2v10.Infrastructure;
 
-public static class DynamicHelpers
+public static partial class DynamicHelpers
 {
 	public static T? Get<T>(this ExpandoObject obj, String name)
 	{
@@ -210,10 +208,18 @@ public static class DynamicHelpers
 		return obj;
 	}
 
+	const String EVAL_PATTERN = @"(\w+)\[(\d+)\]{1}";
+#if NET7_0_OR_GREATER
+	[GeneratedRegex(EVAL_PATTERN, RegexOptions.None, "en-US")]
+	private static partial Regex EvalRegex();
+#else
+	private static Regex EVAL_REGEX => new(EVAL_PATTERN, RegexOptions.Compiled);
+	private static Regex EvalRegex() => EVAL_REGEX;
+#endif
+
 	public static Object? EvalExpression(this ExpandoObject root, String expression, Boolean throwIfError = false)
 	{
 		Object currentContext = root;
-		var pattern = @"(\w+)\[(\d+)\]{1}";
 		foreach (var exp in expression.Split('.'))
 		{
 			if (currentContext == null)
@@ -222,7 +228,7 @@ public static class DynamicHelpers
 			var d = currentContext as IDictionary<String, Object?>;
 			if (prop.Contains('['))
 			{
-				var match = Regex.Match(prop, pattern);
+				var match = EvalRegex().Match(prop);
 				prop = match.Groups[1].Value;
 				if ((d != null) && d.TryGetValue(prop, out Object? value))
 				{
@@ -288,12 +294,22 @@ public static class DynamicHelpers
 		return fallback;
 	}
 
+
+	const String RESOLVE_PATTERN = "\\{\\{(.+?)\\}\\}";
+#if NET7_0_OR_GREATER
+	[GeneratedRegex(RESOLVE_PATTERN, RegexOptions.None, "en-US")]
+	private static partial Regex ResolveRegex();
+#else
+	private static Regex RESOLVE_REGEX => new(RESOLVE_PATTERN, RegexOptions.Compiled);
+	private static Regex ResolveRegex() => RESOLVE_REGEX;
+#endif
+
 	public static String? Resolve(this ExpandoObject This, String? source)
 	{
 		if (source == null)
 			return null;
-		var pattern = "\\{\\{(.+?)\\}\\}";
-		var ms = Regex.Matches(source, pattern);
+		
+		var ms = ResolveRegex().Matches(source);
 		if (ms.Count == 0)
 			return source;
 		var sb = new StringBuilder(source);
@@ -309,10 +325,8 @@ public static class DynamicHelpers
 	public static void ReplaceValue(this ExpandoObject This, String key, Func<Object, Object> replacement)
 	{
 		var d = This as IDictionary<String, Object>;
-		if (d.ContainsKey(key))
-		{
-			d[key] = replacement(d[key]);
-		}
+		if (d.TryGetValue(key, out var value))
+			d[key] = replacement(value);
 	}
 
 

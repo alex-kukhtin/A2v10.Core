@@ -1,3 +1,5 @@
+// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+
 using System.Dynamic;
 
 using A2v10.Infrastructure;

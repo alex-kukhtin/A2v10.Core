@@ -2,31 +2,28 @@
 
 using System.Threading.Tasks;
 
-using Microsoft.Extensions.DependencyInjection;
-
-using A2v10.Data.Interfaces;
 using System.IO;
-using Newtonsoft.Json;
-using A2v10.Infrastructure;
-using A2v10.Core.Web.Site.TestServices;
 using System;
 using System.Dynamic;
+
+using Microsoft.Extensions.DependencyInjection;
+
+using Newtonsoft.Json;
+
+using A2v10.Data.Interfaces;
+using A2v10.Infrastructure;
+using A2v10.Core.Web.Site.TestServices;
 using A2v10.Services;
 
 namespace A2v10.Core.Web.Site.AppActions;
 
-internal class LoadApplication : IClrInvokeTarget
+internal class LoadApplication(IServiceProvider serviceProvider) : IClrInvokeTarget
 {
-    private readonly IDbContext _dbContext;
-    private readonly TestBusinessAppProvider _appProvider;
-    private readonly ICurrentUser _currentUser; 
-    public LoadApplication(IServiceProvider serviceProvider)
-    {
-        _dbContext = serviceProvider.GetRequiredService<IDbContext>();
-        _appProvider = serviceProvider.GetRequiredService<TestBusinessAppProvider>();
-        _currentUser = serviceProvider.GetRequiredService<ICurrentUser>();
-    }
-    public async Task<Object> InvokeAsync(ExpandoObject args)
+    private readonly IDbContext _dbContext = serviceProvider.GetRequiredService<IDbContext>();
+    private readonly TestBusinessAppProvider _appProvider = serviceProvider.GetRequiredService<TestBusinessAppProvider>();
+    private readonly ICurrentUser _currentUser = serviceProvider.GetRequiredService<ICurrentUser>();
+
+	public async Task<Object> InvokeAsync(ExpandoObject args)
     {
         if (_currentUser.Identity.Id == null)
             throw new InvalidOperationException("Current user is null");

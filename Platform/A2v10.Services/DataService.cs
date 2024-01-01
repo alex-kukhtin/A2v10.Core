@@ -98,7 +98,7 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
         }
         else
 			throw new DataServiceException($"Export template not defined");
-		var fn = _localizer.Localize(dm.ResolveDataModel(export.FileName));
+		var fn = _localizer.Localize(dm.Resolve(export.FileName));
 
         var resultFileName = $"{fn}.{export.Format}";
 		var resultMime = MimeTypes.GetMimeMapping($".{export.Format}");

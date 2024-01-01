@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
-		<Version>10.1.8193</Version>
+		<Version>10.1.8214</Version>
 		<Nullable>enable</Nullable>
 		<LangVersion>Latest</LangVersion>
 		<AssemblyName>A2v10.Infrastructure</AssemblyName>
@@ -12,7 +12,7 @@
 		<Authors>Oleksandr Kukhtin</Authors>
 		<Company>Oleksandr Kukhtin</Company>
 		<Description>A2v10 Platform Abstractions</Description>
-		<Copyright>Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.</Copyright>
+		<Copyright>Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.</Copyright>
 		<RepositoryType>github</RepositoryType>
 		<PackageTags>A2v10</PackageTags>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -20,7 +20,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Data.Interfaces" Version="10.1.7342" />
+		<PackageReference Include="A2v10.Data.Interfaces" Version="10.1.7347" />
 		<PackageReference Include="A2v10.Runtime.Interfaces" Version="10.1.8121" />
 	</ItemGroup>
 
