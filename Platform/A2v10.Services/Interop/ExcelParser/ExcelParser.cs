@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System.Globalization;
 using System.IO;
@@ -23,7 +23,7 @@ internal record ExeclParseResult
 	public List<String> Columns { get; init; }
 }
 
-internal class ExcelParser : IDisposable
+internal partial class ExcelParser : IDisposable
 {
 
 	public String? ErrorMessage { get; set; }
@@ -66,7 +66,15 @@ internal class ExcelParser : IDisposable
 	}
 
 
-	const String DateFormatPattern = "d{1,4}|m{1,5}|y{2,4}|h{1,2}";
+	const String DATEFORMAT_PATTERN = "d{1,4}|m{1,5}|y{2,4}|h{1,2}";
+#if NET7_0_OR_GREATER
+	[GeneratedRegex(DATEFORMAT_PATTERN, RegexOptions.None, "en-US")]
+	private static partial Regex DateFormatRegex();
+#else
+	private static Regex DF_REGEX => new(DATEFORMAT_PATTERN, RegexOptions.Compiled);
+	private static Regex DateFormatRegex() => DF_REGEX;
+#endif
+
 	static Boolean IsDateFormat(NumberingFormat? format)
 	{
 		if (format == null || format.FormatCode == null)
@@ -74,7 +82,7 @@ internal class ExcelParser : IDisposable
 		var fc = format.FormatCode.Value;
 		if (String.IsNullOrEmpty(fc))
 			return false;
-		return Regex.Match(fc, DateFormatPattern).Success;
+		return DateFormatRegex().Match(fc).Success;
 	}
 	ExeclParseResult ParseFileImpl(Stream stream, ITableDescription table)
 	{

@@ -58,23 +58,22 @@ public enum ModelParseType
 	auto
 }
 
-public interface IModelBlob
+public interface IModelBlob : IModelBase
 {
 	String? Id { get; }
 	String? Key { get; }    
 	ModelBlobType Type { get; }	
 	ModelParseType Parse { get; }
-    String? DataSource { get; }
     String? ClrType { get; }
     String? OutputFileName { get; }
 	Boolean Zip { get; }
 	String? AzureSource { get; }
 	String? Container { get; }
+	String? Locale { get; }
 	ExpandoObject? Parameters { get; }
-	Int32 CommandTimeout { get; }
-    String LoadProcedure();
-	String UpdateProcedure();
-	String DeleteProcedure();
+	String DeleteBlobProcedure();
+	String LoadBlobProcedure();
+	String UpdateBlobProcedure();
     
 }
 

@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System.Linq;
 using System.Collections.Generic;
@@ -9,7 +9,7 @@ using A2v10.Infrastructure;
 
 namespace A2v10.Xaml;
 
-public class Bind : BindBase, ISupportInitialize
+public partial class Bind : BindBase, ISupportInitialize
 {
 	public String? Path { get; set; }
 	public String? Format { get; set; }
@@ -81,7 +81,15 @@ public class Bind : BindBase, ISupportInitialize
 	}
 
 
-	private static readonly Regex _selectedRegEx = new(@"([\w\.]+)\.Selected\((\w+)\)", RegexOptions.Compiled);
+
+	const String SEL_PATTERN = @"([\w\.]+)\.Selected\((\w+)\)";
+#if NET7_0_OR_GREATER
+	[GeneratedRegex(SEL_PATTERN, RegexOptions.None, "en-US")]
+	private static partial Regex SelectedRegex();
+#else
+	private static Regex SEL_REGEX => new(SEL_PATTERN, RegexOptions.Compiled);
+	private static Regex SelectedRegex() => SEL_REGEX;
+#endif
 
 	public Boolean HasFilters => Filters != null && Filters.Count > 0;
 
@@ -103,7 +111,7 @@ public class Bind : BindBase, ISupportInitialize
 	{
 		if (Path == null)
 			return;
-		var match = _selectedRegEx.Match(Path);
+		var match = SelectedRegex().Match(Path);
 		if (match.Groups.Count == 3)
 			Path = $"{match.Groups[1].Value}.Selected('{match.Groups[2].Value}')";
 	}

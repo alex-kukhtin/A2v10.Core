@@ -18,7 +18,7 @@ public struct CellSpan
 	public Int32 Col;
 }
 
-public class ExCell
+public partial class ExCell
 {
 	public CellSpan Span { get; set; }
 	public String Value { get; set; } = String.Empty;
@@ -28,6 +28,21 @@ public class ExCell
 	public DataType DataType { get; set; }
 	public UInt32 StyleIndex { get; set; }
 
+	const String SPACECOMMA = @"[\s,]";
+	const String SPACEONLY = @"[\s]";
+#if NET7_0_OR_GREATER
+	[GeneratedRegex(SPACECOMMA, RegexOptions.None, "en-US")]
+	private static partial Regex SpaceCommaRegex();
+	
+	[GeneratedRegex(SPACEONLY, RegexOptions.None, "en-US")]
+	private static partial Regex SpaceOnlyRegex();
+#else
+	private static Regex SPACECOMMA_REGEX => new(SPACECOMMA, RegexOptions.Compiled);
+	private static Regex SpaceCommaRegex() => SPACECOMMA_REGEX;
+	private static Regex SPACEONLY_REGEX => new(SPACEONLY, RegexOptions.Compiled);
+	private static Regex SpaceOnlyRegex() => SPACEONLY_REGEX;
+#endif
+
 	static String NormalizeNumber(String number, IFormatProvider format)
 	{
 		if (String.IsNullOrEmpty(number))
@@ -35,9 +50,9 @@ public class ExCell
 		if (Decimal.TryParse(number, NumberStyles.Number, format, out Decimal result))
 			return result.ToString(CultureInfo.InvariantCulture);
 		if (number.Contains('.'))
-			return Regex.Replace(number, @"[\s,]", String.Empty);
+			return SpaceCommaRegex().Replace(number, String.Empty);
 		else
-			return Regex.Replace(number, @"[\s]", String.Empty).Replace(',', '.');
+			return SpaceOnlyRegex().Replace(number, String.Empty).Replace(',', '.');
 	}
 
 	static String NormalizeDate(String text)

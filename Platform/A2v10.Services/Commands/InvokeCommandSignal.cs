@@ -7,10 +7,12 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace A2v10.Services;
 
+#pragma warning disable CS9113 // Parameter is unread.
 public class InvokeCommandSignal(IServiceProvider services) : IModelInvokeCommand
+#pragma warning restore CS9113 // Parameter is unread.
 {
-	private readonly IServiceProvider _serivceProvider = services;
-	private readonly ICurrentUser _currentUser = services.GetRequiredService<ICurrentUser>();
+	//private readonly IServiceProvider _serivceProvider = services;
+	//private readonly ICurrentUser _currentUser = services.GetRequiredService<ICurrentUser>();
 
     #region IModelInvokeCommand
     public Task<IInvokeResult> ExecuteAsync(IModelCommand command, ExpandoObject parameters)

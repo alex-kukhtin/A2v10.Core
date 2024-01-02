@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
-		<Version>10.1.8193</Version>
+		<Version>10.1.8214</Version>
 		<LangVersion>Latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<AssemblyName>A2v10.ReportEngine.Pdf</AssemblyName>
@@ -12,7 +12,7 @@
 		<Authors>Oleksandr Kukhtin</Authors>
 		<Company>Oleksandr Kukhtin</Company>
 		<Description>PDF report engine for A2v10</Description>
-		<Copyright>Copyright © 2020-2023 Oleksandr Kukhtin. All rights reserved.</Copyright>
+		<Copyright>Copyright © 2020-2024 Oleksandr Kukhtin. All rights reserved.</Copyright>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/alex-kukhtin/A2v10.Core</RepositoryUrl>
 		<PackageTags>A2v10 Reports Pdf</PackageTags>
@@ -23,7 +23,7 @@
 	<ItemGroup>
 		<PackageReference Include="HarfBuzzSharp" Version="7.3.0" />
 		<PackageReference Include="Jint" Version="3.0.0-beta-2057" />
-		<PackageReference Include="QuestPDF" Version="2023.12.1" />
+		<PackageReference Include="QuestPDF" Version="2023.12.2" />
 		<PackageReference Include="SkiaSharp" Version="2.88.6" />
 		<PackageReference Include="SkiaSharp.HarfBuzz" Version="2.88.6" />
 	</ItemGroup>

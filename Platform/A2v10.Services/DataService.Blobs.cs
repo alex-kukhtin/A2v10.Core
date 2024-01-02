@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 
 using A2v10.Services.Interop;
+using System.Globalization;
 
 namespace A2v10.Services;
 
@@ -40,9 +41,9 @@ public partial class DataService
 
 	private Task<BlobInfo?> LoadBlobSql(IModelBlob blob, ExpandoObject prms)
 	{
-		var loadProc = blob.LoadProcedure();
+		var loadProc = blob.LoadBlobProcedure();
 		if (String.IsNullOrEmpty(loadProc))
-			throw new DataServiceException($"LoadProcedure is null");
+			throw new DataServiceException($"LoadBlobProcedure is null");
 		return _dbContext.LoadAsync<BlobInfo>(blob?.DataSource, loadProc, prms);
 	}
 	private async Task<BlobInfo?> LoadBlobAzure(IModelBlob blob, ExpandoObject prms)
@@ -179,8 +180,8 @@ public partial class DataService
 		if (!String.IsNullOrEmpty(key))
 			blobInfo.Key = key; // optional
 
-		var saveProc = (blobModel?.UpdateProcedure())
-			?? throw new DataServiceException($"UpdateProcedure is null");
+		var saveProc = (blobModel?.UpdateBlobProcedure())
+			?? throw new DataServiceException($"UpdateBlobProcedure is null");
 
 		var output = await _dbContext.ExecuteAndLoadAsync<BlobUpdateInfo, BlobUpdateOutput>(blobModel.DataSource, saveProc, blobInfo)
 			?? throw new InvalidOperationException("Update result is null");
@@ -226,9 +227,9 @@ public partial class DataService
 			ModelParseType.xlsx or ModelParseType.excel => ParseXlsx(blobModel, setBlob, setParams),
 			ModelParseType.json => ParseJson(blobModel, setBlob, setParams),
 			ModelParseType.auto => ParseAuto(blobModel, setBlob, setParams),
-			ModelParseType.csv => ParseCsv(blobModel, setBlob, setParams),
-			ModelParseType.dbf => ParseDbf(blobModel, setBlob, setParams),
-			ModelParseType.xml => ParseXml(blobModel, setBlob, setParams),
+			ModelParseType.csv => ParseFlat("csv", blobModel, setBlob, setParams),
+			ModelParseType.dbf => ParseFlat("dbf", blobModel, setBlob, setParams),
+			ModelParseType.xml => ParseFlat("xml", blobModel, setBlob, setParams),
 			_ => throw new NotImplementedException(blobModel.Parse.ToString())
 		};
 	}
@@ -243,9 +244,9 @@ public partial class DataService
 		{
 			".xlsx" => ParseXlsx(blobModel, setBlob, setParams),
 			".json" => ParseJson(blobModel, setBlob, setParams),
-			".csv" => ParseCsv(blobModel, setBlob, setParams),
-			".dbf" => ParseDbf(blobModel, setBlob, setParams),
-			".xml" => ParseXml(blobModel, setBlob, setParams),
+			".csv" => ParseFlat("csv", blobModel, setBlob, setParams),
+			".dbf" => ParseFlat("dbf", blobModel, setBlob, setParams),
+			".xml" => ParseFlat("xml", blobModel, setBlob, setParams),
 			_ => throw new NotImplementedException()
 		};
 	}
@@ -292,19 +293,33 @@ public partial class DataService
 		var res = await _dbContext.SaveModelAsync(blobModel.DataSource, blobModel.UpdateProcedure(), dm.Data, prms, null, blobModel.CommandTimeout);
 		return res.Root;
 	}
-	private Task<ExpandoObject> ParseCsv(IModelBlob blobModel, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams)
-	{
-		throw new NotImplementedException();
-	}
 
-	private Task<ExpandoObject> ParseDbf(IModelBlob blobModel, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams)
+	private async Task<ExpandoObject> ParseFlat(String format, IModelBlob blobModel, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams)
 	{
-		throw new NotImplementedException();
-	}
+		BlobUpdateInfo blobInfo = new();
+		setBlob(blobInfo);
+		if (blobInfo.Stream == null)
+			throw new InvalidOperationException("Stream is null");
 
-	private Task<ExpandoObject> ParseXml(IModelBlob blobModel, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams)
-	{
-		throw new NotImplementedException();
+		IFormatProvider formatProvider = CultureInfo.InvariantCulture;
+		var rdr = _externalDataProvider.GetReader(format, null, blobInfo.Name);
+		if (!blobModel.HasModel())
+			return rdr.CreateDataModel(blobInfo.Stream);
+		else
+		{
+			var prms = new ExpandoObject();
+			setParams?.Invoke(prms);
+			var dm = await _dbContext.SaveModelAsync(blobModel.DataSource, blobModel.UpdateProcedure(), [], prms,
+				(table) =>
+				{
+					if (!String.IsNullOrEmpty(blobModel.Locale))
+						table.FormatProvider = CultureInfo.GetCultureInfo(blobModel.Locale);
+					return rdr.ParseFile(blobInfo.Stream, table);
+				},
+				blobModel.CommandTimeout
+			);
+			return dm?.Root ?? [];
+		}
 	}
 
 	public async Task<ExpandoObject> DeleteBlobAsync(String baseUrl, Action<ExpandoObject>? setParams)

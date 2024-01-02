@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -206,14 +206,24 @@ public class ColumnDefinition
 }
 
 [TypeConverter(typeof(ColumnDefinitionsConverter))]
-public class ColumnDefinitions : List<ColumnDefinition>
+public partial class ColumnDefinitions : List<ColumnDefinition>
 {
+
+	const String REPEAT_PATTERN = @"^Repeat\((.+)\)$";
+#if NET7_0_OR_GREATER
+	[GeneratedRegex(REPEAT_PATTERN, RegexOptions.None, "en-US")]
+	private static partial Regex RepeatRegex();
+#else
+	private static Regex REPEAT_REGEX => new(REPEAT_PATTERN, RegexOptions.Compiled);
+	private static Regex RepeatRegex() => REPEAT_REGEX;
+#endif
+
 	public static ColumnDefinitions FromString(String val)
 	{
 		var coll = new ColumnDefinitions();
 		if (val.StartsWith("Repeat"))
 		{
-			var match = Regex.Match(val.Trim(), @"^Repeat\((.+)\)$");
+			var match = RepeatRegex().Match(val.Trim());
 			if (match.Groups.Count < 2)
 				throw new XamlException($"Invalid repeat value '{val}'");
 

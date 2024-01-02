@@ -1,11 +1,11 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System.Text.RegularExpressions;
 using System.Xml;
 
 namespace A2v10.Services.Interop;
 
-internal class HtmlReader
+internal partial class HtmlReader
 {
 	private readonly ExSheet _sheet;
 	private readonly IFormatProvider _currentFormat;
@@ -58,11 +58,18 @@ internal class HtmlReader
 		return _sheet;
 	}
 
-	private static readonly Regex s_colRegEx = new("<col ([\\w=\"\\s:%;-]+)>");
+	const String COL_PATTERN = "<col ([\\w=\"\\s:%;-]+)>";
+#if NET7_0_OR_GREATER
+	[GeneratedRegex(COL_PATTERN, RegexOptions.None, "en-US")]
+	private static partial Regex ColumnRegex();
+#else
+	private static Regex COL_REGEX => new(COL_PATTERN, RegexOptions.Compiled);
+	private static Regex ColumnRegex() => COL_REGEX;
+#endif
 
 	static XmlDocument GetXmlFromHtml(String html)
 	{
-		var xml = s_colRegEx.Replace(html, (math) => $"<col {math.Groups[1].Value} />")
+		var xml = ColumnRegex().Replace(html, (math) => $"<col {math.Groups[1].Value} />")
 			.Replace("&nbsp;", "&#160;").Replace("<br>", "&#10;");
 		var doc = new XmlDocument();
 		doc.LoadXml(xml);

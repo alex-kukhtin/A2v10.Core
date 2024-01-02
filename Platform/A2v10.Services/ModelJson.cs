@@ -136,25 +136,26 @@ public class ModelJsonBlob : ModelJsonViewBase, IModelBlob
     public String? ClrType { get; init; }
 	public String? AzureSource { get; init; }
 	public String? Container { get; init; }
+	public String? Locale { get; }
 	public Boolean Zip { get; init; }
     public ModelBlobType Type { get; init; }
 	public ModelParseType Parse { get; init; }
 
-	public override String LoadProcedure()
+	public String LoadBlobProcedure()
 	{
 		var strSuffix = Suffix ?? "Load";
 		var strKey = Key != null ? $"{Key}." : String.Empty;
 		return $"[{CurrentSchema}].[{CurrentModel}.{strKey}{strSuffix}]";
 	}
 
-    public override String UpdateProcedure()
+    public String UpdateBlobProcedure()
     {
         var strSuffix = Suffix ?? "Update";
         var strKey = Key != null ? $"{Key}." : String.Empty;
         return $"[{CurrentSchema}].[{CurrentModel}.{strKey}{strSuffix}]";
     }
 
-	public String DeleteProcedure()
+	public String DeleteBlobProcedure()
 	{
 		var strSuffix = "Delete";
 		var strKey = Key != null ? $"{Key}." : String.Empty;

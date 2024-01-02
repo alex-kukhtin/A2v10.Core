@@ -1,9 +1,10 @@
-﻿using A2v10.Identity.Core;
-using A2v10.Web.Identity;
-using A2v10.Web.Identity.ApiKey;
+﻿using System.Dynamic;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Dynamic;
+
+using A2v10.Identity.Core;
+using A2v10.Web.Identity;
 
 namespace A2v10.ApiHost.Controllers;
 
@@ -50,7 +51,9 @@ public class ApiController(IConfiguration _configuration) : ControllerBase
 	//[HttpGet("{id:guid}")]
 	[HttpGet("{id}")]
 	[ActionName("getforecast")]
+#pragma warning disable IDE0060 // Remove unused parameter
 	public IEnumerable<WeatherForecast> Get([FromRoute] String id)
+#pragma warning restore IDE0060 // Remove unused parameter
 	{
 		// constraints: Microsoft.AspNetCore.Routing.RouteOptions
 		var userId = User.Identity.GetUserId<Int64>();
