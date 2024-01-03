@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
-	  <Version>10.1.8214</Version>
+	  <Version>10.1.8215</Version>
 	  <LangVersion>Latest</LangVersion>
 	  <Nullable>enable</Nullable>
 	  <ImplicitUsings>disable</ImplicitUsings>
@@ -22,7 +22,7 @@
 
   <ItemGroup>
     <PackageReference Include="DocumentFormat.OpenXml" Version="3.0.0" />
-    <PackageReference Include="Jint" Version="3.0.0-beta-2057" />
+    <PackageReference Include="Jint" Version="3.0.0-beta-2058" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
