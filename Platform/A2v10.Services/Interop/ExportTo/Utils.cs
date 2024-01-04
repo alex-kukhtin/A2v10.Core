@@ -56,6 +56,7 @@ public static class Utils
 						lst.Align = HorizontalAlign.Right;
 						break;
 					case "text-left":
+					case "text-default":
 						lst.Align = HorizontalAlign.Left;
 						break;
 				}
