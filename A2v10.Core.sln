@@ -122,7 +122,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BlobStorages", "BlobStorage
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzureBlobStorage", "BlobStorages\AzureBlobStorage\AzureBlobStorage.csproj", "{7077A931-7247-4CCA-AE1C-D24BFBD84600}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestServices", "Tests\TestServices\TestServices.csproj", "{96D431A8-3D14-496D-8357-1D4750AEB13D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestServices", "Tests\TestServices\TestServices.csproj", "{96D431A8-3D14-496D-8357-1D4750AEB13D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
