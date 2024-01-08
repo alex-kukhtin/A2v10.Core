@@ -1,4 +1,4 @@
-﻿// Copyright © 2020-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2020-2024 Oleksandr Kukhtin. All rights reserved.
 
 
 using Newtonsoft.Json;
@@ -25,7 +25,7 @@ public static class JsonHelpers
 			Formatting = Formatting.None,
 			StringEscapeHandling = StringEscapeHandling.EscapeHtml,
 			DateFormatHandling = DateFormatHandling.IsoDateFormat,
-			DateTimeZoneHandling = DateTimeZoneHandling.Utc,
+			DateTimeZoneHandling = DateTimeZoneHandling.Unspecified,
 			NullValueHandling = NullValueHandling.Ignore,
 			DefaultValueHandling = DefaultValueHandling.Ignore
 		};
@@ -36,7 +36,7 @@ public static class JsonHelpers
 			Formatting = Formatting.None,
 			StringEscapeHandling = StringEscapeHandling.Default,
 			DateFormatHandling = DateFormatHandling.IsoDateFormat,
-			DateTimeZoneHandling = DateTimeZoneHandling.Utc,
+			DateTimeZoneHandling = DateTimeZoneHandling.Unspecified,
 			NullValueHandling = NullValueHandling.Ignore,
 			DefaultValueHandling = DefaultValueHandling.Ignore,
 			Converters = new List<JsonConverter>
@@ -51,7 +51,7 @@ public static class JsonHelpers
             Formatting = Formatting.Indented,
             StringEscapeHandling = StringEscapeHandling.EscapeHtml,
             DateFormatHandling = DateFormatHandling.IsoDateFormat,
-            DateTimeZoneHandling = DateTimeZoneHandling.Utc,
+            DateTimeZoneHandling = DateTimeZoneHandling.Unspecified,
             NullValueHandling = NullValueHandling.Ignore,
             DefaultValueHandling = DefaultValueHandling.Ignore,
 			Converters = new List<JsonConverter>()

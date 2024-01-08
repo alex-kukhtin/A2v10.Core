@@ -523,13 +523,16 @@
 .control-group.disabled {
 	.input-group {
 		background-color: @disabled-bg-color;
-
-		opacity:@control-disabled-opacity;
+		opacity: @control-disabled-opacity;
 	}
 
 	a:not(.rendershow) {
 		pointer-events: none;
 		opacity: 0.5;
+	}
+
+	.selector-combo {
+		pointer-events: none;
 	}
 }
 
