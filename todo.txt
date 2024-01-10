@@ -77,9 +77,7 @@ TABBED LAYOUT
 74. Левая панель - текст в меню nowrap, ellipsis
 78. SimpleSecurity: развязать User/Tenant
 79. Красивость. Если Search заполнен - подсвечивать его каким-то цветом.
-82. NovaEra2023. Что-то с сохранением вариантов после изменения шаблона.
 83. NovaEra2023. Динамическая оборотка - придумать что-то со сворачиванием сальдо.
-84. NovaEra2023: OperationKinds и устанвка Bind, BindFactor (картинка для Order)
 85. InitLayout (Login/Registration/etc) - нету footer
 86. 
 
@@ -101,5 +99,3 @@ Dynamic Reports
 
 24. 
 
--- DEPLOY
-WebAssets: vue.js, tabmain.js

@@ -35,6 +35,7 @@ public interface IBlobUpdateInfo
     public String? Name { get; set; }
     public Stream? Stream { get; set; }
     public String? BlobName { get; set; }
+    public Object? Id { get; set; }
 }
 
 public interface IBlobUpdateOutput
