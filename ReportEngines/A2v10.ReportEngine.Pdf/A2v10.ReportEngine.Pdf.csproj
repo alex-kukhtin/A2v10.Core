@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
-		<Version>10.1.8223</Version>
+		<Version>10.1.8224</Version>
 		<LangVersion>Latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<AssemblyName>A2v10.ReportEngine.Pdf</AssemblyName>
@@ -21,11 +21,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="HarfBuzzSharp" Version="7.3.0.1" />
 		<PackageReference Include="Jint" Version="3.0.0-beta-2059" />
-		<PackageReference Include="QuestPDF" Version="2023.12.2" />
-		<PackageReference Include="SkiaSharp" Version="2.88.7" />
-		<PackageReference Include="SkiaSharp.HarfBuzz" Version="2.88.7" />
+		<PackageReference Include="QuestPDF" Version="2023.12.3" />
 	</ItemGroup>
 
 	<ItemGroup>
