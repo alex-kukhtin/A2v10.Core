@@ -1,6 +1,7 @@
-﻿// Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2023-2024 Oleksandr Kukhtin. All rights reserved.
 
-/*20230829-8146*/
+/*20240118-8226*/
+
 /* tabbed:shell.js */
 (function () {
 	const eventBus = require('std:eventBus');
@@ -345,8 +346,11 @@
 				}, 50); // same as modal
 			},
 			_requery(vm, data) {
-				if (!vm || !vm.__tabUrl__)
-					return;
+				if (!vm) return;
+				if (vm.__requery) {
+					vm.__requery();
+				}
+				if (!vm.__tabUrl__) return;
 				let t = this.tabs.find(t => tabUrlKey(t) === vm.__tabUrl__);
 				if (!t) return;
 				let run = data ? data.Run : false;

@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -17,6 +17,7 @@ using A2v10.Infrastructure;
 using A2v10.Web.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 
 namespace A2v10.Platform.Web.Controllers;
 
@@ -25,19 +26,11 @@ public record MultiTenantParamJson(String Companies, String Period);
 [Route("_shell/[action]")]
 [Authorize]
 [ExecutingFilter]
-public class ShellController(IDbContext dbContext, IApplicationHost host, ICurrentUser currentUser, IProfiler profiler,
-    ILocalizer localizer, IAppCodeProvider codeProvider, IAppDataProvider appDataProvider, IOptions<AppOptions> appOptions,
-    ILogger<ShellController> logger) : Controller
+public class ShellController(IDbContext _dbContext, IApplicationHost _host, ICurrentUser _currentUser, IProfiler _profiler,
+    ILocalizer _localizer, IAppCodeProvider _codeProvider, IAppDataProvider _appDataProvider, IOptions<AppOptions> appOptions,
+    ILogger<ShellController> _logger) : Controller
 {
-	private readonly IApplicationHost _host = host;
-	private readonly IDbContext _dbContext = dbContext;
-	private readonly ICurrentUser _currentUser = currentUser;
-	private readonly IProfiler _profiler = profiler;
-	private readonly IAppCodeProvider _codeProvider = codeProvider;
-	private readonly IAppDataProvider _appDataProvider = appDataProvider;
 	private readonly AppOptions _appOptions = appOptions.Value;
-	private readonly ILocalizer _localizer = localizer;
-	private readonly ILogger<ShellController> _logger = logger;
 
 
     const String MENU_PROC = "a2ui.[Menu.User.Load]";
@@ -160,7 +153,7 @@ public class ShellController(IDbContext dbContext, IApplicationHost host, ICurre
 		return shell.ResolveMacros(macros) ?? String.Empty;
 	}
 
-	async Task<String> BuildScript()
+    async Task<String> BuildScript()
 	{
 		String shell = Resource.shell;
 
@@ -219,7 +212,7 @@ public class ShellController(IDbContext dbContext, IApplicationHost host, ICurre
 		String jsonMenu = JsonConvert.SerializeObject(menuRoot, JsonHelpers.ConfigSerializerSettings(_host.IsDebugConfiguration));
 		macros.Set("Menu", jsonMenu);
 
-		if (setCompany)
+        if (setCompany)
 		{
 			var comps = dm.Root.Get<List<ExpandoObject>>("Companies");
 			var currComp = (comps?.Find(c => c.Get<Boolean>("Current"))) 

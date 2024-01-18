@@ -1,6 +1,6 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
-/*20201111-7721*/
+/*20240118-8226*/
 
 (function () {
 
@@ -33,5 +33,4 @@
 
 	window.$$rootUrl = '/admin';
 	window.$$debug = $(Debug);
-
 })();

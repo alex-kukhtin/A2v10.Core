@@ -9,6 +9,8 @@ using System.IO;
 using Newtonsoft.Json;
 
 using A2v10.Infrastructure;
+using Microsoft.Extensions.Configuration;
+using System.Text;
 
 namespace A2v10.Platform.Web;
 public static class HostHelpers
@@ -84,5 +86,20 @@ public static class HostHelpers
 		var manifestPath = provider.MapHostingPath("manifest.json");
 		return File.Exists(manifestPath) ? "<link rel=\"manifest\" href=\"/manifest.json\">" : null;
 	}
+
+	public static String? SwitchLocale(this IConfiguration config)
+	{
+        var dateLocale = config.GetValue<String>("Globalization:DateLocale");
+        var numLocale = config.GetValue<String>("Globalization:NumberLocale");
+		if (String.IsNullOrEmpty(dateLocale) && String.IsNullOrEmpty(numLocale))
+			return null;
+        var sb = new StringBuilder("<script type=\"text/javascript\">");
+        if (!String.IsNullOrEmpty(dateLocale))
+            sb.Append($"window.$$locale.$DateLocale = '{dateLocale}';");
+        if (!String.IsNullOrEmpty(numLocale))
+            sb.Append($"window.$$locale.$NumberLocale = '{numLocale}';");
+		sb.Append("</script>");
+        return sb.ToString();
+    }
 }
 

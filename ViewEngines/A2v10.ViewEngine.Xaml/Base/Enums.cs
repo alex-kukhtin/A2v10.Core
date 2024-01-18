@@ -1,5 +1,5 @@
 ﻿
-// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Xaml;
 
@@ -120,7 +120,8 @@ public enum DataType
 	Currency,
 	Boolean,
 	Object,
-	Period
+	Period,
+    Percent
 }
 
 public enum ControlSize

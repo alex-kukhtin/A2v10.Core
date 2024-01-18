@@ -1,5 +1,6 @@
-﻿
-/*20210531-7776*/
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+
+/*20240118-8226*/
 
 (function () {
 
@@ -55,5 +56,4 @@
 
 	window.$$rootUrl = '';
 	window.$$debug = $(Debug);
-
 })();

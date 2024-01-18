@@ -2,6 +2,7 @@
 @inject IAppCodeProvider codeProvider
 @inject ICurrentUser currentUser
 @inject IAppVersion appVersion
+@inject IConfiguration config
 
 @{
 	IUserLocale userLocale = currentUser.Locale;
@@ -36,9 +37,10 @@ GitHub: https://github.com/alex-kukhtin/A2v10.Core
 	<script type="text/javascript" src="/scripts/vue.@Html.Raw(ViewBag.__Minify)js?v=2.7.14"></script>
 	<script type="text/javascript" src="/scripts/signalr.min.js?v=6.0.16"></script>
 	<script type="text/javascript" src="/scripts/locale-@Html.Raw(userLocale.Language + ".min.js")?v=@appVersion.AppBuild"></script>
+	@Html.Raw(config.SwitchLocale())
 	<script type="text/javascript" src="/scripts/tabmain.js?v=@appVersion.AppBuild"></script>
 	<script type="text/javascript" src="/scripts/tabbed.js?v=@appVersion.AppBuild"></script>
-	@Html.Raw(await codeProvider.LayoutScripts());
+	@Html.Raw(await codeProvider.LayoutScripts())
 	@Html.Raw(codeProvider.AppScriptsLink())
 	@Html.Raw(Model?.ModelScripts)
 	<script type="text/javascript" src="/_shell/script"></script>

@@ -1,5 +1,6 @@
-﻿
-/*20230506-8086*/
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+
+/*20240118-8226*/
 
 (function () {
 
