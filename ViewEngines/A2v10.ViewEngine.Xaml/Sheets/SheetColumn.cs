@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -52,7 +52,11 @@ public class SheetColumn : XamlElement
 			col.MergeStyle("width", Width.Value);
         if (MinWidth != null)
             col.MergeStyle("min-width", MinWidth.Value);
-        if (Background != ColumnBackgroundStyle.None)
+
+		var bgBind = GetBinding(nameof(Background));
+		if (bgBind != null)
+            col.MergeAttribute(":class", bgBind.GetPathFormat(context));
+        else if (Background != ColumnBackgroundStyle.None)
 			col.AddCssClass(Background.ToString().ToKebabCase());
 
 		col.Render(context, TagRenderMode.SelfClosing);

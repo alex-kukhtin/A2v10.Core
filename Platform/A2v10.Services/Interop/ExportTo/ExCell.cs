@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System.Globalization;
 using System.Text.RegularExpressions;
@@ -55,7 +55,20 @@ public partial class ExCell
 			return SpaceOnlyRegex().Replace(number, String.Empty).Replace(',', '.');
 	}
 
-	static String NormalizeDate(String text)
+	static String NormalizePercent(String number, IFormatProvider format)
+	{
+        if (number.EndsWith('%'))
+			number = number[..^1];
+        var val = NormalizeNumber(number, format);
+		if (String.IsNullOrEmpty(val))
+			return val;
+		if (Decimal.TryParse(val, out Decimal result))
+			return (result / 100).ToString(CultureInfo.InvariantCulture);
+		return "#ERR";
+	}
+
+
+    static String NormalizeDate(String text)
 	{
 		if (String.IsNullOrEmpty(text))
 			return String.Empty;
@@ -135,6 +148,10 @@ public partial class ExCell
 			case "time":
 				DataType = DataType.Time;
 				Value = NormalizeTime(text);
+				break;
+			case "percent":
+				DataType = DataType.Percent;
+				Value = NormalizePercent(text, format);
 				break;
 			default:
 				Value = text;

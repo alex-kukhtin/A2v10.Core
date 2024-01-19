@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System.IO;
 
@@ -7,6 +7,11 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace A2v10.Services.Interop;
+
+/*
+Excel number formats
+https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.numberingformat?view=openxml-3.0.1
+*/
 
 internal class Html2Excel(String locale)
 {
@@ -126,7 +131,7 @@ internal class Html2Excel(String locale)
 				/*currency*/ new NumberingFormat() { FormatCode = "#,##0.00####;[Red]\\-#,##0.00####", NumberFormatId = 169 },
 				/*number*/   new NumberingFormat() { FormatCode = "#,##0.######;[Red]-#,##0.######", NumberFormatId = 170 },
 				/*time*/     new NumberingFormat() { FormatCode = "hh:mm;@", NumberFormatId = 165 }
-			);
+            );
 
 		var cellFormats = new CellFormats(new CellFormat());
 
@@ -181,6 +186,10 @@ internal class Html2Excel(String locale)
 				break;
 			case DataType.Time:
 				cf.NumberFormatId = 165;
+				cf.ApplyNumberFormat = true;
+				break;
+			case DataType.Percent:
+				cf.NumberFormatId = 9; /*standard*/
 				cf.ApplyNumberFormat = true;
 				break;
 			case DataType.Number:
@@ -266,6 +275,10 @@ internal class Html2Excel(String locale)
 				cell.DataType = new EnumValue<CellValues>(CellValues.Number);
 				cell.CellValue = new CellValue(exCell.Value);
 				break;
+			case DataType.Percent:
+                cell.DataType = new EnumValue<CellValues>(CellValues.Number);
+                cell.CellValue = new CellValue(exCell.Value);
+                break;
 			case DataType.Date:
 			case DataType.DateTime:
 				// DataType not needed
