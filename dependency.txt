@@ -1,6 +1,10 @@
-2024-01-19 (next: 8228)
+2024-01-19 (next: 8229)
 =======================
-
+A2v10.Platform
+A2v10.ReportEngine.Pdf
+A2v10.Services
+A2v10.Platform.Web
+A2v10.Web.Assets
 
 A2v10.Platform
 	A2v10.Identity.Core

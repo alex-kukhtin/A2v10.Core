@@ -105,4 +105,11 @@
 			<button class="dropdown-item" v-on:click="popupCloseAll"><span>@loc["CloseAllTabs"]</span></button>
 		</div>
 	</div>
+	<div v-if="newVersionAvailable" class="mdi-new-version">
+		<div class="nv-body">
+			<h3>A new version is available</h3>
+			<span>Reload the page to continue</span>
+			<button class="btn btn-primary" v-on:click="reloadApplication">Reload to update</button>
+		</div>
+	</div>
 </div>

@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.IO;
@@ -41,10 +41,11 @@ public class PageController : BaseController
 	private readonly IAppCodeProvider _codeProvider;
 	private readonly IViewEngineProvider _viewEngineProvider;
 	private readonly IAppDataProvider _appDataProvider;
+	private readonly IAppVersion _appVersion;
 
 	public PageController(IApplicationHost host, IAppCodeProvider codeProvider,
 		ILocalizer localizer, ICurrentUser currentUser, IProfiler profiler, IDataService dataService, 
-		IViewEngineProvider viewEngineProvider, IAppDataProvider appDataProvider)
+		IViewEngineProvider viewEngineProvider, IAppDataProvider appDataProvider, IAppVersion appVersion)
 		: base(host, localizer, currentUser, profiler)
 	{
 		_dataService = dataService;
@@ -52,6 +53,7 @@ public class PageController : BaseController
 		_scripter = new VueDataScripter(host, codeProvider, _localizer, currentUser);
 		_viewEngineProvider = viewEngineProvider;
 		_appDataProvider = appDataProvider;
+		_appVersion = appVersion;
 	}
 
 	[Route("_page/{*pathInfo}")]
@@ -118,6 +120,7 @@ public class PageController : BaseController
 			return Content(modelAndView.ActionResult, MimeTypes.Text.HtmlUtf8);
 
 		Response.ContentType = MimeTypes.Text.HtmlUtf8;
+		Response.Headers.Append("App-Version", _appVersion.AppVersion);
 
 		IDataModel? model = modelAndView.Model;
 		var rw = modelAndView.View ?? 

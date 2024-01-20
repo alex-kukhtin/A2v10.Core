@@ -191,7 +191,7 @@ app.modules['std:signalR'] = function () {
 
 // Copyright © 2023-2024 Oleksandr Kukhtin. All rights reserved.
 
-/*20240118-8226*/
+/*20240120-8228*/
 
 /* tabbed:shell.js */
 (function () {
@@ -230,7 +230,8 @@ app.modules['std:signalR'] = function () {
 				homeLoaded: false,
 				lockRoute: false,
 				requestsCount: 0,
-				contextTabKey: 0
+				contextTabKey: 0,
+				newVersionAvailable: false
 			};
 		},
 		components: {
@@ -274,6 +275,9 @@ app.modules['std:signalR'] = function () {
 			navigateTo(to) {
 				this.navigatingUrl = to.url;
 				this.navigate({ url: to.url, title: '' });
+			},
+			reloadApplication() {
+				window.location.reload();
 			},
 			setDocTitle(title) {
 				let tab = this.activeTab;
@@ -756,6 +760,11 @@ app.modules['std:signalR'] = function () {
 				me.requestsCount -= 1;
 				window.__requestsCount__ = me.requestsCount;
 			});
+			eventBus.$on('checkVersion', (ver) => {
+				if (ver && this.appData && ver !== this.appData.version)
+					this.newVersionAvailable = true;
+			});
+
 			signalR.startService();
 
 			window.addEventListener("beforeunload", (ev) => {
