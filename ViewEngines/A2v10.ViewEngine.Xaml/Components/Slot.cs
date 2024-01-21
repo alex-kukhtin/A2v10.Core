@@ -1,46 +1,61 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
-namespace A2v10.Xaml
+namespace A2v10.Xaml;
+
+[ContentProperty("Children")]
+public class Slot : UIElementBase
 {
-	[ContentProperty("Children")]
-	public class Slot : UIElementBase
+	const String SLOT_ITEM = "__si__";
+
+	public Object? Scope { get; set; }
+	public UIElementBase? Fallback { get; set; }
+	public UIElementCollection Children { get; set; } = [];
+
+	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
-		const String SLOT_ITEM = "__si__";
-
-		public Object? Scope { get; set; }
-		public UIElementBase? Fallback { get; set; }
-		public UIElementCollection Children { get; set; } = [];
-
-		public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
-		{
-			if (SkipRender(context))
-				return;
-			var scopeBind = GetBinding(nameof(Scope)) 
-				?? throw new XamlException("Scope must be specified for Slot component");
+		if (SkipRender(context))
+			return;
+		var scopeBind = GetBinding(nameof(Scope)) 
+			?? throw new XamlException("Scope must be specified for Slot component");
             String slotItem = $"{SLOT_ITEM}{context.ScopeLevel}";
 
-			var tag = new TagBuilder("template", null, IsInGrid);
-			tag.MergeAttribute("v-if", $"!!{scopeBind.GetPathFormat(context)}");
-			tag.MergeAttribute("v-for", $"{slotItem} in [{scopeBind.GetPath(context)}]");
+		var tag = new TagBuilder("template", null, IsInGrid);
+		tag.MergeAttribute("v-if", $"!!{scopeBind.GetPathFormat(context)}");
+		tag.MergeAttribute("v-for", $"{slotItem} in [{scopeBind.GetPath(context)}]");
 
-			tag.RenderStart(context);
-			using (var ctx = new ScopeContext(context, slotItem, scopeBind.Path))
+		tag.RenderStart(context);
+		using (var ctx = new ScopeContext(context, slotItem, scopeBind.Path))
+		{
+			foreach (var c in Children)
 			{
-				foreach (var c in Children)
-				{
-					c.IsInGrid = IsInGrid;
-					c.RenderElement(context);
-				}
-			}
-			tag.RenderEnd(context);
-			if (Fallback != null)
-			{
-				var fb = new TagBuilder("template");
-				fb.MergeAttribute("v-if", $"!{scopeBind.GetPathFormat(context)}");
-				fb.RenderStart(context);
-				Fallback.RenderElement(context);
-				fb.RenderEnd(context);
+				c.IsInGrid = IsInGrid;
+				c.RenderElement(context);
 			}
 		}
+		tag.RenderEnd(context);
+		if (Fallback != null)
+		{
+			var fb = new TagBuilder("template");
+			fb.MergeAttribute("v-if", $"!{scopeBind.GetPathFormat(context)}");
+			fb.RenderStart(context);
+			Fallback.RenderElement(context);
+			fb.RenderEnd(context);
+		}
+	}
+
+	public override void OnSetStyles(RootContainer root)
+	{
+		base.OnSetStyles(root);
+		Fallback?.OnSetStyles(root);
+		foreach (var b in Children)
+			b.OnSetStyles(root);
+	}
+
+	protected override void OnEndInit()
+	{
+		base.OnEndInit();
+		Fallback?.SetParent(this);
+		foreach (var b in Children)
+			b.SetParent(this);
 	}
 }
