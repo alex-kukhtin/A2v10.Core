@@ -85,9 +85,9 @@ app.modules['std:locale'] = function () {
 	return window.$$locale;
 };
 
-// Copyright © 2015-2018 Alex Kukhtin. All rights reserved.
+// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
-// 20181120-7363
+// 20240111-7956
 // platform/polyfills.js
 
 
@@ -132,10 +132,20 @@ app.modules['std:locale'] = function () {
 
 (function (date) {
 
+	let td = new Date(0, 0, 1, 0, 0, 0, 0);
+
 	date.isZero = date.isZero || function () {
-		let td = new Date(0, 0, 1, 0, 0, 0, 0);
-		td.setHours(0, -td.getTimezoneOffset(), 0, 0);
 		return this.getTime() === td.getTime();
+	};
+
+	date.toJSON = function (key) {
+		let nd = new Date(this);
+		let ds = 0;
+		if (nd.getFullYear() < 1925) {
+			ds = -4;
+		}
+		nd.setHours(nd.getHours(), nd.getMinutes() - nd.getTimezoneOffset(), nd.getSeconds() - ds, 0);
+		return nd.toISOString().replace('Z', '');
 	};
 
 })(Date.prototype);
@@ -198,7 +208,7 @@ app.modules['std:const'] = function () {
 
 // Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
-// 20240104-7954
+// 20240121-7958
 // services/utils.js
 
 app.modules['std:utils'] = function () {
@@ -206,23 +216,29 @@ app.modules['std:utils'] = function () {
 	const locale = require('std:locale');
 	const platform = require('std:platform');
 	const dateLocale = locale.$DateLocale || locale.$Locale;
-	const numLocale = locale.$Locale;
+	const numLocale = locale.$NumberLocale || locale.$Locale;
+
 	const _2digit = '2-digit';
 
-	const dateOptsDate = { timeZone: 'UTC', year: 'numeric', month: _2digit, day: _2digit };
-	const dateOptsTime = { timeZone: 'UTC', hour: _2digit, minute: _2digit };
+	const dateOptsDate = { year: 'numeric', month: _2digit, day: _2digit };
+	const dateOptsTime = { hour: _2digit, minute: _2digit };
 	
 	const formatDate = new Intl.DateTimeFormat(dateLocale, dateOptsDate).format;
 	const formatTime = new Intl.DateTimeFormat(dateLocale, dateOptsTime).format;
 
 	const currencyFormat = new Intl.NumberFormat(numLocale, { minimumFractionDigits: 2, maximumFractionDigits: 6, useGrouping: true }).format;
-	const numberFormat = new Intl.NumberFormat(numLocale, { minimumFractionDigits: 0, maximumFractionDigits: 6, useGrouping: true }).format;
+	const nf = new Intl.NumberFormat(numLocale, { minimumFractionDigits: 0, maximumFractionDigits: 6, useGrouping: true });
+	const numberFormat = nf.format;
 
-	const utcdatRegEx = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/;
+	const parts = nf.formatToParts(1000.5);
+	const decimalSymbol = parts[3].value;
+	const groupingSymbol = parts[1].value;
+
+	const utcdatRegEx = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?$/;
 
 	let numFormatCache = {};
 
-	const zeroDate = new Date(Date.UTC(0, 0, 1, 0, 0, 0, 0));
+	const zeroDate = new Date(0, 0, 1, 0, 0, 0, 0);
 
 	return {
 		isArray: Array.isArray,
@@ -270,7 +286,8 @@ app.modules['std:utils'] = function () {
 			minDate: dateCreate(1901, 1, 1),
 			maxDate: dateCreate(2999, 12, 31),
 			fromDays: fromDays,
-			parseTime: timeParse
+			parseTime: timeParse,
+			fromServer: dateFromServer
 		},
 		text: {
 			contains: textContains,
@@ -468,6 +485,8 @@ app.modules['std:utils'] = function () {
 			case 'Currency':
 			case 'Number':
 				return toNumber(obj);
+			case 'Percent':
+				return toNumber(obj) / 100.0;
 			case 'Date':
 				return dateParse(obj);
 		}
@@ -566,7 +585,7 @@ app.modules['std:utils'] = function () {
 				if (dateIsZero(obj))
 					return '';
 				if (dateHasTime(obj))
-					return obj.toISOString();
+					return obj.toJSON();
 				return '' + obj.getFullYear() + pad2(obj.getMonth() + 1) + pad2(obj.getDate());
 			case 'Time':
 				if (!isDate(obj)) {
@@ -603,6 +622,12 @@ app.modules['std:utils'] = function () {
 					return '';
 
 				return formatNumber(obj, opts.format);
+			case 'Percent':
+				if (!isNumber(obj))
+					obj = toNumber(obj);
+				if (opts.hideZeros && obj === 0)
+					return '';
+				return formatNumber((+obj) * 100, opts.format) + '%';
 			default:
 				console.error(`Invalid DataType for utils.format (${dataType})`);
 		}
@@ -628,20 +653,23 @@ app.modules['std:utils'] = function () {
 	}
 
 	function toNumber(val) {
-		if (isString(val))
-			val = val.replace(/\s/g, '').replace(',', '.');
+		if (isString(val)) {
+			val = val.replaceAll(groupingSymbol, '');
+			val = val.replace(/\s|%/g, '').replace(',', '.');
+		}
 		return isFinite(val) ? +val : 0;
 	}
 
 	function dateToday() {
 		let td = new Date();
-		return new Date(Date.UTC(td.getFullYear(), td.getMonth(), td.getDate(), 0, 0, 0, 0));
+		td.setHours(0, 0, 0, 0);
+		return td;
 	}
 
 	function dateNow(second) {
 		let td = new Date();
 		let sec = second ? td.getSeconds() : 0;
-		return new Date(Date.UTC(td.getFullYear(), td.getMonth(), td.getDate(), td.getHours(), td.getMinutes(), sec, 0));
+		return new Date(td.getFullYear(), td.getMonth(), td.getDate(), td.getHours(), td.getMinutes(), sec, 0);
 	}
 
 	function dateZero() {
@@ -653,19 +681,19 @@ app.modules['std:utils'] = function () {
 		if (isDate(str)) return str;
 
 		if (utcdatRegEx.test(str)) {
-			return new Date(str);
+			return dateFromServer(str);
 		}
 
 		let dt;
 		if (str.length === 8) {
 			dt = new Date(+str.substring(0, 4), +str.substring(4, 6) - 1, +str.substring(6, 8), 0, 0, 0, 0);
 		} else if (str.startsWith('\"\\/\"')) {
-			dt = new Date(str.substring(4, str.length - 4));
+			dt = dateFromServer(str.substring(4, str.length - 4));
 		} else {
-			dt = new Date(str);
+			dt = dateFromServer(str);
 		}
 		if (!isNaN(dt.getTime())) {
-			return new Date(Date.UTC(dt.getFullYear(), dt.getMonth(), dt.getDate(), 0, 0, 0, 0));
+			return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 0, 0, 0, 0);
 		}
 		return str;
 	}
@@ -673,7 +701,7 @@ app.modules['std:utils'] = function () {
 	function string2Date(str) {
 		try {
 			let dt = new Date(str);
-			dt.setUTCHours(0, 0, 0, 0);
+			dt.setHours(0, 0, 0, 0);
 			return dt;
 		} catch (err) {
 			return str;
@@ -734,7 +762,7 @@ app.modules['std:utils'] = function () {
 			}
 			return +y;
 		};
-		let td = new Date(Date.UTC(+normalizeYear(seg[2]), +((seg[1] ? seg[1] : 1) - 1), +seg[0], 0, 0, 0, 0));
+		let td = new Date(+normalizeYear(seg[2]), +((seg[1] ? seg[1] : 1) - 1), +seg[0], 0, 0, 0, 0);
 		if (isNaN(td.getDate()))
 			return dateZero();
 		return td;
@@ -754,22 +782,29 @@ app.modules['std:utils'] = function () {
 
 	function dateHasTime(d1) {
 		if (!isDate(d1)) return false;
-		return d1.getUTCHours() !== 0 || d1.getUTCMinutes() !== 0 && d1.getUTCSeconds() !== 0;
+		return d1.getHours() !== 0 || d1.getMinutes() !== 0 && d1.getSeconds() !== 0;
 	}
 
 	function endOfMonth(dt) {
-		var dte = new Date(Date.UTC(dt.getFullYear(), dt.getMonth() + 1, 0, 0, 0, 0));
+		var dte = new Date(dt.getFullYear(), dt.getMonth() + 1, 0, 0, 0, 0);
 		return dte;
 	}
 
 	function dateCreate(year, month, day) {
-		let dt = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+		let dt = new Date(year, month - 1, day, 0, 0, 0, 0);
 		return dt;
 	}
 
 	function dateCreateTime(year, month, day, hour, min, sec) {
-		let dt = new Date(Date.UTC(year, month - 1, day, hour || 0, min || 0, sec || 0, 0));
+		let dt = new Date(year, month - 1, day, hour || 0, min || 0, sec || 0, 0);
 		return dt;
+	}
+
+	function dateFromServer(src) {
+		if (isDate(src))
+			return src;
+		let dx = new Date(src);
+		return dx;
 	}
 
 	function dateDiff(unit, d1, d2) {
@@ -813,7 +848,7 @@ app.modules['std:utils'] = function () {
 	}
 
 	function fromDays(days) {
-		return new Date(Date.UTC(1900, 0, days, 0, 0, 0, 0));
+		return new Date(1900, 0, days, 0, 0, 0, 0);
 	}
 
 	function dateAdd(dt, nm, unit) {
@@ -822,18 +857,19 @@ app.modules['std:utils'] = function () {
 		var du = 0;
 		switch (unit) {
 			case 'year':
-				return new Date(Date.UTC(dt.getFullYear() + nm, dt.getMonth(), dt.getDate(), 0, 0, 0, 0));
+				return new Date(dt.getFullYear() + nm, dt.getMonth(), dt.getDate(), 0, 0, 0, 0);
 			case 'month':
 				// save day of month
 				let newMonth = dt.getMonth() + nm;
 				let day = dt.getDate();
-				var ldm = new Date(Date.UTC(dt.getFullYear(), newMonth + 1, 0, 0, 0)).getDate();
+				var ldm = new Date(dt.getFullYear(), newMonth + 1, 0, 0, 0).getDate();
 				if (day > ldm)
 					day = ldm;
-				var dtx = new Date(Date.UTC(dt.getFullYear(), newMonth, day, 0, 0, 0));
+				var dtx = new Date(dt.getFullYear(), newMonth, day, 0, 0, 0);
 				return dtx;
 			case 'day':
-				du = 1000 * 60 * 60 * 24;
+				// Daylight time!!!
+				return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate() + nm, 0, 0, 0, 0);
 				break;
 			case 'hour':
 				du = 1000 * 60 * 60;
@@ -876,6 +912,7 @@ app.modules['std:utils'] = function () {
 		return text.charAt(0).toUpperCase() + text.slice(1);
 	}
 	function maxChars(text, length) {
+		if (!text) return text;
 		text = '' + text || '';
 		if (text.length < length)
 			return text;
@@ -1721,9 +1758,9 @@ app.modules['std:modelInfo'] = function () {
 };
 
 
-// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
-// 20230518-7933
+// 20240120-7958
 /* services/http.js */
 
 app.modules['std:http'] = function () {
@@ -1748,6 +1785,7 @@ app.modules['std:http'] = function () {
 	async function doRequest(method, url, data, raw, skipEvents) {
 		if (!skipEvents)
 			eventBus.$emit('beginRequest', url);
+		let appver = '';
 		try {
 			var response = await fetch(url, {
 				method,
@@ -1759,6 +1797,7 @@ app.modules['std:http'] = function () {
 				body: data
 			});
 			let ct = response.headers.get("content-type") || '';
+			appver = response.headers.get("app-version") || '';
 			switch (response.status) {
 				case 200:
 					if (raw)
@@ -1795,8 +1834,11 @@ app.modules['std:http'] = function () {
 			throw err;
 		}
 		finally {
-			if (!skipEvents)
+			if (!skipEvents) {
 				eventBus.$emit('endRequest', url);
+				if (appver)
+					eventBus.$emit('checkVersion', appver);
+			}
 		}
 	}
 
@@ -2939,7 +2981,7 @@ app.modules['std:impl:array'] = function () {
 				break;
 			case Date:
 				let srcval = source[prop] || null;
-				shadow[prop] = srcval ? new Date(srcval) : utils.date.zero();
+				shadow[prop] = srcval ? utils.date.fromServer(srcval) : utils.date.zero();
 				break;
 			case platform.File:
 			case Object:
@@ -3992,8 +4034,9 @@ app.modules['std:impl:array'] = function () {
 						let dt = src[prop];
 						if (!dt)
 							platform.set(this, prop, utils.date.zero());
-						else
-							platform.set(this, prop, new Date(src[prop]));
+						else {
+							platform.set(this, prop, utils.date.fromServer(src[prop]));
+						}
 					} else if (utils.isPrimitiveCtor(ctor)) {
 						platform.set(this, prop, src[prop]);
 					} else {
@@ -4903,9 +4946,9 @@ app.modules['std:barcode'] = function () {
 	}
 };
 
-// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
-// 20230527-7936
+// 20240118-7957
 /*components/includeplain.js*/
 
 (function () {
@@ -5064,6 +5107,10 @@ app.modules['std:barcode'] = function () {
 				_destroyElement(this.$el);
 			},
 			loaded(data) {
+				if (data)
+					data.__requery = () => {
+						this.needLoad += 1;
+					};
 				if (this.complete)
 					this.complete({ src: this.source, root: data });
 			},
@@ -5940,20 +5987,17 @@ Vue.component('validator-control', {
 			},
 			days() {
 				let dt = new Date(this.model);
-				dt.setHours(0, -dt.getTimezoneOffset(), 0, 0);
 				let d = dt.getDate();
 				dt.setDate(1); // 1-st day of month
 				let w = dt.getDay() - 1; // weekday
 				if (w === -1) w = 6;
-				else if (w === 0) w = 7;
+				//else if (w === 0) w = 7;
 				dt.setDate(-w + 1);
 				let arr = [];
 				for (let r = 0; r < 6; r++) {
 					let row = [];
 					for (let c = 0; c < 7; c++) {
-						let xd = new Date(dt);
-						xd.setHours(0, -xd.getTimezoneOffset(), 0, 0);
-						row.push(new Date(xd));
+						row.push(new Date(dt));
 						dt.setDate(dt.getDate() + 1);
 					}
 					arr.push(row);
@@ -6142,14 +6186,14 @@ Vue.component('validator-control', {
 				this.viewDate = dt;
 			},
 			selectDay(day) {
-				var dt = new Date(Date.UTC(day.getFullYear(), day.getMonth(), day.getDate(), 0, 0, 0, 0));
+				var dt = new Date(day.getFullYear(), day.getMonth(), day.getDate(), 0, 0, 0, 0);
 				this.setDate(dt);
 				this.isOpen = false;
 			},
 			setDate(d) {
 				// save time
 				let md = this.modelDate;
-				let nd = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), md.getUTCHours(), md.getUTCMinutes(), 0, 0));
+				let nd = new Date(d.getFullYear(), d.getMonth(), d.getDate(), md.getHours(), md.getMinutes(), 0, 0);
 				nd = this.fitDate(nd);
 				this.updateModel(nd);
 			},
@@ -6189,9 +6233,9 @@ Vue.component('validator-control', {
 					if (utils.date.isZero(this.modelDate))
 						return '';
 					if (this.view === 'month')
-						return utils.text.capitalize(this.modelDate.toLocaleString(dateLocale, { timeZone: 'UTC', year: 'numeric', month: 'long' }));
+						return utils.text.capitalize(this.modelDate.toLocaleString(dateLocale, { year: 'numeric', month: 'long' }));
 					else
-						return this.modelDate.toLocaleString(dateLocale, { timeZone: 'UTC', year: 'numeric', month: '2-digit', day: '2-digit' });
+						return this.modelDate.toLocaleString(dateLocale, { year: 'numeric', month: '2-digit', day: '2-digit' });
 				},
 				set(str) {
 					let md = utils.date.parse(str, this.yearCutOff);
@@ -6216,9 +6260,9 @@ Vue.component('validator-control', {
 	});
 })();
 
-// Copyright © 2015-2020 Alex Kukhtin. All rights reserved.
+// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
-// 20200907-7706
+// 20240154-7954
 // components/timepicker.js
 
 
@@ -6355,7 +6399,7 @@ Vue.component('validator-control', {
 			},
 			setHour(h) {
 				let nd = new Date(this.modelDate);
-				nd.setUTCHours(h);
+				nd.setHours(h);
 				this.item[this.prop] = nd;
 			},
 			setMinute(m) {
@@ -6366,12 +6410,12 @@ Vue.component('validator-control', {
 			},
 			hourClass(h) {
 				let cls = '';
-				if (this.modelDate.getUTCHours() === +h)
+				if (this.modelDate.getHours() === +h)
 					cls += ' active';
 				return cls;
 			},
 			minuteClass(m) {
-				return this.modelDate.getUTCMinutes() === +m ? 'active' : undefined;
+				return this.modelDate.getMinutes() === +m ? 'active' : undefined;
 			},
 			cssClass2() {
 				let cx = this.cssClass();
@@ -6395,7 +6439,7 @@ Vue.component('validator-control', {
 					let md = this.modelDate;
 					if (utils.date.isZero(md))
 						return '';
-					return md.toLocaleTimeString(dateLocale, { timeZone: 'UTC', hour: '2-digit', minute: "2-digit" });
+					return md.toLocaleTimeString(dateLocale, { hour: '2-digit', minute: "2-digit" });
 				},
 				set(str) {
 					let md = new Date(this.modelDate);
@@ -6403,9 +6447,9 @@ Vue.component('validator-control', {
 						if (utils.date.isZero(md))
 							md = utils.date.today();
 						let time = utils.date.parseTime(str);
-						md.setUTCHours(time.getHours(), time.getMinutes());
+						md.setHours(time.getHours(), time.getMinutes());
 					} else {
-						md.setUTCHours(0, 0);
+						md.setHours(0, 0);
 					}
 					this.item[this.prop] = md;
 					this.isOpen = false;
@@ -6668,7 +6712,7 @@ Vue.component('validator-control', {
 })();
 // Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
-// 20231001-7949
+// 20240107-7955
 // components/periodpicker.js
 
 
@@ -6918,9 +6962,9 @@ Vue.component('validator-control', {
 })();
 
 
-// Copyright © 2015-2023 Alex Kukhtin. All rights reserved.
+// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
-/*20230613-7948*/
+/*20240124-7959*/
 // components/selector.js
 
 (function selector_component() {
@@ -7211,7 +7255,7 @@ Vue.component('validator-control', {
 				this.current = this.items.indexOf(itm);
 				this.$nextTick(() => {
 					if (this.hitfunc) {
-						this.hitfunc.call(this.item.$root, itm);
+						this.hitfunc.call(this.item.$root, itm, this.item, this.prop);
 						return;
 					}
 					if (obj && obj.$merge)
@@ -7340,9 +7384,9 @@ Vue.component('validator-control', {
 		}
 	});
 })();
-// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
-// 20230807-7941
+// 20240126-7959
 // components/datagrid.js*/
 
 (function () {
@@ -7389,7 +7433,7 @@ Vue.component('validator-control', {
 						<span v-if="isGroupCountVisible(g)" class="grcount" v-text="g.count" /></td>
 					</tr>
 					<template v-for="(row, rowIndex) in g.items">
-						<data-grid-row v-show="isGroupBodyVisible(g)" :group="true" :level="g.level" :cols="columns" :row="row" :key="gIndex + ':' + rowIndex" :index="rowIndex" :mark="mark" ref="row" />
+						<data-grid-row v-show="isGroupBodyVisible(g)" :group="true" :level="g.level" :cols="columns" :row="row" :key="gIndex + ':' + rowIndex" :index="rowIndex" :mark="mark" ref="row"  :is-item-active="isItemActive" :hit-item="hitItem"/>
 						<data-grid-row-details v-if="rowDetailsShow(row)" v-show="isGroupBodyVisible(g)" :cols="columns.length" :row="row" :key="'rd:' + gIndex + ':' + rowIndex" :mark="mark">
 							<slot name="row-details" :row="row"></slot>
 						</data-grid-row-details>
@@ -11431,12 +11475,13 @@ Vue.component('a2-panel', {
 })();
 // Copyright © 2022-2024 Olekdsandr Kukhtin. All rights reserved.
 
-// 20240104-7954
+// 20240128-7959
 // components/treegrid.js
 
 (function () {
 
 	const utils = require('std:utils');
+	const eventBus = require('std:eventBus');
 
 	let debouncedUpdate = utils.debounce((pane) => {
 		if (!pane) return;
@@ -11529,9 +11574,11 @@ Vue.component('a2-panel', {
 					itm.$expanded = !itm.$expanded;
 			},
 			select(itm) {
+				eventBus.$emit('closeAllPopups');
 				itm.elem.$select(this.root);
 			},
 			dblClick(evt, itm) {
+				eventBus.$emit('closeAllPopups');
 				evt.stopImmediatePropagation();
 				window.getSelection().removeAllRanges();
 				if (this.doubleclick)
@@ -12365,9 +12412,9 @@ Vue.directive('disable', {
 });
 
 
-// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
-/*20221027-7902*/
+/*20240107-7954*/
 /* directives/dropdown.js */
 
 (function () {
@@ -12435,11 +12482,22 @@ Vue.directive('disable', {
 		}
 	});
 
+	function canClick(el) {
+		const hlink = "a2-hyperlink";
+		if (el.classList.contains(hlink))
+			return false;
+		el = el.parentElement;
+		if (el && el.classList.contains(hlink))
+			return false;
+		return true;
+	}
+
 	Vue.directive('contextmenu', {
 		_contextMenu(ev) {
 			ev.preventDefault();
 			ev.stopPropagation();
-			ev.target.click();
+			if (canClick(ev.target))
+				ev.target.click();
 			let menu = document.querySelector('#' + this._val);
 			let br = menu.parentNode.getBoundingClientRect();
 			let style = menu.style;
@@ -12809,9 +12867,9 @@ Vue.directive('resize', {
 });
 
 
-// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
-/*20231106-7951*/
+/*20240107-7954*/
 // controllers/base.js
 
 (function () {
@@ -13769,7 +13827,7 @@ Vue.directive('resize', {
 						id = utils.getStringId(arg);
 					const self = this;
 					const root = window.$$rootUrl;
-					let newurl = url ? urltools.combine('/_export', url, id) : self.$baseUrl.replace('/_page/', '/_export/');
+					let newurl = url ? urltools.combine('/_export', url, id) : self.$baseUrl.split('?')[0].replace('/_page/', '/_export/');
 					newurl = urltools.combine(root, newurl) + urltools.makeQueryString(dat);
 					window.location = newurl; // to display errors
 				};
