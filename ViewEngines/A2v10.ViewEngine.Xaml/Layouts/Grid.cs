@@ -65,6 +65,8 @@ public class Grid(IServiceProvider serviceProvider) : Container
 	public GapSize? Gap { get; set; }
 	public Length? MinWidth { get; set; }
 
+	public Overflow? Overflow { get; set; }
+
 	RowDefinitions? _rows;
 	ColumnDefinitions? _columns;
 
@@ -101,6 +103,7 @@ public class Grid(IServiceProvider serviceProvider) : Container
 		var grid = new TagBuilder("div", "grid", IsInGrid);
 		onRender?.Invoke(grid);
 		MergeAttributes(grid, context);
+		grid.AddCssClass(Overflow.ToClass());
 		if (Height != null)
 			grid.MergeStyle("height", Height.Value);
 		if (MinWidth != null)

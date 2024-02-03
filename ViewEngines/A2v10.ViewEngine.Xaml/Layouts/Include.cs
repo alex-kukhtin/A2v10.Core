@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Xaml;
 
@@ -13,6 +13,7 @@ public class Include : UIElementBase
 	public String? CssClass { get; set; }
 
 	public Boolean Queued { get; set; }
+	public Overflow? Overflow { get; set; }
 
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
@@ -25,6 +26,7 @@ public class Include : UIElementBase
 		var div = new TagBuilder(tagName, null, IsInGrid);
 
 		MergeAttributes(div, context);
+		div.AddCssClass(Overflow.ToClass());
 
 		AddBindingCssClass(div, context, CssClass);
 
