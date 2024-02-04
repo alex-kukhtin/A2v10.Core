@@ -36,7 +36,7 @@ public class JwtBearerSettings
 		var cfg = config.GetSection("Authentication:JwtBearer").Get<JwtBearerConfig>() 
 			?? throw new InvalidProgramException("Configuration key 'Authentication:JwtBearer' not found");
             if (String.IsNullOrEmpty(cfg.SecurityKey) || cfg.SecurityKey.Length < 16)
-			throw new InvalidProgramException("Configuration key 'Authentication:JwtBearer.SecurityKey' must me at least 16 charactets long");
+			throw new InvalidProgramException("Configuration key Authentication:JwtBearer:SecurityKey must be at least 16 charactets long");
 
 		Byte[] key = Encoding.UTF8.GetBytes(cfg.SecurityKey);
 
