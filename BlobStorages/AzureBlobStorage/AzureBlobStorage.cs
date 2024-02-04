@@ -1,4 +1,4 @@
-﻿// Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2023-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Concurrent;
@@ -10,6 +10,7 @@ using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 
 using A2v10.Infrastructure;
+using System.IO;
 
 namespace A2v10.BlobStorage.Azure;
 
@@ -47,6 +48,12 @@ public class AzureBlobStorage(IConfiguration _configuration) : IBlobStorage
 	{
 		var client = GetClient(source, container);
 		await client.UploadBlobAsync(blobInfo.BlobName, blobInfo.Stream);
+	}
+
+	public async Task SaveAsync(String? source, String? container, String blobName, Stream stream)
+	{
+		var client = GetClient(source, container);
+		await client.UploadBlobAsync(blobName, stream);
 	}
 
 	public Task DeleteAsync(String? source, String? container, String blobName)
