@@ -1,5 +1,6 @@
 ﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
+using DocumentFormat.OpenXml.Drawing.Diagrams;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
@@ -117,6 +118,35 @@ public partial class ExCell
 		};
 	}
 
+	public static ExCell Create(Object? val)
+	{
+		var cell = new ExCell();	
+		if (val is String strVal)
+		{
+			cell.Value = strVal;	
+			cell.DataType = DataType.String;
+		}
+		else if (val is Decimal decVal)
+		{
+			cell.Value = decVal.ToString(CultureInfo.InvariantCulture);
+			cell.DataType = DataType.Currency;
+		}
+		else if (val is Int32 int32Val)
+		{
+			cell.Value = int32Val.ToString();
+			cell.DataType = DataType.Number;
+		}
+		else if (val is DateTime dateVal)
+		{
+			cell.Value = dateVal.ToOADate().ToString(CultureInfo.InvariantCulture);
+			if (dateVal.Minute == 0 && dateVal.Second == 0)
+				cell.DataType = DataType.Date;
+			else
+				cell.DataType = DataType.DateTime;
+		}
+		// todo: process time and float values
+		return cell;
+	}
 	public void SetValue(String text, String? dataType, IFormatProvider format)
 	{
 		if (text.Contains('\n'))

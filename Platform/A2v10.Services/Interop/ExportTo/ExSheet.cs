@@ -1,28 +1,57 @@
 ﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
 
+using System.Globalization;
+
 namespace A2v10.Services.Interop;
-internal class ExSheet(IFormatProvider _currentFormat)
+public class ExSheet
 {
-	readonly IList<ExRow> _body = new List<ExRow>();
-	readonly IList<ExRow> _header = new List<ExRow>();
-	readonly IList<ExRow> _footer = new List<ExRow>();
+	private readonly IFormatProvider _currentFormat;
+	readonly List<ExRow> _body = [];
+	readonly List<ExRow> _header = [];
+	readonly List<ExRow> _footer = [];
+	readonly List<ExRow> _headerFlat = [];
+	readonly List<ExRow> _bodyFlat = [];
+
+	public ExSheet(IFormatProvider? currentFormat = null)
+	{
+		_currentFormat = currentFormat ??
+			CultureInfo.CreateSpecificCulture("uk-UA");
+	}
+	public ExSheet(String locale)
+	{
+		_currentFormat = CultureInfo.CreateSpecificCulture(locale);
+	}
 
 	public IList<ExColumn> Columns { get; } = new List<ExColumn>();
 	public StylesDictionary Styles { get; } = new StylesDictionary();
 
-    public ExRow GetRow(Int32 rowNo, RowKind kind)
+	private List<ExRow> GetRowsByKind(RowKind kind)
 	{
-		IList<ExRow> _rows = kind switch
-        {
+		return kind switch
+		{
 			RowKind.Header => _header,
 			RowKind.Footer => _footer,
-			RowKind.Body   => _body,
+			RowKind.Body => _body,
+			RowKind.HeaderFlat => _headerFlat,
+			RowKind.BodyFlat => _bodyFlat,
 			_ => throw new DataServiceException($"Invalid RowKind '{kind}'")
-        };
-		while (_rows.Count <= rowNo)
-			_rows.Add(new ExRow() { Kind = kind });
-		return _rows[rowNo];
+		};
+	}
+    public ExRow GetRow(Int32 rowNo, RowKind kind)
+	{
+		var rows = GetRowsByKind(kind);	
+		while (rows.Count <= rowNo)
+			rows.Add(new ExRow() { Kind = kind });
+		return rows[rowNo];
+	}
+
+	public ExRow AddRow(RowKind kind)
+	{
+		var rows = GetRowsByKind(kind);
+		var nrow = new ExRow() { Kind = kind };
+		rows.Add(nrow);	
+		return nrow;
 	}
 
 	ExCell AddSpanCell(RowKind kind, Int32 row, Int32 col)
@@ -31,6 +60,14 @@ internal class ExSheet(IFormatProvider _currentFormat)
 		return r.SetSpanCell(col);
 	}
 
+
+	public ExCell AddCell(ExRow row, Object value)
+	{
+		var cell = ExCell.Create(value);
+		row.Cells.Add(cell);
+		cell.StyleIndex = Styles.GetOrCreate(cell.GetStyle(row, String.Empty));
+		return cell;
+	}
 	public ExCell AddCell(Int32 rowNo, ExRow exRow, CellSpan span, String value, String? dataType, String cellClass)
 	{
 		// first empty cell
@@ -72,12 +109,24 @@ internal class ExSheet(IFormatProvider _currentFormat)
 			yield return r;
 		foreach (var r in _footer)
 			yield return r;
+		foreach (var r in _headerFlat)
+			yield return r;
+		foreach (var r in _bodyFlat)
+			yield return r;
 	}
 
 	public ExColumn AddColumn()
 	{
 		var col = new ExColumn();
 		Columns.Add(col);
+		return col;
+	}
+
+	public ExColumn AddColumn(UInt32 width)
+	{
+		var col = AddColumn();
+		if (width != 0)
+			col.Width = width;
 		return col;
 	}
 }

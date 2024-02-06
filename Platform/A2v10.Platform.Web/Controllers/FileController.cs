@@ -14,6 +14,9 @@ using Newtonsoft.Json;
 using A2v10.Infrastructure;
 using A2v10.Data.Interfaces;
 using System.Dynamic;
+using System.Reflection.Metadata;
+using System.Text;
+using static System.Reflection.Metadata.BlobBuilder;
 
 namespace A2v10.Platform.Web.Controllers;
 
@@ -34,7 +37,7 @@ public class FileController(IApplicationHost host,
 			var blob = await _dataService.LoadBlobAsync(UrlKind.File, pathInfo, (prms) =>
 			{
 				SetSqlQueryParams(prms);
-				SetRequestQueryKey(prms);
+				SetRequestQueryParams(prms);
 			}) ?? throw new InvalidOperationException("Blob not found");
 
             if (blob.CheckToken)
@@ -59,6 +62,17 @@ public class FileController(IApplicationHost host,
 			var accept = Request.Headers.Accept.ToString();
 			if (accept != null && accept.Trim().StartsWith("image", StringComparison.OrdinalIgnoreCase))
 				return WriteImageException(ex);
+			else if (Request.Query["export"].Count > 0)
+			{
+				var bytes = Encoding.UTF8.GetBytes(ex.ToString());
+				var ar = new WebBinaryActionResult(bytes, MimeTypes.Text.Plain);
+				var cdh = new ContentDispositionHeaderValue("attachment")
+				{
+					FileNameStar = "error.txt"
+				};
+				ar.AddHeader("Content-Disposition", cdh.ToString());
+				return ar;
+			}
 			else
 				return WriteExceptionStatus(ex);
 		}
@@ -87,7 +101,7 @@ public class FileController(IApplicationHost host,
 				}, 
 				(prms) => {
 					SetSqlQueryParams(prms);
-					SetRequestQueryKey(prms);
+					SetRequestQueryParams(prms);
 				}
 			);
 			result.ReplaceValue("Token", (v) =>
@@ -121,12 +135,16 @@ public class FileController(IApplicationHost host,
 		}
 	}
 
-	void SetRequestQueryKey(ExpandoObject prms)
+	void SetRequestQueryParams(ExpandoObject prms)
 	{
-		var key = Request.Query["Key"].ToString();
-		if (!String.IsNullOrEmpty(key))
-			prms.Set("Key", key);
-
+		foreach (var qkey in Request.Query.Keys)
+		{
+			if (qkey == "export")
+				continue;
+			var val = Request.Query[qkey];
+			if (!String.IsNullOrEmpty(val))
+				prms.Set(qkey, val);
+		}
 	}
 
 	void ValidateToken(Guid dbToken)

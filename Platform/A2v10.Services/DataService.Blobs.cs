@@ -89,7 +89,8 @@ public partial class DataService
 			Name = result.Name,
 			Mime = result.Mime,
 			Stream = result.Stream,
-			BlobName = result.BlobName
+			BlobName = result.BlobName,
+			SkipToken = true
 		};
 	}
 

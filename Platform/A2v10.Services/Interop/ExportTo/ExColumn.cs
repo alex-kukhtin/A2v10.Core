@@ -3,7 +3,7 @@
 
 namespace A2v10.Services.Interop;
 
-internal class ExColumn
+public class ExColumn
 {
 	public UInt32 Width { get; set; }
 }

@@ -6,7 +6,9 @@ public enum RowKind
 {
 	Header,
 	Footer,
-	Body
+	Body,
+	HeaderFlat,
+	BodyFlat
 }
 
 public class ExRow

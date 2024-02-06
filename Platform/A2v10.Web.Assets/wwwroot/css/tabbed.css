@@ -4686,6 +4686,7 @@ ul.news-list > li {
   list-style: none;
   margin-top: 10px;
   box-shadow: 0 0 12px #999;
+  border-radius: 4px;
 }
 .toastr-stack li.toast.warning {
   background-color: #ffb74d;
@@ -4709,10 +4710,11 @@ ul.news-list > li {
 .toastr-stack .list-enter,
 .toastr-stack .list-leave-to {
   opacity: 0;
-  transform: translateY(10px);
+  transform: translateY(3px);
 }
 .toastr-stack .list-leave-active {
   position: absolute;
+  width: 320px;
 }
 table col.fit {
   width: 0.1%;
@@ -6068,6 +6070,7 @@ TODO:
   padding: 0.4rem 0.6rem 0.6rem 0.6rem;
   border: 1px solid var(--neutral300);
   text-align: left;
+  border-radius: 4px;
 }
 .field-set legend {
   font-size: 0.95rem;
