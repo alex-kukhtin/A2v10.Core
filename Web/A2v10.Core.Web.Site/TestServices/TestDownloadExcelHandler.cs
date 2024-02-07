@@ -15,6 +15,8 @@ public class TestDownloadExcelHandler(IServiceProvider serviceProvider) : IClrIn
 	{
 		var sh = new ExSheet();
 		sh.AddColumn(); // at least one
+		sh.AddColumn(70); 
+		sh.AddColumn(120);
 
 		var row = sh.AddRow(RowKind.HeaderFlat);
 		sh.AddCell(row, "T1");

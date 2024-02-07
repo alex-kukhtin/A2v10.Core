@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 
 using System.Globalization;
@@ -61,7 +61,7 @@ public class ExSheet
 	}
 
 
-	public ExCell AddCell(ExRow row, Object value)
+	public ExCell AddCell(ExRow row, Object? value)
 	{
 		var cell = ExCell.Create(value);
 		row.Cells.Add(cell);
