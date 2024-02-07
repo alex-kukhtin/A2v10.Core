@@ -203,10 +203,8 @@ public class ExcelWriter
 		}
 
 		// align
-		if (style.DataType == DataType.Date || style.DataType == DataType.DateTime)
-		{
+		if (style.IsDateOrTime)
 			cf.Alignment.Horizontal = HorizontalAlignmentValues.Center;
-		}
 
 		if (style.Wrap)
 			cf.Alignment.WrapText = true;
@@ -328,6 +326,7 @@ public class ExcelWriter
 		switch (exCell.DataType)
 		{
 			case DataType.String:
+			case DataType.StringPlain:
 				cell.DataType = new EnumValue<CellValues>(CellValues.InlineString);
 				cell.InlineString = new InlineString(new Text(exCell.Value));
 				break;

@@ -124,16 +124,26 @@ public partial class ExCell
 		if (val is String strVal)
 		{
 			cell.Value = strVal;	
-			cell.DataType = DataType.String;
+			cell.DataType = DataType.StringPlain;
 		}
 		else if (val is Decimal decVal)
 		{
 			cell.Value = decVal.ToString(CultureInfo.InvariantCulture);
 			cell.DataType = DataType.Currency;
 		}
+		else if (val is Double dblVal)
+		{
+			cell.Value = dblVal.ToString(CultureInfo.InvariantCulture);
+			cell.DataType = DataType.Number;
+		}
 		else if (val is Int32 int32Val)
 		{
 			cell.Value = int32Val.ToString();
+			cell.DataType = DataType.Number;
+		}
+		else if (val is Int64 int64Val)
+		{
+			cell.Value = int64Val.ToString();
 			cell.DataType = DataType.Number;
 		}
 		else if (val is DateTime dateVal)
@@ -144,7 +154,12 @@ public partial class ExCell
 			else
 				cell.DataType = DataType.DateTime;
 		}
-		// todo: process time and float values
+		else if (val is TimeSpan timeVal)
+		{
+			DateTime oaBaseDate = new(1899, 12, 30);
+			cell.Value = oaBaseDate.Add(timeVal).ToOADate().ToString(CultureInfo.InvariantCulture);
+			cell.DataType = DataType.Time;
+		}
 		return cell;
 	}
 	public void SetValue(String text, String? dataType, IFormatProvider format)

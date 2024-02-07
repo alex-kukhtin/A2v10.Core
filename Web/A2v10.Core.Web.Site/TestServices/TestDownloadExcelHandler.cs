@@ -14,7 +14,7 @@ public class TestDownloadExcelHandler(IServiceProvider serviceProvider) : IClrIn
 	public Task<InvokeBlobResult> InvokeAsync(ExpandoObject args)
 	{
 		var sh = new ExSheet();
-		sh.AddColumn(); // at least one
+		sh.AddColumn(100); // at least one
 		sh.AddColumn(70); 
 		sh.AddColumn(120);
 
@@ -24,9 +24,10 @@ public class TestDownloadExcelHandler(IServiceProvider serviceProvider) : IClrIn
 		sh.AddCell(row, "T3");
 
 		row = sh.AddRow(RowKind.BodyFlat);
-		sh.AddCell(row, "A1");
+		sh.AddCell(row, "Long Text without wrapping");
 		sh.AddCell(row, (Decimal) 12.34);
 		sh.AddCell(row, DateTime.Now);
+		sh.AddCell(row, TimeSpan.FromMinutes(251));
 
 		row = sh.AddRow(RowKind.BodyFlat);
 		sh.AddCell(row, "A2");

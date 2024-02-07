@@ -1,9 +1,11 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Threading.Tasks;
 using System.IO;
 using System.Net.Http.Headers;
+using System.Dynamic;
+using System.Text;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,10 +15,6 @@ using Newtonsoft.Json;
 
 using A2v10.Infrastructure;
 using A2v10.Data.Interfaces;
-using System.Dynamic;
-using System.Reflection.Metadata;
-using System.Text;
-using static System.Reflection.Metadata.BlobBuilder;
 
 namespace A2v10.Platform.Web.Controllers;
 
@@ -139,7 +137,7 @@ public class FileController(IApplicationHost host,
 	{
 		foreach (var qkey in Request.Query.Keys)
 		{
-			if (qkey == "export")
+			if (qkey == "export" || qkey == "token")
 				continue;
 			var val = Request.Query[qkey].ToString();
 			if (!String.IsNullOrEmpty(val))
