@@ -141,7 +141,7 @@ public class FileController(IApplicationHost host,
 		{
 			if (qkey == "export")
 				continue;
-			var val = Request.Query[qkey];
+			var val = Request.Query[qkey].ToString();
 			if (!String.IsNullOrEmpty(val))
 				prms.Set(qkey, val);
 		}
