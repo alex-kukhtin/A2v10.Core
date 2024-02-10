@@ -1,9 +1,9 @@
-﻿// Copyright © 2022-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2022-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.IO;
-using System.Dynamic;
 using System.Threading.Tasks;
+using System.Text.Json;
 
 using QuestPDF;
 using QuestPDF.Fluent;
@@ -11,6 +11,9 @@ using QuestPDF.Infrastructure;
 
 using A2v10.Infrastructure;
 using A2v10.Xaml.Report;
+
+using A2v10.Xaml.Report.Spreadsheet;
+using System.Text.Json.Serialization;
 
 namespace A2v10.ReportEngine.Pdf;
 
@@ -32,10 +35,35 @@ public class PdfReportEngine : IReportEngine
 			?? throw new InvalidOperationException($"File not found '{path}'");
 		return TemplateReader.ReadReport(stream);
 	}
+
+	private Page ReadTemplateFromDb(IReportInfo reportInfo)
+	{
+		var json = reportInfo.DataModel?.Resolve(reportInfo.Report)
+			?? throw new InvalidOperationException("Data is null");
+		var ss = JsonSerializer.Deserialize<Spreadsheet>(json, DefaultOpts)
+			?? throw new InvalidOperationException("Invalid json");
+		return ss;
+	}
+
+	static JsonSerializerOptions DefaultOpts {
+		get {
+			var opts = new JsonSerializerOptions();
+			opts.Converters.Add(new JsonStringEnumConverter());
+			return opts;
+		}
+	}
+
 	public Task<IInvokeResult> ExportAsync(IReportInfo reportInfo, ExportReportFormat format)
 	{
-		var repPath = Path.Combine(reportInfo.Path, reportInfo.Report) + ".xaml";
-		Page page = ReadTemplate(repPath);
+		String repPath = String.Empty;
+		Boolean readFromModel = false;
+
+		if (reportInfo.Report.StartsWith("{{") && reportInfo.Report.EndsWith("}}"))
+			readFromModel = true;
+		else 
+			repPath = Path.Combine(reportInfo.Path, reportInfo.Report) + ".xaml";
+
+		Page page = readFromModel ? ReadTemplateFromDb(reportInfo) : ReadTemplate(repPath);
 
 		var name = reportInfo.DataModel?.Root?.Resolve(reportInfo.Name) ?? "report";
 

@@ -1,4 +1,4 @@
-﻿// Copyright © 2022 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2022-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 

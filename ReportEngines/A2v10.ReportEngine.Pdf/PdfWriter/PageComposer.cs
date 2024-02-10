@@ -1,4 +1,4 @@
-﻿// Copyright © 2022 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2022-2024 Oleksandr Kukhtin. All rights reserved.
 
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
@@ -6,6 +6,7 @@ using QuestPDF.Infrastructure;
 
 using A2v10.Xaml.Report;
 using System;
+using A2v10.Xaml.Report.Spreadsheet;
 
 namespace A2v10.ReportEngine.Pdf;
 
@@ -81,13 +82,24 @@ internal class PageComposer
 
 	void ComposeContent(IContainer container)
 	{
-		foreach (var c in _page.Columns)
+		if (_page is Spreadsheet spreadsheet)
 		{
 			container.Column(column =>
 			{
-				var cc = new ColumnComposer(c, _context);
+				var cc = new WorkbookComposer(spreadsheet.Workbook, _context);
 				cc.Compose(column);
 			});
+		}
+		else if (_page.Columns.Count > 0)
+		{
+			foreach (var c in _page.Columns)
+			{
+				container.Column(column =>
+				{
+					var cc = new ColumnComposer(c, _context);
+					cc.Compose(column);
+				});
+			}
 		}
 	}
 
