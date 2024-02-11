@@ -122,6 +122,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzureBlobStorage", "BlobSto
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestServices", "Tests\TestServices\TestServices.csproj", "{96D431A8-3D14-496D-8357-1D4750AEB13D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReportEngineExcel", "ReportEngines\ReportEngineExcel\ReportEngineExcel.csproj", "{214A2D6F-AD73-4B18-911D-896B7B001768}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -232,6 +234,10 @@ Global
 		{96D431A8-3D14-496D-8357-1D4750AEB13D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{96D431A8-3D14-496D-8357-1D4750AEB13D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{96D431A8-3D14-496D-8357-1D4750AEB13D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{214A2D6F-AD73-4B18-911D-896B7B001768}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{214A2D6F-AD73-4B18-911D-896B7B001768}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{214A2D6F-AD73-4B18-911D-896B7B001768}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{214A2D6F-AD73-4B18-911D-896B7B001768}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -265,6 +271,7 @@ Global
 		{D19D50DE-FE50-4FD5-8A1D-FDAFECB18557} = {E8C95F64-3001-4F08-B774-A6A89EB2945D}
 		{7077A931-7247-4CCA-AE1C-D24BFBD84600} = {CC97614A-5CDD-40F8-B82E-7471EE110AEC}
 		{96D431A8-3D14-496D-8357-1D4750AEB13D} = {B2D38948-4CBF-49BB-8708-A508012D6FC2}
+		{214A2D6F-AD73-4B18-911D-896B7B001768} = {A1D69499-3CCF-4BBC-AE6E-0281286A1F3F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D64A03C5-D2E1-49C8-A7A9-D6022941DE01}

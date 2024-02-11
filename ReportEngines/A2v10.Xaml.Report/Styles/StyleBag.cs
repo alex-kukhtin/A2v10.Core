@@ -1,4 +1,4 @@
-﻿// Copyright © 2022 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2022-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -12,12 +12,17 @@ public class StyleBag
 	const String THIN_BORDER = ".2pt";
 	public StyleBag()
 	{
-
 		_styles.Add("Page", new RuntimeStyle()
 		{
 			FontSize = 9F,
 			Margin = Thickness.FromString("20mm,10mm")
-		}); 
+		});
+
+		_styles.Add("Spreadsheet", new RuntimeStyle()
+		{
+			FontSize = 9F,
+			Margin = Thickness.FromString("20mm,10mm")
+		});
 
 		_styles.Add("Text.Title", new RuntimeStyle()
 		{
@@ -80,12 +85,8 @@ public class StyleBag
 	RuntimeStyle? FindStyles(String selector) 
 	{ 
 		foreach (var key in _styles.Keys)
-		{
 			if (selector.EndsWith(key))
-			{
 				return _styles[key].Clone();
-			}
-		}
 		return null;
 	}
 }

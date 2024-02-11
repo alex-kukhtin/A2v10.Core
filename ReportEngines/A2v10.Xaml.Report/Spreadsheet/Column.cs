@@ -5,9 +5,9 @@ using System.Collections.Generic;
 
 namespace A2v10.Xaml.Report.Spreadsheet;
 
-public class Column
+public class Column : XamlElement
 {
-	public Int32 Width { get; init; }
+	public Single Width { get; init; }
 }
 
 public class ColumnCollection : Dictionary<String, Column>

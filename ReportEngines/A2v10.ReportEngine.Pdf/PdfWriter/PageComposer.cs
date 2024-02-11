@@ -54,7 +54,7 @@ internal class PageComposer
 			if (rs != null && rs.FontSize != null)
 				ts = ts.FontSize(rs.FontSize.Value);
 			else
-				ts = ts.FontSize(10F);
+				ts = ts.FontSize(9.75F);
 			return ts;
 		});
 

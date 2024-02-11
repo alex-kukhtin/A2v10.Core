@@ -5,11 +5,11 @@ using System.Collections.Generic;
 
 namespace A2v10.Xaml.Report.Spreadsheet;
 
-public class Row
+public class Row : XamlElement
 {
-	public Int32 Height { get; init; }
+	public Single Height { get; init; }
 }
 
-public class RowCollection : Dictionary<Int32, Row>
+public class RowCollection : Dictionary<UInt32, Row>
 {
 }

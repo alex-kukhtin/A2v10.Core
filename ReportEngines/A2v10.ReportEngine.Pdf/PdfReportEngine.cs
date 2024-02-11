@@ -36,12 +36,13 @@ public class PdfReportEngine : IReportEngine
 		return TemplateReader.ReadReport(stream);
 	}
 
-	private Page ReadTemplateFromDb(IReportInfo reportInfo)
+	private static Page ReadTemplateFromDb(IReportInfo reportInfo)
 	{
 		var json = reportInfo.DataModel?.Resolve(reportInfo.Report)
 			?? throw new InvalidOperationException("Data is null");
 		var ss = JsonSerializer.Deserialize<Spreadsheet>(json, DefaultOpts)
 			?? throw new InvalidOperationException("Invalid json");
+		ss.ApplyStyles("Root", new StyleBag());
 		return ss;
 	}
 
@@ -49,6 +50,7 @@ public class PdfReportEngine : IReportEngine
 		get {
 			var opts = new JsonSerializerOptions();
 			opts.Converters.Add(new JsonStringEnumConverter());
+			opts.Converters.Add(new JsonThicknessConverter());
 			return opts;
 		}
 	}

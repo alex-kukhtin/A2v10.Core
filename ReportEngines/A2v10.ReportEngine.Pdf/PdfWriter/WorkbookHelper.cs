@@ -1,7 +1,11 @@
-﻿using System;
+﻿// Copyright © 2024 Oleksandr Kukhtin. All rights reserved.
+
+using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
+
+using Jint.Native;
 
 using A2v10.Xaml.Report.Spreadsheet;
 
@@ -9,77 +13,53 @@ namespace A2v10.ReportEngine.Pdf;
 
 /*
  * TODO: 
- * 1. Span
- * 2. RowHeight неправильно для Range
- * 3. 
+ * 5. Заменить AccessFunction на Resolve через RegEx
  */
-internal class WorkbookCell
+internal record WorkbookCell
 {
-	public WorkbookCell(Cell cell, String rf)
+	public WorkbookCell(Cell cell)
 	{
+		Cell = cell;
 		Value = cell.Value;
-		Ref = rf;
 	}
 	public WorkbookCell(Boolean isSpanPart)
 	{
 		IsSpanPart = isSpanPart;
+		Cell = new Cell();
 	}
 
-	public Boolean IsSpanPart { get; set; }	
-	public String? Value { get; init;}
-	public String? Ref { get; init;}
+	public Cell Cell {  get; init; }
+	public UInt32 ColSpan => Cell.ColSpan;
+	public UInt32 RowSpan => Cell.RowSpan;
+	public Boolean IsSpanPart { get; init; }	
+	public String? Value { get; set;}
 }
 
-internal static class CellRefs
-{
-	public static String Index2Col(Int32 index)
-	{
-		Int32 q = index / 26;
-
-		if (q > 0)
-			return Index2Col(q - 1) + (Char)((Int32)'A' + (index % 26));
-		else
-			return String.Empty + (Char)((Int32)'A' + index);
-	}
-
-	public static (Int32 row, Int32 column) Parse(String refs)
-	{
-		Int32 ci = 0;
-		Int32 ri = 0;
-		refs = refs.ToUpper();
-		for (Int32 ix = 0; ix < refs.Length; ix++)
-		{
-			if (refs[ix] >= 'A')
-				ci = (ci * 26) + ((Int32)refs[ix] - 64);
-			else
-			{
-				ri = Int32.Parse(refs[ix..]) - 1;
-				break;
-			}
-		}
-		return (ri, ci - 1);
-	}
-}
-
-public record RealRow(Int32 CellRow, ExpandoObject? item = null);
+public record RealRow(UInt32 CellRow, ExpandoObject? Item = null);
 internal class WorkbookHelper
 {
-	private const Int32 DEFAULT_COLUMN_WIDTH = 10; // mm
-	private const Int32 DEFAULT_ROW_HEIGHT = 7; // mm
+	private const Single DEFAULT_COLUMN_WIDTH = 42; // pt
+	private const Single DEFAULT_ROW_HEIGHT = 15; // pt
 
 	private readonly Workbook _workbook;
 	private readonly RenderContext _context;
+
+	private readonly WorkbookCell?[,] _matrix;
+	private readonly List<RealRow> _realRows;
+
+	public WorkbookCell?[,] CellMatrix => _matrix;
 
 	public WorkbookHelper(Workbook workbook, RenderContext context)
 	{
 		_workbook = workbook;
 		_context = context;
+		(_matrix, _realRows) = CreateCellMatrix();
 	}
 
 	private IEnumerable<RealRow> GetRealRows()
 	{
 		var count  = _workbook.RowCount;	
-		Int32 r = 0;
+		UInt32 r = 0;
 		while (r < count)
 		{
 			var rng = _workbook.Ranges.Find(rng => rng.Start == r + 1);
@@ -92,7 +72,7 @@ internal class WorkbookHelper
 					continue;
 				foreach (var colElem in coll)
 				{
-					for (int k=rng.Start; k<=rng.End; k++)
+					for (UInt32 k=rng.Start; k<=rng.End; k++)
 						yield return new RealRow(k, colElem);
 				}
 				r += rng.End - rng.Start;
@@ -100,7 +80,25 @@ internal class WorkbookHelper
 			r++;
 		}
 	}
-	public WorkbookCell?[,] GetCellMatrix()
+
+	private WorkbookCell CreateWorkbookCell(Cell cell, ExpandoObject? item, JsValue? accessFunc)
+	{
+		var wbCell = new WorkbookCell(cell);
+		var val = cell.Value;
+		if (String.IsNullOrEmpty(val))
+			return wbCell;
+		val = val.Trim();
+		if (item != null && accessFunc != null)
+			wbCell.Value = _context.ValueToString(_context.Engine.Invoke(accessFunc, item, null),
+				cell.DataType, cell.Format);
+        else if (val.StartsWith('{') && val.EndsWith('}')) {
+			wbCell.Value = _context.ValueToString(_context.Engine.EvaluateValue(val[1..^1]),
+				cell.DataType, cell.Format);
+		}
+        return wbCell;
+	}
+
+	private (WorkbookCell?[,] mx, List<RealRow> rows) CreateCellMatrix()
 	{
 		var realRows = GetRealRows().ToList();
 		var mx = new WorkbookCell[realRows.Count, _workbook.ColumnCount];
@@ -112,13 +110,32 @@ internal class WorkbookHelper
 				var cellRef = $"{CellRefs.Index2Col(c)}{rr.CellRow}";
 				if (_workbook.Cells.TryGetValue(cellRef, out var wbCell))
 				{
-					mx[r, c] = new WorkbookCell(wbCell, cellRef);
+					JsValue? accessFunc = null;
+					if (rr.Item != null)
+						accessFunc = _context.Engine.CreateAccessFunctionBracess(wbCell.Value);
+					mx[r, c] = CreateWorkbookCell(wbCell, rr.Item, accessFunc);
+					if (wbCell.ColSpan > 1 && wbCell.RowSpan > 1)
+					{
+						for (var cj = c + 1; cj < c + wbCell.ColSpan; cj++)
+							mx[r, cj] = new WorkbookCell(true); // right
+						for (var rj = 1;  rj < wbCell.RowSpan; rj++)
+						{
+							for (var cj = c; cj < c + wbCell.ColSpan; cj++)
+								mx[r + rj, cj] = new WorkbookCell(true);
+						}
+					}
+					else if (wbCell.ColSpan > 1)
+						for (var cj = c + 1; cj < c + wbCell.ColSpan; cj++)
+							mx[r, cj] = new WorkbookCell(true);
+					else if (wbCell.RowSpan > 1)
+						for (var rj = r + 1; rj < r + wbCell.RowSpan; rj++)
+							mx[rj, c] = new WorkbookCell(true);
 				}
 			}
 		}
-		return mx;
+		return (mx, realRows);
 	}
-	public Int32 ColumnWidth(Int32 column)
+	public Single ColumnWidth(Int32 column)
 	{
 		var width = DEFAULT_COLUMN_WIDTH;
 		if (_workbook.Columns.TryGetValue(CellRefs.Index2Col(column), out var sheetColumn))
@@ -126,10 +143,11 @@ internal class WorkbookHelper
 		return width;
 	}
 
-	public Int32 RowHeight(Int32 row)
+	public Single RowHeight(Int32 r)
 	{
 		var rowHeight = DEFAULT_ROW_HEIGHT;
-		if (_workbook.Rows.TryGetValue(row + 1, out var sheetRow))
+		var row = _realRows[r].CellRow;
+		if (_workbook.Rows.TryGetValue(row, out var sheetRow))
 			rowHeight = sheetRow.Height;
 		return rowHeight;
 	}

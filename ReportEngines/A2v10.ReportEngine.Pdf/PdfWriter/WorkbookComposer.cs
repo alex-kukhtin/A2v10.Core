@@ -32,39 +32,50 @@ internal class WorkbookComposer(Workbook _workbook, RenderContext _context) : Fl
 		var wbh = new WorkbookHelper(_workbook, _context);
 		table.ColumnsDefinition(column => {
 			for (int i = 0; i < _workbook.ColumnCount; i++)
-				column.ConstantColumn(wbh.ColumnWidth(i), Unit.Millimetre);
+			{
+				var cw = wbh.ColumnWidth(i);
+				if (cw < 0)
+					column.RelativeColumn(-cw);
+				else
+					column.ConstantColumn(cw);
+			}
 		});
 
-		var mx = wbh.GetCellMatrix();
+		var mx = wbh.CellMatrix;
 		for (int r=0; r <= mx.GetUpperBound(0); r++)
 		{
-			var rowHeight = wbh.RowHeight(r);
-			for (int c =0; c <= mx.GetUpperBound(1); c++)
+			var rh = wbh.RowHeight(r);
+			for (int c = 0; c <= mx.GetUpperBound(1); c++)
 			{
 				var wbCell = mx[r, c];
 				if (wbCell != null && wbCell.IsSpanPart)
 					continue;
-				var tc = table.Cell().Height(rowHeight, Unit.Millimetre)
-					.Border(.2F).Padding(2F);
+				var tc = table.Cell();
+				var cellHeight = rh;
+				if (wbCell?.ColSpan > 1)
+					tc = tc.ColumnSpan(wbCell.ColSpan);
+				if (wbCell?.RowSpan > 1)
+				{
+					tc = tc.RowSpan(wbCell.RowSpan);
+					for (var rs=1; rs < wbCell.RowSpan; rs++)
+						cellHeight += wbh.RowHeight(r + rs);
+				}
+				var cont = tc.MinHeight(cellHeight);
+				// TODO check border
+				// cont = cont.Border(.2F);
+				cont = cont.ApplyDecoration(wbCell?.Cell.RuntimeStyle);
 				if (wbCell != null)
-					ComposeCell(wbCell, tc);
+					ComposeCell(wbCell, cont);
 			}
 		}
 	}
 
-	private void ComposeCell(WorkbookCell wbCell, IContainer cellCont)
+	private static void ComposeCell(WorkbookCell wbCell, IContainer cellCont)
 	{
 		if (!String.IsNullOrEmpty(wbCell.Value))
-			cellCont.Text(wbCell.Value);
-	}
-
-	private void ComposeCell(Int32 row, Int32 column, IContainer cellCont)
-	{
-		var cellRef = $"{CellRefs.Index2Col(column)}{row + 1}";
-		cellCont = cellCont.Border(.2F).Padding(2F);
-		if (!_workbook.Cells.TryGetValue(cellRef, out Cell? cell))
-			return;
-		if (cell != null && !String.IsNullOrEmpty(cell.Value))
-			cellCont.Text(cell.Value);
+		{
+			cellCont.Text(wbCell.Value)
+				.ApplyText(wbCell.Cell.RuntimeStyle);
+		}
 	}
 }

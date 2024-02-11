@@ -6,14 +6,28 @@ namespace A2v10.Xaml.Report.Spreadsheet;
 
 public class Workbook : XamlElement
 {
-    public Int32 RowCount { get; init; }
-	public Int32 ColumnCount { get; init; }
+    public UInt32 RowCount { get; set; }
+	public UInt32 ColumnCount { get; set; }
 	public ColumnCollection Columns { get; init; } = [];
 	public RowCollection Rows { get; init; } = [];
 	public CellCollection Cells { get; init; } = [];
 	public RangeCollection Ranges { get; init; } = [];	
-	public override void ApplyStyles(string selector, StyleBag styles)
+	public StyleCollection Styles { get; init; } = [];
+	public override void ApplyStyles(String selector, StyleBag styles)
     {
-        base.ApplyStyles(selector, styles);
-    }
+		var sel = selector;
+		_runtimeStyle = styles.GetRuntimeStyle(sel);
+		foreach (var c in Cells.Values)
+		{
+			c.OnCreate();
+			c.ApplyStyles(sel + ">Cell", styles);
+			if (c.Style != null && Styles.TryGetValue(c.Style, out var runtimeStyle))
+				c.ApplyRuntimeStyle(runtimeStyle);
+		}
+		foreach (var r in Rows.Values)
+			r.ApplyStyles(sel + ">Row", styles);
+		foreach (var c in Columns.Values)
+			c.ApplyStyles(sel + ">Column", styles);
+		ApplyStylesSelf();
+	}
 }
