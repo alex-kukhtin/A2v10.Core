@@ -6,14 +6,14 @@ namespace A2v10.ReportEngine.Pdf;
 
 public static class CellRefs
 {
-	public static String Index2Col(Int32 index)
+	public static String Index2Col(UInt32 index)
 	{
-		Int32 q = index / 26;
+		UInt32 q = index / 26;
 
 		if (q > 0)
-			return Index2Col(q - 1) + (Char)((Int32)'A' + (index % 26));
+			return Index2Col(q - 1) + (Char)((UInt32)'A' + (index % 26));
 		else
-			return String.Empty + (Char)((Int32)'A' + index);
+			return String.Empty + (Char)((UInt32)'A' + index);
 	}
 
 	public static (UInt32 row, UInt32 column) Parse(String refs)

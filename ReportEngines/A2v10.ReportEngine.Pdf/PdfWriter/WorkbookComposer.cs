@@ -31,7 +31,7 @@ internal class WorkbookComposer(Workbook _workbook, RenderContext _context) : Fl
 	{
 		var wbh = new WorkbookHelper(_workbook, _context);
 		table.ColumnsDefinition(column => {
-			for (int i = 0; i < _workbook.ColumnCount; i++)
+			for (UInt32 i = 0; i < _workbook.ColumnCount; i++)
 			{
 				var cw = wbh.ColumnWidth(i);
 				if (cw < 0)

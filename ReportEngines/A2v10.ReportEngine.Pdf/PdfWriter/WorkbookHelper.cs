@@ -107,7 +107,7 @@ internal class WorkbookHelper
 		for (var r=0; r<realRows.Count; r++)
 		{
 			var rr = realRows[r];
-			for (var c = 0; c < _workbook.ColumnCount; c++)
+			for (UInt32 c = 0; c < _workbook.ColumnCount; c++)
 			{
 				var cellRef = $"{CellRefs.Index2Col(c)}{rr.CellRow}";
 				if (_workbook.Cells.TryGetValue(cellRef, out var wbCell))
@@ -137,7 +137,7 @@ internal class WorkbookHelper
 		}
 		return (mx, realRows);
 	}
-	public Single ColumnWidth(Int32 column)
+	public Single ColumnWidth(UInt32 column)
 	{
 		var width = DEFAULT_COLUMN_WIDTH;
 		if (_workbook.Columns.TryGetValue(CellRefs.Index2Col(column), out var sheetColumn))

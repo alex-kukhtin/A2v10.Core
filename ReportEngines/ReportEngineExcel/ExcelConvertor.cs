@@ -4,26 +4,46 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 
 
+using XSheet = A2v10.Xaml.Report.Spreadsheet.Spreadsheet;
 using XWorkbook = A2v10.Xaml.Report.Spreadsheet.Workbook;
 using XCell = A2v10.Xaml.Report.Spreadsheet.Cell;
 using XRow = A2v10.Xaml.Report.Spreadsheet.Row;
 using XColumn = A2v10.Xaml.Report.Spreadsheet.Column;
+using PageOrientation  = A2v10.Xaml.Report.PageOrientation;
+
 using A2v10.ReportEngine.Pdf;
 
 namespace ReportEngineExcel;
 
+/* TODO:
+ * Ranges
+ * Styles
+ */
+
+/*
+Excel Column Width
+	https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.column?view=openxml-3.0.1
+*/
+
 internal class ExcelConvertor
 {
 	private readonly String _fileName;
+
+	private const Single CHAR_WIDTH = 8;
+
 	public ExcelConvertor(String fileName)
 	{
 		_fileName = fileName;
 	}
 
-	public XWorkbook ParseFile()
+	public XSheet ParseFile()
 	{
 
 		var wb = new XWorkbook();
+		var ws = new XSheet()
+		{
+			Workbook = wb
+		};
 
 		var doc = SpreadsheetDocument.Open(_fileName, isEditable: false);
 		var workBookPart = doc.WorkbookPart
@@ -58,6 +78,15 @@ internal class ExcelConvertor
 		wb.RowCount = Math.Max(lt.row, br.row) + 1;
 		wb.ColumnCount = Math.Max(lt.column, br.column) + 1;
 
+		var ps = workSheetPart.Worksheet.GetFirstChild<PageSetup>();
+		if (ps != null && ps.Orientation != null)
+		{
+			if (ps.Orientation == OrientationValues.Portrait)
+				ws.Orientation = PageOrientation.Portrait;
+			else if (ps.Orientation != OrientationValues.Landscape) 
+				ws.Orientation = PageOrientation.Landscape;
+		}
+
 		var rows = workSheetPart.Worksheet.Descendants<Row>()
 			?? throw new InvalidOperationException($"The sheet does not have a rows");
 		foreach (var row in rows)
@@ -79,7 +108,13 @@ internal class ExcelConvertor
 			?? throw new InvalidOperationException($"The sheet does not have a columns");
 		foreach (var col in columns)
 		{
-			var xc = CreateColumn(col);
+			if (col.Min != null && col.Max != null && col.Min.Value == col.Max.Value)
+			{
+				var colRef = CellRefs.Index2Col(col.Min.Value - 1);
+				var xc = CreateColumn(col);
+				if (xc != null)
+					wb.Columns.Add(colRef, xc);
+			}
 		}
 
 		var mrgCelss = workSheetPart.Worksheet.Descendants<MergeCell>();
@@ -103,13 +138,11 @@ internal class ExcelConvertor
 				if (rs > 1)
 					xCell.RowSpan = rs;
 			}
-
-			Console.WriteLine(mc.Reference?.ToString());
 		}
-		return wb;
+		return ws;
 	}
 
-	XCell? CreateCell(Cell cell, SharedStringTable sharedStringTable)
+	static XCell? CreateCell(Cell cell, SharedStringTable sharedStringTable)
 	{
 		if (cell.DataType == null || cell.CellValue == null)
 			return null;
@@ -122,14 +155,24 @@ internal class ExcelConvertor
 		return null;
 	}
 
-	XColumn? CreateColumn(Column? col)
+	static XColumn? CreateColumn(Column? col)
 	{
 		if (col == null) 
 			return null;
-		return new XColumn();
+		Single ptW = 0;
+		if (col.CustomWidth != null)
+		{
+			if (col.CustomWidth.Value && col.Width != null)
+			{
+				var fw = col.Width.Value;
+				var pxW = Math.Truncate(((256 * fw + Math.Truncate(128 / CHAR_WIDTH)) / 256) * CHAR_WIDTH);
+				ptW = (Single) pxW * 72F / 96F;
+			}
+		}
+		return new XColumn() { Width = ptW };
 	}
 
-	XRow? CreateRow(Row? row)
+	static XRow? CreateRow(Row? row)
 	{
 		if (row == null)	
 			return null;
