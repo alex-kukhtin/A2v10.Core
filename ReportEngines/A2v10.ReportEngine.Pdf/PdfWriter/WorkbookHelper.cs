@@ -13,7 +13,7 @@ namespace A2v10.ReportEngine.Pdf;
 
 /*
  * TODO: 
- * 5. Заменить AccessFunction на Resolve через RegEx
+ * 7. Page.Title - {}
  */
 internal record WorkbookCell
 {
@@ -38,7 +38,9 @@ internal record WorkbookCell
 public record RealRow(UInt32 CellRow, ExpandoObject? Item = null);
 internal class WorkbookHelper
 {
-	private const Single DEFAULT_COLUMN_WIDTH = 42; // pt
+	// 1pt = 1/72in, 1in = 96px
+
+	private const Single DEFAULT_COLUMN_WIDTH = 54; // pt
 	private const Single DEFAULT_ROW_HEIGHT = 15; // pt
 
 	private readonly Workbook _workbook;

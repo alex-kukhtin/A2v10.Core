@@ -75,6 +75,7 @@ internal class WorkbookComposer(Workbook _workbook, RenderContext _context) : Fl
 		if (!String.IsNullOrEmpty(wbCell.Value))
 		{
 			cellCont.Text(wbCell.Value)
+				.LineHeight(1)
 				.ApplyText(wbCell.Cell.RuntimeStyle);
 		}
 	}
