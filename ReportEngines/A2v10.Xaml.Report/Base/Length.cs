@@ -39,6 +39,13 @@ public record Length
 		}
 		throw new XamlException($"Invalid length value '{strVal}'");
 	}
+
+	public override string ToString()
+	{
+		if (Unit == "pt")
+			return Value.ToString();
+		return $"{Value}{Unit}";
+	}
 }
 
 public class LengthConverter : TypeConverter

@@ -7,7 +7,7 @@ using System.Text.Json.Serialization;
 using A2v10.Xaml.Report;
 
 namespace A2v10.ReportEngine.Pdf;
-internal class JsonThicknessConverter : JsonConverter<Thickness>
+public class JsonThicknessConverter : JsonConverter<Thickness>
 {
 	public override Thickness? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 	{
@@ -19,7 +19,7 @@ internal class JsonThicknessConverter : JsonConverter<Thickness>
 
 	public override void Write(Utf8JsonWriter writer, Thickness value, JsonSerializerOptions options)
 	{
-		throw new NotImplementedException();
+		writer.WriteStringValue(value.ToString());
 	}
 }
 

@@ -1,4 +1,4 @@
-﻿
+﻿// Copyright © 2024 Oleksandr Kukhtin. All rights reserved.
 
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
@@ -9,15 +9,23 @@ using XWorkbook = A2v10.Xaml.Report.Spreadsheet.Workbook;
 using XCell = A2v10.Xaml.Report.Spreadsheet.Cell;
 using XRow = A2v10.Xaml.Report.Spreadsheet.Row;
 using XColumn = A2v10.Xaml.Report.Spreadsheet.Column;
+using XRange = A2v10.Xaml.Report.Spreadsheet.Range;
+using XStyle = A2v10.Xaml.Report.RuntimeStyle;
+
 using PageOrientation  = A2v10.Xaml.Report.PageOrientation;
+using TextAlign = A2v10.Xaml.Report.TextAlign;
+using VertAlign = A2v10.Xaml.Report.VertAlign;
+using Thickness = A2v10.Xaml.Report.Thickness;
 
 using A2v10.ReportEngine.Pdf;
 
 namespace ReportEngineExcel;
 
 /* TODO:
- * Ranges
- * Styles
+ 5. Styles (FontSize, Border, Fill, Format)
+ 6. RowHeight
+ 7. PageMargins
+ 9. 
  */
 
 /*
@@ -63,10 +71,14 @@ internal class ExcelConvertor
 
 		var stylesPart = workBookPart.WorkbookStylesPart;
 		// This formats is NUMBER, not standard!
-		var numFormats = stylesPart?.Stylesheet
-			.Descendants<NumberingFormat>()?
-			.GroupBy(x => x.NumberFormatId?.Value.ToString() ?? String.Empty)
-			.ToDictionary(g => g.Key, g => g.First());
+		var styleSheet = stylesPart?.Stylesheet;
+		if (styleSheet != null)
+		{
+			var numFormats = stylesPart?.Stylesheet
+				.Descendants<NumberingFormat>()?
+				.GroupBy(x => x.NumberFormatId?.Value.ToString() ?? String.Empty)
+				.ToDictionary(g => g.Key, g => g.First());
+		}
 
 		var dim = workSheetPart.Worksheet.SheetDimension?.Reference?.ToString()
 			?? throw new InvalidOperationException("Invalid SheetDimension");
@@ -85,6 +97,27 @@ internal class ExcelConvertor
 				ws.Orientation = PageOrientation.Portrait;
 			else if (ps.Orientation != OrientationValues.Landscape) 
 				ws.Orientation = PageOrientation.Landscape;
+		}
+
+		var mg = workSheetPart.Worksheet.GetFirstChild<PageMargins>();
+		if (mg != null)
+		{
+			if (mg.Left != null)
+				Console.WriteLine(mg.Left.Value);
+			if (mg.Right != null)
+				Console.WriteLine(mg.Right.Value);
+		}
+
+		var defNames = workBook?.DefinedNames?.Elements<DefinedName>();
+
+		if (defNames != null)
+		{
+			foreach (var defName in defNames)
+			{
+				var df = CreateRange(defName);
+				if (df != null)
+					wb.Ranges.Add(df);
+			}
 		}
 
 		var rows = workSheetPart.Worksheet.Descendants<Row>()
@@ -139,18 +172,76 @@ internal class ExcelConvertor
 					xCell.RowSpan = rs;
 			}
 		}
+
+		if (styleSheet != null)
+		{
+			var formats = styleSheet.Descendants<CellFormat>().ToArray();
+			for (var i = 1; i < formats.Length; i++)
+			{
+				var cf = formats[i];
+				var styleRef = $"S{i - 1}";
+				var rs = CreateStyle(cf);
+				if (rs != null)
+					wb.Styles.Add(styleRef, rs);	
+			}
+		}
 		return ws;
+	}
+
+	static XRange? CreateRange(DefinedName dn)
+	{
+		if (dn == null)
+			return null;
+		String? name = dn.Name;
+		if (name == null)
+			return null;
+		String showRef = dn.Text;
+		Int32 exclPos = showRef.IndexOf('!');
+		if (exclPos == -1)
+			return null;
+		String shtName = showRef[..exclPos];
+		String shtRef = showRef[(exclPos + 1)..];
+		Int32 colonPos = shtRef.IndexOf(':');
+		if (colonPos == -1)
+			return null;
+		string startRef = shtRef[..colonPos]; // link to the first line of the range
+		String endRef = shtRef[(colonPos + 1)..];  // link to the second line of the range
+		if (startRef.Length < 2)
+			return null;
+		if (endRef.Length < 2)
+			return null;
+		UInt32 startRow = 0;
+		UInt32 endRow = 0;
+		if (startRef[0] == '$')
+		{
+			if (!UInt32.TryParse(startRef[1..], out startRow))
+				return null;
+		}
+		if (endRef[0] == '$')
+		{
+			if (!UInt32.TryParse(endRef[1..], out endRow))
+				return null;
+		}
+		var rng = new XRange() {
+			Value = $"{{{name.Replace('_', '.')}}}",
+			Start = startRow,
+			End = endRow
+		};
+		return rng;
 	}
 
 	static XCell? CreateCell(Cell cell, SharedStringTable sharedStringTable)
 	{
 		if (cell.DataType == null || cell.CellValue == null)
 			return null;
+		String? style = null;
+		if (cell.StyleIndex != null)
+			style = $"S{cell.StyleIndex.Value}";
 		if (cell.DataType == CellValues.SharedString)
 		{
 			Int32 ssid = Int32.Parse(cell.CellValue.Text);
 			String str = sharedStringTable.ChildElements[ssid].InnerText;
-			return new XCell() { Value = str };
+			return new XCell() { Value = str, Style = style };
 		}
 		return null;
 	}
@@ -176,6 +267,69 @@ internal class ExcelConvertor
 	{
 		if (row == null)	
 			return null;
+		var h = row.Height;
+		// TODO: row Height
 		return new XRow();
+	}
+
+	static XStyle? CreateStyle(CellFormat? cf)
+	{
+		if (cf == null)
+			return null;
+		String? background = null;
+		Single? fontSize = null;
+		Thickness? border = null;
+		TextAlign? align = null;
+		VertAlign? vAlign = null;
+
+		if (cf?.ApplyFill?.Value == true)
+		{
+			background = "background";
+		}
+
+		if (cf?.ApplyBorder?.Value == true) { 
+			border = Thickness.FromString("1pt,3mm");
+		}
+
+		if (cf?.ApplyFont?.Value == true)
+		{
+			fontSize = 10F;
+		}
+
+		if (cf?.ApplyNumberFormat?.Value  == true)
+		{
+			// apply format
+		}
+
+		if (cf?.ApplyAlignment?.Value == true)
+		{
+			var a = cf.Alignment;
+			if (a?.Horizontal != null)
+			{
+				if (a.Horizontal == HorizontalAlignmentValues.Right)
+					align = TextAlign.Right;
+				else if (a.Horizontal != HorizontalAlignmentValues.Center)
+					align = TextAlign.Center;
+			}
+			if (a?.Vertical != null)
+			{
+				if (a.Vertical == VerticalAlignmentValues.Bottom)
+					vAlign = VertAlign.Bottom;
+				else if (a.Vertical == VerticalAlignmentValues.Center)
+					vAlign = VertAlign.Middle;
+			}
+		}
+
+		if (background == null && fontSize == null && border == null && align == null && vAlign == null)
+			return null;
+
+		return new XStyle()
+		{
+			FontSize = fontSize,	
+			Background = background,
+			Border = border,
+			Align = align,
+			VAlign = vAlign
+		};
 	}
 }

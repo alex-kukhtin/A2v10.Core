@@ -83,6 +83,18 @@ public record Thickness
 		}
 		return null;
 	}
+
+	public override String ToString()
+	{
+		var t = All();
+		if (t != null)
+			return t.ToString();
+		var h = Horizontal();
+		var v = Vertical();
+		if (v != null && h != null)
+			return $"{v},{h}";
+		return $"{Left},{Top},{Right},{Bottom}";
+	}
 }
 
 public class ThicknessConverter : TypeConverter
