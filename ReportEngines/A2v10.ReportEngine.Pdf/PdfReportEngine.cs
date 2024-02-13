@@ -3,7 +3,6 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using System.Text.Json;
 
 using QuestPDF;
 using QuestPDF.Fluent;
@@ -13,7 +12,7 @@ using A2v10.Infrastructure;
 using A2v10.Xaml.Report;
 
 using A2v10.Xaml.Report.Spreadsheet;
-using System.Text.Json.Serialization;
+using A2v10.ReportEngine.Script;
 
 namespace A2v10.ReportEngine.Pdf;
 
@@ -26,7 +25,7 @@ public class PdfReportEngine : IReportEngine
 	{
         Settings.License ??= LicenseType.Community;
         _appCodeProvider = appCodeProvider;
-		_localizer = new PdfReportLocalizer(user.Locale.Locale, localizer);
+		_localizer = new DefaultReportLocalizer(user.Locale.Locale, localizer);
 	}
 
 	private Page ReadTemplate(String path)
@@ -40,19 +39,9 @@ public class PdfReportEngine : IReportEngine
 	{
 		var json = reportInfo.DataModel?.Resolve(reportInfo.Report)
 			?? throw new InvalidOperationException("Data is null");
-		var ss = JsonSerializer.Deserialize<Spreadsheet>(json, DefaultOpts)
-			?? throw new InvalidOperationException("Invalid json");
+		var ss = SpreadsheetJson.FromJson(json);
 		ss.ApplyStyles("Root", new StyleBag());
 		return ss;
-	}
-
-	static JsonSerializerOptions DefaultOpts {
-		get {
-			var opts = new JsonSerializerOptions();
-			opts.Converters.Add(new JsonStringEnumConverter());
-			opts.Converters.Add(new JsonThicknessConverter());
-			return opts;
-		}
 	}
 
 	public Task<IInvokeResult> ExportAsync(IReportInfo reportInfo, ExportReportFormat format)

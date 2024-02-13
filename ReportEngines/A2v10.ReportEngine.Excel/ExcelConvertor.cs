@@ -1,8 +1,13 @@
 ﻿// Copyright © 2024 Oleksandr Kukhtin. All rights reserved.
 
+using System;
+using System.Linq;
+using System.IO;
+using System.Collections.Generic;
+
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
-
+using DocumentFormat.OpenXml;
 
 using XSheet = A2v10.Xaml.Report.Spreadsheet.Spreadsheet;
 using XWorkbook = A2v10.Xaml.Report.Spreadsheet.Workbook;
@@ -17,15 +22,15 @@ using TextAlign = A2v10.Xaml.Report.TextAlign;
 using VertAlign = A2v10.Xaml.Report.VertAlign;
 using Thickness = A2v10.Xaml.Report.Thickness;
 
-using A2v10.ReportEngine.Pdf;
-
-namespace ReportEngineExcel;
+namespace A2v10.ReportEngine.Excel;
 
 /* TODO:
- 5. Styles (FontSize, Border, Fill, Format)
- 6. RowHeight
- 7. PageMargins
- 9. 
+ 5. Styles (Format)
+ 9. Почему-то не выравнивается Unit
+10. Диапазон колонок - для автоформата по ширине
+11. Не ставится Title
+12. Print, Download - GPF
+13. Download as Excel (в обратную сторону)
  */
 
 /*
@@ -33,15 +38,84 @@ Excel Column Width
 	https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.column?view=openxml-3.0.1
 */
 
-internal class ExcelConvertor
+public class StyleRefs
+{
+	private readonly Border[] _borders;
+	private readonly Font[] _fonts;
+	private readonly Fill[] _fills;
+	private readonly FontSize? _defaultFontSize;	
+
+	const String THIN_BORDER = ".2";
+	const String MEDIUM_BORDER = "1";
+	public StyleRefs(Stylesheet stylesheet)
+	{
+		_borders = stylesheet.Descendants<Border>().ToArray();
+		_fonts = stylesheet.Descendants<Font>().ToArray();
+		_fills = stylesheet.Descendants<Fill>().ToArray();	
+		_defaultFontSize = _fonts.Length > 0 ? _fonts[0].FontSize : null;
+	}
+
+	public Thickness? GetBorder(UInt32? id)
+	{
+		if (id == null)
+			return null;
+		var b = _borders[id.Value];
+		if (b == null)
+			return null;
+		var bx =  $"{Length(b.TopBorder?.Style)},{Length(b.RightBorder?.Style)},{Length(b.BottomBorder?.Style)},{Length(b.LeftBorder?.Style)}";
+		return Thickness.FromString(bx);
+	}
+
+
+	public Single? GetFont(UInt32? id)
+	{
+		if (id == null)
+			return null;
+		var f = _fonts[id.Value];
+		if (f.FontSize?.Val == _defaultFontSize?.Val)
+			return null;
+		if (f == null || f.FontSize == null || f.FontSize.Val == null)
+			return null;
+		return (Single) f.FontSize.Val.Value;
+	}
+
+	public String? GetFill(UInt32? id)
+	{
+		if (id == null)
+			return null;
+		var f = _fills[id.Value - 1];
+		if (f.PatternFill?.PatternType?.Value == PatternValues.Gray125)
+			return "f5f5f5";
+		return null;
+	}
+	private String Length(EnumValue<BorderStyleValues>? val) 
+	{
+		if (val == null)
+			return "0";
+		if (val == BorderStyleValues.Thin)
+			return THIN_BORDER;
+		else if (val == BorderStyleValues.Medium)
+			return MEDIUM_BORDER;
+		throw new InvalidOperationException();
+	}
+}
+public class ExcelConvertor
 {
 	private readonly String _fileName;
+	private readonly Stream? _stream;
 
 	private const Single CHAR_WIDTH = 8;
 
 	public ExcelConvertor(String fileName)
 	{
 		_fileName = fileName;
+		_stream = null;
+	}
+
+	public ExcelConvertor(Stream stream)
+	{
+		_fileName = String.Empty;
+		_stream = stream;
 	}
 
 	public XSheet ParseFile()
@@ -53,7 +127,8 @@ internal class ExcelConvertor
 			Workbook = wb
 		};
 
-		var doc = SpreadsheetDocument.Open(_fileName, isEditable: false);
+		var doc = _stream != null ? SpreadsheetDocument.Open(_stream, isEditable: false)
+			: SpreadsheetDocument.Open(_fileName, isEditable: false);
 		var workBookPart = doc.WorkbookPart
 			?? throw new InvalidOperationException("Invalid Excel file");
 		var workBook = workBookPart.Workbook;
@@ -102,10 +177,12 @@ internal class ExcelConvertor
 		var mg = workSheetPart.Worksheet.GetFirstChild<PageMargins>();
 		if (mg != null)
 		{
-			if (mg.Left != null)
-				Console.WriteLine(mg.Left.Value);
-			if (mg.Right != null)
-				Console.WriteLine(mg.Right.Value);
+			// in INCHES
+			var lm = mg.Left?.Value * 72F ?? 0;
+			var rm = mg.Right?.Value * 72F ?? 0;
+			var tm = mg.Top?.Value * 72F ?? 0;
+			var bm = mg.Bottom?.Value * 72F ?? 0;
+			ws.Margin = Thickness.FromString($"{tm},{rm},{bm},{lm}");
 		}
 
 		var defNames = workBook?.DefinedNames?.Elements<DefinedName>();
@@ -122,10 +199,13 @@ internal class ExcelConvertor
 
 		var rows = workSheetPart.Worksheet.Descendants<Row>()
 			?? throw new InvalidOperationException($"The sheet does not have a rows");
+
+		var defRowHeight = workSheetPart.Worksheet.SheetFormatProperties?.DefaultRowHeight;
+		HashSet<String> _cellStyles = [];
 		foreach (var row in rows)
 		{
 			var ix = row.RowIndex ?? 0;
-			var wbrow = CreateRow(row);
+			var wbrow = CreateRow(row, defRowHeight);
 			if (wbrow != null)
 				wb.Rows.Add(ix, wbrow);
 			foreach (var cell in row.Elements<Cell>()) {
@@ -133,7 +213,11 @@ internal class ExcelConvertor
 						?? throw new InvalidOperationException($"CellRef is null");
 				var xc = CreateCell(cell, sharedStringTable);
 				if (xc != null)
+				{
 					wb.Cells.Add(cellRef, xc);
+					if (xc.Style != null)
+						_cellStyles.Add(xc.Style);
+				}
 			}
 		}
 
@@ -175,13 +259,14 @@ internal class ExcelConvertor
 
 		if (styleSheet != null)
 		{
+			var refs = new StyleRefs(styleSheet);
 			var formats = styleSheet.Descendants<CellFormat>().ToArray();
 			for (var i = 1; i < formats.Length; i++)
 			{
 				var cf = formats[i];
 				var styleRef = $"S{i - 1}";
-				var rs = CreateStyle(cf);
-				if (rs != null)
+				var rs = CreateStyle(cf, refs);
+				if (rs != null && _cellStyles.Contains(styleRef))
 					wb.Styles.Add(styleRef, rs);	
 			}
 		}
@@ -232,18 +317,22 @@ internal class ExcelConvertor
 
 	static XCell? CreateCell(Cell cell, SharedStringTable sharedStringTable)
 	{
-		if (cell.DataType == null || cell.CellValue == null)
-			return null;
 		String? style = null;
 		if (cell.StyleIndex != null)
 			style = $"S{cell.StyleIndex.Value}";
+		var xcell = new XCell()
+		{
+			Style = style,
+		};
+		if (cell.DataType == null || cell.CellValue == null)
+			return xcell;
 		if (cell.DataType == CellValues.SharedString)
 		{
 			Int32 ssid = Int32.Parse(cell.CellValue.Text);
 			String str = sharedStringTable.ChildElements[ssid].InnerText;
-			return new XCell() { Value = str, Style = style };
+			xcell.Value = str;
 		}
-		return null;
+		return xcell;
 	}
 
 	static XColumn? CreateColumn(Column? col)
@@ -263,16 +352,22 @@ internal class ExcelConvertor
 		return new XColumn() { Width = ptW };
 	}
 
-	static XRow? CreateRow(Row? row)
+	static XRow? CreateRow(Row? row, DoubleValue? defRowHeight)
 	{
-		if (row == null)	
+		if (row == null)
 			return null;
-		var h = row.Height;
-		// TODO: row Height
-		return new XRow();
+		var h = row.Height; // pt
+		if (h == null)
+			return null;
+		if (defRowHeight != null && h.Value == defRowHeight.Value)
+			return null;
+		return new XRow()
+		{
+			Height = (Single)h.Value
+		};
 	}
 
-	static XStyle? CreateStyle(CellFormat? cf)
+	static XStyle? CreateStyle(CellFormat? cf, StyleRefs refs)
 	{
 		if (cf == null)
 			return null;
@@ -283,18 +378,13 @@ internal class ExcelConvertor
 		VertAlign? vAlign = null;
 
 		if (cf?.ApplyFill?.Value == true)
-		{
-			background = "background";
-		}
+			background = refs.GetFill(cf.FillId?.Value);
 
-		if (cf?.ApplyBorder?.Value == true) { 
-			border = Thickness.FromString("1pt,3mm");
-		}
+		if (cf?.ApplyBorder?.Value == true)
+			border = refs.GetBorder(cf.BorderId?.Value);
 
 		if (cf?.ApplyFont?.Value == true)
-		{
-			fontSize = 10F;
-		}
+			fontSize = refs.GetFont(cf.FontId?.Value);
 
 		if (cf?.ApplyNumberFormat?.Value  == true)
 		{
@@ -313,8 +403,8 @@ internal class ExcelConvertor
 			}
 			if (a?.Vertical != null)
 			{
-				if (a.Vertical == VerticalAlignmentValues.Bottom)
-					vAlign = VertAlign.Bottom;
+				if (a.Vertical == VerticalAlignmentValues.Top)
+					vAlign = VertAlign.Top;
 				else if (a.Vertical == VerticalAlignmentValues.Center)
 					vAlign = VertAlign.Middle;
 			}

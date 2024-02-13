@@ -25,6 +25,10 @@ del /q ReportEngines\A2v10.ReportEngine.Pdf\bin\Release\*.nupkg
 del /q ReportEngines\A2v10.ReportEngine.Pdf\bin\Release\*.snupkg
 del /q ReportEngines\A2v10.Xaml.Report\bin\Release\*.nupkg
 del /q ReportEngines\A2v10.Xaml.Report\bin\Release\*.snupkg
+del /q ReportEngines\A2v10.ReportEngine.Script\bin\Release\*.nupkg
+del /q ReportEngines\A2v10.ReportEngine.Script\bin\Release\*.snupkg
+del /q ReportEngines\A2v10.ReportEngine.Excel\bin\Release\*.nupkg
+del /q ReportEngines\A2v10.ReportEngine.Excel\bin\Release\*.snupkg
 rem del /q ReportEngines\A2v10.ReportEngine.Stimulsoft\bin\Release\*.nupkg
 rem del /q ReportEngines\A2v10.ReportEngine.Stimulsoft\bin\Release\*.snupkg
 
@@ -80,6 +84,12 @@ copy ViewEngines\A2v10.ViewEngine.Html\bin\Release\*.snupkg ..\NuGet.local
 
 copy ReportEngines\A2v10.ReportEngine.Pdf\bin\Release\*.nupkg ..\NuGet.local
 copy ReportEngines\A2v10.ReportEngine.Pdf\bin\Release\*.snupkg ..\NuGet.local
+
+copy ReportEngines\A2v10.ReportEngine.Script\bin\Release\*.nupkg ..\NuGet.local
+copy ReportEngines\A2v10.ReportEngine.Script\bin\Release\*.snupkg ..\NuGet.local
+
+copy ReportEngines\A2v10.ReportEngine.Excel\bin\Release\*.nupkg ..\NuGet.local
+copy ReportEngines\A2v10.ReportEngine.Excel\bin\Release\*.snupkg ..\NuGet.local
 
 copy ReportEngines\A2v10.Xaml.Report\bin\Release\*.nupkg ..\NuGet.local
 copy ReportEngines\A2v10.Xaml.Report\bin\Release\*.snupkg ..\NuGet.local

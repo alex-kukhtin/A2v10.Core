@@ -4,9 +4,8 @@ using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-using A2v10.Xaml.Report;
+namespace A2v10.Xaml.Report.Spreadsheet;
 
-namespace A2v10.ReportEngine.Pdf;
 public class JsonThicknessConverter : JsonConverter<Thickness>
 {
 	public override Thickness? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)

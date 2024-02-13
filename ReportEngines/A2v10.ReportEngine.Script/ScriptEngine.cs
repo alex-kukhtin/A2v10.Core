@@ -8,9 +8,9 @@ using System.Globalization;
 using Jint;
 using Jint.Native;
 
-namespace A2v10.ReportEngine.Pdf;
+namespace A2v10.ReportEngine.Script;
 
-internal class ScriptEngine
+public class ScriptEngine
 {
 	private readonly Engine _engine;
 	private readonly CultureInfo _culture;

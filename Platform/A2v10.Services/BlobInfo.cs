@@ -26,6 +26,18 @@ public record BlobUpdateInfo : IBlobUpdateInfo
     public String? Key { get; set; }
     public Object? Id { get; set; }
 }
+
+public record BlobUpdateString
+{
+	public Int32? TenantId { get; set; }
+	public Int64 UserId { get; set; }
+	public String? Mime { get; set; }
+	public String? Name { get; set; }
+	public String? Stream { get; set; }
+	public String? Key { get; set; }
+	public Object? Id { get; set; }
+}
+
 public record BlobUpdateOutput : IBlobUpdateOutput
 {
     public Object Id { get; set; } = new();

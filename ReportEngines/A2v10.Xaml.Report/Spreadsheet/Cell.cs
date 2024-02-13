@@ -44,7 +44,8 @@ public class Cell : XamlElement
 	public void OnCreate()
 	{
 		var rs = GetRuntimeStyle();
-		rs.Padding = Thickness.FromString("1pt,4pt");
+		rs.Padding = Thickness.FromString("1,3"); // 1pt v, 3pt h
+		rs.VAlign = VertAlign.Bottom; // default is bottom
 		switch (DataType)
 		{
 			case DataType.Date:

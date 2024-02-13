@@ -8,14 +8,15 @@ using System.Linq;
 using Jint.Native;
 
 using A2v10.Xaml.Report.Spreadsheet;
+using A2v10.ReportEngine.Script;
 
-namespace A2v10.ReportEngine.Pdf;
+namespace A2v10.ReportEngine.Excel;
 
 /*
  * TODO: 
  * 7. Page.Title - {}
  */
-internal record WorkbookCell
+public record WorkbookCell
 {
 	public WorkbookCell(Cell cell)
 	{
@@ -36,12 +37,12 @@ internal record WorkbookCell
 }
 
 public record RealRow(UInt32 CellRow, ExpandoObject? Item = null);
-internal class WorkbookHelper
+public class WorkbookHelper
 {
 	// 1pt = 1/72in, 1in = 96px
 
-	private const Single DEFAULT_COLUMN_WIDTH = 54; // pt
-	private const Single DEFAULT_ROW_HEIGHT = 15; // pt
+	private const Single DEFAULT_COLUMN_WIDTH = 54F; // pt
+	private const Single DEFAULT_ROW_HEIGHT = 14.25F; // pt
 
 	private readonly Workbook _workbook;
 	private readonly RenderContext _context;
@@ -115,7 +116,8 @@ internal class WorkbookHelper
 					JsValue? accessFunc = null;
 					if (rr.Item != null)
 						accessFunc = _context.Engine.CreateAccessFunctionBracess(wbCell.Value);
-					mx[r, c] = CreateWorkbookCell(wbCell, rr.Item, accessFunc);
+					if (mx[r, c] == null) // may be already created with colspan
+						mx[r, c] = CreateWorkbookCell(wbCell, rr.Item, accessFunc);
 					if (wbCell.ColSpan > 1 && wbCell.RowSpan > 1)
 					{
 						for (var cj = c + 1; cj < c + wbCell.ColSpan; cj++)

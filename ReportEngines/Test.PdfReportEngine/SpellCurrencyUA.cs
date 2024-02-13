@@ -1,4 +1,5 @@
 using A2v10.ReportEngine.Pdf;
+using A2v10.ReportEngine.Script;
 using System.Globalization;
 
 namespace Test.PdfReportEngine;

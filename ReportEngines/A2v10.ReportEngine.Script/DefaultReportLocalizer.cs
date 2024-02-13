@@ -5,9 +5,9 @@ using System.Globalization;
 
 using A2v10.Infrastructure;
 
-namespace A2v10.ReportEngine.Pdf;
+namespace A2v10.ReportEngine.Script;
 
-public class PdfReportLocalizer(String locale, ILocalizer localizer) : IReportLocalizer
+public class DefaultReportLocalizer(String locale, ILocalizer localizer) : IReportLocalizer
 {
 	private readonly ILocalizer _localizer = localizer;
 	private readonly String _locale = locale;

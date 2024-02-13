@@ -142,7 +142,7 @@ public partial class DataService
 	{
 		BlobUpdateInfo blobInfo = new()
 		{
-			Id = blobModel.Id
+			Id = blobModel.Id,
 		};
 		setBlob(blobInfo);
 		var args = new ExpandoObject();
@@ -155,6 +155,27 @@ public partial class DataService
 
 		var result = await clrInvokeTarget.InvokeAsync(args);
 
+		if (result is InvokeBlobResult invokeBlobResult)
+		{
+			if (invokeBlobResult.Stream == null)
+				throw new InvalidOperationException("InvokeBlobResult.Stream is null");
+			blobInfo.Stream = new MemoryStream(invokeBlobResult.Stream);
+			return await SaveBlobInt(blobInfo, blobModel, setParams);
+		}
+		else if (result is String strResult)
+		{
+			BlobUpdateString blobStringInfo = new()
+			{
+				TenantId = blobInfo.TenantId,
+				UserId = blobInfo.UserId,
+				Id = blobInfo.Id,
+				Key = blobInfo.Key,
+				Name = blobInfo.Name,
+				Mime = blobInfo.Mime,
+				Stream = strResult
+			};
+			return await SaveBlobString(blobStringInfo, blobModel, setParams);
+		}
 		if (result is not ExpandoObject eoResult)
 			throw new InvalidOperationException($"{blobModel.ClrType}. The return type of the must be an ExpandoObject");
 		return eoResult;
@@ -168,6 +189,34 @@ public partial class DataService
 		};
 		setBlob(blobInfo);
 		return SaveBlobInt(blobInfo, blobModel, setParams);
+	}
+
+	private async Task<ExpandoObject> SaveBlobString(BlobUpdateString blobInfo, IModelBlob blobModel, Action<ExpandoObject>? setParams)
+	{
+		ExpandoObject savePrms = [];
+		setParams?.Invoke(savePrms);
+
+		blobInfo.UserId = savePrms.Get<Int64>("UserId"); // required
+		blobInfo.TenantId = savePrms.Get<Int32?>("TenantId"); // optional
+		var key = savePrms.Get<String>("Key");
+		if (!String.IsNullOrEmpty(key))
+			blobInfo.Key = key; // optional
+
+		var saveProc = (blobModel?.UpdateBlobProcedure())
+			?? throw new DataServiceException($"UpdateBlobProcedure is null");
+
+		var output = await _dbContext.ExecuteAndLoadAsync<BlobUpdateString, BlobUpdateOutput>(blobModel.DataSource, saveProc, blobInfo)
+			?? throw new InvalidOperationException("Update result is null");
+
+		var result = new ExpandoObject()
+		{
+			{ "Id",    output.Id },
+			{ "Name",  blobInfo.Name ?? String.Empty },
+			{ "Mime",  blobInfo.Mime ?? String.Empty },
+		};
+		if (output.Token != null)
+			result.Add("Token", output.Token);
+		return result;
 	}
 
 	private async Task<ExpandoObject> SaveBlobInt(BlobUpdateInfo blobInfo, IModelBlob blobModel, Action<ExpandoObject>? setParams)

@@ -2,6 +2,10 @@
 =======================
 A2v10.ReportEngine.Pdf
 A2v10.Xaml.Report
+A2v10.Services
+A2v10.Platform
+A2v10.ReportEngine.Excel (new)
+A2v10.ReportEngine.Script (new)
 
 
 A2v10.Platform

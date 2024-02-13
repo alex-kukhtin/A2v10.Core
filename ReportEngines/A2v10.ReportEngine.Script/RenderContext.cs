@@ -8,9 +8,9 @@ using System.IO;
 using A2v10.Infrastructure;
 using A2v10.Xaml.Report;
 
-namespace A2v10.ReportEngine.Pdf;
+namespace A2v10.ReportEngine.Script;
 
-internal class RenderContext
+public class RenderContext
 {
 	private readonly IReportLocalizer _localizer;
 

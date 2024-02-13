@@ -12,8 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\A2v10.ReportEngine.Pdf\A2v10.ReportEngine.Pdf.csproj" />
-    <ProjectReference Include="..\A2v10.Xaml.Report\A2v10.Xaml.Report.csproj" />
+    <ProjectReference Include="..\A2v10.ReportEngine.Excel\A2v10.ReportEngine.Excel.csproj" />
   </ItemGroup>
 
 </Project>

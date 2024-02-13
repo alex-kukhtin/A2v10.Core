@@ -1,9 +1,6 @@
-﻿using System.Text.Encodings.Web;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Text.Unicode;
-
-using A2v10.ReportEngine.Pdf;
+﻿
+using A2v10.ReportEngine.Excel;
+using A2v10.Xaml.Report.Spreadsheet;
 
 namespace ReportEngineExcel;
 
@@ -16,16 +13,7 @@ internal class Program
 		var conv = new ExcelConvertor(fileName);
 		var res = conv.ParseFile();
 
-		var opts = new JsonSerializerOptions()
-		{
-			WriteIndented = true,
-			DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
-			Encoder = JavaScriptEncoder.Create(new UnicodeRange(0x0000, 0x7FFF))
-		};
-		opts.Converters.Add(new JsonStringEnumConverter());
-		opts.Converters.Add(new JsonThicknessConverter());
-
-		var json = JsonSerializer.Serialize(res, opts);
+		var json = SpreadsheetJson.ToJsonDebug(res);
 
 		Console.WriteLine(json);
 	}

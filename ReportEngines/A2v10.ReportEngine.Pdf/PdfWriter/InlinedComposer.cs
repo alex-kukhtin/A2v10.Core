@@ -1,4 +1,4 @@
-﻿// Copyright © 2022 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2022-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 
@@ -6,6 +6,7 @@ using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
 
 using A2v10.Xaml.Report;
+using A2v10.ReportEngine.Script;
 
 namespace A2v10.ReportEngine.Pdf;
 

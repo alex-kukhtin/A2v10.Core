@@ -2,7 +2,7 @@
 
 using System;
 
-namespace A2v10.ReportEngine.Pdf;
+namespace A2v10.ReportEngine.Excel;
 
 public static class CellRefs
 {

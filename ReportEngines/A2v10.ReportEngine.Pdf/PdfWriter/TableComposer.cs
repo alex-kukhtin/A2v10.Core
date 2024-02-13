@@ -11,6 +11,7 @@ using QuestPDF.Infrastructure;
 using QuestPDF.Elements.Table;
 
 using A2v10.Xaml.Report;
+using A2v10.ReportEngine.Script;
 
 namespace A2v10.ReportEngine.Pdf;
 

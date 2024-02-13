@@ -5,30 +5,27 @@
 		<Version>10.1.8230</Version>
 		<LangVersion>Latest</LangVersion>
 		<Nullable>enable</Nullable>
-		<AssemblyName>A2v10.ReportEngine.Pdf</AssemblyName>
+		<AssemblyName>A2v10.ReportEngine.Script</AssemblyName>
 		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
 		<Product>A2v10</Product>
-		<PackageId>A2v10.ReportEngine.Pdf</PackageId>
+		<PackageId>A2v10.ReportEngine.Script</PackageId>
 		<Authors>Oleksandr Kukhtin</Authors>
 		<Company>Oleksandr Kukhtin</Company>
 		<Description>PDF report engine for A2v10</Description>
 		<Copyright>Copyright © 2020-2024 Oleksandr Kukhtin. All rights reserved.</Copyright>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/alex-kukhtin/A2v10.Core</RepositoryUrl>
-		<PackageTags>A2v10 Reports Pdf</PackageTags>
+		<PackageTags>A2v10 Reports</PackageTags>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Jint" Version="3.0.0" />
-		<PackageReference Include="QuestPDF" Version="2023.12.5" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Platform\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
-		<ProjectReference Include="..\A2v10.ReportEngine.Script\A2v10.ReportEngine.Script.csproj" />
-		<ProjectReference Include="..\A2v10.ReportEngine.Excel\A2v10.ReportEngine.Excel.csproj" />
 		<ProjectReference Include="..\A2v10.Xaml.Report\A2v10.Xaml.Report.csproj" />
 	</ItemGroup>
 
@@ -46,9 +43,5 @@
 
 	<ItemGroup>
 		<None Include="README.md" Pack="true" PackagePath="\" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Utlls\" />
 	</ItemGroup>
 </Project>

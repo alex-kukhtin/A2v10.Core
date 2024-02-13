@@ -3,6 +3,7 @@
 using System.Globalization;
 
 using A2v10.ReportEngine.Pdf;
+using A2v10.ReportEngine.Script;
 
 namespace A2v10.Pdf.Tests;
 

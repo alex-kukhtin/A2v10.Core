@@ -93,7 +93,7 @@ public record Thickness
 		var v = Vertical();
 		if (v != null && h != null)
 			return $"{v},{h}";
-		return $"{Left},{Top},{Right},{Bottom}";
+		return $"{Top},{Right},{Bottom},{Left}";
 	}
 }
 
