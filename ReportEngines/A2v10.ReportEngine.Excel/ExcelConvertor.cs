@@ -67,16 +67,25 @@ public class StyleRefs
 	}
 
 
-	public Single? GetFont(UInt32? id)
+	public (Single? fontSize, Boolean bold, Boolean italic, Boolean underline)? GetFont(UInt32? id)
 	{
 		if (id == null)
 			return null;
 		var f = _fonts[id.Value];
-		if (f.FontSize?.Val == _defaultFontSize?.Val)
-			return null;
-		if (f == null || f.FontSize == null || f.FontSize.Val == null)
-			return null;
-		return (Single) f.FontSize.Val.Value;
+
+		Boolean bold = false;
+		Boolean italic = false;
+		Boolean underline = false;
+		Single? fontSize = null;
+		if (f.Bold?.Val?.Value == true)
+			bold = true;
+		if (f.Italic?.Val?.Value == true)
+			italic = true;
+		if (f.Underline?.Val?.Value == UnderlineValues.Single)
+			underline = true;
+		if (f.FontSize?.Val != _defaultFontSize?.Val)
+			fontSize = (Single?) f.FontSize?.Val?.Value;
+		return (fontSize, bold, italic, underline);
 	}
 
 	public String? GetFill(UInt32? id)
@@ -88,7 +97,7 @@ public class StyleRefs
 			return "f5f5f5";
 		return null;
 	}
-	private String Length(EnumValue<BorderStyleValues>? val) 
+	private static String Length(EnumValue<BorderStyleValues>? val) 
 	{
 		if (val == null)
 			return "0";
@@ -284,7 +293,7 @@ public class ExcelConvertor
 		Int32 exclPos = showRef.IndexOf('!');
 		if (exclPos == -1)
 			return null;
-		String shtName = showRef[..exclPos];
+		// String shtName = showRef[..exclPos];
 		String shtRef = showRef[(exclPos + 1)..];
 		Int32 colonPos = shtRef.IndexOf(':');
 		if (colonPos == -1)
@@ -373,6 +382,9 @@ public class ExcelConvertor
 			return null;
 		String? background = null;
 		Single? fontSize = null;
+		Boolean? fontBold = null;
+		Boolean? fontItalic = null;
+		Boolean? fontUnderline = null;
 		Thickness? border = null;
 		TextAlign? align = null;
 		VertAlign? vAlign = null;
@@ -384,7 +396,17 @@ public class ExcelConvertor
 			border = refs.GetBorder(cf.BorderId?.Value);
 
 		if (cf?.ApplyFont?.Value == true)
-			fontSize = refs.GetFont(cf.FontId?.Value);
+		{
+			var ff = refs.GetFont(cf.FontId?.Value);
+			if (ff != null)
+			{
+				var fv = ff.Value;
+				fontSize = fv.fontSize;
+				fontBold = fv.bold;
+				fontItalic = fv.italic;	
+				fontUnderline = fv.underline;	
+			}
+		}
 
 		if (cf?.ApplyNumberFormat?.Value  == true)
 		{
@@ -410,12 +432,16 @@ public class ExcelConvertor
 			}
 		}
 
-		if (background == null && fontSize == null && border == null && align == null && vAlign == null)
+		if (background == null && fontSize == null && border == null && align == null && 
+				vAlign == null && fontBold == null && fontItalic == null && fontUnderline == null)
 			return null;
 
 		return new XStyle()
 		{
 			FontSize = fontSize,	
+			Bold = fontBold,
+			Italic = fontItalic,
+			Underline = fontUnderline,
 			Background = background,
 			Border = border,
 			Align = align,

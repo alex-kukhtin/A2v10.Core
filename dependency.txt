@@ -6,7 +6,8 @@ A2v10.Services
 A2v10.Platform
 A2v10.ReportEngine.Excel (new)
 A2v10.ReportEngine.Script (new)
-
+A2v10.ViewEngine.Xaml
+A2v10.Identity.Jwt
 
 A2v10.Platform
 	A2v10.Identity.Core
