@@ -26,10 +26,8 @@ namespace A2v10.ReportEngine.Excel;
 
 /* TODO:
  5. Styles (Format)
- 9. Почему-то не выравнивается Unit
-10. Диапазон колонок - для автоформата по ширине
+ 0. Диапазон колонок - для автоформата по ширине
 11. Не ставится Title
-12. Print, Download - GPF
 13. Download as Excel (в обратную сторону)
  */
 
@@ -67,21 +65,21 @@ public class StyleRefs
 	}
 
 
-	public (Single? fontSize, Boolean bold, Boolean italic, Boolean underline)? GetFont(UInt32? id)
+	public (Single? fontSize, Boolean? bold, Boolean? italic, Boolean? underline)? GetFont(UInt32? id)
 	{
 		if (id == null)
 			return null;
 		var f = _fonts[id.Value];
 
-		Boolean bold = false;
-		Boolean italic = false;
-		Boolean underline = false;
+		Boolean? bold = null;
+		Boolean? italic = null;
+		Boolean? underline = null;
 		Single? fontSize = null;
-		if (f.Bold?.Val?.Value == true)
+		if (f.Bold != null)
 			bold = true;
-		if (f.Italic?.Val?.Value == true)
+		if (f.Italic != null)
 			italic = true;
-		if (f.Underline?.Val?.Value == UnderlineValues.Single)
+		if (f.Underline != null)
 			underline = true;
 		if (f.FontSize?.Val != _defaultFontSize?.Val)
 			fontSize = (Single?) f.FontSize?.Val?.Value;
@@ -420,7 +418,7 @@ public class ExcelConvertor
 			{
 				if (a.Horizontal == HorizontalAlignmentValues.Right)
 					align = TextAlign.Right;
-				else if (a.Horizontal != HorizontalAlignmentValues.Center)
+				else if (a.Horizontal == HorizontalAlignmentValues.Center)
 					align = TextAlign.Center;
 			}
 			if (a?.Vertical != null)
