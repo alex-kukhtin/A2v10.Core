@@ -5,6 +5,7 @@
 
 @group-bk-color: var(--neutral100);
 @group-brd-color: var(--neutral300);
+@list-brd-color: var(--neutral300);
 
 .a2-list {
 	list-style-type: none;
@@ -85,20 +86,33 @@
 	}
 
 	&.border, &.border-all {
-		border: 1px solid @light-gray-color;
+		border: 1px solid @list-brd-color;
+		border-radius: @control-brd-radius;
+		padding: .5rem;
+
+		li.group {
+			margin: .25rem 0;
+			border: 1px solid var(--neutral200);
+			border-radius: @control-brd-radius;
+			padding: 8px 8px 8px 10px;
+		}
+
+		li.group:first-child {
+			margin-top: 0;
+		}
 	}
 
 	&.border-top {
-		border-top: 1px solid @light-gray-color;
+		border-top: 1px solid @list-brd-color;
 	}
 
 	&.border-bottom {
-		border-bottom: 1px solid @light-gray-color;
+		border-bottom: 1px solid @list-brd-color;
 	}
 
 	&.border-top-bottom {
-		border-top: 1px solid @light-gray-color;
-		border-bottom: 1px solid @light-gray-color;
+		border-top: 1px solid @list-brd-color;
+		border-bottom: 1px solid @list-brd-color;
 	}
 
 	&.two-columns-grid {

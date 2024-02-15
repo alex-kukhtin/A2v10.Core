@@ -29,6 +29,11 @@ namespace A2v10.ReportEngine.Excel;
  0. Диапазон колонок - для автоформата по ширине
 11. Не ставится Title
 13. Download as Excel (в обратную сторону)
+14. Таки пределать {} на Expando.Get и сделать в конце формат
+    {Document.Sum:spell_ua_uah} {Document.Date:dd.mm.yyyy}
+    А если в скобках, то это выражение JS
+	{(spellMoney(Document.Sum, 'UAH'))}
+    Попробовать сделать еще одну странцу Scripts - и в нее можно вставить код на JS
  */
 
 /*
