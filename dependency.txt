@@ -1,16 +1,5 @@
-2024-02-07 (next: 8243)
+2024-02-16 (next: 8244)
 =======================
-A2v10.ReportEngine.Pdf
-A2v10.Xaml.Report
-A2v10.Services
-A2v10.Platform
-A2v10.ReportEngine.Excel (new)
-A2v10.ReportEngine.Script (new)
-A2v10.ViewEngine.Xaml
-A2v10.Identity.Jwt
-A2v10.Web.Assets
-A2v10.App.Assets
-
 
 A2v10.Platform
 	A2v10.Identity.Core

@@ -25,15 +25,8 @@ using Thickness = A2v10.Xaml.Report.Thickness;
 namespace A2v10.ReportEngine.Excel;
 
 /* TODO:
- 5. Styles (Format)
- 0. Диапазон колонок - для автоформата по ширине
-11. Не ставится Title
 13. Download as Excel (в обратную сторону)
-14. Таки пределать {} на Expando.Get и сделать в конце формат
-    {Document.Sum:spell_ua_uah} {Document.Date:dd.mm.yyyy}
-    А если в скобках, то это выражение JS
-	{(spellMoney(Document.Sum, 'UAH'))}
-    Попробовать сделать еще одну странцу Scripts - и в нее можно вставить код на JS
+15. Попробовать сделать еще одну странцу Scripts - и в нее можно вставить код на JS
  */
 
 /*
@@ -46,7 +39,8 @@ public class StyleRefs
 	private readonly Border[] _borders;
 	private readonly Font[] _fonts;
 	private readonly Fill[] _fills;
-	private readonly FontSize? _defaultFontSize;	
+	private readonly FontSize? _defaultFontSize;
+	private readonly Dictionary<String, NumberingFormat> _formats;
 
 	const String THIN_BORDER = ".2";
 	const String MEDIUM_BORDER = "1";
@@ -56,6 +50,9 @@ public class StyleRefs
 		_fonts = stylesheet.Descendants<Font>().ToArray();
 		_fills = stylesheet.Descendants<Fill>().ToArray();	
 		_defaultFontSize = _fonts.Length > 0 ? _fonts[0].FontSize : null;
+		_formats = stylesheet.Descendants<NumberingFormat>()
+			.GroupBy(x => x.NumberFormatId?.Value.ToString() ?? String.Empty)
+			.ToDictionary(g => g.Key, g => g.First());
 	}
 
 	public Thickness? GetBorder(UInt32? id)
@@ -69,6 +66,17 @@ public class StyleRefs
 		return Thickness.FromString(bx);
 	}
 
+	public String? GetFormat(UInt32Value? id)
+	{
+		if (id == null)
+			return null;
+		var f = ExcelFormats.GetNumberFormat(id);
+		if (f != null)
+			return f;
+		if (id != null && _formats.TryGetValue(id.ToString()!, out NumberingFormat? nf) && nf != null)
+			return nf.FormatCode?.Value;
+		return null;
+	}
 
 	public (Single? fontSize, Boolean? bold, Boolean? italic, Boolean? underline)? GetFont(UInt32? id)
 	{
@@ -116,6 +124,8 @@ public class ExcelConvertor
 	private readonly String _fileName;
 	private readonly Stream? _stream;
 
+	private String? _fitColumn = null;
+
 	private const Single CHAR_WIDTH = 8;
 
 	public ExcelConvertor(String fileName)
@@ -157,15 +167,7 @@ public class ExcelConvertor
 			?? throw new InvalidOperationException($"The SharedStringTablePart does not have a SharedStringTable");
 
 		var stylesPart = workBookPart.WorkbookStylesPart;
-		// This formats is NUMBER, not standard!
 		var styleSheet = stylesPart?.Stylesheet;
-		if (styleSheet != null)
-		{
-			var numFormats = stylesPart?.Stylesheet
-				.Descendants<NumberingFormat>()?
-				.GroupBy(x => x.NumberFormatId?.Value.ToString() ?? String.Empty)
-				.ToDictionary(g => g.Key, g => g.First());
-		}
 
 		var dim = workSheetPart.Worksheet.SheetDimension?.Reference?.ToString()
 			?? throw new InvalidOperationException("Invalid SheetDimension");
@@ -206,6 +208,8 @@ public class ExcelConvertor
 				var df = CreateRange(defName);
 				if (df != null)
 					wb.Ranges.Add(df);
+				else
+					_fitColumn = GetFitRange(defName);
 			}
 		}
 
@@ -240,9 +244,11 @@ public class ExcelConvertor
 			if (col.Min != null && col.Max != null && col.Min.Value == col.Max.Value)
 			{
 				var colRef = CellRefs.Index2Col(col.Min.Value - 1);
-				var xc = CreateColumn(col);
+				var xc = CreateColumn(col, colRef == _fitColumn);
 				if (xc != null)
+				{
 					wb.Columns.Add(colRef, xc);
+				}
 			}
 		}
 
@@ -283,6 +289,41 @@ public class ExcelConvertor
 			}
 		}
 		return ws;
+	}
+
+	static String? GetFitRange(DefinedName dn)
+	{
+		if (dn == null)
+			return null;
+		String? name = dn.Name;
+		if (name == null)
+			return null;
+		String showRef = dn.Text;
+		Int32 exclPos = showRef.IndexOf('!');
+		if (exclPos == -1)
+			return null;
+		// String shtName = showRef[..exclPos];
+		String shtRef = showRef[(exclPos + 1)..];
+		Int32 colonPos = shtRef.IndexOf(':');
+		if (colonPos == -1)
+			return null;
+		string startRef = shtRef[..colonPos]; // link to the first line of the range
+		String endRef = shtRef[(colonPos + 1)..];  // link to the second line of the range
+		if (startRef.Length < 2)
+			return null;
+		if (endRef.Length < 2)
+			return null;
+		String? startCol = null;
+		String? endCol = null;
+		if (startRef[0] == '$')
+		{
+			startCol = startRef[1..];
+		}
+		if (endRef[0] == '$')
+		{
+			endCol = endRef[1..];
+		}
+		return startCol == endCol ? startCol : null;
 	}
 
 	static XRange? CreateRange(DefinedName dn)
@@ -347,7 +388,7 @@ public class ExcelConvertor
 		return xcell;
 	}
 
-	static XColumn? CreateColumn(Column? col)
+	static XColumn? CreateColumn(Column? col, Boolean fit)
 	{
 		if (col == null) 
 			return null;
@@ -361,7 +402,7 @@ public class ExcelConvertor
 				ptW = (Single) pxW * 72F / 96F;
 			}
 		}
-		return new XColumn() { Width = ptW };
+		return new XColumn() { Width = fit ? -1 : ptW };
 	}
 
 	static XRow? CreateRow(Row? row, DoubleValue? defRowHeight)
@@ -391,6 +432,7 @@ public class ExcelConvertor
 		Thickness? border = null;
 		TextAlign? align = null;
 		VertAlign? vAlign = null;
+		String? format = null;
 
 		if (cf?.ApplyFill?.Value == true)
 			background = refs.GetFill(cf.FillId?.Value);
@@ -413,7 +455,7 @@ public class ExcelConvertor
 
 		if (cf?.ApplyNumberFormat?.Value  == true)
 		{
-			// apply format
+			format = refs.GetFormat(cf.NumberFormatId);
 		}
 
 		if (cf?.ApplyAlignment?.Value == true)
@@ -436,7 +478,8 @@ public class ExcelConvertor
 		}
 
 		if (background == null && fontSize == null && border == null && align == null && 
-				vAlign == null && fontBold == null && fontItalic == null && fontUnderline == null)
+			vAlign == null && fontBold == null && fontItalic == null && fontUnderline == null &&
+			format == null)
 			return null;
 
 		return new XStyle()
@@ -448,7 +491,8 @@ public class ExcelConvertor
 			Background = background,
 			Border = border,
 			Align = align,
-			VAlign = vAlign
+			VAlign = vAlign,
+			Format = format,
 		};
 	}
 }

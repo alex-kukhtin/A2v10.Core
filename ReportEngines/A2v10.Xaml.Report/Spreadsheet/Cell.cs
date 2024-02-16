@@ -39,6 +39,8 @@ public class Cell : XamlElement
 			rs.Underline = style.Underline;
 		if (style.Color != null)
 			rs.Color = style.Color;
+		if (style.Format != null)	
+			rs.Format = style.Format;
 	}
 
 	public void OnCreate()

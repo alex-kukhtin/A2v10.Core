@@ -1,21 +1,16 @@
 ﻿// Copyright © 2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
-using System.Collections.Generic;
-using System.Dynamic;
 using System.Linq;
-
-using Jint.Native;
+using System.Dynamic;
+using System.Collections.Generic;
 
 using A2v10.Xaml.Report.Spreadsheet;
 using A2v10.ReportEngine.Script;
 
+
 namespace A2v10.ReportEngine.Excel;
 
-/*
- * TODO: 
- * 7. Page.Title - {}
- */
 public record WorkbookCell
 {
 	public WorkbookCell(Cell cell)
@@ -37,7 +32,7 @@ public record WorkbookCell
 }
 
 public record RealRow(UInt32 CellRow, ExpandoObject? Item = null);
-public class WorkbookHelper
+public partial class WorkbookHelper
 {
 	// 1pt = 1/72in, 1in = 96px
 
@@ -84,21 +79,14 @@ public class WorkbookHelper
 		}
 	}
 
-	private WorkbookCell CreateWorkbookCell(Cell cell, ExpandoObject? item, JsValue? accessFunc)
+	private WorkbookCell CreateWorkbookCell(Cell cell, ExpandoObject? item)
 	{
 		var wbCell = new WorkbookCell(cell);
 		var val = cell.Value;
 		if (String.IsNullOrEmpty(val))
 			return wbCell;
-		val = val.Trim();
-		if (item != null && accessFunc != null)
-			wbCell.Value = _context.ValueToString(_context.Engine.Invoke(accessFunc, item, null),
-				cell.DataType, cell.Format);
-        else if (val.StartsWith('{') && val.EndsWith('}')) {
-			wbCell.Value = _context.ValueToString(_context.Engine.EvaluateValue(val[1..^1]),
-				cell.DataType, cell.Format);
-		}
-        return wbCell;
+		wbCell.Value = _context.Resolve(val, item ?? _context.DataModel, cell.DataType, cell.Format ?? cell.RuntimeStyle?.Format);
+		return wbCell;
 	}
 
 	private (WorkbookCell?[,] mx, List<RealRow> rows) CreateCellMatrix()
@@ -113,11 +101,8 @@ public class WorkbookHelper
 				var cellRef = $"{CellRefs.Index2Col(c)}{rr.CellRow}";
 				if (_workbook.Cells.TryGetValue(cellRef, out var wbCell))
 				{
-					JsValue? accessFunc = null;
-					if (rr.Item != null)
-						accessFunc = _context.Engine.CreateAccessFunctionBracess(wbCell.Value);
 					if (mx[r, c] == null) // may be already created with colspan
-						mx[r, c] = CreateWorkbookCell(wbCell, rr.Item, accessFunc);
+						mx[r, c] = CreateWorkbookCell(wbCell, rr.Item);
 					if (wbCell.ColSpan > 1 && wbCell.RowSpan > 1)
 					{
 						for (var cj = c + 1; cj < c + wbCell.ColSpan; cj++)

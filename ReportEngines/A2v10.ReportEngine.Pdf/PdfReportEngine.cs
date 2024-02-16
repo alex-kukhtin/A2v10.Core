@@ -13,6 +13,7 @@ using A2v10.Xaml.Report;
 
 using A2v10.Xaml.Report.Spreadsheet;
 using A2v10.ReportEngine.Script;
+using DocumentFormat.OpenXml.Bibliography;
 
 namespace A2v10.ReportEngine.Pdf;
 
@@ -56,11 +57,18 @@ public class PdfReportEngine : IReportEngine
 
 		Page page = readFromModel ? ReadTemplateFromDb(reportInfo) : ReadTemplate(repPath);
 
+		if (page.Title == null && reportInfo.Name != null)
+			page.Title = reportInfo.Name;
+
 		var name = reportInfo.DataModel?.Root?.Resolve(reportInfo.Name) ?? "report";
 
 		var model = reportInfo.DataModel?.Root ?? [];
 		var context = new RenderContext(repPath, _localizer, model, page.Code);
 		var doc = new ReportDocument(page, context);
+
+		var resultTitle = doc.GetMetadata().Title;
+		if (!String.IsNullOrEmpty(resultTitle))
+			name = resultTitle;
 
 		using MemoryStream outputStream = new();
 

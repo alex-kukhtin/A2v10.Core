@@ -25,7 +25,7 @@ internal class ReportDocument(Page page, RenderContext context) : IDocument
 	public DocumentMetadata GetMetadata()
 	{
 		var title = _context.GetValueAsString(_page, "Title");
-		title ??= _page.Title;
+		title ??= _context.ResolveModel(_page.Title);
 		var md = DocumentMetadata.Default;
 		md.Title = title;
 		return md;

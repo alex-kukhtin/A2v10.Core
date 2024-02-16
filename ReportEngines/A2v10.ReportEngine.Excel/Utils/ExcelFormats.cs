@@ -1,16 +1,29 @@
-﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2024 Oleksandr Kukhtin. All rights reserved.
 
-using System.Collections.ObjectModel;
+using System;
+using System.Collections.Generic;
 
 using DocumentFormat.OpenXml;
 
-namespace A2v10.Services.Interop;
-
+namespace A2v10.ReportEngine.Excel;
 internal static class ExcelFormats
 {
 	//// https://msdn.microsoft.com/en-GB/library/documentformat.openxml.spreadsheet.numberingformat(v=office.14).aspx
-	private static readonly ReadOnlyDictionary<UInt32, String> DateFormatDictionary = new(new Dictionary<UInt32, String>()
+	private static readonly Dictionary<UInt32, String> ExcelFormatDictionary = new()
 	{
+		// GENERAL
+		[0] = "General",
+		[1] = "0",
+		[2] = "0.00",
+		[3] = "#,##0",
+		[4] = "#,##0.00",
+		[11] = "0.00E+00",
+		[37] = "#,##0 ;(#,##0)",
+		[38] = "#,##0 ;[Red](#,##0)",
+		[39] = "#,##0.00;(#,##0.00)",
+		[40] = "#,##0.00;[Red](#,##0.00)",
+		[48] = "##0.0E+0",
+		// DATE TIME
 		[14] = "dd/MM/yyyy",
 		[15] = "d-MMM-yy",
 		[16] = "d-MMM",
@@ -54,36 +67,14 @@ internal static class ExcelFormats
 		[185] = "MMM-dd",
 		[186] = "M/d/yyyy",
 		[187] = "d-MMM-yyyy"
-	});
+	};
 
-	private static readonly ReadOnlyDictionary<UInt32, String> NumberFormatDictionary = new(new Dictionary<UInt32, String>()
-	{
-		[0] = "General",
-		[1] = "0",
-		[2] = "0.00",
-		[3] = "#,##0",
-		[4] = "#,##0.00",
-		[11] = "0.00E+00",
-		[37] = "#,##0 ;(#,##0)",
-		[38] = "#,##0 ;[Red](#,##0)",
-		[39] = "#,##0.00;(#,##0.00)",
-		[40] = "#,##0.00;[Red](#,##0.00)",
-		[48] = "##0.0E+0"
-	});
-
-	public static String? GetDateTimeFormat(UInt32Value? numberFormatId)
+	public static String? GetNumberFormat(UInt32Value? numberFormatId)
 	{
 		if (numberFormatId is null)
 			return null;
-		if (DateFormatDictionary.TryGetValue(numberFormatId.Value, out String? format))
-			return format;
+		if (ExcelFormatDictionary.TryGetValue(numberFormatId.Value, out String? value))
+				return value;
 		return null;
-	}
-
-	public static Boolean IsNumberFormat(UInt32Value? numberFormatId)
-	{
-		if (numberFormatId is null) 
-			return false;
-		return NumberFormatDictionary.ContainsKey(numberFormatId.Value);
 	}
 }

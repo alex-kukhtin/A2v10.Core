@@ -25,10 +25,6 @@ public class ImportExcelReportHandler(IServiceProvider _serviceProvider) : IClrI
 		var result = cnv.ParseFile();
 		var json = SpreadsheetJson.ToJson(result);	
 
-		var br = new InvokeBlobResult()
-		{
-			Stream = Encoding.UTF8.GetBytes(json)
-		};
 		return Task.FromResult<Object>(json);
 	}
 }

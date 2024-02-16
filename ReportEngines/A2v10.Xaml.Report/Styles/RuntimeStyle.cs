@@ -1,4 +1,4 @@
-﻿// Copyright © 2022 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2022-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -20,6 +20,7 @@ public class RuntimeStyle
 	public Thickness? Padding { get; set; }
 	public Thickness? Border { get; set; }
 	public String? Color { get; set; }
+	public String? Format { get; set; }
 
 	public RuntimeStyle Clone()
 	{
@@ -35,7 +36,8 @@ public class RuntimeStyle
 			Bold = this.Bold,
 			Italic = this.Italic,
 			Underline = this.Underline,
-			Color = this.Color
+			Color = this.Color,
+			Format = this.Format
 		};
 	}
 }

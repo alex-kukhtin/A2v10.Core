@@ -1,21 +1,28 @@
-﻿// Copyright © 2022-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2022-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+using System.Collections.Concurrent;
 using System.Dynamic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+
+using Jint.Native;
 
 using A2v10.Infrastructure;
 using A2v10.Xaml.Report;
 
 namespace A2v10.ReportEngine.Script;
 
-public class RenderContext
+public partial class RenderContext
 {
 	private readonly IReportLocalizer _localizer;
 
 	private readonly CultureInfo _formatProvider;
 	private readonly String _templatePath;
+	private readonly ConcurrentDictionary<String, JsValue> _accessFuncs = [];
 
 	public RenderContext(String templatePath, IReportLocalizer localizer, ExpandoObject model, String? code)
 	{
@@ -116,6 +123,94 @@ public class RenderContext
 			}
 		}
 		return null;
+	}
+
+	private static DataType MatchDataType(DataType dt, Object? value)
+	{
+		if (dt != DataType.String)
+			return dt;
+		return value switch
+		{
+			Decimal => DataType.Currency,
+			Single or Double => DataType.Number,
+			DateTime => DataType.DateTime,
+			_ => dt
+		};
+	}
+
+	private JsValue? GetOrCreateAccessFunc(String source)
+	{
+		if (_accessFuncs.TryGetValue(source, out JsValue? func))
+			return func;
+		func = Engine.CreateAccessFunction(source[1..^1]);
+		_accessFuncs.TryAdd(source, func);
+		return func;
+	}
+
+
+	const String RESOLVE_PATTERN = "\\{(.+?)\\}";
+#if NET7_0_OR_GREATER
+	[GeneratedRegex(RESOLVE_PATTERN, RegexOptions.None, "en-US")]
+	private static partial Regex ResolveRegex();
+#else
+	private static Regex RESOLVEREGEX => new(RESOLVE_PATTERN, RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase );
+	private static Regex ResolveRegex() => RESOLVEREGEX;
+#endif
+
+	public String? Resolve(String? source, ExpandoObject? item, DataType dataType, String? format)
+	{
+		if (String.IsNullOrEmpty(source))
+			return source;
+		var ms = ResolveRegex().Matches(source);
+		if (ms.Count == 0)
+			return source;
+		if (item == null)
+			return null;
+		var sb = new StringBuilder(source);
+		foreach (Match m in ms.Cast<Match>())
+		{
+			String? valResult = null;
+			String key = m.Groups[1].Value;
+			if (key.StartsWith('(') && key.EndsWith(')'))
+			{
+				// JS expression
+				var f = GetOrCreateAccessFunc(key);
+				if (f != null)
+				{
+					var valObj = Engine.Invoke(f, item, null);
+					valResult = ValueToString(valObj, MatchDataType(dataType, valObj), format);
+				}
+			}
+			else
+			{
+				if (key.Contains(':'))
+				{
+					var spos = key.IndexOf(':');
+					var exp = key[..spos];
+					format = key[(spos + 1)..];
+					key = exp;
+				}
+				var valObj = item.Eval<Object>(key);
+				valResult = ValueToString(valObj, MatchDataType(dataType, valObj), format);
+			}
+			if (ms.Count == 1 && m.Groups[0].Value == source)
+				return valResult ?? String.Empty; // single element
+			sb.Replace(m.Value, valResult);
+
+		}
+		return sb.ToString();
+	}
+
+	public String? ResolveModel(String? value)
+	{
+		if (value == null)
+			return null;
+		var sb = new StringBuilder(value);
+		sb.Replace("{{", "{");
+		sb.Replace("}}", "}");
+		var rx =  Resolve(sb.ToString(), DataModel, DataType.String, null);
+		// inner expressions!!!!
+		return Resolve(rx, DataModel, DataType.String, null);
 	}
 
 	public Boolean IsVisible(XamlElement elem)

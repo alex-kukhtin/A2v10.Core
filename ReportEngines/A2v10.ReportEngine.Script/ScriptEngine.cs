@@ -53,18 +53,6 @@ public class ScriptEngine
 		return _engine.Evaluate(expression).ToObject();
 	}
 
-	public JsValue? CreateAccessFunctionBracess(String? expression)
-	{
-		if (expression == null) 
-			return null;
-		var text = expression.Trim();
-		if (text.StartsWith('{') && text.EndsWith('}'))
-		{
-			return CreateAccessFunction(text[1..^1]);
-		}
-		return null;
-	}
-
 	public JsValue CreateAccessFunction(String expression)
 	{
 		var exp = $"_elem_ => _elem_.{expression}";
