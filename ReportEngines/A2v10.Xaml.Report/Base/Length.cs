@@ -40,8 +40,9 @@ public record Length
 	public override string ToString()
 	{
 		if (Unit == "pt")
-			return Value.ToString();
-		return $"{Value}{Unit}";
+			return Value.ToString(CultureInfo.InvariantCulture);
+		FormattableString fs = $"{Value}{Unit}";
+		return fs.ToString(CultureInfo.InvariantCulture);
 	}
 }
 
