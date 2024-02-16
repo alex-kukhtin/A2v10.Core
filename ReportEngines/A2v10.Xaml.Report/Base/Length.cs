@@ -28,7 +28,7 @@ public record Length
 	public static Length FromString(String strVal)
 	{
 		strVal = strVal.Trim().ToLowerInvariant().Replace("*", "fr");
-		if (Single.TryParse(strVal, out Single tryResult))
+		if (Single.TryParse(strVal, NumberStyles.Any, CultureInfo.InvariantCulture, out Single tryResult))
 			return new Length() { Value = tryResult, Unit = "pt" };
 		var ext = strVal.Substring(strVal.Length - 2, 2);
 		var val = strVal[..^2];

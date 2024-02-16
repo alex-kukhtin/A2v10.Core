@@ -3040,6 +3040,10 @@ pre.a2-code {
   overflow-y: auto;
   position: relative;
   background-color: var(--bgControl);
+  --header-height: 36px;
+}
+.data-grid-container.compact {
+  --header-height: 31px;
 }
 .data-grid-container.bordered {
   border: 1px solid var(--neutral300);
@@ -3059,7 +3063,7 @@ pre.a2-code {
   border-left: 1px solid var(--neutral300);
   width: 0;
   z-index: 1;
-  height: 36px;
+  height: var(--header-height);
 }
 table.data-grid {
   cursor: default;
@@ -3129,7 +3133,9 @@ table.data-grid > thead > tr > th {
 }
 table.data-grid > thead > tr > th .h-holder {
   position: relative;
-  padding: 0.5rem;
+  padding: 0 0.5rem;
+  display: inline-flex;
+  align-items: center;
 }
 table.data-grid > thead > tr > th .h-holder > span {
   word-break: unset;
@@ -3154,13 +3160,13 @@ table.data-grid > thead > tr > th.sort.desc .h-holder:after {
   content: '';
   display: inline-block;
   border-top-color: #999;
-  vertical-align: bottom;
+  margin-top: 6px;
 }
 table.data-grid > thead > tr > th.sort.asc .h-holder:after {
   content: '';
   display: inline-block;
   border-bottom-color: #999;
-  vertical-align: 2px;
+  margin-bottom: 4px;
 }
 table.data-grid tr.active {
   background-color: var(--activeBkLight) !important;
@@ -3337,13 +3343,13 @@ table.data-grid > tbody > tr.bold > td {
   height: 100%;
   overflow: hidden;
   position: relative;
-  min-height: 36px;
+  min-height: var(--header-height);
 }
 .data-grid-container.fixed-header > .data-grid-body.fixed-header {
-  margin-top: 36px;
+  margin-top: var(--header-height);
   overflow: hidden;
   overflow-y: auto;
-  height: calc(100% - 2.6rem);
+  height: calc(100% - var(--header-height));
 }
 .data-grid-container.fixed-header > .data-grid-body.fixed-header > table > thead {
   height: 0;
@@ -3383,7 +3389,7 @@ table.data-grid > tbody > tr.bold > td {
   top: 0;
   background-color: inherit;
   width: 100%;
-  min-height: 36px;
+  min-height: var(--header-height);
   margin-left: -1px;
   border-left: 1px solid var(--neutral300);
   border-bottom: 1px solid var(--neutral300);
@@ -3403,13 +3409,13 @@ table.data-grid > tbody > tr.bold > td {
 }
 .data-grid-container > .data-grid-body > .data-grid-empty {
   position: absolute;
-  top: 36px;
+  top: var(--header-height);
   left: 0;
   right: 0;
   margin-top: 1px;
 }
 .data-grid-container.data-grid-light.fixed-header > .data-grid-body.fixed-header {
-  margin-top: 36px;
+  margin-top: var(--header-height);
   height: calc(100% - 36px);
 }
 .data-grid-container.data-grid-light table.data-grid th {
@@ -3687,8 +3693,16 @@ tr:hover .commandbar.visible-hover {
 .tree-view li.expanded > .overlay > .toggle:after {
   content: "\e9a4";
 }
+.tree-view li.group > .overlay {
+  font-weight: 600;
+}
 .tree-view.no-indent li > ul {
   padding-left: 0;
+}
+.tree-view.border {
+  border-radius: 4px;
+  padding: 0.5rem;
+  border: 1px solid var(--neutral300);
 }
 .tree-view.tree-view-side-bar-menu {
   background-color: #9ab3e0;
@@ -4081,17 +4095,30 @@ tr:hover .commandbar.visible-hover {
 }
 .a2-list.border,
 .a2-list.border-all {
-  border: 1px solid var(--neutral50);
+  border: 1px solid var(--neutral300);
+  border-radius: 4px;
+  padding: 0.5rem;
+}
+.a2-list.border li.group,
+.a2-list.border-all li.group {
+  margin: 0.25rem 0;
+  border: 1px solid var(--neutral200);
+  border-radius: 4px;
+  padding: 8px 8px 8px 10px;
+}
+.a2-list.border li.group:first-child,
+.a2-list.border-all li.group:first-child {
+  margin-top: 0;
 }
 .a2-list.border-top {
-  border-top: 1px solid var(--neutral50);
+  border-top: 1px solid var(--neutral300);
 }
 .a2-list.border-bottom {
-  border-bottom: 1px solid var(--neutral50);
+  border-bottom: 1px solid var(--neutral300);
 }
 .a2-list.border-top-bottom {
-  border-top: 1px solid var(--neutral50);
-  border-bottom: 1px solid var(--neutral50);
+  border-top: 1px solid var(--neutral300);
+  border-bottom: 1px solid var(--neutral300);
 }
 .a2-list.two-columns-grid {
   display: grid;
