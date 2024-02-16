@@ -92,8 +92,12 @@ public record Thickness
 		var h = Horizontal();
 		var v = Vertical();
 		if (v != null && h != null)
-			return $"{v},{h}";
-		return $"{Top},{Right},{Bottom},{Left}";
+		{
+			FormattableString fs = $"{v},{h}";
+			return fs.ToString(CultureInfo.InvariantCulture);
+		}
+		FormattableString fs1 = $"{Top},{Right},{Bottom},{Left}";
+		return fs1.ToString(CultureInfo.InvariantCulture);
 	}
 }
 
