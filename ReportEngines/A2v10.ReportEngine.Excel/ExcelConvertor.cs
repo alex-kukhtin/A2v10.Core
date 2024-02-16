@@ -4,6 +4,7 @@ using System;
 using System.Linq;
 using System.IO;
 using System.Collections.Generic;
+using System.Globalization;
 
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
@@ -196,7 +197,8 @@ public class ExcelConvertor
 			var rm = mg.Right?.Value * 72F ?? 0;
 			var tm = mg.Top?.Value * 72F ?? 0;
 			var bm = mg.Bottom?.Value * 72F ?? 0;
-			ws.Margin = Thickness.FromString($"{tm},{rm},{bm},{lm}");
+			FormattableString fs = $"{tm},{rm},{bm},{lm}";
+			ws.Margin = Thickness.FromString(fs.ToString(CultureInfo.InvariantCulture));
 		}
 
 		var defNames = workBook?.DefinedNames?.Elements<DefinedName>();
