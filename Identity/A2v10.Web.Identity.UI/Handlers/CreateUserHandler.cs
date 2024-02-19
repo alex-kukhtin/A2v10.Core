@@ -1,8 +1,9 @@
-﻿// Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2023-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Dynamic;
 using System.Threading.Tasks;
+using System.Linq;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -10,8 +11,7 @@ using Microsoft.AspNetCore.Identity;
 
 using A2v10.Infrastructure;
 using A2v10.Web.Identity;
-using Microsoft.AspNetCore.Mvc;
-using System.Linq;
+
 
 namespace A2v10.Identity.UI;
 
@@ -27,17 +27,22 @@ public class CreateUserHandler(IServiceProvider serviceProvider) : IClrInvokeTar
     {
         Int32? TenantId = IsMultiTenant ? args.Get<Int32>("TenantId") : null;
 
+        var src = args.Get<ExpandoObject>("User")
+            ?? throw new InvalidOperationException("User is null");
+
         var user = new AppUser<Int64>()
         {
             Tenant = TenantId,
-            UserName = args.GetNotNull<String>("UserName"),
-            PersonName = args.Get<String>("PersonName"),
-            Email = args.GetNotNull<String>("UserName"),
-            PhoneNumber = args.Get<String>("PhoneNumber"),
-            Memo = args.Get<String>("Memo")
+            UserName = src.GetNotNull<String>("UserName"),
+            PersonName = src.Get<String>("PersonName"),
+            Email = src.GetNotNull<String>("Email"),
+            PhoneNumber = src.Get<String>("PhoneNumber"),
+            Memo = src.Get<String>("Memo")
         };
 
-        var password = args.GetNotNull<String>("Password");  
+        user.Email ??= user.UserName;
+
+        var password = src.GetNotNull<String>("Password");  
         var result = await _userManager.CreateAsync(user, password);
         if (result.Succeeded)
         {
@@ -45,8 +50,25 @@ public class CreateUserHandler(IServiceProvider serviceProvider) : IClrInvokeTar
             await _userManager.ConfirmEmailAsync(user, token);
             var createdUser = await _userManager.FindByIdAsync(user.Id.ToString())
                 ?? throw new InvalidOperationException("Create user failed");
-            return createdUser;
-        }
-        throw new InvalidOperationException(String.Join(", ", result.Errors.Select(x => x.Description)));
+
+            var cu = new ExpandoObject()
+            {
+                { "Id", createdUser.Id },
+                { "EmailConfirmed", createdUser.EmailConfirmed }
+		    };
+        
+            cu.SetNotNull("UserName", createdUser.UserName);
+			cu.SetNotNull("Email", createdUser.Email);
+			cu.SetNotNull("PersonName", createdUser.PersonName);
+			cu.SetNotNull("Memo", createdUser.Memo);
+			cu.SetNotNull("Locale", createdUser.Locale);
+
+            return new ExpandoObject()
+            {
+                {"Success", true },
+                {"User", cu }
+            };
+		}
+		throw new InvalidOperationException(String.Join(", ", result.Errors.Select(x => x.Description)));
     }
 }

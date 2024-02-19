@@ -70,6 +70,7 @@ public partial class WorkbookHelper
 					continue;
 				foreach (var colElem in coll)
 				{
+					// TODO: Check nested ranges
 					for (UInt32 k=rng.Start; k<=rng.End; k++)
 						yield return new RealRow(k, colElem);
 				}

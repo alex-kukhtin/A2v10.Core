@@ -3136,6 +3136,7 @@ table.data-grid > thead > tr > th .h-holder {
   padding: 0 0.5rem;
   display: inline-flex;
   align-items: center;
+  min-height: var(--header-height);
 }
 table.data-grid > thead > tr > th .h-holder > span {
   word-break: unset;
@@ -3353,6 +3354,7 @@ table.data-grid > tbody > tr.bold > td {
 }
 .data-grid-container.fixed-header > .data-grid-body.fixed-header > table > thead {
   height: 0;
+  position: unset;
 }
 .data-grid-container.fixed-header > .data-grid-body.fixed-header > table > thead > tr > th {
   border-top-style: none;
@@ -3389,7 +3391,6 @@ table.data-grid > tbody > tr.bold > td {
   top: 0;
   background-color: inherit;
   width: 100%;
-  min-height: var(--header-height);
   margin-left: -1px;
   border-left: 1px solid var(--neutral300);
   border-bottom: 1px solid var(--neutral300);

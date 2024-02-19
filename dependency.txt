@@ -1,4 +1,4 @@
-2024-02-16 (next: 8248)
+2024-02-19 (next: 8249)
 =======================
 
 A2v10.Platform
@@ -7,7 +7,9 @@ A2v10.Platform
 		A2v10.Identity.Core
 		A2v10.Infrastructure
 	A2v10.ReportEngine.Pdf
-		A2v10.Xaml.Report
+		A2v10.ReportEngine.Excel
+			A2v10.ReportEngine.Script
+			A2v10.Xaml.Report
 		A2v10.Infrastructure
 	A2v10.Services
 		A2v10.Infrastructure

@@ -298,7 +298,7 @@ public class ExcelConvertor
 		if (dn == null)
 			return null;
 		String? name = dn.Name;
-		if (name == null)
+		if (name == null || name != "Fit")
 			return null;
 		String showRef = dn.Text;
 		Int32 exclPos = showRef.IndexOf('!');
