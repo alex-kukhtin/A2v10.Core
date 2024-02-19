@@ -1,21 +1,28 @@
 /*
-Copyright © 2008-2023 Oleksandr Kukhtin
+Copyright © 2008-2024 Oleksandr Kukhtin
 
-Last updated : 21 dec 2023
-module version : 8198
+Last updated : 19 feb 2024
+module version : 8248
 */
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.SCHEMATA where SCHEMA_NAME=N'a2sys')
-	exec sp_executesql N'create schema a2sys';
+	exec sp_executesql N'create schema a2sys authorization dbo';
 go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.SCHEMATA where SCHEMA_NAME=N'a2security')
-	exec sp_executesql N'create schema a2security';
+	exec sp_executesql N'create schema a2security authorization dbo';
 go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.SCHEMATA where SCHEMA_NAME=N'a2ui')
-	exec sp_executesql N'create schema a2ui';
+	exec sp_executesql N'create schema a2ui authorization dbo';
 go
+
+------------------------------------------------
+alter authorization on schema::a2sys to dbo;
+alter authorization on schema::a2security to dbo;
+alter authorization on schema::a2ui to dbo;
+go
+
 ------------------------------------------------
 grant execute on schema ::a2sys to public;
 grant execute on schema ::a2security to public;

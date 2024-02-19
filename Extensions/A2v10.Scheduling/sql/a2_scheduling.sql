@@ -1,8 +1,8 @@
 ﻿/*
-Copyright © 2008-2023 Oleksandr Kukhtin
+Copyright © 2008-2024 Oleksandr Kukhtin
 
-Last updated : 21 aug 2023
-module version : 8135
+Last updated : 19 feb 2024
+module version : 8232
 */
 
 /*
@@ -16,12 +16,14 @@ print @json;
 */
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.SCHEMATA where SCHEMA_NAME=N'a2sch')
-	exec sp_executesql N'create schema a2sch';
+	exec sp_executesql N'create schema a2sch authorization dbo';
+go
+------------------------------------------------
+alter authorization on schema::a2sch to dbo;
 go
 ------------------------------------------------
 grant execute on schema ::a2sch to public;
 go
-
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.SEQUENCES where SEQUENCE_SCHEMA=N'a2sch' and SEQUENCE_NAME=N'SQ_Commands')
 	create sequence a2sch.SQ_Commands as bigint start with 100 increment by 1;
