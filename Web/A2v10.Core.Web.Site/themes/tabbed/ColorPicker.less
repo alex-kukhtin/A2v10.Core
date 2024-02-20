@@ -12,7 +12,7 @@
 		background: white;
 		top: 100%;
 		width: 100%;
-		border: 1px solid @default-brd-color;
+		border: 1px solid @control-brd-color;
 		max-height: @panel-height;
 		overflow: auto;
 		box-shadow: @dropdown-shadow;
@@ -62,6 +62,14 @@
 
 		.caret {
 			opacity: .5;
+		}
+	}
+
+	&.drop-up {
+		.color-picker-pane {
+			top: auto;
+			bottom: 100%;
+			margin-bottom: 2px;
 		}
 	}
 }

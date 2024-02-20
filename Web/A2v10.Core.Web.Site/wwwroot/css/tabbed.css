@@ -7543,7 +7543,7 @@ table.tree-grid a.toggle.expanded:after {
   background: white;
   top: 100%;
   width: 100%;
-  border: 1px solid var(--neutral300);
+  border: 1px solid var(--neutral400);
   max-height: 280px;
   overflow: auto;
   box-shadow: 3px 3px 10px 0 rgba(174, 174, 174, 0.5), 0 5px 40px 0 rgba(0, 0, 0, 0.15);
@@ -7584,6 +7584,11 @@ table.tree-grid a.toggle.expanded:after {
 }
 .color-picker.disabled .caret {
   opacity: 0.5;
+}
+.color-picker.drop-up .color-picker-pane {
+  top: auto;
+  bottom: 100%;
+  margin-bottom: 2px;
 }
 .tags-control .input-group {
   display: flex;

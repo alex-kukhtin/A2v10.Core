@@ -1,17 +1,16 @@
-/*!@localize*/
-
 (() => {
 	const popup = require('std:popup');
 	const du = require('std:utils').date;
 	const eventBus = require('std:eventBus');
+	const loc = require('app:locale');
 
 	const timeBoardTemplate = `
 <div class="time-board">
 <table>
 	<thead><tr>
 		<th class="bt-2 bl-2 bb-2" rowspan=3>№</th>
-		<th class="bt-2" colspan=2>@[Employee]</th>
-		<th class="bt-2" colspan=2>@[Schedule]</th>
+		<th class="bt-2" colspan=2 v-text="localize('@Employee')"></th>
+		<th class="bt-2" colspan=2 v-text="localize('@Schedule')"></th>
 		<th class="bt-2" :colspan="calLength">Робочий час</th>
 		<th class="bt-2 bl-2" :colspan="presences.length + 1">Відпрацьовано</th>
 		<th class="bt-2" :colspan="absences.length">Неявки (дні/години)</th>
@@ -169,6 +168,9 @@
 			}
 		},
 		methods: {
+			localize(key) {
+				return loc[key];
+			},
 			cellText(row, day) {
 				let dd = row.Days[day];
 				if (!dd) return '';
@@ -321,3 +323,130 @@
 		}
 	});
 })();
+
+app.modules["app:folders"] = {
+	handleSavedFolder,
+	deleteFolderCommand,
+	moveToGroupCommand
+}
+
+async function handleSavedFolder(elem) {
+	let ctrl = this.$ctrl;
+	let found = this.Folders.$find(f => f.Id === elem.Id);
+	if (found) {
+		found.Name = elem.Name;
+		return;
+	}
+
+	let parentId = elem.Folder.Id;
+	let elemToAppend = { Icon: 'folder-outline', Id: elem.Id, Name: elem.Name };
+
+	if (!parentId) {
+		// top level folder
+		let woGroups = this.Folders.$find(f => f.Id === -2); // without groups
+		if (woGroups)
+			this.Folders.$insert(elemToAppend, "above", woGroups).$select(this.Folders);
+		else
+			this.Folders.$append(elemToAppend).$select(this.Folders);
+		return;
+	}
+	let foundFolder = this.Folders.$find(f => f.Id === parentId);
+	if (!foundFolder)
+		return;
+
+	foundFolder.HasSubItems = true;
+
+	if (foundFolder.$expanded)
+		foundFolder.SubItems.$append(elemToAppend).$select(this.Folders);
+	else {
+		await ctrl.$expand(foundFolder, 'SubItems', true);
+		let nf = this.Folders.$find(f => f.Id === elem.Id);
+		if (nf)
+			nf.$select(this.Folders);
+	}
+}
+
+function deleteFolderCommand(chProp) {
+	function canDelete(fld) {
+		if (!fld) return false;
+		if (fld.HasSubItems) return false;
+		if (fld.SubItems.length) return false;
+		if (fld[chProp].length) return false;
+		if (fld.Id < 0) return false;
+		return true;
+	}
+	async function deleteFolder() {
+		const ctrl = this.$ctrl;
+		let sel = this.Folders.$selected;
+		if (!canDelete(sel)) return false;
+		await ctrl.$invoke('deleteFolder', { Id: sel.Id });
+		sel.$remove();
+	}
+
+	function canDeleteFolder() {
+		let sel = this.Folders.$selected;
+		return canDelete(sel);
+	}
+
+	return {
+		exec: deleteFolder,
+		canExec: canDeleteFolder,
+		confirm: '@[Confirm.Delete.Folder]'
+	}
+}
+
+function moveToGroupCommand(chProp, path) {
+
+	function canMoveToGroup() { 
+		return !!getSelecteElems(this);
+	}
+
+	function getSelecteElems(root) {
+		let sel = root.Folders.$selected;
+		if (!sel) return null;
+		let x = sel[chProp].$checked;
+		if (!x || !x.length) return null;
+		return x;
+	}
+
+	async function moveToGroup() {
+		let items = getSelecteElems(this);
+		if (!items) return;
+		let ctrl = this.$ctrl;
+
+		// before browse!!! can be changed
+		let selFolder = this.Folders.$selected;
+
+		let folder = await ctrl.$showDialog(`${path}/browsefolder`);
+		if (folder.Id === selFolder.Id) {
+			ctrl.$alert('@[Error.Element.AlreadyInFolder]');
+			return;
+		}
+
+		await ctrl.$invoke('moveToFolder', { Folder: folder.Id, Items: items.map(itm => itm.Id).join(',') });
+
+		const resetChildren = (id) => {
+			// finds folder in the main tree and resets children's
+			let targetFolder = this.Folders.$find(f => f.Id === folder.Id);
+			if (targetFolder)
+				targetFolder[chProp].$resetLazy();
+		};
+
+		resetChildren(folder.Id);
+		resetChildren(-2);
+
+		items.forEach(itm => itm.$checked = false);
+
+		if (selFolder.Id == -1) return;
+
+		for (let i = 0; i < items.length; i++)
+			items[i].$remove();
+
+		ctrl.$modalClose(true);
+	}
+
+	return {
+		exec: moveToGroup,
+		canExec: canMoveToGroup
+	};
+}
