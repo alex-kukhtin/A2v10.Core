@@ -34,6 +34,8 @@ public class JwtBearerService(JwtBearerSettings settings)
 			claims.Add(new Claim(WellKnownClaims.Organization, user.Organization.ToString()!));
 		if (!String.IsNullOrEmpty(user.Segment))
 			claims.Add(new Claim(WellKnownClaims.Segment, user.Segment));
+		if (!String.IsNullOrEmpty(user.Locale))
+			claims.Add(new Claim(WellKnownClaims.Locale, user.Locale));
 
 		var expires = DateTime.UtcNow.AddMinutes(_settings.ExpireMinutes);
 
