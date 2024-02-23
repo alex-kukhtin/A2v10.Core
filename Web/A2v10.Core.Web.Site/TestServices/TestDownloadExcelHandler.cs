@@ -8,7 +8,9 @@ using A2v10.Services.Interop;
 
 namespace A2v10.Core.Web.Site;
 
+#pragma warning disable CS9113 // Parameter is unread.
 public class TestDownloadExcelHandler(IServiceProvider serviceProvider) : IClrInvokeBlob
+#pragma warning restore CS9113 // Parameter is unread.
 {
 	// TODO: arguments
 	public Task<InvokeBlobResult> InvokeAsync(ExpandoObject args)
