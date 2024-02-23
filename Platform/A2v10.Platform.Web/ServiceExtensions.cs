@@ -29,7 +29,8 @@ public static class ServiceExtensions
 
 		services.AddScoped<IApplicationHost, WebApplicationHost>()
 		.AddScoped<ITenantManager, WebTenantManager>()
-		.AddScoped<IAppTenantManager, AppTenantManager>();
+		.AddScoped<IAppTenantManager, AppTenantManager>()
+		.AddScoped<IDataScripter, VueDataScripter>();
 
 		services.AddScoped<WebLocalizer>()
 			.AddScoped<ILocalizer>(s => s.GetRequiredService<WebLocalizer>())

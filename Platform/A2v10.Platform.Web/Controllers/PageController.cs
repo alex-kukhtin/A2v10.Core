@@ -37,7 +37,7 @@ public class PageActionResult(IRenderResult render, String? script) : IActionRes
 public class PageController : BaseController
 {
 	private readonly IDataService _dataService;
-	private readonly VueDataScripter _scripter;
+	private readonly IDataScripter _scripter;
 	private readonly IAppCodeProvider _codeProvider;
 	private readonly IViewEngineProvider _viewEngineProvider;
 	private readonly IAppDataProvider _appDataProvider;
@@ -45,12 +45,12 @@ public class PageController : BaseController
 
 	public PageController(IApplicationHost host, IAppCodeProvider codeProvider,
 		ILocalizer localizer, ICurrentUser currentUser, IProfiler profiler, IDataService dataService, 
-		IViewEngineProvider viewEngineProvider, IAppDataProvider appDataProvider, IAppVersion appVersion)
+		IViewEngineProvider viewEngineProvider, IAppDataProvider appDataProvider, IAppVersion appVersion, IDataScripter scripter)
 		: base(host, localizer, currentUser, profiler)
 	{
 		_dataService = dataService;
 		_codeProvider = codeProvider;
-		_scripter = new VueDataScripter(host, codeProvider, _localizer, currentUser);
+		_scripter = scripter;
 		_viewEngineProvider = viewEngineProvider;
 		_appDataProvider = appDataProvider;
 		_appVersion = appVersion;
