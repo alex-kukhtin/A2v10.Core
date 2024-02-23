@@ -1,11 +1,12 @@
-﻿// Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2023-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Dynamic;
+using System.Threading.Tasks;
 
 namespace A2v10.Infrastructure;
 
 public interface IEndpointHandler
 {
-    String RenderResult(IPlatformUrl platformUrl, IModelView modelView, ExpandoObject prms);
+    Task<String> RenderResultAsync(IPlatformUrl platformUrl, IModelView modelView, ExpandoObject prms);
 }

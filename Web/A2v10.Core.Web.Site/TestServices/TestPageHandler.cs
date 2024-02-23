@@ -1,6 +1,7 @@
 ﻿using A2v10.Infrastructure;
 using System;
 using System.Dynamic;
+using System.Threading.Tasks;
 
 namespace A2v10.Core.Web.Site.TestServices
 {
@@ -8,10 +9,10 @@ namespace A2v10.Core.Web.Site.TestServices
 	public class TestPageHandler(IViewEngineProvider _) : IEndpointHandler
 #pragma warning restore CS9113 // Parameter is unread.
 	{
-		public string RenderResult(IPlatformUrl platformUrl, IModelView modelView, ExpandoObject prms)
+		public Task<String> RenderResultAsync(IPlatformUrl platformUrl, IModelView modelView, ExpandoObject prms)
 		{
 			var id = $"el{Guid.NewGuid()}";
-			return
+			var r =
 $$""""
 <div class="page absolute page-grid" id="{{id}}"><a2-document-title page-title="PAGE HANDLER">
 	</a2-document-title>
@@ -29,6 +30,7 @@ vm.__doInit__('$personnel/design/test/123/');
 })();
 </script>
 """";
+			return Task.FromResult<String>(r);
 		}
 	}
 }

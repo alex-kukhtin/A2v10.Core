@@ -2,13 +2,14 @@
 
 using System;
 using System.Dynamic;
+using System.Threading.Tasks;
 
 namespace A2v10.Infrastructure;
 
 public class NullEndpointHandler : IEndpointHandler
 {
-	public string RenderResult(IPlatformUrl platformUrl, IModelView modelView, ExpandoObject prms)
+	public Task<String> RenderResultAsync(IPlatformUrl platformUrl, IModelView modelView, ExpandoObject prms)
 	{
-		throw new NotImplementedException(modelView.EndpointHandler);
+		throw new NotImplementedException();
 	}
 }

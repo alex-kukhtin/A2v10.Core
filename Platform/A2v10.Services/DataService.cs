@@ -150,7 +150,7 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 		{
 			var handler = _serviceProvider.GetRequiredService<IEndpointHandler>();
 			var prms = view.CreateParameters(platformUrl, null, setParams);
-			var result = handler.RenderResult(platformUrl, view, prms);
+			var result = await handler.RenderResultAsync(platformUrl, view, prms);
 			return new DataLoadResult(null, null, result);
 		}
 
