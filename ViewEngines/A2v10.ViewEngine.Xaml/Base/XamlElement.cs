@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
 
@@ -174,5 +174,13 @@ public class XamlElement : ISupportBinding, IInitComplete
 		OnEndInit();
 	}
 	#endregion
+
+
+	public static T Create<T>(Action<BindImpl>? action) where T : ISupportBinding, new()
+	{
+		var elem = new T();
+		action?.Invoke(elem.BindImpl);
+		return elem;
+	}
 }
 
