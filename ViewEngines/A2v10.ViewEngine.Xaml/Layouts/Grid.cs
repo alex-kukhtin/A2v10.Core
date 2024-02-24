@@ -56,6 +56,27 @@ public class Grid(IServiceProvider serviceProvider) : Container
 
 	#endregion
 
+	public void SetVAlign(Object obj, AlignItem align)
+	{
+		_attachedPropertyManager.SetProperty("Grid.VAlign", obj, align);
+	}
+	public void SetRow(Object obj, Int32 row)
+	{
+		_attachedPropertyManager.SetProperty("Grid.Row", obj, row);
+	}
+	public void SetCol(Object obj, Int32 col)
+	{
+		_attachedPropertyManager.SetProperty("Grid.Col", obj, col);
+	}
+	public void SetColSpan(Object obj, Int32 colSpan)
+	{
+		_attachedPropertyManager.SetProperty("Grid.ColSpan", obj, colSpan);
+	}
+
+	public void SetRowSpan(Object obj, Int32 rowSpan)
+	{
+		_attachedPropertyManager.SetProperty("Grid.RowSpan", obj, rowSpan);
+	}
 
 	public Length? Height { get; set; }
 	public BackgroundStyle Background { get; set; }
