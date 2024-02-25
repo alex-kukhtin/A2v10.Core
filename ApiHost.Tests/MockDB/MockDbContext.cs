@@ -1,12 +1,10 @@
-﻿using A2v10.Data.Interfaces;
-using A2v10.Web.Identity;
-using System;
-using System.Collections.Generic;
+﻿
 using System.Data;
+using System.Data.Common;
 using System.Dynamic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
+using A2v10.Data.Interfaces;
+using A2v10.Web.Identity;
 
 namespace ApiHost.Tests.MockDB;
 
@@ -102,7 +100,12 @@ public class MockDbContext : IDbContext
         throw new NotImplementedException();
     }
 
-    public void LoadRaw(string? source, string procedure, ExpandoObject prms, Action<int, IDataReader> action)
+	public Task<IDataModel> LoadModelSqlAsync(string? source, string sqlString, Action<DbParameterCollection> onSetParams)
+	{
+		throw new NotImplementedException();
+	}
+
+	public void LoadRaw(string? source, string procedure, ExpandoObject prms, Action<int, IDataReader> action)
 	{
 		throw new NotImplementedException();
 	}

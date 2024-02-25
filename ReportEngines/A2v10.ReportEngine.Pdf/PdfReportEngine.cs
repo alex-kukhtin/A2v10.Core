@@ -36,7 +36,7 @@ public class PdfReportEngine : IReportEngine
 		return TemplateReader.ReadReport(stream);
 	}
 
-	private static Page ReadTemplateFromDb(IReportInfo reportInfo)
+	private static Spreadsheet ReadTemplateFromDb(IReportInfo reportInfo)
 	{
 		var json = reportInfo.DataModel?.Resolve(reportInfo.Report)
 			?? throw new InvalidOperationException("Data is null");

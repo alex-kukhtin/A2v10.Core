@@ -78,8 +78,8 @@ public class DynamicHelpers
             { "Id", 23 },
             { "Name", "Item 23"}
         };
-        x.ReplaceValue("Id", x => ((Int32)x) + 100);
-        x.ReplaceValue("Name", s => s.ToString()!.Replace("23", "77"));
+        x.ReplaceValue("Id", x => ((Int32)(x ?? 0) + 100));
+        x.ReplaceValue("Name", s => s?.ToString()!.Replace("23", "77"));
 		Assert.AreEqual(123, x.Get<Int32>("Id"));
 		Assert.AreEqual("Item 77", x.Get<String>("Name"));
 	}

@@ -34,28 +34,12 @@ public class PageActionResult(IRenderResult render, String? script) : IActionRes
 [ExecutingFilter]
 [Authorize]
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-public class PageController : BaseController
+public class PageController(IApplicationHost _host, ILocalizer _localizer, ICurrentUser _currentUser, 
+	IProfiler _profiler, IDataService _dataService,
+	IViewEngineProvider _viewEngineProvider, IAppDataProvider _appDataProvider, 
+	IAppVersion _appVersion, IDataScripter _scripter) 
+	: BaseController(_host, _localizer, _currentUser, _profiler)
 {
-	private readonly IDataService _dataService;
-	private readonly IDataScripter _scripter;
-	private readonly IAppCodeProvider _codeProvider;
-	private readonly IViewEngineProvider _viewEngineProvider;
-	private readonly IAppDataProvider _appDataProvider;
-	private readonly IAppVersion _appVersion;
-
-	public PageController(IApplicationHost host, IAppCodeProvider codeProvider,
-		ILocalizer localizer, ICurrentUser currentUser, IProfiler profiler, IDataService dataService, 
-		IViewEngineProvider viewEngineProvider, IAppDataProvider appDataProvider, IAppVersion appVersion, IDataScripter scripter)
-		: base(host, localizer, currentUser, profiler)
-	{
-		_dataService = dataService;
-		_codeProvider = codeProvider;
-		_scripter = scripter;
-		_viewEngineProvider = viewEngineProvider;
-		_appDataProvider = appDataProvider;
-		_appVersion = appVersion;
-	}
-
 	[Route("_page/{*pathInfo}")]
 	public async Task<IActionResult> Page(String pathInfo)
 	{

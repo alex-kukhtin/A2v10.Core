@@ -15,7 +15,7 @@ public static partial class DynamicHelpers
 {
 	public static T? Get<T>(this ExpandoObject obj, String name)
 	{
-		if (obj is not IDictionary<String, Object> d)
+		if (obj is not IDictionary<String, Object?> d)
 			return default;
 		if (d.TryGetValue(name, out Object? result))
 		{
@@ -65,7 +65,7 @@ public static partial class DynamicHelpers
 		return null;
 	}
 
-	public static ExpandoObject Add(this ExpandoObject obj, String name, Object value)
+	public static ExpandoObject Add(this ExpandoObject obj, String name, Object? value)
 	{
 		if (obj is not IDictionary<String, Object?> d)
 			return obj;
@@ -75,7 +75,7 @@ public static partial class DynamicHelpers
 
 	public static void SetIfNotExists(this ExpandoObject obj, String name, Object value)
 	{
-		if (obj is not IDictionary<String, Object> d)
+		if (obj is not IDictionary<String, Object?> d)
 			return;
 		if (!d.ContainsKey(name))
 			d.Add(name, value);
@@ -121,8 +121,8 @@ public static partial class DynamicHelpers
 			return;
 		if (other == null)
 			return;
-		IDictionary<String, Object> thatD = that as IDictionary<String, Object>;
-		foreach (var k in other as IDictionary<String, Object>)
+		IDictionary<String, Object?> thatD = that;
+		foreach (var k in other as IDictionary<String, Object?>)
 		{
 			if (!thatD.ContainsKey(k.Key))
 				thatD.Add(k.Key, k.Value);
@@ -137,8 +137,8 @@ public static partial class DynamicHelpers
 			return;
 		if (other == null)
 			return;
-		IDictionary<String, Object> thatD = that as IDictionary<String, Object>;
-		foreach (var (k, v) in other as IDictionary<String, Object>)
+		IDictionary<String, Object?> thatD = that;
+		foreach (var (k, v) in other as IDictionary<String, Object?>)
 		{
 			if (exclude != null && exclude.Any(x => x.Equals(k, StringComparison.OrdinalIgnoreCase)))
 				continue;
@@ -153,8 +153,8 @@ public static partial class DynamicHelpers
 			return;
 		if (other == null)
 			return;
-		IDictionary<String, Object> thatD = that as IDictionary<String, Object>;
-		foreach (var k in other as IDictionary<String, Object>)
+		IDictionary<String, Object?> thatD = that;
+		foreach (var k in other as IDictionary<String, Object?>)
 		{
 			if (thatD.ContainsKey(k.Key))
 				thatD[k.Key] = k.Value;
@@ -169,8 +169,8 @@ public static partial class DynamicHelpers
 			return;
 		if (other == null)
 			return;
-		IDictionary<String, Object> thatD = that as IDictionary<String, Object>;
-		foreach (var k in other as IDictionary<String, Object>)
+		IDictionary<String, Object?> thatD = that;
+		foreach (var k in other as IDictionary<String, Object?>)
 		{
 			if (!thatD.ContainsKey(k.Key))
 				thatD.Add(k.Key, k.Value);
@@ -268,7 +268,7 @@ public static partial class DynamicHelpers
 	public static ExpandoObject Clone(this ExpandoObject elem, String[]? exclude = null)
 	{
 		var eo = new ExpandoObject();
-		foreach (var v in elem as IDictionary<String, Object>)
+		foreach (var v in elem as IDictionary<String, Object?>)
 		{
 			if (exclude != null && exclude.Contains(v.Key))
 				continue;
@@ -279,7 +279,7 @@ public static partial class DynamicHelpers
 
 	public static Boolean IsEmpty(this ExpandoObject that)
 	{
-		return that == null || that is not IDictionary<String, Object> dict || dict.Count == 0;
+		return that == null || that is not IDictionary<String, Object?> dict || dict.Count == 0;
 	}
 
 	public static T? Eval<T>(this ExpandoObject root, String? expression, T? fallback = default, Boolean throwIfError = false)
@@ -322,19 +322,19 @@ public static partial class DynamicHelpers
 		return sb.ToString();
 	}
 
-	public static void ReplaceValue(this ExpandoObject This, String key, Func<Object, Object> replacement)
+	public static void ReplaceValue(this ExpandoObject This, String key, Func<Object?, Object?> replacement)
 	{
-		var d = This as IDictionary<String, Object>;
+		var d = This as IDictionary<String, Object?>;
 		if (d.TryGetValue(key, out var value))
 			d[key] = replacement(value);
 	}
 
 
-	public static Dictionary<String, Object>? Object2Dictionary(Object? obj)
+	public static Dictionary<String, Object?>? Object2Dictionary(Object? obj)
 	{
 		if (obj == null)
 			return null;
-		var d = new Dictionary<String, Object>();
+		var d = new Dictionary<String, Object?>();
 		foreach (var pi in obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
 		{
 			var val = pi.GetValue(obj);
@@ -373,8 +373,8 @@ public static partial class DynamicHelpers
 		return IsNullableType(type) ? type.GetGenericArguments()[0] : type;
 	}
 
-	public static IEnumerable<KeyValuePair<String, Object>> Enumerate(this ExpandoObject obj)
+	public static IEnumerable<KeyValuePair<String, Object?>> Enumerate(this ExpandoObject obj)
 	{
-		return obj as IDictionary<String, Object>;
+		return obj;
 	}
 }

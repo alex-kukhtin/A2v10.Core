@@ -6,7 +6,7 @@ namespace ReportEngineExcel;
 
 internal class Program
 {
-	static void Main(string[] args)
+	static void Main()
 	{
 		String fileName = "C:\\Projects\\NovaEra.2023\\Data\\Пример_расходной_накладной.xlsx";
 

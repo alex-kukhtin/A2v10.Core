@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
-		<Version>10.1.8251</Version>
+		<Version>10.1.8255</Version>
 		<Nullable>enable</Nullable>
 		<LangVersion>Latest</LangVersion>
 		<AssemblyName>A2v10.Infrastructure</AssemblyName>
@@ -20,7 +20,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Data.Interfaces" Version="10.1.7348" />
+		<PackageReference Include="A2v10.Data.Interfaces" Version="10.1.7354" />
 		<PackageReference Include="A2v10.Runtime.Interfaces" Version="10.1.8121" />
 	</ItemGroup>
 
