@@ -8,12 +8,19 @@ TODO:
 @button-gap: -1px;
 @divider-color: @dropdown-brd-color;
 
+@menu-padding: 4px;
+
 .menu {
 	top: 100%;
 	min-width: 160px; //TODO:
 	box-shadow: @dropdown-shadow;
 	border: 1px solid @dropdown-brd-color;
 	font-weight: normal;
+
+	&.menu-columns {
+		column-rule: 1px solid @dropdown-brd-color;
+		column-gap: @menu-padding * 2;
+	}
 
 	.dropdown-item {
 		display: flex;
@@ -25,7 +32,7 @@ TODO:
 		background-color: transparent;
 		width: 100%;
 		text-align: left;
-		border-radius:@control-brd-radius;
+		border-radius: @control-brd-radius;
 
 		&:hover {
 			text-decoration: none;
@@ -89,7 +96,7 @@ TODO:
 	bottom: auto;
 	text-align: left;
 	min-width: 100%;
-	padding:3px;
+	padding:@menu-padding;
 	border-radius: @control-brd-radius;
 
 	> .checkbox {

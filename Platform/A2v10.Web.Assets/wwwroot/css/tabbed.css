@@ -5287,6 +5287,10 @@ TODO:
   border: 1px solid var(--neutral300);
   font-weight: normal;
 }
+.menu.menu-columns {
+  column-rule: 1px solid var(--neutral300);
+  column-gap: 8px;
+}
 .menu .dropdown-item {
   display: flex;
   cursor: pointer;
@@ -5350,7 +5354,7 @@ TODO:
   bottom: auto;
   text-align: left;
   min-width: 100%;
-  padding: 3px;
+  padding: 4px;
   border-radius: 4px;
 }
 .dropdown-menu > .checkbox {
