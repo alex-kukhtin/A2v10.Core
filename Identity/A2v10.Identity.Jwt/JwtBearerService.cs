@@ -1,4 +1,4 @@
-﻿// Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2021-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 
@@ -32,6 +32,8 @@ public class JwtBearerService(JwtBearerSettings settings)
 			claims.Add(new Claim(WellKnownClaims.Tenant, user.Tenant.ToString()!));
 		if (user.Organization != null)
 			claims.Add(new Claim(WellKnownClaims.Organization, user.Organization.ToString()!));
+		if (!String.IsNullOrEmpty(user.OrganizationKey))
+			claims.Add(new Claim(WellKnownClaims.OrganizationKey, user.OrganizationKey));
 		if (!String.IsNullOrEmpty(user.Segment))
 			claims.Add(new Claim(WellKnownClaims.Segment, user.Segment));
 		if (!String.IsNullOrEmpty(user.Locale))
