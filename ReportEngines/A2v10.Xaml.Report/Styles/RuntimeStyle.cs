@@ -22,6 +22,8 @@ public class RuntimeStyle
 	public String? Color { get; set; }
 	public String? Format { get; set; }
 
+	public UInt32? TextRotation { get; set; }
+
 	public RuntimeStyle Clone()
 	{
 		return new RuntimeStyle()
@@ -37,7 +39,8 @@ public class RuntimeStyle
 			Italic = this.Italic,
 			Underline = this.Underline,
 			Color = this.Color,
-			Format = this.Format
+			Format = this.Format,
+			TextRotation = this.TextRotation
 		};
 	}
 }

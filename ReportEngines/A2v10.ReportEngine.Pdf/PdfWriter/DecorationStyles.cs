@@ -85,6 +85,10 @@ internal static class DecorationStyles
 					break;
 			}
 		}
+		if (style.TextRotation == 90)
+			container = container.RotateLeft();
+		else if (style.TextRotation == 180)
+			container = container.RotateRight();
 		return container;
 	}
 	public static IContainer ApplyDecoration(this IContainer container, RuntimeStyle? style)

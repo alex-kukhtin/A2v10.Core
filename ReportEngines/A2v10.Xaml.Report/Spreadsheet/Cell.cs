@@ -41,6 +41,8 @@ public class Cell : XamlElement
 			rs.Color = style.Color;
 		if (style.Format != null)	
 			rs.Format = style.Format;
+		if (style.TextRotation != null)
+			rs.TextRotation = style.TextRotation;
 	}
 
 	public void OnCreate()

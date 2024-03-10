@@ -124,6 +124,7 @@ public class ExcelConvertor
 {
 	private readonly String _fileName;
 	private readonly Stream? _stream;
+	private UInt32 _realColumns = 0;
 
 	private String? _fitColumn = null;
 
@@ -235,6 +236,8 @@ public class ExcelConvertor
 					wb.Cells.Add(cellRef, xc);
 					if (xc.Style != null)
 						_cellStyles.Add(xc.Style);
+					var realCellRef = CellRefs.Parse(cellRef);
+					_realColumns = Math.Max(_realColumns, realCellRef.column + 1);
 				}
 			}
 		}
@@ -277,6 +280,30 @@ public class ExcelConvertor
 			}
 		}
 
+		/*
+		var drawings = workSheetPart.DrawingsPart?.ImageParts;
+		if (drawings != null)
+		{
+			foreach (var dr in drawings)
+			{
+				var sream = dr.GetStream();
+				var ct = dr.ContentType;
+				var rId = workSheetPart.DrawingsPart?.GetIdOfPart(dr);
+			}
+			var anchor = workSheetPart.DrawingsPart?.WorksheetDrawing.OfType<TwoCellAnchor>();
+			if (anchor != null)
+			{
+				foreach (var ca in anchor)
+				{
+					var row = ca.FromMarker?.RowId?.Text;
+					var col = ca.FromMarker?.ColumnId?.Text;
+					var pic = ca.OfType<DocumentFormat.OpenXml.Drawing.Spreadsheet.Picture>().FirstOrDefault();
+					var rIdofPicture = pic?.BlipFill?.Blip?.Embed;
+				}
+			}
+		}
+		*/
+
 		if (styleSheet != null)
 		{
 			var refs = new StyleRefs(styleSheet);
@@ -290,7 +317,15 @@ public class ExcelConvertor
 					wb.Styles.Add(styleRef, rs);	
 			}
 		}
+
+		FitColumnCount(ws.Workbook);
+
 		return ws;
+	}
+	void FitColumnCount(XWorkbook wb)
+	{
+		if (wb.ColumnCount > _realColumns)
+			wb.ColumnCount = _realColumns;
 	}
 
 	static String? GetFitRange(DefinedName dn)
@@ -380,7 +415,7 @@ public class ExcelConvertor
 			Style = style,
 		};
 		if (cell.DataType == null || cell.CellValue == null)
-			return xcell;
+			return null;
 		if (cell.DataType == CellValues.SharedString)
 		{
 			Int32 ssid = Int32.Parse(cell.CellValue.Text);
@@ -435,6 +470,7 @@ public class ExcelConvertor
 		TextAlign? align = null;
 		VertAlign? vAlign = null;
 		String? format = null;
+		UInt32? textRotation = null;
 
 		if (cf?.ApplyFill?.Value == true)
 			background = refs.GetFill(cf.FillId?.Value);
@@ -477,11 +513,12 @@ public class ExcelConvertor
 				else if (a.Vertical == VerticalAlignmentValues.Center)
 					vAlign = VertAlign.Middle;
 			}
+			textRotation = a?.TextRotation?.Value;
 		}
 
 		if (background == null && fontSize == null && border == null && align == null && 
 			vAlign == null && fontBold == null && fontItalic == null && fontUnderline == null &&
-			format == null)
+			format == null && textRotation == null)
 			return null;
 
 		return new XStyle()
@@ -495,6 +532,7 @@ public class ExcelConvertor
 			Align = align,
 			VAlign = vAlign,
 			Format = format,
+			TextRotation = textRotation
 		};
 	}
 }
