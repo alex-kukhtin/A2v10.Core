@@ -1,5 +1,4 @@
-﻿// Copyright © 2015-2018 Alex Kukhtin. All rights reserved.
-
+﻿
 @import "Utlis.less";
 @import "Variables.less";
 
@@ -15,7 +14,6 @@ table.sheet {
 	.user-select();
 	width: auto;
 	border-collapse: collapse;
-
 	//margin: 0 1px 0 0; /*border-collapse bug*/
 	tr {
 		page-break-inside: avoid;
@@ -40,6 +38,10 @@ table.sheet {
 
 	td.indent.lev-4 {
 		padding-left: 6px + 3 * 12px;
+	}
+
+	td.indent.lev-5 {
+		padding-left: 6px + 4 * 12px;
 	}
 
 	.col-shadow {
@@ -74,28 +76,27 @@ table.sheet {
 
 	tr.row-no-border {
 		td {
-			border-style: none!important;
-			background-color: @bk-sheet!important;
+			border-style: none !important;
+			background-color: @bk-sheet !important;
 		}
 
 		td.underline {
-			border-bottom: 1px solid @table-brd-color!important;
+			border-bottom: 1px solid @table-brd-color !important;
 			height: 30px;
 		}
 	}
 
 	tr.row-page-header {
 		td {
-			font-size:.95rem;
-			color:#999;
-			height:3rem;
-			border-style:none;
-
+			font-size: .95rem;
+			color: #999;
+			height: 3rem;
+			border-style: none;
 		}
 	}
 
 	tr.row-divider {
-		height:@cell-padding-v * 2;
+		height: @cell-padding-v * 2;
 	}
 
 	tr.row-parameter, tr.row-last-parameter {
@@ -115,7 +116,7 @@ table.sheet {
 
 	.row-parameter tr:last-child {
 		td {
-			background-color:red!important;
+			background-color: red !important;
 		}
 	}
 
@@ -156,8 +157,8 @@ table.sheet {
 
 	.group-cell {
 		padding: 4px 2px;
-		max-width:20px;
-		width:20px;
+		max-width: 20px;
+		width: 20px;
 
 		> div {
 			cursor: pointer;
@@ -212,7 +213,7 @@ table.sheet {
 	}
 
 	&.fit-width {
-		width:1px;
+		width: 1px;
 	}
 }
 

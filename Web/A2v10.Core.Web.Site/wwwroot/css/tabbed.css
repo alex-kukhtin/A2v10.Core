@@ -6335,6 +6335,9 @@ table.sheet td.indent.lev-3 {
 table.sheet td.indent.lev-4 {
   padding-left: 42px;
 }
+table.sheet td.indent.lev-5 {
+  padding-left: 54px;
+}
 table.sheet .col-shadow {
   visibility: collapse;
   display: none;
@@ -6361,7 +6364,7 @@ table.sheet tr.row-title td:last-child {
   padding-right: 0;
 }
 table.sheet tr.row-no-border td {
-  border-style: none!important;
+  border-style: none !important;
   background-color: var(--bgSheet) !important;
 }
 table.sheet tr.row-no-border td.underline {
@@ -6391,7 +6394,7 @@ table.sheet tr.row-last-parameter td:last-child {
   padding-right: 0;
 }
 table.sheet .row-parameter tr:last-child td {
-  background-color: red!important;
+  background-color: red !important;
 }
 table.sheet tr.row-last-parameter td {
   padding-bottom: 15px;
