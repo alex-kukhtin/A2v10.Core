@@ -39,10 +39,10 @@ public static class JsonHelpers
 			DateTimeZoneHandling = DateTimeZoneHandling.Unspecified,
 			NullValueHandling = NullValueHandling.Ignore,
 			DefaultValueHandling = DefaultValueHandling.Ignore,
-			Converters = new List<JsonConverter>
-			{
+			Converters =
+			[
 				new JsonDoubleConverter()
-			}
+			]
 		};
 
     public static readonly JsonSerializerSettings IndentedSerializerSettings =
@@ -54,10 +54,10 @@ public static class JsonHelpers
             DateTimeZoneHandling = DateTimeZoneHandling.Unspecified,
             NullValueHandling = NullValueHandling.Ignore,
             DefaultValueHandling = DefaultValueHandling.Ignore,
-			Converters = new List<JsonConverter>()
-			{
+			Converters =
+			[
 				new JsonDoubleConverter(),
 				new IgnoreNullValueExpandoObjectConverter()
-			}
+			]
         };
 }

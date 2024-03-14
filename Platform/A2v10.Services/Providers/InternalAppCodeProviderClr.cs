@@ -53,7 +53,7 @@ public class InternalAppCodeProviderClr(IAppContainer _appContainer) : IAppCodeP
     public IEnumerable<String> EnumerateFiles(String? path, String searchPattern)
 	{
 		if (String.IsNullOrEmpty(path))
-			return Enumerable.Empty<String>();
+			return [];
 		if (searchPattern.StartsWith('*'))
 			searchPattern = searchPattern[1..];
 		return _appContainer.EnumerateFiles(path, searchPattern);

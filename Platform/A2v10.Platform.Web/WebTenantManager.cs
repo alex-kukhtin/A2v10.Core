@@ -23,9 +23,9 @@ public record TenantInfo : ITenantInfo
 	public String Procedure => $"[{_schema}].[SetTenantId]";
 
 	public IEnumerable<TenantInfoParam> Params =>
-		new List<TenantInfoParam>() {
+		[
 			new("@TenantId", _tenantId)
-		};
+		];
 }
 
 public class WebTenantManager(ICurrentUser currentUser, IOptions<AppOptions> appOptions,

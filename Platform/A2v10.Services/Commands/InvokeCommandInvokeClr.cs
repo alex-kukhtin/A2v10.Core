@@ -24,7 +24,7 @@ public class InvokeCommandInvokeClr(IServiceProvider serviceProvider) : IModelIn
 				?? throw new InvalidOperationException("Type not found");
 			var ctor = tp.GetConstructor([typeof(IServiceProvider)])
 				?? throw new InvalidOperationException($"ctor(IServiceProvider) not found in {clrType}");
-			var elem = ctor.Invoke(new Object[] { _serviceProvider })
+			var elem = ctor.Invoke([_serviceProvider])
 				?? throw new InvalidOperationException($"Unable to create element of {clrType}");
 			if (elem is not IClrInvokeTarget invokeTarget)
 				throw new InvalidOperationException($"The type '{clrType}' must implement the interface IClrInvokeTarget");

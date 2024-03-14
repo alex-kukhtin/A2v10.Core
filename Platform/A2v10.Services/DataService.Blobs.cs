@@ -73,7 +73,7 @@ public partial class DataService
 			?? throw new InvalidOperationException($"Type {strClrType} not found");
 		var ctor = tp.GetConstructor([typeof(IServiceProvider)])
 			?? throw new InvalidOperationException($"ctor(IServiceProvider) not found in {strClrType}");
-		var elem = ctor.Invoke(new Object[] { _serviceProvider })
+		var elem = ctor.Invoke([_serviceProvider])
 			?? throw new InvalidOperationException($"Unable to create element of {strClrType}");
 		return elem;
 	}

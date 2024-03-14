@@ -23,8 +23,8 @@ public class ExSheet
 		_currentFormat = CultureInfo.CreateSpecificCulture(locale);
 	}
 
-	public IList<ExColumn> Columns { get; } = new List<ExColumn>();
-	public StylesDictionary Styles { get; } = new StylesDictionary();
+	public List<ExColumn> Columns { get; } = [];
+	public StylesDictionary Styles { get; } = new();
 
 	private List<ExRow> GetRowsByKind(RowKind kind)
 	{

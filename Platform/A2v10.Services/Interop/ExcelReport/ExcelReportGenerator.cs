@@ -463,8 +463,8 @@ public class ExcelReportGenerator : IDisposable
         {
             // find row first
             var row = sheetData.Elements<Row>().First<Row>(r => (r.RowIndex ?? 0) == rd.FirstRow);
-            rd.Rows = new List<Row?>();
-            rd.RowsForClone = new List<Row?>();
+            rd.Rows = [];
+            rd.RowsForClone = [];
             for (Int32 i = 0; i < rd.RowCount; i++)
             {
                 rd.Rows.Add(row);

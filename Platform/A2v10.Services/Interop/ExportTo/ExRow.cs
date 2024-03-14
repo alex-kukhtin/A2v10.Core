@@ -18,7 +18,7 @@ public class ExRow
 	public HorizontalAlign Align { get; set; }
 	public UInt32 Height { get; set; }
 
-	public IList<ExCell> Cells { get; } = new List<ExCell>();
+	public List<ExCell> Cells { get; } = [];
 
 	public (ExCell Cell, Int32 Index) AddCell()
 	{
