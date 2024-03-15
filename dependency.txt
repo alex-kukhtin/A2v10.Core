@@ -1,8 +1,5 @@
-2024-03-13 (next: 8265)
+2024-03-15 (next: 8266)
 =======================
-A2v10.Services
-A2v10.Platform.Web
-A2v10.Platform
 
 A2v10.Platform
 	A2v10.Identity.Core
