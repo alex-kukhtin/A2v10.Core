@@ -18,6 +18,7 @@ using A2v10.Scheduling.Commands;
 using A2v10.Core.Web.Site.TestServices;
 
 using A2v10.BlobStorage.Azure;
+using Microsoft.AspNetCore.Identity;
 
 namespace A2v10.Core.Web.Site;
 

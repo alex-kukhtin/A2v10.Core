@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Web.Identity;
 
@@ -26,7 +26,10 @@ public sealed class AppUserStore<T>(IDbContext dbContext, IOptions<AppUserStoreO
 	IUserSecurityStampStore<AppUser<T>>,
 	IUserClaimStore<AppUser<T>>,
 	IUserRoleStore<AppUser<T>>,
-	IUserLockoutStore<AppUser<T>>
+	IUserLockoutStore<AppUser<T>>,
+	IUserTwoFactorStore<AppUser<T>>,
+	IUserAuthenticatorKeyStore<AppUser<T>>
+	//IUserTwoFactorTokenProvider<AppUser<T>>
 	where T : struct
 {
 	private readonly IDbContext _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
@@ -465,8 +468,8 @@ public sealed class AppUserStore<T>(IDbContext dbContext, IOptions<AppUserStoreO
 		{
 			var prms = new ExpandoObject()
 				{
-					{ "LoginProvider", loginProvider },
-					{ "ProviderKey", providerKey },
+					{ ParamNames.LoginProvider, loginProvider },
+					{ ParamNames.ProviderKey, providerKey },
 				};
 			return await _dbContext.LoadAsync<AppUser<T>>(_dataSource, $"[{_dbSchema}].[FindUserByExternalLogin]", prms);
 		}
@@ -655,6 +658,31 @@ public sealed class AppUserStore<T>(IDbContext dbContext, IOptions<AppUserStoreO
 	{
 		user.LockoutEnabled = enabled;
 		return Task.CompletedTask;
+	}
+
+	#endregion
+
+	#region IUserTwoFactorStore
+	public Task SetTwoFactorEnabledAsync(AppUser<T> user, Boolean enabled, CancellationToken cancellationToken)
+	{
+		throw new NotImplementedException();
+	}
+
+	public Task<Boolean> GetTwoFactorEnabledAsync(AppUser<T> user, CancellationToken cancellationToken)
+	{
+		return Task.FromResult<Boolean>(user.TwoFactorEnabled);
+	}
+	#endregion
+
+	#region IUserAuthenticatorKeyStore
+	public Task SetAuthenticatorKeyAsync(AppUser<T> user, String key, CancellationToken cancellationToken)
+	{
+		throw new NotImplementedException();
+	}
+
+	public Task<String?> GetAuthenticatorKeyAsync(AppUser<T> user, CancellationToken cancellationToken)
+	{
+		return Task.FromResult<String?>("My_Authenticator_Key");
 	}
 	#endregion
 }

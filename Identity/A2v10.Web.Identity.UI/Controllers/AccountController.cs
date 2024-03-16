@@ -186,6 +186,17 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
 					returnUrl = "/";
 				return new JsonResult(JsonResponse.Redirect(returnUrl));
 			}
+			else if (result.RequiresTwoFactor)
+			{
+				var authKey = await _userManager.GetAuthenticatorKeyAsync(user);
+				if (String.IsNullOrEmpty(authKey))
+					await _userManager.ResetAuthenticatorKeyAsync(user);
+				authKey = await _userManager.GetAuthenticatorKeyAsync(user);
+
+				await _userManager.VerifyTwoFactorTokenAsync(user, _userManager.Options.Tokens.AuthenticatorTokenProvider, "222334");
+
+				throw new NotImplementedException("RequiresTwoFactor yet not implemented");
+			}
 			else
 			{
 				return new JsonResult(JsonResponse.Error(result.ToString()));

@@ -49,9 +49,10 @@ public class AppUser<T> where T : struct
 	public String? Roles { get; set; }
     public String? ZipCode { get; set; }
     public Boolean IsBlocked { get; set; }
+	public Boolean TwoFactorEnabled { get; set; }
 
-    // for .net framework compatibility
-    public String? PasswordHash2 { get; set; }
+	// for .net framework compatibility
+	public String? PasswordHash2 { get; set; }
 	public String? SecurityStamp2 { get; set; }
     public String? Memo { get; set; }
 

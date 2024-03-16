@@ -30,6 +30,8 @@ public static class ServicesExtensions
 
 		var us = options.User;
 		us.RequireUniqueEmail = true;
+
+		// options.Tokens
 	}
 	public static IServiceCollection AddPlatformIdentityCore<T>(this IServiceCollection services,
 		Action<IdentityOptions>? identityOptions = null) where T : struct
@@ -53,9 +55,10 @@ public static class ServicesExtensions
 		.AddScoped<IUserStore<AppUser<T>>>(s => s.GetRequiredService<AppUserStore<T>>())
 		.AddScoped<IUserLoginStore<AppUser<T>>>(s => s.GetRequiredService<AppUserStore<T>>())
 		.AddScoped<IUserClaimStore<AppUser<T>>>(s => s.GetRequiredService<AppUserStore<T>>())
+		.AddScoped<IUserTwoFactorStore<AppUser<T>>>(s => s.GetRequiredService<AppUserStore<T>>())
 		//.AddScoped<IUserRoleStore<AppUser<T>>>(s => s.GetRequiredService<AppUserStore<T>>())
 		.AddScoped<ISecurityStampValidator, SecurityStampValidator<AppUser<T>>>();
-
+		      
 #if NET8_0_OR_GREATER
 		// do nothing
 #else
