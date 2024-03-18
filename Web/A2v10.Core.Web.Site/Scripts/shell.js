@@ -1,6 +1,6 @@
 ﻿// Copyright © 2023-2024 Oleksandr Kukhtin. All rights reserved.
 
-/*20240315-8265*/
+/*20240315-8268*/
 
 /* tabbed:shell.js */
 (function () {
@@ -59,18 +59,13 @@
 			hasModified() { return this.tabs.some(t => t.root && t.root.$isDirty); }
 		},
 		methods: {
-			navigate(u0) {
-				let bu = u0.url.split('?');
-				let u1 = {
-					url: bu[0],
-					query: bu.length > 1 ? '?' + bu[1] : ''
-				};
+			navigate(u1) {
 				let tab = this.tabs.find(tab => tab.url == u1.url);
 				if (!tab) {
 					let parentUrl = '';
 					if (this.activeTab)
 						parentUrl = this.activeTab.url || '';
-					tab = { title: u0.title, url: u1.url, query: u1.query || '', loaded: true, key: tabKey++, root: null, parentUrl: parentUrl, reload: 0, debug: false };
+					tab = { title: u1.title, url: u1.url, query: u1.query || '', loaded: true, key: tabKey++, root: null, parentUrl: parentUrl, reload: 0, debug: false };
 					this.tabs.push(tab);
 					var cti = this.closedTabs.findIndex(t => t.url === u1.url);
 					if (cti >= 0)

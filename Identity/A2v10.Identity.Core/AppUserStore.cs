@@ -16,7 +16,6 @@ using A2v10.Identity.Core.Helpers;
 
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Microsoft.AspNetCore.DataProtection.KeyManagement;
 
 public sealed class AppUserStore<T>(IDbContext dbContext, IOptions<AppUserStoreOptions<T>> options) :
 	IUserStore<AppUser<T>>,
@@ -506,7 +505,7 @@ public sealed class AppUserStore<T>(IDbContext dbContext, IOptions<AppUserStoreO
 
 	public Task<String?> GetPhoneNumberAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
-		return Task.FromResult<String?>(user.PhoneNumber ?? throw new InvalidOperationException("Phone number is null"));
+		return Task.FromResult<String?>(user.PhoneNumber);
 	}
 
 	public Task<Boolean> GetPhoneNumberConfirmedAsync(AppUser<T> user, CancellationToken cancellationToken)

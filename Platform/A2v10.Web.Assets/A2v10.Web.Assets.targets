@@ -4,6 +4,7 @@
 		<SourceIcon Include="$(MSBuildThisFileDirectory)..\content\assets\wwwroot\favicon.ico" />
 		<SourceAssetsJs Include="$(MSBuildThisFileDirectory)..\content\assets\wwwroot\scripts\*" />
 		<SourceAssetsJsChart Include="$(MSBuildThisFileDirectory)..\content\assets\wwwroot\scripts\lib\chartjs\*" />
+		<SourceAssetsQrCode Include="$(MSBuildThisFileDirectory)..\content\assets\wwwroot\scripts\lib\qrcodejs\*" />
 		<SourceAssetsCss Include="$(MSBuildThisFileDirectory)..\content\assets\wwwroot\css\*" />
 		<SourceAssetsFonts Include="$(MSBuildThisFileDirectory)..\content\assets\wwwroot\css\fonts\*" />
 		<SourceAssetsLoc Include="$(MSBuildThisFileDirectory)..\content\assets\wwwroot\localization\*" />
@@ -13,6 +14,7 @@
 		<Copy SourceFiles="@(SourceIcon)" DestinationFiles="$(ProjectDir)\wwwroot\favicon.ico" SkipUnchangedFiles="true"/>
 		<Copy SourceFiles="@(SourceAssetsJs)" DestinationFolder="$(ProjectDir)\wwwroot\scripts" SkipUnchangedFiles="true"/>
 		<Copy SourceFiles="@(SourceAssetsJsChart)" DestinationFolder="$(ProjectDir)\wwwroot\scripts\lib\chartjs" SkipUnchangedFiles="true"/>
+		<Copy SourceFiles="@(SourceAssetsQrCode)" DestinationFolder="$(ProjectDir)\wwwroot\scripts\lib\qrcodejs" SkipUnchangedFiles="true"/>
 		<Copy SourceFiles="@(SourceAssetsCss)" DestinationFolder="$(ProjectDir)\wwwroot\css" SkipUnchangedFiles="true"/>
 		<Copy SourceFiles="@(SourceAssetsFonts)" DestinationFolder="$(ProjectDir)\wwwroot\css\fonts" SkipUnchangedFiles="true"/>
 		<Copy SourceFiles="@(SourceAssetsLoc)" DestinationFolder="$(ProjectDir)\wwwroot\localization" SkipUnchangedFiles="true"/>
