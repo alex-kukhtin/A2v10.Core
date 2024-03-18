@@ -17,13 +17,14 @@ services.AddPlatformIdentityCore<T>()
 
 ```json
 "Identity": {
-	"UserStore": {
-		"DataSource": "ConnectionStringName",
-		"MultiTenant": false,
-		"ValidationInterval": "00:05:00"
-	},
-	"CookiePrefix": "Cookie_Prefix",
-	"Providers": "Local,..."
+  "UserStore": {
+    "DataSource": "ConnectionStringName",
+    "MultiTenant": false,
+    "ValidationInterval": "00:05:00",
+    "AuthenticatorIssuer": 'IssuerName'
+  },
+  "CookiePrefix": "Cookie_Prefix",
+  "Providers": "Local,..."
 }
 ```
 

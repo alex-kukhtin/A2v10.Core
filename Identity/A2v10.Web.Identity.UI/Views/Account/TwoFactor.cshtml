@@ -1,0 +1,40 @@
+﻿@model TwoFactorViewModel
+@inject ILocalizer _loc
+
+<div class="center-page">
+	<div class="initial-form">
+		<h3 class="a2-header text-center">@Html.Raw(_loc["TwoFactorPrompt"])</h3>
+		<hr />
+		<div v-if="serverError" class="validation-summary" style="margin-top:10px">
+			<span class="error" v-text="serverError"></span>
+		</div>
+		<div>
+			<p class="text-center">@Html.Raw(_loc["AuthenticatorText"])</p>
+			<div class="control-group" style="width:60%;margin:auto" v-bind:class="{invalid: invalidCode}">
+				<label class="a2-label" style="text-align:center;margin-bottom:5px">@Html.Raw(_loc["AuthenticationCode"])</label>
+				<div class="input-group">
+					<input v-focus class="control text-center" type="text" v-model="confirmCode" tabindex="1" spellcheck="false" v-on:keydown.enter.stop.prevent="onCodeEnter"/>
+					<div class="validator" v-if=
+					"invalidCode">
+						<span class="error">@Html.Raw(_loc["EnterConfirmCode"])</span>
+					</div>
+				</div>
+			</div>
+
+			<button v-on:click.stop.prevent="submitCode" class="btn btn-primary" v_bind:disabled="confirmCodeDisabled">@Html.Raw(_loc["Verify"])</button>
+			<label class="checkbox" style="width:60%;margin:1rem auto;">
+				<input type="checkbox" v-model="rememberMe" tabindex="3" />
+				<span>@Html.Raw(_loc["RememberCredentials"])</span>
+			</label>
+		</div>
+
+		<a tabindex="3" href="/" class="a2-hyperlink">@Html.Raw(_loc["Login"])</a>
+	</div>
+</div>
+
+@section Scripts
+{
+<script type="text/javascript">
+	@Html.Partial("~/Views/Account/TwoFactorScript.cshtml")
+</script>
+}

@@ -1,8 +1,8 @@
 /*
 Copyright © 2008-2024 Oleksandr Kukhtin
 
-Last updated : 19 feb 2024
-module version : 8248
+Last updated : 17 mar 2024
+module version : 8267
 */
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.SCHEMATA where SCHEMA_NAME=N'a2sys')
@@ -84,6 +84,7 @@ create table a2security.Users
 	SecurityStamp2 nvarchar(max) null,
 	PasswordHash2 nvarchar(max) null,
 	TwoFactorEnabled bit not null constraint DF_Users_TwoFactorEnabled default(0),
+	AuthenticatorKey nvarchar(64) null,
 	Email nvarchar(255) null,
 	EmailConfirmed bit not null constraint DF_Users_EmailConfirmed default(0),
 	PhoneNumber nvarchar(255) null,
@@ -110,6 +111,10 @@ go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = N'a2security' and TABLE_NAME = N'Users' and COLUMN_NAME = N'IsBlocked')
 	alter table a2security.Users add IsBlocked bit constraint DF_UsersIsBlocked default(0);
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = N'a2security' and TABLE_NAME = N'Users' and COLUMN_NAME = N'AuthenticatorKey')
+	alter table a2security.Users add AuthenticatorKey nvarchar(64) null;
 go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2security' and TABLE_NAME=N'ApiUserLogins')
@@ -182,7 +187,7 @@ as
 		LockoutEnabled, AccessFailedCount, LockoutEndDateUtc, TwoFactorEnabled, [Locale],
 		PersonName, Memo, Void, LastLoginDate, LastLoginHost, Tenant, EmailConfirmed,
 		PhoneNumberConfirmed, RegisterHost, ChangePasswordEnabled, Segment,
-		SecurityStamp2, PasswordHash2, SetPassword, IsBlocked
+		SecurityStamp2, PasswordHash2, SetPassword, IsBlocked, AuthenticatorKey
 	from a2security.Users u
 	where Void = 0 and Id <> 0;
 go

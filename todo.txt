@@ -1,4 +1,9 @@
-﻿APP COMPILER & MODULES
+﻿Authenticator
+1. Load/Save User Key
+2. Dialog format and Localization
+3. Handler for Generate Key
+
+APP COMPILER & MODULES
 ======================
 3. PdfReportEngine - Images
 

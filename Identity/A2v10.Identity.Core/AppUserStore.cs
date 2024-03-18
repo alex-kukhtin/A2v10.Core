@@ -16,6 +16,7 @@ using A2v10.Identity.Core.Helpers;
 
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
 
 public sealed class AppUserStore<T>(IDbContext dbContext, IOptions<AppUserStoreOptions<T>> options) :
 	IUserStore<AppUser<T>>,
@@ -65,7 +66,10 @@ public sealed class AppUserStore<T>(IDbContext dbContext, IOptions<AppUserStoreO
         public const String Locale = nameof(Locale);
 		public const String LoginProvider = nameof(LoginProvider);
         public const String ProviderKey = nameof(ProviderKey);
-    }
+		public const String TwoFactorEnabled = nameof(TwoFactorEnabled);
+		public const String AuthenticatorKey = nameof(AuthenticatorKey);
+
+	}
 
     public async Task<IdentityResult> CreateAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
@@ -171,6 +175,11 @@ public sealed class AppUserStore<T>(IDbContext dbContext, IOptions<AppUserStoreO
             prm.Add(ParamNames.ZipCode, user.ZipCode);
         if (user.Flags.HasFlag(UpdateFlags.Locale))
             prm.Add(ParamNames.Locale, user.Locale);
+		if (user.Flags.HasFlag(UpdateFlags.TwoFactor))
+		{
+			prm.Add(ParamNames.TwoFactorEnabled, user.TwoFactorEnabled);
+			prm.Add(ParamNames.AuthenticatorKey, user.AuthenticatorKey);
+		}
 
         await _dbContext.ExecuteExpandoAsync(_dataSource, $"[{_dbSchema}].[User.UpdateParts]", prm);
 
@@ -665,7 +674,13 @@ public sealed class AppUserStore<T>(IDbContext dbContext, IOptions<AppUserStoreO
 	#region IUserTwoFactorStore
 	public Task SetTwoFactorEnabledAsync(AppUser<T> user, Boolean enabled, CancellationToken cancellationToken)
 	{
-		throw new NotImplementedException();
+		user.TwoFactorEnabled = enabled;
+		var exp = new ExpandoObject()
+		{
+			{ ParamNames.Id, user.Id },
+			{ ParamNames.TwoFactorEnabled, enabled }
+		};
+		return _dbContext.ExecuteExpandoAsync(_dataSource, $"[{_dbSchema}].[User.SetTwoFactorEnabled]", exp);
 	}
 
 	public Task<Boolean> GetTwoFactorEnabledAsync(AppUser<T> user, CancellationToken cancellationToken)
@@ -677,12 +692,18 @@ public sealed class AppUserStore<T>(IDbContext dbContext, IOptions<AppUserStoreO
 	#region IUserAuthenticatorKeyStore
 	public Task SetAuthenticatorKeyAsync(AppUser<T> user, String key, CancellationToken cancellationToken)
 	{
-		throw new NotImplementedException();
+		user.AuthenticatorKey = key;
+		var exp = new ExpandoObject()
+		{
+			{ ParamNames.Id, user.Id },
+			{ ParamNames.AuthenticatorKey, key }
+		};
+		return _dbContext.ExecuteExpandoAsync(_dataSource, $"[{_dbSchema}].[User.SetAuthenticatorKey]", exp);
 	}
 
 	public Task<String?> GetAuthenticatorKeyAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
-		return Task.FromResult<String?>("My_Authenticator_Key");
+		return Task.FromResult<String?>(user.AuthenticatorKey);
 	}
 	#endregion
 }

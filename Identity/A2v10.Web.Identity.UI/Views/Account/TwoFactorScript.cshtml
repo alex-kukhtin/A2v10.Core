@@ -1,0 +1,76 @@
+﻿@inject ILocalizer _loc
+@model TwoFactorViewModel
+
+"use strict";
+(function() {
+
+new Vue({
+el:"#app",
+data: {
+	email: '@Model.Login',
+	confirmCode:'',
+	rememberMe: true,
+	submitted: false,
+	serverError: '',
+},
+computed: {
+	invalidCode() {
+		if (!this.submitted) return false;
+		return !this.confirmCode;
+	},
+	valid() {
+		return !this.invalidCode;
+	}
+},
+methods: {
+	onCodeEnter: function(ev) {
+		this.submitCode();
+	},
+	success(result) {
+		switch (result.message) {
+			case 'Redirect':
+				window.location.replace(result.url);
+				break;
+			default:
+				alert(`${result.message}`);
+				break;
+		}
+	},
+	fail(msg) {
+		switch (msg) {
+			case 'InvalidCode':
+				this.serverError = '@Html.Raw(_loc["InvalidConfirmCode"])';
+				break;
+			case 'AntiForgery':
+				this.serverError = '@Html.Raw(_loc["AntiForgery"])';
+				break;
+			default:
+				this.serverError = '@Html.Raw(_loc["ErrorText"])';
+				break;
+		}
+	},
+	async submitCode() {
+		this.submitted = true;
+		if (!this.valid) return;
+		let formData = new URLSearchParams();
+		formData.append('Login', this.email);
+		formData.append('Code', this.confirmCode.trim());
+		formData.append('RememberMe', this.rememberMe);
+		formData.append('__RequestVerificationToken', '@Model?.RequestToken');
+		let resp = await fetch('/account/twofactor', {
+			method: 'POST',
+			body: formData
+		});
+		if (resp.redirected)
+			window.location.assign(resp.url);
+		else if (resp.ok) {
+			let result = await resp.json();
+			if (result.success)
+				this.success(result);
+			else
+				this.fail(result.message);
+		}
+	}
+}
+});
+})();

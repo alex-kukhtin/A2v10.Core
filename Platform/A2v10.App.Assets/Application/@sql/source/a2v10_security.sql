@@ -1,8 +1,8 @@
 ﻿/*
-Copyright © 2008-2023 Oleksandr Kukhtin
+Copyright © 2008-2024 Oleksandr Kukhtin
 
-Last updated : 21 dec 2023
-module version : 8198
+Last updated : 18 mar 2024
+module version : 8267
 */
 
 -- SECURITY
@@ -331,6 +331,33 @@ begin
 end
 go
 ------------------------------------------------
+create or alter procedure a2security.[User.SetAuthenticatorKey]
+@Id bigint,
+@AuthenticatorKey nvarchar(64)
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+
+	update a2security.Users set AuthenticatorKey = @AuthenticatorKey  where Id = @Id;
+end
+go
+------------------------------------------------
+create or alter procedure a2security.[User.SetTwoFactorEnabled]
+@Id bigint,
+@TwoFactorEnabled bit
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+
+	if @TwoFactorEnabled = 1
+		update a2security.Users set TwoFactorEnabled = 1 where Id = @Id;
+	else
+		update a2security.Users set TwoFactorEnabled = 0, AuthenticatorKey = null where Id = @Id;
+end
+go
+------------------------------------------------
 create or alter procedure a2security.[User.CreateApiUser]
 @UserId bigint,
 @TenantId int = 1,
@@ -499,5 +526,4 @@ begin
 	where Tenant = @Tenant and UserId = @Id and [Provider] = @Provider and Token = @Token;
 end
 go
-
 

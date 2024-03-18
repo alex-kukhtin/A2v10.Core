@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -31,7 +31,7 @@ public static class ServicesExtensions
 		var us = options.User;
 		us.RequireUniqueEmail = true;
 
-		// options.Tokens
+		options.Tokens.AuthenticatorIssuer = "NovaEra";
 	}
 	public static IServiceCollection AddPlatformIdentityCore<T>(this IServiceCollection services,
 		Action<IdentityOptions>? identityOptions = null) where T : struct
@@ -149,6 +149,14 @@ public static class ServicesExtensions
 			opts.DataSource = storeConfig.DataSource;
 			opts.MultiTenant = storeConfig.MultiTenant;
 		});
+
+		if (!String.IsNullOrEmpty(storeConfig.AuthenticatorIssuer))
+		{
+			services.Configure<IdentityOptions>(opts =>
+			{
+				opts.Tokens.AuthenticatorIssuer = storeConfig.AuthenticatorIssuer;
+			});
+		}
 
 		TimeSpan validationInterval = TimeSpan.FromSeconds(60 * 5);
 		if (storeConfig.ValidationInterval != null)

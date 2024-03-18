@@ -8,7 +8,7 @@ for the A2v10 platform applications.
 // T - type of user identifier
 
 .AddApiKeyAuthorization<T>(options => {
-	// options
+    // options
 });
 ```
 

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Dynamic;
 using System.Text;
 using System.Text.Json;
+using System.Text.Encodings.Web;
 
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authorization;
@@ -36,7 +37,7 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
             IAntiforgery _antiforgery, IDbContext _dbContext,
             IApplicationTheme _appTheme, IMailService _mailService, ILocalizer _localizer,
             IConfiguration _configuration, IAppTenantManager _appTenantManager, 
-			ILogger<AccountController> _logger,
+			ILogger<AccountController> _logger, UrlEncoder _urlEncoder,
 			IDataProtectionProvider protectionProvider,
             IOptions<AppUserStoreOptions<Int64>> userStoreOptions) : Controller
 {
@@ -188,14 +189,7 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
 			}
 			else if (result.RequiresTwoFactor)
 			{
-				var authKey = await _userManager.GetAuthenticatorKeyAsync(user);
-				if (String.IsNullOrEmpty(authKey))
-					await _userManager.ResetAuthenticatorKeyAsync(user);
-				authKey = await _userManager.GetAuthenticatorKeyAsync(user);
-
-				await _userManager.VerifyTwoFactorTokenAsync(user, _userManager.Options.Tokens.AuthenticatorTokenProvider, "222334");
-
-				throw new NotImplementedException("RequiresTwoFactor yet not implemented");
+				return new JsonResult(JsonResponse.Redirect($"/account/twofactor?login={model.Login}&returnUrl={_urlEncoder.Encode(model.ReturnUrl ?? "/")}"));
 			}
 			else
 			{
@@ -718,7 +712,7 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
 	[HttpGet]
 	public async Task<IActionResult> InitPassword([FromQuery] String? token)
 	{
-		_logger.LogInformation("Login");
+		_logger.LogInformation("InitPassword");
 
 		if (token == null)
 			return NotFound();
@@ -787,6 +781,64 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
 				return new JsonResult(JsonResponse.Error(String.Join(", ", identityResult.Errors.Select(e => e.Code))));
 		}
 		catch (Exception ex) 
+		{
+			return new JsonResult(JsonResponse.Error(ex));
+		}
+	}
+
+	[HttpGet]
+	public async Task<IActionResult> TwoFactor([FromQuery] String login)
+	{
+		_logger.LogInformation("TwoFactor");
+
+		if (String.IsNullOrEmpty(login))
+			throw new InvalidOperationException("Login is null");
+
+		var user = await _userManager.FindByNameAsync(login) ??
+			throw new InvalidOperationException("User not found");
+
+		var vm = new TwoFactorViewModel()
+		{
+			Title = await LoadTitleAsync(),
+			Theme = _appTheme.MakeTheme(),
+			Login = user.UserName ?? String.Empty,
+			RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken
+		};
+		return View(vm);
+	}
+
+	// https://github.com/chsakell/aspnet-core-identity/blob/master/AspNetCoreIdentity/Controllers/TwoFactorAuthenticationController.cs
+	[HttpPost]
+	public async Task<IActionResult> TwoFactor([FromForm] TwoFactorViewModel model)
+	{
+		var isValid = await _antiforgery.IsRequestValidAsync(HttpContext);
+
+		if (!isValid)
+			return new JsonResult(JsonResponse.Error("AntiForgery"));
+
+		try
+		{
+			var user = await _userManager.FindByNameAsync(model.Login)
+				?? throw new InvalidOperationException("User not found");
+
+			// VERIFY TWO FACTOR CODE
+			var twoFactorResult = await _userManager.VerifyTwoFactorTokenAsync(user, _userManager.Options.Tokens.AuthenticatorTokenProvider, model.Code);
+
+			_logger.LogInformation(twoFactorResult.ToString());
+
+			var signInResult = await _signInManager.TwoFactorAuthenticatorSignInAsync(model.Code, model.IsPersistent, true);
+			if (signInResult.Succeeded)
+			{
+				RemoveAntiforgeryCookie();
+				var returnUrl = model.ReturnUrl?.ToLowerInvariant();
+				if (returnUrl == null || returnUrl.StartsWith("/account"))
+					returnUrl = "/";
+				return new JsonResult(JsonResponse.Redirect(returnUrl));
+			}
+			else
+				return new JsonResult(JsonResponse.Error("InvalidCode"));
+		}
+		catch (Exception ex)
 		{
 			return new JsonResult(JsonResponse.Error(ex));
 		}

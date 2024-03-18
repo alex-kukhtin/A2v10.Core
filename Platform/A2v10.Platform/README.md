@@ -8,15 +8,15 @@ A2v10.Platform is a A2v10 main package.
 ```csharp
 public void ConfigureServices(IServiceCollection services)
 
-	var builders = services.UsePlatform(Configuration);
+    var builders = services.UsePlatform(Configuration);
 
-	builders.AuthenticationBuilder.Add...;
-	builders.MvcBuilder.Add...;
+    builders.AuthenticationBuilder.Add...;
+    builders.MvcBuilder.Add...;
 }
 
 public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 {
-	app.ConfigurePlatform(env, Configuration);
+    app.ConfigurePlatform(env, Configuration);
 }
 ```
 
