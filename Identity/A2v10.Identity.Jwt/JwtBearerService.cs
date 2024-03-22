@@ -60,6 +60,7 @@ public class JwtBearerService(JwtBearerSettings settings)
 				accessToken: accessToken,
 				refreshToken: GenerateRefreshToken(),
 				user: user.UserName,
+				personName: user.PersonName ?? user.UserName,
 				validTo: token.ValidTo.ToUnixTime()
 			)
 		);
