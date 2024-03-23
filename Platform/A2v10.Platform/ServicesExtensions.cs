@@ -69,7 +69,6 @@ public static class ServicesExtensions
 		services.TryAddScoped<IUserBannerProvider, NullUserBannerProvider>();
 		services.TryAddScoped<ILicenseManager, EmptyLicenseManager>();
 		services.TryAddSingleton<ISqlQueryTextProvider, NullSqlQueryTextProvider>();
-		services.TryAddScoped<IEndpointHandler, NullEndpointHandler>();
 
 		var cookiePrefix = configuration.GetValue<String>("identity:cookiePrefix")?.Trim()
 			?? "A2v10Platform";

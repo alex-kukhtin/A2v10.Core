@@ -1,4 +1,4 @@
-2024-03-22 (next: 8270)
+2024-03-23 (next: 8271)
 =======================
 
 
@@ -19,6 +19,7 @@ A2v10.Platform
 		A2v10.System.Xaml
 		A2v10.Infrastructure
 	A2v10.ViewEngine.Html
+		A2v10.Infrastructure
 	A2v10.Identity.UI
 		A2v10.Identity.Core
 		A2v10.Infrastructure

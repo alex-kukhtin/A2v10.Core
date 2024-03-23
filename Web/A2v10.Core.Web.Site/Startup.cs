@@ -43,7 +43,6 @@ public class Startup(IConfiguration configuration)
 		services.AddScoped<ILicenseManager, NullLicenseManager>();
 
 		services.AddScoped<ISqlQueryTextProvider, SqlQueryTextProvider>();
-		services.AddScoped<IEndpointHandler, TestPageHandler>();
 
 		var builders = services.UsePlatform(Configuration);
 
@@ -93,7 +92,10 @@ public class Startup(IConfiguration configuration)
             factory.RegisterCommand<ScheduledSendMailCommand>("SendMail")
             .RegisterCommand<ScheduledExecuteSqlCommand>("ExecuteSql");
         });
-    }
+	
+		services.AddKeyedScoped<IEndpointHandler, TestPageHandler>("SqlReports");
+		services.AddKeyedScoped<IEndpointHandler, TestPageHandler>("MyData");
+	}
 
 	public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 	{

@@ -11,6 +11,7 @@ using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Services.Interop;
+using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace A2v10.Services;
 
@@ -149,7 +150,7 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 
 		if (!String.IsNullOrEmpty(view.EndpointHandler))
 		{
-			var handler = _serviceProvider.GetRequiredService<IEndpointHandler>();
+			var handler = GetEndpointHandler(view.EndpointHandler);
 			var prms = view.CreateParameters(platformUrl, null, setParams);
 			if (isReload)
 			{
@@ -304,6 +305,14 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 		}
 	}
 
+	private IEndpointHandler GetEndpointHandler(String endpoint)
+	{
+		var handlerKeys = endpoint.Split(':');
+		if (handlerKeys.Length != 2)
+			throw new InvalidOperationException("Invalid EndpointHandler");
+		return _serviceProvider.GetRequiredKeyedService<IEndpointHandler>(handlerKeys[0]);
+
+	}
 	public async Task<ISaveResult> SaveAsync(String baseUrl, ExpandoObject data, Action<ExpandoObject> setParams)
 	{
 		var platformBaseUrl = CreatePlatformUrl(baseUrl);
@@ -317,7 +326,7 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 
 		if (!String.IsNullOrEmpty(view.EndpointHandler))
 		{
-			var handler = _serviceProvider.GetRequiredService<IEndpointHandler>();
+			var handler = GetEndpointHandler(view.EndpointHandler);
 			var saveResult = await handler.SaveAsync(platformBaseUrl, view, data, savePrms);
 			return new SaveResult()
 			{
