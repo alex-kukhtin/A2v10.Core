@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -94,5 +94,6 @@ public class Splitter(IServiceProvider serviceProvider) : Container
 			throw new XamlException("The splitter must have two panels");
 		if (Orientation == Orientation.Horizontal)
 			throw new XamlException("The horizontal splitter is not yet supported");
+		EndInitAttached(_attachedPropertyManager);
 	}
 }

@@ -191,7 +191,7 @@ app.modules['std:signalR'] = function () {
 
 // Copyright © 2023-2024 Oleksandr Kukhtin. All rights reserved.
 
-/*20240120-8228*/
+/*20240315-8268*/
 
 /* tabbed:shell.js */
 (function () {
@@ -250,15 +250,15 @@ app.modules['std:signalR'] = function () {
 			hasModified() { return this.tabs.some(t => t.root && t.root.$isDirty); }
 		},
 		methods: {
-			navigate(m) {
-				let tab = this.tabs.find(tab => tab.url == m.url);
+			navigate(u1) {
+				let tab = this.tabs.find(tab => tab.url == u1.url);
 				if (!tab) {
 					let parentUrl = '';
 					if (this.activeTab)
 						parentUrl = this.activeTab.url || '';
-					tab = { title: m.title, url: m.url, query: m.query || '', loaded: true, key: tabKey++, root: null, parentUrl: parentUrl, reload:0, debug:false };
+					tab = { title: u1.title, url: u1.url, query: u1.query || '', loaded: true, key: tabKey++, root: null, parentUrl: parentUrl, reload: 0, debug: false };
 					this.tabs.push(tab);
-					var cti = this.closedTabs.findIndex(t => t.url === m.url);
+					var cti = this.closedTabs.findIndex(t => t.url === u1.url);
 					if (cti >= 0)
 						this.closedTabs.splice(cti, 1);
 				}

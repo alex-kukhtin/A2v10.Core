@@ -43,7 +43,7 @@ public enum ModelBlobType
     json,
 	clr,
 	parse,
-	azureBlob
+	blobStorage
 }
 
 public enum ModelParseType
@@ -67,7 +67,8 @@ public interface IModelBlob : IModelBase
     String? ClrType { get; }
     String? OutputFileName { get; }
 	Boolean Zip { get; }
-	String? AzureSource { get; }
+	String? BlobStorage { get; }
+	String? BlobSource { get; }
 	String? Container { get; }
 	String? Locale { get; }
 	ExpandoObject? Parameters { get; }

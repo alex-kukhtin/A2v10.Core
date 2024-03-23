@@ -1,15 +1,16 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System.Text;
 using System.Threading.Tasks;
 using System.Globalization;
 using System.IO;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Services.Interop;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace A2v10.Services;
 
@@ -59,17 +60,17 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 		return new PlatformUrl(baseUrl, id);
 	}
 
-	public Task<IDataLoadResult> LoadAsync(UrlKind kind, String baseUrl, Action<ExpandoObject> setParams)
+	public Task<IDataLoadResult> LoadAsync(UrlKind kind, String baseUrl, Action<ExpandoObject> setParams, Boolean isReload = false)
 	{
 		var platformBaseUrl = CreatePlatformUrl(kind, baseUrl);
-		return Load(platformBaseUrl, setParams);
+		return Load(platformBaseUrl, setParams, isReload);
 	}
 
-	public Task<IDataLoadResult> LoadAsync(String baseUrl, Action<ExpandoObject> setParams)
+	public Task<IDataLoadResult> LoadAsync(String baseUrl, Action<ExpandoObject> setParams, Boolean isReload = false)
 	{
 		// with redirect here only!
 		var platformBaseUrl = CreatePlatformUrl(baseUrl, null);
-		return Load(platformBaseUrl, setParams);
+		return Load(platformBaseUrl, setParams, isReload);
 	}
 
     public async Task<IInvokeResult> ExportAsync(String baseUrl, Action<ExpandoObject> setParams)
@@ -142,7 +143,7 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 		return view;
 	}
 
-	async Task<IDataLoadResult> Load(IPlatformUrl platformUrl, Action<ExpandoObject> setParams)
+	async Task<IDataLoadResult> Load(IPlatformUrl platformUrl, Action<ExpandoObject> setParams, Boolean isReload = false)
 	{
 		var view = await LoadViewAsync(platformUrl);
 
@@ -150,8 +151,16 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 		{
 			var handler = _serviceProvider.GetRequiredService<IEndpointHandler>();
 			var prms = view.CreateParameters(platformUrl, null, setParams);
-			var result = await handler.RenderResultAsync(platformUrl, view, prms);
-			return new DataLoadResult(null, null, result);
+			if (isReload)
+			{
+				var dm = await handler.ReloadAsync(platformUrl, view, prms);
+				return new DataLoadResult(dm, null, null);
+			}
+			else
+			{
+				var result = await handler.RenderResultAsync(platformUrl, view, prms);
+				return new DataLoadResult(null, null, result);
+			}
 		}
 
 		var loadPrms = view.CreateParameters(platformUrl, null, setParams);
@@ -247,7 +256,7 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 
 	public async Task<String> ReloadAsync(String baseUrl, Action<ExpandoObject> setParams)
 	{
-		var result = await LoadAsync(baseUrl, setParams);
+		var result = await LoadAsync(baseUrl, setParams, true);
 		if (result.Model != null)
 			return JsonConvert.SerializeObject(result.Model.Root, JsonHelpers.DataSerializerSettings);
 		return "{}";
@@ -305,6 +314,16 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 		ResolveParams(savePrms, data);
 
 		CheckUserState();
+
+		if (!String.IsNullOrEmpty(view.EndpointHandler))
+		{
+			var handler = _serviceProvider.GetRequiredService<IEndpointHandler>();
+			var saveResult = await handler.SaveAsync(platformBaseUrl, view, data, savePrms);
+			return new SaveResult()
+			{
+				Data = JsonConvert.SerializeObject(saveResult, JsonHelpers.DataSerializerSettings),
+			};
+		}
 
 		// TODO: HookHandler, invokeTarget, events
 

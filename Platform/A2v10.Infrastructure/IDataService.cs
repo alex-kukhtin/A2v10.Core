@@ -75,8 +75,8 @@ public interface ISaveResult
 
 public interface IDataService
 {
-	Task<IDataLoadResult> LoadAsync(UrlKind kind, String baseUrl, Action<ExpandoObject> setParams);
-	Task<IDataLoadResult> LoadAsync(String baseUrl, Action<ExpandoObject> setParams);
+	Task<IDataLoadResult> LoadAsync(UrlKind kind, String baseUrl, Action<ExpandoObject> setParams, Boolean isReload = false);
+	Task<IDataLoadResult> LoadAsync(String baseUrl, Action<ExpandoObject> setParams, Boolean isReload = false);
     Task<IInvokeResult> ExportAsync(String baseUrl, Action<ExpandoObject> setParams);
     Task<IBlobInfo?> LoadBlobAsync(UrlKind kind, String baseUrl, Action<ExpandoObject> setParams, String? suffix = null);
 	Task<ExpandoObject> SaveBlobAsync(String baseUrl, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams, UrlKind urlKind = UrlKind.File);

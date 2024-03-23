@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System.IO;
 using System.Reflection;
@@ -33,7 +33,7 @@ public partial class DataService
 			ModelBlobType.sql => await LoadBlobSql(blob, prms),
 			ModelBlobType.json => await LoadBlobJson(blob, prms),
 			ModelBlobType.clr => await LoadBlobClr(blob, prms),
-			ModelBlobType.azureBlob => await LoadBlobAzure(blob, prms),
+			ModelBlobType.blobStorage => await LoadBlobStorage(blob, prms),
 			_ => throw new NotImplementedException(blob.Type.ToString()),
 		};
 		return blobInfo;
@@ -46,7 +46,7 @@ public partial class DataService
 			throw new DataServiceException($"LoadBlobProcedure is null");
 		return _dbContext.LoadAsync<BlobInfo>(blob?.DataSource, loadProc, prms);
 	}
-	private async Task<BlobInfo?> LoadBlobAzure(IModelBlob blob, ExpandoObject prms)
+	private async Task<BlobInfo?> LoadBlobStorage(IModelBlob blob, ExpandoObject prms)
 	{
 		var blobInfo = await LoadBlobSql(blob, prms);
 		var blobName = blobInfo?.BlobName
@@ -55,9 +55,10 @@ public partial class DataService
 			return blobInfo;
 
 		var blobEngine = _serviceProvider.GetRequiredService<IBlobStorageProvider>();
-		var engine = blobEngine.FindBlobStorage("AzureStorage");
+		var storage = blobEngine.FindBlobStorage(blob.BlobStorage ??
+			throw new InvalidOperationException("BlobStorage is null"));
 
-		var bytes = await engine.LoadAsync(blob.AzureSource, blob.Container, blobName);
+		var bytes = await storage.LoadAsync(blob.BlobSource, blob.Container, blobName);
 
 		blobInfo.Stream = bytes.ToArray();
 		return blobInfo;
@@ -131,8 +132,8 @@ public partial class DataService
 		{
 			ModelBlobType.parse => await ParseFile(blobModel, setBlob, setParams),
 			ModelBlobType.sql => await SaveBlobSql(blobModel, setBlob, setParams),
-			ModelBlobType.azureBlob => await SaveBlobAzure(blobModel, setBlob, setParams),
 			ModelBlobType.clr => await SaveBlobClr(blobModel, setBlob, setParams),
+			ModelBlobType.blobStorage => await SaveBlobStorage(blobModel, setBlob, setParams),
 			_ =>
 				throw new NotImplementedException(blobModel.Type.ToString())
 		};
@@ -246,7 +247,7 @@ public partial class DataService
 			result.Add("Token", output.Token);
 		return result;
 	}
-	private async Task<ExpandoObject> SaveBlobAzure(IModelBlob blobModel, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams)
+	private async Task<ExpandoObject> SaveBlobStorage(IModelBlob blobModel, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams)
 	{
 		BlobUpdateInfo blobInfo = new()
 		{
@@ -263,8 +264,9 @@ public partial class DataService
 		blobInfo.BlobName = $"{tenant}{folder}/{Guid.NewGuid()}_{blobInfo.Name}";
 
 		var blobEngine = _serviceProvider.GetRequiredService<IBlobStorageProvider>();
-		var storage = blobEngine.FindBlobStorage("AzureStorage");
-		await storage.SaveAsync(blobModel.AzureSource, blobModel.Container, blobInfo);
+		var storage = blobEngine.FindBlobStorage(blobModel.BlobStorage ??
+			throw new InvalidOperationException("BlobStorage is null"));
+		await storage.SaveAsync(blobModel.BlobSource, blobModel.Container, blobInfo);
 
 		blobInfo.Stream = null; // not stream in SQL
 		return await SaveBlobInt(blobInfo, blobModel, setParams);
@@ -380,7 +382,7 @@ public partial class DataService
 		return blobModel.Type switch
 		{
 			ModelBlobType.sql => await DeleteBlobSql(blobModel, setParams),
-			ModelBlobType.azureBlob => await DeleteBlobAzure(blobModel, setParams),
+			ModelBlobType.blobStorage => await DeleteBlobStorage(blobModel, setParams),
 			_ =>
 				throw new NotImplementedException(blobModel.Type.ToString())
 		};
@@ -391,7 +393,7 @@ public partial class DataService
 	{
 		throw new NotImplementedException();
 	}
-	Task<ExpandoObject> DeleteBlobAzure(IModelBlob model, Action<ExpandoObject>? setParams)
+	Task<ExpandoObject> DeleteBlobStorage(IModelBlob model, Action<ExpandoObject>? setParams)
 	{
 		throw new NotImplementedException();
 	}

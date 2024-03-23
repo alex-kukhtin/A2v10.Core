@@ -1,8 +1,9 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Alex Kukhtin. All rights reserved.
 
+
+using System.Text;
 
 using Microsoft.Extensions.DependencyInjection;
-using System.Text;
 
 namespace A2v10.Xaml;
 
@@ -61,5 +62,11 @@ public class FullHeightPanel(IServiceProvider serviceProvider) : Container
 		panel.RenderStart(context);
 		RenderChildren(context);
 		panel.RenderEnd(context);
+	}
+
+	protected override void OnEndInit()
+	{
+		base.OnEndInit();
+		EndInitAttached(_attachedPropertyManager);
 	}
 }
