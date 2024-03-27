@@ -191,7 +191,7 @@ app.modules['std:signalR'] = function () {
 
 // Copyright © 2023-2024 Oleksandr Kukhtin. All rights reserved.
 
-/*20240315-8268*/
+/*20240327-8271*/
 
 /* tabbed:shell.js */
 (function () {
@@ -752,6 +752,7 @@ app.modules['std:signalR'] = function () {
 			eventBus.$on('closePlain', this.closeTabFromStore);
 			eventBus.$on('pageReloaded', this._pageReloaded);
 			eventBus.$on('toParentTab', this._eventToParentTab);
+			eventBus.$on('closeAllTabs', this.popupCloseAll);
 			eventBus.$on('beginRequest', () => {
 				me.requestsCount += 1;
 				window.__requestsCount__ = me.requestsCount;
