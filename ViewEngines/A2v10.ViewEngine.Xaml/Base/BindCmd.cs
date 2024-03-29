@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System.Text;
 
@@ -94,6 +94,7 @@ public enum Permission
 	CanDelete = 4,
 	CanApply = 8,
 	CanUnapply = 16,
+	CanCreate = 32,
 }
 
 //[DefaultProperty("Command")]
