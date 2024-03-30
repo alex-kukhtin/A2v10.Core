@@ -1,11 +1,18 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Xaml;
+
+public enum BorderMode
+{
+	Default,
+	None
+}
 
 public class Static : ValuedControl, ITableControl
 {
 	public TextAlign Align { get; set; }
 	public UInt32 MaxChars { get; set; }
+	public BorderMode Border { get; set; }	
 
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
@@ -17,6 +24,9 @@ public class Static : ValuedControl, ITableControl
 		MergeValue(input, context); // item, prop for validator
 		MergeAlign(input, context, Align);
 		SetSize(input, nameof(Static));
+		if (Border == BorderMode.None)
+			input.AddCssClass("no-border");
+
 		var valBind = GetBinding(nameof(Value));
 		if (valBind != null)
 		{
