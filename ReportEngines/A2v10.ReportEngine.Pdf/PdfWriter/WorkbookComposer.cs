@@ -74,7 +74,11 @@ internal class WorkbookComposer(Workbook _workbook, RenderContext _context) : Fl
 
 	private static void ComposeCell(WorkbookCell wbCell, IContainer cellCont)
 	{
-		if (!String.IsNullOrEmpty(wbCell.Value))
+		if (wbCell.Image != null)
+		{
+			cellCont.Image(wbCell.Image.Stream);
+		}
+		else if (!String.IsNullOrEmpty(wbCell.Value))
 		{
 			cellCont.Text(wbCell.Value)
 				.LineHeight(1)

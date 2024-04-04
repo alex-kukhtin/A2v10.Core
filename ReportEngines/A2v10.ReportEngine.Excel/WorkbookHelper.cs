@@ -11,6 +11,7 @@ using A2v10.ReportEngine.Script;
 
 namespace A2v10.ReportEngine.Excel;
 
+public record CellImage(Byte[] Stream);
 public record WorkbookCell
 {
 	public WorkbookCell(Cell cell)
@@ -29,6 +30,7 @@ public record WorkbookCell
 	public UInt32 RowSpan => Cell.RowSpan;
 	public Boolean IsSpanPart { get; init; }	
 	public String? Value { get; set;}
+	public CellImage? Image { get; set; }
 }
 
 public record RealRow(UInt32 CellRow, ExpandoObject? Item = null);
@@ -70,9 +72,26 @@ public partial class WorkbookHelper
 					continue;
 				foreach (var colElem in coll)
 				{
-					// TODO: Check nested ranges
-					for (UInt32 k=rng.Start; k<=rng.End; k++)
-						yield return new RealRow(k, colElem);
+					for (UInt32 k = rng.Start; k <= rng.End; k++)
+					{
+                        // TODO: Check nested ranges
+                        var innerRng = _workbook.Ranges.Find(r => r != rng && r.Start == k);
+						if (innerRng == null)
+							yield return new RealRow(k, colElem);
+						else
+						{
+							var innerColl = ScriptEngine.GetCollection(colElem, innerRng.Value[1..^1]);
+							if (innerColl == null)
+								continue;
+							foreach (var innerElem in innerColl)
+							{
+								for (UInt32 m = innerRng.Start; m <= innerRng.End; m++)
+								{
+									yield return new RealRow(m, innerElem);
+								}
+							}
+                        }
+					}
 				}
 				r += rng.End - rng.Start;
 			}
@@ -86,8 +105,14 @@ public partial class WorkbookHelper
 		var val = cell.Value;
 		if (String.IsNullOrEmpty(val))
 			return wbCell;
-		wbCell.Value = _context.Resolve(val, item ?? _context.DataModel, cell.DataType, cell.Format ?? cell.RuntimeStyle?.Format);
-		return wbCell;
+		var rr = _context.Resolve(val, item ?? _context.DataModel, cell.DataType, cell.Format ?? cell.RuntimeStyle?.Format);
+		if (rr != null)
+		{
+			wbCell.Value = rr.Value;
+			if (rr.Stream != null)
+				wbCell.Image = new CellImage(rr.Stream);
+		}
+        return wbCell;
 	}
 
 	private (WorkbookCell?[,] mx, List<RealRow> rows) CreateCellMatrix()

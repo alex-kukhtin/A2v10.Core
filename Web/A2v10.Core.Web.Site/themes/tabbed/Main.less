@@ -323,13 +323,13 @@ pre.a2-code {
 	color: @danger-txt-color;
 	border: 1px solid @danger-brd-color;
 	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-	user-select:text;
+	user-select: text;
 
 	.message {
 		padding: 15px 10px;
 		white-space: pre-line;
-		font-weight: bold;
-		font-size:1.2rem;
+		font-weight: @font-bold;
+		font-size: 1.2rem;
 	}
 
 	.stack-trace {
@@ -342,15 +342,16 @@ pre.a2-code {
 	}
 
 	.link {
-		padding:0.5rem 1rem;
-		display:inline-block;
-		border:1px solid @danger-txt-color;
-		font-weight:bold;
-		color:@danger-txt-color;
-		margin-bottom:1rem;
+		padding: 0.5rem 1rem;
+		display: inline-block;
+		border: 1px solid @danger-txt-color;
+		font-weight: @font-bold;
+		color: @danger-txt-color;
+		margin-bottom: 1rem;
+
 		&:hover {
-			background-color:@danger-btn-color;
-			color:white;
+			background-color: @danger-btn-color;
+			color: white;
 		}
 	}
 }
@@ -392,7 +393,7 @@ pre.a2-code {
 .a2-header {
 	margin: 0 0 .8rem 0;
 	color: @header-text-color;
-	font-weight: bold;
+	font-weight: @font-bold;
 	font-family: inherit;
 	word-break: break-word;
 }

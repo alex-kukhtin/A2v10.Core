@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Threading.Tasks;
@@ -824,7 +824,7 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
 			// VERIFY TWO FACTOR CODE
 			var twoFactorResult = await _userManager.VerifyTwoFactorTokenAsync(user, _userManager.Options.Tokens.AuthenticatorTokenProvider, model.Code);
 
-			_logger.LogInformation(twoFactorResult.ToString());
+			_logger.LogInformation("Two Factor Result: {twoFactorResult}", twoFactorResult.ToString());
 
 			var signInResult = await _signInManager.TwoFactorAuthenticatorSignInAsync(model.Code, model.IsPersistent, true);
 			if (signInResult.Succeeded)

@@ -1,12 +1,13 @@
-﻿// Copyright © 2022-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2022-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Globalization;
-using A2v10.Infrastructure;
 using Jint;
 using Jint.Native;
+
+using A2v10.Infrastructure;
 
 namespace A2v10.ReportEngine.Script;
 
@@ -45,8 +46,17 @@ public class ScriptEngine
 			return listExp;
 		throw new InvalidOperationException($"'{expression}' is not a collection");
 	}
+    public static IList<ExpandoObject>? GetCollection(ExpandoObject value, String expression)
+    {
+        var list = value.Eval<Object>(expression);
+		if (list == null)
+			return null;
+        if (list is IList<ExpandoObject> listExp)
+            return listExp;
+        throw new InvalidOperationException($"'{expression}' is not a collection");
+    }
 
-	public Object? EvaluateValue(String? expression)
+    public Object? EvaluateValue(String? expression)
 	{
 		if (expression == null)
 			return null;

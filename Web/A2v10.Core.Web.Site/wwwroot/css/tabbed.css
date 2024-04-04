@@ -1246,7 +1246,7 @@ h5,
 }
 .span-sum {
   white-space: nowrap;
-  font-weight: 600;
+  font-weight: 500;
 }
 .span-sum .ico {
   margin-left: 0.25rem;
@@ -3341,7 +3341,7 @@ table.data-grid > tbody > tr.light-yellow > td {
   background-color: rgba(255, 216, 0, 0.07);
 }
 table.data-grid > tbody > tr.bold > td {
-  font-weight: 600;
+  font-weight: 500;
 }
 .data-grid-container.fixed-header {
   height: 100%;
@@ -4201,7 +4201,7 @@ tr:hover .commandbar.visible-hover {
   margin-left: 0.5rem;
 }
 .chat-item .chat-user {
-  font-weight: 600;
+  font-weight: 500;
 }
 .chat-item .chat-add-on {
   float: right;
@@ -4422,7 +4422,7 @@ ul.news-list > li {
   background-color: var(--dialogHeaderBkColor);
   padding: 0.5em 0.5em 0.5em 1rem;
   cursor: move;
-  font-weight: 600;
+  font-weight: 500;
   min-height: 2.4rem;
   line-height: 1.7rem;
   border-radius: 8px 8px 0 0;
@@ -4754,7 +4754,7 @@ table col.sorted {
   background-color: rgba(238, 238, 238, 0.25);
 }
 table tr.bold > td {
-  font-weight: 600;
+  font-weight: 500;
 }
 table td.gray {
   background-color: var(--neutral50);
@@ -6356,7 +6356,7 @@ table.sheet tr.row-title {
 }
 table.sheet tr.row-title td {
   border-style: none !important;
-  font-weight: 600;
+  font-weight: 500;
   padding: 0 6px 5px, 5px;
   background-color: var(--bgSheet);
 }
@@ -6415,14 +6415,14 @@ table.sheet tr.row-total {
   background-color: rgba(255, 239, 135, 0.2);
 }
 table.sheet tr.row-total td {
-  font-weight: 600;
+  font-weight: 500;
 }
 table.sheet tr.group {
   background-color: rgba(221, 248, 236, 0.25);
   color: #208080;
 }
 table.sheet tr.group td {
-  font-weight: 600;
+  font-weight: 500;
 }
 table.sheet .group-cell {
   padding: 4px 2px;
@@ -6579,7 +6579,7 @@ table > colgroup col.blue {
 .app-exception .message {
   padding: 15px 10px;
   white-space: pre-line;
-  font-weight: bold;
+  font-weight: 500;
   font-size: 1.2rem;
 }
 .app-exception .stack-trace {
@@ -6594,7 +6594,7 @@ table > colgroup col.blue {
   padding: 0.5rem 1rem;
   display: inline-block;
   border: 1px solid #a94442;
-  font-weight: bold;
+  font-weight: 500;
   color: #a94442;
   margin-bottom: 1rem;
 }
@@ -6634,7 +6634,7 @@ table > colgroup col.blue {
 .a2-header {
   margin: 0 0 0.8rem 0;
   color: var(--text-header);
-  font-weight: bold;
+  font-weight: 500;
   font-family: inherit;
   word-break: break-word;
 }
@@ -6645,7 +6645,7 @@ table > colgroup col.blue {
   padding: 0.15rem 0.4rem 0.2rem 0.4rem;
   margin-left: 0.6rem;
   font-size: 85%;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1;
   text-align: center;
   white-space: nowrap;
@@ -6850,6 +6850,10 @@ table > colgroup col.blue {
   display: inline-flex;
   align-items: center;
   position: relative;
+}
+.mdi-tabs-container .mdi-tabs li:not(.tab-home) {
+  max-width: var(--maxTabWidth);
+  min-width: 65px;
 }
 .mdi-tabs-container .mdi-tabs li .tab-title {
   max-width: 160px;
@@ -7176,8 +7180,14 @@ table > colgroup col.blue {
   font-weight: 500;
   margin: 0;
 }
-@media (max-width: 1000px) {
-  /* TODO adjust tab size */
+@media (max-width: 1024px) {
+  /* adjust tab size */
+  .mdi-tabs-container .mdi-tabs li {
+    padding-left: 10px;
+  }
+  .mdi-tabs-container .mdi-tabs li.tab-home {
+    padding-right: 10px;
+  }
 }
 .login-shell {
   display: grid;

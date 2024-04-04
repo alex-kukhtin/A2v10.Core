@@ -9,6 +9,7 @@ using System.Globalization;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Drawing.Spreadsheet;
 
 using XSheet = A2v10.Xaml.Report.Spreadsheet.Spreadsheet;
 using XWorkbook = A2v10.Xaml.Report.Spreadsheet.Workbook;
@@ -280,31 +281,7 @@ public class ExcelConvertor
 			}
 		}
 
-		/*
-		var drawings = workSheetPart.DrawingsPart?.ImageParts;
-		if (drawings != null)
-		{
-			foreach (var dr in drawings)
-			{
-				var sream = dr.GetStream();
-				var ct = dr.ContentType;
-				var rId = workSheetPart.DrawingsPart?.GetIdOfPart(dr);
-			}
-			var anchor = workSheetPart.DrawingsPart?.WorksheetDrawing.OfType<TwoCellAnchor>();
-			if (anchor != null)
-			{
-				foreach (var ca in anchor)
-				{
-					var row = ca.FromMarker?.RowId?.Text;
-					var col = ca.FromMarker?.ColumnId?.Text;
-					var pic = ca.OfType<DocumentFormat.OpenXml.Drawing.Spreadsheet.Picture>().FirstOrDefault();
-					var rIdofPicture = pic?.BlipFill?.Blip?.Embed;
-				}
-			}
-		}
-		*/
-
-		if (styleSheet != null)
+        if (styleSheet != null)
 		{
 			var refs = new StyleRefs(styleSheet);
 			var formats = styleSheet.Descendants<CellFormat>().ToArray();
@@ -322,7 +299,8 @@ public class ExcelConvertor
 
 		return ws;
 	}
-	void FitColumnCount(XWorkbook wb)
+
+    void FitColumnCount(XWorkbook wb)
 	{
 		if (wb.ColumnCount > _realColumns)
 			wb.ColumnCount = _realColumns;

@@ -16,6 +16,7 @@ using A2v10.Xaml.Report;
 
 namespace A2v10.ReportEngine.Script;
 
+public record ResolveResult(String? Value, Byte[]? Stream = null);
 public partial class RenderContext
 {
 	private readonly IReportLocalizer _localizer;
@@ -157,13 +158,13 @@ public partial class RenderContext
 	private static Regex ResolveRegex() => RESOLVEREGEX;
 #endif
 
-	public String? Resolve(String? source, ExpandoObject? item, DataType dataType, String? format)
+	public ResolveResult? Resolve(String? source, ExpandoObject? item, DataType dataType, String? format)
 	{
 		if (String.IsNullOrEmpty(source))
-			return source;
+			return new ResolveResult(source);
 		var ms = ResolveRegex().Matches(source);
 		if (ms.Count == 0)
-			return source;
+			return new ResolveResult(source);
 		if (item == null)
 			return null;
 		var sb = new StringBuilder(source);
@@ -191,14 +192,16 @@ public partial class RenderContext
 					key = exp;
 				}
 				var valObj = item.Eval<Object>(key);
+				if (valObj is Byte[] bytes)
+					return new ResolveResult(null, bytes);
 				valResult = ValueToString(valObj, MatchDataType(dataType, valObj), format);
 			}
 			if (ms.Count == 1 && m.Groups[0].Value == source)
-				return valResult ?? String.Empty; // single element
+				return new ResolveResult(valResult ?? String.Empty); // single element
 			sb.Replace(m.Value, valResult);
 
 		}
-		return sb.ToString();
+		return new ResolveResult(sb.ToString());
 	}
 
 	public String? ResolveModel(String? value)
@@ -210,7 +213,7 @@ public partial class RenderContext
 		sb.Replace("}}", "}");
 		var rx =  Resolve(sb.ToString(), DataModel, DataType.String, null);
 		// inner expressions!!!!
-		return Resolve(rx, DataModel, DataType.String, null);
+		return Resolve(rx?.Value, DataModel, DataType.String, null)?.Value;
 	}
 
 	public Boolean IsVisible(XamlElement elem)
