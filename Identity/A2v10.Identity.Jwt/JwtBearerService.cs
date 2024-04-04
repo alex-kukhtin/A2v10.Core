@@ -93,7 +93,9 @@ public class JwtBearerService(JwtBearerSettings settings)
 				Id = principal.Identity.GetUserId<T>(),
 				UserName = principal.Identity.GetUserClaim(WellKnownClaims.Name),
 				Tenant = principal.Identity.GetUserTenant<T>(),
-				Organization = principal.Identity.GetUserOrganization<T>()
+				Organization = principal.Identity.GetUserOrganization<T>(),
+				OrganizationKey = principal.Identity.GetUserOrganizationKey(),
+				Locale = principal.Identity.GetUserLocale()
 			};
 		}
 		throw new SecurityTokenValidationException();
