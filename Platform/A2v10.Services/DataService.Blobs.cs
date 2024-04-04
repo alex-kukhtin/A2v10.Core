@@ -212,7 +212,7 @@ public partial class DataService
 		var result = new ExpandoObject()
 		{
 			{ "Id",    output.Id },
-			{ "Name",  blobInfo.Name ?? String.Empty },
+			{ "Name",  output.Name ?? blobInfo.Name ?? String.Empty },
 			{ "Mime",  blobInfo.Mime ?? String.Empty },
 		};
 		if (output.Token != null)

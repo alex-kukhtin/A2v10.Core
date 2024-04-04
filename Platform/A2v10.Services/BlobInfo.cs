@@ -41,5 +41,6 @@ public record BlobUpdateString
 public record BlobUpdateOutput : IBlobUpdateOutput
 {
     public Object Id { get; set; } = new();
+    public String? Name { get; set; }
     public Guid? Token { get; set; }
 }
