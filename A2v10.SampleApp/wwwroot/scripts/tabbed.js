@@ -191,7 +191,7 @@ app.modules['std:signalR'] = function () {
 
 // Copyright © 2023-2024 Oleksandr Kukhtin. All rights reserved.
 
-/*20240327-8271*/
+/*20240403-8272*/
 
 /* tabbed:shell.js */
 (function () {
@@ -247,7 +247,8 @@ app.modules['std:signalR'] = function () {
 			canPopupClose() { return this.contextTabKey > 10; /* 10 - home */ },
 			canPopupCloseRight() { return this.contextTabKey && this.tabs.some(v => v.key > this.contextTabKey); },
 			canReopenClosed() { return this.closedTabs.length > 0 },
-			hasModified() { return this.tabs.some(t => t.root && t.root.$isDirty); }
+			hasModified() { return this.tabs.some(t => t.root && t.root.$isDirty); },
+			maxTabWidth() { return `calc((100% - 50px) / ${this.tabs.length})`; }
 		},
 		methods: {
 			navigate(u1) {
