@@ -31,7 +31,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 		else
 		{
 			if (modelView.IsIndex)
-				templateText = CreateIndexTemplate(modelView);
+				templateText = CreateIndexTemplate(table);
 			else if (platformUrl.Action == "edit")
 				templateText = CreateEditTemplate(modelView);
 		}
@@ -43,9 +43,9 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 			page = LoadPage(modelView, rawView);
 
 		if (modelView.IsIndex && !modelView.IsDialog)
-			page = CreateIndexPage();
+			page = CreateIndexPage(table);
 		else if (!modelView.IsIndex && modelView.IsDialog && platformUrl.Action == "edit")
-			page = CreateEditDialog();
+			page = CreateEditDialog(table);
 
 		if (page == null)
 			throw new InvalidOperationException("Page is null");
@@ -62,10 +62,18 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 		return await _dynamicRenderer.RenderPage(rri);
 	}
 
-	UIElement CreateIndexPage()
+	UIElement CreateIndexPage(RuntimeTable table)
 	{
 		var page = new Page()
 		{
+			CollectionView = new CollectionView()
+			{
+				RunAt = RunMode.ServerUrl,
+				Bindings = cw =>
+				{
+					cw.SetBinding(nameof(CollectionView.ItemsSource), new Bind(table.Name));
+				}
+			},
 			Children = [
 				new Grid(_xamlSericeProvider) {
 					Rows = [
@@ -73,6 +81,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 						new RowDefinition() {Height = GridLength.FromString("1*")},
 						new RowDefinition() {Height = GridLength.FromString("Auto")},
 					],
+					Height = Length.FromString("100%"),
 					Children = [
 						new Toolbar(_xamlSericeProvider)
 						{
@@ -84,9 +93,9 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 										var bindCmd = new BindCmd() {
 											Command = Xaml.CommandType.Dialog,
 											Action = DialogAction.EditSelected,
-											Url = "/catalog/experiment/edit",
+											Url = "/catalog/agent/edit",
 										};
-										bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind("Agents"));
+										bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(table.Name));
 										btn.SetBinding(nameof(Button.Command), bindCmd);
 									}
 								},
@@ -102,10 +111,18 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 						},
 						new DataGrid() {
 							FixedHeader = true,
+							Sort = true,
 							Bindings = (dg) => {
-								dg.SetBinding(nameof(DataGrid.ItemsSource), new Bind("Agents"));
+								dg.SetBinding(nameof(DataGrid.ItemsSource), new Bind("Parent.ItemsSource"));
 							},
 							Columns = [
+								new DataGridColumn() {
+									Header = "#",
+									Role = ColumnRole.Id,
+									Bindings = (c) => {
+										c.SetBinding(nameof(DataGridColumn.Content), new Bind("Id"));
+									}
+								},
 								new DataGridColumn() {
 									Header = "@[Name]",
 									Bindings = (c) => {
@@ -119,6 +136,11 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 									}
 								}
 							]
+						},
+						new Pager() {
+							Bindings = p => {
+								p.SetBinding(nameof(Pager.Source), new Bind("Parent.Pager"));
+							}
 						}
 					]
 				}
@@ -127,7 +149,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 		return page;
 	}
 
-	UIElement CreateEditDialog()
+	UIElement CreateEditDialog(RuntimeTable table)
 	{
 		var dlg = new Dialog()
 		{
@@ -169,14 +191,14 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 		return dlg;
 	}
 
-	String CreateIndexTemplate(IModelView modelView)
+	String CreateIndexTemplate(RuntimeTable table)
 	{
 		var template = $$"""
 
 			const template = {
 				options:{
 					noDirty: true,
-					persistSelect: ["Agents"]
+					persistSelect: ['{{table.Name}}']
 				},
 				validators: {
 				}

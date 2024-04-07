@@ -37,9 +37,9 @@ public class Startup(IConfiguration configuration)
     public void ConfigureServices(IServiceCollection services)
 	{
 		//!!!Before UsePlatform(). It has a default implementation.
-		services.UseMailClient();
-		//services.UseAppRuntimeBuilder();
-		services.UsePermissions();
+		//services.UseMailClient();
+		services.UseAppRuntimeBuilder();
+		//services.UsePermissions();
 		//services.AddScoped<IUserBannerProvider, TestBannerProvider>();
 		//services.UseLicenseManager();
 		services.AddScoped<ILicenseManager, NullLicenseManager>();
@@ -48,6 +48,7 @@ public class Startup(IConfiguration configuration)
 
 		var builders = services.UsePlatform(Configuration);
 
+		/*
         builders.AuthenticationBuilder.AddGoogle(opts =>
 		{
 			opts.ClientId = Configuration.GetValue<String>("Identity:Google:ClientId")
@@ -62,6 +63,7 @@ public class Startup(IConfiguration configuration)
 			opts.ClientSecret = Configuration.GetValue<String>("Identity:Microsoft:ClientSecret")
 				?? throw new InvalidOperationException("Identity:Microsoft:ClientSecret not found");
 		});
+		*/
 
 		services.AddSingleton<TestBusinessAppProvider>();
 

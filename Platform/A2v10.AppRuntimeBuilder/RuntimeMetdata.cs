@@ -46,6 +46,8 @@ public record RuntimeField
 }
 public record RuntimeTable
 {
+	public String Name {  get; init; }	= String.Empty;
+	public String Schema { get; init; } = String.Empty;
 	public List<RuntimeField> Fields { get; init; } = [];
 
 	public IEnumerable<RuntimeField> RealFields()
@@ -54,11 +56,9 @@ public record RuntimeTable
 
 		yield return new RuntimeField() { Name = "Id", Type = FieldType.Identifier };
 		yield return new RuntimeField() { Name = "Name", Type = FieldType.String, Length = 255 };
-		yield return new RuntimeField() { Name = "FullName", Type = FieldType.String, Length = 255 };
 		yield return new RuntimeField() { Name = "Memo", Type = FieldType.String, Length = 255 };
-		yield return new RuntimeField() { Name = "IsCustomer", Type = FieldType.Boolean};
-		yield return new RuntimeField() { Name = "IsSupplier", Type = FieldType.Boolean };
-		yield return new RuntimeField() { Name = "Folder", Type = FieldType.Identifier };
+		yield return new RuntimeField() { Name = "Code", Type = FieldType.String, Length = 12 };
+		yield return new RuntimeField() { Name = "FullName", Type = FieldType.String, Length = 255 };
 	}
 }
 
