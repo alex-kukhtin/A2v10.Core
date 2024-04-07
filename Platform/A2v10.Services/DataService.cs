@@ -11,7 +11,6 @@ using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Services.Interop;
-using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace A2v10.Services;
 
@@ -49,7 +48,7 @@ public class SaveResult : ISaveResult
 }
 public partial class DataService(IServiceProvider _serviceProvider, IModelJsonReader _modelReader, IDbContext _dbContext, ICurrentUser _currentUser,
     ISqlQueryTextProvider _sqlQueryTextProvider, IAppCodeProvider _codeProvider,
-    IExternalDataProvider _externalDataProvider, ILocalizer _localizer) : IDataService
+    IExternalDataProvider _externalDataProvider, ILocalizer _localizer, IAppRuntimeBuilder _appRuntimeBuilder) : IDataService
 {
     static PlatformUrl CreatePlatformUrl(UrlKind kind, String baseUrl)
 	{
@@ -144,11 +143,29 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 		return view;
 	}
 
+	void CheckPermissions(IModelBase modelBase)
+	{
+		if (modelBase.Permissions == null)
+			return;
+		foreach (var (k, v) in modelBase.Permissions)
+		{
+			if (!_currentUser.IsPermissionEnabled(k, (PermissionFlag) v))
+				throw new DataServiceException("UI:Access denied");
+		}
+	}
+
 	async Task<IDataLoadResult> Load(IPlatformUrl platformUrl, Action<ExpandoObject> setParams, Boolean isReload = false)
 	{
 		var view = await LoadViewAsync(platformUrl);
 
-		if (!String.IsNullOrEmpty(view.EndpointHandler))
+		CheckPermissions(view);
+
+		if (view.ModelAuto != null)
+		{
+			var result = await _appRuntimeBuilder.RenderAsync(platformUrl, view, isReload);
+			return new DataLoadResult(result.DataModel, null, result.ActionResult);
+		}
+		else if (!String.IsNullOrEmpty(view.EndpointHandler))
 		{
 			var handler = GetEndpointHandler(view.EndpointHandler);
 			var prms = view.CreateParameters(platformUrl, null, setParams);
@@ -318,13 +335,27 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 		var platformBaseUrl = CreatePlatformUrl(baseUrl);
 		var view = await LoadViewAsync(platformBaseUrl);
 
+        if (_currentUser.State.IsReadOnly)
+			throw new DataServiceException("UI:Access denied");
+
+		CheckPermissions(view);
+
 		var savePrms = view.CreateParameters(platformBaseUrl, null, setParams);
 
 		ResolveParams(savePrms, data);
 
 		CheckUserState();
 
-		if (!String.IsNullOrEmpty(view.EndpointHandler))
+		if (view.ModelAuto != null)
+		{
+			var saveResult = await _appRuntimeBuilder.SaveAsync(platformBaseUrl, view, data, savePrms);
+			return new SaveResult()
+			{
+				Data = JsonConvert.SerializeObject(saveResult, JsonHelpers.DataSerializerSettings),
+			};
+
+		}
+		else if (!String.IsNullOrEmpty(view.EndpointHandler))
 		{
 			var handler = GetEndpointHandler(view.EndpointHandler);
 			var saveResult = await handler.SaveAsync(platformBaseUrl, view, data, savePrms);
@@ -359,7 +390,11 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 	{
 		var platformBaseUrl = CreatePlatformUrl(baseUrl);
 		var cmd = await _modelReader.GetCommandAsync(platformBaseUrl, command);
+
+		CheckPermissions(cmd);
+
 		CheckRoles(cmd);
+
 
 		var prms = cmd.CreateParameters(platformBaseUrl, null, (eo) =>
 			{

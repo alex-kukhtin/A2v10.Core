@@ -25,7 +25,7 @@ public class AppTenantManager : IAppTenantManager
 		_dbContext = dbContext;
 		var options = userStoreOptions.Value;
 		_multiTenant = options.MultiTenant ?? false;
-		_dbSchema = options.Schema ?? "a2security";
+		_dbSchema = options.SecuritySchema;
 		_dataSource = options.DataSource;
 		_currentUser = currentUser;	
 	}

@@ -128,6 +128,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "A2v10.ReportEngine.Excel", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "A2v10.ReportEngine.Script", "ReportEngines\A2v10.ReportEngine.Script\A2v10.ReportEngine.Script.csproj", "{31DEC414-7BD9-4007-85FA-66FD85D8445A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "A2v10.AppRuntimeBuilder", "Platform\A2v10.AppRuntimeBuilder\A2v10.AppRuntimeBuilder.csproj", "{FA54AAD2-4810-48B2-900B-EF432ECD7831}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -250,6 +252,10 @@ Global
 		{31DEC414-7BD9-4007-85FA-66FD85D8445A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{31DEC414-7BD9-4007-85FA-66FD85D8445A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{31DEC414-7BD9-4007-85FA-66FD85D8445A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FA54AAD2-4810-48B2-900B-EF432ECD7831}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FA54AAD2-4810-48B2-900B-EF432ECD7831}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FA54AAD2-4810-48B2-900B-EF432ECD7831}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FA54AAD2-4810-48B2-900B-EF432ECD7831}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -286,6 +292,7 @@ Global
 		{214A2D6F-AD73-4B18-911D-896B7B001768} = {A1D69499-3CCF-4BBC-AE6E-0281286A1F3F}
 		{5ABDE5AE-B960-4373-90DB-8CC05CBC37A4} = {A1D69499-3CCF-4BBC-AE6E-0281286A1F3F}
 		{31DEC414-7BD9-4007-85FA-66FD85D8445A} = {A1D69499-3CCF-4BBC-AE6E-0281286A1F3F}
+		{FA54AAD2-4810-48B2-900B-EF432ECD7831} = {FAC17E50-040A-4C01-A4DC-DC21B61DA444}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D64A03C5-D2E1-49C8-A7A9-D6022941DE01}

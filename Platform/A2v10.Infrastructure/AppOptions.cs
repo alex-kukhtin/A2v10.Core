@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -28,6 +28,7 @@ public record AppOptions
 	public String? UserMenu { get; set; }
 	public String? Theme { get; set; }
 	public String? Layout { get; set; }
+	public String? HelpUrl { get; set; }
 	public Boolean MultiTenant { get; set; }
 	public Boolean MultiCompany { get; set; }
 	public Boolean Registration { get; set; }

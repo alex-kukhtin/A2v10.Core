@@ -42,11 +42,11 @@ public class EditUserHandler(IServiceProvider serviceProvider) : IClrInvokeTarge
         };
 
         var editedUser = await _dbContext.ExecuteAndLoadAsync<EditUserParams, AppUser<Int64>>(
-                _userStoreOptions.DataSource, $"[{_userStoreOptions.SecuritySchema()}].[User.EditUser]", editPrms)
+                _userStoreOptions.DataSource, $"[{_userStoreOptions.SecuritySchema}].[User.EditUser]", editPrms)
             ?? throw new InvalidOperationException("Error editing user");
 
         if (IsMultiTenant)
-            await _dbContext.ExecuteAsync(editedUser.Segment, $"[{_userStoreOptions.SecuritySchema()}].[User.Tenant.EditUser]", editedUser);
+            await _dbContext.ExecuteAsync(editedUser.Segment, $"[{_userStoreOptions.SecuritySchema}].[User.Tenant.EditUser]", editedUser);
 
         return new ExpandoObject()
         {

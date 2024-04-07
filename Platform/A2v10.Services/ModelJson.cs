@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System.Text;
 
@@ -7,21 +7,25 @@ using Microsoft.Extensions.DependencyInjection;
 using A2v10.Data.Interfaces;
 
 namespace A2v10.Services;
+public class ModelJsonAuto : IModelJsonAuto
+{
+	public AutoRender Render { get; init; }	
+}
 public class ModelJsonBase : IModelBase
 {
 	protected ModelJson? _parent;
 	protected ModelJson Parent => _parent ?? throw new ModelJsonException("Parent is null");
-
 	public String? Source { get; init; }
 	public String? Schema { get; init; }
-	public String? Model { get; init; }	
+	public String? Model { get; init; }
+	public ModelJsonAuto? Auto { get; init; }
+	IModelJsonAuto? IModelBase.ModelAuto => Auto;
 	public Boolean Signal { get; init; }
 	public List<String>? Roles { get; init; }	
-
 	public Int32 CommandTimeout { get; init; }
 
 	public ExpandoObject? Parameters { get; set; }
-
+	public Dictionary<String, PermissionBits>? Permissions { get; init; }
 	internal virtual void SetParent(ModelJson rm)
 	{
 		_parent = rm;
@@ -227,6 +231,13 @@ public class ModelJsonView : ModelJsonViewBase, IModelView
 		if (mobile && !String.IsNullOrEmpty(ViewMobile))
 			return ViewMobile;
 		return View ?? throw new InvalidProgramException("View not defined");
+	}
+
+	public String? GetRawView(Boolean mobile)
+	{
+		if (mobile && !String.IsNullOrEmpty(ViewMobile))
+			return ViewMobile;
+		return View;
 	}
 
 	public IModelView Resolve(IDataModel model)

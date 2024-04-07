@@ -7134,6 +7134,9 @@ table > colgroup col.blue {
   grid-area: main;
   overflow: hidden;
 }
+.mdi-main > .a2-include {
+  height: 100%;
+}
 .mdi-view {
   height: 100%;
 }

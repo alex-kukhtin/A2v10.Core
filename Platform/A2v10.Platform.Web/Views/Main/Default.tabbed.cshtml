@@ -61,6 +61,11 @@
 		<div :class="{spinner: true, active:processing}"></div>
 		<span class="divider"></span>
 
+		<span class="links">
+			<a target="_blank" tabindex="-1" href="" v-on:click.stop.prevent="navigateUrl('/app/about/0')">@loc.Localize(null, "@[About]")</a>
+		</span>
+		<span class="divider"></span>
+
 		<span class="version-info">
 			<a target="_blank" tabindex="-1" href="https://a2v10.com"><i class="ico ico-a2logo a2logo-layout"></i></a>
 			@loc.Localize(null, "@[Version]")

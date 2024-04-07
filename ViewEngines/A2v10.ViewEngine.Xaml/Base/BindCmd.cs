@@ -89,12 +89,15 @@ public enum ExportToFormat
 public enum Permission
 {
 	None = 0,
-	CanView = 1,
-	CanEdit = 2,
-	CanDelete = 4,
-	CanApply = 8,
-	CanUnapply = 16,
-	CanCreate = 32,
+	CanView = PermissionFlag.CanView,
+	CanEdit = PermissionFlag.CanEdit,
+	CanDelete = PermissionFlag.CanDelete,
+	CanApply = PermissionFlag.CanApply,
+	CanUnapply = PermissionFlag.CanUnapply,
+	CanCreate = PermissionFlag.CanCreate,
+	CanFlag64 = PermissionFlag.CanFlag64,
+	CanFlag128 = PermissionFlag.CanFlag128,
+	CanFlag256 = PermissionFlag.CanFlag256	
 }
 
 //[DefaultProperty("Command")]

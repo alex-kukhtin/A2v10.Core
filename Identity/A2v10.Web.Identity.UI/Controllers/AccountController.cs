@@ -46,7 +46,7 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
 
     private Boolean IsMultiTenant => _userStoreOptions.MultiTenant ?? false;
 	private String? CatalogDataSource => _userStoreOptions.DataSource;
-	private String? SecuritySchema => _userStoreOptions.SecuritySchema();
+	private String? SecuritySchema => _userStoreOptions.SecuritySchema;
 
 
     void RemoveAllCookies()

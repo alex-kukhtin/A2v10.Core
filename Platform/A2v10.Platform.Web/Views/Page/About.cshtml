@@ -8,12 +8,12 @@
 <div class="page absolute page-grid" id="@pageGuid">
 	<a2-document-title page-title="@_localizer.Localize("@[About]")"></a2-document-title>
 	<div class="toolbar page-toolbar">
-		<button class="btn btn-tb" v-on:click.prevent="$requery"><i class="ico ico-reload"></i> @_localizer.Localize("@[Refresh]")</button>
+		<button class="btn btn-tb" v-on:click.prevent="$requery()"><i class="ico ico-reload"></i> @_localizer.Localize("@[Refresh]")</button>
 		<div class="aligner"></div>
-		<button class="btn btn-tb" v-on:click.prevent="$close"><i class="ico ico-close"></i> @_localizer.Localize("@[Close]")</button>
+		<button class="btn btn-tb" v-on:click.prevent="$close()"><i class="ico ico-close"></i> @_localizer.Localize("@[Close]")</button>
 	</div>
-	<div class="page-content">
-		<div class="grid app-page">
+	<div class="page-content bg-white">
+		<div class="grid app-page" style="padding:1rem">
 			<h3 class="a2-header" v-text="appData.title"></h3>
 
 			<h4 class="a2-header" v-text="appData.copyright"></h4>
@@ -22,16 +22,22 @@
 			<div>
 				<span v-text="locale.$CreatedOpenSource"></span>
 				<ul class="about-source-list">
-					<li><span class="bold">A2v10</span> Copyright © 2014-2023 Oleksandr Kukhtin <a target="_blank" href="https://a2v10.com" v-text="locale.$HomePage"></a></li>
-					<li><span class="bold">A2v10.Data</span> Copyright © 2014-2023 Oleksandr Kukhtin <a target="_blank" href="https://github.com/alex-kukhtin/A2v10.Data" v-text="locale.$HomePage"></a></li>
-					<li><span class="bold">A2v10.IconFont</span> Copyright © 2017-2023 Oleksandr Kukhtin <a target="_blank" href="https://github.com/alex-kukhtin/A2v10.IconFont" v-text="locale.$HomePage"></a></li>
-					<li><span class="bold">Json.NET</span> Copyright © 2007 James Newton-King <a target="_blank" href="https://github.com/JamesNK/Newtonsoft.Json/blob/master/LICENSE.md" v-text="locale.$License"></a><a target="_blank" href="https://www.newtonsoft.com/json" v-text="locale.$HomePage"></a></li>
-					<li><span class="bold">Jint</span> Copyright © 2013, Sebastien Ros <a target="_blank" href="https://github.com/sebastienros/jint/blob/dev/LICENSE.txt" v-text="locale.$License"></a><a target="_blank" href="https://github.com/sebastienros/jint" v-text="locale.$HomePage"></a></li>
-					<li><span class="bold">QRCoder</span> Copyright © 2013-2018 Raffael Herrmann <a target="_blank" href="https://github.com/codebude/QRCoder/blob/master/LICENSE.txt" v-text="locale.$License"></a><a target="_blank" href="https://github.com/codebude/QRCoder" v-text="locale.$HomePage"></a></li>
+					<li><span class="bold">A2v10</span> Copyright © 2014-2024 Oleksandr Kukhtin <a target="_blank" href="https://a2v10.com" v-text="locale.$HomePage"></a></li>
+					<li><span class="bold">A2v10.Core</span> Copyright © 2014-2024 Oleksandr Kukhtin <a target="_blank" href="https://github.com/alex-kukhtin/A2v10.Core" v-text="locale.$HomePage"></a></li>
+					<li><span class="bold">A2v10.Data.Core</span> Copyright © 2014-2024 Oleksandr Kukhtin <a target="_blank" href="https://github.com/alex-kukhtin/A2v10.Data.Core" v-text="locale.$HomePage"></a></li>
+					<li><span class="bold">A2v10.IconFont</span> Copyright © 2017-2024 Oleksandr Kukhtin <a target="_blank" href="https://github.com/alex-kukhtin/A2v10.IconFont" v-text="locale.$HomePage"></a></li>
+					<li><span class="bold">Json.NET</span> Copyright © 2007 - present James Newton-King <a target="_blank" href="https://github.com/JamesNK/Newtonsoft.Json/blob/master/LICENSE.md" v-text="locale.$License"></a><a target="_blank" href="https://www.newtonsoft.com/json" v-text="locale.$HomePage"></a></li>
+					<li><span class="bold">Jint</span> Copyright © 2013 - present, Sebastien Ros <a target="_blank" href="https://github.com/sebastienros/jint/blob/dev/LICENSE.txt" v-text="locale.$License"></a><a target="_blank" href="https://github.com/sebastienros/jint" v-text="locale.$HomePage"></a></li>
+					<li><span class="bold">QuestPDF</span> Copyright © 2020 - present Marcin Ziąbek CodeFlint <a target="_blank" href="https://www.questpdf.com/license/community.html" v-text="locale.$License"></a><a target="_blank" href="https://www.questpdf.com" v-text="locale.$HomePage"></a></li>
+					<li><span class="bold">Open-XML-SDK</span> Copyright © .NET Foundation and Contributors<a target="_blank" href="https://github.com/dotnet/Open-XML-SDK/blob/main/LICENSE" v-text="locale.$License"></a><a target="_blank" href="https://github.com/dotnet/Open-XML-SDK" v-text="locale.$HomePage"></a></li>
+					<li><span class="bold">MailKit by Jeffrey Stedfast</span> Copyright © .NET Foundation and Contributors<a target="_blank" href="https://github.com/jstedfast/MimeKit/blob/master/LICENSE" v-text="locale.$License"></a><a target="_blank" href="https://mimekit.net" v-text="locale.$HomePage"></a></li>
+					<li><span class="bold">Quartz.AspNetCore</span> Copyright © 2007-present Marko Lahma<a target="_blank" href="https://github.com/quartznet/quartznet?tab=Apache-2.0-1-ov-file#readme" v-text="locale.$License"></a><a target="_blank" href="https://www.quartz-scheduler.net" v-text="locale.$HomePage"></a></li>
+
 					<li><span class="bold">Vue.js</span> Copyright © 2013-2024 Yuxi (Evan) You <a target="_blank" href="https://github.com/vuejs/vue/blob/dev/LICENSE" v-text="locale.$License"></a><a target="_blank" href="https://vuejs.org" v-text="locale.$HomePage"></a></li>
 					<li><span class="bold">Vuex.js</span> Copyright © 2015-2024 Evan You <a target="_blank" href="https://github.com/vuejs/vuex/blob/dev/LICENSE" v-text="locale.$License"></a><a target="_blank" href="https://github.com/vuejs/vuex" v-text="locale.$HomePage"></a></li>
-					<li><span class="bold">D3</span> Copyright © 2010-2020 Mike Bostock <a target="_blank" href="https://github.com/d3/d3/blob/master/LICENSE" v-text="locale.$License"></a><a target="_blank" href="https://d3js.org" v-text="locale.$HomePage"></a></li>
-					<li><span class="bold">QuestPDF</span> Copyright © 2020 - present Marcin Ziąbek CodeFlint <a target="_blank" href="https://www.questpdf.com/license-community.html" v-text="locale.$License"></a><a target="_blank" href="https://www.questpdf.com" v-text="locale.$HomePage"></a></li>
+					<li><span class="bold">D3</span> Copyright © 2010-2023 Mike Bostock <a target="_blank" href="https://github.com/d3/d3/blob/master/LICENSE" v-text="locale.$License"></a><a target="_blank" href="https://d3js.org" v-text="locale.$HomePage"></a></li>
+					<li><span class="bold">QRCode for JavaScript</span> Copyright © 2009 Kazuhiko Arase <a target="_blank" href="https://github.com/davidshimjs/qrcodejs/blob/master/LICENSE" v-text="locale.$License"></a><a target="_blank" href="https://github.com/davidshimjs/qrcodejs" v-text="locale.$HomePage"></a></li>
+					<li><span class="bold">Chart.js</span> Copyright © 2014-2022 Chart.js Contributors<a target="_blank" href="https://github.com/chartjs/Chart.js/blob/master/LICENSE.md" v-text="locale.$License"></a><a target="_blank" href="https://www.chartjs.org" v-text="locale.$HomePage"></a></li>
 				</ul>
 			</div>
 		</div>
@@ -50,20 +56,23 @@
 
 	const eventBus = require('std:eventBus');
 
-	const store = component('std:store');
-	const documentTitle = component("std:doctitle");
+	const DataModelController = component('baseController');
 
 
-	const vm = new Vue({
-		el: "#@pageGuid",
-		store: store,
+	eventBus.$emit('beginLoad');
+	const vm = new DataModelController({
+		el: '#@pageGuid',
+		props: {
+			inDialog: { type: Boolean, default: false },
+			isIndex: { type: Boolean, default: false },
+			isSkipDataStack: { type: Boolean, default: true },
+			pageTitle: { type: String }
+		},
 		data: {
+			id: 0,
 			appData: @Html.Raw(Model.AppData)
 		},
-		components: {
-			'a2-document-title': documentTitle
-		},
-		computed: {
+		computed:{
 			hasLogo() {
 				return this.appData && this.appData.appLogo;
 			},
@@ -74,15 +83,17 @@
 				return window.$$locale;
 			}
 		},
-		methods: {
-			$close() {
-				this.$store.commit("close");
-			},
-			$requery() {
-				eventBus.$emit('requery');
-			}
-		},
+		mounted() {
+			eventBus.$emit('endLoad');
+		}
 	});
+
+	vm.$data._host_ = {
+		$viewModel: vm,
+		$ctrl: vm.__createController__(vm)
+	};
+
+	vm.__doInit__('_navpane/index/');
 
 })();
 </script>

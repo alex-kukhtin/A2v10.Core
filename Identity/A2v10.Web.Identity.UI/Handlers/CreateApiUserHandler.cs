@@ -55,11 +55,11 @@ public class CreateApiUserHandler(IServiceProvider serviceProvider) : IClrInvoke
         };
 
         var createdUser = await _dbContext.ExecuteAndLoadAsync<CreateUserParams, AppUser<Int64>>(
-                _userStoreOptions.DataSource, $"[{_userStoreOptions.SecuritySchema()}].[User.CreateApiUser]", createPrms)
+                _userStoreOptions.DataSource, $"[{_userStoreOptions.SecuritySchema}].[User.CreateApiUser]", createPrms)
             ?? throw new InvalidOperationException("Error creating API user");
 
         if (IsMultiTenant)
-            await _dbContext.ExecuteAsync(createdUser.Segment, $"[{_userStoreOptions.SecuritySchema()}].[User.Tenant.CreateApiUser]", createdUser);
+            await _dbContext.ExecuteAsync(createdUser.Segment, $"[{_userStoreOptions.SecuritySchema}].[User.Tenant.CreateApiUser]", createdUser);
 
         return createdUser;
     }

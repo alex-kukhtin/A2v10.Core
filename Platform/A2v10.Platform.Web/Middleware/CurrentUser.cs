@@ -1,11 +1,14 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Threading;
+using System.Dynamic;
+using System.Linq;
+using System.Collections.Generic;
 
 using Microsoft.AspNetCore.Http;
-
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.Options;
 
 using Newtonsoft.Json;
 
@@ -13,10 +16,6 @@ using A2v10.Infrastructure;
 using A2v10.Data.Interfaces;
 
 using A2v10.Web.Identity;
-using System.Collections.Generic;
-using Microsoft.Extensions.Options;
-using System.Dynamic;
-using System.Linq;
 
 namespace A2v10.Platform.Web;
 public record UserIdentity : IUserIdentity
@@ -43,6 +42,8 @@ public record UserState : IUserState
 {
 	public Int64? Company { get; set; }
 	public Boolean IsReadOnly { get; set; }
+	public Boolean IsAdmin { get; set; }
+	public String? Permissions { get; set; }
 
 	// TODO: isValud???
 	public Boolean Invalid { get; set; }
@@ -80,12 +81,14 @@ public class CurrentUser : ICurrentUser, IDbIdentity
 
 	private readonly IHttpContextAccessor _httpContextAccessor;
 	private readonly IDataProtector _protector;
+	private readonly IPermissionBag _permissionBag;
 
 	public CurrentUser(IHttpContextAccessor httpContextAccessor, IDataProtectionProvider dataProtectionProvider,
-		IOptions<AppOptions> options)
+		IOptions<AppOptions> options, IPermissionBag permissionBag)
 	{
 		_httpContextAccessor = httpContextAccessor;
 		_protector = dataProtectionProvider.CreateProtector("State");
+		_permissionBag = permissionBag;
 		var px = options?.Value?.CookiePrefix;
 		if (!String.IsNullOrEmpty(px))
             CookiePrefix = px + '.';
@@ -119,6 +122,16 @@ public class CurrentUser : ICurrentUser, IDbIdentity
 	}
 
 	private String CookieName => $"{CookiePrefix}{CookieNames.Identity.State}";
+
+	public Boolean IsPermissionEnabled(String key, PermissionFlag flag)
+	{
+		if (State.IsAdmin)
+			return true;
+		var permissionFlags = _permissionBag.DecodePermissions(State.Permissions);
+		if (permissionFlags.TryGetValue(key, out var flags))
+			return flags.HasFlag(flag);
+		return false;
+	}
 
 	void SetupUserState(HttpContext context)
 	{
@@ -173,11 +186,13 @@ public class CurrentUser : ICurrentUser, IDbIdentity
 	{
 		Identity.SetInitialTenantId(tenantId);
 	}
-	public void SetReadOnly(Boolean readOnly)
+	public void SetUserState(Boolean admin, Boolean readOnly, String? permissions)
 	{
 		if (State == null)
 			throw new InvalidProgramException("There is no current user state");
 		State.IsReadOnly = readOnly;
+		State.Permissions = permissions;
+		State.IsAdmin = admin;
 		StoreState();
 	}
 

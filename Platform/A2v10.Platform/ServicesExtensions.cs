@@ -24,6 +24,7 @@ using A2v10.Platform.Web;
 using A2v10.Module.Infrastructure;
 using A2v10.Data.Providers;
 using Microsoft.AspNetCore.Authentication;
+using System.Security;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -69,6 +70,8 @@ public static class ServicesExtensions
 		services.TryAddScoped<IUserBannerProvider, NullUserBannerProvider>();
 		services.TryAddScoped<ILicenseManager, EmptyLicenseManager>();
 		services.TryAddSingleton<ISqlQueryTextProvider, NullSqlQueryTextProvider>();
+		services.TryAddScoped<IAppRuntimeBuilder, NullAppRuntimeBuilder>();
+		services.TryAddSingleton<IPermissionBag, NullPermissionBag>();
 
 		var cookiePrefix = configuration.GetValue<String>("identity:cookiePrefix")?.Trim()
 			?? "A2v10Platform";
@@ -78,7 +81,7 @@ public static class ServicesExtensions
 			.AddPlatformAuthentication(cookiePrefix);
 
 
-        services.AddSingleton<IWebHostFilesProvider, WebHostFilesProvider>();
+		services.AddSingleton<IWebHostFilesProvider, WebHostFilesProvider>();
 
 		services.UseSqlServerStorage(configuration);
 
@@ -155,8 +158,8 @@ public static class ServicesExtensions
 			endpoints.MapHub<DefaultHub>("/_userhub");
 		});
 
-        var cultureInfo = new CultureInfo("uk-UA");
-        if (configuration != null)
+		var cultureInfo = new CultureInfo("uk-UA");
+		if (configuration != null)
 		{
 			var ci = configuration.GetValue<String>("Globalization:Locale");
 			if (!String.IsNullOrEmpty(ci))
@@ -165,6 +168,12 @@ public static class ServicesExtensions
 
 		CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
 		CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
+	}
+
+
+	public static IServiceCollection UsePermissions(this IServiceCollection services)
+	{
+		return services.AddSingleton<IPermissionBag, WebPermissonBug>();
 	}
 }
 

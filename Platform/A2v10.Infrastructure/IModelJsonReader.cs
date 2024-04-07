@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -9,6 +9,31 @@ using System.Threading.Tasks;
 using A2v10.Data.Interfaces;
 
 namespace A2v10.Infrastructure;
+
+public enum AutoRender 
+{ 
+	Page,
+	Dialog
+}
+public interface IModelJsonAuto
+{
+	public AutoRender Render { get; }
+}
+
+// as model.json.schema
+public enum PermissionBits
+{
+	View = PermissionFlag.CanView,
+	Edit = PermissionFlag.CanEdit,
+	Delete = PermissionFlag.CanDelete,
+	Apply = PermissionFlag.CanApply,
+	Unapply = PermissionFlag.CanUnapply,
+	Create = PermissionFlag.CanCreate,
+	Flag64 = PermissionFlag.CanFlag64,
+	Flag128 = PermissionFlag.CanFlag128,
+	Flag256 = PermissionFlag.CanFlag256,
+}
+
 public interface IModelBase
 {
 	[Flags]
@@ -20,7 +45,7 @@ public interface IModelBase
 	}
 
 	String? DataSource { get; }
-
+	String? CurrentModel { get; }
 	Boolean Signal { get; }
 
 	String LoadProcedure();
@@ -31,10 +56,10 @@ public interface IModelBase
 	Boolean CheckRoles(IEnumerable<String>? roles);
 	String Path { get; }
 	String BaseUrl { get; }
-
 	Int32 CommandTimeout { get; }
-
+	IModelJsonAuto? ModelAuto { get; }
 	ExpandoObject CreateParameters(IPlatformUrl url, Object? id, Action<ExpandoObject>? setParams = null, ParametersFlags flags = ParametersFlags.None);
+	Dictionary<String, PermissionBits>? Permissions { get; }
 }
 
 public enum ModelBlobType
@@ -118,6 +143,7 @@ public interface IModelView : IModelBase
 	List<String>? Styles { get; }
 
 	String GetView(Boolean bMobile);
+	String? GetRawView(Boolean bMobile);
 	Boolean IsDialog { get; }
 	Boolean IsIndex { get; }
 

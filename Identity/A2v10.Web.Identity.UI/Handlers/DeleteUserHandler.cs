@@ -35,11 +35,11 @@ public class DeleteUserHandler(IServiceProvider serviceProvider) : IClrInvokeTar
         };
 
         var deletedUser = await _dbContext.ExecuteAndLoadAsync<DeleteUserParams, AppUser<Int64>>(
-            _userStoreOptions.DataSource, $"[{_userStoreOptions.SecuritySchema()}].[User.DeleteUser]", deletePrms)
+            _userStoreOptions.DataSource, $"[{_userStoreOptions.SecuritySchema}].[User.DeleteUser]", deletePrms)
             ?? throw new InvalidOperationException("Error deleting user");
 
         if (IsMultiTenant)
-            await _dbContext.ExecuteAsync(deletedUser.Segment, $"[{_userStoreOptions.SecuritySchema()}].[User.Tenant.DeleteUser]", deletedUser);
+            await _dbContext.ExecuteAsync(deletedUser.Segment, $"[{_userStoreOptions.SecuritySchema}].[User.Tenant.DeleteUser]", deletedUser);
 
         return new ExpandoObject()
         {

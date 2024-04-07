@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -122,9 +122,9 @@ public class VueDataScripter(IApplicationHost host, IAppCodeProvider codeProvide
 	private readonly IApplicationHost _host = host ?? throw new ArgumentNullException(nameof(host));
 	private readonly ICurrentUser _currentUser = currentUser;
 
-    public String CreateDataModelScript(IDataModel? model, Boolean isPlain)
+	public String CreateDataModelScript(IDataModel? model, Boolean isPlain)
 	{
-		if (model == null) 
+		if (model == null)
 			return CreateEmptyStript();
 		if (isPlain)
 			return CreatePlainScript();
@@ -415,7 +415,7 @@ function modelData(template, data) {
 				continue;
 			var fileName = moduleName.RemoveHeadSlash().AddExtension("js");
 
-			using var stream = _codeProvider.FileStreamRO(fileName) 
+			using var stream = _codeProvider.FileStreamRO(fileName)
 				?? throw new InvalidOperationException($"File not found '{fileName}'");
 			using var rdr = new StreamReader(stream);
 			String moduleText = rdr.ReadToEnd();
@@ -516,6 +516,22 @@ function modelData(template, data) {
 		return _host.GetAppSettings(result);
 	}
 
+	// TODO: Add To Interface
+	public async Task<String> GetTemplateScript(IModelView view)
+	{
+		var sbRequired = new StringBuilder();
+		if (view.Path == null)
+			throw new InvalidOperationException("Model.Path is null");
+		var pathToRead = _codeProvider.MakePath(view.Path, $"{view.Template}.js");
+		using var stream = _codeProvider.FileStreamRO(pathToRead)
+			?? throw new FileNotFoundException($"Template file '{pathToRead}' not found.");
+		using var sr = new StreamReader(stream);
+		var fileTemplateText = await sr.ReadToEndAsync() ??
+			throw new FileNotFoundException($"Template file '{pathToRead}' not found.");
+		AddRequiredModules(sbRequired, fileTemplateText);
+		return CreateTemplateForWrite(Localize(fileTemplateText));
+	}
+
 	public async Task<ScriptInfo> GetModelScript(ModelScriptInfo msi)
 	{
 		var output = new StringBuilder();
@@ -545,7 +561,7 @@ function modelData(template, data) {
 		}
 		if (msi.DataModel != null)
 		{
-			dataModelText = JsonConvert.SerializeObject(msi.DataModel.Root, 
+			dataModelText = JsonConvert.SerializeObject(msi.DataModel.Root,
 				JsonHelpers.ConfigSerializerSettings(_host.IsDebugConfiguration));
 		}
 
@@ -571,9 +587,9 @@ function modelData(template, data) {
 		output.Append(footer);
 
 		return new ScriptInfo(
-			Script:output.ToString(),	
-			DataScript:modelFunc.ToString()
-            );
+			Script: output.ToString(),
+			DataScript: modelFunc.ToString()
+			);
 	}
 
 	public ScriptInfo GetServerScript(ModelScriptInfo msi)
@@ -594,7 +610,7 @@ function modelData(template, data) {
 				?? throw new FileNotFoundException($"File not found. '{fileTemplatePath}'");
 			using var sr = new StreamReader(stream);
 			var fileTemplateText = await sr.ReadToEndAsync();
-            sbRequired = new StringBuilder();
+			sbRequired = new StringBuilder();
 			AddRequiredModules(sbRequired, fileTemplateText);
 			templateText = CreateTemplateForWrite(Localize(fileTemplateText));
 		}
@@ -602,7 +618,7 @@ function modelData(template, data) {
 		sb.Replace("$(TemplateText)", templateText);
 		sb.Replace("$(RequiredModules)", sbRequired?.ToString());
 		String? modelScript = msi.DataModel?.CreateScript(this);
-		String? rawData = msi.DataModel != null ? JsonConvert.SerializeObject(msi.DataModel.Root, 
+		String? rawData = msi.DataModel != null ? JsonConvert.SerializeObject(msi.DataModel.Root,
 			JsonHelpers.ConfigSerializerSettings(_host.IsDebugConfiguration))
 			: null;
 		sb.Replace("$(DataModelText)", rawData);

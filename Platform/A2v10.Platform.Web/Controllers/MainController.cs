@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 
@@ -8,12 +8,11 @@ using System.IO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Diagnostics;
 
 using A2v10.Infrastructure;
 using A2v10.Web.Identity;
 using A2v10.Module.Infrastructure;
-using Microsoft.AspNetCore.Diagnostics;
-using System.Diagnostics;
 
 namespace A2v10.Platform.Web.Controllers;
 
@@ -59,7 +58,7 @@ public class MainController(IDataService dataService, IOptions<AppOptions> appOp
 		{
 			PersonName = User.Identity.GetUserPersonName() ?? User.Identity.Name ?? throw new ApplicationException("Invalid UserName"),
 			Debug = _appOptions.Environment.IsDebug,
-			HelpUrl = "http://TODO/HELP_URL",
+			HelpUrl = _appOptions.HelpUrl,
 			ModelStyles = layoutDescr?.ModelStyles,
 			ModelScripts = layoutDescr?.ModelScripts,
 			HasNavPane = HasNavPane(),

@@ -15,10 +15,10 @@ using A2v10.ReportEngine.Pdf;
 using A2v10.Workflow.Engine;
 using A2v10.Scheduling;
 using A2v10.Scheduling.Commands;
+using A2v10.AppRuntimeBuilder;
 using A2v10.Core.Web.Site.TestServices;
 
 using A2v10.BlobStorage.Azure;
-using Microsoft.AspNetCore.Identity;
 
 namespace A2v10.Core.Web.Site;
 
@@ -38,6 +38,8 @@ public class Startup(IConfiguration configuration)
 	{
 		//!!!Before UsePlatform(). It has a default implementation.
 		services.UseMailClient();
+		//services.UseAppRuntimeBuilder();
+		services.UsePermissions();
 		//services.AddScoped<IUserBannerProvider, TestBannerProvider>();
 		//services.UseLicenseManager();
 		services.AddScoped<ILicenseManager, NullLicenseManager>();

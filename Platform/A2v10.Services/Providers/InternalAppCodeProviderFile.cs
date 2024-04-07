@@ -32,12 +32,20 @@ public class InternalAppCodeProviderFile(String path) : IAppCodeProviderImpl
         return File.Exists(fullPath);
     }
 
+    private static FileStreamOptions StreamOptions => new()
+    {
+        Mode = FileMode.Open,
+        Access = FileAccess.Read,
+        Share = FileShare.ReadWrite,
+        Options = FileOptions.Asynchronous  | FileOptions.SequentialScan
+    };
+
     public Stream? FileStreamRO(String path)
 	{
 		var fullPath = NormalizePath(path);
 		if (!File.Exists(fullPath))
 			return null;
-        return new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+        return new FileStream(fullPath,  StreamOptions);
     }
 
     public Stream? FileStreamResource(String path)

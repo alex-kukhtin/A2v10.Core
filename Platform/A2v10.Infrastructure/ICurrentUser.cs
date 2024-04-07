@@ -41,8 +41,9 @@ public interface ICurrentUser
 	public IUserLocale Locale { get; }
 	void SetCompanyId(Int64 id);
 	void SetInitialTenantId(Int32 tenantId);
-	void SetReadOnly(Boolean readOnly);
+	void SetUserState(Boolean admin, Boolean readOnly, String? permissions);
 	void AddModules(IEnumerable<Guid> modules);
 	ExpandoObject DefaultParams();
+	Boolean IsPermissionEnabled(String key, PermissionFlag flag);
 }
 

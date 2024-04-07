@@ -3,7 +3,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 
 namespace A2v10.Platform.Web.Controllers;

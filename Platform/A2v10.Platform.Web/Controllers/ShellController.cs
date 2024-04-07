@@ -5,19 +5,20 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
 using System.Threading.Tasks;
+using System.Linq;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 
 using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Web.Identity;
-using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
 
 namespace A2v10.Platform.Web.Controllers;
 
@@ -27,15 +28,15 @@ public record MultiTenantParamJson(String Companies, String Period);
 [Authorize]
 [ExecutingFilter]
 public class ShellController(IDbContext _dbContext, IApplicationHost _host, ICurrentUser _currentUser, IProfiler _profiler,
-    ILocalizer _localizer, IAppCodeProvider _codeProvider, IAppDataProvider _appDataProvider, IOptions<AppOptions> appOptions,
-    ILogger<ShellController> _logger) : Controller
+	ILocalizer _localizer, IAppCodeProvider _codeProvider, IAppDataProvider _appDataProvider, IOptions<AppOptions> appOptions,
+	ILogger<ShellController> _logger, IPermissionBag _pemissionBag) : Controller
 {
 	private readonly AppOptions _appOptions = appOptions.Value;
 
 
-    const String MENU_PROC = "a2ui.[Menu.User.Load]";
+	const String MENU_PROC = "a2ui.[Menu.User.Load]";
 
-    Int64? UserId => User.Identity.GetUserId<Int64?>();
+	Int64? UserId => User.Identity.GetUserId<Int64?>();
 	Int32? TenantId => User.Identity.GetUserTenant<Int32>();
 
 	public Boolean IsDebugConfiguration => _appOptions.Environment.IsDebug;
@@ -139,6 +140,8 @@ public class ShellController(IDbContext _dbContext, IApplicationHost _host, ICur
 
 		String proc = MENU_PROC;
 
+		await EnsurePermissionObjects();
+
 		if (_appOptions.IsCustomUserMenu)
 			proc = _appOptions.UserMenu!;
 		IDataModel dm = await _dbContext.LoadModelAsync(_host.TenantDataSource, proc, loadPrms);
@@ -153,7 +156,12 @@ public class ShellController(IDbContext _dbContext, IApplicationHost _host, ICur
 		return shell.ResolveMacros(macros) ?? String.Empty;
 	}
 
-    async Task<String> BuildScript()
+	async Task EnsurePermissionObjects()
+	{
+		await _pemissionBag.LoadPermisionBagAsync(_dbContext, _currentUser.Identity.Segment);
+	}
+
+	async Task<String> BuildScript()
 	{
 		String shell = Resource.shell;
 
@@ -197,13 +205,16 @@ public class ShellController(IDbContext _dbContext, IApplicationHost _host, ICur
 
 		String proc = MENU_PROC;
 
+		await EnsurePermissionObjects();
+
 		if (_appOptions.IsCustomUserMenu)
 			proc = _appOptions.UserMenu!;
 
 		_logger.LogInformation("AppPath: {path}", _appOptions.Path);
         _logger.LogInformation("Menu procedure: {proc}", proc);
 
-        IDataModel dm = await _dbContext.LoadModelAsync(_host.TenantDataSource, proc, loadPrms);
+
+		IDataModel dm = await _dbContext.LoadModelAsync(_host.TenantDataSource, proc, loadPrms);
 
 		ExpandoObject? menuRoot = dm.Root.RemoveEmptyArrays();
 		SetUserStatePermission(dm);
@@ -229,14 +240,27 @@ public class ShellController(IDbContext _dbContext, IApplicationHost _host, ICur
 
 	void SetUserStatePermission(IDataModel model)
 	{
-		_currentUser.SetReadOnly(model.Eval<Boolean>("UserState.ReadOnly"));
+		var adm = model.Eval<Boolean>("UserState.IsAdmin");
+		Boolean ro = model.Eval<Boolean>("UserState.ReadOnly");
+		if (adm)
+		{
+			_currentUser.SetUserState(true, ro, null);
+		}
+		else
+		{
+			var perm = model.Root.Get<List<ExpandoObject>>("Permissions");
+			String? permSet = null;
+			if (perm != null && perm.Count > 0)
+				permSet = String.Join(',', perm.Select(p => $"{p.Get<Int64>("Id")}:{p.Get<Int32>("Flags"):X}"));
+			_currentUser.SetUserState(false, ro, permSet);
+		}
 	}
 
     static void SetUserStateModules(IDataModel _1/*dm*/)
 	{
 	}
 
-    void GetAppFiles(String ext, TextWriter writer)
+	void GetAppFiles(String ext, TextWriter writer)
 	{
 		var files = _codeProvider.EnumerateAllFiles("_assets", $"*.{ext}");
 		if (files == null)
