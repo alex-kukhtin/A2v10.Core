@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace A2v10.Services;
 
-public class ModelJsonReader(IModelJsonPartProvider _partProvider) : IModelJsonReader
+public class ModelJsonReader(IModelJsonPartProvider _partProvider, IAppRuntimeBuilder _appRuntimeBuilder) : IModelJsonReader
 {
     public async Task<IModelView?> TryGetViewAsync(IPlatformUrl url)
 	{
@@ -16,6 +16,38 @@ public class ModelJsonReader(IModelJsonPartProvider _partProvider) : IModelJsonR
 		return rm.GetAction(url.Action);
 	}
 
+	ModelJson CreateAuto(IPlatformUrl url, String? command = null)
+	{
+		var model = String.Join('.', url.LocalPath.Split('/').Select(s => s.ToPascalCase()));
+		var ms = new ModelJson()
+		{
+			Model = model
+		};
+		if (command == "fetch")
+		{
+			ms.Commands.Add(command, new ModelJsonCommand()
+			{
+				Type = ModelCommandType.auto,
+				Procedure = "Fetch"
+			});
+		}
+		else if (url.Kind == UrlKind.Page)
+		{
+			ms.Actions.Add(url.Action, new ModelJsonView()
+			{
+				Index = url.Action == "index",
+				Auto = new ModelJsonAuto() { Render = AutoRender.Page }
+			});
+		}
+		else if (url.Kind == UrlKind.Dialog)
+			ms.Dialogs.Add(url.Action, new ModelJsonDialog()
+			{
+				Index = url.Action == "browse",	
+				Auto = new ModelJsonAuto() { Render = AutoRender.Page }
+			});
+		ms.OnEndInit(url);
+		return ms;
+	}
 	public async Task<IModelView> GetViewAsync(IPlatformUrl url)
 	{
 		var rm = await Load(url);
@@ -30,7 +62,7 @@ public class ModelJsonReader(IModelJsonPartProvider _partProvider) : IModelJsonR
 
 	public async Task<IModelCommand> GetCommandAsync(IPlatformUrl url, String command)
 	{
-		var rm = await Load(url);
+		var rm = await Load(url, command);
 		return rm.GetCommand(command);
 	}
 
@@ -51,9 +83,14 @@ public class ModelJsonReader(IModelJsonPartProvider _partProvider) : IModelJsonR
 		};
 	}
 
-	public async Task<ModelJson> Load(IPlatformUrl url)
+	public async Task<ModelJson> Load(IPlatformUrl url, String? command = null)
 	{
-		return await TryLoad(url) ?? throw new ModelJsonException($"File not found '{url.LocalPath}/model.json'");
+		var ms = await TryLoad(url);
+		if (ms != null)
+			return ms;
+		if (_appRuntimeBuilder.IsAutoSupported)
+			return CreateAuto(url, command);
+		throw new ModelJsonException($"File not found '{url.LocalPath}/model.json'");
 	}
 
 	public Task<ModelJson?> TryLoad(IPlatformUrl url)

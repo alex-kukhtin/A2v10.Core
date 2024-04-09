@@ -1,4 +1,4 @@
-﻿// Copyright © 2024 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Dynamic;
@@ -15,6 +15,8 @@ public interface IAppRuntimeResult
 }
 public interface IAppRuntimeBuilder
 {
+	Boolean IsAutoSupported { get; }
 	Task<IAppRuntimeResult> RenderAsync(IPlatformUrl platformUrl, IModelView view, Boolean isReload);
 	Task<ExpandoObject> SaveAsync(IPlatformUrl platformUrl, IModelView view, ExpandoObject data, ExpandoObject savePrms);
+	Task<IDataModel> ExecuteCommandAsync(IModelCommand command, ExpandoObject parameters);
 }

@@ -1,4 +1,21 @@
 ﻿
-1. Сортировки в index
-2. Имя объекта/типа в единственном числе. (singular)
-3. 
+1. Сортировки в index (SQL)
+4. Ref - поля - забирать 
+5. Metadata Reader - watcher
+6. Реализовать Browse dialog
+7. Реализовать Fetch command
+8. Map в index
+9. Documents
+10. Journals
+11. Reports
+
+Сценарий
+1. Ставим расширение из Visual Studio Extensions
+2. Создается solution с двумя проектами.
+3. Редактируется metadata.json (конструктором, который надо написать)
+4. Build - из metadata.json генерится три файла /_sql/struct.sql, tabltypes.sql, ui.sql
+   и sql.json из этих файлов, который потом обрабатывается.
+   (Доделать BuildSql пакет)
+5. Запускается /_sqlscripts/application.sql
+6. Запускется приложение.
+7. Profit!

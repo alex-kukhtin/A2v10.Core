@@ -15,8 +15,8 @@ public enum IdType {
 
 public enum FieldType
 {
-	Identifier,
 	String,
+	Id,
 	Money,
 	Float,
 	Date,
@@ -26,24 +26,12 @@ public enum FieldType
 
 public record RuntimeField
 {
-	public String? Name { get; init; }
+	public String Name { get; init; } = String.Empty;
 	public Int32? Length { get; init; }
 	public String? Ref { get; init; }
-	public FieldType? Type { get; init; }
-
-	[JsonIgnore]
-	public Type ValueType =>
-		Type switch
-		{
-			FieldType.Identifier => typeof(Int64),
-			FieldType.String => typeof(String),
-			FieldType.Money => typeof(Decimal),
-			FieldType.Float => typeof(Double),
-			FieldType.Boolean => typeof(Boolean),
-			FieldType.Date or FieldType.DateTime => typeof(DateTime),
-			_ => throw new NotImplementedException(Type.ToString())
-		};
+	public FieldType Type { get; init; }
 }
+
 public record RuntimeTable
 {
 	public String Name {  get; init; }	= String.Empty;
@@ -53,16 +41,30 @@ public record RuntimeTable
 	public IEnumerable<RuntimeField> RealFields()
 	{
 		// ПОРЯДОК ПОЛЕЙ ВАЖЕН!!! ТИП - ОБЯЗАТЕЛЬНО!!!
-
-		yield return new RuntimeField() { Name = "Id", Type = FieldType.Identifier };
+		yield return new RuntimeField() { Name = "Id", Type = FieldType.Id };
 		yield return new RuntimeField() { Name = "Name", Type = FieldType.String, Length = 255 };
 		yield return new RuntimeField() { Name = "Memo", Type = FieldType.String, Length = 255 };
-		yield return new RuntimeField() { Name = "Code", Type = FieldType.String, Length = 12 };
-		yield return new RuntimeField() { Name = "FullName", Type = FieldType.String, Length = 255 };
+		foreach (var f in Fields)
+			yield return new RuntimeField() { Name = f.Name, Type = f.RealType(), Length = f.RealLength() };
+	}
+
+	[JsonIgnore]
+	public String SqlTableName => $"{Schema}.[{Name}]";
+	[JsonIgnore]
+	public String TypeName => $"T{Name.Singular()}";
+	[JsonIgnore]
+	public String ItemName => $"{Name.Singular()}";
+	[JsonIgnore]
+	public String TableTypeName => $"{Schema}.[{Name.Singular()}.TableType]";
+
+	private RuntimeMetadata? _metadata;
+	internal void SetParent(RuntimeMetadata meta)
+	{
+		_metadata = meta;
 	}
 }
 
-public record RuntimeMetdata
+public record RuntimeMetadata
 {
 	public IdType Id { get; init; }
 	public Dictionary<String, RuntimeTable> Catalogs { get; init; } = [];
@@ -82,5 +84,13 @@ public record RuntimeMetdata
 		if (tableDict.TryGetValue(info[1], out var table))
 			return table;
 		throw new InvalidOperationException($"Runtime Table {info} not found");
+	}
+
+	public void OnEndInit()
+	{
+		foreach (var table in Catalogs.Values)
+			table.SetParent(this);
+		foreach (var table in Documents.Values)
+			table.SetParent(this);
 	}
 }

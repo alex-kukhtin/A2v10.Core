@@ -5,6 +5,7 @@ using System.Data;
 using System.Dynamic;
 using System.Threading.Tasks;
 using System.Data.Common;
+using System.Linq;
 
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
@@ -27,30 +28,34 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IOptions<AppOptions>
 
 	public async Task<ExpandoObject> SaveAsync(RuntimeTable table, ExpandoObject data)
 	{
-		var sqlString = """
+		var sqlString = $"""
 
 		declare @rtable table(Id bigint);
-		declare @id bigint;
-		merge cat.Agents as t
-		using @Agent as s
+		declare @Id bigint;
+		merge {table.SqlTableName} as t
+		using @{table.ItemName} as s
 		on t.Id = s.Id
 		when matched then update set
 			t.[Name] = s.[Name],
-			t.Memo = s.Memo 
+			{String.Join(' ', table.Fields.Select(f => $"t.{f.Name} = s.{f.Name},"))}
+			t.Memo = s.Memo
+		when not matched then insert 
+			(Name, Memo) values
+			(s.Name, s.Memo)
 		output inserted.Id into @rtable(Id);
-		select top(1) @id = Id from @rtable;
 
-		select [Agent!TAgent!Object] = null, [Id!!Id] = a.Id, [Name!!Name] = a.Name, a.Memo
-		from cat.Agents a where Id = @id;
+		select top(1) @Id = Id from @rtable;
+
+		{GetPlainModelSql(table)}
 		""";
 
-		var ag = data.Get<ExpandoObject>("Agent");
+		var ag = data.Get<ExpandoObject>(table.ItemName);
 		var dtable = TableTypeBuilder.BuildDataTable(table, ag);
 
 		var dm = await _dbContext.LoadModelSqlAsync(null, sqlString, dbprms =>
 		{
 			AddDefaultParameters(dbprms);
-			dbprms.Add(new SqlParameter("@Agent", SqlDbType.Structured) { TypeName = "cat.[Agent.TableType]", Value = dtable });
+			dbprms.Add(new SqlParameter($"@{table.ItemName}", SqlDbType.Structured) { TypeName = table.TableTypeName, Value = dtable });
 		});
 		return dm.Root;
 	}
@@ -63,27 +68,41 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IOptions<AppOptions>
 
 			set @Order = lower(@Order);
 			set @Dir = lower(@Dir);
+			declare @fr nvarchar(255) = N'%' + @Fragment + N'%';
 
 			declare @tmp table(Id bigint, rowno int identity(1, 1), rowcnt int);
 			insert into @tmp(Id, rowcnt)
 			select Id, count(*) over() 
-			from {table.Schema}.[{table.Name}] a
+			from {table.SqlTableName} a
+			where a.Void = 0 and (@fr is null or a.Name like @fr or a.Memo like @fr)
 			order by
 				case when @Dir = N'asc' then
 					case @Order
+						when N'id' then a.Id
+					end
+				end asc,
+				case when @Dir = N'asc' then
+					case @Order
 						when N'name' then a.Name
+						when N'memo' then a.Memo
 					end
 				end asc,
 				case when @Dir = N'desc' then
 					case @Order
-						when N'name' then a.Name
+						when N'id' then a.Id
 					end
 				end desc,
-				Id
+				case when @Dir = N'desc' then
+					case @Order
+						when N'name' then a.Name
+						when N'memo' then a.Memo
+					end
+				end desc,
+						Id
 			offset @Offset rows fetch next @PageSize rows only option (recompile);
 
-			select [{table.Name}!TAgent!Array] = null, [Id!!Id] = a.Id, [Name!!Name] = a.Name, a.Memo,
-				a.Code, a.FullName,
+			select [{table.Name}!{table.TypeName}!Array] = null, [Id!!Id] = a.Id, [Name!!Name] = a.Name, a.Memo,
+				{String.Join(' ', table.Fields.Select(f => $"a.[{f.Name}],"))}
 				[!!RowCount]  = t.rowcnt
 			from {table.Schema}.[{table.Name}] a inner join @tmp t on a.Id = t.Id
 			order by t.[rowno];
@@ -112,25 +131,57 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IOptions<AppOptions>
 			dbprms.AddBigInt("@Id", null);
 			dbprms.AddInt("@Offset", offset);
 			dbprms.AddInt("@PageSize", pageSize);
-			dbprms.AddString("@Order", "id");
-			dbprms.AddString("@Dir", "asc");
-			dbprms.AddString("@Fragment", null);
+			dbprms.AddString("@Order", qry?.Get<String>("Order") ?? "name");
+			dbprms.AddString("@Dir", qry?.Get<String>("Dir") ?? "asc");
+			dbprms.AddString("@Fragment", qry?.Get<String>("Fragment"));
 		});
 	}
 
+	private String GetPlainModelSql(RuntimeTable table)
+	{
+		return $"""
+		select [{table.ItemName}!{table.TypeName}!Object] = null, [Id!!Id] = a.Id, [Name!!Name] = a.Name, 
+			{String.Join(' ', table.Fields.Select(f => $"{f.SqlField("a", table)},"))}
+			a.Memo
+		from {table.SqlTableName} a where a.Id = @Id;
+
+		-- TODO: Maps
+		declare @Unit bigint;
+		select @Unit = a.[Unit] from cat.[Items] a where a.Id = @Id;
+
+		select [!TUnit!Map] = null, [Id!!Id] = a.Id, [Name!!Name] = a.Name
+		from cat.Units a where a.Id = @Unit;
+		""";
+	}
 	private Task<IDataModel> LoadPlainModelAsync(IPlatformUrl platformUrl, RuntimeTable table)
 	{
-		var sqlString = """
-			select [Agent!TAgent!Object] = null, [Id!!Id] = a.Id, [Name!!Name] = a.Name, a.Memo,
-				a.FullName, a.Code
-			from cat.Agents a where a.Id = @Id
-			order by a.Id;
-		""";
+		var sqlString = GetPlainModelSql(table);
 
 		return _dbContext.LoadModelSqlAsync(null, sqlString, dbprms =>
 		{
 			AddDefaultParameters(dbprms);
 			dbprms.AddString("@Id", platformUrl.Id);
+		});
+	}
+
+	public Task<IDataModel> ExecuteCommandAsync(String command, RuntimeTable table, ExpandoObject prms) 
+	{
+		// command === [dbo].[Fetch]
+		var text = prms.Get<String>("Text");
+		// TODO: Create SQL for table
+		var sqlString = $"""
+		declare @fr nvarchar(255) = N'%' + @Text + N'%';
+		select [Units!TUnit!Array] = null, [Id!!Id] = a.Id, [Name!!Name] = a.Name, 
+			a.Short,
+			a.Memo
+		from cat.[Units] a where a.Void = 0 and (@Text is null or a.Name like @fr 
+			or a.Short like @fr
+			or a.Memo like @fr);
+		""";
+		return _dbContext.LoadModelSqlAsync(null, sqlString, dbprms =>
+		{
+			AddDefaultParameters(dbprms);
+			dbprms.AddString("@Text", text);
 		});
 	}
 }

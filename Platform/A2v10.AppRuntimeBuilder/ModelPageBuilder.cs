@@ -21,6 +21,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 	private readonly IAppCodeProvider _codeProvider = _serviceProvider.GetRequiredService<IAppCodeProvider>();
 	private readonly IXamlPartProvider _xamlPartProvider = _serviceProvider.GetRequiredService<IXamlPartProvider>();
 
+	const Int32 COLUMN_MAX_CHARS = 50;
 	public async Task<String> RenderPageAsync(IPlatformUrl platformUrl, IModelView modelView, RuntimeTable table, IDataModel dataModel)
 	{
 		String rootId = $"el{Guid.NewGuid()}";
@@ -41,14 +42,18 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 		var rawView = modelView.GetRawView(false);
 		if (!String.IsNullOrEmpty(rawView))
 			page = LoadPage(modelView, rawView);
-
-		if (modelView.IsIndex && !modelView.IsDialog)
-			page = CreateIndexPage(table);
+		else if (modelView.IsIndex && !modelView.IsDialog)
+			page = CreateIndexPage(platformUrl, table);
 		else if (!modelView.IsIndex && modelView.IsDialog && platformUrl.Action == "edit")
 			page = CreateEditDialog(table);
+		else if (modelView.IsIndex && modelView.IsDialog && platformUrl.Action == "browse")
+			throw new InvalidOperationException("Generate browse dialog");
 
 		if (page == null)
 			throw new InvalidOperationException("Page is null");
+
+		if (page is ISupportPlatformUrl supportPlatformUrl)
+			supportPlatformUrl.SetPlatformUrl(platformUrl);
 
 		var rri = new DynamicRenderPageInfo()
 		{
@@ -62,13 +67,66 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 		return await _dynamicRenderer.RenderPage(rri);
 	}
 
-	UIElement CreateIndexPage(RuntimeTable table)
+	UIElement CreateIndexPage(IPlatformUrl platformUrl, RuntimeTable table)
 	{
+		DataGridColumnCollection CreateColumns()
+		{
+			DataGridColumnCollection columns = [
+				new DataGridColumn() {
+					Header = "#",
+					Role = ColumnRole.Id,
+					Bindings = (c) => {
+						c.SetBinding(nameof(DataGridColumn.Content), new Bind("Id"));
+					}
+				},
+				new DataGridColumn() {
+					Header = "@[Name]",
+					MaxChars = COLUMN_MAX_CHARS,
+					Bindings = (c) => {
+						c.SetBinding(nameof(DataGridColumn.Content), new Bind("Name"));
+					}
+				},
+			];
+			table.Fields.ForEach(f =>
+			{
+				columns.Add(new DataGridColumn()
+				{
+					Header = $"@[{f.Name}]",
+					MaxChars = f.HasMaxChars() ? COLUMN_MAX_CHARS : 0,
+					Bindings = c => {
+						c.SetBinding(nameof(DataGridColumn.Content), new Bind(f.Name));
+					}
+				}); 
+			});
+			columns.Add(
+				new DataGridColumn()
+				{
+					Header = "@[Memo]",
+					MaxChars =	COLUMN_MAX_CHARS,
+					Bindings = (c) =>
+					{
+						c.SetBinding(nameof(DataGridColumn.Content), new Bind("Memo"));
+					}
+				}
+			);
+
+			return columns;
+		}
+
 		var page = new Page()
 		{
 			CollectionView = new CollectionView()
 			{
 				RunAt = RunMode.ServerUrl,
+				Filter = new FilterDescription()
+				{
+					Items = [
+						new FilterItem() {
+							DataType = DataType.String,
+							Property = "Fragment"
+						}
+					]
+				},
 				Bindings = cw =>
 				{
 					cw.SetBinding(nameof(CollectionView.ItemsSource), new Bind(table.Name));
@@ -87,13 +145,25 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 						{
 							Children = [
 								new Button() {
-									Content = "@[Edit]",
+									Content = "@[Create]",
+									Icon=Icon.Plus,
+									Bindings = (btn) => {
+										var bindCmd = new BindCmd() {
+											Command = Xaml.CommandType.Dialog,
+											Action = DialogAction.Append,
+											Url = $"/{platformUrl.LocalPath}/edit",
+										};
+										bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(table.Name));
+										btn.SetBinding(nameof(Button.Command), bindCmd);
+									}
+								},
+								new Button() {
 									Icon=Icon.Edit,
 									Bindings = (btn) => {
 										var bindCmd = new BindCmd() {
 											Command = Xaml.CommandType.Dialog,
 											Action = DialogAction.EditSelected,
-											Url = "/catalog/agent/edit",
+											Url = $"/{platformUrl.LocalPath}/edit",
 										};
 										bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(table.Name));
 										btn.SetBinding(nameof(Button.Command), bindCmd);
@@ -107,6 +177,14 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 										btn.SetBinding(nameof(Button.Command), new BindCmd() {Command = Xaml.CommandType.Reload});
 									}
 								},
+								new ToolbarAligner(),
+								new TextBox() {
+									Placeholder = "@[Search]",
+									Width = Length.FromString("20rem"),
+									Bindings = tb => {
+										tb.SetBinding(nameof(TextBox.Value), new Bind("Parent.Filter.Fragment"));
+									}
+								}
 							]
 						},
 						new DataGrid() {
@@ -115,27 +193,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 							Bindings = (dg) => {
 								dg.SetBinding(nameof(DataGrid.ItemsSource), new Bind("Parent.ItemsSource"));
 							},
-							Columns = [
-								new DataGridColumn() {
-									Header = "#",
-									Role = ColumnRole.Id,
-									Bindings = (c) => {
-										c.SetBinding(nameof(DataGridColumn.Content), new Bind("Id"));
-									}
-								},
-								new DataGridColumn() {
-									Header = "@[Name]",
-									Bindings = (c) => {
-										c.SetBinding(nameof(DataGridColumn.Content), new Bind("Name"));
-									}
-								},
-								new DataGridColumn() {
-									Header = "@[Memo]",
-									Bindings = (c) => {
-										c.SetBinding(nameof(DataGridColumn.Content), new Bind("Memo"));
-									}
-								}
-							]
+							Columns = CreateColumns()
 						},
 						new Pager() {
 							Bindings = p => {
@@ -151,15 +209,64 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 
 	UIElement CreateEditDialog(RuntimeTable table)
 	{
+		UIElementCollection CreateDialogChildren()
+		{
+			UIElementCollection coll = [
+				new TextBox()
+				{
+					Label = "@[Name]",
+					Bold = true,
+					TabIndex = 1,
+					Bindings = (txt) => {
+						txt.SetBinding(nameof(TextBox.Value), new Bind($"{table.ItemName}.Name"));
+					}
+			}];
+			foreach (var f in table.Fields)
+			{
+				coll.Add(String.IsNullOrEmpty(f.Ref) ?
+					new TextBox()
+					{
+						Label = $"$[{f.Name}]",
+						Multiline = f.IsMultiline(),
+						Bindings = (txt) =>
+						{
+							txt.SetBinding(nameof(TextBox.Value), new Bind($"{table.ItemName}.{f.Name}"));
+						}
+					} :
+					new SelectorSimple()
+					{
+						Label = $"$[{f.Name}]",
+						Url = f.RefUrl(),
+						Bindings = ss =>
+						{
+							ss.SetBinding(nameof(SelectorSimple.Value), new Bind($"{table.ItemName}.{f.Name}"));
+						}
+					}
+				);
+			}
+			coll.Add(new TextBox()
+			{
+				Label = "@[Memo]",
+				Multiline = true,
+				Bindings = (txt) =>
+				{
+					txt.SetBinding(nameof(TextBox.Value), new Bind($"{table.ItemName}.Memo"));
+				}
+			});
+			return coll;
+		}
+
 		var dlg = new Dialog()
 		{
 			Title = "From Page",
+			Overflow = true,
 			Buttons = [
 				new Button() {
 					Content = "@[SaveAndClose]",
 					Style = ButtonStyle.Primary,
 					Bindings = (btn) => {
-						btn.SetBinding(nameof(Button.Command), new BindCmd("SaveAndClose"));
+						btn.SetBinding(nameof(Button.Command), 
+							new BindCmd("SaveAndClose") {ValidRequired = true} );
 					}
 				},
 				new Button() {Content = "@[Cancel]",
@@ -170,21 +277,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 			],
 			Children = [
 				new Grid(_xamlSericeProvider) {
-					Children = [
-						new TextBox() {
-							Label = "@[Name]",
-							Bindings = (txt) => {
-								txt.SetBinding(nameof(TextBox.Value), new Bind("Agent.Name"));
-							}
-						},
-						new TextBox() {
-							Label = "@[Memo]",
-							Multiline = true,	
-							Bindings = (txt) => {
-								txt.SetBinding(nameof(TextBox.Value), new Bind("Agent.Memo"));
-							}
-						}
-					]
+					Children = CreateDialogChildren()
 				}
 			]
 		};

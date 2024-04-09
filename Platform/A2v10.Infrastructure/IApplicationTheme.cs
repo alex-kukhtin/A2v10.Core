@@ -7,6 +7,5 @@ namespace A2v10.Infrastructure;
 public interface IApplicationTheme
 {
 	String MakeTheme();
-
 	String LogoUrl();
 }

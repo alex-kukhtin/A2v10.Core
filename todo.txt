@@ -46,7 +46,6 @@ LICENSING
 42. DataController.Invoke XML
 46. ExportController
 47. AppLinks
-49. Убрать ViewBag.___
 50. globalPeriod вместо custom в config.
 51. HtmlRenderer
 52. Admin - CheckPermissions for view/scriptAdmin/etc
@@ -60,7 +59,7 @@ LICENSING
 
 TABBED LAYOUT
 =============
-4. Footer: About, Footer.AppLinks
+4. Footer: Footer.AppLinks
 25. Header.UserMenu. ChangePassword
 27. Header -> Search in interface
 30. LeftMenu - поиск

@@ -13,7 +13,7 @@ namespace A2v10.AppRuntimeBuilder;
 
 public class RuntimeMetadataProvider(IAppCodeProvider _appCodeProvider)
 {
-	private RuntimeMetdata? _runtimeMetdata = null;
+	private RuntimeMetadata? _runtimeMetdata = null;
 
 	private static readonly JsonSerializerSettings CamelCaseSerializerSettings =
 		new()
@@ -26,7 +26,7 @@ public class RuntimeMetadataProvider(IAppCodeProvider _appCodeProvider)
 			}
 		};
 
-	public async Task<RuntimeMetdata> GetMetadata()
+	public async Task<RuntimeMetadata> GetMetadata()
 	{
 		if (_runtimeMetdata != null)
 			return _runtimeMetdata;
@@ -36,8 +36,9 @@ public class RuntimeMetadataProvider(IAppCodeProvider _appCodeProvider)
 
 		var text = await sr.ReadToEndAsync()
 			?? throw new InvalidOperationException("metadata.json is empty");
-		var newData = _runtimeMetdata = JsonConvert.DeserializeObject<RuntimeMetdata>(text, CamelCaseSerializerSettings)
+		var newData = _runtimeMetdata = JsonConvert.DeserializeObject<RuntimeMetadata>(text, CamelCaseSerializerSettings)
 			?? throw new InvalidOperationException("Invalid metadata.json");
+		newData.OnEndInit();
 		_runtimeMetdata = newData;
 		return _runtimeMetdata;
 	}

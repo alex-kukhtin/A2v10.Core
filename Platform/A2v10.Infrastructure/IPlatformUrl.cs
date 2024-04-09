@@ -20,13 +20,11 @@ public interface IPlatformUrl
 {
 	String LocalPath { get; }
 	String BaseUrl { get; }
-
 	UrlKind Kind { get; }
 	String Action { get; }
 	String? Id { get; }
-
 	ExpandoObject? Query { get; }
+	
 	void Redirect(String? path);
-
 	String NormalizedLocal(String fileName);
 }

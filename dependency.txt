@@ -1,7 +1,8 @@
-2024-04-05 (next: 8275)
+2024-04-07 (next: 8276)
 =======================
-A2v10.Infrastructure!!!
-
+A2v10.Infrastructure!!!! IPlatformUrl:Auto!!!
+A2v10.ViewEngine.Xaml
+A2v10.App.Assets (в .NET добавить Auto)
 
 
 A2v10.Platform

@@ -326,7 +326,8 @@ public enum ModelCommandType
 	invokeTarget,
 	// new
 	csharp,
-	signal
+	signal,
+	auto
 }
 
 public class ModelJsonCommand : ModelJsonBase, IModelCommand
