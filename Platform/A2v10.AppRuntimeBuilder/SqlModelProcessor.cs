@@ -32,7 +32,7 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IOptions<AppOptions>
 
 		declare @rtable table(Id bigint);
 		declare @Id bigint;
-		merge {table.SqlTableName} as t
+		merge {table.SqlTableName()} as t
 		using @{table.ItemName} as s
 		on t.Id = s.Id
 		when matched then update set
@@ -55,7 +55,7 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IOptions<AppOptions>
 		var dm = await _dbContext.LoadModelSqlAsync(null, sqlString, dbprms =>
 		{
 			AddDefaultParameters(dbprms);
-			dbprms.Add(new SqlParameter($"@{table.ItemName}", SqlDbType.Structured) { TypeName = table.TableTypeName, Value = dtable });
+			dbprms.Add(new SqlParameter($"@{table.ItemName}", SqlDbType.Structured) { TypeName = table.TableTypeName(), Value = dtable });
 		});
 		return dm.Root;
 	}
@@ -73,7 +73,7 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IOptions<AppOptions>
 			declare @tmp table(Id bigint, rowno int identity(1, 1), rowcnt int);
 			insert into @tmp(Id, rowcnt)
 			select Id, count(*) over() 
-			from {table.SqlTableName} a
+			from {table.SqlTableName()} a
 			where a.Void = 0 and (@fr is null or a.Name like @fr or a.Memo like @fr)
 			order by
 				case when @Dir = N'asc' then
@@ -101,7 +101,7 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IOptions<AppOptions>
 						Id
 			offset @Offset rows fetch next @PageSize rows only option (recompile);
 
-			select [{table.Name}!{table.TypeName}!Array] = null, [Id!!Id] = a.Id, [Name!!Name] = a.Name, a.Memo,
+			select [{table.Name}!{table.TypeName()}!Array] = null, [Id!!Id] = a.Id, [Name!!Name] = a.Name, a.Memo,
 				{String.Join(' ', table.Fields.Select(f => $"a.[{f.Name}],"))}
 				[!!RowCount]  = t.rowcnt
 			from {table.Schema}.[{table.Name}] a inner join @tmp t on a.Id = t.Id
@@ -140,10 +140,10 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IOptions<AppOptions>
 	private String GetPlainModelSql(RuntimeTable table)
 	{
 		return $"""
-		select [{table.ItemName}!{table.TypeName}!Object] = null, [Id!!Id] = a.Id, [Name!!Name] = a.Name, 
+		select [{table.ItemName}!{table.TypeName()}!Object] = null, [Id!!Id] = a.Id, [Name!!Name] = a.Name, 
 			{String.Join(' ', table.Fields.Select(f => $"{f.SqlField("a", table)},"))}
 			a.Memo
-		from {table.SqlTableName} a where a.Id = @Id;
+		from {table.SqlTableName()} a where a.Id = @Id;
 
 		-- TODO: Maps
 		declare @Unit bigint;

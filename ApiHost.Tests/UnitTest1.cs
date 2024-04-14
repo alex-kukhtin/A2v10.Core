@@ -1,13 +1,4 @@
 
-using A2v10.ApiHost;
-using A2v10.Data.Interfaces;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Engine.ClientProtocol;
-using Newtonsoft.Json;
-using System.Dynamic;
-using System.Net;
-using System.Net.Http.Headers;
 
 namespace ApiHost.Tests;
 

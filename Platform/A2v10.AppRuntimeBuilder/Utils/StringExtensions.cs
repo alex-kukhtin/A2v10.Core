@@ -9,7 +9,7 @@ internal static class StringExtensions
 	public static String Singular(this String s)
 	{
 		if (s.EndsWith("ies"))
-			return s + "y";
+			return s[0..^3] + "y";
 		else if (s.EndsWith('s'))
 			return s[0..^1];
 		return s;

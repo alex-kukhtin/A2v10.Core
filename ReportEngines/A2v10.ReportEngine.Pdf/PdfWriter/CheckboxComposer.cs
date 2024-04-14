@@ -5,8 +5,7 @@ using System.Dynamic;
 
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
-
-using SkiaSharp;
+using QuestPDF.Skia;
 
 using A2v10.Xaml.Report;
 using A2v10.ReportEngine.Script;
@@ -22,44 +21,47 @@ internal class CheckboxComposer(Checkbox checkbox, RenderContext context) : Flow
 	{
 		if (!_context.IsVisible(_checkbox))
 			return;
-
+		var svgImage = SvgImage.FromText("");
 		container.ApplyDecoration(_checkbox.RuntimeStyle)
 			.Width(12, Unit.Point)
 			.Height(12, Unit.Point)
-			.Canvas((canvas, size) =>
+			.Svg(svgImage);
+		/*
+		.Canvas((canvas, size) =>
+		{
+			using var borderPaint = new SKPaint()
 			{
-				using var borderPaint = new SKPaint()
+				Color = SKColors.Black,
+				StrokeWidth = 1,
+				IsStroke = true,
+			};
+			var rect = new SKRect(0, 0, size.Width, size.Height);
+			canvas.DrawRect(rect, borderPaint);
+
+			Boolean? val = GetCheckBoxValue(value);
+			if (val != null && val.Value)
+			{
+				// draw mark
+				using var markPaint = new SKPaint()
 				{
 					Color = SKColors.Black,
-					StrokeWidth = 1,
+					StrokeWidth = 1.5F,
 					IsStroke = true,
+					StrokeMiter = 1,
+					StrokeCap = SKStrokeCap.Round
 				};
-				var rect = new SKRect(0, 0, size.Width, size.Height);
-				canvas.DrawRect(rect, borderPaint);
+				rect.Inflate(-rect.Width / 4, -rect.Height / 4);
+				SKPoint[] markPoints =
+				[
+					new(rect.Left, rect.Top + rect.Height / 2),
+					new(rect.Left + rect.Width / 3, rect.Bottom),
+					new(rect.Right, rect.Top)
+				];
 
-				Boolean? val = GetCheckBoxValue(value);
-				if (val != null && val.Value)
-				{
-					// draw mark
-					using var markPaint = new SKPaint()
-					{
-						Color = SKColors.Black,
-						StrokeWidth = 1.5F,
-						IsStroke = true,
-						StrokeMiter = 1,
-						StrokeCap = SKStrokeCap.Round
-					};
-					rect.Inflate(-rect.Width / 4, -rect.Height / 4);
-					SKPoint[] markPoints =
-                    [
-                        new(rect.Left, rect.Top + rect.Height / 2),
-						new(rect.Left + rect.Width / 3, rect.Bottom),
-						new(rect.Right, rect.Top)
-					];
-
-					canvas.DrawPoints(SKPointMode.Polygon, markPoints, markPaint);
-				}
-			});
+				canvas.DrawPoints(SKPointMode.Polygon, markPoints, markPaint);
+			}
+		});
+			*/
 	}
 
 	Boolean GetCheckBoxValue(Object? scope)

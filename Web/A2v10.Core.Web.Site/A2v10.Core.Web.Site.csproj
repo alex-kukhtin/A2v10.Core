@@ -22,8 +22,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="A2v10.Workflow.Engine" Version="10.1.8138" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.3" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="8.0.3" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.4" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="8.0.4" />
 	</ItemGroup>
 
 	<ItemGroup>

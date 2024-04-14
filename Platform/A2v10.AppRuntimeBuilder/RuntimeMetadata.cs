@@ -24,6 +24,12 @@ public enum FieldType
 	Boolean
 }
 
+public enum TableType
+{
+	Catalog,
+	Document
+}
+
 public record RuntimeField
 {
 	public String Name { get; init; } = String.Empty;
@@ -32,12 +38,27 @@ public record RuntimeField
 	public FieldType Type { get; init; }
 }
 
+public record SortElement
+{
+	public String Order { get; init; } = String.Empty;
+}
+public record IndexUiElement
+{
+	public SortElement? Sort {  get; init; }	
+}
+public record UserInterface
+{
+	public IndexUiElement? Index { get; init; }
+}
+
 public record RuntimeTable
 {
 	public String Name {  get; init; }	= String.Empty;
 	public String Schema { get; init; } = String.Empty;
 	public List<RuntimeField> Fields { get; init; } = [];
 
+	public Dictionary<String, RuntimeTable>? Details { get; init; }
+	public UserInterface? Ui { get; init; }
 	public IEnumerable<RuntimeField> RealFields()
 	{
 		// ПОРЯДОК ПОЛЕЙ ВАЖЕН!!! ТИП - ОБЯЗАТЕЛЬНО!!!
@@ -49,18 +70,18 @@ public record RuntimeTable
 	}
 
 	[JsonIgnore]
-	public String SqlTableName => $"{Schema}.[{Name}]";
-	[JsonIgnore]
-	public String TypeName => $"T{Name.Singular()}";
-	[JsonIgnore]
 	public String ItemName => $"{Name.Singular()}";
-	[JsonIgnore]
-	public String TableTypeName => $"{Schema}.[{Name.Singular()}.TableType]";
 
 	private RuntimeMetadata? _metadata;
-	internal void SetParent(RuntimeMetadata meta)
+	private TableType _tableType;
+	internal void SetParent(RuntimeMetadata meta, TableType tableType)
 	{
 		_metadata = meta;
+		_tableType = tableType;
+	}
+	internal UserInterface GetUserInterface()
+	{
+		return Ui ?? new UserInterface();
 	}
 }
 
@@ -89,8 +110,8 @@ public record RuntimeMetadata
 	public void OnEndInit()
 	{
 		foreach (var table in Catalogs.Values)
-			table.SetParent(this);
+			table.SetParent(this, TableType.Catalog);
 		foreach (var table in Documents.Values)
-			table.SetParent(this);
+			table.SetParent(this, TableType.Document);
 	}
 }
