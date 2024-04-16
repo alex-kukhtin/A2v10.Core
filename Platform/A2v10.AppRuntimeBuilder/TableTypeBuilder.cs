@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Dynamic;
-using System.Runtime.Remoting;
+
 using A2v10.Infrastructure;
 
 namespace A2v10.AppRuntimeBuilder;

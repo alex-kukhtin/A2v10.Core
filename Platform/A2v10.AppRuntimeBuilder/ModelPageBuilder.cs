@@ -29,13 +29,10 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 		String templateText = String.Empty;
 		if (!String.IsNullOrEmpty(modelView.Template))
 			templateText = await GetTemplateScriptAsync(modelView);
-		else
-		{
-			if (modelView.IsIndex)
-				templateText = CreateIndexTemplate(table);
-			else if (platformUrl.Action == "edit")
-				templateText = CreateEditTemplate(modelView);
-		}
+		else if (modelView.IsIndex)
+			templateText = CreateIndexTemplate(table);
+		else if (platformUrl.Action == "edit")
+			templateText = CreateEditTemplate(table);
 
 		UIElement? page = null;
 
@@ -47,7 +44,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 		else if (!modelView.IsIndex && modelView.IsDialog && platformUrl.Action == "edit")
 			page = CreateEditDialog(table);
 		else if (modelView.IsIndex && modelView.IsDialog && platformUrl.Action == "browse")
-			throw new InvalidOperationException("Generate browse dialog");
+			page = CreateBrowseDialog(table);
 
 		if (page == null)
 			throw new InvalidOperationException("Page is null");
@@ -207,6 +204,48 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 		return page;
 	}
 
+	UIElement CreateBrowseDialog(RuntimeTable table)
+	{
+		var dlg = new Dialog()
+		{
+			CollectionView = new CollectionView()
+			{
+				RunAt = RunMode.Server,
+				Filter = new FilterDescription()
+				{
+					Items = [
+						new FilterItem() {Property = "Fragment"}
+					]
+				},
+				Bindings = cw => cw.SetBinding(nameof(CollectionView.ItemsSource), new Bind(table.Name))
+			},
+			Buttons = [
+				new Button() {
+					Style = ButtonStyle.Primary,
+					Content = "@[Select]"
+				},
+				new Button() {
+					Content = "@[Cancel]",
+					Bindings = btn => btn.SetBinding(nameof(Button.Command), new BindCmd("Close"))
+				}
+			],
+			Children = [
+				new Grid(_xamlSericeProvider) {
+					Children = [
+						new Toolbar(_xamlSericeProvider) {
+
+						},
+						new DataGrid() {
+
+						},
+						new Pager() { Bindings = pgr => pgr.SetBinding(nameof(Pager.Source), new Bind("Parent.Pager"))},
+					]
+				}
+			]
+		};
+		return dlg;
+	}
+
 	UIElement CreateEditDialog(RuntimeTable table)
 	{
 		UIElementCollection CreateDialogChildren()
@@ -218,7 +257,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 					Bold = true,
 					TabIndex = 1,
 					Bindings = (txt) => {
-						txt.SetBinding(nameof(TextBox.Value), new Bind($"{table.ItemName}.Name"));
+						txt.SetBinding(nameof(TextBox.Value), new Bind($"{table.ItemName()}.Name"));
 					}
 			}];
 			foreach (var f in table.Fields)
@@ -230,7 +269,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 						Multiline = f.IsMultiline(),
 						Bindings = (txt) =>
 						{
-							txt.SetBinding(nameof(TextBox.Value), new Bind($"{table.ItemName}.{f.Name}"));
+							txt.SetBinding(nameof(TextBox.Value), new Bind($"{table.ItemName()}.{f.Name}"));
 						}
 					} :
 					new SelectorSimple()
@@ -239,7 +278,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 						Url = f.RefUrl(),
 						Bindings = ss =>
 						{
-							ss.SetBinding(nameof(SelectorSimple.Value), new Bind($"{table.ItemName}.{f.Name}"));
+							ss.SetBinding(nameof(SelectorSimple.Value), new Bind($"{table.ItemName()}.{f.Name}"));
 						}
 					}
 				);
@@ -250,7 +289,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 				Multiline = true,
 				Bindings = (txt) =>
 				{
-					txt.SetBinding(nameof(TextBox.Value), new Bind($"{table.ItemName}.Memo"));
+					txt.SetBinding(nameof(TextBox.Value), new Bind($"{table.ItemName()}.Memo"));
 				}
 			});
 			return coll;
@@ -292,8 +331,6 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 				options:{
 					noDirty: true,
 					persistSelect: ['{{table.Name}}']
-				},
-				validators: {
 				}
 			};
 
@@ -302,12 +339,12 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 		return template;
 	}
 
-	String CreateEditTemplate(IModelView modelView)
+	String CreateEditTemplate(RuntimeTable table)
 	{
 		var template = $$"""
 			const template = {
 				validators: {
-					'Agent.Name' : '@[Error.Required]'
+					'{{table.ItemName()}}.Name' : '@[Error.Required]'
 				}
 			};
 

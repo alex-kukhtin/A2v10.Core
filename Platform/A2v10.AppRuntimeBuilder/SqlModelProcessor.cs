@@ -33,7 +33,7 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IOptions<AppOptions>
 		declare @rtable table(Id bigint);
 		declare @Id bigint;
 		merge {table.SqlTableName()} as t
-		using @{table.ItemName} as s
+		using @{table.ItemName()} as s
 		on t.Id = s.Id
 		when matched then update set
 			t.[Name] = s.[Name],
@@ -49,13 +49,13 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IOptions<AppOptions>
 		{GetPlainModelSql(table)}
 		""";
 
-		var ag = data.Get<ExpandoObject>(table.ItemName);
+		var ag = data.Get<ExpandoObject>(table.ItemName());
 		var dtable = TableTypeBuilder.BuildDataTable(table, ag);
 
 		var dm = await _dbContext.LoadModelSqlAsync(null, sqlString, dbprms =>
 		{
 			AddDefaultParameters(dbprms);
-			dbprms.Add(new SqlParameter($"@{table.ItemName}", SqlDbType.Structured) { TypeName = table.TableTypeName(), Value = dtable });
+			dbprms.Add(new SqlParameter($"@{table.ItemName()}", SqlDbType.Structured) { TypeName = table.TableTypeName(), Value = dtable });
 		});
 		return dm.Root;
 	}
@@ -140,7 +140,7 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IOptions<AppOptions>
 	private String GetPlainModelSql(RuntimeTable table)
 	{
 		return $"""
-		select [{table.ItemName}!{table.TypeName()}!Object] = null, [Id!!Id] = a.Id, [Name!!Name] = a.Name, 
+		select [{table.ItemName()}!{table.TypeName()}!Object] = null, [Id!!Id] = a.Id, [Name!!Name] = a.Name, 
 			{String.Join(' ', table.Fields.Select(f => $"{f.SqlField("a", table)},"))}
 			a.Memo
 		from {table.SqlTableName()} a where a.Id = @Id;

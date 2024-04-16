@@ -27,7 +27,8 @@ public enum FieldType
 public enum TableType
 {
 	Catalog,
-	Document
+	Document,
+	Journal
 }
 
 public record RuntimeField
@@ -46,9 +47,14 @@ public record IndexUiElement
 {
 	public SortElement? Sort {  get; init; }	
 }
+public record BrowseUiElement
+{
+}
+
 public record UserInterface
 {
 	public IndexUiElement? Index { get; init; }
+	public BrowseUiElement? Browse { get; init; }
 }
 
 public record RuntimeTable
@@ -59,18 +65,6 @@ public record RuntimeTable
 
 	public Dictionary<String, RuntimeTable>? Details { get; init; }
 	public UserInterface? Ui { get; init; }
-	public IEnumerable<RuntimeField> RealFields()
-	{
-		// ПОРЯДОК ПОЛЕЙ ВАЖЕН!!! ТИП - ОБЯЗАТЕЛЬНО!!!
-		yield return new RuntimeField() { Name = "Id", Type = FieldType.Id };
-		yield return new RuntimeField() { Name = "Name", Type = FieldType.String, Length = 255 };
-		yield return new RuntimeField() { Name = "Memo", Type = FieldType.String, Length = 255 };
-		foreach (var f in Fields)
-			yield return new RuntimeField() { Name = f.Name, Type = f.RealType(), Length = f.RealLength() };
-	}
-
-	[JsonIgnore]
-	public String ItemName => $"{Name.Singular()}";
 
 	private RuntimeMetadata? _metadata;
 	private TableType _tableType;
