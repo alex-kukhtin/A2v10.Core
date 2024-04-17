@@ -52,4 +52,11 @@ internal static class FieldExtensions
 			return $"[{field.Name}!TUnit!RefId] = {alias}.[{field.Name}]";
 		return $"{alias}.[{field.Name}]";
 	}
+
+	public static Boolean Searchable(this FieldType fieldType) =>
+		fieldType switch
+		{
+			FieldType.String => true,
+			_ => false
+		};
 }

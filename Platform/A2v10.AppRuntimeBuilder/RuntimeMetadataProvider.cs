@@ -30,14 +30,15 @@ public class RuntimeMetadataProvider(IAppCodeProvider _appCodeProvider)
 	{
 		if (_runtimeMetdata != null)
 			return _runtimeMetdata;
-		using var stream = _appCodeProvider.FileStreamRO("metadata.json", true)
-			?? throw new InvalidOperationException("metadata.json not found");
+		const String fileName = "app.metadata";
+		using var stream = _appCodeProvider.FileStreamRO(fileName, true)
+			?? throw new InvalidOperationException($"{fileName} not found");
 		using var sr = new StreamReader(stream);
 
 		var text = await sr.ReadToEndAsync()
-			?? throw new InvalidOperationException("metadata.json is empty");
+			?? throw new InvalidOperationException($"{fileName} is empty");
 		var newData = _runtimeMetdata = JsonConvert.DeserializeObject<RuntimeMetadata>(text, CamelCaseSerializerSettings)
-			?? throw new InvalidOperationException("Invalid metadata.json");
+			?? throw new InvalidOperationException($"Invalid {fileName}");
 		newData.OnEndInit();
 		_runtimeMetdata = newData;
 		return _runtimeMetdata;

@@ -62,6 +62,7 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IOptions<AppOptions>
 
 	private Task<IDataModel> LoadIndexModelAsync(IPlatformUrl platformUrl, RuntimeTable table)
 	{
+		// TODO: sort fields
 		var sqlString = $"""
 			set nocount on;
 			set transaction isolation level read uncommitted;
@@ -74,7 +75,10 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IOptions<AppOptions>
 			insert into @tmp(Id, rowcnt)
 			select Id, count(*) over() 
 			from {table.SqlTableName()} a
-			where a.Void = 0 and (@fr is null or a.Name like @fr or a.Memo like @fr)
+			where a.Void = 0 and (@fr is null 
+				or a.Name like @fr 
+				{String.Join(' ', table.SearchField().Select(f => $"or a.{f.Name} like @fr"))}
+				or a.Memo like @fr)
 			order by
 				case when @Dir = N'asc' then
 					case @Order
@@ -98,7 +102,7 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IOptions<AppOptions>
 						when N'memo' then a.Memo
 					end
 				end desc,
-						Id
+				Id
 			offset @Offset rows fetch next @PageSize rows only option (recompile);
 
 			select [{table.Name}!{table.TypeName()}!Array] = null, [Id!!Id] = a.Id, [Name!!Name] = a.Name, a.Memo,
@@ -164,24 +168,32 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IOptions<AppOptions>
 		});
 	}
 
-	public Task<IDataModel> ExecuteCommandAsync(String command, RuntimeTable table, ExpandoObject prms) 
+	private Task<IDataModel> ExecuteFetch(RuntimeTable table, ExpandoObject prms)
 	{
-		// command === [dbo].[Fetch]
 		var text = prms.Get<String>("Text");
-		// TODO: Create SQL for table
 		var sqlString = $"""
-		declare @fr nvarchar(255) = N'%' + @Text + N'%';
-		select [Units!TUnit!Array] = null, [Id!!Id] = a.Id, [Name!!Name] = a.Name, 
-			a.Short,
-			a.Memo
-		from cat.[Units] a where a.Void = 0 and (@Text is null or a.Name like @fr 
-			or a.Short like @fr
-			or a.Memo like @fr);
-		""";
+			declare @fr nvarchar(255) = N'%' + @Text + N'%';
+			select [{table.Name}!{table.TypeName()}!Array] = null, [Id!!Id] = a.Id, [Name!!Name] = a.Name, 
+				{String.Join(' ', table.SearchField().Select(f => $"a.{f.Name},"))}
+				a.Memo
+			from {table.SqlTableName()} a where a.Void = 0 and (@Text is null 
+				or a.Name like @fr 
+				{String.Join(' ', table.SearchField().Select(f => $"or a.{f.Name} like @fr"))}
+				or a.Memo like @fr);
+			""";
 		return _dbContext.LoadModelSqlAsync(null, sqlString, dbprms =>
 		{
 			AddDefaultParameters(dbprms);
 			dbprms.AddString("@Text", text);
 		});
+	}
+	public Task<IDataModel> ExecuteCommandAsync(String command, RuntimeTable table, ExpandoObject prms) 
+	{
+		// command === [dbo].[Fetch]
+		if (command == "[dbo].[Fetch]")
+		{
+			return ExecuteFetch(table, prms);
+		}
+		throw new NotImplementedException($"Command {command} yet not implemented");
 	}
 }
