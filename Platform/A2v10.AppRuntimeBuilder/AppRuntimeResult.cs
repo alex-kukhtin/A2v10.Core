@@ -1,4 +1,5 @@
-﻿
+﻿// Copyright © 2022-2024 Oleksandr Kukhtin. All rights reserved.
+
 using System;
 
 using A2v10.Data.Interfaces;

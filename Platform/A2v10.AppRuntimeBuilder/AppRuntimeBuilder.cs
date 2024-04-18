@@ -4,53 +4,47 @@ using System;
 using System.Threading.Tasks;
 using System.Dynamic;
 
-using Microsoft.Extensions.Options;
-
 using A2v10.Infrastructure;
 using A2v10.Data.Interfaces;
 
 namespace A2v10.AppRuntimeBuilder;
 
-public class AppRuntimeBuilder(IServiceProvider _serviceProvider, IOptions<AppOptions> _appOptions,
+public class AppRuntimeBuilder(IServiceProvider _serviceProvider,
 	RuntimeMetadataProvider _runtimeMetaProvider, IDbContext _dbContext, ICurrentUser _currentUser) : IAppRuntimeBuilder
 {
-	private readonly SqlModelProcessor _dbProcessor = new(_currentUser, _appOptions, _dbContext);
+	private readonly SqlModelProcessor _dbProcessor = new(_currentUser, _dbContext);
 	private readonly ModelPageBuilder _modelPageBuilder = new(_serviceProvider);
 	public Boolean IsAutoSupported => true;
 
 	public async Task<IAppRuntimeResult> RenderAsync(IPlatformUrl platformUrl, IModelView view, bool isReload)
 	{
-		var table = await GetModelTable(view);
+		var endpoint = await GetEndpoint(view);
 
-		var dm = await _dbProcessor.LoadModelAsync(platformUrl, view, table);
+		var dm = await _dbProcessor.LoadModelAsync(platformUrl, view, endpoint);
 
 		if (isReload)
 			return new AppRuntimeResult(dm, null);
 
-		var page = await _modelPageBuilder.RenderPageAsync(platformUrl, view, table, dm);
+		var page = await _modelPageBuilder.RenderPageAsync(platformUrl, view, endpoint, dm);
 
 		return new AppRuntimeResult(dm, page);
 	}
 
-	async Task<RuntimeTable> GetModelTable(IModelBase modelBase)
+	async Task<EndpointDescriptor> GetEndpoint(IModelBase modelBase)
 	{
 		var meta = await _runtimeMetaProvider.GetMetadata();
-		var cm = modelBase.CurrentModel
-			?? throw new InvalidOperationException($"{modelBase.CurrentModel} is null");
-
-		return meta.GetTable(cm)
-			?? throw new InvalidOperationException($"Table {modelBase.CurrentModel} not found");
+		return meta.GetEndpoint(modelBase.Path);
 	}
 
 	public async Task<ExpandoObject> SaveAsync(IPlatformUrl platformUrl, IModelView view, ExpandoObject data, ExpandoObject savePrms)
 	{
-		var table = await GetModelTable(view);
-		return await _dbProcessor.SaveAsync(table, data);
+		var endpoint = await GetEndpoint(view);
+		return await _dbProcessor.SaveAsync(endpoint.BaseTable, data);
 	}
 
 	public async Task<IDataModel> ExecuteCommandAsync(IModelCommand command, ExpandoObject parameters)
 	{
-		var mt = await GetModelTable(command);
-		return await _dbProcessor.ExecuteCommandAsync(command.LoadProcedure(), mt, parameters);
+		var endpoint = await GetEndpoint(command);
+		return await _dbProcessor.ExecuteCommandAsync(command.LoadProcedure(), endpoint.BaseTable, parameters);
 	}
 }

@@ -30,7 +30,6 @@ internal static class FieldExtensions
 	
 	public static Boolean IsMultiline(this RuntimeField field)
 		=> field.HasMaxChars();
-
 	public static Boolean IsString(this RuntimeField field)
 		=> field.Ref == null && field.Type == FieldType.String;
 
@@ -59,4 +58,6 @@ internal static class FieldExtensions
 			FieldType.String => true,
 			_ => false
 		};
+	public static Boolean Sortable(this FieldType fieldType) =>
+		fieldType != FieldType.Boolean && fieldType != FieldType.Reference;
 }

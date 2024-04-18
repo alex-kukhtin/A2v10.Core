@@ -22,7 +22,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 	private readonly IXamlPartProvider _xamlPartProvider = _serviceProvider.GetRequiredService<IXamlPartProvider>();
 
 	const Int32 COLUMN_MAX_CHARS = 50;
-	public async Task<String> RenderPageAsync(IPlatformUrl platformUrl, IModelView modelView, RuntimeTable table, IDataModel dataModel)
+	public async Task<String> RenderPageAsync(IPlatformUrl platformUrl, IModelView modelView, EndpointDescriptor endpoint, IDataModel dataModel)
 	{
 		String rootId = $"el{Guid.NewGuid()}";
 
@@ -30,9 +30,9 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 		if (!String.IsNullOrEmpty(modelView.Template))
 			templateText = await GetTemplateScriptAsync(modelView);
 		else if (modelView.IsIndex)
-			templateText = CreateIndexTemplate(table);
+			templateText = CreateIndexTemplate(endpoint);
 		else if (platformUrl.Action == "edit")
-			templateText = CreateEditTemplate(table);
+			templateText = CreateEditTemplate(endpoint);
 
 		UIElement? page = null;
 
@@ -40,11 +40,11 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 		if (!String.IsNullOrEmpty(rawView))
 			page = LoadPage(modelView, rawView);
 		else if (modelView.IsIndex && !modelView.IsDialog)
-			page = CreateIndexPage(platformUrl, table);
+			page = CreateIndexPage(platformUrl, endpoint);
 		else if (!modelView.IsIndex && modelView.IsDialog && platformUrl.Action == "edit")
-			page = CreateEditDialog(table);
+			page = CreateEditDialog(endpoint);
 		else if (modelView.IsIndex && modelView.IsDialog && platformUrl.Action == "browse")
-			page = CreateBrowseDialog(table);
+			page = CreateBrowseDialog(endpoint);
 
 		if (page == null)
 			throw new InvalidOperationException("Page is null");
@@ -64,49 +64,27 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 		return await _dynamicRenderer.RenderPage(rri);
 	}
 
-	UIElement CreateIndexPage(IPlatformUrl platformUrl, RuntimeTable table)
+	UIElement CreateIndexPage(IPlatformUrl platformUrl, EndpointDescriptor endpoint)
 	{
+		var arrayName = endpoint.BaseTable.Name;
+		var indexUi = endpoint.GetIndexUI();
+
 		DataGridColumnCollection CreateColumns()
 		{
-			DataGridColumnCollection columns = [
-				new DataGridColumn() {
-					Header = "#",
-					Role = ColumnRole.Id,
-					Bindings = (c) => {
-						c.SetBinding(nameof(DataGridColumn.Content), new Bind("Id"));
-					}
-				},
-				new DataGridColumn() {
-					Header = "@[Name]",
-					MaxChars = COLUMN_MAX_CHARS,
-					Bindings = (c) => {
-						c.SetBinding(nameof(DataGridColumn.Content), new Bind("Name"));
-					}
-				},
-			];
-			table.Fields.ForEach(f =>
+			DataGridColumnCollection columns = [];
+			indexUi.Fields.ForEach(f =>
 			{
 				columns.Add(new DataGridColumn()
 				{
-					Header = $"@[{f.Name}]",
-					MaxChars = f.HasMaxChars() ? COLUMN_MAX_CHARS : 0,
+					Header = f.RealTitle(),
+					MaxChars = f.MaxChars ? COLUMN_MAX_CHARS : 0,
+					Sort = f.Sort,
+					Role = f.Name == "Id" ? ColumnRole.Id : ColumnRole.Default,
 					Bindings = c => {
 						c.SetBinding(nameof(DataGridColumn.Content), new Bind(f.Name));
 					}
-				}); 
+				});
 			});
-			columns.Add(
-				new DataGridColumn()
-				{
-					Header = "@[Memo]",
-					MaxChars =	COLUMN_MAX_CHARS,
-					Bindings = (c) =>
-					{
-						c.SetBinding(nameof(DataGridColumn.Content), new Bind("Memo"));
-					}
-				}
-			);
-
 			return columns;
 		}
 
@@ -126,7 +104,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 				},
 				Bindings = cw =>
 				{
-					cw.SetBinding(nameof(CollectionView.ItemsSource), new Bind(table.Name));
+					cw.SetBinding(nameof(CollectionView.ItemsSource), new Bind(arrayName));
 				}
 			},
 			Children = [
@@ -150,7 +128,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 											Action = DialogAction.Append,
 											Url = $"/{platformUrl.LocalPath}/edit",
 										};
-										bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(table.Name));
+										bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(arrayName));
 										btn.SetBinding(nameof(Button.Command), bindCmd);
 									}
 								},
@@ -162,7 +140,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 											Action = DialogAction.EditSelected,
 											Url = $"/{platformUrl.LocalPath}/edit",
 										};
-										bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(table.Name));
+										bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(arrayName));
 										btn.SetBinding(nameof(Button.Command), bindCmd);
 									}
 								},
@@ -204,8 +182,9 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 		return page;
 	}
 
-	UIElement CreateBrowseDialog(RuntimeTable table)
+	UIElement CreateBrowseDialog(EndpointDescriptor endpoint)
 	{
+		var table = endpoint.BaseTable;
 		var dlg = new Dialog()
 		{
 			CollectionView = new CollectionView()
@@ -246,8 +225,9 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 		return dlg;
 	}
 
-	UIElement CreateEditDialog(RuntimeTable table)
+	UIElement CreateEditDialog(EndpointDescriptor endpoint)
 	{
+		var table = endpoint.BaseTable;
 		UIElementCollection CreateDialogChildren()
 		{
 			UIElementCollection coll = [
@@ -323,14 +303,14 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 		return dlg;
 	}
 
-	String CreateIndexTemplate(RuntimeTable table)
+	String CreateIndexTemplate(EndpointDescriptor endpoint)
 	{
 		var template = $$"""
 
 			const template = {
 				options:{
 					noDirty: true,
-					persistSelect: ['{{table.Name}}']
+					persistSelect: ['{{endpoint.BaseTable.Name}}']
 				}
 			};
 
@@ -339,8 +319,9 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 		return template;
 	}
 
-	String CreateEditTemplate(RuntimeTable table)
+	String CreateEditTemplate(EndpointDescriptor endpoint)
 	{
+		var table = endpoint.BaseTable;
 		var template = $$"""
 			const template = {
 				validators: {

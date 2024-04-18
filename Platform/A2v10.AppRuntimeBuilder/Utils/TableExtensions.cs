@@ -19,10 +19,29 @@ internal static class TableExtensions
 	public static IEnumerable<RuntimeField> RealFields(this RuntimeTable table)
 	{
 		// ПОРЯДОК ПОЛЕЙ ВАЖЕН!!! ТИП - ОБЯЗАТЕЛЬНО!!!
-		foreach (var f in table.DefaultFields)
+		foreach (var f in table.DefaultFields())
 			yield return f;
 		foreach (var f in table.Fields)
 			yield return new RuntimeField() { Name = f.Name, Type = f.RealType(), Length = f.RealLength() };
+	}
+
+	public static List<RuntimeField> DefaultFields(this RuntimeTable table)
+	{
+		return table.TableType switch
+		{
+			TableType.Catalog => [
+				new RuntimeField() { Name = "Id", Type = FieldType.Id },
+				new RuntimeField() { Name = "Name", Type = FieldType.String, Length = 255 },
+				new RuntimeField() { Name = "Memo", Type = FieldType.String, Length = 255 }
+			],
+			TableType.Document => [
+				new RuntimeField() { Name = "Id", Type = FieldType.Id },
+				new RuntimeField() { Name = "Done", Type = FieldType.Boolean },
+				new RuntimeField() { Name = "Date", Type = FieldType.Date },
+				new RuntimeField() { Name = "Memo", Type = FieldType.String, Length = 255 }
+			],
+			_ => throw new NotImplementedException()
+		};
 	}
 
 	public static String TableTypeSchema(this TableType tableType) =>

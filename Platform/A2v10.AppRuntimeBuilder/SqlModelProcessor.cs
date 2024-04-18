@@ -8,7 +8,6 @@ using System.Data.Common;
 using System.Linq;
 
 using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Options;
 
 using A2v10.Data.Core;
 using A2v10.Data.Interfaces;
@@ -16,10 +15,10 @@ using A2v10.Infrastructure;
 
 namespace A2v10.AppRuntimeBuilder;
 
-internal class SqlModelProcessor(ICurrentUser _currentUser, IOptions<AppOptions> _options, IDbContext _dbContext)
-{	public Task<IDataModel> LoadModelAsync(IPlatformUrl platformUrl, IModelView view, RuntimeTable table)
+internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContext)
+{	public Task<IDataModel> LoadModelAsync(IPlatformUrl platformUrl, IModelView view, EndpointDescriptor endpoint)
 	{
-		return view.IsIndex ? LoadIndexModelAsync(platformUrl, table) : LoadPlainModelAsync(platformUrl, table);
+		return view.IsIndex ? LoadIndexModelAsync(platformUrl, endpoint) : LoadPlainModelAsync(platformUrl, endpoint.BaseTable);
 	}
 	private void AddDefaultParameters(DbParameterCollection prms)
 	{
@@ -60,9 +59,11 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IOptions<AppOptions>
 		return dm.Root;
 	}
 
-	private Task<IDataModel> LoadIndexModelAsync(IPlatformUrl platformUrl, RuntimeTable table)
+	private Task<IDataModel> LoadIndexModelAsync(IPlatformUrl platformUrl, EndpointDescriptor endpoint)
 	{
-		// TODO: sort fields
+		var table = endpoint.BaseTable;
+		// TODO: sort fields from UI
+		// TODO: maps
 		var sqlString = $"""
 			set nocount on;
 			set transaction isolation level read uncommitted;
@@ -135,6 +136,7 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IOptions<AppOptions>
 			dbprms.AddBigInt("@Id", null);
 			dbprms.AddInt("@Offset", offset);
 			dbprms.AddInt("@PageSize", pageSize);
+			// TODO: Default order
 			dbprms.AddString("@Order", qry?.Get<String>("Order") ?? "name");
 			dbprms.AddString("@Dir", qry?.Get<String>("Dir") ?? "asc");
 			dbprms.AddString("@Fragment", qry?.Get<String>("Fragment"));
