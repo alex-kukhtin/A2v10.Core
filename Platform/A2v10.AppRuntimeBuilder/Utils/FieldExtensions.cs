@@ -46,9 +46,11 @@ internal static class FieldExtensions
 
 	public static String SqlField(this RuntimeField field, String alias, RuntimeTable table)
 	{
-		// TODO: getParentType
 		if (field.Ref != null)
-			return $"[{field.Name}!TUnit!RefId] = {alias}.[{field.Name}]";
+		{
+			var refTable = table.FindTable(field.Ref);
+			return $"[{field.Name}!{refTable.TypeName()}!RefId] = {alias}.[{field.Name}]";
+		}
 		return $"{alias}.[{field.Name}]";
 	}
 

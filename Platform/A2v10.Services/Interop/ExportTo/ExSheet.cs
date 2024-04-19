@@ -35,7 +35,7 @@ public class ExSheet
 			RowKind.Body => _body,
 			RowKind.HeaderFlat => _headerFlat,
 			RowKind.BodyFlat => _bodyFlat,
-			_ => throw new DataServiceException($"Invalid RowKind '{kind}'")
+			_ => throw new ExportToExcelException($"Invalid RowKind '{kind}'")
 		};
 	}
     public ExRow GetRow(Int32 rowNo, RowKind kind)

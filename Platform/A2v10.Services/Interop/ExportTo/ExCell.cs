@@ -1,6 +1,5 @@
 ﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
-using DocumentFormat.OpenXml.Drawing.Diagrams;
 using System.Globalization;
 using System.Text.RegularExpressions;
 

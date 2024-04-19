@@ -22,10 +22,14 @@ internal static class TableExtensions
 		foreach (var f in table.DefaultFields())
 			yield return f;
 		foreach (var f in table.Fields)
-			yield return new RuntimeField() { Name = f.Name, Type = f.RealType(), Length = f.RealLength() };
+			yield return new RuntimeField() { Name = f.Name, Type = f.RealType(), Length = f.RealLength(), Ref = f.Ref };
+	}
+    public static RuntimeField FindField(this RuntimeTable table, String name)
+	{
+		return table.RealFields().First(f => f.Name == name);
 	}
 
-	public static List<RuntimeField> DefaultFields(this RuntimeTable table)
+    public static List<RuntimeField> DefaultFields(this RuntimeTable table)
 	{
 		return table.TableType switch
 		{

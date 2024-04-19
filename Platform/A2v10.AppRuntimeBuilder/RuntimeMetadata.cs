@@ -50,15 +50,31 @@ public record UiField
 {
 	public String Name { get; set; } = String.Empty;
 	public String? Title { get; set; }
-	public Boolean Sort { get; set; }
+    public Boolean Sort { get; set; }
 	public SearchType Search { get; set; }
 	public Boolean MaxChars { get; set; }
-	public Boolean Multiline { get; set;}
+	public Boolean Multiline { get; set; }
 	public Boolean Required { get; set; }
+    public Boolean Fit { get; set; }
+    public RuntimeField? BaseField { get; set; }
+    public RuntimeTable? RefTable { get; set; }
+    public String? Display { get; set; }
 }
 public record BaseUiElement
 {
 	public List<UiField> Fields { get; init; } = [];
+
+	public EndpointDescriptor? Endpoint { get; private set; }	
+    public void SetParent(EndpointDescriptor endpoint)
+	{
+		Endpoint = endpoint;
+		foreach (var field in Fields)
+		{
+			field.BaseField = endpoint.BaseTable.FindField(field.Name);
+			if (field.BaseField.Ref != null)
+				field.RefTable= endpoint.GetTable(field.BaseField.Ref);
+		}
+	}
 }
 public record IndexUiElement : BaseUiElement
 {
@@ -70,6 +86,12 @@ public record UIDescriptor
 {
 	public IndexUiElement? Index { get; init; }
 	public IndexUiElement? Browse { get; init; }
+
+	public void SetParent(EndpointDescriptor endpoint)
+	{
+		Index?.SetParent(endpoint);
+		Browse?.SetParent(endpoint);	
+	}
 }
 
 public record EndpointDescriptor
@@ -78,6 +100,14 @@ public record EndpointDescriptor
 	public String Table { get; init; } = String.Empty;
 	public RuntimeTable BaseTable { get; set; } = new();
 	public UIDescriptor UI { get; set; } = new();
+	public RuntimeMetadata? Metadata { get; set; }
+
+	public void SetParent(RuntimeMetadata metadata)
+	{
+		Metadata = metadata;
+		BaseTable = metadata.GetTable(Table);
+		UI.SetParent(this);
+	}
 }
 
 public record RuntimeTable
@@ -86,7 +116,6 @@ public record RuntimeTable
 	public String Schema { get; private set; } = String.Empty;
 	public List<RuntimeField> Fields { get; init; } = [];
 	public List<RuntimeTable>? Details { get; init; }
-	public UIDescriptor? Ui { get; init; }
 
 	internal TableType TableType;
 
@@ -101,6 +130,12 @@ public record RuntimeTable
 		if (Details != null)
 			foreach (var dt in Details)
 				dt.SetParent(_metadata, TableType.Details, this);
+	}
+
+	public RuntimeTable FindTable(String name)
+	{
+		return _metadata?.GetTable(name)
+			?? throw new InvalidOperationException("Metadata is null");
 	}
 }
 
@@ -137,7 +172,8 @@ public record RuntimeMetadata
 			{
 				return new EndpointDescriptor() {
 					Table = $"Catalog.{t.Name}",
-					BaseTable = t
+					BaseTable = t,
+					Metadata = this
 				};
 			}
 			throw new InvalidOperationException($"Endpoint {endpointName} not found");
@@ -147,10 +183,9 @@ public record RuntimeMetadata
 			throw new InvalidOperationException("path is empty");
 		if (!name.StartsWith('/'))
 			name = $"/{name}";
-		var descr = Endpoints.FirstOrDefault(e => e.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
-		if (descr == null)
-			descr = DefaultFromName(name);
-		descr.BaseTable = GetTable(descr.Table);
+		var descr = Endpoints.FirstOrDefault(e => e.Name.Equals(name, StringComparison.OrdinalIgnoreCase)) 
+			?? DefaultFromName(name);
+        descr.BaseTable = GetTable(descr.Table);
 		return descr;
 	}
 
@@ -162,5 +197,7 @@ public record RuntimeMetadata
 			table.SetParent(this, TableType.Document);
 		foreach (var table in Journals)
 			table.SetParent(this, TableType.Journal);
+		foreach (var ep in Endpoints)
+			ep.SetParent(this);
 	}
 }

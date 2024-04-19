@@ -6,6 +6,7 @@ using System.Dynamic;
 using System.Threading.Tasks;
 using System.Data.Common;
 using System.Linq;
+using System.Text;
 
 using Microsoft.Data.SqlClient;
 
@@ -18,7 +19,7 @@ namespace A2v10.AppRuntimeBuilder;
 internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContext)
 {	public Task<IDataModel> LoadModelAsync(IPlatformUrl platformUrl, IModelView view, EndpointDescriptor endpoint)
 	{
-		return view.IsIndex ? LoadIndexModelAsync(platformUrl, endpoint) : LoadPlainModelAsync(platformUrl, endpoint.BaseTable);
+		return view.IsIndex ? LoadIndexModelAsync(platformUrl, endpoint.GetIndexUI()) : LoadPlainModelAsync(platformUrl, endpoint.BaseTable);
 	}
 	private void AddDefaultParameters(DbParameterCollection prms)
 	{
@@ -59,64 +60,109 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContex
 		return dm.Root;
 	}
 
-	private Task<IDataModel> LoadIndexModelAsync(IPlatformUrl platformUrl, EndpointDescriptor endpoint)
+	private Task<IDataModel> LoadIndexModelAsync(IPlatformUrl platformUrl, IndexUiElement indexUi)
 	{
-		var table = endpoint.BaseTable;
-		// TODO: sort fields from UI
-		// TODO: maps
-		var sqlString = $"""
-			set nocount on;
-			set transaction isolation level read uncommitted;
+		var table = indexUi.Endpoint?.BaseTable
+			?? throw new InvalidOperationException("Endpoint or BaseTable is null");
 
-			set @Order = lower(@Order);
-			set @Dir = lower(@Dir);
-			declare @fr nvarchar(255) = N'%' + @Fragment + N'%';
+        // TODO: search fields from UI, sort non string fields
 
-			declare @tmp table(Id bigint, rowno int identity(1, 1), rowcnt int);
-			insert into @tmp(Id, rowcnt)
-			select Id, count(*) over() 
-			from {table.SqlTableName()} a
-			where a.Void = 0 and (@fr is null 
-				or a.Name like @fr 
-				{String.Join(' ', table.SearchField().Select(f => $"or a.{f.Name} like @fr"))}
-				or a.Memo like @fr)
-			order by
-				case when @Dir = N'asc' then
-					case @Order
-						when N'id' then a.Id
-					end
-				end asc,
-				case when @Dir = N'asc' then
-					case @Order
-						when N'name' then a.Name
-						when N'memo' then a.Memo
-					end
-				end asc,
-				case when @Dir = N'desc' then
-					case @Order
-						when N'id' then a.Id
-					end
-				end desc,
-				case when @Dir = N'desc' then
-					case @Order
-						when N'name' then a.Name
-						when N'memo' then a.Memo
-					end
-				end desc,
-				Id
-			offset @Offset rows fetch next @PageSize rows only option (recompile);
+        var refFields = indexUi.Fields.Where(f => f.BaseField?.Ref != null);
 
-			select [{table.Name}!{table.TypeName()}!Array] = null, [Id!!Id] = a.Id, [Name!!Name] = a.Name, a.Memo,
-				{String.Join(' ', table.Fields.Select(f => $"a.[{f.Name}],"))}
-				[!!RowCount]  = t.rowcnt
-			from {table.Schema}.[{table.Name}] a inner join @tmp t on a.Id = t.Id
-			order by t.[rowno];
+        String RefTableFields()
+		{
+			return String.Join(' ', refFields.Select(rf => $"[{rf.Name}] bigint,"));
+		}
 
-			-- system data
-			select [!$System!] = null,
-				[!{table.Name}!PageSize] = @PageSize,  [!{table.Name}!Offset] = @Offset,
-				[!{table.Name}!SortOrder] = @Order,  [!{table.Name}!SortDir] = @Dir,
-				[!{table.Name}.Fragment!Filter] = @Fragment
+        String RefInsertFields()
+        {
+            return String.Join(' ', refFields.Select(rf => $"[{rf.Name}],"));
+        }
+
+		String SelectFieldsAll(String alias) {
+			return String.Join(' ', indexUi.Fields.Select(rf => $"{rf.SelectSqlField(alias)},"));
+		}
+
+		String MapsData()
+		{
+            if (!refFields.Any())
+				return String.Empty;	
+            var sb = new StringBuilder();
+			foreach (var rf in refFields) {
+				sb.AppendLine($"""
+				with TM as (select [{rf.Name}] from @tmp group by [{rf.Name}])
+				select [!{rf.RefTable?.TypeName()}!Map] = null, [Id!!Id] = m.Id, 
+					{rf.RealDisplaySqlField("m")}
+				from TM inner join {rf.RefTable?.SqlTableName()} m on TM.[{rf.Name}] = m.Id;
+				""");
+			}
+			return sb.ToString();
+		}
+
+		String SortStrings(String alias)
+		{
+			var strFields = table.RealFields().Where(f => f.Type == FieldType.String);
+			if (!strFields.Any())
+				return String.Empty;
+			var fields = String.Join(' ', strFields.Select(f => $"when N'{f.Name.ToLowerInvariant()}' then {alias}.[{f.Name}] "));
+			return $"""
+			case when @Dir = N'asc' then
+				case @Order
+					{fields}
+				end
+			end asc,
+			case when @Dir = N'desc' then
+				case @Order
+					{fields}
+				end
+			end desc,			
+			""";
+		}
+
+        var sqlString = $"""
+		set nocount on;
+		set transaction isolation level read uncommitted;
+
+		set @Order = lower(@Order);
+		set @Dir = lower(@Dir);
+		declare @fr nvarchar(255) = N'%' + @Fragment + N'%';
+
+		declare @tmp table(Id bigint, rowno int identity(1, 1), {RefTableFields()} rowcnt int);
+		insert into @tmp(Id, {RefInsertFields()} rowcnt)
+		select Id, {RefInsertFields()} count(*) over() 
+		from {table.SqlTableName()} a
+		where a.Void = 0 and (@fr is null 
+			or a.[Name] like @fr 
+			{String.Join(' ', table.SearchField().Select(f => $"or a.{f.Name} like @fr"))}
+			or a.Memo like @fr)
+		order by
+			case when @Dir = N'asc' then
+				case @Order
+					when N'id' then a.Id
+				end
+			end asc,
+			case when @Dir = N'desc' then
+				case @Order
+					when N'id' then a.Id
+				end
+			end desc,
+			{SortStrings("a")}
+			a.[Id]
+		offset @Offset rows fetch next @PageSize rows only option (recompile);
+
+		select [{table.Name}!{table.TypeName()}!Array] = null,
+			{SelectFieldsAll("a")}
+			[!!RowCount]  = t.rowcnt
+		from {table.SqlTableName()} a inner join @tmp t on a.Id = t.Id
+		order by t.[rowno];
+
+		{MapsData()}
+
+		-- system data
+		select [!$System!] = null,
+			[!{table.Name}!PageSize] = @PageSize,  [!{table.Name}!Offset] = @Offset,
+			[!{table.Name}!SortOrder] = @Order,  [!{table.Name}!SortDir] = @Dir,
+			[!{table.Name}.Fragment!Filter] = @Fragment
 
 		""";
 
@@ -146,7 +192,7 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContex
 	private String GetPlainModelSql(RuntimeTable table)
 	{
 		return $"""
-		select [{table.ItemName()}!{table.TypeName()}!Object] = null, [Id!!Id] = a.Id, [Name!!Name] = a.Name, 
+		select [{table.ItemName()}!{table.TypeName()}!Object] = null, [Id!!Id] = a.Id, [Name!!Name] = a.[Name], 
 			{String.Join(' ', table.Fields.Select(f => $"{f.SqlField("a", table)},"))}
 			a.Memo
 		from {table.SqlTableName()} a where a.Id = @Id;
@@ -155,7 +201,7 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContex
 		declare @Unit bigint;
 		select @Unit = a.[Unit] from cat.[Items] a where a.Id = @Id;
 
-		select [!TUnit!Map] = null, [Id!!Id] = a.Id, [Name!!Name] = a.Name
+		select [!TUnit!Map] = null, [Id!!Id] = a.Id, [Name!!Name] = a.[Name]
 		from cat.Units a where a.Id = @Unit;
 		""";
 	}
@@ -175,11 +221,11 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContex
 		var text = prms.Get<String>("Text");
 		var sqlString = $"""
 			declare @fr nvarchar(255) = N'%' + @Text + N'%';
-			select [{table.Name}!{table.TypeName()}!Array] = null, [Id!!Id] = a.Id, [Name!!Name] = a.Name, 
+			select [{table.Name}!{table.TypeName()}!Array] = null, [Id!!Id] = a.Id, [Name!!Name] = a.[Name], 
 				{String.Join(' ', table.SearchField().Select(f => $"a.{f.Name},"))}
 				a.Memo
 			from {table.SqlTableName()} a where a.Void = 0 and (@Text is null 
-				or a.Name like @fr 
+				or a.[Name] like @fr 
 				{String.Join(' ', table.SearchField().Select(f => $"or a.{f.Name} like @fr"))}
 				or a.Memo like @fr);
 			""";

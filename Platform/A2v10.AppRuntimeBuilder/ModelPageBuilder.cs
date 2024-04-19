@@ -6,11 +6,11 @@ using System.IO;
 
 using Microsoft.Extensions.DependencyInjection;
 
+using A2v10.System.Xaml;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
-using A2v10.System.Xaml;
-using A2v10.Xaml.DynamicRendrer;
 using A2v10.Xaml;
+using A2v10.Xaml.DynamicRendrer;
 
 namespace A2v10.AppRuntimeBuilder;
 
@@ -81,7 +81,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 					Sort = f.Sort,
 					Role = f.Name == "Id" ? ColumnRole.Id : ColumnRole.Default,
 					Bindings = c => {
-						c.SetBinding(nameof(DataGridColumn.Content), new Bind(f.Name));
+						c.SetBinding(nameof(DataGridColumn.Content), new Bind(f.BindName()));
 					}
 				});
 			});
