@@ -38,7 +38,11 @@ internal class TableTypeBuilder
 			{
 				var obj = data.Get<Object>(col.ColumnName);
 				if (obj is ExpandoObject exp)
+				{
 					obj = exp.Get<Object>("Id");
+					if (obj is Int64 int64 && int64 == 0)
+						obj = DBNull.Value;
+				}
 				r[i] = obj;
 			}
 		}

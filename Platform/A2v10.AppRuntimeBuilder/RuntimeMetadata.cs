@@ -10,6 +10,7 @@ public enum FieldType
 {
 	String,
 	Id,
+	Int,
 	Money,
 	Float,
 	Date,
@@ -82,20 +83,33 @@ public record IndexUiElement : BaseUiElement
 	public SortElement? Sort {  get; init; }
 }
 
+public record EditUiElement : BaseUiElement 
+{ 
+}
+
 public record UIDescriptor
 {
 	public IndexUiElement? Index { get; init; }
 	public IndexUiElement? Browse { get; init; }
+	public EditUiElement? Edit { get; init; }	
 
 	public void SetParent(EndpointDescriptor endpoint)
 	{
 		Index?.SetParent(endpoint);
 		Browse?.SetParent(endpoint);	
+		Edit?.SetParent(endpoint);
 	}
 }
 
+public enum EndpointEdit
+{
+	Auto,
+	Dialog,
+	Page
+}
 public record EndpointDescriptor
 {
+	public EndpointEdit Edit { get; init; }
 	public String Name { get; init; } = String.Empty;
 	public String Table { get; init; } = String.Empty;
 	public RuntimeTable BaseTable { get; set; } = new();
@@ -116,6 +130,8 @@ public record RuntimeTable
 	public String Schema { get; private set; } = String.Empty;
 	public List<RuntimeField> Fields { get; init; } = [];
 	public List<RuntimeTable>? Details { get; init; }
+	public RuntimeTable DetailsParent => _parent 
+			?? throw new InvalidOperationException("Details parent is null");
 
 	internal TableType TableType;
 
@@ -153,8 +169,8 @@ public record RuntimeMetadata
 		var tableList = info[0] switch
 		{
 			"Catalog" => Catalogs,
-			"Documents" => Documents,
-			"Journals" => Journals,
+			"Document" => Documents,
+			"Journal" => Journals,
 			_ => throw new InvalidOperationException($"Invalid runtime model key {info[0]}")
 		};
 		return tableList.FirstOrDefault(x => x.Name == info[1]) ??

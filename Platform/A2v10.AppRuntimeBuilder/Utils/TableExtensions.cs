@@ -24,6 +24,12 @@ internal static class TableExtensions
 		foreach (var f in table.Fields)
 			yield return new RuntimeField() { Name = f.Name, Type = f.RealType(), Length = f.RealLength(), Ref = f.Ref };
 	}
+
+    public static IEnumerable<RuntimeField> RealFieldsMap(this RuntimeTable table)
+	{
+		return table.RealFields().Where(f => f.Name != "Memo");
+	}
+
     public static RuntimeField FindField(this RuntimeTable table, String name)
 	{
 		return table.RealFields().First(f => f.Name == name);
@@ -42,9 +48,15 @@ internal static class TableExtensions
 				new RuntimeField() { Name = "Id", Type = FieldType.Id },
 				new RuntimeField() { Name = "Done", Type = FieldType.Boolean },
 				new RuntimeField() { Name = "Date", Type = FieldType.Date },
-				new RuntimeField() { Name = "Memo", Type = FieldType.String, Length = 255 }
+                new RuntimeField() { Name = "Sum", Type = FieldType.Money },
+                new RuntimeField() { Name = "Memo", Type = FieldType.String, Length = 255 }
 			],
-			_ => throw new NotImplementedException()
+			TableType.Details => [
+                new RuntimeField() { Name = "Id", Type = FieldType.Id },
+                new RuntimeField() { Name = "RowNo", Type = FieldType.Int },
+                new RuntimeField() { Name = "Parent", Type = FieldType.Id },
+            ],
+            _ => throw new NotImplementedException()
 		};
 	}
 

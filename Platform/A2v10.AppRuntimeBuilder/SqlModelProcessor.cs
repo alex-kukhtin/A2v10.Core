@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Data.Common;
 using System.Linq;
 using System.Text;
+using System.Collections.Generic;
 
 using Microsoft.Data.SqlClient;
 
@@ -26,8 +27,36 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContex
 		prms.AddBigInt("@UserId", _currentUser.Identity.Id);
 	}
 
-	public async Task<ExpandoObject> SaveAsync(RuntimeTable table, ExpandoObject data)
+    private String MapsData(IEnumerable<RuntimeField> refFields, RuntimeTable table, String tmpTable)
+    {
+        String SelectFieldsMap(RuntimeTable? table, String alias)
+        {
+            if (table == null)
+                return String.Empty;
+            return String.Join(',', table.RealFieldsMap().Select(f => f.SelectSqlField(alias, table)));
+        }
+
+        if (!refFields.Any())
+            return String.Empty;
+        var sb = new StringBuilder();
+        foreach (var rf in refFields)
+        {
+            var rtable = table.FindTable(rf.Ref!);
+            sb.AppendLine($"""
+				with TM as (select [{rf.MapName()}] from {tmpTable} group by [{rf.MapName()}])
+				select [!{rtable.TypeName()}!Map] = null, 
+					{SelectFieldsMap(rtable, "m")}
+				from TM inner join {rtable.SqlTableName()} m on TM.[{rf.MapName()}] = m.Id;
+				""");
+			sb.AppendLine();
+        }
+        return sb.ToString();
+    }
+
+
+    public async Task<ExpandoObject> SaveAsync(RuntimeTable table, ExpandoObject data)
 	{
+		var updateFields = table.RealFields().Where(f => f.Name != "Id");
 		var sqlString = $"""
 
 		declare @rtable table(Id bigint);
@@ -36,12 +65,10 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContex
 		using @{table.ItemName()} as s
 		on t.Id = s.Id
 		when matched then update set
-			t.[Name] = s.[Name],
-			{String.Join(' ', table.Fields.Select(f => $"t.{f.Name} = s.{f.Name},"))}
-			t.Memo = s.Memo
+			{String.Join(',', updateFields.Select(f => $"t.{f.Name} = s.{f.Name}"))}
 		when not matched then insert 
-			(Name, Memo) values
-			(s.Name, s.Memo)
+			({String.Join(',', updateFields.Select(f => f.Name))}) values
+			({String.Join(',', updateFields.Select(f => $"s.{f.Name}"))})
 		output inserted.Id into @rtable(Id);
 
 		select top(1) @Id = Id from @rtable;
@@ -67,41 +94,25 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContex
 
         // TODO: search fields from UI, sort non string fields
 
-        var refFields = indexUi.Fields.Where(f => f.BaseField?.Ref != null);
+        var refFields = table.Fields.Where(f => f.Ref != null);
 
         String RefTableFields()
 		{
-			return String.Join(' ', refFields.Select(rf => $"[{rf.Name}] bigint,"));
+			return String.Join(' ', refFields.Select(rf => $"[{rf.MapName()}] bigint,"));
 		}
 
         String RefInsertFields()
         {
-            return String.Join(' ', refFields.Select(rf => $"[{rf.Name}],"));
+            return String.Join(' ', refFields.Select(rf => $"[{rf.MapName()}],"));
         }
 
-		String SelectFieldsAll(String alias) {
-			return String.Join(' ', indexUi.Fields.Select(rf => $"{rf.SelectSqlField(alias)},"));
+		String SelectFieldsAll(RuntimeTable table, String alias) {
+			return String.Join(' ', table.RealFields().Select(f => $"{f.SelectSqlField(alias, table)},"));
 		}
 
-		String MapsData()
+		String SortStrings(Func<RuntimeField, Boolean> predicate, String alias)
 		{
-            if (!refFields.Any())
-				return String.Empty;	
-            var sb = new StringBuilder();
-			foreach (var rf in refFields) {
-				sb.AppendLine($"""
-				with TM as (select [{rf.Name}] from @tmp group by [{rf.Name}])
-				select [!{rf.RefTable?.TypeName()}!Map] = null, [Id!!Id] = m.Id, 
-					{rf.RealDisplaySqlField("m")}
-				from TM inner join {rf.RefTable?.SqlTableName()} m on TM.[{rf.Name}] = m.Id;
-				""");
-			}
-			return sb.ToString();
-		}
-
-		String SortStrings(String alias)
-		{
-			var strFields = table.RealFields().Where(f => f.Type == FieldType.String);
+			var strFields = table.RealFields().Where(predicate);
 			if (!strFields.Any())
 				return String.Empty;
 			var fields = String.Join(' ', strFields.Select(f => $"when N'{f.Name.ToLowerInvariant()}' then {alias}.[{f.Name}] "));
@@ -129,10 +140,9 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContex
 
 		declare @tmp table(Id bigint, rowno int identity(1, 1), {RefTableFields()} rowcnt int);
 		insert into @tmp(Id, {RefInsertFields()} rowcnt)
-		select Id, {RefInsertFields()} count(*) over() 
+		select a.Id, {RefInsertFields()} count(*) over() 
 		from {table.SqlTableName()} a
 		where a.Void = 0 and (@fr is null 
-			or a.[Name] like @fr 
 			{String.Join(' ', table.SearchField().Select(f => $"or a.{f.Name} like @fr"))}
 			or a.Memo like @fr)
 		order by
@@ -146,17 +156,17 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContex
 					when N'id' then a.Id
 				end
 			end desc,
-			{SortStrings("a")}
+			{SortStrings(f => f.Type == FieldType.String, "a")}
 			a.[Id]
 		offset @Offset rows fetch next @PageSize rows only option (recompile);
 
 		select [{table.Name}!{table.TypeName()}!Array] = null,
-			{SelectFieldsAll("a")}
+			{SelectFieldsAll(table, "a")}
 			[!!RowCount]  = t.rowcnt
 		from {table.SqlTableName()} a inner join @tmp t on a.Id = t.Id
 		order by t.[rowno];
 
-		{MapsData()}
+		{MapsData(refFields, table, "@tmp")}
 
 		-- system data
 		select [!$System!] = null,
@@ -190,19 +200,106 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContex
 	}
 
 	private String GetPlainModelSql(RuntimeTable table)
-	{
-		return $"""
-		select [{table.ItemName()}!{table.TypeName()}!Object] = null, [Id!!Id] = a.Id, [Name!!Name] = a.[Name], 
-			{String.Join(' ', table.Fields.Select(f => $"{f.SqlField("a", table)},"))}
-			a.Memo
+    {
+		var refFieldsMap = table.Fields.Where(f => f.Ref != null);
+
+		// TODO: Нужно использовать TableName а не FieldName
+		IEnumerable<RuntimeField> DetailsFieldMap()
+		{
+			if (table.Details != null)
+				foreach (var detailsTable in table.Details)
+				{
+					foreach (var f in detailsTable.Fields.Where(f => f.Ref != null))
+					{
+						yield return f;
+						var rt = detailsTable.FindTable(f.Ref!);
+						foreach (var f2 in rt.Fields.Where(f => f.Ref != null))
+							yield return f2;
+					}
+				}
+		}
+
+		var detailsFieldMap = DetailsFieldMap();	
+		var fullFieldsMap = refFieldsMap.Union(detailsFieldMap);
+
+		String DeclareMap()
+		{
+            if (!fullFieldsMap.Any())
+                return String.Empty;
+			return $"""
+			declare @map table(Id bigint, {String.Join(',', fullFieldsMap.Select(f => $"{f.MapName()} bigint"))});
+			""";
+        }
+
+        String InsertMapMain()
+		{
+			if (!refFieldsMap.Any())
+				return String.Empty;
+			return $"""
+			insert into @map(Id, {String.Join(',', refFieldsMap.Select(f => f.MapName()))})
+			select a.Id, {String.Join(',', refFieldsMap.Select(f => $"a.{f.Name}"))} 
+			from {table.SqlTableName()} a where a.Id = @Id;
+			""";
+		}
+
+        String InsertMapDetails()
+		{
+			if (!detailsFieldMap.Any())
+				return String.Empty;
+			if (table.Details == null)
+				return String.Empty;
+			var sb = new StringBuilder();
+			foreach (var details in table.Details) {
+				var fieldMap = details.Fields.Where(f => f.Ref != null);
+				sb.AppendLine($"""
+				insert into @map({String.Join(',', fieldMap.Select(f => f.MapName()))})
+				select {String.Join(',', fieldMap.Select(f => $"a.{f.Name}"))}
+				from {details.SqlTableName()} a where a.Parent = @Id;
+				""");
+				sb.AppendLine();
+            }
+            return sb.ToString();
+		}
+
+		String DetailsFields()
+		{
+			if (table.Details == null)
+				return String.Empty;
+			var details = String.Join(',', table.Details.Select(f => $"[{f.Name}!{f.TypeName()}!Array] = null"));
+			if (String.IsNullOrEmpty(details))
+				return String.Empty;
+			return "," + details;
+		} 
+
+		String DetailsTable()
+		{
+            if (table.Details == null)	
+				return String.Empty;
+			var sb = new StringBuilder();
+			foreach (var details in table.Details)
+			{
+				var fields = String.Join(',', details.RealFields().Select(f => f.SelectSqlField("d", details)));
+				sb.AppendLine($"""
+				select [!{details.TypeName()}!Array] = null,
+					{fields}
+				from {details.SqlTableName()} d where d.Parent = @Id;
+				""");
+			}
+			return sb.ToString();	
+		}
+
+        return $"""
+		select [{table.ItemName()}!{table.TypeName()}!Object] = null, 
+			{String.Join(',', table.RealFields().Select(f => $"{f.SelectSqlField("a", table)}"))}
+			{DetailsFields()}
 		from {table.SqlTableName()} a where a.Id = @Id;
 
-		-- TODO: Maps
-		declare @Unit bigint;
-		select @Unit = a.[Unit] from cat.[Items] a where a.Id = @Id;
+		{DeclareMap()}
+		{DetailsTable()}
+		{InsertMapMain()}
 
-		select [!TUnit!Map] = null, [Id!!Id] = a.Id, [Name!!Name] = a.[Name]
-		from cat.Units a where a.Id = @Unit;
+		{InsertMapDetails()}
+		{MapsData(fullFieldsMap, table, "@map")}
 		""";
 	}
 	private Task<IDataModel> LoadPlainModelAsync(IPlatformUrl platformUrl, RuntimeTable table)

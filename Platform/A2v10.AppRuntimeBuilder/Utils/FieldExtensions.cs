@@ -28,33 +28,34 @@ internal static class FieldExtensions
 	public static Boolean HasMaxChars(this RuntimeField field)
 		=> field.IsString() && field.RealLength() >= 255;
 	
-	public static Boolean IsMultiline(this RuntimeField field)
-		=> field.HasMaxChars();
 	public static Boolean IsString(this RuntimeField field)
 		=> field.Ref == null && field.Type == FieldType.String;
-
-	public static String RefUrl(this RuntimeField field)
+    
+	public static String MapName(this RuntimeField field)
 	{
-		if (field.Ref != null)
-		{
-			var sp = field.Ref.Split('.');
-			sp[1] = sp[1].Singular();
-			return $"/{String.Join('/', sp.Select(s => s.ToLowerInvariant()))}";
-		}
-		throw new InvalidOperationException($"Invalid RefValue {field.Name}");
+		if (field.Ref == null)
+			throw new InvalidOperationException("Map Ref is null");
+		return field.Ref.Split('.')[1].Singular().ToLowerInvariant();
 	}
-
-	public static String SqlField(this RuntimeField field, String alias, RuntimeTable table)
+    public static String SelectSqlField(this RuntimeField field, String alias, RuntimeTable table)
 	{
 		if (field.Ref != null)
 		{
 			var refTable = table.FindTable(field.Ref);
 			return $"[{field.Name}!{refTable.TypeName()}!RefId] = {alias}.[{field.Name}]";
 		}
-		return $"{alias}.[{field.Name}]";
+        else if (field.Name == "Id")
+            return $"[Id!!Id] = {alias}.Id";
+        else if (field.Name == "Name")
+            return $"[Name!!Name] = {alias}.[Name]";
+        else if (field.Name == "RowNo")
+            return $"[RowNo!!RowNumber] = {alias}.RowNo";
+        else if (field.Name == "Parent")
+            return $"[!{table.DetailsParent.TypeName()}.{table.Name}!ParentId] = {alias}.Parent";
+        return $"{alias}.[{field.Name}]";
 	}
 
-	public static Boolean Searchable(this FieldType fieldType) =>
+    public static Boolean Searchable(this FieldType fieldType) =>
 		fieldType switch
 		{
 			FieldType.String => true,

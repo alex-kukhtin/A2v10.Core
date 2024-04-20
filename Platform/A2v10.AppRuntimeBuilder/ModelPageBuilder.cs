@@ -3,6 +3,7 @@
 using System;
 using System.Threading.Tasks;
 using System.IO;
+using System.Linq;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -20,8 +21,6 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 	private readonly DynamicRenderer _dynamicRenderer = new(_serviceProvider);
 	private readonly IAppCodeProvider _codeProvider = _serviceProvider.GetRequiredService<IAppCodeProvider>();
 	private readonly IXamlPartProvider _xamlPartProvider = _serviceProvider.GetRequiredService<IXamlPartProvider>();
-
-	const Int32 COLUMN_MAX_CHARS = 50;
 	public async Task<String> RenderPageAsync(IPlatformUrl platformUrl, IModelView modelView, EndpointDescriptor endpoint, IDataModel dataModel)
 	{
 		String rootId = $"el{Guid.NewGuid()}";
@@ -43,6 +42,8 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 			page = CreateIndexPage(platformUrl, endpoint);
 		else if (!modelView.IsIndex && modelView.IsDialog && platformUrl.Action == "edit")
 			page = CreateEditDialog(endpoint);
+		else if (!modelView.IsIndex && !modelView.IsDialog && platformUrl.Action == "edit")
+			page = CreateEditPage(endpoint);
 		else if (modelView.IsIndex && modelView.IsDialog && platformUrl.Action == "browse")
 			page = CreateBrowseDialog(endpoint);
 
@@ -68,25 +69,44 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 	{
 		var arrayName = endpoint.BaseTable.Name;
 		var indexUi = endpoint.GetIndexUI();
+		var editMode = endpoint.EditMode();
 
-		DataGridColumnCollection CreateColumns()
+		BindCmd EditCommand()
 		{
-			DataGridColumnCollection columns = [];
-			indexUi.Fields.ForEach(f =>
+			var cmd = new BindCmd();
+			if (editMode == EndpointEdit.Dialog)
 			{
-				columns.Add(new DataGridColumn()
-				{
-					Header = f.RealTitle(),
-					MaxChars = f.MaxChars ? COLUMN_MAX_CHARS : 0,
-					Sort = f.Sort,
-					Role = f.Name == "Id" ? ColumnRole.Id : ColumnRole.Default,
-					Bindings = c => {
-						c.SetBinding(nameof(DataGridColumn.Content), new Bind(f.BindName()));
-					}
-				});
-			});
-			return columns;
+				cmd.Command = CommandType.Dialog;
+				cmd.Action = DialogAction.EditSelected;
+				cmd.Url = $"/{platformUrl.LocalPath}/edit";
+				cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(arrayName));
+			}
+			else if (editMode == EndpointEdit.Page) {
+                cmd.Command = CommandType.OpenSelected;
+                cmd.Url = $"/{platformUrl.LocalPath}/edit";
+                cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(arrayName));
+            }
+            return cmd;
 		}
+
+		BindCmd CreateCommand()
+		{
+            var cmd = new BindCmd();
+            if (editMode == EndpointEdit.Dialog)
+            {
+                cmd.Command = CommandType.Dialog;
+                cmd.Action = DialogAction.Append;
+                cmd.Url = $"/{platformUrl.LocalPath}/edit";
+                cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(arrayName));
+            }
+            else if (editMode == EndpointEdit.Page)
+            {
+                cmd.Command = CommandType.Append;
+                cmd.Url = $"/{platformUrl.LocalPath}/edit";
+                cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(arrayName));
+            }
+            return cmd;
+        }
 
 		var page = new Page()
 		{
@@ -123,43 +143,19 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 									Content = "@[Create]",
 									Icon=Icon.Plus,
 									Bindings = (btn) => {
-										var bindCmd = new BindCmd() {
-											Command = Xaml.CommandType.Dialog,
-											Action = DialogAction.Append,
-											Url = $"/{platformUrl.LocalPath}/edit",
-										};
-										bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(arrayName));
-										btn.SetBinding(nameof(Button.Command), bindCmd);
+										btn.SetBinding(nameof(Button.Command), CreateCommand());
 									}
 								},
 								new Button() {
 									Icon=Icon.Edit,
 									Bindings = (btn) => {
-										var bindCmd = new BindCmd() {
-											Command = Xaml.CommandType.Dialog,
-											Action = DialogAction.EditSelected,
-											Url = $"/{platformUrl.LocalPath}/edit",
-										};
-										bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(arrayName));
-										btn.SetBinding(nameof(Button.Command), bindCmd);
+										btn.SetBinding(nameof(Button.Command), EditCommand());
 									}
 								},
 								new Separator(),
-								new Button() {
-									Content = "@[Reload]",
-									Icon = Icon.Reload,
-									Bindings = (btn) => {
-										btn.SetBinding(nameof(Button.Command), new BindCmd() {Command = Xaml.CommandType.Reload});
-									}
-								},
+								XamlHelper.CreateButton(CommandType.Reload, Icon.Reload),
 								new ToolbarAligner(),
-								new TextBox() {
-									Placeholder = "@[Search]",
-									Width = Length.FromString("20rem"),
-									Bindings = tb => {
-										tb.SetBinding(nameof(TextBox.Value), new Bind("Parent.Filter.Fragment"));
-									}
-								}
+								XamlHelper.CreateSearchBox()
 							]
 						},
 						new DataGrid() {
@@ -168,7 +164,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 							Bindings = (dg) => {
 								dg.SetBinding(nameof(DataGrid.ItemsSource), new Bind("Parent.ItemsSource"));
 							},
-							Columns = CreateColumns()
+							Columns = indexUi.IndexColumns()
 						},
 						new Pager() {
 							Bindings = p => {
@@ -184,9 +180,14 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 
 	UIElement CreateBrowseDialog(EndpointDescriptor endpoint)
 	{
-		var table = endpoint.BaseTable;
+        var table = endpoint.BaseTable;
+        var indexUi = endpoint.GetBrowseUI();
+        var arrayName = endpoint.BaseTable.Name;
+
 		var dlg = new Dialog()
 		{
+			Title = "Browse",
+			Width = Length.FromString("60rem"),
 			CollectionView = new CollectionView()
 			{
 				RunAt = RunMode.Server,
@@ -201,22 +202,31 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 			Buttons = [
 				new Button() {
 					Style = ButtonStyle.Primary,
-					Content = "@[Select]"
+					Content = "@[Select]",
+					Bindings = btn => {
+						var bindCmd = new BindCmd("Select");
+						bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(arrayName));
+						btn.SetBinding(nameof(Button.Command), bindCmd);
+					}
 				},
-				new Button() {
-					Content = "@[Cancel]",
-					Bindings = btn => btn.SetBinding(nameof(Button.Command), new BindCmd("Close"))
-				}
+				XamlHelper.CreateButton(CommandType.Close, "@[Cancel]"),
 			],
 			Children = [
 				new Grid(_xamlSericeProvider) {
 					Children = [
 						new Toolbar(_xamlSericeProvider) {
-
-						},
+							Children = [
+								XamlHelper.CreateButton(CommandType.Reload, Icon.Reload),
+								new ToolbarAligner(),
+								XamlHelper.CreateSearchBox()
+                            ]
+                        },
 						new DataGrid() {
-
-						},
+							FixedHeader = true,
+							Height = Length.FromString("35rem"),
+							Columns = indexUi.IndexColumns(),
+							Bindings = dg => dg.SetBinding(nameof(DataGrid.ItemsSource), new Bind("Parent.ItemsSource"))
+                        },
 						new Pager() { Bindings = pgr => pgr.SetBinding(nameof(Pager.Source), new Bind("Parent.Pager"))},
 					]
 				}
@@ -225,53 +235,52 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 		return dlg;
 	}
 
+	UIElement CreateEditPage(EndpointDescriptor endpoint)
+	{
+        var uiElement = endpoint.GetEditUI();
+        var table = endpoint.BaseTable;
+
+        UIElementCollection PlainFields()
+        {
+            UIElementCollection coll = [];
+            foreach (var f in uiElement.Fields)
+                coll.Add(f.EditField(table));
+            return coll;
+        }
+
+        var page = new Page()
+		{
+			Title = "Edit Page",
+			Toolbar = new Toolbar(_xamlSericeProvider)
+			{
+				Children = [
+					XamlHelper.CreateButton(CommandType.SaveAndClose, "@[SaveAndClose]", Icon.SaveCloseOutline),
+                    XamlHelper.CreateButton(CommandType.Save, "@[Save]", Icon.SaveOutline),
+					new Separator(),
+					XamlHelper.CreateButton(CommandType.Reload, Icon.Reload),
+					new ToolbarAligner(),
+					XamlHelper.CreateButton(CommandType.Close, Icon.Close)
+				]
+			},
+			Children = [
+				new Grid(_xamlSericeProvider) {
+					Width = Length.FromString("30rem"),
+					Children = PlainFields()
+				}
+			]
+		};
+		return page;
+	}
+
 	UIElement CreateEditDialog(EndpointDescriptor endpoint)
 	{
+		var uiElement = endpoint.GetEditUI();
 		var table = endpoint.BaseTable;
 		UIElementCollection CreateDialogChildren()
 		{
-			UIElementCollection coll = [
-				new TextBox()
-				{
-					Label = "@[Name]",
-					Bold = true,
-					TabIndex = 1,
-					Bindings = (txt) => {
-						txt.SetBinding(nameof(TextBox.Value), new Bind($"{table.ItemName()}.Name"));
-					}
-			}];
-			foreach (var f in table.Fields)
-			{
-				coll.Add(String.IsNullOrEmpty(f.Ref) ?
-					new TextBox()
-					{
-						Label = $"$[{f.Name}]",
-						Multiline = f.IsMultiline(),
-						Bindings = (txt) =>
-						{
-							txt.SetBinding(nameof(TextBox.Value), new Bind($"{table.ItemName()}.{f.Name}"));
-						}
-					} :
-					new SelectorSimple()
-					{
-						Label = $"$[{f.Name}]",
-						Url = f.RefUrl(),
-						Bindings = ss =>
-						{
-							ss.SetBinding(nameof(SelectorSimple.Value), new Bind($"{table.ItemName()}.{f.Name}"));
-						}
-					}
-				);
-			}
-			coll.Add(new TextBox()
-			{
-				Label = "@[Memo]",
-				Multiline = true,
-				Bindings = (txt) =>
-				{
-					txt.SetBinding(nameof(TextBox.Value), new Bind($"{table.ItemName()}.Memo"));
-				}
-			});
+			UIElementCollection coll = [];
+			foreach (var f in uiElement.Fields)
+				coll.Add(f.EditField(table));
 			return coll;
 		}
 
@@ -284,15 +293,11 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 					Content = "@[SaveAndClose]",
 					Style = ButtonStyle.Primary,
 					Bindings = (btn) => {
-						btn.SetBinding(nameof(Button.Command), 
+						btn.SetBinding(nameof(Button.Command),
 							new BindCmd("SaveAndClose") {ValidRequired = true} );
 					}
 				},
-				new Button() {Content = "@[Cancel]",
-					Bindings = (btn) => {
-						btn.SetBinding(nameof(Button.Command), new BindCmd("Close"));
-					}
-				}
+				XamlHelper.CreateButton(CommandType.Close, "@[Cancel]")
 			],
 			Children = [
 				new Grid(_xamlSericeProvider) {
@@ -321,11 +326,15 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 
 	String CreateEditTemplate(EndpointDescriptor endpoint)
 	{
+		var ui = endpoint.GetEditUI();
 		var table = endpoint.BaseTable;
+
+		var rq = ui.Fields.Where(f => f.Required);
+
 		var template = $$"""
 			const template = {
 				validators: {
-					'{{table.ItemName()}}.Name' : '@[Error.Required]'
+					{{String.Join(",/n", rq.Select(f => $"'{table.ItemName()}.{f.Name}': '@[Error.Required]'"))}}
 				}
 			};
 
