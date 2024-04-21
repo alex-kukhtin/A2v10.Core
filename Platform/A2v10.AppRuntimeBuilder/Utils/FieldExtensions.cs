@@ -1,7 +1,6 @@
 ﻿// Copyright © 2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
-using System.Linq;
 
 namespace A2v10.AppRuntimeBuilder;
 
@@ -10,13 +9,14 @@ internal static class FieldExtensions
 	public static Type ValueType(this RuntimeField field) =>
 		field.Type switch
 		{
-			FieldType.Id => typeof(Int64),
-			FieldType.String => typeof(String),
+			FieldType.Id or FieldType.Parent => typeof(Int64),
+            FieldType.Int => typeof(Int32),
+            FieldType.String => typeof(String),
 			FieldType.Money => typeof(Decimal),
 			FieldType.Float => typeof(Double),
 			FieldType.Boolean => typeof(Boolean),
 			FieldType.Date or FieldType.DateTime => typeof(DateTime),
-			_ => throw new NotImplementedException(field.Type.ToString())
+			_ => throw new NotImplementedException($"Unknown field type: {field.Type}")
 		};
 
 	public static FieldType RealType(this RuntimeField field)
@@ -44,14 +44,14 @@ internal static class FieldExtensions
 			var refTable = table.FindTable(field.Ref);
 			return $"[{field.Name}!{refTable.TypeName()}!RefId] = {alias}.[{field.Name}]";
 		}
+        else if (field.Type == FieldType.Parent)
+            return $"[!{table.DetailsParent.TypeName()}.{table.Name}!ParentId] = {alias}.[{field.Name}]";
         else if (field.Name == "Id")
             return $"[Id!!Id] = {alias}.Id";
         else if (field.Name == "Name")
             return $"[Name!!Name] = {alias}.[Name]";
         else if (field.Name == "RowNo")
             return $"[RowNo!!RowNumber] = {alias}.RowNo";
-        else if (field.Name == "Parent")
-            return $"[!{table.DetailsParent.TypeName()}.{table.Name}!ParentId] = {alias}.Parent";
         return $"{alias}.[{field.Name}]";
 	}
 

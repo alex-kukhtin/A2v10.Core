@@ -132,18 +132,53 @@ internal static class UIExtensions
             return list;
         }
 
+        List<UiField> DetailsFields(RuntimeTable rt)
+        {
+            List<UiField> list = [
+                new() {Name = "RowNo"},
+            ];
+            foreach (var f in rt.Fields)
+                list.Add(new() { Name = f.Name });
+            list.Add(new()
+            {
+                Name = "Memo",
+                Multiline = true
+            });
+            return list;
+        }
+
+        List<EditUiElement>? DetailsUIList()
+		{
+			if (table.Details == null || table.Details.Count == 0)
+				return null;
+			var list = new List<EditUiElement>();
+			foreach (var dt in table.Details)
+			{
+				var uiElem = new EditUiElement()
+				{
+					Name = dt.Name,
+					Fields = DetailsFields(dt)
+				};
+				uiElem.SetParentTable(dt, endpoint);
+				list.Add(uiElem);
+			}
+			return list;
+		}
+
 		return endpoint.EndpointType() switch
 		{
 			TableType.Catalog => new EditUiElement()
 			{
-				Fields = CatalogFields()
+				Fields = CatalogFields(),
+				Details = DetailsUIList()
 			},
 			TableType.Document => new EditUiElement()
 			{
-				Fields = DocumentFields()
-			},
+				Fields = DocumentFields(),
+                Details = DetailsUIList()
+            },
 			_ => throw new InvalidOperationException($"Invalid Endpoint for index {endpoint.EndpointType()}")
-		};
+		}; ;
     }
     public static IndexUiElement GetIndexUI(this EndpointDescriptor endpoint)
 	{
@@ -173,8 +208,8 @@ internal static class UIExtensions
 		var editElem = endpoint.UI.Edit;
 		if (editElem != null)
 			return editElem;
-        var indexElem = endpoint.DefaultEditUiElement();
-        indexElem.SetParent(endpoint);
-        return indexElem;
+        editElem = endpoint.DefaultEditUiElement();
+        editElem.SetParent(endpoint);
+        return editElem;
     }
 }

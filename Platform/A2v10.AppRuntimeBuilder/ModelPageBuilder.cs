@@ -101,14 +101,13 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
             }
             else if (editMode == EndpointEdit.Page)
             {
-                cmd.Command = CommandType.Append;
+                cmd.Command = CommandType.Create;
                 cmd.Url = $"/{platformUrl.LocalPath}/edit";
-                cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(arrayName));
             }
             return cmd;
         }
 
-		var page = new Page()
+        var page = new Page()
 		{
 			CollectionView = new CollectionView()
 			{
@@ -163,6 +162,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 							Sort = true,
 							Bindings = (dg) => {
 								dg.SetBinding(nameof(DataGrid.ItemsSource), new Bind("Parent.ItemsSource"));
+								dg.SetBinding(nameof(DataGrid.DoubleClick), EditCommand());
 							},
 							Columns = indexUi.IndexColumns()
 						},
@@ -225,7 +225,15 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 							FixedHeader = true,
 							Height = Length.FromString("35rem"),
 							Columns = indexUi.IndexColumns(),
-							Bindings = dg => dg.SetBinding(nameof(DataGrid.ItemsSource), new Bind("Parent.ItemsSource"))
+							Bindings = dg => {
+								var dblClick = new BindCmd() 
+								{
+									Command = CommandType.Select,
+								};
+								dblClick.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(table.Name));
+								dg.SetBinding(nameof(DataGrid.ItemsSource), new Bind("Parent.ItemsSource"));
+								dg.SetBinding(nameof(DataGrid.DoubleClick), dblClick);
+							}
                         },
 						new Pager() { Bindings = pgr => pgr.SetBinding(nameof(Pager.Source), new Bind("Parent.Pager"))},
 					]
@@ -233,6 +241,89 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 			]
 		};
 		return dlg;
+	}
+
+	UIElement CreateEditDetails(EditUiElement uiElement, String tableName)
+	{
+		TableCellCollection DetailsCells() 
+		{
+			var coll = new TableCellCollection();
+			coll.Add(new TableCell()
+			{
+					Wrap = WrapMode.NoWrap,
+					Bindings = tc => tc.SetBinding(nameof(TableCell.Content), new Bind("RowNo"))
+			}
+			); ;
+			foreach (var elem in uiElement.Fields.Where(f => f.Name != "RowNo"))
+			{
+				coll.Add(new TableCell()
+				{
+					Content = elem.EditCellField(),
+				});
+			}
+			coll.Add(new Hyperlink()
+			{
+				Content = "✕",
+				Wrap = WrapMode.NoWrap,
+				Bindings = (h) =>
+				{
+					var bindCmd = new BindCmd("Remove");
+					bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind());
+					h.SetBinding(nameof(Hyperlink.Command), bindCmd);
+				}
+			});
+			return coll;
+		
+		}
+		return new Block()
+		{
+			Children = [
+				new Toolbar(_xamlSericeProvider) {
+					Children = [
+						new Button() {
+							Icon= Icon.Plus,
+							Bindings = btn => {
+								var bindCmd = new BindCmd() {
+									Command = CommandType.Append,
+								};
+								bindCmd.BindImpl.SetBinding(nameof(bindCmd.Argument), new Bind($"{tableName}.{uiElement.Name}"));
+								btn.SetBinding(nameof(Button.Command), bindCmd);
+							}
+						}
+					]
+				},
+				new Table() {
+					GridLines = GridLinesVisibility.Both,
+					StickyHeaders = true,
+					Background = TableBackgroundStyle.Paper,
+					Width = Length.FromString("100%"),
+					Columns = [
+						new TableColumn() { Width = Length.FromString("25px") }
+					],
+					Header = [
+						new TableRow() {
+							Cells = [
+								new TableCell() { Content = "#" }
+							]
+						}
+					],
+					Rows = [
+						new TableRow() {
+							Cells = DetailsCells()
+						}
+					],
+					Footer = [
+						new TableRow() {
+							Cells = [
+								new TableCell() { 
+								}
+							]
+						}
+					],
+					Bindings = tbl => tbl.SetBinding(nameof(Table.ItemsSource), new Bind($"{tableName}.{uiElement.Name}"))
+				}
+			]
+		};
 	}
 
 	UIElement CreateEditPage(EndpointDescriptor endpoint)
@@ -244,7 +335,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
         {
             UIElementCollection coll = [];
             foreach (var f in uiElement.Fields)
-                coll.Add(f.EditField(table));
+                coll.Add(f.EditField(table.ItemName()));
             return coll;
         }
 
@@ -269,6 +360,13 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 				}
 			]
 		};
+		if (uiElement.Details != null)
+		{
+			foreach (var uiDetails in uiElement.Details)
+			{
+				page.Children.Add(CreateEditDetails(uiDetails, table.ItemName()));
+			}
+		}
 		return page;
 	}
 
@@ -280,7 +378,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 		{
 			UIElementCollection coll = [];
 			foreach (var f in uiElement.Fields)
-				coll.Add(f.EditField(table));
+				coll.Add(f.EditField(table.ItemName()));
 			return coll;
 		}
 

@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 
 namespace A2v10.AppRuntimeBuilder;
 
@@ -16,7 +17,8 @@ public enum FieldType
 	Date,
 	DateTime,
 	Boolean,
-	Reference
+	Reference,
+	Parent
 }
 
 public enum TableType
@@ -85,6 +87,19 @@ public record IndexUiElement : BaseUiElement
 
 public record EditUiElement : BaseUiElement 
 { 
+	public String? Name { get; init; }
+	public List<EditUiElement>? Details { get; init; }
+
+	public void SetParentTable(RuntimeTable table, EndpointDescriptor endpoint)
+	{
+		foreach (var f in Fields)
+		{
+			f.BaseField = table.FindField(f.Name);
+            if (f.BaseField.Ref != null)
+                f.RefTable = endpoint.GetTable(f.BaseField.Ref);
+        }
+    }
+
 }
 
 public record UIDescriptor

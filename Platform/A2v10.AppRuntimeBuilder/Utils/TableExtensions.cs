@@ -10,7 +10,8 @@ internal static class TableExtensions
 {
 	public static String SqlTableName(this RuntimeTable table) => $"{table.Schema}.[{table.Name}]";
 	public static String TableTypeName(this RuntimeTable table) => $"{table.Schema}.[{table.Name.Singular()}.TableType]";
-	public static String TypeName(this RuntimeTable table) => $"T{table.Name.Singular()}";
+    public static String DetailsTableTypeName(this RuntimeTable table, RuntimeTable parent) => $"{parent.Schema}.[{parent.Name.Singular()}.{table.Name.Singular()}.TableType]";
+    public static String TypeName(this RuntimeTable table) => $"T{table.Name.Singular()}";
 	public static String ItemName(this RuntimeTable table) => $"{table.Name.Singular()}";
 
 	public static IEnumerable<RuntimeField> SearchField(this RuntimeTable table)
@@ -35,6 +36,11 @@ internal static class TableExtensions
 		return table.RealFields().First(f => f.Name == name);
 	}
 
+    public static String ParentTableName(this RuntimeTable table)
+    {
+        return table.DetailsParent.Name.Singular();
+    }
+
     public static List<RuntimeField> DefaultFields(this RuntimeTable table)
 	{
 		return table.TableType switch
@@ -54,7 +60,8 @@ internal static class TableExtensions
 			TableType.Details => [
                 new RuntimeField() { Name = "Id", Type = FieldType.Id },
                 new RuntimeField() { Name = "RowNo", Type = FieldType.Int },
-                new RuntimeField() { Name = "Parent", Type = FieldType.Id },
+                new RuntimeField() { Name = table.ParentTableName(), Type = FieldType.Parent },
+                new RuntimeField() { Name = "Memo", Type = FieldType.String, Length = 255 }
             ],
             _ => throw new NotImplementedException()
 		};

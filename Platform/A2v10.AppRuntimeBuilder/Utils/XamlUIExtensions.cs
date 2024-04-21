@@ -32,6 +32,17 @@ internal static class XamlUIExtensions
     {
         return field.BaseField?.Type == FieldType.Date || field.BaseField?.Type == FieldType.DateTime;
     }
+    public static TextAlign TextAlign(this UiField field)
+    {
+        if (field.IsReference())
+            return Xaml.TextAlign.Default;
+        return field.BaseField?.Type switch
+        {
+            FieldType.Date or FieldType.DateTime or FieldType.Boolean => Xaml.TextAlign.Center,
+            FieldType.Float or FieldType.Money or FieldType.Id or FieldType.Int => Xaml.TextAlign.Right,
+            _ => Xaml.TextAlign.Default,
+        };
+    }
 
     public static String RefUrl(this UiField field)
     {
@@ -56,8 +67,9 @@ internal static class XamlUIExtensions
         };
     }
 
-    public static UIElement EditField(this UiField field, RuntimeTable table)
+    public static UIElement EditField(this UiField field, String? itemName = null)
     {
+        var elemName = itemName != null ? $"{itemName}." : String.Empty;
         if (field.IsReference())
             return new SelectorSimple()
             {
@@ -65,7 +77,7 @@ internal static class XamlUIExtensions
                 Url = field.RefUrl(),
                 Bindings = ss =>
                 {
-                    ss.SetBinding(nameof(SelectorSimple.Value), new Bind($"{table.ItemName()}.{field.Name}"));
+                    ss.SetBinding(nameof(SelectorSimple.Value), new Bind($"{elemName}{field.Name}"));
                 }
             };
         else if (field.IsDatePicker())
@@ -74,7 +86,7 @@ internal static class XamlUIExtensions
                 Label = field.RealTitle(),
                 Bindings = ss =>
                 {
-                    ss.SetBinding(nameof(SelectorSimple.Value), new Bind($"{table.ItemName()}.{field.Name}"));
+                    ss.SetBinding(nameof(SelectorSimple.Value), new Bind($"{elemName}{field.Name}"));
                 }
             };
         else
@@ -87,7 +99,40 @@ internal static class XamlUIExtensions
                 {
                     txt.SetBinding(
                         nameof(TextBox.Value),
-                        new Bind($"{table.ItemName()}.{field.Name}") { DataType = field.XamlDataType() });
+                        new Bind($"{elemName}{field.Name}") { DataType = field.XamlDataType() });
+                }
+            };
+    }
+
+    public static UIElement EditCellField(this UiField field, String? itemName = null)
+    {
+        var elemName = itemName != null ? $"{itemName}." : String.Empty;
+        if (field.IsReference())
+            return new SelectorSimple()
+            {
+                Url = field.RefUrl(),
+                Bindings = ss =>
+                {
+                    ss.SetBinding(nameof(SelectorSimple.Value), new Bind($"{elemName}{field.Name}"));
+                }
+            };
+        else if (field.IsDatePicker())
+            return new DatePicker()
+            {
+                Bindings = ss =>
+                {
+                    ss.SetBinding(nameof(SelectorSimple.Value), new Bind($"{elemName}{field.Name}"));
+                }
+            };
+        else
+            return new TextBox()
+            {
+                Align = field.TextAlign(),
+                Bindings = (txt) =>
+                {
+                    txt.SetBinding(
+                        nameof(TextBox.Value),
+                        new Bind($"{elemName}{field.Name}") { DataType = field.XamlDataType() });
                 }
             };
     }
@@ -99,6 +144,7 @@ internal static class XamlUIExtensions
             Header = field.RealTitle(),
             MaxChars = field.MaxChars ? COLUMN_MAX_CHARS : 0,
             Sort = field.Sort,
+            Align = field.TextAlign(),
             Role = field.XamlColumnRole(),
             Bindings = c =>
             {

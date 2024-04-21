@@ -56,11 +56,43 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContex
 
     public async Task<ExpandoObject> SaveAsync(RuntimeTable table, ExpandoObject data)
 	{
+		String MergeDetails()
+		{
+			if (table.Details == null || table.Details.Count == 0)
+				return String.Empty;
+			var sb = new StringBuilder();
+			foreach (var details in table.Details)
+			{
+				var updateFields = details.RealFields().Where(f => f.Type != FieldType.Parent && f.Name != "Id");
+				var parentField = details.RealFields().FirstOrDefault(f => f.Type == FieldType.Parent)
+					?? throw new InvalidOperationException("Parent field not found");
+				sb.AppendLine($"""
+				merge {details.SqlTableName()} as t
+				using @{details.Name} as s
+				on t.Id = s.Id
+				when matched then update set
+					{String.Join(',', updateFields.Select(f => $"t.{f.Name} = s.{f.Name}"))}
+				when not matched then insert 
+					({parentField.Name}, {String.Join(',', updateFields.Select(f => f.Name))}) values
+					(@Id, {String.Join(',', updateFields.Select(f => $"s.{f.Name}"))})
+				when not matched by source and t.[{parentField.Name}] = @Id then delete;
+				""");
+				sb.AppendLine();
+			}
+			return sb.ToString();
+		}
+
 		var updateFields = table.RealFields().Where(f => f.Name != "Id");
 		var sqlString = $"""
 
+		set nocount on;
+		set transaction isolation level read committed;
+		set xact_abort on;
+
 		declare @rtable table(Id bigint);
 		declare @Id bigint;
+
+		begin tran;
 		merge {table.SqlTableName()} as t
 		using @{table.ItemName()} as s
 		on t.Id = s.Id
@@ -73,16 +105,27 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContex
 
 		select top(1) @Id = Id from @rtable;
 
+		{MergeDetails()}
+
+		commit tran;
+
 		{GetPlainModelSql(table)}
 		""";
 
-		var ag = data.Get<ExpandoObject>(table.ItemName());
-		var dtable = TableTypeBuilder.BuildDataTable(table, ag);
+		var item = data.Get<ExpandoObject>(table.ItemName());
+		var dtable = TableTypeBuilder.BuildDataTable(table, item);
 
 		var dm = await _dbContext.LoadModelSqlAsync(null, sqlString, dbprms =>
 		{
 			AddDefaultParameters(dbprms);
 			dbprms.Add(new SqlParameter($"@{table.ItemName()}", SqlDbType.Structured) { TypeName = table.TableTypeName(), Value = dtable });
+			if (table.Details != null && item != null)
+				foreach (var details in table.Details)
+				{
+					var rows = item.Get<List<Object>>(details.Name);
+                    var dtable = TableTypeBuilder.BuildDataTable(details, rows);
+                    dbprms.Add(new SqlParameter($"@{details.Name}", SqlDbType.Structured) { TypeName = details.DetailsTableTypeName(table), Value = dtable });
+				}
 		});
 		return dm.Root;
 	}
@@ -110,7 +153,7 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContex
 			return String.Join(' ', table.RealFields().Select(f => $"{f.SelectSqlField(alias, table)},"));
 		}
 
-		String SortStrings(Func<RuntimeField, Boolean> predicate, String alias)
+		String SortPredicate(Func<RuntimeField, Boolean> predicate, String alias)
 		{
 			var strFields = table.RealFields().Where(predicate);
 			if (!strFields.Any())
@@ -146,17 +189,9 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContex
 			{String.Join(' ', table.SearchField().Select(f => $"or a.{f.Name} like @fr"))}
 			or a.Memo like @fr)
 		order by
-			case when @Dir = N'asc' then
-				case @Order
-					when N'id' then a.Id
-				end
-			end asc,
-			case when @Dir = N'desc' then
-				case @Order
-					when N'id' then a.Id
-				end
-			end desc,
-			{SortStrings(f => f.Type == FieldType.String, "a")}
+			{SortPredicate(f => f.Type == FieldType.String, "a")}
+			{SortPredicate(f => f.Type == FieldType.Id || f.Type == FieldType.Money || f.Type == FieldType.Float, "a")}
+			{SortPredicate(f => f.Type == FieldType.Date || f.Type == FieldType.DateTime, "a")}
 			a.[Id]
 		offset @Offset rows fetch next @PageSize rows only option (recompile);
 
@@ -251,10 +286,12 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContex
 			var sb = new StringBuilder();
 			foreach (var details in table.Details) {
 				var fieldMap = details.Fields.Where(f => f.Ref != null);
-				sb.AppendLine($"""
+                var parentField = details.RealFields().FirstOrDefault(f => f.Type == FieldType.Parent)
+                    ?? throw new InvalidOperationException("Parent field not found");
+                sb.AppendLine($"""
 				insert into @map({String.Join(',', fieldMap.Select(f => f.MapName()))})
-				select {String.Join(',', fieldMap.Select(f => $"a.{f.Name}"))}
-				from {details.SqlTableName()} a where a.Parent = @Id;
+				select {String.Join(',', fieldMap.Select(f => $"a.[{f.Name}]"))}
+				from {details.SqlTableName()} a where a.[{parentField.Name}] = @Id;
 				""");
 				sb.AppendLine();
             }
@@ -279,10 +316,12 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContex
 			foreach (var details in table.Details)
 			{
 				var fields = String.Join(',', details.RealFields().Select(f => f.SelectSqlField("d", details)));
-				sb.AppendLine($"""
+                var parentField = details.RealFields().FirstOrDefault(f => f.Type == FieldType.Parent)
+                    ?? throw new InvalidOperationException("Parent field not found");
+                sb.AppendLine($"""
 				select [!{details.TypeName()}!Array] = null,
 					{fields}
-				from {details.SqlTableName()} d where d.Parent = @Id;
+				from {details.SqlTableName()} d where d.[{parentField.Name}] = @Id;
 				""");
 			}
 			return sb.ToString();	
