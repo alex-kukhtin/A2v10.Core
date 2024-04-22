@@ -27,6 +27,17 @@ internal static class XamlUIExtensions
 			_ => DataType.String
         };
     }
+    public static Length? XamlColumnWidth(this UiField field)
+    {
+        if (field.Name == "RowNo")
+            return Length.FromString("25px");
+        return field.BaseField?.Type switch
+        {
+            FieldType.Date => Length.FromString("10rem"),
+            FieldType.Money or FieldType.Float => Length.FromString("6rem"),
+            _ => null
+        }; ; ;
+    }
 
     public static Boolean IsDatePicker(this UiField field)
     {
@@ -94,7 +105,9 @@ internal static class XamlUIExtensions
             {
                 Label = field.RealTitle(),
                 Multiline = field.Multiline,
+                Align = field.TextAlign(),
                 Required = field.Required,
+                Disabled = !String.IsNullOrEmpty(field.Computed),
                 Bindings = (txt) =>
                 {
                     txt.SetBinding(
@@ -128,6 +141,7 @@ internal static class XamlUIExtensions
             return new TextBox()
             {
                 Align = field.TextAlign(),
+                Disabled = !String.IsNullOrEmpty(field.Computed),
                 Bindings = (txt) =>
                 {
                     txt.SetBinding(

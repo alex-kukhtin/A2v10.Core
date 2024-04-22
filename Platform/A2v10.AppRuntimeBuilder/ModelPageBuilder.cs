@@ -12,6 +12,8 @@ using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Xaml;
 using A2v10.Xaml.DynamicRendrer;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace A2v10.AppRuntimeBuilder;
 
@@ -272,9 +274,38 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 					h.SetBinding(nameof(Hyperlink.Command), bindCmd);
 				}
 			});
-			return coll;
-		
+			return coll;		
 		}
+
+		TableCellCollection HeaderCells()
+		{
+            var coll = new TableCellCollection();
+            coll.Add(new TableCell()
+            {
+                Wrap = WrapMode.NoWrap,
+				Content = "#"
+            }
+            ); ;
+            foreach (var elem in uiElement.Fields.Where(f => f.Name != "RowNo"))
+            {
+                coll.Add(new TableCell()
+                {
+                    Content = elem.RealTitle(),
+                });
+            }
+            coll.Add(new TableCell());
+			return coll;
+        }
+
+		TableColumnCollection TableColumns()
+		{
+			TableColumnCollection tc = [];
+			foreach (var elem in uiElement.Fields)
+				tc.Add(new TableColumn() { Width = elem.XamlColumnWidth()});
+			tc.Add(new TableColumn() { Fit = true });
+            return tc;
+		}
+
 		return new Block()
 		{
 			Children = [
@@ -297,14 +328,10 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 					StickyHeaders = true,
 					Background = TableBackgroundStyle.Paper,
 					Width = Length.FromString("100%"),
-					Columns = [
-						new TableColumn() { Width = Length.FromString("25px") }
-					],
+					Columns = TableColumns(),
 					Header = [
 						new TableRow() {
-							Cells = [
-								new TableCell() { Content = "#" }
-							]
+							Cells = HeaderCells()
 						}
 					],
 					Rows = [
@@ -428,11 +455,31 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 		var table = endpoint.BaseTable;
 
 		var rq = ui.Fields.Where(f => f.Required);
+		var validators = String.Join(",\n", rq.Select(f => $"'{table.ItemName()}.{f.Name}': '@[Error.Required]'"));
+
+		IEnumerable<(RuntimeTable Table, UiField Field)> GetComputedFields()
+		{
+			foreach (var f in ui.Fields.Where(f => !String.IsNullOrEmpty(f.Computed)))
+				yield return (table, f);
+			if (ui.Details != null)
+				foreach (var detailsTable in ui.Details)
+					foreach (var f in detailsTable.Fields.Where(f => !String.IsNullOrEmpty(f.Computed)))
+						yield return (detailsTable.BaseTable 
+							?? throw new InvalidOperationException("BaseTable for Details is null"), 
+							f);
+		}
+
+		var templateProps = String.Join(",\n", GetComputedFields().Select(f => $$"""
+			'{{f.Table.TypeName()}}.{{f.Field.Name}}'() { return {{f.Field.Computed}}; }
+		"""));
 
 		var template = $$"""
 			const template = {
+				properties:{
+					{{templateProps}}
+				},
 				validators: {
-					{{String.Join(",/n", rq.Select(f => $"'{table.ItemName()}.{f.Name}': '@[Error.Required]'"))}}
+					{{validators}}
 				}
 			};
 

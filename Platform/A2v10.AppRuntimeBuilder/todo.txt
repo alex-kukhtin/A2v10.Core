@@ -1,17 +1,18 @@
 ﻿
 10. Journals ??
 11. Reports ??
-12. Details - Table Header/Footer/Total
+12. Details - Table Footer/Total
 13  Номер документа
 14. Plain model. Нет заполняются Map из дочерних таблиц
 15. Application.Title
-16. 
+17. MetadataEditor - Menu
+18. 
 
 Сценарий
 1. Ставим расширение из Visual Studio Extensions
 2. Создается solution с двумя проектами.
 3. Редактируется app.metadata (конструктором)
-   И при сохранении metadata сразу генерится готовые _tables.sql, _tabletypes.sql, _ui.sql.
+   И при сохранении metadata сразу генерятся готовые _tables.sql, _tabletypes.sql, _ui.sql.
 4. Build - в sql.json шаблона сразу записаны файлы _tables.sql, _tabletypes.sql, _ui.sql.
 5. Запускается /_sqlscripts/application.sql
 6. Ctrl + F5 - Запускется приложение.

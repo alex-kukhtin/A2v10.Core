@@ -62,11 +62,11 @@ public record UiField
     public RuntimeField? BaseField { get; set; }
     public RuntimeTable? RefTable { get; set; }
     public String? Display { get; set; }
+	public String? Computed { get; set; }
 }
 public record BaseUiElement
 {
 	public List<UiField> Fields { get; init; } = [];
-
 	public EndpointDescriptor? Endpoint { get; private set; }	
     public void SetParent(EndpointDescriptor endpoint)
 	{
@@ -90,8 +90,11 @@ public record EditUiElement : BaseUiElement
 	public String? Name { get; init; }
 	public List<EditUiElement>? Details { get; init; }
 
+	public RuntimeTable? BaseTable { get; private set; }
+
 	public void SetParentTable(RuntimeTable table, EndpointDescriptor endpoint)
 	{
+		BaseTable = table;
 		foreach (var f in Fields)
 		{
 			f.BaseField = table.FindField(f.Name);
@@ -104,9 +107,9 @@ public record EditUiElement : BaseUiElement
 
 public record UIDescriptor
 {
-	public IndexUiElement? Index { get; init; }
-	public IndexUiElement? Browse { get; init; }
-	public EditUiElement? Edit { get; init; }	
+	public IndexUiElement? Index { get; set; }
+	public IndexUiElement? Browse { get; set; }
+	public EditUiElement? Edit { get; set; }	
 
 	public void SetParent(EndpointDescriptor endpoint)
 	{

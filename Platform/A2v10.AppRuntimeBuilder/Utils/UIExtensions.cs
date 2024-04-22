@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace A2v10.AppRuntimeBuilder;
 
@@ -57,7 +58,8 @@ internal static class UIExtensions
     public static IndexUiElement DefaultIndexUiElement(this EndpointDescriptor endpoint)
 	{
         var table = endpoint.BaseTable;
-        IndexUiElement indexElem = endpoint.EndpointType() switch
+		var endpointType = endpoint.EndpointType();
+        IndexUiElement indexElem = endpointType switch
 		{
 			TableType.Catalog => new IndexUiElement()
 			{
@@ -118,9 +120,13 @@ internal static class UIExtensions
         }
         List<UiField> DocumentFields()
         {
+			String? computedSum = null;
+			if (table.Details?.Count == 1 && table.Details[0].Fields.Any(f => f.Name == "Sum"))
+				computedSum = $"this.{table.Details[0].Name}.$sum(r => r.Sum)";
+
             List<UiField> list = [
                 new() {Name = "Date"},
-                new() {Name = "Sum"}
+                new() {Name = "Sum", Computed = computedSum }
             ];
             foreach (var f in table.Fields)
                 list.Add(new() { Name = f.Name });
@@ -134,11 +140,15 @@ internal static class UIExtensions
 
         List<UiField> DetailsFields(RuntimeTable rt)
         {
+			bool hasQtyPriceSum = rt.Fields.Any(f => f.Name == "Qty")
+				&& rt.Fields.Any(f => f.Name == "Price")
+				&& rt.Fields.Any(f => f.Name == "Sum");
+
             List<UiField> list = [
                 new() {Name = "RowNo"},
             ];
             foreach (var f in rt.Fields)
-                list.Add(new() { Name = f.Name });
+                list.Add(new() { Name = f.Name, Computed = hasQtyPriceSum && f.Name == "Sum" ? "this.Price * this.Qty": null });
             list.Add(new()
             {
                 Name = "Memo",
@@ -183,16 +193,18 @@ internal static class UIExtensions
     public static IndexUiElement GetIndexUI(this EndpointDescriptor endpoint)
 	{
 		var ui = endpoint.UI;
-		if (ui?.Index != null)
+		if (ui.Index != null)
 			return ui.Index;
-		return endpoint.DefaultIndexUiElement();
+		ui.Index = endpoint.DefaultIndexUiElement();
+		return ui.Index;
 	}
     public static IndexUiElement GetBrowseUI(this EndpointDescriptor endpoint)
     {
         var ui = endpoint.UI;
-        if (ui?.Browse != null)
+        if (ui.Browse != null)
             return ui.Browse;
-        return endpoint.DefaultIndexUiElement();
+        ui.Browse = endpoint.DefaultIndexUiElement();
+		return ui.Browse;
     }
 
     public static EndpointEdit EditMode(this EndpointDescriptor endpoint)
@@ -210,6 +222,7 @@ internal static class UIExtensions
 			return editElem;
         editElem = endpoint.DefaultEditUiElement();
         editElem.SetParent(endpoint);
+        endpoint.UI.Edit = editElem;
         return editElem;
     }
 }
