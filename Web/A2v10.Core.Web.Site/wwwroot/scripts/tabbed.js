@@ -277,6 +277,7 @@ app.modules['std:signalR'] = function () {
 				this.navigatingUrl = to.url;
 				this.navigate({ url: to.url, title: '' });
 			},
+			dummy() {},
 			reloadApplication() {
 				window.location.reload();
 			},

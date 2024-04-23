@@ -36,7 +36,8 @@
 		</ul>
 		<div class="mdi-tabs-menu">
 			<span class="open-menu ico ico-chevron-down" v-on:click.stop.prevent="toggleTabPopup"></span>
-			<ul class="mdi-tabs-popup menu" v-if="tabPopupOpen" ref="tabPopup">
+			<ul class="mdi-tabs-popup menu" v-if="tabPopupOpen" ref="tabPopup"
+				v-on:contextmenu.stop.prevent="dummy">
 				<li class="group">@loc["OpenTabs"]</li>
 				<li v-for="t in tabs" v-on:click.stop.prevent="selectTab(t, false, $event)">
 					<span v-text="fitText(t.title)"></span>

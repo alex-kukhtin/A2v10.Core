@@ -2188,6 +2188,7 @@ pre.a2-code {
 }
 .control-group.no-border .input-group {
   border: none;
+  border-radius: 0;
 }
 .control-group.with-width .input-group {
   width: 100%;
@@ -4880,7 +4881,7 @@ table.hover > tbody > tr.active:hover {
 }
 .a2-table > thead > tr > td,
 .a2-table > tfoot > tr > td {
-  padding: 8px 6px;
+  padding: 7px 6px;
   background-color: var(--neutral100);
   border-color: var(--neutral300);
 }
@@ -7565,7 +7566,8 @@ table.tree-grid a.toggle.expanded:after {
   z-index: 1031;
   background: white;
   top: 100%;
-  width: 100%;
+  width: auto;
+  min-width: 100%;
   border: 1px solid var(--neutral400);
   max-height: 280px;
   overflow: auto;
