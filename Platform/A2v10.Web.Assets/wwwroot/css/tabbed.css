@@ -1496,14 +1496,14 @@ header .include.nav-pane .partial-block .control-group,
   grid-template-columns: 1fr auto;
 }
 .page.page-grid .page-toolbar {
-  grid-column: 1 / span 2;
+  grid-column: 1;
   grid-row: 1;
   border-bottom: 1px solid var(--neutral300);
   padding: 0.5rem;
 }
 .page.page-grid .page-taskpad {
   grid-column: 2;
-  grid-row: 2 / span 2;
+  grid-row: 1 / span 2;
 }
 .page.page-grid .page-pager {
   grid-row: 3;
@@ -1638,20 +1638,23 @@ header .include.nav-pane .partial-block .control-group,
 .taskpad .taskpad-collapse-handle {
   position: absolute;
   display: block;
-  top: 50%;
-  width: 24px;
-  height: 24px;
+  top: 9.5px;
+  width: 26px;
+  height: 26px;
   color: var(--link);
-  border: 1px solid var(--link);
-  border-radius: 50%;
+  border: 1px solid var(--neutral400);
+  border-radius: 4px;
   background-color: white;
   text-align: center;
-  line-height: 22px;
+  line-height: 24px;
   z-index: 20;
   text-decoration: none;
 }
 .taskpad .taskpad-collapse-handle:hover {
-  background-color: var(--neutral100);
+  background-color: var(--bgPrimary);
+}
+.taskpad.collapsible .taskpad-body .panel:first-child .panel-header {
+  margin-left: 10px;
 }
 .taskpad.no-collapsible .taskpad-collapse-handle {
   display: none;
@@ -1663,30 +1666,33 @@ header .include.nav-pane .partial-block .control-group,
   content: "\e9a3";
 }
 .taskpad.collapsed {
-  background-color: var(--neutral100);
+  background-color: var(--bgPrimary);
 }
 .taskpad.collapsed .taskpad-collapse-handle:before {
   content: "\e9a5";
 }
 .taskpad .taskpad-title {
-  background-color: var(--neutral100);
+  background-color: var(--bgPrimary);
   white-space: nowrap;
   height: 100%;
   cursor: pointer;
   font-size: 16px;
-  padding-left: 2px;
-  color: var(--text-label);
+  color: var(--neutral500);
+  position: absolute;
+  top: 52px;
+  left: 0;
+  padding-left: 31px;
 }
 .taskpad .taskpad-title .taskpad-label {
   display: block;
-  padding-left: 10px;
   transform: rotate(90deg);
+  transform-origin: top left;
 }
 .taskpad.position-right {
   border-left: 1px solid var(--neutral300);
 }
 .taskpad.position-right .taskpad-collapse-handle {
-  left: -12px;
+  left: -8.66666667px;
 }
 .taskpad.position-right.expanded .taskpad-collapse-handle:before {
   content: "\e9a5";
@@ -1698,7 +1704,7 @@ header .include.nav-pane .partial-block .control-group,
   border-right: 1px solid var(--neutral300);
 }
 .taskpad.position-left .taskpad-collapse-handle {
-  right: -12px;
+  right: -13px;
 }
 .taskpad.position-left.expanded .taskpad-collapse-handle:before {
   content: "\e9ab";
@@ -4107,7 +4113,7 @@ tr:hover .commandbar.visible-hover {
 .a2-list.border li.group,
 .a2-list.border-all li.group {
   margin: 0.25rem 0;
-  border: 1px solid var(--neutral200);
+  border: 1px solid var(--neutral300);
   border-radius: 4px;
   padding: 8px 8px 8px 10px;
 }
@@ -5825,8 +5831,8 @@ TODO:
 .a2-state-card .a2-badge {
   padding: 0 4px;
   margin: 0 2px;
-  background-color: var(--neutral200);
-  border: 1px solid var(--neutral200);
+  background-color: var(--neutral300);
+  border: 1px solid var(--neutral300);
   color: var(--text);
 }
 .a2-state-card.a2-state-card-styled {
@@ -6611,7 +6617,7 @@ table > colgroup col.blue {
   height: 4px;
   width: 100%;
   overflow: hidden;
-  background-color: var(--neutral600);
+  background-color: var(--neutral400);
 }
 .load-indicator:before {
   content: '';

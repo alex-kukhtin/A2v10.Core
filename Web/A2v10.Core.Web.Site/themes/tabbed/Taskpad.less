@@ -1,10 +1,10 @@
 ﻿
 @import "Variables.less";
 
-@taskpad-collapsed-bg-color: var(--neutral100);
+@taskpad-collapsed-bg-color: var(--bgPrimary);
 @taskpad-collapsed-width: 36px; /*see: taskpad.js*/
 
-@handle-size: 24px;
+@handle-size: 26px;
 
 .taskpad {
 	overflow: visible;
@@ -24,12 +24,12 @@
 	.taskpad-collapse-handle {
 		position: absolute;
 		display: block;
-		top: 50%;
+		top: 9.5px;
 		width: @handle-size;
 		height: @handle-size;
 		color: @link-color;
-		border: 1px solid @link-color;
-		border-radius: 50%;
+		border: 1px solid @control-brd-color;
+		border-radius: @control-brd-radius;
 		background-color: white;
 		text-align: center;
 		line-height: (@handle-size - 2);
@@ -38,6 +38,16 @@
 
 		&:hover {
 			background-color: @taskpad-collapsed-bg-color;
+		}
+	}
+
+	&.collapsible {
+		.taskpad-body {
+			.panel:first-child {
+				.panel-header {
+					margin-left: 10px;
+				}
+			}
 		}
 	}
 
@@ -78,13 +88,16 @@
 		height: 100%;
 		cursor: pointer;
 		font-size: 16px;
-		padding-left: 2px;
-		color: @label-color;
+		color: var(--neutral500);
+		position:absolute;
+		top:@handle-size * 2;
+		left:0;
+		padding-left:31px;
 
 		.taskpad-label {
 			display: block;
-			padding-left: 10px;
 			transform: rotate(90deg);
+			transform-origin: top left;
 		}
 	}
 }
@@ -93,7 +106,7 @@
 	border-left: 1px solid @default-brd-color;
 
 	.taskpad-collapse-handle {
-		left: -(@handle-size / 2);
+		left: -(@handle-size / 3);
 	}
 
 	&.expanded {
