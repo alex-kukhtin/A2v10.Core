@@ -130,9 +130,12 @@ public sealed class WebProfiler(IHttpContextAccessor httpContext, WebProfilerSto
 			return null;
 		var requestList = _storage.Get(SessionId());
 		_request = new ProfileRequest(address);
-		requestList.AddFirst(_request);
-		while (requestList.Count > REQUEST_COUNT)
-			requestList.RemoveLast();
+		lock (requestList)
+		{
+			requestList.AddFirst(_request);
+			while (requestList.Count > REQUEST_COUNT)
+				requestList.RemoveLast();
+		}
 		return _request;
 	}
 
