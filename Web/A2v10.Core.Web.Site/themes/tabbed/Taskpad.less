@@ -90,14 +90,17 @@
 		font-size: 16px;
 		color: var(--neutral500);
 		position:absolute;
-		top:@handle-size * 2;
+		top:0;
 		left:0;
+		width:100%;
+		height:100%;
 		padding-left:31px;
 
 		.taskpad-label {
 			display: block;
 			transform: rotate(90deg);
 			transform-origin: top left;
+			padding-left:46px;
 		}
 	}
 }
@@ -118,6 +121,8 @@
 	}
 
 	&.collapsed {
+		padding:0!important;
+		width:auto!important;
 		.taskpad-collapse-handle {
 			&:before {
 				content: "\e9a3"; // chevron-left

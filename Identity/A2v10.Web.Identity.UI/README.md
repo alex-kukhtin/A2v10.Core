@@ -47,11 +47,13 @@ public void ConfigureServices(IServiceCollection services)
 	{
 		opts.ClientId = Configuration.GetValue<String>("Identity:Google:ClientId");
 		opts.ClientSecret = Configuration.GetValue<String>("Identity:Google:ClientSecret");
+		opts.Events.OnRemoteFailure = OpenIdErrorHandlers.OnRemoteFailure;
 	})
 	.AddMicrosoftAccount(opts =>
 	{
 		opts.ClientId = Configuration.GetValue<String>("Identity:Microsoft:ClientId");
 		opts.ClientSecret = Configuration.GetValue<String>("Identity:Microsoft:ClientSecret");
+		opts.Events.OnRemoteFailure = OpenIdErrorHandlers.OnRemoteFailure;
 	});
 }
 ```

@@ -315,7 +315,7 @@ public sealed class AppUserStore<T>(IDbContext dbContext, IOptions<AppUserStoreO
 
 	private static void AddDefaultClaims(AppUser<T> user, List<Claim> list)
 	{
-		list.Add(new Claim(WellKnownClaims.NameIdentifier, user.Id.ToString()!));
+		//????list.Add(new Claim(WellKnownClaims.NameIdentifier, user.Id.ToString()!));
 		list.Add(new Claim(WellKnownClaims.PersonName, user.PersonName ?? String.Empty));
 		if (!String.IsNullOrEmpty(user.FirstName))
 			list.Add(new Claim(WellKnownClaims.FirstName, user.FirstName));

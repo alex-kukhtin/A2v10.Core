@@ -57,7 +57,7 @@ public class PlatformUrl : IPlatformUrl
 	static (String Path, String Query) NormalizePath(String path)
 	{
 		String query = String.Empty;
-		Boolean auto = false;
+
 		if (path.Contains('?'))
 		{
 			var px = path.Split('?');

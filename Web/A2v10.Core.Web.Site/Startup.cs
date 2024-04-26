@@ -16,6 +16,7 @@ using A2v10.Workflow.Engine;
 using A2v10.Scheduling;
 using A2v10.Scheduling.Commands;
 using A2v10.AppRuntimeBuilder;
+using A2v10.Identity.Core;
 using A2v10.Core.Web.Site.TestServices;
 
 using A2v10.BlobStorage.Azure;
@@ -48,13 +49,13 @@ public class Startup(IConfiguration configuration)
 
 		var builders = services.UsePlatform(Configuration);
 
-		/*
         builders.AuthenticationBuilder.AddGoogle(opts =>
 		{
 			opts.ClientId = Configuration.GetValue<String>("Identity:Google:ClientId")
 				?? throw new InvalidOperationException("Identity:Google:ClientId not found");
 			opts.ClientSecret = Configuration.GetValue<String>("Identity:Google:ClientSecret")
 				?? throw new InvalidOperationException("Identity:Google:ClientSecret not found");
+			opts.Events.OnRemoteFailure = OpenIdErrorHandlers.OnRemoteFailure;
 	    })
 		.AddMicrosoftAccount(opts =>
 		{
@@ -62,8 +63,8 @@ public class Startup(IConfiguration configuration)
 				?? throw new InvalidOperationException("Identity:Microsoft:ClientId not found");
 			opts.ClientSecret = Configuration.GetValue<String>("Identity:Microsoft:ClientSecret")
 				?? throw new InvalidOperationException("Identity:Microsoft:ClientSecret not found");
+			opts.Events.OnRemoteFailure = OpenIdErrorHandlers.OnRemoteFailure;
 		});
-		*/
 
 		services.AddSingleton<TestBusinessAppProvider>();
 

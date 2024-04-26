@@ -487,7 +487,22 @@ public class AccountController(SignInManager<AppUser<Int64>> _signInManager,
 	public async Task<IActionResult> Logout2()
 	{
 		await DoLogout();
+		var providers = _configuration.GetValue<String>("Identity:Providers")?.Split(',');
+		if (providers != null && providers.Length == 1 && providers[0] != "Local")
+			return Content("{\"showLogOut\":true}", MimeTypes.Application.Json);
 		return Content("{}", MimeTypes.Application.Json);
+	}
+
+	[HttpGet]
+	[AllowAnonymous]
+	public async Task<IActionResult> LoggedOut()
+	{
+		var vm = new SimpleIdentityViewModel()
+		{
+			Title = await LoadTitleAsync(),
+			Theme = _appTheme.MakeTheme()
+		};
+		return View(vm);
 	}
 
 	[Authorize]

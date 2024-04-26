@@ -1674,19 +1674,21 @@ header .include.nav-pane .partial-block .control-group,
 .taskpad .taskpad-title {
   background-color: var(--bgPrimary);
   white-space: nowrap;
-  height: 100%;
   cursor: pointer;
   font-size: 16px;
   color: var(--neutral500);
   position: absolute;
-  top: 52px;
+  top: 0;
   left: 0;
+  width: 100%;
+  height: 100%;
   padding-left: 31px;
 }
 .taskpad .taskpad-title .taskpad-label {
   display: block;
   transform: rotate(90deg);
   transform-origin: top left;
+  padding-left: 46px;
 }
 .taskpad.position-right {
   border-left: 1px solid var(--neutral300);
@@ -1696,6 +1698,10 @@ header .include.nav-pane .partial-block .control-group,
 }
 .taskpad.position-right.expanded .taskpad-collapse-handle:before {
   content: "\e9a5";
+}
+.taskpad.position-right.collapsed {
+  padding: 0!important;
+  width: auto!important;
 }
 .taskpad.position-right.collapsed .taskpad-collapse-handle:before {
   content: "\e9a3";

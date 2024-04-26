@@ -259,9 +259,6 @@ table.fixed-layout {
   text-align: center;
   padding-right: 16px;
 }
-.page.page-grid {
-  overflow: hidden;
-}
 .a2-sticky-bottom {
   display: none;
 }

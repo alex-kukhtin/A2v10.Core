@@ -1,0 +1,30 @@
+﻿
+@inject ILocalizer _loc
+
+<div class="center-page">
+	<div class="initial-form">
+		<h3 class="a2-header text-center">@Html.Raw(_loc["LogOutPrompt"])</h3>
+		<hr />
+		<div>
+			<p>@Html.Raw(_loc["LogOutMessage"])</p>
+			<button class="btn btn-primary" v-on:click.stop.prevent="submit"  tabindex="1">@Html.Raw(_loc["LoginAgain"])</button>
+		</div>
+
+	</div>
+</div>
+
+@section Scripts
+{
+<script type="text/javascript">
+(function() {
+	new Vue({
+		el:"#app",
+		methods: {
+			submit() {
+				window.location.assign('/account/login');
+			}
+		}
+	});
+})();
+</script>
+}
