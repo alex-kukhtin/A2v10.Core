@@ -14,9 +14,6 @@ internal static class TableExtensions
     public static String TypeName(this RuntimeTable table) => $"T{table.Name.Singular()}";
 	public static String ItemName(this RuntimeTable table) => $"{table.Name.Singular()}";
 
-	public static IEnumerable<RuntimeField> SearchField(this RuntimeTable table)
-		=> table.Fields.Where(f => f.Type.Searchable());
-
 	public static IEnumerable<RuntimeField> RealFields(this RuntimeTable table)
 	{
 		// ПОРЯДОК ПОЛЕЙ ВАЖЕН!!! ТИП - ОБЯЗАТЕЛЬНО!!!
@@ -53,6 +50,7 @@ internal static class TableExtensions
 			TableType.Document => [
 				new RuntimeField() { Name = "Id", Type = FieldType.Id },
 				new RuntimeField() { Name = "Done", Type = FieldType.Boolean },
+				new RuntimeField() { Name = "Number", Type = FieldType.String, Length = 32 },
 				new RuntimeField() { Name = "Date", Type = FieldType.Date },
                 new RuntimeField() { Name = "Sum", Type = FieldType.Money },
                 new RuntimeField() { Name = "Memo", Type = FieldType.String, Length = 255 }

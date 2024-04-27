@@ -35,6 +35,7 @@ public static class XamlHelper
         return new TextBox()
         {
             Placeholder = "@[Search]",
+            TabIndex = 1,
             Width = Length.FromString("20rem"),
             Bindings = tb =>
             {

@@ -10,7 +10,7 @@ namespace A2v10.AppRuntimeBuilder;
 
 internal static class XamlUIExtensions
 {
-    const Int32 COLUMN_MAX_CHARS = 50;
+    public const Int32 COLUMN_MAX_CHARS = 50;
     public static String BindName(this UiField field)
     {
         if (!String.IsNullOrEmpty(field.BaseField?.Ref))
@@ -97,7 +97,7 @@ internal static class XamlUIExtensions
                 Label = field.RealTitle(),
                 Bindings = ss =>
                 {
-                    ss.SetBinding(nameof(SelectorSimple.Value), new Bind($"{elemName}{field.Name}"));
+                    ss.SetBinding(nameof(DatePicker.Value), new Bind($"{elemName}{field.Name}"));
                 }
             };
         else
@@ -160,10 +160,10 @@ internal static class XamlUIExtensions
             Sort = field.Sort,
             Align = field.TextAlign(),
             Role = field.XamlColumnRole(),
+            Fit = field.Fit,
+            Wrap = field.Fit ? WrapMode.NoWrap : WrapMode.Default,
             Bindings = c =>
-            {
-                c.SetBinding(nameof(DataGridColumn.Content), new Bind(field.BindName()) { DataType = field.XamlDataType() });
-            }
+                c.SetBinding(nameof(DataGridColumn.Content), new Bind(field.BindName()) { DataType = field.XamlDataType() })
         };
     }
 

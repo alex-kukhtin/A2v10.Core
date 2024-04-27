@@ -39,12 +39,12 @@ public class AppRuntimeBuilder(IServiceProvider _serviceProvider,
 	public async Task<ExpandoObject> SaveAsync(IPlatformUrl platformUrl, IModelView view, ExpandoObject data, ExpandoObject savePrms)
 	{
 		var endpoint = await GetEndpoint(view);
-		return await _dbProcessor.SaveAsync(endpoint.BaseTable, data);
+		return await _dbProcessor.SaveAsync(endpoint, data);
 	}
 
 	public async Task<IDataModel> ExecuteCommandAsync(IModelCommand command, ExpandoObject parameters)
 	{
 		var endpoint = await GetEndpoint(command);
-		return await _dbProcessor.ExecuteCommandAsync(command.LoadProcedure(), endpoint.BaseTable, parameters);
+		return await _dbProcessor.ExecuteCommandAsync(command.LoadProcedure(), endpoint, parameters);
 	}
 }

@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 
 namespace A2v10.AppRuntimeBuilder;
 
@@ -63,6 +62,8 @@ public record UiField
     public RuntimeTable? RefTable { get; set; }
     public String? Display { get; set; }
 	public String? Computed { get; set; }
+	public Boolean Filter { get; set; }
+	public Boolean Total { get; set; }
 }
 public record BaseUiElement
 {
@@ -133,6 +134,7 @@ public record EndpointDescriptor
 	public RuntimeTable BaseTable { get; set; } = new();
 	public UIDescriptor UI { get; set; } = new();
 	public RuntimeMetadata? Metadata { get; set; }
+	public Dictionary<String, String>? Parameters { get; init; }
 
 	public void SetParent(RuntimeMetadata metadata)
 	{

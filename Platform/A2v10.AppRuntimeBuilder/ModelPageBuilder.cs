@@ -12,8 +12,6 @@ using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Xaml;
 using A2v10.Xaml.DynamicRendrer;
-using System.Collections;
-using System.Collections.Generic;
 
 namespace A2v10.AppRuntimeBuilder;
 
@@ -31,9 +29,9 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 		if (!String.IsNullOrEmpty(modelView.Template))
 			templateText = await GetTemplateScriptAsync(modelView);
 		else if (modelView.IsIndex)
-			templateText = CreateIndexTemplate(endpoint);
+			templateText = TemplateBuilder.CreateIndexTemplate(endpoint);
 		else if (platformUrl.Action == "edit")
-			templateText = CreateEditTemplate(endpoint);
+			templateText = TemplateBuilder.CreateEditTemplate(endpoint);
 
 		UIElement? page = null;
 
@@ -72,6 +70,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 		var arrayName = endpoint.BaseTable.Name;
 		var indexUi = endpoint.GetIndexUI();
 		var editMode = endpoint.EditMode();
+		var filters = indexUi.Fields.Where(f => f.Filter);
 
 		BindCmd EditCommand()
 		{
@@ -109,19 +108,31 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
             return cmd;
         }
 
-        var page = new Page()
+		FilterItems CreateFilters()
+		{
+			FilterItems f = [
+				new FilterItem()
+				{
+					DataType = DataType.String,
+					Property = "Fragment"
+				}
+			];
+			foreach (var field in filters)
+				f.Add(new FilterItem()
+				{
+					Property = field.IsPeriod() ? "Period" : field.Name,
+					DataType = field.IsPeriod() ? DataType.Period : DataType.Object,
+				});
+			return f;
+		}
+		var page = new Page()
 		{
 			CollectionView = new CollectionView()
 			{
 				RunAt = RunMode.ServerUrl,
 				Filter = new FilterDescription()
 				{
-					Items = [
-						new FilterItem() {
-							DataType = DataType.String,
-							Property = "Fragment"
-						}
-					]
+					Items = CreateFilters()
 				},
 				Bindings = cw =>
 				{
@@ -177,6 +188,29 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 				}
 			]
 		};
+		if (filters.Any()) {
+			var tp = new Taskpad();
+			foreach (var filter in filters)
+				if (filter.IsPeriod())
+					tp.Children.Add(new PeriodPicker()
+					{
+						Label = filter.Name == "Date" ? "@[Period]" : filter.RealTitle(),
+						Placement = DropDownPlacement.BottomRight,
+						Bindings = pp => pp.SetBinding(nameof(PeriodPicker.Value), new Bind("Parent.Filter.Period"))
+					});
+				else
+					tp.Children.Add(new SelectorSimple()
+					{
+						Label = filter.RealTitle(),
+						Url = filter.RefUrl(),
+						ShowClear = true,
+						MaxChars = XamlUIExtensions.COLUMN_MAX_CHARS,
+						Placeholder = $"@[Filter.{filter.Name}].All",
+						Bindings = ss => 
+							ss.SetBinding(nameof(SelectorSimple.Value), new Bind($"Parent.Filter.{filter.Name}"))
+					});
+			page.Taskpad = tp;
+		}
 		return page;
 	}
 
@@ -188,7 +222,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 
 		var dlg = new Dialog()
 		{
-			Title = "Browse",
+			Title = $"${table.ItemName()}.Browse",
 			Width = Length.FromString("60rem"),
 			CollectionView = new CollectionView()
 			{
@@ -249,13 +283,13 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 	{
 		TableCellCollection DetailsCells() 
 		{
-			var coll = new TableCellCollection();
-			coll.Add(new TableCell()
-			{
-					Wrap = WrapMode.NoWrap,
-					Bindings = tc => tc.SetBinding(nameof(TableCell.Content), new Bind("RowNo"))
-			}
-			); ;
+			TableCellCollection coll = [
+				new TableCell()
+				{
+						Wrap = WrapMode.NoWrap,
+						Bindings = tc => tc.SetBinding(nameof(TableCell.Content), new Bind("RowNo"))
+				}
+			];
 			foreach (var elem in uiElement.Fields.Where(f => f.Name != "RowNo"))
 			{
 				coll.Add(new TableCell()
@@ -279,13 +313,13 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 
 		TableCellCollection HeaderCells()
 		{
-            var coll = new TableCellCollection();
-            coll.Add(new TableCell()
-            {
-                Wrap = WrapMode.NoWrap,
-				Content = "#"
-            }
-            ); ;
+			TableCellCollection coll = [
+				new TableCell()
+				{
+					Wrap = WrapMode.NoWrap,
+					Content = "#"
+				}
+			];
             foreach (var elem in uiElement.Fields.Where(f => f.Name != "RowNo"))
             {
                 coll.Add(new TableCell()
@@ -297,6 +331,32 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 			return coll;
         }
 
+		TableCellCollection FooterCells()
+		{
+			TableCellCollection coll = [];
+			foreach (var elem in uiElement.Fields)
+			{
+				if (elem.Total)
+					coll.Add(new TableCell()
+					{
+						Align = TextAlign.Right,
+						Bold = true,
+						Bindings = tc =>
+						{
+							var bind = new Bind($"{tableName}.{uiElement.Name}.{elem.Name}")
+							{
+								DataType = elem.XamlDataType()
+							};
+							tc.SetBinding(nameof(TableCell.Content), bind);
+						}
+					});
+				else
+					coll.Add(new TableCell());
+			}
+			coll.Add(new TableCell()); // remove
+			return coll;
+		}
+
 		TableColumnCollection TableColumns()
 		{
 			TableColumnCollection tc = [];
@@ -306,8 +366,11 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
             return tc;
 		}
 
-		return new Block()
+		return new Grid(_xamlSericeProvider)
 		{
+			Height = Length.FromString("100%"),
+			Rows = RowDefinitions.FromString("Auto,1*"),
+			AlignItems = AlignItem.Stretch,
 			Children = [
 				new Toolbar(_xamlSericeProvider) {
 					Children = [
@@ -341,10 +404,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 					],
 					Footer = [
 						new TableRow() {
-							Cells = [
-								new TableCell() { 
-								}
-							]
+							Cells = FooterCells()
 						}
 					],
 					Bindings = tbl => tbl.SetBinding(nameof(Table.ItemsSource), new Bind($"{tableName}.{uiElement.Name}"))
@@ -358,22 +418,65 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
         var uiElement = endpoint.GetEditUI();
         var table = endpoint.BaseTable;
 
-        UIElementCollection PlainFields()
+		UIElementCollection TitleFields()
+		{
+			UIElementCollection coll = [
+				new Header() { Content = "TITLE_HERE" }
+			];
+			var number = uiElement.Fields.FirstOrDefault(f => f.Name == "Number");
+			if (number != null)
+				coll.Add(new StackPanel()
+				{
+					Gap = GapSize.FromString(".5rem"),
+					Orientation = Orientation.Horizontal,
+					Children = [
+						new Label() { Content = "@[Number]" },
+						new TextBox() {
+							Bindings = dp => dp.SetBinding(nameof(TextBox.Value), new Bind($"{table.ItemName()}.{number.Name}"))
+						}
+					]
+				});
+			var date = uiElement.Fields.FirstOrDefault(f => f.Name == "Date");
+			if (date != null)
+				coll.Add(new StackPanel()
+				{
+					Gap = GapSize.FromString(".5rem"),
+					Orientation = Orientation.Horizontal,
+					Children = [
+						new Label() { Content = "@[Date]" },
+						new DatePicker() {
+							Bindings = dp => dp.SetBinding(nameof(DatePicker.Value), new Bind($"{table.ItemName()}.{date.Name}"))
+						}
+					]
+				});
+			return coll;
+		}
+
+		UIElementCollection PlainFields()
         {
             UIElementCollection coll = [];
-            foreach (var f in uiElement.Fields)
+            foreach (var f in uiElement.Fields.Where(f => f.Name != "Date" && f.Name != "Number"))
                 coll.Add(f.EditField(table.ItemName()));
             return coll;
         }
 
-        var page = new Page()
+		UIElementCollection DetailsBlock()
+		{
+			var coll = new UIElementCollection();
+			if (uiElement.Details != null)
+				foreach (var uiDetails in uiElement.Details)
+					coll.Add(CreateEditDetails(uiDetails, table.ItemName()));
+			return coll;
+		}
+
+		var page = new Page()
 		{
 			Title = "Edit Page",
 			Toolbar = new Toolbar(_xamlSericeProvider)
 			{
 				Children = [
 					XamlHelper.CreateButton(CommandType.SaveAndClose, "@[SaveAndClose]", Icon.SaveCloseOutline),
-                    XamlHelper.CreateButton(CommandType.Save, "@[Save]", Icon.SaveOutline),
+					XamlHelper.CreateButton(CommandType.Save, "@[Save]", Icon.SaveOutline),
 					new Separator(),
 					XamlHelper.CreateButton(CommandType.Reload, Icon.Reload),
 					new ToolbarAligner(),
@@ -382,18 +485,54 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 			},
 			Children = [
 				new Grid(_xamlSericeProvider) {
-					Width = Length.FromString("30rem"),
-					Children = PlainFields()
+					Columns = ColumnDefinitions.FromString("22rem,2rem,1*"),
+					Rows = RowDefinitions.FromString("Auto,1*"),
+					Height = Length.FromString("100%"),
+					AlignItems = AlignItem.Start,
+					Gap = GapSize.FromString("0"),
+					Padding = Thickness.FromString("1rem"),
+					Children = [
+						new StackPanel() {
+							Children = [
+								new StackPanel() {
+									Orientation = Orientation.Horizontal,
+									Gap = GapSize.FromString("1rem"),
+									Children = TitleFields()
+								},
+								new Line()
+							],
+							Attach = att => {
+								att.Add("Grid.Row", "1");
+								att.Add("Grid.ColSpan", "3");
+							}
+
+						},
+						new GridDivider() {
+							Attach = att => {
+								att.Add("Grid.Col", "2");
+								att.Add("Grid.RowSpan", "2");
+							}
+						},
+						new Grid(_xamlSericeProvider) {
+							Children = PlainFields(),
+							Attach = att => {
+								att.Add("Grid.Col", "1");
+								att.Add("Grid.Row", "2");
+							}
+						},
+						new Grid(_xamlSericeProvider) {
+							AutoFlow = AutoFlowMode.Row,
+							Height = Length.FromString("100%"),
+							Children = DetailsBlock(),
+							Attach = att => {
+								att.Add("Grid.Col", "3");
+								att.Add("Grid.Row", "2");
+							}
+						}
+					]
 				}
 			]
 		};
-		if (uiElement.Details != null)
-		{
-			foreach (var uiDetails in uiElement.Details)
-			{
-				page.Children.Add(CreateEditDetails(uiDetails, table.ItemName()));
-			}
-		}
 		return page;
 	}
 
@@ -433,61 +572,6 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 		return dlg;
 	}
 
-	String CreateIndexTemplate(EndpointDescriptor endpoint)
-	{
-		var template = $$"""
-
-			const template = {
-				options:{
-					noDirty: true,
-					persistSelect: ['{{endpoint.BaseTable.Name}}']
-				}
-			};
-
-			module.exports = template;            
-			""";
-		return template;
-	}
-
-	String CreateEditTemplate(EndpointDescriptor endpoint)
-	{
-		var ui = endpoint.GetEditUI();
-		var table = endpoint.BaseTable;
-
-		var rq = ui.Fields.Where(f => f.Required);
-		var validators = String.Join(",\n", rq.Select(f => $"'{table.ItemName()}.{f.Name}': '@[Error.Required]'"));
-
-		IEnumerable<(RuntimeTable Table, UiField Field)> GetComputedFields()
-		{
-			foreach (var f in ui.Fields.Where(f => !String.IsNullOrEmpty(f.Computed)))
-				yield return (table, f);
-			if (ui.Details != null)
-				foreach (var detailsTable in ui.Details)
-					foreach (var f in detailsTable.Fields.Where(f => !String.IsNullOrEmpty(f.Computed)))
-						yield return (detailsTable.BaseTable 
-							?? throw new InvalidOperationException("BaseTable for Details is null"), 
-							f);
-		}
-
-		var templateProps = String.Join(",\n", GetComputedFields().Select(f => $$"""
-			'{{f.Table.TypeName()}}.{{f.Field.Name}}'() { return {{f.Field.Computed}}; }
-		"""));
-
-		var template = $$"""
-			const template = {
-				properties:{
-					{{templateProps}}
-				},
-				validators: {
-					{{validators}}
-				}
-			};
-
-			module.exports = template;            
-			""";
-		return template;
-	}
-
 	private async Task<String> GetTemplateScriptAsync(IModelView view)
 	{
 		if (view.Path == null)
@@ -507,6 +591,6 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 		var obj = _xamlPartProvider.GetXamlPart(path);
 		if (obj is UIElement uIElement)
 			return uIElement;
-		throw new InvalidOperationException("Xaml. Root is not 'IXamlElement'");
+		throw new InvalidOperationException("Xaml. Root is not an IXamlElement");
 	}
 }

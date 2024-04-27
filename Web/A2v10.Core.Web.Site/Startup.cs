@@ -49,6 +49,7 @@ public class Startup(IConfiguration configuration)
 
 		var builders = services.UsePlatform(Configuration);
 
+		/*
         builders.AuthenticationBuilder.AddGoogle(opts =>
 		{
 			opts.ClientId = Configuration.GetValue<String>("Identity:Google:ClientId")
@@ -65,6 +66,7 @@ public class Startup(IConfiguration configuration)
 				?? throw new InvalidOperationException("Identity:Microsoft:ClientSecret not found");
 			opts.Events.OnRemoteFailure = OpenIdErrorHandlers.OnRemoteFailure;
 		});
+		*/
 
 		services.AddSingleton<TestBusinessAppProvider>();
 

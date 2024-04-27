@@ -8,12 +8,14 @@ using System.Data.Common;
 using System.Linq;
 using System.Text;
 using System.Collections.Generic;
+using System.Globalization;
 
 using Microsoft.Data.SqlClient;
 
 using A2v10.Data.Core;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
+using System.Net;
 
 namespace A2v10.AppRuntimeBuilder;
 
@@ -27,7 +29,7 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContex
 		prms.AddBigInt("@UserId", _currentUser.Identity.Id);
 	}
 
-    private String MapsData(IEnumerable<RuntimeField> refFields, RuntimeTable table, String tmpTable)
+    private static String MapsData(IEnumerable<RuntimeField> refFields, RuntimeTable table, String tmpTable)
     {
         String SelectFieldsMap(RuntimeTable? table, String alias)
         {
@@ -43,7 +45,7 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContex
         {
             var rtable = table.FindTable(rf.Ref!);
             sb.AppendLine($"""
-				with TM as (select [{rf.MapName()}] from {tmpTable} group by [{rf.MapName()}])
+				with TM as (select [{rf.MapName()}] from {tmpTable} where [{rf.MapName()}] is not null group by [{rf.MapName()}])
 				select [!{rtable.TypeName()}!Map] = null, 
 					{SelectFieldsMap(rtable, "m")}
 				from TM inner join {rtable.SqlTableName()} m on TM.[{rf.MapName()}] = m.Id;
@@ -54,8 +56,11 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContex
     }
 
 
-    public async Task<ExpandoObject> SaveAsync(RuntimeTable table, ExpandoObject data)
+    public async Task<ExpandoObject> SaveAsync(EndpointDescriptor endpoint, ExpandoObject data)
 	{
+		var table = endpoint.BaseTable;
+
+
 		String MergeDetails()
 		{
 			if (table.Details == null || table.Details.Count == 0)
@@ -82,7 +87,17 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContex
 			return sb.ToString();
 		}
 
-		var updateFields = table.RealFields().Where(f => f.Name != "Id");
+		var updateFields = table.RealFields().Where(f => f.Name != "Id" && !endpoint.IsParameter(f));
+
+		String? paramFields = null;
+		String? paramValues = null;
+
+		if (endpoint.Parameters != null && endpoint.Parameters.Count > 0)
+		{
+			paramFields = $"{String.Join(",", endpoint.Parameters.Select(p => p.Key))}, ";
+			paramValues = $"{String.Join(",", endpoint.Parameters.Select(p => $"N'{p.Value}'"))}, ";
+		}
+
 		var sqlString = $"""
 
 		set nocount on;
@@ -99,8 +114,8 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContex
 		when matched then update set
 			{String.Join(',', updateFields.Select(f => $"t.{f.Name} = s.{f.Name}"))}
 		when not matched then insert 
-			({String.Join(',', updateFields.Select(f => f.Name))}) values
-			({String.Join(',', updateFields.Select(f => $"s.{f.Name}"))})
+			({paramFields}{String.Join(',', updateFields.Select(f => f.Name))}) values
+			({paramValues}{String.Join(',', updateFields.Select(f => $"s.{f.Name}"))})
 		output inserted.Id into @rtable(Id);
 
 		select top(1) @Id = Id from @rtable;
@@ -135,64 +150,107 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContex
 		var table = indexUi.Endpoint?.BaseTable
 			?? throw new InvalidOperationException("Endpoint or BaseTable is null");
 
-        // TODO: search fields from UI, sort non string fields
-
-        var refFields = table.Fields.Where(f => f.Ref != null);
-
-        String RefTableFields()
+		var qry = platformUrl.Query;
+		Int32 offset = 0;
+		Int32 pageSize = 20;
+		String? fragment = null;
+		String order = "name";
+		String dir = "asc";
+		if (qry != null)
 		{
-			return String.Join(' ', refFields.Select(rf => $"[{rf.MapName()}] bigint,"));
+			if (qry.HasProperty("Offset"))
+				offset = Int32.Parse(qry.Get<String>("Offset") ?? "0");
+			if (qry.HasProperty("PageSize"))
+				pageSize = Int32.Parse(qry.Get<String>("PageSize") ?? "20");
+			fragment = qry?.Get<String>("Fragment");
+			// TODO: Default order
+			order = qry?.Get<String>("Order") ?? "name";
+			dir = qry?.Get<String>("Dir")?.ToLowerInvariant() ?? "asc";
 		}
 
-        String RefInsertFields()
-        {
-            return String.Join(' ', refFields.Select(rf => $"[{rf.MapName()}],"));
+		var refFields = table.Fields.Where(f => f.Ref != null);
+
+		var filters = indexUi.Fields.Where(f => f.Filter);
+		var hasPeriod = filters.Any(f => f.IsPeriod());
+		filters = filters.Where(f => !f.IsPeriod()); // exclude period
+
+        String RefTableFields() =>
+			String.Join(' ', refFields.Select(rf => $"[{rf.MapName()}] bigint,"));
+
+        String RefInsertFields() =>
+            String.Join(' ', refFields.Select(rf => $"[{rf.MapName()}],"));
+
+		String SelectFieldsAll(RuntimeTable table, String alias) =>
+			String.Join(' ', table.RealFields().Select(f => $"{f.SelectSqlField(alias, table)},"));
+
+		String PeriodWhere() => hasPeriod ? "and a.[Date] >= @From and a.[Date] <= @To " : String.Empty;
+		String PeriodDefault() => hasPeriod ?
+			"""
+			set @From = isnull(@From, getdate());
+			set @To = isnull(@To, @From);
+			""" : String.Empty;
+		String PeriodSystem() => hasPeriod ? $",[!{table.Name}.Period.From!Filter] = @From, [!{table.Name}.Period.To!Filter] = @To" : String.Empty;
+
+		String FilterToMap()
+		{
+			if (!filters.Any())
+				return String.Empty;
+			return $""""
+			insert into @tmp({String.Join(',', filters.Select(f => $"{f.BaseField?.MapName()}"))}) values
+			({String.Join(',', filters.Select(f => $"@{f.Name}"))});
+			"""";
+		}
+
+		String ParametersCondition()
+		{
+            if (indexUi.Endpoint.Parameters == null)
+				return String.Empty;
+			var str = String.Join(" and ", indexUi.Endpoint.Parameters.Select(p => $"a.[{p.Key}] = N'{p.Value}'"));
+			if (str.Length > 0)
+				return $"and {str}";
+			return String.Empty;
         }
 
-		String SelectFieldsAll(RuntimeTable table, String alias) {
-			return String.Join(' ', table.RealFields().Select(f => $"{f.SelectSqlField(alias, table)},"));
-		}
-
-		String SortPredicate(Func<RuntimeField, Boolean> predicate, String alias)
+		String WhereCondition()
 		{
-			var strFields = table.RealFields().Where(predicate);
-			if (!strFields.Any())
+			if (!filters.Any() && String.IsNullOrEmpty(fragment))
 				return String.Empty;
-			var fields = String.Join(' ', strFields.Select(f => $"when N'{f.Name.ToLowerInvariant()}' then {alias}.[{f.Name}] "));
-			return $"""
-			case when @Dir = N'asc' then
-				case @Order
-					{fields}
-				end
-			end asc,
-			case when @Dir = N'desc' then
-				case @Order
-					{fields}
-				end
-			end desc,			
-			""";
+			List<String> list = [];
+
+			if (fragment != null)
+			{
+				var sf = indexUi.Fields.Where(f => f.Search == SearchType.Like).Select(f => $"a.{f.Name} like @fr");
+				list.Add($" ({String.Join(" or ", sf)}) ");
+			}
+			foreach (var f in filters) {
+				var dat = qry?.Get<Object>(f.Name);
+				if (dat == null)
+					continue;
+				list.Add($"a.[{f.Name}] = @{f.Name}");
+			}
+			if (list.Count == 0)
+				return String.Empty;
+			return $"and {String.Join(" and ", list)}";
 		}
 
-        var sqlString = $"""
+		var sqlString = $"""
 		set nocount on;
 		set transaction isolation level read uncommitted;
 
 		set @Order = lower(@Order);
 		set @Dir = lower(@Dir);
-		declare @fr nvarchar(255) = N'%' + @Fragment + N'%';
 
+		declare @fr nvarchar(255) = N'%' + @Fragment + N'%';
+	
+		{PeriodDefault()}
+		
 		declare @tmp table(Id bigint, rowno int identity(1, 1), {RefTableFields()} rowcnt int);
 		insert into @tmp(Id, {RefInsertFields()} rowcnt)
 		select a.Id, {RefInsertFields()} count(*) over() 
 		from {table.SqlTableName()} a
-		where a.Void = 0 and (@fr is null 
-			{String.Join(' ', table.SearchField().Select(f => $"or a.{f.Name} like @fr"))}
-			or a.Memo like @fr)
+		where a.Void = 0 {ParametersCondition()} {PeriodWhere()} {WhereCondition()}
 		order by
-			{SortPredicate(f => f.Type == FieldType.String, "a")}
-			{SortPredicate(f => f.Type == FieldType.Id || f.Type == FieldType.Money || f.Type == FieldType.Float, "a")}
-			{SortPredicate(f => f.Type == FieldType.Date || f.Type == FieldType.DateTime, "a")}
-			a.[Id]
+			a.[{table.RealFields().FirstOrDefault(f => f.Name.Equals(order, StringComparison.OrdinalIgnoreCase))?.Name}] {dir}
 		offset @Offset rows fetch next @PageSize rows only option (recompile);
 
 		select [{table.Name}!{table.TypeName()}!Array] = null,
@@ -201,6 +259,7 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContex
 		from {table.SqlTableName()} a inner join @tmp t on a.Id = t.Id
 		order by t.[rowno];
 
+		{FilterToMap()}
 		{MapsData(refFields, table, "@tmp")}
 
 		-- system data
@@ -208,30 +267,44 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContex
 			[!{table.Name}!PageSize] = @PageSize,  [!{table.Name}!Offset] = @Offset,
 			[!{table.Name}!SortOrder] = @Order,  [!{table.Name}!SortDir] = @Dir,
 			[!{table.Name}.Fragment!Filter] = @Fragment
+			{String.Join(' ', filters.Select(f => $",[!{table.Name}.{f.Name}.{f.RefTable?.TypeName()}.RefId!Filter] = @{f.Name}"))}
+			{PeriodSystem()}
 
 		""";
 
-		var qry = platformUrl.Query;
-		Int32 offset = 0;
-		Int32 pageSize = 20;
-		if (qry != null)
-		{
-			if (qry.HasProperty("Offset"))
-				offset = Int32.Parse(qry.Get<String>("Offset") ?? "0");
-			if (qry.HasProperty("PageSize"))
-				pageSize = Int32.Parse(qry.Get<String>("PageSize") ?? "20");
-		}
 		return _dbContext.LoadModelSqlAsync(null, sqlString, dbprms =>
 		{
 			AddDefaultParameters(dbprms);
 			dbprms.AddBigInt("@Id", null);
 			dbprms.AddInt("@Offset", offset);
 			dbprms.AddInt("@PageSize", pageSize);
-			// TODO: Default order
-			dbprms.AddString("@Order", qry?.Get<String>("Order") ?? "name");
-			dbprms.AddString("@Dir", qry?.Get<String>("Dir") ?? "asc");
-			dbprms.AddString("@Fragment", qry?.Get<String>("Fragment"));
+			dbprms.AddString("@Order", order);
+			dbprms.AddString("@Dir", dir);
+			dbprms.AddString("@Fragment", fragment);
+			if (hasPeriod)
+			{
+				dbprms.Add(new SqlParameter("@From", SqlDbType.Date) { Value = GetDateParameter(qry, "From") });
+				dbprms.Add(new SqlParameter("@To", SqlDbType.Date) { Value = GetDateParameter(qry, "To") });
+			};
+			foreach (var f in filters)
+			{
+				var val = qry?.Get<String>(f.Name);
+				dbprms.AddBigInt($"@{f.Name}", String.IsNullOrEmpty(val) ? null : Int64.Parse(val));
+			}
 		});
+	}
+
+	// TODO: Перенести в Data.Core.DbParamsExtension
+	Object GetDateParameter(ExpandoObject? eo, String name)
+	{
+		var val = eo?.Get<Object>(name);
+		if (val == null)
+			return DBNull.Value;
+		if (val is DateTime dt)
+			return dt;
+		else if (val is String strVal)
+			return DateTime.ParseExact(strVal, "yyyyMMdd", CultureInfo.InvariantCulture);
+		throw new InvalidExpressionException($"Invalid Date Parameter value: {val}");
 	}
 
 	private String GetPlainModelSql(RuntimeTable table)
@@ -352,18 +425,26 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContex
 		});
 	}
 
-	private Task<IDataModel> ExecuteFetch(RuntimeTable table, ExpandoObject prms)
+	private Task<IDataModel> ExecuteFetch(EndpointDescriptor endpoint, ExpandoObject prms)
 	{
+		var table = endpoint.BaseTable;
+		var indexUi = endpoint.GetBrowseUI();
+
 		var text = prms.Get<String>("Text");
+
+		String WhereCondition()
+		{
+			String? cond = null;
+			if (text != null)
+				cond = String.Join(" or ", indexUi.Fields.Where(f => f.Search == SearchType.Like).Select(f => $"a.{f.Name} like @fr"));
+			return cond != null ? $" and ({cond})" : String.Empty;
+		}
+
 		var sqlString = $"""
 			declare @fr nvarchar(255) = N'%' + @Text + N'%';
-			select [{table.Name}!{table.TypeName()}!Array] = null, [Id!!Id] = a.Id, [Name!!Name] = a.[Name], 
-				{String.Join(' ', table.SearchField().Select(f => $"a.{f.Name},"))}
-				a.Memo
-			from {table.SqlTableName()} a where a.Void = 0 and (@Text is null 
-				or a.[Name] like @fr 
-				{String.Join(' ', table.SearchField().Select(f => $"or a.{f.Name} like @fr"))}
-				or a.Memo like @fr);
+			select [{table.Name}!{table.TypeName()}!Array] = null,
+				{String.Join(',', table.RealFields().Select(f => $"{f.SelectSqlField("a", table)}"))}
+			from {table.SqlTableName()} a where a.Void = 0 {WhereCondition()};
 			""";
 		return _dbContext.LoadModelSqlAsync(null, sqlString, dbprms =>
 		{
@@ -371,13 +452,12 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContex
 			dbprms.AddString("@Text", text);
 		});
 	}
-	public Task<IDataModel> ExecuteCommandAsync(String command, RuntimeTable table, ExpandoObject prms) 
+	public Task<IDataModel> ExecuteCommandAsync(String command, EndpointDescriptor endpoint, ExpandoObject prms) 
 	{
-		// command === [dbo].[Fetch]
-		if (command == "[dbo].[Fetch]")
+		return command switch
 		{
-			return ExecuteFetch(table, prms);
-		}
-		throw new NotImplementedException($"Command {command} yet not implemented");
+			"[dbo].[Fetch]" => ExecuteFetch(endpoint, prms),
+			_ => throw new NotImplementedException($"Command {command} yet not implemented")
+		};
 	}
 }

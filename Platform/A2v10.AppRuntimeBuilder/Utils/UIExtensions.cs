@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace A2v10.AppRuntimeBuilder;
 
@@ -34,12 +35,16 @@ internal static class UIExtensions
 		return field.Title;
 	}
 
-    public static Boolean IsReference(this UiField field)
+	public static Boolean IsReference(this UiField field)
 	{
 		return field.BaseField?.Ref != null;
 	}
+	public static Boolean IsPeriod(this UiField field)
+	{
+		return field.Name == "Date";
+	}
 
-    public static RuntimeTable GetTable(this EndpointDescriptor endpoint, String table)
+	public static RuntimeTable GetTable(this EndpointDescriptor endpoint, String table)
 	{
 		return endpoint.Metadata?.GetTable(table) ??
 			throw new InvalidOperationException($"Table {table} not found");
@@ -72,32 +77,38 @@ internal static class UIExtensions
 			{
 				Fields = [
 					new UiField() {Name = "Id", Sort = true },
-					new UiField() {Name = "Date", Sort = true },
+					new UiField() {Name = "Number", Sort = true, Search = SearchType.Like, Fit = true },
+					new UiField() {Name = "Date", Sort = true, Filter = true },
 					new UiField() {Name = "Sum", Sort = true }
 				]
 			},
 			_ => throw new InvalidOperationException($"Invalid Endpoint for index {endpoint.EndpointType()}")
 		};
 
-		foreach (var f in table.Fields)
+		foreach (var f in table.Fields.Where(f => !endpoint.IsParameter(f)))
         {
-            indexElem.Fields.Add(new UiField()
-            {
-                Name = f.Name,
-                Sort = f.Type.Sortable(),
-                Search = f.Type.Searchable() ? SearchType.Like : SearchType.None,
-                MaxChars = f.HasMaxChars(),
-                BaseField = f,
-                Fit = f.RealLength() <= 32
-            }
-            );
+			indexElem.Fields.Add(new UiField()
+			{
+				Name = f.Name,
+				Sort = f.Type.Sortable(),
+				Search = f.Type.Searchable() ? SearchType.Like : SearchType.None,
+				MaxChars = f.HasMaxChars(),
+				BaseField = f,
+				Fit = f.RealLength() <= 32,
+				Filter = f.Ref != null
+			});
         }
         indexElem.Fields.Add(new UiField() { Name = "Memo", Sort = true, Search = SearchType.Like, MaxChars = true });
         indexElem.SetParent(endpoint);
 		return indexElem;
     }
+	public static Boolean IsParameter(this EndpointDescriptor endpoint, RuntimeField field)
+	{
+		return endpoint.Parameters != null && endpoint.Parameters.ContainsKey(field.Name);
+	}
 
-    public static EditUiElement DefaultEditUiElement(this EndpointDescriptor endpoint)
+
+	public static EditUiElement DefaultEditUiElement(this EndpointDescriptor endpoint)
     {
 		var table = endpoint.BaseTable;
 		List<UiField> CatalogFields()
@@ -126,9 +137,10 @@ internal static class UIExtensions
 
             List<UiField> list = [
                 new() {Name = "Date"},
+				new() {Name = "Number" },
                 new() {Name = "Sum", Computed = computedSum }
             ];
-            foreach (var f in table.Fields)
+            foreach (var f in table.Fields.Where(f => !endpoint.IsParameter(f)))
                 list.Add(new() { Name = f.Name });
             list.Add(new()
             {
@@ -148,7 +160,11 @@ internal static class UIExtensions
                 new() {Name = "RowNo"},
             ];
             foreach (var f in rt.Fields)
-                list.Add(new() { Name = f.Name, Computed = hasQtyPriceSum && f.Name == "Sum" ? "this.Price * this.Qty": null });
+                list.Add(new() { 
+					Name = f.Name, 
+					Computed = hasQtyPriceSum && f.Name == "Sum" ? "this.Price * this.Qty": null,
+					Total = f.Name == "Sum"
+				});
             list.Add(new()
             {
                 Name = "Memo",
