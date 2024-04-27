@@ -68,6 +68,7 @@ internal static class UIExtensions
 		{
 			TableType.Catalog => new IndexUiElement()
 			{
+				Sort = new SortElement() { Order = "Name", Dir = SortDir.Asc },
 				Fields = [
 					new UiField() {Name = "Id", Sort = true },
 					new UiField() {Name = "Name", Sort = true, Search = SearchType.Like, MaxChars = true }
@@ -75,6 +76,7 @@ internal static class UIExtensions
 			},
 			TableType.Document => new IndexUiElement()
 			{
+				Sort = new SortElement() { Order = "Date", Dir = SortDir.Desc },
 				Fields = [
 					new UiField() {Name = "Id", Sort = true },
 					new UiField() {Name = "Number", Sort = true, Search = SearchType.Like, Fit = true },

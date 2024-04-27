@@ -154,8 +154,8 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContex
 		Int32 offset = 0;
 		Int32 pageSize = 20;
 		String? fragment = null;
-		String order = "name";
-		String dir = "asc";
+		String order = indexUi.SortOrder();
+		String dir = indexUi.SortDirection();
 		if (qry != null)
 		{
 			if (qry.HasProperty("Offset"))
@@ -163,9 +163,8 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContex
 			if (qry.HasProperty("PageSize"))
 				pageSize = Int32.Parse(qry.Get<String>("PageSize") ?? "20");
 			fragment = qry?.Get<String>("Fragment");
-			// TODO: Default order
-			order = qry?.Get<String>("Order") ?? "name";
-			dir = qry?.Get<String>("Dir")?.ToLowerInvariant() ?? "asc";
+			order = qry?.Get<String>("Order") ?? indexUi.SortOrder();
+			dir = qry?.Get<String>("Dir")?.ToLowerInvariant() ?? indexUi.SortDirection();
 		}
 
 		var refFields = table.Fields.Where(f => f.Ref != null);

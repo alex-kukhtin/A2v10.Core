@@ -1,5 +1,7 @@
 ﻿// Copyright © 2022-2024 Oleksandr Kukhtin. All rights reserved.
 
+using A2v10.Xaml;
+using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,9 +38,16 @@ public record RuntimeField
 	public FieldType Type { get; init; }
 }
 
+public enum SortDir
+{
+	Asc,
+	Desc
+
+}
 public record SortElement
 {
 	public String Order { get; init; } = String.Empty;
+	public SortDir Dir { get; init; }
 }
 
 public enum SearchType
@@ -82,8 +91,17 @@ public record BaseUiElement
 }
 public record IndexUiElement : BaseUiElement
 {
-	// default sort ???
-	public SortElement? Sort {  get; init; }
+	public SortElement? Sort { get; init; } = new SortElement() { Order = "Name" };
+
+	internal String SortOrder()
+	{
+		return Sort?.Order ?? "Name";
+	}
+
+	internal String SortDirection()
+	{
+		return Sort?.Dir.ToString().ToUpperInvariant() ?? "asc";
+	}
 }
 
 public record EditUiElement : BaseUiElement 
