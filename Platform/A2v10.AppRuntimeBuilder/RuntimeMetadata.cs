@@ -66,12 +66,13 @@ public record UiField
 	public Boolean Multiline { get; set; }
 	public Boolean Required { get; set; }
     public Boolean Fit { get; set; }
-    public RuntimeField? BaseField { get; set; }
-    public RuntimeTable? RefTable { get; set; }
     public String? Display { get; set; }
 	public String? Computed { get; set; }
 	public Boolean Filter { get; set; }
 	public Boolean Total { get; set; }
+
+	public RuntimeField? BaseField { get; set; }
+	public RuntimeTable? RefTable { get; set; }
 }
 public record BaseUiElement
 {
