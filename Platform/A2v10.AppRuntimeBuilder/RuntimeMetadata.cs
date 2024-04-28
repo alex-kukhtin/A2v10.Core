@@ -61,7 +61,8 @@ public record UiField
 	public String? Title { get; set; }
     public Boolean Sort { get; set; }
 	public SearchType Search { get; set; }
-	public Boolean MaxChars { get; set; }
+	public Boolean MaxChars { get; set; } // TODO: Убрать
+	public Int32? LineClamp { get;set; }
 	public Boolean Multiline { get; set; }
 	public Boolean Required { get; set; }
     public Boolean Fit { get; set; }

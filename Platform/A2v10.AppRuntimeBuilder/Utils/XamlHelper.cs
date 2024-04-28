@@ -37,6 +37,8 @@ public static class XamlHelper
             Placeholder = "@[Search]",
             TabIndex = 1,
             Width = Length.FromString("20rem"),
+            ShowSearch = true,
+            ShowClear = true,
             Bindings = tb =>
             {
                 tb.SetBinding(nameof(TextBox.Value), new Bind("Parent.Filter.Fragment"));
