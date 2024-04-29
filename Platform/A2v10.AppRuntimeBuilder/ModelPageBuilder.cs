@@ -204,7 +204,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 						Label = filter.RealTitle(),
 						Url = filter.RefUrl(),
 						ShowClear = true,
-						MaxChars = XamlUIExtensions.COLUMN_MAX_CHARS,
+						LineClamp = 2,
 						Placeholder = $"@[Filter.{filter.Name}].All",
 						Bindings = ss => 
 							ss.SetBinding(nameof(SelectorSimple.Value), new Bind($"Parent.Filter.{filter.Name}"))

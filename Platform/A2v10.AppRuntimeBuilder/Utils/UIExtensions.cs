@@ -70,7 +70,7 @@ internal static class UIExtensions
 				Sort = new SortElement() { Order = "Name", Dir = SortDir.Asc },
 				Fields = [
 					new UiField() {Name = "Id", Sort = true },
-					new UiField() {Name = "Name", Sort = true, Search = SearchType.Like, MaxChars = true }
+					new UiField() {Name = "Name", Sort = true, Search = SearchType.Like, LineClamp = 2 }
 				]
 			},
 			TableType.Document => new IndexUiElement()
@@ -93,13 +93,13 @@ internal static class UIExtensions
 				Name = f.Name,
 				Sort = f.Type.Sortable(),
 				Search = f.Type.Searchable() ? SearchType.Like : SearchType.None,
-				MaxChars = f.HasMaxChars(),
+				LineClamp = f.HasLineClamp() ? 2 : 0,
 				BaseField = f,
 				Fit = f.RealLength() <= 32,
 				Filter = f.Ref != null
 			});
         }
-        indexElem.Fields.Add(new UiField() { Name = "Memo", Sort = true, Search = SearchType.Like, MaxChars = true });
+        indexElem.Fields.Add(new UiField() { Name = "Memo", Sort = true, Search = SearchType.Like, LineClamp = 2 });
         indexElem.SetParent(endpoint);
 		return indexElem;
     }

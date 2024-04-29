@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
 using System.Collections.Generic;
@@ -44,6 +44,7 @@ public class DataGridColumn : XamlElement
 	public Boolean? If { get; set; }
 	public ColumnRole Role { get; set; }
 	public Int32 MaxChars { get; set; }
+	public Int32 LineClamp { get; set; }
 	public String? CheckAll { get; set; }
 
 	Boolean _noPadding;
@@ -70,6 +71,8 @@ public class DataGridColumn : XamlElement
 			column.MergeAttribute(":small", Small.Value.ToString().ToLowerInvariant());
 		if (MaxChars != 0)
 			column.MergeAttribute(":max-chars", MaxChars);
+		if (LineClamp != 0)
+			column.MergeAttribute(":line-clamp", LineClamp);
 
 		var checkAllBind = GetBinding(nameof(CheckAll));
 		if (checkAllBind != null)

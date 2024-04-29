@@ -156,7 +156,7 @@ internal static class XamlUIExtensions
         return new DataGridColumn()
         {
             Header = field.RealTitle(),
-            MaxChars = field.MaxChars ? COLUMN_MAX_CHARS : 0,
+            LineClamp = field.LineClamp,
             Sort = field.Sort,
             Align = field.TextAlign(),
             Role = field.XamlColumnRole(),

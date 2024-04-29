@@ -25,8 +25,8 @@ internal static class FieldExtensions
 	public static Int32? RealLength(this RuntimeField field)
 		=> field.IsString() ? field.Length ?? 255 : null;
 
-	public static Boolean HasMaxChars(this RuntimeField field)
-		=> field.IsString() && field.RealLength() >= 255;
+	public static Boolean HasLineClamp(this RuntimeField field)
+		=> field.IsString() && field.RealLength() >= Constants.ClampThreshold;
 	
 	public static Boolean IsString(this RuntimeField field)
 		=> field.Ref == null && field.Type == FieldType.String;
