@@ -207,7 +207,7 @@ app.modules['std:const'] = function () {
 
 // Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
-// 20240309-7961
+// 20240325-7964
 // services/utils.js
 
 app.modules['std:utils'] = function () {
@@ -311,7 +311,8 @@ app.modules['std:utils'] = function () {
 		model: {
 			propFromPath
 		},
-		mergeTemplate
+		mergeTemplate,
+		mapTagColor
 	};
 
 	function isFunction(value) { return typeof value === 'function'; }
@@ -1071,6 +1072,29 @@ app.modules['std:utils'] = function () {
 			delegates: assign(src.delegates, tml.delegates),
 			options: assign(src.options, tml.options)
 		});
+	}
+
+	function mapTagColor(style) {
+		let tagColors = {
+			'cyan': '#60bbe5',
+			'green': '#5db750',
+			'olive': '#b5cc18',
+			'white': 'white',
+			'teal': '#00b5ad',
+			'tan': 'tan',
+			'red': '#da533f',
+			'blue': 'cornflowerblue',
+			'orange': '#ffb74d',
+			'seagreen': 'darkseagreen',
+			'null': '#8f94b0',
+			'gold': '#eac500',
+			'salmon': 'salmon',
+			'purple': 'mediumpurple',
+			'pink': 'hotpink',
+			'magenta': 'darkmagenta',
+			'lightgray': '#ccc'
+		};
+		return tagColors[style || 'null'] || '#8f94b0';
 	}
 };
 
@@ -7020,7 +7044,7 @@ Vue.component('validator-control', {
 
 // Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
-/*20240124-7959*/
+/*20240429-7970*/
 // components/selector.js
 
 (function selector_component() {
@@ -7050,10 +7074,12 @@ Vue.component('validator-control', {
 		<validator :invalid="invalid" :errors="errors" :options="validatorOptions"></validator>
 		<div class="selector-pane" v-if="isOpen" ref="pane" :class="paneClass">
 			<div class="selector-body" :style="bodyStyle">
-				<slot name="pane" :items="items" :is-item-active="isItemActive" :item-name="itemName" :hit="hit" :max-chars="maxChars" :slotStyle="slotStyle">
+				<slot name="pane" :items="items" :is-item-active="isItemActive" :item-name="itemName" :hit="hit" :max-chars="maxChars" :line-clamp="lineClamp" :slotStyle="slotStyle">
 					<ul class="selector-ul">
-						<li @mousedown.prevent="hit(itm)" :class="{active: isItemActive(itmIndex)}"
-							v-for="(itm, itmIndex) in items" :key="itmIndex" v-text="itemName(itm)"></li>
+						<li @mousedown.prevent="hit(itm)" :class="{'active': isItemActive(itmIndex)}"
+							v-for="(itm, itmIndex) in items" :key="itmIndex">
+							<span :style="itemStyle(itm)" :class="itemClass(itm, itmIndex)" :title="itemTitle(itm)" v-text="itemName(itm)"></span>
+						</li>
 					</ul>
 				</slot>
 			</div>
@@ -7091,7 +7117,8 @@ Vue.component('validator-control', {
 			mode: String,
 			fetchCommand: String,
 			fetchCommandData: Object,
-			maxChars: Number
+			maxChars: Number,
+			lineClamp: Number
 		},
 		data() {
 			return {
@@ -7303,6 +7330,22 @@ Vue.component('validator-control', {
 						return;
 				}
 			},
+			itemTitle(itm) {
+				if (this.lineClamp > 0)
+					return this.itemName(itm)
+				return '';
+			},
+			itemStyle(itm) {
+				if (this.lineClamp > 0)
+					return { '-webkit-line-clamp': this.lineClamp };
+				return undefined;
+			},
+			itemClass(itm, itmIndex) {
+				let cls = '';
+				if (this.lineClamp > 0)
+					cls += ' line-clamp';
+				return cls;
+			},
 			hit(itm) {
 				let obj = this.item[this.prop];
 				this.query = this.valueText;
@@ -7442,7 +7485,7 @@ Vue.component('validator-control', {
 })();
 // Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
-// 20240215-7960
+// 20240429-7970
 // components/datagrid.js*/
 
 (function () {
@@ -7582,6 +7625,7 @@ Vue.component('validator-control', {
 			wrap: String,
 			command: Object,
 			maxChars: Number,
+			lineClamp: Number,
 			checkAll: String
 		},
 		created() {
@@ -7819,11 +7863,16 @@ Vue.component('validator-control', {
 			}
 
 			let content = utils.eval(row, col.content, col.dataType, col.evalOpts);
-			let spanProps = { 'class': { 'dg-cell': true, 'negative-red': isNegativeRed(col) } };
+			let spanProps = { 'class': { 'dg-cell': true, 'negative-red': isNegativeRed(col), 'line-clamp': col.lineClamp > 0 } };
 			if (col.maxChars) {
 				spanProps.attrs = { title: content };
 				content = utils.text.maxChars(content, col.maxChars);
 			}
+			else if (col.lineClamp > 0) {
+				spanProps.attrs = { title: content }
+				spanProps.style = { '-webkit-line-clamp': col.lineClamp };
+			}
+
 			let chElems = [h('span', spanProps, content)];
 			let icoSingle = !col.content ? ' ico-single' : '';
 			if (col.icon)
@@ -12925,7 +12974,7 @@ Vue.directive('resize', {
 
 // Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
-/*20240226-7961*/
+/*20240226-7963*/
 // controllers/base.js
 
 (function () {
@@ -12978,19 +13027,17 @@ Vue.directive('resize', {
 	}
 
 	function isPermissionsDisabled(opts, arg) {
-		if (opts && opts.checkPermission) {
-			if (arg.$permissions) {
-				let perm = arg.$permissions;
-				let prop = opts.checkPermission;
-				if (prop in perm) {
-					if (!perm[prop])
-						return true;
-				} else {
-					console.error(`invalid permssion name: '${prop}'`);
-				}
-			}
+		if (!arg || !opts || !opts.checkPermission) return false;
+
+		let prop = opts.checkPermission;
+		if (!utils.isDefined(arg.$permissions)) {
+			console.warn('[!!Permissions] not found');
+			return true;
 		}
-		return false;
+		let perm = arg.$permissions;
+		if (prop in perm)
+			return !perm[prop];
+		return true;
 	}
 
 	const base = Vue.extend({

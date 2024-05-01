@@ -9,7 +9,7 @@ public class IndexPage : UIElement, IRootContainer, IUriContext, ISupportPlatfor
 {
 	public String Source { get; set; } = String.Empty;
 
-	public DataColumnCollection Columns { get; set; } = new();
+	public DataColumnCollection Columns { get; set; } = [];
 	public Uri? BaseUri { get; set; }
 
 	private IPlatformUrl? PlatformUrl { get; set; }

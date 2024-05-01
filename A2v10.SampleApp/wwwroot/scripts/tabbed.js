@@ -81,8 +81,8 @@ app.modules['std:signalR'] = function () {
 		},
 		methods: {
 			async logout() {
-				await http.post('/account/logout2');
-				window.location.assign('/account/login');
+				let res = await http.post('/account/logout2');
+				window.location.assign(`/account/${res.showLogOut ? 'loggedout' : 'login'}`);
 			},
 			profile() {
 				eventBus.$emit('navigateto', { url: '/_profile/index/0'});
@@ -277,6 +277,7 @@ app.modules['std:signalR'] = function () {
 				this.navigatingUrl = to.url;
 				this.navigate({ url: to.url, title: '' });
 			},
+			dummy() {},
 			reloadApplication() {
 				window.location.reload();
 			},

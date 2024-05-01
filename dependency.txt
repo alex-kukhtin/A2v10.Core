@@ -1,13 +1,7 @@
-2024-04-25 (next: 8281)
+2024-04-25 (next: 8282)
 =======================
 A2v10.Platform
-A2v10.Platform.Web
 A2v10.ReportEngine.Pdf
-A2v10.ReportEngine.Excel
-A2v10.ReportEngine.Script
-A2v10.Services
-A2v10.Web.Assets
-A2v10.App.Assets
 A2v10.ViewEngine.Xaml
 
 

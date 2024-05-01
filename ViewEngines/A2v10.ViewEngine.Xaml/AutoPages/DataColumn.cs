@@ -23,7 +23,7 @@ public class DataColumn : UIElementBase
 		throw new NotImplementedException();
 	}
 
-	public DataGridColumn DataGridColumn => new DataGridColumn()
+	public DataGridColumn DataGridColumn => new()
 	{
 		Header = this.Header ?? $"@[{Data}]",
 		Fit = this.Fit,
