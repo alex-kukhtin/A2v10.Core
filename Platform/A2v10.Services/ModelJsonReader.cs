@@ -23,12 +23,12 @@ public class ModelJsonReader(IModelJsonPartProvider _partProvider, IAppRuntimeBu
 		{
 			Model = model
 		};
-		if (command == "fetch")
+		if (!String.IsNullOrEmpty(command))
 		{
 			ms.Commands.Add(command, new ModelJsonCommand()
 			{
 				Type = ModelCommandType.auto,
-				Procedure = "Fetch"
+				Procedure = command.ToPascalCase(),
 			});
 		}
 		else if (url.Kind == UrlKind.Page)

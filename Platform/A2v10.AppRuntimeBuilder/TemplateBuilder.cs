@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace A2v10.AppRuntimeBuilder;
 
@@ -44,6 +45,24 @@ internal static class TemplateBuilder
 		String ComputedText(String typeName, UiField f) =>
 			$$"""'{{typeName}}.{{f.Name}}'() { return {{f.Computed}}; }""";
 
+		List<String> commands = [];
+		StringBuilder functions = new StringBuilder();	
+		if (endpoint.EndpointType() == TableType.Document)
+		{
+			commands.Add("apply");
+			commands.Add("unapply");
+			functions.Append($$"""
+			async function apply() {
+				let ctrl = this.$ctrl;
+				await ctrl.$invoke('apply', {Id: this.{{table.ItemName()}}.Id}, '{{endpoint.Name}}');
+				ctrl.$requery();
+			}
+			function unapply() {
+				alert('unapply');
+			}
+			""");
+		}
+
 		IEnumerable<String> GetComputedFields()
 		{
 			foreach (var f in ui.Fields.Where(f => !String.IsNullOrEmpty(f.Computed)))
@@ -71,9 +90,14 @@ internal static class TemplateBuilder
 					{{templateProps}}
 				},
 				validators: {
-				{{validators}}
+					{{validators}}
+				},
+				commands: {
+					{{String.Join(",\n\t\t", commands)}}
 				}
 			};
+
+			{{functions}}
 
 			module.exports = template;            
 			""";

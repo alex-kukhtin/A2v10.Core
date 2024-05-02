@@ -8,9 +8,9 @@ namespace A2v10.AppRuntimeBuilder;
 
 public static class XamlHelper
 {
-    public static Button CreateButton(CommandType commandType, String? content = null, Icon icon = Icon.NoIcon)
+    public static Button CreateButton(CommandType commandType, String? content = null, Icon icon = Icon.NoIcon, Action<Button> onCreate = null)
     {
-        return new Button()
+        var btn = new Button()
         {
             Icon = icon,
             Content = content,
@@ -18,6 +18,8 @@ public static class XamlHelper
                 btn.SetBinding(nameof(Button.Command), new BindCmd() { Command = commandType });
             }
         };
+        onCreate?.Invoke(btn);
+        return btn;
     }
     public static Button CreateButton(CommandType commandType, Icon icon)
     {

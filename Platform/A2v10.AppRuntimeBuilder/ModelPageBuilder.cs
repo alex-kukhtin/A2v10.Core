@@ -478,6 +478,19 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 					XamlHelper.CreateButton(CommandType.SaveAndClose, "@[SaveAndClose]", Icon.SaveCloseOutline),
 					XamlHelper.CreateButton(CommandType.Save, "@[Save]", Icon.SaveOutline),
 					new Separator(),
+					new Button() {
+						Icon = Icon.Apply,
+						Content = "@[Apply]",
+						Bindings = b => {
+							var bindCmd = new BindCmd() {
+								Command = CommandType.Execute,
+								CommandName = "apply"
+							};
+							b.SetBinding(nameof(Button.Command), bindCmd);
+							b.SetBinding(nameof(Button.If), new Bind($"!{table.ItemName()}.Done"));
+						}
+					},
+					new Separator(),
 					XamlHelper.CreateButton(CommandType.Reload, Icon.Reload),
 					new ToolbarAligner(),
 					XamlHelper.CreateButton(CommandType.Close, Icon.Close)

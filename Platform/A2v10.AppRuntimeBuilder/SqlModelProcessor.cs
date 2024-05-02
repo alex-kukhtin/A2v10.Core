@@ -423,6 +423,16 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContex
 		});
 	}
 
+	private Task<IDataModel> ExecuteApply(EndpointDescriptor endpoint, ExpandoObject prms)
+	{
+		throw new NotImplementedException("Execute APPLY");
+	}
+
+	private Task<IDataModel> ExecuteUnApply(EndpointDescriptor endpoint, ExpandoObject prms)
+	{
+		throw new NotImplementedException("Execute APPLY");
+	}
+
 	private Task<IDataModel> ExecuteFetch(EndpointDescriptor endpoint, ExpandoObject prms)
 	{
 		var table = endpoint.BaseTable;
@@ -455,6 +465,8 @@ internal class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContex
 		return command switch
 		{
 			"[dbo].[Fetch]" => ExecuteFetch(endpoint, prms),
+			"[dbo].[Apply]" => ExecuteApply(endpoint, prms),
+			"[dbo].[Unapply]" => ExecuteUnApply(endpoint, prms),
 			_ => throw new NotImplementedException($"Command {command} yet not implemented")
 		};
 	}
