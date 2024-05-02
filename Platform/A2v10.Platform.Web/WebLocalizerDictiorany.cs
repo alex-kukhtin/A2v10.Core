@@ -1,4 +1,4 @@
-﻿// Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2021-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Concurrent;
@@ -100,7 +100,8 @@ public class WebLocalizerDictiorany(IWebHostFilesProvider hostFilesProvider, IAp
 				yield return new LocalePath(s, true);
 		}
 
-		foreach (var s in _appCodeProvider.EnumerateAllFiles(LocalizationPath, $"*.{locale}.txt"))
+		foreach (var s in _appCodeProvider.EnumerateAllFiles(LocalizationPath, $"*.{locale}.txt")
+				.OrderBy(f => f))
 			yield return new LocalePath(s, false);
 
 		// simple locale: uk
@@ -113,7 +114,8 @@ public class WebLocalizerDictiorany(IWebHostFilesProvider hostFilesProvider, IAp
 				foreach (var s in Directory.EnumerateFiles(dirPath, $"*.{locale}.txt"))
 					yield return new LocalePath(s, true);
 			}
-			foreach (var s in _appCodeProvider.EnumerateAllFiles(LocalizationPath, $"*.{locale}.txt"))
+			foreach (var s in _appCodeProvider.EnumerateAllFiles(LocalizationPath, $"*.{locale}.txt")
+				.OrderBy(f => f))
 				yield return new LocalePath(s, false);
 		}
 	}

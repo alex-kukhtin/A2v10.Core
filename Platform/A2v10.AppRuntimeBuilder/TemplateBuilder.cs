@@ -40,7 +40,7 @@ internal static class TemplateBuilder
 		var table = endpoint.BaseTable;
 
 		var rq = ui.Fields.Where(f => f.Required);
-		var validators = String.Join(",\n\t\t", rq.Select(f => $"'{table.ItemName()}.{f.Name}': '@[Error.Required]'"));
+		var validators = String.Join(",\n\t\t", rq.Select(f => $"'{table.ItemName()}.{f.Name}': `@[Error.Required]`"));
 
 		String ComputedText(String typeName, UiField f) =>
 			$$"""'{{typeName}}.{{f.Name}}'() { return {{f.Computed}}; }""";

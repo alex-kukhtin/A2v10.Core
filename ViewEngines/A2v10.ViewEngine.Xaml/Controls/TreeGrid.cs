@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
 
@@ -178,6 +178,7 @@ public class TreeGrid : Control, ITableControl
 		base.OnEndInit();
 		foreach (var col in Columns)
 			col.SetParent(this);
+		ContextMenu?.InvokeEndInit();
 	}
 
 	public override void OnSetStyles(RootContainer root)

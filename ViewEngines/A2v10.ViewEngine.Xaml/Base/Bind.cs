@@ -68,12 +68,12 @@ public partial class Bind : BindBase, ISupportInitialize
 		if (formatBind != null)
 			opts.Add($"format: {formatBind.GetPathFormat(context)},");
 		else if (!String.IsNullOrEmpty(Format))
-			opts.Add($"format: '{context.Localize(Format.ToJsString())}'");
+			opts.Add($"format: `{context.Localize(Format.ToJsString())}`");
 
 		if (maskBind != null)
 			opts.Add($"mask: {maskBind.GetPathFormat(context)}");
 		else if (!String.IsNullOrEmpty(Mask))
-			opts.Add($"mask: '{context.Localize(Mask.ToJsString())}'");
+			opts.Add($"mask: `{context.Localize(Mask.ToJsString())}`");
 
 		if (HideZeros)
 			opts.Add("hideZeros: true");

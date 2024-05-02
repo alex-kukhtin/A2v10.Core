@@ -105,6 +105,7 @@ internal static class XamlUIExtensions
             {
                 Label = field.RealTitle(),
                 Multiline = field.Multiline,
+                Rows = field.Multiline ? 3 : 1,
                 Align = field.TextAlign(),
                 Required = field.Required,
                 Disabled = !String.IsNullOrEmpty(field.Computed),

@@ -2,6 +2,7 @@
 =======================
 A2v10.Platform
 A2v10.ReportEngine.Pdf
+A2v10.Platform.Web
 A2v10.ViewEngine.Xaml
 A2v10.Services
 

@@ -205,7 +205,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 						Url = filter.RefUrl(),
 						ShowClear = true,
 						LineClamp = 2,
-						Placeholder = $"@[Filter.{filter.Name}].All",
+						Placeholder = $"@[Filter.{filter.Name}.All]",
 						Bindings = ss => 
 							ss.SetBinding(nameof(SelectorSimple.Value), new Bind($"Parent.Filter.{filter.Name}"))
 					});
@@ -219,10 +219,11 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
         var table = endpoint.BaseTable;
         var indexUi = endpoint.GetBrowseUI();
         var arrayName = endpoint.BaseTable.Name;
-
+		var editUrl = endpoint.EndpointType() == TableType.Catalog ? $"/catalog/{table.ItemName()}/edit" :
+				throw new InvalidOperationException("Invalid endpoint type");
 		var dlg = new Dialog()
 		{
-			Title = $"${table.ItemName()}.Browse",
+			Title = $"@[{table.ItemName()}.Browse]",
 			Width = Length.FromString("60rem"),
 			CollectionView = new CollectionView()
 			{
@@ -269,6 +270,23 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 								dblClick.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(table.Name));
 								dg.SetBinding(nameof(DataGrid.ItemsSource), new Bind("Parent.ItemsSource"));
 								dg.SetBinding(nameof(DataGrid.DoubleClick), dblClick);
+							},
+							ContextMenu = new DropDownMenu() {
+								Children = [
+									new MenuItem() {
+										Content = "@[Edit]",
+										Bindings = mi => {
+											var bindCmd = new BindCmd() {
+												Command = CommandType.Dialog,
+												Action = DialogAction.EditSelected,
+												Url = editUrl
+											};
+											bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(table.Name));
+											mi.SetBinding(nameof(MenuItem.Command), bindCmd);
+										}
+									},
+									new Separator()
+								]
 							}
                         },
 						new Pager() { Bindings = pgr => pgr.SetBinding(nameof(Pager.Source), new Bind("Parent.Pager"))},
@@ -563,7 +581,6 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 
 		var dlg = new Dialog()
 		{
-			Title = "From Page",
 			Overflow = true,
 			Buttons = [
 				new Button() {
@@ -580,7 +597,14 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 				new Grid(_xamlSericeProvider) {
 					Children = CreateDialogChildren()
 				}
-			]
+			],
+			Bindings = dlg =>
+			{
+				dlg.SetBinding(nameof(Dialog.Title), new Bind($"{table.ItemName()}.Id")
+				{
+					Format = $"@[{table.ItemName()}] [{{0}}]"
+				});
+			}
 		};
 		return dlg;
 	}

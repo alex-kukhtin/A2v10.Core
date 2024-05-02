@@ -222,6 +222,7 @@ public class DataGrid : Control
 		base.OnEndInit();
 		foreach (var col in Columns)
 			col.SetParent(this);
+		ContextMenu?.InvokeEndInit();
 	}
 
 	public override void OnSetStyles(RootContainer root)
