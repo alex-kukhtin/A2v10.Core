@@ -5,6 +5,9 @@
 15. Application.Title
 17. MetadataEditor - Menu
 20. Document.Date = default today
+21. Row. Required
+22. Row. Поиск по артикулу
+23. 
 
 Сценарий
 1. Ставим расширение из Visual Studio Extensions

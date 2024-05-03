@@ -31,12 +31,15 @@ internal static class XamlUIExtensions
     {
         if (field.Name == "RowNo")
             return Length.FromString("25px");
+        var fw = field.FieldWidth();
+        if (fw != null)
+            return fw;
         return field.BaseField?.Type switch
         {
             FieldType.Date => Length.FromString("10rem"),
             FieldType.Money or FieldType.Float => Length.FromString("6rem"),
             _ => null
-        }; ; ;
+        };
     }
 
     public static Boolean IsDatePicker(this UiField field)
@@ -82,15 +85,23 @@ internal static class XamlUIExtensions
     {
         var elemName = itemName != null ? $"{itemName}." : String.Empty;
         if (field.IsReference())
-            return new SelectorSimple()
-            {
-                Label = field.RealTitle(),
-                Url = field.RefUrl(),
-                Bindings = ss =>
+        {
+            if (field.IsSubField())
+                return new TextBox()
                 {
-                    ss.SetBinding(nameof(SelectorSimple.Value), new Bind($"{elemName}{field.Name}"));
-                }
-            };
+
+                };
+            else
+                return new SelectorSimple()
+                {
+                    Label = field.RealTitle(),
+                    Url = field.RefUrl(),
+                    Bindings = ss =>
+                    {
+                        ss.SetBinding(nameof(SelectorSimple.Value), new Bind($"{elemName}{field.Name}"));
+                    }
+                };
+        }
         else if (field.IsDatePicker())
             return new DatePicker()
             {
@@ -118,18 +129,36 @@ internal static class XamlUIExtensions
             };
     }
 
+    public static Length? FieldWidth(this UiField field)
+    {
+        return String.IsNullOrEmpty(field.Width) ? null : Length.FromString(field.Width);    
+    }
     public static UIElement EditCellField(this UiField field, String? itemName = null)
     {
         var elemName = itemName != null ? $"{itemName}." : String.Empty;
         if (field.IsReference())
-            return new SelectorSimple()
-            {
-                Url = field.RefUrl(),
-                Bindings = ss =>
+        {
+            if (field.IsSubField())
+                return new TextBox()
                 {
-                    ss.SetBinding(nameof(SelectorSimple.Value), new Bind($"{elemName}{field.Name}"));
-                }
-            };
+                    Width = field.FieldWidth(),
+					Bindings = ss =>
+					{
+						ss.SetBinding(nameof(TextBox.Value), new Bind($"{elemName}{field.Name}"));
+					}
+				};
+            else
+                return new SelectorSimple()
+                {
+                    Url = field.RefUrl(),
+                    DisplayProperty = field.Display,
+                    Width = field.FieldWidth(),
+                    Bindings = ss =>
+                    {
+                        ss.SetBinding(nameof(SelectorSimple.Value), new Bind($"{elemName}{field.Name}"));
+                    }
+                };
+        }
         else if (field.IsDatePicker())
             return new DatePicker()
             {

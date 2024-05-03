@@ -30,10 +30,15 @@ internal static class TableExtensions
 
     public static RuntimeField FindField(this RuntimeTable table, String name)
 	{
+		if (name.Contains('.'))
+		{
+			var ns = name.Split('.');
+			name = ns[0];
+		}
 		return table.RealFields().First(f => f.Name == name);
 	}
 
-    public static String ParentTableName(this RuntimeTable table)
+	public static String ParentTableName(this RuntimeTable table)
     {
         return table.DetailsParent.Name.Singular();
     }

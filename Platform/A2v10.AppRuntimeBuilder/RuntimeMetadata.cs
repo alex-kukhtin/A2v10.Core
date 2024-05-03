@@ -69,6 +69,7 @@ public record UiField
 	public String? Computed { get; set; }
 	public Boolean Filter { get; set; }
 	public Boolean Total { get; set; }
+	public String? Width { get; set; }
 
 	public RuntimeField? BaseField { get; set; }
 	public RuntimeTable? RefTable { get; set; }
@@ -77,7 +78,7 @@ public record BaseUiElement
 {
 	public List<UiField> Fields { get; init; } = [];
 	public EndpointDescriptor? Endpoint { get; private set; }	
-    public void SetParent(EndpointDescriptor endpoint)
+    public virtual void SetParent(EndpointDescriptor endpoint)
 	{
 		Endpoint = endpoint;
 		foreach (var field in Fields)
@@ -121,6 +122,20 @@ public record EditUiElement : BaseUiElement
         }
     }
 
+	public override void SetParent(EndpointDescriptor endpoint)
+	{
+		base.SetParent(endpoint);
+		if (Details == null)
+			return;
+		foreach (var detalils in Details)
+		{
+			if (detalils.Name == null)
+				throw new InvalidOperationException("Details Name is null");
+			var baseTable = endpoint.BaseTable.Details?.FirstOrDefault(x => x.Name == detalils.Name)
+					?? throw new InvalidOperationException("Base table not found");
+			detalils.SetParentTable(baseTable, endpoint);
+		}
+	}
 }
 
 public record UIDescriptor
@@ -147,6 +162,7 @@ public record EndpointDescriptor
 {
 	public EndpointEdit Edit { get; init; }
 	public String Name { get; init; } = String.Empty;
+	public String Title { get; init; } = String.Empty;
 	public String Table { get; init; } = String.Empty;
 	public RuntimeTable BaseTable { get; set; } = new();
 	public UIDescriptor UI { get; set; } = new();

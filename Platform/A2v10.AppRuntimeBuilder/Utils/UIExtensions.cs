@@ -29,14 +29,22 @@ internal static class UIExtensions
 	}
     public static String RealTitle(this UiField field)
 	{
-		if (String.IsNullOrEmpty(field.Title))
-			return $"@[{field.Name}]";
-		return field.Title;
+		if (!String.IsNullOrEmpty(field.Title))
+			return field.Title;
+		if (field.Name.Contains('.'))
+		{
+			return $"@[{field.Name.Split('.')[1]}]";
+		}
+		return $"@[{field.Name}]";
 	}
 
 	public static Boolean IsReference(this UiField field)
 	{
 		return field.BaseField?.Ref != null;
+	}
+	public static Boolean IsSubField(this UiField field)
+	{
+		return field.Name.Contains('.');
 	}
 	public static Boolean IsPeriod(this UiField field)
 	{

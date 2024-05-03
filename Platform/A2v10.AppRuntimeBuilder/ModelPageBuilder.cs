@@ -379,7 +379,10 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 		{
 			TableColumnCollection tc = [];
 			foreach (var elem in uiElement.Fields)
-				tc.Add(new TableColumn() { Width = elem.XamlColumnWidth()});
+				tc.Add(new TableColumn() { 
+					Width = elem.XamlColumnWidth(),
+					Fit = elem.Fit
+				});
 			tc.Add(new TableColumn() { Fit = true });
             return tc;
 		}
@@ -394,6 +397,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 					Children = [
 						new Button() {
 							Icon= Icon.Plus,
+							Content = "@[AddRow]",
 							Bindings = btn => {
 								var bindCmd = new BindCmd() {
 									Command = CommandType.Append,
@@ -439,7 +443,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 		UIElementCollection TitleFields()
 		{
 			UIElementCollection coll = [
-				new Header() { Content = "TITLE_HERE" }
+				new Header() { Content = endpoint.RealName() }
 			];
 			var number = uiElement.Fields.FirstOrDefault(f => f.Name == "Number");
 			if (number != null)
