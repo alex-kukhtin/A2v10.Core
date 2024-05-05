@@ -5,6 +5,7 @@ A2v10.ReportEngine.Pdf
 A2v10.Platform.Web
 A2v10.ViewEngine.Xaml
 A2v10.Services
+A2v10.Infrastructure
 
 
 A2v10.Platform

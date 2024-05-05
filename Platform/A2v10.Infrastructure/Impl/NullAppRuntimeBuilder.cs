@@ -26,4 +26,14 @@ public class NullAppRuntimeBuilder : IAppRuntimeBuilder
 	{
 		throw new NotImplementedException(THROW_MESSAGE);
 	}
+
+	public Task DbRemoveAsync(IPlatformUrl platformUrl, IModelView view, String? propName, ExpandoObject execPrms)
+	{
+		throw new NotImplementedException(THROW_MESSAGE);
+	}
+
+	public Task<IDataModel> ExpandAsync(IPlatformUrl platformUrl, IModelView view, ExpandoObject execPrms)
+	{
+		throw new NotImplementedException(THROW_MESSAGE);
+	}
 }

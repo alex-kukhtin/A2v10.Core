@@ -8,7 +8,7 @@ namespace A2v10.AppRuntimeBuilder;
 
 public static class XamlHelper
 {
-    public static Button CreateButton(CommandType commandType, String? content = null, Icon icon = Icon.NoIcon, Action<Button> onCreate = null)
+    public static Button CreateButton(CommandType commandType, String? content = null, Icon icon = Icon.NoIcon, Action<Button>? onCreate = null)
     {
         var btn = new Button()
         {

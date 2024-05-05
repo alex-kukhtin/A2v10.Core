@@ -47,4 +47,15 @@ public class AppRuntimeBuilder(IServiceProvider _serviceProvider,
 		var endpoint = await GetEndpoint(command);
 		return await _dbProcessor.ExecuteCommandAsync(command.LoadProcedure(), endpoint, parameters);
 	}
+
+	public async Task DbRemoveAsync(IPlatformUrl platformUrl, IModelView view, String? propName, ExpandoObject execPrms)
+	{
+		var endpoint = await GetEndpoint(view);
+		await _dbProcessor.DbRemoveAsync(propName, endpoint, execPrms);
+	}
+
+	public Task<IDataModel> ExpandAsync(IPlatformUrl platformUrl, IModelView view, ExpandoObject execPrms)
+	{
+		throw new NotImplementedException("AppRuntimeBuilder.ExpandAsync yet not implemented");
+	}
 }

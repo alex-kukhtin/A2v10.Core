@@ -46,7 +46,7 @@ internal static class TemplateBuilder
 			$$"""'{{typeName}}.{{f.Name}}'() { return {{f.Computed}}; }""";
 
 		List<String> commands = [];
-		StringBuilder functions = new StringBuilder();	
+		StringBuilder functions = new();	
 		if (endpoint.EndpointType() == TableType.Document)
 		{
 			commands.Add("apply");

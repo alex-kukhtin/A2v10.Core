@@ -164,6 +164,17 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 										btn.SetBinding(nameof(Button.Command), EditCommand());
 									}
 								},
+								new Button() {
+									Icon=Icon.Delete,
+									Bindings = b => {
+										var bindCmd = new BindCmd() {
+											Command = CommandType.DbRemoveSelected,
+											Confirm = new Confirm() {Message = "@[Confirm.Delete.Element]" }
+										};
+										bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(arrayName));
+										b.SetBinding(nameof(Button.Command), bindCmd);
+									}
+								},
 								new Separator(),
 								XamlHelper.CreateButton(CommandType.Reload, Icon.Reload),
 								new ToolbarAligner(),

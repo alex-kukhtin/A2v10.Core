@@ -4,12 +4,12 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Dynamic;
-
+using System.Linq;
 using A2v10.Infrastructure;
 
 namespace A2v10.AppRuntimeBuilder;
 
-internal class TableTypeBuilder
+internal class DataTableBuilder
 {
 	public static DataTable BuildDataTable(RuntimeTable table, ExpandoObject? data)
 	{
@@ -40,7 +40,7 @@ internal class TableTypeBuilder
         var dtable = new DataTable();
 
         List<DataColumn> columns = [];
-        foreach (var f in table.RealFields())
+        foreach (var f in table.RealFields().Where(f => f.Name != "Void"))
         {
             if (skipParent && f.Type == FieldType.Parent)
                 continue;

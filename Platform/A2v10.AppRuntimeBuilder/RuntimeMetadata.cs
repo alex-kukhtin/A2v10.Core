@@ -1,5 +1,6 @@
 ﻿// Copyright © 2022-2024 Oleksandr Kukhtin. All rights reserved.
 
+using A2v10.Xaml;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -70,7 +71,7 @@ public record UiField
 	public Boolean Filter { get; set; }
 	public Boolean Total { get; set; }
 	public String? Width { get; set; }
-
+	public TextAlign Align { get; set; }
 	public RuntimeField? BaseField { get; set; }
 	public RuntimeTable? RefTable { get; set; }
 }

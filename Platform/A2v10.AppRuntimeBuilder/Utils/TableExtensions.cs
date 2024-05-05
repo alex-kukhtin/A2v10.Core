@@ -49,6 +49,7 @@ internal static class TableExtensions
 		{
 			TableType.Catalog => [
 				new RuntimeField() { Name = "Id", Type = FieldType.Id },
+				new RuntimeField() { Name = "Void", Type = FieldType.Boolean },
 				new RuntimeField() { Name = "Name", Type = FieldType.String, Length = 255 },
 				new RuntimeField() { Name = "Memo", Type = FieldType.String, Length = 255 }
 			],
@@ -66,6 +67,10 @@ internal static class TableExtensions
                 new RuntimeField() { Name = table.ParentTableName(), Type = FieldType.Parent },
                 new RuntimeField() { Name = "Memo", Type = FieldType.String, Length = 255 }
             ],
+			TableType.Journal => [
+				new RuntimeField() { Name = "Id", Type = FieldType.Id },
+				new RuntimeField() { Name = "Date", Type = FieldType.Date },
+			],
             _ => throw new NotImplementedException()
 		};
 	}

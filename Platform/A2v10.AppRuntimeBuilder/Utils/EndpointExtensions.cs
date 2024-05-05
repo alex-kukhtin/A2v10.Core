@@ -12,6 +12,6 @@ internal static class EndpointExtensions
 		if (!String.IsNullOrEmpty(endpoint.Title))
 			return endpoint.Title;
 		var spl = endpoint.Name.Split('/');
-		return $"@[{spl[spl.Length - 1].ToPascalCase()}]";
+		return $"@[{spl[^1].ToPascalCase()}]";
 	}
 }

@@ -256,7 +256,12 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 		var execPrms = view.CreateParameters(platformBaseUrl, Id, setParams);
 		execPrms.SetNotNull("Id", Id);
 
-		var model = await _dbContext.LoadModelAsync(view.DataSource, expandProc, execPrms);
+		IDataModel? model;
+		if (view.ModelAuto != null)
+			model = await _appRuntimeBuilder.ExpandAsync(platformBaseUrl, view, execPrms);
+		else
+			model = await _dbContext.LoadModelAsync(view.DataSource, expandProc, execPrms);
+
 		return JsonConvert.SerializeObject(model.Root, JsonHelpers.DataSerializerSettings);
 	}
 
@@ -264,12 +269,16 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 	{
 		var platformBaseUrl = CreatePlatformUrl(baseUrl);
 		var view = await LoadViewAsync(platformBaseUrl);
-		var deleteProc = view.DeleteProcedure(propertyName);
 
 		var execPrms = view.CreateParameters(platformBaseUrl, Id, setParams);
 		execPrms.SetNotNull("Id", Id);
 
-		await _dbContext.ExecuteExpandoAsync(view.DataSource, deleteProc, execPrms);
+		var deleteProc = view.DeleteProcedure(propertyName);
+
+		if (view.ModelAuto != null)
+			await _appRuntimeBuilder.DbRemoveAsync(platformBaseUrl, view, propertyName, execPrms);
+		else
+			await _dbContext.ExecuteExpandoAsync(view.DataSource, deleteProc, execPrms);
 	}
 
 	public async Task<String> ReloadAsync(String baseUrl, Action<ExpandoObject> setParams)

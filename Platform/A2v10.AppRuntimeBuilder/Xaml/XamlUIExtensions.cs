@@ -13,7 +13,8 @@ internal static class XamlUIExtensions
     public const Int32 COLUMN_MAX_CHARS = 50;
     public static String BindName(this UiField field)
     {
-        if (!String.IsNullOrEmpty(field.BaseField?.Ref))
+        if (!String.IsNullOrEmpty(field.BaseField?.Ref) && !String.IsNullOrEmpty(field.Display) 
+               && !field.Name.Contains('.'))
             return $"{field.Name}.{field.Display ?? "Name"}";
         return field.Name;
     }
@@ -48,6 +49,8 @@ internal static class XamlUIExtensions
     }
     public static TextAlign TextAlign(this UiField field)
     {
+        if (field.Align != Xaml.TextAlign.Default)
+            return field.Align;
         if (field.IsReference())
             return Xaml.TextAlign.Default;
         return field.BaseField?.Type switch
