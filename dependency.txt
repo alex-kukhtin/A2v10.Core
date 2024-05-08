@@ -1,16 +1,8 @@
-2024-04-25 (next: 8282)
+2024-05-08 (next: 8283)
 =======================
-A2v10.Platform
-A2v10.ReportEngine.Pdf
-A2v10.Platform.Web
-A2v10.ViewEngine.Xaml
-A2v10.Services
-A2v10.Infrastructure
 
 
 A2v10.Platform
-	A2v10.AppRuntimeBuilder
-		A2v10.ViewEngine.Xaml
 	A2v10.Platform.Web
 		A2v10.Identity.Core
 		A2v10.Infrastructure
@@ -43,6 +35,10 @@ A2v10.Identity.Jwt
 A2v10.Scheduling.Commands
 	A2v10.Infrastructure
 	A2v10.Scheduling.Infrastructure
+
+A2v10.AppRuntimeBuilder
+	A2v10.ViewEngine.Xaml
+	A2v10.Infrastructure
 
 A2v10.Web.Assets
 A2v10.App.Assets

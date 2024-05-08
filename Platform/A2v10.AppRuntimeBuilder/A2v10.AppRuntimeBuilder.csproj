@@ -19,6 +19,13 @@
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
 
+	<PropertyGroup>
+		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<ProjectReference Include="..\..\ViewEngines\A2v10.ViewEngine.Xaml\A2v10.ViewEngine.Xaml.csproj" />
 		<ProjectReference Include="..\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
@@ -27,6 +34,7 @@
 	<ItemGroup>
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="A2v10.Data.Core" Version="10.1.7358" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
 	</ItemGroup>
 
 	<ItemGroup>
