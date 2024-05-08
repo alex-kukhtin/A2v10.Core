@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
 
@@ -19,6 +19,7 @@ public class DatePicker : ValuedControl, ITableControl
 
 	public String? YearCutOff { get; set; }
 
+	public Boolean ShowClear { get; set; }
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
 		if (CheckDisabledModel(context))
@@ -29,6 +30,8 @@ public class DatePicker : ValuedControl, ITableControl
 		MergeDisabled(input, context);
 		MergeAlign(input, context, Align);
 		input.MergeAttribute("year-cut-off", YearCutOff);
+		if (ShowClear)
+			input.MergeAttribute(":has-clear", "true");
 		SetSize(input, nameof(DatePicker));
 		if (Placement != DropDownPlacement.BottomLeft)
 			input.AddCssClass("drop-" + Placement.ToString().ToKebabCase());
