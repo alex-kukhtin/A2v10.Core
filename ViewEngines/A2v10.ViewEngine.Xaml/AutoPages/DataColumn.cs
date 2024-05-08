@@ -16,6 +16,7 @@ public class DataColumn : UIElementBase
 	public Boolean? Sort { get; set; }
 	public ColumnRole Role { get; set; }	
 	public Int32 MaxChars { get; set; }
+	public Int32 LineClamp { get; set; }
 	public String? Header { get; set; }	
 
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
@@ -28,6 +29,7 @@ public class DataColumn : UIElementBase
 		Header = this.Header ?? $"@[{Data}]",
 		Fit = this.Fit,
 		MaxChars = this.MaxChars,
+		LineClamp = this.LineClamp,
 		Sort = this.Sort,
 		Role = this.Role,
 		Wrap = this.Fit ? WrapMode.NoWrap : this.Wrap,
