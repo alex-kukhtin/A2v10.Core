@@ -70,7 +70,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 		var arrayName = endpoint.BaseTable.Name;
 		var indexUi = endpoint.GetIndexUI();
 		var editMode = endpoint.EditMode();
-		var filters = indexUi.Fields.Where(f => f.Filter);
+		var filters = indexUi.Fields.Where(f => f.Filter && !f.Name.Contains('.'));
 
 		BindCmd EditCommand()
 		{
@@ -160,12 +160,14 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 								},
 								new Button() {
 									Icon=Icon.Edit,
+									Tip = "@[Edit]",
 									Bindings = (btn) => {
 										btn.SetBinding(nameof(Button.Command), EditCommand());
 									}
 								},
 								new Button() {
 									Icon=Icon.Delete,
+									Tip = "@[Delete]",
 									Bindings = b => {
 										var bindCmd = new BindCmd() {
 											Command = CommandType.DbRemoveSelected,
@@ -176,7 +178,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 									}
 								},
 								new Separator(),
-								XamlHelper.CreateButton(CommandType.Reload, Icon.Reload),
+								XamlHelper.CreateButton(CommandType.Reload, Icon.Reload, "@[Reload]"),
 								new ToolbarAligner(),
 								XamlHelper.CreateSearchBox()
 							]
@@ -521,6 +523,18 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 							};
 							b.SetBinding(nameof(Button.Command), bindCmd);
 							b.SetBinding(nameof(Button.If), new Bind($"!{table.ItemName()}.Done"));
+						}
+					},
+					new Button() {
+						Icon = Icon.Unapply,
+						Content = "@[UnApply]",
+						Bindings = b => {
+							var bindCmd = new BindCmd() {
+								Command = CommandType.Execute,
+								CommandName = "unapply"
+							};
+							b.SetBinding(nameof(Button.Command), bindCmd);
+							b.SetBinding(nameof(Button.If), new Bind($"{table.ItemName()}.Done"));
 						}
 					},
 					new Separator(),

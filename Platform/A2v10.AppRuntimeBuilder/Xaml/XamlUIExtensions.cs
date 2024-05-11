@@ -1,4 +1,4 @@
-﻿// Copyright © 2022-2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Data;
@@ -13,9 +13,12 @@ internal static class XamlUIExtensions
     public const Int32 COLUMN_MAX_CHARS = 50;
     public static String BindName(this UiField field)
     {
-        if (!String.IsNullOrEmpty(field.BaseField?.Ref) && !String.IsNullOrEmpty(field.Display) 
-               && !field.Name.Contains('.'))
+        if (!String.IsNullOrEmpty(field.BaseField?.Ref))
+        {
+            if (field.Name.Contains('.'))
+                return field.Name;
             return $"{field.Name}.{field.Display ?? "Name"}";
+        }
         return field.Name;
     }
     public static DataType XamlDataType(this UiField field)
@@ -123,6 +126,7 @@ internal static class XamlUIExtensions
                 Align = field.TextAlign(),
                 Required = field.Required,
                 Disabled = !String.IsNullOrEmpty(field.Computed),
+                TabIndex = field.Name == "Name" ? 1 : 0,
                 Bindings = (txt) =>
                 {
                     txt.SetBinding(

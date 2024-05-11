@@ -51,14 +51,17 @@ internal static class TemplateBuilder
 		{
 			commands.Add("apply");
 			commands.Add("unapply");
+
 			functions.Append($$"""
 			async function apply() {
 				let ctrl = this.$ctrl;
 				await ctrl.$invoke('apply', {Id: this.{{table.ItemName()}}.Id}, '{{endpoint.Name}}');
 				ctrl.$requery();
 			}
-			function unapply() {
-				alert('unapply');
+			async function unapply() {
+				let ctrl = this.$ctrl;
+				await ctrl.$invoke('unapply', {Id: this.{{table.ItemName()}}.Id}, '{{endpoint.Name}}');
+				ctrl.$requery();
 			}
 			""");
 		}

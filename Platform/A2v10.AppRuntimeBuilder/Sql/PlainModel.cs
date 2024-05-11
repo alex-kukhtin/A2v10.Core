@@ -5,13 +5,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Data;
+using System.Dynamic;
+
+using Microsoft.Data.SqlClient;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Data.Core;
-using Microsoft.Data.SqlClient;
-using System.Data;
-using System.Dynamic;
 
 namespace A2v10.AppRuntimeBuilder;
 
@@ -44,7 +45,7 @@ internal partial class SqlModelProcessor
 			if (!fullFieldsMap.Any())
 				return String.Empty;
 			return $"""
-			declare @map table(Id bigint, {String.Join(',', fullFieldsMap.Select(f => $"{f.MapName()} bigint"))});
+			declare @map table(Id bigint, {String.Join(',', fullFieldsMap.Select(f => $"[{f.Name}] bigint"))});
 			""";
 		}
 
@@ -53,8 +54,8 @@ internal partial class SqlModelProcessor
 			if (!refFieldsMap.Any())
 				return String.Empty;
 			return $"""
-			insert into @map(Id, {String.Join(',', refFieldsMap.Select(f => f.MapName()))})
-			select a.Id, {String.Join(',', refFieldsMap.Select(f => $"a.{f.Name}"))} 
+			insert into @map(Id, {String.Join(',', refFieldsMap.Select(f => $"[{f.Name}]"))})
+			select a.Id, {String.Join(',', refFieldsMap.Select(f => $"a.[{f.Name}]"))} 
 			from {table.SqlTableName()} a where a.Id = @Id;
 			""";
 		}
@@ -72,7 +73,7 @@ internal partial class SqlModelProcessor
 				var parentField = details.RealFields().FirstOrDefault(f => f.Type == FieldType.Parent)
 					?? throw new InvalidOperationException("Parent field not found");
 				sb.AppendLine($"""
-				insert into @map({String.Join(',', fieldMap.Select(f => f.MapName()))})
+				insert into @map({String.Join(',', fieldMap.Select(f => $"[{f.Name}]"))})
 				select {String.Join(',', fieldMap.Select(f => $"a.[{f.Name}]"))}
 				from {details.SqlTableName()} a where a.[{parentField.Name}] = @Id;
 				""");
@@ -110,6 +111,16 @@ internal partial class SqlModelProcessor
 			return sb.ToString();
 		}
 
+		String SystemRecordset()
+		{
+			if (table.Schema == "doc")
+				return $"""
+				select [!$System!] = null, [!!ReadOnly] = d.Done
+				from {table.SqlTableName()} d where Id = @Id;
+				""";
+			return String.Empty;
+		}
+
 		return $"""
 		select [{table.ItemName()}!{table.TypeName()}!Object] = null, 
 			{String.Join(',', table.RealFields().Select(f => $"{f.SelectSqlField("a", table)}"))}
@@ -122,6 +133,8 @@ internal partial class SqlModelProcessor
 
 		{InsertMapDetails()}
 		{MapsData(fullFieldsMap, table, "@map")}
+
+		{SystemRecordset()}
 		""";
 	}
 	private Task<IDataModel> LoadPlainModelAsync(IPlatformUrl platformUrl, RuntimeTable table)

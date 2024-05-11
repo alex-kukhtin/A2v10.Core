@@ -1,5 +1,9 @@
-2024-05-08 (next: 8283)
+2024-05-08 (next: 8284)
 =======================
+A2v10.Web.Assets
+A2v10.AppRuntimeBuilder
+A2v10.Platform
+A2v10.Services
 
 
 A2v10.Platform

@@ -18,7 +18,7 @@ internal static class DefaultUI
 			{
 				Sort = new SortElement() { Order = "Name", Dir = SortDir.Asc },
 				Fields = [
-					new UiField() {Name = "Id", Sort = true },
+					new UiField() {Name = "Id", Sort = true, Search = SearchType.Exact },
 					new UiField() {Name = "Name", Sort = true, Search = SearchType.Like, LineClamp = 2 }
 				]
 			},
@@ -44,7 +44,7 @@ internal static class DefaultUI
 				Search = f.Type.Searchable() ? SearchType.Like : SearchType.None,
 				LineClamp = f.HasLineClamp() ? 2 : 0,
 				BaseField = f,
-				Fit = f.RealLength() <= 32,
+				Fit = f.RealLength() <= Constants.FitThreshold,
 				Filter = f.Ref != null
 			});
 		}

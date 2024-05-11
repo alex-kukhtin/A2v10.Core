@@ -1,10 +1,10 @@
 ﻿// Copyright © 2022-2024 Oleksandr Kukhtin. All rights reserved.
 
-using Microsoft.Extensions.DependencyInjection;
 
 using A2v10.Infrastructure;
+using A2v10.AppRuntimeBuilder;
 
-namespace A2v10.AppRuntimeBuilder;
+namespace Microsoft.Extensions.DependencyInjection;
 
 public static class ServicesExtensions
 {

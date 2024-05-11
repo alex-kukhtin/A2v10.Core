@@ -40,15 +40,15 @@ internal partial class SqlModelProcessor
 
 		var refFields = table.Fields.Where(f => f.Ref != null);
 
-		var filters = indexUi.Fields.Where(f => f.Filter);
+		var filters = indexUi.Fields.Where(f => f.Filter && !f.Name.Contains('.'));
 		var hasPeriod = filters.Any(f => f.IsPeriod());
 		filters = filters.Where(f => !f.IsPeriod()); // exclude period
 
 		String RefTableFields() =>
-			String.Join(' ', refFields.Select(rf => $"[{rf.MapName()}] bigint,"));
+			String.Join(' ', refFields.Select(rf => $"[{rf.Name}] bigint,"));
 
 		String RefInsertFields() =>
-			String.Join(' ', refFields.Select(rf => $"[{rf.MapName()}],"));
+			String.Join(' ', refFields.Select(rf => $"[{rf.Name}],"));
 
 		String SelectFieldsAll(RuntimeTable table, String alias) =>
 			String.Join(' ', table.RealFields().Select(f => $"{f.SelectSqlField(alias, table)},"));
@@ -66,19 +66,19 @@ internal partial class SqlModelProcessor
 			if (!filters.Any())
 				return String.Empty;
 			return $""""
-			insert into @tmp({String.Join(',', filters.Select(f => $"{f.BaseField?.MapName()}"))}) values
+			insert into @tmp({String.Join(',', filters.Select(f => $"[{f.Name}]"))}) values
 			({String.Join(',', filters.Select(f => $"@{f.Name}"))});
 			"""";
 		}
 
 		String ParametersCondition()
 		{
+			var hasVoid = indexUi.Endpoint.EndpointType() == TableType.Catalog;
 			if (indexUi.Endpoint.Parameters == null)
-				return String.Empty;
-			var str = String.Join(" and ", indexUi.Endpoint.Parameters.Select(p => $"a.[{p.Key}] = N'{p.Value}'"));
-			if (str.Length > 0)
-				return $"and {str}";
-			return String.Empty;
+				return hasVoid ? "a.Void = 0" : String.Empty;
+			var prms = indexUi.Endpoint.Parameters.Select(p => $"a.[{p.Key}] = @{p.Key}");
+			var cond = hasVoid ? (new String[] { "a.Void = 0" }).Union(prms) : prms;
+			return String.Join(" and ", cond);
 		}
 
 		String WhereCondition()
@@ -119,7 +119,7 @@ internal partial class SqlModelProcessor
 		insert into @tmp(Id, {RefInsertFields()} rowcnt)
 		select a.Id, {RefInsertFields()} count(*) over() 
 		from {table.SqlTableName()} a
-		where a.Void = 0 {ParametersCondition()} {PeriodWhere()} {WhereCondition()}
+		where {ParametersCondition()} {PeriodWhere()} {WhereCondition()}
 		order by
 			a.[{table.RealFields().FirstOrDefault(f => f.Name.Equals(order, StringComparison.OrdinalIgnoreCase))?.Name}] {dir}
 		offset @Offset rows fetch next @PageSize rows only option (recompile);
@@ -152,6 +152,11 @@ internal partial class SqlModelProcessor
 			dbprms.AddString("@Order", order);
 			dbprms.AddString("@Dir", dir);
 			dbprms.AddString("@Fragment", fragment);
+
+			if (indexUi.Endpoint.Parameters != null)
+				foreach (var eprm in indexUi.Endpoint.Parameters)
+					dbprms.AddString($"@{eprm.Key}", eprm.Value);
+
 			if (hasPeriod)
 			{
 				dbprms.Add(new SqlParameter("@From", SqlDbType.Date) { Value = GetDateParameter(qry, "From") });

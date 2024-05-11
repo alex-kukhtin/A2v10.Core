@@ -21,11 +21,12 @@ public static class XamlHelper
         onCreate?.Invoke(btn);
         return btn;
     }
-    public static Button CreateButton(CommandType commandType, Icon icon)
+    public static Button CreateButton(CommandType commandType, Icon icon, String? Tip = null)
     {
         return new Button()
         {
             Icon = icon,
+            Tip = Tip,
             Bindings = btn => {
                 btn.SetBinding(nameof(Button.Command), new BindCmd() { Command = commandType });
             }

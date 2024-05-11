@@ -101,7 +101,7 @@ public record IndexUiElement : BaseUiElement
 
 	internal String SortDirection()
 	{
-		return Sort?.Dir.ToString().ToUpperInvariant() ?? "asc";
+		return Sort?.Dir.ToString().ToLowerInvariant() ?? "asc";
 	}
 }
 
@@ -153,6 +153,14 @@ public record UIDescriptor
 	}
 }
 
+public record ApplyDescriptor
+{
+	public String Journal { get; init; } = String.Empty;
+	public Boolean In { get; init; }
+	public Boolean Out { get; init; }
+	public String Source { get; init; } = String.Empty;
+}
+
 public enum EndpointEdit
 {
 	Auto,
@@ -169,6 +177,7 @@ public record EndpointDescriptor
 	public UIDescriptor UI { get; set; } = new();
 	public RuntimeMetadata? Metadata { get; set; }
 	public Dictionary<String, String>? Parameters { get; init; }
+	public List<ApplyDescriptor> Apply { get; init; } = [];
 
 	public void SetParent(RuntimeMetadata metadata)
 	{

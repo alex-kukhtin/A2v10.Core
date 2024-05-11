@@ -42,10 +42,10 @@ internal partial class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _
         {
             var rtable = table.FindTable(rf.Ref!);
             sb.AppendLine($"""
-				with TM as (select [{rf.MapName()}] from {tmpTable} where [{rf.MapName()}] is not null group by [{rf.MapName()}])
+				with TM as (select [{rf.Name}] from {tmpTable} where [{rf.Name}] is not null group by [{rf.Name}])
 				select [!{rtable.TypeName()}!Map] = null, 
 					{SelectFieldsMap(rtable, "m")}
-				from TM inner join {rtable.SqlTableName()} m on TM.[{rf.MapName()}] = m.Id;
+				from TM inner join {rtable.SqlTableName()} m on TM.[{rf.Name}] = m.Id;
 				""");
 			sb.AppendLine();
         }
@@ -65,17 +65,6 @@ internal partial class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _
 			return DateTime.ParseExact(strVal, "yyyyMMdd", CultureInfo.InvariantCulture);
 		throw new InvalidExpressionException($"Invalid Date Parameter value: {val}");
 	}
-
-	private Task<IDataModel> ExecuteApply(EndpointDescriptor endpoint, ExpandoObject prms)
-	{
-		throw new NotImplementedException("Execute APPLY");
-	}
-
-	private Task<IDataModel> ExecuteUnApply(EndpointDescriptor endpoint, ExpandoObject prms)
-	{
-		throw new NotImplementedException("Execute APPLY");
-	}
-
 	private Task<IDataModel> ExecuteFetch(EndpointDescriptor endpoint, ExpandoObject prms)
 	{
 		var table = endpoint.BaseTable;
