@@ -97,14 +97,17 @@ internal static class UIExtensions
     }
 
 
-    public static EditUiElement GetEditUI(this EndpointDescriptor endpoint) 
-	{ 
+	public static EditUiElement GetEditUI(this EndpointDescriptor endpoint)
+	{
 		var editElem = endpoint.UI.Edit;
-		if (editElem != null)
-			return editElem;
-        editElem = endpoint.DefaultEditUiElement();
-        editElem.SetParent(endpoint);
-        endpoint.UI.Edit = editElem;
-        return editElem;
-    }
+		if (editElem == null)
+			editElem = endpoint.DefaultEditUiElement();
+		else if (editElem.Fields == null || editElem.Fields.Count == 0)
+			editElem = endpoint.DefaultEditUiElement(editElem);
+		else
+			endpoint.CheckDefaultDetails(editElem);
+		editElem.SetParent(endpoint);
+		endpoint.UI.Edit = editElem;
+		return editElem;
+	}
 }

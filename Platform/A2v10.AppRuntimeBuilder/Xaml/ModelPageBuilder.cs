@@ -317,8 +317,8 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 			TableCellCollection coll = [
 				new TableCell()
 				{
-						Wrap = WrapMode.NoWrap,
-						Bindings = tc => tc.SetBinding(nameof(TableCell.Content), new Bind("RowNo"))
+					Wrap = WrapMode.NoWrap,
+					Bindings = tc => tc.SetBinding(nameof(TableCell.Content), new Bind("RowNo"))
 				}
 			];
 			foreach (var elem in uiElement.Fields.Where(f => f.Name != "RowNo"))
@@ -506,7 +506,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 
 		var page = new Page()
 		{
-			Title = "Edit Page",
+			Title = $"{endpoint.Title}",
 			Toolbar = new Toolbar(_xamlSericeProvider)
 			{
 				Children = [

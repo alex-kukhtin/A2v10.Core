@@ -14,23 +14,23 @@ internal static class TemplateBuilder
 		var table = endpoint.BaseTable;
 
 		var template = $$"""
-
-			const template = {
-				options:{
-					noDirty: true,
-					persistSelect: ['{{endpoint.BaseTable.Name}}']
-				},
-				events: {
-					'g.{{table.ItemName().ToLowerInvariant()}}.saved': elemSaved					
-				}
-			};
-
-			module.exports = template;            
-
-			function elemSaved(r) {
-				console.dir(r);
+		const template = {
+			options:{
+				noDirty: true,
+				persistSelect: ['{{endpoint.BaseTable.Name}}']
+			},
+			events: {
+				'g.{{table.ItemName().ToLowerInvariant()}}.saved': elemSaved					
 			}
-			""";
+		};
+
+		module.exports = template;            
+
+		function elemSaved(r) {
+			console.dir(r);
+			console.dir(r['{{table.ItemName()}}']);
+		}
+		""";
 		return template;
 	}
 
@@ -46,7 +46,11 @@ internal static class TemplateBuilder
 			$$"""'{{typeName}}.{{f.Name}}'() { return {{f.Computed}}; }""";
 
 		List<String> commands = [];
-		StringBuilder functions = new();	
+		List<String> defaults = [];
+
+		StringBuilder functions = new();
+		StringBuilder declarations = new();
+
 		if (endpoint.EndpointType() == TableType.Document)
 		{
 			commands.Add("apply");
@@ -63,6 +67,13 @@ internal static class TemplateBuilder
 				await ctrl.$invoke('unapply', {Id: this.{{table.ItemName()}}.Id}, '{{endpoint.Name}}');
 				ctrl.$requery();
 			}
+			""");
+			defaults.Add("'Document.Date'() {return du.today();}");
+
+			declarations.Append($$"""
+			const utils = require("std:utils");
+			const du = utils.date;
+			const cu = utils.currency;
 			""");
 		}
 
@@ -85,25 +96,29 @@ internal static class TemplateBuilder
 		var templateProps = String.Join(",\n\t\t", GetComputedFields());
 
 		var template = $$"""
-			const template = {
-				options: {
-					globalSaveEvent: 'g.{{table.ItemName().ToLowerInvariant()}}.saved'
-				},
-				properties:{
-					{{templateProps}}
-				},
-				validators: {
-					{{validators}}
-				},
-				commands: {
-					{{String.Join(",\n\t\t", commands)}}
-				}
-			};
+		{{declarations}}
+		const template = {
+			options: {
+				globalSaveEvent: 'g.{{table.ItemName().ToLowerInvariant()}}.saved'
+			},
+			properties:{
+				{{templateProps}}
+			},
+			validators: {
+				{{validators}}
+			},
+			defaults: {
+				{{String.Join(",\n\t\t", defaults)}}
+			},
+			commands: {
+				{{String.Join(",\n\t\t", commands)}}
+			}
+		};
 
-			{{functions}}
+		{{functions}}
 
-			module.exports = template;            
-			""";
+		module.exports = template;            
+		""";
 		return template;
 	}
 

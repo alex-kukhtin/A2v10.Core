@@ -4,7 +4,7 @@
 20. Document.Date = default today
 21. Row. Required
 22. Row. Поиск по артикулу
-23. 
+23. RowNo почему-то всегда первый и нельзя поменять порядок
 
 Сценарий
 1. Ставим расширение из Visual Studio Extensions

@@ -93,10 +93,19 @@ internal static class XamlUIExtensions
         if (field.IsReference())
         {
             if (field.IsSubField())
-                return new TextBox()
+            {
+                var ff = field.Name.Split('.');
+                return new SelectorSimple()
                 {
-
+                    Label = field.RealTitle(),
+                    DisplayProperty = ff[1],
+                    Url = field.RefUrl(),
+                    Bindings = tb =>
+                    {
+                        tb.SetBinding(nameof(SelectorSimple.Value), new Bind($"{elemName}{ff[0]}"));
+                    }
                 };
+            }
             else
                 return new SelectorSimple()
                 {

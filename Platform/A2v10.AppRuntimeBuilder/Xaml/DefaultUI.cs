@@ -53,7 +53,31 @@ internal static class DefaultUI
 		return indexElem;
 	}
 
-	public static EditUiElement DefaultEditUiElement(this EndpointDescriptor endpoint)
+	public static List<UiField> DetailsFields(RuntimeTable rt)
+	{
+		bool hasQtyPriceSum = rt.Fields.Any(f => f.Name == "Qty")
+			&& rt.Fields.Any(f => f.Name == "Price")
+			&& rt.Fields.Any(f => f.Name == "Sum");
+
+		List<UiField> list = [
+			new() {Name = "RowNo"},
+			];
+		foreach (var f in rt.Fields)
+			list.Add(new()
+			{
+				Name = f.Name,
+				Computed = hasQtyPriceSum && f.Name == "Sum" ? "this.Price * this.Qty" : null,
+				Total = f.Name == "Sum"
+			});
+		list.Add(new()
+		{
+			Name = "Memo",
+			Multiline = true
+		});
+		return list;
+	}
+
+	public static EditUiElement DefaultEditUiElement(this EndpointDescriptor endpoint, EditUiElement? source = null)
 	{
 		var table = endpoint.BaseTable;
 		List<UiField> CatalogFields()
@@ -97,30 +121,6 @@ internal static class DefaultUI
 			return list;
 		}
 
-		List<UiField> DetailsFields(RuntimeTable rt)
-		{
-			bool hasQtyPriceSum = rt.Fields.Any(f => f.Name == "Qty")
-				&& rt.Fields.Any(f => f.Name == "Price")
-				&& rt.Fields.Any(f => f.Name == "Sum");
-
-			List<UiField> list = [
-				new() {Name = "RowNo"},
-			];
-			foreach (var f in rt.Fields)
-				list.Add(new()
-				{
-					Name = f.Name,
-					Computed = hasQtyPriceSum && f.Name == "Sum" ? "this.Price * this.Qty" : null,
-					Total = f.Name == "Sum"
-				});
-			list.Add(new()
-			{
-				Name = "Memo",
-				Multiline = true
-			});
-			return list;
-		}
-
 		List<EditUiElement>? DetailsUIList()
 		{
 			if (table.Details == null || table.Details.Count == 0)
@@ -128,13 +128,24 @@ internal static class DefaultUI
 			var list = new List<EditUiElement>();
 			foreach (var dt in table.Details)
 			{
-				var uiElem = new EditUiElement()
+				EditUiElement? existintElem = null;
+				if (source != null)
+					existintElem = source.Details?.FirstOrDefault(f => f.Name == dt.Name);
+				if (existintElem != null)
 				{
-					Name = dt.Name,
-					Fields = DetailsFields(dt)
-				};
-				uiElem.SetParentTable(dt, endpoint);
-				list.Add(uiElem);
+					existintElem.SetParentTable(dt, endpoint);
+					list.Add(existintElem);
+				}
+				else
+				{ 
+					var uiElem = new EditUiElement()
+					{
+						Name = dt.Name,
+						Fields = DetailsFields(dt)
+					};
+					uiElem.SetParentTable(dt, endpoint);
+					list.Add(uiElem);
+				}
 			}
 			return list;
 		}
@@ -153,5 +164,32 @@ internal static class DefaultUI
 			},
 			_ => throw new InvalidOperationException($"Invalid Endpoint for index {endpoint.EndpointType()}")
 		}; ;
+	}
+
+	public static void CheckDefaultDetails(this EndpointDescriptor endpoint, EditUiElement editElem)
+	{
+		if (editElem.Details == null || editElem.Details.Count == 0)
+			return;
+		List<EditUiElement> newDetails = [];
+		foreach (var dd  in editElem.Details)
+		{
+			if (dd.Fields.Count != 0)
+				newDetails.Add(dd);
+			else
+			{
+				if (dd.BaseTable == null)
+					throw new InvalidOperationException("Details. BaseTable is null");
+				var uiElem = new EditUiElement()
+				{
+					Name = dd.Name,
+					Fields = DetailsFields(dd.BaseTable)
+				};
+				uiElem.SetParentTable(dd.BaseTable, endpoint);
+				newDetails.Add(uiElem);
+			}
+		}
+		editElem.Details.Clear();
+		foreach (var nd in newDetails)
+			editElem.Details.Add(nd);
 	}
 }
