@@ -6997,7 +6997,7 @@ table > colgroup col.blue {
   grid-area: navbar;
   background-color: #757575;
   position: relative;
-  min-width: 80px;
+  min-width: 78px;
 }
 .mdi-navbar .bar {
   margin: 0;

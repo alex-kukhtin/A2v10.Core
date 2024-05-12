@@ -6,11 +6,11 @@ using System.Dynamic;
 using System.Text;
 using System.Linq;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 using A2v10.Data.Interfaces;
 using A2v10.Data.Core;
 using A2v10.Data;
-using System.Diagnostics.CodeAnalysis;
 
 namespace A2v10.AppRuntimeBuilder;
 
@@ -21,9 +21,9 @@ internal class FieldNameComparer : IEqualityComparer<RuntimeField>
 		return x?.Name == y?.Name;
 	}
 
-	public int GetHashCode([DisallowNull] RuntimeField obj)
+	public int GetHashCode([DisallowNull] RuntimeField field)
 	{
-		return obj.GetHashCode();
+		return field.GetHashCode();
 	}
 }
 internal partial class SqlModelProcessor
@@ -47,12 +47,52 @@ internal partial class SqlModelProcessor
 	{
 		var baseTable = endpoint.BaseTable;
 
-		IEnumerable<String> IntersectFields(RuntimeTable jrn, RuntimeTable details, String prefix)
-			=> jrn.Fields.Intersect(details.Fields, new FieldNameComparer()).Select(f => $"{prefix}[{f.Name}]");
+		IEnumerable<RuntimeField> IntersectFields(RuntimeTable jrn, RuntimeTable details)
+			=> jrn.Fields.Intersect(details.Fields, new FieldNameComparer());
+
+		String SelectFieldWithStorno(RuntimeField field, String prefix, Boolean storno)
+		{
+			var sign = field.CanStorno() && storno ? "-" : "";
+			return $"{sign}{prefix}.[{field.Name}]";
+		}
+
+		IEnumerable<RuntimeField> FindInOutInsert(RuntimeTable jrn, RuntimeTable doc, String InOut, Boolean isInsert)
+		{
+			foreach (var f in jrn.Fields.Where(f => f.Ref != null))
+			{
+				var xf = doc.Fields.FirstOrDefault(df => f.Name + InOut == df.Name);
+				if (xf != null)
+					yield return isInsert ? f : xf; // SOURCE or Target
+			}
+		}
 
 		String InsertToJournals()
 		{
 			var sb = new StringBuilder();
+
+			String InsertIntoJounalSql(Boolean inOut, Boolean storno, RuntimeField refField, RuntimeTable jrnTable, RuntimeTable sourceTable) 
+			{
+				var inOutVal = inOut ? 1 : -1;
+				var inOutStr = inOut ? "In" : "Out";
+
+				var enumFieldsInsert = IntersectFields(jrnTable, sourceTable).Select(f => $"[{f.Name}]");
+				var enumFieldsSelect = IntersectFields(jrnTable, sourceTable).Select(f => SelectFieldWithStorno(f, "dd", storno));
+				var enumFieldsInsertDoc = IntersectFields(jrnTable, baseTable).Select(f => $"[{f.Name}]");
+				var enumFieldsSelectDoc = IntersectFields(jrnTable, baseTable).Select(f => SelectFieldWithStorno(f, "d", storno));
+				var enumFieldsInsertInOut = FindInOutInsert(jrnTable, baseTable, inOutStr, true).Select(f => $"[{f.Name}]");
+				var enumFieldsSelectInOut = FindInOutInsert(jrnTable, baseTable, inOutStr, false).Select(f => $"[{f.Name}]");
+
+				var ddFieldsInsert = String.Join(", ", enumFieldsInsert.Union(enumFieldsInsertDoc).Union(enumFieldsInsertInOut));
+				var ddFieldsSelect = String.Join(", ", enumFieldsSelect.Union(enumFieldsSelectDoc).Union(enumFieldsSelectInOut));
+				return $"""
+				insert into {jrnTable.SqlTableName()} ([{refField.Name}], [Date], [InOut], {ddFieldsInsert})
+				select [{refField.Name}], d.[Date], {inOutVal}, {ddFieldsSelect}
+				from {sourceTable.SqlTableName()} dd
+					inner join {baseTable.SqlTableName()} d on dd.[{refField.Name}] = d.Id
+				where dd.[{refField.Name}] = @Id;
+				""";
+			}
+
 			foreach (var appl in endpoint.Apply)
 			{
 				var jrnTable = endpoint.GetTable($"Journal.{appl.Journal}")
@@ -65,20 +105,10 @@ internal partial class SqlModelProcessor
 					var srcArr = appl.Source.Split('.');
 					var sourceTable = baseTable.Details?.FirstOrDefault(f => f.Name == srcArr[1])
 						?? throw new InvalidOperationException($"Source'{appl.Source}' not found");
-
-					if (appl.In && appl.Out)
-						throw new NotImplementedException("Apply In/Out yet not implemented");
-					else
-					{
-						var inOutVal = appl.In ? 1 : appl.Out ? -1 : 0;
-						sb.AppendLine($"""
-						insert into {jrnTable.SqlTableName()} ([{refField.Name}], [Date], [InOut], {String.Join(", ", IntersectFields(jrnTable, sourceTable, String.Empty))})
-						select [{refField.Name}], d.[Date], {inOutVal}, {String.Join(", ", IntersectFields(jrnTable, sourceTable, "dd."))} 
-						from {sourceTable.SqlTableName()} dd
-							inner join {baseTable.SqlTableName()} d on dd.[{refField.Name}] = d.Id
-						where dd.[{refField.Name}] = @Id;
-						""");
-					}
+					if (appl.In)
+						sb.AppendLine(InsertIntoJounalSql(true, appl.Storno, refField, jrnTable, sourceTable));
+					if (appl.Out)
+						sb.AppendLine(InsertIntoJounalSql(false, appl.Storno, refField, jrnTable, sourceTable));
 				}
 				else
 				{

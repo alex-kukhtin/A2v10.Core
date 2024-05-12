@@ -19,6 +19,11 @@ internal static class FieldExtensions
 			_ => throw new NotImplementedException($"Unknown field type: {field.Type}")
 		};
 
+	public static Boolean CanStorno(this RuntimeField field) =>
+		field.Type switch {
+			FieldType.Float or FieldType.Money => true,
+			_ => false
+		};
 	public static FieldType RealType(this RuntimeField field)
 		=> field.Ref != null ? FieldType.Id :  field.Type;
 

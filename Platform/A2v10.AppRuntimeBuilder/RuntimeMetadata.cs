@@ -159,6 +159,7 @@ public record ApplyDescriptor
 	public Boolean In { get; init; }
 	public Boolean Out { get; init; }
 	public String Source { get; init; } = String.Empty;
+	public Boolean Storno { get; init; }
 }
 
 public enum EndpointEdit

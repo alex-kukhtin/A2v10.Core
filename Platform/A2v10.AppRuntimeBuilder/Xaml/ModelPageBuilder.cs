@@ -519,7 +519,8 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 						Bindings = b => {
 							var bindCmd = new BindCmd() {
 								Command = CommandType.Execute,
-								CommandName = "apply"
+								CommandName = "apply",
+								SaveRequired = true,
 							};
 							b.SetBinding(nameof(Button.Command), bindCmd);
 							b.SetBinding(nameof(Button.If), new Bind($"!{table.ItemName()}.Done"));
