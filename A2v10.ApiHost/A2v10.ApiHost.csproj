@@ -10,7 +10,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="A2v10.Data.Core" Version="10.1.7360" />
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.1" />
 	</ItemGroup>
 
 	<ItemGroup>

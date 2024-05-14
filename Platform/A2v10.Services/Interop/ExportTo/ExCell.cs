@@ -68,12 +68,17 @@ public partial class ExCell
 	}
 
 
-    static String NormalizeDate(String text)
+    static String NormalizeDate(String text, IFormatProvider format)
 	{
 		if (String.IsNullOrEmpty(text))
 			return String.Empty;
+
 		if (DateTime.TryParseExact(text, "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt))
 			return dt.ToOADate().ToString(CultureInfo.InvariantCulture);
+
+		if (DateTime.TryParse(text, format, DateTimeStyles.None, out dt))
+			return dt.ToOADate().ToString(CultureInfo.InvariantCulture);
+
 		throw new ExportToExcelException($"Invalid date {text}");
 	}
 
@@ -161,7 +166,7 @@ public partial class ExCell
 		}
 		return cell;
 	}
-	public void SetValue(String text, String? dataType, IFormatProvider format)
+	public void SetValue(String text, String? dataType, IFormatProvider numberFormat, IFormatProvider dateFormat)
 	{
 		if (text.Contains('\n'))
 			dataType = "string";
@@ -175,15 +180,15 @@ public partial class ExCell
 				break;
 			case "currency":
 				DataType = DataType.Currency;
-				Value = NormalizeNumber(text, format);
+				Value = NormalizeNumber(text, numberFormat);
 				break;
 			case "number":
 				DataType = DataType.Number;
-				Value = NormalizeNumber(text, format);
+				Value = NormalizeNumber(text, numberFormat);
 				break;
 			case "date":
 				DataType = DataType.Date;
-				Value = NormalizeDate(text);
+				Value = NormalizeDate(text, dateFormat);
 				break;
 			case "datetime":
 				DataType = DataType.DateTime;
@@ -195,7 +200,7 @@ public partial class ExCell
 				break;
 			case "percent":
 				DataType = DataType.Percent;
-				Value = NormalizePercent(text, format);
+				Value = NormalizePercent(text, numberFormat);
 				break;
 			default:
 				Value = text;

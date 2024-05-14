@@ -49,15 +49,15 @@ public class Startup(IConfiguration configuration)
 
 		var builders = services.UsePlatform(Configuration);
 
-		/*
-        builders.AuthenticationBuilder.AddGoogle(opts =>
+		builders.AuthenticationBuilder.AddGoogle(opts =>
 		{
 			opts.ClientId = Configuration.GetValue<String>("Identity:Google:ClientId")
 				?? throw new InvalidOperationException("Identity:Google:ClientId not found");
 			opts.ClientSecret = Configuration.GetValue<String>("Identity:Google:ClientSecret")
 				?? throw new InvalidOperationException("Identity:Google:ClientSecret not found");
 			opts.Events.OnRemoteFailure = OpenIdErrorHandlers.OnRemoteFailure;
-	    })
+		});
+		/*
 		.AddMicrosoftAccount(opts =>
 		{
 			opts.ClientId = Configuration.GetValue<String>("Identity:Microsoft:ClientId")

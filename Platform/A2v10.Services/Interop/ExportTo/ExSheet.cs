@@ -6,21 +6,25 @@ using System.Globalization;
 namespace A2v10.Services.Interop;
 public class ExSheet
 {
-	private readonly IFormatProvider _currentFormat;
+	private readonly IFormatProvider _currentNumberFormat;
+	private readonly IFormatProvider _currentDateFormat;
 	readonly List<ExRow> _body = [];
 	readonly List<ExRow> _header = [];
 	readonly List<ExRow> _footer = [];
 	readonly List<ExRow> _headerFlat = [];
 	readonly List<ExRow> _bodyFlat = [];
 
-	public ExSheet(IFormatProvider? currentFormat = null)
+	public ExSheet(IFormatProvider? currentNumberFormat = null, IFormatProvider? currentDateFormat = null)
 	{
-		_currentFormat = currentFormat ??
+		_currentNumberFormat = currentNumberFormat ??
+			CultureInfo.CreateSpecificCulture("uk-UA");
+		_currentDateFormat = currentDateFormat ??
 			CultureInfo.CreateSpecificCulture("uk-UA");
 	}
 	public ExSheet(String locale)
 	{
-		_currentFormat = CultureInfo.CreateSpecificCulture(locale);
+		_currentNumberFormat = CultureInfo.CreateSpecificCulture(locale);
+		_currentDateFormat = CultureInfo.CreateSpecificCulture(locale);
 	}
 
 	public List<ExColumn> Columns { get; } = [];
@@ -74,7 +78,7 @@ public class ExSheet
 		var row = GetRow(rowNo, exRow.Kind);
 		var (cell, index) = row.AddCell();
 		cell.Span = span;
-		cell.SetValue(value, dataType, _currentFormat);
+		cell.SetValue(value, dataType, _currentNumberFormat, _currentDateFormat);
 		cell.StyleIndex = Styles.GetOrCreate(cell.GetStyle(row, cellClass));
 		if (span.Col == 0 && span.Row == 0)
 			return cell;
