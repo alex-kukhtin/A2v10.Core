@@ -1,8 +1,5 @@
-2024-05-13 (next: 8286)
+2024-05-14 (next: 8287)
 =======================
-A2v10.AppRuntimeBuilder
-A2v10.ReportEngine.Pdf
-A2v10.Platform
 
 
 A2v10.Platform

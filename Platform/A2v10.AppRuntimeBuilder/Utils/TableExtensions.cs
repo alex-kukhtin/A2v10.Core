@@ -10,8 +10,8 @@ internal static class TableExtensions
 {
 	public static String SqlTableName(this RuntimeTable table) => $"{table.Schema}.[{table.Name}]";
 	public static String TableTypeName(this RuntimeTable table) => $"{table.Schema}.[{table.Name.Singular()}.TableType]";
-    public static String DetailsTableTypeName(this RuntimeTable table, RuntimeTable parent) => $"{parent.Schema}.[{parent.Name.Singular()}.{table.Name.Singular()}.TableType]";
-    public static String TypeName(this RuntimeTable table) => $"T{table.Name.Singular()}";
+	public static String DetailsTableTypeName(this RuntimeTable table, RuntimeTable parent) => $"{parent.Schema}.[{parent.Name.Singular()}.{table.Name.Singular()}.TableType]";
+	public static String TypeName(this RuntimeTable table) => $"T{table.Name.Singular()}";
 	public static String ItemName(this RuntimeTable table) => $"{table.Name.Singular()}";
 
 	public static IEnumerable<RuntimeField> RealFields(this RuntimeTable table)
@@ -23,12 +23,12 @@ internal static class TableExtensions
 			yield return new RuntimeField() { Name = f.Name, Type = f.RealType(), Length = f.RealLength(), Ref = f.Ref };
 	}
 
-    public static IEnumerable<RuntimeField> RealFieldsMap(this RuntimeTable table)
+	public static IEnumerable<RuntimeField> RealFieldsMap(this RuntimeTable table)
 	{
 		return table.RealFields().Where(f => f.Name != "Memo");
 	}
 
-    public static RuntimeField FindField(this RuntimeTable table, String name)
+	public static RuntimeField FindField(this RuntimeTable table, String name)
 	{
 		if (name.Contains('.'))
 		{
@@ -39,11 +39,11 @@ internal static class TableExtensions
 	}
 
 	public static String ParentTableName(this RuntimeTable table)
-    {
-        return table.DetailsParent.Name.Singular();
-    }
+	{
+		return table.DetailsParent.Name.Singular();
+	}
 
-    public static List<RuntimeField> DefaultFields(this RuntimeTable table)
+	public static List<RuntimeField> DefaultFields(this RuntimeTable table)
 	{
 		return table.TableType switch
 		{
@@ -58,20 +58,20 @@ internal static class TableExtensions
 				new RuntimeField() { Name = "Done", Type = FieldType.Boolean },
 				new RuntimeField() { Name = "Number", Type = FieldType.String, Length = 32 },
 				new RuntimeField() { Name = "Date", Type = FieldType.Date },
-                new RuntimeField() { Name = "Sum", Type = FieldType.Money },
-                new RuntimeField() { Name = "Memo", Type = FieldType.String, Length = 255 }
+				new RuntimeField() { Name = "Sum", Type = FieldType.Money },
+				new RuntimeField() { Name = "Memo", Type = FieldType.String, Length = 255 }
 			],
 			TableType.Details => [
-                new RuntimeField() { Name = "Id", Type = FieldType.Id },
-                new RuntimeField() { Name = "RowNo", Type = FieldType.Int },
-                new RuntimeField() { Name = table.ParentTableName(), Type = FieldType.Parent },
-                new RuntimeField() { Name = "Memo", Type = FieldType.String, Length = 255 }
-            ],
+				new RuntimeField() { Name = "Id", Type = FieldType.Id },
+				new RuntimeField() { Name = "RowNo", Type = FieldType.Int },
+				new RuntimeField() { Name = table.ParentTableName(), Type = FieldType.Parent },
+				new RuntimeField() { Name = "Memo", Type = FieldType.String, Length = 255 }
+			],
 			TableType.Journal => [
 				new RuntimeField() { Name = "Id", Type = FieldType.Id },
 				new RuntimeField() { Name = "Date", Type = FieldType.Date },
 			],
-            _ => throw new NotImplementedException()
+			_ => throw new NotImplementedException()
 		};
 	}
 
@@ -83,4 +83,15 @@ internal static class TableExtensions
 			TableType.Journal => "jrn",
 			_ => throw new InvalidOperationException($"Invalid shema source {tableType}")
 		};
+
+	public static IEnumerable<(String Name, RuntimeTable Table)> ReferenceTable(this RuntimeTable table, String name, RuntimeMetadata metadata)
+	{
+		foreach (var f in table.Fields.Where(f => f.Ref == name))
+			yield return (f.Name, table);
+		if (table.Details == null)
+			yield break;
+		foreach (var dd in table.Details)
+			foreach (var f in dd.ReferenceTable(name, metadata))
+				yield return f;
+	}
 }

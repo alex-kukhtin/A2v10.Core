@@ -1,7 +1,6 @@
 ﻿
 11. Reports ??
 14. Plain model. Нет заполняются Map из дочерних таблиц
-20. Document.Date = default today
 21. Row. Required
 22. Row. Поиск по артикулу
 23. RowNo почему-то всегда первый и нельзя поменять порядок

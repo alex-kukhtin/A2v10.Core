@@ -8,7 +8,6 @@ using System.Data.Common;
 using System.Linq;
 using System.Text;
 using System.Collections.Generic;
-using System.Globalization;
 
 using A2v10.Data.Core;
 using A2v10.Data.Interfaces;
@@ -17,7 +16,8 @@ using A2v10.Infrastructure;
 namespace A2v10.AppRuntimeBuilder;
 
 internal partial class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _dbContext)
-{	public Task<IDataModel> LoadModelAsync(IPlatformUrl platformUrl, IModelView view, EndpointDescriptor endpoint)
+{	
+	public Task<IDataModel> LoadModelAsync(IPlatformUrl platformUrl, IModelView view, EndpointDescriptor endpoint)
 	{
 		return view.IsIndex ? LoadIndexModelAsync(platformUrl, endpoint.GetIndexUI()) : LoadPlainModelAsync(platformUrl, endpoint.BaseTable);
 	}
@@ -52,19 +52,6 @@ internal partial class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _
         return sb.ToString();
     }
 
-
-	// TODO: Перенести в Data.Core.DbParamsExtension
-	static Object GetDateParameter(ExpandoObject? eo, String name)
-	{
-		var val = eo?.Get<Object>(name);
-		if (val == null)
-			return DBNull.Value;
-		if (val is DateTime dt)
-			return dt;
-		else if (val is String strVal)
-			return DateTime.ParseExact(strVal, "yyyyMMdd", CultureInfo.InvariantCulture);
-		throw new InvalidExpressionException($"Invalid Date Parameter value: {val}");
-	}
 	private Task<IDataModel> ExecuteFetch(EndpointDescriptor endpoint, ExpandoObject prms)
 	{
 		var table = endpoint.BaseTable;
@@ -106,7 +93,27 @@ internal partial class SqlModelProcessor(ICurrentUser _currentUser, IDbContext _
 	public Task<IDataModel> DbRemoveAsync(String? propName, EndpointDescriptor endpoint, ExpandoObject prms)
 	{
 		String command = $"{endpoint.BaseTable.Schema}.{endpoint.BaseTable.Name}";
-		// var refs = endpoint.BaseTable.AllReferencs();
-		throw new NotImplementedException($"Delete from {command} yet not implemented");
+		var refs = endpoint.AllReferences();
+		var exists = refs.Select(f => $"""
+		exists(select * from {f.Table.SqlTableName()} where [{f.Name}] = @Id)
+		""");
+
+		var sqlCheck = "";
+		if (exists.Any())
+			sqlCheck = $"""
+			if {String.Join("\n or ", exists)}
+				throw 60000, N'UI:@[Error.Delete.Used]', 0;
+			""";
+
+		var sqlString = $"""
+			{sqlCheck}
+
+			update {endpoint.BaseTable.SqlTableName()} set Void = 1 where Id = @Id;
+			""";
+		return _dbContext.LoadModelSqlAsync(null, sqlString, dbprms =>
+		{
+			AddDefaultParameters(dbprms);
+			dbprms.AddBigInt("@Id", prms.Get<Int64>("Id"));
+		});
 	}
 }

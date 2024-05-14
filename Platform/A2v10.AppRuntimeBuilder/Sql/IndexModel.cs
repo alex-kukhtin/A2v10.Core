@@ -159,8 +159,8 @@ internal partial class SqlModelProcessor
 
 			if (hasPeriod)
 			{
-				dbprms.Add(new SqlParameter("@From", SqlDbType.Date) { Value = GetDateParameter(qry, "From") });
-				dbprms.Add(new SqlParameter("@To", SqlDbType.Date) { Value = GetDateParameter(qry, "To") });
+				dbprms.Add(new SqlParameter("@From", SqlDbType.Date) { Value = SqlHelpers.GetDateParameter(qry, "From") });
+				dbprms.Add(new SqlParameter("@To", SqlDbType.Date) { Value = SqlHelpers.GetDateParameter(qry, "To") });
 			};
 			foreach (var f in filters)
 			{
