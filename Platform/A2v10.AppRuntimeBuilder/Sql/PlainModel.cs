@@ -168,10 +168,10 @@ internal partial class SqlModelProcessor
 				using @{details.Name} as s
 				on t.Id = s.Id
 				when matched then update set
-					{String.Join(',', updateFields.Select(f => $"t.{f.Name} = s.{f.Name}"))}
+					{String.Join(',', updateFields.Select(f => $"t.[{f.Name}] = s.[{f.Name}]"))}
 				when not matched then insert 
-					({parentField.Name}, {String.Join(',', updateFields.Select(f => f.Name))}) values
-					(@Id, {String.Join(',', updateFields.Select(f => $"s.{f.Name}"))})
+					({parentField.Name}, {String.Join(',', updateFields.Select(f => $"[{f.Name}]"))}) values
+					(@Id, {String.Join(',', updateFields.Select(f => $"s.[{f.Name}]"))})
 				when not matched by source and t.[{parentField.Name}] = @Id then delete;
 				""");
 				sb.AppendLine();
@@ -204,10 +204,10 @@ internal partial class SqlModelProcessor
 		using @{table.ItemName()} as s
 		on t.Id = s.Id
 		when matched then update set
-			{String.Join(',', updateFields.Select(f => $"t.{f.Name} = s.{f.Name}"))}
+			{String.Join(',', updateFields.Select(f => $"t.[{f.Name}] = s.[{f.Name}]"))}
 		when not matched then insert 
-			({paramFields}{String.Join(',', updateFields.Select(f => f.Name))}) values
-			({paramValues}{String.Join(',', updateFields.Select(f => $"s.{f.Name}"))})
+			({paramFields}{String.Join(',', updateFields.Select(f => $"[{f.Name}]"))}) values
+			({paramValues}{String.Join(',', updateFields.Select(f => $"s.[{f.Name}]"))})
 		output inserted.Id into @rtable(Id);
 
 		select top(1) @Id = Id from @rtable;
