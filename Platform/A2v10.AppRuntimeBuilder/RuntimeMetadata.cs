@@ -45,8 +45,8 @@ public enum SortDir
 }
 public record SortElement
 {
-	public String Order { get; init; } = String.Empty;
-	public SortDir Dir { get; init; }
+	public String? Order { get; init; }
+	public SortDir? Dir { get; init; }
 }
 
 public enum SearchType
@@ -92,16 +92,17 @@ public record BaseUiElement
 }
 public record IndexUiElement : BaseUiElement
 {
-	public SortElement? Sort { get; init; } = new SortElement() { Order = "Name" };
+	public SortElement? Sort { get; init; } = new();
 
 	internal String SortOrder()
 	{
-		return Sort?.Order ?? "Name";
+		return Sort?.Order ?? (Endpoint?.EndpointType() == TableType.Document ? "Date" : "Name");
 	}
 
 	internal String SortDirection()
 	{
-		return Sort?.Dir.ToString().ToLowerInvariant() ?? "asc";
+		return Sort?.Dir?.ToString().ToLowerInvariant() ??
+			(Endpoint?.EndpointType() == TableType.Document ? "desc" : "asc");
 	}
 }
 

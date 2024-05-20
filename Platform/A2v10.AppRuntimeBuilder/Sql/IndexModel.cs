@@ -121,7 +121,7 @@ internal partial class SqlModelProcessor
 		from {table.SqlTableName()} a
 		where {ParametersCondition()} {PeriodWhere()} {WhereCondition()}
 		order by
-			a.[{table.RealFields().FirstOrDefault(f => f.Name.Equals(order, StringComparison.OrdinalIgnoreCase))?.Name}] {dir}
+			a.[{table.RealFields().FirstOrDefault(f => f.Name.Equals(order, StringComparison.OrdinalIgnoreCase))?.Name ?? "Id"}] {dir}
 		offset @Offset rows fetch next @PageSize rows only option (recompile);
 
 		select [{table.Name}!{table.TypeName()}!Array] = null,
