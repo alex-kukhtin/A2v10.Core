@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2008-2024 Oleksandr Kukhtin
 
-Last updated : 19 feb 2024
-module version : 8232
+Last updated : 24 may 2024
+module version : 8283
 */
 
 /*
@@ -46,7 +46,6 @@ create table a2sch.Commands
 	Error nvarchar(1024) sparse null 
 );
 go
-
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2sch' and TABLE_NAME=N'Exceptions')
 create table a2sch.Exceptions
@@ -57,6 +56,10 @@ create table a2sch.Exceptions
 	[UtcDateCreated] datetime not null
 		constraint DF_Exceptions_UtcDateCreated default(getutcdate())
 );
+go
+------------------------------------------------
+if not exists (select * from sys.indexes where object_id = object_id(N'a2sch.Commands') and name = N'IX_Commands_Complete_Lock_UtcRunAt')
+	create nonclustered index IX_Commands_Complete_Lock_UtcRunAt on a2sch.[Commands] ([Complete], [Lock], [UtcRunAt]) with (online = on)
 go
 ------------------------------------------------
 create or alter procedure a2sch.[Command.List]
