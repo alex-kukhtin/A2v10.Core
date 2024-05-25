@@ -59,7 +59,7 @@ create table a2sch.Exceptions
 go
 ------------------------------------------------
 if not exists (select * from sys.indexes where object_id = object_id(N'a2sch.Commands') and name = N'IX_Commands_Complete_Lock_UtcRunAt')
-	create nonclustered index IX_Commands_Complete_Lock_UtcRunAt on a2sch.[Commands] ([Complete], [Lock], [UtcRunAt]) with (online = on)
+	create nonclustered index IX_Commands_Complete_Lock_UtcRunAt on a2sch.[Commands] ([Complete], [Lock], [UtcRunAt]);
 go
 ------------------------------------------------
 create or alter procedure a2sch.[Command.List]
