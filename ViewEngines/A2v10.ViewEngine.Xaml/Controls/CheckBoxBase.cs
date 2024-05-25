@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
 
@@ -9,6 +9,7 @@ public abstract class CheckBoxBase : ValuedControl, ITableControl
 {
 	internal abstract String ControlType { get; }
 	internal abstract String InputControlType { get; }
+	internal virtual String? InputControlClass { get; }
 
 	public TextColor Color { get; set; }
 
@@ -43,7 +44,7 @@ public abstract class CheckBoxBase : ValuedControl, ITableControl
 		if (Color != TextColor.Default)
 			tag.AddCssClass("text-color-" + Color.ToString().ToKebabCase());
 		tag.RenderStart(context);
-		var input = new TagBuilder("input");
+		var input = new TagBuilder("input", InputControlClass);
 		input.MergeAttribute("type", InputControlType);
 		if (TabIndex != 0)
 			input.MergeAttribute("tabindex", TabIndex.ToString());
