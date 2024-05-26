@@ -5,7 +5,8 @@
 			"Scripts/signalr.js",
 			"Scripts/appheader.js",
 			"Scripts/navbar.js",
-			"Scripts/shell.js"
+			"Scripts/shell.js",
+			"Scripts/bigcalendar.js"
 		],
 		"minify": { "enabled": false }
 	},

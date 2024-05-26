@@ -2,7 +2,7 @@
   font-family: 'A2v10';
   font-display: fallback;
   src: url('/css/fonts/A2v10.eot');
-  src: url('/css/fonts/A2v10.eot?#iefix') format('eot'), url('/css/fonts/A2v10.woff?v=7946') format('woff'), url('/css/fonts/A2v10.ttf?v=7946') format('truetype'), url('/css/fonts/A2v10.svg#A2v10') format('svg');
+  src: url('/css/fonts/A2v10.eot?#iefix') format('eot'), url('/css/fonts/A2v10.woff?v=7967') format('woff'), url('/css/fonts/A2v10.ttf?v=7967') format('truetype'), url('/css/fonts/A2v10.svg#A2v10') format('svg');
   font-weight: normal;
   font-style: normal;
 }
@@ -158,8 +158,14 @@
 .ico-disapprove:before {
   content: "\e937";
 }
+.ico-calendar-today:before {
+  content: "\e93c";
+}
 .ico-calendar:before {
   content: "\e93d";
+}
+.ico-calendar-week:before {
+  content: "\e93e";
 }
 .ico-call:before {
   content: "\ea19";
@@ -328,6 +334,12 @@
 }
 .ico-edit:before {
   content: "\e94a";
+}
+.ico-edit-undo:before {
+  content: "\e947";
+}
+.ico-edit-redo:before {
+  content: "\e948";
 }
 .ico-rename:before {
   content: "\e953";
@@ -6850,7 +6862,7 @@ table > colgroup col.blue {
 }
 .mdi-header .include.nav-pane .partial-block .btn:hover {
   background-color: var(--neutral700);
-  color: #ffda00;
+  color: var(--link);
 }
 .mdi-header .dropdown {
   height: 100%;
@@ -6868,7 +6880,7 @@ table > colgroup col.blue {
   background-color: var(--neutral900);
 }
 .mdi-header .dropdown .user-name:hover {
-  color: #ffda00;
+  color: var(--link);
   background-color: var(--neutral700);
 }
 .mdi-header .dropdown .user-name .caret {
@@ -7082,11 +7094,11 @@ table > colgroup col.blue {
 .mdi-navbar .bar li:hover:not(.grow),
 .mdi-navbar .bar li.active {
   background-color: var(--neutral900);
-  color: #ffda00;
+  color: var(--link);
 }
 .mdi-navbar .bar li:hover:not(.grow) .menu-text,
 .mdi-navbar .bar li.active .menu-text {
-  color: #ffda00;
+  color: var(--link);
   opacity: 0.95;
 }
 .mdi-navbar .bar li.grow {
@@ -7180,11 +7192,11 @@ table > colgroup col.blue {
   font-size: 1.3rem;
 }
 .mdi-navbar .mdi-menu li.level-1 .btn-plus:hover {
-  color: #ffda00;
+  color: var(--link);
 }
 .mdi-navbar .mdi-menu li.level-1:hover {
   background-color: var(--neutral900);
-  color: #ffda00;
+  color: var(--link);
 }
 .mdi-navbar .mdi-menu li.level-1:hover .btn-plus {
   display: block;
@@ -7901,6 +7913,168 @@ table.tree-grid a.toggle.expanded:after {
 .kanban .kanban-card .kanban-card-footer {
   padding: 4px 8px;
   border-top: 1px solid var(--neutral300);
+}
+.a2-big-calendar {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+  height: 100%;
+}
+.a2-big-calendar .top-bar {
+  grid-row: 1;
+  display: flex;
+  flex-direction: row;
+  padding: 0 0 0.5rem 0;
+  line-height: 2;
+  align-items: stretch;
+}
+.a2-big-calendar .top-bar .title {
+  flex-grow: 1;
+  text-align: center;
+  font-size: 120%;
+}
+.a2-big-calendar .bc-container {
+  height: 100%;
+  overflow: auto;
+  position: relative;
+  grid-row: 2;
+  border-bottom: 1px solid var(--neutral300);
+  background-color: white;
+}
+.a2-big-calendar table.bc-table {
+  width: 100%;
+  height: 100%;
+  border-collapse: separate;
+}
+.a2-big-calendar table.bc-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 51;
+}
+.a2-big-calendar table.bc-table thead th {
+  height: 35px;
+  background-color: var(--neutral100);
+  border: 1px solid var(--neutral300);
+  border-left-width: 0;
+  text-align: center;
+  white-space: nowrap;
+  padding: 0 5px;
+}
+.a2-big-calendar table.bc-table thead th:first-child {
+  border-left-width: 1px;
+}
+.a2-big-calendar table.bc-table tbody tr:last-child td,
+.a2-big-calendar table.bc-table tbody tr:nth-last-child(2) th {
+  border-bottom-width: 0;
+}
+.a2-big-calendar table.bc-week thead th.today {
+  border-top: 2px solid var(--link);
+  font-weight: 500;
+  color: var(--link);
+}
+.a2-big-calendar table.bc-week tbody th {
+  vertical-align: top;
+  border: 1px solid var(--neutral300);
+  border-top-width: 0;
+  background-color: var(--neutral100);
+}
+.a2-big-calendar table.bc-week tbody th .h-title {
+  display: inline-block;
+  width: 50px;
+  padding: 5px;
+  text-align: right;
+  white-space: nowrap;
+}
+.a2-big-calendar table.bc-week tbody td.bc-h-top {
+  border-right: 1px solid var(--neutral300);
+  border-bottom: 1px dotted var(--neutral300);
+  height: 30px;
+  position: relative;
+}
+.a2-big-calendar table.bc-week tbody td.bc-h-bottom {
+  border-right: 1px solid var(--neutral300);
+  border-bottom: 1px solid var(--neutral300);
+  height: 30px;
+  position: relative;
+}
+.a2-big-calendar table.bc-week .h-event {
+  position: absolute;
+  right: 0;
+  left: 0;
+  z-index: 50;
+  border-radius: 4px;
+  padding: 4px;
+  line-height: normal;
+  font-size: 90%;
+  background-color: #9ACD32A0;
+  overflow: hidden;
+}
+.a2-big-calendar table.bc-month td.bc-day {
+  border: 0 solid var(--neutral300);
+  border-bottom-width: 1px;
+  border-right-width: 1px;
+  width: 14.28571429%;
+  vertical-align: top;
+  height: 120px;
+  padding: 2px 4px;
+  line-height: 1;
+}
+.a2-big-calendar table.bc-month td.bc-day:first-child {
+  border-left-width: 1px;
+}
+.a2-big-calendar table.bc-month td.bc-day.other {
+  background-color: var(--bgPrimary);
+}
+.a2-big-calendar table.bc-month td.bc-day .day-date {
+  margin-bottom: 4px;
+}
+.a2-big-calendar table.bc-month td.bc-day.today {
+  background-color: #fff29d20;
+  border-top: 2px solid var(--link);
+}
+.a2-big-calendar table.bc-month td.bc-day.today .day-date {
+  font-weight: 500;
+}
+.a2-big-calendar table.bc-month .bc-day-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.a2-big-calendar table.bc-month .day-event {
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: #9ACD32A0;
+  font-size: 90%;
+  line-height: normal;
+}
+.a2-big-calendar table.bc-month .day-event .me-body {
+  margin: 3px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  overflow: hidden;
+}
+.a2-big-calendar .current-time {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 2px dotted var(--link);
+  top: 770px;
+  --time: "00:00";
+}
+.a2-big-calendar .current-time::after {
+  content: var(--time);
+  background-color: var(--neutral100);
+  color: var(--link);
+  font-weight: 500;
+  padding: 5px;
+  width: 50px;
+  box-sizing: border-box;
+  text-align: right;
+  position: absolute;
+  left: 0;
+  border-left: 1px solid var(--neutral300);
+  top: -17px;
 }
 .initial-form .external-providers {
   display: flex;
