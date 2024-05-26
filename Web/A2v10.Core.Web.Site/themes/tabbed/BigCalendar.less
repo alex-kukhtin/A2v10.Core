@@ -1,9 +1,9 @@
 ﻿@import "Variables.less";
 
-@border-color: @default-brd-color;
+@bc-border-color: @default-brd-color;
 @bc-header-bg-color: var(--neutral100);
 @table-bg-color:white;
-@accent-color:@link-color;
+@bc-accent-color:@link-color;
 @other-day-color:@disabled-bg-color;
 @today-day-color:#fff29d20;
 @default-evt-bk-color: #9ACD32A0;
@@ -34,7 +34,7 @@
 		overflow: auto;
 		position: relative;
 		grid-row: 2;
-		border-bottom: 1px solid @border-color;
+		border-bottom: 1px solid @bc-border-color;
 		background-color: @table-bg-color;
 	}
 
@@ -51,7 +51,7 @@
 			th {
 				height: 35px;
 				background-color: @bc-header-bg-color;
-				border: 1px solid @border-color;
+				border: 1px solid @bc-border-color;
 				border-left-width: 0;
 				text-align: center;
 				white-space: nowrap;
@@ -74,16 +74,16 @@
 
 		thead {
 			th.today {
-				border-top: 2px solid @accent-color;
+				border-top: 2px solid @bc-accent-color;
 				font-weight: @font-bold;
-				color: @accent-color;
+				color: @bc-accent-color;
 			}
 		}
 
 		tbody {
 			th {
 				vertical-align: top;
-				border: 1px solid @border-color;
+				border: 1px solid @bc-border-color;
 				border-top-width: 0;
 				background-color: @bc-header-bg-color;
 
@@ -97,15 +97,15 @@
 			}
 
 			td.bc-h-top {
-				border-right: 1px solid @border-color;
-				border-bottom: 1px dotted @border-color;
+				border-right: 1px solid @bc-border-color;
+				border-bottom: 1px dotted @bc-border-color;
 				height: 30px;
 				position: relative;
 			}
 
 			td.bc-h-bottom {
-				border-right: 1px solid @border-color;
-				border-bottom: 1px solid @border-color;
+				border-right: 1px solid @bc-border-color;
+				border-bottom: 1px solid @bc-border-color;
 				height: 30px;
 				position: relative;
 			}
@@ -127,7 +127,7 @@
 
 	table.bc-month {
 		td.bc-day {
-			border: 0 solid @border-color;
+			border: 0 solid @bc-border-color;
 			border-bottom-width: 1px;
 			border-right-width: 1px;
 			width: 14.2857142857%;
@@ -150,7 +150,7 @@
 
 			&.today {
 				background-color: @today-day-color;
-				border-top: 2px solid @accent-color;
+				border-top: 2px solid @bc-accent-color;
 
 				.day-date {
 					font-weight: @font-bold;
@@ -185,14 +185,14 @@
 		position: absolute;
 		left: 0;
 		right: 0;
-		border-top: 2px dotted @accent-color;
+		border-top: 2px dotted @bc-accent-color;
 		top: 770px;
 		--time: "00:00";
 
 		&::after {
 			content: var(--time);
 			background-color: @bc-header-bg-color;
-			color: @accent-color;
+			color: @bc-accent-color;
 			font-weight: @font-bold;
 			padding: 5px;
 			width: 50px;
@@ -200,7 +200,7 @@
 			text-align: right;
 			position: absolute;
 			left: 0;
-			border-left: 1px solid @border-color;
+			border-left: 1px solid @bc-border-color;
 			top: -17px;
 		}
 	}

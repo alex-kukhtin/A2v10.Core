@@ -6862,7 +6862,7 @@ table > colgroup col.blue {
 }
 .mdi-header .include.nav-pane .partial-block .btn:hover {
   background-color: var(--neutral700);
-  color: var(--link);
+  color: #ffda00;
 }
 .mdi-header .dropdown {
   height: 100%;
@@ -6880,7 +6880,7 @@ table > colgroup col.blue {
   background-color: var(--neutral900);
 }
 .mdi-header .dropdown .user-name:hover {
-  color: var(--link);
+  color: #ffda00;
   background-color: var(--neutral700);
 }
 .mdi-header .dropdown .user-name .caret {
@@ -7094,11 +7094,11 @@ table > colgroup col.blue {
 .mdi-navbar .bar li:hover:not(.grow),
 .mdi-navbar .bar li.active {
   background-color: var(--neutral900);
-  color: var(--link);
+  color: #ffda00;
 }
 .mdi-navbar .bar li:hover:not(.grow) .menu-text,
 .mdi-navbar .bar li.active .menu-text {
-  color: var(--link);
+  color: #ffda00;
   opacity: 0.95;
 }
 .mdi-navbar .bar li.grow {
@@ -7192,11 +7192,11 @@ table > colgroup col.blue {
   font-size: 1.3rem;
 }
 .mdi-navbar .mdi-menu li.level-1 .btn-plus:hover {
-  color: var(--link);
+  color: #ffda00;
 }
 .mdi-navbar .mdi-menu li.level-1:hover {
   background-color: var(--neutral900);
-  color: var(--link);
+  color: #ffda00;
 }
 .mdi-navbar .mdi-menu li.level-1:hover .btn-plus {
   display: block;
