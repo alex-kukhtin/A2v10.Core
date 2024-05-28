@@ -72,6 +72,8 @@ public class ApiKeyAuthenticationHandler<T> : AuthenticationHandler<ApiKeyAuthen
 		if (appUser == null || appUser.IsEmpty)
 			return AuthenticateResult.NoResult();
 		var claims = await _userClaimStore.GetClaimsAsync(appUser, CancellationToken.None);
+		// ID is required
+		claims.Add(new Claim(WellKnownClaims.NameIdentifier, appUser.Id.ToString()!));
 
 		var identity = new ClaimsIdentity(claims, ApiKeyAuthenticationOptions.AuthenticationType);
 		var identities = new List<ClaimsIdentity> { identity };
