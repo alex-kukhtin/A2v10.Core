@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
-		<Version>10.1.8290</Version>
+		<Version>10.1.8296</Version>
 		<LangVersion>Latest</LangVersion>
 		<Product>A2v10</Product>
 		<Nullable>enable</Nullable>
@@ -33,7 +33,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-		<PackageReference Include="A2v10.Data.Core" Version="10.1.7361" />
+		<PackageReference Include="A2v10.Data.Core" Version="10.1.7362" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
 	</ItemGroup>
 

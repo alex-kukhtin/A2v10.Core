@@ -11,15 +11,16 @@ using Microsoft.AspNetCore.Identity;
 
 using A2v10.Infrastructure;
 using A2v10.Web.Identity;
+using A2v10.Data.Interfaces;
 
 
 namespace A2v10.Identity.UI;
-
 
 public class CreateUserHandler(IServiceProvider serviceProvider) : IClrInvokeTarget
 {
     private readonly AppUserStoreOptions<Int64> _userStoreOptions = serviceProvider.GetRequiredService<IOptions<AppUserStoreOptions<Int64>>>().Value;
     private readonly UserManager<AppUser<Int64>> _userManager = serviceProvider.GetRequiredService<UserManager<AppUser<Int64>>>();
+    private readonly IDbContext _dbContext = serviceProvider.GetRequiredService<IDbContext>();
 
     Boolean IsMultiTenant => _userStoreOptions.MultiTenant ?? false;
 
@@ -46,12 +47,18 @@ public class CreateUserHandler(IServiceProvider serviceProvider) : IClrInvokeTar
         var result = await _userManager.CreateAsync(user, password);
         if (result.Succeeded)
         {
-            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+
+			var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             await _userManager.ConfirmEmailAsync(user, token);
+
             var createdUser = await _userManager.FindByIdAsync(user.Id.ToString())
                 ?? throw new InvalidOperationException("Create user failed");
 
-            var cu = new ExpandoObject()
+            // TODO: перенести это в _tenantManager
+			if (IsMultiTenant)
+				await _dbContext.ExecuteAsync<AppUser<Int64>>(user.Segment, $"[{_userStoreOptions.SecuritySchema}].[User.Invite]", createdUser);
+
+			var cu = new ExpandoObject()
             {
                 { "Id", createdUser.Id },
                 { "EmailConfirmed", createdUser.EmailConfirmed }
