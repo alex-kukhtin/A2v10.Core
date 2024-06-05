@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
 
@@ -9,7 +9,7 @@ public class SheetSection : UIElement
 {
 	public Object? ItemsSource { get; set; }
 
-	public SheetRows Children { get; } = [];
+	public SheetRows Children { get; set; } = [];
 
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{

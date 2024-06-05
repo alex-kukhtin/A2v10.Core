@@ -1,8 +1,5 @@
-2024-05-28 (next: 8296)
+2024-06-05 (next: 8298)
 =======================
-A2v10.Identity.UI
-A2v10.Platform
-A2v10.AppRuntimeBuilder
 
 A2v10.Platform
 	A2v10.Platform.Web

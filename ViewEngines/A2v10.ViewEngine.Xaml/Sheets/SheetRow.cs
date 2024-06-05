@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
 using System.Collections.Generic;
@@ -25,7 +25,7 @@ namespace A2v10.Xaml
 	[ContentProperty("Cells")]
 	public class SheetRow : UIElement
 	{
-		public SheetCells Cells { get; } = [];
+		public SheetCells Cells { get; set; } = [];
 
 		public RowStyle Style { get; set; }
 		public TextAlign? Align { get; set; }
