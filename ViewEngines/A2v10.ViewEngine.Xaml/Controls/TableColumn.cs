@@ -17,6 +17,8 @@ public class TableColumn : XamlElement
 
 	public Boolean? If { get; set; }
 
+	public Object? ItemsSource { get; set; }
+
 	public TableColumn()
 	{
 
@@ -33,6 +35,23 @@ public class TableColumn : XamlElement
 	internal void Render(RenderContext context)
 	{
 		var col = new TagBuilder("col");
+
+		Bind? isBind = GetBinding(nameof(ItemsSource));
+		if (isBind != null)
+		{
+			col.MergeAttribute("v-for", $"(col, colIndex) in {isBind.GetPath(context)}");
+			col.MergeAttribute(":key", "colIndex");
+			using var scope = new ScopeContext(context, "col", isBind.Path);
+			RenderColumn(col, context);
+		}
+		else
+		{
+			RenderColumn(col, context);
+		}
+	}
+
+	void RenderColumn(TagBuilder col, RenderContext context)
+	{ 
 		if (Fit)
 			col.AddCssClass("fit");
 		if (Width != null)
