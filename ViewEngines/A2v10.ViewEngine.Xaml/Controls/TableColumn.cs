@@ -56,7 +56,10 @@ public class TableColumn : XamlElement
 			col.AddCssClass("fit");
 		if (Width != null)
 			col.MergeStyle("width", Width.Value);
-		if (MinWidth != null)
+		var mwBind = GetBinding(nameof(MinWidth));
+		if (mwBind != null)
+			col.MergeAttribute(":style", $"{{'min-width':{mwBind.GetPathFormat(context)} }}");
+		else if (MinWidth != null)
 			col.MergeStyle("min-width", MinWidth.Value);
 		MergeBindingAttributeBool(col, context, "v-if", nameof(If), If);
 		var bgBind = GetBinding(nameof(Background));

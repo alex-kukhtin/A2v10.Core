@@ -22,6 +22,7 @@ public class TableCell : UiContentElement
 	public Boolean Gray { get; set; }
 	public String? CssClass { get; set; }
 	public Length? Width { get; set; }
+	public Length? MinWidth { get; set; }
 
 	public Boolean? FirstInRow { get; set; }
 	//public Boolean Validate { get; set; }
@@ -40,6 +41,8 @@ public class TableCell : UiContentElement
 
 		if (Width != null)
 			td.MergeStyle("width", Width.ToString());
+		if (MinWidth != null)
+			td.MergeStyle("min-width", MinWidth.ToString());
 
 		td.AddCssClass(CssClass);
 
