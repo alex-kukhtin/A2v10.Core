@@ -11,6 +11,17 @@
 		"minify": { "enabled": false }
 	},
 	{
+		"outputFileName": "wwwroot/scripts/tabbedsp.js",
+		"inputFiles": [
+			"Scripts/signalr.js",
+			"Scripts/appheader.js",
+			"Scripts/navbar.js",
+			"Scripts/shellsp.js",
+			"Scripts/bigcalendar.js"
+		],
+		"minify": { "enabled": false }
+	},
+	{
 		"outputFileName": "../../Platform/A2v10.App.Assets/Application/@sql/a2v10_platform.sql",
 		"inputFiles": [
 			"../../Platform/A2v10.App.Assets/Application/@sql/source/a2v10_struct.sql",

@@ -1,4 +1,4 @@
-﻿// Copyright © 2022-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2022-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Dynamic;
@@ -12,11 +12,8 @@ namespace A2v10.ReportEngine.Pdf;
 
 using Image = A2v10.Xaml.Report.Image;
 
-internal class ImageComposer(Image image, RenderContext context) : FlowElementComposer
+internal class ImageComposer(Image _image, RenderContext _context) : FlowElementComposer
 {
-	private readonly Image _image = image;
-	private readonly RenderContext _context = context;
-
     internal override void Compose(IContainer container, Object? value = null)
 	{
 		if (!_context.IsVisible(_image))

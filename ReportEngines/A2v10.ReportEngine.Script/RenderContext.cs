@@ -16,7 +16,12 @@ using A2v10.Xaml.Report;
 
 namespace A2v10.ReportEngine.Script;
 
-public record ResolveResult(String? Value, Byte[]? Stream = null);
+public enum ResolveResultType
+{
+	Default,
+	QrCode
+}
+public record ResolveResult(String? Value, Byte[]? Stream = null, ResolveResultType ResultType = ResolveResultType.Default);
 public partial class RenderContext
 {
 	private readonly IReportLocalizer _localizer;
@@ -179,6 +184,8 @@ public partial class RenderContext
 				if (f != null)
 				{
 					var valObj = Engine.Invoke(f, item, null);
+					if (valObj is QrCodeValue qrCodeValue)
+						return new ResolveResult(qrCodeValue.Value, null, ResolveResultType.QrCode);
 					valResult = ValueToString(valObj, MatchDataType(dataType, valObj), format);
 				}
 			}

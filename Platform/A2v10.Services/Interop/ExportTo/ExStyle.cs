@@ -30,6 +30,7 @@ public struct Style
 
 	public readonly Boolean HasBorder => RowKind == RowKind.Body || RowRole == RowRole.Header || RowRole == RowRole.Footer || RowRole == RowRole.Total;
 	public readonly Boolean IsDateOrTime => DataType == DataType.Date || DataType == DataType.DateTime || DataType == DataType.Time;
+	public readonly Boolean IsBoolean => DataType == DataType.Boolean;
 }
 
 public class StylesDictionary

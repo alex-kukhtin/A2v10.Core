@@ -290,7 +290,7 @@ public class Dialog : RootContainer, ISupportTwoPhaseRendering
 			ha.MergeAttribute(":href", $"$helpHref('{HelpUrl}')");
 		}
 		ha.RenderStart(context);
-		new TagBuilder("i", "ico ico-help-outline")
+		new TagBuilder("i", "ico ico-help")
 			.Render(context);
 		//context.Writer.Write(context.Localize("@[Help]"));
 		ha.RenderEnd(context);

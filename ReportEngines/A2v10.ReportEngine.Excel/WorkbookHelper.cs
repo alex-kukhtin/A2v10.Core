@@ -12,6 +12,7 @@ using A2v10.ReportEngine.Script;
 namespace A2v10.ReportEngine.Excel;
 
 public record CellImage(Byte[] Stream);
+public record CellQrCode(String Value);
 public record WorkbookCell
 {
 	public WorkbookCell(Cell cell)
@@ -31,6 +32,7 @@ public record WorkbookCell
 	public Boolean IsSpanPart { get; init; }	
 	public String? Value { get; set;}
 	public CellImage? Image { get; set; }
+	public CellQrCode? QrCode { get; set; }
 }
 
 public record RealRow(UInt32 CellRow, ExpandoObject? Item = null);
@@ -111,6 +113,8 @@ public partial class WorkbookHelper
 			wbCell.Value = rr.Value;
 			if (rr.Stream != null)
 				wbCell.Image = new CellImage(rr.Stream);
+			else if (rr.ResultType == ResolveResultType.QrCode)
+				wbCell.QrCode = new CellQrCode(rr.Value ?? String.Empty);
 		}
         return wbCell;
 	}

@@ -177,6 +177,10 @@ public class ExcelWriter
 				cf.NumberFormatId = 9; /*standard*/
 				cf.ApplyNumberFormat = true;
 				break;
+			case DataType.Boolean:
+				cf.NumberFormatId = 0; /*standard*/
+				cf.ApplyNumberFormat = true;
+				break;
 			case DataType.Number:
 				break;
 			case DataType.String:
@@ -203,7 +207,7 @@ public class ExcelWriter
 		}
 
 		// align
-		if (style.IsDateOrTime)
+		if (style.IsDateOrTime || style.IsBoolean)
 			cf.Alignment.Horizontal = HorizontalAlignmentValues.Center;
 
 		if (style.Wrap)
@@ -345,6 +349,10 @@ public class ExcelWriter
 			case DataType.Date:
 			case DataType.DateTime:
 				// DataType not needed
+				cell.CellValue = new CellValue(exCell.Value);
+				break;
+			case DataType.Boolean:
+				cell.DataType = new EnumValue<CellValues>(CellValues.Boolean);
 				cell.CellValue = new CellValue(exCell.Value);
 				break;
 			default:

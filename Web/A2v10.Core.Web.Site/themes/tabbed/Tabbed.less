@@ -547,3 +547,22 @@
 		grid-area: main;
 	}
 }
+
+.sp-shell {
+	display: grid;
+	grid-template-rows: auto auto 1fr auto;
+	grid-template-areas:
+		"header" "banner" "main" "footer";
+	height: 100%;
+	overflow: hidden;
+	width: 100%;
+}
+
+.sp-content-view {
+	grid-area: main;
+	overflow: hidden;
+
+	> .a2-include {
+		height: 100%;
+	}
+}

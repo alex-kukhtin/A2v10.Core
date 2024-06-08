@@ -61,8 +61,9 @@ namespace A2v10.Platform.Web {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ////*20210531-7776*/
+        ///   Looks up a localized string similar to // Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+        ///
+        ////*20240118-8226*/
         ///
         ///(function () {
         ///
@@ -82,10 +83,7 @@ namespace A2v10.Platform.Web {
         ///		components: {
         ///			&apos;a2-app-header&apos;: AppHeader,
         ///			&apos;a2-main-view&apos;: MainView
-        ///		},
-        ///		data: {
-        ///			version: &apos;$(AppVersion)&apos;,
-        ///			menu: menu.Menu ?  [rest of string was truncated]&quot;;.
+        ///		 [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string shell {
             get {
@@ -94,9 +92,9 @@ namespace A2v10.Platform.Web {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to // Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+        ///   Looks up a localized string similar to // Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
         ///
-        ////*20201111-7721*/
+        ////*20240118-8226*/
         ///
         ///(function () {
         ///
@@ -116,7 +114,7 @@ namespace A2v10.Platform.Web {
         ///		},
         ///		methods: {
         ///			root() {
-        ///				let opts = { ti [rest of string was truncated]&quot;;.
+        ///				let opts = [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string shellAdmin {
             get {
@@ -125,8 +123,9 @@ namespace A2v10.Platform.Web {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ////*20230506-8086*/
+        ///   Looks up a localized string similar to // Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+        ///
+        ////*20240118-8226*/
         ///
         ///(function () {
         ///
@@ -149,13 +148,44 @@ namespace A2v10.Platform.Web {
         ///		}
         ///	});
         ///
-        ///	window.$$rootUrl = &apos;&apos;;
-        ///	window.$$debug = $(Debug);
-        ///})();.
+        ///	wind [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string shellPlain {
             get {
                 return ResourceManager.GetString("shellPlain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to // Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+        ///
+        ////*20240118-8226*/
+        ///
+        ///(function () {
+        ///
+        ///	const Shell = component(&apos;std:shellSinglePage&apos;)
+        ///
+        ///	const sp = menu.SysParams || {};
+        ///
+        ///	const elem = new Shell({
+        ///		el: &apos;#shell&apos;,
+        ///		data: {
+        ///			version: &apos;$(AppVersion)&apos;,
+        ///			title: sp.AppTitle || &apos;&apos;,
+        ///			subtitle: sp.AppSubTitle || &apos;&apos;,
+        ///			userState: menu.UserState,
+        ///			isDebug: $(Debug),
+        ///			appData: $(AppData),
+        ///		}
+        ///	});
+        ///
+        ///	window.$$rootUrl = &apos;&apos;;
+        ///	window.$$debug = $(Debug);
+        ///})();.
+        /// </summary>
+        internal static string shellSinglePage {
+            get {
+                return ResourceManager.GetString("shellSinglePage", resourceCulture);
             }
         }
     }

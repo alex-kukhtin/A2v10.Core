@@ -72,17 +72,15 @@ internal class WorkbookComposer(Workbook _workbook, RenderContext _context) : Fl
 		}
 	}
 
-	private static void ComposeCell(WorkbookCell wbCell, IContainer cellCont)
+	private void ComposeCell(WorkbookCell wbCell, IContainer cellCont)
 	{
 		if (wbCell.Image != null)
-		{
 			cellCont.Image(wbCell.Image.Stream);
-		}
+		else if (wbCell.QrCode != null) 
+			QrCodeComposer.DrawQrCode(cellCont, wbCell.QrCode.Value);
 		else if (!String.IsNullOrEmpty(wbCell.Value))
-		{
 			cellCont.Text(wbCell.Value)
 				.LineHeight(1)
 				.ApplyText(wbCell.Cell.RuntimeStyle);
-		}
 	}
 }

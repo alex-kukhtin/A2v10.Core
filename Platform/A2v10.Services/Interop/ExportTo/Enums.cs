@@ -12,7 +12,8 @@ public enum DataType
 	DateTime,
 	Time,
 	Percent,
-	StringPlain
+	StringPlain,
+	Boolean
 }
 
 public enum HorizontalAlign

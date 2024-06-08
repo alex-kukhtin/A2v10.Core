@@ -6026,6 +6026,13 @@ TODO:
   cursor: pointer;
   height: 2rem;
 }
+.panel .panel-header .panel-header-slot {
+  width: 100%;
+  display: flex;
+}
+.panel .panel-header .panel-header-slot .a2-panel-description {
+  font-size: 1rem;
+}
 .panel .panel-header .ico {
   margin-right: 3px;
 }
@@ -7282,6 +7289,21 @@ table > colgroup col.blue {
 }
 .login-shell .main-view {
   grid-area: main;
+}
+.sp-shell {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  grid-template-areas: "header" "banner" "main" "footer";
+  height: 100%;
+  overflow: hidden;
+  width: 100%;
+}
+.sp-content-view {
+  grid-area: main;
+  overflow: hidden;
+}
+.sp-content-view > .a2-include {
+  height: 100%;
 }
 .a2-new-btn .btn {
   padding: 0 1em;

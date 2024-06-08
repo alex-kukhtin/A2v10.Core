@@ -22,6 +22,7 @@ internal static class Extensions
 			Table table => new TableComposer(table, context),
 			Text text => new TextComposer(text, context),
 			Image image => new ImageComposer(image, context),
+			QrCode qrCode => new QrCodeComposer(qrCode, context),
 			Line line => new LineComposer(line),
 			List list => new ListComposer(list, context),
 			Inlined inlined => new InlinedComposer(inlined, context),

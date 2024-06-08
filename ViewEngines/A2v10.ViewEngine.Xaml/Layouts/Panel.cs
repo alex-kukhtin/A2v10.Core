@@ -40,6 +40,7 @@ public class Panel : Container, ITableControl
     public GapSize? Gap { get; set; }
 
     public String? TestId { get; set; }
+	public Object? Description { get; set; }
 
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
@@ -109,8 +110,30 @@ public class Panel : Container, ITableControl
 		{
 			context.Writer.Write(context.LocalizeCheckApostrophe(Header.ToString()));
 		}
+		RenderDesription(context);
 		RenderHint(context);
 		header.RenderEnd(context);
+	}
+
+	void RenderDesription(RenderContext context)
+	{
+		var dBind = GetBinding(nameof(Description));
+		if (dBind == null && Description == null)
+			return;
+		new ToolbarAligner().RenderElement(context);
+		var wrap = new TagBuilder(null, "a2-panel-description");
+		wrap.RenderStart(context);
+		if (dBind != null)
+		{
+			var span = new TagBuilder("span");
+			span.MergeAttribute("v-text", dBind.GetPathFormat(context));
+			span.Render(context);
+		}
+		else if (Description is UIElementBase uiDescr)
+			uiDescr.RenderElement(context);
+		else if (Description != null)
+			context.Writer.Write(context.LocalizeCheckApostrophe(Description.ToString()));
+		wrap.RenderEnd(context);
 	}
 
 	void RenderHint(RenderContext context)

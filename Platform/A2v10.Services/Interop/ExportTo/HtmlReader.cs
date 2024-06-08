@@ -76,7 +76,7 @@ internal partial class HtmlReader(IFormatProvider currentFormat)
 	static XmlDocument GetXmlFromHtml(String html)
 	{
 		var xml = ColumnRegex().Replace(html, (math) => $"<col {math.Groups[1].Value} />")
-			.Replace("&nbsp;", "&#160;").Replace("<br>", "&#10;");
+			.Replace("&nbsp;", "&#160;").Replace("<br>", "&#10;").Replace("<hr>", "&#160;");
 		var doc = new XmlDocument();
 		doc.LoadXml(xml);
 		return doc;

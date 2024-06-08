@@ -36,5 +36,5 @@ public record AppOptions
     public AppEnvironment Environment { get; } = new AppEnvironment();
 	public Dictionary<String, ModuleInfo>? Modules { get; set; }
 	public Boolean IsCustomUserMenu => !String.IsNullOrEmpty(UserMenu);
-
+	public List<String> SinglePages { get; set; } = [];
 }

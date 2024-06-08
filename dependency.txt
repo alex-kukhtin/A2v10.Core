@@ -1,5 +1,9 @@
 2024-06-06 (next: 8301)
 =======================
+A2v10.Platform
+A2v10.Platform.Web
+A2v10.ViewEngine.Xaml
+
 
 A2v10.Platform
 	A2v10.Platform.Web

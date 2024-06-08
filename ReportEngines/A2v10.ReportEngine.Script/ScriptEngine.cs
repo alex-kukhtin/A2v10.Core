@@ -37,6 +37,7 @@ public class ScriptEngine
 		_engine.SetValue("spellMoney", SpellMoney);
         _engine.SetValue("spellMoneyEn", SpellMoneyEn);
         _engine.SetValue("formatDate", FormatDate);
+		_engine.SetValue("qrCode", QrCodeFunc);
 	}
 
 	public IList<ExpandoObject> EvaluateCollection(String expression)
@@ -103,5 +104,10 @@ public class ScriptEngine
 		if (value is DateTime valDate)
 			return valDate.ToString(format, _culture);
 		return "Invalid date";
+	}
+
+	Object QrCodeFunc(Object value)
+	{
+		return new QrCodeValue(value?.ToString() ?? String.Empty);
 	}
 }

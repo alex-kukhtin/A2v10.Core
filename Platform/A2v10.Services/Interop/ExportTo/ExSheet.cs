@@ -1,6 +1,7 @@
 ﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 
+using A2v10.Data.Interfaces;
 using System.Globalization;
 
 namespace A2v10.Services.Interop;
@@ -132,6 +133,35 @@ public class ExSheet
 		if (width != 0)
 			col.Width = width;
 		return col;
+	}
+
+	public static Byte[] CreateFromDataModel(IDataModel model)
+	{
+		var meta = model.Metadata["TRow"];
+		var columns = meta.Fields.Select(f => f.Key).ToList();
+
+		var sheet = new ExSheet();
+
+		var rows = model.Eval<List<ExpandoObject>>("Rows")
+			?? throw new InvalidOperationException("Rows is null");
+
+		var hrow = sheet.AddRow(RowKind.HeaderFlat);
+		foreach (var c in columns)
+		{
+			sheet.AddColumn(); // default width
+			sheet.AddCell(hrow, c);
+		}
+
+		foreach (var row in rows)
+		{
+			var exrow = sheet.AddRow(RowKind.BodyFlat);
+			foreach (var c in columns)
+				sheet.AddCell(exrow, row.Get<Object>(c));
+		}
+
+		var writer = new ExcelWriter();
+		var bytes = writer.SheetToExcel(sheet);
+		return bytes;
 	}
 }
 

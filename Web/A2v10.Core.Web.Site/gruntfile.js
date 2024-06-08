@@ -13,11 +13,12 @@ module.exports = function (grunt) {
 			main: {
 				files: {
 					'wwwroot/scripts/tabbed.min.js': ['wwwroot/scripts/tabbed.js'],
+					'wwwroot/scripts/tabbedsp.min.js': ['wwwroot/scripts/tabbedsp.js'],
 				}
 			},
 		},
 		watch: {
-			files: ["wwwroot/scripts/tabbed.js"],
+			files: ["wwwroot/scripts/tabbed.js", "wwwroot/scripts/tabbedsp.js"],
 			tasks: ["terser"]
 		}
 });

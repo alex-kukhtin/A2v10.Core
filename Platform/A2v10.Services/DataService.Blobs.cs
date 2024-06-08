@@ -34,6 +34,7 @@ public partial class DataService
 			ModelBlobType.json => await LoadBlobJson(blob, prms),
 			ModelBlobType.clr => await LoadBlobClr(blob, prms),
 			ModelBlobType.blobStorage => await LoadBlobStorage(blob, prms),
+			ModelBlobType.excel => await LoadBlobExcel(blob, prms),
 			_ => throw new NotImplementedException(blob.Type.ToString()),
 		};
 		return blobInfo;
@@ -46,6 +47,28 @@ public partial class DataService
 			throw new DataServiceException($"LoadBlobProcedure is null");
 		return _dbContext.LoadAsync<BlobInfo>(blob?.DataSource, loadProc, prms);
 	}
+
+	private async Task<BlobInfo?> LoadBlobExcel(IModelBlob blob, ExpandoObject prms)
+	{
+		var loadProc = blob.LoadProcedure();
+		if (String.IsNullOrEmpty(loadProc))
+			throw new DataServiceException($"LoadProcedure is null");
+		var dm = await _dbContext.LoadModelAsync(blob.DataSource, loadProc, prms)
+			?? throw new InvalidOperationException("LoadBlobExcel. DataModel is null");
+		var bytes = ExSheet.CreateFromDataModel(dm);
+
+		var fn = blob.OutputFileName ?? "ffile";
+		if (!fn.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+			fn += ".xlsx";
+		return new BlobInfo()
+		{
+			SkipToken = true,
+			Mime = MimeTypes.Application.Xlsx,
+			Stream = bytes,
+			Name = fn
+		};
+	}
+
 	private async Task<BlobInfo?> LoadBlobStorage(IModelBlob blob, ExpandoObject prms)
 	{
 		var blobInfo = await LoadBlobSql(blob, prms);

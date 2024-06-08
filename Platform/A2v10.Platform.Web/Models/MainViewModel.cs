@@ -14,5 +14,7 @@ public class MainViewModel
 	public Boolean HasProfile { get; init; }
 	public Boolean HasSettings { get; init; }
 	public String Theme { get; init; } = String.Empty;
+	public String Minify { get; init; } = String.Empty;
+	public String? SinglePagePath { get; set; }
 }
 

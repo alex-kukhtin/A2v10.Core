@@ -62,6 +62,20 @@ public class ShellController(IDbContext _dbContext, IApplicationHost _host, ICur
 		return DoScript();
 	}
 
+	public async Task<IActionResult> ScriptSp()
+	{
+		try
+		{
+			Response.ContentType = MimeTypes.Application.Javascript;
+			var script = await BuildScriptSinglePage();
+			return new WebActionResult(script);
+		}
+		catch (Exception ex)
+		{
+			return new WebExceptionResult(500, ex.Message);
+		}
+	}
+
 	public IActionResult Locale()
 	{
 		var x = JsonConvert.SerializeObject(_localizer.Dictionary, Formatting.None);
@@ -156,6 +170,42 @@ public class ShellController(IDbContext _dbContext, IApplicationHost _host, ICur
 		return shell.ResolveMacros(macros) ?? String.Empty;
 	}
 
+	async Task<String> BuildScriptSinglePage()
+	{
+		String shell = Resource.shellSinglePage;
+
+		ExpandoObject loadPrms = [];
+		SetSqlParams(loadPrms);
+
+		ExpandoObject macros = [];
+
+		_ = macros.Append(new Dictionary<String, Object?>
+		{
+			{ "AppVersion", _appDataProvider.AppVersion },
+			{ "Debug", IsDebugConfiguration ? "true" : "false" },
+			{ "AppData", await _appDataProvider.GetAppDataAsStringAsync() }
+		});
+
+		String proc = MENU_PROC;
+
+		await EnsurePermissionObjects();
+
+		if (_appOptions.IsCustomUserMenu)
+			proc = _appOptions.UserMenu!;
+
+		proc = proc.Replace("Menu.", "MenuSP.");
+		IDataModel dm = await _dbContext.LoadModelAsync(_host.TenantDataSource, proc, loadPrms);
+
+		ExpandoObject? menuRoot = dm.Root.RemoveEmptyArrays();
+		SetUserStatePermission(dm);
+		SetUserStateModules(dm);
+
+		String jsonMenu = JsonConvert.SerializeObject(menuRoot, JsonHelpers.ConfigSerializerSettings(_host.IsDebugConfiguration));
+		macros.Set("Menu", jsonMenu);
+
+		return shell.ResolveMacros(macros) ?? String.Empty;
+	}
+
 	async Task EnsurePermissionObjects()
 	{
 		await _pemissionBag.LoadPermisionBagAsync(_dbContext, _currentUser.Identity.Segment);
@@ -181,7 +231,7 @@ public class ShellController(IDbContext _dbContext, IApplicationHost _host, ICur
 			{ "Period", "null" },
 		});
 
-		Boolean setCompany = false;
+		//Boolean setCompany = false;
 		/*
 		if (_host.IsMultiTenant || _host.IsUsePeriodAndCompanies)
 		{
@@ -223,6 +273,7 @@ public class ShellController(IDbContext _dbContext, IApplicationHost _host, ICur
 		String jsonMenu = JsonConvert.SerializeObject(menuRoot, JsonHelpers.ConfigSerializerSettings(_host.IsDebugConfiguration));
 		macros.Set("Menu", jsonMenu);
 
+		/*
         if (setCompany)
 		{
 			var comps = dm.Root.Get<List<ExpandoObject>>("Companies");
@@ -234,6 +285,7 @@ public class ShellController(IDbContext _dbContext, IApplicationHost _host, ICur
 			_currentUser.SetCompanyId(currComp.Get<Int64>("Id"));
 
 		}
+		*/
 
 		return shell.ResolveMacros(macros) ?? String.Empty;
 	}

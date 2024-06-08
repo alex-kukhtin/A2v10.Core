@@ -124,10 +124,10 @@ public partial class ExCell
 
 	public static ExCell Create(Object? val)
 	{
-		var cell = new ExCell();	
+		var cell = new ExCell();
 		if (val is String strVal)
 		{
-			cell.Value = strVal;	
+			cell.Value = strVal;
 			cell.DataType = DataType.StringPlain;
 		}
 		else if (val is Decimal decVal)
@@ -157,6 +157,11 @@ public partial class ExCell
 				cell.DataType = DataType.Date;
 			else
 				cell.DataType = DataType.DateTime;
+		}
+		else if (val is Boolean boolVal)
+		{
+			cell.Value = boolVal ? "1" : "0";
+			cell.DataType = DataType.Boolean;
 		}
 		else if (val is TimeSpan timeVal)
 		{

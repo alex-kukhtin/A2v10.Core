@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using A2v10.Infrastructure;
 using A2v10.Web.Identity;
 using A2v10.Module.Infrastructure;
+using System.Linq;
 
 namespace A2v10.Platform.Web.Controllers;
 
@@ -50,10 +51,11 @@ public class MainController(IDataService dataService, IOptions<AppOptions> appOp
 		if (!await CheckLicenseAsync())
 			return new EmptyResult();	
 
-		var layoutDescr = await _dataService.GetLayoutDescriptionAsync(NormalizePathInfo(pathInfo));
-
 		if (User.Identity == null)
 			throw new ApplicationException("Invalid User");
+
+		var layoutDescr = await _dataService.GetLayoutDescriptionAsync(NormalizePathInfo(pathInfo));
+
 		var viewModel = new MainViewModel()
 		{
 			PersonName = User.Identity.GetUserPersonName() ?? User.Identity.Name ?? throw new ApplicationException("Invalid UserName"),
@@ -64,16 +66,21 @@ public class MainController(IDataService dataService, IOptions<AppOptions> appOp
 			HasNavPane = HasNavPane(),
 			HasProfile = HasProfile(),
 			Theme = _appTheme.MakeTheme(),
-			HasSettings = _currentUser.Identity.IsAdmin && HasSettings()
+			HasSettings = _currentUser.Identity.IsAdmin && HasSettings(),
+			Minify = _appOptions.Environment.IsRelease ? "min." : String.Empty,
 		};
-		ViewBag.__Minify = ""; // "min.";
+
+		if (pathInfo != null && _appOptions.SinglePages.Any(x => pathInfo.StartsWith(x, StringComparison.OrdinalIgnoreCase)))
+		{
+			viewModel.SinglePagePath = pathInfo;
+			return View("Default.singlepage", viewModel);
+		}
 
 		if (!String.IsNullOrEmpty(_appOptions.Layout))
 			return View($"Default.{_appOptions.Layout}", viewModel);
 
 		return View(viewModel);
 	}
-
 
 	[Route("main/error")]
 	[HttpGet]

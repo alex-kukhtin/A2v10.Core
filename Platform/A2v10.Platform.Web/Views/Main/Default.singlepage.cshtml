@@ -1,0 +1,79 @@
+﻿@model MainViewModel
+@{
+	Layout = "_Layout.singlePage";
+}
+@inject ILocalizer loc
+@inject IApplicationHost host
+@inject IUserBannerProvider userBanner
+@inject IApplicationTheme theme
+
+@{
+	var bannerText = await userBanner.GetHtmlAsync();
+	var isBannerVisible = !String.IsNullOrEmpty(bannerText);
+}
+
+<div id="shell" class="sp-shell @(Model!.Debug ? "debug" : "release")" v-cloak
+	 data-init-url="@Html.Raw(Model.SinglePagePath)">
+	<a2-mdi-header :title="title" person-name="@Model.PersonName" :has-profile="@Model.HasProfile.ToString().ToLowerInvariant()"
+				   profile-text="@loc["Profile"]" :logo="'@Html.Raw(theme.LogoUrl())'">
+		@if (Model.HasNavPane)
+		{
+			<include class=nav-pane src="/_page/_navpane/index/0" :hide-indicator="true"></include>
+		}
+	</a2-mdi-header>
+	<div class="load-indicator" v-show="processing"></div>
+	<a2-singlepage-view :url="currentPage"></a2-singlepage-view>
+	<div class="mdi-footer">
+		<div :class="{spinner: true, active:processing}"></div>
+		<span class="divider"></span>
+
+		<span class="links">
+			<a target="_blank" tabindex="-1" href="" v-on:click.stop.prevent="navigateUrl('/app/about/0')">@loc.Localize(null, "@[About]")</a>
+		</span>
+		<span class="divider"></span>
+
+		<span class="version-info">
+			<a target="_blank" tabindex="-1" href="https://a2v10.com"><i class="ico ico-a2logo a2logo-layout"></i></a>
+			@loc.Localize(null, "@[Version]")
+			<span v-text="version"></span>
+		</span>
+		@if (host.IsDebugConfiguration)
+		{
+			<div class="debug-btn dropdown dir-up" v-dropdown>
+				<button class="btn btn-debug" toggle>@loc.Localize(null, "@[Debug]")<span class="caret up"></span></button>
+				<div class="dropdown-menu menu up-left">
+					<a v-on:click.prevent="debugModel" class="dropdown-item" tabindex="-1"><i class="ico ico-database"></i> @loc.Localize(null, "@[DataModel]")</a>
+					<a v-on:click.prevent="debugTrace" class="dropdown-item" tabindex="-1"><i class="ico ico-chart-stacked-line"></i> @loc.Localize(null, "@[Profiling]")</a>
+					<div class="divider"></div>
+					<label class="checkbox">
+						<input type="checkbox" v-model="traceEnabled" name="trace" />
+						<span>@loc["Tracing"]</span>
+					</label>
+				</div>
+			</div>
+		}
+		else
+		{
+			@* use gap:12px*@
+			<div></div>
+		}
+	</div>
+	<a2-debug :model-stack="modelStack" :model-visible="debugShowModel" v-if="isDebug"
+			  :trace-visible="debugShowTrace" :counter="dataCounter" :close="debugClose"></a2-debug>
+	<div class=modal-stack v-if=hasModals>
+		<div class="modal-wrapper modal-animation-frame" v-for="dlg in modals" v-bind:class="{show: dlg.wrap}">
+			<a2-modal :dialog=dlg></a2-modal>
+		</div>
+	</div>
+	<a2-toastr></a2-toastr>
+	<div class="side-pane-frame" v-if="sidePaneVisible">
+		<include :src="sidePaneUrl" :hide-indicator="true"></include>
+	</div>
+	<div v-if="newVersionAvailable" class="mdi-new-version">
+		<div class="nv-body">
+			<h3>A new version is available</h3>
+			<span>Reload the page to continue</span>
+			<button class="btn btn-primary" v-on:click="reloadApplication">Reload to update</button>
+		</div>
+	</div>
+</div>
