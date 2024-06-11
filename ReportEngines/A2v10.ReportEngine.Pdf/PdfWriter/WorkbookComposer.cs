@@ -72,7 +72,7 @@ internal class WorkbookComposer(Workbook _workbook, RenderContext _context) : Fl
 		}
 	}
 
-	private void ComposeCell(WorkbookCell wbCell, IContainer cellCont)
+	private static void ComposeCell(WorkbookCell wbCell, IContainer cellCont)
 	{
 		if (wbCell.Image != null)
 			cellCont.Image(wbCell.Image.Stream);

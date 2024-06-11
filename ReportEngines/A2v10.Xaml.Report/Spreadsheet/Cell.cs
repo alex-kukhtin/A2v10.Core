@@ -48,7 +48,7 @@ public class Cell : XamlElement
 	public void OnCreate()
 	{
 		var rs = GetRuntimeStyle();
-		rs.Padding = Thickness.FromString("1,3"); // 1pt v, 3pt h
+		rs.Padding = Thickness.FromString("1,3,2,3"); // 1pt t, 3pt l+r, 2pt b
 		rs.VAlign = VertAlign.Bottom; // default is bottom
 		switch (DataType)
 		{
