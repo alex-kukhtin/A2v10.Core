@@ -60,7 +60,8 @@ public sealed class AppUserStore<T>(IDbContext dbContext, IOptions<AppUserStoreO
 		public const String Roles = nameof(Roles);
 		public const String Branch = nameof(Branch);
         public const String ZipCode = nameof(ZipCode);
-        public const String AccessFailedCount = nameof(AccessFailedCount);
+		public const String ExternalId = nameof(ExternalId);
+		public const String AccessFailedCount = nameof(AccessFailedCount);
 		public const String LockoutEndDate = nameof(LockoutEndDate);
         public const String Locale = nameof(Locale);
 		public const String LoginProvider = nameof(LoginProvider);
@@ -172,7 +173,9 @@ public sealed class AppUserStore<T>(IDbContext dbContext, IOptions<AppUserStoreO
 			prm.Add(ParamNames.Branch, user.Branch);
         if (user.Flags.HasFlag(UpdateFlags.ZipCode))
             prm.Add(ParamNames.ZipCode, user.ZipCode);
-        if (user.Flags.HasFlag(UpdateFlags.Locale))
+		if (user.Flags.HasFlag(UpdateFlags.ExternalId))
+			prm.Add(ParamNames.ExternalId, user.ExternalId);
+		if (user.Flags.HasFlag(UpdateFlags.Locale))
             prm.Add(ParamNames.Locale, user.Locale);
 		if (user.Flags.HasFlag(UpdateFlags.TwoFactor))
 		{
