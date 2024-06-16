@@ -44,7 +44,7 @@
 			width: @modal-width-medium;
 			height: auto;
 			background-color: @bk-primary;
-			border-radius:@modal-brd-radius;
+			border-radius: @modal-brd-radius;
 
 			&.with-placement {
 				position: absolute;
@@ -62,6 +62,13 @@
 
 			&.side-bar-right {
 				right: 0;
+				border-radius: @modal-brd-radius 0 0 @modal-brd-radius;
+
+				.button-on-top {
+					.modal-footer {
+						border-radius: @modal-brd-radius 0 0 0;
+					}
+				}
 			}
 
 			&.side-bar-left {

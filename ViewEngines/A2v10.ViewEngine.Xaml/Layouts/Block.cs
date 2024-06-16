@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
 
@@ -20,6 +20,7 @@ public class Block : UIElement, ITableControl
 	public BackgroundStyle Background { get; set; }
 	public ShadowStyle DropShadow { get; set; }
 	public Length? MaxWidth { get; set; }
+	public Length? MaxHeight { get; set; }
 
 	internal virtual void RenderChildren(RenderContext context)
 	{
@@ -72,6 +73,8 @@ public class Block : UIElement, ITableControl
 
 		if (MaxWidth != null)
 			div.MergeStyle("max-width", MaxWidth.Value);
+		if (MaxHeight != null)
+			div.MergeStyle("max-height", MaxHeight.Value);
 
 		div.RenderStart(context);
 		RenderChildren(context);

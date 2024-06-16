@@ -2402,7 +2402,7 @@ pre.a2-code {
   font-size: 75%;
 }
 .a2-label.lg {
-  font-size: 1rem;
+  font-size: 1.2em;
 }
 .control-group.val-warning .validator {
   background-color: #fff9e7;
@@ -4376,6 +4376,10 @@ ul.news-list > li {
 }
 .modal-stack .modal-wrapper .modal-window.side-bar-right {
   right: 0;
+  border-radius: 8px 0 0 8px;
+}
+.modal-stack .modal-wrapper .modal-window.side-bar-right .button-on-top .modal-footer {
+  border-radius: 8px 0 0 0;
 }
 .modal-stack .modal-wrapper .modal-window.side-bar-left {
   left: 0;
