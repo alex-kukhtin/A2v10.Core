@@ -36,6 +36,7 @@ public record BlobUpdateString
 	public String? Stream { get; set; }
 	public String? Key { get; set; }
 	public Object? Id { get; set; }
+    public Stream? RawData { get; set; }
 }
 
 public record BlobUpdateOutput : IBlobUpdateOutput

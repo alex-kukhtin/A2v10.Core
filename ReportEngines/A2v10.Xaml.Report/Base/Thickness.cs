@@ -10,8 +10,8 @@ namespace A2v10.Xaml.Report;
 public record Thickness
 {
 	public Length Top { get; init; } = Length.Empty();
-	public Length Right { get; init; } = Length.Empty();
-	public Length Bottom { get; init; } = Length.Empty();
+	public Length Right { get; set; } = Length.Empty();
+	public Length Bottom { get; set; } = Length.Empty();
 	public Length Left { get; init; } = Length.Empty();
 
 	public static Thickness FromString(String str)

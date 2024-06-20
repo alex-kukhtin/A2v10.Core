@@ -9,6 +9,7 @@ using QuestPDF.Infrastructure;
 using A2v10.Xaml.Report;
 using A2v10.Xaml.Report.Spreadsheet;
 using A2v10.ReportEngine.Script;
+using A2v10.ReportEngine.Excel;
 
 namespace A2v10.ReportEngine.Pdf;
 
@@ -60,15 +61,45 @@ internal class PageComposer
 			return ts;
 		});
 
-		// header
-		if (_page.Header != null)
-			page.Header().Element(ComposeHeader);
+		if (_page is Spreadsheet ps)
+		{
+			var wbHelper = new WorkbookHelper(ps.Workbook, _context);
+			var wbComposer = new WorkbookComposer(ps.Workbook, wbHelper, _context);
+			if (ps.Workbook.Header != null)
+			{
+				// compose workbook header
+			}
+			// content
+			page.Content().Element(container =>
+			{
+				container.Column(column =>
+				{
+					wbComposer.Compose(column);
+				});
+			});
+			if (ps.Workbook.Footer != null)
+			{
+				page.Footer().Element(container =>
+				{
+					container.Column(col =>
+					{
+						wbComposer.ComposeFooter(col);
+					});
+				});
+			}
+		}
+		else
+		{
+			// header
+			if (_page.Header != null)
+				page.Header().Element(ComposeHeader);
 
-		// content
-		page.Content().Element(ComposeContent);
+			// content
+			page.Content().Element(ComposeContent);
 
-		if (_page.Footer != null)
-			page.Footer().Element(ComposeFooter);
+			if (_page.Footer != null)
+				page.Footer().Element(ComposeFooter);
+		}
 	}
 
 	void ComposeHeader(IContainer container)
@@ -84,15 +115,7 @@ internal class PageComposer
 
 	void ComposeContent(IContainer container)
 	{
-		if (_page is Spreadsheet spreadsheet)
-		{
-			container.Column(column =>
-			{
-				var cc = new WorkbookComposer(spreadsheet.Workbook, _context);
-				cc.Compose(column);
-			});
-		}
-		else if (_page.Columns.Count > 0)
+		if (_page.Columns.Count > 0)
 		{
 			foreach (var c in _page.Columns)
 			{

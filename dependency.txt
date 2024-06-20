@@ -1,5 +1,6 @@
-2024-06-18 (next: 8306)
+2024-06-20 (next: 8307)
 =======================
+
 
 A2v10.Platform
 	A2v10.Platform.Web
@@ -8,7 +9,7 @@ A2v10.Platform
 	A2v10.ReportEngine.Pdf
 		A2v10.ReportEngine.Excel
 			A2v10.ReportEngine.Script
-			A2v10.Xaml.Report
+				A2v10.Xaml.Report
 		A2v10.Infrastructure
 	A2v10.Services
 		A2v10.Infrastructure

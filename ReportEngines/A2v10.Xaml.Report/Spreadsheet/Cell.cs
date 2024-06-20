@@ -21,6 +21,8 @@ public class Cell : XamlElement
 			rs.Border = style.Border;
 		if (style.Background != null)
 			rs.Background = style.Background;
+		if (style.FontName != null)
+			rs.FontName = style.FontName;
 		if (style.FontSize != null)
 			rs.FontSize = style.FontSize;
 		if (style.Align != null)
@@ -63,6 +65,18 @@ public class Cell : XamlElement
 				break;
 
 		}
+	}
+
+	public void FixRuntimeBorder(Cell source, Char target)
+	{
+		if (RuntimeStyle == null || source.RuntimeStyle == null) 
+			return;
+		if (RuntimeStyle.Border == null || source.RuntimeStyle.Border == null)
+			return;
+		if (target == 'R')
+			RuntimeStyle.Border.Right = source.RuntimeStyle.Border.Right;
+		else if (target == 'B')
+			RuntimeStyle.Border.Bottom = source.RuntimeStyle.Border.Bottom;
 	}
 }
 

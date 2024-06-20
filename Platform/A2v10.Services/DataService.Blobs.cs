@@ -57,7 +57,8 @@ public partial class DataService
 			?? throw new InvalidOperationException("LoadBlobExcel. DataModel is null");
 		var bytes = ExSheet.CreateFromDataModel(dm);
 
-		var fn = blob.OutputFileName ?? "ffile";
+		var fn = dm.Resolve(blob.OutputFileName) ?? "file";
+		 
 		if (!fn.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
 			fn += ".xlsx";
 		return new BlobInfo()
@@ -196,7 +197,8 @@ public partial class DataService
 				Key = blobInfo.Key,
 				Name = blobInfo.Name,
 				Mime = blobInfo.Mime,
-				Stream = strResult
+				Stream = strResult,
+				RawData = blobInfo.Stream
 			};
 			return await SaveBlobString(blobStringInfo, blobModel, setParams);
 		}

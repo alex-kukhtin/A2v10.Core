@@ -9,7 +9,6 @@ using System.Globalization;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml;
-using DocumentFormat.OpenXml.Drawing.Spreadsheet;
 
 using XSheet = A2v10.Xaml.Report.Spreadsheet.Spreadsheet;
 using XWorkbook = A2v10.Xaml.Report.Spreadsheet.Workbook;
@@ -41,8 +40,12 @@ public class StyleRefs
 	private readonly Border[] _borders;
 	private readonly Font[] _fonts;
 	private readonly Fill[] _fills;
-	private readonly FontSize? _defaultFontSize;
+	private FontSize? _defaultFontSize;
+	private FontName? _defaultFontName;
 	private readonly Dictionary<String, NumberingFormat> _formats;
+
+	public String? DefaultFontFamily => _defaultFontName?.Val?.Value;
+	public Single? DefaultFontSize => (Single?) _defaultFontSize?.Val?.Value;
 
 	const String THIN_BORDER = ".2";
 	const String MEDIUM_BORDER = "1";
@@ -50,11 +53,31 @@ public class StyleRefs
 	{
 		_borders = stylesheet.Descendants<Border>().ToArray();
 		_fonts = stylesheet.Descendants<Font>().ToArray();
-		_fills = stylesheet.Descendants<Fill>().ToArray();	
-		_defaultFontSize = _fonts.Length > 0 ? _fonts[0].FontSize : null;
+		_fills = stylesheet.Descendants<Fill>().ToArray();
 		_formats = stylesheet.Descendants<NumberingFormat>()
 			.GroupBy(x => x.NumberFormatId?.Value.ToString() ?? String.Empty)
 			.ToDictionary(g => g.Key, g => g.First());
+		ParseDefaultFont(stylesheet);
+	}
+
+	void ParseDefaultFont(Stylesheet stylesheet) 
+	{ 
+		var defaultStyle = stylesheet.CellStyles?.Cast<CellStyle>().First(s => s.Name == "Normal");
+		if (defaultStyle == null)
+			return;
+		var formatId = defaultStyle.FormatId?.Value;
+		if (formatId == null)
+			return;
+		var fmts = stylesheet.CellStyleFormats?.ToArray();
+		if (fmts != null && fmts.Length > formatId)
+		{
+			if (fmts[formatId.Value] is CellFormat cf && cf.FontId != null)
+			{
+				var f = _fonts[cf.FontId.Value];
+				_defaultFontSize = f.FontSize;
+				_defaultFontName = f.FontName;
+			}
+		}
 	}
 
 	public Thickness? GetBorder(UInt32? id)
@@ -80,7 +103,7 @@ public class StyleRefs
 		return null;
 	}
 
-	public (Single? fontSize, Boolean? bold, Boolean? italic, Boolean? underline)? GetFont(UInt32? id)
+	public (Single? fontSize, Boolean? bold, Boolean? italic, Boolean? underline, String? name)? GetFont(UInt32? id)
 	{
 		if (id == null)
 			return null;
@@ -90,6 +113,7 @@ public class StyleRefs
 		Boolean? italic = null;
 		Boolean? underline = null;
 		Single? fontSize = null;
+		String? name = null;
 		if (f.Bold != null)
 			bold = true;
 		if (f.Italic != null)
@@ -98,7 +122,9 @@ public class StyleRefs
 			underline = true;
 		if (f.FontSize?.Val != _defaultFontSize?.Val)
 			fontSize = (Single?) f.FontSize?.Val?.Value;
-		return (fontSize, bold, italic, underline);
+		if (f.FontName?.Val != null && f.FontName?.Val != _defaultFontName?.Val)
+			name = f.FontName?.Val?.Value;
+		return (fontSize, bold, italic, underline, name);
 	}
 
 	public String? GetFill(UInt32? id)
@@ -211,7 +237,14 @@ public class ExcelConvertor
 			{
 				var df = CreateRange(defName);
 				if (df != null)
-					wb.Ranges.Add(df);
+				{
+					if (df.Value == "{Header}")
+						wb.Header = df;
+					else if (df.Value == "{Footer}")
+						wb.Footer = df;
+					else
+						wb.Ranges.Add(df);
+				}
 				else
 					_fitColumn = GetFitRange(defName);
 			}
@@ -293,6 +326,8 @@ public class ExcelConvertor
 				if (rs != null && _cellStyles.Contains(styleRef))
 					wb.Styles.Add(styleRef, rs);	
 			}
+			ws.FontFamily = refs.DefaultFontFamily;
+			ws.FontSize = refs.DefaultFontSize;
 		}
 
 		FitColumnCount(ws.Workbook);
@@ -386,6 +421,8 @@ public class ExcelConvertor
 	static XCell? CreateCell(Cell cell, SharedStringTable sharedStringTable)
 	{
 		String? style = null;
+		if (cell.DataType == null && cell.CellValue == null && cell.StyleIndex == null)
+			return null;
 		if (cell.StyleIndex != null)
 			style = $"S{cell.StyleIndex.Value}";
 		var xcell = new XCell()
@@ -393,7 +430,7 @@ public class ExcelConvertor
 			Style = style,
 		};
 		if (cell.DataType == null || cell.CellValue == null)
-			return null;
+			return xcell;
 		if (cell.DataType == CellValues.SharedString)
 		{
 			Int32 ssid = Int32.Parse(cell.CellValue.Text);
@@ -444,6 +481,7 @@ public class ExcelConvertor
 		Boolean? fontBold = null;
 		Boolean? fontItalic = null;
 		Boolean? fontUnderline = null;
+		String? fontName = null;
 		Thickness? border = null;
 		TextAlign? align = null;
 		VertAlign? vAlign = null;
@@ -466,6 +504,7 @@ public class ExcelConvertor
 				fontBold = fv.bold;
 				fontItalic = fv.italic;	
 				fontUnderline = fv.underline;	
+				fontName = fv.name;
 			}
 		}
 
@@ -494,13 +533,14 @@ public class ExcelConvertor
 			textRotation = a?.TextRotation?.Value;
 		}
 
-		if (background == null && fontSize == null && border == null && align == null && 
+		if (background == null && fontName == null && fontSize == null && border == null && align == null && 
 			vAlign == null && fontBold == null && fontItalic == null && fontUnderline == null &&
 			format == null && textRotation == null)
 			return null;
 
 		return new XStyle()
 		{
+			FontName = fontName,
 			FontSize = fontSize,	
 			Bold = fontBold,
 			Italic = fontItalic,

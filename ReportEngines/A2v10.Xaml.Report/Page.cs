@@ -19,7 +19,7 @@ public class Page : XamlElement
 	[JsonIgnore]
 	public Column? Footer { get; init; }
 
-	public String? FontFamily { get; init; }
+	public String? FontFamily { get; set; }
 	public PageOrientation Orientation { get; set; }
 
 	public override void ApplyStyles(String selector, StyleBag styles)

@@ -13,6 +13,8 @@ public class Workbook : XamlElement
 	public CellCollection Cells { get; init; } = [];
 	public RangeCollection Ranges { get; init; } = [];	
 	public StyleCollection Styles { get; init; } = [];
+	public Range? Header { get; set; }
+	public Range? Footer { get; set; }
 	public override void ApplyStyles(String selector, StyleBag styles)
     {
 		var sel = selector;

@@ -138,19 +138,28 @@
 	left: 0;
 	top: 0;
 	right: 0;
-	bottom: 0!important; /*disable debug footer*/
+	bottom: 0 !important; /*disable debug footer*/
 	z-index: @modal-wrapper-index;
 	overflow: auto;
 	background-color: transparent;
-	display:flex;
-	align-items:center;
-	justify-content:center;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 
 	.modal-window {
 		position: relative;
 		width: @modal-width-medium;
 		height: auto;
 		background-color: white;
+		border-radius: @modal-brd-radius;
+		/* TEMP: Moving doesn't work correctly */
+		.modal-header {
+			cursor:default;
+			pointer-events:none;
+			.btnclose {
+				pointer-events:all;
+			}
+		}
 	}
 }
 

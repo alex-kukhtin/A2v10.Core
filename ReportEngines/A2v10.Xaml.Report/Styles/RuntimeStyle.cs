@@ -8,6 +8,7 @@ namespace A2v10.Xaml.Report;
 
 public class RuntimeStyle
 {
+	public String? FontName { get; set; }
 	public Single? FontSize { get; set; }
 	public TextAlign? Align { get; set; }
 	public VertAlign? VAlign { get; set; }
@@ -28,6 +29,7 @@ public class RuntimeStyle
 	{
 		return new RuntimeStyle()
 		{
+			FontName = this.FontName,
 			FontSize = this.FontSize,
 			Padding = this.Padding,
 			Margin = this.Margin,

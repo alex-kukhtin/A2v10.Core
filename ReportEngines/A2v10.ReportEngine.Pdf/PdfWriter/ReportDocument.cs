@@ -6,6 +6,7 @@ using QuestPDF.Fluent;
 
 using A2v10.Xaml.Report;
 using A2v10.ReportEngine.Script;
+using A2v10.Xaml.Report.Spreadsheet;
 
 namespace A2v10.ReportEngine.Pdf;
 
@@ -18,7 +19,10 @@ internal class ReportDocument(Page page, RenderContext context) : IDocument
 	{
 		container.Page(page =>
 		{
-			new PageComposer(_page, _context).Compose(page);
+			if (_page is Spreadsheet ss)
+				new SpreadsheetComposer(ss, _context).Compose(page);
+			else
+				new PageComposer(_page, _context).Compose(page);
 		});
 	}
 

@@ -1,4 +1,4 @@
-﻿// Copyright © 2022 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2022-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Text.Json.Serialization;
@@ -15,7 +15,7 @@ public class XamlElement : ISupportBinding
 	public Boolean? Italic { get; init; }
 	public Boolean? Underline { get; init; }
 
-	public Single? FontSize { get; init; }
+	public Single? FontSize { get; set; }
 
 	public Thickness? Margin { get; set ;}
 	public Thickness? Padding { get; init; }

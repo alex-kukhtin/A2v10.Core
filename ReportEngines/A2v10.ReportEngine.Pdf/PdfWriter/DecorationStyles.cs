@@ -13,41 +13,41 @@ namespace A2v10.ReportEngine.Pdf;
 internal static class DecorationStyles
 {
 
-	public static IContainer ApplyPadding(this IContainer container, Thickness? thickness)
+	public static IContainer ApplyPadding(this IContainer container, Thickness? padding)
 	{
-		if (thickness == null)
+		if (padding == null)
 			return container;
-		var pad = thickness.All();
+		var pad = padding.All();
 		if (pad != null && !pad.IsEmpty())
 			return container.Padding(pad.Value, Extensions.GetUnit(pad.Unit));
 
-		if (!thickness.Top.IsEmpty())
-			container = container.PaddingTop(thickness.Top.Value, Extensions.GetUnit(thickness.Top.Unit));
-		if (!thickness.Right.IsEmpty())
-			container = container.PaddingRight(thickness.Right.Value, Extensions.GetUnit(thickness.Right.Unit));
-		if (!thickness.Bottom.IsEmpty())
-			container = container.PaddingBottom(thickness.Bottom.Value, Extensions.GetUnit(thickness.Bottom.Unit));
-		if (!thickness.Left.IsEmpty())
-			container = container.PaddingLeft(thickness.Left.Value, Extensions.GetUnit(thickness.Left.Unit));
+		if (!padding.Top.IsEmpty())
+			container = container.PaddingTop(padding.Top.Value, Extensions.GetUnit(padding.Top.Unit));
+		if (!padding.Right.IsEmpty())
+			container = container.PaddingRight(padding.Right.Value, Extensions.GetUnit(padding.Right.Unit));
+		if (!padding.Bottom.IsEmpty())
+			container = container.PaddingBottom(padding.Bottom.Value, Extensions.GetUnit(padding.Bottom.Unit));
+		if (!padding.Left.IsEmpty())
+			container = container.PaddingLeft(padding.Left.Value, Extensions.GetUnit(padding.Left.Unit));
 		return container;
 	}
 
-	public static IContainer ApplyBorder(this IContainer container, Thickness? thickness)
+	public static IContainer ApplyBorder(this IContainer container, Thickness? border)
 	{
-		if (thickness == null)
+		if (border == null)
 			return container;
-		var pad = thickness.All();
+		var pad = border.All();
 		if (pad != null && !pad.IsEmpty())
 			return container.Border(pad.Value, Extensions.GetUnit(pad.Unit));
 
-		if (!thickness.Top.IsEmpty())
-			container = container.BorderTop(thickness.Top.Value, thickness.Top.Unit.ToUnit());
-		if (!thickness.Right.IsEmpty())
-			container = container.BorderRight(thickness.Right.Value, thickness.Right.Unit.ToUnit());
-		if (!thickness.Bottom.IsEmpty())
-			container = container.BorderBottom(thickness.Bottom.Value, thickness.Bottom.Unit.ToUnit());
-		if (!thickness.Left.IsEmpty())
-			container = container.BorderLeft(thickness.Left.Value, thickness.Left.Unit.ToUnit());
+		if (!border.Top.IsEmpty())
+			container = container.BorderTop(border.Top.Value, border.Top.Unit.ToUnit());
+		if (!border.Right.IsEmpty())
+			container = container.BorderRight(border.Right.Value, border.Right.Unit.ToUnit());
+		if (!border.Bottom.IsEmpty())
+			container = container.BorderBottom(border.Bottom.Value, border.Bottom.Unit.ToUnit());
+		if (!border.Left.IsEmpty())
+			container = container.BorderLeft(border.Left.Value, border.Left.Unit.ToUnit());
 		return container;
 	}
 
@@ -122,6 +122,8 @@ internal static class DecorationStyles
 	{
 		if (style == null)
 			return container;
+		if (!String.IsNullOrEmpty(style.FontName))
+			container = container.FontFamily(style.FontName);	
 		if (style.FontSize != null)
 			container = container.FontSize(style.FontSize.Value);
 		if (style.Bold != null && style.Bold.Value)

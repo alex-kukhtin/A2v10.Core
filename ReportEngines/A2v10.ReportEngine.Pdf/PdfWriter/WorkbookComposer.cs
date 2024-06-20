@@ -11,7 +11,7 @@ using A2v10.ReportEngine.Excel;
 
 namespace A2v10.ReportEngine.Pdf;
 
-internal class WorkbookComposer(Workbook _workbook, RenderContext _context) : FlowElementComposer
+internal class WorkbookComposer(Workbook _workbook, WorkbookHelper _helper, RenderContext _context) : FlowElementComposer
 {	internal override void Compose(IContainer container, Object? value = null)
 	{
 		if (!_context.IsVisible(_workbook))
@@ -19,7 +19,7 @@ internal class WorkbookComposer(Workbook _workbook, RenderContext _context) : Fl
 		container
 			.ApplyLayoutOptions(_workbook)
 			.ApplyDecoration(_workbook.RuntimeStyle)
-			.Table(ComposeTable);
+			.Table(table =>  ComposeTable(table, _helper.CellMatrix));
 	}
 	public void Compose(ColumnDescriptor column)
 	{
@@ -29,13 +29,20 @@ internal class WorkbookComposer(Workbook _workbook, RenderContext _context) : Fl
 		});
 	}
 
-	public void ComposeTable(TableDescriptor table)
+	public void ComposeFooter(ColumnDescriptor column)
 	{
-		var wbh = new WorkbookHelper(_workbook, _context);
+		column.Item().Element(cont =>
+		{
+			cont.Table(table => ComposeTable(table, _helper.FooterMatrix));
+		});
+	}
+
+	public void ComposeTable(TableDescriptor table, WorkbookCell?[,] matrix)
+	{
 		table.ColumnsDefinition(column => {
 			for (UInt32 i = 0; i < _workbook.ColumnCount; i++)
 			{
-				var cw = wbh.ColumnWidth(i);
+				var cw = _helper.ColumnWidth(i);
 				if (cw < 0)
 					column.RelativeColumn(-cw);
 				else
@@ -43,13 +50,12 @@ internal class WorkbookComposer(Workbook _workbook, RenderContext _context) : Fl
 			}
 		});
 
-		var mx = wbh.CellMatrix;
-		for (int r=0; r <= mx.GetUpperBound(0); r++)
+		for (int r=0; r <= matrix.GetUpperBound(0); r++)
 		{
-			var rh = wbh.RowHeight(r);
-			for (int c = 0; c <= mx.GetUpperBound(1); c++)
+			var rh = _helper.RowHeight(r);
+			for (int c = 0; c <= matrix.GetUpperBound(1); c++)
 			{
-				var wbCell = mx[r, c];
+				var wbCell = matrix[r, c];
 				if (wbCell != null && wbCell.IsSpanPart)
 					continue;
 				var tc = table.Cell();
@@ -60,7 +66,7 @@ internal class WorkbookComposer(Workbook _workbook, RenderContext _context) : Fl
 				{
 					tc = tc.RowSpan(wbCell.RowSpan);
 					for (var rs=1; rs < wbCell.RowSpan; rs++)
-						cellHeight += wbh.RowHeight(r + rs);
+						cellHeight += _helper.RowHeight(r + rs);
 				}
 				var cont = tc.MinHeight(cellHeight);
 				// TODO check border
