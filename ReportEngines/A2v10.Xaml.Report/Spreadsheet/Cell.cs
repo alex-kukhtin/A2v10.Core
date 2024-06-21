@@ -10,7 +10,7 @@ public class Cell : XamlElement
 	public String? Value { get; set; }
 	public UInt32 RowSpan { get; set; }
 	public UInt32 ColSpan { get; set; }
-	public DataType DataType { get; init; }
+	public DataType DataType { get; set; }
 	public String? Style { get; init; }
 	public String? Format { get; init; }	
 	public void ApplyRuntimeStyle(RuntimeStyle style)

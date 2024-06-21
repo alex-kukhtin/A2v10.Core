@@ -539,7 +539,10 @@
 			// home page here this.tabs.push({})
 			this.$el._close = this.__clickOutside;
 			this.clearLocalStorage();
-			this.restoreTabs();
+			if (!this.menu || !this.menu.length)
+				this.selectHome(false); // store empty tabs
+			else
+				this.restoreTabs();
 		},
 		created() {
 			const me = this;

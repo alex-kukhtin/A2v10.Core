@@ -66,7 +66,13 @@ internal class SpreadsheetComposer
 		var wbComposer = new WorkbookComposer(_ssheet.Workbook, wbHelper, _context);
 		if (_ssheet.Workbook.Header != null)
 		{
-			// compose workbook header
+			page.Header().Element(container =>
+			{
+				container.Column(col =>
+				{
+					wbComposer.ComposeHeader(col);
+				});
+			});
 		}
 		// content
 		page.Content().Element(container =>

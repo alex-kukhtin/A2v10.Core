@@ -26,7 +26,7 @@ public class WebAppDataProvider(IAppCodeProvider codeProvider, ILocalizer locali
 		Int64 userId = 0;
         if (_currentUser != null && _currentUser.Identity.Id != null)
 			userId = _currentUser.Identity?.Id ?? 0;
-            using var stream = _codeProvider.FileStreamRO("app.json", primaryOnly: true);
+        using var stream = _codeProvider.FileStreamRO("app.json", primaryOnly: true);
 		if (stream != null)
 		{
 			using var sr = new StreamReader(stream);

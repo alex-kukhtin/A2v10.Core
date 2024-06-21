@@ -450,3 +450,84 @@ function moveToGroupCommand(chProp, path) {
 		canExec: canMoveToGroup
 	};
 }
+(() => {
+
+	app.modules["app:stockdoc"] = {
+		reloadRems,
+		itemRoleChange,
+		articleChange,
+		setRowPrice
+	};
+
+	const utils = require("std:utils");
+	const cu = utils.currency;
+
+	async function reloadRems(doc, rows, selfcost) {
+		const ctrl = this.$ctrl;
+		let rarr = rows.split(',');
+		let items = []
+		for (let rowName of rarr)
+			items.push(...doc[rowName].map(r => r.Item.Id));
+
+		let cmd = selfcost ? 'getSelfCostPricesAndRems' : 'getPricesAndRems';
+		let arg = { Items: items.join(','), Date: doc.Date, Wh: doc.WhFrom.Id || undefined };
+		if (!selfcost)
+			arg.PriceKind = doc.PriceKind.Id;
+
+		let result = await ctrl.$invoke(cmd, arg, '/document/commands');
+
+		// selfcost - use roles, otherwise - items only
+		for (let rowName of rarr)
+			doc[rowName].forEach(row => {
+				let price = selfcost ? result.Prices.find(p => p.Item === row.Item.Id && p.Role === row.ItemRole.Id)
+					: result.Prices.find(p => p.Item === row.Item.Id);
+				setRowPrice.call(this, row, price ? price.Price : 0);
+				let rem = result.Rems.find(p => p.Item === row.Item.Id && p.Role === row.ItemRole.Id);
+				row.Rem = rem ? rem.Rem : 0;
+			});
+	}
+
+	async function itemRoleChange(row, selfcost) {
+		const ctrl = this.$ctrl;
+		let doc = this.Document;
+		let cmd = selfcost ? 'getSelfCostPricesAndRems' : 'getPricesAndRems';
+		let arg = { Items: '' + row.Item.Id, Date: doc.Date, Wh: doc.WhFrom.Id || undefined };
+		if (!selfcost)
+			arg.PriceKind = doc.PriceKind.Id;
+
+		let result = await ctrl.$invoke(cmd, arg, '/document/commands');
+		let price = result.Prices.find(p => p.Item === row.Item.Id && p.Role === row.ItemRole.Id);
+		row.Price = price ? price.Price : 0;
+		let rem = result.Rems.find(p => p.Item === row.Item.Id && p.Role === row.ItemRole.Id);
+		row.Rem = rem ? rem.Rem : 0;
+	}
+
+	async function articleChange(item, val, withRem) {
+		if (!val) {
+			item.$empty();
+			return;
+		};
+		const ctrl = this.$ctrl;
+		let arg = {
+			Text: val.trim(),
+			PriceKind: this.Document.PriceKind.Id || undefined,
+			Date: this.Document.Date
+		};
+		if (withRem)
+			arg.Wh = this.Document.WhFrom.Id;
+		let result = await ctrl.$invoke('findArticle', arg, '/catalog/item');
+		result?.Item ? item.$merge(result.Item) : item.$empty();
+	}
+
+	function setRowPrice(row, price) {
+		let doc = this.Document;
+		var priceWithVat = doc.PriceKind.Vat;
+		// row.Price always without VAT!
+		if (priceWithVat) {
+			let vatValue = row.VatRate.Value;
+			price = cu.round(price * 100.0 / (100.0 + vatValue), 6);
+		}
+		row.Price = price;
+	}
+
+})();

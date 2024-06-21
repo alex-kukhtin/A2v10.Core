@@ -50,6 +50,8 @@ public partial class WorkbookHelper
 	private readonly WorkbookCell?[,] _footer;
 	private readonly WorkbookCell?[,] _header;
 	private readonly List<RealRow> _realRows;
+	private readonly List<RealRow> _headerRows;
+	private readonly List<RealRow> _footerRows;
 
 	public WorkbookCell?[,] CellMatrix => _matrix;
 	public WorkbookCell?[,] FooterMatrix => _footer;
@@ -60,8 +62,8 @@ public partial class WorkbookHelper
 		_workbook = workbook;
 		_context = context;
 		(_matrix, _realRows) = CreateCellMatrix(GetRealRows);
-		(_footer, _) = CreateCellMatrix(GetFooterRows);
-		(_header, _) = CreateCellMatrix(GetHeaderRows);
+		(_footer, _footerRows) = CreateCellMatrix(GetFooterRows);
+		(_header, _headerRows) = CreateCellMatrix(GetHeaderRows);
 	}
 
 	private Boolean InHeaderFooter(UInt32 row)
@@ -95,7 +97,10 @@ public partial class WorkbookHelper
 		while (r < count)
 		{
 			if (InHeaderFooter(r))
-				yield break;
+			{
+				r += 1;
+				continue;
+			}
 			var rng = _workbook.Ranges.Find(rng => rng.Start == r + 1);
 			if (rng == null)
 				yield return new RealRow(r + 1);
@@ -221,6 +226,24 @@ public partial class WorkbookHelper
 	{
 		var rowHeight = DEFAULT_ROW_HEIGHT;
 		var row = _realRows[r].CellRow;
+		if (_workbook.Rows.TryGetValue(row, out var sheetRow))
+			rowHeight = sheetRow.Height;
+		return rowHeight;
+	}
+
+	public Single HeaderRowHeight(Int32 r)
+	{
+		var rowHeight = DEFAULT_ROW_HEIGHT;
+		var row = _headerRows[r].CellRow;
+		if (_workbook.Rows.TryGetValue(row, out var sheetRow))
+			rowHeight = sheetRow.Height;
+		return rowHeight;
+	}
+
+	public Single FooterRowHeight(Int32 r)
+	{
+		var rowHeight = DEFAULT_ROW_HEIGHT;
+		var row = _footerRows[r].CellRow;
 		if (_workbook.Rows.TryGetValue(row, out var sheetRow))
 			rowHeight = sheetRow.Height;
 		return rowHeight;

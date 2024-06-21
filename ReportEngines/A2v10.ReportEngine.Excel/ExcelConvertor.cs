@@ -152,6 +152,7 @@ public class ExcelConvertor
 	private readonly String _fileName;
 	private readonly Stream? _stream;
 	private UInt32 _realColumns = 0;
+	private UInt32 _realRows = 0;	
 
 	private String? _fitColumn = null;
 
@@ -228,6 +229,12 @@ public class ExcelConvertor
 			FormattableString fs = $"{tm},{rm},{bm},{lm}";
 			ws.Margin = Thickness.FromString(fs.ToString(CultureInfo.InvariantCulture));
 		}
+		var pageSetup = workSheetPart.Worksheet.GetFirstChild<PageSetup>();
+		if (pageSetup != null)
+		{
+			if (pageSetup.Orientation?.Value == OrientationValues.Landscape)
+				ws.Orientation = PageOrientation.Landscape;
+		}
 
 		var defNames = workBook?.DefinedNames?.Elements<DefinedName>();
 
@@ -272,6 +279,7 @@ public class ExcelConvertor
 						_cellStyles.Add(xc.Style);
 					var realCellRef = CellRefs.Parse(cellRef);
 					_realColumns = Math.Max(_realColumns, realCellRef.column + 1);
+					_realRows = Math.Max(_realRows, realCellRef.row + 1);
 				}
 			}
 		}
@@ -331,11 +339,18 @@ public class ExcelConvertor
 		}
 
 		FitColumnCount(ws.Workbook);
+		FixRowCount(ws.Workbook);
 
 		return ws;
 	}
 
-    void FitColumnCount(XWorkbook wb)
+	void FixRowCount(XWorkbook wb)
+	{
+		if (wb.RowCount > _realRows)
+			wb.RowCount = _realRows;
+	}
+
+	void FitColumnCount(XWorkbook wb)
 	{
 		if (wb.ColumnCount > _realColumns)
 			wb.ColumnCount = _realColumns;
@@ -420,6 +435,10 @@ public class ExcelConvertor
 
 	static XCell? CreateCell(Cell cell, SharedStringTable sharedStringTable)
 	{
+		if (cell.CellReference == "A12")
+		{
+			int z = 55;
+		}
 		String? style = null;
 		if (cell.DataType == null && cell.CellValue == null && cell.StyleIndex == null)
 			return null;

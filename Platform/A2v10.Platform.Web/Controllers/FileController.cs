@@ -15,6 +15,7 @@ using Newtonsoft.Json;
 
 using A2v10.Infrastructure;
 using A2v10.Data.Interfaces;
+using System.Net.Mime;
 
 namespace A2v10.Platform.Web.Controllers;
 
@@ -30,6 +31,7 @@ public class FileController(IApplicationHost host,
 	[HttpGet]
 	public async Task<IActionResult> DefaultGet(String pathInfo)
 	{
+
 		try
 		{
 			var blob = await _dataService.LoadBlobAsync(UrlKind.File, pathInfo, (prms) =>
@@ -47,9 +49,12 @@ public class FileController(IApplicationHost host,
 			var ar = new WebBinaryActionResult(blob.Stream, blob.Mime ?? MimeTypes.Text.Plain);
 			if (Request.Query["export"].Count > 0)
 			{
+				var fileName = _localizer.Localize(null, blob.Name) ?? "file";
+				if (!fileName.Contains('.'))
+					fileName += MimeTypeHelpers.GetExtension(blob.Mime);
 				var cdh = new ContentDispositionHeaderValue("attachment")
 				{
-					FileNameStar = _localizer.Localize(null, blob.Name)
+					FileNameStar = fileName
 				};
 				ar.AddHeader("Content-Disposition", cdh.ToString());
 			}

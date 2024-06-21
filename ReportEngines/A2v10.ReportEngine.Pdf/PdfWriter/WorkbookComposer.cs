@@ -19,7 +19,7 @@ internal class WorkbookComposer(Workbook _workbook, WorkbookHelper _helper, Rend
 		container
 			.ApplyLayoutOptions(_workbook)
 			.ApplyDecoration(_workbook.RuntimeStyle)
-			.Table(table =>  ComposeTable(table, _helper.CellMatrix));
+			.Table(table =>  ComposeTable(table, _helper.CellMatrix, _helper.RowHeight));
 	}
 	public void Compose(ColumnDescriptor column)
 	{
@@ -33,11 +33,19 @@ internal class WorkbookComposer(Workbook _workbook, WorkbookHelper _helper, Rend
 	{
 		column.Item().Element(cont =>
 		{
-			cont.Table(table => ComposeTable(table, _helper.FooterMatrix));
+			cont.Table(table => ComposeTable(table, _helper.FooterMatrix, _helper.FooterRowHeight));
 		});
 	}
 
-	public void ComposeTable(TableDescriptor table, WorkbookCell?[,] matrix)
+	public void ComposeHeader(ColumnDescriptor column)
+	{
+		column.Item().Element(cont =>
+		{
+			cont.Table(table => ComposeTable(table, _helper.HeaderMatrix, _helper.HeaderRowHeight));
+		});
+	}
+
+	public void ComposeTable(TableDescriptor table, WorkbookCell?[,] matrix, Func<Int32, Single> getHeight)
 	{
 		table.ColumnsDefinition(column => {
 			for (UInt32 i = 0; i < _workbook.ColumnCount; i++)
@@ -50,12 +58,12 @@ internal class WorkbookComposer(Workbook _workbook, WorkbookHelper _helper, Rend
 			}
 		});
 
-		for (int r=0; r <= matrix.GetUpperBound(0); r++)
+		for (int rn=0; rn <= matrix.GetUpperBound(0); rn++)
 		{
-			var rh = _helper.RowHeight(r);
+			var rh = getHeight(rn);
 			for (int c = 0; c <= matrix.GetUpperBound(1); c++)
 			{
-				var wbCell = matrix[r, c];
+				var wbCell = matrix[rn, c];
 				if (wbCell != null && wbCell.IsSpanPart)
 					continue;
 				var tc = table.Cell();
@@ -66,7 +74,7 @@ internal class WorkbookComposer(Workbook _workbook, WorkbookHelper _helper, Rend
 				{
 					tc = tc.RowSpan(wbCell.RowSpan);
 					for (var rs=1; rs < wbCell.RowSpan; rs++)
-						cellHeight += _helper.RowHeight(r + rs);
+						cellHeight += getHeight(rn + rs);
 				}
 				var cont = tc.MinHeight(cellHeight);
 				// TODO check border

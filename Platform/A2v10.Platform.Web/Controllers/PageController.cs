@@ -105,6 +105,7 @@ public class PageController(IApplicationHost _host, ILocalizer _localizer, ICurr
 
 		Response.ContentType = MimeTypes.Text.HtmlUtf8;
 		Response.Headers.Append("App-Version", _appVersion.AppVersion);
+		//TODO: Response.Headers.Append("Module-Version");
 
 		IDataModel? model = modelAndView.Model;
 		var rw = modelAndView.View ?? 
