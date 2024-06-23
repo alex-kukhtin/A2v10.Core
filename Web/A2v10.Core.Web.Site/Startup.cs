@@ -75,7 +75,7 @@ public class Startup(IConfiguration configuration)
 			factory.RegisterEngine<PdfReportEngine>("pdf");
 		});
 
-		services.AddBlobStorages(factory =>
+		services.AddBlobStorages(configuration, factory =>
 		{
 			factory.RegisterStorage<AzureBlobStorage>("AzureStorage");
 		});

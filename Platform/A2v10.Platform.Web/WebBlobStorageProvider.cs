@@ -1,4 +1,4 @@
-﻿// Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2021-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Linq;
@@ -6,6 +6,7 @@ using System.Collections.Generic;
 
 using A2v10.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 
 namespace A2v10.Platform.Web;
 
@@ -23,10 +24,13 @@ public class BlobStorageFactory
 	}
 }
 
-public class WebBlobStorageProvider(IServiceProvider _serviceProvider, IList<BlobStorageDescriptor> _storages) : IBlobStorageProvider
+public class WebBlobStorageProvider(IServiceProvider _serviceProvider, IList<BlobStorageDescriptor> _storages, IConfiguration _configuration) : IBlobStorageProvider
 {
 	public IBlobStorage FindBlobStorage(String name)
 	{
+		if (name == "FromConfig")
+			name = _configuration.GetValue<String>("BlobStorage:Provider")
+				?? throw new InvalidOperationException("BlobStorage:Provider not found");
 		var storage = _storages.FirstOrDefault(x => x.Name == name) 
 			?? throw new InvalidReqestExecption($"Blob storage for '{name}' not found");
             var rs = _serviceProvider.GetRequiredService(storage.StorageType);
