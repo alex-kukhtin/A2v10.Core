@@ -10,6 +10,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{885646AD-E0D2-4749-BD79-2395286FCF81}"
 	ProjectSection(SolutionItems) = preProject
 		dependency.txt = dependency.txt
+		description.txt = description.txt
 		todo.txt = todo.txt
 	EndProjectSection
 EndProject
@@ -130,7 +131,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "A2v10.ReportEngine.Script",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "A2v10.AppRuntimeBuilder", "Platform\A2v10.AppRuntimeBuilder\A2v10.AppRuntimeBuilder.csproj", "{FA54AAD2-4810-48B2-900B-EF432ECD7831}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileSystemBlobStorage", "BlobStorages\FileSystemBlobStorage\FileSystemBlobStorage.csproj", "{5699CCCF-A6C0-4545-970B-0FD5C27C6FD4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileSystemBlobStorage", "BlobStorages\FileSystemBlobStorage\FileSystemBlobStorage.csproj", "{5699CCCF-A6C0-4545-970B-0FD5C27C6FD4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

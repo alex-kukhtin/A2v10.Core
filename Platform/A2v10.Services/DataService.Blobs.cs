@@ -4,18 +4,33 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Globalization;
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 
 using Newtonsoft.Json;
 
 using A2v10.Services.Interop;
-using System.Globalization;
 
 namespace A2v10.Services;
 
 public partial class DataService
 {
+	private (ModelBlobType BlobType, String? StorageName) GetBlobType(IModelBlob modelBlob)
+	{
+		if (modelBlob.Type != ModelBlobType.blobStorage)
+			return (modelBlob.Type, null);
+		if (modelBlob.BlobStorage == "SqlServer")
+			return (ModelBlobType.sql, null);
+		if (modelBlob.BlobStorage != "FromConfig")
+			return (ModelBlobType.blobStorage, modelBlob.BlobStorage);
+		var name = _configuration.GetValue<String>("BlobStorage:Provider")
+			?? throw new InvalidOperationException("BlobStorage:Provider not found");
+		if (name == "SqlServer")
+			return (ModelBlobType.sql, null);
+		return (ModelBlobType.blobStorage, name);
+	}
 	public async Task<IBlobInfo?> LoadBlobAsync(UrlKind kind, String baseUrl, Action<ExpandoObject> setParams, String? suffix = null)
 	{
 		var platformUrl = CreatePlatformUrl(kind, baseUrl);
@@ -28,12 +43,13 @@ public partial class DataService
 			prms.Set("Key", blob.Key);
 		setParams?.Invoke(prms);
 
-		var blobInfo = blob.Type switch
+		var blobType = GetBlobType(blob);
+		var blobInfo = blobType.BlobType switch
 		{
 			ModelBlobType.sql => await LoadBlobSql(blob, prms),
 			ModelBlobType.json => await LoadBlobJson(blob, prms),
 			ModelBlobType.clr => await LoadBlobClr(blob, prms),
-			ModelBlobType.blobStorage => await LoadBlobStorage(blob, prms),
+			ModelBlobType.blobStorage => await LoadBlobStorage(blob, blobType.StorageName, prms),
 			ModelBlobType.excel => await LoadBlobExcel(blob, prms),
 			_ => throw new NotImplementedException(blob.Type.ToString()),
 		};
@@ -70,7 +86,7 @@ public partial class DataService
 		};
 	}
 
-	private async Task<BlobInfo?> LoadBlobStorage(IModelBlob blob, ExpandoObject prms)
+	private async Task<BlobInfo?> LoadBlobStorage(IModelBlob blob, String? storageName, ExpandoObject prms)
 	{
 		var blobInfo = await LoadBlobSql(blob, prms);
 		var blobName = blobInfo?.BlobName
@@ -79,7 +95,7 @@ public partial class DataService
 			return blobInfo;
 
 		var blobEngine = _serviceProvider.GetRequiredService<IBlobStorageProvider>();
-		var storage = blobEngine.FindBlobStorage(blob.BlobStorage ??
+		var storage = blobEngine.FindBlobStorage(storageName ??
 			throw new InvalidOperationException("BlobStorage is null"));
 
 		var bytes = await storage.LoadAsync(blob.BlobSource, blob.Container, blobName);
@@ -152,12 +168,13 @@ public partial class DataService
 		var platformUrl = CreatePlatformUrl(urlKind, baseUrl);
 		var blobModel = await _modelReader.GetBlobAsync(platformUrl)
 			?? throw new DataServiceException($"Blob is null");
-		return blobModel.Type switch
+		var blobType = GetBlobType(blobModel);
+		return blobType.BlobType switch
 		{
 			ModelBlobType.parse => await ParseFile(blobModel, setBlob, setParams),
 			ModelBlobType.sql => await SaveBlobSql(blobModel, setBlob, setParams),
 			ModelBlobType.clr => await SaveBlobClr(blobModel, setBlob, setParams),
-			ModelBlobType.blobStorage => await SaveBlobStorage(blobModel, setBlob, setParams),
+			ModelBlobType.blobStorage => await SaveBlobStorage(blobModel, blobType.StorageName, setBlob, setParams),
 			_ =>
 				throw new NotImplementedException(blobModel.Type.ToString())
 		};
@@ -272,7 +289,7 @@ public partial class DataService
 			result.Add("Token", output.Token);
 		return result;
 	}
-	private async Task<ExpandoObject> SaveBlobStorage(IModelBlob blobModel, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams)
+	private async Task<ExpandoObject> SaveBlobStorage(IModelBlob blobModel, String? storageName, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams)
 	{
 		BlobUpdateInfo blobInfo = new()
 		{
@@ -289,7 +306,7 @@ public partial class DataService
 		blobInfo.BlobName = $"{tenant}{folder}/{Guid.NewGuid()}_{blobInfo.Name}";
 
 		var blobEngine = _serviceProvider.GetRequiredService<IBlobStorageProvider>();
-		var storage = blobEngine.FindBlobStorage(blobModel.BlobStorage ??
+		var storage = blobEngine.FindBlobStorage(storageName ??
 			throw new InvalidOperationException("BlobStorage is null"));
 		await storage.SaveAsync(blobModel.BlobSource, blobModel.Container, blobInfo);
 
@@ -404,10 +421,11 @@ public partial class DataService
 		var platformUrl = CreatePlatformUrl(UrlKind.File, baseUrl);
 		var blobModel = await _modelReader.GetBlobAsync(platformUrl)
 			?? throw new DataServiceException($"Blob is null");
-		return blobModel.Type switch
+		var blobType = GetBlobType(blobModel);
+		return blobType.BlobType switch
 		{
 			ModelBlobType.sql => await DeleteBlobSql(blobModel, setParams),
-			ModelBlobType.blobStorage => await DeleteBlobStorage(blobModel, setParams),
+			ModelBlobType.blobStorage => await DeleteBlobStorage(blobModel, blobType.StorageName, setParams),
 			_ =>
 				throw new NotImplementedException(blobModel.Type.ToString())
 		};
@@ -418,8 +436,15 @@ public partial class DataService
 	{
 		throw new NotImplementedException();
 	}
-	Task<ExpandoObject> DeleteBlobStorage(IModelBlob model, Action<ExpandoObject>? setParams)
+	Task<ExpandoObject> DeleteBlobStorage(IModelBlob model, String? storageName, Action<ExpandoObject>? setParams)
 	{
 		throw new NotImplementedException();
+		/*
+		var blobEngine = _serviceProvider.GetRequiredService<IBlobStorageProvider>();
+		var storage = blobEngine.FindBlobStorage(storageName ??
+			throw new InvalidOperationException("BlobStorage is null"));
+		await storage.DeleteAsync(model.BlobSource, model.Container, "BLOB_NAME");
+		return [];
+		*/
 	}
 }

@@ -2,15 +2,15 @@
 
 using System;
 using System.Threading.Tasks;
+using System.IO;
 
 using Microsoft.Extensions.Configuration;
 
 using A2v10.Infrastructure;
-using System.IO;
 
-namespace FileSystemBlobStorage;
+namespace A2v10.BlobStorage.FileSystem;
 
-public class AzureBlobStorage(IConfiguration _configuration) : IBlobStorage
+public class FileSystemBlobStorage(IConfiguration _configuration) : IBlobStorage
 {
 	private String GetRootPath()
 	{
@@ -19,17 +19,36 @@ public class AzureBlobStorage(IConfiguration _configuration) : IBlobStorage
 	}
 	public async Task<ReadOnlyMemory<Byte>> LoadAsync(String? source, String? container, String blobName)
 	{
-		var path = Path.Combine(GetRootPath(), blobName);
+		var path = Path.Combine(GetRootPath(), container ?? String.Empty, blobName);
 		var bytes = await File.ReadAllBytesAsync(path);
 		return bytes.AsMemory();
 	}
 
 	public Task SaveAsync(String? source, String? container, IBlobUpdateInfo blobInfo)
 	{
-		throw new NotImplementedException();
+		var blobName = blobInfo.BlobName
+			?? throw new InvalidOperationException("IBlobUpdateInfo.BlobName is null");
+		var blobStream = blobInfo.Stream
+			?? throw new InvalidOperationException("IBlobUpdateInfo.Stream is null");
+		var path = Path.Combine(GetRootPath(), container ?? String.Empty, blobName);
+		EnsureDirectory(path);
+		using var ms = new MemoryStream();
+		blobStream.CopyTo(ms);
+		return File.WriteAllBytesAsync(path, ms.ToArray());
+	}
+
+	private void EnsureDirectory(String path)
+	{
+		var dir = Path.GetDirectoryName(path)
+			?? throw new InvalidOperationException("Directory is null");
+		if (Directory.Exists(dir))
+			return;
+		Directory.CreateDirectory(dir);
 	}
 	public Task DeleteAsync(String? source, String? container, String blobName)
 	{
-		throw new NotImplementedException();
+		var path = Path.Combine(GetRootPath(), container ?? String.Empty, blobName);
+		File.Delete(path);
+		return Task.CompletedTask;
 	}
 }

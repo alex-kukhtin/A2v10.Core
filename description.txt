@@ -1,0 +1,51 @@
+BLOB STORAGE
+============
+
+1. ≈сли в model.json type="blobStorage", то должен быть указан параметр blobStorage
+≈го значени€:
+	"FromConfig" - берем название сервиса из ключа BlobStorage:Provider и, само собой
+	сам провайдер должен быть зарегистрирован.
+	остальное - название сервиса
+	≈сли название - "SqlServer" - то все сохран€ем в базе.
+
+Startup.cs
+	services.AddBlobStorages(factory =>
+	{
+		factory.RegisterStorage<AzureBlobStorage>("AzureStorage");
+		factory.RegisterStorage<FileSystemBlobStorage>("FileSystem");
+	});
+
+
+ѕримеры:
+	"files": {
+		"upload": {
+			"type": "blobStorage",
+			"blobStorage": "FromConfig"
+		}
+	}
+
+	¬ appsettings.json:
+
+    1. "BlobStorage": {
+        "Provider": "SqlServer"
+    }
+	Ќичего не нужно добавл€ть
+		
+    2. "BlobStorage": {
+        "Provider": "AzureStorage"
+    }
+	должен быть зарегистрирован сервис
+	factory.RegisterStorage<AzureBlobStorage>("AzureStorage");
+	и указана ConnectionStrings.AzureStorage.
+	container используетс€ как часть пути. ≈сли не указан - "default"
+	source - им€ ConnectionString, если не указано - "AzureStorage"
+
+    3. "BlobStorage": {
+        "Provider": "FileSystem",
+		"Path": "ѕуть_на_сервере"
+    }
+	+ должен быть зарегистрирован сервис
+		factory.RegisterStorage<FileSystemBlobStorage>("FileSystem");
+	container используетс€ как часть пути.
+
+3. ќстальные значени€ type в model.json считаем устаревшими.

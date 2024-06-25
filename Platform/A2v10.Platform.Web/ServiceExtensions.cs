@@ -8,7 +8,6 @@ using A2v10.Infrastructure;
 
 using A2v10.Platform.Web;
 using A2v10.Platform.Web.Controllers;
-using Microsoft.Extensions.Configuration;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -114,7 +113,7 @@ public static class ServiceExtensions
 		return services;
 	}
 
-	public static IServiceCollection AddBlobStorages(this IServiceCollection services, IConfiguration configuration, Action<BlobStorageFactory> action)
+	public static IServiceCollection AddBlobStorages(this IServiceCollection services, Action<BlobStorageFactory> action)
 	{
 		var blobEngineFactory = new BlobStorageFactory();
 		action.Invoke(blobEngineFactory);
@@ -122,7 +121,7 @@ public static class ServiceExtensions
 			services.AddSingleton(r.StorageType);
 
 		services.AddSingleton<IBlobStorageProvider>(s =>
-			new WebBlobStorageProvider(s, blobEngineFactory.Engines, configuration)
+			new WebBlobStorageProvider(s, blobEngineFactory.Engines)
 		);
 		return services;
 	}

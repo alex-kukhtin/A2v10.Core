@@ -11,6 +11,7 @@ using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Services.Interop;
+using Microsoft.Extensions.Configuration;
 
 namespace A2v10.Services;
 
@@ -47,7 +48,7 @@ public class SaveResult : ISaveResult
 
 }
 public partial class DataService(IServiceProvider _serviceProvider, IModelJsonReader _modelReader, IDbContext _dbContext, ICurrentUser _currentUser,
-    ISqlQueryTextProvider _sqlQueryTextProvider, IAppCodeProvider _codeProvider,
+    ISqlQueryTextProvider _sqlQueryTextProvider, IAppCodeProvider _codeProvider, IConfiguration _configuration,
     IExternalDataProvider _externalDataProvider, ILocalizer _localizer, IAppRuntimeBuilder _appRuntimeBuilder) : IDataService
 {
     static PlatformUrl CreatePlatformUrl(UrlKind kind, String baseUrl)

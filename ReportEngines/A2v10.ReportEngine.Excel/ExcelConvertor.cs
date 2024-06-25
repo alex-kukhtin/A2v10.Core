@@ -435,10 +435,6 @@ public class ExcelConvertor
 
 	static XCell? CreateCell(Cell cell, SharedStringTable sharedStringTable)
 	{
-		if (cell.CellReference == "A12")
-		{
-			int z = 55;
-		}
 		String? style = null;
 		if (cell.DataType == null && cell.CellValue == null && cell.StyleIndex == null)
 			return null;

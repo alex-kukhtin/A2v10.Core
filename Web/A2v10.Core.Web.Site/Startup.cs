@@ -15,11 +15,10 @@ using A2v10.ReportEngine.Pdf;
 using A2v10.Workflow.Engine;
 using A2v10.Scheduling;
 using A2v10.Scheduling.Commands;
-using A2v10.AppRuntimeBuilder;
-using A2v10.Identity.Core;
 using A2v10.Core.Web.Site.TestServices;
 
 using A2v10.BlobStorage.Azure;
+using A2v10.BlobStorage.FileSystem;
 
 namespace A2v10.Core.Web.Site;
 
@@ -75,9 +74,10 @@ public class Startup(IConfiguration configuration)
 			factory.RegisterEngine<PdfReportEngine>("pdf");
 		});
 
-		services.AddBlobStorages(configuration, factory =>
+		services.AddBlobStorages(factory =>
 		{
 			factory.RegisterStorage<AzureBlobStorage>("AzureStorage");
+			factory.RegisterStorage<FileSystemBlobStorage>("FileSystem");
 		});
 
 

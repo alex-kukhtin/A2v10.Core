@@ -9,16 +9,18 @@ services.AddBlobStorages(factory =>
 {
 	factory.RegisterStorage<FileSystemBlobStorage>("FileSystem");
 });
-
-/* or */
-services.AddBlobStorages(factory =>
-{
-	if (configuration.GetValue<String>("BlobStorage:Provider") == "FileSystem")
-		factory.RegisterStorage<AzureBlobStorage>("FileSystem");
-});
 ```
 
 ## Configuration (appsettings.json)
+
+```json
+"BlobStorage": {
+	"Path": "server_path"
+}
+```
+
+If you use **"blobStorage": "FromConfig"** in model.json, then specify the provider:
+
 ```json
 "BlobStorage": {
 	"Provider":"FileSystem",

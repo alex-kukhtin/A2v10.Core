@@ -1,9 +1,5 @@
-2024-06-21 (next: 8308)
+2024-06-25 (next: 8309)
 =======================
-A2v10.Platform
-A2v10.Platform.Web
-A2v10.BlobStorage.Azure
-A2v10.BlobStorage.FileSystem
 
 A2v10.Platform
 	A2v10.Platform.Web

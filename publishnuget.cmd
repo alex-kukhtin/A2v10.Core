@@ -49,6 +49,8 @@ del /q Extensions\A2v10.Scheduling.Infrastructure\bin\Release\*.snupkg
 
 del /q BlobStorages\AzureBlobStorage\bin\Release\*.nupkg
 del /q BlobStorages\AzureBlobStorage\bin\Release\*.snupkg
+del /q BlobStorages\FileSystemBlobStorage\bin\Release\*.nupkg
+del /q BlobStorages\FileSystemBlobStorage\bin\Release\*.snupkg
 
 dotnet pack -c Release
 
@@ -119,7 +121,8 @@ copy Extensions\A2v10.Scheduling.Infrastructure\bin\Release\*.snupkg ..\NuGet.lo
 
 copy BlobStorages\AzureBlobStorage\bin\Release\*.nupkg ..\NuGet.local
 copy BlobStorages\AzureBlobStorage\bin\Release\*.snupkg ..\NuGet.local
-
+copy BlobStorages\FileSystemBlobStorage\bin\Release\*.nupkg ..\NuGet.local
+copy BlobStorages\FileSystemBlobStorage\bin\Release\*.snupkg ..\NuGet.local
 
 
 pause

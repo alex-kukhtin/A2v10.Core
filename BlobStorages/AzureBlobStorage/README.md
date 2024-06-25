@@ -9,13 +9,6 @@ services.AddBlobStorages(factory =>
 {
 	factory.RegisterStorage<AzureBlobStorage>("AzureStorage");
 });
-
-/* or */
-services.AddBlobStorages(factory =>
-{
-	if (configuration.GetValue<String>("BlobStorage:Provider") == "AzureStorage")
-		factory.RegisterStorage<AzureBlobStorage>("AzureStorage");
-});
 ```
 
 ## Configuration (appsettings.json)
@@ -36,6 +29,7 @@ If you use **"blobStorage": "FromConfig"** in model.json, then specify the provi
 # Related Packages
 
 * [A2v10.Platform](https://www.nuget.org/packages/A2v10.Platform)
+* [A2v10.BlobStorage.FileSystem](https://www.nuget.org/packages/A2v10.BlobStorage.FileSystem)
 
 # Feedback
 
