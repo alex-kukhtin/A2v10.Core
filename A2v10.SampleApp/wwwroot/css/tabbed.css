@@ -4432,7 +4432,7 @@ ul.news-list > li {
   left: 0;
   top: 0;
   right: 0;
-  bottom: 0!important;
+  bottom: 0 !important;
   /*disable debug footer*/
   z-index: 1050;
   overflow: auto;
@@ -4446,6 +4446,15 @@ ul.news-list > li {
   width: 500px;
   height: auto;
   background-color: white;
+  border-radius: 8px;
+  /* TEMP: Moving doesn't work correctly */
+}
+.inline-modal-wrapper .modal-window .modal-header {
+  cursor: default;
+  pointer-events: none;
+}
+.inline-modal-wrapper .modal-window .modal-header .btnclose {
+  pointer-events: all;
 }
 .modal {
   display: flex;

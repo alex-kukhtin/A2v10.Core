@@ -1,6 +1,5 @@
-2024-06-25 (next: 8309)
+2024-06-27 (next: 8310)
 =======================
-A2v10.ReportEngine.Pdf
 
 
 A2v10.Platform
@@ -32,6 +31,8 @@ A2v10.MailClient
 A2v10.Identity.ApiKey
 A2v10.Identity.Jwt
 	A2v10.Identity.Core
+
+A2v10.Scheduling
 
 A2v10.Scheduling.Commands
 	A2v10.Infrastructure
