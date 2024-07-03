@@ -1,0 +1,59 @@
+﻿:root {
+  --bgPrimary: #fbfbfb;
+  --bgControl: #fff;
+  --bgMenu: #fff;
+  --bgSheet: #fff;
+  --text: #000;
+  --fontSize: 14px;
+  --themeLight: #2d8ecf;
+  --neutralBkDark: #e5e4e3;
+  --neutralBk: #f3f2f1;
+  --link: #208cf8;
+  --linkDark: #0669cb;
+  --hoverBk: #fdf4bf;
+  --activeBk: #cde6f7;
+  --hoverBkLight: #fdf4bf;
+  --activeBkLight: #cde6f7;
+  --dialogHeaderBkColor: #fff29d;
+  --dialogHeaderBkColorDark: #ede193;
+  --dialog-footer-bg: #f5f5f5;
+  --table-header-bg: #f5f5f5;
+  /*neutral100*/
+  --neutral900: #373744;
+  --neutral800: #474752;
+  --neutral700: #8d8f98;
+  --neutral500: #b0b2ba;
+  --neutral400: #c6c9d1;
+  --neutral300: #e8eaf3;
+  --neutral100: #edf0fa;
+  --neutral50: #f3f5fc;
+  --icon-color: #636367;
+  --menu-hover: #e8eaf3;
+  --text-light: #5a5a68;
+  --text-header: #00000090;
+  --text-label: #000000d0;
+  --nav900: #373744;
+  /*neutral900*/
+  --nav800: #474752;
+  /*neutral800*/
+  --nav700: #8d8f98;
+  /*neutral700*/
+  --nav300: #e8eaf3;
+  /*neutral300*/
+  --nav100: #f0f0f0;
+  --nav-bg: #474752;
+  /*neutral800*/
+  --nav-icon: #ffffff78;
+  --nav-text: #ffffffd0;
+  --nav-line: #ffffff33;
+  --nav-accent: #96c0f3;
+  --mdi-menu-bg: #373744;
+  /*neutral900*/
+  --mdi-menu-text: #e8eaf3;
+  /*neutral300*/
+  --mdi-menu-hover: #474752;
+  /*neutral800*/
+  --mdi-menu-light: #8d8f98;
+  /*neutral700*/
+  --mdi-menu-line: #ffffff33;
+}

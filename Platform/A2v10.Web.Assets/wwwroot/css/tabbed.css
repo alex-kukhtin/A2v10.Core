@@ -1397,7 +1397,7 @@ header .h-menu .ico,
 }
 header .h-menu:hover,
 .header .h-menu:hover {
-  background-color: var(--themeDarker);
+  background-color: #af1d46;
 }
 header > a.nav-admin,
 .header > a.nav-admin {
@@ -1409,11 +1409,11 @@ header > a.nav-admin,
 }
 header > a.nav-admin:hover,
 .header > a.nav-admin:hover {
-  background-color: var(--themeDarker);
+  background-color: #af1d46;
 }
 header > a.open,
 .header > a.open {
-  background-color: var(--themeDarker);
+  background-color: #af1d46;
 }
 header > .dropdown,
 .header > .dropdown {
@@ -1435,7 +1435,7 @@ header .btn,
 }
 header .btn:hover,
 .header .btn:hover {
-  background-color: var(--themeDarker);
+  background-color: #af1d46;
 }
 header .btn.user-name,
 .header .btn.user-name,
@@ -1469,7 +1469,7 @@ header .company-menu-name,
 }
 header .dropdown.separate.show .btn,
 .header .dropdown.separate.show .btn {
-  background-color: var(--themeDarker);
+  background-color: #af1d46;
 }
 header .dropdown.separate.show .btn.btn-success,
 .header .dropdown.separate.show .btn.btn-success {
@@ -1664,9 +1664,9 @@ header .include.nav-pane .partial-block .control-group,
   width: 26px;
   height: 26px;
   color: var(--link);
-  border: 1px solid var(--neutral400);
+  border: 1px solid var(--neutral100);
   border-radius: 4px;
-  background-color: white;
+  background-color: var(--neutral50);
   text-align: center;
   line-height: 24px;
   z-index: 20;
@@ -4511,7 +4511,7 @@ ul.news-list > li {
 }
 .modal-footer {
   padding: 1rem;
-  background-color: var(--neutral100);
+  background-color: var(--dialog-footer-bg);
   display: flex;
   justify-content: flex-end;
   align-items: center;
@@ -4929,7 +4929,7 @@ table.hover > tbody > tr.active:hover {
 .a2-table > thead > tr > td,
 .a2-table > tfoot > tr > td {
   padding: 7px 6px;
-  background-color: var(--neutral100);
+  background-color: var(--table-header-bg);
   border-color: var(--neutral300);
 }
 .a2-table td.ctrl {
@@ -6860,7 +6860,7 @@ table > colgroup col.blue {
 }
 .mdi-header {
   grid-area: header;
-  background-color: var(--neutral900);
+  background-color: var(--nav900);
   height: 40px;
   color: white;
   display: flex;
@@ -6881,8 +6881,8 @@ table > colgroup col.blue {
   color: white;
 }
 .mdi-header .include.nav-pane .partial-block .btn:hover {
-  background-color: var(--neutral700);
-  color: #ffda00;
+  background-color: var(--mdi-menu-hover);
+  color: var(--nav-accent);
 }
 .mdi-header .dropdown {
   height: 100%;
@@ -6897,11 +6897,11 @@ table > colgroup col.blue {
   gap: 8px;
   align-items: center;
   color: white;
-  background-color: var(--neutral900);
+  background-color: var(--nav900);
 }
 .mdi-header .dropdown .user-name:hover {
-  color: #ffda00;
-  background-color: var(--neutral700);
+  color: var(--nav-accent);
+  background-color: var(--mdi-menu-hover);
 }
 .mdi-header .dropdown .user-name .caret {
   margin: 5px 0 0 0;
@@ -6909,13 +6909,13 @@ table > colgroup col.blue {
 .mdi-tabs-container {
   grid-area: tabs;
   display: flex;
-  background-color: #f0f0f0;
+  background-color: var(--nav100);
   justify-content: space-between;
 }
 .mdi-tabs-container .mdi-tabs {
   display: flex;
   flex-direction: row;
-  padding: 0;
+  padding: 2px 0 0 2px;
   margin: 0;
   overflow: auto;
   width: 100%;
@@ -6932,15 +6932,17 @@ table > colgroup col.blue {
 }
 .mdi-tabs-container .mdi-tabs li {
   list-style: none;
-  height: 2.5rem;
+  height: 2.3rem;
+  line-height: 2.3rem;
   padding-left: 16px;
-  background-color: var(--neutral300);
+  background-color: var(--nav300);
   white-space: nowrap;
   pointer-events: all;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   position: relative;
+  border-radius: 4px 4px 0 0;
 }
 .mdi-tabs-container .mdi-tabs li:not(.tab-home) {
   max-width: var(--maxTabWidth);
@@ -6958,7 +6960,7 @@ table > colgroup col.blue {
   z-index: 8;
   left: 10px;
   padding: 3px 8px;
-  border: 1px solid var(--neutral900);
+  border: 1px solid var(--nav900);
   font-size: 12px;
   background-color: #fffcd5;
 }
@@ -6971,7 +6973,7 @@ table > colgroup col.blue {
   margin: 0 4px;
 }
 .mdi-tabs-container .mdi-tabs li .close:hover {
-  background-color: var(--neutral300);
+  background-color: var(--nav300);
 }
 .mdi-tabs-container .mdi-tabs li:hover {
   text-shadow: 0.5px 0 0 var(--text);
@@ -7026,7 +7028,7 @@ table > colgroup col.blue {
 }
 .mdi-tabs-container .mdi-tabs-menu .open-menu {
   display: block;
-  line-height: 2.5rem;
+  line-height: 2.3rem;
   padding: 0 10px;
 }
 .mdi-tabs-container .mdi-tabs-menu .open-menu:hover {
@@ -7035,7 +7037,7 @@ table > colgroup col.blue {
 .mdi-footer,
 .footer {
   grid-area: footer;
-  background-color: #f0f0f0;
+  background-color: var(--nav100);
   display: flex;
   height: 2rem;
   align-items: center;
@@ -7067,7 +7069,7 @@ table > colgroup col.blue {
 }
 .mdi-navbar {
   grid-area: navbar;
-  background-color: #757575;
+  background-color: var(--nav-bg);
   position: relative;
   min-width: 78px;
 }
@@ -7091,7 +7093,7 @@ table > colgroup col.blue {
 .mdi-navbar .bar li {
   list-style: none;
   padding: 11px 0;
-  color: white;
+  color: var(--nav-icon);
   border-radius: 4px;
   display: inline-flex;
   flex-direction: column;
@@ -7109,16 +7111,16 @@ table > colgroup col.blue {
   font-size: 10px;
   text-align: center;
   line-height: 1;
-  color: #ffffffd0;
+  color: var(--nav-text);
 }
 .mdi-navbar .bar li:hover:not(.grow),
 .mdi-navbar .bar li.active {
-  background-color: var(--neutral900);
-  color: #ffda00;
+  background-color: var(--nav900);
+  color: var(--nav-accent);
 }
 .mdi-navbar .bar li:hover:not(.grow) .menu-text,
 .mdi-navbar .bar li.active .menu-text {
-  color: #ffda00;
+  color: var(--nav-accent);
   opacity: 0.95;
 }
 .mdi-navbar .bar li.grow {
@@ -7133,7 +7135,7 @@ table > colgroup col.blue {
   content: "";
   width: 100%;
   height: 1px;
-  background-color: var(--neutral300);
+  background-color: var(--nav-line);
   display: block;
 }
 .mdi-navbar .bar li.border-bottom {
@@ -7145,20 +7147,20 @@ table > colgroup col.blue {
   content: "";
   width: 100%;
   height: 1px;
-  background-color: var(--neutral300);
+  background-color: var(--nav-line);
   display: block;
 }
 .mdi-navbar .mdi-menu {
   position: absolute;
-  padding: 1rem;
+  padding: 2rem;
   left: 100%;
   top: 0;
   bottom: 0;
-  background-color: var(--neutral800);
-  color: white;
+  background-color: var(--mdi-menu-bg);
+  color: var(--mdi-menu-text);
   min-width: 250px;
   z-index: 1040;
-  box-shadow: 3px 3px 10px 0 rgba(174, 174, 174, 0.5), 0 5px 40px 0 rgba(0, 0, 0, 0.15);
+  box-shadow: 4px 0 8px 0 rgba(0, 0, 0, 0.15);
   overflow: auto;
 }
 .mdi-navbar .mdi-menu::-webkit-scrollbar {
@@ -7174,8 +7176,8 @@ table > colgroup col.blue {
   font-size: 1.5rem;
   padding: 0 0 0.5rem 0;
   margin: 0 0 1rem 0;
-  color: var(--neutral300);
-  border-bottom: 1px solid var(--neutral300);
+  color: var(--mdi-menu-light);
+  border-bottom: 1px solid var(--mdi-menu-line);
 }
 .mdi-navbar .mdi-menu ul {
   padding: 0;
@@ -7190,17 +7192,17 @@ table > colgroup col.blue {
 }
 .mdi-navbar .mdi-menu li.level-0 .folder {
   font-size: 1.2rem;
-  color: var(--neutral300);
+  color: var(--mdi-menu-light);
 }
 .mdi-navbar .mdi-menu li.level-1 {
   list-style: none;
-  color: white;
-  padding: 0 10px 0 24px;
+  padding: 0 10px 0 16px;
   font-size: 1rem;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
   border-radius: 4px;
+  margin: 0 0 1px 0;
 }
 .mdi-navbar .mdi-menu li.level-1 .btn-plus {
   display: none;
@@ -7208,15 +7210,15 @@ table > colgroup col.blue {
   border-radius: 50%;
   padding: 0;
   align-self: center;
-  color: white;
+  color: currentColor;
   font-size: 1.3rem;
 }
 .mdi-navbar .mdi-menu li.level-1 .btn-plus:hover {
-  color: #ffda00;
+  color: var(--nav-accent);
 }
 .mdi-navbar .mdi-menu li.level-1:hover {
-  background-color: var(--neutral900);
-  color: #ffda00;
+  background-color: var(--mdi-menu-hover);
+  color: var(--nav-accent);
 }
 .mdi-navbar .mdi-menu li.level-1:hover .btn-plus {
   display: block;
@@ -7664,13 +7666,13 @@ table.tree-grid a.toggle.expanded:after {
   top: 3px;
   right: 3px;
   line-height: 1.5em;
-  background-color: var(--neutralBk);
+  background-color: var(--neutral100);
 }
 .dashboard-item .clear-button:hover {
-  background-color: var(--neutralBkDark);
+  background-color: var(--neutral300);
 }
 .dashboard-item .clear-button:active {
-  background-color: var(--neutralBkDarker);
+  background-color: var(--neutral400);
 }
 .color-picker .color-picker-pane {
   position: absolute;

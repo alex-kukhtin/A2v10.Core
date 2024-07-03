@@ -6,6 +6,12 @@
         "useNodeSass": false
     },
     {
+        "outputFile": "wwwroot/css/lightblue.colorscheme.css",
+        "inputFile": "themes/tabbed/_LightBlue.colorscheme.less",
+        "sourceMap": false,
+        "useNodeSass": false
+    },
+    {
         "outputFile": "wwwroot/css/tabbed.css",
         "inputFile": "themes/tabbed/site.less",
         "sourceMap": false,

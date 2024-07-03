@@ -1,15 +1,26 @@
 ﻿@import "Variables.less";
 
-@tab-height: 2.5rem;
+@tab-height: 2.3rem;
 
+@dark0: var(--nav900);
+@dark1: var(--nav800);
+@dark2: var(--nav700);
+@nav-bg-color: var(--nav-bg);
 
-@dark0: var(--neutral900);
-@dark1: var(--neutral800);
-@dark2: var(--neutral700);
-//@light0: var(--neutral100);
-@light0: #f0f0f0;
-@light1: var(--neutral300);
-@accent-color: #ffda00;
+@light0: var(--nav100);
+@light1: var(--nav300);
+
+@accent-color: var(--nav-accent);
+
+@mdi-menu-bg: var(--mdi-menu-bg);
+@mdi-menu-hover: var(--mdi-menu-hover);
+@mdi-menu-text: var(--mdi-menu-text);
+@mdi-menu-light: var(--mdi-menu-light);
+@mdi-menu-line: var(--mdi-menu-line);
+
+@nav-icon: var(--nav-icon);
+@nav-menu-text: var(--nav-text);
+@nav-menu-line:var(--nav-line);
 
 .mdi-shell {
 	display: grid;
@@ -46,7 +57,7 @@
 				color: white;
 
 				&:hover {
-					background-color: @dark2;
+					background-color: @mdi-menu-hover;
 					color: @accent-color;
 				}
 			}
@@ -70,7 +81,7 @@
 
 			&:hover {
 				color: @accent-color;
-				background-color: @dark2;
+				background-color: @mdi-menu-hover;
 			}
 
 			.caret {
@@ -89,7 +100,7 @@
 	.mdi-tabs {
 		display: flex;
 		flex-direction: row;
-		padding: 0;
+		padding: 2px 0 0 2px;
 		margin: 0;
 		overflow: auto;
 		width: 100%;
@@ -109,6 +120,7 @@
 		li {
 			list-style: none;
 			height: @tab-height;
+			line-height:@tab-height;
 			padding-left: 16px;
 			display: inline-flex;
 			background-color: @light1;
@@ -118,6 +130,7 @@
 			display: inline-flex;
 			align-items: center;
 			position: relative;
+			border-radius:4px 4px 0 0;
 
 			&:not(.tab-home) {
 				max-width: var(--maxTabWidth);
@@ -265,7 +278,7 @@
 
 .mdi-navbar {
 	grid-area: navbar;
-	background-color: #757575;
+	background-color: @nav-bg-color;
 	position: relative;
 	min-width: 78px;
 
@@ -291,7 +304,7 @@
 		li {
 			list-style: none;
 			padding: 11px 0;
-			color: white;
+			color: @nav-icon;
 			border-radius: 4px;
 			display: inline-flex;
 			flex-direction: column;
@@ -310,7 +323,7 @@
 				font-size: 10px;
 				text-align: center;
 				line-height: 1;
-				color: #ffffffd0;
+				color: @nav-menu-text;
 			}
 
 			&:hover:not(.grow), &.active {
@@ -336,7 +349,7 @@
 					content: "";
 					width: 100%;
 					height: 1px;
-					background-color: @light1;
+					background-color: @nav-menu-line;
 					display: block;
 				}
 			}
@@ -350,7 +363,7 @@
 					content: "";
 					width: 100%;
 					height: 1px;
-					background-color: @light1;
+					background-color: @nav-menu-line;
 					display: block;
 				}
 			}
@@ -359,15 +372,15 @@
 
 	.mdi-menu {
 		position: absolute;
-		padding: 1rem;
+		padding: 2rem;
 		left: 100%;
 		top: 0;
 		bottom: 0;
-		background-color: @dark1;
-		color: white;
+		background-color: @mdi-menu-bg;
+		color: @mdi-menu-text;
 		min-width: 250px;
 		z-index: 1040;
-		box-shadow: 3px 3px 10px 0 rgba(174,174,174,.5), 0 5px 40px 0 rgba(0,0,0,.15);
+		box-shadow: 4px 0 8px 0 rgba(0,0,0,0.15);
 		overflow: auto;
 
 		&::-webkit-scrollbar {
@@ -385,8 +398,8 @@
 			font-size: 1.5rem;
 			padding: 0 0 .5rem 0;
 			margin: 0 0 1rem 0;
-			color: @light1;
-			border-bottom: 1px solid @light1;
+			color: @mdi-menu-light;
+			border-bottom: 1px solid @mdi-menu-line;
 		}
 
 		ul {
@@ -404,19 +417,19 @@
 
 			.folder {
 				font-size: 1.2rem;
-				color: @light1;
+				color: @mdi-menu-light;
 			}
 		}
 
 		li.level-1 {
 			list-style: none;
-			color: white;
-			padding: 0 10px 0 24px;
+			padding: 0 10px 0 16px;
 			font-size: 1rem;
 			cursor: pointer;
 			display: flex;
 			justify-content: space-between;
 			border-radius: 4px;
+			margin: 0 0 1px 0;
 
 			.btn-plus {
 				display: none;
@@ -424,7 +437,7 @@
 				border-radius: 50%;
 				padding: 0;
 				align-self: center;
-				color: white;
+				color: currentColor;
 				font-size: 1.3rem;
 
 				&:hover {
@@ -433,7 +446,7 @@
 			}
 
 			&:hover {
-				background-color: @dark0;
+				background-color: @mdi-menu-hover;
 				color: @accent-color;
 
 				.btn-plus {
