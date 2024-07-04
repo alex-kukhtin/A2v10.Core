@@ -96,11 +96,12 @@
 	display: flex;
 	background-color: @light0;
 	justify-content: space-between;
+	padding: 2px 0 0 2px;
 
 	.mdi-tabs {
 		display: flex;
 		flex-direction: row;
-		padding: 2px 0 0 2px;
+		padding: 0;
 		margin: 0;
 		overflow: auto;
 		width: 100%;
@@ -120,7 +121,7 @@
 		li {
 			list-style: none;
 			height: @tab-height;
-			line-height:@tab-height;
+			line-height: @tab-height;
 			padding-left: 16px;
 			display: inline-flex;
 			background-color: @light1;
@@ -130,7 +131,7 @@
 			display: inline-flex;
 			align-items: center;
 			position: relative;
-			border-radius:4px 4px 0 0;
+			border-radius: 4px 4px 0 0;
 
 			&:not(.tab-home) {
 				max-width: var(--maxTabWidth);
@@ -237,7 +238,7 @@
 			padding: 0 10px;
 
 			&:hover {
-				background-color: #e8e8e8;
+				background-color: @light1;
 			}
 		}
 	}
