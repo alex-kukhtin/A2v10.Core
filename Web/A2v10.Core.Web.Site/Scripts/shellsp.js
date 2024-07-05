@@ -318,7 +318,7 @@
 				window.__requestsCount__ = this.requestsCount;
 			});
 			eventBus.$on('checkVersion', (ver) => {
-				if (ver && this.appData && ver !== this.appData.version)
+				if (ver && this.appData && (ver.app !== this.appData.version || ver.module !== this.appData.moduleVersion))
 					this.newVersionAvailable = true;
 			});
 

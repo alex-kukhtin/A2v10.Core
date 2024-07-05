@@ -159,13 +159,13 @@
 		outline-offset: -2px;
 	}
 
-	&:hover {
+	&:not([disabled]):hover {
 		background-color: @toolbar-hover;
 		//background-color: @hover-bg-color;
 		outline: none;
 	}
 
-	&:active {
+	&:not([disabled]):active {
 		background-color: @toolbar-active;
 		box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2) inset;
 		outline: none;

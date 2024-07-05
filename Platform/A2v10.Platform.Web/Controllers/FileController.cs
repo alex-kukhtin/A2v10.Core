@@ -51,7 +51,7 @@ public class FileController(IApplicationHost host,
 			{
 				var fileName = _localizer.Localize(null, blob.Name) ?? "file";
 				if (!fileName.Contains('.'))
-					fileName += MimeTypeHelpers.GetExtension(blob.Mime);
+					fileName += MimeTypes.GetExtension(blob.Mime);
 				var cdh = new ContentDispositionHeaderValue("attachment")
 				{
 					FileNameStar = fileName

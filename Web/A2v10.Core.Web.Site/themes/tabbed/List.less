@@ -3,9 +3,10 @@
 @list-body-color: #999;
 @chat-gap: .5rem;
 
-@group-bk-color: var(--neutral100);
+@group-bk-color: var(--neutral50);
 @group-brd-color: var(--neutral300);
 @list-brd-color: var(--neutral300);
+@list-icon-color: var(--icon-color);
 
 .a2-list {
 	list-style-type: none;
@@ -92,9 +93,9 @@
 
 		li.group {
 			margin: .25rem 0;
-			border: 1px solid var(--neutral300);
+			border: 1px solid @group-brd-color;
 			border-radius: @control-brd-radius;
-			padding: 8px 8px 8px 10px;
+			padding: 6px 8px 6px 10px;
 		}
 
 		li.group:first-child {
@@ -186,7 +187,7 @@
 	}
 
 	.list-item-simple-icon {
-		color: var(--neutral800);
+		color: @icon-color;
 		font-size: 1.2rem;
 		min-width: 2rem;
 	}
@@ -221,7 +222,7 @@
 
 		.ico {
 			font-size: @font-size-small;
-			color: #999;
+			color: @list-icon-color;
 		}
 
 		.dropdown {
@@ -292,7 +293,7 @@ ul.news-list {
 		font-size: 200%;
 		margin-right: 12px;
 		margin-top: 2px;
-		color: @list-body-color;
+		color: @list-icon-color;
 	}
 
 	.list-item-header {

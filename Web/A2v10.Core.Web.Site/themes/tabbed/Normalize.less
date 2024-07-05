@@ -33,11 +33,8 @@ td, th {
 }
 
 button, input[type=button] {
-	background-color: var(--neutral300);
-
-	&:hover {
-		background-color: #ddd;
-	}
+	--btn-bg: var(--default-base);
+	background-color: var(--btn-bg);
 }
 
 button {
@@ -175,4 +172,13 @@ h4, .h4 {
 
 h5, .h5 {
 	font-size: 0.85rem;
+}
+
+.a2-list, .grid, .a2-table, .page-content, .modal-body {
+	scrollbar-color: var(--neutral500) var(--neutral300);
+}
+
+&::-webkit-scrollbar-thumb {
+	background-color: var(--neutral400);
+	border-radius: 8px;
 }

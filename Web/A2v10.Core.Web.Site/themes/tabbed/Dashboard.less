@@ -6,6 +6,8 @@
 @toolbar-height:44px;
 
 @light-gray-color: var(--neutral50);
+@host-bg-color: var(--default-base);
+@host-brd-color: var(--neutral500);
 
 .dashboard-container {
 	position: relative;
@@ -119,7 +121,7 @@
 		background-color: var(--neutral50);
 
 		&.hover {
-			background-color: #ddd;
+			background-color: @host-bg-color;
 		}
 	}
 
@@ -150,8 +152,8 @@
 	position: fixed;
 	left: -100%;
 	top: -100%;
-	background-color: #ddd;
-	border: 2px solid #999;
+	background-color: @host-bg-color;
+	border: 2px solid @host-brd-color;
 	border-radius:4px;
 	opacity: .9;
 }

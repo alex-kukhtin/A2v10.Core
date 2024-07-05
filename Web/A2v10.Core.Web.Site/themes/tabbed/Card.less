@@ -5,10 +5,12 @@
 @card-margin:0.7rem;
 @card-margin-compact: 0.5rem;
 @card-ghost-color: hsla(0,0%,100%,.25);
+@card-styled-opacity: 26%;
 
 .a2-state-card {
+	--card-bg: white;
 	position: relative;
-	background-color: white;
+	background-color: var(--card-bg);
 	display: flex;
 	flex-direction: column;
 	justify-content: space-between;
@@ -50,6 +52,7 @@
 
 	&.a2-state-card-styled {
 		color: #000000a0;
+		background-color: hsl(from var(--card-bg) h s l / @card-styled-opacity);
 
 		.a2-card-icon {
 			color: @card-ghost-color;
@@ -62,23 +65,23 @@
 	}
 
 	&.a2-state-card-yellow {
-		background-color: @warning-base-color_opacity;
+		--card-bg: @warning-base-color;
 	}
 
 	&.a2-state-card-green {
-		background-color: @success-base-color_opacity;
+		--card-bg: @success-base-color;
 	}
 
 	&.a2-state-card-cyan {
-		background-color: @info-base-color_opacity;
+		--card-bg: @info-base-color;
 	}
 
 	&.a2-state-card-red {
-		background-color: @danger-base-color_opacity;
+		--card-bg: @danger-base-color;
 	}
 
 	&.a2-state-card-primary {
-		background-color: @primary-base-color_opacity;
+		--card-bg: @primary-base-color;
 	}
 
 	&.compact {

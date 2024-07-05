@@ -1,4 +1,4 @@
-﻿// Copyright © 2021-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2021-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 
@@ -55,5 +55,26 @@ public static class MimeTypes
 	public static Boolean IsImage(String? mime)
 	{
 		return mime != null && mime.StartsWith("image", StringComparison.OrdinalIgnoreCase);
+	}
+
+	public static String GetExtension(String? mimeType)
+	{
+		return mimeType?.ToLowerInvariant() switch
+		{
+			MimeTypes.Application.Pdf => ".pdf",
+			MimeTypes.Application.Zip => ".zip",
+			MimeTypes.Application.Xlsx => ".xlsx",
+			MimeTypes.Application.Xml or MimeTypes.Text.Xml => ".xml",
+			MimeTypes.Application.Json => ".json",
+			MimeTypes.Text.Html or MimeTypes.Text.HtmlUtf8 => ".htm",
+			MimeTypes.Text.Plain => ".txt",
+			MimeTypes.Text.Csv => ".csv",
+			MimeTypes.Image.Png => ".png",
+			MimeTypes.Image.Jpg => ".jpg",
+			MimeTypes.Image.Bmp => ".bmp",
+			MimeTypes.Image.Svg => ".svg",
+			MimeTypes.Image.Tif => ".tif",
+			_ => String.Empty,
+		};
 	}
 }

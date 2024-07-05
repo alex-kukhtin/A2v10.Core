@@ -50,10 +50,16 @@
   --nav-accent: #96c0f3;
   --mdi-menu-bg: #373744;
   /*neutral900*/
-  --mdi-menu-text: #e8eaf3;
-  /*neutral300*/
+  --mdi-menu-text: #ffffffe8;
   --mdi-menu-hover: #474752;
   /*neutral800*/
-  --mdi-menu-light: #ffffff8f;
-  --mdi-menu-line: #ffffff8f;
+  --mdi-menu-light: #ffffff9f;
+  --mdi-menu-line: #ffffff9f;
+  --default-base: #dcdfec;
+  /*neutral350?*/
+  --primary-base: #3783e1;
+  --warning-base: #ffb74d;
+  --danger-base: #da533f;
+  --success-base: #5db750;
+  --info-base: #60bbe5;
 }

@@ -131,6 +131,9 @@ public class AppCodeProvider : IAppCodeProvider
 		.Select(p => p.ModuleId ?? throw new InvalidOperationException("ModuleId is null"));
 
 	public String AppId => _appId;
+
+	public String? ModuleVersion => _providers[DEFAULT_PROVIDER].ModuleVersion;
+
 }
 
 

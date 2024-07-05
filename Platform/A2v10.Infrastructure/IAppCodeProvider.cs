@@ -19,5 +19,6 @@ public interface IAppCodeProvider
 
     Boolean HasLicensedModules { get; }
     IEnumerable<Guid> LicensedModules { get; }
+	String? ModuleVersion { get; }
 }
 

@@ -36,10 +36,12 @@ public class AppInfo
 	}
 }
 
-public class PlatformAppVersion : IAppVersion
+public class PlatformAppVersion(IAppCodeProvider _codeProvider) : IAppVersion
 {
 	public String AppVersion => AppInfo.MainAssembly.Version;
 	public String AppBuild => AppInfo.MainAssembly.Build;
 	public String Copyright => AppInfo.MainAssembly.Copyright;
+
+	public String? ModuleVersion => _codeProvider.ModuleVersion;
 }
 

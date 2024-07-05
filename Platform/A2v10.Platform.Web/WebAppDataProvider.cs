@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Dynamic;
@@ -41,6 +41,7 @@ public class WebAppDataProvider(IAppCodeProvider codeProvider, ILocalizer locali
 		return new ExpandoObject()
 		{
 			{ "version", _appVersion.AppVersion },
+			{ "moduleVersion", _appVersion.ModuleVersion ?? String.Empty },
 			{ "title", "A2v10.Core Web Application" },
 			{ "copyright", _appVersion.Copyright },
 			{ "appId", _codeProvider.AppId },

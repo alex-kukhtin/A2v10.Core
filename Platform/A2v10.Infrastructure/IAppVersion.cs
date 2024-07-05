@@ -9,4 +9,5 @@ public interface IAppVersion
 	String AppVersion { get; }
 	String AppBuild { get; }
 	String Copyright { get; }
+	String? ModuleVersion { get; }
 }

@@ -96,7 +96,7 @@
 	display: flex;
 	background-color: @light0;
 	justify-content: space-between;
-	padding: 2px 0 0 2px;
+	padding:0;
 
 	.mdi-tabs {
 		display: flex;
@@ -110,11 +110,11 @@
 		&::-webkit-scrollbar {
 			height: 4px;
 			width: 4px;
-			background-color: var(--neutral300);
+			background-color: var(--nav100);
 		}
 
 		&::-webkit-scrollbar-thumb {
-			background-color: var(--neutral500);
+			background-color: var(--neutral400);
 			border-radius: 8px;
 		}
 
@@ -132,6 +132,11 @@
 			align-items: center;
 			position: relative;
 			border-radius: 4px 4px 0 0;
+			margin-top:2px;
+
+			&.tab-home {
+				margin-left:2px;
+			}
 
 			&:not(.tab-home) {
 				max-width: var(--maxTabWidth);
@@ -294,11 +299,11 @@
 		&::-webkit-scrollbar {
 			height: 4px;
 			width: 4px;
-			background-color: var(--neutral300);
+			background-color: var(--nav100);
 		}
 
 		&::-webkit-scrollbar-thumb {
-			background-color: var(--neutral500);
+			background-color: var(--neutral400);
 			border-radius: 8px;
 		}
 

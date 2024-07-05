@@ -11,8 +11,9 @@ public class InternalAppCodeProviderFile(String path) : IAppCodeProviderImpl
     public Boolean IsFileSystem => true;
 	public Boolean IsLicensed => false;
 	public Guid? ModuleId => null;
+	public String? ModuleVersion => null;
 
-    public String NormalizePath(String path)
+	public String NormalizePath(String path)
 	{
         if (path.StartsWith('$'))
         {

@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System.IO;
 using System.Reflection;
@@ -10,14 +10,14 @@ namespace A2v10.Services;
 
 public class InternalAppCodeProviderClr(IAppContainer _appContainer) : IAppCodeProviderImpl
 {
-
+	private String? _moduleVersion = _appContainer.GetType().Assembly.GetName().Version?.ToString();
 	public Boolean IsFileSystem => false;
-
 	public Boolean IsLicensed => _appContainer.IsLicensed;
-
 	public Guid? ModuleId => _appContainer.Id;
 
-    public String NormalizePath(String path)
+	public String? ModuleVersion => _moduleVersion;
+
+	public String NormalizePath(String path)
 	{
 		if (path.StartsWith('$'))
 		{
