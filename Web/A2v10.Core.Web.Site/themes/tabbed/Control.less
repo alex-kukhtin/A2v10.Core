@@ -528,6 +528,11 @@
 }
 
 .control-group.disabled {
+	
+	&:not(.rendershow) {
+		pointer-events: none;
+	}
+
 	.input-group {
 		background-color: @disabled-bg-color;
 		opacity: @control-disabled-opacity;

@@ -1546,7 +1546,7 @@ header .include.nav-pane .partial-block .control-group,
   overflow: auto;
 }
 .page.page-grid .page-content.with-wrapper {
-  background-color: #e3e3e3;
+  background-color: var(--neutral400);
   padding: 0;
 }
 .page.page-grid.taskpad-left .page-taskpad {
@@ -2339,6 +2339,9 @@ pre.a2-code {
 .control-group.invalid .input-group .control {
   background-color: #fff8f8;
 }
+.control-group.disabled:not(.rendershow) {
+  pointer-events: none;
+}
 .control-group.disabled .input-group {
   background-color: var(--bgPrimary);
   opacity: 0.85;
@@ -2510,10 +2513,10 @@ pre.a2-code {
   border-radius: 4px;
 }
 .btn:not([disabled]):hover {
-  background-color: hsl(from var(--btn-bg) h s calc(l - 7));
+  background-color: hsl(from var(--btn-bg) h s calc(l - 4));
 }
 .btn:not([disabled]):active {
-  background-color: hsl(from var(--btn-bg) h s calc(l - 10));
+  background-color: hsl(from var(--btn-bg) h s calc(l - 6));
 }
 .btn:focus {
   outline-offset: -3px;
@@ -6533,7 +6536,7 @@ table > colgroup col.blue {
   background-color: rgba(196, 237, 255, 0.25);
 }
 .sheet-page-wrapper {
-  background-color: #e3e3e3;
+  background-color: var(--neutral400);
   padding: 30px 0;
   min-height: 100%;
   min-width: max-content;
@@ -6917,7 +6920,8 @@ table > colgroup col.blue {
   z-index: 8;
   left: 10px;
   padding: 3px 8px;
-  border: 1px solid var(--nav900);
+  line-height: 1;
+  border: 1px solid var(--nav700);
   font-size: 12px;
   background-color: #fffcd5;
 }
