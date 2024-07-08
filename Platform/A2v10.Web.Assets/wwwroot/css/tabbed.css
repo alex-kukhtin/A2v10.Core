@@ -1653,7 +1653,6 @@ header .include.nav-pane .partial-block .control-group,
   height: 100%;
   cursor: col-resize;
 }
-/*see: taskpad.js*/
 .taskpad {
   overflow: visible;
   position: relative;
@@ -1697,6 +1696,8 @@ header .include.nav-pane .partial-block .control-group,
 }
 .taskpad.collapsed {
   background-color: var(--bgPrimary);
+  width: 36px;
+  padding: 0 !important;
 }
 .taskpad.collapsed .taskpad-collapse-handle:before {
   content: "\e9a5";
@@ -1706,7 +1707,7 @@ header .include.nav-pane .partial-block .control-group,
   white-space: nowrap;
   cursor: pointer;
   font-size: 16px;
-  color: var(--neutral500);
+  color: var(--text-label);
   position: absolute;
   top: 0;
   left: 0;
@@ -1731,7 +1732,6 @@ header .include.nav-pane .partial-block .control-group,
 }
 .taskpad.position-right.collapsed {
   padding: 0!important;
-  width: auto!important;
 }
 .taskpad.position-right.collapsed .taskpad-collapse-handle:before {
   content: "\e9a3";

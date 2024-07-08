@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
 
@@ -33,6 +33,9 @@ public class Taskpad : Container
 		MergeBindingAttributeString(tag, context, "title", nameof(Title), Title);
 		tag.AddCssClassBool(Overflow, "overflow");
 		tag.MergeStyle("grid-column", Position == TaskpadPosition.Left ? "1" : "2");
+
+		if (Width != null)
+			tag.MergeAttribute("initial-width", Width.Value);
 
 		if (Background != BackgroundStyle.Default)
 			tag.AddCssClass("background-" + Background.ToString().ToKebabCase());

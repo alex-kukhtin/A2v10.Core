@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
 
@@ -36,16 +36,8 @@ public class Page : RootContainer
 
 			var tp = GetTaskpad();
 
-			if (tp != null && tp.Width != null)
-			{
-				if (tp.Position == TaskpadPosition.Left)
-				{
-					tag.AddCssClass("taskpad-left");
-					tag.MergeStyle("grid-template-columns", $"{tp.Width.Value} 1fr");
-				}
-				else
-					tag.MergeStyle("grid-template-columns", $"1fr {tp.Width.Value}");
-			}
+			if (tp != null && tp.Position == TaskpadPosition.Left)
+				tag.AddCssClass("taskpad-left");
 		}
 
 		if (CollectionView != null)
@@ -108,7 +100,7 @@ public class Page : RootContainer
 		else
 		{
 			if (page == null)
-				throw new InvalidProgramException();
+				throw new InvalidOperationException("page is null");
 			page.RenderEnd(context);
 		}
 	}
