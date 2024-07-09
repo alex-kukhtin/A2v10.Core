@@ -5,14 +5,9 @@
   --bgSheet: #fff;
   --text: #000;
   --fontSize: 14px;
-  --themeDark: #2573a8;
-  --themeDarker: #205980;
   --themeLight: #2d8ecf;
-  --neutralLight: #edebe9;
-  --neutralBkDarker: #dad9d8;
   --neutralBkDark: #e5e4e3;
   --neutralBk: #f3f2f1;
-  --neutralBkLight: #faf9f8;
   --link: #208cf8;
   --linkDark: #0669cb;
   --hoverBk: #fdf4bf;
@@ -21,6 +16,12 @@
   --activeBkLight: #cde6f7;
   --dialogHeaderBkColor: #fff29d;
   --dialogHeaderBkColorDark: #ede193;
+  --dialog-footer-bg: #f5f5f5;
+  /*neutral100*/
+  --table-header-bg: #f5f5f5;
+  /*neutral100*/
+  --table-header-bg-hover: #ececec;
+  --table-header-sort: #eeeeee3f;
   --neutral900: #212121;
   --neutral800: #5c5c5c;
   --neutral700: #888888;
@@ -36,4 +37,34 @@
   /*neutral800*/
   --text-header: #00000090;
   --text-label: #000000d0;
+  --nav900: #212121;
+  /*neutral900*/
+  --nav800: #5c5c5c;
+  /*neutral800*/
+  --nav700: #888888;
+  /*neutral700*/
+  --nav300: #e0e0e0;
+  /*neutral300*/
+  --nav100: #f0f0f0;
+  --nav-bg: #757575;
+  --nav-icon: white;
+  --nav-text: #ffffffd0;
+  --nav-line: #e0e0e0;
+  /* neutral300 */
+  --nav-accent: #ffda00;
+  --mdi-menu-bg: #5c5c5c;
+  /*neutral800*/
+  --mdi-menu-text: white;
+  --mdi-menu-hover: #212121;
+  /*neutral900*/
+  --mdi-menu-light: #e0e0e0;
+  /*neutral300*/
+  --mdi-menu-line: #e0e0e0;
+  /*neutral300*/
+  --default-base: #e0e0e0 /*neutral300*/;
+  --primary-base: #3470b4;
+  --warning-base: #ffb74d;
+  --danger-base: #da533f;
+  --success-base: #5db750;
+  --info-base: #60bbe5;
 }
