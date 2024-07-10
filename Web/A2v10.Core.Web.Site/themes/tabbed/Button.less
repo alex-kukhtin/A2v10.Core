@@ -153,11 +153,12 @@
 .btn-toolbar {
 	background-color: transparent;
 
-	&:hover {
+	&:not([disabled]):hover {
 		background-color: @toolbar-hover;
 	}
 
 	&:not([disabled]):active {
+		box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2) inset;
 		background-color: @toolbar-active;
 	}
 }

@@ -1,9 +1,7 @@
-2024-07-05 (next: 8318)
+2024-07-10 (next: 8320)
 =======================
-A2v10.Platform
-A2v10.ViewEngine.Xaml
-A2v10.Web.Assets
-A2v10.App.Assets
+
+
 
 A2v10.Platform
 	A2v10.Platform.Web
@@ -29,6 +27,8 @@ A2v10.Platform
 A2v10.BlobStorage.Azure
 	A2v10.Infrastructure
 A2v10.MailClient
+	A2v10.Infrastructure
+A2v10.BlobStorage.FileSystem
 	A2v10.Infrastructure
 
 A2v10.Identity.ApiKey
