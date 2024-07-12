@@ -2651,10 +2651,11 @@ pre.a2-code {
 .btn-toolbar {
   background-color: transparent;
 }
-.btn-toolbar:hover {
+.btn-toolbar:not([disabled]):hover {
   background-color: var(--menu-hover);
 }
 .btn-toolbar:not([disabled]):active {
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2) inset;
   background-color: var(--menu-hover);
 }
 .btn-outline {

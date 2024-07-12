@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
-		<Version>10.1.8319</Version>
+		<Version>10.1.8320</Version>
 		<LangVersion>Latest</LangVersion>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Platform</PackageId>
@@ -35,7 +35,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Data.Core" Version="10.1.7367" />
+		<PackageReference Include="A2v10.Data.Core" Version="10.1.7368" />
 		<PackageReference Include="A2v10.Data.Providers" Version="10.1.7366" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
 	</ItemGroup>
