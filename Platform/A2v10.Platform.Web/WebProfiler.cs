@@ -1,8 +1,9 @@
-﻿// Copyright © 2020-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2020-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Collections.Concurrent;
 
 using Microsoft.AspNetCore.Http;
 
@@ -10,8 +11,6 @@ using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
-using System.Collections.Concurrent;
-using Microsoft.IdentityModel.Tokens;
 
 namespace A2v10.Platform.Web;
 
@@ -168,7 +167,7 @@ public sealed class WebProfiler(IHttpContextAccessor httpContext, WebProfilerSto
 	public String? GetJson()
 	{
 		var requestList = _storage.Get(SessionId());
-		if (requestList.IsNullOrEmpty()) 
+		if (requestList == null || requestList.Count == 0) 
 			return "[]";
         return JsonConvert.SerializeObject(requestList);
 	}
