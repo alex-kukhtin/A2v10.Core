@@ -17,6 +17,7 @@ using XRow = A2v10.Xaml.Report.Spreadsheet.Row;
 using XColumn = A2v10.Xaml.Report.Spreadsheet.Column;
 using XRange = A2v10.Xaml.Report.Spreadsheet.Range;
 using XStyle = A2v10.Xaml.Report.RuntimeStyle;
+using XPageFooter = A2v10.Xaml.Report.Spreadsheet.PageFooter;
 
 using PageOrientation  = A2v10.Xaml.Report.PageOrientation;
 using TextAlign = A2v10.Xaml.Report.TextAlign;
@@ -209,15 +210,6 @@ public class ExcelConvertor
 		wb.RowCount = Math.Max(lt.row, br.row) + 1;
 		wb.ColumnCount = Math.Max(lt.column, br.column) + 1;
 
-		var ps = workSheetPart.Worksheet.GetFirstChild<PageSetup>();
-		if (ps != null && ps.Orientation != null)
-		{
-			if (ps.Orientation == OrientationValues.Portrait)
-				ws.Orientation = PageOrientation.Portrait;
-			else if (ps.Orientation != OrientationValues.Landscape) 
-				ws.Orientation = PageOrientation.Landscape;
-		}
-
 		var mg = workSheetPart.Worksheet.GetFirstChild<PageMargins>();
 		if (mg != null)
 		{
@@ -229,11 +221,21 @@ public class ExcelConvertor
 			FormattableString fs = $"{tm},{rm},{bm},{lm}";
 			ws.Margin = Thickness.FromString(fs.ToString(CultureInfo.InvariantCulture));
 		}
-		var pageSetup = workSheetPart.Worksheet.GetFirstChild<PageSetup>();
-		if (pageSetup != null)
+
+		var ps = workSheetPart.Worksheet.GetFirstChild<PageSetup>();
+		if (ps != null && ps.Orientation != null)
 		{
-			if (pageSetup.Orientation?.Value == OrientationValues.Landscape)
+			if (ps.Orientation == OrientationValues.Portrait)
+				ws.Orientation = PageOrientation.Portrait;
+			else if (ps.Orientation != OrientationValues.Landscape)
 				ws.Orientation = PageOrientation.Landscape;
+		}
+
+		var hf = workSheetPart.Worksheet.GetFirstChild<HeaderFooter>();
+		if (hf != null)
+		{
+			var pageFooter = hf.OddFooter?.InnerText;
+			ws.Workbook.PageFooter = XPageFooter.FromString(pageFooter);
 		}
 
 		var defNames = workBook?.DefinedNames?.Elements<DefinedName>();
@@ -249,6 +251,10 @@ public class ExcelConvertor
 						wb.Header = df;
 					else if (df.Value == "{Footer}")
 						wb.Footer = df;
+					else if (df.Value == "{TableHeader}")
+						wb.TableHeader = df;
+					else if (df.Value == "{TableFooter}")
+						wb.TableFooter = df;
 					else
 						wb.Ranges.Add(df);
 				}

@@ -6,6 +6,7 @@ using System.Dynamic;
 using System.Collections.Generic;
 
 using A2v10.Xaml.Report.Spreadsheet;
+using A2v10.Xaml.Report;
 using A2v10.ReportEngine.Script;
 
 
@@ -33,6 +34,7 @@ public record WorkbookCell
 	public String? Value { get; set;}
 	public CellImage? Image { get; set; }
 	public CellQrCode? QrCode { get; set; }
+	public Boolean NoWrap { get; set; }	
 }
 
 public record RealRow(UInt32 CellRow, ExpandoObject? Item = null);
@@ -148,6 +150,7 @@ public partial class WorkbookHelper
 		if (rr != null)
 		{
 			wbCell.Value = rr.Value;
+			wbCell.NoWrap = cell.DataType != DataType.String;
 			if (rr.Stream != null)
 				wbCell.Image = new CellImage(rr.Stream);
 			else if (rr.ResultType == ResolveResultType.QrCode)

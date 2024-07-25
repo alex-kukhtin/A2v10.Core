@@ -15,6 +15,9 @@ public class Workbook : XamlElement
 	public StyleCollection Styles { get; init; } = [];
 	public Range? Header { get; set; }
 	public Range? Footer { get; set; }
+	public Range? TableHeader { get; set; }
+	public Range? TableFooter { get; set; }	
+	public PageFooter? PageFooter { get; set; }
 	public override void ApplyStyles(String selector, StyleBag styles)
     {
 		var sel = selector;

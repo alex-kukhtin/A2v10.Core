@@ -8,6 +8,7 @@ using QuestPDF.Infrastructure;
 using A2v10.Xaml.Report.Spreadsheet;
 using A2v10.ReportEngine.Script;
 using A2v10.ReportEngine.Excel;
+using System.Text.RegularExpressions;
 
 namespace A2v10.ReportEngine.Pdf;
 
@@ -19,7 +20,7 @@ internal class WorkbookComposer(Workbook _workbook, WorkbookHelper _helper, Rend
 		container
 			.ApplyLayoutOptions(_workbook)
 			.ApplyDecoration(_workbook.RuntimeStyle)
-			.Table(table =>  ComposeTable(table, _helper.CellMatrix, _helper.RowHeight));
+			.Table(table => ComposeTable(table, _helper.CellMatrix, _helper.RowHeight));
 	}
 	public void Compose(ColumnDescriptor column)
 	{
@@ -34,6 +35,29 @@ internal class WorkbookComposer(Workbook _workbook, WorkbookHelper _helper, Rend
 		column.Item().Element(cont =>
 		{
 			cont.Table(table => ComposeTable(table, _helper.FooterMatrix, _helper.FooterRowHeight));
+		});
+	}
+
+	public void ComposePageFooter(ColumnDescriptor column)
+	{
+		column.Item().Element(cont =>
+		{
+			var center = _workbook.PageFooter?.Center;
+			if (center != null)
+			{
+				cont.PaddingTop(5, Unit.Point).AlignCenter().Text(txt =>
+				{
+					foreach (var t in PageFooter.Resolve(center))
+					{
+						if (t == "&(Page)")
+							txt.CurrentPageNumber();
+						else if (t == "&(Pages)")
+							txt.TotalPages();
+						else
+							txt.Span(t);
+					}
+				});
+			}
 		});
 	}
 
@@ -90,11 +114,13 @@ internal class WorkbookComposer(Workbook _workbook, WorkbookHelper _helper, Rend
 	{
 		if (wbCell.Image != null)
 			cellCont.Image(wbCell.Image.Stream);
-		else if (wbCell.QrCode != null) 
+		else if (wbCell.QrCode != null)
 			QrCodeComposer.DrawQrCode(cellCont, wbCell.QrCode.Value);
 		else if (!String.IsNullOrEmpty(wbCell.Value))
-			cellCont.Text(wbCell.Value)
+		{
+			cellCont.ShowEntire().Text(wbCell.Value)
 				.LineHeight(1)
 				.ApplyText(wbCell.Cell.RuntimeStyle);
+		}
 	}
 }

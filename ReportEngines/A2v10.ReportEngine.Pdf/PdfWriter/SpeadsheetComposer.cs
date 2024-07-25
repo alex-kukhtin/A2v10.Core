@@ -92,5 +92,15 @@ internal class SpreadsheetComposer
 				});
 			});
 		}
+		else if (_ssheet.Workbook.PageFooter != null)
+		{
+			page.Footer().Element(container =>
+			{
+				container.Column(col =>
+				{
+					wbComposer.ComposePageFooter(col);
+				});
+			});
+		}
 	}
 }

@@ -87,6 +87,16 @@ internal class PageComposer
 					});
 				});
 			}
+			else if (ps.Workbook.PageFooter != null)
+			{
+				page.Footer().Element(container =>
+				{
+					container.Column(col =>
+					{
+						wbComposer.ComposePageFooter(col);
+					});
+				});
+			}
 		}
 		else
 		{
