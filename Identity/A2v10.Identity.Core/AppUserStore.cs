@@ -340,6 +340,8 @@ public sealed class AppUserStore<T>(IDbContext dbContext, IOptions<AppUserStoreO
 			list.Add(new Claim(WellKnownClaims.Branch, user.Branch.ToString()!));
 		if (user.OrganizationKey != null)
 			list.Add(new Claim(WellKnownClaims.OrganizationKey, user.OrganizationKey));
+		if (user.OrganizationTag != null)
+			list.Add(new Claim(WellKnownClaims.OrganizationTag, user.OrganizationTag));
 		if (user.IsPersistent)
 			list.Add(new Claim(WellKnownClaims.IsPersistent, "true"));
 		if (!String.IsNullOrEmpty(user.Roles))

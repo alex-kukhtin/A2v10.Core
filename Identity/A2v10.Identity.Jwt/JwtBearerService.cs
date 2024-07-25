@@ -34,6 +34,8 @@ public class JwtBearerService(JwtBearerSettings settings)
 			claims.Add(new Claim(WellKnownClaims.Organization, user.Organization.ToString()!));
 		if (!String.IsNullOrEmpty(user.OrganizationKey))
 			claims.Add(new Claim(WellKnownClaims.OrganizationKey, user.OrganizationKey));
+		if (!String.IsNullOrEmpty(user.OrganizationTag))
+			claims.Add(new Claim(WellKnownClaims.OrganizationTag, user.OrganizationTag));
 		if (!String.IsNullOrEmpty(user.Segment))
 			claims.Add(new Claim(WellKnownClaims.Segment, user.Segment));
 		if (!String.IsNullOrEmpty(user.Locale))
@@ -95,6 +97,7 @@ public class JwtBearerService(JwtBearerSettings settings)
 				Tenant = principal.Identity.GetUserTenant<T>(),
 				Organization = principal.Identity.GetUserOrganization<T>(),
 				OrganizationKey = principal.Identity.GetUserOrganizationKey(),
+				OrganizationTag = principal.Identity.GetUserOrganizationTag(),
 				Locale = principal.Identity.GetUserLocale()
 			};
 		}

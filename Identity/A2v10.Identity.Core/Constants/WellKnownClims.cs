@@ -16,6 +16,7 @@ public static class WellKnownClaims
 	public const String Locale = nameof(Locale);
 	public const String Organization = nameof(Organization);
 	public const String OrganizationKey = nameof(OrganizationKey);
+	public const String OrganizationTag = nameof(OrganizationTag);
 	public const String Branch = nameof(Branch);
 	public const String Roles = nameof(Roles);
 	public const String IsPersistent = nameof(IsPersistent);

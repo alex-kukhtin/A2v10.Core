@@ -113,6 +113,10 @@ public static class IdentityExtensions
 	{
 		return identity?.GetUserClaim(WellKnownClaims.OrganizationKey);
 	}
+	public static String? GetUserOrganizationTag(this IIdentity? identity)
+	{
+		return identity?.GetUserClaim(WellKnownClaims.OrganizationTag);
+	}
 
 	public static String? GetUserSegment(this IIdentity? identity)
 	{

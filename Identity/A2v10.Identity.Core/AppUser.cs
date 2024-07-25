@@ -44,6 +44,7 @@ public class AppUser<T> where T : struct
 	public T? Organization { get; set; }
 	public T? Branch { get; set; }
 	public String? OrganizationKey { get; set; }
+	public String? OrganizationTag { get; set; }
 	public DateOnly BirthDate { get; set; }
 	public Boolean SetPassword { get; set; }
 	public Boolean IsPersistent { get; set; }
