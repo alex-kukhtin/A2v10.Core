@@ -8,7 +8,6 @@ using QuestPDF.Infrastructure;
 using A2v10.Xaml.Report.Spreadsheet;
 using A2v10.ReportEngine.Script;
 using A2v10.ReportEngine.Excel;
-using System.Text.RegularExpressions;
 
 namespace A2v10.ReportEngine.Pdf;
 

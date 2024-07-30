@@ -13,7 +13,6 @@ using A2v10.Xaml.Report;
 
 using A2v10.Xaml.Report.Spreadsheet;
 using A2v10.ReportEngine.Script;
-using DocumentFormat.OpenXml.Bibliography;
 
 namespace A2v10.ReportEngine.Pdf;
 
@@ -25,7 +24,10 @@ public class PdfReportEngine : IReportEngine
 	public PdfReportEngine(IAppCodeProvider appCodeProvider, ILocalizer localizer, ICurrentUser user)
 	{
         Settings.License ??= LicenseType.Community;
-        _appCodeProvider = appCodeProvider;
+
+		// Settings.EnableDebugging = true;
+
+		_appCodeProvider = appCodeProvider;
 		_localizer = new DefaultReportLocalizer(user.Locale.Locale, localizer);
 	}
 

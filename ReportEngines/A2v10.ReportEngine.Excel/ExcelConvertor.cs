@@ -227,7 +227,7 @@ public class ExcelConvertor
 		{
 			if (ps.Orientation == OrientationValues.Portrait)
 				ws.Orientation = PageOrientation.Portrait;
-			else if (ps.Orientation != OrientationValues.Landscape)
+			else if (ps.Orientation == OrientationValues.Landscape)
 				ws.Orientation = PageOrientation.Landscape;
 		}
 
