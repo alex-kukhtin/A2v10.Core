@@ -1304,7 +1304,7 @@ kbd {
   text-overflow: ellipsis;
 }
 html {
-  font-family: system, 'Segoe UI', Tahoma, Verdana, sans-serif;
+  font-family: system, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: var(--fontSize);
   -ms-text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
@@ -1319,7 +1319,7 @@ input,
 textarea,
 select,
 button {
-  font-family: system, 'Segoe UI', Tahoma, Verdana, sans-serif;
+  font-family: system, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   color: var(--text);
 }
 input,
@@ -1940,7 +1940,7 @@ pre.a2-code {
 }
 .a2-hyperlink {
   display: inline-flex;
-  gap: 0.5rem;
+  gap: 2px;
   align-items: baseline;
 }
 .a2-hyperlink:focus,
@@ -3090,7 +3090,7 @@ table.data-grid col.fit {
   width: 0.1%;
 }
 table.data-grid.striped > tbody > tr.even {
-  background-color: rgba(224, 224, 224, 0.1);
+  background-color: hsl(from var(--neutral300) h s l / 10%);
 }
 table.data-grid:not(.no-hover) > tbody > tr:hover {
   background-color: var(--menu-hover);
@@ -3224,7 +3224,7 @@ table.data-grid td.marker > div {
   bottom: 0;
   right: 0;
   border-left: 6px solid #ddd;
-  background-color: rgba(224, 224, 224, 0.1);
+  background-color: hsl(from var(--neutral300) h s l / 10%);
 }
 table.data-grid td.marker > .warning,
 table.data-grid td.marker > .yellow {
@@ -4108,7 +4108,7 @@ tr:hover .commandbar.visible-hover {
   border-radius: 4px;
 }
 .a2-list.striped .a2-list-item:nth-of-type(even) {
-  background-color: rgba(224, 224, 224, 0.1);
+  background-color: hsl(from var(--neutral300) h s l / 10%);
 }
 .a2-list.border,
 .a2-list.border-all {
@@ -4874,7 +4874,7 @@ table.hover > tbody > tr.active:hover {
   line-height: 1.8;
 }
 .a2-table.striped > tbody > tr:nth-of-type(even) {
-  background-color: rgba(224, 224, 224, 0.1);
+  background-color: hsl(from var(--neutral300) h s l / 10%);
 }
 .a2-table.bordered {
   margin: 1px;
@@ -4938,7 +4938,7 @@ table.hover > tbody > tr.active:hover {
   top: 0;
   bottom: 0;
   right: 0;
-  background-color: rgba(224, 224, 224, 0.1);
+  background-color: hsl(from var(--neutral300) h s l / 10%);
   border-left: 4px solid #ddd;
   height: 20px;
 }
@@ -4989,7 +4989,7 @@ table.hover > tbody > tr.active:hover {
   background-color: rgba(254, 220, 220, 0.25);
 }
 .a2-table tr.gray > td {
-  background-color: rgba(224, 224, 224, 0.1);
+  background-color: hsl(from var(--neutral300) h s l / 10%);
 }
 .a2-table .control-group .input-group {
   line-height: inherit;
@@ -5131,7 +5131,7 @@ table.prop-grid.grid-horizontal td.prop-value {
   padding-right: 0;
 }
 table.prop-grid.striped > tbody > tr:nth-of-type(even) {
-  background-color: rgba(224, 224, 224, 0.1);
+  background-color: hsl(from var(--neutral300) h s l / 10%);
 }
 table.prop-grid.grid-horizontal tr:first-child > td,
 table.prop-grid.grid-both tr:first-child > td {
@@ -6509,7 +6509,7 @@ table.sheet tr.cyan {
   background-color: rgba(114, 234, 234, 0.07) !important;
 }
 table.sheet tr.gray {
-  background-color: rgba(224, 224, 224, 0.1) !important;
+  background-color: hsl(from var(--neutral300) h s l / 10%) !important;
 }
 table.sheet.compact {
   font-size: 0.95rem;
@@ -7449,7 +7449,7 @@ table.tree-grid.hover tr:hover:not(.active) {
   background-color: var(--menu-hover);
 }
 table.tree-grid.striped tbody > tr:nth-child(even):not(.active) {
-  background-color: rgba(224, 224, 224, 0.1);
+  background-color: hsl(from var(--neutral300) h s l / 10%);
 }
 table.tree-grid tr.active {
   background-color: var(--activeBkLight);

@@ -33,6 +33,10 @@ Store ClientId and ClientSecret in appsettings.json and enable external provider
 		"ClientId": MICROSOFT_CLIENT_ID",
 		"ClientSecret": "MICROSOFT_CLIENT_SECRET"
 	}
+},
+"DemoAccount": {
+    "Login": "DEMO_LOGIN",
+    "Password": "DEMO_PASSWORD"
 }
 ```
 

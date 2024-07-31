@@ -25,6 +25,10 @@ services.AddPlatformIdentityCore<T>()
   },
   "CookiePrefix": "Cookie_Prefix",
   "Providers": "Local,..."
+},
+"DemoAccount": {
+    "Login": "DEMO_LOGIN",
+    "Password": "DEMO_PASSWORD"
 }
 ```
 
