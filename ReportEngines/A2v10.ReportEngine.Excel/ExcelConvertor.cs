@@ -55,15 +55,17 @@ public class StyleRefs
 		_borders = stylesheet.Descendants<Border>().ToArray();
 		_fonts = stylesheet.Descendants<Font>().ToArray();
 		_fills = stylesheet.Descendants<Fill>().ToArray();
+
 		_formats = stylesheet.Descendants<NumberingFormat>()
 			.GroupBy(x => x.NumberFormatId?.Value.ToString() ?? String.Empty)
 			.ToDictionary(g => g.Key, g => g.First());
+
 		ParseDefaultFont(stylesheet);
 	}
 
 	void ParseDefaultFont(Stylesheet stylesheet) 
 	{ 
-		var defaultStyle = stylesheet.CellStyles?.Cast<CellStyle>().First(s => s.Name == "Normal");
+		var defaultStyle = stylesheet.CellStyles?.Cast<CellStyle>().FirstOrDefault(s => s.Name == "Normal");
 		if (defaultStyle == null)
 			return;
 		var formatId = defaultStyle.FormatId?.Value;
