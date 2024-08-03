@@ -4,6 +4,7 @@ using System;
 
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
+using QuestPDF.Elements.Table;
 
 using A2v10.Xaml.Report.Spreadsheet;
 using A2v10.ReportEngine.Script;
@@ -21,12 +22,41 @@ internal class WorkbookComposer(Workbook _workbook, WorkbookHelper _helper, Rend
 			.ApplyDecoration(_workbook.RuntimeStyle)
 			.Table(table => ComposeTable(table, _helper.CellMatrix, _helper.RowHeight));
 	}
+
+	private void ComposeTable(ColumnDescriptor column)
+	{
+		if (!_context.IsVisible(_workbook))
+			return;
+		column.Item().Element(container =>
+			container.ApplyLayoutOptions(_workbook)
+			.ApplyDecoration(_workbook.RuntimeStyle)
+			.Table(table => ComposeTable(table, _helper.TopPartMatrix, _helper.TopPartRowHeight))
+		);
+		column.Item().Element(container =>
+			container.ApplyLayoutOptions(_workbook)
+			.ApplyDecoration(_workbook.RuntimeStyle)
+			.Table(table => ComposeTable(table,
+				_helper.TableBodyMatrix, _helper.TableBodyRowHeight,
+				_helper.TableHeaderMatrix, _helper.TableHeaderRowHeight,
+				_helper.TableFooterMatrix, _helper.TableFooterRowHeight))
+		);
+		column.Item().Element(container =>
+			container.ApplyLayoutOptions(_workbook)
+			.ApplyDecoration(_workbook.RuntimeStyle)
+			.Table(table => ComposeTable(table, _helper.BottomPartMatrix, _helper.BottomPartRowHeight))
+		);
+	}
 	public void Compose(ColumnDescriptor column)
 	{
-		column.Item().Element(cont =>
+		if (_helper.CellMatrix != null)
 		{
-			Compose(cont);
-		});
+			column.Item().Element(cont =>
+			{
+				Compose(cont);
+			});
+		}
+		else
+			ComposeTable(column);
 	}
 
 	public void ComposeFooter(ColumnDescriptor column)
@@ -62,13 +92,15 @@ internal class WorkbookComposer(Workbook _workbook, WorkbookHelper _helper, Rend
 
 	public void ComposeHeader(ColumnDescriptor column)
 	{
+		if (_helper.HeaderMatrix == null)
+			return;
 		column.Item().Element(cont =>
 		{
 			cont.Table(table => ComposeTable(table, _helper.HeaderMatrix, _helper.HeaderRowHeight));
 		});
 	}
 
-	public void ComposeTable(TableDescriptor table, WorkbookCell?[,] matrix, Func<Int32, Single> getHeight)
+	private void ComposeColumns(TableDescriptor table)
 	{
 		table.ColumnsDefinition(column => {
 			for (UInt32 i = 0; i < _workbook.ColumnCount; i++)
@@ -80,8 +112,13 @@ internal class WorkbookComposer(Workbook _workbook, WorkbookHelper _helper, Rend
 					column.ConstantColumn(cw);
 			}
 		});
+	}
 
-		for (int rn=0; rn <= matrix.GetUpperBound(0); rn++)
+	private static void ComposeMatrix(Func<ITableCellContainer> getCell,  WorkbookCell?[,]? matrix, Func<Int32, Single> getHeight)
+	{
+		if (matrix == null)
+			return;
+		for (int rn = 0; rn <= matrix.GetUpperBound(0); rn++)
 		{
 			var rh = getHeight(rn);
 			for (int c = 0; c <= matrix.GetUpperBound(1); c++)
@@ -89,14 +126,14 @@ internal class WorkbookComposer(Workbook _workbook, WorkbookHelper _helper, Rend
 				var wbCell = matrix[rn, c];
 				if (wbCell != null && wbCell.IsSpanPart)
 					continue;
-				var tc = table.Cell();
+				var tc = getCell();
 				var cellHeight = rh;
 				if (wbCell?.ColSpan > 1)
 					tc = tc.ColumnSpan(wbCell.ColSpan);
 				if (wbCell?.RowSpan > 1)
 				{
 					tc = tc.RowSpan(wbCell.RowSpan);
-					for (var rs=1; rs < wbCell.RowSpan; rs++)
+					for (var rs = 1; rs < wbCell.RowSpan; rs++)
 						cellHeight += getHeight(rn + rs);
 				}
 				var cont = tc.MinHeight(cellHeight);
@@ -106,6 +143,40 @@ internal class WorkbookComposer(Workbook _workbook, WorkbookHelper _helper, Rend
 				if (wbCell != null)
 					ComposeCell(wbCell, cont);
 			}
+		}
+	}
+
+	public void ComposeTable(TableDescriptor table, WorkbookCell?[,]? matrix, Func<Int32, Single> getHeight)
+	{
+		if (matrix == null)
+			return;
+
+		ComposeColumns(table);
+		ComposeMatrix(table.Cell, matrix, getHeight);
+	}
+
+	public void ComposeTable(TableDescriptor table, 
+			WorkbookCell?[,]? matrix, Func<Int32, Single> getHeight,
+			WorkbookCell?[,]? header, Func<Int32, Single> getHeaderHeight,
+			WorkbookCell?[,]? footer, Func<Int32, Single> getFooterHeight
+		)
+	{
+		ComposeColumns(table);
+
+		if (header != null)
+		{
+			table.Header(headCont =>
+			{
+				ComposeMatrix(headCont.Cell, header, getHeaderHeight);
+			});
+		}
+		ComposeMatrix(table.Cell, matrix, getHeight);
+		if (footer != null)
+		{
+			table.Footer(footerCont =>
+			{
+				ComposeMatrix(footerCont.Cell, footer, getFooterHeight);
+			});
 		}
 	}
 

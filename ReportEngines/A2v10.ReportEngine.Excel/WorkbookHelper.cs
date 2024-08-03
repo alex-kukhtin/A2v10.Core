@@ -27,14 +27,14 @@ public record WorkbookCell
 		Cell = new Cell();
 	}
 
-	public Cell Cell {  get; init; }
+	public Cell Cell { get; init; }
 	public UInt32 ColSpan => Cell.ColSpan;
 	public UInt32 RowSpan => Cell.RowSpan;
-	public Boolean IsSpanPart { get; init; }	
-	public String? Value { get; set;}
+	public Boolean IsSpanPart { get; init; }
+	public String? Value { get; set; }
 	public CellImage? Image { get; set; }
 	public CellQrCode? QrCode { get; set; }
-	public Boolean NoWrap { get; set; }	
+	public Boolean NoWrap { get; set; }
 }
 
 public record RealRow(UInt32 CellRow, ExpandoObject? Item = null);
@@ -48,22 +48,51 @@ public partial class WorkbookHelper
 	private readonly Workbook _workbook;
 	private readonly RenderContext _context;
 
-	private readonly WorkbookCell?[,] _matrix;
-	private readonly WorkbookCell?[,] _footer;
-	private readonly WorkbookCell?[,] _header;
-	private readonly List<RealRow> _realRows;
-	private readonly List<RealRow> _headerRows;
-	private readonly List<RealRow> _footerRows;
+	private readonly WorkbookCell?[,]? _matrix;
+	private readonly WorkbookCell?[,]? _footer;
+	private readonly WorkbookCell?[,]? _header;
+	private readonly List<RealRow>? _realRows;
+	private readonly List<RealRow>? _headerRows;
+	private readonly List<RealRow>? _footerRows;
 
-	public WorkbookCell?[,] CellMatrix => _matrix;
-	public WorkbookCell?[,] FooterMatrix => _footer;
-	public WorkbookCell?[,] HeaderMatrix => _header;
+	/* table header variant */
+	private readonly WorkbookCell?[,]? _topPart;
+	private readonly WorkbookCell?[,]? _bottomPart;
+	private readonly WorkbookCell?[,]? _tableHeader;
+	private readonly WorkbookCell?[,]? _tableBody;
+	private readonly WorkbookCell?[,]? _tableFooter;
+	private readonly List<RealRow>? _topPartRows;
+	private readonly List<RealRow>? _bottomPartRows;
+	private readonly List<RealRow>? _tableHeaderRows;
+	private readonly List<RealRow>? _tableBodyRows;
+	private readonly List<RealRow>? _tableFooterRows;
+
+	public WorkbookCell?[,]? CellMatrix => _matrix;
+	public WorkbookCell?[,]? FooterMatrix => _footer;
+	public WorkbookCell?[,]? HeaderMatrix => _header;
+	// new variant
+	public WorkbookCell?[,]? TopPartMatrix => _topPart;
+	public WorkbookCell?[,]? BottomPartMatrix => _bottomPart;
+	public WorkbookCell?[,]? TableHeaderMatrix => _tableHeader;
+	public WorkbookCell?[,]? TableBodyMatrix => _tableBody;
+	public WorkbookCell?[,]? TableFooterMatrix => _tableFooter;
 
 	public WorkbookHelper(Workbook workbook, RenderContext context)
 	{
 		_workbook = workbook;
 		_context = context;
-		(_matrix, _realRows) = CreateCellMatrix(GetRealRows);
+		if (_workbook.TableHeader != null || _workbook.TableFooter != null)
+		{
+			(_tableBody, _tableBodyRows) = CreateCellMatrix(GetTableRealRows);
+			(_tableHeader, _tableHeaderRows) = CreateCellMatrix(GetTableHeaderRows);
+			(_tableFooter, _tableFooterRows) = CreateCellMatrix(GetTableFooterRows);
+			(_topPart, _topPartRows) = CreateCellMatrix(GetTopPartRows);
+			(_bottomPart, _bottomPartRows) = CreateCellMatrix(GetBottomPartRows);
+		}
+		else
+		{
+			(_matrix, _realRows) = CreateCellMatrix(GetRealRows);
+		}
 		(_footer, _footerRows) = CreateCellMatrix(GetFooterRows);
 		(_header, _headerRows) = CreateCellMatrix(GetHeaderRows);
 	}
@@ -74,7 +103,27 @@ public partial class WorkbookHelper
 			return true;
 		if (_workbook.Footer != null && _workbook.Footer.RowInside(row + 1))
 			return true;
+		if (_workbook.TableHeader != null && _workbook.TableHeader.RowInside(row + 1))
+			return true;
+		if (_workbook.TableFooter != null && _workbook.TableFooter.RowInside(row + 1))
+			return true;
 		return false;
+	}
+
+	private IEnumerable<RealRow> GetTableHeaderRows()
+	{
+		if (_workbook.TableHeader == null)
+			yield break;
+		for (var r = _workbook.TableHeader.Start; r <= _workbook.TableHeader.End; r++)
+			yield return new RealRow(r);
+	}
+
+	private IEnumerable<RealRow> GetTableFooterRows()
+	{
+		if (_workbook.TableFooter == null)
+			yield break;
+		for (var r = _workbook.TableFooter.Start; r <= _workbook.TableFooter.End; r++)
+			yield return new RealRow(r);
 	}
 
 	private IEnumerable<RealRow> GetHeaderRows()
@@ -92,9 +141,38 @@ public partial class WorkbookHelper
 		for (var r = _workbook.Footer.Start; r <= _workbook.Footer.End; r++)
 			yield return new RealRow(r);
 	}
+
+	private IEnumerable<RealRow> GetTopPartRows()
+	{
+		UInt32 bottomRow = 0;
+		if (_workbook.TableHeader != null)
+			bottomRow = _workbook.TableHeader.End;
+		else
+			foreach (var r in _workbook.Ranges)
+				bottomRow = Math.Max(bottomRow, r.End);
+		UInt32 topRow = 1;
+		if (_workbook.Header != null)
+			topRow = _workbook.Header.End + 1;
+		for (UInt32 r = topRow; r < bottomRow; r++)
+			yield return new RealRow(r);
+	}
+
+	private IEnumerable<RealRow> GetBottomPartRows()
+	{
+		UInt32 topRow = 0;
+		if (_workbook.TableFooter != null)
+			topRow = _workbook.TableFooter.End;
+		else
+			foreach (var r in _workbook.Ranges)
+				topRow = Math.Max(topRow, r.End);
+		// TODO: 0 or 1???
+		for (var r = topRow + 1; r <= _workbook.RowCount; r++)
+			yield return new RealRow(r);
+	}
+
 	private IEnumerable<RealRow> GetRealRows()
 	{
-		var count  = _workbook.RowCount;	
+		var count = _workbook.RowCount;
 		UInt32 r = 0;
 		while (r < count)
 		{
@@ -115,8 +193,8 @@ public partial class WorkbookHelper
 				{
 					for (UInt32 k = rng.Start; k <= rng.End; k++)
 					{
-                        // TODO: Check nested ranges
-                        var innerRng = _workbook.Ranges.Find(r => r != rng && r.Start == k);
+						// TODO: Check nested ranges
+						var innerRng = _workbook.Ranges.Find(r => r != rng && r.Start == k);
 						if (innerRng == null)
 							yield return new RealRow(k, colElem);
 						else
@@ -131,12 +209,47 @@ public partial class WorkbookHelper
 									yield return new RealRow(m, innerElem);
 								}
 							}
-                        }
+						}
 					}
 				}
 				r += rng.End - rng.Start;
 			}
 			r++;
+		}
+	}
+
+	private IEnumerable<RealRow> GetTableRealRows()
+	{
+		foreach (var rng in _workbook.Ranges)
+		{
+			if (rng == null)
+				yield break;
+			var coll = _context.Engine.EvaluateCollection(rng.Value[1..^1]);
+			if (coll == null)
+				continue;
+			foreach (var colElem in coll)
+			{
+				for (UInt32 k = rng.Start; k <= rng.End; k++)
+				{
+					// TODO: Check nested ranges
+					var innerRng = _workbook.Ranges.Find(r => r != rng && r.Start == k);
+					if (innerRng == null)
+						yield return new RealRow(k, colElem);
+					else
+					{
+						var innerColl = ScriptEngine.GetCollection(colElem, innerRng.Value[1..^1]);
+						if (innerColl == null)
+							continue;
+						foreach (var innerElem in innerColl)
+						{
+							for (UInt32 m = innerRng.Start; m <= innerRng.End; m++)
+							{
+								yield return new RealRow(m, innerElem);
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 
@@ -156,14 +269,14 @@ public partial class WorkbookHelper
 			else if (rr.ResultType == ResolveResultType.QrCode)
 				wbCell.QrCode = new CellQrCode(rr.Value ?? String.Empty);
 		}
-        return wbCell;
+		return wbCell;
 	}
 
 	private (WorkbookCell?[,] mx, List<RealRow> rows) CreateCellMatrix(Func<IEnumerable<RealRow>> rows)
 	{
 		var realRows = rows().ToList();
 		var mx = new WorkbookCell[realRows.Count, _workbook.ColumnCount];
-		for (var r=0; r<realRows.Count; r++)
+		for (var r = 0; r < realRows.Count; r++)
 		{
 			var rr = realRows[r];
 			for (UInt32 c = 0; c < _workbook.ColumnCount; c++)
@@ -177,7 +290,7 @@ public partial class WorkbookHelper
 				{
 					for (var cj = c + 1; cj < c + wbCell.ColSpan; cj++)
 						mx[r, cj] = new WorkbookCell(true); // right
-					for (var rj = 1;  rj < wbCell.RowSpan; rj++)
+					for (var rj = 1; rj < wbCell.RowSpan; rj++)
 					{
 						for (var cj = c; cj < c + wbCell.ColSpan; cj++)
 							mx[r + rj, cj] = new WorkbookCell(true);
@@ -198,7 +311,7 @@ public partial class WorkbookHelper
 						if (_workbook.Cells.TryGetValue(rightCellRef, out var wbRightCell))
 						{
 							var trg = mx[r, c].Cell;
-							trg.FixRuntimeBorder(wbRightCell, 'R');	
+							trg.FixRuntimeBorder(wbRightCell, 'R');
 						}
 					}
 					if (wbCell.RowSpan > 1)
@@ -225,28 +338,22 @@ public partial class WorkbookHelper
 		return width;
 	}
 
-	public Single RowHeight(Int32 r)
-	{
-		var rowHeight = DEFAULT_ROW_HEIGHT;
-		var row = _realRows[r].CellRow;
-		if (_workbook.Rows.TryGetValue(row, out var sheetRow))
-			rowHeight = sheetRow.Height;
-		return rowHeight;
-	}
+	public Single RowHeight(Int32 r) => RowHeight(r, () => _realRows);
+	public Single HeaderRowHeight(Int32 r) => RowHeight(r, () => _headerRows);
+	public Single FooterRowHeight(Int32 r) => RowHeight(r, () => _footerRows);
+	public Single TableHeaderRowHeight(Int32 r) => RowHeight(r, () => _tableHeaderRows);
+	public Single TableBodyRowHeight(Int32 r) => RowHeight(r, () => _tableBodyRows);
+	public Single TableFooterRowHeight(Int32 r) => RowHeight(r, () => _tableFooterRows);
+	public Single TopPartRowHeight(Int32 r) => RowHeight(r, () => _topPartRows);
+	public Single BottomPartRowHeight(Int32 r) => RowHeight(r, () => _bottomPartRows);
 
-	public Single HeaderRowHeight(Int32 r)
+	public Single RowHeight(Int32 r, Func<List<RealRow>?> getRows)
 	{
 		var rowHeight = DEFAULT_ROW_HEIGHT;
-		var row = _headerRows[r].CellRow;
-		if (_workbook.Rows.TryGetValue(row, out var sheetRow))
-			rowHeight = sheetRow.Height;
-		return rowHeight;
-	}
-
-	public Single FooterRowHeight(Int32 r)
-	{
-		var rowHeight = DEFAULT_ROW_HEIGHT;
-		var row = _footerRows[r].CellRow;
+		var x = getRows();
+		if (x == null)
+			return rowHeight;
+		var row = x[r].CellRow;
 		if (_workbook.Rows.TryGetValue(row, out var sheetRow))
 			rowHeight = sheetRow.Height;
 		return rowHeight;

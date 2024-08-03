@@ -32,6 +32,8 @@ internal class TextComposer(Text text, RenderContext context) : FlowElementCompo
 		if (!String.IsNullOrEmpty(rs.Color))
 			ts = ts.FontColor(rs.Color!);
 		descr.DefaultTextStyle(ts);
+		if (rs.Align == TextAlign.Justify)
+			descr.Justify();
 	}
 
 	static TextSpanDescriptor? ApplyRuntimeStyle(TextSpanDescriptor? descr, ContentElement elem)

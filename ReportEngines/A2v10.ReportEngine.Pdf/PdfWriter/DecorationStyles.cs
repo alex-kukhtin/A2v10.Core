@@ -118,10 +118,12 @@ internal static class DecorationStyles
 		return container.ApplyDecoration(style);
 	}
 
-	public static TextSpanDescriptor ApplyText(this TextSpanDescriptor container, RuntimeStyle? style)
+	public static TextBlockDescriptor ApplyText(this TextBlockDescriptor container, RuntimeStyle? style)
 	{
 		if (style == null)
 			return container;
+		if (style.Align == TextAlign.Justify)
+			container.Justify();
 		if (!String.IsNullOrEmpty(style.FontName))
 			container = container.FontFamily(style.FontName);	
 		if (style.FontSize != null)

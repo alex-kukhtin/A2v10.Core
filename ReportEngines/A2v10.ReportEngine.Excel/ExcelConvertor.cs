@@ -545,6 +545,8 @@ public class ExcelConvertor
 					align = TextAlign.Right;
 				else if (a.Horizontal == HorizontalAlignmentValues.Center)
 					align = TextAlign.Center;
+				else if (a.Horizontal == HorizontalAlignmentValues.Justify)
+					align = TextAlign.Justify;
 			}
 			if (a?.Vertical != null)
 			{

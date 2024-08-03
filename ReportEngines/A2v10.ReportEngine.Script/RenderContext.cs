@@ -55,7 +55,7 @@ public partial class RenderContext
 		if (value == null)
 			return String.Empty;
 
-		if (!String.IsNullOrEmpty(format))
+		if (!String.IsNullOrEmpty(format) && format != "General")
 			return String.Format(_formatProvider, $"{{0:{format}}}", value);
 
 		var result = dataType switch
