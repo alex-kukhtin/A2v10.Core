@@ -1,6 +1,6 @@
 ﻿// Copyright © 2023-2024 Oleksandr Kukhtin. All rights reserved.
 
-/*20240403-8272*/
+/*20240807-8333*/
 
 /* tabbed:shell.js */
 (function () {
@@ -61,6 +61,10 @@
 		},
 		methods: {
 			navigate(u1) {
+				if (u1.url.indexOf('{genrandom}') >= 0) {
+					let randomString = Math.random().toString(36).substring(2);
+					u1.url = u1.url.replace('{genrandom}', randomString);
+				}
 				let tab = this.tabs.find(tab => tab.url == u1.url);
 				if (!tab) {
 					let parentUrl = '';
