@@ -1969,6 +1969,9 @@ pre.a2-code {
 .a2-hyperlink.a2-inline {
   display: inline-flex;
 }
+.a2-hyperlink.rendershow {
+  pointer-events: all;
+}
 .control-group {
   display: block;
   font-size: 1em;
