@@ -27,7 +27,7 @@
 			<li v-on:click.stop.prevent="selectHome()" tab-key="10" class="tab-home" v-bind:class="{active: isHomeActive()}">
 				<span class="ico ico-home"></span>
 			</li>
-			<li v-for="t in tabs" :key="t.url" :tab-key="t.key" :title="t.title" v-on:mouseleave="t.debug = false"
+			<li v-for="t in tabs" :key="t.key" :tab-key="t.key" :title="t.title" v-on:mouseleave="t.debug = false"
 				:class="{active: isTabActive(t)}" v-on:click.stop.prevent="selectTab(t, false, $event)" v-on:mouseup.middle="closeTab(t)">
 				<span v-text="tabTitle(t)" class="tab-title"></span>
 				<span class="close ico ico-clear" v-on:click.stop.prevent="closeTab(t)"></span>
