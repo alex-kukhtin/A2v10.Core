@@ -1,7 +1,6 @@
-﻿// Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2021-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
-using System.Configuration;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -94,8 +93,8 @@ public static class ServicesExtensions
 	private static void ValidateJob(ConfigJob job)
 	{
 		if (String.IsNullOrEmpty(job.Id))
-			throw new ConfigurationErrorsException("Job Id is required");
+			throw new InvalidOperationException("Job Id is required");
 		if (!CronExpression.IsValidExpression(job.Cron))
-			throw new ConfigurationErrorsException($"Invalid cron expression '{job.Cron}'");
+			throw new InvalidOperationException($"Invalid cron expression '{job.Cron}'");
 	}
 }
