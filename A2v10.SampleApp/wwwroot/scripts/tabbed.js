@@ -92,9 +92,9 @@ app.modules['std:signalR'] = function () {
 		}
 	});
 })();
-// Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
+// Copyright © 2023-2024 Oleksandr Kukhtin. All rights reserved.
 
-/*20230901-8147*/
+/*20240807-8333*/
 /* tabbed:navbar.js */
 (function () {
 
@@ -160,10 +160,6 @@ app.modules['std:signalR'] = function () {
 				eventBus.$emit('closeAllPopups');
 				const shell = this.$parent;
 				this.activeMenu = null;
-				if (url.endsWith('{genrandom}')) {
-					let randomString = Math.random().toString(36).substring(2);
-					url = url.replace('{genrandom}', randomString);
-				}
 				if (url.startsWith("page:"))
 					shell.$emit('navigate', { title: title, url: url.substring(5) });
 				else if (url.startsWith("dialog:")) {
@@ -191,7 +187,7 @@ app.modules['std:signalR'] = function () {
 
 // Copyright © 2023-2024 Oleksandr Kukhtin. All rights reserved.
 
-/*20240403-8272*/
+/*20240807-8333*/
 
 /* tabbed:shell.js */
 (function () {
@@ -252,6 +248,10 @@ app.modules['std:signalR'] = function () {
 		},
 		methods: {
 			navigate(u1) {
+				if (u1.url.indexOf('{genrandom}') >= 0) {
+					let randomString = Math.random().toString(36).substring(2);
+					u1.url = u1.url.replace('{genrandom}', randomString);
+				}
 				let tab = this.tabs.find(tab => tab.url == u1.url);
 				if (!tab) {
 					let parentUrl = '';

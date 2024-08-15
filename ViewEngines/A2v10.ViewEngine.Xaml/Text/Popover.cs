@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 
 using A2v10.Infrastructure;
@@ -103,7 +103,7 @@ public class Popover : Inline
         {
             var cont = new TagBuilder("span");
             cont.MergeAttribute("v-text", cntBind.GetPathFormat(context));
-            cont.Render(context);
+			cont.Render(context);
         }
         else if (Content is UIElementBase uiElemBase)
         {

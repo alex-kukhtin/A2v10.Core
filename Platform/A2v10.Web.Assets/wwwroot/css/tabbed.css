@@ -5592,6 +5592,10 @@ TODO:
   color: var(--linkDark);
   border-bottom-color: var(--linkDark);
 }
+.popover-wrapper.negative-red > .popover-title:hover {
+  color: currentColor;
+  border-bottom-color: currentColor;
+}
 .popover-wrapper > .popup-body {
   display: none;
   position: absolute;
