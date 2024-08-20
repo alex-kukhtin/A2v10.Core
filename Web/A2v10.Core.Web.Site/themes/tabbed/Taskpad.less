@@ -30,14 +30,14 @@
 		color: @link-color;
 		border: 1px solid var(--neutral100);
 		border-radius: @control-brd-radius;
-		background-color: var(--neutral50);
+		background-color: var(--nav100);
 		text-align: center;
 		line-height: (@handle-size - 2);
 		z-index: 20;
 		text-decoration: none;
 
 		&:hover {
-			background-color: @taskpad-collapsed-bg-color;
+			background-color: var(--nav300);
 		}
 	}
 
@@ -74,7 +74,6 @@
 
 	&.collapsed {
 		background-color: @taskpad-collapsed-bg-color;
-
 		width: @taskpad-collapsed-width;
 		padding: 0 !important;
 

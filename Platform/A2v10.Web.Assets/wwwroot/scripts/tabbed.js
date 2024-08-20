@@ -187,7 +187,7 @@ app.modules['std:signalR'] = function () {
 
 // Copyright © 2023-2024 Oleksandr Kukhtin. All rights reserved.
 
-/*20240807-8333*/
+/*20240820-8337*/
 
 /* tabbed:shell.js */
 (function () {
@@ -277,7 +277,7 @@ app.modules['std:signalR'] = function () {
 				this.navigatingUrl = to.url;
 				this.navigate({ url: to.url, title: '' });
 			},
-			dummy() {},
+			dummy() { },
 			reloadApplication() {
 				window.location.reload();
 			},
@@ -334,11 +334,11 @@ app.modules['std:signalR'] = function () {
 				if (tab.root && tab.root.$isDirty)
 					star = '* ';
 				return star + tab.title;
-				
+
 			},
 			tabSource(tab) {
-				return tab.loaded ? (tab.url  + (tab.query || '')) : null;
-			},		
+				return tab.loaded ? (tab.url + (tab.query || '')) : null;
+			},
 			homeSource() {
 				return this.homeLoaded ? '/_home/index/0' : null;
 			},
@@ -480,15 +480,20 @@ app.modules['std:signalR'] = function () {
 			},
 			// context menu
 			tabsContextMenu(ev) {
+				eventBus.$emit('closeAllPopups');
 				this.contextTabKey = 0;
 				let li = ev.target.closest('li');
 				if (li)
 					this.contextTabKey = +(li.getAttribute('tab-key') || 0);
 				let menu = document.querySelector('#ctx-tabs-popup');
 				let br = menu.parentNode.getBoundingClientRect();
+				let mw = 242; // menu width
+				let lp = ev.clientX - br.left;
+				if (lp + mw > br.right)
+					lp -= mw;
 				let style = menu.style;
 				style.top = (ev.clientY - br.top) + 'px';
-				style.left = (ev.clientX - br.left) + 'px';
+				style.left = lp + 'px';
 				menu.classList.add('show');
 				//console.dir(this.contextTabKey);
 			},

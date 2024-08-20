@@ -1689,14 +1689,14 @@ header .include.nav-pane .partial-block .control-group,
   color: var(--link);
   border: 1px solid var(--neutral100);
   border-radius: 4px;
-  background-color: var(--neutral50);
+  background-color: var(--nav100);
   text-align: center;
   line-height: 24px;
   z-index: 20;
   text-decoration: none;
 }
 .taskpad .taskpad-collapse-handle:hover {
-  background-color: var(--bgPrimary);
+  background-color: var(--nav300);
 }
 .taskpad.collapsible .taskpad-body .panel:first-child .panel-header {
   margin-left: 10px;
