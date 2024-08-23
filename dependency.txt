@@ -1,5 +1,11 @@
 2024-08-20 (next: 8338)
 =======================
+A2v10.Platform
+	A2v10.Platform.Web
+		A2v10.Identity.Core
+	A2v10.Identity.UI
+A2v10.Identity.ApiKey
+A2v10.Identity.Jwt
 
 
 
