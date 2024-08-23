@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2008-2024 Oleksandr Kukhtin
 
-Last updated : 08 jun 2024
-module version : 8301
+Last updated : 23 aug 2024
+module version : 8339
 */
 ------------------------------------------------
 drop procedure if exists a2ui.[Menu.Merge];
@@ -49,9 +49,10 @@ begin
 		t.[Order] = s.[Order],
 		t.ClassName = s.ClassName,
 		t.CreateUrl= s.CreateUrl,
-		t.CreateName = s.CreateName
-	when not matched by target then insert(Module, Tenant, Id, Parent, [Name], [Url], Icon, [Order], ClassName, CreateUrl, CreateName) values 
-		(@ModuleId, @TenantId, Id, Parent, [Name], [Url], Icon, [Order], ClassName, CreateUrl, CreateName)
+		t.CreateName = s.CreateName,
+		t.IsDevelopment = s.IsDevelopment
+	when not matched by target then insert(Module, Tenant, Id, Parent, [Name], [Url], Icon, [Order], ClassName, CreateUrl, CreateName, IsDevelopment) values 
+		(@ModuleId, @TenantId, Id, Parent, [Name], [Url], Icon, [Order], ClassName, CreateUrl, CreateName, IsDevelopment)
 	when not matched by source and t.Tenant = @TenantId and t.Module = @ModuleId then
 		delete;
 end
