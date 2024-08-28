@@ -1,5 +1,6 @@
 ﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
+using System.Collections.Generic;
 using System.Text;
 
 using A2v10.Infrastructure;
@@ -400,9 +401,14 @@ public class BindCmd : BindBase
 
 	String GetOptionsForFile(RenderContext _)
 	{
-		if (FileAction == FileAction.Unknown)
+		if (FileAction == FileAction.Unknown && !SaveRequired)
 			return nullString;
-		return $"{{action: '{FileAction.ToString().ToLowerInvariant()}'}}";
+		List<String> list = [];
+		if (SaveRequired)
+			list.Add("saveRequired: true");
+		if (FileAction != FileAction.Unknown)
+			list.Add($"action: '{FileAction.ToString().ToLowerInvariant()}'");
+		return $"{{{String.Join(", ", list)}}}";
 	}
 
 	String GetOptionsValid(RenderContext _)
