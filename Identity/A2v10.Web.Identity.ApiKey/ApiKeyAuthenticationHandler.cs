@@ -66,7 +66,7 @@ public class ApiKeyAuthenticationHandler<T> : AuthenticationHandler<ApiKeyAuthen
 		var appUser = _configOptions.KeyType switch
 		{
 			KeyType.ApiKey => await _userLoginStore.FindByLoginAsync(ProviderName, apiKey, CancellationToken.None),
-			KeyType.EncodedClaims => await GetApiUserFromClaims(apiKey),
+			KeyType.EncodedClaims => await GetApiUserFromClaimsAsync(apiKey),
 			_ => throw new InvalidOperationException("Yet not implemented")
 		};
 		if (appUser == null || appUser.IsEmpty)
@@ -84,7 +84,7 @@ public class ApiKeyAuthenticationHandler<T> : AuthenticationHandler<ApiKeyAuthen
 		return AuthenticateResult.Success(ticket);
 	}
 
-	private async Task<AppUser<T>?> GetApiUserFromClaims(String apiKey)
+	private async Task<AppUser<T>?> GetApiUserFromClaimsAsync(String apiKey)
 	{
 		var user = ApiKeyUserHelper<T>.GetUserFromApiKey(apiKey, _configOptions.AesEncryptKey, _configOptions.AesEncryptVector);
 		if (user == null)
