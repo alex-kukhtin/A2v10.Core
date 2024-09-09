@@ -43,13 +43,13 @@ public partial class DataService
 			prms.Set("Key", blob.Key);
 		setParams?.Invoke(prms);
 
-		var blobType = GetBlobType(blob);
-		var blobInfo = blobType.BlobType switch
+		var (BlobType, StorageName) = GetBlobType(blob);
+		var blobInfo = BlobType switch
 		{
 			ModelBlobType.sql => await LoadBlobSql(blob, prms),
 			ModelBlobType.json => await LoadBlobJson(blob, prms),
 			ModelBlobType.clr => await LoadBlobClr(blob, prms),
-			ModelBlobType.blobStorage => await LoadBlobStorage(blob, blobType.StorageName, prms),
+			ModelBlobType.blobStorage => await LoadBlobStorage(blob, StorageName, prms),
 			ModelBlobType.excel => await LoadBlobExcel(blob, prms),
 			_ => throw new NotImplementedException(blob.Type.ToString()),
 		};
@@ -168,13 +168,13 @@ public partial class DataService
 		var platformUrl = CreatePlatformUrl(urlKind, baseUrl);
 		var blobModel = await _modelReader.GetBlobAsync(platformUrl)
 			?? throw new DataServiceException($"Blob is null");
-		var blobType = GetBlobType(blobModel);
-		return blobType.BlobType switch
+		var (BlobType, StorageName) = GetBlobType(blobModel);
+		return BlobType switch
 		{
 			ModelBlobType.parse => await ParseFile(blobModel, setBlob, setParams),
 			ModelBlobType.sql => await SaveBlobSql(blobModel, setBlob, setParams),
 			ModelBlobType.clr => await SaveBlobClr(blobModel, setBlob, setParams),
-			ModelBlobType.blobStorage => await SaveBlobStorage(blobModel, blobType.StorageName, setBlob, setParams),
+			ModelBlobType.blobStorage => await SaveBlobStorage(blobModel, StorageName, setBlob, setParams),
 			_ =>
 				throw new NotImplementedException(blobModel.Type.ToString())
 		};
@@ -421,11 +421,11 @@ public partial class DataService
 		var platformUrl = CreatePlatformUrl(UrlKind.File, baseUrl);
 		var blobModel = await _modelReader.GetBlobAsync(platformUrl)
 			?? throw new DataServiceException($"Blob is null");
-		var blobType = GetBlobType(blobModel);
-		return blobType.BlobType switch
+		var (BlobType, StorageName) = GetBlobType(blobModel);
+		return BlobType switch
 		{
 			ModelBlobType.sql => await DeleteBlobSql(blobModel, setParams),
-			ModelBlobType.blobStorage => await DeleteBlobStorage(blobModel, blobType.StorageName, setParams),
+			ModelBlobType.blobStorage => await DeleteBlobStorage(blobModel, StorageName, setParams),
 			_ =>
 				throw new NotImplementedException(blobModel.Type.ToString())
 		};
