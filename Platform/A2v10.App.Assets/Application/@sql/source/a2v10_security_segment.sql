@@ -1,8 +1,8 @@
 ﻿/*
-Copyright © 2008-2023 Oleksandr Kukhtin
+Copyright © 2008-2024 Oleksandr Kukhtin
 
-Last updated : 05 aug 2023
-module version : 8186
+Last updated : 09 sep 2023
+module version : 8342
 */
 
 -- SECURITY SEGMENT
@@ -11,7 +11,9 @@ create or alter procedure a2security.SetTenantId
 @TenantId int
 as
 begin
+	set nocount on;
 	exec sp_set_session_context @key=N'TenantId', @value=@TenantId, @read_only=0;   
+	update a2security.Tenants set TransactionCount = TransactionCount + 1, LastTransactionDate = getutcdate() where Id = @TenantId;
 end
 go
 ------------------------------------------------
