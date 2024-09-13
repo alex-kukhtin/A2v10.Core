@@ -49,6 +49,7 @@ public class Popover : Inline
     public Length? Top { get; set; }
 
     public String? Url { get; set; }
+    public Object? Argument { get; set; }
     public Length? OffsetX { get; set; }
 
     public PopoverUnderlineMode Underline { get; set; }
@@ -90,6 +91,12 @@ public class Popover : Inline
             po.MergeAttribute(":url", urlBind.GetPathFormat(context));
         else if (!String.IsNullOrEmpty(Url))
             po.MergeAttribute("url", Url);
+
+        var arg = GetBinding(nameof(Argument));
+        if (arg != null)
+            po.MergeAttribute(":arg", arg.GetPathFormat(context));
+        else if (Argument != null)
+            po.MergeAttribute("arg", Argument.ToString());
 
         if (Width != null)
             po.MergeAttribute("width", Width.Value);

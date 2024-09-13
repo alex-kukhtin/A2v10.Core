@@ -563,7 +563,7 @@ end
 go
 
 /*
-Copyright © 2008-2023 Oleksandr Kukhtin
+Copyright © 2008-2024 Oleksandr Kukhtin
 
 Last updated : 09 sep 2023
 module version : 8342
