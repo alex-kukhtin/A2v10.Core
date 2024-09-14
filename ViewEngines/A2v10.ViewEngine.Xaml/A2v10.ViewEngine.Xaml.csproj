@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
-		<Version>10.1.8343</Version>
+		<Version>10.1.8344</Version>
 		<Nullable>enable</Nullable>
 		<LangVersion>Latest</LangVersion>
 		<AssemblyName>A2v10.Xaml</AssemblyName>
