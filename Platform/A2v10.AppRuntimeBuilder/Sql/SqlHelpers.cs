@@ -3,9 +3,9 @@
 using System;
 using System.Dynamic;
 
-using A2v10.Data;
+using A2v10.Data.Core.Extensions.Dynamic;
 
-namespace A2v10.AppRuntimeBuilder;
+namespace A2v10.AppRuntimeBuilder.Sql;
 
 internal static class SqlHelpers
 {

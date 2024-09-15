@@ -8,15 +8,18 @@ using System.Data;
 
 using Microsoft.Data.SqlClient;
 
-using A2v10.Data.Core;
 using A2v10.Data.Interfaces;
+using A2v10.Data.Core.Extensions;
 using A2v10.Infrastructure;
+using A2v10.AppRuntimeBuilder.Sql;
 
 namespace A2v10.AppRuntimeBuilder;
 
 internal partial class SqlModelProcessor
 {
-	private Task<IDataModel> LoadIndexModelAsync(IPlatformUrl platformUrl, IndexUiElement indexUi)
+    private static IEnumerable<String> VoidParam => ["a.Void = 0"];
+
+    private Task<IDataModel> LoadIndexModelAsync(IPlatformUrl platformUrl, IndexUiElement indexUi)
 	{
 		var table = indexUi.Endpoint?.BaseTable
 			?? throw new InvalidOperationException("Endpoint or BaseTable is null");
@@ -73,12 +76,12 @@ internal partial class SqlModelProcessor
 
 		String ParametersCondition()
 		{
-			var hasVoid = indexUi.Endpoint.EndpointType() == TableType.Catalog;
+            var hasVoid = indexUi.Endpoint.EndpointType() == TableType.Catalog;
 			if (indexUi.Endpoint.Parameters == null)
 				return hasVoid ? "a.Void = 0" : String.Empty;
 			var prms = indexUi.Endpoint.Parameters.Select(p => $"a.[{p.Key}] = @{p.Key}");
-			var cond = hasVoid ? (new String[] { "a.Void = 0" }).Union(prms) : prms;
-			return String.Join(" and ", cond);
+			var cond = hasVoid ? VoidParam.Union(prms) : prms;
+            return String.Join(" and ", cond);
 		}
 
 		String WhereCondition()

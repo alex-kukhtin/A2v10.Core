@@ -9,9 +9,9 @@ using System.Linq;
 using System.Text;
 using System.Collections.Generic;
 
-using A2v10.Data.Core;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
+using A2v10.Data.Core.Extensions;
 
 namespace A2v10.AppRuntimeBuilder;
 
