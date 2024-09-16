@@ -11,7 +11,6 @@ using System.Dynamic;
 using Microsoft.Data.SqlClient;
 
 using A2v10.Data.Interfaces;
-using A2v10.Data;
 using A2v10.Data.Core.Extensions;
 using A2v10.Infrastructure;
 
