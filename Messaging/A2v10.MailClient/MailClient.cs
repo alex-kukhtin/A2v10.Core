@@ -5,15 +5,15 @@ using System.IO;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 
 using MimeKit.Text;
 using MimeKit;
 using MailKit.Net.Smtp;
+using MailKit.Security;
 
 using A2v10.Infrastructure;
-using MailKit.Security;
-using Microsoft.Extensions.Logging;
-using System.Diagnostics;
 
 namespace A2v10.MailClient;
 
