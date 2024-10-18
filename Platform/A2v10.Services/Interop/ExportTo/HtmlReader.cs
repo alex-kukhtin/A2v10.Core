@@ -66,24 +66,18 @@ internal partial class HtmlReader(IFormatProvider currentFormat)
 
 	// TODO: DELETE THIS AFTER REWRITED CLIENT CODE;
 	const String COL_PATTERN = "<col ([\\w=\"\\s:%;-]+)>";
-	const String TITLE_PATTERN = @"\stitle=""[^""]*""";
 #if NET7_0_OR_GREATER
 	[GeneratedRegex(COL_PATTERN, RegexOptions.None, "en-US")]
 	private static partial Regex ColumnRegex();
-	[GeneratedRegex(TITLE_PATTERN, RegexOptions.None, "en-US")]
-	private static partial Regex TitleRegex();
 #else
 	private static Regex COL_REGEX => new(COL_PATTERN, RegexOptions.Compiled);
-	private static Regex TITLE_REGEX => new(TITLE_PATTERN, RegexOptions.Compiled);
 	private static Regex ColumnRegex() => COL_REGEX;
-	private static Regex TitleRegex() => TITLE_REGEX;
 #endif
 
 	static XmlDocument GetXmlFromHtml(String html)
 	{
 		var xml = ColumnRegex().Replace(html, (math) => $"<col {math.Groups[1].Value} />")
 			.Replace("&nbsp;", "&#160;").Replace("<br>", "&#10;").Replace("<hr>", "&#160;");
-		xml = TitleRegex().Replace(xml, "");
 		var doc = new XmlDocument();
 		doc.LoadXml(xml);
 		return doc;
