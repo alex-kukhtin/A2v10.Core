@@ -49,3 +49,18 @@ Startup.cs
 	container используется как часть пути.
 
 3. Остальные значения type в model.json считаем устаревшими.
+
+
+
+
+window.history.replaceState позволяет менять Url без перезагрузки.
+shell.js: this.replaceState(tab) может менять этот URL
+в mounted можем взять window.location.pathname + search 
+и найти/открыть соответствующий tab.
+
+осталось дописать кусок в restoreTabs;
+
+полезности: - можем пересылать урлы, сохрянять в закладках и т.д.
+проблемы: - человек может менять url - будет бардак
+
+
