@@ -6864,6 +6864,7 @@ table > colgroup col.blue {
 .mdi-header .include.nav-pane .partial-block .btn {
   background-color: transparent;
   color: white;
+  position: relative;
 }
 .mdi-header .include.nav-pane .partial-block .btn:hover {
   background-color: var(--mdi-menu-hover);
@@ -7910,7 +7911,7 @@ table.tree-grid a.toggle.expanded:after {
   border-bottom: 1px solid var(--neutral300);
 }
 .kanban .lane {
-  background-color: var(--neutral100);
+  background-color: var(--table-header-bg);
   padding: 8px;
   width: var(--lane-width);
   min-width: var(--lane-min-width);
@@ -7986,7 +7987,7 @@ table.tree-grid a.toggle.expanded:after {
 }
 .a2-big-calendar table.bc-table thead th {
   height: 35px;
-  background-color: var(--neutral100);
+  background-color: var(--table-header-bg);
   border: 1px solid var(--neutral300);
   border-left-width: 0;
   text-align: center;
@@ -8009,7 +8010,7 @@ table.tree-grid a.toggle.expanded:after {
   vertical-align: top;
   border: 1px solid var(--neutral300);
   border-top-width: 0;
-  background-color: var(--neutral100);
+  background-color: var(--table-header-bg);
 }
 .a2-big-calendar table.bc-week tbody th .h-title {
   display: inline-block;
@@ -8097,7 +8098,7 @@ table.tree-grid a.toggle.expanded:after {
 }
 .a2-big-calendar .current-time::after {
   content: var(--time);
-  background-color: var(--neutral100);
+  background-color: var(--table-header-bg);
   color: var(--link);
   font-weight: 500;
   padding: 5px;
