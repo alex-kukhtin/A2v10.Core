@@ -29,10 +29,19 @@ public class InvokeCommandExecuteSql(IDbContext dbContext) : IModelInvokeCommand
 		var strResult = model != null && model.Root != null ?
 			JsonConvert.SerializeObject(model.Root, JsonHelpers.DataSerializerSettings) : "{}";
 
+		ExpandoObject? signal = null;
+		if (command.Signal && model != null && model.Root != null)
+		{
+			signal = model.Root.Get<ExpandoObject>("Signal");
+			model.Root.Set("Signal", null);
+		}
+
 		var result = new InvokeResult(
 			body: strResult != null ? Encoding.UTF8.GetBytes(strResult) : [],
 			contentType: MimeTypes.Application.Json
 		);
+		if (signal != null)
+			result.Signal = SignalResult.FromData(signal);	
 		return result;
 	}
 }
