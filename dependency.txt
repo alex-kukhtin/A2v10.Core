@@ -1,10 +1,5 @@
-2024-10-20 (next: 8355)
+2024-10-21 (next: 8356)
 =======================
-A2v10.ViewEngine.Xaml (fix selector error)
-A2v10.Services (signal)
-A2v10.Platform
-A2v10.AppRuntimeBuilder (signal)
-A2v10.App.Assets (signal)
 
 A2v10.Platform
 	A2v10.Platform.Web
