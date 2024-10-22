@@ -1,4 +1,5 @@
 ﻿// Copyright © 2024 Oleksandr Kukhtin. All rights reserved.
+
 (function () {
 
 	const TODAY_COLOR = "#fffff080"; // sync with LESS!
@@ -18,6 +19,7 @@
 		<button class="btn btn-tb btn-icon" @click="nextPart(-1)"><i class="ico ico-arrow-left"></i></button>
 		<button class="btn btn-tb btn-icon" @click="nextPart(1)"><i class="ico ico-arrow-right"></i></button>
 		<button class="btn btn-tb btn-icon" @click="todayPart"><i class="ico ico-calendar-today"></i> <span v-text="locale.$Today"></span></button>
+		<slot name="leftbar"></slot>
 	</div>
 	<div class="title">
 		<span v-text=topTitle></span>
