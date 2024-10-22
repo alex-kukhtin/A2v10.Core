@@ -247,6 +247,9 @@ app.modules['std:signalR'] = function () {
 			maxTabWidth() { return `calc((100% - 50px) / ${this.tabs.length})`; }
 		},
 		methods: {
+			replaceState(tab) {
+				//??window.history.replaceState(null, null, tab ? tab.url : '/');
+			},
 			navigate(u1) {
 				if (u1.url.indexOf('{genrandom}') >= 0) {
 					let randomString = Math.random().toString(36).substring(2);
@@ -309,6 +312,7 @@ app.modules['std:signalR'] = function () {
 				if (page) {
 					let tab = this.activeTab || this.tabs.find(t => t.url == page.src);
 					if (tab) {
+						this.replaceState(tab);
 						tab.root = page.root;
 						document.title = tab.title;
 						if (page.root) {
@@ -346,6 +350,7 @@ app.modules['std:signalR'] = function () {
 				this.homeLoaded = true;
 				this.activeTab = null;
 				document.title = this.homePageTitle;
+				this.replaceState(null);
 				if (noStore)
 					return;
 				this.storeTabs();
@@ -359,6 +364,7 @@ app.modules['std:signalR'] = function () {
 				tab.loaded = true;
 				this.activeTab = tab;
 				document.title = tab.title;
+				this.replaceState(tab);
 				if (noStore)
 					return;
 				this.storeTabs();
@@ -447,7 +453,8 @@ app.modules['std:signalR'] = function () {
 				});
 				window.localStorage.setItem(this.storageKey, tabs);
 			},
-			restoreTabs() {
+			restoreTabs(path) {
+				let newurl = path !== '/' ? path : '';
 				let tabs = window.localStorage.getItem(this.storageKey);
 				if (!tabs) {
 					this.selectHome(true);
@@ -738,7 +745,7 @@ app.modules['std:signalR'] = function () {
 			if (!this.menu || !this.menu.length)
 				this.selectHome(false); // store empty tabs
 			else
-				this.restoreTabs();
+				this.restoreTabs(window.location.pathname + window.location.search);
 		},
 		created() {
 			const me = this;

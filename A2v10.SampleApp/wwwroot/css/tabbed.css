@@ -2,7 +2,7 @@
   font-family: 'A2v10';
   font-display: fallback;
   src: url('/css/fonts/A2v10.eot');
-  src: url('/css/fonts/A2v10.eot?#iefix') format('eot'), url('/css/fonts/A2v10.woff?v=7967') format('woff'), url('/css/fonts/A2v10.ttf?v=7967') format('truetype'), url('/css/fonts/A2v10.svg#A2v10') format('svg');
+  src: url('/css/fonts/A2v10.eot?#iefix') format('eot'), url('/css/fonts/A2v10.woff?v=7970') format('woff'), url('/css/fonts/A2v10.ttf?v=7970') format('truetype'), url('/css/fonts/A2v10.svg#A2v10') format('svg');
   font-weight: normal;
   font-style: normal;
 }
@@ -445,6 +445,9 @@
 }
 .ico-folder-outline:before {
   content: "\e95a";
+}
+.ico-folder-move-to:before {
+  content: "\e957";
 }
 .ico-folders-outline:before {
   content: "\e959";
@@ -6861,6 +6864,7 @@ table > colgroup col.blue {
 .mdi-header .include.nav-pane .partial-block .btn {
   background-color: transparent;
   color: white;
+  position: relative;
 }
 .mdi-header .include.nav-pane .partial-block .btn:hover {
   background-color: var(--mdi-menu-hover);
@@ -7907,7 +7911,7 @@ table.tree-grid a.toggle.expanded:after {
   border-bottom: 1px solid var(--neutral300);
 }
 .kanban .lane {
-  background-color: var(--neutral100);
+  background-color: var(--table-header-bg);
   padding: 8px;
   width: var(--lane-width);
   min-width: var(--lane-min-width);
@@ -7983,7 +7987,7 @@ table.tree-grid a.toggle.expanded:after {
 }
 .a2-big-calendar table.bc-table thead th {
   height: 35px;
-  background-color: var(--neutral100);
+  background-color: var(--table-header-bg);
   border: 1px solid var(--neutral300);
   border-left-width: 0;
   text-align: center;
@@ -8006,7 +8010,7 @@ table.tree-grid a.toggle.expanded:after {
   vertical-align: top;
   border: 1px solid var(--neutral300);
   border-top-width: 0;
-  background-color: var(--neutral100);
+  background-color: var(--table-header-bg);
 }
 .a2-big-calendar table.bc-week tbody th .h-title {
   display: inline-block;
@@ -8094,7 +8098,7 @@ table.tree-grid a.toggle.expanded:after {
 }
 .a2-big-calendar .current-time::after {
   content: var(--time);
-  background-color: var(--neutral100);
+  background-color: var(--table-header-bg);
   color: var(--link);
   font-weight: 500;
   padding: 5px;
