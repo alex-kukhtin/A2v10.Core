@@ -1626,9 +1626,16 @@ header .include.nav-pane .partial-block .control-group,
   margin: 0.75em auto 0 auto;
   text-align: center;
 }
-.center-page .initial-form button {
+.center-page .initial-form button,
+.center-page .initial-form a.btn {
   width: 60%;
   margin-top: 2em;
+}
+.center-page .initial-form .initial-form-body a {
+  display: inline;
+}
+.center-page .initial-form .initial-form-body p {
+  margin-bottom: 1rem;
 }
 .center-page .initial-form .summary div {
   white-space: pre-line;
@@ -2539,9 +2546,14 @@ pre.a2-code {
 }
 .btn:not([disabled]):hover {
   background-color: hsl(from var(--btn-bg) h s calc(l - 4));
+  box-shadow: 0 10px 10px -10px rgba(0, 0, 0, 0.4);
+  transition: box-shadow linear 0.2s;
 }
 .btn:not([disabled]):active {
   background-color: hsl(from var(--btn-bg) h s calc(l - 6));
+  box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2) inset;
+  outline-style: none;
+  transition: box-shadow linear 0.2s;
 }
 .btn:focus {
   outline-offset: -3px;
@@ -2559,15 +2571,6 @@ pre.a2-code {
 .btn.btn-icon > .ico {
   margin-right: 0;
 }
-.btn:not([disabled]):hover {
-  box-shadow: 0 10px 10px -10px rgba(0, 0, 0, 0.4);
-  transition: box-shadow linear 0.2s;
-}
-.btn:not([disabled]):active {
-  box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2) inset;
-  outline-style: none;
-  transition: box-shadow linear 0.2s;
-}
 .btn .btn-badge {
   position: absolute;
   top: 3px;
@@ -2578,6 +2581,9 @@ pre.a2-code {
   padding: 1px;
   min-width: 14px;
   min-height: 14px;
+}
+a.btn {
+  background-color: var(--btn-bg);
 }
 .btn.lg {
   font-size: 1.25rem;

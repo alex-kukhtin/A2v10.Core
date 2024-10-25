@@ -135,7 +135,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileSystemBlobStorage", "Bl
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{04B7C64B-CD96-48FD-8474-03350BE14F1B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestMailSender", "Tools\TestMailSender\TestMailSender.csproj", "{72D8BEC3-B040-4819-9F7E-BDB4D9042B93}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestMailSender", "Tools\TestMailSender\TestMailSender.csproj", "{72D8BEC3-B040-4819-9F7E-BDB4D9042B93}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
