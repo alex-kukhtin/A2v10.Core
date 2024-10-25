@@ -32,14 +32,15 @@ namespace A2v10.Identity.UI;
 [ApiExplorerSettings(IgnoreApi = true)]
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 [AllowAnonymous]
-public class AccountController(SignInManager<AppUser<Int64>> _signInManager, 
-			UserManager<AppUser<Int64>> _userManager,
-            IAntiforgery _antiforgery, IDbContext _dbContext,
-            IApplicationTheme _appTheme, IMailService _mailService, ILocalizer _localizer,
-            IConfiguration _configuration, IAppTenantManager _appTenantManager, 
-			ILogger<AccountController> _logger, UrlEncoder _urlEncoder,
-			IDataProtectionProvider protectionProvider,
-            IOptions<AppUserStoreOptions<Int64>> userStoreOptions) : Controller
+public class AccountController(
+	SignInManager<AppUser<Int64>> _signInManager, 
+	UserManager<AppUser<Int64>> _userManager,
+    IAntiforgery _antiforgery, IDbContext _dbContext,
+    IApplicationTheme _appTheme, IMailService _mailService, ILocalizer _localizer,
+    IConfiguration _configuration, IAppTenantManager _appTenantManager, 
+	ILogger<AccountController> _logger, UrlEncoder _urlEncoder,
+	IDataProtectionProvider protectionProvider,
+    IOptions<AppUserStoreOptions<Int64>> userStoreOptions) : Controller
 {
     private readonly IDataProtector _protector = protectionProvider.CreateProtector("Login");
 	private readonly AppUserStoreOptions<Int64> _userStoreOptions = userStoreOptions.Value;

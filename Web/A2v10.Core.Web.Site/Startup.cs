@@ -1,4 +1,4 @@
-// Copyright © 2020-2023 Oleksandr Kukhtin. All rights reserved.
+// Copyright © 2020-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -10,7 +10,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 using A2v10.Infrastructure;
-using A2v10.Module.Infrastructure;
 using A2v10.ReportEngine.Pdf;
 using A2v10.Workflow.Engine;
 using A2v10.Scheduling;
@@ -22,12 +21,28 @@ using A2v10.BlobStorage.FileSystem;
 
 namespace A2v10.Core.Web.Site;
 
+public struct LicenseInfo : ILicenseInfo
+{
+	public LicenseState LicenseState => LicenseState.Ok;
+	public String Name => throw new NotImplementedException();
+	public String ApplicationName => throw new NotImplementedException();
+	public DateTime Created { get; set; }
+	public DateTime Expired => throw new NotImplementedException();
+	public String? Title => throw new NotImplementedException();
+	public String? Message => throw new NotImplementedException();
+}
+
 public class NullLicenseManager : ILicenseManager
 {
-    public Task<bool> VerifyLicensesAsync(string? dataSource, int? tenantId, IEnumerable<Guid> modules)
+    public Task<LicenseState> VerifyLicensesAsync(string? dataSource, int? tenantId, IEnumerable<Guid> modules)
     {
-        return Task.FromResult(true);
+        return Task.FromResult(LicenseState.Ok);
     }
+
+	public Task<ILicenseInfo> GetLicenseInfoAsync(String? dataSource, Int32? tenantId)
+	{
+		return Task.FromResult<ILicenseInfo>(new LicenseInfo());
+	}
 }
 
 public class Startup(IConfiguration configuration)

@@ -2,11 +2,11 @@
 
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
-		<LangVersion>11.0</LangVersion>
+		<LangVersion>Latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<AssemblyName>A2v10.Module.Infrastructure</AssemblyName>
 		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-		<Version>10.1.8109</Version>
+		<Version>10.1.8110</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Module.Infrastructure</PackageId>
 		<Authors>Oleksandr Kukhtin</Authors>

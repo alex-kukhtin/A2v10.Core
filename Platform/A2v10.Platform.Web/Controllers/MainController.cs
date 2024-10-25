@@ -4,6 +4,7 @@ using System;
 
 using System.Threading.Tasks;
 using System.IO;
+using System.Linq;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
@@ -12,8 +13,6 @@ using Microsoft.AspNetCore.Diagnostics;
 
 using A2v10.Infrastructure;
 using A2v10.Web.Identity;
-using A2v10.Module.Infrastructure;
-using System.Linq;
 
 namespace A2v10.Platform.Web.Controllers;
 
@@ -31,7 +30,9 @@ public class MainController(IDataService dataService, IOptions<AppOptions> appOp
 	private readonly ILicenseManager _licenseManager = licenseManager;
 	private readonly ICurrentUser _currentUser = currentUser;
 
-    static String? NormalizePathInfo(String? pathInfo)
+	private const String SKIP_COOKIE = "SkipLicense";
+
+	static String? NormalizePathInfo(String? pathInfo)
         {
 		if (String.IsNullOrEmpty(pathInfo))
 			return null;
@@ -39,6 +40,32 @@ public class MainController(IDataService dataService, IOptions<AppOptions> appOp
 		if (parts.Length == 1)
 			return $"{pathInfo}{Path.DirectorySeparatorChar}index{Path.DirectorySeparatorChar}0";
 		return pathInfo;
+	}
+
+	[HttpGet]
+	[Route("/license")]
+	public async Task<IActionResult> License()
+	{
+		var licInfo = await _licenseManager.GetLicenseInfoAsync(_currentUser.Identity.Segment, _currentUser.Identity.Tenant);
+		if (licInfo.LicenseState == LicenseState.Ok)
+			return Redirect("/");
+
+		var m = new LicenseModel(licInfo)
+		{
+			Theme = _appTheme.MakeTheme(),
+			Minify = _appOptions.Environment.IsRelease ? "min." : String.Empty,
+			AppTitle = licInfo.ApplicationName
+		};
+		return View(m);	
+	}
+
+	[HttpPost]
+	[Route("/license")]
+	[ActionName("license")]
+	public IActionResult LicensePost()
+	{
+		Response.Cookies.Append(SKIP_COOKIE, "true");
+		return Redirect("/");
 	}
 
 	[Route("{*pathInfo}")]
@@ -49,7 +76,15 @@ public class MainController(IDataService dataService, IOptions<AppOptions> appOp
 			return NotFound();
 
 		if (!await CheckLicenseAsync())
-			return new EmptyResult();	
+		{
+			var skip = Request.Cookies[SKIP_COOKIE];
+			if (skip == null)
+			{
+				return Redirect("/license");
+			}
+		}
+
+		Response.Cookies.Delete(SKIP_COOKIE);
 
 		if (User.Identity == null)
 			throw new ApplicationException("Invalid User");
@@ -140,6 +175,6 @@ public class MainController(IDataService dataService, IOptions<AppOptions> appOp
 			return true;
 		return await _licenseManager.VerifyLicensesAsync(
 			_currentUser.Identity.Segment, _currentUser.Identity.Tenant, 
-			_codeProvider.LicensedModules);
+			_codeProvider.LicensedModules) == LicenseState.Ok;
 	}
 }

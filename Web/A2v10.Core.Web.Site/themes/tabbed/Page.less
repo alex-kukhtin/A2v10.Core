@@ -95,6 +95,7 @@
 		background-color: var(--bgPrimary);
 		box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 		border-radius: @dialog-brd-radius;
+
 		.control-group {
 			margin: 1em 0;
 			display: block;
@@ -110,20 +111,30 @@
 			text-align: center;
 		}
 
-		button {
+		button, a.btn {
 			width: 60%;
 			margin-top: 2em;
+		}
+
+		.initial-form-body {
+			a {
+				display: inline;
+			}
+
+			p {
+				margin-bottom: 1rem;
+			}
 		}
 
 		.summary {
 			div {
 				white-space: pre-line;
-				line-height:1.5;
+				line-height: 1.5;
 			}
 		}
 
 		p {
-			margin-bottom:2rem;
+			margin-bottom: 2rem;
 		}
 	}
 }

@@ -1,0 +1,34 @@
+﻿@model LicenseModel
+@inject ILocalizer _loc
+@{
+	Layout = "_LayoutError";
+}
+
+<div class="center-page">
+	<div class="initial-form">
+
+		<h3 class="a2-header text-center">@_loc.Localize("@[License]")</h3>
+
+		<hr style="margin-top:1rem" />
+
+        <div class="text-center text-color-danger bold">@Model.LicenseInfo.Title</div>
+
+        <div class="initial-form-body">
+            @Html.Raw(Model.LicenseInfo.Message)
+        </div>
+
+        @if (Model.CanContinue)
+        {
+            <form method="post">
+                <button class="btn btn-primary" type="submit">@_loc["Continue"]</button>
+            </form>
+        }
+
+        @if (Model.CanReload)
+        {
+            <a class="btn btn-primary" href="/">@_loc["Reload"]</a>
+        }
+    </div>
+</div>
+
+
