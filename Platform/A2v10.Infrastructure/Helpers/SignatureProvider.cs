@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Copyright © 2023-2024 Oleksandr Kukhtin. All rights reserved.
+
+using System;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -41,7 +43,7 @@ public static class SignatureProvider
 		return Convert.ToHexString(signedHash);
 	}
 
-	private static Boolean VerifySign(String text, String signature, String publicKey)
+	public static Boolean VerifySign(String text, String signature, String publicKey)
 	{
 		using SHA256 alg = SHA256.Create();
 		using RSA rsa = RSA.Create();

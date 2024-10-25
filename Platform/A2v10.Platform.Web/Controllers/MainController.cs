@@ -47,7 +47,9 @@ public class MainController(IDataService dataService, IOptions<AppOptions> appOp
 	public async Task<IActionResult> License()
 	{
 		var licInfo = await _licenseManager.GetLicenseInfoAsync(_currentUser.Identity.Segment, _currentUser.Identity.Tenant);
-		if (licInfo.LicenseState == LicenseState.Ok)
+
+		// expired only for banner
+		if (licInfo.LicenseState == LicenseState.Ok || licInfo.LicenseState == LicenseState.Expired)
 			return Redirect("/");
 
 		var m = new LicenseModel(licInfo)

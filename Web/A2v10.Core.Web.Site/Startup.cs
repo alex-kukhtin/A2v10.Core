@@ -26,8 +26,8 @@ public struct LicenseInfo : ILicenseInfo
 	public LicenseState LicenseState => LicenseState.Ok;
 	public String Name => throw new NotImplementedException();
 	public String ApplicationName => throw new NotImplementedException();
-	public DateTime Created { get; set; }
-	public DateTime Expired => throw new NotImplementedException();
+	public DateTime IssuedOn { get; set; }
+	public DateTime ExpiresOn => throw new NotImplementedException();
 	public String? Title => throw new NotImplementedException();
 	public String? Message => throw new NotImplementedException();
 }

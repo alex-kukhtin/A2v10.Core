@@ -14,6 +14,5 @@ public class EmptyLicenseManager : ILicenseManager
 	public Task<ILicenseInfo> GetLicenseInfoAsync(String? dataSource, Int32? tenantId)
 	{
 		throw new NotImplementedException(nameof(GetLicenseInfoAsync));
-
 	}
 }

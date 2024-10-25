@@ -12,18 +12,18 @@ public enum LicenseState
 	NotFound,
 	InvalidFile,
 	Expired,
-	TermsViolation
+	TermsViolation,
+	InvalidAppVersion
 }
 
 public interface ILicenseInfo
 {
 	LicenseState LicenseState { get; }
 	String ApplicationName { get; }
-	String Name { get; }
-	DateTime Created { get; }
-	DateTime Expired { get; }
+    DateTime IssuedOn { get; }
+	DateTime ExpiresOn { get; }
 	String? Message { get; }	
-	String? Title { get; }	
+	String? Title { get; }
 }
 
 
