@@ -40,9 +40,13 @@
 		//padding: @kanban-gap 0 @kanban-gap @kanban-gap;
 		width: var(--lane-width);
 		min-width: var(--lane-min-width);
-		background: @bk-menu;
+		background-color: @bk-menu;
 		display: flex;
 		border-bottom: 1px solid @border-color;
+
+		&.over {
+			background-color: var(--neutral50);
+		}
 	}
 
 	.lane {
@@ -51,6 +55,10 @@
 		width: var(--lane-width);
 		min-width: var(--lane-min-width);
 		display: flex;
+
+		&.over {
+			background-color: var(--neutral100);
+		}
 	}
 
 	.lane-header .lane-header-body {

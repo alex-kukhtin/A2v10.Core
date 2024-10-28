@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
-		<Version>10.1.8360</Version>
+		<Version>10.1.8361</Version>
 		<LangVersion>Latest</LangVersion>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Platform</PackageId>

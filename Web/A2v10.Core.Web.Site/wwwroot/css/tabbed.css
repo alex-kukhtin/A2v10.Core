@@ -7912,9 +7912,12 @@ table.tree-grid a.toggle.expanded:after {
 .kanban .lane-header {
   width: var(--lane-width);
   min-width: var(--lane-min-width);
-  background: var(--bgMenu);
+  background-color: var(--bgMenu);
   display: flex;
   border-bottom: 1px solid var(--neutral300);
+}
+.kanban .lane-header.over {
+  background-color: var(--neutral50);
 }
 .kanban .lane {
   background-color: var(--table-header-bg);
@@ -7922,6 +7925,9 @@ table.tree-grid a.toggle.expanded:after {
   width: var(--lane-width);
   min-width: var(--lane-min-width);
   display: flex;
+}
+.kanban .lane.over {
+  background-color: var(--neutral100);
 }
 .kanban .lane-header .lane-header-body {
   flex-grow: 2;

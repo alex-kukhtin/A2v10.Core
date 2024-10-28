@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Xaml;
 
@@ -72,6 +72,7 @@ public class Hyperlink : Inline
 
 		var tag = new TagBuilder("a", "a2-hyperlink", inGrid);
 		tag.MergeAttribute("href", "javascript:void(0)");
+		tag.MergeAttribute("draggable", "false"); // disable drag'n'drop
 		onRender?.Invoke(tag);
 		var attrMode = MergeAttrMode.All;
 		if (inside)
