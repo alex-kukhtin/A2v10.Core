@@ -1334,6 +1334,9 @@ html {
   width: 100%;
   caret-color: transparent;
 }
+*[contenteditable="true"] {
+  caret-color: auto;
+}
 input,
 textarea,
 select,
@@ -2376,7 +2379,6 @@ pre.a2-code {
 }
 .control-group.disabled .input-group {
   background-color: var(--bgPrimary);
-  opacity: 0.85;
 }
 .control-group.disabled a:not(.rendershow) {
   pointer-events: none;

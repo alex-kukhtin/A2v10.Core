@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "LicenseBuilder": {
+      "commandName": "Project",
+      "commandLineArgs": "verify --s license.json --t license.signed.json --private keys/privatekey.key --public keys/publickey.key",
+      "workingDirectory": "c:\\temp\\_ne_keys"
+    }
+  }
+}

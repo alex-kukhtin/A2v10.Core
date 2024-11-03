@@ -48,6 +48,7 @@ public partial class DataService
 		{
 			ModelBlobType.sql => await LoadBlobSql(blob, prms),
 			ModelBlobType.json => await LoadBlobJson(blob, prms),
+			ModelBlobType.text => await LoadBlobSqlText(blob, prms),
 			ModelBlobType.clr => await LoadBlobClr(blob, prms),
 			ModelBlobType.blobStorage => await LoadBlobStorage(blob, StorageName, prms),
 			ModelBlobType.excel => await LoadBlobExcel(blob, prms),
@@ -64,7 +65,23 @@ public partial class DataService
 		return _dbContext.LoadAsync<BlobInfo>(blob?.DataSource, loadProc, prms);
 	}
 
-	private async Task<BlobInfo?> LoadBlobExcel(IModelBlob blob, ExpandoObject prms)
+    private async Task<BlobInfo?> LoadBlobSqlText(IModelBlob blob, ExpandoObject prms)
+    {
+        var loadProc = blob.LoadBlobProcedure();
+        if (String.IsNullOrEmpty(loadProc))
+            throw new DataServiceException($"LoadBlobProcedure is null");
+        var btInfo = await _dbContext.LoadAsync<BlobTextInfo>(blob?.DataSource, loadProc, prms)
+            ?? throw new DataServiceException($"BlobTextInfo is null");
+        return new BlobInfo()
+		{
+			Name = btInfo.Name,
+			Mime = btInfo.Mime,
+			Stream = btInfo.Stream,	
+			SkipToken = true,
+		};
+    }
+
+    private async Task<BlobInfo?> LoadBlobExcel(IModelBlob blob, ExpandoObject prms)
 	{
 		var loadProc = blob.LoadProcedure();
 		if (String.IsNullOrEmpty(loadProc))

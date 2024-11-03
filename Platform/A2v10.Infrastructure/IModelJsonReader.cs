@@ -69,7 +69,8 @@ public enum ModelBlobType
 	clr,
 	parse,
 	blobStorage,
-	excel
+	excel,
+	text
 }
 
 public enum ModelParseType

@@ -1,6 +1,7 @@
 ﻿// Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.
 
 using System.IO;
+using System.Text;
 
 namespace A2v10.Services;
 public class BlobInfo : IBlobInfo
@@ -10,6 +11,18 @@ public class BlobInfo : IBlobInfo
 	public Guid Token { get; init; }
 	public Byte[]? Stream { get; set; }
 	public String? BlobName { get; init; }
+    public Boolean SkipToken { get; init; }
+    public Boolean CheckToken => !SkipToken;
+}
+
+public class BlobTextInfo : IBlobInfo
+{
+    public String? Mime { get; init; }
+    public String? Name { get; init; }
+    public Guid Token { get; init; }
+    public String? Data { get; init; }   
+    public Byte[]? Stream => Encoding.UTF8.GetBytes(Data ?? String.Empty);
+    public String? BlobName { get; init; }
     public Boolean SkipToken { get; init; }
     public Boolean CheckToken => !SkipToken;
 }

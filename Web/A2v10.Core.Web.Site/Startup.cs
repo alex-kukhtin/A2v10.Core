@@ -18,6 +18,7 @@ using A2v10.Core.Web.Site.TestServices;
 
 using A2v10.BlobStorage.Azure;
 using A2v10.BlobStorage.FileSystem;
+using System.Dynamic;
 
 namespace A2v10.Core.Web.Site;
 
@@ -30,6 +31,7 @@ public struct LicenseInfo : ILicenseInfo
 	public DateTime ExpiresOn => throw new NotImplementedException();
 	public String? Title => throw new NotImplementedException();
 	public String? Message => throw new NotImplementedException();
+	public ExpandoObject Data => throw new NotImplementedException();	
 }
 
 public class NullLicenseManager : ILicenseManager

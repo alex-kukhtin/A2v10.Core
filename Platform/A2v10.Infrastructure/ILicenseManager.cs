@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Threading.Tasks;
 
 namespace A2v10.Infrastructure;
@@ -24,6 +25,7 @@ public interface ILicenseInfo
 	DateTime ExpiresOn { get; }
 	String? Message { get; }	
 	String? Title { get; }
+	ExpandoObject Data { get; }
 }
 
 
