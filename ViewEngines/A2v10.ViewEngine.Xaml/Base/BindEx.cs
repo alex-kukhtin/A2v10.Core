@@ -23,3 +23,13 @@ public class BindNumber : Bind
         NegativeRed = true;
     }
 }
+
+public class BindCmdExec : BindCmd
+{
+    public BindCmdExec(String path)
+        : base()
+    {
+        Command = CommandType.Execute;
+        CommandName = path;
+    }
+}

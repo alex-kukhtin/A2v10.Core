@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
+		<TargetFrameworks>net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
 		<Version>10.1.8363</Version>
 		<Nullable>enable</Nullable>
 		<LangVersion>Latest</LangVersion>
@@ -20,8 +20,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Data.Interfaces" Version="10.1.7366" />
-		<PackageReference Include="A2v10.Runtime.Interfaces" Version="10.1.8121" />
+		<PackageReference Include="A2v10.Data.Interfaces" Version="10.1.7386" />
+		<PackageReference Include="A2v10.Runtime.Interfaces" Version="10.1.8122" />
 	</ItemGroup>
 
 	<PropertyGroup>

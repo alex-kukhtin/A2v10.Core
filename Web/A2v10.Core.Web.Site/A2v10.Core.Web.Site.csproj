@@ -21,9 +21,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="A2v10.Data.Core" Version="10.1.7386" />
+		<PackageReference Include="A2v10.Data.Providers" Version="10.1.7386" />
 		<PackageReference Include="A2v10.Workflow.Engine" Version="10.1.8162" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.10" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="8.0.10" />
+		<PackageReference Include="Azure.Storage.Blobs" Version="12.23.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.11" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="8.0.11" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>

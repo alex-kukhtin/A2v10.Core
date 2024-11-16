@@ -14,8 +14,9 @@ public class SheetColumn : XamlElement
 	public Length? Width { get; set; }
     public Length? MinWidth { get; set; }
     public ColumnBackgroundStyle Background { get; set; }
+    public Boolean? If { get; set; }
 
-	public SheetColumn()
+    public SheetColumn()
 	{
 
 	}
@@ -53,7 +54,9 @@ public class SheetColumn : XamlElement
         if (MinWidth != null)
             col.MergeStyle("min-width", MinWidth.Value);
 
-		var bgBind = GetBinding(nameof(Background));
+        MergeBindingAttributeBool(col, context, "v-if", nameof(If), If);
+
+        var bgBind = GetBinding(nameof(Background));
 		if (bgBind != null)
             col.MergeAttribute(":class", bgBind.GetPathFormat(context));
         else if (Background != ColumnBackgroundStyle.None)

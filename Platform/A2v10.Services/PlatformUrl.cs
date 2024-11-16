@@ -89,7 +89,7 @@ public class PlatformUrl : IPlatformUrl
 		if (len < 3)
 			throw new InvalidOperationException($"Invalid URL {String.Join('/', parts)}");
 		var pathArr = new ArraySegment<String>(parts, 1, len - 3);
-		LocalPath = String.Join("/", pathArr);
+		LocalPath = String.Join("/", pathArr.ToArray());
 		// baseUrl with action and id
 		var baseArr = new List<String>(pathArr)
 		{
