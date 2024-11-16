@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
+		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
 		<LangVersion>Latest</LangVersion>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
@@ -24,8 +24,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Data.Core" Version="10.1.7386" />
-		<PackageReference Include="A2v10.Data.Providers" Version="10.1.7386" />
+		<PackageReference Include="A2v10.Data.Core" Version="10.1.7500" />
+		<PackageReference Include="A2v10.Data.Providers" Version="10.1.7500" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.0" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
 		<PackageReference Include="MSTest.TestAdapter" Version="3.6.3" />

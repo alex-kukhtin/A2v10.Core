@@ -59,12 +59,6 @@ public static class ServicesExtensions
 		//.AddScoped<IUserRoleStore<AppUser<T>>>(s => s.GetRequiredService<AppUserStore<T>>())
 		.AddScoped<ISecurityStampValidator, SecurityStampValidator<AppUser<T>>>();
 		      
-#if NET8_0_OR_GREATER
-		// do nothing
-#else
-		services.AddScoped<ISystemClock, SystemClock>();
-#endif
-
 		/* 
 		services.AddScoped<AppRoleStore<T>>()
 			.AddScoped<IRoleStore<AppRole<T>>>(s => s.GetRequiredService<AppRoleStore<T>>());

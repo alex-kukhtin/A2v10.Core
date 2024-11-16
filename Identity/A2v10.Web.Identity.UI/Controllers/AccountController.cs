@@ -507,7 +507,8 @@ public class AccountController(
 	}
 
 	[Authorize]
-	[HttpPost]
+    [AllowAnonymous]
+    [HttpPost]
 	public async Task<IActionResult> ChangePassword([FromForm] ChangePasswordViewModel model)
 	{
 		try

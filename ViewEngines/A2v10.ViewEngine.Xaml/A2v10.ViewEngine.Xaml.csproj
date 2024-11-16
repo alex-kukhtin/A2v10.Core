@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
-		<Version>10.1.8363</Version>
+		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+		<Version>10.1.8500</Version>
 		<Nullable>enable</Nullable>
 		<LangVersion>Latest</LangVersion>
 		<AssemblyName>A2v10.Xaml</AssemblyName>
@@ -19,7 +19,6 @@
 		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
 	</PropertyGroup>
 
 	<ItemGroup>
