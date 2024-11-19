@@ -99,7 +99,7 @@ public class AccountController(
 	public async Task<IActionResult> OpenIdLogin(String provider)
 	{
 		var availableSchemes = await _signInManager.GetExternalAuthenticationSchemesAsync();
-		var scheme = availableSchemes.First(x => x.Name == provider) 
+		var scheme = availableSchemes.FirstOrDefault(x => x.Name == provider) 
 			?? throw new InvalidOperationException($"Provider {provider} not found");
 		var redirectUrl = Url.ActionLink("loginexternal");
 		var loginInfo = _signInManager.ConfigureExternalAuthenticationProperties(scheme.Name, redirectUrl);

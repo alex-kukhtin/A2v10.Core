@@ -45,8 +45,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "A2v10.Web.Assets", "A2v10.W
 		Platform\A2v10.Web.Assets\README.md = Platform\A2v10.Web.Assets\README.md
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Implementation", "Implementation", "{78F20842-546F-4A01-B76E-AE2016E9708D}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CodeGen", "CodeGen", "{362A9E7C-45ED-45C0-887B-E9FB00FE190B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "A2v10.ReportEngine.Pdf", "ReportEngines\A2v10.ReportEngine.Pdf\A2v10.ReportEngine.Pdf.csproj", "{6C119F41-2986-4111-B9E2-9E9E493F597E}"

@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
 
@@ -11,7 +11,9 @@ public enum TableBackgroundStyle
 	Yellow,
 	Cyan,
 	Rose,
-	WhiteSmoke
+	WhiteSmoke,
+	White,
+	Primary
 }
 
 public enum CellSpacingMode

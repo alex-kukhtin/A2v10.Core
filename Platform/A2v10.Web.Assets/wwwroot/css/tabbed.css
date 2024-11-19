@@ -5096,6 +5096,9 @@ table.hover > tbody > tr.active:hover {
   background-color: var(--neutral50);
 }
 .a2-table.bk-white {
+  background-color: #fff;
+}
+.a2-table.bk-primary {
   background-color: var(--bgPrimary);
 }
 .app-link-table {
