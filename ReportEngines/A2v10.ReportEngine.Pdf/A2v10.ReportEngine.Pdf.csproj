@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
-		<Version>10.1.8503</Version>
+		<Version>10.1.8504</Version>
 		<LangVersion>Latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<AssemblyName>A2v10.ReportEngine.Pdf</AssemblyName>
@@ -22,7 +22,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="QRCoder" Version="1.6.0" />
-		<PackageReference Include="QuestPDF" Version="2024.12.0" />
+		<PackageReference Include="QuestPDF" Version="2024.12.1" />
 	</ItemGroup>
 
 	<ItemGroup>
