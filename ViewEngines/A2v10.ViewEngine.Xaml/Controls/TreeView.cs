@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2024 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
 using System.Text;
@@ -18,7 +18,9 @@ namespace A2v10.Xaml;
         staticIcons: [String, String], //[Folder, Item]
         folderSelect: Boolean || Function,
         wrapLabel: Boolean,
-        hasIcon: Boolean
+        hasIcon: Boolean,
+		isGroup: Boolean,
+		isFolder: Boolean
     }
     */
 
@@ -29,7 +31,8 @@ public class TreeViewItem : UIElement
 	public Icon Icon { get; set; }
 	public String? Label { get; set; }
 	public Boolean? IsFolder { get => IsGroup; set => IsGroup = value; }
-	public Boolean? IsGroup { get; set; }
+    public Boolean? IsFolder2 { get; set; }
+    public Boolean? IsGroup { get; set; }
 	public Boolean InitialExpand { get; set; }
 
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
@@ -53,11 +56,17 @@ public class TreeViewItem : UIElement
 			sb.Append($"hasIcon: true, icon: '{iconBind.Path}',"); //GetTypedPath(context, TypeCheckerTypeCode.Skip)}',");
 		var isGroupBind = GetBinding(nameof(IsGroup));
 		if (isGroupBind != null)
-			sb.Append($"isGroup: '{isGroupBind.Path}',"); // GetTypedPath(context, TypeCheckerTypeCode.Skip)}',");
+			sb.Append($"isGroup: '{isGroupBind.Path}',");
 		else if (IsGroup != null)
 			throw new XamlException("The IsGroup property must be a binding");
 
-		if (InitialExpand)
+        var isFolderBind = GetBinding(nameof(IsFolder2));
+        if (isFolderBind != null)
+            sb.Append($"isFolder: '{isFolderBind.Path}',"); 
+        else if (IsFolder2 != null)
+            throw new XamlException("The IsFolder2 property must be a binding");
+
+        if (InitialExpand)
 			sb.Append("initialExpand: true,");
 
 		// visible => if or show

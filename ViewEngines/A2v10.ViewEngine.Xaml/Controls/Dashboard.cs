@@ -1,4 +1,4 @@
-﻿// Copyright © 2022-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2022-2024 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Xaml;
 
@@ -9,7 +9,8 @@ public class Dashboard : UIElementBase
 	public GridLength? CellWidth { get; set; }
 	public GridLength? CellHeight { get; set; }
 	public UIElement? EndEditToolbar { get; set; }
-	public Button? StartEditButton { get; set; }
+    public UIElement? Toolbar { get; set; }
+    public Button? StartEditButton { get; set; }
 	public Boolean Editable { get; set; }
 	public Boolean EditMode { get; set; }
 	public Object? ItemsList { get; set; }
@@ -91,7 +92,15 @@ public class Dashboard : UIElementBase
 			EndEditToolbar.RenderElement(context);
 			tb.RenderEnd(context);
 		}
-		if (EmptyPanel != null)
+        if (Toolbar != null)
+        {
+            var tb = new TagBuilder("template");
+            tb.MergeAttribute("v-slot:toolbar2", "tb");
+            tb.RenderStart(context);
+            Toolbar.RenderElement(context);
+            tb.RenderEnd(context);
+        }
+        if (EmptyPanel != null)
 		{
 			var panel = new TagBuilder("template");
 			panel.MergeAttribute("slot", "empty");
@@ -100,5 +109,16 @@ public class Dashboard : UIElementBase
 			panel.RenderEnd(context);
 		}
 	}
+
+    protected override void OnEndInit()
+    {
+        base.OnEndInit();
+		if (Toolbar != null)
+			Toolbar.SetParent(this);
+        if (EndEditToolbar != null)
+            EndEditToolbar.SetParent(this);
+        if (StartEditButton != null)
+            StartEditButton.SetParent(this);
+    }
 }
 
