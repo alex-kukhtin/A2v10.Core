@@ -1,9 +1,5 @@
-2024-11-19 (next: 8504)
+2024-12-23 (next: 8505)
 =======================
-A2v10.Platform
-A2v10.ViewEngine.Xaml
-A2v10.Web.Assets
-A2v10.App.Assets
 
 
 A2v10.Platform
