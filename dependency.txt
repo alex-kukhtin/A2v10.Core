@@ -1,5 +1,7 @@
-2024-12-23 (next: 8505)
+2025-01-08 (next: 8507)
 =======================
+!do not update Microsoft.OpenApi to 1.6.23
+
 
 
 A2v10.Platform
