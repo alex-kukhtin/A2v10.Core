@@ -28,9 +28,13 @@ public class SheetCellGroup : XamlElement, ISheetCell
 		}
 		else
 		{
-			RenderChildren(context);
-		}
-	}
+            var t = new TagBuilder("template");
+            MergeBindingAttributeBool(t, context, "v-if", nameof(If), If);
+            t.RenderStart(context);
+            RenderChildren(context);
+            t.RenderEnd(context);
+        }
+    }
 
 	void RenderChildren(RenderContext context)
 	{

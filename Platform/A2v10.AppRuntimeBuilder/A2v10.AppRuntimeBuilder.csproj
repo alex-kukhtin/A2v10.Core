@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
-		<Version>10.1.8503</Version>
+		<Version>10.1.8507</Version>
 		<LangVersion>Latest</LangVersion>
 		<Product>A2v10</Product>
 		<Nullable>enable</Nullable>
@@ -10,7 +10,7 @@
 		<Authors>Oleksandr Kukthin</Authors>
 		<Company>Oleksandr Kukthin</Company>
 		<Description>A2v10 Platform Application Runtime Builder</Description>
-		<Copyright>Copyright © 2024 Oleksandr Kukthin. All rights reserved.</Copyright>
+		<Copyright>Copyright © 2024-2025 Oleksandr Kukthin. All rights reserved.</Copyright>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/alex-kukhtin/A2v10.Core</RepositoryUrl>
 		<PackageTags>A2v10 Platform</PackageTags>

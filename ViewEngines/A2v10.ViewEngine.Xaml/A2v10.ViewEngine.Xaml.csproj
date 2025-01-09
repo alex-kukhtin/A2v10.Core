@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
-		<Version>10.1.8504</Version>
+		<Version>10.1.8507</Version>
 		<Nullable>enable</Nullable>
 		<LangVersion>Latest</LangVersion>
 		<AssemblyName>A2v10.Xaml</AssemblyName>
@@ -12,7 +12,7 @@
 		<Authors>Oleksandr Kukthin</Authors>
 		<Company>Oleksandr Kukthin</Company>
 		<Description>Xaml view engine for A2v10</Description>
-		<Copyright>Copyright © 2015-2024 Oleksandr  Kukhtin. All rights reserved.</Copyright>
+		<Copyright>Copyright © 2015-2025 Oleksandr  Kukhtin. All rights reserved.</Copyright>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/alex-kukhtin/A2v10.Core</RepositoryUrl>
 		<PackageTags>A2v10 Xaml</PackageTags>
