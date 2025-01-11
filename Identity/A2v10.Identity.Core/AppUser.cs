@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
 
@@ -20,13 +20,15 @@ public enum UpdateFlags
 	Locale = 0x400,
 	TwoFactor = 0x800,
 	ExternalId = 0x1000,
+	NickName = 0x2000
 }
 public class AppUser<T> where T : struct
 {
 	public T Id { get; set; }
 	public String? UserName { get; set; }
 	public String? PersonName { get; set; }
-	public String? FirstName { get; set; }
+    public String? NickName { get; set; }
+    public String? FirstName { get; set; }
 	public String? LastName { get; set; }
 	public String? Email { get; set; }
 	public String? PhoneNumber { get; set; }

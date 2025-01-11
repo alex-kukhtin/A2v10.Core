@@ -1,4 +1,6 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
+
+using System.Linq;
 
 using A2v10.Infrastructure;
 
@@ -25,4 +27,11 @@ public class Paragraph : UIElement
 		Inlines.Render(context);
 		tag.RenderEnd(context);
 	}
+
+    protected override void OnEndInit()
+    {
+        base.OnEndInit();
+		foreach (var inl in Inlines.OfType<XamlElement>())
+            inl.SetParent(this);
+    }
 }

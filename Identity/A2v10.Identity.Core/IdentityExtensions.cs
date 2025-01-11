@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -46,7 +46,12 @@ public static class IdentityExtensions
 		return String.IsNullOrEmpty(claim) ? identity?.Name : claim;
 	}
 
-	public static String? GetUserFirstName(this IIdentity? identity)
+    public static String? GetUserNickName(this IIdentity? identity)
+    {
+        return identity.GetUserClaim(WellKnownClaims.NickName);
+    }
+
+    public static String? GetUserFirstName(this IIdentity? identity)
 	{
 		return identity.GetUserClaim(WellKnownClaims.FirstName);
 	}

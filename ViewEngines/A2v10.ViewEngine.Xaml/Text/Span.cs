@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Xaml;
 
@@ -57,4 +57,23 @@ public class Span : Inline
 		if (Space == SpaceMode.After || Space == SpaceMode.Both)
 			context.Writer.Write("&#160;");
 	}
+}
+
+
+[ContentProperty("Content")]
+public class Bold : Span
+{
+	public Bold()
+	{
+		Bold = true;
+	}
+}
+
+[ContentProperty("Content")]
+public class Italic : Span
+{
+	public Italic() 
+	{
+        Italic = true;
+    }
 }
