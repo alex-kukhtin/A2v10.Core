@@ -8,13 +8,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Compile Remove="AppStart\**" />
-	  <Content Remove="AppStart\**" />
-	  <EmbeddedResource Remove="AppStart\**" />
-	  <None Remove="AppStart\**" />
-	</ItemGroup>
-
-	<ItemGroup>
 	  <None Include="..\..\Platform\A2v10.App.Assets\Application\%40sql\a2v10_platform.sql" Link="a2v10_platform.sql" />
 	  <None Include="..\..\Platform\A2v10.App.Assets\Application\%40sql\a2v10_platform_mt_catalog.sql" Link="a2v10_platform_mt_catalog.sql" />
 	  <None Include="..\..\Platform\A2v10.App.Assets\Application\%40sql\a2v10_platform_mt_segment.sql" Link="a2v10_platform_mt_segment.sql" />
@@ -23,8 +16,8 @@
 	<ItemGroup>
 		<PackageReference Include="A2v10.Workflow.Engine" Version="10.1.8201" />
 		<PackageReference Include="Azure.Storage.Blobs" Version="12.23.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.11" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="8.0.11" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.12" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="8.0.12" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -51,9 +44,6 @@
 		</Reference>
 	</ItemGroup>
 
-	<ItemGroup>
-		<Content Update="wwwroot\App_application\main\test\test.view.xaml" />
-	</ItemGroup>
 
 	<ItemGroup>
 	  <Folder Include="wwwroot\img\logo\" />
