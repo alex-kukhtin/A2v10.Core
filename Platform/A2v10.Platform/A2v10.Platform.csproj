@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
-		<Version>10.1.8509</Version>
+		<Version>10.1.8510</Version>
 		<LangVersion>Latest</LangVersion>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Platform</PackageId>
@@ -35,7 +35,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Data.Core" Version="10.1.7503" />
+		<PackageReference Include="A2v10.Data.Core" Version="10.1.7504" />
 		<PackageReference Include="A2v10.Data.Providers" Version="10.1.7501" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.1" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
