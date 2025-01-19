@@ -62,8 +62,13 @@ public class Component : UIElementBase
     {
         base.OnEndInit();
 		foreach (var c in Slots.Values)
-		{
 			c.SetParent(this);	
-		}
+    }
+
+    public override void OnSetStyles(RootContainer root)
+    {
+        base.OnSetStyles(root);
+        foreach (var ch in Slots.Values)
+            ch.OnSetStyles(root);
     }
 }
