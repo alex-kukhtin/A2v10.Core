@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
 using System.IO;
@@ -95,6 +95,7 @@ public class RenderContext(IXamlElement _root, IRenderInfo _ri, ILocalizer _loca
 {
 	public String? RootId { get; set; }
 	public String? Path { get; set; }
+	public Component? RenderedComponent { get; set; }
 
     public TextWriter Writer { get; private set; } = writer;
 

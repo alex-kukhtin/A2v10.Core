@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
-		<Version>10.1.8502</Version>
+		<Version>10.1.8511</Version>
 		<LangVersion>Latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<AssemblyName>A2v10.ReportEngine.Excel</AssemblyName>
@@ -12,7 +12,7 @@
 		<Authors>Oleksandr Kukhtin</Authors>
 		<Company>Oleksandr Kukhtin</Company>
 		<Description>PDF report engine for A2v10</Description>
-		<Copyright>Copyright © 2024 Oleksandr Kukhtin. All rights reserved.</Copyright>
+		<Copyright>Copyright © 2024-2025 Oleksandr Kukhtin. All rights reserved.</Copyright>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/alex-kukhtin/A2v10.Core</RepositoryUrl>
 		<PackageTags>A2v10 Reports Excel</PackageTags>

@@ -24,7 +24,7 @@ public abstract class UIElementBase : XamlElement, IXamlElement
 
 	public abstract void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null);
 
-	[Flags]
+    [Flags]
 	public enum MergeAttrMode
 	{
 		Visibility = 0x01,
