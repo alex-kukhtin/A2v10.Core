@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
-	  <Version>10.1.8509</Version>
+	  <Version>10.1.8515</Version>
 	  <LangVersion>Latest</LangVersion>
 	  <Nullable>enable</Nullable>
 	  <ImplicitUsings>disable</ImplicitUsings>
@@ -13,7 +13,7 @@
 	  <Authors>Oleksandr Kukhtin</Authors>
 	  <Company>Oleksandr Kukhtin</Company>
 	  <Description>A2v10 Platform Services</Description>
-	  <Copyright>Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.</Copyright>
+	  <Copyright>Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.</Copyright>
 	  <RepositoryType>github</RepositoryType>
 	  <PackageTags>A2v10</PackageTags>
 	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -23,7 +23,7 @@
 
   <ItemGroup>
     <PackageReference Include="DocumentFormat.OpenXml" Version="3.2.0" />
-    <PackageReference Include="Jint" Version="4.1.0" />
+    <PackageReference Include="Jint" Version="4.2.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.1" />
