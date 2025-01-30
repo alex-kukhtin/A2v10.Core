@@ -6432,6 +6432,9 @@ table.sheet td.indent.lev-4 {
 table.sheet td.indent.lev-5 {
   padding-left: 54px;
 }
+table.sheet td.indent.lev-6 {
+  padding-left: 66px;
+}
 table.sheet .col-shadow {
   visibility: collapse;
   display: none;
@@ -7383,7 +7386,7 @@ table.tree-grid td.c-m,
 table.tree-grid th.c-m {
   min-width: 6px;
   padding: 0;
-  border-left: none!important;
+  border-left: none !important;
 }
 table.tree-grid th {
   background-color: #f5f5f5;
@@ -7513,6 +7516,9 @@ table.tree-grid tr.lev-4 .mark {
 }
 table.tree-grid tr.lev-5 .mark {
   min-width: 108px;
+}
+table.tree-grid tr.lev-6 .mark {
+  min-width: 126px;
 }
 table.tree-grid a.toggle {
   display: inline-block;

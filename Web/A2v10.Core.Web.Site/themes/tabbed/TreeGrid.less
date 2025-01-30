@@ -1,5 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
-
+﻿
 @import "Variables.less";
 
 @toggle-size: 18px;
@@ -47,7 +46,7 @@ table.tree-grid {
 		&.c-m {
 			min-width: 6px;
 			padding: 0;
-			border-left:none!important;
+			border-left: none !important;
 		}
 	}
 
@@ -218,6 +217,10 @@ table.tree-grid {
 
 	tr.lev-5 .mark {
 		min-width: @toggle-size * 6;
+	}
+
+	tr.lev-6 .mark {
+		min-width: @toggle-size * 7;
 	}
 
 	a.toggle {
