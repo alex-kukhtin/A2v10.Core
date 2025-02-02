@@ -48,6 +48,7 @@ public class DataGridColumn : XamlElement
 	public Int32 MaxChars { get; set; }
 	public Int32 LineClamp { get; set; }
 	public String? CheckAll { get; set; }
+	public ColumnBackgroundStyle Background { get; set; }
 
 	Boolean _noPadding;
 
@@ -75,8 +76,10 @@ public class DataGridColumn : XamlElement
 			column.MergeAttribute(":max-chars", MaxChars);
 		if (LineClamp != 0)
 			column.MergeAttribute(":line-clamp", LineClamp);
+		if (Background != ColumnBackgroundStyle.None)
+            column.MergeAttribute("back-color", Background.ToString().ToLowerInvariant());
 
-		var checkAllBind = GetBinding(nameof(CheckAll));
+        var checkAllBind = GetBinding(nameof(CheckAll));
 		if (checkAllBind != null)
 			column.MergeAttribute("check-all", checkAllBind.Path);
 		else if (CheckAll != null)

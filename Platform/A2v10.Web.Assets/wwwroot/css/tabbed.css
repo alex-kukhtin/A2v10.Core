@@ -3172,6 +3172,21 @@ table.data-grid td.cell-validator {
 table.data-grid colgroup > col.sorted {
   background-color: var(--table-header-sort);
 }
+table.data-grid colgroup > col.red {
+  background-color: rgba(254, 220, 220, 0.25);
+}
+table.data-grid colgroup > col.green {
+  background-color: rgba(216, 255, 216, 0.25);
+}
+table.data-grid colgroup > col.blue {
+  background-color: rgba(114, 234, 234, 0.07);
+}
+table.data-grid colgroup > col.yellow {
+  background-color: rgba(255, 216, 0, 0.07);
+}
+table.data-grid colgroup > col.gray {
+  background-color: hsl(from var(--neutral300) h s l / 10%);
+}
 table.data-grid > thead > tr > th {
   border-color: var(--neutral300);
   background-color: var(--table-header-bg);
