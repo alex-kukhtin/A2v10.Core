@@ -8393,6 +8393,17 @@ td.vert > .vcell {
   border-bottom: 1px solid var(--neutralBkDark);
   padding: 0 2px;
 }
+.debug-panel .toolbar .btn-checkbox {
+  cursor: pointer;
+}
+.debug-panel .toolbar .btn-checkbox.checked {
+  background-color: var(--activeBkLight);
+  outline: 1px solid var(--neutral400);
+  outline-offset: -1px;
+}
+.debug-panel .toolbar .btn-checkbox.checked:hover {
+  background-color: var(--menu-hover);
+}
 .debug-panel .debug-body {
   overflow: auto;
   background-color: var(--neutral50);
