@@ -8350,7 +8350,7 @@ td.vert > .vcell {
   bottom: 2rem;
   right: 0;
   z-index: 110;
-  background-color: var(--neutral50);
+  background-color: var(--bgPrimary);
   border-left: 1px solid var(--neutral300);
   width: 390px;
   box-shadow: -5px 0 10px 0 rgba(0, 0, 0, 0.2);
@@ -8406,7 +8406,7 @@ td.vert > .vcell {
 }
 .debug-panel .debug-body {
   overflow: auto;
-  background-color: var(--neutral50);
+  background-color: var(--bgPrimary);
   user-select: text;
 }
 .debug-panel .debug-model pre {
