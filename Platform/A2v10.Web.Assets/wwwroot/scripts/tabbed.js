@@ -223,6 +223,7 @@ app.modules['std:signalR'] = function () {
 				tabPopupOpen: false,
 				navigatingUrl: '',
 				homePageTitle: '',
+				homeRoot: null,
 				homeLoaded: false,
 				lockRoute: false,
 				requestsCount: 0,
@@ -319,7 +320,8 @@ app.modules['std:signalR'] = function () {
 							page.root.__tabUrl__ = tabUrlKey(tab);
 							page.root.$store.commit('setroute', tab.url);
 						}
-					}
+					} else if (page.src === '/_home/index/0')
+						this.homeRoot = page.root;
 				}
 				this.navigatingUrl = '';
 			},
@@ -454,7 +456,6 @@ app.modules['std:signalR'] = function () {
 				window.localStorage.setItem(this.storageKey, tabs);
 			},
 			restoreTabs(path) {
-				let newurl = path !== '/' ? path : '';
 				let tabs = window.localStorage.getItem(this.storageKey);
 				if (!tabs) {
 					this.selectHome(true);
@@ -735,6 +736,8 @@ app.modules['std:signalR'] = function () {
 			activeTab(newtab) {
 				if (newtab && newtab.root)
 					this.updateModelStack(newtab.root)
+				else
+					this.updateModelStack(this.homeRoot);
 			}
 		},
 		mounted() {

@@ -1,4 +1,5 @@
-﻿
+﻿@import "Variables.less";
+
 .a2-image {
 	display: flex;
 	position: relative;
@@ -6,14 +7,14 @@
 
 	.remove-image {
 		position: absolute;
-		top: 0;
-		right: 0;
+		top: .5rem;
+		right: .5rem;
 		width: 1.6rem;
 		height: 1.6rem;
 		border-radius: 50%;
 		background-color: #fff;
-		border: 1px solid @dark-bk-color;
-		color: @dark-bk-color;
+		border: 1px solid var(--neutral400);
+		color: var(--neutral400);
 		text-align: center;
 
 		&:hover {
@@ -33,7 +34,6 @@
 
 	.file-upload {
 		margin: auto;
-		max-width: 250px;
 		max-height: 250px;
 	}
 }
@@ -41,13 +41,14 @@
 .file-upload {
 	display: block;
 	padding: 0;
-	background-color: lemonchiffon;
-	border: 2px dotted @default-brd-color;
+	background-color: #fffff0;
+	border: 2px dotted var(--neutral400);
 	position: relative;
-	color: @default-brd-color;
+	color: var(--neutral300);
 
 	&.hover {
-		border-color: gold;
+		border-color: var(--neutral500);
+		background-color: var(--hoverBk);
 	}
 
 	input {
@@ -72,9 +73,10 @@
 		left: 0;
 		right: 0;
 		bottom: 0;
-		padding-bottom: 1rem;
 		text-align: center;
-		font-size:0.95rem;
+		font-size: 0.95rem;
+		color: var(--neutral400);
+		padding: 1rem;
 	}
 }
 

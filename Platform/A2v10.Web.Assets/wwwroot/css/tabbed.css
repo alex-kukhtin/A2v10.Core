@@ -1784,14 +1784,14 @@ header .include.nav-pane .partial-block .control-group,
 }
 .a2-image .remove-image {
   position: absolute;
-  top: 0;
-  right: 0;
+  top: 0.5rem;
+  right: 0.5rem;
   width: 1.6rem;
   height: 1.6rem;
   border-radius: 50%;
   background-color: #fff;
-  border: 1px solid #8591a2;
-  color: #8591a2;
+  border: 1px solid var(--neutral400);
+  color: var(--neutral400);
   text-align: center;
 }
 .a2-image .remove-image:hover {
@@ -1807,19 +1807,19 @@ header .include.nav-pane .partial-block .control-group,
 }
 .a2-image .file-upload {
   margin: auto;
-  max-width: 250px;
   max-height: 250px;
 }
 .file-upload {
   display: block;
   padding: 0;
-  background-color: lemonchiffon;
-  border: 2px dotted var(--neutral300);
+  background-color: #fffff0;
+  border: 2px dotted var(--neutral400);
   position: relative;
   color: var(--neutral300);
 }
 .file-upload.hover {
-  border-color: gold;
+  border-color: var(--neutral500);
+  background-color: var(--hoverBk);
 }
 .file-upload input {
   width: 100%;
@@ -1841,9 +1841,10 @@ header .include.nav-pane .partial-block .control-group,
   left: 0;
   right: 0;
   bottom: 0;
-  padding-bottom: 1rem;
   text-align: center;
   font-size: 0.95rem;
+  color: var(--neutral400);
+  padding: 1rem;
 }
 .a2-file-upload .file-upload {
   height: 5rem;
@@ -5233,6 +5234,7 @@ label.radio > span::before {
   background-position: center;
   background-repeat: no-repeat;
   align-self: center;
+  min-width: 1em;
 }
 label.checkbox.no-wrap span,
 label.radio.no-wrap span {
@@ -7237,6 +7239,8 @@ table > colgroup col.blue {
   align-self: center;
   color: currentColor;
   font-size: 1.3rem;
+  position: relative;
+  left: 1rem;
 }
 .mdi-navbar .mdi-menu li.level-1 .btn-plus:hover {
   color: var(--nav-accent);
