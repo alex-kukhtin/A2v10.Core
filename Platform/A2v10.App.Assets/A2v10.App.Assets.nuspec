@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>A2v10.App.Assets</id>
-		<version>10.1.8517</version>
+		<version>10.1.8521</version>
 		<title>A2v10.Platform Application Assets</title>
 		<authors>Oleksandr Kukthin</authors>
 		<owners>Oleksandr Kukthin</owners>

@@ -12,7 +12,7 @@
 		background: white;
 		top: 100%;
 		width: auto;
-		min-width:100%;
+		min-width: 100%;
 		border: 1px solid @control-brd-color;
 		max-height: @panel-height;
 		overflow: auto;
@@ -71,6 +71,26 @@
 			top: auto;
 			bottom: 100%;
 			margin-bottom: 2px;
+		}
+	}
+
+	&.compact {
+		.color-picker-pane {
+			width: 16.5rem;
+
+			.color-picker-list {
+				flex-direction: row;
+				flex-wrap: wrap;
+
+				.tag-label {
+					width: 24px;
+
+					&:hover {
+						outline: 1px solid var(--link);
+						outline-offset: 1px;
+					}
+				}
+			}
 		}
 	}
 }
