@@ -9,7 +9,6 @@
 		<SourceAssetsFonts Include="$(MSBuildThisFileDirectory)..\content\assets\wwwroot\css\fonts\*" />
 		<SourceAssetsLoc Include="$(MSBuildThisFileDirectory)..\content\assets\wwwroot\localization\*" />
 		<SourceAssetsLogo Include="$(MSBuildThisFileDirectory)..\content\assets\wwwroot\img\logo\*" />
-		<SourceAssetsBpmnJs Include="$(MSBuildThisFileDirectory)..\content\assets\wwwroot\scripts\lib\bpmn\*" />
 	</ItemGroup>
 	<Target Name="CopyAssetsToProject" BeforeTargets="Build">
 		<Copy SourceFiles="@(SourceIcon)" DestinationFiles="$(ProjectDir)\wwwroot\favicon.ico" SkipUnchangedFiles="true"/>
@@ -20,6 +19,5 @@
 		<Copy SourceFiles="@(SourceAssetsFonts)" DestinationFolder="$(ProjectDir)\wwwroot\css\fonts" SkipUnchangedFiles="true"/>
 		<Copy SourceFiles="@(SourceAssetsLoc)" DestinationFolder="$(ProjectDir)\wwwroot\localization" SkipUnchangedFiles="true"/>
 		<Copy SourceFiles="@(SourceAssetsLogo)" DestinationFolder="$(ProjectDir)\wwwroot\img\logo" SkipUnchangedFiles="true"/>
-		<Copy SourceFiles="@(SourceAssetsBpmnJs)" DestinationFolder="$(ProjectDir)\wwwroot\scripts\lib\bpmn" SkipUnchangedFiles="true"/>
 	</Target>
 </Project>
