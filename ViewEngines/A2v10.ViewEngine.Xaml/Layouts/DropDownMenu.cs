@@ -13,7 +13,6 @@ public interface IDropDownPros
 
 public class DropDownMenu : Container, IDropDownPros
 {
-
 	public DropDownDirection Direction { get; set; }
 	public BackgroundStyle Background { get; set; }
 	public Boolean Separate { get; set; }

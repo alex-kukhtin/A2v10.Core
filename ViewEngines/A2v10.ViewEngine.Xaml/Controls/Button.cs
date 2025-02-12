@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 
 namespace A2v10.Xaml;
@@ -169,4 +169,11 @@ public class Button : CommandControl
 
 	public Boolean IsParentCommandBar => FindParentExact<CommandBar>() != null;
 	public Boolean IsParentToolBar => FindParentExact<Toolbar>() != null;
+
+	protected override void OnEndInit()
+	{
+		base.OnEndInit();
+		if (DropDown != null)
+			DropDown.SetParent(this);
+	}
 }
