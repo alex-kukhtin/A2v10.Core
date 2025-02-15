@@ -11,7 +11,7 @@ using A2v10.Data.Interfaces;
 
 namespace A2v10.Services.Interop;
 
-internal record ExeclParseResult
+public record ExeclParseResult
 {
 	public ExeclParseResult(ExpandoObject data, List<String> columns)
 	{
@@ -23,7 +23,7 @@ internal record ExeclParseResult
 	public List<String> Columns { get; init; }
 }
 
-internal partial class ExcelParser : IDisposable
+public partial class ExcelParser : IDisposable
 {
 
 	public String? ErrorMessage { get; set; }
