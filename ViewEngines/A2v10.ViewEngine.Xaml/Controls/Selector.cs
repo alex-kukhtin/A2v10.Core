@@ -92,6 +92,8 @@ public class Selector : ValuedControl, ITableControl
 		var fetchData = GetBinding(nameof(FetchData));
 		if (fetchData != null)
 			input.MergeAttribute(":fetch-command-data", fetchData.GetPath(context));
+		else if (FetchData != null && FetchData.StartsWith('{'))
+			input.MergeAttribute(":fetch-command-data", FetchData);
 
 		MergeAttributes(input, context);
 		MergeDisabled(input, context);

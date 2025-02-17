@@ -1,4 +1,6 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
+
+using A2v10.ViewEngine.Xaml;
 
 namespace A2v10.Xaml;
 
@@ -13,6 +15,11 @@ public class SelectorSimple : Selector
     protected override void OnEndInit()
 	{
 		base.OnEndInit();
+
+        String? urlData = null;
+        (Url, urlData) = Url.ParseUrlQuery();
+        if (urlData != null)
+            Data = urlData;
 
 		if (AddOns.Count > 0)
 		{
@@ -64,6 +71,11 @@ public class SelectorSimple : Selector
             cmd.BindImpl.SetBinding("Data", dat);
             this.BindImpl.SetBinding(nameof(FetchData), dat);
         }
+        else if (Data != null)
+        {
+            cmd.Data = Data;
+            this.FetchData = Data;
+        }
         hlink.BindImpl.SetBinding("Command", cmd);
         AddOns.Insert(0, hlink);
 	}
@@ -73,4 +85,5 @@ public class SelectorSimple : Selector
         _renderAction?.Invoke(context);
         base.RenderElement(context, onRender);
     }
+
 }

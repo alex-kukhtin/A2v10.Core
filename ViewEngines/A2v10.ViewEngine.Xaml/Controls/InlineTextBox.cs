@@ -8,6 +8,8 @@ public class InlineTextBox : ValuedControl, ITableControl
     public TextAlign Align { get; set; }
     public Bind? EnterCommand { get; set; }
     public String? EditTip { get; set; }
+    public Length? MinWidth { get; set; }
+    public Length? MaxWidth { get; set; }
 
     public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
     {
@@ -18,6 +20,12 @@ public class InlineTextBox : ValuedControl, ITableControl
         MergeAttributes(input, context);
         MergeDisabled(input, context);
         SetSize(input, nameof(InlineTextBox));
+
+        if (MinWidth != null)
+            input.MergeStyle("min-width", MinWidth.Value);
+
+        if (MaxWidth != null)
+            input.MergeStyle("max-width", MaxWidth.Value);
 
         var enterCmd = GetBindingCommand(nameof(EnterCommand));
         if (enterCmd != null)
