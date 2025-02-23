@@ -1,6 +1,6 @@
-﻿// Copyright © 2023-2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2023-2025 Oleksandr Kukhtin. All rights reserved.
 
-/*20240820-8337*/
+/*20259223-8529*/
 
 /* tabbed:shell.js */
 (function () {
@@ -18,6 +18,11 @@
 	let tabKey = 77;
 
 	const tabUrlKey = tab => `${tab.url}:${tab.key}`;
+
+	function getClosestLi(ev) {
+		if (!ev.target) return null;
+		return ev.target.closest('li');
+	}
 
 	app.components["std:shellPlain"] = Vue.extend({
 		store,
@@ -41,7 +46,8 @@
 				lockRoute: false,
 				requestsCount: 0,
 				contextTabKey: 0,
-				newVersionAvailable: false
+				newVersionAvailable: false,
+				movedTab: null
 			};
 		},
 		components: {
@@ -74,7 +80,7 @@
 					let parentUrl = '';
 					if (this.activeTab)
 						parentUrl = this.activeTab.url || '';
-					tab = { title: u1.title, url: u1.url, query: u1.query || '', loaded: true, key: tabKey++, root: null, parentUrl: parentUrl, reload: 0, debug: false };
+					tab = { title: u1.title, url: u1.url, query: u1.query || '', cnt:0, loaded: true, key: tabKey++, root: null, parentUrl: parentUrl, reload: 0, debug: false };
 					this.tabs.push(tab);
 					var cti = this.closedTabs.findIndex(t => t.url === u1.url);
 					if (cti >= 0)
@@ -177,6 +183,8 @@
 					return;
 				}
 				tab.loaded = true;
+				if (this.activeTab != tab)
+					tab.cnt += 1;
 				this.activeTab = tab;
 				document.title = tab.title;
 				this.replaceState(tab);
@@ -282,11 +290,11 @@
 						let loaded = ix === i;
 						if (loaded)
 							this.navigatingUrl = t.url;
-						this.tabs.push({ title: t.title, url: t.url, query: t.query, loaded, key: tabKey++, root: null, parentUrl: t.parentUrl, reload: 0, debug: false });
+						this.tabs.push({ title: t.title, url: t.url, query: t.query, cnt: t.cnt, o:i + 1, loaded, key: tabKey++, root: null, parentUrl: t.parentUrl, reload: 0, debug: false });
 					}
 					for (let i = 0; i < elems.closedTabs.length; i++) {
 						let t = elems.closedTabs[i];
-						this.closedTabs.push({ title: t.title, url: t.url, query: t.query, loaded: true, key: tabKey++ });
+						this.closedTabs.push({ title: t.title, url: t.url, query: t.query, cnt:0, loaded: true, key: tabKey++ });
 					}
 					if (ix >= 0 && ix < this.tabs.length)
 						this.activeTab = this.tabs[ix];
@@ -326,6 +334,97 @@
 				if (this.closedTabs.length <= 0) return;
 				let t = this.closedTabs[0];
 				this.reopenTab(t);
+			},
+			_resortTabs() {
+				let arr = this.tabs;
+				arr.sort((a, b) => a.o - b.o);
+				for (let i = 0; i < arr.length; i++) 
+					arr[i].o = i + 1;
+				this.storeTabs();
+			},
+			offsetLeft(t) {
+				let mt = this.movedTab;
+				if (!mt || mt.tab !== t)
+					return "0";
+				return mt.pos + 'px';
+			},
+			isDragged(t) {
+				let mt = this.movedTab;
+				return mt && mt.tab === t;
+			},
+			pointerDown(ev, t) {
+				let li = getClosestLi(ev)
+				if (!li) return;
+				ev.target.setPointerCapture(ev.pointerId);
+				let l = li.getBoundingClientRect().left;
+				this.movedTab = { tab: t, x: ev.x-l, l, pos: 0, dx: ev.x - l };
+				console.log(`down. l:${this.movedTab.l}, x:${this.movedTab.x}, dx:${this.movedTab.dx}`);
+			},
+			dumpTabs() {
+				console.log(this.tabs.map(t => t.o).join(','));
+			},
+			_swapTabs(tab, delta) {
+				let sorted = this.tabs.toSorted((a, b) => a.o - b.o);
+				let ix = sorted.indexOf(tab);
+				ix += delta;
+				if (ix < 0 || ix >= sorted.length)
+					return null;
+				let ntab = sorted[ix];
+				let ntx = this.tabs.indexOf(ntab);
+				let tmp = tab.o;
+				tab.o = ntab.o;
+				ntab.o = tmp;
+				console.log(ntab.title);
+				return this.$refs.tab[ntx];
+			},
+			pointerMove(ev, t) {
+				let mt = this.movedTab
+				if (!mt) return;
+				let li = getClosestLi(ev)
+				if (!li) return;
+				let cr = li.getBoundingClientRect();
+				let offset = ev.x - mt.l - mt.x;
+				console.log(ev.x, mt.l, offset);
+				mt.pos = offset;
+				if (Math.abs(offset) < 65 /*min tab width*/)
+					return;
+				Find tab by ev.x !!!
+				if (offset > 0 && offset > cr.width / 2) {
+					let ntref = this._swapTabs(mt.tab, 1);
+					if (!ntref) return;
+					let ntcrTest = ntref.getBoundingClientRect();
+					Vue.nextTick(() => {
+						let ntcr = ntref.getBoundingClientRect();
+ 						let dl = 0;
+						if (ntcr.left > ntcrTest.left) {
+							dl = ntcr.left - ntcrTest.left;
+							console.error(ntcr.left, ntcrTest.left);
+						};
+						let dxmin = Math.min(ntcr.width, cr.width);
+						let dx = ntcrTest.width - cr.width;
+						//mt.x = ev.x + ntcr.width - (ev.x - mt.x);
+						console.dir(ntcr);
+						mt.l += ntcrTest.width + dl; // !!!!
+						this.dumpTabs();
+						console.log(`move. l:${mt.l}, x:${mt.x}, dl: ${dl}`);
+					});
+					console.dir('return 1');
+				} else if (offset < 0 && -offset > cr.width / 2) {
+					return;
+					let ntref = this._swapTabs(mt.tab, -1);
+					if (!ntref) return;
+					Vue.nextTick(() => {
+						let ntcr = ntref.getBoundingClientRect();
+						console.log(ntcr.width);
+						mt.x = ev.x - (cr.width + offset);
+						mt.l = mt.l - cr.width;
+					});
+				}
+			},
+			pointerUp(ev, t) {
+				ev.target.releasePointerCapture(ev.pointerId);
+				this.movedTab = null;
+				this._resortTabs();
 			},
 			popupCloseOther() {
 				if (!this.contextTabKey) return;
@@ -522,6 +621,8 @@
 			},
 			updateModelStack(root) {
 				if (this.__dataStack__.length > 0 && this.__dataStack__[0] === root)
+					return;
+				if (!root || !root.$data)
 					return;
 				this.__dataStack__.splice(0);
 				this.__dataStack__.unshift(root);

@@ -7002,9 +7002,15 @@ table > colgroup col.blue {
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  position: relative;
   border-radius: 4px 4px 0 0;
   margin-top: 2px;
+  position: relative;
+}
+.mdi-tabs-container .mdi-tabs li.drag {
+  background-color: yellow !important;
+  z-index: 5;
+  box-shadow: 0 0 5px #555 !important;
+  border-right-color: transparent;
 }
 .mdi-tabs-container .mdi-tabs li.tab-home {
   margin-left: 2px;

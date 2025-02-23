@@ -97,7 +97,7 @@
 	display: flex;
 	background-color: @light0;
 	justify-content: space-between;
-	padding:0;
+	padding: 0;
 
 	.mdi-tabs {
 		display: flex;
@@ -133,10 +133,18 @@
 			align-items: center;
 			position: relative;
 			border-radius: 4px 4px 0 0;
-			margin-top:2px;
+			margin-top: 2px;
+			position: relative;
+
+			&.drag {
+				background-color: yellow !important;
+				z-index: 5;
+				box-shadow: 0 0 5px #555 !important;
+				border-right-color: transparent;
+			}
 
 			&.tab-home {
-				margin-left:2px;
+				margin-left: 2px;
 			}
 
 			&:not(.tab-home) {
@@ -157,7 +165,7 @@
 				z-index: 8;
 				left: 10px;
 				padding: 3px 8px;
-				line-height:1;
+				line-height: 1;
 				border: 1px solid @dark2;
 				font-size: 12px;
 				background-color: #fffcd5;

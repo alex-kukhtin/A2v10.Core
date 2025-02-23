@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2020-2025 Oleksandr Kukhtin
 
-Last updated : 20 feb 2025
-module version : 8208
+Last updated : 22 feb 2025
+module version : 8209
 */
 ------------------------------------------------
 set nocount on;
@@ -25,7 +25,7 @@ go
 begin
 	set nocount on;
 	declare @version int;
-	set @version = 8208;
+	set @version = 8209;
 	if exists(select * from a2wf.Versions where Module = N'main')
 		update a2wf.Versions set [Version] = @version where Module = N'main';
 	else
@@ -368,6 +368,19 @@ begin
 	from a2wf.Workflows
 	where Id=@Id and (@Version=0 or [Version]=@Version)
 	order by [Version] desc;
+end
+go
+------------------------------------------------
+create or alter procedure a2wf.[Catalog.Load]
+@UserId bigint = null,
+@Id nvarchar(64)
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+
+	select c.Body, c.[Format]
+	from a2wf.[Catalog] c where Id = @Id;
 end
 go
 ------------------------------------------------
