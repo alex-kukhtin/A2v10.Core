@@ -7009,7 +7009,7 @@ table > colgroup col.blue {
 .mdi-tabs-container .mdi-tabs li.drag {
   background-color: yellow !important;
   z-index: 5;
-  box-shadow: 0 0 5px #555 !important;
+  box-shadow: 0 0 5px #777 !important;
   border-right-color: transparent;
 }
 .mdi-tabs-container .mdi-tabs li.tab-home {

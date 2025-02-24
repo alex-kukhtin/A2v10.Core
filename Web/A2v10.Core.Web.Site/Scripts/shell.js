@@ -80,7 +80,7 @@
 					let parentUrl = '';
 					if (this.activeTab)
 						parentUrl = this.activeTab.url || '';
-					tab = { title: u1.title, url: u1.url, query: u1.query || '', cnt:0, loaded: true, key: tabKey++, root: null, parentUrl: parentUrl, reload: 0, debug: false };
+					tab = { title: u1.title, url: u1.url, query: u1.query || '', cnt: 0, o: this.tabs.length + 1, loaded: true, key: tabKey++, root: null, parentUrl: parentUrl, reload: 0, debug: false };
 					this.tabs.push(tab);
 					var cti = this.closedTabs.findIndex(t => t.url === u1.url);
 					if (cti >= 0)
@@ -253,6 +253,7 @@
 					if (this.closedTabs.length > 10)
 						this.closedTabs.pop();
 				}
+				this._resortTabs();
 				this.storeTabs();
 			},
 			clearLocalStorage() {
@@ -290,11 +291,11 @@
 						let loaded = ix === i;
 						if (loaded)
 							this.navigatingUrl = t.url;
-						this.tabs.push({ title: t.title, url: t.url, query: t.query, cnt: t.cnt, o:i + 1, loaded, key: tabKey++, root: null, parentUrl: t.parentUrl, reload: 0, debug: false });
+						this.tabs.push({ title: t.title, url: t.url, query: t.query, cnt: t.cnt, o: i + 1, loaded, key: tabKey++, root: null, parentUrl: t.parentUrl, reload: 0, debug: false });
 					}
 					for (let i = 0; i < elems.closedTabs.length; i++) {
 						let t = elems.closedTabs[i];
-						this.closedTabs.push({ title: t.title, url: t.url, query: t.query, cnt:0, loaded: true, key: tabKey++ });
+						this.closedTabs.push({ title: t.title, url: t.url, query: t.query, cnt: 0, loaded: true, key: tabKey++ });
 					}
 					if (ix >= 0 && ix < this.tabs.length)
 						this.activeTab = this.tabs[ix];
@@ -338,7 +339,7 @@
 			_resortTabs() {
 				let arr = this.tabs;
 				arr.sort((a, b) => a.o - b.o);
-				for (let i = 0; i < arr.length; i++) 
+				for (let i = 0; i < arr.length; i++)
 					arr[i].o = i + 1;
 				this.storeTabs();
 			},
@@ -352,74 +353,93 @@
 				let mt = this.movedTab;
 				return mt && mt.tab === t;
 			},
+			orderedTabs(x) {
+				if (!this.tabs.length) return [];
+				let otabs = this.tabs.map((t, ix) => ({
+					tab: t,
+					ref: this.$refs.tab[ix], w: 0,
+				}));
+				otabs.pointTab = -1;
+				otabs.currentTab = -1;
+				let hcr = this.$refs.home.getBoundingClientRect();
+				otabs.left = hcr.right;
+				let l = hcr.right;
+				for (let i = 0; i < otabs.length; i++) {
+					let t = otabs[i];
+					if (t.tab === this.movedTab.tab)
+						otabs.currentTab = i;
+					let cr = t.ref.getBoundingClientRect();
+					t.w = cr.width;
+					let ptIn = x >= l && x <= l + cr.width;
+					if (ptIn) {
+						//console.log('pt tab:', i, x, l, l + cr.width);
+						otabs.pointTab = i;
+					}
+					l += cr.width;
+				}
+				otabs.isEmpty = otabs.pointTab < 0 || otabs.pointTab === otabs.currentTab;
+				return otabs;
+			},
 			pointerDown(ev, t) {
 				let li = getClosestLi(ev)
 				if (!li) return;
 				ev.target.setPointerCapture(ev.pointerId);
-				let l = li.getBoundingClientRect().left;
-				this.movedTab = { tab: t, x: ev.x-l, l, pos: 0, dx: ev.x - l };
-				console.log(`down. l:${this.movedTab.l}, x:${this.movedTab.x}, dx:${this.movedTab.dx}`);
+				let cr = li.getBoundingClientRect();
+				this.movedTab = { tab: t, x: ev.x - cr.left, l: cr.left, pos: 0 };
+				console.log(`down. l:${this.movedTab.l}, x:${this.movedTab.x}, pos:${this.movedTab.pos}`);
 			},
-			dumpTabs() {
-				console.log(this.tabs.map(t => t.o).join(','));
-			},
-			_swapTabs(tab, delta) {
-				let sorted = this.tabs.toSorted((a, b) => a.o - b.o);
-				let ix = sorted.indexOf(tab);
-				ix += delta;
-				if (ix < 0 || ix >= sorted.length)
-					return null;
-				let ntab = sorted[ix];
-				let ntx = this.tabs.indexOf(ntab);
-				let tmp = tab.o;
-				tab.o = ntab.o;
-				ntab.o = tmp;
-				console.log(ntab.title);
-				return this.$refs.tab[ntx];
+			_swapOrderedTabs(ordered, x) {
+				let tab1 = ordered[ordered.currentTab];
+				let tab2 = ordered[ordered.pointTab];
+				if (tab1 === tab2) return;
+				let tmp = tab1.tab.o;
+				tab1.tab.o = tab2.tab.o;
+				tab2.tab.o = tmp;
+				let l = ordered.left;
+				console.log('source', ordered.map(t => t.tab.o + ':' + t.w.toFixed()).join(','));
+				let neo = ordered.toSorted((a, b) => a.tab.o - b.tab.o);
+				console.log('otabs', neo.map(t => t.tab.o + ':' + t.w.toFixed()).join(','));
+				let dbg = [];
+				for (let i = 0; i < neo.length; i++) {
+					let t = neo[i];
+					dbg.push(t.w.toFixed());	
+					if (l + t.w > x) {
+						// TODO: как-то тут более точно определить попадание
+						//ordered.pointTab = i;
+						console.log('swap returns ix:', i, 'l:', l, 'x', x);
+						console.log(dbg.join(','));
+						return l;
+					}
+					l += t.w;
+				}
+				return l; // right panel
 			},
 			pointerMove(ev, t) {
 				let mt = this.movedTab
 				if (!mt) return;
-				let li = getClosestLi(ev)
-				if (!li) return;
-				let cr = li.getBoundingClientRect();
+
 				let offset = ev.x - mt.l - mt.x;
-				console.log(ev.x, mt.l, offset);
 				mt.pos = offset;
-				if (Math.abs(offset) < 65 /*min tab width*/)
+
+				let li = getClosestLi(ev)
+				if (!li)
 					return;
-				Find tab by ev.x !!!
-				if (offset > 0 && offset > cr.width / 2) {
-					let ntref = this._swapTabs(mt.tab, 1);
-					if (!ntref) return;
-					let ntcrTest = ntref.getBoundingClientRect();
-					Vue.nextTick(() => {
-						let ntcr = ntref.getBoundingClientRect();
- 						let dl = 0;
-						if (ntcr.left > ntcrTest.left) {
-							dl = ntcr.left - ntcrTest.left;
-							console.error(ntcr.left, ntcrTest.left);
-						};
-						let dxmin = Math.min(ntcr.width, cr.width);
-						let dx = ntcrTest.width - cr.width;
-						//mt.x = ev.x + ntcr.width - (ev.x - mt.x);
-						console.dir(ntcr);
-						mt.l += ntcrTest.width + dl; // !!!!
-						this.dumpTabs();
-						console.log(`move. l:${mt.l}, x:${mt.x}, dl: ${dl}`);
-					});
-					console.dir('return 1');
-				} else if (offset < 0 && -offset > cr.width / 2) {
+				let cr = li.getBoundingClientRect();
+				let hw = cr.width / 2;
+
+				if (Math.abs(offset) < hw)
 					return;
-					let ntref = this._swapTabs(mt.tab, -1);
-					if (!ntref) return;
-					Vue.nextTick(() => {
-						let ntcr = ntref.getBoundingClientRect();
-						console.log(ntcr.width);
-						mt.x = ev.x - (cr.width + offset);
-						mt.l = mt.l - cr.width;
-					});
-				}
+
+				let ordered = this.orderedTabs(ev.x - mt.x + hw);
+				if (ordered.isEmpty || ordered.dw < hw)
+					return;
+				console.dir(ordered);
+				console.log('calc point', ordered.dw);
+				let nl = this._swapOrderedTabs(ordered, ev.x - mt.x + hw);
+				console.log('set nl:', nl, 'pos:', mt.pos);
+				mt.l = nl;
+				offset = ev.x - mt.l - mt.x;
+				mt.pos = offset;
 			},
 			pointerUp(ev, t) {
 				ev.target.releasePointerCapture(ev.pointerId);

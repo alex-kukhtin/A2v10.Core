@@ -1,20 +1,18 @@
 ﻿[
-    {
-        "outputFile": "wwwroot/css/light.colorscheme.css",
-        "inputFile": "themes/tabbed/_Light.colorscheme.less",
-        "sourceMap": false,
-        "useNodeSass": false
-    },
-    {
-        "outputFile": "wwwroot/css/lightblue.colorscheme.css",
-        "inputFile": "themes/tabbed/_LightBlue.colorscheme.less",
-        "sourceMap": false,
-        "useNodeSass": false
-    },
-    {
-        "outputFile": "wwwroot/css/tabbed.css",
-        "inputFile": "themes/tabbed/site.less",
-        "sourceMap": false,
-        "useNodeSass": false
-    }
+  {
+    "outputFile": "wwwroot/css/light.colorscheme.css",
+    "inputFile": "themes/tabbed/_Light.colorscheme.less"
+  },
+  {
+    "outputFile": "wwwroot/css/lightblue.colorscheme.css",
+    "inputFile": "themes/tabbed/_LightBlue.colorscheme.less"
+  },
+  {
+    "outputFile": "wwwroot/css/tabbed.css",
+    "inputFile": "themes/tabbed/site.less"
+  },
+  {
+    "outputFile": "gruntfile.es5.js",
+    "inputFile": "gruntfile.js"
+  }
 ]
