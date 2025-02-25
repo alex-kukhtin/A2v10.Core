@@ -6966,6 +6966,17 @@ table > colgroup col.blue {
 .mdi-header .dropdown .user-name .caret {
   margin: 5px 0 0 0;
 }
+@keyframes tab-willclose {
+  0% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.2;
+  }
+}
 .mdi-tabs-container {
   grid-area: tabs;
   display: flex;
@@ -7007,10 +7018,13 @@ table > colgroup col.blue {
   position: relative;
 }
 .mdi-tabs-container .mdi-tabs li.drag {
-  background-color: yellow !important;
   z-index: 5;
   box-shadow: 0 0 5px #777 !important;
   border-right-color: transparent;
+  text-shadow: 0.5px 0 0 var(--text);
+}
+.mdi-tabs-container .mdi-tabs li.willclose {
+  animation: tab-willclose 2s infinite;
 }
 .mdi-tabs-container .mdi-tabs li.tab-home {
   margin-left: 2px;

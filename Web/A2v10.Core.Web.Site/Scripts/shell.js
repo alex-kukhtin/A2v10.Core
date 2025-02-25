@@ -1,6 +1,6 @@
 ﻿// Copyright © 2023-2025 Oleksandr Kukhtin. All rights reserved.
 
-/*20259223-8529*/
+/*20259225-8529*/
 
 /* tabbed:shell.js */
 (function () {
@@ -14,14 +14,24 @@
 	const modalComponent = component('std:modal');
 	const toastrComponent = component('std:toastr');
 	const store = component('std:store');
+	const MAX_OPENED_TABS = 10;
 
 	let tabKey = 77;
-
+	
 	const tabUrlKey = tab => `${tab.url}:${tab.key}`;
 
 	function getClosestLi(ev) {
 		if (!ev.target) return null;
 		return ev.target.closest('li');
+	}
+
+	function intersectLines(t, c) {
+		let dx = 0;
+		if (t.r > c.r)
+			dx = c.r - t.l;
+		else if (t.l < c.l)
+			dx = t.r - c.l;
+		return dx > 0;
 	}
 
 	app.components["std:shellPlain"] = Vue.extend({
@@ -31,6 +41,7 @@
 				tabs: [],
 				closedTabs: [],
 				activeTab: null,
+				maxUsed: 0,
 				modals: [],
 				modalRequeryUrl: '',
 				traceEnabled: log.traceEnabled(),
@@ -88,8 +99,14 @@
 				}
 				tab.loaded = true;
 				this.activeTab = tab;
-				if (this.tabs.length > 10)
-					this.tabs.splice(0, 1);
+				this.useTab(tab);
+				if (this.tabs.length > MAX_OPENED_TABS) {
+					let mt = this.tabs.toSorted((a, b) => b.cnt - a.cnt);
+					if (mt.length) {
+						let ix = this.tabs.indexOf(mt[0]);
+						this.tabs.splice(ix, 1);
+					}
+				}
 				this.storeTabs();
 			},
 			navigateUrl(url) {
@@ -150,6 +167,9 @@
 			isHomeActive() {
 				return !this.activeTab;
 			},
+			tabTooltip(tab) {
+				return `${tab.url}`;
+			},
 			fitText(t) {
 				if (!t) return 'untitled';
 				return t.length > 30 ? t.substring(0, 30) + '…' : t;
@@ -166,6 +186,11 @@
 			},
 			homeSource() {
 				return this.homeLoaded ? '/_home/index/0' : null;
+			},
+			useTab(tab) {
+				this.tabs.filter(t => t != tab).forEach(t => t.cnt += 1);
+				tab.cnt = 0;
+				this.maxUsed = Math.max(...this.tabs.map(t => t.cnt));
 			},
 			selectHome(noStore) {
 				this.homeLoaded = true;
@@ -184,7 +209,7 @@
 				}
 				tab.loaded = true;
 				if (this.activeTab != tab)
-					tab.cnt += 1;
+					this.useTab(tab);
 				this.activeTab = tab;
 				document.title = tab.title;
 				this.replaceState(tab);
@@ -223,7 +248,7 @@
 					let rt = this.tabs.splice(ix, 1);
 					if (rt.length) {
 						this.closedTabs.unshift(rt[0]);
-						if (this.closedTabs.length > 10)
+						if (this.closedTabs.length > MAX_OPENED_TABS)
 							this.closedTabs.pop();
 					}
 				});
@@ -234,6 +259,7 @@
 					if (this.activeTab !== currentTab)
 						this.selectTab(currentTab, true);
 				}
+				this._resortTabs();
 				this.storeTabs();
 			},
 			removeTab(tabIndex) {
@@ -241,16 +267,18 @@
 				let parent = this.tabs.find(t => t.url === currentTab.parentUrl);
 				if (parent)
 					this.selectTab(parent, true);
-				else if (tabIndex > 0)
-					this.selectTab(this.tabs[tabIndex - 1], true);
-				else if (this.tabs.length > 1)
-					this.selectTab(this.tabs[tabIndex + 1], true);
-				else
-					this.selectHome(true);
+				if (this.isTabActive(currentTab)) {
+					if (tabIndex > 0)
+						this.selectTab(this.tabs[tabIndex - 1], true);
+					else if (this.tabs.length > 1)
+						this.selectTab(this.tabs[tabIndex + 1], true);
+					else
+						this.selectHome(true);
+				}
 				let rt = this.tabs.splice(tabIndex, 1);
 				if (rt.length) {
 					this.closedTabs.unshift(rt[0]);
-					if (this.closedTabs.length > 10)
+					if (this.closedTabs.length > MAX_OPENED_TABS)
 						this.closedTabs.pop();
 				}
 				this._resortTabs();
@@ -268,7 +296,8 @@
 					keys.forEach(f => window.localStorage.removeItem(f));
 			},
 			storeTabs() {
-				var mapTab = (t) => { return { title: t.title, url: t.url, query: t.query || '', parentUrl: t.parentUrl }; };
+				this.maxUsed = Math.max(...this.tabs.map(t => t.cnt));
+				var mapTab = (t) => { return { title: t.title, url: t.url, cnt: t.cnt, query: t.query || '', parentUrl: t.parentUrl }; };
 				let ix = this.tabs.indexOf(this.activeTab);
 				let tabs = JSON.stringify({
 					index: ix,
@@ -291,7 +320,7 @@
 						let loaded = ix === i;
 						if (loaded)
 							this.navigatingUrl = t.url;
-						this.tabs.push({ title: t.title, url: t.url, query: t.query, cnt: t.cnt, o: i + 1, loaded, key: tabKey++, root: null, parentUrl: t.parentUrl, reload: 0, debug: false });
+						this.tabs.push({ title: t.title, url: t.url, query: t.query, cnt: t.cnt || 0, o: i + 1, loaded, key: tabKey++, root: null, parentUrl: t.parentUrl, reload: 0, debug: false });
 					}
 					for (let i = 0; i < elems.closedTabs.length; i++) {
 						let t = elems.closedTabs[i];
@@ -303,6 +332,7 @@
 						this.selectHome(true);
 				} catch (err) {
 				}
+				this.maxUsed = Math.max(...this.tabs.map(t => t.cnt));
 			},
 			toggleTabPopup() {
 				eventBus.$emit('closeAllPopups');
@@ -325,7 +355,6 @@
 				style.top = (ev.clientY - br.top) + 'px';
 				style.left = lp + 'px';
 				menu.classList.add('show');
-				//console.dir(this.contextTabKey);
 			},
 			popupClose() {
 				let t = this.tabs.find(t => t.key === this.contextTabKey);
@@ -353,32 +382,8 @@
 				let mt = this.movedTab;
 				return mt && mt.tab === t;
 			},
-			orderedTabs(x) {
-				if (!this.tabs.length) return [];
-				let otabs = this.tabs.map((t, ix) => ({
-					tab: t,
-					ref: this.$refs.tab[ix], w: 0,
-				}));
-				otabs.pointTab = -1;
-				otabs.currentTab = -1;
-				let hcr = this.$refs.home.getBoundingClientRect();
-				otabs.left = hcr.right;
-				let l = hcr.right;
-				for (let i = 0; i < otabs.length; i++) {
-					let t = otabs[i];
-					if (t.tab === this.movedTab.tab)
-						otabs.currentTab = i;
-					let cr = t.ref.getBoundingClientRect();
-					t.w = cr.width;
-					let ptIn = x >= l && x <= l + cr.width;
-					if (ptIn) {
-						//console.log('pt tab:', i, x, l, l + cr.width);
-						otabs.pointTab = i;
-					}
-					l += cr.width;
-				}
-				otabs.isEmpty = otabs.pointTab < 0 || otabs.pointTab === otabs.currentTab;
-				return otabs;
+			willClose(t) {
+				return this.tabs.length >= MAX_OPENED_TABS && t.cnt === this.maxUsed;
 			},
 			pointerDown(ev, t) {
 				let li = getClosestLi(ev)
@@ -386,33 +391,13 @@
 				ev.target.setPointerCapture(ev.pointerId);
 				let cr = li.getBoundingClientRect();
 				this.movedTab = { tab: t, x: ev.x - cr.left, l: cr.left, pos: 0 };
-				console.log(`down. l:${this.movedTab.l}, x:${this.movedTab.x}, pos:${this.movedTab.pos}`);
+				this._dragContext = { tabs: [], currentTab: -1, pointTab: -1, left: 0 };
 			},
-			_swapOrderedTabs(ordered, x) {
-				let tab1 = ordered[ordered.currentTab];
-				let tab2 = ordered[ordered.pointTab];
-				if (tab1 === tab2) return;
-				let tmp = tab1.tab.o;
-				tab1.tab.o = tab2.tab.o;
-				tab2.tab.o = tmp;
-				let l = ordered.left;
-				console.log('source', ordered.map(t => t.tab.o + ':' + t.w.toFixed()).join(','));
-				let neo = ordered.toSorted((a, b) => a.tab.o - b.tab.o);
-				console.log('otabs', neo.map(t => t.tab.o + ':' + t.w.toFixed()).join(','));
-				let dbg = [];
-				for (let i = 0; i < neo.length; i++) {
-					let t = neo[i];
-					dbg.push(t.w.toFixed());	
-					if (l + t.w > x) {
-						// TODO: как-то тут более точно определить попадание
-						//ordered.pointTab = i;
-						console.log('swap returns ix:', i, 'l:', l, 'x', x);
-						console.log(dbg.join(','));
-						return l;
-					}
-					l += t.w;
-				}
-				return l; // right panel
+			pointerUp(ev, t) {
+				ev.target.releasePointerCapture(ev.pointerId);
+				this.movedTab = null;
+				this._dragContext = null;
+				this._resortTabs();
 			},
 			pointerMove(ev, t) {
 				let mt = this.movedTab
@@ -425,26 +410,94 @@
 				if (!li)
 					return;
 				let cr = li.getBoundingClientRect();
-				let hw = cr.width / 2;
+				let hw = cr.width / 4;
 
 				if (Math.abs(offset) < hw)
 					return;
 
-				let ordered = this.orderedTabs(ev.x - mt.x + hw);
-				if (ordered.isEmpty || ordered.dw < hw)
+				this._createOrderedTabs();
+
+				let testTab = { l: ev.x - mt.x, r: ev.x - mt.x + cr.width };
+
+				if (!this._testOrderedTabs(testTab))
 					return;
-				console.dir(ordered);
-				console.log('calc point', ordered.dw);
-				let nl = this._swapOrderedTabs(ordered, ev.x - mt.x + hw);
-				console.log('set nl:', nl, 'pos:', mt.pos);
-				mt.l = nl;
+
+				let nl = this._swapOrderedTabs(testTab);
+				if (!nl) return;
+				//console.log('set nl:', nl.l, 'i:', nl.i);
+				mt.l = nl.l;
 				offset = ev.x - mt.l - mt.x;
 				mt.pos = offset;
 			},
-			pointerUp(ev, t) {
-				ev.target.releasePointerCapture(ev.pointerId);
-				this.movedTab = null;
-				this._resortTabs();
+			_createOrderedTabs() {
+				if (!this._dragContext) return;
+				if (this._dragContext.tabs.length) return;
+				if (!this.tabs.length) return;
+
+				let findAttr = (t) => {
+					return this.$refs.tab.find(el => el.getAttribute('tab-key') == t.key);
+				};
+
+				let otabs = this.tabs.map((t, ix) => ({
+					tab: t,
+					ref: findAttr(t), w: 0,
+				}));
+				let hcr = this.$refs.home.getBoundingClientRect();
+				this._dragContext.left = hcr.right;
+				let l = hcr.right;
+				for (let i = 0; i < otabs.length; i++) {
+					let t = otabs[i];
+					if (t.tab === this.movedTab.tab)
+						this._dragContext.currentTab = i;
+					let cr = t.ref.getBoundingClientRect();
+					t.w = cr.width;
+					l += t.w;
+				}
+				this._dragContext.tabs = otabs;
+				return otabs;
+			},
+			_testOrderedTabs(testTab) {
+				if (!this.movedTab) return false;
+				let otabs = this._dragContext.tabs;
+				if (!otabs || !otabs.length) return false;
+				let l = this._dragContext.left;
+				for (let i = 0; i < otabs.length; i++) {
+					let t = otabs[i];
+					if (t.tab === this.movedTab.tab)
+						this._dragContext.currentTab = i;
+					if (intersectLines(testTab, { l, r: l + t.w })) {
+						this._dragContext.pointTab = i;
+					}
+					l += t.w;
+				}
+				return this._dragContext.currentTab != -1 &&
+					this._dragContext.pointTab != -1 &&
+					this._dragContext.currentTab != this._dragContext.pointTab;
+			},
+			_swapOrderedTabs(testTab) {
+				if (!this._dragContext) return;
+				let tabs = this._dragContext.tabs;
+				if (!tabs.length) return;
+				let tab1 = tabs[this._dragContext.currentTab];
+				let tab2 = tabs[this._dragContext.pointTab];
+				if (tab1 === tab2) return;
+				if (tab1.tab.o === tab2.tab.o)
+					return;
+				let tmp = tab1.tab.o;
+				tab1.tab.o = tab2.tab.o;
+				tab2.tab.o = tmp;
+				let l = this._dragContext.left;
+				let neo = tabs.toSorted((a, b) => a.tab.o - b.tab.o);
+				this._dragContext.tabs = neo;
+				for (let i = 0; i < neo.length; i++) {
+					let t = neo[i];
+					if (l >= testTab.l) { 
+						this._dragContext.pointTab = i;
+						return { l, i };
+					}
+					l += t.w;
+				}
+				return { l, i: neo.length }; 
 			},
 			popupCloseOther() {
 				if (!this.contextTabKey) return;

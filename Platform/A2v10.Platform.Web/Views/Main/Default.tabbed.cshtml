@@ -28,13 +28,11 @@
 				<span class="ico ico-home"></span>
 			</li>
 			<li v-for="t in tabs" :key="t.key" :tab-key="t.key" :title="t.title" v-on:mouseleave="t.debug = false"
-				ref="tab"
-				:class="{active: isTabActive(t), drag: isDragged(t)}" v-on:click.stop.prevent="selectTab(t, false, $event)" v-on:mouseup.middle="closeTab(t)"
+				ref="tab" :class="{active: isTabActive(t), drag: isDragged(t), willclose: willClose(t)}" v-on:click.stop.prevent="selectTab(t, false, $event)" v-on:mouseup.middle="closeTab(t)"
 					:style="{left:offsetLeft(t), order: t.o}" v-on:pointerdown="pointerDown($event, t)" v-on:pointermove="pointerMove($event, t)" v-on:pointerup="pointerUp($event,t)">
 				<span v-text="tabTitle(t)" class="tab-title"></span>
 				<span class="close ico ico-clear" v-on:click.stop.prevent="closeTab(t)"></span>
-				<span class="tab-tooltip" v-if="t.debug" v-text="t.url"></span>
-				<span v-text="t.o"></span>
+				<span class="tab-tooltip" v-if="t.debug" v-text="tabTooltip(t)"></span>
 			</li>
 		</ul>
 		<div class="mdi-tabs-menu">
