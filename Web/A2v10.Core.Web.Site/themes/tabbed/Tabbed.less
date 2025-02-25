@@ -151,8 +151,12 @@
 			&.drag {
 				z-index: 5;
 				box-shadow: 0 0 5px #777 !important;
-				border-right-color: transparent;
+				border-right-color: transparent !important;
 				text-shadow: .5px 0 0 @text-color;
+				color:var(--link);
+				.close {
+					visibility: hidden!important;
+				}
 			}
 
 			&.willclose {
