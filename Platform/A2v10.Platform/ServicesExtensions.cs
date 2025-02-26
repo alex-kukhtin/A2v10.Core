@@ -1,4 +1,4 @@
-﻿// Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2021-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Globalization;
@@ -11,6 +11,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.AspNetCore.Authentication;
 
 using A2v10.Data;
 using A2v10.Data.Interfaces;
@@ -21,13 +22,13 @@ using A2v10.ViewEngine.Xaml;
 using A2v10.ViewEngine.Html;
 
 using A2v10.Platform.Web;
-using A2v10.Module.Infrastructure;
 using A2v10.Data.Providers;
-using Microsoft.AspNetCore.Authentication;
+using A2v10.Platform;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
 public record Builders(IMvcBuilder MvcBuilder, AuthenticationBuilder AuthenticationBuilder);
+
 public static class ServicesExtensions
 {
 	public static IServiceCollection UseSqlServerStorage(this IServiceCollection services, IConfiguration configuration)
@@ -95,16 +96,25 @@ public static class ServicesExtensions
 		{
 			configuration.GetSection("application").Bind(opts);
 			opts.CookiePrefix = cookiePrefix;
-			opts.Modules = configuration.GetSection("application:modules")
-				.GetChildren().ToDictionary<IConfigurationSection, String, ModuleInfo>(
-					x => x.Key,
-					x =>
-					{
-						var mi = new ModuleInfo();
-						x.Bind(mi);
-						return mi;
-					},
-					StringComparer.InvariantCultureIgnoreCase);
+			var strModules = configuration.GetValue<String>("application:modules");
+
+			if (strModules != null)
+			{
+				opts.Modules = OptionsExtensions.ModulesFromString(strModules);
+			}
+			else
+			{
+				opts.Modules = configuration.GetSection("application:modules")
+					.GetChildren().ToDictionary<IConfigurationSection, String, ModuleInfo>(
+						x => x.Key,
+						x =>
+						{
+							var mi = new ModuleInfo();
+							x.Bind(mi);
+							return mi;
+						},
+						StringComparer.InvariantCultureIgnoreCase);
+			}
 		});
 
 		services.AddScoped<IDataService, DataService>();

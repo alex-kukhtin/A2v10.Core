@@ -91,7 +91,7 @@
 					let parentUrl = '';
 					if (this.activeTab)
 						parentUrl = this.activeTab.url || '';
-					tab = { title: u1.title, url: u1.url, query: u1.query || '', cnt: 0, o: this.tabs.length + 1, loaded: true, key: tabKey++, root: null, parentUrl: parentUrl, reload: 0, debug: false };
+					tab = { title: u1.title, url: u1.url, query: u1.query || '', cnt: 1, o: this.tabs.length + 1, loaded: true, key: tabKey++, root: null, parentUrl: parentUrl, reload: 0, debug: false };
 					this.tabs.push(tab);
 					var cti = this.closedTabs.findIndex(t => t.url === u1.url);
 					if (cti >= 0)
@@ -189,7 +189,7 @@
 			},
 			useTab(tab) {
 				this.tabs.filter(t => t != tab).forEach(t => t.cnt += 1);
-				tab.cnt = 0;
+				tab.cnt = 1;
 				this.maxUsed = Math.max(...this.tabs.map(t => t.cnt));
 			},
 			selectHome(noStore) {
@@ -315,16 +315,20 @@
 				try {
 					let elems = JSON.parse(tabs);
 					let ix = elems.index;
-					for (let i = 0; i < elems.tabs.length; i++) {
+					let len = elems.tabs.length;
+					for (let i = 0; i < len; i++) {
 						let t = elems.tabs[i];
 						let loaded = ix === i;
 						if (loaded)
 							this.navigatingUrl = t.url;
-						this.tabs.push({ title: t.title, url: t.url, query: t.query, cnt: t.cnt || 0, o: i + 1, loaded, key: tabKey++, root: null, parentUrl: t.parentUrl, reload: 0, debug: false });
+						this.tabs.push({
+							title: t.title, url: t.url, query: t.query,
+							cnt: t.cnt || len - i - 1, o: i + 1, loaded, key: tabKey++, root: null, parentUrl: t.parentUrl, reload: 0, debug: false
+						});
 					}
 					for (let i = 0; i < elems.closedTabs.length; i++) {
 						let t = elems.closedTabs[i];
-						this.closedTabs.push({ title: t.title, url: t.url, query: t.query, cnt: 0, loaded: true, key: tabKey++ });
+						this.closedTabs.push({ title: t.title, url: t.url, query: t.query, cnt: 1, loaded: true, key: tabKey++ });
 					}
 					if (ix >= 0 && ix < this.tabs.length)
 						this.activeTab = this.tabs[ix];
