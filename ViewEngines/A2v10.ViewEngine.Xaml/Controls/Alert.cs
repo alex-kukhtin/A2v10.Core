@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2018 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Alex Kukhtin. All rights reserved.
 
 
 namespace A2v10.Xaml;
@@ -60,5 +60,12 @@ public class Alert : UIElement
 		}
 		tag.RenderEnd(context);
 	}
+
+    protected override void OnEndInit()
+    {
+        base.OnEndInit();
+        if (Content != null && Content is XamlElement xaml)
+            xaml.SetParent(this);
+    }
 }
 
