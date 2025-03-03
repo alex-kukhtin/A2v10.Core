@@ -161,7 +161,7 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 
 		CheckPermissions(view);
 
-		if (view.ModelAuto != null)
+        if (view.HasMetadata)
 		{
 			var result = await _appRuntimeBuilder.RenderAsync(platformUrl, view, isReload);
 			return new DataLoadResult(result.DataModel, null, result.ActionResult);

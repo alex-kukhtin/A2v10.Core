@@ -1,0 +1,9 @@
+﻿
+1. TypeName - Singular
+3. Primary Key & Use References
+4. Analyse MutliTenant mode
+5. Edit Dialog && Save Model
+7. Data Types
+8. Generate view, template ?
+9. Все же нужен файл metadata.json с описанием отличий от стандарта
+10. 

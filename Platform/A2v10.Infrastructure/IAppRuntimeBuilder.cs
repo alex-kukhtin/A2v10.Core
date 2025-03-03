@@ -13,6 +13,7 @@ public interface IAppRuntimeResult
 	public IDataModel? DataModel { get; }
 	public String? ActionResult { get; }
 }
+
 public interface IAppRuntimeBuilder
 {
 	Boolean IsAutoSupported { get; }

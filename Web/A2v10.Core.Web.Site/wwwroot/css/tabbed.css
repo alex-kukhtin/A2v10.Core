@@ -3453,6 +3453,7 @@ table.data-grid > tbody > tr.bold > td {
   overflow: hidden;
   position: relative;
   min-height: var(--header-height);
+  min-width: fit-content;
 }
 .data-grid-container.fixed-header > .data-grid-body.fixed-header {
   margin-top: var(--header-height);

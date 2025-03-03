@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -18,6 +18,14 @@ public enum AutoRender
 public interface IModelJsonAuto
 {
 	public AutoRender Render { get; }
+}
+
+public interface IModelJsonMeta
+{
+	public String Table { get; }
+	public String Schema { get; }
+    public List<String> Hidden { get; }
+	public String Void { get; }
 }
 
 // as model.json.schema
@@ -58,8 +66,10 @@ public interface IModelBase
 	String BaseUrl { get; }
 	Int32 CommandTimeout { get; }
 	IModelJsonAuto? ModelAuto { get; }
+	IModelJsonMeta? Meta { get; }
 	ExpandoObject CreateParameters(IPlatformUrl url, Object? id, Action<ExpandoObject>? setParams = null, ParametersFlags flags = ParametersFlags.None);
 	Dictionary<String, PermissionBits>? Permissions { get; }
+	Boolean HasMetadata => ModelAuto != null || Meta != null;
 }
 
 public enum ModelBlobType

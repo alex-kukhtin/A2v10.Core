@@ -11,7 +11,7 @@ public class NullAppRuntimeBuilder : IAppRuntimeBuilder
 {
 	public bool IsAutoSupported => false;
 
-	const String THROW_MESSAGE = "Install package A2v10.AppRuntimeBuilder";
+    const String THROW_MESSAGE = "Install package A2v10.AppRuntimeBuilder";
 	public Task<IAppRuntimeResult> RenderAsync(IPlatformUrl platformUrl, IModelView view, bool isReload)
 	{
 		throw new NotImplementedException(THROW_MESSAGE);

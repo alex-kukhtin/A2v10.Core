@@ -27,6 +27,7 @@
 		<ProjectReference Include="..\..\Extensions\A2v10.Scheduling\A2v10.Scheduling.csproj" />
 		<ProjectReference Include="..\..\Messaging\A2v10.MailClient\A2v10.MailClient.csproj" />
 		<ProjectReference Include="..\..\Platform\A2v10.AppRuntimeBuilder\A2v10.AppRuntimeBuilder.csproj" />
+		<ProjectReference Include="..\..\Platform\A2v10.Metadata.SqlServer\A2v10.Metadata.SqlServer.csproj" />
 		<ProjectReference Include="..\..\Platform\A2v10.Platform\A2v10.Platform.csproj" />
 		<ProjectReference Include="..\..\ReportEngines\A2v10.ReportEngine.Pdf\A2v10.ReportEngine.Pdf.csproj" />
 		<ProjectReference Include="..\..\ViewEngines\A2v10.ViewEngine.Xaml\A2v10.ViewEngine.Xaml.csproj" />

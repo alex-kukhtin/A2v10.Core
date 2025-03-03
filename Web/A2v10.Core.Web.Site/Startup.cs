@@ -1,8 +1,9 @@
-// Copyright © 2020-2024 Oleksandr Kukhtin. All rights reserved.
+// Copyright © 2020-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System;
+using System.Dynamic;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -18,7 +19,6 @@ using A2v10.Core.Web.Site.TestServices;
 
 using A2v10.BlobStorage.Azure;
 using A2v10.BlobStorage.FileSystem;
-using System.Dynamic;
 
 namespace A2v10.Core.Web.Site;
 
@@ -55,7 +55,8 @@ public class Startup(IConfiguration configuration)
 	{
 		//!!!Before UsePlatform(). It has a default implementation.
 		//services.UseMailClient();
-		services.UseAppRuntimeBuilder();
+		//services.UseAppRuntimeBuilder();
+		services.UseAppMetdataBuilder();
 		//services.UsePermissions();
 		//services.AddScoped<IUserBannerProvider, TestBannerProvider>();
 		//services.UseLicenseManager();

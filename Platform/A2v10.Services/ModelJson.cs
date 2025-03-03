@@ -76,8 +76,9 @@ public class ModelJsonBase : IModelBase
 
     public String Path => Parent.LocalPath;
 	public String BaseUrl => Parent.BaseUrl;
+    public IModelJsonMeta? Meta => Parent.Meta;
 
-	public virtual ExpandoObject CreateParameters(IPlatformUrl url, Object? id,  Action<ExpandoObject>? setParams = null, IModelBase.ParametersFlags flags = IModelBase.ParametersFlags.None)
+    public virtual ExpandoObject CreateParameters(IPlatformUrl url, Object? id,  Action<ExpandoObject>? setParams = null, IModelBase.ParametersFlags flags = IModelBase.ParametersFlags.None)
 	{
 		// model.json, query, id, system
 		var eo = new ExpandoObject();
@@ -404,6 +405,22 @@ public class ModelJsonReport : ModelJsonBase, IModelReport
 	}
 }
 
+public class DatabaseMeta : IModelJsonMeta
+{
+	public String Table { get; set; } = default!;
+	public List<String> Hidden { get; } = [];
+
+    public String Void { get; } = "Void";
+
+    public String Schema => _parent?.Schema ?? throw new InvalidOperationException("schema is null");
+
+	private ModelJson? _parent;
+	public void SetParent(ModelJson? parent)
+	{
+		_parent = parent;	
+	}
+}
+
 public class ModelJson
 {
 	private String? _localPath;
@@ -415,7 +432,8 @@ public class ModelJson
 	#region JSON
 	public String? Source { get; init; }
 	public String? Schema { get; init; }
-	public String? Model { get; init; }
+    public DatabaseMeta? Meta { get; init; }
+    public String? Model { get; init; }
 	public List<String>? Roles { get; init; }
 
 	public Dictionary<String, ModelJsonView> Actions { get; init; } = new(StringComparer.OrdinalIgnoreCase);
@@ -434,7 +452,16 @@ public class ModelJson
 	{
 		if (Actions.TryGetValue(key ?? "index", out ModelJsonView? view))
 			return view;
-		return null;
+        if (Meta != null)
+        {
+			var empty = new ModelJsonView()
+			{
+				Index = key == "index",
+			};
+			empty.SetParent(this);
+			return empty;	
+        }
+        return null;
 	}
 
 	public ModelJsonView GetAction(String key)
@@ -509,6 +536,7 @@ public class ModelJson
 			c.SetParent(this);
 		foreach (var (_, r) in Reports)
 			r.SetParent(this);
+		Meta?.SetParent(this);
 	}
 }
 

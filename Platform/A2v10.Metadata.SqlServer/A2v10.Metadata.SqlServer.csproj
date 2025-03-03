@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\ViewEngines\A2v10.ViewEngine.Xaml\A2v10.ViewEngine.Xaml.csproj" />
+    <ProjectReference Include="..\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="A2v10.Data.Core" Version="10.1.7509" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.2" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+	</ItemGroup>
+
+</Project>
