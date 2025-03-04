@@ -476,7 +476,10 @@ public class ModelJson
 			return view;
 		if (Meta != null)
 		{
-			var empty = new ModelJsonDialog();
+			var empty = new ModelJsonDialog()
+			{
+				Index = key == "browse",
+			};
             empty.SetParent(this);
             return empty;
         }

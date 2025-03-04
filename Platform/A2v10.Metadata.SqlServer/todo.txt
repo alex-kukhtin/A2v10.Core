@@ -1,8 +1,8 @@
 ﻿
 3. Primary Key & Use References
 4. Analyse MutliTenant mode
-5. Edit Dialog && Save Model
 8. Generate view, template ?
 9. Все же нужен файл metadata.json с описанием отличий от стандарта ?
    Или запишем все это в БД в специальную таблицу
-10. 
+10. Save Model
+11. Browse Dialog
