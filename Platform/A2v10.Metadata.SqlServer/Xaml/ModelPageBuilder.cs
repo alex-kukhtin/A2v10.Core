@@ -34,6 +34,8 @@ internal partial class ModelPageBuilder(IServiceProvider _serviceProvider)
             page = LoadPage(modelView, rawView);
         else if (modelView.IsIndex && !modelView.IsDialog)
             page = CreateIndexPage(platformUrl, modelView, meta);
+        else if (modelView.IsDialog && platformUrl.Action == "edit")
+            page = CreateEditDialog(platformUrl, modelView, meta);
 
         if (page == null)
             throw new InvalidOperationException("Page is null");

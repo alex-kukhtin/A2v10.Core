@@ -86,3 +86,4 @@ refschema, reftable, refcolumns = string_agg(refcolumn, N',')
 from T
 group by [name], refschema, reftable;
 
+

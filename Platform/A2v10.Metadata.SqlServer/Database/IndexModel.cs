@@ -3,6 +3,8 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Text;
+using System.Collections.Generic;
 
 using A2v10.Infrastructure;
 using A2v10.Data.Interfaces;
@@ -36,19 +38,18 @@ internal partial class DatabaseModelProcessor
                 offset = Int32.Parse(qry.Get<String>("Offset") ?? "0");
             if (qry.HasProperty("PageSize"))
                 pageSize = Int32.Parse(qry.Get<String>("PageSize") ?? "20");
-            fragment = qry?.Get<String>("Fragment");
+            fragment = qry?.Get<String?>("Fragment");
             order = qry?.Get<String>("Order") ?? defaultOrder;
             dir = qry?.Get<String>("Dir")?.ToLowerInvariant() ?? DEFAULT_DIR;
         }
 
-        String RefTableFields()
-        {
-            return String.Empty;
-        }
+        var refFields = meta.RefFields(viewMeta);
 
-        String RefInsertFields() { 
-            return String.Empty; 
-        }
+        var sqlOrder = $"a.[{order}]";
+        var sortColumn = refFields.FirstOrDefault(c => c.Column.Name == order);
+
+        if (sortColumn.Column != null)
+            sqlOrder = $"r{sortColumn.Index}.[Name]";
 
         String ParametersCondition() { 
             return $"a.[{viewMeta.Void}] = 0"; 
@@ -56,11 +57,14 @@ internal partial class DatabaseModelProcessor
 
         String WhereCondition()
         {
-            return String.Empty;
+            if (String.IsNullOrEmpty(fragment))
+                return String.Empty;
+            var searchable =
+                meta.RealColumns(viewMeta).Where(c => c.IsSearchable).Select(c => $"a.[{c.Name}] like @fr")
+                .Union(refFields.Select(c => $"r{c.Index}.[Name] like @fr"));
+                
+            return $"and (@fr is null or {String.Join(" or ", searchable)})";
         }
-
-        String SelectFieldsAll(TableMetadata meta, String alias) =>
-            String.Join(' ', meta.RealColumns(viewMeta).Select(f => $"{f.SqlFieldName(alias)},"));
 
         var sqlString = $"""
         set nocount on;
@@ -69,21 +73,16 @@ internal partial class DatabaseModelProcessor
         set @Dir = lower(@Dir);
         
         declare @fr nvarchar(255) = N'%' + @Fragment + N'%';
-        
-        declare @tmp table(Id bigint, rowno int identity(1, 1), {RefTableFields()} rowcnt int);
-        insert into @tmp(Id, {RefInsertFields()} rowcnt)
-        select a.Id, {RefInsertFields()} count(*) over() 
+                
+        select [{meta.Table}!{meta.ModelType}!Array] = null,
+            {String.Join(",", meta.SelectFieldsAll("a", viewMeta, refFields))},
+            [!!RowCount]  = count(*) over()        
         from {meta.SqlTableName} a
+        {RefTableJoins(refFields)}
         where {ParametersCondition()} {WhereCondition()}
-        order by a.[{order}] {dir}
+        order by {sqlOrder} {dir}
         offset @Offset rows fetch next @PageSize rows only option (recompile);
         
-        select [{meta.Table}!{meta.ModelType}!Array] = null,
-            {SelectFieldsAll(meta, "a")}
-            [!!RowCount]  = t.rowcnt        
-        from @tmp t inner join {meta.SqlTableName} a on t.[Id] = a.[Id]
-        order by rowno;
-
         -- system data
         select [!$System!] = null,
         	[!{meta.Table}!PageSize] = @PageSize,  [!{meta.Table}!Offset] = @Offset,

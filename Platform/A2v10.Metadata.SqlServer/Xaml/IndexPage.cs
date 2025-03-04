@@ -20,10 +20,22 @@ internal partial class ModelPageBuilder
                 {
                     Header = $"@[{c.Name}]"
                 };
+                dgc.Role = c.ColumnDataType switch
+                {
+                    ColumnDataType.BigInt => c.IsReference ? ColumnRole.Default :  ColumnRole.Id,
+                    ColumnDataType.Date or ColumnDataType.DateTime => ColumnRole.Date,
+                    ColumnDataType.Currency or ColumnDataType.Float => ColumnRole.Number,
+                    ColumnDataType.Boolean => ColumnRole.CheckBox,
+                    _ => ColumnRole.Default
+                };
                 if (c.MaxLength >= 255)
                     dgc.LineClamp = 2;
                 if (c.IsReference)
-                    ; //dgc.Content = "Reference";
+                {
+                    dgc.SortProperty = c.Name;
+                    var sf = c.IsParent ? "Elem" : string.Empty;
+                    dgc.BindImpl.SetBinding(nameof(DataGridColumn.Content), new Bind($"{c.Name}{sf}.Name"));
+                }
                 else
                     dgc.BindImpl.SetBinding(nameof(DataGridColumn.Content), new Bind(c.Name));
                 columns.Add(dgc);
@@ -33,9 +45,17 @@ internal partial class ModelPageBuilder
 
         Button EditButton() 
         {
+            var cmd = new BindCmd()
+            {
+                Command = CommandType.Dialog,
+                Action = DialogAction.EditSelected,
+                Url = $"/{platformUrl.LocalPath}/edit"
+            };
+            cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind("Parent.ItemsSource"));
             return new Button()
             {
-                Icon = Icon.Edit
+                Icon = Icon.Edit,
+                Bindings = b => b.SetBinding(nameof(Button.Command), cmd)
             };
         }
 
@@ -44,7 +64,16 @@ internal partial class ModelPageBuilder
             CollectionView = new CollectionView()
             {
                 RunAt = RunMode.ServerUrl,
-                Bindings = b => b.SetBinding(nameof(CollectionView.ItemsSource), new Bind(table))
+                Bindings = b => b.SetBinding(nameof(CollectionView.ItemsSource), new Bind(table)),
+                Filter = new FilterDescription()
+                {
+                    Items = [
+                        new FilterItem() {
+                            Property  = "Fragment",
+                            DataType = DataType.String
+                        }
+                    ]
+                }
             },
             Children = [
                 new Grid(_xamlSericeProvider)
@@ -63,6 +92,12 @@ internal partial class ModelPageBuilder
                                 new Button() {
                                     Icon = Icon.Reload,
                                     Bindings = b => b.SetBinding(nameof(Button.Command), new BindCmd() {Command = CommandType.Reload})
+                                },
+                                new ToolbarAligner(),
+                                new TextBox() {
+                                    Placeholder = "@[Search]",
+                                    Width = Length.FromString("20rem"),
+                                    Bindings = b => b.SetBinding(nameof(TextBox.Value), new Bind("Parent.Filter.Fragment"))
                                 }
                             ]
                         },

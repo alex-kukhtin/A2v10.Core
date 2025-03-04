@@ -474,7 +474,13 @@ public class ModelJson
 	{
 		if (Dialogs.TryGetValue(key, out ModelJsonDialog? view))
 			return view;
-		throw new ModelJsonException($"Dialog: {key} not found");
+		if (Meta != null)
+		{
+			var empty = new ModelJsonDialog();
+            empty.SetParent(this);
+            return empty;
+        }
+        throw new ModelJsonException($"Dialog: {key} not found");
 	}
 
 	public ModelJsonReport GetReport(String key)
