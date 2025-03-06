@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System.Text;
 
@@ -20,10 +20,13 @@ public class ModelJsonBase : IModelBase
 	public String? Model { get; init; }
 	public ModelJsonAuto? Auto { get; init; }
 	IModelJsonAuto? IModelBase.ModelAuto => Auto;
-	public Boolean Signal { get; init; }
+    IModelBaseMeta? IModelBase.Meta => Meta;
+    public Boolean Signal { get; init; }
 	public List<String>? Roles { get; init; }	
 	public Int32 CommandTimeout { get; init; }
 
+    public ModelBaseMeta? Meta { get; init; }
+    
 	public ExpandoObject? Parameters { get; set; }
 	public Dictionary<String, PermissionBits>? Permissions { get; init; }
 	internal virtual void SetParent(ModelJson rm)
@@ -76,7 +79,6 @@ public class ModelJsonBase : IModelBase
 
     public String Path => Parent.LocalPath;
 	public String BaseUrl => Parent.BaseUrl;
-    public IModelJsonMeta? Meta => Parent.Meta;
 
     public virtual ExpandoObject CreateParameters(IPlatformUrl url, Object? id,  Action<ExpandoObject>? setParams = null, IModelBase.ParametersFlags flags = IModelBase.ParametersFlags.None)
 	{
@@ -129,6 +131,7 @@ public class ModelJsonViewBase : ModelJsonBase
 	{
 		base.SetParent(rm);
 		Merge?.SetParent(rm);
+		Meta?.SetParent(rm.Meta);	
 	}
 }
 
@@ -409,8 +412,7 @@ public class DatabaseMeta : IModelJsonMeta
 {
 	public String Table { get; set; } = default!;
 	public List<String> Hidden { get; } = [];
-
-    public String Void { get; } = "Void";
+    public String Void { get; set; } = "Void";
 
     public String Schema => _parent?.Schema ?? throw new InvalidOperationException("schema is null");
 
@@ -419,6 +421,24 @@ public class DatabaseMeta : IModelJsonMeta
 	{
 		_parent = parent;	
 	}
+}
+
+public class ModelBaseMeta : IModelBaseMeta
+{
+    public String? Columns { get; init; }
+    public String? Table { get; init; }
+    public String? Schema { get; init; }
+    public MetaEditMode Edit { get; init; }
+
+    IModelJsonMeta? _parent;
+    public void SetParent(IModelJsonMeta? parent)
+    {
+        _parent = parent;
+    }
+	public String CurrentTable => Table ?? _parent?.Table
+		?? throw new InvalidOperationException("Table is null");
+    public String CurrentSchema => Schema ?? _parent?.Schema
+        ?? throw new InvalidOperationException("Schema is null");
 }
 
 public class ModelJson
@@ -457,6 +477,7 @@ public class ModelJson
 			var empty = new ModelJsonView()
 			{
 				Index = key == "index",
+				Meta = new ModelBaseMeta()
 			};
 			empty.SetParent(this);
 			return empty;	
@@ -479,6 +500,7 @@ public class ModelJson
 			var empty = new ModelJsonDialog()
 			{
 				Index = key == "browse",
+				Meta = new ModelBaseMeta()
 			};
             empty.SetParent(this);
             return empty;

@@ -1,8 +1,7 @@
 ﻿
-3. Primary Key & Use References
 4. Analyse MutliTenant mode
 8. Generate view, template ?
-9. Все же нужен файл metadata.json с описанием отличий от стандарта ?
-   Или запишем все это в БД в специальную таблицу
 10. Save Model
-11. Browse Dialog
+13. Не сортирует по битовым полям (это где-то в Xaml)
+14. Не работает ParentElem в Edit.
+15. Global Hidden columns root.Global

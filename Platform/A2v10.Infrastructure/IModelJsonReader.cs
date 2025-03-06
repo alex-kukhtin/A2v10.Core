@@ -28,6 +28,21 @@ public interface IModelJsonMeta
 	public String Void { get; }
 }
 
+public enum MetaEditMode
+{
+	Dialog,
+	Page
+}
+public interface IModelBaseMeta
+{
+    public String? Table { get; }
+    public String? Schema { get; }
+    public String? Columns { get; }
+	public MetaEditMode Edit { get; }	
+    public String CurrentTable { get; }
+    public String CurrentSchema { get; }
+}
+
 // as model.json.schema
 public enum PermissionBits
 {
@@ -66,7 +81,7 @@ public interface IModelBase
 	String BaseUrl { get; }
 	Int32 CommandTimeout { get; }
 	IModelJsonAuto? ModelAuto { get; }
-	IModelJsonMeta? Meta { get; }
+    IModelBaseMeta? Meta { get; }
 	ExpandoObject CreateParameters(IPlatformUrl url, Object? id, Action<ExpandoObject>? setParams = null, ParametersFlags flags = ParametersFlags.None);
 	Dictionary<String, PermissionBits>? Permissions { get; }
 	Boolean HasMetadata => ModelAuto != null || Meta != null;

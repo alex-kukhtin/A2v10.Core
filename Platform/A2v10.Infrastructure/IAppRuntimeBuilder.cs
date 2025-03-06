@@ -13,11 +13,15 @@ public interface IAppRuntimeResult
 	public IDataModel? DataModel { get; }
 	public String? ActionResult { get; }
 }
+public record EndpointTableInfo(String? DataSoruce, String Schema, String Table);
 
 public interface IAppRuntimeBuilder
 {
 	Boolean IsAutoSupported { get; }
-	Task<IAppRuntimeResult> RenderAsync(IPlatformUrl platformUrl, IModelView view, Boolean isReload);
+    Boolean IsMetaSupported { get; }
+
+	Task<EndpointTableInfo> ModelInfoFromPathAsync(String path);
+    Task<IAppRuntimeResult> RenderAsync(IPlatformUrl platformUrl, IModelView view, Boolean isReload);
 	Task<ExpandoObject> SaveAsync(IPlatformUrl platformUrl, IModelView view, ExpandoObject data, ExpandoObject savePrms);
 	Task<IDataModel> ExecuteCommandAsync(IModelCommand command, ExpandoObject parameters);
 	Task DbRemoveAsync(IPlatformUrl platformUrl, IModelView view, String? propName, ExpandoObject execPrms);

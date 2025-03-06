@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using A2v10.Infrastructure;
+using A2v10.Xaml;
 
 namespace A2v10.Metadata.SqlServer;
 
@@ -26,6 +27,8 @@ public record ColumnReference
     public String RefTable { get; init; } = default!;
     public String RefColumn { get; init; } = default!;
     public String ModelType => $"TR{RefTable.Singular()}";
+    public TableMetadata RefMetadata { get; set; } = new();
+    public String EndpointPath { get; set; } = default!;
 }
 public record TableColumn
 {
@@ -44,8 +47,9 @@ public record TableColumn
     internal ColumnDataType ColumnDataType => DataType switch
         {
             "bigint" => ColumnDataType.BigInt,
-            "Int" => ColumnDataType.Int,
+            "int" => ColumnDataType.Int,
             "nvarchar" => ColumnDataType.String,
+            "nchar" => ColumnDataType.String,
             "date" => ColumnDataType.Date,
             "datetime" => ColumnDataType.DateTime,
             "money" => ColumnDataType.Currency,
@@ -55,32 +59,78 @@ public record TableColumn
             _ => throw new InvalidOperationException($"Unknown DataType: {DataType}")
         };
 }
+
+public record ViewColumn
+{
+    public TableColumn Column { get; init; } = default!;
+    public String Name { get; set; } = default!;
+    public String Header { get; init; } = default!;
+
+    public static ViewColumn FromString(String def)
+    {
+        if (String.IsNullOrWhiteSpace(def))
+            throw new InvalidOperationException("empty column ");
+        var spl = def.Trim().Split(':');
+        var name = spl[0];
+        if (String.IsNullOrEmpty(name))
+            throw new InvalidOperationException("invalid column name");
+        var header = spl.Length > 1 ? spl[1] : $"@[{name}]";
+        return new ViewColumn()
+        {
+            Name = name,
+            Header = header
+        };
+    }
+}
+
+public record TableDefinition
+{
+    public String? Void { get; init; }
+    public String? Name { get; init; }
+    public String? Id { get; init; }
+    public String? IsFolder { get; init; }
+    public String? HiddenColumns { get; init; }
+
+    public String VoidField => Void ?? "Void";
+    public String NameField => Name ?? "Name";
+    public String IdField => Id ?? "Id";
+    public String IsFolderField => IsFolder ?? "IsFolder";
+}
 public record TableMetadata
 {
     public List<TableColumn> Columns { get; } = [];
 
     public String Schema { get; init; } = default!;
     public String Table { get; init; } = default!;
-
+    public TableDefinition Definition { get; set; } = default!;
     public String SqlTableName => $"{Schema}.[{Table}]";
     public String ModelType => $"T{Table.Singular()}";
 
-    internal IEnumerable<TableColumn> RealColumns(IModelJsonMeta meta)
+    internal IEnumerable<ViewColumn> EditColumns(IModelBaseMeta meta)
     {
-        return Columns.Where(c => c.Name != meta.Void && !meta.Hidden.Any(h => h == c.Name));
+        return IndexColumns(meta);
     }
 
-    internal List<(TableColumn Column, Int32 Index)> RefFields(IModelJsonMeta meta)
+    internal IEnumerable<ViewColumn> IndexColumns(IModelBaseMeta meta)
+    {
+        var tableColumns = Columns.Select(c => new ViewColumn() { Column = c, Name = c.Name, Header = $"@[{c.Name}]" });
+        if (String.IsNullOrEmpty(meta.Columns))
+            return tableColumns;
+        var viewColumns = meta.Columns.Split(',').Select(c => ViewColumn.FromString(c));
+        return viewColumns.Join(tableColumns, v => v.Name, t => t.Name, (v, t) => new ViewColumn() {Name = t.Name, Header = v.Header, Column = t.Column });
+    }
+
+    internal List<(TableColumn Column, Int32 Index)> RefFields()
     {
         var index = 0;
-        return RealColumns(meta).Where(c => c.IsReference).Select(c => (Column: c, Index: ++index)).ToList();
+        return Columns.Where(c => c.IsReference).Select(c => (Column: c, Index: ++index)).ToList();
     }
 
-    internal IEnumerable<String> SelectFieldsAll(String alias, IModelJsonMeta meta, List<(TableColumn Column, Int32 Index)> refFields)
+    internal IEnumerable<String> SelectFieldsAll(String alias, List<(TableColumn Column, Int32 Index)> refFields)
     {
-        foreach (var c in RealColumns(meta).Where(c => !c.IsReference))
-            if (c.Name == "Id")
-                yield return $"[Id!!Id] = {alias}.[{c.Name}]";
+        foreach (var c in Columns.Where(c => !c.IsReference))
+            if (c.Name == Definition.IdField)
+                yield return $"[{c.Name}!!Id] = {alias}.[{c.Name}]";
             else
                 yield return c.IsParent ? $"ParentElem = {alias}.[{c.Name}]" : $"{alias}.[{c.Name}]";
         foreach (var c in refFields)
@@ -90,7 +140,28 @@ public record TableMetadata
             var sf = String.Empty;
             if (col.IsParent)
                 sf = "Elem";
-            yield return $"[{col.Name}{sf}.Id!{colRef.ModelType}!Id] = r{c.Index}.[Id], [{col.Name}{sf}.Name!{colRef.ModelType}!Name] = r{c.Index}.[Name]";
+            var nameField = colRef.RefMetadata.Definition.NameField;
+            var idField = colRef.RefMetadata.Definition.IdField;
+            yield return $"[{col.Name}{sf}.{idField}!{colRef.ModelType}!Id] = r{c.Index}.[{idField}], [{col.Name}{sf}.Name!{colRef.ModelType}!Name] = r{c.Index}.[{nameField}]";
         }
+    }
+
+    internal void OnEndInit()
+    {
+        Definition ??= new();
+        if (Definition.HiddenColumns != null)
+        {
+            foreach (var hc in Definition.HiddenColumns.Split(',')) {
+                var fc = Columns.FirstOrDefault(x => x.Name == hc);
+                if (fc != null)
+                    Columns.Remove(fc);
+            }
+        }
+        var vf = Columns.FirstOrDefault(x => x.Name == Definition.VoidField);
+        if (vf != null)
+            Columns.Remove(vf);
+        var ff = Columns.FirstOrDefault(x => x.Name == Definition.IsFolderField);
+        if (ff != null)
+            Columns.Remove(ff);
     }
 }

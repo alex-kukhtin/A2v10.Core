@@ -12,7 +12,7 @@ internal partial class ModelPageBuilder
     {
         var viewMeta = modelView.Meta ??
             throw new InvalidOperationException("Meta is null");
-        var elemName = viewMeta.Table.Singular();
+        var elemName = viewMeta.CurrentTable.Singular();
 
 
         Button SelectButton() 
@@ -30,26 +30,26 @@ internal partial class ModelPageBuilder
         DataGridColumnCollection DataGridColumns()
         {
             var columns = new DataGridColumnCollection();
-            foreach (var c in meta.RealColumns(viewMeta))
+            foreach (var c in meta.IndexColumns(viewMeta))
             {
                 var dgc = new DataGridColumn()
                 {
-                    Header = $"@[{c.Name}]"
+                    Header = c.Header
                 };
-                dgc.Role = c.ColumnDataType switch
+                dgc.Role = c.Column.ColumnDataType switch
                 {
-                    ColumnDataType.BigInt => c.IsReference ? ColumnRole.Default : ColumnRole.Id,
+                    ColumnDataType.BigInt => c.Column.IsReference ? ColumnRole.Default : ColumnRole.Id,
                     ColumnDataType.Date or ColumnDataType.DateTime => ColumnRole.Date,
                     ColumnDataType.Currency or ColumnDataType.Float => ColumnRole.Number,
                     ColumnDataType.Boolean => ColumnRole.CheckBox,
                     _ => ColumnRole.Default
                 };
-                if (c.MaxLength >= 255)
+                if (c.Column.MaxLength >= 255)
                     dgc.LineClamp = 2;
-                if (c.IsReference)
+                if (c.Column.IsReference)
                 {
                     dgc.SortProperty = c.Name;
-                    var sf = c.IsParent ? "Elem" : string.Empty;
+                    var sf = c.Column.IsParent ? "Elem" : string.Empty;
                     dgc.BindImpl.SetBinding(nameof(DataGridColumn.Content), new Bind($"{c.Name}{sf}.Name"));
                 }
                 else
@@ -62,6 +62,8 @@ internal partial class ModelPageBuilder
         return new Dialog()
         {
             Title = $"@[{meta.Table.Singular()}.Browse]",
+            Width = Length.FromString("60rem"),
+            Overflow = true,
             CollectionView = new CollectionView()
             {
                 RunAt = RunMode.Server,
@@ -102,7 +104,13 @@ internal partial class ModelPageBuilder
                         new DataGrid() {
                             FixedHeader = true,
                             Sort = true,
-                            Bindings = b => b.SetBinding(nameof(DataGrid.ItemsSource), new Bind("Parent.ItemsSource")),
+                            Height = Length.FromString("40rem"),
+                            Bindings = b => {
+                                var selectCmd = new BindCmd() {Command = CommandType.Select};
+                                selectCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind("Parent.ItemsSource"));
+                                b.SetBinding(nameof(DataGrid.ItemsSource), new Bind("Parent.ItemsSource"));
+                                b.SetBinding(nameof(DataGrid.DoubleClick), selectCmd);
+                            },
                             Columns = DataGridColumns()
                         },
                         new Pager() {

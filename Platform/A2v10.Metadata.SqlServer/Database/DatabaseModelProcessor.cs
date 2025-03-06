@@ -3,13 +3,13 @@
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
-using System.Security.Cryptography;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 using A2v10.Data.Core.Extensions;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
-using A2v10.Xaml;
 
 namespace A2v10.Metadata.SqlServer;
 
@@ -20,6 +20,14 @@ internal partial class DatabaseModelProcessor(DatabaseMetadataProvider _metadata
         if (view.Meta == null)
            throw new InvalidOperationException("Meta is null");
         var meta = await _metadataProvider.GetSchemaAsync(view.Meta, view.DataSource);
+
+        foreach (var c in meta.Columns.Where(c => c.IsReference))
+        {
+            var refTable = c.Reference!;
+            refTable.RefMetadata = await _metadataProvider.GetSchemaAsync(view.DataSource, refTable.RefSchema, refTable.RefTable);
+            refTable.EndpointPath = _metadataProvider.GetOrAddEndpointPath(view.DataSource, refTable.RefSchema, refTable.RefTable);
+        }
+
         var dm = view.IsIndex ? await LoadIndexModelAsync(meta, platformUrl, view) : await LoadPlainModelAsync(meta, platformUrl, view);
         return (dm, meta);
     }
@@ -38,7 +46,7 @@ internal partial class DatabaseModelProcessor(DatabaseMetadataProvider _metadata
         {
             var rc = col.Column.Reference!;
             sb.AppendLine($"""
-                   left join {rc.RefSchema}.[{rc.RefTable}] r{col.Index} on a.[{col.Column.Name}] = r{col.Index}.[Id]
+                   left join {rc.RefSchema}.[{rc.RefTable}] r{col.Index} on a.[{col.Column.Name}] = r{col.Index}.[{rc.RefMetadata.Definition.IdField}]
                  """);
         }
         return sb.ToString();

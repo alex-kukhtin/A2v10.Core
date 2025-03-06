@@ -10,9 +10,16 @@ namespace A2v10.Infrastructure;
 public class NullAppRuntimeBuilder : IAppRuntimeBuilder
 {
 	public bool IsAutoSupported => false;
+    public Boolean IsMetaSupported => false;
 
-    const String THROW_MESSAGE = "Install package A2v10.AppRuntimeBuilder";
-	public Task<IAppRuntimeResult> RenderAsync(IPlatformUrl platformUrl, IModelView view, bool isReload)
+    const String THROW_MESSAGE = "Install package A2v10.AppRuntimeBuilder or A2v10.Metadata.SqlServer";
+
+    public Task<EndpointTableInfo> ModelInfoFromPathAsync(String path)
+    {
+        throw new NotImplementedException(THROW_MESSAGE);
+    }
+
+    public Task<IAppRuntimeResult> RenderAsync(IPlatformUrl platformUrl, IModelView view, bool isReload)
 	{
 		throw new NotImplementedException(THROW_MESSAGE);
 	}

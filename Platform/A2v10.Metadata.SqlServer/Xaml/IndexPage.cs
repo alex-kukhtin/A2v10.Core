@@ -2,6 +2,7 @@
 
 using A2v10.Infrastructure;
 using A2v10.Xaml;
+using System;
 
 namespace A2v10.Metadata.SqlServer;
 
@@ -9,31 +10,33 @@ internal partial class ModelPageBuilder
 {
     UIElement CreateIndexPage(IPlatformUrl platformUrl, IModelView modelView, TableMetadata meta)
     {
-        var table = modelView.Meta!.Table;
+        var viewMeta = modelView.Meta
+             ?? throw new InvalidOperationException("modelView.Meta is null");
+        var table = viewMeta.CurrentTable;
 
         DataGridColumnCollection DataGridColumns()
         {
             var columns = new DataGridColumnCollection();
-            foreach (var c in meta.RealColumns(modelView.Meta))
+            foreach (var c in meta.IndexColumns(modelView.Meta))
             {
                 var dgc = new DataGridColumn()
                 {
-                    Header = $"@[{c.Name}]"
+                    Header = c.Header
                 };
-                dgc.Role = c.ColumnDataType switch
+                dgc.Role = c.Column.ColumnDataType switch
                 {
-                    ColumnDataType.BigInt => c.IsReference ? ColumnRole.Default :  ColumnRole.Id,
+                    ColumnDataType.BigInt => c.Column.IsReference ? ColumnRole.Default :  ColumnRole.Id,
                     ColumnDataType.Date or ColumnDataType.DateTime => ColumnRole.Date,
                     ColumnDataType.Currency or ColumnDataType.Float => ColumnRole.Number,
                     ColumnDataType.Boolean => ColumnRole.CheckBox,
                     _ => ColumnRole.Default
                 };
-                if (c.MaxLength >= 255)
+                if (c.Column.MaxLength >= 255)
                     dgc.LineClamp = 2;
-                if (c.IsReference)
+                if (c.Column.IsReference)
                 {
                     dgc.SortProperty = c.Name;
-                    var sf = c.IsParent ? "Elem" : string.Empty;
+                    var sf = c.Column.IsParent ? "Elem" : string.Empty;
                     dgc.BindImpl.SetBinding(nameof(DataGridColumn.Content), new Bind($"{c.Name}{sf}.Name"));
                 }
                 else
@@ -45,16 +48,39 @@ internal partial class ModelPageBuilder
 
         Button EditButton() 
         {
-            var cmd = new BindCmd()
+            var cmd = viewMeta.Edit == MetaEditMode.Dialog
+            ? new BindCmd()
             {
                 Command = CommandType.Dialog,
                 Action = DialogAction.EditSelected,
+                Url = $"/{platformUrl.LocalPath}/edit"
+            }
+            : new BindCmd()
+            {
+                Command = CommandType.OpenSelected,
                 Url = $"/{platformUrl.LocalPath}/edit"
             };
             cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind("Parent.ItemsSource"));
             return new Button()
             {
                 Icon = Icon.Edit,
+                Bindings = b => b.SetBinding(nameof(Button.Command), cmd)
+            };
+        }
+
+        Button CreateButton()
+        {
+            var cmd = new BindCmd()
+            {
+                Command = CommandType.Dialog,
+                Action = DialogAction.Append,
+                Url = $"/{platformUrl.LocalPath}/edit"
+            };
+            cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind("Parent.ItemsSource"));
+            return new Button()
+            {
+                Icon = Icon.Plus,
+                Content = "@[Create]",
                 Bindings = b => b.SetBinding(nameof(Button.Command), cmd)
             };
         }
@@ -87,6 +113,7 @@ internal partial class ModelPageBuilder
                     Children = [
                         new Toolbar(_xamlSericeProvider) {
                             Children = [
+                                CreateButton(),
                                 EditButton(),
                                 new Separator(),
                                 new Button() {

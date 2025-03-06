@@ -16,14 +16,14 @@ internal partial class DatabaseModelProcessor
         var viewMeta = view.Meta ??
            throw new InvalidOperationException($"view.Meta is null");
 
-        var refFields = meta.RefFields(viewMeta);
+        var refFields = meta.RefFields();
 
         var sqlString = $"""
         set nocount on;
         set transaction isolation level read uncommitted;
         
         select [{meta.Table.Singular()}!{meta.ModelType}!Object] = null,
-            {String.Join(",", meta.SelectFieldsAll("a", viewMeta, refFields))},
+            {String.Join(",", meta.SelectFieldsAll("a", refFields))},
             [!!RowCount]  = count(*) over()        
         from {meta.SqlTableName} a
             {RefTableJoins(refFields)}

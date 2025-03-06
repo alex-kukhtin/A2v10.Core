@@ -15,7 +15,12 @@ public class AppMetadataBuilder(IServiceProvider _serviceProvider,
     private readonly DatabaseModelProcessor _dbProcessor = new DatabaseModelProcessor(_metadataProvider, _currentUser, _dbContext);
     private readonly ModelPageBuilder _modelPageBuilder = new(_serviceProvider);
     public bool IsAutoSupported => false;
+    public Boolean IsMetaSupported => true;
 
+    public Task<EndpointTableInfo> ModelInfoFromPathAsync(String path)
+    {
+        return _metadataProvider.GetModelInfoFromPathAsync(path);
+    }
     public async Task<IAppRuntimeResult> RenderAsync(IPlatformUrl platformUrl, IModelView view, bool isReload)
     {
         if (view.Meta == null)

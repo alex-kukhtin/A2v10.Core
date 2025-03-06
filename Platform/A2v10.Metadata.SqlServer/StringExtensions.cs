@@ -14,4 +14,20 @@ internal static class StringExtensions
             return src[..^1];
         return src;  
     }
+    public static String Plural(this String src)
+    {
+        if (src.EndsWith("y"))
+            return src + "ies";
+        return src + "s";
+    }
+
+    public static String SchemaToDirectory(this String schema)
+    {
+        return schema switch
+        {
+            "cat" => "catalog",
+            "doc" => "document",
+            _ => schema
+        };
+    }
 }

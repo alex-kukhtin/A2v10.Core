@@ -1,5 +1,6 @@
 ﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
 
+using DocumentFormat.OpenXml.EMMA;
 using System.Threading.Tasks;
 
 namespace A2v10.Services;
@@ -16,7 +17,22 @@ public class ModelJsonReader(IModelJsonPartProvider _partProvider, IAppRuntimeBu
 		return rm.GetAction(url.Action);
 	}
 
-	ModelJson CreateAuto(IPlatformUrl url, String? command = null)
+	async Task<ModelJson> CreateMeta(IPlatformUrl url, String? command = null)
+	{
+		var tableInfo = await _appRuntimeBuilder.ModelInfoFromPathAsync(url.LocalPath);
+        var ms = new ModelJson()
+        {
+			Schema = tableInfo.Schema,	
+			Meta = new DatabaseMeta()
+			{
+				Table = tableInfo.Table,
+			}
+        };
+        ms.OnEndInit(url);
+		return ms;
+    }
+
+    ModelJson CreateAuto(IPlatformUrl url, String? command = null)
 	{
 		var model = String.Join('.', url.LocalPath.Split('/').Select(s => s.ToPascalCase()));
 		var ms = new ModelJson()
@@ -90,6 +106,8 @@ public class ModelJsonReader(IModelJsonPartProvider _partProvider, IAppRuntimeBu
 			return ms;
 		if (_appRuntimeBuilder.IsAutoSupported)
 			return CreateAuto(url, command);
+		else if (_appRuntimeBuilder.IsMetaSupported)
+			return await CreateMeta(url, command);
 		throw new ModelJsonException($"File not found '{url.LocalPath}/model.json'");
 	}
 

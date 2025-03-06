@@ -3,8 +3,6 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Text;
-using System.Collections.Generic;
 
 using A2v10.Infrastructure;
 using A2v10.Data.Interfaces;
@@ -42,17 +40,18 @@ internal partial class DatabaseModelProcessor
             order = qry?.Get<String>("Order") ?? defaultOrder;
             dir = qry?.Get<String>("Dir")?.ToLowerInvariant() ?? DEFAULT_DIR;
         }
+        // TODO: order взять из таблицы - он попадает в SQL!
 
-        var refFields = meta.RefFields(viewMeta);
+        var refFields = meta.RefFields();
 
         var sqlOrder = $"a.[{order}]";
         var sortColumn = refFields.FirstOrDefault(c => c.Column.Name == order);
 
         if (sortColumn.Column != null)
-            sqlOrder = $"r{sortColumn.Index}.[Name]";
+            sqlOrder = $"r{sortColumn.Index}.[Name]"; // TODO: NameField
 
-        String ParametersCondition() { 
-            return $"a.[{viewMeta.Void}] = 0"; 
+        String ParametersCondition() {
+            return $"a.[{meta.Definition.VoidField}] = 0"; 
         }
 
         String WhereCondition()
@@ -60,7 +59,7 @@ internal partial class DatabaseModelProcessor
             if (String.IsNullOrEmpty(fragment))
                 return String.Empty;
             var searchable =
-                meta.RealColumns(viewMeta).Where(c => c.IsSearchable).Select(c => $"a.[{c.Name}] like @fr")
+                meta.Columns.Where(c => c.IsSearchable).Select(c => $"a.[{c.Name}] like @fr")
                 .Union(refFields.Select(c => $"r{c.Index}.[Name] like @fr"));
                 
             return $"and (@fr is null or {String.Join(" or ", searchable)})";
@@ -75,7 +74,7 @@ internal partial class DatabaseModelProcessor
         declare @fr nvarchar(255) = N'%' + @Fragment + N'%';
                 
         select [{meta.Table}!{meta.ModelType}!Array] = null,
-            {String.Join(",", meta.SelectFieldsAll("a", viewMeta, refFields))},
+            {String.Join(",", meta.SelectFieldsAll("a", refFields))},
             [!!RowCount]  = count(*) over()        
         from {meta.SqlTableName} a
         {RefTableJoins(refFields)}
