@@ -30,17 +30,21 @@ public interface IModelJsonMeta
 
 public enum MetaEditMode
 {
+	Default,
 	Dialog,
 	Page
 }
 public interface IModelBaseMeta
 {
-    public String? Table { get; }
-    public String? Schema { get; }
-    public String? Columns { get; }
-	public MetaEditMode Edit { get; }	
-    public String CurrentTable { get; }
-    public String CurrentSchema { get; }
+	public String? Table { get; }
+	public String? Schema { get; }
+	public String? Columns { get; }
+	public MetaEditMode Edit { get; }
+	public String CurrentTable { get; }
+	public String CurrentSchema { get; }
+
+	// calculated	
+	public MetaEditMode EditMode {get;}
 }
 
 // as model.json.schema

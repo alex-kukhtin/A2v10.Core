@@ -439,6 +439,20 @@ public class ModelBaseMeta : IModelBaseMeta
 		?? throw new InvalidOperationException("Table is null");
     public String CurrentSchema => Schema ?? _parent?.Schema
         ?? throw new InvalidOperationException("Schema is null");
+
+    public MetaEditMode EditMode 
+	{ 
+		get 
+		{ 
+			if (Edit != MetaEditMode.Default)
+				return Edit;
+			return CurrentSchema switch {
+				"cat" => MetaEditMode.Dialog,
+				"doc" => MetaEditMode.Page,
+				_ => throw new InvalidOperationException($"Unknonwn edit mode for {CurrentSchema}")
+			};
+		}
+	}
 }
 
 public class ModelJson

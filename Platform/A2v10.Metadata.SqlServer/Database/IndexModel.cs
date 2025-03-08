@@ -58,8 +58,8 @@ internal partial class DatabaseModelProcessor
         {
             if (String.IsNullOrEmpty(fragment))
                 return String.Empty;
-            var searchable =
-                meta.Columns.Where(c => c.IsSearchable).Select(c => $"a.[{c.Name}] like @fr")
+            var searchable = meta
+                .Columns.Where(c => c.IsSearchable).Select(c => $"a.[{c.Name}] like @fr")
                 .Union(refFields.Select(c => $"r{c.Index}.[Name] like @fr"));
                 
             return $"and (@fr is null or {String.Join(" or ", searchable)})";
