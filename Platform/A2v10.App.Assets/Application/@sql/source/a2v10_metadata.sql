@@ -1,7 +1,7 @@
 /*
 Copyright © 2025 Oleksandr Kukhtin
 
-Last updated : 03 mar 2025
+Last updated : 10 mar 2025
 module version : 8533
 */
 
@@ -12,7 +12,6 @@ go
 ------------------------------------------------
 grant execute on schema ::a2meta to public;
 go
-
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'TablesMetadata')
 create table a2meta.TablesMetadata
@@ -27,7 +26,47 @@ create table a2meta.TablesMetadata
 	constraint PK_TablesMetadata primary key([Schema], [Table])
 );
 go
-
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'TableDetails')
+create table a2meta.TableDetails
+(
+	[ParentSchema] sysname not null, 
+	[ParentTable] sysname not null,
+	[DetailsSchema] sysname not null,
+	[DetailsTable] sysname not null,
+	SameId bit not null
+		constraint DF_TableDetails_SameId default(0),
+	constraint PK_TableDetails primary key([ParentSchema], [ParentTable], [DetailsSchema], [DetailsTable])
+);
+go
+------------------------------------------------
+drop procedure if exists a2meta.[TableDetails.Merge];
+drop type if exists a2meta.[TableDetails.TableType];
+go
+------------------------------------------------
+create type a2meta.[TableDetails.TableType] as table (
+	[Schema] sysname not null,
+	[Table] sysname not null,
+	SameId bit not null
+);
+go
+------------------------------------------------
+create or alter procedure a2meta.[TableDetails.Merge]
+@ParentSchema sysname,
+@ParentTable sysname,
+@Details a2meta.[TableDetails.TableType] readonly
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+    merge a2meta.[TableDetails] as t
+    using @Details as s
+    on t.ParentSchema = @ParentSchema and t.ParentTable = @ParentTable and  t.[DetailsSchema] = s.[Schema] and t.[DetailsTable] = s.[Table]
+    when not matched then insert
+        (ParentSchema, ParentTable, [DetailsSchema], [DetailsTable], SameId) values
+        (@ParentSchema, @ParentTable, s.[Schema], s.[Table], s.SameId);
+end
+go
 ------------------------------------------------
 create or alter procedure a2meta.[Table.Schema]
 @Schema sysname,
@@ -42,7 +81,8 @@ begin
 	select [Table!TTable!Object] = null, [Id!!Id] = 1, [Schema] = TABLE_SCHEMA, [Table] = TABLE_NAME,
 		[TenantId] = @TenantId,
 		[Columns!TColumn!Array] = null,
-		[Definition!TDefine!Object] = null
+		[Definition!TDefine!Object] = null,
+		[Details!TDetail!Array] = null
 	from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA = @Schema collate SQL_Latin1_General_CP1_CI_AI 
 		and TABLE_NAME = @Table collate SQL_Latin1_General_CP1_CI_AI;
 
