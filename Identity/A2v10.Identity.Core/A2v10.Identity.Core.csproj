@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
-		<Version>10.1.8529</Version>
+		<Version>10.1.8534</Version>
 		<LangVersion>Latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<OutputType>Library</OutputType>
@@ -23,7 +23,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="A2v10.Data.Interfaces" Version="10.1.7500" />
-		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.6.0" />
+		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.6.1" />
 	</ItemGroup>
 
 	<PropertyGroup>

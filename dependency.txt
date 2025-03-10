@@ -1,7 +1,19 @@
 ﻿2025-03-07 (next: 8534)
 =======================
 !do not update Microsoft.OpenApi to 1.6.23 (https://github.com/microsoft/OpenAPI.NET/issues/2030)
-
+A2v10.AppRuntimeBuilder
+A2v10.Platform
+A2v10.Platform.Web
+A2v10.Identity.Core
+A2v10.Identity.UI
+A2v10.Identity.ApiKey
+A2v10.Identity.Jwt
+A2v10.MailClient
+A2v10.Scheduling
+A2v10.Services
+A2v10.ReportEngine.Pdf
+A2v10.ReportEngine.Excel
+A2v10.ReportEngine.Script
 
 A2v10.Platform
 	A2v10.Platform.Web
