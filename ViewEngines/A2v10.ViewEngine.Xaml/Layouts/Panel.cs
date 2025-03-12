@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
 
@@ -148,4 +148,12 @@ public class Panel : Container, ITableControl
 		});
 	}
 
+    protected override void OnEndInit()
+    {
+        base.OnEndInit();
+        if (Header is XamlElement hElem)
+            hElem?.SetParent(this);
+        if (Description is XamlElement xElem)
+            xElem?.SetParent(this);
+    }
 }
