@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using A2v10.Infrastructure;
-using A2v10.Xaml;
 
 namespace A2v10.Metadata.SqlServer;
 
@@ -91,20 +90,59 @@ public record TableDefinition
     public String? IsFolder { get; init; }
     public String? HiddenColumns { get; init; }
 
-    public String VoidField => Void ?? "Void";
-    public String NameField => Name ?? "Name";
-    public String IdField => Id ?? "Id";
-    public String IsFolderField => IsFolder ?? "IsFolder";
+    
+    internal String VoidField => Void ?? "Void";
+    internal String NameField => Name ?? "Name";
+    internal String IdField => Id ?? "Id";
+    internal String IsFolderField => IsFolder ?? "IsFolder";
+
+    internal static TableDefinition Merge(TableDefinition? source, TableDefinition? other)
+    {
+        if (source != null && other != null)
+        {
+            var hiddenSource = source.HiddenColumns?.Split(',') ?? [];
+            var hiddenOther = other.HiddenColumns?.Split(',') ?? [];
+            return new TableDefinition()
+            {
+                Void = source.Void ?? other.Void,
+                Name = source.Name ?? other.Name,
+                Id = source.Id ?? other.Id,
+                IsFolder = source.IsFolder ?? other.IsFolder,
+                HiddenColumns = String.Join(',', hiddenSource.Union(hiddenOther))
+            };
+        }
+        else if (source == null && other != null)
+            return other;
+        else if (source != null && other == null)
+            return source;
+        return new TableDefinition();
+    }
 }
+
+public record FormColumn
+{
+    public String Path { get; set; } = default!;
+    public String? Header { get; set; }
+    public Boolean NoSort { get; init; }
+    public Boolean Filter { get; init; }
+    public Int32 Width { get; init; }
+    public Int32 Clamp { get; init; }
+}
+public record Form
+{    
+    public Int32 Width { get; init; }
+    public String? Title { get; init; }
+    public List<FormColumn> FormColumns { get; set; } = [];
+}
+
 public record TableMetadata
 {
-    public List<TableColumn> Columns { get; } = [];
-
+    public List<TableColumn> Columns { get; private set; } = [];
     public String Schema { get; init; } = default!;
     public String Table { get; init; } = default!;
     public TableDefinition Definition { get; set; } = default!;
-    public String SqlTableName => $"{Schema}.[{Table}]";
-    public String ModelType => $"T{Table.Singular()}";
+    internal String SqlTableName => $"{Schema}.[{Table}]";
+    internal String ModelType => $"T{Table.Singular()}";
 
     internal IEnumerable<ViewColumn> EditColumns(IModelBaseMeta meta)
     {
@@ -146,22 +184,21 @@ public record TableMetadata
         }
     }
 
-    internal void OnEndInit()
+    internal TableMetadata MergeGlobal(TableMetadata global)
     {
-        Definition ??= new();
-        if (Definition.HiddenColumns != null)
+        var def = TableDefinition.Merge(Definition, global.Definition);
+
+        var hiddenColumns = def.HiddenColumns?.Split(',').ToHashSet() ?? [];
+
+        Boolean IsFieldVisible(TableColumn col) =>
+            !hiddenColumns.Contains(col.Name) && col.Name != def.VoidField && col.Name != def.IsFolderField;
+
+        return new TableMetadata()
         {
-            foreach (var hc in Definition.HiddenColumns.Split(',')) {
-                var fc = Columns.FirstOrDefault(x => x.Name == hc);
-                if (fc != null)
-                    Columns.Remove(fc);
-            }
-        }
-        var vf = Columns.FirstOrDefault(x => x.Name == Definition.VoidField);
-        if (vf != null)
-            Columns.Remove(vf);
-        var ff = Columns.FirstOrDefault(x => x.Name == Definition.IsFolderField);
-        if (ff != null)
-            Columns.Remove(ff);
+            Definition = def,
+            Table = this.Table,
+            Schema = this.Schema,
+            Columns = Columns.Where(IsFieldVisible).ToList()
+        };
     }
 }

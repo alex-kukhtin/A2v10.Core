@@ -11,6 +11,7 @@ using A2v10.System.Xaml;
 using A2v10.Xaml.DynamicRendrer;
 using A2v10.Data.Interfaces;
 using A2v10.Xaml;
+using System.Linq;
 
 namespace A2v10.Metadata.SqlServer;
 
@@ -20,6 +21,7 @@ internal partial class ModelPageBuilder(IServiceProvider _serviceProvider)
     private readonly DynamicRenderer _dynamicRenderer = new(_serviceProvider);
     private readonly IAppCodeProvider _codeProvider = _serviceProvider.GetRequiredService<IAppCodeProvider>();
     private readonly IXamlPartProvider _xamlPartProvider = _serviceProvider.GetRequiredService<IXamlPartProvider>();
+    private readonly DatabaseMetadataProvider _dbMetaProvider = _serviceProvider.GetRequiredService<DatabaseMetadataProvider>();
 
     public async Task<String> RenderPageAsync(IPlatformUrl platformUrl, IModelView modelView, IDataModel dataModel, TableMetadata meta)
     {
@@ -32,12 +34,17 @@ internal partial class ModelPageBuilder(IServiceProvider _serviceProvider)
         var rawView = modelView.GetRawView(false);
         if (!String.IsNullOrEmpty(rawView))
             page = LoadPage(modelView, rawView);
-        else if (modelView.IsIndex && !modelView.IsDialog)
-            page = CreateIndexPage(platformUrl, modelView, meta);
-        else if (modelView.IsDialog && platformUrl.Action == "edit")
-            page = CreateEditDialog(platformUrl, modelView, meta);
-        else if (modelView.IsDialog && platformUrl.Action == "browse")
-            page = CreateBrowseDialog(platformUrl, modelView, meta);
+        else {
+            if (platformUrl.Action.Equals("index", StringComparison.OrdinalIgnoreCase))
+            {
+                var form = MergeIndexForm(await _dbMetaProvider.GetFormAsync(modelView.DataSource, meta.Schema, meta.Table, platformUrl.Action), meta);
+                page = CreateIndexPage(platformUrl, modelView, meta);
+            }
+            else if (modelView.IsDialog && platformUrl.Action == "edit")
+                page = CreateEditDialog(platformUrl, modelView, meta);
+            else if (modelView.IsDialog && platformUrl.Action == "browse")
+                page = CreateBrowseDialog(platformUrl, modelView, meta);
+        }
 
         if (page == null)
             throw new InvalidOperationException("Page is null");
@@ -78,4 +85,19 @@ internal partial class ModelPageBuilder(IServiceProvider _serviceProvider)
             return uIElement;
         throw new InvalidOperationException("Xaml. Root is not an IXamlElement");
     }
+
+    Form MergeIndexForm(Form? form, TableMetadata meta)
+    {
+        var metaColumns = meta.Columns.Select(c => new FormColumn()
+        {
+            Path = c.Name
+        });
+
+        return new Form()
+        {
+            Title = form?.Title ?? $"@[{meta.Table.Singular()}.Browse]",
+            FormColumns = form?.FormColumns ?? metaColumns.ToList()
+        };
+    }
+
 }

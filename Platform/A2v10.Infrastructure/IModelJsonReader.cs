@@ -40,11 +40,11 @@ public interface IModelBaseMeta
 	public String? Schema { get; }
 	public String? Columns { get; }
 	public MetaEditMode Edit { get; }
-	public String CurrentTable { get; }
-	public String CurrentSchema { get; }
 
-	// calculated	
-	public MetaEditMode EditMode {get;}
+    // calculated	
+    public String CurrentTable { get; }
+    public String CurrentSchema { get; }
+    public MetaEditMode EditMode {get;}
 }
 
 // as model.json.schema

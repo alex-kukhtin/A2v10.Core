@@ -40,6 +40,47 @@ create table a2meta.TableDetails
 );
 go
 ------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.SEQUENCES where SEQUENCE_SCHEMA=N'a2meta' and SEQUENCE_NAME=N'SQ_TableForms')
+	create sequence a2meta.SQ_TableForms as bigint start with 100 increment by 1;
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'TableForms')
+create table a2meta.TableForms
+(
+	[Id] bigint not null
+		constraint DF_Forms_Id default(next value for a2meta.SQ_TableForms)
+		constraint PK_Forms primary key,
+	[Key] sysname not null,
+	[Schema] sysname not null, 
+	[Table] sysname not null,
+	Width int,
+	Title nvarchar(255)
+);
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.SEQUENCES where SEQUENCE_SCHEMA=N'a2meta' and SEQUENCE_NAME=N'SQ_FormColumns')
+	create sequence a2meta.SQ_FormColumns as bigint start with 100 increment by 1;
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'FormColumns')
+create table a2meta.FormColumns
+(
+	[Id] bigint not null
+		constraint DF_FormColumns_Id default(next value for a2meta.SQ_FormColumns)
+		constraint PK_FormColumns primary key,
+	[Form] bigint not null
+		constraint FK_FormColumns_Form_TableForms references a2meta.TableForms(Id),
+	[Order] int not null,
+	[Path] nvarchar(255), 
+	Header nvarchar(255),
+	NoSort bit,
+	[Filter] bit,
+	Fit bit,
+	Width int,
+	Clamp int
+);
+go
+------------------------------------------------
 drop procedure if exists a2meta.[TableDetails.Merge];
 drop type if exists a2meta.[TableDetails.TableType];
 go
@@ -119,19 +160,46 @@ begin
 		[!TTable.Definition!ParentId] = 1
 	from a2meta.TablesMetadata where [Schema] = @Schema collate SQL_Latin1_General_CP1_CI_AI 
 		and [Table] = @Table collate SQL_Latin1_General_CP1_CI_AI;
+	
 	-- exetending properties
 	-- https://www.mssqltips.com/sqlservertip/5384/working-with-sql-server-extended-properties/
 end
 go
+
 ------------------------------------------------
-declare @Schema nvarchar(255) = N'CAT';
-declare @Table nvarchar(255) = N'AGENTS';
+create or alter procedure a2meta.[Table.Form]
+@Schema sysname,
+@Table sysname,
+@Key sysname
+as
+begin
+	set nocount on;
+	set transaction isolation level read uncommitted;
+
+	declare @formId bigint;
+	select @formId = Id from a2meta.TableForms 
+	where [Schema] = @Schema collate SQL_Latin1_General_CP1_CI_AI 
+		and [Table] = @Table collate SQL_Latin1_General_CP1_CI_AI 
+		and [Key] = @Key collate SQL_Latin1_General_CP1_CI_AI;
+
+	select [Form!TForm!Object] = null, [Id!!Id] = Id, [Key],
+		Width, Title,
+		[Columns!TFColumn!Array] = null, [Controls!TFControl!Array] = null
+	from a2meta.TableForms where Id = @formId;
+end
+go
+------------------------------------------------
+declare @Schema nvarchar(255) = N'cat';
+declare @Table nvarchar(255) = N'Agents';
 
 exec a2meta.[Table.Schema] @Schema, @Table;
 
 /*
 insert into a2meta.TablesMetadata ([Schema], [Table], HiddenColumns)
 values ('cat', 'Agents', N'Uid,Parent2');
+
+insert into a2meta.TableForms ([Schema], [Table], [Key], Width)
+values ('cat', 'Agents', N'Index', 800);
 
 insert into a2meta.TablesMetadata ([Schema], [Table], HiddenColumns)
 values ('doc', 'Contracts', N'Uid');
@@ -140,8 +208,9 @@ insert into a2meta.TablesMetadata ([Schema], [Table], Name)
 values ('cat', 'Currencies', N'Alpha3');
 */
 
-select * from a2meta.TablesMetadata;
+--select * from a2meta.TablesMetadata;
 
+/*
 with T as (
 	select fk.[name], [index] = fkc.constraint_column_id,
 		[schema] = schema_name(fk.[schema_id]),
@@ -160,5 +229,5 @@ select [name], columns = string_agg([column], N','),
 refschema, reftable, refcolumns = string_agg(refcolumn, N',')
 from T
 group by [name], refschema, reftable;
-
+*/
 
