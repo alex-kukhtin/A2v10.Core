@@ -10,6 +10,18 @@ namespace A2v10.Metadata;
 
 internal static class XamlExtensions
 {
+    public static DataType ToBindDataType(this ColumnDataType columnDataType)
+    {
+        return columnDataType switch
+        {
+            ColumnDataType.Date => DataType.Date,
+            ColumnDataType.DateTime => DataType.DateTime,
+            ColumnDataType.Money => DataType.Currency,
+            ColumnDataType.Float => DataType.Number,    
+            ColumnDataType.Bit => DataType.Boolean,
+            _ => DataType.String,
+        };
+    }
     public static ColumnRole ToColumnRole(this ColumnDataType dataType, Boolean isReference)
     {
         return dataType switch
@@ -31,7 +43,7 @@ internal static class XamlExtensions
                 Role = c.Role,
                 LineClamp = c.Clamp,
                 SortProperty = c.SortProperty,
-                Bindings = b => b.SetBinding(nameof(DataGridColumn.Content), new Bind(c.Path))
+                Bindings = b => b.SetBinding(nameof(DataGridColumn.Content), new Bind(c.Path) { DataType = c.BindDataType })
             }
         );
     }

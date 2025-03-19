@@ -11,22 +11,22 @@ namespace A2v10.Metadata;
 
 internal partial class DatabaseModelProcessor
 {
-    public Task<IDataModel> LoadPlainModelAsync(TableMetadata meta, IPlatformUrl platformUrl, IModelView view)
+    public Task<IDataModel> LoadPlainModelAsync(TableMetadata table, IPlatformUrl platformUrl, IModelView view, AppMetadata appMeta)
     {
         var viewMeta = view.Meta ??
            throw new InvalidOperationException($"view.Meta is null");
 
-        var refFields = meta.RefFields();
+        var refFields = table.RefFields();
 
         var sqlString = $"""
         set nocount on;
         set transaction isolation level read uncommitted;
         
-        select [{meta.Name.Singular()}!{meta.ModelType}!Object] = null,
-            {String.Join(",", meta.SelectFieldsAll("a", refFields))},
+        select [{table.Name.Singular()}!{table.ModelType}!Object] = null,
+            {String.Join(",", table.AllSqlFields("a", appMeta))},
             [!!RowCount]  = count(*) over()        
-        from {meta.SqlTableName} a
-            {RefTableJoins(refFields)}
+        from {table.Schema}.[{table.Name}] a
+            {RefTableJoins(refFields, appMeta)}
         where a.[Id] = @Id
         """;
 

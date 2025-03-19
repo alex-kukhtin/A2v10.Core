@@ -262,6 +262,20 @@ begin
 end
 go
 ------------------------------------------------
+create or alter procedure a2meta.[App.Metadata]
+as
+begin
+	set nocount on;
+	set transaction isolation level read uncommitted;
+	select [Application!TApp!Object] = null, IdDataType = N'bigint', 
+		[Id] = cast(null as nvarchar(32)), 
+		[Name] = cast(null as nvarchar(32)), 
+		Void = cast(null as nvarchar(32)), 
+		IsFolder = cast(null as nvarchar(32)), 
+		IsSystem = cast(null as nvarchar(32));
+end
+go
+------------------------------------------------
 create or alter procedure a2meta.[Table.Schema]
 @Schema sysname,
 @Table sysname
@@ -270,14 +284,15 @@ begin
 	set nocount on;
 	set transaction isolation level read uncommitted;
 
-	declare @TenantId sysname = 'TenantId'
 
-	select [Table!TTable!Object] = null, [Id!!Id] = 1, [Schema] = TABLE_SCHEMA, [Table] = TABLE_NAME,
-		[TenantId] = @TenantId,
+	select [Table!TTable!Object] = null, [!!Id] = 1, [Schema] = TABLE_SCHEMA, [Name] = TABLE_NAME,
+		c.ItemsName, c.ItemName, c.TypeName,
 		[Columns!TColumn!Array] = null,
 		[Definition!TDefine!Object] = null,
 		[Details!TDetail!Array] = null
-	from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA = @Schema collate SQL_Latin1_General_CP1_CI_AI 
+	from INFORMATION_SCHEMA.TABLES ic
+		inner join a2meta.[Catalog] c on c.Kind = N'table' and ic.TABLE_SCHEMA = c.[Schema] and ic.TABLE_NAME = c.[Name]
+	where ic.TABLE_SCHEMA = @Schema collate SQL_Latin1_General_CP1_CI_AI 
 		and TABLE_NAME = @Table collate SQL_Latin1_General_CP1_CI_AI;
 
 	select [!TColumn!Array] = null, [Name!!Id] = COLUMN_NAME, DataType = DATA_TYPE, 
@@ -286,7 +301,6 @@ begin
 		[!TTable.Columns!ParentId] = 1
 	from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = @Schema collate SQL_Latin1_General_CP1_CI_AI 
 		and TABLE_NAME = @Table collate SQL_Latin1_General_CP1_CI_AI 
-		and COLUMN_NAME <> @TenantId
 	order by ORDINAL_POSITION;
 
 	with T as (
@@ -303,7 +317,6 @@ begin
 			inner join sys.columns c2 on fkc.referenced_column_id = c2.column_id and fkc.referenced_object_id = c2.[object_id]
 		where schema_name(fk.[schema_id]) = @Schema collate SQL_Latin1_General_CP1_CI_AI
 		and object_name(fk.parent_object_id) = @Table collate SQL_Latin1_General_CP1_CI_AI 
-		and c1.[name] <> @TenantId
 	)
 	select [!TReference!Object] = null, RefSchema, RefTable, RefColumn,
 		[!TColumn.Reference!ParentId] = [Column]
@@ -318,7 +331,6 @@ begin
 	-- https://www.mssqltips.com/sqlservertip/5384/working-with-sql-server-extended-properties/
 end
 go
-
 ------------------------------------------------
 create or alter procedure a2meta.[Config.Load]
 @UserId bigint
@@ -327,8 +339,12 @@ begin
 	set nocount on;
 	set transaction isolation level read uncommitted;
 
-	select [Application!TApp!Object] = null, [Id!!Id] = 1,
-		IdDataType = N'bigint', 
+	select [Application!TApp!Object] = null, [!!Id] = 1, IdDataType = N'bigint', 
+		[Id] = cast(null as nvarchar(32)), 
+		[Name] = cast(null as nvarchar(32)), 
+		Void = cast(null as nvarchar(32)), 
+		IsFolder = cast(null as nvarchar(32)), 
+		IsSystem = cast(null as nvarchar(32)), 
 		[Tables!TTable!Array] = null;
 
 	select [!TTable!Array] = null, [Id!!Id] = Id, c.[Schema], c.[Name], c.[Kind],
@@ -380,7 +396,7 @@ go
 ------------------------------------------------
 /*
 declare @Schema nvarchar(255) = N'cat';
-declare @Table nvarchar(255) = N'Agents';
+declare @Table nvarchar(255) = N'Companies';
 
 exec a2meta.[Table.Schema] @Schema, @Table;
 */
@@ -427,4 +443,10 @@ drop table a2meta.Columns
 drop table a2meta.[Catalog];
 */
 
-exec a2meta.[Config.Load] 99
+--exec a2meta.[Config.Load] 99
+
+declare @Schema nvarchar(255) = N'cat';
+declare @Table nvarchar(255) = N'companies';
+
+exec a2meta.[Table.Schema] @Schema, @Table;
+

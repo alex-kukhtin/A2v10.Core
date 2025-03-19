@@ -3,6 +3,7 @@
 using System;
 using System.Dynamic;
 using System.Threading.Tasks;
+using System.Text;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -26,12 +27,26 @@ public class DeployDatabaseHandler(IServiceProvider _serviceProvider) : IClrInvo
         var meta = AppMetadata.FromDataModel(dm);
 
         var dbCreator = new DatabaseCreator(meta);
+
+        var sql = new StringBuilder("""
+        set nocount on;
+        set transaction isolation level read uncommitted;
+
+        """);
         foreach (var t in meta.Tables)
         {
             var createTable = dbCreator.CreateTable(t);
-            var tt = dbCreator.CreateTableType(t);
-            int z = 55;
+            sql.AppendLine(createTable);
+            //var tt = dbCreator.CreateTableType(t);
+            //int z = 55;
         }
+        foreach (var t in meta.Tables)
+        {
+            var createFK = dbCreator.CreateForeignKeys(t);
+            sql.AppendLine(createFK);
+        }
+
+        await _dbContext.LoadModelSqlAsync(null, sql.ToString());
 
         return new ExpandoObject();
     }

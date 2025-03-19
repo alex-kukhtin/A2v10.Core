@@ -21,6 +21,12 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     {
         return _metadataCache.GetOrAddAsync(dataSource, schema, table, LoadTableMetadataAsync);
     }
+
+    public Task<AppMetadata> GetAppMetadataAsync(String? dataSource)
+    {
+        return _metadataCache.GetAppMetadataAsync(dataSource, LoadAppMetadataAsync);
+    }
+
     public String GetOrAddEndpointPath(String? dataSource, String schema, String table)
     {
         return _metadataCache.GetOrAddEndpointPath(dataSource, schema, table);
@@ -36,11 +42,11 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         var modelTableInfo = _metadataCache.GetModelInfoFromPath(path);
         if (modelTableInfo == null) {
             var pathInfo = ParsePath(path);
-            var meta = await _metadataCache.GetOrAddAsync(null, pathInfo.schema, pathInfo.table,
+            var tableMeta = await _metadataCache.GetOrAddAsync(null, pathInfo.schema, pathInfo.table,
                 LoadTableMetadataAsync);
             // case sensitive
-            pathInfo.table = meta.Name;
-            pathInfo.schema = meta.Schema;
+            pathInfo.table = tableMeta.Name;
+            pathInfo.schema = tableMeta.Schema;
             _metadataCache.GetOrAddEndpointPath(null, pathInfo.schema, pathInfo.table);
             modelTableInfo = _metadataCache.GetModelInfoFromPath(path);
         }
@@ -49,6 +55,17 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return modelTableInfo;
     }
 
+    private async Task<AppMetadata> LoadAppMetadataAsync(String? dataSource)
+    {
+        var dm = await _dbContext.LoadModelAsync(dataSource, "a2meta.[App.Metadata]")
+            ?? throw new InvalidOperationException("a2meta.[App.Metadata] returns null");
+        var appExpando = dm.Eval<ExpandoObject>("Application");
+        var json = JsonConvert.SerializeObject(appExpando) ??
+            throw new InvalidOperationException("AppMetadata not found");
+        var meta = JsonConvert.DeserializeObject<AppMetadata>(json, JsonSettings.IgnoreNull)
+            ?? throw new InvalidOperationException("AppMetadata deserialization fails");
+        return meta;
+    }
     private async Task<TableMetadata> LoadTableMetadataAsync(String? dataSource, String schema, String table)
     {
         var prms = new ExpandoObject()
@@ -64,7 +81,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         var json = JsonConvert.SerializeObject(tableExpando);
         if (json == null)
             throw new InvalidOperationException("TableMetadata not found");
-        var meta = JsonConvert.DeserializeObject<TableMetadata>(json)
+        var meta = JsonConvert.DeserializeObject<TableMetadata>(json, JsonSettings.IgnoreNull)
             ?? throw new InvalidOperationException("TableMetadata deserialization fails");
         return meta;
     }

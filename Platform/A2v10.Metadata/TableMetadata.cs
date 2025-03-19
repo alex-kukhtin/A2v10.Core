@@ -34,9 +34,7 @@ public record ColumnReference
     public String RefTable { get; init; } = default!;
 
     /* OLD */
-    public String RefColumn { get; init; } = default!;
     public String ModelType => $"TR{RefTable.Singular()}";
-    public TableMetadata RefMetadata { get; set; } = new();
     public String EndpointPath { get; set; } = default!;
 }
 public record TableColumn
@@ -45,13 +43,14 @@ public record TableColumn
     public String Name { get; init; } = default!;
     public ColumnDataType DataType { get; init; } = default!;
     public Int32? MaxLength { get; init; }
-    public ColumnReference? Reference { get; init; }
+    public ColumnReference Reference { get; init; } = default!;
     public String? DbName { get; init; }
     public ColumnDataType? DbDataType { get; init; }
     #endregion
-
+    internal Boolean IsReference => Reference != null && Reference.RefTable != null;
     internal Boolean Exists => DbName != null && DbDataType != null;
-    internal Boolean IsReference => Reference != null;    
+
+    // Old
     internal Boolean IsParent => Name == "Parent";
     internal Boolean IsSearchable => DataType == ColumnDataType.String;
 }
@@ -79,43 +78,6 @@ public record ViewColumn
     }
 }
 
-public record TableDefinition
-{
-    public String? Void { get; init; }
-    public String? Name { get; init; }
-    public String? Id { get; init; }
-    public String? IsFolder { get; init; }
-    public String? HiddenColumns { get; init; }
-
-    
-    internal String VoidField => Void ?? "Void";
-    internal String NameField => Name ?? "Name";
-    internal String IdField => Id ?? "Id";
-    internal String IsFolderField => IsFolder ?? "IsFolder";
-
-    internal static TableDefinition Merge(TableDefinition? source, TableDefinition? other)
-    {
-        if (source != null && other != null)
-        {
-            var hiddenSource = source.HiddenColumns?.Split(',') ?? [];
-            var hiddenOther = other.HiddenColumns?.Split(',') ?? [];
-            return new TableDefinition()
-            {
-                Void = source.Void ?? other.Void,
-                Name = source.Name ?? other.Name,
-                Id = source.Id ?? other.Id,
-                IsFolder = source.IsFolder ?? other.IsFolder,
-                HiddenColumns = String.Join(',', hiddenSource.Union(hiddenOther))
-            };
-        }
-        else if (source == null && other != null)
-            return other;
-        else if (source != null && other == null)
-            return source;
-        return new TableDefinition();
-    }
-}
-
 public record FormColumn
 {
     public String Path { get; init; } = default!;
@@ -127,6 +89,7 @@ public record FormColumn
 
     // internal 
     internal ColumnRole Role { get; init; } 
+    internal DataType BindDataType {  get; init; }  
     internal String? SortProperty { get; init; }    
 }
 public record Form
@@ -147,9 +110,6 @@ public record TableMetadata
     public String? TypeName { get; init; }
     #endregion
 
-    // OLD
-    public TableDefinition Definition { get; set; } = default!;
-    internal String SqlTableName => $"{Schema}.[{Name}]";
     internal String ModelType => $"T{Name.Singular()}";
 
     internal IEnumerable<ViewColumn> EditColumns(IModelBaseMeta meta)
@@ -165,50 +125,6 @@ public record TableMetadata
         var viewColumns = meta.Columns.Split(',').Select(c => ViewColumn.FromString(c));
         return viewColumns.Join(tableColumns, v => v.Name, t => t.Name, (v, t) => new ViewColumn() {Name = t.Name, Header = v.Header, Column = t.Column });
     }
-
-    internal List<(TableColumn Column, Int32 Index)> RefFields()
-    {
-        var index = 0;
-        return Columns.Where(c => c.IsReference).Select(c => (Column: c, Index: ++index)).ToList();
-    }
-
-    internal IEnumerable<String> SelectFieldsAll(String alias, List<(TableColumn Column, Int32 Index)> refFields)
-    {
-        foreach (var c in Columns.Where(c => !c.IsReference))
-            if (c.Name == Definition.IdField)
-                yield return $"[{c.Name}!!Id] = {alias}.[{c.Name}]";
-            else
-                yield return c.IsParent ? $"ParentElem = {alias}.[{c.Name}]" : $"{alias}.[{c.Name}]";
-        foreach (var c in refFields)
-        {
-            var col = c.Column;
-            var colRef = c.Column.Reference!;
-            var sf = String.Empty;
-            if (col.IsParent)
-                sf = "Elem";
-            var nameField = colRef.RefMetadata.Definition.NameField;
-            var idField = colRef.RefMetadata.Definition.IdField;
-            yield return $"[{col.Name}{sf}.{idField}!{colRef.ModelType}!Id] = r{c.Index}.[{idField}], [{col.Name}{sf}.Name!{colRef.ModelType}!Name] = r{c.Index}.[{nameField}]";
-        }
-    }
-
-    internal TableMetadata MergeGlobal(TableMetadata global)
-    {
-        var def = TableDefinition.Merge(Definition, global.Definition);
-
-        var hiddenColumns = def.HiddenColumns?.Split(',').ToHashSet() ?? [];
-
-        Boolean IsFieldVisible(TableColumn col) =>
-            !hiddenColumns.Contains(col.Name) && col.Name != def.VoidField && col.Name != def.IsFolderField;
-
-        return new TableMetadata()
-        {
-            Definition = def,
-            Name = this.Name,
-            Schema = this.Schema,
-            Columns = Columns.Where(IsFieldVisible).ToList()
-        };
-    }
 }
 
 public record AppMetadata
@@ -221,8 +137,7 @@ public record AppMetadata
     public String? Name { get; init; }
     public String? Void { get; init; }
     public String? IsSystem { get; init; }
-    public String? IsFolder { get; init; }
-
+    public String? IsFolder { get; init; }    
     internal String IdField => Id ?? nameof(Id);
     internal String NameField => Name ?? nameof(Name);
     internal String VoidField => Name ?? nameof(Void);
@@ -233,7 +148,7 @@ public record AppMetadata
     {
         var json = JsonConvert.SerializeObject(model.Root.Get<Object>("Application"))
             ?? throw new InvalidOperationException("Application is null");
-        return JsonConvert.DeserializeObject<AppMetadata>(json)
+        return JsonConvert.DeserializeObject<AppMetadata>(json, JsonSettings.IgnoreNull)
             ?? throw new InvalidOperationException("AppMetadata deserialization fails");
     }
 }

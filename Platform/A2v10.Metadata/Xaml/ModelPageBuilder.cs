@@ -1,8 +1,9 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
-using System.Threading.Tasks;
+using System.Linq;
 using System.IO;
+using System.Threading.Tasks;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,7 +12,6 @@ using A2v10.System.Xaml;
 using A2v10.Xaml.DynamicRendrer;
 using A2v10.Data.Interfaces;
 using A2v10.Xaml;
-using System.Linq;
 
 namespace A2v10.Metadata;
 
@@ -96,10 +96,12 @@ internal partial class ModelPageBuilder(IServiceProvider _serviceProvider)
             var sf = c.IsParent ? "Elem" : string.Empty;
             var col = new FormColumn()
             {
-                Path = c.IsReference ? $"{c.Name}cf.Name" : c.Name,
+                // TODO: .Name заменить на appMeta.NameField
+                Path = c.IsReference ? $"{c.Name}.Name" : c.Name,
                 Header = $"@[{c.Name}]",
                 Clamp = c.MaxLength >= 255 ? 2 : 0,
                 Role = c.DataType.ToColumnRole(c.IsReference),
+                BindDataType = c.DataType.ToBindDataType(),
                 SortProperty = c.IsReference ? c.Name : null
             };
             return col;

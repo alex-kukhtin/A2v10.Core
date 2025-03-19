@@ -15,6 +15,7 @@ public class DatabaseMetadataCache
     ConcurrentDictionary<String, TableMetadata> _cache = [];
     ConcurrentDictionary<String, EndpointTableInfo> _endpoints = [];
     ConcurrentDictionary<String, Form?> _formCache = [];
+    ConcurrentDictionary<String, AppMetadata> _appMetaCache = [];
     public async Task<TableMetadata> GetOrAddAsync(String? dataSource, String schema, String table, 
         Func<String?, String, String, Task<TableMetadata>> getMeta)
     {
@@ -23,9 +24,18 @@ public class DatabaseMetadataCache
             return meta;
         meta = await getMeta(dataSource, schema, table);
         key = $"{dataSource}:{meta.Schema}:{meta.Name}";
-        var globalMeta = await GetGlobalMetaAsync(dataSource, getMeta);
-        meta = meta.MergeGlobal(globalMeta);
+        //var globalMeta = await GetGlobalMetaAsync(dataSource, getMeta);
+        //meta = meta.MergeGlobal(globalMeta);
         return _cache.GetOrAdd(key, meta);
+    }
+
+    public async Task<AppMetadata> GetAppMetadataAsync(String? dataSource, Func<String?, Task<AppMetadata>> func)
+    {
+        var key = dataSource ?? "default";
+        if (_appMetaCache.TryGetValue(key, out AppMetadata? meta))
+            return meta;    
+        meta = await func(dataSource);
+        return _appMetaCache.GetOrAdd(key, meta);
     }
 
     async Task<TableMetadata> GetGlobalMetaAsync(String? dataSource,
@@ -54,11 +64,12 @@ public class DatabaseMetadataCache
     {
         var segment0 = schema switch
         {
-            "cat" => "catalog",
-            "doc" => "document",
+            "cat" => "catalogs",
+            "doc" => "documents",
+            "jrn" => "journals",
             _ => schema
         };
-        var path = $"{segment0}/{table.Singular()}".ToLowerInvariant();
+        var path = $"{segment0}/{table}".ToLowerInvariant();
         _endpoints.TryAdd(path, new EndpointTableInfo(dataSource, schema, table));
         return path;
     }

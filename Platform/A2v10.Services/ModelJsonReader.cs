@@ -1,6 +1,5 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
-using DocumentFormat.OpenXml.EMMA;
 using System.Threading.Tasks;
 
 namespace A2v10.Services;

@@ -12,17 +12,17 @@ namespace A2v10.Metadata;
 
 internal partial class DatabaseModelProcessor
 {
-    public Task<IDataModel> LoadIndexModelAsync(TableMetadata meta, IPlatformUrl platformUrl, IModelView view)
+    public Task<IDataModel> LoadIndexModelAsync(TableMetadata table, IPlatformUrl platformUrl, IModelView view, AppMetadata appMeta)
     {
         var viewMeta = view.Meta ??
             throw new InvalidOperationException($"view.Meta is null");
 
         const String DEFAULT_DIR = "asc";
-        if (meta.Columns.Count == 0)
+        if (table.Columns.Count == 0)
             throw new InvalidOperationException($"The model '{viewMeta.Table}' does not have columns");
 
 
-        String defaultOrder = meta.Columns[0].Name;
+        String defaultOrder = table.Columns[0].Name;
 
         var qry = platformUrl.Query;
         Int32 offset = 0;
@@ -42,7 +42,7 @@ internal partial class DatabaseModelProcessor
         }
         // TODO: order взять из таблицы - он попадает в SQL!
 
-        var refFields = meta.RefFields();
+        var refFields = table.RefFields();
 
         var sqlOrder = $"a.[{order}]";
         var sortColumn = refFields.FirstOrDefault(c => c.Column.Name == order);
@@ -51,14 +51,14 @@ internal partial class DatabaseModelProcessor
             sqlOrder = $"r{sortColumn.Index}.[Name]"; // TODO: NameField
 
         String ParametersCondition() {
-            return $"a.[{meta.Definition.VoidField}] = 0"; 
+            return $"a.[{appMeta.VoidField}] = 0"; 
         }
 
         String WhereCondition()
         {
             if (String.IsNullOrEmpty(fragment))
                 return String.Empty;
-            var searchable = meta
+            var searchable = table
                 .Columns.Where(c => c.IsSearchable).Select(c => $"a.[{c.Name}] like @fr")
                 .Union(refFields.Select(c => $"r{c.Index}.[Name] like @fr"));
                 
@@ -73,20 +73,20 @@ internal partial class DatabaseModelProcessor
         
         declare @fr nvarchar(255) = N'%' + @Fragment + N'%';
                 
-        select [{meta.Name}!{meta.ModelType}!Array] = null,
-            {String.Join(",", meta.SelectFieldsAll("a", refFields))},
+        select [{table.Name}!{table.ModelType}!Array] = null,
+            {String.Join(",", table.AllSqlFields("a", appMeta))},
             [!!RowCount]  = count(*) over()        
-        from {meta.SqlTableName} a
-        {RefTableJoins(refFields)}
+        from {table.Schema}.[{table.Name}] a
+        {RefTableJoins(refFields, appMeta)}
         where {ParametersCondition()} {WhereCondition()}
         order by {sqlOrder} {dir}
         offset @Offset rows fetch next @PageSize rows only option (recompile);
         
         -- system data
         select [!$System!] = null,
-        	[!{meta.Name}!PageSize] = @PageSize,  [!{meta.Name}!Offset] = @Offset,
-        	[!{meta.Name}!SortOrder] = @Order,  [!{meta.Name}!SortDir] = @Dir,
-        	[!{meta.Name}.Fragment!Filter] = @Fragment;
+        	[!{table.Name}!PageSize] = @PageSize,  [!{table.Name}!Offset] = @Offset,
+        	[!{table.Name}!SortOrder] = @Order,  [!{table.Name}!SortDir] = @Dir,
+        	[!{table.Name}.Fragment!Filter] = @Fragment;
         
         """;
         return _dbContext.LoadModelSqlAsync(view.DataSource, sqlString, dbprms =>
