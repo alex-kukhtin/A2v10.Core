@@ -2,7 +2,7 @@
 
 using System;
 
-namespace A2v10.Metadata.SqlServer;
+namespace A2v10.Metadata;
 
 internal static class StringExtensions
 {
@@ -19,15 +19,5 @@ internal static class StringExtensions
         if (src.EndsWith("y"))
             return src + "ies";
         return src + "s";
-    }
-
-    public static String SchemaToDirectory(this String schema)
-    {
-        return schema switch
-        {
-            "cat" => "catalog",
-            "doc" => "document",
-            _ => schema
-        };
     }
 }

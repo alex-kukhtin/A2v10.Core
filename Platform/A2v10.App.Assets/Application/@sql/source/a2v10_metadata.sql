@@ -13,6 +13,159 @@ go
 grant execute on schema ::a2meta to public;
 go
 ------------------------------------------------
+create or alter function a2meta.fn_Schema2Text(@Schema nvarchar(32))
+returns nvarchar(255)
+as
+begin
+	return case @Schema
+		when N'cat' then N'Catalogs'
+		when N'doc' then N'Documents'
+		when N'jrn' then N'Journals'
+		when N'rep' then N'Reports'
+		else N'Undefined'
+	end;
+end
+go
+------------------------------------------------
+create or alter function a2meta.fn_TableFullName(@Schema nvarchar(32), @Name nvarchar(128))
+returns nvarchar(255)
+as
+begin
+	return a2meta.fn_Schema2Text(@Schema) + N'.' + @Name;
+end
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.SEQUENCES where SEQUENCE_SCHEMA=N'a2meta' and SEQUENCE_NAME=N'SQ_Catalog')
+	create sequence a2meta.SQ_Catalog as bigint start with 100 increment by 1;
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'Catalog')
+create table a2meta.[Catalog]
+(
+	[Id] bigint not null
+		constraint DF_Catalog_Id default(next value for a2meta.SQ_Catalog)
+		constraint PK_Catalog primary key,
+	[Parent] bigint not null
+		constraint FK_Catalog_Parent_Catalog references a2meta.[Catalog](Id),
+	[ParentTable] bigint null
+		constraint FK_Catalog_ParentTable_Catalog references a2meta.[Catalog](Id),
+	IsFolder bit not null
+		constraint DF_Catalog_IsFolder default(0),
+	[Schema] nvarchar(32) null, 
+	[Name] nvarchar(128) null,
+	[Kind] nvarchar(32),
+	ItemsName nvarchar(128),
+	ItemName nvarchar(128),
+	TypeName nvarchar(128)
+);
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'DefaultColumns')
+create table a2meta.[DefaultColumns]
+(
+	[Id] bigint not null
+		constraint PK_DefaultColumns primary key,
+	[Schema] nvarchar(32),
+	Kind nvarchar(32),
+	[Name] nvarchar(128),
+	[DataType] nvarchar(32),
+	[MaxLength] int,
+	Ref nvarchar(32)
+);
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.SEQUENCES where SEQUENCE_SCHEMA=N'a2meta' and SEQUENCE_NAME=N'SQ_Columns')
+	create sequence a2meta.SQ_Columns as bigint start with 100 increment by 1;
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'Columns')
+create table a2meta.[Columns]
+(
+	[Id] bigint not null
+		constraint DF_Columns_Id default(next value for a2meta.SQ_Columns)
+		constraint PK_Columns primary key,
+	[Table] bigint not null
+		constraint FK_Columns_Parent_Catalog references a2meta.[Catalog](Id),
+	[Name] nvarchar(128),
+	[Label] nvarchar(255),
+	[DataType] nvarchar(32),
+	[MaxLength] int,
+	Reference bigint
+		constraint FK_Columns_Reference_Catalog references a2meta.[Catalog](Id)
+);
+go
+------------------------------------------------
+begin
+	declare @cat table(Id bigint, IsFolder bit, Parent bigint, [Schema] nvarchar(32), [Name] nvarchar(255), Kind nvarchar(32));
+	insert into @cat(Id, IsFolder, [Schema], Kind, [Name]) values
+	(0,  0, N'root', N'root',   N'Root'),
+	(10, 0, N'app',  N'app',    N'Application'),
+	(11, 1, N'cat',  N'folder', N'Catalogs'),
+	(12, 1, N'doc',  N'folder', N'Documents'),
+	(13, 1, N'jrn',  N'folder', N'Journals'),
+	(14, 1, N'rep',  N'folder', N'Reports'),
+	(70, 1, N'ui',   N'folder', N'User Interfaces');
+
+	merge a2meta.[Catalog] as t
+	using @cat as s
+	on t.Id = s.Id
+	when matched then update set
+		t.[Name] = s.[Name],
+		t.Kind = s.Kind,
+		t.IsFolder = s.IsFolder
+	when not matched then insert
+		(Id, Parent, IsFolder, [Schema], [Name], Kind) values
+		(s.Id, 0, s.IsFolder, s.[Schema], s.[Name], Kind);
+
+	declare @defCols table(Id bigint, [Schema] nvarchar(32), Kind nvarchar(32), [Name] nvarchar(255), 	[DataType] nvarchar(32),
+		[MaxLength] int, Ref nvarchar(32));
+
+	insert into @defCols(Id, [Schema], Kind, [Name], DataType, [MaxLength], Ref) values
+	(10, N'cat', N'table', N'Id',   N'id', null, null),
+	(11, N'cat', N'table', N'Void', N'bit', null, null),
+	(12, N'cat', N'table', N'IsSystem', N'bit', null, null),
+	(13, N'cat', N'table', N'IsFolder', N'bit', null, null),
+	(14, N'cat', N'table', N'Parent', N'reference', null, N'self'),
+	(15, N'cat', N'table', N'Name', N'string',    255, null),
+	(16, N'cat', N'table', N'Memo', N'string',    255, null),
+	(17, N'cat', N'table', N'Owner',N'reference', null, N'user'),
+	(20, N'doc', N'table', N'Id',   N'id',       null, null),
+	(21, N'doc', N'table', N'Void', N'bit',      null, null),
+	(22, N'doc', N'table', N'Done', N'bit',      null, null),
+	(23, N'doc', N'table', N'Date', N'date',     null, null),
+	(24, N'doc', N'table', N'Sum',  N'currency', null, null),
+	(25, N'doc', N'table', N'Memo', N'string', 255, null),
+	(26, N'doc', N'table', N'Owner',N'reference', null, N'user'),
+	-- cat.Details
+	(30, N'cat', N'details', N'Id',     N'id', null, null),
+	(31, N'cat', N'details', N'Parent', N'reference', null, N'parent'),
+	(32, N'cat', N'details', N'RowNo',  N'int', null, null),
+	-- doc.Details
+	(40, N'doc', N'details', N'Id',     N'id', null, null),
+	(41, N'doc', N'details', N'Parent', N'reference', null, N'parent'),
+	(42, N'doc', N'details', N'RowNo',  N'int', null, null),
+	-- jrn.Journal
+	(50, N'jrn', N'table', N'Id',     N'id', null, null),
+	(51, N'jrn', N'table', N'Date',   N'datetime', null, null),
+	(52, N'jrn', N'table', N'InOut',  N'int', null, null),
+	(53, N'jrn', N'table', N'Owner',  N'reference', null, N'user');
+
+	merge a2meta.DefaultColumns as t
+	using @defCols as s
+	on t.Id = s.Id
+	when matched then update set
+		t.[Schema] = s.[Schema],
+		t.[Kind] = s.Kind,
+		t.[Name] = s.[Name],
+		t.DataType = s.DataType,
+		t.[MaxLength] = s.[MaxLength],
+		t.Ref = s.Ref
+	when not matched then insert
+		(Id, [Schema], Kind, [Name], DataType, [MaxLength], Ref) values
+		(Id, [Schema], Kind, [Name], DataType, [MaxLength], s.Ref);
+end
+go
+------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'TablesMetadata')
 create table a2meta.TablesMetadata
 (
@@ -167,6 +320,36 @@ end
 go
 
 ------------------------------------------------
+create or alter procedure a2meta.[Config.Load]
+@UserId bigint
+as
+begin
+	set nocount on;
+	set transaction isolation level read uncommitted;
+
+	select [Application!TApp!Object] = null, [Id!!Id] = 1,
+		IdDataType = N'bigint', 
+		[Tables!TTable!Array] = null;
+
+	select [!TTable!Array] = null, [Id!!Id] = Id, c.[Schema], c.[Name], c.[Kind],
+		[Columns!TColumn!Array] = null,
+		[!TApp.Tables!ParentId] = 1
+	from a2meta.[Catalog] c
+		left join INFORMATION_SCHEMA.TABLES t on t.TABLE_SCHEMA =  c.[Schema] and t.TABLE_NAME = c.[Name]
+	where c.[Kind] in (N'table', N'details');
+
+	select [!TColumn!Array] = null, [Id!!Id] = c.Id, c.[Name], c.[DataType], c.[MaxLength],
+		[Reference.RefSchema!TRef!] = r.[Schema], [Reference.RefTable!TRef!] = r.[Name],
+		DbName = ic.COLUMN_NAME, DbDataType =  ic.DATA_TYPE,
+		[!TTable.Columns!ParentId] = c.[Table]
+	from a2meta.Columns c
+		inner join a2meta.[Catalog] t on c.[Table] = t.Id 
+		left join a2meta.[Catalog] r on c.Reference = r.Id
+		left join INFORMATION_SCHEMA.COLUMNS ic on ic.TABLE_SCHEMA = t.[Schema] and ic.TABLE_NAME = t.[Name] and ic.COLUMN_NAME = c.[Name];
+end
+go
+
+------------------------------------------------
 create or alter procedure a2meta.[Table.Form]
 @Schema sysname,
 @Table sysname,
@@ -186,13 +369,21 @@ begin
 		Width, Title,
 		[Columns!TFColumn!Array] = null, [Controls!TFControl!Array] = null
 	from a2meta.TableForms where Id = @formId;
+
+	select [!TFColumn!Array] = null, [Id!!Id] = Id, [Path], Header, 
+		Width, Clamp, NoSort, [Filter], Fit,
+		[!TForm.Columns!ParentId] = [Form]
+	from a2meta.FormColumns where [Form] = @formId
+	order by [Order]
 end
 go
 ------------------------------------------------
+/*
 declare @Schema nvarchar(255) = N'cat';
 declare @Table nvarchar(255) = N'Agents';
 
 exec a2meta.[Table.Schema] @Schema, @Table;
+*/
 
 /*
 insert into a2meta.TablesMetadata ([Schema], [Table], HiddenColumns)
@@ -231,3 +422,9 @@ from T
 group by [name], refschema, reftable;
 */
 
+/*
+drop table a2meta.Columns
+drop table a2meta.[Catalog];
+*/
+
+exec a2meta.[Config.Load] 99

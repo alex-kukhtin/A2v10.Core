@@ -11,7 +11,7 @@ using A2v10.Data.Core.Extensions;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 
-namespace A2v10.Metadata.SqlServer;
+namespace A2v10.Metadata;
 
 internal partial class DatabaseModelProcessor(DatabaseMetadataProvider _metadataProvider, ICurrentUser _currentUser, IDbContext _dbContext)
 {

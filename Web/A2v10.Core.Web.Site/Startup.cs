@@ -56,7 +56,7 @@ public class Startup(IConfiguration configuration)
 		//!!!Before UsePlatform(). It has a default implementation.
 		//services.UseMailClient();
 		//services.UseAppRuntimeBuilder();
-		services.UseAppMetdataBuilder();
+		services.UseAppMetdata();
 		//services.UsePermissions();
 		//services.AddScoped<IUserBannerProvider, TestBannerProvider>();
 		//services.UseLicenseManager();

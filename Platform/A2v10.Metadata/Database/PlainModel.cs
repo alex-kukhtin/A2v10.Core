@@ -7,7 +7,7 @@ using A2v10.Data.Core.Extensions;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 
-namespace A2v10.Metadata.SqlServer;
+namespace A2v10.Metadata;
 
 internal partial class DatabaseModelProcessor
 {
@@ -22,7 +22,7 @@ internal partial class DatabaseModelProcessor
         set nocount on;
         set transaction isolation level read uncommitted;
         
-        select [{meta.Table.Singular()}!{meta.ModelType}!Object] = null,
+        select [{meta.Name.Singular()}!{meta.ModelType}!Object] = null,
             {String.Join(",", meta.SelectFieldsAll("a", refFields))},
             [!!RowCount]  = count(*) over()        
         from {meta.SqlTableName} a

@@ -4,7 +4,7 @@ using A2v10.Infrastructure;
 using A2v10.Xaml;
 using System;
 
-namespace A2v10.Metadata.SqlServer;
+namespace A2v10.Metadata;
 
 internal partial class ModelPageBuilder
 {
@@ -25,13 +25,13 @@ internal partial class ModelPageBuilder
                         Url = $"/{column.Column.Reference!.EndpointPath}",
                         Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), new Bind($"{elemName}.{column.Name}"))
                     });
-                else if (column.Column.ColumnDataType == ColumnDataType.Boolean)
+                else if (column.Column.DataType == ColumnDataType.Bit)
                     coll.Add(new CheckBox()
                     {
                         Label = $"@[{column.Name}]",
                         Bindings = b => b.SetBinding(nameof(CheckBox.Value), new Bind($"{elemName}.{column.Name}"))
                     });
-                else if (column.Column.ColumnDataType == ColumnDataType.Date || column.Column.ColumnDataType == ColumnDataType.DateTime)
+                else if (column.Column.DataType == ColumnDataType.Date || column.Column.DataType == ColumnDataType.DateTime)
                     coll.Add(new DatePicker()
                     {
                         Label = $"@[{column.Name}]",
@@ -50,7 +50,7 @@ internal partial class ModelPageBuilder
 
         return new Dialog()
         {
-            Title = $"@[{meta.Table.Singular()}]",
+            Title = $"@[{meta.Name.Singular()}]",
             Buttons = [
                 new Button() {
                     Content = "@[SaveAndClose]",

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 using A2v10.Infrastructure;
 
-namespace A2v10.Metadata.SqlServer;
+namespace A2v10.Metadata;
 
 // SINGLETON
 
@@ -22,7 +22,7 @@ public class DatabaseMetadataCache
         if (_cache.TryGetValue(key, out TableMetadata? meta))
             return meta;
         meta = await getMeta(dataSource, schema, table);
-        key = $"{dataSource}:{meta.Schema}:{meta.Table}";
+        key = $"{dataSource}:{meta.Schema}:{meta.Name}";
         var globalMeta = await GetGlobalMetaAsync(dataSource, getMeta);
         meta = meta.MergeGlobal(globalMeta);
         return _cache.GetOrAdd(key, meta);

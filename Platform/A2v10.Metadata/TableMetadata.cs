@@ -3,27 +3,37 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
+using A2v10.Xaml;
+using Newtonsoft.Json;
 
-namespace A2v10.Metadata.SqlServer;
+namespace A2v10.Metadata;
 
 public enum ColumnDataType
 {
+    Id,
+    Reference,
+    String,
+    // sql
     BigInt,
     Int,
-    String,
-    Boolean,
+    NVarChar,
+    NChar,
+    Bit,
     Date,
     DateTime,
-    Currency,
+    Money,
     Float,
-    Guid
+    Uniqueidentifier
 }
 
 public record ColumnReference
 {
     public String RefSchema { get; init; } = default!;
     public String RefTable { get; init; } = default!;
+
+    /* OLD */
     public String RefColumn { get; init; } = default!;
     public String ModelType => $"TR{RefTable.Singular()}";
     public TableMetadata RefMetadata { get; set; } = new();
@@ -33,30 +43,17 @@ public record TableColumn
 {
     #region Database Fields
     public String Name { get; init; } = default!;
-    public String DataType { get; init; } = default!;
+    public ColumnDataType DataType { get; init; } = default!;
     public Int32? MaxLength { get; init; }
     public ColumnReference? Reference { get; init; }
+    public String? DbName { get; init; }
+    public ColumnDataType? DbDataType { get; init; }
     #endregion
 
+    internal Boolean Exists => DbName != null && DbDataType != null;
     internal Boolean IsReference => Reference != null;    
     internal Boolean IsParent => Name == "Parent";
-
-    internal Boolean IsSearchable => ColumnDataType == ColumnDataType.String;
-
-    internal ColumnDataType ColumnDataType => DataType switch
-        {
-            "bigint" => ColumnDataType.BigInt,
-            "int" => ColumnDataType.Int,
-            "nvarchar" => ColumnDataType.String,
-            "nchar" => ColumnDataType.String,
-            "date" => ColumnDataType.Date,
-            "datetime" => ColumnDataType.DateTime,
-            "money" => ColumnDataType.Currency,
-            "float" => ColumnDataType.Float,   
-            "bit" => ColumnDataType.Boolean,
-            "uniqueidentifier" => ColumnDataType.Guid,
-            _ => throw new InvalidOperationException($"Unknown DataType: {DataType}")
-        };
+    internal Boolean IsSearchable => DataType == ColumnDataType.String;
 }
 
 public record ViewColumn
@@ -121,28 +118,39 @@ public record TableDefinition
 
 public record FormColumn
 {
-    public String Path { get; set; } = default!;
+    public String Path { get; init; } = default!;
     public String? Header { get; set; }
     public Boolean NoSort { get; init; }
     public Boolean Filter { get; init; }
     public Int32 Width { get; init; }
-    public Int32 Clamp { get; init; }
+    public Int32 Clamp { get; init; }    
+
+    // internal 
+    internal ColumnRole Role { get; init; } 
+    internal String? SortProperty { get; init; }    
 }
 public record Form
 {    
     public Int32 Width { get; init; }
     public String? Title { get; init; }
-    public List<FormColumn> FormColumns { get; set; } = [];
+    public List<FormColumn> Columns { get; set; } = [];
 }
 
 public record TableMetadata
 {
-    public List<TableColumn> Columns { get; private set; } = [];
+    #region Database fields
     public String Schema { get; init; } = default!;
-    public String Table { get; init; } = default!;
+    public String Name { get; init; } = default!;
+    public List<TableColumn> Columns { get; private set; } = [];
+    public String? ItemsName { get; init; }
+    public String? ItemName { get; init; }
+    public String? TypeName { get; init; }
+    #endregion
+
+    // OLD
     public TableDefinition Definition { get; set; } = default!;
-    internal String SqlTableName => $"{Schema}.[{Table}]";
-    internal String ModelType => $"T{Table.Singular()}";
+    internal String SqlTableName => $"{Schema}.[{Name}]";
+    internal String ModelType => $"T{Name.Singular()}";
 
     internal IEnumerable<ViewColumn> EditColumns(IModelBaseMeta meta)
     {
@@ -196,9 +204,36 @@ public record TableMetadata
         return new TableMetadata()
         {
             Definition = def,
-            Table = this.Table,
+            Name = this.Name,
             Schema = this.Schema,
             Columns = Columns.Where(IsFieldVisible).ToList()
         };
+    }
+}
+
+public record AppMetadata
+{
+    public ColumnDataType IdDataType { get; init; }
+    public TableMetadata[] Tables { get; init; } = [];
+
+    // field names
+    public String? Id { get; init; }
+    public String? Name { get; init; }
+    public String? Void { get; init; }
+    public String? IsSystem { get; init; }
+    public String? IsFolder { get; init; }
+
+    internal String IdField => Id ?? nameof(Id);
+    internal String NameField => Name ?? nameof(Name);
+    internal String VoidField => Name ?? nameof(Void);
+    internal String IsFolderField => Name ?? nameof(IsFolder);
+    internal String IsSystemField => Name ?? nameof(IsSystem);
+    internal Boolean HasConstraint(String name) => name == IsSystemField || name == IsFolderField || name == VoidField;
+    internal static AppMetadata FromDataModel(IDataModel model)
+    {
+        var json = JsonConvert.SerializeObject(model.Root.Get<Object>("Application"))
+            ?? throw new InvalidOperationException("Application is null");
+        return JsonConvert.DeserializeObject<AppMetadata>(json)
+            ?? throw new InvalidOperationException("AppMetadata deserialization fails");
     }
 }

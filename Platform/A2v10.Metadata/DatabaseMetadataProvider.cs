@@ -8,9 +8,8 @@ using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
-using A2v10.Xaml;
 
-namespace A2v10.Metadata.SqlServer;
+namespace A2v10.Metadata;
 
 public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbContext _dbContext)
 {
@@ -40,7 +39,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             var meta = await _metadataCache.GetOrAddAsync(null, pathInfo.schema, pathInfo.table,
                 LoadTableMetadataAsync);
             // case sensitive
-            pathInfo.table = meta.Table;
+            pathInfo.table = meta.Name;
             pathInfo.schema = meta.Schema;
             _metadataCache.GetOrAddEndpointPath(null, pathInfo.schema, pathInfo.table);
             modelTableInfo = _metadataCache.GetModelInfoFromPath(path);
@@ -87,7 +86,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         var json = JsonConvert.SerializeObject(formExpando);
         if (json == null)
             throw new InvalidOperationException("Form not found");
-        var meta = JsonConvert.DeserializeObject<Form>(json)
+        var meta = JsonConvert.DeserializeObject<Form>(json, JsonSettings.IgnoreNull)
             ?? throw new InvalidOperationException("Form deserialization fails");
         return meta;
     }
@@ -99,10 +98,10 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             throw new InvalidOperationException($"Invalid path: {path}");
         var schema = split[0] switch
         {
-            "catalog" => "cat",
-            "document" => "doc",
+            "catalogs" => "cat",
+            "documents" => "doc",
             _ => "unknown schema"
         };
-        return (schema, split[1].Plural());
+        return (schema, split[1]);
     }
 }

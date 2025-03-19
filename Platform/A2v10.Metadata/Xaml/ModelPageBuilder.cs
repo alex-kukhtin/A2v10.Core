@@ -13,7 +13,7 @@ using A2v10.Data.Interfaces;
 using A2v10.Xaml;
 using System.Linq;
 
-namespace A2v10.Metadata.SqlServer;
+namespace A2v10.Metadata;
 
 internal partial class ModelPageBuilder(IServiceProvider _serviceProvider)
 {
@@ -37,13 +37,16 @@ internal partial class ModelPageBuilder(IServiceProvider _serviceProvider)
         else {
             if (platformUrl.Action.Equals("index", StringComparison.OrdinalIgnoreCase))
             {
-                var form = MergeIndexForm(await _dbMetaProvider.GetFormAsync(modelView.DataSource, meta.Schema, meta.Table, platformUrl.Action), meta);
-                page = CreateIndexPage(platformUrl, modelView, meta);
+                var form = MergeIndexForm(await _dbMetaProvider.GetFormAsync(modelView.DataSource, meta.Schema, meta.Name, platformUrl.Action), meta);
+                page = CreateIndexPage(platformUrl, modelView, form);
             }
             else if (modelView.IsDialog && platformUrl.Action == "edit")
                 page = CreateEditDialog(platformUrl, modelView, meta);
             else if (modelView.IsDialog && platformUrl.Action == "browse")
+            {
+                var form = MergeIndexForm(await _dbMetaProvider.GetFormAsync(modelView.DataSource, meta.Schema, meta.Name, platformUrl.Action), meta);
                 page = CreateBrowseDialog(platformUrl, modelView, meta);
+            }
         }
 
         if (page == null)
@@ -88,15 +91,25 @@ internal partial class ModelPageBuilder(IServiceProvider _serviceProvider)
 
     Form MergeIndexForm(Form? form, TableMetadata meta)
     {
-        var metaColumns = meta.Columns.Select(c => new FormColumn()
+        var metaColumns = meta.Columns.Select(c => 
         {
-            Path = c.Name
-        });
+            var sf = c.IsParent ? "Elem" : string.Empty;
+            var col = new FormColumn()
+            {
+                Path = c.IsReference ? $"{c.Name}cf.Name" : c.Name,
+                Header = $"@[{c.Name}]",
+                Clamp = c.MaxLength >= 255 ? 2 : 0,
+                Role = c.DataType.ToColumnRole(c.IsReference),
+                SortProperty = c.IsReference ? c.Name : null
+            };
+            return col;
+         });
 
+        var fc = form?.Columns;
         return new Form()
         {
-            Title = form?.Title ?? $"@[{meta.Table.Singular()}.Browse]",
-            FormColumns = form?.FormColumns ?? metaColumns.ToList()
+            Title = form?.Title ?? $"@[{meta.Name.Singular()}.Browse]",
+            Columns = fc != null && fc.Count > 0 ? fc : metaColumns.ToList()
         };
     }
 

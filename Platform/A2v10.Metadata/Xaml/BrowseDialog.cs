@@ -4,7 +4,7 @@ using A2v10.Infrastructure;
 using A2v10.Xaml;
 using System;
 
-namespace A2v10.Metadata.SqlServer;
+namespace A2v10.Metadata;
 
 internal partial class ModelPageBuilder
 {
@@ -36,12 +36,12 @@ internal partial class ModelPageBuilder
                 {
                     Header = c.Header
                 };
-                dgc.Role = c.Column.ColumnDataType switch
+                dgc.Role = c.Column.DataType switch
                 {
                     ColumnDataType.BigInt => c.Column.IsReference ? ColumnRole.Default : ColumnRole.Id,
                     ColumnDataType.Date or ColumnDataType.DateTime => ColumnRole.Date,
-                    ColumnDataType.Currency or ColumnDataType.Float => ColumnRole.Number,
-                    ColumnDataType.Boolean => ColumnRole.CheckBox,
+                    ColumnDataType.Money or ColumnDataType.Float => ColumnRole.Number,
+                    ColumnDataType.Bit => ColumnRole.CheckBox,
                     _ => ColumnRole.Default
                 };
                 if (c.Column.MaxLength >= 255)
@@ -61,13 +61,13 @@ internal partial class ModelPageBuilder
 
         return new Dialog()
         {
-            Title = $"@[{meta.Table.Singular()}.Browse]",
+            Title = $"@[{meta.Name.Singular()}.Browse]",
             Width = Length.FromString("60rem"),
             Overflow = true,
             CollectionView = new CollectionView()
             {
                 RunAt = RunMode.Server,
-                Bindings = b => b.SetBinding(nameof(CollectionView.ItemsSource), new Bind(meta.Table)),
+                Bindings = b => b.SetBinding(nameof(CollectionView.ItemsSource), new Bind(meta.Name)),
                 Filter = new FilterDescription()
                 {
                     Items = [

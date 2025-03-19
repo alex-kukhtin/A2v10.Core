@@ -8,7 +8,7 @@ using A2v10.Infrastructure;
 using A2v10.Data.Interfaces;
 using A2v10.Data.Core.Extensions;
 
-namespace A2v10.Metadata.SqlServer;
+namespace A2v10.Metadata;
 
 internal partial class DatabaseModelProcessor
 {
@@ -73,7 +73,7 @@ internal partial class DatabaseModelProcessor
         
         declare @fr nvarchar(255) = N'%' + @Fragment + N'%';
                 
-        select [{meta.Table}!{meta.ModelType}!Array] = null,
+        select [{meta.Name}!{meta.ModelType}!Array] = null,
             {String.Join(",", meta.SelectFieldsAll("a", refFields))},
             [!!RowCount]  = count(*) over()        
         from {meta.SqlTableName} a
@@ -84,9 +84,9 @@ internal partial class DatabaseModelProcessor
         
         -- system data
         select [!$System!] = null,
-        	[!{meta.Table}!PageSize] = @PageSize,  [!{meta.Table}!Offset] = @Offset,
-        	[!{meta.Table}!SortOrder] = @Order,  [!{meta.Table}!SortDir] = @Dir,
-        	[!{meta.Table}.Fragment!Filter] = @Fragment;
+        	[!{meta.Name}!PageSize] = @PageSize,  [!{meta.Name}!Offset] = @Offset,
+        	[!{meta.Name}!SortOrder] = @Order,  [!{meta.Name}!SortDir] = @Dir,
+        	[!{meta.Name}.Fragment!Filter] = @Fragment;
         
         """;
         return _dbContext.LoadModelSqlAsync(view.DataSource, sqlString, dbprms =>

@@ -1,7 +1,7 @@
-﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
-
+using System.Linq;
 using A2v10.Infrastructure;
 
 namespace A2v10.Xaml;
@@ -270,8 +270,5 @@ public class DataGridColumn : XamlElement
 
 public class DataGridColumnCollection : List<DataGridColumn>
 {
-	public DataGridColumnCollection()
-	{
-
-	}
+	public DataGridColumnCollection() {}
 }

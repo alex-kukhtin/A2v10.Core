@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 
-namespace A2v10.Metadata.SqlServer;
+namespace A2v10.Metadata;
 
 public class AppMetadataBuilder(IServiceProvider _serviceProvider,
     IDbContext _dbContext, ICurrentUser _currentUser, DatabaseMetadataProvider _metadataProvider) : IAppRuntimeBuilder

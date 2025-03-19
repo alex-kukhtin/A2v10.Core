@@ -1,50 +1,19 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
-using A2v10.Infrastructure;
-using A2v10.Xaml;
 using System;
 
-namespace A2v10.Metadata.SqlServer;
+using A2v10.Infrastructure;
+using A2v10.Xaml;
+
+namespace A2v10.Metadata;
 
 internal partial class ModelPageBuilder
 {
-    UIElement CreateIndexPage(IPlatformUrl platformUrl, IModelView modelView, TableMetadata meta)
+    UIElement CreateIndexPage(IPlatformUrl platformUrl, IModelView modelView, Form form)
     {
         var viewMeta = modelView.Meta
              ?? throw new InvalidOperationException("modelView.Meta is null");
         var table = viewMeta.CurrentTable;
-
-        DataGridColumnCollection DataGridColumns()
-        {
-            var columns = new DataGridColumnCollection();
-            foreach (var c in meta.IndexColumns(modelView.Meta))
-            {
-                var dgc = new DataGridColumn()
-                {
-                    Header = c.Header
-                };
-                dgc.Role = c.Column.ColumnDataType switch
-                {
-                    ColumnDataType.BigInt => c.Column.IsReference ? ColumnRole.Default :  ColumnRole.Id,
-                    ColumnDataType.Date or ColumnDataType.DateTime => ColumnRole.Date,
-                    ColumnDataType.Currency or ColumnDataType.Float => ColumnRole.Number,
-                    ColumnDataType.Boolean => ColumnRole.CheckBox,
-                    _ => ColumnRole.Default
-                };
-                if (c.Column.MaxLength >= 255)
-                    dgc.LineClamp = 2;
-                if (c.Column.IsReference)
-                {
-                    dgc.SortProperty = c.Name;
-                    var sf = c.Column.IsParent ? "Elem" : string.Empty;
-                    dgc.BindImpl.SetBinding(nameof(DataGridColumn.Content), new Bind($"{c.Name}{sf}.Name"));
-                }
-                else
-                    dgc.BindImpl.SetBinding(nameof(DataGridColumn.Content), new Bind(c.Name));
-                columns.Add(dgc);
-            }
-            return columns;
-        }
 
         Button EditButton() 
         {
@@ -132,7 +101,7 @@ internal partial class ModelPageBuilder
                             FixedHeader = true,
                             Sort = true,
                             Bindings = b => b.SetBinding(nameof(DataGrid.ItemsSource), new Bind("Parent.ItemsSource")),
-                            Columns = DataGridColumns()
+                            Columns = [..form.IndexColumns()]
                         },
                         new Pager() {
                             Bindings = b => b.SetBinding(nameof(Pager.Source), new Bind("Parent.Pager"))
