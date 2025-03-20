@@ -33,15 +33,20 @@ internal partial class ModelPageBuilder(IServiceProvider _serviceProvider)
         UIElement? page = null;
         var rawView = modelView.GetRawView(false);
         if (!String.IsNullOrEmpty(rawView))
+        {
             page = LoadPage(modelView, rawView);
-        else {
+        }
+        else
+        {
             if (platformUrl.Action.Equals("index", StringComparison.OrdinalIgnoreCase))
             {
                 var form = MergeIndexForm(await _dbMetaProvider.GetFormAsync(modelView.DataSource, meta.Schema, meta.Name, platformUrl.Action), meta);
                 page = CreateIndexPage(platformUrl, modelView, form);
             }
             else if (modelView.IsDialog && platformUrl.Action == "edit")
+            {
                 page = CreateEditDialog(platformUrl, modelView, meta);
+            }
             else if (modelView.IsDialog && platformUrl.Action == "browse")
             {
                 var form = MergeIndexForm(await _dbMetaProvider.GetFormAsync(modelView.DataSource, meta.Schema, meta.Name, platformUrl.Action), meta);
@@ -110,7 +115,7 @@ internal partial class ModelPageBuilder(IServiceProvider _serviceProvider)
         var fc = form?.Columns;
         return new Form()
         {
-            Title = form?.Title ?? $"@[{meta.Name.Singular()}.Browse]",
+            Title = form?.Title ?? $"@[{meta.Name}]",
             Columns = fc != null && fc.Count > 0 ? fc : metaColumns.ToList()
         };
     }

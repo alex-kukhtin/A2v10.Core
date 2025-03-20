@@ -4,7 +4,6 @@
 10. Save Model
 13. Не сортирует по битовым полям (это где-то в Xaml)
 14. Не работает ParentElem в Edit.
-15. Global Hidden columns root.Global 
 17. IndexPage DoubleClick
 18. Index: Загрузка колонок / фильтров из БД
 19. ContractKind: нет колонки Void (что-то придумать в БД)
@@ -12,7 +11,9 @@
 21. Color в метаданные для TagLabel
 22. Переименовать сам пакет и разделить его на две части - Xaml и БД.
 (чтобы менять код для БД для разных СУБД)
-23. 
 25. CreateTable - Default for primary key
+26. ParentElem переименовать в Folder
+27. Edit - исключить Id, Void, IsSystem IsFolder
+28. Формы!!!!
 
 

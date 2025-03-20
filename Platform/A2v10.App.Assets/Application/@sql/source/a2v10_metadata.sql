@@ -450,3 +450,4 @@ declare @Table nvarchar(255) = N'companies';
 
 exec a2meta.[Table.Schema] @Schema, @Table;
 
+select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where CONSTRAINT_NAME = N'FK_Columns_Parent_Catalog'

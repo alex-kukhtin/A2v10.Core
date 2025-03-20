@@ -1,6 +1,7 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+using System.Dynamic;
 using System.Threading.Tasks;
 
 using A2v10.Data.Core.Extensions;
@@ -35,5 +36,42 @@ internal partial class DatabaseModelProcessor
             AddDefaultParameters(dbprms);
             dbprms.AddString("@Id", platformUrl.Id);
         });
+    }
+
+    public async Task<ExpandoObject> SaveModelAsync(IModelView view, ExpandoObject data, ExpandoObject savePrms)
+    {
+        if (view.Meta == null)
+            throw new InvalidOperationException("Meta is null");
+        var table = await _metadataProvider.GetSchemaAsync(view.Meta, view.DataSource);
+        var appMeta = await _metadataProvider.GetAppMetadataAsync(view.DataSource);
+
+        // todo: Id from
+        var sqlString = $"""
+        set nocount on;
+        set transaction isolation level read committed;
+        set xact_abort on;
+        
+        declare @rtable table(Id {appMeta.IdDataType});
+        declare @Id {appMeta.IdDataType};
+        
+        merge {table.Schema}.[{table.Name}] as t
+        using @{table.RealItemName} as s
+        on t.[{appMeta.IdField}] = s.[{appMeta.IdField}]
+        when matched then update set
+
+        when not matched then insert
+        () values
+        () 
+        output inserted.Id into @rtable(Id);
+
+        select @Id = Id from @rtable;
+
+
+        """;
+        var dm = await _dbContext.LoadModelSqlAsync(view.DataSource, sqlString, dbprms =>
+        {
+            AddDefaultParameters(dbprms);
+        });
+        return dm.Root; 
     }
 }

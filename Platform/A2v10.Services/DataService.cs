@@ -258,7 +258,7 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 		execPrms.SetNotNull("Id", Id);
 
 		IDataModel? model;
-		if (view.ModelAuto != null)
+		if (view.HasMetadata)
 			model = await _appRuntimeBuilder.ExpandAsync(platformBaseUrl, view, execPrms);
 		else
 			model = await _dbContext.LoadModelAsync(view.DataSource, expandProc, execPrms);
@@ -276,7 +276,7 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 
 		var deleteProc = view.DeleteProcedure(propertyName);
 
-		if (view.ModelAuto != null)
+		if (view.HasMetadata)
 			await _appRuntimeBuilder.DbRemoveAsync(platformBaseUrl, view, propertyName, execPrms);
 		else
 			await _dbContext.ExecuteExpandoAsync(view.DataSource, deleteProc, execPrms);
@@ -356,7 +356,7 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 
 		CheckUserState();
 
-		if (view.ModelAuto != null)
+		if (view.HasMetadata)
 		{
 			var saveResult = await _appRuntimeBuilder.SaveAsync(platformBaseUrl, view, data, savePrms);
 			return new SaveResult()

@@ -17,7 +17,7 @@ internal partial class ModelPageBuilder
 
         Button EditButton() 
         {
-            var cmd = viewMeta.Edit == MetaEditMode.Dialog
+            var cmd = viewMeta.EditMode == MetaEditMode.Dialog
             ? new BindCmd()
             {
                 Command = CommandType.Dialog,
@@ -56,6 +56,7 @@ internal partial class ModelPageBuilder
 
         return new Page()
         {
+            Title = form.Title,
             CollectionView = new CollectionView()
             {
                 RunAt = RunMode.ServerUrl,

@@ -110,7 +110,9 @@ public record TableMetadata
     public String? TypeName { get; init; }
     #endregion
 
+    // TODO
     internal String ModelType => $"T{Name.Singular()}";
+    internal String RealItemName => ItemName ?? Name.Singular();
 
     internal IEnumerable<ViewColumn> EditColumns(IModelBaseMeta meta)
     {

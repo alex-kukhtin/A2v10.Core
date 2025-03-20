@@ -32,9 +32,9 @@ public class AppMetadataBuilder(IServiceProvider _serviceProvider,
         return new AppRuntimeResult(dm, page);
     }
 
-    public Task<ExpandoObject> SaveAsync(IPlatformUrl platformUrl, IModelView view, ExpandoObject data, ExpandoObject savePrms)
+    public async Task<ExpandoObject> SaveAsync(IPlatformUrl platformUrl, IModelView view, ExpandoObject data, ExpandoObject savePrms)
     {
-        throw new NotImplementedException();
+        return await _dbProcessor.SaveModelAsync(view, data, savePrms);
     }
 
     public Task DbRemoveAsync(IPlatformUrl platformUrl, IModelView view, string? propName, ExpandoObject execPrms)
