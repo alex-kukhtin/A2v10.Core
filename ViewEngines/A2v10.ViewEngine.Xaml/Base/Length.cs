@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System.ComponentModel;
 using System.Globalization;
@@ -96,8 +96,10 @@ public record GridLength
 
 	public static GridLength FromString(String strVal)
 	{
-		if (strVal == "Auto")
+		if (strVal.Equals("Auto", StringComparison.OrdinalIgnoreCase))
 			return new GridLength("auto");
+		else if (strVal.EndsWith("fr"))
+			return new GridLength(strVal);
 		else if (strVal.StartsWith("MinMax"))
 		{
 			var pattern = @"MinMax\(([\w\.]+[%\*\.]?);([\w\.]+[%\*\.]?)\)";

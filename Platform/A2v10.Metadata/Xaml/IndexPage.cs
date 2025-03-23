@@ -9,7 +9,7 @@ namespace A2v10.Metadata;
 
 internal partial class ModelPageBuilder
 {
-    UIElement CreateIndexPage(IPlatformUrl platformUrl, IModelView modelView, Form form)
+    UIElement CreateIndexPage(IPlatformUrl platformUrl, IModelView modelView, FormOld form)
     {
         var viewMeta = modelView.Meta
              ?? throw new InvalidOperationException("modelView.Meta is null");

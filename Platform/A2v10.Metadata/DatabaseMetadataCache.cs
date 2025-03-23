@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Threading.Tasks;
 
 using A2v10.Infrastructure;
+using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
@@ -14,7 +15,7 @@ public class DatabaseMetadataCache
 {
     ConcurrentDictionary<String, TableMetadata> _cache = [];
     ConcurrentDictionary<String, EndpointTableInfo> _endpoints = [];
-    ConcurrentDictionary<String, Form?> _formCache = [];
+    ConcurrentDictionary<String, FormMetadata> _formCache = [];
     ConcurrentDictionary<String, AppMetadata> _appMetaCache = [];
     public async Task<TableMetadata> GetOrAddAsync(String? dataSource, String schema, String table, 
         Func<String?, String, String, Task<TableMetadata>> getMeta)
@@ -38,25 +39,20 @@ public class DatabaseMetadataCache
         return _appMetaCache.GetOrAdd(key, meta);
     }
 
-    async Task<TableMetadata> GetGlobalMetaAsync(String? dataSource,
-        Func<String?, String, String, Task<TableMetadata>> getMeta)
+    public Task<FormOld?> GetOrAddFormOldAsync(String? dataSource, String schema, String table, String key,
+        Func<String?, String, String, String, Task<FormOld?>> getForm)
     {
-        var schema = "a2meta";
-        var table = "TablesMetadata";
-        var key = $"{dataSource}:{schema}:{table}";
-        if (_cache.TryGetValue(key, out TableMetadata? meta))
-            return meta;
-        meta = await getMeta(dataSource, schema, table);
-        return _cache.GetOrAdd(key, meta);
+        throw new InvalidOperationException("Form CACHE OLD");
     }
 
-    public async Task<Form?> GetOrAddFormAsync(String? dataSource, String schema, String table, String key,
-        Func<String?, String, String, String, Task<Form?>> getForm)
+    public async Task<FormMetadata> GetOrAddFormAsync(String? dataSource, String schema, String table, String key,
+    Func<String?, String, String, String, Task<FormMetadata>> getForm)
     {
         var dictKey = $"{dataSource}:{schema}:{table}:{key.ToLowerInvariant()}";
-        if (_formCache.TryGetValue(dictKey, out Form? form))
+        if (_formCache.TryGetValue(dictKey, out var form))
             return form;
         form = await getForm(dataSource, schema, table, key);
+        return form; // TODO: CACHE
         return _formCache.GetOrAdd(dictKey, form);
     }
 

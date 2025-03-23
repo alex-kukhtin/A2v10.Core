@@ -92,7 +92,7 @@ public record FormColumn
     internal DataType BindDataType {  get; init; }  
     internal String? SortProperty { get; init; }    
 }
-public record Form
+public record FormOld
 {    
     public Int32 Width { get; init; }
     public String? Title { get; init; }
@@ -113,6 +113,7 @@ public record TableMetadata
     // TODO
     internal String ModelType => $"T{Name.Singular()}";
     internal String RealItemName => ItemName ?? Name.Singular();
+    internal String RealItemsName => ItemsName ?? Name;  
 
     internal IEnumerable<ViewColumn> EditColumns(IModelBaseMeta meta)
     {

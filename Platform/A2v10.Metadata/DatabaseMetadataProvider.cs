@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
+using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
@@ -32,9 +33,9 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return _metadataCache.GetOrAddEndpointPath(dataSource, schema, table);
     }
 
-    public Task<Form?> GetFormAsync(String? dataSource, String schema, String table, String key)
+    public Task<FormOld?> GetFormOldAsync(String? dataSource, String schema, String table, String key)
     {
-        return _metadataCache.GetOrAddFormAsync(dataSource, schema, table, key, LoadTableFormAsync);
+        return _metadataCache.GetOrAddFormOldAsync(dataSource, schema, table, key, LoadTableFormOldAsync);
     }
 
     public async Task<EndpointTableInfo> GetModelInfoFromPathAsync(String path)
@@ -53,6 +54,11 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         if (modelTableInfo == null)
             throw new InvalidOperationException("GetModelInfo fails");
         return modelTableInfo;
+    }
+
+    public Task<FormMetadata> GetFormAsync(String? dataSource, String schema, String table, String key)
+    {
+        return _metadataCache.GetOrAddFormAsync(dataSource, schema, table, key, LoadTableFormAsync);
     }
 
     private async Task<AppMetadata> LoadAppMetadataAsync(String? dataSource)
@@ -86,7 +92,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return meta;
     }
 
-    private async Task<Form?> LoadTableFormAsync(String? dataSource, String schema, String table, String key)
+    private async Task<FormOld?> LoadTableFormOldAsync(String? dataSource, String schema, String table, String key)
     {
         var prms = new ExpandoObject()
         {
@@ -103,9 +109,39 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         var json = JsonConvert.SerializeObject(formExpando);
         if (json == null)
             throw new InvalidOperationException("Form not found");
-        var meta = JsonConvert.DeserializeObject<Form>(json, JsonSettings.IgnoreNull)
+        var meta = JsonConvert.DeserializeObject<FormOld>(json, JsonSettings.IgnoreNull)
             ?? throw new InvalidOperationException("Form deserialization fails");
         return meta;
+    }
+
+    private async Task<FormMetadata> LoadTableFormAsync(String? dataSource, String schema, String table, String key)
+    {
+        var prms = new ExpandoObject()
+        {
+            {"Schema", schema},
+            {"Table", table},
+            {"Key", key},
+        };
+        var dm = await _dbContext.LoadModelAsync(dataSource, "a2meta.[Table.Form]", prms)
+            ?? throw new InvalidOperationException("Form is null");
+
+        var formExpando = dm.Eval<ExpandoObject>("Form");
+        if (formExpando == null)
+        {
+            var fb = new FormBuilder(this, dataSource, schema, table);
+            var defaultForm = await fb.CreateFormAsync(key);
+            return new FormMetadata(XamlBulder.BuildForm(defaultForm), String.Empty);
+        }
+
+        var json = JsonConvert.SerializeObject(formExpando);
+
+        if (json == null)
+            throw new InvalidOperationException("Form not found");
+        var form = JsonConvert.DeserializeObject<Form>(json, JsonSettings.IgnoreNull)
+            ?? throw new InvalidOperationException("Form deserialization fails");
+
+        return new FormMetadata(XamlBulder.BuildForm(form), String.Empty);
+
     }
 
     private (String schema, String table) ParsePath(String path)

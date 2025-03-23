@@ -38,20 +38,9 @@ internal partial class ModelPageBuilder(IServiceProvider _serviceProvider)
         }
         else
         {
-            if (platformUrl.Action.Equals("index", StringComparison.OrdinalIgnoreCase))
-            {
-                var form = MergeIndexForm(await _dbMetaProvider.GetFormAsync(modelView.DataSource, meta.Schema, meta.Name, platformUrl.Action), meta);
-                page = CreateIndexPage(platformUrl, modelView, form);
-            }
-            else if (modelView.IsDialog && platformUrl.Action == "edit")
-            {
-                page = CreateEditDialog(platformUrl, modelView, meta);
-            }
-            else if (modelView.IsDialog && platformUrl.Action == "browse")
-            {
-                var form = MergeIndexForm(await _dbMetaProvider.GetFormAsync(modelView.DataSource, meta.Schema, meta.Name, platformUrl.Action), meta);
-                page = CreateBrowseDialog(platformUrl, modelView, meta);
-            }
+            var formMeta = await _dbMetaProvider.GetFormAsync(modelView.DataSource, meta.Schema, meta.Name, platformUrl.Action);
+            page = formMeta.Page;
+            templateText = formMeta.Template;
         }
 
         if (page == null)
@@ -94,7 +83,7 @@ internal partial class ModelPageBuilder(IServiceProvider _serviceProvider)
         throw new InvalidOperationException("Xaml. Root is not an IXamlElement");
     }
 
-    Form MergeIndexForm(Form? form, TableMetadata meta)
+    FormOld MergeIndexForm(FormOld? form, TableMetadata meta)
     {
         var metaColumns = meta.Columns.Select(c => 
         {
@@ -113,7 +102,7 @@ internal partial class ModelPageBuilder(IServiceProvider _serviceProvider)
          });
 
         var fc = form?.Columns;
-        return new Form()
+        return new FormOld()
         {
             Title = form?.Title ?? $"@[{meta.Name}]",
             Columns = fc != null && fc.Count > 0 ? fc : metaColumns.ToList()

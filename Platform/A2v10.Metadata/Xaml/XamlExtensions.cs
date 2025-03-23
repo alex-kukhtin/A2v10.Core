@@ -10,6 +10,41 @@ namespace A2v10.Metadata;
 
 internal static class XamlExtensions
 {
+    public static Icon Command2Icon(this FormCommand command)
+    {
+        return command switch {
+            FormCommand.Reload => Icon.Reload,
+            FormCommand.Edit => Icon.Edit,
+            FormCommand.Delete => Icon.Clear,
+            FormCommand.Create => Icon.Plus,
+            _ => Icon.NoIcon,
+        };
+    }
+
+    public static BindCmd BindCommand(this FormItem item)
+    {
+        BindCmd CreateDialogCommand(DialogAction action)
+        {
+            var cmd = new BindCmd()
+            {
+                Command = CommandType.Dialog,
+                Action = action,
+                Url = $"/{item.CommandParameter}/edit"
+            };
+            cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind("Parent.ItemsSource"));
+            return cmd;
+        }
+
+        return item.Command switch
+        {
+            FormCommand.Reload => new BindCmd() { Command = CommandType.Reload },
+            FormCommand.Edit => CreateDialogCommand(DialogAction.EditSelected), 
+            FormCommand.Create => CreateDialogCommand(DialogAction.Append),
+            _ => throw new NotImplementedException($"Implement Command for {item.Command}")
+        };
+
+    }
+
     public static DataType ToBindDataType(this ColumnDataType columnDataType)
     {
         return columnDataType switch
@@ -22,6 +57,7 @@ internal static class XamlExtensions
             _ => DataType.String,
         };
     }
+
     public static ColumnRole ToColumnRole(this ColumnDataType dataType, Boolean isReference)
     {
         return dataType switch
@@ -34,7 +70,7 @@ internal static class XamlExtensions
             _ => ColumnRole.Default,
         };
     }
-    public static IEnumerable<DataGridColumn> IndexColumns(this Form form)
+    public static IEnumerable<DataGridColumn> IndexColumns(this FormOld form)
     {
         return form.Columns.Select(c =>
             new DataGridColumn()

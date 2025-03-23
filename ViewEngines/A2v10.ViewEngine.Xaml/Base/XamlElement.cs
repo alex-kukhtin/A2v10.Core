@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
 
@@ -12,7 +12,7 @@ public class XamlElement : ISupportBinding, IInitComplete
 	internal Dictionary<String, Object>? _attachedProps;
 
 	public Action<XamlElement>? Bindings { get; init; }
-	public Action<IDictionary<String, Object>>? Attach { get; init; }
+	public Action<IDictionary<String, Object>>? Attach { get; set; }
 
 	BindImpl? _bindImpl;
 

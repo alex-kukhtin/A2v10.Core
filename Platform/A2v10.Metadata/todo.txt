@@ -13,7 +13,11 @@
 (чтобы менять код для БД для разных СУБД)
 25. CreateTable - Default for primary key
 26. ParentElem переименовать в Folder
-27. Edit - исключить Id, Void, IsSystem IsFolder
+27. Edit/Index/Browse - исключить Id, Void, IsSystem IsFolder
 28. Формы!!!!
+29. IndexPage: Height 100%
+30. Edit in Page/Dialog
+31. IndexPage: SortProperty
+32. 
 
 
