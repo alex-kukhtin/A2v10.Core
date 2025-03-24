@@ -40,7 +40,7 @@ internal partial class DatabaseModelProcessor(DatabaseMetadataProvider _metadata
         prms.AddBigInt("@UserId", _currentUser.Identity.Id);
     }
 
-    String RefTableJoins(IEnumerable<(TableColumn Column, Int32 Index)> refFields, AppMetadata appMeta)
+    String RefTableJoins(IEnumerable<(TableColumn Column, Int32 Index)> refFields, String alias, AppMetadata appMeta)
     {
         var sb = new StringBuilder();
         foreach (var col in refFields)
@@ -48,7 +48,7 @@ internal partial class DatabaseModelProcessor(DatabaseMetadataProvider _metadata
             var rc = col.Column.Reference ??
                 throw new InvalidOperationException("Invalid Reference");
             sb.AppendLine($"""
-                left join {rc.RefSchema}.[{rc.RefTable}] r{col.Index} on a.[{col.Column.Name}] = r{col.Index}.[{appMeta.IdField}]
+                left join {rc.RefSchema}.[{rc.RefTable}] r{col.Index} on {alias}.[{col.Column.Name}] = r{col.Index}.[{appMeta.IdField}]
             """);
         }
         return sb.ToString();

@@ -27,6 +27,8 @@ internal static class XamlExtensions
         return item.DataType switch
         {
             ItemDataType.Currency => new Bind(item.Data) { DataType = DataType.Currency, HideZeros = true, NegativeRed = true },
+            ItemDataType.Date => new Bind(item.Data) { DataType = DataType.Date },
+            ItemDataType.DateTime => new Bind(item.Data) { DataType = DataType.DateTime },
             _ => new Bind(item.Data),
         };
     }
@@ -82,6 +84,7 @@ internal static class XamlExtensions
     {
         return dataType switch
         {
+            ItemDataType.Id => ColumnRole.Id,
             ItemDataType.Boolean => ColumnRole.CheckBox,
             ItemDataType.Currency => ColumnRole.Number,
             ItemDataType.Date or ItemDataType.DateTime => ColumnRole.Date,

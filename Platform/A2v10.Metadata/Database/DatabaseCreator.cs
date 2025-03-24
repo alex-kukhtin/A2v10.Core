@@ -71,12 +71,11 @@ internal class DatabaseCreator(AppMetadata _meta)
         var fields = table.Columns.Select(c => createField(c));
 
         return $"""
-        drop type if exists {table.Schema}.[{table.Name}.TableType];
-        create type {table.Schema}.[{table.Name}.TableType] as table
+        drop type if exists {table.Schema}.[{table.RealItemName}.TableType];
+        create type {table.Schema}.[{table.RealItemName}.TableType] as table
         (
             {String.Join(",\n    ", fields)}
         );
-        go        
         """;
     }
 

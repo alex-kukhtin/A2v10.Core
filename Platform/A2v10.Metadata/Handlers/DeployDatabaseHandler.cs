@@ -42,6 +42,11 @@ public class DeployDatabaseHandler(IServiceProvider _serviceProvider) : IClrInvo
         }
         foreach (var t in meta.Tables)
         {
+            var createTableType = dbCreator.CreateTableType(t);
+            sql.AppendLine(createTableType);
+        }
+        foreach (var t in meta.Tables)
+        {
             var createFK = dbCreator.CreateForeignKeys(t);
             sql.AppendLine(createFK);
         }

@@ -21,6 +21,7 @@ internal static class FormExtensions
     {
         return column.DataType switch
         {
+            ColumnDataType.Id => ItemDataType.Id,
             ColumnDataType.NChar or ColumnDataType.NVarChar => ItemDataType.String,
             ColumnDataType.Bit => ItemDataType.Boolean,
             ColumnDataType.Date => ItemDataType.Date,

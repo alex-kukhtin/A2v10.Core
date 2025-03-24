@@ -50,11 +50,6 @@ internal partial class FormBuilder
             Buttons = [
                 new FormItem(FormItemIs.Button) 
                 {
-                    Label = "@[Save]",
-                    Command = FormCommand.Save,
-                },
-                new FormItem(FormItemIs.Button) 
-                {
                     Label = "@[SaveAndClose]",
                     Command = FormCommand.SaveAndClose,
                     Primary = true,

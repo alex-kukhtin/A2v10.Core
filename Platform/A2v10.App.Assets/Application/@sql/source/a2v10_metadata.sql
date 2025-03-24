@@ -13,28 +13,6 @@ go
 grant execute on schema ::a2meta to public;
 go
 ------------------------------------------------
-create or alter function a2meta.fn_Schema2Text(@Schema nvarchar(32))
-returns nvarchar(255)
-as
-begin
-	return case @Schema
-		when N'cat' then N'Catalogs'
-		when N'doc' then N'Documents'
-		when N'jrn' then N'Journals'
-		when N'rep' then N'Reports'
-		else N'Undefined'
-	end;
-end
-go
-------------------------------------------------
-create or alter function a2meta.fn_TableFullName(@Schema nvarchar(32), @Name nvarchar(128))
-returns nvarchar(255)
-as
-begin
-	return a2meta.fn_Schema2Text(@Schema) + N'.' + @Name;
-end
-go
-------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.SEQUENCES where SEQUENCE_SCHEMA=N'a2meta' and SEQUENCE_NAME=N'SQ_Catalog')
 	create sequence a2meta.SQ_Catalog as bigint start with 100 increment by 1;
 go
@@ -94,6 +72,68 @@ create table a2meta.[Columns]
 		constraint FK_Columns_Reference_Catalog references a2meta.[Catalog](Id)
 );
 go
+
+------------------------------------------------
+create or alter view a2meta.view_RealTables
+as
+	select Id = c.Id, c.Parent, c.Kind, c.[Schema], [Name] = c.[Name], c.ItemsName, c.ItemName, c.TypeName
+	from a2meta.[Catalog] c inner join INFORMATION_SCHEMA.TABLES ic on 
+		ic.TABLE_SCHEMA = c.[Schema]
+		and ic.TABLE_NAME = c.[Name] collate SQL_Latin1_General_CP1_CI_AI;
+go
+------------------------------------------------
+create or alter procedure a2meta.[Table.Schema]
+@Schema sysname,
+@Table sysname
+as
+begin
+	set nocount on;
+	set transaction isolation level read uncommitted;
+
+	declare @tableId bigint;
+
+	select @tableId = Id from a2meta.view_RealTables r 
+	where r.[Schema] = @Schema collate SQL_Latin1_General_CP1_CI_AI
+		and r.[Name] = @Table collate SQL_Latin1_General_CP1_CI_AI
+		and r.Kind = N'table';
+
+	declare @innerTables table(Id bigint, Kind nvarchar(32));
+	with TT as (
+		select Id, Parent, Kind from a2meta.[Catalog] where Id = @tableId and Kind = N'table'
+		union all 
+		select c.Id, c.Parent, c.Kind 
+		from a2meta.[Catalog] c
+			inner join TT on c.Parent = tt.Id and c.Kind in (N'table', N'details')
+	)
+	insert into @innerTables (Id, Kind)
+	select Id, Kind from TT;
+
+	select [Table!TTable!Object] = null, [!!Id] = c.Id, c.[Schema], c.[Name],
+		c.ItemsName, c.ItemName, c.TypeName,
+		[Columns!TColumn!Array] = null,
+		[Details!TTable!Array] = null
+	from a2meta.view_RealTables c 
+	where c.Id = @tableId and c.Kind = N'table';
+
+	select [!TTable!Array] = null, [Id!!Id] = c.Id, [Schema] = c.[Schema], [Name] = c.[Name],
+		c.ItemsName, c.ItemName, c.TypeName,
+		[Columns!TColumn!Array] = null,
+		[!TTable.Details!ParentId] = c.Parent
+	from a2meta.view_RealTables c 
+	where c.Parent = @tableId and c.Kind = N'details';
+
+	select [!TColumn!Array] = null, [Id!!Id] = c.Id, c.[Name], DataType = c.DataType, 
+		c.[MaxLength],
+		[Reference.RefSchema!TReference!] = r.[Schema],
+		[Reference.RefTable!TReference!] = r.[Name],
+		[!TTable.Columns!ParentId] = c.[Table]
+	from a2meta.Columns c
+		inner join @innerTables it on c.[Table] = it.Id
+		left join a2meta.[Catalog] r on c.Reference = r.Id
+	order by c.Id;
+end
+go
+
 ------------------------------------------------
 begin
 	declare @cat table(Id bigint, IsFolder bit, Parent bigint, [Schema] nvarchar(32), [Name] nvarchar(255), Kind nvarchar(32));
@@ -276,59 +316,25 @@ begin
 end
 go
 ------------------------------------------------
-create or alter procedure a2meta.[Table.Schema]
-@Schema sysname,
-@Table sysname
+create or alter function a2meta.fn_Schema2Text(@Schema nvarchar(32))
+returns nvarchar(255)
 as
 begin
-	set nocount on;
-	set transaction isolation level read uncommitted;
-
-
-	select [Table!TTable!Object] = null, [!!Id] = 1, [Schema] = TABLE_SCHEMA, [Name] = TABLE_NAME,
-		c.ItemsName, c.ItemName, c.TypeName,
-		[Columns!TColumn!Array] = null,
-		[Definition!TDefine!Object] = null,
-		[Details!TDetail!Array] = null
-	from INFORMATION_SCHEMA.TABLES ic
-		inner join a2meta.[Catalog] c on c.Kind = N'table' and ic.TABLE_SCHEMA = c.[Schema] and ic.TABLE_NAME = c.[Name]
-	where ic.TABLE_SCHEMA = @Schema collate SQL_Latin1_General_CP1_CI_AI 
-		and TABLE_NAME = @Table collate SQL_Latin1_General_CP1_CI_AI;
-
-	select [!TColumn!Array] = null, [Name!!Id] = COLUMN_NAME, DataType = DATA_TYPE, 
-		[MaxLength] = CHARACTER_MAXIMUM_LENGTH,
-		[Reference!TReference!Object] = null,
-		[!TTable.Columns!ParentId] = 1
-	from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = @Schema collate SQL_Latin1_General_CP1_CI_AI 
-		and TABLE_NAME = @Table collate SQL_Latin1_General_CP1_CI_AI 
-	order by ORDINAL_POSITION;
-
-	with T as (
-		select [Name] = fk.[name], [index] = fkc.constraint_column_id,
-			[schema] = schema_name(fk.[schema_id]),
-			[table] = object_name(fk.parent_object_id),
-			[Column] = c1.[name],
-			RefSchema = schema_name(rt.[schema_id]),
-			RefTable = object_name(fk.referenced_object_id),
-			RefColumn = c2.[name]
-		from  sys.foreign_keys fk inner join sys.foreign_key_columns fkc on fkc.constraint_object_id = fk.[object_id]
-			inner join sys.tables rt on fk.referenced_object_id = rt.[object_id]
-			inner join sys.columns c1 on fkc.parent_column_id = c1.column_id and fkc.parent_object_id = c1.[object_id]
-			inner join sys.columns c2 on fkc.referenced_column_id = c2.column_id and fkc.referenced_object_id = c2.[object_id]
-		where schema_name(fk.[schema_id]) = @Schema collate SQL_Latin1_General_CP1_CI_AI
-		and object_name(fk.parent_object_id) = @Table collate SQL_Latin1_General_CP1_CI_AI 
-	)
-	select [!TReference!Object] = null, RefSchema, RefTable, RefColumn,
-		[!TColumn.Reference!ParentId] = [Column]
-	from T;
-
-	select [!TDefine!Object] = null, [Id], [Name], [Void], [HiddenColumns],
-		[!TTable.Definition!ParentId] = 1
-	from a2meta.TablesMetadata where [Schema] = @Schema collate SQL_Latin1_General_CP1_CI_AI 
-		and [Table] = @Table collate SQL_Latin1_General_CP1_CI_AI;
-	
-	-- exetending properties
-	-- https://www.mssqltips.com/sqlservertip/5384/working-with-sql-server-extended-properties/
+	return case @Schema
+		when N'cat' then N'Catalogs'
+		when N'doc' then N'Documents'
+		when N'jrn' then N'Journals'
+		when N'rep' then N'Reports'
+		else N'Undefined'
+	end;
+end
+go
+------------------------------------------------
+create or alter function a2meta.fn_TableFullName(@Schema nvarchar(32), @Name nvarchar(128))
+returns nvarchar(255)
+as
+begin
+	return a2meta.fn_Schema2Text(@Schema) + N'.' + @Name;
 end
 go
 ------------------------------------------------
@@ -445,9 +451,45 @@ drop table a2meta.[Catalog];
 
 --exec a2meta.[Config.Load] 99
 
-declare @Schema nvarchar(255) = N'cat';
-declare @Table nvarchar(255) = N'companies';
+declare @Schema nvarchar(255) = N'doc';
+declare @Table nvarchar(255) = N'documents';
 
 exec a2meta.[Table.Schema] @Schema, @Table;
 
 select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where CONSTRAINT_NAME = N'FK_Columns_Parent_Catalog'
+
+/*
+	select [!TColumn!Array] = null, [Name!!Id] = COLUMN_NAME, DataType = DATA_TYPE, 
+		[MaxLength] = CHARACTER_MAXIMUM_LENGTH,
+		[Reference!TReference!Object] = null,
+		[!TTable.Columns!ParentId] = @tableId
+	from INFORMATION_SCHEMA.COLUMNS where 
+		TABLE_SCHEMA = @Schema collate SQL_Latin1_General_CP1_CI_AI 
+		and TABLE_NAME = @Table collate SQL_Latin1_General_CP1_CI_AI 
+	order by ORDINAL_POSITION;
+*/
+
+/*
+	with T as (
+		select [Name] = fk.[name], [index] = fkc.constraint_column_id,
+			[schema] = schema_name(fk.[schema_id]),
+			[table] = object_name(fk.parent_object_id),
+			[Column] = c1.[name],
+			RefSchema = schema_name(rt.[schema_id]),
+			RefTable = object_name(fk.referenced_object_id),
+			RefColumn = c2.[name]
+		from  sys.foreign_keys fk inner join sys.foreign_key_columns fkc on fkc.constraint_object_id = fk.[object_id]
+			inner join sys.tables rt on fk.referenced_object_id = rt.[object_id]
+			inner join sys.columns c1 on fkc.parent_column_id = c1.column_id and fkc.parent_object_id = c1.[object_id]
+			inner join sys.columns c2 on fkc.referenced_column_id = c2.column_id and fkc.referenced_object_id = c2.[object_id]
+		where schema_name(fk.[schema_id]) = @Schema collate SQL_Latin1_General_CP1_CI_AI
+		and object_name(fk.parent_object_id) = @Table collate SQL_Latin1_General_CP1_CI_AI 
+	)
+	select [!TReference!Object] = null, RefSchema, RefTable, RefColumn,
+		[!TColumn.Reference!ParentId] = [Column]
+	from T;
+*/
+
+	
+	-- exetending properties
+	-- https://www.mssqltips.com/sqlservertip/5384/working-with-sql-server-extended-properties/

@@ -42,7 +42,7 @@ public record TableColumn
     #region Database Fields
     public String Name { get; init; } = default!;
     public ColumnDataType DataType { get; init; } = default!;
-    public Int32? MaxLength { get; init; }
+    public Int32 MaxLength { get; init; }
     public ColumnReference Reference { get; init; } = default!;
     public String? DbName { get; init; }
     public ColumnDataType? DbDataType { get; init; }
@@ -108,12 +108,14 @@ public record TableMetadata
     public String? ItemsName { get; init; }
     public String? ItemName { get; init; }
     public String? TypeName { get; init; }
+    public List<TableMetadata> Details { get; private set; } = [];
     #endregion
 
-    // TODO
-    internal String ModelType => $"T{Name.Singular()}";
+    // internal variables
     internal String RealItemName => ItemName ?? Name.Singular();
     internal String RealItemsName => ItemsName ?? Name;  
+    internal String RealTypeName => $"T{TypeName ?? RealItemName}";
+    internal String TableTypeName => $"{Schema}.[{RealItemName}.TableType]";
 
     internal IEnumerable<ViewColumn> EditColumns(IModelBaseMeta meta)
     {
@@ -148,6 +150,9 @@ public record AppMetadata
     internal String VoidField => Void ?? nameof(Void);
     internal String IsFolderField => IsFolder ?? nameof(IsFolder);
     internal String IsSystemField => IsSystem ?? nameof(IsSystem);
+
+    internal String RowNoField => "RowNo";
+    internal String ParentField = "Parent";
     internal Boolean HasDefault(String name) => name == IsSystemField || name == IsFolderField || name == VoidField;
 
     internal static AppMetadata FromDataModel(IDataModel model)

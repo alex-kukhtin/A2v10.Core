@@ -73,11 +73,11 @@ internal partial class DatabaseModelProcessor
         
         declare @fr nvarchar(255) = N'%' + @Fragment + N'%';
                 
-        select [{table.Name}!{table.ModelType}!Array] = null,
+        select [{table.Name}!{table.RealTypeName}!Array] = null,
             {String.Join(",", table.AllSqlFields("a", appMeta))},
             [!!RowCount]  = count(*) over()        
         from {table.Schema}.[{table.Name}] a
-        {RefTableJoins(refFields, appMeta)}
+        {RefTableJoins(refFields, "a", appMeta)}
         where {ParametersCondition()} {WhereCondition()}
         order by {sqlOrder} {dir}
         offset @Offset rows fetch next @PageSize rows only option (recompile);

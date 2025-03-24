@@ -52,6 +52,7 @@ public enum FormCommand
 public enum ItemDataType
 {
     Unknown,
+    Id,
     String,
     Date,
     DateTime,
