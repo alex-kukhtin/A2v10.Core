@@ -24,8 +24,9 @@ internal partial class FormBuilder(DatabaseMetadataProvider _metaProvider, Strin
     {
         Boolean IsVisible(String name)
         {
-            return name != appMeta.IdField && name != appMeta.VoidField
-                && name != appMeta.IsFolderField && name != appMeta.IsSystemField;
+            return name != appMeta.VoidField
+                && name != appMeta.IsFolderField 
+                && name != appMeta.IsSystemField;
         }
 
         return table.Columns.Where(c => IsVisible(c.Name));

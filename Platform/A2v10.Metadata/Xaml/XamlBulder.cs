@@ -1,7 +1,9 @@
-﻿
+﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using A2v10.System.Xaml;
 using A2v10.Xaml;
 
@@ -28,7 +30,17 @@ internal class XamlBulder
         return new CollectionView()
         {
             RunAt = form.Is == FormItemIs.Page ? RunMode.ServerUrl : RunMode.Server,
-            Bindings = b => b.SetBinding(nameof(CollectionView.ItemsSource), new Bind(form.Data))
+            Bindings = b => b.SetBinding(nameof(CollectionView.ItemsSource), new Bind(form.Data)),
+            Filter = new FilterDescription()
+            {
+                Items = [
+                    new FilterItem() {
+                        Property = "Fragment",
+                        DataType = DataType.String,
+                    }
+                    // TODO:: Collection Filters!!!
+                ]
+            }
         };
     }
 
@@ -41,10 +53,14 @@ internal class XamlBulder
             UIElementBase elem = item.Is switch
             {
                 FormItemIs.Grid => CreateGrid(item),
+                FormItemIs.Panel => CreatePanel(item),
                 FormItemIs.DataGrid => CreateDataGrid(item),
                 FormItemIs.Pager => CreatePager(item),
                 FormItemIs.Toolbar => CreateToolbar(item),
                 FormItemIs.TextBox => CreateTextBox(item),
+                FormItemIs.Selector => CreateSelector(item),
+                FormItemIs.DatePicker => CreateDatePicker(item),
+                FormItemIs.CheckBox => CreateCheckBox(item),
                 _ => throw new NotImplementedException($"Implement CreateElement: {item.Is}")
             };
             if (attach != null)
@@ -68,6 +84,17 @@ internal class XamlBulder
         AttachInt32("Grid.RowSpan", source.colSpan);
     }
 
+    private Panel CreatePanel(FormItem source)
+    {
+        return new Panel()
+        {
+            Header = source.Label,
+            Collapsible = true,
+            Style = PaneStyle.Transparent,
+            Children = [.. CreateElements(source.Items, Attach)]
+        };
+    }
+
     private Grid CreateGrid(FormItem source)
     {
         IEnumerable<RowDefinition> GridRows()
@@ -81,12 +108,14 @@ internal class XamlBulder
                 }
             );
         }
+
+
         return new Grid(_xamlServiceProvider)
         {
-            Rows = [..GridRows()],
+            Rows = [.. GridRows()],
             //Columns
             Height = !String.IsNullOrEmpty(source.Height) ? Length.FromString(source.Height) : null,
-            Children = [..CreateElements(source.Items, Attach)]
+            Children = [.. CreateElements(source.Items, Attach)]
         };
     }
 
@@ -99,7 +128,9 @@ internal class XamlBulder
             return source.Items.Select(c => new DataGridColumn()
             {
                 Header = c.Label,
-                Bindings = b => b.SetBinding(nameof(DataGridColumn.Content), new Bind(c.Data))
+                Role = c.DataType.ToColumnRole(),
+                Align = c.DataType.ToTextAlign(),
+                Bindings = b => b.SetBinding(nameof(DataGridColumn.Content), c.TypedBind())
             });
         }
 
@@ -107,8 +138,14 @@ internal class XamlBulder
         {
             FixedHeader = true,
             Sort = true,
-            Bindings = b => b.SetBinding(nameof(DataGrid.ItemsSource), new Bind(source.Data)),
-            Columns = [.. Columns()]
+            Columns = [.. Columns()],
+            Height = Length.FromStringNull(source.Height),
+            Bindings = b =>
+            {
+                b.SetBinding(nameof(DataGrid.ItemsSource), new Bind(source.Data));
+                if (source.Command != FormCommand.Unknown)
+                    b.SetBinding(nameof(DataGrid.DoubleClick), source.BindCommand());
+            }
         };
     }
     private Pager CreatePager(FormItem source)
@@ -121,7 +158,38 @@ internal class XamlBulder
 
     private TextBox CreateTextBox(FormItem source)
     {
+        Int32 tabIndex = source.Data.EndsWith(".Name") ? 1 : 0;
         return new TextBox()
+        {
+            Label = source.Label,
+            TabIndex = tabIndex,
+            Align = source.DataType.ToTextAlign(),
+            Width = Length.FromStringNull(source.Width),
+            Bindings = b => b.SetBinding(nameof(TextBox.Value), source.TypedBind())
+        };
+    }
+    private Selector CreateSelector(FormItem source)
+    {
+        return new SelectorSimple()
+        {
+            Label = source.Label,
+            Url = $"/{source.Parameter}",
+            Width = Length.FromStringNull(source.Width),
+            Bindings = b => b.SetBinding(nameof(TextBox.Value), new Bind(source.Data))
+        };
+    }
+    private DatePicker CreateDatePicker(FormItem source)
+    {
+        return new DatePicker()
+        {
+            Label = source.Label,
+            Width = Length.FromStringNull(source.Width),
+            Bindings = b => b.SetBinding(nameof(TextBox.Value), new Bind(source.Data))
+        };
+    }
+    private CheckBox CreateCheckBox(FormItem source)
+    {
+        return new CheckBox()
         {
             Label = source.Label,
             Bindings = b => b.SetBinding(nameof(TextBox.Value), new Bind(source.Data))
@@ -130,30 +198,69 @@ internal class XamlBulder
 
     private Toolbar CreateToolbar(FormItem source)
     {
-        IEnumerable<Button> Buttons()
+        IEnumerable<UIElementBase> Buttons()
         {
             if (source.Items == null)
                 return Enumerable.Empty<Button>();
 
-            return source.Items.Select(c => new Button()
+            UIElementBase CreateElement(FormItem c)
             {
-                Content = c.Label,
-                Icon = c.Command.Command2Icon(),
-                Bindings = b => b.SetBinding(nameof(Button.Command), c.BindCommand())
-            });
+                return c.Is switch
+                {
+                    FormItemIs.Button => new Button()
+                        {
+                            Content = c.Label,
+                            Icon = c.Command.Command2Icon(),
+                            Bindings = b => b.SetBinding(nameof(Button.Command), c.BindCommand())
+                        },
+                    FormItemIs.Aligner => new ToolbarAligner(),
+                    FormItemIs.TextBox => new TextBox()
+                        {
+                            ShowClear = true,   
+                            ShowSearch = true,  
+                            Placeholder = "@[Search]",
+                            Bindings = b => b.SetBinding(nameof(TextBox.Value), new Bind(c.Data))
+                        },
+                    _ => throw new InvalidOperationException($"Implement toolbar elem: {c.Is}")
+                };
+            }
+            return source.Items.Select(CreateElement);
         }
         return new Toolbar(_xamlServiceProvider)
         {
-            Children = [..Buttons()]
+            Children = [.. Buttons()]
         };
     }
 
+    IEnumerable<UIElement> CreateDialogButtons(Form form)
+    {
+        if (form.Buttons == null)
+            return Enumerable.Empty<Button>();
+        return form.Buttons.Select(e => new Button()
+        {
+            Content = e.Label,
+            Style = e.Primary ? ButtonStyle.Primary : ButtonStyle.Default,
+            Bindings = b => b.SetBinding(nameof(Button.Command), e.BindCommand())
+        });
+    }
+
+    private Taskpad? CreateTaskpad(FormItem? item)
+    {
+        if (item == null)
+            return null;
+        return new Taskpad()
+        {
+            Children = [.. CreateElements(item.Items)],
+        };
+    }
     private Page BuildPage(Form form)
     {
         var page = new Page()
         {
             CollectionView = CreateCollectionView(form),
-            Children = [.. CreateElements(form.Items)]
+            Children = [.. CreateElements(form.Items)],
+            Taskpad = CreateTaskpad(form.Taskpad),
+            Title = form.Label,
         };
         return page;
     }
@@ -162,8 +269,10 @@ internal class XamlBulder
     {
         var dialog = new Dialog()
         {
+            Title = form.Label,
             CollectionView = CreateCollectionView(form),
-            Children = [.. CreateElements(form.Items)]
+            Children = [.. CreateElements(form.Items)],
+            Buttons = [.. CreateDialogButtons(form)]
         };
         return dialog;
     }

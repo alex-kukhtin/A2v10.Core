@@ -82,31 +82,4 @@ internal partial class ModelPageBuilder(IServiceProvider _serviceProvider)
             return uIElement;
         throw new InvalidOperationException("Xaml. Root is not an IXamlElement");
     }
-
-    FormOld MergeIndexForm(FormOld? form, TableMetadata meta)
-    {
-        var metaColumns = meta.Columns.Select(c => 
-        {
-            var sf = c.IsParent ? "Elem" : string.Empty;
-            var col = new FormColumn()
-            {
-                // TODO: .Name заменить на appMeta.NameField
-                Path = c.IsReference ? $"{c.Name}.Name" : c.Name,
-                Header = $"@[{c.Name}]",
-                Clamp = c.MaxLength >= 255 ? 2 : 0,
-                Role = c.DataType.ToColumnRole(c.IsReference),
-                BindDataType = c.DataType.ToBindDataType(),
-                SortProperty = c.IsReference ? c.Name : null
-            };
-            return col;
-         });
-
-        var fc = form?.Columns;
-        return new FormOld()
-        {
-            Title = form?.Title ?? $"@[{meta.Name}]",
-            Columns = fc != null && fc.Count > 0 ? fc : metaColumns.ToList()
-        };
-    }
-
 }

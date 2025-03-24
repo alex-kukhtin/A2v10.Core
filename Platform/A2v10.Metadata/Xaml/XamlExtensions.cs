@@ -12,12 +12,31 @@ internal static class XamlExtensions
 {
     public static Icon Command2Icon(this FormCommand command)
     {
-        return command switch {
+        return command switch 
+        {
             FormCommand.Reload => Icon.Reload,
             FormCommand.Edit => Icon.Edit,
             FormCommand.Delete => Icon.Clear,
             FormCommand.Create => Icon.Plus,
             _ => Icon.NoIcon,
+        };
+    }
+
+    public static Bind TypedBind(this FormItem item)
+    {
+        return item.DataType switch
+        {
+            ItemDataType.Currency => new Bind(item.Data) { DataType = DataType.Currency, HideZeros = true, NegativeRed = true },
+            _ => new Bind(item.Data),
+        };
+    }
+
+    public static TextAlign ToTextAlign(this ItemDataType dt)
+    {
+        return dt switch
+        {
+            ItemDataType.Currency => TextAlign.Right,
+            _ => TextAlign.Default
         };
     }
 
@@ -29,15 +48,29 @@ internal static class XamlExtensions
             {
                 Command = CommandType.Dialog,
                 Action = action,
-                Url = $"/{item.CommandParameter}/edit"
+                Url = $"/{item.Parameter}/edit"
             };
             cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind("Parent.ItemsSource"));
+            return cmd;
+        }
+
+        BindCmd CreateSelectCommand()
+        {
+            var cmd = new BindCmd() 
+            { 
+                Command = CommandType.Select
+            };
+            cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(item.Parameter ?? String.Empty));
             return cmd;
         }
 
         return item.Command switch
         {
             FormCommand.Reload => new BindCmd() { Command = CommandType.Reload },
+            FormCommand.Save => new BindCmd() { Command = CommandType.Save },
+            FormCommand.SaveAndClose => new BindCmd() { Command = CommandType.SaveAndClose },
+            FormCommand.Close => new BindCmd() { Command = CommandType.Close },
+            FormCommand.Select => CreateSelectCommand(),
             FormCommand.Edit => CreateDialogCommand(DialogAction.EditSelected), 
             FormCommand.Create => CreateDialogCommand(DialogAction.Append),
             _ => throw new NotImplementedException($"Implement Command for {item.Command}")
@@ -45,28 +78,13 @@ internal static class XamlExtensions
 
     }
 
-    public static DataType ToBindDataType(this ColumnDataType columnDataType)
-    {
-        return columnDataType switch
-        {
-            ColumnDataType.Date => DataType.Date,
-            ColumnDataType.DateTime => DataType.DateTime,
-            ColumnDataType.Money => DataType.Currency,
-            ColumnDataType.Float => DataType.Number,    
-            ColumnDataType.Bit => DataType.Boolean,
-            _ => DataType.String,
-        };
-    }
-
-    public static ColumnRole ToColumnRole(this ColumnDataType dataType, Boolean isReference)
+    public static ColumnRole ToColumnRole(this ItemDataType dataType)
     {
         return dataType switch
         {
-            ColumnDataType.BigInt => isReference ? ColumnRole.Default : ColumnRole.Id,
-            ColumnDataType.Bit => ColumnRole.CheckBox,
-            ColumnDataType.Money or ColumnDataType.Float or ColumnDataType.Int
-                => ColumnRole.Number,
-            ColumnDataType.Date or ColumnDataType.DateTime => ColumnRole.Date,
+            ItemDataType.Boolean => ColumnRole.CheckBox,
+            ItemDataType.Currency => ColumnRole.Number,
+            ItemDataType.Date or ItemDataType.DateTime => ColumnRole.Date,
             _ => ColumnRole.Default,
         };
     }

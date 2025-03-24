@@ -19,6 +19,7 @@ internal partial class FormBuilder
                 c => new FormItem()
                 {
                     Is = FormItemIs.DataGridColumn,
+                    DataType = c.ToItemDataType(),
                     Data = c.IsReference ? $"{c.Name}.{appMeta.NameField}"  : c.Name,
                     Label = $"@[{c.Name}]"
                 }
@@ -27,23 +28,57 @@ internal partial class FormBuilder
 
         IEnumerable<FormItem> ToolbarButtons()
         {
-            yield return new FormItem()
+            yield return new FormItem(FormItemIs.Button)
             {
-                Is = FormItemIs.Button,
-                Command = FormCommand.Create,
                 Label = "@[Create]",
-                CommandParameter = _metaProvider.GetOrAddEndpointPath(_dataSource, _schema, _table),
+                Command = FormCommand.Create,
+                Parameter = _metaProvider.GetOrAddEndpointPath(_dataSource, _schema, _table),
             };
-            yield return new FormItem()
+            yield return new FormItem(FormItemIs.Button)
             {
-                Is = FormItemIs.Button,
                 Command = FormCommand.Edit,
-                CommandParameter = _metaProvider.GetOrAddEndpointPath(_dataSource, _schema, _table),
+                Parameter = _metaProvider.GetOrAddEndpointPath(_dataSource, _schema, _table),
             };
-            yield return new FormItem()
+            yield return new FormItem(FormItemIs.Button)
             {
-                Is = FormItemIs.Button,
                 Command = FormCommand.Reload,
+            };
+            yield return new FormItem(FormItemIs.Aligner);
+            yield return new FormItem(FormItemIs.TextBox)
+            {
+                Data = "Parent.Filter.Fragment"
+            };
+        }
+
+        FormItem? CreateTaskPad()
+        {
+            if (!tableMeta.Columns.Any(c => c.IsReference))
+                return null;
+
+            FormItem CreateFilter(TableColumn column)
+            {
+                return new FormItem(FormItemIs.Selector)
+                {
+                    Label = $"@[{column.Name}]",
+                    Data = $"Parent.Filter.{column.DataType}"
+                };
+            }
+
+            var columns = tableMeta.Columns.Where(c => c.IsReference).Select(c => CreateFilter(c));
+
+            return new FormItem(FormItemIs.Taskpad)
+            {
+                Items = [
+                    new FormItem(FormItemIs.Panel) {
+                        Label = "@[Filters]",
+                        Items = [
+                            new FormItem(FormItemIs.Grid) 
+                            {
+                                Items = [..columns]
+                            }
+                        ]
+                    }
+                ]
             };
         }
 
@@ -52,6 +87,7 @@ internal partial class FormBuilder
             Is = FormItemIs.Page,
             UseCollectionView = true,
             Data = tableMeta.RealItemsName,
+            Label = $"@[{tableMeta.RealItemsName}]",
             Items = [
                 new FormItem() {
                     Is = FormItemIs.Grid,
@@ -67,7 +103,9 @@ internal partial class FormBuilder
                             Is = FormItemIs.DataGrid,
                             Data = "Parent.ItemsSource",
                             row = 2,
-                            Items = [..Columns()]
+                            Items = [..Columns()],
+                            Command = FormCommand.Edit,
+                            Parameter = _metaProvider.GetOrAddEndpointPath(_dataSource, _schema, _table),
                         },
                         new FormItem() {
                             Is = FormItemIs.Pager,
@@ -76,7 +114,8 @@ internal partial class FormBuilder
                         }
                     ]
                 }
-            ]
+            ],
+            Taskpad = CreateTaskPad()
         };
     }
 }

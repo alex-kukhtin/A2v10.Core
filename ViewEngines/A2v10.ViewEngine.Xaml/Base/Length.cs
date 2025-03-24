@@ -51,7 +51,15 @@ public record Length
 				strVal.EndsWith("rem"));
 	}
 
-	public static Length FromString(String strVal)
+	public static Length? FromStringNull(String? strVal)
+	{
+		if (strVal == null)
+			return null;
+		return FromString(strVal);
+	}
+
+
+    public static Length FromString(String strVal)
 	{
 		strVal = strVal.Trim();
 		if (strVal == "Auto")

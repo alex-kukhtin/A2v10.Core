@@ -26,7 +26,7 @@ internal class DatabaseCreator(AppMetadata _meta)
                 };
                 constraint = $"\n       constraint DF_{table.Name}_{column.Name} default({defKey})";
             }
-            else if (_meta.HasConstraint(column.Name))
+            else if (_meta.HasDefault(column.Name))
             {
                 nullable = NOT_NULL;
                 constraint = $"\n       constraint DF_{table.Name}_{column.Name} default(0)";

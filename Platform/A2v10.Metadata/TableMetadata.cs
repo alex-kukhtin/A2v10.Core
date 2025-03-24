@@ -141,12 +141,15 @@ public record AppMetadata
     public String? Void { get; init; }
     public String? IsSystem { get; init; }
     public String? IsFolder { get; init; }    
+
+    // internal
     internal String IdField => Id ?? nameof(Id);
     internal String NameField => Name ?? nameof(Name);
-    internal String VoidField => Name ?? nameof(Void);
-    internal String IsFolderField => Name ?? nameof(IsFolder);
-    internal String IsSystemField => Name ?? nameof(IsSystem);
-    internal Boolean HasConstraint(String name) => name == IsSystemField || name == IsFolderField || name == VoidField;
+    internal String VoidField => Void ?? nameof(Void);
+    internal String IsFolderField => IsFolder ?? nameof(IsFolder);
+    internal String IsSystemField => IsSystem ?? nameof(IsSystem);
+    internal Boolean HasDefault(String name) => name == IsSystemField || name == IsFolderField || name == VoidField;
+
     internal static AppMetadata FromDataModel(IDataModel model)
     {
         var json = JsonConvert.SerializeObject(model.Root.Get<Object>("Application"))

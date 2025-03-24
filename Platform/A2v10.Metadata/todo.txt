@@ -1,23 +1,19 @@
 ﻿
-4. Analyse MutliTenant mode
 8. Generate view, template ?
 10. Save Model
-13. Не сортирует по битовым полям (это где-то в Xaml)
 14. Не работает ParentElem в Edit.
-17. IndexPage DoubleClick
-18. Index: Загрузка колонок / фильтров из БД
 19. ContractKind: нет колонки Void (что-то придумать в БД)
 20. a2security.Users => meta. Name = UserName
 21. Color в метаданные для TagLabel
 22. Переименовать сам пакет и разделить его на две части - Xaml и БД.
 (чтобы менять код для БД для разных СУБД)
 25. CreateTable - Default for primary key
-26. ParentElem переименовать в Folder
-27. Edit/Index/Browse - исключить Id, Void, IsSystem IsFolder
-28. Формы!!!!
-29. IndexPage: Height 100%
 30. Edit in Page/Dialog
-31. IndexPage: SortProperty
-32. 
-
+31. IndexPage: SortProperty (Agent.Name?)
+32. CollectionView: Filters
+33. Не ищет по тексту в простых справочниках
+35. Enums a-la Reference
+36. Default Sort Property - сейчас Id - сделать Name? или Date?
+37. Toolbar: Separator/Aligner?
+40. Control.Multiline
 

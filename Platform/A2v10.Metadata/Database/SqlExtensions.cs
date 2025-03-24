@@ -35,15 +35,19 @@ internal static class SqlExtensions
             if (c.Name == appMeta.IdField)
                 yield return $"[{c.Name}!!Id] = {alias}.[{c.Name}]";
             else
-                yield return c.IsParent ? $"ParentElem = {alias}.[{c.Name}]" : $"{alias}.[{c.Name}]";
+                yield return c.IsParent ? $"Folder = {alias}.[{c.Name}]" : $"{alias}.[{c.Name}]";
         foreach (var c in refFields)
         {
             var col = c.Column;
             var colRef = c.Column.Reference;
-            var sf = String.Empty;
+            var elemName = col.Name;
+            var modelType = $"T{col.Reference.RefTable.Singular()}";
             if (col.IsParent)
-                sf = "Elem";
-            yield return $"[{col.Name}{sf}.{appMeta.IdField}!{colRef.ModelType}!Id] = r{c.Index}.[{appMeta.IdField}], [{col.Name}{sf}.Name!{colRef.ModelType}!Name] = r{c.Index}.[{appMeta.NameField}]";
+            {
+                elemName = "Folder";
+                modelType = "TFolder";
+            }
+            yield return $"[{elemName}.{appMeta.IdField}!{modelType}!Id] = r{c.Index}.[{appMeta.IdField}], [{elemName}.Name!{modelType}!Name] = r{c.Index}.[{appMeta.NameField}]";
         }
     }
 }

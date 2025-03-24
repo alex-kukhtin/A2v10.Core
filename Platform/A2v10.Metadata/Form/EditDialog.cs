@@ -16,14 +16,19 @@ internal partial class FormBuilder
 
         FormItem CreateControl(TableColumn column, Int32 index)
         {
-            var fi = new FormItem()
+            String? prm = null;
+            if (column.IsReference)
+                prm = _metaProvider.GetOrAddEndpointPath(_dataSource, column.Reference.RefSchema, column.Reference.RefTable);
+            return new FormItem()
             {
-                Is = FormItemIs.TextBox,
+                Is =  column.Column2Is(),
                 row = index,
                 Label = $"@[{column.Name}]",
                 Data = $"{tableMeta.RealItemName}.{column.Name}",
+                DataType = column.ToItemDataType(),
+                Parameter = prm,
+                Width = column.DataType.ToWidth()
             };
-            return fi;
         }
 
         IEnumerable<FormItem> Controls()
@@ -36,10 +41,28 @@ internal partial class FormBuilder
         {
             Is = FormItemIs.Dialog,
             Items = [
-                new FormItem()
+                new FormItem(FormItemIs.Grid)
                 {
                     Is = FormItemIs.Grid,
                     Items = [..Controls()]
+                }
+            ],
+            Buttons = [
+                new FormItem(FormItemIs.Button) 
+                {
+                    Label = "@[Save]",
+                    Command = FormCommand.Save,
+                },
+                new FormItem(FormItemIs.Button) 
+                {
+                    Label = "@[SaveAndClose]",
+                    Command = FormCommand.SaveAndClose,
+                    Primary = true,
+                },
+                new FormItem(FormItemIs.Button)
+                {
+                    Label = "@[Cancel]",
+                    Command = FormCommand.Close
                 }
             ]
         };
