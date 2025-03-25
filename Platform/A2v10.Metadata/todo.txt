@@ -1,6 +1,5 @@
 ﻿
 8. Generate view, template ?
-10. Save Model
 14. Не работает ParentElem в Edit.
 19. ContractKind: нет колонки Void (что-то придумать в БД)
 20. a2security.Users => meta. Name = UserName
@@ -14,6 +13,8 @@
 33. Не ищет по тексту в простых справочниках
 35. Enums a-la Reference
 36. Default Sort Property - сейчас Id - сделать Name? или Date?
-37. Toolbar: Separator/Aligner?
+37. Toolbar: Separator
 40. Control.Multiline
-
+41. Save Details
+42. Xaml Details
+43. 

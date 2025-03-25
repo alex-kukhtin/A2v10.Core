@@ -7,14 +7,19 @@ using System.Collections.Generic;
 
 namespace A2v10.Metadata;
 
-internal partial class FormBuilder(DatabaseMetadataProvider _metaProvider, String? _dataSource, String _schema, String _table)
+internal partial class FormBuilder(DatabaseMetadataProvider _metaProvider, String? _dataSource, TableMetadata _meta)
 {
     public async Task<Form> CreateFormAsync(String key)
     {
         return key.ToLowerInvariant() switch
         {
             "index" => await CreateIndexFormAsync(),
-            "edit" => await CreateEditDialogAsync(),
+            "edit" => _meta.EditWith switch
+            {
+                EditWithMode.Dialog => await CreateEditDialogAsync(),
+                EditWithMode.Page => await CreateEditPageAsync(),
+                _ => throw new NotImplementedException($"CreateForm: {_meta.EditWith}")
+            },
             "browse" => await CreateBrowseDialogAsync(),
             _ => throw new NotImplementedException($"CreateForm: {key}")
         };
@@ -26,6 +31,19 @@ internal partial class FormBuilder(DatabaseMetadataProvider _metaProvider, Strin
         {
             return name != appMeta.VoidField
                 && name != appMeta.IsFolderField 
+                && name != appMeta.IsSystemField;
+        }
+
+        return table.Columns.Where(c => IsVisible(c.Name));
+    }
+
+    public IEnumerable<TableColumn> EditableColumns(TableMetadata table, AppMetadata appMeta)
+    {
+        Boolean IsVisible(String name)
+        {
+            return name != appMeta.VoidField
+                && name != appMeta.IdField
+                && name != appMeta.IsFolderField
                 && name != appMeta.IsSystemField;
         }
 

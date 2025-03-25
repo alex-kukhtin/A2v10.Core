@@ -34,7 +34,8 @@ create table a2meta.[Catalog]
 	[Kind] nvarchar(32),
 	ItemsName nvarchar(128),
 	ItemName nvarchar(128),
-	TypeName nvarchar(128)
+	TypeName nvarchar(128),
+	EditWith nvarchar(16)
 );
 go
 ------------------------------------------------
@@ -63,7 +64,7 @@ create table a2meta.[Columns]
 		constraint DF_Columns_Id default(next value for a2meta.SQ_Columns)
 		constraint PK_Columns primary key,
 	[Table] bigint not null
-		constraint FK_Columns_Parent_Catalog references a2meta.[Catalog](Id),
+		constraint FK_Columns_Table_Catalog references a2meta.[Catalog](Id),
 	[Name] nvarchar(128),
 	[Label] nvarchar(255),
 	[DataType] nvarchar(32),
@@ -72,11 +73,22 @@ create table a2meta.[Columns]
 		constraint FK_Columns_Reference_Catalog references a2meta.[Catalog](Id)
 );
 go
-
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'Forms')
+create table a2meta.[Forms]
+(
+	[Table] bigint not null
+		constraint FK_Forms_Table_Catalog references a2meta.[Catalog](Id),
+	[Key] nvarchar(64) not null,
+	[Json] nvarchar(max),
+		constraint PK_Forms primary key ([Table], [Key]) 
+);
+go
 ------------------------------------------------
 create or alter view a2meta.view_RealTables
 as
-	select Id = c.Id, c.Parent, c.Kind, c.[Schema], [Name] = c.[Name], c.ItemsName, c.ItemName, c.TypeName
+	select Id = c.Id, c.Parent, c.Kind, c.[Schema], [Name] = c.[Name], c.ItemsName, c.ItemName, c.TypeName,
+		c.EditWith
 	from a2meta.[Catalog] c inner join INFORMATION_SCHEMA.TABLES ic on 
 		ic.TABLE_SCHEMA = c.[Schema]
 		and ic.TABLE_NAME = c.[Name] collate SQL_Latin1_General_CP1_CI_AI;
@@ -109,7 +121,7 @@ begin
 	select Id, Kind from TT;
 
 	select [Table!TTable!Object] = null, [!!Id] = c.Id, c.[Schema], c.[Name],
-		c.ItemsName, c.ItemName, c.TypeName,
+		c.ItemsName, c.ItemName, c.TypeName, c.EditWith,
 		[Columns!TColumn!Array] = null,
 		[Details!TTable!Array] = null
 	from a2meta.view_RealTables c 
@@ -133,7 +145,47 @@ begin
 	order by c.Id;
 end
 go
+------------------------------------------------
+create or alter procedure a2meta.[Table.Form]
+@Schema nvarchar(32) = null,
+@Table nvarchar(128) = null,
+@Id bigint = null,
+@Key nvarchar(64)
+as
+begin
+	set nocount on;
+	set transaction isolation level read uncommitted;
 
+	if @Id is null and @Schema is not null and @Table is not null
+		select @Id = Id from a2meta.[Catalog] where 
+			[Schema] = @Schema  collate SQL_Latin1_General_CP1_CI_AI
+			and [Name] = @Table  collate SQL_Latin1_General_CP1_CI_AI;
+
+	select [Table!TTable!Object] = null, [Id!!Id] = Id, [Name], [Schema], EditWith
+	from a2meta.[Catalog] where Id = @Id;
+
+	select [Form!TForm!Object] = null, [Id!!Id] = @Id, 
+		[Json!!Json] = f.[Json]
+	from a2meta.Forms f where [Table] = @Id and [Key] = @Key;
+end
+go
+------------------------------------------------
+create or alter procedure a2meta.[Table.Form.Update]
+@Id bigint = null,
+@Key nvarchar(64),
+@Json nvarchar(max)
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+
+	update a2meta.Forms set [Json] = @Json where [Table] = @Id and [Key] = @Key;
+	if @@rowcount = 0
+		insert into a2meta.Forms ([Table], [Key], [Json]) values (@Id, @Key, @Json);
+
+	exec a2meta.[Table.Form] @Id = @Id, @Key = @Key;
+end
+go
 ------------------------------------------------
 begin
 	declare @cat table(Id bigint, IsFolder bit, Parent bigint, [Schema] nvarchar(32), [Name] nvarchar(255), Kind nvarchar(32));
@@ -230,47 +282,6 @@ create table a2meta.TableDetails
 	SameId bit not null
 		constraint DF_TableDetails_SameId default(0),
 	constraint PK_TableDetails primary key([ParentSchema], [ParentTable], [DetailsSchema], [DetailsTable])
-);
-go
-------------------------------------------------
-if not exists(select * from INFORMATION_SCHEMA.SEQUENCES where SEQUENCE_SCHEMA=N'a2meta' and SEQUENCE_NAME=N'SQ_TableForms')
-	create sequence a2meta.SQ_TableForms as bigint start with 100 increment by 1;
-go
-------------------------------------------------
-if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'TableForms')
-create table a2meta.TableForms
-(
-	[Id] bigint not null
-		constraint DF_Forms_Id default(next value for a2meta.SQ_TableForms)
-		constraint PK_Forms primary key,
-	[Key] sysname not null,
-	[Schema] sysname not null, 
-	[Table] sysname not null,
-	Width int,
-	Title nvarchar(255)
-);
-go
-------------------------------------------------
-if not exists(select * from INFORMATION_SCHEMA.SEQUENCES where SEQUENCE_SCHEMA=N'a2meta' and SEQUENCE_NAME=N'SQ_FormColumns')
-	create sequence a2meta.SQ_FormColumns as bigint start with 100 increment by 1;
-go
-------------------------------------------------
-if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'FormColumns')
-create table a2meta.FormColumns
-(
-	[Id] bigint not null
-		constraint DF_FormColumns_Id default(next value for a2meta.SQ_FormColumns)
-		constraint PK_FormColumns primary key,
-	[Form] bigint not null
-		constraint FK_FormColumns_Form_TableForms references a2meta.TableForms(Id),
-	[Order] int not null,
-	[Path] nvarchar(255), 
-	Header nvarchar(255),
-	NoSort bit,
-	[Filter] bit,
-	Fit bit,
-	Width int,
-	Clamp int
 );
 go
 ------------------------------------------------
@@ -371,34 +382,6 @@ begin
 end
 go
 
-------------------------------------------------
-create or alter procedure a2meta.[Table.Form]
-@Schema sysname,
-@Table sysname,
-@Key sysname
-as
-begin
-	set nocount on;
-	set transaction isolation level read uncommitted;
-
-	declare @formId bigint;
-	select @formId = Id from a2meta.TableForms 
-	where [Schema] = @Schema collate SQL_Latin1_General_CP1_CI_AI 
-		and [Table] = @Table collate SQL_Latin1_General_CP1_CI_AI 
-		and [Key] = @Key collate SQL_Latin1_General_CP1_CI_AI;
-
-	select [Form!TForm!Object] = null, [Id!!Id] = Id, [Key],
-		Width, Title,
-		[Columns!TFColumn!Array] = null, [Controls!TFControl!Array] = null
-	from a2meta.TableForms where Id = @formId;
-
-	select [!TFColumn!Array] = null, [Id!!Id] = Id, [Path], Header, 
-		Width, Clamp, NoSort, [Filter], Fit,
-		[!TForm.Columns!ParentId] = [Form]
-	from a2meta.FormColumns where [Form] = @formId
-	order by [Order]
-end
-go
 ------------------------------------------------
 /*
 declare @Schema nvarchar(255) = N'cat';

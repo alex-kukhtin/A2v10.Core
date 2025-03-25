@@ -12,6 +12,15 @@ public class NullAppRuntimeBuilder : IAppRuntimeBuilder
 	public bool IsAutoSupported => false;
     public Boolean IsMetaSupported => false;
 
+    public String MetadataScripts(String _)
+    {
+        return String.Empty;
+    }
+    public String MetadataStyles(String _)
+    {
+        return String.Empty;
+    }
+
     const String THROW_MESSAGE = "Install package A2v10.AppRuntimeBuilder or A2v10.Metadata.SqlServer";
 
     public Task<EndpointTableInfo> ModelInfoFromPathAsync(String path)

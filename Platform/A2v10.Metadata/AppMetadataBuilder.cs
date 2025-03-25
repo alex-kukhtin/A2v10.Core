@@ -10,12 +10,21 @@ using A2v10.Infrastructure;
 namespace A2v10.Metadata;
 
 public class AppMetadataBuilder(IServiceProvider _serviceProvider,
-    IDbContext _dbContext, ICurrentUser _currentUser, DatabaseMetadataProvider _metadataProvider) : IAppRuntimeBuilder
+    IDbContext _dbContext, ICurrentUser _currentUser, DatabaseMetadataProvider _metadataProvider, IAppVersion _appVersion) : IAppRuntimeBuilder
 {
     private readonly DatabaseModelProcessor _dbProcessor = new DatabaseModelProcessor(_metadataProvider, _currentUser, _dbContext);
     private readonly ModelPageBuilder _modelPageBuilder = new(_serviceProvider);
     public bool IsAutoSupported => false;
     public Boolean IsMetaSupported => true;
+
+    public String MetadataScripts(String minify)
+    {
+        return $"""<script type="text/javascript" src="/scripts/meta/formdesigner.{minify}js?v={_appVersion.AppVersion}"></script>""";
+    }
+    public String MetadataStyles(String minify)
+    {
+        return $"""<link rel="stylesheet" href="/css/meta/formdesigner.{minify}css?v={_appVersion.AppVersion}\">""";
+    }
 
     public Task<EndpointTableInfo> ModelInfoFromPathAsync(String path)
     {

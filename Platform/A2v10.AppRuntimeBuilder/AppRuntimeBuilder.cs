@@ -16,6 +16,16 @@ public class AppRuntimeBuilder(IServiceProvider _serviceProvider,
 	private readonly ModelPageBuilder _modelPageBuilder = new(_serviceProvider);
 	public Boolean IsAutoSupported => true;
     public Boolean IsMetaSupported => false;
+
+    public String MetadataScripts(String _) 
+	{ 
+		return String.Empty;
+	}
+    public String MetadataStyles(String _)
+	{
+		return String.Empty;
+	}
+
     public Task<EndpointTableInfo> ModelInfoFromPathAsync(String path)
 	{
         throw new NotImplementedException();

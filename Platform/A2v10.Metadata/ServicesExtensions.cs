@@ -12,6 +12,8 @@ public static class ServicesExtensions
         services.AddSingleton<DatabaseMetadataCache>()
             .AddScoped<DatabaseMetadataProvider>()
             .AddScoped<IAppRuntimeBuilder, AppMetadataBuilder>();
+
+        services.AddKeyedScoped<IEndpointHandler, MetadataEndpointHandler>("Meta");
         return services;
     }
 }

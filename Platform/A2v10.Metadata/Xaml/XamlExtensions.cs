@@ -1,8 +1,6 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
-using System.Linq;
-using System.Collections.Generic;
 
 using A2v10.Xaml;
 
@@ -10,12 +8,14 @@ namespace A2v10.Metadata;
 
 internal static class XamlExtensions
 {
-    public static Icon Command2Icon(this FormCommand command)
+    public static Icon Command2Icon(this FormItem item)
     {
-        return command switch 
+        if (item.Command == null)
+            return Icon.NoIcon;
+        return item.Command.Command switch 
         {
             FormCommand.Reload => Icon.Reload,
-            FormCommand.Edit => Icon.Edit,
+            FormCommand.Edit or FormCommand.Open => Icon.Edit,
             FormCommand.Delete => Icon.Clear,
             FormCommand.Create => Icon.Plus,
             _ => Icon.NoIcon,
@@ -33,9 +33,9 @@ internal static class XamlExtensions
         };
     }
 
-    public static TextAlign ToTextAlign(this ItemDataType dt)
+    public static TextAlign ToTextAlign(this FormItem fi)
     {
-        return dt switch
+        return fi.DataType switch
         {
             ItemDataType.Currency => TextAlign.Right,
             _ => TextAlign.Default
@@ -50,7 +50,7 @@ internal static class XamlExtensions
             {
                 Command = CommandType.Dialog,
                 Action = action,
-                Url = $"/{item.Parameter}/edit"
+                Url = $"/{item.Command?.Url}/edit"
             };
             cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind("Parent.ItemsSource"));
             return cmd;
@@ -62,11 +62,21 @@ internal static class XamlExtensions
             { 
                 Command = CommandType.Select
             };
-            cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(item.Parameter ?? String.Empty));
+            cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(item.Command?.Argument ?? String.Empty));
+            return cmd;
+        }
+        BindCmd CreateOpenCommand()
+        {
+            var cmd = new BindCmd()
+            {
+                Command = CommandType.OpenSelected,
+                Url = $"/{item.Command?.Url}/edit"
+            };
+            cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(item.Command?.Argument ?? String.Empty));
             return cmd;
         }
 
-        return item.Command switch
+        return item.Command?.Command switch
         {
             FormCommand.Reload => new BindCmd() { Command = CommandType.Reload },
             FormCommand.Save => new BindCmd() { Command = CommandType.Save },
@@ -75,14 +85,15 @@ internal static class XamlExtensions
             FormCommand.Select => CreateSelectCommand(),
             FormCommand.Edit => CreateDialogCommand(DialogAction.EditSelected), 
             FormCommand.Create => CreateDialogCommand(DialogAction.Append),
-            _ => throw new NotImplementedException($"Implement Command for {item.Command}")
+            FormCommand.Open => CreateOpenCommand(),
+            _ => throw new NotImplementedException($"Implement Command for {item.Command?.Command}")
         };
 
     }
 
-    public static ColumnRole ToColumnRole(this ItemDataType dataType)
+    public static ColumnRole ToColumnRole(this FormItem item)
     {
-        return dataType switch
+        return item.DataType switch
         {
             ItemDataType.Id => ColumnRole.Id,
             ItemDataType.Boolean => ColumnRole.CheckBox,
@@ -91,17 +102,13 @@ internal static class XamlExtensions
             _ => ColumnRole.Default,
         };
     }
-    public static IEnumerable<DataGridColumn> IndexColumns(this FormOld form)
+
+    public static String? Localize(this String? source)
     {
-        return form.Columns.Select(c =>
-            new DataGridColumn()
-            {
-                Header = c.Header ?? $"@[{c.Path}]",
-                Role = c.Role,
-                LineClamp = c.Clamp,
-                SortProperty = c.SortProperty,
-                Bindings = b => b.SetBinding(nameof(DataGridColumn.Content), new Bind(c.Path) { DataType = c.BindDataType })
-            }
-        );
+        if (source == null) 
+            return null;
+        if (source.StartsWith("@"))
+            return $"@[{source[1..]}]";
+        return source;   
     }
 }

@@ -8,7 +8,6 @@ using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
-using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
@@ -28,14 +27,13 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return _metadataCache.GetAppMetadataAsync(dataSource, LoadAppMetadataAsync);
     }
 
+    public String GetOrAddEndpointPath(String? dataSource, TableMetadata meta)
+    {
+        return _metadataCache.GetOrAddEndpointPath(dataSource, meta.Schema, meta.Name);
+    }
     public String GetOrAddEndpointPath(String? dataSource, String schema, String table)
     {
         return _metadataCache.GetOrAddEndpointPath(dataSource, schema, table);
-    }
-
-    public Task<FormOld?> GetFormOldAsync(String? dataSource, String schema, String table, String key)
-    {
-        return _metadataCache.GetOrAddFormOldAsync(dataSource, schema, table, key, LoadTableFormOldAsync);
     }
 
     public async Task<EndpointTableInfo> GetModelInfoFromPathAsync(String path)
@@ -56,9 +54,9 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return modelTableInfo;
     }
 
-    public Task<FormMetadata> GetFormAsync(String? dataSource, String schema, String table, String key)
+    public Task<FormMetadata> GetFormAsync(String? dataSource, TableMetadata meta, String key)
     {
-        return _metadataCache.GetOrAddFormAsync(dataSource, schema, table, key, LoadTableFormAsync);
+        return _metadataCache.GetOrAddFormAsync(dataSource, meta, key, LoadTableFormAsync);
     }
 
     private async Task<AppMetadata> LoadAppMetadataAsync(String? dataSource)
@@ -91,47 +89,31 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return meta;
     }
 
-    private async Task<FormOld?> LoadTableFormOldAsync(String? dataSource, String schema, String table, String key)
+    public Task<Form> CreateDefaultFormAsync(String? dataSource, TableMetadata meta, String key)
     {
-        var prms = new ExpandoObject()
-        {
-            {"Schema", schema},
-            {"Table", table},
-            {"Key", key},
-        };
-        var dm = await _dbContext.LoadModelAsync(dataSource, "a2meta.[Table.Form]", prms);
-        if (dm == null)
-            return null;
-        var formExpando = dm.Eval<ExpandoObject>("Form");
-        if (formExpando == null)
-            return null;
-        var json = JsonConvert.SerializeObject(formExpando);
-        if (json == null)
-            throw new InvalidOperationException("Form not found");
-        var meta = JsonConvert.DeserializeObject<FormOld>(json, JsonSettings.IgnoreNull)
-            ?? throw new InvalidOperationException("Form deserialization fails");
-        return meta;
+        var fb = new FormBuilder(this, dataSource, meta);
+        return fb.CreateFormAsync(key);
     }
 
-    private async Task<FormMetadata> LoadTableFormAsync(String? dataSource, String schema, String table, String key)
+    private async Task<FormMetadata> LoadTableFormAsync(String? dataSource, TableMetadata meta, String key)
     {
         var prms = new ExpandoObject()
         {
-            {"Schema", schema},
-            {"Table", table},
+            {"Schema", meta.Schema},
+            {"Table", meta.Name},
             {"Key", key},
         };
         var dm = await _dbContext.LoadModelAsync(dataSource, "a2meta.[Table.Form]", prms)
             ?? throw new InvalidOperationException("Form is null");
 
-        var formExpando = dm.Eval<ExpandoObject>("Form");
+        var formExpando = dm.Eval<ExpandoObject>("Form.Json");
         if (formExpando == null)
         {
-            var fb = new FormBuilder(this, dataSource, schema, table);
-            var defaultForm = await fb.CreateFormAsync(key);
+            var defaultForm = await CreateDefaultFormAsync(dataSource, meta, key);
             return new FormMetadata(XamlBulder.BuildForm(defaultForm), String.Empty);
         }
 
+        // convert Expando to Form
         var json = JsonConvert.SerializeObject(formExpando);
 
         if (json == null)

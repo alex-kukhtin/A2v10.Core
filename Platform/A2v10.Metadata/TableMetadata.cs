@@ -99,6 +99,12 @@ public record FormOld
     public List<FormColumn> Columns { get; set; } = [];
 }
 
+public enum EditWithMode
+{
+    Dialog,
+    Page 
+}
+
 public record TableMetadata
 {
     #region Database fields
@@ -108,6 +114,7 @@ public record TableMetadata
     public String? ItemsName { get; init; }
     public String? ItemName { get; init; }
     public String? TypeName { get; init; }
+    public EditWithMode EditWith { get; init; }
     public List<TableMetadata> Details { get; private set; } = [];
     #endregion
 

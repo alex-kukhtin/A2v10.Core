@@ -20,6 +20,9 @@ public interface IAppRuntimeBuilder
 	Boolean IsAutoSupported { get; }
     Boolean IsMetaSupported { get; }
 
+	String MetadataScripts(String minify);
+	String MetadataStyles(String minify);
+
 	Task<EndpointTableInfo> ModelInfoFromPathAsync(String path);
     Task<IAppRuntimeResult> RenderAsync(IPlatformUrl platformUrl, IModelView view, Boolean isReload);
 	Task<ExpandoObject> SaveAsync(IPlatformUrl platformUrl, IModelView view, ExpandoObject data, ExpandoObject savePrms);

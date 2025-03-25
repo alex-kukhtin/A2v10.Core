@@ -78,17 +78,19 @@ internal class XamlBulder
             att.Add(name, val.ToString());
         }
 
-        AttachInt32("Grid.Row", source.row);
-        AttachInt32("Grid.Col", source.col);
-        AttachInt32("Grid.RowSpan", source.rowSpan);
-        AttachInt32("Grid.RowSpan", source.colSpan);
+        if (source.Grid == null)
+            return;
+        AttachInt32("Grid.Row", source.Grid.Row);
+        AttachInt32("Grid.Col", source.Grid.Col);
+        AttachInt32("Grid.RowSpan", source.Grid.RowSpan);
+        AttachInt32("Grid.RowSpan", source.Grid.ColSpan);
     }
 
     private Panel CreatePanel(FormItem source)
     {
         return new Panel()
         {
-            Header = source.Label,
+            Header = source.Label.Localize(),
             Collapsible = true,
             Style = PaneStyle.Transparent,
             Children = [.. CreateElements(source.Items, Attach)]
@@ -99,9 +101,9 @@ internal class XamlBulder
     {
         IEnumerable<RowDefinition> GridRows()
         {
-            if (source.Rows == null)
+            if (source.Props?.Rows == null)
                 return Enumerable.Empty<RowDefinition>();
-            return source.Rows.Split(' ').Select(r =>
+            return source.Props.Rows.Split(' ').Select(r =>
                 new RowDefinition()
                 {
                     Height = GridLength.FromString(r),
@@ -109,13 +111,24 @@ internal class XamlBulder
             );
         }
 
+        IEnumerable<ColumnDefinition> GridColumns()
+        {
+            if (source.Props?.Columns == null)
+                return Enumerable.Empty<ColumnDefinition>();
+            return source.Props.Columns.Split(' ').Select(r =>
+                new ColumnDefinition()
+                {
+                    Width = GridLength.FromString(r),
+                }
+            );
+        }
 
         return new Grid(_xamlServiceProvider)
         {
             Rows = [.. GridRows()],
-            //Columns
+            Columns = [..GridColumns()],
             Height = !String.IsNullOrEmpty(source.Height) ? Length.FromString(source.Height) : null,
-            Children = [.. CreateElements(source.Items, Attach)]
+            Children = [..CreateElements(source.Items, Attach)]
         };
     }
 
@@ -127,9 +140,9 @@ internal class XamlBulder
                 return Enumerable.Empty<DataGridColumn>();
             return source.Items.Select(c => new DataGridColumn()
             {
-                Header = c.Label,
-                Role = c.DataType.ToColumnRole(),
-                Align = c.DataType.ToTextAlign(),
+                Header = c.Label.Localize(),
+                Role = c.ToColumnRole(),
+                Align = c.ToTextAlign(),
                 Bindings = b => b.SetBinding(nameof(DataGridColumn.Content), c.TypedBind())
             });
         }
@@ -143,7 +156,7 @@ internal class XamlBulder
             Bindings = b =>
             {
                 b.SetBinding(nameof(DataGrid.ItemsSource), new Bind(source.Data));
-                if (source.Command != FormCommand.Unknown)
+                if (source.Command != null)
                     b.SetBinding(nameof(DataGrid.DoubleClick), source.BindCommand());
             }
         };
@@ -161,9 +174,9 @@ internal class XamlBulder
         Int32 tabIndex = source.Data.EndsWith(".Name") ? 1 : 0;
         return new TextBox()
         {
-            Label = source.Label,
+            Label = source.Label.Localize(),
             TabIndex = tabIndex,
-            Align = source.DataType.ToTextAlign(),
+            Align = source.ToTextAlign(),
             Width = Length.FromStringNull(source.Width),
             Bindings = b => b.SetBinding(nameof(TextBox.Value), source.TypedBind())
         };
@@ -172,8 +185,8 @@ internal class XamlBulder
     {
         return new SelectorSimple()
         {
-            Label = source.Label,
-            Url = $"/{source.Parameter}",
+            Label = source.Label.Localize(),
+            Url = $"/{source.Props?.Url}",
             Width = Length.FromStringNull(source.Width),
             Bindings = b => b.SetBinding(nameof(TextBox.Value), new Bind(source.Data))
         };
@@ -182,7 +195,7 @@ internal class XamlBulder
     {
         return new DatePicker()
         {
-            Label = source.Label,
+            Label = source.Label.Localize(),
             Width = Length.FromStringNull(source.Width),
             Bindings = b => b.SetBinding(nameof(TextBox.Value), new Bind(source.Data))
         };
@@ -191,7 +204,7 @@ internal class XamlBulder
     {
         return new CheckBox()
         {
-            Label = source.Label,
+            Label = source.Label.Localize(),
             Bindings = b => b.SetBinding(nameof(TextBox.Value), new Bind(source.Data))
         };
     }
@@ -208,19 +221,20 @@ internal class XamlBulder
                 return c.Is switch
                 {
                     FormItemIs.Button => new Button()
-                        {
-                            Content = c.Label,
-                            Icon = c.Command.Command2Icon(),
-                            Bindings = b => b.SetBinding(nameof(Button.Command), c.BindCommand())
-                        },
+                    {
+                        Content = c.Label.Localize(),
+                        Icon = c.Command2Icon(),
+                        Bindings = b => b.SetBinding(nameof(Button.Command), c.BindCommand())
+                    },
                     FormItemIs.Aligner => new ToolbarAligner(),
-                    FormItemIs.TextBox => new TextBox()
-                        {
-                            ShowClear = true,   
-                            ShowSearch = true,  
-                            Placeholder = "@[Search]",
-                            Bindings = b => b.SetBinding(nameof(TextBox.Value), new Bind(c.Data))
-                        },
+                    FormItemIs.SearchBox => new TextBox()
+                    {
+                        ShowClear = true,   
+                        ShowSearch = true,  
+                        Placeholder = "@[Search]",
+                        Width = Length.FromStringNull(c.Width),
+                        Bindings = b => b.SetBinding(nameof(TextBox.Value), new Bind(c.Data))
+                    },
                     _ => throw new InvalidOperationException($"Implement toolbar elem: {c.Is}")
                 };
             }
@@ -238,8 +252,8 @@ internal class XamlBulder
             return Enumerable.Empty<Button>();
         return form.Buttons.Select(e => new Button()
         {
-            Content = e.Label,
-            Style = e.Primary ? ButtonStyle.Primary : ButtonStyle.Default,
+            Content = e.Label.Localize(),
+            Style = e.Props?.Style == ItemStyle.Primary ? ButtonStyle.Primary : ButtonStyle.Default,
             Bindings = b => b.SetBinding(nameof(Button.Command), e.BindCommand())
         });
     }
@@ -250,6 +264,7 @@ internal class XamlBulder
             return null;
         return new Taskpad()
         {
+            Title = item.Label.Localize(),
             Children = [.. CreateElements(item.Items)],
         };
     }
@@ -260,7 +275,7 @@ internal class XamlBulder
             CollectionView = CreateCollectionView(form),
             Children = [.. CreateElements(form.Items)],
             Taskpad = CreateTaskpad(form.Taskpad),
-            Title = form.Label,
+            Title = form.Label.Localize(),
         };
         return page;
     }
@@ -269,7 +284,8 @@ internal class XamlBulder
     {
         var dialog = new Dialog()
         {
-            Title = form.Label,
+            Title = form.Label.Localize(),
+            Width = Length.FromStringNull(form.Width),
             CollectionView = CreateCollectionView(form),
             Children = [.. CreateElements(form.Items)],
             Buttons = [.. CreateDialogButtons(form)]

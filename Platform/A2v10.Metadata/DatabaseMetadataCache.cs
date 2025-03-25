@@ -45,13 +45,13 @@ public class DatabaseMetadataCache
         throw new InvalidOperationException("Form CACHE OLD");
     }
 
-    public async Task<FormMetadata> GetOrAddFormAsync(String? dataSource, String schema, String table, String key,
-    Func<String?, String, String, String, Task<FormMetadata>> getForm)
+    public async Task<FormMetadata> GetOrAddFormAsync(String? dataSource, TableMetadata meta, String key,
+    Func<String?, TableMetadata, String, Task<FormMetadata>> getForm)
     {
-        var dictKey = $"{dataSource}:{schema}:{table}:{key.ToLowerInvariant()}";
+        var dictKey = $"{dataSource}:{meta.Schema}:{meta.Name}:{key.ToLowerInvariant()}";
         if (_formCache.TryGetValue(dictKey, out var form))
             return form;
-        form = await getForm(dataSource, schema, table, key);
+        form = await getForm(dataSource, meta, key);
         return form; // TODO: CACHE
         return _formCache.GetOrAdd(dictKey, form);
     }

@@ -71,7 +71,7 @@ public static class HostHelpers
 		return await rdr.ReadToEndAsync();
 	}
 
-	public static async Task<String> LayoutScripts(this IAppCodeProvider provider)
+    public static async Task<String> LayoutScripts(this IAppCodeProvider provider)
 	{
 		// primary only
 		using var stream = provider.FileStreamRO("_layout/_scripts.html", true);

@@ -10,7 +10,7 @@ internal partial class FormBuilder
 {
     private async Task<Form> CreateBrowseDialogAsync()
     {
-        var tableMeta = await _metaProvider.GetSchemaAsync(_dataSource, _schema, _table);
+        var tableMeta = await _metaProvider.GetSchemaAsync(_dataSource, _meta.Schema, _meta.Name);
         var appMeta = await _metaProvider.GetAppMetadataAsync(_dataSource);
 
         IEnumerable<FormItem> Columns()
@@ -21,7 +21,7 @@ internal partial class FormBuilder
                 {
                     Is = FormItemIs.DataGridColumn,
                     Data = c.IsReference ? $"{c.Name}.{appMeta.NameField}" : c.Name,
-                    Label = $"@[{c.Name}]"
+                    Label = $"@{c.Name}"
                 }
             );
         }
@@ -30,23 +30,24 @@ internal partial class FormBuilder
         {
             yield return new FormItem(FormItemIs.Button)
             {
-                Command = FormCommand.Create,
-                Label = "@[Create]",
-                Parameter = _metaProvider.GetOrAddEndpointPath(_dataSource, _schema, _table),
+                Label = "@Create",
+                Command = new FormItemCommand(FormCommand.Create,
+                    _metaProvider.GetOrAddEndpointPath(_dataSource, _meta)),
             };
             yield return new FormItem(FormItemIs.Button)
             {
-                Command = FormCommand.Edit,
-                Parameter = _metaProvider.GetOrAddEndpointPath(_dataSource, _schema, _table),
+                Command = new FormItemCommand(FormCommand.Edit,
+                    _metaProvider.GetOrAddEndpointPath(_dataSource, _meta)),
             };
             yield return new FormItem(FormItemIs.Button)
             {
-                Command = FormCommand.Reload,
+                Command = new FormItemCommand(FormCommand.Reload),
             };
             yield return new FormItem(FormItemIs.Aligner);
-            yield return new FormItem(FormItemIs.TextBox)
+            yield return new FormItem(FormItemIs.SearchBox)
             {
-                Data = "Parent.Filter.Fragment"
+                Data = "Parent.Filter.Fragment",
+                Width = "20rem"
             };
         }
 
@@ -55,30 +56,35 @@ internal partial class FormBuilder
             Is = FormItemIs.Dialog,
             Data = tableMeta.RealItemsName,
             UseCollectionView = true,
-            Label = $"@[{tableMeta.RealItemsName}.Browse]",
+            Schema = tableMeta.Schema,
+            Table = tableMeta.Name,
+            Label = $"@{tableMeta.RealItemsName}.Browse",
+            Width = "65rem",
             Items = [
                 new FormItem()
                 {
                     Is = FormItemIs.Grid,
-                    Rows = "auto 1fr auto",
+                    Props = new FormItemProps() {
+                        Rows = "auto 1fr auto",
+                        Columns = "1fr",
+                    },
                     Items = [
                         new FormItem() {
                             Is = FormItemIs.Toolbar,
-                            row = 1,
+                            Grid = new FormItemGrid(1, 1),
                             Items =  [..ToolbarButtons()]
                         },
                         new FormItem() {
                             Is = FormItemIs.DataGrid,
-                            row = 2,
+                            Grid = new FormItemGrid(2, 1),
                             Height = "30rem",
-                            Command = FormCommand.Select,
-                            Parameter = tableMeta.RealItemsName,
+                            Command = new FormItemCommand(FormCommand.Select, tableMeta.RealItemsName),
                             Data = "Parent.ItemsSource",
                             Items = [..Columns()]
                         },
                         new FormItem() {
                             Is = FormItemIs.Pager,
-                            row = 3,
+                            Grid = new FormItemGrid(3, 1), 
                             Data = "Parent.Pager"
                         }
                     ]                        
@@ -87,15 +93,17 @@ internal partial class FormBuilder
             Buttons = [
                 new FormItem(FormItemIs.Button)
                 {
-                    Label = "@[Select]",
-                    Command = FormCommand.Select,
-                    Primary = true,
-                    Parameter = tableMeta.RealItemsName
+                    Label = "@Select",
+                    Command = new FormItemCommand(FormCommand.Select, tableMeta.RealItemsName),
+                    Props = new FormItemProps() 
+                    {
+                        Style = ItemStyle.Primary
+                    }
                 },
                 new FormItem(FormItemIs.Button)
                 {
-                    Label = "@[Cancel]",
-                    Command = FormCommand.Close
+                    Label = "@Cancel",
+                    Command = new FormItemCommand(FormCommand.Close)
                 }
             ]
         };
