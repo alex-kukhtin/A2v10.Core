@@ -1729,6 +1729,9 @@ header .include.nav-pane .partial-block .control-group,
   overflow: auto;
   height: 100%;
 }
+.taskpad .panel-content > .grid {
+  padding: 0;
+}
 .taskpad.overflow .taskpad-body {
   overflow: visible;
 }

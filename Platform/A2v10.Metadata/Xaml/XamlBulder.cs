@@ -27,19 +27,27 @@ internal class XamlBulder
     {
         if (!form.UseCollectionView)
             return null;
+
+        IEnumerable<FilterItem> Filters()
+        {
+            yield return new FilterItem() { 
+                Property = "Fragment"
+            };
+
+            var filters = form.Props?.Filters;
+            if (String.IsNullOrEmpty(filters))
+                yield break;
+            foreach (var f in filters.Split(','))
+                yield return new FilterItem() { Property = f, DataType = DataType.Object };
+        }
+
         return new CollectionView()
         {
             RunAt = form.Is == FormItemIs.Page ? RunMode.ServerUrl : RunMode.Server,
             Bindings = b => b.SetBinding(nameof(CollectionView.ItemsSource), new Bind(form.Data)),
             Filter = new FilterDescription()
             {
-                Items = [
-                    new FilterItem() {
-                        Property = "Fragment",
-                        DataType = DataType.String,
-                    }
-                    // TODO:: Collection Filters!!!
-                ]
+                Items = [..Filters()]
             }
         };
     }
@@ -143,6 +151,7 @@ internal class XamlBulder
                 Header = c.Label.Localize(),
                 Role = c.ToColumnRole(),
                 Align = c.ToTextAlign(),
+                SortProperty  = c.Data.EndsWith(".Name") ? c.Data[..^5] : null,
                 Bindings = b => b.SetBinding(nameof(DataGridColumn.Content), c.TypedBind())
             });
         }
@@ -188,7 +197,9 @@ internal class XamlBulder
             Label = source.Label.Localize(),
             Url = $"/{source.Props?.Url}",
             Width = Length.FromStringNull(source.Width),
-            Bindings = b => b.SetBinding(nameof(TextBox.Value), new Bind(source.Data))
+            Placeholder = source.Props?.Placeholder.Localize(),
+            ShowClear = source.Props?.ShowClear == true,
+            Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), new Bind(source.Data))
         };
     }
     private DatePicker CreateDatePicker(FormItem source)
@@ -265,6 +276,7 @@ internal class XamlBulder
         return new Taskpad()
         {
             Title = item.Label.Localize(),
+            Collapsible = true,
             Children = [.. CreateElements(item.Items)],
         };
     }

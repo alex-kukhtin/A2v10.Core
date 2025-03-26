@@ -100,7 +100,10 @@ public record FormItemProps
     public String? Rows { get; init; }
     public String? Columns { get; init; }
     public String? Url { get; init; }
+    public String? Placeholder { get; init; }
+    public Boolean ShowClear { get; init; } 
     public ItemStyle Style { get; init; }
+    public String? Filters { get; init; }
 }
 
 public record FormItem

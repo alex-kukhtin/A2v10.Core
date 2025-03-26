@@ -192,10 +192,12 @@ begin
 	insert into @cat(Id, IsFolder, [Schema], Kind, [Name]) values
 	(0,  0, N'root', N'root',   N'Root'),
 	(10, 0, N'app',  N'app',    N'Application'),
-	(11, 1, N'cat',  N'folder', N'Catalogs'),
-	(12, 1, N'doc',  N'folder', N'Documents'),
-	(13, 1, N'jrn',  N'folder', N'Journals'),
-	(14, 1, N'rep',  N'folder', N'Reports'),
+	(11, 1, N'enm',  N'folder', N'Enums'),
+	(12, 1, N'cat',  N'folder', N'Catalogs'),
+	(13, 1, N'doc',  N'folder', N'Documents'),
+	(14, 1, N'op',   N'folder', N'Operations'),
+	(15, 1, N'jrn',  N'folder', N'Journals'),
+	(16, 1, N'rep',  N'folder', N'Reports'),
 	(70, 1, N'ui',   N'folder', N'User Interfaces');
 
 	merge a2meta.[Catalog] as t
@@ -204,7 +206,8 @@ begin
 	when matched then update set
 		t.[Name] = s.[Name],
 		t.Kind = s.Kind,
-		t.IsFolder = s.IsFolder
+		t.IsFolder = s.IsFolder,
+		t.[Schema] = s.[Schema]
 	when not matched then insert
 		(Id, Parent, IsFolder, [Schema], [Name], Kind) values
 		(s.Id, 0, s.IsFolder, s.[Schema], s.[Name], Kind);

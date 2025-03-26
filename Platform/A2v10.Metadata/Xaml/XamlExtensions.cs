@@ -15,9 +15,14 @@ internal static class XamlExtensions
         return item.Command.Command switch 
         {
             FormCommand.Reload => Icon.Reload,
+            FormCommand.Create => Icon.Plus,
             FormCommand.Edit or FormCommand.Open => Icon.Edit,
             FormCommand.Delete => Icon.Clear,
-            FormCommand.Create => Icon.Plus,
+            FormCommand.Copy => Icon.Copy,
+            FormCommand.Apply => Icon.Apply,
+            FormCommand.Unapply => Icon.Unapply,
+            FormCommand.SaveAndClose => Icon.SaveCloseOutline,
+            FormCommand.Save => Icon.SaveOutline,
             _ => Icon.NoIcon,
         };
     }

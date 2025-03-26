@@ -3,6 +3,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 using A2v10.Infrastructure;
 using A2v10.Data.Interfaces;
@@ -40,7 +41,12 @@ internal partial class DatabaseModelProcessor
             order = qry?.Get<String>("Order") ?? defaultOrder;
             dir = qry?.Get<String>("Dir")?.ToLowerInvariant() ?? DEFAULT_DIR;
         }
-        // TODO: order взять из таблицы - он попадает в SQL!
+
+        if (!table.Columns.Any(c => c.Name.Equals(order, StringComparison.OrdinalIgnoreCase))) 
+            order = defaultOrder;
+
+        if (dir != "asc" && dir != "desc")
+            dir = DEFAULT_DIR;
 
         var refFields = table.RefFields();
 
@@ -50,19 +56,44 @@ internal partial class DatabaseModelProcessor
         if (sortColumn.Column != null)
             sqlOrder = $"r{sortColumn.Index}.[Name]"; // TODO: NameField
 
-        String ParametersCondition() {
-            return $"a.[{appMeta.VoidField}] = 0"; 
-        }
-
-        String WhereCondition()
+        IEnumerable<String> Where()
         {
-            if (String.IsNullOrEmpty(fragment))
-                return String.Empty;
+            yield return $"a.[{appMeta.VoidField}]=0";
+
+            foreach (var r in refFields)
+            {
+                var val = qry?.GetInt64(r.Column.Name);
+                if (val != null && val != 0)
+                    yield return $"a.[{r.Column.Name}] = @{r.Column.Name}";
+            }
+
             var searchable = table
                 .Columns.Where(c => c.IsSearchable).Select(c => $"a.[{c.Name}] like @fr")
                 .Union(refFields.Select(c => $"r{c.Index}.[Name] like @fr"));
-                
-            return $"and (@fr is null or {String.Join(" or ", searchable)})";
+
+            if (!String.IsNullOrEmpty(fragment))
+                yield return $"(@fr is null or {String.Join(" or ", searchable)})";
+        }
+
+        String filterJoins() 
+        { 
+            if (!refFields.Any())
+                return String.Empty;
+            return " left join " + String.Join(" left join ", refFields.Select(r => 
+                $"""
+                {r.Column.Reference.RefSchema}.[{r.Column.Reference.RefTable}] r{r.Index} on r{r.Index}.[{appMeta.IdField}] = @{r.Column.Name}
+                """));
+        }
+
+        String filterFields()
+        {
+            if (!refFields.Any())
+                return String.Empty;
+            return ", " + String.Join(", ", refFields.Select(r =>
+            $"""
+            [!{table.Name}.{r.Column.Name}.{appMeta.IdField}!Filter] = r{r.Index}.[{appMeta.IdField}],
+            [!{table.Name}.{r.Column.Name}.{appMeta.NameField}!Filter] = r{r.Index}.[{appMeta.NameField}]
+            """));
         }
 
         var sqlString = $"""
@@ -78,15 +109,18 @@ internal partial class DatabaseModelProcessor
             [!!RowCount]  = count(*) over()        
         from {table.Schema}.[{table.Name}] a
         {RefTableJoins(refFields, "a", appMeta)}
-        where {ParametersCondition()} {WhereCondition()}
+        where {String.Join(" and ", Where())}
         order by {sqlOrder} {dir}
-        offset @Offset rows fetch next @PageSize rows only option (recompile);
+        offset @Offset rows fetch next @PageSize rows only;
         
+        declare @ft table(Id int);
+        insert into @ft (Id) values (1);
         -- system data
         select [!$System!] = null,
         	[!{table.Name}!PageSize] = @PageSize,  [!{table.Name}!Offset] = @Offset,
         	[!{table.Name}!SortOrder] = @Order,  [!{table.Name}!SortDir] = @Dir,
-        	[!{table.Name}.Fragment!Filter] = @Fragment;
+        	[!{table.Name}.Fragment!Filter] = @Fragment{filterFields()}
+        from @ft {filterJoins()};
         
         """;
         return _dbContext.LoadModelSqlAsync(view.DataSource, sqlString, dbprms =>
@@ -97,6 +131,8 @@ internal partial class DatabaseModelProcessor
             dbprms.AddString("@Order", order);
             dbprms.AddString("@Dir", dir);
             dbprms.AddString("@Fragment", fragment);
+            foreach (var r in refFields)
+                dbprms.AddBigInt($"@{r.Column.Name}", qry?.GetInt64(r.Column.Name));
         });
     }
 }

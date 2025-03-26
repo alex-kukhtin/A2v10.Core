@@ -63,14 +63,35 @@
 
 	const propsheetTemplate = `
 <div class="fd-propsheet">
-	{{item.Is}}
+	<div class="fd-item-is" v-text="item.Is" />
 	<table>
+		<tr>
+			<td colspan=2 class="fd-ps-header">General</td>
+		</tr>
 		<tr v-for="(p, ix) in itemProps" :key=ix>
 			<td v-text="p.name" />
 			<td>
 				<input v-model.lazy.trim="p.value" />
 			</td>
-		</tr>	
+		</tr>
+		<tr v-if="item.Grid">
+			<td colspan=2 class="fd-ps-header">Grid</td>
+		</tr>
+		<tr v-if="item.Grid" v-for="(p, ix) in gridProps" :key="'g:' + ix">
+			<td v-text="p.name"/>
+			<td>
+				<input v-model.lazy.trim="p.value" type=number />
+			</td>
+		</tr>
+		<tr v-if="item.Command">
+			<td colspan=2 class="fd-ps-header">Command</td>
+		</tr>
+		<tr v-if="item.Command" v-for="(p, ix) in commandProps" :key="'c:' + ix">
+			<td v-text="p.name"/>
+			<td>
+				<input v-model.lazy.trim="p.value" />
+			</td>
+		</tr>
 	</table>
 </div>
 `;
@@ -78,17 +99,19 @@
 	// TODO: ������������� ������� Dialog.Label => Dialog.Title?
 	const PROP_MAP = {
 		Grid: ['Rows', 'Columns', "Height"],
-		TextBox: ["Data", 'Label', "Width", 'row', 'col', 'rowSpan', 'colSpan'],
-		DatePicker: ["Data", 'Label', "Width", 'row', 'col', 'rowSpan', 'colSpan'],
-		Selector: ["Data", 'Label', "Width", 'row', 'col', 'rowSpan', 'colSpan'],
-		DataGrid: ["Data", 'Height', 'row', 'col'],
-		CLabel: ["Label", 'row', 'col'],
+		TextBox: ["Data", 'Label', "Width"],
+		DatePicker: ["Data", 'Label', "Width"],
+		Selector: ["Data", 'Label', "Width"],
+		DataGrid: ["Data", 'Height'],
+		CLabel: ["Label"],
 		DataGridColumn: ["Data", 'Label'],
-		Toolbar: ["row", 'col'],
-		Pager: ["row", 'col', 'Data'],
+		Toolbar: [],
+		Pager: ['Data'],
 		Dialog: ['Label', 'Width', 'Height', "Data"],
 		Page: ['Label', "Data"],
-		Button: ['Label', 'Command', "Parameter"],
+		Button: ['Label', "Parameter"],
+		GRID_PROPS: ['Row', 'Col', 'RowSpan', 'ColSpan'],
+		COMMAND_PROPS: ['Command', 'Argument', 'Url']
 	};
 
 	var propsheetElem = {
@@ -100,24 +123,35 @@
 			itemProps() {
 				if (!this.item) return [];
 				const type = this.item.Is;
-				const props = PROP_MAP[type];
-				if (!props) return [];
-				return props.map(p => {
-					const item = this.item;
-					const r = {
-						name: p,
-						get value() { return item[p]; },
-						set value(v) { Vue.set(item, p, v); }	
-					};
-					return r;
-				})
+				return this.getProps(PROP_MAP[type], this.item);
+			},
+			gridProps() {
+				let g = this.item.Grid;
+				if (!g) return [];
+				return this.getProps(PROP_MAP['GRID_PROPS'], this.item.Grid);
+			},
+			commandProps() {
+				let g = this.item.Command;
+				if (!g) return [];
+				return this.getProps(PROP_MAP['COMMAND_PROPS'], this.item.Command);
 			}
 		},
 		methods: {
+			getProps(props, item) {
+				if (!props) return [];
+				return props.map(p => {
+					const r = {
+						name: p,
+						get value() { return item[p] || ''; },
+						set value(v) { Vue.set(item, p, v); }
+					};
+					return r;
+				});
+			}
 		}
 	};
 
-	const taskpadTemplate = `
+	const taskpadTemplate$1 = `
 <div class="fd-taskpad">
 	<ul class="fd-tabbar">
 		<li :class="{active: activeTab === 'tbox'}" @click.stop.prevent="activeTab = 'tbox'">Toolbox</li>
@@ -129,7 +163,7 @@
 `;
 
 	var taskpad = {
-		template: taskpadTemplate,
+		template: taskpadTemplate$1,
 		props: {
 			item: Object,
 			fields: Array,
@@ -224,7 +258,7 @@
 	var control = {
 		props: {
 			item: Object,
-			cont: Object	
+			cont: Object,
 		},
 		computed: {
 			controlStyle() {
@@ -347,7 +381,6 @@
 		computed: {
 			elemStyle() {
 				return {
-					height: this.item.Height || ''
 				}
 			}
 		}
@@ -358,7 +391,7 @@
 		<button>
 			<i class="ico ico-chevron-left" />
 		</button>
-		<button>1</button>
+		<button class="active">1</button>
 		<button>2</button>
 		<button>3</button>
 		<button>4</button>
@@ -390,7 +423,7 @@
 		extends: layoutItem,
 		computed: {
 			icon() {
-				switch (this.item.Command) {
+				switch (this.item.Command.Command) {
 					case 'Edit': return 'ico-edit';
 					case 'New': return 'ico-add';
 					case 'Create': return 'ico-add';
@@ -429,6 +462,46 @@
 		}
 	};
 
+	function is2icon(is) {
+		switch (is) {
+			case 'SearchBox': return 'ico-search';
+		}
+		return '';
+	}
+
+	const inputControlTemplate = `
+<div class="control-group" :style=controlStyle @click=itemClick>
+<label v-text="item.Label" v-if="item.Label"/>
+	<div class="input-group">
+		<span v-text="item.Data" class="input" />
+		<a v-if="icon">
+			<i class="ico" :class="icon" />
+		</a>
+	</div>
+</div>
+`;
+
+	const searchBox = {
+		template: inputControlTemplate,
+		extends: control,
+		computed: {
+			icon() { return is2icon(this.item.Is); }
+		},
+		methods: {
+			itemClick(ev) {
+				// todo: check if toolbar
+				ev.preventDefault();
+				ev.stopPropagation();
+				this.cont.select(this.item);
+			}
+		}
+	};
+
+
+	var inputControls = {
+		searchBox
+	};
+
 	var toolbar = {
 		template: `<div class="toolbar" @dragover=dragOver @drop=drop >
 		<component :is="item.Is" v-for="(item, ix) in item.Items" :item="item" :key="ix" :cont=cont />
@@ -437,7 +510,8 @@
 		components: {
 			'Button': button$1,
 			'Aligner': aligner,
-			'TextBox': textBox
+			'TextBox': textBox,
+			'SearchBox': inputControls.searchBox
 		},
 		methods: {
 			dragOver(ev) {
@@ -479,20 +553,33 @@
 			'Toolbar': toolbar
 		},
 		computed: {
+			grid() {
+				return this.item.Grid || {};
+			},
 			row() {
-				return this.item.row;
+				return this.grid.Row || '';
 			},
 			col() {
-				return this.item.col;
+				return this.grid.Col || '';
 			},
 			rowSpan() {
-				return this.item.rowSpan || 1;
+				return this.grid.RowSpan || '';
 			},
 			colSpan() {
-				return this.item.colSpan || 1;
+				return this.grid.ColSpan || '';
 			},
 			style() {
-				return `grid-area: ${this.row} / ${this.col} / span ${this.rowSpan} / span ${this.colSpan}`;
+				let row = this.row;
+				if (this.rowSpan)
+					row += `/ span ${this.rowSpan}`;
+				let col = this.col;
+				if (this.colSpan)
+					col += `/ span ${this.colSpan}`;
+				return {
+					gridRow: row,
+					gridColumn: col,
+					height: this.item.Height || ''
+				};
 			},
 			selected() {
 				return this.cont.isActive(this.item);
@@ -540,18 +627,21 @@
 			cont: Object
 		},
 		computed: {
+			props() {
+				return this.item.Props || {};
+			},
 			cols() {
-				if (!this.item.Columns) return 0;
-				return this.item.Columns.split(' ').map((c, ix) => ix + 1);
+				if (!this.props.Columns) return 1;
+				return this.props.Columns.split(' ').map((c, ix) => ix + 1);
 			},
 			rows() {
-				if (!this.item.Rows) return 0;
-				return this.item.Rows.split(' ').map((r, ix) => ix + 1);
+				if (!this.props.Rows) return 1;
+				return this.props.Rows.split(' ').map((r, ix) => ix + 1);
 			},
 			gridStyle() {
 				return {
-					gridTemplateColumns: this.item.Columns || '',
-					gridTemplateRows: this.item.Rows || '',
+					gridTemplateColumns: this.props.Columns || 'auto',
+					gridTemplateRows: this.props.Rows || 'auto',
 					height: this.item.Height || ''
 				}
 			},
@@ -606,6 +696,20 @@
 		}
 	};
 
+	const taskpadTemplate = `
+<div class="fd-elem-taskpad">
+	TASKPAD
+</div>
+`;
+
+	var frmTaskpad = {
+		template: taskpadTemplate,
+		props: {
+			item: Object,
+			cont: Object
+		}
+	};
+
 	const containerTemplate = `
 <div class="fd-container" @keyup.self=keyUp tabindex=0 >
 	<fd-toolbar></fd-toolbar>
@@ -620,9 +724,8 @@
 				<component v-for="(itm, ix) in form.Items" :key="ix" :is="itm.Is"
 					:item="itm" :cont=cont />
 			</div>
+			<component :is="form.Taskpad.Is" :item="form.Taskpad" :cont=cont v-if="form.Taskpad" />
 			<dlg-buttons v-if="isDialog" :elems="form.Buttons" :cont=cont />
-		</div>
-		<div class="fd-page-taskpad">
 		</div>
 	</div>
 </div>
@@ -640,7 +743,8 @@
 			'fd-toolbar': toolbar$1,
 			'fd-taskpad': taskpad,
 			'dlg-buttons': dlgButtons,
-			'HLine': lineElem
+			'HLine': lineElem,
+			'Taskpad': frmTaskpad
 		},
 		props: {
 			form: Object,
@@ -671,6 +775,7 @@
 				return el;
 			},
 			isDialog() {
+				console.dir(this.form);
 				return this.form.Is === 'Dialog';
 			}
 		},

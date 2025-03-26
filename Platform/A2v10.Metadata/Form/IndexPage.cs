@@ -32,16 +32,18 @@ internal partial class FormBuilder
             yield return new FormItem(FormItemIs.Button)
             {
                 Label = "@Create",
-                Command = new FormItemCommand(FormCommand.Create,
-                    _metaProvider.GetOrAddEndpointPath(_dataSource, _meta)),
+                Command = new FormItemCommand(FormCommand.Create)
+                {
+                    Url = _metaProvider.GetOrAddEndpointPath(_dataSource, _meta),
+                    Argument = "Parent.ItemsSource"
+                }
             };
             yield return tableMeta.EditWith switch
             {
                 EditWithMode.Page => new FormItem(FormItemIs.Button)
                 {
-                    Command = new FormItemCommand()
+                    Command = new FormItemCommand(FormCommand.Open)
                     {
-                        Command = FormCommand.Open,
                         Url = _metaProvider.GetOrAddEndpointPath(_dataSource, _meta),
                         Argument = "Parent.ItemsSource"
                     }
@@ -79,7 +81,13 @@ internal partial class FormBuilder
                 return new FormItem(FormItemIs.Selector)
                 {
                     Label = $"@{column.Name}",
-                    Data = $"Parent.Filter.{column.DataType}"
+                    Data = $"Parent.Filter.{column.Name}",
+                    Props = new FormItemProps()
+                    {
+                        Url = column.Reference.EndpointPath,
+                        Placeholder = $"@{column.Reference.RefTable}.All",
+                        ShowClear = true,
+                    }
                 };
             }
 
@@ -109,6 +117,10 @@ internal partial class FormBuilder
             Table = tableMeta.Name,
             Data = tableMeta.RealItemsName,
             Label = $"@{tableMeta.RealItemsName}",
+            Props = new FormItemProps()
+            {
+                Filters = String.Join(',', tableMeta.RefFields().Select(c => c.Column.Name))
+            },
             Items = [
                 new FormItem() {
                     Is = FormItemIs.Grid,

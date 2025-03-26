@@ -51,7 +51,9 @@ internal partial class FormBuilder
                     Is = FormItemIs.Grid,
                     Props = new FormItemProps() 
                     {
-                        Rows = String.Join(' ', EditableColumns(tableMeta, appMeta).Select(c => "auto")),
+                        // rows + 1
+                        Rows = String.Join(' ', EditableColumns(tableMeta, appMeta).Select(c => "auto")
+                            .Union(["auto"])),
                         Columns = "1fr"
                     },
                     Items = [..Controls()]

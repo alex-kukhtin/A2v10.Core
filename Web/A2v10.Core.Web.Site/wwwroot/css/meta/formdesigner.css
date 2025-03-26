@@ -94,13 +94,23 @@
 .fd-container .fd-propsheet {
   width: 100%;
 }
+.fd-container .fd-propsheet .fd-item-is {
+  padding: 0 8px;
+  line-height: 2em;
+  font-weight: 500;
+}
 .fd-container .fd-propsheet table {
   width: 100%;
   border-collapse: collapse;
-  border-top: 1px solid #ddd;
+  border-top: 1px solid #eee;
 }
 .fd-container .fd-propsheet table tr {
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid #eee;
+}
+.fd-container .fd-propsheet table tr .fd-ps-header {
+  font-weight: 500;
+  height: 1.8em;
+  background-color: #eee;
 }
 .fd-container .fd-propsheet table tr td input,
 .fd-container .fd-propsheet table tr td select {
@@ -109,8 +119,8 @@
 }
 .fd-container .fd-propsheet table tr td:first-child {
   width: 30%;
-  border-right: 1px solid #ddd;
-  border-left: 16px solid #ddd;
+  border-right: 1px solid #eee;
+  border-left: 16px solid #eee;
   padding: 0 6px;
 }
 .fd-container .fd-main {
@@ -160,6 +170,8 @@
   background-color: var(--bgPrimary);
   min-height: 28px;
   min-width: 20px;
+  width: 100%;
+  height: 100%;
 }
 .fd-container .fd-elem-grid .fd-grid-ph.hover {
   background-color: #bbb;
@@ -172,6 +184,9 @@
 }
 .fd-container .fd-elem-grid .fd-grid-item > label {
   line-height: 2em;
+}
+.fd-container .fd-elem-grid .fd-grid-item .input-group {
+  width: 100%;
 }
 .fd-container .fd-elem-grid .fd-grid-item .handle {
   position: absolute;
@@ -209,7 +224,8 @@
 .fd-container .fd-elem-grid .fd-grid-item .fd-datagrid {
   min-height: 80px;
   width: 100%;
-  height: 120px;
+  min-height: 120px;
+  height: 100%;
   display: flex;
   flex-direction: row;
   justify-content: space-between;

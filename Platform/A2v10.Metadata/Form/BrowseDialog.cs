@@ -31,13 +31,19 @@ internal partial class FormBuilder
             yield return new FormItem(FormItemIs.Button)
             {
                 Label = "@Create",
-                Command = new FormItemCommand(FormCommand.Create,
-                    _metaProvider.GetOrAddEndpointPath(_dataSource, _meta)),
+                Command = new FormItemCommand(FormCommand.Create)
+                {
+                    Url = _metaProvider.GetOrAddEndpointPath(_dataSource, _meta),
+                    Argument = "Parent.ItemsSource"
+                }
             };
             yield return new FormItem(FormItemIs.Button)
             {
-                Command = new FormItemCommand(FormCommand.Edit,
-                    _metaProvider.GetOrAddEndpointPath(_dataSource, _meta)),
+                Command = new FormItemCommand(FormCommand.Edit)
+                {
+                    Url = _metaProvider.GetOrAddEndpointPath(_dataSource, _meta),
+                    Argument = "Parent.ItemsSource"
+                }
             };
             yield return new FormItem(FormItemIs.Button)
             {
