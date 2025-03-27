@@ -1,22 +1,21 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Collections.Generic;
 
 namespace A2v10.Metadata;
 
-internal partial class FormBuilder
+internal partial class BaseModelBuilder
 {
-    private async Task<Form> CreateEditPageAsync()
+    private Form CreateEditPage()
     {
-        var tableMeta = await _metaProvider.GetSchemaAsync(_dataSource, _meta.Schema, _meta.Name);
-        var appMeta = await _metaProvider.GetAppMetadataAsync(_dataSource);
-
 
         IEnumerable<FormItem> ToolbarButtons()
         {
+            yield return new FormItem(FormItemIs.Button)
+            {
+                Label = "@SaveAndClose",
+                Command = new FormItemCommand(FormCommand.SaveAndClose)
+            };
             yield return new FormItem(FormItemIs.Button)
             {
                 Label = "@Save",
@@ -38,10 +37,10 @@ internal partial class FormBuilder
         {
             Is = FormItemIs.Page,
             UseCollectionView = true,
-            Schema = tableMeta.Schema,
-            Table = tableMeta.Name,
-            Data = tableMeta.RealItemsName,
-            Label = $"@{tableMeta.RealItemsName}",
+            Schema = _table.Schema,
+            Table = _table.Name,
+            Data = _table.RealItemsName,
+            Label = $"@{_table.RealItemsName}",
             Items = [
                 new FormItem() {
                     Is = FormItemIs.Grid,

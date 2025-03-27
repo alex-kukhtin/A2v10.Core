@@ -16,7 +16,7 @@ internal static class XamlExtensions
         {
             FormCommand.Reload => Icon.Reload,
             FormCommand.Create => Icon.Plus,
-            FormCommand.Edit or FormCommand.Open => Icon.Edit,
+            FormCommand.EditSelected or FormCommand.Edit => Icon.Edit,
             FormCommand.Delete => Icon.Clear,
             FormCommand.Copy => Icon.Copy,
             FormCommand.Apply => Icon.Apply,
@@ -47,18 +47,30 @@ internal static class XamlExtensions
         };
     }
 
-    public static BindCmd BindCommand(this FormItem item)
+    public static BindCmd BindCommand(this FormItem item, EditWithMode withMode)
     {
-        BindCmd CreateDialogCommand(DialogAction action)
+        BindCmd CreateCreateCommand()
         {
-            var cmd = new BindCmd()
+            if (withMode == EditWithMode.Dialog)
             {
-                Command = CommandType.Dialog,
-                Action = action,
-                Url = $"/{item.Command?.Url}/edit"
-            };
-            cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind("Parent.ItemsSource"));
-            return cmd;
+                var cmd = new BindCmd()
+                {
+                    Command = CommandType.Dialog,
+                    Action = DialogAction.Append,
+                    Url = $"{item.Command?.Url}/edit",
+                };
+                cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind("Parent.ItemsSource"));
+                return cmd;
+            }
+            else
+            {
+                return new BindCmd()
+                {
+                    Command = CommandType.Open,
+                    Url = $"{item.Command?.Url}/edit",
+                    Argument = "new",
+                };
+            }
         }
 
         BindCmd CreateSelectCommand()
@@ -70,13 +82,29 @@ internal static class XamlExtensions
             cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(item.Command?.Argument ?? String.Empty));
             return cmd;
         }
-        BindCmd CreateOpenCommand()
+
+        BindCmd CreateAppendCommand()
+        {
+            var cmd = new BindCmd()
+            {
+                Command = CommandType.Append,
+            };
+            cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(item.Command?.Argument ?? String.Empty));
+            return cmd;
+        }
+
+        BindCmd EditSelectedCommand()
         {
             var cmd = new BindCmd()
             {
                 Command = CommandType.OpenSelected,
-                Url = $"/{item.Command?.Url}/edit"
+                Url = $"{item.Command?.Url}/edit"
             };
+            if (withMode == EditWithMode.Dialog)
+            {
+                cmd.Command = CommandType.Dialog;
+                cmd.Action = DialogAction.EditSelected;
+            }
             cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(item.Command?.Argument ?? String.Empty));
             return cmd;
         }
@@ -88,9 +116,26 @@ internal static class XamlExtensions
             FormCommand.SaveAndClose => new BindCmd() { Command = CommandType.SaveAndClose },
             FormCommand.Close => new BindCmd() { Command = CommandType.Close },
             FormCommand.Select => CreateSelectCommand(),
-            FormCommand.Edit => CreateDialogCommand(DialogAction.EditSelected), 
-            FormCommand.Create => CreateDialogCommand(DialogAction.Append),
-            FormCommand.Open => CreateOpenCommand(),
+            FormCommand.EditSelected => EditSelectedCommand(),
+            FormCommand.Create => CreateCreateCommand(),
+            FormCommand.Append => CreateAppendCommand(),
+            FormCommand.Apply => new BindCmd()
+            {
+                Command = CommandType.Execute,
+                CommandName = "apply",
+                SaveRequired = true,
+                ValidRequired = true,
+            },
+            FormCommand.Unapply => new BindCmd()
+            {
+                Command = CommandType.Execute,
+                CommandName = "unapply"
+            },
+            FormCommand.Open => new BindCmd()
+            {
+                Command = CommandType.Open,
+                Url = item.Command?.Url
+            },
             _ => throw new NotImplementedException($"Implement Command for {item.Command?.Command}")
         };
 

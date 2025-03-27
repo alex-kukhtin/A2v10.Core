@@ -2,29 +2,25 @@
 
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Collections.Generic;
 
 namespace A2v10.Metadata;
 
-internal partial class FormBuilder
+internal partial class BaseModelBuilder
 {
-    private async Task<Form> CreateEditDialogAsync()
+    private Form CreateEditDialog()
     {
-        var tableMeta = await _metaProvider.GetSchemaAsync(_dataSource, _meta.Schema, _meta.Name);
-        var appMeta = await _metaProvider.GetAppMetadataAsync(_dataSource);
-
         FormItem CreateControl(TableColumn column, Int32 index)
         {
             String? prm = null;
             if (column.IsReference)
-                prm = _metaProvider.GetOrAddEndpointPath(_dataSource, column.Reference.RefSchema, column.Reference.RefTable);
+                prm = column.Reference.EndpointPath();
             return new FormItem()
             {
                 Is =  column.Column2Is(),
                 Grid = new FormItemGrid(index, 1),
                 Label = $"@{column.Name}",
-                Data = $"{tableMeta.RealItemName}.{column.Name}",
+                Data = $"{_table.RealItemName}.{column.Name}",
                 DataType = column.ToItemDataType(),
                 Props = new FormItemProps()
                 {
@@ -37,13 +33,13 @@ internal partial class FormBuilder
         IEnumerable<FormItem> Controls()
         {
             Int32 row = 1;
-            return EditableColumns(tableMeta, appMeta).Select(c => CreateControl(c, row++));
+            return _table.EditableColumns(_appMeta).Select(c => CreateControl(c, row++));
         }
 
         return new Form()
         {
-            Schema = tableMeta.Schema,
-            Table = tableMeta.Name,
+            Schema = _table.Schema,
+            Table = _table.Name,
             Is = FormItemIs.Dialog,
             Items = [
                 new FormItem(FormItemIs.Grid)
@@ -52,7 +48,7 @@ internal partial class FormBuilder
                     Props = new FormItemProps() 
                     {
                         // rows + 1
-                        Rows = String.Join(' ', EditableColumns(tableMeta, appMeta).Select(c => "auto")
+                        Rows = String.Join(' ', _table.EditableColumns(_appMeta).Select(c => "auto")
                             .Union(["auto"])),
                         Columns = "1fr"
                     },

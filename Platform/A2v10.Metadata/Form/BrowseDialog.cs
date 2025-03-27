@@ -2,25 +2,21 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace A2v10.Metadata;
 
-internal partial class FormBuilder
+internal partial class BaseModelBuilder
 {
-    private async Task<Form> CreateBrowseDialogAsync()
+    public Form CreateBrowseDialog()
     {
-        var tableMeta = await _metaProvider.GetSchemaAsync(_dataSource, _meta.Schema, _meta.Name);
-        var appMeta = await _metaProvider.GetAppMetadataAsync(_dataSource);
-
         IEnumerable<FormItem> Columns()
         {
 
-            return VisibleColumns(tableMeta, appMeta).Select(
+            return _table.VisibleColumns(_appMeta).Select(
                 c => new FormItem()
                 {
                     Is = FormItemIs.DataGridColumn,
-                    Data = c.IsReference ? $"{c.Name}.{appMeta.NameField}" : c.Name,
+                    Data = c.IsReference ? $"{c.Name}.{_appMeta.NameField}" : c.Name,
                     Label = $"@{c.Name}"
                 }
             );
@@ -33,15 +29,15 @@ internal partial class FormBuilder
                 Label = "@Create",
                 Command = new FormItemCommand(FormCommand.Create)
                 {
-                    Url = _metaProvider.GetOrAddEndpointPath(_dataSource, _meta),
+                    Url = _table.EndpointPath(),
                     Argument = "Parent.ItemsSource"
                 }
             };
             yield return new FormItem(FormItemIs.Button)
             {
-                Command = new FormItemCommand(FormCommand.Edit)
+                Command = new FormItemCommand(FormCommand.EditSelected)
                 {
-                    Url = _metaProvider.GetOrAddEndpointPath(_dataSource, _meta),
+                    Url = _table.EndpointPath(),
                     Argument = "Parent.ItemsSource"
                 }
             };
@@ -60,11 +56,11 @@ internal partial class FormBuilder
         return new Form()
         {
             Is = FormItemIs.Dialog,
-            Data = tableMeta.RealItemsName,
+            Data = _table.RealItemsName,
             UseCollectionView = true,
-            Schema = tableMeta.Schema,
-            Table = tableMeta.Name,
-            Label = $"@{tableMeta.RealItemsName}.Browse",
+            Schema = _table.Schema,
+            Table = _table.Name,
+            Label = $"@{_table.RealItemsName}.Browse",
             Width = "65rem",
             Items = [
                 new FormItem()
@@ -84,7 +80,7 @@ internal partial class FormBuilder
                             Is = FormItemIs.DataGrid,
                             Grid = new FormItemGrid(2, 1),
                             Height = "30rem",
-                            Command = new FormItemCommand(FormCommand.Select, tableMeta.RealItemsName),
+                            Command = new FormItemCommand(FormCommand.Select, _table.RealItemsName),
                             Data = "Parent.ItemsSource",
                             Items = [..Columns()]
                         },
@@ -100,7 +96,7 @@ internal partial class FormBuilder
                 new FormItem(FormItemIs.Button)
                 {
                     Label = "@Select",
-                    Command = new FormItemCommand(FormCommand.Select, tableMeta.RealItemsName),
+                    Command = new FormItemCommand(FormCommand.Select, _table.RealItemsName),
                     Props = new FormItemProps() 
                     {
                         Style = ItemStyle.Primary

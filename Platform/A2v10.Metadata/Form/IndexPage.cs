@@ -2,26 +2,22 @@
 
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Collections.Generic;
 
 namespace A2v10.Metadata;
 
-internal partial class FormBuilder
+internal partial class BaseModelBuilder
 {
-    private async Task<Form> CreateIndexFormAsync()
+    private Form CreateIndexPage()
     {
-        var tableMeta = await _metaProvider.GetSchemaAsync(_dataSource, _meta.Schema, _meta.Name);
-        var appMeta = await _metaProvider.GetAppMetadataAsync(_dataSource);
-
         IEnumerable<FormItem> Columns() { 
 
-            return VisibleColumns(tableMeta, appMeta).Select(
+            return _table.VisibleColumns(_appMeta).Select(
                 c => new FormItem()
                 {
                     Is = FormItemIs.DataGridColumn,
                     DataType = c.ToItemDataType(),
-                    Data = c.IsReference ? $"{c.Name}.{appMeta.NameField}"  : c.Name,
+                    Data = c.IsReference ? $"{c.Name}.{_appMeta.NameField}"  : c.Name,
                     Label = $"@{c.Name}"
                 }
             ); 
@@ -29,35 +25,20 @@ internal partial class FormBuilder
 
         IEnumerable<FormItem> ToolbarButtons()
         {
+            yield return FormBuild.Button(new FormItemCommand(FormCommand.Create)
+                {
+                    Url = _table.EndpointPath(),
+                    Argument = "Parent.ItemsSource"
+                },
+                "@Create"
+            );
             yield return new FormItem(FormItemIs.Button)
             {
-                Label = "@Create",
-                Command = new FormItemCommand(FormCommand.Create)
+                Command = new FormItemCommand(FormCommand.EditSelected)
                 {
-                    Url = _metaProvider.GetOrAddEndpointPath(_dataSource, _meta),
+                    Url = _table.EndpointPath(),
                     Argument = "Parent.ItemsSource"
                 }
-            };
-            yield return tableMeta.EditWith switch
-            {
-                EditWithMode.Page => new FormItem(FormItemIs.Button)
-                {
-                    Command = new FormItemCommand(FormCommand.Open)
-                    {
-                        Url = _metaProvider.GetOrAddEndpointPath(_dataSource, _meta),
-                        Argument = "Parent.ItemsSource"
-                    }
-                },
-                EditWithMode.Dialog => new FormItem(FormItemIs.Button)
-                {
-                    Command = new FormItemCommand()
-                    {
-                        Command = FormCommand.Edit,
-                        Url = _metaProvider.GetOrAddEndpointPath(_dataSource, _meta),
-                        Argument = "Parent.ItemsSource"
-                    }
-                },
-                _ => throw new InvalidOperationException($"Implement Command {tableMeta.EditWith}")
             };
             yield return new FormItem(FormItemIs.Button)
             {
@@ -73,7 +54,7 @@ internal partial class FormBuilder
 
         FormItem? CreateTaskPad()
         {
-            if (!tableMeta.Columns.Any(c => c.IsReference))
+            if (!_table.Columns.Any(c => c.IsReference))
                 return null;
 
             FormItem CreateFilter(TableColumn column)
@@ -84,14 +65,14 @@ internal partial class FormBuilder
                     Data = $"Parent.Filter.{column.Name}",
                     Props = new FormItemProps()
                     {
-                        Url = column.Reference.EndpointPath,
+                        Url = column.Reference.EndpointPath(),
                         Placeholder = $"@{column.Reference.RefTable}.All",
                         ShowClear = true,
                     }
                 };
             }
 
-            var columns = tableMeta.Columns.Where(c => c.IsReference).Select(c => CreateFilter(c));
+            var columns = _table.Columns.Where(c => c.IsReference).Select(c => CreateFilter(c));
 
             return new FormItem(FormItemIs.Taskpad)
             {
@@ -113,13 +94,13 @@ internal partial class FormBuilder
         {
             Is = FormItemIs.Page,
             UseCollectionView = true,
-            Schema = tableMeta.Schema,
-            Table = tableMeta.Name,
-            Data = tableMeta.RealItemsName,
-            Label = $"@{tableMeta.RealItemsName}",
+            Schema = _table.Schema,
+            Table = _table.Name,
+            Data = _table.RealItemsName,
+            Label = $"@{_table.RealItemsName}",
             Props = new FormItemProps()
             {
-                Filters = String.Join(',', tableMeta.RefFields().Select(c => c.Column.Name))
+                Filters = String.Join(',', _table.RefFields().Select(c => c.Column.Name))
             },
             Items = [
                 new FormItem() {
@@ -141,8 +122,11 @@ internal partial class FormBuilder
                             Height = "100%",
                             Grid = new FormItemGrid(2, 1),
                             Items = [..Columns()],
-                            Command = new FormItemCommand(FormCommand.Edit,
-                                _metaProvider.GetOrAddEndpointPath(_dataSource, _meta)),
+                            Command = new FormItemCommand(FormCommand.EditSelected)
+                            {
+                                Url = _table.EndpointPath(),
+                                Argument = "Parent.ItemsSource"
+                            }
                         },
                         new FormItem() {
                             Is = FormItemIs.Pager,

@@ -108,7 +108,7 @@
 		Toolbar: [],
 		Pager: ['Data'],
 		Dialog: ['Label', 'Width', 'Height', "Data"],
-		Page: ['Label', "Data"],
+		Page: ['Label', "Data", "UseCollectionView"],
 		Button: ['Label', "Parameter"],
 		GRID_PROPS: ['Row', 'Col', 'RowSpan', 'ColSpan'],
 		COMMAND_PROPS: ['Command', 'Argument', 'Url']
@@ -117,7 +117,8 @@
 	var propsheetElem = {
 		template: propsheetTemplate,
 		props: {
-			item: Object
+			item: Object,
+			host: Object
 		},
 		computed: {
 			itemProps() {
@@ -137,13 +138,18 @@
 			}
 		},
 		methods: {
+			setDirty() {
+				if (!this.host) return;
+				this.host.setDirty();
+			},
 			getProps(props, item) {
 				if (!props) return [];
+				let that = this;
 				return props.map(p => {
 					const r = {
 						name: p,
 						get value() { return item[p] || ''; },
-						set value(v) { Vue.set(item, p, v); }
+						set value(v) { Vue.set(item, p, v); that.setDirty(); }
 					};
 					return r;
 				});
@@ -158,7 +164,7 @@
 		<li :class="{active: activeTab === 'props'}" @click.stop.prevent="activeTab = 'props'">Properties</li>
 	</ul>
 	<toolbox v-if="activeTab === 'tbox'" :fields=fields :cont=cont :components=components />
-	<propsheet v-if="activeTab === 'props'" :item=item  />
+	<propsheet v-if="activeTab === 'props'" :item=item :host=host />
 </div>
 `;
 
@@ -168,7 +174,8 @@
 			item: Object,
 			fields: Array,
 			components: Array,
-			cont: Object
+			cont: Object,
+			host: Object
 		},
 		components: {
 			'toolbox': toolboxElem,
@@ -190,14 +197,14 @@
 
 	const toolbarTemplate = `
 <div class="toolbar fd-toolbar">
-	<button class="btn btn-tb btn-icon">
+	<button class="btn btn-tb btn-icon" @click="clickCmd('save')" :disabled="disabled()">
 		<i class="ico ico-save-outline" />
 	</button>
-	<button class="btn btn-tb btn-icon">
+	<button class="btn btn-tb btn-icon" >
 		<i class="ico ico-clear" />
 	</button>
 	<div class="divider" />
-	<button class="btn btn-tb btn-icon">
+	<button class="btn btn-tb btn-icon" @click="clickCmd('reload')">
 		<i class="ico ico-reload" />
 	</button> 
 </div>
@@ -206,7 +213,17 @@
 	var toolbar$1 = {
 		template: toolbarTemplate,
 		props: {
-			form: Object	
+			host: Object	
+		},
+		methods: {
+			clickCmd(cmd) {
+				if (!this.host) return;
+				this.host.exec(cmd);
+			},
+			disabled() {
+				if (!this.host) return true;
+				return !this.host.isDirty();
+			}
 		}
 	};
 
@@ -424,7 +441,9 @@
 		computed: {
 			icon() {
 				switch (this.item.Command.Command) {
-					case 'Edit': return 'ico-edit';
+					case 'Edit':
+					case 'EditSelected':
+						return 'ico-edit';
 					case 'New': return 'ico-add';
 					case 'Create': return 'ico-add';
 					case 'Delete': return 'ico-clear';
@@ -712,8 +731,8 @@
 
 	const containerTemplate = `
 <div class="fd-container" @keyup.self=keyUp tabindex=0 >
-	<fd-toolbar></fd-toolbar>
-	<fd-taskpad :item=selectedItem :fields=fields :cont=cont :components=components />
+	<fd-toolbar :host=host></fd-toolbar>
+	<fd-taskpad :item=selectedItem :fields=fields :cont=cont :components=components :host=host />
 	<div class="fd-main" @click.stop.stop=clickBody>
 		<div class=fd-body  @click.stop.stop=clickBody :class="bodyClass" :style="bodyStyle">
 			<div v-if="isDialog" class="modal-header">
@@ -749,7 +768,8 @@
 		props: {
 			form: Object,
 			fields: Array,
-			components: Array
+			components: Array,
+			host: Object
 		},
 		data() {
 			return {

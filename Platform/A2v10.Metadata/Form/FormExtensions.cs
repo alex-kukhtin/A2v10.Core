@@ -1,6 +1,8 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace A2v10.Metadata;
 
@@ -39,5 +41,31 @@ internal static class FormExtensions
             ColumnDataType.Date or ColumnDataType.DateTime => "12rem",
             _ => null
         };
+    }
+
+    public static IEnumerable<TableColumn> VisibleColumns(this TableMetadata table, AppMetadata appMeta)
+    {
+        Boolean IsVisible(String name)
+        {
+            return name != appMeta.VoidField
+                && name != appMeta.IsFolderField
+                && name != appMeta.IsSystemField;
+        }
+
+        return table.Columns.Where(c => IsVisible(c.Name));
+    }
+
+    public static IEnumerable<TableColumn> EditableColumns(this TableMetadata table, AppMetadata appMeta)
+    {
+        Boolean IsVisible(String name)
+        {
+            return name != appMeta.VoidField
+                && name != appMeta.IdField
+                && name != appMeta.IsFolderField
+                && name != appMeta.IsSystemField
+                && name != "Parent"; // TODO???
+        }
+
+        return table.Columns.Where(c => IsVisible(c.Name));
     }
 }

@@ -5,7 +5,6 @@ using System.Collections.Concurrent;
 using System.Threading.Tasks;
 
 using A2v10.Infrastructure;
-using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
@@ -39,19 +38,14 @@ public class DatabaseMetadataCache
         return _appMetaCache.GetOrAdd(key, meta);
     }
 
-    public Task<FormOld?> GetOrAddFormOldAsync(String? dataSource, String schema, String table, String key,
-        Func<String?, String, String, String, Task<FormOld?>> getForm)
-    {
-        throw new InvalidOperationException("Form CACHE OLD");
-    }
 
     public async Task<FormMetadata> GetOrAddFormAsync(String? dataSource, TableMetadata meta, String key,
-    Func<String?, TableMetadata, String, Task<FormMetadata>> getForm)
+    Func<String?, TableMetadata, String, Func<Form>, Task<FormMetadata>> getForm, Func<Form> getDefaultForm)
     {
         var dictKey = $"{dataSource}:{meta.Schema}:{meta.Name}:{key.ToLowerInvariant()}";
         if (_formCache.TryGetValue(dictKey, out var form))
             return form;
-        form = await getForm(dataSource, meta, key);
+        form = await getForm(dataSource, meta, key, getDefaultForm);
         return form; // TODO: CACHE
         return _formCache.GetOrAdd(dictKey, form);
     }

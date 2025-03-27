@@ -150,7 +150,8 @@ create or alter procedure a2meta.[Table.Form]
 @Schema nvarchar(32) = null,
 @Table nvarchar(128) = null,
 @Id bigint = null,
-@Key nvarchar(64)
+@Key nvarchar(64),
+@WithColumns bit = 0
 as
 begin
 	set nocount on;
@@ -167,13 +168,17 @@ begin
 	select [Form!TForm!Object] = null, [Id!!Id] = @Id, 
 		[Json!!Json] = f.[Json]
 	from a2meta.Forms f where [Table] = @Id and [Key] = @Key;
+
+	select [Columns!TColumn!Array] = null, [Id!!Id] = Id, c.[Name], c.[Label], c.DataType, c.Reference
+	from a2meta.Columns c where [Table] = @Id;
 end
 go
 ------------------------------------------------
 create or alter procedure a2meta.[Table.Form.Update]
 @Id bigint = null,
 @Key nvarchar(64),
-@Json nvarchar(max)
+@Json nvarchar(max),
+@WithColumns bit = 0
 as
 begin
 	set nocount on;

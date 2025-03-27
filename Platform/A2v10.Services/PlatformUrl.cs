@@ -115,7 +115,12 @@ public class PlatformUrl : IPlatformUrl
 		}
 	}
 
-	static void AddQueryParam(ExpandoObject eo, String key, String? value)
+    public IPlatformUrl CreateFromMetadata(String localPath)
+	{
+		return new PlatformUrl(localPath);
+	}
+
+    static void AddQueryParam(ExpandoObject eo, String key, String? value)
 	{
 		if (value == null)
 			return;

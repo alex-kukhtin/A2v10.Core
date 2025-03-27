@@ -1,24 +1,22 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Dynamic;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+
+using Microsoft.Data.SqlClient;
 
 using A2v10.Data.Core.Extensions;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
-using Microsoft.Data.SqlClient;
 
 namespace A2v10.Metadata;
 
-internal partial class DatabaseModelProcessor
+internal partial class BaseModelBuilder
 {
-
     private String LoadPlainModelSql(TableMetadata table, AppMetadata appMeta)
     {
         String DetailsArray()
@@ -42,7 +40,7 @@ internal partial class DatabaseModelProcessor
                     [!{table.RealTypeName}.{t.RealItemsName}!ParentId] = d.[{appMeta.ParentField}],
                     {String.Join(",", t.AllSqlFields("d", appMeta, isDetails:true))}
                 from {t.Schema}.[{t.Name}] d
-                    {RefTableJoins(t.RefFields(), "d", appMeta)}
+                    {RefTableJoins(t.RefFields(), "d")}
                 where d.[{appMeta.ParentField}] = @Id
                 order by d.[{appMeta.RowNoField}];
                 
@@ -60,7 +58,7 @@ internal partial class DatabaseModelProcessor
             {String.Join(",", table.AllSqlFields("a", appMeta))}{DetailsArray()}
         from 
         {table.Schema}.[{table.Name}] a
-            {RefTableJoins(table.RefFields(), "a", appMeta)}
+            {RefTableJoins(table.RefFields(), "a")}
         where a.[Id] = @Id;
 
         {DetailsContent()}
@@ -69,30 +67,23 @@ internal partial class DatabaseModelProcessor
         """;
 
     }
-    public Task<IDataModel> LoadPlainModelAsync(TableMetadata table, IPlatformUrl platformUrl, IModelView view, AppMetadata appMeta)
+    public Task<IDataModel> LoadPlainModelAsync()
     {
-        var viewMeta = view.Meta ??
-           throw new InvalidOperationException($"view.Meta is null");
 
-        var sqlString = LoadPlainModelSql(table, appMeta);
+        var sqlString = LoadPlainModelSql(_table, _appMeta);
 
-        return _dbContext.LoadModelSqlAsync(view.DataSource, sqlString, dbprms =>
+        return _dbContext.LoadModelSqlAsync(_dataSource, sqlString, dbprms =>
         {
             AddDefaultParameters(dbprms);
-            dbprms.AddString("@Id", platformUrl.Id);
+            dbprms.AddString("@Id", _platformUrl.Id);
         });
     }
-
-    public async Task<ExpandoObject> SaveModelAsync(IModelView view, ExpandoObject data, ExpandoObject savePrms)
+    public async Task<ExpandoObject> SavePlainModelAsync(ExpandoObject data, ExpandoObject savePrms)
     {
-        if (view.Meta == null)
-            throw new InvalidOperationException("Meta is null");
-        var table = await _metadataProvider.GetSchemaAsync(view.Meta, view.DataSource);
-        var appMeta = await _metadataProvider.GetAppMetadataAsync(view.DataSource);
 
-        var updatedFields = table.Columns.Where(c => c.IsFieldUpdated(appMeta)).Select(c => $"t.[{c.Name}] = s.[{c.Name}]");
+        var updatedFields = _table.Columns.Where(c => c.IsFieldUpdated(_appMeta)).Select(c => $"t.[{c.Name}] = s.[{c.Name}]");
 
-        var insertedFields = table.Columns.Where(c => c.IsFieldUpdated(appMeta)).Select(c => $"[{c.Name}]");
+        var insertedFields = _table.Columns.Where(c => c.IsFieldUpdated(_appMeta)).Select(c => $"[{c.Name}]");
 
         // todo: Id from
         var sqlString = $"""
@@ -100,12 +91,12 @@ internal partial class DatabaseModelProcessor
         set transaction isolation level read committed;
         set xact_abort on;
         
-        declare @rtable table(Id {appMeta.IdDataType});
-        declare @Id {appMeta.IdDataType};
+        declare @rtable table(Id {_appMeta.IdDataType});
+        declare @Id {_appMeta.IdDataType};
         
-        merge {table.Schema}.[{table.Name}] as t
-        using @{table.RealItemName} as s
-        on t.[{appMeta.IdField}] = s.[{appMeta.IdField}]
+        merge {_table.Schema}.[{_table.Name}] as t
+        using @{_table.RealItemName} as s
+        on t.[{_appMeta.IdField}] = s.[{_appMeta.IdField}]
         when matched then update set
         {String.Join(",\n", updatedFields)}
         when not matched then insert
@@ -115,16 +106,16 @@ internal partial class DatabaseModelProcessor
 
         select @Id = Id from @rtable;
 
-        {LoadPlainModelSql(table, appMeta)}
+        {LoadPlainModelSql(_table, _appMeta)}
         """;
-        var item = data.Get<ExpandoObject>(table.RealItemName);
-        var tableBuilder = new DataTableBuilder(table, appMeta);
+        var item = data.Get<ExpandoObject>(_table.RealItemName);
+        var tableBuilder = new DataTableBuilder(_table, _appMeta);
         var dtable = tableBuilder.BuildDataTable(item);
 
-        var dm = await _dbContext.LoadModelSqlAsync(view.DataSource, sqlString, dbprms =>
+        var dm = await _dbContext.LoadModelSqlAsync(_dataSource, sqlString, dbprms =>
         {
             AddDefaultParameters(dbprms);
-            dbprms.Add(new SqlParameter($"@{table.RealItemName}", SqlDbType.Structured) { TypeName = table.TableTypeName, Value = dtable });
+            dbprms.Add(new SqlParameter($"@{_table.RealItemName}", SqlDbType.Structured) { TypeName = _table.TableTypeName, Value = dtable });
         });
         return dm.Root; 
     }

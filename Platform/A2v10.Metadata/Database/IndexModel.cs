@@ -5,27 +5,25 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
+using Microsoft.Data.SqlClient;
+
 using A2v10.Infrastructure;
 using A2v10.Data.Interfaces;
 using A2v10.Data.Core.Extensions;
 
 namespace A2v10.Metadata;
 
-internal partial class DatabaseModelProcessor
+internal partial class BaseModelBuilder
 {
-    public Task<IDataModel> LoadIndexModelAsync(TableMetadata table, IPlatformUrl platformUrl, IModelView view, AppMetadata appMeta)
+    public Task<IDataModel> LoadIndexModelAsync()
     {
-        var viewMeta = view.Meta ??
-            throw new InvalidOperationException($"view.Meta is null");
-
         const String DEFAULT_DIR = "asc";
-        if (table.Columns.Count == 0)
-            throw new InvalidOperationException($"The model '{viewMeta.Table}' does not have columns");
+        if (_table.Columns.Count == 0)
+            throw new InvalidOperationException($"The model '{_table.Name}' does not have columns");
 
+        String defaultOrder = _table.Columns[0].Name;
 
-        String defaultOrder = table.Columns[0].Name;
-
-        var qry = platformUrl.Query;
+        var qry = _platformUrl.Query;
         Int32 offset = 0;
         Int32 pageSize = 20;
         String? fragment = null;
@@ -42,13 +40,13 @@ internal partial class DatabaseModelProcessor
             dir = qry?.Get<String>("Dir")?.ToLowerInvariant() ?? DEFAULT_DIR;
         }
 
-        if (!table.Columns.Any(c => c.Name.Equals(order, StringComparison.OrdinalIgnoreCase))) 
+        if (!_table.Columns.Any(c => c.Name.Equals(order, StringComparison.OrdinalIgnoreCase))) 
             order = defaultOrder;
 
         if (dir != "asc" && dir != "desc")
             dir = DEFAULT_DIR;
 
-        var refFields = table.RefFields();
+        var refFields = _table.RefFields();
 
         var sqlOrder = $"a.[{order}]";
         var sortColumn = refFields.FirstOrDefault(c => c.Column.Name == order);
@@ -58,16 +56,16 @@ internal partial class DatabaseModelProcessor
 
         IEnumerable<String> Where()
         {
-            yield return $"a.[{appMeta.VoidField}]=0";
+            yield return $"a.[{_appMeta.VoidField}]=0";
 
             foreach (var r in refFields)
             {
-                var val = qry?.GetInt64(r.Column.Name);
-                if (val != null && val != 0)
+                var val = qry?.Get<Object>(r.Column.Name);
+                if (val != null)
                     yield return $"a.[{r.Column.Name}] = @{r.Column.Name}";
             }
 
-            var searchable = table
+            var searchable = _table
                 .Columns.Where(c => c.IsSearchable).Select(c => $"a.[{c.Name}] like @fr")
                 .Union(refFields.Select(c => $"r{c.Index}.[Name] like @fr"));
 
@@ -81,7 +79,7 @@ internal partial class DatabaseModelProcessor
                 return String.Empty;
             return " left join " + String.Join(" left join ", refFields.Select(r => 
                 $"""
-                {r.Column.Reference.RefSchema}.[{r.Column.Reference.RefTable}] r{r.Index} on r{r.Index}.[{appMeta.IdField}] = @{r.Column.Name}
+                {r.Column.Reference.RefSchema}.[{r.Column.Reference.RefTable}] r{r.Index} on r{r.Index}.[{_appMeta.IdField}] = @{r.Column.Name}
                 """));
         }
 
@@ -91,8 +89,8 @@ internal partial class DatabaseModelProcessor
                 return String.Empty;
             return ", " + String.Join(", ", refFields.Select(r =>
             $"""
-            [!{table.Name}.{r.Column.Name}.{appMeta.IdField}!Filter] = r{r.Index}.[{appMeta.IdField}],
-            [!{table.Name}.{r.Column.Name}.{appMeta.NameField}!Filter] = r{r.Index}.[{appMeta.NameField}]
+            [!{_table.Name}.{r.Column.Name}.{_appMeta.IdField}!Filter] = r{r.Index}.[{_appMeta.IdField}],
+            [!{_table.Name}.{r.Column.Name}.{_appMeta.NameField}!Filter] = r{r.Index}.[{_appMeta.NameField}]
             """));
         }
 
@@ -104,11 +102,11 @@ internal partial class DatabaseModelProcessor
         
         declare @fr nvarchar(255) = N'%' + @Fragment + N'%';
                 
-        select [{table.Name}!{table.RealTypeName}!Array] = null,
-            {String.Join(",", table.AllSqlFields("a", appMeta))},
+        select [{_table.Name}!{_table.RealTypeName}!Array] = null,
+            {String.Join(",", _table.AllSqlFields("a", _appMeta))},
             [!!RowCount]  = count(*) over()        
-        from {table.Schema}.[{table.Name}] a
-        {RefTableJoins(refFields, "a", appMeta)}
+        from {_table.Schema}.[{_table.Name}] a
+        {RefTableJoins(refFields, "a")}
         where {String.Join(" and ", Where())}
         order by {sqlOrder} {dir}
         offset @Offset rows fetch next @PageSize rows only;
@@ -117,13 +115,13 @@ internal partial class DatabaseModelProcessor
         insert into @ft (Id) values (1);
         -- system data
         select [!$System!] = null,
-        	[!{table.Name}!PageSize] = @PageSize,  [!{table.Name}!Offset] = @Offset,
-        	[!{table.Name}!SortOrder] = @Order,  [!{table.Name}!SortDir] = @Dir,
-        	[!{table.Name}.Fragment!Filter] = @Fragment{filterFields()}
+        	[!{_table.Name}!PageSize] = @PageSize,  [!{_table.Name}!Offset] = @Offset,
+        	[!{_table.Name}!SortOrder] = @Order,  [!{_table.Name}!SortDir] = @Dir,
+        	[!{_table.Name}.Fragment!Filter] = @Fragment{filterFields()}
         from @ft {filterJoins()};
         
         """;
-        return _dbContext.LoadModelSqlAsync(view.DataSource, sqlString, dbprms =>
+        return _dbContext.LoadModelSqlAsync(_dataSource, sqlString, dbprms =>
         {
             AddDefaultParameters(dbprms);
             dbprms.AddInt("@Offset", offset);
@@ -132,7 +130,10 @@ internal partial class DatabaseModelProcessor
             dbprms.AddString("@Dir", dir);
             dbprms.AddString("@Fragment", fragment);
             foreach (var r in refFields)
-                dbprms.AddBigInt($"@{r.Column.Name}", qry?.GetInt64(r.Column.Name));
+                dbprms.Add(new SqlParameter($"@{r.Column.Name}", _appMeta.IdDataType.ToSqlDbType())
+                {
+                    Value = qry?.Get<Object>(r.Column.Name) ?? DBNull.Value
+                });
         });
     }
 }

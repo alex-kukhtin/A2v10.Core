@@ -38,7 +38,6 @@ public interface IModelBaseMeta
 {
 	public String? Table { get; }
 	public String? Schema { get; }
-	public String? Columns { get; }
 	public MetaEditMode Edit { get; }
 
     // calculated	

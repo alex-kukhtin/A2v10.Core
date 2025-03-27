@@ -1,7 +1,8 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
-using A2v10.Xaml;
 using System;
+
+using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
@@ -13,11 +14,15 @@ public enum FormItemIs
     Dialog,
     Grid,
     Popup,
+    Tabs,
+    Tab,
     // layouts
     Pager,
     DataGrid,
     DataGridColumn,
     Toolbar,
+    Table,
+    TableCell,
     TabBar,
     Taskpad,
     Panel,
@@ -37,9 +42,10 @@ public enum FormItemIs
 public enum FormCommand
 {
     Reload,
-    Create,
+    Create, // page
+    Open,   // page
     Edit,
-    Open,
+    EditSelected, // or page
     Delete,
     Copy,
     Apply,
@@ -47,7 +53,8 @@ public enum FormCommand
     Save,
     SaveAndClose,
     Select,
-    Close   
+    Close,
+    Append
 }
 
 public enum ItemDataType
@@ -134,6 +141,7 @@ public record Form : FormItem
     public String Table { get; init; } = default!;
     public FormItem[]? Buttons { get; init; }
     public FormItem? Taskpad { get; init; }
+    public FormItem? Toolbar { get; init; }
 }
 
 public record FormMetadata(RootContainer Page, String Template)

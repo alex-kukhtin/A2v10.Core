@@ -27,15 +27,6 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return _metadataCache.GetAppMetadataAsync(dataSource, LoadAppMetadataAsync);
     }
 
-    public String GetOrAddEndpointPath(String? dataSource, TableMetadata meta)
-    {
-        return _metadataCache.GetOrAddEndpointPath(dataSource, meta.Schema, meta.Name);
-    }
-    public String GetOrAddEndpointPath(String? dataSource, String schema, String table)
-    {
-        return _metadataCache.GetOrAddEndpointPath(dataSource, schema, table);
-    }
-
     public async Task<EndpointTableInfo> GetModelInfoFromPathAsync(String path)
     {
         var modelTableInfo = _metadataCache.GetModelInfoFromPath(path);
@@ -54,9 +45,9 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return modelTableInfo;
     }
 
-    public Task<FormMetadata> GetFormAsync(String? dataSource, TableMetadata meta, String key)
+    public Task<FormMetadata> GetFormAsync(String? dataSource, TableMetadata meta, String key, Func<Form> defForm)
     {
-        return _metadataCache.GetOrAddFormAsync(dataSource, meta, key, LoadTableFormAsync);
+        return _metadataCache.GetOrAddFormAsync(dataSource, meta, key, LoadTableFormAsync, defForm);
     }
 
     private async Task<AppMetadata> LoadAppMetadataAsync(String? dataSource)
@@ -89,13 +80,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return meta;
     }
 
-    public Task<Form> CreateDefaultFormAsync(String? dataSource, TableMetadata meta, String key)
-    {
-        var fb = new FormBuilder(this, dataSource, meta);
-        return fb.CreateFormAsync(key);
-    }
-
-    private async Task<FormMetadata> LoadTableFormAsync(String? dataSource, TableMetadata meta, String key)
+    private async Task<FormMetadata> LoadTableFormAsync(String? dataSource, TableMetadata meta, String key, Func<Form> getDefaultForm)
     {
         var prms = new ExpandoObject()
         {
@@ -109,8 +94,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         var formExpando = dm.Eval<ExpandoObject>("Form.Json");
         if (formExpando == null)
         {
-            var defaultForm = await CreateDefaultFormAsync(dataSource, meta, key);
-            return new FormMetadata(XamlBulder.BuildForm(defaultForm), String.Empty);
+            var defaultForm = getDefaultForm();
+            return new FormMetadata(XamlBulder.BuildForm(defaultForm, meta.EditWith), String.Empty);
         }
 
         // convert Expando to Form
@@ -121,7 +106,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         var form = JsonConvert.DeserializeObject<Form>(json, JsonSettings.IgnoreNull)
             ?? throw new InvalidOperationException("Form deserialization fails");
 
-        return new FormMetadata(XamlBulder.BuildForm(form), String.Empty);
+        return new FormMetadata(XamlBulder.BuildForm(form, meta.EditWith), String.Empty);
 
     }
 

@@ -2,12 +2,25 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 
 namespace A2v10.Metadata;
 
 internal static class SqlExtensions
 {
+    public static SqlDbType ToSqlDbType(this ColumnDataType columnDataType)
+    {
+        return columnDataType switch
+        {
+            ColumnDataType.BigInt => SqlDbType.BigInt,
+            ColumnDataType.Int => SqlDbType.Int,
+            ColumnDataType.String => SqlDbType.NVarChar,
+            ColumnDataType.Uniqueidentifier => SqlDbType.UniqueIdentifier,
+            _ => throw new NotSupportedException($"{columnDataType} is not supported")
+        };
+    }
+
     public static String SqlDataType(this TableColumn column, ColumnDataType idDataType)
     {
         var idDataStr = idDataType.ToString().ToLowerInvariant(); 

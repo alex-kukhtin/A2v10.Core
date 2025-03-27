@@ -69,7 +69,7 @@ public class Switch : UIElementBase
 
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
-		var expr = GetBinding(nameof(Expression)) 
+		var expr = GetBinding(nameof(Expression))
 			?? throw new XamlException("Binding 'Expression' must be a Bind");
         var cases = Cases.OrderBy(x => x is Else).ToList();
 

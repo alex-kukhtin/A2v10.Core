@@ -9,12 +9,12 @@ using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
-internal class XamlBulder
+internal class XamlBulder(EditWithMode _withMode)
 {
     private readonly IServiceProvider _xamlServiceProvider = new XamlServiceProvider();
-    public static RootContainer BuildForm(Form form)
+    public static RootContainer BuildForm(Form form, EditWithMode withMode)
     {
-        var b = new XamlBulder();
+        var b = new XamlBulder(withMode);
         return form.Is switch
         {
             FormItemIs.Page => b.BuildPage(form),
@@ -52,29 +52,59 @@ internal class XamlBulder
         };
     }
 
+    private UIElementBase? CreateElement(FormItem item, Action<IDictionary<String, Object>, FormItem>? attach = null) 
+    {
+        UIElementBase? elem = item.Is switch
+        {
+            FormItemIs.Grid => CreateGrid(item),
+            FormItemIs.Panel => CreatePanel(item),
+            FormItemIs.DataGrid => CreateDataGrid(item),
+            FormItemIs.Tabs => CreateTabs(item),
+            FormItemIs.Pager => CreatePager(item),
+            FormItemIs.Toolbar => CreateToolbar(item),
+            FormItemIs.TextBox => CreateTextBox(item),
+            FormItemIs.Selector => CreateSelector(item),
+            FormItemIs.DatePicker => CreateDatePicker(item),
+            FormItemIs.CheckBox => CreateCheckBox(item),
+            FormItemIs.Table => CreateTable(item),
+            FormItemIs.Header => CreateHeader(item),
+            FormItemIs.Label => CreateLabel(item),
+            _ => throw new NotImplementedException($"Implement CreateElement: {item.Is}")
+        };
+        if (elem != null && attach != null)
+            elem.Attach = att => attach(att, item);
+        return elem;
+    }
     private IEnumerable<UIElementBase> CreateElements(IEnumerable<FormItem>? items, Action<IDictionary<String, Object>, FormItem>? attach = null)
     {
         if (items == null)
             yield break;
         foreach (var item in items)
         {
-            UIElementBase elem = item.Is switch
-            {
-                FormItemIs.Grid => CreateGrid(item),
-                FormItemIs.Panel => CreatePanel(item),
-                FormItemIs.DataGrid => CreateDataGrid(item),
-                FormItemIs.Pager => CreatePager(item),
-                FormItemIs.Toolbar => CreateToolbar(item),
-                FormItemIs.TextBox => CreateTextBox(item),
-                FormItemIs.Selector => CreateSelector(item),
-                FormItemIs.DatePicker => CreateDatePicker(item),
-                FormItemIs.CheckBox => CreateCheckBox(item),
-                _ => throw new NotImplementedException($"Implement CreateElement: {item.Is}")
-            };
-            if (attach != null)
-                elem.Attach = att => attach(att, item);
+            UIElementBase? elem = CreateElement(item, attach);
+            if (elem == null)
+                continue;
             yield return elem;
+            if (item.Is == FormItemIs.Tabs)
+                yield return CreateTabsBody(item);
         }
+    }
+
+    private UIElementBase CreateTabsBody(FormItem item)
+    {
+        Case CreateCase(FormItem ch)
+        {
+            return new Case()
+            {
+                Value = "",
+                Children = [..CreateElements(ch.Items)]
+            };
+        }
+        return new Switch()
+        {
+            Bindings = b => b.SetBinding(nameof(Switch.Expression), new Bind("Root.$$Tab")),
+            Cases = [..item.Items?.Select(CreateCase) ?? []]
+        };
     }
 
     private void Attach(IDictionary<String, Object> att, FormItem source)
@@ -94,6 +124,15 @@ internal class XamlBulder
         AttachInt32("Grid.RowSpan", source.Grid.ColSpan);
     }
 
+    private UIElement CreateTabs(FormItem item)
+    {
+        var tabBarButtons = item.Items?.Select(c => new TabButton() { Content = c.Label }) ?? [];
+        return new TabBar()
+        {
+            Buttons = [..tabBarButtons],
+            Bindings = b => b.SetBinding(nameof(TabBar.Value), new Bind("Root.$$Tab"))
+        };
+    }
     private Panel CreatePanel(FormItem source)
     {
         return new Panel()
@@ -166,7 +205,7 @@ internal class XamlBulder
             {
                 b.SetBinding(nameof(DataGrid.ItemsSource), new Bind(source.Data));
                 if (source.Command != null)
-                    b.SetBinding(nameof(DataGrid.DoubleClick), source.BindCommand());
+                    b.SetBinding(nameof(DataGrid.DoubleClick), source.BindCommand(_withMode));
             }
         };
     }
@@ -195,7 +234,7 @@ internal class XamlBulder
         return new SelectorSimple()
         {
             Label = source.Label.Localize(),
-            Url = $"/{source.Props?.Url}",
+            Url = source.Props?.Url,
             Width = Length.FromStringNull(source.Width),
             Placeholder = source.Props?.Placeholder.Localize(),
             ShowClear = source.Props?.ShowClear == true,
@@ -220,8 +259,55 @@ internal class XamlBulder
         };
     }
 
-    private Toolbar CreateToolbar(FormItem source)
+    private Table CreateTable(FormItem source)
     {
+        var headers = source.Items?.Select(c => new TableCell() { Content = c.Label});
+        var cells = source.Items?.Select(c => new TableCell()
+        {
+            Content = c.Items != null && c.Items.Length > 0 ? CreateElement(c.Items[0]) : null,
+        });
+
+        return new Table()
+        {
+            StickyHeaders = true,
+            GridLines = GridLinesVisibility.Both,
+            Bindings = b => b.SetBinding(nameof(Table.ItemsSource), new Bind(source.Data)),
+            Background = TableBackgroundStyle.White,
+            Height = Length.FromStringNull(source.Height),
+            Header = [
+                new TableRow() {
+                    Cells = [..headers ?? []]
+                }
+            ],
+            Rows = [
+                new TableRow() {
+                    Cells = [..cells ?? []]
+                }
+            ]
+        };
+    }
+
+    private Header CreateHeader(FormItem source)
+    {
+        return new Header()
+        {
+            Content = source.Label.Localize(),
+            Bold = false
+        };
+    }
+    private Label CreateLabel(FormItem source)
+    {
+        return new Label()
+        {
+            Content = source.Label.Localize()
+        };
+    }
+
+
+    private Toolbar? CreateToolbar(FormItem? source)
+    {
+        if (source == null)
+            return null;
         IEnumerable<UIElementBase> Buttons()
         {
             if (source.Items == null)
@@ -235,7 +321,7 @@ internal class XamlBulder
                     {
                         Content = c.Label.Localize(),
                         Icon = c.Command2Icon(),
-                        Bindings = b => b.SetBinding(nameof(Button.Command), c.BindCommand())
+                        Bindings = b => b.SetBinding(nameof(Button.Command), c.BindCommand(_withMode))
                     },
                     FormItemIs.Aligner => new ToolbarAligner(),
                     FormItemIs.SearchBox => new TextBox()
@@ -265,7 +351,7 @@ internal class XamlBulder
         {
             Content = e.Label.Localize(),
             Style = e.Props?.Style == ItemStyle.Primary ? ButtonStyle.Primary : ButtonStyle.Default,
-            Bindings = b => b.SetBinding(nameof(Button.Command), e.BindCommand())
+            Bindings = b => b.SetBinding(nameof(Button.Command), e.BindCommand(_withMode))
         });
     }
 
@@ -287,6 +373,7 @@ internal class XamlBulder
             CollectionView = CreateCollectionView(form),
             Children = [.. CreateElements(form.Items)],
             Taskpad = CreateTaskpad(form.Taskpad),
+            Toolbar = CreateToolbar(form.Toolbar),
             Title = form.Label.Localize(),
         };
         return page;

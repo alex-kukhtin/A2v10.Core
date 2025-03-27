@@ -27,4 +27,5 @@ public interface IPlatformUrl
 	
 	void Redirect(String? path);
 	String NormalizedLocal(String fileName);
+	IPlatformUrl CreateFromMetadata(String localPath);
 }

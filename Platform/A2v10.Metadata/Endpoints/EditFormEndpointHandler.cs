@@ -20,7 +20,6 @@ public class EditFormEndpointHandler(IServiceProvider _serviceProvider) : IEndpo
     private readonly IDbContext _dbContext = _serviceProvider.GetRequiredService<IDbContext>();
     private readonly DynamicRenderer _dynamicRenderer = new(_serviceProvider);
     private readonly CodeLoader _codeLoader = new(_serviceProvider);
-    private readonly DatabaseMetadataProvider _databaseMetadataProvider = _serviceProvider.GetRequiredService<DatabaseMetadataProvider>();
     public async Task<String> RenderResultAsync(IPlatformUrl platformUrl, IModelView modelView, ExpandoObject prms)
     {
         var key = prms.Get<String>("Form")
@@ -28,7 +27,8 @@ public class EditFormEndpointHandler(IServiceProvider _serviceProvider) : IEndpo
         var dbPrms = new ExpandoObject()
         {
             {"Id", platformUrl.Id },
-            {"Key", key }
+            {"Key", key },
+            {"WithColumns", true }
         };
 
         var dataModel = await _dbContext.LoadModelAsync(modelView.DataSource, "a2meta.[Table.Form]", dbPrms);
@@ -48,9 +48,13 @@ public class EditFormEndpointHandler(IServiceProvider _serviceProvider) : IEndpo
                 Name = table,
                 EditWith = Enum.Parse<EditWithMode>(ew)
             };
-           
-            var defaultForm = await _databaseMetadataProvider.CreateDefaultFormAsync(modelView.DataSource, tm, key);
 
+            var editPlatformUrl = platformUrl.CreateFromMetadata(tm.LocalPath(key));
+
+            var modelBuilder = _serviceProvider.GetRequiredService<IModelBuilder>();
+            await modelBuilder.BuildAsync(editPlatformUrl, tm, null /*always*/);
+
+            var defaultForm = modelBuilder.CreateDefaultForm();
 
             // with null for Form Designer
             var json = JsonConvert.SerializeObject(defaultForm, JsonSettings.WithNull);
@@ -91,6 +95,15 @@ public class EditFormEndpointHandler(IServiceProvider _serviceProvider) : IEndpo
 
     public Task<ExpandoObject> SaveAsync(IPlatformUrl platformUrl, IModelView modelView, ExpandoObject data, ExpandoObject prms)
     {
-        throw new NotImplementedException("SAVE FORM");
+        var eo = data.Eval<ExpandoObject>("Form.Json");
+        // serialize with null for designer
+        var json = JsonConvert.SerializeObject(eo);
+        var form = JsonConvert.DeserializeObject<Form>(json);
+        var jsonForSave = JsonConvert.SerializeObject(form, JsonSettings.WithNull);
+
+        //await _dbContext.ExecuteExpandoAsync(modelView.DataSource, "a2meta.[Form.Update]", prms);
+
+        return Task.FromResult<ExpandoObject>(new ExpandoObject());
+        //throw new NotImplementedException();
     }
 }

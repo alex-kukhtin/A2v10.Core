@@ -2,11 +2,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
+
+using Newtonsoft.Json;
+
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
-using A2v10.Xaml;
-using Newtonsoft.Json;
 
 namespace A2v10.Metadata;
 
@@ -32,11 +32,8 @@ public record ColumnReference
 {
     public String RefSchema { get; init; } = default!;
     public String RefTable { get; init; } = default!;
-
-    /* OLD */
-    public String ModelType => $"TR{RefTable.Singular()}";
-    public String EndpointPath { get; set; } = default!;
 }
+
 public record TableColumn
 {
     #region Database Fields
@@ -55,49 +52,6 @@ public record TableColumn
     internal Boolean IsSearchable => DataType == ColumnDataType.String;
 }
 
-public record ViewColumn
-{
-    public TableColumn Column { get; init; } = default!;
-    public String Name { get; set; } = default!;
-    public String Header { get; init; } = default!;
-
-    public static ViewColumn FromString(String def)
-    {
-        if (String.IsNullOrWhiteSpace(def))
-            throw new InvalidOperationException("empty column ");
-        var spl = def.Trim().Split(':');
-        var name = spl[0];
-        if (String.IsNullOrEmpty(name))
-            throw new InvalidOperationException("invalid column name");
-        var header = spl.Length > 1 ? spl[1] : $"@[{name}]";
-        return new ViewColumn()
-        {
-            Name = name,
-            Header = header
-        };
-    }
-}
-
-public record FormColumn
-{
-    public String Path { get; init; } = default!;
-    public String? Header { get; set; }
-    public Boolean NoSort { get; init; }
-    public Boolean Filter { get; init; }
-    public Int32 Width { get; init; }
-    public Int32 Clamp { get; init; }    
-
-    // internal 
-    internal ColumnRole Role { get; init; } 
-    internal DataType BindDataType {  get; init; }  
-    internal String? SortProperty { get; init; }    
-}
-public record FormOld
-{    
-    public Int32 Width { get; init; }
-    public String? Title { get; init; }
-    public List<FormColumn> Columns { get; set; } = [];
-}
 
 public enum EditWithMode
 {
@@ -123,20 +77,6 @@ public record TableMetadata
     internal String RealItemsName => ItemsName ?? Name;  
     internal String RealTypeName => $"T{TypeName ?? RealItemName}";
     internal String TableTypeName => $"{Schema}.[{RealItemName}.TableType]";
-
-    internal IEnumerable<ViewColumn> EditColumns(IModelBaseMeta meta)
-    {
-        return IndexColumns(meta);
-    }
-
-    internal IEnumerable<ViewColumn> IndexColumns(IModelBaseMeta meta)
-    {
-        var tableColumns = Columns.Select(c => new ViewColumn() { Column = c, Name = c.Name, Header = $"@[{c.Name}]" });
-        if (String.IsNullOrEmpty(meta.Columns))
-            return tableColumns;
-        var viewColumns = meta.Columns.Split(',').Select(c => ViewColumn.FromString(c));
-        return viewColumns.Join(tableColumns, v => v.Name, t => t.Name, (v, t) => new ViewColumn() {Name = t.Name, Header = v.Header, Column = t.Column });
-    }
 }
 
 public record AppMetadata
