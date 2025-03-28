@@ -25,7 +25,9 @@ public enum ColumnDataType
     DateTime,
     Money,
     Float,
-    Uniqueidentifier
+    Uniqueidentifier,
+    Enum,
+    Operation
 }
 
 public record ColumnReference

@@ -93,17 +93,24 @@ public class EditFormEndpointHandler(IServiceProvider _serviceProvider) : IEndpo
         throw new NotImplementedException("RELOAD FORM");
     }
 
-    public Task<ExpandoObject> SaveAsync(IPlatformUrl platformUrl, IModelView modelView, ExpandoObject data, ExpandoObject prms)
+    public async Task<ExpandoObject> SaveAsync(IPlatformUrl platformUrl, IModelView modelView, ExpandoObject data, ExpandoObject prms)
     {
         var eo = data.Eval<ExpandoObject>("Form.Json");
+        var id = data.Eval<Object>("Form.Id");
+        var key = data.Eval<String>("Form.Key");
+
         // serialize with null for designer
         var json = JsonConvert.SerializeObject(eo);
         var form = JsonConvert.DeserializeObject<Form>(json);
         var jsonForSave = JsonConvert.SerializeObject(form, JsonSettings.WithNull);
 
-        //await _dbContext.ExecuteExpandoAsync(modelView.DataSource, "a2meta.[Form.Update]", prms);
-
-        return Task.FromResult<ExpandoObject>(new ExpandoObject());
-        //throw new NotImplementedException();
+        var dbPrms = new ExpandoObject()
+        {
+            { "Id", id },
+            {"Key", key },
+            { "Json", json }
+        };
+        await _dbContext.ExecuteExpandoAsync(modelView.DataSource, "a2meta.[Table.Form.Update]", dbPrms);
+        return new();
     }
 }

@@ -16,6 +16,7 @@ internal interface IModelBuilder
     Task<IDataModel> LoadModelAsync();
     Task<ExpandoObject> SaveModelAsync(ExpandoObject data, ExpandoObject savePrms);
     Task<String> RenderPageAsync(IModelView modelView, IDataModel dataModel);
+    Task<IInvokeResult> InvokeAsync(IModelCommand cmd, String command, ExpandoObject? prms);
     Task<String> CreateTemplateAsync();
     Form CreateDefaultForm();
 }

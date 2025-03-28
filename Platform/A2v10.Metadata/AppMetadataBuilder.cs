@@ -55,6 +55,11 @@ public class AppMetadataBuilder(IServiceProvider _serviceProvider,
         throw new NotImplementedException();
     }
 
+    public async Task<IInvokeResult> InvokeAsync(IPlatformUrl platformUrl, String command, IModelCommand cmd, ExpandoObject? prms)
+    {
+        var iBuilder = await FindModelBuilderAsync(platformUrl, cmd);
+        return await iBuilder.InvokeAsync(cmd, command, prms);
+    }
     public Task<IDataModel> ExecuteCommandAsync(IModelCommand command, ExpandoObject parameters)
     {
         throw new NotImplementedException();

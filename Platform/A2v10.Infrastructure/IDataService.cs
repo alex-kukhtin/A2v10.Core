@@ -57,7 +57,7 @@ public interface IInvokeResult
 	Byte[] Body { get; }
 	String ContentType { get; }
 	String? FileName { get; }
-	ISignalResult? Signal { get; } 
+	ISignalResult? Signal { get; }
 }
 
 public interface ILayoutDescription

@@ -31,6 +31,11 @@ public class AppRuntimeBuilder(IServiceProvider _serviceProvider,
         throw new NotImplementedException();
     }
 
+    public Task<IInvokeResult> InvokeAsync(IPlatformUrl platformUrl, String command, IModelCommand cmd, ExpandoObject? prms)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<IAppRuntimeResult> RenderAsync(IPlatformUrl platformUrl, IModelView view, bool isReload)
 	{
 		var endpoint = await GetEndpoint(view);

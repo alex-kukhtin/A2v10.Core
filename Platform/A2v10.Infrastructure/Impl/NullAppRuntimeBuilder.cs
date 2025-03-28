@@ -28,6 +28,11 @@ public class NullAppRuntimeBuilder : IAppRuntimeBuilder
         throw new NotImplementedException(THROW_MESSAGE);
     }
 
+    public Task<IInvokeResult> InvokeAsync(IPlatformUrl platformUrl, String command, IModelCommand cmd, ExpandoObject? prms)
+	{
+        throw new NotImplementedException(THROW_MESSAGE);
+    }
+
     public Task<IAppRuntimeResult> RenderAsync(IPlatformUrl platformUrl, IModelView view, bool isReload)
 	{
 		throw new NotImplementedException(THROW_MESSAGE);

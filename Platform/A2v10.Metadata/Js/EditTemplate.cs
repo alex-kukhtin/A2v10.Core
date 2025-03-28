@@ -9,6 +9,14 @@ internal partial class BaseModelBuilder
 {
     private Task<String> CreateEditTemplate()
     {
+        return _table.Schema switch
+        {
+            "doc" => CreateDocumentTemplate(),
+            _ => CreateGenericEditTemplate()
+        };
+    }
+    private Task<String> CreateGenericEditTemplate()
+    { 
         var templ = """
         const template = {
             properties: {

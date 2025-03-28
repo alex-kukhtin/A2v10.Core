@@ -32,9 +32,10 @@ public class ModelJsonBase : IModelBase
 	internal virtual void SetParent(ModelJson rm)
 	{
 		_parent = rm;
-	}
+        Meta?.SetParent(rm.Meta);
+    }
 
-	public Boolean CheckRoles(IEnumerable<String>? roles)
+    public Boolean CheckRoles(IEnumerable<String>? roles)
 	{
 		if (CurrentRoles == null) 
 			return true;
@@ -411,8 +412,6 @@ public class ModelJsonReport : ModelJsonBase, IModelReport
 public class DatabaseMeta : IModelJsonMeta
 {
 	public String Table { get; set; } = default!;
-	public List<String> Hidden { get; } = [];
-    public String Void { get; set; } = "Void";
 
     public String Schema => _parent?.Schema ?? throw new InvalidOperationException("schema is null");
 
@@ -499,10 +498,26 @@ public class ModelJson
         return null;
 	}
 
-	public ModelJsonView GetAction(String key)
+    public ModelJsonCommand? TryGetCommand(String key)
+    {
+        if (Commands.TryGetValue(key, out ModelJsonCommand? command))
+            return command;
+        if (Meta != null)
+        {
+            var empty = new ModelJsonCommand()
+            {				
+                Meta = new ModelBaseMeta()
+            };
+            empty.SetParent(this);
+            return empty;
+        }
+        return null;
+    }
+
+    public ModelJsonView GetAction(String key)
 	{
 		var view = TryGetAction(key);
-		return view ?? throw new ModelJsonException($"Action: {key} not found");
+		return view ?? throw new ModelJsonException($"Action {key} not found");
 	}
 
 	public ModelJsonDialog GetDialog(String key)
@@ -513,7 +528,7 @@ public class ModelJson
 		{
 			var empty = new ModelJsonDialog()
 			{
-				Index = key == "browse",
+				Index = key.StartsWith("browse"),
 				Meta = new ModelBaseMeta()
 			};
             empty.SetParent(this);
@@ -530,10 +545,9 @@ public class ModelJson
 	}
 
 	public ModelJsonCommand GetCommand(String key)
-	{
-		if (Commands.TryGetValue(key, out ModelJsonCommand? command))
-			return command;
-		throw new ModelJsonException($"Command: {key} not found");
+    {
+		var command = TryGetCommand(key);
+        return command ?? throw new ModelJsonException($"Command {key} not found");
 	}
 
 	public ModelJsonBlob GetBlob(String key, String? suffix = null)

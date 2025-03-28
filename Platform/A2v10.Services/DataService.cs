@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 using A2v10.Data.Interfaces;
 using A2v10.Services.Interop;
 using Microsoft.Extensions.Configuration;
+using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace A2v10.Services;
 
@@ -401,10 +402,14 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 		var platformBaseUrl = CreatePlatformUrl(baseUrl);
 		var cmd = await _modelReader.GetCommandAsync(platformBaseUrl, command);
 
-		CheckPermissions(cmd);
+        if (cmd.HasMetadata)
+        {
+            return await _appRuntimeBuilder.InvokeAsync(platformBaseUrl, command, cmd, data);
+        }
+
+        CheckPermissions(cmd);
 
 		CheckRoles(cmd);
-
 
 		var prms = cmd.CreateParameters(platformBaseUrl, null, (eo) =>
 			{

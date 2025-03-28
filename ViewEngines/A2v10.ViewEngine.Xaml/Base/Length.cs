@@ -53,7 +53,7 @@ public record Length
 
 	public static Length? FromStringNull(String? strVal)
 	{
-		if (strVal == null)
+		if (String.IsNullOrWhiteSpace(strVal))
 			return null;
 		return FromString(strVal);
 	}

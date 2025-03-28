@@ -119,6 +119,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         {
             "catalogs" => "cat",
             "documents" => "doc",
+            "operations" => "op",
+            "journals" => "jrn",
             _ => "unknown schema"
         };
         return (schema, split[1]);

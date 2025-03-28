@@ -24,8 +24,6 @@ public interface IModelJsonMeta
 {
 	public String Table { get; }
 	public String Schema { get; }
-    public List<String> Hidden { get; }
-	public String Void { get; }
 }
 
 public enum MetaEditMode

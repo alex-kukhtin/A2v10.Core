@@ -9,6 +9,14 @@ internal partial class BaseModelBuilder
 {
     private Task<String> CreateIndexTemplate()
     {
-        return Task.FromResult<String>("");
+        var templ = $$"""
+        const template = {
+            options: {
+                persistSelect: ['{{_table.RealItemsName}}']
+            }
+        };
+        module.exports = template;
+        """;
+        return Task.FromResult<String>(templ);
     }
 }

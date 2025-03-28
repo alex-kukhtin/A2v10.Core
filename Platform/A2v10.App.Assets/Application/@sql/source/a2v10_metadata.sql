@@ -74,6 +74,25 @@ create table a2meta.[Columns]
 );
 go
 ------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.SEQUENCES where SEQUENCE_SCHEMA=N'a2meta' and SEQUENCE_NAME=N'SQ_Items')
+	create sequence a2meta.SQ_Items as bigint start with 100 increment by 1;
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'Items')
+create table a2meta.Items
+(
+	[Id] bigint not null
+		constraint DF_Items_Id default(next value for a2meta.SQ_Items)
+		constraint PK_Items primary key,
+	[Table] bigint not null
+		constraint FK_Items_Table_Catalog references a2meta.[Catalog](Id),
+	[Name] nvarchar(128),
+	[Code] nvarchar(64),
+	[Label] nvarchar(255),
+	[Order] int
+);
+go
+------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'Forms')
 create table a2meta.[Forms]
 (
@@ -136,8 +155,14 @@ begin
 
 	select [!TColumn!Array] = null, [Id!!Id] = c.Id, c.[Name], DataType = c.DataType, 
 		c.[MaxLength],
-		[Reference.RefSchema!TReference!] = r.[Schema],
-		[Reference.RefTable!TReference!] = r.[Name],
+		[Reference.RefSchema!TReference!] = case c.DataType 
+		when N'operation' then N'op' 
+		else r.[Schema] 
+		end,
+		[Reference.RefTable!TReference!] = case c.DataType 
+		when N'operation' then N'Operations'
+		else r.[Name]
+		end,
 		[!TTable.Columns!ParentId] = c.[Table]
 	from a2meta.Columns c
 		inner join @innerTables it on c.[Table] = it.Id
@@ -162,10 +187,10 @@ begin
 			[Schema] = @Schema  collate SQL_Latin1_General_CP1_CI_AI
 			and [Name] = @Table  collate SQL_Latin1_General_CP1_CI_AI;
 
-	select [Table!TTable!Object] = null, [Id!!Id] = Id, [Name], [Schema], EditWith
+	select [Table!TTable!Object] = null, [Id!!Id] = Id, [Name], [Schema], EditWith, ParentTable
 	from a2meta.[Catalog] where Id = @Id;
 
-	select [Form!TForm!Object] = null, [Id!!Id] = @Id, 
+	select [Form!TForm!Object] = null, [Id!!Id] = @Id,  [Key],
 		[Json!!Json] = f.[Json]
 	from a2meta.Forms f where [Table] = @Id and [Key] = @Key;
 
@@ -344,6 +369,7 @@ begin
 		when N'doc' then N'Documents'
 		when N'jrn' then N'Journals'
 		when N'rep' then N'Reports'
+		when N'op'  then N'Operations'
 		else N'Undefined'
 	end;
 end
@@ -448,6 +474,8 @@ declare @Table nvarchar(255) = N'documents';
 exec a2meta.[Table.Schema] @Schema, @Table;
 
 select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where CONSTRAINT_NAME = N'FK_Columns_Parent_Catalog'
+
+select * from a2meta.Columns where Id = 354;
 
 /*
 	select [!TColumn!Array] = null, [Name!!Id] = COLUMN_NAME, DataType = DATA_TYPE, 

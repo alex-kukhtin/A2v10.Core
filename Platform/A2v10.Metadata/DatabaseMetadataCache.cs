@@ -56,6 +56,7 @@ public class DatabaseMetadataCache
         {
             "cat" => "catalogs",
             "doc" => "documents",
+            "op" => "operations",
             "jrn" => "journals",
             _ => schema
         };
