@@ -13,5 +13,4 @@ internal static class SqlHelpers
 	{
 		return eo.GetDateParameter(name);
 	}
-
 }

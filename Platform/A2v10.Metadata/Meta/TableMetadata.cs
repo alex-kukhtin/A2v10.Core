@@ -72,6 +72,7 @@ public record TableMetadata
     public String? TypeName { get; init; }
     public EditWithMode EditWith { get; init; }
     public List<TableMetadata> Details { get; private set; } = [];
+    public ColumnReference? ParentTable { get; init; }
     #endregion
 
     // internal variables

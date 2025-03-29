@@ -52,15 +52,7 @@ public class DatabaseMetadataCache
 
     public String GetOrAddEndpointPath(String? dataSource, String schema, String table)
     {
-        var segment0 = schema switch
-        {
-            "cat" => "catalogs",
-            "doc" => "documents",
-            "op" => "operations",
-            "jrn" => "journals",
-            _ => schema
-        };
-        var path = $"{segment0}/{table}".ToLowerInvariant();
+        var path = $"{schema.ToFolder()}/{table}".ToLowerInvariant();
         _endpoints.TryAdd(path, new EndpointTableInfo(dataSource, schema, table));
         return path;
     }

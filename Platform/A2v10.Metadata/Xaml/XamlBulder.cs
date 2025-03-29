@@ -38,7 +38,12 @@ internal class XamlBulder(EditWithMode _withMode)
             if (String.IsNullOrEmpty(filters))
                 yield break;
             foreach (var f in filters.Split(','))
-                yield return new FilterItem() { Property = f, DataType = DataType.Object };
+            {
+                if (f == "Period")
+                    yield return new FilterItem() { Property = f, DataType = DataType.Period };
+                else
+                    yield return new FilterItem() { Property = f, DataType = DataType.Object };
+            }
         }
 
         return new CollectionView()
@@ -52,12 +57,12 @@ internal class XamlBulder(EditWithMode _withMode)
         };
     }
 
-    private UIElementBase? CreateElement(FormItem item, Action<IDictionary<String, Object>, FormItem>? attach = null) 
+    private UIElementBase? CreateElement(FormItem item, Action<IDictionary<String, Object>, FormItem>? attach = null, String? param = null) 
     {
         UIElementBase? elem = item.Is switch
         {
-            FormItemIs.Grid => CreateGrid(item),
-            FormItemIs.Panel => CreatePanel(item),
+            FormItemIs.Grid => CreateGrid(item, param),
+            FormItemIs.Panel => CreatePanel(item, param),
             FormItemIs.DataGrid => CreateDataGrid(item),
             FormItemIs.Tabs => CreateTabs(item),
             FormItemIs.Pager => CreatePager(item),
@@ -65,23 +70,25 @@ internal class XamlBulder(EditWithMode _withMode)
             FormItemIs.TextBox => CreateTextBox(item),
             FormItemIs.Selector => CreateSelector(item),
             FormItemIs.DatePicker => CreateDatePicker(item),
+            FormItemIs.PeriodPicker => CreatePeriodPicker(item, param),
             FormItemIs.CheckBox => CreateCheckBox(item),
             FormItemIs.Table => CreateTable(item),
             FormItemIs.Header => CreateHeader(item),
             FormItemIs.Label => CreateLabel(item),
+            FormItemIs.Button => CreateButton(item),
             _ => throw new NotImplementedException($"Implement CreateElement: {item.Is}")
         };
         if (elem != null && attach != null)
             elem.Attach = att => attach(att, item);
         return elem;
     }
-    private IEnumerable<UIElementBase> CreateElements(IEnumerable<FormItem>? items, Action<IDictionary<String, Object>, FormItem>? attach = null)
+    private IEnumerable<UIElementBase> CreateElements(IEnumerable<FormItem>? items, Action<IDictionary<String, Object>, FormItem>? attach = null, String? param = null)
     {
         if (items == null)
             yield break;
         foreach (var item in items)
         {
-            UIElementBase? elem = CreateElement(item, attach);
+            UIElementBase? elem = CreateElement(item, attach, param);
             if (elem == null)
                 continue;
             yield return elem;
@@ -121,7 +128,7 @@ internal class XamlBulder(EditWithMode _withMode)
         AttachInt32("Grid.Row", source.Grid.Row);
         AttachInt32("Grid.Col", source.Grid.Col);
         AttachInt32("Grid.RowSpan", source.Grid.RowSpan);
-        AttachInt32("Grid.RowSpan", source.Grid.ColSpan);
+        AttachInt32("Grid.ColSpan", source.Grid.ColSpan);
     }
 
     private UIElement CreateTabs(FormItem item)
@@ -133,18 +140,18 @@ internal class XamlBulder(EditWithMode _withMode)
             Bindings = b => b.SetBinding(nameof(TabBar.Value), new Bind("Root.$$Tab"))
         };
     }
-    private Panel CreatePanel(FormItem source)
+    private Panel CreatePanel(FormItem source, String? param = null)
     {
         return new Panel()
         {
             Header = source.Label.Localize(),
             Collapsible = true,
             Style = PaneStyle.Transparent,
-            Children = [.. CreateElements(source.Items, Attach)]
+            Children = [.. CreateElements(source.Items, Attach, param)]
         };
     }
 
-    private Grid CreateGrid(FormItem source)
+    private Grid CreateGrid(FormItem source, String? param)
     {
         IEnumerable<RowDefinition> GridRows()
         {
@@ -175,7 +182,7 @@ internal class XamlBulder(EditWithMode _withMode)
             Rows = [.. GridRows()],
             Columns = [..GridColumns()],
             Height = !String.IsNullOrEmpty(source.Height) ? Length.FromString(source.Height) : null,
-            Children = [..CreateElements(source.Items, Attach)]
+            Children = [..CreateElements(source.Items, Attach, param)]
         };
     }
 
@@ -247,7 +254,17 @@ internal class XamlBulder(EditWithMode _withMode)
         {
             Label = source.Label.Localize(),
             Width = Length.FromStringNull(source.Width),
-            Bindings = b => b.SetBinding(nameof(TextBox.Value), new Bind(source.Data))
+            Bindings = b => b.SetBinding(nameof(DatePicker.Value), new Bind(source.Data))
+        };
+    }
+    private PeriodPicker CreatePeriodPicker(FormItem source, String? param)
+    {
+        return new PeriodPicker()
+        {
+            Label = source.Label.Localize(),
+            Width = Length.FromStringNull(source.Width),
+            Placement = param == "taskpad" ? DropDownPlacement.BottomRight : default,
+            Bindings = b => b.SetBinding(nameof(PeriodPicker.Value), new Bind(source.Data))
         };
     }
     private CheckBox CreateCheckBox(FormItem source)
@@ -303,6 +320,14 @@ internal class XamlBulder(EditWithMode _withMode)
         };
     }
 
+    private Button CreateButton(FormItem source)
+    {
+        return new Button()
+        {
+            Content = source.Label.Localize(),
+            Bindings = b => b.SetBinding(nameof(Button.Command), source.BindCommand(_withMode))
+        };
+    }
 
     private Toolbar? CreateToolbar(FormItem? source)
     {
@@ -363,7 +388,7 @@ internal class XamlBulder(EditWithMode _withMode)
         {
             Title = item.Label.Localize(),
             Collapsible = true,
-            Children = [.. CreateElements(item.Items)],
+            Children = [.. CreateElements(item.Items, null, "taskpad")],
         };
     }
     private Page BuildPage(Form form)

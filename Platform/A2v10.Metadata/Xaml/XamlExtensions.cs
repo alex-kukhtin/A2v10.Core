@@ -32,6 +32,7 @@ internal static class XamlExtensions
         return item.DataType switch
         {
             ItemDataType.Currency => new Bind(item.Data) { DataType = DataType.Currency, HideZeros = true, NegativeRed = true },
+            ItemDataType.Number => new Bind(item.Data) { DataType = DataType.Number, HideZeros = true, NegativeRed = true },
             ItemDataType.Date => new Bind(item.Data) { DataType = DataType.Date },
             ItemDataType.DateTime => new Bind(item.Data) { DataType = DataType.DateTime },
             _ => new Bind(item.Data),
@@ -42,9 +43,17 @@ internal static class XamlExtensions
     {
         return fi.DataType switch
         {
-            ItemDataType.Currency => TextAlign.Right,
+            ItemDataType.Currency or ItemDataType.Number => TextAlign.Right,
+            ItemDataType.Date or ItemDataType.DateTime => TextAlign.Center,
             _ => TextAlign.Default
         };
+    }
+
+    public static BindCmd BindCommandArg(this FormItem item, CommandType commandType)
+    {
+        var cmd = new BindCmd() { Command = commandType };
+        cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(item.Command?.Argument ?? String.Empty));
+        return cmd;
     }
 
     public static BindCmd BindCommand(this FormItem item, EditWithMode withMode)
@@ -73,26 +82,6 @@ internal static class XamlExtensions
             }
         }
 
-        BindCmd CreateSelectCommand()
-        {
-            var cmd = new BindCmd() 
-            { 
-                Command = CommandType.Select
-            };
-            cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(item.Command?.Argument ?? String.Empty));
-            return cmd;
-        }
-
-        BindCmd CreateAppendCommand()
-        {
-            var cmd = new BindCmd()
-            {
-                Command = CommandType.Append,
-            };
-            cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(item.Command?.Argument ?? String.Empty));
-            return cmd;
-        }
-
         BindCmd EditSelectedCommand()
         {
             var cmd = new BindCmd()
@@ -115,16 +104,16 @@ internal static class XamlExtensions
             FormCommand.Save => new BindCmd() { Command = CommandType.Save },
             FormCommand.SaveAndClose => new BindCmd() { Command = CommandType.SaveAndClose },
             FormCommand.Close => new BindCmd() { Command = CommandType.Close },
-            FormCommand.Select => CreateSelectCommand(),
+            FormCommand.Select => item.BindCommandArg(CommandType.Select),
             FormCommand.EditSelected => EditSelectedCommand(),
             FormCommand.Create => CreateCreateCommand(),
-            FormCommand.Append => CreateAppendCommand(),
+            FormCommand.Append => item.BindCommandArg(CommandType.Append),
             FormCommand.Apply => new BindCmd()
             {
                 Command = CommandType.Execute,
                 CommandName = "apply",
                 SaveRequired = true,
-                ValidRequired = true,
+                ValidRequired = true
             },
             FormCommand.Unapply => new BindCmd()
             {
@@ -136,6 +125,7 @@ internal static class XamlExtensions
                 Command = CommandType.Open,
                 Url = item.Command?.Url
             },
+            FormCommand.Remove => item.BindCommandArg(CommandType.Remove),
             _ => throw new NotImplementedException($"Implement Command for {item.Command?.Command}")
         };
 
@@ -147,7 +137,7 @@ internal static class XamlExtensions
         {
             ItemDataType.Id => ColumnRole.Id,
             ItemDataType.Boolean => ColumnRole.CheckBox,
-            ItemDataType.Currency => ColumnRole.Number,
+            ItemDataType.Currency or ItemDataType.Number => ColumnRole.Number,
             ItemDataType.Date or ItemDataType.DateTime => ColumnRole.Date,
             _ => ColumnRole.Default,
         };

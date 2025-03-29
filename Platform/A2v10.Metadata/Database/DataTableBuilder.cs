@@ -1,8 +1,11 @@
-﻿using A2v10.Infrastructure;
+﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
+
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Dynamic;
+
+using A2v10.Infrastructure;
 
 namespace A2v10.Metadata;
 
@@ -17,15 +20,28 @@ internal class DataTableBuilder(TableMetadata table, AppMetadata appMeta)
         return dtable;
     }
 
-    private DataTable CreateDataTable(Boolean skipParent = false)
+    public DataTable BuildDataTable(List<Object>? rows)
+    {
+        var dtable = CreateDataTable();
+
+        if (rows == null || rows.Count == 0)
+            return dtable;
+
+        foreach (var src in rows)
+        {
+            if (src is ExpandoObject srcEo)
+                AddRow(dtable, srcEo);
+        }
+        return dtable;
+    }
+
+    private DataTable CreateDataTable()
     {
         var dtable = new DataTable();
 
         List<DataColumn> columns = [];
         foreach (var f in table.Columns)
         {
-            if (skipParent && f.Name == "Parent")
-                continue;
             var c = new DataColumn(f.Name, f.ClrDataType(appMeta.IdDataType));
             if (f.MaxLength != 0)
                 c.MaxLength = f.MaxLength;

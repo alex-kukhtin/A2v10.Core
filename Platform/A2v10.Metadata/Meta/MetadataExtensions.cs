@@ -10,9 +10,10 @@ internal static class MetadataExtensions
     {
         return schema switch
         {
-            "cat" => "catalogs",
-            "doc" => "documents",
-            "jrn" => "journals",
+            "cat" => "catalog",
+            "doc" => "document",
+            "jrn" => "journal",
+            "op" => "operation",
             _ => schema
         };
     }
@@ -21,9 +22,28 @@ internal static class MetadataExtensions
         return $"/{refs.RefSchema.ToFolder()}/{refs.RefTable}".ToLowerInvariant();
     }
 
+    internal static Boolean IsEmpty(this ColumnReference? refs)
+    {
+        if (refs == null) return true;
+        if (String.IsNullOrEmpty(refs.RefTable)) return true;
+        return false;
+    }
+
     internal static String EndpointPath(this TableMetadata table)
     {
         return $"/{table.Schema.ToFolder()}/{table.Name}".ToLowerInvariant();
+    }
+
+    internal static String EndpointPathUseBase(this TableMetadata table, TableMetadata? baseTable)
+    {
+        if (baseTable != null)
+            return baseTable.EndpointPath();
+        return table.EndpointPath();
+    }
+
+    internal static Boolean HasPeriod(this TableMetadata table)
+    {
+        return table.Schema == "doc" || table.Schema == "jrn";
     }
 
     internal static String LocalPath(this TableMetadata table, String action)

@@ -6,6 +6,7 @@ using System.Dynamic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 using Microsoft.Data.SqlClient;
 
@@ -62,7 +63,6 @@ internal partial class BaseModelBuilder
         where a.[Id] = @Id;
 
         {DetailsContent()}
-        -- SELECT ALL DETAILS HERE
 
         """;
 
@@ -85,6 +85,32 @@ internal partial class BaseModelBuilder
 
         var insertedFields = _table.Columns.Where(c => c.IsFieldUpdated(_appMeta)).Select(c => $"[{c.Name}]");
 
+        String MergeDetails()
+        {
+            if (_table.Details == null || _table.Details.Count == 0)
+                return String.Empty;
+            var sb = new StringBuilder();
+            foreach (var details in _table.Details)
+            {
+                var updateFields = details.Columns.Where(f => !f.IsParent && f.Name != _appMeta.IdField);
+                var parentField = details.Columns.FirstOrDefault(f => f.IsParent)
+                    ?? throw new InvalidOperationException("Parent field not found");
+                sb.AppendLine($"""
+				merge {details.SqlTableName()} as t
+				using @{details.Name} as s
+				on t.Id = s.Id
+				when matched then update set
+					{String.Join(',', updateFields.Select(f => $"t.[{f.Name}] = s.[{f.Name}]"))}
+				when not matched then insert 
+					({parentField.Name}, {String.Join(',', updateFields.Select(f => $"[{f.Name}]"))}) values
+					(@Id, {String.Join(',', updateFields.Select(f => $"s.[{f.Name}]"))})
+				when not matched by source and t.[{parentField.Name}] = @Id then delete;
+				""");
+                sb.AppendLine();
+            }
+            return sb.ToString();
+        }
+
         // todo: Id from
         var sqlString = $"""
         set nocount on;
@@ -94,7 +120,7 @@ internal partial class BaseModelBuilder
         declare @rtable table(Id {_appMeta.IdDataType});
         declare @Id {_appMeta.IdDataType};
         
-        merge {_table.Schema}.[{_table.Name}] as t
+        merge {_table.SqlTableName()} as t
         using @{_table.RealItemName} as s
         on t.[{_appMeta.IdField}] = s.[{_appMeta.IdField}]
         when matched then update set
@@ -105,17 +131,27 @@ internal partial class BaseModelBuilder
         output inserted.Id into @rtable(Id);
 
         select @Id = Id from @rtable;
+        
+        {MergeDetails()}
 
         {LoadPlainModelSql(_table, _appMeta)}
         """;
         var item = data.Get<ExpandoObject>(_table.RealItemName);
         var tableBuilder = new DataTableBuilder(_table, _appMeta);
+        
         var dtable = tableBuilder.BuildDataTable(item);
 
         var dm = await _dbContext.LoadModelSqlAsync(_dataSource, sqlString, dbprms =>
         {
             AddDefaultParameters(dbprms);
             dbprms.Add(new SqlParameter($"@{_table.RealItemName}", SqlDbType.Structured) { TypeName = _table.TableTypeName, Value = dtable });
+            _table.Details.ForEach(details =>
+            {
+                var rows = item?.Get<List<Object>>($"{details.Name}");
+                var detailsTableBuilder = new DataTableBuilder(details, _appMeta);
+                var detailsTable = detailsTableBuilder.BuildDataTable(rows);
+                dbprms.Add(new SqlParameter($"@{details.Name}", SqlDbType.Structured) { TypeName = details.TableTypeName, Value = detailsTable });
+            });
         });
         return dm.Root; 
     }

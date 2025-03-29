@@ -27,7 +27,7 @@ internal partial class BaseModelBuilder
         {
             yield return FormBuild.Button(new FormItemCommand(FormCommand.Create)
                 {
-                    Url = _table.EndpointPath(),
+                    Url = _table.EndpointPathUseBase(_baseTable),
                     Argument = "Parent.ItemsSource"
                 },
                 "@Create"
@@ -36,7 +36,7 @@ internal partial class BaseModelBuilder
             {
                 Command = new FormItemCommand(FormCommand.EditSelected)
                 {
-                    Url = _table.EndpointPath(),
+                    Url = _table.EndpointPathUseBase(_baseTable),
                     Argument = "Parent.ItemsSource"
                 }
             };
@@ -56,6 +56,17 @@ internal partial class BaseModelBuilder
         {
             if (!_table.Columns.Any(c => c.IsReference))
                 return null;
+            
+            IEnumerable<FormItem> CreatePeriod()
+            {
+                if (_table.HasPeriod())
+                    yield return new FormItem(FormItemIs.PeriodPicker)
+                    {
+                        Data = "Parent.Filter.Period",
+                        Label = "@Period"
+                    };
+                yield break;
+            }
 
             FormItem CreateFilter(TableColumn column)
             {
@@ -72,7 +83,11 @@ internal partial class BaseModelBuilder
                 };
             }
 
-            var columns = _table.Columns.Where(c => c.IsReference).Select(c => CreateFilter(c));
+            var tableCols = _table.Columns.Where(c => c.IsReference);
+            if (_baseTable != null && _baseTable.Schema == "op")
+                tableCols = tableCols.Where(c => c.DataType != ColumnDataType.Operation);
+
+            var columns =  CreatePeriod().Union(tableCols.Select(c => CreateFilter(c)));
 
             return new FormItem(FormItemIs.Taskpad)
             {
@@ -90,6 +105,8 @@ internal partial class BaseModelBuilder
             };
         }
 
+        String periodFilter = _table.HasPeriod() ? "Period," : String.Empty;
+
         return new Form()
         {
             Is = FormItemIs.Page,
@@ -100,7 +117,7 @@ internal partial class BaseModelBuilder
             Label = $"@{_table.RealItemsName}",
             Props = new FormItemProps()
             {
-                Filters = String.Join(',', _table.RefFields().Select(c => c.Column.Name))
+                Filters = $"{periodFilter}{String.Join(',', _table.RefFields().Select(c => c.Column.Name))}"
             },
             Items = [
                 new FormItem() {

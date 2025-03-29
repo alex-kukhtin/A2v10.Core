@@ -117,10 +117,10 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             throw new InvalidOperationException($"Invalid path: {path}");
         var schema = split[0] switch
         {
-            "catalogs" => "cat",
-            "documents" => "doc",
-            "operations" => "op",
-            "journals" => "jrn",
+            "catalog" => "cat",
+            "document" => "doc",
+            "operation" => "op",
+            "journal" => "jrn",
             _ => "unknown schema"
         };
         return (schema, split[1]);

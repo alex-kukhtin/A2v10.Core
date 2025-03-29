@@ -27,7 +27,8 @@ internal static class SqlExtensions
         return column.DataType switch
         {
             ColumnDataType.Id => idDataStr,
-            ColumnDataType.Reference or ColumnDataType.Operation or ColumnDataType.Enum => idDataStr,
+            ColumnDataType.Reference or ColumnDataType.Enum => idDataStr,
+            ColumnDataType.Operation => "nvarchar(64)",
             ColumnDataType.String => $"nvarchar({column.MaxLength})",
             ColumnDataType.NVarChar => $"nvarchar({column.MaxLength})",
             ColumnDataType.NChar => $"nchar({column.MaxLength})",
@@ -40,14 +41,16 @@ internal static class SqlExtensions
         return column.DataType switch
         {
             ColumnDataType.Id or ColumnDataType.Reference 
-                or ColumnDataType.Operation or ColumnDataType.Enum => idType,
+                or ColumnDataType.Enum => idType,
+            ColumnDataType.Operation => typeof(String),                
             ColumnDataType.BigInt => typeof(Int64),
             ColumnDataType.String or ColumnDataType.NVarChar or
                 ColumnDataType.NChar => typeof(String),
-            ColumnDataType.Date => typeof(DateTime),
+            ColumnDataType.Date or ColumnDataType.DateTime => typeof(DateTime),
             ColumnDataType.Bit => typeof(Boolean),
             ColumnDataType.Money => typeof(Decimal),
             ColumnDataType.Float => typeof(Double),
+            ColumnDataType.Int => typeof(Int32),
             _ => throw new InvalidOperationException($"Invalid Data Type for update. ({column.DataType})"),
         };
     }
@@ -68,6 +71,8 @@ internal static class SqlExtensions
         var index = 0;
         return table.Columns.Where(c => c.IsReference).Select(c => (Column: c, Index: ++index)).ToList();
     }
+
+    internal static String SqlTableName(this TableMetadata table) => $"{table.Schema}.[{table.Name}]";
 
     internal static IEnumerable<String> AllSqlFields(this TableMetadata table, String alias, AppMetadata appMeta, Boolean isDetails = false)
     {

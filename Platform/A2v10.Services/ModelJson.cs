@@ -447,7 +447,7 @@ public class ModelBaseMeta : IModelBaseMeta
 				return Edit;
 			return CurrentSchema switch {
 				"cat" => MetaEditMode.Dialog,
-				"doc" => MetaEditMode.Page,
+				"doc" or "op" => MetaEditMode.Page,
 				_ => throw new InvalidOperationException($"Unknonwn edit mode for {CurrentSchema}")
 			};
 		}

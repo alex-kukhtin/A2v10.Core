@@ -18,8 +18,19 @@ internal partial class BaseModelBuilder
     public Task<IDataModel> LoadIndexModelAsync()
     {
         const String DEFAULT_DIR = "asc";
+
+        const String DATE_COLUMN = "Date"; //TODO: ???
+
         if (_table.Columns.Count == 0)
             throw new InvalidOperationException($"The model '{_table.Name}' does not have columns");
+
+        TableColumn? opColumn = null;
+        String? opValue = null;
+        if (_baseTable != null && _baseTable.Schema == "op")
+        {
+            opColumn = _table.Columns.FirstOrDefault(c => c.DataType == ColumnDataType.Operation);
+            opValue = _baseTable?.Name.ToLowerInvariant();
+        }
 
         String defaultOrder = _table.Columns[0].Name;
 
@@ -47,6 +58,9 @@ internal partial class BaseModelBuilder
             dir = DEFAULT_DIR;
 
         var refFields = _table.RefFields();
+        var refFieldsFilter = refFields;
+        if (opColumn != null)
+            refFieldsFilter = refFields.Where(c => c.Column != opColumn);
 
         var sqlOrder = $"a.[{order}]";
         var sortColumn = refFields.FirstOrDefault(c => c.Column.Name == order);
@@ -54,11 +68,22 @@ internal partial class BaseModelBuilder
         if (sortColumn.Column != null)
             sqlOrder = $"r{sortColumn.Index}.[Name]"; // TODO: NameField
 
+        var collectionName = _table.RealItemsName;
+
         IEnumerable<String> Where()
         {
-            yield return $"a.[{_appMeta.VoidField}]=0";
+            yield return "1 = 1"; // for default // TODO: ???? как-то проверить
 
-            foreach (var r in refFields)
+            if (_table.Columns.Any(c => c.Name == _appMeta.VoidField))
+                yield return $"a.[{_appMeta.VoidField}]=0";
+
+            if (opColumn != null)
+                yield return $"a.[{opColumn.Name}] = N'{opValue}'";
+
+            if (_table.HasPeriod())
+                yield return $"a.[{DATE_COLUMN}] >= @From and a.[{DATE_COLUMN}] <= @To";
+
+            foreach (var r in refFieldsFilter)
             {
                 var val = qry?.Get<Object>(r.Column.Name);
                 if (val != null)
@@ -75,37 +100,53 @@ internal partial class BaseModelBuilder
 
         String filterJoins() 
         { 
-            if (!refFields.Any())
+            if (!refFieldsFilter.Any())
                 return String.Empty;
-            return " left join " + String.Join(" left join ", refFields.Select(r => 
+            return " left join " + String.Join(" left join ", refFieldsFilter.Select(r => 
                 $"""
                 {r.Column.Reference.RefSchema}.[{r.Column.Reference.RefTable}] r{r.Index} on r{r.Index}.[{_appMeta.IdField}] = @{r.Column.Name}
                 """));
         }
 
+
         String filterFields()
         {
-            if (!refFields.Any())
+            if (!refFieldsFilter.Any())
                 return String.Empty;
-            return ", " + String.Join(", ", refFields.Select(r =>
+            return ", " + String.Join(", ", refFieldsFilter.Select(r =>
             $"""
-            [!{_table.Name}.{r.Column.Name}.{_appMeta.IdField}!Filter] = r{r.Index}.[{_appMeta.IdField}],
-            [!{_table.Name}.{r.Column.Name}.{_appMeta.NameField}!Filter] = r{r.Index}.[{_appMeta.NameField}]
+            [!{collectionName}.{r.Column.Name}.{_appMeta.IdField}!Filter] = r{r.Index}.[{_appMeta.IdField}],
+            [!{collectionName}.{r.Column.Name}.{_appMeta.NameField}!Filter] = r{r.Index}.[{_appMeta.NameField}]
             """));
+        }
+
+        String filterPeriod()
+        {
+            if (!_table.HasPeriod())
+                return String.Empty;
+            return $"[!{collectionName}.Period.From!Filter] = @From, [!{collectionName}.Period.To!Filter] = @To,";
+        }
+
+        String defaultPeriod()
+        {
+            if (!_table.HasPeriod())
+                return String.Empty;
+
+            return "set @From = isnull(@From, N'19010101'); set @To = isnull(@To, N'29991231');";
         }
 
         var sqlString = $"""
         set nocount on;
         set transaction isolation level read uncommitted;
-        
+
         set @Dir = lower(@Dir);
-        
+        {defaultPeriod()}
         declare @fr nvarchar(255) = N'%' + @Fragment + N'%';
                 
-        select [{_table.Name}!{_table.RealTypeName}!Array] = null,
+        select [{collectionName}!{_table.RealTypeName}!Array] = null,
             {String.Join(",", _table.AllSqlFields("a", _appMeta))},
             [!!RowCount]  = count(*) over()        
-        from {_table.Schema}.[{_table.Name}] a
+        from {_table.SqlTableName()} a
         {RefTableJoins(refFields, "a")}
         where {String.Join(" and ", Where())}
         order by {sqlOrder} {dir}
@@ -115,22 +156,24 @@ internal partial class BaseModelBuilder
         insert into @ft (Id) values (1);
         -- system data
         select [!$System!] = null,
-        	[!{_table.Name}!PageSize] = @PageSize,  [!{_table.Name}!Offset] = @Offset,
-        	[!{_table.Name}!SortOrder] = @Order,  [!{_table.Name}!SortDir] = @Dir,
-        	[!{_table.Name}.Fragment!Filter] = @Fragment{filterFields()}
+        	[!{collectionName}!PageSize] = @PageSize,  [!{collectionName}!Offset] = @Offset,
+        	[!{collectionName}!SortOrder] = @Order,  [!{collectionName}!SortDir] = @Dir,
+            {filterPeriod()}
+        	[!{collectionName}.Fragment!Filter] = @Fragment{filterFields()}
         from @ft {filterJoins()};
         
         """;
         return _dbContext.LoadModelSqlAsync(_dataSource, sqlString, dbprms =>
         {
             AddDefaultParameters(dbprms);
+            AddPeriodParameters(dbprms, qry);
             dbprms.AddInt("@Offset", offset);
             dbprms.AddInt("@PageSize", pageSize);
             dbprms.AddString("@Order", order);
             dbprms.AddString("@Dir", dir);
             dbprms.AddString("@Fragment", fragment);
-            foreach (var r in refFields)
-                dbprms.Add(new SqlParameter($"@{r.Column.Name}", _appMeta.IdDataType.ToSqlDbType())
+            foreach (var r in refFieldsFilter)
+                dbprms.Add(new SqlParameter($"@{r.Column.Name}", r.Column.ClrDataType(_appMeta.IdDataType))
                 {
                     Value = qry?.Get<Object>(r.Column.Name) ?? DBNull.Value
                 });

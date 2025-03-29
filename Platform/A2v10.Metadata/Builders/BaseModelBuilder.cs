@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Dynamic;
-using System.Reflection.Metadata.Ecma335;
+using System.Globalization;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -23,6 +23,7 @@ internal partial class BaseModelBuilder(
     ICurrentUser _currentUser) : IModelBuilder
 {
     protected TableMetadata _table { get; private set; } = default!;
+    protected TableMetadata? _baseTable { get; private set; }
     protected AppMetadata _appMeta { get; private set; } = default!;
     protected String? _dataSource { get; private set; }
     protected IPlatformUrl _platformUrl { get; private set; } = default!;
@@ -36,6 +37,7 @@ internal partial class BaseModelBuilder(
         _dataSource = modelBase.DataSource;
         _platformUrl = platformUrl;
         _table = await _metadataProvider.GetSchemaAsync(modelBase.Meta, modelBase.DataSource);
+        await CheckParent(modelBase.DataSource);
         _appMeta = await _metadataProvider.GetAppMetadataAsync(modelBase.DataSource);
     }
 
@@ -45,8 +47,18 @@ internal partial class BaseModelBuilder(
         _table = table;
         _platformUrl = platformUrl;
         _table = await _metadataProvider.GetSchemaAsync(_dataSource, table.Schema, table.Name);
+        await CheckParent(_dataSource);
         _appMeta = await _metadataProvider.GetAppMetadataAsync(_dataSource);
     }
+
+    private async Task CheckParent(String? dataSource)
+    {
+        if (_table.ParentTable.IsEmpty()) return;
+        _baseTable = _table;
+        _table = await _metadataProvider.GetSchemaAsync(dataSource, _table.ParentTable!.RefSchema, _table.ParentTable.RefTable)
+            ?? throw new InvalidOperationException($"Parent Table {_table.ParentTable.RefTable} not found");
+    }
+
     public async Task<IDataModel> LoadModelAsync()
     {
         return Action switch
@@ -132,6 +144,21 @@ internal partial class BaseModelBuilder(
         if (_currentUser.Identity.Tenant != null)
             prms.AddInt("@TenantId", _currentUser.Identity.Tenant);
         prms.AddBigInt("@UserId", _currentUser.Identity.Id);
+    }
+    protected void AddPeriodParameters(DbParameterCollection prms, ExpandoObject? qry)
+    {
+        if (!_table.HasPeriod())
+            return;
+
+        DateTime? DateTimeFromString(String? value)
+        {
+            if (value == null)
+                return null;
+            return DateTime.ParseExact(value, "yyyyMMdd", CultureInfo.InvariantCulture);    
+        }
+
+        prms.AddDate("@From", DateTimeFromString(qry?.Get<String>("From")));
+        prms.AddDate("@To", DateTimeFromString(qry?.Get<String>("To")));
     }
 
     protected String RefTableJoins(IEnumerable<(TableColumn Column, Int32 Index)> refFields, String alias)

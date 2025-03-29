@@ -31,7 +31,7 @@ internal partial class BaseModelBuilder
         set nocount on;
         set transaction isolation level read committed;
         declare @op {_appMeta.IdDataType};
-            select @op = [{opColumn.Name}] from {_table.Schema}.[{_table.Name}]
+            select @op = [{opColumn.Name}] from {_table.SqlTableName()}
             where [{_appMeta.IdField}] = @Id;
         throw 60000, @op, 0;
         """;

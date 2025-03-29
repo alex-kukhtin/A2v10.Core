@@ -54,7 +54,8 @@ public enum FormCommand
     SaveAndClose,
     Select,
     Close,
-    Append
+    Append,
+    Remove
 }
 
 public enum ItemDataType
@@ -65,6 +66,7 @@ public enum ItemDataType
     Date,
     DateTime,
     Currency,
+    Number,
     Boolean
 }
 

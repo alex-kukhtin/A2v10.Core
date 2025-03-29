@@ -15,6 +15,7 @@ internal partial class BaseModelBuilder
         return command.ToLowerInvariant() switch
         {
             "apply" => ApplyAsync(prms),
+            "fetch" => FetchAsync(prms),
             _ => throw new NotImplementedException($"Implement invoke for {command}")
         };
     }
@@ -23,6 +24,6 @@ internal partial class BaseModelBuilder
     {
         if (_table.Schema != "doc")
             throw new NotImplementedException($"The apply command is available for documents only");
-        return ApplyDocumentAsync(prms);
+        return ApplyDocumentAsync(prms); 
     }
 }

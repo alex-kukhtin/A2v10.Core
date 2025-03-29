@@ -73,12 +73,13 @@ internal partial class BaseModelBuilder
                                 new FormItem(c.Column2Is()) 
                                 {
                                     Data = c.Name,
+                                    DataType = c.ToItemDataType(),  
                                     Props= c.IsReference ? 
                                         new FormItemProps() {
                                             Url = c.Reference.EndpointPath(),
                                         } 
                                         : null
-                                }
+                                },
                             ]
                         }
                     );
@@ -106,7 +107,17 @@ internal partial class BaseModelBuilder
                             new FormItem(FormItemIs.Table) {
                                 Data = dataBind,
                                 Height = "100%",
-                                Items = [..cells]
+                                Items = [
+                                    ..cells, 
+                                    new FormItem(FormItemIs.TableCell) 
+                                    {
+                                        Items = [
+                                            FormBuild.Button(new FormItemCommand() {
+                                                Command = FormCommand.Remove
+                                            }, "✕"),
+                                        ]
+                                    }
+                                ]
                             },
                         ]
                     };

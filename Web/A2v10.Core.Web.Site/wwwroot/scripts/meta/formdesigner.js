@@ -68,7 +68,13 @@
 		<tr>
 			<td colspan=2 class="fd-ps-header">General</td>
 		</tr>
-		<tr v-for="(p, ix) in itemProps" :key=ix>
+		<tr v-for="(p, ix) in itemProps" :key="'i:'+ix">
+			<td v-text="p.name" />
+			<td>
+				<input v-model.lazy.trim="p.value" />
+			</td>
+		</tr>
+		<tr v-for="(p, ix) in otherProps" :key="'o:'+ix">
 			<td v-text="p.name" />
 			<td>
 				<input v-model.lazy.trim="p.value" />
@@ -98,9 +104,10 @@
 
 	// TODO: ������������� ������� Dialog.Label => Dialog.Title?
 	const PROP_MAP = {
-		Grid: ['Rows', 'Columns', "Height"],
+		Grid: ["Height"],
 		TextBox: ["Data", 'Label', "Width"],
 		DatePicker: ["Data", 'Label', "Width"],
+		PeriodPicker: ["Data", 'Label', "Width"],
 		Selector: ["Data", 'Label', "Width"],
 		DataGrid: ["Data", 'Height'],
 		CLabel: ["Label"],
@@ -109,9 +116,12 @@
 		Pager: ['Data'],
 		Dialog: ['Label', 'Width', 'Height', "Data"],
 		Page: ['Label', "Data", "UseCollectionView"],
-		Button: ['Label', "Parameter"],
+		Button: ['Label'],
 		GRID_PROPS: ['Row', 'Col', 'RowSpan', 'ColSpan'],
-		COMMAND_PROPS: ['Command', 'Argument', 'Url']
+		COMMAND_PROPS: ['Command', 'Argument', 'Url'],
+		OTHER_PROPS: {
+			Grid: ["Rows", "Columns"]
+		}
 	};
 
 	var propsheetElem = {
@@ -125,6 +135,11 @@
 				if (!this.item) return [];
 				const type = this.item.Is;
 				return this.getProps(PROP_MAP[type], this.item);
+			},
+			otherProps() {
+				if (!this.item) return [];
+				const type = this.item.Is;
+				return this.getProps(PROP_MAP.OTHER_PROPS[type], this.item.Props);
 			},
 			gridProps() {
 				let g = this.item.Grid;
@@ -673,7 +688,7 @@
 	};
 
 	const buttonTemplate = `
-<button @click.stop.prevent="select" class="btn a2-inline" :class="{ selected, 'btn-primary': item.Primary }" :draggable=true
+<button @click.stop.prevent="select" class="btn a2-inline" :class="btnClass" :draggable=true
 	@dragstart.stop=dragStart v-text="item.Label">
 </button>
 `;
@@ -682,6 +697,12 @@
 		template: buttonTemplate,
 		extends: layoutItem,
 		computed: {
+			btnClass() {
+				return {
+					selected: this.selected,
+					'btn-primary': this.item.Props?.Style === 'Primary'
+				};
+			}
 		},
 		methods: {
 			dragStart(ev) {
@@ -739,6 +760,9 @@
 				<span class="modal-title" v-text="form.Label"/>
 				<button tabindex="-1" class="btnclose">✕</button>
 			</div>
+			<div v-if="isPage" class="fd-tabs-header">
+				<div class="fd-tab-title" v-text="form.Label"/>
+			</div>
 			<div class="fd-content">
 				<component v-for="(itm, ix) in form.Items" :key="ix" :is="itm.Is"
 					:item="itm" :cont=cont />
@@ -795,13 +819,20 @@
 				return el;
 			},
 			isDialog() {
-				console.dir(this.form);
 				return this.form.Is === 'Dialog';
+			},
+			isPage() {
+				console.dir(this.form);
+				return this.form.Is === 'Page';
 			}
 		},
 		methods: {
 			clickBody() {
 				this.selectedItem = this.form;	
+			},
+			setDirty() {
+				if (this.host)
+					this.host.setDirty();
 			},
 			keyUp(ev) {
 				console.dir(ev.which);
@@ -847,28 +878,32 @@
 			},
 			$dropItem(rc) {
 				if (!this.selectedItem) return;
+
 				console.dir(this.selectedItem);
 				console.dir(rc);
 
-				if (!this.selectedItem.row && !this.selectedItem.col) {
+				let sg = this.selectedItem.Grid || {};
+				/*
+				if (!this.selectedItem.Grid.Row && !this.selectedItem.Grid.Col) {
+					// clone element
 					let no = Object.assign({}, this.selectedItem);
 					no.Items = [];
-					no.row = rc.row;	
-					no.col = rc.col;	
+					no.Grid = { Row: rc.row, Col: rc.col };	
 					rc.grid.Items.push(no);
 					this.selectedItem = no;
 					return;
 				}
+				*/
 
-				// selectedItem может быть новым элементом	
 				let fg = this.findGridByItem(this.selectedItem);
+
 				if (fg && fg.Is === 'Grid' && fg !== rc.grid) {
 					let ix = fg.Items.indexOf(this.selectedItem);
 					fg.Items.splice(ix, 1);
 					rc.grid.Items.push(this.selectedItem);
 				}
-				this.selectedItem.row = rc.row;
-				this.selectedItem.col = rc.col;			
+				this.selectedItem.Grid = { Row: rc.row, Col: rc.col, ColSpan: sg.ColSpan, RowSpan: sg.RowSpan };
+				this.setDirty();
 			}
 		},
 		mounted() {

@@ -29,6 +29,7 @@ internal static class FormExtensions
             ColumnDataType.Date => ItemDataType.Date,
             ColumnDataType.DateTime => ItemDataType.DateTime,
             ColumnDataType.Money => ItemDataType.Currency,
+            ColumnDataType.Float => ItemDataType.Number,
             _ => ItemDataType._,
         };
     }

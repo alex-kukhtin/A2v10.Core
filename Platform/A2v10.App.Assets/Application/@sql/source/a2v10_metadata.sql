@@ -107,8 +107,8 @@ go
 create or alter view a2meta.view_RealTables
 as
 	select Id = c.Id, c.Parent, c.Kind, c.[Schema], [Name] = c.[Name], c.ItemsName, c.ItemName, c.TypeName,
-		c.EditWith
-	from a2meta.[Catalog] c inner join INFORMATION_SCHEMA.TABLES ic on 
+		c.EditWith, c.ParentTable
+	from a2meta.[Catalog] c left join INFORMATION_SCHEMA.TABLES ic on 
 		ic.TABLE_SCHEMA = c.[Schema]
 		and ic.TABLE_NAME = c.[Name] collate SQL_Latin1_General_CP1_CI_AI;
 go
@@ -126,7 +126,7 @@ begin
 	select @tableId = Id from a2meta.view_RealTables r 
 	where r.[Schema] = @Schema collate SQL_Latin1_General_CP1_CI_AI
 		and r.[Name] = @Table collate SQL_Latin1_General_CP1_CI_AI
-		and r.Kind = N'table';
+		and r.Kind in (N'table', N'operation');
 
 	declare @innerTables table(Id bigint, Kind nvarchar(32));
 	with TT as (
@@ -141,10 +141,12 @@ begin
 
 	select [Table!TTable!Object] = null, [!!Id] = c.Id, c.[Schema], c.[Name],
 		c.ItemsName, c.ItemName, c.TypeName, c.EditWith,
+		[ParentTable.RefSchema!TReference!] = pt.[Schema], [ParentTable.RefTable!TReference] = pt.[Name],
 		[Columns!TColumn!Array] = null,
 		[Details!TTable!Array] = null
 	from a2meta.view_RealTables c 
-	where c.Id = @tableId and c.Kind = N'table';
+		left join a2meta.[Catalog] pt on c.ParentTable = pt.Id
+	where c.Id = @tableId and c.Kind in (N'table', N'operation');
 
 	select [!TTable!Array] = null, [Id!!Id] = c.Id, [Schema] = c.[Schema], [Name] = c.[Name],
 		c.ItemsName, c.ItemName, c.TypeName,
@@ -365,11 +367,11 @@ returns nvarchar(255)
 as
 begin
 	return case @Schema
-		when N'cat' then N'Catalogs'
-		when N'doc' then N'Documents'
-		when N'jrn' then N'Journals'
-		when N'rep' then N'Reports'
-		when N'op'  then N'Operations'
+		when N'cat' then N'Catalog'
+		when N'doc' then N'Document'
+		when N'jrn' then N'Journal'
+		when N'rep' then N'Report'
+		when N'op'  then N'Operation'
 		else N'Undefined'
 	end;
 end

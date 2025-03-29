@@ -142,16 +142,22 @@
   display: flex;
   flex-direction: column;
   overflow: visible;
-  border: 1px solid #ccc;
   margin: auto;
-}
-.fd-container .fd-body.page {
-  width: 100%;
-  height: 100%;
-  padding: 0.5rem 1rem;
 }
 .fd-container .fd-body.page .fd-content {
   height: 100%;
+  padding: 2px;
+}
+.fd-container .fd-body.page .fd-tabs-header {
+  height: 34px;
+  background-color: #aaa;
+}
+.fd-container .fd-body.page .fd-tabs-header .fd-tab-title {
+  display: inline-block;
+  line-height: 2.3rem;
+  padding: 0 16px;
+  background-color: var(--bgPrimary);
+  border-radius: 4px 4px 0 0;
 }
 .fd-container .fd-body.dialog {
   border-radius: 8px;
