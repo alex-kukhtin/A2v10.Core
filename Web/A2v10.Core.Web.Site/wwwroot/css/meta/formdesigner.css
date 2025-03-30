@@ -147,6 +147,27 @@
 .fd-container .fd-body.page .fd-content {
   height: 100%;
   padding: 2px;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  grid-template-columns: 1fr auto;
+}
+.fd-container .fd-body.page .fd-content .form-toolbar {
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--neutral300);
+  grid-row: 1;
+}
+.fd-container .fd-body.page .fd-content .fd-elem-taskpad {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  width: 22rem;
+  padding: 11px 1rem 1rem 1rem;
+  border-left: 1px solid var(--neutral300);
+}
+.fd-container .fd-body.page .fd-content .fd-elem-taskpad .grid {
+  padding: 0;
+}
+.fd-container .fd-body.page .fd-content > .fd-elem-grid {
+  grid-row: 2;
 }
 .fd-container .fd-body.page .fd-tabs-header {
   height: 34px;
@@ -158,6 +179,7 @@
   padding: 0 16px;
   background-color: var(--bgPrimary);
   border-radius: 4px 4px 0 0;
+  height: 34px;
 }
 .fd-container .fd-body.dialog {
   border-radius: 8px;
@@ -170,6 +192,7 @@
 .fd-container .fd-elem-grid {
   display: grid;
   grid-gap: 0.5rem 1rem;
+  position: relative;
 }
 .fd-container .fd-elem-grid .fd-grid-ph {
   border: 1px dotted #bbb;
@@ -276,6 +299,21 @@
   box-shadow: none;
   outline: 0;
   transition: none;
+}
+.fd-container .fd-elem-grid .fd-grid-handle {
+  position: absolute;
+  right: -9px;
+  top: -9px;
+  width: 18px;
+  height: 18px;
+  background-color: lavenderblush;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  line-height: 16px;
+  text-align: center;
+  color: firebrick;
+  font-size: 11px;
+  z-index: 12;
 }
 .fd-container .btn:focus {
   outline: none !important;

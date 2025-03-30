@@ -5,8 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
-using Microsoft.Data.SqlClient;
-
 using A2v10.Infrastructure;
 using A2v10.Data.Interfaces;
 using A2v10.Data.Core.Extensions;
@@ -167,16 +165,13 @@ internal partial class BaseModelBuilder
         {
             AddDefaultParameters(dbprms);
             AddPeriodParameters(dbprms, qry);
-            dbprms.AddInt("@Offset", offset);
-            dbprms.AddInt("@PageSize", pageSize);
-            dbprms.AddString("@Order", order);
-            dbprms.AddString("@Dir", dir);
-            dbprms.AddString("@Fragment", fragment);
+            dbprms.AddInt("@Offset", offset)
+            .AddInt("@PageSize", pageSize)
+            .AddString("@Order", order)
+            .AddString("@Dir", dir)
+            .AddString("@Fragment", fragment);
             foreach (var r in refFieldsFilter)
-                dbprms.Add(new SqlParameter($"@{r.Column.Name}", r.Column.DataType.ToSqlDbType(_appMeta.IdDataType))
-                {
-                    Value = qry?.Get<Object>(r.Column.Name) ?? DBNull.Value
-                });
+                dbprms.AddTyped($"@{r.Column.Name}", r.Column.DataType.ToSqlDbType(_appMeta.IdDataType), qry?.Get<Object>(r.Column.Name));
         });
     }
 }

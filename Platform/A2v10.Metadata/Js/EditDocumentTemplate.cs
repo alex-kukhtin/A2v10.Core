@@ -11,12 +11,17 @@ internal partial class BaseModelBuilder
     {
         var endpoint = $"/documents/{_table.RealItemsName}";
         var templ = $$"""
+        const du = require('std:utils').date;
         const template = {
             properties: {
                 'TRoot.$$Tab': String
             },
+            defaults: {
+                'Document.Date'() { return du.today(); }
+            },
             commands: {
-                apply
+                apply,
+                unApply
             }
         };
 
@@ -25,6 +30,12 @@ internal partial class BaseModelBuilder
         async function apply() {
             const ctrl = this.$ctrl;
             await ctrl.$invoke('apply', {Id: this.{{_table.RealItemName}}.{{_appMeta.IdField}}}, '{{endpoint}}');
+            ctrl.$requery();
+        }
+
+        async function unApply() {
+            const ctrl = this.$ctrl;
+            await ctrl.$invoke('unapply', {Id: this.{{_table.RealItemName}}.{{_appMeta.IdField}}}, '{{endpoint}}');
             ctrl.$requery();
         }
         """;

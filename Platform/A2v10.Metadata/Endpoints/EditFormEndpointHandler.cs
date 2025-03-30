@@ -37,12 +37,12 @@ public class EditFormEndpointHandler(IServiceProvider _serviceProvider) : IEndpo
         if (eo == null)
         {
             var table = dataModel.Eval<String>("Table.Name")
-                ?? throw new InvalidOperationException("Table is null");
+                ?? throw new InvalidOperationException("Table.Name is null");
             var schema = dataModel.Eval<String>("Table.Schema")
-                ?? throw new InvalidOperationException("Schema is null");
+                ?? throw new InvalidOperationException("Table.Schema is null");
 
             var ew = dataModel.Eval<String>("Table.EditWith")
-                ?? throw new InvalidOperationException("Schema is null");
+                ?? throw new InvalidOperationException("Table.EditWith is null");
             var tm = new TableMetadata() {
                 Schema = schema,
                 Name = table,

@@ -8,8 +8,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
-using Microsoft.Data.SqlClient;
-
 using A2v10.Data.Core.Extensions;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
@@ -144,13 +142,13 @@ internal partial class BaseModelBuilder
         var dm = await _dbContext.LoadModelSqlAsync(_dataSource, sqlString, dbprms =>
         {
             AddDefaultParameters(dbprms);
-            dbprms.Add(new SqlParameter($"@{_table.RealItemName}", SqlDbType.Structured) { TypeName = _table.TableTypeName, Value = dtable });
+            dbprms.AddStructured($"@{_table.RealItemName}", _table.TableTypeName, dtable);
             _table.Details.ForEach(details =>
             {
                 var rows = item?.Get<List<Object>>($"{details.Name}");
                 var detailsTableBuilder = new DataTableBuilder(details, _appMeta);
                 var detailsTable = detailsTableBuilder.BuildDataTable(rows);
-                dbprms.Add(new SqlParameter($"@{details.Name}", SqlDbType.Structured) { TypeName = details.TableTypeName, Value = detailsTable });
+                dbprms.AddStructured($"@{details.Name}", details.TableTypeName, detailsTable);
             });
         });
         return dm.Root; 

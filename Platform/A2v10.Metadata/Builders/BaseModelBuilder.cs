@@ -139,16 +139,17 @@ internal partial class BaseModelBuilder(
         return await dynamicRenderer.RenderPage(rri);
     }
 
-    protected void AddDefaultParameters(DbParameterCollection prms)
+    protected DbParameterCollection AddDefaultParameters(DbParameterCollection prms)
     {
         if (_currentUser.Identity.Tenant != null)
             prms.AddInt("@TenantId", _currentUser.Identity.Tenant);
         prms.AddBigInt("@UserId", _currentUser.Identity.Id);
+        return prms;
     }
-    protected void AddPeriodParameters(DbParameterCollection prms, ExpandoObject? qry)
+    protected DbParameterCollection AddPeriodParameters(DbParameterCollection prms, ExpandoObject? qry)
     {
         if (!_table.HasPeriod())
-            return;
+            return prms;
 
         DateTime? DateTimeFromString(String? value)
         {
@@ -157,8 +158,8 @@ internal partial class BaseModelBuilder(
             return DateTime.ParseExact(value, "yyyyMMdd", CultureInfo.InvariantCulture);    
         }
 
-        prms.AddDate("@From", DateTimeFromString(qry?.Get<String>("From")));
-        prms.AddDate("@To", DateTimeFromString(qry?.Get<String>("To")));
+        return prms.AddDate("@From", DateTimeFromString(qry?.Get<String>("From")))
+            .AddDate("@To", DateTimeFromString(qry?.Get<String>("To")));
     }
 
     protected String RefTableJoins(IEnumerable<(TableColumn Column, Int32 Index)> refFields, String alias)

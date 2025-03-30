@@ -110,7 +110,8 @@
 		PeriodPicker: ["Data", 'Label', "Width"],
 		Selector: ["Data", 'Label', "Width"],
 		DataGrid: ["Data", 'Height'],
-		CLabel: ["Label"],
+		Label: ["Label"],
+		Panel: ["Label"],
 		DataGridColumn: ["Data", 'Label'],
 		Toolbar: [],
 		Pager: ['Data'],
@@ -139,17 +140,17 @@
 			otherProps() {
 				if (!this.item) return [];
 				const type = this.item.Is;
-				return this.getProps(PROP_MAP.OTHER_PROPS[type], this.item.Props);
+				return this.getProps(PROP_MAP.OTHER_PROPS[type], this.item.Props || {});
 			},
 			gridProps() {
 				let g = this.item.Grid;
 				if (!g) return [];
-				return this.getProps(PROP_MAP['GRID_PROPS'], this.item.Grid);
+				return this.getProps(PROP_MAP['GRID_PROPS'], this.item.Grid || {});
 			},
 			commandProps() {
 				let g = this.item.Command;
 				if (!g) return [];
-				return this.getProps(PROP_MAP['COMMAND_PROPS'], this.item.Command);
+				return this.getProps(PROP_MAP['COMMAND_PROPS'], this.item.Command || {});
 			}
 		},
 		methods: {
@@ -225,7 +226,7 @@
 </div>
 `;
 
-	var toolbar$1 = {
+	var toolbar = {
 		template: toolbarTemplate,
 		props: {
 			host: Object	
@@ -349,7 +350,22 @@
 		extends: control
 	};
 
-	var layoutItem = {
+	const periodPickerTemplate = `
+<div class="control-group period-picker" :style=controlStyle >
+	<label v-text="item.Label" v-if="item.Label"/>
+	<div class="input-group">
+		<span v-text="item.Data" class="input text-center"/>
+		<span class="caret" />
+	</div>
+</div>
+`;
+
+	var periodPicker = {
+		template: periodPickerTemplate,
+		extends: control
+	};
+
+	var layoutelem = {
 		props: {
 			item: Object,
 			cont: Object	
@@ -376,7 +392,7 @@
 
 	var dataGridColumn = {
 		template: dataGridColumnTemplate,
-		extends: layoutItem,
+		extends: layoutelem,
 		methods: {
 			dragStart(ev) {
 				console.dir('drag start column');
@@ -452,7 +468,7 @@
 
 	var button$1 = {
 		template: buttonTemplate$1,
-		extends: layoutItem,
+		extends: layoutelem,
 		computed: {
 			icon() {
 				switch (this.item.Command.Command) {
@@ -460,6 +476,9 @@
 					case 'EditSelected':
 						return 'ico-edit';
 					case 'New': return 'ico-add';
+					case 'Save': return 'ico-save-outline';
+					case 'SaveAndClose': return 'ico-save-close-outline';
+					case 'Apply': return 'ico-apply';
 					case 'Create': return 'ico-add';
 					case 'Delete': return 'ico-clear';
 					case 'Reload': return 'ico-reload';
@@ -485,7 +504,7 @@
 
 	var aligner = {
 		template: alignerTemplate,
-		extends: layoutItem,
+		extends: layoutelem,
 		methods: {
 			dragStart(ev) {
 				console.dir('drag start aligner');
@@ -536,7 +555,7 @@
 		searchBox
 	};
 
-	var toolbar = {
+	var itemToolbar = {
 		template: `<div class="toolbar" @dragover=dragOver @drop=drop >
 		<component :is="item.Is" v-for="(item, ix) in item.Items" :item="item" :key="ix" :cont=cont />
 	</div>`,
@@ -562,6 +581,28 @@
 		extends: control
 	};
 
+	var header = {
+		template: '<div class="a2-header" v-text="item.Label" />',
+		extends: control
+	};
+
+	const tabsTemplate = `
+<div class="fd-elem-tabs">
+	TABS
+	<ul>
+		<li v-for="(itm, ix) in item.Items" v-text="itm.Label" :key=ix />
+	</ul>
+</div>
+`;
+
+	var tabs = {
+		template: tabsTemplate,
+		props: {
+			item: Object,
+			cont: Object
+		}
+	};
+
 	const gridItem = `
 <div class="fd-grid-item" :draggable="true"
 	@dragstart.stop=dragStart @dragend=dragEnd
@@ -581,10 +622,13 @@
 			'TextBox': textBox,
 			'Selector': selector,
 			'DatePicker': datePicker,
+			'PeriodPicker': periodPicker,
 			'DataGrid': datagrid,
-			'CLabel': label, 
+			'Label': label, 
+			'Header': header,
 			'Pager': pager,
-			'Toolbar': toolbar
+			'Toolbar': itemToolbar,
+			'Tabs': tabs
 		},
 		computed: {
 			grid() {
@@ -645,12 +689,14 @@
 			:key="row + ':' + col" :cont=cont />
 	</template>
 	<fd-grid-item v-for="(itm, ix) in item.Items" :item=itm :key=ix :cont=cont />
+
+	<div class="fd-grid-handle">▷</div>
 </div>
 `;
 
 	var gridElem = {
 		name: 'grid',
-		extends: layoutItem,
+		extends: layoutelem,
 		template: gridTemplate,
 		components: {
 			'fd-grid-ph': gridPlaceholder$1,
@@ -684,7 +730,7 @@
 
 	var lineElem = {
 		template: '<div class="line" @click.stop.prevent=select :class="{selected}"><hr></div>',
-		extends: layoutItem
+		extends: layoutelem
 	};
 
 	const buttonTemplate = `
@@ -695,7 +741,7 @@
 
 	var button = {
 		template: buttonTemplate,
-		extends: layoutItem,
+		extends: layoutelem,
 		computed: {
 			btnClass() {
 				return {
@@ -736,14 +782,39 @@
 		}
 	};
 
+	const panelTemplate = `
+<div class="fd-panel panel panel-transparent" @click.stop=select :class="{selected}">
+	<div class="panel-header">
+		<div v-text="item.Label" class="panel-header-slot" />
+		<span class="ico panel-collapse-handle" />
+	</div>
+	<component v-for="(itm, ix) in item.Items" :key="ix" :is="itm.Is"
+		:item="itm" :cont=cont />
+</div>
+`;
+
+	var panel = {
+		template: panelTemplate,
+		extends: layoutelem,
+		props: {
+			item: Object,
+			cont: Object
+		}
+	};
+
 	const taskpadTemplate = `
-<div class="fd-elem-taskpad">
-	TASKPAD
+<div class="fd-elem-taskpad"  @click.stop=select :class="{selected}">
+	<component v-for="(itm, ix) in item.Items" :key="ix" :is="itm.Is"
+		:item="itm" :cont=cont />
 </div>
 `;
 
 	var frmTaskpad = {
 		template: taskpadTemplate,
+		extends: layoutelem,
+		components: {
+			'Panel': panel
+		},
 		props: {
 			item: Object,
 			cont: Object
@@ -764,10 +835,12 @@
 				<div class="fd-tab-title" v-text="form.Label"/>
 			</div>
 			<div class="fd-content">
+				<Toolbar v-if="form.Toolbar" :item="form.Toolbar"
+					:cont=cont class="form-toolbar"/>
 				<component v-for="(itm, ix) in form.Items" :key="ix" :is="itm.Is"
 					:item="itm" :cont=cont />
+				<Taskpad :item="form.Taskpad" :cont=cont v-if="form.Taskpad" />
 			</div>
-			<component :is="form.Taskpad.Is" :item="form.Taskpad" :cont=cont v-if="form.Taskpad" />
 			<dlg-buttons v-if="isDialog" :elems="form.Buttons" :cont=cont />
 		</div>
 	</div>
@@ -783,11 +856,12 @@
 	Vue.component('fd-container', {
 		template: containerTemplate,
 		components: {
-			'fd-toolbar': toolbar$1,
+			'fd-toolbar': toolbar,
 			'fd-taskpad': taskpad,
 			'dlg-buttons': dlgButtons,
 			'HLine': lineElem,
-			'Taskpad': frmTaskpad
+			'Taskpad': frmTaskpad,
+			'Toolbar': itemToolbar
 		},
 		props: {
 			form: Object,
