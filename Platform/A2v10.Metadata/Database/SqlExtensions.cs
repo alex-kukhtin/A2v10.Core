@@ -9,13 +9,19 @@ namespace A2v10.Metadata;
 
 internal static class SqlExtensions
 {
-    public static SqlDbType ToSqlDbType(this ColumnDataType columnDataType)
+    public static SqlDbType ToSqlDbType(this ColumnDataType columnDataType, ColumnDataType idDataType)
     {
         return columnDataType switch
         {
+            ColumnDataType.Id or ColumnDataType.Reference => idDataType.ToSqlDbType(idDataType),
+            ColumnDataType.Operation => SqlDbType.NVarChar,   
             ColumnDataType.BigInt => SqlDbType.BigInt,
             ColumnDataType.Int => SqlDbType.Int,
             ColumnDataType.String => SqlDbType.NVarChar,
+            ColumnDataType.DateTime => SqlDbType.DateTime,
+            ColumnDataType.Date => SqlDbType.Date,
+            ColumnDataType.Money => SqlDbType.Money,
+            ColumnDataType.Float => SqlDbType.Float,
             ColumnDataType.Uniqueidentifier => SqlDbType.UniqueIdentifier,
             _ => throw new NotSupportedException($"{columnDataType} is not supported")
         };

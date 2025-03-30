@@ -173,7 +173,7 @@ internal partial class BaseModelBuilder
             dbprms.AddString("@Dir", dir);
             dbprms.AddString("@Fragment", fragment);
             foreach (var r in refFieldsFilter)
-                dbprms.Add(new SqlParameter($"@{r.Column.Name}", r.Column.ClrDataType(_appMeta.IdDataType))
+                dbprms.Add(new SqlParameter($"@{r.Column.Name}", r.Column.DataType.ToSqlDbType(_appMeta.IdDataType))
                 {
                     Value = qry?.Get<Object>(r.Column.Name) ?? DBNull.Value
                 });
