@@ -144,7 +144,7 @@ internal partial class BaseModelBuilder
         select [{collectionName}!{_table.RealTypeName}!Array] = null,
             {String.Join(",", _table.AllSqlFields("a", _appMeta))},
             [!!RowCount]  = count(*) over()        
-        from {_table.SqlTableName()} a
+        from {_table.SqlTableName} a
         {RefTableJoins(refFields, "a")}
         where {String.Join(" and ", Where())}
         order by {sqlOrder} {dir}

@@ -1,8 +1,8 @@
 /*
 Copyright © 2025 Oleksandr Kukhtin
 
-Last updated : 10 mar 2025
-module version : 8533
+Last updated : 02 apr 2025
+module version : 8540
 */
 
 ------------------------------------------------
@@ -104,6 +104,29 @@ create table a2meta.[Forms]
 );
 go
 ------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.SEQUENCES where SEQUENCE_SCHEMA=N'a2meta' and SEQUENCE_NAME=N'SQ_Apply')
+	create sequence a2meta.SQ_Apply as bigint start with 100 increment by 1;
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'Apply')
+create table a2meta.[Apply]
+(
+	[Id] bigint not null
+		constraint DF_Apply_Id default(next value for a2meta.SQ_Apply)
+		constraint PK_Apply primary key,
+	[Table] bigint not null
+		constraint FK_Apply_Table_Catalog references a2meta.[Catalog](Id),
+	[Journal] bigint not null
+		constraint FK_Apply_Journal_Catalog references a2meta.[Catalog](Id),
+	[Order] int not null,
+	Details bigint
+		constraint FK_Apply_Details_Catalog references a2meta.[Catalog](Id),
+	[InOut] smallint not null,
+	Storno bit not null
+		constraint DF_Apply_Storno default(0)
+);
+go
+------------------------------------------------
 create or alter view a2meta.view_RealTables
 as
 	select Id = c.Id, c.Parent, c.Kind, c.[Schema], [Name] = c.[Name], c.ItemsName, c.ItemName, c.TypeName,
@@ -143,7 +166,8 @@ begin
 		c.ItemsName, c.ItemName, c.TypeName, c.EditWith,
 		[ParentTable.RefSchema!TReference!] = pt.[Schema], [ParentTable.RefTable!TReference] = pt.[Name],
 		[Columns!TColumn!Array] = null,
-		[Details!TTable!Array] = null
+		[Details!TTable!Array] = null,
+		[Apply!TApply!Array] = null
 	from a2meta.view_RealTables c 
 		left join a2meta.[Catalog] pt on c.ParentTable = pt.Id
 	where c.Id = @tableId and c.Kind in (N'table', N'operation');
@@ -170,6 +194,15 @@ begin
 		inner join @innerTables it on c.[Table] = it.Id
 		left join a2meta.[Catalog] r on c.Reference = r.Id
 	order by c.Id;
+
+	select [!TApply!Array] = null, [Id!!Id] = a.Id, a.InOut, a.Storno,
+		[Journal.RefSchema!TReference!] = j.[Schema], [Journal.RefTable!TReference!Name] = j.[Name],
+		[Details.RefSchema!TReference!] = d.[Schema], [Details.RefTable!TReference!Name] = d.[Name],
+		[!TTable.Apply!ParentId] = a.[Table]
+	from a2meta.Apply a 
+		inner join a2meta.[Catalog] j on a.Journal = j.Id -- always
+		left join a2meta.[Catalog] d on a.Details = d.Id -- possible
+	where a.[Table] = @tableId;
 end
 go
 ------------------------------------------------

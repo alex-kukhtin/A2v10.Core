@@ -71,7 +71,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         var dm = await _dbContext.LoadModelAsync(dataSource, "a2meta.[Table.Schema]", prms)
             ?? throw new InvalidOperationException("a2meta.[Table.Schema] returns null");
         var tableExpando = dm.Eval<ExpandoObject>("Table")
-            ?? throw new InvalidOperationException($"{schema}.{table} not found");
+            ?? throw new InvalidOperationException($"Metadata for {schema}.{table} not found");
         var json = JsonConvert.SerializeObject(tableExpando);
         if (json == null)
             throw new InvalidOperationException("TableMetadata not found");
@@ -121,7 +121,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             "document" => "doc",
             "operation" => "op",
             "journal" => "jrn",
-            _ => "unknown schema"
+            _ => split[0]
         };
         return (schema, split[1]);
     }

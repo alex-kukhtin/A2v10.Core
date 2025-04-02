@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
+using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace A2v10.Metadata;
 
@@ -34,6 +35,7 @@ public record ColumnReference
 {
     public String RefSchema { get; init; } = default!;
     public String RefTable { get; init; } = default!;
+    internal String SqlTableName => $"{RefSchema}.[{RefTable}]";
 }
 
 public record TableColumn
@@ -61,7 +63,17 @@ public enum EditWithMode
     Page 
 }
 
-public record TableMetadata
+public record TableApply
+{
+    #region Database Fields
+    public Int16 InOut { get; init; } = default!;
+    public Boolean Storno { get; init; }
+    public ColumnReference Journal { get; init; } = default!;
+    public ColumnReference? Details { get; init; }
+    #endregion
+}
+
+    public record TableMetadata
 {
     #region Database fields
     public String Schema { get; init; } = default!;
@@ -74,12 +86,16 @@ public record TableMetadata
     public List<TableMetadata> Details { get; private set; } = [];
     public ColumnReference? ParentTable { get; init; }
     #endregion
+    public List<TableApply>? Apply { get; init; }
 
     // internal variables
     internal String RealItemName => ItemName ?? Name.Singular();
     internal String RealItemsName => ItemsName ?? Name;  
     internal String RealTypeName => $"T{TypeName ?? RealItemName}";
     internal String TableTypeName => $"{Schema}.[{RealItemName}.TableType]";
+    internal String SqlTableName => $"{Schema}.[{Name}]";
+    internal Boolean IsDocument => Schema == "doc";
+    internal Boolean IsJournal => Schema == "jrn";
 }
 
 public record AppMetadata

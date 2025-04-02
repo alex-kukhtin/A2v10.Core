@@ -78,8 +78,6 @@ internal static class SqlExtensions
         return table.Columns.Where(c => c.IsReference).Select(c => (Column: c, Index: ++index)).ToList();
     }
 
-    internal static String SqlTableName(this TableMetadata table) => $"{table.Schema}.[{table.Name}]";
-
     internal static IEnumerable<String> AllSqlFields(this TableMetadata table, String alias, AppMetadata appMeta, Boolean isDetails = false)
     {
         var refFields = table.RefFields();

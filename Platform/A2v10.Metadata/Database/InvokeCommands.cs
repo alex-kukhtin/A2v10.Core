@@ -16,14 +16,22 @@ internal partial class BaseModelBuilder
         {
             "apply" => ApplyAsync(prms),
             "fetch" => FetchAsync(prms),
+            "unapply" => UnApplyAsync(prms),
             _ => throw new NotImplementedException($"Implement invoke for {command}")
         };
     }
 
     private Task<IInvokeResult> ApplyAsync(ExpandoObject? prms)
     {
-        if (_table.Schema != "doc")
-            throw new NotImplementedException($"The apply command is available for documents only");
+        if (!_table.IsDocument)
+            throw new NotImplementedException($"The Apply command is available for documents only");
         return ApplyDocumentAsync(prms); 
+    }
+
+    private Task<IInvokeResult> UnApplyAsync(ExpandoObject? prms)
+    {
+        if (!_table.IsDocument)
+            throw new NotImplementedException($"The UnApply command is available for documents only");
+        return UnApplyDocumentAsync(prms);
     }
 }

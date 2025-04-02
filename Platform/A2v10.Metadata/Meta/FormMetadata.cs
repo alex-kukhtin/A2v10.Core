@@ -49,11 +49,12 @@ public enum FormCommand
     Delete,
     Copy,
     Apply,
-    Unapply,
+    UnApply,
     Save,
     SaveAndClose,
     Select,
     Close,
+    Print,
     Append,
     Remove
 }

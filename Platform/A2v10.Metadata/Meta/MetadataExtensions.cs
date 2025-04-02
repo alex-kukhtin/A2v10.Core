@@ -43,7 +43,7 @@ internal static class MetadataExtensions
 
     internal static Boolean HasPeriod(this TableMetadata table)
     {
-        return table.Schema == "doc" || table.Schema == "jrn";
+        return table.IsDocument || table.IsJournal;
     }
 
     internal static String LocalPath(this TableMetadata table, String action)

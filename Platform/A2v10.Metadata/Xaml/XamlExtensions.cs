@@ -20,9 +20,10 @@ internal static class XamlExtensions
             FormCommand.Delete => Icon.Clear,
             FormCommand.Copy => Icon.Copy,
             FormCommand.Apply => Icon.Apply,
-            FormCommand.Unapply => Icon.Unapply,
+            FormCommand.UnApply => Icon.Unapply,
             FormCommand.SaveAndClose => Icon.SaveCloseOutline,
             FormCommand.Save => Icon.SaveOutline,
+            FormCommand.Print => Icon.Print,
             _ => Icon.NoIcon,
         };
     }
@@ -54,6 +55,16 @@ internal static class XamlExtensions
         var cmd = new BindCmd() { Command = commandType };
         cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(item.Command?.Argument ?? String.Empty));
         return cmd;
+    }
+
+    public static void AddCommandBindings(this FormItem item, XamlElement b)
+    {
+        if (item.Command == null)
+            return;
+        if (item.Command.Command == FormCommand.Apply)
+            b.SetBinding(nameof(Button.If), new Bind("!Document.Done"));
+        else if (item.Command.Command == FormCommand.UnApply)
+            b.SetBinding(nameof(Button.If), new Bind("Document.Done"));
     }
 
     public static BindCmd BindCommand(this FormItem item, EditWithMode withMode)
@@ -115,15 +126,19 @@ internal static class XamlExtensions
                 SaveRequired = true,
                 ValidRequired = true
             },
-            FormCommand.Unapply => new BindCmd()
+            FormCommand.UnApply => new BindCmd()
             {
                 Command = CommandType.Execute,
-                CommandName = "unapply"
+                CommandName = "unApply"
             },
             FormCommand.Open => new BindCmd()
             {
                 Command = CommandType.Open,
                 Url = item.Command?.Url
+            },
+            FormCommand.Print => new BindCmd()
+            {
+                Command = CommandType.Print
             },
             FormCommand.Remove => item.BindCommandArg(CommandType.Remove),
             _ => throw new NotImplementedException($"Implement Command for {item.Command?.Command}")

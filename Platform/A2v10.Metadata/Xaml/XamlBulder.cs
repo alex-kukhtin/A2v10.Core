@@ -346,7 +346,10 @@ internal class XamlBulder(EditWithMode _withMode)
                     {
                         Content = c.Label.Localize(),
                         Icon = c.Command2Icon(),
-                        Bindings = b => b.SetBinding(nameof(Button.Command), c.BindCommand(_withMode))
+                        Bindings = b => {
+                            b.SetBinding(nameof(Button.Command), c.BindCommand(_withMode));
+                            c.AddCommandBindings(b);
+                        }
                     },
                     FormItemIs.Aligner => new ToolbarAligner(),
                     FormItemIs.SearchBox => new TextBox()

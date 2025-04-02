@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2020-2025 Oleksandr Kukhtin
 
-Last updated : 22 feb 2025
-module version : 8209
+Last updated : 31 mar 2025
+module version : 8211
 */
 ------------------------------------------------
 set nocount on;
@@ -25,7 +25,7 @@ go
 begin
 	set nocount on;
 	declare @version int;
-	set @version = 8209;
+	set @version = 8211;
 	if exists(select * from a2wf.Versions where Module = N'main')
 		update a2wf.Versions set [Version] = @version where Module = N'main';
 	else
@@ -242,12 +242,24 @@ create table a2wf.[AutoStart]
 	Lock uniqueidentifier null,
 	DateCreated datetime not null constraint DF_AutoStart_DateCreated default(getutcdate()),
 	InstanceId uniqueidentifier null,
-	DateStarted datetime null
+	DateStarted datetime null,
+	CorrelationId nvarchar(255) null,
+	Complete int not null
+		constraint DF_AutoStart_Complete default(0)
 );
 go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA=N'a2wf' and TABLE_NAME=N'AutoStart' and COLUMN_NAME=N'StartAt')
 	alter table a2wf.AutoStart add StartAt datetime null;
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA=N'a2wf' and TABLE_NAME=N'AutoStart' and COLUMN_NAME=N'CorrelationId')
+	alter table a2wf.AutoStart add CorrelationId nvarchar(255) null;
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA=N'a2wf' and TABLE_NAME=N'AutoStart' and COLUMN_NAME=N'Complete')
+	alter table a2wf.AutoStart add Complete int not null 
+		constraint DF_AutoStart_Complete default(0) with values;
 go
 ------------------------------------------------
 create or alter procedure a2wf.[Catalog.Save]
@@ -789,11 +801,11 @@ begin
 	declare @AutoStartTable table(Id bigint);
 	update a2wf.AutoStart set Lock = newid() 
 	output inserted.Id into @AutoStartTable(Id)
-	where Lock is null and InstanceId is null and DateStarted is null and 
+	where Lock is null and Complete = 0 and DateStarted is null and 
 		(StartAt is null or StartAt <= @now);
 
 	select [AutoStart!TAutoStart!Array] = null, [Id!!Id]= a.Id,  
-		WorkflowId, [Version], [Params!!Json] = Params
+		WorkflowId, [Version], [Params!!Json] = Params, CorrelationId, a.InstanceId
 	from @AutoStartTable t inner join a2wf.AutoStart a on t.Id = a.Id
 	order by a.DateCreated;
 end
@@ -803,14 +815,16 @@ create or alter procedure a2wf.[AutoStart.Create]
 @WorkflowId nvarchar(255),
 @Version int = 0,
 @Params nvarchar(max) = null,
-@StartAt datetime = null
+@StartAt datetime = null,
+@CorrelationId nvarchar(255) = null,
+@InstanceId uniqueidentifier = null
 as
 begin
 	set nocount on;
 	set transaction isolation level read committed;
 
-	insert into a2wf.AutoStart(WorkflowId, [Version], [Params], StartAt) 
-	values (@WorkflowId, @Version, @Params, @StartAt);
+	insert into a2wf.AutoStart(WorkflowId, [Version], [Params], StartAt, CorrelationId, InstanceId) 
+	values (@WorkflowId, @Version, @Params, @StartAt, @CorrelationId, @InstanceId);
 end
 go
 ------------------------------------------------
@@ -821,7 +835,7 @@ as
 begin
 	set nocount on;
 	set transaction isolation level read committed;
-	update a2wf.AutoStart set InstanceId = @InstanceId, DateStarted = getutcdate() 
+	update a2wf.AutoStart set InstanceId = @InstanceId, DateStarted = getutcdate(), Complete = 1
 	where Id=@Id;
 end
 go

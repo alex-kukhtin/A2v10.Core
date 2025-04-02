@@ -49,6 +49,16 @@ internal partial class BaseModelBuilder
             return sb.ToString();
         }
 
+        String SystemRecordset()
+        {
+            if (table.IsDocument)
+                return $"""
+				select [!$System!] = null, [!!ReadOnly] = d.Done
+				from {table.SqlTableName} d where Id = @Id;
+				""";
+            return String.Empty;
+        }
+
         return $"""
         set nocount on;
         set transaction isolation level read uncommitted;
@@ -61,6 +71,8 @@ internal partial class BaseModelBuilder
         where a.[Id] = @Id;
 
         {DetailsContent()}
+
+        {SystemRecordset()}
 
         """;
 
@@ -94,7 +106,7 @@ internal partial class BaseModelBuilder
                 var parentField = details.Columns.FirstOrDefault(f => f.IsParent)
                     ?? throw new InvalidOperationException("Parent field not found");
                 sb.AppendLine($"""
-				merge {details.SqlTableName()} as t
+				merge {details.SqlTableName} as t
 				using @{details.Name} as s
 				on t.Id = s.Id
 				when matched then update set
@@ -118,7 +130,7 @@ internal partial class BaseModelBuilder
         declare @rtable table(Id {_appMeta.IdDataType});
         declare @Id {_appMeta.IdDataType};
         
-        merge {_table.SqlTableName()} as t
+        merge {_table.SqlTableName} as t
         using @{_table.RealItemName} as s
         on t.[{_appMeta.IdField}] = s.[{_appMeta.IdField}]
         when matched then update set

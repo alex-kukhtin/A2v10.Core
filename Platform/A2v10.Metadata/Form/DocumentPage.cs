@@ -14,8 +14,10 @@ internal partial class BaseModelBuilder
 
         IEnumerable<FormItem> toolbarButtons = [
             FormBuild.Button(FormCommand.SaveAndClose, "@SaveAndClose"),
-            FormBuild.Button(FormCommand.Save, "@Save"),
+            FormBuild.Button(FormCommand.Save),
+            FormBuild.Button(FormCommand.Print),
             FormBuild.Button(FormCommand.Apply, "@Apply"),
+            FormBuild.Button(FormCommand.UnApply, "@UnApply"),
             FormBuild.Button(FormCommand.Reload),
             new FormItem(FormItemIs.Aligner)
         ];

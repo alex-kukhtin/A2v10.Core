@@ -9,7 +9,7 @@ internal partial class BaseModelBuilder
 {
     private Task<String> CreateDocumentTemplate()
     {
-        var endpoint = $"/documents/{_table.RealItemsName}";
+        var endpoint = _table.EndpointPathUseBase(_baseTable);
         var templ = $$"""
         const du = require('std:utils').date;
         const template = {

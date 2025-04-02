@@ -13,11 +13,8 @@ using A2v10.Scheduling.Infrastructure;
 
 namespace A2v10.Scheduling.Commands;
 
-public class ScheduledExecuteSqlCommand(ILogger<ScheduledExecuteSqlCommand> logger, IDbContext dbContext) : IScheduledCommand
+public class ScheduledExecuteSqlCommand(ILogger<ScheduledExecuteSqlCommand> _logger, IDbContext _dbContext) : IScheduledCommand
 {
-    private readonly ILogger<ScheduledExecuteSqlCommand> _logger = logger;
-    private readonly IDbContext _dbContext = dbContext;
-
     public async Task ExecuteAsync(String? Data)
     {
         _logger.LogInformation("ExecuteSqlCommand at {Time}, Data = {Data}", DateTime.Now, Data);

@@ -26,7 +26,7 @@ internal partial class BaseModelBuilder
         set @fr = N'%' + @Text + N'%';
 
         select top(100) [{_table.RealItemsName}!{_table.RealTypeName}!Array] = null, [{_appMeta.IdField}!!Id] = a.[{_appMeta.IdField}], [{_appMeta.NameField}!!Name] = a.[{_appMeta.NameField}]
-        from {_table.SqlTableName()} a
+        from {_table.SqlTableName} a
         where a.[{_appMeta.VoidField}] = 0 and
             (a.[{_appMeta.NameField}] like @fr)
         order by a.[{_appMeta.NameField}];

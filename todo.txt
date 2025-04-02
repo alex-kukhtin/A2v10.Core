@@ -1,4 +1,10 @@
-﻿Authenticator
+﻿Зависимости от OpenAPI
+======================
+1. выделить статические ApiOptions в отдельный пакет A2v10.Security.ApiHost
+2. связать его с Swashbuckle.AspNetCore
+
+
+Authenticator
 1. Load/Save User Key
 2. Dialog format and Localization
 3. Handler for Generate Key

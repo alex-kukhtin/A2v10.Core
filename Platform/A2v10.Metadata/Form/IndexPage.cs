@@ -141,7 +141,7 @@ internal partial class BaseModelBuilder
                             Items = [..Columns()],
                             Command = new FormItemCommand(FormCommand.EditSelected)
                             {
-                                Url = _table.EndpointPath(),
+                                Url = _table.EndpointPathUseBase(_baseTable),
                                 Argument = "Parent.ItemsSource"
                             }
                         },

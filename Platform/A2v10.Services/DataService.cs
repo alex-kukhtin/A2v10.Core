@@ -12,7 +12,6 @@ using Newtonsoft.Json;
 using A2v10.Data.Interfaces;
 using A2v10.Services.Interop;
 using Microsoft.Extensions.Configuration;
-using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace A2v10.Services;
 
