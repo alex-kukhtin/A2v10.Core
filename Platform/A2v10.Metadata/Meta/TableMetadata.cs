@@ -63,6 +63,20 @@ public enum EditWithMode
     Page 
 }
 
+public enum ApplySourceKind
+{
+    Table,
+    Details
+}
+public record ApplyMapping
+{
+    public String Target { get; init; } = default!;
+
+    public String Source { get; init; } = default!;
+
+    public ApplySourceKind Kind {get; init;}
+}
+
 public record TableApply
 {
     #region Database Fields
@@ -70,6 +84,7 @@ public record TableApply
     public Boolean Storno { get; init; }
     public ColumnReference Journal { get; init; } = default!;
     public ColumnReference? Details { get; init; }
+    public List<ApplyMapping>? Mapping { get; init; } = [];
     #endregion
 }
 

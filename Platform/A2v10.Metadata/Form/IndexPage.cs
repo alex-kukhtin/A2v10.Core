@@ -8,20 +8,22 @@ namespace A2v10.Metadata;
 
 internal partial class BaseModelBuilder
 {
+    IEnumerable<FormItem> IndexColumns()
+    {
+
+        return _table.VisibleColumns(_appMeta).Select(
+            c => new FormItem()
+            {
+                Is = FormItemIs.DataGridColumn,
+                DataType = c.ToItemDataType(),
+                Data = c.IsReference ? $"{c.Name}.{_appMeta.NameField}" : c.Name,
+                Label = $"@{c.Name}"
+            }
+        );
+    }
+
     private Form CreateIndexPage()
     {
-        IEnumerable<FormItem> Columns() { 
-
-            return _table.VisibleColumns(_appMeta).Select(
-                c => new FormItem()
-                {
-                    Is = FormItemIs.DataGridColumn,
-                    DataType = c.ToItemDataType(),
-                    Data = c.IsReference ? $"{c.Name}.{_appMeta.NameField}"  : c.Name,
-                    Label = $"@{c.Name}"
-                }
-            ); 
-        }
 
         IEnumerable<FormItem> ToolbarButtons()
         {
@@ -138,7 +140,7 @@ internal partial class BaseModelBuilder
                             Data = "Parent.ItemsSource",
                             Height = "100%",
                             Grid = new FormItemGrid(2, 1),
-                            Items = [..Columns()],
+                            Items = [..IndexColumns()],
                             Command = new FormItemCommand(FormCommand.EditSelected)
                             {
                                 Url = _table.EndpointPathUseBase(_baseTable),

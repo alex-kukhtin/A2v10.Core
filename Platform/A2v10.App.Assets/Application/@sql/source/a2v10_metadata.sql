@@ -78,6 +78,7 @@ if not exists(select * from INFORMATION_SCHEMA.SEQUENCES where SEQUENCE_SCHEMA=N
 	create sequence a2meta.SQ_Items as bigint start with 100 increment by 1;
 go
 ------------------------------------------------
+-- TODO: DELETE ME
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'Items')
 create table a2meta.Items
 (
@@ -124,6 +125,25 @@ create table a2meta.[Apply]
 	[InOut] smallint not null,
 	Storno bit not null
 		constraint DF_Apply_Storno default(0)
+);
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.SEQUENCES where SEQUENCE_SCHEMA=N'a2meta' and SEQUENCE_NAME=N'SQ_ApplyMapping')
+	create sequence a2meta.SQ_ApplyMapping as bigint start with 100 increment by 1;
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'ApplyMapping')
+create table a2meta.[ApplyMapping]
+(
+	[Id] bigint not null
+		constraint DF_ApplyMapping_Id default(next value for a2meta.SQ_ApplyMapping)
+		constraint PK_ApplyMapping primary key,
+	[Apply] bigint not null
+		constraint FK_ApplyMapping_Apply_Apply references a2meta.Apply(Id),
+	[Target] bigint not null
+		constraint FK_ApplyMapping_Target_Columns references a2meta.Columns(Id),
+	[Source] bigint not null
+		constraint FK_ApplyMapping_Source_Columns references a2meta.Columns(Id)
 );
 go
 ------------------------------------------------
@@ -198,10 +218,23 @@ begin
 	select [!TApply!Array] = null, [Id!!Id] = a.Id, a.InOut, a.Storno,
 		[Journal.RefSchema!TReference!] = j.[Schema], [Journal.RefTable!TReference!Name] = j.[Name],
 		[Details.RefSchema!TReference!] = d.[Schema], [Details.RefTable!TReference!Name] = d.[Name],
+		[Mapping!TMapping!Array] = null,
 		[!TTable.Apply!ParentId] = a.[Table]
 	from a2meta.Apply a 
 		inner join a2meta.[Catalog] j on a.Journal = j.Id -- always
 		left join a2meta.[Catalog] d on a.Details = d.Id -- possible
+	where a.[Table] = @tableId;
+
+	select [!TMapping!Array] = null, [Id!!Id] = m.Id,
+		[Target] = t.[Name], 
+		-- source may be in document or details
+		[Source] = s.[Name], Kind = st.Kind,
+		[!TApply.Mapping!ParentId] = a.Id
+	from a2meta.ApplyMapping m 
+		inner join a2meta.[Apply] a on m.Apply = a.Id
+		inner join a2meta.Columns t on m.[Target] = t.Id
+		inner join a2meta.Columns s on m.Source= s.Id
+		inner join a2meta.[Catalog] st on s.[Table] = st.Id
 	where a.[Table] = @tableId;
 end
 go

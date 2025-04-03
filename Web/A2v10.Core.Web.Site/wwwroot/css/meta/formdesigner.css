@@ -21,7 +21,7 @@
   z-index: 10;
   position: relative;
 }
-.fd-container .selected:not(.handle):after {
+.fd-container .selected:not(.fd-grid-handle):after {
   content: "";
   position: absolute;
   top: -2px;
@@ -38,6 +38,7 @@
   grid-row: 2;
   background-color: var(--bgPrimary);
   user-select: none;
+  border-left: 1px solid #aaa;
 }
 .fd-container .fd-taskpad ul.fd-tabbar {
   display: flex;
@@ -156,6 +157,9 @@
   border-bottom: 1px solid var(--neutral300);
   grid-row: 1;
 }
+.fd-container .fd-body.page .fd-content .form-toolbar .toolbar {
+  position: relative;
+}
 .fd-container .fd-body.page .fd-content .fd-elem-taskpad {
   grid-column: 2;
   grid-row: 1 / span 2;
@@ -189,6 +193,16 @@
 .fd-container .fd-body.dialog .modal-header {
   cursor: default;
 }
+.fd-container .handle222 {
+  position: absolute;
+  width: 8px;
+  height: 100%;
+  left: -8px;
+  top: 0;
+  background: radial-gradient(circle at 1px 1px, #ccc 1px, transparent 0);
+  background-size: 4px 4px;
+  z-index: 9;
+}
 .fd-container .fd-elem-grid {
   display: grid;
   grid-gap: 0.5rem 1rem;
@@ -216,16 +230,6 @@
 }
 .fd-container .fd-elem-grid .fd-grid-item .input-group {
   width: 100%;
-}
-.fd-container .fd-elem-grid .fd-grid-item .handle {
-  position: absolute;
-  width: 8px;
-  height: 100%;
-  left: -8px;
-  top: 0;
-  background: radial-gradient(circle at 1px 1px, #ccc 1px, transparent 0);
-  background-size: 4px 4px;
-  z-index: 9;
 }
 .fd-container .fd-elem-grid .fd-grid-item .input {
   width: 100%;
@@ -271,6 +275,7 @@
   line-height: 2em;
   padding: 0 10px;
   border-bottom: 1px solid var(--neutral300);
+  white-space: nowrap;
 }
 .fd-container .fd-elem-grid .fd-grid-item .fd-datagrid .fd-datagrid-column .column {
   line-height: 2em;

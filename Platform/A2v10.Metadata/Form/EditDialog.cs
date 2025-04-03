@@ -8,32 +8,33 @@ namespace A2v10.Metadata;
 
 internal partial class BaseModelBuilder
 {
+    FormItem CreateControl(TableColumn column, Int32 row, Int32 col)
+    {
+        String? prm = null;
+        if (column.IsReference)
+            prm = column.Reference.EndpointPath();
+        return new FormItem()
+        {
+            Is = column.Column2Is(),
+            Grid = new FormItemGrid(row, col),
+            Label = $"@{column.Name}",
+            Data = $"{_table.RealItemName}.{column.Name}",
+            DataType = column.ToItemDataType(),
+            Props = new FormItemProps()
+            {
+                Url = prm
+            },
+            Width = column.DataType.ToWidth()
+        };
+    }
+
     private Form CreateEditDialog()
     {
-        FormItem CreateControl(TableColumn column, Int32 index)
-        {
-            String? prm = null;
-            if (column.IsReference)
-                prm = column.Reference.EndpointPath();
-            return new FormItem()
-            {
-                Is =  column.Column2Is(),
-                Grid = new FormItemGrid(index, 1),
-                Label = $"@{column.Name}",
-                Data = $"{_table.RealItemName}.{column.Name}",
-                DataType = column.ToItemDataType(),
-                Props = new FormItemProps()
-                {
-                    Url = prm
-                },
-                Width = column.DataType.ToWidth()
-            };
-        }
 
         IEnumerable<FormItem> Controls()
         {
             Int32 row = 1;
-            return _table.EditableColumns(_appMeta).Select(c => CreateControl(c, row++));
+            return _table.EditableColumns(_appMeta).Select(c => CreateControl(c, row++, 1));
         }
 
         return new Form()

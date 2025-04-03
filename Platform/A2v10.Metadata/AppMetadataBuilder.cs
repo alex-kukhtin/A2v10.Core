@@ -35,10 +35,8 @@ public class AppMetadataBuilder(IServiceProvider _serviceProvider,
         var iBuilder = await FindModelBuilderAsync(platformUrl, view);
         var dm = await iBuilder.LoadModelAsync();
 
-        //var (dm, meta) = await _dbProcessor.LoadModelAsync(view, platformUrl);
         if (isReload)
             return new AppRuntimeResult(dm, null);
-        //var page = await _modelPageBuilder.RenderPageAsync(platformUrl, view, dm, meta);
         var page = await iBuilder.RenderPageAsync(view, dm);
         return new AppRuntimeResult(dm, page);
     }

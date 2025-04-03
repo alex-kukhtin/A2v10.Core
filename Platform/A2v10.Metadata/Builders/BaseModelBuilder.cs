@@ -117,7 +117,7 @@ internal partial class BaseModelBuilder(
         }
         else
         {
-            var formMeta = await _metadataProvider.GetFormAsync(_dataSource, _table, _platformUrl.Action, CreateDefaultForm);
+            var formMeta = await _metadataProvider.GetFormAsync(_dataSource, _baseTable ?? _table, _platformUrl.Action, CreateDefaultForm);
             page = formMeta.Page;
             templateText = await CreateTemplateAsync();
         }

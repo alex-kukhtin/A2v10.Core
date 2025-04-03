@@ -12,6 +12,8 @@ namespace A2v10.Metadata;
 
 internal partial class BaseModelBuilder
 {
+    /* В журнале обязательно InOut, Document */
+    /* В документе обязательно Id, Done */
     private async Task<IInvokeResult> ApplyDocumentAsync(ExpandoObject? prms)
     {
         var opColumn = _table.Columns.FirstOrDefault(c => c.DataType == ColumnDataType.Operation);
@@ -28,26 +30,32 @@ internal partial class BaseModelBuilder
         var journals = applyTable.Apply.Select(c => c.Journal).Distinct(new ColumnReferenceComparer());
         var deleteFromJournals = journals.Select(j => $"delete from {j.SqlTableName} where [Document] = @Id");
 
-        /*В журнале обязательно InOut, Date, Document */
-        /*В документе обязательно Id, Done */
+        String InsertIntoJournal(TableApply a)
+        {
+            if (a.Mapping == null || a.Mapping.Count == 0)
+                throw new InvalidOperationException("Mapping is null");
+            var docAlias = "d";
+            var rowsAlias = "r";
+            String applyKindAlias(ApplySourceKind kind) => kind == ApplySourceKind.Details ? rowsAlias : docAlias;
 
-        /*
-         * 1. Достать сюда журналы, по которым проводится документ.
-         * 2. Получить соответствия полям из документа и из Details.
-         * (поля документа и Details тут уже есть)
-         * 3. Сформировать SQL, который проводит документ в журналах.
-         * 4. В журнале ОБЯЗАТЕЛЬНО InOut, Document, Date
-         */
-        
+            // alias = "d" for document "r" for details
+            var fields = a.Mapping.Select(m => (Target: $"[{m.Target}]", Source: $"{applyKindAlias(m.Kind)}.[{m.Source}]"));
 
-        var sql = $"""
-        set nocount on;
-        set transaction isolation level read committed;
-        declare @op {_appMeta.IdDataType};
-            select @op = [{opColumn.Name}] from {_table.SqlTableName}
-            where [{_appMeta.IdField}] = @Id;
-        throw 60000, @op, 0;
-        """;
+            String JoinDetails()
+            {
+                if (a.Details == null)
+                    return string.Empty;
+                return $"inner join {a.Details.SqlTableName} {rowsAlias} on {rowsAlias}.[Parent] = {docAlias}.[{_appMeta.IdField}]";
+            }
+
+            return $"""
+                insert into {a.Journal.SqlTableName} (InOut, Document, {String.Join(',', fields.Select(f => f.Target))})
+                select {a.InOut}, @Id, {String.Join(',', fields.Select(f => f.Source))}
+                from {_table.SqlTableName} {docAlias}
+                {JoinDetails()}
+                where {docAlias}.{_appMeta.IdField} = @Id;
+            """;
+        }
 
         var applySql = $"""
         set nocount on;
@@ -57,11 +65,7 @@ internal partial class BaseModelBuilder
         begin tran;
         {String.Join(";\n", deleteFromJournals)}
 
-        insert into jrn.StockJournal([Date], InOut, Document, Sum, Qty, Item)
-        select d.Date, 1, d.Id, r1.[Sum], r1.Qty, r1.Item
-        from doc.Rows r1
-            left join doc.Documents d on r1.Parent = d.Id
-        where d.Id = @Id;
+        {String.Join(";\n", applyTable.Apply.Select(a => InsertIntoJournal(a)))}
 
         update {_table.SqlTableName} set [Done] = 1 where [{_appMeta.IdField}] = @Id;
         commit tran;

@@ -38,6 +38,24 @@ internal partial class BaseModelBuilder
             };
         }
 
+        IEnumerable<FormItem> BodyItems(Int32 cols)
+        {
+            var row = 1;
+            var col = 1;
+            var skipColumns = new HashSet<String>() { "Date", "Done", "Memo" };
+
+            foreach (var c in _table.EditableColumns(_appMeta).Where(c => !skipColumns.Contains(c.Name)))
+            {
+                yield return CreateControl(c, row, col++);
+                if (col > cols)
+                {
+                    col = 1;
+                    row += 1;
+                }
+
+            }
+        }
+
         IEnumerable<FormItem> Body()
         {
             Int32 rowNo = 1;
@@ -59,7 +77,8 @@ internal partial class BaseModelBuilder
                 {
                     Rows = "auto auto auto",
                     Columns = "22rem 22rem 1fr"
-                }
+                },
+                Items = [..BodyItems(cols: 2)]
             };
 
             // details

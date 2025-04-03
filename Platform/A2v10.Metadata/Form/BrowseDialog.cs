@@ -9,19 +9,6 @@ internal partial class BaseModelBuilder
 {
     public Form CreateBrowseDialog()
     {
-        IEnumerable<FormItem> Columns()
-        {
-
-            return _table.VisibleColumns(_appMeta).Select(
-                c => new FormItem()
-                {
-                    Is = FormItemIs.DataGridColumn,
-                    Data = c.IsReference ? $"{c.Name}.{_appMeta.NameField}" : c.Name,
-                    Label = $"@{c.Name}"
-                }
-            );
-        }
-
         IEnumerable<FormItem> ToolbarButtons()
         {
             yield return new FormItem(FormItemIs.Button)
@@ -82,7 +69,7 @@ internal partial class BaseModelBuilder
                             Height = "30rem",
                             Command = new FormItemCommand(FormCommand.Select, _table.RealItemsName),
                             Data = "Parent.ItemsSource",
-                            Items = [..Columns()]
+                            Items = [..IndexColumns()]
                         },
                         new FormItem() {
                             Is = FormItemIs.Pager,

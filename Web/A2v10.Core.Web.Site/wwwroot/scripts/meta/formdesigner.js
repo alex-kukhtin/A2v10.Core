@@ -406,6 +406,7 @@
 	const dataGridTemplate = `
 <div class="fd-datagrid" @dragover=dragOver @drop=drop :style=elemStyle >
 	<DataGridColumn v-for="(c, ix) in item.Items" :item=c :key=ix :cont=cont />
+	<div class="fd-grid-handle">▷</div>
 </div>
 `;
 
@@ -466,24 +467,26 @@
 </button>
 `;
 
+	const cmdMap = {
+		Edit: 'ico-edit',
+		EditSelected: 'ico-edit',
+		New: 'ico-add',
+		Save: 'ico-save-outline',
+		SaveAndClose: 'ico-save-close-outline',
+		Apply: 'ico-apply',
+		UnApply: 'ico-unapply',
+		Create: 'ico-add',
+		Delete: 'ico-clear',
+		Reload: 'ico-reload',
+		Print: 'ico-print'
+	};
+
 	var button$1 = {
 		template: buttonTemplate$1,
 		extends: layoutelem,
 		computed: {
 			icon() {
-				switch (this.item.Command.Command) {
-					case 'Edit':
-					case 'EditSelected':
-						return 'ico-edit';
-					case 'New': return 'ico-add';
-					case 'Save': return 'ico-save-outline';
-					case 'SaveAndClose': return 'ico-save-close-outline';
-					case 'Apply': return 'ico-apply';
-					case 'Create': return 'ico-add';
-					case 'Delete': return 'ico-clear';
-					case 'Reload': return 'ico-reload';
-				}
-				return 'ico-menu';
+				return cmdMap[this.item.Command.Command] || 'ico-menu';
 			}
 		},
 		methods: {
@@ -523,7 +526,7 @@
 	}
 
 	const inputControlTemplate = `
-<div class="control-group" :style=controlStyle @click=itemClick>
+<div class="control-group" :style=controlStyle @click=itemClick :class="{ selected }">
 <label v-text="item.Label" v-if="item.Label"/>
 	<div class="input-group">
 		<span v-text="item.Data" class="input" />
@@ -538,7 +541,13 @@
 		template: inputControlTemplate,
 		extends: control,
 		computed: {
-			icon() { return is2icon(this.item.Is); }
+			icon() { return is2icon(this.item.Is); },
+			controlStyle() {
+				return undefined;
+			},
+			selected() {
+				return this.cont.isActive(this.item);
+			}
 		},
 		methods: {
 			itemClick(ev) {
@@ -556,10 +565,11 @@
 	};
 
 	var itemToolbar = {
-		template: `<div class="toolbar" @dragover=dragOver @drop=drop >
+		template: `<div class="toolbar" @dragover=dragOver @drop=drop @click.stop.prevent=select :class="{ selected }">
 		<component :is="item.Is" v-for="(item, ix) in item.Items" :item="item" :key="ix" :cont=cont />
+		<div class="fd-grid-handle">▷</div>
 	</div>`,
-		extends: control,
+		extends: layoutelem,
 		components: {
 			'Button': button$1,
 			'Aligner': aligner,
@@ -607,7 +617,6 @@
 <div class="fd-grid-item" :draggable="true"
 	@dragstart.stop=dragStart @dragend=dragEnd
 	:style="style" @click.stop.prevent=select :class="{ selected }">
-		<div class="handle" v-if=hasHandle></div>
 		<component :is="item.Is" :item="item" :cont="cont" />
 </div>
 `;
@@ -661,9 +670,6 @@
 			},
 			selected() {
 				return this.cont.isActive(this.item);
-			},
-			hasHandle() {
-				return this.item.Is == 'DataGrid' || this.item.Is === "Toolbar";
 			}
 		},
 		methods: {
@@ -835,8 +841,9 @@
 				<div class="fd-tab-title" v-text="form.Label"/>
 			</div>
 			<div class="fd-content">
-				<Toolbar v-if="form.Toolbar" :item="form.Toolbar"
-					:cont=cont class="form-toolbar"/>
+				<div v-if="form.Toolbar" class="form-toolbar">
+					<Toolbar :item="form.Toolbar" :cont=cont class="toolbar"/>
+				</div>
 				<component v-for="(itm, ix) in form.Items" :key="ix" :is="itm.Is"
 					:item="itm" :cont=cont />
 				<Taskpad :item="form.Taskpad" :cont=cont v-if="form.Taskpad" />
