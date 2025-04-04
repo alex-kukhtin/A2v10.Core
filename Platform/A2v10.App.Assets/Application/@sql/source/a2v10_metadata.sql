@@ -70,7 +70,10 @@ create table a2meta.[Columns]
 	[DataType] nvarchar(32),
 	[MaxLength] int,
 	Reference bigint
-		constraint FK_Columns_Reference_Catalog references a2meta.[Catalog](Id)
+		constraint FK_Columns_Reference_Catalog references a2meta.[Catalog](Id),
+	[Order] int,
+	IsSystem bit
+		constraint DF_Columns_IsSystem default(0)
 );
 go
 ------------------------------------------------
