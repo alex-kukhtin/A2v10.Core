@@ -75,7 +75,7 @@ internal class XamlBulder(EditWithMode _withMode)
             FormItemIs.Table => CreateTable(item),
             FormItemIs.Header => CreateHeader(item),
             FormItemIs.Label => CreateLabel(item),
-            FormItemIs.Button => CreateButton(item),
+            FormItemIs.Button => CreateButton(item, param),
             _ => throw new NotImplementedException($"Implement CreateElement: {item.Is}")
         };
         if (elem != null && attach != null)
@@ -103,13 +103,13 @@ internal class XamlBulder(EditWithMode _withMode)
         {
             return new Case()
             {
-                Value = "",
-                Children = [..CreateElements(ch.Items)]
+                Value = ch.Data,
+                Children = [..CreateElements(ch.Items, null, "tabsbody")]
             };
         }
         return new Switch()
         {
-            Bindings = b => b.SetBinding(nameof(Switch.Expression), new Bind("Root.$$Tab")),
+            Bindings = b => b.SetBinding(nameof(Switch.Expression), new Bind(item.Data)),
             Cases = [..item.Items?.Select(CreateCase) ?? []]
         };
     }
@@ -133,11 +133,12 @@ internal class XamlBulder(EditWithMode _withMode)
 
     private UIElement CreateTabs(FormItem item)
     {
-        var tabBarButtons = item.Items?.Select(c => new TabButton() { Content = c.Label }) ?? [];
+        var tabBarButtons = item.Items?.Select(c => new TabButton() { Content = c.Label, ActiveValue = c.Data }) ?? [];
+
         return new TabBar()
         {
             Buttons = [..tabBarButtons],
-            Bindings = b => b.SetBinding(nameof(TabBar.Value), new Bind("Root.$$Tab"))
+            Bindings = b => b.SetBinding(nameof(TabBar.Value), new Bind(item.Data))
         };
     }
     private Panel CreatePanel(FormItem source, String? param = null)
@@ -281,7 +282,7 @@ internal class XamlBulder(EditWithMode _withMode)
         var headers = source.Items?.Select(c => new TableCell() { Content = c.Label});
         var cells = source.Items?.Select(c => new TableCell()
         {
-            Content = c.Items != null && c.Items.Length > 0 ? CreateElement(c.Items[0]) : null,
+            Content = c.Items != null && c.Items.Length > 0 ? CreateElement(c.Items[0], null, "table") : null,
         });
 
         return new Table()
@@ -312,6 +313,7 @@ internal class XamlBulder(EditWithMode _withMode)
             Bold = false
         };
     }
+
     private Label CreateLabel(FormItem source)
     {
         return new Label()
@@ -320,8 +322,15 @@ internal class XamlBulder(EditWithMode _withMode)
         };
     }
 
-    private Button CreateButton(FormItem source)
+    private UIElement CreateButton(FormItem source, String? param)
     {
+        if (param == "table")
+            return new Hyperlink()
+            {
+                Content = source.Label.Localize(),
+                Icon = source.Command2Icon(),
+                Bindings = b => b.SetBinding(nameof(Button.Command), source.BindCommand(_withMode))
+            };
         return new Button()
         {
             Content = source.Label.Localize(),

@@ -30,11 +30,12 @@ internal partial class BaseModelBuilder
         IEnumerable<FormItem> HeaderItems()
         {
             // Title, @Number [Number] @Date, [DatePicker]
-            yield return FormBuild.Header($"@{_table.RealItemName}");
-            yield return FormBuild.Label("@Date");
+            yield return FormBuild.Header($"@{_table.RealItemName}", new FormItemGrid(1, 1));
+            yield return FormBuild.Label("@Date", new FormItemGrid(1, 2));
             yield return new FormItem(FormItemIs.DatePicker)
             {
-                Data = $"{_table.RealItemName}.Date"
+                Data = $"{_table.RealItemName}.Date",
+                Grid = new FormItemGrid(1, 3),
             };
         }
 
@@ -110,9 +111,10 @@ internal partial class BaseModelBuilder
                     return new FormItem(FormItemIs.Tab)
                     {
                         Label = $"@{d.Name}",
-                        Data = "Root.$$Tab",
+                        Data = d.Name,
                         Items = [
                             new FormItem(FormItemIs.Toolbar) {
+                                Grid = new FormItemGrid(2, 1),
                                 Items = [
                                     new FormItem(FormItemIs.Button) 
                                     {
@@ -127,6 +129,7 @@ internal partial class BaseModelBuilder
                             },
                             new FormItem(FormItemIs.Table) {
                                 Data = dataBind,
+                                Grid = new FormItemGrid(3, 1),
                                 Height = "100%",
                                 Items = [
                                     ..cells, 
@@ -143,12 +146,23 @@ internal partial class BaseModelBuilder
                         ]
                     };
                 });
-                yield return new FormItem(FormItemIs.Tabs)
+                yield return new FormItem(FormItemIs.Grid)
                 {
-                    Grid = new FormItemGrid(rowNo++, 1),
-                    Items = [..details],
+                    Props = new FormItemProps() { 
+                        Columns = "auto",
+                        Rows = "auto auto 1fr",
+                    },
+                    Height = "100%",
+                    Items = [
+                        new FormItem(FormItemIs.Tabs)
+                        {
+                            Grid = new FormItemGrid(1, 1),
+                            Data = $"{_table.RealItemName}.$$Tab",
+                            Items = [..details]
+                        }
+                    ]
                 };
-                rowNo += 2; // toolbar & table
+                rowNo += 1; // toolbar & table
             }
             // footer
             yield return new FormItem(FormItemIs.Grid)
@@ -181,7 +195,7 @@ internal partial class BaseModelBuilder
                 new FormItem() {
                     Is = FormItemIs.Grid,
                     Props = new FormItemProps() {
-                        Rows = hasDetails ? "auto auto auto auto 1fr auto" : "auto auto 1fr auto",
+                        Rows = hasDetails ? "auto auto 1fr auto" : "auto auto 1fr auto",
                         Columns = "1fr",
                     },
                     Height = "100%",

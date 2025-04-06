@@ -1729,6 +1729,9 @@ header .include.nav-pane .partial-block .control-group,
   overflow: auto;
   height: 100%;
 }
+.taskpad .panel-content > .grid {
+  padding: 0;
+}
 .taskpad.overflow .taskpad-body {
   overflow: visible;
 }
@@ -3453,6 +3456,7 @@ table.data-grid > tbody > tr.bold > td {
   overflow: hidden;
   position: relative;
   min-height: var(--header-height);
+  min-width: fit-content;
 }
 .data-grid-container.fixed-header > .data-grid-body.fixed-header {
   margin-top: var(--header-height);

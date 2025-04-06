@@ -115,6 +115,7 @@ public record TableApply
     internal String SqlTableName => $"{Schema}.[{Name}]";
     internal Boolean IsDocument => Schema == "doc";
     internal Boolean IsJournal => Schema == "jrn";
+    internal Boolean IsOperation => Schema == "op";
 
     internal IEnumerable<TableColumn> PrimaryKeys => Columns.Where(c => c.IsPK);
 }

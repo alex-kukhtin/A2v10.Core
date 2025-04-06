@@ -6,16 +6,18 @@ namespace A2v10.Metadata;
 
 internal static class FormBuild
 {
-    public static FormItem Header(String content) =>
+    public static FormItem Header(String content, FormItemGrid? grid) =>
         new FormItem(FormItemIs.Header)
         {
-            Label = content
+            Label = content,
+            Grid = grid
         };
 
-    public static FormItem Label(String content) =>
+    public static FormItem Label(String content, FormItemGrid? grid = null) =>
         new FormItem(FormItemIs.Label)
         {
-            Label = content
+            Label = content,
+            Grid = grid
         };
 
     public static FormItem Button(FormCommand command, String label = "") =>

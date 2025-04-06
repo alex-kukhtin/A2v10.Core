@@ -37,8 +37,6 @@ public class DeployDatabaseHandler(IServiceProvider _serviceProvider) : IClrInvo
         {
             var createTable = dbCreator.CreateTable(t);
             sql.AppendLine(createTable);
-            //var tt = dbCreator.CreateTableType(t);
-            //int z = 55;
         }
         foreach (var t in meta.Tables)
         {
