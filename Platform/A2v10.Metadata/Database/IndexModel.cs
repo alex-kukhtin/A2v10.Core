@@ -171,7 +171,12 @@ internal partial class BaseModelBuilder
             .AddString("@Dir", dir)
             .AddString("@Fragment", fragment);
             foreach (var r in refFieldsFilter)
-                dbprms.AddTyped($"@{r.Column.Name}", r.Column.DataType.ToSqlDbType(_appMeta.IdDataType), qry?.Get<Object>(r.Column.Name));
+            {
+                var data = qry.Get<Object>(r.Column.Name);
+                if (data != null && _appMeta.IdDataType == ColumnDataType.Uniqueidentifier)
+                    data = Guid.Parse(data.ToString()!);
+                dbprms.AddTyped($"@{r.Column.Name}", r.Column.DataType.ToSqlDbType(_appMeta.IdDataType), data);
+            }
         });
     }
 }

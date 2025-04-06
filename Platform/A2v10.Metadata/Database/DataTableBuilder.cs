@@ -9,6 +9,9 @@ using A2v10.Infrastructure;
 
 namespace A2v10.Metadata;
 
+/*
+ * Важно! Порядок добавления колонок в DataTable должен совпадать с порядком в табличном типе!
+*/
 internal class DataTableBuilder(TableMetadata table, AppMetadata appMeta)
 {
     public DataTable BuildDataTable(ExpandoObject? data)
@@ -39,16 +42,13 @@ internal class DataTableBuilder(TableMetadata table, AppMetadata appMeta)
     {
         var dtable = new DataTable();
 
-        List<DataColumn> columns = [];
         foreach (var f in table.Columns)
         {
             var c = new DataColumn(f.Name, f.ClrDataType(appMeta.IdDataType));
             if (f.MaxLength != 0)
                 c.MaxLength = f.MaxLength;
-            columns.Add(c);
+            dtable.Columns.Add(c);
         }
-        for (int i = 0; i < columns.Count; i++)
-            dtable.Columns.Add(columns[i]);
         return dtable;
     }
     private void AddRow(DataTable dtable, ExpandoObject src)
@@ -61,16 +61,23 @@ internal class DataTableBuilder(TableMetadata table, AppMetadata appMeta)
         for (int i = 0; i < columns.Count; i++)
         {
             var col = columns[i];
-            if (src.HasProperty(col.ColumnName))
+            if (!src.HasProperty(col.ColumnName))
             {
+                r[col] = DBNull.Value;
+            }
+            else
+            { 
                 var obj = src.Get<Object>(col.ColumnName);
-                if (obj is ExpandoObject exp)
+                if (obj == null)
+                    obj = DBNull.Value; 
+                else if (obj is ExpandoObject exp)
                 {
                     obj = exp.Get<Object>("Id");
+                    // TODO: Id DataType    
                     if (obj is Int64 int64 && int64 == 0)
                         obj = DBNull.Value;
                 }
-                r[i] = obj;
+                r[col] = obj;
             }
         }
     }

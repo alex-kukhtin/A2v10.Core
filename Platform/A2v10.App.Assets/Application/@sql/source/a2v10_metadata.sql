@@ -1,7 +1,7 @@
 /*
 Copyright © 2025 Oleksandr Kukhtin
 
-Last updated : 02 apr 2025
+Last updated : 06 apr 2025
 module version : 8540
 */
 
@@ -11,6 +11,21 @@ if not exists(select * from INFORMATION_SCHEMA.SCHEMATA where SCHEMA_NAME=N'a2me
 go
 ------------------------------------------------
 grant execute on schema ::a2meta to public;
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'Application')
+create table a2meta.[Application]
+(
+	[Id] bigint not null
+		constraint PK_Application primary key,
+	[Name] nvarchar(255),
+	[Title] nvarchar(255),
+	IdDataType nvarchar(32)
+);
+go
+------------------------------------------------
+if not exists (select * from a2meta.[Application] where Id = 10)
+	insert into a2meta.[Application] (Id, [Name], Title, IdDataType) values (10, N'MyApplication', 'My Application', N'bigint');
 go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.SEQUENCES where SEQUENCE_SCHEMA=N'a2meta' and SEQUENCE_NAME=N'SQ_Catalog')
@@ -35,7 +50,8 @@ create table a2meta.[Catalog]
 	ItemsName nvarchar(128),
 	ItemName nvarchar(128),
 	TypeName nvarchar(128),
-	EditWith nvarchar(16)
+	EditWith nvarchar(16),
+	Source nvarchar(255)
 );
 go
 ------------------------------------------------
@@ -49,7 +65,9 @@ create table a2meta.[DefaultColumns]
 	[Name] nvarchar(128),
 	[DataType] nvarchar(32),
 	[MaxLength] int,
-	Ref nvarchar(32)
+	Ref nvarchar(32),
+	IsPK bit
+		constraint DF_DefaultColumns_IsPK default(0),
 );
 go
 ------------------------------------------------
@@ -73,27 +91,10 @@ create table a2meta.[Columns]
 		constraint FK_Columns_Reference_Catalog references a2meta.[Catalog](Id),
 	[Order] int,
 	IsSystem bit
-		constraint DF_Columns_IsSystem default(0)
-);
-go
-------------------------------------------------
-if not exists(select * from INFORMATION_SCHEMA.SEQUENCES where SEQUENCE_SCHEMA=N'a2meta' and SEQUENCE_NAME=N'SQ_Items')
-	create sequence a2meta.SQ_Items as bigint start with 100 increment by 1;
-go
-------------------------------------------------
--- TODO: DELETE ME
-if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'Items')
-create table a2meta.Items
-(
-	[Id] bigint not null
-		constraint DF_Items_Id default(next value for a2meta.SQ_Items)
-		constraint PK_Items primary key,
-	[Table] bigint not null
-		constraint FK_Items_Table_Catalog references a2meta.[Catalog](Id),
-	[Name] nvarchar(128),
-	[Code] nvarchar(64),
-	[Label] nvarchar(255),
-	[Order] int
+		constraint DF_Columns_IsSystem default(0),
+	IsPK bit
+		constraint DF_Columns_IsPK default(0),
+	Source nvarchar(255)
 );
 go
 ------------------------------------------------
@@ -203,7 +204,7 @@ begin
 	where c.Parent = @tableId and c.Kind = N'details';
 
 	select [!TColumn!Array] = null, [Id!!Id] = c.Id, c.[Name], DataType = c.DataType, 
-		c.[MaxLength],
+		c.[MaxLength], c.IsPK,
 		[Reference.RefSchema!TReference!] = case c.DataType 
 		when N'operation' then N'op' 
 		else r.[Schema] 
@@ -216,7 +217,7 @@ begin
 	from a2meta.Columns c
 		inner join @innerTables it on c.[Table] = it.Id
 		left join a2meta.[Catalog] r on c.Reference = r.Id
-	order by c.Id;
+	order by c.[Order]; -- REQUIRED!!!!
 
 	select [!TApply!Array] = null, [Id!!Id] = a.Id, a.InOut, a.Storno,
 		[Journal.RefSchema!TReference!] = j.[Schema], [Journal.RefTable!TReference!Name] = j.[Name],
@@ -314,37 +315,37 @@ begin
 		(s.Id, 0, s.IsFolder, s.[Schema], s.[Name], Kind);
 
 	declare @defCols table(Id bigint, [Schema] nvarchar(32), Kind nvarchar(32), [Name] nvarchar(255), 	[DataType] nvarchar(32),
-		[MaxLength] int, Ref nvarchar(32));
+		[MaxLength] int, Ref nvarchar(32), IsPK bit);
 
-	insert into @defCols(Id, [Schema], Kind, [Name], DataType, [MaxLength], Ref) values
-	(10, N'cat', N'table', N'Id',   N'id', null, null),
-	(11, N'cat', N'table', N'Void', N'bit', null, null),
-	(12, N'cat', N'table', N'IsSystem', N'bit', null, null),
-	(13, N'cat', N'table', N'IsFolder', N'bit', null, null),
-	(14, N'cat', N'table', N'Parent', N'reference', null, N'self'),
-	(15, N'cat', N'table', N'Name', N'string',    255, null),
-	(16, N'cat', N'table', N'Memo', N'string',    255, null),
-	(17, N'cat', N'table', N'Owner',N'reference', null, N'user'),
-	(20, N'doc', N'table', N'Id',   N'id',       null, null),
-	(21, N'doc', N'table', N'Void', N'bit',      null, null),
-	(22, N'doc', N'table', N'Done', N'bit',      null, null),
-	(23, N'doc', N'table', N'Date', N'date',     null, null),
-	(24, N'doc', N'table', N'Sum',  N'currency', null, null),
-	(25, N'doc', N'table', N'Memo', N'string', 255, null),
-	(26, N'doc', N'table', N'Owner',N'reference', null, N'user'),
+	insert into @defCols(Id, [Schema], Kind, [Name], IsPK, DataType, [MaxLength], Ref) values
+	(10, N'cat', N'table', N'Id',   1, N'id', null, null),
+	(11, N'cat', N'table', N'Void', 0, N'bit', null, null),
+	(12, N'cat', N'table', N'IsSystem', 0, N'bit', null, null),
+	(13, N'cat', N'table', N'IsFolder', 0, N'bit', null, null),
+	(14, N'cat', N'table', N'Parent',   0, N'reference', null, N'self'),
+	(15, N'cat', N'table', N'Name',     0, N'string',    255, null),
+	(16, N'cat', N'table', N'Memo', 0, N'string',    255, null),
+	(17, N'cat', N'table', N'Owner',0, N'reference', null, N'user'),
+	(20, N'doc', N'table', N'Id',   1, N'id',       null, null),
+	(21, N'doc', N'table', N'Void', 0, N'bit',      null, null),
+	(22, N'doc', N'table', N'Done', 0, N'bit',      null, null),
+	(23, N'doc', N'table', N'Date', 0, N'date',     null, null),
+	(24, N'doc', N'table', N'Sum',  0, N'currency', null, null),
+	(25, N'doc', N'table', N'Memo', 0, N'string', 255, null),
+	(26, N'doc', N'table', N'Owner',0, N'reference', null, N'user'),
 	-- cat.Details
-	(30, N'cat', N'details', N'Id',     N'id', null, null),
-	(31, N'cat', N'details', N'Parent', N'reference', null, N'parent'),
-	(32, N'cat', N'details', N'RowNo',  N'int', null, null),
+	(30, N'cat', N'details', N'Id',     1, N'id', null, null),
+	(31, N'cat', N'details', N'Parent', 0, N'reference', null, N'parent'),
+	(32, N'cat', N'details', N'RowNo',  0, N'int', null, null),
 	-- doc.Details
-	(40, N'doc', N'details', N'Id',     N'id', null, null),
-	(41, N'doc', N'details', N'Parent', N'reference', null, N'parent'),
-	(42, N'doc', N'details', N'RowNo',  N'int', null, null),
+	(40, N'doc', N'details', N'Id',     1, N'id', null, null),
+	(41, N'doc', N'details', N'Parent', 0, N'reference', null, N'parent'),
+	(42, N'doc', N'details', N'RowNo',  0, N'int', null, null),
 	-- jrn.Journal
-	(50, N'jrn', N'table', N'Id',     N'id', null, null),
-	(51, N'jrn', N'table', N'Date',   N'datetime', null, null),
-	(52, N'jrn', N'table', N'InOut',  N'int', null, null),
-	(53, N'jrn', N'table', N'Owner',  N'reference', null, N'user');
+	(50, N'jrn', N'table', N'Id',     1, N'id', null, null),
+	(51, N'jrn', N'table', N'Date',   0, N'datetime', null, null),
+	(52, N'jrn', N'table', N'InOut',  0, N'int', null, null),
+	(53, N'jrn', N'table', N'Owner',  0, N'reference', null, N'user');
 
 	merge a2meta.DefaultColumns as t
 	using @defCols as s
@@ -355,10 +356,11 @@ begin
 		t.[Name] = s.[Name],
 		t.DataType = s.DataType,
 		t.[MaxLength] = s.[MaxLength],
-		t.Ref = s.Ref
+		t.Ref = s.Ref,
+		t.IsPK = s.IsPK
 	when not matched then insert
-		(Id, [Schema], Kind, [Name], DataType, [MaxLength], Ref) values
-		(Id, [Schema], Kind, [Name], DataType, [MaxLength], s.Ref);
+		(Id, [Schema], Kind, [Name], DataType, [MaxLength], Ref, IsPK) values
+		(Id, [Schema], Kind, [Name], DataType, [MaxLength], s.Ref, s.IsPK);
 end
 go
 ------------------------------------------------
@@ -422,12 +424,16 @@ as
 begin
 	set nocount on;
 	set transaction isolation level read uncommitted;
-	select [Application!TApp!Object] = null, IdDataType = N'bigint', 
+
+	declare @appId bigint = 10;
+
+	select [Application!TApp!Object] = null, IdDataType, 
 		[Id] = cast(null as nvarchar(32)), 
 		[Name] = cast(null as nvarchar(32)), 
 		Void = cast(null as nvarchar(32)), 
 		IsFolder = cast(null as nvarchar(32)), 
-		IsSystem = cast(null as nvarchar(32));
+		IsSystem = cast(null as nvarchar(32))
+	from a2meta.[Application] where Id = @appId;
 end
 go
 ------------------------------------------------
@@ -460,33 +466,36 @@ as
 begin
 	set nocount on;
 	set transaction isolation level read uncommitted;
+	
+	declare @appId bigint = 10;
 
-	select [Application!TApp!Object] = null, [!!Id] = 1, IdDataType = N'bigint', 
+	select [Application!TApp!Object] = null, [!!Id] = @appId, IdDataType,
 		[Id] = cast(null as nvarchar(32)), 
 		[Name] = cast(null as nvarchar(32)), 
 		Void = cast(null as nvarchar(32)), 
 		IsFolder = cast(null as nvarchar(32)), 
 		IsSystem = cast(null as nvarchar(32)), 
-		[Tables!TTable!Array] = null;
+		[Tables!TTable!Array] = null
+	from a2meta.[Application] where Id = @appId;
 
 	select [!TTable!Array] = null, [Id!!Id] = Id, c.[Schema], c.[Name], c.[Kind],
 		[Columns!TColumn!Array] = null,
-		[!TApp.Tables!ParentId] = 1
+		[!TApp.Tables!ParentId] = @appId
 	from a2meta.[Catalog] c
 		left join INFORMATION_SCHEMA.TABLES t on t.TABLE_SCHEMA =  c.[Schema] and t.TABLE_NAME = c.[Name]
 	where c.[Kind] in (N'table', N'details');
 
-	select [!TColumn!Array] = null, [Id!!Id] = c.Id, c.[Name], c.[DataType], c.[MaxLength],
+	select [!TColumn!Array] = null, [Id!!Id] = c.Id, c.[Name], c.[DataType], c.[MaxLength], c.IsPK,
 		[Reference.RefSchema!TRef!] = r.[Schema], [Reference.RefTable!TRef!] = r.[Name],
 		DbName = ic.COLUMN_NAME, DbDataType =  ic.DATA_TYPE,
 		[!TTable.Columns!ParentId] = c.[Table]
 	from a2meta.Columns c
 		inner join a2meta.[Catalog] t on c.[Table] = t.Id 
 		left join a2meta.[Catalog] r on c.Reference = r.Id
-		left join INFORMATION_SCHEMA.COLUMNS ic on ic.TABLE_SCHEMA = t.[Schema] and ic.TABLE_NAME = t.[Name] and ic.COLUMN_NAME = c.[Name];
+		left join INFORMATION_SCHEMA.COLUMNS ic on ic.TABLE_SCHEMA = t.[Schema] and ic.TABLE_NAME = t.[Name] and ic.COLUMN_NAME = c.[Name]
+	order by c.[Order]; -- REQUIRED!!!
 end
 go
-
 ------------------------------------------------
 /*
 declare @Schema nvarchar(255) = N'cat';
@@ -540,13 +549,12 @@ drop table a2meta.[Catalog];
 --exec a2meta.[Config.Load] 99
 
 declare @Schema nvarchar(255) = N'doc';
-declare @Table nvarchar(255) = N'documents';
+declare @Table nvarchar(255) = N'ClientOrders';
 
 exec a2meta.[Table.Schema] @Schema, @Table;
+--exec a2meta.[Config.Load] 99 @Schema, @Table;
 
-select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where CONSTRAINT_NAME = N'FK_Columns_Parent_Catalog'
-
-select * from a2meta.Columns where Id = 354;
+--select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where CONSTRAINT_NAME = N'FK_Columns_Parent_Catalog'
 
 /*
 	select [!TColumn!Array] = null, [Name!!Id] = COLUMN_NAME, DataType = DATA_TYPE, 
@@ -580,6 +588,6 @@ select * from a2meta.Columns where Id = 354;
 	from T;
 */
 
-	
 	-- exetending properties
 	-- https://www.mssqltips.com/sqlservertip/5384/working-with-sql-server-extended-properties/
+

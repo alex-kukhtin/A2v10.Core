@@ -1,13 +1,13 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+using System.Linq;
 using System.Collections.Generic;
 
 using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
-using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace A2v10.Metadata;
 
@@ -16,9 +16,13 @@ public enum ColumnDataType
     Id,
     Reference,
     String,
+    Stream,
+    Enum,
+    Operation,
     // sql
     BigInt,
     Int,
+    SmallInt,
     NVarChar,
     NChar,
     Bit,
@@ -27,8 +31,7 @@ public enum ColumnDataType
     Money,
     Float,
     Uniqueidentifier,
-    Enum,
-    Operation
+    VarBinary,
 }
 
 public record ColumnReference
@@ -47,6 +50,7 @@ public record TableColumn
     public ColumnReference Reference { get; init; } = default!;
     public String? DbName { get; init; }
     public ColumnDataType? DbDataType { get; init; }
+    public Boolean IsPK { get; init; }  
     #endregion
     internal Boolean IsReference => Reference != null && Reference.RefTable != null;
     internal Boolean Exists => DbName != null && DbDataType != null;
@@ -107,10 +111,12 @@ public record TableApply
     internal String RealItemName => ItemName ?? Name.Singular();
     internal String RealItemsName => ItemsName ?? Name;  
     internal String RealTypeName => $"T{TypeName ?? RealItemName}";
-    internal String TableTypeName => $"{Schema}.[{RealItemName}.TableType]";
+    internal String TableTypeName => $"{Schema}.[{Name}.TableType]";
     internal String SqlTableName => $"{Schema}.[{Name}]";
     internal Boolean IsDocument => Schema == "doc";
     internal Boolean IsJournal => Schema == "jrn";
+
+    internal IEnumerable<TableColumn> PrimaryKeys => Columns.Where(c => c.IsPK);
 }
 
 public record AppMetadata
@@ -123,7 +129,8 @@ public record AppMetadata
     public String? Name { get; init; }
     public String? Void { get; init; }
     public String? IsSystem { get; init; }
-    public String? IsFolder { get; init; }    
+    public String? IsFolder { get; init; }
+    public String? RowNo { get; init; }
 
     // internal
     internal String IdField => Id ?? nameof(Id);
@@ -131,8 +138,8 @@ public record AppMetadata
     internal String VoidField => Void ?? nameof(Void);
     internal String IsFolderField => IsFolder ?? nameof(IsFolder);
     internal String IsSystemField => IsSystem ?? nameof(IsSystem);
+    internal String RowNoField => RowNo ?? nameof(RowNo);
 
-    internal String RowNoField => "RowNo";
     internal String ParentField = "Parent";
     internal Boolean HasDefault(String name) => name == IsSystemField || name == IsFolderField || name == VoidField;
 

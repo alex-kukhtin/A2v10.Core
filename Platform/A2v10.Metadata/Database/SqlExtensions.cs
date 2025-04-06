@@ -17,11 +17,13 @@ internal static class SqlExtensions
             ColumnDataType.Operation => SqlDbType.NVarChar,   
             ColumnDataType.BigInt => SqlDbType.BigInt,
             ColumnDataType.Int => SqlDbType.Int,
+            ColumnDataType.SmallInt => SqlDbType.SmallInt,
             ColumnDataType.String => SqlDbType.NVarChar,
             ColumnDataType.DateTime => SqlDbType.DateTime,
             ColumnDataType.Date => SqlDbType.Date,
             ColumnDataType.Money => SqlDbType.Money,
             ColumnDataType.Float => SqlDbType.Float,
+            ColumnDataType.Stream or ColumnDataType.VarBinary => SqlDbType.VarBinary,
             ColumnDataType.Uniqueidentifier => SqlDbType.UniqueIdentifier,
             _ => throw new NotSupportedException($"{columnDataType} is not supported")
         };
@@ -30,20 +32,28 @@ internal static class SqlExtensions
     public static String SqlDataType(this TableColumn column, ColumnDataType idDataType)
     {
         var idDataStr = idDataType.ToString().ToLowerInvariant(); 
+        var maxLength = column.MaxLength == 0 ? "max" : column.MaxLength.ToString();
         return column.DataType switch
         {
             ColumnDataType.Id => idDataStr,
             ColumnDataType.Reference or ColumnDataType.Enum => idDataStr,
             ColumnDataType.Operation => "nvarchar(64)",
-            ColumnDataType.String => $"nvarchar({column.MaxLength})",
-            ColumnDataType.NVarChar => $"nvarchar({column.MaxLength})",
-            ColumnDataType.NChar => $"nchar({column.MaxLength})",
+            ColumnDataType.String => $"nvarchar({maxLength})",
+            ColumnDataType.NVarChar => $"nvarchar({maxLength})",
+            ColumnDataType.NChar => $"nchar({maxLength})",
+            ColumnDataType.Stream => $"varbinary(max)",
+            ColumnDataType.Uniqueidentifier => "uniqueidentifier",
             _ => column.DataType.ToString().ToLowerInvariant(),
         };
     }
     public static Type ClrDataType(this TableColumn column, ColumnDataType idDataType)
     {
-        Type idType = idDataType == ColumnDataType.BigInt ? typeof(Int64) : typeof(Int32);
+        Type idType = idDataType switch
+        {
+            ColumnDataType.BigInt => typeof(Int64),
+            ColumnDataType.Uniqueidentifier => typeof(Guid),
+            _ => throw new InvalidOperationException($"Invalid Id Data Type: {idDataType}")
+        };
         return column.DataType switch
         {
             ColumnDataType.Id or ColumnDataType.Reference 
@@ -57,6 +67,9 @@ internal static class SqlExtensions
             ColumnDataType.Money => typeof(Decimal),
             ColumnDataType.Float => typeof(Double),
             ColumnDataType.Int => typeof(Int32),
+            ColumnDataType.SmallInt => typeof(Int16),
+            ColumnDataType.Stream => typeof(Byte[]),
+            ColumnDataType.Uniqueidentifier => typeof(Guid),
             _ => throw new InvalidOperationException($"Invalid Data Type for update. ({column.DataType})"),
         };
     }
@@ -95,7 +108,8 @@ internal static class SqlExtensions
             var col = c.Column;
             var colRef = c.Column.Reference;
             var elemName = col.Name;
-            var modelType = $"T{col.Reference.RefTable.Singular()}";
+            // TR, not T - avoid recursion 
+            var modelType = $"TR{col.Reference.RefTable.Singular()}";
             if (col.IsParent)
             {
                 elemName = "Folder";

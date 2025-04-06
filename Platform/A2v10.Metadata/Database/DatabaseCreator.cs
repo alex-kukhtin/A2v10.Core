@@ -1,5 +1,6 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
+using DocumentFormat.OpenXml.Office2016.Excel;
 using System;
 using System.Linq;
 
@@ -45,7 +46,9 @@ internal class DatabaseCreator(AppMetadata _meta)
             """;
         }
 
-        var fields = table.Columns.Select(c => createField(c));
+        var fields = table.Columns.Select(createField);
+
+        var primaryKeys = table.Columns.Where(c => c.IsPK).Select(c => $"[{c.Name}]");
 
         return $"""
         {createSequence()}
@@ -54,7 +57,7 @@ internal class DatabaseCreator(AppMetadata _meta)
         create table {table.Schema}.[{table.Name}]
         (
             {String.Join(",\n    ", fields)},
-            constraint PK_{table.Name} primary key ([{_meta.IdField}])
+            constraint PK_{table.Name} primary key ({String.Join(',', primaryKeys)})
         );
         """;
     }
@@ -68,11 +71,11 @@ internal class DatabaseCreator(AppMetadata _meta)
             return $"[{column.Name}] {column.SqlDataType(idDataType)}";
         }
 
-        var fields = table.Columns.Select(c => createField(c));
+        var fields = table.Columns.Select(createField);
 
         return $"""
-        drop type if exists {table.Schema}.[{table.RealItemName}.TableType];
-        create type {table.Schema}.[{table.RealItemName}.TableType] as table
+        drop type if exists {table.Schema}.[{table.Name}.TableType];
+        create type {table.Schema}.[{table.Name}.TableType] as table
         (
             {String.Join(",\n    ", fields)}
         );
@@ -83,13 +86,25 @@ internal class DatabaseCreator(AppMetadata _meta)
     {
         String createReference(TableColumn column)
         {
+            // TODO: Достать Id из таблицы
             var refs = column.Reference ??
                 throw new InvalidOperationException("Reference is null");
+
+            var refTable = _meta.Tables.FirstOrDefault(x => x.Schema == refs.RefSchema && x.Name == refs.RefTable)
+                ?? throw new InvalidOperationException($"Reference table {refs.RefSchema}.{refs.RefTable} not found");
+            var refTablePk = refTable.Columns.Where(x => x.IsPK);
+            if (refTablePk.Count() > 1)
+            {
+                throw new InvalidOperationException("TODO: Implement multi-column foreign key");    
+            }
+            var refTablePkName = refTablePk.First().Name;
+
             var constraintName = $"FK_{table.Name}_{column.Name}_{refs.RefTable}";
             return $"""
             if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.Schema}' and TABLE_NAME = N'{table.Name}' and CONSTRAINT_NAME = N'{constraintName}')
                 alter table {table.Schema}.[{table.Name}] add 
-                    constraint {constraintName} foreign key ([{column.Name}]) references {refs.RefSchema}.[{refs.RefTable}]({_meta.IdField});
+                    constraint {constraintName} foreign key ([{column.Name}]) references {refs.RefSchema}.[{refs.RefTable}]([{refTablePkName}]);
+            alter table {table.Schema}.[{table.Name}] nocheck constraint {constraintName};
             """;
         }
         var refs = table.Columns.Where(c => c.IsReference).Select(rc => createReference(rc));

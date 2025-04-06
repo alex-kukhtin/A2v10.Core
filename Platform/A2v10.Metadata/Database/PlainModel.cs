@@ -60,8 +60,6 @@ internal partial class BaseModelBuilder
         }
 
         return $"""
-        set nocount on;
-        set transaction isolation level read uncommitted;
         
         select [{table.RealItemName}!{table.RealTypeName}!Object] = null,
             {String.Join(",", table.AllSqlFields("a", appMeta))}{DetailsArray()}
@@ -80,7 +78,13 @@ internal partial class BaseModelBuilder
     public Task<IDataModel> LoadPlainModelAsync()
     {
 
-        var sqlString = LoadPlainModelSql(_table, _appMeta);
+        var sqlString = $"""
+            set nocount on;
+            set transaction isolation level read uncommitted;
+            
+            {LoadPlainModelSql(_table, _appMeta)};
+            
+            """;
 
         return _dbContext.LoadModelSqlAsync(_dataSource, sqlString, dbprms =>
         {
@@ -94,6 +98,11 @@ internal partial class BaseModelBuilder
         var updatedFields = _table.Columns.Where(c => c.IsFieldUpdated(_appMeta)).Select(c => $"t.[{c.Name}] = s.[{c.Name}]");
 
         var insertedFields = _table.Columns.Where(c => c.IsFieldUpdated(_appMeta)).Select(c => $"[{c.Name}]");
+
+        String onPrimaryKeys()
+        {
+            return String.Join(" and ", _table.PrimaryKeys.Select(c => $"t.[{c.Name}]  = s.[{c.Name}]"));
+        }
 
         String MergeDetails()
         {
@@ -121,18 +130,19 @@ internal partial class BaseModelBuilder
             return sb.ToString();
         }
 
-        // todo: Id from
+        var idDataTypeString = _table.PrimaryKeys.First().SqlDataType(_appMeta.IdDataType);
+
         var sqlString = $"""
         set nocount on;
         set transaction isolation level read committed;
         set xact_abort on;
         
-        declare @rtable table(Id {_appMeta.IdDataType});
-        declare @Id {_appMeta.IdDataType};
+        declare @rtable table(Id {idDataTypeString});
+        declare @Id {idDataTypeString};
         
         merge {_table.SqlTableName} as t
         using @{_table.RealItemName} as s
-        on t.[{_appMeta.IdField}] = s.[{_appMeta.IdField}]
+        on {onPrimaryKeys()}
         when matched then update set
         {String.Join(",\n", updatedFields)}
         when not matched then insert
@@ -164,5 +174,19 @@ internal partial class BaseModelBuilder
             });
         });
         return dm.Root; 
+    }
+
+    String DumpDataTable(DataTable dataTable)
+    {
+        var sb = new StringBuilder();
+        foreach (DataRow row in dataTable.Rows)
+        {
+            foreach (DataColumn col in dataTable.Columns)
+            {
+                sb.AppendLine($"{col.ColumnName} [{col.DataType}] = {row[col]} ");
+            }
+            sb.AppendLine("-----------------");
+        }
+        return sb.ToString();
     }
 }
