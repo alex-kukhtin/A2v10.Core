@@ -33,6 +33,11 @@ public class AppMetadataBuilder(IServiceProvider _serviceProvider,
     public async Task<IAppRuntimeResult> RenderAsync(IPlatformUrl platformUrl, IModelView view, bool isReload)
     {
         var iBuilder = await FindModelBuilderAsync(platformUrl, view);
+
+        var endpointBuilder = FindEndpointBuilder(iBuilder.MetadataEndpointBuilder, iBuilder);
+        if (endpointBuilder != null)
+              return await endpointBuilder.RenderAsync(platformUrl, view, isReload);
+
         var dm = await iBuilder.LoadModelAsync();
 
         if (isReload)
@@ -74,5 +79,16 @@ public class AppMetadataBuilder(IServiceProvider _serviceProvider,
         var x = _serviceProvider.GetRequiredService<IModelBuilder>();
         await x.BuildAsync(platformUrl, modelBase);
         return x;
+    }
+
+    private IMetaEndpointBuilder? FindEndpointBuilder(String? name, IModelBuilder baseBuilder)
+    {
+        if (String.IsNullOrEmpty(name))
+            return null;
+        return name switch
+        {
+            "rep:report.render" => new ReportEndpointBuilder(_serviceProvider, baseBuilder),
+            _ => throw new InvalidOperationException("IMetaEndpointBuilder for {name} not found")
+        };
     }
 }

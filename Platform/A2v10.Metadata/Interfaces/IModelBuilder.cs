@@ -19,4 +19,9 @@ internal interface IModelBuilder
     Task<IInvokeResult> InvokeAsync(IModelCommand cmd, String command, ExpandoObject? prms);
     Task<String> CreateTemplateAsync();
     Form CreateDefaultForm();
+    String? MetadataEndpointBuilder { get; }
+
+    TableMetadata Table { get; }
+    TableMetadata? BaseTable { get; }
+    AppMetadata AppMeta { get; }
 }

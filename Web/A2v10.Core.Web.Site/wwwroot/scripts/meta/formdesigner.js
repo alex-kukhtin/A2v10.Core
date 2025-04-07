@@ -383,11 +383,11 @@
 	};
 
 	const dataGridColumnTemplate = `
-<div class="fd-datagrid-column" @click.stop.prevent="select" :class="{ selected }"
+<td class="fd-datagrid-column" @click.stop.prevent="select" :class="{ selected }"
 	:draggable=true @dragstart.stop=dragStart>
 	<div v-text="item.Label" class="label" />
 	<div v-text="item.Data" class="column" />
-</div>
+</td>
 `;
 
 	var dataGridColumn = {
@@ -405,7 +405,11 @@
 
 	const dataGridTemplate = `
 <div class="fd-datagrid" @dragover=dragOver @drop=drop :style=elemStyle >
-	<DataGridColumn v-for="(c, ix) in item.Items" :item=c :key=ix :cont=cont />
+	<table>
+		<tr>
+			<DataGridColumn v-for="(c, ix) in item.Items" :item=c :key=ix :cont=cont />
+		</tr>
+	</table>
 	<div class="fd-grid-handle">▷</div>
 </div>
 `;

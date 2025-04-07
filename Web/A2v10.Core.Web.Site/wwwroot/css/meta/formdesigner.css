@@ -267,8 +267,11 @@
   border-radius: 4px;
   position: relative;
 }
-.fd-container .fd-elem-grid .fd-grid-item .fd-datagrid .fd-datagrid-column {
+.fd-container .fd-elem-grid .fd-grid-item .fd-datagrid table {
   width: 100%;
+}
+.fd-container .fd-elem-grid .fd-grid-item .fd-datagrid .fd-datagrid-column {
+  vertical-align: top;
 }
 .fd-container .fd-elem-grid .fd-grid-item .fd-datagrid .fd-datagrid-column .label {
   background-color: var(--table-header-bg);

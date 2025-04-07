@@ -41,6 +41,19 @@ public record ColumnReference
     internal String SqlTableName => $"{RefSchema}.[{RefTable}]";
 }
 
+public enum TableColumnRole
+{
+    Normal = 0,
+    PrimaryKey = 1,
+    Void = 2,
+    IsFolder = 3,
+    Parent = 4,
+    Name = 5,
+    IsSystem = 6,
+    Done = 7,
+    RowNo = 8
+}
+
 public record TableColumn
 {
     #region Database Fields
@@ -50,10 +63,16 @@ public record TableColumn
     public ColumnReference Reference { get; init; } = default!;
     public String? DbName { get; init; }
     public ColumnDataType? DbDataType { get; init; }
-    public Boolean IsPK { get; init; }  
+    public TableColumnRole Role { get; init; } = default!;
     #endregion
     internal Boolean IsReference => Reference != null && Reference.RefTable != null;
     internal Boolean Exists => DbName != null && DbDataType != null;
+
+    internal Boolean HasDefault => 
+           Role == TableColumnRole.IsFolder
+        || Role == TableColumnRole.IsSystem
+        || Role == TableColumnRole.Void
+        || Role == TableColumnRole.Done;
 
     // Old
     internal Boolean IsParent => Name == "Parent";
@@ -108,6 +127,17 @@ public record TableApply
     public List<TableApply>? Apply { get; init; }
 
     // internal variables
+    internal String PrimaryKeyField => Columns.FirstOrDefault(c => c.Role == TableColumnRole.PrimaryKey)?.Name
+        ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Primary Key");
+    internal String VoidField => Columns.FirstOrDefault(c => c.Role == TableColumnRole.Void)?.Name
+        ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Void column");
+    internal String RowNoField => Columns.FirstOrDefault(c => c.Role == TableColumnRole.RowNo)?.Name
+        ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a RowNumber column");
+    internal String NameField => Columns.FirstOrDefault(c => c.Role == TableColumnRole.Name)?.Name
+        ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Name column");
+    internal String DoneField => Columns.FirstOrDefault(c => c.Role == TableColumnRole.Done)?.Name
+        ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Done column");
+
     internal String RealItemName => ItemName ?? Name.Singular();
     internal String RealItemsName => ItemsName ?? Name;  
     internal String RealTypeName => $"T{TypeName ?? RealItemName}";
@@ -117,32 +147,22 @@ public record TableApply
     internal Boolean IsJournal => Schema == "jrn";
     internal Boolean IsOperation => Schema == "op";
 
-    internal IEnumerable<TableColumn> PrimaryKeys => Columns.Where(c => c.IsPK);
+    internal IEnumerable<TableColumn> PrimaryKeys => Columns.Where(c => c.Role == TableColumnRole.PrimaryKey);
 }
 
 public record AppMetadata
 {
     public ColumnDataType IdDataType { get; init; }
     public TableMetadata[] Tables { get; init; } = [];
+    public String DetailsKey { get; init; } = default!;
 
     // field names
     public String? Id { get; init; }
     public String? Name { get; init; }
-    public String? Void { get; init; }
-    public String? IsSystem { get; init; }
-    public String? IsFolder { get; init; }
-    public String? RowNo { get; init; }
 
     // internal
     internal String IdField => Id ?? nameof(Id);
     internal String NameField => Name ?? nameof(Name);
-    internal String VoidField => Void ?? nameof(Void);
-    internal String IsFolderField => IsFolder ?? nameof(IsFolder);
-    internal String IsSystemField => IsSystem ?? nameof(IsSystem);
-    internal String RowNoField => RowNo ?? nameof(RowNo);
-
-    internal String ParentField = "Parent";
-    internal Boolean HasDefault(String name) => name == IsSystemField || name == IsFolderField || name == VoidField;
 
     internal static AppMetadata FromDataModel(IDataModel model)
     {

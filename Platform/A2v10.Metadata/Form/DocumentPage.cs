@@ -16,8 +16,16 @@ internal partial class BaseModelBuilder
             FormBuild.Button(FormCommand.SaveAndClose, "@SaveAndClose"),
             FormBuild.Button(FormCommand.Save),
             FormBuild.Button(FormCommand.Print),
-            FormBuild.Button(FormCommand.Apply, "@Apply"),
-            FormBuild.Button(FormCommand.UnApply, "@UnApply"),
+            new FormItem(FormItemIs.Button) {
+                Label = "@Apply",
+                Command = new FormItemCommand(FormCommand.Apply),
+                If = $"!{_table.RealItemName}.{_table.DoneField}"
+            },
+            new FormItem(FormItemIs.Button) {
+                Label = "@UnApply",
+                Command = new FormItemCommand(FormCommand.UnApply),
+                If = $"{_table.RealItemName}.{_table.DoneField}"
+            },
             FormBuild.Button(FormCommand.Reload),
             new FormItem(FormItemIs.Aligner)
         ];
@@ -29,8 +37,10 @@ internal partial class BaseModelBuilder
 
         IEnumerable<FormItem> HeaderItems()
         {
+            var title = _baseTable?.RealItemName ?? _table.RealItemName;
+
             // Title, @Number [Number] @Date, [DatePicker]
-            yield return FormBuild.Header($"@{_table.RealItemName}", new FormItemGrid(1, 1));
+            yield return FormBuild.Header(title, new FormItemGrid(1, 1));
             yield return FormBuild.Label("@Date", new FormItemGrid(1, 2));
             yield return new FormItem(FormItemIs.DatePicker)
             {
@@ -59,11 +69,11 @@ internal partial class BaseModelBuilder
 
         IEnumerable<FormItem> Body()
         {
-            Int32 rowNo = 1;
             // header
             yield return new FormItem(FormItemIs.Grid)
             {
-                Grid = new FormItemGrid(rowNo++, 1),
+                Grid = new FormItemGrid(1, 1),
+                CssClass = "document-header",
                 Props = new FormItemProps() { 
                     Rows = "auto",
                     Columns = "auto auto 12rem auto 12rem 1fr",
@@ -73,13 +83,13 @@ internal partial class BaseModelBuilder
             // body
             yield return new FormItem(FormItemIs.Grid)
             {
-                Grid = new FormItemGrid(rowNo++, 1),
+                Grid = new FormItemGrid(2, 1),
                 Props = new FormItemProps()
                 {
                     Rows = "auto auto auto",
-                    Columns = "22rem 22rem 1fr"
+                    Columns = "22rem 22rem 22rem 22rem 1fr"
                 },
-                Items = [..BodyItems(cols: 2)]
+                Items = [..BodyItems(cols: 4)]
             };
 
             // details
@@ -111,63 +121,69 @@ internal partial class BaseModelBuilder
                     return new FormItem(FormItemIs.Tab)
                     {
                         Label = $"@{d.Name}",
+                        Grid = new FormItemGrid(4, 1),
                         Data = d.Name,
                         Items = [
-                            new FormItem(FormItemIs.Toolbar) {
-                                Grid = new FormItemGrid(2, 1),
-                                Items = [
-                                    new FormItem(FormItemIs.Button) 
-                                    {
-                                        Label = "@AddRow",
-                                        Command = new FormItemCommand() 
-                                        {
-                                            Command = FormCommand.Append,
-                                            Argument = dataBind,
-                                        },
-                                    }
-                                ]
-                            },
-                            new FormItem(FormItemIs.Table) {
-                                Data = dataBind,
-                                Grid = new FormItemGrid(3, 1),
+                            new FormItem(FormItemIs.Grid)
+                            {
                                 Height = "100%",
+                                MinHeight = "25rem",
+                                Props = new FormItemProps()
+                                {
+                                    Rows = "auto 1fr",
+                                    Columns = "auto",
+                                },
                                 Items = [
-                                    ..cells, 
-                                    new FormItem(FormItemIs.TableCell) 
-                                    {
+                                    new FormItem(FormItemIs.Toolbar) {
+                                        Grid = new FormItemGrid(1, 1),
+                                        CssClass = "document-details-toolbar",
                                         Items = [
-                                            FormBuild.Button(new FormItemCommand() {
-                                                Command = FormCommand.Remove
-                                            }, "✕"),
+                                            new FormItem(FormItemIs.Button)
+                                            {
+                                                Label = "@AddRow",
+                                                Command = new FormItemCommand()
+                                                {
+                                                    Command = FormCommand.Append,
+                                                    Argument = dataBind,
+                                                },
+                                            }
                                         ]
-                                    }
+                                    },
+                                    new FormItem(FormItemIs.Table) {
+                                        Data = dataBind,
+                                        Height = "100%",
+                                        CssClass = "document-details",
+                                        Grid = new FormItemGrid(2, 1),
+                                        Items = [
+                                            ..cells,
+                                            new FormItem(FormItemIs.TableCell)
+                                            {
+                                                Items = [
+                                                    FormBuild.Button(new FormItemCommand() {
+                                                        Command = FormCommand.Remove
+                                                    }, "✕"),
+                                                ]
+                                            }
+                                        ]
+                                    },
                                 ]
-                            },
+                            }
                         ]
                     };
                 });
-                yield return new FormItem(FormItemIs.Grid)
+                yield return new FormItem(FormItemIs.Tabs)
                 {
-                    Props = new FormItemProps() { 
-                        Columns = "auto",
-                        Rows = "auto auto 1fr",
-                    },
-                    Height = "100%",
-                    Items = [
-                        new FormItem(FormItemIs.Tabs)
-                        {
-                            Grid = new FormItemGrid(1, 1),
-                            Data = $"{_table.RealItemName}.$$Tab",
-                            Items = [..details]
-                        }
-                    ]
+                    Data = $"{_table.RealItemName}.$$Tab",
+                    Grid = new FormItemGrid(3, 1),
+                    CssClass = "document-tabbar",
+                    Items = [..details]
                 };
-                rowNo += 1; // toolbar & table
             }
             // footer
             yield return new FormItem(FormItemIs.Grid)
             {
-                Grid = new FormItemGrid(rowNo++, 1),
+                Grid = new FormItemGrid(hasDetails ? 5 : 3, 1),
+                CssClass = "document-footer",
                 Props = new FormItemProps()
                 {
                     Columns = "auto 1fr",
@@ -187,15 +203,17 @@ internal partial class BaseModelBuilder
         {
             Is = FormItemIs.Page,
             UseCollectionView = true,
+            CssClass = "document-page",
             Schema = _table.Schema,
             Table = _table.Name,
             Data = _table.RealItemName,
-            Label = $"@{_table.RealItemName}",
+            Label =  _baseTable?.RealItemName ?? _table.RealItemName,
+            EditWith = _table.EditWith,
             Items = [
                 new FormItem() {
                     Is = FormItemIs.Grid,
                     Props = new FormItemProps() {
-                        Rows = hasDetails ? "auto auto 1fr auto" : "auto auto 1fr auto",
+                        Rows = hasDetails ? "auto auto auto 1fr auto" : "auto auto 1fr auto",
                         Columns = "1fr",
                     },
                     Height = "100%",

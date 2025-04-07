@@ -74,15 +74,15 @@ internal static class SqlExtensions
         };
     }
 
-    internal static Boolean IsFieldUpdated(this TableColumn column, AppMetadata appMeta)
+    internal static Boolean IsFieldUpdated(this TableColumn column)
     {
-        return column.Name != appMeta.IdField
-            && column.Name != appMeta.VoidField
-            && column.Name != appMeta.IsFolderField
-            && column.Name != appMeta.IsSystemField
+        return column.Role != TableColumnRole.PrimaryKey
+            && column.Role != TableColumnRole.Void
+            && column.Role != TableColumnRole.IsFolder
+            && column.Role != TableColumnRole.IsSystem
             && column.Name != "Owner"
             && column.Name != "Folder"
-            && column.Name != "Done";
+            && column.Role != TableColumnRole.Done;
     }
 
     internal static IEnumerable<(TableColumn Column, Int32 Index)> RefFields(this TableMetadata table)
@@ -95,15 +95,15 @@ internal static class SqlExtensions
     {
         var refFields = table.RefFields();
         foreach (var c in table.Columns.Where(c => !c.IsReference))
-            if (c.Name == appMeta.IdField)
+            if (c.Role == TableColumnRole.PrimaryKey)
                 yield return $"[{c.Name}!!Id] = {alias}.[{c.Name}]";
-            else if (c.Name == appMeta.RowNoField)
+            else if (c.Role == TableColumnRole.RowNo)
                 yield return $"[{c.Name}!!RowNumber] = {alias}.[{c.Name}]";
             else
                 yield return c.IsParent ? $"Folder = {alias}.[{c.Name}]" : $"{alias}.[{c.Name}]";
         foreach (var c in refFields)
         {
-            if (isDetails && c.Column.Name == appMeta.ParentField)
+            if (isDetails && c.Column.Role == TableColumnRole.Parent)
                 continue;
             var col = c.Column;
             var colRef = c.Column.Reference;

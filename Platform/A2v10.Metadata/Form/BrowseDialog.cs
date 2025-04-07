@@ -47,6 +47,7 @@ internal partial class BaseModelBuilder
             UseCollectionView = true,
             Schema = _table.Schema,
             Table = _table.Name,
+            EditWith = _table.EditWith,
             Label = $"@{_table.RealItemsName}.Browse",
             Width = "65rem",
             Items = [

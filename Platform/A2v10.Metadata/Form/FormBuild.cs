@@ -23,8 +23,8 @@ internal static class FormBuild
     public static FormItem Button(FormCommand command, String label = "") =>
         new FormItem(FormItemIs.Button)
         {
-                Label = label,
-                Command = new FormItemCommand(command)
+            Label = label,
+            Command = new FormItemCommand(command)
         };
 
     public static FormItem Button(FormItemCommand command, String label = "") =>

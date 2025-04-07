@@ -53,7 +53,7 @@ internal partial class BaseModelBuilder
                 select {a.InOut}, @Id, {String.Join(',', fields.Select(f => f.Source))}
                 from {_table.SqlTableName} {docAlias}
                 {JoinDetails()}
-                where {docAlias}.{_appMeta.IdField} = @Id;
+                where {docAlias}.{_table.PrimaryKeyField} = @Id;
             """;
         }
 
@@ -67,7 +67,7 @@ internal partial class BaseModelBuilder
 
         {String.Join(";\n", applyTable.Apply.Select(a => InsertIntoJournal(a)))}
 
-        update {_table.SqlTableName} set [Done] = 1 where [{_appMeta.IdField}] = @Id;
+        update {_table.SqlTableName} set [Done] = 1 where [{_table.PrimaryKeyField}] = @Id;
         commit tran;
         """;
 
@@ -105,7 +105,7 @@ internal partial class BaseModelBuilder
         begin tran;
         {String.Join(";\n", deleteFromJournals)}
         
-        update {_table.SqlTableName} set Done = 0 where [{_appMeta.IdField}] = @Id;
+        update {_table.SqlTableName} set [Done] = 0 where [{_table.PrimaryKeyField}] = @Id;
         commit tran;
 
         """;

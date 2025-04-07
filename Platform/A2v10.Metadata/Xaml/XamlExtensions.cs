@@ -24,6 +24,7 @@ internal static class XamlExtensions
             FormCommand.SaveAndClose => Icon.SaveCloseOutline,
             FormCommand.Save => Icon.SaveOutline,
             FormCommand.Print => Icon.Print,
+            FormCommand.Append => Icon.Plus,
             _ => Icon.NoIcon,
         };
     }
@@ -57,21 +58,11 @@ internal static class XamlExtensions
         return cmd;
     }
 
-    public static void AddCommandBindings(this FormItem item, XamlElement b)
-    {
-        if (item.Command == null)
-            return;
-        if (item.Command.Command == FormCommand.Apply)
-            b.SetBinding(nameof(Button.If), new Bind("!Document.Done"));
-        else if (item.Command.Command == FormCommand.UnApply)
-            b.SetBinding(nameof(Button.If), new Bind("Document.Done"));
-    }
-
-    public static BindCmd BindCommand(this FormItem item, EditWithMode withMode)
+    public static BindCmd BindCommand(this FormItem item, EditWithMode mode)
     {
         BindCmd CreateCreateCommand()
         {
-            if (withMode == EditWithMode.Dialog)
+            if (mode == EditWithMode.Dialog)
             {
                 var cmd = new BindCmd()
                 {
@@ -100,7 +91,7 @@ internal static class XamlExtensions
                 Command = CommandType.OpenSelected,
                 Url = $"{item.Command?.Url}/edit"
             };
-            if (withMode == EditWithMode.Dialog)
+            if (mode == EditWithMode.Dialog)
             {
                 cmd.Command = CommandType.Dialog;
                 cmd.Action = DialogAction.EditSelected;

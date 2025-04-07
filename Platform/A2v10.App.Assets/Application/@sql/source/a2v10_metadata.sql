@@ -1,7 +1,7 @@
 /*
 Copyright © 2025 Oleksandr Kukhtin
 
-Last updated : 06 apr 2025
+Last updated : 07 apr 2025
 module version : 8540
 */
 
@@ -20,12 +20,13 @@ create table a2meta.[Application]
 		constraint PK_Application primary key,
 	[Name] nvarchar(255),
 	[Title] nvarchar(255),
-	IdDataType nvarchar(32)
+	IdDataType nvarchar(32),
+	DetailsKey nvarchar(32) -- Parent, Id
 );
 go
 ------------------------------------------------
 if not exists (select * from a2meta.[Application] where Id = 10)
-	insert into a2meta.[Application] (Id, [Name], Title, IdDataType) values (10, N'MyApplication', 'My Application', N'bigint');
+	insert into a2meta.[Application] (Id, [Name], Title, IdDataType, DetailsKey) values (10, N'MyApplication', 'My Application', N'bigint', N'Parent');
 go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.SEQUENCES where SEQUENCE_SCHEMA=N'a2meta' and SEQUENCE_NAME=N'SQ_Catalog')
@@ -66,8 +67,8 @@ create table a2meta.[DefaultColumns]
 	[DataType] nvarchar(32),
 	[MaxLength] int,
 	Ref nvarchar(32),
-	IsPK bit
-		constraint DF_DefaultColumns_IsPK default(0),
+	[Role] int not null
+		constraint DF_DefaultColumns_Role default(0)
 );
 go
 ------------------------------------------------
@@ -90,10 +91,8 @@ create table a2meta.[Columns]
 	Reference bigint
 		constraint FK_Columns_Reference_Catalog references a2meta.[Catalog](Id),
 	[Order] int,
-	IsSystem bit
-		constraint DF_Columns_IsSystem default(0),
-	IsPK bit
-		constraint DF_Columns_IsPK default(0),
+	[Role] int not null
+		constraint DF_Columns_Role default(0),
 	Source nvarchar(255)
 );
 go
@@ -154,7 +153,7 @@ go
 create or alter view a2meta.view_RealTables
 as
 	select Id = c.Id, c.Parent, c.Kind, c.[Schema], [Name] = c.[Name], c.ItemsName, c.ItemName, c.TypeName,
-		c.EditWith, c.ParentTable
+		c.EditWith, c.ParentTable, c.IsFolder
 	from a2meta.[Catalog] c left join INFORMATION_SCHEMA.TABLES ic on 
 		ic.TABLE_SCHEMA = c.[Schema]
 		and ic.TABLE_NAME = c.[Name] collate SQL_Latin1_General_CP1_CI_AI;
@@ -204,7 +203,7 @@ begin
 	where c.Parent = @tableId and c.Kind = N'details';
 
 	select [!TColumn!Array] = null, [Id!!Id] = c.Id, c.[Name], DataType = c.DataType, 
-		c.[MaxLength], c.IsPK,
+		c.[MaxLength], c.[Role],
 		[Reference.RefSchema!TReference!] = case c.DataType 
 		when N'operation' then N'op' 
 		else r.[Schema] 
@@ -240,6 +239,26 @@ begin
 		inner join a2meta.Columns s on m.Source= s.Id
 		inner join a2meta.[Catalog] st on s.[Table] = st.Id
 	where a.[Table] = @tableId;
+end
+go
+------------------------------------------------
+create or alter procedure a2meta.[Report.Schema]
+@Schema sysname,
+@Table sysname
+as
+begin
+	declare @tableId bigint;
+
+	select @tableId = Id from a2meta.[Catalog] r 
+	where r.[Schema] = @Schema collate SQL_Latin1_General_CP1_CI_AI
+		and r.[Name] = @Table collate SQL_Latin1_General_CP1_CI_AI
+		and r.Kind in (N'report');
+
+	select [Table!TTable!Object] = null, [!!Id] = c.Id, c.[Schema], c.[Name], c.ItemName, c.ItemsName,
+		[ParentTable.RefSchema!TReference!] = pt.[Schema], [ParentTable.RefTable!TReference] = pt.[Name]
+	from a2meta.[Catalog] c 
+		left join a2meta.[Catalog] pt on c.ParentTable = pt.Id
+	where c.Id = @tableId and c.Kind in (N'report');
 end
 go
 ------------------------------------------------
@@ -315,37 +334,40 @@ begin
 		(s.Id, 0, s.IsFolder, s.[Schema], s.[Name], Kind);
 
 	declare @defCols table(Id bigint, [Schema] nvarchar(32), Kind nvarchar(32), [Name] nvarchar(255), 	[DataType] nvarchar(32),
-		[MaxLength] int, Ref nvarchar(32), IsPK bit);
+		[MaxLength] int, Ref nvarchar(32), [Role] int);
 
-	insert into @defCols(Id, [Schema], Kind, [Name], IsPK, DataType, [MaxLength], Ref) values
-	(10, N'cat', N'table', N'Id',   1, N'id', null, null),
-	(11, N'cat', N'table', N'Void', 0, N'bit', null, null),
-	(12, N'cat', N'table', N'IsSystem', 0, N'bit', null, null),
-	(13, N'cat', N'table', N'IsFolder', 0, N'bit', null, null),
-	(14, N'cat', N'table', N'Parent',   0, N'reference', null, N'self'),
-	(15, N'cat', N'table', N'Name',     0, N'string',    255, null),
-	(16, N'cat', N'table', N'Memo', 0, N'string',    255, null),
-	(17, N'cat', N'table', N'Owner',0, N'reference', null, N'user'),
-	(20, N'doc', N'table', N'Id',   1, N'id',       null, null),
-	(21, N'doc', N'table', N'Void', 0, N'bit',      null, null),
-	(22, N'doc', N'table', N'Done', 0, N'bit',      null, null),
-	(23, N'doc', N'table', N'Date', 0, N'date',     null, null),
-	(24, N'doc', N'table', N'Sum',  0, N'currency', null, null),
-	(25, N'doc', N'table', N'Memo', 0, N'string', 255, null),
-	(26, N'doc', N'table', N'Owner',0, N'reference', null, N'user'),
+	insert into @defCols(Id, [Schema], Kind, [Name], [Role], DataType, [MaxLength], Ref) values
+	-- Catalog
+	(10, N'cat', N'table', N'Id',       1, N'id', null, null),
+	(11, N'cat', N'table', N'Void',     2, N'bit', null, null),
+	(12, N'cat', N'table', N'IsSystem', 6, N'bit', null, null),
+	(13, N'cat', N'table', N'IsFolder', 3, N'bit', null, null),
+	(14, N'cat', N'table', N'Parent',   4, N'reference', null, N'self'),
+	(15, N'cat', N'table', N'Name',     5, N'string',    255, null),
+	(16, N'cat', N'table', N'Memo',     0, N'string',    255, null),
+	(17, N'cat', N'table', N'Owner',    0, N'reference', null, N'user'),
+	-- Document
+	(20, N'doc', N'table', N'Id',       1, N'id',       null, null),
+	(21, N'doc', N'table', N'Void',     2, N'bit',      null, null),
+	(22, N'doc', N'table', N'Done',     7, N'bit',      null, null),
+	(23, N'doc', N'table', N'Date',     0, N'date',     null, null),
+	(24, N'doc', N'table', N'Name',     5, N'string',   null, null), -- todo: computed
+	(25, N'doc', N'table', N'Sum',      0, N'currency', null, null),
+	(26, N'doc', N'table', N'Memo',     0, N'string', 255, null),
+	(27, N'doc', N'table', N'Owner',    0, N'reference', null, N'user'),
 	-- cat.Details
 	(30, N'cat', N'details', N'Id',     1, N'id', null, null),
-	(31, N'cat', N'details', N'Parent', 0, N'reference', null, N'parent'),
-	(32, N'cat', N'details', N'RowNo',  0, N'int', null, null),
+	(31, N'cat', N'details', N'Parent', 4, N'reference', null, N'parent'),
+	(32, N'cat', N'details', N'RowNo',  8, N'int', null, null),
 	-- doc.Details
 	(40, N'doc', N'details', N'Id',     1, N'id', null, null),
-	(41, N'doc', N'details', N'Parent', 0, N'reference', null, N'parent'),
-	(42, N'doc', N'details', N'RowNo',  0, N'int', null, null),
+	(41, N'doc', N'details', N'Parent', 4, N'reference', null, N'parent'),
+	(42, N'doc', N'details', N'RowNo',  8, N'int', null, null),
 	-- jrn.Journal
-	(50, N'jrn', N'table', N'Id',     1, N'id', null, null),
-	(51, N'jrn', N'table', N'Date',   0, N'datetime', null, null),
-	(52, N'jrn', N'table', N'InOut',  0, N'int', null, null),
-	(53, N'jrn', N'table', N'Owner',  0, N'reference', null, N'user');
+	(50, N'jrn', N'table', N'Id',       1, N'id', null, null),
+	(51, N'jrn', N'table', N'Date',     0, N'datetime', null, null),
+	(52, N'jrn', N'table', N'InOut',    0, N'int', null, null),
+	(53, N'jrn', N'table', N'Owner',    0, N'reference', null, N'user');
 
 	merge a2meta.DefaultColumns as t
 	using @defCols as s
@@ -357,10 +379,10 @@ begin
 		t.DataType = s.DataType,
 		t.[MaxLength] = s.[MaxLength],
 		t.Ref = s.Ref,
-		t.IsPK = s.IsPK
+		t.[Role] = s.[Role]
 	when not matched then insert
-		(Id, [Schema], Kind, [Name], DataType, [MaxLength], Ref, IsPK) values
-		(Id, [Schema], Kind, [Name], DataType, [MaxLength], s.Ref, s.IsPK);
+		(Id, [Schema], Kind, [Name], DataType, [MaxLength], Ref, [Role]) values
+		(Id, [Schema], Kind, [Name], DataType, [MaxLength], s.Ref, s.[Role]);
 end
 go
 ------------------------------------------------
@@ -427,12 +449,8 @@ begin
 
 	declare @appId bigint = 10;
 
-	select [Application!TApp!Object] = null, IdDataType, 
-		[Id] = cast(null as nvarchar(32)), 
-		[Name] = cast(null as nvarchar(32)), 
-		Void = cast(null as nvarchar(32)), 
-		IsFolder = cast(null as nvarchar(32)), 
-		IsSystem = cast(null as nvarchar(32))
+	select [Application!TApp!Object] = null, IdDataType, DetailsKey,
+		[Name] = cast(null as nvarchar(32))
 	from a2meta.[Application] where Id = @appId;
 end
 go
@@ -470,11 +488,6 @@ begin
 	declare @appId bigint = 10;
 
 	select [Application!TApp!Object] = null, [!!Id] = @appId, IdDataType,
-		[Id] = cast(null as nvarchar(32)), 
-		[Name] = cast(null as nvarchar(32)), 
-		Void = cast(null as nvarchar(32)), 
-		IsFolder = cast(null as nvarchar(32)), 
-		IsSystem = cast(null as nvarchar(32)), 
 		[Tables!TTable!Array] = null
 	from a2meta.[Application] where Id = @appId;
 
@@ -485,7 +498,7 @@ begin
 		left join INFORMATION_SCHEMA.TABLES t on t.TABLE_SCHEMA =  c.[Schema] and t.TABLE_NAME = c.[Name]
 	where c.[Kind] in (N'table', N'details');
 
-	select [!TColumn!Array] = null, [Id!!Id] = c.Id, c.[Name], c.[DataType], c.[MaxLength], c.IsPK,
+	select [!TColumn!Array] = null, [Id!!Id] = c.Id, c.[Name], c.[DataType], c.[MaxLength], c.[Role],
 		[Reference.RefSchema!TRef!] = r.[Schema], [Reference.RefTable!TRef!] = r.[Name],
 		DbName = ic.COLUMN_NAME, DbDataType =  ic.DATA_TYPE,
 		[!TTable.Columns!ParentId] = c.[Table]
@@ -542,7 +555,7 @@ group by [name], refschema, reftable;
 */
 
 /*
-drop table a2meta.Columns
+drop table a2meta.[Columns]
 drop table a2meta.[Catalog];
 */
 

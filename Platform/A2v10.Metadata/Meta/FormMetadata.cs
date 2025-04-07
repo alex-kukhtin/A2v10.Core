@@ -132,6 +132,9 @@ public record FormItem
     public FormItem[]? Items { get; init; }
     public String? Width { get; init; }
     public String? Height { get; init; }
+    public String? MinHeight { get; init; }
+    public String? CssClass { get; init; }
+    public String? If { get; init; }
     public FormItemGrid? Grid { get; init; }
     public FormItemCommand? Command { get; init; }
     public FormItemProps? Props { get; init; }
@@ -145,6 +148,7 @@ public record Form : FormItem
     public FormItem[]? Buttons { get; init; }
     public FormItem? Taskpad { get; init; }
     public FormItem? Toolbar { get; init; }
+    public EditWithMode EditWith { get; init; }
 }
 
 public record FormMetadata(RootContainer Page, String Template)

@@ -61,6 +61,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             ?? throw new InvalidOperationException("AppMetadata deserialization fails");
         return meta;
     }
+
     private async Task<TableMetadata> LoadTableMetadataAsync(String? dataSource, String schema, String table)
     {
         var prms = new ExpandoObject()
@@ -68,7 +69,11 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             {"Schema", schema},
             {"Table", table},
         };
-        var dm = await _dbContext.LoadModelAsync(dataSource, "a2meta.[Table.Schema]", prms)
+        String procedure = schema switch {
+            "rep" => "a2meta.[Report.Schema]",
+            _ => "a2meta.[Table.Schema]"
+        };
+        var dm = await _dbContext.LoadModelAsync(dataSource, procedure, prms)
             ?? throw new InvalidOperationException("a2meta.[Table.Schema] returns null");
         var tableExpando = dm.Eval<ExpandoObject>("Table")
             ?? throw new InvalidOperationException($"Metadata for {schema}.{table} not found");
@@ -95,7 +100,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         if (formExpando == null)
         {
             var defaultForm = getDefaultForm();
-            return new FormMetadata(XamlBulder.BuildForm(defaultForm, meta.EditWith), String.Empty);
+            return new FormMetadata(XamlBulder.BuildForm(defaultForm), String.Empty);
         }
 
         // convert Expando to Form
@@ -106,7 +111,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         var form = JsonConvert.DeserializeObject<Form>(json, JsonSettings.IgnoreNull)
             ?? throw new InvalidOperationException("Form deserialization fails");
 
-        return new FormMetadata(XamlBulder.BuildForm(form, meta.EditWith), String.Empty);
+        return new FormMetadata(XamlBulder.BuildForm(form), String.Empty);
 
     }
 
@@ -115,14 +120,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         var split = path.Split('/');
         if (split.Length < 2 )
             throw new InvalidOperationException($"Invalid path: {path}");
-        var schema = split[0] switch
-        {
-            "catalog" => "cat",
-            "document" => "doc",
-            "operation" => "op",
-            "journal" => "jrn",
-            _ => split[0]
-        };
+        var schema = split[0].FromFolder();
         return (schema, split[1]);
     }
 }

@@ -99,6 +99,10 @@ internal partial class BaseModelBuilder
                         Items = [
                             new FormItem(FormItemIs.Grid) 
                             {
+                                Props = new FormItemProps() {
+                                    Rows = String.Join(' ', columns.Select(c => "auto")),
+                                    Columns = "1fr",
+                                },
                                 Items = [..columns]
                             }
                         ]
@@ -116,7 +120,8 @@ internal partial class BaseModelBuilder
             Schema = _table.Schema,
             Table = _table.Name,
             Data = _table.RealItemsName,
-            Label = $"@{_table.RealItemsName}",
+            EditWith = _table.EditWith,
+            Label = _baseTable?.RealItemsName ?? _table.RealItemsName,
             Props = new FormItemProps()
             {
                 Filters = $"{periodFilter}{String.Join(',', _table.RefFields().Select(c => c.Column.Name))}"

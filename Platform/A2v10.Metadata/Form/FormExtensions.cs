@@ -46,27 +46,27 @@ internal static class FormExtensions
 
     public static IEnumerable<TableColumn> VisibleColumns(this TableMetadata table, AppMetadata appMeta)
     {
-        Boolean IsVisible(String name)
+        Boolean IsVisible(TableColumn column)
         {
-            return name != appMeta.VoidField
-                && name != appMeta.IsFolderField
-                && name != appMeta.IsSystemField;
+            return column.Role != TableColumnRole.Void
+                && column.Role != TableColumnRole.IsFolder
+                && column.Role != TableColumnRole.IsSystem;
         }
 
-        return table.Columns.Where(c => IsVisible(c.Name));
+        return table.Columns.Where(c => IsVisible(c));
     }
 
     public static IEnumerable<TableColumn> EditableColumns(this TableMetadata table, AppMetadata appMeta)
     {
-        Boolean IsVisible(String name)
+        Boolean IsVisible(TableColumn column)
         {
-            return name != appMeta.VoidField
-                && name != appMeta.IdField
-                && name != appMeta.IsFolderField
-                && name != appMeta.IsSystemField
-                && name != "Parent"; // TODO???
+            return column.Role != TableColumnRole.Void
+                && column.Role != TableColumnRole.PrimaryKey
+                && column.Role != TableColumnRole.IsFolder
+                && column.Role != TableColumnRole.IsSystem
+                && column.Name != "Parent"; // TODO???
         }
 
-        return table.Columns.Where(c => IsVisible(c.Name));
+        return table.Columns.Where(c => IsVisible(c));
     }
 }

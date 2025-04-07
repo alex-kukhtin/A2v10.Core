@@ -107,7 +107,7 @@ public class EditFormEndpointHandler(IServiceProvider _serviceProvider) : IEndpo
         var dbPrms = new ExpandoObject()
         {
             { "Id", id },
-            {"Key", key },
+            { "Key", key },
             { "Json", json }
         };
         await _dbContext.ExecuteExpandoAsync(modelView.DataSource, "a2meta.[Table.Form.Update]", dbPrms);

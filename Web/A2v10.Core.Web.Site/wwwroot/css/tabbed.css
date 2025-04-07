@@ -4064,7 +4064,6 @@ tr:hover .commandbar.visible-hover {
   gap: 1rem;
   border-bottom: 3px solid var(--neutral300);
   align-items: baseline;
-  margin: 0.65rem 0;
   color: var(--text);
 }
 .a2-tab-bar-item:first-child {

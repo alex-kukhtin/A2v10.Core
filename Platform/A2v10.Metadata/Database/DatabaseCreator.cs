@@ -1,6 +1,5 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
-using DocumentFormat.OpenXml.Office2016.Excel;
 using System;
 using System.Linq;
 
@@ -16,23 +15,23 @@ internal class DatabaseCreator(AppMetadata _meta)
 
             String? nullable = null;
             var constraint = String.Empty;
-            if (column.Name == _meta.IdField)
+            if (column.Role == TableColumnRole.PrimaryKey)
             {
                 nullable = NOT_NULL;
-                var defKey = _meta.IdDataType switch
+                var defKey = column.DataType switch
                 {
                     ColumnDataType.Uniqueidentifier => "newid()",
                     ColumnDataType.Int or ColumnDataType.BigInt => $"next value for {table.Schema}.SQ_{table.Name}",
-                    _ => throw new InvalidOperationException($"Defaults for {_meta.IdDataType} is not supported")
+                    _ => throw new InvalidOperationException($"Defaults for {column.DataType} is not supported")
                 };
                 constraint = $"\n       constraint DF_{table.Name}_{column.Name} default({defKey})";
             }
-            else if (_meta.HasDefault(column.Name))
+            else if (column.HasDefault)
             {
                 nullable = NOT_NULL;
                 constraint = $"\n       constraint DF_{table.Name}_{column.Name} default(0)";
             }
-            return $"[{column.Name}] {column.SqlDataType(_meta.IdDataType)}{nullable}{constraint}";
+            return $"[{column.Name}] {column.SqlDataType(column.DataType)}{nullable}{constraint}";
         }
 
         String createSequence()
@@ -48,7 +47,7 @@ internal class DatabaseCreator(AppMetadata _meta)
 
         var fields = table.Columns.Select(createField);
 
-        var primaryKeys = table.Columns.Where(c => c.IsPK).Select(c => $"[{c.Name}]");
+        var primaryKeys = table.PrimaryKeys.Select(c => $"[{c.Name}]");
 
         return $"""
         {createSequence()}
@@ -92,7 +91,7 @@ internal class DatabaseCreator(AppMetadata _meta)
 
             var refTable = _meta.Tables.FirstOrDefault(x => x.Schema == refs.RefSchema && x.Name == refs.RefTable)
                 ?? throw new InvalidOperationException($"Reference table {refs.RefSchema}.{refs.RefTable} not found");
-            var refTablePk = refTable.Columns.Where(x => x.IsPK);
+            var refTablePk = refTable.PrimaryKeys;
             if (refTablePk.Count() > 1)
             {
                 throw new InvalidOperationException("TODO: Implement multi-column foreign key");    
@@ -102,9 +101,9 @@ internal class DatabaseCreator(AppMetadata _meta)
             var constraintName = $"FK_{table.Name}_{column.Name}_{refs.RefTable}";
             return $"""
             if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.Schema}' and TABLE_NAME = N'{table.Name}' and CONSTRAINT_NAME = N'{constraintName}')
-                alter table {table.Schema}.[{table.Name}] add 
+                alter table {table.SqlTableName} add 
                     constraint {constraintName} foreign key ([{column.Name}]) references {refs.RefSchema}.[{refs.RefTable}]([{refTablePkName}]);
-            alter table {table.Schema}.[{table.Name}] nocheck constraint {constraintName};
+            alter table {table.SqlTableName} nocheck constraint {constraintName};
             """;
         }
         var refs = table.Columns.Where(c => c.IsReference).Select(rc => createReference(rc));

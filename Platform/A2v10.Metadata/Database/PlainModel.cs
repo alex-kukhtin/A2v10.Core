@@ -36,12 +36,12 @@ internal partial class BaseModelBuilder
             {
                 sb.AppendLine($"""
                 select [!{t.RealTypeName}!Array] = null,
-                    [!{table.RealTypeName}.{t.RealItemsName}!ParentId] = d.[{appMeta.ParentField}],
+                    [!{table.RealTypeName}.{t.RealItemsName}!ParentId] = d.[{appMeta.DetailsKey}],
                     {String.Join(",", t.AllSqlFields("d", appMeta, isDetails:true))}
                 from {t.Schema}.[{t.Name}] d
                     {RefTableJoins(t.RefFields(), "d")}
-                where d.[{appMeta.ParentField}] = @Id
-                order by d.[{appMeta.RowNoField}];
+                where d.[{appMeta.DetailsKey}] = @Id
+                order by d.[{t.RowNoField}];
                 
                 """);
 
@@ -53,7 +53,7 @@ internal partial class BaseModelBuilder
         {
             if (table.IsDocument)
                 return $"""
-				select [!$System!] = null, [!!ReadOnly] = d.Done
+				select [!$System!] = null, [!!ReadOnly] = d.{_table.DoneField}
 				from {table.SqlTableName} d where Id = @Id;
 				""";
             return String.Empty;
@@ -95,9 +95,9 @@ internal partial class BaseModelBuilder
     public async Task<ExpandoObject> SavePlainModelAsync(ExpandoObject data, ExpandoObject savePrms)
     {
 
-        var updatedFields = _table.Columns.Where(c => c.IsFieldUpdated(_appMeta)).Select(c => $"t.[{c.Name}] = s.[{c.Name}]");
+        var updatedFields = _table.Columns.Where(c => c.IsFieldUpdated()).Select(c => $"t.[{c.Name}] = s.[{c.Name}]");
 
-        var insertedFields = _table.Columns.Where(c => c.IsFieldUpdated(_appMeta)).Select(c => $"[{c.Name}]");
+        var insertedFields = _table.Columns.Where(c => c.IsFieldUpdated()).Select(c => $"[{c.Name}]");
 
         String onPrimaryKeys()
         {
@@ -111,8 +111,8 @@ internal partial class BaseModelBuilder
             var sb = new StringBuilder();
             foreach (var details in _table.Details)
             {
-                var updateFields = details.Columns.Where(f => !f.IsParent && f.Name != _appMeta.IdField);
-                var parentField = details.Columns.FirstOrDefault(f => f.IsParent)
+                var updateFields = details.Columns.Where(f => f.Role != TableColumnRole.Parent && f.Role != TableColumnRole.PrimaryKey);
+                var parentField = details.Columns.FirstOrDefault(f => f.Role == TableColumnRole.Parent)
                     ?? throw new InvalidOperationException("Parent field not found");
                 sb.AppendLine($"""
 				merge {details.SqlTableName} as t

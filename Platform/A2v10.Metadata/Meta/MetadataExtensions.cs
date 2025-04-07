@@ -14,7 +14,20 @@ internal static class MetadataExtensions
             "doc" => "document",
             "jrn" => "journal",
             "op" => "operation",
+            "rep" => "report",
             _ => schema
+        };
+    }
+    internal static String FromFolder(this String folder)
+    {
+        return folder switch
+        {
+            "catalog" => "cat",
+            "document" => "doc",
+            "operation" => "op",
+            "journal" => "jrn",
+            "report" => "rep",
+            _ => folder
         };
     }
     internal static String EndpointPath(this ColumnReference refs)

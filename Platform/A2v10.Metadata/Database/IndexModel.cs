@@ -72,8 +72,8 @@ internal partial class BaseModelBuilder
         {
             yield return "1 = 1"; // for default // TODO: ???? как-то проверить
 
-            if (_table.Columns.Any(c => c.Name == _appMeta.VoidField))
-                yield return $"a.[{_appMeta.VoidField}]=0";
+            if (_table.Columns.Any(c => c.Role == TableColumnRole.Void))
+                yield return $"a.[{_table.VoidField}]=0";
 
             if (opColumn != null)
                 yield return $"a.[{opColumn.Name}] = N'{opValue}'";
@@ -172,7 +172,7 @@ internal partial class BaseModelBuilder
             .AddString("@Fragment", fragment);
             foreach (var r in refFieldsFilter)
             {
-                var data = qry.Get<Object>(r.Column.Name);
+                var data = qry?.Get<Object>(r.Column.Name);
                 if (data != null && _appMeta.IdDataType == ColumnDataType.Uniqueidentifier)
                     data = Guid.Parse(data.ToString()!);
                 dbprms.AddTyped($"@{r.Column.Name}", r.Column.DataType.ToSqlDbType(_appMeta.IdDataType), data);

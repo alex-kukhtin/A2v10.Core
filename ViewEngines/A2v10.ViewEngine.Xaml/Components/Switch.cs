@@ -16,12 +16,13 @@ public class Case : XamlElement
 	public void RenderElement(RenderContext context)
 	{
 		var parentGrid = FindParent<Grid>();
-		if (parentGrid != null)
+		var parentSwitch = FindParent<Switch>();
+        if (parentGrid != null && parentSwitch != null)
 		{
 			foreach (var c in Children)
 			{
 				c.IsInGrid = true;
-				using (context.GridContext(c, parentGrid))
+				using (context.GridContext(parentSwitch, parentGrid))
 				{
 					c.RenderElement(context);
 				}

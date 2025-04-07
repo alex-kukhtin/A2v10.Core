@@ -30,6 +30,16 @@ internal partial class BaseModelBuilder(
     protected Boolean IsDialog => _platformUrl.Kind == UrlKind.Dialog;
     protected String Action => _platformUrl.Action.ToLowerInvariant();
 
+    public TableMetadata Table => _table;
+    public TableMetadata? BaseTable => _baseTable;
+    public AppMetadata AppMeta => _appMeta;
+
+    public String? MetadataEndpointBuilder => _baseTable?.Schema switch
+    {
+        "rep" => "rep:report.render",
+        _ => null
+    };
+
     public async Task BuildAsync(IPlatformUrl platformUrl, IModelBase modelBase)
     {
         if (modelBase.Meta == null)

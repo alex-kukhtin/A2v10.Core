@@ -39,7 +39,8 @@ internal partial class BaseModelBuilder
             UseCollectionView = true,
             Schema = _table.Schema,
             Table = _table.Name,
-            Data = _table.RealItemsName,
+            Data = _table.RealItemName,
+            EditWith = _table.EditWith,
             Label = $"@{_table.RealItemsName}",
             Items = [
                 new FormItem() {

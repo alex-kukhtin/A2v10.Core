@@ -1,16 +1,15 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
-using System.Linq;
 using System.Threading.Tasks;
+using System.Dynamic;
+using System.Text;
+
+using Newtonsoft.Json;
 
 using A2v10.Infrastructure;
 using A2v10.Data.Core.Extensions;
-using System.Dynamic;
-using DocumentFormat.OpenXml.EMMA;
-using Newtonsoft.Json;
 using A2v10.Services;
-using System.Text;
 
 namespace A2v10.Metadata;
 
@@ -25,11 +24,12 @@ internal partial class BaseModelBuilder
         declare @fr nvarchar(255);
         set @fr = N'%' + @Text + N'%';
 
-        select top(100) [{_table.RealItemsName}!{_table.RealTypeName}!Array] = null, [{_appMeta.IdField}!!Id] = a.[{_appMeta.IdField}], [{_appMeta.NameField}!!Name] = a.[{_appMeta.NameField}]
+        select top(100) [{_table.RealItemsName}!{_table.RealTypeName}!Array] = null, 
+            [{_table.PrimaryKeyField}!!Id] = a.[{_table.PrimaryKeyField}], [{_table.NameField}!!Name] = a.[{_table.NameField}]
         from {_table.SqlTableName} a
-        where a.[{_appMeta.VoidField}] = 0 and
-            (a.[{_appMeta.NameField}] like @fr)
-        order by a.[{_appMeta.NameField}];
+        where a.[{_table.VoidField}] = 0 and
+            (a.[{_table.NameField}] like @fr)
+        order by a.[{_table.NameField}];
         """;
 
         var model = await _dbContext.LoadModelSqlAsync(_dataSource, sql, dbprms =>

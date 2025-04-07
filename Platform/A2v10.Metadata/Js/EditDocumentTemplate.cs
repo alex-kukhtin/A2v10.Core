@@ -19,7 +19,7 @@ internal partial class BaseModelBuilder
             {
                 var opColumn = _table.Columns.FirstOrDefault(c => c.DataType == ColumnDataType.Operation);
                 if (opColumn != null)
-                    yield return $$"""'{{_table.RealItemName}}.{{opColumn.Name}}'() { return { Id: '{{_baseTable.Name.ToLowerInvariant()}}'};}""";
+                    yield return $$"""'{{_table.RealItemName}}.{{opColumn.Name}}'() { return { Id: '{{_baseTable.Name.ToLowerInvariant()}}', Name: '{{_baseTable.RealItemName}}'};}""";
             }
         }
 
@@ -54,13 +54,13 @@ internal partial class BaseModelBuilder
 
         async function apply() {
             const ctrl = this.$ctrl;
-            await ctrl.$invoke('apply', {Id: this.{{_table.RealItemName}}.{{_appMeta.IdField}}}, '{{endpoint}}');
+            await ctrl.$invoke('apply', {Id: this.{{_table.RealItemName}}.{{_table.PrimaryKeyField}}}, '{{endpoint}}');
             ctrl.$requery();
         }
 
         async function unApply() {
             const ctrl = this.$ctrl;
-            await ctrl.$invoke('unapply', {Id: this.{{_table.RealItemName}}.{{_appMeta.IdField}}}, '{{endpoint}}');
+            await ctrl.$invoke('unapply', {Id: this.{{_table.RealItemName}}.{{_table.PrimaryKeyField}}}, '{{endpoint}}');
             ctrl.$requery();
         }
         """;

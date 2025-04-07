@@ -42,6 +42,8 @@ internal partial class BaseModelBuilder
             Schema = _table.Schema,
             Table = _table.Name,
             Is = FormItemIs.Dialog,
+            EditWith = _table.EditWith,
+            Data = _table.RealItemName,
             Items = [
                 new FormItem(FormItemIs.Grid)
                 {
