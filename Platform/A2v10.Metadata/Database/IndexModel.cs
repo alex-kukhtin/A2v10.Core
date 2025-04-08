@@ -13,7 +13,7 @@ namespace A2v10.Metadata;
 
 internal partial class BaseModelBuilder
 {
-    public Task<IDataModel> LoadIndexModelAsync()
+    public async Task<IDataModel> LoadIndexModelAsync()
     {
         const String DEFAULT_DIR = "asc";
 
@@ -55,16 +55,17 @@ internal partial class BaseModelBuilder
         if (dir != "asc" && dir != "desc")
             dir = DEFAULT_DIR;
 
-        var refFields = _table.RefFields();
+        var refFields = await ReferenceFieldsAsync(_table);
         var refFieldsFilter = refFields;
+
         if (opColumn != null)
             refFieldsFilter = refFields.Where(c => c.Column != opColumn);
 
         var sqlOrder = $"a.[{order}]";
         var sortColumn = refFields.FirstOrDefault(c => c.Column.Name == order);
 
-        if (sortColumn.Column != null)
-            sqlOrder = $"r{sortColumn.Index}.[Name]"; // TODO: NameField
+        if (sortColumn?.Column != null)
+            sqlOrder = $"r{sortColumn.Index}.[{sortColumn.Table.NameField}]";
 
         var collectionName = _table.RealItemsName;
 
@@ -72,7 +73,7 @@ internal partial class BaseModelBuilder
         {
             yield return "1 = 1"; // for default // TODO: ???? как-то проверить
 
-            if (_table.Columns.Any(c => c.Role == TableColumnRole.Void))
+            if (_table.Columns.Any(c => c.Role.HasFlag(TableColumnRole.Void)))
                 yield return $"a.[{_table.VoidField}]=0";
 
             if (opColumn != null)
@@ -102,7 +103,7 @@ internal partial class BaseModelBuilder
                 return String.Empty;
             return " left join " + String.Join(" left join ", refFieldsFilter.Select(r => 
                 $"""
-                {r.Column.Reference.RefSchema}.[{r.Column.Reference.RefTable}] r{r.Index} on r{r.Index}.[{_appMeta.IdField}] = @{r.Column.Name}
+                {r.Table.SqlTableName} r{r.Index} on r{r.Index}.[{r.Table.PrimaryKeyField}] = @{r.Column.Name}
                 """));
         }
 
@@ -113,8 +114,8 @@ internal partial class BaseModelBuilder
                 return String.Empty;
             return ", " + String.Join(", ", refFieldsFilter.Select(r =>
             $"""
-            [!{collectionName}.{r.Column.Name}.{_appMeta.IdField}!Filter] = r{r.Index}.[{_appMeta.IdField}],
-            [!{collectionName}.{r.Column.Name}.{_appMeta.NameField}!Filter] = r{r.Index}.[{_appMeta.NameField}]
+            [!{collectionName}.{r.Column.Name}.{r.Table.PrimaryKeyField}!Filter] = r{r.Index}.[{r.Table.PrimaryKeyField}],
+            [!{collectionName}.{r.Column.Name}.{r.Table.NameField}!Filter] = r{r.Index}.[{r.Table.NameField}]
             """));
         }
 
@@ -142,7 +143,7 @@ internal partial class BaseModelBuilder
         declare @fr nvarchar(255) = N'%' + @Fragment + N'%';
                 
         select [{collectionName}!{_table.RealTypeName}!Array] = null,
-            {String.Join(",", _table.AllSqlFields("a", _appMeta))},
+            {String.Join(",", _table.AllSqlFields(refFields, "a"))},
             [!!RowCount]  = count(*) over()        
         from {_table.SqlTableName} a
         {RefTableJoins(refFields, "a")}
@@ -161,7 +162,7 @@ internal partial class BaseModelBuilder
         from @ft {filterJoins()};
         
         """;
-        return _dbContext.LoadModelSqlAsync(_dataSource, sqlString, dbprms =>
+        return await _dbContext.LoadModelSqlAsync(_dataSource, sqlString, dbprms =>
         {
             AddDefaultParameters(dbprms);
             AddPeriodParameters(dbprms, qry);

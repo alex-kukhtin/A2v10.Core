@@ -34,7 +34,7 @@ internal partial class BaseModelBuilder
         IEnumerable<FormItem> Controls()
         {
             Int32 row = 1;
-            return _table.EditableColumns(_appMeta).Select(c => CreateControl(c, row++, 1));
+            return _table.EditableColumns().Select(c => CreateControl(c, row++, 1));
         }
 
         return new Form()
@@ -51,7 +51,7 @@ internal partial class BaseModelBuilder
                     Props = new FormItemProps() 
                     {
                         // rows + 1
-                        Rows = String.Join(' ', _table.EditableColumns(_appMeta).Select(c => "auto")
+                        Rows = String.Join(' ', _table.EditableColumns().Select(c => "auto")
                             .Union(["auto"])),
                         Columns = "1fr"
                     },

@@ -55,7 +55,7 @@ internal partial class BaseModelBuilder
             var col = 1;
             var skipColumns = new HashSet<String>() { "Date", "Done", "Memo" };
 
-            foreach (var c in _table.EditableColumns(_appMeta).Where(c => !skipColumns.Contains(c.Name)))
+            foreach (var c in _table.EditableColumns().Where(c => !skipColumns.Contains(c.Name)))
             {
                 yield return CreateControl(c, row, col++);
                 if (col > cols)
@@ -97,7 +97,7 @@ internal partial class BaseModelBuilder
             {
                 var details = _table.Details.Select(d => 
                 {
-                    var cells = d.EditableColumns(_appMeta).Select(c =>
+                    var cells = d.EditableColumns().Select(c =>
                         new FormItem(FormItemIs.TableCell)
                         {
                             Label = $"@{c.Name}",

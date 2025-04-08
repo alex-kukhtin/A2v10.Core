@@ -76,46 +76,38 @@ internal static class SqlExtensions
 
     internal static Boolean IsFieldUpdated(this TableColumn column)
     {
-        return column.Role != TableColumnRole.PrimaryKey
-            && column.Role != TableColumnRole.Void
-            && column.Role != TableColumnRole.IsFolder
-            && column.Role != TableColumnRole.IsSystem
+        return !column.Role.HasFlag(TableColumnRole.PrimaryKey)
+            && !column.Role.HasFlag(TableColumnRole.Void)
+            && !column.Role.HasFlag(TableColumnRole.IsFolder)
+            && !column.Role.HasFlag(TableColumnRole.IsSystem)
             && column.Name != "Owner"
             && column.Name != "Folder"
-            && column.Role != TableColumnRole.Done;
+            && !column.Role.HasFlag(TableColumnRole.Done);
     }
 
-    internal static IEnumerable<(TableColumn Column, Int32 Index)> RefFields(this TableMetadata table)
+    internal static IEnumerable<String> AllSqlFields(this TableMetadata table, IEnumerable<ReferenceMember> refFields, String alias, Boolean isDetails = false)
     {
-        var index = 0;
-        return table.Columns.Where(c => c.IsReference).Select(c => (Column: c, Index: ++index)).ToList();
-    }
-
-    internal static IEnumerable<String> AllSqlFields(this TableMetadata table, String alias, AppMetadata appMeta, Boolean isDetails = false)
-    {
-        var refFields = table.RefFields();
         foreach (var c in table.Columns.Where(c => !c.IsReference))
-            if (c.Role == TableColumnRole.PrimaryKey)
+            if (c.Role.HasFlag(TableColumnRole.PrimaryKey))
                 yield return $"[{c.Name}!!Id] = {alias}.[{c.Name}]";
-            else if (c.Role == TableColumnRole.RowNo)
+            else if (c.Role.HasFlag(TableColumnRole.RowNo))
                 yield return $"[{c.Name}!!RowNumber] = {alias}.[{c.Name}]";
             else
                 yield return c.IsParent ? $"Folder = {alias}.[{c.Name}]" : $"{alias}.[{c.Name}]";
         foreach (var c in refFields)
         {
-            if (isDetails && c.Column.Role == TableColumnRole.Parent)
+            if (isDetails && c.Column.Role.HasFlag(TableColumnRole.Parent))
                 continue;
             var col = c.Column;
-            var colRef = c.Column.Reference;
             var elemName = col.Name;
             // TR, not T - avoid recursion 
-            var modelType = $"TR{col.Reference.RefTable.Singular()}";
+            var modelType = $"TR{c.Table.RealItemName}";
             if (col.IsParent)
             {
                 elemName = "Folder";
                 modelType = "TFolder";
             }
-            yield return $"[{elemName}.{appMeta.IdField}!{modelType}!Id] = r{c.Index}.[{appMeta.IdField}], [{elemName}.Name!{modelType}!Name] = r{c.Index}.[{appMeta.NameField}]";
+            yield return $"[{elemName}.{c.Table.PrimaryKeyField}!{modelType}!Id] = r{c.Index}.[{c.Table.PrimaryKeyField}], [{elemName}.Name!{modelType}!Name] = r{c.Index}.[{c.Table.NameField}]";
         }
     }
 }

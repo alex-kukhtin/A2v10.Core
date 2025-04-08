@@ -10,13 +10,14 @@ internal partial class BaseModelBuilder
 {
     IEnumerable<FormItem> IndexColumns()
     {
-
-        return _table.VisibleColumns(_appMeta).Select(
+        return _table.VisibleColumns().Select(
             c => new FormItem()
             {
                 Is = FormItemIs.DataGridColumn,
                 DataType = c.ToItemDataType(),
-                Data = c.IsReference ? $"{c.Name}.{_appMeta.NameField}" : c.Name,
+                Data = c.IsReference ? 
+                    $"{c.Name}.{_refFields.First(r => r.Column.Name == c.Name).Table.NameField}" 
+                    : c.Name,
                 Label = $"@{c.Name}"
             }
         );
@@ -124,7 +125,7 @@ internal partial class BaseModelBuilder
             Label = _baseTable?.RealItemsName ?? _table.RealItemsName,
             Props = new FormItemProps()
             {
-                Filters = $"{periodFilter}{String.Join(',', _table.RefFields().Select(c => c.Column.Name))}"
+                Filters = $"{periodFilter}{String.Join(',', _table.Columns.Where(c => c.IsReference).Select(c => c.Name))}"
             },
             Items = [
                 new FormItem() {

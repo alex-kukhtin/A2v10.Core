@@ -14,7 +14,8 @@ internal partial class BaseModelBuilder
     {
         IEnumerable<String> defaults()
         {
-            yield return $$"""'{{_table.RealItemName}}.Date'() { return du.today(); }""";
+            if (_table.Columns.Any(c => c.Name == "Date"))
+                yield return $$"""'{{_table.RealItemName}}.Date'() { return du.today(); }""";
             if (_baseTable != null && _baseTable.IsOperation)
             {
                 var opColumn = _table.Columns.FirstOrDefault(c => c.DataType == ColumnDataType.Operation);

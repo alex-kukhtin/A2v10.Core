@@ -16,7 +16,7 @@ namespace A2v10.Metadata;
 
 internal partial class BaseModelBuilder
 {
-    private String LoadPlainModelSql(TableMetadata table, AppMetadata appMeta)
+    private async Task<String> LoadPlainModelSqlAsync(TableMetadata table)
     {
         String DetailsArray()
         {
@@ -26,7 +26,7 @@ internal partial class BaseModelBuilder
             return $",\n{String.Join(',', detailsArray)}";
         }
 
-        String DetailsContent()
+        async Task<String> DetailsContentAsync()
         {
             if (!table.Details.Any())
                 return String.Empty;
@@ -34,13 +34,18 @@ internal partial class BaseModelBuilder
 
             foreach (var t in table.Details)
             {
+                var refFields = await ReferenceFieldsAsync(t);  
+
+                var parentField = refFields.FirstOrDefault(r => r.Table.SqlTableName == _table.SqlTableName)
+                    ?? throw new InvalidOperationException($"Parent field not found in {t.SqlTableName}");
+
                 sb.AppendLine($"""
                 select [!{t.RealTypeName}!Array] = null,
-                    [!{table.RealTypeName}.{t.RealItemsName}!ParentId] = d.[{appMeta.DetailsKey}],
-                    {String.Join(",", t.AllSqlFields("d", appMeta, isDetails:true))}
+                    [!{table.RealTypeName}.{t.RealItemsName}!ParentId] = d.[{parentField.Column.Name}],
+                    {String.Join(",", t.AllSqlFields(refFields, "d", isDetails:true))}
                 from {t.Schema}.[{t.Name}] d
-                    {RefTableJoins(t.RefFields(), "d")}
-                where d.[{appMeta.DetailsKey}] = @Id
+                    {RefTableJoins(refFields, "d")}
+                where d.[{parentField.Column.Name}] = @Id
                 order by d.[{t.RowNoField}];
                 
                 """);
@@ -59,34 +64,35 @@ internal partial class BaseModelBuilder
             return String.Empty;
         }
 
+        var tableRefFields = await ReferenceFieldsAsync(table);
         return $"""
         
         select [{table.RealItemName}!{table.RealTypeName}!Object] = null,
-            {String.Join(",", table.AllSqlFields("a", appMeta))}{DetailsArray()}
+            {String.Join(",", table.AllSqlFields(tableRefFields, "a"))}{DetailsArray()}
         from 
         {table.Schema}.[{table.Name}] a
-            {RefTableJoins(table.RefFields(), "a")}
+            {RefTableJoins(tableRefFields, "a")}
         where a.[Id] = @Id;
 
-        {DetailsContent()}
+        {await DetailsContentAsync()}
 
         {SystemRecordset()}
 
         """;
 
     }
-    public Task<IDataModel> LoadPlainModelAsync()
+    public async Task<IDataModel> LoadPlainModelAsync()
     {
 
         var sqlString = $"""
             set nocount on;
             set transaction isolation level read uncommitted;
             
-            {LoadPlainModelSql(_table, _appMeta)};
+            {await LoadPlainModelSqlAsync(_table)};
             
             """;
 
-        return _dbContext.LoadModelSqlAsync(_dataSource, sqlString, dbprms =>
+        return await _dbContext.LoadModelSqlAsync(_dataSource, sqlString, dbprms =>
         {
             AddDefaultParameters(dbprms);
             dbprms.AddString("@Id", _platformUrl.Id);
@@ -111,8 +117,8 @@ internal partial class BaseModelBuilder
             var sb = new StringBuilder();
             foreach (var details in _table.Details)
             {
-                var updateFields = details.Columns.Where(f => f.Role != TableColumnRole.Parent && f.Role != TableColumnRole.PrimaryKey);
-                var parentField = details.Columns.FirstOrDefault(f => f.Role == TableColumnRole.Parent)
+                var updateFields = details.Columns.Where(f => !f.Role.HasFlag(TableColumnRole.Parent) && !f.Role.HasFlag(TableColumnRole.PrimaryKey));
+                var parentField = details.Columns.FirstOrDefault(f => f.Role.HasFlag(TableColumnRole.Parent))
                     ?? throw new InvalidOperationException("Parent field not found");
                 sb.AppendLine($"""
 				merge {details.SqlTableName} as t
@@ -154,7 +160,7 @@ internal partial class BaseModelBuilder
         
         {MergeDetails()}
 
-        {LoadPlainModelSql(_table, _appMeta)}
+        {await LoadPlainModelSqlAsync(_table)}
         """;
         var item = data.Get<ExpandoObject>(_table.RealItemName);
         var tableBuilder = new DataTableBuilder(_table, _appMeta);

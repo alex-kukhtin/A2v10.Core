@@ -15,11 +15,15 @@ internal class DatabaseCreator(AppMetadata _meta)
 
             String? nullable = null;
             var constraint = String.Empty;
-            if (column.Role == TableColumnRole.PrimaryKey)
+            if (column.Role.HasFlag(TableColumnRole.PrimaryKey))
             {
                 nullable = NOT_NULL;
-                var defKey = column.DataType switch
+                var colDataType = column.DataType;
+                if (colDataType == ColumnDataType.Id)
+                    colDataType = _meta.IdDataType;
+                var defKey = colDataType switch
                 {
+                    ColumnDataType.Id => $"next value for {table.Schema}.SQ_{table.Name}",
                     ColumnDataType.Uniqueidentifier => "newid()",
                     ColumnDataType.Int or ColumnDataType.BigInt => $"next value for {table.Schema}.SQ_{table.Name}",
                     _ => throw new InvalidOperationException($"Defaults for {column.DataType} is not supported")
@@ -31,7 +35,7 @@ internal class DatabaseCreator(AppMetadata _meta)
                 nullable = NOT_NULL;
                 constraint = $"\n       constraint DF_{table.Name}_{column.Name} default(0)";
             }
-            return $"[{column.Name}] {column.SqlDataType(column.DataType)}{nullable}{constraint}";
+            return $"[{column.Name}] {column.SqlDataType(_meta.IdDataType)}{nullable}{constraint}";
         }
 
         String createSequence()

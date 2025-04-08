@@ -1,7 +1,7 @@
 /*
 Copyright © 2025 Oleksandr Kukhtin
 
-Last updated : 07 apr 2025
+Last updated : 08 apr 2025
 module version : 8540
 */
 
@@ -20,13 +20,12 @@ create table a2meta.[Application]
 		constraint PK_Application primary key,
 	[Name] nvarchar(255),
 	[Title] nvarchar(255),
-	IdDataType nvarchar(32),
-	DetailsKey nvarchar(32) -- Parent, Id
+	IdDataType nvarchar(32)
 );
 go
 ------------------------------------------------
 if not exists (select * from a2meta.[Application] where Id = 10)
-	insert into a2meta.[Application] (Id, [Name], Title, IdDataType, DetailsKey) values (10, N'MyApplication', 'My Application', N'bigint', N'Parent');
+	insert into a2meta.[Application] (Id, [Name], Title, IdDataType) values (10, N'MyApplication', 'My Application', N'bigint');
 go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.SEQUENCES where SEQUENCE_SCHEMA=N'a2meta' and SEQUENCE_NAME=N'SQ_Catalog')
@@ -68,7 +67,8 @@ create table a2meta.[DefaultColumns]
 	[MaxLength] int,
 	Ref nvarchar(32),
 	[Role] int not null
-		constraint DF_DefaultColumns_Role default(0)
+		constraint DF_DefaultColumns_Role default(0),
+	[Order] int not null
 );
 go
 ------------------------------------------------
@@ -203,7 +203,7 @@ begin
 	where c.Parent = @tableId and c.Kind = N'details';
 
 	select [!TColumn!Array] = null, [Id!!Id] = c.Id, c.[Name], DataType = c.DataType, 
-		c.[MaxLength], c.[Role],
+		c.[MaxLength], c.[Role], c.[Order],
 		[Reference.RefSchema!TReference!] = case c.DataType 
 		when N'operation' then N'op' 
 		else r.[Schema] 
@@ -216,7 +216,7 @@ begin
 	from a2meta.Columns c
 		inner join @innerTables it on c.[Table] = it.Id
 		left join a2meta.[Catalog] r on c.Reference = r.Id
-	order by c.[Order]; -- REQUIRED!!!!
+	order by c.Id; -- same as Config.Load
 
 	select [!TApply!Array] = null, [Id!!Id] = a.Id, a.InOut, a.Storno,
 		[Journal.RefSchema!TReference!] = j.[Schema], [Journal.RefTable!TReference!Name] = j.[Name],
@@ -334,40 +334,41 @@ begin
 		(s.Id, 0, s.IsFolder, s.[Schema], s.[Name], Kind);
 
 	declare @defCols table(Id bigint, [Schema] nvarchar(32), Kind nvarchar(32), [Name] nvarchar(255), 	[DataType] nvarchar(32),
-		[MaxLength] int, Ref nvarchar(32), [Role] int);
+		[MaxLength] int, Ref nvarchar(32), [Role] int, [Order] int);
 
-	insert into @defCols(Id, [Schema], Kind, [Name], [Role], DataType, [MaxLength], Ref) values
+	insert into @defCols(Id, [Order], [Schema], Kind, [Name], [Role], DataType, [MaxLength], Ref) values
 	-- Catalog
-	(10, N'cat', N'table', N'Id',       1, N'id', null, null),
-	(11, N'cat', N'table', N'Void',     2, N'bit', null, null),
-	(12, N'cat', N'table', N'IsSystem', 6, N'bit', null, null),
-	(13, N'cat', N'table', N'IsFolder', 3, N'bit', null, null),
-	(14, N'cat', N'table', N'Parent',   4, N'reference', null, N'self'),
-	(15, N'cat', N'table', N'Name',     5, N'string',    255, null),
-	(16, N'cat', N'table', N'Memo',     0, N'string',    255, null),
-	(17, N'cat', N'table', N'Owner',    0, N'reference', null, N'user'),
+	(10, 1, N'cat', N'table', N'Id',         1, N'id', null, null),
+	(11, 2, N'cat', N'table', N'Void',      16, N'bit', null, null),
+	(12, 3, N'cat', N'table', N'IsSystem', 128, N'bit', null, null),
+	(13, 4, N'cat', N'table', N'IsFolder',  64, N'bit', null, null),
+	(14, 5, N'cat', N'table', N'Parent',    32, N'reference', null, N'self'),
+	(15, 6, N'cat', N'table', N'Name',       2, N'string',    255, null),
+	(16, 7, N'cat', N'table', N'Memo',       0, N'string',    255, null),
+	(17, 8, N'cat', N'table', N'Owner',      0, N'reference', null, N'user'),
 	-- Document
-	(20, N'doc', N'table', N'Id',       1, N'id',       null, null),
-	(21, N'doc', N'table', N'Void',     2, N'bit',      null, null),
-	(22, N'doc', N'table', N'Done',     7, N'bit',      null, null),
-	(23, N'doc', N'table', N'Date',     0, N'date',     null, null),
-	(24, N'doc', N'table', N'Name',     5, N'string',   null, null), -- todo: computed
-	(25, N'doc', N'table', N'Sum',      0, N'currency', null, null),
-	(26, N'doc', N'table', N'Memo',     0, N'string', 255, null),
-	(27, N'doc', N'table', N'Owner',    0, N'reference', null, N'user'),
+	(20, 1, N'doc', N'table', N'Id',         1, N'id',       null, null),
+	(21, 2, N'doc', N'table', N'Void',      16, N'bit',      null, null),
+	(22, 3, N'doc', N'table', N'Done',     256, N'bit',      null, null),
+	(23, 4, N'doc', N'table', N'Date',       0, N'date',     null, null),
+	(24, 5, N'doc', N'table', N'Name',       2, N'string',   null, null), -- todo: computed
+	(25, 6, N'doc', N'table', N'Sum',        0, N'currency', null, null),
+	(26, 7, N'doc', N'table', N'Memo',       0, N'string',    255, null),
+	(27, 8, N'doc', N'table', N'Owner',      0, N'reference', null, N'user'),
 	-- cat.Details
-	(30, N'cat', N'details', N'Id',     1, N'id', null, null),
-	(31, N'cat', N'details', N'Parent', 4, N'reference', null, N'parent'),
-	(32, N'cat', N'details', N'RowNo',  8, N'int', null, null),
+	(30, 1, N'cat', N'details', N'Id',      1, N'id',  null, null),
+	(31, 2, N'cat', N'details', N'Parent', 32, N'reference', null, N'parent'),
+	(32, 3, N'cat', N'details', N'RowNo',   8, N'int', null, null),
 	-- doc.Details
-	(40, N'doc', N'details', N'Id',     1, N'id', null, null),
-	(41, N'doc', N'details', N'Parent', 4, N'reference', null, N'parent'),
-	(42, N'doc', N'details', N'RowNo',  8, N'int', null, null),
+	(40, 1, N'doc', N'details', N'Id',       1, N'id',   null, null),
+	(41, 2, N'doc', N'details', N'Parent',  32, N'reference',  null, N'parent'),
+	(42, 3, N'doc', N'details', N'RowNo',    8, N'int',  null, null),
+	(43, 4, N'doc', N'details', N'Kind',   512, N'string', 32, null),
 	-- jrn.Journal
-	(50, N'jrn', N'table', N'Id',       1, N'id', null, null),
-	(51, N'jrn', N'table', N'Date',     0, N'datetime', null, null),
-	(52, N'jrn', N'table', N'InOut',    0, N'int', null, null),
-	(53, N'jrn', N'table', N'Owner',    0, N'reference', null, N'user');
+	(50, 1, N'jrn', N'table', N'Id',       1, N'id', null, null),
+	(51, 2, N'jrn', N'table', N'Date',     0, N'datetime', null, null),
+	(52, 3, N'jrn', N'table', N'InOut',    0, N'int', null, null),
+	(53, 4, N'jrn', N'table', N'Owner',    0, N'reference', null, N'user');
 
 	merge a2meta.DefaultColumns as t
 	using @defCols as s
@@ -379,12 +380,14 @@ begin
 		t.DataType = s.DataType,
 		t.[MaxLength] = s.[MaxLength],
 		t.Ref = s.Ref,
-		t.[Role] = s.[Role]
+		t.[Role] = s.[Role],
+		t.[Order] = s.[Order]
 	when not matched then insert
-		(Id, [Schema], Kind, [Name], DataType, [MaxLength], Ref, [Role]) values
-		(Id, [Schema], Kind, [Name], DataType, [MaxLength], s.Ref, s.[Role]);
+		(Id, [Schema], Kind, [Name], DataType, [MaxLength], Ref, [Role], [Order]) values
+		(Id, [Schema], Kind, [Name], DataType, [MaxLength], s.Ref, s.[Role], [Order]);
 end
 go
+-- DELETE 
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'TablesMetadata')
 create table a2meta.TablesMetadata
@@ -399,6 +402,7 @@ create table a2meta.TablesMetadata
 	constraint PK_TablesMetadata primary key([Schema], [Table])
 );
 go
+-- DELETE
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'TableDetails')
 create table a2meta.TableDetails
@@ -449,7 +453,7 @@ begin
 
 	declare @appId bigint = 10;
 
-	select [Application!TApp!Object] = null, IdDataType, DetailsKey,
+	select [Application!TApp!Object] = null, IdDataType,
 		[Name] = cast(null as nvarchar(32))
 	from a2meta.[Application] where Id = @appId;
 end
@@ -484,6 +488,8 @@ as
 begin
 	set nocount on;
 	set transaction isolation level read uncommitted;
+
+	-- FOR DEPLOY
 	
 	declare @appId bigint = 10;
 
@@ -506,7 +512,7 @@ begin
 		inner join a2meta.[Catalog] t on c.[Table] = t.Id 
 		left join a2meta.[Catalog] r on c.Reference = r.Id
 		left join INFORMATION_SCHEMA.COLUMNS ic on ic.TABLE_SCHEMA = t.[Schema] and ic.TABLE_NAME = t.[Name] and ic.COLUMN_NAME = c.[Name]
-	order by c.[Order]; -- REQUIRED!!!
+	order by c.Id; /* same as Table.Schema */
 end
 go
 ------------------------------------------------

@@ -30,6 +30,7 @@ internal partial class BaseModelBuilder(
     protected Boolean IsDialog => _platformUrl.Kind == UrlKind.Dialog;
     protected String Action => _platformUrl.Action.ToLowerInvariant();
 
+    protected IEnumerable<ReferenceMember> _refFields = default!;
     public TableMetadata Table => _table;
     public TableMetadata? BaseTable => _baseTable;
     public AppMetadata AppMeta => _appMeta;
@@ -48,6 +49,7 @@ internal partial class BaseModelBuilder(
         _platformUrl = platformUrl;
         _table = await _metadataProvider.GetSchemaAsync(modelBase.Meta, modelBase.DataSource);
         await CheckParent(modelBase.DataSource);
+        _refFields = await ReferenceFieldsAsync(_table);
         _appMeta = await _metadataProvider.GetAppMetadataAsync(modelBase.DataSource);
     }
 
@@ -58,6 +60,7 @@ internal partial class BaseModelBuilder(
         _platformUrl = platformUrl;
         _table = await _metadataProvider.GetSchemaAsync(_dataSource, table.Schema, table.Name);
         await CheckParent(_dataSource);
+        _refFields = await ReferenceFieldsAsync(_table);
         _appMeta = await _metadataProvider.GetAppMetadataAsync(_dataSource);
     }
 
@@ -172,15 +175,13 @@ internal partial class BaseModelBuilder(
             .AddDate("@To", DateTimeFromString(qry?.Get<String>("To")));
     }
 
-    protected String RefTableJoins(IEnumerable<(TableColumn Column, Int32 Index)> refFields, String alias)
+    protected String RefTableJoins(IEnumerable<ReferenceMember> refFields, String alias)
     {
         var sb = new StringBuilder();
-        foreach (var col in refFields)
+        foreach (var refField in refFields)
         {
-            var rc = col.Column.Reference ??
-                throw new InvalidOperationException("Invalid Reference");
             sb.AppendLine($"""
-                left join {rc.RefSchema}.[{rc.RefTable}] r{col.Index} on {alias}.[{col.Column.Name}] = r{col.Index}.[{_appMeta.IdField}]
+                left join {refField.Table.SqlTableName} r{refField.Index} on {alias}.[{refField.Column.Name}] = r{refField.Index}.[{refField.Table.PrimaryKeyField}]
             """);
         }
         return sb.ToString();

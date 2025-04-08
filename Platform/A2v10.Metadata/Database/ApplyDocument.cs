@@ -3,10 +3,10 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Dynamic;
 
 using A2v10.Infrastructure;
 using A2v10.Data.Core.Extensions;
-using System.Dynamic;
 
 namespace A2v10.Metadata;
 
@@ -14,13 +14,14 @@ internal partial class BaseModelBuilder
 {
     /* В журнале обязательно InOut, Document */
     /* В документе обязательно Id, Done */
+    /* TODO: Find 'Document' field */
     private async Task<IInvokeResult> ApplyDocumentAsync(ExpandoObject? prms)
     {
         var opColumn = _table.Columns.FirstOrDefault(c => c.DataType == ColumnDataType.Operation);
         if (opColumn == null)
             throw new InvalidOperationException("Implement. Apply for Document");
 
-        var doneColumn = _table.Columns.FirstOrDefault(c => c.Name == "Done")
+        var doneColumn = _table.Columns.FirstOrDefault(c => c.Role.HasFlag(TableColumnRole.Done))
             ?? throw new InvalidOperationException("Document. The 'Done' сolumn is not found");
 
         TableMetadata applyTable = this._baseTable ?? _table;
@@ -45,7 +46,7 @@ internal partial class BaseModelBuilder
             {
                 if (a.Details == null)
                     return string.Empty;
-                return $"inner join {a.Details.SqlTableName} {rowsAlias} on {rowsAlias}.[Parent] = {docAlias}.[{_appMeta.IdField}]";
+                return $"inner join {a.Details.SqlTableName} {rowsAlias} on {rowsAlias}.[Parent] = {docAlias}.[{_table.PrimaryKeyField}]";
             }
 
             return $"""
@@ -67,7 +68,7 @@ internal partial class BaseModelBuilder
 
         {String.Join(";\n", applyTable.Apply.Select(a => InsertIntoJournal(a)))}
 
-        update {_table.SqlTableName} set [Done] = 1 where [{_table.PrimaryKeyField}] = @Id;
+        update {_table.SqlTableName} set [{_table.DoneField}] = 1 where [{_table.PrimaryKeyField}] = @Id;
         commit tran;
         """;
 
@@ -84,9 +85,10 @@ internal partial class BaseModelBuilder
     private async Task<IInvokeResult> UnApplyDocumentAsync(ExpandoObject? prms)
     {
         var opColumn = _table.Columns.FirstOrDefault(c => c.DataType == ColumnDataType.Operation);
+
         if (opColumn == null)
             throw new InvalidOperationException("Implement. UnApply for Document");
-        var doneColumn = _table.Columns.FirstOrDefault(c => c.Name == "Done")
+        var doneColumn = _table.Columns.FirstOrDefault(c => c.Role.HasFlag(TableColumnRole.Done))
             ?? throw new InvalidOperationException("Document. The 'Done' сolumn is not found");
 
         TableMetadata applyTable = this._baseTable ?? _table;
@@ -95,7 +97,8 @@ internal partial class BaseModelBuilder
 
         var journals = applyTable.Apply.Select(c => c.Journal).Distinct(new ColumnReferenceComparer());
 
-        var deleteFromJournals = journals.Select(j => $"delete from {j.SqlTableName} where [Document] = @Id");
+        var deleteFromJournals = journals.Select(j => 
+            $"delete from {j.SqlTableName} where [Document] = @Id");
 
         var unApplySql = $"""
         set nocount on;
@@ -105,7 +108,7 @@ internal partial class BaseModelBuilder
         begin tran;
         {String.Join(";\n", deleteFromJournals)}
         
-        update {_table.SqlTableName} set [Done] = 0 where [{_table.PrimaryKeyField}] = @Id;
+        update {_table.SqlTableName} set [{_table.DoneField}] = 0 where [{_table.PrimaryKeyField}] = @Id;
         commit tran;
 
         """;

@@ -44,29 +44,29 @@ internal static class FormExtensions
         };
     }
 
-    public static IEnumerable<TableColumn> VisibleColumns(this TableMetadata table, AppMetadata appMeta)
+    public static IEnumerable<TableColumn> VisibleColumns(this TableMetadata table)
     {
         Boolean IsVisible(TableColumn column)
         {
-            return column.Role != TableColumnRole.Void
-                && column.Role != TableColumnRole.IsFolder
-                && column.Role != TableColumnRole.IsSystem;
+            return !column.Role.HasFlag(TableColumnRole.Void)
+                && !column.Role.HasFlag(TableColumnRole.IsFolder)
+                && !column.Role.HasFlag(TableColumnRole.IsSystem);
         }
 
-        return table.Columns.Where(c => IsVisible(c));
+        return table.Columns.Where(IsVisible).OrderBy(c => c.Order);
     }
 
-    public static IEnumerable<TableColumn> EditableColumns(this TableMetadata table, AppMetadata appMeta)
+    public static IEnumerable<TableColumn> EditableColumns(this TableMetadata table)
     {
         Boolean IsVisible(TableColumn column)
         {
             return column.Role != TableColumnRole.Void
-                && column.Role != TableColumnRole.PrimaryKey
-                && column.Role != TableColumnRole.IsFolder
-                && column.Role != TableColumnRole.IsSystem
+                && !column.Role.HasFlag(TableColumnRole.PrimaryKey)
+                && !column.Role.HasFlag(TableColumnRole.IsFolder)
+                && !column.Role.HasFlag(TableColumnRole.IsSystem)
                 && column.Name != "Parent"; // TODO???
         }
 
-        return table.Columns.Where(c => IsVisible(c));
+        return table.Columns.Where(IsVisible).OrderBy(c => c.Order);
     }
 }
