@@ -104,7 +104,7 @@
 
 	// TODO: ������������� ������� Dialog.Label => Dialog.Title?
 	const PROP_MAP = {
-		Grid: ["Height"],
+		Grid: ["Height", "CssClass"],
 		TextBox: ["Data", 'Label', "Width"],
 		DatePicker: ["Data", 'Label', "Width"],
 		PeriodPicker: ["Data", 'Label', "Width"],
@@ -113,11 +113,12 @@
 		Label: ["Label"],
 		Panel: ["Label"],
 		DataGridColumn: ["Data", 'Label'],
-		Toolbar: [],
+		Toolbar: ["CssClass"],
+		Tabs: ["CssClass"],
 		Pager: ['Data'],
 		Dialog: ['Label', 'Width', 'Height', "Data"],
-		Page: ['Label', "Data", "UseCollectionView"],
-		Button: ['Label'],
+		Page: ['Label', "Data", "CssClass", "UseCollectionView"],
+		Button: ['Label', "CssClass", "If"],
 		GRID_PROPS: ['Row', 'Col', 'RowSpan', 'ColSpan'],
 		COMMAND_PROPS: ['Command', 'Argument', 'Url'],
 		OTHER_PROPS: {
@@ -216,7 +217,7 @@
 	<button class="btn btn-tb btn-icon" @click="clickCmd('save')" :disabled="disabled()">
 		<i class="ico ico-save-outline" />
 	</button>
-	<button class="btn btn-tb btn-icon" >
+	<button class="btn btn-tb btn-icon" @click=deleteItem >
 		<i class="ico ico-clear" />
 	</button>
 	<div class="divider" />
@@ -235,6 +236,9 @@
 			clickCmd(cmd) {
 				if (!this.host) return;
 				this.host.exec(cmd);
+			},
+			deleteItem() {
+				this.$parent.deleteItem();
 			},
 			disabled() {
 				if (!this.host) return true;
@@ -564,16 +568,33 @@
 	};
 
 
+	const checkBoxTemplate = `
+<label class="checkbox" :label="item.Label" :style=controlStyle >
+	<input type="checkbox" xcheck="true" checked />
+	<span v-text=item.Label />
+</label>
+`;
+
+	const checkBox = {
+		template: checkBoxTemplate,
+		extends: control
+	};
+
+
 	var inputControls = {
-		searchBox
+		searchBox,
+		checkBox
 	};
 
 	var itemToolbar = {
-		template: `<div class="toolbar" @dragover=dragOver @drop=drop @click.stop.prevent=select :class="{ selected }">
+		template: `<div class="toolbar" @dragover=dragOver @drop=drop >
 		<component :is="item.Is" v-for="(item, ix) in item.Items" :item="item" :key="ix" :cont=cont />
-		<div class="fd-grid-handle">▷</div>
+		<div v-if="!isPage" class="fd-grid-handle">▷</div>
 	</div>`,
 		extends: layoutelem,
+		props: {
+			isPage: Boolean,
+		},
 		components: {
 			'Button': button$1,
 			'Aligner': aligner,
@@ -601,11 +622,13 @@
 	};
 
 	const tabsTemplate = `
-<div class="fd-elem-tabs">
-	TABS
-	<ul>
-		<li v-for="(itm, ix) in item.Items" v-text="itm.Label" :key=ix />
-	</ul>
+<div class="fd-elem-tabs a2-tab-bar">
+	<div class="a2-tab-bar-item active" v-for="(itm, ix) in item.Items" :key=ix>
+		<a class="a2-tab-button active">
+			<span class="content" v-text="itm.Label" />
+		</a>
+	</div>
+	<div class="fd-grid-handle">▷</div>
 </div>
 `;
 
@@ -637,6 +660,7 @@
 			'DatePicker': datePicker,
 			'PeriodPicker': periodPicker,
 			'DataGrid': datagrid,
+			'CheckBox': inputControls.checkBox,
 			'Label': label, 
 			'Header': header,
 			'Pager': pager,
@@ -672,7 +696,12 @@
 					height: this.item.Height || ''
 				};
 			},
+			isSameSelected() {
+				let itmIs = this.item.Is;
+				return itmIs == 'Grid';
+			},
 			selected() {
+				if (this.isSameSelected) return;
 				return this.cont.isActive(this.item);
 			}
 		},
@@ -699,7 +728,6 @@
 			:key="row + ':' + col" :cont=cont />
 	</template>
 	<fd-grid-item v-for="(itm, ix) in item.Items" :item=itm :key=ix :cont=cont />
-
 	<div class="fd-grid-handle">▷</div>
 </div>
 `;
@@ -846,7 +874,7 @@
 			</div>
 			<div class="fd-content">
 				<div v-if="form.Toolbar" class="form-toolbar">
-					<Toolbar :item="form.Toolbar" :cont=cont class="toolbar"/>
+					<Toolbar :item="form.Toolbar" :cont=cont class="page-toolbar" :is-page="true"/>
 				</div>
 				<component v-for="(itm, ix) in form.Items" :key="ix" :is="itm.Is"
 					:item="itm" :cont=cont />
@@ -907,7 +935,6 @@
 				return this.form.Is === 'Dialog';
 			},
 			isPage() {
-				console.dir(this.form);
 				return this.form.Is === 'Page';
 			}
 		},
@@ -934,6 +961,7 @@
 				if (ix < 0) return;
 				g.Items.splice(ix, 1);
 				this.selectedItem = this.form;
+				this.setDirty();
 			},
 			findGridByItem(tf) {
 				function findInContainer(el, tf) {
@@ -967,18 +995,18 @@
 				console.dir(this.selectedItem);
 				console.dir(rc);
 
-				let sg = this.selectedItem.Grid || {};
-				/*
-				if (!this.selectedItem.Grid.Row && !this.selectedItem.Grid.Col) {
+				let sg = this.selectedItem || {};
+
+				if (!sg.Grid) {
 					// clone element
 					let no = Object.assign({}, this.selectedItem);
 					no.Items = [];
 					no.Grid = { Row: rc.row, Col: rc.col };	
 					rc.grid.Items.push(no);
 					this.selectedItem = no;
+					this.setDirty();
 					return;
 				}
-				*/
 
 				let fg = this.findGridByItem(this.selectedItem);
 
