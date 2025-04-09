@@ -1,6 +1,5 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
-using DocumentFormat.OpenXml.Wordprocessing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,7 +28,10 @@ internal partial class BaseModelBuilder
             if (_table.Details.Count > 0)
             {
                 var fd = _table.Details.First();
-                yield return $$"""'{{_table.RealTypeName}}.$$Tab': {type: String, value: '{{fd.Name}}'}""";
+                if (fd.Kinds.Count == 0)
+                    yield return $$"""'{{_table.RealTypeName}}.$$Tab': {type: String, value: '{{fd.Name}}'}""";
+                else
+                    yield return $$"""'{{_table.RealTypeName}}.$$Tab': {type: String, value: '{{fd.Kinds.First().Name}}'}""";
             }
         }
 

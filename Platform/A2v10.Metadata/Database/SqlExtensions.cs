@@ -90,13 +90,15 @@ internal static class SqlExtensions
         foreach (var c in table.Columns.Where(c => !c.IsReference))
             if (c.Role.HasFlag(TableColumnRole.PrimaryKey))
                 yield return $"[{c.Name}!!Id] = {alias}.[{c.Name}]";
+            else if (isDetails && c.Role.HasFlag(TableColumnRole.Kind))
+                continue;
             else if (c.Role.HasFlag(TableColumnRole.RowNo))
                 yield return $"[{c.Name}!!RowNumber] = {alias}.[{c.Name}]";
             else
                 yield return c.IsParent ? $"Folder = {alias}.[{c.Name}]" : $"{alias}.[{c.Name}]";
         foreach (var c in refFields)
         {
-            if (isDetails && c.Column.Role.HasFlag(TableColumnRole.Parent))
+            if (isDetails && (c.Column.Role.HasFlag(TableColumnRole.Parent) || c.Column.Role.HasFlag(TableColumnRole.Kind)))
                 continue;
             var col = c.Column;
             var elemName = col.Name;

@@ -30,6 +30,7 @@ internal static class FormExtensions
             ColumnDataType.DateTime => ItemDataType.DateTime,
             ColumnDataType.Money => ItemDataType.Currency,
             ColumnDataType.Float => ItemDataType.Number,
+            ColumnDataType.Int => ItemDataType.Number,
             _ => ItemDataType._,
         };
     }
@@ -50,6 +51,7 @@ internal static class FormExtensions
         {
             return !column.Role.HasFlag(TableColumnRole.Void)
                 && !column.Role.HasFlag(TableColumnRole.IsFolder)
+                && !column.Role.HasFlag(TableColumnRole.Kind)
                 && !column.Role.HasFlag(TableColumnRole.IsSystem);
         }
 
@@ -64,6 +66,7 @@ internal static class FormExtensions
                 && !column.Role.HasFlag(TableColumnRole.PrimaryKey)
                 && !column.Role.HasFlag(TableColumnRole.IsFolder)
                 && !column.Role.HasFlag(TableColumnRole.IsSystem)
+                && !column.Role.HasFlag(TableColumnRole.Kind)
                 && column.Name != "Parent"; // TODO???
         }
 

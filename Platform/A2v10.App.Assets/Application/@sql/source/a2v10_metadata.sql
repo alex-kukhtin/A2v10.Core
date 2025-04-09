@@ -97,6 +97,24 @@ create table a2meta.[Columns]
 );
 go
 ------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.SEQUENCES where SEQUENCE_SCHEMA=N'a2meta' and SEQUENCE_NAME=N'SQ_DetailsKinds')
+	create sequence a2meta.SQ_DetailsKinds as bigint start with 100 increment by 1;
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'DetailsKinds')
+create table a2meta.[DetailsKinds]
+(
+	[Id] bigint not null
+		constraint DF_DetailsKinds_Id default(next value for a2meta.SQ_DetailsKinds)
+		constraint PK_DetailsKinds primary key,
+	[Details] bigint not null
+		constraint FK_DetailsKinds_Table_Catalog references a2meta.[Catalog](Id),
+	[Order] int not null,
+	[Name] nvarchar(32),
+	[Label] nvarchar(255)
+);
+go
+------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'Forms')
 create table a2meta.[Forms]
 (
@@ -127,7 +145,9 @@ create table a2meta.[Apply]
 		constraint FK_Apply_Details_Catalog references a2meta.[Catalog](Id),
 	[InOut] smallint not null,
 	Storno bit not null
-		constraint DF_Apply_Storno default(0)
+		constraint DF_Apply_Storno default(0),
+	Kind bigint
+		constraint FK_Apply_Kind_DetailsKinds references a2meta.DetailsKinds(Id),
 );
 go
 ------------------------------------------------
@@ -190,7 +210,8 @@ begin
 		[ParentTable.RefSchema!TReference!] = pt.[Schema], [ParentTable.RefTable!TReference] = pt.[Name],
 		[Columns!TColumn!Array] = null,
 		[Details!TTable!Array] = null,
-		[Apply!TApply!Array] = null
+		[Apply!TApply!Array] = null,
+		[Kinds!TKind!Array] = null
 	from a2meta.view_RealTables c 
 		left join a2meta.[Catalog] pt on c.ParentTable = pt.Id
 	where c.Id = @tableId and c.Kind in (N'table', N'operation');
@@ -198,6 +219,7 @@ begin
 	select [!TTable!Array] = null, [Id!!Id] = c.Id, [Schema] = c.[Schema], [Name] = c.[Name],
 		c.ItemsName, c.ItemName, c.TypeName,
 		[Columns!TColumn!Array] = null,
+		[Kinds!TKind!Array] = null,
 		[!TTable.Details!ParentId] = c.Parent
 	from a2meta.view_RealTables c 
 	where c.Parent = @tableId and c.Kind = N'details';
@@ -218,7 +240,7 @@ begin
 		left join a2meta.[Catalog] r on c.Reference = r.Id
 	order by c.Id; -- same as Config.Load
 
-	select [!TApply!Array] = null, [Id!!Id] = a.Id, a.InOut, a.Storno,
+	select [!TApply!Array] = null, [Id!!Id] = a.Id, a.InOut, a.Storno, DetailsKind = dk.[Name],
 		[Journal.RefSchema!TReference!] = j.[Schema], [Journal.RefTable!TReference!Name] = j.[Name],
 		[Details.RefSchema!TReference!] = d.[Schema], [Details.RefTable!TReference!Name] = d.[Name],
 		[Mapping!TMapping!Array] = null,
@@ -226,7 +248,13 @@ begin
 	from a2meta.Apply a 
 		inner join a2meta.[Catalog] j on a.Journal = j.Id -- always
 		left join a2meta.[Catalog] d on a.Details = d.Id -- possible
+		left join a2meta.DetailsKinds dk on a.Kind = dk.Id and dk.Details = a.Details
 	where a.[Table] = @tableId;
+
+	select [!TKind!Array] = null, [Id!!Id] = a.Id, a.[Name], a.[Label],
+		[!TTable.Kinds!ParentId] = a.[Details]
+	from a2meta.DetailsKinds a 
+		inner join @innerTables it on a.Details = it.Id and it.Kind = N'details';
 
 	select [!TMapping!Array] = null, [Id!!Id] = m.Id,
 		[Target] = t.[Name], 
@@ -239,6 +267,7 @@ begin
 		inner join a2meta.Columns s on m.Source= s.Id
 		inner join a2meta.[Catalog] st on s.[Table] = st.Id
 	where a.[Table] = @tableId;
+
 end
 go
 ------------------------------------------------
@@ -516,11 +545,12 @@ begin
 end
 go
 ------------------------------------------------
-/*
-declare @Schema nvarchar(255) = N'cat';
-declare @Table nvarchar(255) = N'Companies';
+declare @Schema nvarchar(255) = N'op';
+declare @Table nvarchar(255) = N'BillIn';
 
 exec a2meta.[Table.Schema] @Schema, @Table;
+
+/*
 */
 
 /*
@@ -567,11 +597,13 @@ drop table a2meta.[Catalog];
 
 --exec a2meta.[Config.Load] 99
 
+/*
 declare @Schema nvarchar(255) = N'doc';
 declare @Table nvarchar(255) = N'ClientOrders';
 
 exec a2meta.[Table.Schema] @Schema, @Table;
 --exec a2meta.[Config.Load] 99 @Schema, @Table;
+*/
 
 --select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where CONSTRAINT_NAME = N'FK_Columns_Parent_Catalog'
 

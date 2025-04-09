@@ -33,10 +33,22 @@ internal partial class BaseModelBuilder
 
         String InsertIntoJournal(TableApply a)
         {
+            // a.DetailsKind
             if (a.Mapping == null || a.Mapping.Count == 0)
                 throw new InvalidOperationException("Mapping is null");
             var docAlias = "d";
             var rowsAlias = "r";
+
+            String onUseKind = String.Empty;
+
+            if (a.Details != null && !String.IsNullOrEmpty(a.DetailsKind))
+            {
+                var td = _table.Details.FirstOrDefault(x => x.Name == a.Details.RefTable)
+                    ?? throw new InvalidOperationException($"Details {a.Details.RefTable} not found");
+                var kindField = td.KindField;
+                onUseKind = $" and r.[{kindField}] = N'{a.DetailsKind}'";
+            }
+
             String applyKindAlias(ApplySourceKind kind) => kind == ApplySourceKind.Details ? rowsAlias : docAlias;
 
             // alias = "d" for document "r" for details
@@ -46,11 +58,11 @@ internal partial class BaseModelBuilder
             {
                 if (a.Details == null)
                     return string.Empty;
-                return $"inner join {a.Details.SqlTableName} {rowsAlias} on {rowsAlias}.[Parent] = {docAlias}.[{_table.PrimaryKeyField}]";
+                return $"inner join {a.Details.SqlTableName} {rowsAlias} on {rowsAlias}.[Parent] = {docAlias}.[{_table.PrimaryKeyField}]{onUseKind}";
             }
 
             return $"""
-                insert into {a.Journal.SqlTableName} (InOut, Document, {String.Join(',', fields.Select(f => f.Target))})
+                insert into {a.Journal.SqlTableName} ([InOut], [Document], {String.Join(',', fields.Select(f => f.Target))})
                 select {a.InOut}, @Id, {String.Join(',', fields.Select(f => f.Source))}
                 from {_table.SqlTableName} {docAlias}
                 {JoinDetails()}
@@ -75,7 +87,7 @@ internal partial class BaseModelBuilder
         await _dbContext.LoadModelSqlAsync(_dataSource, applySql, dbprms =>
         {
             dbprms.AddBigInt("@UserId", _currentUser.Identity.Id)
-            .AddString("@Id", prms?.Get<Object>("Id")?.ToString());
+            .AddString("@Id", prms?.Get<Object>(_table.PrimaryKeyField)?.ToString());
         });
 
         return EmptyInvokeResult.FromString("{}", MimeTypes.Application.Json);

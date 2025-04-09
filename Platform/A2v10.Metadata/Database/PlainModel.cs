@@ -22,7 +22,12 @@ internal partial class BaseModelBuilder
         {
             if (!table.Details.Any())
                 return String.Empty;
-            var detailsArray = table.Details.Select(t => $"[{t.RealItemsName}!{t.RealTypeName}!Array] = null");
+
+            var detailsArray = table.Details.Select(d => {
+                if (d.Kinds.Count == 0)
+                    return $"[{d.RealItemsName}!{d.RealTypeName}!Array] = null";
+                return String.Join(",", d.Kinds.Select(k => $"[{k.Name}!{d.RealTypeName}!Array] = null"));
+            });
             return $",\n{String.Join(',', detailsArray)}";
         }
 
@@ -34,14 +39,24 @@ internal partial class BaseModelBuilder
 
             foreach (var t in table.Details)
             {
-                var refFields = await ReferenceFieldsAsync(t);  
+                var refFields = await ReferenceFieldsAsync(t);
+
+                var kindField = t.KindField;
 
                 var parentField = refFields.FirstOrDefault(r => r.Table.SqlTableName == _table.SqlTableName)
-                    ?? throw new InvalidOperationException($"Parent field not found in {t.SqlTableName}");
+                    ?? throw new InvalidOperationException($"Parent field not found in {_table.SqlTableName}");
+
+                var detailsParentIdField = $"[!{table.RealTypeName}.{t.RealItemsName}!ParentId] = d.[{parentField.Column.Name}]";
+                if (t.Kinds.Count > 0)
+                {
+                    detailsParentIdField = String.Join(',', t.Kinds.Select(k =>
+                        $"[!{table.RealTypeName}.{k.Name}!ParentId] = case when d.[{kindField}] = N'{k.Name}' then d.[{parentField.Column.Name}] else null end"
+                    ));
+                }
 
                 sb.AppendLine($"""
                 select [!{t.RealTypeName}!Array] = null,
-                    [!{table.RealTypeName}.{t.RealItemsName}!ParentId] = d.[{parentField.Column.Name}],
+                    {detailsParentIdField},
                     {String.Join(",", t.AllSqlFields(refFields, "d", isDetails:true))}
                 from {t.Schema}.[{t.Name}] d
                     {RefTableJoins(refFields, "d")}
@@ -65,12 +80,12 @@ internal partial class BaseModelBuilder
         }
 
         var tableRefFields = await ReferenceFieldsAsync(table);
+
         return $"""
         
         select [{table.RealItemName}!{table.RealTypeName}!Object] = null,
             {String.Join(",", table.AllSqlFields(tableRefFields, "a"))}{DetailsArray()}
-        from 
-        {table.Schema}.[{table.Name}] a
+        from {table.Schema}.[{table.Name}] a
             {RefTableJoins(tableRefFields, "a")}
         where a.[Id] = @Id;
 
@@ -115,22 +130,60 @@ internal partial class BaseModelBuilder
             if (_table.Details == null || _table.Details.Count == 0)
                 return String.Empty;
             var sb = new StringBuilder();
-            foreach (var details in _table.Details)
+
+            String mergeOneDetails(TableMetadata detailsTable)
             {
-                var updateFields = details.Columns.Where(f => !f.Role.HasFlag(TableColumnRole.Parent) && !f.Role.HasFlag(TableColumnRole.PrimaryKey));
-                var parentField = details.Columns.FirstOrDefault(f => f.Role.HasFlag(TableColumnRole.Parent))
+                var updateFields = detailsTable.Columns.Where(f => !f.Role.HasFlag(TableColumnRole.Parent) && !f.Role.HasFlag(TableColumnRole.PrimaryKey) && f.Role.HasFlag(TableColumnRole.Kind));
+                var parentField = detailsTable.Columns.FirstOrDefault(f => f.Role.HasFlag(TableColumnRole.Parent))
                     ?? throw new InvalidOperationException("Parent field not found");
-                sb.AppendLine($"""
-				merge {details.SqlTableName} as t
-				using @{details.Name} as s
-				on t.Id = s.Id
+                return $"""
+				merge {detailsTable.SqlTableName} as t
+				using @{detailsTable.Name} as s
+				on t.{detailsTable.PrimaryKeyField} = s.{detailsTable.PrimaryKeyField}
 				when matched then update set
 					{String.Join(',', updateFields.Select(f => $"t.[{f.Name}] = s.[{f.Name}]"))}
 				when not matched then insert 
-					({parentField.Name}, {String.Join(',', updateFields.Select(f => $"[{f.Name}]"))}) values
+					([{parentField.Name}], {String.Join(',', updateFields.Select(f => $"[{f.Name}]"))}) values
 					(@Id, {String.Join(',', updateFields.Select(f => $"s.[{f.Name}]"))})
 				when not matched by source and t.[{parentField.Name}] = @Id then delete;
-				""");
+				""";
+            }
+
+            String mergeMultiDetails(TableMetadata detailsTable)
+            {
+                var updateFields = 
+                    detailsTable.Columns.Where(f => !f.Role.HasFlag(TableColumnRole.Parent) && !f.Role.HasFlag(TableColumnRole.PrimaryKey) && !f.Role.HasFlag(TableColumnRole.Kind));
+                var parentField = detailsTable.Columns.FirstOrDefault(f => f.Role.HasFlag(TableColumnRole.Parent))
+                    ?? throw new InvalidOperationException("Parent field not found");
+                var kindField = detailsTable.Columns.FirstOrDefault(f => f.Role.HasFlag(TableColumnRole.Kind))
+                    ?? throw new InvalidOperationException("Kind field not found");
+
+                var usingDetails = detailsTable.Kinds.Select(k => 
+                    $"select [__Kind__] = N'{k.Name}', * from @{k.Name}"
+                );
+
+                return $"""
+				with ST as (
+				    {String.Join("\nunion all\n", usingDetails)}
+				)
+				merge {detailsTable.SqlTableName} as t
+				using ST as s
+				on t.{detailsTable.PrimaryKeyField} = s.{detailsTable.PrimaryKeyField}
+				when matched then update set
+					{String.Join(',', updateFields.Select(f => $"t.[{f.Name}] = s.[{f.Name}]"))}
+				when not matched then insert 
+					([{parentField.Name}], [{kindField.Name}], {String.Join(',', updateFields.Select(f => $"[{f.Name}]"))}) values
+					(@Id, s.[__Kind__], {String.Join(',', updateFields.Select(f => $"s.[{f.Name}]"))})
+				when not matched by source and t.[{parentField.Name}] = @Id then delete;
+				""";
+            }
+
+            foreach (var details in _table.Details)
+            {
+                if (details.Kinds.Count == 0)
+                    sb.AppendLine(mergeOneDetails(details));
+                else
+                    sb.AppendLine(mergeMultiDetails(details));
                 sb.AppendLine();
             }
             return sb.ToString();
@@ -173,10 +226,22 @@ internal partial class BaseModelBuilder
             dbprms.AddStructured($"@{_table.RealItemName}", _table.TableTypeName, dtable);
             _table.Details.ForEach(details =>
             {
-                var rows = item?.Get<List<Object>>($"{details.Name}");
                 var detailsTableBuilder = new DataTableBuilder(details, _appMeta);
-                var detailsTable = detailsTableBuilder.BuildDataTable(rows);
-                dbprms.AddStructured($"@{details.Name}", details.TableTypeName, detailsTable);
+                if (details.Kinds.Count > 0)
+                {
+                    foreach (var k in details.Kinds)
+                    {
+                        var rows = item?.Get<List<Object>>($"{k.Name}");
+                        var detailsTable = detailsTableBuilder.BuildDataTable(rows);
+                        dbprms.AddStructured($"@{k.Name}", details.TableTypeName, detailsTable);
+                    }
+                }
+                else
+                {
+                    var rows = item?.Get<List<Object>>($"{details.Name}");
+                    var detailsTable = detailsTableBuilder.BuildDataTable(rows);
+                    dbprms.AddStructured($"@{details.Name}", details.TableTypeName, detailsTable);
+                }
             });
         });
         return dm.Root; 

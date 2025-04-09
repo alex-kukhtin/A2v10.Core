@@ -16,6 +16,15 @@ public class DatabaseMetadataCache
     ConcurrentDictionary<String, EndpointTableInfo> _endpoints = [];
     ConcurrentDictionary<String, FormMetadata> _formCache = [];
     ConcurrentDictionary<String, AppMetadata> _appMetaCache = [];
+
+    public void ClearAll()
+    {
+        _cache.Clear();
+        _endpoints.Clear();
+        _formCache.Clear();
+        _appMetaCache.Clear();
+    }
+
     public async Task<TableMetadata> GetOrAddAsync(String? dataSource, String schema, String table, 
         Func<String?, String, String, Task<TableMetadata>> getMeta)
     {

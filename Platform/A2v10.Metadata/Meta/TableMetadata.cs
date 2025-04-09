@@ -113,10 +113,12 @@ public record TableApply
     public ColumnReference Journal { get; init; } = default!;
     public ColumnReference? Details { get; init; }
     public List<ApplyMapping>? Mapping { get; init; } = [];
+    public String? DetailsKind { get; init; }
     #endregion
 }
 
-    public record TableMetadata
+public record DetailsKind(String Name, String Label);
+public record TableMetadata
 {
     #region Database fields
     public String Schema { get; init; } = default!;
@@ -130,6 +132,7 @@ public record TableApply
     public ColumnReference? ParentTable { get; init; }
     #endregion
     public List<TableApply>? Apply { get; init; }
+    public List<DetailsKind> Kinds { get; init; } = [];
 
     // internal variables
     internal String PrimaryKeyField => Columns.FirstOrDefault(c => c.Role.HasFlag(TableColumnRole.PrimaryKey))?.Name
@@ -142,6 +145,8 @@ public record TableApply
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Name column");
     internal String DoneField => Columns.FirstOrDefault(c => c.Role.HasFlag(TableColumnRole.Done))?.Name
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Done column");
+    internal String KindField => Columns.FirstOrDefault(c => c.Role.HasFlag(TableColumnRole.Kind))?.Name
+        ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Kind column");
 
     internal String RealItemName => ItemName ?? Name.Singular();
     internal String RealItemsName => ItemsName ?? Name;  

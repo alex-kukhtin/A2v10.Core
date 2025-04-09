@@ -15,6 +15,7 @@ namespace A2v10.Metadata;
 public class DeployDatabaseHandler(IServiceProvider _serviceProvider) : IClrInvokeTarget
 {
     private readonly IDbContext _dbContext = _serviceProvider.GetRequiredService<IDbContext>();
+    private readonly DatabaseMetadataCache _metadataCache = _serviceProvider.GetRequiredService<DatabaseMetadataCache>();
 
     public async Task<Object> InvokeAsync(ExpandoObject args)
     {
@@ -50,6 +51,8 @@ public class DeployDatabaseHandler(IServiceProvider _serviceProvider) : IClrInvo
         }
 
         await _dbContext.LoadModelSqlAsync(null, sql.ToString());
+
+        _metadataCache.ClearAll();
 
         return new ExpandoObject();
     }
