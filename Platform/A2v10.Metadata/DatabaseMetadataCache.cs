@@ -2,6 +2,8 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 using A2v10.Infrastructure;
@@ -23,6 +25,14 @@ public class DatabaseMetadataCache
         _endpoints.Clear();
         _formCache.Clear();
         _appMetaCache.Clear();
+    }
+
+    public void Clear(String? schema, String? table)
+    {
+        var key = $":{schema}:{table}";
+        var realKeys = _cache.Keys.Where(x => x.EndsWith(key));
+        foreach (var realKey in realKeys)
+            _cache.TryRemove(realKey, out var value);
     }
 
     public async Task<TableMetadata> GetOrAddAsync(String? dataSource, String schema, String table, 

@@ -51,9 +51,18 @@ create table a2meta.[Catalog]
 	ItemName nvarchar(128),
 	TypeName nvarchar(128),
 	EditWith nvarchar(16),
-	Source nvarchar(255)
+	Source nvarchar(255),
+	ItemsLabel nvarchar(255),
+	ItemLabel nvarchar(128),
 );
 go
+
+/*
+alter table a2meta.[Catalog] add ItemsLabel nvarchar(255);
+alter table a2meta.[Catalog] add ItemLabel nvarchar(128);
+go
+*/
+
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'DefaultColumns')
 create table a2meta.[DefaultColumns]
@@ -173,7 +182,7 @@ go
 create or alter view a2meta.view_RealTables
 as
 	select Id = c.Id, c.Parent, c.Kind, c.[Schema], [Name] = c.[Name], c.ItemsName, c.ItemName, c.TypeName,
-		c.EditWith, c.ParentTable, c.IsFolder
+		c.EditWith, c.ParentTable, c.IsFolder, c.ItemLabel, c.ItemsLabel
 	from a2meta.[Catalog] c left join INFORMATION_SCHEMA.TABLES ic on 
 		ic.TABLE_SCHEMA = c.[Schema]
 		and ic.TABLE_NAME = c.[Name] collate SQL_Latin1_General_CP1_CI_AI;
@@ -206,7 +215,7 @@ begin
 	select Id, Kind from TT;
 
 	select [Table!TTable!Object] = null, [!!Id] = c.Id, c.[Schema], c.[Name],
-		c.ItemsName, c.ItemName, c.TypeName, c.EditWith,
+		c.ItemsName, c.ItemName, c.TypeName, c.EditWith, c.ItemLabel, c.ItemsLabel,
 		[ParentTable.RefSchema!TReference!] = pt.[Schema], [ParentTable.RefTable!TReference] = pt.[Name],
 		[Columns!TColumn!Array] = null,
 		[Details!TTable!Array] = null,
@@ -307,7 +316,8 @@ begin
 			[Schema] = @Schema  collate SQL_Latin1_General_CP1_CI_AI
 			and [Name] = @Table  collate SQL_Latin1_General_CP1_CI_AI;
 
-	select [Table!TTable!Object] = null, [Id!!Id] = Id, [Name], [Schema], EditWith, ParentTable
+	select [Table!TTable!Object] = null, [Id!!Id] = Id, [Name], [Schema], EditWith, 
+		ParentTable, ItemLabel, ItemsLabel
 	from a2meta.[Catalog] where Id = @Id;
 
 	select [Form!TForm!Object] = null, [Id!!Id] = @Id,  [Key],

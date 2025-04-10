@@ -130,6 +130,9 @@ public record TableMetadata
     public EditWithMode EditWith { get; init; }
     public List<TableMetadata> Details { get; private set; } = [];
     public ColumnReference? ParentTable { get; init; }
+
+    public String? ItemsLabel { get; init; }
+    public String? ItemLabel { get; init; }
     #endregion
     public List<TableApply>? Apply { get; init; }
     public List<DetailsKind> Kinds { get; init; } = [];
@@ -152,6 +155,8 @@ public record TableMetadata
     internal String RealItemsName => ItemsName ?? Name;  
     internal String RealTypeName => $"T{TypeName ?? RealItemName}";
     internal String TableTypeName => $"{Schema}.[{Name}.TableType]";
+    internal String RealItemLabel => ItemLabel ?? $"@{RealItemName}";
+    internal String RealItemsLabel => ItemsLabel ?? $"@{RealItemsName}";
     internal String SqlTableName => $"{Schema}.[{Name}]";
     internal Boolean IsDocument => Schema == "doc";
     internal Boolean IsJournal => Schema == "jrn";

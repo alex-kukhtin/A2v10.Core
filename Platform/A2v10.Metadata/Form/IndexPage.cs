@@ -122,7 +122,7 @@ internal partial class BaseModelBuilder
             Table = _table.Name,
             Data = _table.RealItemsName,
             EditWith = _table.EditWith,
-            Label = _baseTable?.RealItemsName ?? _table.RealItemsName,
+            Label = _baseTable?.RealItemsLabel ?? _table.RealItemsLabel,
             Props = new FormItemProps()
             {
                 Filters = $"{periodFilter}{String.Join(',', _table.Columns.Where(c => c.IsReference).Select(c => c.Name))}"
