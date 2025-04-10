@@ -56,8 +56,8 @@ internal partial class BaseModelBuilder
 
             String JoinDetails()
             {
-                if (a.Details == null)
-                    return string.Empty;
+                if (a.Details == null || String.IsNullOrEmpty(a.Details.RefTable))
+                    return String.Empty;
                 return $"inner join {a.Details.SqlTableName} {rowsAlias} on {rowsAlias}.[Parent] = {docAlias}.[{_table.PrimaryKeyField}]{onUseKind}";
             }
 
@@ -78,7 +78,7 @@ internal partial class BaseModelBuilder
         begin tran;
         {String.Join(";\n", deleteFromJournals)}
 
-        {String.Join(";\n", applyTable.Apply.Select(a => InsertIntoJournal(a)))}
+        {String.Join("\n\n", applyTable.Apply.Select(a => InsertIntoJournal(a)))}
 
         update {_table.SqlTableName} set [{_table.DoneField}] = 1 where [{_table.PrimaryKeyField}] = @Id;
         commit tran;
