@@ -125,6 +125,8 @@ public static class ServicesExtensions
 		// platfrom core services
 		services.AddSingleton<IAppVersion, PlatformAppVersion>();
 
+		services.AddTransient<IBackgroundProcessHandler, BackgroundProcessHandler>();
+
 		services.AddHttpClient();
 		services.AddSignalR();
 

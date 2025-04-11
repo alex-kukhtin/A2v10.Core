@@ -3,7 +3,6 @@
 using System;
 using System.Dynamic;
 using System.Threading.Tasks;
-using System.Text;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -16,12 +15,28 @@ public class DeployDatabaseHandler(IServiceProvider _serviceProvider) : IClrInvo
 {
     private readonly IDbContext _dbContext = _serviceProvider.GetRequiredService<IDbContext>();
     private readonly DatabaseMetadataCache _metadataCache = _serviceProvider.GetRequiredService<DatabaseMetadataCache>();
+    private readonly IBackgroundProcessHandler _backgroundProcessor = _serviceProvider.GetRequiredService<IBackgroundProcessHandler>();
+    private readonly ISignalSender _signalSender = _serviceProvider.GetRequiredService<ISignalSender>();
 
-    public async Task<Object> InvokeAsync(ExpandoObject args)
+    public Task<Object> InvokeAsync(ExpandoObject args)
+    {
+        var userIdObj = args.Get<Object>("UserId");
+        if (userIdObj == null)
+            throw new InvalidOperationException("UserId is null");
+        var userId = Convert.ToInt64(userIdObj);
+        if (userId == 0)
+            throw new InvalidOperationException("UserId = 0");
+
+        _backgroundProcessor.Execute(_serviceProvider => ProcessDataAsync(userId));
+
+        return Task.FromResult<Object>(new ExpandoObject());
+    }
+
+    private async Task ProcessDataAsync(Int64 userId)
     {
         var prms = new ExpandoObject()
         {
-            {"UserId", args.Get<Object>("UserId") }
+            {"UserId", userId }
         };
 
         var dm = await _dbContext.LoadModelAsync(null, "a2meta.[Config.Load]", prms);
@@ -29,31 +44,43 @@ public class DeployDatabaseHandler(IServiceProvider _serviceProvider) : IClrInvo
 
         var dbCreator = new DatabaseCreator(meta);
 
-        var sql = new StringBuilder("""
-        set nocount on;
-        set transaction isolation level read uncommitted;
+        Task SendSignalAsync(String kind, TableMetadata table, Int32 index)
+        {
+            return _signalSender.SendAsync(
+                new SignalResult(userId, "meta.deploy")
+                {
+                    Data = new ExpandoObject()
+                    {
+                        { "Kind", kind },
+                        { "Schema", table.Schema},
+                        { "Table", table.Name },
+                        { "Index", index },
+                    }
+                }
+            );
+        }
 
-        """);
+        Int32 index = 0;
         foreach (var t in meta.Tables)
         {
             var createTable = dbCreator.CreateTable(t);
-            sql.AppendLine(createTable);
+            await _dbContext.LoadModelSqlAsync(null, createTable);
+            await SendSignalAsync("Table", t, index++);
         }
+        index = 0;
         foreach (var t in meta.Tables)
         {
             var createTableType = dbCreator.CreateTableType(t);
-            sql.AppendLine(createTableType);
+            await _dbContext.LoadModelSqlAsync(null, createTableType);
+            await SendSignalAsync("TableType", t, index++);
         }
+        index = 0;
         foreach (var t in meta.Tables)
         {
             var createFK = dbCreator.CreateForeignKeys(t);
-            sql.AppendLine(createFK);
+            await _dbContext.LoadModelSqlAsync(null, createFK);
+            await SendSignalAsync("ForeignKey", t, index++);
         }
-
-        await _dbContext.LoadModelSqlAsync(null, sql.ToString());
-
         _metadataCache.ClearAll();
-
-        return new ExpandoObject();
     }
 }
