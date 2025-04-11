@@ -31,8 +31,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="A2v10.System.Xaml" Version="10.1.8027" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.3" />
-		<PackageReference Include="Microsoft.Extensions.Options" Version="9.0.3" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.4" />
+		<PackageReference Include="Microsoft.Extensions.Options" Version="9.0.4" />
 	</ItemGroup>
 
 	<PropertyGroup>
