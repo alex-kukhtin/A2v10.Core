@@ -90,6 +90,8 @@ internal static class SqlExtensions
         foreach (var c in table.Columns.Where(c => !c.IsReference))
             if (c.Role.HasFlag(TableColumnRole.PrimaryKey))
                 yield return $"[{c.Name}!!Id] = {alias}.[{c.Name}]";
+            else if (c.Role.HasFlag(TableColumnRole.Name))
+                yield return $"[{c.Name}!!Name] = {alias}.[{c.Name}]";
             else if (isDetails && c.Role.HasFlag(TableColumnRole.Kind))
                 continue;
             else if (c.Role.HasFlag(TableColumnRole.RowNo))
@@ -109,7 +111,7 @@ internal static class SqlExtensions
                 elemName = "Folder";
                 modelType = "TFolder";
             }
-            yield return $"[{elemName}.{c.Table.PrimaryKeyField}!{modelType}!Id] = r{c.Index}.[{c.Table.PrimaryKeyField}], [{elemName}.Name!{modelType}!Name] = r{c.Index}.[{c.Table.NameField}]";
+            yield return $"[{elemName}.{c.Table.PrimaryKeyField}!{modelType}!Id] = r{c.Index}.[{c.Table.PrimaryKeyField}], [{elemName}.{c.Table.NameField}!{modelType}!Name] = r{c.Index}.[{c.Table.NameField}]";
         }
     }
 }

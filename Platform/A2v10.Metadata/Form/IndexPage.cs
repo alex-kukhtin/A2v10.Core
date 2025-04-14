@@ -90,7 +90,7 @@ internal partial class BaseModelBuilder
             if (_baseTable != null && _baseTable.Schema == "op")
                 tableCols = tableCols.Where(c => c.DataType != ColumnDataType.Operation);
 
-            var columns =  CreatePeriod().Union(tableCols.Select(c => CreateFilter(c)));
+            var columns = CreatePeriod().Union(tableCols.Select(c => CreateFilter(c)));
 
             return new FormItem(FormItemIs.Taskpad)
             {
@@ -112,7 +112,13 @@ internal partial class BaseModelBuilder
             };
         }
 
-        String periodFilter = _table.HasPeriod() ? "Period," : String.Empty;
+        IEnumerable<String> filters()
+        {
+            if (_table.HasPeriod())
+                yield return "Period";
+            foreach (var column in _table.Columns.Where(c => c.IsReference))
+                yield return column.Name;
+        }
 
         return new Form()
         {
@@ -125,7 +131,7 @@ internal partial class BaseModelBuilder
             Label = _baseTable?.RealItemsLabel ?? _table.RealItemsLabel,
             Props = new FormItemProps()
             {
-                Filters = $"{periodFilter}{String.Join(',', _table.Columns.Where(c => c.IsReference).Select(c => c.Name))}"
+                Filters = String.Join(',', filters()) 
             },
             Items = [
                 new FormItem() {

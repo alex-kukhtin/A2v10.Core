@@ -51,7 +51,7 @@ public enum TableColumnRole
     Code       = 0x4,  // 4
     RowNo      = 0x8,  // 8 (RowNo + PrimaryKey) = 0x9 (9)
     Void       = 0x10, // 16
-    Parent     = 0x20, // 32
+    Parent     = 0x20, // 32 (Parent + PrimaryKey) = 0x33
     IsFolder   = 0x40, // 64
     IsSystem   = 0x80, // 128
     Done       = 0x100, // 256
@@ -138,7 +138,7 @@ public record TableMetadata
     public List<DetailsKind> Kinds { get; init; } = [];
 
     // internal variables
-    internal String PrimaryKeyField => Columns.FirstOrDefault(c => c.Role.HasFlag(TableColumnRole.PrimaryKey))?.Name
+    internal String PrimaryKeyField => Columns.FirstOrDefault(c => c.Role.HasFlag(TableColumnRole.PrimaryKey) && !c.Role.HasFlag(TableColumnRole.RowNo))?.Name
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Primary Key");
     internal String VoidField => Columns.FirstOrDefault(c => c.Role.HasFlag(TableColumnRole.Void))?.Name
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Void column");

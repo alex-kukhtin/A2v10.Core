@@ -39,18 +39,23 @@ internal partial class BaseModelBuilder
 
             foreach (var t in table.Details)
             {
+
+                //TODO: Use: Same Key
+
                 var refFields = await ReferenceFieldsAsync(t);
 
-                var kindField = t.KindField;
+                String? kindField = t.Kinds.Count > 0 ? t.KindField : null;
 
-                var parentField = refFields.FirstOrDefault(r => r.Table.SqlTableName == _table.SqlTableName)
-                    ?? throw new InvalidOperationException($"Parent field not found in {_table.SqlTableName}");
+                var parentField = refFields.FirstOrDefault(r => r.Table.SqlTableName == _table.SqlTableName)?.Column.Name
+                    ?? t.PrimaryKeyField;
 
-                var detailsParentIdField = $"[!{table.RealTypeName}.{t.RealItemsName}!ParentId] = d.[{parentField.Column.Name}]";
+
+                var detailsParentIdField = $"[!{table.RealTypeName}.{t.RealItemsName}!ParentId] = d.[{parentField}]";
+
                 if (t.Kinds.Count > 0)
                 {
                     detailsParentIdField = String.Join(',', t.Kinds.Select(k =>
-                        $"[!{table.RealTypeName}.{k.Name}!ParentId] = case when d.[{kindField}] = N'{k.Name}' then d.[{parentField.Column.Name}] else null end"
+                        $"[!{table.RealTypeName}.{k.Name}!ParentId] = case when d.[{kindField}] = N'{k.Name}' then d.[{parentField}] else null end"
                     ));
                 }
 
@@ -60,7 +65,7 @@ internal partial class BaseModelBuilder
                     {String.Join(",", t.AllSqlFields(refFields, "d", isDetails:true))}
                 from {t.Schema}.[{t.Name}] d
                     {RefTableJoins(refFields, "d")}
-                where d.[{parentField.Column.Name}] = @Id
+                where d.[{parentField}] = @Id
                 order by d.[{t.RowNoField}];
                 
                 """);
@@ -74,7 +79,7 @@ internal partial class BaseModelBuilder
             if (table.IsDocument)
                 return $"""
 				select [!$System!] = null, [!!ReadOnly] = d.{_table.DoneField}
-				from {table.SqlTableName} d where Id = @Id;
+				from {table.SqlTableName} d where [{table.PrimaryKeyField}] = @Id;
 				""";
             return String.Empty;
         }
@@ -87,7 +92,7 @@ internal partial class BaseModelBuilder
             {String.Join(",", table.AllSqlFields(tableRefFields, "a"))}{DetailsArray()}
         from {table.Schema}.[{table.Name}] a
             {RefTableJoins(tableRefFields, "a")}
-        where a.[Id] = @Id;
+        where a.[{table.PrimaryKeyField}] = @Id;
 
         {await DetailsContentAsync()}
 
@@ -207,9 +212,9 @@ internal partial class BaseModelBuilder
         when not matched then insert
         ({String.Join(',', insertedFields)}) values
         ({String.Join(',', insertedFields)}) 
-        output inserted.Id into @rtable(Id);
+        output inserted.[{_table.PrimaryKeyField}] into @rtable([Id]);
 
-        select @Id = Id from @rtable;
+        select @Id = [Id] from @rtable;
         
         {MergeDetails()}
 

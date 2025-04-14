@@ -69,10 +69,15 @@ internal class DataTableBuilder(TableMetadata table, AppMetadata appMeta)
             { 
                 var obj = src.Get<Object>(col.ColumnName);
                 if (obj == null)
-                    obj = DBNull.Value; 
+                    obj = DBNull.Value;
+                else if (col.DataType == typeof(Guid))
+                {
+                    if (obj is String strObj && String.IsNullOrWhiteSpace(strObj))
+                        obj = DBNull.Value;
+                }
                 else if (obj is ExpandoObject exp)
                 {
-                    obj = exp.Get<Object>("Id");
+                    obj = exp.Get<Object>("Id"); // TODO: Primary key !!!!
                     // TODO: Id DataType    
                     if (obj is Int64 int64 && int64 == 0)
                         obj = DBNull.Value;

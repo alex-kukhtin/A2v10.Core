@@ -2901,6 +2901,7 @@ a.btn {
   width: 100%;
   min-height: 2em;
   white-space: nowrap;
+  border-radius: 4px;
 }
 .period-picker.open:not(.pp-navbar):not(.pp-hyperlink) .period-text {
   z-index: 1071;

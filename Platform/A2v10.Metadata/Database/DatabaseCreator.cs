@@ -21,14 +21,17 @@ internal class DatabaseCreator(AppMetadata _meta)
                 var colDataType = column.DataType;
                 if (colDataType == ColumnDataType.Id)
                     colDataType = _meta.IdDataType;
-                var defKey = colDataType switch
+                else if (!column.Role.HasFlag(TableColumnRole.RowNo)) 
                 {
-                    ColumnDataType.Id => $"next value for {table.Schema}.SQ_{table.Name}",
-                    ColumnDataType.Uniqueidentifier => "newid()",
-                    ColumnDataType.Int or ColumnDataType.BigInt => $"next value for {table.Schema}.SQ_{table.Name}",
-                    _ => throw new InvalidOperationException($"Defaults for {column.DataType} is not supported")
-                };
-                constraint = $"\n       constraint DF_{table.Name}_{column.Name} default({defKey})";
+                    var defKey = colDataType switch
+                    {
+                        ColumnDataType.Id => $"next value for {table.Schema}.SQ_{table.Name}",
+                        ColumnDataType.Uniqueidentifier => "newsequentialid()",
+                        ColumnDataType.Int or ColumnDataType.BigInt => $"next value for {table.Schema}.SQ_{table.Name}",
+                        _ => throw new InvalidOperationException($"Defaults for {column.DataType} is not supported")
+                    };
+                    constraint = $"\n       constraint DF_{table.Name}_{column.Name} default({defKey})";
+                }
             }
             else if (column.HasDefault)
             {
