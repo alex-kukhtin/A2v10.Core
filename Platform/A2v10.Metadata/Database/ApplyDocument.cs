@@ -62,11 +62,13 @@ internal partial class BaseModelBuilder
             }
 
             return $"""
-                insert into {a.Journal.SqlTableName} ([InOut], [Document], {String.Join(',', fields.Select(f => f.Target))})
-                select {a.InOut}, @Id, {String.Join(',', fields.Select(f => f.Source))}
+
+                insert into {a.Journal.SqlTableName} ([InOut], {String.Join(',', fields.Select(f => f.Target))})
+                select {a.InOut}, {String.Join(',', fields.Select(f => f.Source))}
                 from {_table.SqlTableName} {docAlias}
                 {JoinDetails()}
                 where {docAlias}.{_table.PrimaryKeyField} = @Id;
+
             """;
         }
 

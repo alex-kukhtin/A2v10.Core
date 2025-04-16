@@ -71,6 +71,10 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         };
         String procedure = schema switch {
             "rep" => "a2meta.[Report.Schema]",
+            "op" => table switch {
+                "operations" => "a2meta.[Operation.Schema]",
+                _ => "a2meta.[Table.Schema]"
+            },
             _ => "a2meta.[Table.Schema]"
         };
         var dm = await _dbContext.LoadModelAsync(dataSource, procedure, prms)

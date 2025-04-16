@@ -383,6 +383,7 @@ internal class XamlBulder(EditWithMode _editWith)
                     {
                         ShowClear = true,   
                         ShowSearch = true,  
+                        TabIndex = 1,
                         Placeholder = "@[Search]",
                         Width = Length.FromStringNull(c.Width),
                         Bindings = b => b.SetBinding(nameof(TextBox.Value), new Bind(c.Data))
@@ -446,6 +447,7 @@ internal class XamlBulder(EditWithMode _editWith)
         {
             Title = form.Label.Localize(),
             CssClass = form.CssClass,
+            Overflow = true,
             Width = Length.FromStringNull(form.Width),
             CollectionView = CreateCollectionView(form),
             Children = [.. CreateElements(form.Items)],

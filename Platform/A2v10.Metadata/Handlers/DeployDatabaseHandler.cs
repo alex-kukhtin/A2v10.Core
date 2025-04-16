@@ -74,13 +74,21 @@ public class DeployDatabaseHandler(IServiceProvider _serviceProvider) : IClrInvo
             await _dbContext.LoadModelSqlAsync(null, createTableType);
             await SendSignalAsync("TableType", t, index++);
         }
+
+        // Run before foreign keys, it may be used for operations.
+        var sqlOps = dbCreator.CreateOperations(meta.Operations);
+        if (!String.IsNullOrEmpty(sqlOps))
+            await _dbContext.LoadModelSqlAsync(null, sqlOps);
+
         index = 0;
         foreach (var t in meta.Tables)
         {
             var createFK = dbCreator.CreateForeignKeys(t);
-            await _dbContext.LoadModelSqlAsync(null, createFK);
+            if (!String.IsNullOrEmpty(createFK))
+                await _dbContext.LoadModelSqlAsync(null, createFK);
             await SendSignalAsync("ForeignKey", t, index++);
         }
+
         _metadataCache.ClearAll();
     }
 }

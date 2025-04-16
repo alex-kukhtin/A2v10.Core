@@ -2,6 +2,7 @@
 
 using System;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace A2v10.Metadata;
 
@@ -41,6 +42,11 @@ internal class DatabaseCreator(AppMetadata _meta)
             return $"[{column.Name}] {column.SqlDataType(_meta.IdDataType)}{nullable}{constraint}";
         }
 
+        String alterCreateField(TableColumn column)
+        {
+            return $"alter table {table.SqlTableName} add {createField(column)}";
+        }
+
         String createSequence()
         {
             if (_meta.IdDataType != ColumnDataType.Int && _meta.IdDataType != ColumnDataType.BigInt)
@@ -56,15 +62,20 @@ internal class DatabaseCreator(AppMetadata _meta)
 
         var primaryKeys = table.PrimaryKeys.Select(c => $"[{c.Name}]");
 
+        var alterFields = table.Columns
+            .Where(c => String.IsNullOrEmpty(c.DbName) && !c.DbDataType.HasValue)
+            .Select(alterCreateField);
+
         return $"""
         {createSequence()}
 
         if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'{table.Schema}' and TABLE_NAME=N'{table.Name}')
-        create table {table.Schema}.[{table.Name}]
+        create table {table.SqlTableName}
         (
             {String.Join(",\n    ", fields)},
             constraint PK_{table.Name} primary key ({String.Join(',', primaryKeys)})
         );
+        {String.Join('\n', alterFields)}
         """;
     }
 
@@ -90,9 +101,20 @@ internal class DatabaseCreator(AppMetadata _meta)
 
     internal String CreateForeignKeys(TableMetadata table)
     {
+        const String check = "check"; // TODO: ????
         String createReference(TableColumn column)
         {
-            // TODO: Достать Id из таблицы
+            if (column.DataType == ColumnDataType.Operation)
+            {
+                var opConstraintName = $"FK_{table.Name}_{column.Name}_Operations";
+                return $"""
+                if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.Schema}' and TABLE_NAME = N'{table.Name}' and CONSTRAINT_NAME = N'{opConstraintName}')
+                    alter table {table.SqlTableName} add 
+                        constraint {opConstraintName} foreign key ([{column.Name}]) references op.[Operations]([Id]);
+                alter table {table.SqlTableName} {check} constraint {opConstraintName};
+                """;
+            }
+
             var refs = column.Reference ??
                 throw new InvalidOperationException("Reference is null");
 
@@ -110,10 +132,49 @@ internal class DatabaseCreator(AppMetadata _meta)
             if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.Schema}' and TABLE_NAME = N'{table.Name}' and CONSTRAINT_NAME = N'{constraintName}')
                 alter table {table.SqlTableName} add 
                     constraint {constraintName} foreign key ([{column.Name}]) references {refs.RefSchema}.[{refs.RefTable}]([{refTablePkName}]);
-            alter table {table.SqlTableName} nocheck constraint {constraintName};
+            alter table {table.SqlTableName} {check} constraint {constraintName};
             """;
         }
-        var refs = table.Columns.Where(c => c.IsReference).Select(rc => createReference(rc));
+        var refs = table.Columns.Where(c => c.IsReference || c.DataType == ColumnDataType.Operation).Select(rc => createReference(rc));
         return String.Join('\n', refs);
+    }
+
+    internal String CreateOperations(IEnumerable<OperationMetadata> ops)
+    {
+        if (!ops.Any())
+            return String.Empty;
+
+        var opValues = ops.Select(op => $"""
+        (N'{op.Id}', N'{op.Name ?? op.Id}', N'/operation/{op.Id.ToLowerInvariant()}')
+        """);
+
+        return $"""
+        if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'op' and TABLE_NAME=N'Operations')
+        create table op.[Operations] 
+        (
+            [Id] nvarchar(64) not null
+                constraint PK_Operations primary key,
+            [Void] bit not null
+                constraint DF_Operations_Void default(0),
+                    [Name] nvarchar(255),
+            [Url] nvarchar(255)
+        );
+        
+        begin
+        declare @ops table(Id nvarchar(64), [Name] nvarchar(255), [Url] nvarchar(255));
+        insert into @ops(Id, [Name], [Url]) values
+        {String.Join(",\n", opValues)};
+        
+        merge op.Operations as t
+        using @ops as s
+        on t.Id = s.Id
+        when matched then update set
+            t.[Name] = s.[Name],
+            t.[Url] = s.[Url]
+        when not matched then insert
+            (Id, [Name], [Url]) values
+            (s.Id, s.[Name], s.[Url]);
+        end
+        """;
     }
 }

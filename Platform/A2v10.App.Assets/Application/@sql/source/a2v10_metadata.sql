@@ -253,7 +253,32 @@ begin
 		inner join a2meta.Columns s on m.Source= s.Id
 		inner join a2meta.[Catalog] st on s.[Table] = st.Id
 	where a.[Table] = @tableId;
+end
+go
+------------------------------------------------
+create or alter procedure a2meta.[Operation.Schema]
+@Schema sysname,
+@Table sysname
+as
+begin
+	declare @tableId uniqueidentifier;
 
+	select @tableId = Id from a2meta.[Catalog] r 
+	where r.[Schema] = @Schema collate SQL_Latin1_General_CP1_CI_AI
+		and r.[Name] = @Table collate SQL_Latin1_General_CP1_CI_AI
+		and r.Kind in (N'folder') and IsFolder = 1;
+
+	select [Table!TTable!Object] = null, [!!Id] = c.Id, c.[Schema], c.[Name], c.ItemName, c.ItemsName,
+		[Columns!TColumn!Array] = null
+	from a2meta.[Catalog] c 
+	where c.Id = @tableId;
+
+	select [!TColumn!Array] = null, [Id!!Id] = c.Id, c.[Name], DataType = c.DataType, 
+		c.[MaxLength], c.[Role], c.[Order],
+		[!TTable.Columns!ParentId] = c.[Table]
+	from a2meta.Columns c
+	where c.[Table] = @tableId
+	order by c.InitialOrder; -- same as [Config.Load]
 end
 go
 ------------------------------------------------
@@ -400,6 +425,16 @@ begin
 	insert into a2meta.[Application] (Id, [Name], Title, IdDataType)
 	values (@appId, N'MyApplication', N'My Application', N'bigint');
 
+	/* TODO: колонки для таблицы операций - оно должно создаваться через Config.CreateTable.
+insert into a2meta.Columns ([Table], [Name], [DataType], [MaxLength], [Role], [Order]) values
+(N'36CB0618-F8E0-48A2-984E-1BD6D7C80935', N'Id', N'string', 64, 1, 1),
+(N'36CB0618-F8E0-48A2-984E-1BD6D7C80935', N'Name', N'string', 255, 2, 2);
+
+insert into a2meta.Columns ([Table], [Name], [DataType], [MaxLength], [Role], [Order]) values
+(N'36CB0618-F8E0-48A2-984E-1BD6D7C80935', N'Void', N'bit', 0, 16, 3);
+
+	*/
+
 end
 go
 ------------------------------------------------
@@ -455,7 +490,8 @@ begin
 	select @appId = Id from a2meta.[Catalog] where [Kind] = N'app' and IsFolder = 0 and Parent = @rootId;
 
 	select [Application!TApp!Object] = null, [!!Id] = @appId, IdDataType,
-		[Tables!TTable!Array] = null
+		[Tables!TTable!Array] = null,
+		[Operations!TOperation!Array] = null
 	from a2meta.[Application] where Id = @appId
 
 	select [!TTable!Array] = null, [Id!!Id] = Id, c.[Schema], c.[Name], c.[Kind],
@@ -474,6 +510,11 @@ begin
 		left join a2meta.[Catalog] r on c.Reference = r.Id
 		left join INFORMATION_SCHEMA.COLUMNS ic on ic.TABLE_SCHEMA = t.[Schema] and ic.TABLE_NAME = t.[Name] and ic.COLUMN_NAME = c.[Name]
 	order by c.InitialOrder; -- same [Table.Schema]
+
+	select 	[!TOperation!Array] = null, [Id] = op.[Name], [Name] = ItemLabel,
+		[!TApp.Operations!ParentId] = @appId
+	from a2meta.[Catalog] op
+	where [Schema] = N'op' and IsFolder = 0 and Kind = N'operation';
 end
 go
 ------------------------------------------------
@@ -487,6 +528,8 @@ exec a2meta.[Table.Schema] @Schema, @Table;
 
 
 --select * from a2meta.TablesMetadata;
+
+select * from sys.foreign_keys
 
 /*
 with T as (

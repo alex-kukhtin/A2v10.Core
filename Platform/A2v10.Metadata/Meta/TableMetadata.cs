@@ -167,10 +167,13 @@ public record TableMetadata
     internal IEnumerable<TableColumn> PrimaryKeys => Columns.Where(c => c.Role.HasFlag(TableColumnRole.PrimaryKey));
 }
 
+public record OperationMetadata(String Id, String? Name);
+
 public record AppMetadata
 {
     public ColumnDataType IdDataType { get; init; }
     public TableMetadata[] Tables { get; init; } = [];
+    public OperationMetadata[] Operations { get; init; } = []; 
 
     // internal
     internal static AppMetadata FromDataModel(IDataModel model)
