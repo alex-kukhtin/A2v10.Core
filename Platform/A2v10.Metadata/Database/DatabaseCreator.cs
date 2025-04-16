@@ -21,7 +21,7 @@ internal class DatabaseCreator(AppMetadata _meta)
                 var colDataType = column.DataType;
                 if (colDataType == ColumnDataType.Id)
                     colDataType = _meta.IdDataType;
-                else if (!column.Role.HasFlag(TableColumnRole.RowNo)) 
+                if (!column.Role.HasFlag(TableColumnRole.RowNo)) 
                 {
                     var defKey = colDataType switch
                     {
