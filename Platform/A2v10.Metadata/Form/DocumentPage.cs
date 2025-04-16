@@ -218,7 +218,6 @@ internal partial class BaseModelBuilder
         return new Form()
         {
             Is = FormItemIs.Page,
-            UseCollectionView = true,
             CssClass = "document-page",
             Schema = _table.Schema,
             Table = _table.Name,

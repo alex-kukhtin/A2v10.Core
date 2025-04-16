@@ -36,7 +36,6 @@ internal partial class BaseModelBuilder
         return new Form()
         {
             Is = FormItemIs.Page,
-            UseCollectionView = true,
             Schema = _table.Schema,
             Table = _table.Name,
             Data = _table.RealItemName,

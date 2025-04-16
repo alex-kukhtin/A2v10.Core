@@ -77,9 +77,11 @@ internal class DataTableBuilder(TableMetadata table, AppMetadata appMeta)
                 }
                 else if (obj is ExpandoObject exp)
                 {
-                    obj = exp.Get<Object>("Id"); // TODO: Primary key !!!!
-                    // TODO: Id DataType    
+                    obj = exp.Get<Object>("Id");
                     if (obj is Int64 int64 && int64 == 0)
+                        obj = DBNull.Value;
+                    else if (appMeta.IdDataType == ColumnDataType.Uniqueidentifier 
+                            && obj is String strVal && String.IsNullOrWhiteSpace(strVal))
                         obj = DBNull.Value;
                 }
                 r[col] = obj;

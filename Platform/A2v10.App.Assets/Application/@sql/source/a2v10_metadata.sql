@@ -224,7 +224,7 @@ begin
 	from a2meta.Columns c
 		inner join @innerTables it on c.[Table] = it.Id
 		left join a2meta.[Catalog] r on c.Reference = r.Id
-	order by c.Id; -- same as Config.Load
+	order by c.InitialOrder; -- same as [Config.Load]
 
 	select [!TApply!Array] = null, [Id!!Id] = a.Id, a.InOut, a.Storno, DetailsKind = dk.[Name],
 		[Journal.RefSchema!TReference!] = j.[Schema], [Journal.RefTable!TReference!Name] = j.[Name],
@@ -360,10 +360,8 @@ begin
 	(1, N'cat', N'table', N'Id',         1, N'id', null, null),
 	(2, N'cat', N'table', N'Void',      16, N'bit', null, null),
 	(3, N'cat', N'table', N'IsSystem', 128, N'bit', null, null),
-	(4, N'cat', N'table', N'IsFolder',  64, N'bit', null, null),
-	(5, N'cat', N'table', N'Parent',    32, N'reference', null, N'self'),
-	(6, N'cat', N'table', N'Name',       2, N'string',    255, null),
-	(7, N'cat', N'table', N'Memo',       0, N'string',    255, null),
+	(4, N'cat', N'table', N'Name',       2, N'string',    255, null),
+	(5, N'cat', N'table', N'Memo',       0, N'string',    255, null),
 
 	-- Document
 	(1, N'doc', N'table', N'Id',         1, N'id',       null, null),
@@ -412,7 +410,7 @@ begin
 	set transaction isolation level read uncommitted;
 
 	declare @appId uniqueidentifier;
-	select @appId = Id from a2meta.[Catalog] where [Kind] = N'root' and Id = [Parent];
+	select @appId = Id from a2meta.[Catalog] where [Kind] = N'app' and IsFolder = 0;
 
 	select [Application!TApp!Object] = null, IdDataType, [Name], [Title]
 	from a2meta.[Application] where Id = @appId;
@@ -450,12 +448,15 @@ begin
 	set transaction isolation level read uncommitted;
 
 	-- FOR DEPLOY
+	declare @rootId uniqueidentifier;
+	select @rootId = Id from a2meta.[Catalog] where [Kind] = N'root' and Id = [Parent];
+
 	declare @appId uniqueidentifier;
-	select @appId = Id from a2meta.[Catalog] where [Kind] = N'root' and Id = [Parent];
+	select @appId = Id from a2meta.[Catalog] where [Kind] = N'app' and IsFolder = 0 and Parent = @rootId;
 
 	select [Application!TApp!Object] = null, [!!Id] = @appId, IdDataType,
 		[Tables!TTable!Array] = null
-	from a2meta.[Application] where Id = @appId;
+	from a2meta.[Application] where Id = @appId
 
 	select [!TTable!Array] = null, [Id!!Id] = Id, c.[Schema], c.[Name], c.[Kind],
 		[Columns!TColumn!Array] = null,
@@ -472,7 +473,7 @@ begin
 		inner join a2meta.[Catalog] t on c.[Table] = t.Id 
 		left join a2meta.[Catalog] r on c.Reference = r.Id
 		left join INFORMATION_SCHEMA.COLUMNS ic on ic.TABLE_SCHEMA = t.[Schema] and ic.TABLE_NAME = t.[Name] and ic.COLUMN_NAME = c.[Name]
-	order by c.Id; /* same as Table.Schema */
+	order by c.InitialOrder; -- same [Table.Schema]
 end
 go
 ------------------------------------------------
@@ -565,7 +566,10 @@ drop table if exists a2meta.[DefaultColumns]
 drop table if exists a2meta.[DetailsKinds];
 drop table if exists a2meta.[Forms]
 drop table if exists a2meta.[Columns]
+drop table if exists a2meta.[Items]
 drop table if exists a2meta.[Catalog]
 
 exec a2meta.[Catalog.Init];
 */
+
+
