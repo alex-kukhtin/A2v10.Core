@@ -55,7 +55,9 @@ public enum TableColumnRole
     IsFolder   = 0x40, // 64
     IsSystem   = 0x80, // 128
     Done       = 0x100, // 256
-    Kind       = 0x200, // 512    
+    Kind       = 0x200, // 512
+    Owner      = 0x400, // 1024
+    Number     = 0x800  // 2048
 }
 
 public record TableColumn

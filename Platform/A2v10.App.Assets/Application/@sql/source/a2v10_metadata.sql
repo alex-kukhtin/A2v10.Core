@@ -1,7 +1,7 @@
 /*
 Copyright © 2025 Oleksandr Kukhtin
 
-Last updated : 15 apr 2025
+Last updated : 16 apr 2025
 module version : 8541
 */
 
@@ -35,7 +35,10 @@ create table a2meta.[Catalog]
 	EditWith nvarchar(16),
 	Source nvarchar(255),
 	ItemsLabel nvarchar(255),
-	ItemLabel nvarchar(128)
+	ItemLabel nvarchar(128),
+	UseFolders bit
+		constraint DF_Catalog_UseFolders default(0),
+	FolderMode nvarchar(16)
 );
 go
 ------------------------------------------------
@@ -361,17 +364,16 @@ begin
 	(5, N'cat', N'table', N'Parent',    32, N'reference', null, N'self'),
 	(6, N'cat', N'table', N'Name',       2, N'string',    255, null),
 	(7, N'cat', N'table', N'Memo',       0, N'string',    255, null),
-	(8, N'cat', N'table', N'Owner',      0, N'reference', null, N'user'),
 
 	-- Document
 	(1, N'doc', N'table', N'Id',         1, N'id',       null, null),
 	(2, N'doc', N'table', N'Void',      16, N'bit',      null, null),
 	(3, N'doc', N'table', N'Done',     256, N'bit',      null, null),
 	(4, N'doc', N'table', N'Date',       0, N'date',     null, null),
-	(5, N'doc', N'table', N'Name',       2, N'string',   null, null), -- todo: computed
-	(6, N'doc', N'table', N'Sum',        0, N'money',    null, null),
-	(7, N'doc', N'table', N'Memo',       0, N'string',    255, null),
-	(8, N'doc', N'table', N'Owner',      0, N'reference', null, N'user'),
+	(5, N'doc', N'table', N'Number',  2048, N'string',     32, null),
+	(6, N'doc', N'table', N'Name',       2, N'string',    255, null), -- todo: computed
+	(7, N'doc', N'table', N'Sum',        0, N'money',    null, null),
+	(8, N'doc', N'table', N'Memo',       0, N'string',    255, null),
 	-- cat.Details
 	(1, N'cat', N'details', N'Id',      1, N'id',  null, null),
 	(2, N'cat', N'details', N'Parent', 32, N'reference', null, N'parent'),
@@ -381,11 +383,14 @@ begin
 	(2, N'doc', N'details', N'Parent',  32, N'reference',  null, N'parent'),
 	(3, N'doc', N'details', N'RowNo',    8, N'int',  null, null),
 	(4, N'doc', N'details', N'Kind',   512, N'string', 32, null),
+	(5, N'doc', N'details', N'Qty',      0, N'float',null, null),
+	(5, N'doc', N'details', N'Sum',      0, N'money',null, null),
 	-- jrn.Journal
 	(1, N'jrn', N'table', N'Id',       1, N'id', null, null),
 	(2, N'jrn', N'table', N'Date',     0, N'datetime', null, null),
-	(3, N'jrn', N'table', N'InOut',    0, N'int', null, null),
-	(4, N'jrn', N'table', N'Owner',    0, N'reference', null, N'user');
+	(3, N'jrn', N'table', N'InOut',    0, N'int',   null, null),
+	(4, N'jrn', N'table', N'Qty',      0, N'float', null, null),
+	(5, N'jrn', N'table', N'Sum',      0, N'money', null, null);
 
 	insert into a2meta.DefaultColumns ([Schema], Kind, [Name], DataType, [MaxLength], Ref, [Role], [Order]) 
 	select [Schema], Kind, [Name], DataType, [MaxLength], Ref, [Role], [Order]
