@@ -1,6 +1,7 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+using System.Linq;
 
 namespace A2v10.Metadata;
 
@@ -52,6 +53,16 @@ internal static class MetadataExtensions
         if (baseTable != null)
             return baseTable.EndpointPath();
         return table.EndpointPath();
+    }
+
+    internal static String EditEndpoint(this TableMetadata table, TableMetadata? baseTable)
+    {
+        var editEndpoint = $"{table.EndpointPathUseBase(baseTable)}/edit";
+
+        if (table.Columns.Any(c => c.DataType == ColumnDataType.Operation))
+            editEndpoint = "{Operation.Url}";
+
+        return editEndpoint;
     }
 
     internal static Boolean HasPeriod(this TableMetadata table)

@@ -63,8 +63,11 @@ internal class DatabaseCreator(AppMetadata _meta)
         var primaryKeys = table.PrimaryKeys.Select(c => $"[{c.Name}]");
 
         var alterFields = table.Columns
-            .Where(c => String.IsNullOrEmpty(c.DbName) && !c.DbDataType.HasValue)
-            .Select(alterCreateField);
+                .Where(c => String.IsNullOrEmpty(c.DbName) && !c.DbDataType.HasValue)
+                .Select(alterCreateField);
+
+        if (table.HasDbTable)
+            return String.Join("\n", alterFields);
 
         return $"""
         {createSequence()}
@@ -75,7 +78,6 @@ internal class DatabaseCreator(AppMetadata _meta)
             {String.Join(",\n    ", fields)},
             constraint PK_{table.Name} primary key ({String.Join(',', primaryKeys)})
         );
-        {String.Join('\n', alterFields)}
         """;
     }
 
@@ -145,7 +147,7 @@ internal class DatabaseCreator(AppMetadata _meta)
             return String.Empty;
 
         var opValues = ops.Select(op => $"""
-        (N'{op.Id}', N'{op.Name ?? op.Id}', N'/operation/{op.Id.ToLowerInvariant()}')
+        (N'{op.Id}', N'{op.Name ?? op.Id}', N'/operation/{op.Id.ToLowerInvariant()}/edit')
         """);
 
         return $"""

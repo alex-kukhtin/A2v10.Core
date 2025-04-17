@@ -41,6 +41,9 @@ internal partial class BaseModelBuilder
         var templ = $$"""
         const du = require('std:utils').date;
         const template = {
+            options: {
+                globalSaveEvent: 'g.document.saved'
+            },
             properties: {
                  {{String.Join(jsDivider, properties())}},
             },
@@ -58,12 +61,16 @@ internal partial class BaseModelBuilder
         async function apply() {
             const ctrl = this.$ctrl;
             await ctrl.$invoke('apply', {Id: this.{{_table.RealItemName}}.{{_table.PrimaryKeyField}}}, '{{endpoint}}');
+        	this.{{_table.RealItemName}}.Done = true;
+            ctrl.$emitGlobal('g.document.applied', this);
             ctrl.$requery();
         }
 
         async function unApply() {
             const ctrl = this.$ctrl;
             await ctrl.$invoke('unapply', {Id: this.{{_table.RealItemName}}.{{_table.PrimaryKeyField}}}, '{{endpoint}}');
+        	this.{{_table.RealItemName}}.Done = false;
+            ctrl.$emitGlobal('g.document.applied', this);
             ctrl.$requery();
         }
         """;

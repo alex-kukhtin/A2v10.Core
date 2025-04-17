@@ -111,7 +111,23 @@ internal static class SqlExtensions
                 elemName = "Folder";
                 modelType = "TFolder";
             }
-            yield return $"[{elemName}.{c.Table.PrimaryKeyField}!{modelType}!Id] = r{c.Index}.[{c.Table.PrimaryKeyField}], [{elemName}.{c.Table.NameField}!{modelType}!Name] = r{c.Index}.[{c.Table.NameField}]";
+            if (c.Column.DataType == ColumnDataType.Operation)
+                yield return $"""
+                    [{elemName}.Id!{modelType}!Id] = r{c.Index}.[Id], 
+                    [{elemName}.Name!{modelType}!Name] = r{c.Index}.[Name],
+                    [{elemName}.Url!{modelType}!] = r{c.Index}.[Url]
+                    """;
+            else if (c.Table.Columns.Any(c => c.Role == TableColumnRole.Done))
+                yield return $"""
+                    [{elemName}.{c.Table.PrimaryKeyField}!{modelType}!Id] = r{c.Index}.[{c.Table.PrimaryKeyField}], 
+                    [{elemName}.{c.Table.NameField}!{modelType}!Name] = r{c.Index}.[{c.Table.NameField}],
+                    [{elemName}.{c.Table.DoneField}!{modelType}!] = r{c.Index}.[{c.Table.DoneField}]
+                    """;
+            else
+                yield return $"""
+                    [{elemName}.{c.Table.PrimaryKeyField}!{modelType}!Id] = r{c.Index}.[{c.Table.PrimaryKeyField}], 
+                    [{elemName}.{c.Table.NameField}!{modelType}!Name] = r{c.Index}.[{c.Table.NameField}]
+                    """;
         }
     }
 }

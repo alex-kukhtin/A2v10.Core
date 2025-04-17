@@ -8,6 +8,15 @@ namespace A2v10.Metadata;
 
 internal static class XamlExtensions
 {
+    public static RenderMode? Command2RenderMode(this FormItem item)
+    {
+        return item.Command?.Command switch
+        {
+            FormCommand.Dialog => RenderMode.Show,
+            _ => null,
+        };
+    }
+
     public static Icon Command2Icon(this FormItem item)
     {
         if (item.Command == null)
@@ -25,6 +34,7 @@ internal static class XamlExtensions
             FormCommand.Save => Icon.SaveOutline,
             FormCommand.Print => Icon.Print,
             FormCommand.Append => Icon.Plus,
+            FormCommand.Dialog => Icon.Account,
             _ => Icon.NoIcon,
         };
     }
@@ -86,10 +96,13 @@ internal static class XamlExtensions
 
         BindCmd EditSelectedCommand()
         {
+            var url = item.Command.Url
+                ?? throw new InvalidOperationException("Url is required for EditSelected Command");
+            var urlBind = url.StartsWith("{");
             var cmd = new BindCmd()
             {
                 Command = CommandType.OpenSelected,
-                Url = $"{item.Command?.Url}/edit"
+                Url = urlBind ? null : $"{item.Command?.Url}"
             };
             if (mode == EditWithMode.Dialog)
             {
@@ -97,8 +110,24 @@ internal static class XamlExtensions
                 cmd.Action = DialogAction.EditSelected;
             }
             cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(item.Command?.Argument ?? String.Empty));
+            if (urlBind)
+                cmd.BindImpl.SetBinding(nameof(BindCmd.Url), new Bind(url[1..^1]));
             return cmd;
         }
+
+        BindCmd ShowDialogCommand()
+        {
+            var cmd = new BindCmd()
+            {
+                Command = CommandType.Dialog,
+                Action = DialogAction.Show,
+                Url = item.Command?.Url
+            };
+            if (!String.IsNullOrEmpty(item.Command?.Argument))
+                cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(item.Command.Argument));
+            return cmd;
+         }
+
 
         return item.Command?.Command switch
         {
@@ -131,6 +160,7 @@ internal static class XamlExtensions
             {
                 Command = CommandType.Print
             },
+            FormCommand.Dialog => ShowDialogCommand(),            
             FormCommand.Remove => item.BindCommandArg(CommandType.Remove),
             _ => throw new NotImplementedException($"Implement Command for {item.Command?.Command}")
         };

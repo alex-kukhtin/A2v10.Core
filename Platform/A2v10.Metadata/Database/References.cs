@@ -37,6 +37,12 @@ internal partial class BaseModelBuilder
                         MaxLength = 255,
                         Role = TableColumnRole.Name,
                     },
+                    new TableColumn()
+                    {
+                        Name = "Url",
+                        DataType = ColumnDataType.String,
+                        MaxLength = 255
+                    },
                 },
             };
         }

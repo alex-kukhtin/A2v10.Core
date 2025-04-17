@@ -64,7 +64,8 @@ public class DeployDatabaseHandler(IServiceProvider _serviceProvider) : IClrInvo
         foreach (var t in meta.Tables)
         {
             var createTable = dbCreator.CreateTable(t);
-            await _dbContext.LoadModelSqlAsync(null, createTable);
+            if (!String.IsNullOrEmpty(createTable))
+                await _dbContext.LoadModelSqlAsync(null, createTable);
             await SendSignalAsync("Table", t, index++);
         }
         index = 0;

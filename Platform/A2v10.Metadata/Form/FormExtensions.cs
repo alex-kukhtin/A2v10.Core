@@ -1,5 +1,6 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
+using A2v10.Xaml;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,8 @@ internal static class FormExtensions
     {
         if (column.IsReference)
             return FormItemIs.Selector;
+        if (column.Role.HasFlag(TableColumnRole.RowNo))
+            return FormItemIs.Content;
         return column.DataType switch
         {
             ColumnDataType.DateTime or ColumnDataType.Date => FormItemIs.DatePicker,
@@ -19,6 +22,16 @@ internal static class FormExtensions
             _ => FormItemIs.TextBox,
         };
     }
+
+    public static String? ToColumnWidth(this TableColumn column)
+    {
+        if (column.Role.HasFlag(TableColumnRole.RowNo))
+            return "1px";
+        if (column.DataType == ColumnDataType.Money || column.DataType == ColumnDataType.Float)
+            return "10rem";
+        return null;
+    }
+
     public static ItemDataType ToItemDataType(this TableColumn column)
     {
         return column.DataType switch

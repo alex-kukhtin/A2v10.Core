@@ -10,7 +10,7 @@ internal partial class BaseModelBuilder
 {
     IEnumerable<FormItem> IndexColumns()
     {
-        return _table.VisibleColumns().Select(
+        return _table.VisibleColumns().OrderBy(c => c.Order).Select(
             c => new FormItem()
             {
                 Is = FormItemIs.DataGridColumn,
@@ -25,7 +25,6 @@ internal partial class BaseModelBuilder
 
     private Form CreateIndexPage()
     {
-
         IEnumerable<FormItem> ToolbarButtons()
         {
             yield return FormBuild.Button(new FormItemCommand(FormCommand.Create)
@@ -39,10 +38,11 @@ internal partial class BaseModelBuilder
             {
                 Command = new FormItemCommand(FormCommand.EditSelected)
                 {
-                    Url = _table.EndpointPathUseBase(_baseTable),
+                    Url = _table.EditEndpoint(_baseTable),
                     Argument = "Parent.ItemsSource"
                 }
             };
+            yield return new FormItem(FormItemIs.Separator);
             yield return new FormItem(FormItemIs.Button)
             {
                 Command = new FormItemCommand(FormCommand.Reload),
@@ -59,24 +59,14 @@ internal partial class BaseModelBuilder
         {
             if (!_table.Columns.Any(c => c.IsReference))
                 return null;
-            
-            IEnumerable<FormItem> CreatePeriod()
-            {
-                if (_table.HasPeriod())
-                    yield return new FormItem(FormItemIs.PeriodPicker)
-                    {
-                        Data = "Parent.Filter.Period",
-                        Label = "@Period"
-                    };
-                yield break;
-            }
 
-            FormItem CreateFilter(TableColumn column)
+            FormItem CreateFilter(TableColumn column, Int32 gridRow)
             {
                 return new FormItem(FormItemIs.Selector)
                 {
                     Label = $"@{column.Name}",
                     Data = $"Parent.Filter.{column.Name}",
+                    Grid = new FormItemGrid(gridRow, 1),
                     Props = new FormItemProps()
                     {
                         Url = column.Reference.EndpointPath(),
@@ -86,11 +76,29 @@ internal partial class BaseModelBuilder
                 };
             }
 
-            var tableCols = _table.Columns.Where(c => c.IsReference);
+            var tableRefCols = _table.Columns.Where(c => c.IsReference);
             if (_baseTable != null && _baseTable.Schema == "op")
-                tableCols = tableCols.Where(c => c.DataType != ColumnDataType.Operation);
+                tableRefCols = tableRefCols.Where(c => c.DataType != ColumnDataType.Operation);
+            
+            tableRefCols = tableRefCols.OrderBy(c => c.Order);
 
-            var columns = CreatePeriod().Union(tableCols.Select(c => CreateFilter(c)));
+            IEnumerable<FormItem> Filters()
+            {
+                Int32 gridRow = 1;  
+                if (_table.HasPeriod())
+                    yield return new FormItem(FormItemIs.PeriodPicker)
+                    {
+                        Data = "Parent.Filter.Period",
+                        Label = "@Period",
+                        Grid = new FormItemGrid(gridRow++, 1)
+                    };
+                foreach (var c in tableRefCols)
+                    yield return CreateFilter(c, gridRow++);
+            }
+
+            Int32 filtersCount = tableRefCols.Count();
+            if (_table.HasPeriod())
+                filtersCount++;
 
             return new FormItem(FormItemIs.Taskpad)
             {
@@ -101,10 +109,10 @@ internal partial class BaseModelBuilder
                             new FormItem(FormItemIs.Grid) 
                             {
                                 Props = new FormItemProps() {
-                                    Rows = String.Join(' ', columns.Select(c => "auto")),
+                                    Rows = String.Join(' ', Enumerable.Range(1, filtersCount).Select(c => "auto")),
                                     Columns = "1fr",
                                 },
-                                Items = [..columns]
+                                Items = [..Filters()]
                             }
                         ]
                     }
@@ -155,7 +163,7 @@ internal partial class BaseModelBuilder
                             Items = [..IndexColumns()],
                             Command = new FormItemCommand(FormCommand.EditSelected)
                             {
-                                Url = _table.EndpointPathUseBase(_baseTable),
+                                Url = _table.EditEndpoint(_baseTable),
                                 Argument = "Parent.ItemsSource"
                             }
                         },

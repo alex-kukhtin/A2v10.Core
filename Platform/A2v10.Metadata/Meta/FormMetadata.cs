@@ -27,10 +27,12 @@ public enum FormItemIs
     Taskpad,
     Panel,
     Aligner,
+    Separator,
     // controls
     Button,
     TextBox,
     SearchBox,
+    Content, // for cells
     Selector,
     DatePicker,
     PeriodPicker,
@@ -56,7 +58,8 @@ public enum FormCommand
     Close,
     Print,
     Append,
-    Remove
+    Remove,
+    Dialog
 }
 
 public enum ItemDataType
@@ -89,10 +92,11 @@ public record FormItemGrid
 public record FormItemCommand
 {
     public FormItemCommand() { }
-    public FormItemCommand(FormCommand cmd, String? arg = null) 
+    public FormItemCommand(FormCommand cmd, String? arg = null, String? url = null) 
     { 
         Command = cmd;
         Argument = arg;
+        Url = url;
     }
     public FormCommand Command { get; init; }
     public String? Argument { get; init; }

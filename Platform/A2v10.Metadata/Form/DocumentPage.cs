@@ -16,6 +16,7 @@ internal partial class BaseModelBuilder
             FormBuild.Button(FormCommand.SaveAndClose, "@SaveAndClose"),
             FormBuild.Button(FormCommand.Save),
             FormBuild.Button(FormCommand.Print),
+            new FormItem(FormItemIs.Separator),
             new FormItem(FormItemIs.Button) {
                 Label = "@Apply",
                 Command = new FormItemCommand(FormCommand.Apply),
@@ -26,6 +27,12 @@ internal partial class BaseModelBuilder
                 Command = new FormItemCommand(FormCommand.UnApply),
                 If = $"{_table.RealItemName}.{_table.DoneField}"
             },
+            new FormItem(FormItemIs.Button) {
+                Label = "@ShowTrans",
+                Command = new FormItemCommand(FormCommand.Dialog, _table.RealItemName, $"{_table.EndpointPathUseBase(_baseTable)}/showtrans"),
+                If = $"{_table.RealItemName}.{_table.DoneField}"
+            },
+            new FormItem(FormItemIs.Separator),
             FormBuild.Button(FormCommand.Reload),
             new FormItem(FormItemIs.Aligner)
         ];
@@ -37,10 +44,11 @@ internal partial class BaseModelBuilder
 
         IEnumerable<FormItem> HeaderItems()
         {
-            var title = _baseTable?.RealItemName ?? _table.RealItemName;
+            var title = _baseTable?.RealItemLabel ?? _table.RealItemLabel;
 
             // Title, @Number [Number] @Date, [DatePicker]
             yield return FormBuild.Header(title, new FormItemGrid(1, 1));
+
             yield return FormBuild.Label("@Date", new FormItemGrid(1, 2));
             yield return new FormItem(FormItemIs.DatePicker)
             {
@@ -80,6 +88,7 @@ internal partial class BaseModelBuilder
                 },
                 Items = [..HeaderItems()]
             };
+
             // body
             yield return new FormItem(FormItemIs.Grid)
             {
@@ -94,15 +103,17 @@ internal partial class BaseModelBuilder
 
             IEnumerable<FormItem> DetailsTableCells(TableMetadata d) 
             {
-                return d.EditableColumns().Select(c =>
+                return d.EditableColumns().OrderBy(c => c.Order).Select(c =>
                     new FormItem(FormItemIs.TableCell)
                     {
-                        Label = $"@{c.Name}",
+                        Label =  c.Label ?? $"@{c.Name}",
+                        Width = c.ToColumnWidth(),
+                        DataType = c.ToItemDataType(),
                         Items = [
                             new FormItem(c.Column2Is())
                             {
-                                Data = c.Name,
                                 DataType = c.ToItemDataType(),
+                                Data = c.Name,
                                 Props= c.IsReference ?
                                     new FormItemProps() {
                                         Url = c.Reference.EndpointPath(),
@@ -156,6 +167,7 @@ internal partial class BaseModelBuilder
                                     ..DetailsTableCells(d),
                                     new FormItem(FormItemIs.TableCell)
                                     {
+                                        Width = "1px",
                                         Items = [
                                             FormBuild.Button(new FormItemCommand() {
                                                 Command = FormCommand.Remove
@@ -222,11 +234,12 @@ internal partial class BaseModelBuilder
             Schema = _table.Schema,
             Table = _table.Name,
             Data = _table.RealItemName,
-            Label =  _baseTable?.RealItemName ?? _table.RealItemName,
+            Label =  _baseTable?.RealItemLabel ?? _table.RealItemLabel,
             EditWith = _table.EditWith,
             Items = [
                 new FormItem() {
                     Is = FormItemIs.Grid,
+                    CssClass = "document-grid",
                     Props = new FormItemProps() {
                         Rows = hasDetails ? "auto auto auto 1fr auto" : "auto auto 1fr auto",
                         Columns = "1fr",

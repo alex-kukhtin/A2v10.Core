@@ -210,7 +210,7 @@ begin
 	from a2meta.view_RealTables c 
 	where c.Parent = @tableId and c.Kind = N'details';
 
-	select [!TColumn!Array] = null, [Id!!Id] = c.Id, c.[Name], DataType = c.DataType, 
+	select [!TColumn!Array] = null, [Id!!Id] = c.Id, c.[Name], c.[Label], c.DataType, 
 		c.[MaxLength], c.[Role], c.[Order],
 		[Reference.RefSchema!TReference!] = case c.DataType 
 		when N'operation' then N'op' 
@@ -426,6 +426,7 @@ begin
 	values (@appId, N'MyApplication', N'My Application', N'bigint');
 
 	/* TODO: колонки для таблицы операций - оно должно создаваться через Config.CreateTable.
+
 insert into a2meta.Columns ([Table], [Name], [DataType], [MaxLength], [Role], [Order]) values
 (N'36CB0618-F8E0-48A2-984E-1BD6D7C80935', N'Id', N'string', 64, 1, 1),
 (N'36CB0618-F8E0-48A2-984E-1BD6D7C80935', N'Name', N'string', 255, 2, 2);
@@ -494,7 +495,8 @@ begin
 		[Operations!TOperation!Array] = null
 	from a2meta.[Application] where Id = @appId
 
-	select [!TTable!Array] = null, [Id!!Id] = Id, c.[Schema], c.[Name], c.[Kind],
+	select [!TTable!Array] = null, [Id!!Id] = Id, c.[Schema], c.[Name], c.[Kind], 
+		DbName = t.TABLE_NAME, DbSchema = t.TABLE_SCHEMA,
 		[Columns!TColumn!Array] = null,
 		[!TApp.Tables!ParentId] = @appId
 	from a2meta.[Catalog] c
@@ -509,6 +511,7 @@ begin
 		inner join a2meta.[Catalog] t on c.[Table] = t.Id 
 		left join a2meta.[Catalog] r on c.Reference = r.Id
 		left join INFORMATION_SCHEMA.COLUMNS ic on ic.TABLE_SCHEMA = t.[Schema] and ic.TABLE_NAME = t.[Name] and ic.COLUMN_NAME = c.[Name]
+	where t.Kind <> N'folder'
 	order by c.InitialOrder; -- same [Table.Schema]
 
 	select 	[!TOperation!Array] = null, [Id] = op.[Name], [Name] = ItemLabel,

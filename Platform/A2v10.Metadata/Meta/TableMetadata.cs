@@ -64,6 +64,7 @@ public record TableColumn
 {
     #region Database Fields
     public String Name { get; init; } = default!;
+    public String? Label { get; init; } = default!;
     public ColumnDataType DataType { get; init; } = default!;
     public Int32 MaxLength { get; init; }
     public ColumnReference Reference { get; init; } = default!;
@@ -135,6 +136,8 @@ public record TableMetadata
 
     public String? ItemsLabel { get; init; }
     public String? ItemLabel { get; init; }
+    public String? DbName { get; init; }
+    public String? DbSchema { get; init; }
     #endregion
     public List<TableApply>? Apply { get; init; }
     public List<DetailsKind> Kinds { get; init; } = [];
@@ -163,6 +166,7 @@ public record TableMetadata
     internal Boolean IsDocument => Schema == "doc";
     internal Boolean IsJournal => Schema == "jrn";
     internal Boolean IsOperation => Schema == "op";
+    internal Boolean HasDbTable => !String.IsNullOrEmpty(DbName) && !String.IsNullOrEmpty(DbSchema);
 
     internal IEnumerable<TableColumn> PrimaryKeys => Columns.Where(c => c.Role.HasFlag(TableColumnRole.PrimaryKey));
 }

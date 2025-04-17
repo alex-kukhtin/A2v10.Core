@@ -78,6 +78,7 @@ internal class XamlBulder(EditWithMode _editWith)
             FormItemIs.Header => CreateHeader(item),
             FormItemIs.Label => CreateLabel(item),
             FormItemIs.Button => CreateButton(item, param),
+            FormItemIs.Content => CreateSpan(item),
             _ => throw new NotImplementedException($"Implement CreateElement: {item.Is}")
         };
         if (elem != null && attach != null)
@@ -240,11 +241,9 @@ internal class XamlBulder(EditWithMode _editWith)
 
     private TextBox CreateTextBox(FormItem source)
     {
-        Int32 tabIndex = source.Data.EndsWith(".Name") ? 1 : 0;
         return new TextBox()
         {
             Label = source.Label.Localize(),
-            TabIndex = tabIndex,
             Align = source.ToTextAlign(),
             Width = Length.FromStringNull(source.Width),
             Bindings = b => b.SetBinding(nameof(TextBox.Value), source.TypedBind())
@@ -298,6 +297,8 @@ internal class XamlBulder(EditWithMode _editWith)
         var headers = source.Items?.Select(c => new TableCell() { Content = c.Label});
         var cells = source.Items?.Select(c => new TableCell()
         {
+            Width = Length.FromStringNull(c.Width),
+            Align = c.ToTextAlign(),
             Content = c.Items != null && c.Items.Length > 0 ? CreateElement(c.Items[0], null, "table") : null,
         });
 
@@ -340,6 +341,15 @@ internal class XamlBulder(EditWithMode _editWith)
         };
     }
 
+    private Span CreateSpan(FormItem source)
+    {
+        return new Span()
+        {
+            Bindings = b => b.SetBinding(nameof(Span.Content), new Bind(source.Data))
+        };
+    }
+
+
     private UIElement CreateButton(FormItem source, String? param)
     {
         if (param == "table")
@@ -374,11 +384,13 @@ internal class XamlBulder(EditWithMode _editWith)
                     {
                         Content = c.Label.Localize(),
                         Icon = c.Command2Icon(),
+                        Render = c.Command2RenderMode(),
                         Bindings = b => {
                             b.SetBinding(nameof(Button.Command), c.BindCommand(_editWith));
                         }
                     },
                     FormItemIs.Aligner => new ToolbarAligner(),
+                    FormItemIs.Separator => new Separator(),
                     FormItemIs.SearchBox => new TextBox()
                     {
                         ShowClear = true,   
