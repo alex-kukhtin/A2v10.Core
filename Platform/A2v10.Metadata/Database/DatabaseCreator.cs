@@ -103,12 +103,13 @@ internal class DatabaseCreator(AppMetadata _meta)
 
     internal String CreateForeignKeys(TableMetadata table)
     {
-        const String check = "check"; // TODO: ????
+        const String check = "nocheck"; // TODO: ????
         String createReference(TableColumn column)
         {
             if (column.DataType == ColumnDataType.Operation)
             {
                 var opConstraintName = $"FK_{table.Name}_{column.Name}_Operations";
+
                 return $"""
                 if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.Schema}' and TABLE_NAME = N'{table.Name}' and CONSTRAINT_NAME = N'{opConstraintName}')
                     alter table {table.SqlTableName} add 
@@ -130,6 +131,8 @@ internal class DatabaseCreator(AppMetadata _meta)
             var refTablePkName = refTablePk.First().Name;
 
             var constraintName = $"FK_{table.Name}_{column.Name}_{refs.RefTable}";
+            if (constraintName.Length > 128)
+                constraintName = constraintName[0..127];
             return $"""
             if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.Schema}' and TABLE_NAME = N'{table.Name}' and CONSTRAINT_NAME = N'{constraintName}')
                 alter table {table.SqlTableName} add 
@@ -158,7 +161,7 @@ internal class DatabaseCreator(AppMetadata _meta)
                 constraint PK_Operations primary key,
             [Void] bit not null
                 constraint DF_Operations_Void default(0),
-                    [Name] nvarchar(255),
+            [Name] nvarchar(255),
             [Url] nvarchar(255)
         );
         

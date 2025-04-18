@@ -618,4 +618,11 @@ drop table if exists a2meta.[Catalog]
 exec a2meta.[Catalog.Init];
 */
 
+select * from a2meta.ODataTables;
+select * from a2meta.ODataColumns order by [Name];
+
+;
+
+
+
 
