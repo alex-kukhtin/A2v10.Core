@@ -57,7 +57,8 @@ public enum TableColumnRole
     Done       = 0x100, // 256
     Kind       = 0x200, // 512
     Owner      = 0x400, // 1024
-    Number     = 0x800  // 2048
+    Number     = 0x800, // 2048
+    SystemName = 0x1000  // 4096
 }
 
 public record TableColumn
