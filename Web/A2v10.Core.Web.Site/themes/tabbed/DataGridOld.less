@@ -174,7 +174,7 @@ table.data-grid {
 			display: inline-flex;
 			align-items: center;
 			min-height: var(--header-height);
-			white-space: nowrap;
+
 			> span {
 				word-break: unset;
 			}
@@ -439,27 +439,37 @@ table.data-grid > tbody {
 
 .data-grid-container.fixed-header {
 	height: 100%;
-	overflow: auto;
+	overflow: hidden;
 	position: relative;
 	min-height: var(--header-height);
+	min-width:fit-content;
 
 	> .data-grid-body.fixed-header {
-		overflow: auto;
-		height: 100%;
-
+		margin-top: var(--header-height);
+		overflow: hidden;
+		overflow-y: auto;
+		// 25px (header) + 27px(pager)
+		height: ~"calc(100% - var(--header-height))";
+		//border-bottom: 1px solid @table-hdr-brd-color;
 		> table > thead {
 			height: 0;
-			position: sticky;
-			top: 0;
-			z-index: 7;
+			position:unset;
 
 			> tr > th {
 				border-top-style: none;
 				border-bottom-style: none;
+				height: 0;
+				visibility: hidden;
 				text-align: left !important;
 
 				> .h-fill {
-					display: none;
+					padding: 0 8px;
+					height: 0;
+					color: transparent;
+					line-height: 0 !important;
+					margin-top: -5px;
+					opacity: 0;
+					white-space: nowrap;
 				}
 
 				&.check-all > .h-fill {
@@ -473,6 +483,9 @@ table.data-grid > tbody {
 				}
 
 				> .h-holder {
+					position: absolute;
+					visibility: visible;
+					top: 0;
 					background-color: inherit;
 					width: 100%;
 					margin-left: -1px;
@@ -526,6 +539,8 @@ table.data-grid > tbody {
 
 	&.fixed-header {
 		> .data-grid-body.fixed-header {
+			margin-top: var(--header-height);
+			height: ~"calc(100% - 36px)";
 		}
 	}
 

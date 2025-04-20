@@ -26,7 +26,7 @@ internal static class XamlExtensions
             FormCommand.Reload => Icon.Reload,
             FormCommand.Create => Icon.Plus,
             FormCommand.EditSelected or FormCommand.Edit => Icon.Edit,
-            FormCommand.Delete => Icon.Clear,
+            FormCommand.Delete or FormCommand.DeleteSelected => Icon.Clear,
             FormCommand.Copy => Icon.Copy,
             FormCommand.Apply => Icon.Apply,
             FormCommand.UnApply => Icon.Unapply,
@@ -115,6 +115,18 @@ internal static class XamlExtensions
             return cmd;
         }
 
+        BindCmd DeleteSelectedCommand()
+        {
+            var cmd = new BindCmd()
+            {
+                Command = CommandType.DbRemoveSelected,
+                Confirm = new Confirm() { Message = "@[Confirm.Delete.Element]" },
+            };
+            cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(item.Command?.Argument ?? String.Empty));
+            return cmd;
+        }
+
+
         BindCmd ShowDialogCommand()
         {
             var cmd = new BindCmd()
@@ -137,6 +149,7 @@ internal static class XamlExtensions
             FormCommand.Close => new BindCmd() { Command = CommandType.Close },
             FormCommand.Select => item.BindCommandArg(CommandType.Select),
             FormCommand.EditSelected => EditSelectedCommand(),
+            FormCommand.DeleteSelected => DeleteSelectedCommand(),
             FormCommand.Create => CreateCreateCommand(),
             FormCommand.Append => item.BindCommandArg(CommandType.Append),
             FormCommand.Apply => new BindCmd()
@@ -185,6 +198,6 @@ internal static class XamlExtensions
             return null;
         if (source.StartsWith("@"))
             return $"@[{source[1..]}]";
-        return source;   
+        return source.Replace("\"", "&quot;");
     }
 }

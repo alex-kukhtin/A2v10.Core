@@ -10,7 +10,7 @@ internal partial class BaseModelBuilder
 {
     IEnumerable<FormItem> IndexColumns()
     {
-        return _table.VisibleColumns().OrderBy(c => c.Order).Select(
+        return _table.VisibleColumns(_appMeta).OrderBy(c => c.Order).Select(
             c => new FormItem()
             {
                 Is = FormItemIs.DataGridColumn,
@@ -18,7 +18,7 @@ internal partial class BaseModelBuilder
                 Data = c.IsReference ? 
                     $"{c.Name}.{_refFields.First(r => r.Column.Name == c.Name).Table.NameField}" 
                     : c.Name,
-                Label = $"@{c.Name}"
+                Label = c.Label ?? $"@{c.Name}"
             }
         );
     }
@@ -37,6 +37,14 @@ internal partial class BaseModelBuilder
             yield return new FormItem(FormItemIs.Button)
             {
                 Command = new FormItemCommand(FormCommand.EditSelected)
+                {
+                    Url = _table.EditEndpoint(_baseTable),
+                    Argument = "Parent.ItemsSource"
+                }
+            };
+            yield return new FormItem(FormItemIs.Button)
+            {
+                Command = new FormItemCommand(FormCommand.DeleteSelected)
                 {
                     Url = _table.EditEndpoint(_baseTable),
                     Argument = "Parent.ItemsSource"
@@ -64,7 +72,7 @@ internal partial class BaseModelBuilder
             {
                 return new FormItem(FormItemIs.Selector)
                 {
-                    Label = $"@{column.Name}",
+                    Label = column.Label ?? $"@{column.Name}",
                     Data = $"Parent.Filter.{column.Name}",
                     Grid = new FormItemGrid(gridRow, 1),
                     Props = new FormItemProps()

@@ -15,6 +15,7 @@ label.checkbox, label.radio {
 	display: inline-block;
 	line-height: @checkbox-size;
 	white-space: nowrap;
+	position: relative; // prevent scrolling when checkbox is checked
 
 	> span {
 		display: inline-flex;
@@ -35,7 +36,7 @@ label.checkbox, label.radio {
 			background-position: center;
 			background-repeat: no-repeat;
 			align-self: center;
-			min-width:1em;
+			min-width: 1em;
 		}
 	}
 

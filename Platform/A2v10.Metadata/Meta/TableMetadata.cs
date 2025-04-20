@@ -75,6 +75,7 @@ public record TableColumn
     public Int32 Order { get; init; }
     #endregion
     internal Boolean IsReference => Reference != null && Reference.RefTable != null;
+    internal Boolean IsBlob => DataType == ColumnDataType.Stream;
     internal Boolean Exists => DbName != null && DbDataType != null;
 
     internal Boolean HasDefault => 

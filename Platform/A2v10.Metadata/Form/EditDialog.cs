@@ -17,7 +17,7 @@ internal partial class BaseModelBuilder
         {
             Is = column.Column2Is(),
             Grid = new FormItemGrid(row, col),
-            Label = $"@{column.Name}",
+            Label = column.Label ?? $"@{column.Name}",
             Data = $"{_table.RealItemName}.{column.Name}",
             DataType = column.ToItemDataType(),
             Props = new FormItemProps()

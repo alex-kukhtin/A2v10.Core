@@ -49,6 +49,7 @@ public enum FormCommand
     Edit,
     EditSelected, // or page
     Delete,
+    DeleteSelected,
     Copy,
     Apply,
     UnApply,

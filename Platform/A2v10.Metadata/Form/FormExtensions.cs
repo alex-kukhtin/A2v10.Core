@@ -58,14 +58,19 @@ internal static class FormExtensions
         };
     }
 
-    public static IEnumerable<TableColumn> VisibleColumns(this TableMetadata table)
+    public static IEnumerable<TableColumn> VisibleColumns(this TableMetadata table, AppMetadata appMeta)
     {
         Boolean IsVisible(TableColumn column)
         {
+            if (appMeta.IdDataType == ColumnDataType.Uniqueidentifier && column.Role.HasFlag(TableColumnRole.PrimaryKey))
+                return false;
+            if (column.DataType == ColumnDataType.Stream)
+                return false;
             return !column.Role.HasFlag(TableColumnRole.Void)
                 && !column.Role.HasFlag(TableColumnRole.IsFolder)
                 && !column.Role.HasFlag(TableColumnRole.Kind)
-                && !column.Role.HasFlag(TableColumnRole.IsSystem);
+                && !column.Role.HasFlag(TableColumnRole.IsSystem)
+                && !column.Role.HasFlag(TableColumnRole.SystemName);
         }
 
         return table.Columns.Where(IsVisible).OrderBy(c => c.Order);
@@ -79,8 +84,8 @@ internal static class FormExtensions
                 && !column.Role.HasFlag(TableColumnRole.PrimaryKey)
                 && !column.Role.HasFlag(TableColumnRole.IsFolder)
                 && !column.Role.HasFlag(TableColumnRole.IsSystem)
-                && !column.Role.HasFlag(TableColumnRole.Kind)
-                && column.Name != "Parent"; // TODO???
+                && !column.Role.HasFlag(TableColumnRole.SystemName)
+                && !column.Role.HasFlag(TableColumnRole.Kind);
         }
 
         return table.Columns.Where(IsVisible).OrderBy(c => c.Order);

@@ -118,7 +118,16 @@ public record GridLength
 			GridLength gl2 = GridLength.FromString(match.Groups[2].Value);
 			return new GridLength($"minmax({gl1},{gl2})");
 		}
-		else if (Length.IsValidLength(strVal))
+		else if (strVal.StartsWith("Repeat")) {
+            var pattern = @"Repeat\((\d?);([\w\.]+[%\*\.]?)\)";
+            var match = Regex.Match(strVal.Replace(" ", String.Empty), pattern);
+            if (match.Groups.Count != 3)
+                throw new XamlException($"Invalid grid length value '{strVal}'");
+			int count = Int32.Parse(match.Groups[1].Value);
+            GridLength gl = GridLength.FromString(match.Groups[2].Value);
+			return new GridLength($"repeat({count}, {gl.Value})");
+        }
+        else if (Length.IsValidLength(strVal))
 			return new GridLength() { Value = strVal };
 		if (strVal.EndsWith('*'))
 			return new GridLength(strVal.Trim().Replace("*", "fr"));
