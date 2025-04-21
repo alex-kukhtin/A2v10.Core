@@ -45,7 +45,7 @@ internal partial class BaseModelBuilder
                 globalSaveEvent: 'g.document.saved'
             },
             properties: {
-                 {{String.Join(jsDivider, properties())}},
+                {{String.Join(jsDivider, properties())}}
             },
             defaults: {
                 {{String.Join(jsDivider, defaults())}}

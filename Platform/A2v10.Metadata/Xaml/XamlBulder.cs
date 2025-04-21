@@ -70,7 +70,7 @@ internal class XamlBulder(EditWithMode _editWith)
             FormItemIs.Pager => CreatePager(item),
             FormItemIs.Toolbar => CreateToolbar(item),
             FormItemIs.TextBox => CreateTextBox(item),
-            FormItemIs.Selector => CreateSelector(item),
+            FormItemIs.Selector => CreateSelector(item, param),
             FormItemIs.DatePicker => CreateDatePicker(item),
             FormItemIs.PeriodPicker => CreatePeriodPicker(item, param),
             FormItemIs.CheckBox => CreateCheckBox(item),
@@ -249,7 +249,7 @@ internal class XamlBulder(EditWithMode _editWith)
             Bindings = b => b.SetBinding(nameof(TextBox.Value), source.TypedBind())
         };
     }
-    private Selector CreateSelector(FormItem source)
+    private Selector CreateSelector(FormItem source, String? param)
     {
         return new SelectorSimple()
         {
@@ -258,6 +258,7 @@ internal class XamlBulder(EditWithMode _editWith)
             Width = Length.FromStringNull(source.Width),
             Placeholder = source.Props?.Placeholder.Localize(),
             ShowClear = source.Props?.ShowClear == true,
+            Highlight = param == "taskpad",
             Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), new Bind(source.Data))
         };
     }

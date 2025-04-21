@@ -75,7 +75,7 @@ internal class DataTableBuilder(TableMetadata table, AppMetadata appMeta)
                     if (obj is String strObj && String.IsNullOrWhiteSpace(strObj))
                         obj = DBNull.Value;
                 }
-                else if (obj is ExpandoObject exp)
+                if (obj is ExpandoObject exp)
                 {
                     obj = exp.Get<Object>("Id");
                     if (obj is Int64 int64 && int64 == 0)

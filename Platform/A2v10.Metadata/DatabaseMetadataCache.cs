@@ -2,12 +2,10 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 using A2v10.Infrastructure;
-using A2v10.System.Xaml;
 using A2v10.Xaml;
 
 namespace A2v10.Metadata;
@@ -68,8 +66,10 @@ public class DatabaseMetadataCache
             return form;
         form = await getForm(dataSource, meta, key, getDefaultForm);
         initForm(form.Page);
-        //return form; // TODO: CACHE
-        return _formCache.GetOrAdd(dictKey, form);
+        return form; // TODO: CACHE (нельзя кешировать, если это документ - там есть System.ReadOnly,
+                     // который меняет (!) Xaml. Вообще-то не должен, но так написано :-(
+
+        //return _formCache.GetOrAdd(dictKey, form);
     }
 
     public String GetOrAddEndpointPath(String? dataSource, String schema, String table)

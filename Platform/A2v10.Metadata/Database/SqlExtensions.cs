@@ -88,8 +88,10 @@ internal static class SqlExtensions
     internal static IEnumerable<String> AllSqlFields(this TableMetadata table, IEnumerable<ReferenceMember> refFields, String alias, Boolean isDetails = false)
     {
         foreach (var c in table.Columns.Where(c => !c.IsReference && !c.IsBlob))
-            if (c.Role.HasFlag(TableColumnRole.PrimaryKey))
+            if (c.Role.HasFlag(TableColumnRole.PrimaryKey) && !c.Role.HasFlag(TableColumnRole.RowNo))
                 yield return $"[{c.Name}!!Id] = {alias}.[{c.Name}]";
+            else if (c.Role.HasFlag(TableColumnRole.PrimaryKey) && c.Role.HasFlag(TableColumnRole.RowNo))
+                yield return $"[{c.Name}!!RowNumber] = {alias}.[{c.Name}]";
             else if (c.Role.HasFlag(TableColumnRole.Name))
                 yield return $"[{c.Name}!!Name] = {alias}.[{c.Name}]";
             else if (isDetails && c.Role.HasFlag(TableColumnRole.Kind))

@@ -138,20 +138,44 @@ internal partial class BaseModelBuilder
 
             String mergeOneDetails(TableMetadata detailsTable)
             {
-                var updateFields = detailsTable.Columns.Where(f => !f.Role.HasFlag(TableColumnRole.Parent) && !f.Role.HasFlag(TableColumnRole.PrimaryKey) && f.Role.HasFlag(TableColumnRole.Kind));
-                var parentField = detailsTable.Columns.FirstOrDefault(f => f.Role.HasFlag(TableColumnRole.Parent))
-                    ?? throw new InvalidOperationException("Parent field not found");
-                return $"""
-				merge {detailsTable.SqlTableName} as t
-				using @{detailsTable.Name} as s
-				on t.{detailsTable.PrimaryKeyField} = s.{detailsTable.PrimaryKeyField}
-				when matched then update set
-					{String.Join(',', updateFields.Select(f => $"t.[{f.Name}] = s.[{f.Name}]"))}
-				when not matched then insert 
-					([{parentField.Name}], {String.Join(',', updateFields.Select(f => $"[{f.Name}]"))}) values
-					(@Id, {String.Join(',', updateFields.Select(f => $"s.[{f.Name}]"))})
-				when not matched by source and t.[{parentField.Name}] = @Id then delete;
-				""";
+                var updateFields = detailsTable.Columns.Where(f => !f.Role.HasFlag(TableColumnRole.Parent) && !f.Role.HasFlag(TableColumnRole.PrimaryKey) && !f.Role.HasFlag(TableColumnRole.Kind));
+
+                var multPk = detailsTable.PrimaryKeys.Count() > 1;
+
+                if (multPk)
+                {
+                    var parentField = detailsTable.PrimaryKeys.FirstOrDefault(pk => !pk.Role.HasFlag(TableColumnRole.RowNo))
+                        ?? throw new InvalidOperationException("MergeDetails: Primary key not found");
+                    var rowNoField = detailsTable.PrimaryKeys.FirstOrDefault(pk => pk.Role.HasFlag(TableColumnRole.RowNo))
+                        ?? throw new InvalidOperationException("MergeDetails: RowNo field not found");
+                    return $"""
+				    merge {detailsTable.SqlTableName} as t
+				    using @{detailsTable.Name} as s
+				    on {String.Join(" and ", detailsTable.PrimaryKeys.Select(c => $"t.[{c.Name}]  = s.[{c.Name}]"))}
+				    when matched then update set
+				        {String.Join(',', updateFields.Select(f => $"t.[{f.Name}] = s.[{f.Name}]"))}
+				    when not matched then insert 
+				        ([{parentField.Name}], [{rowNoField.Name}], {String.Join(',', updateFields.Select(f => $"[{f.Name}]"))}) values
+				        (@Id, s.[{rowNoField.Name}], {String.Join(',', updateFields.Select(f => $"s.[{f.Name}]"))})
+				    when not matched by source and t.[{parentField.Name}] = @Id then delete;
+				    """;
+                }
+                else
+                {
+                    var parentField = detailsTable.Columns.FirstOrDefault(f => f.Role.HasFlag(TableColumnRole.Parent))
+                        ?? throw new InvalidOperationException("MergeDetails: Parent field not found");
+                    return $"""
+				    merge {detailsTable.SqlTableName} as t
+				    using @{detailsTable.Name} as s
+				    on $"t.[{detailsTable.PrimaryKeyField}]  = s.[{detailsTable.PrimaryKeyField}]"
+				    when matched then update set
+				        {String.Join(',', updateFields.Select(f => $"t.[{f.Name}] = s.[{f.Name}]"))}
+				    when not matched then insert 
+				        ([{parentField.Name}], {String.Join(',', updateFields.Select(f => $"[{f.Name}]"))}) values
+				        (@Id, {String.Join(',', updateFields.Select(f => $"s.[{f.Name}]"))})
+				    when not matched by source and t.[{parentField.Name}] = @Id then delete;
+				    """;
+                }
             }
 
             String mergeMultiDetails(TableMetadata detailsTable)
@@ -224,6 +248,8 @@ internal partial class BaseModelBuilder
         var tableBuilder = new DataTableBuilder(_table, _appMeta);
         
         var dtable = tableBuilder.BuildDataTable(item);
+
+        //var str = DumpDataTable(dtable);
 
         var dm = await _dbContext.LoadModelSqlAsync(_dataSource, sqlString, dbprms =>
         {
