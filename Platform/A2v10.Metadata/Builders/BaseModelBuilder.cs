@@ -13,6 +13,7 @@ using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Xaml;
 using A2v10.Xaml.DynamicRendrer;
+using Jint.Native.Function;
 
 namespace A2v10.Metadata;
 
@@ -130,7 +131,7 @@ internal partial class BaseModelBuilder(
         }
         else
         {
-            var formMeta = await _metadataProvider.GetFormAsync(_dataSource, _baseTable ?? _table, _platformUrl.Action, CreateDefaultForm);
+            var formMeta = await _metadataProvider.GetFormAsync(_dataSource, _baseTable ?? _table, _platformUrl.Action, CreateDefaultForm, dynamicRenderer.InitPage);
             page = formMeta.Page;
             templateText = await CreateTemplateAsync();
         }
@@ -147,7 +148,8 @@ internal partial class BaseModelBuilder(
             ModelView = modelView,
             PlatformUrl = _platformUrl,
             Model = dataModel,
-            Template = templateText
+            Template = templateText,
+            SkipInit = true
         };
         return await dynamicRenderer.RenderPage(rri);
     }

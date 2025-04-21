@@ -2306,6 +2306,10 @@ pre.a2-code {
 .control-group.sm {
   font-size: 0.9rem;
 }
+.control-group.has-value .input-group {
+  background-color: #f0f7fc;
+  font-weight: 500;
+}
 .control-group.no-border .input-group {
   border: none;
   border-radius: 0;
@@ -2901,6 +2905,7 @@ a.btn {
   width: 100%;
   min-height: 2em;
   white-space: nowrap;
+  border-radius: 4px;
 }
 .period-picker.open:not(.pp-navbar):not(.pp-hyperlink) .period-text {
   z-index: 1071;
@@ -3248,6 +3253,7 @@ table.data-grid > thead > tr > th .h-holder {
   display: inline-flex;
   align-items: center;
   min-height: var(--header-height);
+  white-space: nowrap;
 }
 table.data-grid > thead > tr > th .h-holder > span {
   word-break: unset;
@@ -3453,26 +3459,23 @@ table.data-grid > tbody > tr.bold > td {
 }
 .data-grid-container.fixed-header {
   height: 100%;
-  overflow: hidden;
+  overflow: auto;
   position: relative;
   min-height: var(--header-height);
-  min-width: fit-content;
 }
 .data-grid-container.fixed-header > .data-grid-body.fixed-header {
-  margin-top: var(--header-height);
-  overflow: hidden;
-  overflow-y: auto;
-  height: calc(100% - var(--header-height));
+  overflow: auto;
+  height: 100%;
 }
 .data-grid-container.fixed-header > .data-grid-body.fixed-header > table > thead {
   height: 0;
-  position: unset;
+  position: sticky;
+  top: 0;
+  z-index: 7;
 }
 .data-grid-container.fixed-header > .data-grid-body.fixed-header > table > thead > tr > th {
   border-top-style: none;
   border-bottom-style: none;
-  height: 0;
-  visibility: hidden;
   text-align: left !important;
   /*
 				&:first-child > .h-holder {
@@ -3481,13 +3484,7 @@ table.data-grid > tbody > tr.bold > td {
 				*/
 }
 .data-grid-container.fixed-header > .data-grid-body.fixed-header > table > thead > tr > th > .h-fill {
-  padding: 0 8px;
-  height: 0;
-  color: transparent;
-  line-height: 0 !important;
-  margin-top: -5px;
-  opacity: 0;
-  white-space: nowrap;
+  display: none;
 }
 .data-grid-container.fixed-header > .data-grid-body.fixed-header > table > thead > tr > th.check-all > .h-fill {
   width: 26px;
@@ -3498,9 +3495,6 @@ table.data-grid > tbody > tr.bold > td {
   margin-left: 2px;
 }
 .data-grid-container.fixed-header > .data-grid-body.fixed-header > table > thead > tr > th > .h-holder {
-  position: absolute;
-  visibility: visible;
-  top: 0;
   background-color: inherit;
   width: 100%;
   margin-left: -1px;
@@ -3526,10 +3520,6 @@ table.data-grid > tbody > tr.bold > td {
   left: 0;
   right: 0;
   margin-top: 1px;
-}
-.data-grid-container.data-grid-light.fixed-header > .data-grid-body.fixed-header {
-  margin-top: var(--header-height);
-  height: calc(100% - 36px);
 }
 .data-grid-container.data-grid-light table.data-grid th {
   color: var(--text-label);
@@ -4064,7 +4054,6 @@ tr:hover .commandbar.visible-hover {
   gap: 1rem;
   border-bottom: 3px solid var(--neutral300);
   align-items: baseline;
-  margin: 0.65rem 0;
   color: var(--text);
 }
 .a2-tab-bar-item:first-child {
@@ -5255,6 +5244,7 @@ label.radio {
   display: inline-block;
   line-height: 1em;
   white-space: nowrap;
+  position: relative;
 }
 label.checkbox > span,
 label.radio > span {

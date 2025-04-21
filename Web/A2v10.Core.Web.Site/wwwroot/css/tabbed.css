@@ -2306,6 +2306,10 @@ pre.a2-code {
 .control-group.sm {
   font-size: 0.9rem;
 }
+.control-group.has-value .input-group {
+  background-color: #f0f7fc;
+  font-weight: 500;
+}
 .control-group.no-border .input-group {
   border: none;
   border-radius: 0;

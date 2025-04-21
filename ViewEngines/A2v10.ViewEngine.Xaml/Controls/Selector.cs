@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
 
@@ -38,8 +38,9 @@ public class Selector : ValuedControl, ITableControl
     public SelectorStyle Style { get; set; }
 	public Int32 MaxChars { get; set; }
 	public Int32 LineClamp { get; set; }
+    public Boolean Highlight { get; set; }
 
-	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
+    public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
 		if (CheckDisabledModel(context))
 			return;
@@ -73,6 +74,8 @@ public class Selector : ValuedControl, ITableControl
 		}
 		if (ShowCaret.HasValue && ShowCaret.Value)
 			input.MergeAttribute(":caret", "true");
+        if (Highlight)
+            input.MergeAttribute(":highlight", "true");
         if (UseAll)
         {
             input.MergeAttribute(":has-clear", "true");

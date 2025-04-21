@@ -17,6 +17,8 @@ del /q Platform\A2v10.Services\bin\Release\*.snupkg
 del /q Platform\A2v10.Services\bin\Release\*.nupkg
 del /q Platform\A2v10.AppRuntimeBuilder\bin\Release\*.snupkg
 del /q Platform\A2v10.AppRuntimeBuilder\bin\Release\*.nupkg
+del /q Platform\A2v10.Metadata\bin\Release\*.snupkg
+del /q Platform\A2v10.Metadata\bin\Release\*.nupkg
 
 del /q ViewEngines\A2v10.ViewEngine.Xaml\bin\Release\*.nupkg
 del /q ViewEngines\A2v10.ViewEngine.Xaml\bin\Release\*.snupkg
@@ -82,6 +84,9 @@ copy Platform\A2v10.Services\bin\Release\*.snupkg ..\NuGet.local
 
 copy Platform\A2v10.AppRuntimeBuilder\bin\Release\*.nupkg ..\NuGet.local
 copy Platform\A2v10.AppRuntimeBuilder\bin\Release\*.snupkg ..\NuGet.local
+
+copy Platform\A2v10.Metadata\bin\Release\*.nupkg ..\NuGet.local
+copy Platform\A2v10.Metadata\bin\Release\*.snupkg ..\NuGet.local
 
 copy ViewEngines\A2v10.ViewEngine.Xaml\bin\Release\*.nupkg ..\NuGet.local
 copy ViewEngines\A2v10.ViewEngine.Xaml\bin\Release\*.snupkg ..\NuGet.local

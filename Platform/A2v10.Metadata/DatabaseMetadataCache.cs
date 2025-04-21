@@ -7,6 +7,8 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using A2v10.Infrastructure;
+using A2v10.System.Xaml;
+using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
@@ -59,13 +61,14 @@ public class DatabaseMetadataCache
 
 
     public async Task<FormMetadata> GetOrAddFormAsync(String? dataSource, TableMetadata meta, String key,
-    Func<String?, TableMetadata, String, Func<Form>, Task<FormMetadata>> getForm, Func<Form> getDefaultForm)
+    Func<String?, TableMetadata, String, Func<Form>, Task<FormMetadata>> getForm, Func<Form> getDefaultForm, Action<UIElement> initForm)
     {
         var dictKey = $"{dataSource}:{meta.Schema}:{meta.Name}:{key.ToLowerInvariant()}";
         if (_formCache.TryGetValue(dictKey, out var form))
             return form;
         form = await getForm(dataSource, meta, key, getDefaultForm);
-        return form; // TODO: CACHE
+        initForm(form.Page);
+        //return form; // TODO: CACHE
         return _formCache.GetOrAdd(dictKey, form);
     }
 

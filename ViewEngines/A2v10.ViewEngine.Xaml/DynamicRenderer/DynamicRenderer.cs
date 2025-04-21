@@ -1,4 +1,4 @@
-﻿// Copyright © 2021-2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2021-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System.IO;
 using System.Threading.Tasks;
@@ -14,23 +14,30 @@ public class DynamicRenderer(IServiceProvider serviceProvider)
 	private readonly IDataScripter _dataScripter = serviceProvider.GetRequiredService<IDataScripter>();
 	private readonly IXamlPartProvider _partProvider = serviceProvider.GetRequiredService<IXamlPartProvider>();
 	private readonly ILocalizer _localizer = serviceProvider.GetRequiredService<ILocalizer>();
-	public async Task<String> RenderPage(DynamicRenderPageInfo info)
-	{
-		if (info.Page is IInitComplete initComplete)
-		{
-			initComplete.InitComplete();
-		}
 
-		var stylesPart = _partProvider.GetCachedXamlPartOrNull("styles.xaml");
-		if (stylesPart != null)
-		{
-			if (stylesPart is not Styles styles)
-				throw new InvalidOperationException("Xaml. Styles is not 'Styles'");
-			if (info.Page is IRootContainer root)
-			{
-				root.SetStyles(styles);
-			}
-		}
+	public void InitPage(UIElement page)
+	{
+        if (page is IInitComplete initComplete)
+        {
+            initComplete.InitComplete();
+        }
+
+        var stylesPart = _partProvider.GetCachedXamlPartOrNull("styles.xaml");
+        if (stylesPart != null)
+        {
+            if (stylesPart is not Styles styles)
+                throw new InvalidOperationException("Xaml. Styles is not 'Styles'");
+            if (page is IRootContainer root)
+            {
+                root.SetStyles(styles);
+            }
+        }
+    }
+
+    public async Task<String> RenderPage(DynamicRenderPageInfo info)
+	{
+		if (!info.SkipInit)
+            InitPage(info.Page);
 
 		using var stringWriter = new StringWriter();
 
