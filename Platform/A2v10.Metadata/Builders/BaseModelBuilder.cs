@@ -131,8 +131,8 @@ internal partial class BaseModelBuilder(
         }
         else
         {
-            var formMeta = await _metadataProvider.GetFormAsync(_dataSource, _baseTable ?? _table, _platformUrl.Action, CreateDefaultForm, dynamicRenderer.InitPage);
-            page = formMeta.Page;
+            var formMeta = await _metadataProvider.GetFormAsync(_dataSource, _baseTable ?? _table, _platformUrl.Action, CreateDefaultForm);
+            page = XamlBulder.BuildForm(formMeta.form);
             templateText = await CreateTemplateAsync();
         }
         if (page == null)
@@ -148,8 +148,7 @@ internal partial class BaseModelBuilder(
             ModelView = modelView,
             PlatformUrl = _platformUrl,
             Model = dataModel,
-            Template = templateText,
-            SkipInit = true
+            Template = templateText
         };
         return await dynamicRenderer.RenderPage(rri);
     }

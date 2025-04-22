@@ -13,5 +13,4 @@ public struct DynamicRenderPageInfo
 	public IModelView ModelView { get; init; }
 
 	public String? Template { get; init; }
-	public Boolean SkipInit { get; init; }
 }

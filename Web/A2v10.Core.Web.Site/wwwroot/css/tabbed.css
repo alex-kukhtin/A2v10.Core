@@ -8483,6 +8483,7 @@ td.vert > .vcell {
   overflow: auto;
   background-color: var(--bgPrimary);
   user-select: text;
+  flex-grow: 1;
 }
 .debug-panel .debug-model pre {
   max-height: none;
@@ -8543,6 +8544,7 @@ td.vert > .vcell {
   margin: 0;
   padding: 0;
   cursor: default;
+  white-space: nowrap;
 }
 .a2-json-b .jb-label {
   display: inline-flex;

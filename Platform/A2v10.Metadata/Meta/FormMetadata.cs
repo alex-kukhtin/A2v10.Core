@@ -2,8 +2,6 @@
 
 using System;
 
-using A2v10.Xaml;
-
 namespace A2v10.Metadata;
 
 public enum FormItemIs 
@@ -156,6 +154,6 @@ public record Form : FormItem
     public EditWithMode EditWith { get; init; }
 }
 
-public record FormMetadata(RootContainer Page, String Template)
+public record FormMetadata(Form form, String Template)
 {
 }

@@ -59,16 +59,13 @@ public class DatabaseMetadataCache
 
 
     public async Task<FormMetadata> GetOrAddFormAsync(String? dataSource, TableMetadata meta, String key,
-    Func<String?, TableMetadata, String, Func<Form>, Task<FormMetadata>> getForm, Func<Form> getDefaultForm, Action<UIElement> initForm)
+    Func<String?, TableMetadata, String, Func<Form>, Task<FormMetadata>> getForm, Func<Form> getDefaultForm)
     {
         var dictKey = $"{dataSource}:{meta.Schema}:{meta.Name}:{key.ToLowerInvariant()}";
         if (_formCache.TryGetValue(dictKey, out var form))
             return form;
         form = await getForm(dataSource, meta, key, getDefaultForm);
-        initForm(form.Page);
-        return form; // TODO: CACHE (нельзя кешировать, если это документ - там есть System.ReadOnly,
-                     // который меняет (!) Xaml. Вообще-то не должен, но так написано :-(
-
+        return form; 
         //return _formCache.GetOrAdd(dictKey, form);
     }
 

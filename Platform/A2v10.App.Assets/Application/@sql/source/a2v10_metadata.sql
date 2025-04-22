@@ -1,7 +1,7 @@
 /*
 Copyright © 2025 Oleksandr Kukhtin
 
-Last updated : 16 apr 2025
+Last updated : 22 apr 2025
 module version : 8541
 */
 
@@ -11,6 +11,15 @@ if not exists(select * from INFORMATION_SCHEMA.SCHEMATA where SCHEMA_NAME=N'a2me
 go
 ------------------------------------------------
 grant execute on schema ::a2meta to public;
+go
+------------------------------------------------
+create or alter view a2meta.view_TableTypeColumns 
+as
+	select [schema] = schema_name(t.[schema_id]),
+		column_name = c.[name],
+		column_id = c.column_id,
+		[type_name] = t.[name]
+	from sys.columns c inner join sys.table_types t on c.[object_id] = t.type_table_object_id
 go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'Catalog')
@@ -87,7 +96,6 @@ create table a2meta.[Columns]
 	[MaxLength] int,
 	Reference uniqueidentifier
 		constraint FK_Columns_Reference_Catalog references a2meta.[Catalog](Id),
-	InitialOrder int identity(1000, 1),
 	[Order] int,
 	[Role] int not null
 		constraint DF_Columns_Role default(0),
@@ -180,16 +188,16 @@ begin
 		and r.[Name] = @Table collate SQL_Latin1_General_CP1_CI_AI
 		and r.Kind in (N'table', N'operation');
 
-	declare @innerTables table(Id uniqueidentifier, Kind nvarchar(32));
+	declare @innerTables table(Id uniqueidentifier, Kind nvarchar(32), [Schema] sysname, [Name] sysname);
 	with TT as (
-		select Id, Parent, Kind from a2meta.[Catalog] where Id = @tableId and Kind = N'table'
+		select Id, Parent, Kind, [Schema], [Name] from a2meta.[Catalog] where Id = @tableId and Kind = N'table'
 		union all 
-		select c.Id, c.Parent, c.Kind 
+		select c.Id, c.Parent, c.Kind, c.[Schema], c.[Name]
 		from a2meta.[Catalog] c
 			inner join TT on c.Parent = tt.Id and c.Kind in (N'table', N'details')
 	)
-	insert into @innerTables (Id, Kind)
-	select Id, Kind from TT;
+	insert into @innerTables (Id, Kind, [Schema], [Name])
+	select Id, Kind, [Schema], [Name] from TT;
 
 	select [Table!TTable!Object] = null, [!!Id] = c.Id, c.[Schema], c.[Name],
 		c.ItemsName, c.ItemName, c.TypeName, c.EditWith, c.ItemLabel, c.ItemsLabel,
@@ -211,7 +219,7 @@ begin
 	where c.Parent = @tableId and c.Kind = N'details';
 
 	select [!TColumn!Array] = null, [Id!!Id] = c.Id, c.[Name], c.[Label], c.DataType, 
-		c.[MaxLength], c.[Role], c.[Order],
+		c.[MaxLength], c.[Role], c.[Order], DbOrder = tvc.column_id,
 		[Reference.RefSchema!TReference!] = case c.DataType 
 		when N'operation' then N'op' 
 		else r.[Schema] 
@@ -223,8 +231,11 @@ begin
 		[!TTable.Columns!ParentId] = c.[Table]
 	from a2meta.Columns c
 		inner join @innerTables it on c.[Table] = it.Id
+		inner join a2meta.view_TableTypeColumns tvc on c.[Name] = tvc.column_name 
+			and tvc.[schema] = it.[Schema] collate SQL_Latin1_General_CP1_CI_AI
+			and tvc.[type_name] = it.[Name] + N'.TableType' collate SQL_Latin1_General_CP1_CI_AI
 		left join a2meta.[Catalog] r on c.Reference = r.Id
-	order by c.InitialOrder; -- same as [Config.Load]
+	order by it.[Name], tvc.column_id; -- same as [Config.Load]
 
 	select [!TApply!Array] = null, [Id!!Id] = a.Id, a.InOut, a.Storno, DetailsKind = dk.[Name],
 		[Journal.RefSchema!TReference!] = j.[Schema], [Journal.RefTable!TReference!Name] = j.[Name],
@@ -278,7 +289,7 @@ begin
 		[!TTable.Columns!ParentId] = c.[Table]
 	from a2meta.Columns c
 	where c.[Table] = @tableId
-	order by c.InitialOrder; -- same as [Config.Load]
+	order by c.[Order]; -- TableType for operation is not used.
 end
 go
 ------------------------------------------------
@@ -512,7 +523,7 @@ begin
 		left join a2meta.[Catalog] r on c.Reference = r.Id
 		left join INFORMATION_SCHEMA.COLUMNS ic on ic.TABLE_SCHEMA = t.[Schema] and ic.TABLE_NAME = t.[Name] and ic.COLUMN_NAME = c.[Name]
 	where t.Kind <> N'folder'
-	order by c.InitialOrder; -- same [Table.Schema]
+	order by c.[Order]; -- Used for create TableType
 
 	select 	[!TOperation!Array] = null, [Id] = op.[Name], [Name] = ItemLabel,
 		[!TApp.Operations!ParentId] = @appId
@@ -521,8 +532,8 @@ begin
 end
 go
 ------------------------------------------------
-declare @Schema nvarchar(255) = N'op';
-declare @Table nvarchar(255) = N'BillIn';
+declare @Schema nvarchar(255) = N'doc';
+declare @Table nvarchar(255) = N'ПоступлениеТоваровУслуг';
 
 exec a2meta.[Table.Schema] @Schema, @Table;
 

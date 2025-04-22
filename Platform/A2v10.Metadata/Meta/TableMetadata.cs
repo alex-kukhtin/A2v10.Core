@@ -73,6 +73,7 @@ public record TableColumn
     public ColumnDataType? DbDataType { get; init; }
     public TableColumnRole Role { get; init; } = default!;
     public Int32 Order { get; init; }
+    public Int32 DbOrder { get; init; }
     #endregion
     internal Boolean IsReference => Reference != null && Reference.RefTable != null;
     internal Boolean IsBlob => DataType == ColumnDataType.Stream;

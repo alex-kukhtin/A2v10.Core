@@ -36,8 +36,7 @@ public class DynamicRenderer(IServiceProvider serviceProvider)
 
     public async Task<String> RenderPage(DynamicRenderPageInfo info)
 	{
-		if (!info.SkipInit)
-            InitPage(info.Page);
+        InitPage(info.Page);
 
 		using var stringWriter = new StringWriter();
 

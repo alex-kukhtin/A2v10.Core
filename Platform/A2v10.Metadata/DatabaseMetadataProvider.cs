@@ -46,9 +46,9 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return modelTableInfo;
     }
 
-    public Task<FormMetadata> GetFormAsync(String? dataSource, TableMetadata meta, String key, Func<Form> defForm, Action<UIElement> initForm)
+    public Task<FormMetadata> GetFormAsync(String? dataSource, TableMetadata meta, String key, Func<Form> defForm)
     {
-        return _metadataCache.GetOrAddFormAsync(dataSource, meta, key, LoadTableFormAsync, defForm, initForm);
+        return _metadataCache.GetOrAddFormAsync(dataSource, meta, key, LoadTableFormAsync, defForm);
     }
 
     private async Task<AppMetadata> LoadAppMetadataAsync(String? dataSource)
@@ -105,7 +105,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         if (formExpando == null)
         {
             var defaultForm = getDefaultForm();
-            return new FormMetadata(XamlBulder.BuildForm(defaultForm), String.Empty);
+            return new FormMetadata(defaultForm, String.Empty);
         }
 
         // convert Expando to Form
@@ -116,7 +116,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         var form = JsonConvert.DeserializeObject<Form>(json, JsonSettings.IgnoreNull)
             ?? throw new InvalidOperationException("Form deserialization fails");
 
-        return new FormMetadata(XamlBulder.BuildForm(form), String.Empty);
+        return new FormMetadata(form, String.Empty);
 
     }
 
