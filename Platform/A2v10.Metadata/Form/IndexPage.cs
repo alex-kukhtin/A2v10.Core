@@ -18,7 +18,7 @@ internal partial class BaseModelBuilder
                 Data = c.IsReference ? 
                     $"{c.Name}.{_refFields.First(r => r.Column.Name == c.Name).Table.NameField}" 
                     : c.Name,
-                Label = c.Label ?? $"@{c.Name}"
+                Label = c.Label ?? $"@{c.Name}",
             }
         );
     }

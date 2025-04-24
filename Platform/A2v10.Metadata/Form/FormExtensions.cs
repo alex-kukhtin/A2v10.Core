@@ -70,7 +70,8 @@ internal static class FormExtensions
                 && !column.Role.HasFlag(TableColumnRole.IsFolder)
                 && !column.Role.HasFlag(TableColumnRole.Kind)
                 && !column.Role.HasFlag(TableColumnRole.IsSystem)
-                && !column.Role.HasFlag(TableColumnRole.SystemName);
+                && !column.Role.HasFlag(TableColumnRole.SystemName)
+                && !column.Role.HasFlag(TableColumnRole.Parent);
         }
 
         return table.Columns.Where(IsVisible).OrderBy(c => c.Order);

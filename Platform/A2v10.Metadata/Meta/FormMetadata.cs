@@ -117,6 +117,8 @@ public record FormItemProps
     public Boolean ShowClear { get; init; } 
     public ItemStyle Style { get; init; }
     public String? Filters { get; init; }
+    public Boolean Multiline { get; init; }
+    public Int32 LineClamp { get; init; }
 }
 
 public record FormItem

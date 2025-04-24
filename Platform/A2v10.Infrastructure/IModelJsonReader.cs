@@ -81,11 +81,11 @@ public interface IModelBase
 	String Path { get; }
 	String BaseUrl { get; }
 	Int32 CommandTimeout { get; }
-	IModelJsonAuto? ModelAuto { get; }
+	IModelJsonAuto? Auto { get; }
     IModelBaseMeta? Meta { get; }
 	ExpandoObject CreateParameters(IPlatformUrl url, Object? id, Action<ExpandoObject>? setParams = null, ParametersFlags flags = ParametersFlags.None);
 	Dictionary<String, PermissionBits>? Permissions { get; }
-	Boolean HasMetadata => ModelAuto != null || Meta != null;
+	Boolean HasMetadata => Auto != null || Meta != null;
 }
 
 public enum ModelBlobType

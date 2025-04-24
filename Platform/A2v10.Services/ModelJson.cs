@@ -19,7 +19,7 @@ public class ModelJsonBase : IModelBase
 	public String? Schema { get; init; }
 	public String? Model { get; init; }
 	public ModelJsonAuto? Auto { get; init; }
-	IModelJsonAuto? IModelBase.ModelAuto => Auto;
+	IModelJsonAuto? IModelBase.Auto => Auto;
     IModelBaseMeta? IModelBase.Meta => Meta;
     public Boolean Signal { get; init; }
 	public List<String>? Roles { get; init; }	
