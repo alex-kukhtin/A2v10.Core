@@ -156,7 +156,7 @@ create table a2meta.[ApplyMapping]
 		constraint DF_ApplyMapping_Id default(newid())
 		constraint PK_ApplyMapping primary key,
 	[Apply] uniqueidentifier not null
-		constraint FK_ApplyMapping_Apply_Apply references a2meta.Apply(Id),
+		constraint FK_ApplyMapping_Apply_Apply references a2meta.Apply(Id) on delete cascade,
 	[Target] uniqueidentifier not null
 		constraint FK_ApplyMapping_Target_Columns references a2meta.Columns(Id),
 	[Source] uniqueidentifier not null
@@ -627,10 +627,12 @@ drop table if exists a2meta.[Items]
 drop table if exists a2meta.[Catalog]
 
 exec a2meta.[Catalog.Init];
-*/
 
 select * from a2meta.ODataTables;
 select * from a2meta.ODataColumns order by [Name];
+
+*/
+
 
 ;
 
