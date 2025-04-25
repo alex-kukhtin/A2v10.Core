@@ -246,9 +246,11 @@ internal class XamlBulder(EditWithMode _editWith)
             Label = source.Label.Localize(),
             Align = source.ToTextAlign(),
             Width = Length.FromStringNull(source.Width),
+            Multiline = source.Props?.Multiline == true,
             Bindings = b => b.SetBinding(nameof(TextBox.Value), source.TypedBind())
         };
     }
+
     private Selector CreateSelector(FormItem source, String? param)
     {
         return new SelectorSimple()

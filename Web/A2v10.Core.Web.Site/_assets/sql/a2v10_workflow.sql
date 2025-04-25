@@ -2,12 +2,15 @@
 Copyright © 2020-2025 Oleksandr Kukhtin
 
 Last updated : 31 mar 2025
-module version : 8211
+module version : 8212 !!! TODO
 */
 ------------------------------------------------
 set nocount on;
 if not exists(select * from INFORMATION_SCHEMA.SCHEMATA where SCHEMA_NAME=N'a2wf')
-	exec sp_executesql N'create schema a2wf';
+	exec sp_executesql N'create schema a2wf authorization dbo';
+go
+------------------------------------------------
+alter authorization on schema::a2wf to dbo;
 go
 ------------------------------------------------
 grant execute on schema ::a2wf to public;
@@ -25,7 +28,7 @@ go
 begin
 	set nocount on;
 	declare @version int;
-	set @version = 8211;
+	set @version = 8212;
 	if exists(select * from a2wf.Versions where Module = N'main')
 		update a2wf.Versions set [Version] = @version where Module = N'main';
 	else

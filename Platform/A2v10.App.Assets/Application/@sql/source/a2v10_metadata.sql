@@ -396,7 +396,7 @@ begin
 	(1, N'cat', N'table', N'Id',         1, N'id', null, null),
 	(2, N'cat', N'table', N'Void',      16, N'bit', null, null),
 	(3, N'cat', N'table', N'IsSystem', 128, N'bit', null, null),
-	(4, N'cat', N'table', N'Name',       2, N'string',    255, null),
+	(4, N'cat', N'table', N'Name',       2, N'string',    200, null),
 	(5, N'cat', N'table', N'Memo',       0, N'string',    255, null),
 
 	-- Document
@@ -405,13 +405,15 @@ begin
 	(3, N'doc', N'table', N'Done',     256, N'bit',      null, null),
 	(4, N'doc', N'table', N'Date',       0, N'date',     null, null),
 	(5, N'doc', N'table', N'Number',  2048, N'string',     32, null),
-	(6, N'doc', N'table', N'Name',       2, N'string',    255, null), -- todo: computed
+	(6, N'doc', N'table', N'Name',       2, N'string',    200, null), -- todo: computed
 	(7, N'doc', N'table', N'Sum',        0, N'money',    null, null),
 	(8, N'doc', N'table', N'Memo',       0, N'string',    255, null),
+	
 	-- cat.Details
 	(1, N'cat', N'details', N'Id',      1, N'id',  null, null),
 	(2, N'cat', N'details', N'Parent', 32, N'reference', null, N'parent'),
 	(3, N'cat', N'details', N'RowNo',   8, N'int', null, null),
+
 	-- doc.Details
 	(1, N'doc', N'details', N'Id',       1, N'id',   null, null),
 	(2, N'doc', N'details', N'Parent',  32, N'reference',  null, N'parent'),
@@ -419,12 +421,13 @@ begin
 	(4, N'doc', N'details', N'Kind',   512, N'string', 32, null),
 	(5, N'doc', N'details', N'Qty',      0, N'float',null, null),
 	(5, N'doc', N'details', N'Sum',      0, N'money',null, null),
+	
 	-- jrn.Journal
-	(1, N'jrn', N'table', N'Id',       1, N'id', null, null),
+	(1, N'jrn', N'table', N'Id',       1, N'id',       null, null),
 	(2, N'jrn', N'table', N'Date',     0, N'datetime', null, null),
-	(3, N'jrn', N'table', N'InOut',    0, N'int',   null, null),
-	(4, N'jrn', N'table', N'Qty',      0, N'float', null, null),
-	(5, N'jrn', N'table', N'Sum',      0, N'money', null, null);
+	(3, N'jrn', N'table', N'InOut',    0, N'int',      null, null),
+	(4, N'jrn', N'table', N'Qty',      0, N'float',    null, null),
+	(5, N'jrn', N'table', N'Sum',      0, N'money',    null, null);
 
 	insert into a2meta.DefaultColumns ([Schema], Kind, [Name], DataType, [MaxLength], Ref, [Role], [Order]) 
 	select [Schema], Kind, [Name], DataType, [MaxLength], Ref, [Role], [Order]

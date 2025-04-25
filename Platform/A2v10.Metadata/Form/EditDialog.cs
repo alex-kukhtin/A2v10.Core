@@ -22,7 +22,9 @@ internal partial class BaseModelBuilder
             DataType = column.ToItemDataType(),
             Props = new FormItemProps()
             {
-                Url = prm
+                Url = prm,
+                Multiline = column.DataType == ColumnDataType.String && 
+                    (column.MaxLength > Constants.MultilineThreshold || column.MaxLength == 0),
             },
             Width = column.DataType.ToWidth()
         };
