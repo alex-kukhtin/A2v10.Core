@@ -1,7 +1,7 @@
 /*
 Copyright © 2025 Oleksandr Kukhtin
 
-Last updated : 22 apr 2025
+Last updated : 26 apr 2025
 module version : 8541
 */
 
@@ -372,14 +372,14 @@ begin
 	declare @cat table([Order] int, IsFolder bit, Parent bigint, [Schema] nvarchar(32), [Name] nvarchar(255), Kind nvarchar(32));
 	insert into @cat([Order], IsFolder, [Schema], Kind, [Name]) values
 
-	(10, 0, N'app',  N'app',    N'Application'),
-	(11, 1, N'enm',  N'folder', N'Enums'),
-	(12, 1, N'cat',  N'folder', N'Catalogs'),
-	(13, 1, N'doc',  N'folder', N'Documents'),
-	(14, 1, N'op',   N'folder', N'Operations'),
-	(15, 1, N'jrn',  N'folder', N'Journals'),
-	(16, 1, N'rep',  N'folder', N'Reports'),
-	(70, 1, N'ui',   N'folder', N'User Interfaces');
+	(10, 0, N'app',  N'app',    N'@[Application]'),
+	(11, 1, N'enm',  N'folder', N'@[Enums]'),
+	(12, 1, N'cat',  N'folder', N'@[Catalogs]'),
+	(13, 1, N'doc',  N'folder', N'@[Documents]'),
+	(14, 1, N'op',   N'folder', N'@[Operations]'),
+	(15, 1, N'jrn',  N'folder', N'@[Journals]'),
+	(16, 1, N'rep',  N'folder', N'@[Reports]'),
+	(70, 1, N'ui',   N'folder', N'@[UserInterfaces]');
 
 	declare @root uniqueidentifier = newid();
 	insert into a2meta.[Catalog] (Id, Parent, [Schema], [Kind], [Name], [Order])
@@ -477,6 +477,8 @@ begin
 		when N'jrn' then N'Journal'
 		when N'rep' then N'Report'
 		when N'op'  then N'Operation'
+		when N'acc' then N'Account'
+		when N'regi' then N'InfoRegister'
 		else N'Undefined'
 	end;
 end

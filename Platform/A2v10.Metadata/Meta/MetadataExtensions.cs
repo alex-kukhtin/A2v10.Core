@@ -16,6 +16,8 @@ internal static class MetadataExtensions
             "jrn" => "journal",
             "op" => "operation",
             "rep" => "report",
+            "acc" => "account",
+            "regi" => "inforegister",
             _ => schema
         };
     }
@@ -28,6 +30,8 @@ internal static class MetadataExtensions
             "operation" => "op",
             "journal" => "jrn",
             "report" => "rep",
+            "account" => "acc",
+            "inforegister" => "regi",
             _ => folder
         };
     }

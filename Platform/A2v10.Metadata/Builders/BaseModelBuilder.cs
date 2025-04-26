@@ -13,7 +13,6 @@ using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Xaml;
 using A2v10.Xaml.DynamicRendrer;
-using Jint.Native.Function;
 
 namespace A2v10.Metadata;
 

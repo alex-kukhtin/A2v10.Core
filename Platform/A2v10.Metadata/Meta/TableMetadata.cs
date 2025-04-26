@@ -79,7 +79,7 @@ public record TableColumn
     internal Boolean IsBlob => DataType == ColumnDataType.Stream;
     internal Boolean Exists => DbName != null && DbDataType != null;
 
-    internal Boolean HasDefault => 
+    internal Boolean HasDefaultBit => 
            Role.HasFlag(TableColumnRole.IsFolder)
         || Role.HasFlag(TableColumnRole.IsSystem)
         || Role.HasFlag(TableColumnRole.Void)
@@ -172,6 +172,7 @@ public record TableMetadata
     internal Boolean HasDbTable => !String.IsNullOrEmpty(DbName) && !String.IsNullOrEmpty(DbSchema);
 
     internal IEnumerable<TableColumn> PrimaryKeys => Columns.Where(c => c.Role.HasFlag(TableColumnRole.PrimaryKey));
+    internal Boolean HasSequence => PrimaryKeys.Count() == 1 && PrimaryKeys.First().DataType == ColumnDataType.Id;
 }
 
 public record OperationMetadata(String Id, String? Name);

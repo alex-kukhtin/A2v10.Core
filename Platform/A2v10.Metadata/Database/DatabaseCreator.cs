@@ -10,6 +10,9 @@ internal class DatabaseCreator(AppMetadata _meta)
 {
     internal String CreateTable(TableMetadata table)
     {
+
+        var multPrimaryKeys = table.PrimaryKeys.Count() > 1;
+
         String createField(TableColumn column)
         {
             const String NOT_NULL = " not null";
@@ -22,19 +25,23 @@ internal class DatabaseCreator(AppMetadata _meta)
                 var colDataType = column.DataType;
                 if (colDataType == ColumnDataType.Id)
                     colDataType = _meta.IdDataType;
-                if (!column.Role.HasFlag(TableColumnRole.RowNo)) 
+                if (!multPrimaryKeys && table.HasSequence) 
                 {
                     var defKey = colDataType switch
                     {
-                        ColumnDataType.Id => $"next value for {table.Schema}.SQ_{table.Name}",
+                        ColumnDataType.Id => $"next value for {table.Schema}.[SQ_{table.Name}]",
                         ColumnDataType.Uniqueidentifier => "newsequentialid()",
-                        ColumnDataType.Int or ColumnDataType.BigInt => $"next value for {table.Schema}.SQ_{table.Name}",
+                        ColumnDataType.Int or ColumnDataType.BigInt => $"next value for {table.Schema}.[SQ_{table.Name}]",
+                        ColumnDataType.Date or ColumnDataType.DateTime => null,
+                        ColumnDataType.String => null,   
+                        ColumnDataType.Reference => null,
                         _ => throw new InvalidOperationException($"Defaults for {column.DataType} is not supported")
                     };
-                    constraint = $"\n       constraint DF_{table.Name}_{column.Name} default({defKey})";
+                    if (defKey != null)
+                        constraint = $"\n       constraint DF_{table.Name}_{column.Name} default({defKey})";
                 }
             }
-            else if (column.HasDefault)
+            else if (column.HasDefaultBit)
             {
                 nullable = NOT_NULL;
                 constraint = $"\n       constraint DF_{table.Name}_{column.Name} default(0)";
@@ -49,11 +56,13 @@ internal class DatabaseCreator(AppMetadata _meta)
 
         String createSequence()
         {
+            if (!table.HasSequence)
+                return String.Empty;
             if (_meta.IdDataType != ColumnDataType.Int && _meta.IdDataType != ColumnDataType.BigInt)
                 return String.Empty;
             return $"""
             if not exists(select * from INFORMATION_SCHEMA.SEQUENCES where SEQUENCE_SCHEMA = N'{table.Schema}' and SEQUENCE_NAME = N'SQ_{table.Name}')
-            	create sequence {table.Schema}.SQ_{table.Name} as {_meta.IdDataType.ToString().ToLowerInvariant()} start with 1000 increment by 1;
+            	create sequence {table.Schema}.[SQ_{table.Name}] as {_meta.IdDataType.ToString().ToLowerInvariant()} start with 1000 increment by 1;
 
             """;
         }

@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using A2v10.Infrastructure;
-using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
