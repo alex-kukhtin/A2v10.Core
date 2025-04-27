@@ -1,6 +1,7 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.Xaml;
+using Acornima.Ast;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,6 +30,23 @@ internal static class FormExtensions
             return "1px";
         if (column.DataType == ColumnDataType.Money || column.DataType == ColumnDataType.Float)
             return "10rem";
+        return null;
+    }
+
+    public static FormItemProps? IndexColumnProps(this TableColumn column)
+    {
+        var noWrap = column.Role.HasFlag(TableColumnRole.Code) || column.Role.HasFlag(TableColumnRole.Number); 
+        var lineClamp = column.MaxLength == 0 || column.MaxLength > Constants.MultilineThreshold ? 2 : 0;
+
+        if (noWrap || lineClamp > 0)
+        {
+            return new FormItemProps()
+            {
+                LineClamp = lineClamp,
+                Fit = noWrap,
+                NoWrap = noWrap,
+            };
+        }
         return null;
     }
 

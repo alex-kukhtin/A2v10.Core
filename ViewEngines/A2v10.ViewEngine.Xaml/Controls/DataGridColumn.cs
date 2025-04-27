@@ -69,8 +69,6 @@ public class DataGridColumn : XamlElement
 			column.MergeAttribute(":no-padding", "true");
 		if (Sort != null)
 			column.MergeAttribute(":sort", Sort.Value.ToString().ToLowerInvariant());
-		if (SortProperty != null)
-			column.MergeAttribute("sort-prop", SortProperty);
 		if (Small != null)
 			column.MergeAttribute(":small", Small.Value.ToString().ToLowerInvariant());
 		if (MaxChars != 0)
@@ -119,7 +117,11 @@ public class DataGridColumn : XamlElement
 
         CreateEditable();
 
-		Boolean isTemplate = Content is UIElementBase;
+		// after create editable!!!
+        if (SortProperty != null)
+            column.MergeAttribute("sort-prop", SortProperty);
+
+        Boolean isTemplate = Content is UIElementBase;
 		String? tmlId = null;
 		if (!isTemplate)
 		{
@@ -226,11 +228,14 @@ public class DataGridColumn : XamlElement
 		void CreateCheckBox()
 		{
 			var checkBox = new CheckBox();
-			checkBox.SetBinding("Value", GetBinding("Content"));
+			var bind = GetBinding(nameof(Content));
+            checkBox.SetBinding("Value", bind);
 			if (!Editable)
 				checkBox.Disabled = true;
 			Content = checkBox;
-		}
+			if (String.IsNullOrEmpty(SortProperty))
+				SortProperty = bind?.Path;
+        }
         
 		switch (ControlType)
 		{

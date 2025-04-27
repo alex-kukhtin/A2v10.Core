@@ -212,6 +212,9 @@ internal class XamlBulder(EditWithMode _editWith)
                 Role = c.ToColumnRole(),
                 Align = c.ToTextAlign(),
                 SortProperty  = c.Data.EndsWith(".Name") ? c.Data[..^5] : null,
+                LineClamp = c.Props?.LineClamp ?? 0,
+                Fit = c.Props?.Fit == true,
+                Wrap = c.Props?.NoWrap == true ? WrapMode.NoWrap : WrapMode.Default,
                 Bindings = b => b.SetBinding(nameof(DataGridColumn.Content), c.TypedBind())
             });
         }

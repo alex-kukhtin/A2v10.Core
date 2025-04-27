@@ -119,6 +119,8 @@ public record FormItemProps
     public String? Filters { get; init; }
     public Boolean Multiline { get; init; }
     public Int32 LineClamp { get; init; }
+    public Boolean Fit { get; init; }   
+    public Boolean NoWrap { get; init; }    
 }
 
 public record FormItem

@@ -15,10 +15,11 @@ internal partial class BaseModelBuilder
             {
                 Is = FormItemIs.DataGridColumn,
                 DataType = c.ToItemDataType(),
-                Data = c.IsReference ? 
-                    $"{c.Name}.{_refFields.First(r => r.Column.Name == c.Name).Table.NameField}" 
+                Data = c.IsReference ?
+                    $"{c.Name}.{_refFields.First(r => r.Column.Name == c.Name).Table.NameField}"
                     : c.Name,
                 Label = c.Label ?? $"@{c.Name}",
+                Props = c.IndexColumnProps()
             }
         );
     }
