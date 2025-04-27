@@ -103,6 +103,38 @@ create table a2meta.[Columns]
 );
 go
 ------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'DefaultSections')
+create table a2meta.[DefaultSections]
+(
+	[Id] uniqueidentifier not null
+		constraint DF_DefaultSections_Id default(newid())
+		constraint PK_DefaultSections primary key,
+	[Schema] nvarchar(32) not null,
+	[Name] nvarchar(255),
+	[Order] int not null
+);
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'MenuItems')
+create table a2meta.[MenuItems]
+(
+	[Id] uniqueidentifier not null
+		constraint DF_MenuItems_Id default(newid())
+		constraint PK_MenuItems primary key,
+	[Interface] uniqueidentifier not null
+		constraint FK_MenuItems_Interface_Catalog references a2meta.[Catalog](Id)
+		on delete cascade,
+	[Parent] uniqueidentifier
+		constraint FK_MenuItems_Parent_MenuItems references a2meta.[MenuItems](Id),
+	[Name] nvarchar(255),
+	[Url] nvarchar(255),
+	[CreateName] nvarchar(255),
+	[CreateUrl] nvarchar(255),
+	[Order] int,
+	Source nvarchar(255) null
+);
+go
+------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'DetailsKinds')
 create table a2meta.[DetailsKinds]
 (
@@ -439,6 +471,15 @@ begin
 	insert into a2meta.[Application] (Id, [Name], Title, IdDataType)
 	values (@appId, N'MyApplication', N'My Application', N'bigint');
 
+	declare @sections table ([Schema] nvarchar(32), [Name] nvarchar(255), [Order] int)
+	insert into @sections([Schema], [Name], [Order]) values 
+	(N'ui', N'@General', 1),
+	(N'ui', N'@Documents', 2),
+	(N'ui', N'@Catalogs', 3);
+
+	insert into a2meta.DefaultSections ([Schema], [Name], [Order])
+	select [Schema], [Name], [Order] from @sections;
+
 	/* TODO: колонки для таблицы операций - оно должно создаваться через Config.CreateTable.
 
 insert into a2meta.Columns ([Table], [Name], [DataType], [MaxLength], [Role], [Order]) values
@@ -632,6 +673,8 @@ drop table if exists a2meta.[Items]
 drop table if exists a2meta.[Catalog]
 
 exec a2meta.[Catalog.Init];
+
+select * from a2meta.DefaultSections;
 
 select * from a2meta.ODataTables;
 select * from a2meta.ODataColumns order by [Name];

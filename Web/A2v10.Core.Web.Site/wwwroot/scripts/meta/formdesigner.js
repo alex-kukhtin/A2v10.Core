@@ -27,6 +27,12 @@
 		}
 	};
 
+	const defaultControls = [
+		{ Is: 'Grid', Props: {Rows: 'auto auto', Columns: 'auto auto'} },
+		{ Is: 'Button' },
+		{ Is: 'Panel' },
+	];
+
 	const toolboxTemplate = `
 <div class="fd-toolbox">
 	<details open>
@@ -51,10 +57,12 @@
 		},
 		props: {
 			fields: Array,
-			components: Array,
 			cont: Object
 		},
 		computed: {
+			components() {
+				return defaultControls;
+			}
 		},
 		methods: {
 
@@ -106,6 +114,7 @@
 	const PROP_MAP = {
 		Grid: ["Height", "CssClass"],
 		TextBox: ["Data", 'Label', "Width"],
+		SearchBox: ["Data", 'Label', "Width"],
 		DatePicker: ["Data", 'Label', "Width"],
 		PeriodPicker: ["Data", 'Label', "Width"],
 		Selector: ["Data", 'Label', "Width"],
@@ -443,6 +452,8 @@
 		}
 	};
 
+	const locale = window.$$locale || {};
+
 	var pager = {
 		template: `<div class="a2-pager">
 		<button>
@@ -459,11 +470,18 @@
 			<i class="ico ico-chevron-right" />
 		</button>
 		<div class="a2-pager-divider" />
-		<span class="a2-pager-title">items: <b>1</b>-<b>20</b> of <b>500</b></span>
+		<span class="a2-pager-title" v-html=pagerText></span>
 	</div>`,
 		props: {
 			item: Object,
 			cont: Object	
+		},
+		computed: {
+			pagerText() {
+				let elems = locale['$PagerElements'] || 'items';
+				let ofStr = locale['$Of'] || 'of';
+				return `${elems}: <b>1</b>-<b>20</b> ${ofStr} <b>150</b>`;
+			}
 		}
 	};
 
@@ -486,7 +504,8 @@
 		Create: 'ico-add',
 		Delete: 'ico-clear',
 		Reload: 'ico-reload',
-		Print: 'ico-print'
+		Print: 'ico-print',
+		DeleteSelected: 'ico-clear',
 	};
 
 	var button$1 = {
@@ -580,10 +599,20 @@
 		extends: control
 	};
 
+	const separatorTemplate = `
+<div role="separator" class="divider" @click.stop.prevent="select" :class="{ selected }" :draggable=true
+		@dragstart.stop=dragStart />
+`;
+
+	const separator = {
+		template: separatorTemplate,
+		extends: layoutelem
+	};
 
 	var inputControls = {
 		searchBox,
-		checkBox
+		checkBox,
+		separator
 	};
 
 	var itemToolbar = {
@@ -599,7 +628,8 @@
 			'Button': button$1,
 			'Aligner': aligner,
 			'TextBox': textBox,
-			'SearchBox': inputControls.searchBox
+			'SearchBox': inputControls.searchBox,
+			'Separator': inputControls.separator,
 		},
 		methods: {
 			dragOver(ev) {
@@ -859,10 +889,27 @@
 		}
 	};
 
+	function dataType2Is(dt) {
+		switch (dt) {
+			case "reference": return "Selector";
+			case "bit": return "CheckBox";
+			case "date":
+			case "datetime": return "DatePicker";
+		}
+		return "TextBox";
+	}
+
+	function field2component(f) {
+		return {
+			Data: f.Name,
+			Is: dataType2Is(f.DataType)
+		};
+	}
+
 	const containerTemplate = `
 <div class="fd-container" @keyup.self=keyUp tabindex=0 >
 	<fd-toolbar :host=host></fd-toolbar>
-	<fd-taskpad :item=selectedItem :fields=fields :cont=cont :components=components :host=host />
+	<fd-taskpad :item=selectedItem :fields=componentFields :cont=cont :components=components :host=host />
 	<div class="fd-main" @click.stop.stop=clickBody>
 		<div class=fd-body  @click.stop.stop=clickBody :class="bodyClass" :style="bodyStyle">
 			<div v-if="isDialog" class="modal-header">
@@ -878,7 +925,7 @@
 				</div>
 				<component v-for="(itm, ix) in form.Items" :key="ix" :is="itm.Is"
 					:item="itm" :cont=cont />
-				<Taskpad :item="form.Taskpad" :cont=cont v-if="form.Taskpad" />
+				<Taskpad :item="form.Taskpad" :cont=cont v-if="form.Taskpad"/>
 			</div>
 			<dlg-buttons v-if="isDialog" :elems="form.Buttons" :cont=cont />
 		</div>
@@ -936,6 +983,9 @@
 			},
 			isPage() {
 				return this.form.Is === 'Page';
+			},
+			componentFields() {
+				return this.fields.map(field2component);
 			}
 		},
 		methods: {
@@ -1021,6 +1071,7 @@
 		},
 		mounted() {
 			this.selectedItem = this.form;
+			console.dir(this.fields);
 		}
 	});
 
