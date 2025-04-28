@@ -46,14 +46,28 @@ internal partial class BaseModelBuilder
         {
             var title = _baseTable?.RealItemLabel ?? _table.RealItemLabel;
 
+            Int32 colNo = 1;
             // Title, @Number [Number] @Date, [DatePicker]
-            yield return FormBuild.Header(title, new FormItemGrid(1, 1));
+            yield return FormBuild.Header(title, new FormItemGrid(1, colNo++));
 
-            yield return FormBuild.Label("@Date", new FormItemGrid(1, 2));
+            colNo += 1; // Gap
+
+            var x = _table.Columns.FirstOrDefault(c => c.Role.HasFlag(TableColumnRole.Number));
+            if (x != null)
+            {
+                yield return FormBuild.Label("@Number", new FormItemGrid(1, colNo++));
+                yield return new FormItem(FormItemIs.TextBox)
+                {
+                    Data = $"{_table.RealItemName}.{x.Name}",
+                    Grid = new FormItemGrid(1, colNo++),
+                };
+            }
+
+            yield return FormBuild.Label("@Date", new FormItemGrid(1, colNo++));
             yield return new FormItem(FormItemIs.DatePicker)
             {
                 Data = $"{_table.RealItemName}.Date",
-                Grid = new FormItemGrid(1, 3),
+                Grid = new FormItemGrid(1, colNo++),
             };
         }
 
@@ -61,7 +75,7 @@ internal partial class BaseModelBuilder
         {
             var row = 1;
             var col = 1;
-            var skipColumns = new HashSet<String>() { "Date", "Done", "Memo" };
+            var skipColumns = new HashSet<String>() { "Date", "Done", "Memo", "Number" };
 
             foreach (var c in _table.EditableColumns().Where(c => !skipColumns.Contains(c.Name)))
             {
@@ -84,7 +98,7 @@ internal partial class BaseModelBuilder
                 CssClass = "document-header",
                 Props = new FormItemProps() { 
                     Rows = "auto",
-                    Columns = "auto auto 12rem auto 12rem 1fr",
+                    Columns = "auto 5rem auto 12rem auto 12rem 1fr",
                 },
                 Items = [..HeaderItems()]
             };
@@ -221,7 +235,10 @@ internal partial class BaseModelBuilder
                     FormBuild.Label("@Memo"),
                     new FormItem(FormItemIs.TextBox) 
                     {
-                        Data = $"{_table.RealItemName}.Memo"
+                        Data = $"{_table.RealItemName}.Memo",
+                        Props = new FormItemProps() {
+                            Multiline = true
+                        }
                     }
                 ]
             };

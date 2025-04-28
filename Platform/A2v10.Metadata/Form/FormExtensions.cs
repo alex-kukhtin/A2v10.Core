@@ -101,6 +101,7 @@ internal static class FormExtensions
         {
             return column.Role != TableColumnRole.Void
                 && !column.Role.HasFlag(TableColumnRole.PrimaryKey)
+                && !column.Role.HasFlag(TableColumnRole.Parent)
                 && !column.Role.HasFlag(TableColumnRole.IsFolder)
                 && !column.Role.HasFlag(TableColumnRole.IsSystem)
                 && !column.Role.HasFlag(TableColumnRole.SystemName)

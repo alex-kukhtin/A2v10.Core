@@ -21,7 +21,7 @@ public class InvokeCommandInvokeClr(IServiceProvider serviceProvider) : IModelIn
 			var (assembly, clrType) = ClrHelpers.ParseClrType(command.ClrType);
 			var ass = Assembly.Load(assembly);
 			var tp = ass.GetType(clrType)
-				?? throw new InvalidOperationException("Type not found");
+				?? throw new InvalidOperationException($"Type '{clrType}' not found");
 			var ctor = tp.GetConstructor([typeof(IServiceProvider)])
 				?? throw new InvalidOperationException($"ctor(IServiceProvider) not found in {clrType}");
 			var elem = ctor.Invoke([_serviceProvider])
