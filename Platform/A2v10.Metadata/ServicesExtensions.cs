@@ -15,7 +15,7 @@ public static class ServicesExtensions
 
         services.AddKeyedScoped<IEndpointHandler, MetadataEndpointHandler>("Meta");
 
-        services.AddScoped<IModelBuilder, BaseModelBuilder>();
+        services.AddScoped<IModelBuilderFactory, ModelBuilderFactory>();
 
         return services;
     }

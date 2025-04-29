@@ -20,6 +20,7 @@ public class EditFormEndpointHandler(IServiceProvider _serviceProvider) : IEndpo
     private readonly IDbContext _dbContext = _serviceProvider.GetRequiredService<IDbContext>();
     private readonly DynamicRenderer _dynamicRenderer = new(_serviceProvider);
     private readonly CodeLoader _codeLoader = new(_serviceProvider);
+    private readonly IModelBuilderFactory _modelBuilderFactory = _serviceProvider.GetRequiredService<IModelBuilderFactory>();
     public async Task<String> RenderResultAsync(IPlatformUrl platformUrl, IModelView modelView, ExpandoObject prms)
     {
         var key = prms.Get<String>("Form")
@@ -51,8 +52,7 @@ public class EditFormEndpointHandler(IServiceProvider _serviceProvider) : IEndpo
 
             var editPlatformUrl = platformUrl.CreateFromMetadata(tm.LocalPath(key));
 
-            var modelBuilder = _serviceProvider.GetRequiredService<IModelBuilder>();
-            await modelBuilder.BuildAsync(editPlatformUrl, tm, null /*always*/);
+            var modelBuilder = await _modelBuilderFactory.BuildAsync(editPlatformUrl, tm, null /*always*/);
 
             var defaultForm = modelBuilder.CreateDefaultForm();
 

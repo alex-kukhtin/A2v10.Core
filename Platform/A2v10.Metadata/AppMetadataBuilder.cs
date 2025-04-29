@@ -4,15 +4,15 @@ using System;
 using System.Dynamic;
 using System.Threading.Tasks;
 
-using Microsoft.Extensions.DependencyInjection;
-
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 
 namespace A2v10.Metadata;
 
-public class AppMetadataBuilder(IServiceProvider _serviceProvider,
-    DatabaseMetadataProvider _metadataProvider, IAppVersion _appVersion) : IAppRuntimeBuilder
+internal class AppMetadataBuilder(IServiceProvider _serviceProvider,
+    DatabaseMetadataProvider _metadataProvider,
+    IModelBuilderFactory _modelBuilderFactory,
+    IAppVersion _appVersion) : IAppRuntimeBuilder
 {
     public bool IsAutoSupported => false;
     public Boolean IsMetaSupported => true;
@@ -32,7 +32,7 @@ public class AppMetadataBuilder(IServiceProvider _serviceProvider,
     }
     public async Task<IAppRuntimeResult> RenderAsync(IPlatformUrl platformUrl, IModelView view, bool isReload)
     {
-        var iBuilder = await FindModelBuilderAsync(platformUrl, view);
+        var iBuilder = await _modelBuilderFactory.BuildAsync(platformUrl, view);
 
         var endpointBuilder = FindEndpointBuilder(iBuilder.MetadataEndpointBuilder, iBuilder);
         if (endpointBuilder != null)
@@ -48,19 +48,19 @@ public class AppMetadataBuilder(IServiceProvider _serviceProvider,
 
     public async Task<ExpandoObject> SaveAsync(IPlatformUrl platformUrl, IModelView view, ExpandoObject data, ExpandoObject savePrms)
     {
-        var iBuilder = await FindModelBuilderAsync(platformUrl, view);
+        var iBuilder = await _modelBuilderFactory.BuildAsync(platformUrl, view);
         return await iBuilder.SaveModelAsync(data, savePrms);
     }
 
     public async Task DbRemoveAsync(IPlatformUrl platformUrl, IModelView view, string? propName, ExpandoObject execPrms)
     {
-        var iBuilder = await FindModelBuilderAsync(platformUrl, view);
+        var iBuilder = await _modelBuilderFactory.BuildAsync(platformUrl, view);
         throw new NotImplementedException();
     }
 
     public async Task<IInvokeResult> InvokeAsync(IPlatformUrl platformUrl, String command, IModelCommand cmd, ExpandoObject? prms)
     {
-        var iBuilder = await FindModelBuilderAsync(platformUrl, cmd);
+        var iBuilder = await _modelBuilderFactory.BuildAsync(platformUrl, cmd);
         return await iBuilder.InvokeAsync(cmd, command, prms);
     }
     public Task<IDataModel> ExecuteCommandAsync(IModelCommand command, ExpandoObject parameters)
@@ -70,15 +70,8 @@ public class AppMetadataBuilder(IServiceProvider _serviceProvider,
 
     public async Task<IDataModel> ExpandAsync(IPlatformUrl platformUrl, IModelView view, ExpandoObject execPrms)
     {
-        var iBuilder = await FindModelBuilderAsync(platformUrl, view);
+        var iBuilder = await _modelBuilderFactory.BuildAsync(platformUrl, view);
         throw new NotImplementedException();
-    }
-
-    private async Task<IModelBuilder> FindModelBuilderAsync(IPlatformUrl platformUrl, IModelBase modelBase)
-    {
-        var x = _serviceProvider.GetRequiredService<IModelBuilder>();
-        await x.BuildAsync(platformUrl, modelBase);
-        return x;
     }
 
     private IMetaEndpointBuilder? FindEndpointBuilder(String? name, IModelBuilder baseBuilder)

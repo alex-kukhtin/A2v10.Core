@@ -11,8 +11,6 @@ namespace A2v10.Metadata;
 
 internal interface IModelBuilder
 {
-    Task BuildAsync(IPlatformUrl platformUrl, IModelBase modelBase);
-    Task BuildAsync(IPlatformUrl platformUrl, TableMetadata table, String? dataSource);
     Task<IDataModel> LoadModelAsync();
     Task<ExpandoObject> SaveModelAsync(ExpandoObject data, ExpandoObject savePrms);
     Task<String> RenderPageAsync(IModelView modelView, IDataModel dataModel);
@@ -24,4 +22,5 @@ internal interface IModelBuilder
     TableMetadata Table { get; }
     TableMetadata? BaseTable { get; }
     AppMetadata AppMeta { get; }
+    Task<FormMetadata> GetFormAsync(String key);
 }

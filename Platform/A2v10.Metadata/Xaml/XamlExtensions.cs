@@ -200,4 +200,9 @@ internal static class XamlExtensions
             return $"@[{source[1..]}]";
         return source.Replace("\"", "&quot;");
     }
+
+    public static String BindText(this FormItem item)
+    {
+        return $$"""{Bind {{item.Data}}}""";
+    }
 }

@@ -8,6 +8,8 @@ using System.Globalization;
 using System.Text;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using A2v10.Data.Core.Extensions;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
@@ -16,21 +18,20 @@ using A2v10.Xaml.DynamicRendrer;
 
 namespace A2v10.Metadata;
 
-internal partial class BaseModelBuilder(
-    IServiceProvider _serviceProvider, 
-    IDbContext _dbContext,
-    DatabaseMetadataProvider _metadataProvider, 
-    ICurrentUser _currentUser) : IModelBuilder
+internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IModelBuilder
 {
-    protected TableMetadata _table { get; private set; } = default!;
-    protected TableMetadata? _baseTable { get; private set; }
-    protected AppMetadata _appMeta { get; private set; } = default!;
-    protected String? _dataSource { get; private set; }
-    protected IPlatformUrl _platformUrl { get; private set; } = default!;
+    protected readonly DatabaseMetadataProvider _metadataProvider = _serviceProvider.GetRequiredService<DatabaseMetadataProvider>();
+    protected readonly ICurrentUser _currentUser = _serviceProvider.GetRequiredService<ICurrentUser>();
+    protected readonly IDbContext _dbContext = _serviceProvider.GetRequiredService<IDbContext>();
+    internal TableMetadata _table { get; init; } = default!;
+    internal TableMetadata? _baseTable { get; init; }
+    internal AppMetadata _appMeta { get; init; } = default!;
+    internal String? _dataSource { get; init; }
+    internal IPlatformUrl _platformUrl { get; init; } = default!;
     protected Boolean IsDialog => _platformUrl.Kind == UrlKind.Dialog;
     protected String Action => _platformUrl.Action.ToLowerInvariant();
+    internal IEnumerable<ReferenceMember> _refFields { get; init; } = default!;
 
-    protected IEnumerable<ReferenceMember> _refFields = default!;
     public TableMetadata Table => _table;
     public TableMetadata? BaseTable => _baseTable;
     public AppMetadata AppMeta => _appMeta;
@@ -40,37 +41,6 @@ internal partial class BaseModelBuilder(
         "rep" => "rep:report.render",
         _ => null
     };
-
-    public async Task BuildAsync(IPlatformUrl platformUrl, IModelBase modelBase)
-    {
-        if (modelBase.Meta == null)
-            throw new InvalidOperationException("Meta is null");
-        _dataSource = modelBase.DataSource;
-        _platformUrl = platformUrl;
-        _table = await _metadataProvider.GetSchemaAsync(modelBase.Meta, modelBase.DataSource);
-        await CheckParent(modelBase.DataSource);
-        _refFields = await ReferenceFieldsAsync(_table);
-        _appMeta = await _metadataProvider.GetAppMetadataAsync(modelBase.DataSource);
-    }
-
-    public async Task BuildAsync(IPlatformUrl platformUrl, TableMetadata table, String? dataSource)
-    {
-        _dataSource = dataSource;
-        _table = table;
-        _platformUrl = platformUrl;
-        _table = await _metadataProvider.GetSchemaAsync(_dataSource, table.Schema, table.Name);
-        await CheckParent(_dataSource);
-        _refFields = await ReferenceFieldsAsync(_table);
-        _appMeta = await _metadataProvider.GetAppMetadataAsync(_dataSource);
-    }
-
-    private async Task CheckParent(String? dataSource)
-    {
-        if (_table.ParentTable.IsEmpty()) return;
-        _baseTable = _table;
-        _table = await _metadataProvider.GetSchemaAsync(dataSource, _table.ParentTable!.RefSchema, _table.ParentTable.RefTable)
-            ?? throw new InvalidOperationException($"Parent Table {_table.ParentTable.RefTable} not found");
-    }
 
     public async Task<IDataModel> LoadModelAsync()
     {
@@ -111,7 +81,11 @@ internal partial class BaseModelBuilder(
         };
     }
 
-   
+    public Task<FormMetadata> GetFormAsync(String key)
+    { 
+        return _metadataProvider.GetFormAsync(_dataSource, _baseTable ?? _table, key, CreateDefaultForm);
+    }
+
     public async Task<String> RenderPageAsync(IModelView modelView, IDataModel dataModel)
     {
         var codeLoader = new CodeLoader(_serviceProvider);
