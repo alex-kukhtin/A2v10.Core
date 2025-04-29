@@ -24,13 +24,16 @@ public class GenerateHandler(IServiceProvider _serviceProvider) : IClrInvokeTarg
 
         var table = await _metadataProvider.GetSchemaAsync(null, schema, name);
 
-        var builder = await _modelBuilderFactory.BuildAsync(table, null);
+        var builder = await _modelBuilderFactory.BuildAsync(table.PlatformUrl("index"), table, null);
+        var formIndex = await builder.GetFormAsync();
 
-        var formIndex = await builder.GetFormAsync("index");
-        var formEdit = await builder.GetFormAsync("edit");
+        builder = await _modelBuilderFactory.BuildAsync(table.PlatformUrl("edit"), table, null);
+        var formEdit = await builder.GetFormAsync();
 
         var indexXml = XmlTextBuilder.Build(formIndex);
 
-        throw new InvalidOperationException($"GENERATE FOR {table.EndpointPath}");
+        var editXml = XmlTextBuilder.Build(formEdit);
+
+        throw new InvalidOperationException($"GENERATE FOR {table.EndpointPath()}");
     }
 }

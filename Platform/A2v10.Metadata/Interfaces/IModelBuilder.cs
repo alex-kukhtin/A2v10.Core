@@ -22,5 +22,5 @@ internal interface IModelBuilder
     TableMetadata Table { get; }
     TableMetadata? BaseTable { get; }
     AppMetadata AppMeta { get; }
-    Task<FormMetadata> GetFormAsync(String key);
+    Task<FormMetadata> GetFormAsync();
 }

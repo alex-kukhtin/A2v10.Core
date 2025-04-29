@@ -1,5 +1,7 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
+using A2v10.Infrastructure;
+using A2v10.Services;
 using System;
 using System.Linq;
 
@@ -57,6 +59,17 @@ internal static class MetadataExtensions
         if (baseTable != null)
             return baseTable.EndpointPath();
         return table.EndpointPath();
+    }
+
+    public static IPlatformUrl PlatformUrl(this TableMetadata table, String action)
+    {
+        var kind = "_dialog";
+        if (action == "index")
+            kind = "_page";
+        else if (action == "edit" && table.EditWith == EditWithMode.Page)
+            kind = "_page";
+        var url = $"{kind}/{table.EndpointPath()}/{action}/";
+        return new PlatformUrl(url);
     }
 
     internal static String EditEndpoint(this TableMetadata table, TableMetadata? baseTable)

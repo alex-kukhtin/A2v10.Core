@@ -81,9 +81,9 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
         };
     }
 
-    public Task<FormMetadata> GetFormAsync(String key)
+    public Task<FormMetadata> GetFormAsync()
     { 
-        return _metadataProvider.GetFormAsync(_dataSource, _baseTable ?? _table, key, CreateDefaultForm);
+        return _metadataProvider.GetFormAsync(_dataSource, _baseTable ?? _table, Action, CreateDefaultForm);
     }
 
     public async Task<String> RenderPageAsync(IModelView modelView, IDataModel dataModel)

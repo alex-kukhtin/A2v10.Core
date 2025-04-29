@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using A2v10.Infrastructure;
+using A2v10.Services;
 
 namespace A2v10.Metadata;
 
@@ -37,20 +38,6 @@ internal partial class ModelBuilderFactory(
         {
             _dataSource = dataSource,
             _platformUrl = platformUrl,
-            _table = tables.table,
-            _baseTable = tables.baseTable,
-            _refFields = await ReferenceFieldsAsync(dataSource, table),
-            _appMeta = await _metadataProvider.GetAppMetadataAsync(dataSource)
-        };
-    }
-
-    public async Task<IModelBuilder> BuildAsync(TableMetadata table, String? dataSource)
-    {
-        var tables = await GetTablesAsync(dataSource, table);
-
-        return new BaseModelBuilder(_serviceProvider)
-        {
-            _dataSource = dataSource,
             _table = tables.table,
             _baseTable = tables.baseTable,
             _refFields = await ReferenceFieldsAsync(dataSource, table),
