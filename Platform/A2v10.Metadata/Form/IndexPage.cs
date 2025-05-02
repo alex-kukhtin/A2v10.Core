@@ -10,7 +10,7 @@ internal partial class BaseModelBuilder
 {
     IEnumerable<FormItem> IndexColumns()
     {
-        return _table.VisibleColumns(_appMeta).OrderBy(c => c.Order).Select(
+        return _table.VisibleColumns(_appMeta).Select(
             c => new FormItem()
             {
                 Is = FormItemIs.DataGridColumn,

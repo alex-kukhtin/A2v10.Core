@@ -24,6 +24,7 @@ public class GenerateHandler(IServiceProvider _serviceProvider) : IClrInvokeTarg
 
         var table = await _metadataProvider.GetSchemaAsync(null, schema, name);
 
+        // TODO: Create EndpointGenerator
         var builder = await _modelBuilderFactory.BuildAsync(table.PlatformUrl("index"), table, null);
         var formIndex = await builder.GetFormAsync();
 

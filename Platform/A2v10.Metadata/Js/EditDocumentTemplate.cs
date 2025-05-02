@@ -33,6 +33,12 @@ internal partial class BaseModelBuilder
                 else
                     yield return $$"""'{{_table.RealTypeName}}.$$Tab': {type: String, value: '{{fd.Kinds.First().Name}}'}""";
             }
+            foreach (var c in _table.Columns.Where(c => !String.IsNullOrEmpty(c.Computed)))
+                yield return $$"""'{{_table.RealTypeName}}.{{c.Name}}'() { return {{c.Computed}};}""";
+
+            foreach (var d in _table.Details)
+                foreach (var c in d.Columns.Where(c => !String.IsNullOrEmpty(c.Computed)))
+                    yield return $$"""'{{d.RealTypeName}}.{{c.Name}}'() { return {{c.Computed}};}""";
         }
 
         const String jsDivider = ",\n\t\t";

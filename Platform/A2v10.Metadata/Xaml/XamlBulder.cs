@@ -78,7 +78,7 @@ internal class XamlBulder(EditWithMode _editWith)
             FormItemIs.Header => CreateHeader(item),
             FormItemIs.Label => CreateLabel(item),
             FormItemIs.Button => CreateButton(item, param),
-            FormItemIs.Content => CreateSpan(item),
+            FormItemIs.Content => CreateStatic(item),
             _ => throw new NotImplementedException($"Implement CreateElement: {item.Is}")
         };
         if (elem != null && attach != null)
@@ -300,7 +300,7 @@ internal class XamlBulder(EditWithMode _editWith)
 
     private Table CreateTable(FormItem source)
     {
-        var headers = source.Items?.Select(c => new TableCell() { Content = c.Label});
+        var headers = source.Items?.Select(c => new TableCell() { Content = c.Label.Localize()});
         var cells = source.Items?.Select(c => new TableCell()
         {
             Width = Length.FromStringNull(c.Width),
@@ -347,11 +347,14 @@ internal class XamlBulder(EditWithMode _editWith)
         };
     }
 
-    private Span CreateSpan(FormItem source)
+    private Static CreateStatic(FormItem source)
     {
-        return new Span()
+        return new Static()
         {
-            Bindings = b => b.SetBinding(nameof(Span.Content), new Bind(source.Data))
+            Label = source.Label.Localize(),
+            Align = source.ToTextAlign(),
+            Width = Length.FromStringNull(source.Width),
+            Bindings = b => b.SetBinding(nameof(Static.Value), source.TypedBind())
         };
     }
 

@@ -74,6 +74,7 @@ public record TableColumn
     public TableColumnRole Role { get; init; } = default!;
     public Int32 Order { get; init; }
     public Int32 DbOrder { get; init; }
+    public String? Computed { get; init; }
     #endregion
     internal Boolean IsReference => Reference != null && Reference.RefTable != null;
     internal Boolean IsBlob => DataType == ColumnDataType.Stream;
@@ -159,9 +160,9 @@ public record TableMetadata
     internal String KindField => Columns.FirstOrDefault(c => c.Role.HasFlag(TableColumnRole.Kind))?.Name
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Kind column");
 
-    internal String RealItemName => ItemName ?? Name.Singular();
+    internal String RealItemName => ItemsName != null ? ItemsName.Singular() : ItemName ?? Name.Singular();
     internal String RealItemsName => ItemsName ?? Name;  
-    internal String RealTypeName => $"T{TypeName ?? RealItemName}";
+    internal String RealTypeName => $"T{TypeName ??  RealItemName}";
     internal String TableTypeName => $"{Schema}.[{Name}.TableType]";
     internal String RealItemLabel => ItemLabel ?? $"@{RealItemName}";
     internal String RealItemsLabel => ItemsLabel ?? $"@{RealItemsName}";

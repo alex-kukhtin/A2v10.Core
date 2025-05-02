@@ -30,15 +30,58 @@ internal partial class BaseModelBuilder
         };
     }
 
-    private Form CreateEditDialog()
+    private FormItem Content()
     {
-
         IEnumerable<FormItem> Controls()
         {
             Int32 row = 1;
             return _table.EditableColumns().Select(c => CreateControl(c, row++, 1));
         }
 
+        FormItem ContentGrid()
+        {
+            return new FormItem(FormItemIs.Grid)
+            {
+                Is = FormItemIs.Grid,
+                Props = new FormItemProps()
+                {
+                    // rows + 1
+                    Rows = String.Join(' ', _table.EditableColumns().Select(c => "auto")
+                        .Union(["auto"])),
+                    Columns = "1fr"
+                },
+                Items = [.. Controls()]
+            };
+        }
+
+        var hasDetails = _table.Details.Any();
+        var hasMemo = _table.Columns.Any(c => c.Name == "Memo");
+        if (hasDetails)
+        {
+            return new FormItem(FormItemIs.Grid)
+            {
+                Props = new FormItemProps()
+                {
+                    Rows = hasMemo ? "auto auto 1fr auto" : "auto auto 1fr",
+                    Columns = "1fr"
+                },
+                Items = [
+                    ContentGrid(),
+                    new FormItem(FormItemIs.Tabs)
+                    {
+                        Data = $"{_table.RealItemName}.$$Tab",
+                        Grid = new FormItemGrid(3, 1),
+                        CssClass = "details-tabbar",
+                        Items = [.. _table.Details.Select(d => DetailsTab(d, $"{_table.RealItemName}.{d.RealItemsName}", d.RealItemsName, d.RealItemsLabel, "details"))]
+                    }
+                ]
+            };
+        }
+        return ContentGrid();
+    }
+
+    private Form CreateEditDialog()
+    {
         return new Form()
         {
             Schema = _table.Schema,
@@ -47,20 +90,7 @@ internal partial class BaseModelBuilder
             Label = _table.RealItemLabel,
             EditWith = _table.EditWith,
             Data = _table.RealItemName,
-            Items = [
-                new FormItem(FormItemIs.Grid)
-                {
-                    Is = FormItemIs.Grid,
-                    Props = new FormItemProps() 
-                    {
-                        // rows + 1
-                        Rows = String.Join(' ', _table.EditableColumns().Select(c => "auto")
-                            .Union(["auto"])),
-                        Columns = "1fr"
-                    },
-                    Items = [..Controls()]
-                }
-            ],
+            Items = [Content()],
             Buttons = [
                 new FormItem(FormItemIs.Button)
                 {

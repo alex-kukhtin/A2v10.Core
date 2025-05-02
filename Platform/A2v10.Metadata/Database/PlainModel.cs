@@ -64,7 +64,7 @@ internal partial class BaseModelBuilder
                     {detailsParentIdField},
                     {String.Join(",", t.AllSqlFields(refFields, "d", isDetails:true))}
                 from {t.Schema}.[{t.Name}] d
-                    {RefTableJoins(refFields, "d")}
+                {RefTableJoins(refFields, "d")}
                 where d.[{parentField}] = @Id
                 order by d.[{t.RowNoField}];
                 
@@ -91,7 +91,7 @@ internal partial class BaseModelBuilder
         select [{table.RealItemName}!{table.RealTypeName}!Object] = null,
             {String.Join(",", table.AllSqlFields(tableRefFields, "a"))}{DetailsArray()}
         from {table.Schema}.[{table.Name}] a
-            {RefTableJoins(tableRefFields, "a")}
+        {RefTableJoins(tableRefFields, "a")}
         where a.[{table.PrimaryKeyField}] = @Id;
 
         {await DetailsContentAsync()}
@@ -151,7 +151,7 @@ internal partial class BaseModelBuilder
                     return $"""
 				    merge {detailsTable.SqlTableName} as t
 				    using @{detailsTable.Name} as s
-				    on {String.Join(" and ", detailsTable.PrimaryKeys.Select(c => $"t.[{c.Name}]  = s.[{c.Name}]"))}
+				    on {String.Join(" and ", detailsTable.PrimaryKeys.Select(c => $"t.[{c.Name}] = s.[{c.Name}]"))}
 				    when matched then update set
 				        {String.Join(',', updateFields.Select(f => $"t.[{f.Name}] = s.[{f.Name}]"))}
 				    when not matched then insert 
@@ -167,7 +167,7 @@ internal partial class BaseModelBuilder
                     return $"""
 				    merge {detailsTable.SqlTableName} as t
 				    using @{detailsTable.Name} as s
-				    on $"t.[{detailsTable.PrimaryKeyField}]  = s.[{detailsTable.PrimaryKeyField}]"
+				    on t.[{detailsTable.PrimaryKeyField}]  = s.[{detailsTable.PrimaryKeyField}]
 				    when matched then update set
 				        {String.Join(',', updateFields.Select(f => $"t.[{f.Name}] = s.[{f.Name}]"))}
 				    when not matched then insert 
@@ -269,7 +269,7 @@ internal partial class BaseModelBuilder
                 }
                 else
                 {
-                    var rows = item?.Get<List<Object>>($"{details.Name}");
+                    var rows = item?.Get<List<Object>>($"{details.RealItemsName}");
                     var detailsTable = detailsTableBuilder.BuildDataTable(rows);
                     dbprms.AddStructured($"@{details.Name}", details.TableTypeName, detailsTable);
                 }

@@ -1,7 +1,5 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
-using A2v10.Xaml;
-using Acornima.Ast;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +14,9 @@ internal static class FormExtensions
             return FormItemIs.Selector;
         if (column.Role.HasFlag(TableColumnRole.RowNo))
             return FormItemIs.Content;
+        if (!String.IsNullOrEmpty(column.Computed))
+            return FormItemIs.Content;
+
         return column.DataType switch
         {
             ColumnDataType.DateTime or ColumnDataType.Date => FormItemIs.DatePicker,
@@ -84,12 +85,15 @@ internal static class FormExtensions
                 return false;
             if (column.DataType == ColumnDataType.Stream)
                 return false;
-            return !column.Role.HasFlag(TableColumnRole.Void)
-                && !column.Role.HasFlag(TableColumnRole.IsFolder)
-                && !column.Role.HasFlag(TableColumnRole.Kind)
-                && !column.Role.HasFlag(TableColumnRole.IsSystem)
-                && !column.Role.HasFlag(TableColumnRole.SystemName)
-                && !column.Role.HasFlag(TableColumnRole.Parent);
+            var sysColumns = 
+                  TableColumnRole.Void
+                | TableColumnRole.IsFolder
+                | TableColumnRole.IsSystem
+                | TableColumnRole.SystemName
+                | TableColumnRole.Kind
+                | TableColumnRole.Parent;
+
+            return (column.Role & sysColumns) == 0;
         }
 
         return table.Columns.Where(IsVisible).OrderBy(c => c.Order);
@@ -97,17 +101,15 @@ internal static class FormExtensions
 
     public static IEnumerable<TableColumn> EditableColumns(this TableMetadata table)
     {
-        Boolean IsVisible(TableColumn column)
-        {
-            return column.Role != TableColumnRole.Void
-                && !column.Role.HasFlag(TableColumnRole.PrimaryKey)
-                && !column.Role.HasFlag(TableColumnRole.Parent)
-                && !column.Role.HasFlag(TableColumnRole.IsFolder)
-                && !column.Role.HasFlag(TableColumnRole.IsSystem)
-                && !column.Role.HasFlag(TableColumnRole.SystemName)
-                && !column.Role.HasFlag(TableColumnRole.Kind);
-        }
+        var hiddenColumns =
+              TableColumnRole.Void
+            | TableColumnRole.PrimaryKey
+            | TableColumnRole.IsFolder
+            | TableColumnRole.IsSystem
+            | TableColumnRole.SystemName
+            | TableColumnRole.Kind
+            | TableColumnRole.Parent;
 
-        return table.Columns.Where(IsVisible).OrderBy(c => c.Order);
+        return table.Columns.Where(c => (c.Role & hiddenColumns) == 0).OrderBy(c => c.Order);
     }
 }

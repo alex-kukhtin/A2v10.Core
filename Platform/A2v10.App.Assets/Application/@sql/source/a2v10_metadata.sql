@@ -99,7 +99,8 @@ create table a2meta.[Columns]
 	[Order] int,
 	[Role] int not null
 		constraint DF_Columns_Role default(0),
-	Source nvarchar(255) null
+	Source nvarchar(255) null,
+	Computed nvarchar(255) null
 );
 go
 ------------------------------------------------
@@ -243,7 +244,7 @@ begin
 	where c.Id = @tableId and c.Kind in (N'table', N'operation');
 
 	select [!TTable!Array] = null, [Id!!Id] = c.Id, [Schema] = c.[Schema], [Name] = c.[Name],
-		c.ItemsName, c.ItemName, c.TypeName,
+		c.ItemsName, c.ItemName, c.TypeName, c.ItemLabel, c.ItemsLabel,
 		[Columns!TColumn!Array] = null,
 		[Kinds!TKind!Array] = null,
 		[!TTable.Details!ParentId] = c.Parent
@@ -251,7 +252,7 @@ begin
 	where c.Parent = @tableId and c.Kind = N'details';
 
 	select [!TColumn!Array] = null, [Id!!Id] = c.Id, c.[Name], c.[Label], c.DataType, 
-		c.[MaxLength], c.[Role], c.[Order], DbOrder = tvc.column_id,
+		c.[MaxLength], c.[Role], c.Computed, c.[Order], DbOrder = tvc.column_id,
 		[Reference.RefSchema!TReference!] = case c.DataType 
 		when N'operation' then N'op' 
 		else r.[Schema] 

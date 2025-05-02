@@ -19,15 +19,15 @@ internal partial class ModelBuilderFactory(
         if (modelBase.Meta == null)
             throw new InvalidOperationException("Meta is null");
 
-        var table = await _metadataProvider.GetSchemaAsync(modelBase.Meta, modelBase.DataSource);
-        var tables = await GetTablesAsync(modelBase.DataSource, table);
+        var srcTable = await _metadataProvider.GetSchemaAsync(modelBase.Meta, modelBase.DataSource);
+        var tables = await GetTablesAsync(modelBase.DataSource, srcTable);
 
         return new BaseModelBuilder(_serviceProvider) {
             _dataSource = modelBase.DataSource,
             _platformUrl = platformUrl,
             _table = tables.table,
             _baseTable = tables.baseTable,
-            _refFields = await ReferenceFieldsAsync(modelBase.DataSource, table),
+            _refFields = await ReferenceFieldsAsync(modelBase.DataSource, tables.table),
             _appMeta = await _metadataProvider.GetAppMetadataAsync(modelBase.DataSource)
         };
     }
@@ -40,7 +40,7 @@ internal partial class ModelBuilderFactory(
             _platformUrl = platformUrl,
             _table = tables.table,
             _baseTable = tables.baseTable,
-            _refFields = await ReferenceFieldsAsync(dataSource, table),
+            _refFields = await ReferenceFieldsAsync(dataSource, tables.table),
             _appMeta = await _metadataProvider.GetAppMetadataAsync(dataSource)
         };
     }

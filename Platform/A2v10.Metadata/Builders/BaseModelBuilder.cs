@@ -1,11 +1,11 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Dynamic;
 using System.Globalization;
-using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -151,13 +151,6 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
 
     protected String RefTableJoins(IEnumerable<ReferenceMember> refFields, String alias)
     {
-        var sb = new StringBuilder();
-        foreach (var refField in refFields)
-        {
-            sb.AppendLine($"""
-                left join {refField.Table.SqlTableName} r{refField.Index} on {alias}.[{refField.Column.Name}] = r{refField.Index}.[{refField.Table.PrimaryKeyField}]
-            """);
-        }
-        return sb.ToString();
+        return String.Join("\n", refFields.Select(refField => $"    left join {refField.Table.SqlTableName} r{refField.Index} on {alias}.[{refField.Column.Name}] = r{refField.Index}.[{refField.Table.PrimaryKeyField}]"));
     }
 }

@@ -1,7 +1,6 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
-using System.Linq;
 
 namespace A2v10.Metadata;
 

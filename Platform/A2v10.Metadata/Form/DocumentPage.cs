@@ -115,97 +115,17 @@ internal partial class BaseModelBuilder
                 Items = [..BodyItems(cols: 4)]
             };
 
-            IEnumerable<FormItem> DetailsTableCells(TableMetadata d) 
-            {
-                return d.EditableColumns().OrderBy(c => c.Order).Select(c =>
-                    new FormItem(FormItemIs.TableCell)
-                    {
-                        Label =  c.Label ?? $"@{c.Name}",
-                        Width = c.ToColumnWidth(),
-                        DataType = c.ToItemDataType(),
-                        Items = [
-                            new FormItem(c.Column2Is())
-                            {
-                                DataType = c.ToItemDataType(),
-                                Data = c.Name,
-                                Props= c.IsReference ?
-                                    new FormItemProps() {
-                                        Url = c.Reference.EndpointPath(),
-                                    }
-                                    : null
-                            }
-                        ]
-                    }
-                );
-            }
-
-            FormItem DetailsTab(TableMetadata d, String dataBind, String tabBind, String? tabName)
-            {
-                return new FormItem(FormItemIs.Tab)
-                {
-                    Label = tabName ?? $"@{tabBind}",
-                    Grid = new FormItemGrid(4, 1),
-                    Data = tabBind,
-                    Items = [
-                    new FormItem(FormItemIs.Grid)
-                    {
-                        Height = "100%",
-                        MinHeight = "25rem",
-                        Props = new FormItemProps()
-                        {
-                            Rows = "auto 1fr",
-                            Columns = "auto",
-                        },
-                        Items = [
-                            new FormItem(FormItemIs.Toolbar) {
-                                Grid = new FormItemGrid(1, 1),
-                                CssClass = "document-details-toolbar",
-                                Items = [
-                                    new FormItem(FormItemIs.Button)
-                                    {
-                                        Label = "@AddRow",
-                                        Command = new FormItemCommand()
-                                        {
-                                            Command = FormCommand.Append,
-                                            Argument = dataBind,
-                                        },
-                                    }
-                                ]
-                            },
-                            new FormItem(FormItemIs.Table) {
-                                Data = dataBind,
-                                Height = "100%",
-                                CssClass = "document-details",
-                                Grid = new FormItemGrid(2, 1),
-                                Items = [
-                                    ..DetailsTableCells(d),
-                                    new FormItem(FormItemIs.TableCell)
-                                    {
-                                        Width = "1px",
-                                        Items = [
-                                            FormBuild.Button(new FormItemCommand() {
-                                                Command = FormCommand.Remove
-                                            }, "✕"),
-                                        ]
-                                    }
-                                ]
-                            }]
-                        }
-                    ]
-                };
-            }
-
             IEnumerable<FormItem> DetailsTabs()
             {
                 foreach (var d in _table.Details)
                 {
                     if (d.Kinds.Count == 0)
-                        yield return DetailsTab(d, $"{_table.RealItemName}.{d.RealItemsName}", d.Name, null);
+                        yield return DetailsTab(d, $"{_table.RealItemName}.{d.RealItemsName}", d.Name, null, "document");
                     else
                         foreach (var k in d.Kinds)
                         {
                             var dataBind = $"{_table.RealItemName}.{k.Name}";
-                            yield return DetailsTab(d, dataBind, k.Name, k.Label);
+                            yield return DetailsTab(d, dataBind, k.Name, k.Label, "document");
                         }
                 }
             }
