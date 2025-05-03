@@ -75,6 +75,7 @@ public record TableColumn
     public Int32 Order { get; init; }
     public Int32 DbOrder { get; init; }
     public String? Computed { get; init; }
+    public Boolean Required { get; init; }
     #endregion
     internal Boolean IsReference => Reference != null && Reference.RefTable != null;
     internal Boolean IsBlob => DataType == ColumnDataType.Stream;

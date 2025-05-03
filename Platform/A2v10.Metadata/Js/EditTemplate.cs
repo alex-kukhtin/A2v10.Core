@@ -27,6 +27,15 @@ internal partial class BaseModelBuilder
         }
     }
 
+    IEnumerable<String> validators()
+    {
+        foreach (var col in _table.Columns.Where(c => c.Required))
+            yield return $"'{_table.RealItemName}.{col.Name}': `@[Error.Required]`";
+        foreach (var d in _table.Details)
+            foreach (var c in d.Columns.Where(c => c.Required))
+                yield return $"'{_table.RealItemName}.{d.RealItemsName}[].{c.Name}': `@[Error.Required]`";
+    }
+
     private Task<String> CreateGenericEditTemplate()
     {
         const String jsDivider = ",\n\t\t";
@@ -35,7 +44,10 @@ internal partial class BaseModelBuilder
         const template = {
             properties: {
                 {{String.Join(jsDivider, properties())}}
-            }
+            },
+            validators: {
+                {{String.Join(jsDivider, validators())}}
+            },
         };
         module.exports = template;
         """;

@@ -100,7 +100,8 @@ create table a2meta.[Columns]
 	[Role] int not null
 		constraint DF_Columns_Role default(0),
 	Source nvarchar(255) null,
-	Computed nvarchar(255) null
+	Computed nvarchar(255) null,
+	[Required] bit
 );
 go
 ------------------------------------------------
@@ -252,7 +253,7 @@ begin
 	where c.Parent = @tableId and c.Kind = N'details';
 
 	select [!TColumn!Array] = null, [Id!!Id] = c.Id, c.[Name], c.[Label], c.DataType, 
-		c.[MaxLength], c.[Role], c.Computed, c.[Order], DbOrder = tvc.column_id,
+		c.[MaxLength], c.[Role], c.Computed, c.[Required], c.[Order], DbOrder = tvc.column_id,
 		[Reference.RefSchema!TReference!] = case c.DataType 
 		when N'operation' then N'op' 
 		else r.[Schema] 
@@ -412,7 +413,7 @@ begin
 	(14, 1, N'op',   N'folder', N'@[Operations]'),
 	(15, 1, N'jrn',  N'folder', N'@[Journals]'),
 	(16, 1, N'rep',  N'folder', N'@[Reports]'),
-	(70, 1, N'ui',   N'folder', N'@[UserInterfaces]');
+	(70, 1, N'ui',   N'folder', N'@[MainMenu]');
 
 	declare @root uniqueidentifier = newid();
 	insert into a2meta.[Catalog] (Id, Parent, [Schema], [Kind], [Name], [Order])

@@ -41,6 +41,28 @@ internal partial class BaseModelBuilder
                     yield return $$"""'{{d.RealTypeName}}.{{c.Name}}'() { return {{c.Computed}};}""";
         }
 
+        IEnumerable<String> validators()
+        {
+            foreach (var col in _table.Columns.Where(c => c.Required))
+                yield return $"'{_table.RealItemName}.{col.Name}': `@[Error.Required]`";
+            if (_baseTable != null)
+            {
+                foreach (var d in _table.Details)
+                    if (d.Kinds.Count > 0)
+                        foreach (var k in d.Kinds)
+                            foreach (var c in d.Columns.Where(c => c.Required))
+                                yield return $"'{_table.RealItemName}.{k.Name}[].{c.Name}': `@[Error.Required]`";
+                    else
+                        foreach (var c in d.Columns.Where(c => c.Required))
+                            yield return $"'{_table.RealItemName}.{d.RealItemsName}[].{c.Name}': `@[Error.Required]`";
+            }
+            else
+                foreach (var d in _table.Details)
+                    foreach (var c in d.Columns.Where(c => c.Required))
+                        yield return $"'{_table.RealItemName}.{d.RealItemsName}[].{c.Name}': `@[Error.Required]`";
+        }
+
+
         const String jsDivider = ",\n\t\t";
 
         var endpoint = _table.EndpointPathUseBase(_baseTable);
@@ -55,6 +77,9 @@ internal partial class BaseModelBuilder
             },
             defaults: {
                 {{String.Join(jsDivider, defaults())}}
+            },
+            validators: {
+                {{String.Join(jsDivider, validators())}}
             },
             commands: {
                 apply,
