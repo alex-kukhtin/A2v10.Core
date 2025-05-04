@@ -118,6 +118,7 @@ public record FormItemProps
     public ItemStyle Style { get; init; }
     public String? Filters { get; init; }
     public Boolean Multiline { get; init; }
+    public Int32 TabIndex { get; init; }
     public Int32 LineClamp { get; init; }
     public Boolean Fit { get; init; }   
     public Boolean NoWrap { get; init; }    

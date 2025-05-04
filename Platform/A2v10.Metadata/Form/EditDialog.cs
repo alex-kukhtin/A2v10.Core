@@ -25,6 +25,7 @@ internal partial class BaseModelBuilder
                 Url = prm,
                 Multiline = column.DataType == ColumnDataType.String && 
                     (column.MaxLength > Constants.MultilineThreshold || column.MaxLength == 0),
+                TabIndex = column.Role.HasFlag(TableColumnRole.Name) ? 1 : 0,
             },
             Width = column.DataType.ToWidth()
         };

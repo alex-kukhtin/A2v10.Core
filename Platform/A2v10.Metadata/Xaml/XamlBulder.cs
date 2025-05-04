@@ -250,6 +250,7 @@ internal class XamlBulder(EditWithMode _editWith)
             Align = source.ToTextAlign(),
             Width = Length.FromStringNull(source.Width),
             Multiline = source.Props?.Multiline == true,
+            TabIndex = source.Props?.TabIndex ?? 0, 
             Bindings = b => b.SetBinding(nameof(TextBox.Value), source.TypedBind())
         };
     }

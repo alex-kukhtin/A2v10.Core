@@ -141,6 +141,7 @@ public record TableMetadata
 
     public String? ItemsLabel { get; init; }
     public String? ItemLabel { get; init; }
+    public String? Type { get; init; }
     public String? DbName { get; init; }
     public String? DbSchema { get; init; }
     #endregion

@@ -47,9 +47,13 @@ create table a2meta.[Catalog]
 	ItemLabel nvarchar(128),
 	UseFolders bit
 		constraint DF_Catalog_UseFolders default(0),
-	FolderMode nvarchar(16)
+	FolderMode nvarchar(16),
+	[Type] nvarchar(32) -- for reports, other
 );
 go
+
+--alter table a2meta.[Catalog] add [Type] nvarchar(32);
+
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'Application')
 create table a2meta.[Application]
@@ -340,6 +344,7 @@ begin
 		and r.Kind in (N'report');
 
 	select [Table!TTable!Object] = null, [!!Id] = c.Id, c.[Schema], c.[Name], c.ItemName, c.ItemsName,
+		c.ItemLabel, c.ItemsLabel, c.[Type],
 		[ParentTable.RefSchema!TReference!] = pt.[Schema], [ParentTable.RefTable!TReference] = pt.[Name]
 	from a2meta.[Catalog] c 
 		left join a2meta.[Catalog] pt on c.ParentTable = pt.Id

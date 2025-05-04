@@ -5,6 +5,7 @@
 A2v10.Platform
 A2v10.Services
 A2v10.Metadata
+A2v10.Web.Assets
 
 
 A2v10.Platform

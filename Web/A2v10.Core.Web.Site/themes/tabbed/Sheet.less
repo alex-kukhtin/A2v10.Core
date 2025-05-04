@@ -254,7 +254,7 @@ table > colgroup {
 	background-color: @page-wrapper-bg-color;
 	padding: 30px 0;
 	min-height: 100%;
-	min-width:max-content;
+	min-width: max-content;
 
 	.sheet-page {
 		margin: 0 auto;
@@ -275,6 +275,16 @@ table > colgroup {
 			min-height: @page-height-l;
 		}
 	}
+}
+
+.sheet-page.sheet-report {
+	padding: 1rem;
+	width: fit-content;
+}
+
+.sheet-page.sheet-dirty {
+	opacity: 0.5;
+	filter: saturate(.2);
 }
 
 @media print {
@@ -308,7 +318,6 @@ table > colgroup {
 			}
 		}
 	}
-
 	/*
 	@page {
 		size: A4 portrait;

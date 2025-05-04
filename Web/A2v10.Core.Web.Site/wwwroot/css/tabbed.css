@@ -2898,6 +2898,10 @@ a.btn {
 .period-picker.disabled {
   cursor: default;
 }
+.period-picker .descr {
+  display: block;
+  text-align: center;
+}
 .period-picker .period-text {
   padding: 0 0 0 5px;
   line-height: 2em;
@@ -6656,6 +6660,14 @@ table > colgroup col.blue {
   width: 29.7cm;
   min-height: 21cm;
 }
+.sheet-page.sheet-report {
+  padding: 1rem;
+  width: fit-content;
+}
+.sheet-page.sheet-dirty {
+  opacity: 0.5;
+  filter: saturate(0.2);
+}
 @media print {
   .sheet-page-wrapper {
     padding: 0 !important;
@@ -8415,6 +8427,9 @@ td.vert > .vcell {
 }
 .bg-white {
   background-color: white;
+}
+.bg-primary {
+  background-color: var(--bgPrimary);
 }
 .h-100 {
   height: 100%;
