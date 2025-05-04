@@ -5,6 +5,8 @@
 A2v10.Platform
 A2v10.Services
 A2v10.Metadata
+A2v10.MailClient
+A2v10.ReportEngine.Pdf
 A2v10.Web.Assets
 
 
