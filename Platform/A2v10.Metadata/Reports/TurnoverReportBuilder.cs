@@ -2,12 +2,12 @@
 
 using System;
 using System.Threading.Tasks;
-using A2v10.Xaml;
+using System.Dynamic;
 
 using A2v10.Data.Core.Extensions;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
-using System.Dynamic;
+using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
@@ -15,6 +15,22 @@ internal class TurnoverReportBuilder(IServiceProvider serviceProvider, TableMeta
     : BaseReportBuilder(serviceProvider, report, source)
 {
     public override Task<IDataModel> LoadReportModelAsync(IModelView view, ExpandoObject prms)
+    {
+        var sqlString = CreateSqlText();
+
+        return _dbContext.LoadModelSqlAsync(view.DataSource, sqlString, dbprms =>
+        {
+            dbprms.AddBigInt("@UserId", _currentUser.Identity.Id);
+            dbprms
+             .AddDateFromQuery("@From",  prms, "From")
+             .AddDateFromQuery("@To", prms, "To")
+             .AddBitFromQuery("@Run", prms, "Run")
+             .AddStringFromQuery("@Tab", prms, "Tab");
+            // dbPrms.AddRefereces
+        });
+    }
+
+    private String CreateSqlText()
     {
         var sqlString = $"""
         set nocount on;
@@ -35,14 +51,7 @@ internal class TurnoverReportBuilder(IServiceProvider serviceProvider, TableMeta
             [Period.From!TPeriod!] = @From, [Period.To!TPeriod!] = @To, Run = @Run, Tab = @Tab;
         """;
 
-        return _dbContext.LoadModelSqlAsync(view.DataSource, sqlString, dbprms =>
-        {
-            dbprms.AddBigInt("@UserId", _currentUser.Identity.Id);
-            dbprms.AddDate("@From", DateParameter(prms, "From"))
-                .AddDate("@To", DateParameter(prms, "To"))
-                .AddBit("@Run", BoolParameter(prms, "Run"))
-                .AddString("@Tab", prms.Get<String>("Tab"));
-        });
+        return sqlString;
     }
 
     public override UIElement CreatePage()

@@ -15,7 +15,7 @@ internal partial class BaseModelBuilder
                 Label = "@Create",
                 Command = new FormItemCommand(FormCommand.Create)
                 {
-                    Url = _table.EndpointPath(),
+                    Url = _table.EndpointPathUseBase(_baseTable),
                     Argument = "Parent.ItemsSource"
                 }
             };
@@ -23,10 +23,11 @@ internal partial class BaseModelBuilder
             {
                 Command = new FormItemCommand(FormCommand.EditSelected)
                 {
-                    Url = _table.EndpointPath(),
+                    Url = _table.EditEndpoint(_baseTable),
                     Argument = "Parent.ItemsSource"
                 }
             };
+            yield return new FormItem(FormItemIs.Separator);
             yield return new FormItem(FormItemIs.Button)
             {
                 Command = new FormItemCommand(FormCommand.Reload),

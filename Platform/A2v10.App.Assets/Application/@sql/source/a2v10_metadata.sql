@@ -109,6 +109,24 @@ create table a2meta.[Columns]
 );
 go
 ------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'ReportItems')
+create table a2meta.[ReportItems]
+(
+	[Id] uniqueidentifier not null
+		constraint DF_ReportItems_Id default(newid())
+		constraint PK_ReportItems primary key,
+	[Report] uniqueidentifier not null
+		constraint FK_ReportItems_Report_Catalog references a2meta.[Catalog](Id),
+	[Column] uniqueidentifier not null
+		constraint FK_ReportItems_Column_Columns references a2meta.[Columns](Id),
+	[Kind] nchar(1) not null, -- (G)roup, (F)ilter, (D)ata, (A)ttribute
+	[Order] int not null,
+	[Label] nvarchar(255),
+	Func nvarchar(32), -- for Data - Year, Quart, Month
+	[Checked] bit -- for Grouping
+);
+go
+------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'DefaultSections')
 create table a2meta.[DefaultSections]
 (
