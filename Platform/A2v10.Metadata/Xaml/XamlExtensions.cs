@@ -180,6 +180,11 @@ internal static class XamlExtensions
 
     }
 
+    public static Boolean IsCheckedColumn(this FormItem item)
+    {
+        return item.Data == "$checked" && item.DataType == ItemDataType.Boolean;
+    }
+
     public static ColumnRole ToColumnRole(this FormItem item)
     {
         return item.DataType switch

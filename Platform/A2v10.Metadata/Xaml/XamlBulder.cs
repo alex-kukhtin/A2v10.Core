@@ -210,12 +210,18 @@ internal class XamlBulder(EditWithMode _editWith)
             {
                 Header = c.Label.Localize(),
                 Role = c.ToColumnRole(),
+                Editable = c.IsCheckedColumn(),
                 Align = c.ToTextAlign(),
-                SortProperty  = c.Data.EndsWith(".Name") ? c.Data[..^5] : null,
+                SortProperty = c.Data.EndsWith(".Name") ? c.Data[..^5] : null,
                 LineClamp = c.Props?.LineClamp ?? 0,
                 Fit = c.Props?.Fit == true,
                 Wrap = c.Props?.NoWrap == true ? WrapMode.NoWrap : WrapMode.Default,
-                Bindings = b => b.SetBinding(nameof(DataGridColumn.Content), c.TypedBind())
+                Bindings = b =>
+                {
+                    b.SetBinding(nameof(DataGridColumn.Content), c.TypedBind());
+                    if (c.IsCheckedColumn())
+                        b.SetBinding(nameof(DataGridColumn.CheckAll), new Bind(c.Data));
+                }
             });
         }
 
@@ -264,6 +270,7 @@ internal class XamlBulder(EditWithMode _editWith)
             Width = Length.FromStringNull(source.Width),
             Placeholder = source.Props?.Placeholder.Localize(),
             ShowClear = source.Props?.ShowClear == true,
+            LineClamp = source.Props?.LineClamp ?? 0,
             Highlight = param == "taskpad",
             Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), new Bind(source.Data))
         };
@@ -286,7 +293,12 @@ internal class XamlBulder(EditWithMode _editWith)
             CssClass = source.CssClass,
             Width = Length.FromStringNull(source.Width),
             Placement = param == "taskpad" ? DropDownPlacement.BottomRight : default,
-            Bindings = b => b.SetBinding(nameof(PeriodPicker.Value), new Bind(source.Data))
+            Display = DisplayMode.Name,
+            Bindings = b =>
+            {
+                b.SetBinding(nameof(PeriodPicker.Value), new Bind(source.Data));
+                b.SetBinding(nameof(PeriodPicker.Description), new Bind($"{source.Data}.Name"));
+            }
         };
     }
     private CheckBox CreateCheckBox(FormItem source)

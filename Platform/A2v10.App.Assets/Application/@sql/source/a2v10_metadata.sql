@@ -51,9 +51,6 @@ create table a2meta.[Catalog]
 	[Type] nvarchar(32) -- for reports, other
 );
 go
-
---alter table a2meta.[Catalog] add [Type] nvarchar(32);
-
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'Application')
 create table a2meta.[Application]
@@ -223,7 +220,7 @@ go
 create or alter view a2meta.view_RealTables
 as
 	select Id = c.Id, c.Parent, c.Kind, c.[Schema], [Name] = c.[Name], c.ItemsName, c.ItemName, c.TypeName,
-		c.EditWith, c.ParentTable, c.IsFolder, c.ItemLabel, c.ItemsLabel
+		c.EditWith, c.ParentTable, c.IsFolder, c.ItemLabel, c.ItemsLabel, c.UseFolders, c.[Type]
 	from a2meta.[Catalog] c left join INFORMATION_SCHEMA.TABLES ic on 
 		ic.TABLE_SCHEMA = c.[Schema]
 		and ic.TABLE_NAME = c.[Name] collate SQL_Latin1_General_CP1_CI_AI;
@@ -256,7 +253,7 @@ begin
 	select Id, Kind, [Schema], [Name] from TT;
 
 	select [Table!TTable!Object] = null, [!!Id] = c.Id, c.[Schema], c.[Name],
-		c.ItemsName, c.ItemName, c.TypeName, c.EditWith, c.ItemLabel, c.ItemsLabel,
+		c.ItemsName, c.ItemName, c.TypeName, c.EditWith, c.ItemLabel, c.ItemsLabel, c.UseFolders,
 		[ParentTable.RefSchema!TReference!] = pt.[Schema], [ParentTable.RefTable!TReference] = pt.[Name],
 		[Columns!TColumn!Array] = null,
 		[Details!TTable!Array] = null,
@@ -267,7 +264,7 @@ begin
 	where c.Id = @tableId and c.Kind in (N'table', N'operation');
 
 	select [!TTable!Array] = null, [Id!!Id] = c.Id, [Schema] = c.[Schema], [Name] = c.[Name],
-		c.ItemsName, c.ItemName, c.TypeName, c.ItemLabel, c.ItemsLabel,
+		c.ItemsName, c.ItemName, c.TypeName, c.ItemLabel, c.ItemsLabel, c.[Type],
 		[Columns!TColumn!Array] = null,
 		[Kinds!TKind!Array] = null,
 		[!TTable.Details!ParentId] = c.Parent

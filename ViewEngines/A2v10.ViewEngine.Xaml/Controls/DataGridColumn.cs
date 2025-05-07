@@ -233,7 +233,7 @@ public class DataGridColumn : XamlElement
 			if (!Editable)
 				checkBox.Disabled = true;
 			Content = checkBox;
-			if (String.IsNullOrEmpty(SortProperty))
+			if (String.IsNullOrEmpty(SortProperty) && bind?.Path != "$checked")
 				SortProperty = bind?.Path;
         }
         

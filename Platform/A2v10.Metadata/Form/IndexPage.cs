@@ -10,8 +10,15 @@ internal partial class BaseModelBuilder
 {
     IEnumerable<FormItem> IndexColumns()
     {
-        return _table.VisibleColumns(_appMeta).Select(
-            c => new FormItem()
+        if (_table.UseFolders)
+            yield return new FormItem()
+            {
+                Is = FormItemIs.DataGridColumn,
+                DataType = ItemDataType.Boolean,
+                Data = "$checked",
+            };
+        foreach (var c in _table.VisibleColumns(_appMeta))
+            yield return new FormItem()
             {
                 Is = FormItemIs.DataGridColumn,
                 DataType = c.ToItemDataType(),
@@ -20,8 +27,7 @@ internal partial class BaseModelBuilder
                     : c.Name,
                 Label = c.Label ?? $"@{c.Name}",
                 Props = c.IndexColumnProps()
-            }
-        );
+            };
     }
 
     private Form CreateIndexPage()
@@ -66,7 +72,7 @@ internal partial class BaseModelBuilder
 
         FormItem? CreateTaskPad()
         {
-            if (!_table.Columns.Any(c => c.IsReference))
+            if (!_table.Columns.Any(c => c.IsReference) && !_table.UseFolders)
                 return null;
 
             FormItem CreateFilter(TableColumn column, Int32 gridRow)
@@ -81,6 +87,7 @@ internal partial class BaseModelBuilder
                         Url = column.Reference.EndpointPath(),
                         Placeholder = $"@{column.Reference.RefTable}.All",
                         ShowClear = true,
+                        LineClamp = 2
                     }
                 };
             }

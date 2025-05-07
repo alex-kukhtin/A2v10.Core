@@ -21,6 +21,7 @@ public class EditFormEndpointHandler(IServiceProvider _serviceProvider) : IEndpo
     private readonly DynamicRenderer _dynamicRenderer = new(_serviceProvider);
     private readonly CodeLoader _codeLoader = new(_serviceProvider);
     private readonly IModelBuilderFactory _modelBuilderFactory = _serviceProvider.GetRequiredService<IModelBuilderFactory>();
+    private readonly DatabaseMetadataProvider _dbMetadataProvider = _serviceProvider.GetRequiredService<DatabaseMetadataProvider>();
     public async Task<String> RenderResultAsync(IPlatformUrl platformUrl, IModelView modelView, ExpandoObject prms)
     {
         var key = prms.Get<String>("Form")
@@ -44,11 +45,8 @@ public class EditFormEndpointHandler(IServiceProvider _serviceProvider) : IEndpo
 
             var ew = dataModel.Eval<String>("Table.EditWith")
                 ?? throw new InvalidOperationException("Table.EditWith is null");
-            var tm = new TableMetadata() {
-                Schema = schema,
-                Name = table,
-                EditWith = Enum.Parse<EditWithMode>(ew)
-            };
+
+            var tm = await _dbMetadataProvider.GetSchemaAsync(modelView.DataSource, schema, table);
 
             var editPlatformUrl = platformUrl.CreateFromMetadata(tm.LocalPath(key));
 
