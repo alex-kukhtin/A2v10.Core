@@ -22,6 +22,8 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Tabl
     protected TableMetadata _source => source;
     protected IDbContext _dbContext => _serviceProvider.GetRequiredService<IDbContext>();
     protected ICurrentUser _currentUser => _serviceProvider.GetRequiredService<ICurrentUser>();
+    protected DatabaseMetadataProvider _metadataProvider => _serviceProvider.GetRequiredService<DatabaseMetadataProvider>();
+
     protected readonly IServiceProvider _xamlServiceProvider = new XamlServiceProvider();
     public abstract Task<IDataModel> LoadReportModelAsync(IModelView view, ExpandoObject prms);
 
@@ -109,6 +111,21 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Tabl
                     b.SetBinding(nameof(PeriodPicker.Description), new Bind("Filter.Period.Name"));
                 }
             };
+
+            foreach (var r in _report.TypedReportItems(ReportItemKind.Filter))
+            {
+                yield return new SelectorSimple()
+                {
+                    Label = r.Label.Localize() ?? $"@[{r.Column}]",
+                    Url = r.Endpoint(),
+                    ShowClear = true,
+                    Placeholder = $"@[{r.Column}.All]",
+                    Bindings = b =>
+                    {
+                        b.SetBinding(nameof(SelectorSimple.Value), new Bind($"Filter.{r.Column}"));
+                    }
+                };
+            }
         }
         return new Taskpad()
         {

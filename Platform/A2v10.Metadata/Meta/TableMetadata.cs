@@ -125,6 +125,29 @@ public record TableApply
     #endregion
 }
 
+public enum ReportItemKind
+{
+    G,
+    F,
+    D,
+    Grouping = G,
+    Filter = F,
+    Data = D
+}
+public record ReportItemMetadata
+{
+    #region Database Fields 
+    public ReportItemKind Kind { get; init; }
+    public String Column { get; init; } = default!;
+    public ColumnDataType DataType { get; init; } = default!;
+    public String RefSchema { get; init; } = default!;
+    public String RefTable { get; init; } = default!;
+    public Boolean Checked { get; init; }
+    public Int32 Order { get; init; }
+    public String? Label { get; init; }
+    public String? Func { get; init; }
+    #endregion
+}
 public record DetailsKind(String Name, String Label);
 public record TableMetadata
 {
@@ -148,7 +171,7 @@ public record TableMetadata
     #endregion
     public List<TableApply>? Apply { get; init; }
     public List<DetailsKind> Kinds { get; init; } = [];
-
+    public List<ReportItemMetadata> ReportItems { get; init; } = [];
     // internal variables
     internal String PrimaryKeyField => Columns.FirstOrDefault(c => c.Role.HasFlag(TableColumnRole.PrimaryKey) && !c.Role.HasFlag(TableColumnRole.RowNo))?.Name
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Primary Key");

@@ -1,9 +1,11 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
-using A2v10.Infrastructure;
-using A2v10.Services;
 using System;
 using System.Linq;
+using System.Collections.Generic;
+
+using A2v10.Infrastructure;
+using A2v10.Services;
 
 namespace A2v10.Metadata;
 
@@ -107,4 +109,18 @@ internal static class MetadataExtensions
         };
     }
 
+
+    internal static IEnumerable<ReportItemMetadata> TypedReportItems(this TableMetadata table, ReportItemKind kind)
+    {
+        return table.ReportItems.Where(ri => ri.Kind == kind).OrderBy(r => r.Order);
+    }
+
+    internal static String Endpoint(this ReportItemMetadata item)
+    {
+        return $"/{item.RefSchema.ToFolder()}/{item.RefTable}";
+    }
+    internal static String CreateField(this ReportItemMetadata item, ColumnDataType idDataType, String? prefix = null)
+    {
+        return $"[{prefix}{item.Column}] {item.DataType.ToSqlDbType(idDataType).ToString().ToLowerInvariant()}";
+    }
 }

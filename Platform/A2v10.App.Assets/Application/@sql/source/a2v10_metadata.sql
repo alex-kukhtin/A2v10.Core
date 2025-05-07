@@ -360,10 +360,21 @@ begin
 
 	select [Table!TTable!Object] = null, [!!Id] = c.Id, c.[Schema], c.[Name], c.ItemName, c.ItemsName,
 		c.ItemLabel, c.ItemsLabel, c.[Type],
-		[ParentTable.RefSchema!TReference!] = pt.[Schema], [ParentTable.RefTable!TReference] = pt.[Name]
+		[ParentTable.RefSchema!TReference!] = pt.[Schema], [ParentTable.RefTable!TReference] = pt.[Name],
+		[ReportItems!TRepItem!Array] = null
 	from a2meta.[Catalog] c 
 		left join a2meta.[Catalog] pt on c.ParentTable = pt.Id
 	where c.Id = @tableId and c.Kind in (N'report');
+
+	select [!TRepItem!Array] = null, ri.Kind, [Column] = c.[Name], c.[DataType],
+		[RefSchema] = t.[Schema], [RefTable] = t.[Name],
+		ri.[Order], ri.[Label], ri.Checked, ri.[Func],
+		[!TTable.ReportItems!ParentId] = ri.[Report]
+	from a2meta.ReportItems ri
+		inner join a2meta.[Columns] c on ri.[Column] = c.Id
+		left join a2meta.[Catalog] t on c.Reference = t.Id
+	where ri.Report = @tableId
+	order by ri.[Order];
 end
 go
 ------------------------------------------------

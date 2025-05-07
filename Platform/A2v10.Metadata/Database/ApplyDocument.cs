@@ -28,7 +28,7 @@ internal partial class BaseModelBuilder
         if (applyTable.Apply == null || !applyTable.Apply.Any())
             throw new InvalidOperationException($"Table {applyTable.Schema}.[{applyTable.Name}]. Nothing to apply");
 
-        var journals = applyTable.Apply.Select(c => c.Journal).Distinct(new ColumnReferenceComparer());
+        var journals = applyTable.Apply.Select(c => c.Journal).Distinct(Comparers.ColumnReference);
         var deleteFromJournals = journals.Select(j => $"delete from {j.SqlTableName} where [Document] = @Id");
 
         String InsertIntoJournal(TableApply a)
@@ -109,7 +109,7 @@ internal partial class BaseModelBuilder
         if (applyTable.Apply == null || !applyTable.Apply.Any())
             throw new InvalidOperationException($"Table {applyTable.Schema}.[{applyTable.Name}]. Nothing to apply");
 
-        var journals = applyTable.Apply.Select(c => c.Journal).Distinct(new ColumnReferenceComparer());
+        var journals = applyTable.Apply.Select(c => c.Journal).Distinct(Comparers.ColumnReference);
 
         var deleteFromJournals = journals.Select(j => 
             $"delete from {j.SqlTableName} where [Document] = @Id");
