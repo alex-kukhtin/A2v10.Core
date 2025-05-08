@@ -6,6 +6,9 @@ using System.Collections.Generic;
 
 using A2v10.Infrastructure;
 using A2v10.Services;
+using A2v10.Xaml;
+using DocumentFormat.OpenXml.Wordprocessing;
+using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 
 namespace A2v10.Metadata;
 
@@ -122,5 +125,41 @@ internal static class MetadataExtensions
     internal static String CreateField(this ReportItemMetadata item, ColumnDataType idDataType, String? prefix = null)
     {
         return $"[{prefix}{item.Column}] {item.DataType.ToSqlDbType(idDataType).ToString().ToLowerInvariant()}";
+    }
+
+    internal static String LocalizeLabel(this ReportItemMetadata item)
+    {
+        return item.Label.Localize() ?? $"@[{item.Column}]";
+    }
+
+    internal static Bind BindColumn(this ReportItemMetadata item, String? prefix = null)
+    {
+        return item.DataType switch
+        {
+            ColumnDataType.Money => new BindSum($"{prefix}{item.Column}"),
+            ColumnDataType.Float => new BindNumber($"{prefix}{item.Column}"),
+            _ => new Bind($"{prefix}{item.Column}")
+        };
+    }
+
+    internal static SheetCell BindSheetCell(this ReportItemMetadata item, String? prefix = null)
+    {
+        var bind = item.DataType switch
+        {
+            ColumnDataType.Money => new BindSum($"{prefix}{item.Column}"),
+            ColumnDataType.Float => new BindNumber($"{prefix}{item.Column}"),
+            _ => new Bind($"{prefix}{item.Column}")
+        };
+        var align = item.DataType switch
+        {
+            ColumnDataType.Money => TextAlign.Right,
+            ColumnDataType.Float => TextAlign.Right,
+            _ => TextAlign.Left
+        };
+        return new SheetCell()
+        {
+            Align = align,
+            Bindings = b => b.SetBinding(nameof(SheetCell.Content), bind)
+        };
     }
 }

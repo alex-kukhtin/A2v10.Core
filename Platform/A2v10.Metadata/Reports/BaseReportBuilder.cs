@@ -4,7 +4,6 @@ using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Dynamic;
-using System.Globalization;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -25,30 +24,10 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Tabl
     protected DatabaseMetadataProvider _metadataProvider => _serviceProvider.GetRequiredService<DatabaseMetadataProvider>();
 
     protected readonly IServiceProvider _xamlServiceProvider = new XamlServiceProvider();
+
+    protected ReportGrouping _grouping = default!;
+
     public abstract Task<IDataModel> LoadReportModelAsync(IModelView view, ExpandoObject prms);
-
-    // TODO: move to A2v10.Data.Core - QueryParameterDate
-    protected static DateTime? DateParameter(ExpandoObject eo, String prop)
-    {
-        var val = eo.Get<String>(prop);
-        if (val == null)
-            return null;
-        return DateTime.ParseExact(val, "yyyyMMdd", CultureInfo.InvariantCulture);
-    }
-
-    // TODO: move to A2v10.Data.Core - QueryParameterBit
-    protected static Boolean? BoolParameter(ExpandoObject eo, String prop)
-    {
-        var val = eo.Get<Object?>(prop);
-        if (val == null)
-            return null;
-        if (val is Boolean boolVal)
-            return boolVal;
-        else if (val is String strVal)
-            return Convert.ToBoolean(strVal, CultureInfo.InvariantCulture);
-        throw new InvalidOperationException($"Invalid type for bit {val.GetType()}");
-    }
-
     public abstract UIElement CreatePage();
     protected Toolbar CreateToolbar()
     {
@@ -59,7 +38,7 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Tabl
                 new Button()
                     {
                         Icon = Icon.PlayOutline,
-                        Content = "@[Run]",
+                        Content = "@[Report.Run]",
                         Bindings = b => b.SetBinding(nameof(Button.Command), new BindCmdExec("generate"))
                     },
                     new Separator(),
@@ -86,9 +65,9 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Tabl
                         Content = new Text() 
                         {
                             Inlines = [
-                                new Span() { Space = SpaceMode.After, Content = "@[Report.Param.Changed" },
+                                new Span() { Space = SpaceMode.After, Content = "@[Report.Param.Changed]" },
                                 new Hyperlink() {
-                                    Content = "@[RunNow]",
+                                    Content = "@[Report.RunNow]",
                                     Bindings = b => b.SetBinding(nameof(Hyperlink.Command), new BindCmdExec("generate"))
                                 },
                             ]
@@ -116,10 +95,11 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Tabl
             {
                 yield return new SelectorSimple()
                 {
-                    Label = r.Label.Localize() ?? $"@[{r.Column}]",
+                    Label = r.LocalizeLabel(),
                     Url = r.Endpoint(),
                     ShowClear = true,
-                    Placeholder = $"@[{r.Column}.All]",
+                    Highlight = true,
+                    Placeholder = $"@[{r.Column}.AllData]",
                     Bindings = b =>
                     {
                         b.SetBinding(nameof(SelectorSimple.Value), new Bind($"Filter.{r.Column}"));
@@ -130,6 +110,7 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Tabl
         return new Taskpad()
         {
             CssClass = "report-taskpad bg-primary",
+            Width = Length.FromString("24rem"),
             Children = [
                 new Grid(_xamlServiceProvider)
                     {
@@ -148,6 +129,11 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Tabl
                                     {
                                         ActiveValue = "g",
                                         Content = "@[Grouping]"
+                                    },
+                                    new TabButton()
+                                    {
+                                        ActiveValue = "d",
+                                        Content = "@[Data]"
                                     }
                                 ]
                             },
@@ -162,6 +148,19 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Tabl
                                                 Children = [..filters()],
                                             }
                                         ]
+                                    },
+                                    new Case()
+                                    {
+                                        Value = "g",
+                                        Children = [
+                                            CreateGroupingPane()
+                                        ]
+                                    },
+                                    new Case() {
+                                        Value = "d",
+                                        Children = [
+                                            CreateDataPane()
+                                        ]
                                     }
                                 ]
                             }
@@ -171,6 +170,127 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Tabl
         };
     }
 
+    private Grid CreateGroupingPane()
+    {
+        var cmdUp = new BindCmd()
+        {
+            Command = CommandType.MoveSelected,
+            CommandName = "up"
+        };
+        var cmdDown = new BindCmd()
+        {
+            Command = CommandType.MoveSelected,
+            CommandName = "down"
+        };
+        cmdUp.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind("GroupingInfo"));
+        cmdDown.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind("GroupingInfo"));
+
+        return new Grid(_xamlServiceProvider)
+        {
+            Gap = GapSize.FromString("0"),
+            AlignItems = AlignItem.Stretch,
+            Columns = [
+                new ColumnDefinition() { Width = GridLength.FromString("1*") },
+                new ColumnDefinition() { Width = GridLength.FromString("Auto") }
+            ],
+            Children = [
+                new List() {
+                    Bindings = b => b.SetBinding(nameof(List.ItemsSource), new Bind("GroupingInfo")),
+                    Width = Length.FromString("100%"),
+                    Content = [
+                        new StackPanel()
+                        {
+                            Gap = GapSize.FromString("6"),
+                            Orientation = Orientation.Horizontal,
+                            AlignItems = AlignItems.Center,
+                            Children = [
+                                new CheckBox() {
+                                    Bindings = b => b.SetBinding(nameof(CheckBox.Value), new Bind("Checked"))
+                                },
+                                new Span() {
+                                    Bindings = b => b.SetBinding(nameof(Span.Content), new Bind("Label"))
+                                }
+                            ]
+                        }
+                    ]
+                },
+                new Toolbar(_xamlServiceProvider) {
+                    Orientation = ToolbarOrientation.Vertical,
+                    Children = [
+                        new Button() {
+                            Icon = Icon.ArrowUp,
+                            Bindings = b => b.SetBinding(nameof(Button.Command), cmdUp),
+                        },
+                        new Button() {
+                            Icon = Icon.ArrowDown,
+                            Bindings = b => b.SetBinding(nameof(Button.Command), cmdDown),
+                        }
+                    ]
+                }
+            ]
+        };
+    }
+
+    private Grid CreateDataPane()
+    {
+        var cmdUp = new BindCmd()
+        {
+            Command = CommandType.MoveSelected,
+            CommandName = "up"
+        };
+        var cmdDown = new BindCmd()
+        {
+            Command = CommandType.MoveSelected,
+            CommandName = "down"
+        };
+        cmdUp.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind("DataInfo"));
+        cmdDown.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind("DataInfo"));
+
+        return new Grid(_xamlServiceProvider)
+        {
+            Gap = GapSize.FromString("0"),
+            AlignItems = AlignItem.Stretch,
+            Columns = [
+                new ColumnDefinition() { Width = GridLength.FromString("1*") },
+                new ColumnDefinition() { Width = GridLength.FromString("Auto") }
+            ],
+            Children = [
+                new List() {
+                    Bindings = b => b.SetBinding(nameof(List.ItemsSource), new Bind("DataInfo")),
+                    Width = Length.FromString("100%"),
+                    Content = [
+                        new StackPanel()
+                        {
+                            Gap = GapSize.FromString("6"),
+                            Orientation = Orientation.Horizontal,
+                            AlignItems = AlignItems.Center,
+                            Children = [
+                                new CheckBox() {
+                                    Bindings = b => b.SetBinding(nameof(CheckBox.Value), new Bind("Checked"))
+                                },
+                                new Span() {
+                                    Bindings = b => b.SetBinding(nameof(Span.Content), new Bind("Label"))
+                                }
+                            ]
+                        }
+                    ]
+                },
+                new Toolbar(_xamlServiceProvider) {
+                    Orientation = ToolbarOrientation.Vertical,
+                    Children = [
+                        new Button() {
+                            Icon = Icon.ArrowUp,
+                            Bindings = b => b.SetBinding(nameof(Button.Command), cmdUp),
+                        },
+                        new Button() {
+                            Icon = Icon.ArrowDown,
+                            Bindings = b => b.SetBinding(nameof(Button.Command), cmdDown),
+                        }
+                    ]
+                }
+            ]
+        };
+    }
     protected EmptyPanel CreateNonRunPanel()
     {
         return new EmptyPanel()
@@ -180,9 +300,9 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Tabl
             Content = new Text()
             {
                 Inlines = [
-                    new Span() { Content = "@[ReportNotYetBuild]", Block = true },
+                    new Span() { Content = "@[Report.NotYetBuild]", Block = true },
                     new Hyperlink() {
-                        Content = "@[RunNow]",
+                        Content = "@[Report.RunNow]",
                         Bindings = b => b.SetBinding(nameof(Hyperlink.Command), new BindCmdExec("generate"))
                     }
                 ]
@@ -210,6 +330,26 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Tabl
                     }
                 ]
             };
+            foreach (var p in _grouping.Filters)
+            {
+                yield return new SheetRow()
+                {
+                    Style = RowStyle.Parameter,
+                    Cells = [
+                        new SheetCell() {
+                            ColSpan = 2,
+                            Wrap = WrapMode.NoWrap,
+                            Content = p.LocalizeLabel()
+                        },
+                        new SheetCell() {
+                            ColSpan = 4,
+                            Bold = true,
+                            Bindings = b => b.SetBinding(nameof(SheetCell.Content), new Bind($"Filter.{p.Column}.Name"))
+                        }
+                    ],
+                    Bindings = b => b.SetBinding(nameof(SheetRow.If), new Bind($"Filter.{p.Column}.Id"))
+                };
+            }
         }
 
         yield return new SheetRow()
@@ -264,10 +404,25 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Tabl
             const ctrl = this.$ctrl;
             
             let repFilter = this.Filter;
+
+            let group = this.GroupingInfo.filter(f => f.Checked).map(f => f.Id).join('!');
+            let datinfo = this.DataInfo.filter(f => f.Checked).map(f => f.Id).join('!');
+
+            if (!group) {
+                ctrl.$alert('@[Report.Error.AtLeastGroup]');
+                return;
+            }
         
+            if (!datinfo) {
+                ctrl.$alert('@[Report.Error.AtLeastData]');
+                return;
+            }
+                
             let filter = {
                 Run : true,
-                Tab : repFilter.Tab,
+                Group: group,
+                Data: datinfo,
+                Tab : repFilter.Tab
             };
 
             this.$$Loading = true;

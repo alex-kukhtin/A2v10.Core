@@ -19,8 +19,7 @@ internal class TurnoverReportBuilder(IServiceProvider serviceProvider, TableMeta
 {
     public override async Task<IDataModel> LoadReportModelAsync(IModelView view, ExpandoObject prms)
     {
-        var filters = _report.TypedReportItems(ReportItemKind.Filter);
-
+        _grouping = new ReportGrouping(_report, prms);
         var sqlString = await CreateSqlTextAsync(view.DataSource);
 
         return await _dbContext.LoadModelSqlAsync(view.DataSource, sqlString, dbprms =>
@@ -31,7 +30,7 @@ internal class TurnoverReportBuilder(IServiceProvider serviceProvider, TableMeta
              .AddDateFromQuery("@To", prms, "To")
              .AddBitFromQuery("@Run", prms, "Run")
              .AddStringFromQuery("@Tab", prms, "Tab");
-            foreach (var r in filters)
+            foreach (var r in _grouping.Filters)
                 dbprms.AddBigIntFromQuery($"@{r.Column}", prms, r.Column);
         });
     }
@@ -40,16 +39,12 @@ internal class TurnoverReportBuilder(IServiceProvider serviceProvider, TableMeta
     {
         var appMeta = await _metadataProvider.GetAppMetadataAsync(dataSource);
 
-        var filterElems = _report.TypedReportItems(ReportItemKind.Filter).ToList();
-        var groupingElems = _report.TypedReportItems(ReportItemKind.Grouping).ToList();
-        var dataElems = _report.TypedReportItems(ReportItemKind.Data).ToList();
-
-        var filterFields = filterElems.Select(f =>
+        var filterFields = _grouping.Filters.Select(f =>
             $"[{f.Column}!T{f.Column}!RefId] = @{f.Column}"
         );
 
         var filterMaps = new StringBuilder();
-        foreach (var f in filterElems)
+        foreach (var f in _grouping.Filters)
         {
             var refMeta = await _metadataProvider.GetSchemaAsync(dataSource, f.RefSchema, f.RefTable);
             filterMaps.AppendLine($"""
@@ -61,9 +56,9 @@ internal class TurnoverReportBuilder(IServiceProvider serviceProvider, TableMeta
 
         IEnumerable<String> createTempTableFeilds()
         {
-            foreach (var f in filterElems.Union(groupingElems).Distinct(Comparers.ReportItemMetadata))
+            foreach (var f in _grouping.Filters.Union(_grouping.Grouping).Distinct(Comparers.ReportItemMetadata))
                 yield return f.CreateField(appMeta.IdDataType);
-            foreach (var f in dataElems)
+            foreach (var f in _grouping.Data)
             {
                 yield return f.CreateField(appMeta.IdDataType, "Start");
                 yield return f.CreateField(appMeta.IdDataType, "In");
@@ -83,38 +78,39 @@ internal class TurnoverReportBuilder(IServiceProvider serviceProvider, TableMeta
         set @To = isnull(@To, eomonth(@From));
         declare @end date = dateadd(day, 1, @To);    
 
-        -- TODO: Insert rems, turns
-        insert into #tmpturn([Store], [InSum], [OutSum])
-        select [Store], 
-            InSum = sum(case when InOut = 1 then [Sum] else 0 end),
-            OutSum = sum(case when InOut = -1 then [Sum] else 0 end)
-        from {_source.SqlTableName}
-        where [Date] > @From and [Date] < @end
-        group by [Store];
+        insert into #tmpturn({_grouping.SimpleFields()}, {_grouping.SimpleDataFields()})
+        select {_grouping.SelectFields("j")},
+            {_grouping.InsertIntoDataFields("j")}
+        from {_source.SqlTableName} j
+        where @Run = 1 and [Date] < @end
+            {_grouping.SqlWhereClause("j")} 
+        group by {_grouping.SelectFields("j")};
 
+        -- Main Select
         with T as (
-            -- Main Select
-            select [Store], [InSum] = sum(InSum), [OutSum] = sum(OutSum),
-            StoreGrp = grouping([Store])
+            select 
+                {_grouping.FieldsWithGrouping()},
+                {_grouping.AggregateDataFields()}
             from #tmpturn
-            group by rollup([Store])
+            where @Run = 1
+            group by rollup({_grouping.SimpleFields()})
         )
         select [RepData!TRepData!Group] = null, 
-            [Store.Id!TStore!Id] = T.Store, [Store.Name!TStore!Name] = isnull(s.[Name], N'@[Store.NoData]'), [InSum], OutSum,
-            [Store!!GroupMarker] = StoreGrp,
+            {_grouping.ReferenceWithGrouping()},
+            {_grouping.FullDataFields()}, 
             [Items!TRepData!Items] = null
         from T
-            left join cat.Stores s on T.Store = s.Id
-        order by StoreGrp desc;
-
-        -- TODO: remove
-        select [Temp!TTemp!Array] = null, *
-        from #tmpturn;
+            {_grouping.ReferenceJoins()}
+        where @Run = 1
+        order by {_grouping.ReferenceOrderByGrp()};
 
         select [Filter!TFilter!Object] = null, {String.Join(',', filterFields)},
+            [Group] = N'{_grouping.GroupParams}',
             [Period.From!TPeriod!] = @From, [Period.To!TPeriod!] = @To, Run = @Run, Tab = @Tab;
 
         {filterMaps}
+
+        {_grouping.RepInfoSql()}
         """;
 
         return sqlString;
@@ -122,29 +118,94 @@ internal class TurnoverReportBuilder(IServiceProvider serviceProvider, TableMeta
 
     public override UIElement CreatePage()
     {
-        SheetSection HeaderSection()
+        var dataCount = _grouping.Data.Count();
+        var headerRowCount = dataCount > 1 ? 2 : 1;
+
+        IEnumerable<SheetCell> dataCells()
         {
-            return new SheetSection()
+            yield return new SheetGroupCell();
+            yield return new SheetCell()
             {
-                Children = [
-                    new SheetRow()
-                    {
-                        Style = RowStyle.Header,
-                        Cells = [
-                            new SheetCell() {
-                                ColSpan = 2,
-                                Content = "H1"
-                            },
-                            new SheetCell() {
-                                Content = "H2"
-                            },
-                            new SheetCell() {
-                                Content = "H3"
-                            }
-                        ]
-                    }
-                ]
+                GroupIndent = true,
+                ColSpan = 2,
+                Bindings = b => b.SetBinding(nameof(SheetCell.Content), new Bind("$groupName"))
             };
+            foreach (var d in _grouping.Data)
+                yield return d.BindSheetCell("Start");
+            foreach (var d in _grouping.Data)
+                yield return d.BindSheetCell("In");
+            foreach (var d in _grouping.Data)
+                yield return d.BindSheetCell("Out");
+            foreach (var d in _grouping.Data)
+                yield return d.BindSheetCell("End");
+        }
+
+        IEnumerable<SheetCell> totalCells()
+        {
+            yield return new SheetCell();
+            yield return new SheetCell()
+            {
+                ColSpan = 2,
+                Content = "@[Total]"
+            };
+            foreach (var d in _grouping.Data)
+                yield return d.BindSheetCell("RepData.Start");
+            foreach (var d in _grouping.Data)
+                yield return d.BindSheetCell("RepData.In");
+            foreach (var d in _grouping.Data)
+                yield return d.BindSheetCell("RepData.Out");
+            foreach (var d in _grouping.Data)
+                yield return d.BindSheetCell("RepData.End");
+        }
+
+        IEnumerable<SheetCell> headerCellsRow1()
+        {
+            yield return new SheetCell()
+            {
+                RowSpan = headerRowCount,
+            };
+            yield return new SheetCell()
+            {
+                ColSpan = 2,
+                RowSpan = headerRowCount,
+                Content = String.Join(" / ", _grouping.Grouping.Select(g => g.LocalizeLabel()))
+            };
+            foreach (var d in "@[TurnOver.Start]|@[TurnOver.In]|@[TurnOver.Out]|@[TurnOver.End]".Split('|'))
+            {
+                yield return new SheetCell()
+                {
+                    ColSpan = dataCount,
+                    Content = d
+                };
+            }
+        }
+
+        IEnumerable<SheetCell> headerCellsRow2()
+        {
+            foreach (var r in Enumerable.Range(1, 4))
+                foreach (var d in _grouping.Data)
+                    yield return new SheetCell()
+                    {
+                        Content = d.LocalizeLabel(),
+                        Wrap = WrapMode.NoWrap
+                    };
+        }
+
+        IEnumerable<SheetRow> headerRows()
+        {
+            yield return new SheetRow()
+            {
+                Style = RowStyle.Header,
+                Cells = [.. headerCellsRow1()]
+            };
+            if (dataCount > 1)
+            {
+                yield return new SheetRow()
+                {
+                    Style = RowStyle.Header,
+                    Cells = [..headerCellsRow2()]
+                };
+            }
         }
 
         SheetSection TotalSection()
@@ -155,18 +216,7 @@ internal class TurnoverReportBuilder(IServiceProvider serviceProvider, TableMeta
                     new SheetRow()
                     {
                         Style = RowStyle.Total,
-                        Cells = [
-                            new SheetCell() {
-                                ColSpan = 2,
-                                Content = "Total"
-                            },
-                            new SheetCell() {
-                                Content = "T2"
-                            },
-                            new SheetCell() {
-                                Content = "T3"
-                            }
-                        ]
+                        Cells = [..totalCells()]
                     }
                 ]
             };
@@ -190,33 +240,15 @@ internal class TurnoverReportBuilder(IServiceProvider serviceProvider, TableMeta
                             GridLines = GridLinesVisibility.Both,
                             Bindings = b => b.SetBinding(nameof(Sheet.If), new Bind("Filter.Run")),
                             Sections = [
-                                HeaderSection(),
+                                new SheetSection() {
+                                    Children = [..headerRows()]
+                                },
                                 TotalSection(),
                                 new SheetTreeSection() {
                                     Bindings = b => b.SetBinding(nameof(SheetSection.ItemsSource), new Bind("RepData.Items")),
                                     Children = [
                                         new SheetRow() {
-                                            Cells = [
-                                                new SheetGroupCell(),
-                                                new SheetCell() {Content = "1", GroupIndent = true },
-                                                new SheetCell() {Content = "2" },
-                                                new SheetCell() {
-                                                    Align  = TextAlign.Center,
-                                                    Bindings = b => b.SetBinding(nameof(SheetCell.Content), new Bind("$groupName"))
-                                                },
-                                                new SheetCell() {
-                                                    Align  = TextAlign.Right,
-                                                    Bindings = b => b.SetBinding(nameof(SheetCell.Content), new BindSum("InSum"))
-                                                },
-                                                new SheetCell() {
-                                                    Align  = TextAlign.Right,
-                                                    Bindings = b => b.SetBinding(nameof(SheetCell.Content), new BindSum("OutSum"))
-                                                },
-                                                new SheetCell() {
-                                                    Align  = TextAlign.Right,
-                                                    Bindings = b => b.SetBinding(nameof(SheetCell.Content), new Bind("Id"))
-                                                },
-                                            ]
+                                            Cells = [..dataCells()]
                                         }
                                     ]
                                 }
@@ -224,13 +256,14 @@ internal class TurnoverReportBuilder(IServiceProvider serviceProvider, TableMeta
                             Header = [..CreateSheetHeader()],
                             Columns = [
                                 new SheetColumn() {
-                                    Width = Length.FromString("1rem"),
+                                    Width = Length.FromString("16px"),
                                 },
                                 new SheetColumn() {
-                                    Width = Length.FromString("1rem"),
+                                    Width = Length.FromString("4rem"),
                                 },
                                 new SheetColumn() {
-                                    Width = Length.FromString("5rem"),
+                                    Width = Length.FromString("100%"),
+                                    MinWidth = Length.FromString("Auto")
                                 }
                             ]
                         }

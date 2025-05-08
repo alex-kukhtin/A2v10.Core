@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
 
@@ -143,4 +143,10 @@ public class List : Control, ITableControl
 		panel.RenderEnd(context);
 	}
 
+    protected override void OnEndInit()
+    {
+        base.OnEndInit();
+        foreach (var el in Content)
+            el.SetParent(this);
+    }
 }
