@@ -257,6 +257,7 @@ internal class XamlBulder(EditWithMode _editWith)
             Width = Length.FromStringNull(source.Width),
             Multiline = source.Props?.Multiline == true,
             TabIndex = source.Props?.TabIndex ?? 0, 
+            Required = source.Props?.Required == true,
             Bindings = b => b.SetBinding(nameof(TextBox.Value), source.TypedBind())
         };
     }
@@ -271,6 +272,7 @@ internal class XamlBulder(EditWithMode _editWith)
             Placeholder = source.Props?.Placeholder.Localize(),
             ShowClear = source.Props?.ShowClear == true,
             LineClamp = source.Props?.LineClamp ?? 0,
+            Required = source.Props?.Required == true,
             Highlight = param == "taskpad",
             Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), new Bind(source.Data))
         };
@@ -282,6 +284,7 @@ internal class XamlBulder(EditWithMode _editWith)
             Label = source.Label.Localize(),
             CssClass = source.CssClass,
             Width = Length.FromStringNull(source.Width),
+            Required = source.Props?.Required == true,
             Bindings = b => b.SetBinding(nameof(DatePicker.Value), new Bind(source.Data))
         };
     }

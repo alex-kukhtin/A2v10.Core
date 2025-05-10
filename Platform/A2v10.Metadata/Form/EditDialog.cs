@@ -26,6 +26,7 @@ internal partial class BaseModelBuilder
                 Multiline = column.DataType == ColumnDataType.String && 
                     (column.MaxLength > Constants.MultilineThreshold || column.MaxLength == 0),
                 TabIndex = column.Role.HasFlag(TableColumnRole.Name) ? 1 : 0,
+                Required = column.Required
             },
             Width = column.DataType.ToWidth()
         };
