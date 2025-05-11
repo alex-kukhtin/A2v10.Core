@@ -3,6 +3,9 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Data;
+using System.ComponentModel.DataAnnotations;
+using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace A2v10.Metadata;
 
@@ -153,14 +156,46 @@ internal class DatabaseCreator(AppMetadata _meta)
         return String.Join('\n', refs);
     }
 
+    internal String MergeOperations()
+    {
+        return """
+        merge op.Operations as t
+        using @Operations as s
+        on t.Id = s.Id
+        when matched then update set
+            t.[Name] = s.[Name],
+            t.[Url] = s.[Url],
+            t.[Category] = s.[Category]
+        when not matched then insert
+            (Id, [Name], [Url], [Category]) values
+            (s.Id, s.[Name], s.[Url], [Category]);
+        """;
+    }
+
+    internal DataTable CreateOperationTable(IEnumerable<OperationMetadata> ops)
+    {
+        var dt = new DataTable();
+        dt.Columns.Add("Id", typeof(String)).MaxLength = 64;
+        dt.Columns.Add("Name", typeof(String)).MaxLength = 255;
+        dt.Columns.Add("Url", typeof(String)).MaxLength = 255;
+        dt.Columns.Add("Category", typeof(String)).MaxLength = 32;
+
+        foreach (var op in ops)
+        {
+            var dr = dt.NewRow();
+            dr["Id"] = op.Id;
+            dr["Name"] = op.Name ?? op.Id;
+            dr["Url"] = $"/operation/{op.Id.ToLowerInvariant()}/edit";
+            dr["Category"] = op.Category;
+            dt.Rows.Add(dr);
+        }
+        return dt;
+    }
+
     internal String CreateOperations(IEnumerable<OperationMetadata> ops)
     {
         if (!ops.Any())
             return String.Empty;
-
-        var opValues = ops.Select(op => $"""
-        (N'{op.Id}', N'{op.Name ?? op.Id}', N'/operation/{op.Id.ToLowerInvariant()}/edit')
-        """);
 
         return $"""
         if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'op' and TABLE_NAME=N'Operations')
@@ -171,24 +206,9 @@ internal class DatabaseCreator(AppMetadata _meta)
             [Void] bit not null
                 constraint DF_Operations_Void default(0),
             [Name] nvarchar(255),
+            [Category] nvarchar(255),
             [Url] nvarchar(255)
         );
-        
-        begin
-        declare @ops table(Id nvarchar(64), [Name] nvarchar(255), [Url] nvarchar(255));
-        insert into @ops(Id, [Name], [Url]) values
-        {String.Join(",\n", opValues)};
-        
-        merge op.Operations as t
-        using @ops as s
-        on t.Id = s.Id
-        when matched then update set
-            t.[Name] = s.[Name],
-            t.[Url] = s.[Url]
-        when not matched then insert
-            (Id, [Name], [Url]) values
-            (s.Id, s.[Name], s.[Url]);
-        end
         """;
     }
 }

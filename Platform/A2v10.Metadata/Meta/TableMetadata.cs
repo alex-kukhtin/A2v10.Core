@@ -202,14 +202,15 @@ public record TableMetadata
     internal Boolean HasSequence => PrimaryKeys.Count() == 1 && PrimaryKeys.First().DataType == ColumnDataType.Id;
 }
 
-public record OperationMetadata(String Id, String? Name);
+public record OperationMetadata(String Id, String? Name, String? Category);
 
 public record AppMetadata
 {
+    public Guid Id { get; init; } = default!;
     public ColumnDataType IdDataType { get; init; }
     public TableMetadata[] Tables { get; init; } = [];
-    public OperationMetadata[] Operations { get; init; } = []; 
-
+    public OperationMetadata[] Operations { get; init; } = [];
+    public String Title { get; init; } = default!;
     // internal
     internal static AppMetadata FromDataModel(IDataModel model)
     {

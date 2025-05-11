@@ -1,10 +1,9 @@
 /*
 Copyright © 2025 Oleksandr Kukhtin
 
-Last updated : 26 apr 2025
+Last updated : 11 may 2025
 module version : 8541
 */
-
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.SCHEMATA where SCHEMA_NAME=N'a2meta')
 	exec sp_executesql N'create schema a2meta authorization dbo';
@@ -61,7 +60,9 @@ create table a2meta.[Application]
 	[Name] nvarchar(255),
 	[Title] nvarchar(255),
 	IdDataType nvarchar(32),
-	Memo nvarchar(255)
+	Memo nvarchar(255),
+	[Version] int not null
+		constraint DF_Application_Version default(0)
 );
 go
 ------------------------------------------------
@@ -79,7 +80,9 @@ create table a2meta.[DefaultColumns]
 	Ref nvarchar(32),
 	[Role] int not null
 		constraint DF_DefaultColumns_Role default(0),
-	[Order] int not null
+	[Order] int not null,
+	[Required] bit not null
+		constraint DF_DefaultColumns_Required default(0)
 );
 go
 ------------------------------------------------
@@ -454,75 +457,81 @@ begin
 	select @root, IsFolder, [Schema], [Kind], [Name], [Order] from @cat;
 
 	declare @defCols table([Schema] nvarchar(32), Kind nvarchar(32), [Name] nvarchar(255), 	[DataType] nvarchar(32),
-		[MaxLength] int, Ref nvarchar(32), [Role] int, [Order] int);
+		[MaxLength] int, Ref nvarchar(32), [Role] int, [Order] int, [Required] bit);
 
-	insert into @defCols([Order], [Schema], Kind, [Name], [Role], DataType, [MaxLength], Ref) values
+	insert into @defCols([Order], [Schema], Kind, [Name], [Role], [Required], DataType, [MaxLength], Ref) values
 	-- Catalog
-	(1, N'cat', N'table', N'Id',         1, N'id', null, null),
-	(2, N'cat', N'table', N'Void',      16, N'bit', null, null),
-	(3, N'cat', N'table', N'IsSystem', 128, N'bit', null, null),
-	(4, N'cat', N'table', N'Name',       2, N'string',    200, null),
-	(5, N'cat', N'table', N'Memo',       0, N'string',    255, null),
+	(1, N'cat', N'table', N'Id',         1, 0, N'id', null, null),
+	(2, N'cat', N'table', N'Void',      16, 0, N'bit', null, null),
+	(3, N'cat', N'table', N'IsSystem', 128, 0, N'bit', null, null),
+	(4, N'cat', N'table', N'Name',       2, 1, N'string',    100, null),
+	(5, N'cat', N'table', N'Memo',       0, 0, N'string',    255, null),
 
 	-- Document
-	(1, N'doc', N'table', N'Id',         1, N'id',       null, null),
-	(2, N'doc', N'table', N'Void',      16, N'bit',      null, null),
-	(3, N'doc', N'table', N'Done',     256, N'bit',      null, null),
-	(4, N'doc', N'table', N'Date',       0, N'date',     null, null),
-	(5, N'doc', N'table', N'Number',  2048, N'string',     32, null),
-	(6, N'doc', N'table', N'Name',       2, N'string',    200, null), -- todo: computed
-	(7, N'doc', N'table', N'Sum',        0, N'money',    null, null),
-	(8, N'doc', N'table', N'Memo',       0, N'string',    255, null),
+	(1, N'doc', N'table', N'Id',         1, 0, N'id',        null, null),
+	(2, N'doc', N'table', N'Void',      16, 0, N'bit',       null, null),
+	(3, N'doc', N'table', N'Done',     256, 0, N'bit',       null, null),
+	(4, N'doc', N'table', N'Date',       0, 0, N'date',      null, null),
+	(5, N'doc', N'table', N'Number',  2048, 0, N'string',      32, null),
+	(6, N'doc', N'table', N'Operation',  0, 0, N'operation', null, null),
+	(7, N'doc', N'table', N'Name',       2, 0, N'string',     100, null), -- todo: computed
+	(8, N'doc', N'table', N'Sum',        0, 0, N'money',     null, null),
+	(9, N'doc', N'table', N'Memo',       0, 0, N'string',     255, null),
 	
 	-- cat.Details
-	(1, N'cat', N'details', N'Id',      1, N'id',  null, null),
-	(2, N'cat', N'details', N'Parent', 32, N'reference', null, N'parent'),
-	(3, N'cat', N'details', N'RowNo',   8, N'int', null, null),
+	(1, N'cat', N'details', N'Id',      1, 0, N'id',  null, null),
+	(2, N'cat', N'details', N'Parent', 32, 0, N'reference', null, N'parent'),
+	(3, N'cat', N'details', N'RowNo',   8, 0, N'int', null, null),
 
 	-- doc.Details
-	(1, N'doc', N'details', N'Id',       1, N'id',   null, null),
-	(2, N'doc', N'details', N'Parent',  32, N'reference',  null, N'parent'),
-	(3, N'doc', N'details', N'RowNo',    8, N'int',  null, null),
-	(4, N'doc', N'details', N'Kind',   512, N'string', 32, null),
-	(5, N'doc', N'details', N'Qty',      0, N'float',null, null),
-	(5, N'doc', N'details', N'Sum',      0, N'money',null, null),
+	(1, N'doc', N'details', N'Id',       1, 0, N'id',   null, null),
+	(2, N'doc', N'details', N'Parent',  32, 0, N'reference',  null, N'parent'),
+	(3, N'doc', N'details', N'RowNo',    8, 0, N'int',  null, null),
+	(4, N'doc', N'details', N'Kind',   512, 0, N'string', 32, null),
+	(5, N'doc', N'details', N'Qty',      0, 1, N'float',null, null),
+	(6, N'doc', N'details', N'Price',    0, 1, N'float',null, null),
+	(7, N'doc', N'details', N'Sum',      0, 0, N'money',null, null),
 	
 	-- jrn.Journal
-	(1, N'jrn', N'table', N'Id',       1, N'id',       null, null),
-	(2, N'jrn', N'table', N'Date',     0, N'datetime', null, null),
-	(3, N'jrn', N'table', N'InOut',    0, N'int',      null, null),
-	(4, N'jrn', N'table', N'Qty',      0, N'float',    null, null),
-	(5, N'jrn', N'table', N'Sum',      0, N'money',    null, null);
+	(1, N'jrn', N'table', N'Id',       1, 0, N'id',       null, null),
+	(2, N'jrn', N'table', N'Date',     0, 0, N'datetime', null, null),
+	(3, N'jrn', N'table', N'InOut',    0, 0, N'int',      null, null),
+	(4, N'jrn', N'table', N'Qty',      0, 0, N'float',    null, null),
+	(5, N'jrn', N'table', N'Sum',      0, 0, N'money',    null, null),
 
-	insert into a2meta.DefaultColumns ([Schema], Kind, [Name], DataType, [MaxLength], Ref, [Role], [Order]) 
-	select [Schema], Kind, [Name], DataType, [MaxLength], Ref, [Role], [Order]
+	-- op.Operations
+	(1, N'op', N'optable', N'Id',       1, 0, N'id',      null, null),
+	(2, N'op', N'optable', N'Name',     2, 0, N'string',    64, null),
+	(3, N'op', N'optable', N'Url',      0, 0, N'string',   255, null),
+	(4, N'op', N'optable', N'Category', 0, 0, N'string',    32, null),
+	(5, N'op', N'optable', N'Void',    16, 0, N'bit',     null, null);
+
+	insert into a2meta.DefaultColumns ([Schema], Kind, [Name], DataType, [MaxLength], Ref, [Role], [Order], [Required])
+	select [Schema], Kind, [Name], DataType, [MaxLength], Ref, [Role], [Order], [Required]
 	from @defCols;
 
 	declare @appId uniqueidentifier;
 	select @appId = Id from a2meta.[Catalog] where IsFolder = 0 and Kind = N'app';
 
-	insert into a2meta.[Application] (Id, [Name], Title, IdDataType)
-	values (@appId, N'MyApplication', N'My Application', N'bigint');
+	insert into a2meta.[Application] (Id, [Name], Title, IdDataType, [Version])
+	values (@appId, N'MyApplication', N'My Application', N'bigint', 1);
 
 	declare @sections table ([Schema] nvarchar(32), [Name] nvarchar(255), [Order] int)
 	insert into @sections([Schema], [Name], [Order]) values 
 	(N'ui', N'@General', 1),
 	(N'ui', N'@Documents', 2),
-	(N'ui', N'@Catalogs', 3);
+	(N'ui', N'@Catalogs', 3),
+	(N'ui', N'@Reports', 4);
 
 	insert into a2meta.DefaultSections ([Schema], [Name], [Order])
 	select [Schema], [Name], [Order] from @sections;
 
-	/* TODO: колонки дл€ таблицы операций - оно должно создаватьс€ через Config.CreateTable.
+	declare @opTableId uniqueidentifier;
+	select @opTableId = Id from a2meta.[Catalog] where [Schema] = N'op' and IsFolder = 1 and Kind = N'folder';
 
-insert into a2meta.Columns ([Table], [Name], [DataType], [MaxLength], [Role], [Order]) values
-(N'36CB0618-F8E0-48A2-984E-1BD6D7C80935', N'Id', N'string', 64, 1, 1),
-(N'36CB0618-F8E0-48A2-984E-1BD6D7C80935', N'Name', N'string', 255, 2, 2);
-
-insert into a2meta.Columns ([Table], [Name], [DataType], [MaxLength], [Role], [Order]) values
-(N'36CB0618-F8E0-48A2-984E-1BD6D7C80935', N'Void', N'bit', 0, 16, 3);
-
-	*/
+	insert into a2meta.Columns ([Table], [Name], [DataType], [MaxLength], [Role], [Order])
+	select @opTableId, [Name], [DataType], [MaxLength], [Role], [Order] from a2meta.DefaultColumns
+	where [Schema] = N'op' and Kind = N'optable';
 
 end
 go
@@ -580,7 +589,7 @@ begin
 	declare @appId uniqueidentifier;
 	select @appId = Id from a2meta.[Catalog] where [Kind] = N'app' and IsFolder = 0 and Parent = @rootId;
 
-	select [Application!TApp!Object] = null, [!!Id] = @appId, IdDataType,
+	select [Application!TApp!Object] = null, [Id!!Id] = @appId, IdDataType, [Name], [Title],
 		[Tables!TTable!Array] = null,
 		[Operations!TOperation!Array] = null
 	from a2meta.[Application] where Id = @appId
@@ -604,25 +613,27 @@ begin
 	where t.Kind <> N'folder'
 	order by c.[Order]; -- Used for create TableType
 
-	select 	[!TOperation!Array] = null, [Id] = op.[Name], [Name] = ItemLabel,
+	select 	[!TOperation!Array] = null, [Id] = op.[Name], [Name] = ItemLabel, Category = [Type],
 		[!TApp.Operations!ParentId] = @appId
 	from a2meta.[Catalog] op
 	where [Schema] = N'op' and IsFolder = 0 and Kind = N'operation';
 end
 go
 ------------------------------------------------
-declare @Schema nvarchar(255) = N'doc';
-declare @Table nvarchar(255) = N'ѕоступление“оваров”слуг';
-
-exec a2meta.[Table.Schema] @Schema, @Table;
-
-/*
-*/
-
-
---select * from a2meta.TablesMetadata;
-
-select * from sys.foreign_keys
+drop type if exists a2meta.[Operation.TableType];
+go
+------------------------------------------------
+create type a2meta.[Operation.TableType] as table
+(
+	Id nvarchar(64),
+	[Name] nvarchar(255),
+	[Url] nvarchar(255),
+	Category nvarchar(32)
+);
+go
+------------------------------------------------
+exec a2meta.[Catalog.Init];
+go
 
 /*
 with T as (
@@ -705,13 +716,10 @@ drop table if exists a2meta.[Columns]
 drop table if exists a2meta.[Items]
 drop table if exists a2meta.[Catalog]
 
-exec a2meta.[Catalog.Init];
-
 select * from a2meta.DefaultSections;
 
 select * from a2meta.ODataTables;
 select * from a2meta.ODataColumns order by [Name];
-
 */
 
 

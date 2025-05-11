@@ -8434,6 +8434,10 @@ td.vert > .vcell {
 .h-100 {
   height: 100%;
 }
+.input-code input {
+  font-family: 'Consolas', 'Courier New', Courier, monospace;
+  font-weight: 600;
+}
 .debug-panel {
   position: absolute;
   top: 0;

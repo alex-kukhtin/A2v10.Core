@@ -45,7 +45,7 @@ internal class DataTableBuilder(TableMetadata table, AppMetadata appMeta)
         foreach (var f in table.Columns.OrderBy(c => c.DbOrder))
         {
             var c = new DataColumn(f.Name, f.ClrDataType(appMeta.IdDataType));
-            if (f.MaxLength != 0)
+            if (f.MaxLength != 0 && f.DataType == ColumnDataType.String)
                 c.MaxLength = f.MaxLength;
             dtable.Columns.Add(c);
         }
