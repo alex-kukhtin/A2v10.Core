@@ -15,6 +15,8 @@ using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Xaml;
 using A2v10.Xaml.DynamicRendrer;
+using System.Text;
+using DocumentFormat.OpenXml.Drawing.Charts;
 
 namespace A2v10.Metadata;
 
@@ -59,6 +61,22 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
             "edit" => await CreateEditTemplate(),
             _ => throw new NotImplementedException($"Create template for {Action}")
         };
+    }
+
+    public static String EnumsMapSql(IEnumerable<ReferenceMember> refs, Boolean isFilter)
+    {
+        var sb = new StringBuilder();
+        var where = isFilter ? "" : " where e.[Id] <> N''";
+        foreach (var r in refs.Where(c => c.Column.DataType == ColumnDataType.Enum))
+        {
+            sb.AppendLine($"""
+                select [{r.Table.RealItemsName}!TR{r.Table.RealItemName}!Map] = null, [Id!!Id] = e.Id, [Name!!Name] = e.[Name]
+                from {r.Table.SqlTableName} e
+                {where}
+                order by e.[Order];
+                """);
+        }
+        return sb.ToString();
     }
 
     public Form CreateDefaultForm()

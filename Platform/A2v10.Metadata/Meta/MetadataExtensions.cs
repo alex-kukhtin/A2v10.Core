@@ -7,8 +7,6 @@ using System.Collections.Generic;
 using A2v10.Infrastructure;
 using A2v10.Services;
 using A2v10.Xaml;
-using DocumentFormat.OpenXml.Wordprocessing;
-using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 
 namespace A2v10.Metadata;
 
@@ -125,6 +123,61 @@ internal static class MetadataExtensions
     internal static String CreateField(this ReportItemMetadata item, ColumnDataType idDataType, String? prefix = null)
     {
         return $"[{prefix}{item.Column}] {item.DataType.ToSqlDbType(idDataType).ToString().ToLowerInvariant()}";
+    }
+
+    internal static TableMetadata CreateOperationMeta()
+    {
+        return new TableMetadata()
+        {
+            Schema = "op",
+            Name = "Operations",
+            Columns = [
+                new TableColumn()
+                {
+                    Name = "Id",
+                    DataType = ColumnDataType.String,
+                    MaxLength = 16,
+                    Role = TableColumnRole.PrimaryKey,
+                },
+                new TableColumn()
+                {
+                    Name = "Name",
+                    DataType = ColumnDataType.String,
+                    MaxLength = 255,
+                    Role = TableColumnRole.Name,
+                },
+                new TableColumn()
+                {
+                    Name = "Url",
+                    DataType = ColumnDataType.String,
+                    MaxLength = 255
+                }
+            ]
+        };
+    }
+    internal static TableMetadata CreateEnumMeta(TableColumn col)
+    {
+        return new TableMetadata()
+        {
+            Schema = col.Reference.RefSchema,
+            Name = col.Reference.RefTable,
+            Columns = [
+                new TableColumn()
+                    {
+                        Name = "Id",
+                        DataType = ColumnDataType.String,
+                        MaxLength = 16,
+                        Role = TableColumnRole.PrimaryKey,
+                    },
+                    new TableColumn()
+                    {
+                        Name = "Name",
+                        DataType = ColumnDataType.String,
+                        MaxLength = 255,
+                        Role = TableColumnRole.Name,
+                    }
+            ]
+        };
     }
 
     internal static String LocalizeLabel(this ReportItemMetadata item)

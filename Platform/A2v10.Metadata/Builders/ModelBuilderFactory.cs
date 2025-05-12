@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using A2v10.Infrastructure;
-using A2v10.Services;
 
 namespace A2v10.Metadata;
 
@@ -59,42 +58,14 @@ internal partial class ModelBuilderFactory(
 
     internal async Task<IEnumerable<ReferenceMember>> ReferenceFieldsAsync(String? dataSource, TableMetadata table)
     {
-        TableMetadata CreateOperationMeta()
-        {
-            return new TableMetadata()
-            {
-                Schema = "op",
-                Name = "Operations",
-                Columns = new List<TableColumn>()
-                {
-                    new TableColumn()
-                    {
-                        Name = "Id",
-                        DataType = ColumnDataType.String,
-                        MaxLength = 16,
-                        Role = TableColumnRole.PrimaryKey,
-                    },
-                    new TableColumn()
-                    {
-                        Name = "Name",
-                        DataType = ColumnDataType.String,
-                        MaxLength = 255,
-                        Role = TableColumnRole.Name,
-                    },
-                    new TableColumn()
-                    {
-                        Name = "Url",
-                        DataType = ColumnDataType.String,
-                        MaxLength = 255
-                    },
-                },
-            };
-        }
         async Task<ReferenceMember> CreateMember(TableColumn column, Int32 index)
         {
-            var table = column.DataType == ColumnDataType.Operation ?
-                CreateOperationMeta()
-                : await _metadataProvider.GetSchemaAsync(dataSource, column.Reference.RefSchema, column.Reference.RefTable);
+            var table = column.DataType switch
+            {
+                ColumnDataType.Operation => MetadataExtensions.CreateOperationMeta(),
+                ColumnDataType.Enum => MetadataExtensions.CreateEnumMeta(column),
+                _ => await _metadataProvider.GetSchemaAsync(dataSource, column.Reference.RefSchema, column.Reference.RefTable)
+            };
             return new ReferenceMember(column, table, index);
         }
         Int32 index = 0;

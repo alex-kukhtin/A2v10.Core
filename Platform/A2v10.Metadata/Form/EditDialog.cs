@@ -13,6 +13,9 @@ internal partial class BaseModelBuilder
         String? prm = null;
         if (column.IsReference)
             prm = column.Reference.EndpointPath();
+        String? itemsSource = null;
+        if (column.IsReference)
+            itemsSource = column.Reference.RefTable;
         return new FormItem()
         {
             Is = column.Column2Is(),
@@ -20,15 +23,16 @@ internal partial class BaseModelBuilder
             Label = column.Label ?? $"@{column.Name}",
             Data = $"{_table.RealItemName}.{column.Name}",
             DataType = column.ToItemDataType(),
+            Width = column.DataType.ToWidth(),
             Props = new FormItemProps()
             {
                 Url = prm,
+                ItemsSource = itemsSource,
                 Multiline = column.DataType == ColumnDataType.String && 
                     (column.MaxLength > Constants.MultilineThreshold || column.MaxLength == 0),
                 TabIndex = column.Role.HasFlag(TableColumnRole.Name) ? 1 : 0,
-                Required = column.Required
-            },
-            Width = column.DataType.ToWidth()
+                Required = column.Required,
+            }
         };
     }
 

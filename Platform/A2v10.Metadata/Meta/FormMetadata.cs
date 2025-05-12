@@ -32,6 +32,7 @@ public enum FormItemIs
     SearchBox,
     Content, // for cells
     Selector,
+    ComboBox,
     DatePicker,
     PeriodPicker,
     CheckBox,
@@ -123,6 +124,7 @@ public record FormItemProps
     public Boolean Fit { get; init; }   
     public Boolean NoWrap { get; init; }    
     public Boolean Required { get; init; }
+    public String? ItemsSource { get; init; }
 }
 
 public record FormItem

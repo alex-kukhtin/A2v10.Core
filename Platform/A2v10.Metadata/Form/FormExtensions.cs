@@ -11,7 +11,8 @@ internal static class FormExtensions
     public static FormItemIs Column2Is(this TableColumn column)
     {
         if (column.IsReference)
-            return FormItemIs.Selector;
+            return column.DataType == ColumnDataType.Enum 
+                ? FormItemIs.ComboBox : FormItemIs.Selector;
         if (column.Role.HasFlag(TableColumnRole.RowNo))
             return FormItemIs.Content;
         if (!String.IsNullOrEmpty(column.Computed))

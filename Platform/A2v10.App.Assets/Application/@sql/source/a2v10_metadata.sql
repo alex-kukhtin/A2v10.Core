@@ -1,8 +1,8 @@
 /*
 Copyright © 2025 Oleksandr Kukhtin
 
-Last updated : 11 may 2025
-module version : 8541
+Last updated : 12 may 2025
+module version : 8547
 */
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.SCHEMATA where SCHEMA_NAME=N'a2meta')
@@ -124,6 +124,21 @@ create table a2meta.[ReportItems]
 	[Label] nvarchar(255),
 	Func nvarchar(32), -- for Data - Year, Quart, Month
 	[Checked] bit -- for Grouping
+);
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'EnumItems')
+create table a2meta.EnumItems
+(
+	[Id] uniqueidentifier not null
+		constraint DF_EnumItems_Id default(newid())
+		constraint PK_EnumItems primary key,
+	[Enum] uniqueidentifier not null
+		constraint FK_EnumItems_Report_Catalog references a2meta.[Catalog](Id),
+	[Name] nvarchar(16) not null,
+	[Label] nvarchar(255),
+	[Order] int not null,
+	[Inactive] bit
 );
 go
 ------------------------------------------------
@@ -328,6 +343,9 @@ create or alter procedure a2meta.[Operation.Schema]
 @Table sysname
 as
 begin
+	set nocount on;
+	set transaction isolation level read uncommitted;
+
 	declare @tableId uniqueidentifier;
 
 	select @tableId = Id from a2meta.[Catalog] r 
@@ -354,6 +372,9 @@ create or alter procedure a2meta.[Report.Schema]
 @Table sysname
 as
 begin
+	set nocount on;
+	set transaction isolation level read uncommitted;
+
 	declare @tableId uniqueidentifier;
 
 	select @tableId = Id from a2meta.[Catalog] r 
@@ -378,6 +399,36 @@ begin
 		left join a2meta.[Catalog] t on c.Reference = t.Id
 	where ri.Report = @tableId
 	order by ri.[Order];
+end
+go
+------------------------------------------------
+create or alter procedure a2meta.[Enum.Schema]
+@Schema sysname,
+@Table sysname
+as
+begin
+	set nocount on;
+	set transaction isolation level read uncommitted;
+
+	declare @tableId uniqueidentifier;
+
+	select @tableId = Id from a2meta.[Catalog] r 
+	where r.[Schema] = @Schema collate SQL_Latin1_General_CP1_CI_AI
+		and r.[Name] = @Table collate SQL_Latin1_General_CP1_CI_AI
+		and r.Kind in (N'enum');
+
+	select [Table!TTable!Object] = null, [!!Id] = c.Id, c.[Schema], c.[Name],
+		[EnumValues!TEnumValue!Array] = null
+	from a2meta.[Catalog] c 
+		left join a2meta.[Catalog] pt on c.ParentTable = pt.Id
+	where c.Id = @tableId and c.Kind in (N'enum');
+
+	select [!TEnumValue!Array] = null, [Id] = ei.[Name], [Name] = ei.[Label], ei.[Order],
+		ei.Inactive,
+		[!TTable.EnumValues!ParentId] = ei.Enum
+	from a2meta.EnumItems ei
+	where ei.Enum = @tableId
+	order by ei.[Order];
 end
 go
 ------------------------------------------------
@@ -561,6 +612,7 @@ begin
 		when N'rep' then N'Report'
 		when N'op'  then N'Operation'
 		when N'acc' then N'Account'
+		when N'enm' then N'Enum'
 		when N'regi' then N'InfoRegister'
 		else N'Undefined'
 	end;
@@ -591,7 +643,8 @@ begin
 
 	select [Application!TApp!Object] = null, [Id!!Id] = @appId, IdDataType, [Name], [Title],
 		[Tables!TTable!Array] = null,
-		[Operations!TOperation!Array] = null
+		[Operations!TOperation!Array] = null,
+		[Enums!TEnum!Array] = null
 	from a2meta.[Application] where Id = @appId
 
 	select [!TTable!Array] = null, [Id!!Id] = Id, c.[Schema], c.[Name], c.[Kind], 
@@ -617,10 +670,22 @@ begin
 		[!TApp.Operations!ParentId] = @appId
 	from a2meta.[Catalog] op
 	where [Schema] = N'op' and IsFolder = 0 and Kind = N'operation';
+
+	select 	[!TEnum!Array] = null, [Id!!Id] = e.Id, e.[Name],
+		[Values!TEnumValue!Array] = null,
+		[!TApp.Enums!ParentId] = @appId
+	from a2meta.[Catalog] e
+	where [Schema] = N'enm' and IsFolder = 0 and Kind = N'enum';
+
+	select [!TEnumValue!Array] = null, [Id] = [Name], [Name] = [Label], Inactive, [Order],
+		[!TEnum.Values!ParentId] = Enum
+	from a2meta.EnumItems
+	order by [Enum], [Order];
 end
 go
 ------------------------------------------------
 drop type if exists a2meta.[Operation.TableType];
+drop type if exists a2meta.[Enum.TableType];
 go
 ------------------------------------------------
 create type a2meta.[Operation.TableType] as table
@@ -629,6 +694,15 @@ create type a2meta.[Operation.TableType] as table
 	[Name] nvarchar(255),
 	[Url] nvarchar(255),
 	Category nvarchar(32)
+);
+go
+------------------------------------------------
+create type a2meta.[Enum.TableType] as table
+(
+	Id nvarchar(16),
+	[Name] nvarchar(255),
+	[Order] int,
+	Inactive bit
 );
 go
 ------------------------------------------------

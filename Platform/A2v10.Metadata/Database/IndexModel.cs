@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using A2v10.Infrastructure;
 using A2v10.Data.Interfaces;
 using A2v10.Data.Core.Extensions;
+using System.Text;
 
 namespace A2v10.Metadata;
 
@@ -119,6 +120,14 @@ internal partial class BaseModelBuilder
             """));
         }
 
+        String filterEnumCheck()
+        {
+            var sb = new StringBuilder();
+            foreach (var r in refFieldsFilter.Where(c => c.Column.IsEnum))
+                 sb.AppendLine($"set @{r.Column.Name} = isnull(@{r.Column.Name}, N'');");
+            return sb.ToString();
+        }
+
         String filterPeriod()
         {
             if (!_table.HasPeriod())
@@ -141,7 +150,7 @@ internal partial class BaseModelBuilder
         set @Dir = lower(@Dir);
         {defaultPeriod()}
         declare @fr nvarchar(255) = N'%' + @Fragment + N'%';
-                
+        
         select [{collectionName}!{_table.RealTypeName}!Array] = null,
             {String.Join(",", _table.AllSqlFields(refFields, "a"))},
             [!!RowCount]  = count(*) over()        
@@ -151,6 +160,11 @@ internal partial class BaseModelBuilder
         order by {sqlOrder} {dir}
         offset @Offset rows fetch next @PageSize rows only;
         
+        {EnumsMapSql(_refFields, true)}
+
+        -- After select, before $System.
+        {filterEnumCheck()}
+
         declare @ft table(Id int);
         insert into @ft (Id) values (1);
         -- system data

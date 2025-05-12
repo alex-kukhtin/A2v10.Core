@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
+using DocumentFormat.OpenXml.Drawing.Charts;
 
 namespace A2v10.Metadata;
 
@@ -78,6 +79,7 @@ public record TableColumn
     public Boolean Required { get; init; }
     #endregion
     internal Boolean IsReference => Reference != null && Reference.RefTable != null;
+    internal Boolean IsEnum => IsReference && DataType == ColumnDataType.Enum;
     internal Boolean IsBlob => DataType == ColumnDataType.Stream;
     internal Boolean Exists => DbName != null && DbDataType != null;
 
@@ -204,12 +206,16 @@ public record TableMetadata
 
 public record OperationMetadata(String Id, String? Name, String? Category);
 
+public record EnumValueMetadata(String Id, String Name, Int32 Order, Boolean? Inactive);
+public record EnumMetadata(String Name, EnumValueMetadata[] Values);
+
 public record AppMetadata
 {
     public Guid Id { get; init; } = default!;
     public ColumnDataType IdDataType { get; init; }
     public TableMetadata[] Tables { get; init; } = [];
     public OperationMetadata[] Operations { get; init; } = [];
+    public EnumMetadata[] Enums { get; init; } = [];
     public String Title { get; init; } = default!;
     // internal
     internal static AppMetadata FromDataModel(IDataModel model)

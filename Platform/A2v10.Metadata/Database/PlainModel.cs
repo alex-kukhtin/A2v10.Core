@@ -96,6 +96,8 @@ internal partial class BaseModelBuilder
 
         {await DetailsContentAsync()}
 
+        {EnumsMapSql(tableRefFields, false)}
+
         {SystemRecordset()}
 
         """;

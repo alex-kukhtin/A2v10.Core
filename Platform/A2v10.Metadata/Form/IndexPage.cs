@@ -77,17 +77,31 @@ internal partial class BaseModelBuilder
 
             FormItem CreateFilter(TableColumn column, Int32 gridRow)
             {
-                return new FormItem(FormItemIs.Selector)
+                String? url = null;
+                String? itemsSource = null;
+                Int32 lineClamp = 0;
+                Boolean showClear = false;
+                if (column.IsReference && !column.IsEnum)
                 {
+                    url = column.Reference.EndpointPath();
+                    lineClamp = 2;
+                    showClear = true;
+                }
+                if (column.IsEnum)
+                    itemsSource = column.Reference.RefTable;
+                return new FormItem()
+                {
+                    Is = column.Column2Is(),
                     Label = column.Label ?? $"@{column.Name}",
                     Data = $"Parent.Filter.{column.Name}",
                     Grid = new FormItemGrid(gridRow, 1),
                     Props = new FormItemProps()
                     {
-                        Url = column.Reference.EndpointPath(),
+                        Url = url,
                         Placeholder = $"@{column.Reference.RefTable}.All",
-                        ShowClear = true,
-                        LineClamp = 2
+                        ShowClear = showClear,
+                        LineClamp = lineClamp,
+                        ItemsSource = itemsSource,
                     }
                 };
             }

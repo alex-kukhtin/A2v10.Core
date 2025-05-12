@@ -71,6 +71,7 @@ internal class XamlBulder(EditWithMode _editWith)
             FormItemIs.Toolbar => CreateToolbar(item),
             FormItemIs.TextBox => CreateTextBox(item),
             FormItemIs.Selector => CreateSelector(item, param),
+            FormItemIs.ComboBox => CreateComboBox(item, param),
             FormItemIs.DatePicker => CreateDatePicker(item),
             FormItemIs.PeriodPicker => CreatePeriodPicker(item, param),
             FormItemIs.CheckBox => CreateCheckBox(item),
@@ -275,6 +276,28 @@ internal class XamlBulder(EditWithMode _editWith)
             Required = source.Props?.Required == true,
             Highlight = param == "taskpad",
             Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), new Bind(source.Data))
+        };
+    }
+    private ComboBox CreateComboBox(FormItem source, String? param)
+    {
+        return new ComboBox()
+        {
+            Label = source.Label.Localize(),
+            Width = Length.FromStringNull(source.Width),
+            Required = source.Props?.Required == true,
+            Bindings = b => { 
+                b.SetBinding(nameof(ComboBox.Value), new Bind(source.Data));
+                b.SetBinding(nameof(ComboBox.ItemsSource), new Bind(source?.Props?.ItemsSource 
+                    ?? throw new InvalidOperationException("ComboBox. ItemsSource is null")));
+            },
+            Children = [
+                new ComboBoxItem() {
+                    Bindings = b => {
+                        b.SetBinding(nameof(ComboBoxItem.Content), new Bind("Name"));
+                        b.SetBinding(nameof(ComboBoxItem.Value), new Bind());
+                    }
+                }
+            ]
         };
     }
     private DatePicker CreateDatePicker(FormItem source)

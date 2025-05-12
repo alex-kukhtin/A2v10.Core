@@ -14,7 +14,8 @@ internal static class SqlExtensions
         return columnDataType switch
         {
             ColumnDataType.Id or ColumnDataType.Reference => idDataType.ToSqlDbType(idDataType),
-            ColumnDataType.Operation => SqlDbType.NVarChar,   
+            ColumnDataType.Operation => SqlDbType.NVarChar,
+            ColumnDataType.Enum => SqlDbType.NVarChar,
             ColumnDataType.BigInt => SqlDbType.BigInt,
             ColumnDataType.Int => SqlDbType.Int,
             ColumnDataType.SmallInt => SqlDbType.SmallInt,
@@ -36,8 +37,9 @@ internal static class SqlExtensions
         return column.DataType switch
         {
             ColumnDataType.Id => idDataStr,
-            ColumnDataType.Reference or ColumnDataType.Enum => idDataStr,
+            ColumnDataType.Reference => idDataStr,
             ColumnDataType.Operation => "nvarchar(64)",
+            ColumnDataType.Enum => "nvarchar(16)",
             ColumnDataType.String => $"nvarchar({maxLength})",
             ColumnDataType.NVarChar => $"nvarchar({maxLength})",
             ColumnDataType.NChar => $"nchar({maxLength})",
@@ -56,9 +58,9 @@ internal static class SqlExtensions
         };
         return column.DataType switch
         {
-            ColumnDataType.Id or ColumnDataType.Reference 
-                or ColumnDataType.Enum => idType,
-            ColumnDataType.Operation => typeof(String),                
+            ColumnDataType.Id or ColumnDataType.Reference => idType,
+            ColumnDataType.Operation => typeof(String),
+            ColumnDataType.Enum => typeof(String),
             ColumnDataType.BigInt => typeof(Int64),
             ColumnDataType.String or ColumnDataType.NVarChar or
                 ColumnDataType.NChar => typeof(String),

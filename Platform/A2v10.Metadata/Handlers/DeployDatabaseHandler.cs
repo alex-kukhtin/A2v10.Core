@@ -60,7 +60,6 @@ public class DeployDatabaseHandler(IServiceProvider _serviceProvider) : IClrInvo
 
         await UpdateMetadataAsync(meta);
 
-
         var dbCreator = new DatabaseCreator(meta);
 
         Task SendSignalAsync(String kind, TableMetadata table, Int32 index)
@@ -79,7 +78,21 @@ public class DeployDatabaseHandler(IServiceProvider _serviceProvider) : IClrInvo
             );
         }
 
+        foreach (var e in meta.Enums)
+        {
+            var createTable = dbCreator.CreateEnum(e);
+            if (!String.IsNullOrEmpty(createTable))
+                await _dbContext.LoadModelSqlAsync(null, createTable);
+            var enumTable = dbCreator.CreateEnumTable(e);
+            await _dbContext.LoadModelSqlAsync(null, dbCreator.MergeEnums(e), dbprms =>
+            {
+                dbprms.AddStructured($"@Enums", "a2meta.[Enum.TableType]", enumTable);
+            });
+            // TODO: signal
+        }
+
         Int32 index = 0;
+
         foreach (var t in meta.Tables)
         {
             var createTable = dbCreator.CreateTable(t);

@@ -4,8 +4,6 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Data;
-using System.ComponentModel.DataAnnotations;
-using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace A2v10.Metadata;
 
@@ -38,6 +36,7 @@ internal class DatabaseCreator(AppMetadata _meta)
                         ColumnDataType.Date or ColumnDataType.DateTime => null,
                         ColumnDataType.String => null,   
                         ColumnDataType.Reference => null,
+                        ColumnDataType.Enum => null,
                         _ => throw new InvalidOperationException($"Defaults for {column.DataType} is not supported")
                     };
                     if (defKey != null)
@@ -129,9 +128,20 @@ internal class DatabaseCreator(AppMetadata _meta)
                 alter table {table.SqlTableName} {check} constraint {opConstraintName};
                 """;
             }
+            else if (column.DataType == ColumnDataType.Enum)
+            {
+                var opConstraintName = $"FK_{table.Name}_{column.Name}_{column.Reference.RefTable}";
+
+                return $"""
+                if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.Schema}' and TABLE_NAME = N'{table.Name}' and CONSTRAINT_NAME = N'{opConstraintName}')
+                    alter table {table.SqlTableName} add 
+                        constraint {opConstraintName} foreign key ([{column.Name}]) references {column.Reference.SqlTableName}([Id]);
+                alter table {table.SqlTableName} {check} constraint {opConstraintName};
+                """;
+            }
 
             var refs = column.Reference ??
-                throw new InvalidOperationException("Reference is null");
+                    throw new InvalidOperationException("Reference is null");
 
             var refTable = _meta.Tables.FirstOrDefault(x => x.Schema == refs.RefSchema && x.Name == refs.RefTable)
                 ?? throw new InvalidOperationException($"Reference table {refs.RefSchema}.{refs.RefTable} not found");
@@ -209,6 +219,67 @@ internal class DatabaseCreator(AppMetadata _meta)
             [Category] nvarchar(255),
             [Url] nvarchar(255)
         );
+        """;
+    }
+
+    internal String CreateEnum(EnumMetadata enm)
+    {
+        return $"""
+        if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'enm' and TABLE_NAME=N'{enm.Name}')
+        create table enm.[{enm.Name}]
+        (
+            [Id] nvarchar(16) not null
+                constraint PK_{enm.Name} primary key,
+            [Name] nvarchar(255),
+            [Order] int not null,
+            Inactive bit not null
+                constraint DF_{enm.Name}_Inactive default(0)
+        );
+        """;
+    }
+
+    internal DataTable CreateEnumTable(EnumMetadata enm)
+    {
+        var dt = new DataTable();
+        dt.Columns.Add("Id", typeof(String)).MaxLength = 16;
+        dt.Columns.Add("Name", typeof(String)).MaxLength = 255;
+        dt.Columns.Add("Order", typeof(Int32));
+        dt.Columns.Add("Inactive", typeof(Boolean));
+
+        // add "All"
+        var ar = dt.NewRow();
+        ar["Id"] = "";
+        ar["Name"] = $"@[{enm.Name}.All]";
+        ar["Order"] = -1;
+        ar["Inactive"] = false;
+        dt.Rows.Add(ar);
+
+
+        foreach (var val in enm.Values)
+        {
+            var dr = dt.NewRow();
+            dr["Id"] = val.Id;
+            dr["Name"] = val.Name ?? val.Id;
+            dr["Order"] = val.Order;
+            dr["Inactive"] = val.Inactive == true;
+            dt.Rows.Add(dr);
+        }
+        return dt;
+    }
+
+    internal String MergeEnums(EnumMetadata enm)
+    {
+        return $"""
+        merge enm.[{enm.Name}] as t
+        using @Enums as s
+        on t.Id = s.Id
+        when matched then update set
+            t.[Name] = s.[Name],
+            t.[Order] = s.[Order],
+            t.[Inactive] = s.[Inactive]
+        when not matched then insert
+            (Id, [Name], [Order], [Inactive]) values
+            (s.Id, s.[Name], s.[Order], [Inactive]);
         """;
     }
 }

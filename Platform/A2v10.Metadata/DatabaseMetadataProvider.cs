@@ -72,6 +72,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         };
         String procedure = schema switch {
             "rep" => "a2meta.[Report.Schema]",
+            "enm" => "a2meta.[Enum.Schema]",
             "op" => table switch {
                 "operations" => "a2meta.[Operation.Schema]",
                 _ => "a2meta.[Table.Schema]"
