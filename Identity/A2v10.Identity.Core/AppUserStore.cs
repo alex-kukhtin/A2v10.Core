@@ -7,6 +7,8 @@ using System.Dynamic;
 using System.Security.Claims;
 using System.Threading;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Identity;
@@ -14,8 +16,6 @@ using Microsoft.AspNetCore.Identity;
 using A2v10.Data.Interfaces;
 using A2v10.Identity.Core.Helpers;
 
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 
 public sealed class AppUserStore<T>(IDbContext dbContext, IOptions<AppUserStoreOptions<T>> options) :
 	IUserStore<AppUser<T>>,

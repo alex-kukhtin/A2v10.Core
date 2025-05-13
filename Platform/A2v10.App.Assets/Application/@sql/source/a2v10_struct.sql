@@ -1,8 +1,8 @@
 ﻿/*
-Copyright © 2008-2024 Oleksandr Kukhtin
+Copyright © 2008-2025 Oleksandr Kukhtin
 
-Last updated : 17 mar 2024
-module version : 8267
+Last updated : 13 may 2025
+module version : 8268
 */
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.SCHEMATA where SCHEMA_NAME=N'a2sys')
@@ -179,6 +179,16 @@ create table a2security.RefreshTokens
 		constraint FK_RefreshTokens_UserId_Users foreign key (Tenant, UserId) references a2security.Users(Tenant, Id),
 	constraint PK_RefreshTokens primary key (Tenant, UserId, [Provider], Token) with (fillfactor = 70),
 );
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where [TABLE_SCHEMA] = N'a2security' and TABLE_NAME = N'KeyVaults')
+create table a2security.[KeyVaults]
+(
+	[Key] nvarchar(255) not null
+		constraint PK_KeyVaults primary key,	
+	[Value] nvarchar(max),
+	[Expired] datetime null
+)
 go
 ------------------------------------------------
 create or alter view a2security.ViewUsers

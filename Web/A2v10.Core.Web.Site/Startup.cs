@@ -98,6 +98,7 @@ public class Startup(IConfiguration configuration)
 			factory.RegisterStorage<FileSystemBlobStorage>("FileSystem");
 		});
 
+		services.AddDataProtectionSqlServer<Int64>("APP_ANAME");
 
 		services.AddWorkflowEngineScoped()
 		.AddInvokeTargets(a =>

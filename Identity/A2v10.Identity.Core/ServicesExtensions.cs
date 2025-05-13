@@ -9,6 +9,14 @@ using Microsoft.AspNetCore.Identity;
 
 using A2v10.Web.Identity;
 using Microsoft.Extensions.Configuration;
+using System.Collections.Generic;
+using System.Xml.Linq;
+using Microsoft.AspNetCore.DataProtection.Repositories;
+using A2v10.Identity.Core;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.Options;
+
 public static class ServicesExtensions
 {
 	public static void ConfigureDefaultIdentityOptions(IdentityOptions options)
@@ -164,5 +172,22 @@ public static class ServicesExtensions
 
         return services;
     }
+
+
+	public static IServiceCollection AddDataProtectionSqlServer<T>(this IServiceCollection services, String appName)
+        where T : struct
+    {
+        services.AddSingleton<IXmlRepository, SqlServerDataProtectionRepository<T>>();
+        services.AddDataProtection().SetApplicationName(appName);
+        services.AddSingleton<IConfigureOptions<KeyManagementOptions>>(sp =>
+        {
+            var repo = sp.GetRequiredService<IXmlRepository>();
+            return new ConfigureOptions<KeyManagementOptions>(options =>
+            {
+                options.XmlRepository = repo;
+            });
+        });
+        return services;
+	}
 }
 

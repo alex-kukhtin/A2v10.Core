@@ -39,8 +39,9 @@ public static class ServicesExtensions
 		services.AddScoped<IDbContext, SqlDbContext>()
 			.AddSingleton<MetadataCache>()
 			.AddSingleton<IDataConfiguration, DataConfiguration>();
+		services.AddSingleton<IStaticDbContext, StaticDbContext>();
 
-		services.Configure<DataConfigurationOptions>(opts =>
+        services.Configure<DataConfigurationOptions>(opts =>
 		{
 			opts.ConnectionStringName = "Default";
 			opts.DisableWriteMetadataCaching = !configuration.GetValue<Boolean>("Data:MetadataCache");
