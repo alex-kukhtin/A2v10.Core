@@ -9,8 +9,8 @@
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.ViewEngine.Xaml</PackageId>
-		<Authors>Oleksandr Kukthin</Authors>
-		<Company>Oleksandr Kukthin</Company>
+		<Authors>Oleksandr Kukhtin</Authors>
+		<Company>Oleksandr Kukhtin</Company>
 		<Description>Xaml view engine for A2v10</Description>
 		<Copyright>Copyright © 2015-2025 Oleksandr  Kukhtin. All rights reserved.</Copyright>
 		<RepositoryType>git</RepositoryType>
@@ -31,8 +31,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="A2v10.System.Xaml" Version="10.1.8027" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.4" />
-		<PackageReference Include="Microsoft.Extensions.Options" Version="9.0.4" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.5" />
+		<PackageReference Include="Microsoft.Extensions.Options" Version="9.0.5" />
 	</ItemGroup>
 
 	<PropertyGroup>

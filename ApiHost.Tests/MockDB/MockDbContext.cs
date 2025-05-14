@@ -164,4 +164,9 @@ public class MockDbContext : IDbContext
     {
         throw new NotImplementedException();
     }
+
+	public IParameterBuilder ParameterBuilder(DbParameterCollection prms)
+    {
+        throw new NotImplementedException();
+    }
 }

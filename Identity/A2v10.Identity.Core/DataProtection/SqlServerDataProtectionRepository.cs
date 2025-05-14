@@ -9,7 +9,6 @@ using Microsoft.Extensions.Options;
 
 using A2v10.Data.Interfaces;
 using A2v10.Web.Identity;
-using A2v10.Data.Core.Extensions;
 
 namespace A2v10.Identity.Core;
 
@@ -44,7 +43,8 @@ public sealed class SqlServerDataProtectionRepository<T>(IStaticDbContext _dbCon
 
         _dbContext.ExecuteNonQuery(_dataSource, $"{_dbSchema}.[KeyVault.Update]", prms =>
         {
-            prms.AddString("@Key", friendlyName)
+            var prmsBuilder = _dbContext.ParameterBuilder(prms);
+            prmsBuilder.AddString("@Key", friendlyName)
                 .AddString("@Value", element.ToString(), 65535)
                 .AddDateTime("@Expired", dtValue);
         });

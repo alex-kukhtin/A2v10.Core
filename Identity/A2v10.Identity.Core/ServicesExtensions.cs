@@ -1,21 +1,20 @@
-﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
-
-namespace Microsoft.Extensions.DependencyInjection;
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 
-using A2v10.Web.Identity;
 using Microsoft.Extensions.Configuration;
-using System.Collections.Generic;
-using System.Xml.Linq;
 using Microsoft.AspNetCore.DataProtection.Repositories;
-using A2v10.Identity.Core;
 using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Options;
+
+using A2v10.Web.Identity;
+using A2v10.Identity.Core;
+
+namespace Microsoft.Extensions.DependencyInjection;
 
 public static class ServicesExtensions
 {

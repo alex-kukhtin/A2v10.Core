@@ -2,15 +2,15 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
-		<Version>10.1.8546</Version>
+		<Version>10.1.8547</Version>
 		<LangVersion>Latest</LangVersion>
 		<Product>A2v10</Product>
 		<Nullable>enable</Nullable>
 		<PackageId>A2v10.AppRuntimeBuilder</PackageId>
-		<Authors>Oleksandr Kukthin</Authors>
-		<Company>Oleksandr Kukthin</Company>
+		<Authors>Oleksandr Kukhtin</Authors>
+		<Company>Oleksandr Kukhtin</Company>
 		<Description>A2v10 Platform Application Runtime Builder</Description>
-		<Copyright>Copyright © 2024-2025 Oleksandr Kukthin. All rights reserved.</Copyright>
+		<Copyright>Copyright © 2024-2025 Oleksandr Kukhtin. All rights reserved.</Copyright>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/alex-kukhtin/A2v10.Core</RepositoryUrl>
 		<PackageTags>A2v10 Platform</PackageTags>
@@ -32,8 +32,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Data.Core" Version="10.1.7529" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.4" />
+		<PackageReference Include="A2v10.Data.Core" Version="10.1.7540" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.5" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
 	</ItemGroup>

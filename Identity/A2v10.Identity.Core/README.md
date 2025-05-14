@@ -13,6 +13,10 @@ services.AddPlatformIdentityCore<T>()
   .AddPlatformAuthentication(cookiePrefix);
 ```
 
+If you want to use the custom data protection storage, add it
+```csharp
+services.AddDataProtectionSqlServer<T>("AppName");
+```
 # appsettings.json section
 
 ```json

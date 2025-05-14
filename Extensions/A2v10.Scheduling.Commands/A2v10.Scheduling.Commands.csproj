@@ -7,10 +7,10 @@
 		<Nullable>enable</Nullable>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Scheduling.Commands</PackageId>
-		<Authors>Oleksandr Kukthin</Authors>
-		<Company>Oleksandr Kukthin</Company>
+		<Authors>Oleksandr Kukhtin</Authors>
+		<Company>Oleksandr Kukhtin</Company>
 		<Description>A2v10 Background processing</Description>
-		<Copyright>Copyright © 2015-2024 Oleksandr Kukthin. All rights reserved.</Copyright>
+		<Copyright>Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.</Copyright>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/alex-kukhtin/A2v10.Core</RepositoryUrl>
 		<PackageTags>A2v10 Platform</PackageTags>
@@ -26,7 +26,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.4" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.5" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 	</ItemGroup>
