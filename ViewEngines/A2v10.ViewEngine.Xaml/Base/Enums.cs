@@ -1,5 +1,5 @@
 ﻿
-// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Xaml;
 
@@ -261,6 +261,7 @@ public enum Icon
 	Barcode,
 	Bell,
 	Board,
+	Bookmark,
 	BrandExcel,
 	Calc,
 	Calendar,
@@ -296,6 +297,8 @@ public enum Icon
 	Close,
 	Cloud,
 	CloudOutline,
+	Code,
+	CodeCheck,
 	Comment,
 	CommentAdd,
 	CommentDiscussion,
@@ -305,12 +308,12 @@ public enum Icon
 	CommentPrevious,
 	CommentUrgent,
 	Company,
-	Confirm,
-	CurrencyUah,
+    Confirm,
+    Copy,
+    CurrencyUah,
 	CurrencyUsd,
 	CurrencyEuro,
 	CurrencyOther,
-	Copy,
 	Cut,
 	Delete,
 	DeleteBox,
@@ -492,6 +495,7 @@ public enum Icon
 	UserPlus,
 	UserRole,
 	Users,
+	Variable,
 	Waiting,
 	WaitingOutline,
 	Warehouse,

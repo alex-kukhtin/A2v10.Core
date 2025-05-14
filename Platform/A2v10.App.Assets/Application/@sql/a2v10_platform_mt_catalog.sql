@@ -1,8 +1,8 @@
 /*
-Copyright © 2008-2024 Oleksandr Kukhtin
+Copyright © 2008-2025 Oleksandr Kukhtin
 
-Last updated : 17 mar 2024
-module version : 8267
+Last updated : 13 may 2025
+module version : 8268
 */
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.SCHEMATA where SCHEMA_NAME=N'a2sys')
@@ -181,6 +181,16 @@ create table a2security.RefreshTokens
 );
 go
 ------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where [TABLE_SCHEMA] = N'a2security' and TABLE_NAME = N'KeyVaults')
+create table a2security.[KeyVaults]
+(
+	[Key] nvarchar(255) not null
+		constraint PK_KeyVaults primary key,	
+	[Value] nvarchar(max),
+	[Expired] datetime null
+)
+go
+------------------------------------------------
 create or alter view a2security.ViewUsers
 as
 	select Id, UserName, DomainUser, PasswordHash, SecurityStamp, Email, PhoneNumber,
@@ -331,10 +341,10 @@ go
 
 
 /*
-Copyright © 2008-2024 Oleksandr Kukhtin
+Copyright © 2008-2025 Oleksandr Kukhtin
 
-Last updated : 18 mar 2024
-module version : 8267
+Last updated : 13 may 2025
+module version : 8268
 */
 
 -- SECURITY
@@ -859,3 +869,37 @@ begin
 end
 go
 
+------------------------------------------------
+create or alter procedure a2security.[KeyVault.Load]
+as
+begin
+	set nocount on;
+	set transaction isolation level read uncommitted;
+
+	select [Value] from a2security.KeyVaults;
+end
+go
+------------------------------------------------
+create or alter procedure a2security.[KeyVault.Update]
+@Key nvarchar(32),
+@Value nvarchar(max),
+@Expired datetime = null
+as
+begin
+	set nocount on;
+	set transaction isolation level read uncommitted;
+
+	with TV as (
+		select [Key] = @Key, [Value] = @Value, Expired = @Expired
+	)
+	merge a2security.KeyVaults as t
+	using TV as s
+	on t.[Key] = s.[Key]
+	when matched then update set
+		t.[Value] = s.[Value],
+		t.Expired = s.[Expired]
+	when not matched then insert
+		([Key], [Value], [Expired]) values
+		([Key], [Value], [Expired]);
+end
+go
