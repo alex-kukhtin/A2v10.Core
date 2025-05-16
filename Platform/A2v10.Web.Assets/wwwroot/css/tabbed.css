@@ -8450,6 +8450,10 @@ td.vert > .vcell {
   font-family: 'Consolas', 'Courier New', Courier, monospace;
   font-weight: 600;
 }
+.data-grid td.monospace {
+  font-family: 'Consolas', 'Courier New', Courier, monospace;
+  font-weight: 500;
+}
 .debug-panel {
   position: absolute;
   top: 0;
@@ -8613,6 +8617,15 @@ td.vert > .vcell {
 .a2-json-b .jbp-object {
   font-style: italic;
   color: darkcyan;
+}
+.a2-json-view {
+  background-color: var(--bgControl);
+  overflow: auto;
+  border: 1px solid var(--neutral400);
+  border-radius: 4px;
+}
+.a2-json-view.wrap .jbp-value {
+  white-space: normal;
 }
 @media print {
   .no-print {

@@ -2,6 +2,7 @@
 
 @import "Utlis.less";
 @import "Variables.less";
+@import "Colors.less";
 
 @debug-pane-width: 390px;
 @debug-pane-bg-color: var(--bgPrimary);
@@ -216,5 +217,19 @@
     .jbp-object {
         font-style: italic;
         color: darkcyan;
+    }
+}
+
+
+.a2-json-view {
+    background-color: @bk-control;
+    overflow: auto;
+    border: 1px solid @control-brd-color;
+    border-radius: @control-brd-radius;
+
+    &.wrap {
+        .jbp-value {
+            white-space:normal;
+        }
     }
 }
