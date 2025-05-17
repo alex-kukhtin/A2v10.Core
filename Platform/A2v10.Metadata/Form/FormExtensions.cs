@@ -16,7 +16,7 @@ internal static class FormExtensions
         if (column.Role.HasFlag(TableColumnRole.RowNo))
             return FormItemIs.Content;
         if (!String.IsNullOrEmpty(column.Computed))
-            return FormItemIs.Content;
+            return FormItemIs.Static;
 
         return column.DataType switch
         {

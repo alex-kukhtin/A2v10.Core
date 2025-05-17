@@ -196,6 +196,7 @@ public record TableMetadata
     internal String RealItemsLabel => ItemsLabel ?? $"@{RealItemsName}";
     internal String SqlTableName => $"{Schema}.[{Name}]";
     internal Boolean IsDocument => Schema == "doc";
+    internal Boolean IsEnum => Schema == "enm";
     internal Boolean IsJournal => Schema == "jrn";
     internal Boolean IsOperation => Schema == "op";
     internal Boolean HasDbTable => !String.IsNullOrEmpty(DbName) && !String.IsNullOrEmpty(DbSchema);

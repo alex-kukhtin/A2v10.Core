@@ -5,7 +5,7 @@
 
 	const toolboxItemTemplate = `
 <li class="fd-tbox-item" :draggable="true" @dragstart.stop=dragStart>
-	<i class="ico ico-grid" />
+	<i class="ico ico-rename" />
 	<span v-text=label />
 </li>
 `;
@@ -88,19 +88,19 @@
 				<input v-model.lazy.trim="p.value" />
 			</td>
 		</tr>
-		<tr v-if="item.Grid">
+		<tr v-if="hasGrid">
 			<td colspan=2 class="fd-ps-header">Grid</td>
 		</tr>
-		<tr v-if="item.Grid" v-for="(p, ix) in gridProps" :key="'g:' + ix">
+		<tr v-if="hasGrid" v-for="(p, ix) in gridProps" :key="'g:' + ix">
 			<td v-text="p.name"/>
 			<td>
 				<input v-model.lazy.trim="p.value" type=number />
 			</td>
 		</tr>
-		<tr v-if="item.Command">
+		<tr v-if="hasCommand">
 			<td colspan=2 class="fd-ps-header">Command</td>
 		</tr>
-		<tr v-if="item.Command" v-for="(p, ix) in commandProps" :key="'c:' + ix">
+		<tr v-if="hasCommand" v-for="(p, ix) in commandProps" :key="'c:' + ix">
 			<td v-text="p.name"/>
 			<td>
 				<input v-model.lazy.trim="p.value" />
@@ -113,25 +113,32 @@
 	// TODO: ������������� ������� Dialog.Label => Dialog.Title?
 	const PROP_MAP = {
 		Grid: ["Height", "CssClass"],
-		TextBox: ["Data", 'Label', "Width"],
-		SearchBox: ["Data", 'Label', "Width"],
-		DatePicker: ["Data", 'Label', "Width"],
-		PeriodPicker: ["Data", 'Label', "Width"],
-		Selector: ["Data", 'Label', "Width"],
-		DataGrid: ["Data", 'Height'],
-		Label: ["Label"],
+		TextBox: ['Data', 'Label', 'Width'],
+		ComboBox: ['Data', 'Label', 'Width'],
+		SearchBox: ['Data', 'Label', 'Width'],
+		Static: ['Data', 'Label', 'Width'],
+		DatePicker: ['Data', 'Label', 'Width'],
+		PeriodPicker: ['Data', 'Label', 'Width'],
+		Selector: ['Data', 'Label', 'Width'],
+		Header: ['Data', 'Label'],
+		DataGrid: ['Data', 'Height'],
+		Label: ['Label'],
 		Panel: ["Label"],
-		DataGridColumn: ["Data", 'Label'],
-		Toolbar: ["CssClass"],
-		Tabs: ["CssClass"],
+		DataGridColumn: ['Data', 'Label'],
+		Toolbar: ['CssClass'],
+		Tabs: ['CssClass'],
 		Pager: ['Data'],
-		Dialog: ['Label', 'Width', 'Height', "Data"],
-		Page: ['Label', "Data", "CssClass", "UseCollectionView"],
-		Button: ['Label', "CssClass", "If"],
+		Dialog: ['Label', 'Width', 'Height', 'Data'],
+		Page: ['Label', 'Data', "CssClass", "UseCollectionView"],
+		Button: ['Label', 'CssClass', 'If'],
 		GRID_PROPS: ['Row', 'Col', 'RowSpan', 'ColSpan'],
 		COMMAND_PROPS: ['Command', 'Argument', 'Url'],
 		OTHER_PROPS: {
-			Grid: ["Rows", "Columns"]
+			Grid: ['Rows', 'Columns'],
+			TextBox: ['Multiline', 'Placeholder'],
+			DataGridColumn: ['Fit', 'NoWrap', 'LineClamp'],
+			Selector: ['Placeholder', 'ShowClear'],
+			ComboBox: ['ItemsSource'],
 		}
 	};
 
@@ -142,6 +149,12 @@
 			host: Object
 		},
 		computed: {
+			hasGrid() {
+				return this.item.$parent.$parent.Is === 'Grid';
+			},
+			hasCommand() {
+				return this.item.Is === 'Button';
+			},
 			itemProps() {
 				if (!this.item) return [];
 				const type = this.item.Is;
@@ -506,6 +519,7 @@
 		Reload: 'ico-reload',
 		Print: 'ico-print',
 		DeleteSelected: 'ico-clear',
+		Dialog: 'ico-account' // TODO???
 	};
 
 	var button$1 = {
@@ -548,6 +562,7 @@
 	function is2icon(is) {
 		switch (is) {
 			case 'SearchBox': return 'ico-search';
+			case 'ComboBox': return 'ico-chevron-down';
 		}
 		return '';
 	}
@@ -555,6 +570,18 @@
 	const inputControlTemplate = `
 <div class="control-group" :style=controlStyle @click=itemClick :class="{ selected }">
 <label v-text="item.Label" v-if="item.Label"/>
+	<div class="input-group">
+		<span v-text="item.Data" class="input" />
+		<a v-if="icon">
+			<i class="ico" :class="icon" />
+		</a>
+	</div>
+</div>
+`;
+
+	const inputControlSimpleTemplate = `
+<div class="control-group" :style=controlStyle >
+<label v-text="item.Label" v-if="item.Label" />
 	<div class="input-group">
 		<span v-text="item.Data" class="input" />
 		<a v-if="icon">
@@ -609,9 +636,27 @@
 		extends: layoutelem
 	};
 
+	const comboBox = {
+		template: inputControlSimpleTemplate,
+		extends: control,
+		computed: {
+			icon() { return is2icon(this.item.Is); }
+		}
+	};
+
+	const staticBox = {
+		template: inputControlSimpleTemplate,
+		extends: control,
+		computed: {
+			icon() { return undefined }
+		}
+	};
+
 	var inputControls = {
 		searchBox,
 		checkBox,
+		comboBox,
+		staticBox,
 		separator
 	};
 
@@ -691,6 +736,8 @@
 			'PeriodPicker': periodPicker,
 			'DataGrid': datagrid,
 			'CheckBox': inputControls.checkBox,
+			'ComboBox': inputControls.comboBox,
+			'Static': inputControls.staticBox,
 			'Label': label, 
 			'Header': header,
 			'Pager': pager,
@@ -723,7 +770,8 @@
 				return {
 					gridRow: row,
 					gridColumn: col,
-					height: this.item.Height || ''
+					height: this.item.Height || '',
+					width: this.item.Width || ''
 				};
 			},
 			isSameSelected() {
@@ -920,22 +968,18 @@
 				<div class="fd-tab-title" v-text="form.Label"/>
 			</div>
 			<div class="fd-content">
-				<div v-if="form.Toolbar" class="form-toolbar">
+				<div v-if="hasToolbar" class="form-toolbar">
 					<Toolbar :item="form.Toolbar" :cont=cont class="page-toolbar" :is-page="true"/>
 				</div>
 				<component v-for="(itm, ix) in form.Items" :key="ix" :is="itm.Is"
 					:item="itm" :cont=cont />
-				<Taskpad :item="form.Taskpad" :cont=cont v-if="form.Taskpad"/>
+				<Taskpad :item="form.Taskpad" :cont=cont v-if="hasTaskpad"/>
 			</div>
 			<dlg-buttons v-if="isDialog" :elems="form.Buttons" :cont=cont />
 		</div>
 	</div>
 </div>
 `;
-
-	function isContainer(isElem) {
-		return isElem === 'Grid';
-	}
 
 	Vue.component('Grid', gridElem);
 
@@ -968,6 +1012,12 @@
 					isActive: (itm) => itm === this.selectedItem,
 					canDrop: this.$canDrop
 				}
+			},
+			hasTaskpad() {
+				return this.form.Taskpad && this.form.Taskpad.Items.length;
+			},
+			hasToolbar() {
+				return this.form.Toolbar && this.form.Toolbar.Items.length;
 			},
 			bodyClass() {
 				return this.form.Is.toLowerCase();
@@ -1005,28 +1055,9 @@
 			},
 			deleteItem() {
 				if (!this.selectedItem) return;
-				let g = this.findGridByItem(this.selectedItem);
-				if (!g || g.Is !== 'Grid') return;
-				let ix = g.Items.indexOf(this.selectedItem);
-				if (ix < 0) return;
-				g.Items.splice(ix, 1);
+				this.selectedItem.$remove();
 				this.selectedItem = this.form;
 				this.setDirty();
-			},
-			findGridByItem(tf) {
-				function findInContainer(el, tf) {
-					if (!el || !el.Items) return null;
-					for (let i = 0; i < el.Items.length; i++) {
-						let x = el.Items[i];
-						if (x === tf) return el;
-						if (!isContainer(x.Is))
-							continue;
-						let res = findInContainer(x, tf);
-						if (res) return res;	
-					}
-					return null;
-				}
-				return findInContainer(this.form, tf);
 			},
 			$selectItem(item) {
 				this.selectedItem = item;
@@ -1058,12 +1089,11 @@
 					return;
 				}
 
-				let fg = this.findGridByItem(this.selectedItem);
+				let fg = this.selectedItem.$parent;
 
 				if (fg && fg.Is === 'Grid' && fg !== rc.grid) {
-					let ix = fg.Items.indexOf(this.selectedItem);
-					fg.Items.splice(ix, 1);
-					rc.grid.Items.push(this.selectedItem);
+					this.selectedItem.$remove();
+					rc.grid.Items.$append(this.selectedItem);
 				}
 				this.selectedItem.Grid = { Row: rc.row, Col: rc.col, ColSpan: sg.ColSpan, RowSpan: sg.RowSpan };
 				this.setDirty();

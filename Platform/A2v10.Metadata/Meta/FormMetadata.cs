@@ -1,6 +1,7 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+using System.ComponentModel;
 
 namespace A2v10.Metadata;
 
@@ -31,6 +32,7 @@ public enum FormItemIs
     TextBox,
     SearchBox,
     Content, // for cells
+    Static,
     Selector,
     ComboBox,
     DatePicker,
@@ -42,6 +44,7 @@ public enum FormItemIs
 
 public enum FormCommand
 {
+    Unknown,
     Reload,
     Create, // page
     Open,   // page
@@ -87,6 +90,8 @@ public record FormItemGrid
     public Int32 Col { get; init; }
     public Int32 RowSpan { get; init; }
     public Int32 ColSpan { get; init; }
+
+    public Boolean IsEmpty => Row == 0 && Col == 0 && RowSpan == 0 && ColSpan == 0;
 }
 
 public record FormItemCommand
@@ -101,6 +106,8 @@ public record FormItemCommand
     public FormCommand Command { get; init; }
     public String? Argument { get; init; }
     public String? Url { get; init; }
+    internal Boolean IsEmpty => Command == FormCommand.Unknown &&
+        String.IsNullOrEmpty(Argument) && String.IsNullOrEmpty(Url);
 }
 
 public enum ItemStyle
@@ -125,6 +132,14 @@ public record FormItemProps
     public Boolean NoWrap { get; init; }    
     public Boolean Required { get; init; }
     public String? ItemsSource { get; init; }
+
+    internal Boolean IsEmpty =>
+        String.IsNullOrEmpty(Rows) && String.IsNullOrEmpty(Columns)
+        && String.IsNullOrEmpty(Url) && String.IsNullOrEmpty(Placeholder)
+        && !ShowClear && Style == ItemStyle.Default
+        && String.IsNullOrEmpty(Filters) && !Multiline && TabIndex == 0
+        && LineClamp == 0 && !Fit && !NoWrap && !Required
+        && String.IsNullOrEmpty(ItemsSource);
 }
 
 public record FormItem
@@ -136,9 +151,9 @@ public record FormItem
         Is = type;
     }
 
-    public FormItemIs Is { get; init; } = default!;
-    public String Label { get; init; } = default!;
-    public String Data { get; init; } = default!;
+    public FormItemIs Is { get; init; }
+    public String Label { get; init; } = String.Empty;
+    public String Data { get; init; } = String.Empty;
     public ItemDataType DataType { get; init; }
     public FormItem[]? Items { get; init; }
     public String? Width { get; init; }
@@ -154,8 +169,8 @@ public record FormItem
 public record Form : FormItem
 {
     public Boolean UseCollectionView { get; init; }
-    public String Schema { get; init; } = default!;
-    public String Table { get; init; } = default!;
+    public String Schema { get; init; } = String.Empty;
+    public String Table { get; init; } = String.Empty;
     public FormItem[]? Buttons { get; init; }
     public FormItem? Taskpad { get; init; }
     public FormItem? Toolbar { get; init; }

@@ -2,13 +2,13 @@
 
 using System;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
 using A2v10.Infrastructure;
 using A2v10.Data.Interfaces;
 using A2v10.Data.Core.Extensions;
-using System.Text;
 
 namespace A2v10.Metadata;
 

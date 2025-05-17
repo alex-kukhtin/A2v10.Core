@@ -169,6 +169,12 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
 
     protected String RefTableJoins(IEnumerable<ReferenceMember> refFields, String alias)
     {
-        return String.Join("\n", refFields.Select(refField => $"    left join {refField.Table.SqlTableName} r{refField.Index} on {alias}.[{refField.Column.Name}] = r{refField.Index}.[{refField.Table.PrimaryKeyField}]"));
+        return String.Join("\n", refFields.Select(refField =>
+        {
+            var enumWhere = "";
+            if (refField.Table.IsEnum)
+                enumWhere = $" and r{refField.Index}.[{refField.Table.PrimaryKeyField}] <> N''";
+            return $"    left join {refField.Table.SqlTableName} r{refField.Index} on {alias}.[{refField.Column.Name}] = r{refField.Index}.[{refField.Table.PrimaryKeyField}]{enumWhere}";
+        }));
     }
 }

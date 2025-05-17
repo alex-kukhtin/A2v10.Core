@@ -12,6 +12,8 @@ using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Xaml.DynamicRendrer;
 using A2v10.Xaml;
+using A2v10.Data;
+using DocumentFormat.OpenXml.Drawing.Charts;
 
 namespace A2v10.Metadata;
 
@@ -61,6 +63,8 @@ public class EditFormEndpointHandler(IServiceProvider _serviceProvider) : IEndpo
             dataModel = await _dbContext.LoadModelAsync(modelView.DataSource, "a2meta.[Table.Form.Update]", dbPrms);
         }
 
+        var formDm = CreateFormDataModel(dataModel.Root);
+
         String rootId = $"el{Guid.NewGuid()}";
         String templateText = String.Empty;
         if (!String.IsNullOrEmpty(modelView.Template))
@@ -80,7 +84,7 @@ public class EditFormEndpointHandler(IServiceProvider _serviceProvider) : IEndpo
             Page = page,
             ModelView = modelView,
             PlatformUrl = platformUrl,
-            Model = dataModel,
+            Model = formDm, //dataModel,
             Template = templateText
         };
         return await _dynamicRenderer.RenderPage(rri);
@@ -99,16 +103,104 @@ public class EditFormEndpointHandler(IServiceProvider _serviceProvider) : IEndpo
 
         // serialize with null for designer
         var json = JsonConvert.SerializeObject(eo);
-        var form = JsonConvert.DeserializeObject<Form>(json);
-        var jsonForSave = JsonConvert.SerializeObject(form, JsonSettings.WithNull);
+        var form = JsonConvert.DeserializeObject<Form>(json, JsonSettings.Default);
+        var jsonForSave = JsonConvert.SerializeObject(form, JsonSettings.IgnoreNull);
 
         var dbPrms = new ExpandoObject()
         {
             { "Id", id },
             { "Key", key },
-            { "Json", json }
+            { "Json", jsonForSave }
         };
         await _dbContext.ExecuteExpandoAsync(modelView.DataSource, "a2meta.[Table.Form.Update]", dbPrms);
         return new();
+    }
+
+
+    private IDataModel CreateFormDataModel(ExpandoObject root)
+    {
+        var mb = new DataModelBuilder();
+
+        ElementMetadata AddFormItemProps(ElementMetadata elem)
+        {
+            elem.AddField("Is", SqlDataType.String, 32)
+            .AddField("Label", SqlDataType.String, 255)
+            .AddField("Data", SqlDataType.String, 255)
+            .AddField("Items", "TFormItemArray")
+            .AddField("Width", SqlDataType.String, 255)
+            .AddField("Height", SqlDataType.String, 255)
+            .AddField("MinHeight", SqlDataType.String, 255)
+            .AddField("CssClass", SqlDataType.String, 255)
+            .AddField("If", SqlDataType.String, 255)
+            .AddField("Grid", "TGrid")
+            .AddField("Command", "TCommand")
+            .AddField("Props", "TProp")
+            .IsArrayType = true;
+            return elem;
+        }
+
+        mb.AddMetadata("TTable")
+            .AddField("Id", SqlDataType.Guid)
+            .AddField("Schema", SqlDataType.String, 255)
+            .AddField("Table", SqlDataType.String, 255)
+            .AddField("EditWith", SqlDataType.String, 16);
+
+        mb.AddMetadata("TFormWrap")
+            .AddField("Id", SqlDataType.Guid)
+            .AddField("Key", SqlDataType.String, 255)
+            .AddField("Json", "TForm");
+
+        AddFormItemProps(mb.AddMetadata("TForm"))
+            .AddField("UseCollectionView", SqlDataType.Bit)
+            .AddField("Schema", SqlDataType.String, 255)
+            .AddField("Table", SqlDataType.String, 255)
+            .AddField("Buttons", "TFormItemArray")
+            .AddField("Taskpad", "TFormItem")
+            .AddField("Toolbar", "TFormItem")
+            .AddField("EditWith", SqlDataType.String, 16);
+
+        AddFormItemProps(mb.AddMetadata("TFormItem"));
+
+        mb.AddMetadata("TCommand")
+            .AddField("Command", SqlDataType.String, 64)
+            .AddField("Argument", SqlDataType.String, 255)
+            .AddField("Url", SqlDataType.String, 255);
+
+        mb.AddMetadata("TGrid")
+            .AddField("Row", SqlDataType.Int)
+            .AddField("Col", SqlDataType.Int)
+            .AddField("RowSpan", SqlDataType.Int)
+            .AddField("ColSpan", SqlDataType.Int);
+
+        mb.AddMetadata("TProp")
+            .AddField("Rows", SqlDataType.String, 255)
+            .AddField("Columns", SqlDataType.String, 255)
+            .AddField("Url", SqlDataType.String, 255)
+            .AddField("Placeholder", SqlDataType.String, 255)
+            .AddField("ShowClear", SqlDataType.Bit)
+            .AddField("Style", SqlDataType.String, 64)
+            .AddField("Filters", SqlDataType.String, 64)
+            .AddField("Multiline", SqlDataType.Bit)
+            .AddField("TabIndex", SqlDataType.Int)
+            .AddField("LineClamp", SqlDataType.Int)
+            .AddField("Fit", SqlDataType.Bit)
+            .AddField("NoWrap", SqlDataType.Bit)
+            .AddField("Required", SqlDataType.Bit)
+            .AddField("ItemsSource", SqlDataType.String, 255);
+
+        mb.AddMetadata("TColumn")
+            .AddField("Id", SqlDataType.Guid)
+            .AddField("Name", SqlDataType.String, 255)
+            .AddField("Label", SqlDataType.String, 255)
+            .AddField("DataType", SqlDataType.String, 64)
+            .AddField("Reference", SqlDataType.String, 255)
+            .IsArrayType = true;
+
+        mb.AddMetadata("TRoot")
+            .AddField("Table", "TTable")
+            .AddField("Form", "TFormWrap")
+            .AddField("Columns", "TColumnArray");
+
+        return mb.CreateDataModel(root);
     }
 }

@@ -79,7 +79,8 @@ internal class XamlBulder(EditWithMode _editWith)
             FormItemIs.Header => CreateHeader(item),
             FormItemIs.Label => CreateLabel(item),
             FormItemIs.Button => CreateButton(item, param),
-            FormItemIs.Content => CreateStatic(item),
+            FormItemIs.Content => CreateSpan(item),
+            FormItemIs.Static => CreateStatic(item),
             _ => throw new NotImplementedException($"Implement CreateElement: {item.Is}")
         };
         if (elem != null && attach != null)
@@ -383,6 +384,14 @@ internal class XamlBulder(EditWithMode _editWith)
         return new Label()
         {
             Content = source.Label.Localize()
+        };
+    }
+
+    private Span CreateSpan(FormItem source)
+    {
+        return new Span()
+        {
+            Bindings = b => b.SetBinding(nameof(Span.Content), source.TypedBind())
         };
     }
 
