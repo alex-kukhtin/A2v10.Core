@@ -8454,6 +8454,10 @@ td.vert > .vcell {
   font-family: 'Consolas', 'Courier New', Courier, monospace;
   font-weight: 500;
 }
+.data-grid td.monospace .dg-cell {
+  display: inline-block;
+  margin-top: 3px;
+}
 .debug-panel {
   position: absolute;
   top: 0;

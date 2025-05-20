@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Threading.Tasks;
@@ -15,7 +15,6 @@ using Newtonsoft.Json;
 
 using A2v10.Infrastructure;
 using A2v10.Data.Interfaces;
-using System.Net.Mime;
 
 namespace A2v10.Platform.Web.Controllers;
 
