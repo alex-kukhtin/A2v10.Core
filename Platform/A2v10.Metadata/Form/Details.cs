@@ -14,18 +14,16 @@ internal partial class BaseModelBuilder
      *     Toolbar
      *     Table
      */
-    FormItem DetailsTab(TableMetadata d, String dataBind, String tabBind, String? tabName, String cssPrefix)
+    IEnumerable<FormItem> DetailsTableCells(TableMetadata d)
     {
-        IEnumerable<FormItem> DetailsTableCells(TableMetadata d)
-        {
-            return d.EditableColumns().OrderBy(c => c.Order).Select(c =>
-                new FormItem(FormItemIs.TableCell)
-                {
-                    Label = c.Label ?? $"@{c.Name}",
-                    Width = c.ToColumnWidth(),
-                    DataType = c.ToItemDataType(),
-                    Items = [
-                        new FormItem(c.Column2Is())
+        return d.EditableColumns().OrderBy(c => c.Order).Select(c =>
+            new FormItem(FormItemIs.TableCell)
+            {
+                Label = c.Label ?? $"@{c.Name}",
+                Width = c.ToColumnWidth(),
+                DataType = c.ToItemDataType(),
+                Items = [
+                    new FormItem(c.Column2Is())
                             {
                                 DataType = c.ToItemDataType(),
                                 Data = c.Name,
@@ -35,11 +33,63 @@ internal partial class BaseModelBuilder
                                     }
                                     : null
                             }
-                    ]
-                }
-            );
-        }
+                ]
+            }
+        );
+    }
 
+    FormItem DetailsTab(TableMetadata d, String dataBind, String tabBind, String? tabName, String cssPrefix)
+    {
+
+        return new FormItem(FormItemIs.Tab)
+        {
+            Label = tabName ?? $"@{tabBind}",
+            Grid = new FormItemGrid(4, 1),
+            Data = tabBind,
+            Items = [
+            new FormItem(FormItemIs.StackPanel)
+            {
+                Height = "100%",
+                CssClass = "details",
+                Items = [
+                    new FormItem(FormItemIs.Toolbar) {
+                        CssClass = $"{cssPrefix}-details-toolbar",
+                        Items = [
+                            new FormItem(FormItemIs.Button)
+                            {
+                                Label = "@AddRow",
+                                Command = new FormItemCommand()
+                                {
+                                    Command = FormCommand.Append,
+                                    Argument = dataBind,
+                                },
+                            }
+                        ]
+                    },
+                    new FormItem(FormItemIs.Table) {
+                        Data = dataBind,
+                        Height = "100%",
+                        CssClass = $"{cssPrefix}-details",
+                        Items = [
+                            ..DetailsTableCells(d),
+                            new FormItem(FormItemIs.TableCell)
+                            {
+                                Width = "1px",
+                                Items = [
+                                    FormBuild.Button(new FormItemCommand() {
+                                        Command = FormCommand.Remove
+                                    }, "✕"),
+                                ]
+                            }
+                        ]
+                    }]
+                }
+            ]
+        };
+    }
+
+    FormItem DetailsTabGrid(TableMetadata d, String dataBind, String tabBind, String? tabName, String cssPrefix)
+    {
         return new FormItem(FormItemIs.Tab)
         {
             Label = tabName ?? $"@{tabBind}",
@@ -49,11 +99,10 @@ internal partial class BaseModelBuilder
             new FormItem(FormItemIs.Grid)
             {
                 Height = "100%",
-                MinHeight = "25rem",
-                Props = new FormItemProps()
-                {
+                CssClass = "details",
+                Props = new FormItemProps() {
                     Rows = "auto 1fr",
-                    Columns = "auto",
+                    Columns = "1fr"
                 },
                 Items = [
                     new FormItem(FormItemIs.Toolbar) {

@@ -120,12 +120,12 @@ internal partial class BaseModelBuilder
                 foreach (var d in _table.Details)
                 {
                     if (d.Kinds.Count == 0)
-                        yield return DetailsTab(d, $"{_table.RealItemName}.{d.RealItemsName}", d.Name, null, "document");
+                        yield return DetailsTabGrid(d, $"{_table.RealItemName}.{d.RealItemsName}", d.Name, null, "document");
                     else
                         foreach (var k in d.Kinds)
                         {
                             var dataBind = $"{_table.RealItemName}.{k.Name}";
-                            yield return DetailsTab(d, dataBind, k.Name, k.Label, "document");
+                            yield return DetailsTabGrid(d, dataBind, k.Name, k.Label, "document");
                         }
                 }
             }

@@ -102,6 +102,7 @@ internal partial class BaseModelBuilder
                         ShowClear = showClear,
                         LineClamp = lineClamp,
                         ItemsSource = itemsSource,
+                        Highlight = true
                     }
                 };
             }

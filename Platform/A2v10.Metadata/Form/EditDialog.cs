@@ -19,7 +19,7 @@ internal partial class BaseModelBuilder
         return new FormItem()
         {
             Is = column.Column2Is(),
-            Grid = new FormItemGrid(row, col),
+            Grid = (row != 0 || col != 0) ? new FormItemGrid(row, col) : null,
             Label = column.Label ?? $"@{column.Name}",
             Data = $"{_table.RealItemName}.{column.Name}",
             DataType = column.ToItemDataType(),
@@ -61,8 +61,7 @@ internal partial class BaseModelBuilder
                 Props = new FormItemProps()
                 {
                     // rows + 1
-                    Rows = String.Join(' ', editableColumns.Select(c => "auto")
-                        .Union(["auto"])),
+                    Rows = String.Join(' ', Enumerable.Range(1, editableColumns.Count()).Select(c => "auto")),
                     Columns = "1fr"
                 },
                 Items = [.. Controls()]
@@ -74,24 +73,20 @@ internal partial class BaseModelBuilder
             IEnumerable<FormItem> EnumMemo()
             {
                 if (memoColumn != null)
-                    yield return CreateControl(memoColumn, 4, 1);
+                    yield return CreateControl(memoColumn, 0, 0);
             }
 
-            return new FormItem(FormItemIs.Grid)
+            return new FormItem(FormItemIs.StackPanel)
             {
-                Props = new FormItemProps()
-                {
-                    Rows = memoColumn != null ? "auto auto 1fr auto" : "auto auto 1fr",
-                    Columns = "1fr"
-                },
+                CssClass = "dialog-details",
                 Items = [
                     ContentGrid(),
                     new FormItem(FormItemIs.Tabs)
                     {
                         Data = $"{_table.RealItemName}.$$Tab",
-                        Grid = new FormItemGrid(3, 1),
                         CssClass = "details-tabbar",
-                        Items = [.. _table.Details.Select(d => DetailsTab(d, $"{_table.RealItemName}.{d.RealItemsName}", d.RealItemsName, d.RealItemsLabel, "details"))]
+                        Height = "20rem",
+                        Items = [.. _table.Details.Select(d => DetailsTab(d, $"{_table.RealItemName}.{d.RealItemsName}", d.RealItemsName, d.RealItemsLabel, "catalog"))],
                     },
                     ..EnumMemo()
                 ]
@@ -108,6 +103,7 @@ internal partial class BaseModelBuilder
             Table = _table.Name,
             Is = FormItemIs.Dialog,
             Label = _table.RealItemLabel,
+            CssClass = "edit-item-dialog",
             EditWith = _table.EditWith,
             Data = _table.RealItemName,
             Items = [Content()],

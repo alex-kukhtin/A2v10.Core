@@ -123,7 +123,8 @@ public class Dialog : RootContainer, ISupportTwoPhaseRendering
 		if (Background != BackgroundStyle.Default)
 			content.AddCssClass("background-" + Background.ToString().ToKebabCase());
 		content.AddCssClassBool(Overflow, "overflow");
-		content.RenderStart(context);
+		content.AddCssClass(CssClass);
+        content.RenderStart(context);
 		if (Taskpad != null)
 		{
 			var gridContent = new TagBuilder("div", "dialog-grid-content");

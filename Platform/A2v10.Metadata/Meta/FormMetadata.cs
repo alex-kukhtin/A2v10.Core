@@ -1,7 +1,6 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
-using System.ComponentModel;
 
 namespace A2v10.Metadata;
 
@@ -12,6 +11,7 @@ public enum FormItemIs
     Page, 
     Dialog,
     Grid,
+    StackPanel,
     Popup,
     Tabs,
     Tab,
@@ -132,13 +132,14 @@ public record FormItemProps
     public Boolean NoWrap { get; init; }    
     public Boolean Required { get; init; }
     public String? ItemsSource { get; init; }
+    public Boolean Highlight { get; init; }
 
     internal Boolean IsEmpty =>
         String.IsNullOrEmpty(Rows) && String.IsNullOrEmpty(Columns)
         && String.IsNullOrEmpty(Url) && String.IsNullOrEmpty(Placeholder)
         && !ShowClear && Style == ItemStyle.Default
         && String.IsNullOrEmpty(Filters) && !Multiline && TabIndex == 0
-        && LineClamp == 0 && !Fit && !NoWrap && !Required
+        && LineClamp == 0 && !Fit && !NoWrap && !Required && !Highlight
         && String.IsNullOrEmpty(ItemsSource);
 }
 

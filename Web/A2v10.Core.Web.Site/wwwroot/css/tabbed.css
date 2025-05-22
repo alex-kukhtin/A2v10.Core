@@ -4667,7 +4667,7 @@ ul.news-list > li {
 .modal-content .dialog-grid .taskpad {
   grid-row: 1;
 }
-.modal-content .grid {
+.modal-content > .grid {
   padding: 1rem;
   gap: 0.5rem;
 }
@@ -4731,6 +4731,12 @@ ul.news-list > li {
 }
 .modal-header-menu .modal-menu-link:hover {
   background-color: rgba(128, 128, 128, 0.15);
+}
+.edit-item-dialog {
+  padding: 1rem;
+}
+.edit-item-dialog .grid {
+  padding: 0;
 }
 .wizard-panel {
   display: grid;
@@ -6038,6 +6044,9 @@ TODO:
   justify-self: center;
   width: 1px;
 }
+.a2-switch .grid {
+  padding: 0;
+}
 .stack-panel {
   display: flex !important;
   flex-direction: column;
@@ -6054,6 +6063,10 @@ TODO:
 }
 .stack-panel.wrap {
   flex-wrap: wrap;
+}
+.stack-panel.details,
+.stack-panel.dialog-details {
+  gap: 0.5rem;
 }
 .align-stretch {
   align-items: stretch !important;

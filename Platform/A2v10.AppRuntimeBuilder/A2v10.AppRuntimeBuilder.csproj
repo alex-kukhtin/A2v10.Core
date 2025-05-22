@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
-		<Version>10.1.8549</Version>
+		<Version>10.1.8550</Version>
 		<LangVersion>Latest</LangVersion>
 		<Product>A2v10</Product>
 		<Nullable>enable</Nullable>

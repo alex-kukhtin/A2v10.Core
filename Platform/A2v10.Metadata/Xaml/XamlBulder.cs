@@ -64,6 +64,7 @@ internal class XamlBulder(EditWithMode _editWith)
         UIElementBase? elem = item.Is switch
         {
             FormItemIs.Grid => CreateGrid(item, param),
+            FormItemIs.StackPanel => CreateStackPanel(item, param), 
             FormItemIs.Panel => CreatePanel(item, param),
             FormItemIs.DataGrid => CreateDataGrid(item),
             FormItemIs.Tabs => CreateTabs(item),
@@ -117,6 +118,7 @@ internal class XamlBulder(EditWithMode _editWith)
         {
             Bindings = b => b.SetBinding(nameof(Switch.Expression), new Bind(item.Data)),
             Cases = [.. item.Items?.Select(CreateCase) ?? []],
+            Height = Length.FromStringNull(item.Height),
             Attach = att =>
             {
                 if (firstItem != null)
@@ -161,6 +163,17 @@ internal class XamlBulder(EditWithMode _editWith)
             Collapsible = true,
             Style = PaneStyle.Transparent,
             Children = [.. CreateElements(source.Items, Attach, param)]
+        };
+    }
+
+    private StackPanel CreateStackPanel(FormItem source, String? param)
+    {
+        return new StackPanel()
+        {
+            CssClass = source.CssClass,
+            Height = Length.FromStringNull(source.Height),
+            Width = Length.FromStringNull(source.Width),
+            Children = [.. CreateElements(source.Items, null, param)]
         };
     }
 
@@ -260,6 +273,8 @@ internal class XamlBulder(EditWithMode _editWith)
             Multiline = source.Props?.Multiline == true,
             TabIndex = source.Props?.TabIndex ?? 0, 
             Required = source.Props?.Required == true,
+            Highlight = source.Props?.Highlight == true,
+            ShowClear = source.Props?.ShowClear == true,
             Bindings = b => b.SetBinding(nameof(TextBox.Value), source.TypedBind())
         };
     }
@@ -275,7 +290,7 @@ internal class XamlBulder(EditWithMode _editWith)
             ShowClear = source.Props?.ShowClear == true,
             LineClamp = source.Props?.LineClamp ?? 0,
             Required = source.Props?.Required == true,
-            Highlight = param == "taskpad",
+            Highlight = source.Props?.Highlight == true,
             Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), new Bind(source.Data))
         };
     }
@@ -286,6 +301,7 @@ internal class XamlBulder(EditWithMode _editWith)
             Label = source.Label.Localize(),
             Width = Length.FromStringNull(source.Width),
             Required = source.Props?.Required == true,
+            Highlight = source.Props?.Highlight == true,
             Bindings = b => { 
                 b.SetBinding(nameof(ComboBox.Value), new Bind(source.Data));
                 b.SetBinding(nameof(ComboBox.ItemsSource), new Bind(source?.Props?.ItemsSource 
@@ -448,14 +464,12 @@ internal class XamlBulder(EditWithMode _editWith)
                     },
                     FormItemIs.Aligner => new ToolbarAligner(),
                     FormItemIs.Separator => new Separator(),
-                    FormItemIs.SearchBox => new TextBox()
+                    FormItemIs.SearchBox => new SearchBox()
                     {
-                        ShowClear = true,   
-                        ShowSearch = true,  
                         TabIndex = 1,
                         Placeholder = "@[Search]",
                         Width = Length.FromStringNull(c.Width),
-                        Bindings = b => b.SetBinding(nameof(TextBox.Value), new Bind(c.Data))
+                        Bindings = b => b.SetBinding(nameof(SearchBox.Value), new Bind(c.Data))
                     },
                     _ => throw new InvalidOperationException($"Implement toolbar elem: {c.Is}")
                 };
