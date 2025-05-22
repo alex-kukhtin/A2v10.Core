@@ -38,11 +38,20 @@ internal partial class BaseModelBuilder
 
     private FormItem Content()
     {
+        var hasDetails = _table.Details.Any();
+        var memoColumn = _table.Columns.FirstOrDefault(c => c.Name == "Memo");
+
+        var editableColumns = _table.EditableColumns();
+        if (hasDetails && memoColumn != null)
+            editableColumns = editableColumns
+                .Where(c => c.Name != "Memo").ToList();
+
         IEnumerable<FormItem> Controls()
         {
             Int32 row = 1;
-            return _table.EditableColumns().Select(c => CreateControl(c, row++, 1));
+            return editableColumns.Select(c => CreateControl(c, row++, 1));
         }
+
 
         FormItem ContentGrid()
         {
@@ -52,7 +61,7 @@ internal partial class BaseModelBuilder
                 Props = new FormItemProps()
                 {
                     // rows + 1
-                    Rows = String.Join(' ', _table.EditableColumns().Select(c => "auto")
+                    Rows = String.Join(' ', editableColumns.Select(c => "auto")
                         .Union(["auto"])),
                     Columns = "1fr"
                 },
@@ -60,15 +69,19 @@ internal partial class BaseModelBuilder
             };
         }
 
-        var hasDetails = _table.Details.Any();
-        var hasMemo = _table.Columns.Any(c => c.Name == "Memo");
         if (hasDetails)
         {
+            IEnumerable<FormItem> EnumMemo()
+            {
+                if (memoColumn != null)
+                    yield return CreateControl(memoColumn, 4, 1);
+            }
+
             return new FormItem(FormItemIs.Grid)
             {
                 Props = new FormItemProps()
                 {
-                    Rows = hasMemo ? "auto auto 1fr auto" : "auto auto 1fr",
+                    Rows = memoColumn != null ? "auto auto 1fr auto" : "auto auto 1fr",
                     Columns = "1fr"
                 },
                 Items = [
@@ -79,7 +92,8 @@ internal partial class BaseModelBuilder
                         Grid = new FormItemGrid(3, 1),
                         CssClass = "details-tabbar",
                         Items = [.. _table.Details.Select(d => DetailsTab(d, $"{_table.RealItemName}.{d.RealItemsName}", d.RealItemsName, d.RealItemsLabel, "details"))]
-                    }
+                    },
+                    ..EnumMemo()
                 ]
             };
         }

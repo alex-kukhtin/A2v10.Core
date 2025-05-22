@@ -81,6 +81,7 @@ public record TableColumn
     internal Boolean IsReference => Reference != null && Reference.RefTable != null;
     internal Boolean IsEnum => IsReference && DataType == ColumnDataType.Enum;
     internal Boolean IsBlob => DataType == ColumnDataType.Stream;
+    internal Boolean IsString => DataType == ColumnDataType.String;
     internal Boolean Exists => DbName != null && DbDataType != null;
 
     internal Boolean HasDefaultBit => 

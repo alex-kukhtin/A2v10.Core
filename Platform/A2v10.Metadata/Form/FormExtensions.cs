@@ -38,7 +38,7 @@ internal static class FormExtensions
     public static FormItemProps? IndexColumnProps(this TableColumn column)
     {
         var noWrap = column.Role.HasFlag(TableColumnRole.Code) || column.Role.HasFlag(TableColumnRole.Number); 
-        var lineClamp = column.MaxLength == 0 || column.MaxLength > Constants.MultilineThreshold ? 2 : 0;
+        var lineClamp = column.IsString && (column.MaxLength == 0 || column.MaxLength > Constants.MultilineThreshold) ? 2 : 0;
 
         if (noWrap || lineClamp > 0)
         {

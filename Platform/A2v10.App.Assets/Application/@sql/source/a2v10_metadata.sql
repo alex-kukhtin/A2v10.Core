@@ -322,7 +322,8 @@ begin
 	select [!TKind!Array] = null, [Id!!Id] = a.Id, a.[Name], a.[Label],
 		[!TTable.Kinds!ParentId] = a.[Details]
 	from a2meta.DetailsKinds a 
-		inner join @innerTables it on a.Details = it.Id and it.Kind = N'details';
+		inner join @innerTables it on a.Details = it.Id and it.Kind = N'details'
+	order by a.[Order];
 
 	select [!TMapping!Array] = null, [Id!!Id] = m.Id,
 		[Target] = t.[Name], 
