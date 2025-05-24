@@ -1,4 +1,11 @@
-﻿Зависимости от OpenAPI
+﻿Mobile version
+======================
+1. Отдельные мобильные модели и Views для мобильных устройств
+Оне не tabbed, просто страницы с навигацией.
+Поэтому придется таки делать /Shared/MobileLayout.cshtml
+
+
+Зависимости от OpenAPI
 ======================
 1. выделить статические ApiOptions в отдельный пакет A2v10.Security.ApiHost
 2. связать его с Swashbuckle.AspNetCore
@@ -67,12 +74,8 @@ TABBED LAYOUT
 =============
 4. Footer: Footer.AppLinks
 25. Header.UserMenu. ChangePassword
-27. Header -> Search in interface
 30. LeftMenu - поиск
-32. Сделать поиск по интерфейсу - Пример: Одниці виміру -> /sales/catalog/index/{guid}
-34. Tabbed. rightMenu. Закрывать вкладку прямо из меню.
 *41. Platform4.8: input-group disabled для textarea:disabled
-44. Tabbed. rightMenu - Hover, Sections (OPEN, RECENTLY CLOSED) styling
 *48. NovaEra2023. Order. Нету контрагента - include - GPF
 52. Нет видов договоров
 *53. Catalog.Other - сделать какой-то title, чтобы было видно откуда оно открывалось
@@ -83,27 +86,23 @@ TABBED LAYOUT
 59. Если не найден файл view, говорит View engine not found for ..., 
 	а должен говорить что искал и где.
 64. Sheet. Сделать таки padding для колонки SheetLevelCell
-67. Tabbed: Drag'n'drop tabs
 74. Левая панель - текст в меню nowrap, ellipsis
 78. SimpleSecurity: развязать User/Tenant
 79. Красивость. Если Search заполнен - подсвечивать его каким-то цветом.
-83. NovaEra2023. Динамическая оборотка - придумать что-то со сворачиванием сальдо.
-85. InitLayout (Login/Registration/etc) - нету footer
 86. 
+
 
 
 Dynamic Reports
 ===============
 2. Сделать аргегаты First, Last
 
-11. Выключить все группировки. В root показывает неправильные данные.
-	  Запретить строить отчет если нет хотя-бы одной группировки.
 
 15. Data.Core (dynamic grouping): Все же чистить поля если есть дочерние записи. Но только если нету детей!
 
 16. Grouping.Field - Grouping mode - например для даты только first/last. Зависит от типа.
 
-17. platform_simple.sql -> User/Tenants развязать. Как в qela.
+17. platform_simple.sql -> User/Tenants развязать.
 
 23. Хитрые группировки по дате - месяц, год, неделя, день недели
 

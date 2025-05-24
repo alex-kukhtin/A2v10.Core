@@ -5,28 +5,23 @@ using System.Dynamic;
 using System.Text;
 
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 using A2v10.Infrastructure;
-using Microsoft.Extensions.Options;
-using Microsoft.AspNetCore.Http;
 
 namespace A2v10.Platform.Web;
 
-public class WebApplicationHost(IConfiguration config, IOptions<AppOptions> appOptions, ICurrentUser currentUser) : IApplicationHost
+public class WebApplicationHost(IConfiguration _config, IOptions<AppOptions> appOptions, ICurrentUser _currentUser) : IApplicationHost
 {
-	private readonly IConfiguration _appSettings = config.GetSection("appSettings");
+	private readonly IConfiguration _appSettings = _config.GetSection("appSettings");
 	private readonly AppOptions _appOptions = appOptions.Value;
-	private readonly ICurrentUser _currentUser = currentUser;
 
     public Boolean IsMultiTenant => _appOptions.MultiTenant;
 	public Boolean IsMultiCompany => _appOptions.MultiCompany;
-
 	public Boolean IsDebugConfiguration => _appOptions.Environment.IsDebug;
-
-	public Boolean Mobile { get; private set; }
 
     public String? TenantDataSource => String.IsNullOrEmpty(_currentUser.Identity.Segment) ? null : _currentUser.Identity.Segment;
 
@@ -70,25 +65,6 @@ public class WebApplicationHost(IConfiguration config, IOptions<AppOptions> appO
 			return eo;
 		}
 		throw new InvalidOperationException($"Configuration parameter 'appSettings/{key}' not defined");
-	}
-
-	/*
-	public string MakeRelativePath(string path, string fileName)
-	{
-		throw new NotImplementedException();
-	}
-	*/
-
-	/*
-	public void StartApplication(bool bAdmin)
-	{
-		throw new NotImplementedException();
-	}
-	*/
-
-	private static Boolean GetIsMobile(HttpContext? context)
-	{
-		return false;
 	}
 }
 

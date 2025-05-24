@@ -1,6 +1,7 @@
 ﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+using System.Dynamic;
 using System.IO;
 using System.Threading.Tasks;
 using System.Text;
@@ -12,7 +13,6 @@ using Microsoft.AspNetCore.Http;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
-using System.Dynamic;
 
 namespace A2v10.Platform.Web.Controllers;
 
@@ -37,7 +37,7 @@ public class PageActionResult(IRenderResult render, String? script) : IActionRes
 public class PageController(IApplicationHost _host, ILocalizer _localizer, ICurrentUser _currentUser, 
 	IProfiler _profiler, IDataService _dataService,
 	IViewEngineProvider _viewEngineProvider, IAppDataProvider _appDataProvider, 
-	IAppVersion _appVersion, IDataScripter _scripter) 
+	IAppVersion _appVersion, IDataScripter _scripter, IUserDevice _userDevice) 
 	: BaseController(_host, _localizer, _currentUser, _profiler)
 {
 	[Route("_page/{*pathInfo}")]
@@ -116,7 +116,7 @@ public class PageController(IApplicationHost _host, ILocalizer _localizer, ICurr
 
 		//var typeChecker = _host.CheckTypes(rw.Path, rw.checkTypes, model);
 
-		var viewName = rw.GetView(_host.Mobile);
+		var viewName = rw.GetView(_userDevice.IsMobile);
 		var templateName = rw.Template;
 		String? viewText = null;
 		String? templateText = null;
@@ -170,7 +170,7 @@ public class PageController(IApplicationHost _host, ILocalizer _localizer, ICurr
 		{
 			RootId = rootId,
 			FileName = (viewText == null) ? viewEngine.FileName : null,
-			FileTitle = rw.GetView(_host.Mobile),
+			FileTitle = rw.GetView(_userDevice.IsMobile),
 			Path = rw.Path,
 			DataModel = model,
 			Text = viewText,

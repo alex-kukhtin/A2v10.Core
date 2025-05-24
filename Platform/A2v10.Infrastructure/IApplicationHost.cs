@@ -6,8 +6,6 @@ using System.Dynamic;
 namespace A2v10.Infrastructure;
 public interface IApplicationHost
 {
-	Boolean Mobile { get; }
-
 	Boolean IsDebugConfiguration { get; }
 	//Boolean IsProductionEnvironment { get; }
 	Boolean IsMultiTenant { get; }
