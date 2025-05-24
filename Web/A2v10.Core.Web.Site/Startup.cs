@@ -60,7 +60,7 @@ public class Startup(IConfiguration configuration)
 		//services.UsePermissions();
 		//services.AddScoped<IUserBannerProvider, TestBannerProvider>();
 		//services.UseLicenseManager();
-		services.AddScoped<ILicenseManager, NullLicenseManager>();
+		//services.AddScoped<ILicenseManager, NullLicenseManager>();
 
 		services.AddScoped<ISqlQueryTextProvider, SqlQueryTextProvider>();
 

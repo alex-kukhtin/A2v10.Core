@@ -1,0 +1,401 @@
+﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+
+@import "Variables.less";
+
+@table-hdr-bg-color: var(--table-header-bg);
+
+@compact-ctrl-height:1.67em;
+
+@cell-vert-padding: 4px;
+@cell-vert-padding-x2: 8px;
+@cell-vert-padding-x15: 7px;
+@cell-horz-padding: 6px;
+
+table {
+	col.fit {
+		width: .1%;
+	}
+
+	col.sorted {
+		background-color: @sort-bg-color;
+	}
+
+	tr.bold > td {
+		font-weight: @font-bold;
+	}
+
+	td.gray {
+		background-color: @table-cell-gray-color;
+	}
+
+	tr.overline {
+		border-top: 2px solid @table-brd-color;
+	}
+
+	td.wrap {
+		word-break: break-word;
+	}
+}
+
+.a2-table.table-separate-border {
+	border-collapse:separate;
+}
+
+.a2-table.table-cell-spacing-small {
+	border-spacing: 2px;
+	border-collapse: separate;
+	margin:-2px;
+}
+
+.a2-table.table-cell-spacing-medium {
+	border-spacing: 6px;
+	border-collapse: separate;
+	margin:-6px;
+}
+
+.a2-table.table-cell-spacing-large {
+	border-spacing: 10px;
+	border-collapse: separate;
+	margin:-10px;
+}
+
+table.bordered {
+	// use OUTLINE
+}
+
+table.hover {
+	> tbody > tr:hover {
+		background-color: @hover-bg-color !important;
+	}
+
+	> tbody > tr.active:hover {
+		background-color: @active-bg-color !important;
+	}
+}
+
+.grid-vertical, .grid-both {
+	> tbody, > thead, > tfoot {
+		> tr {
+			> td, > th {
+				border-right: 1px solid @table-brd-color;
+			}
+		}
+	}
+
+	> tbody, > thead, > tfoot {
+		> tr > td:first-child:not(.no-first), > tr > th:first-child:not(.no-first) {
+			border-left: 1px solid @table-brd-color;
+		}
+	}
+}
+
+.grid-horizontal, .grid-both {
+	> tbody, > thead, > tfoot {
+		> tr {
+			> td, > th {
+				border-bottom: 1px solid @table-brd-color;
+			}
+		}
+	}
+
+	> thead > tr:first-child > td, tfoot > tr:first-child > td {
+		border-top: 1px solid @table-brd-color;
+	}
+}
+
+.grid-horizontal, .grid-vertical, .grid-both {
+	td > .control-group > .input-group {
+		border-color:transparent;
+	}
+}
+
+
+
+.a2-table {
+	border-collapse: separate;
+	border-spacing: 0;
+	line-height: 1.8;
+
+	&.striped > tbody > tr:nth-of-type(even) {
+		background-color: @alter-bg-color;
+	}
+
+	&.bordered {
+		margin: 1px;
+		outline: 1px solid @table-brd-color;
+	}
+
+	> tbody > tr {
+		vertical-align: top;
+	}
+
+	> tbody > tr > td {
+		padding: 0 6px;
+		border-color: @table-brd-color;
+
+		label {
+			display: inline-block;
+		}
+
+		.control-group {
+			margin: 0;
+		}
+
+		.a2-table {
+			margin: -1px;
+		}
+	}
+
+	> thead, > tfoot {
+		line-height: 1;
+	}
+
+	> thead > tr, > tfoot > tr {
+		vertical-align: middle;
+	}
+
+	> thead > tr > td, > tfoot > tr > td {
+		padding: @cell-vert-padding-x15 @cell-horz-padding;
+		background-color: @table-hdr-bg-color;
+		border-color: @table-brd-color;
+	}
+
+	td.ctrl {
+		padding: 0;
+		vertical-align: top;
+
+		.checkbox, .radio {
+			margin: 0 6px;
+		}
+
+		.stack-panel.horizontal {
+			align-items: baseline;
+
+			.control-group + .control-group {
+				border-left: 1px solid @table-brd-color;
+			}
+		}
+
+		.input-group.static {
+			line-height: 2em;
+		}
+	}
+
+	td.marker-cell {
+		padding: 0 !important;
+		width: 1px;
+		position: relative;
+
+		.marker {
+			// HACK!
+			position: absolute;
+			left: 0;
+			top: 0;
+			bottom: 0;
+			right: 0;
+			background-color: @alter-bg-color;
+			border-left: 4px solid #ddd;
+			height: 20px;
+
+			&.success, &.green {
+				background-color: @mark-success-bg-color;
+				border-left-color: @mark-success-brd-color;
+			}
+
+			&.danger, &.red, &.error {
+				background-color: @mark-danger-bg-color;
+				border-left-color: @mark-danger-brd-color;
+			}
+
+			&.warning, &.orange {
+				background-color: @mark-warning-bg-color;
+				border-left-color: @mark-warning-brd-color;
+			}
+
+			&.info, &.cyan {
+				background-color: @mark-info-bg-color;
+				border-left-color: @mark-info-brd-color;
+			}
+		}
+	}
+
+	td.row-divider {
+		padding: 0;
+		height: 1px;
+		background-color: @table-brd-color;
+	}
+
+	tr:last-child td.row-divider {
+		display: none;
+	}
+
+	tr.success, tr.green {
+		> td {
+			background-color: @mark-success-bg-color;
+		}
+	}
+
+	tr.info, tr.cyan {
+		> td {
+			background-color: @mark-info-bg-color;
+		}
+	}
+
+	tr.warning, tr.orange {
+		> td {
+			background-color: @mark-warning-bg-color;
+		}
+	}
+
+	tr.danger, tr.error, tr.red {
+		> td {
+			background-color: @mark-danger-bg-color;
+		}
+	}
+
+	tr.gray {
+		> td {
+			background-color: @alter-bg-color;
+		}
+	}
+
+	.control-group .input-group {
+		line-height: inherit;
+
+		a {
+			line-height: inherit;
+		}
+
+		.popover-title {
+			line-height: inherit;
+		}
+	}
+}
+
+.a2-sticky-bottom {
+	height: 1px;
+	background-color: @background-color;
+	position: relative;
+	top: -1px;
+}
+
+.a2-table.compact {
+	//TODO: may be .small-font ????
+	line-height: normal;
+	line-height: 1.52;
+
+	> thead, > tfoot {
+		line-height: @compact-ctrl-height;
+	}
+
+	input, select {
+		height: @compact-ctrl-height;
+	}
+
+	td {
+		padding: 0 4px;
+
+		.input-group {
+			padding: 0;
+		}
+
+		.input-group input {
+		}
+
+		.input-group.static > span {
+			line-height: @compact-ctrl-height;
+			min-height: @compact-ctrl-height;
+			height: @compact-ctrl-height;
+		}
+
+		&.ctrl {
+			padding: 0;
+
+			.checkbox, .radio {
+				margin: 0 6px 0 4px;
+
+				:before, :after {
+					width: 13px;
+					height: 13px;
+				}
+
+				> span {
+					padding-left: 18px;
+				}
+			}
+		}
+	}
+}
+
+.a2-table.bk-paper {
+	background-color: #fcfaf6;
+}
+
+.a2-table.bk-yellow {
+	background-color: @light-yellow-bg-color;
+}
+
+.a2-table.bk-cyan {
+	background-color: @cyan-bg;
+}
+
+.a2-table.bk-rose {
+	background-color: #fff8f8;
+}
+
+.a2-table.bk-white-smoke {
+	background-color: @whitesmoke-gray-bg-color;
+}
+
+.a2-table.bk-white {
+	background-color: #fff;
+}
+
+.a2-table.bk-primary {
+	background-color: var(--bgPrimary);
+}
+
+.app-link-table {
+	border-collapse:collapse;
+	td,th {
+		padding:4px 6px;
+		border:1px solid #ccc;
+	}
+	th {
+		font-weight:bold;
+		color:#777;
+	}
+}
+
+.bordered-pane {
+	.a2-table {
+		margin: -1px 0;
+		tr > td:first-child {
+			border-left-style:none;
+		}
+	}
+}
+
+.a2-sticky-container {
+	overflow: auto;
+
+	tr {
+		scroll-margin-top: 35px;
+	}
+}
+
+table.a2-table.sticky {
+	width:100%;
+	thead, tfoot {
+		position: sticky;
+		z-index: @sticky-index;
+	}
+
+	thead {
+		top: 0;
+	}
+
+	tfoot {
+		bottom: 0;
+	}
+}

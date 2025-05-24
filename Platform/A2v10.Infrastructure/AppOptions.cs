@@ -17,7 +17,9 @@ public record AppEnvironment
 public record ModuleInfo
 {
     public String? Path { get; init; }
+    public String? Assembly { get; init; }
     public Boolean Default { get; init; }
+    public String? RealPath => Assembly != null ? $"clr-type:{Assembly}.AppContainer;assembly={Assembly}" : Path;
 }
 
 public record AppOptions

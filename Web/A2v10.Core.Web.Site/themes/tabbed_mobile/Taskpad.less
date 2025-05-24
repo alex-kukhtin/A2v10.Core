@@ -1,0 +1,162 @@
+﻿
+@import "Variables.less";
+
+@taskpad-collapsed-bg-color: var(--bgPrimary);
+@taskpad-collapsed-width: 36px;
+
+@handle-size: 26px;
+
+.taskpad {
+	overflow: visible;
+	position: relative;
+
+	.taskpad-body {
+		overflow: auto;
+		height: 100%;
+	}
+
+	.panel-content > .grid {
+		padding: 0;
+	}
+
+	&.overflow {
+		.taskpad-body {
+			overflow: visible;
+		}
+	}
+
+	.taskpad-collapse-handle {
+		position: absolute;
+		display: block;
+		top: 9.5px;
+		width: @handle-size;
+		height: @handle-size;
+		color: @link-color;
+		border: 1px solid var(--neutral100);
+		border-radius: @control-brd-radius;
+		background-color: var(--nav100);
+		text-align: center;
+		line-height: (@handle-size - 2);
+		z-index: 20;
+		text-decoration: none;
+
+		&:hover {
+			background-color: var(--nav300);
+		}
+	}
+
+	&.collapsible {
+		.taskpad-body {
+			.panel:first-child {
+				.panel-header {
+					margin-left: 10px;
+				}
+			}
+		}
+	}
+
+	&.no-collapsible {
+		.taskpad-collapse-handle {
+			display: none;
+		}
+
+		&.expanded {
+			margin-left: 0;
+		}
+	}
+
+
+	&.expanded {
+
+		.taskpad-collapse-handle {
+
+			&:before {
+				content: "\e9a3"; // chevron-left
+			}
+		}
+	}
+
+	&.collapsed {
+		background-color: @taskpad-collapsed-bg-color;
+		width: @taskpad-collapsed-width;
+		padding: 0 !important;
+
+		.taskpad-collapse-handle {
+			&:before {
+				content: "\e9a5"; // chevron-right
+			}
+		}
+	}
+
+	.taskpad-title {
+		background-color: @taskpad-collapsed-bg-color;
+		white-space: nowrap;
+		height: 100%;
+		cursor: pointer;
+		font-size: 16px;
+		color: var(--text-label);
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		padding-left: 31px;
+
+		.taskpad-label {
+			display: block;
+			transform: rotate(90deg);
+			transform-origin: top left;
+			padding-left: 46px;
+		}
+	}
+}
+
+.taskpad.position-right {
+	border-left: 1px solid @default-brd-color;
+
+	.taskpad-collapse-handle {
+		left: -(@handle-size / 3);
+	}
+
+	&.expanded {
+		.taskpad-collapse-handle {
+			&:before {
+				content: "\e9a5"; // chevron-right
+			}
+		}
+	}
+
+	&.collapsed {
+		padding:0!important;
+
+		.taskpad-collapse-handle {
+			&:before {
+				content: "\e9a3"; // chevron-left
+			}
+		}
+	}
+}
+
+.taskpad.position-left {
+	border-right: 1px solid @control-brd-light-color;
+
+	.taskpad-collapse-handle {
+		right: -(@handle-size/2);
+	}
+
+	&.expanded {
+		.taskpad-collapse-handle {
+			&:before {
+				content: "\e9ab"; // chevron-double-left
+			}
+		}
+	}
+
+	&.collapsed {
+		.taskpad-collapse-handle {
+			&:before {
+				content: "\e9ad"; // chevron-double-right
+			}
+		}
+	}
+}

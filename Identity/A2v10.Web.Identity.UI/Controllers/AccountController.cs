@@ -39,7 +39,7 @@ public class AccountController(
     IApplicationTheme _appTheme, IMailService _mailService, ILocalizer _localizer,
     IConfiguration _configuration, IAppTenantManager _appTenantManager, 
 	ILogger<AccountController> _logger, UrlEncoder _urlEncoder,
-	IDataProtectionProvider protectionProvider,
+    IDataProtectionProvider protectionProvider,
     IOptions<AppUserStoreOptions<Int64>> userStoreOptions) : Controller
 {
     private readonly IDataProtector _protector = protectionProvider.CreateProtector("Login");
@@ -127,7 +127,7 @@ public class AccountController(
 			LoginProviders = providers != null ? String.Join(',', providers) : "Local",
 			ReturnUrl = returnUrl
 		};
-		return View(m);
+        return View(m);
 	}
 
 	/*

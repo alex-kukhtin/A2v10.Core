@@ -1,10 +1,11 @@
 ﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
-
-using System.Threading.Tasks;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
@@ -20,15 +21,17 @@ namespace A2v10.Platform.Web.Controllers;
 [ExecutingFilter]
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 public class MainController(IDataService dataService, IOptions<AppOptions> appOptions,
-    IApplicationTheme appTheme, IAppCodeProvider codeProvider, ILicenseManager licenseManager,
+    IApplicationTheme appTheme, IAppCodeProvider codeProvider, IEnumerable<ILicenseManager> licenseManagers,
     ICurrentUser currentUser) : Controller
 {
 	private readonly AppOptions _appOptions = appOptions.Value;
 	private readonly IDataService _dataService = dataService;
 	private readonly IApplicationTheme _appTheme = appTheme;
 	private readonly IAppCodeProvider _codeProvider = codeProvider;
-	private readonly ILicenseManager _licenseManager = licenseManager;
-	private readonly ICurrentUser _currentUser = currentUser;
+	private readonly ILicenseManager _licenseManager =
+			licenseManagers.Count() == 1 ? licenseManagers.First()
+			: throw new InvalidOperationException("Too many License Managers");
+    private readonly ICurrentUser _currentUser = currentUser;
 
 	private const String SKIP_COOKIE = "SkipLicense";
 
@@ -43,6 +46,14 @@ public class MainController(IDataService dataService, IOptions<AppOptions> appOp
 	}
 
 	[HttpGet]
+	[Route("/viewlicense/0")]
+	public async Task<IActionResult> ViewLicense()
+	{
+        var licInfo = await _licenseManager.GetLicenseInfoAsync(_currentUser.Identity.Segment, _currentUser.Identity.Tenant);
+        return View(new ViewLicenseModel(licInfo));
+	}
+
+     [HttpGet]
 	[Route("/license")]
 	public async Task<IActionResult> License()
 	{
@@ -77,7 +88,9 @@ public class MainController(IDataService dataService, IOptions<AppOptions> appOp
 		if (IsStaticFile() || (pathInfo != null && pathInfo.StartsWith('_')))
 			return NotFound();
 
-		if (!await CheckLicenseAsync())
+		var licResult = await CheckLicenseAsync();
+
+        if (licResult == LicenseResult.Fail)
 		{
 			var skip = Request.Cookies[SKIP_COOKIE];
 			if (skip == null)
@@ -105,7 +118,8 @@ public class MainController(IDataService dataService, IOptions<AppOptions> appOp
 			Theme = _appTheme.MakeTheme(),
 			HasSettings = _currentUser.Identity.IsAdmin && HasSettings(),
 			Minify = _appOptions.Environment.IsRelease ? "min." : String.Empty,
-		};
+			HasLicense = licResult == LicenseResult.Success,
+        };
 
 		if (pathInfo != null && _appOptions.SinglePages.Any(x => pathInfo.StartsWith(x, StringComparison.OrdinalIgnoreCase)))
 		{
@@ -171,12 +185,19 @@ public class MainController(IDataService dataService, IOptions<AppOptions> appOp
 			path.EndsWith(".map", StringComparison.OrdinalIgnoreCase);
 	}
 
-	private async Task<Boolean> CheckLicenseAsync()
+	private enum LicenseResult {
+        NoLicense,
+		Success,
+		Fail
+    }
+
+	private async Task<LicenseResult> CheckLicenseAsync()
 	{
 		if (!_codeProvider.HasLicensedModules)
-			return true;
-		return await _licenseManager.VerifyLicensesAsync(
+			return LicenseResult.NoLicense;
+		var result = await _licenseManager.VerifyLicensesAsync(
 			_currentUser.Identity.Segment, _currentUser.Identity.Tenant, 
 			_codeProvider.LicensedModules) == LicenseState.Ok;
-	}
+		return result ? LicenseResult.Success : LicenseResult.Fail;
+    }
 }

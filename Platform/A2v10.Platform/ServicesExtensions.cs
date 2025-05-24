@@ -3,6 +3,7 @@
 using System;
 using System.Globalization;
 using System.Linq;
+using System.Collections.Generic;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Builder;
@@ -24,6 +25,7 @@ using A2v10.ViewEngine.Html;
 using A2v10.Platform.Web;
 using A2v10.Data.Providers;
 using A2v10.Platform;
+using System.Collections;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -181,6 +183,7 @@ public static class ServicesExtensions
 		CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
 		CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 	}
+
 
 
 	public static IServiceCollection UsePermissions(this IServiceCollection services)

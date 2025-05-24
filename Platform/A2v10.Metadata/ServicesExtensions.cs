@@ -3,6 +3,8 @@
 using A2v10.Infrastructure;
 using A2v10.Metadata;
 
+[assembly: IssueDate("2024-10-24")]
+
 namespace Microsoft.Extensions.DependencyInjection;
 
 public static class ServicesExtensions
@@ -16,6 +18,8 @@ public static class ServicesExtensions
         services.AddKeyedScoped<IEndpointHandler, MetadataEndpointHandler>("Meta");
 
         services.AddScoped<IModelBuilderFactory, ModelBuilderFactory>();
+
+        services.AddScoped<ILicenseManager, LicenseManager>();  
 
         return services;
     }

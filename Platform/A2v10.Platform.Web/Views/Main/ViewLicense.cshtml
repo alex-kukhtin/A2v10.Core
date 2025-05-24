@@ -1,0 +1,89 @@
+﻿@model ViewLicenseModel
+@inject ILocalizer _loc
+@{
+	Layout = null;
+    var elem = $"el{System.Guid.NewGuid().ToString()}";
+}
+
+<div class="modal" id="@elem" v-cloak v-modal-width="{width:'35rem'}">
+    <div class="modal-header" v-drag-window>
+        <span class=modal-title>@_loc.Localize("@[License]")<span>
+        <button tabindex="-1" class="btnclose" v-on:click="close">✕</button>
+    </div>
+	<div class="modal-content">
+        <div class="grid" style="grid-template-columns:1fr 1fr">
+		    <div class="control-group" style="grid-area: 1 / 1 / 1 / span 2;">
+			    <label>@_loc["Code"]</label> 
+		        <div class="input-group static">
+                    <span class="static-input">@Model.Id</span>
+		        </div>
+		    </div>
+			<div class="control-group">
+				<label>Видана</label> 
+				<div class="input-group static text-center">
+		            <span class="static-input">@Model.IssuedOn</span>
+                </div>
+		    </div>
+			<div class="control-group">
+				<label>Діє до</label> 
+				<div class="input-group static text-center">
+		            <span class="static-input">@Model.ExpiresOn</span>
+                </div>
+		    </div>
+			<div class="control-group" style="grid-area: 3 / 1 / 3 / 1;">
+				<label>Код ЄДРПОУ</label> 
+				<div class="input-group static">
+		            <span class="static-input">@Model.CodeUA</span>
+                </div>
+		    </div>
+			<div class="control-group" style="grid-area: 4 / 1 / 4 / span 2;">
+				<label>@_loc["User"]</label> 
+				<div class="input-group static">
+		            <span class="static-input">@Model.Name</span>
+                </div>
+		    </div>
+			<div class="control-group" style="grid-area: 5 / 1 / 5 / 1;">
+				<label>@_loc["Email"]</label> 
+				<div class="input-group static">
+		            <span class="static-input">@Model.Email</span>
+                </div>
+		    </div>
+			<div class="control-group" style="grid-area: 5 / 2 / 5 / 2;">
+				<label>@_loc["Phone"]</label> 
+				<div class="input-group static">
+		            <span class="static-input">@Model.Phone</span>
+                </div>
+		    </div>
+			<div class="control-group"  style="grid-area: 6 / 1 / 6 / 1;">
+				<label>Логіни</label> 
+				<div class="input-group static text-right">
+		            <span class="static-input">@Model.Users</span>
+                </div>
+		    </div>
+			<div class="control-group"  style="grid-area: 7 / 1 / 7 / span 2;">
+				<label>Партнер</label> 
+				<div class="input-group static">
+		            <span class="static-input">@Model.PartnerName</span>
+                </div>
+		    </div>
+        </div>
+    </div>
+
+    <div class="modal-footer">
+        <button class="btn a2-inline btn-primary" v-on:click="close">@_loc["Close"]</button>
+    </div>
+</div>
+<script type="text/javascript">
+
+	var eventBus = require('std:eventBus');
+
+    var vm = new Vue({
+	    el: '#@elem',
+        methods: {
+            close() {
+                eventBus.$emit('modalClose'); 
+            }
+        }
+    });
+</script>
+

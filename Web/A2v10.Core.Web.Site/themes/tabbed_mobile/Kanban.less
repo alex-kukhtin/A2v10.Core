@@ -1,0 +1,102 @@
+﻿@import "Variables.less";
+
+@lane-width: 300px;
+@lane-min-width:200px;
+@kanban-gap: 8px;
+@lane-gap: 6px;
+@lane-color: var(--table-header-bg);
+@border-color: @default-brd-color;
+
+.kanban {
+	overflow: auto;
+	display: flex;
+	flex-direction: column;
+	--lane-width: @lane-width;
+	--lane-min-width: @lane-min-width;
+
+	.kanban-part {
+		display: flex;
+		flex-direction: row;
+		gap: @lane-gap;
+	}
+
+	.kanban-header, .kanban-footer {
+		position: sticky;
+	}
+
+	.kanban-header {
+		top: 0;
+	}
+
+	.kanban-footer {
+		bottom: 0;
+	}
+
+	.kanban-body {
+		flex-grow: 2;
+	}
+
+	.lane-header {
+		//padding: @kanban-gap 0 @kanban-gap @kanban-gap;
+		width: var(--lane-width);
+		min-width: var(--lane-min-width);
+		background-color: @bk-menu;
+		display: flex;
+		border-bottom: 1px solid @border-color;
+
+		&.over {
+			background-color: var(--neutral50);
+		}
+	}
+
+	.lane {
+		background-color: @lane-color;
+		padding: @kanban-gap;
+		width: var(--lane-width);
+		min-width: var(--lane-min-width);
+		display: flex;
+
+		&.over {
+			background-color: var(--neutral100);
+		}
+	}
+
+	.lane-header .lane-header-body {
+		flex-grow: 2;
+	}
+
+	.lane-footer {
+		//padding: @kanban-gap;
+		width: var(--lane-width);
+		min-width: var(--lane-min-width);
+		background: @background-color;
+		border-top: 1px solid @border-color;
+	}
+
+	.card-list {
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: @kanban-gap;
+		flex-grow: 2;
+	}
+
+	.card {
+		cursor: pointer;
+	}
+
+	.kanban-card {
+		border-radius: 2px;
+
+		.kanban-card-header {
+			padding: (@kanban-gap/2) @kanban-gap;
+			border-bottom: 1px solid @border-color;
+		}
+
+		.kanban-card-footer {
+			padding: (@kanban-gap/2) @kanban-gap;
+			border-top: 1px solid @border-color;
+		}
+	}
+}

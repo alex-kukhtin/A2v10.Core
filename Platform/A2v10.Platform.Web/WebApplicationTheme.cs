@@ -12,9 +12,8 @@ using A2v10.Infrastructure;
 
 namespace A2v10.Platform.Web;
 
-public class WebApplicationTheme(IWebHostEnvironment webHostEnviromnent, IOptions<AppOptions> options) : IApplicationTheme
+public class WebApplicationTheme(IWebHostEnvironment _webHostEnviromnent, IOptions<AppOptions> options, IUserDevice _userDevice) : IApplicationTheme
 {
-    private readonly IWebHostEnvironment _webHostEnviromnent = webHostEnviromnent;
 	private readonly AppOptions _appOptions = options.Value;
 
     public String MakeTheme()
@@ -29,7 +28,8 @@ public class WebApplicationTheme(IWebHostEnvironment webHostEnviromnent, IOption
 		}
 		if (theme == "advance" && colorScheme == null)
 			colorScheme = "default";
-		var themeFileName = $"/css/{theme}.min.css";
+		var mobile = _userDevice.IsMobile ? "_mobile": "";
+        var themeFileName = $"/css/{theme}{mobile}.min.css";
 		var tfi = _webHostEnviromnent.WebRootFileProvider.GetFileInfo(themeFileName);
 		var themeFileStamp = tfi.LastModified.ToUnixTimeSeconds().ToString();
 		var sb = new StringBuilder();

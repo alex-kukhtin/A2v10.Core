@@ -1,0 +1,113 @@
+﻿
+@import "Variables.less";
+
+@tabbar-border-height: 3px;
+@tabbar-border-color: @default-brd-color;
+@tabbar-padding: .65rem;
+@tab-active-brd-color: gold;
+@tab-brd-color: @light-gray-color;
+@tabbar-font-bold:500;
+
+@tabbar-link-color: var(--text);
+//@tabbar-link-hover-background: var(--neutral_Lighter_Alt) #faf9f8;
+
+.a2-tab-bar {
+	display: flex;
+	gap: 1rem;
+	border-bottom: @tabbar-border-height solid @tabbar-border-color;
+	align-items: baseline;
+	color: var(--text);
+}
+
+.a2-tab-bar-item {
+
+	&:first-child {
+		padding-left: 0;
+	}
+
+	&:not(.active):hover {
+		//background-color: @tabbar-link-hover-background;
+	}
+}
+
+.a2-tab-button {
+	border-bottom: @tabbar-border-height solid @tabbar-border-color;
+	margin-bottom: -@tabbar-border-height;
+	font-size: 1.1rem;
+	display: block;
+	padding: @tabbar-padding 0;
+	color: @text-color;
+
+	&:hover {
+		text-shadow: .5px 0 0 @text-color;
+		color: @text-color;
+	}
+
+	&.active {
+		border-bottom-color: @tabbar-link-color;
+		text-shadow: .5px 0 0 @text-color;
+	}
+
+	.content {
+		white-space: nowrap;
+	}
+}
+
+.a2-tab-description {
+	color: @label-color;
+}
+
+.a2-tab-bar.tab-bar-button-group {
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	align-items: stretch;
+	border: none;
+
+	.a2-tab-bar-item {
+		flex: 1 1 auto;
+		padding: 0;
+	}
+
+	.a2-tab-button {
+		text-align: center;
+		border: 1px solid @navbar-bg-color;
+		font-weight: normal;
+		font-size: 1rem;
+		margin: 0;
+
+		&.active {
+			background-color: @menu-bk-color;
+			border-color: @menu-bk-color;
+			color: white;
+		}
+	}
+}
+
+.a2-tab-bar.tab-bar-tab {
+	border-bottom: 1px solid @tab-brd-color;
+	border-top: @tabbar-border-height solid transparent;
+	background-color: @whitesmoke-gray-bg-color;
+	margin: 0;
+
+	.a2-tab-bar-item {
+		padding: 0;
+		margin-top: -@tabbar-border-height;
+		margin-bottom: -1px;
+	}
+
+	.a2-tab-button {
+		font-size: 1rem;
+		border: 1px solid transparent;
+		padding: .45rem 1rem .55rem 1rem;
+		margin: 0;
+
+		&.active {
+			background-color: @background-color;
+			border-top: @tabbar-border-height solid @tab-active-brd-color;
+			border-left-color: @tab-brd-color;
+			border-right-color: @tab-brd-color;
+			border-bottom-color: white;
+		}
+	}
+}

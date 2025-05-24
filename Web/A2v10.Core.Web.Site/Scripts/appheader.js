@@ -1,4 +1,4 @@
-﻿// Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2023-2025 Oleksandr Kukhtin. All rights reserved.
 
 /*20230525-8100*/
 /* tabbed:appheader.js */
@@ -27,6 +27,10 @@
 					<i class="ico ico-user"></i> 
 					<span v-text="profileText"></span>
 				</button>
+				<button v-if=hasLicense @click=license tabindex="-1" class="dropdown-item">
+					<i class="ico ico-policy"></i>
+					<span v-text="licenseText"></span>
+				</button>
 				<button @click=logout tabindex="-1" class="dropdown-item">
 					<i class="ico ico-logout"></i> 
 					<span v-text="locale.$Quit"></span>
@@ -40,7 +44,9 @@
 			subTitle: String,
 			personName: String,
 			hasProfile: Boolean,
+			hasLicense: Boolean,
 			profileText: String,
+			licenseText: String,
 			logo: String
 		},
 		computed: {
@@ -54,6 +60,10 @@
 			},
 			profile() {
 				eventBus.$emit('navigateto', { url: '/_profile/index/0'});
+			},
+			license() {
+				const dlgData = { promise: null, rd: true, raw: true };
+				eventBus.$emit('modal', '/viewlicense', dlgData);
 			}
 		},
 		mounted() {

@@ -11,6 +11,7 @@ using Newtonsoft.Json.Converters;
 
 using A2v10.Infrastructure;
 using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Http;
 
 namespace A2v10.Platform.Web;
 
@@ -27,7 +28,7 @@ public class WebApplicationHost(IConfiguration config, IOptions<AppOptions> appO
 
 	public Boolean Mobile { get; private set; }
 
-	public String? TenantDataSource => String.IsNullOrEmpty(_currentUser.Identity.Segment) ? null : _currentUser.Identity.Segment;
+    public String? TenantDataSource => String.IsNullOrEmpty(_currentUser.Identity.Segment) ? null : _currentUser.Identity.Segment;
 
 	public String? GetAppSettings(String? source)
 	{
@@ -84,5 +85,10 @@ public class WebApplicationHost(IConfiguration config, IOptions<AppOptions> appO
 		throw new NotImplementedException();
 	}
 	*/
+
+	private static Boolean GetIsMobile(HttpContext? context)
+	{
+		return false;
+	}
 }
 

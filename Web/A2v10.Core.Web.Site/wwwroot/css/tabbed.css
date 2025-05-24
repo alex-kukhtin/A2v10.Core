@@ -7425,6 +7425,10 @@ table > colgroup col.blue {
 .login-shell .header {
   grid-area: header;
 }
+.login-shell .footer {
+  justify-content: end;
+  padding: 0 8px 0 0;
+}
 .login-shell .main-view {
   grid-area: main;
 }

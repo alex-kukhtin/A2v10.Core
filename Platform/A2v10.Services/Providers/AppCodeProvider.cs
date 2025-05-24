@@ -26,7 +26,7 @@ public class AppCodeProvider : IAppCodeProvider
 				var key = k.ToLowerInvariant();
 				if (v.Default)
 					key = DEFAULT_PROVIDER;
-				_providers.Add(key, CreateProvider(v.Path ?? throw new InvalidOperationException("Path is null")));
+                _providers.Add(key, CreateProvider(v.RealPath ?? throw new InvalidOperationException("Path is null")));
 			}
 		}
 		_appId = opts.AppId;

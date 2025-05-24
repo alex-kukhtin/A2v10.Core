@@ -25,12 +25,14 @@ public static class ServiceExtensions
 		});
 		*/
 
-		services.AddSingleton<IApplicationTheme, WebApplicationTheme>();
+		services.AddScoped<IApplicationTheme, WebApplicationTheme>();
 
 		services.AddScoped<IApplicationHost, WebApplicationHost>()
 		.AddScoped<ITenantManager, WebTenantManager>()
 		.AddScoped<IAppTenantManager, AppTenantManager>()
 		.AddScoped<IDataScripter, VueDataScripter>();
+
+		services.AddScoped<IUserDevice, WebUserDevice>();
 
 		services.AddScoped<WebLocalizer>()
 			.AddScoped<ILocalizer>(s => s.GetRequiredService<WebLocalizer>())

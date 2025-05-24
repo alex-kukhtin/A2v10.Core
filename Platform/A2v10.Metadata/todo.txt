@@ -12,19 +12,12 @@
 21. Color в метаданные для TagLabel
 22. Переименовать сам пакет и разделить его на две части - Xaml и БД.
 (чтобы менять код для БД для разных СУБД)
-25. CreateTable - Default for primary key
 31. IndexPage: SortProperty (Agent.Name?)
-32. CollectionView: Filters
-33. Не ищет по тексту в простых справочниках
-35. Enums a-la Reference
 36. Default Sort Property - сейчас Id - сделать Name? или Date?
-37. Toolbar: Separator
-40. Control.Multiline
-41. Save Details
-42. Xaml Details
 43. Сделать команды как в Xaml (Dialog, Action и т.д)
-44. Документ создает в диалоге, а не на странице.
-45. Не ставит Url для селекторов в TaskPad.
-46. Доделать формирование страницы документа.
-47. Наследование документов, чтобы правильно писать в журнал.
 
+
+
+-- Links
+-- Device Detection	
+https://github.com/wangkanai/wangkanai/tree/main/Detection

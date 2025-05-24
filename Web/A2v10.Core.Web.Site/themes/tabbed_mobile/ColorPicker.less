@@ -1,0 +1,98 @@
+﻿// Copyright © 2023-2024 Oleksandr Kukhtin. All rights reserved.
+
+@import "Variables.less";
+
+@panel-height: 280px;
+
+.color-picker {
+
+	.color-picker-pane {
+		position: absolute;
+		z-index: @pane-z-index;
+		background: white;
+		top: 100%;
+		width: auto;
+		min-width: 100%;
+		border: 1px solid @control-brd-color;
+		max-height: @panel-height;
+		overflow: auto;
+		box-shadow: @dropdown-shadow;
+		border-radius: @control-brd-radius;
+
+		.color-picker-list {
+			display: flex;
+			flex-direction: column;
+			padding: 2px;
+		}
+	}
+
+	.color-picker-wrapper {
+		padding: 0;
+		margin: 0;
+		display: flex;
+		flex-direction: row;
+		width: 100%;
+		align-items: center;
+
+		&:focus-visible {
+			outline: none;
+		}
+
+		.tag-label {
+			width: 100%;
+		}
+	}
+
+	.tag-label {
+		font-size: 1rem;
+		height: 1.75em;
+		margin: .125em;
+		line-height: 1.9;
+		padding: 0 5px;
+		cursor: pointer;
+	}
+
+	.caret {
+		margin: 4px 6px 0 5px;
+	}
+
+	&.disabled {
+		.color-picker-wrapper {
+			pointer-events: none;
+		}
+
+		.caret {
+			opacity: .5;
+		}
+	}
+
+	&.drop-up {
+		.color-picker-pane {
+			top: auto;
+			bottom: 100%;
+			margin-bottom: 2px;
+		}
+	}
+
+	&.compact {
+		.color-picker-pane {
+			width: 16.5rem;
+
+			.color-picker-list {
+				flex-direction: row;
+				flex-wrap: wrap;
+
+				.tag-label {
+					width: 24px;
+
+					&:hover {
+						outline: 1px solid var(--link);
+						outline-offset: 1px;
+					}
+				}
+			}
+		}
+	}
+}
+
+

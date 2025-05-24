@@ -16,5 +16,6 @@ public class MainViewModel
 	public String Theme { get; init; } = String.Empty;
 	public String Minify { get; init; } = String.Empty;
 	public String? SinglePagePath { get; set; }
+	public Boolean HasLicense { get; init; }
 }
 

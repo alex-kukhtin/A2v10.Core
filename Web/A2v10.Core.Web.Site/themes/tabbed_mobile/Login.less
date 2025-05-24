@@ -1,0 +1,53 @@
+﻿.initial-form {
+	.external-providers {
+		display: flex;
+		gap: 6px;
+
+		a.btn-logo {
+			display: inline-flex;
+			white-space: nowrap;
+			gap: 6px;
+			background-color: #fff;
+
+			img {
+				width: 18px;
+			}
+
+			.provider-name {
+				font-weight:500;
+			}
+		}
+	}
+
+	.or-line {
+		display: flex;
+		justify-content: center;
+		gap: 6px;
+		position: relative;
+		margin: 12px 0 0 0;
+
+		.or-span {
+			padding: 0 10px;
+			z-index: 1;
+			display: inline-flex;
+			background-color: var(--bgPrimary);
+		}
+
+		&:before, &:after {
+			content: '';
+			position: absolute;
+			height: 1px;
+			width: 50%;
+			top: 50%;
+			background-color: var(--neutral400);
+		}
+
+		&:before {
+			left: 0;
+		}
+
+		&:after {
+			right: 0;
+		}
+	}
+}

@@ -23,7 +23,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="A2v10.Data.Interfaces" Version="10.1.7540" />
-		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.10.0" />
+		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.11.0" />
 	</ItemGroup>
 
 	<PropertyGroup>

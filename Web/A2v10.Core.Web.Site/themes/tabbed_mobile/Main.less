@@ -1,0 +1,513 @@
+﻿@import "Variables.less";
+@import "Mixins.less";
+
+html {
+	font-family: @font-family;
+	font-size: @font-size;
+	-ms-text-size-adjust: 100%;
+	-webkit-text-size-adjust: 100%;
+	color: @text-color;
+	box-sizing: border-box;
+	padding: 0;
+	height: 100%;
+	width: 100%;
+	caret-color: transparent;
+}
+
+*[contenteditable="true"] {
+	caret-color: auto;
+}
+
+input, textarea, select, button {
+	font-family: @font-family;
+	color:@text-color;
+}
+
+
+input, textarea {
+	caret-color:auto;
+}
+
+body {
+	overflow: hidden;
+	height: 100%;
+	width: 100%;
+	padding: 0;
+	background-color: @background-color;
+	.noselect();
+}
+
+body.waiting * {
+	cursor:wait;
+}
+
+[v-cloak] {
+	display: none!important;
+}
+
+hr {
+	margin: .8rem 0;
+	border: 1px solid @default-brd-color;
+	border-bottom-style: none;
+}
+
+.app-title {
+	font-size: 20px;
+	display: inline-block;
+	margin-left: 10px;
+	padding-bottom: 3px;
+}
+
+.app-logo {
+	display: inline-flex;
+	height: @header-height;
+}
+
+header, .header {
+	position: absolute;
+	left: 0;
+	top: 0;
+	right: 0;
+	height: @header-height;
+	padding: 0;
+	background-color: @header-bg-color;
+	color: white;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	user-select: none;
+
+
+	.h-menu-title {
+		font-size: 18px;
+	}
+
+	.h-block {
+		display: flex;
+		align-items: center;
+		white-space: nowrap;
+		color: inherit;
+
+		&:hover {
+			text-decoration: none;
+			color: inherit;
+		}
+
+		.app-subtitle {
+			padding-left: 12px;
+		}
+	}
+
+	.h-menu {
+		.ico {
+			font-size: 22px;
+		}
+
+		margin: 0 8px 0 -8px;
+		padding: 8px 10px;
+
+		&:hover {
+			background-color: @brand-hover-color;
+		}
+	}
+
+	> a.nav-admin {
+		color: inherit;
+		padding: 0 1em;
+		height: 100%;
+		display: inline-flex;
+		align-items: center;
+
+		&:hover {
+			background-color: @brand-hover-color;
+		}
+	}
+
+	> a.middle {
+		//margin-right:10px;
+	}
+
+	> a.open {
+		background-color: @brand-hover-color;
+	}
+
+	> .dropdown {
+		display: inline-block;
+		height: 100%;
+
+		.menu {
+			margin-top: 0;
+			min-width: 185px;
+		}
+	}
+
+	.btn {
+		background-color: transparent;
+		white-space: nowrap;
+		color: white;
+		padding: 0 .5em 0 1em;
+		height: 100%;
+
+		&:hover {
+			background-color: @brand-hover-color;
+		}
+
+		&.user-name, &.company-name {
+			padding: 0 .5em 0 1em;
+		}
+
+		.caret {
+			margin: 0 .25em;
+		}
+	}
+
+	.user-name .person-name,
+	.company-name {
+		overflow: hidden;
+		max-width: 20rem;
+		text-overflow: ellipsis;
+		user-select: text;
+	}
+
+	.user-name .client-id {
+		padding-left: .3rem;
+		user-select: text;
+	}
+
+	.company-menu-name {
+		max-width: 20rem;
+		text-overflow: ellipsis;
+		overflow: hidden;
+	}
+
+	.dropdown.separate.show {
+		.btn {
+			background-color: @brand-hover-color;
+		}
+
+		.btn.btn-success {
+			background-color: hsl(from @success-base-color h s calc(l - 5));
+		}
+	}
+
+	.include.nav-pane {
+		width: auto;
+
+		.btn {
+			padding: 0 .5rem;
+			position: relative;
+		}
+
+		.partial-block {
+			display: flex;
+			align-items: stretch;
+			height: 100%;
+
+			.btn-icon {
+				width: @header-height;
+			}
+
+			.control-group {
+				margin-bottom: 0;
+				align-self: center;
+			}
+		}
+	}
+}
+
+
+.include {
+	width: 100%;
+	height: 100%;
+	position: relative;
+	white-space: normal; // override
+}
+
+.include.loading {
+	> div {
+		display: none;
+	}
+}
+
+@import "Page.less";
+@import "Splitter.less";
+@import "Taskpad.less";
+@import "Image.less";
+@import "Upload.less";
+
+.spinner {
+	box-sizing: content-box;
+	width: .8rem;
+	min-width: .8rem;
+	height: .8rem;
+	margin-right: .25rem;
+	background-color: transparent;
+	border-radius: 50%;
+	border: 4px solid #ccc;
+
+	&.active {
+		border-color: @link-hover-color;
+		border-top-color: #ccc;
+		animation: spin 1.5s linear infinite;
+	}
+}
+
+@keyframes spin {
+	0% {
+		transform: rotate(0deg);
+	}
+
+	100% {
+		transform: rotate(360deg);
+	}
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+
+	to {
+		opacity: 1;
+	}
+}
+
+keyframes fadeOut {
+	from {
+		opacity: 1;
+	}
+
+	to {
+		opacity: 0;
+	}
+}
+
+
+pre.a2-code {
+	overflow: auto;
+	max-height: 300px;
+	margin: 0;
+}
+
+
+@import "Control.less";
+@import "Button.less";
+@import "DatePicker.less";
+@import "Selector.less";
+@import "DataGrid.less";
+@import "ToolBar.less";
+@import "TreeView.less";
+@import "Tab.less";
+@import "TabBar.less";
+@import "List.less";
+@import "Dialog.less";
+@import "Wizard.less";
+@import "Toastr.less";
+@import "Table.less";
+@import "PropertyGrid.less";
+@import "CheckBox.less";
+@import "Pager.less";
+@import "DropDown.less";
+@import "Popover.less";
+@import "Card.less";
+@import "Grid.less";
+@import "Layout.less";
+@import "WaitCursor.less";
+
+@import "Sheet.less";
+
+.app-exception {
+	margin: 50px auto;
+	width: 600px;
+	height: auto;
+	text-align: center;
+	z-index: auto; //@exception-index;
+	position: relative;
+	padding: 0;
+	background-color: @danger-bg-color;
+	color: @danger-txt-color;
+	border: 1px solid @danger-brd-color;
+	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+	user-select: text;
+
+	.message {
+		padding: 15px 10px;
+		white-space: pre-line;
+		font-weight: @font-bold;
+		font-size: 1.2rem;
+	}
+
+	.stack-trace {
+		border-top: 1px solid @danger-txt-color;
+		background-color: lighten(@danger-bg-color, 5%);
+		overflow: auto;
+		padding: 10px;
+		max-height: 200px;
+		font-size: 92%;
+	}
+
+	.link {
+		padding: 0.5rem 1rem;
+		display: inline-block;
+		border: 1px solid @danger-txt-color;
+		font-weight: @font-bold;
+		color: @danger-txt-color;
+		margin-bottom: 1rem;
+
+		&:hover {
+			background-color: @danger-btn-color;
+			color: white;
+		}
+	}
+}
+
+.load-indicator {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: @header-height - @progress-bar-height;
+	height: @progress-bar-height;
+	width: 100%;
+	overflow: hidden;
+	background-color: @progress-bar-bk-color;
+
+	&:before {
+		content: '';
+		display: block;
+		position: relative;
+		left: 0;
+		width: 50%;
+		height: @progress-bar-height;
+		background-color: @progress-bar-color;
+		animation: loading 2s linear infinite;
+		border-radius: @progress-bar-height * 3;
+		//opacity: .75;
+	}
+}
+
+@keyframes loading {
+	from {
+		left: 0;
+	}
+
+	to {
+		left: 100%;
+	}
+}
+
+.a2-header {
+	margin: 0 0 .8rem 0;
+	color: @header-text-color;
+	font-weight: @font-bold;
+	font-family: inherit;
+	word-break: break-word;
+}
+
+
+.badge {
+	display: inline-block;
+	background-color: @dark-bk-color;
+	color: white;
+	padding: .15rem .4rem .2rem .4rem;
+	margin-left: 0.6rem;
+	font-size: 85%;
+	font-weight: @font-bold;
+	line-height: 1;
+	text-align: center;
+	white-space: nowrap;
+	vertical-align: baseline;
+	border-radius: .25rem;
+}
+
+.a2-badge {
+	background-color: @dark-bk-color;
+	color: white;
+	padding: 0 .2rem .1rem .2rem;
+	border-radius: .25rem;
+	white-space: nowrap;
+}
+
+.xaml-exception {
+	padding: 6px;
+	display: inline-block;
+	background-color: @danger-bg-color;
+	border: 1px solid @danger-brd-color;
+	color: @danger-txt-color;
+}
+
+.not-supported {
+	width: 400px;
+	margin: 0 auto;
+	padding: 20px;
+	text-align: center;
+	background-color: @danger-bg-color;
+	color: @danger-txt-color;
+	border: 1px solid @danger-brd-color;
+	position:absolute;
+	left:0;
+	top:20px;
+	right:0;
+}
+
+.a2-graphics {
+	display: block;
+	width: 100%;
+	svg {
+		// avoid 3 extra pixels. default alignment is baseline!
+		display:block;
+	}
+}
+
+.center-content {
+	display: flex;
+	width: auto;
+	height: 100%;
+	align-items: center;
+	justify-content: center;
+}
+
+
+.tooltip {
+	position: absolute;
+	padding: 6px;
+	background-color: @background-color;
+	border: 1px solid @default-brd-color;
+}
+
+.title-notify {
+	animation: pulse 1s infinite ease-out;
+	display: none;
+	padding: 2px 12px;
+	border-radius: 1rem;
+	color: white;
+	white-space:nowrap;
+	overflow:hidden;
+	text-overflow:ellipsis;
+
+	&.warning {
+		background-color: @warning-base-color;
+		display: inline;
+	}
+
+	&.danger {
+		display: inline;
+		background-color: @danger-base-color;
+	}
+}
+
+.side-pane-frame {
+	position: absolute;
+	top: @header-height;
+	bottom: @footer-height;
+	right: 0;
+	z-index: @pane-z-index;
+	background-color: @background-color;
+	box-shadow: -5px 0 10px 0 rgb(0 0 0 / 20%);
+}
+
+// compatible with old layouts 
+.shell, .main-view, .full-view {
+		  height:100%;
+}
+
+@import "AppPages.less";
