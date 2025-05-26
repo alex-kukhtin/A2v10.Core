@@ -56,7 +56,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
                 ? await LoadIndexTreeModelAsync()
                 : await LoadIndexModelAsync(),
             "edit" => await LoadPlainModelAsync(),
-            "browsefolder" => await LoadIndexTreeModelAsync(),
+            "browsefolder" => await LoadBrowseTreeModelAsync(),
             _ => throw new NotImplementedException($"Load model for {Action}")
         };
     }
@@ -66,6 +66,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
         {
             "browse" or "index" => await CreateIndexTemplate(),
             "edit" => await CreateEditTemplate(),
+            "browsefolder" => String.Empty,
             _ => throw new NotImplementedException($"Create template for {Action}")
         };
     }
@@ -93,7 +94,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
             "browse" => CreateBrowseDialog(),
             "index" => CreateIndexPage(),
             "edit" => IsDialog ? CreateEditDialog() : CreateDocumentPage(),
-            "browsefolder" => throw new NotImplementedException("Create BrowseFolder Page"),
+            "browsefolder" => CreateBrowseTreeDialog(),
             _ => throw new NotImplementedException($"Create form for {Action}")
         };
     }

@@ -73,6 +73,7 @@ internal static class FormExtensions
         return dt switch
         {
             ColumnDataType.Money => "12rem",
+            ColumnDataType.Float => "12rem",
             ColumnDataType.Date or ColumnDataType.DateTime => "12rem",
             _ => null
         };

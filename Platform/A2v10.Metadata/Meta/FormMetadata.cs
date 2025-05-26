@@ -135,13 +135,13 @@ public record FormItemProps
     public String? ItemsSource { get; init; }
     public Boolean Highlight { get; init; }
     public Boolean Folder { get; init; }
-
+    public Boolean Total { get; init; }
     internal Boolean IsEmpty =>
         String.IsNullOrEmpty(Rows) && String.IsNullOrEmpty(Columns)
         && String.IsNullOrEmpty(Url) && String.IsNullOrEmpty(Placeholder)
         && !ShowClear && Style == ItemStyle.Default
         && String.IsNullOrEmpty(Filters) && !Multiline && TabIndex == 0
-        && LineClamp == 0 && !Fit && !NoWrap && !Required && !Highlight && !Folder
+        && LineClamp == 0 && !Fit && !NoWrap && !Required && !Highlight && !Folder && !Total
         && String.IsNullOrEmpty(ItemsSource);
 }
 

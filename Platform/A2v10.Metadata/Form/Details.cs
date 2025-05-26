@@ -14,26 +14,34 @@ internal partial class BaseModelBuilder
      *     Toolbar
      *     Table
      */
-    IEnumerable<FormItem> DetailsTableCells(TableMetadata d)
+    IEnumerable<FormItem> DetailsTableCells(TableMetadata d, String dataBind)
     {
-        return d.EditableColumns().OrderBy(c => c.Order).Select(c =>
+        return d.EditableColumns()
+            .Where(c => !c.IsParent)
+            .OrderBy(c => c.IsRowNo ? -1 :  c.Order)
+            .Select(c =>
             new FormItem(FormItemIs.TableCell)
             {
                 Label = c.Label ?? $"@{c.Name}",
                 Width = c.ToColumnWidth(),
                 DataType = c.ToItemDataType(),
+                Data = c.Total ? $"{dataBind}.{c.Name}" : String.Empty,
                 Items = [
                     new FormItem(c.Column2Is())
-                            {
-                                DataType = c.ToItemDataType(),
-                                Data = c.Name,
-                                Props= c.IsReference ?
-                                    new FormItemProps() {
-                                        Url = c.Reference.EndpointPath(),
-                                    }
-                                    : null
+                    {
+                        DataType = c.ToItemDataType(),
+                        Data = c.Name,
+                        Props= c.IsReference ?
+                            new FormItemProps() {
+                                Url = c.Reference.EndpointPath(),
                             }
-                ]
+                            : null
+                    }
+                ],
+                Props = c.Total ? new FormItemProps()
+                {
+                    Total = true
+                }: null
             }
         );
     }
@@ -71,7 +79,7 @@ internal partial class BaseModelBuilder
                         Height = "100%",
                         CssClass = $"{cssPrefix}-details",
                         Items = [
-                            ..DetailsTableCells(d),
+                            ..DetailsTableCells(d, dataBind),
                             new FormItem(FormItemIs.TableCell)
                             {
                                 Width = "1px",
@@ -126,7 +134,7 @@ internal partial class BaseModelBuilder
                         CssClass = $"{cssPrefix}-details",
                         Grid = new FormItemGrid(2, 1),
                         Items = [
-                            ..DetailsTableCells(d),
+                            ..DetailsTableCells(d, dataBind),
                             new FormItem(FormItemIs.TableCell)
                             {
                                 Width = "1px",

@@ -12,10 +12,12 @@ namespace A2v10.Metadata;
 
 internal partial class BaseModelBuilder
 {
-    public Task<IDataModel> LoadIndexTreeModelAsync()
+    public async Task<IDataModel> LoadIndexTreeModelAsync()
     {
         var collectionName = _table.RealItemsName;
         var collectionType = _table.RealTypeName;
+
+        var refFields = await ReferenceFieldsAsync(_table);
 
         var sqlString = $"""
         set nocount on;
@@ -25,11 +27,9 @@ internal partial class BaseModelBuilder
         as (
             select Id = cast(-1 as bigint), [Name] = N'[Без групування]', Icon='ban',
                 HasChildren = cast(0 as bit), [Order] = 1
-            where @StdFolders = 1
             union all
             select Id = cast(-2 as bigint), [Name] = N'[Не в групах]', Icon='folder-ban',
                 HasChildren = cast(0 as bit), [Order] = 8
-            where @StdFolders = 1
             union all
             select Id, [Name], Icon = N'folder-outline',
                 HasChildren = case when exists (select * from {_table.SqlTableName} 
@@ -46,19 +46,51 @@ internal partial class BaseModelBuilder
         order by [Order], [Name];
 
         -- Lasy table declaration
-        select [!{collectionType}!Array] = null, [Id!!Id] = c.Id, [Name!!Name] = c.[Name],
-            [Memo], [!!RowCount] = 0
+        select [!{collectionType}!Array] = null, 
+            {String.Join(",", _table.AllSqlFields(refFields, "c"))},
+            [!!RowCount] = 0
         from {_table.SqlTableName} c
+        {RefTableJoins(refFields, "c")}
         where 0 <> 0;
         """;
 
-        return _dbContext.LoadModelSqlAsync(_dataSource, sqlString, dbprms =>
+        return await _dbContext.LoadModelSqlAsync(_dataSource, sqlString, dbprms =>
         {
             AddDefaultParameters(dbprms);
-            dbprms.AddBit("@StdFolders", true);
         });
     }
 
+    public async Task<IDataModel> LoadBrowseTreeModelAsync()
+    {
+        var collectionName = _table.RealItemsName;
+        var collectionType = _table.RealTypeName;
+
+        var sqlString = $"""
+        set nocount on;
+        set transaction isolation level read uncommitted;
+
+        with T(Id, [Name], Icon, HasChildren, [Order])
+        as (
+            select Id, [Name], Icon = N'folder-outline',
+                HasChildren = case when exists (select * from {_table.SqlTableName} 
+                    where Void = 0 and IsFolder = 1 and Parent = f.Id) then 1 else 0 end,
+                [Order] = 2
+            from {_table.SqlTableName} f
+            where f.IsFolder = 1 and f.Void = 0 and f.Parent is null
+        )
+        select [Folders!TFolder!Tree] = null, [Id!!Id] = Id, [Name!!Name] = [Name], Icon,
+            [SubItems!TFolder!Items] = null, 
+            [HasSubItems!!HasChildren] = HasChildren
+        from T
+        order by [Order], [Name];
+
+        """;
+
+        return await _dbContext.LoadModelSqlAsync(_dataSource, sqlString, dbprms =>
+        {
+            AddDefaultParameters(dbprms);
+        });
+    }
 
     public Task<IDataModel> ExpandAsync(ExpandoObject expandPrms)
     {

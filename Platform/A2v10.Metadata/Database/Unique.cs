@@ -4,6 +4,7 @@ using System;
 using System.Threading.Tasks;
 using System.Dynamic;
 using System.Text;
+using System.Linq;
 
 using Newtonsoft.Json;
 
@@ -15,34 +16,31 @@ namespace A2v10.Metadata;
 
 internal partial class BaseModelBuilder
 {
-
-    private Task<IInvokeResult> FetchFolderAsync(ExpandoObject? prms)
+    private async Task<IInvokeResult> CheckInvokeAsync(ExpandoObject? prms, String property)
     {
-        throw new InvalidOperationException("IMPLEMENT FETCH FOLDER");
-    }
+        var column = _table.Columns.FirstOrDefault(c => c.Name.Equals(property, StringComparison.OrdinalIgnoreCase))
+            ?? throw new InvalidOperationException($"Column {property} not found in table {_table.Name}");
 
-    private async Task<IInvokeResult> FetchAsync(ExpandoObject? prms)
-    {
         var sql = $"""
         set nocount on;
         set transaction isolation level read uncommitted;
 
-        declare @fr nvarchar(255);
-        set @fr = N'%' + @Text + N'%';
+        declare @valid bit = 1;
 
-        select top(100) [{_table.RealItemsName}!{_table.RealTypeName}!Array] = null, 
-            [{_table.PrimaryKeyField}!!Id] = a.[{_table.PrimaryKeyField}], [{_table.NameField}!!Name] = a.[{_table.NameField}]
-        from {_table.SqlTableName} a
-        where a.[{_table.VoidField}] = 0 and
-            (a.[{_table.NameField}] like @fr)
-        order by a.[{_table.NameField}];
+        if exists(select 1 from {_table.SqlTableName} t where t.[{column.Name}] = @Value and t.Id <> @Id)
+            set @valid = 0;
+
+        select [Result!TResult!Object] = null, [Value] = @valid;
         """;
 
         var model = await _dbContext.LoadModelSqlAsync(_dataSource, sql, dbprms =>
         {
             dbprms.AddBigInt("@UserId", _currentUser.Identity.Id)
-            .AddString("@Text", prms?.Get<String>("Text"));
+            .AddBigInt("@Id", prms?.Get<Int64>("Id"))
+            .AddString("@Value", prms?.Get<String>("Value"));
         });
+
+        // TODO : Create Extension for FETCH
 
         var strResult = model != null && model.Root != null ?
             JsonConvert.SerializeObject(model.Root, JsonHelpers.DataSerializerSettings) : "{}";
@@ -52,4 +50,5 @@ internal partial class BaseModelBuilder
             contentType: MimeTypes.Application.Json
         );
     }
+
 }

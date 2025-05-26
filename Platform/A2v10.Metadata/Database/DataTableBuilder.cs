@@ -61,13 +61,18 @@ internal class DataTableBuilder(TableMetadata table, AppMetadata appMeta)
         for (int i = 0; i < columns.Count; i++)
         {
             var col = columns[i];
-            if (!src.HasProperty(col.ColumnName))
+
+            var realColumnName = col.ColumnName;
+            if (table.UseFolders && col.ColumnName == "Parent")
+                realColumnName = "Folder";
+
+            if (!src.HasProperty(realColumnName))
             {
                 r[col] = DBNull.Value;
             }
             else
             { 
-                var obj = src.Get<Object>(col.ColumnName);
+                var obj = src.Get<Object>(realColumnName);
                 if (obj == null)
                     obj = DBNull.Value;
                 else if (col.DataType == typeof(Guid))

@@ -77,6 +77,8 @@ public record TableColumn
     public Int32 DbOrder { get; init; }
     public String? Computed { get; init; }
     public Boolean Required { get; init; }
+    public Boolean Total { get; init; }
+    public Boolean Unique { get; init; }
     #endregion
     internal Boolean IsReference => Reference != null && Reference.RefTable != null;
     internal Boolean IsEnum => IsReference && DataType == ColumnDataType.Enum;
@@ -90,8 +92,10 @@ public record TableColumn
         || Role.HasFlag(TableColumnRole.Void)
         || Role.HasFlag(TableColumnRole.Done);
 
+    internal Boolean IsVoid => Role.HasFlag(TableColumnRole.Void);
     internal Boolean IsParent => Role.HasFlag(TableColumnRole.Parent);
     internal Boolean IsName => Role.HasFlag(TableColumnRole.Name);
+    internal Boolean IsRowNo => Role.HasFlag(TableColumnRole.RowNo);
     internal Boolean IsSearchable => DataType == ColumnDataType.String;
     internal Boolean IsMemo => Name == "Memo";
 }

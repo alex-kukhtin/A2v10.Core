@@ -37,14 +37,19 @@ internal partial class BaseModelBuilder
                 yield return $$"""'{{_table.RealTypeName}}.{{c.Name}}'() { return {{c.Computed}};}""";
 
             foreach (var d in _table.Details)
+            {
                 foreach (var c in d.Columns.Where(c => !String.IsNullOrEmpty(c.Computed)))
                     yield return $$"""'{{d.RealTypeName}}.{{c.Name}}'() { return {{c.Computed}};}""";
+                foreach (var c in d.Columns.Where(c => c.Total))
+                    yield return $$"""'{{d.RealTypeName}}Array.{{c.Name}}'() { return this.$sum(c => c.{{c.Name}}); }""";
+            }
         }
 
         IEnumerable<String> validators()
         {
             foreach (var col in _table.Columns.Where(c => c.Required))
                 yield return $"'{_table.RealItemName}.{col.Name}': `@[Error.Required]`";
+
             if (_baseTable != null)
             {
                 foreach (var d in _table.Details)

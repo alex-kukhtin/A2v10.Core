@@ -6,6 +6,7 @@ using System.Linq;
 
 using A2v10.System.Xaml;
 using A2v10.Xaml;
+using DocumentFormat.OpenXml.Bibliography;
 
 namespace A2v10.Metadata;
 
@@ -302,6 +303,7 @@ internal class XamlBulder(EditWithMode _editWith)
             Align = source.ToTextAlign(),
             Width = Length.FromStringNull(source.Width),
             Multiline = source.Props?.Multiline == true,
+            Rows = source.Props?.Multiline == true ? 3 : null,
             TabIndex = source.Props?.TabIndex ?? 0, 
             Required = source.Props?.Required == true,
             Highlight = source.Props?.Highlight == true,
@@ -389,12 +391,55 @@ internal class XamlBulder(EditWithMode _editWith)
     private Table CreateTable(FormItem source)
     {
         var headers = source.Items?.Select(c => new TableCell() { Content = c.Label.Localize()});
+
         var cells = source.Items?.Select(c => new TableCell()
         {
             Width = Length.FromStringNull(c.Width),
             Align = c.ToTextAlign(),
             Content = c.Items != null && c.Items.Length > 0 ? CreateElement(c.Items[0], null, "table") : null,
         });
+
+        IEnumerable<TableRow> TotalRows()
+        {
+            if (source.Items == null)
+                yield break;
+            var cols = source.Items.ToList();
+
+            List<TableCell> totals = [];
+            Int32 span = 0;
+            for (Int32 i = 0; i < cols.Count; i++)
+            {
+                var item = source.Items[i];
+                var hasTotal = item.Props?.Total == true;
+                if (!hasTotal && totals.Count == 0)
+                {
+                    span += 1;
+                    continue;
+                }
+                if (span > 0 && totals.Count == 0)
+                    totals.Add(new TableCell()
+                    {
+                        Content = "@[Total]",
+                        ColSpan = span
+                    });
+                totals.Add(new TableCell()
+                {
+                    Width = Length.FromStringNull(item.Width),
+                    Align = item.ToTextAlign(),
+                    Bindings = b =>
+                    {
+                        if (hasTotal)
+                            b.SetBinding(nameof(TableCell.Content), item.TypedBind());
+                    }
+                });
+            }
+
+            if (source.Items != null && source.Items.Any(c => c.Props?.Total == true))
+                yield return new TableRow()
+                {
+                    Cells = [.. totals]
+                };
+        }
 
         return new Table()
         {
@@ -413,7 +458,8 @@ internal class XamlBulder(EditWithMode _editWith)
                 new TableRow() {
                     Cells = [..cells ?? []]
                 }
-            ]
+            ],
+            Footer = [..TotalRows()]
         };
     }
 

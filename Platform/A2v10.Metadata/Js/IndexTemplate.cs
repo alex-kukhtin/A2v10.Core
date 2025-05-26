@@ -19,6 +19,14 @@ internal partial class BaseModelBuilder
             }
         }
 
+        IEnumerable<String> options()
+        {
+            if (_table.UseFolders)
+                yield return $"persistSelect: ['Folders']";
+            else
+                yield return $"persistSelect: ['{_table.RealItemsName}']";
+        }
+
         IEnumerable<String> functions()
         {
             if (_table.IsDocument)
@@ -48,7 +56,7 @@ internal partial class BaseModelBuilder
         var templ = $$"""
         const template = {
             options: {
-                persistSelect: ['{{_table.RealItemsName}}']
+                {{String.Join(jsDivider, options())}}
             },
             events: {
                 {{String.Join(jsDivider, events())}}
