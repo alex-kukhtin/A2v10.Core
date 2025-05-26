@@ -121,7 +121,7 @@ public class LicenseManager(ILogger<LicenseManager> _logger) : ILicenseManager
 
         // License file is OK.
 
-        if (licenseInfo.ExpiresOn >= DateTime.Now)
+        if (licenseInfo.ExpiresOn < DateTime.Now)
         {
             // expired
             // якщо дата поточної версії меньша за ExpiresOn, повертаємо OK

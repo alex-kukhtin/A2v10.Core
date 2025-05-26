@@ -90,9 +90,10 @@ public record TableColumn
         || Role.HasFlag(TableColumnRole.Void)
         || Role.HasFlag(TableColumnRole.Done);
 
-    // Old
-    internal Boolean IsParent => Name == "Parent";
+    internal Boolean IsParent => Role.HasFlag(TableColumnRole.Parent);
+    internal Boolean IsName => Role.HasFlag(TableColumnRole.Name);
     internal Boolean IsSearchable => DataType == ColumnDataType.String;
+    internal Boolean IsMemo => Name == "Memo";
 }
 
 
@@ -180,6 +181,10 @@ public record TableMetadata
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Primary Key");
     internal String VoidField => Columns.FirstOrDefault(c => c.Role.HasFlag(TableColumnRole.Void))?.Name
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Void column");
+    internal String IsFolderField => Columns.FirstOrDefault(c => c.Role.HasFlag(TableColumnRole.IsFolder))?.Name
+        ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a IsFolder column");
+    internal String ParentField => Columns.FirstOrDefault(c => c.Role.HasFlag(TableColumnRole.Parent))?.Name
+        ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Parent column");
     internal String RowNoField => Columns.FirstOrDefault(c => c.Role.HasFlag(TableColumnRole.RowNo))?.Name
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a RowNumber column");
     internal String NameField => Columns.FirstOrDefault(c => c.Role.HasFlag(TableColumnRole.Name))?.Name

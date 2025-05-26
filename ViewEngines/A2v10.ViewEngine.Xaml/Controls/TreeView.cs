@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
 using System.Text;
@@ -199,5 +199,8 @@ public class TreeView : Control
 			IconItem = Icon.Empty;
 		else if (IconFolder == Icon.NoIcon && IconItem != Icon.NoIcon)
 			IconFolder = Icon.Empty;
+
+		foreach (var c in Children)
+			c.SetParent(this);
 	}
 }

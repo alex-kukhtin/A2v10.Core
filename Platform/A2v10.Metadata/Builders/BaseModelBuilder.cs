@@ -43,13 +43,20 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
         "rep" => "rep:report.render",
         _ => null
     };
+    public Task<IDataModel> LoadLazyModelAsync()
+    {
+        return LoadIndexModelAsync(true);
+    }
 
     public async Task<IDataModel> LoadModelAsync()
     {
         return Action switch
         {
-            "browse" or "index" => await LoadIndexModelAsync(),
+            "browse" or "index" => _table.UseFolders
+                ? await LoadIndexTreeModelAsync()
+                : await LoadIndexModelAsync(),
             "edit" => await LoadPlainModelAsync(),
+            "browsefolder" => await LoadIndexTreeModelAsync(),
             _ => throw new NotImplementedException($"Load model for {Action}")
         };
     }
@@ -86,6 +93,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
             "browse" => CreateBrowseDialog(),
             "index" => CreateIndexPage(),
             "edit" => IsDialog ? CreateEditDialog() : CreateDocumentPage(),
+            "browsefolder" => throw new NotImplementedException("Create BrowseFolder Page"),
             _ => throw new NotImplementedException($"Create form for {Action}")
         };
     }

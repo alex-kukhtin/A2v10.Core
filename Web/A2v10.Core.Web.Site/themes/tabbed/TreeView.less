@@ -8,9 +8,13 @@
 
 .tree-view {
 	margin: 0;
-	padding: 0;
+	padding: .25rem;
 	overflow-y: auto;
 	overflow-x: hidden;
+	background-color: @bk-control;
+	border: 1px solid @control-brd-color;
+	border-radius: @control-brd-radius;
+	min-height:150px;
 
 	li {
 		list-style: none;
@@ -104,7 +108,7 @@
 		}
 
 		&.group > .overlay {
-			font-weight:600;
+			font-weight: 600;
 		}
 	}
 

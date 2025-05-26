@@ -12,6 +12,8 @@ namespace A2v10.Metadata;
 internal interface IModelBuilder
 {
     Task<IDataModel> LoadModelAsync();
+    Task<IDataModel> LoadLazyModelAsync();
+    Task<IDataModel> ExpandAsync(ExpandoObject expandPrms);
     Task<ExpandoObject> SaveModelAsync(ExpandoObject data, ExpandoObject savePrms);
     Task<String> RenderPageAsync(IModelView modelView, IDataModel dataModel);
     Task<IInvokeResult> InvokeAsync(IModelCommand cmd, String command, ExpandoObject? prms);

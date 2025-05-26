@@ -1,7 +1,7 @@
 ﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
-
+using System.ComponentModel;
 using A2v10.Infrastructure;
 
 namespace A2v10.Xaml;
@@ -40,6 +40,8 @@ public class XamlElement : ISupportBinding, IInitComplete
 	{
 		if (bind == null)
 			return;
+		if (bind is ISupportInitialize init)
+			init.EndInit();
 		BindImpl.SetBinding(name, bind);
 	}
 

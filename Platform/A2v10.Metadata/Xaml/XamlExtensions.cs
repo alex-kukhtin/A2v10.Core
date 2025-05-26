@@ -143,7 +143,7 @@ internal static class XamlExtensions
 
         return item.Command?.Command switch
         {
-            FormCommand.Reload => new BindCmd() { Command = CommandType.Reload },
+            FormCommand.Reload => item.BindCommandArg(CommandType.Reload),
             FormCommand.Save => new BindCmd() { Command = CommandType.Save },
             FormCommand.SaveAndClose => new BindCmd() { Command = CommandType.SaveAndClose },
             FormCommand.Close => new BindCmd() { Command = CommandType.Close },

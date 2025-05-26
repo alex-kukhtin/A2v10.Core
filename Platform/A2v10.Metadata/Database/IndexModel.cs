@@ -14,7 +14,7 @@ namespace A2v10.Metadata;
 
 internal partial class BaseModelBuilder
 {
-    public async Task<IDataModel> LoadIndexModelAsync()
+    public async Task<IDataModel> LoadIndexModelAsync(Boolean lazy = false)
     {
         const String DEFAULT_DIR = "asc";
 
@@ -70,12 +70,18 @@ internal partial class BaseModelBuilder
 
         var collectionName = _table.RealItemsName;
 
-        IEnumerable<String> Where()
+        IEnumerable<String> WhereClause()
         {
             yield return "1 = 1"; // for default // TODO: ???? как-то проверить
 
+            if (lazy)
+            {
+                yield return $"a.{_table.IsFolderField} = 0"; // for lazy loading
+                yield return $"(@Id = -1 or a.{_table.ParentField} = @Id or (@Id = -2 and a.{_table.ParentField} is null))";
+            }
+
             if (_table.Columns.Any(c => c.Role.HasFlag(TableColumnRole.Void)))
-                yield return $"a.[{_table.VoidField}]=0";
+                yield return $"a.[{_table.VoidField}] = 0";
 
             if (opColumn != null)
                 yield return $"a.[{opColumn.Name}] = N'{opValue}'";
@@ -156,7 +162,7 @@ internal partial class BaseModelBuilder
             [!!RowCount]  = count(*) over()        
         from {_table.SqlTableName} a
         {RefTableJoins(refFields, "a")}
-        where {String.Join(" and ", Where())}
+        where {String.Join(" and ", WhereClause())}
         order by {sqlOrder} {dir}
         offset @Offset rows fetch next @PageSize rows only;
         
@@ -180,6 +186,10 @@ internal partial class BaseModelBuilder
         {
             AddDefaultParameters(dbprms);
             AddPeriodParameters(dbprms, qry);
+
+            if (lazy)
+                dbprms.AddString("@Id", _platformUrl.Id);
+
             dbprms.AddInt("@Offset", offset)
             .AddInt("@PageSize", pageSize)
             .AddString("@Order", order)

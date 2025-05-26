@@ -252,7 +252,7 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 	{
 		var platformBaseUrl = CreatePlatformUrl(baseUrl);
 		var view = await LoadViewAsync(platformBaseUrl);
-		var expandProc = view.ExpandProcedure();
+
 
 		var execPrms = view.CreateParameters(platformBaseUrl, Id, setParams);
 		execPrms.SetNotNull("Id", Id);
@@ -261,7 +261,10 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 		if (view.HasMetadata)
 			model = await _appRuntimeBuilder.ExpandAsync(platformBaseUrl, view, execPrms);
 		else
-			model = await _dbContext.LoadModelAsync(view.DataSource, expandProc, execPrms);
+		{
+            var expandProc = view.ExpandProcedure();
+            model = await _dbContext.LoadModelAsync(view.DataSource, expandProc, execPrms);
+		}
 
 		return JsonConvert.SerializeObject(model.Root, JsonHelpers.DataSerializerSettings);
 	}
@@ -306,7 +309,13 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 		var platformBaseUrl = CreatePlatformUrl(baseUrl, strId);
 		var view = await LoadViewAsync(platformBaseUrl);
 
-		String loadProc = view.LoadLazyProcedure(propertyName.ToPascalCase());
+		if (view.HasMetadata)
+		{
+			var root = await _appRuntimeBuilder.LoadLazyAsync(platformBaseUrl, view);
+            return JsonConvert.SerializeObject(root, JsonHelpers.DataSerializerSettings);
+        }
+
+        String loadProc = view.LoadLazyProcedure(propertyName.ToPascalCase());
 		var loadParams = view.CreateParameters(platformBaseUrl, Id, setParams, IModelBase.ParametersFlags.SkipModelJsonParams);
 
 		var model = await _dbContext.LoadModelAsync(view.DataSource, loadProc, loadParams);

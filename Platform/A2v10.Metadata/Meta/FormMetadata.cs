@@ -19,6 +19,7 @@ public enum FormItemIs
     Pager,
     DataGrid,
     DataGridColumn,
+    TreeView,
     Toolbar,
     Table,
     TableCell,
@@ -133,13 +134,14 @@ public record FormItemProps
     public Boolean Required { get; init; }
     public String? ItemsSource { get; init; }
     public Boolean Highlight { get; init; }
+    public Boolean Folder { get; init; }
 
     internal Boolean IsEmpty =>
         String.IsNullOrEmpty(Rows) && String.IsNullOrEmpty(Columns)
         && String.IsNullOrEmpty(Url) && String.IsNullOrEmpty(Placeholder)
         && !ShowClear && Style == ItemStyle.Default
         && String.IsNullOrEmpty(Filters) && !Multiline && TabIndex == 0
-        && LineClamp == 0 && !Fit && !NoWrap && !Required && !Highlight
+        && LineClamp == 0 && !Fit && !NoWrap && !Required && !Highlight && !Folder
         && String.IsNullOrEmpty(ItemsSource);
 }
 

@@ -108,9 +108,8 @@ internal static class FormExtensions
             | TableColumnRole.IsFolder
             | TableColumnRole.IsSystem
             | TableColumnRole.SystemName
-            | TableColumnRole.Kind
-            | TableColumnRole.Parent;
+            | TableColumnRole.Kind;
 
-        return table.Columns.Where(c => (c.Role & hiddenColumns) == 0).OrderBy(c => c.Order);
+        return table.Columns.Where(c => (c.Role & hiddenColumns) == 0).OrderBy(c => c.IsMemo ? Int32.MaxValue : c.Order);
     }
 }

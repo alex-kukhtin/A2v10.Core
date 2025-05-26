@@ -78,4 +78,9 @@ public class AppRuntimeBuilder(IServiceProvider _serviceProvider,
 	{
 		throw new NotImplementedException("AppRuntimeBuilder.ExpandAsync yet not implemented");
 	}
+
+    public Task<ExpandoObject> LoadLazyAsync(IPlatformUrl platformUrl, IModelView view)
+    {
+        throw new NotImplementedException("AppRuntimeBuilder.LoadLazyAsync yet not implemented");
+    }
 }

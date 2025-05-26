@@ -67,6 +67,7 @@ internal class XamlBulder(EditWithMode _editWith)
             FormItemIs.StackPanel => CreateStackPanel(item, param), 
             FormItemIs.Panel => CreatePanel(item, param),
             FormItemIs.DataGrid => CreateDataGrid(item),
+            FormItemIs.TreeView => CreateTreeView(item),
             FormItemIs.Tabs => CreateTabs(item),
             FormItemIs.Pager => CreatePager(item),
             FormItemIs.Toolbar => CreateToolbar(item),
@@ -214,6 +215,36 @@ internal class XamlBulder(EditWithMode _editWith)
             Children = [..CreateElements(source.Items, Attach, param)]
         };
     }
+    private TreeView CreateTreeView(FormItem source)
+    {
+        // for folder
+        return new TreeView()
+        {
+            AutoSelect = AutoSelectMode.FirstItem,
+            FolderSelect = true,
+            Height = Length.FromStringNull(source.Height),  
+            Bindings = b =>
+            {
+                b.SetBinding(nameof(TreeView.ItemsSource), new Bind(source.Data));
+            },
+            Children = [new TreeViewItem() {
+                Bindings = b =>
+                {
+                    b.SetBinding(nameof(TreeViewItem.Label), new Bind("Name"));
+                    b.SetBinding(nameof(TreeViewItem.Icon), new Bind("Icon"));
+                    b.SetBinding(nameof(TreeViewItem.ItemsSource), new Bind("SubItems"));
+                    b.SetBinding(nameof(TreeViewItem.IsFolder), new Bind("HasSubItems"));
+                },
+            }],
+            ContextMenu = new DropDownMenu()
+            {
+                Direction = DropDownDirection.UpRight,
+                Children = [
+                    new Separator(),
+                ]
+            }
+        };
+    }
 
     private DataGrid CreateDataGrid(FormItem source)
     {
@@ -291,6 +322,7 @@ internal class XamlBulder(EditWithMode _editWith)
             LineClamp = source.Props?.LineClamp ?? 0,
             Required = source.Props?.Required == true,
             Highlight = source.Props?.Highlight == true,
+            Folder = source.Props?.Folder == true,
             Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), new Bind(source.Data))
         };
     }

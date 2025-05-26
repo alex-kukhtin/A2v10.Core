@@ -60,7 +60,10 @@ internal partial class BaseModelBuilder
             yield return new FormItem(FormItemIs.Separator);
             yield return new FormItem(FormItemIs.Button)
             {
-                Command = new FormItemCommand(FormCommand.Reload),
+                Command = new FormItemCommand(FormCommand.Reload)
+                {
+                    Argument = _table.UseFolders ? $"Folders.Selected({_table.RealItemsName})" : null
+                }
             };
             yield return new FormItem(FormItemIs.Aligner);
             yield return new FormItem(FormItemIs.SearchBox)
@@ -74,6 +77,82 @@ internal partial class BaseModelBuilder
         {
             if (!_table.Columns.Any(c => c.IsReference) && !_table.UseFolders)
                 return null;
+
+            FormItem TreeToolbar()
+            {
+                return new FormItem(FormItemIs.Toolbar)
+                {
+                    Items = [
+                        new FormItem(FormItemIs.Button)
+                        {
+                            Label = "@Create",
+                            Command = new FormItemCommand(FormCommand.Create)
+                            {
+                                Url = _table.EndpointPath(),
+                                Argument = "Folders"
+                            }
+                        },
+                        new FormItem(FormItemIs.Button)
+                        {
+                            Command = new FormItemCommand(FormCommand.EditSelected)
+                            {
+                                Url = _table.EndpointPathUseBase(_baseTable),
+                                Argument = "Folders"
+                            }
+                        },
+                        new FormItem(FormItemIs.Button)
+                        {
+                            Command = new FormItemCommand(FormCommand.DeleteSelected)
+                            {
+                                Argument = "Folders"
+                            }
+                        },
+                        new FormItem(FormItemIs.Separator),
+                        new FormItem(FormItemIs.Button)
+                        {
+                            Command = new FormItemCommand(FormCommand.Reload)
+                        }
+                    ]
+                };
+            }
+
+            FormItem CreateFoldersView()
+            {
+                return new FormItem(FormItemIs.Panel)
+                {
+                    Label = "@Grouping",
+                    Items = [
+                        TreeToolbar(),
+                        new FormItem(FormItemIs.TreeView)
+                        {
+                            Data = "Folders",
+                            Height = "50vh",
+                        }
+                    ]
+                };
+            }
+
+            IEnumerable<FormItem> TaskpadPanels()
+            {
+                if (_table.UseFolders)
+                    yield return CreateFoldersView();
+                var filters = Filters().ToList();
+                if (filters.Count > 0)
+                    yield return new FormItem(FormItemIs.Panel)
+                    {
+                        Label = "@Filters",
+                        Items = [
+                            new FormItem(FormItemIs.Grid)
+                                {
+                                    Props = new FormItemProps() {
+                                        Rows = String.Join(' ', Enumerable.Range(1, filters.Count).Select(c => "auto")),
+                                        Columns = "1fr",
+                                    },
+                                    Items = [..Filters()]
+                                }
+                        ]
+                    };
+            }
 
             FormItem CreateFilter(TableColumn column, Int32 gridRow)
             {
@@ -107,7 +186,7 @@ internal partial class BaseModelBuilder
                 };
             }
 
-            var tableRefCols = _table.Columns.Where(c => c.IsReference);
+            var tableRefCols = _table.Columns.Where(c => c.IsReference && !c.Role.HasFlag(TableColumnRole.Parent));
             if (_baseTable != null && _baseTable.Schema == "op")
                 tableRefCols = tableRefCols.Where(c => c.DataType != ColumnDataType.Operation);
             
@@ -127,31 +206,13 @@ internal partial class BaseModelBuilder
                     yield return CreateFilter(c, gridRow++);
             }
 
-            Int32 filtersCount = tableRefCols.Count();
-            if (_table.HasPeriod())
-                filtersCount++;
-
             return new FormItem(FormItemIs.Taskpad)
             {
-                Items = [
-                    new FormItem(FormItemIs.Panel) {
-                        Label = "@Filters",
-                        Items = [
-                            new FormItem(FormItemIs.Grid) 
-                            {
-                                Props = new FormItemProps() {
-                                    Rows = String.Join(' ', Enumerable.Range(1, filtersCount).Select(c => "auto")),
-                                    Columns = "1fr",
-                                },
-                                Items = [..Filters()]
-                            }
-                        ]
-                    }
-                ]
+                Items = [..TaskpadPanels()],
             };
         }
 
-        IEnumerable<String> filters()
+        IEnumerable<String> FilterNames()
         {
             if (_table.HasPeriod())
                 yield return "Period";
@@ -165,12 +226,12 @@ internal partial class BaseModelBuilder
             UseCollectionView = true,
             Schema = _table.Schema,
             Table = _table.Name,
-            Data = _table.RealItemsName,
+            Data = _table.UseFolders ? $"Folders.Selected({_table.RealItemsName})" : _table.RealItemsName,
             EditWith = _table.EditWith,
             Label = _baseTable?.RealItemsLabel ?? _table.RealItemsLabel,
             Props = new FormItemProps()
             {
-                Filters = String.Join(',', filters()) 
+                Filters = String.Join(',', FilterNames()) 
             },
             Items = [
                 new FormItem() {

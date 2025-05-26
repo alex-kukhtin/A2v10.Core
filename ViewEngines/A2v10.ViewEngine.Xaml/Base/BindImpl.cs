@@ -1,6 +1,7 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace A2v10.Xaml;
 public class BindImpl
@@ -12,7 +13,9 @@ public class BindImpl
 		_bindings ??= [];
 		if (!_bindings.TryAdd(name, bind))
 			_bindings[name] = bind;
-		return bind;
+        if (bind is ISupportInitialize init)
+            init.EndInit();
+        return bind;
 	}
 
 	public void RemoveBinding(String name)

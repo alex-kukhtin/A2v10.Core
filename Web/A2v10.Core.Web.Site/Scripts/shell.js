@@ -79,7 +79,7 @@
 		},
 		methods: {
 			replaceState(tab) {
-				//??window.history.replaceState(null, null, tab ? tab.url : '/');
+				//window.history.replaceState(null, null, tab ? tab.url : '/');
 			},
 			navigate(u1) {
 				if (u1.url.indexOf('{genrandom}') >= 0) {

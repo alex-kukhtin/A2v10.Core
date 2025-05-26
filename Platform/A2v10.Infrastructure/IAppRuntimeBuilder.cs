@@ -30,4 +30,5 @@ public interface IAppRuntimeBuilder
     Task<IDataModel> ExecuteCommandAsync(IModelCommand command, ExpandoObject parameters);
 	Task DbRemoveAsync(IPlatformUrl platformUrl, IModelView view, String? propName, ExpandoObject execPrms);
 	Task<IDataModel> ExpandAsync(IPlatformUrl platformUrl, IModelView view, ExpandoObject execPrms);
+    Task<ExpandoObject> LoadLazyAsync(IPlatformUrl platformUrl, IModelView view);
 }

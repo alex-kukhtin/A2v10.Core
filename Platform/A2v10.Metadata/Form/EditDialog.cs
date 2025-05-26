@@ -16,12 +16,13 @@ internal partial class BaseModelBuilder
         String? itemsSource = null;
         if (column.IsReference)
             itemsSource = column.Reference.RefTable;
+        var colName = column.IsParent ? "Folder" : column.Name;
         return new FormItem()
         {
             Is = column.Column2Is(),
             Grid = (row != 0 || col != 0) ? new FormItemGrid(row, col) : null,
-            Label = column.Label ?? $"@{column.Name}",
-            Data = $"{_table.RealItemName}.{column.Name}",
+            Label = column.Label ?? $"@{colName}",
+            Data = $"{_table.RealItemName}.{colName}",
             DataType = column.ToItemDataType(),
             Width = column.DataType.ToWidth(),
             Props = new FormItemProps()
@@ -30,8 +31,9 @@ internal partial class BaseModelBuilder
                 ItemsSource = itemsSource,
                 Multiline = column.DataType == ColumnDataType.String && 
                     (column.MaxLength > Constants.MultilineThreshold || column.MaxLength == 0),
-                TabIndex = column.Role.HasFlag(TableColumnRole.Name) ? 1 : 0,
+                TabIndex = column.IsName ? 1 : 0,
                 Required = column.Required,
+                Folder = column.IsParent && _table.UseFolders,
             }
         };
     }
@@ -39,19 +41,13 @@ internal partial class BaseModelBuilder
     private FormItem Content()
     {
         var hasDetails = _table.Details.Any();
-        var memoColumn = _table.Columns.FirstOrDefault(c => c.Name == "Memo");
+        var memoColumn = _table.Columns.FirstOrDefault(c => c.IsMemo);
 
         var editableColumns = _table.EditableColumns();
+
         if (hasDetails && memoColumn != null)
             editableColumns = editableColumns
-                .Where(c => c.Name != "Memo").ToList();
-
-        IEnumerable<FormItem> Controls()
-        {
-            Int32 row = 1;
-            return editableColumns.Select(c => CreateControl(c, row++, 1));
-        }
-
+                .Where(c => !c.IsMemo).ToList();
 
         FormItem ContentGrid()
         {
@@ -64,7 +60,7 @@ internal partial class BaseModelBuilder
                     Rows = String.Join(' ', Enumerable.Range(1, editableColumns.Count()).Select(c => "auto")),
                     Columns = "1fr"
                 },
-                Items = [.. Controls()]
+                Items = [.. editableColumns.Select((c, index) => CreateControl(c, index + 1, 1))]
             };
         }
 

@@ -71,7 +71,13 @@ internal class AppMetadataBuilder(IServiceProvider _serviceProvider,
     public async Task<IDataModel> ExpandAsync(IPlatformUrl platformUrl, IModelView view, ExpandoObject execPrms)
     {
         var iBuilder = await _modelBuilderFactory.BuildAsync(platformUrl, view);
-        throw new NotImplementedException();
+        return await iBuilder.ExpandAsync(execPrms);
+    }
+    public async Task<ExpandoObject> LoadLazyAsync(IPlatformUrl platformUrl, IModelView view)
+    {
+        var iBuilder = await _modelBuilderFactory.BuildAsync(platformUrl, view);
+        var dm = await  iBuilder.LoadLazyModelAsync();
+        return dm.Root;
     }
 
     private IMetaEndpointBuilder? FindEndpointBuilder(String? name, IModelBuilder baseBuilder)

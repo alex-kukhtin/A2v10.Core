@@ -1,9 +1,10 @@
-﻿// Copyright © 2024 Olekdsandr Kukhtin. All rights reserved.
+﻿// Copyright © 2024-2025 Olekdsandr Kukhtin. All rights reserved.
 
-using A2v10.Data.Interfaces;
 using System;
 using System.Dynamic;
 using System.Threading.Tasks;
+
+using A2v10.Data.Interfaces;
 
 namespace A2v10.Infrastructure;
 
@@ -57,4 +58,9 @@ public class NullAppRuntimeBuilder : IAppRuntimeBuilder
 	{
 		throw new NotImplementedException(THROW_MESSAGE);
 	}
+
+    public Task<ExpandoObject> LoadLazyAsync(IPlatformUrl platformUrl, IModelView view)
+    {
+        throw new NotImplementedException(THROW_MESSAGE);
+    }
 }
