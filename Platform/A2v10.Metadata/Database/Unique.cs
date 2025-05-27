@@ -3,20 +3,16 @@
 using System;
 using System.Threading.Tasks;
 using System.Dynamic;
-using System.Text;
 using System.Linq;
-
-using Newtonsoft.Json;
 
 using A2v10.Infrastructure;
 using A2v10.Data.Core.Extensions;
-using A2v10.Services;
 
 namespace A2v10.Metadata;
 
 internal partial class BaseModelBuilder
 {
-    private async Task<IInvokeResult> CheckInvokeAsync(ExpandoObject? prms, String property)
+    private async Task<IInvokeResult> CheckUniqueAsync(ExpandoObject? prms, String property)
     {
         var column = _table.Columns.FirstOrDefault(c => c.Name.Equals(property, StringComparison.OrdinalIgnoreCase))
             ?? throw new InvalidOperationException($"Column {property} not found in table {_table.Name}");
@@ -39,16 +35,6 @@ internal partial class BaseModelBuilder
             .AddBigInt("@Id", prms?.Get<Int64>("Id"))
             .AddString("@Value", prms?.Get<String>("Value"));
         });
-
-        // TODO : Create Extension for FETCH
-
-        var strResult = model != null && model.Root != null ?
-            JsonConvert.SerializeObject(model.Root, JsonHelpers.DataSerializerSettings) : "{}";
-
-        return new InvokeResult(
-            body: strResult != null ? Encoding.UTF8.GetBytes(strResult) : [],
-            contentType: MimeTypes.Application.Json
-        );
+        return model.ToInvokeResult();
     }
-
 }

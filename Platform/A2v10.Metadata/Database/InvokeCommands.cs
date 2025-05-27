@@ -18,7 +18,7 @@ internal partial class BaseModelBuilder
             "fetch" => FetchAsync(prms),
             "fetchfolder" => FetchFolderAsync(prms),
             "unapply" => UnApplyAsync(prms),
-            var s when s.EndsWith(".unique") => CheckInvokeAsync(prms, command.Split('.')[0]),
+            var s when s.EndsWith(".unique") => CheckUniqueAsync(prms, command.Split('.')[0]),
             _ => throw new NotImplementedException($"Implement invoke for {command}")
         };
     }

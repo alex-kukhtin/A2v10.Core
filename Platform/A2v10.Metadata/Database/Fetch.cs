@@ -3,13 +3,9 @@
 using System;
 using System.Threading.Tasks;
 using System.Dynamic;
-using System.Text;
-
-using Newtonsoft.Json;
 
 using A2v10.Infrastructure;
 using A2v10.Data.Core.Extensions;
-using A2v10.Services;
 
 namespace A2v10.Metadata;
 
@@ -44,12 +40,6 @@ internal partial class BaseModelBuilder
             .AddString("@Text", prms?.Get<String>("Text"));
         });
 
-        var strResult = model != null && model.Root != null ?
-            JsonConvert.SerializeObject(model.Root, JsonHelpers.DataSerializerSettings) : "{}";
-
-        return new InvokeResult(
-            body: strResult != null ? Encoding.UTF8.GetBytes(strResult) : [],
-            contentType: MimeTypes.Application.Json
-        );
+        return model.ToInvokeResult();
     }
 }

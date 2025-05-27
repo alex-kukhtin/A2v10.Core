@@ -1,5 +1,7 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
+using A2v10.Xaml;
+using DocumentFormat.OpenXml.Bibliography;
 using System.Collections.Generic;
 
 namespace A2v10.Metadata;
@@ -10,6 +12,31 @@ internal partial class BaseModelBuilder
     {
         IEnumerable<FormItem> ToolbarButtons()
         {
+            yield return new FormItem(FormItemIs.Button)
+            {
+                Command = new FormItemCommand(FormCommand.Create)
+                {
+                    Url = $"{_table.EndpointPath()}/editfolder",
+                    Argument = "Folders",
+                }
+            };
+            yield return new FormItem(FormItemIs.Button)
+            {
+                Command = new FormItemCommand(FormCommand.EditSelected)
+                {
+                    Url = $"{_table.EndpointPath()}/editfolder",
+                    Argument = "Folders",
+                }
+            };
+            yield return new FormItem(FormItemIs.Button)
+            {
+                Command = new FormItemCommand(FormCommand.DeleteSelected)
+                {
+                    Url = $"{_table.EndpointPath()}/deletefolder",
+                    Argument = "Folders",
+                }
+            };
+            yield return new FormItem(FormItemIs.Separator);
             yield return new FormItem(FormItemIs.Button)
             {
                 Command = new FormItemCommand(FormCommand.Reload),

@@ -9,6 +9,15 @@ namespace A2v10.Metadata;
 
 internal static class SqlExtensions
 {
+    public static String LocalizeSql(this String value)
+    {
+        if (String.IsNullOrEmpty(value))
+            return String.Empty;
+        value = value.Replace("'", "''");
+        if (value.StartsWith("@"))
+            return $"@[{value[1..]}]";
+        return value;
+    }
     public static SqlDbType ToSqlDbType(this ColumnDataType columnDataType, ColumnDataType idDataType)
     {
         return columnDataType switch

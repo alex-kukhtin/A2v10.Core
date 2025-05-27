@@ -77,7 +77,7 @@ internal partial class BaseModelBuilder
             if (lazy)
             {
                 yield return $"a.{_table.IsFolderField} = 0"; // for lazy loading
-                yield return $"(@Id = -1 or a.{_table.ParentField} = @Id or (@Id = -2 and a.{_table.ParentField} is null))";
+                yield return $"(@Id = 0 or a.{_table.ParentField} = @Id or (@Id = -2 and a.{_table.ParentField} is null))";
             }
 
             if (_table.Columns.Any(c => c.Role.HasFlag(TableColumnRole.Void)))
