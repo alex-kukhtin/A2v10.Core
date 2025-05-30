@@ -15,6 +15,8 @@ public class StyleDescriptor
 			return;
 		if (root?.Styles == null)
 			return;
+		if (StyleName == "Empty")
+			return;
 		if (root.Styles.TryGetValue(StyleName, out Style? style))
 			style.Set(elem);
 		else
