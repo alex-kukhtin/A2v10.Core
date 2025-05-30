@@ -13,7 +13,7 @@ public interface IAppCodeProvider
     Boolean IsFileExists(String path);
     Stream? FileStreamRO(String path, Boolean primaryOnly = false);
     Stream? FileStreamResource(String path, Boolean primaryOnly = false);
-
+    IEnumerable<Stream> EnumerateFileStreamsRO(String path);
     IEnumerable<String> EnumerateAllFiles(String path, String searchPattern);
     IEnumerable<String> EnumerateWatchedDirs(String path, String searchPattern);
 

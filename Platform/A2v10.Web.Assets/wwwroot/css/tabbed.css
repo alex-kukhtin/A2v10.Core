@@ -3741,9 +3741,13 @@ tr:hover .commandbar.visible-hover {
 }
 .tree-view {
   margin: 0;
-  padding: 0;
+  padding: 0.25rem;
   overflow-y: auto;
   overflow-x: hidden;
+  background-color: var(--bgControl);
+  border: 1px solid var(--neutral400);
+  border-radius: 4px;
+  min-height: 150px;
 }
 .tree-view li {
   list-style: none;
@@ -6110,6 +6114,7 @@ TODO:
 .panel .panel-content {
   display: flex;
   flex-direction: column;
+  gap: 0.25rem;
 }
 .panel .panel-header {
   padding: 0 0.625rem;
@@ -7425,6 +7430,10 @@ table > colgroup col.blue {
 .login-shell .header {
   grid-area: header;
 }
+.login-shell .footer {
+  justify-content: end;
+  padding: 0 8px 0 0;
+}
 .login-shell .main-view {
   grid-area: main;
 }
@@ -8459,7 +8468,8 @@ td.vert > .vcell {
 .h-100 {
   height: 100%;
 }
-.input-code input {
+.input-code input,
+.input-code static-input {
   font-family: 'Consolas', 'Courier New', Courier, monospace;
   font-weight: 600;
 }

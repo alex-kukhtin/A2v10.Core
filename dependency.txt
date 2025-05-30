@@ -1,8 +1,6 @@
-﻿2025-05-22 (next: 8551)
+﻿2025-05-30 (next: 8552)
 =======================
 !do not update Microsoft.OpenApi to 1.6.23 (https://github.com/microsoft/OpenAPI.NET/issues/2030)
-
-A2v10.Infrastructure!!!
 
 
 A2v10.Platform

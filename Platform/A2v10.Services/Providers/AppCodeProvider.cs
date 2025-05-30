@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System.IO;
 
@@ -88,6 +88,16 @@ public class AppCodeProvider : IAppCodeProvider
 			GetProvider(DEFAULT_PROVIDER).FileStreamRO(path);
 		return GetProvider(path).FileStreamRO(path);
 	}
+
+	public IEnumerable<Stream> EnumerateFileStreamsRO(String path)
+	{
+		foreach (var p in _providers)
+        {
+            var stream = p.Value.FileStreamRO(path);
+            if (stream != null)
+                yield return stream;
+        }
+    }
 
     public Stream? FileStreamResource(String path, Boolean primaryOnly = false)
     {

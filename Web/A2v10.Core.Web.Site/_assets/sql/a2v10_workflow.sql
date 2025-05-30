@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2020-2025 Oleksandr Kukhtin
 
-Last updated : 31 mar 2025
-module version : 8212 !!! TODO
+Last updated : 29 may 2025
+module version : 8227 !!! TODO
 */
 ------------------------------------------------
 set nocount on;
@@ -28,7 +28,7 @@ go
 begin
 	set nocount on;
 	declare @version int;
-	set @version = 8212;
+	set @version = 8227;
 	if exists(select * from a2wf.Versions where Module = N'main')
 		update a2wf.Versions set [Version] = @version where Module = N'main';
 	else
@@ -187,12 +187,17 @@ begin
 	(
 		InstanceId uniqueidentifier not null,
 		[Bookmark] nvarchar(255) not null,
-		constraint PK_InstanceBookmarks primary key clustered (InstanceId, [Bookmark]) with (fillfactor = 70),
+			constraint PK_InstanceBookmarks primary key clustered (InstanceId, [Bookmark]) with (fillfactor = 70),
+		[Activity] nvarchar(255) null,
 		[WorkflowId] nvarchar(255) not null,
-		constraint FK_InstanceBookmarks_PK foreign key (WorkflowId, InstanceId) references a2wf.Instances (WorkflowId, Id),
+			constraint FK_InstanceBookmarks_PK foreign key (WorkflowId, InstanceId) references a2wf.Instances (WorkflowId, Id),
 	);
 	create index IDX_InstanceBookmarks_WB on a2wf.InstanceBookmarks (WorkflowId, Bookmark) with (fillfactor = 70);
 end
+go
+------------------------------------------------
+if not exists (select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = N'a2wf' and TABLE_NAME=N'InstanceBookmarks' and COLUMN_NAME=N'Activity')
+	alter table a2wf.InstanceBookmarks add [Activity] nvarchar(255) null;
 go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2wf' and TABLE_NAME=N'InstanceEvents')
@@ -538,7 +543,8 @@ go
 create type a2wf.[InstanceBookmarks.TableType] as table
 (
 	ParentGUID uniqueidentifier,
-	[Bookmark] nvarchar(255)
+	[Bookmark] nvarchar(255),
+	[Activity] nvarchar(255)
 )
 go
 ------------------------------------------------
@@ -712,8 +718,8 @@ begin
 	) as s
 	on t.[Bookmark] = s.[Bookmark] and t.InstanceId = s.InstanceId and t.WorkflowId = s.WorkflowId
 	when not matched by target then insert
-		(InstanceId, [Bookmark], WorkflowId) values
-		(s.InstanceId, s.[Bookmark], s.WorkflowId)
+		(InstanceId, [Bookmark], WorkflowId, Activity) values
+		(s.InstanceId, s.[Bookmark], s.WorkflowId, s.Activity)
 	when not matched by source then delete;
 
 

@@ -14,11 +14,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Workflow.Engine" Version="10.1.8224" />
 		<PackageReference Include="Azure.Storage.Blobs" Version="12.24.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.16" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="8.0.16" />
-		<PackageReference Include="A2v10.Module.Workflow" Version="10.1.1033" />
+		<PackageReference Include="A2v10.Workflow.Engine" Version="10.1.8227" />
+		<PackageReference Include="A2v10.Workflow.WebAssets" Version="10.1.8115" />
+		<PackageReference Include="A2v10.Module.Workflow" Version="10.1.1036" />
 	</ItemGroup>
 
 	<ItemGroup>
