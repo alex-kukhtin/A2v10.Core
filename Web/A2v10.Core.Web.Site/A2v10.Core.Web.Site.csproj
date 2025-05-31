@@ -11,6 +11,8 @@
 	  <None Include="..\..\Platform\A2v10.App.Assets\Application\%40sql\a2v10_platform.sql" Link="a2v10_platform.sql" />
 	  <None Include="..\..\Platform\A2v10.App.Assets\Application\%40sql\a2v10_platform_mt_catalog.sql" Link="a2v10_platform_mt_catalog.sql" />
 	  <None Include="..\..\Platform\A2v10.App.Assets\Application\%40sql\a2v10_platform_mt_segment.sql" Link="a2v10_platform_mt_segment.sql" />
+	  <None Include="..\..\Platform\A2v10.App.Assets\Application\%40sql\a2v10_platform_simple.sql" Link="a2v10_platform_simple.sql" />
+	  <None Include="..\..\Platform\A2v10.App.Assets\Application\%40sql\a2v10_platform_st.sql" Link="a2v10_platform_st.sql" />
 	</ItemGroup>
 
 	<ItemGroup>

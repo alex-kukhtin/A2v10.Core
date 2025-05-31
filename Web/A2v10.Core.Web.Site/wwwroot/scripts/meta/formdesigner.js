@@ -844,6 +844,36 @@
 		}
 	};
 
+	const stackPanelTemplate = `
+<div class="fd-elem-stackpanel stack-panel" @click.stop=select :style=spStyle :class="{selected}">
+	<fd-grid-item v-for="(itm, ix) in item.Items" :item=itm :key=ix :cont=cont />
+</div>
+`;
+
+	var stackPanelElem = {
+		name: 'stackpanel',
+		extends: layoutelem,
+		template: stackPanelTemplate,
+		components: {
+			'fd-grid-ph': gridPlaceholder$1,
+			'fd-grid-item': gridItem$1
+		},
+		props: {
+			item: Object,
+			cont: Object
+		},
+		computed: {
+			props() {
+				return this.item.Props || {};
+			},
+			stStyle() {
+				return {
+					height: this.item.Height || ''
+				}
+			},
+		}
+	};
+
 	var lineElem = {
 		template: '<div class="line" @click.stop.prevent=select :class="{selected}"><hr></div>',
 		extends: layoutelem
@@ -982,6 +1012,7 @@
 `;
 
 	Vue.component('Grid', gridElem);
+	Vue.component('StackPanel', stackPanelElem);
 
 	Vue.component('fd-container', {
 		template: containerTemplate,

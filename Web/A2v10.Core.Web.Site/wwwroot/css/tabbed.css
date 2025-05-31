@@ -2012,6 +2012,7 @@ pre.a2-code {
   overflow: auto;
   max-height: 300px;
   margin: 0;
+  line-height: normal;
 }
 .validation-summary {
   font-size: 0.95rem;
