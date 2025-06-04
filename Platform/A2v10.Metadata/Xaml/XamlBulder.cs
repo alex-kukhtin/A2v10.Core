@@ -148,7 +148,7 @@ internal class XamlBulder(EditWithMode _editWith)
 
     private UIElement CreateTabs(FormItem item)
     {
-        var tabBarButtons = item.Items?.Select(c => new TabButton() { Content = c.Label, ActiveValue = c.Data }) ?? [];
+        var tabBarButtons = item.Items?.Select(c => new TabButton() { Content = c.Label.Localize(), ActiveValue = c.Data }) ?? [];
 
         return new TabBar()
         {

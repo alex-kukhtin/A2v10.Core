@@ -40,8 +40,11 @@ internal class TurnoverReportBuilder(IServiceProvider serviceProvider, TableMeta
         var appMeta = await _metadataProvider.GetAppMetadataAsync(dataSource);
 
         var filterFields = _grouping.Filters.Select(f =>
-            $"[{f.Column}!T{f.Column}!RefId] = @{f.Column}"
-        );
+            $"[{f.Column}!T{f.Column}!RefId] = @{f.Column}");
+
+        var filterSql = filterFields.Any()
+            ? $"{String.Join(", ", filterFields)}, "
+            : String.Empty;
 
         var filterMaps = new StringBuilder();
         foreach (var f in _grouping.Filters)
@@ -104,7 +107,7 @@ internal class TurnoverReportBuilder(IServiceProvider serviceProvider, TableMeta
         where @Run = 1
         order by {_grouping.ReferenceOrderByGrp()};
 
-        select [Filter!TFilter!Object] = null, {String.Join(',', filterFields)},
+        select [Filter!TFilter!Object] = null, {filterSql}
             [Group] = N'{_grouping.GroupParams}',
             [Period.From!TPeriod!] = @From, [Period.To!TPeriod!] = @To, Run = @Run, Tab = @Tab;
 

@@ -10,8 +10,8 @@ internal static class StringExtensions
     {
         if (src.EndsWith("ies"))
             return src[..^3] + "y";
-        if (src.EndsWith("es"))
-            return src[..^2];
+        if (src.EndsWith("ses"))
+            return src[..^2]; // remove 'es'
         if (src.EndsWith("s"))
             return src[..^1];
         return src;  
@@ -20,6 +20,8 @@ internal static class StringExtensions
     {
         if (src.EndsWith("y"))
             return src + "ies";
+        else if (src.EndsWith("s"))
+            return src + "es";
         return src + "s";
     }
 }

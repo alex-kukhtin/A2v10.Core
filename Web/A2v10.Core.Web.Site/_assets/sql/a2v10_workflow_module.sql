@@ -352,6 +352,7 @@ begin
 	select [Instance!TInstance!Object] = null, [Id!!Id] = i.Id, WorkflowId = i.WorkflowId, 
 		[Version] = i.[Version], [Xml] = w.[Text], [DateModified!!Utc] = DateModified,
 		[Track!TTrack!Array] = null, [UserTrack!TUserTrack!Array] = null,
+		[FullTrack!TFullTrack!Array] = null,
 		i.ExecutionStatus
 	from a2wf.Instances i inner join a2wf.Workflows w on i.WorkflowId = w.Id and i.[Version] = w.[Version]
 	where i.Id = @Id;
@@ -372,6 +373,13 @@ begin
 	from TE
 		left join a2wf.InstanceBookmarks b on TE.InstanceId = b.InstanceId and TE.Activity = b.Activity
 		left join a2wf.InstanceEvents e on TE.InstanceId = e.InstanceId and TE.Activity = e.[Event];
+
+	select [!TFullTrack!Array] = null, Id = Activity, [Action], [EventTime!!Utc] = EventTime,
+		[Message],
+		[!TInstance.FullTrack!ParentId] = InstanceId 
+	from a2wf.InstanceTrack where InstanceId = @Id and [Action] <> 0 and Kind = 0 /*Activity*/
+	order by [EventTime] desc, RecordNumber desc;
+
 end
 go
 ------------------------------------------------

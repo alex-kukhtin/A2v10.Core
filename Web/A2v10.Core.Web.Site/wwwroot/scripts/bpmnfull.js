@@ -4008,7 +4008,7 @@
       taskMarkerRenderers[ type ](parentGfx, element, attrs);
     }
 
-    function renderTaskMarkers(parentGfx, element, taskMarkers, attrs = {}) {
+    function renderTaskMarkers(parentGfx, element, taskMarkers = [], attrs = {}) {
       attrs = {
         fill: attrs.fill,
         stroke: attrs.stroke,
@@ -4018,14 +4018,14 @@
 
       var semantic = getBusinessObject(element);
 
-      var subprocess = taskMarkers && taskMarkers.includes('SubProcessMarker');
+      var subprocess = taskMarkers.includes('SubProcessMarker');
 
       if (subprocess) {
         attrs = {
           ...attrs,
           seq: -21,
           parallel: -22,
-          compensation: -42,
+          compensation: -25,
           loop: -18,
           adhoc: 10
         };
@@ -4034,22 +4034,22 @@
           ...attrs,
           seq: -5,
           parallel: -6,
-          compensation: -27,
+          compensation: -7,
           loop: 0,
-          adhoc: 10
+          adhoc: -8
         };
       }
 
-      forEach$1(taskMarkers, function(marker) {
-        renderTaskMarker(marker, parentGfx, element, attrs);
-      });
-
       if (semantic.get('isForCompensation')) {
-        renderTaskMarker('CompensationMarker', parentGfx, element, attrs);
+        taskMarkers.push('CompensationMarker');
       }
 
       if (is$1(semantic, 'bpmn:AdHocSubProcess')) {
-        renderTaskMarker('AdhocMarker', parentGfx, element, attrs);
+        taskMarkers.push('AdhocMarker');
+
+        if (!subprocess) {
+          assign$1(attrs, { compensation: attrs.compensation - 18 });
+        }
       }
 
       var loopCharacteristics = semantic.get('loopCharacteristics'),
@@ -4057,18 +4057,40 @@
 
       if (loopCharacteristics) {
 
+        assign$1(attrs, {
+          compensation: attrs.compensation - 18,
+        });
+
+        if (taskMarkers.includes('AdhocMarker')) {
+          assign$1(attrs, {
+            seq: -23,
+            loop: -18,
+            parallel: -24
+          });
+        }
+
         if (isSequential === undefined) {
-          renderTaskMarker('LoopMarker', parentGfx, element, attrs);
+          taskMarkers.push('LoopMarker');
         }
 
         if (isSequential === false) {
-          renderTaskMarker('ParallelMarker', parentGfx, element, attrs);
+          taskMarkers.push('ParallelMarker');
         }
 
         if (isSequential === true) {
-          renderTaskMarker('SequentialMarker', parentGfx, element, attrs);
+          taskMarkers.push('SequentialMarker');
         }
       }
+
+      if (taskMarkers.includes('CompensationMarker') && taskMarkers.length === 1) {
+        assign$1(attrs, {
+          compensation: -8
+        });
+      }
+
+      forEach$1(taskMarkers, function(marker) {
+        renderTaskMarker(marker, parentGfx, element, attrs);
+      });
     }
 
     function renderLabel(parentGfx, label, attrs = {}) {
@@ -107574,7 +107596,7 @@
   	} = props;
 
   	const commandStack = useService('commandStack');
-  	const translate = useService('translate');
+  	useService('translate');
 
   	const setValue = (value) => {
   		commandStack.execute('element.updateModdleProperties', {
@@ -107589,7 +107611,7 @@
   	return CheckboxEntry({
   		element: parameter,
   		id: idPrefix + '-correlationid',
-  		label: translate('CorrelationId'),
+  		label: 'Correlation Id',
   		getValue: () => parameter.CorrelationId || false,	
   		setValue
   	});
@@ -108429,6 +108451,7 @@
   				index$4,
   				MoveCanvasModule,
   				ZoomScrollModule,
+  				OutlineModule,
   				modeling
   			],
   			moddleExtensions: {
