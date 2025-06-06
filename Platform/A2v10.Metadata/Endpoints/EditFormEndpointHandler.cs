@@ -13,7 +13,6 @@ using A2v10.Infrastructure;
 using A2v10.Xaml.DynamicRendrer;
 using A2v10.Xaml;
 using A2v10.Data;
-using DocumentFormat.OpenXml.Drawing.Charts;
 
 namespace A2v10.Metadata;
 
@@ -38,6 +37,7 @@ public class EditFormEndpointHandler(IServiceProvider _serviceProvider) : IEndpo
         var dataModel = await _dbContext.LoadModelAsync(modelView.DataSource, "a2meta.[Table.Form]", dbPrms);
 
         var eo = dataModel.Eval<Object>("Form.Json");
+
         if (eo == null)
         {
             var table = dataModel.Eval<String>("Table.Name")
@@ -55,12 +55,15 @@ public class EditFormEndpointHandler(IServiceProvider _serviceProvider) : IEndpo
             var modelBuilder = await _modelBuilderFactory.BuildAsync(editPlatformUrl, tm, null /*always*/);
 
             var defaultForm = modelBuilder.CreateDefaultForm();
-
-            // with null for Form Designer
-            var json = JsonConvert.SerializeObject(defaultForm, JsonSettings.WithNull);
-            dbPrms.Add("Json", json);
-            // update default form
-            dataModel = await _dbContext.LoadModelAsync(modelView.DataSource, "a2meta.[Table.Form.Update]", dbPrms);
+            var json = JsonConvert.SerializeObject(defaultForm, JsonSettings.IgnoreNull);
+            var formJson = JsonConvert.DeserializeObject<ExpandoObject>(json, JsonSettings.Default)
+                ?? throw new InvalidOperationException("Form deserialization fails");
+            dataModel.Root.Set("Form", new ExpandoObject()
+            {
+                {"Id", platformUrl.Id },
+                {"Key", key },
+                {"Json", formJson }
+            });
         }
 
         var formDm = CreateFormDataModel(dataModel.Root);
@@ -142,7 +145,7 @@ public class EditFormEndpointHandler(IServiceProvider _serviceProvider) : IEndpo
         mb.AddMetadata("TTable")
             .AddField("Id", SqlDataType.Guid)
             .AddField("Schema", SqlDataType.String, 255)
-            .AddField("Table", SqlDataType.String, 255)
+            .AddField("Name", SqlDataType.String, 255)
             .AddField("EditWith", SqlDataType.String, 16);
 
         mb.AddMetadata("TFormWrap")

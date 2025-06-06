@@ -2,6 +2,9 @@
 =======================
 !do not update Microsoft.OpenApi to 1.6.23 (https://github.com/microsoft/OpenAPI.NET/issues/2030)
 
+!!!INFRASTRUCTURE
+
+A2v10.Web.Assets
 
 A2v10.Platform
 	A2v10.Platform.Web
@@ -49,6 +52,7 @@ A2v10.Metadata
 	A2v10.ViewEngine.Xaml
 	A2v10.Infrastructure
 	A2v10.Services
+	A2v10.Module.Metadata -- НЕ ЗАБЫВАЕМ ОБНОВИТЬ ВЕРСИЮ В nuspec!
 
 A2v10.Web.Assets
 A2v10.App.Assets

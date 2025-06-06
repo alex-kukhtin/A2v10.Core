@@ -13,6 +13,7 @@ public class FormMetadataContractResolver : DefaultContractResolver
     protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
     {
         var prop = base.CreateProperty(member, memberSerialization);
+
         if (prop.PropertyType == typeof(String))
         {
             prop.ShouldSerialize = instance =>
@@ -26,23 +27,20 @@ public class FormMetadataContractResolver : DefaultContractResolver
                 return true;
             };
         }
-        else if (prop.DeclaringType == typeof(FormItem) && prop.PropertyType == typeof(FormItemGrid))
+        else if (prop.DeclaringType == typeof(FormItem))
         {
-            prop.ShouldSerialize = instance =>
-            {
-                var item = (FormItem)instance;
-                return item.Grid?.IsEmpty != true;
-            };
+            SetShouldSerializeFormItem(prop);
         }
-        else if (prop.DeclaringType == typeof(FormItem) && prop.PropertyType == typeof(FormItemCommand))
-        {
-            prop.ShouldSerialize = instance =>
-            {
-                var item = (FormItem)instance;
-                return item.Command?.IsEmpty != true;
-            };
+        else if (prop.DeclaringType == typeof(Form))
+        { 
+            SetShouldSerializeForm(prop);
         }
-        else if (prop.DeclaringType == typeof(FormItem) && prop.PropertyType == typeof(FormItemProps))
+        return prop;
+    }
+
+    void SetShouldSerializeFormItem(JsonProperty prop)
+    {
+        if (prop.PropertyType == typeof(FormItemProps))
         {
             prop.ShouldSerialize = instance =>
             {
@@ -50,7 +48,7 @@ public class FormMetadataContractResolver : DefaultContractResolver
                 return item.Props?.IsEmpty != true;
             };
         }
-        else if (prop.DeclaringType == typeof(FormItem) && prop.PropertyName == "Items")
+        else if (prop.PropertyName == nameof(FormItem.Items))
         {
             prop.ShouldSerialize = instance =>
             {
@@ -58,7 +56,27 @@ public class FormMetadataContractResolver : DefaultContractResolver
                 return item.Items != null && item.Items.Length > 0;
             };
         }
-        else if (prop.DeclaringType == typeof(Form) && prop.PropertyName == "Buttons")
+        else if (prop.PropertyType == typeof(FormItemCommand))
+        {
+            prop.ShouldSerialize = instance =>
+            {
+                var item = (FormItem)instance;
+                return item.Command?.IsEmpty != true;
+            };
+        }
+        else if (prop.PropertyType == typeof(FormItemGrid))
+        {
+            prop.ShouldSerialize = instance =>
+            {
+                var item = (FormItem)instance;
+                return item.Grid?.IsEmpty != true;
+            };
+        }
+    }
+
+    void SetShouldSerializeForm(JsonProperty prop)
+    {
+        if (prop.PropertyName == nameof(Form.Buttons))
         {
             prop.ShouldSerialize = instance =>
             {
@@ -66,6 +84,21 @@ public class FormMetadataContractResolver : DefaultContractResolver
                 return item.Buttons != null && item.Buttons.Length > 0;
             };
         }
-        return prop;
+        else if (prop.PropertyName == nameof(Form.Toolbar))
+        {
+            prop.ShouldSerialize = instance =>
+            {
+                var item = (Form)instance;
+                return item.Toolbar != null && item.Toolbar.Items?.Length > 0;
+            };
+        }
+        else if (prop.PropertyName == nameof(Form.Taskpad))
+        {
+            prop.ShouldSerialize = instance =>
+            {
+                var item = (Form)instance;
+                return item.Taskpad != null && item.Taskpad.Items?.Length > 0;
+            };
+        }
     }
 }

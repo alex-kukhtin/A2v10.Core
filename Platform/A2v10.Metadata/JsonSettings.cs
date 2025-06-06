@@ -1,11 +1,9 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
-using System.Reflection;
-
+using A2v10.Services;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
 
 namespace A2v10.Metadata;
 
@@ -46,4 +44,16 @@ public static class JsonSettings
             new JsonEmptyStringEnumConverter()
         ]
     };
+
+    public static readonly JsonSerializerSettings DefaultExpando =
+        new()
+        {
+            NullValueHandling = NullValueHandling.Ignore,
+            DefaultValueHandling = DefaultValueHandling.Ignore,
+            Converters =
+            [
+                new IgnoreNullValueExpandoObjectConverter()
+            ]
+        };
+
 }

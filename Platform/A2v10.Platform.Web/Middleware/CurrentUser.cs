@@ -201,7 +201,7 @@ public class CurrentUser : ICurrentUser, IDbIdentity
 		var prms = new ExpandoObject();
 		if (Identity.Id != null)
 			prms.Add("UserId", Identity.Id);
-		if (Identity.Tenant != null)
+		if (Identity.Tenant != null && Identity.Tenant != 0)
 			prms.Add("TenantId", Identity.Tenant);
 		return prms;
 	}

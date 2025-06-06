@@ -14,7 +14,7 @@ public static class MimeTypes
 		public const String OctetBinary = "application/octet-binary";
 		public const String OctetStream = "application/octet-stream";
 		public const String Pdf = "application/pdf";
-		public const String Zip = "tapplication/zip";
+		public const String Zip = "application/zip";
 		public const String Xlsx = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 	}
 

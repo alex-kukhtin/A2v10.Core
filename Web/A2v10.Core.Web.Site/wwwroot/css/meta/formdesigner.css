@@ -95,12 +95,6 @@
 .fd-container .fd-taskpad .fd-toolbox details ul li.fd-tbox-item .ico {
   color: #999;
 }
-.fd-container .fd-toolbar {
-  grid-column: 1 / span 2;
-  grid-row: 1;
-  border-bottom: 1px solid #aaa;
-  padding: 7px 14px 7px 14px;
-}
 .fd-container .fd-propsheet {
   width: 100%;
 }
@@ -245,6 +239,9 @@
   padding: 0 5px;
   height: 2em;
   overflow: hidden;
+}
+.fd-container .fd-elem-grid .fd-grid-item .input.multiline {
+  height: 61px;
 }
 .fd-container .fd-elem-grid .fd-grid-item .form-group {
   display: flex;

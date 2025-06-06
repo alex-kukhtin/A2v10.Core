@@ -508,6 +508,7 @@ internal class XamlBulder(EditWithMode _editWith)
             {
                 Content = source.Label.Localize(),
                 Icon = source.Command2Icon(),
+                CssClass = source.CssClass,
                 Bindings = b => b.SetBinding(nameof(Button.Command), source.BindCommand(_editWith))
             };
         return new Button()
@@ -535,6 +536,7 @@ internal class XamlBulder(EditWithMode _editWith)
                     {
                         Content = c.Label.Localize(),
                         Icon = c.Command2Icon(),
+                        CssClass = c.CssClass,
                         Render = c.Command2RenderMode(),
                         Bindings = b => {
                             b.SetBinding(nameof(Button.Command), c.BindCommand(_editWith));
@@ -546,6 +548,7 @@ internal class XamlBulder(EditWithMode _editWith)
                     {
                         TabIndex = 1,
                         Placeholder = "@[Search]",
+                        CssClass = c.CssClass,
                         Width = Length.FromStringNull(c.Width),
                         Bindings = b => b.SetBinding(nameof(SearchBox.Value), new Bind(c.Data))
                     },
