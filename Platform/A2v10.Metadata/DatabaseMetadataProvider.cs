@@ -9,6 +9,8 @@ using Newtonsoft.Json;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Xaml;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace A2v10.Metadata;
 
@@ -46,9 +48,32 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return modelTableInfo;
     }
 
+    public void RemoveFormFromCache(String? dataSource, String schema, String table, String key)
+    {
+        _metadataCache.RemoveFormFromCache(dataSource, schema, table, key);
+    }
     public Task<FormMetadata> GetFormAsync(String? dataSource, TableMetadata meta, String key, Func<Form> defForm)
     {
         return _metadataCache.GetOrAddFormAsync(dataSource, meta, key, LoadTableFormAsync, defForm);
+    }
+
+    public async Task<IEnumerable<ReferenceMember>> ReferenceFieldsAsync(String? dataSource, TableMetadata table)
+    {
+        async Task<ReferenceMember> CreateMember(TableColumn column, Int32 index)
+        {
+            var table = column.DataType switch
+            {
+                ColumnDataType.Operation => await GetSchemaAsync(dataSource, "op", "operations"),
+                ColumnDataType.Enum => MetadataExtensions.CreateEnumMeta(column),
+                _ => await GetSchemaAsync(dataSource, column.Reference.RefSchema, column.Reference.RefTable)
+            };
+            return new ReferenceMember(column, table, index);
+        }
+        Int32 index = 0;
+        var list = new List<ReferenceMember>();
+        foreach (var cx in table.Columns.Where(c => c.IsReference))
+            list.Add(await CreateMember(cx, index++));
+        return list;
     }
 
     private async Task<AppMetadata> LoadAppMetadataAsync(String? dataSource)
@@ -120,6 +145,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return new FormMetadata(form, String.Empty);
 
     }
+
+
 
     private (String schema, String table) ParsePath(String path)
     {

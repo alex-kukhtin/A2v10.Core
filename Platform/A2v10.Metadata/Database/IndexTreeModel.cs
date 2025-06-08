@@ -10,14 +10,14 @@ using A2v10.Infrastructure;
 
 namespace A2v10.Metadata;
 
-internal partial class BaseModelBuilder
+internal partial class IndexModelBuilder
 {
     public async Task<IDataModel> LoadIndexTreeModelAsync()
     {
         var collectionName = _table.RealItemsName;
         var collectionType = _table.RealTypeName;
 
-        var refFields = await ReferenceFieldsAsync(_table);
+        var refFields = _refFields; // await ReferenceFieldsAsync(_table));
 
         var sqlString = $"""
         set nocount on;

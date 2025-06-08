@@ -27,12 +27,12 @@ internal class ReportItemMetadataComparer : IEqualityComparer<ReportItemMetadata
     {
         if (Object.ReferenceEquals(x, y))
             return true;
-        return x?.Column == y?.Column && x?.RefSchema == y?.RefSchema && x?.RefTable == y?.RefTable;
+        return x?.Column == y?.Column && x?.RealRefSchema == y?.RealRefSchema && x?.RealRefTable == y?.RealRefTable;
     }
 
     public int GetHashCode([DisallowNull] ReportItemMetadata item)
     {
-        return item.Column.GetHashCode() ^ item.RefSchema.GetHashCode() ^ item.RefTable.GetHashCode();
+        return item.Column.GetHashCode() ^ item.RealRefSchema.GetHashCode() ^ item.RealRefTable.GetHashCode();
     }
 }
 

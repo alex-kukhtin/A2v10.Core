@@ -4,9 +4,9 @@ using System.Collections.Generic;
 
 namespace A2v10.Metadata;
 
-internal partial class BaseModelBuilder
+internal partial class PlainModelBuilder
 {
-    private Form CreateEditPage()
+    internal Form CreateEditPage()
     {
 
         IEnumerable<FormItem> ToolbarButtons()

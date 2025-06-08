@@ -9,15 +9,15 @@ using A2v10.Data.Core.Extensions;
 
 namespace A2v10.Metadata;
 
-internal partial class BaseModelBuilder
+internal partial class IndexModelBuilder
 {
 
-    private Task<IInvokeResult> FetchFolderAsync(ExpandoObject? prms)
+    internal Task<IInvokeResult> FetchFolderAsync(ExpandoObject? prms)
     {
         throw new InvalidOperationException("IMPLEMENT FETCH FOLDER");
     }
 
-    private async Task<IInvokeResult> FetchAsync(ExpandoObject? prms)
+    internal async Task<IInvokeResult> FetchAsync(ExpandoObject? prms)
     {
         var sql = $"""
         set nocount on;

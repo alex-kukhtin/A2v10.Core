@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace A2v10.Metadata;
 
-internal partial class BaseModelBuilder
+internal partial class PlainModelBuilder
 {
     FormItem CreateControl(TableColumn column, Int32 row, Int32 col)
     {
@@ -91,7 +91,7 @@ internal partial class BaseModelBuilder
         return ContentGrid();
     }
 
-    private Form CreateEditDialog()
+    internal Form CreateEditDialog()
     {
         return new Form()
         {

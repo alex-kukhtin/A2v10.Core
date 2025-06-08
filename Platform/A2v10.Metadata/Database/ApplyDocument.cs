@@ -10,12 +10,12 @@ using A2v10.Data.Core.Extensions;
 
 namespace A2v10.Metadata;
 
-internal partial class BaseModelBuilder
+internal partial class PlainModelBuilder
 {
     /* В журнале обязательно InOut, Document */
     /* В документе обязательно Id, Done */
     /* TODO: Find 'Document' field */
-    private async Task<IInvokeResult> ApplyDocumentAsync(ExpandoObject? prms)
+    internal async Task<IInvokeResult> ApplyDocumentAsync(ExpandoObject? prms)
     {
         var opColumn = _table.Columns.FirstOrDefault(c => c.DataType == ColumnDataType.Operation);
         if (opColumn == null)
@@ -96,7 +96,7 @@ internal partial class BaseModelBuilder
     }
 
 
-    private async Task<IInvokeResult> UnApplyDocumentAsync(ExpandoObject? prms)
+    internal async Task<IInvokeResult> UnApplyDocumentAsync(ExpandoObject? prms)
     {
         var opColumn = _table.Columns.FirstOrDefault(c => c.DataType == ColumnDataType.Operation);
 

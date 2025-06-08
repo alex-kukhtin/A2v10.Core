@@ -102,7 +102,8 @@ public class EditFormEndpointHandler(IServiceProvider _serviceProvider) : IEndpo
     {
         var eo = data.Eval<ExpandoObject>("Form.Json");
         var id = data.Eval<Object>("Form.Id");
-        var key = data.Eval<String>("Form.Key");
+        var key = data.Eval<String>("Form.Key")
+            ?? throw new InvalidOperationException("Form.Key is null");
 
         // serialize with null for designer
         var json = JsonConvert.SerializeObject(eo);
@@ -116,6 +117,11 @@ public class EditFormEndpointHandler(IServiceProvider _serviceProvider) : IEndpo
             { "Json", jsonForSave }
         };
         await _dbContext.ExecuteExpandoAsync(modelView.DataSource, "a2meta.[Table.Form.Update]", dbPrms);
+        var schema = data.Eval<String>("Table.Schema")
+            ?? throw new InvalidOperationException("Table.Schema is null");
+        var table = data.Eval<String>("Table.Name")
+            ?? throw new InvalidOperationException("Table.Name is null");
+        _dbMetadataProvider.RemoveFormFromCache(modelView.DataSource, schema, table, key);
         return new();
     }
 

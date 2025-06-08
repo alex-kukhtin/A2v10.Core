@@ -10,9 +10,9 @@ using A2v10.Data.Core.Extensions;
 
 namespace A2v10.Metadata;
 
-internal partial class BaseModelBuilder
+internal partial class PlainModelBuilder
 {
-    private async Task<IInvokeResult> CheckUniqueAsync(ExpandoObject? prms, String property)
+    internal async Task<IInvokeResult> CheckUniqueAsync(ExpandoObject? prms, String property)
     {
         var column = _table.Columns.FirstOrDefault(c => c.Name.Equals(property, StringComparison.OrdinalIgnoreCase))
             ?? throw new InvalidOperationException($"Column {property} not found in table {_table.Name}");

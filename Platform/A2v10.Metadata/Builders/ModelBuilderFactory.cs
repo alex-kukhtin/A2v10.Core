@@ -26,7 +26,7 @@ internal partial class ModelBuilderFactory(
             _platformUrl = platformUrl,
             _table = tables.table,
             _baseTable = tables.baseTable,
-            _refFields = await ReferenceFieldsAsync(modelBase.DataSource, tables.table),
+            _refFields = await _metadataProvider.ReferenceFieldsAsync(modelBase.DataSource, tables.table),
             _appMeta = await _metadataProvider.GetAppMetadataAsync(modelBase.DataSource)
         };
     }
@@ -39,7 +39,7 @@ internal partial class ModelBuilderFactory(
             _platformUrl = platformUrl,
             _table = tables.table,
             _baseTable = tables.baseTable,
-            _refFields = await ReferenceFieldsAsync(dataSource, tables.table),
+            _refFields = await _metadataProvider.ReferenceFieldsAsync(dataSource, tables.table),
             _appMeta = await _metadataProvider.GetAppMetadataAsync(dataSource)
         };
     }
@@ -54,24 +54,5 @@ internal partial class ModelBuilderFactory(
                 ?? throw new InvalidOperationException($"Parent Table {table.ParentTable.RefTable} not found");
         }
         return (table, baseTable);
-    }
-
-    internal async Task<IEnumerable<ReferenceMember>> ReferenceFieldsAsync(String? dataSource, TableMetadata table)
-    {
-        async Task<ReferenceMember> CreateMember(TableColumn column, Int32 index)
-        {
-            var table = column.DataType switch
-            {
-                ColumnDataType.Operation => MetadataExtensions.CreateOperationMeta(),
-                ColumnDataType.Enum => MetadataExtensions.CreateEnumMeta(column),
-                _ => await _metadataProvider.GetSchemaAsync(dataSource, column.Reference.RefSchema, column.Reference.RefTable)
-            };
-            return new ReferenceMember(column, table, index);
-        }
-        Int32 index = 0;
-        var list = new List<ReferenceMember>();
-        foreach (var cx in table.Columns.Where(c => c.IsReference))
-            list.Add(await CreateMember(cx, index++));
-        return list;
     }
 }

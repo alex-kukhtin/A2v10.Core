@@ -155,6 +155,17 @@ public record ReportItemMetadata
     public String? Label { get; init; }
     public String? Func { get; init; }
     #endregion
+
+    public String RealRefSchema => DataType switch
+    {
+        ColumnDataType.Operation => "op",
+        _ => RefSchema
+    };
+    public String RealRefTable => DataType switch
+    {
+        ColumnDataType.Operation => "operations", // Lower case is important!
+        _ => RefTable
+    };
 }
 public record DetailsKind(String Name, String Label);
 public record TableMetadata

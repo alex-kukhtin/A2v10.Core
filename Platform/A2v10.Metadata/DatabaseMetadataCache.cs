@@ -57,6 +57,12 @@ public class DatabaseMetadataCache
     }
 
 
+    public void RemoveFormFromCache(String? dataSource, String schema, String table, String key)
+    {
+        var dictKey = $"{dataSource}:{schema}:{table}:{key.ToLowerInvariant()}";
+        _formCache.TryRemove(dictKey, out var _);
+    }
+
     public async Task<FormMetadata> GetOrAddFormAsync(String? dataSource, TableMetadata meta, String key,
     Func<String?, TableMetadata, String, Func<Form>, Task<FormMetadata>> getForm, Func<Form> getDefaultForm)
     {
@@ -64,8 +70,8 @@ public class DatabaseMetadataCache
         if (_formCache.TryGetValue(dictKey, out var form))
             return form;
         form = await getForm(dataSource, meta, key, getDefaultForm);
-        return form; 
-        //return _formCache.GetOrAdd(dictKey, form);
+        //return form; 
+        return _formCache.GetOrAdd(dictKey, form);
     }
 
     public String GetOrAddEndpointPath(String? dataSource, String schema, String table)

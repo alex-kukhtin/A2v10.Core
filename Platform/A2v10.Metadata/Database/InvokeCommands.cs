@@ -15,10 +15,10 @@ internal partial class BaseModelBuilder
         return command.ToLowerInvariant() switch
         {
             "apply" => ApplyAsync(prms),
-            "fetch" => FetchAsync(prms),
-            "fetchfolder" => FetchFolderAsync(prms),
+            "fetch" => _index.FetchAsync(prms),
+            "fetchfolder" => _index.FetchFolderAsync(prms),
             "unapply" => UnApplyAsync(prms),
-            var s when s.EndsWith(".unique") => CheckUniqueAsync(prms, command.Split('.')[0]),
+            var s when s.EndsWith(".unique") => _plain.CheckUniqueAsync(prms, command.Split('.')[0]),
             _ => throw new NotImplementedException($"Implement invoke for {command}")
         };
     }
@@ -27,13 +27,13 @@ internal partial class BaseModelBuilder
     {
         if (!_table.IsDocument)
             throw new NotImplementedException($"The Apply command is available for documents only");
-        return ApplyDocumentAsync(prms); 
+        return _plain.ApplyDocumentAsync(prms); 
     }
 
     private Task<IInvokeResult> UnApplyAsync(ExpandoObject? prms)
     {
         if (!_table.IsDocument)
             throw new NotImplementedException($"The UnApply command is available for documents only");
-        return UnApplyDocumentAsync(prms);
+        return _plain.UnApplyDocumentAsync(prms);
     }
 }

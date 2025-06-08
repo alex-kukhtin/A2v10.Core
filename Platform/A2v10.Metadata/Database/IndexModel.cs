@@ -12,7 +12,7 @@ using A2v10.Data.Core.Extensions;
 
 namespace A2v10.Metadata;
 
-internal partial class BaseModelBuilder
+internal partial class IndexModelBuilder
 {
     public async Task<IDataModel> LoadIndexModelAsync(Boolean lazy = false)
     {
@@ -56,7 +56,7 @@ internal partial class BaseModelBuilder
         if (dir != "asc" && dir != "desc")
             dir = DEFAULT_DIR;
 
-        var refFields = await ReferenceFieldsAsync(_table);
+        var refFields = _refFields; // await ReferenceFieldsAsync(_table);
         var refFieldsFilter = refFields;
 
         if (opColumn != null)
@@ -166,7 +166,7 @@ internal partial class BaseModelBuilder
         order by {sqlOrder} {dir}
         offset @Offset rows fetch next @PageSize rows only;
         
-        {EnumsMapSql(_refFields, true)}
+        {EnumsMapSql(refFields, true)}
 
         -- After select, before $System.
         {filterEnumCheck()}

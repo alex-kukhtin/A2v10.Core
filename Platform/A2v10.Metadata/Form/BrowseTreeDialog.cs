@@ -1,12 +1,10 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
-using A2v10.Xaml;
-using DocumentFormat.OpenXml.Bibliography;
 using System.Collections.Generic;
 
 namespace A2v10.Metadata;
 
-internal partial class BaseModelBuilder
+internal partial class IndexModelBuilder
 {
     public Form CreateBrowseTreeDialog()
     {

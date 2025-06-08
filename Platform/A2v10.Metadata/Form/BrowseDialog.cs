@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace A2v10.Metadata;
 
-internal partial class BaseModelBuilder
+internal partial class IndexModelBuilder
 {
     public Form CreateBrowseDialog()
     {

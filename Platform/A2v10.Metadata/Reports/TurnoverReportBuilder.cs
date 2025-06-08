@@ -31,7 +31,12 @@ internal class TurnoverReportBuilder(IServiceProvider serviceProvider, TableMeta
              .AddBitFromQuery("@Run", prms, "Run")
              .AddStringFromQuery("@Tab", prms, "Tab");
             foreach (var r in _grouping.Filters)
-                dbprms.AddBigIntFromQuery($"@{r.Column}", prms, r.Column);
+            {
+                if (r.DataType == ColumnDataType.Operation)
+                    dbprms.AddStringFromQuery($"@{r.Column}", prms, r.Column);
+                else
+                    dbprms.AddBigIntFromQuery($"@{r.Column}", prms, r.Column);
+            }
         });
     }
 
@@ -49,10 +54,10 @@ internal class TurnoverReportBuilder(IServiceProvider serviceProvider, TableMeta
         var filterMaps = new StringBuilder();
         foreach (var f in _grouping.Filters)
         {
-            var refMeta = await _metadataProvider.GetSchemaAsync(dataSource, f.RefSchema, f.RefTable);
+            var refMeta = await _metadataProvider.GetSchemaAsync(dataSource, f.RealRefSchema, f.RealRefTable);
             filterMaps.AppendLine($"""
                 select [!T{f.Column}!Map] = null, [Id!!Id] = [{refMeta.PrimaryKeyField}], [Name!!Name] = [{refMeta.NameField}]
-                from {f.RefSchema}.[{f.RefTable}]
+                from {f.RealRefSchema}.[{f.RealRefTable}]
                 where [{refMeta.PrimaryKeyField}] = @{f.Column}
             """);
         }

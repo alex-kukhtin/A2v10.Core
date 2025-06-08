@@ -21,6 +21,77 @@ if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = N'a2
 	alter table a2wf.[Catalog] add DateModified datetime constraint DF_Catalog_DateModified default(getutcdate()) with values;
 go
 
+-- INBOX
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2wf' and TABLE_NAME=N'Inbox')
+create table a2wf.[Inbox]
+(
+	Id uniqueidentifier not null,
+	InstanceId uniqueidentifier not null
+		constraint FK_Inbox_InstanceId_Instances foreign key references a2wf.Instances(Id),
+	Bookmark nvarchar(255) not null,
+	Activity nvarchar(255),
+	DateCreated datetime not null
+		constraint DF_Inbox_DateCreated default(getutcdate()),
+	DateRemoved datetime null,
+	Void bit not null
+		constraint DF_Inbox_Void default(0),
+	[User] bigint,
+	[Role] bigint,
+	[Url] nvarchar(255),
+	[Text] nvarchar(255),
+	-- other fields
+	constraint PK_Inbox primary key clustered(Id, InstanceId)
+);
+go
+------------------------------------------------
+if not exists (select * from INFORMATION_SCHEMA.ROUTINES where ROUTINE_SCHEMA=N'a2wf' and ROUTINE_NAME=N'Instance.Inbox.Create')
+	exec sp_executesql N'
+	create procedure a2wf.[Instance.Inbox.Create]
+	@UserId bigint = null,
+	@Id uniqueidentifier,
+	@InstanceId uniqueidentifier,
+	@Bookmark nvarchar(255),
+	@Activity nvarchar(255),
+	@User bigint,
+	@Role bigint,
+	@Text nvarchar(255),
+	@Url nvarchar(255)
+	as
+	begin
+		set nocount on;
+		set transaction isolation level read committed;
+		set xact_abort on;
+
+		insert into a2wf.[Inbox] (Id, InstanceId, Bookmark, Activity, [User], [Role], [Text], [Url]) -- other fields
+		values (@Id, @InstanceId, @Bookmark, @Activity, @User, @Role, @Text, @Url); -- other parameters
+	end
+	';
+go
+------------------------------------------------
+if not exists (select * from INFORMATION_SCHEMA.ROUTINES where ROUTINE_SCHEMA=N'a2wf' and ROUTINE_NAME=N'Instance.Inbox.Remove')
+	exec sp_executesql N'
+	create procedure a2wf.[Instance.Inbox.Remove]
+	@UserId bigint = null,
+	@Id uniqueidentifier,
+	@InstanceId uniqueidentifier
+	as
+	begin
+		set nocount on;
+		set transaction isolation level read committed;
+		set xact_abort on;
+
+		update a2wf.Inbox set Void = 1, DateRemoved = getutcdate() where Id=@Id and InstanceId=@InstanceId;
+	end
+	';
+go
+
+/*
+drop table a2wf.Inbox;
+drop procedure a2wf.[Instance.Inbox.Remove];
+drop procedure a2wf.[Instance.Inbox.Create];
+*/
+
 -- CATALOG
 ------------------------------------------------
 create or alter procedure wfadm.[Catalog.Index]
@@ -292,7 +363,7 @@ begin
 
 	-- Inbox MUST be created
 	select [!TInbox!Array] = null, [Id!!Id] = i.Id, 
-		Bookmark, [DateCreated!!Utc] = DateCreated, i.[Text], i.[User], i.[Role], i.[Url], i.[State],
+		Bookmark, [DateCreated!!Utc] = DateCreated, i.[Text], i.[User], i.[Role], i.[Url],
 		[Instance!TInstance.Inboxes!ParentId] = InstanceId
 	from a2wf.Inbox i inner join @inst t on i.InstanceId = t.Id
 	where i.Void = 0;
@@ -550,6 +621,7 @@ go
 create type wfadm.[AutoStart.TableType] as table (
 	Workflow nvarchar(255),
 	StartAt datetime,
+	TimezoneOffset int,
 	CorrelationId nvarchar(255)
 );
 go
@@ -573,13 +645,12 @@ begin
 	set nocount on;
 	set transaction isolation level read committed;
 
-	declare @mins int;
-	set @mins = datediff(minute,getdate(),getutcdate());
+	-- SQL server time may be UTC!!!
 
-	declare @rtable table(Id bigint)
+	declare @rtable table(Id bigint);
 	insert into a2wf.AutoStart (WorkflowId, CorrelationId, StartAt)
 	output inserted.Id into @rtable(Id)
-	select upper(Workflow), CorrelationId, dateadd(minute, @mins, StartAt)
+	select upper(Workflow), CorrelationId, dateadd(minute, TimezoneOffset, StartAt)
 	from @AutoStart;
 
 	declare @Id bigint;
@@ -587,5 +658,4 @@ begin
 	exec wfadm.[AutoStart.Load] @UserId, @Id;
 end
 go
-
 

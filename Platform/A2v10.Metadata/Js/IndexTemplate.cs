@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace A2v10.Metadata;
 
-internal partial class BaseModelBuilder
+internal partial class IndexModelBuilder
 {
-    private Task<String> CreateIndexTemplate()
+    internal Task<String> CreateIndexTemplate()
     {
         IEnumerable<String> events()
         {

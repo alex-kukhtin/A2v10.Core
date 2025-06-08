@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace A2v10.Metadata;
 
-internal partial class BaseModelBuilder
+internal partial class PlainModelBuilder
 {
-    private Task<String> CreateEditTemplate()
+    internal Task<String> CreateEditTemplate()
     {
         return _table.Schema switch
         {

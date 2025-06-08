@@ -1,8 +1,24 @@
 ﻿/*
 Copyright © 2020-2025 Oleksandr Kukhtin
 
-Last updated : 29 may 2025
-module version : 8227 !!! TODO
+Last updated : 04 jun 2025
+module version : 8229
+*/
+
+/* WF TABLES
+a2wf.[Versions]
+a2wf.InstanceBookmarks
+a2wf.InstanceTrack
+a2wf.InstanceEvents
+a2wf.InstanceVariablesGuid
+a2wf.InstanceVariablesString
+a2wf.InstanceVariablesInt
+a2wf.Instances
+a2wf.Workflows
+a2wf.[Catalog]
+a2wf.AutoStart
+-- Custom Table
+a2wf.[Inbox]
 */
 ------------------------------------------------
 set nocount on;
@@ -28,7 +44,7 @@ go
 begin
 	set nocount on;
 	declare @version int;
-	set @version = 8227;
+	set @version = 8229;
 	if exists(select * from a2wf.Versions where Module = N'main')
 		update a2wf.Versions set [Version] = @version where Module = N'main';
 	else
@@ -902,25 +918,23 @@ begin
 	commit tran;
 end
 go
-
 /*
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2wf' and TABLE_NAME=N'Inbox')
-begin
-	create table a2wf.[Inbox]
-	(
-		Id uniqueidentifier not null,
-		InstanceId uniqueidentifier not null
-			constraint FK_Inbox_InstanceId_Instances foreign key references a2wf.Instances(Id),
-		Bookmark nvarchar(255) not null,
-		DateCreated datetime not null
-			constraint DF_Inbox_DateCreated default(getutcdate()),
-		DateRemoved datetime null
-		Void bit,
-		-- other fields
-		constraint PK_Inbox primary key clustered(Id, InstanceId)
-	);
-end
+create table a2wf.[Inbox]
+(
+	Id uniqueidentifier not null,
+	InstanceId uniqueidentifier not null
+		constraint FK_Inbox_InstanceId_Instances foreign key references a2wf.Instances(Id),
+	Bookmark nvarchar(255) not null,
+	Activity nvarchar(255),
+	DateCreated datetime not null
+		constraint DF_Inbox_DateCreated default(getutcdate()),
+	DateRemoved datetime null
+	Void bit,
+	-- other fields
+	constraint PK_Inbox primary key clustered(Id, InstanceId)
+);
 go
 ------------------------------------------------
 create or alter procedure a2wf.[Instance.Inbox.Create]
@@ -928,15 +942,16 @@ create or alter procedure a2wf.[Instance.Inbox.Create]
 @Id uniqueidentifier,
 @InstanceId uniqueidentifier,
 @Bookmark nvarchar(255),
-... -- other parametets
+@Activity nvarchar(255),
+-- ...other parametets
 as
 begin
 	set nocount on;
 	set transaction isolation level read committed;
 	set xact_abort on;
 
-	insert into a2wf.[Inbox] (Id, InstanceId, Bookmark, ...)
-	values (@Id, @InstanceId, @Bookmark, ...);
+	insert into a2wf.[Inbox] (Id, InstanceId, Bookmark, Activity) -- other fields
+	values (@Id, @InstanceId, @Bookmark, @Activity); -- other parameters
 end
 go
 ------------------------------------------------
@@ -952,17 +967,6 @@ begin
 
 	update a2wf.Inbox set Void = 1, DateRemoved = getutcdate() where Id=@Id and InstanceId=@InstanceId;
 end
-go*/
-
-/*
-drop table a2wf.InstanceBookmarks;
-drop table a2wf.InstanceTrack;
-drop table a2wf.InstanceEvents;
-drop table a2wf.InstanceVariablesGuid;
-drop table a2wf.InstanceVariablesString;
-drop table a2wf.InstanceVariablesInt;
-drop table a2wf.Instances;
-drop table a2wf.Workflows;
-drop table a2wf.Catalog;
-drop table a2wf.AutoStart;
+go
 */
+

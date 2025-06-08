@@ -1,5 +1,6 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
+using DocumentFormat.OpenXml.Wordprocessing;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -39,11 +40,10 @@ internal static class SqlExtensions
         };
     }
 
-    public static String SqlDataType(this TableColumn column, ColumnDataType idDataType)
+    public static String ToSqlDataType(this ColumnDataType columnDataType, ColumnDataType idDataType, String maxLength = "255")
     {
-        var idDataStr = idDataType.ToString().ToLowerInvariant(); 
-        var maxLength = column.MaxLength == 0 ? "max" : column.MaxLength.ToString();
-        return column.DataType switch
+        var idDataStr = idDataType.ToString().ToLowerInvariant();
+        return columnDataType switch
         {
             ColumnDataType.Id => idDataStr,
             ColumnDataType.Reference => idDataStr,
@@ -54,8 +54,15 @@ internal static class SqlExtensions
             ColumnDataType.NChar => $"nchar({maxLength})",
             ColumnDataType.Stream => $"varbinary(max)",
             ColumnDataType.Uniqueidentifier => "uniqueidentifier",
-            _ => column.DataType.ToString().ToLowerInvariant(),
+            _ => columnDataType.ToString().ToLowerInvariant(),
         };
+    }
+
+    public static String SqlDataType(this TableColumn column, ColumnDataType idDataType)
+    {
+        var idDataStr = idDataType.ToString().ToLowerInvariant(); 
+        var maxLength = column.MaxLength == 0 ? "max" : column.MaxLength.ToString();
+        return column.DataType.ToSqlDataType(idDataType, maxLength);
     }
     public static Type ClrDataType(this TableColumn column, ColumnDataType idDataType)
     {

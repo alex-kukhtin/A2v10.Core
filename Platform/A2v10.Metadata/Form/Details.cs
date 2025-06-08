@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace A2v10.Metadata;
 
-internal partial class BaseModelBuilder
+internal partial class PlainModelBuilder
 {
     /*
      * Tab

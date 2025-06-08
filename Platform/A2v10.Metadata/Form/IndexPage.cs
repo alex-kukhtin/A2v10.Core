@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace A2v10.Metadata;
 
-internal partial class BaseModelBuilder
+internal partial class IndexModelBuilder
 {
     IEnumerable<FormItem> IndexColumns()
     {
@@ -30,7 +30,7 @@ internal partial class BaseModelBuilder
             };
     }
 
-    private Form CreateIndexPage()
+    internal Form CreateIndexPage()
     {
         IEnumerable<FormItem> ToolbarButtons()
         {

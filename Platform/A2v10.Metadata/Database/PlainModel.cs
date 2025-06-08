@@ -14,7 +14,7 @@ using A2v10.Infrastructure;
 
 namespace A2v10.Metadata;
 
-internal partial class BaseModelBuilder
+internal partial class PlainModelBuilder
 {
     private async Task<String> LoadPlainModelSqlAsync(TableMetadata table)
     {
@@ -42,13 +42,12 @@ internal partial class BaseModelBuilder
 
                 //TODO: Use: Same Key
 
-                var refFields = await ReferenceFieldsAsync(t);
+                var refFields = await _metadataProvider.ReferenceFieldsAsync(_dataSource, t);
 
                 String? kindField = t.Kinds.Count > 0 ? t.KindField : null;
 
                 var parentField = refFields.FirstOrDefault(r => r.Table.SqlTableName == _table.SqlTableName)?.Column.Name
                     ?? t.PrimaryKeyField;
-
 
                 var detailsParentIdField = $"[!{table.RealTypeName}.{t.RealItemsName}!ParentId] = d.[{parentField}]";
 
@@ -84,7 +83,7 @@ internal partial class BaseModelBuilder
             return String.Empty;
         }
 
-        var tableRefFields = await ReferenceFieldsAsync(table);
+        var tableRefFields = _refFields; 
 
         return $"""
         

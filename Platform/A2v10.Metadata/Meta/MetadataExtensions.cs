@@ -118,43 +118,13 @@ internal static class MetadataExtensions
 
     internal static String Endpoint(this ReportItemMetadata item)
     {
-        return $"/{item.RefSchema.ToFolder()}/{item.RefTable}";
+        return $"/{item.RealRefSchema.ToFolder()}/{item.RealRefTable}";
     }
     internal static String CreateField(this ReportItemMetadata item, ColumnDataType idDataType, String? prefix = null)
     {
-        return $"[{prefix}{item.Column}] {item.DataType.ToSqlDbType(idDataType).ToString().ToLowerInvariant()}";
+        return $"[{prefix}{item.Column}] {item.DataType.ToSqlDataType(idDataType)}";
     }
 
-    internal static TableMetadata CreateOperationMeta()
-    {
-        return new TableMetadata()
-        {
-            Schema = "op",
-            Name = "Operations",
-            Columns = [
-                new TableColumn()
-                {
-                    Name = "Id",
-                    DataType = ColumnDataType.String,
-                    MaxLength = 16,
-                    Role = TableColumnRole.PrimaryKey,
-                },
-                new TableColumn()
-                {
-                    Name = "Name",
-                    DataType = ColumnDataType.String,
-                    MaxLength = 255,
-                    Role = TableColumnRole.Name,
-                },
-                new TableColumn()
-                {
-                    Name = "Url",
-                    DataType = ColumnDataType.String,
-                    MaxLength = 255
-                }
-            ]
-        };
-    }
     internal static TableMetadata CreateEnumMeta(TableColumn col)
     {
         return new TableMetadata()

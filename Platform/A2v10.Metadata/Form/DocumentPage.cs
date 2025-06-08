@@ -6,9 +6,9 @@ using System.Collections.Generic;
 
 namespace A2v10.Metadata;
 
-internal partial class BaseModelBuilder
+internal partial class PlainModelBuilder
 {
-    private Form CreateDocumentPage()
+    internal Form CreateDocumentPage()
     {
         var hasDetails = _table.Details.Any();
 

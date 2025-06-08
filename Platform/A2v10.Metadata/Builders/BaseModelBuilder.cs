@@ -3,28 +3,24 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Dynamic;
-using System.Globalization;
 using System.Threading.Tasks;
+using System.Text;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using A2v10.Data.Core.Extensions;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Xaml;
 using A2v10.Xaml.DynamicRendrer;
-using System.Text;
-using DocumentFormat.OpenXml.Drawing.Charts;
 
 namespace A2v10.Metadata;
 
 internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IModelBuilder
 {
-    protected readonly DatabaseMetadataProvider _metadataProvider = _serviceProvider.GetRequiredService<DatabaseMetadataProvider>();
-    protected readonly ICurrentUser _currentUser = _serviceProvider.GetRequiredService<ICurrentUser>();
-    protected readonly IDbContext _dbContext = _serviceProvider.GetRequiredService<IDbContext>();
+    internal readonly DatabaseMetadataProvider _metadataProvider = _serviceProvider.GetRequiredService<DatabaseMetadataProvider>();
+    internal readonly ICurrentUser _currentUser = _serviceProvider.GetRequiredService<ICurrentUser>();
+    internal readonly IDbContext _dbContext = _serviceProvider.GetRequiredService<IDbContext>();
     internal TableMetadata _table { get; init; } = default!;
     internal TableMetadata? _baseTable { get; init; }
     internal AppMetadata _appMeta { get; init; } = default!;
@@ -38,6 +34,10 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
     public TableMetadata? BaseTable => _baseTable;
     public AppMetadata AppMeta => _appMeta;
 
+    private Lazy<IndexModelBuilder> _indexBuilder => new Lazy<IndexModelBuilder>(new IndexModelBuilder(this));
+    private IndexModelBuilder _index => _indexBuilder.Value;
+    private Lazy<PlainModelBuilder> _plainBuilder => new Lazy<PlainModelBuilder>(new PlainModelBuilder(this));
+    private PlainModelBuilder _plain => _plainBuilder.Value;
     public String? MetadataEndpointBuilder => _baseTable?.Schema switch
     {
         "rep" => "rep:report.render",
@@ -45,7 +45,12 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
     };
     public Task<IDataModel> LoadLazyModelAsync()
     {
-        return LoadIndexModelAsync(true);
+        return _index.LoadIndexModelAsync(true);
+    }
+
+    public Task<IDataModel> ExpandAsync(ExpandoObject expandPrms)
+    {
+        return _index.ExpandAsync(expandPrms);
     }
 
     public async Task<IDataModel> LoadModelAsync()
@@ -53,10 +58,10 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
         return Action switch
         {
             "browse" or "index" => _table.UseFolders
-                ? await LoadIndexTreeModelAsync()
-                : await LoadIndexModelAsync(),
-            "edit" => await LoadPlainModelAsync(),
-            "browsefolder" => await LoadBrowseTreeModelAsync(),
+                ? await _index.LoadIndexTreeModelAsync()
+                : await _index.LoadIndexModelAsync(),
+            "edit" => await _plain.LoadPlainModelAsync(),
+            "browsefolder" => await _index.LoadBrowseTreeModelAsync(),
             _ => throw new NotImplementedException($"Load model for {Action}")
         };
     }
@@ -64,8 +69,8 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
     {
         return Action switch
         {
-            "browse" or "index" => await CreateIndexTemplate(),
-            "edit" => await CreateEditTemplate(),
+            "browse" or "index" => await _index.CreateIndexTemplate(),
+            "edit" => await _plain.CreateEditTemplate(),
             "browsefolder" => String.Empty,
             _ => throw new NotImplementedException($"Create template for {Action}")
         };
@@ -91,10 +96,10 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
     {
         return Action switch
         {
-            "browse" => CreateBrowseDialog(),
-            "index" => CreateIndexPage(),
-            "edit" => IsDialog ? CreateEditDialog() : CreateDocumentPage(),
-            "browsefolder" => CreateBrowseTreeDialog(),
+            "browse" => _index.CreateBrowseDialog(),
+            "index" => _index.CreateIndexPage(),
+            "edit" => IsDialog ? _plain.CreateEditDialog() : _plain.CreateDocumentPage(),
+            "browsefolder" => _index.CreateBrowseTreeDialog(),
             _ => throw new NotImplementedException($"Create form for {Action}")
         };
     }
@@ -103,7 +108,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
     {
         return Action switch
         {
-            "edit" => SavePlainModelAsync(data, savePrms),
+            "edit" => _plain.SavePlainModelAsync(data, savePrms),
             _ => throw new NotImplementedException($"Create form for {Action}")
         };
     }
@@ -151,39 +156,5 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
             Template = templateText
         };
         return await dynamicRenderer.RenderPage(rri);
-    }
-
-    protected DbParameterCollection AddDefaultParameters(DbParameterCollection prms)
-    {
-        if (_currentUser.Identity.Tenant != null)
-            prms.AddInt("@TenantId", _currentUser.Identity.Tenant);
-        prms.AddBigInt("@UserId", _currentUser.Identity.Id);
-        return prms;
-    }
-    protected DbParameterCollection AddPeriodParameters(DbParameterCollection prms, ExpandoObject? qry)
-    {
-        if (!_table.HasPeriod())
-            return prms;
-
-        DateTime? DateTimeFromString(String? value)
-        {
-            if (value == null)
-                return null;
-            return DateTime.ParseExact(value, "yyyyMMdd", CultureInfo.InvariantCulture);    
-        }
-
-        return prms.AddDate("@From", DateTimeFromString(qry?.Get<String>("From")))
-            .AddDate("@To", DateTimeFromString(qry?.Get<String>("To")));
-    }
-
-    protected String RefTableJoins(IEnumerable<ReferenceMember> refFields, String alias)
-    {
-        return String.Join("\n", refFields.Select(refField =>
-        {
-            var enumWhere = "";
-            if (refField.Table.IsEnum)
-                enumWhere = $" and r{refField.Index}.[{refField.Table.PrimaryKeyField}] <> N''";
-            return $"    left join {refField.Table.SqlTableName} r{refField.Index} on {alias}.[{refField.Column.Name}] = r{refField.Index}.[{refField.Table.PrimaryKeyField}]{enumWhere}";
-        }));
     }
 }

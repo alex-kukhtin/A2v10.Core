@@ -56,7 +56,7 @@ internal class ReportGrouping
         => String.Join(", ", Grouping.Select((c, ix) => $"[{c.Column}.Id!T{c.Column}!Id] = T.{c.Column}, [{c.Column}.Name!T{c.Column}!Name] = isnull(r{ix + 1}.[Name], N'@[{c.Column}.NoData]'), [{c.Column}!!GroupMarker] = {c.Column}Grp"));
 
     internal String ReferenceJoins()
-        => String.Join(" ", Grouping.Select((c, ix) => $"left join {c.RefSchema}.[{c.RefTable}] r{ix + 1} on T.[{c.Column}] = r{ix + 1}.[Id]"));
+        => String.Join(" ", Grouping.Select((c, ix) => $"left join {c.RealRefSchema}.[{c.RealRefTable}] r{ix + 1} on T.[{c.Column}] = r{ix + 1}.[Id]"));
 
     internal String ReferenceOrderByGrp()
         => String.Join(", ", Grouping.Select(c => $"{c.Column}Grp desc"));

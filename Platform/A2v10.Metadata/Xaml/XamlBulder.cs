@@ -6,7 +6,6 @@ using System.Linq;
 
 using A2v10.System.Xaml;
 using A2v10.Xaml;
-using DocumentFormat.OpenXml.Bibliography;
 
 namespace A2v10.Metadata;
 
@@ -547,6 +546,7 @@ internal class XamlBulder(EditWithMode _editWith)
                     FormItemIs.SearchBox => new SearchBox()
                     {
                         TabIndex = 1,
+                        Label = c.Label.Localize(),
                         Placeholder = "@[Search]",
                         CssClass = c.CssClass,
                         Width = Length.FromStringNull(c.Width),
