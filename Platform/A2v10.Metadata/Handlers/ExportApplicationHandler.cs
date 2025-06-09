@@ -37,7 +37,7 @@ public class ExportApplicationHandler(IServiceProvider _serviceProvider) : IClrI
 
         return new InvokeBlobResult()
         {
-            Name = $"{appName}{appVersion}.zip",
+            Name = $"{appName}_{appVersion}.zip",
             Mime = MimeTypes.Application.Zip,
             Stream = stream
         };
