@@ -11,10 +11,11 @@
 	var bannerText = await userBanner.GetHtmlAsync();
 	var isBannerVisible = !String.IsNullOrEmpty(bannerText);
 	var hasLicense = Model.HasLicense.ToString().ToLowerInvariant();
+	var hasProfile = Model.HasProfile.ToString().ToLowerInvariant();
 }
 
 <div id="shell" class="mdi-shell @(Model!.Debug ? "debug" : "release")" v-cloak>
-	<a2-mdi-header :title="title" person-name="@Model.PersonName" :has-profile="@Model.HasProfile.ToString().ToLowerInvariant()"
+	<a2-mdi-header :title="title" person-name="@Model.PersonName" :has-profile="@hasProfile" profile-text="@loc["Profile"]"
 		accesskeyprofile-text="@loc["Profile"]" :logo="'@Html.Raw(theme.LogoUrl())'" :has-license="@hasLicense" license-text="@loc["License"]" >
 		@if (Model.HasNavPane)
 		{
