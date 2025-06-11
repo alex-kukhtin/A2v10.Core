@@ -260,11 +260,18 @@ public class ShellController(IDbContext _dbContext, IApplicationHost _host, ICur
 		if (_appOptions.IsCustomUserMenu)
 			proc = _appOptions.UserMenu!;
 
-		_logger.LogInformation("AppPath: {path}", _appOptions.Path);
-        _logger.LogInformation("Menu procedure: {proc}", proc);
+		var menuDataSource = _host.TenantDataSource;
+		int colonPos = proc.IndexOf(':');
+        if (colonPos != -1)
+		{
+			menuDataSource = proc[0..colonPos];
+            proc = proc[(colonPos + 1)..];
+        }
+        _logger.LogInformation("AppPath: {path}", _appOptions.Path);
+        _logger.LogInformation("Menu Procedure: {proc}", proc);
+        _logger.LogInformation("Menu Data Source: {menuDataSource}", menuDataSource);
 
-
-		IDataModel dm = await _dbContext.LoadModelAsync(_host.TenantDataSource, proc, loadPrms);
+        IDataModel dm = await _dbContext.LoadModelAsync(menuDataSource, proc, loadPrms);
 
 		ExpandoObject? menuRoot = dm.Root.RemoveEmptyArrays();
 		SetUserStatePermission(dm);
@@ -273,21 +280,24 @@ public class ShellController(IDbContext _dbContext, IApplicationHost _host, ICur
 		String jsonMenu = JsonConvert.SerializeObject(menuRoot, JsonHelpers.ConfigSerializerSettings(_host.IsDebugConfiguration));
 		macros.Set("Menu", jsonMenu);
 
-		/*
-        if (setCompany)
+		if (_appOptions.MultiCompany)
 		{
-			var comps = dm.Root.Get<List<ExpandoObject>>("Companies");
-			var currComp = (comps?.Find(c => c.Get<Boolean>("Current"))) 
-				?? throw new InvalidDataException("There is no current company");
+            var comps = dm.Root.Get<List<ExpandoObject>>("Companies");
+            var currComp = (comps?.Find(c => c.Get<Boolean>("Current")))
+                ?? throw new InvalidDataException("There is no current company");
             var menuJson = JsonConvert.SerializeObject(comps);
-			macros.Set("Companies", $"{{menu:{menuJson}, links:null}}");
+            macros.Set("Companies", $"{{menu:{menuJson}, links:null}}");
 
-			_currentUser.SetCompanyId(currComp.Get<Int64>("Id"));
+            _currentUser.SetCompanyId(currComp.Get<Int64>("Id"));
 
-		}
-		*/
+            var period = dm.Eval<Object>("Period");
+			if (period != null) {
+				String jsonPeriod = JsonConvert.SerializeObject(period, JsonHelpers.ConfigSerializerSettings(_host.IsDebugConfiguration));
+				macros.Set("Period", jsonPeriod);
+			}
+        }
 
-		return shell.ResolveMacros(macros) ?? String.Empty;
+        return shell.ResolveMacros(macros) ?? String.Empty;
 	}
 
 	void SetUserStatePermission(IDataModel model)

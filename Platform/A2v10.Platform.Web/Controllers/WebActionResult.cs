@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Net.Http.Headers;
 
 using A2v10.Infrastructure;
-using Microsoft.AspNetCore.ResponseCaching;
 
 namespace A2v10.Platform.Web.Controllers;
 
@@ -111,6 +110,7 @@ public class WebExceptionResult(Int32 errorCode, String? message) : IActionResul
 		var resp = context.HttpContext.Response;
 		resp.ContentType = MimeTypes.Text.Plain;
 		resp.StatusCode = _errorCode;
-		return resp.WriteAsync(_message, Encoding.UTF8);
+		resp.Headers.Append("Error-Message", _message);	
+        return resp.WriteAsync(_message, Encoding.UTF8);
 	}
 }

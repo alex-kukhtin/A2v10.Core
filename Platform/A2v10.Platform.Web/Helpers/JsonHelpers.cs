@@ -1,6 +1,7 @@
 ﻿// Copyright © 2019-2024 Oleksandr Kukhtin. All rights reserved.
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace A2v10.Platform.Web;
 
@@ -32,4 +33,10 @@ public static class JsonHelpers
 	{
 		return bDebug ? StandardSerializerSettings : ReleaseSerializerSettings;
 	}
+
+	public static JsonSerializerSettings ExpandoObjectSettings =
+		new JsonSerializerSettings
+		{
+			Converters = [ new ExpandoObjectConverter() ]
+		};
 }

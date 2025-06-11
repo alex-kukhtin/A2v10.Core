@@ -2,6 +2,23 @@
 =======================
 !do not update Microsoft.OpenApi to 1.6.23 (https://github.com/microsoft/OpenAPI.NET/issues/2030)
 
+A2v10.BlobStorage.Azure
+A2v10.Identity.Jwt
+A2v10.BlobStorage.FileSystem
+A2v10.Platform
+A2v10.MailClient
+A2v10.Platform.Web
+A2v10.Scheduling
+A2v10.Scheduling.Commands
+A2v10.ViewEngine.Xaml
+A2v10.AppRuntimeBuilder
+A2v10.Metadata
+A2v10.Services
+A2v10.ReportEngine.Pdf
+A2v10.ReportEngine.Excel
+A2v10.ReportEngine.Script
+A2v10.Xaml.Report
+
 
 A2v10.Platform
 	A2v10.Platform.Web

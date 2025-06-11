@@ -550,6 +550,7 @@ function modelData(template, data) {
 				if (msi.Path == null)
 					throw new InvalidOperationException("Model.Path is null");
 				var pathToRead = _codeProvider.MakePath(msi.Path, $"{msi.Template}.js");
+
 				using var stream = _codeProvider.FileStreamRO(pathToRead)
 					?? throw new FileNotFoundException($"Template file '{pathToRead}' not found.");
 				using var sr = new StreamReader(stream);
