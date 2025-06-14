@@ -930,8 +930,9 @@ create table a2wf.[Inbox]
 	Activity nvarchar(255),
 	DateCreated datetime not null
 		constraint DF_Inbox_DateCreated default(getutcdate()),
-	DateRemoved datetime null
-	Void bit,
+	DateRemoved datetime null,
+	Void bit not null
+		constraint DF_Inbox_Void default(0),
 	-- other fields
 	constraint PK_Inbox primary key clustered(Id, InstanceId)
 );
@@ -942,7 +943,7 @@ create or alter procedure a2wf.[Instance.Inbox.Create]
 @Id uniqueidentifier,
 @InstanceId uniqueidentifier,
 @Bookmark nvarchar(255),
-@Activity nvarchar(255),
+@Activity nvarchar(255)
 -- ...other parametets
 as
 begin

@@ -262,9 +262,9 @@ begin
 	declare @wfid uniqueidentifier = newid();
 	declare @idstr nvarchar(255) = upper(cast(@wfid as nvarchar(255)));
 
-	insert into a2wf.[Catalog](Id, [Name], [Body], [Format]) values
+	insert into a2wf.[Catalog](Id, [Name], [Body], [Format], [Hash]) values
 		(@idstr, replace(@Name, N'.bpmn', N''), 
-		@xml, N'text/xml');
+		@xml, N'text/xml', hashbytes(N'SHA2_256', @xml));
 
 	select [Result!TResult!Object] = null, [Id] = @idstr;
 end

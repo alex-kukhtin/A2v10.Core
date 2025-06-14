@@ -35,12 +35,15 @@ public class InvokeCommandInvokeTarget : IModelInvokeCommand
         try
         {
 			var res = await engine.InvokeAsync(target[1], parameters);
-			var signal = res.Eval<List<ExpandoObject>>("Signal");
-			if (signal != null && signal.Count > 0)
+			if (command.Signal)
 			{
-                foreach (var e in signal)
-                    await _signalSender.SendAsync(SignalResult.FromData(e));
-            }
+				var signal = res.Eval<List<ExpandoObject>>("Signal");
+				if (signal != null && signal.Count > 0)
+				{
+					foreach (var e in signal)
+						await _signalSender.SendAsync(SignalResult.FromData(e));
+				}
+			}
             return new InvokeResult(
 				body: Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(res)),
 				contentType: MimeTypes.Application.Json
