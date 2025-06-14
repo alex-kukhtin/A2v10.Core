@@ -197,7 +197,7 @@ app.modules['std:signalR'] = function () {
 
 // Copyright © 2023-2025 Oleksandr Kukhtin. All rights reserved.
 
-/*20259225-8529*/
+/*20250614-8556*/
 
 /* tabbed:shell.js */
 (function () {
@@ -775,6 +775,12 @@ app.modules['std:signalR'] = function () {
 					inst.modalRequery();
 				}
 			},
+			_modalSetAttribites(attr, instance) {
+				if (!attr || !instance) return;
+				let dlg = this._findRealDialog();
+				if (!dlg) return;
+				dlg.attrs = instance.__parseControllerAttributes(attr);
+			},
 			_modalCreated(instance) {
 				// include instance!
 				let dlg = this._findRealDialog();
@@ -949,6 +955,7 @@ app.modules['std:signalR'] = function () {
 			eventBus.$on('closeAllPopups', popup.closeAll);
 			eventBus.$on('modal', this.showModal);
 			eventBus.$on('modalCreated', this._modalCreated);
+			eventBus.$on('modalSetAttribites', this._modalSetAttribites);
 			eventBus.$on('requery', this._requery);
 			eventBus.$on('isModalRequery', this._isModalRequery);
 			eventBus.$on('modalRequery', this._modalRequery);

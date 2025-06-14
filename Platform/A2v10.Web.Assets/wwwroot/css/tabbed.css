@@ -3940,17 +3940,18 @@ tr:hover .commandbar.visible-hover {
 }
 .tab-panel.tab-pos-top .tab-header {
   grid-row: 1;
-  border-bottom: 1px solid var(--neutral50);
+  border-bottom: 1px solid var(--neutral300);
 }
 .tab-panel.tab-pos-top .tab-header > li {
   margin-bottom: -1px;
   border-top-width: 3px;
+  border-radius: 4px 4px 0 0;
 }
 .tab-panel.tab-pos-top .tab-header > li.active {
   border-top: 3px solid gold;
 }
 .tab-panel.tab-pos-top .tab-header > li:hover {
-  border-bottom-color: var(--neutral50);
+  border-bottom-color: var(--neutral300);
 }
 .tab-panel.tab-pos-top .tab-header > li.active:hover {
   border-bottom-color: transparent;
@@ -3963,7 +3964,7 @@ tr:hover .commandbar.visible-hover {
 }
 .tab-panel.tab-pos-bottom .tab-header {
   grid-row: 2;
-  border-top: 1px solid var(--neutral50);
+  border-top: 1px solid var(--neutral300);
 }
 .tab-panel.tab-pos-bottom .tab-header > li {
   margin-top: -1px;
@@ -3973,7 +3974,7 @@ tr:hover .commandbar.visible-hover {
   border-bottom: 3px solid gold;
 }
 .tab-panel.tab-pos-bottom .tab-header > li:hover {
-  border-top-color: var(--neutral50);
+  border-top-color: var(--neutral300);
 }
 .tab-panel.tab-pos-bottom .tab-header > li.active:hover {
   border-top-color: transparent;
@@ -3984,7 +3985,7 @@ tr:hover .commandbar.visible-hover {
 .tab-panel .tab-header {
   background-color: var(--neutral50);
   margin: 0;
-  padding: 0 6px 0;
+  padding: 0 6px;
   grid-column: 1;
 }
 .tab-panel .tab-header > li {
@@ -4009,14 +4010,14 @@ tr:hover .commandbar.visible-hover {
   vertical-align: middle;
 }
 .tab-panel .tab-header > li:hover {
-  background-color: #eee;
+  background-color: var(--menu-hover);
   color: var(--linkDark);
 }
 .tab-panel .tab-header > li.active {
   background-color: white;
   cursor: default;
-  border-right: 1px solid var(--neutral50);
-  border-left: 1px solid var(--neutral50);
+  border-right: 1px solid var(--neutral300);
+  border-left: 1px solid var(--neutral300);
   color: var(--text);
 }
 .tab-panel .tab-header > li.active.yellow {
@@ -4033,7 +4034,7 @@ tr:hover .commandbar.visible-hover {
   grid-row: 1;
   grid-column: 2;
   align-self: stretch;
-  border-bottom: 1px solid var(--neutral50);
+  border-bottom: 1px solid var(--neutral300);
   padding-right: 6px;
   color: #777;
   display: inline-flex;
@@ -4064,7 +4065,7 @@ tr:hover .commandbar.visible-hover {
   padding-left: 0;
 }
 .tab-panel.bordered > .tab-content {
-  border: 1px solid var(--neutral50);
+  border: 1px solid var(--neutral300);
   border-top: none;
 }
 .tab-panel.full-page .tab-content {
