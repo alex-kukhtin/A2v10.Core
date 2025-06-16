@@ -9,6 +9,7 @@
 		<SourceAssetsFonts Include="$(MSBuildThisFileDirectory)..\content\assets\wwwroot\css\fonts\*" />
 		<SourceAssetsLoc Include="$(MSBuildThisFileDirectory)..\content\assets\wwwroot\localization\*" />
 		<SourceAssetsLogo Include="$(MSBuildThisFileDirectory)..\content\assets\wwwroot\img\logo\*" />
+		<SourceAssetsRoot Include="$(MSBuildThisFileDirectory)..\content\rootassets\*" />
 	</ItemGroup>
 	<Target Name="CopyAssetsToProject" BeforeTargets="Build">
 		<Copy SourceFiles="@(SourceIcon)" DestinationFiles="$(ProjectDir)\wwwroot\favicon.ico" SkipUnchangedFiles="true"/>
@@ -19,5 +20,6 @@
 		<Copy SourceFiles="@(SourceAssetsFonts)" DestinationFolder="$(ProjectDir)\wwwroot\css\fonts" SkipUnchangedFiles="true"/>
 		<Copy SourceFiles="@(SourceAssetsLoc)" DestinationFolder="$(ProjectDir)\wwwroot\localization" SkipUnchangedFiles="true"/>
 		<Copy SourceFiles="@(SourceAssetsLogo)" DestinationFolder="$(ProjectDir)\wwwroot\img\logo" SkipUnchangedFiles="true"/>
+		<Copy SourceFiles="@(SourceAssetsRoot)" DestinationFolder="$(ProjectDir)\_assets" SkipUnchangedFiles="true"/>
 	</Target>
 </Project>

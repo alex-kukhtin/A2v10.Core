@@ -1,6 +1,7 @@
 ﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System.IO;
+using System.Reflection;
 
 using Microsoft.Extensions.Options;
 
@@ -10,12 +11,14 @@ namespace A2v10.Services;
 
 public class AppCodeProvider : IAppCodeProvider
 {
-	private readonly Dictionary<String, IAppCodeProviderImpl> _providers = new(StringComparer.InvariantCultureIgnoreCase);
+	private readonly IServiceProvider _serviceProvider;
+    private readonly Dictionary<String, IAppCodeProviderImpl> _providers = new(StringComparer.InvariantCultureIgnoreCase);
 	private readonly String _appId;
 
 	private const String DEFAULT_PROVIDER = "_";
-	public AppCodeProvider(IOptions<AppOptions> appOptions)
+	public AppCodeProvider(IServiceProvider serviceProvider, IOptions<AppOptions> appOptions)
 	{
+		_serviceProvider = serviceProvider;
 		var opts = appOptions.Value ?? throw new ArgumentNullException(nameof(appOptions));
 		if (opts.Modules == null || opts.Modules.Count == 0)
 			_providers.Add(DEFAULT_PROVIDER, CreateProvider(opts.Path));
@@ -32,7 +35,7 @@ public class AppCodeProvider : IAppCodeProvider
 		_appId = opts.AppId;
 	}
 
-	static IAppCodeProviderImpl CreateProvider(String path)
+    IAppCodeProviderImpl CreateProvider(String path)
 	{
 		if (ClrHelpers.IsClrPath(path))
 			return new InternalAppCodeProviderClr(CreateContainer(path));
@@ -40,10 +43,11 @@ public class AppCodeProvider : IAppCodeProvider
 			return new InternalAppCodeProviderFile(path);
 	}
 
-	static IAppContainer CreateContainer(String path)
+	IAppContainer CreateContainer(String path)
 	{
 		var assembly = ClrHelpers.ParseClrType(path);
-		var container = Activator.CreateInstance(assembly.assembly, assembly.type)?.Unwrap();
+		var container = Activator.CreateInstance(assembly.assembly, assembly.type, false, BindingFlags.Default, null, 
+				new Object?[] { /*_serviceProvider*/ }, null, null)?.Unwrap();
 		if (container is IAppContainer appContainer)
 			return appContainer;
 		else

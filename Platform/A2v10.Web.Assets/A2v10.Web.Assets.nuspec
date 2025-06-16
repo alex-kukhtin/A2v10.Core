@@ -22,6 +22,7 @@
 	<files>
 		<file src="A2v10.Web.Assets.targets" target="build/A2v10.Web.Assets.targets" />
 		<file src="wwwroot/**/*" target="content/assets"/>
+		<file src="_assets/*" target="content/rootassets"/>
 		<file src="README.md" target="docs\" />
 	</files>
 </package>

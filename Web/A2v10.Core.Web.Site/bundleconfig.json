@@ -52,5 +52,16 @@
 			"../../Platform/A2v10.App.Assets/Application/@sql/source/a2v10_init.sql"
 		],
 		"minify": { "enabled": false }
+	},
+	{
+		"outputFileName": "../../Platform/A2v10.Web.Assets/_assets/a2v10_platform_simple.sql",
+		"inputFiles": [
+			"../../Platform/SqlScripts/a2v10_struct_simple.sql",
+			"../../Platform/SqlScripts/a2v10_system_simple.sql",
+			"../../Platform/SqlScripts/a2v10_security_simple.sql",
+			"../../Platform/SqlScripts/a2v10_ui_simple.sql",
+			"../../Platform/SqlScripts/a2v10_admin_simple.sql"
+		],
+		"minify": { "enabled": false }
 	}
 ]
