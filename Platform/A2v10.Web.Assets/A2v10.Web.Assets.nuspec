@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>A2v10.Web.Assets</id>
-		<version>10.1.8556</version>
+		<version>10.1.8557</version>
 		<title>A2v10.Platform Client Web Files</title>
 		<authors>Oleksandr Kukhtin</authors>
 		<owners>Oleksandr Kukhtin</owners>
@@ -22,7 +22,7 @@
 	<files>
 		<file src="A2v10.Web.Assets.targets" target="build/A2v10.Web.Assets.targets" />
 		<file src="wwwroot/**/*" target="content/assets"/>
-		<file src="_assets/*" target="content/rootassets"/>
+		<file src="_assets/**/*" target="content/assets"/>
 		<file src="README.md" target="docs\" />
 	</files>
 </package>

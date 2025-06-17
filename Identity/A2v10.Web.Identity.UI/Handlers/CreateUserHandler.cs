@@ -36,7 +36,7 @@ public class CreateUserHandler(IServiceProvider serviceProvider) : IClrInvokeTar
             Tenant = TenantId,
             UserName = src.GetNotNull<String>("UserName"),
             PersonName = src.Get<String>("PersonName"),
-            Email = src.GetNotNull<String>("Email"),
+            Email = src.Get<String>("Email"),
             PhoneNumber = src.Get<String>("PhoneNumber"),
             Memo = src.Get<String>("Memo")
         };
