@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.IO;
@@ -53,7 +53,7 @@ public class MainController(IDataService dataService, IOptions<AppOptions> appOp
         return View(new ViewLicenseModel(licInfo));
 	}
 
-     [HttpGet]
+    [HttpGet]
 	[Route("/license")]
 	public async Task<IActionResult> License()
 	{

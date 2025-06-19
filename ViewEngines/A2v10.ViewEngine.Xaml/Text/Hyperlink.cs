@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Xaml;
 
@@ -123,9 +123,11 @@ public class Hyperlink : Inline
 		var cbind = GetBinding(nameof(Content));
 		if (cbind != null)
 		{
-			new TagBuilder("span")
-				.MergeAttribute("v-text", cbind.GetPathFormat(context))
-				.Render(context);
+			var stb = new TagBuilder("span")
+				.MergeAttribute("v-text", cbind.GetPathFormat(context));
+			if (cbind.NegativeRed)
+                stb.MergeAttribute(":class", $"$getNegativeRedClass({cbind.GetPath(context)})");
+            stb.Render(context);
 		}
 		else if (Content is UIElementBase uiElemBase)
 		{

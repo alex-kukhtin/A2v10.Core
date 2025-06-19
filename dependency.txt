@@ -1,4 +1,4 @@
-﻿2025-06-17 (next: 8558)
+﻿2025-06-19 (next: 8559)
 =======================
 !do not update Microsoft.OpenApi to 1.6.23 (https://github.com/microsoft/OpenAPI.NET/issues/2030)
 

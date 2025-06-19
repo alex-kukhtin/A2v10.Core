@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
-		<Version>10.1.8554</Version>
+		<Version>10.1.8558</Version>
 		<LangVersion>Latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<AddRazorSupportForMvc>true</AddRazorSupportForMvc>

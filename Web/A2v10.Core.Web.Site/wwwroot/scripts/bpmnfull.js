@@ -2263,11 +2263,11 @@
       [ 'l', width - borderRadius * 2, 0 ],
       [ 'a', borderRadius, borderRadius, 0, 0, 1, borderRadius, borderRadius ],
       [ 'l', 0, height - borderRadius * 2 ],
-      [ 'a', borderRadius, borderRadius, 0, 0, 1, -10, borderRadius ],
+      [ 'a', borderRadius, borderRadius, 0, 0, 1, -borderRadius, borderRadius ],
       [ 'l', borderRadius * 2 - width, 0 ],
-      [ 'a', borderRadius, borderRadius, 0, 0, 1, -10, -10 ],
+      [ 'a', borderRadius, borderRadius, 0, 0, 1, -borderRadius, -borderRadius ],
       [ 'l', 0, borderRadius * 2 - height ],
-      [ 'a', borderRadius, borderRadius, 0, 0, 1, borderRadius, -10 ],
+      [ 'a', borderRadius, borderRadius, 0, 0, 1, borderRadius, -borderRadius ],
       [ 'z' ]
     ];
 
@@ -31609,7 +31609,7 @@
 
     return [
       [ 'M', x, y ],
-      [ 'm', 0, -10 ],
+      [ 'm', 0, -r ],
       [ 'a', r, r, 0, 1, 1, 0, 2 * r ],
       [ 'a', r, r, 0, 1, 1, 0, -2 * r ],
       [ 'z' ]
@@ -31938,8 +31938,8 @@
 
     var visual = create$1('rect');
     attr$1(visual, {
-      x: -18 / 2,
-      y: -6 / 2,
+      x: -width / 2,
+      y: -height / 2,
       width: width,
       height: height
     });
@@ -31950,7 +31950,7 @@
     var hit = create$1('rect');
     attr$1(hit, {
       x: -hitWidth / 2,
-      y: -17 / 2,
+      y: -hitHeight / 2,
       width: hitWidth,
       height: hitHeight
     });
@@ -60628,8 +60628,8 @@
     var visual = create$1('rect');
 
     attr$1(visual, {
-      x: -8 / 2 + offset.x,
-      y: -8 / 2 + offset.y,
+      x: -HANDLE_SIZE / 2 + offset.x,
+      y: -HANDLE_SIZE / 2 + offset.y,
       width: HANDLE_SIZE,
       height: HANDLE_SIZE
     });
@@ -60641,8 +60641,8 @@
     var hit = create$1('rect');
 
     attr$1(hit, {
-      x: -20 / 2 + offset.x,
-      y: -20 / 2 + offset.y,
+      x: -HANDLE_HIT_SIZE / 2 + offset.x,
+      y: -HANDLE_HIT_SIZE / 2 + offset.y,
       width: HANDLE_HIT_SIZE,
       height: HANDLE_HIT_SIZE
     });
@@ -60712,13 +60712,13 @@
     };
 
     if (direction.indexOf('e') !== -1) {
-      offset.x = 6;
+      offset.x = -HANDLE_OFFSET;
     } else if (direction.indexOf('w') !== -1) {
       offset.x = HANDLE_OFFSET;
     }
 
     if (direction.indexOf('s') !== -1) {
-      offset.y = 6;
+      offset.y = -HANDLE_OFFSET;
     } else if (direction.indexOf('n') !== -1) {
       offset.y = HANDLE_OFFSET;
     }
@@ -66126,8 +66126,8 @@
       outline = create$1('rect');
 
       attr$1(outline, assign$1({
-        x: -5,
-        y: -5,
+        x: -DEFAULT_OFFSET,
+        y: -DEFAULT_OFFSET,
         rx: 14,
         width: element.width + DEFAULT_OFFSET * 2,
         height: element.height + DEFAULT_OFFSET * 2
@@ -107852,6 +107852,10 @@
   			component: CalledElement
   		});
   		entries.push({
+  			id: 'correlation-id',
+  			component: CorrelationIdElement
+  		});
+  		entries.push({
   			id: 'parameters',
   			component: Parameters
   		});
@@ -107982,6 +107986,36 @@
   		element,
   		id: 'called-element',
   		label: translate('Called Element'),
+  		getValue,
+  		setValue,
+  		debounce
+  	});
+  }
+
+  function CorrelationIdElement(props) {
+  	const { element } = props;
+
+  	const translate = useService('translate');
+  	const debounce = useService('debounceInput');
+  	const modeling = useService('modeling');
+
+  	const setValue = (value) => {
+  		modeling.updateProperties(element, {
+  			correlationId: value
+  		});
+  	};
+
+  	const getValue = (parameter) => {
+  		return element.businessObject.correlationId ?? '';
+  	};
+
+  	return TextAreaEntry({
+  		element,
+  		id: 'correlation-Id',
+  		label: translate('Correlation Id'),
+  		rows: 1,
+  		monospace: true,
+  		description: translate('Expression'),
   		getValue,
   		setValue,
   		debounce

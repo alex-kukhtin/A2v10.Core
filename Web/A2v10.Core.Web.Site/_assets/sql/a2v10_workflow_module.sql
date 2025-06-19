@@ -110,16 +110,11 @@ begin
 
 	select [Workflows!TWorkflow!Array] = null, [Id!!Id] = w.Id, w.[Name], t.[Version],
 		[DateCreated!!Utc] = w.DateCreated, [DateModified!!Utc] = w.DateModified,
-		w.Svg, w.Zoom, w.Memo,
-		NeedPublish = cast(case when w.[Hash] = x.[Hash] then 0 else 1 end as bit),
-		[Arguments!TArg!Array] = null
+		w.Svg, w.Zoom, w.Memo, w.[Key],
+		NeedPublish = cast(case when w.[Hash] = x.[Hash] then 0 else 1 end as bit)
 	from a2wf.[Catalog] w left join @wftable t on w.Id = t.Id
 		left join a2wf.Workflows x on w.Id = x.Id and x.[Version] = t.[Version]
 	order by w.DateCreated desc;
-
-	select [!TArg!Array] = null, wa.[Name], wa.[Type], wa.[Value],
-		[!TWorkflow.Arguments!ParentId] = t.Id
-	from a2wf.WorkflowArguments wa inner join @wftable t on wa.WorkflowId = t.Id and wa.[Version] = t.[Version]
 end
 go
 ------------------------------------------------
@@ -135,7 +130,7 @@ begin
 
 	declare @version int, @hash varbinary(64);
 	select @version = max([Version]) from a2wf.Workflows where Id = @Id;
-	select @hash = Hash from a2wf.Workflows where Id = @Id and [Version] = @version;
+	select @hash = [Hash] from a2wf.Workflows where Id = @Id and [Version] = @version;
 
 	select [Workflow!TWorkflow!Object] = null, [Id!!Id] = Id, [Name!!Name] = [Name], [Body],
 		[Svg] = cast(null as nvarchar(max)), [Version] = @version,  Zoom,
@@ -282,6 +277,105 @@ begin
 	if exists(select * from a2wf.Workflows where Id = @Id)
 		throw 60000, N'UI:@[WfAdm.Error.WorkflowUsed]', 0;
 	delete from a2wf.[Catalog] where Id = @Id;
+end
+go
+
+------------------------------------------------
+create or alter procedure wfadm.[Catalog.Prop.Load]
+@UserId bigint,
+@Id nvarchar(64) = null
+as
+begin
+	set nocount on;
+	set transaction isolation level read uncommitted;
+
+	set @Id = upper(@Id);
+
+	select [Workflow!TWorkflow!Object] = null, [Id!!Id] = Id, [Name!!Name] = [Name],
+		Memo, [Key]
+	from a2wf.[Catalog] 
+	where Id = @Id collate SQL_Latin1_General_CP1_CI_AI
+	order by Id;
+end
+go
+------------------------------------------------
+drop procedure if exists wfadm.[Catalog.Prop.Metadata];
+drop procedure if exists wfadm.[Catalog.Prop.Update];
+drop type if exists wfadm.[Catalog.Prop.TableType];
+go
+------------------------------------------------
+create type wfadm.[Catalog.Prop.TableType] as table
+(
+	Id nvarchar(64),
+	[Name] nvarchar(255),
+	[Key] nvarchar(32),
+	[Memo] nvarchar(255)
+);
+go
+------------------------------------------------
+create or alter procedure wfadm.[Catalog.Prop.Metadata]
+as
+begin
+	set nocount on;
+	set transaction isolation level read uncommitted;
+	declare @Workflow wfadm.[Catalog.Prop.TableType];
+	select [Workflow!Workflow!Metadata] = null, * from @Workflow;
+end
+go
+------------------------------------------------
+create or alter procedure wfadm.[Catalog.Prop.Update]
+@UserId bigint,
+@Workflow wfadm.[Catalog.Prop.TableType] readonly
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+	set xact_abort on;
+
+	declare @rtable table(Id nvarchar(64));
+	declare @wfid nvarchar(64);
+
+	merge a2wf.[Catalog] as t
+	using @Workflow as s
+	on t.Id = s.Id collate SQL_Latin1_General_CP1_CI_AI
+	when matched then update set
+		t.[Name] = s.[Name],
+		t.[Key] = s.[Key],
+		t.[Memo] = s.[Memo],
+		t.DateModified = getutcdate()
+ 	output inserted.Id into @rtable(Id);
+	select @wfid = Id from @rtable;
+
+	exec wfadm.[Catalog.Prop.Load] @UserId = @UserId, @Id = @wfid;
+end
+go
+
+------------------------------------------------
+create or alter procedure wfadm.[Catalog.Run.Load]
+@UserId bigint,
+@Id nvarchar(64)
+as
+begin
+	set nocount on;
+	set transaction isolation level read uncommitted;
+
+
+	declare @version int;
+	select @version = max([Version]) from a2wf.Workflows where Id = @Id;
+
+	select [Workflow!TWorkflow!Object] = null, [Id!!Id] = w.Id, w.[Name], [Version] = @version,
+		[DateCreated!!Utc] = w.DateCreated, [DateModified!!Utc] = w.DateModified,
+		w.Memo, w.[Key], CorrelationId = cast(null as nvarchar(255)),
+		NeedPublish = cast(case when w.[Hash] = x.[Hash] then 0 else 1 end as bit),
+		[Arguments!TArg!Array] = null
+	from a2wf.[Catalog] w 
+		left join a2wf.Workflows x on w.Id = x.Id and x.[Version] = @version
+	where w.Id = @Id and x.[Version]  = @version;
+
+	select [!TArg!Array] = null, wa.[Name], wa.[Type], wa.[Value],
+		[!TWorkflow.Arguments!ParentId] = wa.WorkflowId
+	from a2wf.WorkflowArguments wa 
+	where wa.WorkflowId = @Id and [Version] = @version;
 end
 go
 
