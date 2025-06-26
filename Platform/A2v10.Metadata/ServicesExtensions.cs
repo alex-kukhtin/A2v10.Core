@@ -2,14 +2,13 @@
 
 using A2v10.Infrastructure;
 using A2v10.Metadata;
-
-[assembly: IssueDate("2024-10-24")]
+using A2v10.Services;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
 public static class ServicesExtensions
 {
-    public static IServiceCollection UseAppMetdata(this IServiceCollection services)
+    public static IServiceCollection UseAppMetadata(this IServiceCollection services)
     {
         services.AddSingleton<DatabaseMetadataCache>()
             .AddScoped<DatabaseMetadataProvider>()

@@ -19,7 +19,7 @@
 		<PackageReference Include="Azure.Storage.Blobs" Version="12.24.1" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.17" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="8.0.17" />
-		<PackageReference Include="A2v10.Module.Workflow" Version="10.1.1042" />
+		<PackageReference Include="A2v10.Module.Workflow" Version="10.1.1043" />
 	</ItemGroup>
 
 	<ItemGroup>

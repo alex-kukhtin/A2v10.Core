@@ -53,10 +53,11 @@ public class Startup(IConfiguration configuration)
 
     public void ConfigureServices(IServiceCollection services)
 	{
+		//services.AddSingleton<ILicenseManager, LicenseManager>();
 		//!!!Before UsePlatform(). It has a default implementation.
 		//services.UseMailClient();
 		//services.UseAppRuntimeBuilder();
-		services.UseAppMetdata();
+		services.UseAppMetadata();
 		//services.UsePermissions();
 		//services.AddScoped<IUserBannerProvider, TestBannerProvider>();
 		//services.UseLicenseManager();

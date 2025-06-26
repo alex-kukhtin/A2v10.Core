@@ -1,9 +1,8 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
-using System;
 using System.Globalization;
 
-namespace A2v10.Metadata;
+namespace Microsoft.Extensions.DependencyInjection;
 
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false)]
 public class IssueDateAttribute : Attribute

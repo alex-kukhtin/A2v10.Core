@@ -7780,6 +7780,9 @@ table.tree-grid a.toggle.expanded:after {
   height: 100%;
   overflow: hidden;
 }
+.dashboard .a2-state-card {
+  border-radius: 3px;
+}
 .drag-host {
   position: fixed;
   left: -100%;
@@ -8467,8 +8470,23 @@ td.vert > .vcell {
 .bg-primary {
   background-color: var(--bgPrimary);
 }
+.brd-radius-4 {
+  border-radius: 4px;
+}
+.brd-radius-3 {
+  border-radius: 3px;
+}
+.border-300 {
+  border: 1px solid var(--neutral300);
+}
+.border-400 {
+  border: 1px solid var(--neutral400);
+}
 .h-100 {
   height: 100%;
+}
+.w-100 {
+  width: 100%;
 }
 .input-code input,
 .input-code static-input {

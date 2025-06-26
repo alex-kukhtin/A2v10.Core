@@ -16,7 +16,7 @@ namespace A2v10.AppRuntimeBuilder;
 
 public class RuntimeMetadataProvider(IAppCodeProvider _appCodeProvider, IOptions<AppOptions> _appOptions)
 {
-	private RuntimeMetadata? _runtimeMetdata = null;
+	private RuntimeMetadata? _runtimeMetadata = null;
     private readonly Boolean _watch = _appOptions.Value.Environment.Watch;
     private FileSystemWatcher? _fileWatcher = null;
 
@@ -46,8 +46,8 @@ public class RuntimeMetadataProvider(IAppCodeProvider _appCodeProvider, IOptions
     }
     public async Task<RuntimeMetadata> GetMetadata()
 	{
-		if (_runtimeMetdata != null)
-			return _runtimeMetdata;
+		if (_runtimeMetadata != null)
+			return _runtimeMetadata;
 		const String fileName = "app.metadata";
         CreateWatcher(fileName);
         using var stream = _appCodeProvider.FileStreamRO(fileName, true)
@@ -56,15 +56,15 @@ public class RuntimeMetadataProvider(IAppCodeProvider _appCodeProvider, IOptions
 
 		var text = await sr.ReadToEndAsync()
 			?? throw new InvalidOperationException($"{fileName} is empty");
-		var newData = _runtimeMetdata = JsonConvert.DeserializeObject<RuntimeMetadata>(text, CamelCaseSerializerSettings)
+		var newData = _runtimeMetadata = JsonConvert.DeserializeObject<RuntimeMetadata>(text, CamelCaseSerializerSettings)
 			?? throw new InvalidOperationException($"Invalid {fileName}");
 		newData.OnEndInit();
-		_runtimeMetdata = newData;
-		return _runtimeMetdata;
+		_runtimeMetadata = newData;
+		return _runtimeMetadata;
 	}
 
     private void Watcher_Changed(Object sender, FileSystemEventArgs e)
     {
-        _runtimeMetdata = null;
+        _runtimeMetadata = null;
     }
 }

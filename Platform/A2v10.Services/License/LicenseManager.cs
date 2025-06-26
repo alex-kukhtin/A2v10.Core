@@ -1,8 +1,5 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
-using System;
-using System.Collections.Generic;
-using System.Dynamic;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.IO;
@@ -10,11 +7,12 @@ using System.IO;
 using Microsoft.Extensions.Logging;
 
 using Newtonsoft.Json;
-
-using A2v10.Infrastructure;
 using A2v10.Services;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace A2v10.Metadata;
+[assembly: IssueDate("2024-10-24")]
+
+namespace Microsoft.Extensions.DependencyInjection;
 
 public class LicenseInfo : ILicenseInfo
 {
@@ -123,9 +121,15 @@ public class LicenseManager(ILogger<LicenseManager> _logger) : ILicenseManager
 
         if (licenseInfo.ExpiresOn < DateTime.Now)
         {
+            var entryAss = Assembly.GetEntryAssembly()!;
             // expired
+            var issueDate = entryAss.GetCustomAttribute<IssueDateAttribute>();
+            if (issueDate == null)
+            {
+                issueDate = ass.GetCustomAttribute<IssueDateAttribute>()
+                    ?? throw new InvalidOperationException("Assembly does not have IssueDateAttribute");
+            }
             // якщо дата поточної версії меньша за ExpiresOn, повертаємо OK
-            var issueDate = ass.GetCustomAttribute<IssueDateAttribute>()!;
             if (licenseInfo.ExpiresOn < issueDate.IssueDate)
                 licenseInfo.LicenseState = LicenseState.Ok;
             licenseInfo.LicenseState = LicenseState.Expired;

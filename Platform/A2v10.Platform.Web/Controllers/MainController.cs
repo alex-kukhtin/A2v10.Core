@@ -21,8 +21,8 @@ namespace A2v10.Platform.Web.Controllers;
 [ExecutingFilter]
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 public class MainController(IDataService dataService, IOptions<AppOptions> appOptions,
-    IApplicationTheme appTheme, IAppCodeProvider codeProvider, IEnumerable<ILicenseManager> licenseManagers,
-    ICurrentUser currentUser) : Controller
+	IApplicationTheme appTheme, IAppCodeProvider codeProvider, IEnumerable<ILicenseManager> licenseManagers,
+	ICurrentUser currentUser) : Controller
 {
 	private readonly AppOptions _appOptions = appOptions.Value;
 	private readonly IDataService _dataService = dataService;
@@ -31,12 +31,12 @@ public class MainController(IDataService dataService, IOptions<AppOptions> appOp
 	private readonly ILicenseManager _licenseManager =
 			licenseManagers.Count() == 1 ? licenseManagers.First()
 			: throw new InvalidOperationException("Too many License Managers");
-    private readonly ICurrentUser _currentUser = currentUser;
+	private readonly ICurrentUser _currentUser = currentUser;
 
 	private const String SKIP_COOKIE = "SkipLicense";
 
 	static String? NormalizePathInfo(String? pathInfo)
-        {
+	{
 		if (String.IsNullOrEmpty(pathInfo))
 			return null;
 		var parts = pathInfo.Split([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar]);
@@ -49,11 +49,11 @@ public class MainController(IDataService dataService, IOptions<AppOptions> appOp
 	[Route("/viewlicense/0")]
 	public async Task<IActionResult> ViewLicense()
 	{
-        var licInfo = await _licenseManager.GetLicenseInfoAsync(_currentUser.Identity.Segment, _currentUser.Identity.Tenant);
-        return View(new ViewLicenseModel(licInfo));
+		var licInfo = await _licenseManager.GetLicenseInfoAsync(_currentUser.Identity.Segment, _currentUser.Identity.Tenant);
+		return View(new ViewLicenseModel(licInfo));
 	}
 
-    [HttpGet]
+	[HttpGet]
 	[Route("/license")]
 	public async Task<IActionResult> License()
 	{
@@ -69,7 +69,7 @@ public class MainController(IDataService dataService, IOptions<AppOptions> appOp
 			Minify = _appOptions.Environment.IsRelease ? "min." : String.Empty,
 			AppTitle = licInfo.ApplicationName
 		};
-		return View(m);	
+		return View(m);
 	}
 
 	[HttpPost]
@@ -90,7 +90,7 @@ public class MainController(IDataService dataService, IOptions<AppOptions> appOp
 
 		var licResult = await CheckLicenseAsync();
 
-        if (licResult == LicenseResult.Fail)
+		if (licResult == LicenseResult.Fail)
 		{
 			var skip = Request.Cookies[SKIP_COOKIE];
 			if (skip == null)
@@ -119,7 +119,7 @@ public class MainController(IDataService dataService, IOptions<AppOptions> appOp
 			HasSettings = _currentUser.Identity.IsAdmin && HasSettings(),
 			Minify = _appOptions.Environment.IsRelease ? "min." : String.Empty,
 			HasLicense = licResult == LicenseResult.Success,
-        };
+		};
 
 		if (pathInfo != null && _appOptions.SinglePages.Any(x => pathInfo.StartsWith(x, StringComparison.OrdinalIgnoreCase)))
 		{
@@ -138,31 +138,31 @@ public class MainController(IDataService dataService, IOptions<AppOptions> appOp
 	[AllowAnonymous]
 	public IActionResult Error(String? _1/*pathInfo*/)
 	{
-        //var RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+		//var RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
 
-        var exceptionHandlerPathFeature =
-            HttpContext.Features.Get<IExceptionHandlerPathFeature>();
+		var exceptionHandlerPathFeature =
+			HttpContext.Features.Get<IExceptionHandlerPathFeature>();
 
 		String? ExceptionMessage = String.Empty;
 
-        if (exceptionHandlerPathFeature?.Error is FileNotFoundException)
-        {
-            ExceptionMessage = "The file was not found.";
-        }
+		if (exceptionHandlerPathFeature?.Error is FileNotFoundException)
+		{
+			ExceptionMessage = "The file was not found.";
+		}
 		else if (exceptionHandlerPathFeature?.Error is Exception ex)
 		{
 			ExceptionMessage = ex.Message;
 		}
 
-        if (exceptionHandlerPathFeature?.Path == "/")
-        {
-            ExceptionMessage ??= string.Empty;
-            ExceptionMessage += " Page: Home.";
-        }
-        return View("Error", ExceptionMessage);
+		if (exceptionHandlerPathFeature?.Path == "/")
+		{
+			ExceptionMessage ??= string.Empty;
+			ExceptionMessage += " Page: Home.";
+		}
+		return View("Error", ExceptionMessage);
 	}
 
-    private Boolean HasNavPane()
+	private Boolean HasNavPane()
 	{
 		return _codeProvider.IsFileExists("_navpane/model.json");
 	}
@@ -186,18 +186,22 @@ public class MainController(IDataService dataService, IOptions<AppOptions> appOp
 	}
 
 	private enum LicenseResult {
-        NoLicense,
+		NoLicense,
 		Success,
 		Fail
-    }
+	}
 
 	private async Task<LicenseResult> CheckLicenseAsync()
 	{
 		if (!_codeProvider.HasLicensedModules)
 			return LicenseResult.NoLicense;
-		var result = await _licenseManager.VerifyLicensesAsync(
-			_currentUser.Identity.Segment, _currentUser.Identity.Tenant, 
-			_codeProvider.LicensedModules) == LicenseState.Ok;
+		var licResult = await _licenseManager.VerifyLicensesAsync(
+			_currentUser.Identity.Segment, _currentUser.Identity.Tenant,
+			_codeProvider.LicensedModules);
+		var result =
+			licResult == LicenseState.Ok ||
+			licResult == LicenseState.Expired ||
+			licResult == LicenseState.TermsViolation;
 		return result ? LicenseResult.Success : LicenseResult.Fail;
     }
 }
