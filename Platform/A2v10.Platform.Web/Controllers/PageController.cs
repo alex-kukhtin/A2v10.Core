@@ -53,7 +53,7 @@ public class PageController(IApplicationHost _host, ILocalizer _localizer, ICurr
     public async Task<IActionResult> Export(String pathInfo)
     {
         // {pagePath}/action/id
-        var res = await _dataService.ExportAsync(pathInfo, SetSqlQueryParams);
+        var res = await _dataService.ExportAsync(pathInfo + Request.QueryString, SetSqlQueryParams);
 
 		var result = new WebBinaryActionResult(res.Body, res.ContentType);
 		Response.ContentType = res.ContentType;

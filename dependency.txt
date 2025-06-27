@@ -3,6 +3,12 @@
 !do not update Microsoft.OpenApi to 1.6.23 (https://github.com/microsoft/OpenAPI.NET/issues/2030)
 
 A2v10.Platform
+A2v10.Platform.Web
+A2v10.Services
+A2v10.Web.Assets
+
+
+A2v10.Platform
 	A2v10.Platform.Web
 		A2v10.Identity.Core
 		A2v10.Infrastructure

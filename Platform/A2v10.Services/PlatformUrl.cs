@@ -124,24 +124,25 @@ public class PlatformUrl : IPlatformUrl
 	{
 		if (value == null)
 			return;
-		if (!key.Equals("period", StringComparison.OrdinalIgnoreCase))
+		if (!key.StartsWith("period", StringComparison.OrdinalIgnoreCase))
 		{
 			eo.Set(key.ToPascalCase(), value);
 		}
 		else
 		{
-			var ps = value.Split('-');
-			eo.RemoveKeys("From,To"); // replace prev value
+			var suffix = key[6..]; // period
+            var ps = value.Split('-');
+			eo.RemoveKeys($"From{suffix},To{suffix}"); // replace prev value
 			if ("all".Equals(ps[0], StringComparison.OrdinalIgnoreCase))
 			{
 				// from js! utils.date.minDate/maxDate
-				eo.Set("From", "19010101");
-				eo.Set("To", "29991231");
+				eo.Set($"From{suffix}", "19010101");
+				eo.Set($"To{suffix}", "29991231");
 			}
 			else
 			{
-				eo.Set("From", ps[0]);
-				eo.Set("To", ps.Length == 2 ? ps[1] : ps[0]);
+				eo.Set($"From{suffix}", ps[0]);
+				eo.Set($"To{suffix}", ps.Length == 2 ? ps[1] : ps[0]);
 			}
 		}
 	}
