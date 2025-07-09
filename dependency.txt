@@ -1,13 +1,7 @@
-﻿2025-06-26 (next: 8562)
+﻿2025-07-09 (next: 8563)
 =======================
 !do not update Microsoft.OpenApi to 1.6.23 (https://github.com/microsoft/OpenAPI.NET/issues/2030)
 
-A2v10.Metadata
-A2v10.Platform
-A2v10.ReportEngine.Pdf
-A2v10.ReportEngine.Excel
-A2v10.ReportEngine.Script
-A2v10.Services
 
 
 A2v10.Platform
