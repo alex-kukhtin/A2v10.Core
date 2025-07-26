@@ -108362,6 +108362,19 @@
   			]
   		},
   		{
+  			name: "wfCallActivity",
+  			extends: [
+  				"bpmn:CallActivity"
+  			],
+  			properties: [
+  				{
+  					name: "correlationId",
+  					isAttr: true,
+  					type: "String"
+  				}
+  			]
+  		},
+  		{
   			name: "wfUserTask",
   			extends: [
   				"bpmn:UserTask"

@@ -44,6 +44,21 @@ create table a2wf.[Inbox]
 	constraint PK_Inbox primary key clustered(Id, InstanceId)
 );
 go
+
+------------------------------------------------
+create or alter procedure a2wf.[Inbox.CancelChildren]
+@InstanceId uniqueidentifier
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+
+	update a2wf.Inbox set Void = 1, DateRemoved = getutcdate()
+	from a2wf.Inbox b inner join a2wf.Instances i on b.InstanceId = i.Id
+	where i.Parent = @InstanceId;
+end
+go
+
 ------------------------------------------------
 if not exists (select * from INFORMATION_SCHEMA.ROUTINES where ROUTINE_SCHEMA=N'a2wf' and ROUTINE_NAME=N'Instance.Inbox.Create')
 	exec sp_executesql N'
@@ -85,6 +100,7 @@ if not exists (select * from INFORMATION_SCHEMA.ROUTINES where ROUTINE_SCHEMA=N'
 	end
 	';
 go
+
 
 /*
 drop table a2wf.Inbox;
@@ -135,7 +151,8 @@ begin
 	select [Workflow!TWorkflow!Object] = null, [Id!!Id] = Id, [Name!!Name] = [Name], [Body],
 		[Svg] = cast(null as nvarchar(max)), [Version] = @version,  Zoom,
 		[DateCreated!!Utc] = DateCreated, [DateModified!!Utc] = DateModified,
-		NeedPublish = cast(case when [Hash] = @hash then 0 else 1 end as bit)
+		NeedPublish = cast(case when [Hash] = @hash then 0 else 1 end as bit),
+		[Key], [Memo]
 	from a2wf.[Catalog] 
 	where Id = @Id collate SQL_Latin1_General_CP1_CI_AI
 	order by Id;
@@ -359,6 +376,7 @@ begin
 	set nocount on;
 	set transaction isolation level read uncommitted;
 
+	set @Id = upper(@Id);
 
 	declare @version int;
 	select @version = max([Version]) from a2wf.Workflows where Id = @Id;
@@ -389,7 +407,8 @@ create or alter procedure wfadm.[Instance.Index]
 @Order nvarchar(255) = N'datemodified',
 @Dir nvarchar(20) = N'desc',
 @Workflow nvarchar(255) = null,
-@State nvarchar(32) = null
+@State nvarchar(32) = null,
+@Fragment nvarchar(255) = null
 as
 begin
 	set nocount on;
@@ -398,6 +417,9 @@ begin
 	set @Order = lower(@Order);
 	set @Dir = lower(@Dir);
 	set @Workflow = upper(@Workflow);
+
+	declare @fr nvarchar(255) = N'%' + @Fragment + N'%';
+	declare @frId uniqueidentifier = try_cast(trim(@Fragment) as uniqueidentifier);
 
 	set @State = nullif(@State, N'');
 
@@ -410,6 +432,7 @@ begin
 		inner join a2wf.[Workflows] w on i.WorkflowId = w.Id and i.[Version] = w.[Version]
 	where (@Workflow is null or w.Id = @Workflow)
 		and (@State is null or i.[ExecutionStatus] = @State)
+		and (@fr is null or i.Id = @frId or i.Parent = @frId or i.CorrelationId like @frId or w.[Name] like @fr)
 	order by 
 		case when @Dir = N'asc' then
 			case @Order 
@@ -450,6 +473,7 @@ begin
 		i.ExecutionStatus, Lock, [LockDate!!Utc] = LockDate, i.CorrelationId,
 		[DateCreated!!Utc] = i.DateCreated, [DateModified!!Utc] = i.DateModified,
 		[Inboxes!TInbox!Array] = null, [Bookmarks!TBookmark!Array] = null,
+		ParentInstance = i.Parent,
 		[!!RowCount] = t.rowcnt
 	from a2wf.Instances i inner join @inst t on i.Id = t.Id
 		inner join a2wf.[Workflows] w on i.WorkflowId = w.Id and i.[Version] = w.[Version]
@@ -484,7 +508,7 @@ begin
 	select [!$System!] = null, [!Instances!Offset] = @Offset, [!Instances!PageSize] = @PageSize, 
 		[!Instances!SortOrder] = @Order, [!Instances!SortDir] = @Dir,
 		[!Instances.Workflow.TWorkflow.RefId!Filter] = @Workflow, 
-		[!Instances.State!Filter] = isnull(@State, N'');
+		[!Instances.State!Filter] = isnull(@State, N''), [!Instances.Fragment!Filter] = @Fragment;
 end
 go
 ------------------------------------------------
@@ -496,15 +520,13 @@ begin
 	set nocount on;
 	set transaction isolation level read committed;
 	set xact_abort on;
+
 	begin tran;
-	
 	delete from a2wf.Inbox where InstanceId = @Id;
 	exec a2wf.[Instance.Delete] @UserId = @UserId, @Id = @Id;
-
 	commit tran;
 end
 go
-
 ------------------------------------------------
 create or alter procedure wfadm.[Instance.Show.Load]
 @UserId bigint,

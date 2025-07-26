@@ -1,7 +1,7 @@
 ﻿/*
 Copyright © 2020-2025 Oleksandr Kukhtin
 
-Last updated : 14 jun 2025
+Last updated : 26 jul 2025
 module version : 8233
 */
 
@@ -871,6 +871,31 @@ begin
 end
 go
 ------------------------------------------------
+create or alter procedure a2wf.[Instance.CancelChildren]
+@InstanceId uniqueidentifier,
+@Workflow nvarchar(255)
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+
+	declare @rtable table(Id uniqueidentifier);
+	update a2wf.Instances set ExecutionStatus = N'Canceled' 
+	output inserted.Id into @rtable(Id)
+	where Parent = @InstanceId and WorkflowId = @Workflow and ExecutionStatus = N'Idle';
+
+	delete from a2wf.InstanceBookmarks 
+	from a2wf.InstanceBookmarks ib inner join @rtable t on ib.InstanceId = t.Id and ib.WorkflowId = @Workflow
+
+	delete from a2wf.InstanceEvents 
+	from a2wf.InstanceEvents ie inner join @rtable t on ie.InstanceId = t.Id and ie.WorkflowId = @Workflow
+
+	-- remove inbox for all children
+	exec sp_executesql N'exec a2wf.[Inbox.CancelChildren] @InstanceId = @InstanceId', 
+		N'@InstanceId uniqueidentifier', @InstanceId;
+end
+go
+------------------------------------------------
 create or alter procedure a2wf.[Workflow.GetIdByKey]
 @Key nvarchar(32)
 as
@@ -986,6 +1011,19 @@ begin
 	set xact_abort on;
 
 	update a2wf.Inbox set Void = 1, DateRemoved = getutcdate() where Id=@Id and InstanceId=@InstanceId;
+end
+go
+------------------------------------------------
+create or alter procedure a2wf.[Inbox.CancelChildren]
+@InstanceId uniqueidentifier
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+
+	update a2wf.Inbox set Void = 1--, DateRemoved = getutcdate()
+	from a2wf.Inbox b inner join a2wf.Instances i on b.InstanceId = i.Id
+	where i.Parent = @InstanceId;
 end
 go
 */
