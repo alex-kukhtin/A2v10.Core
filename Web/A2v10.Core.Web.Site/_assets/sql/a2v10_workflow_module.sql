@@ -101,13 +101,6 @@ if not exists (select * from INFORMATION_SCHEMA.ROUTINES where ROUTINE_SCHEMA=N'
 	';
 go
 
-
-/*
-drop table a2wf.Inbox;
-drop procedure a2wf.[Instance.Inbox.Remove];
-drop procedure a2wf.[Instance.Inbox.Create];
-*/
-
 -- CATALOG
 ------------------------------------------------
 create or alter procedure wfadm.[Catalog.Index]
@@ -396,6 +389,82 @@ begin
 	where wa.WorkflowId = @Id and [Version] = @version;
 end
 go
+------------------------------------------------
+create or alter procedure wfadm.[Catalog.Backup]
+@UserId bigint,
+@Ids nvarchar(max) = null
+as
+begin
+	set nocount on;
+	set transaction isolation level read uncommitted;
+
+	declare @src table(Id nvarchar(255));
+	insert into @src(Id)
+	select [value] from string_split(@Ids, nchar(11) /* \v in template */);
+
+	select [Workflows!TWorkflow!Array] = null, c.[Id], c.[Format], c.[Name], c.[Key], c.Memo, c.Zoom
+	from a2wf.[Catalog] c
+	inner join @src s on c.Id = s.Id;
+
+	select [Data!TData!Array] = null, c.[Id], c.[Body], c.[Svg]
+	from a2wf.[Catalog] c
+	inner join @src s on c.Id = s.Id;
+end
+go
+------------------------------------------------
+drop procedure if exists wfadm.[Catalog.Restore.Metadata];
+drop procedure if exists wfadm.[Catalog.Restore.Update];
+drop type if exists wfadm.[Catalog.Restore.TableType];
+go
+------------------------------------------------
+create type wfadm.[Catalog.Restore.TableType] as table (
+	[Id] nvarchar(255) not null,
+	[Format] nvarchar(32) not null,
+	[Body] nvarchar(max) null,
+	[Name] nvarchar(255),
+	[Memo] nvarchar(255),
+	[Svg] nvarchar(max),
+	[Key] nvarchar(32),
+	Zoom float
+);
+go
+------------------------------------------------
+create or alter procedure wfadm.[Catalog.Restore.Metadata]
+as
+begin
+	set nocount on;
+	set transaction isolation level read uncommitted;
+
+	declare @Workflows wfadm.[Catalog.Restore.TableType];
+	select [Workflows!Workflows!Metadata] = null, * from @Workflows
+end
+go
+------------------------------------------------
+create or alter procedure wfadm.[Catalog.Restore.Update]
+@UserId bigint,
+@Workflows wfadm.[Catalog.Restore.TableType] readonly
+as
+begin
+	set nocount on;
+	set transaction isolation level read uncommitted;
+	merge a2wf.[Catalog] as t
+	using @Workflows as s
+	on t.Id = s.Id
+	when matched then update set
+		t.[Format] = s.[Format],
+		t.Zoom = round(s.Zoom, 2),
+		t.[Name] = s.[Name],
+		t.[Key] = s.[Key],
+		t.[Memo] = s.Memo,
+		t.Body = s.Body,
+		t.Svg = s.Svg,
+		t.[Hash] = hashbytes(N'SHA2_256', s.Body),
+		t.DateModified = getutcdate()
+	when not matched then insert 
+		(Id, [Format], Zoom, [Name], [Key], Memo, Body, Svg, [Hash]) values
+		(s.Id, s.[Format], round(s.Zoom, 2), s.[Name], s.[Key], s.[Memo], s.Body, s.Svg, hashbytes(N'SHA2_256', s.Body));
+end
+go
 
 -- INSTANCE
 ------------------------------------------------
@@ -641,6 +710,7 @@ begin
 	update a2wf.Instances set Lock = null, LockDate = null where Id = @Id;
 end
 go
+
 -- AUTOSTART
 ------------------------------------------------
 create or alter procedure wfadm.[AutoStart.Index]
