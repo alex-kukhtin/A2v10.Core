@@ -21,7 +21,7 @@ public class ClrHelpersTest
 		Assert.AreEqual("Type.Name", type);
 		Assert.AreEqual("Assembly.Name", assembly);
 
-		Assert.ThrowsException<ArgumentException>(() =>
+		Assert.ThrowsExactly<ArgumentException>(() =>
 		{
 			ClrHelpers.ParseClrType(pathFail);
 		});
