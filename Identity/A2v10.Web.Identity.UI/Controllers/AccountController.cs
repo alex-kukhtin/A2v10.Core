@@ -40,6 +40,7 @@ public class AccountController(
     IConfiguration _configuration, IAppTenantManager _appTenantManager, 
 	ILogger<AccountController> _logger, UrlEncoder _urlEncoder,
     IDataProtectionProvider protectionProvider,
+	ICurrentUser _currentUser,
     IOptions<AppUserStoreOptions<Int64>> userStoreOptions) : Controller
 {
     private readonly IDataProtector _protector = protectionProvider.CreateProtector("Login");
@@ -57,13 +58,13 @@ public class AccountController(
 	}
 	void RemoveAntiforgeryCookie()
 	{
-		foreach (var key in Request.Cookies.Keys.Where(x => x.Contains("Antiforgery")))
+		foreach (var key in Request.Cookies.Keys.Where(x => x.Contains("Antiforgery") || x.Contains("UserLocale")))
 			Response.Cookies.Delete(key);
 	}
 
 	void RemoveNonAntiforgeryCookies()
 	{
-		foreach (var key in Request.Cookies.Keys.Where(x => !x.Contains("Antiforgery")))
+		foreach (var key in Request.Cookies.Keys.Where(x => !x.Contains("Antiforgery") && !x.Contains("UserLocale")))
 			Response.Cookies.Delete(key);
 	}
 
@@ -255,8 +256,9 @@ public class AccountController(
 				UserName = model.Login,
 				PersonName = model.PersonName,
 				Email = model.Login,
-				PhoneNumber = model.Phone
-			};
+				PhoneNumber = model.Phone,
+                Locale = _currentUser.Locale.Locale,
+            };
 
 			if (IsMultiTenant)
 				user.Tenant = -1; // tenant will be created

@@ -1,16 +1,17 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
 using System.IO;
+using System.Text;
+
+using Microsoft.Extensions.Configuration;
 
 using Newtonsoft.Json;
 
 using A2v10.Infrastructure;
-using Microsoft.Extensions.Configuration;
-using System.Text;
 
 namespace A2v10.Platform.Web;
 public static class HostHelpers
@@ -97,10 +98,10 @@ public static class HostHelpers
 		return File.Exists(manifestPath) ? "<link rel=\"manifest\" href=\"/manifest.json\">" : null;
 	}
 
-	public static String? SwitchLocale(this IConfiguration config)
+	public static String? SwitchLocale(this IGlobalization glob)
 	{
-        var dateLocale = config.GetValue<String>("Globalization:DateLocale");
-        var numLocale = config.GetValue<String>("Globalization:NumberLocale");
+        var dateLocale = glob.DateLocale;
+        var numLocale = glob.NumberLocale;
 		if (String.IsNullOrEmpty(dateLocale) && String.IsNullOrEmpty(numLocale))
 			return null;
         var sb = new StringBuilder("<script type=\"text/javascript\">");

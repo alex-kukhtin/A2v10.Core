@@ -1,20 +1,19 @@
-﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
-using System.Threading;
+using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
-using System.Collections.Generic;
+using System.Threading;
 
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 
 using Newtonsoft.Json;
 
-using A2v10.Infrastructure;
 using A2v10.Data.Interfaces;
-
+using A2v10.Infrastructure;
 using A2v10.Web.Identity;
 
 namespace A2v10.Platform.Web;
@@ -82,14 +81,15 @@ public class CurrentUser : ICurrentUser, IDbIdentity
 	private readonly IHttpContextAccessor _httpContextAccessor;
 	private readonly IDataProtector _protector;
 	private readonly IPermissionBag _permissionBag;
-
-	public CurrentUser(IHttpContextAccessor httpContextAccessor, IDataProtectionProvider dataProtectionProvider,
-		IOptions<AppOptions> options, IPermissionBag permissionBag)
+	private readonly IGlobalization _globalization;
+    public CurrentUser(IHttpContextAccessor httpContextAccessor, IDataProtectionProvider dataProtectionProvider,
+		IOptions<AppOptions> options, IPermissionBag permissionBag, IGlobalization globalization)
 	{
 		_httpContextAccessor = httpContextAccessor;
 		_protector = dataProtectionProvider.CreateProtector("State");
 		_permissionBag = permissionBag;
-		var px = options?.Value?.CookiePrefix;
+        _globalization = globalization;
+        var px = options?.Value?.CookiePrefix;
 		if (!String.IsNullOrEmpty(px))
             CookiePrefix = px + '.';
     }
@@ -153,11 +153,49 @@ public class CurrentUser : ICurrentUser, IDbIdentity
 		}
 	}
 
-	void SetupUserLocale(HttpContext context)
+    void SetupLocaleFromBrowser(HttpContext context)
+    {
+		String? lang = context.Request.Query["lang"];
+		if (lang != null)
+		{
+			context.Response.Cookies.Append("UserLocale", lang, new CookieOptions()
+			{
+				SameSite = SameSiteMode.Strict,
+				Secure = true,
+				HttpOnly = true
+			});
+		}
+		else
+		{
+			if (context.Request.Cookies.TryGetValue("UserLocale", out var cookieLang))
+				lang = cookieLang;
+			else
+			{
+
+				var acceptLanguage = context.Request.Headers["Accept-Language"].ToString();
+                if (String.IsNullOrWhiteSpace(acceptLanguage))
+                    return;
+                var ix = acceptLanguage.IndexOf(',');
+                if (ix < 0)
+                    return;
+                lang = acceptLanguage[..ix].Trim();
+            }
+        }
+
+		var realLang = _globalization.IsAvailable(lang);
+		if (realLang == null)
+            return;
+        Locale = new UserLocale(realLang);
+    }
+
+    void SetupUserLocale(HttpContext context)
 	{
 		var ident = context.User.Identity;
 		if (ident == null || !ident.IsAuthenticated)
+		{
+			SetupLocaleFromBrowser(context);
 			return;
+		}
 		var userLoc = ident.GetUserLocale();
 		if (context.Request.Query.ContainsKey("lang"))
 		{
