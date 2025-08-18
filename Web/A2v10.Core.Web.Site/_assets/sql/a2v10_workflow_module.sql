@@ -21,11 +21,6 @@ if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = N'a2
 	alter table a2wf.[Catalog] add DateModified datetime constraint DF_Catalog_DateModified default(getutcdate()) with values;
 go
 
-------------------------------------------------
-if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = N'a2wf' and TABLE_NAME = N'Catalog' and COLUMN_NAME = N'Archive')
-	alter table a2wf.[Catalog] add Archive bit constraint DF_Catalog_Archive default(0) with values;
-go
-
 -- INBOX
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2wf' and TABLE_NAME=N'Inbox')

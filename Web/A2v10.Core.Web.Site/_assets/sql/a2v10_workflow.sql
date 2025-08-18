@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2020-2025 Oleksandr Kukhtin
 
-Last updated : 26 jul 2025
-module version : 8233
+Last updated : 16 aug 2025
+module version : 8235
 */
 
 /* WF TABLES
@@ -17,6 +17,7 @@ a2wf.Instances
 a2wf.Workflows
 a2wf.[Catalog]
 a2wf.AutoStart
+a2wf.PendingMessages
 -- Custom Table
 a2wf.[Inbox]
 */
@@ -44,7 +45,7 @@ go
 begin
 	set nocount on;
 	declare @version int;
-	set @version = 8233;
+	set @version = 8235;
 	if exists(select * from a2wf.Versions where Module = N'main')
 		update a2wf.Versions set [Version] = @version where Module = N'main';
 	else
@@ -92,6 +93,10 @@ go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = N'a2wf' and TABLE_NAME = N'Catalog' and COLUMN_NAME = N'Key')
 	alter table a2wf.[Catalog] add [Key] nvarchar(32);
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = N'a2wf' and TABLE_NAME = N'Catalog' and COLUMN_NAME = N'Archive')
+	alter table a2wf.[Catalog] add Archive bit constraint DF_Catalog_Archive default(0) with values;
 go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2wf' and TABLE_NAME=N'Workflows')
@@ -289,6 +294,23 @@ go
 if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA=N'a2wf' and TABLE_NAME=N'AutoStart' and COLUMN_NAME=N'Complete')
 	alter table a2wf.AutoStart add Complete int not null 
 		constraint DF_AutoStart_Complete default(0) with values;
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2wf' and TABLE_NAME=N'PendingMessages')
+create table a2wf.[PendingMessages]
+(
+	[Id] bigint identity(100, 1) not null
+		constraint PK_PendingMessages primary key clustered,
+	Lock uniqueidentifier null,
+	DateCreated datetime not null 
+		constraint DF_PendingMessages_DateCreated default(getutcdate()),
+	InstanceId uniqueidentifier not null,
+	[Message] nvarchar(255) not null,
+	DateStarted datetime null,
+	Complete int not null
+		constraint DF_PendingMessages_Complete default(0),
+	DateCompleted datetime null
+);
 go
 ------------------------------------------------
 create or alter procedure a2wf.[Catalog.Save]
@@ -839,6 +861,16 @@ begin
 		WorkflowId, [Version], [Params!!Json] = Params, CorrelationId, a.InstanceId
 	from @AutoStartTable t inner join a2wf.AutoStart a on t.Id = a.Id
 	order by a.DateCreated;
+
+	-- messages
+	declare @MessagesTable table(Id bigint, InstanceId uniqueidentifier, [Message] nvarchar(255));
+	update a2wf.PendingMessages set Lock = newid() 
+	output inserted.Id, inserted.InstanceId, inserted.[Message] into @MessagesTable(Id, InstanceId, [Message])
+	from a2wf.PendingMessages pm inner join a2wf.InstanceEvents ie on pm.InstanceId = ie.InstanceId and ie.[Kind] = N'M'
+	where pm.Lock is null and pm.Complete = 0 and pm.DateStarted is null;
+
+	select [Messages!TMessage!Array] = null, [Id!!Id]= t.Id,  t.InstanceId, t.[Message]
+	from @MessagesTable t;
 end
 go
 ------------------------------------------------
@@ -867,6 +899,31 @@ begin
 	set nocount on;
 	set transaction isolation level read committed;
 	update a2wf.AutoStart set InstanceId = @InstanceId, DateStarted = getutcdate(), Complete = 1
+	where Id=@Id;
+end
+go
+------------------------------------------------
+create or alter procedure a2wf.[PendingMessage.Create]
+@InstanceId uniqueidentifier,
+@Message nvarchar(255)
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+
+	insert into a2wf.PendingMessages(InstanceId, [Message]) 
+	values (@InstanceId, @Message);
+end
+go
+------------------------------------------------
+create or alter procedure a2wf.[PendingMessage.Complete]
+@Id bigint,
+@InstanceId uniqueidentifier
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+	update a2wf.PendingMessages set InstanceId = @InstanceId, DateCompleted = getutcdate(), Complete = 1
 	where Id=@Id;
 end
 go
@@ -905,7 +962,7 @@ begin
 
 	select top(1) w.Id 
 	from a2wf.[Catalog] c inner join a2wf.Workflows w on c.Id = w.Id
-	where c.[Key] = @Key;
+	where c.[Key] = @Key and c.Archive = 0;
 end
 go
 ------------------------------------------------
@@ -958,6 +1015,7 @@ begin
 	delete from a2wf.InstanceVariablesGuid where InstanceId = @Id;
 	delete from a2wf.InstanceVariablesString where InstanceId = @Id;
 	delete from a2wf.InstanceVariablesInt where InstanceId = @Id;
+	delete from a2wf.PendingMessages where InstanceId = @Id;
 	delete from a2wf.Instances where Id = @Id;
 	commit tran;
 end
