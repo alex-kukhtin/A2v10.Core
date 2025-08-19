@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System.Globalization;
 using System.Text.RegularExpressions;
@@ -116,9 +116,10 @@ public partial class ExCell
 			RowKind = row.Kind,
 			Align = align,
 			VAlign = cls.VAlign,
-			Bold = cls.Bold,
+			Bold = cls.Bold || row.IsGroup || row.Role == RowRole.Total,
 			Indent = cls.Indent,
-			Underline = cls.Underline
+			Underline = cls.Underline,
+			IsGroup = row.IsGroup
 		};
 	}
 

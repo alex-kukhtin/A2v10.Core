@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System.IO;
 
@@ -94,11 +94,11 @@ public class ExcelWriter
 				{
 					PatternType = PatternValues.Gray0625,
 				}),
-				//index 2 - lighth gold (total)
+				//index 2 - Light gold (total)
 				new Fill(new PatternFill()
 				{
 					PatternType = PatternValues.Solid,
-					ForegroundColor = new ForegroundColor() { Rgb = "FFFFFCED" },
+					ForegroundColor = new ForegroundColor() { Rgb = "FFFFfAD4" },
 					BackgroundColor = new BackgroundColor() { Indexed = (UInt32Value)64U }
 				}),
 				//index 3 - Light gray (total)
@@ -107,8 +107,15 @@ public class ExcelWriter
 					PatternType = PatternValues.Solid,
 					ForegroundColor = new ForegroundColor() { Rgb = "FFF8F8F8" },
 					BackgroundColor = new BackgroundColor() { Indexed = (UInt32Value)64U }
-				})
-			);
+				}),
+				// index 4 -> LightGreen (group)
+				new Fill(new PatternFill()
+				{
+					PatternType = PatternValues.Solid,
+                    ForegroundColor = new ForegroundColor() { Rgb = "FFEFFCF6" },
+                    BackgroundColor = new BackgroundColor() { Indexed = (UInt32Value)64U }
+                })
+            );
 
 		var numFormats = new NumberingFormats(
 				/*date*/     new NumberingFormat() { FormatCode = "dd\\.mm\\.yyyy;@", NumberFormatId = 166 },
@@ -203,6 +210,12 @@ public class ExcelWriter
 		else if (style.RowRole == RowRole.Total)
 		{
 			cf.FillId = 2;
+			cf.ApplyFill = true;
+		}
+
+		if (style.IsGroup)
+		{
+			cf.FillId = 4; // зеленый
 			cf.ApplyFill = true;
 		}
 

@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Services.Interop;
 
@@ -10,6 +10,7 @@ public class ExClassList
 	public RowRole Role { get; set; }
 	public UInt32 Indent { get; set; }
 	public Boolean Underline { get; set; }
+	public Boolean IsGroup { get; set; }
 }
 
 
@@ -85,6 +86,8 @@ public static class Utils
 		}
 		if (strClass.Contains("indent"))
 			lst.Indent = level;
+		if (strClass.Contains("group"))
+			lst.IsGroup = true;
 		if (strClass.Contains("underline"))
 			lst.Underline = true;
 		return lst;

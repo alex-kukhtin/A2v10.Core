@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Services.Interop;
 
@@ -17,6 +17,7 @@ public class ExRow
 	public RowKind Kind { get; set; }
 	public HorizontalAlign Align { get; set; }
 	public UInt32 Height { get; set; }
+	public Boolean IsGroup { get; set; }	
 
 	public List<ExCell> Cells { get; } = [];
 
@@ -52,5 +53,6 @@ public class ExRow
 			Role = cls.Role;
 		if (cls.Align != HorizontalAlign.NotSet)
 			Align = cls.Align;
+		IsGroup = cls.IsGroup;
 	}
 }

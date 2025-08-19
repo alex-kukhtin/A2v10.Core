@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Services.Interop;
 
@@ -27,6 +27,7 @@ public struct Style
 	public RowKind RowKind;
 	public UInt32 Indent;
 	public Boolean Underline;
+	public Boolean IsGroup;
 
 	public readonly Boolean HasBorder => RowKind == RowKind.Body || RowRole == RowRole.Header || RowRole == RowRole.Footer || RowRole == RowRole.Total;
 	public readonly Boolean IsDateOrTime => DataType == DataType.Date || DataType == DataType.DateTime || DataType == DataType.Time;
