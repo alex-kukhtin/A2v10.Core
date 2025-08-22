@@ -2,7 +2,7 @@
 
 namespace A2v10.Services.Interop;
 
-public class ExClassList
+public struct ExClassList
 {
 	public HorizontalAlign Align { get; set; }
 	public VerticalAlign VAlign { get; set; }

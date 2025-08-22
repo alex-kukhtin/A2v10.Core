@@ -1,8 +1,9 @@
-﻿2025-08-18 (next: 8567)
+﻿2025-08-22 (next: 8569)
 
 A2v10.Metadata
 A2v10.Platform
 A2v10.Services
+A2v10.Web.Assets
 
 =======================
 !do not update Microsoft.OpenApi to 1.6.23 (https://github.com/microsoft/OpenAPI.NET/issues/2030)

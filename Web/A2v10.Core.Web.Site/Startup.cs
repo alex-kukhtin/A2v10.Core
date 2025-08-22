@@ -19,6 +19,7 @@ using A2v10.Core.Web.Site.TestServices;
 
 using A2v10.BlobStorage.Azure;
 using A2v10.BlobStorage.FileSystem;
+using A2v10.Identity.Core;
 
 namespace A2v10.Core.Web.Site;
 
@@ -67,7 +68,6 @@ public class Startup(IConfiguration configuration)
 
 		var builders = services.UsePlatform(Configuration);
 
-		/*
 		builders.AuthenticationBuilder.AddGoogle(opts =>
 		{
 			opts.ClientId = Configuration.GetValue<String>("Identity:Google:ClientId")
@@ -84,8 +84,7 @@ public class Startup(IConfiguration configuration)
 				?? throw new InvalidOperationException("Identity:Microsoft:ClientSecret not found");
 			opts.Events.OnRemoteFailure = OpenIdErrorHandlers.OnRemoteFailure;
 		});
-		*/
-
+	
 		services.AddSingleton<TestBusinessAppProvider>();
 
 		services.AddReportEngines(factory =>

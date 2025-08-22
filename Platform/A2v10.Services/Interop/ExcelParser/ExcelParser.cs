@@ -108,7 +108,13 @@ public partial class ExcelParser : IDisposable
 				?? throw new InteropException($"The workbook does not have a SharedStringTablePart");
 			var sharedStringTable = sharedStringPart.SharedStringTable;
 
-			var stylesPart = workBookPart.WorkbookStylesPart;
+			var hlinksDict = workSheetPart.Worksheet.Descendants<Hyperlink>()
+				.ToDictionary(h => h.Reference!.ToString()!, h => h);
+
+			var hLinkRels = workSheetPart.HyperlinkRelationships
+				.ToDictionary(h => h.Id!, h => h.Uri);
+
+            var stylesPart = workBookPart.WorkbookStylesPart;
 			// This formats is NUMBER, not standard!
 			var numFormats = stylesPart?.Stylesheet
 				.Descendants<NumberingFormat>()?
@@ -154,7 +160,15 @@ public partial class ExcelParser : IDisposable
 						String str = sharedStringTable.ChildElements[ssid].InnerText;
 						try
 						{
-							table.SetValue(dataRow, columns[colIndex], str);
+							if (hlinksDict.TryGetValue(c.CellReference!.ToString()!, out Hyperlink? hLink)
+								&& hLink?.Id != null && hLinkRels.TryGetValue(hLink.Id!, out Uri? hLinkUrl) && hLinkUrl != null)
+							{
+								table.SetValue(dataRow, columns[colIndex], hLinkUrl.ToString());
+							}
+							else
+							{
+								table.SetValue(dataRow, columns[colIndex], str);
+							}
 						}
 						catch (Exception ex)
 						{
