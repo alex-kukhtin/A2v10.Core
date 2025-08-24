@@ -614,11 +614,17 @@ begin
 
 	select [Instance!TInstance!Object] = null, [Id!!Id] = i.Id, WorkflowId = i.WorkflowId, 
 		[Version] = i.[Version], [Xml] = w.[Text], [DateModified!!Utc] = DateModified,
+		ParentInstance = i.Parent,
 		[Track!TTrack!Array] = null, [UserTrack!TUserTrack!Array] = null,
 		[FullTrack!TFullTrack!Array] = null,
+		[Children!TInst!Array] = null,
 		i.ExecutionStatus
 	from a2wf.Instances i inner join a2wf.Workflows w on i.WorkflowId = w.Id and i.[Version] = w.[Version]
 	where i.Id = @Id;
+
+	select [!TInst!Array] = null, [Id!!Id] = Id,
+		[!TInstance.Children!ParentId] = Parent
+	from a2wf.Instances where Parent = @Id;
 
 	with TE as(
 		select InstanceId, Activity

@@ -104,8 +104,12 @@ public class FileController(IApplicationHost host,
 				(prms) => {
 					SetSqlQueryParams(prms);
 					SetRequestQueryParams(prms);
-				}
-			);
+					if (Request.Form.TryGetValue("Key", out var key))
+						prms.Set("Key", key.ToString());
+                    if (Request.Form.TryGetValue("Param", out var param))
+                        prms.Set("Param", param.ToString());
+                }
+            );
 			result.ReplaceValue("Token", (v) =>
 			{
 				if (v is Guid guid)

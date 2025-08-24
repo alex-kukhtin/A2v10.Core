@@ -8489,7 +8489,7 @@ td.vert > .vcell {
   width: 100%;
 }
 .input-code input,
-.input-code static-input {
+.input-code .static-input {
   font-family: 'Consolas', 'Courier New', Courier, monospace;
   font-weight: 600;
 }

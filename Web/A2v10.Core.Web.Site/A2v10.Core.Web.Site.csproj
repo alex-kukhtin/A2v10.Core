@@ -18,7 +18,7 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.19" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="8.0.19" />
-		<PackageReference Include="A2v10.Module.Workflow" Version="10.1.1065" />
+		<PackageReference Include="A2v10.Module.Workflow" Version="10.1.1066" />
 	</ItemGroup>
 
 	<ItemGroup>

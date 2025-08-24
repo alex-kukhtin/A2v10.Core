@@ -1,7 +1,10 @@
 ﻿2025-08-22 (next: 8569)
 
+A2v10.AppRuntimeBuilder
+A2v10.Identity.UI
 A2v10.Metadata
 A2v10.Platform
+A2v10.Platform.Web
 A2v10.Services
 A2v10.Web.Assets
 

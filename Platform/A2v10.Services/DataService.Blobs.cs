@@ -289,8 +289,11 @@ public partial class DataService
 		var key = savePrms.Get<String>("Key");
 		if (!String.IsNullOrEmpty(key))
 			blobInfo.Key = key; // optional
+        var param = savePrms.Get<String>("Param");
+        if (!String.IsNullOrEmpty(param))
+            blobInfo.Param = param; // optional
 
-		var saveProc = (blobModel?.UpdateBlobProcedure())
+        var saveProc = (blobModel?.UpdateBlobProcedure())
 			?? throw new DataServiceException($"UpdateBlobProcedure is null");
 
 		var output = await _dbContext.ExecuteAndLoadAsync<BlobUpdateInfo, BlobUpdateOutput>(blobModel.DataSource, saveProc, blobInfo)
