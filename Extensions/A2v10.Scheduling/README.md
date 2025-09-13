@@ -63,7 +63,7 @@ Rest parameters depend on the handler type.
 
 Make sure the site is always running.
 
-* Application Pool | Advanced Settings => Start Mode = AlwaysRunning
+* Application Pool | Advanced Settings => Start Mode = AlwaysRunning, Idle Time-out Action = Suspend
 * Site | Advanced Settings => Preload Enabled = True
 
 # Feedback

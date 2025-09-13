@@ -1,4 +1,4 @@
-﻿// Copyright © 2022-2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2022-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Concurrent;
@@ -223,7 +223,25 @@ public partial class RenderContext
 		return Resolve(rx?.Value, DataModel, DataType.String, null)?.Value;
 	}
 
-	public Boolean IsVisible(XamlElement elem)
+    private Boolean GetBoolVal(ExpandoObject data, String? path)
+    {
+        if (path == null)
+            return false;
+        Boolean bInvert = false;
+        if (path.StartsWith("!"))
+        {
+            bInvert = true;
+            path = path[1..];
+        }
+        var val = data.Eval<Object>(path);
+        if (val is Boolean boolVal)
+            return bInvert ? !boolVal : boolVal;
+        if (val == null)
+            return bInvert ? true : false;
+        return bInvert ? false : true;
+    }
+
+    public Boolean IsVisible(XamlElement elem, ExpandoObject? data = null)
 	{
 		var ifbind = elem.GetBindRuntime(nameof(elem.If));
 		if (ifbind == null)
@@ -232,7 +250,9 @@ public partial class RenderContext
 				return false;
 			return true;
 		}
-		var val = Engine.EvaluateValue(ifbind.Expression);
+        if (data != null)
+            return GetBoolVal(data, ifbind.Expression);
+        var val = Engine.EvaluateValue(ifbind.Expression);
 		if (val is Boolean boolVal)
 			return boolVal;
 		else if (val == null)

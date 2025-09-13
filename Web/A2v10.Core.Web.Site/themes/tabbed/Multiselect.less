@@ -1,0 +1,133 @@
+﻿@import "Variables.less";
+
+@higlight-color: #f0f7fc;
+@tags-max-height:130px;
+
+.a2-multiselect {
+	position: relative;
+
+	.ms-placeholder {
+		flex-grow:1;
+		line-height:2em;
+		padding:0 5px;
+		color:var(--neutral400);
+	}
+
+	.ms-text {
+		display: flex;
+		flex-wrap: wrap;
+		flex-grow: 1;
+		gap: 3px;
+		margin: 3px;
+		line-height: 1;
+		max-height:@tags-max-height;
+		overflow:auto;
+
+
+		&::-webkit-scrollbar {
+			height: 4px;
+			width: 4px;
+			background-color: var(--neutral100);
+		}
+
+		&::-webkit-scrollbar-thumb {
+			background-color: var(--neutral400);
+			border-radius: 8px;
+		}
+
+
+		.ms-tag {
+			border: 1px solid var(--neutral400);
+			border-radius: @control-brd-radius;
+			white-space: nowrap;
+			line-height: 1;
+			display: inline-flex;
+			align-items: center;
+			background-color: @higlight-color;
+
+			.ms-tag-remove {
+				background-color: transparent;
+				font-size: .9rem;
+				cursor: pointer;
+
+				&:hover {
+					color: var(--link);
+					background-color: var(--neutral100);
+				}
+			}
+
+			.ms-tag-body {
+				display: inline-block;
+				max-width: var(--x-width);
+				overflow: hidden;
+				text-overflow: ellipsis;
+				padding-left: 6px;
+			}
+		}
+	}
+
+	.ms-pane {
+		position: absolute;
+		z-index: @popup-index !important;
+		top: 100%;
+		width: 100%;
+		background-color: @bk-menu;
+		box-shadow: @dropdown-shadow;
+		border: 1px solid @control-focus-color;
+		border-radius: @control-brd-radius;
+
+		.ms-fetch {
+		}
+
+		.input-group {
+			margin: 4px;
+		}
+
+		.ms-pane-list {
+			overflow: auto;
+			height: 250px;
+			font-size: 1rem;
+			list-style: none;
+			margin: 4px;
+			padding: 0;
+
+			.ms-pane-item {
+				margin: 0;
+				padding: 0;
+				list-style: none;
+				padding: 6px 4px;
+				white-space: normal;
+				cursor: pointer;
+				display: flex;
+				align-items: baseline;
+				gap: 8px;
+
+				&.active {
+					background-color: @higlight-color;
+				}
+
+				&:hover {
+					background-color: @hover-bg-color;
+				}
+
+
+				.ms-pane-item-text {
+					-webkit-line-clamp: 2;
+					line-height: 1.2;
+				}
+			}
+		}
+
+		.ms-pane-footer {
+			background-color: var(--dialog-footer-bg);
+			padding: 6px;
+			display: flex;
+			justify-content: flex-end;
+			gap: 6px;
+
+			.btn {
+				min-width: 100px;
+			}
+		}
+	}
+}

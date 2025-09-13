@@ -6,7 +6,8 @@
 			"Scripts/appheader.js",
 			"Scripts/navbar.js",
 			"Scripts/shell.js",
-			"Scripts/bigcalendar.js"
+			"Scripts/bigcalendar.js",
+			"Scripts/multiselect.js"
 		],
 		"minify": { "enabled": false }
 	},
@@ -17,7 +18,8 @@
 			"Scripts/appheader.js",
 			"Scripts/navbar.js",
 			"Scripts/shellsp.js",
-			"Scripts/bigcalendar.js"
+			"Scripts/bigcalendar.js",
+			"Scripts/multiselect.js"
 		],
 		"minify": { "enabled": false }
 	},

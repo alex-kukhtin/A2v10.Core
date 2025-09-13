@@ -312,6 +312,7 @@ pre.a2-code {
 @import "Grid.less";
 @import "Layout.less";
 @import "WaitCursor.less";
+@import "Multiselect.less";
 
 @import "Sheet.less";
 
@@ -507,6 +508,11 @@ pre.a2-code {
 // compatible with old layouts 
 .shell, .main-view, .full-view {
 		  height:100%;
+}
+
+input::placeholder {
+	color:var(--neutral400);
+	opacity:1;
 }
 
 @import "AppPages.less";

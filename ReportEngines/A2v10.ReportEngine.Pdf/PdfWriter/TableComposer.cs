@@ -1,4 +1,4 @@
-﻿// Copyright © 2022 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2022-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Dynamic;
@@ -158,7 +158,7 @@ internal class TableComposer(Table table, RenderContext context) : FlowElementCo
 	{
 		foreach (var row in body)
 		{
-			if (!_context.IsVisible(row))
+			if (!_context.IsVisible(row, data))
 				continue;
 			foreach (var cell in row.Cells)
 				ComposeCell(kind, cell, () => tbl.Cell(), data);
