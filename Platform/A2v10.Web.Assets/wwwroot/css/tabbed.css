@@ -6487,6 +6487,111 @@ iframe.eusign-iframe {
   border-top-color: #ccc;
   animation: spin 1.5s linear infinite;
 }
+.a2-multiselect {
+  position: relative;
+}
+.a2-multiselect .ms-placeholder {
+  flex-grow: 1;
+  line-height: 2em;
+  padding: 0 5px;
+  color: var(--neutral400);
+}
+.a2-multiselect .ms-text {
+  display: flex;
+  flex-wrap: wrap;
+  flex-grow: 1;
+  gap: 3px;
+  margin: 3px;
+  line-height: 1;
+  max-height: 130px;
+  overflow: auto;
+}
+.a2-multiselect .ms-text::-webkit-scrollbar {
+  height: 4px;
+  width: 4px;
+  background-color: var(--neutral100);
+}
+.a2-multiselect .ms-text::-webkit-scrollbar-thumb {
+  background-color: var(--neutral400);
+  border-radius: 8px;
+}
+.a2-multiselect .ms-text .ms-tag {
+  border: 1px solid var(--neutral400);
+  border-radius: 4px;
+  white-space: nowrap;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  background-color: #f0f7fc;
+}
+.a2-multiselect .ms-text .ms-tag .ms-tag-remove {
+  background-color: transparent;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.a2-multiselect .ms-text .ms-tag .ms-tag-remove:hover {
+  color: var(--link);
+  background-color: var(--neutral100);
+}
+.a2-multiselect .ms-text .ms-tag .ms-tag-body {
+  display: inline-block;
+  max-width: var(--x-width);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-left: 6px;
+}
+.a2-multiselect .ms-pane {
+  position: absolute;
+  z-index: 1070 !important;
+  top: 100%;
+  width: 100%;
+  background-color: var(--bgMenu);
+  box-shadow: 3px 3px 10px 0 rgba(174, 174, 174, 0.5), 0 5px 40px 0 rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--link);
+  border-radius: 4px;
+}
+.a2-multiselect .ms-pane .input-group {
+  margin: 4px;
+}
+.a2-multiselect .ms-pane .ms-pane-list {
+  overflow: auto;
+  height: 250px;
+  font-size: 1rem;
+  list-style: none;
+  margin: 4px;
+  padding: 0;
+}
+.a2-multiselect .ms-pane .ms-pane-list .ms-pane-item {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  padding: 6px 4px;
+  white-space: normal;
+  cursor: pointer;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.a2-multiselect .ms-pane .ms-pane-list .ms-pane-item.active {
+  background-color: #f0f7fc;
+}
+.a2-multiselect .ms-pane .ms-pane-list .ms-pane-item:hover {
+  background-color: var(--menu-hover);
+}
+.a2-multiselect .ms-pane .ms-pane-list .ms-pane-item .ms-pane-item-text {
+  -webkit-line-clamp: 2;
+  line-height: 1.2;
+}
+.a2-multiselect .ms-pane .ms-pane-footer {
+  background-color: var(--dialog-footer-bg);
+  padding: 6px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.a2-multiselect .ms-pane .ms-pane-footer .btn {
+  min-width: 100px;
+}
 table.sheet {
   -webkit-user-select: text;
   -moz-user-select: text;
@@ -6918,6 +7023,10 @@ table > colgroup col.blue {
 .main-view,
 .full-view {
   height: 100%;
+}
+input::placeholder {
+  color: var(--neutral400);
+  opacity: 1;
 }
 .about-source-list {
   list-style-position: inside;

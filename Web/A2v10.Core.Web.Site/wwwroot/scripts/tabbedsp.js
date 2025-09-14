@@ -836,8 +836,6 @@ app.modules['std:signalR'] = function () {
 	const utils = require('std:utils');
 	const locale = window.$$locale;
 
-	console.dir(locale);
-
 	const DEFAULT_DELAY = 300;
 
 	Vue.component('a2-multiselect', {
@@ -926,7 +924,12 @@ app.modules['std:signalR'] = function () {
 				if (!be) return;
 				if (this.selArray.find(a => a.Id === be.Id))
 					return;
-				this.item[this.prop].push({ Id: be.Id, Name: be.Name });
+				let arr = this.item[this.prop];
+				let nelem = { Id: be.Id, Name: be.Name };
+				if (arr.$append)
+					arr.$append(nelem)
+				else
+					arr.push(nelem);
 			},
 			isChecked(itm) {
 				return !!this.selArray.find(x => x.Id === itm.Id);
@@ -944,16 +947,27 @@ app.modules['std:signalR'] = function () {
 					else
 						this.removeItemFromFilter(x);
 				}
+				this.close();
 			},
 			addItemToFilter(itm) {
 				let ix = this.selArray.findIndex(x => x.Id === itm.Id);
 				if (ix >= 0) return;
-				this.selArray.push({ Id: itm.Id, Name: itm.Name });
+				let nelem = { Id: itm.Id, Name: itm.Name };
+				let arr = this.selArray;
+				if (arr.$append)
+					arr.$append(nelem);
+				else
+					arr.push(nelem);
 			},
 			removeItemFromFilter(itm) {
-				let ix = this.selArray.findIndex(x => x.Id === itm.Id);
+				let arr = this.selArray;
+				let ix = arr.findIndex(x => x.Id === itm.Id);
 				if (ix < 0) return;
-				this.selArray.splice(ix, 1);
+				let el = arr[ix];
+				if (el.$remove)
+					el.$remove();
+				else
+					arr.splice(ix, 1);
 			},
 			itemClass(itm) {
 				return itm.Checked ? 'active' : undefined;
@@ -976,9 +990,13 @@ app.modules['std:signalR'] = function () {
 				this.query = '';
 			},
 			removeItem(x) {
-				let ix = this.selArray.indexOf(x);
-				if (ix < 0) return;
-				this.selArray.splice(ix, 1);
+				if (x.$remove)
+					x.$remove();
+				else {
+					let ix = this.selArray.indexOf(x);
+					if (ix < 0) return;
+					this.selArray.splice(ix, 1);
+				}
 			},
 			__clickOutside(el) {
 				if (el && el.closest && el.closest(".ms-pane"))
