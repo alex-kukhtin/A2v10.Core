@@ -17,22 +17,45 @@
 		let fs = st.FontSize ? `FS${st.FontSize}` : '-';
 		let a = st.Align ? st.Align[0] : '-';
 		let va = st.VAlign ? st.VAlign[0] : '-';
-		return `${b}:${i}:${fs}:${a}:${va}`;
+		let brd = st.Border || '-';
+		return `${b}:${i}:${fs}:${a}:${va}:${brd}`;
 	}
 
 	class StyleProcessor {
 		constructor(styles) {
 			this.styles = styles;
+			this.stylesMap = Object.keys(this.styles).reduce((p, c) => {
+				let st = this.styles[c];
+				let sc = styleHashCode(st);
+				p[sc] = c;
+				return p;
+			}, {});
 		}
 
-		findStyle(st) {
-			let hash = styleHashCode(st);
-			console.dir(st);
-			return this.styles[hash] || null;
+		defaultStyle() {
+			return {};		
 		}
 
-		setStyle(st, prop, val) {
+		appendNewStyle(styleObj, hashCode) {
+			let ix = Object.keys(this.styles).length + 1;
+			let skey = '';
+			do {
+				skey = `S${ix}`;
+				ix += 1;
+			} while (this.styles[skey]);
+			Vue.set(this.styles, skey, styleObj);
+			this.stylesMap[hashCode] = skey;
+			return skey;
+		}
 
+		setStyleProp(st, prop, val) {
+			let sobj = Object.assign({}, this.styles[st] || this.defaultStyle());
+			sobj[prop] = val;
+			let shc = styleHashCode(sobj);
+			if (shc === '-:-:-:-:-:-')
+				return undefined;
+			let ns = this.stylesMap[shc];
+			return ns || this.appendNewStyle(sobj, shc);
 		}
 	}
 
@@ -455,8 +478,16 @@
 
 	const toolbarTemplate = `
 <div class="ss-toolbar">TOOLBAR
-	<button @click="toggleBool('Bold')" :class="{checked: isChecked('Bold')}">B</button>
-	<button @click="toggleBool('Italic')" :class="{checked: isChecked('Italic')}">I</button>
+	<button @click="toggleBool('Bold')" :class="{checked: isChecked('Bold', true)}">B</button>
+	<button @click="toggleBool('Italic')" :class="{checked: isChecked('Italic', true)}">I</button>
+	<span>|</span>
+	<button @click="setProp('Align', '')" :class="{checked: isCheckedProp('Align', '')}">L</button>
+	<button @click="setProp('Align', 'Center')" :class="{checked: isCheckedProp('Align', 'Center')}">C</button>
+	<button @click="setProp('Align', 'Right')" :class="{checked: isCheckedProp('Align', 'Right')}">R</button>
+	<span>|</span>
+	<button @click="setProp('VAlign', '')" :class="{checked: isCheckedProp('VAlign', '')}">T</button>
+	<button @click="setProp('VAlign', 'Middle')" :class="{checked: isCheckedProp('VAlign', 'Middle')}">M</button>
+	<button @click="setProp('VAlign', 'Bottom')" :class="{checked: isCheckedProp('VAlign', 'Bottom')}">B</button>
 </div>
 `;
 	var spreadSheetToolbar = {
@@ -464,13 +495,17 @@
 		props: {
 		},
 		methods: {
-			isChecked(prop) {
-				return this.$parent.$getSelProp(prop);
+			isChecked(prop, val) {
+				return this.$parent.$getSelProp(prop, val);
+			},
+			isCheckedProp(prop, val) {
+				return (this.$parent.$getSelProp(prop) || '') === val;
 			},
 			toggleBool(prop) {
-				this.$parent.sheet;
 				this.$parent.$setSelProp(prop, !this.isChecked(prop));
-				return;
+			},
+			setProp(prop, val) {
+				this.$parent.$setSelProp(prop, val);
 			}
 		}
 	};
@@ -723,16 +758,6 @@
 				this.fitSpan(cp, rp);
 				this.doEdit(cp, rp);
 			},
-			setProp(c, r, cb, create) {
-				let cellRef = `${toColRef(c)}${r + 1}`;
-				let cell = this.sheet.Cells[cellRef];
-				if (!cell && create) {
-					cell = {};
-					Vue.set(this.sheet.Cells, cellRef, cell);
-				}
-				if (cell)
-					cb(cell);
-			},
 			endEdit(val) {
 				let r = this.editRect;
 				let cellRef = `${toColRef(r.c)}${r.r + 1}`;
@@ -903,6 +928,8 @@
 					c += ' italic';
 				if (st.Align)
 					c += ` text-${st.Align.toLowerCase()}`;
+				if (st.VAlign)
+					c += ` align-${st.VAlign.toLowerCase()}`;
 				return c;
 			},
 			hScrollPageSize() {
@@ -958,9 +985,12 @@
 						Vue.set(this.sheet.Cells, cr, cell);
 						cell = this.sheet.Cells[cr];
 					}
+					Vue.set(cell, 'Style', this.__sp.setStyleProp(cell.Style, prop, val));
+					/*
 					console.dir(cell.Style);
 					this.__sp.findStyle(cell.Style);
 					console.dir(styleHashCode(cell.Style));
+					*/
 				}
 				return true;
 			}

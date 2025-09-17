@@ -91,6 +91,7 @@ body .ss {
   cursor: default;
   display: inline-flex;
   border: 1px solid transparent;
+  align-items: baseline;
 }
 .ss-body .cell.cell-edit {
   line-height: 1;
@@ -108,6 +109,15 @@ body .ss {
 }
 .ss-body .cell.text-center {
   justify-content: center;
+}
+.ss-body .cell.text-right {
+  justify-content: right;
+}
+.ss-body .cell.align-middle {
+  align-items: center;
+}
+.ss-body .cell.align-bottom {
+  align-items: end;
 }
 .ss-body .canvas .thc {
   height: 24px;
