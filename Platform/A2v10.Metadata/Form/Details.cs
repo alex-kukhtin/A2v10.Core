@@ -16,6 +16,21 @@ internal partial class PlainModelBuilder
      */
     IEnumerable<FormItem> DetailsTableCells(TableMetadata d, String dataBind)
     {
+        FormItemProps? GetItemProps(TableColumn c)
+        {
+            if (c.IsReference)
+                return new FormItemProps()
+                {
+                    Url = c.Reference.EndpointPath(),
+                };
+            else if (c.IsEnum)
+                return new FormItemProps()
+                {
+                    ItemsSource = $"Root.{c.Reference.RefTable}"
+                };
+            return null;
+        }
+
         return d.EditableColumns()
             .Where(c => !c.IsParent)
             .OrderBy(c => c.IsRowNo ? -1 :  c.Order)
@@ -31,11 +46,7 @@ internal partial class PlainModelBuilder
                     {
                         DataType = c.ToItemDataType(),
                         Data = c.Name,
-                        Props= c.IsReference ?
-                            new FormItemProps() {
-                                Url = c.Reference.EndpointPath(),
-                            }
-                            : null
+                        Props= GetItemProps(c)
                     }
                 ],
                 Props = c.Total ? new FormItemProps()

@@ -58,10 +58,11 @@ internal partial class PlainModelBuilder
                     ));
                 }
 
+                var enumFields = DatabaseMetadataProvider.EnumFields(t, false);
                 sb.AppendLine($"""
                 select [!{t.RealTypeName}!Array] = null,
                     {detailsParentIdField},
-                    {String.Join(",", t.AllSqlFields(refFields, "d", isDetails:true))}
+                    {String.Join(",", t.AllSqlFields(refFields, enumFields, "d", isDetails:true))}
                 from {t.Schema}.[{t.Name}] d
                 {RefTableJoins(refFields, "d")}
                 where d.[{parentField}] = @Id
@@ -83,19 +84,22 @@ internal partial class PlainModelBuilder
             return String.Empty;
         }
 
-        var tableRefFields = _refFields; 
+        var tableRefFields = _refFields;
+
+        var enumFieldsAll = DatabaseMetadataProvider.EnumFields(table, true);
+        var enumFieldsBase = DatabaseMetadataProvider.EnumFields(table, false);
 
         return $"""
         
         select [{table.RealItemName}!{table.RealTypeName}!Object] = null,
-            {String.Join(",", table.AllSqlFields(tableRefFields, "a"))}{DetailsArray()}
+            {String.Join(",", table.AllSqlFields(tableRefFields, enumFieldsBase, "a"))}{DetailsArray()}
         from {table.Schema}.[{table.Name}] a
         {RefTableJoins(tableRefFields, "a")}
         where a.[{table.PrimaryKeyField}] = @Id;
 
         {await DetailsContentAsync()}
 
-        {EnumsMapSql(tableRefFields, false)}
+        {EnumsMapSql(enumFieldsAll, false)}
 
         {SystemRecordset()}
 

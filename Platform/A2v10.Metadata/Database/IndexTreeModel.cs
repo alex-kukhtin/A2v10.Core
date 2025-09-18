@@ -19,6 +19,7 @@ internal partial class IndexModelBuilder
 
         var refFields = _refFields; // await ReferenceFieldsAsync(_table));
 
+        var enumFields = DatabaseMetadataProvider.EnumFields(_table, false);
         var sqlString = $"""
         set nocount on;
         set transaction isolation level read uncommitted;
@@ -51,7 +52,7 @@ internal partial class IndexModelBuilder
 
         -- Lasy table declaration
         select [!{collectionType}!Array] = null, 
-            {String.Join(",", _table.AllSqlFields(refFields, "c"))},
+            {String.Join(",", _table.AllSqlFields(refFields, enumFields, "c"))},
             [!!RowCount] = 0
         from {_table.SqlTableName} c
         {RefTableJoins(refFields, "c")}

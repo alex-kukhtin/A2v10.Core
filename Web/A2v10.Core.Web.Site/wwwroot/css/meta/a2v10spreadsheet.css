@@ -1,12 +1,4 @@
-﻿body {
-  background-color: aliceblue;
-  font-family: Verdana;
-  font-size: 13px;
-}
-body .ss {
-  background-color: beige;
-}
-.ss-container {
+﻿.ss-container {
   width: 75vw;
   height: 75vh;
   position: relative;

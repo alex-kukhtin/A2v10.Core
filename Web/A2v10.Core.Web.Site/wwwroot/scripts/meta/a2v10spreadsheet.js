@@ -275,7 +275,7 @@
 					if (x >= maxWidth)
 						break;
 					let cls = 'vline';
-					if (c == sh.Fixed.Columns - 1)
+					if (c == sh.FixedColumns - 1)
 						cls += ' freeze';
 					elems.push(h('div', { class: cls, style: { left: toPx(x), height: toPx(maxPos.bottom) } }));
 				}
@@ -289,7 +289,7 @@
 					if (y >= maxHeigth)
 						break;
 					let cls = 'hline';
-					if (r === sh.Fixed.Rows - 1)
+					if (r === sh.FixedRows - 1)
 						cls += ' freeze';
 					elems.push(h('div', { class: cls, style: { top: toPx(y), width: toPx(maxPos.right) } }));
 				}
@@ -303,7 +303,7 @@
 					let cls = 'thc';
 					if (parent.isInSelection((sel, cell) => c >= sel.left && c <= sel.left + (cell?.ColSpan - 1 || 0)))
 						cls += ' thc-sel';
-					if (c === sh.Size.Columns - 1) {
+					if (c === sh.ColumnCount - 1) {
 						cls += ' last';
 						cw += 1;
 					}
@@ -326,7 +326,7 @@
 					let cls = 'thr';
 					if (parent.isInSelection((sel, cell) => r >= sel.top && r <= sel.top + (cell?.RowSpan - 1 || 0)))
 						cls += ' thr-sel';
-					if (r === sh.Size.Rows - 1) {
+					if (r === sh.RowCount - 1) {
 						cls += ' last';
 						rh += 1;
 					}
@@ -408,7 +408,7 @@
 							style: { left: toPx(x), top: toPx(y), width: toPx(nw + 1), height: toPx(nh + 1) },
 							on: { pointerdown: (ev) => this.clickPh(c, r, cell, ev) }
 						},
-						cell.Content));
+						cell.Value));
 					}
 					x += cw;
 					if (x >= maxWidth)
@@ -431,7 +431,7 @@
 
 	var spreadSheetSelection = {
 		render(h) {
-			let sel = this.$parent.sheet.$selection;
+			let sel = this.$parent.selection;
 			let ch = [];
 			for (let i = 0; i < sel.length; i++) {
 				let s = sel[i];
@@ -535,9 +535,9 @@
 		<ss-selection />
 		<ss-edit v-if=editing text=editText />
 	</div>
-	<a2-scroll-bar class="no-me" :horz=true :min="sheet.Fixed.Columns" :max="sheet.Size.Columns"
+	<a2-scroll-bar class="no-me" :horz=true :min="sheet.FixedColumns" :max="sheet.ColumnCount"
 		:pos="scrollPos.x" :page="hScrollPageSize()"" :setPos=setPosX></a2-scroll-bar>
-	<a2-scroll-bar class="no-me" :horz=false :min="sheet.Fixed.Rows" :max="sheet.Size.Rows"
+	<a2-scroll-bar class="no-me" :horz=false :min="sheet.FixedRows" :max="sheet.RowCount"
 		:pos="scrollPos.y" :page="vScrollPageSize()" :setPos=setPosY></a2-scroll-bar>
 </div>
 `;
@@ -566,7 +566,8 @@
 				selecting: false,
 				editRect: { l: 0, t: 0, w: 0, h: 0, c: '', r: -1 },
 				editText: '',
-				selStart: { c: 0, r: 0 }
+				selStart: { c: 0, r: 0 },
+				selection: []
 			};
 		},
 		computed: {
@@ -662,29 +663,28 @@
 			},
 			renderedRows: function* () {
 				let sh = this.sheet;
-				for (let f = 0; f < sh.Fixed.Rows; f++)
+				for (let f = 0; f < sh.FixedRows; f++)
 					yield f;
-				for (let f = this.scrollPos.y; f < sh.Size.Rows; /* maxRows ??*/ f++)
+				for (let f = this.scrollPos.y; f < sh.RowCount; /* maxRows ??*/ f++)
 					yield f;
 			},
 			renderedColumns: function* () {
 				let sh = this.sheet;
-				for (let c = 0; c < sh.Fixed.Columns; c++)
+				for (let c = 0; c < sh.FixedColumns; c++)
 					yield c;
-				for (let c = this.scrollPos.x; c < sh.Size.Columns; /*maxColumns ?? */ c++)
+				for (let c = this.scrollPos.x; c < sh.ColumnCount; /*maxColumns ?? */ c++)
 					yield c;
 			},
 			setPos(c, r) {
-				let sa = this.sheet.$selection;
+				let sa = this.selection;
 				if (!sa || !sa.length) return;
 				let sel = sa[0];
 				let sh = this.sheet;
 				sh.Fixed;
-				let sz = sh.Size;
 				if (c < 0) c = 0;
-				if (c > sz.Columns - 1) c = sz.Columns - 1;
+				if (c > sh.ColumnCount - 1) c = sh.ColumnCount - 1;
 				if (r < 0) r = 0;
-				if (r > sz.Rows - 1) r = sz.Rows - 1;
+				if (r > sh.RowCount - 1) r = sh.RowCount - 1;
 				sel.left = c; sel.right = c + 1;
 				sel.top = r; sel.bottom = r + 1;
 				this.fitScrollPos();
@@ -692,12 +692,12 @@
 			mousewheel(ev) {
 				let deltaY = +(ev.deltaY / 100).toFixed();
 				if (deltaY > 0)
-					this.scrollPos.y = Math.min(this.scrollPos.y + deltaY, this.sheet.Size.Rows - this.vScrollPageSize());
+					this.scrollPos.y = Math.min(this.scrollPos.y + deltaY, this.sheet.RowCount - this.vScrollPageSize());
 				else
-					this.scrollPos.y = Math.max(this.scrollPos.y + deltaY, this.sheet.Fixed.Rows);
+					this.scrollPos.y = Math.max(this.scrollPos.y + deltaY, this.sheet.FixedRows);
 			},
 			keydown(ev) {
-				let sa = this.sheet.$selection;
+				let sa = this.selection;
 				if (!sa || !sa.length) return;
 				let sel = sa[0];
 				switch (ev.which) {
@@ -714,7 +714,7 @@
 						this.setPos(sel.left, sel.top + 1);
 						break;
 					case 34: /* pgdn */
-						this.setPos(sel.left, sel.top + this.vScrollPageSize() + this.sheet.Fixed.Rows /*TODO last visible row*/);
+						this.setPos(sel.left, sel.top + this.vScrollPageSize() + this.sheet.FixedRows /*TODO last visible row*/);
 						break;
 					case 33: /* pgup */
 						this.setPos(sel.left, sel.top - this.vScrollPageSize()/*TODO* first visible row*/);
@@ -797,8 +797,8 @@
 
 			},
 			$selectCell(c, r, cell) {
-				let sht = this.sheet;
-				let sa = sht.$selection;
+				this.sheet;
+				let sa = this.selection;
 				this.selecting = true;
 				sa.length = 0;
 				let sp = { left: c, top: r, right: c + (cell.ColSpan || 1), bottom: r + (cell.RowSpan || 1)};
@@ -811,7 +811,7 @@
 				this.cancelEdit();
 				this.selecting = true;
 				let sht = this.sheet;
-				let sa = sht.$selection;
+				let sa = this.selection;
 				let p = this.pointFromEvent(ev);
 				if (p.x < this.startX) {
 					let rp = this.rowFromPoint(p.y);
@@ -822,7 +822,7 @@
 				else if (p.y < columnHeaderHeigth) {
 					let cp = this.colFromPoint(p.x);
 					sa.length = 0;
-					let sp = { left: cp.col, top: 0, right: cp.col + 1, bottom: sht.Size.Rows + 1 };
+					let sp = { left: cp.col, top: 0, right: cp.col + 1, bottom: sht.RowCount + 1 };
 					sa.push(sp);
 				}
 				else {
@@ -840,7 +840,7 @@
 				if (ev.srcElement.classList.contains('no-me'))
 					return;
 				let p = this.pointFromEvent(ev);
-				let sa = this.sheet.$selection;
+				let sa = this.selection;
 				if (!sa || !sa.length) return;
 				let sel = sa[0];
 				if (p.x < this.startX) {
@@ -878,13 +878,13 @@
 				this.fitScrollPos();
 			},
 			fitScrollPos() {
-				let sa = this.sheet.$selection;
+				let sa = this.selection;
 				if (!sa || !sa.length) return;
 				let sel = sa[0];
 				let cont = this.$refs.container;
 				let cWidth = cont.clientWidth - 1; //- rowHeaderWidth;
 				let cHeight = cont.clientHeight - 1; //- columnHeaderHeigth;
-				let fix = this.sheet.Fixed;
+				let fix = this.sheet.Fixed || {};
 				let sp = this.scrollPos;
 				let sr = null;
 				if (sp.y > fix.Rows && sel.top < sp.y)
@@ -915,7 +915,7 @@
 				return null;
 			},
 			isInSelection(cb, cell) {
-				return this.sheet.$selection.some(c => cb(c, this.sheet.Cells[`${toColRef(c.left)}${c.top + 1}`]));
+				return this.selection.some(c => cb(c, this.sheet.Cells[`${toColRef(c.left)}${c.top + 1}`]));
 			},
 			cellClass(cell) {
 				if (!cell || !cell.Style) return '';
@@ -943,7 +943,7 @@
 					x += this.colWidth(c);
 					if (x > max)
 						break;
-					else if (c >= this.sheet.Fixed.Columns)
+					else if (c >= this.sheet.FixedColumns)
 						cols += 1;
 				}
 				//console.dir(cols);
@@ -960,13 +960,13 @@
 					y += this.rowHeight(r);
 					if (y > max)
 						break;
-					else if (r >= this.sheet.Fixed.Rows)
+					else if (r >= this.sheet.FixedRows)
 						rows += 1;
 				}
 				return rows;
 			},
 			$getSelProp(prop) {
-				let sa = this.sheet.$selection;
+				let sa = this.selection;
 				if (!sa || !sa.length) return false;
 				let sel = sa[0];
 				let cellRef = `${toColRef(sel.left)}${sel.top+1}`;
@@ -977,7 +977,7 @@
 				return style[prop] || false;
 			},
 			$setSelProp(prop, val) {
-				let sel = this.sheet.$selection;
+				let sel = this.selection;
 				for (let cr of enumerateSel(sel)) {
 					let cell = this.sheet.Cells[cr];
 					if (!cell) {
@@ -998,18 +998,15 @@
 		mounted() {
 			this.updateCount += 1;
 			let sp = { left: 0, top: 0, right: 1, bottom: 1 };
-			this.sheet.$selection.push(sp);
-			this.scrollPos.x = this.sheet.Fixed.Columns;
-			this.scrollPos.y = this.sheet.Fixed.Rows;
+			this.selection.push(sp);
+			this.scrollPos.x = this.sheet.FixedColumns || 0;
+			this.scrollPos.y = this.sheet.FixedRows || 0;
 			this.__ro = new ResizeObserver(x => {
 				this.updateCount += 1;
 				this.fitScrollPos();
 			});
 			this.__ro.observe(this.$el);
 			this.__sp = new StyleProcessor(this.sheet.Styles);
-			for (let s of Object.keys(this.sheet.Styles)) {
-				console.log(s, styleHashCode(this.sheet.Styles[s]));
-			}
 		},
 		beforeDestroy() {
 			if (this.__ro)

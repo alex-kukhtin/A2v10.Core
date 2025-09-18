@@ -14,7 +14,7 @@ internal partial class PlainModelBuilder
         if (column.IsReference)
             prm = column.Reference.EndpointPath();
         String? itemsSource = null;
-        if (column.IsReference)
+        if (column.IsReference || column.IsEnum)
             itemsSource = column.Reference.RefTable;
         var colName = column.IsParent ? "Folder" : column.Name;
         return new FormItem()

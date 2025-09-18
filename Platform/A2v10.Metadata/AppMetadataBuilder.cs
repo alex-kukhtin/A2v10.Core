@@ -19,11 +19,17 @@ internal class AppMetadataBuilder(IServiceProvider _serviceProvider,
 
     public String MetadataScripts(String minify)
     {
-        return $"""<script type="text/javascript" src="/scripts/meta/formdesigner.{minify}js?v={_appVersion.AppVersion}"></script>""";
+        return $"""
+            <script type="text/javascript" src="/scripts/meta/formdesigner.{minify}js?v={_appVersion.AppVersion}"></script>
+            <script type="text/javascript" src="/scripts/meta/a2v10spreadsheet.{minify}js?v={_appVersion.AppVersion}"></script>
+            """;
     }
     public String MetadataStyles(String minify)
     {
-        return $"""<link rel="stylesheet" href="/css/meta/formdesigner.{minify}css?v={_appVersion.AppVersion}\">""";
+        return $"""
+            <link rel="stylesheet" href="/css/meta/formdesigner.{minify}css?v={_appVersion.AppVersion}\">
+            <link rel="stylesheet" href="/css/meta/a2v10spreadsheet.{minify}css?v={_appVersion.AppVersion}\">
+            """;
     }
 
     public Task<EndpointTableInfo> ModelInfoFromPathAsync(String path)

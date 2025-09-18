@@ -22,9 +22,9 @@ internal partial class IndexModelBuilder
             {
                 Is = FormItemIs.DataGridColumn,
                 DataType = c.ToItemDataType(),
-                Data = c.IsReference ?
-                    $"{c.Name}.{_refFields.First(r => r.Column.Name == c.Name).Table.NameField}"
-                    : c.Name,
+                Data = c.IsEnum ? $"{c.Name}.Name" : 
+                    c.IsReference ? $"{c.Name}.{_refFields.First(r => r.Column.Name == c.Name).Table.NameField}" :
+                    c.Name,
                 Label = c.Label ?? $"@{c.Name}",
                 Props = c.IndexColumnProps()
             };

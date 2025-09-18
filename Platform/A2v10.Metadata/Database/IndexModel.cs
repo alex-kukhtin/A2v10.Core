@@ -149,6 +149,7 @@ internal partial class IndexModelBuilder
             return "set @From = isnull(@From, N'19010101'); set @To = isnull(@To, N'29991231');";
         }
 
+        var enumFields = DatabaseMetadataProvider.EnumFields(_table, false);
         var sqlString = $"""
         set nocount on;
         set transaction isolation level read uncommitted;
@@ -158,7 +159,7 @@ internal partial class IndexModelBuilder
         declare @fr nvarchar(255) = N'%' + @Fragment + N'%';
         
         select [{collectionName}!{_table.RealTypeName}!Array] = null,
-            {String.Join(",", _table.AllSqlFields(refFields, "a"))},
+            {String.Join(",", _table.AllSqlFields(refFields, enumFields, "a"))},
             [!!RowCount]  = count(*) over()        
         from {_table.SqlTableName} a
         {RefTableJoins(refFields, "a")}
@@ -166,7 +167,7 @@ internal partial class IndexModelBuilder
         order by {sqlOrder} {dir}
         offset @Offset rows fetch next @PageSize rows only;
         
-        {EnumsMapSql(refFields, true)}
+        {EnumsMapSql(enumFields, true)}
 
         -- After select, before $System.
         {filterEnumCheck()}

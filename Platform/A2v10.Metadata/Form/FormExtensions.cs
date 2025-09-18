@@ -11,8 +11,9 @@ internal static class FormExtensions
     public static FormItemIs Column2Is(this TableColumn column)
     {
         if (column.IsReference)
-            return column.DataType == ColumnDataType.Enum 
-                ? FormItemIs.ComboBox : FormItemIs.Selector;
+            return FormItemIs.Selector;
+        else if (column.IsEnum)
+            return FormItemIs.ComboBox;
         if (column.Role.HasFlag(TableColumnRole.RowNo))
             return FormItemIs.Content;
         if (!String.IsNullOrEmpty(column.Computed))
@@ -37,7 +38,7 @@ internal static class FormExtensions
 
     public static FormItemProps? IndexColumnProps(this TableColumn column)
     {
-        var noWrap = column.Role.HasFlag(TableColumnRole.Code) || column.Role.HasFlag(TableColumnRole.Number); 
+        var noWrap = column.Role.HasFlag(TableColumnRole.Code) || column.Role.HasFlag(TableColumnRole.Number) || column.IsEnum; 
         var lineClamp = column.IsString && (column.MaxLength == 0 || column.MaxLength > Constants.MultilineThreshold) ? 2 : 0;
 
         if (noWrap || lineClamp > 0)

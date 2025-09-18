@@ -80,8 +80,8 @@ public record TableColumn
     public Boolean Total { get; init; }
     public Boolean Unique { get; init; }
     #endregion
-    internal Boolean IsReference => Reference != null && Reference.RefTable != null;
-    internal Boolean IsEnum => IsReference && DataType == ColumnDataType.Enum;
+    internal Boolean IsReference => Reference != null && Reference.RefTable != null && DataType != ColumnDataType.Enum;
+    internal Boolean IsEnum => DataType == ColumnDataType.Enum;
     internal Boolean IsBlob => DataType == ColumnDataType.Stream;
     internal Boolean IsString => DataType == ColumnDataType.String;
     internal Boolean Exists => DbName != null && DbDataType != null;

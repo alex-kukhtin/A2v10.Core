@@ -102,9 +102,9 @@ internal static class SqlExtensions
             && !column.Role.HasFlag(TableColumnRole.Done);
     }
 
-    internal static IEnumerable<String> AllSqlFields(this TableMetadata table, IEnumerable<ReferenceMember> refFields, String alias, Boolean isDetails = false)
+    internal static IEnumerable<String> AllSqlFields(this TableMetadata table, IEnumerable<ReferenceMember> refFields, IEnumerable<ReferenceMember> enumFields, String alias, Boolean isDetails = false)
     {
-        foreach (var c in table.Columns.Where(c => !c.IsReference && !c.IsBlob && !c.IsVoid))
+        foreach (var c in table.Columns.Where(c => !c.IsReference && !c.IsBlob && !c.IsVoid && !c.IsEnum))
             if (c.Role.HasFlag(TableColumnRole.PrimaryKey) && !c.Role.HasFlag(TableColumnRole.RowNo))
                 yield return $"[{c.Name}!!Id] = {alias}.[{c.Name}]";
             else if (c.Role.HasFlag(TableColumnRole.PrimaryKey) && c.Role.HasFlag(TableColumnRole.RowNo))
@@ -117,6 +117,14 @@ internal static class SqlExtensions
                 yield return $"[{c.Name}!!RowNumber] = {alias}.[{c.Name}]";
             else
                 yield return c.IsParent ? $"Folder = {alias}.[{c.Name}]" : $"{alias}.[{c.Name}]";
+        foreach (var e in enumFields)
+        {
+            var modelType = $"TR{e.Table.RealItemName}";
+            var col = e.Column;
+            var elemName = col.Name;
+            yield return $"[{col.Name}!{modelType}!RefId] = {alias}.[{col.Name}]";
+
+        }
         foreach (var c in refFields)
         {
             if (isDetails && (c.Column.Role.HasFlag(TableColumnRole.Parent) || c.Column.Role.HasFlag(TableColumnRole.Kind)))

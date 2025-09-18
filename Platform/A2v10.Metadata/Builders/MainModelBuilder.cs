@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Dynamic;
 using System.Globalization;
-using System.Threading.Tasks;
 
 using A2v10.Data.Core.Extensions;
 using A2v10.Infrastructure;
@@ -49,18 +48,15 @@ internal class MainModelBuilder(BaseModelBuilder _baseModelBuilder)
     {
         return String.Join("\n", refFields.Select(refField =>
         {
-            var enumWhere = "";
-            if (refField.Table.IsEnum)
-                enumWhere = $" and r{refField.Index}.[{refField.Table.PrimaryKeyField}] <> N''";
-            return $"    left join {refField.Table.SqlTableName} r{refField.Index} on {alias}.[{refField.Column.Name}] = r{refField.Index}.[{refField.Table.PrimaryKeyField}]{enumWhere}";
+            return $"    left join {refField.Table.SqlTableName} r{refField.Index} on {alias}.[{refField.Column.Name}] = r{refField.Index}.[{refField.Table.PrimaryKeyField}]";
         }));
     }
 
-    protected static String EnumsMapSql(IEnumerable<ReferenceMember> refs, Boolean isFilter)
+    protected static String EnumsMapSql(IEnumerable<ReferenceMember> enums, Boolean isFilter)
     {
         var sb = new StringBuilder();
         var where = isFilter ? "" : " where e.[Id] <> N''";
-        foreach (var r in refs.Where(c => c.Column.DataType == ColumnDataType.Enum))
+        foreach (var r in enums)
         {
             sb.AppendLine($"""
                 select [{r.Table.RealItemsName}!TR{r.Table.RealItemName}!Map] = null, [Id!!Id] = e.Id, [Name!!Name] = e.[Name]

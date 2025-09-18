@@ -64,15 +64,30 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             var table = column.DataType switch
             {
                 ColumnDataType.Operation => await GetSchemaAsync(dataSource, "op", "operations"),
-                ColumnDataType.Enum => MetadataExtensions.CreateEnumMeta(column),
                 _ => await GetSchemaAsync(dataSource, column.Reference.RefSchema, column.Reference.RefTable)
             };
             return new ReferenceMember(column, table, index);
         }
         Int32 index = 0;
         var list = new List<ReferenceMember>();
-        foreach (var cx in table.Columns.Where(c => c.IsReference))
+        foreach (var cx in table.Columns.Where(c => c.IsReference && !c.IsEnum))
             list.Add(await CreateMember(cx, index++));
+        return list;
+    }
+
+    public static IEnumerable<ReferenceMember> EnumFields(TableMetadata table, Boolean withDetails)
+    {
+        ReferenceMember CreateMember(TableColumn column, Int32 index) => 
+            new ReferenceMember(column, MetadataExtensions.CreateEnumMeta(column), index);
+
+        Int32 index = 0;
+        var list = new List<ReferenceMember>();
+        foreach (var cx in table.Columns.Where(c => c.IsEnum))
+            list.Add(CreateMember(cx, index++));
+        if (withDetails)
+            foreach (var dt in table.Details)
+                foreach (var ct in dt.Columns.Where(c => c.IsEnum))
+                    list.Add(CreateMember(ct, index++));
         return list;
     }
 
