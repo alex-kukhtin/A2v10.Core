@@ -10,15 +10,12 @@
 	const columnHeaderHeigth = 23; // column header height - 1
 
 
-	function styleHashCode(st) {
-		if (!st) return '-';
-		let b = st.Bold ? 'B' : '-';
-		let i = st.Italic ? 'I' : '-';
-		let fs = st.FontSize ? `FS${st.FontSize}` : '-';
-		let a = st.Align ? st.Align[0] : '-';
-		let va = st.VAlign ? st.VAlign[0] : '-';
-		let brd = st.Border || '-';
-		return `${b}:${i}:${fs}:${a}:${va}:${brd}`;
+	function pt2Px(p) {
+		return Math.round(p * 1.33333 * 100) / 100; // pt * (96 / 72);
+	}
+
+	function px2Pt(px) {
+		return px * .75; // px * (72 / 96)
 	}
 
 	class StyleProcessor {
@@ -26,7 +23,7 @@
 			this.styles = styles;
 			this.stylesMap = Object.keys(this.styles).reduce((p, c) => {
 				let st = this.styles[c];
-				let sc = styleHashCode(st);
+				let sc = this.styleHashCode(st);
 				p[sc] = c;
 				return p;
 			}, {});
@@ -36,13 +33,75 @@
 			return {};		
 		}
 
+
+		styleHashCode(st) {
+			if (!st) return '-';
+			let b = st.Bold ? 'B' : '-';
+			let i = st.Italic ? 'I' : '-';
+			let fs = st.FontSize ? `FS${st.FontSize}` : '-';
+			let a = st.Align ? st.Align[0] : '-';
+			let va = st.VAlign ? st.VAlign[0] : '-';
+			let brd = st.Border || '-';
+			return `${b}:${i}:${fs}:${a}:${va}:${brd}`;
+		}
+
+		cellClass(key) {
+			let st = this.styles[key];
+			let c = '';
+			if (!st) return c;
+			if (st.Bold)
+				c += ' bold';
+			if (st.Italic)
+				c += ' italic';
+			if (st.Align)
+				c += ` text-${st.Align.toLowerCase()}`;
+			if (st.VAlign)
+				c += ` align-${st.VAlign.toLowerCase()}`;
+			return c;
+		}
+
+		cellStyle(key) {
+			let st = this.styles[key];
+			let c = {};
+			if (!st) return c;
+			if (st.FontSize)
+				c.fontSize = `${st.FontSize}pt`;
+
+			function setBorder(name, val) {
+				val = +val;
+				if (!val)
+					return;
+				if (val === .2)
+					c[name] = "1px solid black";
+				else if (val === 1)
+					c[name] = "2px solid black";
+			}
+
+			if (st.Border) {
+				let bx = st.Border.split(',');
+				if (bx.length === 1) {
+					if (+bx[0] === 0.2)
+						c.border = "1px solid black";
+				}
+				else if (bx.length === 4) {
+					setBorder('borderTop', bx[0]);
+					setBorder('borderRight', bx[1]);
+					setBorder('borderBottom', bx[2]);
+					setBorder('borderLeft', bx[3]);
+				}
+			}
+			return c;
+		}
+
 		appendNewStyle(styleObj, hashCode) {
-			let ix = Object.keys(this.styles).length + 1;
-			let skey = '';
-			do {
-				skey = `S${ix}`;
-				ix += 1;
-			} while (this.styles[skey]);
+			function getNextKey(obj) {
+				let i = 1;
+				while (obj.hasOwnProperty(`S${i}`)) {
+					i++;
+				}
+				return `S${i}`;
+			}
+			let skey = getNextKey(this.styles);
 			Vue.set(this.styles, skey, styleObj);
 			this.stylesMap[hashCode] = skey;
 			return skey;
@@ -51,7 +110,7 @@
 		setStyleProp(st, prop, val) {
 			let sobj = Object.assign({}, this.styles[st] || this.defaultStyle());
 			sobj[prop] = val;
-			let shc = styleHashCode(sobj);
+			let shc = this.styleHashCode(sobj);
 			if (shc === '-:-:-:-:-:-')
 				return undefined;
 			let ns = this.stylesMap[shc];
@@ -222,7 +281,7 @@
 			hMouseUp(ev) {
 				this.onUp(ev, nw => {
 					let col = this.$parent.getOrCreateColumn(this.rItem);
-					Vue.set(col, 'Width', nw);
+					Vue.set(col, 'Width', px2Pt(nw));
 				});
 			},
 			hMouseMove(ev) {
@@ -245,7 +304,7 @@
 			vMouseUp(ev) {
 				this.onUp(ev, nh => {
 					let row = this.$parent.getOrCreateRow(this.rItem);
-					Vue.set(row, 'Height', nh);
+					Vue.set(row, 'Height', px2Pt(nh));
 				});
 			},
 			vMouseMove(ev) {
@@ -392,20 +451,22 @@
 						let nw = cw;
 						let nh = rh;
 						let cellCls = 'cell' + p.cellClass(cell);
+						let cellStyle = p.cellStyle(cell);
 						if (cell.ColSpan > 1 || cell.RowSpan > 1) {
 							for (let sc = 1; sc < cell.ColSpan; sc++)
 								nw += p.colWidth(sc + c);
 							for (let sr = 1; sr < cell.RowSpan; sr++)
 								nh += p.rowHeight(sr + r);
 							cellCls += ' span';
+							let cellStyle = { left: toPx(x + 1), top: toPx(y + 1), width: toPx(nw - 1), height: toPx(nh - 1) };
 							elems.push(h('div', {
 								class: 'cell-ph',
-								style: { left: toPx(x + 1), top: toPx(y + 1), width: toPx(nw - 1), height: toPx(nh - 1) },
+								style: cellStyle
 							}));
 						}
 						elems.push(h('div', {
 							class: cellCls,
-							style: { left: toPx(x), top: toPx(y), width: toPx(nw + 1), height: toPx(nh + 1) },
+							style: Object.assign({ left: toPx(x), top: toPx(y), width: toPx(nw + 1), height: toPx(nh + 1) }, cellStyle),
 							on: { pointerdown: (ev) => this.clickPh(c, r, cell, ev) }
 						},
 						cell.Value));
@@ -510,8 +571,8 @@
 		}
 	};
 
-	const defaultColumWidth = 100;
-	const defaultRowHeight = 23;
+	const defaultColumWidth = 54; // 56pt = 72px
+	const defaultRowHeight = 15; // 15pt = 20px;
 
 	const rowComboWidth = 75;
 
@@ -535,9 +596,9 @@
 		<ss-selection />
 		<ss-edit v-if=editing text=editText />
 	</div>
-	<a2-scroll-bar class="no-me" :horz=true :min="sheet.FixedColumns" :max="sheet.ColumnCount"
+	<a2-scroll-bar class="no-me" :horz=true :min="sheet.FixedColumns || 0" :max="sheet.ColumnCount"
 		:pos="scrollPos.x" :page="hScrollPageSize()"" :setPos=setPosX></a2-scroll-bar>
-	<a2-scroll-bar class="no-me" :horz=false :min="sheet.FixedRows" :max="sheet.RowCount"
+	<a2-scroll-bar class="no-me" :horz=false :min="sheet.FixedRows || 0" :max="sheet.RowCount"
 		:pos="scrollPos.y" :page="vScrollPageSize()" :setPos=setPosY></a2-scroll-bar>
 </div>
 `;
@@ -598,11 +659,11 @@
 			},
 			colWidth(c) {
 				let col = this.sheet.Columns[toColRef(c)];
-				return col ? col.Width : defaultColumWidth;
+				return pt2Px(col ? (col.Width == -1 ? 70 : col.Width) : defaultColumWidth);
 			},
 			rowHeight(r) {
 				let row = this.sheet.Rows[r + 1];
-				return row ? row.Height : defaultRowHeight;
+				return pt2Px(row ? row.Height : defaultRowHeight);
 			},
 			getOrCreateRow(r) {
 				let row = this.sheet.Rows[r + 1];
@@ -767,7 +828,7 @@
 					cell = { Content: val };
 					Vue.set(this.sheet.Cells, cellRef, cell);
 				}
-				Vue.set(cell, 'Content', val);
+				Vue.set(cell, 'Value', val);
 			},
 			startEdit(c, r) {
 				return { control: 'editor' };
@@ -816,7 +877,7 @@
 				if (p.x < this.startX) {
 					let rp = this.rowFromPoint(p.y);
 					sa.length = 0;
-					let sp = { left: 0, top: rp.row, right: sht.Size.Columns + 1, bottom: rp.row + 1 };
+					let sp = { left: 0, top: rp.row, right: sht.ColumnCount + 1, bottom: rp.row + 1 };
 					sa.push(sp);
 				}
 				else if (p.y < columnHeaderHeigth) {
@@ -918,19 +979,12 @@
 				return this.selection.some(c => cb(c, this.sheet.Cells[`${toColRef(c.left)}${c.top + 1}`]));
 			},
 			cellClass(cell) {
-				if (!cell || !cell.Style) return '';
-				let st = this.sheet.Styles[cell.Style];
-				if (!st) return '';
-				let c = '';
-				if (st.Bold)
-					c += ' bold';
-				if (st.Italic)
-					c += ' italic';
-				if (st.Align)
-					c += ` text-${st.Align.toLowerCase()}`;
-				if (st.VAlign)
-					c += ` align-${st.VAlign.toLowerCase()}`;
-				return c;
+				if (!cell) return '';
+				return this.__sp.cellClass(cell.Style);
+			},
+			cellStyle(cell) {
+				if (!cell) return '';
+				return this.__sp.cellStyle(cell.Style);
 			},
 			hScrollPageSize() {
 				let cont = this.$refs.container;
@@ -939,14 +993,14 @@
 				let x = this.startX;
 				let max = cont.clientWidth;
 				let cols = 0;
+				let fc = this.sheet.FixedColumns || 0;
 				for (let c of this.renderedColumns()) {
 					x += this.colWidth(c);
 					if (x > max)
 						break;
-					else if (c >= this.sheet.FixedColumns)
+					else if (c >= fc)
 						cols += 1;
 				}
-				//console.dir(cols);
 				return cols;
 			},
 			vScrollPageSize() {
@@ -956,11 +1010,12 @@
 				let y = columnHeaderHeigth;
 				let max = cont.clientHeight;
 				let rows = 0;
+				let fr = this.sheet.FixedRows || 0;
 				for (let r of this.renderedRows()) {
 					y += this.rowHeight(r);
 					if (y > max)
 						break;
-					else if (r >= this.sheet.FixedRows)
+					else if (r >= fr)
 						rows += 1;
 				}
 				return rows;
@@ -998,6 +1053,7 @@
 		mounted() {
 			this.updateCount += 1;
 			let sp = { left: 0, top: 0, right: 1, bottom: 1 };
+			// TODO: check span
 			this.selection.push(sp);
 			this.scrollPos.x = this.sheet.FixedColumns || 0;
 			this.scrollPos.y = this.sheet.FixedRows || 0;
@@ -1007,6 +1063,9 @@
 			});
 			this.__ro.observe(this.$el);
 			this.__sp = new StyleProcessor(this.sheet.Styles);
+			// TODO: auto style
+			this.sheet.ColumnCount = 26;
+			this.sheet.RowCount = 100;
 		},
 		beforeDestroy() {
 			if (this.__ro)
