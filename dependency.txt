@@ -3,6 +3,7 @@
 A2v10.Metadata
 A2v10.Platform
 A2v10.Platform.Web
+A2v10.Services
 
 
 =======================

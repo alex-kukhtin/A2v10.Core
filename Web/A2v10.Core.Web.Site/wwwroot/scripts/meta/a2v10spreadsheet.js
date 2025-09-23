@@ -9,6 +9,24 @@
 	const rowHeaderWidth = 32;
 	const columnHeaderHeigth = 23; // column header height - 1
 
+	function fromCellRef(ref) { 
+		const match = ref.match(/^([A-Z]+)(\d+)$/);
+		if (!match)
+			throw new Error(`Invalid cell reference: ${ref}`);
+
+		const c = match[1];
+		const rn = parseInt(match[2], 10);
+
+		// (A=1, B=2, ..., Z=26, AA=27 ..)
+		let cn = 0;
+		for (let i = 0; i < c.length; i++) {
+			cn *= 26;
+			cn += c.charCodeAt(i) - 64; // 'A'.charCodeAt(0) === 65
+		}
+
+		return { r: rn, c: cn - 1 };
+	}
+
 
 	function pt2Px(p) {
 		return Math.round(p * 1.33333 * 100) / 100; // pt * (96 / 72);
@@ -42,7 +60,8 @@
 			let a = st.Align ? st.Align[0] : '-';
 			let va = st.VAlign ? st.VAlign[0] : '-';
 			let brd = st.Border || '-';
-			return `${b}:${i}:${fs}:${a}:${va}:${brd}`;
+			let bg = st.BackgroundColor ? `BG${st.Background}` : '-';
+			return `${b}:${i}:${fs}:${a}:${va}:${brd}:${bg}`;
 		}
 
 		cellClass(key) {
@@ -66,6 +85,10 @@
 			if (!st) return c;
 			if (st.FontSize)
 				c.fontSize = `${st.FontSize}pt`;
+			if (st.FontName) {
+				c.fontFamily = st.FontName;
+				console.dir(c);
+			}
 
 			function setBorder(name, val) {
 				val = +val;
@@ -90,6 +113,8 @@
 					setBorder('borderLeft', bx[3]);
 				}
 			}
+			if (st.Background)
+				c.backgroundColor = "#" + st.Background;
 			return c;
 		}
 
@@ -280,8 +305,10 @@
 			},
 			hMouseUp(ev) {
 				this.onUp(ev, nw => {
+					let cw = px2pt(nw);
+					// TODO: check DEFAULT width
 					let col = this.$parent.getOrCreateColumn(this.rItem);
-					Vue.set(col, 'Width', px2Pt(nw));
+					Vue.set(col, 'Width', cw);
 				});
 			},
 			hMouseMove(ev) {
@@ -755,7 +782,7 @@
 				if (deltaY > 0)
 					this.scrollPos.y = Math.min(this.scrollPos.y + deltaY, this.sheet.RowCount - this.vScrollPageSize());
 				else
-					this.scrollPos.y = Math.max(this.scrollPos.y + deltaY, this.sheet.FixedRows);
+					this.scrollPos.y = Math.max(this.scrollPos.y + deltaY, (this.sheet.FixedRows || 0));
 			},
 			keydown(ev) {
 				let sa = this.selection;
@@ -851,7 +878,7 @@
 				er.r = rp.row;
 				let c = this.sheet.Cells[`${toColRef(cp.col)}${rp.row + 1}`];
 				if (c)
-					this.editText = c.Content;
+					this.editText = c.Value;
 				else
 					this.editText = '';
 				this.editing = true;
@@ -862,7 +889,7 @@
 				let sa = this.selection;
 				this.selecting = true;
 				sa.length = 0;
-				let sp = { left: c, top: r, right: c + (cell.ColSpan || 1), bottom: r + (cell.RowSpan || 1)};
+				let sp = { left: c, top: r, right: c + (cell.ColSpan || 1), bottom: r + (cell.RowSpan || 1) };
 				sa.push(sp);
 			},
 			pointerdown(ev) {
@@ -945,7 +972,7 @@
 				let cont = this.$refs.container;
 				let cWidth = cont.clientWidth - 1; //- rowHeaderWidth;
 				let cHeight = cont.clientHeight - 1; //- columnHeaderHeigth;
-				let fix = this.sheet.Fixed || {};
+				let fix = { Rows: this.sheet.FixedRows || 0, Columns: this.sheet.FixedColumns|| 0 };
 				let sp = this.scrollPos;
 				let sr = null;
 				if (sp.y > fix.Rows && sel.top < sp.y)
@@ -1036,7 +1063,7 @@
 				for (let cr of enumerateSel(sel)) {
 					let cell = this.sheet.Cells[cr];
 					if (!cell) {
-						cell = { Content: val };
+						cell = { Value: val };
 						Vue.set(this.sheet.Cells, cr, cell);
 						cell = this.sheet.Cells[cr];
 					}
@@ -1063,6 +1090,23 @@
 			});
 			this.__ro.observe(this.$el);
 			this.__sp = new StyleProcessor(this.sheet.Styles);
+			this.__mergeCells = {};
+			for (let cr in this.sheet.Cells) {
+				let cell = this.sheet.Cells[cr];
+				if (cell.ColSpan > 1 || cell.RowSpan > 1) {
+					let rowCol = fromCellRef(cr);
+					if (cell.RowSpan > 1 && (cell.ColSpan || 1) == 1)
+						for (let r = 1; r < (cell.RowSpan || 1); r++)
+							this.__mergeCells[`${toColRef(rowCol.c)}${r + rowCol.r}`] = cr;
+					else if (cell.ColSpan > 1 && (cell.RowSpan || 1) == 1)
+						for (let c = 1; c < (cell.ColSpan || 1); c++)
+							this.__mergeCells[`${toColRef(c + rowCol.c)}${rowCol.r}`] = cr;
+					else
+						for (let c = 1; c < (cell.ColSpan || 1); c++)
+							for (let r = 1; r < (cell.RowSpan || 1); r++)
+								this.__mergeCells[`${toColRef(c + rowCol.c)}${r + rowCol.r}`] = cr;
+				}
+			}
 			// TODO: auto style
 			this.sheet.ColumnCount = 26;
 			this.sheet.RowCount = 100;

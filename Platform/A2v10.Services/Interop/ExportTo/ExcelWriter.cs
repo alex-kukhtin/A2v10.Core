@@ -226,7 +226,7 @@ public class ExcelWriter
 		if (style.Wrap)
 			cf.Alignment.WrapText = true;
 
-		switch (style.Align)
+        switch (style.Align)
 		{
 			case HorizontalAlign.Center:
 				cf.Alignment.Horizontal = HorizontalAlignmentValues.Center;
@@ -248,10 +248,20 @@ public class ExcelWriter
 				cf.Alignment.Vertical = VerticalAlignmentValues.Bottom;
 				break;
 		}
-		if (style.Indent > 1)
+
+        if (style.Vertical)
+        {
+            cf.Alignment.TextRotation = 90;
+			cf.Alignment.Horizontal = HorizontalAlignmentValues.Center;
+			cf.Alignment.Vertical = VerticalAlignmentValues.Bottom;
+			cf.Alignment.WrapText = true;
+        }
+
+        if (style.Indent > 1)
 			cf.Alignment.Indent = style.Indent - 1;
 		if (style.Underline)
 			cf.BorderId = 2;
+
 		return cf;
 	}
 

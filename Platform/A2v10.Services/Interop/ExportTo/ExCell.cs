@@ -119,7 +119,8 @@ public partial class ExCell
 			Bold = cls.Bold || row.IsGroup || row.Role == RowRole.Total,
 			Indent = cls.Indent,
 			Underline = cls.Underline,
-			IsGroup = row.IsGroup
+			IsGroup = row.IsGroup,
+			Vertical = cls.Vertical
 		};
 	}
 

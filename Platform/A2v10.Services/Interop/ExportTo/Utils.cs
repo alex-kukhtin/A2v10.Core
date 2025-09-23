@@ -10,7 +10,8 @@ public struct ExClassList
 	public RowRole Role { get; set; }
 	public UInt32 Indent { get; set; }
 	public Boolean Underline { get; set; }
-	public Boolean IsGroup { get; set; }
+    public Boolean Vertical { get; set; }
+    public Boolean IsGroup { get; set; }
 }
 
 
@@ -45,8 +46,17 @@ public static class Utils
 				case "row-divider":
 					lst.Role = RowRole.Divider;
 					break;
-			}
-			if (cls.StartsWith("text-"))
+				case "vert":
+					lst.Vertical = true;
+					break;
+				case "underline":
+					lst.Underline = true;
+					break;
+                case "group":
+                    lst.IsGroup = true;
+                    break;
+            }
+            if (cls.StartsWith("text-"))
 			{
 				switch (cls)
 				{
@@ -80,16 +90,10 @@ public static class Utils
 			if (cls == "bold")
 				lst.Bold = true;
 			if (cls.StartsWith("lev-"))
-			{
 				level = UInt32.Parse(cls[4..]);
-			}
 		}
 		if (strClass.Contains("indent"))
 			lst.Indent = level;
-		if (strClass.Contains("group"))
-			lst.IsGroup = true;
-		if (strClass.Contains("underline"))
-			lst.Underline = true;
 		return lst;
 	}
 }

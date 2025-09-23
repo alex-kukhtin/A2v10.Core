@@ -27,7 +27,8 @@ public struct Style
 	public RowKind RowKind;
 	public UInt32 Indent;
 	public Boolean Underline;
-	public Boolean IsGroup;
+	public Boolean Vertical;
+    public Boolean IsGroup;
 
 	public readonly Boolean HasBorder => RowKind == RowKind.Body || RowRole == RowRole.Header || RowRole == RowRole.Footer || RowRole == RowRole.Total;
 	public readonly Boolean IsDateOrTime => DataType == DataType.Date || DataType == DataType.DateTime || DataType == DataType.Time;
