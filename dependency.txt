@@ -1,6 +1,8 @@
 ﻿2025-09-17 (next: 8573)
 
 A2v10.AppRuntimeBuilder
+A2v10.Identity.ApiKey
+A2v10.Identity.Jwt
 A2v10.Metadata
 A2v10.Platform
 A2v10.Platform.Web
