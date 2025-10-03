@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
-		<Version>10.1.8573</Version>
+		<Version>10.1.8575</Version>
 		<LangVersion>Latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<AssemblyName>A2v10.Identity.Jwt</AssemblyName>
@@ -22,7 +22,7 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.20" Condition="'$(TargetFramework)' == 'net8.0'" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.9" Condition="'$(TargetFramework)' == 'net9.0'" />
-		<PackageReference Include="Microsoft.OpenApi" Version="1.6.26" />
+		<PackageReference Include="Microsoft.OpenApi" Version="1.6.27" />
 	</ItemGroup>
 
 	<PropertyGroup>
