@@ -1,4 +1,4 @@
-﻿// Copyright © 2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -11,8 +11,8 @@ public class Cell : XamlElement
 	public UInt32 RowSpan { get; set; }
 	public UInt32 ColSpan { get; set; }
 	public DataType DataType { get; set; }
-	public String? Style { get; init; }
-	public String? Format { get; init; }	
+	public String? Style { get; set; }
+	public String? Format { get; set; }	
 	public void ApplyRuntimeStyle(RuntimeStyle style)
 	{
 		var rs = GetRuntimeStyle();

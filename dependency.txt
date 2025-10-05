@@ -2,6 +2,9 @@
 
 A2v10.Identity.ApiKey
 A2v10.Identity.Jwt
+A2v10.ReportEngine.Pdf
+A2v10.ReportEngine.Excel
+A2v10.ReportEngine.Script
 
 
 =======================
