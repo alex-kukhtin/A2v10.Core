@@ -14,8 +14,8 @@ public class ClrHelpersTest
     {
         const String pathOk = "clr-type:Type.Name;assembly=Assembly.Name";
         const String pathFail = "clr-type,Type;asss+Test";
-        Assert.AreEqual(true, ClrHelpers.IsClrPath(pathOk));
-		Assert.AreEqual(false, ClrHelpers.IsClrPath(pathFail));
+        Assert.IsTrue(ClrHelpers.IsClrPath(pathOk));
+		Assert.IsFalse(ClrHelpers.IsClrPath(pathFail));
 
 		var (assembly, type) = ClrHelpers.ParseClrType(pathOk);
 		Assert.AreEqual("Type.Name", type);

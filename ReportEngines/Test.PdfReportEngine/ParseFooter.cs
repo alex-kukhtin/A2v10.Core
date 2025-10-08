@@ -13,14 +13,14 @@ public class ParseFooter
 	public void ResoloveSimple()
 	{
 		var x = PageFooter.Resolve("&(Page) of &(Pages)").ToArray();
-		Assert.AreEqual(3, x.Length);
+		Assert.HasCount(3, x);
 		Assert.AreEqual("&(Page)", x[0]);
 		Assert.AreEqual(" of ", x[1]);
 		Assert.AreEqual("&(Pages)", x[2]);
 
 
 		x = PageFooter.Resolve("Стор. &(Page) з &(Pages)").ToArray();
-		Assert.AreEqual(4, x.Length);
+		Assert.HasCount(4, x);
 		Assert.AreEqual("Стор. ", x[0]);
 		Assert.AreEqual("&(Page)", x[1]);
 		Assert.AreEqual(" з ", x[2]);
