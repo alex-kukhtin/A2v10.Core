@@ -1,5 +1,6 @@
 ﻿2025-10-03 (next: 8575)
 
+A2v10.App.Assets
 A2v10.AppRuntimeBuilder
 A2v10.Identity.ApiKey
 A2v10.Identity.Jwt
@@ -8,7 +9,7 @@ A2v10.Platform
 A2v10.ReportEngine.Pdf
 A2v10.ReportEngine.Excel
 A2v10.ReportEngine.Script
-
+A2v10.ViewEngine.Xaml
 
 =======================
 !do not update Microsoft.OpenApi to 1.6.23 (https://github.com/microsoft/OpenAPI.NET/issues/2030)

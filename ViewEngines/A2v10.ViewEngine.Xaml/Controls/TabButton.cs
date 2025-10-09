@@ -1,4 +1,4 @@
-﻿// Copyright © 2019-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2019-2025 Alex Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
 
@@ -11,10 +11,10 @@ public class TabButton : UIElementBase
 {
 	public Object? Content { get; set; }
 	public Object? Description { get; set; }
-
 	public String? ActiveValue { get; set; }
+    public String? Badge { get; set; }
 
-	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
+    public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
 		throw new NotImplementedException(nameof(RenderElement));
 	}
@@ -52,6 +52,7 @@ public class TabButton : UIElementBase
 
 		btn.RenderStart(context);
 		RenderContent(context);
+		RenderBadge(context, Badge, "tb-badge");
 		RenderDescription(context);
 		btn.RenderEnd(context);
 	}
