@@ -1,4 +1,4 @@
-﻿// Copyright © 2023-2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2023-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 
@@ -18,8 +18,8 @@ public class Workbook : XamlElement
 	public Range? TableHeader { get; set; }
 	public Range? TableFooter { get; set; }	
 	public PageFooter? PageFooter { get; set; }
-    public UInt32? ColumnWidth { get; set; }
-    public UInt32? RowHeight { get; set; }
+    public Single? ColumnWidth { get; set; }
+    public Single? RowHeight { get; set; }
     public override void ApplyStyles(String selector, StyleBag styles)
     {
 		var sel = selector;
