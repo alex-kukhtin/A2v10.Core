@@ -18,7 +18,9 @@ public class Workbook : XamlElement
 	public Range? TableHeader { get; set; }
 	public Range? TableFooter { get; set; }	
 	public PageFooter? PageFooter { get; set; }
-	public override void ApplyStyles(String selector, StyleBag styles)
+    public UInt32? ColumnWidth { get; set; }
+    public UInt32? RowHeight { get; set; }
+    public override void ApplyStyles(String selector, StyleBag styles)
     {
 		var sel = selector;
 		_runtimeStyle = styles.GetRuntimeStyle(sel);

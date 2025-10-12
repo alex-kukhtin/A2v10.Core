@@ -1,4 +1,4 @@
-﻿// Copyright © 2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2024-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Linq;
@@ -332,7 +332,7 @@ public partial class WorkbookHelper
 
 	public Single ColumnWidth(UInt32 column)
 	{
-		var width = DEFAULT_COLUMN_WIDTH;
+		var width = _workbook.ColumnWidth ?? DEFAULT_COLUMN_WIDTH;
 		if (_workbook.Columns.TryGetValue(CellRefs.Index2Col(column), out var sheetColumn))
 			width = sheetColumn.Width;
 		return width;
@@ -349,7 +349,7 @@ public partial class WorkbookHelper
 
 	public Single RowHeight(Int32 r, Func<List<RealRow>?> getRows)
 	{
-		var rowHeight = DEFAULT_ROW_HEIGHT;
+		var rowHeight = _workbook.RowHeight ?? DEFAULT_ROW_HEIGHT;
 		var x = getRows();
 		if (x == null)
 			return rowHeight;
