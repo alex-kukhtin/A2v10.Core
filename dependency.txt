@@ -2,8 +2,10 @@
 
 A2v10.App.Assets
 A2v10.AppRuntimeBuilder
+A2v10.BlobStorage.Azure
 A2v10.Identity.ApiKey
 A2v10.Identity.Jwt
+A2v10.MailClient
 A2v10.Metadata
 A2v10.Platform
 A2v10.ReportEngine.Pdf
