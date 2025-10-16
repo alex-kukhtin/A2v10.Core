@@ -105,6 +105,8 @@
 				if (bx.length === 1) {
 					if (+bx[0] === 0.2)
 						c.border = "1px solid black";
+					else if (+bx[0] === 1)
+						c.border = "3px solid black";
 				}
 				else if (bx.length === 4) {
 					setBorder('borderTop', bx[0]);
@@ -305,7 +307,7 @@
 			},
 			hMouseUp(ev) {
 				this.onUp(ev, nw => {
-					let cw = px2pt(nw);
+					let cw = px2Pt(nw);
 					// TODO: check DEFAULT width
 					let col = this.$parent.getOrCreateColumn(this.rItem);
 					Vue.set(col, 'Width', cw);
@@ -686,11 +688,17 @@
 			},
 			colWidth(c) {
 				let col = this.sheet.Columns[toColRef(c)];
-				return pt2Px(col ? (col.Width == -1 ? 70 : col.Width) : defaultColumWidth);
+				let cw = this.sheet.ColumnWidth ?? defaultColumWidth;
+				if (col && col.Width)
+					cw = col.Width == -1 ? 70 : col.Width;
+				return pt2Px(cw);
 			},
 			rowHeight(r) {
 				let row = this.sheet.Rows[r + 1];
-				return pt2Px(row ? row.Height : defaultRowHeight);
+				let rh = this.sheet.RowHeight ?? defaultRowHeight;
+				if (row && row.Height)
+					rh = row.Height;
+				return pt2Px(rh);
 			},
 			getOrCreateRow(r) {
 				let row = this.sheet.Rows[r + 1];
@@ -904,13 +912,13 @@
 				if (p.x < this.startX) {
 					let rp = this.rowFromPoint(p.y);
 					sa.length = 0;
-					let sp = { left: 0, top: rp.row, right: sht.ColumnCount + 1, bottom: rp.row + 1 };
+					let sp = { left: 0, top: rp.row, right: sht.ColumnCount, bottom: rp.row + 1 };
 					sa.push(sp);
 				}
 				else if (p.y < columnHeaderHeigth) {
 					let cp = this.colFromPoint(p.x);
 					sa.length = 0;
-					let sp = { left: cp.col, top: 0, right: cp.col + 1, bottom: sht.RowCount + 1 };
+					let sp = { left: cp.col, top: 0, right: cp.col + 1, bottom: sht.RowCount};
 					sa.push(sp);
 				}
 				else {
@@ -959,7 +967,7 @@
 				}
 			},
 			pointerup(ev) {
-				ev.target.setPointerCapture(ev.pointerId);
+				ev.target.releasePointerCapture(ev.pointerId);
 				this.selecting = false;
 				this.selStart.x = 0;
 				this.selStart.y = 0;
@@ -1108,8 +1116,8 @@
 				}
 			}
 			// TODO: auto style
-			this.sheet.ColumnCount = 26;
-			this.sheet.RowCount = 100;
+			this.sheet.ColumnCount = Math.max(this.sheet.ColumnCount, 26);
+			this.sheet.RowCount = Math.max(this.sheet.RowCount, 100);
 		},
 		beforeDestroy() {
 			if (this.__ro)
