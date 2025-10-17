@@ -93,22 +93,22 @@
   min-width: fit-content;
   min-height: fit-content;
 }
-.ss-body .cell.bold {
+.ss-body .cell.c-bold {
   font-weight: bold;
 }
-.ss-body .cell.italic {
+.ss-body .cell.c-italic {
   font-style: italic;
 }
-.ss-body .cell.text-center {
+.ss-body .cell.c-text-center {
   justify-content: center;
 }
-.ss-body .cell.text-right {
+.ss-body .cell.c-text-right {
   justify-content: right;
 }
-.ss-body .cell.align-middle {
+.ss-body .cell.c-align-middle {
   align-items: center;
 }
-.ss-body .cell.align-bottom {
+.ss-body .cell.c-align-bottom {
   align-items: end;
 }
 .ss-body .canvas .thc {
