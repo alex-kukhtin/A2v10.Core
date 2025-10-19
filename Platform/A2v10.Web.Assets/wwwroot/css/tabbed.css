@@ -4100,6 +4100,14 @@ tr:hover .commandbar.visible-hover {
 .a2-tab-button .content {
   white-space: nowrap;
 }
+.a2-tab-button .tb-badge {
+  padding: 2px 7px;
+  border-radius: 50%;
+  background-color: var(--neutral400);
+  font-size: 12px;
+  margin-left: 5px;
+  color: var(--bgMenu);
+}
 .a2-tab-description {
   color: var(--text-label);
 }
