@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System.IO;
 using System.Globalization;
@@ -339,6 +339,12 @@ public class ExcelReportGenerator : IDisposable
                     var listData = list[i];
                     SetRecordData(def, listData);
                 }
+                // Shift all ranges downward. The current range is already in use, so it's safe to shift it.
+                foreach (var dsr in datasetRows)
+                {
+                    dsr.Value.FirstRow += count;
+                    dsr.Value.LastRow += count;
+                }
             }
         }
         return result;
@@ -504,7 +510,7 @@ public class ExcelReportGenerator : IDisposable
         var nextRow = insertedRow.NextSibling<Row>();
         while (nextRow != null)
         {
-            nextRow.RowIndex = insertedRow.RowIndex ?? new UInt32Value();
+            nextRow.RowIndex = nextRow.RowIndex ?? new UInt32Value();
             nextRow.RowIndex += 1;
             nextRow = nextRow.NextSibling<Row>();
         }
