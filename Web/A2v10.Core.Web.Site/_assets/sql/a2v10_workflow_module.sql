@@ -296,6 +296,48 @@ end
 go
 
 ------------------------------------------------
+create or alter procedure wfadm.[Workflow.Copy]
+@UserId bigint,
+@Id uniqueidentifier
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+	set xact_abort on;
+
+	declare @newid uniqueidentifier = newid();
+	
+	insert into a2wf.[Catalog] (Id, [Name], [Format], [Body], [Hash], Svg, Archive, Memo)
+	select Id= @newid, [Name] = [Name] + N'-Copy', [Format], [Body], [Hash], Svg, 0, Memo
+	from a2wf.[Catalog] where Id = @Id;
+
+	select [Workflow!TWorkflow!Object] = null, [Id!!Id] = w.Id, w.[Name],
+		[DateCreated!!Utc] = w.DateCreated, [DateModified!!Utc] = w.DateModified,
+		w.Svg, w.Zoom, w.Memo, w.[Key], w.Archive,
+		NeedPublish = cast(1 as bit)
+	from a2wf.[Catalog] w where w.Id = @newid;
+end
+go
+
+------------------------------------------------
+create or alter procedure wfadm.[Workflow.Key.Duplicate]
+@UserId bigint,
+@Id uniqueidentifier = null,
+@Text nvarchar(255) = null
+as
+begin
+	set nocount on;
+	set transaction isolation level read uncommitted;
+
+	declare @valid bit = 1;
+
+	if exists(select 1 from a2wf.[Catalog] where [Key] = @Text and Id <> @Id and Archive = 0)
+		set @valid = 0;
+
+	select [Result!TResult!Object] = null, [Value] = @valid;
+end
+go
+------------------------------------------------
 create or alter procedure wfadm.[Catalog.Prop.Load]
 @UserId bigint,
 @Id nvarchar(64) = null
