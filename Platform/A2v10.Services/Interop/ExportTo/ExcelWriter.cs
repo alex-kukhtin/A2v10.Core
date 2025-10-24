@@ -344,6 +344,14 @@ public class ExcelWriter
 		return row;
 	}
 
+
+	static CellValue? NumberCellValue(String str)
+	{
+		if (str == "NaN" || str == "∞")
+			return null;
+		return new CellValue(str);
+	}
+
 	static void SetCellValue(Cell cell, ExCell exCell/*, ExRow exRow*/)
 	{
 		if (exCell.StyleIndex != 0)
@@ -359,15 +367,15 @@ public class ExcelWriter
 				break;
 			case DataType.Currency:
 				cell.DataType = new EnumValue<CellValues>(CellValues.Number);
-				cell.CellValue = new CellValue(exCell.Value);
+				cell.CellValue = NumberCellValue(exCell.Value);
 				break;
 			case DataType.Number:
 				cell.DataType = new EnumValue<CellValues>(CellValues.Number);
-				cell.CellValue = new CellValue(exCell.Value);
+				cell.CellValue = NumberCellValue(exCell.Value);
 				break;
 			case DataType.Percent:
 				cell.DataType = new EnumValue<CellValues>(CellValues.Number);
-				cell.CellValue = new CellValue(exCell.Value);
+				cell.CellValue = NumberCellValue(exCell.Value);
 				break;
 			case DataType.Date:
 			case DataType.DateTime:

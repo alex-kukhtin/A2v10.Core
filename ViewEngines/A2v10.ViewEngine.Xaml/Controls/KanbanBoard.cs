@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Xaml;
 
@@ -9,6 +9,8 @@ public class KanbanBoard : UIElement
     public Object? Items { get; set; }
     public String? StateProperty { get; set; }
     public String? DropDelegate { get; set; }
+    public Boolean ShowTrash { get; set; }
+    public String? TrashDelegate { get; set; }
 
     public UIElementCollection Header { get; set; } = [];
     public UIElementCollection Footer { get; set; } = [];
@@ -24,12 +26,15 @@ public class KanbanBoard : UIElement
         kb.MergeAttribute("state-prop", StateProperty);
         if (!String.IsNullOrEmpty(DropDelegate))
             kb.MergeAttribute(":drop-delegate", $"$delegate('{DropDelegate}')");
+        if (!String.IsNullOrEmpty(TrashDelegate))
+            kb.MergeAttribute(":trash-delegate", $"$delegate('{TrashDelegate}')");
         var lanesBind = GetBinding(nameof(Lanes));
         if (lanesBind != null)
             kb.MergeAttribute(":lanes", lanesBind.GetPath(context));
         var itemsBind = GetBinding(nameof(Items));
         if (itemsBind != null)
             kb.MergeAttribute(":items", itemsBind.GetPath(context));
+        kb.MergeAttribute(":show-trash", ShowTrash ? "true" : "false");
 
         kb.RenderStart(context);
         // header

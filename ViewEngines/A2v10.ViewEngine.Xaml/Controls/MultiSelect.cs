@@ -21,8 +21,15 @@ public class MultiSelect : ValuedControl, ITableControl
         MergeDisabled(input, context);
         MergeBindingAttributeString(input, context, "placeholder", nameof(Placeholder), Placeholder);
         MergeValue(input, context);
-        input.MergeAttribute("url", Url); 
 
+
+        input.MergeAttribute("url", Url);
+
+        var fetchData = GetBinding(nameof(Data));
+        if (fetchData != null)
+            input.MergeAttribute(":fetch-data", fetchData.GetPath(context));
+        else if (Data != null && Data.StartsWith('{'))
+            input.MergeAttribute(":fetch-data", Data);
 
         input.RenderStart(context);
         RenderAddOns(context);

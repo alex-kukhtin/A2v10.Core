@@ -49,7 +49,8 @@
 			prop: String,
 			url: String,
 			label: String,
-			placeholder: String
+			placeholder: String,
+			fetchData: Object
 		},
 		data() {
 			return {
@@ -76,7 +77,8 @@
 						this.items.splice(0);
 						return;
 					}
-					let el = await this.$root.$invoke('fetch', { Text: this.query }, this.url);
+					let invokeArg = Object.assign({}, { Text: this.query }, this.fetchData);
+					let el = await this.$root.$invoke('fetch', invokeArg, this.url);
 					if (!el) return;
 					let keys = Object.keys(el);
 					if (!keys || !keys.length) return;
@@ -90,7 +92,7 @@
 		methods: {
 			async browseItem() {
 				let vm = this.$root;
-				let be = await vm.$showDialog(this.url + '/browse');
+				let be = await vm.$showDialog(this.url + '/browse', null, this.fetchData);
 				if (!be) return;
 				if (this.selArray.find(a => a.Id === be.Id))
 					return;
