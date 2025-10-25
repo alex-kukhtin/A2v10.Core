@@ -1,0 +1,9 @@
+﻿<Page xmlns="clr-namespace:A2v10.Xaml;assembly=A2v10.Xaml"
+	 Title="Home">
+    <EmptyPanel>
+        <StackPanel AlignItems="Center" Gap="1rem">
+            <Text>Yet not implemented</Text>
+            <Hyperlink Content="Configuration" Command="{BindCmd Open, Url=/$meta/config/index, Argument=0}"/>
+        </StackPanel>
+    </EmptyPanel>
+</Page>

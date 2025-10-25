@@ -1,0 +1,12 @@
+﻿[
+	{
+		"$schema": "@schemas/sql-json-schema.json#",
+		"outputFile": "_sqlscripts/main.sql",
+		"inputFiles": [
+			"_sql/_schemas.sql",
+			"_sql/_tables.sql",
+			"_sql/_tabletypes.sql",
+			"_sql/_ui.sql"
+		]
+	}
+]

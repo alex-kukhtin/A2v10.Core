@@ -1,0 +1,54 @@
+﻿; Items
+@Item=Об'єкт обліку
+@Items=Об'єкти обліку
+@Agent=Контрагент
+@Agents=Контрагенти
+@Project=Проєкт
+@Projects=Проєкти
+@Store=Склад
+@Stores=Склади
+@StoreIn=Склад куди
+@StoreOut=Склад звідки
+@Unit=Одиниця виміру
+@Units=Одиниці виміру
+@UnitShort=Од. вим.
+
+; Fields
+@Id=#
+@Number=Номер
+@Period=Період
+@Short=Скорочення
+@BarCode=Штрихкод
+@Barcode=Штрихкод
+@SKU=Артикул
+@Code=Код
+@Start=Початок
+@Begin=Початок
+@End=Закінчення
+
+; Commands
+@Apply=Провести
+@UnApply=Скасувати проведення
+@AddRow=Додати рядок
+
+; Browse
+@Agent.Browse=Вибір контрагента
+@Item.Browse=Вибір об'єкта обліку
+@Store.Browse=Вибір складу
+@Unit.Browse=Вибір одиниці виміру
+@Project.Browse=Вибір проєкта
+
+;Filter
+@Filter.Agent.All=Всі контрагенти
+@Filter.Store.All=Всі склади
+@Filter.StoreIn.All=Всі склади
+@Filter.StoreOut.All=Всі склади
+@Filter.Project.All=Всі проєкти
+
+; Errors
+@Error.Required=Обов'язкове поле
+@Error.Delete.Used=Неможливо видалити елемент, він використовується в системі
+
+; Confirm
+@Confirm.Delete.Element=Ви впевнені, що бажаєте видалити елемент?
+

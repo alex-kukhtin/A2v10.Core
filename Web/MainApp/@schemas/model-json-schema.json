@@ -1,0 +1,389 @@
+﻿{
+	"$schema": "http://json-schema.org/draft-04/schema",
+	"$version": "10.0.7974",
+	"title": "JSON Schema for model.json",
+	"type": "object",
+
+	"definitions": {
+		"permissions": {
+			"type": "object",
+			"patternProperties": {
+				".+": {
+					"type": "string",
+					"enum": [ "view", "edit", "delete", "apply", "create", "unapply", "flag64", "flag128", "flag256" ]
+				}
+			}
+		},
+		"auto": {
+			"type": "object",
+			"properties": {
+				"render": {
+					"type": "string",
+					"enum": [ "page", "partial", "dialog", "popup" ]
+				}
+			}
+		},
+		"meta": {
+			"type": "object",
+			"properties": {
+				"table": {
+					"type": "string"
+				},
+				"schema": {
+					"type": "string"
+				},
+				"edit": {
+					"type": "string",
+					"enum": [ "default", "page", "dialog"]
+				}
+			}
+		}
+	},
+
+	"properties": {
+		"$schema": { "type": "string" },
+		"source": {
+			"type": "string"
+		},
+		"model": { "type": "string" },
+		"schema": { "type": "string" },
+		"module": { "type": "string" },
+		"allowAddress": { "type": "string" },
+		"allowOrigin": { "type,": "string" },
+		"meta": { "$ref": "#/definitions/meta" },
+		"actions": {
+			"type": "object",
+			"patternProperties": {
+				".+": {
+					"type": "object",
+					"properties": {
+						"index": { "type": "boolean" },
+						"source": { "type": "string" },
+						"schema": { "type": "string" },
+						"model": { "type": "string" },
+						"view": { "type": "string" },
+						"viewMobile": { "type": "string" },
+						"template": { "type": "string" },
+						"checkTypes": { "type": "string" },
+						"processDbEvents": { "type": "boolean" },
+						"commandTimeout": { "type": "number" },
+						"indirect": { "type": "boolean" },
+						"target": { "type": "string" },
+						"targetId": { "type": "string" },
+						"skipDataStack": { "type": "boolean" },
+						"plain": { "type": "boolean" },
+						"endpointHandler": { "type": "string" },
+						"signal": { "type": "boolean" },
+						"merge": {
+							"type": "object",
+							"properties": {
+								"source": { "type": "string" },
+								"model": { "type": "string" },
+								"schema": { "type": "string" },
+								"parameters": { "type": "object" }
+							},
+							"additionalProperties": false
+						},
+						"events": {
+							"type": "object",
+							"properties": {
+								"afterSave": {
+									"type": "object",
+									"properties": {
+										"source": { "type": "string" },
+										"schema": { "type": "string" },
+										"model": { "type": "string" }
+									}
+								}
+							}
+						},
+						"export": {
+							"type": "object",
+							"properties": {
+								"template": { "type": "string" },
+								"fileName": { "type": "string" },
+								"format": {
+									"type": "string",
+									"enum": [ "xlsx", "dbf", "csv" ]
+								},
+								"encoding": { "type": "string" }
+							},
+							"additionalProperties": false
+						},
+						"parameters": { "type": "object" },
+						"permissions": { "$ref": "#/definitions/permissions" },
+						"auto": { "$ref": "#/definitions/auto" },
+						"meta": { "$ref": "#/definitions/meta" },
+						"roles": {
+							"type": "array",
+							"items": { "type": "string" }
+						},
+						"scripts": {
+							"type": "array",
+							"items": { "type": "string" }
+						},
+						"styles": {
+							"type": "array",
+							"items": { "type": "string" }
+						}
+					},
+					"additionalProperties": false
+				}
+			}
+		},
+		"dialogs": {
+			"type": "object",
+			"patternProperties": {
+				".+": {
+					"type": "object",
+					"properties": {
+						"index": { "type": "boolean" },
+						"source": { "type": "string" },
+						"schema": { "type": "string" },
+						"model": { "type": "string" },
+						"view": { "type": "string" },
+						"viewMobile": { "type": "string" },
+						"template": { "type": "string" },
+						"copy": { "type": "boolean" },
+						"checkTypes": { "type": "string" },
+						"processDbEvents": { "type": "boolean" },
+						"commandTimeout": { "type": "number" },
+						"signal": { "type": "boolean" },
+						"endpointHandler": { "type": "string" },
+						"hook": {
+							"type": "string",
+							"pattern": "^\\s*clr-type\\s*:\\s*([\\w\\.]+)\\s*;\\s*assembly\\s*=\\s*([\\w\\.]+)\\s*$"
+						},
+						"merge": {
+							"type": "object",
+							"properties": {
+								"source": { "type": "string" },
+								"model": { "type": "string" },
+								"schema": { "type": "string" },
+								"parameters": { "type": "object" }
+							},
+							"additionalProperties": false
+						},
+						"twoPhase": { "type": "boolean" },
+						"parameters": { "type": "object" },
+						"permissions": { "$ref": "#/definitions/permissions" },
+						"auto": { "$ref": "#/definitions/auto" },
+						"meta": { "$ref": "#/definitions/meta" },
+						"roles": {
+							"type": "array",
+							"items": { "type": "string" }
+						}
+					},
+					"additionalProperties": false
+				}
+			}
+		},
+		"popups": {
+			"type": "object",
+			"patternProperties": {
+				".+": {
+					"type": "object",
+					"properties": {
+						"schema": { "type": "string" },
+						"source": { "type": "string" },
+						"model": { "type": "string" },
+						"view": { "type": "string" },
+						"viewMobile": { "type": "string" },
+						"template": { "type": "string" },
+						"checkTypes": { "type": "string" },
+						"processDbEvents": { "type": "boolean" },
+						"commandTimeout": { "type": "number" },
+						"parameters": { "type": "object" },
+						"endpointHandler": { "type": "string" },
+						"permissions": { "$ref": "#/definitions/permissions" },
+						"auto": { "$ref": "#/definitions/auto" },
+						"meta": { "$ref": "#/definitions/meta" },
+						"roles": {
+							"type": "array",
+							"items": { "type": "string" }
+						}
+					},
+					"additionalProperties": false
+				}
+			}
+		},
+		"commands": {
+			"type": "object",
+			"patternProperties": {
+				".+": {
+					"type": "object",
+					"properties": {
+						"type": {
+							"type": "string",
+							"enum": [
+								"sql",
+								"clr",
+								"script",
+								"xml",
+								"invokeTarget",
+								"startProcess",
+								"resumeProcess",
+								"callApi",
+								"file",
+								"sendMessage",
+								"javascript",
+								"processDbEvents",
+								"startBpmn",
+								"resumeBpmn",
+								"signal",
+								"auto"
+							]
+						},
+						"schema": { "type": "string" },
+						"source": { "type": "string" },
+						"model": { "type": "string" },
+						"command": { "type": "string" },
+						"procedure": { "type": "string" },
+						"target": {
+							"type": "string",
+							"pattern": "^(\\w+)\\.(\\w+)$"
+						},
+						"checkTypes": { "type": "string" },
+						"processDbEvents": { "type": "boolean" },
+						"commandTimeout": { "type": "number" },
+						"clrType": {
+							"type": "string",
+							"pattern": "^\\s*clr-type\\s*:\\s*([\\w\\.]+)\\s*;\\s*assembly\\s*=\\s*([\\w\\.]+)\\s*$"
+						},
+						"invoke": {
+							"type": "string",
+							"pattern": "^\\s*clr-type\\s*:\\s*([\\w\\.]+)\\s*;\\s*assembly\\s*=\\s*([\\w\\.]+)\\s*$"
+						},
+						"async": { "type": "boolean" },
+						"method": {
+							"type": "string",
+							"enum": [ "get", "post", "put", "delete" ]
+						},
+						"authorize": { "type": "boolean" },
+						"allowOrigin": { "type": "string" },
+						"errorCode": { "type": "number" },
+						"parameters": { "type": "object" },
+						"args": { "type": "object" },
+						"file": { "type": "string" },
+						"debugOnly": { "type": "boolean" },
+						"permissions": { "$ref": "#/definitions/permissions" },
+						"auto": { "$ref": "#/definitions/auto" },
+						"meta": { "$ref": "#/definitions/meta" },
+						"signal": { "type": "boolean" },
+						"roles": {
+							"type": "array",
+							"items": { "type": "string" }
+						}
+					},
+					"additionalProperties": false
+				}
+			}
+		},
+		"reports": {
+			"type": "object",
+			"patternProperties": {
+				".+": {
+					"type": "object",
+					"properties": {
+						"schema": { "type": "string" },
+						"source": { "type": "string" },
+						"model": { "type": "string" },
+						"name": { "type": "string" },
+						"report": { "type": "string" },
+						"checkTypes": { "type": "string" },
+						"encoding": { "type": "string" },
+						"commandTimeout": { "type": "number" },
+						"xmlSchemas": {
+							"type": "array",
+							"items": { "type": "string" }
+						},
+						"type": {
+							"type": "string",
+							"enum": [ "stimulsoft", "xml", "json", "pdf", "xlsx" ]
+						},
+						"permissions": { "$ref": "#/definitions/permissions" },
+						"auto": { "$ref": "#/definitions/auto" },
+						"meta": { "$ref": "#/definitions/meta" }
+					},
+					"additionalProperties": false
+				}
+			}
+		},
+		"files": {
+			"type": "object",
+			"patternProperties": {
+				".+": {
+					"type": "object",
+					"properties": {
+						"model": { "type": "string" },
+						"schema": { "type": "string" },
+						"source": { "type": "string" },
+						"type": {
+							"type": "string",
+							"enum": [ "parse", "clr", "sql", "azureBlob", "blobStorage", "json", "excel", "text" ]
+						},
+						"parse": {
+							"type": "string",
+							"enum": [ "excel", "xlsx", "csv", "dbf", "xml", "auto", "json" ]
+						},
+						"commandTimeout": { "type": "number" },
+						"async": { "type": "boolean" },
+						"clrType": {
+							"type": "string",
+							"pattern": "^\\s*clr-type\\s*:\\s*([\\w\\.]+)\\s*;\\s*assembly\\s*=\\s*([\\w\\.]+)\\s*$"
+						},
+						"locale": { "type": "string" },
+						"container": { "type": "string" },
+						"outputFileName": { "type": "string" },
+						"zip": { "type": "boolean" },
+						"azureSource": { "type": "string" },
+						"blobSource": { "type": "string" },
+						"blobStorage": { "type": "string" },
+						"imageCompress": {
+							"type": "object",
+							"properties": {
+								"quality": { "type": "number" },
+								"threshold": { "type": "number" }
+							}
+						},
+						"availableModels": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"name": { "type": "string" },
+									"columns": { "type": "string" },
+									"source": { "type": "string" },
+									"schema": { "type": "string" },
+									"model": { "type": "string" },
+									"checkTypes": { "type": "string" },
+									"parameters": { "type": "object" }
+								},
+								"additionalProperties": false
+							}
+						},
+						"permissions": { "$ref": "#/definitions/permissions" },
+						"auto": { "$ref": "#/definitions/auto" },
+						"meta": { "$ref": "#/definitions/meta" },
+						"key": { "type": "string" }
+					},
+					"additionalProperties": false
+				}
+			}
+		},
+		"imageSettings": {
+			"type": "object",
+			"patternProperties": {
+				".+": {
+					"type": "object",
+					"properties": {
+						"quality": { "type": "number" },
+						"threshold": { "type": "number" }
+					},
+					"additionalProperties": false
+				}
+			}
+		}
+	},
+	"additionalProperties": false
+}
