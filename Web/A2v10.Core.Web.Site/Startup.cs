@@ -121,7 +121,9 @@ public class Startup(IConfiguration configuration)
 	
 		services.AddKeyedScoped<IEndpointHandler, TestPageHandler>("SqlReports");
 		services.AddKeyedScoped<IEndpointHandler, TestPageHandler>("MyData");
-	}
+
+		MainApp.LibraryStartup.Init();
+    }
 
 	public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 	{
