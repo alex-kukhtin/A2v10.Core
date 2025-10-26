@@ -8,5 +8,9 @@ public struct CancelToken
 
 public class CatalogElem
 {
+    public Guid RefKey { get; init; }
+
+    #region EVENTS
     public Func<CancelToken, Task>? BeforeSave { get; init; }
+    #endregion
 }

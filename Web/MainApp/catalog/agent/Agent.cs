@@ -2,7 +2,6 @@
 
 public class Agent : CatalogElem
 {
-    public Guid RefKey { get; init; }
     public String Наименование { get; set; } = String.Empty;    
 
     public Agent()
