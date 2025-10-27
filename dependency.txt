@@ -3,8 +3,9 @@
 A2v10.AppRuntimeBuilder
 A2v10.Metadata
 A2v10.Platform
+A2v10.Scheduling
 
-!Workflow.Module
+!Workflow.Module (scheduling, workflow.engine)
 
 
 =======================

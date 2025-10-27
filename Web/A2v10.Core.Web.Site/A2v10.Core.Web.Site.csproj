@@ -42,9 +42,11 @@
 		<Reference Include="AppPersonnel">
 		  <HintPath>..\..\..\..\Projects\NovaEra.2023\AppPersonnel\bin\Debug\net6.0\AppPersonnel.dll</HintPath>
 		</Reference>
+		<!--
 		<Reference Include="MainApp">
 		  <HintPath>..\..\..\A2v10.Standard.Modules\MainApp\bin\Debug\net8.0\MainApp.dll</HintPath>
 		</Reference>
+		-->
 	</ItemGroup>
 
 
