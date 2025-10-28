@@ -2,7 +2,7 @@
 
 public class Agent : CatalogElem
 {
-    public String Наименование { get; set; } = String.Empty;    
+    public String? Code { get; set; }
 
     public Agent()
     {
@@ -13,6 +13,7 @@ public class Agent : CatalogElem
     {
         Console.WriteLine("Agent.BeforeSave called");
         token.Cancel = true;
+        Name = "Changed in BeforeSave"; 
         return Task.CompletedTask;
     }
 }
