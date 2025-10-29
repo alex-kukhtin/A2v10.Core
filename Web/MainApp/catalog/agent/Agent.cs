@@ -1,6 +1,6 @@
 ﻿namespace MainApp.Catalog;
 
-public class Agent : CatalogElem
+public partial class Agent : CatalogElem
 {
     public String? Code { get; set; }
 
