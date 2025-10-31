@@ -1,9 +1,5 @@
-﻿2025-10-24 (next: 8579)
+﻿2025-10-31 (next: 8580)
 
-A2v10.AppRuntimeBuilder
-A2v10.Metadata
-A2v10.Platform
-A2v10.Scheduling
 
 !Workflow.Module (scheduling, workflow.engine)
 
