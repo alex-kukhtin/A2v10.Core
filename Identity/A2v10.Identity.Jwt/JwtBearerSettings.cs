@@ -1,4 +1,4 @@
-﻿// Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2021-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Text;
@@ -65,8 +65,13 @@ public class JwtBearerSettings
 					ctx.Response.Headers.Append("Token-Expired", "true");
 				}
 				return Task.CompletedTask;
-			}
-		};
+			},
+			OnTokenValidated = (ctx) =>
+			{
+				// additional validation can be done here
+				return Task.CompletedTask;
+            }
+        };
 	}
 
 	public TokenValidationParameters DefaultValidationParameters =>

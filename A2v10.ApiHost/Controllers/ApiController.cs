@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 
 using A2v10.Identity.Core;
 using A2v10.Web.Identity;
+using A2v10.Identity.Jwt;
+using A2v10.Web.Identity.ApiKey;
 
 namespace A2v10.ApiHost.Controllers;
 
@@ -22,8 +24,8 @@ public class ResponseSuccess
 }
 
 [ApiController]
-//[Authorize(AuthenticationSchemes = ApiKeyAuthenticationOptions.Scheme)]
-[Authorize]
+[Authorize(AuthenticationSchemes = JwtBearerAuthenticationOptions.Scheme + "," + ApiKeyAuthenticationOptions.Scheme)]
+//[Authorize]
 [Route("api/[action]")]
 [Produces("application/json")]
 [ProducesResponseType(typeof(ResponseSuccess), StatusCodes.Status200OK)]

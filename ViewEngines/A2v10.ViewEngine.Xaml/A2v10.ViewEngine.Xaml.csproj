@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
-		<Version>10.1.8578</Version>
+		<TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+		<Version>10.1.8600</Version>
 		<Nullable>enable</Nullable>
 		<LangVersion>Latest</LangVersion>
 		<AssemblyName>A2v10.Xaml</AssemblyName>
@@ -30,9 +30,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.System.Xaml" Version="10.1.8028" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.10" />
-		<PackageReference Include="Microsoft.Extensions.Options" Version="9.0.10" />
+		<PackageReference Include="A2v10.System.Xaml" Version="10.1.8030" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Options" Version="10.0.0" />
 	</ItemGroup>
 
 	<PropertyGroup>

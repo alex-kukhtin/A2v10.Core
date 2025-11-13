@@ -34,6 +34,37 @@ services.AddPlatformIdentityCore<T>()
 }
 ```
 
+
+## Configure Swagger
+
+Add PackageReference to *Swashbuckle.AspNetCore*:
+```xml	
+<PackageReference Include="Swashbuckle.AspNetCore" Version="10.0.0" />
+```
+
+and add the following code to *Startup.cs*:
+```csharp
+using Microsoft.OpenApi;
+
+services.AddSwaggerGen(c =>
+{
+    c.AddSecurityDefinition(JwtBearerAuthenticationOptions.Scheme, new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.Http,
+        In = ParameterLocation.Header,
+        Scheme = JwtBearerAuthenticationOptions.Scheme,
+    });
+
+    c.AddSecurityRequirement(doc => new OpenApiSecurityRequirement()
+    {
+        {
+            new OpenApiSecuritySchemeReference(JwtBearerAuthenticationOptions.Scheme, doc),
+            new List<String>()
+        }
+    });
+});
+```
+
 # Related Packages
 
 * [A2v10.Identity.Core](https://www.nuget.org/packages/A2v10.Identity.Core)

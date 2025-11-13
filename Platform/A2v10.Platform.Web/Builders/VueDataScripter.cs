@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -114,7 +114,9 @@ vm.__doInit__('$(BaseUrl)');
 ";
 }
 
-public class VueDataScripter(IApplicationHost host, IAppCodeProvider codeProvider, ILocalizer localizer, ICurrentUser currentUser) : IDataScripter
+public class VueDataScripter(
+	IApplicationHost host, IAppCodeProvider codeProvider, ILocalizer localizer, 
+	ICurrentUser currentUser) : IDataScripter
 {
 
 	private readonly IAppCodeProvider _codeProvider = codeProvider ?? throw new ArgumentNullException(nameof(codeProvider));
@@ -131,7 +133,7 @@ public class VueDataScripter(IApplicationHost host, IAppCodeProvider codeProvide
 		return model.CreateScript(this);
 	}
 
-	public String CreateScript(IDataHelper helper, IDictionary<String, Object?>? sys, IDictionary<String, IDataMetadata> meta)
+	public String CreateScript(IDataHelper helper, IReadOnlyDictionary<String, Object?>? sys, IDictionary<String, IDataMetadata> meta)
 	{
 		var sb = new StringBuilder();
 		sb.AppendLine("function modelData(template, data) {");
@@ -178,7 +180,7 @@ function modelData(template, data) {
 ";
 	}
 
-	static String SetModelInfo(IDataHelper helper, IDictionary<String, Object?>? sys)
+	static String SetModelInfo(IDataHelper helper, IReadOnlyDictionary<String, Object?>? sys)
 	{
 		if (sys == null)
 			return String.Empty;

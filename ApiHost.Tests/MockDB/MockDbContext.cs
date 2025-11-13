@@ -70,12 +70,12 @@ public class MockDbContext : IDbContext
 		return Task.FromResult((T?) o);
 	}
 
-	public IList<T>? LoadList<T>(string? source, string command, object? prms = null) where T : class
+	public IReadOnlyList<T>? LoadList<T>(string? source, string command, object? prms = null) where T : class
 	{
 		throw new NotImplementedException();
 	}
 
-	public Task<IList<T>?> LoadListAsync<T>(string? source, string command, object? prms = null) where T : class
+	public Task<IReadOnlyList<T>?> LoadListAsync<T>(string? source, string command, object? prms = null) where T : class
 	{
 		throw new NotImplementedException();
 	}

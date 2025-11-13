@@ -1,4 +1,4 @@
-﻿// Copyright © 2020-2023 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2020-2025 Alex Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;

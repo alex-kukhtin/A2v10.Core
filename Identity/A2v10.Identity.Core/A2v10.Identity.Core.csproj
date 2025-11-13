@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
-		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
-		<Version>10.1.8566</Version>
+		<TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+		<Version>10.1.8600</Version>
 		<LangVersion>Latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<OutputType>Library</OutputType>
@@ -22,7 +22,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Data.Interfaces" Version="10.1.7540" />
+		<PackageReference Include="A2v10.Data.Interfaces" Version="10.1.7570" />
 		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.14.0" />
 	</ItemGroup>
 
