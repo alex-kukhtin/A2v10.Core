@@ -51,6 +51,7 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
     ISqlQueryTextProvider _sqlQueryTextProvider, IAppCodeProvider _codeProvider, IConfiguration _configuration,
     IExternalDataProvider _externalDataProvider, ILocalizer _localizer, IAppRuntimeBuilder _appRuntimeBuilder) : IDataService
 {
+	//private readonly IClrAppProvider? _clrAppProvider = _serviceProvider.GetService<IClrAppProvider>();	
     static PlatformUrl CreatePlatformUrl(UrlKind kind, String baseUrl)
 	{
 		return new PlatformUrl(kind, baseUrl, null);

@@ -20,6 +20,7 @@ using A2v10.Core.Web.Site.TestServices;
 using A2v10.BlobStorage.Azure;
 using A2v10.BlobStorage.FileSystem;
 using A2v10.Identity.Core;
+using MainApp;
 
 namespace A2v10.Core.Web.Site;
 
@@ -122,7 +123,7 @@ public class Startup(IConfiguration configuration)
 		services.AddKeyedScoped<IEndpointHandler, TestPageHandler>("SqlReports");
 		services.AddKeyedScoped<IEndpointHandler, TestPageHandler>("MyData");
 
-		MainApp.LibraryStartup.Init();
+		AppStartup.Init();
     }
 
 	public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

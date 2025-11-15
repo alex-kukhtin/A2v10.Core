@@ -2,7 +2,7 @@
 
 namespace MainApp;
 
-public static class LibraryStartup
+public static class AppStartup
 {
     public static void Init()
     {
