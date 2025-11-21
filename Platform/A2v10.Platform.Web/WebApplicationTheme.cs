@@ -1,4 +1,4 @@
-﻿// Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2021-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.IO;
@@ -53,4 +53,7 @@ public class WebApplicationTheme(IWebHostEnvironment _webHostEnviromnent, IOptio
 			return String.Empty;
 		return "/img/applogo.svg";
     }
+
+    public String BodyCssClass =>
+		_appOptions.BodyCssClass ?? String.Empty;
 }

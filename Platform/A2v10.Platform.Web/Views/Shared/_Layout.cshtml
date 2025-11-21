@@ -1,6 +1,7 @@
 ﻿@model MainViewModel
 @inject IAppCodeProvider codeProvider
 @inject ICurrentUser currentUser
+@inject IApplicationTheme appTheme
 @inject IAppVersion appVersion
 
 @{
@@ -31,7 +32,7 @@ GitHub: https://github.com/alex-kukhtin/A2v10.Core
 	<link rel="icon" href="/favicon.ico" type="image/x-icon" />
 	@Html.Raw(Model?.ModelStyles)
 </head>
-<body>
+<body class="@appTheme.BodyCssClass">
 	@RenderBody()
 	<script type="text/javascript" src="/scripts/vue.@Html.Raw(minify)js?v=2.7.16"></script>
 	<script type="text/javascript" src="/scripts/d3.min.js?v=@appVersion.AppBuild"></script>

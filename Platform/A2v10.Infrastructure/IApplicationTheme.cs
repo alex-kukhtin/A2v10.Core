@@ -8,4 +8,6 @@ public interface IApplicationTheme
 {
 	String MakeTheme();
 	String LogoUrl();
+
+	String BodyCssClass { get; }
 }

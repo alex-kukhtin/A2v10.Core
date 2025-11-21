@@ -2,6 +2,7 @@
 @inject IAppVersion appVersion
 @inject IApplicationTheme appTheme
 @inject IAppCodeProvider codeProvider
+@inject IApplicationTheme appTheme
 @model IIdentityViewModel
 @{
 	var logoUrl = appTheme.LogoUrl();
@@ -28,7 +29,7 @@ GitHub: https://github.com/alex-kukhtin/A2v10.Core
 	<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
 	<link rel="icon" href="/favicon.ico" type="image/x-icon" />
 </head>
-<body>
+<body class="@appTheme.BodyCssClass">
 	<div id="app" class="shell login-shell" v-cloak>
 		<header class="header">
 			<a class="h-block" href="/">

@@ -30,7 +30,8 @@ public record AppOptions
 	public String? UserMenu { get; set; }
 	public String? Theme { get; set; }
 	public String? Layout { get; set; }
-	public String? HelpUrl { get; set; }
+    public String? BodyCssClass { get; set; }
+    public String? HelpUrl { get; set; }
 	public Boolean MultiTenant { get; set; }
 	public Boolean MultiCompany { get; set; }
 	public Boolean Registration { get; set; }
