@@ -1,17 +1,15 @@
-﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
-
-using System.Text;
-using System.Threading.Tasks;
-using System.Globalization;
-using System.IO;
-
-using Microsoft.Extensions.DependencyInjection;
-
-using Newtonsoft.Json;
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.Data.Interfaces;
 using A2v10.Services.Interop;
+using DocumentFormat.OpenXml.EMMA;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
+using System.Globalization;
+using System.IO;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace A2v10.Services;
 
@@ -350,6 +348,23 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 		return _serviceProvider.GetRequiredKeyedService<IEndpointHandler>(handlerKeys[0]);
 
 	}
+
+    ISignalResult? GetSignalResult(IModelView view, ExpandoObject data)
+	{
+		if (!view.Signal)
+			return null;
+		var signal = data.Get<ExpandoObject>("Signal");
+		data.Set("Signal", null);
+		if (signal != null)
+			return SignalResult.FromData(signal);
+		return null;
+	}
+
+	Task EmitBeforeSaveAsync(IPlatformUrl platformUrl, ExpandoObject data)
+	{
+		return Task.CompletedTask;	
+    }
+
 	public async Task<ISaveResult> SaveAsync(String baseUrl, ExpandoObject data, Action<ExpandoObject> setParams)
 	{
 		var platformBaseUrl = CreatePlatformUrl(baseUrl);
@@ -366,13 +381,16 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 
 		CheckUserState();
 
+		await EmitBeforeSaveAsync(platformBaseUrl, data);
+
 		if (view.HasMetadata)
 		{
 			var saveResult = await _appRuntimeBuilder.SaveAsync(platformBaseUrl, view, data, savePrms);
 			return new SaveResult()
 			{
 				Data = JsonConvert.SerializeObject(saveResult, JsonHelpers.DataSerializerSettings),
-			};
+                SignalResult = GetSignalResult(view, saveResult)
+            };
 
 		}
 		else if (!String.IsNullOrEmpty(view.EndpointHandler))
@@ -382,26 +400,18 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 			return new SaveResult()
 			{
 				Data = JsonConvert.SerializeObject(saveResult, JsonHelpers.DataSerializerSettings),
-			};
+                SignalResult = GetSignalResult(view, saveResult)
+            };
 		}
 
 		// TODO: HookHandler, invokeTarget, events
 
 		var model = await _dbContext.SaveModelAsync(view.DataSource, view.UpdateProcedure(), data, savePrms);
 
-		ISignalResult? signalResult = null;
-		if (view.Signal)
-		{
-			var signal = model.Root.Get<ExpandoObject>("Signal");
-			model.Root.Set("Signal", null);
-			if (signal != null)
-				signalResult = SignalResult.FromData(signal);
-		}
-
 		var result = new SaveResult()
 		{
 			Data = JsonConvert.SerializeObject(model.Root, JsonHelpers.DataSerializerSettings),
-			SignalResult = signalResult
+			SignalResult = GetSignalResult(view, model.Root)
 		};
 		return result;
 	}
