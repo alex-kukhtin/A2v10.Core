@@ -1,15 +1,17 @@
 ﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
-using A2v10.Data.Interfaces;
-using A2v10.Services.Interop;
-using DocumentFormat.OpenXml.EMMA;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
 using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
+using Newtonsoft.Json;
+
+using A2v10.Data.Interfaces;
+using A2v10.Services.Interop;
 
 namespace A2v10.Services;
 
@@ -49,7 +51,7 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
     ISqlQueryTextProvider _sqlQueryTextProvider, IAppCodeProvider _codeProvider, IConfiguration _configuration,
     IExternalDataProvider _externalDataProvider, ILocalizer _localizer, IAppRuntimeBuilder _appRuntimeBuilder) : IDataService
 {
-	//private readonly IClrAppProvider? _clrAppProvider = _serviceProvider.GetService<IClrAppProvider>();	
+	private readonly IAppClrManager? _appClrManager = _serviceProvider.GetService<IAppClrManager>(); // may be null!
     static PlatformUrl CreatePlatformUrl(UrlKind kind, String baseUrl)
 	{
 		return new PlatformUrl(kind, baseUrl, null);
@@ -154,7 +156,7 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 		}
 	}
 
-	async Task<IDataLoadResult> Load(IPlatformUrl platformUrl, Action<ExpandoObject> setParams, Boolean isReload = false)
+	async Task<IDataLoadResult> Load(PlatformUrl platformUrl, Action<ExpandoObject> setParams, Boolean isReload = false)
 	{
 		var view = await LoadViewAsync(platformUrl);
 
@@ -349,7 +351,7 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 
 	}
 
-    ISignalResult? GetSignalResult(IModelView view, ExpandoObject data)
+    static ISignalResult? GetSignalResult(IModelView view, ExpandoObject data)
 	{
 		if (!view.Signal)
 			return null;
@@ -359,11 +361,6 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 			return SignalResult.FromData(signal);
 		return null;
 	}
-
-	Task EmitBeforeSaveAsync(IPlatformUrl platformUrl, ExpandoObject data)
-	{
-		return Task.CompletedTask;	
-    }
 
 	public async Task<ISaveResult> SaveAsync(String baseUrl, ExpandoObject data, Action<ExpandoObject> setParams)
 	{
@@ -381,12 +378,15 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 
 		CheckUserState();
 
-		await EmitBeforeSaveAsync(platformBaseUrl, data);
+		if (_appClrManager != null && !await _appClrManager.OnBeforeSaveModelAsync(platformBaseUrl, data))
+			return new SaveResult();
 
 		if (view.HasMetadata)
 		{
 			var saveResult = await _appRuntimeBuilder.SaveAsync(platformBaseUrl, view, data, savePrms);
-			return new SaveResult()
+			if (_appClrManager != null)
+				await _appClrManager.OnAfterSaveModelAsync(platformBaseUrl, saveResult);
+            return new SaveResult()
 			{
 				Data = JsonConvert.SerializeObject(saveResult, JsonHelpers.DataSerializerSettings),
                 SignalResult = GetSignalResult(view, saveResult)
@@ -397,7 +397,9 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 		{
 			var handler = GetEndpointHandler(view.EndpointHandler);
 			var saveResult = await handler.SaveAsync(platformBaseUrl, view, data, savePrms);
-			return new SaveResult()
+            if (_appClrManager != null)
+                await _appClrManager.OnAfterSaveModelAsync(platformBaseUrl, saveResult);
+            return new SaveResult()
 			{
 				Data = JsonConvert.SerializeObject(saveResult, JsonHelpers.DataSerializerSettings),
                 SignalResult = GetSignalResult(view, saveResult)
@@ -407,8 +409,10 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 		// TODO: HookHandler, invokeTarget, events
 
 		var model = await _dbContext.SaveModelAsync(view.DataSource, view.UpdateProcedure(), data, savePrms);
+        if (_appClrManager != null)
+            await _appClrManager.OnAfterSaveModelAsync(platformBaseUrl, model.Root);
 
-		var result = new SaveResult()
+        var result = new SaveResult()
 		{
 			Data = JsonConvert.SerializeObject(model.Root, JsonHelpers.DataSerializerSettings),
 			SignalResult = GetSignalResult(view, model.Root)

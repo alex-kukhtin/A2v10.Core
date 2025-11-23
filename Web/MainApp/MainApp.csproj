@@ -20,11 +20,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="_sqlscripts\" />
+		<Folder Include="_Global\" />
+		<Folder Include="_sqlscripts\" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\Platform\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
+		<ProjectReference Include="..\..\Platform\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
 	</ItemGroup>
 
 </Project>

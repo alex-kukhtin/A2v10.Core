@@ -1,19 +1,25 @@
-﻿namespace MainApp.Catalog;
+﻿
+using A2v10.Infrastructure.ClrMetadata;
 
-public partial class Agent : CatalogElem
+namespace MainApp.Catalog;
+
+public partial class Agent
 {
-    public String? Code { get; set; }
-
-    public Agent()
+    protected override void Init()
     {
         BeforeSave = this.OnBeforeSave;
+        AfterSave = this.OnAfterSave;
     }
 
     private Task OnBeforeSave(CancelToken token)
     {
         Console.WriteLine("Agent.BeforeSave called");
-        token.Cancel = true;
         Name = "Changed in BeforeSave"; 
+        return Task.CompletedTask;
+    }
+
+    private Task OnAfterSave()
+    {
         return Task.CompletedTask;
     }
 }

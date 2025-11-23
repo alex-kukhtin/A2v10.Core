@@ -12,7 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using A2v10.Infrastructure;
 using A2v10.ReportEngine.Pdf;
-using A2v10.Workflow.Engine;
+//using A2v10.Workflow.Engine;
 using A2v10.Scheduling;
 using A2v10.Scheduling.Commands;
 using A2v10.Core.Web.Site.TestServices;
@@ -101,18 +101,20 @@ public class Startup(IConfiguration configuration)
 
 		//services.AddDataProtectionSqlServer<Int64>("APP_ANAME");
 
+		/*
 		services.AddWorkflowEngineScoped()
 		.AddInvokeTargets(a =>
 		{
 			a.RegisterEngine<WorkflowInvokeTarget>("Workflow", InvokeScope.Scoped);
 		});
+		*/
 
 		services.UseScheduling(Configuration, factory =>
 		{
 			// job handlers
 			factory.RegisterJobHandler<ExecuteSqlJobHandler>("ExecuteSql")
-            .RegisterJobHandler<ProcessCommandsJobHandler>("ProcessCommands")
-            .RegisterJobHandler<WorkflowPendingJobHandler>("WorkflowPending");
+			.RegisterJobHandler<ProcessCommandsJobHandler>("ProcessCommands");
+            //.RegisterJobHandler<WorkflowPendingJobHandler>("WorkflowPending");
 
 			factory.RegisterJobHandler<ExecuteSqlJobHandler>(); // with type name
             // commands
@@ -123,7 +125,12 @@ public class Startup(IConfiguration configuration)
 		services.AddKeyedScoped<IEndpointHandler, TestPageHandler>("SqlReports");
 		services.AddKeyedScoped<IEndpointHandler, TestPageHandler>("MyData");
 
-		AppStartup.Init();
+		services.UseApplicationClr(opts =>
+		{
+			MainApp.StartupClr.Register(opts);
+
+        });
+		//AppStartup.Init();
     }
 
 	public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

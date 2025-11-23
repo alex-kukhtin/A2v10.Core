@@ -1,10 +1,7 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
-using System.Net.Http.Json;
-using System.Net.Mime;
 using System.Text;
-using System.Text.Json.Serialization;
 
 namespace A2v10.Infrastructure;
 

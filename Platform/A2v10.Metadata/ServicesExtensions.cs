@@ -1,8 +1,10 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
+using System;
+
 using A2v10.Infrastructure;
+using A2v10.Infrastructure.ClrMetadata;
 using A2v10.Metadata;
-using A2v10.Services;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -10,6 +12,7 @@ public static class ServicesExtensions
 {
     public static IServiceCollection UseAppMetadata(this IServiceCollection services)
     {
+
         services.AddSingleton<DatabaseMetadataCache>()
             .AddScoped<DatabaseMetadataProvider>()
             .AddScoped<IAppRuntimeBuilder, AppMetadataBuilder>();
@@ -20,6 +23,16 @@ public static class ServicesExtensions
 
         services.AddScoped<ILicenseManager, LicenseManager>();  
 
+        return services;
+    }
+
+    public static IServiceCollection UseApplicationClr(this IServiceCollection services,
+        Action<AppMetadataClrOptions> action)
+    {
+        var options = new AppMetadataClrOptions();
+        action(options);
+        services.AddSingleton<IAppClrProvider>(sp => new AppMetadataClrProvider(options, sp))
+            .AddSingleton<IAppClrManager, AppMetadataClrManager>();
         return services;
     }
 }
