@@ -7,15 +7,9 @@ using A2v10.Infrastructure.ClrMetadata;
 
 namespace A2v10.Metadata;
 
-public class AppMetadataClrProvider : IAppClrProvider
+public class AppMetadataClrProvider(AppMetadataClrOptions _options, IServiceProvider _serviceProvider) : IAppClrProvider
 {
-    private readonly IReadOnlyDictionary<String, Func<ExpandoObject, IServiceProvider, IClrElement>> _elemMap;
-    private readonly IServiceProvider _serviceProvider;
-    public AppMetadataClrProvider(AppMetadataClrOptions _options, IServiceProvider serviceProvider)
-    {
-        _elemMap = _options.Map;
-        _serviceProvider = serviceProvider;
-    }
+    private readonly IReadOnlyDictionary<String, Func<ExpandoObject, IServiceProvider, IClrElement>> _elemMap = _options.Map;
 
     #region IAppClrProvider Members
     public IClrElement? CreateElement(String localPath, ExpandoObject model)

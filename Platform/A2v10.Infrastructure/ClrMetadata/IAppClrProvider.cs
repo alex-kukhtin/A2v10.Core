@@ -7,7 +7,7 @@ namespace A2v10.Infrastructure.ClrMetadata;
 
 public class AppMetadataClrOptions
 {
-    private Dictionary<String, Func<ExpandoObject, IServiceProvider, IClrElement>> _map = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<String, Func<ExpandoObject, IServiceProvider, IClrElement>> _map = new(StringComparer.OrdinalIgnoreCase);
 
     public void AddElement(String code, Func<ExpandoObject, IServiceProvider, IClrElement> action)
     {

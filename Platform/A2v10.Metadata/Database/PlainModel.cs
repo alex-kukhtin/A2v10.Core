@@ -20,7 +20,7 @@ internal partial class PlainModelBuilder
     {
         String DetailsArray()
         {
-            if (!table.Details.Any())
+            if (table.Details.Count == 0)
                 return String.Empty;
 
             var detailsArray = table.Details.Select(d => {
@@ -33,7 +33,7 @@ internal partial class PlainModelBuilder
 
         async Task<String> DetailsContentAsync()
         {
-            if (!table.Details.Any())
+            if (table.Details.Count == 0)
                 return String.Empty;
             var sb = new StringBuilder();
 
@@ -283,7 +283,7 @@ internal partial class PlainModelBuilder
         return dm.Root; 
     }
 
-    String DumpDataTable(DataTable dataTable)
+    static String DumpDataTable(DataTable dataTable)
     {
         var sb = new StringBuilder();
         foreach (DataRow row in dataTable.Rows)
