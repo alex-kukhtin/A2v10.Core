@@ -5,18 +5,21 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Threading.Tasks;
 
-namespace A2v10.Infrastructure.ClrMetadata;
+namespace A2v10.App.Infrastructure;
 
-public class CatalogBase<T> : IClrCatalogElement where T : struct
+public partial class CatalogBase<T> : ElementBase, IClrCatalogElement where T : struct
 {
     protected ExpandoObject? _source;
 
-    #region Ctors
-    public CatalogBase()
+    #region ctors
+    public CatalogBase(IServiceProvider serviceProvider)
+        : base(serviceProvider) 
     {
+        Init();
     }
 
-    public CatalogBase(ExpandoObject? src)
+    public CatalogBase(IServiceProvider serviceProvider, ExpandoObject? src)
+        : base(serviceProvider) 
     {
         _source = src;
         if (src == null)

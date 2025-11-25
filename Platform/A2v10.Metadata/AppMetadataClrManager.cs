@@ -5,7 +5,7 @@ using System.Dynamic;
 using System.Threading.Tasks;
 
 using A2v10.Infrastructure;
-using A2v10.Infrastructure.ClrMetadata;
+using A2v10.App.Infrastructure;
 
 namespace A2v10.Metadata;
 
@@ -30,7 +30,11 @@ internal class AppMetadataClrManager(IAppClrProvider _appClirProvider) : IAppClr
             var cancelToken = new CancelToken();    
             await eventSource.BeforeSave(cancelToken);
             if (cancelToken.Cancel)
+            {
+                if (!String.IsNullOrWhiteSpace(cancelToken.Message))
+                    throw new InvalidOperationException($"UI:{cancelToken.Message}");   
                 return false;
+            }
             elem.ToExpando();
             return true;
         }

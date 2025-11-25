@@ -1,4 +1,5 @@
-﻿using A2v10.Infrastructure.ClrMetadata;
+﻿
+using A2v10.App.Infrastructure;
 using System.Dynamic;
 
 
@@ -8,10 +9,14 @@ using System.Dynamic;
 namespace MainApp;
 public static class StartupClr
 {
+    private static readonly Dictionary<String, Func<ExpandoObject, IServiceProvider, IClrElement>> _elemMap = new()
+    {
+        // ??? TODO: catalog/agent!!!! Singular in name !!!!
+        ["catalog/agents"] = (model, serviceProvider) => new MainApp.Catalog.Agent(serviceProvider, model.Get<ExpandoObject>("Agent"))
+    };
     public static void Register(AppMetadataClrOptions opts)
     {
-        // TODO: catalog/agent!!!! Singular!!!!
-        opts.AddElement("catalog/agents", (model, serviceProvider) => new MainApp.Catalog.Agent(model.Get<ExpandoObject>("Agent")));
+        opts.AddRange(_elemMap);
     }
 }
 

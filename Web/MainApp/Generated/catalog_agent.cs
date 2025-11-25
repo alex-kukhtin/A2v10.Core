@@ -1,18 +1,22 @@
 ﻿
-using A2v10.Infrastructure.ClrMetadata;
 
 using System.Dynamic;
+
+using A2v10.App.Infrastructure;
 
 namespace MainApp.Catalog;
 
 // GENERATED CODE - DO NOT MODIFY   
 public partial class Agent : CatalogBase<Int64>
 {
-    public Agent() : base() { }
+    public Agent(IServiceProvider serviceProvider) : base(serviceProvider)
+    {
+        Init();
+    }   
 
     public String? Code { get; set; }
 
-    public Agent(ExpandoObject? src) : base(src)
+    public Agent(IServiceProvider serviceProvider, ExpandoObject? src) : base(serviceProvider, src)
     {
         if (src != null)
         {

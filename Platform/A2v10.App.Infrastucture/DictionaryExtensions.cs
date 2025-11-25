@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Dynamic;
 
-namespace A2v10.Infrastructure.ClrMetadata;
+namespace A2v10.App.Infrastructure;
 
 public static class DictionaryExtensions
 {

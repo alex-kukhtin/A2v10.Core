@@ -3,7 +3,7 @@
 using System;
 
 using A2v10.Infrastructure;
-using A2v10.Infrastructure.ClrMetadata;
+using A2v10.App.Infrastructure;
 using A2v10.Metadata;
 
 namespace Microsoft.Extensions.DependencyInjection;
@@ -31,8 +31,8 @@ public static class ServicesExtensions
     {
         var options = new AppMetadataClrOptions();
         action(options);
-        services.AddSingleton<IAppClrProvider>(sp => new AppMetadataClrProvider(options, sp))
-            .AddSingleton<IAppClrManager, AppMetadataClrManager>();
+        services.AddScoped<IAppClrProvider>(sp => new AppMetadataClrProvider(options, sp))
+            .AddScoped<IAppClrManager, AppMetadataClrManager>();
         return services;
     }
 }

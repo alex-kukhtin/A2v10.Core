@@ -12,6 +12,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="A2v10.App.Assets" Version="10.1.8578" />
+		<PackageReference Include="A2v10.Data.Interfaces" Version="10.1.7570" />
 		<PackageReference Include="A2v10.Sql.MSBuild" Version="10.1.8105" />
 		<PackageReference Include="Microsoft.TypeScript.MSBuild" Version="5.9.3">
 			<PrivateAssets>all</PrivateAssets>
@@ -25,7 +26,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\Platform\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
+		<ProjectReference Include="..\..\Platform\A2v10.App.Infrastucture\A2v10.App.Infrastructure.csproj" />
 	</ItemGroup>
 
 </Project>

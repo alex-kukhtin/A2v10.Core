@@ -43,7 +43,7 @@ internal partial class PlainModelBuilder
                 else if (col.Required)
                     yield return $"'{_table.RealItemName}.{col.Name}': `@[Error.Required]`";
                 else if (col.Unique)
-                    yield return $$"""'{{_table.RealItemName}}.{{col.Name}}': {valid: {{col.Name.ToLowerInvariant()}}Duplicate, async: true, msg: `@[Error.Duplicate]`}""";
+                    yield return $$"""'{{_table.RealItemName}}.{{col.Name}}': {valid: {{col.Name.ToLowerInvariant()}}Duplicate, async: true, msg: `@[Error.{{_table.RealItemName}}.Duplicate.{{col.Name}}]`}""";
             }
 
             foreach (var d in _table.Details)

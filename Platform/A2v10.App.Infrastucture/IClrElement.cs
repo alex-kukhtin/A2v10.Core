@@ -1,6 +1,6 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
-namespace A2v10.Infrastructure.ClrMetadata;
+namespace A2v10.App.Infrastructure;
 
 public interface IClrElement
 {

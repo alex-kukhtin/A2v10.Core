@@ -3,9 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Dynamic;
 
-using A2v10.Infrastructure.ClrMetadata;
+using A2v10.App.Infrastructure;
 
 namespace A2v10.Metadata;
+
 
 public class AppMetadataClrProvider(AppMetadataClrOptions _options, IServiceProvider _serviceProvider) : IAppClrProvider
 {
