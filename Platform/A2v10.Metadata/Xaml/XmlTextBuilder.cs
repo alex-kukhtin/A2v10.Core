@@ -17,7 +17,7 @@ internal class XmlTextBuilder
     {
         var builder = new XmlTextBuilder()
         {
-            _form = form.form
+            _form = form.Form
         };
         var xdoc = builder.BuildText();
         return xdoc.ToString();

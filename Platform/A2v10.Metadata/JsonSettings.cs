@@ -13,14 +13,18 @@ public class JsonEmptyStringEnumConverter : StringEnumConverter
     public override Object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
     {
         if (String.IsNullOrEmpty(reader.Value?.ToString()))
-            return null;
+        {
+            if (!objectType.IsEnum)
+                throw new ArgumentException("Expected enum", nameof(objectType));
+            return Enum.ToObject(objectType, 0);
+        }
         return base.ReadJson(reader, objectType, existingValue, serializer);
     }
 }
 
 public static class JsonSettings
 {
-    public static JsonSerializerSettings IgnoreNull => new JsonSerializerSettings()
+    public static JsonSerializerSettings IgnoreNull => new()
     {   
         NullValueHandling = NullValueHandling.Ignore,
         DefaultValueHandling = DefaultValueHandling.Ignore,
@@ -30,7 +34,7 @@ public static class JsonSettings
         ContractResolver = new FormMetadataContractResolver()
     };
 
-    public static JsonSerializerSettings WithNull => new JsonSerializerSettings()
+    public static JsonSerializerSettings WithNull => new()
     {
         NullValueHandling = NullValueHandling.Include,
         Converters = [
@@ -38,7 +42,7 @@ public static class JsonSettings
         ]
     };
 
-    public static JsonSerializerSettings Default => new JsonSerializerSettings()
+    public static JsonSerializerSettings Default => new()
     {
         Converters = [
             new JsonEmptyStringEnumConverter()

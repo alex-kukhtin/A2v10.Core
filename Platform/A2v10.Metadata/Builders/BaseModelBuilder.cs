@@ -137,7 +137,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
         else
         {
             var formMeta = await _metadataProvider.GetFormAsync(_dataSource, _baseTable ?? _table, _platformUrl.Action, CreateDefaultForm);
-            page = XamlBulder.BuildForm(formMeta.form);
+            page = XamlBulder.BuildForm(formMeta.Form);
             templateText = await CreateTemplateAsync();
         }
         if (page == null)

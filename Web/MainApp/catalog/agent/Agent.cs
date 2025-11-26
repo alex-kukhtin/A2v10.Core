@@ -9,8 +9,8 @@ public partial class Agent
 {
     protected override void Init()
     {
-        BeforeSave = OnBeforeSave;
-        AfterSave = OnAfterSave;
+        //BeforeSave = OnBeforeSave;
+        //AfterSave = OnAfterSave;
     }
 
     private async Task OnBeforeSave(CancelToken token)

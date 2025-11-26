@@ -180,6 +180,6 @@ public record Form : FormItem
     public EditWithMode EditWith { get; init; }
 }
 
-public record FormMetadata(Form form, String Template)
+public record FormMetadata(Form Form, String Template)
 {
 }

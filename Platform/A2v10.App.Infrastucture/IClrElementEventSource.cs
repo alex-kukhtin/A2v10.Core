@@ -15,6 +15,12 @@ public interface IClrElementEventSource
 {
     Func<CancelToken, Task>? BeforeSave { get; }
     Func<Task>? AfterSave { get; }
+
+    Func<IClrElement, Task>? Copy { get; }
+
+    Func<CancelToken, Task>? BeforeDelete { get; }
+    Func<Task>? AfterDelete { get; }
+
 }
 
 public interface IClrDocumentEventSource : IClrElementEventSource

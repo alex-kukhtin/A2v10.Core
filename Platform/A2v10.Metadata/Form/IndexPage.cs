@@ -177,7 +177,7 @@ internal partial class IndexModelBuilder
                     Props = new FormItemProps()
                     {
                         Url = url,
-                        Placeholder = $"@{column.Reference.RefTable}.All",
+                        Placeholder = $"@{column.Name}.AllData",
                         ShowClear = showClear,
                         LineClamp = lineClamp,
                         ItemsSource = itemsSource,

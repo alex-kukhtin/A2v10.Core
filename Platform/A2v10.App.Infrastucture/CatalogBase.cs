@@ -54,5 +54,8 @@ public partial class CatalogBase<T> : ElementBase, IClrCatalogElement where T : 
     #region IClrEventSource
     public Func<CancelToken, Task>? BeforeSave { get; protected set; }
     public Func<Task>? AfterSave { get; protected set; }
+    public Func<IClrElement, Task>? Copy { get; }
+    public Func<CancelToken, Task>? BeforeDelete { get; }
+    public Func<Task>? AfterDelete { get; }
     #endregion
 }
