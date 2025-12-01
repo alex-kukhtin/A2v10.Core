@@ -12,7 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using A2v10.Infrastructure;
 using A2v10.ReportEngine.Pdf;
-//using A2v10.Workflow.Engine;
+using A2v10.Workflow.Engine;
 using A2v10.Scheduling;
 using A2v10.Scheduling.Commands;
 using A2v10.Core.Web.Site.TestServices;
@@ -27,14 +27,14 @@ namespace A2v10.Core.Web.Site;
 
 public struct LicenseInfo : ILicenseInfo
 {
-	public LicenseState LicenseState => LicenseState.Ok;
-	public String Name => throw new NotImplementedException();
-	public String ApplicationName => throw new NotImplementedException();
+	public readonly LicenseState LicenseState => LicenseState.Ok;
+	public readonly String Name => throw new NotImplementedException();
+	public readonly String ApplicationName => throw new NotImplementedException();
 	public DateTime IssuedOn { get; set; }
-	public DateTime ExpiresOn => throw new NotImplementedException();
-	public String? Title => throw new NotImplementedException();
-	public String? Message => throw new NotImplementedException();
-	public ExpandoObject Data => throw new NotImplementedException();	
+	public readonly DateTime ExpiresOn => throw new NotImplementedException();
+	public readonly String? Title => throw new NotImplementedException();
+	public readonly String? Message => throw new NotImplementedException();
+	public readonly ExpandoObject Data => throw new NotImplementedException();	
 }
 
 public class NullLicenseManager : ILicenseManager
@@ -102,13 +102,11 @@ public class Startup(IConfiguration configuration)
 
 		//services.AddDataProtectionSqlServer<Int64>("APP_ANAME");
 
-		/*
 		services.AddWorkflowEngineScoped()
 		.AddInvokeTargets(a =>
 		{
 			a.RegisterEngine<WorkflowInvokeTarget>("Workflow", InvokeScope.Scoped);
 		});
-		*/
 
 		services.UseScheduling(Configuration, factory =>
 		{

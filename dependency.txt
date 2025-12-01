@@ -1,8 +1,6 @@
-﻿2025-10-31 (next: 8580)
+﻿2025-12-01 (next: 8601)
 
 Проверить Signal после обновления всего!
-
-
 !Workflow.Module (scheduling, workflow.engine)
 
 

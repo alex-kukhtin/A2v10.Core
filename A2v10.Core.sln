@@ -139,7 +139,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "A2v10.Metadata", "Platform\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MainApp", "Web\MainApp\MainApp.csproj", "{18036FBA-769B-42FB-A44D-FB560C9B8569}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "A2v10.App.Infrastructure", "Platform\A2v10.App.Infrastucture\A2v10.App.Infrastructure.csproj", "{052DA9CA-E71F-448B-AC99-6812230A6D8B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "A2v10.App.Infrastructure", "Platform\A2v10.App.Infrastructure\A2v10.App.Infrastructure.csproj", "{052DA9CA-E71F-448B-AC99-6812230A6D8B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -26,7 +26,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\Platform\A2v10.App.Infrastucture\A2v10.App.Infrastructure.csproj" />
+		<ProjectReference Include="..\..\Platform\A2v10.App.Infrastructure\A2v10.App.Infrastructure.csproj" />
 	</ItemGroup>
 
 </Project>

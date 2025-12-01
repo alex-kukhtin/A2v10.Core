@@ -3,9 +3,9 @@
 using System.Text;
 using System.Threading.Tasks;
 
-using Newtonsoft.Json;
-
 using Microsoft.Extensions.DependencyInjection;
+
+using Newtonsoft.Json;
 
 namespace A2v10.Services;
 
@@ -23,7 +23,7 @@ public class InvokeCommandInvokeTarget : IModelInvokeCommand
 
     }
 
-	public async Task<IInvokeResult> ExecuteAsync(IModelCommand command, ExpandoObject parameters)
+    public async Task<IInvokeResult> ExecuteAsync(IModelCommand command, ExpandoObject parameters)
 	{
 		if (command.Target == null)
 			throw new InvalidOperationException("Command.Target is null");
@@ -32,6 +32,7 @@ public class InvokeCommandInvokeTarget : IModelInvokeCommand
 			throw new InvalidOperationException($"Invalid target: {command.Target}");
 		var engine = _engineProvider.FindEngine(target[0]) 
 			?? throw new InvalidOperationException($"InvokeTarget '{target[0]}' not found");
+
         try
         {
 			var res = await engine.InvokeAsync(target[1], parameters);
