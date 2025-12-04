@@ -1342,6 +1342,17 @@
     return element;
   }
 
+  /**
+   * Returns true if the given element is an external label.
+   *
+   * @param {Element} element
+   *
+   * @return {boolean}
+   */
+  function isExternalLabel(element) {
+    return isLabel(element) && isLabelExternal(element.labelTarget);
+  }
+
   function ensureImported(element, target) {
 
     if (element.ownerDocument !== target.ownerDocument) {
@@ -3127,7 +3138,8 @@
   var ELEMENT_LABEL_DISTANCE$1 = 10,
       INNER_OUTER_DIST = 3,
       PARTICIPANT_STROKE_WIDTH = 1.5,
-      TASK_BORDER_RADIUS = 10;
+      TASK_BORDER_RADIUS = 10,
+      EXTERNAL_LABEL_BORDER_RADIUS = 4;
 
   var DEFAULT_OPACITY = 0.95,
       FULL_OPACITY = 1,
@@ -5436,6 +5448,11 @@
    * @return {string} path
    */
   BpmnRenderer.prototype.getShapePath = function(shape) {
+
+    if (isLabel(shape)) {
+      return getRoundRectPath(shape, EXTERNAL_LABEL_BORDER_RADIUS);
+    }
+
     if (is$1(shape, 'bpmn:Event')) {
       return getCirclePath(shape);
     }
@@ -20826,7 +20843,6 @@
   			{
   				name: "operationRef",
   				type: "Operation",
-  				isAttr: true,
   				isReference: true
   			}
   		]
@@ -27560,6 +27576,18 @@
 
     const groups = T$1(() => groupEntries$1(headerEntries), [ headerEntries ]);
 
+    const isActionable = (entry) => {
+      return entry.action && !entry.disabled;
+    };
+
+    const handleClick = (event, entry) => {
+      if (!isActionable(entry)) {
+        return;
+      }
+
+      return onSelect(event, entry);
+    };
+
     return m$1`
     <div class="djs-popup-header">
       <h3 class="djs-popup-title" title=${ title }>${ title }</h3>
@@ -27568,15 +27596,16 @@
 
           ${ group.entries.map(entry => m$1`
             <li key=${ entry.id }>
-              <${ entry.action ? 'button' : 'span' }
+              <${ isActionable(entry) ? 'button' : 'span' }
                 class=${ getHeaderClasses(entry, entry === selectedEntry) }
-                onClick=${ event => entry.action && onSelect(event, entry) }
+                onClick=${ event => handleClick(event, entry) }
                 title=${ entry.title || entry.label }
                 data-id=${ entry.id }
-                onMouseEnter=${ () => entry.action && setSelectedEntry(entry) }
-                onMouseLeave=${ () => entry.action && setSelectedEntry(null) }
-                onFocus=${ () => entry.action && setSelectedEntry(entry) }
-                onBlur=${ () => entry.action && setSelectedEntry(null) }
+                aria-disabled=${ entry.disabled || undefined }
+                onMouseEnter=${ () => isActionable(entry) && setSelectedEntry(entry) }
+                onMouseLeave=${ () => isActionable(entry) && setSelectedEntry(null) }
+                onFocus=${ () => isActionable(entry) && setSelectedEntry(entry) }
+                onBlur=${ () => isActionable(entry) && setSelectedEntry(null) }
               >
                 ${(entry.imageUrl && m$1`<img class="djs-popup-entry-icon" src=${ entry.imageUrl } alt="" />`) ||
                 (entry.imageHtml && m$1`<div class="djs-popup-entry-icon" dangerouslySetInnerHTML=${ { __html: entry.imageHtml } } />`)}
@@ -27647,18 +27676,27 @@
       onAction
     } = props;
 
+    const handleClick = (event, action) => {
+      if (entry.disabled) {
+        return;
+      }
+
+      return onAction(event, entry, action);
+    };
+
     return m$1`
     <li
-      class=${ clsx('entry', { selected }) }
+      class=${ clsx('entry', { selected, disabled: entry.disabled }) }
       data-id=${ entry.id }
       title=${ entry.title || entry.label }
+      aria-disabled=${ entry.disabled || undefined }
       tabIndex="0"
-      onClick=${ onAction }
+      onClick=${ handleClick }
       onFocus=${ onMouseEnter }
       onBlur=${ onMouseLeave }
       onMouseEnter=${ onMouseEnter }
       onMouseLeave=${ onMouseLeave }
-      onDragStart=${ (event) => onAction(event, entry, 'dragstart') }
+      onDragStart=${ (event) => handleClick(event, 'dragstart') }
       draggable=${ true }
     >
       <div class="djs-popup-entry-content">
@@ -27704,13 +27742,14 @@
 
   /**
    * @typedef {import('./PopupMenuProvider').PopupMenuEntry} PopupMenuEntry
+   * @typedef {import('./PopupMenuProvider').PopupMenuGroup} PopupMenuGroup
    */
 
   /**
    * Component that renders a popup menu entry list.
    *
    * @param {Object} props
-   * @param {PopupMenuEntry[]} props.entries
+   * @param {PopupMenuGroup[]} props.groupedEntries
    * @param {PopupMenuEntry} props.selectedEntry
    * @param {(entry: PopupMenuEntry | null) => void} props.setSelectedEntry
    */
@@ -27718,13 +27757,11 @@
     const {
       selectedEntry,
       setSelectedEntry,
-      entries,
+      groupedEntries,
       ...restProps
     } = props;
 
     const resultsRef = A$1();
-
-    const groups = T$1(() => groupEntries(entries), [ entries ]);
 
     // scroll to selected result
     _(() => {
@@ -27742,7 +27779,7 @@
 
     return m$1`
     <div class="djs-popup-results" ref=${ resultsRef }>
-      ${ groups.map(group => m$1`
+      ${ groupedEntries.map(group => m$1`
         ${ group.name && m$1`
           <div key=${ group.id } class="entry-header" title=${ group.name }>
             ${ group.name }
@@ -27766,33 +27803,6 @@
   }
 
 
-  // helpers
-  function groupEntries(entries) {
-    const groups = [];
-
-    const getGroup = group => groups.find(elem => group.id === elem.id);
-
-    const containsGroup = group => !!getGroup(group);
-
-    // legacy support for provider built for the old popUp menu
-    const formatGroup = group =>
-      typeof group === 'string' ? { id: group } : group;
-
-    entries.forEach(entry => {
-
-      // assume a default group when none is provided
-      const group = entry.group ? formatGroup(entry.group) : { id: 'default' };
-
-      if (!containsGroup(group)) {
-        groups.push({ ...group, entries: [ entry ] });
-      } else {
-        getGroup(group).entries.push(entry);
-      }
-    });
-
-    return groups;
-  }
-
   // helpers ////////////////
 
   function scrollIntoView$2(el) {
@@ -27810,6 +27820,7 @@
    * @typedef {import('./PopupMenuProvider').PopupMenuEntry} PopupMenuEntry
    * @typedef {import('./PopupMenuProvider').PopupMenuHeaderEntry} PopupMenuHeaderEntry
    * @typedef {import('./PopupMenuProvider').PopupMenuEmptyPlaceholderProvider | import('./PopupMenuProvider').PopupMenuEmptyPlaceholder} PopupMenuEmptyPlaceholder
+   * @typedef {import('./PopupMenuProvider').PopupMenuGroup} PopupMenuGroup
    *
    * @typedef {import('../search/search').default} search
    *
@@ -27885,21 +27896,24 @@
     const [ entries, setEntries ] = d(filterEntries(originalEntries, searchValue));
     const [ selectedEntry, setSelectedEntry ] = d(entries[0]);
 
+    const groupedEntries = T$1(() => groupEntries(entries), [ entries ]);
+
     const updateEntries = q$1((newEntries) => {
 
       // always select first
       setSelectedEntry(newEntries[0]);
 
       setEntries(newEntries);
-    }, [ selectedEntry, setEntries, setSelectedEntry ]);
+    }, [ setEntries, setSelectedEntry ]);
 
     // filter entries on search value change
     y(() => {
       updateEntries(filterEntries(originalEntries, searchValue));
     }, [ searchValue, originalEntries ]);
 
-    // handle keyboard seleciton
+    // handle keyboard selection
     const keyboardSelect = q$1(direction => {
+      const entries = getOrderedEntries(groupedEntries);
       const idx = entries.indexOf(selectedEntry);
 
       let nextIdx = idx + direction;
@@ -27913,10 +27927,14 @@
       }
 
       setSelectedEntry(entries[nextIdx]);
-    }, [ entries, selectedEntry, setSelectedEntry ]);
+    }, [ groupedEntries, selectedEntry, setSelectedEntry ]);
 
     const handleKeyDown = q$1(event => {
       if (event.key === 'Enter' && selectedEntry) {
+        if (selectedEntry.disabled) {
+          return;
+        }
+
         return onSelect(event, selectedEntry);
       }
 
@@ -27983,7 +28001,7 @@
           ` }
 
           <${PopupMenuList}
-            entries=${ entries }
+            groupedEntries=${ groupedEntries }
             selectedEntry=${ selectedEntry }
             setSelectedEntry=${ setSelectedEntry }
             onAction=${ onSelect }
@@ -28083,6 +28101,7 @@
   `;
   }
 
+
   // helpers //////////////////////
 
   function getPopupStyle(props) {
@@ -28091,6 +28110,49 @@
       width: `${props.width}px`,
       'transform-origin': 'top left'
     };
+  }
+
+  function getOrderedEntries(groupedEntries) {
+    const entries = [];
+
+    groupedEntries.forEach(group => {
+      group.entries.forEach(entry => {
+        entries.push(entry);
+      });
+    });
+
+    return entries;
+  }
+
+  /**
+   * @param {PopupMenuEntry[]} entries
+   *
+   * @return {PopupMenuGroup[]}
+   */
+  function groupEntries(entries) {
+    const groups = [];
+
+    const getGroup = group => groups.find(elem => group.id === elem.id);
+
+    const containsGroup = group => !!getGroup(group);
+
+    // legacy support for provider built for the old popUp menu
+    const formatGroup = group =>
+      typeof group === 'string' ? { id: group } : group;
+
+    entries.forEach(entry => {
+
+      // assume a default group when none is provided
+      const group = entry.group ? formatGroup(entry.group) : { id: 'default' };
+
+      if (!containsGroup(group)) {
+        groups.push({ ...group, entries: [ entry ] });
+      } else {
+        getGroup(group).entries.push(entry);
+      }
+    });
+
+    return groups;
   }
 
   /**
@@ -35431,6 +35493,9 @@
 
         // create a DataObject every time a DataObjectReference is created
         var dataObject = bpmnFactory.create('bpmn:DataObject');
+
+        // Copy the isCollection property if needed.
+        dataObject.isCollection = shape.businessObject.dataObjectRef?.isCollection || false;
 
         // set the reference to the DataObject
         shape.businessObject.dataObjectRef = dataObject;
@@ -44441,7 +44506,8 @@
     'errorRef',
     'escalationRef',
     'messageRef',
-    'signalRef'
+    'signalRef',
+    'dataObjectRef'
   ];
 
   /**
@@ -61385,6 +61451,487 @@
     labelEditingPreview: [ 'type', LabelEditingPreview ]
   };
 
+  var LOW_PRIORITY$4 = 500;
+
+  var DEFAULT_PRIORITY$2 = 1000;
+
+  /**
+   * @typedef {import('../../model/Types').Element} Element
+   *
+   * @typedef {import('./OutlineProvider').default} OutlineProvider
+   * @typedef {import('../../core/EventBus').default} EventBus
+   * @typedef {import('../../draw/Styles').default} Styles
+   */
+
+  /**
+   * @class
+   *
+   * A plugin that adds an outline to shapes and connections that may be activated and styled
+   * via CSS classes.
+   *
+   * @param {EventBus} eventBus
+   * @param {Styles} styles
+   */
+  function Outline$1(eventBus, styles) {
+
+    this._eventBus = eventBus;
+
+    this.offset = 5;
+
+    var OUTLINE_STYLE = styles.cls('djs-outline', [ 'no-fill' ]);
+
+    var self = this;
+
+    /**
+     * @param {SVGElement} gfx
+     *
+     * @return {SVGElement} outline
+     */
+    function createOutline(gfx) {
+      var outline = create$1('rect');
+
+      attr$1(outline, assign$1({
+        x: 0,
+        y: 0,
+        rx: 4,
+        width: 100,
+        height: 100
+      }, OUTLINE_STYLE));
+
+      return outline;
+    }
+
+    // A low priortity is necessary, because outlines of labels have to be updated
+    // after the label bounds have been updated in the renderer.
+    eventBus.on([ 'shape.added', 'shape.changed' ], LOW_PRIORITY$4, function(event) {
+      var element = event.element,
+          gfx = event.gfx;
+
+      var outline = query('.djs-outline', gfx);
+
+      if (!outline) {
+        outline = self.getOutline(element) || createOutline();
+        append(gfx, outline);
+      }
+
+      self.updateShapeOutline(outline, element);
+    });
+
+    eventBus.on([ 'connection.added', 'connection.changed' ], function(event) {
+      var element = event.element,
+          gfx = event.gfx;
+
+      var outline = query('.djs-outline', gfx);
+
+      if (!outline) {
+        outline = createOutline();
+        append(gfx, outline);
+      }
+
+      self.updateConnectionOutline(outline, element);
+    });
+  }
+
+
+  /**
+   * Updates the outline of a shape respecting the dimension of the
+   * element and an outline offset.
+   *
+   * @param {SVGElement} outline
+   * @param {Element} element
+   */
+  Outline$1.prototype.updateShapeOutline = function(outline, element) {
+
+    var updated = false;
+    var providers = this._getProviders();
+
+    if (providers.length) {
+      forEach$1(providers, function(provider) {
+        updated = updated || provider.updateOutline(element, outline);
+      });
+    }
+
+    if (!updated) {
+      attr$1(outline, {
+        x: -this.offset,
+        y: -this.offset,
+        width: element.width + this.offset * 2,
+        height: element.height + this.offset * 2
+      });
+    }
+  };
+
+  /**
+   * Updates the outline of a connection respecting the bounding box of
+   * the connection and an outline offset.
+   * Register an outline provider with the given priority.
+   *
+   * @param {SVGElement} outline
+   * @param {Element} connection
+   */
+  Outline$1.prototype.updateConnectionOutline = function(outline, connection) {
+    var bbox = getBBox(connection);
+
+    attr$1(outline, {
+      x: bbox.x - this.offset,
+      y: bbox.y - this.offset,
+      width: bbox.width + this.offset * 2,
+      height: bbox.height + this.offset * 2
+    });
+  };
+
+  /**
+   * Register an outline provider with the given priority.
+   *
+   * @param {number} priority
+   * @param {OutlineProvider} provider
+   */
+  Outline$1.prototype.registerProvider = function(priority, provider) {
+    if (!provider) {
+      provider = priority;
+      priority = DEFAULT_PRIORITY$2;
+    }
+
+    this._eventBus.on('outline.getProviders', priority, function(event) {
+      event.providers.push(provider);
+    });
+  };
+
+  /**
+   * Returns the registered outline providers.
+   *
+   * @returns {OutlineProvider[]}
+   */
+  Outline$1.prototype._getProviders = function() {
+    var event = this._eventBus.createEvent({
+      type: 'outline.getProviders',
+      providers: []
+    });
+
+    this._eventBus.fire(event);
+
+    return event.providers;
+  };
+
+  /**
+   * Returns the outline for an element.
+   *
+   * @param {Element} element
+   */
+  Outline$1.prototype.getOutline = function(element) {
+    var outline;
+    var providers = this._getProviders();
+
+    forEach$1(providers, function(provider) {
+
+      if (!isFunction(provider.getOutline)) {
+        return;
+      }
+
+      outline = outline || provider.getOutline(element);
+    });
+
+    return outline;
+  };
+
+  Outline$1.$inject = [ 'eventBus', 'styles', 'elementRegistry' ];
+
+  var SELECTION_OUTLINE_PADDING = 6;
+
+  /**
+   * @typedef {import('../../model/Types').Element} Element
+   *
+   * @typedef {import('../../core/EventBus').default} EventBus
+   * @typedef {import('../selection/Selection').default} Selection
+   * @typedef {import('../../core/Canvas').default} Canvas
+   */
+
+  /**
+   * @class
+   *
+   * A plugin that adds an outline to shapes and connections that may be activated and styled
+   * via CSS classes.
+   *
+   * @param {EventBus} eventBus
+   * @param {Canvas} canvas
+   * @param {Selection} selection
+   */
+  function MultiSelectionOutline(eventBus, canvas, selection) {
+    this._canvas = canvas;
+
+    var self = this;
+
+    eventBus.on('element.changed', function(event) {
+      if (selection.isSelected(event.element)) {
+        self._updateMultiSelectionOutline(selection.get());
+      }
+    });
+
+    eventBus.on('selection.changed', function(event) {
+      var newSelection = event.newSelection;
+
+      self._updateMultiSelectionOutline(newSelection);
+    });
+  }
+
+
+
+  MultiSelectionOutline.prototype._updateMultiSelectionOutline = function(selection) {
+    var layer = this._canvas.getLayer('selectionOutline');
+
+    clear$1(layer);
+
+    var enabled = selection.length > 1;
+
+    var container = this._canvas.getContainer();
+
+    classes$1(container)[enabled ? 'add' : 'remove']('djs-multi-select');
+
+    if (!enabled) {
+      return;
+    }
+
+    var bBox = addSelectionOutlinePadding(getBBox(selection));
+
+    var rect = create$1('rect');
+
+    attr$1(rect, assign$1({
+      rx: 3
+    }, bBox));
+
+    classes$1(rect).add('djs-selection-outline');
+
+    append(layer, rect);
+  };
+
+
+  MultiSelectionOutline.$inject = [ 'eventBus', 'canvas', 'selection' ];
+
+  // helpers //////////
+
+  function addSelectionOutlinePadding(bBox) {
+    return {
+      x: bBox.x - SELECTION_OUTLINE_PADDING,
+      y: bBox.y - SELECTION_OUTLINE_PADDING,
+      width: bBox.width + SELECTION_OUTLINE_PADDING * 2,
+      height: bBox.height + SELECTION_OUTLINE_PADDING * 2
+    };
+  }
+
+  /**
+   * @type { import('didi').ModuleDeclaration }
+   */
+  var Outline = {
+    __depends__: [
+      SelectionModule
+    ],
+    __init__: [ 'outline', 'multiSelectionOutline' ],
+    outline: [ 'type', Outline$1 ],
+    multiSelectionOutline: [ 'type', MultiSelectionOutline ]
+  };
+
+  /**
+   * @typedef {import('diagram-js/lib/core/EventBus').default} EventBus
+   * @typedef {import('diagram-js/lib/core/Canvas').default} Canvas
+   * @typedef {import('diagram-js/lib/core/GraphicsFactory').default} GraphicsFactory
+   * @typedef {import('../outline/OutlineProvider').default} Outline
+   * @typedef {import('diagram-js/lib/features/selection').default} Selection
+   *
+   * @typedef {import('diagram-js/lib/model/Types').Element} Element
+   */
+
+  const ALLOWED_ELEMENTS = [ 'bpmn:Event', 'bpmn:SequenceFlow', 'bpmn:Gateway' ];
+
+  const LINE_STYLE = {
+    class: 'bjs-label-link',
+    stroke: 'var(--element-selected-outline-secondary-stroke-color)',
+    strokeDasharray: '5, 5',
+  };
+
+  const DISTANCE_THRESHOLD = 15;
+  const PATH_OFFSET = 2;
+
+  /**
+   * Render a line between an external label and its target element,
+   * when either is selected.
+   *
+   * @param {EventBus} eventBus
+   * @param {Canvas} canvas
+   * @param {GraphicsFactory} graphicsFactory
+   * @param {Outline} outline
+   */
+  function LabelLink$1(eventBus, canvas, graphicsFactory, outline, selection) {
+
+    const layer = canvas.getLayer('overlays');
+
+    eventBus.on([ 'selection.changed', 'shape.changed' ], function() {
+      cleanUp();
+    });
+
+    eventBus.on('selection.changed', function({ newSelection }) {
+
+      const allowedElements = newSelection.filter(element => isAny(element, ALLOWED_ELEMENTS));
+
+      if (allowedElements.length === 1) {
+        const element = allowedElements[0];
+        if (isLabel(element)) {
+          createLink(element, element.labelTarget, newSelection);
+        } else if (element.labels?.length) {
+          createLink(element.labels[0], element, newSelection);
+        }
+      }
+
+      // Only allowed when both label and its target are selected
+      if (allowedElements.length === 2) {
+        const label = allowedElements.find(isLabel);
+        const target = allowedElements.find(el => el.labels?.includes(label));
+        if (label && target) {
+          createLink(label, target, newSelection);
+        }
+      }
+    });
+
+    eventBus.on('shape.changed', function({ element }) {
+
+      if (!isAny(element, ALLOWED_ELEMENTS) || !isElementSelected(element)) {
+        return;
+      }
+
+      if (isLabel(element)) {
+        createLink(element, element.labelTarget, selection.get());
+      } else if (element.labels?.length) {
+        createLink(element.labels[0], element, selection.get());
+      }
+    });
+
+    /**
+     * Render a line between an external label and its target.
+     *
+     * @param {Element} label
+     * @param {Element} target
+     * @param {Element[]} selection
+     */
+    function createLink(label, target, selection = []) {
+
+      // Create an auxiliary line between label and target mid points
+      const line = createLine(
+        [ getMid(target), getMid(label) ],
+        LINE_STYLE
+      );
+      const linePath = line.getAttribute('d');
+
+      // Calculate the intersection point between line and label
+      const labelSelected = selection.includes(label);
+      const labelPath = labelSelected ? getElementOutlinePath(label) : getElementPath(label);
+      const labelInter = getElementLineIntersection(labelPath, linePath);
+
+      // Label on top of the target
+      if (!labelInter) {
+        return;
+      }
+
+      // Calculate the intersection point between line and label
+      // If the target is a sequence flow, there is no intersection,
+      // so we link to the middle of it.
+      const targetSelected = selection.includes(target);
+      const targetPath = targetSelected ? getElementOutlinePath(target) : getElementPath(target);
+      const targetInter = getElementLineIntersection(targetPath, linePath) || getMid(target);
+
+      // Do not draw a link if the points are too close
+      const distance = getDistancePointPoint(targetInter, labelInter);
+      if (distance < DISTANCE_THRESHOLD) {
+        return;
+      }
+
+      // Connect the actual closest points
+      updateLine(line, [ targetInter, labelInter ]);
+      append(layer, line);
+    }
+
+    /**
+     * Remove all existing label links.
+     */
+    function cleanUp() {
+      all(`.${LINE_STYLE.class}`, layer).forEach(remove$3);
+    }
+
+    /**
+     * Get element's slightly expanded outline path.
+     *
+     * @param {Element} element
+     * @returns {string} svg path
+     */
+    function getElementOutlinePath(element) {
+      const outlineShape = outline.getOutline(element);
+      const outlineOffset = outline.offset;
+
+      if (!outlineShape) {
+        return getElementPath(element);
+      }
+
+      if (outlineShape.x) {
+        const shape = {
+          x: element.x + parseSvgNumAttr(outlineShape, 'x') - PATH_OFFSET,
+          y: element.y + parseSvgNumAttr(outlineShape, 'y') - PATH_OFFSET,
+          width: parseSvgNumAttr(outlineShape, 'width') + PATH_OFFSET * 2,
+          height: parseSvgNumAttr(outlineShape, 'height') + PATH_OFFSET * 2
+        };
+
+        return getRoundRectPath(shape, parseSvgNumAttr(outlineShape, 'rx'));
+      }
+
+      if (outlineShape.cx) {
+        const shape = {
+          x: element.x - outlineOffset,
+          y: element.y - outlineOffset,
+          width: parseSvgNumAttr(outlineShape, 'r') * 2,
+          height: parseSvgNumAttr(outlineShape, 'r') * 2,
+        };
+
+        return getCirclePath(shape);
+      }
+    }
+
+    function getElementPath(element) {
+      return graphicsFactory.getShapePath(element);
+    }
+
+    function isElementSelected(element) {
+      return selection.get().includes(element);
+    }
+  }
+
+  LabelLink$1.$inject = [
+    'eventBus',
+    'canvas',
+    'graphicsFactory',
+    'outline',
+    'selection'
+  ];
+
+  /**
+   * Get numeric attribute from SVG element
+   * or 0 if not present.
+   *
+   * @param {SVGElement} node
+   * @param {string} attr
+   * @returns {number}
+   */
+  function parseSvgNumAttr(node, attr) {
+    return parseFloat(attr$1(node, attr) || 0);
+  }
+
+  var LabelLink = {
+    __depends__: [
+      SelectionModule,
+      Outline
+    ],
+    __init__: [
+      'labelLink'
+    ],
+    labelLink: [ 'type', LabelLink$1 ]
+  };
+
   /**
    * @typedef {import('../../core/Canvas').default} Canvas
    * @typedef {import('../../core/EventBus').default} EventBus
@@ -61830,285 +62377,6 @@
       'modelingFeedback'
     ],
     modelingFeedback: [ 'type', ModelingFeedback ]
-  };
-
-  var LOW_PRIORITY$4 = 500;
-
-  var DEFAULT_PRIORITY$2 = 1000;
-
-  /**
-   * @typedef {import('../../model/Types').Element} Element
-   *
-   * @typedef {import('./OutlineProvider').default} OutlineProvider
-   * @typedef {import('../../core/EventBus').default} EventBus
-   * @typedef {import('../../draw/Styles').default} Styles
-   */
-
-  /**
-   * @class
-   *
-   * A plugin that adds an outline to shapes and connections that may be activated and styled
-   * via CSS classes.
-   *
-   * @param {EventBus} eventBus
-   * @param {Styles} styles
-   */
-  function Outline(eventBus, styles) {
-
-    this._eventBus = eventBus;
-
-    this.offset = 5;
-
-    var OUTLINE_STYLE = styles.cls('djs-outline', [ 'no-fill' ]);
-
-    var self = this;
-
-    /**
-     * @param {SVGElement} gfx
-     *
-     * @return {SVGElement} outline
-     */
-    function createOutline(gfx) {
-      var outline = create$1('rect');
-
-      attr$1(outline, assign$1({
-        x: 0,
-        y: 0,
-        rx: 4,
-        width: 100,
-        height: 100
-      }, OUTLINE_STYLE));
-
-      return outline;
-    }
-
-    // A low priortity is necessary, because outlines of labels have to be updated
-    // after the label bounds have been updated in the renderer.
-    eventBus.on([ 'shape.added', 'shape.changed' ], LOW_PRIORITY$4, function(event) {
-      var element = event.element,
-          gfx = event.gfx;
-
-      var outline = query('.djs-outline', gfx);
-
-      if (!outline) {
-        outline = self.getOutline(element) || createOutline();
-        append(gfx, outline);
-      }
-
-      self.updateShapeOutline(outline, element);
-    });
-
-    eventBus.on([ 'connection.added', 'connection.changed' ], function(event) {
-      var element = event.element,
-          gfx = event.gfx;
-
-      var outline = query('.djs-outline', gfx);
-
-      if (!outline) {
-        outline = createOutline();
-        append(gfx, outline);
-      }
-
-      self.updateConnectionOutline(outline, element);
-    });
-  }
-
-
-  /**
-   * Updates the outline of a shape respecting the dimension of the
-   * element and an outline offset.
-   *
-   * @param {SVGElement} outline
-   * @param {Element} element
-   */
-  Outline.prototype.updateShapeOutline = function(outline, element) {
-
-    var updated = false;
-    var providers = this._getProviders();
-
-    if (providers.length) {
-      forEach$1(providers, function(provider) {
-        updated = updated || provider.updateOutline(element, outline);
-      });
-    }
-
-    if (!updated) {
-      attr$1(outline, {
-        x: -this.offset,
-        y: -this.offset,
-        width: element.width + this.offset * 2,
-        height: element.height + this.offset * 2
-      });
-    }
-  };
-
-  /**
-   * Updates the outline of a connection respecting the bounding box of
-   * the connection and an outline offset.
-   * Register an outline provider with the given priority.
-   *
-   * @param {SVGElement} outline
-   * @param {Element} connection
-   */
-  Outline.prototype.updateConnectionOutline = function(outline, connection) {
-    var bbox = getBBox(connection);
-
-    attr$1(outline, {
-      x: bbox.x - this.offset,
-      y: bbox.y - this.offset,
-      width: bbox.width + this.offset * 2,
-      height: bbox.height + this.offset * 2
-    });
-  };
-
-  /**
-   * Register an outline provider with the given priority.
-   *
-   * @param {number} priority
-   * @param {OutlineProvider} provider
-   */
-  Outline.prototype.registerProvider = function(priority, provider) {
-    if (!provider) {
-      provider = priority;
-      priority = DEFAULT_PRIORITY$2;
-    }
-
-    this._eventBus.on('outline.getProviders', priority, function(event) {
-      event.providers.push(provider);
-    });
-  };
-
-  /**
-   * Returns the registered outline providers.
-   *
-   * @returns {OutlineProvider[]}
-   */
-  Outline.prototype._getProviders = function() {
-    var event = this._eventBus.createEvent({
-      type: 'outline.getProviders',
-      providers: []
-    });
-
-    this._eventBus.fire(event);
-
-    return event.providers;
-  };
-
-  /**
-   * Returns the outline for an element.
-   *
-   * @param {Element} element
-   */
-  Outline.prototype.getOutline = function(element) {
-    var outline;
-    var providers = this._getProviders();
-
-    forEach$1(providers, function(provider) {
-
-      if (!isFunction(provider.getOutline)) {
-        return;
-      }
-
-      outline = outline || provider.getOutline(element);
-    });
-
-    return outline;
-  };
-
-  Outline.$inject = [ 'eventBus', 'styles', 'elementRegistry' ];
-
-  var SELECTION_OUTLINE_PADDING = 6;
-
-  /**
-   * @typedef {import('../../model/Types').Element} Element
-   *
-   * @typedef {import('../../core/EventBus').default} EventBus
-   * @typedef {import('../selection/Selection').default} Selection
-   * @typedef {import('../../core/Canvas').default} Canvas
-   */
-
-  /**
-   * @class
-   *
-   * A plugin that adds an outline to shapes and connections that may be activated and styled
-   * via CSS classes.
-   *
-   * @param {EventBus} eventBus
-   * @param {Canvas} canvas
-   * @param {Selection} selection
-   */
-  function MultiSelectionOutline(eventBus, canvas, selection) {
-    this._canvas = canvas;
-
-    var self = this;
-
-    eventBus.on('element.changed', function(event) {
-      if (selection.isSelected(event.element)) {
-        self._updateMultiSelectionOutline(selection.get());
-      }
-    });
-
-    eventBus.on('selection.changed', function(event) {
-      var newSelection = event.newSelection;
-
-      self._updateMultiSelectionOutline(newSelection);
-    });
-  }
-
-
-
-  MultiSelectionOutline.prototype._updateMultiSelectionOutline = function(selection) {
-    var layer = this._canvas.getLayer('selectionOutline');
-
-    clear$1(layer);
-
-    var enabled = selection.length > 1;
-
-    var container = this._canvas.getContainer();
-
-    classes$1(container)[enabled ? 'add' : 'remove']('djs-multi-select');
-
-    if (!enabled) {
-      return;
-    }
-
-    var bBox = addSelectionOutlinePadding(getBBox(selection));
-
-    var rect = create$1('rect');
-
-    attr$1(rect, assign$1({
-      rx: 3
-    }, bBox));
-
-    classes$1(rect).add('djs-selection-outline');
-
-    append(layer, rect);
-  };
-
-
-  MultiSelectionOutline.$inject = [ 'eventBus', 'canvas', 'selection' ];
-
-  // helpers //////////
-
-  function addSelectionOutlinePadding(bBox) {
-    return {
-      x: bBox.x - SELECTION_OUTLINE_PADDING,
-      y: bBox.y - SELECTION_OUTLINE_PADDING,
-      width: bBox.width + SELECTION_OUTLINE_PADDING * 2,
-      height: bBox.height + SELECTION_OUTLINE_PADDING * 2
-    };
-  }
-
-  /**
-   * @type { import('didi').ModuleDeclaration }
-   */
-  var Ouline = {
-    __depends__: [
-      SelectionModule
-    ],
-    __init__: [ 'outline', 'multiSelectionOutline' ],
-    outline: [ 'type', Outline ],
-    multiSelectionOutline: [ 'type', MultiSelectionOutline ]
   };
 
   /**
@@ -62613,7 +62881,7 @@
     __depends__: [
       InteractionEventsModule$1,
       SelectionModule,
-      Ouline,
+      Outline,
       RulesModule$1,
       DraggingModule,
       PreviewSupportModule
@@ -66101,6 +66369,20 @@
 
     var outline;
 
+    if (isExternalLabel(element)) {
+      outline = create$1('rect');
+
+      attr$1(outline, assign$1({
+        x: -DEFAULT_OFFSET,
+        y: -DEFAULT_OFFSET,
+        rx: 4,
+        width: element.width + DEFAULT_OFFSET * 2,
+        height: element.height + DEFAULT_OFFSET * 2
+      }, OUTLINE_STYLE));
+
+      return outline;
+    }
+
     if (isLabel(element)) {
       return;
     }
@@ -66228,7 +66510,7 @@
 
   var OutlineModule = {
     __depends__: [
-      Ouline
+      Outline
     ],
     __init__: [ 'outlineProvider' ],
     outlineProvider: [ 'type', OutlineProvider ]
@@ -66379,6 +66661,7 @@
     KeyboardModule,
     KeyboardMoveSelectionModule,
     LabelEditingModule,
+    LabelLink,
     modeling,
     ModelingFeedbackModule,
     MoveModule,
@@ -107869,6 +108152,14 @@
   		});
   	}
 
+  	if (isAny(element, ['bpmn:UserTask', 'bpmn:StartEvent', 'bpmn:EndEvent', 'bpmn:ScriptTask', 'bpmn:CallActivity'])) {
+  		entries.push({
+  			id: 'track',
+  			component: Track,
+  			isEdited: (node) => node && !!node.value
+  		});
+  	}
+
   	return entries;
   }
 
@@ -107961,6 +108252,25 @@
   		rows: 7,
   		getValue: getExtensionElementValue(element, "wf:Inbox"),
   		setValue: setExtensionElementValue(element, "wf:Inbox"),
+  		debounce
+  	});
+  }
+
+  function Track(props) {
+  	const { element } = props;
+
+  	const translate = useService('translate');
+  	const debounce = useService('debounceInput');
+
+  	return TextAreaEntry({
+  		element,
+  		id: 'track',
+  		label: translate('Track'),
+  		description: translate('Logged after completion'),
+  		monospace: true,
+  		rows: 7,
+  		getValue: getExtensionElementValue(element, "wf:Track"),
+  		setValue: setExtensionElementValue(element, "wf:Track"),
   		debounce
   	});
   }
@@ -108389,6 +108699,19 @@
   		},
   		{
   			name: "Inbox",
+  			superClass: [
+  				"Element"
+  			],
+  			properties: [
+  				{
+  					name: "text",
+  					type: "String",
+  					isBody: true
+  				}
+  			]
+  		},
+  		{
+  			name: "Track",
   			superClass: [
   				"Element"
   			],

@@ -11,7 +11,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.App.Assets" Version="10.1.8578" />
+		<PackageReference Include="A2v10.App.Assets" Version="10.1.8600" />
 		<PackageReference Include="A2v10.Data.Interfaces" Version="10.1.7570" />
 		<PackageReference Include="A2v10.Sql.MSBuild" Version="10.1.8105" />
 		<PackageReference Include="Microsoft.TypeScript.MSBuild" Version="5.9.3">

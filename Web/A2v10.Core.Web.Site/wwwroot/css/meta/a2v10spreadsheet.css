@@ -1,12 +1,13 @@
-﻿.ss-container {
-  width: 75vw;
-  height: 75vh;
+﻿/*33px*/
+.ss-container {
+  width: 100%;
+  height: 100%;
   position: relative;
-  margin: 20px;
+  margin: 0;
 }
 .ss-container.editable .ss-body,
 .ss-container.editable .a2-sb.vert {
-  top: 33px;
+  top: 0;
 }
 .ss-container .ss-toolbar {
   background-color: antiquewhite;
@@ -14,8 +15,10 @@
   left: 0;
   right: 0;
   top: 0;
-  height: 33px;
+  height: 0;
   display: flex;
+  display: none;
+  /*F*/
 }
 .ss-container .ss-toolbar button {
   width: 24px;
@@ -78,12 +81,12 @@
   box-sizing: border-box;
   padding: 4px;
   white-space: nowrap;
-  overflow: visible;
   line-height: 1;
   cursor: default;
   display: inline-flex;
   border: 1px solid transparent;
   align-items: baseline;
+  overflow: hidden;
 }
 .ss-body .cell.cell-edit {
   line-height: 1;
