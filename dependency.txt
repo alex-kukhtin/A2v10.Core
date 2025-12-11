@@ -1,5 +1,18 @@
 ﻿2025-12-01 (next: 8601)
 
+
+A2v10.AppRuntimeBuilder
+A2v10.BlobStorage.Azure
+A2v10.BlobStorage.FileSystem
+A2v10.Identity.Jwt
+A2v10.MailClient
+A2v10.Scheduling
+A2v10.Scheduling.Commands
+A2v10.Services
+A2v10.Platform
+A2v10.ViewEngine.Xaml
+A2v10.Metadata
+
 Проверить Signal после обновления всего!
 !Workflow.Module (scheduling, workflow.engine)
 
