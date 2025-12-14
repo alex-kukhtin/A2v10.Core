@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2024 Olekdsandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Olekdsandr Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
 
@@ -37,7 +37,7 @@ public class ToolbarAligner : UIElementBase
 }
 
 [AttachedProperties("Align")]
-public class Toolbar(IServiceProvider serviceProvider) : Container
+public class Toolbar(IServiceProvider serviceProvider) : Container, ISupportAttached
 {
 
 	public enum ToolbarAlign
@@ -49,9 +49,13 @@ public class Toolbar(IServiceProvider serviceProvider) : Container
 
 	private readonly IAttachedPropertyManager _attachedPropertyManager = serviceProvider.GetRequiredService<IAttachedPropertyManager>();
 
-        #region Attached Properties
+    #region ISupportAttached
+    public IAttachedPropertyManager AttachedPropertyManager => _attachedPropertyManager;
+    #endregion
 
-        public ToolbarAlign GetAlgin(Object obj)
+    #region Attached Properties
+
+    public ToolbarAlign GetAlgin(Object obj)
 	{
 		return _attachedPropertyManager.GetProperty<ToolbarAlign>("Toolbar.Align", obj);
 	}

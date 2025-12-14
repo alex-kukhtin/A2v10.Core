@@ -95,6 +95,7 @@ public class TextBox : ValuedControl, ITableControl
 }
 
 
+[IgnoreWriteProperties("ShowClear,ShowSearch,Highlight")]
 public class SearchBox : TextBox
 {
     protected override void OnEndInit()

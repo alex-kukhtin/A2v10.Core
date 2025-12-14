@@ -21,7 +21,7 @@ public enum GridLengthType
 }
 
 [TypeConverter(typeof(LengthConverter))]
-public record Length
+public record Length : IXamlConverter
 {
 	public String? Value;
 
@@ -76,10 +76,20 @@ public record Length
 			return new Length() { Value = strVal + "px" };
 		throw new XamlException($"Invalid length value '{strVal}'");
 	}
+	#region IXamlConverter
+	public String? ToXamlString()
+	{
+		if (Value == "auto")
+			return "Auto";
+		else if (Value == "fit-content")
+			return "Fit";
+		return Value;	
+    }
+    #endregion
 }
 
 [TypeConverter(typeof(GridLengthConverter))]
-public record GridLength
+public record GridLength : IXamlConverter
 {
 	public String? Value;
 
@@ -135,6 +145,18 @@ public record GridLength
 			return new GridLength(strVal + "px");
 		throw new XamlException($"Invalid grid length value '{strVal}'");
 	}
+
+
+    #region IXamlConverter
+    public String? ToXamlString()
+    {
+		if (Value == "auto")
+			return "Auto";
+		else if (Value != null && Value.EndsWith("fr"))
+			return Value.Replace("fr", "*");
+        return Value;
+    }
+    #endregion
 }
 
 public class LengthConverter : TypeConverter

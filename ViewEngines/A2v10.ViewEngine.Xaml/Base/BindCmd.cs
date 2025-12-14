@@ -104,6 +104,8 @@ public enum Permission
 //[DefaultProperty("Command")]
 public class BindCmd : BindBase
 {
+    protected override String ClassName => nameof(BindCmd);
+    
 	private const String nullString = "null";
 
 	public CommandType Command { get; set; }
@@ -690,5 +692,27 @@ public class BindCmd : BindBase
 			CommandType.Invoke => true,
 			_ => false,
 		};
+	}
+	public override String CreateMarkup()
+    {
+        var sw = new StringBuilder("{");
+        sw.Append(ClassName);
+        sw.Append($" {Command}");
+        if (Action != DialogAction.Unknown)
+            sw.Append($", Action={Action}");
+		var url = GetBinding(nameof(Url));
+        if (url != null)
+            sw.Append($", Url={url.CreateMarkup()}");
+		else if (!String.IsNullOrEmpty(Url))
+            sw.Append($", Url='{Url}'");
+        var arg = GetBinding(nameof(Argument));
+        if (arg != null)
+            sw.Append($", Argument={arg.CreateMarkup()}");
+		if (SaveRequired)
+            sw.Append(", SaveRequired=True");
+        if (ValidRequired)
+            sw.Append(", ValidRequired=True");
+		sw.Append("}");
+		return sw.ToString();
 	}
 }

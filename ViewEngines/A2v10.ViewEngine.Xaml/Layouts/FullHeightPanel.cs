@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2024 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Alex Kukhtin. All rights reserved.
 
 
 using System.Text;
@@ -8,9 +8,14 @@ using Microsoft.Extensions.DependencyInjection;
 namespace A2v10.Xaml;
 
 [AttachedProperties("Fill,Skip")]
-public class FullHeightPanel(IServiceProvider serviceProvider) : Container
+public class FullHeightPanel(IServiceProvider serviceProvider) : Container, ISupportAttached
 {
 	private readonly IAttachedPropertyManager _attachedPropertyManager = serviceProvider.GetRequiredService<IAttachedPropertyManager>();
+
+
+    #region ISupportAttached
+    public IAttachedPropertyManager AttachedPropertyManager => _attachedPropertyManager;
+    #endregion
 
     #region Attached Properties
 

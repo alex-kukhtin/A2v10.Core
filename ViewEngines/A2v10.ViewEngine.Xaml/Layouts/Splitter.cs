@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -6,13 +6,17 @@ namespace A2v10.Xaml;
 
 
 [AttachedProperties("Width,MinWidth")]
-public class Splitter(IServiceProvider serviceProvider) : Container
+public class Splitter(IServiceProvider serviceProvider) : Container, ISupportAttached
 {
 	public Orientation Orientation { get; set; }
 	public Length? Height { get; set; }
 	public Length? MinWidth { get; set; }
 
 	private readonly IAttachedPropertyManager _attachedPropertyManager = serviceProvider.GetRequiredService<IAttachedPropertyManager>();
+
+    #region ISupportAttached
+    public IAttachedPropertyManager AttachedPropertyManager => _attachedPropertyManager;
+    #endregion
 
     #region Attached Properties
 

@@ -8,6 +8,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 using A2v10.Infrastructure;
 
+using System.IO; // TODO:REMOVE
+
 namespace A2v10.Metadata;
 
 public class GenerateHandler(IServiceProvider _serviceProvider) : IClrInvokeTarget
@@ -26,14 +28,23 @@ public class GenerateHandler(IServiceProvider _serviceProvider) : IClrInvokeTarg
 
         // TODO: Create EndpointGenerator
         var builder = await _modelBuilderFactory.BuildAsync(table.PlatformUrl("index"), table, null);
+
+
         var formIndex = await builder.GetFormAsync();
+        var pageIndex = XamlBulder.BuildForm(formIndex.Form);
+        var pageXaml = XamlBulder.GetXaml(pageIndex);
+
+        //File.WriteAllText("C:\\A2v10_Net6\\A2v10.Standard.Modules\\MainApp\\agents\\index.view.xaml", pageXaml);
 
         builder = await _modelBuilderFactory.BuildAsync(table.PlatformUrl("edit"), table, null);
         var formEdit = await builder.GetFormAsync();
 
-        var indexXml = XmlTextBuilder.Build(formIndex);
+        var pageEdit = XamlBulder.BuildForm(formEdit.Form);
+        var editXaml = XamlBulder.GetXaml(pageEdit);
 
-        var editXml = XmlTextBuilder.Build(formEdit);
+        //var indexXml = XmlTextBuilder.Build(formIndex);
+
+        //var editXml = XmlTextBuilder.Build(formEdit);
 
         throw new InvalidOperationException($"GENERATE FOR {table.EndpointPath()}");
     }

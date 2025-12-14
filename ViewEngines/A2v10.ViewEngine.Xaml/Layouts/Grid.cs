@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System.Text;
 using System.Collections.Generic;
@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.DependencyInjection;
 
 using A2v10.Infrastructure;
+using System.Linq;
 
 namespace A2v10.Xaml;
 
@@ -22,10 +23,14 @@ public enum AutoFlowMode
 }
 
 [AttachedProperties("Col,Row,ColSpan,RowSpan,VAlign")]
-public class Grid(IServiceProvider serviceProvider) : Container
+public class Grid(IServiceProvider serviceProvider) : Container, ISupportAttached
 {
 
 	private readonly IAttachedPropertyManager _attachedPropertyManager = serviceProvider.GetRequiredService<IAttachedPropertyManager>();
+
+    #region ISupportAttached
+    public IAttachedPropertyManager AttachedPropertyManager => _attachedPropertyManager;
+    #endregion
 
     #region Attached Properties
 
@@ -204,13 +209,14 @@ public class Grid(IServiceProvider serviceProvider) : Container
 	}
 }
 
-public class RowDefinition
+public record RowDefinition
 {
 	public GridLength? Height { get; set; }
 }
 
+[WrapContent]
 [TypeConverter(typeof(RowDefinitionsConverter))]
-public class RowDefinitions : List<RowDefinition>
+public class RowDefinitions : List<RowDefinition>, IXamlConverter
 {
 	public static RowDefinitions FromString(String val)
 	{
@@ -234,6 +240,13 @@ public class RowDefinitions : List<RowDefinition>
 		}
 		return sb.ToString();
 	}
+
+    #region IXamlConverter
+    public string? ToXamlString()
+    {
+		return String.Join(", ", this.Select(w => w.Height is IXamlConverter xamlConvert ? xamlConvert.ToXamlString() : w.Height?.Value));
+    }
+    #endregion
 }
 
 public class ColumnDefinition
@@ -242,7 +255,7 @@ public class ColumnDefinition
 }
 
 [TypeConverter(typeof(ColumnDefinitionsConverter))]
-public partial class ColumnDefinitions : List<ColumnDefinition>
+public partial class ColumnDefinitions : List<ColumnDefinition>, IXamlConverter
 {
 
 	const String REPEAT_PATTERN = @"^Repeat\((.+)\)$";
@@ -293,6 +306,12 @@ public partial class ColumnDefinitions : List<ColumnDefinition>
 		}
 		return sb.ToString();
 	}
+    #region IXamlConverter
+    public string? ToXamlString()
+    {
+        return String.Join(", ", this.Select(w => w.Width is IXamlConverter xamlConvert ? xamlConvert.ToXamlString() : w.Width?.Value));
+    }
+    #endregion
 }
 
 public class RowDefinitionsConverter : TypeConverter

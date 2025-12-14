@@ -1,17 +1,19 @@
 ﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
 
-using System.Linq;
+using A2v10.Infrastructure;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
-
-using A2v10.Infrastructure;
 
 namespace A2v10.Xaml;
 
 public partial class Bind : BindBase, ISupportInitialize
 {
-	public String? Path { get; set; }
+    protected override String ClassName => nameof(Bind);
+
+    public String? Path { get; set; }
 	public String? Format { get; set; }
 	public DataType DataType { get; set; }
 	public Boolean HideZeros { get; set; }
@@ -115,5 +117,21 @@ public partial class Bind : BindBase, ISupportInitialize
 		if (match.Groups.Count == 3)
 			Path = $"{match.Groups[1].Value}.Selected('{match.Groups[2].Value}')";
 	}
-	#endregion
+    #endregion
+
+	public override String CreateMarkup()
+	{
+        var sw = new StringBuilder("{");
+        sw.Append(ClassName);
+		if (!String.IsNullOrEmpty(Path))
+			sw.Append($" {Path}");
+        if (DataType != DataType.String)
+            sw.Append($", DataType={DataType}");
+        if (HideZeros)
+            sw.Append(", HideZeros=True");
+        if (NegativeRed)
+            sw.Append(", NegativeRed=True");
+        sw.Append('}');
+        return sw.ToString();
+    }
 }

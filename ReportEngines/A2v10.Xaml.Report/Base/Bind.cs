@@ -10,8 +10,7 @@ namespace A2v10.Xaml.Report;
 public class Bind : MarkupExtension, ISupportBinding
 {
 	private BindImpl? _bindImpl;
-
-	public BindImpl BindImpl
+    public BindImpl BindImpl
 	{
 		get
 		{

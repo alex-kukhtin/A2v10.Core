@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Alex Kukhtin. All rights reserved.
 
 using System.ComponentModel;
 using System.Globalization;
@@ -6,7 +6,7 @@ using System.Globalization;
 namespace A2v10.Xaml;
 
 [TypeConverter(typeof(ThicknessConverter))]
-public class Thickness
+public class Thickness : IXamlConverter
 {
 	public Length? Top { get; set; }
 	public Length? Right { get; set; }
@@ -67,7 +67,19 @@ public class Thickness
 			return $"{Top?.Value} {Right?.Value} {Bottom?.Value} {Left?.Value}";
 	}
 
-	internal void MergeAbsolute(TagBuilder tag)
+    #region IXamlConverter
+    public String? ToXamlString() // ! with comma
+    {
+        if (Left == Right && Left == Top && Left == Bottom)
+            return Left?.Value;
+        else if (Left == Right && Top == Bottom)
+            return $"{Top?.Value}, {Left?.Value}";
+        else
+            return $"{Top?.Value}, {Right?.Value}, {Bottom?.Value}, {Left?.Value}";
+    }
+    #endregion
+
+    internal void MergeAbsolute(TagBuilder tag)
 	{
 		tag.MergeStyle("position", "absolute");
 		tag.MergeStyle("top", Top?.Value);

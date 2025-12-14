@@ -5,11 +5,14 @@ using System.Reflection;
 
 namespace A2v10.Xaml;
 
-public abstract class BindBase : MarkupExtension, ISupportBinding
+public abstract class BindBase : MarkupExtension, ISupportBinding, IBindWriter
 {
 	private BindImpl? _bindImpl;
 
-	public BindImpl BindImpl
+	protected abstract String ClassName { get; }
+    public abstract String CreateMarkup();
+
+    public BindImpl BindImpl
 	{
 		get
 		{
@@ -41,5 +44,18 @@ public abstract class BindBase : MarkupExtension, ISupportBinding
 	{
 		return _bindImpl?.GetBindingCommand(name);
 	}
+
+
+    #region IBindWriter 
+    public virtual String? CreateMarkup(String name)
+    {
+        if (_bindImpl == null)
+            return null;
+        var bind = _bindImpl.GetBindingBase(name);
+        if (bind != null)
+            return bind.CreateMarkup();
+        return null;
+    }
+    #endregion
 }
 

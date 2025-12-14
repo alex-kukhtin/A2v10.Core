@@ -1,9 +1,10 @@
-﻿// Copyright © 2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2024-2025 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Xaml;
 
 public class BindSum : Bind
 {
+    protected override String ClassName => nameof(BindSum);
     public BindSum(String path) 
         :base(path)
     { 
@@ -15,6 +16,7 @@ public class BindSum : Bind
 
 public class BindNumber : Bind
 {
+    protected override String ClassName => nameof(BindNumber);
     public BindNumber(String path)
         : base(path)
     {
@@ -26,6 +28,7 @@ public class BindNumber : Bind
 
 public class BindCmdExec : BindCmd
 {
+    protected override String ClassName => nameof(BindCmdExec);
     public BindCmdExec(String path)
         : base()
     {

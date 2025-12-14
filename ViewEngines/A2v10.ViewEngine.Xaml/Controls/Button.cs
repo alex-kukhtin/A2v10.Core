@@ -27,6 +27,7 @@ public enum IconAlign
 	Top = 1,
 }
 
+[ContentAsXamlAttr]
 public class Button : CommandControl
 {
 	public Icon Icon { get; set; }

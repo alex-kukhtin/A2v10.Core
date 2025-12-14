@@ -143,7 +143,7 @@ internal static class XamlExtensions
 
         return item.Command?.Command switch
         {
-            FormCommand.Reload => item.BindCommandArg(CommandType.Reload),
+            FormCommand.Reload => new BindCmd() { Command = CommandType.Reload },
             FormCommand.Save => new BindCmd() { Command = CommandType.Save, ValidRequired = true },
             FormCommand.SaveAndClose => new BindCmd() { Command = CommandType.SaveAndClose, ValidRequired = true },
             FormCommand.Close => new BindCmd() { Command = CommandType.Close },
@@ -152,18 +152,12 @@ internal static class XamlExtensions
             FormCommand.DeleteSelected => DeleteSelectedCommand(),
             FormCommand.Create => CreateCreateCommand(),
             FormCommand.Append => item.BindCommandArg(CommandType.Append),
-            FormCommand.Apply => new BindCmd()
+            FormCommand.Apply => new BindCmdExec("apply")
             {
-                Command = CommandType.Execute,
-                CommandName = "apply",
                 SaveRequired = true,
                 ValidRequired = true
             },
-            FormCommand.UnApply => new BindCmd()
-            {
-                Command = CommandType.Execute,
-                CommandName = "unApply"
-            },
+            FormCommand.UnApply => new BindCmdExec("upApply"),
             FormCommand.Open => new BindCmd()
             {
                 Command = CommandType.Open,

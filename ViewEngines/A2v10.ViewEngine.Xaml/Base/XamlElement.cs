@@ -5,7 +5,7 @@ using System.ComponentModel;
 using A2v10.Infrastructure;
 
 namespace A2v10.Xaml;
-public class XamlElement : ISupportBinding, IInitComplete
+public class XamlElement : ISupportBinding, IInitComplete, IBindWriter
 {
 
 	internal XamlElement? Parent { get; private set; }
@@ -36,7 +36,20 @@ public class XamlElement : ISupportBinding, IInitComplete
 		_bindImpl?.RemoveBinding(name);
 	}
 
-	public void SetBinding(String name, BindBase? bind)
+
+    #region IBindWriter
+    public String? CreateMarkup(String name)
+    {
+		if (_bindImpl == null)
+			return null;
+        var bind = _bindImpl.GetBindingBase(name);
+        if (bind != null)
+            return bind.CreateMarkup();
+        return null;
+    }
+    #endregion
+
+    public void SetBinding(String name, BindBase? bind)
 	{
 		if (bind == null)
 			return;

@@ -1,6 +1,12 @@
 ﻿2025-12-01 (next: 8601)
 
 
+Після оновлення (для Xaml Writer)
+2. Всі класи з TypeConverter -> IXamlConverter
+3. Для всіх ISupportBinding -> implement IBindWriter
+4. ResourceDictionary, etc -> WrapContentAttribute
+
+
 A2v10.AppRuntimeBuilder
 A2v10.BlobStorage.Azure
 A2v10.BlobStorage.FileSystem
@@ -12,6 +18,10 @@ A2v10.Services
 A2v10.Platform
 A2v10.ViewEngine.Xaml
 A2v10.Metadata
+A2v10.ReportEngine.Pdf
+A2v10.ReportEngine.Excel
+A2v10.ReportEngine.Script
+A2v10.Xaml.Report
 
 Проверить Signal после обновления всего!
 !Workflow.Module (scheduling, workflow.engine)

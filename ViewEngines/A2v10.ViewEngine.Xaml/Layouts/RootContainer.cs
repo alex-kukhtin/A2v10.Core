@@ -1,9 +1,11 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 
 using System.Collections.Generic;
 
 namespace A2v10.Xaml;
+
+[WrapContent]
 public sealed class ResourceDictionary : Dictionary<String, Object>
 {
 }

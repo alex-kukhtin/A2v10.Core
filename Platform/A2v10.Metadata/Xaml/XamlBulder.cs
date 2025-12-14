@@ -14,6 +14,16 @@ internal class XamlBulder(EditWithMode _editWith)
 {
     private readonly IServiceProvider _xamlServiceProvider = new XamlServiceProvider();
 
+    public static String GetXaml(Object elem)
+    {
+        if (elem is not IRootContainer)
+            throw new InvalidOperationException($"XamlBuilder.GetXaml. Invalid element type ({elem.GetType().Name}). Expected IRootContainer");
+        if (elem is IInitComplete initComplete)
+            initComplete.InitComplete();
+        var xamlWriter = new XamlWriter();
+        return xamlWriter.GetXaml(elem);
+    }
+
     public static RootContainer BuildForm(Form form)
     {
         var b = new XamlBulder(form.EditWith);
@@ -139,8 +149,10 @@ internal class XamlBulder(EditWithMode _editWith)
 
         if (source.Grid == null)
             return;
-        AttachInt32("Grid.Row", source.Grid.Row);
-        AttachInt32("Grid.Col", source.Grid.Col);
+        if (source.Grid.Row > 1)
+            AttachInt32("Grid.Row", source.Grid.Row);
+        if (source.Grid.Col > 1)
+            AttachInt32("Grid.Col", source.Grid.Col);
         AttachInt32("Grid.RowSpan", source.Grid.RowSpan);
         AttachInt32("Grid.ColSpan", source.Grid.ColSpan);
     }

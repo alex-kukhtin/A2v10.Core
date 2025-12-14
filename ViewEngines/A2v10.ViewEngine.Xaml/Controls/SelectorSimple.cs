@@ -4,9 +4,9 @@ using A2v10.ViewEngine.Xaml;
 
 namespace A2v10.Xaml;
 
+[IgnoreWriteProperties("Fetch,FetchData,AddOns,DisplayProperty")]
 public class SelectorSimple : Selector
 {
-
 	public String? Url { get; set; }
 	public String? Data { get; set; }
     public Boolean Folder { get; set; }

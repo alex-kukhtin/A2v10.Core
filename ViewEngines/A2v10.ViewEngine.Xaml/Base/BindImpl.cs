@@ -23,7 +23,16 @@ public class BindImpl
 		_bindings?.Remove(name);
 	}
 
-	public Bind? GetBinding(String name)
+    public BindBase? GetBindingBase(String name)
+    {
+        if (_bindings == null)
+            return null;
+        if (_bindings.TryGetValue(name, out BindBase? bind))
+            return bind;
+        return null;
+    }
+
+    public Bind? GetBinding(String name)
 	{
 		if (_bindings == null)
 			return null;
