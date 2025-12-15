@@ -43,8 +43,8 @@ internal static class XamlExtensions
     {
         return item.DataType switch
         {
-            ItemDataType.Currency => new Bind(item.Data) { DataType = DataType.Currency, HideZeros = true, NegativeRed = true },
-            ItemDataType.Number => new Bind(item.Data) { DataType = DataType.Number, HideZeros = true, NegativeRed = true },
+            ItemDataType.Currency => new BindSum(item.Data),
+            ItemDataType.Number => new BindNumber(item.Data),
             ItemDataType.Date => new Bind(item.Data) { DataType = DataType.Date },
             ItemDataType.DateTime => new Bind(item.Data) { DataType = DataType.DateTime },
             _ => new Bind(item.Data),

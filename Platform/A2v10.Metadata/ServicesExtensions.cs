@@ -20,6 +20,7 @@ public static class ServicesExtensions
         services.AddKeyedScoped<IEndpointHandler, MetadataEndpointHandler>("Meta");
 
         services.AddScoped<IModelBuilderFactory, ModelBuilderFactory>();
+        services.AddScoped<IEndpointGenerator, EndpointGenerator>();
 
         services.AddScoped<ILicenseManager, LicenseManager>();  
 

@@ -148,6 +148,11 @@ public class AppCodeProvider : IAppCodeProvider
 
 	public String? ModuleVersion => _providers[DEFAULT_PROVIDER].ModuleVersion;
 
+    public String GetMainModuleFullPath(String path, String fileName)
+    {
+		var pathToGet = MakePath(path, fileName);	
+        return GetProvider(path).NormalizePath(pathToGet);
+    }
 }
 
 

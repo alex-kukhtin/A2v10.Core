@@ -269,7 +269,6 @@ internal class XamlBulder(EditWithMode _editWith)
                 Header = c.Label.Localize(),
                 Role = c.ToColumnRole(),
                 Editable = c.IsCheckedColumn(),
-                Align = c.ToTextAlign(),
                 SortProperty = c.Data.EndsWith(".Name") ? c.Data[..^5] : null,
                 LineClamp = c.Props?.LineClamp ?? 0,
                 Fit = c.Props?.Fit == true,
