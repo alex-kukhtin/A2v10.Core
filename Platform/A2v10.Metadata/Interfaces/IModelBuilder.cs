@@ -18,6 +18,8 @@ internal interface IModelBuilder
     Task<String> RenderPageAsync(IModelView modelView, IDataModel dataModel);
     Task<IInvokeResult> InvokeAsync(IModelCommand cmd, String command, ExpandoObject? prms);
     Task<String> CreateTemplateAsync();
+    Task<String> CreateTemplateTSAsync();
+    Task<String> CreateMapTSAsync();
     Form CreateDefaultForm();
     String? MetadataEndpointBuilder { get; }
 

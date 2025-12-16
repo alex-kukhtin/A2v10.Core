@@ -21,23 +21,25 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
     internal readonly DatabaseMetadataProvider _metadataProvider = _serviceProvider.GetRequiredService<DatabaseMetadataProvider>();
     internal readonly ICurrentUser _currentUser = _serviceProvider.GetRequiredService<ICurrentUser>();
     internal readonly IDbContext _dbContext = _serviceProvider.GetRequiredService<IDbContext>();
+#pragma warning disable IDE1006 // Naming Styles
     internal TableMetadata _table { get; init; } = default!;
     internal TableMetadata? _baseTable { get; init; }
     internal AppMetadata _appMeta { get; init; } = default!;
     internal String? _dataSource { get; init; }
     internal IPlatformUrl _platformUrl { get; init; } = default!;
+    internal IEnumerable<ReferenceMember> _refFields { get; init; } = default!;
+    private Lazy<IndexModelBuilder> _indexBuilder => new(new IndexModelBuilder(this));
+    private IndexModelBuilder _index => _indexBuilder.Value;
+    private Lazy<PlainModelBuilder> _plainBuilder => new(new PlainModelBuilder(this));
+    private PlainModelBuilder _plain => _plainBuilder.Value;
+#pragma warning restore IDE1006 // Naming Styles
     protected Boolean IsDialog => _platformUrl.Kind == UrlKind.Dialog;
     protected String Action => _platformUrl.Action.ToLowerInvariant();
-    internal IEnumerable<ReferenceMember> _refFields { get; init; } = default!;
 
     public TableMetadata Table => _table;
     public TableMetadata? BaseTable => _baseTable;
     public AppMetadata AppMeta => _appMeta;
 
-    private Lazy<IndexModelBuilder> _indexBuilder => new Lazy<IndexModelBuilder>(new IndexModelBuilder(this));
-    private IndexModelBuilder _index => _indexBuilder.Value;
-    private Lazy<PlainModelBuilder> _plainBuilder => new Lazy<PlainModelBuilder>(new PlainModelBuilder(this));
-    private PlainModelBuilder _plain => _plainBuilder.Value;
     public String? MetadataEndpointBuilder => _baseTable?.Schema switch
     {
         "rep" => "rep:report.render",
@@ -73,6 +75,26 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
             "edit" => await _plain.CreateEditTemplate(),
             "browsefolder" => String.Empty,
             _ => throw new NotImplementedException($"Create template for {Action}")
+        };
+    }
+    public async Task<String> CreateTemplateTSAsync()
+    {
+        return Action switch
+        {
+            "browse" or "index" => await _index.CreateIndexTSTemplate(),
+            "edit" => await _plain.CreateEditTSTemplate(),
+            "browsefolder" => String.Empty,
+            _ => throw new NotImplementedException($"Create ts template for {Action}")
+        };
+    }
+    public async Task<String> CreateMapTSAsync()
+    {
+        return Action switch
+        {
+            "browse" or "index" => await _index.CreateMapTS(),
+            "edit" => await _plain.CreateMapTS(),
+            "browsefolder" => String.Empty,
+            _ => throw new NotImplementedException($"Create ts template for {Action}")
         };
     }
 

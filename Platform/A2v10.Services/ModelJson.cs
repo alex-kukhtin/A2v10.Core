@@ -26,8 +26,7 @@ public class ModelJsonBase : IModelBase
 	public Int32 CommandTimeout { get; init; }
 
     public ModelBaseMeta? Meta { get; init; }
-    
-	public ExpandoObject? Parameters { get; set; }
+    public ExpandoObject? Parameters { get; set; }
 	public Dictionary<String, PermissionBits>? Permissions { get; init; }
 	internal virtual void SetParent(ModelJson rm)
 	{

@@ -85,7 +85,8 @@ public interface IModelBase
     IModelBaseMeta? Meta { get; }
 	ExpandoObject CreateParameters(IPlatformUrl url, Object? id, Action<ExpandoObject>? setParams = null, ParametersFlags flags = ParametersFlags.None);
 	Dictionary<String, PermissionBits>? Permissions { get; }
-	Boolean HasMetadata => Auto != null || Meta != null;
+    Boolean HasMetadata => Auto != null || Meta != null;
+
 }
 
 public enum ModelBlobType

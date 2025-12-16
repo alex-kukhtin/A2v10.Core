@@ -1,16 +1,18 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
-using A2v10.Infrastructure;
-using A2v10.Services;
-using A2v10.Xaml;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
+using Newtonsoft.Json;
+
+using A2v10.Infrastructure;
+
 namespace A2v10.Metadata;
+
+internal record CreatedFile(String Path, Boolean Created);
 
 internal class EndpointGenerator(IModelBuilderFactory _modelBuilderFactory, IAppCodeProvider _appCodeProvider) : IEndpointGenerator
 {
@@ -35,19 +37,21 @@ internal class EndpointGenerator(IModelBuilderFactory _modelBuilderFactory, IApp
             Actions = new Dictionary<String, ModelJsonViewD>() { 
                 { "index", new ModelJsonViewD()
                     {
+                        Meta = new(),
                         Index = true,
                         Template = "index.template",
                         View = "index.view"
                     }
                 }
             },
-            Dialogs = new Dictionary<String, ModelJsonViewD>()
+            Dialogs = []
         };
 
         if (table.EditWith == EditWithMode.Dialog)
         {
             md.Dialogs.Add("edit", new ModelJsonViewD()
             {
+                Meta = new(),
                 Template = "edit.template",
                 View = "edit.dialog"
             });
@@ -56,6 +60,7 @@ internal class EndpointGenerator(IModelBuilderFactory _modelBuilderFactory, IApp
         {
             md.Actions.Add("edit", new ModelJsonViewD()
             {
+                Meta = new(),
                 Template = "edit.template",
                 View = "edit.view"
             });
@@ -63,6 +68,7 @@ internal class EndpointGenerator(IModelBuilderFactory _modelBuilderFactory, IApp
 
         md.Dialogs.Add("browse", new ModelJsonViewD()
         {
+            Meta = new(),
             Index = true,
             Template = "index.template",
             View = "browse.dialog"
@@ -77,16 +83,14 @@ internal class EndpointGenerator(IModelBuilderFactory _modelBuilderFactory, IApp
     private async Task GenerateIndexAsync(TableMetadata table)
     {
         var platformUrl = table.PlatformUrl("index");
-        await GenerateFormAsync(table, platformUrl);
-        // GenerateIndexTemplate(); //index.template.ts
+        var formFile = await GenerateFormAsync(table, platformUrl);
         // GenerateIndexData(); // index.d.ts
 
     }
     private async Task GenerateEditAsync(TableMetadata table)
     {
         var platformUrl = table.PlatformUrl("edit");
-        await GenerateFormAsync(table, platformUrl);
-        // GenerateEditTemplate(); // edit.template.ts
+        var formFile = await GenerateFormAsync(table, platformUrl);
         // GenerateEditData();     // edit.d.ts
     }
 
@@ -96,16 +100,30 @@ internal class EndpointGenerator(IModelBuilderFactory _modelBuilderFactory, IApp
         await GenerateFormAsync(table, platformUrl);
     }
 
-    private async Task GenerateFormAsync(TableMetadata table, IPlatformUrl platformUrl)
+    private async Task<CreatedFile> GenerateFormAsync(TableMetadata table, IPlatformUrl platformUrl)
     {
+        var fileType = platformUrl.Kind == UrlKind.Dialog ? "dialog" : "view";
+        var fileName = $"{platformUrl.Action}.{fileType}.xaml";
+        var fullPath = _appCodeProvider.GetMainModuleFullPath(platformUrl.LocalPath.RemoveHeadSlash(), fileName);
+        var filePath = Path.Combine(fullPath, fileName);
+
+        //if (File.Exists(fullPath))
+            //return new CreatedFile(filePath, false);
         var builder = await _modelBuilderFactory.BuildAsync(platformUrl, table, null);
         var formIndex = await builder.GetFormAsync();
         var pageIndex = XamlBulder.BuildForm(formIndex.Form);
         var pageXaml = XamlBulder.GetXaml(pageIndex);
-
-        var fileType = platformUrl.Kind == UrlKind.Dialog ? "dialog" : "view";
-        var fullPath = _appCodeProvider.GetMainModuleFullPath(platformUrl.LocalPath.RemoveHeadSlash(), $"{platformUrl.Action}.{fileType}.xaml");
         await WriteFileAsync(fullPath, pageXaml);
+
+        // TODO: Refactor
+        var template = await builder.CreateTemplateTSAsync();
+        fileName = $"{platformUrl.Action}.template.ts";
+        fullPath = _appCodeProvider.GetMainModuleFullPath(platformUrl.LocalPath.RemoveHeadSlash(), fileName);
+        await WriteFileAsync(fullPath, template);
+
+        var map = await builder.CreateMapTSAsync(); 
+
+        return new CreatedFile(filePath, true);
     }
 
     private Task WriteFileAsync(String fullPath, String content)

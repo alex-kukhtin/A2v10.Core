@@ -1,15 +1,15 @@
-﻿using A2v10.Infrastructure;
-using A2v10.Services;
+﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
+
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace A2v10.Metadata;
 
+internal record ModelJsonMetaD { }
+
 internal record ModelJsonViewD
 {
+    public ModelJsonD? Meta { get; init; }
     public Boolean Index {  get; init; }
     public String? Template { get; init; }
     public String? View { get; init; }
