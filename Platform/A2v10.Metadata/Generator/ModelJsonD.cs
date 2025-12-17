@@ -1,5 +1,6 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 
@@ -27,6 +28,9 @@ internal record ModelJsonCommandD
 
 internal record ModelJsonD
 {
+
+    [JsonProperty("$schema")]
+    public String? RefSchema { get; set; }
     public String? Schema {  get; set; }
     public DatabaseMetaD? Meta { get; init; }
 

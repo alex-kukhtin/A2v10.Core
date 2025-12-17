@@ -1,6 +1,7 @@
 ﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 using A2v10.Infrastructure;
@@ -693,7 +694,20 @@ public class BindCmd : BindBase
 			_ => false,
 		};
 	}
-	public override String CreateMarkup()
+
+	protected void AddXtraMarkup(StringBuilder sw)
+	{
+        var arg = GetBinding(nameof(Argument));
+        if (arg != null)
+            sw.Append($", Argument={arg.CreateMarkup()}");
+        if (SaveRequired)
+            sw.Append(", SaveRequired=True");
+        if (ValidRequired)
+            sw.Append(", ValidRequired=True");
+        if (Confirm != null && !String.IsNullOrEmpty(Confirm.Message))
+            sw.Append($", Confirm='{Confirm.Message}'");
+    }
+    public override String CreateMarkup()
     {
         var sw = new StringBuilder("{");
         sw.Append(ClassName);
@@ -705,14 +719,8 @@ public class BindCmd : BindBase
             sw.Append($", Url={url.CreateMarkup()}");
 		else if (!String.IsNullOrEmpty(Url))
             sw.Append($", Url='{Url}'");
-        var arg = GetBinding(nameof(Argument));
-        if (arg != null)
-            sw.Append($", Argument={arg.CreateMarkup()}");
-		if (SaveRequired)
-            sw.Append(", SaveRequired=True");
-        if (ValidRequired)
-            sw.Append(", ValidRequired=True");
-		sw.Append("}");
+		AddXtraMarkup(sw);
+        sw.Append("}");
 		return sw.ToString();
 	}
 }

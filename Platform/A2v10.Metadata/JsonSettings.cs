@@ -50,6 +50,7 @@ public static class JsonSettings
         NullValueHandling = NullValueHandling.Ignore,
         DefaultValueHandling = DefaultValueHandling.Ignore,
         Formatting = Formatting.Indented,
+        
         ContractResolver = new DefaultContractResolver()
         {
             NamingStrategy = new CamelCaseNamingStrategy()

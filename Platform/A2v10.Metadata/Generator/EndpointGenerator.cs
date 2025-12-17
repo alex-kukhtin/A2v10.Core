@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 using A2v10.Infrastructure;
+using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace A2v10.Metadata;
 
@@ -22,6 +23,9 @@ internal class EndpointGenerator(IModelBuilderFactory _modelBuilderFactory, IApp
         await GenerateIndexAsync(table);
         await GenerateEditAsync(table);
         await GenerateBrowseAsync(table);
+        if (table.UseFolders) {
+            await GenerateEditFolderAsync(table);
+        }
     }
 
     private Task GenerateModelJsonAsync(TableMetadata table)
@@ -29,12 +33,13 @@ internal class EndpointGenerator(IModelBuilderFactory _modelBuilderFactory, IApp
         var platformUrl = table.PlatformUrl("index");
         var md = new ModelJsonD()
         {
+            RefSchema = "../../@schemas/model-json-schema.json#",
             Schema = table.Schema,
             Meta = new DatabaseMetaD()
             {
                 Table = table.Name
             },
-            Actions = new Dictionary<String, ModelJsonViewD>() { 
+            Actions = new Dictionary<String, ModelJsonViewD>() {
                 { "index", new ModelJsonViewD()
                     {
                         Meta = new(),
@@ -74,33 +79,53 @@ internal class EndpointGenerator(IModelBuilderFactory _modelBuilderFactory, IApp
             View = "browse.dialog"
         });
 
-        var modelJsonContent = JsonConvert.SerializeObject(md, JsonSettings.CamelCaseSerializerSettingsFormat);
+        var modelJsonContent = SerializeJsonObject(md);
 
         var fullPath = _appCodeProvider.GetMainModuleFullPath(platformUrl.LocalPath.RemoveHeadSlash(), $"model.json");
         return WriteFileAsync(fullPath, modelJsonContent);
     }
 
+
+    private String SerializeJsonObject(Object obj)
+    {
+        var serializer = JsonSerializer.Create(JsonSettings.CamelCaseSerializerSettingsFormat);
+        using (var sw = new StringWriter())
+        using (var writer = new JsonTextWriter(sw))
+        {
+            writer.Formatting = Formatting.Indented;
+            writer.IndentChar = '\t';  
+            writer.Indentation = 1;  // chars
+
+            serializer.Serialize(writer, obj);
+
+            return sw.ToString();
+        }
+    }
     private async Task GenerateIndexAsync(TableMetadata table)
     {
         var platformUrl = table.PlatformUrl("index");
         var formFile = await GenerateFormAsync(table, platformUrl);
-        // GenerateIndexData(); // index.d.ts
 
     }
     private async Task GenerateEditAsync(TableMetadata table)
     {
         var platformUrl = table.PlatformUrl("edit");
         var formFile = await GenerateFormAsync(table, platformUrl);
-        // GenerateEditData();     // edit.d.ts
     }
 
     private async Task GenerateBrowseAsync(TableMetadata table)
     {
         var platformUrl = table.PlatformUrl("browse");
+        await GenerateFormAsync(table, platformUrl, true);
+    }
+
+    private async Task GenerateEditFolderAsync(TableMetadata table)
+    {
+        var platformUrl = table.PlatformUrl("editFolder");
         await GenerateFormAsync(table, platformUrl);
     }
 
-    private async Task<CreatedFile> GenerateFormAsync(TableMetadata table, IPlatformUrl platformUrl)
+    private async Task<CreatedFile> GenerateFormAsync(TableMetadata table, IPlatformUrl platformUrl, Boolean formOnly = false)
     {
         var fileType = platformUrl.Kind == UrlKind.Dialog ? "dialog" : "view";
         var fileName = $"{platformUrl.Action}.{fileType}.xaml";
@@ -115,13 +140,19 @@ internal class EndpointGenerator(IModelBuilderFactory _modelBuilderFactory, IApp
         var pageXaml = XamlBulder.GetXaml(pageIndex);
         await WriteFileAsync(fullPath, pageXaml);
 
+        if (formOnly)
+            return new CreatedFile(filePath, true);
+
         // TODO: Refactor
         var template = await builder.CreateTemplateTSAsync();
         fileName = $"{platformUrl.Action}.template.ts";
         fullPath = _appCodeProvider.GetMainModuleFullPath(platformUrl.LocalPath.RemoveHeadSlash(), fileName);
         await WriteFileAsync(fullPath, template);
 
-        var map = await builder.CreateMapTSAsync(); 
+        var map = await builder.CreateMapTSAsync();
+        fileName = $"{platformUrl.Action}.d.ts";
+        fullPath = _appCodeProvider.GetMainModuleFullPath(platformUrl.LocalPath.RemoveHeadSlash(), fileName);
+        await WriteFileAsync(fullPath, map);
 
         return new CreatedFile(filePath, true);
     }

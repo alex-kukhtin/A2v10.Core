@@ -64,6 +64,7 @@ public class BindCmdExec : BindCmd
         sw.Append(ClassName);
         if (!String.IsNullOrEmpty(CommandName))
             sw.Append($" {CommandName}");
+        AddXtraMarkup(sw);
         sw.Append('}');
         return sw.ToString();
     }

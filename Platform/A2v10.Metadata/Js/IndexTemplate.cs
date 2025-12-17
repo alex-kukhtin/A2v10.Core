@@ -104,7 +104,7 @@ internal partial class IndexModelBuilder
                 """;
 
                 yield return $$"""
-                function handleSaved(elem : TRoot) {
+                function handleSaved(elem : TItemRoot) {
                     let doc = elem.{{_table.RealItemName}};
                     let found = this.{{_table.RealItemsName}}.$find(d => d.Id === doc.Id);
                     if (found)
