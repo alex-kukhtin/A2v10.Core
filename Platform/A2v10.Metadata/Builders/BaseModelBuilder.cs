@@ -55,6 +55,11 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
         return _index.ExpandAsync(expandPrms);
     }
 
+    public Task DbRemoveAsync(String? propName, ExpandoObject execPrms)
+    {
+        return _index.DbRemoveAsync(propName, execPrms);
+    }
+
     public async Task<IDataModel> LoadModelAsync()
     {
         return Action switch

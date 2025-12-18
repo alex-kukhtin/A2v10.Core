@@ -17,6 +17,7 @@ internal interface IModelBuilder
     Task<ExpandoObject> SaveModelAsync(ExpandoObject data, ExpandoObject savePrms);
     Task<String> RenderPageAsync(IModelView modelView, IDataModel dataModel);
     Task<IInvokeResult> InvokeAsync(IModelCommand cmd, String command, ExpandoObject? prms);
+    Task DbRemoveAsync(String? propName, ExpandoObject execPrms);
     Task<String> CreateTemplateAsync();
     Task<String> CreateTemplateTSAsync();
     Task<String> CreateMapTSAsync();

@@ -58,10 +58,10 @@ internal class AppMetadataBuilder(IServiceProvider _serviceProvider,
         return await iBuilder.SaveModelAsync(data, savePrms);
     }
 
-    public async Task DbRemoveAsync(IPlatformUrl platformUrl, IModelView view, string? propName, ExpandoObject execPrms)
+    public async Task DbRemoveAsync(IPlatformUrl platformUrl, IModelView view, String? propName, ExpandoObject execPrms)
     {
         var iBuilder = await _modelBuilderFactory.BuildAsync(platformUrl, view);
-        throw new NotImplementedException();
+        await iBuilder.DbRemoveAsync(propName, execPrms);
     }
 
     public async Task<IInvokeResult> InvokeAsync(IPlatformUrl platformUrl, String command, IModelCommand cmd, ExpandoObject? prms)

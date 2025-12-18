@@ -44,6 +44,14 @@ public record ColumnReference
     internal String SqlTableName => $"{RefSchema}.[{RefTable}]";
 }
 
+public record ColumnReferenceToMe
+{
+    public String RefSchema { get; init; } = default!;
+    public String RefTable { get; init; } = default!;
+    public String Column { get; init; } = default!;
+    internal String SqlTableName => $"{RefSchema}.[{RefTable}]";
+}
+
 [Flags]
 public enum TableColumnRole
 {
@@ -191,6 +199,7 @@ public record TableMetadata
     public List<TableApply>? Apply { get; init; }
     public List<DetailsKind> Kinds { get; init; } = [];
     public List<ReportItemMetadata> ReportItems { get; init; } = [];
+    public List<ColumnReferenceToMe> RefsToMe { get; init; } = [];
     // internal variables
     internal String PrimaryKeyField => Columns.FirstOrDefault(c => c.Role.HasFlag(TableColumnRole.PrimaryKey) && !c.Role.HasFlag(TableColumnRole.RowNo))?.Name
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Primary Key");
