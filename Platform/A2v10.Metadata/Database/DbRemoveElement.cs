@@ -2,6 +2,7 @@
 
 using System;
 using System.Dynamic;
+using System.Linq;
 using System.Threading.Tasks;
 
 using A2v10.Data.Core.Extensions;
@@ -14,15 +15,27 @@ internal partial class IndexModelBuilder
     public Task DbRemoveAsync(String? propName, ExpandoObject execPrms)
     {
         var rf = _table.RefsToMe; // таблиці де є reference
-        var sqlString = """
+        var checkSql = "";
+        if (rf.Count > 0)
+        {
+            var existsRef = rf.Select(tr => $"exists (select 1 from {tr.SqlTableName} where Void = 0 and [{tr.Column}] = @Id)");
+            checkSql = $"""
+            if {String.Join(" or\n", existsRef)}
+                throw 60000, N'UI:@[Error.Delete.Used]', 0;
+            """;
+        }
+
+        var sqlString = $"""
             set nocount on;
             set transaction isolation level read committed;
             set xact_abort on;            
+
+            {checkSql}
             """;
         if (_table.IsDocument)
         {
             sqlString += $"""
-
+            
             declare @Done bit;
             select @Done = Done from {_table.SqlTableName} where Id = @Id;
             if @Done = 1
@@ -35,7 +48,6 @@ internal partial class IndexModelBuilder
         {
             sqlString += $"""
 
-            // TODO: check using
             update {_table.SqlTableName} set [Void] = 1 where [Id] = @Id;
             """;
         }

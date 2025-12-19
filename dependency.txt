@@ -16,6 +16,7 @@ A2v10.Scheduling
 A2v10.Scheduling.Commands
 A2v10.Services
 A2v10.Platform
+A2v10.Platform.Web
 A2v10.ViewEngine.Xaml
 A2v10.Metadata
 A2v10.ReportEngine.Pdf
