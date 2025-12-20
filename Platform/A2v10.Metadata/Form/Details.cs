@@ -14,9 +14,9 @@ internal partial class PlainModelBuilder
      *     Toolbar
      *     Table
      */
-    IEnumerable<FormItem> DetailsTableCells(TableMetadata d, String dataBind)
+    static IEnumerable<FormItem> DetailsTableCells(TableMetadata d, String dataBind)
     {
-        FormItemProps? GetItemProps(TableColumn c)
+        static FormItemProps? GetItemProps(TableColumn c)
         {
             if (c.IsReference)
                 return new FormItemProps()
@@ -57,7 +57,7 @@ internal partial class PlainModelBuilder
         );
     }
 
-    FormItem DetailsTab(TableMetadata d, String dataBind, String tabBind, String? tabName, String cssPrefix)
+    static FormItem DetailsTab(TableMetadata d, String dataBind, String tabBind, String? tabName, String cssPrefix)
     {
 
         return new FormItem(FormItemIs.Tab)
@@ -107,7 +107,7 @@ internal partial class PlainModelBuilder
         };
     }
 
-    FormItem DetailsTabGrid(TableMetadata d, String dataBind, String tabBind, String? tabName, String cssPrefix)
+    static FormItem DetailsTabGrid(TableMetadata d, String dataBind, String tabBind, String? tabName, String cssPrefix)
     {
         return new FormItem(FormItemIs.Tab)
         {

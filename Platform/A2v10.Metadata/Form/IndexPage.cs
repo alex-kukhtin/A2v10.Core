@@ -8,9 +8,9 @@ namespace A2v10.Metadata;
 
 internal partial class IndexModelBuilder
 {
-    IEnumerable<FormItem> IndexColumns()
+    IEnumerable<FormItem> IndexColumns(Boolean hasChecked)
     {
-        if (_table.UseFolders)
+        if (hasChecked)
             yield return new FormItem()
             {
                 Is = FormItemIs.DataGridColumn,
@@ -252,7 +252,7 @@ internal partial class IndexModelBuilder
                             Data = "Parent.ItemsSource",
                             Height = "100%",
                             Grid = new FormItemGrid(2, 1),
-                            Items = [..IndexColumns()],
+                            Items = [..IndexColumns(_table.UseFolders)],
                             Command = new FormItemCommand(FormCommand.EditSelected)
                             {
                                 Url = _table.EditEndpoint(_baseTable),

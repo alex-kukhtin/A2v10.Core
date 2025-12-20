@@ -1,6 +1,8 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace A2v10.Metadata;
 
@@ -40,16 +42,108 @@ internal partial class IndexModelBuilder
             };
         }
 
+        FormItem? CreateTaskpad()
+        {
+            if (!_table.UseFolders)
+                return null;
+
+            FormItem TreeToolbar()
+            {
+                return new FormItem(FormItemIs.Toolbar)
+                {
+                    Items = [
+                        new FormItem(FormItemIs.Button)
+                        {
+                            Label = "@Create",
+                            Command = new FormItemCommand(FormCommand.Create)
+                            {
+                                Url = _table.EndpointPath(),
+                                Argument = "Folders"
+                            }
+                        },
+                        new FormItem(FormItemIs.Button)
+                        {
+                            Command = new FormItemCommand(FormCommand.EditSelected)
+                            {
+                                Url = _table.EndpointPathUseBase(_baseTable),
+                                Argument = "Folders"
+                            }
+                        },
+                        new FormItem(FormItemIs.Button)
+                        {
+                            Command = new FormItemCommand(FormCommand.DeleteSelected)
+                            {
+                                Argument = "Folders"
+                            }
+                        },
+                        new FormItem(FormItemIs.Separator),
+                        new FormItem(FormItemIs.Button)
+                        {
+                            Command = new FormItemCommand(FormCommand.Reload)
+                        }
+                    ]
+                };
+            }
+
+            FormItem CreateFoldersView()
+            {
+                return new FormItem(FormItemIs.Panel)
+                {
+                    Label = "@Grouping",
+                    Items = [
+                        TreeToolbar(),
+                        new FormItem(FormItemIs.TreeView)
+                        {
+                            Data = "Folders",
+                            Height = "48vh",
+                        }
+                    ]
+                };
+            }
+
+            IEnumerable<FormItem> Filters()
+            {
+                yield break;
+            }
+
+            IEnumerable<FormItem> TaskpadPanels()
+            {
+                if (_table.UseFolders)
+                    yield return CreateFoldersView();
+                var filters = Filters().ToList();
+                if (filters.Count > 0)
+                    yield return new FormItem(FormItemIs.Panel)
+                    {
+                        Label = "@Filters",
+                        Items = [
+                            new FormItem(FormItemIs.Grid)
+                                {
+                                    Props = new FormItemProps() {
+                                        Rows = String.Join(' ', Enumerable.Range(1, filters.Count).Select(c => "auto")),
+                                        Columns = "1fr",
+                                    },
+                                    Items = [..Filters()]
+                                }
+                        ]
+                    };
+            }
+
+            return new FormItem(FormItemIs.Taskpad)
+            {
+                Items = [.. TaskpadPanels()],
+            };
+        }
+
         return new Form()
         {
             Is = FormItemIs.Dialog,
-            Data = _table.RealItemsName,
+            Data = _table.UseFolders ? $"Folders.Selected({_table.RealItemsName})" : _table.RealItemsName,
             UseCollectionView = true,
             Schema = _table.Schema,
             Table = _table.Name,
             EditWith = _table.EditWith,
             Label = $"@{_table.RealItemsName}.Browse",
-            Width = "65rem",
+            Width = _table.UseFolders ? "85rem" : "65rem",
             Items = [
                 new FormItem()
                 {
@@ -68,9 +162,9 @@ internal partial class IndexModelBuilder
                             Is = FormItemIs.DataGrid,
                             Grid = new FormItemGrid(2, 1),
                             Height = "30rem",
-                            Command = new FormItemCommand(FormCommand.Select, _table.RealItemsName),
+                            Command = new FormItemCommand(FormCommand.Select, "Parent.ItemsSource"),
                             Data = "Parent.ItemsSource",
-                            Items = [..IndexColumns()]
+                            Items = [..IndexColumns(false)]
                         },
                         new FormItem() {
                             Is = FormItemIs.Pager,
@@ -80,11 +174,12 @@ internal partial class IndexModelBuilder
                     ]                        
                 }
             ],
+            Taskpad = CreateTaskpad(),
             Buttons = [
                 new FormItem(FormItemIs.Button)
                 {
                     Label = "@Select",
-                    Command = new FormItemCommand(FormCommand.Select, _table.RealItemsName),
+                    Command = new FormItemCommand(FormCommand.Select, "Parent.ItemsSource"),
                     Props = new FormItemProps() 
                     {
                         Style = ItemStyle.Primary

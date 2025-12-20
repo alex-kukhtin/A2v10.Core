@@ -195,7 +195,7 @@ internal class XamlBulder(EditWithMode _editWith)
         IEnumerable<RowDefinition> GridRows()
         {
             if (source.Props?.Rows == null)
-                return Enumerable.Empty<RowDefinition>();
+                return [];
             return source.Props.Rows.Split(' ').Select(r =>
                 new RowDefinition()
                 {
@@ -263,7 +263,7 @@ internal class XamlBulder(EditWithMode _editWith)
         IEnumerable<DataGridColumn> Columns()
         {
             if (source.Items == null)
-                return Enumerable.Empty<DataGridColumn>();
+                return [];
             return source.Items.Select(c => new DataGridColumn()
             {
                 Header = c.Label.Localize(),
@@ -338,7 +338,7 @@ internal class XamlBulder(EditWithMode _editWith)
             Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), new Bind(source.Data))
         };
     }
-    private ComboBox CreateComboBox(FormItem source, String? param)
+    private static ComboBox CreateComboBox(FormItem source, String? param)
     {
         return new ComboBox()
         {
@@ -626,7 +626,8 @@ internal class XamlBulder(EditWithMode _editWith)
             Width = Length.FromStringNull(form.Width),
             CollectionView = CreateCollectionView(form),
             Children = [.. CreateElements(form.Items)],
-            Buttons = [.. CreateDialogButtons(form)]
+            Buttons = [.. CreateDialogButtons(form)],
+            Taskpad = CreateTaskpad(form.Taskpad, Attach)
         };
         return dialog;
     }

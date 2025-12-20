@@ -40,14 +40,13 @@ internal partial class PlainModelBuilder
 
     private FormItem Content()
     {
-        var hasDetails = _table.Details.Any();
+        var hasDetails = _table.Details.Count != 0;
         var memoColumn = _table.Columns.FirstOrDefault(c => c.IsMemo);
 
         var editableColumns = _table.EditableColumns();
 
         if (hasDetails && memoColumn != null)
-            editableColumns = editableColumns
-                .Where(c => !c.IsMemo).ToList();
+            editableColumns = [.. editableColumns.Where(c => !c.IsMemo)];
 
         FormItem ContentGrid()
         {
