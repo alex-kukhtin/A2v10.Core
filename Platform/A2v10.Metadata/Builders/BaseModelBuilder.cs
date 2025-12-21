@@ -69,6 +69,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
                 : await _index.LoadIndexModelAsync(),
             "edit" => await _plain.LoadPlainModelAsync(),
             "browsefolder" => await _index.LoadBrowseTreeModelAsync(),
+            "editfolder" => await _index.LoadEditFolderModelAsync(),
             _ => throw new NotImplementedException($"Load model for {Action}")
         };
     }

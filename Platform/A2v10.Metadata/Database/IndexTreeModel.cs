@@ -88,6 +88,10 @@ internal partial class IndexModelBuilder
             dbprms.AddBigInt("@Id", expandPrms.Get<Int64>("Id"));
         });
     }
+    public async Task<IDataModel> LoadEditFolderModelAsync()
+    {
+        throw new NotImplementedException("Not implemented LoadEditFolderModelAsync");
+    }
 
     public async Task<IDataModel> LoadBrowseTreeModelAsync()
     {

@@ -66,18 +66,14 @@ internal static class MetadataExtensions
 
     public static IPlatformUrl PlatformUrl(this TableMetadata table, String action)
     {
-        var kind = "_dialog";
-        if (action == "index")
-            kind = "_page";
-        else if (action == "edit" && table.EditWith == EditWithMode.Page)
-            kind = "_page";
+        var kind = action == "index" || action == "edit" && table.EditWith == EditWithMode.Page ? "_page" : "_dialog";
         var url = $"{kind}/{table.EndpointPath()}/{action}/";
         return new PlatformUrl(url);
     }
 
     internal static String EditEndpoint(this TableMetadata table, TableMetadata? baseTable)
     {
-        var editEndpoint = $"{table.EndpointPathUseBase(baseTable)}/edit";
+        var editEndpoint = $"{table.EndpointPathUseBase(baseTable)}";
 
         if (table.Columns.Any(c => c.DataType == ColumnDataType.Operation))
             editEndpoint = "{Operation.Url}";

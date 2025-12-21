@@ -30,6 +30,44 @@ internal partial class IndexModelBuilder
             };
     }
 
+    FormItem TreeToolbar()
+    {
+        return new FormItem(FormItemIs.Toolbar)
+        {
+            Items = [
+                new FormItem(FormItemIs.Button)
+                {
+                    Label = "@Create",
+                    Command = new FormItemCommand(FormCommand.Create)
+                    {
+                        Url = $"{_table.EndpointPath()}",
+                        Argument = "Folders"
+                    }
+                },
+                new FormItem(FormItemIs.Button)
+                {
+                    Command = new FormItemCommand(FormCommand.EditSelected)
+                    {
+                        Url = $"{_table.EndpointPath()}",
+                        Argument = "Folders"
+                    }
+                },
+                new FormItem(FormItemIs.Button)
+                {
+                    Command = new FormItemCommand(FormCommand.DeleteSelected)
+                    {
+                        Argument = "Folders"
+                    }
+                },
+                new FormItem(FormItemIs.Separator),
+                new FormItem(FormItemIs.Button)
+                {
+                    Command = new FormItemCommand(FormCommand.Reload)
+                }
+            ]
+        };
+    }
+
     internal Form CreateIndexPage()
     {
         IEnumerable<FormItem> ToolbarButtons()
@@ -77,44 +115,6 @@ internal partial class IndexModelBuilder
         {
             if (!_table.Columns.Any(c => c.IsReference) && !_table.UseFolders)
                 return null;
-
-            FormItem TreeToolbar()
-            {
-                return new FormItem(FormItemIs.Toolbar)
-                {
-                    Items = [
-                        new FormItem(FormItemIs.Button)
-                        {
-                            Label = "@Create",
-                            Command = new FormItemCommand(FormCommand.Create)
-                            {
-                                Url = _table.EndpointPath(),
-                                Argument = "Folders"
-                            }
-                        },
-                        new FormItem(FormItemIs.Button)
-                        {
-                            Command = new FormItemCommand(FormCommand.EditSelected)
-                            {
-                                Url = _table.EndpointPathUseBase(_baseTable),
-                                Argument = "Folders"
-                            }
-                        },
-                        new FormItem(FormItemIs.Button)
-                        {
-                            Command = new FormItemCommand(FormCommand.DeleteSelected)
-                            {
-                                Argument = "Folders"
-                            }
-                        },
-                        new FormItem(FormItemIs.Separator),
-                        new FormItem(FormItemIs.Button)
-                        {
-                            Command = new FormItemCommand(FormCommand.Reload)
-                        }
-                    ]
-                };
-            }
 
             FormItem CreateFoldersView()
             {

@@ -1,7 +1,7 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
-
+using A2v10.Data.Interfaces;
 using A2v10.Xaml;
 
 namespace A2v10.Metadata;
@@ -72,7 +72,17 @@ internal static class XamlExtensions
     {
         BindCmd CreateCreateCommand()
         {
-            if (mode == EditWithMode.Dialog)
+            if (item.Command?.Argument == "Folders")
+            {
+                return new BindCmd()
+                {
+                    Command = CommandType.Dialog,
+                    Action = DialogAction.Edit,
+                    Url = $"{item.Command?.Url}/editfolder",
+                    Argument = "new",
+                };
+            }
+            else if (mode == EditWithMode.Dialog)
             {
                 var cmd = new BindCmd()
                 {
@@ -98,11 +108,23 @@ internal static class XamlExtensions
         {
             var url = item.Command.Url
                 ?? throw new InvalidOperationException("Url is required for EditSelected Command");
+
+            if (item.Command.Argument == "Folders")
+            {
+                var editFolder = new BindCmd()
+                {
+                    Command = CommandType.Dialog,
+                    Action = DialogAction.EditSelected,
+                    Url = $"{url}/editfolder",
+                };
+                editFolder.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(item.Command.Argument));
+                return editFolder;  
+            }
             var urlBind = url.StartsWith("{");
             var cmd = new BindCmd()
             {
                 Command = CommandType.OpenSelected,
-                Url = urlBind ? null : $"{item.Command?.Url}"
+                Url = urlBind ? null : $"{item.Command?.Url}/edit",
             };
             if (mode == EditWithMode.Dialog)
             {
