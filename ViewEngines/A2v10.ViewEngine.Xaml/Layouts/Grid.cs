@@ -1,6 +1,7 @@
 ﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System.Text;
+using System.Linq;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -9,7 +10,6 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.DependencyInjection;
 
 using A2v10.Infrastructure;
-using System.Linq;
 
 namespace A2v10.Xaml;
 

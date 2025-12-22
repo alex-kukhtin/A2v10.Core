@@ -148,8 +148,18 @@ public class RenderContext(IXamlElement _root, IRenderInfo _ri, ILocalizer _loca
 	{
 		Writer.Write("&#xa;");
 	}
+    public GridContext GridContext(Object elem1, Object elem2, Object elem3, Grid parentGrid)
+    {
+		var row = parentGrid.GetRow(elem1) ?? parentGrid.GetRow(elem2) ?? parentGrid.GetRow(elem3);
+		var col = parentGrid.GetCol(elem1) ?? parentGrid.GetCol(elem2) ?? parentGrid.GetCol(elem3);
+		var rowSpan = parentGrid.GetRowSpan(elem1) ?? parentGrid.GetRowSpan(elem2) ?? parentGrid.GetRowSpan(elem3);
+		var colSpan = parentGrid.GetColSpan(elem1) ?? parentGrid.GetColSpan(elem2) ?? parentGrid.GetColSpan(elem3);	
+		var vAlign = parentGrid.GetVAlign(elem1) ?? parentGrid.GetVAlign(elem2) ?? parentGrid.GetVAlign(elem3);
+        var rowCol = new GridRowCol(row, col, rowSpan, colSpan, vAlign);
+        return new GridContext(this, rowCol);
+    }
 
-	public GridContext GridContext(Object elem, Grid parentGrid)
+    public GridContext GridContext(Object elem, Grid parentGrid)
 	{
 		var rowCol = new GridRowCol(parentGrid.GetRow(elem), parentGrid.GetCol(elem), parentGrid.GetRowSpan(elem), parentGrid.GetColSpan(elem), parentGrid.GetVAlign(elem));
 		return new GridContext(this, rowCol);

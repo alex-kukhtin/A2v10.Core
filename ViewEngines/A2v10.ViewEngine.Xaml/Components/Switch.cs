@@ -21,7 +21,7 @@ public class Case : XamlElement
 			foreach (var c in Children)
 			{
 				c.IsInGrid = true;
-				using (context.GridContext(parentSwitch, parentGrid))
+				using (context.GridContext(c, this, parentSwitch, parentGrid))
 				{
 					c.RenderElement(context);
 				}
