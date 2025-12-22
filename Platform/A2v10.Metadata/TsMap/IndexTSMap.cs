@@ -11,23 +11,12 @@ internal partial class IndexModelBuilder
 {
     internal Task<String> CreateMapTS()
     {
-        String property(TableColumn column)
-        {
-            var ro = column.IsFieldUpdated() ? "" : "readonly ";
-            return $"\t{ro}{column.Name}: {column.DataType.ToTsType(_appMeta.IdDataType)};";
-        }
-
-        IEnumerable<String> properties()
-        {
-            foreach (var p in _table.Columns.Where(c => !c.IsVoid))
-                yield return property(p);
-        }
-
         var collType = $"T{_table.RealItemsName}";
 
         var templ = $$"""
+
         export interface {{_table.RealTypeName}} extends IArrayElement {
-        {{String.Join("\n", properties())}}
+        {{String.Join("\n", _table.TsProperties(_appMeta))}}
         }
 
         declare type {{collType}} = IElementArray<{{_table.RealTypeName}}>;

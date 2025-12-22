@@ -1,6 +1,8 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace A2v10.Metadata;
 
@@ -27,5 +29,17 @@ internal static class JsExtensions
             ColumnDataType.Reference => idType, // TODO: reference
             _ => throw new InvalidOperationException($"Unknown TS DataType {columnDataType}")
         };
+    }
+
+    public static IEnumerable<String> TsProperties(this TableMetadata table, AppMetadata appMeta)
+    {
+        String property(TableColumn column)
+        {
+            var ro = column.IsFieldUpdated() ? "" : "readonly ";
+            return $"\t{ro}{column.Name}: {column.DataType.ToTsType(appMeta.IdDataType)};";
+        }
+
+        foreach (var p in table.Columns.Where(c => !c.IsVoid))
+            yield return property(p);
     }
 }

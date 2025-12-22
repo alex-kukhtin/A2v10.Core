@@ -1,6 +1,8 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
+using DocumentFormat.OpenXml.Bibliography;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -137,17 +139,39 @@ internal partial class PlainModelBuilder
             }
         }
 
+        IEnumerable<String> types()
+        {
+            yield return "TRoot";
+            yield return _table.RealTypeName;
+        }   
+
         const String jsDivider = ",\n\t\t";
+
+        var propsList = properties().ToList();
+        var validatorsList = validators().ToList(); 
+
+        IEnumerable<String> templateProps()
+        {
+            if (propsList.Count > 0)
+                yield return $$"""
+                        properties: {
+                            {{String.Join(jsDivider, propsList)}}
+                        }
+                    """;
+            if (validatorsList.Count > 0)
+                yield return $$"""
+                        validators: {
+                            {{String.Join(jsDivider, validatorsList)}}
+                        }
+                    """;
+        }
 
         var templ = $$"""
 
+        import { {{String.Join(", ", types())}} } from './edit';
+
         const template : Template = {
-            properties: {
-                {{String.Join(jsDivider, properties())}}
-            },
-            validators: {
-                {{String.Join(jsDivider, validators())}}
-            },
+        {{String.Join(",", templateProps())}}
         };
 
         export default template;
