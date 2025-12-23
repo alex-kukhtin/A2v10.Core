@@ -80,12 +80,18 @@ internal class DataTableBuilder(TableMetadata table, AppMetadata appMeta)
                     if (obj is String strObj && String.IsNullOrWhiteSpace(strObj))
                         obj = DBNull.Value;
                 }
+                else if (col.ColumnName == "rv")
+                {
+                    if (obj is String strObj)
+                        obj =  (String.IsNullOrWhiteSpace(strObj)) ? DBNull.Value
+                            : Convert.FromHexString(strObj);
+                }
                 if (obj is ExpandoObject exp)
                 {
                     obj = exp.Get<Object>("Id");
                     if (obj is Int64 int64 && int64 == 0)
                         obj = DBNull.Value;
-                    else if (appMeta.IdDataType == ColumnDataType.Uniqueidentifier 
+                    else if (appMeta.IdDataType == ColumnDataType.Uniqueidentifier
                             && obj is String strVal && String.IsNullOrWhiteSpace(strVal))
                         obj = DBNull.Value;
                 }

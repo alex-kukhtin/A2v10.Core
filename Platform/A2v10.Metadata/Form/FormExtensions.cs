@@ -86,7 +86,7 @@ internal static class FormExtensions
         {
             if (appMeta.IdDataType == ColumnDataType.Uniqueidentifier && column.Role.HasFlag(TableColumnRole.PrimaryKey))
                 return false;
-            if (column.DataType == ColumnDataType.Stream)
+            if (column.DataType == ColumnDataType.Stream || column.DataType == ColumnDataType.RowVersion)
                 return false;
             var sysColumns = 
                   TableColumnRole.Void
@@ -104,14 +104,21 @@ internal static class FormExtensions
 
     public static IEnumerable<TableColumn> EditableColumns(this TableMetadata table)
     {
-        var hiddenColumns =
-              TableColumnRole.Void
-            | TableColumnRole.PrimaryKey
-            | TableColumnRole.IsFolder
-            | TableColumnRole.IsSystem
-            | TableColumnRole.SystemName
-            | TableColumnRole.Kind;
+        Boolean isVisible(TableColumn column)
+        {
+            var hiddenColumns =
+             TableColumnRole.Void
+           | TableColumnRole.PrimaryKey
+           | TableColumnRole.IsFolder
+           | TableColumnRole.IsSystem
+           | TableColumnRole.SystemName
+           | TableColumnRole.Kind;
 
-        return table.Columns.Where(c => (c.Role & hiddenColumns) == 0).OrderBy(c => c.IsMemo ? Int32.MaxValue : c.Order);
+            return column.DataType != ColumnDataType.Stream 
+                && column.DataType != ColumnDataType.RowVersion 
+                && (column.Role & hiddenColumns) == 0;
+        }
+
+        return table.Columns.Where(c => isVisible(c)).OrderBy(c => c.IsMemo ? Int32.MaxValue : c.Order);
     }
 }

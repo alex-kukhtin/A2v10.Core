@@ -39,7 +39,7 @@ internal static class SqlExtensions
         };
     }
 
-    public static String ToSqlDataType(this ColumnDataType columnDataType, ColumnDataType idDataType, String maxLength = "255")
+    public static String ToSqlDataType(this ColumnDataType columnDataType, ColumnDataType idDataType, String maxLength = "255", Boolean toTableType = false)
     {
         var idDataStr = idDataType.ToString().ToLowerInvariant();
         return columnDataType switch
@@ -53,15 +53,16 @@ internal static class SqlExtensions
             ColumnDataType.NChar => $"nchar({maxLength})",
             ColumnDataType.Stream => $"varbinary(max)",
             ColumnDataType.Uniqueidentifier => "uniqueidentifier",
+            ColumnDataType.RowVersion => toTableType ? "varbinary(8)" : "rowversion",
             _ => columnDataType.ToString().ToLowerInvariant(),
         };
     }
 
-    public static String SqlDataType(this TableColumn column, ColumnDataType idDataType)
+    public static String SqlDataType(this TableColumn column, ColumnDataType idDataType, Boolean toTableType = false)
     {
         var idDataStr = idDataType.ToString().ToLowerInvariant(); 
         var maxLength = column.MaxLength == 0 ? "max" : column.MaxLength.ToString();
-        return column.DataType.ToSqlDataType(idDataType, maxLength);
+        return column.DataType.ToSqlDataType(idDataType, maxLength, toTableType);
     }
     public static Type ClrDataType(this TableColumn column, ColumnDataType idDataType)
     {
@@ -87,7 +88,8 @@ internal static class SqlExtensions
             ColumnDataType.SmallInt => typeof(Int16),
             ColumnDataType.Stream => typeof(Byte[]),
             ColumnDataType.Uniqueidentifier => typeof(Guid),
-            _ => throw new InvalidOperationException($"Invalid Data Type for update. ({column.DataType})"),
+            ColumnDataType.RowVersion => typeof(Byte[]),
+            _ => throw new InvalidOperationException($"Invalid DataType for update. ({column.DataType})"),
         };
     }
 
@@ -98,6 +100,7 @@ internal static class SqlExtensions
             && !column.Role.HasFlag(TableColumnRole.IsFolder)
             && !column.Role.HasFlag(TableColumnRole.IsSystem)
             && column.Name != "Owner"
+            && column.DataType != ColumnDataType.RowVersion
             && !column.Role.HasFlag(TableColumnRole.Done);
     }
 
@@ -122,7 +125,6 @@ internal static class SqlExtensions
             var col = e.Column;
             var elemName = col.Name;
             yield return $"[{col.Name}!{modelType}!RefId] = {alias}.[{col.Name}]";
-
         }
         foreach (var c in refFields)
         {

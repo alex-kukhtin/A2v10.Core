@@ -114,10 +114,19 @@ internal partial class IndexModelBuilder
             }
         }
 
+        IEnumerable<String> types()
+        {
+            yield return "TRoot";
+            yield return _table.RealTypeName;
+            yield return $"T{_table.RealItemsName}"; // collection type
+        }
+
         const String jsDivider = ",\n\t\t";
 
         var templ = $$"""
 
+        import { {{String.Join(", ", types())}} } from './index';
+        
         const template: Template = {
             options: {
                 {{String.Join(jsDivider, options())}}

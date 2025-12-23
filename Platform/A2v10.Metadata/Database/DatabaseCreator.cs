@@ -98,7 +98,7 @@ internal class DatabaseCreator(AppMetadata _meta)
 
         String createField(TableColumn column)
         {
-            return $"[{column.Name}] {column.SqlDataType(idDataType)}";
+            return $"[{column.Name}] {column.SqlDataType(idDataType, true)}";
         }
 
         var fields = table.Columns.Select(createField);

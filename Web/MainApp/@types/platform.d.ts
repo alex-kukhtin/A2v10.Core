@@ -1,7 +1,7 @@
 ﻿
 /* Copyright © 2019-2025 Oleksandr Kukhtin. All rights reserved. */
 
-/* Version 10.0.7987 */
+/* Version 10.0.7985 */
 
 declare function require(url: string): any;
 
@@ -162,12 +162,7 @@ interface templatePropertyGetterSetter {
 }
 interface templatePropertyGetter { (this: IElement): any; }
 
-interface templatePropDefault {
-	type: StringConstructor | BooleanConstructor | NumberConstructor;
-	value?: any;
-}
-
-declare type templateProperty = templatePropertyGetter | templatePropertyGetterSetter | StringConstructor | BooleanConstructor | NumberConstructor | templatePropDefault;
+declare type templateProperty = templatePropertyGetter | templatePropertyGetterSetter | StringConstructor | BooleanConstructor | NumberConstructor;
 
 /* template events */
 interface templateEventChange { (this: IElement, elem: IElement, newVal?: any, oldVal?: any, prop?: string): void; }
@@ -288,7 +283,7 @@ interface IController {
 	$modalClose(result?: any): any;
 	$msg(msg: string, title?: string, style?: CommonStyle): Promise<boolean>;
 	$alert(msg: string | IMessage): Promise<boolean>;
-	$confirm(msg: string | IConfirm): Promise<boolean | string>;
+	$confirm(msg: string | IConfirm): Promise<boolean|string>;
 	$showDialog(url: string, data?: object, query?: object): Promise<any>;
 	$inlineOpen(id: string): void;
 	$inlineClose(id: string, result?: any): void;

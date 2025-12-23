@@ -225,10 +225,23 @@ internal partial class PlainModelBuilder
 
         var idDataTypeString = _table.PrimaryKeys.First().SqlDataType(_appMeta.IdDataType);
 
+        String checkRowVersion = String.Empty;
+        if (_table.Columns.Any(c => c.DataType == ColumnDataType.RowVersion))
+        {
+            var elemName =  _table.IsDocument ? "Document" : "Element";
+            checkRowVersion = $"""
+            if exists(select * from @{_table.RealItemName} t inner join {_table.SqlTableName} c on c.Id = t.Id
+                    where t.rv is not null and t.rv <> c.rv)
+                throw 60000, N'UI:@[Error.{elemName}.RowVersion]', 0;
+            """;
+        }
+
         var sqlString = $"""
         set nocount on;
         set transaction isolation level read committed;
         set xact_abort on;
+
+        {checkRowVersion}
         
         declare @rtable table(Id {idDataTypeString});
         declare @Id {idDataTypeString};

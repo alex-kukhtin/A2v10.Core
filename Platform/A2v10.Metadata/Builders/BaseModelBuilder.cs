@@ -87,8 +87,9 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
     {
         return Action switch
         {
-            "browse" or "index" => await _index.CreateIndexTSTemplate(),
+            "index" => await _index.CreateIndexTSTemplate(),
             "edit" => await _plain.CreateEditTSTemplate(),
+            "browse" => String.Empty,
             "browsefolder" => String.Empty,
             _ => throw new NotImplementedException($"Create ts template for {Action}")
         };
@@ -97,8 +98,9 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
     {
         return Action switch
         {
-            "browse" or "index" => await _index.CreateMapTS(),
+            "index" => await _index.CreateMapTS(),
             "edit" => await _plain.CreateMapTS(),
+            "browse" => String.Empty,   
             "browsefolder" => String.Empty,
             _ => throw new NotImplementedException($"Create ts template for {Action}")
         };

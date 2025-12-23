@@ -33,6 +33,8 @@ public enum ColumnDataType
     Float,
     Uniqueidentifier,
     VarBinary,
+    RowVersion,
+    TimeStamp = RowVersion  // SQL INFORMATION_SCHEMA.DATA_TYPE uses TimeStamp
 }
 
 public record ReferenceMember(TableColumn Column, TableMetadata Table, Int32 Index);
@@ -67,7 +69,7 @@ public enum TableColumnRole
     Kind       = 0x200, // 512
     Owner      = 0x400, // 1024
     Number     = 0x800, // 2048
-    SystemName = 0x1000  // 4096
+    SystemName = 0x1000,// 4096
 }
 
 public record TableColumn
