@@ -166,7 +166,7 @@ internal class DatabaseCreator(AppMetadata _meta)
         return String.Join('\n', refs);
     }
 
-    internal String MergeOperations()
+    internal static String MergeOperations()
     {
         return """
         merge op.Operations as t
@@ -182,7 +182,7 @@ internal class DatabaseCreator(AppMetadata _meta)
         """;
     }
 
-    internal DataTable CreateOperationTable(IEnumerable<OperationMetadata> ops)
+    internal static DataTable CreateOperationTable(IEnumerable<OperationMetadata> ops)
     {
         var dt = new DataTable();
         dt.Columns.Add("Id", typeof(String)).MaxLength = 64;
@@ -202,7 +202,7 @@ internal class DatabaseCreator(AppMetadata _meta)
         return dt;
     }
 
-    internal String CreateOperations(IEnumerable<OperationMetadata> ops)
+    internal static String CreateOperations(IEnumerable<OperationMetadata> ops)
     {
         if (!ops.Any())
             return String.Empty;
@@ -222,7 +222,7 @@ internal class DatabaseCreator(AppMetadata _meta)
         """;
     }
 
-    internal String CreateEnum(EnumMetadata enm)
+    internal static String CreateEnum(EnumMetadata enm)
     {
         return $"""
         if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'enm' and TABLE_NAME=N'{enm.Name}')
@@ -238,7 +238,7 @@ internal class DatabaseCreator(AppMetadata _meta)
         """;
     }
 
-    internal DataTable CreateEnumTable(EnumMetadata enm)
+    internal static DataTable CreateEnumTable(EnumMetadata enm)
     {
         var dt = new DataTable();
         dt.Columns.Add("Id", typeof(String)).MaxLength = 16;
@@ -267,7 +267,7 @@ internal class DatabaseCreator(AppMetadata _meta)
         return dt;
     }
 
-    internal String MergeEnums(EnumMetadata enm)
+    internal static String MergeEnums(EnumMetadata enm)
     {
         return $"""
         merge enm.[{enm.Name}] as t

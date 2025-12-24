@@ -1,7 +1,6 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -12,11 +11,22 @@ internal partial class IndexModelBuilder
     internal Task<String> CreateMapTS()
     {
         var collType = $"T{_table.RealItemsName}";
+        var refDecl = String.Empty;
+
+        var refElems = _refFields.Select(x => $$"""
+        export interface {{x.Table.RealTypeName}} extends IElement {
+        {{String.Join("\n", TsProperties(x.Table))}}
+        }
+        """);
+
+        if (refElems.Any())
+            refDecl = $"\n{String.Join("\n", refElems)}\n";
 
         var templ = $$"""
 
+        {{refDecl}}
         export interface {{_table.RealTypeName}} extends IArrayElement {
-        {{String.Join("\n", _table.TsProperties(_appMeta))}}
+        {{String.Join("\n", TsProperties(_table))}}
         }
 
         declare type {{collType}} = IElementArray<{{_table.RealTypeName}}>;

@@ -1,10 +1,12 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
-using A2v10.Services;
+using System;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
-using System;
+
+using A2v10.Services;
 
 namespace A2v10.Metadata;
 
@@ -35,7 +37,7 @@ public static class JsonSettings
         ContractResolver = new FormMetadataContractResolver()
     };
 
-    public static JsonSerializerSettings CamelCaseSerializerSettings = new()
+    public static JsonSerializerSettings CamelCaseSerializerSettings => new()
     {
         NullValueHandling = NullValueHandling.Ignore,
         DefaultValueHandling = DefaultValueHandling.Ignore,
@@ -45,7 +47,7 @@ public static class JsonSettings
         }
     };
 
-    public static JsonSerializerSettings CamelCaseSerializerSettingsFormat = new()
+    public static JsonSerializerSettings CamelCaseSerializerSettingsFormat => new()
     {
         NullValueHandling = NullValueHandling.Ignore,
         DefaultValueHandling = DefaultValueHandling.Ignore,
@@ -72,7 +74,7 @@ public static class JsonSettings
         ]
     };
 
-    public static readonly JsonSerializerSettings DefaultExpando =
+    public static JsonSerializerSettings DefaultExpando =>
         new()
         {
             NullValueHandling = NullValueHandling.Ignore,

@@ -3,7 +3,6 @@ define(["require", "exports"], function (require, exports) {
     Object.defineProperty(exports, "__esModule", { value: true });
     const template = {
         properties: {
-            'TRoot.$$Default': { type: Number, value: 22 },
             'TRoot.$$Tab': String,
             'TRoot.AgentId': { get: agentGetter, set: agentSetter },
             'TRoot.AgentId2': agentGetter

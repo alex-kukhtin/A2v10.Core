@@ -39,7 +39,7 @@ internal static class JsExtensions
             return $"\t{ro}{column.Name}: {column.DataType.ToTsType(appMeta.IdDataType)};";
         }
 
-        foreach (var p in table.Columns.Where(c => !c.IsVoid))
+        foreach (var p in table.Columns.Where(c => !c.IsVoid && c.DataType != ColumnDataType.RowVersion))
             yield return property(p);
     }
 }

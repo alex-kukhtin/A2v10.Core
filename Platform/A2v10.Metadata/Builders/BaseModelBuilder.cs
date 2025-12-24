@@ -139,7 +139,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
         return Action switch
         {
             "edit" => _plain.SavePlainModelAsync(data, savePrms),
-            _ => throw new NotImplementedException($"Create form for {Action}")
+            _ => throw new NotImplementedException($"Save Model Async for {Action}")
         };
     }
 

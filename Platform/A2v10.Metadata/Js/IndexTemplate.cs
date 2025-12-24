@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace A2v10.Metadata;
@@ -119,21 +120,38 @@ internal partial class IndexModelBuilder
             yield return "TRoot";
             yield return _table.RealTypeName;
             yield return $"T{_table.RealItemsName}"; // collection type
+            foreach (var x in _refFields)
+                yield return x.Table.RealTypeName;
         }
 
         const String jsDivider = ",\n\t\t";
+
+
+        var optionsList = options().ToList();
+        var eventsList = events().ToList(); 
+
+        IEnumerable<String> templateProps()
+        {
+            if (optionsList.Count > 0)
+                yield return $$"""
+                        properties: {
+                            {{String.Join(jsDivider, optionsList)}}
+                        }
+                    """;
+            if (eventsList.Count > 0)
+                yield return $$"""
+                        validators: {
+                            {{String.Join(jsDivider, eventsList)}}
+                        }
+                    """;
+        }
 
         var templ = $$"""
 
         import { {{String.Join(", ", types())}} } from './index';
         
         const template: Template = {
-            options: {
-                {{String.Join(jsDivider, options())}}
-            },
-            events: {   
-                {{String.Join(jsDivider, events())}}
-            }
+        {{String.Join(",", templateProps())}}
         };
 
         export default template;

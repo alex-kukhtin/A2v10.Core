@@ -8,7 +8,6 @@ using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
-using DocumentFormat.OpenXml.Drawing.Charts;
 
 namespace A2v10.Metadata;
 
@@ -46,12 +45,9 @@ public record ColumnReference
     internal String SqlTableName => $"{RefSchema}.[{RefTable}]";
 }
 
-public record ColumnReferenceToMe
+public record ColumnReferenceToMe : ColumnReference
 {
-    public String RefSchema { get; init; } = default!;
-    public String RefTable { get; init; } = default!;
     public String Column { get; init; } = default!;
-    internal String SqlTableName => $"{RefSchema}.[{RefTable}]";
 }
 
 [Flags]

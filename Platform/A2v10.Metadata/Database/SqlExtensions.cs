@@ -14,7 +14,7 @@ internal static class SqlExtensions
         if (String.IsNullOrEmpty(value))
             return String.Empty;
         value = value.Replace("'", "''");
-        if (value.StartsWith("@"))
+        if (value.StartsWith('@'))
             return $"@[{value[1..]}]";
         return value;
     }
@@ -60,7 +60,6 @@ internal static class SqlExtensions
 
     public static String SqlDataType(this TableColumn column, ColumnDataType idDataType, Boolean toTableType = false)
     {
-        var idDataStr = idDataType.ToString().ToLowerInvariant(); 
         var maxLength = column.MaxLength == 0 ? "max" : column.MaxLength.ToString();
         return column.DataType.ToSqlDataType(idDataType, maxLength, toTableType);
     }

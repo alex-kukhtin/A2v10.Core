@@ -6,10 +6,10 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Dynamic;
 using System.Globalization;
+using System.Text;
 
 using A2v10.Data.Core.Extensions;
 using A2v10.Infrastructure;
-using System.Text;
 
 namespace A2v10.Metadata;
 
@@ -19,6 +19,8 @@ internal class MainModelBuilder(BaseModelBuilder _baseModelBuilder)
     protected readonly ICurrentUser _currentUser = _baseModelBuilder._currentUser;
     protected readonly DatabaseMetadataProvider _metadataProvider = _baseModelBuilder._metadataProvider;
     protected readonly String? _dataSource = _baseModelBuilder._dataSource;
+    protected readonly AppMetadata _appMeta = _baseModelBuilder._appMeta;
+    protected readonly IEnumerable<ReferenceMember> _refFields = _baseModelBuilder._refFields;
 
     protected DbParameterCollection AddDefaultParameters(DbParameterCollection prms)
     {
@@ -66,5 +68,23 @@ internal class MainModelBuilder(BaseModelBuilder _baseModelBuilder)
                 """);
         }
         return sb.ToString();
+    }
+
+    public IEnumerable<String> TsProperties(TableMetadata table)
+    {
+        String property(TableColumn column)
+        {
+            var ro = column.IsFieldUpdated() ? "" : "readonly ";
+            if (column.IsReference)
+            {
+                var refMember = _refFields.FindRefMember(column);
+                if (refMember != null)
+                    return $"\t{ro}{column.Name}: {refMember.Table.RealTypeName};";
+            }
+            return $"\t{ro}{column.Name}: {column.DataType.ToTsType(_appMeta.IdDataType)};";
+        }
+
+        foreach (var p in table.Columns.Where(c => !c.IsVoid && c.DataType != ColumnDataType.RowVersion))
+            yield return property(p);
     }
 }

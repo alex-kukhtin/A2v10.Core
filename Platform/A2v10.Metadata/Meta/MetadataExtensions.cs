@@ -6,7 +6,6 @@ using System.Collections.Generic;
 
 using A2v10.Infrastructure;
 using A2v10.Services;
-using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
@@ -146,39 +145,11 @@ internal static class MetadataExtensions
         };
     }
 
-    internal static String LocalizeLabel(this ReportItemMetadata item)
+    internal static ReferenceMember? FindRefMember(this IEnumerable<ReferenceMember> refs, TableColumn column)
     {
-        return item.Label.Localize() ?? $"@[{item.Column}]";
-    }
-
-    internal static Bind BindColumn(this ReportItemMetadata item, String? prefix = null)
-    {
-        return item.DataType switch
-        {
-            ColumnDataType.Money => new BindSum($"{prefix}{item.Column}"),
-            ColumnDataType.Float => new BindNumber($"{prefix}{item.Column}"),
-            _ => new Bind($"{prefix}{item.Column}")
-        };
-    }
-
-    internal static SheetCell BindSheetCell(this ReportItemMetadata item, String? prefix = null)
-    {
-        var bind = item.DataType switch
-        {
-            ColumnDataType.Money => new BindSum($"{prefix}{item.Column}"),
-            ColumnDataType.Float => new BindNumber($"{prefix}{item.Column}"),
-            _ => new Bind($"{prefix}{item.Column}")
-        };
-        var align = item.DataType switch
-        {
-            ColumnDataType.Money => TextAlign.Right,
-            ColumnDataType.Float => TextAlign.Right,
-            _ => TextAlign.Left
-        };
-        return new SheetCell()
-        {
-            Align = align,
-            Bindings = b => b.SetBinding(nameof(SheetCell.Content), bind)
-        };
+        if (column.Reference.IsEmpty())
+            return null;
+        var rm = refs.FirstOrDefault(r =>  r.Table.Schema == column.Reference.RefSchema && r.Table.Name == column.Reference.RefTable);
+        return rm;
     }
 }

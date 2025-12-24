@@ -101,8 +101,7 @@ public class Switch : UIElementBase
 			itm.RenderElement(context);
 			t.RenderEnd(context);
 		}
-		if (parentTag != null)
-            parentTag.RenderEnd(context);
+		parentTag?.RenderEnd(context);
     }
 
 	protected override void OnEndInit()

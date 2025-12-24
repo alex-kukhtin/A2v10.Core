@@ -226,4 +226,40 @@ internal static class XamlExtensions
     {
         return $$"""{Bind {{item.Data}}}""";
     }
+
+    internal static String LocalizeLabel(this ReportItemMetadata item)
+    {
+        return item.Label.Localize() ?? $"@[{item.Column}]";
+    }
+
+    internal static Bind BindColumn(this ReportItemMetadata item, String? prefix = null)
+    {
+        return item.DataType switch
+        {
+            ColumnDataType.Money => new BindSum($"{prefix}{item.Column}"),
+            ColumnDataType.Float => new BindNumber($"{prefix}{item.Column}"),
+            _ => new Bind($"{prefix}{item.Column}")
+        };
+    }
+
+    internal static SheetCell BindSheetCell(this ReportItemMetadata item, String? prefix = null)
+    {
+        var bind = item.DataType switch
+        {
+            ColumnDataType.Money => new BindSum($"{prefix}{item.Column}"),
+            ColumnDataType.Float => new BindNumber($"{prefix}{item.Column}"),
+            _ => new Bind($"{prefix}{item.Column}")
+        };
+        var align = item.DataType switch
+        {
+            ColumnDataType.Money => TextAlign.Right,
+            ColumnDataType.Float => TextAlign.Right,
+            _ => TextAlign.Left
+        };
+        return new SheetCell()
+        {
+            Align = align,
+            Bindings = b => b.SetBinding(nameof(SheetCell.Content), bind)
+        };
+    }
 }

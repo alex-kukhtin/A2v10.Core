@@ -80,11 +80,11 @@ public class DeployDatabaseHandler(IServiceProvider _serviceProvider) : IClrInvo
 
         foreach (var e in meta.Enums)
         {
-            var createTable = dbCreator.CreateEnum(e);
+            var createTable = DatabaseCreator.CreateEnum(e);
             if (!String.IsNullOrEmpty(createTable))
                 await _dbContext.LoadModelSqlAsync(null, createTable);
-            var enumTable = dbCreator.CreateEnumTable(e);
-            await _dbContext.LoadModelSqlAsync(null, dbCreator.MergeEnums(e), dbprms =>
+            var enumTable = DatabaseCreator.CreateEnumTable(e);
+            await _dbContext.LoadModelSqlAsync(null, DatabaseCreator.MergeEnums(e), dbprms =>
             {
                 dbprms.AddStructured($"@Enums", "a2meta.[Enum.TableType]", enumTable);
             });
@@ -109,15 +109,15 @@ public class DeployDatabaseHandler(IServiceProvider _serviceProvider) : IClrInvo
         }
 
         // Run before foreign keys, it may be used for operations.
-        var sqlOps = dbCreator.CreateOperations(meta.Operations);
+        var sqlOps = DatabaseCreator.CreateOperations(meta.Operations);
         if (!String.IsNullOrEmpty(sqlOps))
         {
             // create
             await _dbContext.LoadModelSqlAsync(null, sqlOps);
             // merge
-            await _dbContext.LoadModelSqlAsync(null, dbCreator.MergeOperations(), dbprms =>
+            await _dbContext.LoadModelSqlAsync(null, DatabaseCreator.MergeOperations(), dbprms =>
             {
-                dbprms.AddStructured($"@Operations", "a2meta.[Operation.TableType]", dbCreator.CreateOperationTable(meta.Operations));
+                dbprms.AddStructured($"@Operations", "a2meta.[Operation.TableType]", DatabaseCreator.CreateOperationTable(meta.Operations));
             });
         }
 
