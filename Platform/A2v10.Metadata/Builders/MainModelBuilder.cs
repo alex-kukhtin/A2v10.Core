@@ -35,7 +35,7 @@ internal class MainModelBuilder(BaseModelBuilder _baseModelBuilder)
         if (!_table.HasPeriod())
             return prms;
 
-        DateTime? DateTimeFromString(String? value)
+        static DateTime? DateTimeFromString(String? value)
         {
             if (value == null)
                 return null;
@@ -46,7 +46,7 @@ internal class MainModelBuilder(BaseModelBuilder _baseModelBuilder)
             .AddDate("@To", DateTimeFromString(qry?.Get<String>("To")));
     }
 
-    protected String RefTableJoins(IEnumerable<ReferenceMember> refFields, String alias)
+    protected static String RefTableJoins(IEnumerable<ReferenceMember> refFields, String alias)
     {
         return String.Join("\n", refFields.Select(refField =>
         {

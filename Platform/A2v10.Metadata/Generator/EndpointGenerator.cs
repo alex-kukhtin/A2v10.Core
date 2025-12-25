@@ -86,20 +86,18 @@ internal class EndpointGenerator(IModelBuilderFactory _modelBuilderFactory, IApp
     }
 
 
-    private String SerializeJsonObject(Object obj)
+    private static String SerializeJsonObject(Object obj)
     {
         var serializer = JsonSerializer.Create(JsonSettings.CamelCaseSerializerSettingsFormat);
-        using (var sw = new StringWriter())
-        using (var writer = new JsonTextWriter(sw))
-        {
-            writer.Formatting = Formatting.Indented;
-            writer.IndentChar = '\t';  
-            writer.Indentation = 1;  // chars
+        using var sw = new StringWriter();
+        using var writer = new JsonTextWriter(sw);
+        writer.Formatting = Formatting.Indented;
+        writer.IndentChar = '\t';
+        writer.Indentation = 1;  // chars
 
-            serializer.Serialize(writer, obj);
+        serializer.Serialize(writer, obj);
 
-            return sw.ToString();
-        }
+        return sw.ToString();
     }
     private async Task GenerateIndexAsync(TableMetadata table)
     {
@@ -157,7 +155,7 @@ internal class EndpointGenerator(IModelBuilderFactory _modelBuilderFactory, IApp
         return new CreatedFile(filePath, true);
     }
 
-    private Task WriteFileAsync(String fullPath, String content)
+    private static Task WriteFileAsync(String fullPath, String content)
     {
         var dir =  Path.GetDirectoryName(fullPath)!;
         if (!Directory.Exists(dir))

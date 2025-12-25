@@ -35,7 +35,7 @@ internal class XamlBulder(EditWithMode _editWith)
         };
     }
 
-    private CollectionView? CreateCollectionView(Form form)
+    private static CollectionView? CreateCollectionView(Form form)
     {
         if (!form.UseCollectionView)
             return null;
@@ -114,7 +114,7 @@ internal class XamlBulder(EditWithMode _editWith)
         }
     }
 
-    private UIElementBase CreateTabsBody(FormItem item, AttachAction? attach = null)
+    private Switch CreateTabsBody(FormItem item, AttachAction? attach = null)
     {
         Case CreateCase(FormItem ch)
         {
@@ -157,7 +157,7 @@ internal class XamlBulder(EditWithMode _editWith)
         AttachInt32("Grid.ColSpan", source.Grid.ColSpan);
     }
 
-    private UIElement CreateTabs(FormItem item)
+    private static TabBar CreateTabs(FormItem item)
     {
         var tabBarButtons = item.Items?.Select(c => new TabButton() { Content = c.Label.Localize(), ActiveValue = c.Data }) ?? [];
 
@@ -207,7 +207,7 @@ internal class XamlBulder(EditWithMode _editWith)
         IEnumerable<ColumnDefinition> GridColumns()
         {
             if (source.Props?.Columns == null)
-                return Enumerable.Empty<ColumnDefinition>();
+                return [];
             return source.Props.Columns.Split(' ').Select(r =>
                 new ColumnDefinition()
                 {
@@ -227,7 +227,7 @@ internal class XamlBulder(EditWithMode _editWith)
             Children = [..CreateElements(source.Items, Attach, param)]
         };
     }
-    private TreeView CreateTreeView(FormItem source)
+    private static TreeView CreateTreeView(FormItem source)
     {
         // for folder
         return new TreeView()
@@ -297,7 +297,7 @@ internal class XamlBulder(EditWithMode _editWith)
             }
         };
     }
-    private Pager CreatePager(FormItem source)
+    private static Pager CreatePager(FormItem source)
     {
         return new Pager()
         {
@@ -305,7 +305,7 @@ internal class XamlBulder(EditWithMode _editWith)
         };
     }
 
-    private TextBox CreateTextBox(FormItem source)
+    private static TextBox CreateTextBox(FormItem source)
     {
         return new TextBox()
         {
@@ -322,7 +322,7 @@ internal class XamlBulder(EditWithMode _editWith)
         };
     }
 
-    private Selector CreateSelector(FormItem source, String? param)
+    private static SelectorSimple CreateSelector(FormItem source, String? param)
     {
         return new SelectorSimple()
         {
@@ -361,7 +361,7 @@ internal class XamlBulder(EditWithMode _editWith)
             ]
         };
     }
-    private DatePicker CreateDatePicker(FormItem source)
+    private static DatePicker CreateDatePicker(FormItem source)
     {
         return new DatePicker()
         {
@@ -372,7 +372,7 @@ internal class XamlBulder(EditWithMode _editWith)
             Bindings = b => b.SetBinding(nameof(DatePicker.Value), new Bind(source.Data))
         };
     }
-    private PeriodPicker CreatePeriodPicker(FormItem source, String? param)
+    private static PeriodPicker CreatePeriodPicker(FormItem source, String? param)
     {
         return new PeriodPicker()
         {
@@ -388,7 +388,7 @@ internal class XamlBulder(EditWithMode _editWith)
             }
         };
     }
-    private CheckBox CreateCheckBox(FormItem source)
+    private static CheckBox CreateCheckBox(FormItem source)
     {
         return new CheckBox()
         {
@@ -473,7 +473,7 @@ internal class XamlBulder(EditWithMode _editWith)
         };
     }
 
-    private Header CreateHeader(FormItem source)
+    private static Header CreateHeader(FormItem source)
     {
         return new Header()
         {
@@ -483,7 +483,7 @@ internal class XamlBulder(EditWithMode _editWith)
         };
     }
 
-    private Label CreateLabel(FormItem source)
+    private static Label CreateLabel(FormItem source)
     {
         return new Label()
         {
@@ -491,7 +491,7 @@ internal class XamlBulder(EditWithMode _editWith)
         };
     }
 
-    private Span CreateSpan(FormItem source)
+    private static Span CreateSpan(FormItem source)
     {
         return new Span()
         {
@@ -499,7 +499,7 @@ internal class XamlBulder(EditWithMode _editWith)
         };
     }
 
-    private Static CreateStatic(FormItem source)
+    private static Static CreateStatic(FormItem source)
     {
         return new Static()
         {

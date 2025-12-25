@@ -10,7 +10,7 @@ internal partial class PlainModelBuilder
 {
     internal Form CreateDocumentPage()
     {
-        var hasDetails = _table.Details.Any();
+        var hasDetails = _table.Details.Count != 0;
 
         IEnumerable<FormItem> toolbarButtons = [
             FormBuild.Button(FormCommand.SaveAndClose, "@SaveAndClose"),

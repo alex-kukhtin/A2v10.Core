@@ -17,6 +17,7 @@ namespace A2v10.Metadata;
 internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, TableMetadata report, TableMetadata source)
 {
     protected IServiceProvider _serviceProvider = serviceProvider;
+#pragma warning disable IDE1006 // Naming Styles
     protected TableMetadata _report => report;
     protected TableMetadata _source => source;
     protected IDbContext _dbContext => _serviceProvider.GetRequiredService<IDbContext>();
@@ -26,6 +27,7 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Tabl
     protected readonly IServiceProvider _xamlServiceProvider = new XamlServiceProvider();
 
     protected ReportGrouping _grouping = default!;
+#pragma warning restore IDE1006 // Naming Styles
 
     public abstract Task<IDataModel> LoadReportModelAsync(IModelView view, ExpandoObject prms);
     public abstract UIElement CreatePage();
@@ -291,7 +293,7 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Tabl
             ]
         };
     }
-    protected EmptyPanel CreateNonRunPanel()
+    protected static EmptyPanel CreateNonRunPanel()
     {
         return new EmptyPanel()
         {

@@ -126,7 +126,7 @@ internal class TurnoverReportBuilder(IServiceProvider serviceProvider, TableMeta
 
     public override UIElement CreatePage()
     {
-        var dataCount = _grouping.Data.Count();
+        var dataCount = _grouping.Data.Count;
         var headerRowCount = dataCount > 1 ? 2 : 1;
 
         IEnumerable<SheetCell> dataCells()

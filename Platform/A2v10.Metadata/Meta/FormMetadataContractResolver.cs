@@ -38,7 +38,7 @@ public class FormMetadataContractResolver : DefaultContractResolver
         return prop;
     }
 
-    void SetShouldSerializeFormItem(JsonProperty prop)
+    static void SetShouldSerializeFormItem(JsonProperty prop)
     {
         if (prop.PropertyType == typeof(FormItemProps))
         {
@@ -74,7 +74,7 @@ public class FormMetadataContractResolver : DefaultContractResolver
         }
     }
 
-    void SetShouldSerializeForm(JsonProperty prop)
+    static void SetShouldSerializeForm(JsonProperty prop)
     {
         if (prop.PropertyName == nameof(Form.Buttons))
         {

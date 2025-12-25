@@ -21,9 +21,8 @@ public class DeployDatabaseHandler(IServiceProvider _serviceProvider) : IClrInvo
 
     public Task<Object> InvokeAsync(ExpandoObject args)
     {
-        var userIdObj = args.Get<Object>("UserId");
-        if (userIdObj == null)
-            throw new InvalidOperationException("UserId is null");
+        var userIdObj = args.Get<Object>("UserId") 
+            ?? throw new InvalidOperationException("UserId is null");
         var userId = Convert.ToInt64(userIdObj);
         if (userId == 0)
             throw new InvalidOperationException("UserId = 0");
@@ -33,7 +32,7 @@ public class DeployDatabaseHandler(IServiceProvider _serviceProvider) : IClrInvo
         return Task.FromResult<Object>(new ExpandoObject());
     }
 
-    private Task UpdateMetadataAsync(AppMetadata appMeta)
+    private Task<IDataModel> UpdateMetadataAsync(AppMetadata appMeta)
     {
         var sql = """
             update a2meta.[Application] set Version = Version + 1 where Id = @Id;

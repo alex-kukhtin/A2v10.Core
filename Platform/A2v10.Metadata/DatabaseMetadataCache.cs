@@ -13,10 +13,10 @@ namespace A2v10.Metadata;
 
 public class DatabaseMetadataCache
 {
-    ConcurrentDictionary<String, TableMetadata> _cache = [];
-    ConcurrentDictionary<String, EndpointTableInfo> _endpoints = [];
-    ConcurrentDictionary<String, FormMetadata> _formCache = [];
-    ConcurrentDictionary<String, AppMetadata> _appMetaCache = [];
+    private readonly ConcurrentDictionary<String, TableMetadata> _cache = [];
+    private readonly ConcurrentDictionary<String, EndpointTableInfo> _endpoints = [];
+    private readonly ConcurrentDictionary<String, FormMetadata> _formCache = [];
+    private readonly ConcurrentDictionary<String, AppMetadata> _appMetaCache = [];
 
     public void ClearAll()
     {

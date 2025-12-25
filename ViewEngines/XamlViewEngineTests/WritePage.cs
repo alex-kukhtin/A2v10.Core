@@ -45,7 +45,6 @@ public class XamlWritersTests
         var xw = new XamlWriter();
         var written = xw.GetXaml(page);
 
-        int z = 55;
     }
 
 }

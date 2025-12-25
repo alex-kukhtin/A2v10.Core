@@ -120,7 +120,7 @@ internal static class XamlExtensions
                 editFolder.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(item.Command.Argument));
                 return editFolder;  
             }
-            var urlBind = url.StartsWith("{");
+            var urlBind = url.StartsWith('{');
             var cmd = new BindCmd()
             {
                 Command = CommandType.OpenSelected,
@@ -179,7 +179,7 @@ internal static class XamlExtensions
                 SaveRequired = true,
                 ValidRequired = true
             },
-            FormCommand.UnApply => new BindCmdExec("upApply"),
+            FormCommand.UnApply => new BindCmdExec("unApply"),
             FormCommand.Open => new BindCmd()
             {
                 Command = CommandType.Open,
@@ -217,7 +217,7 @@ internal static class XamlExtensions
     {
         if (source == null) 
             return null;
-        if (source.StartsWith("@"))
+        if (source.StartsWith('@'))
             return $"@[{source[1..]}]";
         return source.Replace("\"", "&quot;");
     }

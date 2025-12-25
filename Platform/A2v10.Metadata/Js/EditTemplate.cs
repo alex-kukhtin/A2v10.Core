@@ -1,8 +1,6 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
-using DocumentFormat.OpenXml.Bibliography;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;

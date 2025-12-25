@@ -3,14 +3,13 @@
 using System;
 using System.Dynamic;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
 
 using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
-using A2v10.Xaml;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace A2v10.Metadata;
 
@@ -34,13 +33,13 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     {
         var modelTableInfo = _metadataCache.GetModelInfoFromPath(path);
         if (modelTableInfo == null) {
-            var pathInfo = ParsePath(path);
-            var tableMeta = await _metadataCache.GetOrAddAsync(null, pathInfo.schema, pathInfo.table,
+            var (schema, table) = ParsePath(path);
+            var tableMeta = await _metadataCache.GetOrAddAsync(null, schema, table,
                 LoadTableMetadataAsync);
             // case sensitive
-            pathInfo.table = tableMeta.Name;
-            pathInfo.schema = tableMeta.Schema;
-            _metadataCache.GetOrAddEndpointPath(null, pathInfo.schema, pathInfo.table);
+            table = tableMeta.Name;
+            schema = tableMeta.Schema;
+            _metadataCache.GetOrAddEndpointPath(null, schema, table);
             modelTableInfo = _metadataCache.GetModelInfoFromPath(path);
         }
         if (modelTableInfo == null)
@@ -77,8 +76,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
 
     public static IEnumerable<ReferenceMember> EnumFields(TableMetadata table, Boolean withDetails)
     {
-        ReferenceMember CreateMember(TableColumn column, Int32 index) => 
-            new ReferenceMember(column, MetadataExtensions.CreateEnumMeta(column), index);
+        static ReferenceMember CreateMember(TableColumn column, Int32 index) => 
+            new(column, MetadataExtensions.CreateEnumMeta(column), index);
 
         Int32 index = 0;
         var list = new List<ReferenceMember>();
@@ -123,9 +122,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             ?? throw new InvalidOperationException("a2meta.[Table.Schema] returns null");
         var tableExpando = dm.Eval<ExpandoObject>("Table")
             ?? throw new InvalidOperationException($"Metadata for {schema}.{table} not found");
-        var json = JsonConvert.SerializeObject(tableExpando);
-        if (json == null)
-            throw new InvalidOperationException("TableMetadata not found");
+        var json = JsonConvert.SerializeObject(tableExpando) 
+            ?? throw new InvalidOperationException("TableMetadata not found");
         var meta = JsonConvert.DeserializeObject<TableMetadata>(json, JsonSettings.IgnoreNull)
             ?? throw new InvalidOperationException("TableMetadata deserialization fails");
         return meta;
@@ -150,10 +148,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         }
 
         // convert Expando to Form
-        var json = JsonConvert.SerializeObject(formExpando);
-
-        if (json == null)
-            throw new InvalidOperationException("Form not found");
+        var json = JsonConvert.SerializeObject(formExpando) 
+            ?? throw new InvalidOperationException("Form not found");
         var form = JsonConvert.DeserializeObject<Form>(json, JsonSettings.IgnoreNull)
             ?? throw new InvalidOperationException("Form deserialization fails");
 
@@ -163,7 +159,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
 
 
 
-    private (String schema, String table) ParsePath(String path)
+    private static (String schema, String table) ParsePath(String path)
     {
         var split = path.Split('/');
         if (split.Length < 2 )

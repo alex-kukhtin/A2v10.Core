@@ -104,7 +104,7 @@ internal static class FormExtensions
 
     public static IEnumerable<TableColumn> EditableColumns(this TableMetadata table)
     {
-        Boolean isVisible(TableColumn column)
+        static Boolean isVisible(TableColumn column)
         {
             var hiddenColumns =
              TableColumnRole.Void

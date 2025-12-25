@@ -134,7 +134,7 @@ internal partial class IndexModelBuilder
         {
             if (optionsList.Count > 0)
                 yield return $$"""
-                        properties: {
+                        options: {
                             {{String.Join(jsDivider, optionsList)}}
                         }
                     """;
