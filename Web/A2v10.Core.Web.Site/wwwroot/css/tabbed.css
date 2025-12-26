@@ -8193,7 +8193,8 @@ table.tree-grid a.toggle.expanded:after {
   min-width: var(--lane-min-width);
   background-color: var(--bgMenu);
   display: flex;
-  border-bottom: 1px solid var(--neutral300);
+  border: 1px solid var(--table-header-bg);
+  border-bottom-color: var(--neutral300);
 }
 .kanban .lane-header.over {
   background-color: var(--neutral50);
@@ -8207,6 +8208,9 @@ table.tree-grid a.toggle.expanded:after {
 }
 .kanban .lane.over {
   background-color: var(--neutral100);
+}
+.kanban .lane.over .card-list {
+  pointer-events: none;
 }
 .kanban .lane-header .lane-header-body {
   flex-grow: 2;

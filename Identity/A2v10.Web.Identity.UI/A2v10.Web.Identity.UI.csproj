@@ -21,6 +21,8 @@
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<RazorCompileOnBuild>true</RazorCompileOnBuild>
+		<RazorCompileOnPublish>true</RazorCompileOnPublish>
 	</PropertyGroup>
 
 	<PropertyGroup>

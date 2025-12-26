@@ -42,7 +42,8 @@
 		min-width: var(--lane-min-width);
 		background-color: @bk-menu;
 		display: flex;
-		border-bottom: 1px solid @border-color;
+		border: 1px solid @lane-color;
+		border-bottom-color: @border-color;
 
 		&.over {
 			background-color: var(--neutral50);
@@ -58,6 +59,10 @@
 
 		&.over {
 			background-color: var(--neutral100);
+
+			.card-list {
+				pointer-events: none;
+			}
 		}
 	}
 
