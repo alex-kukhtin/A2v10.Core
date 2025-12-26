@@ -1,4 +1,5 @@
-﻿
+﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
+
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
