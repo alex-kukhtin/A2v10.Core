@@ -1,5 +1,6 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
+using Jint.Runtime;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -138,14 +139,14 @@ internal partial class PlainModelBuilder
                     yield return $$"""'{{_table.RealTypeName}}.$$Tab': {type: String, value: '{{fd.Kinds.First().Name}}'}""";
             }
             foreach (var c in _table.Columns.Where(c => !String.IsNullOrEmpty(c.Computed)))
-                yield return $$"""'{{_table.RealTypeName}}.{{c.Name}}'() { return {{c.Computed}};}""";
+                yield return $$"""'{{_table.RealTypeName}}.{{c.Name}}'(this: {{_table.RealTypeName}}) { return {{c.Computed}};}""";
 
             foreach (var d in _table.Details)
             {
                 foreach (var c in d.Columns.Where(c => !String.IsNullOrEmpty(c.Computed)))
-                    yield return $$"""'{{d.RealTypeName}}.{{c.Name}}'() { return {{c.Computed}};}""";
+                    yield return $$"""'{{d.RealTypeName}}.{{c.Name}}'(this: {{d.RealTypeName}}) { return {{c.Computed}};}""";
                 foreach (var c in d.Columns.Where(c => c.Total))
-                    yield return $$"""'{{d.RealTypeName}}Array.{{c.Name}}'() { return this.$sum(c => c.{{c.Name}}); }""";
+                    yield return $$"""'{{d.RealTypeName}}Array.{{c.Name}}'(this: {{d.RealTypeName}}Array) { return this.$sum(c => c.{{c.Name}}); }""";
             }
         }
 
@@ -171,11 +172,26 @@ internal partial class PlainModelBuilder
                         yield return $"'{_table.RealItemName}.{d.RealItemsName}[].{c.Name}': `@[Error.Required]`";
         }
 
+        IEnumerable<String> types()
+        {
+            yield return "TRoot";
+            yield return _table.RealTypeName;
+            foreach (var r in _refFields.RefTables())
+                yield return r.RealTypeName;
+            foreach (var d in _table.Details)
+            {
+                yield return d.RealTypeName;
+                yield return $"{d.RealTypeName}Array";
+            }
+        }
 
         const String jsDivider = ",\n\t\t";
 
         var endpoint = _table.EndpointPathUseBase(_baseTable);
         var templ = $$"""
+
+        import { {{String.Join(", ", types())}} } from './edit';
+
         const du: UtilsDate = require('std:utils').date;
         const template: Template = {
             options: {
@@ -196,9 +212,9 @@ internal partial class PlainModelBuilder
             }
         };
 
-        module.exports = template;
+        export default template;
 
-        async function apply(this: IRoot) {
+        async function apply(this: TRoot) {
             const ctrl: IController = this.$ctrl;
             await ctrl.$invoke('apply', {Id: this.{{_table.RealItemName}}.{{_table.PrimaryKeyField}}}, '{{endpoint}}');
         	this.{{_table.RealItemName}}.Done = true;
@@ -206,7 +222,7 @@ internal partial class PlainModelBuilder
             ctrl.$requery();
         }
 
-        async function unApply(this: IRoot) {
+        async function unApply(this: TRoot) {
             const ctrl: IController = this.$ctrl;
             await ctrl.$invoke('unapply', {Id: this.{{_table.RealItemName}}.{{_table.PrimaryKeyField}}}, '{{endpoint}}');
         	this.{{_table.RealItemName}}.Done = false;

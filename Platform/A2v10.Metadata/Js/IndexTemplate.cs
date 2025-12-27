@@ -119,9 +119,9 @@ internal partial class IndexModelBuilder
         {
             yield return "TRoot";
             yield return _table.RealTypeName;
-            yield return $"T{_table.RealItemsName}"; // collection type
-            foreach (var x in _refFields)
-                yield return x.Table.RealTypeName;
+            yield return $"{_table.RealTypeName}Array"; // collection type
+            foreach (var x in _refFields.RefTables())
+                yield return x.RealTypeName;
         }
 
         const String jsDivider = ",\n\t\t";
@@ -140,7 +140,7 @@ internal partial class IndexModelBuilder
                     """;
             if (eventsList.Count > 0)
                 yield return $$"""
-                        validators: {
+                        events: {
                             {{String.Join(jsDivider, eventsList)}}
                         }
                     """;
@@ -151,7 +151,7 @@ internal partial class IndexModelBuilder
         import { {{String.Join(", ", types())}} } from './index';
         
         const template: Template = {
-        {{String.Join(",", templateProps())}}
+        {{String.Join(",\n", templateProps())}}
         };
 
         export default template;

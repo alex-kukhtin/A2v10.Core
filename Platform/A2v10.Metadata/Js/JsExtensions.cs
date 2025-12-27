@@ -9,6 +9,7 @@ internal static class JsExtensions
     private const String TSString = "string";
     private const String TSNumber = "number";
     private const String TBoolean = "boolean";
+    private const String TSDate = "Date";
     public static String ToTsType(this ColumnDataType columnDataType, ColumnDataType idDataType)
     {
         var idType = idDataType switch { 
@@ -23,6 +24,9 @@ internal static class JsExtensions
                 or ColumnDataType.NVarChar => TSString,
             ColumnDataType.Float or ColumnDataType.Money => TSNumber,
             ColumnDataType.Bit => TBoolean,
+            ColumnDataType.BigInt or ColumnDataType.Int => TSNumber,
+            ColumnDataType.DateTime 
+                or ColumnDataType.Date => TSDate,
             ColumnDataType.Enum => TSString, // TODO: enumerable
             ColumnDataType.Reference => idType, // TODO: reference
             _ => throw new InvalidOperationException($"Unknown TS DataType {columnDataType}")

@@ -152,4 +152,9 @@ internal static class MetadataExtensions
         var rm = refs.FirstOrDefault(r =>  r.Table.Schema == column.Reference.RefSchema && r.Table.Name == column.Reference.RefTable);
         return rm;
     }
+
+    internal static IEnumerable<TableMetadata> RefTables (this IEnumerable<ReferenceMember> refs)
+    {
+        return refs.GroupBy(r => r.Table.SqlTableName).Select(g => g.First().Table);
+    }
 }

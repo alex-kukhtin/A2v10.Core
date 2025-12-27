@@ -1,6 +1,9 @@
 ﻿2025-12-26 (next: 8603)
 
 
+A2v10.App.Assets
+A2v10.Metadata
+
 Проверить Signal после обновления всего!
 !Workflow.Module (scheduling, workflow.engine)
 

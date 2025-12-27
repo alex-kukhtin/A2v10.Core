@@ -99,8 +99,7 @@ internal static class SqlExtensions
             && !column.Role.HasFlag(TableColumnRole.IsFolder)
             && !column.Role.HasFlag(TableColumnRole.IsSystem)
             && column.Name != "Owner"
-            && column.DataType != ColumnDataType.RowVersion
-            && !column.Role.HasFlag(TableColumnRole.Done);
+            && column.DataType != ColumnDataType.RowVersion;
     }
 
     internal static IEnumerable<String> AllSqlFields(this TableMetadata table, IEnumerable<ReferenceMember> refFields, IEnumerable<ReferenceMember> enumFields, String alias, Boolean isDetails = false)

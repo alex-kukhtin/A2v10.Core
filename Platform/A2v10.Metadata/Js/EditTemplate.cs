@@ -141,8 +141,8 @@ internal partial class PlainModelBuilder
         {
             yield return "TRoot";
             yield return _table.RealTypeName;
-            foreach (var r in _refFields)
-                yield return r.Table.RealTypeName;
+            foreach (var r in _refFields.RefTables())
+                yield return r.RealTypeName;
         }   
 
         const String jsDivider = ",\n\t\t";
