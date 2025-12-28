@@ -700,8 +700,10 @@ public class BindCmd : BindBase
         var arg = GetBinding(nameof(Argument));
         if (arg != null)
             sw.Append($", Argument={arg.CreateMarkup()}");
-        if (SaveRequired)
-            sw.Append(", SaveRequired=True");
+		else if (!String.IsNullOrEmpty(Argument))
+			sw.Append($", Argument='{Argument}'");
+		if (SaveRequired)
+			sw.Append(", SaveRequired=True");
         if (ValidRequired)
             sw.Append(", ValidRequired=True");
         if (Confirm != null && !String.IsNullOrEmpty(Confirm.Message))

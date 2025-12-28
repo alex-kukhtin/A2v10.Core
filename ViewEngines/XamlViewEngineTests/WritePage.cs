@@ -51,6 +51,21 @@ public class XamlWritersTests
     [TestMethod]
     public void WriteIndexPage()
     {
+        var xaml = """
+        <Page xmlns="clr-namespace:A2v10.Xaml;assembly=A2v10.Xaml" Title="PageTitle" Padding="1rem">
+        	<Page.CollectionView>
+        		<CollectionView ItemsSource="{Bind Agents}" />
+        	</Page.CollectionView>
+        	<Grid Rows="Auto, 1*, Auto" Columns="">
+        		<Toolbar>
+        			<Button Icon="Calc" Command="{BindCmd Open, Url='/agents/edit', Argument='new'}" Content="Create" />
+        		</Toolbar>
+        		<DataGrid Grid.Row="1" />
+        		<Pager Grid.Row="2" />
+        	</Grid>
+        </Page>
+        """;
+
         var sp = new XamlServiceProvider();
 
         var bindCmdCreate = new BindCmd("Open")
@@ -97,7 +112,6 @@ public class XamlWritersTests
         var xw = new XamlWriter();
         var written = xw.GetXaml(page);
 
-        int x = 22;
-
+        Assert.AreEqual(xaml, written);
     }
 }

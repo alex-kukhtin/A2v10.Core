@@ -141,7 +141,7 @@ internal partial class PlainModelBuilder
         {
             yield return "TRoot";
             yield return _table.RealTypeName;
-            foreach (var r in _refFields.RefTables())
+            foreach (var r in _refFields.RefTables(_table.RealTypeName))
                 yield return r.RealTypeName;
         }   
 

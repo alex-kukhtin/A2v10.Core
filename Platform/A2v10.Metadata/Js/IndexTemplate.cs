@@ -120,7 +120,7 @@ internal partial class IndexModelBuilder
             yield return "TRoot";
             yield return _table.RealTypeName;
             yield return $"{_table.RealTypeName}Array"; // collection type
-            foreach (var x in _refFields.RefTables())
+            foreach (var x in _refFields.RefTables(_table.RealTypeName))
                 yield return x.RealTypeName;
         }
 

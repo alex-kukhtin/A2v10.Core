@@ -153,8 +153,11 @@ internal static class MetadataExtensions
         return rm;
     }
 
-    internal static IEnumerable<TableMetadata> RefTables (this IEnumerable<ReferenceMember> refs)
+    internal static IEnumerable<TableMetadata> RefTables (this IEnumerable<ReferenceMember> refs, String? exclude = null)
     {
-        return refs.GroupBy(r => r.Table.SqlTableName).Select(g => g.First().Table);
+        var res = refs.GroupBy(r => r.Table.SqlTableName).Select(g => g.First().Table);
+        if (exclude != null)
+            res = res.Where(t => t.RealTypeName != exclude);
+        return res;
     }
 }

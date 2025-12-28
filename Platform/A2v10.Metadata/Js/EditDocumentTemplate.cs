@@ -51,21 +51,16 @@ internal partial class PlainModelBuilder
             foreach (var col in _table.Columns.Where(c => c.Required))
                 yield return $"'{_table.RealItemName}.{col.Name}': `@[Error.Required]`";
 
-            if (_baseTable != null)
+            foreach (var d in _table.Details)
             {
-                foreach (var d in _table.Details)
-                    if (d.Kinds.Count > 0)
-                        foreach (var k in d.Kinds)
-                            foreach (var c in d.Columns.Where(c => c.Required))
-                                yield return $"'{_table.RealItemName}.{k.Name}[].{c.Name}': `@[Error.Required]`";
-                    else
+                if (d.Kinds.Count > 0)
+                    foreach (var k in d.Kinds)
                         foreach (var c in d.Columns.Where(c => c.Required))
-                            yield return $"'{_table.RealItemName}.{d.RealItemsName}[].{c.Name}': `@[Error.Required]`";
-            }
-            else
-                foreach (var d in _table.Details)
+                            yield return $"'{_table.RealItemName}.{k.Name}[].{c.Name}': `@[Error.Required]`";
+                else
                     foreach (var c in d.Columns.Where(c => c.Required))
                         yield return $"'{_table.RealItemName}.{d.RealItemsName}[].{c.Name}': `@[Error.Required]`";
+            }
         }
 
 
@@ -155,21 +150,20 @@ internal partial class PlainModelBuilder
             foreach (var col in _table.Columns.Where(c => c.Required))
                 yield return $"'{_table.RealItemName}.{col.Name}': `@[Error.Required]`";
 
-            if (_baseTable != null)
+            foreach (var d in _table.Details)
             {
-                foreach (var d in _table.Details)
-                    if (d.Kinds.Count > 0)
-                        foreach (var k in d.Kinds)
-                            foreach (var c in d.Columns.Where(c => c.Required))
-                                yield return $"'{_table.RealItemName}.{k.Name}[].{c.Name}': `@[Error.Required]`";
-                    else
+                if (d.Kinds.Count > 0)
+                {
+                    foreach (var k in d.Kinds)
                         foreach (var c in d.Columns.Where(c => c.Required))
-                            yield return $"'{_table.RealItemName}.{d.RealItemsName}[].{c.Name}': `@[Error.Required]`";
-            }
-            else
-                foreach (var d in _table.Details)
+                            yield return $"'{_table.RealItemName}.{k.Name}[].{c.Name}': `@[Error.Required]`";
+                }
+                else
+                {
                     foreach (var c in d.Columns.Where(c => c.Required))
                         yield return $"'{_table.RealItemName}.{d.RealItemsName}[].{c.Name}': `@[Error.Required]`";
+                }
+            }
         }
 
         IEnumerable<String> types()
