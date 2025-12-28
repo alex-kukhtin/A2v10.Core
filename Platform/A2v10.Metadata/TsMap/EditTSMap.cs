@@ -24,8 +24,13 @@ internal partial class PlainModelBuilder
         IEnumerable<String> detailsFields()
         {
             foreach (var t in _table.Details)
-                foreach (var k in t.Kinds)
-                    yield return $"    readonly {k.Name}: {t.RealTypeName}Array;";
+            {
+                if (t.Kinds.Count == 0)
+                    yield return $"    readonly {t.RealItemsName}: {t.RealTypeName}Array;";
+                else
+                    foreach (var k in t.Kinds)
+                        yield return $"    readonly {k.Name}: {t.RealTypeName}Array;";
+            }
         }
 
         IEnumerable<String> detailsComputed()
@@ -49,6 +54,18 @@ internal partial class PlainModelBuilder
 
         """);
 
+        IEnumerable<String> elemProperties()
+        {
+            foreach (var p in TsProperties(_table))
+                yield return p;
+            var detFields = detailsFields().ToList();
+            if (detFields.Count == 0)
+                yield break;
+            yield return "\t// Details";
+            foreach (var df in detFields)
+                yield return df;
+        }
+
         if (detailElems.Any())
             detailsDecl = $"\n{String.Join("\n", detailElems)}\n";
 
@@ -56,7 +73,7 @@ internal partial class PlainModelBuilder
 
         {{refDecl}}{{detailsDecl}}
         export interface {{_table.RealTypeName}} extends IElement {
-        {{String.Join("\n", TsProperties(_table))}}
+        {{String.Join("\n", elemProperties())}}
         }   
 
         export interface TRoot extends IRoot {
