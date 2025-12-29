@@ -28,6 +28,7 @@ internal static class SqlExtensions
             ColumnDataType.BigInt => SqlDbType.BigInt,
             ColumnDataType.Int => SqlDbType.Int,
             ColumnDataType.SmallInt => SqlDbType.SmallInt,
+            ColumnDataType.Decimal => SqlDbType.Decimal,
             ColumnDataType.String => SqlDbType.NVarChar,
             ColumnDataType.DateTime => SqlDbType.DateTime,
             ColumnDataType.Date => SqlDbType.Date,
@@ -39,7 +40,7 @@ internal static class SqlExtensions
         };
     }
 
-    public static String ToSqlDataType(this ColumnDataType columnDataType, ColumnDataType idDataType, String maxLength = "255", Boolean toTableType = false)
+    public static String ToSqlDataType(this ColumnDataType columnDataType, ColumnDataType idDataType, String maxLength = "255", Int32 scale = 0, Boolean toTableType = false)
     {
         var idDataStr = idDataType.ToString().ToLowerInvariant();
         return columnDataType switch
@@ -54,6 +55,7 @@ internal static class SqlExtensions
             ColumnDataType.Stream => $"varbinary(max)",
             ColumnDataType.Uniqueidentifier => "uniqueidentifier",
             ColumnDataType.RowVersion => toTableType ? "varbinary(8)" : "rowversion",
+            ColumnDataType.Decimal => $"decimal({maxLength},{scale})",
             _ => columnDataType.ToString().ToLowerInvariant(),
         };
     }
@@ -61,7 +63,7 @@ internal static class SqlExtensions
     public static String SqlDataType(this TableColumn column, ColumnDataType idDataType, Boolean toTableType = false)
     {
         var maxLength = column.MaxLength == 0 ? "max" : column.MaxLength.ToString();
-        return column.DataType.ToSqlDataType(idDataType, maxLength, toTableType);
+        return column.DataType.ToSqlDataType(idDataType, maxLength, column.Scale, toTableType);
     }
     public static Type ClrDataType(this TableColumn column, ColumnDataType idDataType)
     {
@@ -84,6 +86,7 @@ internal static class SqlExtensions
             ColumnDataType.Money => typeof(Decimal),
             ColumnDataType.Float => typeof(Double),
             ColumnDataType.Int => typeof(Int32),
+            ColumnDataType.Decimal => typeof(Decimal),
             ColumnDataType.SmallInt => typeof(Int16),
             ColumnDataType.Stream => typeof(Byte[]),
             ColumnDataType.Uniqueidentifier => typeof(Guid),

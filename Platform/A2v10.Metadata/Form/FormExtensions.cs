@@ -31,7 +31,8 @@ internal static class FormExtensions
     {
         if (column.Role.HasFlag(TableColumnRole.RowNo))
             return "1px";
-        if (column.DataType == ColumnDataType.Money || column.DataType == ColumnDataType.Float)
+        if (column.DataType == ColumnDataType.Money || column.DataType == ColumnDataType.Float || 
+            column.DataType == ColumnDataType.Decimal || column.DataType == ColumnDataType.Int)
             return "10rem";
         return null;
     }
@@ -63,8 +64,8 @@ internal static class FormExtensions
             ColumnDataType.Date => ItemDataType.Date,
             ColumnDataType.DateTime => ItemDataType.DateTime,
             ColumnDataType.Money => ItemDataType.Currency,
-            ColumnDataType.Float => ItemDataType.Number,
-            ColumnDataType.Int => ItemDataType.Number,
+            ColumnDataType.Float or ColumnDataType.Int or ColumnDataType.Decimal 
+                => ItemDataType.Number,
             _ => ItemDataType._,
         };
     }
@@ -75,6 +76,7 @@ internal static class FormExtensions
         {
             ColumnDataType.Money => "12rem",
             ColumnDataType.Float => "12rem",
+            ColumnDataType.Decimal => "12rem",
             ColumnDataType.Date or ColumnDataType.DateTime => "12rem",
             _ => null
         };

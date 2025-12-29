@@ -23,6 +23,7 @@ public enum ColumnDataType
     BigInt,
     Int,
     SmallInt,
+    Decimal,
     NVarChar,
     NChar,
     Bit,
@@ -75,6 +76,7 @@ public record TableColumn
     public String? Label { get; init; } = default!;
     public ColumnDataType DataType { get; init; } = default!;
     public Int32 MaxLength { get; init; }
+    public Int32 Scale { get; init; }
     public ColumnReference Reference { get; init; } = default!;
     public String? DbName { get; init; }
     public ColumnDataType? DbDataType { get; init; }
