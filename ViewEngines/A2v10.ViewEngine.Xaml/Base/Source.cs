@@ -7,8 +7,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 using A2v10.Infrastructure;
 
-using PathIO = System.IO.Path;
-
 namespace A2v10.Xaml;
 
 public class Source : MarkupExtension
