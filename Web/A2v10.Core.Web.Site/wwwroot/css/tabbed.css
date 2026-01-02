@@ -1680,6 +1680,10 @@ header .include.nav-pane .partial-block .control-group,
   margin: 0.75em auto 0 auto;
   text-align: center;
 }
+.center-page .initial-form a.add-on {
+  margin: 0;
+  color: #ccc;
+}
 .center-page .initial-form button,
 .center-page .initial-form a.btn {
   width: 60%;

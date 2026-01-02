@@ -104,6 +104,18 @@ methods: {
 			else
 				this.fail(result.message);
 		}
+	},
+	eyeDown(ev) {
+		ev.preventDefault();
+		let addOn = ev.target.closest('.add-on');
+		addOn.setPointerCapture(ev.pointerId);
+		this.$refs.pwd.type = 'text';
+	},
+	eyeUp(ev) {
+		ev.preventDefault();
+		let addOn = ev.target.closest('.add-on');
+		addOn.releasePointerCapture(ev.pointerId);
+		this.$refs.pwd.type = 'password';
 	}
 }
 });

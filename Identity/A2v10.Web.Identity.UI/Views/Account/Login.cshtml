@@ -33,6 +33,7 @@
 				<label for="password" style="grid-row:2; grid-column:1" class="a2-label required">@Html.Raw(_loc["Password"])</label>
 				<div class="input-group">
 					<input class="control" v-focus type="password" id="password" name="password" v-model="password" autocomplete="current-password" tabindex="2" v-on:keydown.enter.stop.prevent="onPwdEnter" ref="pwd" />
+					<a class="add-on" v-on:pointerdown="eyeDown($event)" v-on:pointerup="eyeUp($event)"><i class="ico ico-eye"></i></a>
 					<div class="validator" v-if="invalidPassword">
 						<span class="error">@Html.Raw(_loc["EnterPassword"])</span>
 					</div>

@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Threading.Tasks;
@@ -733,7 +733,7 @@ public class AccountController(
 	{
 		_logger.LogInformation("InitPassword");
 
-		if (token == null)
+        if (token == null)
 			return NotFound();
 		try
 		{

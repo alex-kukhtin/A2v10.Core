@@ -114,6 +114,18 @@ methods: {
 		}
 		else
 			alert(await resp.text());
+	},
+	eyeDown(ev, ctrl) {
+		ev.preventDefault();
+		let addOn = ev.target.closest('.add-on');
+		addOn.setPointerCapture(ev.pointerId);
+		this.$refs[ctrl].type = 'text';
+	},
+	eyeUp(ev, ctrl) {
+		ev.preventDefault();
+		let addOn = ev.target.closest('.add-on');
+		addOn.releasePointerCapture(ev.pointerId);
+		this.$refs[ctrl].type = 'password';
 	}
 },
 mounted() {

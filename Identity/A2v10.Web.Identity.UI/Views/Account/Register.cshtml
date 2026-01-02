@@ -45,6 +45,7 @@
 				<div class="input-group">
 					<input class="control" v-focus type="password" name="password" 
 						v-model="password" autocomplete="current-password" tabindex="5" ref="pwd" />
+					<a class="add-on" v-on:pointerdown="eyeDown($event, 'pwd')" v-on:pointerup="eyeUp($event, 'pwd')"><i class="ico ico-eye"></i></a>
 					<div class="validator">
 						<span class="error" v-text="passwordError"></span>
 					</div>
@@ -54,7 +55,8 @@
 				<label class="a2-label required">@_loc["PasswordAgain"]</label>
 				<div class="input-group">
 					<input class="control" v-focus type="password" v-model="confirm" autocomplete="off"
-						   tabindex="6" title="@_loc["PasswordTip"]" />
+						   tabindex="6" title="@_loc["PasswordTip"]" ref="cnf"/>
+					<a class="add-on" v-on:pointerdown="eyeDown($event, 'cnf')" v-on:pointerup="eyeUp($event, 'cnf')"><i class="ico ico-eye"></i></a>
 					<div class="validator">
 						<span class="error">@_loc["MatchError"]</span>
 					</div>
