@@ -36,6 +36,12 @@
 		return px * .75; // px * (72 / 96)
 	}
 
+	function isObjectEmpty(obj) {
+		return Object.keys(obj).length === 0;
+	}
+
+	const EMPTY_STYLE = '-:-:-:-:-:-:-';
+
 	class StyleProcessor {
 		constructor(styles) {
 			this.styles = styles;
@@ -61,6 +67,7 @@
 			let va = st.VAlign ? st.VAlign[0] : '-';
 			let brd = st.Border || '-';
 			let bg = st.BackgroundColor ? `BG${st.Background}` : '-';
+			// change empty style!
 			return `${b}:${i}:${fs}:${a}:${va}:${brd}:${bg}`;
 		}
 
@@ -152,7 +159,7 @@
 			let sobj = Object.assign({}, this.styles[st] || this.defaultStyle());
 			sobj[prop] = val;
 			let shc = this.styleHashCode(sobj);
-			if (shc === '-:-:-:-:-:-')
+			if (shc === EMPTY_STYLE) // check length
 				return undefined;
 			let ns = this.stylesMap[shc];
 			return ns || this.appendNewStyle(sobj, shc);
@@ -559,7 +566,7 @@
 		methods: {
 			blur(ev) {
 				let p = this.$parent;
-				p.endEdit(ev.target.innerText);
+				p.endEdit(ev.target.innerText.trim());
 			}
 		},
 		render(h) {
@@ -880,15 +887,21 @@
 				this.doEdit(cp, rp);
 			},
 			endEdit(val) {
+				this.cancelEdit();
 				let r = this.editRect;
 				let cellRef = `${toColRef(r.c)}${r.r + 1}`;
 				let cell = this.sheet.Cells[cellRef];
 				if (!cell) {
 					if (!val) return;
-					cell = { Content: val };
+					cell = { Value: val };
 					Vue.set(this.sheet.Cells, cellRef, cell);
 				}
-				Vue.set(cell, 'Value', val);
+				if (val)
+					Vue.set(cell, 'Value', val);
+				else
+					Vue.delete(cell, 'Value');
+				if (isObjectEmpty(cell))
+					Vue.delete(this.sheet.Cells, cellRef);
 			},
 			startEdit(c, r) {
 				return { control: 'editor' };
@@ -1104,11 +1117,17 @@
 				for (let cr of enumerateSel(sel)) {
 					let cell = this.sheet.Cells[cr];
 					if (!cell) {
-						cell = { Value: val };
+						cell = {};
 						Vue.set(this.sheet.Cells, cr, cell);
 						cell = this.sheet.Cells[cr];
 					}
-					Vue.set(cell, 'Style', this.__sp.setStyleProp(cell.Style, prop, val));
+					let cellStyle = this.__sp.setStyleProp(cell.Style, prop, val);
+					if (cellStyle)
+						Vue.set(cell, 'Style', cellStyle);
+					else
+						Vue.delete(cell, 'Style');
+					if (isObjectEmpty(cell))
+						Vue.delete(this.sheet.Cells, cr);
 					/*
 					console.dir(cell.Style);
 					this.__sp.findStyle(cell.Style);

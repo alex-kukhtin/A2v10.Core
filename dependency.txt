@@ -1,8 +1,5 @@
-﻿2025-12-31 (next: 8606)
+﻿2026-01-05 (next: 8607)
 
-A2v10.Identity.UI
-A2v10.Platform
-A2v10.Web.Assets
 
 
 
