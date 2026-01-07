@@ -89,7 +89,8 @@ if not exists (select * from INFORMATION_SCHEMA.ROUTINES where ROUTINE_SCHEMA=N'
 	create procedure a2wf.[Instance.Inbox.Remove]
 	@UserId bigint = null,
 	@Id uniqueidentifier,
-	@InstanceId uniqueidentifier
+	@InstanceId uniqueidentifier,
+	@Answer nvarchar(255) = null
 	as
 	begin
 		set nocount on;
@@ -631,7 +632,7 @@ begin
 	offset @Offset rows fetch next @PageSize rows only
 	option (recompile);
 
-	select [Instances!TInstance!Array] = null, [Id!!Id] = i.Id, w.[Name], i.[Version],
+	select [Instances!TInstance!Array] = null, [Id!!Id] = i.Id, c.[Name], i.[Version],
 		i.ExecutionStatus, Lock, [LockDate!!Utc] = LockDate, i.CorrelationId,
 		[DateCreated!!Utc] = i.DateCreated, [DateModified!!Utc] = i.DateModified,
 		[Inboxes!TInbox!Array] = null, [Bookmarks!TBookmark!Array] = null,
@@ -639,6 +640,7 @@ begin
 		[!!RowCount] = t.rowcnt
 	from a2wf.Instances i inner join @inst t on i.Id = t.Id
 		inner join a2wf.[Workflows] w on i.WorkflowId = w.Id and i.[Version] = w.[Version]
+		inner join a2wf.[Catalog] c on w.Id = c.Id
 	order by t.rowno;
 
 	-- Inbox MUST be created
@@ -655,7 +657,7 @@ begin
 	select [Answer!TAnswer!Object] = null, [Answer] = cast(null as nvarchar(255));
 
 	select [!TWorkflow!Map] = null, [Id!!Id] = Id, [Name!!Name] = [Name]
-	from a2wf.Workflows
+	from a2wf.[Catalog]
 	where Id = @Workflow;
 
 	select [StartWorkflow!TStartWF!Object] = null, [Id!!Id] = Id,

@@ -1,6 +1,4 @@
-﻿2026-01-06 (next: 8608)
-
-
+﻿2026-01-07 (next: 8609)
 
 
 
@@ -10,7 +8,6 @@
 
 =======================
 !do not update Microsoft.OpenApi to 1.6.23 (https://github.com/microsoft/OpenAPI.NET/issues/2030)
-
 
 A2v10.Platform
 	A2v10.Platform.Web
