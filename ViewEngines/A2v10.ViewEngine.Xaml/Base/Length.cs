@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System.ComponentModel;
 using System.Globalization;
@@ -68,7 +68,7 @@ public record Length : IXamlConverter
 			return new Length() { Value = "fit-content" };
 		else if (strVal == "0")
 			return new Length() { Value = strVal };
-		else if (strVal.StartsWith("Calc("))
+		else if (strVal.StartsWith("Calc(") || strVal.StartsWith("Min(") || strVal.StartsWith("Max(") || strVal.StartsWith("Clamp("))
 			return new Length() { Value = strVal };
 		else if (IsValidLength(strVal))
 			return new Length() { Value = strVal.Replace(" ", "") };
