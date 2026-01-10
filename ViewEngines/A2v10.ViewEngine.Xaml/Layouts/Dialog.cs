@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
 using System.Text;
@@ -184,9 +184,9 @@ public class Dialog : RootContainer, ISupportTwoPhaseRendering
 		else if (Size == DialogSize.Small)
 			sb.Append("cssClass:'modal-small',");
 		if (Width != null)
-			sb.Append($"width:'{Width.Value}',");
+			sb.Append($"width:'{Width.Value!.ToLowerInvariant()}',");
 		if (MinWidth != null)
-			sb.Append($"minWidth:'{MinWidth.Value}',");
+			sb.Append($"minWidth:'{MinWidth.Value!.ToLowerInvariant()}',");
 		sb.RemoveTailComma();
 		sb.Append('}');
 		dialog.MergeAttribute("v-modal-width", sb.ToString());

@@ -1,11 +1,6 @@
-﻿2026-01-08 (next: 8610)
+﻿2026-01-10 (next: 8611)
 
-A2v10.AppRuntimeBuilder
-A2v10.Metadata
-A2v10.Platform
-A2v10.ViewEngine.Xaml
 
-Проверить Signal после обновления всего!
 !Workflow.Module (scheduling, workflow.engine)
 
 
