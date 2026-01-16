@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System.IO;
 using System.Globalization;
@@ -155,14 +155,14 @@ public class ExcelReportGenerator : IDisposable
 
             PrepareSharedStringTable(_sharedStringTable);
 
-            var workBook = doc.WorkbookPart.Workbook;
+            var workBook = doc.WorkbookPart.Workbook!;
             var dataSetRows = CreateDataSetRows(workBook);
 
             _sharedStringCount = _sharedStringTable.Elements<SharedStringItem>().Count<SharedStringItem>();
 
             foreach (var workSheetPart in doc.WorkbookPart.WorksheetParts)
             {
-                var workSheet = workSheetPart.Worksheet;
+                var workSheet = workSheetPart.Worksheet!;
                 var sheetData = workSheet.GetFirstChild<SheetData>()
                     ?? throw new InteropException("Sheet Data not found");
 
@@ -316,7 +316,7 @@ public class ExcelReportGenerator : IDisposable
         var result = false;
         foreach (var dataSet in datasetRows)
         {
-            IList<ExpandoObject> list = _dataModel.Eval<List<ExpandoObject>>(dataSet.Key)
+            List<ExpandoObject> list = _dataModel.Eval<List<ExpandoObject>>(dataSet.Key)
                 ?? throw new InteropException($"The data model does not have a '{dataSet.Key}' property ");
             RowSetDef def = dataSet.Value;
             if (list.Count == 0)
@@ -510,7 +510,7 @@ public class ExcelReportGenerator : IDisposable
         var nextRow = insertedRow.NextSibling<Row>();
         while (nextRow != null)
         {
-            nextRow.RowIndex = nextRow.RowIndex ?? new UInt32Value();
+            nextRow.RowIndex ??= new UInt32Value();
             nextRow.RowIndex += 1;
             nextRow = nextRow.NextSibling<Row>();
         }
@@ -523,7 +523,7 @@ public class ExcelReportGenerator : IDisposable
             if (c is not Cell clch || clch.CellReference == null)
                 continue;
             var cr = clch.CellReference.ToString() ?? String.Empty; 
-            var crn = new String(cr.Where(Char.IsLetter).ToArray());
+            var crn = new String([.. cr.Where(Char.IsLetter)]);
             clch.CellReference = crn + row.RowIndex?.ToString();
         }
     }

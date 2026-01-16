@@ -5,14 +5,14 @@
 		<LangVersion>Latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<AssemblyName>A2v10.Module.Infrastructure</AssemblyName>
+		<Version>10.1.8620</Version>
 		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-		<Version>10.1.8110</Version>
 		<Product>A2v10</Product>
 		<PackageId>A2v10.Module.Infrastructure</PackageId>
 		<Authors>Oleksandr Kukhtin</Authors>
 		<Company>Oleksandr Kukhtin</Company>
 		<Description>A2v10 Module Infrastructure</Description>
-		<Copyright>Copyright © 2023 Oleksandr Kukhtin. All rights reserved.</Copyright>
+		<Copyright>Copyright © 2023-2026 Oleksandr Kukhtin. All rights reserved.</Copyright>
 		<RepositoryType>github</RepositoryType>
 		<PackageTags>A2v10</PackageTags>
 	</PropertyGroup>
@@ -25,6 +25,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.102" PrivateAssets="All" />
 	</ItemGroup>
 </Project>

@@ -1,4 +1,4 @@
-﻿// Copyright © 2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2024-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Linq;
@@ -52,9 +52,9 @@ public class StyleRefs
 	const String MEDIUM_BORDER = "1";
 	public StyleRefs(Stylesheet stylesheet)
 	{
-		_borders = stylesheet.Descendants<Border>().ToArray();
-		_fonts = stylesheet.Descendants<Font>().ToArray();
-		_fills = stylesheet.Descendants<Fill>().ToArray();
+		_borders = [.. stylesheet.Descendants<Border>()];
+		_fonts = [.. stylesheet.Descendants<Font>()];
+		_fills = [.. stylesheet.Descendants<Fill>()];
 
 		_formats = stylesheet.Descendants<NumberingFormat>()
 			.GroupBy(x => x.NumberFormatId?.Value.ToString() ?? String.Empty)
@@ -186,7 +186,7 @@ public class ExcelConvertor
 			: SpreadsheetDocument.Open(_fileName, isEditable: false);
 		var workBookPart = doc.WorkbookPart
 			?? throw new InvalidOperationException("Invalid Excel file");
-		var workBook = workBookPart.Workbook;
+		var workBook = workBookPart.Workbook!;
 		var sheet = workBook.Descendants<Sheet>().First()
 			?? throw new InvalidOperationException($"The workbook does not have a sheet");
 		if (sheet.Id == null)
@@ -202,7 +202,7 @@ public class ExcelConvertor
 		var stylesPart = workBookPart.WorkbookStylesPart;
 		var styleSheet = stylesPart?.Stylesheet;
 
-		var dim = workSheetPart.Worksheet.SheetDimension?.Reference?.ToString()
+		var dim = workSheetPart.Worksheet!.SheetDimension?.Reference?.ToString()
 			?? throw new InvalidOperationException("Invalid SheetDimension");
 		var dimSplit = dim.Split(':');
 

@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
-		<Version>10.1.8601</Version>
+		<Version>10.1.8620</Version>
 		<Nullable>enable</Nullable>
 		<LangVersion>Latest</LangVersion>
 		<AssemblyName>A2v10.Infrastructure</AssemblyName>
@@ -12,7 +12,7 @@
 		<Authors>Oleksandr Kukhtin</Authors>
 		<Company>Oleksandr Kukhtin</Company>
 		<Description>A2v10 Platform Abstractions</Description>
-		<Copyright>Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.</Copyright>
+		<Copyright>Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.</Copyright>
 		<RepositoryType>github</RepositoryType>
 		<PackageTags>A2v10</PackageTags>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -20,8 +20,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Data.Interfaces" Version="10.1.7570" />
-		<PackageReference Include="A2v10.Runtime.Interfaces" Version="10.1.8600" />
+		<PackageReference Include="A2v10.Data.Interfaces" Version="10.1.7580" />
+		<PackageReference Include="A2v10.Runtime.Interfaces" Version="10.1.8620" />
 	</ItemGroup>
 
 	<PropertyGroup>
@@ -32,7 +32,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.102" PrivateAssets="All" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -31,6 +31,7 @@ public partial class ExcelParser : IDisposable
 
 	public void Dispose()
 	{
+		GC.SuppressFinalize(this);
 		Dispose(true);
 	}
 
@@ -96,19 +97,22 @@ public partial class ExcelParser : IDisposable
 		{
 			var workBookPart = doc.WorkbookPart
 				?? throw new InteropException("Invalid Excel file");
-			var workBook = workBookPart.Workbook;
-			var sheet = workBook.Descendants<Sheet>().First()
+			var workBook = workBookPart.Workbook
+                ?? throw new InteropException("Workbook is null");
+            var sheet = workBook.Descendants<Sheet>().First()
 				?? throw new InteropException($"The workbook does not have a sheet");
 			if (sheet.Id == null)
 				throw new InteropException($"The workbook sheet not have an id");
 			String sheetId = sheet.Id.Value
 				?? throw new InteropException($"The workbook sheet not have an id");
-			var workSheetPart = (WorksheetPart) workBookPart.GetPartById(sheetId);
-			var sharedStringPart = workBookPart.SharedStringTablePart
-				?? throw new InteropException($"The workbook does not have a SharedStringTablePart");
-			var sharedStringTable = sharedStringPart.SharedStringTable;
+			var workSheetPart = (WorksheetPart) workBookPart.GetPartById(sheetId)
+                ?? throw new InteropException($"WorksheetPart is null");
 
-			var hlinksDict = workSheetPart.Worksheet.Descendants<Hyperlink>()
+            var sharedStringPart = workBookPart.SharedStringTablePart
+				?? throw new InteropException($"The workbook does not have a SharedStringTablePart");
+			var sharedStringTable = sharedStringPart.SharedStringTable!;
+
+			var hlinksDict = workSheetPart.Worksheet!.Descendants<Hyperlink>()
 				.ToDictionary(h => h.Reference!.ToString()!, h => h);
 
 			var hLinkRels = workSheetPart.HyperlinkRelationships
@@ -116,7 +120,7 @@ public partial class ExcelParser : IDisposable
 
             var stylesPart = workBookPart.WorkbookStylesPart;
 			// This formats is NUMBER, not standard!
-			var numFormats = stylesPart?.Stylesheet
+			var numFormats = stylesPart?.Stylesheet!
 				.Descendants<NumberingFormat>()?
 				.GroupBy(x => x.NumberFormatId?.Value.ToString() ?? String.Empty)
 				.ToDictionary(g => g.Key, g => g.First());
