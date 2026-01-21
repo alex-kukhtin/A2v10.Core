@@ -39,6 +39,7 @@ GitHub: https://github.com/alex-kukhtin/A2v10.Core
 <body class="@appTheme.BodyCssClass">
 	@RenderBody()
 	<script type="text/javascript" src="/scripts/vue.@Html.Raw(minify)js?v=2.7.16"></script>
+	<script type="text/javascript" src="/scripts/d3.min.js?v=@appVersion.AppBuild"></script>
 	<script type="text/javascript" src="/scripts/signalr.min.js?v=8.0.7"></script>
 	<script type="text/javascript" src="/scripts/locale-@Html.Raw(userLocale.Language + ".min.js")?v=@appVersion.AppBuild"></script>
 	@Html.Raw(globalization.SwitchLocale())
