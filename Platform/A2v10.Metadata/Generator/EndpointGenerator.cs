@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 using A2v10.Infrastructure;
-using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace A2v10.Metadata;
 
@@ -31,6 +30,11 @@ internal class EndpointGenerator(IModelBuilderFactory _modelBuilderFactory, IApp
     private Task GenerateModelJsonAsync(TableMetadata table)
     {
         var platformUrl = table.PlatformUrl("index");
+        var fullPath = _appCodeProvider.GetMainModuleFullPath(platformUrl.LocalPath.RemoveHeadSlash(), $"model.json");
+
+        if (File.Exists(fullPath))
+            return Task.CompletedTask;
+
         var md = new ModelJsonD()
         {
             RefSchema = "../../@schemas/model-json-schema.json#",
@@ -81,7 +85,6 @@ internal class EndpointGenerator(IModelBuilderFactory _modelBuilderFactory, IApp
 
         var modelJsonContent = SerializeJsonObject(md);
 
-        var fullPath = _appCodeProvider.GetMainModuleFullPath(platformUrl.LocalPath.RemoveHeadSlash(), $"model.json");
         return WriteFileAsync(fullPath, modelJsonContent);
     }
 
@@ -130,8 +133,9 @@ internal class EndpointGenerator(IModelBuilderFactory _modelBuilderFactory, IApp
         var fullPath = _appCodeProvider.GetMainModuleFullPath(platformUrl.LocalPath.RemoveHeadSlash(), fileName);
         var filePath = Path.Combine(fullPath, fileName);
 
-        //if (File.Exists(fullPath))
-            //return new CreatedFile(filePath, false);
+        if (File.Exists(fullPath))
+            return new CreatedFile(filePath, false);
+
         var builder = await _modelBuilderFactory.BuildAsync(platformUrl, table, null);
         var formIndex = await builder.GetFormAsync();
         var pageIndex = XamlBulder.BuildForm(formIndex.Form);
