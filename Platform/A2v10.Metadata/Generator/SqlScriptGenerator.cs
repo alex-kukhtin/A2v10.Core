@@ -2,33 +2,59 @@
 
 using System;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace A2v10.Metadata;
 
 internal class SqlScriptGenerator(AppMetadata _metadata, String _metaPath)
 {
+    private readonly DatabaseCreator _dbCreator = new DatabaseCreator(_metadata);
     public async Task GenerateSqlScriptsAsync()
     {
         if (!Directory.Exists(_metaPath))
             Directory.CreateDirectory(_metaPath);
+        await GenerateSchemas();
         await GenerateTables();
         await GenerateForeignKeys();
+        await GenerateTableTypes();
         await GenerateMetdataInit();
     }   
 
     Task GenerateTables()
     {
+        var strBuilder = new StringBuilder();
+        strBuilder.AppendLine("-- TABLES");
         foreach (var table in _metadata.Tables)
         {
+            strBuilder.AppendLine(_dbCreator.CreateTable(table, skipAlter : true));
+            strBuilder.AppendLine("go");
         }
         String filePath = Path.Combine(_metaPath, "_tables.sql"); 
-        return Task.CompletedTask;
+        return File.WriteAllTextAsync(filePath, strBuilder.ToString());
+    }
+    Task GenerateTableTypes()
+    {
+        var strBuilder = new StringBuilder();
+        strBuilder.AppendLine("-- TABLE TYPES");
+        foreach (var table in _metadata.Tables)
+        {
+            strBuilder.AppendLine(_dbCreator.CreateTableType(table));
+            strBuilder.AppendLine("go");
+        }
+        String filePath = Path.Combine(_metaPath, "_tabletypes.sql");
+        return File.WriteAllTextAsync(filePath, strBuilder.ToString());
     }
 
     Task GenerateForeignKeys()
     {
         String filePath = Path.Combine(_metaPath, "_foreignkeys.sql");
+        return Task.CompletedTask;
+    }
+
+    Task GenerateSchemas()
+    {
+        String filePath = Path.Combine(_metaPath, "_schemas.sql");
         return Task.CompletedTask;
     }
 

@@ -9,7 +9,7 @@ namespace A2v10.Metadata;
 
 internal class DatabaseCreator(AppMetadata _meta)
 {
-    internal String CreateTable(TableMetadata table)
+    internal String CreateTable(TableMetadata table, Boolean skipAlter = false)
     {
 
         var multPrimaryKeys = table.PrimaryKeys.Count() > 1;
@@ -40,13 +40,13 @@ internal class DatabaseCreator(AppMetadata _meta)
                         _ => throw new InvalidOperationException($"Defaults for {column.DataType} is not supported")
                     };
                     if (defKey != null)
-                        constraint = $"\n       constraint DF_{table.Name}_{column.Name} default({defKey})";
+                        constraint = $"\r\n       constraint DF_{table.Name}_{column.Name} default({defKey})";
                 }
             }
             else if (column.HasDefaultBit)
             {
                 nullable = NOT_NULL;
-                constraint = $"\n       constraint DF_{table.Name}_{column.Name} default(0)";
+                constraint = $"\r\n       constraint DF_{table.Name}_{column.Name} default(0)";
             }
             return $"[{column.Name}] {column.SqlDataType(_meta.IdDataType)}{nullable}{constraint}";
         }
@@ -63,9 +63,9 @@ internal class DatabaseCreator(AppMetadata _meta)
             if (_meta.IdDataType != ColumnDataType.Int && _meta.IdDataType != ColumnDataType.BigInt)
                 return String.Empty;
             return $"""
+            ------------------------------------------------
             if not exists(select * from INFORMATION_SCHEMA.SEQUENCES where SEQUENCE_SCHEMA = N'{table.Schema}' and SEQUENCE_NAME = N'SQ_{table.Name}')
             	create sequence {table.Schema}.[SQ_{table.Name}] as {_meta.IdDataType.ToString().ToLowerInvariant()} start with 1000 increment by 1;
-
             """;
         }
 
@@ -77,16 +77,16 @@ internal class DatabaseCreator(AppMetadata _meta)
                 .Where(c => String.IsNullOrEmpty(c.DbName) && !c.DbDataType.HasValue)
                 .Select(alterCreateField);
 
-        if (table.HasDbTable)
-            return String.Join("\n", alterFields);
+        if (table.HasDbTable && !skipAlter)
+            return String.Join(Environment.NewLine, alterFields);
 
         return $"""
         {createSequence()}
-
+        ------------------------------------------------
         if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'{table.Schema}' and TABLE_NAME=N'{table.Name}')
         create table {table.SqlTableName}
         (
-            {String.Join(",\n    ", fields)},
+            {String.Join(",\r\n    ", fields)},
             constraint PK_{table.Name} primary key ({String.Join(',', primaryKeys)})
         );
         """;
@@ -104,10 +104,11 @@ internal class DatabaseCreator(AppMetadata _meta)
         var fields = table.Columns.Select(createField);
 
         return $"""
+        ------------------------------------------------
         drop type if exists {table.Schema}.[{table.Name}.TableType];
         create type {table.Schema}.[{table.Name}.TableType] as table
         (
-            {String.Join(",\n    ", fields)}
+            {String.Join(",\r\n    ", fields)}
         );
         """;
     }
@@ -163,7 +164,7 @@ internal class DatabaseCreator(AppMetadata _meta)
             """;
         }
         var refs = table.Columns.Where(c => c.IsReference || c.DataType == ColumnDataType.Operation).Select(rc => createReference(rc));
-        return String.Join('\n', refs);
+        return String.Join(Environment.NewLine, refs);
     }
 
     internal static String MergeOperations()
