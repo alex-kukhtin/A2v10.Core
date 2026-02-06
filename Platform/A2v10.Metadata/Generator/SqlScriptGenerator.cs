@@ -48,8 +48,19 @@ internal class SqlScriptGenerator(AppMetadata _metadata, String _metaPath)
 
     Task GenerateForeignKeys()
     {
+        var strBuilder = new StringBuilder();
+        strBuilder.AppendLine("-- FOREIGN KEYS");
+        foreach (var table in _metadata.Tables)
+        {
+            var fc = _dbCreator.CreateForeignKeys(table);
+            if (!String.IsNullOrWhiteSpace(fc))
+            {
+                strBuilder.AppendLine(fc);
+                strBuilder.AppendLine("go");
+            }
+        }
         String filePath = Path.Combine(_metaPath, "_foreignkeys.sql");
-        return Task.CompletedTask;
+        return File.WriteAllTextAsync(filePath, strBuilder.ToString());
     }
 
     Task GenerateSchemas()
