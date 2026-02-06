@@ -30,6 +30,11 @@ internal class SqlScriptGenerator(AppMetadata _metadata, String _metaPath)
             strBuilder.AppendLine(_dbCreator.CreateTable(table, skipAlter : true));
             strBuilder.AppendLine("go");
         }
+        foreach (var enm in _metadata.Enums)
+        {
+            strBuilder.AppendLine(DatabaseCreator.CreateEnum(enm));
+            strBuilder.AppendLine("go");
+        }
         String filePath = Path.Combine(_metaPath, "_tables.sql"); 
         return File.WriteAllTextAsync(filePath, strBuilder.ToString());
     }

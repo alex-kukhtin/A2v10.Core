@@ -123,7 +123,6 @@ internal class DatabaseCreator(AppMetadata _meta)
                 var opConstraintName = $"FK_{table.Name}_{column.Name}_Operations";
 
                 return $"""
-                ------------------------------------------------
                 if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.Schema}' and TABLE_NAME = N'{table.Name}' and CONSTRAINT_NAME = N'{opConstraintName}')
                     alter table {table.SqlTableName} add 
                         constraint {opConstraintName} foreign key ([{column.Name}]) references op.[Operations]([Id]);
@@ -135,7 +134,6 @@ internal class DatabaseCreator(AppMetadata _meta)
                 var opConstraintName = $"FK_{table.Name}_{column.Name}_{column.Reference.RefTable}";
 
                 return $"""
-                ------------------------------------------------
                 if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.Schema}' and TABLE_NAME = N'{table.Name}' and CONSTRAINT_NAME = N'{opConstraintName}')
                     alter table {table.SqlTableName} add 
                         constraint {opConstraintName} foreign key ([{column.Name}]) references {column.Reference.SqlTableName}([Id]);
@@ -159,15 +157,21 @@ internal class DatabaseCreator(AppMetadata _meta)
             if (constraintName.Length > 128)
                 constraintName = constraintName[0..127];
             return $"""
-            ------------------------------------------------
             if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.Schema}' and TABLE_NAME = N'{table.Name}' and CONSTRAINT_NAME = N'{constraintName}')
                 alter table {table.SqlTableName} add 
                     constraint {constraintName} foreign key ([{column.Name}]) references {refs.RefSchema}.[{refs.RefTable}]([{refTablePkName}]);
             alter table {table.SqlTableName} {check} constraint {constraintName};
             """;
         }
-        var refs = table.Columns.Where(c => c.IsReference || c.DataType == ColumnDataType.Operation).Select(rc => createReference(rc));
-        return String.Join(Environment.NewLine, refs);
+        var refs = table.Columns.Where(c => c.IsReference || c.DataType == ColumnDataType.Operation || c.DataType == ColumnDataType.Enum)
+            .Select(rc => createReference(rc));
+        var res = String.Join(Environment.NewLine, refs);
+        if (String.IsNullOrEmpty(res.Trim()))
+            return String.Empty;
+        return $"""
+            ------------------------------------------------
+            {res}
+            """;
     }
 
     internal static String MergeOperations()
@@ -229,6 +233,7 @@ internal class DatabaseCreator(AppMetadata _meta)
     internal static String CreateEnum(EnumMetadata enm)
     {
         return $"""
+        ------------------------------------------------
         if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'enm' and TABLE_NAME=N'{enm.Name}')
         create table enm.[{enm.Name}]
         (
