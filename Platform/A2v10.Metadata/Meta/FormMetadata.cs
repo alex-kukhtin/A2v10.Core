@@ -36,6 +36,7 @@ public enum FormItemIs
     Static,
     Selector,
     ComboBox,
+    ComboBoxBit,
     DatePicker,
     PeriodPicker,
     CheckBox,

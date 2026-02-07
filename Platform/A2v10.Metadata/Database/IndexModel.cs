@@ -1,14 +1,13 @@
-﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
 
+using A2v10.Data.Core.Extensions;
+using A2v10.Data.Interfaces;
+using A2v10.Infrastructure;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-
-using A2v10.Infrastructure;
-using A2v10.Data.Interfaces;
-using A2v10.Data.Core.Extensions;
 
 namespace A2v10.Metadata;
 
@@ -65,10 +64,13 @@ internal partial class IndexModelBuilder
         var sqlOrder = $"a.[{order}]";
         var sortColumn = refFields.FirstOrDefault(c => c.Column.Name == order);
 
+        var bitFields = _table.Columns.Where(c => c.IsBitField);
+
         if (sortColumn?.Column != null)
             sqlOrder = $"r{sortColumn.Index}.[{sortColumn.Table.NameField}]";
 
         var collectionName = _table.RealItemsName;
+        var enumFields = DatabaseMetadataProvider.EnumFields(_table, false);
 
         IEnumerable<String> WhereClause()
         {
@@ -96,6 +98,26 @@ internal partial class IndexModelBuilder
                     yield return $"a.[{r.Column.Name}] = @{r.Column.Name}";
             }
 
+            foreach (var e in enumFields)
+            {
+                var val = qry?.Get<String>(e.Column.Name);
+                if (!String.IsNullOrEmpty(val))
+                    yield return $"a.[{e.Column.Name}] = @{e.Column.Name}";
+            }
+
+            foreach (var b in bitFields)
+            {
+                var val = qry?.Get<String>(b.Name);
+                if (!String.IsNullOrEmpty(val))
+                {
+                    if (val == "Y")
+                        yield return $"a.[{b.Name}] = 1";
+                    else if (val == "N")
+                        yield return $"a.[{b.Name}] = 0 or a.[{b.Name}] is null";
+                }
+            }
+
+
             var searchable = _table
                 .Columns.Where(c => c.IsSearchable).Select(c => $"a.[{c.Name}] like @fr")
                 .Union(refFields.Select(c => $"r{c.Index}.[Name] like @fr"));
@@ -117,22 +139,24 @@ internal partial class IndexModelBuilder
 
         String filterFields()
         {
-            if (!refFieldsFilter.Any())
-                return String.Empty;
-            return ", " + String.Join(", ", refFieldsFilter.Select(r =>
+            // references, bit, enum
+            var filterFields = refFieldsFilter.Select(r =>
             $"""
             [!{collectionName}.{r.Column.Name}.{r.Table.PrimaryKeyField}!Filter] = r{r.Index}.[{r.Table.PrimaryKeyField}],
             [!{collectionName}.{r.Column.Name}.{r.Table.NameField}!Filter] = r{r.Index}.[{r.Table.NameField}]
-            """));
+            """);
+            var enumFilterFields = enumFields.Select(e => 
+                $"[!{collectionName}.{e.Column.Name}.TR{e.Table.RealItemName}.RefId!Filter] = @{e.Column.Name}");
+
+            var bitFiltersFields = bitFields.Select(b => 
+                $"[!{collectionName}.{b.Name}!Filter] = @{b.Name}");
+
+            filterFields = filterFields.Union(enumFilterFields).Union(bitFiltersFields);
+            if (!filterFields.Any())
+                return String.Empty;
+            return ", " + String.Join(", ", filterFields);
         }
 
-        String filterEnumCheck()
-        {
-            var sb = new StringBuilder();
-            foreach (var r in refFieldsFilter.Where(c => c.Column.IsEnum))
-                 sb.AppendLine($"set @{r.Column.Name} = isnull(@{r.Column.Name}, N'');");
-            return sb.ToString();
-        }
 
         String filterPeriod()
         {
@@ -140,6 +164,17 @@ internal partial class IndexModelBuilder
                 return String.Empty;
             return $"[!{collectionName}.Period.From!Filter] = @From, [!{collectionName}.Period.To!Filter] = @To,";
         }
+
+        String filterEnumCheck()
+        {
+            var sb = new StringBuilder();
+            foreach (var r in enumFields)
+                sb.AppendLine($"set @{r.Column.Name} = isnull(@{r.Column.Name}, N'');");
+            foreach (var e in enumFields)
+                sb.AppendLine($"set @{e.Column.Name} = isnull(@{e.Column.Name}, N'');");
+            return sb.ToString();
+        }
+
 
         String defaultPeriod()
         {
@@ -149,7 +184,6 @@ internal partial class IndexModelBuilder
             return "set @From = isnull(@From, N'19010101'); set @To = isnull(@To, N'29991231');";
         }
 
-        var enumFields = DatabaseMetadataProvider.EnumFields(_table, false);
         var sqlString = $"""
         set nocount on;
         set transaction isolation level read uncommitted;
@@ -168,10 +202,10 @@ internal partial class IndexModelBuilder
         offset @Offset rows fetch next @PageSize rows only;
         
         {EnumsMapSql(enumFields, true)}
-
+        
         -- After select, before $System.
         {filterEnumCheck()}
-
+        
         declare @ft table(Id int);
         insert into @ft (Id) values (1);
         -- system data
@@ -202,6 +236,16 @@ internal partial class IndexModelBuilder
                 if (data != null && _appMeta.IdDataType == ColumnDataType.Uniqueidentifier)
                     data = Guid.Parse(data.ToString()!);
                 dbprms.AddTyped($"@{r.Column.Name}", r.Column.DataType.ToSqlDbType(_appMeta.IdDataType), data);
+            }
+            foreach (var e in enumFields)
+            {
+                var val = qry?.Get<String>(e.Column.Name);
+                dbprms.AddString($"@{e.Column.Name}", val ?? "");
+            }
+            foreach (var b in bitFields)
+            {
+                var val = qry?.Get<String>(b.Name);
+                dbprms.AddString($"@{b.Name}", val ?? ""); // all values
             }
         });
     }

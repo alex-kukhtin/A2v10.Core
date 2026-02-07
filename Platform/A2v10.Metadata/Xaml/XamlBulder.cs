@@ -43,7 +43,8 @@ internal class XamlBulder(EditWithMode _editWith)
         IEnumerable<FilterItem> Filters()
         {
             yield return new FilterItem() { 
-                Property = "Fragment"
+                Property = "Fragment",
+                DataType = DataType.String,
             };
 
             var filters = form.Props?.Filters;
@@ -51,10 +52,21 @@ internal class XamlBulder(EditWithMode _editWith)
                 yield break;
             foreach (var f in filters.Split(','))
             {
-                if (f == "Period")
-                    yield return new FilterItem() { Property = f, DataType = DataType.Period };
-                else
-                    yield return new FilterItem() { Property = f, DataType = DataType.Object };
+                var x = f.Split(':');
+                String fName = f;
+                DataType filterType = DataType.String;
+                if (x.Length > 1)
+                {
+                    fName = x[0];
+                    filterType = x[1] switch
+                    {
+                        "S" => DataType.String,
+                        "P" => DataType.Period,
+                        "O" => DataType.Object,
+                        _ => throw new InvalidOperationException($"Invalid filter type: {x[1]} in filter {f}")
+                    };
+                }
+                yield return new FilterItem() { Property = fName, DataType = filterType };
             }
         }
 
@@ -84,6 +96,7 @@ internal class XamlBulder(EditWithMode _editWith)
             FormItemIs.TextBox => CreateTextBox(item),
             FormItemIs.Selector => CreateSelector(item, param),
             FormItemIs.ComboBox => CreateComboBox(item, param),
+            FormItemIs.ComboBoxBit => CreateComboBoxBit(item, param),
             FormItemIs.DatePicker => CreateDatePicker(item),
             FormItemIs.PeriodPicker => CreatePeriodPicker(item, param),
             FormItemIs.CheckBox => CreateCheckBox(item),
@@ -361,6 +374,25 @@ internal class XamlBulder(EditWithMode _editWith)
             ]
         };
     }
+    private static ComboBox CreateComboBoxBit(FormItem source, String? param)
+    {
+        return new ComboBox()
+        {
+            Label = source.Label.Localize(),
+            Width = Length.FromStringNull(source.Width),
+            Required = source.Props?.Required == true,
+            Highlight = source.Props?.Highlight == true,
+            Bindings = b => {
+                b.SetBinding(nameof(ComboBox.Value), new Bind(source.Data));
+            },
+            Children = [
+                new ComboBoxItem() { Content = "@[Bit.All]", Value = "" },
+                new ComboBoxItem() { Content = "@[Bit.Yes]", Value = "Y" },
+                new ComboBoxItem() { Content = "@[Bit.No]", Value = "N" },
+            ]
+        };
+    }
+
     private static DatePicker CreateDatePicker(FormItem source)
     {
         return new DatePicker()

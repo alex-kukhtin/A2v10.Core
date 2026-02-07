@@ -38,7 +38,11 @@ internal partial class IndexModelBuilder
             yield return new FormItem(FormItemIs.SearchBox)
             {
                 Data = "Parent.Filter.Fragment",
-                Width = "20rem"
+                Width = "20rem",
+                Props = new FormItemProps()
+                {
+                    TabIndex = 1
+                }
             };
         }
 

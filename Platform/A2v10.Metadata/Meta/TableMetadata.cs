@@ -90,6 +90,7 @@ public record TableColumn
     #endregion
     internal Boolean IsReference => Reference != null && Reference.RefTable != null && DataType != ColumnDataType.Enum;
     internal Boolean IsEnum => DataType == ColumnDataType.Enum;
+    internal Boolean IsBitField => DataType == ColumnDataType.Bit && Role == 0;
     internal Boolean IsBlob => DataType == ColumnDataType.Stream;
     internal Boolean IsString => DataType == ColumnDataType.String;
     internal Boolean Exists => DbName != null && DbDataType != null;

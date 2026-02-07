@@ -154,6 +154,37 @@ internal partial class IndexModelBuilder
                     };
             }
 
+            FormItem CreateEnumFilter(TableColumn column, Int32 gridRow)
+            {
+                var itemsSource = column.Reference.RefTable;
+                return new FormItem()
+                {
+                    Is = FormItemIs.ComboBox,
+                    Label = column.Label ?? $"@{column.Name}",
+                    Data = $"Parent.Filter.{column.Name}",
+                    Grid = new FormItemGrid(gridRow, 1),
+                    Props = new FormItemProps()
+                    {
+                        ItemsSource = itemsSource,
+                        Highlight = true
+                    }
+                };
+            }
+            FormItem CreateBitFilter(TableColumn column, Int32 gridRow)
+            {
+                return new FormItem()
+                {
+                    Is = FormItemIs.ComboBoxBit,
+                    Label = column.Label ?? $"@{column.Name}",
+                    Data = $"Parent.Filter.{column.Name}",
+                    Grid = new FormItemGrid(gridRow, 1),
+                    Props = new FormItemProps()
+                    {
+                        Highlight = true
+                    }
+                };
+            }
+
             FormItem CreateFilter(TableColumn column, Int32 gridRow)
             {
                 String? url = null;
@@ -191,6 +222,9 @@ internal partial class IndexModelBuilder
                 tableRefCols = tableRefCols.Where(c => c.DataType != ColumnDataType.Operation);
             
             tableRefCols = tableRefCols.OrderBy(c => c.Order);
+            var tableEnumCols = _table.Columns.Where(c => c.IsEnum).OrderBy(c => c.Order);
+
+            var tableBitCols = _table.Columns.Where(c => c.IsBitField).OrderBy(c => c.Order);
 
             IEnumerable<FormItem> Filters()
             {
@@ -204,6 +238,10 @@ internal partial class IndexModelBuilder
                     };
                 foreach (var c in tableRefCols)
                     yield return CreateFilter(c, gridRow++);
+                foreach (var e in tableEnumCols)
+                    yield return CreateEnumFilter(e, gridRow++);
+                foreach (var e in tableBitCols)
+                    yield return CreateBitFilter(e, gridRow++);
             }
 
             return new FormItem(FormItemIs.Taskpad)
@@ -215,9 +253,11 @@ internal partial class IndexModelBuilder
         IEnumerable<String> FilterNames()
         {
             if (_table.HasPeriod())
-                yield return "Period";
-            foreach (var column in _table.Columns.Where(c => c.IsReference))
-                yield return column.Name;
+                yield return "Period:P";
+            foreach (var column in _table.Columns.Where(c => c.IsReference || c.IsEnum))
+                yield return $"{column.Name}:O";
+            foreach (var column in _table.Columns.Where(c => c.IsBitField))
+                yield return $"{column.Name}:S";
         }
 
         return new Form()
