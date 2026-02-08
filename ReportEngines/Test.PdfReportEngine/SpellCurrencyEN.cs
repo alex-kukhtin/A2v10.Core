@@ -1,11 +1,9 @@
 ﻿
+// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
 
-using System.Globalization;
-
-using A2v10.ReportEngine.Pdf;
 using A2v10.ReportEngine.Script;
 
-namespace A2v10.Pdf.Tests;
+namespace Test.PdfReportEngine;
 
 [TestClass]
 [TestCategory("Spell Currency (EN)")]

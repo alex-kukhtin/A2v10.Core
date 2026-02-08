@@ -1,11 +1,8 @@
-﻿using A2v10.ReportEngine.Pdf;
-using A2v10.ReportEngine.Script;
-using System;
-using System.Collections.Generic;
+﻿// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
+
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
+using A2v10.ReportEngine.Script;
 
 namespace Test.PdfReportEngine;
 
