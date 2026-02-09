@@ -133,28 +133,34 @@ internal class EndpointGenerator(IModelBuilderFactory _modelBuilderFactory, IApp
         var fullPath = _appCodeProvider.GetMainModuleFullPath(platformUrl.LocalPath.RemoveHeadSlash(), fileName);
         var filePath = Path.Combine(fullPath, fileName);
 
-        if (File.Exists(fullPath))
-            return new CreatedFile(filePath, false);
-
         var builder = await _modelBuilderFactory.BuildAsync(platformUrl, table, null);
-        var formIndex = await builder.GetFormAsync();
-        var pageIndex = XamlBulder.BuildForm(formIndex.Form);
-        var pageXaml = XamlBulder.GetXaml(pageIndex);
-        await WriteFileAsync(fullPath, pageXaml);
+
+        if (!File.Exists(fullPath))
+        {
+            var formIndex = await builder.GetFormAsync();
+            var pageIndex = XamlBulder.BuildForm(formIndex.Form);
+            var pageXaml = XamlBulder.GetXaml(pageIndex);
+            await WriteFileAsync(fullPath, pageXaml);
+        }
 
         if (formOnly)
             return new CreatedFile(filePath, true);
 
-        // TODO: Refactor
-        var template = await builder.CreateTemplateTSAsync();
         fileName = $"{platformUrl.Action}.template.ts";
         fullPath = _appCodeProvider.GetMainModuleFullPath(platformUrl.LocalPath.RemoveHeadSlash(), fileName);
-        await WriteFileAsync(fullPath, template);
+        if (!File.Exists(fullPath))
+        {
+            var template = await builder.CreateTemplateTSAsync();
+            await WriteFileAsync(fullPath, template);
+        }
 
-        var map = await builder.CreateMapTSAsync();
         fileName = $"{platformUrl.Action}.d.ts";
         fullPath = _appCodeProvider.GetMainModuleFullPath(platformUrl.LocalPath.RemoveHeadSlash(), fileName);
-        await WriteFileAsync(fullPath, map);
+        if (!File.Exists(fullPath))
+        {
+            var map = await builder.CreateMapTSAsync();
+            await WriteFileAsync(fullPath, map);
+        }
 
         return new CreatedFile(filePath, true);
     }
