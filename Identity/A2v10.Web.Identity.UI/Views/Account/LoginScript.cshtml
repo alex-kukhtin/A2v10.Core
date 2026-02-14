@@ -1,5 +1,6 @@
 ﻿@inject ILocalizer _loc
 @model LoginViewModel
+@using System.Text.Encodings.Web;
 
 "use strict";
 (function() {
@@ -15,7 +16,7 @@ data: {
 	submitted: false,
 	serverError: '',
 	providers: '@Model?.LoginProviders'.split(','),
-	returnUrl: '@Model?.ReturnUrl'
+	returnUrl: '@JavaScriptEncoder.Default.Encode(Model?.ReturnUrl ?? "")'
 },
 computed: {
 	invalidEmail() {
@@ -86,7 +87,7 @@ methods: {
 	async submit() {
 		this.submitted = true;
 		if (!this.valid) return;
-		let formData = new URLSearchParams();
+		let formData = new FormData();
 		formData.append('Login', this.email);
 		formData.append('Password', this.password);
 		formData.append('RememberMe', this.rememberMe);

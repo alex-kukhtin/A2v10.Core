@@ -184,8 +184,8 @@ public class AccountController(
 				};
                 await _dbContext.ExecuteExpandoAsync(CatalogDataSource, $"[{SecuritySchema}].[UpdateUserLogin]", llprms);
 				RemoveAntiforgeryCookie();
-				var returnUrl = model.ReturnUrl?.ToLowerInvariant();
-				if (returnUrl == null || returnUrl.StartsWith("/account"))
+				var returnUrl = model.ReturnUrl;
+				if (returnUrl == null || returnUrl.StartsWith("/account", StringComparison.OrdinalIgnoreCase))
 					returnUrl = "/";
 				return new JsonResult(JsonResponse.Redirect(returnUrl));
 			}
