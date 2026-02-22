@@ -25,6 +25,11 @@
 		return ev.target.closest('li');
 	}
 
+	function getTabUrl(tab) {
+		let host = `${window.location.protocol}//${window.location.host}`;
+		return `${host}${tab.url}${tab.query || ''}`;
+	}
+
 	function intersectLines(t, c) {
 		let dx = 0;
 		if (t.r > c.r)
@@ -170,6 +175,10 @@
 			},
 			isHomeActive() {
 				return !this.activeTab;
+			},
+			clickTooltip(tab) {
+				let url = getTabUrl(tab);
+				navigator.clipboard.writeText(url);
 			},
 			tabTooltip(tab) {
 				return `${tab.url}`;
@@ -372,6 +381,14 @@
 			popupClose() {
 				let t = this.tabs.find(t => t.key === this.contextTabKey);
 				if (t) this.closeTab(t);
+			},
+			copyTabUrl() {
+				let t = this.tabs.find(t => t.key === this.contextTabKey);
+				if (!t) return;
+				console.dir(t);
+				window.navigator.clipboard.writeText(getTabUrl(t));
+				if (t.root && t.root.$toast)
+					t.root.$toast("URL copied to clipboard");
 			},
 			reopenClosedTab() {
 				if (this.closedTabs.length <= 0) return;

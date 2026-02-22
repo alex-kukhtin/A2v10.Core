@@ -34,7 +34,7 @@
 					:style="{left:offsetLeft(t), order: t.o}" v-on:pointerdown="pointerDown($event, t)" v-on:pointermove="pointerMove($event, t)" v-on:pointerup="pointerUp($event,t)">
 				<span v-text="tabTitle(t)" class="tab-title"></span>
 				<span class="close ico ico-clear" v-on:click.stop.prevent="closeTab(t)"></span>
-				<span class="tab-tooltip" v-if="t.debug" v-text="tabTooltip(t)"></span>
+				<span class="tab-tooltip" v-if="t.debug" v-text="tabTooltip(t)" v-on:click="clickTooltip(t)"></span>
 			</li>
 		</ul>
 		<div class="mdi-tabs-menu">
@@ -112,6 +112,8 @@
 			<button class="dropdown-item" v-on:click="popupCloseOther" v-bind:disabled="!contextTabKey"><span>@loc["CloseOtherTabs"]</span></button>
 			<button class="dropdown-item" v-on:click="popupCloseRight" v-bind:disabled="!canPopupCloseRight"><span>@loc["CloseTabsRight"]</span></button>
 			<button class="dropdown-item" v-on:click="popupCloseAll"><span>@loc["CloseAllTabs"]</span></button>
+			<div class="divider" role="separator"></div>
+			<button class="dropdown-item" v-on:click="copyTabUrl" v-bind:disabled="!canPopupClose"><span>@loc["CopyTabUrl"]</span></button>
 		</div>
 	</div>
 	<div v-if="newVersionAvailable" class="mdi-new-version">
