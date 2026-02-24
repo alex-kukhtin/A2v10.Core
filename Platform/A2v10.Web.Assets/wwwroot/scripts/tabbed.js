@@ -195,9 +195,9 @@ app.modules['std:signalR'] = function () {
 	});
 })();
 
-// Copyright © 2023-2025 Oleksandr Kukhtin. All rights reserved.
+// Copyright © 2023-2026 Oleksandr Kukhtin. All rights reserved.
 
-/*20250614-8556*/
+/*20260214-8622*/
 
 /* tabbed:shell.js */
 (function () {
@@ -220,6 +220,11 @@ app.modules['std:signalR'] = function () {
 	function getClosestLi(ev) {
 		if (!ev.target) return null;
 		return ev.target.closest('li');
+	}
+
+	function getTabUrl(tab) {
+		let host = `${window.location.protocol}//${window.location.host}`;
+		return `${host}${tab.url}${tab.query || ''}`;
 	}
 
 	function intersectLines(t, c) {
@@ -294,6 +299,10 @@ app.modules['std:signalR'] = function () {
 					if (cti >= 0)
 						this.closedTabs.splice(cti, 1);
 				}
+				if (tab.query !== u1.query) {
+					tab.query = u1.query;
+					tab.reload += 1;
+				}
 				tab.loaded = true;
 				this.activeTab = tab;
 				this.useTab(tab);
@@ -306,9 +315,9 @@ app.modules['std:signalR'] = function () {
 				}
 				this.storeTabs();
 			},
-			navigateUrl(url) {
+			navigateUrl(url, query) {
 				this.navigatingUrl = url;
-				this.navigate({ url: url, title: '' });
+				this.navigate({ url: url, title: '', query: query || "" });
 			},
 			navigateTo(to) {
 				this.navigatingUrl = to.url;
@@ -363,6 +372,10 @@ app.modules['std:signalR'] = function () {
 			},
 			isHomeActive() {
 				return !this.activeTab;
+			},
+			clickTooltip(tab) {
+				let url = getTabUrl(tab);
+				navigator.clipboard.writeText(url);
 			},
 			tabTooltip(tab) {
 				return `${tab.url}`;
@@ -512,6 +525,11 @@ app.modules['std:signalR'] = function () {
 				try {
 					let elems = JSON.parse(tabs);
 					let ix = elems.index;
+					if (path !== '/') {
+						let f = elems.tabs.findIndex(t => t.url === path);
+						if (f >= 0)
+							ix = f;
+					}
 					let len = elems.tabs.length;
 					for (let i = 0; i < len; i++) {
 						let t = elems.tabs[i];
@@ -560,6 +578,14 @@ app.modules['std:signalR'] = function () {
 			popupClose() {
 				let t = this.tabs.find(t => t.key === this.contextTabKey);
 				if (t) this.closeTab(t);
+			},
+			copyTabUrl() {
+				let t = this.tabs.find(t => t.key === this.contextTabKey);
+				if (!t) return;
+				console.dir(t);
+				window.navigator.clipboard.writeText(getTabUrl(t));
+				if (t.root && t.root.$toast)
+					t.root.$toast("URL copied to clipboard");
 			},
 			reopenClosedTab() {
 				if (this.closedTabs.length <= 0) return;
@@ -787,6 +813,15 @@ app.modules['std:signalR'] = function () {
 				if (!dlg) return;
 				dlg.instance = instance;
 			},
+			_activeTabUrl(s) {
+				if (!s) return false;
+				s.host = `${window.location.protocol}//${window.location.host}`;
+				let at = this.activeTab;
+				if (!at) return false;
+				s.url = at.url;
+				s.query = at.query || '';
+				return true;
+			},
 			_eventModalClose(result) {
 				if (!this.modals.length) return;
 
@@ -941,8 +976,15 @@ app.modules['std:signalR'] = function () {
 			this.clearLocalStorage();
 			if (!this.menu || !this.menu.length)
 				this.selectHome(false); // store empty tabs
-			else
-				this.restoreTabs(window.location.pathname + window.location.search);
+			else {
+				this.restoreTabs(window.location.pathname);
+				if (window.location.pathname !== '/') {
+					let s = window.location.search;
+					let p = window.location.pathname;
+					window.history.replaceState(undefined, undefined, '/');
+					this.navigateUrl(p, s);
+				}
+			}
 		},
 		created() {
 			const me = this;
@@ -967,6 +1009,7 @@ app.modules['std:signalR'] = function () {
 			eventBus.$on('closePlain', this.closeTabFromStore);
 			eventBus.$on('pageReloaded', this._pageReloaded);
 			eventBus.$on('toParentTab', this._eventToParentTab);
+			eventBus.$on('activeTabUrl', this._activeTabUrl);
 			eventBus.$on('closeAllTabs', this.popupCloseAll);
 			eventBus.$on('beginRequest', () => {
 				me.requestsCount += 1;
