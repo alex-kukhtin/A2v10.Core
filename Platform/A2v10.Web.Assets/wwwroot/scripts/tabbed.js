@@ -197,7 +197,7 @@ app.modules['std:signalR'] = function () {
 
 // Copyright © 2023-2026 Oleksandr Kukhtin. All rights reserved.
 
-/*20260214-8622*/
+/*20260225-8623*/
 
 /* tabbed:shell.js */
 (function () {
@@ -223,8 +223,13 @@ app.modules['std:signalR'] = function () {
 	}
 
 	function getTabUrl(tab) {
+		if (!tab) return '';
 		let host = `${window.location.protocol}//${window.location.host}`;
-		return `${host}${tab.url}${tab.query || ''}`;
+		let concatChar = tab.url.includes('?') ? '&' : '?';
+		let encQuery = '';
+		if (tab.query)
+			encQuery = `${concatChar}_xq=${encodeURIComponent(tab.query)}`;
+		return `${host}${tab.url}${encQuery}`;
 	}
 
 	function intersectLines(t, c) {
@@ -582,7 +587,6 @@ app.modules['std:signalR'] = function () {
 			copyTabUrl() {
 				let t = this.tabs.find(t => t.key === this.contextTabKey);
 				if (!t) return;
-				console.dir(t);
 				window.navigator.clipboard.writeText(getTabUrl(t));
 				if (t.root && t.root.$toast)
 					t.root.$toast("URL copied to clipboard");
@@ -815,11 +819,7 @@ app.modules['std:signalR'] = function () {
 			},
 			_activeTabUrl(s) {
 				if (!s) return false;
-				s.host = `${window.location.protocol}//${window.location.host}`;
-				let at = this.activeTab;
-				if (!at) return false;
-				s.url = at.url;
-				s.query = at.query || '';
+				s.url = getTabUrl(this.activeTab);
 				return true;
 			},
 			_eventModalClose(result) {
@@ -979,10 +979,19 @@ app.modules['std:signalR'] = function () {
 			else {
 				this.restoreTabs(window.location.pathname);
 				if (window.location.pathname !== '/') {
-					let s = window.location.search;
 					let p = window.location.pathname;
+					let q = '';
+					let usp = new URLSearchParams(window.location.search);
+					if (usp.has('_xq')) {
+						q = usp.get('_xq');
+						usp.delete('_xq');
+					}
 					window.history.replaceState(undefined, undefined, '/');
-					this.navigateUrl(p, s);
+					let sp = usp.toString();
+					if (sp)
+						p += '?' + sp;
+					// path = url + normal query, query from _xq!
+					this.navigateUrl(p, q);
 				}
 			}
 		},
