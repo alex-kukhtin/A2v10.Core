@@ -52,6 +52,8 @@ public void ConfigureServices(IServiceCollection services)
 		opts.ClientId = Configuration.GetValue<String>("Identity:Google:ClientId");
 		opts.ClientSecret = Configuration.GetValue<String>("Identity:Google:ClientSecret");
 		opts.Events.OnRemoteFailure = OpenIdErrorHandlers.OnRemoteFailure;
+		// For automatic user creation on External Login
+		opts.Events.OnTicketReceived = OpenIdTicketHandler<{UserIdType}>.OnTickedReceived;
 	})
 	.AddMicrosoftAccount(opts =>
 	{

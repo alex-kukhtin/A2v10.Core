@@ -85,7 +85,8 @@ public class Startup(IConfiguration configuration)
 			opts.ClientSecret = Configuration.GetValue<String>("Identity:Microsoft:ClientSecret")
 				?? throw new InvalidOperationException("Identity:Microsoft:ClientSecret not found");
 			opts.Events.OnRemoteFailure = OpenIdErrorHandlers.OnRemoteFailure;
-		});
+			opts.Events.OnTicketReceived = OpenIdTicketHandler<Int64>.OnTickedReceived;
+        });
 	
 		services.AddSingleton<TestBusinessAppProvider>();
 
