@@ -1,4 +1,4 @@
-﻿// Copyright © 2020-2025 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2020-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -7,6 +7,7 @@ using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Security.Cryptography;
 
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
@@ -38,29 +39,39 @@ public class ApiKeyAuthenticationHandler<T>(IOptionsMonitor<ApiKeyAuthentication
 		var apiKey = apiKeyHeaderValues.FirstOrDefault();
 		if (String.IsNullOrEmpty(apiKey))
 			return AuthenticateResult.NoResult();
-
-		var appUser = _configOptions.KeyType switch
+		try
 		{
-			KeyType.ApiKey => await _userStore.FindByLoginAsync(ProviderName, apiKey, CancellationToken.None),
-			KeyType.EncodedClaims => await GetApiUserFromClaimsAsync(apiKey),
-			_ => throw new InvalidOperationException("Yet not implemented")
-		};
-		if (appUser == null || appUser.IsEmpty)
-			return AuthenticateResult.NoResult();
-		var claims = await _claimStore.GetClaimsAsync(appUser, CancellationToken.None);
-		// ID is required
-		claims.Add(new Claim(WellKnownClaims.NameIdentifier, appUser.Id.ToString()!));
+			var appUser = _configOptions.KeyType switch
+			{
+				KeyType.ApiKey => await _userStore.FindByLoginAsync(ProviderName, apiKey, CancellationToken.None),
+				KeyType.EncodedClaims => await GetApiUserFromClaimsAsync(apiKey),
+				_ => throw new InvalidOperationException("Yet not implemented")
+			};
+			if (appUser == null || appUser.IsEmpty)
+				return AuthenticateResult.NoResult();
+			var claims = await _claimStore.GetClaimsAsync(appUser, CancellationToken.None);
+			// ID is required
+			claims.Add(new Claim(WellKnownClaims.NameIdentifier, appUser.Id.ToString()!));
 
-		var identity = new ClaimsIdentity(claims, ApiKeyAuthenticationOptions.AuthenticationType);
-		var identities = new List<ClaimsIdentity> { identity };
-		var principal = new ClaimsPrincipal(identities);
-		var ticket = new AuthenticationTicket(principal, ApiKeyAuthenticationOptions.DefaultScheme);
+			var identity = new ClaimsIdentity(claims, ApiKeyAuthenticationOptions.AuthenticationType);
+			var identities = new List<ClaimsIdentity> { identity };
+			var principal = new ClaimsPrincipal(identities);
+			var ticket = new AuthenticationTicket(principal, ApiKeyAuthenticationOptions.DefaultScheme);
 
-		Response.Headers.Append("WWW-Authenticate", apiKey);
-		return AuthenticateResult.Success(ticket);
-	}
+			Response.Headers.Append("WWW-Authenticate", apiKey);
+			return AuthenticateResult.Success(ticket);
+		} 
+		catch (CryptographicException)
+		{
+			return AuthenticateResult.Fail("Invalid API key");
+		}
+        catch (FormatException)
+        {
+            return AuthenticateResult.Fail("Invalid API key format");
+        }
+    }
 
-	private async Task<AppUser<T>?> GetApiUserFromClaimsAsync(String apiKey)
+    private async Task<AppUser<T>?> GetApiUserFromClaimsAsync(String apiKey)
 	{
 		var user = ApiKeyUserHelper<T>.GetUserFromApiKey(apiKey, _configOptions.AesEncryptKey, _configOptions.AesEncryptVector);
 		if (user == null)

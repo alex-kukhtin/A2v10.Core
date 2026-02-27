@@ -1,12 +1,15 @@
-﻿2026-02-25 (next: 8624)
+﻿2026-02-27 (next: 8624)
 
+A2v10.AppRuntimeBuilder
 A2v10.App.Assets
 A2v10.Identity.ApiKey	
 A2v10.Identity.Jwt
 A2v10.Identity.Core
 A2v10.Identity.UI
+A2v10.Metadata
 A2v10.Platform
 A2v10.Platform.Web
+A2v10.ReportEngine.Pdf
 
 
 !Workflow.Module (scheduling, workflow.engine)
