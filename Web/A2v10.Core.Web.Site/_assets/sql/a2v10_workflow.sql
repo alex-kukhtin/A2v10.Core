@@ -1,8 +1,8 @@
 ﻿/*
-Copyright © 2020-2025 Oleksandr Kukhtin
+Copyright © 2020-2026 Oleksandr Kukhtin
 
-Last updated : 03 dec 2025
-module version : 8306
+Last updated : 21 jan 2026
+module version : 8322
 */
 
 /* WF TABLES
@@ -46,7 +46,7 @@ go
 begin
 	set nocount on;
 	declare @version int;
-	set @version = 8306;
+	set @version = 8322;
 	if exists(select * from a2wf.Versions where Module = N'main')
 		update a2wf.Versions set [Version] = @version where Module = N'main';
 	else
@@ -161,6 +161,10 @@ go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA=N'a2wf' and TABLE_NAME=N'Instances' and COLUMN_NAME=N'CorrelationId')
 	alter table a2wf.Instances add CorrelationId nvarchar(255) null;
+go
+------------------------------------------------
+if not exists (select * from sys.indexes where object_id = object_id(N'a2wf.Instances') and name = N'IX_Instances_Parent')
+	create nonclustered index IX_Instances_Parent on a2wf.Instances ([Parent])
 go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2wf' and TABLE_NAME=N'InstanceVariablesInt')

@@ -10,7 +10,10 @@ A2v10.Metadata
 A2v10.Platform
 A2v10.Platform.Web
 A2v10.ReportEngine.Pdf
-
+A2v10.ReportEngine.Excel
+A2v10.ReportEngine.Script
+A2v10.Services
+A2v10.Scheduling
 
 !Workflow.Module (scheduling, workflow.engine)
 
