@@ -1,8 +1,8 @@
 ﻿/*
-Copyright © 2008-2025 Oleksandr Kukhtin
+Copyright © 2008-2026 Oleksandr Kukhtin
 
-Last updated : 13 may 2025
-module version : 8268
+Last updated : 26 feb 2026
+module version : 8624
 */
 
 -- SECURITY
@@ -201,6 +201,22 @@ begin
 
 	select u.* from a2security.ViewUsers u
 	where Id = @userId
+end
+go
+------------------------------------------------
+create or alter procedure a2security.[User.EnsureExternalLogin]
+@Tenant int = 1,
+@UserName nvarchar(255),
+@PersonName nvarchar(255)
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+	set xact_abort on;
+
+	if not exists(select * from a2security.Users where UserName = @UserName and Tenant = @Tenant)
+		insert into a2security.Users (Tenant, UserName, PersonName, SecurityStamp, EmailConfirmed, IsExternalLogin) 
+		values (@Tenant, @UserName, @PersonName, N'', 1, 1);
 end
 go
 ------------------------------------------------
