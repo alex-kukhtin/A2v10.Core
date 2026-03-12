@@ -63,7 +63,7 @@ public class DataGrid : Control
 	{
 		get
 		{
-			_groupBy ??= [];
+			_groupBy ??= new GroupDescriptions();
 			return _groupBy;
 		}
 		set { _groupBy = value; }

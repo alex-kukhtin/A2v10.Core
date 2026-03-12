@@ -30,16 +30,22 @@ public class GroupDescription : XamlElement, IJavaScriptSource
 	}
 }
 
+public class GroupDescriptionItems : List<GroupDescription>
+{
+}
+
 [ContentProperty("Items")]
 [TypeConverter(typeof(GroupDescriptionsConverter))]
-public class GroupDescriptions : List<GroupDescription>, IJavaScriptSource
+public class GroupDescriptions : IJavaScriptSource
 {
+	public GroupDescriptionItems Items { get; set; } = [];
+
 	public String? GetJsValue(RenderContext context)
 	{
-		if (Count == 0)
+		if (Items.Count == 0)
 			return null;
 		StringBuilder sb = new("[");
-		foreach (var d in this)
+		foreach (var d in Items)
 		{
 			sb.Append(d.GetJsValue(context)).Append(',');
 		}
@@ -70,7 +76,7 @@ internal class GroupDescriptionsConverter : TypeConverter
 				GroupBy = strVal,
 				Count = true
 			};
-			coll.Add(gd);
+			coll.Items.Add(gd);
 			return coll;
 		}
 		throw new XamlException($"Invalid GroupDescriptions value '{value}'");
