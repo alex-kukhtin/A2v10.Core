@@ -105,6 +105,7 @@ public enum ModelParseType
 	none,
     json,
 	xlsx,
+	xls,
 	excel,
 	csv,
 	dbf,
