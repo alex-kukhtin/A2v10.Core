@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2021 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2026 Alex Kukhtin. All rights reserved.
 
 
 namespace A2v10.Xaml;
@@ -7,6 +7,7 @@ namespace A2v10.Xaml;
 public class Html : Inline
 {
 	public Object? Content { get; set; }
+	public String? HandleClick { get; set; }
 
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
@@ -15,6 +16,9 @@ public class Html : Inline
 		var span = new TagBuilder("span", null, IsInGrid);
 		onRender?.Invoke(span);
 		MergeAttributes(span, context);
+
+		if (!String.IsNullOrEmpty(HandleClick))
+			span.MergeAttribute("@click.stop.prevent", $"$data.$vm.$handleClick('{HandleClick}', $event)");
 
 		var cbind = GetBinding(nameof(Content));
 		if (cbind != null)

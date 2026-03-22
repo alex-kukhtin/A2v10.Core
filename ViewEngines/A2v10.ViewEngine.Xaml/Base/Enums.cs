@@ -1,5 +1,5 @@
 ﻿
-// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
+// Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Xaml;
 
@@ -443,6 +443,7 @@ public enum Icon
 	Rename,
 	Report,
 	Requery,
+	Robot,
 	Save,
 	SaveAs,
 	SaveClose,
