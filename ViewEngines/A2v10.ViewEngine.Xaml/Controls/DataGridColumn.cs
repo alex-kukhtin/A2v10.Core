@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
 using A2v10.Infrastructure;
@@ -20,7 +20,8 @@ public enum ColumnRole
 	Number,
 	Date,
 	CheckBox,
-	Code
+	Code,
+	Fit
 }
 
 [ContentProperty("Content")]
@@ -204,6 +205,11 @@ public class DataGridColumn : XamlElement
 				column.MergeAttribute(":fit", "true", true);
 				column.MergeAttribute("wrap", "no-wrap", true);
 				column.MergeAttribute("align", "right", true);
+				break;
+			case ColumnRole.Fit:
+                // fit, nowrap
+                column.MergeAttribute(":fit", "true", true);
+                column.MergeAttribute("wrap", "no-wrap", true);
 				break;
             case ColumnRole.Code:
                 // fit, nowrap
