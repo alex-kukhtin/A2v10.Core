@@ -1,6 +1,14 @@
-﻿2026-03-08 (next: 8626)
+﻿2026-03-26 (next: 8631)
 
+A2v10.Identity.ApiKey
+A2v10.Identity.Core
+A2v10.Identity.Jwt
+A2v10.Identity.UI
 
+A2v10.Platform
+A2v10.Platform.Web
+
+A2v10.Web.Assets (fonts)
 
 
 !Workflow.Module (scheduling, workflow.engine)
