@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -16,33 +16,32 @@ namespace A2v10.Platform.Web;
 
 static internal class SCRIPT_PARTS
 {
-	internal const String HEADER =
-	@"
-<script type=""text/javascript"">
-'use strict';
-(function() {
-	const DataModelController = component('baseController');
-	const eventBus = require('std:eventBus');
-	const utils = require('std:utils');
-	const uPeriod = require('std:period');
-	const currentModule = $(CurrentModule);
-";
+	internal const String HEADER ="""
 
-	internal const String DATAFUNC =
-	@"
-function() {
-	$(RequiredModules)
+	<script type="text/javascript">
+	'use strict';
+	(function() {
+		const DataModelController = component('baseController');
+		const eventBus = require('std:eventBus');
+		const utils = require('std:utils');
+		const uPeriod = require('std:period');
+		const currentModule = $(CurrentModule);
+	""";
 
-	const rawData = $(DataModelText);
-	const template = $(TemplateText);
+	internal const String DATAFUNC ="""
+		function() {
+			$(RequiredModules)
 
-	$(ModelScript)
+			const rawData = $(DataModelText);
+			const template = $(TemplateText);
+
+			$(ModelScript)
 		
-	return {
-		dataModel: modelData(template, rawData)
-	};
-}
-";
+			return {
+				dataModel: modelData(template, rawData)
+			};
+		}
+		""";
 
 	internal const String DATAFUNC_SERVER =
 	@"
@@ -354,31 +353,37 @@ function modelData(template, data) {
 
 	static String CreateTemplateForWrite(String? fileTemplateText)
 	{
-		if (fileTemplateText != null && fileTemplateText.Contains("define([\"require\", \"exports\"]"))
+		const String USE_STRICT = "\"use strict\";";
+		const String DEFINE_PROP = """Object.defineProperty(exports, "__esModule", { value: true });""";
+        const String DEFINE_STR = """define(["require", "exports"]""";
+        if (fileTemplateText != null)
 		{
-			// amd module
-			return fileTemplateText;
+			if (fileTemplateText.StartsWith(USE_STRICT) && 
+				fileTemplateText.Contains(DEFINE_PROP))
+                 // commonjs module
+                return $$"""
+				define(["require", "exports"], function (require, exports) {				
+					{{fileTemplateText}}
+				});
+				""";
+			else if (fileTemplateText.Contains(DEFINE_STR))
+			{
+				// amd module
+				return fileTemplateText;
+			}
 		}
 
-		const String tmlHeader =
-@"(function() {
-	let module = { exports: undefined };
-	(function(module, exports) {
-";
+		return $$"""
+			(function() {			
+				let module = { exports: undefined };
+				
+				(function(module, exports) {
+					{{fileTemplateText}}
+				})(module, module.exports);
 
-		const String tmlFooter =
-@"
-	})(module, module.exports);
-	return module.exports;
-})()";
-
-		var sb = new StringBuilder();
-
-		sb.AppendLine()
-		.AppendLine(tmlHeader)
-		.AppendLine(fileTemplateText)
-		.AppendLine(tmlFooter);
-		return sb.ToString();
+				return module.exports;
+			})();
+			""";
 	}
 
 	void AddRequiredModules(StringBuilder sb, String clientScript)

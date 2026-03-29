@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2020-2026 Oleksandr Kukhtin
 
-Last updated : 21 jan 2026
-module version : 8322
+Last updated : 19 mar 2026
+module version : 8323
 */
 
 /* WF TABLES
@@ -21,6 +21,13 @@ a2wf.PendingMessages
 -- Custom Table
 a2wf.[Inbox]
 a2wf.[UserTrack]
+-- Custom procedures
+a2wf.[Instance.Inbox.Create]
+a2wf.[Instance.Inbox.Remove]
+a2wf.[Inbox.CancelChildren]
+a2wf.[Instance.UserTrack.Add]
+a2wf.[Instance.OnDelete]
+
 */
 ------------------------------------------------
 set nocount on;
@@ -45,8 +52,8 @@ go
 ------------------------------------------------
 begin
 	set nocount on;
-	declare @version int;
-	set @version = 8322;
+	declare @version int = 8323;
+
 	if exists(select * from a2wf.Versions where Module = N'main')
 		update a2wf.Versions set [Version] = @version where Module = N'main';
 	else
@@ -938,13 +945,14 @@ go
 ------------------------------------------------
 create or alter procedure a2wf.[PendingMessage.Complete]
 @Id bigint,
-@InstanceId uniqueidentifier
+@InstanceId uniqueidentifier,
+@Complete int = 1
 as
 begin
 	set nocount on;
 	set transaction isolation level read committed;
-	update a2wf.PendingMessages set InstanceId = @InstanceId, DateCompleted = getutcdate(), Complete = 1
-	where Id=@Id;
+	update a2wf.PendingMessages set InstanceId = @InstanceId, DateCompleted = getutcdate(), Complete = @Complete
+	where Id = @Id;
 end
 go
 ------------------------------------------------
@@ -1036,10 +1044,14 @@ begin
 	delete from a2wf.InstanceVariablesString where InstanceId = @Id;
 	delete from a2wf.InstanceVariablesInt where InstanceId = @Id;
 	delete from a2wf.PendingMessages where InstanceId = @Id;
+	if object_id('a2wf.[Instance.OnDelete]', 'P') is not null
+		exec sp_executesql N'exec a2wf.[Instance.OnDelete] @UserId = @UserId, @Id = @Id', 
+			N'@UserId bigint, @Id uniqueidentifier', @UserId = @UserId, @Id = @Id;
 	delete from a2wf.Instances where Id = @Id;
 	commit tran;
 end
 go
+
 /*
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2wf' and TABLE_NAME=N'Inbox')
@@ -1138,6 +1150,19 @@ begin
 
 	insert into a2wf.[UserTrack] (InstanceId, UserId, UtcDateCreated, Activity, [Message])
 	values (@InstanceId, @UserId, getutcdate(), @Activity, @Message);
+end
+go
+------------------------------------------------
+create or alter procedure a2wf.[Instance.OnDelete]
+@UserId bigint = null,
+@Id uniqueidentifier
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+	set xact_abort on;
+
+	delete from a2wf.UserTrack where InstanceId = @Id;
 end
 go
 

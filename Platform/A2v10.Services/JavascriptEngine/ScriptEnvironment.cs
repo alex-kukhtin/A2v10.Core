@@ -119,7 +119,7 @@ public class ScriptEnvironment
 		Int32 size = 48;
 		Byte[] data = RandomNumberGenerator.GetBytes(size);
 		String res = Convert.ToBase64String(data);
-		res = res.Remove(res.Length - 2);
+		res = res[..^2];
 		return res;
 	}
 

@@ -145,6 +145,19 @@ if not exists (select * from INFORMATION_SCHEMA.ROUTINES where ROUTINE_SCHEMA=N'
 	end
 	';
 go
+------------------------------------------------
+create or alter procedure a2wf.[Instance.OnDelete]
+@UserId bigint = null,
+@Id uniqueidentifier
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+	set xact_abort on;
+
+	delete from a2wf.UserTrack where InstanceId = @Id;
+end
+go
 
 -- CATALOG
 ------------------------------------------------
