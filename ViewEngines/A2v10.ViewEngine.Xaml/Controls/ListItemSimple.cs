@@ -1,6 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
-
-
+﻿// Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Xaml;
 
@@ -10,9 +8,9 @@ public class ListItemSimple : UIElement
 	public Object? Content { get; set; }
 	public Icon Icon { get; set; }
 	public Command? Command { get; set; }
+    public UIElementBase? DropDown { get; set; }
 
-
-	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
+    public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
 		if (SkipRender(context))
 			return;
@@ -23,6 +21,7 @@ public class ListItemSimple : UIElement
 		div.RenderStart(context);
 		RenderIconBlock(context);
 		RenderBody(context);
+		RenderDropDown(context);
 		div.RenderEnd(context);
 	}
 
@@ -58,4 +57,11 @@ public class ListItemSimple : UIElement
 			context.Writer.Write(context.LocalizeCheckApostrophe(Content.ToString()));
 		hBody.RenderEnd(context);
 	}
+
+    void RenderDropDown(RenderContext context)
+	{
+		if (DropDown == null)
+			return;
+        DropDown?.RenderElement(context);
+    }
 }

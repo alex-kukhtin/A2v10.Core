@@ -1,23 +1,32 @@
 {
 	"compileOnSave": true,
 	"compilerOptions": {
-		"module": "amd",
+		/*
+		TypeScript 6.0 breaking changes incompatible with dynamic this-patterns
+		Revisit when TypeScript provides proper tools for framework-managed context		
+		*/
+		"strict": false,
+		"module": "commonjs",
 		"target": "es2017",
 		"sourceMap": false,
 		"removeComments": true,
 		"listFiles": false,
-		"baseUrl": ".",
 		"traceResolution": false,
+		"useUnknownInCatchVariables": false,
+		"noImplicitAny": false,
+		"noImplicitThis": false,
+		"strictFunctionTypes": false,
+		"strictNullChecks": false,
 		"lib": [ "es2017", "dom" ],
-		"typeRoots": [ "@types" ],
+		"typeRoots": [ "./@types" ],
 		"paths": {
 		}
 	},
 	"include": [
 		"./**/*.ts",
-		"@types/platfrom.d.ts"
+		"./@types/platfrom.d.ts"
 	],
 	"exclude": [
 		"./packages/**/*.ts"
 	]
-}
+} 
