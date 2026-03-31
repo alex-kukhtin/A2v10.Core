@@ -5,10 +5,10 @@ namespace A2v10.Xaml;
 [ContentProperty("Content")]
 public class ListItemSimple : UIElement
 {
-	public Object? Content { get; set; }
-	public Icon Icon { get; set; }
-	public Command? Command { get; set; }
-    public UIElementBase? DropDown { get; set; }
+	public Object? Content { get; init; }
+	public Icon Icon { get; init; }
+	public Command? Command { get; init; }
+    public CommandBar? CommandBar { get; init; }
 
     public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
@@ -21,8 +21,12 @@ public class ListItemSimple : UIElement
 		div.RenderStart(context);
 		RenderIconBlock(context);
 		RenderBody(context);
-		RenderDropDown(context);
-		div.RenderEnd(context);
+        CommandBar?.RenderElement(context, tag =>
+			{
+				tag.AddCssClass("list-item-commands");
+			}
+		);
+        div.RenderEnd(context);
 	}
 
 	Boolean HasBody => GetBinding(nameof(Content)) != null || Content != null;
@@ -58,10 +62,9 @@ public class ListItemSimple : UIElement
 		hBody.RenderEnd(context);
 	}
 
-    void RenderDropDown(RenderContext context)
-	{
-		if (DropDown == null)
-			return;
-        DropDown?.RenderElement(context);
+    protected override void OnEndInit()
+    {
+        base.OnEndInit();
+        CommandBar?.SetParent(this);
     }
 }

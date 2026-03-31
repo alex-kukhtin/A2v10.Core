@@ -12,7 +12,6 @@ public class ListItem : UIElement
 	public Object? Footer { get; set; }
 
 	public Command? Command { get; set; }
-
 	public CommandBar? CommandBar { get; set; }
 
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)

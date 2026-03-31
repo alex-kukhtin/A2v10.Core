@@ -4312,6 +4312,7 @@ tr:hover .commandbar.visible-hover {
 .list-item-simple .list-item-simple-body {
   overflow: hidden;
   text-overflow: ellipsis;
+  flex-grow: 1;
 }
 .list-item-simple .list-item-simple-icon {
   color: var(--icon-color);
