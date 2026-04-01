@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Services.Interop;
 
@@ -12,6 +12,7 @@ public struct ExClassList
 	public Boolean Underline { get; set; }
     public Boolean Vertical { get; set; }
     public Boolean IsGroup { get; set; }
+    public RowColor RowColor { get; set; }
 }
 
 
@@ -54,6 +55,9 @@ public static class Utils
 					break;
                 case "group":
                     lst.IsGroup = true;
+                    break;
+                case "group-red":
+                    lst.RowColor = RowColor.Red;
                     break;
             }
             if (cls.StartsWith("text-"))

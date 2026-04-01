@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Services.Interop;
 
@@ -17,9 +17,10 @@ public class ExRow
 	public RowKind Kind { get; set; }
 	public HorizontalAlign Align { get; set; }
 	public UInt32 Height { get; set; }
-	public Boolean IsGroup { get; set; }	
+	public Boolean IsGroup { get; set; }
+    public RowColor RowColor { get; set; }
 
-	public List<ExCell> Cells { get; } = [];
+    public List<ExCell> Cells { get; } = [];
 
 	public (ExCell Cell, Int32 Index) AddCell()
 	{
@@ -54,5 +55,7 @@ public class ExRow
 		if (cls.Align != HorizontalAlign.NotSet)
 			Align = cls.Align;
 		IsGroup = cls.IsGroup;
-	}
+		RowColor = cls.RowColor;
+
+    }
 }

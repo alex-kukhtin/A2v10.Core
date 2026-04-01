@@ -4323,6 +4323,10 @@ tr:hover .commandbar.visible-hover {
   padding: 7px 0;
   color: inherit;
 }
+.list-item-simple .commandbar {
+  align-self: start;
+  margin: -3px -4px -2px -4px;
+}
 .chat-item {
   padding: 0.5rem / 2;
   display: block;

@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Services.Interop;
 
@@ -16,6 +16,12 @@ public enum RowRole
 	Divider
 }
 
+public enum RowColor
+{
+    None,
+	Red
+}
+
 public struct Style
 {
 	public HorizontalAlign Align;
@@ -29,8 +35,9 @@ public struct Style
 	public Boolean Underline;
 	public Boolean Vertical;
     public Boolean IsGroup;
+	public RowColor RowColor;
 
-	public readonly Boolean HasBorder => RowKind == RowKind.Body || RowRole == RowRole.Header || RowRole == RowRole.Footer || RowRole == RowRole.Total;
+    public readonly Boolean HasBorder => RowKind == RowKind.Body || RowRole == RowRole.Header || RowRole == RowRole.Footer || RowRole == RowRole.Total;
 	public readonly Boolean IsDateOrTime => DataType == DataType.Date || DataType == DataType.DateTime || DataType == DataType.Time;
 	public readonly Boolean IsBoolean => DataType == DataType.Boolean;
 }
