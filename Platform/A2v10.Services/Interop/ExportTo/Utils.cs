@@ -59,6 +59,9 @@ public static class Utils
                 case "group-red":
                     lst.RowColor = RowColor.Red;
                     break;
+                case "group-cyan":
+                    lst.RowColor = RowColor.Cyan;
+                    break;
             }
             if (cls.StartsWith("text-"))
 			{

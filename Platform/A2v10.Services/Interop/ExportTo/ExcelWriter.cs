@@ -115,11 +115,18 @@ public class ExcelWriter
                     ForegroundColor = new ForegroundColor() { Rgb = "FFEFFCF6" },
                     BackgroundColor = new BackgroundColor() { Indexed = (UInt32Value)64U }
                 }),
-                // index 5 -> LightRedd (red)
+                // index 5 -> Light Red (red)
                 new Fill(new PatternFill()
                 {
                     PatternType = PatternValues.Solid,
                     ForegroundColor = new ForegroundColor() { Rgb = "FFFFF4FA" },
+                    BackgroundColor = new BackgroundColor() { Indexed = (UInt32Value)64U }
+                }),
+                // index 6 -> Cyan (cyan)
+                new Fill(new PatternFill()
+                {
+                    PatternType = PatternValues.Solid,
+                    ForegroundColor = new ForegroundColor() { Rgb = "#FFECFDFD" },
                     BackgroundColor = new BackgroundColor() { Indexed = (UInt32Value)64U }
                 })
             );
@@ -226,7 +233,8 @@ public class ExcelWriter
 			cf.FillId = style.RowColor switch
 			{
 				RowColor.Red => 5, // red
-				_ => throw new InvalidOperationException($"Unknown row color: '{style.RowColor}'")
+				RowColor.Cyan => 6, // cyan
+                _ => throw new InvalidOperationException($"Unknown row color: '{style.RowColor}'")
 			};
         }
         else if (style.IsGroup) // low priority than RowColor

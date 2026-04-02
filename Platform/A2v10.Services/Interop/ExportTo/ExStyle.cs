@@ -19,7 +19,8 @@ public enum RowRole
 public enum RowColor
 {
     None,
-	Red
+	Red,
+	Cyan
 }
 
 public struct Style
