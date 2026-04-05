@@ -101,9 +101,7 @@ internal class TextComposer(Text text, RenderContext context) : FlowElementCompo
 					else
 						res = txt.Span(txtVal);
 					if (elem is ContentElement contElem)
-					{
 						ApplyRuntimeStyle(res, contElem);
-					}
 				}
 			}
 		});
