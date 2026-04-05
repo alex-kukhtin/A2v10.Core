@@ -4,9 +4,9 @@ namespace A2v10.Xaml;
 
 public class JsonView : UIElementBase
 {
-    public Object? Source { get; set; }
-    public Length? Height { get; set; }
-    public Length? Width { get; set; }
+    public Object? Source { get; init; }
+    public Length? Height { get; init; }
+    public Length? Width { get; init; }
 
     public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
     {
