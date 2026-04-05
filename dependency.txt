@@ -6,6 +6,11 @@ A2v10.AppRuntimeBuilder
 A2v10.Metadata
 
 A2v10.Platform
+
+A2v10.ReportEngine.Pdf
+A2v10.ReportEngine.Excel
+A2v10.ReportEngine.Script
+
 A2v10.Scheduling
 A2v10.Services
 
