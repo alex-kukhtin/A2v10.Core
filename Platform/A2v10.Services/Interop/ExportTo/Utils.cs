@@ -103,4 +103,36 @@ public static class Utils
 			lst.Indent = level;
 		return lst;
 	}
+
+    public static String BlendColors(String baseArgb, String overlayArgb)
+    {
+        var b = ParseArgb(baseArgb);
+        var o = ParseArgb(overlayArgb);
+
+        Double ao = o.a / 255.0;
+        Double ab = b.a / 255.0;
+
+        Double ar = ao + ab * (1 - ao);
+
+        if (ar == 0)
+            return "00000000";
+
+        Int32 r = (Int32)((o.r * ao + b.r * ab * (1 - ao)) / ar);
+        Int32 g = (Int32)((o.g * ao + b.g * ab * (1 - ao)) / ar);
+        Int32 bl = (Int32)((o.b * ao + b.b * ab * (1 - ao)) / ar);
+        Int32 a = (Int32)(ar * 255);
+
+        return $"{a:X2}{r:X2}{g:X2}{bl:X2}";
+    }
+
+    public static (Int32 a, Int32 r, Int32 g, Int32 b) ParseArgb(String hex)
+    {
+        return (
+            Convert.ToInt32(hex[0..2], 16),
+            Convert.ToInt32(hex[2..4], 16),
+            Convert.ToInt32(hex[4..6], 16),
+            Convert.ToInt32(hex[6..8], 16)
+        );
+    }
 }
+

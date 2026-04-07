@@ -14,14 +14,19 @@ internal class BarcodeComposer(Barcode _code, RenderContext _context) : FlowElem
 {
 	private String CreateBarcodeSvg(String strCode)
 	{
-        var options = new BarcodeOptions();
+        var options = new BarcodeOptions()
+		{
+			PrintDigits = _code.PrintDigits,
+		};
         if (_code.Height != 0)
             options.Height = _code.Height;
+		if (_code.Color != null)
+			options.BarColor = _code.Color;	
         var barcode = new EanBarcodeGenerator(options);
         return _code.Type switch
 		{
-			BarcodeType.Ean13 => barcode.GenerateEan13(strCode),
-			BarcodeType.Ean8 => barcode.GenerateEan8(strCode),
+			BarcodeType.EAN13 => barcode.GenerateEan13(strCode),
+			BarcodeType.EAN8 => barcode.GenerateEan8(strCode),
 			_ => throw new NotSupportedException($"Unsupported barcode type: {_code.Type}")
         };
 	}

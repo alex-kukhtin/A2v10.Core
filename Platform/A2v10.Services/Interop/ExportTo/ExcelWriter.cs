@@ -320,7 +320,9 @@ public class ExcelWriter
 			if (col.Width != 0)
 			{
 				var w = ConvertUnit(col.Width);
-				columns.Append(new Column() { Min = c + 1, Max = c + 1, BestFit = true, CustomWidth = true, Width = w });
+				columns.Append(new Column() { 
+					Min = c + 1, Max = c + 1, BestFit = true, CustomWidth = true, Width = w,
+				});
 			}
 			else
 				columns.Append(new Column() { Min = c + 1, Max = c + 1, Width = 11.5 }) ;
