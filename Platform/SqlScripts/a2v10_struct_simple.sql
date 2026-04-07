@@ -1,7 +1,7 @@
 ﻿/*
-Copyright © 2008-2025 Oleksandr Kukhtin
+Copyright © 2008-2026 Oleksandr Kukhtin
 
-Last updated : 31 may 2025
+Last updated : 07 apr 2026
 module version : 8553
 */
 ------------------------------------------------

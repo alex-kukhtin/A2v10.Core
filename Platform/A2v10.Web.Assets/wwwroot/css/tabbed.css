@@ -4312,6 +4312,7 @@ tr:hover .commandbar.visible-hover {
 .list-item-simple .list-item-simple-body {
   overflow: hidden;
   text-overflow: ellipsis;
+  flex-grow: 1;
 }
 .list-item-simple .list-item-simple-icon {
   color: var(--icon-color);
@@ -4321,6 +4322,10 @@ tr:hover .commandbar.visible-hover {
 .list-item-simple .list-item-body {
   padding: 7px 0;
   color: inherit;
+}
+.list-item-simple .commandbar {
+  align-self: start;
+  margin: -3px -4px -2px -4px;
 }
 .chat-item {
   padding: 0.5rem / 2;
