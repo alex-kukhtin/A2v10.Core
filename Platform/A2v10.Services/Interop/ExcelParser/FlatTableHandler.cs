@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.Data.Interfaces;
 
@@ -6,10 +6,9 @@ namespace A2v10.Services.Interop;
 
 internal class FlatTableHandler : ITableDescription
 {
-
 	public IFormatProvider? FormatProvider { get; set; }
 
-	private readonly List<Object> _list;
+	private readonly List<ExpandoObject> _list;
 
 	public FlatTableHandler()
 	{
@@ -36,7 +35,7 @@ internal class FlatTableHandler : ITableDescription
 	{
 		var eo = new ExpandoObject();
 		var d = eo as IDictionary<String, Object?>;
-		d.Add("Rows", _list);
+		d.Add("Rows", _list.Where(x => !x.IsEmpty()).ToList());
 		return eo;
 	}
 }
