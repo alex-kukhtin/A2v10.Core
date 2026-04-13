@@ -71,8 +71,7 @@ public class Popover : Inline
         po.AddCssClass("po-" + Placement.ToString().ToKebabCase());
         if (Background != PopoverBackgroundStyle.Default)
             po.AddCssClass("po-" + Background.ToString().ToKebabCase());
-        if (Icon != Icon.NoIcon)
-            po.MergeAttribute("icon", Icon.ToString().ToKebabCase());
+        RenderIcon(context, Icon);
         MergeBindingAttributeString(po, context, "content", nameof(Text), Text, MaxChars);
         if (OffsetX != null)
             po.MergeAttribute("offset-x", OffsetX.Value);

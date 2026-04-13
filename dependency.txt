@@ -1,6 +1,9 @@
 ﻿2026-04-10 (next: 8634)
 
-
+A2v10.AppRuntimeBuilder
+A2v10.Metadata
+A2v10.Platform
+A2v10.ViewEngine.Xaml - проверить PopupIcon
 
 !Workflow.Module (scheduling, workflow.engine)
 
