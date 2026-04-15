@@ -19,8 +19,8 @@ internal class GenericJob(ILogger<GenericJob> logger, IServiceProvider servicePr
 
     public async Task Execute(IJobExecutionContext context)
     {
-        var handler = context.MergedJobDataMap.Get("HandlerType") as Type;
-        var info = context.MergedJobDataMap.Get("JobInfo") as ScheduledJobInfo;
+        var handler = context.MergedJobDataMap["HandlerType"] as Type;
+        var info = context.MergedJobDataMap["JobInfo"] as ScheduledJobInfo;
         if (info == null)
         {
             _logger.LogCritical("'JobInfo' not found");

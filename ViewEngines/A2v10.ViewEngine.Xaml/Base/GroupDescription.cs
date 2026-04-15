@@ -1,10 +1,13 @@
-﻿// Copyright © 2015-2017 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
 
-using A2v10.Infrastructure;
+using System.Linq;
+using System.Text;
+
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
-using System.Text;
+
+using A2v10.Infrastructure;
 
 namespace A2v10.Xaml;
 public class GroupDescription : XamlElement, IJavaScriptSource
@@ -47,6 +50,8 @@ public class GroupDescriptions : List<GroupDescription>, IJavaScriptSource
 		sb.Append(']');
 		return sb.ToString();
 	}
+
+	public List<GroupDescription> Items => this;
 }
 
 internal class GroupDescriptionsConverter : TypeConverter
@@ -64,14 +69,9 @@ internal class GroupDescriptionsConverter : TypeConverter
 			return null;
 		if (value is String strVal)
 		{
-			var coll = new GroupDescriptions();
-			var gd = new GroupDescription
-			{
-				GroupBy = strVal,
-				Count = true
-			};
-			coll.Add(gd);
-			return coll;
+			var items = strVal.Split(',').Select(s => new GroupDescription() { GroupBy = s.Trim(), Count = true });
+			GroupDescriptions descr = [..items];
+			return descr;
 		}
 		throw new XamlException($"Invalid GroupDescriptions value '{value}'");
 	}
