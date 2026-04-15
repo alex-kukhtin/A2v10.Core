@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
 
@@ -54,22 +54,11 @@ public class DataGrid : Control
 
 	public DataGridRowDetails? RowDetails { get; set; }
 
-	public UIElement? EmptyPanel { get; set; }
-	public String? EmptyPanelDelegate { get; set; }
-	public AutoSelectMode AutoSelect { get; set; }
-
-	GroupDescriptions? _groupBy;
-	public GroupDescriptions GroupBy
-	{
-		get
-		{
-			_groupBy ??= new GroupDescriptions();
-			return _groupBy;
-		}
-		set { _groupBy = value; }
-	}
-
-	public DropDownMenu? ContextMenu { get; set; }
+	public UIElement? EmptyPanel { get; init; }
+	public String? EmptyPanelDelegate { get; init; }
+	public AutoSelectMode AutoSelect { get; init; }
+	public GroupDescriptions? GroupBy { get; init; }
+	public DropDownMenu? ContextMenu { get; init; }
 
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
@@ -155,8 +144,8 @@ public class DataGrid : Control
 		var groupByBind = GetBinding(nameof(GroupBy));
 		if (groupByBind != null)
 			dataGrid.MergeAttribute(":group-by", groupByBind.GetPath(context));
-		else if (_groupBy != null)
-			dataGrid.MergeAttribute(":group-by", _groupBy.GetJsValue(context));
+		else if (GroupBy != null)
+			dataGrid.MergeAttribute(":group-by", GroupBy.GetJsValue(context));
 
 		if (AutoSelect != AutoSelectMode.None)
 			dataGrid.MergeAttribute("auto-select", AutoSelect.ToString().ToKebabCase());

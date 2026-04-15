@@ -1,85 +1,66 @@
-﻿// Copyright © 2015-2017 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
+
+using System.Linq;
+using System.Collections.Generic;
+using System.Globalization;
+using System.ComponentModel;
 
 using A2v10.Infrastructure;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Globalization;
-using System.Text;
 
 namespace A2v10.Xaml;
 public class GroupDescription : XamlElement, IJavaScriptSource
 {
-	public String? GroupBy { get; set; }
-	public Boolean Count { get; set; }
-	public Boolean Collapsed { get; set; }
-	public String? Title { get; set; }
+	public String? GroupBy { get; init; }
+	public Boolean? Count { get; init; }
+	public Boolean Collapsed { get; init; }
+	public String? Title { get; init; }
 
 	public String GetJsValue(RenderContext context)
 	{
 		if (String.IsNullOrEmpty(GroupBy))
 			throw new XamlException("GroupBy property is required");
-		var sb = new StringBuilder($"{{prop: '{GroupBy.EncodeJs()}'");
-		if (Collapsed)
-			sb.Append(", expanded:").Append((!Collapsed).ToString().ToLowerInvariant());
-		if (Count)
-			sb.Append(", count: true");
-		if (!String.IsNullOrEmpty(Title))
-			sb.Append($", title: '{Title.EncodeJs()}' ");
-		sb.Append('}');
-		return sb.ToString();
-	}
-}
 
-public class GroupDescriptionItems : List<GroupDescription>
-{
+		IEnumerable<String> props()
+		{
+			yield return $"prop: '{GroupBy.EncodeJs()}'";
+            if (Count.HasValue && !Count.Value)
+                yield return "count: false"; // true is default
+            if (!String.IsNullOrEmpty(Title))
+                yield return $"title: '{Title.EncodeJs()}'";
+        }
+
+		return $$"""{{{String.Join(',', props())}}}""";
+	}
 }
 
 [ContentProperty("Items")]
 [TypeConverter(typeof(GroupDescriptionsConverter))]
 public class GroupDescriptions : IJavaScriptSource
 {
-	public GroupDescriptionItems Items { get; set; } = [];
+	public List<GroupDescription> Items { get; set; } = [];
+	public String? GetJsValue(RenderContext context) => 
+		Items.Count > 0 ? $"""[{String.Join(',', Items.Select(x => x.GetJsValue(context)))}]""" : null;
 
-	public String? GetJsValue(RenderContext context)
-	{
-		if (Items.Count == 0)
-			return null;
-		StringBuilder sb = new("[");
-		foreach (var d in Items)
-		{
-			sb.Append(d.GetJsValue(context)).Append(',');
-		}
-		sb.RemoveTailComma();
-		sb.Append(']');
-		return sb.ToString();
-	}
 }
 
 internal class GroupDescriptionsConverter : TypeConverter
 {
 	public override Boolean CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
-	{
-		if (sourceType == typeof(String))
-			return true;
-		return false;
-	}
+		=> sourceType == typeof(String);
 
 	public override Object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, Object value)
 	{
 		if (value == null)
 			return null;
-		if (value is String strVal)
+		if (value is not String strVal)
+            throw new XamlException($"Invalid GroupDescriptions value '{value}'");
+
+        var items = strVal.Split(',').Select(s => new GroupDescription() { GroupBy = s.Trim(), Count = true });
+
+		return new GroupDescriptions()
 		{
-			var coll = new GroupDescriptions();
-			var gd = new GroupDescription
-			{
-				GroupBy = strVal,
-				Count = true
-			};
-			coll.Items.Add(gd);
-			return coll;
-		}
-		throw new XamlException($"Invalid GroupDescriptions value '{value}'");
+			Items = [..items]
+		};
 	}
 }
 
