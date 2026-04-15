@@ -1,13 +1,10 @@
-﻿// Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2017 Alex Kukhtin. All rights reserved.
 
-using System.Linq;
-using System.Text;
-
+using A2v10.Infrastructure;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
-
-using A2v10.Infrastructure;
+using System.Text;
 
 namespace A2v10.Xaml;
 public class GroupDescription : XamlElement, IJavaScriptSource
@@ -33,16 +30,22 @@ public class GroupDescription : XamlElement, IJavaScriptSource
 	}
 }
 
+public class GroupDescriptionItems : List<GroupDescription>
+{
+}
+
 [ContentProperty("Items")]
 [TypeConverter(typeof(GroupDescriptionsConverter))]
-public class GroupDescriptions : List<GroupDescription>, IJavaScriptSource
+public class GroupDescriptions : IJavaScriptSource
 {
+	public GroupDescriptionItems Items { get; set; } = [];
+
 	public String? GetJsValue(RenderContext context)
 	{
-		if (Count == 0)
+		if (Items.Count == 0)
 			return null;
 		StringBuilder sb = new("[");
-		foreach (var d in this)
+		foreach (var d in Items)
 		{
 			sb.Append(d.GetJsValue(context)).Append(',');
 		}
@@ -50,8 +53,6 @@ public class GroupDescriptions : List<GroupDescription>, IJavaScriptSource
 		sb.Append(']');
 		return sb.ToString();
 	}
-
-	public List<GroupDescription> Items => this;
 }
 
 internal class GroupDescriptionsConverter : TypeConverter
@@ -69,9 +70,14 @@ internal class GroupDescriptionsConverter : TypeConverter
 			return null;
 		if (value is String strVal)
 		{
-			var items = strVal.Split(',').Select(s => new GroupDescription() { GroupBy = s.Trim(), Count = true });
-			GroupDescriptions descr = [..items];
-			return descr;
+			var coll = new GroupDescriptions();
+			var gd = new GroupDescription
+			{
+				GroupBy = strVal,
+				Count = true
+			};
+			coll.Items.Add(gd);
+			return coll;
 		}
 		throw new XamlException($"Invalid GroupDescriptions value '{value}'");
 	}
