@@ -1,4 +1,4 @@
-﻿// Copyright © 2020-2025 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2020-2026 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Web.Identity;
 public static class WellKnownClaims
@@ -21,7 +21,8 @@ public static class WellKnownClaims
 	public const String Branch = nameof(Branch);
 	public const String Roles = nameof(Roles);
 	public const String IsPersistent = nameof(IsPersistent);
-	public const String OAuthEmail = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress";
+    public const String DarkTheme = nameof(DarkTheme);
+    public const String OAuthEmail = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress";
     public const String OAuthGivenName = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname";
     public const String OAuthSurName = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname";
 }

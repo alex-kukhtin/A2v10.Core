@@ -1,8 +1,8 @@
 /*
 Copyright © 2008-2026 Oleksandr Kukhtin
 
-Last updated : 07 apr 2026
-module version : 8553
+Last updated : 18 apr 2026
+module version : 8634
 */
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.SCHEMATA where SCHEMA_NAME=N'a2sys')
@@ -79,12 +79,17 @@ create table a2security.Users
 	IsApiUser bit constraint DF_UsersIsApiUser default(0),
 	IsExternalLogin bit constraint DF_UsersIsExternalLogin default(0),
 	IsBlocked bit constraint DF_UsersIsBlocked default(0),
+	DarkTheme bit constraint DF_UsersDarkTheme default(0),
 	UtcDateCreated datetime not null constraint DF_Users_UtcDateCreated default(getutcdate())
 );
 go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = N'a2security' and TABLE_NAME = N'Users' and COLUMN_NAME = N'IsBlocked')
 	alter table a2security.Users add IsBlocked bit constraint DF_UsersIsBlocked default(0);
+go
+-----------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = N'a2security' and TABLE_NAME = N'Users' and COLUMN_NAME = N'DarkTheme')
+	alter table a2security.Users add DarkTheme bit constraint DF_UsersDarkTheme default(0) with values;
 go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = N'a2security' and TABLE_NAME = N'Users' and COLUMN_NAME = N'AuthenticatorKey')
@@ -226,10 +231,10 @@ go
 
 
 /*
-Copyright © 2008-2025 Oleksandr Kukhtin
+Copyright © 2008-2026 Oleksandr Kukhtin
 
-Last updated : 04 jun 2025
-module version : 8553
+Last updated : 18 apr 2025
+module version : 8634
 */
 
 -- SECURITY
@@ -516,7 +521,8 @@ create or alter procedure a2security.[User.UpdateParts]
 @EmailConfirmed bit = null,
 @FirstName nvarchar(255) = null,
 @LastName nvarchar(255) = null,
-@Locale nvarchar(32) = null
+@Locale nvarchar(32) = null,
+@DarkTheme bit = null
 as
 begin
 	set nocount on;
@@ -526,7 +532,8 @@ begin
 		PhoneNumber = isnull(@PhoneNumber, PhoneNumber),
 		PersonName = isnull(@PersonName, PersonName),
 		EmailConfirmed = isnull(@EmailConfirmed, EmailConfirmed),
-		Locale = isnull(@Locale, Locale)
+		Locale = isnull(@Locale, Locale),
+		DarkTheme = isnull(@DarkTheme, DarkTheme)
 	where Id = @Id;
 end
 go

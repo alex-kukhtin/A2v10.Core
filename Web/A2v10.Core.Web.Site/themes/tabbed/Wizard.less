@@ -29,7 +29,7 @@
 
 	li {
 		padding: 0 .7rem;
-		background-color: white;
+		background-color: var(--bgWhite);
 		position: relative;
 		height: @wizard-header-height;
 		border-color: white;
@@ -91,30 +91,30 @@
 		}
 	}
 
-	li.active {
-		background-color: @active-bg-color;
+		li.active {
+			background-color: @active-bg-color;
 
-		> a {
-			border-color: @active-bg-color;
+			> a {
+				border-color: @active-bg-color;
+			}
 		}
-	}
 
-	li.disabled {
-		background-color: @disabled-wiz-bg-color;
+		li.disabled {
+			background-color: @disabled-wiz-bg-color;
 
-		> a {
-			border-color: @disabled-wiz-bg-color;
-			cursor: not-allowed;
+			> a {
+				border-color: @disabled-wiz-bg-color;
+				cursor: not-allowed;
+			}
 		}
-	}
 
-	li.invalid {
-		background-color: @invalid-wiz-bg-color;
+		li.invalid {
+			background-color: @invalid-wiz-bg-color;
 
-		> a {
-			border-color: @invalid-wiz-bg-color;
+			> a {
+				border-color: @invalid-wiz-bg-color;
+			}
 		}
-	}
 }
 
 .wizard-content {

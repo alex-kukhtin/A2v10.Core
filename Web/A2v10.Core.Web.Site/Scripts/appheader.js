@@ -17,6 +17,12 @@
 		<div v-else class="app-title" v-text=title></div>
 		<div class="aligner"></div>
 		<slot></slot>
+		<template v-if="enableDark">
+			<div role="separator" class="divider" />
+			<button v-if="!isDark" class="btn btn-hdr btn-icon" @click="setTheme('dark')" :title="locale.$DarkTheme"><i class="ico ico-mode-dark"></i></button>
+			<button v-if="isDark" class="btn btn-hdr btn-icon" @click="setTheme('light')" :title="locale.$LightTheme"><i class="ico ico-mode-light"></i></button>
+			<div role="separator" class="divider" />
+		</template>
 		<div class="dropdown dir-down separate" v-dropdown>
 			<button class="user-name" toggle :title="personName"><i class="ico ico-user"></i> 
 				<span id="layout-person-name" class="person-name" v-text="personName"></span>
@@ -47,6 +53,8 @@
 			hasLicense: Boolean,
 			profileText: String,
 			licenseText: String,
+			enableDark: Boolean,
+			isDark: Boolean,
 			logo: String
 		},
 		computed: {
@@ -64,6 +72,11 @@
 			license() {
 				const dlgData = { promise: null, rd: true, raw: true };
 				eventBus.$emit('modal', '/viewlicense', dlgData);
+			},
+			async setTheme(theme) {
+				let res = await fetch(`/account/darkmode?theme=${theme}`, { method: 'POST' });
+				if (res.ok)
+					window.location.reload();
 			}
 		},
 		mounted() {

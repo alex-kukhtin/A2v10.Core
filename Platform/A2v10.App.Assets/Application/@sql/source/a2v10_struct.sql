@@ -1,8 +1,8 @@
 ﻿/*
-Copyright © 2008-2025 Oleksandr Kukhtin
+Copyright © 2008-2026 Oleksandr Kukhtin
 
-Last updated : 13 may 2025
-module version : 8268
+Last updated : 18 apr 2026
+module version : 8270
 */
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.SCHEMATA where SCHEMA_NAME=N'a2sys')
@@ -104,6 +104,7 @@ create table a2security.Users
 	IsApiUser bit constraint DF_UsersIsApiUser default(0),
 	IsExternalLogin bit constraint DF_UsersIsExternalLogin default(0),
 	IsBlocked bit constraint DF_UsersIsBlocked default(0),
+	DarkTheme bit constraint DF_UsersDarkTheme default(0),
 	UtcDateCreated datetime not null constraint DF_Users_UtcDateCreated default(getutcdate()),
 	constraint PK_Users primary key (Tenant, Id)
 );
@@ -111,6 +112,10 @@ go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = N'a2security' and TABLE_NAME = N'Users' and COLUMN_NAME = N'IsBlocked')
 	alter table a2security.Users add IsBlocked bit constraint DF_UsersIsBlocked default(0);
+go
+-----------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = N'a2security' and TABLE_NAME = N'Users' and COLUMN_NAME = N'DarkTheme')
+	alter table a2security.Users add DarkTheme bit constraint DF_UsersDarkTheme default(0) with values;
 go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = N'a2security' and TABLE_NAME = N'Users' and COLUMN_NAME = N'AuthenticatorKey')
@@ -197,7 +202,7 @@ as
 		LockoutEnabled, AccessFailedCount, LockoutEndDateUtc, TwoFactorEnabled, [Locale],
 		PersonName, Memo, Void, LastLoginDate, LastLoginHost, Tenant, EmailConfirmed,
 		PhoneNumberConfirmed, RegisterHost, ChangePasswordEnabled, Segment,
-		SecurityStamp2, PasswordHash2, SetPassword, IsBlocked, AuthenticatorKey
+		SecurityStamp2, PasswordHash2, SetPassword, IsBlocked, AuthenticatorKey, DarkTheme
 	from a2security.Users u
 	where Void = 0 and Id <> 0;
 go

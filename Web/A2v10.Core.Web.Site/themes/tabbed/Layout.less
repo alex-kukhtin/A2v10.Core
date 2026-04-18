@@ -81,7 +81,7 @@
 
 .panel {
 	margin-bottom: 12px;
-	background-color: white;
+	background-color: var(--bgWhite);
 	// flex: prevent margin collapse
 	display: flex;
 	flex-direction: column;
@@ -89,7 +89,7 @@
 	.panel-content {
 		display: flex;
 		flex-direction: column;
-		gap:.25rem;
+		gap: .25rem;
 	}
 
 	.panel-header {
@@ -101,11 +101,11 @@
 		height: 2rem;
 
 		.panel-header-slot {
-			width:100%;
-			display:flex;
+			width: 100%;
+			display: flex;
 
 			.a2-panel-description {
-				font-size:1rem;
+				font-size: 1rem;
 			}
 		}
 
@@ -362,7 +362,7 @@
 }
 
 .background-white {
-	background-color: white!important;
+	background-color: var(--bgWhite)!important;
 }
 
 iframe.a2-iframe {
@@ -405,7 +405,7 @@ iframe.eusign-iframe {
 
 	iframe {
 		border: none;
-		background-color: white;
+		background-color: var(--bgWhite);
 	}
 }
 
@@ -413,7 +413,7 @@ iframe.eusign-iframe {
 @flex-padding:1.25rem;
 
 .card {
-	background-color: white;
+	background-color: var(--bgWhite);
 	display: flex;
 	flex-flow: column nowrap;
 	border-radius: @control-brd-radius;

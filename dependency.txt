@@ -1,4 +1,7 @@
-﻿2026-04-10 (next: 8634)
+﻿2026-04-15 (next: 8634)
+
+
+Infrastructure!!!!
 
 A2v10.AppRuntimeBuilder
 
@@ -14,6 +17,7 @@ A2v10.Scheduling (проверить indexer)
 A2v10.Scheduling.Commands
 A2v10.Services
 A2v10.ViewEngine.Xaml
+A2v10.Xaml.Report
 
 !Workflow.Module (scheduling, workflow.engine)
 

@@ -39,8 +39,14 @@ public static class IdentityExtensions
 			return null;
 		return user?.FindFirst(claim)?.Value;
 	}
+    public static Claim? FindUserClaim(this IIdentity? identity, String claim)
+    {
+        if (identity is not ClaimsIdentity user)
+            return null;
+        return user?.FindFirst(claim);
+    }
 
-	public static String? GetUserPersonName(this IIdentity? identity)
+    public static String? GetUserPersonName(this IIdentity? identity)
 	{
 		var claim = identity.GetUserClaim(WellKnownClaims.PersonName);
 		return String.IsNullOrEmpty(claim) ? identity?.Name : claim;

@@ -15,7 +15,8 @@
 }
 
 <div id="shell" class="mdi-shell @(Model!.Debug ? "debug" : "release")" v-cloak>
-	<a2-mdi-header :title="title" person-name="@Model.PersonName" :has-profile="@hasProfile" profile-text="@loc["Profile"]"
+	<a2-mdi-header :title="title" person-name="@Model.PersonName" :has-profile="@hasProfile" profile-text="@loc["Profile"]" enable-dark="@theme.IsDarkThemeEnabled"
+		is-dark="@theme.IsDark"
 		accesskeyprofile-text="@loc["Profile"]" :logo="'@Html.Raw(theme.LogoUrl())'" :has-license="@hasLicense" license-text="@loc["License"]" >
 		@if (Model.HasNavPane)
 		{

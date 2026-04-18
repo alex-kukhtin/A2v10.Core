@@ -1176,14 +1176,14 @@ h5,
   color: #00b5ad;
 }
 .tag-label.white {
-  background-color: white;
+  background-color: var(--bgWhite);
   color: black;
 }
 .tag-label.transparent {
   background-color: transparent;
 }
 .tag-label.outline {
-  background-color: white;
+  background-color: var(--bgWhite);
   border: 1px solid currentColor;
   color: #8f94b0;
 }
@@ -3314,7 +3314,7 @@ table.data-grid tr.active {
   background-color: var(--activeBkLight) !important;
 }
 table.data-grid tr.row-details:hover {
-  background-color: white !important;
+  background-color: var(--bgWhite) !important;
 }
 table.data-grid tr.row-details td.details-cell {
   padding: 0;
@@ -3434,7 +3434,7 @@ table.data-grid tr.group td .grcount {
   float: right;
   font-size: 85%;
   background-color: var(--neutral500);
-  color: white;
+  color: var(--bgWhite);
   padding: 2px 4px;
   border-radius: 10rem;
   text-align: center;
@@ -3917,7 +3917,7 @@ tr:hover .commandbar.visible-hover {
 }
 .side-bar-compact .side-bar-body .tree-view li.active .overlay,
 .tree-view.tree-view-side-bar-menu li.active .overlay {
-  background-color: white;
+  background-color: var(--bgWhite);
   color: #777;
 }
 .side-bar-compact .side-bar-body .tree-view::-webkit-scrollbar,
@@ -4550,7 +4550,7 @@ ul.news-list > li {
   position: relative;
   width: 500px;
   height: auto;
-  background-color: white;
+  background-color: var(--bgWhite);
   border-radius: 8px;
   /* TEMP: Moving doesn't work correctly */
 }
@@ -4782,7 +4782,7 @@ ul.news-list > li {
 }
 .wizard-header li {
   padding: 0 0.7rem;
-  background-color: white;
+  background-color: var(--bgWhite);
   position: relative;
   height: 38px;
   border-color: white;
@@ -5196,7 +5196,7 @@ table.hover > tbody > tr.active:hover {
   background-color: var(--neutral50);
 }
 .a2-table.bk-white {
-  background-color: #fff;
+  background-color: var(--bgWhite);
 }
 .a2-table.bk-primary {
   background-color: var(--bgPrimary);
@@ -5311,7 +5311,7 @@ label.radio > span::before {
   height: 1em;
   border: 1px solid #999;
   border-radius: 1px;
-  background-color: white;
+  background-color: var(--bgWhite);
   background-position: center;
   background-repeat: no-repeat;
   align-self: center;
@@ -5383,7 +5383,7 @@ label.like-checkbox > span:before {
   height: 1em;
   border: 1px solid #999;
   border-radius: 1px;
-  background-color: white;
+  background-color: var(--bgWhite);
   background-position: center;
   background-repeat: no-repeat;
 }
@@ -5977,7 +5977,7 @@ TODO:
   font-size: 12px;
 }
 .a2-state-card {
-  --card-bg: white;
+  --card-bg: var(--bgWhite);
   position: relative;
   background-color: var(--card-bg);
   display: flex;
@@ -6129,7 +6129,7 @@ TODO:
 }
 .panel {
   margin-bottom: 12px;
-  background-color: white;
+  background-color: var(--bgWhite);
   display: flex;
   flex-direction: column;
 }
@@ -6376,7 +6376,7 @@ TODO:
   background-color: ivory!important;
 }
 .background-white {
-  background-color: white!important;
+  background-color: var(--bgWhite) !important;
 }
 iframe.a2-iframe {
   width: 100%;
@@ -6417,10 +6417,10 @@ iframe.eusign-iframe {
 }
 .frame-stack iframe {
   border: none;
-  background-color: white;
+  background-color: var(--bgWhite);
 }
 .card {
-  background-color: white;
+  background-color: var(--bgWhite);
   display: flex;
   flex-flow: column nowrap;
   border-radius: 4px;
@@ -7094,6 +7094,22 @@ input::placeholder {
   flex-direction: row;
   white-space: nowrap;
 }
+.mdi-header .btn {
+  background-color: transparent;
+  color: white;
+  position: relative;
+}
+.mdi-header .btn:hover {
+  background-color: var(--mdi-menu-hover);
+  color: var(--nav-accent);
+}
+.mdi-header .divider {
+  flex-grow: unset;
+  background: var(--neutral700);
+  height: 24px;
+  width: 2px;
+  margin: 0 4px;
+}
 .mdi-header .include.nav-pane {
   width: auto;
 }
@@ -7101,15 +7117,6 @@ input::placeholder {
   display: flex;
   align-items: stretch;
   height: 100%;
-}
-.mdi-header .include.nav-pane .partial-block .btn {
-  background-color: transparent;
-  color: white;
-  position: relative;
-}
-.mdi-header .include.nav-pane .partial-block .btn:hover {
-  background-color: var(--mdi-menu-hover);
-  color: var(--nav-accent);
 }
 .mdi-header .dropdown {
   height: 100%;
@@ -7192,7 +7199,7 @@ input::placeholder {
   color: var(--link);
 }
 .mdi-tabs-container .mdi-tabs li.drag .close {
-  visibility: hidden!important;
+  visibility: hidden !important;
 }
 .mdi-tabs-container .mdi-tabs li.willclose {
   animation: tab-willclose 2s infinite;
@@ -7211,7 +7218,7 @@ input::placeholder {
 }
 .mdi-tabs-container .mdi-tabs li .tab-tooltip {
   position: absolute;
-  background-color: white;
+  background-color: var(--bgWhite);
   top: 4px;
   z-index: 8;
   left: 10px;
@@ -7263,7 +7270,7 @@ input::placeholder {
   padding: 4px;
   margin: 0;
   right: 0;
-  background-color: white;
+  background-color: var(--bgWhite);
   z-index: 71;
   min-width: 250px;
   border-radius: 4px;
@@ -7528,7 +7535,7 @@ input::placeholder {
   padding: 2rem;
   display: flex;
   flex-direction: column;
-  background-color: white;
+  background-color: var(--bgWhite);
   width: 500px;
   margin: 20rem auto;
   gap: 1.5rem;
@@ -7952,7 +7959,7 @@ table.tree-grid a.toggle.expanded:after {
 .color-picker .color-picker-pane {
   position: absolute;
   z-index: 1031;
-  background: white;
+  background: var(--bgWhite);
   top: 100%;
   width: auto;
   min-width: 100%;
@@ -8043,7 +8050,7 @@ table.tree-grid a.toggle.expanded:after {
 }
 .tags-control .tags-pane {
   position: absolute;
-  background-color: white;
+  background-color: var(--bgWhite);
   top: 100%;
   left: 0;
   width: 100%;
@@ -8296,7 +8303,7 @@ table.tree-grid a.toggle.expanded:after {
   position: relative;
   grid-row: 2;
   border-bottom: 1px solid var(--neutral300);
-  background-color: white;
+  background-color: var(--bgWhite);
 }
 .a2-big-calendar table.bc-table {
   width: 100%;
@@ -8614,7 +8621,7 @@ td.vert > .vcell {
   overflow: auto !important;
 }
 .bg-white {
-  background-color: white;
+  background-color: var(--bgWhite);
 }
 .bg-primary {
   background-color: var(--bgPrimary);

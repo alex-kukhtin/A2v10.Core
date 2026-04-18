@@ -29,6 +29,7 @@ public record UserIdentity : IUserIdentity
 
 	public Boolean IsAdmin { get; init; }
 	public Boolean IsTenantAdmin { get; init; }
+	public Boolean DarkTheme { get; init; }
 	public IEnumerable<String>? Roles { get; init; }
 
 	public void SetInitialTenantId(Int32 tenant)
@@ -116,7 +117,8 @@ public class CurrentUser : ICurrentUser, IDbIdentity
 				Segment = ident.GetUserSegment(),
 				IsAdmin = ident.IsUserAdmin(),
 				IsTenantAdmin = ident.IsTenantAdmin(),
-				Roles = ident.GetUserRolesList().ToList()
+				Roles = ident.GetUserRolesList().ToList(),
+				DarkTheme = ident.GetUserClaim(WellKnownClaims.DarkTheme) == "1"
 			};
 		}
 	}

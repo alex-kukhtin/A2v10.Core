@@ -26,7 +26,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.System.Xaml" Version="10.1.8051" />
+		<PackageReference Include="A2v10.System.Xaml" Version="10.1.8052" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.6" />
 		<PackageReference Include="Microsoft.Extensions.Options" Version="10.0.6" />
 	</ItemGroup>

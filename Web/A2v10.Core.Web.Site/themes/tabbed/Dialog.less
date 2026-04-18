@@ -150,14 +150,15 @@
 		position: relative;
 		width: @modal-width-medium;
 		height: auto;
-		background-color: white;
+		background-color: var(--bgWhite);
 		border-radius: @modal-brd-radius;
 		/* TEMP: Moving doesn't work correctly */
 		.modal-header {
-			cursor:default;
-			pointer-events:none;
+			cursor: default;
+			pointer-events: none;
+
 			.btnclose {
-				pointer-events:all;
+				pointer-events: all;
 			}
 		}
 	}

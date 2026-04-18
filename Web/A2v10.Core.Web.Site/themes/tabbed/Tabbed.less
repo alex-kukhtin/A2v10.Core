@@ -43,6 +43,24 @@
 	flex-direction: row;
 	white-space: nowrap;
 
+	.btn {
+		background-color: transparent;
+		color: white;
+		position: relative;
+
+		&:hover {
+			background-color: @mdi-menu-hover;
+			color: @accent-color;
+		}
+	}
+	
+	.divider {
+		flex-grow:unset;
+		background:var(--neutral700);
+		height:24px;
+		width:2px;
+		margin: 0 4px;
+	}
 
 	.include.nav-pane {
 		width: auto;
@@ -51,17 +69,6 @@
 			display: flex;
 			align-items: stretch;
 			height: 100%;
-
-			.btn {
-				background-color: transparent;
-				color: white;
-				position:relative;
-
-				&:hover {
-					background-color: @mdi-menu-hover;
-					color: @accent-color;
-				}
-			}
 		}
 	}
 
@@ -153,9 +160,10 @@
 				box-shadow: 0 0 5px #777 !important;
 				border-right-color: transparent !important;
 				text-shadow: .5px 0 0 @text-color;
-				color:var(--link);
+				color: var(--link);
+
 				.close {
-					visibility: hidden!important;
+					visibility: hidden !important;
 				}
 			}
 
@@ -180,7 +188,7 @@
 
 			.tab-tooltip {
 				position: absolute;
-				background-color: white;
+				background-color: var(--bgWhite);
 				top: 4px;
 				z-index: 8;
 				left: 10px;
@@ -226,9 +234,9 @@
 			}
 		}
 
-		li:not(:last-child) {
-			border-right: 1px solid @bk-primary;
-		}
+			li:not(:last-child) {
+				border-right: 1px solid @bk-primary;
+			}
 
 		.tab-home {
 			padding-right: 16px;
@@ -243,7 +251,7 @@
 			padding: 4px;
 			margin: 0;
 			right: 0;
-			background-color: white;
+			background-color: var(--bgWhite);
 			z-index: 71;
 			min-width: 250px;
 			border-radius: @control-brd-radius;
@@ -555,7 +563,7 @@
 		padding: 2rem;
 		display: flex;
 		flex-direction: column;
-		background-color: white;
+		background-color: var(--bgWhite);
 		width: 500px;
 		margin: 20rem auto;
 		gap: 1.5rem;
