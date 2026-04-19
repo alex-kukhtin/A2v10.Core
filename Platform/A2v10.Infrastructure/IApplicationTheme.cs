@@ -10,7 +10,8 @@ public interface IApplicationTheme
 	String LogoUrl();
 
 	String BodyCssClass { get; }
+    String HtmlCssClass { get; }
 
-	Boolean IsDarkThemeEnabled { get; }
+    Boolean IsDarkThemeEnabled { get; }
     Boolean IsDark { get; }
 }

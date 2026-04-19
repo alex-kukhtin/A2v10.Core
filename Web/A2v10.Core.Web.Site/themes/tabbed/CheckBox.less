@@ -85,8 +85,19 @@ input[type="checkbox"] {
 	}
 }
 
-input[type="radio"] {
+.dark {
+	input[type="checkbox"] {
+		&:checked + span::before {
+			background-image: data-uri('image/svg+xml','checkbox_checked_dark.svg');
+		}
 
+		&:indeterminate + span::before {
+			background-image: data-uri('image/svg+xml', 'checkbox_indeterminate_dark.svg');
+		}
+	}
+}
+
+input[type="radio"] {
 	&:checked + span::before {
 		background-image: data-uri('image/svg+xml','checkbox_radio.svg');
 	}
