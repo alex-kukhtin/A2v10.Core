@@ -34,6 +34,7 @@ public class WebApplicationTheme(IWebHostEnvironment _webHostEnviromnent, IOptio
         var themeFileStamp = tfi.LastModified.ToUnixTimeSeconds().ToString();
 
         var themeFile = $"""<link href="{themeFileName}?ts={themeFileStamp}" rel="stylesheet">""";
+
         var schemeFile = $"""<link href="/css/{colorScheme}.colorscheme.min.css?ts={themeFileStamp}\" rel="stylesheet">""";
 
         return (themeFile, schemeFile);
@@ -44,7 +45,10 @@ public class WebApplicationTheme(IWebHostEnvironment _webHostEnviromnent, IOptio
         var themeName = IsDarkThemeEnabled && IsDark ? _appOptions.DarkTheme : _appOptions.Theme;
         var files = UserColorScheme(themeName ?? "classic");
 
+        var darkContent = IsDark ? "dark" : "light";
+
         return $"""
+            <meta name="color-scheme" content="{darkContent}">
             {files.theme}
             {files.colorScheme}
             """;

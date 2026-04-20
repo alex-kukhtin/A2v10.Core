@@ -458,50 +458,47 @@
 			white-space: nowrap;
 		}
 
-		li.level-0 {
-			list-style: none;
+			li.level-0 {
+				list-style: none;
 
-			.folder {
-				font-size: 1.2rem;
-				color: @mdi-menu-light;
-			}
-		}
-
-		li.level-1 {
-			list-style: none;
-			padding: 0 10px 0 16px;
-			font-size: 1rem;
-			cursor: pointer;
-			display: flex;
-			justify-content: space-between;
-			border-radius: 4px;
-			margin: 0 0 1px 0;
-
-			.btn-plus {
-				display: none;
-				background-color: transparent;
-				border-radius: 50%;
-				padding: 0;
-				align-self: center;
-				color: currentColor;
-				font-size: 1.3rem;
-				position:relative;
-				left:1rem;
-
-				&:hover {
-					color: @accent-color;
+				.folder {
+					font-size: 1.2rem;
+					color: @mdi-menu-light;
 				}
 			}
 
-			&:hover {
-				background-color: @mdi-menu-hover;
-				color: @accent-color;
+			li.level-1 {
+				list-style: none;
+				padding: 0 10px 0 16px;
+				font-size: 1rem;
+				cursor: pointer;
+				display: flex;
+				justify-content: space-between;
+				border-radius: 4px;
+				margin: 0 0 1px 0;
 
 				.btn-plus {
-					display: block;
+					display: none;
+					background-color: transparent;
+					border-radius: 4px;
+					align-self: stretch;
+					color: currentColor;
+					font-size: 1.3rem;
+					position: relative;
+					left: 10px;
+					padding-right: 4px;
+					background-color: var(--mdi-menu-hover);
+				}
+
+				&:hover {
+					background-color: @mdi-menu-hover;
+					color: @accent-color;
+
+					.btn-plus {
+						display: block;
+					}
 				}
 			}
-		}
 	}
 }
 
