@@ -149,8 +149,9 @@ public class ShellController(IDbContext _dbContext, IApplicationHost _host, ICur
 		{
 			{ "AppVersion", _appDataProvider.AppVersion },
 			{ "Debug", IsDebugConfiguration ? "true" : "false" },
-			{ "AppData", await _appDataProvider.GetAppDataAsStringAsync() }
-		});
+			{ "AppData", await _appDataProvider.GetAppDataAsStringAsync() },
+            { "Theme", _currentUser.Identity.Theme ?? "A"}
+        });
 
 		String proc = MENU_PROC;
 
@@ -229,6 +230,7 @@ public class ShellController(IDbContext _dbContext, IApplicationHost _host, ICur
 			{ "AppData", await _appDataProvider.GetAppDataAsStringAsync() },
 			{ "Companies", "null" },
 			{ "Period", "null" },
+			{ "Theme", _currentUser.Identity.Theme ?? "A"}
 		});
 
 		//Boolean setCompany = false;

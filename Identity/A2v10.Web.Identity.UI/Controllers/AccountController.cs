@@ -104,9 +104,8 @@ public class AccountController(
 			throw new InvalidOperationException("Invalid Request");
 		var appUser = await _userManager.FindByIdAsync(User!.Identity.GetUserId<Int64>().ToString()) ??
 			throw new InvalidOperationException("User not found");
-		var themeClaim = theme == "dark" ? "1" : "0";
-		appUser.DarkTheme = theme == "dark";
-        appUser.Flags = UpdateFlags.DarkTheme;
+		appUser.Theme = theme; // Dark/Light/Auto	
+        appUser.Flags = UpdateFlags.Theme;
 		await _userManager.UpdateAsync(appUser);
         await _signInManager.RefreshSignInAsync(appUser);
         return Ok();

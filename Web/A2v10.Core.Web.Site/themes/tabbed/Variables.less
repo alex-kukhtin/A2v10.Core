@@ -162,12 +162,13 @@
 
 @cyan-bg: #edfcfe;
 
-@danger-txt-color: #a94442;
-@danger-bg-color: #f2dede;
-@danger-brd-color: darken(@danger-bg-color, 15%);
+@danger-txt-color: var(--invalid-text);
+@danger-bg-color: var(--invalid-bg);
+@danger-brd-color: var(--invalid-brd);
+@danger-bg-ctrl: var(--invalid-ctrl);
 @danger-shadow-color: rgba(169,68,66,0.3);
 
-@danger-btn-color: lighten(@danger-txt-color, 5%);
+@danger-btn-color: var(--invalid-bg);
 
 @pane-def-txt: #999;
 @pane-def-bg: var(--neutralBk);

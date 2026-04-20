@@ -21,7 +21,7 @@ public enum UpdateFlags
 	TwoFactor = 0x800,
 	ExternalId = 0x1000,
 	NickName = 0x2000,
-	DarkTheme = 0x4000,
+	Theme = 0x4000,
 }
 public class AppUser<T> where T : struct
 {
@@ -54,7 +54,7 @@ public class AppUser<T> where T : struct
 	public Boolean ChangePasswordEnabled { get; set; }
 	public String? Roles { get; set; }
     public String? ZipCode { get; set; }
-	public Boolean DarkTheme { get; set; }
+	public String? Theme { get; set; }
 	public String? ExternalId { get; set; }
 	public Boolean IsBlocked { get; set; }
 	public Boolean TwoFactorEnabled { get; set; }

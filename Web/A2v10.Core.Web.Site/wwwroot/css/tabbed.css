@@ -1287,7 +1287,7 @@ h5,
 }
 .text-color-danger,
 .text-color-red {
-  color: #a94442;
+  color: var(--invalid-text);
 }
 .text-color-green {
   color: #3EA055;
@@ -1314,7 +1314,7 @@ h5,
   color: #3EA055;
 }
 .span-sum.out {
-  color: #a94442;
+  color: var(--invalid-text);
 }
 .span-sum.inout {
   color: #555;
@@ -2027,9 +2027,9 @@ pre.a2-code {
 .validation-summary {
   font-size: 0.95rem;
   padding: 4px 6px;
-  background-color: #f2dede;
-  color: #a94442;
-  border: 1px solid #dca7a7;
+  background-color: var(--invalid-bg);
+  color: var(--invalid-text);
+  border: 1px solid var(--invalid-brd);
   box-shadow: 1px 4px 10px rgba(169, 68, 66, 0.3);
   white-space: pre-line;
 }
@@ -2089,9 +2089,9 @@ pre.a2-code {
   bottom: auto;
   padding: 2px 6px 4px 6px;
   border-radius: 4px;
-  background-color: #f2dede;
-  color: #a94442;
-  border: 1px solid #dca7a7;
+  background-color: var(--invalid-bg);
+  color: var(--invalid-text);
+  border: 1px solid var(--invalid-brd);
   margin-top: 8px;
   text-align: left;
   box-shadow: 1px 4px 10px rgba(169, 68, 66, 0.3);
@@ -2111,7 +2111,7 @@ pre.a2-code {
   bottom: auto;
   border: 8px solid transparent;
   top: -8px;
-  border-bottom: 8px solid #dca7a7;
+  border-bottom: 8px solid var(--invalid-brd);
   border-top-width: 0;
 }
 .control-group .validator:after {
@@ -2119,7 +2119,7 @@ pre.a2-code {
   top: -6.5px;
   left: 8.5px;
   border: 7px solid transparent;
-  border-bottom: 7px solid #f2dede;
+  border-bottom: 7px solid var(--invalid-bg);
   border-top-width: 0;
 }
 .control-group .validator .error,
@@ -2150,14 +2150,14 @@ pre.a2-code {
   top: 100%;
   left: 7.5px;
   margin-bottom: -8px;
-  border-top: 8px solid #dca7a7;
+  border-top: 8px solid var(--invalid-brd);
   border-bottom-width: 0;
 }
 .control-group .validator.top-left:after {
   top: 100%;
   left: 8.5px;
   margin-bottom: -7px;
-  border-top: 7px solid #f2dede;
+  border-top: 7px solid var(--invalid-bg);
   border-bottom-width: 0;
 }
 .control-group .validator.bottom-left {
@@ -2191,14 +2191,14 @@ pre.a2-code {
   right: 8px;
   left: auto;
   top: 100%;
-  border-top: 8px solid #dca7a7;
+  border-top: 8px solid var(--invalid-brd);
   border-bottom-width: 0;
 }
 .control-group .validator.top-right:after {
   top: 100%;
   right: 9px;
   left: auto;
-  border-top: 7px solid #f2dede;
+  border-top: 7px solid var(--invalid-bg);
   border-bottom-width: 0;
 }
 .control-group .validator.bottom-right {
@@ -2212,7 +2212,7 @@ pre.a2-code {
 .control-group .validator.bottom-right:before {
   bottom: auto;
   top: -8px;
-  border-bottom: 8px solid #dca7a7;
+  border-bottom: 8px solid var(--invalid-brd);
   border-top-width: 0;
   right: 8px;
   left: auto;
@@ -2220,7 +2220,7 @@ pre.a2-code {
 .control-group .validator.bottom-right:after {
   bottom: auto;
   top: -6.5px;
-  border-bottom: 7px solid #f2dede;
+  border-bottom: 7px solid var(--invalid-bg);
   border-top-width: 0;
   right: 9px;
   left: auto;
@@ -2409,13 +2409,13 @@ pre.a2-code {
 .control-group.required label:after {
   content: '\2731';
   display: inline-block;
-  color: #dca7a7;
+  color: var(--invalid-brd);
   margin-left: 3px;
   vertical-align: 1px;
   font-size: 75%;
 }
 .control-group.invalid label {
-  color: #a94442;
+  color: var(--invalid-text);
 }
 .control-group.invalid:hover .validator,
 .control-group.invalid .input-group.focus .validator {
@@ -2427,8 +2427,8 @@ pre.a2-code {
   z-index: auto;
 }
 .control-group.invalid .input-group {
-  border-color: #dca7a7 !important;
-  background-color: #fff8f8 !important;
+  border-color: var(--invalid-brd) !important;
+  background-color: var(--invalid-ctrl) !important;
   z-index: auto;
 }
 .control-group.invalid .input-group:after {
@@ -2436,13 +2436,13 @@ pre.a2-code {
   position: absolute;
   right: 0;
   top: 0;
-  border: 4px solid #a94442;
+  border: 4px solid var(--invalid-text);
   border-left-color: transparent;
   border-bottom-color: transparent;
   border-radius: 0 4px 0 0;
 }
 .control-group.invalid .input-group .control {
-  background-color: #fff8f8;
+  background-color: var(--invalid-ctrl);
 }
 .control-group.disabled:not(.rendershow) {
   pointer-events: none;
@@ -2515,7 +2515,7 @@ pre.a2-code {
 .a2-label.required:after {
   content: '\2731';
   display: inline-block;
-  color: #dca7a7;
+  color: var(--invalid-brd);
   margin-left: 3px;
   vertical-align: 1px;
   font-size: 75%;
@@ -2594,11 +2594,11 @@ pre.a2-code {
   color: #69a5f8;
 }
 .static-validator {
-  background-color: #f2dede;
-  color: #a94442;
+  background-color: var(--invalid-bg);
+  color: var(--invalid-text);
   font-size: 96%;
   padding: 2px 6px 4px 6px;
-  border: 1px solid #dca7a7;
+  border: 1px solid var(--invalid-brd);
   text-align: left;
   box-shadow: 1px 4px 10px rgba(169, 68, 66, 0.3);
   line-height: 1.2em;
@@ -6780,7 +6780,7 @@ table.sheet tr.danger,
 table.sheet tr.red,
 table.sheet tr.error {
   background-color: rgba(254, 220, 220, 0.25) !important;
-  color: #a94442;
+  color: var(--invalid-text);
 }
 table.sheet tr.warning,
 table.sheet tr.orange {
@@ -6907,9 +6907,9 @@ table > colgroup col.blue {
   z-index: auto;
   position: relative;
   padding: 0;
-  background-color: #f2dede;
-  color: #a94442;
-  border: 1px solid #dca7a7;
+  background-color: var(--invalid-bg);
+  color: var(--invalid-text);
+  border: 1px solid var(--invalid-brd);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
   user-select: text;
 }
@@ -6920,8 +6920,8 @@ table > colgroup col.blue {
   font-size: 1.2rem;
 }
 .app-exception .stack-trace {
-  border-top: 1px solid #a94442;
-  background-color: #f9f0f0;
+  border-top: 1px solid var(--invalid-text);
+  background-color: var(--invalid-bg);
   overflow: auto;
   padding: 10px;
   max-height: 200px;
@@ -6930,13 +6930,13 @@ table > colgroup col.blue {
 .app-exception .link {
   padding: 0.5rem 1rem;
   display: inline-block;
-  border: 1px solid #a94442;
+  border: 1px solid var(--invalid-text);
   font-weight: 500;
-  color: #a94442;
+  color: var(--invalid-text);
   margin-bottom: 1rem;
 }
 .app-exception .link:hover {
-  background-color: #b94e4c;
+  background-color: var(--invalid-bg);
   color: white;
 }
 .load-indicator {
@@ -6999,18 +6999,18 @@ table > colgroup col.blue {
 .xaml-exception {
   padding: 6px;
   display: inline-block;
-  background-color: #f2dede;
-  border: 1px solid #dca7a7;
-  color: #a94442;
+  background-color: var(--invalid-bg);
+  border: 1px solid var(--invalid-brd);
+  color: var(--invalid-text);
 }
 .not-supported {
   width: 400px;
   margin: 0 auto;
   padding: 20px;
   text-align: center;
-  background-color: #f2dede;
-  color: #a94442;
-  border: 1px solid #dca7a7;
+  background-color: var(--invalid-bg);
+  color: var(--invalid-text);
+  border: 1px solid var(--invalid-brd);
   position: absolute;
   left: 0;
   top: 20px;
@@ -8774,10 +8774,10 @@ td.vert > .vcell {
   color: #478fb1;
 }
 .debug-panel .debug-trace .trace-item-body.exception .badge {
-  background-color: #a94442;
+  background-color: var(--invalid-text);
 }
 .debug-panel .debug-trace .trace-item-body.exception .title {
-  color: #a94442;
+  color: var(--invalid-text);
 }
 .debug-panel .debug-trace ul {
   margin: 0 5px 0 10px;

@@ -25,4 +25,5 @@
 
 	window.$$rootUrl = '';
 	window.$$debug = $(Debug);
+	window.$$theme = '$(Theme)';
 })();

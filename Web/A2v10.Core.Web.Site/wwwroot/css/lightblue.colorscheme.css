@@ -63,4 +63,8 @@
   --danger-base: #da533f;
   --success-base: #5db750;
   --info-base: #60bbe5;
+  --invalid-text: #a94442;
+  --invalid-bg: #f2dede;
+  --invalid-brd: #dca7a7;
+  --invalid-ctrl: #fff8f8;
 }

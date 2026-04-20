@@ -290,7 +290,7 @@ create or alter procedure a2security.[User.UpdateParts]
 @FirstName nvarchar(255) = null,
 @LastName nvarchar(255) = null,
 @Locale nvarchar(32) = null,
-@DarkTheme bit = null
+@Theme nchar(1) = null
 as
 begin
 	set nocount on;
@@ -301,7 +301,7 @@ begin
 		PersonName = isnull(@PersonName, PersonName),
 		EmailConfirmed = isnull(@EmailConfirmed, EmailConfirmed),
 		Locale = isnull(@Locale, Locale),
-		DarkTheme = isnull(@DarkTheme, DarkTheme)
+		Theme = isnull(@Theme, Theme)
 	where Id = @Id;
 end
 go

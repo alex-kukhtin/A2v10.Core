@@ -49,12 +49,6 @@ app.modules['std:signalR'] = function () {
 		<div v-else class="app-title" v-text=title></div>
 		<div class="aligner"></div>
 		<slot></slot>
-		<template v-if="enableDark">
-			<div role="separator" class="divider" />
-			<button v-if="!isDark" class="btn btn-hdr btn-icon" @click="setTheme('dark')" :title="locale.$DarkTheme"><i class="ico ico-mode-dark"></i></button>
-			<button v-if="isDark" class="btn btn-hdr btn-icon" @click="setTheme('light')" :title="locale.$LightTheme"><i class="ico ico-mode-light"></i></button>
-			<div role="separator" class="divider" />
-		</template>
 		<div class="dropdown dir-down separate" v-dropdown>
 			<button class="user-name" toggle :title="personName"><i class="ico ico-user"></i> 
 				<span id="layout-person-name" class="person-name" v-text="personName"></span>

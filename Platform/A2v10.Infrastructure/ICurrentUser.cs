@@ -16,7 +16,7 @@ public interface IUserIdentity
 
 	Boolean IsAdmin { get; }
 	Boolean IsTenantAdmin { get; }
-    Boolean DarkTheme { get; }
+    String? Theme { get; }
 
     void SetInitialTenantId(Int32 tenant);
 	IEnumerable<String>? Roles { get; }
