@@ -1,7 +1,7 @@
 /*
 Copyright © 2008-2026 Oleksandr Kukhtin
 
-Last updated : 18 apr 2026
+Last updated : 20 apr 2026
 module version : 8270
 */
 ------------------------------------------------
@@ -104,7 +104,7 @@ create table a2security.Users
 	IsApiUser bit constraint DF_UsersIsApiUser default(0),
 	IsExternalLogin bit constraint DF_UsersIsExternalLogin default(0),
 	IsBlocked bit constraint DF_UsersIsBlocked default(0),
-	DarkTheme bit constraint DF_UsersDarkTheme default(0),
+	Theme nchar(1) constraint DF_UsersTheme default(N'A'),
 	UtcDateCreated datetime not null constraint DF_Users_UtcDateCreated default(getutcdate()),
 	constraint PK_Users primary key (Tenant, Id)
 );
@@ -114,8 +114,8 @@ if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = N'a2
 	alter table a2security.Users add IsBlocked bit constraint DF_UsersIsBlocked default(0);
 go
 -----------------------------------------------
-if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = N'a2security' and TABLE_NAME = N'Users' and COLUMN_NAME = N'DarkTheme')
-	alter table a2security.Users add DarkTheme bit constraint DF_UsersDarkTheme default(0) with values;
+if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = N'a2security' and TABLE_NAME = N'Users' and COLUMN_NAME = N'Theme')
+	alter table a2security.Users add Theme nchar(1) constraint DF_UsersTheme default(N'A') with values;
 go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = N'a2security' and TABLE_NAME = N'Users' and COLUMN_NAME = N'AuthenticatorKey')
@@ -202,7 +202,7 @@ as
 		LockoutEnabled, AccessFailedCount, LockoutEndDateUtc, TwoFactorEnabled, [Locale],
 		PersonName, Memo, Void, LastLoginDate, LastLoginHost, Tenant, EmailConfirmed,
 		PhoneNumberConfirmed, RegisterHost, ChangePasswordEnabled, Segment,
-		SecurityStamp2, PasswordHash2, SetPassword, IsBlocked, AuthenticatorKey, DarkTheme
+		SecurityStamp2, PasswordHash2, SetPassword, IsBlocked, AuthenticatorKey, Theme
 	from a2security.Users u
 	where Void = 0 and Id <> 0;
 go
@@ -680,7 +680,7 @@ create or alter procedure a2security.[User.UpdateParts]
 @FirstName nvarchar(255) = null,
 @LastName nvarchar(255) = null,
 @Locale nvarchar(32) = null,
-@DarkTheme bit = null
+@Theme nchar(1) = null
 as
 begin
 	set nocount on;
@@ -691,7 +691,7 @@ begin
 		PersonName = isnull(@PersonName, PersonName),
 		EmailConfirmed = isnull(@EmailConfirmed, EmailConfirmed),
 		Locale = isnull(@Locale, Locale),
-		DarkTheme = isnull(@DarkTheme, DarkTheme)
+		Theme = isnull(@Theme, Theme)
 	where Id = @Id;
 end
 go

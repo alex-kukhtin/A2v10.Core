@@ -2305,7 +2305,7 @@ pre.a2-code {
 .control-group .input-group > .dropdown > a:hover {
   text-decoration: none;
   color: var(--link);
-  background-color: var(--neutral100);
+  background-color: var(--menu-hover);
 }
 .control-group .input-group .a2-inline {
   margin-left: 0 !important;
@@ -4774,7 +4774,7 @@ ul.news-list > li {
   padding: 0;
 }
 .dark .modal-window {
-  outline: 2px solid var(--neutral300);
+  outline: 2px solid var(--dialogHeaderBkColor);
 }
 .dark .modal-animation-frame.show {
   background-color: rgba(0, 0, 0, 0.45);
@@ -5253,6 +5253,9 @@ table.a2-table.sticky thead {
 }
 table.a2-table.sticky tfoot {
   bottom: 0;
+}
+.dark .a2-table.bk-paper {
+  background-color: #4c4a46;
 }
 table.prop-grid {
   width: 100%;
@@ -7098,6 +7101,9 @@ input::placeholder {
   word-wrap: break-word;
   word-break: break-word;
   white-space: pre-line;
+}
+.dark .about-source-list li {
+  background-color: #353b3f;
 }
 .mdi-shell {
   display: grid;

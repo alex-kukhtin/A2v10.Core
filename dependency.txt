@@ -1,23 +1,4 @@
-﻿2026-04-15 (next: 8634)
-
-
-Infrastructure!!!!
-
-A2v10.AppRuntimeBuilder
-
-A2v10.BlobStorage.Azure
-A2v10.BlobStorage.FileSystem
-A2v10.MailClient
-A2v10.Metadata
-A2v10.Platform
-A2v10.ReportEngine.Excel
-A2v10.ReportEngine.Pdf
-A2v10.ReportEngine.Script
-A2v10.Scheduling (проверить indexer)
-A2v10.Scheduling.Commands
-A2v10.Services
-A2v10.ViewEngine.Xaml
-A2v10.Xaml.Report
+﻿2026-04-21 (next: 8635)
 
 !Workflow.Module (scheduling, workflow.engine)
 

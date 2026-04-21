@@ -79,6 +79,8 @@ app.modules['std:signalR'] = function () {
 			hasLicense: Boolean,
 			profileText: String,
 			licenseText: String,
+			enableDark: Boolean,
+			isDark: Boolean,
 			logo: String
 		},
 		computed: {
@@ -96,6 +98,11 @@ app.modules['std:signalR'] = function () {
 			license() {
 				const dlgData = { promise: null, rd: true, raw: true };
 				eventBus.$emit('modal', '/viewlicense', dlgData);
+			},
+			async setTheme(theme) {
+				let res = await fetch(`/account/darkmode?theme=${theme}`, { method: 'POST' });
+				if (res.ok)
+					window.location.reload();
 			}
 		},
 		mounted() {
