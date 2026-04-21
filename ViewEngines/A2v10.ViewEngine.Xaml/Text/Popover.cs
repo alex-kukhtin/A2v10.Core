@@ -71,7 +71,12 @@ public class Popover : Inline
         po.AddCssClass("po-" + Placement.ToString().ToKebabCase());
         if (Background != PopoverBackgroundStyle.Default)
             po.AddCssClass("po-" + Background.ToString().ToKebabCase());
-        RenderIcon(context, Icon);
+
+        var iconBind = GetBinding(nameof(Icon));
+        if (iconBind != null)   
+            po.MergeAttribute(":icon", iconBind.GetPathFormat(context));
+        else if (Icon != Icon.NoIcon)
+            po.MergeAttribute("icon", Icon.ToString().ToKebabCase());
         MergeBindingAttributeString(po, context, "content", nameof(Text), Text, MaxChars);
         if (OffsetX != null)
             po.MergeAttribute("offset-x", OffsetX.Value);
@@ -108,6 +113,7 @@ public class Popover : Inline
             po.MergeAttribute("top", Top.Value);
 
         po.RenderStart(context);
+
         var cntBind = GetBinding(nameof(Content));
         if (cntBind != null)
         {
