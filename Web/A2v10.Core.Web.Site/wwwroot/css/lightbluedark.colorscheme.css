@@ -27,7 +27,7 @@
   --hoverBkLight: #35363c;
   --activeBkLight: #3f495a;
   /*виділені рядки в таблицях*/
-  --dialogHeaderBkColor: #324b67;
+  --dialogHeaderBkColor: #404249;
   --dialogHeaderBkColorDark: #1e1f22;
   --dialog-footer-bg: #2b2d31;
   --table-header-bg: #2b2d31;
@@ -71,13 +71,11 @@
   /* сіра кнопка - бекграунд */
   --primary-base: #60AAFD;
   --warning-base: #F0B232;
-  --danger-base: #ff5151;
+  --danger-base: #d05353;
   --success-base: #23A55A;
   --info-base: #2a61a1;
-  --invalid-text: #ff5151;
   --invalid-bg: #2B2D31;
-  --invalid-brd: #ff5151;
-  --invalid-ctrl: #1E1F22;
+  --invalid-ctrl: #2B2D31;
   --scroll-bg: #2B2D31;
   --scroll-thumb: #1E1F22;
   --border-color: #2B2D31;
@@ -101,7 +99,7 @@
   --tag-magenta: #b651a2;
   --tag-olive: #96b653;
   --tag-teal: #00b5ad;
-  --tag-salmon: salmon;
+  --tag-salmon: #e9967a;
   --tag-pink: hotpink;
   --tag-purple: mediumpurple;
   --menu-shadow: 0 0 0 1px #404249, 0 5px 20px 0 rgba(0, 0, 0, 0.2);
@@ -115,13 +113,6 @@ table.sheet tr.row-header {
 }
 .card {
   background-color: var(--bgMenu);
-}
-.a2-list,
-.grid,
-.a2-table,
-.page-content,
-.modal-body {
-  scrollbar-color: var(--neutral400) var(--neutral100);
 }
 .mdi-navbar .mdi-menu {
   box-shadow: var(--menu-shadow);
@@ -137,13 +128,13 @@ table.sheet tr.row-header {
   border: 2px solid var(--neutral300);
   /* для кнопок пагінації*/
 }
-.a2-pager button[disabled] {
+.a2-pager2 button[disabled] {
   color: var(--text-disabled-on-light);
 }
-.a2-pager button[disabled]:hover {
+.a2-pager2 button[disabled]:hover {
   background-color: var(--neutral300);
 }
-.dark .a2-pager button {
+.dark .a2-pager2 button {
   border: 2px solid var(--activeBk);
   /*бордер для активної сірої кнопки*/
 }
@@ -158,7 +149,7 @@ button {
   color: var(--input-text);
 }
 .kanban .kanban-trash {
-  color: var(--invalid-text);
+  color: var(--danger-base);
 }
 .tag-label {
   background-color: #636674;

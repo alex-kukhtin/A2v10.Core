@@ -1057,7 +1057,7 @@ h5,
 .a2-table,
 .page-content,
 .modal-body {
-  scrollbar-color: var(--neutral500) var(--neutral300);
+  scrollbar-color: var(--neutral400) var(--neutral100);
 }
 ::-webkit-scrollbar-thumb {
   background-color: var(--neutral400);
@@ -1287,7 +1287,7 @@ h5,
 }
 .text-color-danger,
 .text-color-red {
-  color: var(--invalid-text);
+  color: var(--danger-base);
 }
 .text-color-green {
   color: #3EA055;
@@ -1314,7 +1314,7 @@ h5,
   color: #3EA055;
 }
 .span-sum.out {
-  color: var(--invalid-text);
+  color: var(--danger-base);
 }
 .span-sum.inout {
   color: #555;
@@ -2028,8 +2028,8 @@ pre.a2-code {
   font-size: 0.95rem;
   padding: 4px 6px;
   background-color: var(--invalid-bg);
-  color: var(--invalid-text);
-  border: 1px solid var(--invalid-brd);
+  color: var(--danger-base);
+  border: 1px solid var(--danger-base);
   box-shadow: 1px 4px 10px rgba(169, 68, 66, 0.3);
   white-space: pre-line;
 }
@@ -2090,37 +2090,33 @@ pre.a2-code {
   padding: 2px 6px 4px 6px;
   border-radius: 4px;
   background-color: var(--invalid-bg);
-  color: var(--invalid-text);
-  border: 1px solid var(--invalid-brd);
-  margin-top: 8px;
+  color: var(--danger-base);
+  border: 1px solid var(--danger-base);
+  margin-top: 9px;
   text-align: left;
   box-shadow: 1px 4px 10px rgba(169, 68, 66, 0.3);
   z-index: 1030;
   line-height: 1.2em;
   font-weight: normal;
   font-style: normal;
-}
-.control-group .validator:before,
-.control-group .validator:after {
-  content: '';
-  position: absolute;
-  bottom: 0;
+  display: block;
 }
 .control-group .validator:before {
-  left: 7.5px;
-  bottom: auto;
-  border: 8px solid transparent;
-  top: -8px;
-  border-bottom: 8px solid var(--invalid-brd);
-  border-top-width: 0;
+  content: '';
+  position: absolute;
+  background-color: var(--invalid-bg);
+  border: 1px solid var(--danger-base);
+  width: 10px;
+  height: 10px;
+  transform: rotate(45deg);
+  z-index: -1;
 }
-.control-group .validator:after {
-  bottom: auto;
-  top: -6.5px;
-  left: 8.5px;
-  border: 7px solid transparent;
-  border-bottom: 7px solid var(--invalid-bg);
-  border-top-width: 0;
+.control-group .validator:before {
+  border-width: 1px 0 0 1px;
+  bottom: 100%;
+  translate: 0 45%;
+  left: 12px;
+  right: auto;
 }
 .control-group .validator .error,
 .control-group .validator .warning,
@@ -2144,86 +2140,41 @@ pre.a2-code {
   top: auto;
   bottom: 100%;
   margin-top: 0;
-  margin-bottom: 8px;
+  margin-bottom: 9px;
 }
 .control-group .validator.top-left:before {
   top: 100%;
-  left: 7.5px;
-  margin-bottom: -8px;
-  border-top: 8px solid var(--invalid-brd);
-  border-bottom-width: 0;
-}
-.control-group .validator.top-left:after {
-  top: 100%;
-  left: 8.5px;
-  margin-bottom: -7px;
-  border-top: 7px solid var(--invalid-bg);
-  border-bottom-width: 0;
-}
-.control-group .validator.bottom-left {
-  /*
-		margin-top: @validator-arrow-size;
-		margin-bottom: 0;
-
-		&:before {
-			bottom: auto;
-			top: -@validator-arrow-size;
-			border-bottom: @validator-arrow-size solid @danger-brd-color;
-			border-top-width: 0;
-		}
-
-		&:after {
-			bottom: auto;
-			top: -6.5px;
-			border-bottom: 7px solid @danger-bg-color;
-			border-top-width: 0;
-		}
-		*/
+  left: 12px;
+  border-width: 0 1px 1px 0;
+  translate: 0 -45%;
 }
 .control-group .validator.top-right {
   left: auto;
   right: 0;
   bottom: 100%;
   top: auto;
-  margin-bottom: 8px;
+  margin-bottom: 9px;
 }
 .control-group .validator.top-right:before {
-  right: 8px;
+  right: 12px;
   left: auto;
   top: 100%;
-  border-top: 8px solid var(--invalid-brd);
-  border-bottom-width: 0;
-}
-.control-group .validator.top-right:after {
-  top: 100%;
-  right: 9px;
-  left: auto;
-  border-top: 7px solid var(--invalid-bg);
-  border-bottom-width: 0;
+  translate: 0 -45%;
+  border-width: 0 1px 1px 0;
 }
 .control-group .validator.bottom-right {
   top: 100%;
   bottom: auto;
   left: auto;
   right: 0;
-  margin-top: 8px;
+  margin-top: 9px;
   margin-bottom: 0;
 }
 .control-group .validator.bottom-right:before {
-  bottom: auto;
-  top: -8px;
-  border-bottom: 8px solid var(--invalid-brd);
-  border-top-width: 0;
-  right: 8px;
+  right: 12px;
   left: auto;
-}
-.control-group .validator.bottom-right:after {
-  bottom: auto;
-  top: -6.5px;
-  border-bottom: 7px solid var(--invalid-bg);
-  border-top-width: 0;
-  right: 9px;
-  left: auto;
+  translate: 0 45%;
+  border-width: 1px 0 0 1px;
 }
 .control-group input,
 .control-group select,
@@ -2409,13 +2360,13 @@ pre.a2-code {
 .control-group.required label:after {
   content: '\2731';
   display: inline-block;
-  color: var(--invalid-brd);
+  color: var(--danger-base);
   margin-left: 3px;
   vertical-align: 1px;
   font-size: 75%;
 }
 .control-group.invalid label {
-  color: var(--invalid-text);
+  color: var(--danger-base);
 }
 .control-group.invalid:hover .validator,
 .control-group.invalid .input-group.focus .validator {
@@ -2427,7 +2378,7 @@ pre.a2-code {
   z-index: auto;
 }
 .control-group.invalid .input-group {
-  border-color: var(--invalid-brd) !important;
+  border-color: var(--danger-base) !important;
   background-color: var(--invalid-ctrl) !important;
   z-index: auto;
 }
@@ -2436,10 +2387,10 @@ pre.a2-code {
   position: absolute;
   right: 0;
   top: 0;
-  border: 4px solid var(--invalid-text);
+  border: 4px solid var(--danger-base);
   border-left-color: transparent;
   border-bottom-color: transparent;
-  border-radius: 0 4px 0 0;
+  border-radius: 0 2px 0 0;
 }
 .control-group.invalid .input-group .control {
   background-color: var(--invalid-ctrl);
@@ -2515,7 +2466,7 @@ pre.a2-code {
 .a2-label.required:after {
   content: '\2731';
   display: inline-block;
-  color: var(--invalid-brd);
+  color: var(--danger-base);
   margin-left: 3px;
   vertical-align: 1px;
   font-size: 75%;
@@ -2595,10 +2546,10 @@ pre.a2-code {
 }
 .static-validator {
   background-color: var(--invalid-bg);
-  color: var(--invalid-text);
+  color: var(--danger-base);
   font-size: 96%;
   padding: 2px 6px 4px 6px;
-  border: 1px solid var(--invalid-brd);
+  border: 1px solid var(--danger-base);
   text-align: left;
   box-shadow: 1px 4px 10px rgba(169, 68, 66, 0.3);
   line-height: 1.2em;
@@ -6795,7 +6746,7 @@ table.sheet tr.danger,
 table.sheet tr.red,
 table.sheet tr.error {
   background-color: rgba(254, 220, 220, 0.25) !important;
-  color: var(--invalid-text);
+  color: var(--danger-base);
 }
 table.sheet tr.warning,
 table.sheet tr.orange {
@@ -6923,8 +6874,8 @@ table > colgroup col.blue {
   position: relative;
   padding: 0;
   background-color: var(--invalid-bg);
-  color: var(--invalid-text);
-  border: 1px solid var(--invalid-brd);
+  color: var(--danger-base);
+  border: 1px solid var(--danger-base);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
   user-select: text;
 }
@@ -6935,7 +6886,7 @@ table > colgroup col.blue {
   font-size: 1.2rem;
 }
 .app-exception .stack-trace {
-  border-top: 1px solid var(--invalid-text);
+  border-top: 1px solid var(--danger-base);
   background-color: var(--invalid-bg);
   overflow: auto;
   padding: 10px;
@@ -6945,9 +6896,9 @@ table > colgroup col.blue {
 .app-exception .link {
   padding: 0.5rem 1rem;
   display: inline-block;
-  border: 1px solid var(--invalid-text);
+  border: 1px solid var(--danger-base);
   font-weight: 500;
-  color: var(--invalid-text);
+  color: var(--danger-base);
   margin-bottom: 1rem;
 }
 .app-exception .link:hover {
@@ -7015,8 +6966,8 @@ table > colgroup col.blue {
   padding: 6px;
   display: inline-block;
   background-color: var(--invalid-bg);
-  border: 1px solid var(--invalid-brd);
-  color: var(--invalid-text);
+  border: 1px solid var(--danger-base);
+  color: var(--danger-base);
 }
 .not-supported {
   width: 400px;
@@ -7024,8 +6975,8 @@ table > colgroup col.blue {
   padding: 20px;
   text-align: center;
   background-color: var(--invalid-bg);
-  color: var(--invalid-text);
-  border: 1px solid var(--invalid-brd);
+  color: var(--danger-base);
+  border: 1px solid var(--danger-base);
   position: absolute;
   left: 0;
   top: 20px;
@@ -8800,10 +8751,10 @@ td.vert > .vcell {
   color: #478fb1;
 }
 .debug-panel .debug-trace .trace-item-body.exception .badge {
-  background-color: var(--invalid-text);
+  background-color: var(--danger-base);
 }
 .debug-panel .debug-trace .trace-item-body.exception .title {
-  color: var(--invalid-text);
+  color: var(--danger-base);
 }
 .debug-panel .debug-trace ul {
   margin: 0 5px 0 10px;

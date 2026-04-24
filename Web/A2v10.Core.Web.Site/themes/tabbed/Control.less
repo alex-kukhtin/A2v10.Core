@@ -3,7 +3,8 @@
 
 @hover-color: var(--menu-hover);
 
-@validator-arrow-size: 8px;
+@validator-arrow-offset-x:12px;
+@validator-arrow-margin: 9px;
 
 // glow
 @focus-box-shadow:  0 0 1px 1px rgba(13, 130, 248, 0.3);
@@ -96,36 +97,32 @@
 		background-color: @danger-bg-color;
 		color: @danger-txt-color;
 		border: 1px solid @danger-brd-color;
-		margin-top: @validator-arrow-size;
+		margin-top: @validator-arrow-margin;
 		text-align: left;
 		box-shadow: @dnager-validator-shadow;
 		z-index: @validator-index;
 		line-height: 1.2em;
 		font-weight: normal;
 		font-style: normal;
+		display: block; // FOR DEBUGGING!!!
 
-		&:before, &:after {
+		&:before {
 			content: '';
 			position: absolute;
-			bottom: 0;
+			background-color: @danger-bg-color;
+			border: 1px solid @danger-base-color;
+			width: 10px;
+			height: 10px;
+			transform: rotate(45deg);
+			z-index: -1;
 		}
 
 		&:before {
-			left: 7.5px;
-			bottom: auto;
-			border: @validator-arrow-size solid transparent;
-			top: -@validator-arrow-size;
-			border-bottom: @validator-arrow-size solid @danger-brd-color;
-			border-top-width: 0;
-		}
-
-		&:after {
-			bottom: auto;
-			top: -6.5px;
-			left: 8.5px;
-			border: 7px solid transparent;
-			border-bottom: 7px solid @danger-bg-color;
-			border-top-width: 0;
+			border-width: 1px 0 0 1px;
+			bottom: 100%;
+			translate: 0 45%;
+			left: @validator-arrow-offset-x;
+			right: auto;
 		}
 
 		.error, .warning, .info {
@@ -148,100 +145,51 @@
 		}
 	}
 
-	.validator.top-left {
-		top: auto;
-		bottom: 100%;
-		margin-top: 0;
-		margin-bottom: @validator-arrow-size;
+		.validator.top-left {
+			top: auto;
+			bottom: 100%;
+			margin-top: 0;
+			margin-bottom: @validator-arrow-margin;
 
-		&:before {
-			top: 100%;
-			left: 7.5px;
-			margin-bottom: -@validator-arrow-size;
-			border-top: @validator-arrow-size solid @danger-brd-color;
-			border-bottom-width: 0
+			&:before {
+				top: 100%;
+				left: @validator-arrow-offset-x;
+				border-width: 0 1px 1px 0;
+				translate: 0 -45%;
+			}
 		}
 
-		&:after {
-			top: 100%;
-			left: 8.5px;
-			margin-bottom: -7px;
-			border-top: 7px solid @danger-bg-color;
-			border-bottom-width: 0;
-		}
-	}
-
-	.validator.bottom-left {
-		/*
-		margin-top: @validator-arrow-size;
-		margin-bottom: 0;
-
-		&:before {
-			bottom: auto;
-			top: -@validator-arrow-size;
-			border-bottom: @validator-arrow-size solid @danger-brd-color;
-			border-top-width: 0;
-		}
-
-		&:after {
-			bottom: auto;
-			top: -6.5px;
-			border-bottom: 7px solid @danger-bg-color;
-			border-top-width: 0;
-		}
-		*/
-	}
-
-	.validator.top-right {
-		left: auto;
-		right: 0;
-		bottom: 100%;
-		top: auto;
-		margin-bottom: @validator-arrow-size;
-
-		&:before {
-			right: @validator-arrow-size;
+		.validator.top-right {
 			left: auto;
+			right: 0;
+			bottom: 100%;
+			top: auto;
+			margin-bottom: @validator-arrow-margin;
+
+			&:before {
+				right: @validator-arrow-offset-x;
+				left: auto;
+				top: 100%;
+				translate: 0 -45%;
+				border-width: 0 1px 1px 0;
+			}
+		}
+
+		.validator.bottom-right {
 			top: 100%;
-			border-top: @validator-arrow-size solid @danger-brd-color;
-			border-bottom-width: 0
-		}
-
-		&:after {
-			top: 100%;
-			right: @validator-arrow-size + 1px;
-			left: auto;
-			border-top: 7px solid @danger-bg-color;
-			border-bottom-width: 0;
-		}
-	}
-
-	.validator.bottom-right {
-		top: 100%;
-		bottom: auto;
-		left: auto;
-		right: 0;
-		margin-top: @validator-arrow-size;
-		margin-bottom: 0;
-
-		&:before {
 			bottom: auto;
-			top: -@validator-arrow-size;
-			border-bottom: @validator-arrow-size solid @danger-brd-color;
-			border-top-width: 0;
-			right: @validator-arrow-size;
 			left: auto;
-		}
+			right: 0;
+			margin-top: @validator-arrow-margin;
+			margin-bottom: 0;
 
-		&:after {
-			bottom: auto;
-			top: -6.5px;
-			border-bottom: 7px solid @danger-bg-color;
-			border-top-width: 0;
-			right: @validator-arrow-size + 1px;
-			left: auto;
+			&:before {
+				right: @validator-arrow-offset-x;
+				left: auto;
+				translate: 0 45%;
+				border-width: 1px 0 0 1px;
+			}
 		}
-	}
 
 
 	input, select, textarea {
@@ -313,9 +261,9 @@
 				min-height: @control-height;
 			}
 
-			> span:focus {
-				outline-style: none;
-			}
+				> span:focus {
+					outline-style: none;
+				}
 		}
 
 		> .popover-wrapper {
@@ -364,8 +312,8 @@
 
 	&.has-value {
 		.input-group {
-			background-color:#f0f7fc;
-			font-weight:500;
+			background-color: #f0f7fc;
+			font-weight: 500;
 		}
 	}
 
@@ -524,7 +472,7 @@
 			border: 4px solid @danger-txt-color;
 			border-left-color: transparent;
 			border-bottom-color: transparent;
-			border-radius: 0 @control-brd-radius 0 0;
+			border-radius: 0 2px 0 0;
 		}
 
 		.control {

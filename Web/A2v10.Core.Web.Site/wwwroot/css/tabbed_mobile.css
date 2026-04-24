@@ -1054,7 +1054,7 @@ h5,
 .a2-table,
 .page-content,
 .modal-body {
-  scrollbar-color: var(--neutral500) var(--neutral300);
+  scrollbar-color: var(--neutral400) var(--neutral100);
 }
 ::-webkit-scrollbar-thumb {
   background-color: var(--neutral400);

@@ -20,7 +20,7 @@
     --hoverBkLight: #35363c;
     --activeBkLight: #3f495a; /*виділені рядки в таблицях*/
     //
-    --dialogHeaderBkColor: #324b67;
+    --dialogHeaderBkColor: #404249;
     --dialogHeaderBkColorDark: #1e1f22;
     --dialog-footer-bg: #2b2d31;
     //
@@ -63,14 +63,12 @@
     --default-base: #4E5058; /* сіра кнопка - бекграунд */
     --primary-base: #60AAFD;
     --warning-base: #F0B232;
-    --danger-base: #ff5151;
+    --danger-base: #d05353;
     --success-base: #23A55A;
     --info-base: #2a61a1;
     //
-    --invalid-text: #ff5151;
     --invalid-bg: #2B2D31;
-    --invalid-brd: #ff5151;
-    --invalid-ctrl: #1E1F22;
+    --invalid-ctrl: #2B2D31;
     --scroll-bg: #2B2D31;
     --scroll-thumb: #1E1F22;
     --border-color: #2B2D31;
@@ -96,7 +94,7 @@
     --tag-olive: #96b653;
     //
     --tag-teal: #00b5ad;
-    --tag-salmon: salmon;
+    --tag-salmon: #e9967a;
     --tag-pink: hotpink;
     --tag-purple: mediumpurple;
     //
@@ -116,13 +114,9 @@
         background-color: var(--bgMenu);
     }
 
-    .a2-list, .grid, .a2-table, .page-content, .modal-body {
-        scrollbar-color: var(--neutral400) var(--neutral100);
+    .mdi-navbar .mdi-menu {
+        box-shadow: var(--menu-shadow);
     }
-
-.mdi-navbar .mdi-menu {
-    box-shadow: var(--menu-shadow);
-}
 
     .taskpad .taskpad-collapse-handle {
         background-color: var(--nav300); /*замінтии для обох тем, щоб було однаково*/
@@ -157,7 +151,7 @@
     }
 
     .kanban .kanban-trash {
-        color: var(--invalid-text);
+        color: var(--danger-base);
     }
 
     .tag-label {

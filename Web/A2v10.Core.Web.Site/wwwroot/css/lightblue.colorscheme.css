@@ -61,9 +61,7 @@
   --danger-base: #da533f;
   --success-base: #5db750;
   --info-base: #60bbe5;
-  --invalid-text: #a94442;
   --invalid-bg: #f2dede;
-  --invalid-brd: #dca7a7;
   --invalid-ctrl: #fff8f8;
   --tag_seagreen: darkseagreen;
   --tag-gold: #eac500;
@@ -75,4 +73,5 @@
   --tag-purple: mediumpurple;
   --menu-shadow: 3px 3px 10px 0 rgba(174, 174, 174, 0.5), 0 5px 40px 0 rgba(0, 0, 0, 0.15);
   --progress-bar-color: gold;
+  --scrollbar-color: var(--neutral400) var(--neutral100);
 }
