@@ -128,13 +128,13 @@ table.sheet tr.row-header {
   border: 2px solid var(--neutral300);
   /* для кнопок пагінації*/
 }
-.a2-pager2 button[disabled] {
+.a2-pager button[disabled] {
   color: var(--text-disabled-on-light);
 }
-.a2-pager2 button[disabled]:hover {
+.a2-pager button[disabled]:hover {
   background-color: var(--neutral300);
 }
-.dark .a2-pager2 button {
+.dark .a2-pager button {
   border: 2px solid var(--activeBk);
   /*бордер для активної сірої кнопки*/
 }
