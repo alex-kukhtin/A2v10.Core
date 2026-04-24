@@ -18,6 +18,7 @@
 @modal-brd-radius: @dialog-brd-radius;
 
 .modal-stack {
+	--btn-color: var(--text);
 	position: fixed;
 	z-index: @modal-stack-index;
 
@@ -103,13 +104,13 @@
 			}
 		}
 
-		.modal-window.modal-small {
-			width: @modal-width-small;
-		}
+			.modal-window.modal-small {
+				width: @modal-width-small;
+			}
 
-		.modal-window.modal-large {
-			width: @modal-width-large;
-		}
+			.modal-window.modal-large {
+				width: @modal-width-large;
+			}
 
 		.load-indicator {
 			top: 2.8rem;
@@ -134,6 +135,7 @@
 }
 
 .inline-modal-wrapper {
+	--btn-color: var(--text);
 	position: fixed;
 	left: 0;
 	top: 0;
@@ -193,7 +195,7 @@
 		float: right;
 		width: @modal-header-line;
 		height: @modal-header-line;
-		border-radius:@control-brd-radius;
+		border-radius: @control-brd-radius;
 
 
 		&:not([disabled]) {
@@ -210,13 +212,13 @@
 
 	.btn-help {
 		float: right;
-		color: @text-color-opacity40;
+		color: var(--btn-color);
 		width: @modal-header-line;
 		height: @modal-header-line;
 		text-align: center;
 		padding-top: 2px;
 		border-radius: @control-brd-radius;
-		margin:0 2px;
+		margin: 0 2px;
 
 		.ico {
 			font-size: 120%;
@@ -406,6 +408,10 @@
 }
 
 .dark {
+	.modal-stack, .inline-modal-wrapper {
+		--btn-color: var(--text);
+	}
+
 	.modal-window {
 		outline: 2px solid var(--dialogHeaderBkColor);
 	}

@@ -21,7 +21,6 @@
   --table-header-bg: #f3f5fc;
   --table-header-bg-hover: #ebedf5;
   --table-header-sort: #f3f5fc3f;
-  --neutral900: #373744;
   --neutral800: #474752;
   --neutral700: #8d8f98;
   --neutral500: #b0b2ba;
@@ -35,7 +34,6 @@
   --text-header: #00000090;
   --text-label: #000000d0;
   --nav900: #373744;
-  /*neutral900*/
   --nav800: #474752;
   /*neutral800*/
   --nav700: #8d8f98;
@@ -67,4 +65,14 @@
   --invalid-bg: #f2dede;
   --invalid-brd: #dca7a7;
   --invalid-ctrl: #fff8f8;
+  --tag_seagreen: darkseagreen;
+  --tag-gold: #eac500;
+  --tag-magenta: darkmagenta;
+  --tag-olive: #b5cc18;
+  --tag-teal: #00b5ad;
+  --tag-salmon: salmon;
+  --tag-pink: hotpink;
+  --tag-purple: mediumpurple;
+  --menu-shadow: 3px 3px 10px 0 rgba(174, 174, 174, 0.5), 0 5px 40px 0 rgba(0, 0, 0, 0.15);
+  --progress-bar-color: gold;
 }

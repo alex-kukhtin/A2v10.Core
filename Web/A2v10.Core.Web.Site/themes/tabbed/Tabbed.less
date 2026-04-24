@@ -112,6 +112,7 @@
 }
 
 .mdi-tabs-container {
+	--active-box-shadow: none;
 	grid-area: tabs;
 	display: flex;
 	background-color: @light0;
@@ -227,6 +228,7 @@
 				box-shadow: 0 0 5px #bbb;
 				border-right-color: transparent;
 				z-index: 2;
+				box-shadow: var(--active-box-shadow);
 
 				.close {
 					visibility: visible;
@@ -251,7 +253,7 @@
 			padding: 4px;
 			margin: 0;
 			right: 0;
-			background-color: var(--bgWhite);
+			background-color: var(--bgMenu);
 			z-index: 71;
 			min-width: 250px;
 			border-radius: @control-brd-radius;
@@ -627,5 +629,15 @@
 
 	> .a2-include {
 		height: 100%;
+	}
+}
+
+.dark {
+	.mdi-navbar {
+		border-right: 1px solid var(--neutral300);
+	}
+
+	.mdi-tabs-container {
+		--active-box-shadow: 0 0 0 2px var(--neutral500);
 	}
 }

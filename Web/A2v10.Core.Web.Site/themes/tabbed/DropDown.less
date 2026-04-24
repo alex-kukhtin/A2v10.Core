@@ -13,6 +13,7 @@ TODO:
 .menu {
 	top: 100%;
 	min-width: 160px; //TODO:
+	background-color: @bk-menu;
 	box-shadow: @dropdown-shadow;
 	border: 1px solid @dropdown-brd-color;
 	font-weight: normal;
@@ -56,14 +57,14 @@ TODO:
 			opacity: 0.5;
 		}
 
-		&[disabled]:hover {
-			background-color: transparent;
-		}
+			&[disabled]:hover {
+				background-color: transparent;
+			}
 	}
 
-	.dropdown-item:hover {
-		background-color: @menu-hover-color;
-	}
+		.dropdown-item:hover {
+			background-color: @menu-hover-color;
+		}
 
 	.divider {
 		flex-grow: 0;
@@ -86,8 +87,6 @@ TODO:
 	display: none;
 	position: absolute;
 	z-index: @popup-index;
-	background-color: @bk-menu;
-	border-radius:2px;
 	width: auto;
 	height: auto;
 	left: 0;

@@ -1,67 +1,239 @@
-﻿:root {
-	color-scheme: dark;
-	--bgPrimary: #0d1117;
-	--bgControl: #000;
-	--bgMenu: #010409;
-	--bgSheet: #0d1117;
-	--bgWhite: #0d1117;
-	--text: #f0f6fc;
-	--fontSize: 14px;
-	--themeLight: hsl(196 70% 54% / 1);
-	--neutralBkDark: #e5e4e3;
-	--neutralBk: #f3f2f1;
-	--link: #58a6ff;
-	--linkDark: #8ac2ff;
-	--hoverBk: #fdf4bf;
-	--activeBk: #15557f;
-	--hoverBkLight: #fdf4bf;
-	--activeBkLight: #15557f;
-	--dialogHeaderBkColor: #316a83;
-	--dialogHeaderBkColorDark: #ede193;
-	--dialog-footer-bg: hsl(0 0% 20% / 1);
-	--table-header-bg: #474752;
-	--table-header-bg-hover: #373744;
-	--table-header-sort: #585a5385;
-	--neutral900: #373744;
-	--neutral800: #474752;
-	--neutral700: #8d8f98;
-	--neutral500: #b0b2ba;
-	--neutral400: #b0b2ba;
-	--neutral300: #999;
-	--neutral100: #8d8f98;
-	--neutral50: #222222;
-	--icon-color: #b1b8c1;
-	--menu-hover: #5a5a68;
-	--text-light: #5a5a68;
-	--text-header: #aaa;
-	--text-label: #aaa;
-	--nav900: #373744;
-	--nav800: #474752;
-	--nav700: #8d8f98;
-	--nav300: #474752;
-	--nav100: #575764;
-	--nav-bg: #474752;
-	--nav-icon: #ffffffc7;
-	--nav-text: #ffffffd0;
-	--nav-line: #ffffff7d;
-	--nav-accent: gold;
-	--mdi-menu-bg: #373744;
-	--mdi-menu-text: #ffffffe8;
-	--mdi-menu-hover: #474752;
-	--mdi-menu-light: #ffffff9f;
-	--mdi-menu-line: #ffffff9f;
-	--default-base: #8f92a3;
-	--primary-base: #3783e1;
-	--warning-base: #ffb74d;
-	--danger-base: #da533f;
-	--success-base: #5db750;
-	--info-base: #60bbe5;
-	//
-	--invalid-text: #dc1616;
-	--invalid-bg: #4e0905;
-	--invalid-brd: #b91c1c;
-	--invalid-ctrl: #3b1a1f;
-	//
-	--scroll-bg: #373744;
-	--scroll-thumb: #474752;
+:root {
+    color-scheme: dark;
+    //
+    --bgPrimary: #2b2d31; /*норм - фон основної робочої області*/
+    --bgControl: #1e1f22; /*фон таблиць, полів, кнопок - має лишатись таким самим темним*/
+    --bgMenu: #383a40; /*відредагонвано - фон заголовків канбанів*/
+    --bgSheet: #2b2d31; /*змінила на колір основної робочої обасті*/
+    --bgWhite: #1e1f22; /*колір фону під таблицею у взаєморозрахунках з контрагентами- змінила на колір інпутів, також використовується на фоні поля вводу фільра на селекторі*/
+    //
+    --text: #b5bac1; /*відредагувала, контраст 8.2 на основному фоні*/
+    --fontSize: 14px;
+    --input-text: #e5eaf1;
+    --themeLight: #60aafd; /*кольори заголовків на деяких текстових блоках - не міняла, прикольний колір бренду*/
+    --neutralBkDark: #e3e5e8;
+    --neutralBk: #ebedef;
+    --link: #60aafd;
+    --linkDark: #8ac2ff;
+    --hoverBk: #35363c; /*сіра кнопка фон ховер*/
+    --activeBk: #3f495a; /*сіра кнопка бордер активний*/
+    --hoverBkLight: #35363c;
+    --activeBkLight: #3f495a; /*виділені рядки в таблицях*/
+    //
+    --dialogHeaderBkColor: #324b67;
+    --dialogHeaderBkColorDark: #1e1f22;
+    --dialog-footer-bg: #2b2d31;
+    //
+    --table-header-bg: #2b2d31;
+    --table-header-bg-hover: #35363c;
+    --table-header-sort: #2b2d31; /*підсвітка комірок в таблиці- зробила без прозорості - колір як основний фон*/
+    --table-accent: #3d2c1a; /*нова змінна - для теплого кольору в таблиці - сума...*/
+    //
+    --neutral800: #dbdee1;
+    --neutral700: #8e9297;
+    --neutral500: #6d6f78;
+    --neutral400: #4e5058;
+    --neutral300: #404249;
+    --neutral100: #2b2d31;
+    --neutral50: #1e1f22;
+    //
+    --icon-color: #b5bac1;
+    //
+    --menu-hover: #2c2d31; /*ховер в меню та на рядках в таблиці*/
+    --text-light: #8e9297;
+    --text-header: #b5bac1;
+    --text-label: #b5bac1;
+    //
+    --nav900: #2b2d31; /*верхнє меню - зробила під колір основноїобласті щоб зменшити різноманіття*/
+    --nav800: #2b2d31;
+    --nav700: #8e9297;
+    --nav300: #404249;
+    --nav100: #2b2d31; /*таб меню - зробила під колір основноїобласті щоб зменшити різноманіття*/
+    --nav-bg: #2b2d31; /*бокове меню - зробила під колір основноїобласті щоб зменшити різноманіття*/
+    --nav-icon: #b5bac1;
+    --nav-text: #dbdee1;
+    --nav-line: #4e5058;
+    --nav-accent: #60AAFD;
+    //
+    --mdi-menu-bg: #2B2D31;
+    --mdi-menu-text: #DBDEE1;
+    --mdi-menu-hover: #35363C;
+    --mdi-menu-light: #B5BAC1;
+    --mdi-menu-line: #4E5058;
+    --default-base: #4E5058; /* сіра кнопка - бекграунд */
+    --primary-base: #60AAFD;
+    --warning-base: #F0B232;
+    --danger-base: #ff5151;
+    --success-base: #23A55A;
+    --info-base: #2a61a1;
+    //
+    --invalid-text: #ff5151;
+    --invalid-bg: #2B2D31;
+    --invalid-brd: #ff5151;
+    --invalid-ctrl: #1E1F22;
+    --scroll-bg: #2B2D31;
+    --scroll-thumb: #1E1F22;
+    --border-color: #2B2D31;
+    --border-strong: #404249;
+    --input-bg: #1E1F22;
+    --input-border: #1E1F22;
+    --input-focus-border: #60AAFD;
+    //
+    --button-primary-bg: #60AAFD;
+    --button-primary-hover: #4B95E8;
+    --button-primary-text: #ffffff;
+    --button-secondary-bg: #4e5058;
+    --button-secondary-hover: #6D6F78;
+    //
+    --text-muted: #6D6F78;
+    --text-disabled: #4E5058;
+    --text-disabled-on-light: #7b7c82; /*нова змінна*/
+    --shadow: 0 5px 20px 0 rgba(0, 0, 0, 0.20); /*нова змінна- тінь для модалок - якщо можете, замініть скрізь у всіх модалок*/
+    //
+    --tag_seagreen: #7bc17b;
+    --tag-gold: #cca348;
+    --tag-magenta: #b651a2;
+    --tag-olive: #96b653;
+    //
+    --tag-teal: #00b5ad;
+    --tag-salmon: salmon;
+    --tag-pink: hotpink;
+    --tag-purple: mediumpurple;
+    //
+    --menu-shadow: 0 0 0 1px #404249, 0 5px 20px 0 rgba(0, 0, 0, 0.20);
+    --progress-bar-color: #60aafd; // theme light
 }
+
+    table.sheet tr.row-header {
+        background-color: #2c2d31;
+    }
+  
+    .tag-label.white {
+        color: var(--text);
+    }
+
+    .card {
+        background-color: var(--bgMenu);
+    }
+
+    .a2-list, .grid, .a2-table, .page-content, .modal-body {
+        scrollbar-color: var(--neutral400) var(--neutral100);
+    }
+
+.mdi-navbar .mdi-menu {
+    box-shadow: var(--menu-shadow);
+}
+
+    .taskpad .taskpad-collapse-handle {
+        background-color: var(--nav300); /*замінтии для обох тем, щоб було однаково*/
+    }
+
+    .taskpad .taskpad-collapse-handle:hover {
+        background-color: var(--bgControl);
+    }
+
+    .dark .a2-pager button {
+        border: 2px solid var(--neutral300); /* для кнопок пагінації*/
+    }
+
+    .a2-pager button[disabled] {
+        color: var(--text-disabled-on-light);
+    }
+
+    .a2-pager button[disabled]:hover {
+        background-color: var(--neutral300);
+    }
+
+    .dark .a2-pager button {
+        border: 2px solid var(--activeBk); /*бордер для активної сірої кнопки*/
+    }
+
+    .control-group .validator {
+        box-shadow: var(--shadow); /*прибрала червону підсвітку*/
+    }
+
+    input, textarea, select, button {
+        color: var(--input-text);
+    }
+
+    .kanban .kanban-trash {
+        color: var(--invalid-text);
+    }
+
+    .tag-label {
+        background-color: #636674;
+    }
+
+    .tags-control .tags-pane {
+        box-shadow: var(--shadow);
+    }
+
+    .btn .btn-badge {
+        background-color: var(--danger-base);
+    }
+
+    .a2-alert.info {
+        background-color: #2c2d31;
+        border-color: #60AAFD;
+        color: #60AAFD;
+    }
+
+    .a2-alert.warning {
+        background-color: #3b2a0640;
+        border-color: #F0B232;
+        color: #F0B232;
+    }
+
+    table.hover > tbody > tr.active:hover {
+        background-color: var(--hoverBkLight) !important; /*ховер рядків в таблиці - вже є правило з імпортант, треба його прибрати певно*/
+    }
+
+    table.sheet tr.row-total {
+        background-color: var(--table-accent);
+    }
+
+    .dark .a2-table.bk-paper {
+        background-color: var(--table-accent);
+    }
+
+    .input-group > .calendar {
+        box-shadow: var(--shadow);
+    }
+
+    .calendar-pane tbody td.today > a {
+        background-color: #60aafd !important;
+        color: #18191b;
+    }
+
+    .control-group.has-value .input-group {
+        background-color: var(--bgControl);
+    }
+
+    table.sheet tr.group {
+        background-color: #1f2f2c;
+        color: #419e8c;
+    }
+
+    .dashboard-item > .drag-area {
+        background-color: rgb(0 0 0 / 70%);
+    }
+
+    .bind-sum {
+        background-color: rgb(0 0 0 / 14%);
+    }
+
+    .dropdown .dropdown-menu.up-right {
+        box-shadow: var(--shadow);
+    }
+
+    table.sheet tr.row-title td {
+        background-color: inherit; /*бекграунд текста в заголовках звітів вимагає бути таким самим як фон*/
+    }
+
+    table.sheet tr.row-parameter td, table.sheet tr.row-last-parameter td {
+        background-color: inherit; /*бекграунд текста в заголовках звітів вимагає бути таким самим як фон*/
+    }
+    /*уточнення для прозорого кольору колонки
+colgroup
+    background-color: rgb(0 0 0 / 50%);
+*/
