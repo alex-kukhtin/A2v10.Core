@@ -32,7 +32,7 @@ internal class TurnoverReportBuilder(IServiceProvider serviceProvider, TableMeta
              .AddStringFromQuery("@Tab", prms, "Tab");
             foreach (var r in _grouping.Filters)
             {
-                if (r.DataType == ColumnDataType.Operation)
+                if (r.DataType == ColumnType.Operation)
                     dbprms.AddStringFromQuery($"@{r.Column}", prms, r.Column);
                 else
                     dbprms.AddBigIntFromQuery($"@{r.Column}", prms, r.Column);

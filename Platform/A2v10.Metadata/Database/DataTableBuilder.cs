@@ -40,15 +40,23 @@ internal class DataTableBuilder(TableMetadata table, AppMetadata appMeta)
 
     private DataTable CreateDataTable()
     {
+
+        DataColumn CreateColumn(TableColumn f)
+        {
+            var c = new DataColumn(f.Name, f.ClrDataType());
+            if (f.MaxLength != 0 && f.Type == ColumnType.String)
+                c.MaxLength = f.MaxLength;
+            return c;
+        }
+
         var dtable = new DataTable();
 
+        dtable.Columns.Add(new DataColumn("Id", typeof(Int64)));
+
+        foreach (var f in table.DefaultColumns())
+            dtable.Columns.Add(CreateColumn(f));
         foreach (var f in table.Columns.OrderBy(c => c.DbOrder))
-        {
-            var c = new DataColumn(f.Name, f.ClrDataType(appMeta.IdDataType));
-            if (f.MaxLength != 0 && f.DataType == ColumnDataType.String)
-                c.MaxLength = f.MaxLength;
-            dtable.Columns.Add(c);
-        }
+            dtable.Columns.Add(CreateColumn(f));
         return dtable;
     }
     private void AddRow(DataTable dtable, ExpandoObject src)
@@ -91,7 +99,7 @@ internal class DataTableBuilder(TableMetadata table, AppMetadata appMeta)
                     obj = exp.Get<Object>("Id");
                     if (obj is Int64 int64 && int64 == 0)
                         obj = DBNull.Value;
-                    else if (appMeta.IdDataType == ColumnDataType.Uniqueidentifier
+                    else if (appMeta.IdDataType == ColumnType.Uniqueidentifier
                             && obj is String strVal && String.IsNullOrWhiteSpace(strVal))
                         obj = DBNull.Value;
                 }

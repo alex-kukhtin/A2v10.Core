@@ -23,21 +23,21 @@ internal class DatabaseCreator(AppMetadata _meta)
             if (column.Role.HasFlag(TableColumnRole.PrimaryKey))
             {
                 nullable = NOT_NULL;
-                var colDataType = column.DataType;
-                if (colDataType == ColumnDataType.Id)
+                var colDataType = column.Type;
+                if (colDataType == ColumnType.Id)
                     colDataType = _meta.IdDataType;
                 if (!multPrimaryKeys && table.HasSequence) 
                 {
                     var defKey = colDataType switch
                     {
-                        ColumnDataType.Id => $"next value for {table.Schema}.[SQ_{table.Name}]",
-                        ColumnDataType.Uniqueidentifier => "newsequentialid()",
-                        ColumnDataType.Int or ColumnDataType.BigInt => $"next value for {table.Schema}.[SQ_{table.Name}]",
-                        ColumnDataType.Date or ColumnDataType.DateTime => null,
-                        ColumnDataType.String => null,   
-                        ColumnDataType.Reference => null,
-                        ColumnDataType.Enum => null,
-                        _ => throw new InvalidOperationException($"Defaults for {column.DataType} is not supported")
+                        ColumnType.Id => $"next value for {table.Schema}.[SQ_{table.Name}]",
+                        ColumnType.Uniqueidentifier => "newsequentialid()",
+                        ColumnType.Int or ColumnType.BigInt => $"next value for {table.Schema}.[SQ_{table.Name}]",
+                        ColumnType.Date or ColumnType.DateTime => null,
+                        ColumnType.String => null,   
+                        ColumnType.Ref => null,
+                        ColumnType.Enum => null,
+                        _ => throw new InvalidOperationException($"Defaults for {column.Type} is not supported")
                     };
                     if (defKey != null)
                         constraint = $"\r\n       constraint DF_{table.Name}_{column.Name} default({defKey})";
@@ -60,7 +60,7 @@ internal class DatabaseCreator(AppMetadata _meta)
         {
             if (!table.HasSequence)
                 return String.Empty;
-            if (_meta.IdDataType != ColumnDataType.Int && _meta.IdDataType != ColumnDataType.BigInt)
+            if (_meta.IdDataType != ColumnType.Int && _meta.IdDataType != ColumnType.BigInt)
                 return String.Empty;
             return $"""
             ------------------------------------------------
@@ -118,7 +118,7 @@ internal class DatabaseCreator(AppMetadata _meta)
         const String check = "nocheck"; // TODO: ????
         String createReference(TableColumn column)
         {
-            if (column.DataType == ColumnDataType.Operation)
+            if (column.Type == ColumnType.Operation)
             {
                 var opConstraintName = $"FK_{table.Name}_{column.Name}_Operations";
 
@@ -129,7 +129,7 @@ internal class DatabaseCreator(AppMetadata _meta)
                 alter table {table.SqlTableName} {check} constraint {opConstraintName};
                 """;
             }
-            else if (column.DataType == ColumnDataType.Enum)
+            else if (column.Type == ColumnType.Enum)
             {
                 var opConstraintName = $"FK_{table.Name}_{column.Name}_{column.Reference.RefTable}";
 
@@ -163,7 +163,7 @@ internal class DatabaseCreator(AppMetadata _meta)
             alter table {table.SqlTableName} {check} constraint {constraintName};
             """;
         }
-        var refs = table.Columns.Where(c => c.IsReference || c.DataType == ColumnDataType.Operation || c.DataType == ColumnDataType.Enum)
+        var refs = table.Columns.Where(c => c.IsReference || c.Type == ColumnType.Operation || c.Type == ColumnType.Enum)
             .Select(rc => createReference(rc));
         var res = String.Join(Environment.NewLine, refs);
         if (String.IsNullOrEmpty(res.Trim()))

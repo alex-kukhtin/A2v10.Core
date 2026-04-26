@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Concurrent;
@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using A2v10.Infrastructure;
+using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
@@ -16,6 +17,7 @@ public class DatabaseMetadataCache
     private readonly ConcurrentDictionary<String, TableMetadata> _cache = [];
     private readonly ConcurrentDictionary<String, EndpointTableInfo> _endpoints = [];
     private readonly ConcurrentDictionary<String, FormMetadata> _formCache = [];
+    private readonly ConcurrentDictionary<String, UIElement> _xamlFormCache = [];
     private readonly ConcurrentDictionary<String, AppMetadata> _appMetaCache = [];
 
     public void ClearAll()
@@ -41,7 +43,7 @@ public class DatabaseMetadataCache
         if (_cache.TryGetValue(key, out TableMetadata? meta))
             return meta;
         meta = await getMeta(dataSource, schema, table);
-        key = $"{dataSource}:{meta.Schema}:{meta.Name}";
+        //key = $"{dataSource}:{meta.Schema}:{meta.Name}";
         //var globalMeta = await GetGlobalMetaAsync(dataSource, getMeta);
         //meta = meta.MergeGlobal(globalMeta);
         return _cache.GetOrAdd(key, meta);
@@ -73,10 +75,18 @@ public class DatabaseMetadataCache
         //return form; 
         return _formCache.GetOrAdd(dictKey, form);
     }
-
-    public String GetOrAddEndpointPath(String? dataSource, String schema, String table)
+    public async Task<UIElement> GetOrAddXamlFormAsync(String? dataSource, TableMetadata meta, String key,
+         Func<UIElement> getDefaultForm)
     {
-        var path = $"{schema.ToFolder()}/{table}".ToLowerInvariant();
+        var dictKey = $"{dataSource}:{meta.Schema}:{meta.Model}:{key.ToLowerInvariant()}";
+        if (_xamlFormCache.TryGetValue(dictKey, out var form))
+            return form;
+        form = getDefaultForm();
+        return _xamlFormCache.GetOrAdd(dictKey, form);
+    }
+
+    public String GetOrAddEndpointPath(String? dataSource, String path, String schema, String table)
+    {
         _endpoints.TryAdd(path, new EndpointTableInfo(dataSource, schema, table));
         return path;
     }

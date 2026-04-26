@@ -1,11 +1,11 @@
-﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Dynamic;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 
 using A2v10.Data.Core.Extensions;
@@ -21,7 +21,7 @@ internal class MainModelBuilder(BaseModelBuilder _baseModelBuilder)
     protected readonly String? _dataSource = _baseModelBuilder._dataSource;
     protected readonly AppMetadata _appMeta = _baseModelBuilder._appMeta;
     protected readonly IEnumerable<ReferenceMember> _refFields = _baseModelBuilder._refFields;
-
+    protected readonly IServiceProvider _xamlServiceProvider = _baseModelBuilder._xamlServiceProvider;
     protected DbParameterCollection AddDefaultParameters(DbParameterCollection prms)
     {
         if (_currentUser.Identity.Tenant != null)
@@ -50,7 +50,7 @@ internal class MainModelBuilder(BaseModelBuilder _baseModelBuilder)
     {
         return String.Join("\n", refFields.Select(refField =>
         {
-            return $"    left join {refField.Table.SqlTableName} r{refField.Index} on {alias}.[{refField.Column.Name}] = r{refField.Index}.[{refField.Table.PrimaryKeyField}]";
+            return $"    left join {refField.Table.SqlTableName} r{refField.Index} on {alias}.[{refField.Column.Name}] = r{refField.Index}.[Id]";
         }));
     }
 
@@ -81,10 +81,10 @@ internal class MainModelBuilder(BaseModelBuilder _baseModelBuilder)
                 if (refMember != null)
                     return $"\t{ro}{column.Name}: {refMember.Table.RealTypeName};";
             }
-            return $"\t{ro}{column.Name}: {column.DataType.ToTsType(_appMeta.IdDataType)};";
+            return $"\t{ro}{column.Name}: {column.Type.ToTsType(_appMeta.IdDataType)};";
         }
 
-        foreach (var p in table.Columns.Where(c => !c.IsVoid && c.DataType != ColumnDataType.RowVersion))
+        foreach (var p in table.Columns.Where(c => !c.IsVoid && c.Type != ColumnType.RowVersion))
             yield return property(p);
     }
 }

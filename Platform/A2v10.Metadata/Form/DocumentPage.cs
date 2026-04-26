@@ -3,11 +3,16 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
 internal partial class PlainModelBuilder
 {
+    internal Page CreateDocumentPageXaml()
+    {
+        return new Page();
+    }
     internal Form CreateDocumentPage()
     {
         var hasDetails = _table.Details.Count != 0;

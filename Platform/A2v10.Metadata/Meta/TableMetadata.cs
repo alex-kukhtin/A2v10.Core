@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Linq;
@@ -11,11 +11,24 @@ using A2v10.Infrastructure;
 
 namespace A2v10.Metadata;
 
-public enum ColumnDataType
+public enum EndpointKind
 {
+    Undefined,
+    Catalog,
+    Document,
+    Journal,
+}
+public enum ColumnType
+{
+    // semantic types
     Id,
-    Reference,
     String,
+    Ref,
+    Date,
+    DateTime,
+    Money,
+    Boolean,
+    //
     Stream,
     Enum,
     Operation,
@@ -27,9 +40,6 @@ public enum ColumnDataType
     NVarChar,
     NChar,
     Bit,
-    Date,
-    DateTime,
-    Money,
     Float,
     Uniqueidentifier,
     VarBinary,
@@ -71,15 +81,17 @@ public enum TableColumnRole
 
 public record TableColumn
 {
+    public String Name { get; set; } = default!;
+    public ColumnType Type { get; init; } = default!;
+    public String Target { get; init; } = default!;
+
     #region Database Fields
-    public String Name { get; init; } = default!;
     public String? Label { get; init; } = default!;
-    public ColumnDataType DataType { get; init; } = default!;
     public Int32 MaxLength { get; init; }
     public Int32 Scale { get; init; }
     public ColumnReference Reference { get; init; } = default!;
     public String? DbName { get; init; }
-    public ColumnDataType? DbDataType { get; init; }
+    public ColumnType? DbDataType { get; init; }
     public TableColumnRole Role { get; init; } = default!;
     public Int32 Order { get; init; }
     public Int32 DbOrder { get; init; }
@@ -88,11 +100,11 @@ public record TableColumn
     public Boolean Total { get; init; }
     public Boolean Unique { get; init; }
     #endregion
-    internal Boolean IsReference => Reference != null && Reference.RefTable != null && DataType != ColumnDataType.Enum;
-    internal Boolean IsEnum => DataType == ColumnDataType.Enum;
-    internal Boolean IsBitField => DataType == ColumnDataType.Bit && Role == 0;
-    internal Boolean IsBlob => DataType == ColumnDataType.Stream;
-    internal Boolean IsString => DataType == ColumnDataType.String;
+    internal Boolean IsReference => Reference != null && Reference.RefTable != null && Type != ColumnType.Enum;
+    internal Boolean IsEnum => Type == ColumnType.Enum;
+    internal Boolean IsBitField => Type == ColumnType.Bit && Role == 0;
+    internal Boolean IsBlob => Type == ColumnType.Stream;
+    internal Boolean IsString => Type == ColumnType.String;
     internal Boolean Exists => DbName != null && DbDataType != null;
 
     internal Boolean HasDefaultBit => 
@@ -105,7 +117,7 @@ public record TableColumn
     internal Boolean IsParent => Role.HasFlag(TableColumnRole.Parent);
     internal Boolean IsName => Role.HasFlag(TableColumnRole.Name);
     internal Boolean IsRowNo => Role.HasFlag(TableColumnRole.RowNo);
-    internal Boolean IsSearchable => DataType == ColumnDataType.String;
+    internal Boolean IsSearchable => Type == ColumnType.String;
     internal Boolean IsMemo => Name == "Memo";
 }
 
@@ -156,7 +168,7 @@ public record ReportItemMetadata
     #region Database Fields 
     public ReportItemKind Kind { get; init; }
     public String Column { get; init; } = default!;
-    public ColumnDataType DataType { get; init; } = default!;
+    public ColumnType DataType { get; init; } = default!;
     public String RefSchema { get; init; } = default!;
     public String RefTable { get; init; } = default!;
     public Boolean Checked { get; init; }
@@ -167,12 +179,12 @@ public record ReportItemMetadata
 
     public String RealRefSchema => DataType switch
     {
-        ColumnDataType.Operation => "op",
+        ColumnType.Operation => "op",
         _ => RefSchema
     };
     public String RealRefTable => DataType switch
     {
-        ColumnDataType.Operation => "operations", // Lower case is important!
+        ColumnType.Operation => "operations", // Lower case is important!
         _ => RefTable
     };
 }
@@ -180,12 +192,28 @@ public record DetailsKind(String Name, String Label);
 public record TableMetadata
 {
     #region Database fields
-    public String Schema { get; init; } = default!;
+    public EndpointKind Kind { get; set; }
+    public String Schema { get; set; } = default!;
+    public String Table { get; set; } = default!;
+    public String Model { get; set; } = default!;
+    public String Path { get; set; } = default!;
+    public Dictionary<String, TableColumn> Fields { get; init; } = [];
+
+    public List<TableColumn> Columns => [.. Fields.Select(
+        kp => { kp.Value.Name = kp.Key; return kp.Value; }
+    )];
+
+    // for sql
+    public String? TypeName => $"T{Model}";
+    public String CollectionName => Model.Plural();
+
+
+    // OLD
     public String Name { get; init; } = default!;
-    public List<TableColumn> Columns { get; internal set; } = [];
+
+    //public List<TableColumn> Columns { get; internal set; } = [];
     public String? ItemsName { get; init; }
     public String? ItemName { get; init; }
-    public String? TypeName { get; init; }
     public EditWithMode EditWith { get; init; }
     public List<TableMetadata> Details { get; private set; } = [];
     public ColumnReference? ParentTable { get; init; }
@@ -202,10 +230,7 @@ public record TableMetadata
     public List<ReportItemMetadata> ReportItems { get; init; } = [];
     public List<ColumnReferenceToMe> RefsToMe { get; init; } = [];
     // internal variables
-    internal String PrimaryKeyField => Columns.FirstOrDefault(c => c.Role.HasFlag(TableColumnRole.PrimaryKey) && !c.Role.HasFlag(TableColumnRole.RowNo))?.Name
-        ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Primary Key");
-    internal String VoidField => Columns.FirstOrDefault(c => c.Role.HasFlag(TableColumnRole.Void))?.Name
-        ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Void column");
+    internal String PrimaryKeyField => "Id";
     internal String IsFolderField => Columns.FirstOrDefault(c => c.Role.HasFlag(TableColumnRole.IsFolder))?.Name
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a IsFolder column");
     internal String ParentField => Columns.FirstOrDefault(c => c.Role.HasFlag(TableColumnRole.Parent))?.Name
@@ -221,11 +246,11 @@ public record TableMetadata
 
     internal String RealItemName => ItemsName != null ? ItemsName.Singular() : ItemName ?? Name.Singular();
     internal String RealItemsName => ItemsName ?? Name;  
-    internal String RealTypeName => $"T{TypeName ??  RealItemName}";
-    internal String TableTypeName => $"{Schema}.[{Name}.TableType]";
+    internal String RealTypeName => $"T{Name}";
+    internal String TableTypeName => $"{Schema}.[{Model}.Meta.TableType]";
     internal String RealItemLabel => ItemLabel ?? $"@{RealItemName}";
     internal String RealItemsLabel => ItemsLabel ?? $"@{RealItemsName}";
-    internal String SqlTableName => $"{Schema}.[{Name}]";
+    internal String SqlTableName => $"{Schema}.[{Table}]";
     internal Boolean IsDocument => Schema == "doc";
     internal Boolean IsEnum => Schema == "enm";
     internal Boolean IsJournal => Schema == "jrn";
@@ -233,7 +258,20 @@ public record TableMetadata
     internal Boolean HasDbTable => !String.IsNullOrEmpty(DbName) && !String.IsNullOrEmpty(DbSchema);
 
     internal IEnumerable<TableColumn> PrimaryKeys => Columns.Where(c => c.Role.HasFlag(TableColumnRole.PrimaryKey));
-    internal Boolean HasSequence => PrimaryKeys.Count() == 1 && PrimaryKeys.First().DataType == ColumnDataType.Id;
+    internal Boolean HasSequence => PrimaryKeys.Count() == 1 && PrimaryKeys.First().Type == ColumnType.Id;
+
+    internal void SetDefaults(String schema, String table)
+    {
+        Path = $"{schema}/{table}";
+        if (String.IsNullOrEmpty(Schema))
+            Schema = schema.FromFolder();
+        if (String.IsNullOrEmpty(Table))
+            Table = table.Plural();
+        if (String.IsNullOrEmpty(Model))
+            Model = table.ToPascalCase();
+        if (Kind == EndpointKind.Undefined)
+            Kind = schema.ToEndpointKind();
+    }
 }
 
 public record OperationMetadata(String Id, String? Name, String? Category);
@@ -244,7 +282,7 @@ public record EnumMetadata(String Name, EnumValueMetadata[] Values);
 public record AppMetadata
 {
     public Guid Id { get; init; } = default!;
-    public ColumnDataType IdDataType { get; init; }
+    public ColumnType IdDataType { get; init; }
     public TableMetadata[] Tables { get; init; } = [];
     public OperationMetadata[] Operations { get; init; } = [];
     public EnumMetadata[] Enums { get; init; } = [];

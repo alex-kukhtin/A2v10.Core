@@ -220,16 +220,7 @@ public class RowDefinitions : List<RowDefinition>, IXamlConverter
 {
 	public static RowDefinitions FromString(String val)
 	{
-		var coll = new RowDefinitions();
-		foreach (var row in val.Split(','))
-		{
-			var rd = new RowDefinition
-			{
-				Height = GridLength.FromString(row.Trim())
-			};
-			coll.Add(rd);
-		}
-		return coll;
+		return [.. val.Split(',', StringSplitOptions.TrimEntries).Select(s => new RowDefinition() { Height = GridLength.FromString(s) })];
 	}
 	public String ToAttribute()
 	{

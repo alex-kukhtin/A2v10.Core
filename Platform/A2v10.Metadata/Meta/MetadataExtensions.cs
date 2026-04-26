@@ -1,11 +1,10 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
-using System;
-using System.Linq;
-using System.Collections.Generic;
-
 using A2v10.Infrastructure;
 using A2v10.Services;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace A2v10.Metadata;
 
@@ -25,6 +24,18 @@ internal static class MetadataExtensions
             _ => schema
         };
     }
+
+    internal static EndpointKind ToEndpointKind(this String schema)
+    {
+        return schema switch
+        {
+            "catalog"  => EndpointKind.Catalog,
+            "document" => EndpointKind.Document,
+            "journal"  => EndpointKind.Journal,
+            _ => throw new InvalidOperationException($"Invalid schema for EndpointKind {schema}")
+        };
+    }
+
     internal static String FromFolder(this String folder)
     {
         return folder switch
@@ -74,7 +85,7 @@ internal static class MetadataExtensions
     {
         var editEndpoint = $"{table.EndpointPathUseBase(baseTable)}";
 
-        if (table.Columns.Any(c => c.DataType == ColumnDataType.Operation))
+        if (table.Columns.Any(c => c.Type == ColumnType.Operation))
             editEndpoint = "{Operation.Url}";
 
         return editEndpoint;
@@ -115,7 +126,7 @@ internal static class MetadataExtensions
     {
         return $"/{item.RealRefSchema.ToFolder()}/{item.RealRefTable}";
     }
-    internal static String CreateField(this ReportItemMetadata item, ColumnDataType idDataType, String? prefix = null)
+    internal static String CreateField(this ReportItemMetadata item, ColumnType idDataType, String? prefix = null)
     {
         return $"[{prefix}{item.Column}] {item.DataType.ToSqlDataType(idDataType)}";
     }
@@ -124,8 +135,9 @@ internal static class MetadataExtensions
     {
         return new TableMetadata()
         {
-            Schema = col.Reference.RefSchema,
+            //Schema = col.Reference.RefSchema,
             Name = col.Reference.RefTable,
+            /*
             Columns = [
                 new TableColumn()
                     {
@@ -142,6 +154,7 @@ internal static class MetadataExtensions
                         Role = TableColumnRole.Name,
                     }
             ]
+            */
         };
     }
 
@@ -159,5 +172,42 @@ internal static class MetadataExtensions
         if (exclude != null)
             res = res.Where(t => t.RealTypeName != exclude);
         return res;
+    }
+
+    internal static IEnumerable<TableColumn> DefaultColumns(this TableMetadata table)
+    {
+        return table.Kind switch
+        {
+            EndpointKind.Catalog => CatalogDefaultColumns(table),
+            _ => throw new InvalidOperationException($"Default columns not defined for {table.Name}")
+        };
+    }
+
+    static IEnumerable<TableColumn> CatalogDefaultColumns(TableMetadata table)
+    {
+        yield return new TableColumn()
+        {
+            Name = Constants.FieldNames.Name,
+            Type = ColumnType.String,
+            MaxLength = 255,
+            Role = TableColumnRole.Name
+        };
+        yield return new TableColumn()
+        {
+            Name = Constants.FieldNames.Memo,
+            MaxLength = 255,
+            Type = ColumnType.String,
+        };
+    }
+    static IEnumerable<TableColumn> DocumentDefaultColumns(TableMetadata table)
+    {
+        yield return new TableColumn()
+        {
+            Name = Constants.FieldNames.Date,
+        };
+        yield return new TableColumn()
+        {
+            Name = Constants.FieldNames.Memo
+        };
     }
 }

@@ -65,7 +65,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 		return await _dynamicRenderer.RenderPage(rri);
 	}
 
-	UIElement CreateIndexPage(IPlatformUrl platformUrl, EndpointDescriptor endpoint)
+	Page CreateIndexPage(IPlatformUrl platformUrl, EndpointDescriptor endpoint)
 	{
 		var arrayName = endpoint.BaseTable.Name;
 		var indexUi = endpoint.GetIndexUI();
@@ -448,7 +448,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 		};
 	}
 
-	UIElement CreateEditPage(EndpointDescriptor endpoint)
+	Page CreateEditPage(EndpointDescriptor endpoint)
 	{
         var uiElement = endpoint.GetEditUI();
         var table = endpoint.BaseTable;
@@ -597,7 +597,7 @@ internal class ModelPageBuilder(IServiceProvider _serviceProvider)
 		return page;
 	}
 
-	UIElement CreateEditDialog(EndpointDescriptor endpoint)
+	Dialog CreateEditDialog(EndpointDescriptor endpoint)
 	{
 		var uiElement = endpoint.GetEditUI();
 		var table = endpoint.BaseTable;

@@ -16,7 +16,18 @@ namespace A2v10.Metadata;
 
 internal partial class PlainModelBuilder
 {
-    private async Task<String> LoadPlainModelSqlAsync(TableMetadata table)
+    private String LoadPlainModelSql(TableMetadata table)
+    {
+        return $"""
+        select [{table.Model}!{table.TypeName}!Object] = null, [Id!!Id] = Id, [Name!!Name] = a.[Name],
+            a.[Memo], a.[Date]
+        from {table.SqlTableName} a
+        where a.Id = @Id;
+
+        """;
+    }
+
+    private async Task<String> LoadPlainModelSqlAsync2(TableMetadata table)
     {
         String DetailsArray()
         {
@@ -113,7 +124,7 @@ internal partial class PlainModelBuilder
             set nocount on;
             set transaction isolation level read uncommitted;
             
-            {await LoadPlainModelSqlAsync(_table)};
+            {LoadPlainModelSql(_table)};
             
             """;
 
@@ -126,14 +137,10 @@ internal partial class PlainModelBuilder
     public async Task<ExpandoObject> SavePlainModelAsync(ExpandoObject data, ExpandoObject savePrms)
     {
 
-        var updatedFields = _table.Columns.Where(c => c.IsFieldUpdated()).Select(c => $"t.[{c.Name}] = s.[{c.Name}]");
+        var allColumns = _table.DefaultColumns().Union(_table.Columns);
 
-        var insertedFields = _table.Columns.Where(c => c.IsFieldUpdated()).Select(c => $"[{c.Name}]");
-
-        String onPrimaryKeys()
-        {
-            return String.Join(" and ", _table.PrimaryKeys.Select(c => $"t.[{c.Name}]  = s.[{c.Name}]"));
-        }
+        var updatedFields = allColumns.Where(c => c.IsFieldUpdated()).Select(c => $"t.[{c.Name}] = s.[{c.Name}]");
+        var insertedFields = allColumns.Where(c => c.IsFieldUpdated()).Select(c => $"[{c.Name}]");
 
         String MergeDetails()
         {
@@ -223,14 +230,12 @@ internal partial class PlainModelBuilder
             return sb.ToString();
         }
 
-        var idDataTypeString = _table.PrimaryKeys.First().SqlDataType(_appMeta.IdDataType);
-
         String checkRowVersion = String.Empty;
-        if (_table.Columns.Any(c => c.DataType == ColumnDataType.RowVersion))
+        if (_table.Columns.Any(c => c.Type == ColumnType.RowVersion))
         {
             var elemName =  _table.IsDocument ? "Document" : "Element";
             checkRowVersion = $"""
-            if exists(select * from @{_table.RealItemName} t inner join {_table.SqlTableName} c on c.Id = t.Id
+            if exists(select * from @{_table.Model} t inner join {_table.SqlTableName} c on c.Id = t.Id
                     where t.rv is not null and t.rv <> c.rv)
                 throw 60000, N'UI:@[Error.{elemName}.RowVersion]', 0;
             """;
@@ -243,26 +248,26 @@ internal partial class PlainModelBuilder
 
         {checkRowVersion}
         
-        declare @rtable table(Id {idDataTypeString});
-        declare @Id {idDataTypeString};
+        declare @rtable table(Id bigint);
+        declare @Id bigint;
         
         merge {_table.SqlTableName} as t
-        using @{_table.RealItemName} as s
-        on {onPrimaryKeys()}
+        using @{_table.Model} as s
+        on t.[Id] = s.[Id]
         when matched then update set
         {String.Join(",\n", updatedFields)}
         when not matched then insert
         ({String.Join(',', insertedFields)}) values
         ({String.Join(',', insertedFields)}) 
-        output inserted.[{_table.PrimaryKeyField}] into @rtable([Id]);
+        output inserted.[Id] into @rtable([Id]);
 
         select @Id = [Id] from @rtable;
         
         {MergeDetails()}
 
-        {await LoadPlainModelSqlAsync(_table)}
+        {LoadPlainModelSql(_table)}
         """;
-        var item = data.Get<ExpandoObject>(_table.RealItemName);
+        var item = data.Get<ExpandoObject>(_table.Model);
         var tableBuilder = new DataTableBuilder(_table, _appMeta);
         
         var dtable = tableBuilder.BuildDataTable(item);
@@ -272,7 +277,7 @@ internal partial class PlainModelBuilder
         var dm = await _dbContext.LoadModelSqlAsync(_dataSource, sqlString, dbprms =>
         {
             AddDefaultParameters(dbprms);
-            dbprms.AddStructured($"@{_table.RealItemName}", _table.TableTypeName, dtable);
+            dbprms.AddStructured($"@{_table.Model}", _table.TableTypeName, dtable);
             _table.Details.ForEach(details =>
             {
                 var detailsTableBuilder = new DataTableBuilder(details, _appMeta);

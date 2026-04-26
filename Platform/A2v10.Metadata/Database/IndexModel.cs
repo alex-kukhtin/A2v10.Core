@@ -1,32 +1,138 @@
 ﻿// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
 
-using A2v10.Data.Core.Extensions;
-using A2v10.Data.Interfaces;
-using A2v10.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using A2v10.Data.Core.Extensions;
+using A2v10.Data.Interfaces;
+using A2v10.Infrastructure;
+
 namespace A2v10.Metadata;
+
+/* TODO:
+1. Сортировка и фильтрация по reference полям
+*/
 
 internal partial class IndexModelBuilder
 {
     public async Task<IDataModel> LoadIndexModelAsync(Boolean lazy = false)
     {
+        const String DEFAULT_DIR = "desc";
+        String defaultOrder = "Id";
+
+        var qry = _platformUrl.Query;
+        Int32 offset = 0;
+        Int32 pageSize = 20;
+        String? fragment = null;
+        String order = defaultOrder;
+        String dir = DEFAULT_DIR;
+
+        var collectionName = _table.CollectionName;
+
+        if (qry != null)
+        {
+            if (qry.HasProperty("Offset"))
+                offset = Int32.Parse(qry.Get<String>("Offset") ?? "0");
+            if (qry.HasProperty("PageSize"))
+                pageSize = Int32.Parse(qry.Get<String>("PageSize") ?? "20");
+            fragment = qry?.Get<String?>("Fragment");
+            order = qry?.Get<String>("Order") ?? defaultOrder;
+            dir = qry?.Get<String>("Dir")?.ToLowerInvariant() ?? DEFAULT_DIR;
+        }
+        if (dir != "asc" && dir != "desc")
+            dir = DEFAULT_DIR;
+        // TODO: Ensure Order is valid
+
+        var refFields = _refFields;
+
+        ReferenceMember? FindReference(TableColumn column)
+        {
+            if (column.Type != ColumnType.Ref)
+                return null;
+            return _refFields.FirstOrDefault(r => column.Target == r.Table.Path);
+        }
+
+        IEnumerable<String> indexSqlFields(String alias)
+        {
+            foreach (var c in _table.DefaultColumns())
+                yield return c.SqlModelColumnName(alias, FindReference(c));
+            foreach (var c in _table.Columns)
+            {
+                yield return c.SqlModelColumnName(alias, FindReference(c));
+            }
+        }
+
+        String RefFieldsEnum(Func<ReferenceMember, String> func)
+        { 
+            // with tail comma!
+            if (!_refFields.Any())
+                return String.Empty;
+            return String.Join(", ", _refFields.Select(r => func(r))) + ", ";
+        }
+
+        var sqlString = $"""
+        set nocount on;
+        set transaction isolation level read uncommitted;
+        
+        set @Dir = lower(@Dir);
+        declare @fr nvarchar(255) = N'%' + @Fragment + N'%';
+
+        declare @map table (rowNo int identity(1,1), Id bigint, {RefFieldsEnum(r => $"{r.Column.Name} bigint")} rowCnt int);
+
+        insert into @map(a.Id, {RefFieldsEnum(r => $"{r.Column.Name}")} rowCnt)
+        select a.Id, {RefFieldsEnum(r => $"a.{r.Column.Name}")}
+            [!!RowCount]  = count(*) over()        
+        from {_table.SqlTableName} a
+        where a.Void = 0 -- TODO: where clause
+        order by a.[{order}] {dir}
+        offset @Offset rows fetch next @PageSize rows only option(recompile);
+        
+        select [{collectionName}!{_table.TypeName}!Array] = null, [Id!!Id] = a.Id,
+            {String.Join(", ", indexSqlFields("a"))},
+            [!!RowCount]  = t.rowCnt        
+        from {_table.SqlTableName} a
+            inner join @map t on t.Id = a.Id
+        order by t.rowNo;
+
+        -- maps
+
+        -- system data
+        select [!$System!] = null,
+        	[!{collectionName}!PageSize] = @PageSize,  [!{collectionName}!Offset] = @Offset,
+        	[!{collectionName}!SortOrder] = @Order,  [!{collectionName}!SortDir] = @Dir,
+        	[!{collectionName}.Fragment!Filter] = @Fragment;
+        """;
+
+        return await _dbContext.LoadModelSqlAsync(_dataSource, sqlString, dbprms =>
+        {
+            AddDefaultParameters(dbprms);
+            AddPeriodParameters(dbprms, qry);
+
+            if (lazy)
+                dbprms.AddString("@Id", _platformUrl.Id);
+
+            dbprms.AddInt("@Offset", offset)
+            .AddInt("@PageSize", pageSize)
+            .AddString("@Order", order)
+            .AddString("@Dir", dir)
+            .AddString("@Fragment", fragment);
+        });
+    }
+
+    public async Task<IDataModel> LoadIndexModelAsync2(Boolean lazy = false)
+    {
         const String DEFAULT_DIR = "asc";
 
         const String DATE_COLUMN = "Date"; //TODO: ???
-
-        if (_table.Columns.Count == 0)
-            throw new InvalidOperationException($"The model '{_table.Name}' does not have columns");
 
         TableColumn? opColumn = null;
         String? opValue = null;
         if (_baseTable != null && _baseTable.Schema == "op")
         {
-            opColumn = _table.Columns.FirstOrDefault(c => c.DataType == ColumnDataType.Operation);
+            opColumn = _table.Columns.FirstOrDefault(c => c.Type == ColumnType.Operation);
             opValue = _baseTable?.Name.ToLowerInvariant();
         }
 
@@ -83,7 +189,7 @@ internal partial class IndexModelBuilder
             }
 
             if (_table.Columns.Any(c => c.Role.HasFlag(TableColumnRole.Void)))
-                yield return $"a.[{_table.VoidField}] = 0";
+                yield return $"a.[Void] = 0";
 
             if (opColumn != null)
                 yield return $"a.[{opColumn.Name}] = N'{opValue}'";
@@ -233,9 +339,9 @@ internal partial class IndexModelBuilder
             foreach (var r in refFieldsFilter)
             {
                 var data = qry?.Get<Object>(r.Column.Name);
-                if (data != null && _appMeta.IdDataType == ColumnDataType.Uniqueidentifier)
+                if (data != null && _appMeta.IdDataType == ColumnType.Uniqueidentifier)
                     data = Guid.Parse(data.ToString()!);
-                dbprms.AddTyped($"@{r.Column.Name}", r.Column.DataType.ToSqlDbType(_appMeta.IdDataType), data);
+                dbprms.AddTyped($"@{r.Column.Name}", r.Column.Type.ToSqlDbType(_appMeta.IdDataType), data);
             }
             foreach (var e in enumFields)
             {

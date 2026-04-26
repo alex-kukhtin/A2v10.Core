@@ -25,7 +25,7 @@ internal partial class IndexModelBuilder
             if (_table.UseFolders)
                 yield return $"persistSelect: ['Folders']";
             else
-                yield return $"persistSelect: ['{_table.RealItemsName}']";
+                yield return $"persistSelect: ['{_table.CollectionName}']";
         }
 
         IEnumerable<String> functions()

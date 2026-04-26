@@ -236,8 +236,8 @@ internal static class XamlExtensions
     {
         return item.DataType switch
         {
-            ColumnDataType.Money => new BindSum($"{prefix}{item.Column}"),
-            ColumnDataType.Float => new BindNumber($"{prefix}{item.Column}"),
+            ColumnType.Money => new BindSum($"{prefix}{item.Column}"),
+            ColumnType.Float => new BindNumber($"{prefix}{item.Column}"),
             _ => new Bind($"{prefix}{item.Column}")
         };
     }
@@ -246,14 +246,14 @@ internal static class XamlExtensions
     {
         var bind = item.DataType switch
         {
-            ColumnDataType.Money => new BindSum($"{prefix}{item.Column}"),
-            ColumnDataType.Float => new BindNumber($"{prefix}{item.Column}"),
+            ColumnType.Money => new BindSum($"{prefix}{item.Column}"),
+            ColumnType.Float => new BindNumber($"{prefix}{item.Column}"),
             _ => new Bind($"{prefix}{item.Column}")
         };
         var align = item.DataType switch
         {
-            ColumnDataType.Money => TextAlign.Right,
-            ColumnDataType.Float => TextAlign.Right,
+            ColumnType.Money => TextAlign.Right,
+            ColumnType.Float => TextAlign.Right,
             _ => TextAlign.Left
         };
         return new SheetCell()

@@ -10,25 +10,25 @@ internal static class JsExtensions
     private const String TSNumber = "number";
     private const String TBoolean = "boolean";
     private const String TSDate = "Date";
-    public static String ToTsType(this ColumnDataType columnDataType, ColumnDataType idDataType)
+    public static String ToTsType(this ColumnType columnDataType, ColumnType idDataType)
     {
         var idType = idDataType switch { 
-            ColumnDataType.BigInt => TSNumber,
-            ColumnDataType.String or ColumnDataType.Uniqueidentifier => TSString,
+            ColumnType.BigInt => TSNumber,
+            ColumnType.String or ColumnType.Uniqueidentifier => TSString,
             _ => throw new InvalidOperationException($"Unknown TS Id DataType {idDataType}")
         };
         return columnDataType switch
         {
-            ColumnDataType.Id => idType,
-            ColumnDataType.String or ColumnDataType.NChar or ColumnDataType.Operation
-                or ColumnDataType.NVarChar => TSString,
-            ColumnDataType.Float or ColumnDataType.Money => TSNumber,
-            ColumnDataType.Bit => TBoolean,
-            ColumnDataType.BigInt or ColumnDataType.Int => TSNumber,
-            ColumnDataType.DateTime 
-                or ColumnDataType.Date => TSDate,
-            ColumnDataType.Enum => TSString, // TODO: enumerable
-            ColumnDataType.Reference => idType, // TODO: reference
+            ColumnType.Id => idType,
+            ColumnType.String or ColumnType.NChar or ColumnType.Operation
+                or ColumnType.NVarChar => TSString,
+            ColumnType.Float or ColumnType.Money => TSNumber,
+            ColumnType.Bit => TBoolean,
+            ColumnType.BigInt or ColumnType.Int => TSNumber,
+            ColumnType.DateTime 
+                or ColumnType.Date => TSDate,
+            ColumnType.Enum => TSString, // TODO: enumerable
+            ColumnType.Ref => idType, // TODO: reference
             _ => throw new InvalidOperationException($"Unknown TS DataType {columnDataType}")
         };
     }

@@ -1,18 +1,17 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
-using System;
-using System.Linq;
-using System.Collections.Generic;
-using System.Dynamic;
-using System.Threading.Tasks;
-using System.Text;
-
-using Microsoft.Extensions.DependencyInjection;
-
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
+using A2v10.System.Xaml;
 using A2v10.Xaml;
 using A2v10.Xaml.DynamicRendrer;
+using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Collections.Generic;
+using System.Dynamic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace A2v10.Metadata;
 
@@ -21,6 +20,8 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
     internal readonly DatabaseMetadataProvider _metadataProvider = _serviceProvider.GetRequiredService<DatabaseMetadataProvider>();
     internal readonly ICurrentUser _currentUser = _serviceProvider.GetRequiredService<ICurrentUser>();
     internal readonly IDbContext _dbContext = _serviceProvider.GetRequiredService<IDbContext>();
+    internal readonly IServiceProvider _xamlServiceProvider = new XamlServiceProvider();
+
 #pragma warning disable IDE1006 // Naming Styles
     internal TableMetadata _table { get; init; } = default!;
     internal TableMetadata? _baseTable { get; init; }
@@ -110,7 +111,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
     {
         var sb = new StringBuilder();
         var where = isFilter ? "" : " where e.[Id] <> N''";
-        foreach (var r in refs.Where(c => c.Column.DataType == ColumnDataType.Enum))
+        foreach (var r in refs.Where(c => c.Column.Type == ColumnType.Enum))
         {
             sb.AppendLine($"""
                 select [{r.Table.RealItemsName}!TR{r.Table.RealItemName}!Map] = null, [Id!!Id] = e.Id, [Name!!Name] = e.[Name]
@@ -122,6 +123,17 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
         return sb.ToString();
     }
 
+    public UIElement CreateDefaultXamlForm()
+    {
+        return Action switch
+        {
+            "browse" => _index.CreateBrowseDialogXaml(),
+            "index" => _index.CreateIndexPageXaml(),
+            "edit" => IsDialog ? _plain.CreateEditDialogXaml() : _plain.CreateDocumentPageXaml(),
+            //"browsefolder" => _index.CreateBrowseTreeDialogXaml(),
+            _ => throw new NotImplementedException($"Create form for {Action}")
+        };
+    }
     public Form CreateDefaultForm()
     {
         return Action switch
@@ -166,8 +178,9 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
         }
         else
         {
-            var formMeta = await _metadataProvider.GetFormAsync(_dataSource, _baseTable ?? _table, _platformUrl.Action, CreateDefaultForm);
-            page = XamlBulder.BuildForm(formMeta.Form);
+            // var formMeta = await _metadataProvider.GetFormAsync(_dataSource, _baseTable ?? _table, _platformUrl.Action, CreateDefaultForm);
+            page = await _metadataProvider.GetXamlFormAsync(_dataSource, _baseTable ?? _table, _platformUrl.Action, CreateDefaultXamlForm);
+            //page = XamlBulder.BuildForm(formMeta.Form);
             templateText = await CreateTemplateAsync();
         }
         if (page == null)

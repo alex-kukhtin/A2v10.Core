@@ -19,10 +19,10 @@ internal static class FormExtensions
         if (!String.IsNullOrEmpty(column.Computed))
             return FormItemIs.Static;
 
-        return column.DataType switch
+        return column.Type switch
         {
-            ColumnDataType.DateTime or ColumnDataType.Date => FormItemIs.DatePicker,
-            ColumnDataType.Bit => FormItemIs.CheckBox,
+            ColumnType.DateTime or ColumnType.Date => FormItemIs.DatePicker,
+            ColumnType.Bit => FormItemIs.CheckBox,
             _ => FormItemIs.TextBox,
         };
     }
@@ -31,8 +31,8 @@ internal static class FormExtensions
     {
         if (column.Role.HasFlag(TableColumnRole.RowNo))
             return "1px";
-        if (column.DataType == ColumnDataType.Money || column.DataType == ColumnDataType.Float || 
-            column.DataType == ColumnDataType.Decimal || column.DataType == ColumnDataType.Int)
+        if (column.Type == ColumnType.Money || column.Type == ColumnType.Float || 
+            column.Type == ColumnType.Decimal || column.Type == ColumnType.Int)
             return "10rem";
         return null;
     }
@@ -56,28 +56,28 @@ internal static class FormExtensions
 
     public static ItemDataType ToItemDataType(this TableColumn column)
     {
-        return column.DataType switch
+        return column.Type switch
         {
-            ColumnDataType.Id => ItemDataType.Id,
-            ColumnDataType.NChar or ColumnDataType.NVarChar => ItemDataType.String,
-            ColumnDataType.Bit => ItemDataType.Boolean,
-            ColumnDataType.Date => ItemDataType.Date,
-            ColumnDataType.DateTime => ItemDataType.DateTime,
-            ColumnDataType.Money => ItemDataType.Currency,
-            ColumnDataType.Float or ColumnDataType.Int or ColumnDataType.Decimal 
+            ColumnType.Id => ItemDataType.Id,
+            ColumnType.NChar or ColumnType.NVarChar => ItemDataType.String,
+            ColumnType.Bit => ItemDataType.Boolean,
+            ColumnType.Date => ItemDataType.Date,
+            ColumnType.DateTime => ItemDataType.DateTime,
+            ColumnType.Money => ItemDataType.Currency,
+            ColumnType.Float or ColumnType.Int or ColumnType.Decimal 
                 => ItemDataType.Number,
             _ => ItemDataType._,
         };
     }
 
-    public static String? ToWidth(this ColumnDataType dt)
+    public static String? ToWidth(this ColumnType dt)
     {
         return dt switch
         {
-            ColumnDataType.Money => "12rem",
-            ColumnDataType.Float => "12rem",
-            ColumnDataType.Decimal => "12rem",
-            ColumnDataType.Date or ColumnDataType.DateTime => "12rem",
+            ColumnType.Money => "12rem",
+            ColumnType.Float => "12rem",
+            ColumnType.Decimal => "12rem",
+            ColumnType.Date or ColumnType.DateTime => "12rem",
             _ => null
         };
     }
@@ -86,9 +86,9 @@ internal static class FormExtensions
     {
         Boolean IsVisible(TableColumn column)
         {
-            if (appMeta.IdDataType == ColumnDataType.Uniqueidentifier && column.Role.HasFlag(TableColumnRole.PrimaryKey))
+            if (appMeta.IdDataType == ColumnType.Uniqueidentifier && column.Role.HasFlag(TableColumnRole.PrimaryKey))
                 return false;
-            if (column.DataType == ColumnDataType.Stream || column.DataType == ColumnDataType.RowVersion)
+            if (column.Type == ColumnType.Stream || column.Type == ColumnType.RowVersion)
                 return false;
             var sysColumns = 
                   TableColumnRole.Void
@@ -116,8 +116,8 @@ internal static class FormExtensions
            | TableColumnRole.SystemName
            | TableColumnRole.Kind;
 
-            return column.DataType != ColumnDataType.Stream 
-                && column.DataType != ColumnDataType.RowVersion 
+            return column.Type != ColumnType.Stream 
+                && column.Type != ColumnType.RowVersion 
                 && (column.Role & hiddenColumns) == 0;
         }
 

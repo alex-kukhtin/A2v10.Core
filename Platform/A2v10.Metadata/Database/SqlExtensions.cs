@@ -18,80 +18,86 @@ internal static class SqlExtensions
             return $"@[{value[1..]}]";
         return value;
     }
-    public static SqlDbType ToSqlDbType(this ColumnDataType columnDataType, ColumnDataType idDataType)
+    public static SqlDbType ToSqlDbType(this ColumnType columnDataType, ColumnType idDataType)
     {
         return columnDataType switch
         {
-            ColumnDataType.Id or ColumnDataType.Reference => idDataType.ToSqlDbType(idDataType),
-            ColumnDataType.Operation => SqlDbType.NVarChar,
-            ColumnDataType.Enum => SqlDbType.NVarChar,
-            ColumnDataType.BigInt => SqlDbType.BigInt,
-            ColumnDataType.Int => SqlDbType.Int,
-            ColumnDataType.SmallInt => SqlDbType.SmallInt,
-            ColumnDataType.Decimal => SqlDbType.Decimal,
-            ColumnDataType.String => SqlDbType.NVarChar,
-            ColumnDataType.DateTime => SqlDbType.DateTime,
-            ColumnDataType.Date => SqlDbType.Date,
-            ColumnDataType.Money => SqlDbType.Money,
-            ColumnDataType.Float => SqlDbType.Float,
-            ColumnDataType.Stream or ColumnDataType.VarBinary => SqlDbType.VarBinary,
-            ColumnDataType.Uniqueidentifier => SqlDbType.UniqueIdentifier,
+            ColumnType.Id or ColumnType.Ref => idDataType.ToSqlDbType(idDataType),
+            ColumnType.Operation => SqlDbType.NVarChar,
+            ColumnType.Enum => SqlDbType.NVarChar,
+            ColumnType.BigInt => SqlDbType.BigInt,
+            ColumnType.Int => SqlDbType.Int,
+            ColumnType.SmallInt => SqlDbType.SmallInt,
+            ColumnType.Decimal => SqlDbType.Decimal,
+            ColumnType.String => SqlDbType.NVarChar,
+            ColumnType.DateTime => SqlDbType.DateTime,
+            ColumnType.Date => SqlDbType.Date,
+            ColumnType.Money => SqlDbType.Money,
+            ColumnType.Float => SqlDbType.Float,
+            ColumnType.Stream or ColumnType.VarBinary => SqlDbType.VarBinary,
+            ColumnType.Uniqueidentifier => SqlDbType.UniqueIdentifier,
             _ => throw new NotSupportedException($"{columnDataType} is not supported")
         };
     }
 
-    public static String ToSqlDataType(this ColumnDataType columnDataType, ColumnDataType idDataType, String maxLength = "255", Int32 scale = 0, Boolean toTableType = false)
+    public static String ToSqlDataType(this ColumnType columnDataType, ColumnType idDataType, String maxLength = "255", Int32 scale = 0, Boolean toTableType = false)
     {
         var idDataStr = idDataType.ToString().ToLowerInvariant();
         return columnDataType switch
         {
-            ColumnDataType.Id => idDataStr,
-            ColumnDataType.Reference => idDataStr,
-            ColumnDataType.Operation => "nvarchar(64)",
-            ColumnDataType.Enum => "nvarchar(16)",
-            ColumnDataType.String => $"nvarchar({maxLength})",
-            ColumnDataType.NVarChar => $"nvarchar({maxLength})",
-            ColumnDataType.NChar => $"nchar({maxLength})",
-            ColumnDataType.Stream => $"varbinary(max)",
-            ColumnDataType.Uniqueidentifier => "uniqueidentifier",
-            ColumnDataType.RowVersion => toTableType ? "varbinary(8)" : "rowversion",
-            ColumnDataType.Decimal => $"decimal({maxLength},{scale})",
+            ColumnType.Id => idDataStr,
+            ColumnType.Ref => idDataStr,
+            ColumnType.Operation => "nvarchar(64)",
+            ColumnType.Enum => "nvarchar(16)",
+            ColumnType.String => $"nvarchar({maxLength})",
+            ColumnType.NVarChar => $"nvarchar({maxLength})",
+            ColumnType.NChar => $"nchar({maxLength})",
+            ColumnType.Stream => $"varbinary(max)",
+            ColumnType.Uniqueidentifier => "uniqueidentifier",
+            ColumnType.RowVersion => toTableType ? "varbinary(8)" : "rowversion",
+            ColumnType.Decimal => $"decimal({maxLength},{scale})",
             _ => columnDataType.ToString().ToLowerInvariant(),
         };
     }
 
-    public static String SqlDataType(this TableColumn column, ColumnDataType idDataType, Boolean toTableType = false)
+    public static String SqlDataType(this TableColumn column, ColumnType idDataType, Boolean toTableType = false)
     {
         var maxLength = column.MaxLength == 0 ? "max" : column.MaxLength.ToString();
-        return column.DataType.ToSqlDataType(idDataType, maxLength, column.Scale, toTableType);
+        return column.Type.ToSqlDataType(idDataType, maxLength, column.Scale, toTableType);
     }
-    public static Type ClrDataType(this TableColumn column, ColumnDataType idDataType)
+
+    public static String SqlModelColumnName(this TableColumn column, String alias, ReferenceMember? refMember)
     {
-        Type idType = idDataType switch
+        if (column.Role == TableColumnRole.Name)
+            return $"[Name!!Name] = {alias}.[Name]";
+        else if (column.Type == ColumnType.Ref) {
+            refMember = refMember ?? throw new InvalidOperationException($"ReferenceMember is required for Ref column {column.Name}");
+            return $"[{column.Name}!{refMember.Table.TypeName}!RefId] = {alias}.[{column.Name}]";
+        }
+        return $"{alias}.[{column.Name}]";
+    }
+
+    public static Type ClrDataType(this TableColumn column)
+    {
+        return column.Type switch
         {
-            ColumnDataType.BigInt => typeof(Int64),
-            ColumnDataType.Uniqueidentifier => typeof(Guid),
-            _ => throw new InvalidOperationException($"Invalid Id Data Type: {idDataType}")
-        };
-        return column.DataType switch
-        {
-            ColumnDataType.Id or ColumnDataType.Reference => idType,
-            ColumnDataType.Operation => typeof(String),
-            ColumnDataType.Enum => typeof(String),
-            ColumnDataType.BigInt => typeof(Int64),
-            ColumnDataType.String or ColumnDataType.NVarChar or
-                ColumnDataType.NChar => typeof(String),
-            ColumnDataType.Date or ColumnDataType.DateTime => typeof(DateTime),
-            ColumnDataType.Bit => typeof(Boolean),
-            ColumnDataType.Money => typeof(Decimal),
-            ColumnDataType.Float => typeof(Double),
-            ColumnDataType.Int => typeof(Int32),
-            ColumnDataType.Decimal => typeof(Decimal),
-            ColumnDataType.SmallInt => typeof(Int16),
-            ColumnDataType.Stream => typeof(Byte[]),
-            ColumnDataType.Uniqueidentifier => typeof(Guid),
-            ColumnDataType.RowVersion => typeof(Byte[]),
-            _ => throw new InvalidOperationException($"Invalid DataType for update. ({column.DataType})"),
+            ColumnType.Id or ColumnType.Ref => typeof(Int64),
+            ColumnType.Operation => typeof(String),
+            ColumnType.Enum => typeof(String),
+            ColumnType.BigInt => typeof(Int64),
+            ColumnType.String or ColumnType.NVarChar or
+                ColumnType.NChar => typeof(String),
+            ColumnType.Date or ColumnType.DateTime => typeof(DateTime),
+            ColumnType.Bit => typeof(Boolean),
+            ColumnType.Money => typeof(Decimal),
+            ColumnType.Float => typeof(Double),
+            ColumnType.Int => typeof(Int32),
+            ColumnType.Decimal => typeof(Decimal),
+            ColumnType.SmallInt => typeof(Int16),
+            ColumnType.Stream => typeof(Byte[]),
+            ColumnType.Uniqueidentifier => typeof(Guid),
+            ColumnType.RowVersion => typeof(Byte[]),
+            _ => throw new InvalidOperationException($"Invalid DataType for update. ({column.Type})"),
         };
     }
 
@@ -102,7 +108,7 @@ internal static class SqlExtensions
             && !column.Role.HasFlag(TableColumnRole.IsFolder)
             && !column.Role.HasFlag(TableColumnRole.IsSystem)
             && column.Name != "Owner"
-            && column.DataType != ColumnDataType.RowVersion;
+            && column.Type != ColumnType.RowVersion;
     }
 
     internal static IEnumerable<String> AllSqlFields(this TableMetadata table, IEnumerable<ReferenceMember> refFields, IEnumerable<ReferenceMember> enumFields, String alias, Boolean isDetails = false)
@@ -140,7 +146,7 @@ internal static class SqlExtensions
                 elemName = "Folder";
                 modelType = "TFolder";
             }
-            if (c.Column.DataType == ColumnDataType.Operation)
+            if (c.Column.Type == ColumnType.Operation)
                 yield return $"""
                     [{elemName}.Id!{modelType}!Id] = r{c.Index}.[Id], 
                     [{elemName}.Name!{modelType}!Name] = r{c.Index}.[Name],

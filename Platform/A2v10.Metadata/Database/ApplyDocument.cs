@@ -17,7 +17,7 @@ internal partial class PlainModelBuilder
     /* TODO: Find 'Document' field */
     internal async Task<IInvokeResult> ApplyDocumentAsync(ExpandoObject? prms)
     {
-        var opColumn = _table.Columns.FirstOrDefault(c => c.DataType == ColumnDataType.Operation);
+        var opColumn = _table.Columns.FirstOrDefault(c => c.Type == ColumnType.Operation);
         if (opColumn == null)
             throw new InvalidOperationException("Implement. Apply for Document");
 
@@ -98,7 +98,7 @@ internal partial class PlainModelBuilder
 
     internal async Task<IInvokeResult> UnApplyDocumentAsync(ExpandoObject? prms)
     {
-        var opColumn = _table.Columns.FirstOrDefault(c => c.DataType == ColumnDataType.Operation);
+        var opColumn = _table.Columns.FirstOrDefault(c => c.Type == ColumnType.Operation);
 
         if (opColumn == null)
             throw new InvalidOperationException("Implement. UnApply for Document");

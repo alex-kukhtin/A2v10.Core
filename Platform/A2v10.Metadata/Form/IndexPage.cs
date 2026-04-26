@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Linq;
@@ -219,7 +219,7 @@ internal partial class IndexModelBuilder
 
             var tableRefCols = _table.Columns.Where(c => c.IsReference && !c.Role.HasFlag(TableColumnRole.Parent));
             if (_baseTable != null && _baseTable.Schema == "op")
-                tableRefCols = tableRefCols.Where(c => c.DataType != ColumnDataType.Operation);
+                tableRefCols = tableRefCols.Where(c => c.Type != ColumnType.Operation);
             
             tableRefCols = tableRefCols.OrderBy(c => c.Order);
             var tableEnumCols = _table.Columns.Where(c => c.IsEnum).OrderBy(c => c.Order);

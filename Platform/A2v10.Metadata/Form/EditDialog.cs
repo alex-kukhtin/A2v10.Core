@@ -24,12 +24,12 @@ internal partial class PlainModelBuilder
             Label = column.Label ?? $"@{colName}",
             Data = $"{_table.RealItemName}.{colName}",
             DataType = column.ToItemDataType(),
-            Width = column.DataType.ToWidth(),
+            Width = column.Type.ToWidth(),
             Props = new FormItemProps()
             {
                 Url = prm,
                 ItemsSource = itemsSource,
-                Multiline = column.DataType == ColumnDataType.String && 
+                Multiline = column.Type == ColumnType.String && 
                     (column.MaxLength > Constants.MultilineThreshold || column.MaxLength == 0),
                 TabIndex = column.IsName ? 1 : 0,
                 Required = column.Required,

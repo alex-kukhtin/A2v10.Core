@@ -18,7 +18,7 @@ internal partial class PlainModelBuilder
                 yield return $$"""'{{_table.RealItemName}}.Date'() { return du.today(); }""";
             if (_baseTable != null && _baseTable.IsOperation)
             {
-                var opColumn = _table.Columns.FirstOrDefault(c => c.DataType == ColumnDataType.Operation);
+                var opColumn = _table.Columns.FirstOrDefault(c => c.Type == ColumnType.Operation);
                 if (opColumn != null)
                     yield return $$"""'{{_table.RealItemName}}.{{opColumn.Name}}'() { return { Id: '{{_baseTable.Name.ToLowerInvariant()}}', Name: '{{_baseTable.RealItemName}}'};}""";
             }
@@ -117,7 +117,7 @@ internal partial class PlainModelBuilder
                 yield return $$"""'{{_table.RealItemName}}.Date'() { return du.today(); }""";
             if (_baseTable != null && _baseTable.IsOperation)
             {
-                var opColumn = _table.Columns.FirstOrDefault(c => c.DataType == ColumnDataType.Operation);
+                var opColumn = _table.Columns.FirstOrDefault(c => c.Type == ColumnType.Operation);
                 if (opColumn != null)
                     yield return $$"""'{{_table.RealItemName}}.{{opColumn.Name}}'() { return { Id: '{{_baseTable.Name.ToLowerInvariant()}}', Name: '{{_baseTable.RealItemName}}'};}""";
             }

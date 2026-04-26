@@ -1,19 +1,21 @@
-﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
-using System.Dynamic;
-using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Dynamic;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
+using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
-public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbContext _dbContext)
+public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbContext _dbContext, IAppCodeProvider _codeProvider)
 {
     public Task<TableMetadata> GetSchemaAsync(IModelBaseMeta meta, String? dataSource)
     {
@@ -36,10 +38,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             var (schema, table) = ParsePath(path);
             var tableMeta = await _metadataCache.GetOrAddAsync(null, schema, table,
                 LoadTableMetadataAsync);
-            // case sensitive
-            table = tableMeta.Name;
-            schema = tableMeta.Schema;
-            _metadataCache.GetOrAddEndpointPath(null, schema, table);
+            _metadataCache.GetOrAddEndpointPath(null, path, schema, table);
             modelTableInfo = _metadataCache.GetModelInfoFromPath(path);
         }
         if (modelTableInfo == null)
@@ -55,21 +54,26 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     {
         return _metadataCache.GetOrAddFormAsync(dataSource, meta, key, LoadTableFormAsync, defForm);
     }
+    public Task<UIElement> GetXamlFormAsync(String? dataSource, TableMetadata meta, String key, Func<UIElement> defForm)
+    {
+        return _metadataCache.GetOrAddXamlFormAsync(dataSource, meta, key, defForm);
+    }
 
     public async Task<IEnumerable<ReferenceMember>> ReferenceFieldsAsync(String? dataSource, TableMetadata table)
     {
         async Task<ReferenceMember> CreateMember(TableColumn column, Int32 index)
         {
-            var table = column.DataType switch
+            var targetPath = ParsePath(column.Target);
+            var table = column.Type switch
             {
-                ColumnDataType.Operation => await GetSchemaAsync(dataSource, "op", "operations"),
-                _ => await GetSchemaAsync(dataSource, column.Reference.RefSchema, column.Reference.RefTable)
+                ColumnType.Operation => await GetSchemaAsync(dataSource, "op", "operations"),
+                _ => await GetSchemaAsync(dataSource, targetPath.schema, targetPath.table)
             };
             return new ReferenceMember(column, table, index);
         }
         Int32 index = 0;
         var list = new List<ReferenceMember>();
-        foreach (var cx in table.Columns.Where(c => c.IsReference && !c.IsEnum))
+        foreach (var cx in table.Columns.Where(c => c.Type == ColumnType.Ref))
             list.Add(await CreateMember(cx, index++));
         return list;
     }
@@ -103,6 +107,23 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     }
 
     private async Task<TableMetadata> LoadTableMetadataAsync(String? dataSource, String schema, String table)
+    {
+        var fileName = Path.Combine(schema, table, "metadata.json");
+        using var stream = _codeProvider.FileStreamRO(fileName);
+        var text = "{}"; // empty value;
+        if (stream != null)
+        {
+            using var sr = new StreamReader(stream);
+            text = await sr.ReadToEndAsync()
+                ?? throw new InvalidOperationException($"{fileName} is empty");
+        }
+        var meta = JsonConvert.DeserializeObject<TableMetadata>(text, JsonSettings.CamelCaseSerializerSettings)
+            ?? throw new InvalidOperationException("TableMetadata deserialization fails");
+        meta.SetDefaults(schema, table);
+        return meta;
+    }
+
+    private async Task<TableMetadata> LoadTableMetadataDbAsync(String? dataSource, String schema, String table)
     {
         var prms = new ExpandoObject()
         {
@@ -161,10 +182,9 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
 
     private static (String schema, String table) ParsePath(String path)
     {
-        var split = path.Split('/');
+        var split = path.ToLowerInvariant().Split('/');
         if (split.Length < 2 )
             throw new InvalidOperationException($"Invalid path: {path}");
-        var schema = split[0].FromFolder();
-        return (schema, split[1]);
+        return (split[0], split[1]);
     }
 }

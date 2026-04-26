@@ -122,7 +122,7 @@ public class EditFormEndpointHandler(IServiceProvider _serviceProvider) : IEndpo
         var table = data.Eval<String>("Table.Name")
             ?? throw new InvalidOperationException("Table.Name is null");
         _dbMetadataProvider.RemoveFormFromCache(modelView.DataSource, schema, table, key);
-        return new();
+        return [];
     }
 
 

@@ -1,8 +1,9 @@
-﻿// Copyright © 2022-2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2022-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using System.Linq;
 
 using Microsoft.Extensions.Options;
 
@@ -10,7 +11,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
 using A2v10.Infrastructure;
-using System.Linq;
 
 namespace A2v10.AppRuntimeBuilder;
 
