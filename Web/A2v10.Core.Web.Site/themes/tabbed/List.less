@@ -142,7 +142,8 @@
 
 	&.chat {
 		user-select: text;
-		padding: 0 0 0 6px;
+		padding: 6px 6px 6px 12px;
+		border-color:var(--neutral400);
 
 		.a2-list-item {
 			padding: 0;
@@ -185,6 +186,7 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 		flex-grow: 1;
+		line-height:1.2;
 	}
 
 	.list-item-simple-icon {
@@ -205,8 +207,9 @@
 }
 
 .chat-item {
-	padding: @chat-gap / 2;
+
 	display: block;
+	margin-bottom: 12px;
 	text-align: left;
 
 	.chat-time, .chat-user {
@@ -247,8 +250,9 @@
 
 	.chat-body {
 		background-color: #fffce9;
+		border-radius: @control-brd-radius;
 		padding: @chat-gap;
-		margin: 3px 6px 6px 0;
+		margin: 6px 6px 6px 0;
 		display: inline-block;
 		box-shadow: 1px 1px 5px 0 rgba(174,174,174,.5), 0 5px 10px 0 rgba(0,0,0,.15);
 		position: relative;

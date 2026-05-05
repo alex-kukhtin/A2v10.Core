@@ -1,11 +1,5 @@
-﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
 
-using A2v10.Data.Interfaces;
-using A2v10.Infrastructure;
-using A2v10.System.Xaml;
-using A2v10.Xaml;
-using A2v10.Xaml.DynamicRendrer;
-using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
@@ -13,9 +7,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.DependencyInjection;
+
+using A2v10.Data.Interfaces;
+using A2v10.Infrastructure;
+using A2v10.System.Xaml;
+using A2v10.Xaml;
+using A2v10.Xaml.DynamicRendrer;
+
 namespace A2v10.Metadata;
 
-internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IModelBuilder
+internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, BuilderDescriptor descriptor) : IModelBuilder
 {
     internal readonly DatabaseMetadataProvider _metadataProvider = _serviceProvider.GetRequiredService<DatabaseMetadataProvider>();
     internal readonly ICurrentUser _currentUser = _serviceProvider.GetRequiredService<ICurrentUser>();
@@ -23,19 +25,21 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
     internal readonly IServiceProvider _xamlServiceProvider = new XamlServiceProvider();
 
 #pragma warning disable IDE1006 // Naming Styles
-    internal TableMetadata _table { get; init; } = default!;
-    internal TableMetadata? _baseTable { get; init; }
-    internal AppMetadata _appMeta { get; init; } = default!;
-    internal String? _dataSource { get; init; }
-    internal IPlatformUrl _platformUrl { get; init; } = default!;
-    internal IEnumerable<ReferenceMember> _refFields { get; init; } = default!;
+    internal TableMetadata _table => descriptor.Table;
+    internal TableMetadata? _baseTable => descriptor.BaseTable;
+    internal AppMetadata _appMeta => descriptor.AppMeta;
+    internal String? _dataSource => descriptor.DataSource;
+    internal IPlatformUrl _platformUrl => descriptor.PlatformUrl;
+    internal IEnumerable<ReferenceMember> _refFields => descriptor.RefFields;
+
+    private SqlBuilder _sqlBuilder => new(descriptor, _serviceProvider);
     private Lazy<IndexModelBuilder> _indexBuilder => new(new IndexModelBuilder(this));
     private IndexModelBuilder _index => _indexBuilder.Value;
     private Lazy<PlainModelBuilder> _plainBuilder => new(new PlainModelBuilder(this));
     private PlainModelBuilder _plain => _plainBuilder.Value;
 #pragma warning restore IDE1006 // Naming Styles
-    protected Boolean IsDialog => _platformUrl.Kind == UrlKind.Dialog;
-    protected String Action => _platformUrl.Action.ToLowerInvariant();
+    protected Boolean IsDialog => descriptor.PlatformUrl.Kind == UrlKind.Dialog;
+    protected String Action => descriptor.PlatformUrl.Action.ToLowerInvariant();
 
     public TableMetadata Table => _table;
     public TableMetadata? BaseTable => _baseTable;
@@ -48,12 +52,12 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
     };
     public Task<IDataModel> LoadLazyModelAsync()
     {
-        return _index.LoadIndexModelAsync(true);
+        return _sqlBuilder.LoadIndexModelAsync(true);
     }
 
     public Task<IDataModel> ExpandAsync(ExpandoObject expandPrms)
     {
-        return _index.ExpandAsync(expandPrms);
+        return _sqlBuilder.ExpandAsync(expandPrms);
     }
 
     public Task DbRemoveAsync(String? propName, ExpandoObject execPrms)
@@ -66,11 +70,11 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
         return Action switch
         {
             "browse" or "index" => _table.UseFolders
-                ? await _index.LoadIndexTreeModelAsync()
-                : await _index.LoadIndexModelAsync(),
+                ? await _sqlBuilder.LoadIndexTreeModelAsync()
+                : await _sqlBuilder.LoadIndexModelAsync(),
             "edit" => await _plain.LoadPlainModelAsync(),
-            "browsefolder" => await _index.LoadBrowseTreeModelAsync(),
-            "editfolder" => await _index.LoadEditFolderModelAsync(),
+            "browsefolder" => await _sqlBuilder.LoadBrowseTreeModelAsync(),
+            "editfolder" => await _sqlBuilder.LoadEditFolderModelAsync(),
             _ => throw new NotImplementedException($"Load model for {Action}")
         };
     }
@@ -157,7 +161,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
 
     public Task<FormMetadata> GetFormAsync()
     { 
-        return _metadataProvider.GetFormAsync(_dataSource, _baseTable ?? _table, Action, CreateDefaultForm);
+        return _metadataProvider.GetFormAsync(descriptor.DataSource, _baseTable ?? _table, Action, CreateDefaultForm);
     }
 
     public async Task<String> RenderPageAsync(IModelView modelView, IDataModel dataModel)
@@ -178,8 +182,8 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
         }
         else
         {
-            // var formMeta = await _metadataProvider.GetFormAsync(_dataSource, _baseTable ?? _table, _platformUrl.Action, CreateDefaultForm);
-            page = await _metadataProvider.GetXamlFormAsync(_dataSource, _baseTable ?? _table, _platformUrl.Action, CreateDefaultXamlForm);
+            // var formMeta = await _metadataProvider.GetFormAsync(descriptor.DataSource, _baseTable ?? _table, descriptor.PlatformUrl.Action, CreateDefaultForm);
+            page = await _metadataProvider.GetXamlFormAsync(descriptor.DataSource, _baseTable ?? _table, descriptor.PlatformUrl.Action, CreateDefaultXamlForm);
             //page = XamlBulder.BuildForm(formMeta.Form);
             templateText = await CreateTemplateAsync();
         }
@@ -187,14 +191,14 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider) : IMo
             throw new InvalidOperationException("Page is null");
 
         if (page is ISupportPlatformUrl supportPlatformUrl)
-            supportPlatformUrl.SetPlatformUrl(_platformUrl);
+            supportPlatformUrl.SetPlatformUrl(descriptor.PlatformUrl);
 
         var rri = new DynamicRenderPageInfo()
         {
             RootId = rootId,
             Page = page,
             ModelView = modelView,
-            PlatformUrl = _platformUrl,
+            PlatformUrl = descriptor.PlatformUrl,
             Model = dataModel,
             Template = templateText
         };

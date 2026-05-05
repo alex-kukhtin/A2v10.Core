@@ -4239,7 +4239,8 @@ tr:hover .commandbar.visible-hover {
 }
 .a2-list.chat {
   user-select: text;
-  padding: 0 0 0 6px;
+  padding: 6px 6px 6px 12px;
+  border-color: var(--neutral400);
 }
 .a2-list.chat .a2-list-item {
   padding: 0;
@@ -4273,6 +4274,7 @@ tr:hover .commandbar.visible-hover {
   overflow: hidden;
   text-overflow: ellipsis;
   flex-grow: 1;
+  line-height: 1.2;
 }
 .list-item-simple .list-item-simple-icon {
   color: var(--icon-color);
@@ -4288,8 +4290,8 @@ tr:hover .commandbar.visible-hover {
   margin: -3px -4px -2px -4px;
 }
 .chat-item {
-  padding: 0.5rem / 2;
   display: block;
+  margin-bottom: 12px;
   text-align: left;
 }
 .chat-item .chat-time,
@@ -4323,8 +4325,9 @@ tr:hover .commandbar.visible-hover {
 }
 .chat-item .chat-body {
   background-color: #fffce9;
+  border-radius: 4px;
   padding: 0.5rem;
-  margin: 3px 6px 6px 0;
+  margin: 6px 6px 6px 0;
   display: inline-block;
   box-shadow: 1px 1px 5px 0 rgba(174, 174, 174, 0.5), 0 5px 10px 0 rgba(0, 0, 0, 0.15);
   position: relative;
@@ -7145,7 +7148,7 @@ input::placeholder {
   }
 }
 .mdi-tabs-container {
-  --active-box-shadow: none;
+  --active-box-shadow: 0 0 5px #bbb;
   grid-area: tabs;
   display: flex;
   background-color: var(--nav100);
@@ -7243,7 +7246,6 @@ input::placeholder {
   text-shadow: 0.5px 0 0 var(--text);
   background-color: var(--bgPrimary);
   border-bottom-color: transparent;
-  box-shadow: 0 0 5px #bbb;
   border-right-color: transparent;
   z-index: 2;
   box-shadow: var(--active-box-shadow);
@@ -8768,6 +8770,10 @@ td.vert > .vcell {
   padding: 2px 0;
 }
 .a2-json-b {
+  --j-name-color: darkmagenta;
+  --j-obj-color: darkcyan;
+  --j-str-color: indianred;
+  --j-val-color: #555;
   font-family: Consolas, 'Courier New', Courier, monospace;
   padding: 6px;
   margin: 0;
@@ -8796,29 +8802,29 @@ td.vert > .vcell {
   cursor: pointer;
 }
 .a2-json-b .jbp-name {
-  color: darkmagenta;
+  color: var(--j-name-color);
   font-weight: 600;
   white-space: nowrap;
 }
 .a2-json-b .jbp-value {
   padding-left: 6px;
-  color: #555;
+  color: var(--j-val-color);
 }
 .a2-json-b .jbp-edit {
   font-size: 13px;
   cursor: pointer;
   display: none;
-  color: #555;
+  color: var(--j-val-color);
 }
 .a2-json-b .jbp-value:hover .jbp-edit {
   /*display:inline; TODO: edit value */
 }
 .a2-json-b .jbp-string {
-  color: indianred;
+  color: var(--j-str-color);
 }
 .a2-json-b .jbp-object {
   font-style: italic;
-  color: darkcyan;
+  color: var(--j-obj-color);
 }
 .a2-json-view {
   background-color: var(--bgControl);
@@ -8829,6 +8835,12 @@ td.vert > .vcell {
 }
 .a2-json-view.wrap .jbp-value {
   white-space: normal;
+}
+.dark .a2-json-b {
+  --j-name-color: #c57df9;
+  --j-obj-color: #79c0ff;
+  --j-str-color: #ff6f4d;
+  --j-val-color: #c9d1d9;
 }
 @media print {
   .no-print {

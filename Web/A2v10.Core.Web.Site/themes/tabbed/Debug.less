@@ -156,6 +156,12 @@
 
 
 .a2-json-b {
+    --j-name-color: darkmagenta;
+    --j-obj-color: darkcyan;
+    --j-str-color: indianred;
+    --j-val-color: #555;
+
+
     font-family: @monospace-font;
     padding: 6px;
     margin: 0;
@@ -170,7 +176,7 @@
         margin: 0;
         padding: 0;
         cursor: default;
-        white-space:nowrap;
+        white-space: nowrap;
     }
 
     .jb-label {
@@ -189,21 +195,21 @@
     }
 
     .jbp-name {
-        color: darkmagenta;
+        color: var(--j-name-color);
         font-weight: 600;
         white-space: nowrap;
     }
 
     .jbp-value {
         padding-left: 6px;
-        color: #555;
+        color: var(--j-val-color);
     }
 
     .jbp-edit {
         font-size: 13px;
         cursor: pointer;
         display: none;
-        color: #555;
+        color: var(--j-val-color);
     }
 
     .jbp-value:hover .jbp-edit {
@@ -211,12 +217,12 @@
     }
 
     .jbp-string {
-        color: indianred;
+        color: var(--j-str-color);
     }
 
     .jbp-object {
         font-style: italic;
-        color: darkcyan;
+        color: var(--j-obj-color);
     }
 }
 
@@ -232,5 +238,14 @@
         .jbp-value {
             white-space:normal;
         }
+    }
+}
+
+.dark {
+    .a2-json-b {
+        --j-name-color: #c57df9;
+        --j-obj-color: #79c0ff;
+        --j-str-color: #ff6f4d;
+        --j-val-color: #c9d1d9;
     }
 }

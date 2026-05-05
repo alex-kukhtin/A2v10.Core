@@ -1,32 +1,32 @@
-﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
 
-using System;   
-using System.Threading.Tasks;
+using System;
 using System.Dynamic;
+using System.Threading.Tasks;
 
-using A2v10.Data.Interfaces;
+using A2v10.App.Infrastructure;
 using A2v10.Data.Core.Extensions;
-using A2v10.Infrastructure;
+using A2v10.Data.Interfaces;
 
 namespace A2v10.Metadata;
 
-internal partial class IndexModelBuilder
+internal partial class SqlBuilder
 {
     public async Task<IDataModel> LoadIndexTreeModelAsync()
     {
-        var collectionName = _table.RealItemsName;
-        var collectionType = _table.RealTypeName;
+        var collectionName = Table.RealItemsName;
+        var collectionType = Table.RealTypeName;
 
-        var refFields = _refFields; // await ReferenceFieldsAsync(_table));
+        var refFields = RefFields; // await ReferenceFieldsAsync(_table));
 
-        var enumFields = DatabaseMetadataProvider.EnumFields(_table, false);
+        var enumFields = DatabaseMetadataProvider.EnumFields(Table, false);
         var sqlString = $"""
         set nocount on;
         set transaction isolation level read uncommitted;
 
         with T(Id, [Name], Icon, HasChildren, [Order], [Parent], InitExpand)
         as (
-            select Id = cast(0 as bigint), [Name] = N'{_table.RealItemsLabel.LocalizeSql()}', Icon='folder-outline',
+            select Id = cast(0 as bigint), [Name] = N'{Table.RealItemsLabel.LocalizeSql()}', Icon='folder-outline',
                 HasChildren = cast(0 as bit), [Order] = 1, [Parent] = cast(null as bigint),
                 [InitExpand] = cast(1 as bit)
             union all
@@ -35,11 +35,11 @@ internal partial class IndexModelBuilder
                 [InitExpand] = cast(0 as bit)
             union all
             select Id, [Name], Icon = N'folder-outline',
-                HasChildren = case when exists (select * from {_table.SqlTableName} 
+                HasChildren = case when exists (select * from {Table.SqlTableName} 
                     where Void = 0 and IsFolder = 1 and Parent = f.Id) then 1 else 0 end,
                 [Order] = 2, [Parent] = cast(0 as bigint), 
                 [InitExpand] = cast(0 as bit)
-            from {_table.SqlTableName} f
+            from {Table.SqlTableName} f
             where f.IsFolder = 1 and f.Void = 0 and f.Parent is null
         )
         select [Folders!TFolder!Tree] = null, [Id!!Id] = Id, [Name!!Name] = [Name], Icon,
@@ -52,14 +52,15 @@ internal partial class IndexModelBuilder
 
         -- Lasy table declaration
         select [!{collectionType}!Array] = null, 
-            {String.Join(",", _table.AllSqlFields(refFields, enumFields, "c"))},
+            {String.Join(",", Table.AllSqlFields(refFields, enumFields, "c"))},
             [!!RowCount] = 0
-        from {_table.SqlTableName} c
-        {RefTableJoins(refFields, "c")}
+        from {Table.SqlTableName} c
         where 0 <> 0;
         """;
 
-        return await _dbContext.LoadModelSqlAsync(_dataSource, sqlString, dbprms =>
+        // { RefTableJoins(refFields, "c")} ???
+
+        return await _dbContext.LoadModelSqlAsync(DataSource, sqlString, dbprms =>
         {
             AddDefaultParameters(dbprms);
         });
@@ -67,8 +68,8 @@ internal partial class IndexModelBuilder
 
     public Task<IDataModel> ExpandAsync(ExpandoObject expandPrms)
     {
-        var collectionName = _table.RealItemsName;
-        var collectionType = _table.RealTypeName;
+        var collectionName = Table.RealItemsName;
+        var collectionType = Table.RealTypeName;
 
         var sqlString = $"""
         set nocount on;
@@ -76,13 +77,13 @@ internal partial class IndexModelBuilder
 
         select [SubItems!TFolder!Tree] = null, [Id!!Id] = Id, [Name!!Name] = [Name], Icon = N'folder-outline',
             [SubItems!TFolder!Items] = null,
-            [HasSubItems!!HasChildren] = case when exists(select 1 from {_table.SqlTableName} c where c.Void=0 and c.Parent = f.Id and c.IsFolder = 1) then 1 else 0 end,
+            [HasSubItems!!HasChildren] = case when exists(select 1 from {Table.SqlTableName} c where c.Void=0 and c.Parent = f.Id and c.IsFolder = 1) then 1 else 0 end,
             [{collectionName}!{collectionType}!LazyArray] = null
-        from {_table.SqlTableName} f where f.IsFolder=1 and f.Parent = @Id and f.Void=0;
+        from {Table.SqlTableName} f where f.IsFolder=1 and f.Parent = @Id and f.Void=0;
 
         """;
 
-        return _dbContext.LoadModelSqlAsync(_dataSource, sqlString, dbprms =>
+        return _dbContext.LoadModelSqlAsync(DataSource, sqlString, dbprms =>
         {
             AddDefaultParameters(dbprms);
             dbprms.AddBigInt("@Id", expandPrms.Get<Int64>("Id"));
@@ -95,8 +96,8 @@ internal partial class IndexModelBuilder
 
     public async Task<IDataModel> LoadBrowseTreeModelAsync()
     {
-        var collectionName = _table.RealItemsName;
-        var collectionType = _table.RealTypeName;
+        var collectionName = Table.RealItemsName;
+        var collectionType = Table.RealTypeName;
 
         var sqlString = $"""
         set nocount on;
@@ -104,16 +105,16 @@ internal partial class IndexModelBuilder
 
         with T(Id, [Name], Icon, HasChildren, [Order], [Parent], InitExpand)
         as (
-            select Id = cast(0 as bigint), [Name] = N'{_table.RealItemsLabel.LocalizeSql()}', Icon='folder-outline',
+            select Id = cast(0 as bigint), [Name] = N'{Table.RealItemsLabel.LocalizeSql()}', Icon='folder-outline',
                 HasChildren = cast(0 as bit), [Order] = 1, [Parent] = cast(null as bigint),
                 [InitExpand] = cast(1 as bit)
             union all
             select Id, [Name], Icon = N'folder-outline',
-                HasChildren = case when exists (select * from {_table.SqlTableName} 
+                HasChildren = case when exists (select * from {Table.SqlTableName} 
                     where Void = 0 and IsFolder = 1 and Parent = f.Id) then 1 else 0 end,
                 [Order] = 2, Parent = cast(0 as bigint),
                 [InitExpand] = cast(0 as bit)
-            from {_table.SqlTableName} f
+            from {Table.SqlTableName} f
             where f.IsFolder = 1 and f.Void = 0 and f.Parent is null
         )
         select [Folders!TFolder!Tree] = null, [Id!!Id] = Id, [Name!!Name] = [Name], Icon,
@@ -125,7 +126,7 @@ internal partial class IndexModelBuilder
 
         """;
 
-        return await _dbContext.LoadModelSqlAsync(_dataSource, sqlString, dbprms =>
+        return await _dbContext.LoadModelSqlAsync(DataSource, sqlString, dbprms =>
         {
             AddDefaultParameters(dbprms);
         });
