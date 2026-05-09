@@ -2099,7 +2099,6 @@ pre.a2-code {
   line-height: 1.2em;
   font-weight: normal;
   font-style: normal;
-  display: block;
 }
 .control-group .validator:before {
   content: '';
