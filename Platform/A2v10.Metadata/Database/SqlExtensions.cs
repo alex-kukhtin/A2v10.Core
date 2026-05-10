@@ -18,12 +18,12 @@ internal static class SqlExtensions
             return $"@[{value[1..]}]";
         return value;
     }
-    public static SqlDbType ToSqlDbType(this ColumnType columnDataType, ColumnType idDataType)
+    public static SqlDbType ToSqlDbType(this ColumnType columnDataType)
     {
         return columnDataType switch
         {
             ColumnType.Id or ColumnType.Ref or 
-                ColumnType.Parent or ColumnType.Onwer => SqlDbType.BigInt,
+                ColumnType.Parent or ColumnType.Owner => SqlDbType.BigInt,
             ColumnType.RowNumber => SqlDbType.Int,
             // other
             ColumnType.Operation => SqlDbType.NVarChar,
@@ -47,8 +47,9 @@ internal static class SqlExtensions
     {
         return columnDataType switch
         {
-            ColumnType.Id or ColumnType.Ref or ColumnType.Onwer or ColumnType.Parent => "bigint",
+            ColumnType.Id or ColumnType.Ref or ColumnType.Owner or ColumnType.Parent => "bigint",
             ColumnType.Operation => "nvarchar(64)",
+            ColumnType.Money => "money",
             ColumnType.Enum => "nvarchar(16)",
             ColumnType.String => $"nvarchar({maxLength})",
             ColumnType.NVarChar => $"nvarchar({maxLength})",
@@ -82,7 +83,7 @@ internal static class SqlExtensions
     {
         return column.Type switch
         {
-            ColumnType.Id or ColumnType.Ref or ColumnType.Onwer or ColumnType.Parent => typeof(Int64),
+            ColumnType.Id or ColumnType.Ref or ColumnType.Owner or ColumnType.Parent => typeof(Int64),
             ColumnType.RowNumber => typeof(Int32),
             ColumnType.Operation => typeof(String),
             ColumnType.Enum => typeof(String),
@@ -106,10 +107,10 @@ internal static class SqlExtensions
     internal static Boolean IsFieldUpdated(this TableColumn column)
     {
         return !column.Role.HasFlag(TableColumnRole.Id)
-            && !column.Role.HasFlag(TableColumnRole.Void)
-            && !column.Role.HasFlag(TableColumnRole.IsFolder)
-            && !column.Role.HasFlag(TableColumnRole.IsSystem)
-            && column.Name != "Owner"
+            && column.Type != ColumnType.Void
+            && column.Type != ColumnType.IsFolder
+            && column.Type != ColumnType.IsSystem
+            && column.Type != ColumnType.Owner
             && column.Type != ColumnType.RowVersion;
     }
 
@@ -154,7 +155,7 @@ internal static class SqlExtensions
                     [{elemName}.Name!{modelType}!Name] = r{c.Index}.[Name],
                     [{elemName}.Url!{modelType}!] = r{c.Index}.[Url]
                     """;
-            else if (c.Table.Columns.Any(c => c.Role == TableColumnRole.Done))
+            else if (c.Table.Columns.Any(c => c.Type == ColumnType.Done))
                 yield return $"""
                     [{elemName}.{c.Table.PrimaryKeyField}!{modelType}!Id] = r{c.Index}.[{c.Table.PrimaryKeyField}], 
                     [{elemName}.{c.Table.NameField}!{modelType}!Name] = r{c.Index}.[{c.Table.NameField}],

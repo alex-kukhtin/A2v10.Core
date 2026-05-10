@@ -14,6 +14,7 @@ namespace A2v10.Metadata;
 
 /* TODO:
 1. Сортировка и фильтрация по reference полям
+2. Убрать refFields -> в колонках уже есть RefTable
 */
 
 internal partial class IndexModelBuilder
@@ -84,7 +85,7 @@ internal partial class IndexModelBuilder
                 yield return $"(@Id = 0 or a.{_table.ParentField} = @Id or (@Id = -2 and a.{_table.ParentField} is null))";
             }
 
-            if (_table.Columns.Any(c => c.Role.HasFlag(TableColumnRole.Void)))
+            if (_table.Columns.Any(c => c.IsVoid))
                 yield return $"a.[Void] = 0";
 
             if (opColumn != null)
@@ -237,7 +238,7 @@ internal partial class IndexModelBuilder
                 var data = qry?.Get<Object>(r.Column.Name);
                 if (data != null && _appMeta.IdDataType == ColumnType.Uniqueidentifier)
                     data = Guid.Parse(data.ToString()!);
-                dbprms.AddTyped($"@{r.Column.Name}", r.Column.Type.ToSqlDbType(_appMeta.IdDataType), data);
+                dbprms.AddTyped($"@{r.Column.Name}", r.Column.Type.ToSqlDbType(), data);
             }
             foreach (var e in enumFields)
             {

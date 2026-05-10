@@ -3,8 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace A2v10.Metadata;
 
@@ -12,15 +10,40 @@ internal static class DefaultFormBuilder
 {
     public static FormMetadata CreateIndexForm(TableMetadata table)
     {
-        IEnumerable<FormColumn> indexColums()
+        var cols = new Dictionary<String, FormColumn>()
         {
-            yield return new FormColumn() { Field = "Id", Header = "@[Id]"};
-            yield return new FormColumn() { Field = "Name", Header = "@[Name]" };
-        }
+            [Constants.FieldNames.Id] = new()
+        };
+        // memo => last
+        foreach (var column in table.DefaultColumns().Where(c => !c.IsMemo))
+            cols.Add(column.Name, new());
+
+        foreach (var column in table.Columns)
+            cols.Add(column.Name, new());
+
+        foreach (var column in table.DefaultColumns().Where(c => c.IsMemo))
+            cols.Add(column.Name, new());
 
         return new FormMetadata()
         {
-            Columns = [..indexColums()]
+            Columns = cols
+        };
+    }
+
+    public static FormMetadata CreateEditForm(TableMetadata table)
+    {
+        var cols = new Dictionary<String, FormColumn>();
+        // memo => last
+        foreach (var column in table.DefaultColumns().Where(c => !c.IsMemo))
+            cols.Add(column.Name, new());
+        foreach (var column in table.Columns)
+            cols.Add(column.Name, new FormColumn());
+        foreach (var column in table.DefaultColumns().Where(c => c.IsMemo))
+            cols.Add(column.Name, new());
+
+        return new FormMetadata()
+        {
+            Columns = cols
         };
     }
 }

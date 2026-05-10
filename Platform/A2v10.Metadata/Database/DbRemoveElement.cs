@@ -54,7 +54,7 @@ internal partial class IndexModelBuilder
         return _dbContext.LoadModelSqlAsync(_dataSource, sqlString, dbprms =>
         {
             AddDefaultParameters(dbprms);
-            dbprms.AddTyped("@Id", _appMeta.IdDataType.ToSqlDbType(_appMeta.IdDataType), execPrms.Get<Object>("Id"));
+            dbprms.AddTyped("@Id", _appMeta.IdDataType.ToSqlDbType(), execPrms.Get<Object>("Id"));
         });
     }
 }

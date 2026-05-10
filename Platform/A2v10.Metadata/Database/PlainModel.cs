@@ -156,9 +156,9 @@ internal partial class PlainModelBuilder
 
                 if (multPk)
                 {
-                    var parentField = detailsTable.PrimaryKeys.FirstOrDefault(pk => !pk.Role.HasFlag(TableColumnRole.RowNo))
+                    var parentField = detailsTable.PrimaryKeys.FirstOrDefault(pk => !pk.IsRowNo)
                         ?? throw new InvalidOperationException("MergeDetails: Primary key not found");
-                    var rowNoField = detailsTable.PrimaryKeys.FirstOrDefault(pk => pk.Role.HasFlag(TableColumnRole.RowNo))
+                    var rowNoField = detailsTable.PrimaryKeys.FirstOrDefault(pk => pk.IsRowNo)
                         ?? throw new InvalidOperationException("MergeDetails: RowNo field not found");
                     return $"""
 				    merge {detailsTable.SqlTableName} as t

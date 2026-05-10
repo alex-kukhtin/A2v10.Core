@@ -17,13 +17,7 @@ internal partial class PlainModelBuilder
     /* TODO: Find 'Document' field */
     internal async Task<IInvokeResult> ApplyDocumentAsync(ExpandoObject? prms)
     {
-        var opColumn = _table.Columns.FirstOrDefault(c => c.Type == ColumnType.Operation);
-        if (opColumn == null)
-            throw new InvalidOperationException("Implement. Apply for Document");
-
-        var doneColumn = _table.Columns.FirstOrDefault(c => c.Role.HasFlag(TableColumnRole.Done))
-            ?? throw new InvalidOperationException("Document. The 'Done' сolumn is not found");
-
+        var opColumn = _table.Columns.FirstOrDefault(c => c.Type == ColumnType.Operation) ?? throw new InvalidOperationException("Implement. Apply for Document");
         TableMetadata applyTable = this._baseTable ?? _table;
         if (applyTable.Apply == null || !applyTable.Apply.Any())
             throw new InvalidOperationException($"Table {applyTable.Schema}.[{applyTable.Name}]. Nothing to apply");
@@ -98,13 +92,8 @@ internal partial class PlainModelBuilder
 
     internal async Task<IInvokeResult> UnApplyDocumentAsync(ExpandoObject? prms)
     {
-        var opColumn = _table.Columns.FirstOrDefault(c => c.Type == ColumnType.Operation);
-
-        if (opColumn == null)
-            throw new InvalidOperationException("Implement. UnApply for Document");
-        var doneColumn = _table.Columns.FirstOrDefault(c => c.Role.HasFlag(TableColumnRole.Done))
-            ?? throw new InvalidOperationException("Document. The 'Done' сolumn is not found");
-
+        var opColumn = _table.Columns.FirstOrDefault(c => c.Type == ColumnType.Operation) 
+            ?? throw new InvalidOperationException("Implement. UnApply for Document");
         TableMetadata applyTable = this._baseTable ?? _table;
         if (applyTable.Apply == null || !applyTable.Apply.Any())
             throw new InvalidOperationException($"Table {applyTable.Schema}.[{applyTable.Name}]. Nothing to apply");

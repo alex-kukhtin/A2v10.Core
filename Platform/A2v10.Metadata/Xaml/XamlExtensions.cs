@@ -1,7 +1,6 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
-using A2v10.Data.Interfaces;
 using A2v10.Xaml;
 
 namespace A2v10.Metadata;
@@ -24,15 +23,36 @@ internal static class XamlExtensions
         return item.Label.Localize() ?? $"@[{item.Column}]";
     }
 
-    internal static Bind BindColumn(this ReportItemMetadata item, String? prefix = null)
-    {
-        return item.DataType switch
+    internal static DataType ToXamlDataType(this FormColumnType column) =>
+        column switch
         {
-            ColumnType.Money => new BindSum($"{prefix}{item.Column}"),
-            ColumnType.Float => new BindNumber($"{prefix}{item.Column}"),
-            _ => new Bind($"{prefix}{item.Column}")
+            FormColumnType.Date => DataType.Date,
+            FormColumnType.DateTime => DataType.DateTime,
+            FormColumnType.Currency => DataType.Currency,
+            FormColumnType.Number => DataType.Number,
+            _ => DataType.String,
         };
-    }
+
+    internal static ColumnRole ToXamlColumnRole(this FormColumnType column) =>
+        column switch
+        {
+            FormColumnType.Id => ColumnRole.Id,
+            FormColumnType.Date or FormColumnType.DateTime => ColumnRole.Date,
+            FormColumnType.Currency or FormColumnType.Number => ColumnRole.Number,
+            _ => ColumnRole.Default,
+        };
+
+    internal static FormColumnType ToFormDataType(this ColumnType column) =>
+        column switch
+        {
+            ColumnType.Id => FormColumnType.Id,
+            ColumnType.Ref => FormColumnType.Ref,
+            ColumnType.Date => FormColumnType.Date,
+            ColumnType.DateTime => FormColumnType.DateTime,
+            ColumnType.Money => FormColumnType.Currency,
+            ColumnType.Float => FormColumnType.Number,
+            _ => FormColumnType.String,
+        };
 
     internal static SheetCell BindSheetCell(this ReportItemMetadata item, String? prefix = null)
     {

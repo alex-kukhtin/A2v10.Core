@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
+using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace A2v10.Metadata;
 
@@ -27,9 +28,10 @@ public enum ColumnType
     Memo,
     RowNumber,
     Done,
+    Void,
     IsSystem,
     IsFolder,
-    Onwer,
+    Owner,
     Parent,
     // Simple fields
     String,
@@ -76,17 +78,9 @@ public enum TableColumnRole
     Id, 
     Name,
     SystemName,
-    Code, 
     RowNo, 
-    Void, 
     Parent, 
-    IsFolder, 
-    IsSystem, 
-    Done, 
-    Kind, 
-    Owner, 
-    Number, 
-    Memo,
+    Kind
 }
 
 public record TableColumn
@@ -100,16 +94,32 @@ public record TableColumn
     public String Name { get; set; } = default!;
     public ColumnType Type { get; init; } = default!;
     public String Target { get; init; } = default!;
+    public TableMetadata? RefTable { get; set; }
+
+    // for metadata provider
+    internal Boolean NeedLoadRef => Type == ColumnType.Ref || Type == ColumnType.Owner || Type == ColumnType.Parent;
+
+    internal String Presentation
+    {
+        get
+        {
+            if (Type == ColumnType.Ref)
+            {
+                if (RefTable == null)
+                    throw new InvalidOperationException($"RefTable for column '{Name}' is null");
+                return RefTable.Label;
+            }
+            return Constants.FieldNames.Name;
+        }
+    }
 
     #region Database Fields
-    public String? Label { get; init; } = default!;
     public Int32 MaxLength { get; init; }
     public Int32 Scale { get; init; }
     public ColumnReference Reference { get; init; } = default!;
     public String? DbName { get; init; }
     public ColumnType? DbDataType { get; init; }
     public TableColumnRole Role { get; init; } = default!;
-    public Int32 Order { get; init; }
     public Int32 DbOrder { get; init; }
     public String? Computed { get; init; }
     public Boolean Required { get; init; }
@@ -118,23 +128,23 @@ public record TableColumn
     #endregion
     internal Boolean IsReference => Reference != null && Reference.RefTable != null && Type != ColumnType.Enum;
     internal Boolean IsEnum => Type == ColumnType.Enum;
-    internal Boolean IsBitField => Type == ColumnType.Bit && Role == 0;
+    internal Boolean IsBitField => Type == ColumnType.Bit;
     internal Boolean IsBlob => Type == ColumnType.Stream;
     internal Boolean IsString => Type == ColumnType.String;
     internal Boolean Exists => DbName != null && DbDataType != null;
 
     internal Boolean HasDefaultBit => 
-           Role == TableColumnRole.IsFolder
-        || Role == TableColumnRole.IsSystem
-        || Role == TableColumnRole.Void
-        || Role == TableColumnRole.Done;
+           Type == ColumnType.IsFolder
+        || Type == ColumnType.IsSystem
+        || Type == ColumnType.Void
+        || Type == ColumnType.Done;
 
-    internal Boolean IsVoid => Role == TableColumnRole.Void;
-    internal Boolean IsParent => Role == TableColumnRole.Parent;
-    internal Boolean IsName => Role == TableColumnRole.Name;
-    internal Boolean IsRowNo => Role == TableColumnRole.RowNo;
+    internal Boolean IsVoid => Type == ColumnType.Void;
+    internal Boolean IsParent => Type == ColumnType.Parent;
+    internal Boolean IsName => Type == ColumnType.Name;
+    internal Boolean IsRowNo => Type == ColumnType.RowNumber;
     internal Boolean IsSearchable => Type == ColumnType.String;
-    internal Boolean IsMemo => Role == TableColumnRole.Memo;
+    internal Boolean IsMemo => Type == ColumnType.Memo;
 }
 
 
@@ -253,7 +263,7 @@ public record TableMetadata
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Parent column");
     internal String NameField => Columns.FirstOrDefault(c => c.Role == TableColumnRole.Name)?.Name
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Name column");
-    internal String DoneField => Columns.FirstOrDefault(c => c.Role == TableColumnRole.Done)?.Name
+    internal String DoneField => Columns.FirstOrDefault(c => c.Type == ColumnType.Done)?.Name
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Done column");
     internal String KindField => Columns.FirstOrDefault(c => c.Role == TableColumnRole.Kind)?.Name
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Kind column");
@@ -286,10 +296,9 @@ public record TableMetadata
             Kind = schema.ToEndpointKind();
         if (String.IsNullOrEmpty(Label))
             Label = Constants.FieldNames.Name;
-        if (!Forms.ContainsKey("index"))
-            Forms.Add("index", DefaultFormBuilder.CreateIndexForm(this));
-        else 
-            Forms["index"].SetDefaults(this);
+        if (!Forms.ContainsKey(Constants.FormNames.Index))
+            Forms.Add(Constants.FormNames.Index, DefaultFormBuilder.CreateIndexForm(this));
+        Forms[Constants.FormNames.Index].SetDefaults(this);
     }
 }
 

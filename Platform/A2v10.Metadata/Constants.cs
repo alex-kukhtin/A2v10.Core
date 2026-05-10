@@ -24,4 +24,13 @@ internal static class Constants
         public const Int32 Name = 255;
         public const Int32 Memo = 255;
     }
+
+    public static class FormNames
+    {
+        public const String Index = "index";
+        public const String Edit = "edit";
+        public const String Open = "open";
+        public const String Show = "show";
+    }
+
 }

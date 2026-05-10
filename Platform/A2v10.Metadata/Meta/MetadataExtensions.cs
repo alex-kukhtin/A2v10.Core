@@ -183,6 +183,18 @@ internal static class MetadataExtensions
         };
     }
 
+    internal static IEnumerable<TableColumn> AllColumns(this TableMetadata table)
+    {
+        yield return new TableColumn(Constants.FieldNames.Id, ColumnType.Id);
+        foreach (var x in table.DefaultColumns())
+            yield return x;
+        foreach (var x in table.Columns)
+            yield return x;
+    }
+
+    internal static FormMetadata IndexForm(this TableMetadata table) =>
+        table.Forms.First(x => x.Key == Constants.FormNames.Index).Value;
+
     static IEnumerable<TableColumn> CatalogDefaultColumns(TableMetadata table)
     {
         yield return new TableColumn(Constants.FieldNames.Name, ColumnType.Name);

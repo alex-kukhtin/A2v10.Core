@@ -17,13 +17,19 @@ namespace A2v10.Metadata;
 
 public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbContext _dbContext, IAppCodeProvider _codeProvider)
 {
-    public Task<TableMetadata> GetSchemaAsync(IModelBaseMeta meta, String? dataSource)
+    public async Task<TableMetadata> GetSchemaAsync(IModelBaseMeta meta, String? dataSource)
     {
-        return _metadataCache.GetOrAddAsync(dataSource, meta.CurrentSchema, meta.CurrentTable, LoadTableMetadataAsync);
+        var loaded = await _metadataCache.GetOrAddAsync(dataSource, meta.CurrentSchema, meta.CurrentTable, LoadTableMetadataAsync);
+        await ResolveReferencesAsyns(loaded, dataSource);
+        loaded.SetDefaults(meta.CurrentSchema, meta.CurrentTable);
+        return loaded;
     }
-    public Task<TableMetadata> GetSchemaAsync(String? dataSource, String schema, String table)
+    public async Task<TableMetadata> GetSchemaAsync(String? dataSource, String schema, String table)
     {
-        return _metadataCache.GetOrAddAsync(dataSource, schema, table, LoadTableMetadataAsync);
+        var meta = await _metadataCache.GetOrAddAsync(dataSource, schema, table, LoadTableMetadataAsync);
+        await ResolveReferencesAsyns(meta, dataSource);
+        meta.SetDefaults(schema, table);
+        return meta;
     }
 
     public Task<AppMetadata> GetAppMetadataAsync(String? dataSource)
@@ -110,7 +116,6 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         }
         var meta = JsonConvert.DeserializeObject<TableMetadata>(text, JsonSettings.CamelCaseSerializerSettings)
             ?? throw new InvalidOperationException("TableMetadata deserialization fails");
-        meta.SetDefaults(schema, table);
         return meta;
     }
 
@@ -142,11 +147,26 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     }
 
 
-    private static (String schema, String table) ParsePath(String path)
+    internal static (String schema, String table) ParsePath(String path)
     {
         var split = path.ToLowerInvariant().Split('/');
         if (split.Length < 2 )
             throw new InvalidOperationException($"Invalid path: {path}");
         return (split[0], split[1]);
+    }
+
+    public async Task ResolveReferencesAsyns(TableMetadata meta, String? dataSource)
+    {
+        foreach (var column in meta.Columns.Where(col => col.NeedLoadRef))
+        {
+            if (column.Type == ColumnType.Parent)
+            {
+                column.RefTable = meta; // self!
+                continue;
+            }
+            var refPath = DatabaseMetadataProvider.ParsePath(column.Target);
+            var refMeta = await GetSchemaAsync(dataSource, refPath.schema, refPath.table);
+            column.RefTable = refMeta;
+        }
     }
 }

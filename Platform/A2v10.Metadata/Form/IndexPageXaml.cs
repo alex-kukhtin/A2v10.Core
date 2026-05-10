@@ -5,33 +5,22 @@ using System.Linq;
 using System.Collections.Generic;
 
 using A2v10.Xaml;
-using System.Globalization;
 
 namespace A2v10.Metadata;
 
 internal partial class IndexModelBuilder
 {
-    IEnumerable<DataGridColumn> IndexColumnsXaml(Boolean hasChecked)
-    {
-        yield return new DataGridColumn()
-        {
-            Role = ColumnRole.Id,
-            Header = "@[Id]",
-            Bindings = b => b.SetBinding(nameof(DataGridColumn.Content), new Bind("Id"))
-        };
-        yield return new DataGridColumn()
-        {
-            LineClamp = 2,
-            Header = "@[Name]",
-            Bindings = b => b.SetBinding(nameof(DataGridColumn.Content), new Bind("Name"))
-        };
-        yield return new DataGridColumn()
-        {
-            LineClamp = 2,
-            Header = "@[Memo]",
-            Bindings = b => b.SetBinding(nameof(DataGridColumn.Content), new Bind("Memo"))
-        };
-    }
+    IEnumerable<DataGridColumn> IndexColumnsXaml(Boolean hasChecked) =>
+        _table.IndexForm().Columns.Select(col =>
+            new DataGridColumn()
+            {
+                Header = col.Value.Header,
+                Role = col.Value.DataType.ToXamlColumnRole(),
+                SortProperty = col.Value.DataType == FormColumnType.Ref ? col.Key : null,
+                Bindings = b => b.SetBinding(nameof(DataGridColumn.Content), 
+                    new Bind(col.Value.Path) { DataType = col.Value.DataType.ToXamlDataType()})
+            }
+         );
 
     CollectionView XamlCollectionView() =>
         new()
