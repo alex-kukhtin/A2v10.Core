@@ -16,6 +16,7 @@ internal partial class IndexModelBuilder
         yield return new DataGridColumn()
         {
             Role = ColumnRole.Id,
+            Header = "@[Id]",
             Bindings = b => b.SetBinding(nameof(DataGridColumn.Content), new Bind("Id"))
         };
         yield return new DataGridColumn()
@@ -120,6 +121,7 @@ internal partial class IndexModelBuilder
                                 new SearchBox()
                                 {
                                     TabIndex = 1,
+                                    Placeholder = "@[Search]",
                                     Bindings = b => b.SetBinding(nameof(SearchBox.Value), new Bind("Parent.Filter.Fragment"))
                                 }
                             ]

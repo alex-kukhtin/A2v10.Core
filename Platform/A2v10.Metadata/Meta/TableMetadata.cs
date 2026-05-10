@@ -16,12 +16,22 @@ public enum EndpointKind
     Undefined,
     Catalog,
     Document,
+    Operation,
     Journal,
 }
 public enum ColumnType
 {
     // semantic types
     Id,
+    Name,
+    Memo,
+    RowNumber,
+    Done,
+    IsSystem,
+    IsFolder,
+    Onwer,
+    Parent,
+    // Simple fields
     String,
     Ref,
     Date,
@@ -61,26 +71,32 @@ public record ColumnReferenceToMe : ColumnReference
     public String Column { get; init; } = default!;
 }
 
-[Flags]
 public enum TableColumnRole
 {
-    PrimaryKey = 0x1,  // 1
-    Name       = 0x2,  // 2
-    Code       = 0x4,  // 4
-    RowNo      = 0x8,  // 8 (RowNo + PrimaryKey) = 0x9 (9)
-    Void       = 0x10, // 16
-    Parent     = 0x20, // 32 (Parent + PrimaryKey) = 0x33
-    IsFolder   = 0x40, // 64
-    IsSystem   = 0x80, // 128
-    Done       = 0x100, // 256
-    Kind       = 0x200, // 512
-    Owner      = 0x400, // 1024
-    Number     = 0x800, // 2048
-    SystemName = 0x1000,// 4096
+    Id, 
+    Name,
+    SystemName,
+    Code, 
+    RowNo, 
+    Void, 
+    Parent, 
+    IsFolder, 
+    IsSystem, 
+    Done, 
+    Kind, 
+    Owner, 
+    Number, 
+    Memo,
 }
 
 public record TableColumn
 {
+    public TableColumn() { }
+    public TableColumn(String name, ColumnType type)
+    {
+        Name = name;
+        Type = type;
+    }
     public String Name { get; set; } = default!;
     public ColumnType Type { get; init; } = default!;
     public String Target { get; init; } = default!;
@@ -108,17 +124,17 @@ public record TableColumn
     internal Boolean Exists => DbName != null && DbDataType != null;
 
     internal Boolean HasDefaultBit => 
-           Role.HasFlag(TableColumnRole.IsFolder)
-        || Role.HasFlag(TableColumnRole.IsSystem)
-        || Role.HasFlag(TableColumnRole.Void)
-        || Role.HasFlag(TableColumnRole.Done);
+           Role == TableColumnRole.IsFolder
+        || Role == TableColumnRole.IsSystem
+        || Role == TableColumnRole.Void
+        || Role == TableColumnRole.Done;
 
-    internal Boolean IsVoid => Role.HasFlag(TableColumnRole.Void);
-    internal Boolean IsParent => Role.HasFlag(TableColumnRole.Parent);
-    internal Boolean IsName => Role.HasFlag(TableColumnRole.Name);
-    internal Boolean IsRowNo => Role.HasFlag(TableColumnRole.RowNo);
+    internal Boolean IsVoid => Role == TableColumnRole.Void;
+    internal Boolean IsParent => Role == TableColumnRole.Parent;
+    internal Boolean IsName => Role == TableColumnRole.Name;
+    internal Boolean IsRowNo => Role == TableColumnRole.RowNo;
     internal Boolean IsSearchable => Type == ColumnType.String;
-    internal Boolean IsMemo => Name == "Memo";
+    internal Boolean IsMemo => Role == TableColumnRole.Memo;
 }
 
 
@@ -197,6 +213,8 @@ public record TableMetadata
     public String Table { get; set; } = default!;
     public String Model { get; set; } = default!;
     public String Path { get; set; } = default!;
+    public String Label { get; set; } = default!;
+
     public Dictionary<String, TableColumn> Fields { get; init; } = [];
 
     public List<TableColumn> Columns => [.. Fields.Select(
@@ -206,7 +224,7 @@ public record TableMetadata
     // for sql
     public String? TypeName => $"T{Model}";
     public String CollectionName => Model.Plural();
-
+    public Dictionary<String, FormMetadata> Forms { get; init; } = [];
 
     // OLD
     public String Name { get; init; } = default!;
@@ -231,17 +249,13 @@ public record TableMetadata
     public List<ColumnReferenceToMe> RefsToMe { get; init; } = [];
     // internal variables
     internal String PrimaryKeyField => "Id";
-    internal String IsFolderField => Columns.FirstOrDefault(c => c.Role.HasFlag(TableColumnRole.IsFolder))?.Name
-        ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a IsFolder column");
-    internal String ParentField => Columns.FirstOrDefault(c => c.Role.HasFlag(TableColumnRole.Parent))?.Name
+    internal String ParentField => Columns.FirstOrDefault(c => c.Role == TableColumnRole.Parent)?.Name
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Parent column");
-    internal String RowNoField => Columns.FirstOrDefault(c => c.Role.HasFlag(TableColumnRole.RowNo))?.Name
-        ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a RowNumber column");
-    internal String NameField => Columns.FirstOrDefault(c => c.Role.HasFlag(TableColumnRole.Name))?.Name
+    internal String NameField => Columns.FirstOrDefault(c => c.Role == TableColumnRole.Name)?.Name
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Name column");
-    internal String DoneField => Columns.FirstOrDefault(c => c.Role.HasFlag(TableColumnRole.Done))?.Name
+    internal String DoneField => Columns.FirstOrDefault(c => c.Role == TableColumnRole.Done)?.Name
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Done column");
-    internal String KindField => Columns.FirstOrDefault(c => c.Role.HasFlag(TableColumnRole.Kind))?.Name
+    internal String KindField => Columns.FirstOrDefault(c => c.Role == TableColumnRole.Kind)?.Name
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Kind column");
 
     internal String RealItemName => ItemsName != null ? ItemsName.Singular() : ItemName ?? Name.Singular();
@@ -251,13 +265,12 @@ public record TableMetadata
     internal String RealItemLabel => ItemLabel ?? $"@{RealItemName}";
     internal String RealItemsLabel => ItemsLabel ?? $"@{RealItemsName}";
     internal String SqlTableName => $"{Schema}.[{Table}]";
-    internal Boolean IsDocument => Schema == "doc";
-    internal Boolean IsEnum => Schema == "enm";
     internal Boolean IsJournal => Schema == "jrn";
     internal Boolean IsOperation => Schema == "op";
+    internal Boolean IsDocument => Schema == "doc";
     internal Boolean HasDbTable => !String.IsNullOrEmpty(DbName) && !String.IsNullOrEmpty(DbSchema);
 
-    internal IEnumerable<TableColumn> PrimaryKeys => Columns.Where(c => c.Role.HasFlag(TableColumnRole.PrimaryKey));
+    internal IEnumerable<TableColumn> PrimaryKeys => Columns.Where(c => c.Role == TableColumnRole.Id);
     internal Boolean HasSequence => PrimaryKeys.Count() == 1 && PrimaryKeys.First().Type == ColumnType.Id;
 
     internal void SetDefaults(String schema, String table)
@@ -271,11 +284,16 @@ public record TableMetadata
             Model = table.ToPascalCase();
         if (Kind == EndpointKind.Undefined)
             Kind = schema.ToEndpointKind();
+        if (String.IsNullOrEmpty(Label))
+            Label = Constants.FieldNames.Name;
+        if (!Forms.ContainsKey("index"))
+            Forms.Add("index", DefaultFormBuilder.CreateIndexForm(this));
+        else 
+            Forms["index"].SetDefaults(this);
     }
 }
 
 public record OperationMetadata(String Id, String? Name, String? Category);
-
 public record EnumValueMetadata(String Id, String Name, Int32 Order, Boolean? Inactive);
 public record EnumMetadata(String Name, EnumValueMetadata[] Values);
 

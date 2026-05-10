@@ -34,7 +34,6 @@ public static class JsonSettings
         Converters = [
             new JsonEmptyStringEnumConverter(),
         ],
-        ContractResolver = new FormMetadataContractResolver()
     };
 
     public static JsonSerializerSettings CamelCaseSerializerSettings => new()

@@ -13,6 +13,9 @@ internal static class Constants
         public const String Id = nameof(Id);
         public const String Name = nameof(Name);
         public const String Memo = nameof(Memo);
+        public const String Void = nameof(Void);
+        public const String IsFolder = nameof(IsFolder);
+        public const String RowNumber = nameof(RowNumber);
         public const String Date = nameof(Date);
         public const String Done = nameof(Done);
     }

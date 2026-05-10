@@ -77,7 +77,7 @@ internal partial class PlainModelBuilder
                 from {t.Schema}.[{t.Name}] d
                 {RefTableJoins(refFields, "d")}
                 where d.[{parentField}] = @Id
-                order by d.[{t.RowNoField}];
+                order by d.[RowNumber];
                 
                 """);
 
@@ -150,7 +150,7 @@ internal partial class PlainModelBuilder
 
             String mergeOneDetails(TableMetadata detailsTable)
             {
-                var updateFields = detailsTable.Columns.Where(f => !f.Role.HasFlag(TableColumnRole.Parent) && !f.Role.HasFlag(TableColumnRole.PrimaryKey) && !f.Role.HasFlag(TableColumnRole.Kind));
+                var updateFields = detailsTable.Columns.Where(f => !f.Role.HasFlag(TableColumnRole.Parent) && !f.Role.HasFlag(TableColumnRole.Id) && !f.Role.HasFlag(TableColumnRole.Kind));
 
                 var multPk = detailsTable.PrimaryKeys.Count() > 1;
 
@@ -193,7 +193,7 @@ internal partial class PlainModelBuilder
             String mergeMultiDetails(TableMetadata detailsTable)
             {
                 var updateFields = 
-                    detailsTable.Columns.Where(f => !f.Role.HasFlag(TableColumnRole.Parent) && !f.Role.HasFlag(TableColumnRole.PrimaryKey) && !f.Role.HasFlag(TableColumnRole.Kind));
+                    detailsTable.Columns.Where(f => !f.Role.HasFlag(TableColumnRole.Parent) && !f.Role.HasFlag(TableColumnRole.Id) && !f.Role.HasFlag(TableColumnRole.Kind));
                 var parentField = detailsTable.Columns.FirstOrDefault(f => f.Role.HasFlag(TableColumnRole.Parent))
                     ?? throw new InvalidOperationException("Parent field not found");
                 var kindField = detailsTable.Columns.FirstOrDefault(f => f.Role.HasFlag(TableColumnRole.Kind))

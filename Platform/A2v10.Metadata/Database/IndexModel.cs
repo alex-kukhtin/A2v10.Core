@@ -80,7 +80,7 @@ internal partial class IndexModelBuilder
 
             if (lazy)
             {
-                yield return $"a.{_table.IsFolderField} = 0"; // for lazy loading
+                yield return $"a.IsFolder = 0"; // for lazy loading
                 yield return $"(@Id = 0 or a.{_table.ParentField} = @Id or (@Id = -2 and a.{_table.ParentField} is null))";
             }
 

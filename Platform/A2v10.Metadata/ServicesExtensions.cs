@@ -17,8 +17,6 @@ public static class ServicesExtensions
             .AddScoped<DatabaseMetadataProvider>()
             .AddScoped<IAppRuntimeBuilder, AppMetadataBuilder>();
 
-        services.AddKeyedScoped<IEndpointHandler, MetadataEndpointHandler>("Meta");
-
         services.AddScoped<IModelBuilderFactory, ModelBuilderFactory>();
         services.AddScoped<IEndpointGenerator, EndpointGenerator>();
 

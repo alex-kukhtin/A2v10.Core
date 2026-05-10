@@ -12,7 +12,6 @@ public static class EndpointDispatcher
     {
         return name.ToLowerInvariant() switch
         {
-            "meta:form.edit" => new EditFormEndpointHandler(serviceProvider),
             _ => throw new NotImplementedException($"Endpoint handler not found. ({name})")
         };
     }

@@ -16,7 +16,6 @@ public class DatabaseMetadataCache
 {
     private readonly ConcurrentDictionary<String, TableMetadata> _cache = [];
     private readonly ConcurrentDictionary<String, EndpointTableInfo> _endpoints = [];
-    private readonly ConcurrentDictionary<String, FormMetadata> _formCache = [];
     private readonly ConcurrentDictionary<String, UIElement> _xamlFormCache = [];
     private readonly ConcurrentDictionary<String, AppMetadata> _appMetaCache = [];
 
@@ -24,7 +23,6 @@ public class DatabaseMetadataCache
     {
         _cache.Clear();
         _endpoints.Clear();
-        _formCache.Clear();
         _appMetaCache.Clear();
     }
 
@@ -58,23 +56,6 @@ public class DatabaseMetadataCache
         return _appMetaCache.GetOrAdd(key, meta);
     }
 
-
-    public void RemoveFormFromCache(String? dataSource, String schema, String table, String key)
-    {
-        var dictKey = $"{dataSource}:{schema}:{table}:{key.ToLowerInvariant()}";
-        _formCache.TryRemove(dictKey, out var _);
-    }
-
-    public async Task<FormMetadata> GetOrAddFormAsync(String? dataSource, TableMetadata meta, String key,
-    Func<String?, TableMetadata, String, Func<Form>, Task<FormMetadata>> getForm, Func<Form> getDefaultForm)
-    {
-        var dictKey = $"{dataSource}:{meta.Schema}:{meta.Name}:{key.ToLowerInvariant()}";
-        if (_formCache.TryGetValue(dictKey, out var form))
-            return form;
-        form = await getForm(dataSource, meta, key, getDefaultForm);
-        //return form; 
-        return _formCache.GetOrAdd(dictKey, form);
-    }
     public async Task<UIElement> GetOrAddXamlFormAsync(String? dataSource, TableMetadata meta, String key,
          Func<UIElement> getDefaultForm)
     {

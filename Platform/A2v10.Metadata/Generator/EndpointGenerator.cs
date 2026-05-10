@@ -128,6 +128,7 @@ internal class EndpointGenerator(IModelBuilderFactory _modelBuilderFactory, IApp
 
     private async Task<CreatedFile> GenerateFormAsync(TableMetadata table, IPlatformUrl platformUrl, Boolean formOnly = false)
     {
+        
         var fileType = platformUrl.Kind == UrlKind.Dialog ? "dialog" : "view";
         var fileName = $"{platformUrl.Action}.{fileType}.xaml";
         var fullPath = _appCodeProvider.GetMainModuleFullPath(platformUrl.LocalPath.RemoveHeadSlash(), fileName);
@@ -137,10 +138,13 @@ internal class EndpointGenerator(IModelBuilderFactory _modelBuilderFactory, IApp
 
         if (!File.Exists(fullPath))
         {
+            throw new InvalidOperationException("Що тут робити?");
+            /*
             var formIndex = await builder.GetFormAsync();
             var pageIndex = XamlBulder.BuildForm(formIndex.Form);
             var pageXaml = XamlBulder.GetXaml(pageIndex);
             await WriteFileAsync(fullPath, pageXaml);
+            */
         }
 
         if (formOnly)

@@ -86,7 +86,7 @@ internal static class FormExtensions
     {
         Boolean IsVisible(TableColumn column)
         {
-            if (appMeta.IdDataType == ColumnType.Uniqueidentifier && column.Role.HasFlag(TableColumnRole.PrimaryKey))
+            if (appMeta.IdDataType == ColumnType.Uniqueidentifier && column.Role.HasFlag(TableColumnRole.Id))
                 return false;
             if (column.Type == ColumnType.Stream || column.Type == ColumnType.RowVersion)
                 return false;
@@ -110,7 +110,7 @@ internal static class FormExtensions
         {
             var hiddenColumns =
              TableColumnRole.Void
-           | TableColumnRole.PrimaryKey
+           | TableColumnRole.Id
            | TableColumnRole.IsFolder
            | TableColumnRole.IsSystem
            | TableColumnRole.SystemName

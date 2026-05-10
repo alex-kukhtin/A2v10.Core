@@ -138,6 +138,19 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
             _ => throw new NotImplementedException($"Create form for {Action}")
         };
     }
+    public Form CreateDefaultForm()
+    {
+        return Action switch
+        {
+            /*
+            "browse" => _index.CreateBrowseDialog(),
+            "index" => _index.CreateIndexPage(),
+            "edit" => IsDialog ? _plain.CreateEditDialog() : _plain.CreateDocumentPage(),
+            "browsefolder" => _index.CreateBrowseTreeDialog(),
+            */
+            _ => throw new NotImplementedException($"Create form for {Action}")
+        };
+    }
 
     public Task<ExpandoObject> SaveModelAsync(ExpandoObject data, ExpandoObject savePrms)
     {
@@ -146,6 +159,11 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
             "edit" => _plain.SavePlainModelAsync(data, savePrms),
             _ => throw new NotImplementedException($"Save Model Async for {Action}")
         };
+    }
+
+    public Task<FormMetadata> GetFormAsync()
+    { 
+        return _metadataProvider.GetFormAsync(descriptor.DataSource, _baseTable ?? _table, Action, CreateDefaultForm);
     }
 
     public async Task<String> RenderPageAsync(IModelView modelView, IDataModel dataModel)
@@ -166,7 +184,9 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
         }
         else
         {
+            // var formMeta = await _metadataProvider.GetFormAsync(descriptor.DataSource, _baseTable ?? _table, descriptor.PlatformUrl.Action, CreateDefaultForm);
             page = await _metadataProvider.GetXamlFormAsync(descriptor.DataSource, _baseTable ?? _table, descriptor.PlatformUrl.Action, CreateDefaultXamlForm);
+            //page = XamlBulder.BuildForm(formMeta.Form);
             templateText = await CreateTemplateAsync();
         }
         if (page == null)

@@ -21,11 +21,9 @@ internal interface IModelBuilder
     Task<String> CreateTemplateAsync();
     Task<String> CreateTemplateTSAsync();
     Task<String> CreateMapTSAsync();
-    Form CreateDefaultForm();
     String? MetadataEndpointBuilder { get; }
 
     TableMetadata Table { get; }
     TableMetadata? BaseTable { get; }
     AppMetadata AppMeta { get; }
-    Task<FormMetadata> GetFormAsync();
 }

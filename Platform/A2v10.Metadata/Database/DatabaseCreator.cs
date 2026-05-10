@@ -20,7 +20,7 @@ internal class DatabaseCreator(AppMetadata _meta)
 
             String? nullable = null;
             var constraint = String.Empty;
-            if (column.Role.HasFlag(TableColumnRole.PrimaryKey))
+            if (column.Role.HasFlag(TableColumnRole.Id))
             {
                 nullable = NOT_NULL;
                 var colDataType = column.Type;
@@ -48,7 +48,7 @@ internal class DatabaseCreator(AppMetadata _meta)
                 nullable = NOT_NULL;
                 constraint = $"\r\n       constraint DF_{table.Name}_{column.Name} default(0)";
             }
-            return $"[{column.Name}] {column.SqlDataType(_meta.IdDataType)}{nullable}{constraint}";
+            return $"[{column.Name}] {column.SqlDataType()}{nullable}{constraint}";
         }
 
         String alterCreateField(TableColumn column)
@@ -94,11 +94,9 @@ internal class DatabaseCreator(AppMetadata _meta)
 
     internal String CreateTableType(TableMetadata table)
     {
-        var idDataType = _meta.IdDataType;
-
         String createField(TableColumn column)
         {
-            return $"[{column.Name}] {column.SqlDataType(idDataType, true)}";
+            return $"[{column.Name}] {column.SqlDataType(true)}";
         }
 
         var fields = table.Columns.Select(createField);

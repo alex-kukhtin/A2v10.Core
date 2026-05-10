@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -22,7 +22,10 @@ internal static class SqlExtensions
     {
         return columnDataType switch
         {
-            ColumnType.Id or ColumnType.Ref => idDataType.ToSqlDbType(idDataType),
+            ColumnType.Id or ColumnType.Ref or 
+                ColumnType.Parent or ColumnType.Onwer => SqlDbType.BigInt,
+            ColumnType.RowNumber => SqlDbType.Int,
+            // other
             ColumnType.Operation => SqlDbType.NVarChar,
             ColumnType.Enum => SqlDbType.NVarChar,
             ColumnType.BigInt => SqlDbType.BigInt,
@@ -40,13 +43,11 @@ internal static class SqlExtensions
         };
     }
 
-    public static String ToSqlDataType(this ColumnType columnDataType, ColumnType idDataType, String maxLength = "255", Int32 scale = 0, Boolean toTableType = false)
+    public static String ToSqlDataType(this ColumnType columnDataType, String maxLength = "255", Int32 scale = 0, Boolean toTableType = false)
     {
-        var idDataStr = idDataType.ToString().ToLowerInvariant();
         return columnDataType switch
         {
-            ColumnType.Id => idDataStr,
-            ColumnType.Ref => idDataStr,
+            ColumnType.Id or ColumnType.Ref or ColumnType.Onwer or ColumnType.Parent => "bigint",
             ColumnType.Operation => "nvarchar(64)",
             ColumnType.Enum => "nvarchar(16)",
             ColumnType.String => $"nvarchar({maxLength})",
@@ -60,10 +61,10 @@ internal static class SqlExtensions
         };
     }
 
-    public static String SqlDataType(this TableColumn column, ColumnType idDataType, Boolean toTableType = false)
+    public static String SqlDataType(this TableColumn column, Boolean toTableType = false)
     {
         var maxLength = column.MaxLength == 0 ? "max" : column.MaxLength.ToString();
-        return column.Type.ToSqlDataType(idDataType, maxLength, column.Scale, toTableType);
+        return column.Type.ToSqlDataType(maxLength, column.Scale, toTableType);
     }
 
     public static String SqlModelColumnName(this TableColumn column, String alias, ReferenceMember? refMember)
@@ -81,7 +82,8 @@ internal static class SqlExtensions
     {
         return column.Type switch
         {
-            ColumnType.Id or ColumnType.Ref => typeof(Int64),
+            ColumnType.Id or ColumnType.Ref or ColumnType.Onwer or ColumnType.Parent => typeof(Int64),
+            ColumnType.RowNumber => typeof(Int32),
             ColumnType.Operation => typeof(String),
             ColumnType.Enum => typeof(String),
             ColumnType.BigInt => typeof(Int64),
@@ -103,7 +105,7 @@ internal static class SqlExtensions
 
     internal static Boolean IsFieldUpdated(this TableColumn column)
     {
-        return !column.Role.HasFlag(TableColumnRole.PrimaryKey)
+        return !column.Role.HasFlag(TableColumnRole.Id)
             && !column.Role.HasFlag(TableColumnRole.Void)
             && !column.Role.HasFlag(TableColumnRole.IsFolder)
             && !column.Role.HasFlag(TableColumnRole.IsSystem)
@@ -114,9 +116,9 @@ internal static class SqlExtensions
     internal static IEnumerable<String> AllSqlFields(this TableMetadata table, IEnumerable<ReferenceMember> refFields, IEnumerable<ReferenceMember> enumFields, String alias, Boolean isDetails = false)
     {
         foreach (var c in table.Columns.Where(c => !c.IsReference && !c.IsBlob && !c.IsVoid && !c.IsEnum))
-            if (c.Role.HasFlag(TableColumnRole.PrimaryKey) && !c.Role.HasFlag(TableColumnRole.RowNo))
+            if (c.Role.HasFlag(TableColumnRole.Id) && !c.Role.HasFlag(TableColumnRole.RowNo))
                 yield return $"[{c.Name}!!Id] = {alias}.[{c.Name}]";
-            else if (c.Role.HasFlag(TableColumnRole.PrimaryKey) && c.Role.HasFlag(TableColumnRole.RowNo))
+            else if (c.Role.HasFlag(TableColumnRole.Id) && c.Role.HasFlag(TableColumnRole.RowNo))
                 yield return $"[{c.Name}!!RowNumber] = {alias}.[{c.Name}]";
             else if (c.Role.HasFlag(TableColumnRole.Name))
                 yield return $"[{c.Name}!!Name] = {alias}.[{c.Name}]";

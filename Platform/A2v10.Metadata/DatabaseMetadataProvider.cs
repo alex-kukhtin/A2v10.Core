@@ -45,15 +45,6 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             throw new InvalidOperationException("GetModelInfo fails");
         return modelTableInfo;
     }
-
-    public void RemoveFormFromCache(String? dataSource, String schema, String table, String key)
-    {
-        _metadataCache.RemoveFormFromCache(dataSource, schema, table, key);
-    }
-    public Task<FormMetadata> GetFormAsync(String? dataSource, TableMetadata meta, String key, Func<Form> defForm)
-    {
-        return _metadataCache.GetOrAddFormAsync(dataSource, meta, key, LoadTableFormAsync, defForm);
-    }
     public Task<UIElement> GetXamlFormAsync(String? dataSource, TableMetadata meta, String key, Func<UIElement> defForm)
     {
         return _metadataCache.GetOrAddXamlFormAsync(dataSource, meta, key, defForm);
@@ -149,35 +140,6 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             ?? throw new InvalidOperationException("TableMetadata deserialization fails");
         return meta;
     }
-
-    private async Task<FormMetadata> LoadTableFormAsync(String? dataSource, TableMetadata meta, String key, Func<Form> getDefaultForm)
-    {
-        var prms = new ExpandoObject()
-        {
-            {"Schema", meta.Schema},
-            {"Table", meta.Name},
-            {"Key", key},
-        };
-        var dm = await _dbContext.LoadModelAsync(dataSource, "a2meta.[Table.Form]", prms)
-            ?? throw new InvalidOperationException("Form is null");
-
-        var formExpando = dm.Eval<ExpandoObject>("Form.Json");
-        if (formExpando == null)
-        {
-            var defaultForm = getDefaultForm();
-            return new FormMetadata(defaultForm, String.Empty);
-        }
-
-        // convert Expando to Form
-        var json = JsonConvert.SerializeObject(formExpando) 
-            ?? throw new InvalidOperationException("Form not found");
-        var form = JsonConvert.DeserializeObject<Form>(json, JsonSettings.IgnoreNull)
-            ?? throw new InvalidOperationException("Form deserialization fails");
-
-        return new FormMetadata(form, String.Empty);
-
-    }
-
 
 
     private static (String schema, String table) ParsePath(String path)

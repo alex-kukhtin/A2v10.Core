@@ -128,7 +128,7 @@ internal static class MetadataExtensions
     }
     internal static String CreateField(this ReportItemMetadata item, ColumnType idDataType, String? prefix = null)
     {
-        return $"[{prefix}{item.Column}] {item.DataType.ToSqlDataType(idDataType)}";
+        return $"[{prefix}{item.Column}] {item.DataType.ToSqlDataType()}";
     }
 
     internal static TableMetadata CreateEnumMeta(TableColumn col)
@@ -185,19 +185,8 @@ internal static class MetadataExtensions
 
     static IEnumerable<TableColumn> CatalogDefaultColumns(TableMetadata table)
     {
-        yield return new TableColumn()
-        {
-            Name = Constants.FieldNames.Name,
-            Type = ColumnType.String,
-            MaxLength = 255,
-            Role = TableColumnRole.Name
-        };
-        yield return new TableColumn()
-        {
-            Name = Constants.FieldNames.Memo,
-            MaxLength = 255,
-            Type = ColumnType.String,
-        };
+        yield return new TableColumn(Constants.FieldNames.Name, ColumnType.Name);
+        yield return new TableColumn(Constants.FieldNames.Memo, ColumnType.Memo);
     }
     static IEnumerable<TableColumn> DocumentDefaultColumns(TableMetadata table)
     {
