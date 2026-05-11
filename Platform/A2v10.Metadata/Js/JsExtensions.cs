@@ -10,16 +10,11 @@ internal static class JsExtensions
     private const String TSNumber = "number";
     private const String TBoolean = "boolean";
     private const String TSDate = "Date";
-    public static String ToTsType(this ColumnType columnDataType, ColumnType idDataType)
+    public static String ToTsType(this ColumnType columnDataType)
     {
-        var idType = idDataType switch { 
-            ColumnType.BigInt => TSNumber,
-            ColumnType.String or ColumnType.Uniqueidentifier => TSString,
-            _ => throw new InvalidOperationException($"Unknown TS Id DataType {idDataType}")
-        };
         return columnDataType switch
         {
-            ColumnType.Id => idType,
+            ColumnType.Id => TSNumber,
             ColumnType.String or ColumnType.NChar or ColumnType.Operation
                 or ColumnType.NVarChar => TSString,
             ColumnType.Float or ColumnType.Money => TSNumber,
@@ -28,7 +23,7 @@ internal static class JsExtensions
             ColumnType.DateTime 
                 or ColumnType.Date => TSDate,
             ColumnType.Enum => TSString, // TODO: enumerable
-            ColumnType.Ref => idType, // TODO: reference
+            ColumnType.Ref => TSNumber, // TODO: reference
             _ => throw new InvalidOperationException($"Unknown TS DataType {columnDataType}")
         };
     }

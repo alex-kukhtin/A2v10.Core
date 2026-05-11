@@ -33,6 +33,7 @@ public enum ColumnType
     IsFolder,
     Owner,
     Parent,
+    User,
     // Simple fields
     String,
     Ref,
@@ -98,6 +99,7 @@ public record TableColumn
 
     // for metadata provider
     internal Boolean NeedLoadRef => Type == ColumnType.Ref || Type == ColumnType.Owner || Type == ColumnType.Parent;
+    internal Boolean IsRef => Type == ColumnType.Ref || Type == ColumnType.Owner || Type == ColumnType.User;
 
     internal String Presentation
     {

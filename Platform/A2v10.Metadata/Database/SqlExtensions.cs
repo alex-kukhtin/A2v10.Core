@@ -23,7 +23,8 @@ internal static class SqlExtensions
         return columnDataType switch
         {
             ColumnType.Id or ColumnType.Ref or 
-                ColumnType.Parent or ColumnType.Owner => SqlDbType.BigInt,
+                ColumnType.Parent or ColumnType.Owner or
+                ColumnType.User => SqlDbType.BigInt,
             ColumnType.RowNumber => SqlDbType.Int,
             // other
             ColumnType.Operation => SqlDbType.NVarChar,
@@ -47,7 +48,8 @@ internal static class SqlExtensions
     {
         return columnDataType switch
         {
-            ColumnType.Id or ColumnType.Ref or ColumnType.Owner or ColumnType.Parent => "bigint",
+            ColumnType.Id or ColumnType.Ref or ColumnType.Owner or 
+                ColumnType.Parent or ColumnType.User => "bigint",
             ColumnType.Operation => "nvarchar(64)",
             ColumnType.Money => "money",
             ColumnType.Enum => "nvarchar(16)",

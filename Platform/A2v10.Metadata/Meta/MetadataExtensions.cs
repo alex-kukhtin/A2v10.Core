@@ -179,7 +179,9 @@ internal static class MetadataExtensions
         return table.Kind switch
         {
             EndpointKind.Catalog => CatalogDefaultColumns(table),
-            _ => throw new InvalidOperationException($"Default columns not defined for {table.Name}")
+            EndpointKind.Document => DocumentDefaultColumns(table),
+            EndpointKind.Journal => DocumentDefaultColumns(table),
+            _ => throw new InvalidOperationException($"Default columns not defined for {table.Kind}")
         };
     }
 
@@ -202,13 +204,11 @@ internal static class MetadataExtensions
     }
     static IEnumerable<TableColumn> DocumentDefaultColumns(TableMetadata table)
     {
-        yield return new TableColumn()
-        {
-            Name = Constants.FieldNames.Date,
-        };
-        yield return new TableColumn()
-        {
-            Name = Constants.FieldNames.Memo
-        };
+        yield return new TableColumn(Constants.FieldNames.Date, ColumnType.Date);
+        yield return new TableColumn(Constants.FieldNames.Memo, ColumnType.Memo);
+    }
+    static IEnumerable<TableColumn> JournalDefaultColumns(TableMetadata table)
+    {
+        yield return new TableColumn(Constants.FieldNames.Date, ColumnType.Date);
     }
 }

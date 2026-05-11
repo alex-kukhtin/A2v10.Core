@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -153,20 +153,29 @@ public class ShellController(IDbContext _dbContext, IApplicationHost _host, ICur
             { "Theme", _currentUser.Identity.Theme ?? "A"}
         });
 
-		String proc = MENU_PROC;
+		var menuFromJson = await LoadMenuFromJsonAsync();
 
-		await EnsurePermissionObjects();
+		if (menuFromJson != null)
+		{
+			macros.Set("Menu", menuFromJson);
+		}
+		else
+		{
+			String proc = MENU_PROC;
 
-		if (_appOptions.IsCustomUserMenu)
-			proc = _appOptions.UserMenu!;
-		IDataModel dm = await _dbContext.LoadModelAsync(_host.TenantDataSource, proc, loadPrms);
+			await EnsurePermissionObjects();
 
-		ExpandoObject? menuRoot = dm.Root.RemoveEmptyArrays();
-		SetUserStatePermission(dm);
-		SetUserStateModules(dm);
+			if (_appOptions.IsCustomUserMenu)
+				proc = _appOptions.UserMenu!;
+			IDataModel dm = await _dbContext.LoadModelAsync(_host.TenantDataSource, proc, loadPrms);
 
-		String jsonMenu = JsonConvert.SerializeObject(menuRoot, JsonHelpers.ConfigSerializerSettings(_host.IsDebugConfiguration));
-		macros.Set("Menu", jsonMenu);
+			ExpandoObject? menuRoot = dm.Root.RemoveEmptyArrays();
+			SetUserStatePermission(dm);
+			SetUserStateModules(dm);
+
+			String jsonMenu = JsonConvert.SerializeObject(menuRoot, JsonHelpers.ConfigSerializerSettings(_host.IsDebugConfiguration));
+			macros.Set("Menu", jsonMenu);
+		}
 
 		return shell.ResolveMacros(macros) ?? String.Empty;
 	}
@@ -233,25 +242,6 @@ public class ShellController(IDbContext _dbContext, IApplicationHost _host, ICur
 			{ "Theme", _currentUser.Identity.Theme ?? "A"}
 		});
 
-		//Boolean setCompany = false;
-		/*
-		if (_host.IsMultiTenant || _host.IsUsePeriodAndCompanies)
-		{
-			// for all users (include features)
-			var res = await ProcessMultiTenantParams(loadPrms);
-			if (res != null)
-			{
-				if (res.Companies != null)
-					macros.Set("Companies", res.Companies);
-				if (res.Period != null)
-					macros.Set("Period", res.Period);
-			}
-		}
-		else if (_host.IsMultiCompany && !bAdmin)
-		{
-			setCompany = true;
-		}
-		*/
 		if (_userDevice.IsMobile)
 			loadPrms.Set("Mobile", true);
 
@@ -259,7 +249,14 @@ public class ShellController(IDbContext _dbContext, IApplicationHost _host, ICur
 
 		await EnsurePermissionObjects();
 
-		if (_appOptions.IsCustomUserMenu)
+		var menuFromJson = LoadMenuFromJsonAsync();
+		if (menuFromJson != null)
+		{
+            macros.Set("Menu", menuFromJson);
+            return shell.ResolveMacros(macros) ?? String.Empty;
+        }
+
+        if (_appOptions.IsCustomUserMenu)
 			proc = _appOptions.UserMenu!;
 
 		var menuDataSource = _host.TenantDataSource;
@@ -346,6 +343,22 @@ public class ShellController(IDbContext _dbContext, IApplicationHost _host, ICur
 				txt = _localizer.Localize(null, txt, false);
 			writer.Write(txt);
 		}
+	}
+
+    private async Task<String?> LoadMenuFromJsonAsync()
+	{
+		using var stream = _codeProvider.FileStreamRO("menu.json", true);
+		if (stream == null)
+			return null;
+        using var sr = new StreamReader(stream);
+        var txt = await sr.ReadToEndAsync();
+		txt = _localizer.Localize(null, txt, false);
+        if (txt == null)
+            return null;
+        var title = await _dbContext.LoadAsync<JsonAppTitle>(_host.TenantDataSource, "a2sys.[AppTitle.Load]");
+        var menu = JsonMenu.ConvertToPlatformMenu(txt, title?.AppTitle, _localizer);
+
+        return menu;
 	}
 }
 

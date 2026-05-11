@@ -81,7 +81,7 @@ internal class MainModelBuilder(BaseModelBuilder _baseModelBuilder)
                 if (refMember != null)
                     return $"\t{ro}{column.Name}: {refMember.Table.RealTypeName};";
             }
-            return $"\t{ro}{column.Name}: {column.Type.ToTsType(_appMeta.IdDataType)};";
+            return $"\t{ro}{column.Name}: {column.Type.ToTsType()};";
         }
 
         foreach (var p in table.Columns.Where(c => !c.IsVoid && c.Type != ColumnType.RowVersion))

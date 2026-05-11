@@ -37,7 +37,7 @@ internal partial class IndexModelBuilder
             declare type {{collType}} = IElementArray<{{_table.RealTypeName}}>;
 
             export interface TFolder extends IArrayElement {
-                readonly Id: {{_appMeta.IdDataType.ToTsType(_appMeta.IdDataType)}};
+                readonly Id: {{_appMeta.IdDataType.ToTsType()}};
                 Icon: string;
                 SubItems: TFolderArray;
                 HasSubItems: boolean;

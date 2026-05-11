@@ -33,11 +33,7 @@ internal class DatabaseCreator(AppMetadata _meta)
                         ColumnType.Id => $"next value for {table.Schema}.[SQ_{table.Name}]",
                         ColumnType.Uniqueidentifier => "newsequentialid()",
                         ColumnType.Int or ColumnType.BigInt => $"next value for {table.Schema}.[SQ_{table.Name}]",
-                        ColumnType.Date or ColumnType.DateTime => null,
-                        ColumnType.String => null,   
-                        ColumnType.Ref => null,
-                        ColumnType.Enum => null,
-                        _ => throw new InvalidOperationException($"Defaults for {column.Type} is not supported")
+                        _ => null
                     };
                     if (defKey != null)
                         constraint = $"\r\n       constraint DF_{table.Name}_{column.Name} default({defKey})";
