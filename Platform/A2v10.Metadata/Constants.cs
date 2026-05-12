@@ -15,9 +15,11 @@ internal static class Constants
         public const String Memo = nameof(Memo);
         public const String Void = nameof(Void);
         public const String IsFolder = nameof(IsFolder);
+        public const String IsSystem = nameof(IsSystem);
         public const String RowNumber = nameof(RowNumber);
         public const String Date = nameof(Date);
         public const String Done = nameof(Done);
+        public const String RowVersion = "rv";
     }
     public static class FieldSizes
     {

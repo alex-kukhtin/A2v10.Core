@@ -41,23 +41,12 @@ internal partial class SqlBuilder
             dir = DEFAULT_DIR;
         // TODO: Ensure Order is valid
 
-        var refFields = RefFields;
-
-        ReferenceMember? FindReference(TableColumn column)
-        {
-            if (column.Type != ColumnType.Ref)
-                return null;
-            return RefFields.FirstOrDefault(r => column.Target == r.Table.Path);
-        }
 
         IEnumerable<String> indexSqlFields(String alias)
         {
-            foreach (var c in _descr.Table.DefaultColumns())
-                yield return c.SqlModelColumnName(alias, FindReference(c));
-            foreach (var c in _descr.Table.Columns)
-            {
-                yield return c.SqlModelColumnName(alias, FindReference(c));
-            }
+            static Boolean includeColumn(TableColumn col)
+                => col.Type != ColumnType.RowVersion && col.Type != ColumnType.Void;
+            return _descr.Table.AllColumns(includeColumn).Select(col => col.SqlModelColumnName(alias));
         }
 
 
@@ -78,7 +67,7 @@ internal partial class SqlBuilder
         order by a.[{order}] {dir}
         offset @Offset rows fetch next @PageSize rows only option(recompile);
         
-        select [{collectionName}!{_descr.Table.TypeName}!Array] = null, [Id!!Id] = a.Id,
+        select [{collectionName}!{_descr.Table.TypeName}!Array] = null,
             {String.Join(", ", indexSqlFields("a"))},
             [!!RowCount]  = t.rowCnt        
         from {_descr.Table.SqlTableName} a

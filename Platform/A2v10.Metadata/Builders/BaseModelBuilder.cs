@@ -30,6 +30,8 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
     internal AppMetadata _appMeta => descriptor.AppMeta;
     internal String? _dataSource => descriptor.DataSource;
     internal IPlatformUrl _platformUrl => descriptor.PlatformUrl;
+
+    [Obsolete("Use Column.RefTable instead.")]
     internal IEnumerable<ReferenceMember> _refFields => descriptor.RefFields;
 
     private SqlBuilder _sqlBuilder => new(descriptor, _serviceProvider);
@@ -118,7 +120,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
         foreach (var r in refs.Where(c => c.Column.Type == ColumnType.Enum))
         {
             sb.AppendLine($"""
-                select [{r.Table.RealItemsName}!TR{r.Table.RealItemName}!Map] = null, [Id!!Id] = e.Id, [Name!!Name] = e.[Name]
+                select [{r.Table.CollectionName}!TR{r.Table.TypeName}!Map] = null, [Id!!Id] = e.Id, [Name!!Name] = e.[Name]
                 from {r.Table.SqlTableName} e
                 {where}
                 order by e.[Order];

@@ -99,7 +99,7 @@ internal partial class PlainModelBuilder
             if (_table.Details.Count > 0)
             {
                 var fd = _table.Details.First();
-                yield return $$"""'{{_table.RealTypeName}}.$$Tab': {type: String, value: '{{fd.RealItemsName}}'}""";
+                yield return $$"""'{{_table.TypeName}}.$$Tab': {type: String, value: '{{fd.RealItemsName}}'}""";
             }
         }
 

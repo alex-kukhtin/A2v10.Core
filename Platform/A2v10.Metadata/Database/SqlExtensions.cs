@@ -70,13 +70,18 @@ internal static class SqlExtensions
         return column.Type.ToSqlDataType(maxLength, column.Scale, toTableType);
     }
 
-    public static String SqlModelColumnName(this TableColumn column, String alias, ReferenceMember? refMember)
+    public static String SqlModelColumnName(this TableColumn column, String alias)
     {
-        if (column.Role == TableColumnRole.Name)
+        if (column.Type == ColumnType.Id)
+            return $"[Id!!Id] = {alias}.[Id]";
+        else if (column.Type == ColumnType.Name)
             return $"[Name!!Name] = {alias}.[Name]";
+        else if (column.Type == ColumnType.RowNumber)
+            return $"[{column.Name}!!RowNumber] = {alias}.[{column.Name}]";
         else if (column.Type == ColumnType.Ref) {
-            refMember = refMember ?? throw new InvalidOperationException($"ReferenceMember is required for Ref column {column.Name}");
-            return $"[{column.Name}!{refMember.Table.TypeName}!RefId] = {alias}.[{column.Name}]";
+            if (column.RefTable == null)
+                throw new InvalidOperationException($"RefTable for column {column.Name} is null");
+            return $"[{column.Name}!{column.RefTable.TypeName}!RefId] = {alias}.[{column.Name}]";
         }
         return $"{alias}.[{column.Name}]";
     }
@@ -108,11 +113,12 @@ internal static class SqlExtensions
 
     internal static Boolean IsFieldUpdated(this TableColumn column)
     {
-        return !column.Role.HasFlag(TableColumnRole.Id)
+        return column.Type != ColumnType.Id
             && column.Type != ColumnType.Void
             && column.Type != ColumnType.IsFolder
             && column.Type != ColumnType.IsSystem
             && column.Type != ColumnType.Owner
+            && column.Type != ColumnType.Parent
             && column.Type != ColumnType.RowVersion;
     }
 

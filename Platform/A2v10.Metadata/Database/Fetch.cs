@@ -26,7 +26,7 @@ internal partial class IndexModelBuilder
         declare @fr nvarchar(255);
         set @fr = N'%' + @Text + N'%';
 
-        select top(100) [{_table.RealItemsName}!{_table.RealTypeName}!Array] = null, 
+        select top(100) [{_table.RealItemsName}!{_table.TypeName}!Array] = null, 
             [{_table.PrimaryKeyField}!!Id] = a.[{_table.PrimaryKeyField}], [{_table.NameField}!!Name] = a.[{_table.NameField}]
         from {_table.SqlTableName} a
         where a.[Void] = 0 and

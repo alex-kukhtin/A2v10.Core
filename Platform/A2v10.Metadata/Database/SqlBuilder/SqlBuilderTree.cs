@@ -15,7 +15,7 @@ internal partial class SqlBuilder
     public async Task<IDataModel> LoadIndexTreeModelAsync()
     {
         var collectionName = Table.RealItemsName;
-        var collectionType = Table.RealTypeName;
+        var collectionType = Table.TypeName;
 
         var refFields = RefFields; // await ReferenceFieldsAsync(_table));
 

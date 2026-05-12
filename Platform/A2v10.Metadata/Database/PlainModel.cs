@@ -36,8 +36,8 @@ internal partial class PlainModelBuilder
 
             var detailsArray = table.Details.Select(d => {
                 if (d.Kinds.Count == 0)
-                    return $"[{d.RealItemsName}!{d.RealTypeName}!Array] = null";
-                return String.Join(",", d.Kinds.Select(k => $"[{k.Name}!{d.RealTypeName}!Array] = null"));
+                    return $"[{d.RealItemsName}!{d.TypeName}!Array] = null";
+                return String.Join(",", d.Kinds.Select(k => $"[{k.Name}!{d.TypeName}!Array] = null"));
             });
             return $",\n{String.Join(',', detailsArray)}";
         }
@@ -60,18 +60,18 @@ internal partial class PlainModelBuilder
                 var parentField = refFields.FirstOrDefault(r => r.Table.SqlTableName == _table.SqlTableName)?.Column.Name
                     ?? t.PrimaryKeyField;
 
-                var detailsParentIdField = $"[!{table.RealTypeName}.{t.RealItemsName}!ParentId] = d.[{parentField}]";
+                var detailsParentIdField = $"[!{table.TypeName}.{t.RealItemsName}!ParentId] = d.[{parentField}]";
 
                 if (t.Kinds.Count > 0)
                 {
                     detailsParentIdField = String.Join(',', t.Kinds.Select(k =>
-                        $"[!{table.RealTypeName}.{k.Name}!ParentId] = case when d.[{kindField}] = N'{k.Name}' then d.[{parentField}] else null end"
+                        $"[!{table.TypeName}.{k.Name}!ParentId] = case when d.[{kindField}] = N'{k.Name}' then d.[{parentField}] else null end"
                     ));
                 }
 
                 var enumFields = DatabaseMetadataProvider.EnumFields(t, false);
                 sb.AppendLine($"""
-                select [!{t.RealTypeName}!Array] = null,
+                select [!{t.TypeName}!Array] = null,
                     {detailsParentIdField},
                     {String.Join(",", t.AllSqlFields(refFields, enumFields, "d", isDetails:true))}
                 from {t.Schema}.[{t.Name}] d
@@ -102,7 +102,7 @@ internal partial class PlainModelBuilder
 
         return $"""
         
-        select [{table.RealItemName}!{table.RealTypeName}!Object] = null,
+        select [{table.RealItemName}!{table.TypeName}!Object] = null,
             {String.Join(",", table.AllSqlFields(tableRefFields, enumFieldsBase, "a"))}{DetailsArray()}
         from {table.Schema}.[{table.Name}] a
         {RefTableJoins(tableRefFields, "a")}

@@ -20,6 +20,7 @@ internal class MainModelBuilder(BaseModelBuilder _baseModelBuilder)
     protected readonly DatabaseMetadataProvider _metadataProvider = _baseModelBuilder._metadataProvider;
     protected readonly String? _dataSource = _baseModelBuilder._dataSource;
     protected readonly AppMetadata _appMeta = _baseModelBuilder._appMeta;
+    [Obsolete("Use Column.RefTable instead.")]
     protected readonly IEnumerable<ReferenceMember> _refFields = _baseModelBuilder._refFields;
     protected readonly IServiceProvider _xamlServiceProvider = _baseModelBuilder._xamlServiceProvider;
     protected DbParameterCollection AddDefaultParameters(DbParameterCollection prms)
@@ -61,7 +62,7 @@ internal class MainModelBuilder(BaseModelBuilder _baseModelBuilder)
         foreach (var r in enums)
         {
             sb.AppendLine($"""
-                select [{r.Table.RealItemsName}!TR{r.Table.RealItemName}!Map] = null, [Id!!Id] = e.Id, [Name!!Name] = e.[Name]
+                select [{r.Table.CollectionName}!TR{r.Table.TypeName}!Map] = null, [Id!!Id] = e.Id, [Name!!Name] = e.[Name]
                 from {r.Table.SqlTableName} e
                 {where}
                 order by e.[Order];
@@ -79,7 +80,7 @@ internal class MainModelBuilder(BaseModelBuilder _baseModelBuilder)
             {
                 var refMember = _refFields.FindRefMember(column);
                 if (refMember != null)
-                    return $"\t{ro}{column.Name}: {refMember.Table.RealTypeName};";
+                    return $"\t{ro}{column.Name}: {refMember.Table.TypeName};";
             }
             return $"\t{ro}{column.Name}: {column.Type.ToTsType()};";
         }

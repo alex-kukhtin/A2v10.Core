@@ -44,11 +44,11 @@ internal partial class PlainModelBuilder
             refDecl = $"\n{String.Join("\n", refElems)}\n";
 
         var detailElems = _table.Details.Select(d => $$"""
-        export interface {{d.RealTypeName}} extends IArrayElement {
+        export interface {{d.TypeName}} extends IArrayElement {
         {{String.Join("\n", TsProperties(d))}}
         }
 
-        export interface {{d.RealTypeName}}Array extends IElementArray<{{d.RealTypeName}}> {
+        export interface {{d.TypeName}}Array extends IElementArray<{{d.TypeName}}> {
         {{String.Join("\n", detailsComputed())}}
         }
 

@@ -195,7 +195,7 @@ internal partial class IndexModelBuilder
         {defaultPeriod()}
         declare @fr nvarchar(255) = N'%' + @Fragment + N'%';
         
-        select [{collectionName}!{_table.RealTypeName}!Array] = null,
+        select [{collectionName}!{_table.TypeName}!Array] = null,
             {String.Join(",", _table.AllSqlFields(refFields, enumFields, "a"))},
             [!!RowCount]  = count(*) over()        
         from {_table.SqlTableName} a

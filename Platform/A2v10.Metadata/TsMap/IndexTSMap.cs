@@ -10,12 +10,12 @@ internal partial class IndexModelBuilder
 {
     internal Task<String> CreateMapTS()
     {
-        var collType = $"{_table.RealTypeName}Array";
+        var collType = $"{_table.TypeName}Array";
         var refDecl = String.Empty;
 
         // exclude self-references
         var refElems = _refFields.RefTables().Where(x => x.SqlTableName != _table.SqlTableName).Select(x => $$"""
-        export interface {{x.RealTypeName}} extends IElement {
+        export interface {{x.TypeName}} extends IElement {
         {{String.Join("\n", TsProperties(x))}}
         }
         """);
@@ -30,14 +30,14 @@ internal partial class IndexModelBuilder
             templ = $$"""
 
             {{refDecl}}
-            export interface {{_table.RealTypeName}} extends IArrayElement {
+            export interface {{_table.TypeName}} extends IArrayElement {
             {{String.Join("\n", TsProperties(_table))}}
             }
 
-            declare type {{collType}} = IElementArray<{{_table.RealTypeName}}>;
+            declare type {{collType}} = IElementArray<{{_table.TypeName}}>;
 
             export interface TFolder extends IArrayElement {
-                readonly Id: {{_appMeta.IdDataType.ToTsType()}};
+                readonly Id: number;
                 Icon: string;
                 SubItems: TFolderArray;
                 HasSubItems: boolean;
@@ -57,11 +57,11 @@ internal partial class IndexModelBuilder
             templ = $$"""
 
             {{refDecl}}
-            export interface {{_table.RealTypeName}} extends IArrayElement {
+            export interface {{_table.TypeName}} extends IArrayElement {
             {{String.Join("\n", TsProperties(_table))}}
             }
 
-            declare type {{collType}} = IElementArray<{{_table.RealTypeName}}>;
+            declare type {{collType}} = IElementArray<{{_table.TypeName}}>;
 
             export interface TRoot extends IRoot {
                 readonly {{_table.RealItemsName}}: {{collType}};

@@ -121,7 +121,7 @@ internal partial class IndexModelBuilder
             yield return _table.RealTypeName;
             yield return $"{_table.RealTypeName}Array"; // collection type
             foreach (var x in _refFields.RefTables(_table.RealTypeName))
-                yield return x.RealTypeName;
+                yield return x.TypeName;
         }
 
         const String jsDivider = ",\n\t\t";

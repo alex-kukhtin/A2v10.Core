@@ -121,6 +121,8 @@ public record TableColumn
     public ColumnReference Reference { get; init; } = default!;
     public String? DbName { get; init; }
     public ColumnType? DbDataType { get; init; }
+    
+    [Obsolete("Use column.Type instead. Role is being phased out.")]
     public TableColumnRole Role { get; init; } = default!;
     public Int32 DbOrder { get; init; }
     public String? Computed { get; init; }
@@ -217,6 +219,14 @@ public record ReportItemMetadata
     };
 }
 public record DetailsKind(String Name, String Label);
+
+public enum TableTrait
+{
+    Audit,
+    Tags,
+    Color
+}
+
 public record TableMetadata
 {
     #region Database fields
@@ -233,15 +243,15 @@ public record TableMetadata
         kp => { kp.Value.Name = kp.Key; return kp.Value; }
     )];
 
+    public List<TableTrait> Traits { get; init; } = [];
+
     // for sql
-    public String? TypeName => $"T{Model}";
+    public String TypeName => $"T{Model}";
     public String CollectionName => Model.Plural();
     public Dictionary<String, FormMetadata> Forms { get; init; } = [];
 
     // OLD
     public String Name { get; init; } = default!;
-
-    //public List<TableColumn> Columns { get; internal set; } = [];
     public String? ItemsName { get; init; }
     public String? ItemName { get; init; }
     public EditWithMode EditWith { get; init; }
@@ -261,9 +271,9 @@ public record TableMetadata
     public List<ColumnReferenceToMe> RefsToMe { get; init; } = [];
     // internal variables
     internal String PrimaryKeyField => "Id";
-    internal String ParentField => Columns.FirstOrDefault(c => c.Role == TableColumnRole.Parent)?.Name
+    internal String ParentField => Columns.FirstOrDefault(c => c.Type == ColumnType.Parent)?.Name
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Parent column");
-    internal String NameField => Columns.FirstOrDefault(c => c.Role == TableColumnRole.Name)?.Name
+    internal String NameField => Columns.FirstOrDefault(c => c.Type == ColumnType.Name)?.Name
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Name column");
     internal String DoneField => Columns.FirstOrDefault(c => c.Type == ColumnType.Done)?.Name
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Done column");

@@ -1,12 +1,12 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
+using A2v10.Data.Core.Extensions;
+using A2v10.Data.Core.Extensions.Dynamic;
 using System;
+using System.Data;
 using System.Dynamic;
 using System.Linq;
 using System.Threading.Tasks;
-
-using A2v10.Data.Core.Extensions;
-using A2v10.Data.Core.Extensions.Dynamic;
 
 namespace A2v10.Metadata;
 
@@ -54,7 +54,7 @@ internal partial class IndexModelBuilder
         return _dbContext.LoadModelSqlAsync(_dataSource, sqlString, dbprms =>
         {
             AddDefaultParameters(dbprms);
-            dbprms.AddTyped("@Id", _appMeta.IdDataType.ToSqlDbType(), execPrms.Get<Object>("Id"));
+            dbprms.AddTyped("@Id", SqlDbType.BigInt, execPrms.Get<Object>("Id"));
         });
     }
 }

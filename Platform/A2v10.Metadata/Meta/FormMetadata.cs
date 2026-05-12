@@ -65,7 +65,7 @@ public record FormMetadata
     {
         foreach (var column in Columns)
         {
-            var c = table.AllColumns().FirstOrDefault(c => c.Name == column.Key) 
+            var c = table.AllColumns(с => true).FirstOrDefault(c => c.Name == column.Key) 
                 ?? throw new InvalidOperationException($"FormMetadata. Column {column.Key} not found");
             column.Value.SetDefaults(c);
         }

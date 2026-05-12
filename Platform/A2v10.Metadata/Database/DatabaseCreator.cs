@@ -20,12 +20,10 @@ internal class DatabaseCreator(AppMetadata _meta)
 
             String? nullable = null;
             var constraint = String.Empty;
-            if (column.Role.HasFlag(TableColumnRole.Id))
+            if (column.Type == ColumnType.Id)
             {
                 nullable = NOT_NULL;
                 var colDataType = column.Type;
-                if (colDataType == ColumnType.Id)
-                    colDataType = _meta.IdDataType;
                 if (!multPrimaryKeys && table.HasSequence) 
                 {
                     var defKey = colDataType switch
@@ -90,7 +88,7 @@ internal class DatabaseCreator(AppMetadata _meta)
 
     internal String CreateTableType(TableMetadata table)
     {
-        String createField(TableColumn column)
+        static String createField(TableColumn column)
         {
             return $"[{column.Name}] {column.SqlDataType(true)}";
         }
