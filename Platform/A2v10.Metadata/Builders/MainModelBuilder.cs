@@ -19,7 +19,6 @@ internal class MainModelBuilder(BaseModelBuilder _baseModelBuilder)
     protected readonly ICurrentUser _currentUser = _baseModelBuilder._currentUser;
     protected readonly DatabaseMetadataProvider _metadataProvider = _baseModelBuilder._metadataProvider;
     protected readonly String? _dataSource = _baseModelBuilder._dataSource;
-    protected readonly AppMetadata _appMeta = _baseModelBuilder._appMeta;
     [Obsolete("Use Column.RefTable instead.")]
     protected readonly IEnumerable<ReferenceMember> _refFields = _baseModelBuilder._refFields;
     protected readonly IServiceProvider _xamlServiceProvider = _baseModelBuilder._xamlServiceProvider;

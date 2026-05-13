@@ -23,7 +23,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         var storage = await ResolveStorageAsync(loaded, dataSource);
         if (storage != null)
         {
-            storage.StorageTopTable = loaded;
+            storage.Origin = loaded;
             loaded = storage;   
         }
         await ResolveReferencesAsyns(loaded, dataSource);
@@ -36,7 +36,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         var storage = await ResolveStorageAsync(meta, dataSource);
         if (storage != null)
         {
-            storage.StorageTopTable = meta;
+            storage.Origin = meta;
             meta = storage;
         }
         await ResolveReferencesAsyns(meta, dataSource);

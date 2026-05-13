@@ -13,7 +13,6 @@ namespace A2v10.Metadata;
 
 internal class ReportEndpointBuilder(IServiceProvider _serviceProvider, IModelBuilder _baseBuilder) : IMetaEndpointBuilder
 {
-    private readonly AppMetadata _appMeta = _baseBuilder.AppMeta;
     private readonly DynamicRenderer _dynamicRenderer = new(_serviceProvider);
 
     public async Task<IAppRuntimeResult> RenderAsync(IPlatformUrl platformUrl, IModelView view, bool isReload)

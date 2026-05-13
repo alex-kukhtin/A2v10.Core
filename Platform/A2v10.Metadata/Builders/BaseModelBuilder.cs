@@ -26,13 +26,12 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
 
 #pragma warning disable IDE1006 // Naming Styles
     internal TableMetadata _table => descriptor.Table;
-    internal TableMetadata? _baseTable => descriptor.Table.StorageTopTable;
-    internal AppMetadata _appMeta => descriptor.AppMeta;
+    internal TableMetadata? _baseTable => descriptor.Table.Origin;
     internal String? _dataSource => descriptor.DataSource;
     internal IPlatformUrl _platformUrl => descriptor.PlatformUrl;
 
     [Obsolete("Use Column.RefTable instead.")]
-    internal IEnumerable<ReferenceMember> _refFields => descriptor.RefFields;
+    internal IEnumerable<ReferenceMember> _refFields = default!;
 
     private SqlBuilder _sqlBuilder => new(descriptor, _serviceProvider);
     private JavascriptBuilder _jsBuilder = new(descriptor, _serviceProvider);
@@ -47,7 +46,6 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
 
     public TableMetadata Table => _table;
     public TableMetadata? BaseTable => _baseTable;
-    public AppMetadata AppMeta => _appMeta;
 
     public String? MetadataEndpointBuilder => _baseTable?.Schema switch
     {

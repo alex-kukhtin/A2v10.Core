@@ -177,9 +177,10 @@ internal partial class IndexModelBuilder
         return new Dialog()
         {
             CollectionView = XamlCollectionView(),
+            Width = Length.FromString("60rem"), // TODO
             Buttons = [
                 new Button() {
-                    Style = ButtonStyle.Primary, 
+                    Style = ButtonStyle.Primary,
                     Content = "@[Select]",
                     Bindings = b => b.SetBinding(nameof(Button.Command), selectCommand)
                 },
@@ -196,6 +197,7 @@ internal partial class IndexModelBuilder
                         {
                             FixedHeader = true,
                             Sort = true,
+                            Height = Length.FromString("20rem"), // TODO
                             Bindings = b => {
                                 b.SetBinding(nameof(DataGrid.ItemsSource), new Bind("Parent.ItemsSource"));
                                 b.SetBinding(nameof(DataGrid.DoubleClick), selectCommand);

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using A2v10.Data.Core.Extensions;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
+using DocumentFormat.OpenXml.Vml.Spreadsheet;
 
 namespace A2v10.Metadata;
 
@@ -188,7 +189,18 @@ internal partial class SqlBuilder
                     }
                     else if (gt.Count() > 1)
                     {
-                        throw new NotImplementedException("multiply map");
+                        var gx = gt.First();
+                        var sbu = new StringBuilder("with TU as (");
+                        sbu.AppendLine();
+                        sbu.Append("  ");
+                        sbu.AppendLine(String.Join(" union all ", gt.Select(g => $" select Id = [{g.Column.Name}] from @map where [{g.Column.Name}] is not null")));
+                        sbu.AppendLine(")");
+                        sbu.AppendLine($"""
+                        ,TR as (select Id from TU where Id is not null group by Id)
+                        select [!{gx.Table.RefTypeName}!Map] = null, [Id!!Id] = r.Id, [{gx.Column.Presentation}!!Name] = r.[{gx.Column.Presentation}]
+                        from {gx.Table.SqlTableName} r inner join TR on r.Id = TR.Id;
+                        """);
+                        sb.AppendLine(sbu.ToString());
                     }
                 }
             }

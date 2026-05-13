@@ -259,7 +259,7 @@ public record TableMetadata
     public String? Storage { get; init; }
     
     [JsonIgnore]
-    internal TableMetadata? StorageTopTable { get; set; }
+    internal TableMetadata? Origin { get; set; }
 
     // OLD
     public String? ItemsName { get; init; }

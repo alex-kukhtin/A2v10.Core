@@ -25,5 +25,4 @@ internal interface IModelBuilder
 
     TableMetadata Table { get; }
     TableMetadata? BaseTable { get; }
-    AppMetadata AppMeta { get; }
 }
