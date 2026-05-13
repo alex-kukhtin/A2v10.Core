@@ -20,6 +20,12 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     public async Task<TableMetadata> GetSchemaAsync(IModelBaseMeta meta, String? dataSource)
     {
         var loaded = await _metadataCache.GetOrAddAsync(dataSource, meta.CurrentSchema, meta.CurrentTable, LoadTableMetadataAsync);
+        var storage = await ResolveStorageAsync(loaded, dataSource);
+        if (storage != null)
+        {
+            storage.StorageTopTable = loaded;
+            loaded = storage;   
+        }
         await ResolveReferencesAsyns(loaded, dataSource);
         loaded.SetDefaults(meta.CurrentSchema, meta.CurrentTable);
         return loaded;
@@ -27,9 +33,26 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     public async Task<TableMetadata> GetSchemaAsync(String? dataSource, String schema, String table)
     {
         var meta = await _metadataCache.GetOrAddAsync(dataSource, schema, table, LoadTableMetadataAsync);
+        var storage = await ResolveStorageAsync(meta, dataSource);
+        if (storage != null)
+        {
+            storage.StorageTopTable = meta;
+            meta = storage;
+        }
         await ResolveReferencesAsyns(meta, dataSource);
         meta.SetDefaults(schema, table);
         return meta;
+    }
+
+    public async Task<TableMetadata?> ResolveStorageAsync(TableMetadata table, String? dataSource)
+    {
+        if (!String.IsNullOrEmpty(table.Storage))
+        {
+            var (storageSchema, storageTable) = DatabaseMetadataProvider.ParsePath(table.Storage);
+            return await GetSchemaAsync(dataSource, storageSchema, storageTable)
+                ?? throw new InvalidOperationException($"Parent Table {table.Storage} not found");
+        }
+        return null;
     }
 
     public Task<AppMetadata> GetAppMetadataAsync(String? dataSource)
@@ -85,7 +108,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         foreach (var cx in table.Columns.Where(c => c.IsEnum))
             list.Add(CreateMember(cx, index++));
         if (withDetails)
-            foreach (var dt in table.Details)
+            foreach (var dt in table.Details.Select(x => x.Value))
                 foreach (var ct in dt.Columns.Where(c => c.IsEnum))
                     list.Add(CreateMember(ct, index++));
         return list;
@@ -164,8 +187,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                 column.RefTable = meta; // self!
                 continue;
             }
-            var refPath = DatabaseMetadataProvider.ParsePath(column.Target);
-            var refMeta = await GetSchemaAsync(dataSource, refPath.schema, refPath.table);
+            var (schema, table) = DatabaseMetadataProvider.ParsePath(column.Target);
+            var refMeta = await GetSchemaAsync(dataSource, schema, table);
             column.RefTable = refMeta;
         }
     }

@@ -15,33 +15,51 @@ internal static class DefaultFormBuilder
 
         var cols = new Dictionary<String, FormColumn>();
         // memo => last
-        foreach (var column in table.AllColumns().Where(c => !c.IsMemo && includeColumn(c)))
+        foreach (var column in table.AllColumns(c => !c.IsMemo && includeColumn(c)))
             cols.Add(column.Name, new());
 
         var memo = table.DefaultColumns().FirstOrDefault(c => c.IsMemo);
         if (memo != null)
             cols.Add(memo.Name, new());
 
+        var filters = table.AllColumns(c => c.IsRef).Select(c => c.Name);
+
         return new FormMetadata()
         {
-            Columns = cols
+            Columns = cols,
+            Commands = [
+                FormCommandType.Add, FormCommandType.Edit, FormCommandType.Delete,
+                FormCommandType.Sep, FormCommandType.Show, FormCommandType.Sep, FormCommandType.Reload,
+                FormCommandType.ToRight, FormCommandType.Search
+            ],
+            Filters = filters.ToList()
         };
     }
 
     public static FormMetadata CreateEditForm(TableMetadata table)
     {
         var cols = new Dictionary<String, FormColumn>();
+
+        Boolean IsEditableColumn(TableColumn col) =>
+            col.Type != ColumnType.Void && col.Type != ColumnType.RowVersion && col.Type != ColumnType.Id &&
+            col.Type != ColumnType.IsSystem;
+
         // memo => last
-        foreach (var column in table.DefaultColumns().Where(c => !c.IsMemo))
+        foreach (var column in table.AllColumns().Where(c => IsEditableColumn(c) && !c.IsMemo))
             cols.Add(column.Name, new());
-        foreach (var column in table.Columns)
-            cols.Add(column.Name, new FormColumn());
-        foreach (var column in table.DefaultColumns().Where(c => c.IsMemo))
-            cols.Add(column.Name, new());
+        var memo = table.DefaultColumns().FirstOrDefault(c => c.IsMemo);
+        if (memo != null)
+            cols.Add(memo.Name, new());
 
         return new FormMetadata()
         {
-            Columns = cols
+            Columns = cols,
+            Commands = [
+                FormCommandType.Save, FormCommandType.SaveAndClose,
+                FormCommandType.Print, FormCommandType.Sep,
+                FormCommandType.Apply, FormCommandType.Sep, FormCommandType.Attachments,
+                FormCommandType.Sep, FormCommandType.Reload
+            ]
         };
     }
 }

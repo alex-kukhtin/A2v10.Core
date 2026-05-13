@@ -8,7 +8,6 @@ using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
-using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace A2v10.Metadata;
 
@@ -69,6 +68,8 @@ public record ColumnReference
     internal String SqlTableName => $"{RefSchema}.[{RefTable}]";
 }
 
+public record RefDescriptor(Int32 Index, TableColumn Column, TableMetadata Table);
+
 public record ColumnReferenceToMe : ColumnReference
 {
     public String Column { get; init; } = default!;
@@ -78,7 +79,6 @@ public enum TableColumnRole
 {
     Id, 
     Name,
-    SystemName,
     RowNo, 
     Parent, 
     Kind
@@ -96,6 +96,7 @@ public record TableColumn
     public ColumnType Type { get; init; } = default!;
     public String Target { get; init; } = default!;
     public TableMetadata? RefTable { get; set; }
+    public TableMetadata RefTableCheck => RefTable ?? throw new InvalidOperationException($"RefTable for '{Name}' is null");
 
     // for metadata provider
     internal Boolean NeedLoadRef => Type == ColumnType.Ref || Type == ColumnType.Owner || Type == ColumnType.Parent;
@@ -106,11 +107,7 @@ public record TableColumn
         get
         {
             if (Type == ColumnType.Ref)
-            {
-                if (RefTable == null)
-                    throw new InvalidOperationException($"RefTable for column '{Name}' is null");
-                return RefTable.Label;
-            }
+                return RefTableCheck.Label;
             return Constants.FieldNames.Name;
         }
     }
@@ -147,7 +144,7 @@ public record TableColumn
     internal Boolean IsParent => Type == ColumnType.Parent;
     internal Boolean IsName => Type == ColumnType.Name;
     internal Boolean IsRowNo => Type == ColumnType.RowNumber;
-    internal Boolean IsSearchable => Type == ColumnType.String;
+    internal Boolean IsSearchable => Type == ColumnType.String || Type == ColumnType.Name || Type == ColumnType.Memo;
     internal Boolean IsMemo => Type == ColumnType.Memo;
 }
 
@@ -239,6 +236,7 @@ public record TableMetadata
 
     public Dictionary<String, TableColumn> Fields { get; init; } = [];
 
+    [JsonIgnore]
     public List<TableColumn> Columns => [.. Fields.Select(
         kp => { kp.Value.Name = kp.Key; return kp.Value; }
     )];
@@ -246,17 +244,31 @@ public record TableMetadata
     public List<TableTrait> Traits { get; init; } = [];
 
     // for sql
+    [JsonIgnore]
     public String TypeName => $"T{Model}";
+    [JsonIgnore]
+    public String RefTypeName => $"TR{Model}";
+    [JsonIgnore]
     public String CollectionName => Model.Plural();
+
+    [JsonIgnore]
+    internal String TableTypeName => $"{Schema}.[{Model}.Meta.TableType]";
+
     public Dictionary<String, FormMetadata> Forms { get; init; } = [];
 
+    public String? Storage { get; init; }
+    
+    [JsonIgnore]
+    internal TableMetadata? StorageTopTable { get; set; }
+
     // OLD
-    public String Name { get; init; } = default!;
     public String? ItemsName { get; init; }
     public String? ItemName { get; init; }
     public EditWithMode EditWith { get; init; }
-    public List<TableMetadata> Details { get; private set; } = [];
-    public ColumnReference? ParentTable { get; init; }
+    //public List<TableMetadata> Details { get; private set; } = [];
+    public Dictionary<String, TableMetadata> Details { get; private set; } = [];
+
+
 
     public String? ItemsLabel { get; init; }
     public String? ItemLabel { get; init; }
@@ -280,11 +292,8 @@ public record TableMetadata
     internal String KindField => Columns.FirstOrDefault(c => c.Role == TableColumnRole.Kind)?.Name
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Kind column");
 
-    internal String RealItemName => ItemsName != null ? ItemsName.Singular() : ItemName ?? Name.Singular();
-    internal String RealItemsName => ItemsName ?? Name;  
-    internal String RealTypeName => $"T{Name}";
-    internal String TableTypeName => $"{Schema}.[{Model}.Meta.TableType]";
-    internal String RealItemLabel => ItemLabel ?? $"@{RealItemName}";
+    internal String RealItemName => ItemsName != null ? ItemsName.Singular() : ItemName ?? Table.Singular();
+    internal String RealItemsName => ItemsName ?? Table;  
     internal String RealItemsLabel => ItemsLabel ?? $"@{RealItemsName}";
     internal String SqlTableName => $"{Schema}.[{Table}]";
     internal Boolean IsJournal => Schema == "jrn";
@@ -297,11 +306,11 @@ public record TableMetadata
 
     internal void SetDefaults(String schema, String table)
     {
-        Path = $"{schema}/{table}";
+        Path = $"/{schema}/{table}";
         if (String.IsNullOrEmpty(Schema))
             Schema = schema.FromFolder();
         if (String.IsNullOrEmpty(Table))
-            Table = table.Plural();
+            Table = table.ToPascalCase().Plural();
         if (String.IsNullOrEmpty(Model))
             Model = table.ToPascalCase();
         if (Kind == EndpointKind.Undefined)
@@ -310,7 +319,10 @@ public record TableMetadata
             Label = Constants.FieldNames.Name;
         if (!Forms.ContainsKey(Constants.FormNames.Index))
             Forms.Add(Constants.FormNames.Index, DefaultFormBuilder.CreateIndexForm(this));
+        if (!Forms.ContainsKey(Constants.FormNames.Edit))
+            Forms.Add(Constants.FormNames.Edit, DefaultFormBuilder.CreateEditForm(this));
         Forms[Constants.FormNames.Index].SetDefaults(this);
+        Forms[Constants.FormNames.Edit].SetDefaults(this);
     }
 }
 

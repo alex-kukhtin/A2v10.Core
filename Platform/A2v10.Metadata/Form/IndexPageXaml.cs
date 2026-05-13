@@ -22,6 +22,13 @@ internal partial class IndexModelBuilder
             }
          );
 
+    IEnumerable<FilterItem> CollectionViewFilters()
+    {
+        yield return new FilterItem() { Property = "Fragment", DataType = DataType.String };
+        foreach (var f in _table.IndexForm().Filters)
+            yield return new FilterItem() { Property = f, DataType = DataType.Object };
+    }
+
     CollectionView XamlCollectionView() =>
         new()
         {
@@ -29,9 +36,7 @@ internal partial class IndexModelBuilder
             Bindings = b => b.SetBinding(nameof(CollectionView.ItemsSource), new Bind(_table.CollectionName)),
             Filter = new FilterDescription()
             {
-                Items = [
-                    new FilterItem() {Property = "Fragment", DataType = DataType.String }
-                ]
+                Items = [..CollectionViewFilters()]
             }
         };
     Pager XamlPager() =>
@@ -49,7 +54,7 @@ internal partial class IndexModelBuilder
             {
                 bindCmd.Command = CommandType.Dialog;
                 bindCmd.Action = DialogAction.Append;
-                bindCmd.Url = $"/{_table.Path}/edit";
+                bindCmd.Url = $"{_table.Path}/edit";
                 bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(_table.CollectionName));
             }
             return bindCmd;
@@ -72,7 +77,7 @@ internal partial class IndexModelBuilder
             {
                 bindCmd.Command = CommandType.Dialog;
                 bindCmd.Action = DialogAction.EditSelected;
-                bindCmd.Url = $"/{_table.Path}/edit";
+                bindCmd.Url = $"{_table.Path}/edit";
                 bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(_table.CollectionName));
             }
             return bindCmd;
@@ -119,21 +124,70 @@ internal partial class IndexModelBuilder
                         {
                             FixedHeader = true,
                             Sort = true,
-                            Bindings = b => b.SetBinding(nameof(DataGrid.ItemsSource), new Bind("Parent.ItemsSource")),
+                            Bindings = b => {
+                                b.SetBinding(nameof(DataGrid.ItemsSource), new Bind("Parent.ItemsSource"));
+                            },
                             Columns = [..IndexColumnsXaml(false)]
                         },
                         XamlPager()
                     ]
                 }
-            ]
+            ],
+            Taskpad = IndexTaskpad()
         };
     }
 
+    UIElement CreateFilterControl(String filter)
+    {
+        var elem = _table.AllColumns(x => x.Name == filter).FirstOrDefault();
+        if (elem == null)
+            return new Block();
+        return new SelectorSimple()
+        {
+            Label = $"@[{elem.RefTableCheck.Model}]",
+            ShowClear = true,
+            Highlight = true,
+            Placeholder = $"@[{elem.RefTableCheck.Model}.All]",
+            Url = elem.RefTableCheck.Path,
+            Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), new Bind($"Parent.Filter.{filter}")),
+        };
+    }
+
+    internal Taskpad? IndexTaskpad()
+    {
+        var filters = _table.IndexForm().Filters;
+        if (filters.Count == 0)
+            return null;
+        return new Taskpad()
+        {
+            Children = [
+                new Panel() {
+                    Header = "@[Filters]",
+                    Collapsible = true,
+                    Style = PaneStyle.Transparent,
+                    Children = [..filters.Select(CreateFilterControl)]
+                },
+            ]
+        };
+    }
     internal Dialog CreateBrowseDialogXaml()
     {
+        var selectCommand = new BindCmd() { Command = CommandType.Select };
+        selectCommand.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind("Parent.ItemsSource"));
         return new Dialog()
         {
             CollectionView = XamlCollectionView(),
+            Buttons = [
+                new Button() {
+                    Style = ButtonStyle.Primary, 
+                    Content = "@[Select]",
+                    Bindings = b => b.SetBinding(nameof(Button.Command), selectCommand)
+                },
+                new Button() {
+                    Content = "@[Cancel]",
+                    Bindings = b => b.SetBinding(nameof(Button.Command), new BindCmd() {Command = CommandType.Close })
+                },
+            ],
             Children = [
                 new Grid(_xamlServiceProvider) {
                     Children = [
@@ -142,13 +196,17 @@ internal partial class IndexModelBuilder
                         {
                             FixedHeader = true,
                             Sort = true,
-                            Bindings = b => b.SetBinding(nameof(DataGrid.ItemsSource), new Bind("Parent.ItemsSource")),
-                            Columns = [..IndexColumnsXaml(false)]
+                            Bindings = b => {
+                                b.SetBinding(nameof(DataGrid.ItemsSource), new Bind("Parent.ItemsSource"));
+                                b.SetBinding(nameof(DataGrid.DoubleClick), selectCommand);
+                            },
+                            Columns = [..IndexColumnsXaml(false)],
                         },
                         XamlPager()
                     ]
                 }
-            ]
+            ],
+            Taskpad = IndexTaskpad()
         };
     }
 }

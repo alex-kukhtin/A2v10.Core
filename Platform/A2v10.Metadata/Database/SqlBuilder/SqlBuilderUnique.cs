@@ -10,12 +10,12 @@ using A2v10.Data.Core.Extensions;
 
 namespace A2v10.Metadata;
 
-internal partial class PlainModelBuilder
+internal partial class SqlBuilder
 {
     internal async Task<IInvokeResult> CheckUniqueAsync(ExpandoObject? prms, String property)
     {
-        var column = _table.Columns.FirstOrDefault(c => c.Name.Equals(property, StringComparison.OrdinalIgnoreCase))
-            ?? throw new InvalidOperationException($"Column {property} not found in table {_table.Name}");
+        var column = Table.AllColumns().FirstOrDefault(c => c.Name.Equals(property, StringComparison.OrdinalIgnoreCase))
+            ?? throw new InvalidOperationException($"Column {property} not found in table {Table.Table}");
 
         var sql = $"""
         set nocount on;
@@ -23,13 +23,13 @@ internal partial class PlainModelBuilder
 
         declare @valid bit = 1;
 
-        if exists(select 1 from {_table.SqlTableName} t where t.[{column.Name}] = @Value and t.Id <> @Id)
+        if exists(select 1 from {Table.SqlTableName} t where t.[{column.Name}] = @Value and t.Id <> @Id)
             set @valid = 0;
 
         select [Result!TResult!Object] = null, [Value] = @valid;
         """;
 
-        var model = await _dbContext.LoadModelSqlAsync(_dataSource, sql, dbprms =>
+        var model = await _dbContext.LoadModelSqlAsync(DataSource, sql, dbprms =>
         {
             dbprms.AddBigInt("@UserId", _currentUser.Identity.Id)
             .AddBigInt("@Id", prms?.Get<Int64>("Id"))

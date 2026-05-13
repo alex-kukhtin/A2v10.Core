@@ -6,10 +6,8 @@ using System.Dynamic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 
 using A2v10.Data.Core.Extensions;
-using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 
 namespace A2v10.Metadata;
@@ -34,7 +32,7 @@ internal partial class PlainModelBuilder
             if (table.Details.Count == 0)
                 return String.Empty;
 
-            var detailsArray = table.Details.Select(d => {
+            var detailsArray = table.Details.Select(x => x.Value).Select(d => {
                 if (d.Kinds.Count == 0)
                     return $"[{d.RealItemsName}!{d.TypeName}!Array] = null";
                 return String.Join(",", d.Kinds.Select(k => $"[{k.Name}!{d.TypeName}!Array] = null"));
@@ -48,7 +46,7 @@ internal partial class PlainModelBuilder
                 return String.Empty;
             var sb = new StringBuilder();
 
-            foreach (var t in table.Details)
+            foreach (var t in table.Details.Select(x => x.Value))
             {
 
                 //TODO: Use: Same Key
@@ -74,7 +72,7 @@ internal partial class PlainModelBuilder
                 select [!{t.TypeName}!Array] = null,
                     {detailsParentIdField},
                     {String.Join(",", t.AllSqlFields(refFields, enumFields, "d", isDetails:true))}
-                from {t.Schema}.[{t.Name}] d
+                from {t.Schema}.[{t.Table}] d
                 {RefTableJoins(refFields, "d")}
                 where d.[{parentField}] = @Id
                 order by d.[RowNumber];
@@ -104,7 +102,7 @@ internal partial class PlainModelBuilder
         
         select [{table.RealItemName}!{table.TypeName}!Object] = null,
             {String.Join(",", table.AllSqlFields(tableRefFields, enumFieldsBase, "a"))}{DetailsArray()}
-        from {table.Schema}.[{table.Name}] a
+        from {table.Schema}.[{table.Table}] a
         {RefTableJoins(tableRefFields, "a")}
         where a.[{table.PrimaryKeyField}] = @Id;
 
@@ -116,23 +114,6 @@ internal partial class PlainModelBuilder
 
         """;
 
-    }
-    public async Task<IDataModel> LoadPlainModelAsync()
-    {
-
-        var sqlString = $"""
-            set nocount on;
-            set transaction isolation level read uncommitted;
-            
-            {LoadPlainModelSql(_table)};
-            
-            """;
-
-        return await _dbContext.LoadModelSqlAsync(_dataSource, sqlString, dbprms =>
-        {
-            AddDefaultParameters(dbprms);
-            dbprms.AddString("@Id", _platformUrl.Id);
-        });
     }
     public async Task<ExpandoObject> SavePlainModelAsync(ExpandoObject data, ExpandoObject savePrms)
     {
@@ -162,7 +143,7 @@ internal partial class PlainModelBuilder
                         ?? throw new InvalidOperationException("MergeDetails: RowNo field not found");
                     return $"""
 				    merge {detailsTable.SqlTableName} as t
-				    using @{detailsTable.Name} as s
+				    using @{detailsTable.Table} as s
 				    on {String.Join(" and ", detailsTable.PrimaryKeys.Select(c => $"t.[{c.Name}] = s.[{c.Name}]"))}
 				    when matched then update set
 				        {String.Join(',', updateFields.Select(f => $"t.[{f.Name}] = s.[{f.Name}]"))}
@@ -178,7 +159,7 @@ internal partial class PlainModelBuilder
                         ?? throw new InvalidOperationException("MergeDetails: Parent field not found");
                     return $"""
 				    merge {detailsTable.SqlTableName} as t
-				    using @{detailsTable.Name} as s
+				    using @{detailsTable.Table} as s
 				    on t.[{detailsTable.PrimaryKeyField}]  = s.[{detailsTable.PrimaryKeyField}]
 				    when matched then update set
 				        {String.Join(',', updateFields.Select(f => $"t.[{f.Name}] = s.[{f.Name}]"))}
@@ -219,7 +200,7 @@ internal partial class PlainModelBuilder
 				""";
             }
 
-            foreach (var details in _table.Details)
+            foreach (var details in _table.Details.Select(x => x.Value))
             {
                 if (details.Kinds.Count == 0)
                     sb.AppendLine(mergeOneDetails(details));
@@ -268,7 +249,7 @@ internal partial class PlainModelBuilder
         {LoadPlainModelSql(_table)}
         """;
         var item = data.Get<ExpandoObject>(_table.Model);
-        var tableBuilder = new DataTableBuilder(_table, _appMeta);
+        var tableBuilder = new DataTableBuilder(_table);
         
         var dtable = tableBuilder.BuildDataTable(item);
 
@@ -278,6 +259,7 @@ internal partial class PlainModelBuilder
         {
             AddDefaultParameters(dbprms);
             dbprms.AddStructured($"@{_table.Model}", _table.TableTypeName, dtable);
+            /*
             _table.Details.ForEach(details =>
             {
                 var detailsTableBuilder = new DataTableBuilder(details, _appMeta);
@@ -297,6 +279,7 @@ internal partial class PlainModelBuilder
                     dbprms.AddStructured($"@{details.Name}", details.TableTypeName, detailsTable);
                 }
             });
+            */
         });
         return dm.Root; 
     }

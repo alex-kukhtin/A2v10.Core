@@ -70,7 +70,7 @@ internal static class SqlExtensions
         return column.Type.ToSqlDataType(maxLength, column.Scale, toTableType);
     }
 
-    public static String SqlModelColumnName(this TableColumn column, String alias)
+    public static String SqlModelColumnName(this TableColumn column, String alias, Func<TableMetadata, String> refPredicate)
     {
         if (column.Type == ColumnType.Id)
             return $"[Id!!Id] = {alias}.[Id]";
@@ -78,11 +78,8 @@ internal static class SqlExtensions
             return $"[Name!!Name] = {alias}.[Name]";
         else if (column.Type == ColumnType.RowNumber)
             return $"[{column.Name}!!RowNumber] = {alias}.[{column.Name}]";
-        else if (column.Type == ColumnType.Ref) {
-            if (column.RefTable == null)
-                throw new InvalidOperationException($"RefTable for column {column.Name} is null");
-            return $"[{column.Name}!{column.RefTable.TypeName}!RefId] = {alias}.[{column.Name}]";
-        }
+        else if (column.Type == ColumnType.Ref)
+            return $"[{column.Name}!{refPredicate(column.RefTableCheck)}!RefId] = {alias}.[{column.Name}]";
         return $"{alias}.[{column.Name}]";
     }
 
@@ -91,6 +88,7 @@ internal static class SqlExtensions
         return column.Type switch
         {
             ColumnType.Id or ColumnType.Ref or ColumnType.Owner or ColumnType.Parent => typeof(Int64),
+            ColumnType.Name or ColumnType.Memo => typeof(String),
             ColumnType.RowNumber => typeof(Int32),
             ColumnType.Operation => typeof(String),
             ColumnType.Enum => typeof(String),
@@ -139,7 +137,7 @@ internal static class SqlExtensions
                 yield return c.IsParent ? $"Folder = {alias}.[{c.Name}]" : $"{alias}.[{c.Name}]";
         foreach (var e in enumFields)
         {
-            var modelType = $"TR{e.Table.RealItemName}";
+            var modelType = $"TR{e.Table.Model}";
             var col = e.Column;
             var elemName = col.Name;
             yield return $"[{col.Name}!{modelType}!RefId] = {alias}.[{col.Name}]";
@@ -151,7 +149,7 @@ internal static class SqlExtensions
             var col = c.Column;
             var elemName = col.Name;
             // TR, not T - avoid recursion 
-            var modelType = $"TR{c.Table.RealItemName}";
+            var modelType = $"TR{c.Table.Model}";
             if (col.IsParent)
             {
                 elemName = "Folder";

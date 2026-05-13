@@ -17,15 +17,13 @@ internal partial class ModelBuilderFactory(
             throw new InvalidOperationException("Meta is null");
 
         var srcTable = await _metadataProvider.GetSchemaAsync(modelBase.Meta, modelBase.DataSource);
-        var (table, baseTable) = await GetTablesAsync(modelBase.DataSource, srcTable);
 
         var bd = new BuilderDescriptor()
         {
             DataSource = modelBase.DataSource,
             PlatformUrl = platformUrl,
-            Table = table,
-            BaseTable = baseTable,
-            RefFields = await _metadataProvider.ReferenceFieldsAsync(modelBase.DataSource, table),
+            Table = srcTable,
+            RefFields = await _metadataProvider.ReferenceFieldsAsync(modelBase.DataSource, srcTable),
             AppMeta = await _metadataProvider.GetAppMetadataAsync(modelBase.DataSource)
         };
 
@@ -33,15 +31,12 @@ internal partial class ModelBuilderFactory(
     }
     public async Task<IModelBuilder> BuildAsync(IPlatformUrl platformUrl, TableMetadata table, String? dataSource)
     {
-        var tables = await GetTablesAsync(dataSource, table);
-
         var bd = new BuilderDescriptor()
         {
             DataSource = dataSource,
             PlatformUrl = platformUrl,
-            Table = tables.table,
-            BaseTable = tables.baseTable,
-            RefFields = await _metadataProvider.ReferenceFieldsAsync(dataSource, tables.table),
+            Table = table,
+            RefFields = await _metadataProvider.ReferenceFieldsAsync(dataSource, table),
             AppMeta = await _metadataProvider.GetAppMetadataAsync(dataSource)
         };
         return new BaseModelBuilder(_serviceProvider, bd);
@@ -50,11 +45,12 @@ internal partial class ModelBuilderFactory(
     private async Task<(TableMetadata table, TableMetadata? baseTable)> GetTablesAsync(String? dataSource, TableMetadata table)
     {
         TableMetadata? baseTable = null;
-        if (!table.ParentTable.IsEmpty())
+        if (!String.IsNullOrEmpty(table.Storage))
         {
+            var (storageSchema, storageTable) = DatabaseMetadataProvider.ParsePath(table.Storage);
             baseTable = table;
-            table = await _metadataProvider.GetSchemaAsync(dataSource, table.ParentTable!.RefSchema, table.ParentTable.RefTable)
-                ?? throw new InvalidOperationException($"Parent Table {table.ParentTable.RefTable} not found");
+            table.StorageTopTable = await _metadataProvider.GetSchemaAsync(dataSource, storageSchema, storageTable)
+                ?? throw new InvalidOperationException($"Parent Table {table.Storage} not found");
         }
         return (table, baseTable);
     }

@@ -1,7 +1,9 @@
 ﻿// Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+using System.Collections.Generic;
 using System.Dynamic;
+using System.Linq;
 using System.Threading.Tasks;
 
 using A2v10.App.Infrastructure;
@@ -17,7 +19,16 @@ internal partial class SqlBuilder
         var collectionName = Table.RealItemsName;
         var collectionType = Table.TypeName;
 
-        var refFields = RefFields; // await ReferenceFieldsAsync(_table));
+        var allColumns = Table.AllColumns().ToList();
+        var refs = allColumns.AllRefs().ToList();
+
+
+        IEnumerable<String> indexSqlFields(String alias)
+        {
+            static Boolean includeColumn(TableColumn col)
+                => col.Type != ColumnType.RowVersion && col.Type != ColumnType.Void;
+            return Table.AllColumns(includeColumn).Select(col => col.SqlModelColumnName(alias, t => t.RefTypeName));
+        }
 
         var enumFields = DatabaseMetadataProvider.EnumFields(Table, false);
         var sqlString = $"""
@@ -52,7 +63,7 @@ internal partial class SqlBuilder
 
         -- Lasy table declaration
         select [!{collectionType}!Array] = null, 
-            {String.Join(",", Table.AllSqlFields(refFields, enumFields, "c"))},
+            {String.Join(",", indexSqlFields("c"))},
             [!!RowCount] = 0
         from {Table.SqlTableName} c
         where 0 <> 0;
@@ -68,8 +79,8 @@ internal partial class SqlBuilder
 
     public Task<IDataModel> ExpandAsync(ExpandoObject expandPrms)
     {
-        var collectionName = Table.RealItemsName;
-        var collectionType = Table.RealTypeName;
+        var collectionName = Table.CollectionName;
+        var collectionType = Table.TypeName;
 
         var sqlString = $"""
         set nocount on;
@@ -96,8 +107,8 @@ internal partial class SqlBuilder
 
     public async Task<IDataModel> LoadBrowseTreeModelAsync()
     {
-        var collectionName = Table.RealItemsName;
-        var collectionType = Table.RealTypeName;
+        var collectionName = Table.CollectionName;
+        var collectionType = Table.TypeName;
 
         var sqlString = $"""
         set nocount on;

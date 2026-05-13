@@ -11,7 +11,6 @@ namespace A2v10.Metadata;
 
 internal partial class IndexModelBuilder
 {
-
     internal Task<IInvokeResult> FetchFolderAsync(ExpandoObject? prms)
     {
         throw new InvalidOperationException("IMPLEMENT FETCH FOLDER");
@@ -26,12 +25,12 @@ internal partial class IndexModelBuilder
         declare @fr nvarchar(255);
         set @fr = N'%' + @Text + N'%';
 
-        select top(100) [{_table.RealItemsName}!{_table.TypeName}!Array] = null, 
-            [{_table.PrimaryKeyField}!!Id] = a.[{_table.PrimaryKeyField}], [{_table.NameField}!!Name] = a.[{_table.NameField}]
+        select top(100) [{_table.CollectionName}!{_table.TypeName}!Array] = null, 
+            [Id!!Id] = a.Id, [Name!!Name] = a.[Name]
         from {_table.SqlTableName} a
         where a.[Void] = 0 and
-            (a.[{_table.NameField}] like @fr)
-        order by a.[{_table.NameField}];
+            (a.[Name] like @fr)
+        order by a.[Name];
         """;
 
         var model = await _dbContext.LoadModelSqlAsync(_dataSource, sql, dbprms =>

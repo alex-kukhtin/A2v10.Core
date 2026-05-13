@@ -48,26 +48,30 @@ public record FormColumn
     [JsonIgnore]
     internal FormColumnType DataType { get; private set; }
 
-    public void SetDefaults(TableColumn column)
+    [JsonIgnore]
+    internal TableColumn TableColumn { get; private set; } = default!;
+
+    public void SetTableColumn(TableColumn column)
     {
-        Header ??= $"@[{column.Name}]";
-        Path ??= column.Type == ColumnType.Ref ? $"{column.Name}.{column.Presentation}" : column.Name;
+        TableColumn = column;
+        Header ??= $"@[{TableColumn.Name}]";
+        Path ??= TableColumn.Type == ColumnType.Ref ? $"{TableColumn.Name}.{TableColumn.Presentation}" : TableColumn.Name;
         // set always
-        DataType = column.Type.ToFormDataType();
+        DataType = TableColumn.Type.ToFormDataType();
     }
 }
 public record FormMetadata
 {
     public Dictionary<String, FormColumn> Columns { get; set; } = [];
-    public FormCommandType[] Commands { get; set; } = [];
-
+    public List<FormCommandType> Commands { get; set; } = [];
+    public List<String> Filters { get; set; } = [];
     public void SetDefaults(TableMetadata table)
     {
         foreach (var column in Columns)
         {
             var c = table.AllColumns(с => true).FirstOrDefault(c => c.Name == column.Key) 
                 ?? throw new InvalidOperationException($"FormMetadata. Column {column.Key} not found");
-            column.Value.SetDefaults(c);
+            column.Value.SetTableColumn(c);
         }
     }
 }

@@ -34,8 +34,8 @@ internal partial class PlainModelBuilder
         {
             if (_table.Details.Count > 0)
             {
-                var fd = _table.Details.First();
-                yield return $$"""'{{_table.RealTypeName}}.$$Tab': {type: String, value: '{{fd.RealItemsName}}'}""";
+                var fd = _table.Details.Select(x => x.Value).First();
+                yield return $$"""'{{_table.TypeName}}.$$Tab': {type: String, value: '{{fd.CollectionName}}'}""";
             }
         }
 
@@ -45,19 +45,19 @@ internal partial class PlainModelBuilder
             {
                 if (col.Unique && col.Required)
                     yield return $$"""
-                '{{_table.RealItemName}}.{{col.Name}}': [
+                '{{_table.Model}}.{{col.Name}}': [
                     `@[Error.Required]`,
                     {valid: {{col.Name.ToLowerInvariant()}}Duplicate, async: true, msg: `@[Error.Duplicate]`}]
                 """;
                 else if (col.Required)
-                    yield return $"'{_table.RealItemName}.{col.Name}': `@[Error.Required]`";
+                    yield return $"'{_table.Model}.{col.Name}': `@[Error.Required]`";
                 else if (col.Unique)
-                    yield return $$"""'{{_table.RealItemName}}.{{col.Name}}': {valid: {{col.Name.ToLowerInvariant()}}Duplicate, async: true, msg: `@[Error.{{_table.RealItemName}}.Duplicate.{{col.Name}}]`}""";
+                    yield return $$"""'{{_table.Model}}.{{col.Name}}': {valid: {{col.Name.ToLowerInvariant()}}Duplicate, async: true, msg: `@[Error.{{_table.RealItemName}}.Duplicate.{{col.Name}}]`}""";
             }
 
-            foreach (var d in _table.Details)
+            foreach (var d in _table.Details.Select(x => x.Value))
                 foreach (var c in d.Columns.Where(c => c.Required))
-                    yield return $"'{_table.RealItemName}.{d.RealItemsName}[].{c.Name}': `@[Error.Required]`";
+                    yield return $"'{_table.RealItemName}.{d.CollectionName}[].{c.Name}': `@[Error.Required]`";
         }
 
         IEnumerable<String> functions()
@@ -98,8 +98,8 @@ internal partial class PlainModelBuilder
         {
             if (_table.Details.Count > 0)
             {
-                var fd = _table.Details.First();
-                yield return $$"""'{{_table.TypeName}}.$$Tab': {type: String, value: '{{fd.RealItemsName}}'}""";
+                var fd = _table.Details.First().Value;
+                yield return $$"""'{{_table.TypeName}}.$$Tab': {type: String, value: '{{fd.CollectionName}}'}""";
             }
         }
 
@@ -109,19 +109,19 @@ internal partial class PlainModelBuilder
             {
                 if (col.Unique && col.Required)
                     yield return $$"""
-                '{{_table.RealItemName}}.{{col.Name}}': [
+                '{{_table.Model}}.{{col.Name}}': [
                     `@[Error.Required]`,
                     {valid: {{col.Name.ToLowerInvariant()}}Duplicate, async: true, msg: `@[Error.Duplicate]`}]
                 """;
                 else if (col.Required)
-                    yield return $"'{_table.RealItemName}.{col.Name}': `@[Error.Required]`";
+                    yield return $"'{_table.Model}.{col.Name}': `@[Error.Required]`";
                 else if (col.Unique)
-                    yield return $$"""'{{_table.RealItemName}}.{{col.Name}}': {valid: {{col.Name.ToLowerInvariant()}}Duplicate, async: true, msg: `@[Error.{{_table.RealItemName}}.Duplicate.{{col.Name}}]`}""";
+                    yield return $$"""'{{_table.Model}}.{{col.Name}}': {valid: {{col.Name.ToLowerInvariant()}}Duplicate, async: true, msg: `@[Error.{{_table.RealItemName}}.Duplicate.{{col.Name}}]`}""";
             }
 
-            foreach (var d in _table.Details)
+            foreach (var d in _table.Details.Select(x => x.Value))
                 foreach (var c in d.Columns.Where(c => c.Required))
-                    yield return $"'{_table.RealItemName}.{d.RealItemsName}[].{c.Name}': `@[Error.Required]`";
+                    yield return $"'{_table.Model}.{d.CollectionName}[].{c.Name}': `@[Error.Required]`";
         }
 
         IEnumerable<String> functions()
@@ -140,9 +140,9 @@ internal partial class PlainModelBuilder
         IEnumerable<String> types()
         {
             yield return "TRoot";
-            yield return _table.RealTypeName;
-            foreach (var r in _refFields.RefTables(_table.RealTypeName))
-                yield return r.RealTypeName;
+            yield return _table.TypeName;
+            foreach (var r in _refFields.RefTables(_table.TypeName))
+                yield return r.TypeName;
         }   
 
         const String jsDivider = ",\n\t\t";

@@ -1,14 +1,55 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
-using System;
 using System.Linq;
 using System.Collections.Generic;
+
 using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
 internal partial class PlainModelBuilder
 {
+    Control CreateEditControl(FormColumn column)
+    {
+        var valueBind = new Bind($"{_table.Model}.{column.TableColumn.Name}");
+        return column.TableColumn.Type switch
+        {
+            ColumnType.Date => new DatePicker()
+            {
+                Label = column.Header,
+                Width = Length.FromString("12rem"),
+                Bindings = b => b.SetBinding(nameof(DatePicker.Value), valueBind)
+            },
+            ColumnType.Name => new TextBox()
+            {
+                Label = column.Header,
+                Bold = true,
+                TabIndex = 1,
+                Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
+            },
+            ColumnType.Memo => new TextBox()
+            {
+                Label = column.Header,
+                Multiline = true,
+                Rows = 3,
+                Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
+            },
+            ColumnType.Ref => new SelectorSimple()
+            {
+                Label = column.Header,
+                Url = column.TableColumn.RefTableCheck.Path,
+                ShowClear = true,
+                Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
+            },
+            _ => new TextBox()
+            {
+                Label = column.Header,
+                Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
+            }
+        };
+    }
+    IEnumerable<Control> EditControls()
+       => _table.EditForm().Columns.Select(c => CreateEditControl(c.Value));
     internal Dialog CreateEditDialogXaml()
     {
         return new Dialog()
@@ -30,25 +71,7 @@ internal partial class PlainModelBuilder
             Children = [
                 new Grid(_xamlServiceProvider)
                 {
-                    Children = [
-                        new TextBox() {
-                            Label = "@[Name]",
-                            TabIndex = 1,
-                            Bold = true,
-                            Bindings = b => b.SetBinding(nameof(TextBox.Value), new Bind($"{_table.Model}.Name"))
-                        },
-                        new DatePicker() {
-                            Label = "@[Date]",
-                            Width = Length.FromString("12rem"),
-                            Bindings = b => b.SetBinding(nameof(TextBox.Value), new Bind($"{_table.Model}.Date"))
-                        },
-                        new TextBox() {
-                            Label = "@[Memo]",
-                            Multiline = true,
-                            Rows = 3,
-                            Bindings = b => b.SetBinding(nameof(TextBox.Value), new Bind($"{_table.Model}.Memo"))
-                        }
-                    ]
+                    Children = [..EditControls()]
                 }
             ]
         };

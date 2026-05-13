@@ -15,7 +15,7 @@ internal partial class PlainModelBuilder
         var detailsDecl = String.Empty;    
 
         var refElems = _refFields.RefTables().Select(x => $$"""
-        export interface {{x.RealTypeName}} extends IElement {
+        export interface {{x.TypeName}} extends IElement {
         {{String.Join("\n", TsProperties(x))}}
         }
 
@@ -23,19 +23,19 @@ internal partial class PlainModelBuilder
 
         IEnumerable<String> detailsFields()
         {
-            foreach (var t in _table.Details)
+            foreach (var t in _table.Details.Select(x => x.Value))
             {
                 if (t.Kinds.Count == 0)
-                    yield return $"    readonly {t.RealItemsName}: {t.RealTypeName}Array;";
+                    yield return $"    readonly {t.RealItemsName}: {t.TypeName}Array;";
                 else
                     foreach (var k in t.Kinds)
-                        yield return $"    readonly {k.Name}: {t.RealTypeName}Array;";
+                        yield return $"    readonly {k.Name}: {t.TypeName}Array;";
             }
         }
 
         IEnumerable<String> detailsComputed()
         {
-            foreach (var t in _table.Details)
+            foreach (var t in _table.Details.Select(x => x.Value))
                 foreach (var c in t.Columns.Where(c => !String.IsNullOrEmpty(c.Computed)))
                     yield return $"    readonly {c.Name}: any;";
         }
@@ -43,7 +43,7 @@ internal partial class PlainModelBuilder
         if (refElems.Any())
             refDecl = $"\n{String.Join("\n", refElems)}\n";
 
-        var detailElems = _table.Details.Select(d => $$"""
+        var detailElems = _table.Details.Select(x => x.Value).Select(d => $$"""
         export interface {{d.TypeName}} extends IArrayElement {
         {{String.Join("\n", TsProperties(d))}}
         }
@@ -72,12 +72,12 @@ internal partial class PlainModelBuilder
         var templ = $$"""
 
         {{refDecl}}{{detailsDecl}}
-        export interface {{_table.RealTypeName}} extends IElement {
+        export interface {{_table.TypeName}} extends IElement {
         {{String.Join("\n", elemProperties())}}
         }   
 
         export interface TRoot extends IRoot {
-            readonly {{_table.RealItemName}}: {{_table.RealTypeName}}; 
+            readonly {{_table.RealItemName}}: {{_table.TypeName}}; 
         }
         """;
         return Task.FromResult<String>(templ);

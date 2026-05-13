@@ -41,7 +41,7 @@ internal class EndpointGenerator(IModelBuilderFactory _modelBuilderFactory, IApp
             Schema = table.Schema,
             Meta = new DatabaseMetaD()
             {
-                Table = table.Name
+                Table = table.Table
             },
             Actions = new Dictionary<String, ModelJsonViewD>() {
                 { "index", new ModelJsonViewD()

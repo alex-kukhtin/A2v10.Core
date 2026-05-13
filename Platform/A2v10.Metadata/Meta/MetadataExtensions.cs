@@ -34,6 +34,7 @@ internal static class MetadataExtensions
             "catalog"  => EndpointKind.Catalog,
             "document" => EndpointKind.Document,
             "journal"  => EndpointKind.Journal,
+            "operation" => EndpointKind.Operation,
             _ => throw new InvalidOperationException($"Invalid schema for EndpointKind {schema}")
         };
     }
@@ -66,14 +67,14 @@ internal static class MetadataExtensions
 
     internal static String EndpointPath(this TableMetadata table)
     {
-        return $"/{table.Schema.ToFolder()}/{table.Name}".ToLowerInvariant();
+        return $"/{table.Schema.ToFolder()}/{table.Model}".ToLowerInvariant();
     }
 
     internal static String EndpointPathUseBase(this TableMetadata table, TableMetadata? baseTable)
     {
         if (baseTable != null)
-            return baseTable.EndpointPath();
-        return table.EndpointPath();
+            return baseTable.Path;
+        return table.Path;
     }
 
     public static IPlatformUrl PlatformUrl(this TableMetadata table, String action)
@@ -101,7 +102,7 @@ internal static class MetadataExtensions
     internal static String LocalPath(this TableMetadata table, String action)
     {
         action = action.ToLowerInvariant();
-        var path = $"{table.Schema.ToFolder()}/{table.Name}".ToLowerInvariant();
+        var path = $"{table.Schema.ToFolder()}/{table.Table}".ToLowerInvariant();
 
         String CreateEditPath()
         {
@@ -138,7 +139,7 @@ internal static class MetadataExtensions
         return new TableMetadata()
         {
             //Schema = col.Reference.RefSchema,
-            Name = col.Reference.RefTable,
+            Table = col.Reference.RefTable,
             /*
             Columns = [
                 new TableColumn()
@@ -164,7 +165,7 @@ internal static class MetadataExtensions
     {
         if (column.Reference.IsEmpty())
             return null;
-        var rm = refs.FirstOrDefault(r =>  r.Table.Schema == column.Reference.RefSchema && r.Table.Name == column.Reference.RefTable);
+        var rm = refs.FirstOrDefault(r =>  r.Table.Schema == column.Reference.RefSchema && r.Table.Table == column.Reference.RefTable);
         return rm;
     }
 
@@ -172,14 +173,21 @@ internal static class MetadataExtensions
     {
         var res = refs.GroupBy(r => r.Table.SqlTableName).Select(g => g.First().Table);
         if (exclude != null)
-            res = res.Where(t => t.RealTypeName != exclude);
+            res = res.Where(t => t.TypeName != exclude);
         return res;
     }
 
     internal static IEnumerable<TableColumn> AllColumns(this TableMetadata table, Func<TableColumn, Boolean>? predicate = null) =>
         table.DefaultColumns().Concat(table.Columns).Where(predicate ?? (_ => true));
 
+    internal static IEnumerable<RefDescriptor> AllRefs(this IEnumerable<TableColumn> columns) =>
+        columns.Where(c => c.IsRef).Select((c, ix) => new RefDescriptor(ix + 1, c, c.RefTable
+            ?? throw new InvalidOperationException($"RefTable for {c.Name} is null")));
+
     internal static FormMetadata IndexForm(this TableMetadata table) =>
         table.Forms.First(x => x.Key == Constants.FormNames.Index).Value;
+
+    internal static FormMetadata EditForm(this TableMetadata table) =>
+        table.Forms.First(x => x.Key == Constants.FormNames.Edit).Value;
 
 }

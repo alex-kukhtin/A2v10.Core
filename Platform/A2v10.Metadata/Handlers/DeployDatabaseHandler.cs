@@ -70,7 +70,7 @@ public class DeployDatabaseHandler(IServiceProvider _serviceProvider) : IClrInvo
                     {
                         { "Kind", kind },
                         { "Schema", table.Schema},
-                        { "Table", table.Name },
+                        { "Table", table.Table },
                         { "Index", index },
                     }
                 }

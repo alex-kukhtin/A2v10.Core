@@ -12,7 +12,7 @@ namespace A2v10.Metadata;
 /*
  * Важно! Порядок добавления колонок в DataTable должен совпадать с порядком в табличном типе!
 */
-internal class DataTableBuilder(TableMetadata table, AppMetadata appMeta)
+internal class DataTableBuilder(TableMetadata table)
 {
     public DataTable BuildDataTable(ExpandoObject? data)
     {
@@ -51,11 +51,11 @@ internal class DataTableBuilder(TableMetadata table, AppMetadata appMeta)
 
         var dtable = new DataTable();
 
-        dtable.Columns.Add(new DataColumn("Id", typeof(Int64)));
+        Boolean IsFieldInDataTable(TableColumn column) =>
+            column.Type != ColumnType.RowVersion && column.Type != ColumnType.Void &&
+            column.Type != ColumnType.IsSystem;
 
-        foreach (var f in table.DefaultColumns())
-            dtable.Columns.Add(CreateColumn(f));
-        foreach (var f in table.Columns.OrderBy(c => c.DbOrder))
+        foreach (var f in table.AllColumns(IsFieldInDataTable))
             dtable.Columns.Add(CreateColumn(f));
         return dtable;
     }
@@ -98,9 +98,6 @@ internal class DataTableBuilder(TableMetadata table, AppMetadata appMeta)
                 {
                     obj = exp.Get<Object>("Id");
                     if (obj is Int64 int64 && int64 == 0)
-                        obj = DBNull.Value;
-                    else if (appMeta.IdDataType == ColumnType.Uniqueidentifier
-                            && obj is String strVal && String.IsNullOrWhiteSpace(strVal))
                         obj = DBNull.Value;
                 }
                 r[col] = obj;

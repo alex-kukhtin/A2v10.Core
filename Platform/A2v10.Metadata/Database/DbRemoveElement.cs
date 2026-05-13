@@ -1,12 +1,13 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
-using A2v10.Data.Core.Extensions;
-using A2v10.Data.Core.Extensions.Dynamic;
 using System;
 using System.Data;
 using System.Dynamic;
 using System.Linq;
 using System.Threading.Tasks;
+
+using A2v10.Data.Core.Extensions;
+using A2v10.Data.Core.Extensions.Dynamic;
 
 namespace A2v10.Metadata;
 

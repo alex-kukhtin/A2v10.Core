@@ -20,7 +20,7 @@ internal partial class PlainModelBuilder
         var opColumn = _table.Columns.FirstOrDefault(c => c.Type == ColumnType.Operation) ?? throw new InvalidOperationException("Implement. Apply for Document");
         TableMetadata applyTable = this._baseTable ?? _table;
         if (applyTable.Apply == null || !applyTable.Apply.Any())
-            throw new InvalidOperationException($"Table {applyTable.Schema}.[{applyTable.Name}]. Nothing to apply");
+            throw new InvalidOperationException($"Table {applyTable.Schema}.[{applyTable.Table}]. Nothing to apply");
 
         var journals = applyTable.Apply.Select(c => c.Journal).Distinct(Comparers.ColumnReference);
         var deleteFromJournals = journals.Select(j => $"delete from {j.SqlTableName} where [Document] = @Id");
@@ -37,7 +37,7 @@ internal partial class PlainModelBuilder
 
             if (a.Details != null && !String.IsNullOrEmpty(a.DetailsKind))
             {
-                var td = _table.Details.FirstOrDefault(x => x.Name == a.Details.RefTable)
+                var td = _table.Details.Select(x => x.Value).FirstOrDefault(x => x.Table == a.Details.RefTable)
                     ?? throw new InvalidOperationException($"Details {a.Details.RefTable} not found");
                 var kindField = td.KindField;
                 onUseKind = $" and r.[{kindField}] = N'{a.DetailsKind}'";
@@ -96,7 +96,7 @@ internal partial class PlainModelBuilder
             ?? throw new InvalidOperationException("Implement. UnApply for Document");
         TableMetadata applyTable = this._baseTable ?? _table;
         if (applyTable.Apply == null || !applyTable.Apply.Any())
-            throw new InvalidOperationException($"Table {applyTable.Schema}.[{applyTable.Name}]. Nothing to apply");
+            throw new InvalidOperationException($"Table {applyTable.Schema}.[{applyTable.Table}]. Nothing to apply");
 
         var journals = applyTable.Apply.Select(c => c.Journal).Distinct(Comparers.ColumnReference);
 

@@ -26,7 +26,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
 
 #pragma warning disable IDE1006 // Naming Styles
     internal TableMetadata _table => descriptor.Table;
-    internal TableMetadata? _baseTable => descriptor.BaseTable;
+    internal TableMetadata? _baseTable => descriptor.Table.StorageTopTable;
     internal AppMetadata _appMeta => descriptor.AppMeta;
     internal String? _dataSource => descriptor.DataSource;
     internal IPlatformUrl _platformUrl => descriptor.PlatformUrl;
@@ -35,6 +35,8 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
     internal IEnumerable<ReferenceMember> _refFields => descriptor.RefFields;
 
     private SqlBuilder _sqlBuilder => new(descriptor, _serviceProvider);
+    private JavascriptBuilder _jsBuilder = new(descriptor, _serviceProvider);
+    private TypescriptBuilder _tsBuilder = new(descriptor, _serviceProvider);
     private Lazy<IndexModelBuilder> _indexBuilder => new(new IndexModelBuilder(this));
     private IndexModelBuilder _index => _indexBuilder.Value;
     private Lazy<PlainModelBuilder> _plainBuilder => new(new PlainModelBuilder(this));
@@ -74,7 +76,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
             "browse" or "index" => _table.UseFolders
                 ? await _sqlBuilder.LoadIndexTreeModelAsync()
                 : await _sqlBuilder.LoadIndexModelAsync(),
-            "edit" => await _plain.LoadPlainModelAsync(),
+            "edit" => await _sqlBuilder.LoadPlainModelAsync(),
             "browsefolder" => await _sqlBuilder.LoadBrowseTreeModelAsync(),
             "editfolder" => await _sqlBuilder.LoadEditFolderModelAsync(),
             _ => throw new NotImplementedException($"Load model for {Action}")
@@ -84,7 +86,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
     {
         return Action switch
         {
-            "browse" or "index" => await _index.CreateIndexTemplate(),
+            "browse" or "index" => await _jsBuilder.CreateIndexTemplate(),
             "edit" => await _plain.CreateEditTemplate(),
             "browsefolder" => String.Empty,
             _ => throw new NotImplementedException($"Create template for {Action}")
@@ -94,7 +96,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
     {
         return Action switch
         {
-            "index" => await _index.CreateIndexTSTemplate(),
+            "index" => await _tsBuilder.CreateIndexTSTemplate(),
             "edit" => await _plain.CreateEditTSTemplate(),
             "browse" => String.Empty,
             "browsefolder" => String.Empty,
@@ -145,7 +147,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
     {
         return Action switch
         {
-            "edit" => _plain.SavePlainModelAsync(data, savePrms),
+            "edit" => _sqlBuilder.SavePlainModelAsync(data, savePrms),
             _ => throw new NotImplementedException($"Save Model Async for {Action}")
         };
     }

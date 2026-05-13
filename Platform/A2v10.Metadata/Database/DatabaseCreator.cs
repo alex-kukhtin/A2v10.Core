@@ -28,19 +28,19 @@ internal class DatabaseCreator(AppMetadata _meta)
                 {
                     var defKey = colDataType switch
                     {
-                        ColumnType.Id => $"next value for {table.Schema}.[SQ_{table.Name}]",
+                        ColumnType.Id => $"next value for {table.Schema}.[SQ_{table.Table}]",
                         ColumnType.Uniqueidentifier => "newsequentialid()",
-                        ColumnType.Int or ColumnType.BigInt => $"next value for {table.Schema}.[SQ_{table.Name}]",
+                        ColumnType.Int or ColumnType.BigInt => $"next value for {table.Schema}.[SQ_{table.Table}]",
                         _ => null
                     };
                     if (defKey != null)
-                        constraint = $"\r\n       constraint DF_{table.Name}_{column.Name} default({defKey})";
+                        constraint = $"\r\n       constraint DF_{table.Table}_{column.Name} default({defKey})";
                 }
             }
             else if (column.HasDefaultBit)
             {
                 nullable = NOT_NULL;
-                constraint = $"\r\n       constraint DF_{table.Name}_{column.Name} default(0)";
+                constraint = $"\r\n       constraint DF_{table.Model}_{column.Name} default(0)";
             }
             return $"[{column.Name}] {column.SqlDataType()}{nullable}{constraint}";
         }
@@ -58,8 +58,8 @@ internal class DatabaseCreator(AppMetadata _meta)
                 return String.Empty;
             return $"""
             ------------------------------------------------
-            if not exists(select * from INFORMATION_SCHEMA.SEQUENCES where SEQUENCE_SCHEMA = N'{table.Schema}' and SEQUENCE_NAME = N'SQ_{table.Name}')
-            	create sequence {table.Schema}.[SQ_{table.Name}] as {_meta.IdDataType.ToString().ToLowerInvariant()} start with 1000 increment by 1;
+            if not exists(select * from INFORMATION_SCHEMA.SEQUENCES where SEQUENCE_SCHEMA = N'{table.Schema}' and SEQUENCE_NAME = N'SQ_{table.Table}')
+            	create sequence {table.Schema}.[SQ_{table.Table}] as {_meta.IdDataType.ToString().ToLowerInvariant()} start with 1000 increment by 1;
             """;
         }
 
@@ -77,11 +77,11 @@ internal class DatabaseCreator(AppMetadata _meta)
         return $"""
         {createSequence()}
         ------------------------------------------------
-        if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'{table.Schema}' and TABLE_NAME=N'{table.Name}')
+        if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'{table.Schema}' and TABLE_NAME=N'{table.Table}')
         create table {table.SqlTableName}
         (
             {String.Join(",\r\n    ", fields)},
-            constraint PK_{table.Name} primary key ({String.Join(',', primaryKeys)})
+            constraint PK_{table.Table} primary key ({String.Join(',', primaryKeys)})
         );
         """;
     }
@@ -97,8 +97,8 @@ internal class DatabaseCreator(AppMetadata _meta)
 
         return $"""
         ------------------------------------------------
-        drop type if exists {table.Schema}.[{table.Name}.TableType];
-        create type {table.Schema}.[{table.Name}.TableType] as table
+        drop type if exists {table.Schema}.[{table.Table}.TableType];
+        create type {table.Schema}.[{table.Table}.TableType] as table
         (
             {String.Join(",\r\n    ", fields)}
         );
@@ -112,10 +112,10 @@ internal class DatabaseCreator(AppMetadata _meta)
         {
             if (column.Type == ColumnType.Operation)
             {
-                var opConstraintName = $"FK_{table.Name}_{column.Name}_Operations";
+                var opConstraintName = $"FK_{table.Table}_{column.Name}_Operations";
 
                 return $"""
-                if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.Schema}' and TABLE_NAME = N'{table.Name}' and CONSTRAINT_NAME = N'{opConstraintName}')
+                if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.Schema}' and TABLE_NAME = N'{table.Table}' and CONSTRAINT_NAME = N'{opConstraintName}')
                     alter table {table.SqlTableName} add 
                         constraint {opConstraintName} foreign key ([{column.Name}]) references op.[Operations]([Id]);
                 alter table {table.SqlTableName} {check} constraint {opConstraintName};
@@ -123,10 +123,10 @@ internal class DatabaseCreator(AppMetadata _meta)
             }
             else if (column.Type == ColumnType.Enum)
             {
-                var opConstraintName = $"FK_{table.Name}_{column.Name}_{column.Reference.RefTable}";
+                var opConstraintName = $"FK_{table.Table}_{column.Name}_{column.Reference.RefTable}";
 
                 return $"""
-                if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.Schema}' and TABLE_NAME = N'{table.Name}' and CONSTRAINT_NAME = N'{opConstraintName}')
+                if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.Schema}' and TABLE_NAME = N'{table.Table}' and CONSTRAINT_NAME = N'{opConstraintName}')
                     alter table {table.SqlTableName} add 
                         constraint {opConstraintName} foreign key ([{column.Name}]) references {column.Reference.SqlTableName}([Id]);
                 alter table {table.SqlTableName} {check} constraint {opConstraintName};
@@ -136,7 +136,7 @@ internal class DatabaseCreator(AppMetadata _meta)
             var refs = column.Reference ??
                     throw new InvalidOperationException("Reference is null");
 
-            var refTable = _meta.Tables.FirstOrDefault(x => x.Schema == refs.RefSchema && x.Name == refs.RefTable)
+            var refTable = _meta.Tables.FirstOrDefault(x => x.Schema == refs.RefSchema && x.Table == refs.RefTable)
                 ?? throw new InvalidOperationException($"Reference table {refs.RefSchema}.{refs.RefTable} not found");
             var refTablePk = refTable.PrimaryKeys;
             if (refTablePk.Count() > 1)
@@ -145,11 +145,11 @@ internal class DatabaseCreator(AppMetadata _meta)
             }
             var refTablePkName = refTablePk.First().Name;
 
-            var constraintName = $"FK_{table.Name}_{column.Name}_{refs.RefTable}";
+            var constraintName = $"FK_{table.Table}_{column.Name}_{refs.RefTable}";
             if (constraintName.Length > 128)
                 constraintName = constraintName[0..127];
             return $"""
-            if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.Schema}' and TABLE_NAME = N'{table.Name}' and CONSTRAINT_NAME = N'{constraintName}')
+            if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.Schema}' and TABLE_NAME = N'{table.Table}' and CONSTRAINT_NAME = N'{constraintName}')
                 alter table {table.SqlTableName} add 
                     constraint {constraintName} foreign key ([{column.Name}]) references {refs.RefSchema}.[{refs.RefTable}]([{refTablePkName}]);
             alter table {table.SqlTableName} {check} constraint {constraintName};

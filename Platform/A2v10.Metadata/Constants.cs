@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 
@@ -30,9 +30,10 @@ internal static class Constants
     public static class FormNames
     {
         public const String Index = "index";
-        public const String Edit = "edit";
-        public const String Open = "open";
-        public const String Show = "show";
+        public const String Edit =   "edit";
+        public const String Open =   "open";
+        public const String Show =   "show";
+        public const String Browse = "browse";
     }
 
 }
