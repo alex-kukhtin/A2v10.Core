@@ -33,6 +33,10 @@ public enum ColumnType
     Owner,
     Parent,
     User,
+    RowKind,
+    Operation,
+    Document,
+    RowVersion,
     // Simple fields
     String,
     Ref,
@@ -43,7 +47,6 @@ public enum ColumnType
     //
     Stream,
     Enum,
-    Operation,
     // sql
     BigInt,
     Int,
@@ -55,11 +58,11 @@ public enum ColumnType
     Float,
     Uniqueidentifier,
     VarBinary,
-    RowVersion,
     TimeStamp = RowVersion  // SQL INFORMATION_SCHEMA.DATA_TYPE uses TimeStamp
 }
 
 public record ReferenceMember(TableColumn Column, TableMetadata Table, Int32 Index);
+public record RefDescriptor(Int32 Index, TableColumn Column, TableMetadata Table);
 
 public record ColumnReference
 {
@@ -68,20 +71,10 @@ public record ColumnReference
     internal String SqlTableName => $"{RefSchema}.[{RefTable}]";
 }
 
-public record RefDescriptor(Int32 Index, TableColumn Column, TableMetadata Table);
 
 public record ColumnReferenceToMe : ColumnReference
 {
     public String Column { get; init; } = default!;
-}
-
-public enum TableColumnRole
-{
-    Id, 
-    Name,
-    RowNo, 
-    Parent, 
-    Kind
 }
 
 public record TableColumn
@@ -99,8 +92,8 @@ public record TableColumn
     public TableMetadata RefTableCheck => RefTable ?? throw new InvalidOperationException($"RefTable for '{Name}' is null");
 
     // for metadata provider
-    internal Boolean NeedLoadRef => Type == ColumnType.Ref || Type == ColumnType.Owner || Type == ColumnType.Parent;
-    internal Boolean IsRef => Type == ColumnType.Ref || Type == ColumnType.Owner || Type == ColumnType.User;
+    internal Boolean IsRef => Type == ColumnType.Ref || Type == ColumnType.Owner || 
+            Type == ColumnType.User || Type == ColumnType.Document || Type == ColumnType.Operation;
 
     internal String Presentation
     {
@@ -119,20 +112,14 @@ public record TableColumn
     public String? DbName { get; init; }
     public ColumnType? DbDataType { get; init; }
     
-    [Obsolete("Use column.Type instead. Role is being phased out.")]
-    public TableColumnRole Role { get; init; } = default!;
-    public Int32 DbOrder { get; init; }
     public String? Computed { get; init; }
     public Boolean Required { get; init; }
     public Boolean Total { get; init; }
     public Boolean Unique { get; init; }
     #endregion
+
     internal Boolean IsReference => Reference != null && Reference.RefTable != null && Type != ColumnType.Enum;
     internal Boolean IsEnum => Type == ColumnType.Enum;
-    internal Boolean IsBitField => Type == ColumnType.Bit;
-    internal Boolean IsBlob => Type == ColumnType.Stream;
-    internal Boolean IsString => Type == ColumnType.String;
-    internal Boolean Exists => DbName != null && DbDataType != null;
 
     internal Boolean HasDefaultBit => 
            Type == ColumnType.IsFolder
@@ -141,9 +128,6 @@ public record TableColumn
         || Type == ColumnType.Done;
 
     internal Boolean IsVoid => Type == ColumnType.Void;
-    internal Boolean IsParent => Type == ColumnType.Parent;
-    internal Boolean IsName => Type == ColumnType.Name;
-    internal Boolean IsRowNo => Type == ColumnType.RowNumber;
     internal Boolean IsSearchable => Type == ColumnType.String || Type == ColumnType.Name || Type == ColumnType.Memo;
     internal Boolean IsMemo => Type == ColumnType.Memo;
 }
@@ -256,7 +240,7 @@ public record TableMetadata
 
     public Dictionary<String, FormMetadata> Forms { get; init; } = [];
 
-    public String? Storage { get; init; }
+    public String? Storage { get; set; }
     
     [JsonIgnore]
     internal TableMetadata? Origin { get; set; }
@@ -289,8 +273,8 @@ public record TableMetadata
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Name column");
     internal String DoneField => Columns.FirstOrDefault(c => c.Type == ColumnType.Done)?.Name
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Done column");
-    internal String KindField => Columns.FirstOrDefault(c => c.Role == TableColumnRole.Kind)?.Name
-        ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Kind column");
+    internal String KindField => Columns.FirstOrDefault(c => c.Type == ColumnType.RowKind)?.Name
+        ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a RowKind column");
 
     internal String RealItemName => ItemsName != null ? ItemsName.Singular() : ItemName ?? Table.Singular();
     internal String RealItemsName => ItemsName ?? Table;  
@@ -301,7 +285,7 @@ public record TableMetadata
     internal Boolean IsDocument => Schema == "doc";
     internal Boolean HasDbTable => !String.IsNullOrEmpty(DbName) && !String.IsNullOrEmpty(DbSchema);
 
-    internal IEnumerable<TableColumn> PrimaryKeys => Columns.Where(c => c.Role == TableColumnRole.Id);
+    internal IEnumerable<TableColumn> PrimaryKeys => Columns.Where(c => c.Type == ColumnType.Id);
     internal Boolean HasSequence => PrimaryKeys.Count() == 1 && PrimaryKeys.First().Type == ColumnType.Id;
 
     internal void SetDefaults(String schema, String table)
@@ -317,6 +301,7 @@ public record TableMetadata
             Kind = schema.ToEndpointKind();
         if (String.IsNullOrEmpty(Label))
             Label = Constants.FieldNames.Name;
+
         if (!Forms.ContainsKey(Constants.FormNames.Index))
             Forms.Add(Constants.FormNames.Index, DefaultFormBuilder.CreateIndexForm(this));
         if (!Forms.ContainsKey(Constants.FormNames.Edit))

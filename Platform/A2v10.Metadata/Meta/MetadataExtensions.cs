@@ -6,7 +6,6 @@ using System.Linq;
 
 using A2v10.Infrastructure;
 using A2v10.Services;
-using DocumentFormat.OpenXml;
 
 namespace A2v10.Metadata;
 
@@ -16,8 +15,8 @@ internal static class MetadataExtensions
     {
         return schema switch
         {
-            "cat" => "catalog",
-            "doc" => "document",
+            "cat" => Constants.EndpointNames.Catalog,
+            "doc" => Constants.EndpointNames.Document,
             "jrn" => "journal",
             "op" => "operation",
             "rep" => "report",
@@ -31,8 +30,8 @@ internal static class MetadataExtensions
     {
         return schema switch
         {
-            "catalog"  => EndpointKind.Catalog,
-            "document" => EndpointKind.Document,
+            Constants.EndpointNames.Catalog => EndpointKind.Catalog,
+            Constants.EndpointNames.Document => EndpointKind.Document,
             "journal"  => EndpointKind.Journal,
             "operation" => EndpointKind.Operation,
             _ => throw new InvalidOperationException($"Invalid schema for EndpointKind {schema}")
@@ -43,8 +42,8 @@ internal static class MetadataExtensions
     {
         return folder switch
         {
-            "catalog" => "cat",
-            "document" => "doc",
+            Constants.EndpointNames.Catalog => "cat",
+            Constants.EndpointNames.Document => "doc",
             "operation" => "op",
             "journal" => "jrn",
             "report" => "rep",
@@ -52,17 +51,6 @@ internal static class MetadataExtensions
             "inforegister" => "regi",
             _ => folder
         };
-    }
-    internal static String EndpointPath(this ColumnReference refs)
-    {
-        return $"/{refs.RefSchema.ToFolder()}/{refs.RefTable}".ToLowerInvariant();
-    }
-
-    internal static Boolean IsEmpty(this ColumnReference? refs)
-    {
-        if (refs == null) return true;
-        if (String.IsNullOrEmpty(refs.RefTable)) return true;
-        return false;
     }
 
     internal static String EndpointPath(this TableMetadata table)
@@ -98,27 +86,6 @@ internal static class MetadataExtensions
     {
         return table.IsDocument || table.IsJournal;
     }
-
-    internal static String LocalPath(this TableMetadata table, String action)
-    {
-        action = action.ToLowerInvariant();
-        var path = $"{table.Schema.ToFolder()}/{table.Table}".ToLowerInvariant();
-
-        String CreateEditPath()
-        {
-            var prefix = table.EditWith == EditWithMode.Page ? "/_page" : "/_dialog";
-            return $"{prefix}/{path}/{action}/new";
-        }
-
-        return action.ToLowerInvariant() switch
-        {
-            "index" => $"/_page/{path}/{action}/new",
-            "browse" or "browsefolder" or "editfolder" => $"/_dialog/{path}/{action}/new",
-            "edit" => CreateEditPath(),
-            _ => throw new NotSupportedException($"Invalid Action ({action})")
-        };
-    }
-
 
     internal static IEnumerable<ReportItemMetadata> TypedReportItems(this TableMetadata table, ReportItemKind kind)
     {
@@ -159,22 +126,6 @@ internal static class MetadataExtensions
             ]
             */
         };
-    }
-
-    internal static ReferenceMember? FindRefMember(this IEnumerable<ReferenceMember> refs, TableColumn column)
-    {
-        if (column.Reference.IsEmpty())
-            return null;
-        var rm = refs.FirstOrDefault(r =>  r.Table.Schema == column.Reference.RefSchema && r.Table.Table == column.Reference.RefTable);
-        return rm;
-    }
-
-    internal static IEnumerable<TableMetadata> RefTables (this IEnumerable<ReferenceMember> refs, String? exclude = null)
-    {
-        var res = refs.GroupBy(r => r.Table.SqlTableName).Select(g => g.First().Table);
-        if (exclude != null)
-            res = res.Where(t => t.TypeName != exclude);
-        return res;
     }
 
     internal static IEnumerable<TableColumn> AllColumns(this TableMetadata table, Func<TableColumn, Boolean>? predicate = null) =>

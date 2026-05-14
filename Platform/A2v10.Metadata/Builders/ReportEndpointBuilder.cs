@@ -18,7 +18,7 @@ internal class ReportEndpointBuilder(IServiceProvider _serviceProvider, IModelBu
     public async Task<IAppRuntimeResult> RenderAsync(IPlatformUrl platformUrl, IModelView view, bool isReload)
     {
         var _source = _baseBuilder.Table;
-        var _report = _baseBuilder.BaseTable
+        var _report = _baseBuilder.Table.Origin
             ?? throw new InvalidOperationException("Report is null");
 
         var reportBuilder = _report?.Type switch
@@ -27,7 +27,7 @@ internal class ReportEndpointBuilder(IServiceProvider _serviceProvider, IModelBu
             _ => throw new NotImplementedException(_report?.Type)
         };
 
-        var dm = await reportBuilder.LoadReportModelAsync(view,  platformUrl.Query ?? new ExpandoObject());
+        var dm = await reportBuilder.LoadReportModelAsync(view,  platformUrl.Query ?? []);
 
         if (isReload)
             return new AppRuntimeResult(dm, null);

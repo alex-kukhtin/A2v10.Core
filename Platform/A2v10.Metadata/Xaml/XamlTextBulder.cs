@@ -7,7 +7,7 @@ using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
-internal class XamlBulder(EditWithMode _editWith)
+internal class XamlTextBulder(EditWithMode _editWith)
 {
     private readonly IServiceProvider _xamlServiceProvider = new XamlServiceProvider();
 

@@ -60,19 +60,13 @@ internal partial class SqlBuilder
             var groupTables = refs.GroupBy(x => x.Table.Table).ToList();
             foreach (var gt in groupTables)
             {
-                if (gt.Count() == 1)
-                {
-                    var gx = gt.First();
-                    sb.AppendLine($"""
-                        select [!{gx.Table.TypeName}!Map] = null, [Id!!Id] = r.Id, [{gx.Column.Presentation}!!Name] = r.[{gx.Column.Presentation}]
-                        from {gx.Table.SqlTableName} r inner join @map t on r.Id in (t.[{gx.Column.Name}]);
-                        """);
-                    sb.AppendLine();
-                }
-                else if (gt.Count() > 1)
-                {
-                    throw new NotImplementedException("multiply map");
-                }
+                var gx = gt.First();
+                var inClause = String.Join(", ", gt.Select(x => $"t.[{x.Column.Name}]"));
+                sb.AppendLine($"""
+                    select [!{gx.Table.TypeName}!Map] = null, [Id!!Id] = r.Id, [{gx.Column.Presentation}!!Name] = r.[{gx.Column.Presentation}]
+                    from {gx.Table.SqlTableName} r inner join @map t on r.Id in ({inClause});
+                    """);
+                sb.AppendLine();
             }
         }
 

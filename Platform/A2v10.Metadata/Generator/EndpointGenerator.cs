@@ -134,7 +134,7 @@ internal class EndpointGenerator(IModelBuilderFactory _modelBuilderFactory, IApp
         var fullPath = _appCodeProvider.GetMainModuleFullPath(platformUrl.LocalPath.RemoveHeadSlash(), fileName);
         var filePath = Path.Combine(fullPath, fileName);
 
-        var builder = await _modelBuilderFactory.BuildAsync(platformUrl, table, null);
+        var builder = _modelBuilderFactory.BuildEndpoint(platformUrl, table, null);
 
         if (!File.Exists(fullPath))
         {

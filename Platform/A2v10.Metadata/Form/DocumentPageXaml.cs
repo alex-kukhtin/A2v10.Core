@@ -7,10 +7,11 @@ using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
-internal partial class PlainModelBuilder
+internal partial class XamlBuilder
 {
     internal Page CreateDocumentPageXaml()
     {
+        var form = Table.EditForm();
         return new Page();
     }
 }

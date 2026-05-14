@@ -55,7 +55,7 @@ public record FormColumn
     {
         TableColumn = column;
         Header ??= $"@[{TableColumn.Name}]";
-        Path ??= TableColumn.Type == ColumnType.Ref ? $"{TableColumn.Name}.{TableColumn.Presentation}" : TableColumn.Name;
+        Path ??= TableColumn.IsRef ? $"{TableColumn.Name}.{TableColumn.Presentation}" : TableColumn.Name;
         // set always
         DataType = TableColumn.Type.ToFormDataType();
     }

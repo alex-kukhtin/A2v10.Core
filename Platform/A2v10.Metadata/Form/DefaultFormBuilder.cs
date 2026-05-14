@@ -32,7 +32,7 @@ internal static class DefaultFormBuilder
                 FormCommandType.Sep, FormCommandType.Show, FormCommandType.Sep, FormCommandType.Reload,
                 FormCommandType.ToRight, FormCommandType.Search
             ],
-            Filters = filters.ToList()
+            Filters = [.. filters]
         };
     }
 
@@ -40,7 +40,7 @@ internal static class DefaultFormBuilder
     {
         var cols = new Dictionary<String, FormColumn>();
 
-        Boolean IsEditableColumn(TableColumn col) =>
+        static Boolean IsEditableColumn(TableColumn col) =>
             col.Type != ColumnType.Void && col.Type != ColumnType.RowVersion && col.Type != ColumnType.Id &&
             col.Type != ColumnType.IsSystem;
 

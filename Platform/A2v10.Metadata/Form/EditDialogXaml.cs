@@ -7,11 +7,11 @@ using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
-internal partial class PlainModelBuilder
+internal partial class XamlBuilder
 {
     Control CreateEditControl(FormColumn column)
     {
-        var valueBind = new Bind($"{_table.Model}.{column.TableColumn.Name}");
+        var valueBind = new Bind($"{Table.Model}.{column.TableColumn.Name}");
         return column.TableColumn.Type switch
         {
             ColumnType.Date => new DatePicker()
@@ -38,7 +38,11 @@ internal partial class PlainModelBuilder
             {
                 Label = column.Header,
                 Url = column.TableColumn.RefTableCheck.Path,
-                ShowClear = true,
+                Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
+            },
+            ColumnType.Done or ColumnType.Bit or ColumnType.Boolean => new CheckBox()
+            {
+                Label = column.Header,
                 Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
             },
             _ => new TextBox()
@@ -49,7 +53,7 @@ internal partial class PlainModelBuilder
         };
     }
     IEnumerable<Control> EditControls()
-       => _table.EditForm().Columns.Select(c => CreateEditControl(c.Value));
+       => Table.EditForm().Columns.Select(c => CreateEditControl(c.Value));
     internal Dialog CreateEditDialogXaml()
     {
         return new Dialog()

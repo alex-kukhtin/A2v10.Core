@@ -1,7 +1,9 @@
 ﻿// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 
 namespace A2v10.Metadata;
 
@@ -76,7 +78,7 @@ internal static class SqlExtensions
             return $"[Name!!Name] = {alias}.[Name]";
         else if (column.Type == ColumnType.RowNumber)
             return $"[{column.Name}!!RowNumber] = {alias}.[{column.Name}]";
-        else if (column.Type == ColumnType.Ref || column.Type == ColumnType.Document)
+        else if (column.Type == ColumnType.Ref)
             return $"[{column.Name}!{refPredicate(column.RefTableCheck)}!RefId] = {alias}.[{column.Name}]";
         return $"{alias}.[{column.Name}]";
     }
@@ -94,7 +96,7 @@ internal static class SqlExtensions
             ColumnType.String or ColumnType.NVarChar or
                 ColumnType.NChar => typeof(String),
             ColumnType.Date or ColumnType.DateTime => typeof(DateTime),
-            ColumnType.Bit or ColumnType.Done => typeof(Boolean),
+            ColumnType.Bit => typeof(Boolean),
             ColumnType.Money => typeof(Decimal),
             ColumnType.Float => typeof(Double),
             ColumnType.Int => typeof(Int32),
@@ -112,11 +114,64 @@ internal static class SqlExtensions
         return column.Type != ColumnType.Id
             && column.Type != ColumnType.Void
             && column.Type != ColumnType.IsFolder
-            && column.Type != ColumnType.Done
-            && column.Type != ColumnType.Operation
             && column.Type != ColumnType.IsSystem
             && column.Type != ColumnType.Owner
             && column.Type != ColumnType.Parent
             && column.Type != ColumnType.RowVersion;
+    }
+
+    internal static IEnumerable<String> AllSqlFields(this TableMetadata table, IEnumerable<ReferenceMember> refFields, IEnumerable<ReferenceMember> enumFields, String alias, Boolean isDetails = false)
+    {
+        foreach (var c in table.Columns.Where(c => !c.IsReference && !c.IsBlob && !c.IsVoid && !c.IsEnum))
+            if (c.Role.HasFlag(TableColumnRole.Id) && !c.Role.HasFlag(TableColumnRole.RowNo))
+                yield return $"[{c.Name}!!Id] = {alias}.[{c.Name}]";
+            else if (c.Role.HasFlag(TableColumnRole.Id) && c.Role.HasFlag(TableColumnRole.RowNo))
+                yield return $"[{c.Name}!!RowNumber] = {alias}.[{c.Name}]";
+            else if (c.Role.HasFlag(TableColumnRole.Name))
+                yield return $"[{c.Name}!!Name] = {alias}.[{c.Name}]";
+            else if (isDetails && c.Role.HasFlag(TableColumnRole.Kind))
+                continue;
+            else if (c.Role.HasFlag(TableColumnRole.RowNo))
+                yield return $"[{c.Name}!!RowNumber] = {alias}.[{c.Name}]";
+            else
+                yield return c.IsParent ? $"Folder = {alias}.[{c.Name}]" : $"{alias}.[{c.Name}]";
+        foreach (var e in enumFields)
+        {
+            var modelType = $"TR{e.Table.Model}";
+            var col = e.Column;
+            var elemName = col.Name;
+            yield return $"[{col.Name}!{modelType}!RefId] = {alias}.[{col.Name}]";
+        }
+        foreach (var c in refFields)
+        {
+            if (isDetails && (c.Column.Role.HasFlag(TableColumnRole.Parent) || c.Column.Role.HasFlag(TableColumnRole.Kind)))
+                continue;
+            var col = c.Column;
+            var elemName = col.Name;
+            // TR, not T - avoid recursion 
+            var modelType = $"TR{c.Table.Model}";
+            if (col.IsParent)
+            {
+                elemName = "Folder";
+                modelType = "TFolder";
+            }
+            if (c.Column.Type == ColumnType.Operation)
+                yield return $"""
+                    [{elemName}.Id!{modelType}!Id] = r{c.Index}.[Id], 
+                    [{elemName}.Name!{modelType}!Name] = r{c.Index}.[Name],
+                    [{elemName}.Url!{modelType}!] = r{c.Index}.[Url]
+                    """;
+            else if (c.Table.Columns.Any(c => c.Type == ColumnType.Done))
+                yield return $"""
+                    [{elemName}.{c.Table.PrimaryKeyField}!{modelType}!Id] = r{c.Index}.[{c.Table.PrimaryKeyField}], 
+                    [{elemName}.{c.Table.NameField}!{modelType}!Name] = r{c.Index}.[{c.Table.NameField}],
+                    [{elemName}.{c.Table.DoneField}!{modelType}!] = r{c.Index}.[{c.Table.DoneField}]
+                    """;
+            else
+                yield return $"""
+                    [{elemName}.{c.Table.PrimaryKeyField}!{modelType}!Id] = r{c.Index}.[{c.Table.PrimaryKeyField}], 
+                    [{elemName}.{c.Table.NameField}!{modelType}!Name] = r{c.Index}.[{c.Table.NameField}]
+                    """;
+        }
     }
 }

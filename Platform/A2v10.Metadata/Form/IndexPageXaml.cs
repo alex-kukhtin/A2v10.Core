@@ -8,10 +8,10 @@ using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
-internal partial class IndexModelBuilder
+internal partial class XamlBuilder
 {
     IEnumerable<DataGridColumn> IndexColumnsXaml(Boolean hasChecked) =>
-        _table.IndexForm().Columns.Select(col =>
+        Table.IndexForm().Columns.Select(col =>
             new DataGridColumn()
             {
                 Header = col.Value.Header,
@@ -25,7 +25,7 @@ internal partial class IndexModelBuilder
     IEnumerable<FilterItem> CollectionViewFilters()
     {
         yield return new FilterItem() { Property = "Fragment", DataType = DataType.String };
-        foreach (var f in _table.IndexForm().Filters)
+        foreach (var f in Table.IndexForm().Filters)
             yield return new FilterItem() { Property = f, DataType = DataType.Object };
     }
 
@@ -33,7 +33,7 @@ internal partial class IndexModelBuilder
         new()
         {
             RunAt = RunMode.Server,
-            Bindings = b => b.SetBinding(nameof(CollectionView.ItemsSource), new Bind(_table.CollectionName)),
+            Bindings = b => b.SetBinding(nameof(CollectionView.ItemsSource), new Bind(Table.CollectionName)),
             Filter = new FilterDescription()
             {
                 Items = [..CollectionViewFilters()]
@@ -50,12 +50,12 @@ internal partial class IndexModelBuilder
         BindCmd CreateBindCmd()
         {
             var bindCmd = new BindCmd();
-            if (_table.EditWith == EditWithMode.Dialog)
+            if (Table.EditWith == EditWithMode.Dialog)
             {
                 bindCmd.Command = CommandType.Dialog;
                 bindCmd.Action = DialogAction.Append;
-                bindCmd.Url = $"{_table.Path}/edit";
-                bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(_table.CollectionName));
+                bindCmd.Url = $"{Table.Path}/edit";
+                bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(Table.CollectionName));
             }
             return bindCmd;
         }
@@ -73,12 +73,12 @@ internal partial class IndexModelBuilder
         BindCmd CreateBindCmd()
         {
             var bindCmd = new BindCmd();
-            if (_table.EditWith == EditWithMode.Dialog)
+            if (Table.EditWith == EditWithMode.Dialog)
             {
                 bindCmd.Command = CommandType.Dialog;
                 bindCmd.Action = DialogAction.EditSelected;
-                bindCmd.Url = $"{_table.Path}/edit";
-                bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(_table.CollectionName));
+                bindCmd.Url = $"{Table.Path}/edit";
+                bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(Table.CollectionName));
             }
             return bindCmd;
         }
@@ -139,7 +139,7 @@ internal partial class IndexModelBuilder
 
     UIElement CreateFilterControl(String filter)
     {
-        var elem = _table.AllColumns(x => x.Name == filter).FirstOrDefault();
+        var elem = Table.AllColumns(x => x.Name == filter).FirstOrDefault();
         if (elem == null)
             return new Block();
         return new SelectorSimple()
@@ -155,7 +155,7 @@ internal partial class IndexModelBuilder
 
     internal Taskpad? IndexTaskpad()
     {
-        var filters = _table.IndexForm().Filters;
+        var filters = Table.IndexForm().Filters;
         if (filters.Count == 0)
             return null;
         return new Taskpad()
@@ -178,6 +178,7 @@ internal partial class IndexModelBuilder
         {
             CollectionView = XamlCollectionView(),
             Width = Length.FromString("60rem"), // TODO
+            Title = $"@[{Table.Model}.Browse]",
             Buttons = [
                 new Button() {
                     Style = ButtonStyle.Primary,
@@ -197,7 +198,7 @@ internal partial class IndexModelBuilder
                         {
                             FixedHeader = true,
                             Sort = true,
-                            Height = Length.FromString("20rem"), // TODO
+                            Height = Length.FromString("30rem"), // TODO
                             Bindings = b => {
                                 b.SetBinding(nameof(DataGrid.ItemsSource), new Bind("Parent.ItemsSource"));
                                 b.SetBinding(nameof(DataGrid.DoubleClick), selectCommand);

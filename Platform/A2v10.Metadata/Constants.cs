@@ -36,4 +36,9 @@ internal static class Constants
         public const String Browse = "browse";
     }
 
+    public static class EndpointNames
+    {
+        public const String Catalog = "catalog";
+        public const String Document = "document";
+    }
 }

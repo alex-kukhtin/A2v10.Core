@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Threading.Tasks;
@@ -9,7 +9,7 @@ using A2v10.Data.Core.Extensions;
 
 namespace A2v10.Metadata;
 
-internal partial class IndexModelBuilder
+internal partial class SqlBuilder
 {
     internal Task<IInvokeResult> FetchFolderAsync(ExpandoObject? prms)
     {
@@ -25,15 +25,15 @@ internal partial class IndexModelBuilder
         declare @fr nvarchar(255);
         set @fr = N'%' + @Text + N'%';
 
-        select top(100) [{_table.CollectionName}!{_table.TypeName}!Array] = null, 
+        select top(100) [{Table.CollectionName}!{Table.TypeName}!Array] = null, 
             [Id!!Id] = a.Id, [Name!!Name] = a.[Name]
-        from {_table.SqlTableName} a
+        from {Table.SqlTableName} a
         where a.[Void] = 0 and
             (a.[Name] like @fr)
         order by a.[Name];
         """;
 
-        var model = await _dbContext.LoadModelSqlAsync(_dataSource, sql, dbprms =>
+        var model = await _dbContext.LoadModelSqlAsync(DataSource, sql, dbprms =>
         {
             dbprms.AddBigInt("@UserId", _currentUser.Identity.Id)
             .AddString("@Text", prms?.Get<String>("Text"));

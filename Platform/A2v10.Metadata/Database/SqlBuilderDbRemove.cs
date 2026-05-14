@@ -11,11 +11,11 @@ using A2v10.Data.Core.Extensions.Dynamic;
 
 namespace A2v10.Metadata;
 
-internal partial class IndexModelBuilder
+internal partial class SqlBuilder
 {
     public Task DbRemoveAsync(String? propName, ExpandoObject execPrms)
     {
-        var rf = _table.RefsToMe; // таблиці де є reference
+        var rf = Table.RefsToMe; // таблиці де є reference
         var checkSql = "";
         if (rf.Count > 0)
         {
@@ -33,26 +33,26 @@ internal partial class IndexModelBuilder
 
             {checkSql}
             """;
-        if (_table.IsDocument)
+        if (Table.IsDocument)
         {
             sqlString += $"""
             
             declare @Done bit;
-            select @Done = Done from {_table.SqlTableName} where Id = @Id;
+            select @Done = Done from {Table.SqlTableName} where Id = @Id;
             if @Done = 1
                 throw 600000, N'@[Error.Document.AlreadyApplied]', 0;
             else
-                update {_table.SqlTableName} set [Void] = 1 where [Id] = @Id;          
+                update {Table.SqlTableName} set [Void] = 1 where [Id] = @Id;          
             """;
         }
         else
         {
             sqlString += $"""
 
-            update {_table.SqlTableName} set [Void] = 1 where [Id] = @Id;
+            update {Table.SqlTableName} set [Void] = 1 where [Id] = @Id;
             """;
         }
-        return _dbContext.LoadModelSqlAsync(_dataSource, sqlString, dbprms =>
+        return _dbContext.LoadModelSqlAsync(DataSource, sqlString, dbprms =>
         {
             AddDefaultParameters(dbprms);
             dbprms.AddTyped("@Id", SqlDbType.BigInt, execPrms.Get<Object>("Id"));

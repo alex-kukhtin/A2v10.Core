@@ -37,4 +37,16 @@ internal partial class ModelBuilderFactory(
         };
         return new BaseModelBuilder(_serviceProvider, bd);
     }
+
+    public IEndpointModelBuilder BuildEndpoint(IPlatformUrl platformUrl, TableMetadata table, String? dataSource)
+    {
+        var bd = new BuilderDescriptor()
+        {
+            DataSource = dataSource,
+            PlatformUrl = platformUrl,
+            Table = table,
+        };
+        return new EndpointModelBuilder(_serviceProvider, bd);
+
+    }
 }

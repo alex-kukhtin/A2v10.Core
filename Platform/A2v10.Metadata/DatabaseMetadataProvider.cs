@@ -20,6 +20,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     public async Task<TableMetadata> GetSchemaAsync(IModelBaseMeta meta, String? dataSource)
     {
         var loaded = await _metadataCache.GetOrAddAsync(dataSource, meta.CurrentSchema, meta.CurrentTable, LoadTableMetadataAsync);
+        if (!String.IsNullOrEmpty(meta.CurrentTable))
+            loaded.Storage = GetDefaultStorage(loaded, meta.CurrentSchema);
         var storage = await ResolveStorageAsync(loaded, dataSource);
         if (storage != null)
         {
@@ -32,23 +34,32 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     }
     public async Task<TableMetadata> GetSchemaAsync(String? dataSource, String schema, String table)
     {
-        var meta = await _metadataCache.GetOrAddAsync(dataSource, schema, table, LoadTableMetadataAsync);
-        var storage = await ResolveStorageAsync(meta, dataSource);
+        var loaded = await _metadataCache.GetOrAddAsync(dataSource, schema, table, LoadTableMetadataAsync);
+        if (!String.IsNullOrEmpty(table))
+            loaded.Storage = GetDefaultStorage(loaded, loaded.Schema);
+        var storage = await ResolveStorageAsync(loaded, dataSource);
         if (storage != null)
         {
-            storage.Origin = meta;
-            meta = storage;
+            storage.Origin = loaded;
+            loaded = storage;
         }
-        await ResolveReferencesAsyns(meta, dataSource);
-        meta.SetDefaults(schema, table);
-        return meta;
+        await ResolveReferencesAsyns(loaded, dataSource);
+        loaded.SetDefaults(schema, table);
+        return loaded;
+    }
+
+    String? GetDefaultStorage(TableMetadata table, String schema)
+    {
+        if (String.IsNullOrEmpty(table.Storage) && schema == Constants.EndpointNames.Document)
+            return Constants.EndpointNames.Document;
+        return table.Storage;
     }
 
     public async Task<TableMetadata?> ResolveStorageAsync(TableMetadata table, String? dataSource)
     {
         if (!String.IsNullOrEmpty(table.Storage))
         {
-            var (storageSchema, storageTable) = DatabaseMetadataProvider.ParsePath(table.Storage);
+            var (storageSchema, storageTable) = ParsePath(table.Storage);
             return await GetSchemaAsync(dataSource, storageSchema, storageTable)
                 ?? throw new InvalidOperationException($"Parent Table {table.Storage} not found");
         }
@@ -173,6 +184,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     internal static (String schema, String table) ParsePath(String path)
     {
         var split = path.ToLowerInvariant().Split('/');
+        if (split.Length == 1)
+            return (split[0], String.Empty);
         if (split.Length < 2 )
             throw new InvalidOperationException($"Invalid path: {path}");
         return (split[0], split[1]);
@@ -180,7 +193,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
 
     public async Task ResolveReferencesAsyns(TableMetadata meta, String? dataSource)
     {
-        foreach (var column in meta.Columns.Where(col => col.NeedLoadRef))
+        foreach (var column in meta.Columns.Where(col => col.IsRef))
         {
             if (column.Type == ColumnType.Parent)
             {

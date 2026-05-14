@@ -7,23 +7,14 @@ using System.Threading.Tasks;
 
 namespace A2v10.Metadata;
 
-internal partial class PlainModelBuilder
+internal partial class JavascriptBuilder
 {
     internal Task<String> CreateEditTemplate()
     {
-        return _table.Schema switch
+        return Table.Schema switch
         {
             "doc" => CreateDocumentTemplate(),
             _ => CreateGenericEditTemplate()
-        };
-    }
-
-    internal Task<String> CreateEditTSTemplate()
-    {
-        return _table.Schema switch
-        {
-            "doc" => CreateDocumentTSTemplate(),
-            _ => CreateGenericEditTSTemplate()
         };
     }
 
@@ -32,37 +23,37 @@ internal partial class PlainModelBuilder
 
         IEnumerable<String> properties()
         {
-            if (_table.Details.Count > 0)
+            if (Table.Details.Count > 0)
             {
-                var fd = _table.Details.Select(x => x.Value).First();
-                yield return $$"""'{{_table.TypeName}}.$$Tab': {type: String, value: '{{fd.CollectionName}}'}""";
+                var fd = Table.Details.Select(x => x.Value).First();
+                yield return $$"""'{{Table.TypeName}}.$$Tab': {type: String, value: '{{fd.CollectionName}}'}""";
             }
         }
 
         IEnumerable<String> validators()
         {
-            foreach (var col in _table.Columns.Where(c => c.Required || c.Unique))
+            foreach (var col in Table.Columns.Where(c => c.Required || c.Unique))
             {
                 if (col.Unique && col.Required)
                     yield return $$"""
-                '{{_table.Model}}.{{col.Name}}': [
+                '{{Table.Model}}.{{col.Name}}': [
                     `@[Error.Required]`,
                     {valid: {{col.Name.ToLowerInvariant()}}Duplicate, async: true, msg: `@[Error.Duplicate]`}]
                 """;
                 else if (col.Required)
-                    yield return $"'{_table.Model}.{col.Name}': `@[Error.Required]`";
+                    yield return $"'{Table.Model}.{col.Name}': `@[Error.Required]`";
                 else if (col.Unique)
-                    yield return $$"""'{{_table.Model}}.{{col.Name}}': {valid: {{col.Name.ToLowerInvariant()}}Duplicate, async: true, msg: `@[Error.{{_table.RealItemName}}.Duplicate.{{col.Name}}]`}""";
+                    yield return $$"""'{{Table.Model}}.{{col.Name}}': {valid: {{col.Name.ToLowerInvariant()}}Duplicate, async: true, msg: `@[Error.{{Table.CollectionName}}.Duplicate.{{col.Name}}]`}""";
             }
 
-            foreach (var d in _table.Details.Select(x => x.Value))
+            foreach (var d in Table.Details.Select(x => x.Value))
                 foreach (var c in d.Columns.Where(c => c.Required))
-                    yield return $"'{_table.RealItemName}.{d.CollectionName}[].{c.Name}': `@[Error.Required]`";
+                    yield return $"'{Table.RealItemName}.{d.CollectionName}[].{c.Name}': `@[Error.Required]`";
         }
 
         IEnumerable<String> functions()
         {
-            foreach (var c in _table.Columns.Where(c => c.Unique))
+            foreach (var c in Table.Columns.Where(c => c.Unique))
             {
                 yield return $$"""
                 function {{c.Name.ToLowerInvariant()}}Duplicate(el, val) {
@@ -85,96 +76,6 @@ internal partial class PlainModelBuilder
             },
         };
         module.exports = template;
-
-        {{String.Join('\n', functions())}}
-        """;
-        return Task.FromResult<String>(templ);
-    }
-
-    private Task<String> CreateGenericEditTSTemplate()
-    {
-
-        IEnumerable<String> properties()
-        {
-            if (_table.Details.Count > 0)
-            {
-                var fd = _table.Details.First().Value;
-                yield return $$"""'{{_table.TypeName}}.$$Tab': {type: String, value: '{{fd.CollectionName}}'}""";
-            }
-        }
-
-        IEnumerable<String> validators()
-        {
-            foreach (var col in _table.Columns.Where(c => c.Required || c.Unique))
-            {
-                if (col.Unique && col.Required)
-                    yield return $$"""
-                '{{_table.Model}}.{{col.Name}}': [
-                    `@[Error.Required]`,
-                    {valid: {{col.Name.ToLowerInvariant()}}Duplicate, async: true, msg: `@[Error.Duplicate]`}]
-                """;
-                else if (col.Required)
-                    yield return $"'{_table.Model}.{col.Name}': `@[Error.Required]`";
-                else if (col.Unique)
-                    yield return $$"""'{{_table.Model}}.{{col.Name}}': {valid: {{col.Name.ToLowerInvariant()}}Duplicate, async: true, msg: `@[Error.{{_table.RealItemName}}.Duplicate.{{col.Name}}]`}""";
-            }
-
-            foreach (var d in _table.Details.Select(x => x.Value))
-                foreach (var c in d.Columns.Where(c => c.Required))
-                    yield return $"'{_table.Model}.{d.CollectionName}[].{c.Name}': `@[Error.Required]`";
-        }
-
-        IEnumerable<String> functions()
-        {
-            foreach (var c in _table.Columns.Where(c => c.Unique))
-            {
-                yield return $$"""
-                function {{c.Name.ToLowerInvariant()}}Duplicate(el, val) {
-                    if (!val) return true;
-                    return el.$vm.$asyncValid('{{c.Name}}.Unique', {Id: el.Id, Value: val});
-                }
-                """;
-            }
-        }
-
-        IEnumerable<String> types()
-        {
-            yield return "TRoot";
-            yield return _table.TypeName;
-            foreach (var r in _refFields.RefTables(_table.TypeName))
-                yield return r.TypeName;
-        }   
-
-        const String jsDivider = ",\n\t\t";
-
-        var propsList = properties().ToList();
-        var validatorsList = validators().ToList(); 
-
-        IEnumerable<String> templateProps()
-        {
-            if (propsList.Count > 0)
-                yield return $$"""
-                        properties: {
-                            {{String.Join(jsDivider, propsList)}}
-                        }
-                    """;
-            if (validatorsList.Count > 0)
-                yield return $$"""
-                        validators: {
-                            {{String.Join(jsDivider, validatorsList)}}
-                        }
-                    """;
-        }
-
-        var templ = $$"""
-
-        import { {{String.Join(", ", types())}} } from './edit';
-
-        const template : Template = {
-        {{String.Join(",", templateProps())}}
-        };
-
-        export default template;
 
         {{String.Join('\n', functions())}}
         """;

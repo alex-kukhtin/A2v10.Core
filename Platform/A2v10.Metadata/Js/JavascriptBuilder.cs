@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Metadata;
 
-internal partial class JavascriptBuilder(BuilderDescriptor desciptor, IServiceProvider serviceProvider)
+internal partial class JavascriptBuilder(BuilderDescriptor desciptor)
 {
-    private readonly BuilderDescriptor _descr = desciptor;
     private readonly TableMetadata Table = desciptor.Table;
 }

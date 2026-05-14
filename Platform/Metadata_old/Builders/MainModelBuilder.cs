@@ -69,22 +69,4 @@ internal class MainModelBuilder(BaseModelBuilder _baseModelBuilder)
         }
         return sb.ToString();
     }
-
-    public IEnumerable<String> TsProperties(TableMetadata table)
-    {
-        String property(TableColumn column)
-        {
-            var ro = column.IsFieldUpdated() ? "" : "readonly ";
-            if (column.IsReference)
-            {
-                var refMember = _refFields.FindRefMember(column);
-                if (refMember != null)
-                    return $"\t{ro}{column.Name}: {refMember.Table.TypeName};";
-            }
-            return $"\t{ro}{column.Name}: {column.Type.ToTsType()};";
-        }
-
-        foreach (var p in table.Columns.Where(c => !c.IsVoid && c.Type != ColumnType.RowVersion))
-            yield return property(p);
-    }
 }

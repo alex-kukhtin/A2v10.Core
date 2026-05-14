@@ -13,7 +13,7 @@ internal static class TableDefaultColumns
         {
             EndpointKind.Catalog => CatalogDefaultColumns(table),
             EndpointKind.Document => DocumentDefaultColumns(table),
-            EndpointKind.Journal => DocumentDefaultColumns(table),
+            EndpointKind.Journal => JournalDefaultColumns(table),
             _ => throw new InvalidOperationException($"Default columns not defined for {table.Kind}")
         };
     }
@@ -37,6 +37,7 @@ internal static class TableDefaultColumns
     }
     static IEnumerable<TableColumn> JournalDefaultColumns(TableMetadata table)
     {
+        yield return new TableColumn(Constants.FieldNames.Id, ColumnType.Id);
         yield return new TableColumn(Constants.FieldNames.Date, ColumnType.Date);
     }
 }

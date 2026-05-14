@@ -7,23 +7,25 @@ using System.Threading.Tasks;
 
 namespace A2v10.Metadata;
 
-internal partial class PlainModelBuilder
+internal partial class TypescriptBuilder
 {
-    internal Task<String> CreateMapTS()
+    internal Task<String> CreateEditMapTS()
     {
         var refDecl = String.Empty;
-        var detailsDecl = String.Empty;    
+        var detailsDecl = String.Empty;
 
-        var refElems = _refFields.RefTables().Select(x => $$"""
-        export interface {{x.TypeName}} extends IElement {
-        {{String.Join("\n", TsProperties(x))}}
+        var refs = Table.AllColumns().AllRefs().ToList();
+
+        var refElems = refs.Select(x => $$"""
+        export interface {{x.Table.TypeName}} extends IElement {
+        {{String.Join("\n", TsProperties(x.Table))}}
         }
 
         """);
 
         IEnumerable<String> detailsFields()
         {
-            foreach (var t in _table.Details.Select(x => x.Value))
+            foreach (var t in Table.Details.Select(x => x.Value))
             {
                 if (t.Kinds.Count == 0)
                     yield return $"    readonly {t.RealItemsName}: {t.TypeName}Array;";
@@ -35,7 +37,7 @@ internal partial class PlainModelBuilder
 
         IEnumerable<String> detailsComputed()
         {
-            foreach (var t in _table.Details.Select(x => x.Value))
+            foreach (var t in Table.Details.Select(x => x.Value))
                 foreach (var c in t.Columns.Where(c => !String.IsNullOrEmpty(c.Computed)))
                     yield return $"    readonly {c.Name}: any;";
         }
@@ -43,7 +45,7 @@ internal partial class PlainModelBuilder
         if (refElems.Any())
             refDecl = $"\n{String.Join("\n", refElems)}\n";
 
-        var detailElems = _table.Details.Select(x => x.Value).Select(d => $$"""
+        var detailElems = Table.Details.Select(x => x.Value).Select(d => $$"""
         export interface {{d.TypeName}} extends IArrayElement {
         {{String.Join("\n", TsProperties(d))}}
         }
@@ -56,7 +58,7 @@ internal partial class PlainModelBuilder
 
         IEnumerable<String> elemProperties()
         {
-            foreach (var p in TsProperties(_table))
+            foreach (var p in TsProperties(Table))
                 yield return p;
             var detFields = detailsFields().ToList();
             if (detFields.Count == 0)
@@ -72,12 +74,12 @@ internal partial class PlainModelBuilder
         var templ = $$"""
 
         {{refDecl}}{{detailsDecl}}
-        export interface {{_table.TypeName}} extends IElement {
+        export interface {{Table.TypeName}} extends IElement {
         {{String.Join("\n", elemProperties())}}
         }   
 
         export interface TRoot extends IRoot {
-            readonly {{_table.RealItemName}}: {{_table.TypeName}}; 
+            readonly {{Table.Model}}: {{Table.TypeName}}; 
         }
         """;
         return Task.FromResult<String>(templ);

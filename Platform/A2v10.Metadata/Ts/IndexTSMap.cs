@@ -6,17 +6,19 @@ using System.Threading.Tasks;
 
 namespace A2v10.Metadata;
 
-internal partial class IndexModelBuilder
+internal partial class TypescriptBuilder
 {
-    internal Task<String> CreateMapTS()
+    internal Task<String> CreateIndexMapTS()
     {
-        var collType = $"{_table.TypeName}Array";
+        var collType = $"{Table.TypeName}Array";
         var refDecl = String.Empty;
 
+        var refs = Table.AllColumns().AllRefs().ToList();
+
         // exclude self-references
-        var refElems = _refFields.RefTables().Where(x => x.SqlTableName != _table.SqlTableName).Select(x => $$"""
-        export interface {{x.TypeName}} extends IElement {
-        {{String.Join("\n", TsProperties(x))}}
+        var refElems = refs.Where(x => x.Table.SqlTableName != Table.SqlTableName).Select(x => $$"""
+        export interface {{x.Table.TypeName}} extends IElement {
+        {{String.Join("\n", TsProperties(x.Table))}}
         }
         """);
 
@@ -25,23 +27,23 @@ internal partial class IndexModelBuilder
 
         var templ = String.Empty;
 
-        if (_table.UseFolders)
+        if (Table.UseFolders)
         {
             templ = $$"""
 
             {{refDecl}}
-            export interface {{_table.TypeName}} extends IArrayElement {
-            {{String.Join("\n", TsProperties(_table))}}
+            export interface {{Table.TypeName}} extends IArrayElement {
+            {{String.Join("\n", TsProperties(Table))}}
             }
 
-            declare type {{collType}} = IElementArray<{{_table.TypeName}}>;
+            declare type {{collType}} = IElementArray<{{Table.TypeName}}>;
 
             export interface TFolder extends IArrayElement {
                 readonly Id: number;
                 Icon: string;
                 SubItems: TFolderArray;
                 HasSubItems: boolean;
-                {{_table.RealItemsName}}: {{collType}};
+                {{Table.CollectionName}}: {{collType}};
                 InitExpanded: boolean;
             }
 
@@ -57,14 +59,14 @@ internal partial class IndexModelBuilder
             templ = $$"""
 
             {{refDecl}}
-            export interface {{_table.TypeName}} extends IArrayElement {
-            {{String.Join("\n", TsProperties(_table))}}
+            export interface {{Table.TypeName}} extends IArrayElement {
+            {{String.Join("\n", TsProperties(Table))}}
             }
 
-            declare type {{collType}} = IElementArray<{{_table.TypeName}}>;
+            declare type {{collType}} = IElementArray<{{Table.TypeName}}>;
 
             export interface TRoot extends IRoot {
-                readonly {{_table.RealItemsName}}: {{collType}};
+                readonly {{Table.CollectionName}}: {{collType}};
             }
             """;
         }

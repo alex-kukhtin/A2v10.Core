@@ -1,10 +1,7 @@
 ﻿// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
-using System.Collections.Generic;
 using System.Dynamic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -24,30 +21,16 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
     internal readonly IDbContext _dbContext = _serviceProvider.GetRequiredService<IDbContext>();
     internal readonly IServiceProvider _xamlServiceProvider = new XamlServiceProvider();
 
-#pragma warning disable IDE1006 // Naming Styles
-    internal TableMetadata _table => descriptor.Table;
-    internal TableMetadata? _baseTable => descriptor.Table.Origin;
-    internal String? _dataSource => descriptor.DataSource;
-    internal IPlatformUrl _platformUrl => descriptor.PlatformUrl;
+    private readonly SqlBuilder _sqlBuilder = new(descriptor, _serviceProvider);
+    private readonly XamlBuilder _xamlBuilder = new(descriptor, _serviceProvider); 
+    private readonly JavascriptBuilder _jsBuilder = new(descriptor);
 
-    [Obsolete("Use Column.RefTable instead.")]
-    internal IEnumerable<ReferenceMember> _refFields = default!;
-
-    private SqlBuilder _sqlBuilder => new(descriptor, _serviceProvider);
-    private JavascriptBuilder _jsBuilder = new(descriptor, _serviceProvider);
-    private TypescriptBuilder _tsBuilder = new(descriptor, _serviceProvider);
-    private Lazy<IndexModelBuilder> _indexBuilder => new(new IndexModelBuilder(this));
-    private IndexModelBuilder _index => _indexBuilder.Value;
-    private Lazy<PlainModelBuilder> _plainBuilder => new(new PlainModelBuilder(this));
-    private PlainModelBuilder _plain => _plainBuilder.Value;
-#pragma warning restore IDE1006 // Naming Styles
     protected Boolean IsDialog => descriptor.PlatformUrl.Kind == UrlKind.Dialog;
     protected String Action => descriptor.PlatformUrl.Action.ToLowerInvariant();
 
-    public TableMetadata Table => _table;
-    public TableMetadata? BaseTable => _baseTable;
+    public TableMetadata Table => descriptor.Table;
 
-    public String? MetadataEndpointBuilder => _baseTable?.Schema switch
+    public String? MetadataEndpointBuilder => Table.Origin?.Schema switch
     {
         "rep" => "rep:report.render",
         _ => null
@@ -64,14 +47,14 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
 
     public Task DbRemoveAsync(String? propName, ExpandoObject execPrms)
     {
-        return _index.DbRemoveAsync(propName, execPrms);
+        return _sqlBuilder.DbRemoveAsync(propName, execPrms);
     }
 
     public async Task<IDataModel> LoadModelAsync()
     {
         return Action switch
         {
-            "browse" or "index" => _table.UseFolders
+            "browse" or "index" => Table.UseFolders
                 ? await _sqlBuilder.LoadIndexTreeModelAsync()
                 : await _sqlBuilder.LoadIndexModelAsync(),
             "edit" => await _sqlBuilder.LoadPlainModelAsync(),
@@ -85,57 +68,19 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
         return Action switch
         {
             "browse" or "index" => await _jsBuilder.CreateIndexTemplate(),
-            "edit" => await _plain.CreateEditTemplate(),
+            "edit" => await _jsBuilder.CreateEditTemplate(),
             "browsefolder" => String.Empty,
             _ => throw new NotImplementedException($"Create template for {Action}")
         };
-    }
-    public async Task<String> CreateTemplateTSAsync()
-    {
-        return Action switch
-        {
-            "index" => await _tsBuilder.CreateIndexTSTemplate(),
-            "edit" => await _plain.CreateEditTSTemplate(),
-            "browse" => String.Empty,
-            "browsefolder" => String.Empty,
-            _ => throw new NotImplementedException($"Create ts template for {Action}")
-        };
-    }
-    public async Task<String> CreateMapTSAsync()
-    {
-        return Action switch
-        {
-            "index" => await _index.CreateMapTS(),
-            "edit" => await _plain.CreateMapTS(),
-            "browse" => String.Empty,   
-            "browsefolder" => String.Empty,
-            _ => throw new NotImplementedException($"Create ts template for {Action}")
-        };
-    }
-
-    public static String EnumsMapSql(IEnumerable<ReferenceMember> refs, Boolean isFilter)
-    {
-        var sb = new StringBuilder();
-        var where = isFilter ? "" : " where e.[Id] <> N''";
-        foreach (var r in refs.Where(c => c.Column.Type == ColumnType.Enum))
-        {
-            sb.AppendLine($"""
-                select [{r.Table.CollectionName}!TR{r.Table.TypeName}!Map] = null, [Id!!Id] = e.Id, [Name!!Name] = e.[Name]
-                from {r.Table.SqlTableName} e
-                {where}
-                order by e.[Order];
-                """);
-        }
-        return sb.ToString();
     }
 
     public UIElement CreateDefaultXamlForm()
     {
         return Action switch
         {
-            "browse" => _index.CreateBrowseDialogXaml(),
-            "index" => _index.CreateIndexPageXaml(),
-            "edit" => IsDialog ? _plain.CreateEditDialogXaml() : _plain.CreateDocumentPageXaml(),
+            "browse" => _xamlBuilder.CreateBrowseDialogXaml(),
+            "index" => _xamlBuilder.CreateIndexPageXaml(),
+            "edit" => IsDialog ? _xamlBuilder.CreateEditDialogXaml() : _xamlBuilder.CreateDocumentPageXaml(),
             //"browsefolder" => _index.CreateBrowseTreeDialogXaml(),
             _ => throw new NotImplementedException($"Create form for {Action}")
         };
@@ -168,7 +113,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
         }
         else
         {
-            page = await _metadataProvider.GetXamlFormAsync(descriptor.DataSource, _baseTable ?? _table, descriptor.PlatformUrl.Action, CreateDefaultXamlForm);
+            page = await _metadataProvider.GetXamlFormAsync(descriptor.DataSource, Table.Origin ?? Table, descriptor.PlatformUrl.Action, CreateDefaultXamlForm);
             templateText = await CreateTemplateAsync();
         }
         if (page == null)

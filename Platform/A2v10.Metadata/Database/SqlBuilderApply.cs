@@ -10,16 +10,16 @@ using A2v10.Data.Core.Extensions;
 
 namespace A2v10.Metadata;
 
-internal partial class PlainModelBuilder
+internal partial class SqlBuilder
 {
     /* В журнале обязательно InOut, Document */
     /* В документе обязательно Id, Done */
     /* TODO: Find 'Document' field */
     internal async Task<IInvokeResult> ApplyDocumentAsync(ExpandoObject? prms)
     {
-        var opColumn = _table.Columns.FirstOrDefault(c => c.Type == ColumnType.Operation) ?? throw new InvalidOperationException("Implement. Apply for Document");
-        TableMetadata applyTable = this._baseTable ?? _table;
-        if (applyTable.Apply == null || !applyTable.Apply.Any())
+        var opColumn = Table.Columns.FirstOrDefault(c => c.Type == ColumnType.Operation) ?? throw new InvalidOperationException("Implement. Apply for Document");
+        TableMetadata applyTable = Table.Origin ?? Table;
+        if (applyTable.Apply == null || applyTable.Apply.Count == 0)
             throw new InvalidOperationException($"Table {applyTable.Schema}.[{applyTable.Table}]. Nothing to apply");
 
         var journals = applyTable.Apply.Select(c => c.Journal).Distinct(Comparers.ColumnReference);
@@ -37,7 +37,7 @@ internal partial class PlainModelBuilder
 
             if (a.Details != null && !String.IsNullOrEmpty(a.DetailsKind))
             {
-                var td = _table.Details.Select(x => x.Value).FirstOrDefault(x => x.Table == a.Details.RefTable)
+                var td = Table.Details.Select(x => x.Value).FirstOrDefault(x => x.Table == a.Details.RefTable)
                     ?? throw new InvalidOperationException($"Details {a.Details.RefTable} not found");
                 var kindField = td.KindField;
                 onUseKind = $" and r.[{kindField}] = N'{a.DetailsKind}'";
@@ -52,16 +52,16 @@ internal partial class PlainModelBuilder
             {
                 if (a.Details == null || String.IsNullOrEmpty(a.Details.RefTable))
                     return String.Empty;
-                return $"inner join {a.Details.SqlTableName} {rowsAlias} on {rowsAlias}.[Parent] = {docAlias}.[{_table.PrimaryKeyField}]{onUseKind}";
+                return $"inner join {a.Details.SqlTableName} {rowsAlias} on {rowsAlias}.[Parent] = {docAlias}.[{Table.PrimaryKeyField}]{onUseKind}";
             }
 
             return $"""
 
                 insert into {a.Journal.SqlTableName} ([InOut], {String.Join(',', fields.Select(f => f.Target))})
                 select {a.InOut}, {String.Join(',', fields.Select(f => f.Source))}
-                from {_table.SqlTableName} {docAlias}
+                from {Table.SqlTableName} {docAlias}
                 {JoinDetails()}
-                where {docAlias}.{_table.PrimaryKeyField} = @Id;
+                where {docAlias}.Id = @Id;
 
             """;
         }
@@ -76,14 +76,14 @@ internal partial class PlainModelBuilder
 
         {String.Join("\n\n", applyTable.Apply.Select(a => InsertIntoJournal(a)))}
 
-        update {_table.SqlTableName} set [{_table.DoneField}] = 1 where [{_table.PrimaryKeyField}] = @Id;
+        update {Table.SqlTableName} set [Done] = 1 where Id = @Id;
         commit tran;
         """;
 
-        await _dbContext.LoadModelSqlAsync(_dataSource, applySql, dbprms =>
+        await _dbContext.LoadModelSqlAsync(DataSource, applySql, dbprms =>
         {
             dbprms.AddBigInt("@UserId", _currentUser.Identity.Id)
-            .AddString("@Id", prms?.Get<Object>(_table.PrimaryKeyField)?.ToString());
+            .AddString("@Id", prms?.Get<Object>(Table.PrimaryKeyField)?.ToString());
         });
 
         return EmptyInvokeResult.FromString("{}", MimeTypes.Application.Json);
@@ -92,10 +92,10 @@ internal partial class PlainModelBuilder
 
     internal async Task<IInvokeResult> UnApplyDocumentAsync(ExpandoObject? prms)
     {
-        var opColumn = _table.Columns.FirstOrDefault(c => c.Type == ColumnType.Operation) 
+        var opColumn = Table.Columns.FirstOrDefault(c => c.Type == ColumnType.Operation) 
             ?? throw new InvalidOperationException("Implement. UnApply for Document");
-        TableMetadata applyTable = this._baseTable ?? _table;
-        if (applyTable.Apply == null || !applyTable.Apply.Any())
+        TableMetadata applyTable =  Table.Origin ?? Table;
+        if (applyTable.Apply == null || applyTable.Apply.Count == 0)
             throw new InvalidOperationException($"Table {applyTable.Schema}.[{applyTable.Table}]. Nothing to apply");
 
         var journals = applyTable.Apply.Select(c => c.Journal).Distinct(Comparers.ColumnReference);
@@ -111,12 +111,12 @@ internal partial class PlainModelBuilder
         begin tran;
         {String.Join(";\n", deleteFromJournals)}
         
-        update {_table.SqlTableName} set [{_table.DoneField}] = 0 where [{_table.PrimaryKeyField}] = @Id;
+        update {Table.SqlTableName} set Done = 0 where Id = @Id;
         commit tran;
 
         """;
 
-        await _dbContext.LoadModelSqlAsync(_dataSource, unApplySql, dbprms =>
+        await _dbContext.LoadModelSqlAsync(DataSource, unApplySql, dbprms =>
         {
             dbprms.AddBigInt("@UserId", _currentUser.Identity.Id)
             .AddString("@Id", prms?.Get<Object>("Id")?.ToString());

@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using A2v10.Data.Core.Extensions;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
-using DocumentFormat.OpenXml.Vml.Spreadsheet;
 
 namespace A2v10.Metadata;
 
@@ -77,6 +76,32 @@ internal partial class SqlBuilder
 
         var collectionName = Table.CollectionName;
 
+        String buildWhereClause()
+        {
+            var sb = new StringBuilder();
+
+            var hasVoid = allColumns.Any(x => x.IsVoid);
+
+            if (hasVoid)
+                sb.Append("where a.Void = 0");
+            else
+                sb.Append("where 1 = 1"); // TODO:!!!!
+
+            if (filters.Count > 0)
+                sb.AppendLine($" and {String.Join(" and ", filters.Select(f => $"a.[{f.name}] = @{f.name}"))}");
+            if (!String.IsNullOrEmpty(fragment))
+            {
+                var searchColumns = allColumns.Where(c => c.IsSearchable).Select(x => $"a.[{x.Name}] like @fr")
+                    .Concat(refs.Select(r => $"r{r.Index}.[{r.Column.Presentation}] like @fr")).ToList();
+                if (searchColumns.Count > 0)
+                {
+                    sb.Append($" and ({String.Join(" or ", searchColumns)})");
+                    sb.AppendLine();
+                }
+            }
+            return sb.ToString();
+        }
+
         String buildIndexSql()
         {
             var sb = new StringBuilder($"""
@@ -134,20 +159,9 @@ internal partial class SqlBuilder
                 // order by for one table only
                 sb.AppendLine($"  left join {refdescr.Table.SqlTableName} r{refdescr.Index} on r{refdescr.Index}.Id = a.[{refdescr.Column.Name}]");
             }
-            sb.Append("where a.Void = 0");
 
-            if (filters.Count > 0)
-                sb.AppendLine($" and {String.Join(" and ", filters.Select(f => $"a.[{f.name}] = @{f.name}"))}");
-            if (!String.IsNullOrEmpty(fragment))
-            {
-                var searchColumns = allColumns.Where(c => c.IsSearchable).Select(x => $"a.[{x.Name}] like @fr")
-                    .Concat(refs.Select(r => $"r{r.Index}.[{r.Column.Presentation}] like @fr")).ToList();
-                if (searchColumns.Count > 0)
-                {
-                    sb.Append($" and ({String.Join(" or ", searchColumns)})");
-                    sb.AppendLine();
-                }
-            }
+            sb.AppendLine(buildWhereClause());
+
             sb.AppendLine($"order by {field} {dir}");
             sb.AppendLine("offset @Offset rows fetch next @PageSize rows only option(recompile);");
             sb.AppendLine();
