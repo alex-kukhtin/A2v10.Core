@@ -130,7 +130,7 @@ internal partial class TypescriptBuilder
                 if (fd.Kinds.Count == 0)
                     yield return $$"""'{{Table.TypeName}}.$$Tab': {type: String, value: '{{fd.Table}}'}""";
                 else
-                    yield return $$"""'{{Table.TypeName}}.$$Tab': {type: String, value: '{{fd.Kinds.First().Name}}'}""";
+                    yield return $$"""'{{Table.TypeName}}.$$Tab': {type: String, value: '{{fd.Kinds.First()}}'}""";
             }
             foreach (var c in Table.Columns.Where(c => !String.IsNullOrEmpty(c.Computed)))
                 yield return $$"""'{{Table.TypeName}}.{{c.Name}}'(this: {{Table.TypeName}}) { return {{c.Computed}};}""";
@@ -155,12 +155,12 @@ internal partial class TypescriptBuilder
                 {
                     foreach (var k in d.Kinds)
                         foreach (var c in d.Columns.Where(c => c.Required))
-                            yield return $"'{Table.Model}.{k.Name}[].{c.Name}': `@[Error.Required]`";
+                            yield return $"'{Table.Model}.{k}[].{c.Name}': `@[Error.Required]`";
                 }
                 else
                 {
                     foreach (var c in d.Columns.Where(c => c.Required))
-                        yield return $"'{Table.RealItemName}.{d.RealItemsName}[].{c.Name}': `@[Error.Required]`";
+                        yield return $"'{Table.RealItemName}.{d.CollectionName}[].{c.Name}': `@[Error.Required]`";
                 }
             }
         }

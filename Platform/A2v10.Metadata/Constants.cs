@@ -16,7 +16,8 @@ internal static class Constants
         public const String Void = nameof(Void);
         public const String IsFolder = nameof(IsFolder);
         public const String IsSystem = nameof(IsSystem);
-        public const String RowNumber = nameof(RowNumber);
+        public const String RowNo = nameof(RowNo);
+        public const String Owner = nameof(Owner);
         public const String Date = nameof(Date);
         public const String Done = nameof(Done);
         public const String RowVersion = "rv";

@@ -7,6 +7,8 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Options;
+
 using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
@@ -26,7 +28,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         if (storage != null)
         {
             storage.Origin = loaded;
-            loaded = storage;   
+            loaded = storage;
         }
         await ResolveReferencesAsyns(loaded, dataSource);
         loaded.SetDefaults(meta.CurrentSchema, meta.CurrentTable);
@@ -193,16 +195,30 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
 
     public async Task ResolveReferencesAsyns(TableMetadata meta, String? dataSource)
     {
-        foreach (var column in meta.Columns.Where(col => col.IsRef))
+        IEnumerable<TableColumn> GetAllReferences(TableMetadata table)
         {
-            if (column.Type == ColumnType.Parent)
-            {
-                column.RefTable = meta; // self!
-                continue;
+            return table.Columns.Where(c => c.IsRef)
+                .Concat(table.Details.Values.SelectMany(GetAllReferences));
+        }
+
+        var allRefs = GetAllReferences(meta).GroupBy(x => x.Target);
+
+        foreach (var group in allRefs)
+        {
+            var column = group.First();
+            foreach (var gcol in group) {
+
+                if (gcol.Type == ColumnType.Parent)
+                {
+                    gcol.RefTable = meta; // self!
+                    continue;
+                }
             }
-            var (schema, table) = DatabaseMetadataProvider.ParsePath(column.Target);
+            var (schema, table) = ParsePath(column.Target);
             var refMeta = await GetSchemaAsync(dataSource, schema, table);
-            column.RefTable = refMeta;
+            foreach (var gcol in group)
+                gcol.RefTable = refMeta;
         }
     }
+
 }

@@ -27,50 +27,91 @@ internal partial class SqlBuilder
             return Table.AllColumns(includeColumn).Select(col => col.SqlModelColumnName(alias, t => t.TypeName));
         }
 
+        String mainDetailsFields(KeyValuePair<String, TableMetadata> detail)
+        {
+            var dt = detail.Value;
+            if (dt.Kinds.Count == 0)
+                return $"[{detail.Key}!{dt.TypeName}!Array] = null";
+            else
+                return String.Join(", ", dt.Kinds.Select(k => $"[{k}!{dt.TypeName}!Array] = null"));
+        }
+
         var sb = new StringBuilder($"""
             -- load for {Table.Model}
 
             set nocount on;
             set transaction isolation level read uncommitted;
+
             """);
         sb.AppendLine();
 
         // STEP 1: main recordset
         sb.AppendLine("-- main recordset");
 
-        sb.AppendLine($"""
+        sb.Append($"""
             select [{Table.Model}!{Table.TypeName}!Object] = null, {String.Join(", ", plainSqlFields("a"))}
-            from {Table.SqlTableName} a where a.Id = @Id;
             """);
-
-        // STEP 5: map recordsets
-        if (refs.Count > 0)
+        if (Table.Details.Count > 0)
         {
-            // STEP 2: temp table
+            sb.AppendLine(",");
+            sb.Append("  ");
+            sb.AppendJoin(", ", Table.Details.Select(mainDetailsFields));
             sb.AppendLine();
-            sb.AppendLine("-- map table");
-            sb.AppendLine($"declare @map table({String.Join(", ", refs.Select(c => $"[{c.Column.Name}] bigint"))});");
-            sb.AppendLine($"""
-                insert into @map({String.Join(", ", refs.Select(c => $"[{c.Column.Name}]"))})
-                select {String.Join(", ", refs.Select(c => $"[{c.Column.Name}]"))}
-                from {Table.SqlTableName} a where a.Id = @Id;
-                """);
+        }
+        else
+        {
             sb.AppendLine();
-            sb.AppendLine("-- map recordsets");
-            var groupTables = refs.GroupBy(x => x.Table.Table).ToList();
-            foreach (var gt in groupTables)
+        }
+        sb.AppendLine($"from {Table.SqlTableName} a where a.Id = @Id;");
+
+
+        if (Table.Details.Count > 0)
+        {
+            // STEP 2: DETAILS
+            sb.AppendLine();
+            foreach (var d in Table.Details)
             {
-                var gx = gt.First();
-                var inClause = String.Join(", ", gt.Select(x => $"t.[{x.Column.Name}]"));
+                var dt = d.Value;
+                var detailsParents = dt.Kinds.Count > 0
+                    ? String.Join(",\n  ", dt.Kinds.Select(k => $"[!{Table.TypeName}.{k}!ParentId] = case when d.[{dt.RowKindField}] = N'{k}' then d.[Owner] else null end"))
+                    : $"[!{Table.TypeName}.{d.Key}!ParentId] = d.[Owner]";
+
+                static Boolean includeDetailsColumn(TableColumn col)
+                    => col.Type != ColumnType.RowKind;
+
+                var detailsFields = d.Value.Columns.Where(c => includeDetailsColumn(c)).Select(col => col.SqlModelColumnName("d", t => t.TypeName)).ToList();
                 sb.AppendLine($"""
-                    select [!{gx.Table.TypeName}!Map] = null, [Id!!Id] = r.Id, [{gx.Column.Presentation}!!Name] = r.[{gx.Column.Presentation}]
-                    from {gx.Table.SqlTableName} r inner join @map t on r.Id in ({inClause});
-                    """);
-                sb.AppendLine();
+                select [!{dt.TypeName}!Array] = null, [Id!!Id] = d.Id, [RowNo!!RowNumber] = d.RowNo,
+                """);
+                if (detailsFields.Count > 0)
+                {
+                    sb.Append($"  {String.Join(", ", detailsFields)}");
+                    sb.AppendLine(",");
+                }
+                sb.AppendLine($"""
+                  {detailsParents}
+                from {dt.SqlTableName} d where d.[Owner] = @Id
+                order by d.RowNo;
+                """);
             }
         }
 
-        // STEP 5: system recorset (filters -> always!)
+
+        var refMap = new RefMapBuilder(Table, isPlain: true);
+
+        // STEP 3: map recordsets
+        if (!refMap.IsEmpty)
+        {
+            sb.AppendLine();
+            sb.AppendLine(refMap.GenerateDeclare());
+            sb.AppendLine();
+            sb.AppendLine(refMap.GenerateInserts());
+            sb.AppendLine();
+            sb.AppendLine(refMap.GenerateResolves());
+        }
+
+        // STEP 5: system recorset
+        sb.AppendLine();
         sb.AppendLine("-- system recordset");
         sb.Append($"""
             select [!$System!] = null;

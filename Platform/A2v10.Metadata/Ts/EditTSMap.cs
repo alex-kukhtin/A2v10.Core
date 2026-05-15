@@ -28,10 +28,10 @@ internal partial class TypescriptBuilder
             foreach (var t in Table.Details.Select(x => x.Value))
             {
                 if (t.Kinds.Count == 0)
-                    yield return $"    readonly {t.RealItemsName}: {t.TypeName}Array;";
+                    yield return $"    readonly {t.CollectionName}: {t.TypeName}Array;";
                 else
                     foreach (var k in t.Kinds)
-                        yield return $"    readonly {k.Name}: {t.TypeName}Array;";
+                        yield return $"    readonly {k}: {t.TypeName}Array;";
             }
         }
 

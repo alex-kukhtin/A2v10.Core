@@ -32,7 +32,7 @@ internal partial class JavascriptBuilder
                 if (fd.Kinds.Count == 0)
                     yield return $$"""'{{Table.TypeName}}.$$Tab': {type: String, value: '{{fd.Table}}'}""";
                 else
-                    yield return $$"""'{{Table.TypeName}}.$$Tab': {type: String, value: '{{fd.Kinds.First().Name}}'}""";
+                    yield return $$"""'{{Table.TypeName}}.$$Tab': {type: String, value: '{{fd.Kinds.First()}}'}""";
             }
             foreach (var c in Table.Columns.Where(c => !String.IsNullOrEmpty(c.Computed)))
                 yield return $$"""'{{Table.TypeName}}.{{c.Name}}'() { return {{c.Computed}};}""";
@@ -56,10 +56,10 @@ internal partial class JavascriptBuilder
                 if (d.Kinds.Count > 0)
                     foreach (var k in d.Kinds)
                         foreach (var c in d.Columns.Where(c => c.Required))
-                            yield return $"'{Table.Model}.{k.Name}[].{c.Name}': `@[Error.Required]`";
+                            yield return $"'{Table.Model}.{k}[].{c.Name}': `@[Error.Required]`";
                 else
                     foreach (var c in d.Columns.Where(c => c.Required))
-                        yield return $"'{Table.Model}.{d.RealItemsName}[].{c.Name}': `@[Error.Required]`";
+                        yield return $"'{Table.Model}.{d.CollectionName}[].{c.Name}': `@[Error.Required]`";
             }
         }
 

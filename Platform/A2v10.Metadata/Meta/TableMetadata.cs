@@ -18,6 +18,7 @@ public enum EndpointKind
     Document,
     Operation,
     Journal,
+    Details
 }
 public enum ColumnType
 {
@@ -199,8 +200,6 @@ public record ReportItemMetadata
         _ => RefTable
     };
 }
-public record DetailsKind(String Name, String Label);
-
 public enum TableTrait
 {
     Audit,
@@ -227,6 +226,17 @@ public record TableMetadata
 
     public List<TableTrait> Traits { get; init; } = [];
 
+    public Dictionary<String, FormMetadata> Forms { get; init; } = [];
+    public String? Storage { get; set; }
+    public Dictionary<String, TableMetadata> Details { get; private set; } = [];
+    public List<String> Kinds { get; init; } = [];
+
+    [JsonIgnore]
+    internal TableMetadata? Origin { get; set; }
+
+    [JsonIgnore]
+    internal String TableTypeName => $"{Schema}.[{Model}.Meta.TableType]";
+
     // for sql
     [JsonIgnore]
     public String TypeName => $"T{Model}";
@@ -234,24 +244,12 @@ public record TableMetadata
     public String RefTypeName => $"TR{Model}";
     [JsonIgnore]
     public String CollectionName => Model.Plural();
-
-    [JsonIgnore]
-    internal String TableTypeName => $"{Schema}.[{Model}.Meta.TableType]";
-
-    public Dictionary<String, FormMetadata> Forms { get; init; } = [];
-
-    public String? Storage { get; set; }
-    
-    [JsonIgnore]
-    internal TableMetadata? Origin { get; set; }
-
     // OLD
     public String? ItemsName { get; init; }
     public String? ItemName { get; init; }
     public EditWithMode EditWith { get; init; }
-    //public List<TableMetadata> Details { get; private set; } = [];
-    public Dictionary<String, TableMetadata> Details { get; private set; } = [];
 
+    #endregion
 
 
     public String? ItemsLabel { get; init; }
@@ -260,12 +258,13 @@ public record TableMetadata
     public Boolean UseFolders { get; init; }    
     public String? DbName { get; init; }
     public String? DbSchema { get; init; }
-    #endregion
     public List<TableApply>? Apply { get; init; }
-    public List<DetailsKind> Kinds { get; init; } = [];
     public List<ReportItemMetadata> ReportItems { get; init; } = [];
     public List<ColumnReferenceToMe> RefsToMe { get; init; } = [];
+
     // internal variables
+    internal String SqlTableName => $"{Schema}.[{Table}]";
+
     internal String PrimaryKeyField => "Id";
     internal String ParentField => Columns.FirstOrDefault(c => c.Type == ColumnType.Parent)?.Name
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Parent column");
@@ -273,13 +272,12 @@ public record TableMetadata
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Name column");
     internal String DoneField => Columns.FirstOrDefault(c => c.Type == ColumnType.Done)?.Name
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Done column");
-    internal String KindField => Columns.FirstOrDefault(c => c.Type == ColumnType.RowKind)?.Name
+    internal String RowKindField => Columns.FirstOrDefault(c => c.Type == ColumnType.RowKind)?.Name
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a RowKind column");
 
     internal String RealItemName => ItemsName != null ? ItemsName.Singular() : ItemName ?? Table.Singular();
     internal String RealItemsName => ItemsName ?? Table;  
     internal String RealItemsLabel => ItemsLabel ?? $"@{RealItemsName}";
-    internal String SqlTableName => $"{Schema}.[{Table}]";
     internal Boolean IsJournal => Schema == "jrn";
     internal Boolean IsOperation => Schema == "op";
     internal Boolean IsDocument => Schema == "doc";
@@ -288,6 +286,13 @@ public record TableMetadata
     internal IEnumerable<TableColumn> PrimaryKeys => Columns.Where(c => c.Type == ColumnType.Id);
     internal Boolean HasSequence => PrimaryKeys.Count() == 1 && PrimaryKeys.First().Type == ColumnType.Id;
 
+    internal void SetDetailDefaults(TableMetadata table)
+    {
+        Schema = table.Schema;
+        Kind = EndpointKind.Details;
+        if (String.IsNullOrEmpty(Table))
+            Table = Model.ToPascalCase().Plural();
+    }
     internal void SetDefaults(String schema, String table)
     {
         Path = $"/{schema}/{table}";
@@ -301,6 +306,9 @@ public record TableMetadata
             Kind = schema.ToEndpointKind();
         if (String.IsNullOrEmpty(Label))
             Label = Constants.FieldNames.Name;
+
+        foreach (var d in Details)
+            d.Value.SetDetailDefaults(this);
 
         if (!Forms.ContainsKey(Constants.FormNames.Index))
             Forms.Add(Constants.FormNames.Index, DefaultFormBuilder.CreateIndexForm(this));

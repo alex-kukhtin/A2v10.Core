@@ -2,8 +2,11 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+
+using Microsoft.Extensions.Options;
 
 using A2v10.Infrastructure;
 using A2v10.Xaml;
@@ -19,6 +22,13 @@ public class DatabaseMetadataCache
     private readonly ConcurrentDictionary<String, UIElement> _xamlFormCache = [];
     private readonly ConcurrentDictionary<String, AppMetadata> _appMetaCache = [];
 
+    private readonly FileSystemWatcher? _fileWatcher = null;
+    public DatabaseMetadataCache(IAppCodeProvider appCodeProvider, IOptions<AppOptions> appOptions)
+    {
+        if (appOptions.Value.Environment.Watch)
+            _fileWatcher = CreateWatcher(appCodeProvider);
+
+    }
     public void ClearAll()
     {
         _cache.Clear();
@@ -77,5 +87,23 @@ public class DatabaseMetadataCache
         if (_endpoints.TryGetValue(path, out var modelInfo))
             return modelInfo;
         return null;
+    }
+
+    private void Watcher_Changed(Object sender, FileSystemEventArgs e)
+    {
+        ClearAll(); // All items! References!
+    }
+    private FileSystemWatcher? CreateWatcher(IAppCodeProvider appCodeProvider)
+    {
+        var path = appCodeProvider.GetMainModuleFullPath(".", String.Empty);
+        var watcher = new FileSystemWatcher(path, "metadata.json")
+        {
+            IncludeSubdirectories = true,
+            NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.Attributes
+        };
+        watcher.Changed += Watcher_Changed;
+        watcher.Created += Watcher_Changed;
+        watcher.EnableRaisingEvents = true;
+        return watcher;
     }
 }

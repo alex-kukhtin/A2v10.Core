@@ -39,7 +39,7 @@ internal partial class SqlBuilder
             {
                 var td = Table.Details.Select(x => x.Value).FirstOrDefault(x => x.Table == a.Details.RefTable)
                     ?? throw new InvalidOperationException($"Details {a.Details.RefTable} not found");
-                var kindField = td.KindField;
+                var kindField = td.RowKindField;
                 onUseKind = $" and r.[{kindField}] = N'{a.DetailsKind}'";
             }
 
