@@ -32,7 +32,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
 
     public String? MetadataEndpointBuilder => Table.Origin?.Schema switch
     {
-        "rep" => "rep:report.render",
+        "report" => "rep:report.render",
         _ => null
     };
     public Task<IDataModel> LoadLazyModelAsync()

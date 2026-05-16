@@ -176,7 +176,7 @@ internal partial class SqlBuilder
         var dm = await _dbContext.LoadModelSqlAsync(DataSource, sqlText, dbprms =>
         {
             AddDefaultParameters(dbprms);
-            dbprms.AddStructured($"@{Table.Model}", Table.TableTypeName, dtable);
+            dbprms.AddStructured($"@{Table.Model}", Table.SqlTableTypeName, dtable);
 
         });
 

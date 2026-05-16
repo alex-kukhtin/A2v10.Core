@@ -14,6 +14,8 @@ using Newtonsoft.Json;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Xaml;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace A2v10.Metadata;
 
@@ -38,7 +40,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     {
         var loaded = await _metadataCache.GetOrAddAsync(dataSource, schema, table, LoadTableMetadataAsync);
         if (!String.IsNullOrEmpty(table))
-            loaded.Storage = GetDefaultStorage(loaded, loaded.Schema);
+            loaded.Storage = GetDefaultStorage(loaded, schema);
         var storage = await ResolveStorageAsync(loaded, dataSource);
         if (storage != null)
         {
@@ -52,8 +54,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
 
     String? GetDefaultStorage(TableMetadata table, String schema)
     {
-        if (String.IsNullOrEmpty(table.Storage) && schema == Constants.EndpointNames.Document)
-            return Constants.EndpointNames.Document;
+        if (String.IsNullOrEmpty(table.Storage) && schema == Constants.SchemaNames.Document)
+            return Constants.SchemaNames.Document;
         return table.Storage;
     }
 
@@ -144,14 +146,17 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         var fileName = Path.Combine(schema, table, "metadata.json");
         using var stream = _codeProvider.FileStreamRO(fileName);
         var text = "{}"; // empty value;
+        String? hash = null;
         if (stream != null)
         {
             using var sr = new StreamReader(stream);
             text = await sr.ReadToEndAsync()
                 ?? throw new InvalidOperationException($"{fileName} is empty");
+            hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text))).ToLowerInvariant();
         }
         var meta = JsonConvert.DeserializeObject<TableMetadata>(text, JsonSettings.CamelCaseSerializerSettings)
             ?? throw new InvalidOperationException("TableMetadata deserialization fails");
+        meta.FileHash = hash;
         return meta;
     }
 

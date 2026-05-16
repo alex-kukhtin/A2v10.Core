@@ -28,9 +28,9 @@ public class CliDatabaseCreator()
                 {
                     var defKey = colDataType switch
                     {
-                        ColumnType.Id => $"next value for {table.Schema}.[SQ_{table.Table}]",
+                        ColumnType.Id => $"next value for {table.SqlSequenceName}",
                         ColumnType.Uniqueidentifier => "newsequentialid()",
-                        ColumnType.Int or ColumnType.BigInt => $"next value for {table.Schema}.[SQ_{table.Table}]",
+                        ColumnType.Int or ColumnType.BigInt => $"next value for {table.SqlSequenceName}]",
                         _ => null
                     };
                     if (defKey != null)
@@ -56,8 +56,8 @@ public class CliDatabaseCreator()
                 return String.Empty;
             return $"""
             ------------------------------------------------
-            if not exists(select * from INFORMATION_SCHEMA.SEQUENCES where SEQUENCE_SCHEMA = N'{table.Schema}' and SEQUENCE_NAME = N'SQ_{table.Table}')
-            	create sequence {table.Schema}.[SQ_{table.Table}] as bigint start with 1000 increment by 1;
+            if not exists(select * from INFORMATION_SCHEMA.SEQUENCES where SEQUENCE_SCHEMA = N'{table.SqlSchema}' and SEQUENCE_NAME = N'SQ_{table.Table}')
+            	create sequence {table.SqlSequenceName} as bigint start with 1000 increment by 1;
             """;
         }
 
@@ -75,7 +75,7 @@ public class CliDatabaseCreator()
         return $"""
         {createSequence()}
         ------------------------------------------------
-        if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'{table.Schema}' and TABLE_NAME=N'{table.Table}')
+        if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'{table.SqlSchema}' and TABLE_NAME=N'{table.Table}')
         create table {table.SqlTableName}
         (
             {String.Join(",\r\n    ", fields)},
@@ -95,8 +95,8 @@ public class CliDatabaseCreator()
 
         return $"""
         ------------------------------------------------
-        drop type if exists {table.TableTypeName};
-        create type {table.TableTypeName} as table
+        drop type if exists {table.SqlTableTypeName};
+        create type {table.SqlTableTypeName} as table
         (
             {String.Join(",\r\n    ", fields)}
         );
@@ -113,7 +113,7 @@ public class CliDatabaseCreator()
                 var opConstraintName = $"FK_{table.Table}_{column.Name}_Operations";
 
                 return $"""
-                if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.Schema}' and TABLE_NAME = N'{table.Table}' and CONSTRAINT_NAME = N'{opConstraintName}')
+                if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.SqlSchema}' and TABLE_NAME = N'{table.Table}' and CONSTRAINT_NAME = N'{opConstraintName}')
                     alter table {table.SqlTableName} add 
                         constraint {opConstraintName} foreign key ([{column.Name}]) references op.[Operations]([Id]);
                 alter table {table.SqlTableName} {check} constraint {opConstraintName};
@@ -124,7 +124,7 @@ public class CliDatabaseCreator()
                 var opConstraintName = $"FK_{table.Table}_{column.Name}_{column.Reference.RefTable}";
 
                 return $"""
-                if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.Schema}' and TABLE_NAME = N'{table.Table}' and CONSTRAINT_NAME = N'{opConstraintName}')
+                if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.SqlSchema}' and TABLE_NAME = N'{table.Table}' and CONSTRAINT_NAME = N'{opConstraintName}')
                     alter table {table.SqlTableName} add 
                         constraint {opConstraintName} foreign key ([{column.Name}]) references {column.Reference.SqlTableName}([Id]);
                 alter table {table.SqlTableName} {check} constraint {opConstraintName};
@@ -148,7 +148,7 @@ public class CliDatabaseCreator()
             if (constraintName.Length > 128)
                 constraintName = constraintName[0..127];
             return $"""
-            if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.Schema}' and TABLE_NAME = N'{table.Table}' and CONSTRAINT_NAME = N'{constraintName}')
+            if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.SqlSchema3}' and TABLE_NAME = N'{table.Table}' and CONSTRAINT_NAME = N'{constraintName}')
                 alter table {table.SqlTableName} add 
                     constraint {constraintName} foreign key ([{column.Name}]) references {refs.RefSchema}.[{refs.RefTable}]([{refTablePkName}]);
             alter table {table.SqlTableName} {check} constraint {constraintName};

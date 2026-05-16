@@ -11,41 +11,26 @@ namespace A2v10.Metadata;
 
 internal static class MetadataExtensions
 {
-    internal static String ToFolder(this String schema)
-    {
-        return schema switch
-        {
-            "cat" => Constants.EndpointNames.Catalog,
-            "doc" => Constants.EndpointNames.Document,
-            "jrn" => "journal",
-            "op" => "operation",
-            "rep" => "report",
-            "acc" => "account",
-            "regi" => "inforegister",
-            _ => schema
-        };
-    }
-
     internal static EndpointKind ToEndpointKind(this String schema)
     {
         return schema switch
         {
-            Constants.EndpointNames.Catalog => EndpointKind.Catalog,
-            Constants.EndpointNames.Document => EndpointKind.Document,
-            "journal"  => EndpointKind.Journal,
+            Constants.SchemaNames.Catalog => EndpointKind.Catalog,
+            Constants.SchemaNames.Document => EndpointKind.Document,
+            Constants.SchemaNames.Journal => EndpointKind.Journal,
             "operation" => EndpointKind.Operation,
             _ => throw new InvalidOperationException($"Invalid schema for EndpointKind {schema}")
         };
     }
 
-    internal static String FromFolder(this String folder)
+    internal static String ToSqlSchema(this String folder)
     {
         return folder switch
         {
-            Constants.EndpointNames.Catalog => "cat",
-            Constants.EndpointNames.Document => "doc",
+            Constants.SchemaNames.Catalog => "cat",
+            Constants.SchemaNames.Document => "doc",
             "operation" => "op",
-            "journal" => "jrn",
+            Constants.SchemaNames.Journal => "jrn",
             "report" => "rep",
             "account" => "acc",
             "inforegister" => "regi",
@@ -55,7 +40,7 @@ internal static class MetadataExtensions
 
     internal static String EndpointPath(this TableMetadata table)
     {
-        return $"/{table.Schema.ToFolder()}/{table.Model}".ToLowerInvariant();
+        return $"/{table.Schema}/{table.Model}".ToLowerInvariant();
     }
 
     internal static String EndpointPathUseBase(this TableMetadata table, TableMetadata? baseTable)
@@ -89,7 +74,7 @@ internal static class MetadataExtensions
 
     internal static String Endpoint(this ReportItemMetadata item)
     {
-        return $"/{item.RealRefSchema.ToFolder()}/{item.RealRefTable}";
+        return $"/{item.RealRefSchema}/{item.RealRefTable}";
     }
     internal static String CreateField(this ReportItemMetadata item, String? prefix = null)
     {

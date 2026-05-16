@@ -3,6 +3,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 using Newtonsoft.Json;
 
@@ -226,16 +227,14 @@ public record TableMetadata
 
     public List<TableTrait> Traits { get; init; } = [];
 
-    public Dictionary<String, FormMetadata> Forms { get; init; } = [];
+    public ConcurrentDictionary<String, FormMetadata> Forms { get; init; } = [];
     public String? Storage { get; set; }
     public Dictionary<String, TableMetadata> Details { get; private set; } = [];
     public List<String> Kinds { get; init; } = [];
 
     [JsonIgnore]
-    internal TableMetadata? Origin { get; set; }
+    public TableMetadata? Origin { get; set; }
 
-    [JsonIgnore]
-    internal String TableTypeName => $"{Schema}.[{Model}.Meta.TableType]";
 
     // for sql
     [JsonIgnore]
@@ -262,8 +261,17 @@ public record TableMetadata
     public List<ReportItemMetadata> ReportItems { get; init; } = [];
     public List<ColumnReferenceToMe> RefsToMe { get; init; } = [];
 
-    // internal variables
-    public String SqlTableName => $"{Schema}.[{Table}]";
+    // Service variables
+    [JsonIgnore]
+    public String SqlSchema => Schema.ToSqlSchema();
+    [JsonIgnore]
+    public String SqlTableName => $"{SqlSchema}.[{Table}]";
+    [JsonIgnore]
+    public String SqlSequenceName => $"{SqlSchema}.[SQ_{Table}]";
+    [JsonIgnore]
+    internal String SqlTableTypeName => $"{SqlSchema}.[{Model}.Meta.TableType]";
+    [JsonIgnore]
+    public String? FileHash { get; set; }
 
     internal String PrimaryKeyField => "Id";
     internal String ParentField => Columns.FirstOrDefault(c => c.Type == ColumnType.Parent)?.Name
@@ -278,9 +286,9 @@ public record TableMetadata
     internal String RealItemName => ItemsName != null ? ItemsName.Singular() : ItemName ?? Table.Singular();
     internal String RealItemsName => ItemsName ?? Table;  
     internal String RealItemsLabel => ItemsLabel ?? $"@{RealItemsName}";
-    internal Boolean IsJournal => Schema == "jrn";
-    internal Boolean IsOperation => Schema == "op";
-    internal Boolean IsDocument => Schema == "doc";
+    internal Boolean IsJournal => Schema == Constants.SchemaNames.Journal;
+    internal Boolean IsOperation => Schema == "operation";
+    internal Boolean IsDocument => Schema == Constants.SchemaNames.Document;
     internal Boolean HasDbTable => !String.IsNullOrEmpty(DbName) && !String.IsNullOrEmpty(DbSchema);
     internal Boolean HasPeriod => IsDocument || IsJournal;
 
@@ -298,7 +306,7 @@ public record TableMetadata
     {
         Path = $"/{schema}/{table}";
         if (String.IsNullOrEmpty(Schema))
-            Schema = schema.FromFolder();
+            Schema = schema;
         if (String.IsNullOrEmpty(Table))
             Table = table.ToPascalCase().Plural();
         if (String.IsNullOrEmpty(Model))
@@ -311,12 +319,13 @@ public record TableMetadata
         foreach (var d in Details)
             d.Value.SetDetailDefaults(this);
 
-        if (!Forms.ContainsKey(Constants.FormNames.Index))
-            Forms.Add(Constants.FormNames.Index, DefaultFormBuilder.CreateIndexForm(this));
-        if (!Forms.ContainsKey(Constants.FormNames.Edit))
-            Forms.Add(Constants.FormNames.Edit, DefaultFormBuilder.CreateEditForm(this));
-        Forms[Constants.FormNames.Index].SetDefaults(this);
-        Forms[Constants.FormNames.Edit].SetDefaults(this);
+        Forms.GetOrAdd(Constants.FormNames.Index, 
+            key => DefaultFormBuilder.CreateIndexForm(this))
+        .SetDefaults(this);
+
+        Forms.GetOrAdd(Constants.FormNames.Edit, 
+            key => DefaultFormBuilder.CreateEditForm(this))
+        .SetDefaults(this);
     }
 }
 

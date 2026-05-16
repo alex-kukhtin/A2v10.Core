@@ -44,9 +44,13 @@ internal sealed class DeployCommand(IServiceProvider services)
 
         Console.WriteLine(dm.Root);
 
-        await _dbDeploy.CreateTableType("catalog", "store");
-        await _dbDeploy.CreateTableType("catalog", "agent");
-        await _dbDeploy.CreateTableType("document", "");
 
+        //TODO: Тут надо загрузить хеши всех таблиц
+
+        foreach (var ep in await _dbDeploy.CollectEndpoints(forSql: true))
+        {
+            Console.WriteLine($"{ep.SqlTableName}, {ep.Columns.Count}");
+            // await _dbDeploy.DeployTableType(ep);
+        }
     }
 }

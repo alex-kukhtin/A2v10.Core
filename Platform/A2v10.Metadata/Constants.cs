@@ -30,16 +30,18 @@ internal static class Constants
 
     public static class FormNames
     {
-        public const String Index = "index";
-        public const String Edit =   "edit";
-        public const String Open =   "open";
-        public const String Show =   "show";
+        public const String Index  = "index";
+        public const String Edit   = "edit";
+        public const String Open   = "open";
+        public const String Show   = "show";
         public const String Browse = "browse";
     }
 
-    public static class EndpointNames
+    public static class SchemaNames
     {
         public const String Catalog = "catalog";
         public const String Document = "document";
+        public const String Journal = "journal";
+        public const String Details = "details";
     }
 }

@@ -1,10 +1,10 @@
-﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Dynamic;
-using System.Linq;
+
 using A2v10.Infrastructure;
 
 namespace A2v10.Metadata;
