@@ -150,8 +150,11 @@ public class AppCodeProvider : IAppCodeProvider
 
     public String GetMainModuleFullPath(String path, String fileName)
     {
-		var pathToGet = MakePath(path, fileName);	
-        return GetProvider(path).NormalizePath(pathToGet);
+		var pathToGet = MakePath(path, fileName);
+		var provider = GetProvider(path);
+		if (!provider.IsFileSystem)
+			return String.Empty;
+		return provider.NormalizePath(pathToGet);
     }
 }
 

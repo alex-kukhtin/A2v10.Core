@@ -263,7 +263,7 @@ public record TableMetadata
     public List<ColumnReferenceToMe> RefsToMe { get; init; } = [];
 
     // internal variables
-    internal String SqlTableName => $"{Schema}.[{Table}]";
+    public String SqlTableName => $"{Schema}.[{Table}]";
 
     internal String PrimaryKeyField => "Id";
     internal String ParentField => Columns.FirstOrDefault(c => c.Type == ColumnType.Parent)?.Name
@@ -282,6 +282,7 @@ public record TableMetadata
     internal Boolean IsOperation => Schema == "op";
     internal Boolean IsDocument => Schema == "doc";
     internal Boolean HasDbTable => !String.IsNullOrEmpty(DbName) && !String.IsNullOrEmpty(DbSchema);
+    internal Boolean HasPeriod => IsDocument || IsJournal;
 
     internal IEnumerable<TableColumn> PrimaryKeys => Columns.Where(c => c.Type == ColumnType.Id);
     internal Boolean HasSequence => PrimaryKeys.Count() == 1 && PrimaryKeys.First().Type == ColumnType.Id;

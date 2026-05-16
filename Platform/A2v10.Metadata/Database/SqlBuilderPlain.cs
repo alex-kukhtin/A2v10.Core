@@ -77,7 +77,7 @@ internal partial class SqlBuilder
                     : $"[!{Table.TypeName}.{d.Key}!ParentId] = d.[Owner]";
 
                 static Boolean includeDetailsColumn(TableColumn col)
-                    => col.Type != ColumnType.RowKind;
+                    => col.Type != ColumnType.RowKind && col.Type != ColumnType.Id;
 
                 var detailsFields = d.Value.Columns.Where(c => includeDetailsColumn(c)).Select(col => col.SqlModelColumnName("d", t => t.TypeName)).ToList();
                 sb.AppendLine($"""
@@ -100,15 +100,8 @@ internal partial class SqlBuilder
         var refMap = new RefMapBuilder(Table, isPlain: true);
 
         // STEP 3: map recordsets
-        if (!refMap.IsEmpty)
-        {
-            sb.AppendLine();
-            sb.AppendLine(refMap.GenerateDeclare());
-            sb.AppendLine();
-            sb.AppendLine(refMap.GenerateInserts());
-            sb.AppendLine();
-            sb.AppendLine(refMap.GenerateResolves());
-        }
+
+        refMap.WriteRefMap(sb);
 
         // STEP 5: system recorset
         sb.AppendLine();

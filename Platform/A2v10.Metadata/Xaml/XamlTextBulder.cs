@@ -7,10 +7,8 @@ using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
-internal class XamlTextBulder(EditWithMode _editWith)
+internal class XamlTextBulder()
 {
-    private readonly IServiceProvider _xamlServiceProvider = new XamlServiceProvider();
-
     public static String GetXaml(Object elem)
     {
         if (elem is not IRootContainer)

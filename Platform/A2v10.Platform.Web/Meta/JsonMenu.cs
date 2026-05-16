@@ -69,6 +69,9 @@ internal record JsonMenu
 
     private static JsonPlatfomMenu ToPlatform(JsonMenu root, Int32 level, ILocalizer localizer)
     {
+        Boolean isAux = false;
+        if (level == 3 && root.Items?.Count > 0)
+            isAux = true;
         var platfom = new JsonPlatfomMenu()
         {
             Name = root.Title,
@@ -76,8 +79,8 @@ internal record JsonMenu
             ClassName = root.ToClassName(),
             CreateUrl = root.ToCreateUrl(),
             CreateName = root.ToCreateName(localizer),
-            Url = $"page:{root.Url}/index/0",
-            Menu = root.Items?.Select(i => ToPlatform(i, level + 1, localizer))?.ToList()
+            Url = isAux ? $"page:{root.Url}" : $"page:{root.Url}/index/0",
+            Menu = isAux ? null : root.Items?.Select(i => ToPlatform(i, level + 1, localizer))?.ToList()
         };
         return platfom;
     }

@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Data.Core.Extensions;
+using A2v10.Metadata.Cli;
 
 namespace A2v10.Metadata;
 
@@ -59,7 +60,7 @@ public class DeployDatabaseHandler(IServiceProvider _serviceProvider) : IClrInvo
 
         await UpdateMetadataAsync(meta);
 
-        var dbCreator = new DatabaseCreator(meta);
+        var dbCreator = new CliDatabaseCreator();
 
         Task SendSignalAsync(String kind, TableMetadata table, Int32 index)
         {
@@ -79,11 +80,11 @@ public class DeployDatabaseHandler(IServiceProvider _serviceProvider) : IClrInvo
 
         foreach (var e in meta.Enums)
         {
-            var createTable = DatabaseCreator.CreateEnum(e);
+            var createTable = CliDatabaseCreator.CreateEnum(e);
             if (!String.IsNullOrEmpty(createTable))
                 await _dbContext.LoadModelSqlAsync(null, createTable);
-            var enumTable = DatabaseCreator.CreateEnumTable(e);
-            await _dbContext.LoadModelSqlAsync(null, DatabaseCreator.MergeEnums(e), dbprms =>
+            var enumTable = CliDatabaseCreator.CreateEnumTable(e);
+            await _dbContext.LoadModelSqlAsync(null, CliDatabaseCreator.MergeEnums(e), dbprms =>
             {
                 dbprms.AddStructured($"@Enums", "a2meta.[Enum.TableType]", enumTable);
             });
@@ -108,15 +109,15 @@ public class DeployDatabaseHandler(IServiceProvider _serviceProvider) : IClrInvo
         }
 
         // Run before foreign keys, it may be used for operations.
-        var sqlOps = DatabaseCreator.CreateOperations(meta.Operations);
+        var sqlOps = CliDatabaseCreator.CreateOperations(meta.Operations);
         if (!String.IsNullOrEmpty(sqlOps))
         {
             // create
             await _dbContext.LoadModelSqlAsync(null, sqlOps);
             // merge
-            await _dbContext.LoadModelSqlAsync(null, DatabaseCreator.MergeOperations(), dbprms =>
+            await _dbContext.LoadModelSqlAsync(null, CliDatabaseCreator.MergeOperations(), dbprms =>
             {
-                dbprms.AddStructured($"@Operations", "a2meta.[Operation.TableType]", DatabaseCreator.CreateOperationTable(meta.Operations));
+                dbprms.AddStructured($"@Operations", "a2meta.[Operation.TableType]", CliDatabaseCreator.CreateOperationTable(meta.Operations));
             });
         }
 

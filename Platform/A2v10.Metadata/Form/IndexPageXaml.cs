@@ -24,9 +24,14 @@ internal partial class XamlBuilder
 
     IEnumerable<FilterItem> CollectionViewFilters()
     {
-        yield return new FilterItem() { Property = "Fragment", DataType = DataType.String };
+        yield return new FilterItem() { 
+            Property = "Fragment", DataType = DataType.String 
+        };
         foreach (var f in Table.IndexForm().Filters)
-            yield return new FilterItem() { Property = f, DataType = DataType.Object };
+            yield return f.Type switch {
+                FormFilterType.Period => new FilterItem() { Property = "Period", DataType = DataType.Period },
+                _ => new FilterItem() { Property = f.Column, DataType = DataType.Object }
+            };
     }
 
     CollectionView XamlCollectionView() =>
@@ -137,20 +142,33 @@ internal partial class XamlBuilder
         };
     }
 
-    UIElement CreateFilterControl(String filter)
+    UIElement CreateFilterControl(FormFilter filter)
     {
-        var elem = Table.AllColumns(x => x.Name == filter).FirstOrDefault();
+        var elem = Table.AllColumns(x => x.Name == filter.Column).FirstOrDefault();
         if (elem == null)
             return new Block();
-        return new SelectorSimple()
-        {
-            Label = $"@[{elem.RefTableCheck.Model}]",
-            ShowClear = true,
-            Highlight = true,
-            Placeholder = $"@[{elem.RefTableCheck.Model}.All]",
-            Url = elem.RefTableCheck.Path,
-            Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), new Bind($"Parent.Filter.{filter}")),
-        };
+        return filter.Type switch {
+            FormFilterType.Period =>
+                new PeriodPicker()
+                {
+                    Label = $"@[Period]",
+                    Placement = DropDownPlacement.BottomRight,
+                    Display = DisplayMode.Name,
+                    Bindings = b => {
+                        b.SetBinding(nameof(PeriodPicker.Value), new Bind("Parent.Filter.Period"));
+                        b.SetBinding(nameof(PeriodPicker.Description), new Bind("Parent.Filter.Period.Name"));
+                    }
+                },
+            _ => new SelectorSimple()
+                {
+                    Label = $"@[{elem.RefTableCheck.Model}]",
+                    ShowClear = true,
+                    Highlight = true,
+                    Placeholder = $"@[{elem.RefTableCheck.Model}.All]",
+                    Url = elem.RefTableCheck.Path,
+                    Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), new Bind($"Parent.Filter.{filter.Column}")),
+                }
+          };
     }
 
     internal Taskpad? IndexTaskpad()

@@ -22,11 +22,11 @@ public class DatabaseMetadataCache
     private readonly ConcurrentDictionary<String, UIElement> _xamlFormCache = [];
     private readonly ConcurrentDictionary<String, AppMetadata> _appMetaCache = [];
 
-    private readonly FileSystemWatcher? _fileWatcher = null;
+    private FileSystemWatcher? FileWatcher { get; init; }
     public DatabaseMetadataCache(IAppCodeProvider appCodeProvider, IOptions<AppOptions> appOptions)
     {
         if (appOptions.Value.Environment.Watch)
-            _fileWatcher = CreateWatcher(appCodeProvider);
+            FileWatcher = CreateWatcher(appCodeProvider);
 
     }
     public void ClearAll()
@@ -34,14 +34,7 @@ public class DatabaseMetadataCache
         _cache.Clear();
         _endpoints.Clear();
         _appMetaCache.Clear();
-    }
-
-    public void Clear(String? schema, String? table)
-    {
-        var key = $":{schema}:{table}";
-        var realKeys = _cache.Keys.Where(x => x.EndsWith(key));
-        foreach (var realKey in realKeys)
-            _cache.TryRemove(realKey, out var value);
+        _xamlFormCache.Clear();
     }
 
     public async Task<TableMetadata> GetOrAddAsync(String? dataSource, String schema, String table, 
@@ -96,10 +89,14 @@ public class DatabaseMetadataCache
     private FileSystemWatcher? CreateWatcher(IAppCodeProvider appCodeProvider)
     {
         var path = appCodeProvider.GetMainModuleFullPath(".", String.Empty);
+        if (String.IsNullOrEmpty(path))
+            return null;
         var watcher = new FileSystemWatcher(path, "metadata.json")
         {
-            IncludeSubdirectories = true,
-            NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.Attributes
+            IncludeSubdirectories = true,            
+            NotifyFilter =
+                NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.Attributes
+                | NotifyFilters.FileName | NotifyFilters.CreationTime
         };
         watcher.Changed += Watcher_Changed;
         watcher.Created += Watcher_Changed;

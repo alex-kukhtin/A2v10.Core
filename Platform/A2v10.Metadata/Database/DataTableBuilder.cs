@@ -51,11 +51,7 @@ internal class DataTableBuilder(TableMetadata table)
 
         var dtable = new DataTable();
 
-        Boolean IsFieldInDataTable(TableColumn column) =>
-            column.Type != ColumnType.RowVersion && column.Type != ColumnType.Void &&
-            column.Type != ColumnType.IsSystem;
-
-        foreach (var f in table.AllColumns(IsFieldInDataTable))
+        foreach (var f in table.AllColumns())
             dtable.Columns.Add(CreateColumn(f));
         return dtable;
     }

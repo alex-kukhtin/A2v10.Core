@@ -39,6 +39,14 @@ public enum FormCommandType
     ToRight
 }
 
+public enum FormFilterType
+{
+    Ref,
+    Period
+}
+
+public record FormFilter(String Column, FormFilterType? Type);
+
 public record FormColumn
 {
     public String Header { get; set; } = default!;
@@ -64,7 +72,7 @@ public record FormMetadata
 {
     public Dictionary<String, FormColumn> Columns { get; set; } = [];
     public List<FormCommandType> Commands { get; set; } = [];
-    public List<String> Filters { get; set; } = [];
+    public List<FormFilter> Filters { get; set; } = [];
     public void SetDefaults(TableMetadata table)
     {
         foreach (var column in Columns)

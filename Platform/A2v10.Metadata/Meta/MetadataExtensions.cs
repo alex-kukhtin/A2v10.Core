@@ -82,11 +82,6 @@ internal static class MetadataExtensions
         return editEndpoint;
     }
 
-    internal static Boolean HasPeriod(this TableMetadata table)
-    {
-        return table.IsDocument || table.IsJournal;
-    }
-
     internal static IEnumerable<ReportItemMetadata> TypedReportItems(this TableMetadata table, ReportItemKind kind)
     {
         return table.ReportItems.Where(ri => ri.Kind == kind).OrderBy(r => r.Order);

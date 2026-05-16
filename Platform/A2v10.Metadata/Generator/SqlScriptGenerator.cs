@@ -1,5 +1,6 @@
 ﻿// Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
 
+using A2v10.Metadata.Cli;
 using System;
 using System.IO;
 using System.Text;
@@ -9,7 +10,7 @@ namespace A2v10.Metadata;
 
 internal class SqlScriptGenerator(AppMetadata _metadata, String _metaPath)
 {
-    private readonly DatabaseCreator _dbCreator = new DatabaseCreator(_metadata);
+    private readonly CliDatabaseCreator _dbCreator = new CliDatabaseCreator();
     public async Task GenerateSqlScriptsAsync()
     {
         if (!Directory.Exists(_metaPath))
@@ -32,7 +33,7 @@ internal class SqlScriptGenerator(AppMetadata _metadata, String _metaPath)
         }
         foreach (var enm in _metadata.Enums)
         {
-            strBuilder.AppendLine(DatabaseCreator.CreateEnum(enm));
+            strBuilder.AppendLine(CliDatabaseCreator.CreateEnum(enm));
             strBuilder.AppendLine("go");
         }
         String filePath = Path.Combine(_metaPath, "_tables.sql"); 
@@ -44,6 +45,7 @@ internal class SqlScriptGenerator(AppMetadata _metadata, String _metaPath)
         strBuilder.AppendLine("-- TABLE TYPES");
         foreach (var table in _metadata.Tables)
         {
+            strBuilder.AppendLine("------------------------------------------------");
             strBuilder.AppendLine(_dbCreator.CreateTableType(table));
             strBuilder.AppendLine("go");
         }

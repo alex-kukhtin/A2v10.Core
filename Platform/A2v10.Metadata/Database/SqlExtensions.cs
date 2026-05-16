@@ -48,6 +48,10 @@ internal static class SqlExtensions
         {
             ColumnType.Id or ColumnType.Ref or ColumnType.Owner or 
                 ColumnType.Parent or ColumnType.User => "bigint",
+            ColumnType.IsSystem or ColumnType.IsFolder or ColumnType.Done or
+                ColumnType.Void or ColumnType.Boolean => "bit",
+            ColumnType.Name => "nvarchar(255)",
+            ColumnType.Memo => "nvarchar(255)",
             ColumnType.Operation => "nvarchar(64)",
             ColumnType.Money => "money",
             ColumnType.Enum => "nvarchar(16)",
@@ -94,7 +98,8 @@ internal static class SqlExtensions
             ColumnType.String or ColumnType.NVarChar or
                 ColumnType.NChar => typeof(String),
             ColumnType.Date or ColumnType.DateTime => typeof(DateTime),
-            ColumnType.Bit or ColumnType.Done => typeof(Boolean),
+            ColumnType.Bit or ColumnType.Done or ColumnType.Void
+                or ColumnType.IsFolder or ColumnType.IsSystem => typeof(Boolean),
             ColumnType.Money => typeof(Decimal),
             ColumnType.Float => typeof(Double),
             ColumnType.Int => typeof(Int32),

@@ -22,7 +22,9 @@ internal static class DefaultFormBuilder
         if (memo != null)
             cols.Add(memo.Name, new());
 
-        var filters = table.AllColumns(c => c.IsRef).Select(c => c.Name);
+        var filters = table.AllColumns(c => c.IsRef).Select(c => new FormFilter(c.Name, FormFilterType.Ref));
+        if (table.HasPeriod)
+            filters = new[] { new FormFilter("Date", FormFilterType.Period) }.Concat(filters);
 
         return new FormMetadata()
         {

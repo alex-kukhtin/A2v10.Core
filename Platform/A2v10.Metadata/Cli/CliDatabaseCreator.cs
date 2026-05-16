@@ -5,9 +5,9 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Data;
 
-namespace A2v10.Metadata;
+namespace A2v10.Metadata.Cli;
 
-internal class DatabaseCreator(AppMetadata _meta)
+public class CliDatabaseCreator()
 {
     internal String CreateTable(TableMetadata table, Boolean skipAlter = false)
     {
@@ -54,12 +54,10 @@ internal class DatabaseCreator(AppMetadata _meta)
         {
             if (!table.HasSequence)
                 return String.Empty;
-            if (_meta.IdDataType != ColumnType.Int && _meta.IdDataType != ColumnType.BigInt)
-                return String.Empty;
             return $"""
             ------------------------------------------------
             if not exists(select * from INFORMATION_SCHEMA.SEQUENCES where SEQUENCE_SCHEMA = N'{table.Schema}' and SEQUENCE_NAME = N'SQ_{table.Table}')
-            	create sequence {table.Schema}.[SQ_{table.Table}] as {_meta.IdDataType.ToString().ToLowerInvariant()} start with 1000 increment by 1;
+            	create sequence {table.Schema}.[SQ_{table.Table}] as bigint start with 1000 increment by 1;
             """;
         }
 
@@ -86,19 +84,19 @@ internal class DatabaseCreator(AppMetadata _meta)
         """;
     }
 
-    internal String CreateTableType(TableMetadata table)
+    public String CreateTableType(TableMetadata table)
     {
         static String createField(TableColumn column)
         {
             return $"[{column.Name}] {column.SqlDataType(true)}";
         }
 
-        var fields = table.Columns.Select(createField);
+        var fields = table.AllColumns().Select(createField);
 
         return $"""
         ------------------------------------------------
-        drop type if exists {table.Schema}.[{table.Table}.TableType];
-        create type {table.Schema}.[{table.Table}.TableType] as table
+        drop type if exists {table.TableTypeName};
+        create type {table.TableTypeName} as table
         (
             {String.Join(",\r\n    ", fields)}
         );
@@ -135,7 +133,8 @@ internal class DatabaseCreator(AppMetadata _meta)
 
             var refs = column.Reference ??
                     throw new InvalidOperationException("Reference is null");
-
+            return String.Empty;
+            /*
             var refTable = _meta.Tables.FirstOrDefault(x => x.Schema == refs.RefSchema && x.Table == refs.RefTable)
                 ?? throw new InvalidOperationException($"Reference table {refs.RefSchema}.{refs.RefTable} not found");
             var refTablePk = refTable.PrimaryKeys;
@@ -154,6 +153,7 @@ internal class DatabaseCreator(AppMetadata _meta)
                     constraint {constraintName} foreign key ([{column.Name}]) references {refs.RefSchema}.[{refs.RefTable}]([{refTablePkName}]);
             alter table {table.SqlTableName} {check} constraint {constraintName};
             """;
+            */
         }
         var refs = table.Columns.Where(c => c.IsReference || c.Type == ColumnType.Operation || c.Type == ColumnType.Enum)
             .Select(rc => createReference(rc));

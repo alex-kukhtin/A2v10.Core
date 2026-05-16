@@ -32,7 +32,7 @@ internal partial class SqlBuilder(BuilderDescriptor desciptor, IServiceProvider 
 
     DbParameterCollection AddPeriodParameters(DbParameterCollection prms, ExpandoObject? qry)
     {
-        if (!Table.HasPeriod())
+        if (!Table.HasPeriod)
             return prms;
 
         static DateTime? DateTimeFromString(String? value)

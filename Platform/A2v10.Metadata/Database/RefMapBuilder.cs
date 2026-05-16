@@ -1,10 +1,11 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
+using A2v10.Infrastructure;
+using DocumentFormat.OpenXml.Office2016.Excel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
-using A2v10.Infrastructure;
+using System.Text;
 
 namespace A2v10.Metadata;
 
@@ -59,17 +60,19 @@ internal class RefMapBuilder
             );
     }
 
-    public String GenerateDeclare()
+    public String? GenerateDeclare()
     {
         var cols = _tableStruct
             .SelectMany(kvp => kvp.Value.Select(name => $"[{name}] bigint"));
+        if (!cols.Any())
+            return null;
         return $"""
         -- map table
         declare @map table({String.Join(", ", cols)});
         """;
     }
 
-    public String GenerateInserts()
+    public String? GenerateInserts()
     {
         var ins = _flat.Select(item =>
         {
@@ -86,6 +89,8 @@ internal class RefMapBuilder
             var where = item.SourceTable.Kind == EndpointKind.Details
                ? "[Owner] = @Id"
                : "Id = @Id";
+            if (String.IsNullOrEmpty(targetCols) || String.IsNullOrEmpty(sourceCols))
+                return null;
             return $"""
             insert into @map({targetCols}) 
             select {sourceCols} 
@@ -97,7 +102,7 @@ internal class RefMapBuilder
         return String.Join("\n\n", ins);
     }
 
-    public String GenerateResolves()
+    public String? GenerateResolves()
     {
         var blocks = _tableStruct.Select(kvp =>
         {
@@ -133,6 +138,32 @@ internal class RefMapBuilder
             return $"{cte}\n{select}";
         });
 
+        if (!blocks.Any())
+            return null;
         return String.Join("\n\n", blocks);
+    }
+
+    public void WriteRefMap(StringBuilder sb)
+    {
+        if (IsEmpty)
+            return;
+        var declare = GenerateDeclare();
+        if (declare != null)
+        {
+            sb.AppendLine();
+            sb.AppendLine(declare);
+        }
+        var inserts = GenerateInserts();
+        if (inserts != null)
+        {
+            sb.AppendLine();
+            sb.AppendLine(inserts);
+        }
+        var resolvers = GenerateResolves();
+        if (resolvers != null)
+        {
+            sb.AppendLine();
+            sb.AppendLine(GenerateResolves());
+        }
     }
 }

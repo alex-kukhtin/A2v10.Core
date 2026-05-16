@@ -87,6 +87,9 @@ internal partial class SqlBuilder
             else
                 sb.Append("where 1 = 1"); // TODO:!!!!
 
+            if (Table.HasPeriod)
+                sb.AppendLine(" and a.[Date] >= @From and a.[Date] < @end");
+
             if (filters.Count > 0)
                 sb.AppendLine($" and {String.Join(" and ", filters.Select(f => $"a.[{f.name}] = @{f.name}"))}");
             if (!String.IsNullOrEmpty(fragment))
@@ -117,6 +120,14 @@ internal partial class SqlBuilder
             {
                 sb.AppendLine();
                 sb.AppendLine("declare @fr nvarchar(255) = N'%' + @Fragment + N'%';");
+            }
+
+            if (Table.HasPeriod)
+            {
+                sb.AppendLine();
+                sb.AppendLine("set @From = isnull(@From, getdate());");
+                sb.AppendLine("set @To = isnull(@To, getdate());");
+                sb.AppendLine("declare @end date = dateadd(day, 1, @To)");
             }
 
             // STEP 2: create temp table
@@ -228,6 +239,11 @@ internal partial class SqlBuilder
               [!{collectionName}!SortOrder] = @Order,  [!{collectionName}!SortDir] = @Dir,
               [!{collectionName}.Fragment!Filter] = @Fragment
             """);
+            if (Table.HasPeriod)
+            {
+                sb.Append($", [!{collectionName}.Period.From!Filter] = @From");
+                sb.Append($", [!{collectionName}.Period.To!Filter] = @To");
+            }
             if (refs.Count > 0) {
                 sb.Append(", ");
                 sb.Append(String.Join(", ", refs.Select(rt => $"[!{collectionName}.{rt.Column.Name}.{rt.Table.RefTypeName}.RefId!Filter] = @{rt.Column.Name}")));
