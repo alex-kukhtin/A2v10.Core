@@ -43,7 +43,50 @@ public class CliDeployDatabase(DatabaseMetadataProvider _metadataProvider, IAppC
         await _dbContext.ExecuteExpandoAsync(null, "a2meta.[Endpoint.Hash]", prms);
     }
 
-    public async Task<IEnumerable<TableMetadata>> CollectEndpoints(Boolean forSql)
+
+    public async Task DeployDatabaseAsync(Boolean verbose, Action<String> writeMsg)
+    {
+        void writeVerboseMsg(String msg)
+        {
+            if (!verbose)
+                return;
+            writeMsg(msg);
+        }
+
+        var ep = (await CollectEndpointsAsync()).ToList();
+        var tables = ep.GroupBy(t => t.SqlTableName).Select(g => g.First()).ToList();
+
+        //TODO: Тут надо загрузить хеши всех таблиц
+        writeMsg("Deploying...");
+        
+        writeVerboseMsg("  Tables:");
+        foreach (var table in tables)
+        {
+            writeVerboseMsg($"    {table.SqlTableName}");
+            // create or alter
+        }
+
+        writeVerboseMsg("  Foreign keys:");
+        foreach (var table in tables)
+        {
+            writeVerboseMsg($"    {table.SqlTableTypeName}");
+            // foreign keys
+        }
+
+
+        writeVerboseMsg("  Table types:");
+        foreach (var table in tables)
+        {
+            writeVerboseMsg($"    {table.SqlTableTypeName}");
+            // table types
+            await DeployTableType(table);
+        }
+        writeMsg($"Done. {tables.Count} updated, {ep.Count - tables.Count} skipped");
+
+        // save new hashes
+    }
+
+    async Task<IEnumerable<TableMetadata>> CollectEndpointsAsync()
     {
         var src = _codeProvider.GetMainModuleFullPath(".", String.Empty);
 
@@ -67,7 +110,6 @@ public class CliDeployDatabase(DatabaseMetadataProvider _metadataProvider, IAppC
             var meta = await _metadataProvider.GetSchemaAsync(null, ep.schema, ep.table);
             result.Add(meta);
         }
-        return forSql ? result.GroupBy(t => t.SqlTableName).Select(g => g.First())
-            : result;
+        return result;
     }
 }

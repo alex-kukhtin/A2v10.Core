@@ -16,6 +16,9 @@ using A2v10.Services;
 
 namespace A2v10.Cli;
 
+/*
+* https://learn.microsoft.com/en-us/dotnet/standard/commandline/syntax
+*/
 internal sealed class Program
 {
     static Task<int> Main(string[] args) => new Program().RunAsync(args);

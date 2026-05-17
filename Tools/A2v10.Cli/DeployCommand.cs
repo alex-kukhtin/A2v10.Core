@@ -22,17 +22,16 @@ internal sealed class DeployCommand(IServiceProvider services)
     private readonly CliDeployDatabase _dbDeploy = services.GetRequiredService<CliDeployDatabase>();
     internal Command Build()
     {
-        var part = new Option<String?>("--part", "-p") { Description = "Deploy part" };
-        var cmd = new Command("deploy", "Deploy A2v10 app");
-        cmd.Options.Add(part);
+        var verbose = new Option<Boolean>("--verbose", "-v") { Description = "Show verbose output" };
+        var cmd = new Command("deploy", "Deploy A2v10 application");
+        cmd.Options.Add(verbose);
 
-        cmd.SetAction(r => DeployDatabase(r.GetValue(part)));
+        cmd.SetAction(r => DeployDatabase(r.GetValue(verbose)));
         return cmd;
     }
 
-    public async Task DeployDatabase(String? part) 
+    public async Task DeployDatabase(Boolean verbose) 
     {
-        Console.WriteLine($"Part: {part}");
         Console.WriteLine($"Current Dir: {Directory.GetCurrentDirectory()}");
         Console.WriteLine($"ConnectionString: {_config.GetConnectionString("Default")}");
         Console.WriteLine($"AppPath: {_config.GetValue<String>("Application:Modules:Main:Path")}");
@@ -45,12 +44,7 @@ internal sealed class DeployCommand(IServiceProvider services)
         Console.WriteLine(dm.Root);
 
 
-        //TODO: Тут надо загрузить хеши всех таблиц
+        await _dbDeploy.DeployDatabaseAsync(verbose, msg => Console.WriteLine(msg));
 
-        foreach (var ep in await _dbDeploy.CollectEndpoints(forSql: true))
-        {
-            Console.WriteLine($"{ep.SqlTableName}, {ep.Columns.Count}");
-            // await _dbDeploy.DeployTableType(ep);
-        }
     }
 }
