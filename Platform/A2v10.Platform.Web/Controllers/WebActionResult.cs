@@ -101,6 +101,18 @@ public class WebBinaryActionResult : IActionResult
 	}
 }
 
+public class ScriptExceptionResult(Exception ex) : IActionResult
+{
+    public Task ExecuteResultAsync(ActionContext context)
+    {
+        var resp = context.HttpContext.Response;
+        resp.ContentType = MimeTypes.Application.Javascript;
+		var msg = (ex.InnerException ?? ex).Message;	
+        return resp.WriteAsync($"alert(`{msg}`)", Encoding.UTF8);
+    }
+
+}
+
 public class WebExceptionResult(Int32 errorCode, String? message) : IActionResult
 {
 	private readonly Int32 _errorCode = errorCode;

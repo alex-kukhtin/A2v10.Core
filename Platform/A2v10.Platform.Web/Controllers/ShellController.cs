@@ -72,7 +72,7 @@ public class ShellController(IDbContext _dbContext, IApplicationHost _host, ICur
 		}
 		catch (Exception ex)
 		{
-			return new WebExceptionResult(500, ex.Message);
+			return new ScriptExceptionResult(ex);
 		}
 	}
 
@@ -92,7 +92,7 @@ public class ShellController(IDbContext _dbContext, IApplicationHost _host, ICur
 		}
 		catch (Exception ex)
 		{
-			return new WebExceptionResult(500, ex.Message);
+			return new ScriptExceptionResult(ex);
 		}
 	}
 
@@ -106,7 +106,7 @@ public class ShellController(IDbContext _dbContext, IApplicationHost _host, ICur
 		}
 		catch (Exception ex)
 		{
-			return new WebExceptionResult(500, ex.Message);
+			return new ScriptExceptionResult(ex);
 		}
 	}
 

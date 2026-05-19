@@ -19,10 +19,10 @@ internal partial class SqlBuilder
     {
         var opColumn = Table.Columns.FirstOrDefault(c => c.Type == ColumnType.Operation) ?? throw new InvalidOperationException("Implement. Apply for Document");
         TableMetadata applyTable = Table.Origin ?? Table;
-        if (applyTable.Apply == null || applyTable.Apply.Count == 0)
+        if (applyTable.ApplyOld == null || applyTable.ApplyOld.Count == 0)
             throw new InvalidOperationException($"Table {applyTable.Schema}.[{applyTable.Table}]. Nothing to apply");
 
-        var journals = applyTable.Apply.Select(c => c.Journal).Distinct(Comparers.ColumnReference);
+        var journals = applyTable.ApplyOld.Select(c => c.JournalOld).Distinct(Comparers.ColumnReference);
         var deleteFromJournals = journals.Select(j => $"delete from {j.SqlTableName} where [Document] = @Id");
 
         String InsertIntoJournal(TableApply a)
@@ -35,10 +35,10 @@ internal partial class SqlBuilder
 
             String onUseKind = String.Empty;
 
-            if (a.Details != null && !String.IsNullOrEmpty(a.DetailsKind))
+            if (a.DetailsOld != null && !String.IsNullOrEmpty(a.DetailsKind))
             {
-                var td = Table.Details.Select(x => x.Value).FirstOrDefault(x => x.Table == a.Details.RefTable)
-                    ?? throw new InvalidOperationException($"Details {a.Details.RefTable} not found");
+                var td = Table.Details.Select(x => x.Value).FirstOrDefault(x => x.Table == a.DetailsOld.RefTable)
+                    ?? throw new InvalidOperationException($"Details {a.DetailsOld.RefTable} not found");
                 var kindField = td.RowKindField;
                 onUseKind = $" and r.[{kindField}] = N'{a.DetailsKind}'";
             }
@@ -50,14 +50,14 @@ internal partial class SqlBuilder
 
             String JoinDetails()
             {
-                if (a.Details == null || String.IsNullOrEmpty(a.Details.RefTable))
+                if (a.DetailsOld == null || String.IsNullOrEmpty(a.DetailsOld.RefTable))
                     return String.Empty;
-                return $"inner join {a.Details.SqlTableName} {rowsAlias} on {rowsAlias}.[Parent] = {docAlias}.[{Table.PrimaryKeyField}]{onUseKind}";
+                return $"inner join {a.DetailsOld.SqlTableName} {rowsAlias} on {rowsAlias}.[Parent] = {docAlias}.[{Table.PrimaryKeyField}]{onUseKind}";
             }
 
             return $"""
 
-                insert into {a.Journal.SqlTableName} ([InOut], {String.Join(',', fields.Select(f => f.Target))})
+                insert into {a.JournalOld.SqlTableName} ([InOut], {String.Join(',', fields.Select(f => f.Target))})
                 select {a.InOut}, {String.Join(',', fields.Select(f => f.Source))}
                 from {Table.SqlTableName} {docAlias}
                 {JoinDetails()}
@@ -74,7 +74,7 @@ internal partial class SqlBuilder
         begin tran;
         {String.Join(";\n", deleteFromJournals)}
 
-        {String.Join("\n\n", applyTable.Apply.Select(a => InsertIntoJournal(a)))}
+        {String.Join("\n\n", applyTable.ApplyOld.Select(a => InsertIntoJournal(a)))}
 
         update {Table.SqlTableName} set [Done] = 1 where Id = @Id;
         commit tran;
@@ -95,10 +95,10 @@ internal partial class SqlBuilder
         var opColumn = Table.Columns.FirstOrDefault(c => c.Type == ColumnType.Operation) 
             ?? throw new InvalidOperationException("Implement. UnApply for Document");
         TableMetadata applyTable =  Table.Origin ?? Table;
-        if (applyTable.Apply == null || applyTable.Apply.Count == 0)
+        if (applyTable.ApplyOld == null || applyTable.ApplyOld.Count == 0)
             throw new InvalidOperationException($"Table {applyTable.Schema}.[{applyTable.Table}]. Nothing to apply");
 
-        var journals = applyTable.Apply.Select(c => c.Journal).Distinct(Comparers.ColumnReference);
+        var journals = applyTable.ApplyOld.Select(c => c.JournalOld).Distinct(Comparers.ColumnReference);
 
         var deleteFromJournals = journals.Select(j => 
             $"delete from {j.SqlTableName} where [Document] = @Id");

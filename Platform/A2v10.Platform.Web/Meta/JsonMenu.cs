@@ -24,6 +24,7 @@ internal record JsonSysParams
 
 internal record JsonPlatfomMenu
 {
+    public String? Id { get; init; } = default!;
     public String Name { get; init; } = default!;
     public String? Url { get; set; }
     public String? Icon { get; set; }
@@ -38,6 +39,8 @@ internal record JsonMenu
 {
     public String Title { get; init; } = default!;
     public String? Url { get; init; }
+    public String? Category { get; init; }
+    public String? Id { get; init; }
     public String? Icon { get; init; }
     public Boolean Grow { get; init; }
     public Boolean Underline { get; init; }
@@ -60,6 +63,8 @@ internal record JsonMenu
         return $"dialog:{Url}/edit/new";
     }
 
+    internal String? IdFromUrl() => Url?.Split('/')[^1];
+
     private String? ToCreateName(ILocalizer localizer)
     {
         if (!Create)
@@ -79,7 +84,7 @@ internal record JsonMenu
             ClassName = root.ToClassName(),
             CreateUrl = root.ToCreateUrl(),
             CreateName = root.ToCreateName(localizer),
-            Url = isAux ? $"page:{root.Url}" : $"page:{root.Url}/index/0",
+            Url = isAux ? $"page:/_auxmenu/any?mode={root.Id}" : $"page:{root.Url}/index/0",
             Menu = isAux ? null : root.Items?.Select(i => ToPlatform(i, level + 1, localizer))?.ToList()
         };
         return platfom;
@@ -97,5 +102,20 @@ internal record JsonMenu
         };
 
         return JsonConvert.SerializeObject(newTop, JsonHelpers.StandardSerializerSettings);
+    }
+
+    internal static JsonMenu? FindById(IEnumerable<JsonMenu>? items, String? id)
+    {
+        if (items == null)
+            return null;
+        foreach (var itm in items)
+        {
+            if (itm.Id == id)
+                return itm;
+            var found = FindById(itm.Items, id);
+            if (found != null) 
+                return found;
+        }
+        return null;
     }
 }

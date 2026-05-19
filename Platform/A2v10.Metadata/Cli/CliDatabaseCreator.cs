@@ -155,7 +155,7 @@ public class CliDatabaseCreator()
             """;
             */
         }
-        var refs = table.Columns.Where(c => c.IsReference || c.Type == ColumnType.Operation || c.Type == ColumnType.Enum)
+        var refs = table.Columns.Where(c => c.IsRef)
             .Select(rc => createReference(rc));
         var res = String.Join(Environment.NewLine, refs);
         if (String.IsNullOrEmpty(res.Trim()))

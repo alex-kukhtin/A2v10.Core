@@ -46,6 +46,8 @@ public static class ServiceExtensions
 		services.AddSingleton<ILocalizerDictiorany, WebLocalizerDictiorany>();
 		services.AddScoped<IAppDataProvider, WebAppDataProvider>();
 
+		services.AddKeyedScoped<IEndpointHandler, AuxMenuEndpointHandler>("AuxMenu");
+
 		services.AddScoped<ITokenProvider, WebTokenProvider>();
 
 		services.AddScoped<CurrentUser>()

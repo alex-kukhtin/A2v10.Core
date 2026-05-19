@@ -8,19 +8,35 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
+using Newtonsoft.Json;
+
 using A2v10.Data.Interfaces;
 using A2v10.Metadata;
 using A2v10.Metadata.Cli;
+using System.Collections.Generic;
 
 namespace A2v10.Cli;
 
-internal sealed class DeployCommand(IServiceProvider services)
+internal record DeployCommandError
+{
+    public String Table { get; set; } = default!;
+    public String? Ddl { get; set; }
+    public String? Message { get; set; }
+}
+internal record DeployCommandResult
+{
+    public Boolean Success { get; set; }
+    public List<String> Warnings { get; } = [];
+    public DeployCommandError? Error { get; set; }
+}
+
+public sealed class DeployCommand(IServiceProvider services)
 {
     private readonly IConfiguration _config = services.GetRequiredService<IConfiguration>();
     private readonly IDbContext _dbContext = services.GetRequiredService<IDbContext>();
     private readonly DatabaseMetadataProvider _metadataProvider = services.GetRequiredService<DatabaseMetadataProvider>();
     private readonly CliDeployDatabase _dbDeploy = services.GetRequiredService<CliDeployDatabase>();
-    internal Command Build()
+    public Command Build()
     {
         var verbose = new Option<Boolean>("--verbose", "-v") { Description = "Show verbose output" };
         var cmd = new Command("deploy", "Deploy A2v10 application");
@@ -30,7 +46,7 @@ internal sealed class DeployCommand(IServiceProvider services)
         return cmd;
     }
 
-    public async Task DeployDatabase(Boolean verbose) 
+    async Task DeployDatabase(Boolean verbose) 
     {
         Console.WriteLine($"Current Dir: {Directory.GetCurrentDirectory()}");
         Console.WriteLine($"ConnectionString: {_config.GetConnectionString("Default")}");
@@ -43,8 +59,12 @@ internal sealed class DeployCommand(IServiceProvider services)
 
         Console.WriteLine(dm.Root);
 
-
         await _dbDeploy.DeployDatabaseAsync(verbose, msg => Console.WriteLine(msg));
+
+        var dr = new DeployCommandResult();
+        var result = JsonConvert.SerializeObject(dr);
+
+        Console.WriteLine(result);
 
     }
 }

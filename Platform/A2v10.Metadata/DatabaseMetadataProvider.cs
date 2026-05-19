@@ -94,25 +94,6 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return _metadataCache.GetOrAddXamlFormAsync(dataSource, meta, key, defForm);
     }
 
-    public async Task<IEnumerable<ReferenceMember>> ReferenceFieldsAsync(String? dataSource, TableMetadata table)
-    {
-        async Task<ReferenceMember> CreateMember(TableColumn column, Int32 index)
-        {
-            var targetPath = ParsePath(column.Target);
-            var table = column.Type switch
-            {
-                ColumnType.Operation => await GetSchemaAsync(dataSource, "op", "operations"),
-                _ => await GetSchemaAsync(dataSource, targetPath.schema, targetPath.table)
-            };
-            return new ReferenceMember(column, table, index);
-        }
-        Int32 index = 0;
-        var list = new List<ReferenceMember>();
-        foreach (var cx in table.Columns.Where(c => c.Type == ColumnType.Ref))
-            list.Add(await CreateMember(cx, index++));
-        return list;
-    }
-
     public static IEnumerable<ReferenceMember> EnumFields(TableMetadata table, Boolean withDetails)
     {
         static ReferenceMember CreateMember(TableColumn column, Int32 index) => 

@@ -39,6 +39,9 @@ public enum ColumnType
     Operation,
     Document,
     RowVersion,
+    Enum,
+    AutoNum,
+    Company,
     // Simple fields
     String,
     Ref,
@@ -48,7 +51,6 @@ public enum ColumnType
     Boolean,
     //
     Stream,
-    Enum,
     // sql
     BigInt,
     Int,
@@ -89,13 +91,18 @@ public record TableColumn
     }
     public String Name { get; set; } = default!;
     public ColumnType Type { get; init; } = default!;
-    public String Target { get; init; } = default!;
+    public String? Target { get; init; } // for refs
+    public String? Key { get; init; } // for enum, autonum
+
+    [JsonIgnore]
     public TableMetadata? RefTable { get; set; }
+    [JsonIgnore]
     public TableMetadata RefTableCheck => RefTable ?? throw new InvalidOperationException($"RefTable for '{Name}' is null");
 
-    // for metadata provider
+    [JsonIgnore]
     internal Boolean IsRef => Type == ColumnType.Ref || Type == ColumnType.Owner || 
-            Type == ColumnType.User || Type == ColumnType.Document || Type == ColumnType.Operation;
+            Type == ColumnType.User || Type == ColumnType.Document || Type == ColumnType.Operation || 
+            Type == ColumnType.Company;
 
     internal String Presentation
     {
@@ -119,18 +126,20 @@ public record TableColumn
     public Boolean Total { get; init; }
     public Boolean Unique { get; init; }
     #endregion
-
-    internal Boolean IsReference => Reference != null && Reference.RefTable != null && Type != ColumnType.Enum;
     internal Boolean IsEnum => Type == ColumnType.Enum;
 
+    [JsonIgnore]
     internal Boolean HasDefaultBit => 
            Type == ColumnType.IsFolder
         || Type == ColumnType.IsSystem
         || Type == ColumnType.Void
         || Type == ColumnType.Done;
 
+    [JsonIgnore]
     internal Boolean IsVoid => Type == ColumnType.Void;
+    [JsonIgnore]
     internal Boolean IsSearchable => Type == ColumnType.String || Type == ColumnType.Name || Type == ColumnType.Memo;
+    [JsonIgnore]
     internal Boolean IsMemo => Type == ColumnType.Memo;
 }
 
@@ -160,8 +169,8 @@ public record TableApply
     #region Database Fields
     public Int16 InOut { get; init; } = default!;
     public Boolean Storno { get; init; }
-    public ColumnReference Journal { get; init; } = default!;
-    public ColumnReference? Details { get; init; }
+    public ColumnReference JournalOld { get; init; } = default!;
+    public ColumnReference? DetailsOld { get; init; }
     public List<ApplyMapping>? Mapping { get; init; } = [];
     public String? DetailsKind { get; init; }
     #endregion
@@ -227,10 +236,10 @@ public record TableMetadata
 
     public List<TableTrait> Traits { get; init; } = [];
 
-    public ConcurrentDictionary<String, FormMetadata> Forms { get; init; } = [];
     public String? Storage { get; set; }
     public Dictionary<String, TableMetadata> Details { get; private set; } = [];
     public List<String> Kinds { get; init; } = [];
+    public ConcurrentDictionary<String, FormMetadata> Forms { get; init; } = [];
 
     [JsonIgnore]
     public TableMetadata? Origin { get; set; }
@@ -257,7 +266,7 @@ public record TableMetadata
     public Boolean UseFolders { get; init; }    
     public String? DbName { get; init; }
     public String? DbSchema { get; init; }
-    public List<TableApply>? Apply { get; init; }
+    public List<TableApply>? ApplyOld { get; init; }
     public List<ReportItemMetadata> ReportItems { get; init; } = [];
     public List<ColumnReferenceToMe> RefsToMe { get; init; } = [];
 
@@ -274,23 +283,21 @@ public record TableMetadata
     public String? FileHash { get; set; }
 
     internal String PrimaryKeyField => "Id";
-    internal String ParentField => Columns.FirstOrDefault(c => c.Type == ColumnType.Parent)?.Name
-        ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Parent column");
-    internal String NameField => Columns.FirstOrDefault(c => c.Type == ColumnType.Name)?.Name
-        ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Name column");
-    internal String DoneField => Columns.FirstOrDefault(c => c.Type == ColumnType.Done)?.Name
-        ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a Done column");
     internal String RowKindField => Columns.FirstOrDefault(c => c.Type == ColumnType.RowKind)?.Name
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a RowKind column");
 
     internal String RealItemName => ItemsName != null ? ItemsName.Singular() : ItemName ?? Table.Singular();
     internal String RealItemsName => ItemsName ?? Table;  
     internal String RealItemsLabel => ItemsLabel ?? $"@{RealItemsName}";
-    internal Boolean IsJournal => Schema == Constants.SchemaNames.Journal;
     internal Boolean IsOperation => Schema == "operation";
+
+    [JsonIgnore]
     internal Boolean IsDocument => Schema == Constants.SchemaNames.Document;
-    internal Boolean HasDbTable => !String.IsNullOrEmpty(DbName) && !String.IsNullOrEmpty(DbSchema);
+    [JsonIgnore]
+    internal Boolean IsJournal => Schema == Constants.SchemaNames.Journal;
+    [JsonIgnore]
     internal Boolean HasPeriod => IsDocument || IsJournal;
+    internal Boolean HasDbTable => !String.IsNullOrEmpty(DbName) && !String.IsNullOrEmpty(DbSchema);
 
     internal IEnumerable<TableColumn> PrimaryKeys => Columns.Where(c => c.Type == ColumnType.Id);
     internal Boolean HasSequence => PrimaryKeys.Count() == 1 && PrimaryKeys.First().Type == ColumnType.Id;
@@ -336,7 +343,6 @@ public record EnumMetadata(String Name, EnumValueMetadata[] Values);
 public record AppMetadata
 {
     public Guid Id { get; init; } = default!;
-    public ColumnType IdDataType { get; init; }
     public TableMetadata[] Tables { get; init; } = [];
     public OperationMetadata[] Operations { get; init; } = [];
     public EnumMetadata[] Enums { get; init; } = [];

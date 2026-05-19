@@ -2,29 +2,37 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFramework>net8.0</TargetFramework>
+		<Version>10.1.8639</Version>
+		<TargetFramework>net10.0</TargetFramework>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<LangVersion>Latest</LangVersion>
-
 		<PackAsTool>true</PackAsTool>
-		<ToolCommandName>a2v10</ToolCommandName>
-		<PackageId>A2v10.Tool</PackageId>
-		<Version>0.1.0</Version>
+		<ToolCommandName>a2</ToolCommandName>
+		<PackageId>A2v10.CLI</PackageId>
 		<Description>A2v10 platform CLI tool</Description>
+		<Authors>Oleksandr Kukhtin</Authors>
+		<Company>Oleksandr Kukhtin</Company>
+		<Copyright>Copyright © 2020-2026 Oleksandr Kukhtin. All rights reserved.</Copyright>
+	</PropertyGroup>
 
-		<UserSecretsId>aspnet-A2v10.Core.Web.Site-3AAA4AB7-4DED-4E64-815B-F75EEDCF167E</UserSecretsId>
+	<PropertyGroup>
+		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<NeutralLanguage>en</NeutralLanguage>
+		<Deterministic>true</Deterministic>
+		<IncludeSymbols>false</IncludeSymbols>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="System.CommandLine" Version="2.0.8" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.8" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.8" />
-		<PackageReference Include="A2v10.Data.Core" Version="10.1.7596" />
+		<PackageReference Include="A2v10.Data.Core" Version="10.1.7597" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\Platform\A2v10.Metadata\A2v10.Metadata.csproj" />
-	  <ProjectReference Include="..\..\Platform\A2v10.Services\A2v10.Services.csproj" />
+		<ProjectReference Include="..\..\Platform\A2v10.Metadata\A2v10.Metadata.csproj" />
 	</ItemGroup>
 </Project>

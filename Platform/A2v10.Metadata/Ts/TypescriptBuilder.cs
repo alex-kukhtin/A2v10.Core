@@ -16,12 +16,8 @@ internal partial class TypescriptBuilder(BuilderDescriptor desciptor)
         static String property(TableColumn column)
         {
             var ro = column.IsFieldUpdated() ? "" : "readonly ";
-            if (column.IsReference)
-            {
-                //var refMember = _refFields.FindRefMember(column);
-                //if (refMember != null)
-                    //return $"\t{ro}{column.Name}: {refMember.Table.TypeName};";
-            }
+            if (column.IsRef)
+                return $"\t{ro}{column.Name}: {column.RefTableCheck.TypeName};";
             return $"\t{ro}{column.Name}: {column.Type.ToTsType()};";
         }
 

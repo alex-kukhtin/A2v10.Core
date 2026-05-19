@@ -54,7 +54,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
     {
         return Action switch
         {
-            "browse" or "index" => Table.UseFolders
+            "browse" or "index" or "indexpartial" => Table.UseFolders
                 ? await _sqlBuilder.LoadIndexTreeModelAsync()
                 : await _sqlBuilder.LoadIndexModelAsync(),
             "edit" => await _sqlBuilder.LoadPlainModelAsync(),
@@ -67,7 +67,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
     {
         return Action switch
         {
-            "browse" or "index" => await _jsBuilder.CreateIndexTemplate(),
+            "browse" or "index" or "indexpartial" => await _jsBuilder.CreateIndexTemplate(),
             "edit" => await _jsBuilder.CreateEditTemplate(),
             "browsefolder" => String.Empty,
             _ => throw new NotImplementedException($"Create template for {Action}")
@@ -80,6 +80,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
         {
             "browse" => _xamlBuilder.CreateBrowseDialogXaml(),
             "index" => _xamlBuilder.CreateIndexPageXaml(),
+            "indexpartial" => _xamlBuilder.CreateIndexPagePartialXaml(),
             "edit" => IsDialog ? _xamlBuilder.CreateEditDialogXaml() : _xamlBuilder.CreateDocumentPageXaml(),
             //"browsefolder" => _index.CreateBrowseTreeDialogXaml(),
             _ => throw new NotImplementedException($"Create form for {Action}")

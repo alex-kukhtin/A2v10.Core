@@ -158,7 +158,14 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 
 	async Task<IDataLoadResult> Load(PlatformUrl platformUrl, Action<ExpandoObject> setParams, Boolean isReload = false)
 	{
-		var view = await LoadViewAsync(platformUrl);
+		if (platformUrl.Action == "_auxmenu")
+		{
+			var auxMenuHandler = _serviceProvider.GetRequiredKeyedService<IEndpointHandler>("AuxMenu");
+            var res = await auxMenuHandler.RenderResultAsync(platformUrl, new ModelJsonView(), new ExpandoObject());
+            return new DataLoadResult(null, null, res);
+        }
+
+        var view = await LoadViewAsync(platformUrl);
 
 		CheckPermissions(view);
 
