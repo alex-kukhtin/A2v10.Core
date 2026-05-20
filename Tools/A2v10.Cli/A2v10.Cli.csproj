@@ -28,7 +28,7 @@
 		<PackageReference Include="System.CommandLine" Version="2.0.8" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.8" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.8" />
-		<PackageReference Include="A2v10.Data.Core" Version="10.1.7597" />
+		<PackageReference Include="A2v10.Data.Core" Version="10.1.7598" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
 	</ItemGroup>
 
