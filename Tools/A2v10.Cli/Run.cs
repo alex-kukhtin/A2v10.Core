@@ -23,6 +23,7 @@ internal sealed partial class Program
         };
         dbCommand.Subcommands.Add(new TablesCommand(_services).Build());
         dbCommand.Subcommands.Add(new ColumnsCommand(_services).Build());
+        dbCommand.Subcommands.Add(new ReferencedByCommand(_services).Build());
         root.Subcommands.Add(dbCommand);
 
         // metadata commands
@@ -32,7 +33,7 @@ internal sealed partial class Program
         };
         metaCommand.Subcommands.Add(new DeployCommand(_services).Build());
         metaCommand.Subcommands.Add(new ValidateCommand(_services).Build());
-        root.Subcommands.Add(metaCommand);
+        //root.Subcommands.Add(metaCommand);
         return root.Parse(args).InvokeAsync();
     }
 }
