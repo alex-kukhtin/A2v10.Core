@@ -47,11 +47,11 @@ internal record JsonResult
         Console.WriteLine(json);
     }
 
-    public static async Task Try(Func<Task> action)
+    public static async Task Try(Func<Task<Object>> action)
     {
         try
         {
-            await action();
+            JsonResult.Ok(await action());
         }
         catch (Exception ex)
         {

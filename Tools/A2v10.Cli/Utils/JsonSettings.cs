@@ -51,7 +51,7 @@ internal static class JsonSettings
 {
     public static JsonSerializerSettings CamelCaseSerializerSettingsFormat => new()
     {
-        NullValueHandling = NullValueHandling.Ignore,
+        NullValueHandling = NullValueHandling.Include,
         DefaultValueHandling = DefaultValueHandling.Include,
         Formatting = Formatting.Indented,
 
@@ -60,7 +60,7 @@ internal static class JsonSettings
             NamingStrategy = new CamelCaseNamingStrategy()
         },
         Converters = [
-            new IgnoreNullValueExpandoObjectConverter()
+            //new IgnoreNullValueExpandoObjectConverter()
         ]
     };
 }

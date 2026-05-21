@@ -10,6 +10,7 @@
 		<PackAsTool>true</PackAsTool>
 		<ToolCommandName>a2</ToolCommandName>
 		<PackageId>A2v10.CLI</PackageId>
+		<AssemblyName>a2</AssemblyName>
 		<Description>A2v10 platform CLI tool</Description>
 		<Authors>Oleksandr Kukhtin</Authors>
 		<Company>Oleksandr Kukhtin</Company>

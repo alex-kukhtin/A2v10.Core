@@ -25,14 +25,14 @@ internal class TablesCommand(IServiceProvider services)
         var schemaArg = new Argument<String?>("schema")
         {
             Description = "Filter by schema name",
-            DefaultValueFactory = reslut => null
+            DefaultValueFactory = _ => null
         };
         cmd.Arguments.Add(schemaArg);
 
         cmd.SetAction(r => JsonResult.Try(() =>  DbList(r.GetValue(schemaArg))));
         return cmd;
     }
-    async Task DbList(String? schema)
+    async Task<Object> DbList(String? schema)
     {
         var sqlString = """
         set nocount on;
@@ -49,8 +49,9 @@ internal class TablesCommand(IServiceProvider services)
             prms.AddString("@Schema", schema);
         });
 
-        var tables = dm.Eval<List<ExpandoObject>>("Tables")?.Select(x => $"{x.Get<String>("Schema")}.[{x.Get<String>("Table")}]");
+        var tables = dm.Eval<List<ExpandoObject>>("Tables")?.Select(x => $"{x.Get<String>("Schema")}.[{x.Get<String>("Table")}]")
+             ?? Enumerable.Empty<String>();
 
-        JsonResult.Ok(tables); 
+        return tables; 
     }
 }

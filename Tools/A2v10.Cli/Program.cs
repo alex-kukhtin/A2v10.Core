@@ -4,6 +4,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.IO;
+using System.Text;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -72,6 +73,8 @@ internal sealed partial class Program
         {
             opts.ConnectionStringName = "Default";
         });
+
+        Console.OutputEncoding = Encoding.UTF8;
 
         _services = host.Build().Services;
     }

@@ -12,14 +12,12 @@ internal sealed partial class Program
 {
     private Task<int> RunAsync(string[] args)
     {
-        var root = new RootCommand("A2v10 platform tools") { 
-            Description = "LLM-aware. Structured JSON output. No interactivity."
-        };
+        var root = new RootCommand("LLM-aware. Structured JSON output. No interactivity."); 
 
         // standard platform commands
         var dbCommand = new Command("db")
         {
-            Description = "Standard platform commands"
+            Description = "Database commands"
         };
         dbCommand.Subcommands.Add(new TablesCommand(_services).Build());
         dbCommand.Subcommands.Add(new ColumnsCommand(_services).Build());

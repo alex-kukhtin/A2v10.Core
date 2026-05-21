@@ -29,7 +29,7 @@ internal class ReferencedByCommand(IServiceProvider services)
         return cmd;
     }
 
-    private async Task ReferencedByList(String table)
+    private async Task<Object> ReferencedByList(String table)
     {
         var sqlString = """
         set nocount on;
@@ -57,8 +57,8 @@ internal class ReferencedByCommand(IServiceProvider services)
             prms.AddString("@Table", table);
         });
 
-        var columns = dm.Eval<List<ExpandoObject>>("ReferencedBy");
+        var columns = dm.Eval<List<ExpandoObject>>("ReferencedBy") ?? [];
 
-        JsonResult.Ok(columns);
+        return columns;
     }
 }

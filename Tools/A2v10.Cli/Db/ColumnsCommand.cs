@@ -24,12 +24,13 @@ internal class ColumnsCommand(IServiceProvider services)
             Description = "Table name",
         };
         cmd.Arguments.Add(tableArg);
+        cmd.Options.Add(new DescribeOption());
 
         cmd.SetAction(r => JsonResult.Try(() => ColumnList(r.GetValue(tableArg)!)));
         return cmd;
     }
 
-    private async Task ColumnList(String table)
+    private async Task<Object> ColumnList(String table)
     {
         var sqlString = """
         set nocount on;
@@ -55,8 +56,8 @@ internal class ColumnsCommand(IServiceProvider services)
             prms.AddString("@Table", table);
         });
 
-        var columns = dm.Eval<List<ExpandoObject>>("Columns");
+        var columns = dm.Eval<List<ExpandoObject>>("Columns") ?? [];
 
-        JsonResult.Ok(columns);
+        return columns;
     }
 }
