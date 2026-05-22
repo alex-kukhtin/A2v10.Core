@@ -130,7 +130,7 @@ internal class EndpointGenerator(IModelBuilderFactory _modelBuilderFactory, IApp
     {
         
         var fileType = platformUrl.Kind == UrlKind.Dialog ? "dialog" : "view";
-        var fileName = $"{platformUrl.Action}.{fileType}.xaml";
+        var fileName = $"{platformUrl.Action}.{fileType}.xamla";
         var fullPath = _appCodeProvider.GetMainModuleFullPath(platformUrl.LocalPath.RemoveHeadSlash(), fileName);
         var filePath = Path.Combine(fullPath, fileName);
 

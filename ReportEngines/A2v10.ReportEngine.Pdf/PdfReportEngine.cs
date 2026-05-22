@@ -31,33 +31,41 @@ public class PdfReportEngine : IReportEngine
 		_localizer = new DefaultReportLocalizer(user.Locale.Locale, localizer);
 	}
 
-	private Page ReadTemplate(String path)
+	private (Page page, String path)  ReadTemplate(String pathA, String pathX)
 	{
-		using var stream = _appCodeProvider.FileStreamRO(path)
-			?? throw new InvalidOperationException($"File not found '{path}'");
-		return TemplateReader.ReadReport(stream);
+		using var streamA = _appCodeProvider.FileStreamRO(pathA);
+		if (streamA != null)
+            return new (TemplateReader.ReadReport(streamA), pathA);
+        using var streamX = _appCodeProvider.FileStreamRO(pathX);
+        if (streamX != null)
+            return new (TemplateReader.ReadReport(streamX), pathX);
+		throw new InvalidOperationException($"File not found '{pathA}' or '{pathX}'");
 	}
 
-	private static Spreadsheet ReadTemplateFromDb(IReportInfo reportInfo)
+	private static (Page page, String path)  ReadTemplateFromDb(IReportInfo reportInfo, String path)
 	{
 		var json = reportInfo.DataModel?.Resolve(reportInfo.Report)
 			?? throw new InvalidOperationException("Data is null");
 		var ss = SpreadsheetJson.FromJson(json);
 		ss.ApplyStyles("Root", new StyleBag());
-		return ss;
+		return new (ss, path);
 	}
 
 	public Task<IInvokeResult> ExportAsync(IReportInfo reportInfo, ExportReportFormat format)
 	{
-		String repPath = String.Empty;
-		Boolean readFromModel = false;
+		String repPathA = String.Empty;
+        String repPathX = String.Empty;
+        Boolean readFromModel = false;
 
 		if (reportInfo.Report.StartsWith("{{") && reportInfo.Report.EndsWith("}}"))
 			readFromModel = true;
-		else 
-			repPath = Path.Combine(reportInfo.Path, reportInfo.Report) + ".xaml";
+		else
+		{
+			repPathA = Path.Combine(reportInfo.Path, reportInfo.Report) + ".xamla";
+            repPathX = Path.Combine(reportInfo.Path, reportInfo.Report) + ".xaml";
+        }
 
-		Page page = readFromModel ? ReadTemplateFromDb(reportInfo) : ReadTemplate(repPath);
+        var (page, path)  = readFromModel ? ReadTemplateFromDb(reportInfo, repPathA) : ReadTemplate(repPathA, repPathX);
 
 		if (page.Title == null && reportInfo.Name != null)
 			page.Title = reportInfo.Name;
@@ -65,7 +73,7 @@ public class PdfReportEngine : IReportEngine
 		var name = reportInfo.DataModel?.Root?.Resolve(reportInfo.Name) ?? "report";
 
 		var model = reportInfo.DataModel?.Root ?? [];
-		var context = new RenderContext(repPath, _localizer, model, page.Code);
+		var context = new RenderContext(path, _localizer, model, page.Code);
 		var doc = new ReportDocument(page, context);
 
 		var resultTitle = doc.GetMetadata().Title;

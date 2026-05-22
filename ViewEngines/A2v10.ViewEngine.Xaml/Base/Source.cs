@@ -73,15 +73,21 @@ public class Source : MarkupExtension
 		}
 		else
 		{
-			String trgPath = PathHelpers.ChangeExtension(targetFileName, "xaml");
+			String trgPathA = PathHelpers.ChangeExtension(targetFileName, "xamla");
+            String trgPathX = PathHelpers.ChangeExtension(targetFileName, "xaml");
 
-			if (appReader.IsFileExists(trgPath))
+            if (appReader.IsFileExists(trgPathA))
 			{
 				var xamPartProvider = serviceProvider.GetRequiredService<IXamlPartProvider>();
-				return xamPartProvider.GetXamlPart(trgPath);
+				return xamPartProvider.GetXamlPart(trgPathA);
 			}
-			else
-				throw new XamlException($"File not found {Path}");
+            else if (appReader.IsFileExists(trgPathX))
+            {
+                var xamPartProvider = serviceProvider.GetRequiredService<IXamlPartProvider>();
+                return xamPartProvider.GetXamlPart(trgPathX);
+            }
+            else
+                throw new XamlException($"File not found {Path}");
 		}
 	}
 }

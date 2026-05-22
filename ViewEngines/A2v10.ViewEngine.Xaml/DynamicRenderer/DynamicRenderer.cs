@@ -22,7 +22,8 @@ public class DynamicRenderer(IServiceProvider serviceProvider)
             initComplete.InitComplete();
         }
 
-        var stylesPart = _partProvider.GetCachedXamlPartOrNull("styles.xaml");
+        var stylesPart = _partProvider.GetCachedXamlPartOrNull("styles.xamla") ??
+            _partProvider.GetCachedXamlPartOrNull("styles.xaml");
         if (stylesPart != null)
         {
             if (stylesPart is not Styles styles)

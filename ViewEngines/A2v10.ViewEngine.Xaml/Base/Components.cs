@@ -56,11 +56,25 @@ public class Components : MarkupExtension
 
 	static ComponentDictionary LoadOneFile(IServiceProvider serviceProvider, String basePath, String path)
 	{
-		String targetPath = Path.Combine(basePath, path) + ".xaml";
-		targetPath= Path.GetRelativePath(".", targetPath);
-		var xamPartProvider = serviceProvider.GetRequiredService<IXamlPartProvider>();
-		var xmlPart = xamPartProvider.GetXamlPart(targetPath);
-		if (xmlPart is ComponentDictionary dict)
+        var xamPartProvider = serviceProvider.GetRequiredService<IXamlPartProvider>();
+        var codeProvider = serviceProvider.GetRequiredService<IAppCodeProvider>();
+        
+		String targetPathA = Path.Combine(basePath, path) + ".xamla";
+		targetPathA= Path.GetRelativePath(".", targetPathA);
+        String targetPathX = String.Empty;
+
+		Object? xmlPart = null;
+		if (codeProvider.IsFileExists(targetPathA))
+			xmlPart = xamPartProvider.GetXamlPart(targetPathA);
+		else if (codeProvider.IsFileExists(targetPathX))
+		{
+            targetPathX = Path.Combine(basePath, path) + ".xaml";
+            targetPathX = Path.GetRelativePath(".", targetPathX);
+            xmlPart = xamPartProvider.GetXamlPart(targetPathX);
+		}
+		if (xmlPart == null)
+			throw new InvalidOperationException($"Component file not found. '{targetPathA}' or '{targetPathX}'");
+        if (xmlPart is ComponentDictionary dict)
 			return dict;
 		throw new XamlException("Root element is not a ComponentDictionary");
 	}

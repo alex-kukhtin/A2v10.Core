@@ -1,4 +1,4 @@
-﻿// Copyright © 2021-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2021-2026 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
 using System.IO;
@@ -32,7 +32,7 @@ public class XamlRenderer(IProfiler _profile, IXamlPartProvider _partProvider, I
 			}
 			else if (!String.IsNullOrEmpty(info.Text))
 			{
-				var filePath = _appCodeProvider.MakePath(info.Path, "dummy.xaml");
+				var filePath = _appCodeProvider.MakePath(info.Path, "dummy.xamla");
 				uiElem = _partProvider.GetXamlPartText(info.Text, filePath) as IXamlElement;
 			}
 			else
@@ -40,8 +40,9 @@ public class XamlRenderer(IProfiler _profile, IXamlPartProvider _partProvider, I
 			if (uiElem == null)
 				throw new XamlException("Xaml. Root is not 'IXamlElement'");
 
-			var stylesPart = _partProvider.GetCachedXamlPartOrNull("styles.xaml");
-			if (stylesPart != null)
+			var stylesPart = _partProvider.GetCachedXamlPartOrNull("styles.xamla")
+				?? _partProvider.GetCachedXamlPartOrNull("styles.xaml");
+            if (stylesPart != null)
 			{
 				if (stylesPart is not Styles styles)
 					throw new XamlException("Xaml. Styles is not 'Styles'");

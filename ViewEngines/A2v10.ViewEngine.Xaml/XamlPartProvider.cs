@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 
 using A2v10.Infrastructure;
 using System.Text;
+using System.Linq;
 
 namespace A2v10.ViewEngine.Xaml;
 
@@ -29,7 +30,8 @@ public class XamlPartProvider : IXamlPartProvider
 		if (appOptions.Value.Environment.Watch)
 		{
 			// Create watcher for xaml
-			var dirs = _codeProvider.EnumerateWatchedDirs(String.Empty, "*.xaml");
+			var dirs = _codeProvider.EnumerateWatchedDirs(String.Empty, "*.xaml")
+				.Concat(_codeProvider.EnumerateWatchedDirs(String.Empty, "*.xamla"));
 			foreach (var dir in dirs) 
 			{
 				var watcher = new FileSystemWatcher(dir, "*.*")
