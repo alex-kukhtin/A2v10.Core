@@ -28,7 +28,8 @@ internal class AppConfigCommand(IServiceProvider services)
     {
         var info = new ExpandoObject()
         {
-            { "multiTenant", _config.GetValue<Boolean>("Application:MultiTenant") }
+            { "multiTenant", _config.GetValue<Boolean>("Application:MultiTenant") },
+            { "metadataEnabled", false }
         };
         return Task.FromResult<Object>(info);
     }

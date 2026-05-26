@@ -7992,7 +7992,7 @@ table.tree-grid a.toggle.expanded:after {
   font-size: 1rem;
   height: 1.75em;
   margin: 0.125em;
-  line-height: 1.9;
+  line-height: 1.6;
   padding: 0 5px;
   cursor: pointer;
 }
