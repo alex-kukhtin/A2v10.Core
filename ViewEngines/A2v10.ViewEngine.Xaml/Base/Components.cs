@@ -59,7 +59,7 @@ public class Components : MarkupExtension
         var xamPartProvider = serviceProvider.GetRequiredService<IXamlPartProvider>();
         var codeProvider = serviceProvider.GetRequiredService<IAppCodeProvider>();
         
-		String targetPathA = Path.Combine(basePath, path) + ".xamla";
+		String targetPathA = Path.Combine(basePath, path) + ".vxaml";
 		targetPathA= Path.GetRelativePath(".", targetPathA);
         String targetPathX = String.Empty;
 

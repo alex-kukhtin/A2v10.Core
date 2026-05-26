@@ -31,7 +31,7 @@ public class XamlPartProvider : IXamlPartProvider
 		{
 			// Create watcher for xaml
 			var dirs = _codeProvider.EnumerateWatchedDirs(String.Empty, "*.xaml")
-				.Concat(_codeProvider.EnumerateWatchedDirs(String.Empty, "*.xamla"));
+				.Concat(_codeProvider.EnumerateWatchedDirs(String.Empty, "*.vxaml"));
 			foreach (var dir in dirs) 
 			{
 				var watcher = new FileSystemWatcher(dir, "*.*")

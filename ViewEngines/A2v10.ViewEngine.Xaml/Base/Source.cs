@@ -73,7 +73,7 @@ public class Source : MarkupExtension
 		}
 		else
 		{
-			String trgPathA = PathHelpers.ChangeExtension(targetFileName, "xamla");
+			String trgPathA = PathHelpers.ChangeExtension(targetFileName, "vxaml");
             String trgPathX = PathHelpers.ChangeExtension(targetFileName, "xaml");
 
             if (appReader.IsFileExists(trgPathA))

@@ -47,7 +47,7 @@ public class AppCodeProvider : IAppCodeProvider
 	{
 		var assembly = ClrHelpers.ParseClrType(path);
 		var container = Activator.CreateInstance(assembly.assembly, assembly.type, false, BindingFlags.Default, null, 
-				new Object?[] { /*_serviceProvider*/ }, null, null)?.Unwrap();
+				[], null, null)?.Unwrap();
 		if (container is IAppContainer appContainer)
 			return appContainer;
 		else

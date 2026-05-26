@@ -89,7 +89,7 @@ public static class ServicesExtensions
 
 		services.AddViewEngines(x =>
 		{
-            x.RegisterEngine<XamlViewEngine>(".xamla");
+            x.RegisterEngine<XamlViewEngine>(".vxaml");
             x.RegisterEngine<XamlViewEngine>(".xaml");
             x.RegisterEngine<HtmlViewEngine>(".html");
 		});

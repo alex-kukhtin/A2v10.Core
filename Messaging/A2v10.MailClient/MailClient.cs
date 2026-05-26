@@ -1,4 +1,4 @@
-﻿// Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2023-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.IO;
@@ -83,7 +83,8 @@ public class MailClient : IMailService
 		var mm = CreateMimeMessage(message);
 
 		var wt = Stopwatch.StartNew();
-		_logger.LogInformation("Sending mail using SMPT. From {from} to {to}", message.From, message.To);
+		if (_logger.IsEnabled(LogLevel.Information))
+			_logger.LogInformation("Sending mail using SMPT. From {from} to {to}", message.From, message.To);
 		var client = new SmtpClient();
 
 		if (_mailSettings.SkipCertificateValidation)
@@ -92,14 +93,16 @@ public class MailClient : IMailService
 		await client.AuthenticateAsync(_mailSettings.UserName, _mailSettings.Password);
 		await client.SendAsync(mm);
 		await client.DisconnectAsync(true);
-        _logger.LogInformation("Mail sent. It took {ms} ms", wt.ElapsedMilliseconds);
+        if (_logger.IsEnabled(LogLevel.Information))
+            _logger.LogInformation("Mail sent. It took {ms} ms", wt.ElapsedMilliseconds);
     }
 
     private async Task SendFileSystemAsync(IMailMessage message)
 	{
 		if (_mailSettings.PickupDirectoryLocation == null)
 			throw new InvalidOperationException("PickupDirectoryLocation is null");
-        _logger.LogInformation("Sending mail using FileSystem ({pickupDirectoryLocation}). From {from} to {to}", _mailSettings.PickupDirectoryLocation, message.From, message.To);
+        if (_logger.IsEnabled(LogLevel.Information))
+            _logger.LogInformation("Sending mail using FileSystem ({pickupDirectoryLocation}). From {from} to {to}", _mailSettings.PickupDirectoryLocation, message.From, message.To);
         var mm = CreateMimeMessage(message);
 		var dir = _mailSettings.PickupDirectoryLocation.Replace("\\", "/");
 		var path = Path.GetFullPath(Path.Combine(dir, $"{Guid.NewGuid()}.eml"));

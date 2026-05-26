@@ -44,7 +44,7 @@ public class WebViewEngineProvider : IViewEngineProvider
 	public IViewEngineResult FindViewEngine(String path, String viewName)
 	{
 		if (viewName == "@Model.View") {
-			var xamlEngineDescriptor = _engines.First(x => x.Extension == ".xamla");
+			var xamlEngineDescriptor = _engines.First(x => x.Extension == ".vxaml");
 			var viewEngine = _serviceProvider.GetService(xamlEngineDescriptor.EngineType) as IViewEngine
 				?? throw new InvalidOperationException("Invalid xaml engine type");
 			return new ViewEngineResult( 

@@ -32,7 +32,7 @@ public class XamlRenderer(IProfiler _profile, IXamlPartProvider _partProvider, I
 			}
 			else if (!String.IsNullOrEmpty(info.Text))
 			{
-				var filePath = _appCodeProvider.MakePath(info.Path, "dummy.xamla");
+				var filePath = _appCodeProvider.MakePath(info.Path, "dummy.vxaml");
 				uiElem = _partProvider.GetXamlPartText(info.Text, filePath) as IXamlElement;
 			}
 			else
@@ -40,7 +40,7 @@ public class XamlRenderer(IProfiler _profile, IXamlPartProvider _partProvider, I
 			if (uiElem == null)
 				throw new XamlException("Xaml. Root is not 'IXamlElement'");
 
-			var stylesPart = _partProvider.GetCachedXamlPartOrNull("styles.xamla")
+			var stylesPart = _partProvider.GetCachedXamlPartOrNull("styles.vxaml")
 				?? _partProvider.GetCachedXamlPartOrNull("styles.xaml");
             if (stylesPart != null)
 			{

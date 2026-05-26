@@ -50,7 +50,7 @@ internal class TablesCommand(IServiceProvider services)
         });
 
         var tables = dm.Eval<List<ExpandoObject>>("Tables")?.Select(x => $"{x.Get<String>("Schema")}.[{x.Get<String>("Table")}]")
-             ?? Enumerable.Empty<String>();
+             ?? [];
 
         return tables; 
     }

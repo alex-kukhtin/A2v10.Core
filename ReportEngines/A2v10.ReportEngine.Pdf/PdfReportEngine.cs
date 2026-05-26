@@ -61,7 +61,7 @@ public class PdfReportEngine : IReportEngine
 			readFromModel = true;
 		else
 		{
-			repPathA = Path.Combine(reportInfo.Path, reportInfo.Report) + ".xamla";
+			repPathA = Path.Combine(reportInfo.Path, reportInfo.Report) + ".vxaml";
             repPathX = Path.Combine(reportInfo.Path, reportInfo.Report) + ".xaml";
         }
 
