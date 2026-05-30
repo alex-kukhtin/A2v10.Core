@@ -49,9 +49,9 @@ public class SaveResult : ISaveResult
 }
 public partial class DataService(IServiceProvider _serviceProvider, IModelJsonReader _modelReader, IDbContext _dbContext, ICurrentUser _currentUser,
     ISqlQueryTextProvider _sqlQueryTextProvider, IAppCodeProvider _codeProvider, IConfiguration _configuration,
-    IExternalDataProvider _externalDataProvider, ILocalizer _localizer, IAppRuntimeBuilder _appRuntimeBuilder) : IDataService
+    IExternalDataProvider _externalDataProvider, ILocalizer _localizer, IAppRuntimeBuilder _appRuntimeBuilder,
+    IAppClrManager? _appClrManager = null) : IDataService
 {
-	private readonly IAppClrManager? _appClrManager = _serviceProvider.GetService<IAppClrManager>(); // may be null!
     static PlatformUrl CreatePlatformUrl(UrlKind kind, String baseUrl)
 	{
 		return new PlatformUrl(kind, baseUrl, null);
@@ -433,9 +433,7 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 		var cmd = await _modelReader.GetCommandAsync(platformBaseUrl, command);
 
         if (cmd.HasMetadata)
-        {
             return await _appRuntimeBuilder.InvokeAsync(platformBaseUrl, command, cmd, data);
-        }
 
         CheckPermissions(cmd);
 

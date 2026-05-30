@@ -66,11 +66,12 @@ public class Components : MarkupExtension
 		Object? xmlPart = null;
 		if (codeProvider.IsFileExists(targetPathA))
 			xmlPart = xamPartProvider.GetXamlPart(targetPathA);
-		else if (codeProvider.IsFileExists(targetPathX))
+		else
 		{
             targetPathX = Path.Combine(basePath, path) + ".xaml";
             targetPathX = Path.GetRelativePath(".", targetPathX);
-            xmlPart = xamPartProvider.GetXamlPart(targetPathX);
+            if (codeProvider.IsFileExists(targetPathX))
+                xmlPart = xamPartProvider.GetXamlPart(targetPathX);
 		}
 		if (xmlPart == null)
 			throw new InvalidOperationException($"Component file not found. '{targetPathA}' or '{targetPathX}'");

@@ -17,27 +17,27 @@ for generate encoded ApiKey.
 ```csharp
 // T - type of user identifier
 .AddApiKeyAuthorization<T>(options => {
-    // options is read only
+  // options is read only
 });
 
 // configure
 services.Configure<ApiKeyConfigurationOptions>(options =>
 {
-	options.KeyType = KeyType.EncodedClaims; /* or KeyType.ApiKey */
-	/* for KeyType.EncodedClaims */
-	options.AesEncryptKey = "Aes_Encrypt_Key";
-	options.AesEncryptVector = "Aes_Encrypt_Vector";
-	options.SkipCheckUser = true;
-	/* or */
-	options.Configure<Int64>(KeyType.EncodedClaims, Configuration);
+  options.KeyType = KeyType.EncodedClaims; /* or KeyType.ApiKey */
+  /* for KeyType.EncodedClaims */
+  options.AesEncryptKey = "Aes_Encrypt_Key";
+  options.AesEncryptVector = "Aes_Encrypt_Vector";
+  options.SkipCheckUser = true;
+  /* or */
+  options.Configure<Int64>(KeyType.EncodedClaims, Configuration);
 });
 ```
 
 ## appsettings.json (for KeyType.EncodedClaims)
 ```json
 "AesEncrypt": {
-	"Key": "my_encrypt_key_1", /* 16 chars min */
-	"Vector": "my_encrypt_vector_1" /* 16 chars min */
+  "Key": "my_encrypt_key_1", /* 16 chars min */
+  "Vector": "my_encrypt_vector_1" /* 16 chars min */
 }
 ```
 
@@ -45,7 +45,7 @@ services.Configure<ApiKeyConfigurationOptions>(options =>
 
 Add PackageReference to *Swashbuckle.AspNetCore*:
 ```xml	
-<PackageReference Include="Swashbuckle.AspNetCore" Version="10.0.0" />
+<PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.4" />
 ```
 
 and add the following code to *Startup.cs*:
@@ -54,26 +54,38 @@ using Microsoft.OpenApi;
 
 services.AddSwaggerGen(c =>
 {
-	c.AddSecurityDefinition(ApiKeyAuthenticationOptions.Scheme, 
-		new OpenApiSecurityScheme()
-		{
-			Type = SecuritySchemeType.ApiKey,
-            In = ParameterLocation.Header,
-            Name = ApiKeyAuthenticationOptions.HeaderName,
-            Scheme = ApiKeyAuthenticationOptions.Scheme
-        }
+  c.SwaggerDoc("v3", new OpenApiInfo { Title = API_NAME, Version = "v3" });
+
+  c.AddSecurityDefinition(ApiKeyAuthenticationOptions.Scheme, 
+    new OpenApiSecurityScheme()
+      {
+        Type = SecuritySchemeType.ApiKey,
+        In = ParameterLocation.Header,
+        Name = ApiKeyAuthenticationOptions.HeaderName,
+        Scheme = ApiKeyAuthenticationOptions.Scheme
+      }
 	);
 
-	c.AddSecurityRequirement(doc => 
-		new OpenApiSecurityRequirement()
-		{
-			{
-				new OpenApiSecuritySchemeReference(ApiKeyAuthenticationOptions.Scheme, doc),
-				new List<String>()
-            }
-		}
-	);
+  c.AddSecurityRequirement(doc => 
+    new OpenApiSecurityRequirement()
+    {
+      {
+        new OpenApiSecuritySchemeReference(ApiKeyAuthenticationOptions.Scheme, doc),
+        new List<String>()
+      }
+    }    
+  );
+
+  var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+  c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 });
+
+// UseSwagger ALWAYS before app.UseRouting()!
+
+app.UseSwagger();
+app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v3/swagger.json", $"{API_NAME} v3"));
+
+
 ```
 
 

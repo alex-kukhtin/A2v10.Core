@@ -125,11 +125,13 @@ public class Startup(IConfiguration configuration)
 		services.AddKeyedScoped<IEndpointHandler, TestPageHandler>("SqlReports");
 		services.AddKeyedScoped<IEndpointHandler, TestPageHandler>("MyData");
 
+		/*
 		services.UseApplicationClr(opts =>
 		{
 			MainApp.StartupClr.Register(opts);
 
         });
+		*/
 		//AppStartup.Init();
     }
 

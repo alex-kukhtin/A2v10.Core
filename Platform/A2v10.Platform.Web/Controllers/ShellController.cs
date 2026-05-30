@@ -355,8 +355,7 @@ public class ShellController(IDbContext _dbContext, IApplicationHost _host, ICur
 		txt = _localizer.Localize(null, txt, false);
         if (txt == null)
             return null;
-        var title = await _dbContext.LoadAsync<JsonAppTitle>(_host.TenantDataSource, "a2sys.[AppTitle.Load]");
-        var menu = JsonMenu.ConvertToPlatformMenu(txt, title?.AppTitle, _localizer);
+        var menu = JsonMenuRoot.ConvertToPlatformMenu(txt, _localizer);
 
         return menu;
 	}

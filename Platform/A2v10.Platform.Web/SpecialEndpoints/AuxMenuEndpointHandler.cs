@@ -36,12 +36,12 @@ public class AuxMenuEndpointHandler(IServiceProvider _serviceProvider, ILocalize
         json = _localizer.Localize(null, json, false)
             ?? throw new InvalidOperationException("menu.json is empty");
 
-        var menu = JsonConvert.DeserializeObject<List<JsonMenu>>(json)
+        var menu = JsonConvert.DeserializeObject<JsonMenuRoot>(json)
             ?? throw new InvalidOperationException("deserialize menu.json fail");
 
         var menuId = platformUrl.Query?.Get<String>("Mode")
             ?? throw new InvalidOperationException("Query parameter 'Mode' not found");
-        var menuItem = JsonMenu.FindById(menu, menuId)
+        var menuItem = JsonMenu.FindById(menu.Menu, menuId)
             ?? throw new InvalidOperationException($"Aux menu for {menuId} not found");
         String rootId = $"el{Guid.NewGuid()}";
 

@@ -21,6 +21,7 @@ using Microsoft.Extensions.Logging;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Web.Identity;
+using System.IO;
 
 namespace A2v10.Identity.UI;
 
@@ -41,6 +42,7 @@ public class AccountController(
 	ILogger<AccountController> _logger, UrlEncoder _urlEncoder,
     IDataProtectionProvider protectionProvider,
 	ICurrentUser _currentUser,
+	IAppCodeProvider _appCodeProvider,
     IOptions<AppUserStoreOptions<Int64>> userStoreOptions) : Controller
 {
     private readonly IDataProtector _protector = protectionProvider.CreateProtector("Login");
@@ -91,9 +93,29 @@ public class AccountController(
 		return null;
     }
 
-	Task<AppTitleModel?> LoadTitleAsync()
+	async Task<AppTitleModel?> LoadTitleAsync()
 	{
-		return _dbContext.LoadAsync<AppTitleModel>(CatalogDataSource, "a2sys.[AppTitle.Load]");
+        using var stream = _appCodeProvider.FileStreamRO("menu.json", true);
+        if (stream == null)
+	        return await _dbContext.LoadAsync<AppTitleModel>(CatalogDataSource, "a2sys.[AppTitle.Load]");
+
+        using var sr = new StreamReader(stream);
+        var txt = await sr.ReadToEndAsync();
+        txt = _localizer.Localize(null, txt, false);
+        if (txt == null)
+            return null;
+		var rdr = new Utf8JsonReader(Encoding.UTF8.GetBytes(txt));
+		while (rdr.Read())
+		{
+            if (rdr.TokenType == JsonTokenType.PropertyName
+                && rdr.GetString() == "appTitle"
+                && rdr.Read()
+                && rdr.TokenType == JsonTokenType.String)
+            {
+                return new AppTitleModel() { AppTitle = rdr.GetString() };
+            }
+        }
+		return new AppTitleModel();
 	}
 
 	[HttpPost]

@@ -4,9 +4,13 @@ using System;
 using System.CommandLine;
 using System.Dynamic;
 using System.Threading.Tasks;
+using System.IO;
+using System.Xml.Linq;
+using System.Linq;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 using A2v10.Infrastructure;
 
@@ -15,6 +19,7 @@ namespace A2v10.Cli;
 internal class AppConfigCommand(IServiceProvider services)
 {
     private readonly IConfiguration _config = services.GetRequiredService<IConfiguration>();
+    private readonly IHostEnvironment _hostEnvironment = services.GetRequiredService<IHostEnvironment>();
 
     internal Command Build()
     {
@@ -29,8 +34,16 @@ internal class AppConfigCommand(IServiceProvider services)
         var info = new ExpandoObject()
         {
             { "multiTenant", _config.GetValue<Boolean>("Application:MultiTenant") },
-            { "metadataEnabled", false }
+            { "metadataEnabled", IsMetatadaEnabled() }
         };
         return Task.FromResult<Object>(info);
+    }
+
+    Boolean IsMetatadaEnabled()
+    {
+        var path = Path.Combine(_hostEnvironment.ContentRootPath, "WebApp", "WebApp.csproj");
+        var doc = XDocument.Load(path);
+        return doc.Descendants("PackageReference")
+            .Any(x => x.Attribute("Include")?.Value == "A2v10.Metadata");
     }
 }
