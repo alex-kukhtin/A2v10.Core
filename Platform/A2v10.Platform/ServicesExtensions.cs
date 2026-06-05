@@ -2,7 +2,6 @@
 
 using System;
 using System.Globalization;
-using System.Linq;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Builder;
@@ -95,30 +94,7 @@ public static class ServicesExtensions
 		});
 
 		// Platform services
-		services.Configure<AppOptions>(opts =>
-		{
-			configuration.GetSection("application").Bind(opts);
-			opts.CookiePrefix = cookiePrefix;
-			var strModules = configuration.GetValue<String>("application:modules");
-
-			if (strModules != null)
-			{
-				opts.Modules = OptionsExtensions.ModulesFromString(strModules);
-			}
-			else
-			{
-				opts.Modules = configuration.GetSection("application:modules")
-					.GetChildren().ToDictionary<IConfigurationSection, String, ModuleInfo>(
-						x => x.Key,
-						x =>
-						{
-							var mi = new ModuleInfo();
-							x.Bind(mi);
-							return mi;
-						},
-						StringComparer.InvariantCultureIgnoreCase);
-			}
-		});
+		services.ConfigureAppOptions(configuration, cookiePrefix);
 
 		services.AddScoped<IDataService, DataService>();
 		services.AddScoped<IModelJsonReader, ModelJsonReader>();
@@ -136,7 +112,7 @@ public static class ServicesExtensions
 		return new Builders(builder, authBuilder);
 	}
 
-	public static void ConfigurePlatform(this IApplicationBuilder app, IWebHostEnvironment env, IConfiguration configuration = null)
+    public static void ConfigurePlatform(this IApplicationBuilder app, IWebHostEnvironment env, IConfiguration configuration = null)
 	{
 		if (env.IsDevelopment())
 		{

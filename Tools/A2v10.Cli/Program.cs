@@ -14,6 +14,10 @@ using A2v10.Infrastructure;
 using A2v10.Services;
 using A2v10.Metadata;
 using A2v10.Metadata.Cli;
+using A2v10.Data.Interfaces;
+using A2v10.Data.Providers;
+using A2v10.ViewEngine.Xaml;
+using A2v10.Platform.Web;
 
 namespace A2v10.Cli;
 
@@ -38,13 +42,24 @@ internal sealed partial class Program
 
         host.Services
             .AddSingleton<DatabaseMetadataCache>()
-            .AddSingleton<IAppCodeProvider, AppCodeProvider>()
+            .AddSingleton<IDataService, DataService>()
+            .AddSingleton<IModelJsonReader, ModelJsonReader>()
+            .AddSingleton<IExternalDataProvider, ExternalDataContext>()
+            .AddSingleton<IAppVersion, PlatformAppVersion>()
+            .AddSingleton<ICurrentUser, CurrentUser>()
+            .AddSingleton<ISqlQueryTextProvider, NullSqlQueryTextProvider>()
+            .AddSingleton<ILocalizer, EmptyLocalizer>()
             .AddSingleton<DatabaseMetadataProvider>()
             .AddSingleton<CliDatabaseCreator>()
+            .AddSingleton<IApplicationHost, WebApplicationHost>()
+            .AddSingleton<IDataScripter, VueDataScripter>()
             .AddSingleton<CliDeployDatabase>();
 
+        host.Services.AddSingleton<IAppCodeProvider, AppCodeProvider>()
+           .AddSingleton<IModelJsonPartProvider, ModelJsonPartProvider>()
+           .AddSingleton<IXamlPartProvider, XamlPartProvider>();
 
-
+        host.Services.UseAppMetadata();
 
         host.Services.Configure<AppOptions>(opts =>
         {

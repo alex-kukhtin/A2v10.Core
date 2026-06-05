@@ -1,4 +1,6 @@
-﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
+
+using System.ComponentModel;
 
 using A2v10.Infrastructure;
 
@@ -10,6 +12,7 @@ public abstract class UIElementBase : XamlElement, IXamlElement
 	public Boolean? Hide { get; set; }
 	public RenderMode? Render { get; set; }
 
+	[Browsable(false)]
 	public Boolean IsInGrid { get; set; }
 
 	public Thickness? Margin { get; set; }

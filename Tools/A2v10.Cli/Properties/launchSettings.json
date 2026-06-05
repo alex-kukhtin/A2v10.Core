@@ -2,7 +2,7 @@
   "profiles": {
     "A2v10.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "app config\r\n",
+      "commandLineArgs": "endpoint resolve-action catalog/agent/edit\r\n",
       "workingDirectory": "C:\\A2v10_Net6\\A2v10.Standard.Modules"
     }
   }

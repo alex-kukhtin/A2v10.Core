@@ -1,42 +1,42 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
-	  <Version>10.1.8639</Version>
-	  <LangVersion>Latest</LangVersion>
-	  <Nullable>enable</Nullable>
-	  <ImplicitUsings>disable</ImplicitUsings>
-	  <AssemblyName>A2v10.Services</AssemblyName>
-	  <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-	  <Product>A2v10</Product>
-	  <PackageId>A2v10.Services</PackageId>
-	  <Authors>Oleksandr Kukhtin</Authors>
-	  <Company>Oleksandr Kukhtin</Company>
-	  <Description>A2v10 Platform Services</Description>
-	  <Copyright>Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.</Copyright>
-	  <RepositoryType>github</RepositoryType>
-	  <PackageTags>A2v10</PackageTags>
-	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
-	  <PackageReadmeFile>README.md</PackageReadmeFile>
-	  <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+		<Version>10.1.8639</Version>
+		<LangVersion>Latest</LangVersion>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<AssemblyName>A2v10.Services</AssemblyName>
+		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+		<Product>A2v10</Product>
+		<PackageId>A2v10.Services</PackageId>
+		<Authors>Oleksandr Kukhtin</Authors>
+		<Company>Oleksandr Kukhtin</Company>
+		<Description>A2v10 Platform Services</Description>
+		<Copyright>Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.</Copyright>
+		<RepositoryType>github</RepositoryType>
+		<PackageTags>A2v10</PackageTags>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="DocumentFormat.OpenXml" Version="3.5.1" />
-    <PackageReference Include="Jint" Version="4.9.2" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.8" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.8" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.8" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.8" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.8" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="DocumentFormat.OpenXml" Version="3.5.1" />
+		<PackageReference Include="Jint" Version="4.9.3" />
+		<PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.8" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.8" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.8" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.8" />
+		<PackageReference Include="Microsoft.Extensions.Http" Version="10.0.8" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\CodeGen\A2v10.Module.Infrastructure\A2v10.Module.Infrastructure.csproj" />
-    <ProjectReference Include="..\..\Extensions\A2v10.Scheduling.Infrastructure\A2v10.Scheduling.Infrastructure.csproj" />
-    <ProjectReference Include="..\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\CodeGen\A2v10.Module.Infrastructure\A2v10.Module.Infrastructure.csproj" />
+		<ProjectReference Include="..\..\Extensions\A2v10.Scheduling.Infrastructure\A2v10.Scheduling.Infrastructure.csproj" />
+		<ProjectReference Include="..\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
+	</ItemGroup>
 
 	<PropertyGroup>
 		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>

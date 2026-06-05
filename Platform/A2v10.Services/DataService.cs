@@ -161,7 +161,7 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 		if (platformUrl.Action == "_auxmenu")
 		{
 			var auxMenuHandler = _serviceProvider.GetRequiredKeyedService<IEndpointHandler>("AuxMenu");
-            var res = await auxMenuHandler.RenderResultAsync(platformUrl, new ModelJsonView(), new ExpandoObject());
+            var res = await auxMenuHandler.RenderResultAsync(platformUrl, new ModelJsonView(), []);
             return new DataLoadResult(null, null, res);
         }
 
@@ -172,7 +172,7 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
         if (view.HasMetadata)
 		{
 			var result = await _appRuntimeBuilder.RenderAsync(platformUrl, view, isReload);
-			return new DataLoadResult(result.DataModel, null, result.ActionResult);
+			return new DataLoadResult(result.DataModel, view, result.ActionResult);
 		}
 		else if (!String.IsNullOrEmpty(view.EndpointHandler))
 		{
