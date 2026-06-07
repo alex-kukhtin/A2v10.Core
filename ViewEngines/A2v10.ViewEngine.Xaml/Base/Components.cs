@@ -60,7 +60,7 @@ public class Components : MarkupExtension
         var codeProvider = serviceProvider.GetRequiredService<IAppCodeProvider>();
         
 		String targetPathA = Path.Combine(basePath, path) + ".vxaml";
-		targetPathA= Path.GetRelativePath(".", targetPathA);
+		targetPathA= Path.GetRelativePath(".", targetPathA).Replace('\\', '/');
         String targetPathX = String.Empty;
 
 		Object? xmlPart = null;
@@ -69,7 +69,7 @@ public class Components : MarkupExtension
 		else
 		{
             targetPathX = Path.Combine(basePath, path) + ".xaml";
-            targetPathX = Path.GetRelativePath(".", targetPathX);
+            targetPathX = Path.GetRelativePath(".", targetPathX).Replace('\\', '/');
             if (codeProvider.IsFileExists(targetPathX))
                 xmlPart = xamPartProvider.GetXamlPart(targetPathX);
 		}

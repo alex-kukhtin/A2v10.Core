@@ -88,7 +88,7 @@ internal class ResolveEndpointCommand(IServiceProvider services)
 
     }
 
-    private ExpandoObject BuildDataModelMeta(IDataModel? model)
+    private static ExpandoObject BuildDataModelMeta(IDataModel? model)
     {
         if (model == null)
             return [];
@@ -126,7 +126,7 @@ internal class ResolveEndpointCommand(IServiceProvider services)
             {"types", buildTypes() }
         };
     }
-    private ExpandoObject BuildSqlProcedures(IModelView view)
+    private static ExpandoObject BuildSqlProcedures(IModelView view)
     {
         static String? canonical(String? name)
         {
