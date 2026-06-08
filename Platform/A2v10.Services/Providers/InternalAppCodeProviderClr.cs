@@ -10,7 +10,7 @@ namespace A2v10.Services;
 
 public class InternalAppCodeProviderClr(IAppContainer _appContainer) : IAppCodeProviderImpl
 {
-	private String? _moduleVersion = _appContainer.GetType().Assembly.GetName().Version?.ToString();
+	private readonly String? _moduleVersion = _appContainer.GetType().Assembly.GetName().Version?.ToString();
 	public Boolean IsFileSystem => false;
 	public Boolean IsLicensed => _appContainer.IsLicensed;
 	public Guid? ModuleId => _appContainer.Id;

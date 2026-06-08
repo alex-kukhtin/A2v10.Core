@@ -1,20 +1,16 @@
 ﻿// Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
-using System.CommandLine;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.IO;
+using System.CommandLine;
 
 using Microsoft.Extensions.DependencyInjection;
 
 using A2v10.Data.Interfaces;
-using A2v10.Data.Core.Extensions;
 using A2v10.Infrastructure;
-using System.IO;
-using Microsoft.AspNetCore.Components;
-using DocumentFormat.OpenXml.Office2016.Drawing.Command;
-using DocumentFormat.OpenXml.Drawing.Diagrams;
 
 namespace A2v10.Cli;
 
@@ -26,6 +22,7 @@ internal class ResolveEndpointCommand(IServiceProvider services)
     {
         root.Subcommands.Add(BuildAction());
         root.Subcommands.Add(BuildDialog());
+        root.Subcommands.Add(BuildPopup());
     }
     internal Command BuildAction()
     {
@@ -38,6 +35,19 @@ internal class ResolveEndpointCommand(IServiceProvider services)
         cmd.Arguments.Add(routeArg);
 
         cmd.SetAction(r => JsonResult.Try(() => ResolveAction("_page", r.GetValue(routeArg)!)));
+        return cmd;
+    }
+    internal Command BuildPopup()
+    {
+        var cmd = new Command("resolve-popup",
+            "Resolve an action (popup) route to its runtime contract: bound procedures, view/template, and model type tree.");
+        var routeArg = new Argument<String>("route")
+        {
+            Description = "Endpoint route (with id)",
+        };
+        cmd.Arguments.Add(routeArg);
+
+        cmd.SetAction(r => JsonResult.Try(() => ResolveAction("_popup", r.GetValue(routeArg)!)));
         return cmd;
     }
 
@@ -79,10 +89,9 @@ internal class ResolveEndpointCommand(IServiceProvider services)
 
     private static ExpandoObject BuildResolvedPath(String route, String? file, String ext)
     {
-        var path = Path.Combine(route, file ?? String.Empty).NormailizePath();
         return new ExpandoObject()
         {
-            { "dir", route },
+            { "dir", route.NormailizePath() },
             { "file",  $"{file}.{ext}" }
         };
 

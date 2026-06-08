@@ -37,7 +37,9 @@ public class AppCodeProvider : IAppCodeProvider
 
     IAppCodeProviderImpl CreateProvider(String path)
 	{
-		if (ClrHelpers.IsClrPath(path))
+		if (path == "null:")
+			return new InternalNullCodeProvider();
+		else if (ClrHelpers.IsClrPath(path))
 			return new InternalAppCodeProviderClr(CreateContainer(path));
 		else
 			return new InternalAppCodeProviderFile(path);

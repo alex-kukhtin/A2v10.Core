@@ -63,7 +63,7 @@ internal class AppConfigCommand(IServiceProvider services)
             // nullables is significant for LLM
             if (mi.Path is null || !String.IsNullOrEmpty(mi.Assembly))
                 return null;
-            if (mi.Path.Contains("clr-type:"))
+            if (mi.Path.Contains("clr-type:") || mi.Path.StartsWith("null:"))
                 return null;
             if (mi.Path.Contains("A2v10."))
                 return null;
@@ -73,9 +73,11 @@ internal class AppConfigCommand(IServiceProvider services)
 
 
         return [.._appOptions.Modules.Select(x => new ExpandoObject()
-        {
-            { "prefix", x.Value.Default ? String.Empty : $"${x.Key.ToLowerInvariant()}" },
-            { "root",  getModlulePath(x.Value) }
-        })];
+                {
+                    { "prefix", x.Value.Default ? String.Empty : $"${x.Key.ToLowerInvariant()}" },
+                    { "root",  getModlulePath(x.Value) }
+                }
+            ).OrderBy(m => m.Get<String>("prefix"))
+        ];
     }
 }

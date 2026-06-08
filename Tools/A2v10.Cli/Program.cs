@@ -26,7 +26,18 @@ namespace A2v10.Cli;
 */
 internal sealed partial class Program
 {
-    static Task<int> Main(string[] args) => new Program().RunAsync(args);
+    static async Task<int> Main(string[] args) 
+    {
+        try
+        {
+            await (new Program().RunAsync(args));
+        }
+        catch (Exception ex)
+        {
+            JsonResult.Fail(ex);
+        }
+        return 0;
+    }
 
     private readonly IServiceProvider _services;
 
@@ -63,6 +74,15 @@ internal sealed partial class Program
 
         host.Services.Configure<AppOptions>(opts =>
         {
+            static String? getModulePath(String? path)
+            {
+                if (path == null)
+                    return null;
+                if (path.StartsWith("clr-type:"))
+                    return "null:";
+                return Path.Combine("WebApp", path);
+            }
+
             host.Configuration.GetSection("application").Bind(opts);
             opts.Modules = host.Configuration.GetSection("application:modules")
                 .GetChildren().ToDictionary<IConfigurationSection, String, ModuleInfo>(
@@ -76,7 +96,7 @@ internal sealed partial class Program
                             Default = mi.Default,
                             Assembly = mi.Assembly,
                             // CurrentDirectory is Root!!!
-                            Path = mi.Path != null ? Path.Combine("WebApp", mi.Path) : null
+                            Path = getModulePath(mi.Path)
                         };
                     },
                     StringComparer.InvariantCultureIgnoreCase);
