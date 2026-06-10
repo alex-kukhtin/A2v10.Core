@@ -41,12 +41,29 @@ internal sealed partial class Program
 
     private readonly IServiceProvider _services;
 
+    private String? ResolveWebAppFolder()
+    {
+        var dir = Directory.GetCurrentDirectory();
+        foreach (var d in Directory.EnumerateDirectories(dir))
+        {
+            var fn = Path.GetFileName(d);
+            if (fn.Contains("WebApp", StringComparison.OrdinalIgnoreCase) && File.Exists(Path.Combine(d, "appsettings.json")))
+                return fn;
+        }
+        return null;
+    }
+
     private Program()
     {
         var host = Host.CreateApplicationBuilder();
 
+        var webAppFolder = ResolveWebAppFolder();
+
+        if (webAppFolder == null)
+            throw new InvalidOperationException("Root host not found");
+
         host.Configuration
-            .AddJsonFile("WebApp/appsettings.json", optional: false)
+            .AddJsonFile($"{webAppFolder}/appsettings.json", optional: false)
             .AddUserSecrets<Program>();
 
         host.Services.UseSimpleDbContext();
@@ -64,7 +81,8 @@ internal sealed partial class Program
             .AddSingleton<CliDatabaseCreator>()
             .AddSingleton<IApplicationHost, WebApplicationHost>()
             .AddSingleton<IDataScripter, VueDataScripter>()
-            .AddSingleton<CliDeployDatabase>();
+            .AddSingleton<CliDeployDatabase>()
+            .AddSingleton<HostRoot>((_) => new HostRoot(webAppFolder));
 
         host.Services.AddSingleton<IAppCodeProvider, AppCodeProvider>()
            .AddSingleton<IModelJsonPartProvider, ModelJsonPartProvider>()
@@ -74,13 +92,16 @@ internal sealed partial class Program
 
         host.Services.Configure<AppOptions>(opts =>
         {
-            static String? getModulePath(String? path)
+            String? getModulePath(ModuleInfo mi)
             {
-                if (path == null)
-                    return null;
-                if (path.StartsWith("clr-type:"))
-                    return "null:";
-                return Path.Combine("WebApp", path);
+                const String NULL_MARKER = "null:";
+                if (mi.Path == null)
+                    return NULL_MARKER;
+                if (!String.IsNullOrEmpty(mi.Assembly))
+                    return NULL_MARKER;
+                if (mi.Path.StartsWith("clr-type:"))
+                    return NULL_MARKER;
+                return Path.Combine(webAppFolder, mi.Path);
             }
 
             host.Configuration.GetSection("application").Bind(opts);
@@ -94,9 +115,8 @@ internal sealed partial class Program
                         return new ModuleInfo()
                         {
                             Default = mi.Default,
-                            Assembly = mi.Assembly,
                             // CurrentDirectory is Root!!!
-                            Path = getModulePath(mi.Path)
+                            Path = getModulePath(mi)
                         };
                     },
                     StringComparer.InvariantCultureIgnoreCase);

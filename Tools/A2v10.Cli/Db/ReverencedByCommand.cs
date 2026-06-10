@@ -48,6 +48,7 @@ internal class ReferencedByCommand(IServiceProvider services)
             join sys.columns sc on sc.object_id = fk.parent_object_id and sc.column_id  = fkc.parent_column_id
             join sys.columns rc on rc.object_id = fk.referenced_object_id and rc.column_id  = fkc.referenced_column_id
         where  fk.referenced_object_id  = object_id(@Table)
+            and sc.[name] not in (N'Tenant', N'TenantId')
         order by ss.[name], sp.[name], sc.[name];
                 
         """;

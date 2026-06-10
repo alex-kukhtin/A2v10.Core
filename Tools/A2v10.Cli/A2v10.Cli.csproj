@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<Version>10.1.8642</Version>
+		<Version>10.1.8644</Version>
 		<TargetFramework>net8.0</TargetFramework>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
@@ -30,13 +30,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="System.CommandLine" Version="2.0.8" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.8" />
-		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.8" />
-		<PackageReference Include="A2v10.Data.Core" Version="10.1.7599" />
+		<PackageReference Include="System.CommandLine" Version="2.0.9" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.9" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.9" />
+		<PackageReference Include="A2v10.Data.Core" Version="10.1.7600" />
 		<PackageReference Include="A2v10.Data.Providers" Version="10.1.7596" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-		<PackageReference Include="System.ServiceProcess.ServiceController" Version="10.0.8" />
 	</ItemGroup>
 
 	<ItemGroup>

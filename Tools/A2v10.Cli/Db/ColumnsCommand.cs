@@ -36,12 +36,14 @@ internal class ColumnsCommand(IServiceProvider services)
         set nocount on;
         set transaction isolation level read uncommitted;
 
-        select [Columns!TColumn!Array] = null,  [Name] = sc.[name], 
-        	[Type] = case when tp.[Name] = 'nvarchar' then tp.[name] + '(' + cast(sc.max_length / 2 as sysname) + ')' else tp.[name] end,
-            Ref = rs.[name] + '.[' + rt.[name] + ']'-- ref_column = rc.[name]
+        select [Columns!TColumn!Array] = null,  [name] = sc.[name], 
+        	[type] = case when tp.[Name] = N'nvarchar' then tp.[name] + N'(' + cast(sc.max_length / 2 as sysname) + N')' else tp.[name] end,
+            ref = rs.[name] + N'.[' + rt.[name] + N']'-- ref_column = rc.[name]
         from sys.columns sc
             inner join sys.types tp on tp.user_type_id = sc.user_type_id
             left join sys.foreign_key_columns fkc on fkc.parent_object_id = sc.object_id and fkc.parent_column_id = sc.column_id
+                and fkc.parent_column_id = sc.column_id
+                and sc.[name] not in (N'Tenant', N'TenantId')
             left join sys.foreign_keys fk on fk.object_id = fkc.constraint_object_id
             left join sys.objects rt on rt.object_id = fk.referenced_object_id
             left join sys.schemas rs on rs.schema_id = rt.schema_id

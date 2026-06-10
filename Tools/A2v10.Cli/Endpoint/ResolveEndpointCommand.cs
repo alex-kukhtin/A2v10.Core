@@ -18,11 +18,12 @@ internal class ResolveEndpointCommand(IServiceProvider services)
 {
     private readonly IDataService _dataService = services.GetRequiredService<IDataService>();
 
-    internal void Register(Command root)
+    internal IList<Command> Register(Command root)
     {
         root.Subcommands.Add(BuildAction());
         root.Subcommands.Add(BuildDialog());
         root.Subcommands.Add(BuildPopup());
+        return root.Subcommands;
     }
     internal Command BuildAction()
     {
@@ -91,7 +92,7 @@ internal class ResolveEndpointCommand(IServiceProvider services)
     {
         return new ExpandoObject()
         {
-            { "dir", route.NormailizePath() },
+            { "dir", route.NormalizePath() },
             { "file",  $"{file}.{ext}" }
         };
 

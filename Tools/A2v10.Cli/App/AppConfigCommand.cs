@@ -23,6 +23,7 @@ internal class AppConfigCommand(IServiceProvider services)
     private readonly IConfiguration _config = services.GetRequiredService<IConfiguration>();
     private readonly AppOptions _appOptions = services.GetRequiredService<IOptions<AppOptions>>().Value;
     private readonly IHostEnvironment _hostEnvironment = services.GetRequiredService<IHostEnvironment>();
+    private readonly HostRoot _rootHost = services.GetRequiredService<HostRoot>();
 
     internal Command Build()
     {
@@ -38,6 +39,7 @@ internal class AppConfigCommand(IServiceProvider services)
         {
             { "multiTenant", _config.GetValue<Boolean>("Application:MultiTenant") },
             { "metadataEnabled", IsMetatadaEnabled() },
+            { "hostRoot", _rootHost.Host },
             { "modules", GetModules() }
         };
         return Task.FromResult<Object>(info);
@@ -45,7 +47,7 @@ internal class AppConfigCommand(IServiceProvider services)
 
     Boolean IsMetatadaEnabled()
     {
-        var path = Path.Combine(_hostEnvironment.ContentRootPath, "WebApp", "WebApp.csproj");
+        var path = Path.Combine(_hostEnvironment.ContentRootPath, _rootHost.Host, $"{_rootHost.Host}.csproj");
         var doc = XDocument.Load(path);
         return doc.Descendants("PackageReference")
             .Any(x => x.Attribute("Include")?.Value == "A2v10.Metadata");

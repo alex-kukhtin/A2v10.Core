@@ -39,7 +39,8 @@ internal sealed partial class Program
         {
             Description = "Endpoint commands"
         };
-        new  ResolveEndpointCommand(_services).Register(endpointCommand);
+        var mdCommands = new  ResolveEndpointCommand(_services).Register(endpointCommand);
+        mdCommands.Add(new EndpointListCommand(_services).Build());
         root.Subcommands.Add(endpointCommand);
 
         // metadata commands
@@ -48,7 +49,7 @@ internal sealed partial class Program
             Description = "Metdata-driven platform commands"
         };
         metaCommand.Subcommands.Add(new DeployCommand(_services).Build());
-        metaCommand.Subcommands.Add(new ValidateCommand(_services).Build());
+        metaCommand.Subcommands.Add(new EndpointListCommand(_services).Build());
         //root.Subcommands.Add(metaCommand);
 
         return root.Parse(args).InvokeAsync();

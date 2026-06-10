@@ -40,7 +40,7 @@ internal class TablesCommand(IServiceProvider services)
 
         select [Tables!TTable!Array] = null, [Schema] = TABLE_SCHEMA, [Table] = TABLE_NAME 
         from INFORMATION_SCHEMA.TABLES
-        where TABLE_SCHEMA not in ('a2wf', 'a2sys', 'a2meta', 'dbo', 'a2security') and
+        where TABLE_SCHEMA not in ('a2wf', 'a2sys', 'a2meta', 'dbo', 'a2security', 'a2ui') and
             @Schema is null or TABLE_SCHEMA = @Schema;        
         """;
 
