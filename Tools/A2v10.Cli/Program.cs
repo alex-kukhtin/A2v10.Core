@@ -41,7 +41,7 @@ internal sealed partial class Program
 
     private readonly IServiceProvider _services;
 
-    private String? ResolveWebAppFolder()
+    private static String? ResolveWebAppFolder()
     {
         var dir = Directory.GetCurrentDirectory();
         foreach (var d in Directory.EnumerateDirectories(dir))
@@ -57,11 +57,8 @@ internal sealed partial class Program
     {
         var host = Host.CreateApplicationBuilder();
 
-        var webAppFolder = ResolveWebAppFolder();
-
-        if (webAppFolder == null)
-            throw new InvalidOperationException("Root host not found");
-
+        var webAppFolder = ResolveWebAppFolder() 
+            ?? throw new InvalidOperationException("Root host not found");
         host.Configuration
             .AddJsonFile($"{webAppFolder}/appsettings.json", optional: false)
             .AddUserSecrets<Program>();
