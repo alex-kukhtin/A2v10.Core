@@ -53,10 +53,10 @@ Skills (stubs for the application developer building on the platform) are a **co
 - **This repo (knows the implementation)** — I read skills **read-only, never edit them here**. Found friction → **build an anchor in the platform** so the skill's promise becomes true; don't touch the spec text. If the text itself looks off, that's an **observation for the blind instance**, not my edit (my judgment of the skill's self-sufficiency is compromised by knowing the implementation — an author doesn't grade their own exam).
 - **The blind instance (knows nothing about the implementation)** — in a separate context, tries to assemble a real application from the skill + the platform's anchors. Where it stumbles is the signal; **skill edits belong to it**. Only a reader who genuinely can't see the implementation can judge whether the skill stands on its own.
 
-Skills live outside `.claude/skills/` (they're read, not invoked) — in the root `SKILLS/` folder: local read-only junctions to the canon repos, gitignored. Two canon stubs: `a2v10-skill` (raw/escaped platform) and `a2v10-md-skill` (metadata-driven). Each junction points at the repo's **`skill/` subfolder only** — the published surface; the authoring/dev part of the repo is structurally out of reach, so the firewall is enforced by the setup rather than by my behavior. Entry points: `SKILLS/<repo>/SKILL.md`. I only need read access; glob to discover.
+Skills live outside `.claude/skills/` (they're read, not invoked) — in the root `SKILLS/` folder: local read-only junctions to the canon repos, gitignored. One canon stub: `a2v10-skill` — the whole platform, metadata-driven layer included. (`a2v10-md-skill` turned out to be a development artifact; decided 2026-06 to discard it — retirement in progress, don't build on it.) The junction points at the repo's **`skill/` subfolder only** — the published surface; the authoring/dev part of the repo is structurally out of reach, so the firewall is enforced by the setup rather than by my behavior. Entry point: `SKILLS/<repo>/SKILL.md`. I only need read access; glob to discover.
 
 Junction wiring (local, not portable — recorded so it can be rebuilt, not for reading):
 - `SKILLS/a2v10-skill` → `c:\Claude\a2v10-skill\skill`
-- `SKILLS/a2v10-md-skill` → `c:\Claude\a2v10-md-skill\skill`
+- `SKILLS/a2v10-md-skill` → `c:\Claude\a2v10-md-skill\skill` (still wired while retirement is in progress)
 
 Recreate after loss (no admin needed): `mklink /J SKILLS\<name> c:\Claude\<name>\skill`.
