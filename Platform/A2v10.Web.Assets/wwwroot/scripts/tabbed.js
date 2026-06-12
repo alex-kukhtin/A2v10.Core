@@ -346,10 +346,25 @@ app.modules['std:signalR'] = function () {
 				if (tab) {
 					tab.title = title;
 					document.title = title;
+					this.storeTabs();
 				} else {
 					this.homePageTitle = title;
 					document.title = title;
 				}
+			},
+			findTabBySource(src) {
+				return this.tabs.find(t => t.url + (t.query || '') === src);
+			},
+			pageTitleOf(root, depth) {
+				// the renderless a2-document-title component holds the page's actual title
+				if (!root || depth > 8) return '';
+				for (let c of root.$children || []) {
+					if (c.$props && 'pageTitle' in c.$props && typeof c.pageTitle === 'string')
+						return c.pageTitle;
+					let title = this.pageTitleOf(c, depth + 1);
+					if (title) return title;
+				}
+				return '';
 			},
 			setNewId(route) {
 				let tab = this.tabs.find(tab => tab.url === route.from);
@@ -365,7 +380,7 @@ app.modules['std:signalR'] = function () {
 			},
 			async tabLoadError(url, err) {
 				if (err) err = err.replace('\\n', '\n');
-				let tab = this.activeTab || this.tabs.find(t => t.url == url);
+				let tab = this.findTabBySource(url) || this.activeTab;
 				if (tab) {
 					if (err.indexOf('UI:') === 0)
 						await this._alert(err.substring(3));
@@ -377,17 +392,29 @@ app.modules['std:signalR'] = function () {
 			},
 			tabLoadComplete(page) {
 				if (page) {
-					let tab = this.activeTab || this.tabs.find(t => t.url == page.src);
+					let tab = this.findTabBySource(page.src);
+					if (!tab && page.src !== '/_home/index/0')
+						tab = this.activeTab;
 					if (tab) {
 						this.replaceState(tab);
 						tab.root = page.root;
-						document.title = tab.title;
+						let pageTitle = this.pageTitleOf(page.root, 0);
+						if (pageTitle)
+							tab.title = pageTitle;
+						let docTitle = this.activeTab ? this.activeTab.title : this.homePageTitle;
+						if (docTitle)
+							document.title = docTitle;
 						if (page.root) {
 							page.root.__tabUrl__ = tabUrlKey(tab);
 							page.root.$store.commit('setroute', tab.url);
 						}
-					} else if (page.src === '/_home/index/0')
+						this.storeTabs();
+					} else if (page.src === '/_home/index/0') {
 						this.homeRoot = page.root;
+						let homeTitle = this.pageTitleOf(page.root, 0);
+						if (homeTitle)
+							this.homePageTitle = homeTitle;
+					}
 				}
 				this.navigatingUrl = '';
 			},
