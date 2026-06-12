@@ -140,23 +140,31 @@
 				if (!tab && this.navigatingUrl)
 					tab = this.tabs.find(tab => tab.url === this.navigatingUrl);
 				if (tab) {
-					tab.title = title;
+					if (tab.title !== title) {
+						tab.title = title;
+						this.storeTabs();
+					}
 					document.title = title;
-					this.storeTabs();
 				} else {
 					this.homePageTitle = title;
 					document.title = title;
 				}
 			},
 			findTabBySource(src) {
-				return this.tabs.find(t => t.url + (t.query || '') === src);
+				return this.tabs.find(t => this.tabSource(t) === src);
 			},
 			pageTitleOf(root, depth) {
-				// the renderless a2-document-title component holds the page's actual title
+				// the page's renderless a2-document-title component holds the actual title
 				if (!root || depth > 8) return '';
+				let dtOptions = component('std:doctitle', true /*no error*/);
 				for (let c of root.$children || []) {
-					if (c.$props && 'pageTitle' in c.$props && typeof c.pageTitle === 'string')
+					let isDocTitle = dtOptions
+						? (c.constructor && c.constructor.extendOptions === dtOptions)
+						: (c.$props && 'pageTitle' in c.$props);
+					if (isDocTitle && typeof c.pageTitle === 'string')
 						return c.pageTitle;
+					if (c.$data && '__baseUrl__' in c.$data)
+						continue; // nested page root (Include) — its title is not this page's
 					let title = this.pageTitleOf(c, depth + 1);
 					if (title) return title;
 				}
@@ -189,27 +197,27 @@
 			tabLoadComplete(page) {
 				if (page) {
 					let tab = this.findTabBySource(page.src);
-					if (!tab && page.src !== '/_home/index/0')
-						tab = this.activeTab;
-					if (tab) {
-						this.replaceState(tab);
-						tab.root = page.root;
-						let pageTitle = this.pageTitleOf(page.root, 0);
-						if (pageTitle)
-							tab.title = pageTitle;
-						let docTitle = this.activeTab ? this.activeTab.title : this.homePageTitle;
-						if (docTitle)
-							document.title = docTitle;
-						if (page.root) {
-							page.root.__tabUrl__ = tabUrlKey(tab);
-							page.root.$store.commit('setroute', tab.url);
-						}
-						this.storeTabs();
-					} else if (page.src === '/_home/index/0') {
+					let pageTitle = this.pageTitleOf(page.root, 0);
+					if (!tab && page.src === '/_home/index/0') {
 						this.homeRoot = page.root;
-						let homeTitle = this.pageTitleOf(page.root, 0);
-						if (homeTitle)
-							this.homePageTitle = homeTitle;
+						if (pageTitle)
+							this.homePageTitle = pageTitle;
+					} else {
+						tab = tab || this.activeTab;
+						if (tab) {
+							this.replaceState(tab);
+							tab.root = page.root;
+							if (pageTitle)
+								tab.title = pageTitle;
+							let docTitle = this.activeTab ? this.activeTab.title : this.homePageTitle;
+							if (docTitle)
+								document.title = docTitle;
+							if (page.root) {
+								page.root.__tabUrl__ = tabUrlKey(tab);
+								page.root.$store.commit('setroute', tab.url);
+							}
+							this.storeTabs();
+						}
 					}
 				}
 				this.navigatingUrl = '';
