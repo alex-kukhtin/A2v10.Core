@@ -6888,6 +6888,7 @@ table > colgroup col.blue {
   font-size: 1.2rem;
 }
 .app-exception .stack-trace {
+  line-height: normal;
   border-top: 1px solid var(--danger-base);
   background-color: var(--invalid-bg);
   overflow: auto;
