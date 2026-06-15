@@ -14137,7 +14137,7 @@ Vue.directive('resize', {
 				eventBus.$emit('toParentTab', { event, source: this, data });
 			},
 			$emitCaller(event, ...arr) {
-				if (this.$caller)
+				if (this.$caller && this.$caller.$data)
 					this.$caller.$data.$emit(event, ...arr);
 				else
 					log.error('There is no caller here');
