@@ -31,7 +31,7 @@ internal class ResolveEndpointCommand(IServiceProvider services)
             "Resolve an action (page) route to its runtime contract: bound procedures, view/template, and model type tree.");
         var routeArg = new Argument<String>("route")
         {
-            Description = "Endpoint route (with id)",
+            Description = "Endpoint route: <path>/<action>, $prefix for a module (e.g. catalog/agent/index)",
         };
         cmd.Arguments.Add(routeArg);
 
@@ -44,7 +44,7 @@ internal class ResolveEndpointCommand(IServiceProvider services)
             "Resolve an action (popup) route to its runtime contract: bound procedures, view/template, and model type tree.");
         var routeArg = new Argument<String>("route")
         {
-            Description = "Endpoint route (with id)",
+            Description = "Endpoint route: <path>/<popup>, $prefix for a module (e.g. catalog/agent/balance)",
         };
         cmd.Arguments.Add(routeArg);
 
@@ -58,7 +58,7 @@ internal class ResolveEndpointCommand(IServiceProvider services)
             "Resolve an dialog (model) route to its runtime contract: bound procedures, view/template, and model type tree.");
         var routeArg = new Argument<String>("route")
         {
-            Description = "Endpoint route (with id)",
+            Description = "Endpoint route: <path>/<dialog>, $prefix for a module (e.g. catalog/agent/edit)",
         };
         cmd.Arguments.Add(routeArg);
 
@@ -81,7 +81,7 @@ internal class ResolveEndpointCommand(IServiceProvider services)
         {
             { "route", route },
             { "model", dr.View.CurrentModel },
-            { "view", BuildResolvedPath(route, dr.View?.GetRawView(false), "xaml") },
+            { "view", BuildResolvedPath(route, dr.View?.GetRawView(false), "vxaml") },
             { "template", BuildResolvedPath(route, dr.View?.Template, "ts") },
             { "sqlProcedures", BuildSqlProcedures(dr.View!) },
             { "dataModel", BuildDataModelMeta(dr.Model) }
@@ -92,7 +92,7 @@ internal class ResolveEndpointCommand(IServiceProvider services)
     {
         return new ExpandoObject()
         {
-            { "dir", route.NormalizePath() },
+            { "route", route.NormalizePath() },
             { "file",  $"{file}.{ext}" }
         };
 

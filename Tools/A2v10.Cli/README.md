@@ -181,7 +181,6 @@ One command per model.json section:
 | `a2 endpoint resolve-action <route>` | `actions` | page |
 | `a2 endpoint resolve-dialog <route>` | `dialogs` | modal |
 | `a2 endpoint resolve-popup <route>`  | `popups`  | popup |
-| `a2 endpoint resolve-command <route>` | `commands` | callable |
 
 The three renderable commands share one output shape:
 
@@ -195,8 +194,8 @@ a2 endpoint resolve-action catalog/agent/edit
   "data": {
     "route": "catalog/agent/edit",
     "model": "Agent",
-    "view":     { "dir": "catalog/agent/edit", "file": "view.dialog.xaml" },
-    "template": { "dir": "catalog/agent/edit", "file": "edit.template.ts" },
+    "view":     { "route": "catalog/agent/edit", "file": "view.dialog.vxaml" },
+    "template": { "route": "catalog/agent/edit", "file": "edit.template.ts" },
     "sqlProcedures": {
       "load":   "cat.[Agent.Load]",
       "update": "cat.[Agent.Update]"
@@ -213,9 +212,10 @@ a2 endpoint resolve-action catalog/agent/edit
 }
 ```
 
-`resolve-command` is similar but for callables: `view`/`template` are absent,
-`sqlProcedures` is what the command actually calls, and `dataModel` is present only if
-the command returns a model.
+A `resolve-command` for the `commands` section (callables — `view`/`template` absent,
+`sqlProcedures` = what the command calls) is **planned, not yet implemented**. Until it
+ships, read a command's procedure binding directly from the `commands` section of
+`model.json`.
 
 These commands require the project to be deployed (migrations applied, build done). Run
 before deployment, they fail by design.

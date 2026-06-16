@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2020-2026 Oleksandr Kukhtin
 
-Last updated : 19 mar 2026
-module version : 8323
+Last updated : 27 may 2026
+module version : 8337
 */
 
 /* WF TABLES
@@ -52,7 +52,7 @@ go
 ------------------------------------------------
 begin
 	set nocount on;
-	declare @version int = 8323;
+	declare @version int = 8337;
 
 	if exists(select * from a2wf.Versions where Module = N'main')
 		update a2wf.Versions set [Version] = @version where Module = N'main';
@@ -157,6 +157,8 @@ begin
 		DateCreated datetime not null constraint DF_Instances_DateCreated default(getutcdate()),
 		DateModified datetime not null constraint DF_Workflows_Modified default(getutcdate()),
 		Lock uniqueidentifier null,
+		Halted bit not null
+			constraint DF_Instances_Halted default(0),
 		LockDate datetime null,
 		CorrelationId nvarchar(255) null,
 		constraint FK_Instances_WorkflowId_Workflows foreign key (WorkflowId, [Version]) 
@@ -168,6 +170,11 @@ go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA=N'a2wf' and TABLE_NAME=N'Instances' and COLUMN_NAME=N'CorrelationId')
 	alter table a2wf.Instances add CorrelationId nvarchar(255) null;
+go
+----------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA=N'a2wf' and TABLE_NAME=N'Instances' and COLUMN_NAME=N'Halted')
+	alter table a2wf.Instances add Halted bit not null
+		constraint DF_Instances_Halted default(0) with values;
 go
 ------------------------------------------------
 if not exists (select * from sys.indexes where object_id = object_id(N'a2wf.Instances') and name = N'IX_Instances_Parent')
@@ -467,16 +474,15 @@ as
 begin
 	set nocount on;
 	set transaction isolation level read committed;
+	set xact_abort on;
 
-	declare @inst table(Id uniqueidentifier);
-
-	update a2wf.Instances set Lock=newid(), LockDate = getutcdate()
-	output inserted.Id into @inst(Id)
+	declare @lock uniqueidentifier = newid();
+	update a2wf.Instances set Lock = @lock, LockDate = getutcdate()
 	where Id=@Id and Lock is null;
 
-	select i.Id, [WorkflowId], [Version], [State], ExecutionStatus, Lock, Parent, CorrelationId
-	from @inst t inner join a2wf.Instances i on t.Id = i.Id
-	where t.Id = @Id;
+	select i.Id, [WorkflowId], [Version], [State], ExecutionStatus, Lock, Parent, CorrelationId, Halted, 
+		Busy = cast(case when i.Lock <> @lock then 1 else 0 end as bit)
+	from a2wf.Instances i where i.Id = @Id;
 end
 go
 ------------------------------------------------
@@ -490,7 +496,8 @@ begin
 
 	declare @inst table(Id uniqueidentifier);
 
-	select i.Id, [WorkflowId], [Version], [State], ExecutionStatus, Lock, Parent, CorrelationId
+	select i.Id, [WorkflowId], [Version], [State], ExecutionStatus, Lock, Parent, CorrelationId,
+		Halted
 	from a2wf.Instances i
 	where i.Id = @Id;
 end
@@ -503,10 +510,12 @@ as
 begin
 	set nocount on;
 	set transaction isolation level read committed;
+	set xact_abort on;
 
+	declare @lock uniqueidentifier = newid();
 	declare @inst table(Id uniqueidentifier);
 
-	update top(1) a2wf.Instances set Lock=newid(), LockDate = getutcdate()
+	update top(1) a2wf.Instances set Lock=@lock, LockDate = getutcdate()
 	output inserted.Id into @inst(Id)
 	from a2wf.Instances i inner join a2wf.InstanceBookmarks b on i.Id = b.InstanceId and i.WorkflowId = b.WorkflowId
 	where b.Bookmark=@Bookmark and Lock is null;
@@ -529,6 +538,7 @@ begin
 	set nocount on;
 	set transaction isolation level read committed;
 	set xact_abort on;
+
 	insert into a2wf.Instances(Id, Parent, WorkflowId, [Version], ExecutionStatus, CorrelationId)
 	values (@Id, @Parent, @WorkflowId, @Version, @ExecutionStatus, @CorrelationId);
 end
@@ -674,9 +684,9 @@ begin
 
 	begin tran;
 	
-	declare @defuid uniqueidentifier;
-	set @defuid = newid();
+	declare @defuid uniqueidentifier = newid();
 	declare @rtable table (id uniqueidentifier);
+
 	with ti as (
 		select t.Id, t.[State], t.DateModified, t.ExecutionStatus, t.Lock, t.LockDate, t.CorrelationId
 		from a2wf.Instances t
@@ -808,6 +818,18 @@ begin
 end
 go
 ------------------------------------------------
+create or alter procedure a2wf.[Instance.Reset]
+@UserId bigint = null,
+@Id uniqueidentifier
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+
+	update a2wf.Instances set Lock = null, LockDate = null, Halted = 0 where Id = @Id;
+end
+go
+------------------------------------------------
 create or alter procedure a2wf.[Instance.Exception]
 @UserId bigint = null,
 @InstanceId uniqueidentifier,
@@ -818,6 +840,10 @@ as
 begin
 	set nocount on;
 	set transaction isolation level read committed;
+	set xact_abort on;
+
+	update a2wf.Instances set Halted = 1 where Id = @InstanceId;
+
 	insert into a2wf.InstanceTrack(InstanceId, Kind, [Action], [Message], RecordNumber)
 	values (@InstanceId, @Kind, @Action, @Message, 0);
 end
@@ -862,13 +888,29 @@ begin
 end
 go
 ------------------------------------------------
+create or alter procedure a2wf.[Instance.Locked.Sweep]
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+	set xact_abort on;
+
+	update a2wf.Instances  set Lock = null, LockDate = null
+	where ExecutionStatus in (N'Idle', N'Init') and Lock is not null and Halted = 0
+	  and LockDate < dateadd(hour, -1, getutcdate());
+end
+go
+------------------------------------------------
 create or alter procedure a2wf.[Instance.Pending.Load]
 as
 begin
 	set nocount on;
 	set transaction isolation level read committed;
+	set xact_abort on;
+
 
 	declare @now datetime;
+
 	set @now = a2wf.[fn_CurrentDate.Get]();
 	-- timers
 	select [Pending!TPend!Array] = null, InstanceId, EventKey = ev.[Event] , ev.Kind
@@ -912,6 +954,7 @@ as
 begin
 	set nocount on;
 	set transaction isolation level read committed;
+	set xact_abort on;
 
 	insert into a2wf.AutoStart(WorkflowId, [Version], [Params], StartAt, CorrelationId, InstanceId) 
 	values (@WorkflowId, @Version, @Params, @StartAt, @CorrelationId, @InstanceId);
@@ -925,6 +968,8 @@ as
 begin
 	set nocount on;
 	set transaction isolation level read committed;
+	set xact_abort on;
+
 	update a2wf.AutoStart set InstanceId = @InstanceId, DateStarted = getutcdate(), Complete = 1
 	where Id=@Id;
 end
@@ -951,6 +996,7 @@ as
 begin
 	set nocount on;
 	set transaction isolation level read committed;
+
 	update a2wf.PendingMessages set InstanceId = @InstanceId, DateCompleted = getutcdate(), Complete = @Complete
 	where Id = @Id;
 end
@@ -963,6 +1009,8 @@ as
 begin
 	set nocount on;
 	set transaction isolation level read committed;
+	set xact_abort on;
+
 
 	declare @rtable table(Id uniqueidentifier);
 	update a2wf.Instances set ExecutionStatus = N'Canceled' 

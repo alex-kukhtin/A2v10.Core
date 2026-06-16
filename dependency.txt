@@ -2,8 +2,11 @@
 
 !Workflow.Module (scheduling, workflow.engine)
 
+A2v10.ReportEngine.Excel
+A2v10.ReportEngine.Script
 A2v10.ReportEngine.Pdf
 A2v10.Platform
+A2v10.Services
 A2v10.ViewEngine.Xaml
 A2v10.Web.Assets
 

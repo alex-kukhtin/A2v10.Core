@@ -2,7 +2,7 @@
   "profiles": {
     "A2v10.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "app config",
+      "commandLineArgs": "endpoint resolve-action catalog/agent/index",
       "workingDirectory": "D:\\Projects\\RightToProtect\\R2P"
     }
   }
