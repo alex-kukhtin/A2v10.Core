@@ -67,26 +67,26 @@ internal class EndpointListCommand(IServiceProvider services)
             )
         ) ?? [];
 
-        String replaceModule(String path)
+        String? replaceModule(String path)
         {
             var ps = path.Split('/');
             var mx = md.FirstOrDefault(m => m.segment == ps[0]);
             if (mx.segment is null)
-                throw new InvalidOperationException($"Folder '{path}' does not belong to any module");
+                return null; // folder outside any module — skip it
             if (mx.isMain)
                 return String.Join('/', ps[1..]);
-            else 
+            else
                 return String.Join("/", [mx.key, ..ps[1..]]);
         }
 
-        String endpointPath(String path)
+        String? endpointPath(String path)
         {
             var r = Path.GetRelativePath(_hostEnvironment.ContentRootPath, path).NormalizePath();
             return replaceModule(r);
         }
 
         var list = FindModelFolders(rootPath);
-        return list.Select(endpointPath).ToList();
+        return list.Select(endpointPath).Where(p => p is not null).ToList();
     }
 }
 
