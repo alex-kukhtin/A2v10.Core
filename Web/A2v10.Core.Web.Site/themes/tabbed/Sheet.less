@@ -28,25 +28,25 @@ table.sheet {
 		border-color: @table-brd-color;
 	}
 
-	td.indent.lev-2 {
-		padding-left: 6px + 1 * 12px;
-	}
+		td.indent.lev-2 {
+			padding-left: 6px + 1 * 12px;
+		}
 
-	td.indent.lev-3 {
-		padding-left: 6px + 2 * 12px;
-	}
+		td.indent.lev-3 {
+			padding-left: 6px + 2 * 12px;
+		}
 
-	td.indent.lev-4 {
-		padding-left: 6px + 3 * 12px;
-	}
+		td.indent.lev-4 {
+			padding-left: 6px + 3 * 12px;
+		}
 
-	td.indent.lev-5 {
-		padding-left: 6px + 4 * 12px;
-	}
+		td.indent.lev-5 {
+			padding-left: 6px + 4 * 12px;
+		}
 
-	td.indent.lev-6 {
-		padding-left: 6px + 5 * 12px;
-	}
+		td.indent.lev-6 {
+			padding-left: 6px + 5 * 12px;
+		}
 
 	.col-shadow {
 		visibility: collapse;
@@ -69,13 +69,13 @@ table.sheet {
 			background-color: @bk-sheet;
 		}
 
-		td:first-child {
-			padding-left: 0;
-		}
+			td:first-child {
+				padding-left: 0;
+			}
 
-		td:last-child {
-			padding-right: 0;
-		}
+			td:last-child {
+				padding-right: 0;
+			}
 	}
 
 	tr.row-no-border {
@@ -84,10 +84,10 @@ table.sheet {
 			background-color: @bk-sheet !important;
 		}
 
-		td.underline {
-			border-bottom: 1px solid @table-brd-color !important;
-			height: 30px;
-		}
+			td.underline {
+				border-bottom: 1px solid @table-brd-color !important;
+				height: 30px;
+			}
 	}
 
 	tr.row-page-header {
@@ -109,13 +109,13 @@ table.sheet {
 			background-color: @bk-sheet;
 		}
 
-		td:first-child {
-			padding-left: 0;
-		}
+			td:first-child {
+				padding-left: 0;
+			}
 
-		td:last-child {
-			padding-right: 0;
-		}
+			td:last-child {
+				padding-right: 0;
+			}
 	}
 
 	.row-parameter tr:last-child {
@@ -218,6 +218,11 @@ table.sheet {
 
 	&.fit-width {
 		width: 1px;
+	}
+
+	&.sheet-stale {
+		opacity: 0.7;
+		filter: saturate(0.2);
 	}
 }
 

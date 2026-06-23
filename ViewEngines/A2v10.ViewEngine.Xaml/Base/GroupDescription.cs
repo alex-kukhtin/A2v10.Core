@@ -49,13 +49,12 @@ public class GroupDescriptions : IJavaScriptSource, IEnumerable<GroupDescription
 	{
 		var gd = new GroupDescriptions();
 		foreach (var s in groupBy)
-			gd.Items.Add(new GroupDescription() { GroupBy = s });
+			gd.Items.Add(new GroupDescription() { GroupBy = s, Count = true });
 		return gd;
 	}
 
     public IEnumerator<GroupDescription> GetEnumerator() => Items.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => Items.GetEnumerator();
-    public void Add(GroupDescription item) => Items.Add(item);
     public void Add(String groupBy) => Items.Add(new GroupDescription { GroupBy = groupBy });
 }
 

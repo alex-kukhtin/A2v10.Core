@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Xaml;
 
@@ -63,15 +63,17 @@ public partial class Sheet : UIElement
 		}
 	}
 
-	public GridLinesVisibility GridLines { get; set; }
-	public Boolean Hover { get; set; }
-	public Boolean Striped { get; set; }
-	public Boolean? Border { get; set; }
-	public Length? Width { get; set; }
-	public Boolean Compact { get; set; }
-	public Boolean FitWidth { get; set; }
+	public GridLinesVisibility GridLines { get; init; }
+	public Boolean Hover { get; init; }
+	public Boolean Striped { get; init; }
+	public Boolean? Border { get; init; }
+	public Length? Width { get; init; }
+	public Boolean Compact { get; init; }
+	public Boolean FitWidth { get; init; }
+	public Boolean Stale { get; init; }
 
-	public SheetAutoGenerate? AutoGenerate { get; set; }
+
+    public SheetAutoGenerate? AutoGenerate { get; set; }
 
 	private SheetGeneratorWrapper? _generatorWrapper;
 	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
@@ -91,6 +93,8 @@ public partial class Sheet : UIElement
 		sheet.AddCssClassBool(FitWidth, "fit-width");
 		if (Width != null)
 			sheet.MergeStyle("width", Width.Value);
+        MergeBindingAttributeBool(sheet, context, ":stale", nameof(Stale), Stale);
+
 		sheet.RenderStart(context);
 		RenderColumns(context);
 		RenderBody(context);
