@@ -23,15 +23,4 @@
 		<None Remove="bin\**\*;obj\**\*"/>
 		<None Remove="@assemblies\*" />
 	</ItemGroup>
-
-	<ItemGroup>
-		<Reference Include="A2v10.Xaml" PrivateAssets="All" ReferenceOutputAssembly="False">
-			<HintPath>@assemblies\A2v10.Xaml.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="A2v10.Xaml.Report" PrivateAssets="All" ReferenceOutputAssembly="False">
-			<HintPath>@assemblies\A2v10.Xaml.Report.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-	</ItemGroup>
 </Project>
