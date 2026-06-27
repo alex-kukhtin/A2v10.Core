@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System.Text;
 using System.Linq;
@@ -23,6 +23,7 @@ public enum AutoFlowMode
 }
 
 [AttachedProperties("Col,Row,ColSpan,RowSpan,VAlign")]
+[AttachedPropertyType("VAlign", "AlignItem")]
 public class Grid(IServiceProvider serviceProvider) : Container, ISupportAttached
 {
 

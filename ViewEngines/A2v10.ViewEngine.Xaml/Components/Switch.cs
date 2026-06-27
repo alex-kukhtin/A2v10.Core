@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +8,7 @@ namespace A2v10.Xaml;
 
 
 [ContentProperty("Children")]
+[AttachedTransparent]
 public class Case : XamlElement
 {
 	public UIElementCollection Children { get; set; } = [];

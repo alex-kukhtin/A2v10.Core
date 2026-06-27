@@ -1,0 +1,28 @@
+﻿<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata>
+		<id>A2v10.App.Assets2026</id>
+		<version>10.1.8642</version>
+		<title>A2v10.Platform Application Assets</title>
+		<authors>Oleksandr Kukhtin</authors>
+		<owners>Oleksandr Kukhtin</owners>
+		<projectUrl>https://a2v10.com</projectUrl>
+		<requireLicenseAcceptance>false</requireLicenseAcceptance>
+		<description>A2v10 Platform (application assets files)</description>
+		<releaseNotes>Current NUGET release</releaseNotes>
+		<copyright>Copyright © 2020-2026 Oleksandr Kukhtin. All rights reserved.</copyright>
+		<tags>A2v10 Platform</tags>
+		<repository type="git" url="https://github.com/alex-kukhtin/A2v10.Core/tree/master/Platform/A2v10.App.Assets" branch="master"/>
+		<license type="expression">MIT</license>
+		<contentFiles>
+			<files include="**/*" buildAction="Content"/>
+		</contentFiles>
+		<readme>docs\README.md</readme>
+	</metadata>
+	<files>
+		<file src="A2v10.App.Assets2026.targets" target="build/A2v10.App.Assets2026.targets" />
+		<file src="Application/**/*" target="content/assets"/>
+		<file src="assemblies/**/*" target="content"/>
+		<file src="README.md" target="docs\" />
+	</files>
+</package>

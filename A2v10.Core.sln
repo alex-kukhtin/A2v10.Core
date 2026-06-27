@@ -144,6 +144,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "A2v10.App.Infrastructure", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "A2v10.Cli", "Tools\A2v10.Cli\A2v10.Cli.csproj", "{50C43A6C-9304-4900-AA6B-FBB739AF9CC7}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "A2v10.App.Assets2026", "A2v10.App.Assets2026", "{EFC5737B-7492-40E1-9DB4-60922806F55E}"
+	ProjectSection(SolutionItems) = preProject
+		Platform\A2v10.App.Assets2026\A2v10.App.Assets2026.nuspec = Platform\A2v10.App.Assets2026\A2v10.App.Assets2026.nuspec
+		Platform\A2v10.App.Assets2026\A2v10.App.Assets2026.targets = Platform\A2v10.App.Assets2026\A2v10.App.Assets2026.targets
+		Platform\A2v10.App.Assets2026\README.md = Platform\A2v10.App.Assets2026\README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -333,6 +340,7 @@ Global
 		{18036FBA-769B-42FB-A44D-FB560C9B8569} = {1823B559-E142-4E96-B927-DF861817AF4E}
 		{052DA9CA-E71F-448B-AC99-6812230A6D8B} = {FAC17E50-040A-4C01-A4DC-DC21B61DA444}
 		{50C43A6C-9304-4900-AA6B-FBB739AF9CC7} = {04B7C64B-CD96-48FD-8474-03350BE14F1B}
+		{EFC5737B-7492-40E1-9DB4-60922806F55E} = {FAC17E50-040A-4C01-A4DC-DC21B61DA444}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D64A03C5-D2E1-49C8-A7A9-D6022941DE01}
