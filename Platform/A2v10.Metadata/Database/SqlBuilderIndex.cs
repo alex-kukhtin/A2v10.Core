@@ -255,9 +255,7 @@ internal partial class SqlBuilder
 
         IEnumerable<String> indexSqlFields(String alias)
         {
-            static Boolean includeColumn(TableColumn col)
-                => col.Type != ColumnType.RowVersion && col.Type != ColumnType.Void;
-            return Table.AllColumns(includeColumn).Select(col => col.SqlModelColumnName(alias, t => t.RefTypeName));
+            return Table.AllColumns(TableColumnPredicates.IsIndexColumn).Select(col => col.SqlModelColumnName(alias, t => t.RefTypeName));
         }
 
         var sqlQuery = buildIndexSql();

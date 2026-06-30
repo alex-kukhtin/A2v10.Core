@@ -1,7 +1,6 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
 using System.Linq;
-using System.Collections.Generic;
 
 using A2v10.Xaml;
 
@@ -52,9 +51,8 @@ internal partial class XamlBuilder
             }
         };
     }
-    IEnumerable<Control> EditControls()
-       => Table.EditForm().Columns.Select(c => CreateEditControl(c.Value));
-    internal Dialog CreateEditDialogXaml()
+
+    internal Dialog CreateEditDialogXaml(FormMetadata meta)
     {
         return new Dialog()
         {
@@ -75,7 +73,7 @@ internal partial class XamlBuilder
             Children = [
                 new Grid(_xamlServiceProvider)
                 {
-                    Children = [..EditControls()]
+                    Children = [..meta.Elements.Select(ElementToControl)]
                 }
             ]
         };

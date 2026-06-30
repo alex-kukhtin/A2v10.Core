@@ -9,6 +9,15 @@ using A2v10.Services;
 
 namespace A2v10.Metadata;
 
+internal static class TableColumnPredicates
+{
+    internal static Boolean IsIndexColumn(TableColumn col)
+        => col.Type != ColumnType.RowVersion && col.Type != ColumnType.Void && col.Type != ColumnType.IsSystem;
+    internal static Boolean IsEditColumn(TableColumn col)
+        => col.Type != ColumnType.RowVersion && col.Type != ColumnType.Void && col.Type != ColumnType.IsSystem
+            && col.Type != ColumnType.Id;
+}
+
 internal static class MetadataExtensions
 {
     internal static EndpointKind ToEndpointKind(this String schema)
@@ -117,8 +126,18 @@ internal static class MetadataExtensions
 
     internal static FormMetadata IndexForm(this TableMetadata table) =>
         table.Forms.First(x => x.Key == Constants.FormNames.Index).Value;
-
+    internal static FormMetadata BrowseForm(this TableMetadata table) =>
+        table.Forms.First(x => x.Key == Constants.FormNames.Browse).Value;
     internal static FormMetadata EditForm(this TableMetadata table) =>
         table.Forms.First(x => x.Key == Constants.FormNames.Edit).Value;
+
+    public static IEnumerable<FormFilter> TableFilters(this TableMetadata table)
+    {
+        var filters = table.AllColumns(c => c.IsRef)
+            .Select(c => new FormFilter(c.Name, FormFilterType.Ref));
+        if (table.HasPeriod)
+            filters = new[] { new FormFilter("Date", FormFilterType.Period) }.Concat(filters);
+        return filters;
+    }
 
 }

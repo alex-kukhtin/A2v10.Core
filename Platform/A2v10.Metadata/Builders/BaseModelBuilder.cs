@@ -78,10 +78,11 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
     {
         return Action switch
         {
-            "browse" => _xamlBuilder.CreateBrowseDialogXaml(),
-            "index" => _xamlBuilder.CreateIndexPageXaml(),
+            "browse" => _xamlBuilder.CreateXamlContainer(Action),
+            "index" => _xamlBuilder.CreateXamlContainer(Action),
+            "edit" => _xamlBuilder.CreateXamlContainer(Action),
             "indexpartial" => _xamlBuilder.CreateIndexPagePartialXaml(),
-            "edit" => IsDialog ? _xamlBuilder.CreateEditDialogXaml() : _xamlBuilder.CreateDocumentPageXaml(),
+            //"edit" => IsDialog ? _xamlBuilder.CreateEditDialogXaml() : _xamlBuilder.CreateDocumentPageXaml(),
             //"browsefolder" => _index.CreateBrowseTreeDialogXaml(),
             _ => throw new NotImplementedException($"Create form for {Action}")
         };

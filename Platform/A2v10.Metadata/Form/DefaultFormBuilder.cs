@@ -1,7 +1,5 @@
 ﻿// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
 
-using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace A2v10.Metadata;
@@ -10,57 +8,78 @@ internal static class DefaultFormBuilder
 {
     public static FormMetadata CreateIndexForm(TableMetadata table)
     {
-        static Boolean includeColumn(TableColumn col)
-            => col.Type != ColumnType.RowVersion && col.Type != ColumnType.Void;
+        var cols = table.AllColumns(TableColumnPredicates.IsIndexColumn)
+            .OrderBy(c => c.IsMemo)
+            .ToDictionary(c => c.Name, c => new FormColumn());
 
-        var cols = new Dictionary<String, FormColumn>();
-        // memo => last
-        foreach (var column in table.AllColumns(c => !c.IsMemo && includeColumn(c)))
-            cols.Add(column.Name, new());
-
-        var memo = table.DefaultColumns().FirstOrDefault(c => c.IsMemo);
-        if (memo != null)
-            cols.Add(memo.Name, new());
-
-        var filters = table.AllColumns(c => c.IsRef).Select(c => new FormFilter(c.Name, FormFilterType.Ref));
-        if (table.HasPeriod)
-            filters = new[] { new FormFilter("Date", FormFilterType.Period) }.Concat(filters);
-
-        return new FormMetadata()
+        return new FormPage()
         {
-            Columns = cols,
-            Commands = [
-                FormCommandType.Add, FormCommandType.Edit, FormCommandType.Delete,
-                FormCommandType.Sep, FormCommandType.Show, FormCommandType.Sep, FormCommandType.Reload,
-                FormCommandType.ToRight, FormCommandType.Search
+            Elements = [
+                new FormToolbar() {
+                    Commands = [
+                        EntityCommandType.Add, EntityCommandType.Edit, EntityCommandType.Delete,
+                        CommandBarItem.Separator, EntityCommandType.Show, CommandBarItem.Separator, EntityCommandType.Reload,
+                        CommandBarItem.Aligner, EntityCommandType.Search
+                    ]
+                },
+                new FormDataGrid() 
+                {
+                    Columns = cols
+                },
+                new FormPager() 
+                {
+                }
             ],
-            Filters = [.. filters]
+            TaskPad = new FormTaskPad()
+            {
+                Filters = [.. table.TableFilters()]
+            }
+        };
+    }
+
+    public static FormMetadata CreateBrowseForm(TableMetadata table)
+    {
+        var cols = table.AllColumns(TableColumnPredicates.IsIndexColumn)
+            .OrderBy(c => c.IsMemo)
+            .ToDictionary(c => c.Name, c => new FormColumn());
+
+        return new FormDialog()
+        {
+            Elements = [
+                new FormToolbar() {
+                    Commands = [
+                        EntityCommandType.Add, EntityCommandType.Edit, EntityCommandType.Delete,
+                        CommandBarItem.Separator, EntityCommandType.Reload,
+                        CommandBarItem.Aligner, EntityCommandType.Search
+                    ]
+                },
+                new FormDataGrid()
+                {
+                    Columns = cols
+                }
+            ]
         };
     }
 
     public static FormMetadata CreateEditForm(TableMetadata table)
     {
-        var cols = new Dictionary<String, FormColumn>();
+        var cols = table.AllColumns(TableColumnPredicates.IsEditColumn)
+            .OrderBy(c => c.IsMemo)
+            .ToDictionary(c => c.Name, c => new FormColumn());
 
-        static Boolean IsEditableColumn(TableColumn col) =>
-            col.Type != ColumnType.Void && col.Type != ColumnType.RowVersion && col.Type != ColumnType.Id &&
-            col.Type != ColumnType.IsSystem;
-
-        // memo => last
-        foreach (var column in table.AllColumns().Where(c => IsEditableColumn(c) && !c.IsMemo))
-            cols.Add(column.Name, new());
-        var memo = table.DefaultColumns().FirstOrDefault(c => c.IsMemo);
-        if (memo != null)
-            cols.Add(memo.Name, new());
-
-        return new FormMetadata()
+        return new FormDialog()
         {
-            Columns = cols,
-            Commands = [
-                FormCommandType.Save, FormCommandType.SaveAndClose,
-                FormCommandType.Print, FormCommandType.Sep,
-                FormCommandType.Apply, FormCommandType.Sep, FormCommandType.Attachments,
-                FormCommandType.Sep, FormCommandType.Reload
+            Toolbar = [
+                EntityCommandType.Save, EntityCommandType.SaveAndClose,
+                EntityCommandType.Print, CommandBarItem.Separator,
+                EntityCommandType.Post, CommandBarItem.Separator, EntityCommandType.Attachments,
+                CommandBarItem.Separator, EntityCommandType.Reload
+            ],
+            Elements = [
+                new FormGrid() 
+                {
+                    Columns = cols
+                }
             ]
         };
     }

@@ -6,16 +6,14 @@ using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-
-using Microsoft.Extensions.Options;
+using System.Security.Cryptography;
+using System.Text;
 
 using Newtonsoft.Json;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Xaml;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace A2v10.Metadata;
 

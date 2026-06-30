@@ -19,7 +19,7 @@ internal enum FormColumnType
     Currency
 }
 
-public enum FormCommandType
+public enum EntityCommandType
 {
     Add,
     Edit,
@@ -32,11 +32,34 @@ public enum FormCommandType
     Show,
     Search,
     Reload,
-    Apply,
-    Attachments,
-    // dividers
-    Sep,
-    ToRight
+    Post,
+    UnPost,
+    Attachments
+}
+
+public enum CommandBarItemKind 
+{ 
+    Command, 
+    Separator, 
+    Aligner 
+}
+
+[JsonConverter(typeof(CommandBarItemConverter))]
+public readonly struct CommandBarItem
+{
+    public CommandBarItemKind Kind { get; }
+    public EntityCommandType? Command { get; }
+    private CommandBarItem(CommandBarItemKind kind, EntityCommandType? command)
+    {
+        Kind = kind;
+        Command = command;
+    }
+
+    public static implicit operator CommandBarItem(EntityCommandType command)
+        => new(CommandBarItemKind.Command, command);
+
+    public static readonly CommandBarItem Separator = new(CommandBarItemKind.Separator, null);
+    public static readonly CommandBarItem Aligner = new(CommandBarItemKind.Aligner, null);
 }
 
 public enum FormFilterType
@@ -50,12 +73,9 @@ public record FormFilter(String Column, FormFilterType? Type);
 public record FormColumn
 {
     public String Header { get; set; } = default!;
-
     public String Path { get; set; } = default!;
-
     [JsonIgnore]
     internal FormColumnType DataType { get; private set; }
-
     [JsonIgnore]
     internal TableColumn TableColumn { get; private set; } = default!;
 
@@ -68,18 +88,62 @@ public record FormColumn
         DataType = TableColumn.Type.ToFormDataType();
     }
 }
-public record FormMetadata
+
+public abstract record FormElement;
+
+public sealed record FormDataGrid : FormElement
 {
     public Dictionary<String, FormColumn> Columns { get; set; } = [];
-    public List<FormCommandType> Commands { get; set; } = [];
+}
+
+public sealed record FormControl : FormElement
+{
+    public String Key { get; init; } = default!;
+    public FormColumn Column { get; init; } = default!;
+}
+
+public sealed record FormGrid : FormElement
+{
+    public Dictionary<String, FormColumn> Columns { get; set; } = [];
+}
+
+public sealed record FormToolbar : FormElement
+{
+    public List<CommandBarItem> Commands { get; set; } = [];
+}
+
+public sealed record FormTaskPad : FormElement
+{    
     public List<FormFilter> Filters { get; set; } = [];
-    public void SetDefaults(TableMetadata table)
+}
+public sealed record FormPager : FormElement;
+
+public abstract record FormMetadata
+{    
+    public List<FormElement> Elements { get; set; } = [];
+    public List<CommandBarItem> Toolbar { get; set; } = [];
+    public FormTaskPad? TaskPad { get; init; }
+    public void SetDefaults(TableMetadata table, Func<TableColumn, Boolean> filter)
     {
-        foreach (var column in Columns)
+        var cols = table.AllColumns(filter).ToList();
+        foreach (var el in Elements)
         {
-            var c = table.AllColumns(с => true).FirstOrDefault(c => c.Name == column.Key) 
-                ?? throw new InvalidOperationException($"FormMetadata. Column {column.Key} not found");
-            column.Value.SetTableColumn(c);
+            if (el is FormDataGrid dg)
+                foreach (var column in dg.Columns)
+                {
+                    var fc = cols.FirstOrDefault(c => c.Name == column.Key)
+                        ?? throw new InvalidOperationException($"FormMetadata. Column {column.Key} not found");
+                    column.Value.SetTableColumn(fc);
+                }
+            else if (el is FormGrid fg)
+                foreach (var column in fg.Columns)
+                {
+                    var fc = cols.FirstOrDefault(c => c.Name == column.Key)
+                        ?? throw new InvalidOperationException($"FormMetadata. Column {column.Key} not found");
+                    column.Value.SetTableColumn(fc);
+                }
         }
     }
 }
+public sealed record FormPage : FormMetadata;
+public sealed record FormDialog : FormMetadata;

@@ -158,9 +158,7 @@ public enum ApplySourceKind
 public record ApplyMapping
 {
     public String Target { get; init; } = default!;
-
     public String Source { get; init; } = default!;
-
     public ApplySourceKind Kind {get; init;}
 }
 
@@ -328,11 +326,15 @@ public record TableMetadata
 
         Forms.GetOrAdd(Constants.FormNames.Index, 
             key => DefaultFormBuilder.CreateIndexForm(this))
-        .SetDefaults(this);
+        .SetDefaults(this, TableColumnPredicates.IsIndexColumn);
 
         Forms.GetOrAdd(Constants.FormNames.Edit, 
             key => DefaultFormBuilder.CreateEditForm(this))
-        .SetDefaults(this);
+        .SetDefaults(this, TableColumnPredicates.IsEditColumn);
+
+        Forms.GetOrAdd(Constants.FormNames.Browse,
+            key => DefaultFormBuilder.CreateBrowseForm(this))
+        .SetDefaults(this, TableColumnPredicates.IsIndexColumn);
     }
 }
 

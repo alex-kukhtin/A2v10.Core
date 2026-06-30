@@ -10,8 +10,8 @@ namespace A2v10.Metadata;
 
 internal partial class XamlBuilder
 {
-    IEnumerable<DataGridColumn> IndexColumnsXaml(Boolean hasChecked) =>
-        Table.IndexForm().Columns.Select(col =>
+    IEnumerable<DataGridColumn> IndexColumnsXaml(Dictionary<String, FormColumn> columns, Boolean hasChecked) =>
+        columns.Select(col =>
             new DataGridColumn()
             {
                 Header = col.Value.Header,
@@ -29,7 +29,7 @@ internal partial class XamlBuilder
             Property = "Fragment",
             DataType = DataType.String
         };
-        foreach (var f in Table.IndexForm().Filters)
+        foreach (var f in Table.TableFilters())
             yield return f.Type switch
             {
                 FormFilterType.Period => new FilterItem() { Property = "Period", DataType = DataType.Period },
@@ -47,11 +47,41 @@ internal partial class XamlBuilder
                 Items = [.. CollectionViewFilters()]
             }
         };
-    Pager XamlPager() =>
-        new()
+
+    UIElementBase CommandBarControl(EntityCommandType cmd)
+    {
+        return cmd switch
         {
-            Bindings = b => b.SetBinding(nameof(Pager.Source), new Bind("Parent.Pager"))
+            EntityCommandType.Reload => new Button()
+            {
+                Icon = Icon.Reload,
+                Bindings = b => b.SetBinding(nameof(Button.Command), new BindCmd(nameof(CommandType.Reload)))
+            },
+            EntityCommandType.Search => new SearchBox()
+            {
+                TabIndex = 1,
+                Placeholder = "@[Search]",
+                Bindings = b => b.SetBinding(nameof(SearchBox.Value), new Bind("Parent.Filter.Fragment"))
+            },
+            EntityCommandType.Edit => ButtonEditSelected(),
+            EntityCommandType.Add => ButtonCreate(),
+            EntityCommandType.Delete => new Button() { Icon = Icon.Clear },
+            EntityCommandType.Show => new Button() { Icon = Icon.ArrowOpen, Content="@[Show]" },
+            _ => throw new InvalidOperationException($"Invalid CommandType {cmd}")
+
         };
+    }
+
+    UIElementBase ToolbarControl(CommandBarItem cmd)
+    {
+        return cmd.Kind switch
+        {
+            CommandBarItemKind.Separator => new Separator(),
+            CommandBarItemKind.Aligner => new ToolbarAligner(),
+            CommandBarItemKind.Command => CommandBarControl(cmd.Command!.Value),
+            _ => throw new InvalidOperationException($"Invalid enum {cmd.Kind}")
+        };
+    }
 
     Button ButtonCreate()
     {
@@ -99,63 +129,74 @@ internal partial class XamlBuilder
         };
     }
 
-    internal Page CreateIndexPageXaml()
+    internal UIElement CreateXamlContainer(String action)
+    {
+        return action switch
+        {
+            "index" => CreateIndexPageXaml(Table.IndexForm()),
+            "browse" => CreateBrowseDialogXaml(Table.BrowseForm()),
+            "edit" => CreateEditDialogXaml(Table.EditForm()),
+            _ => throw new InvalidOperationException($"Invalid action: '{action}'")
+        };
+    }
+
+    internal Page CreateIndexPageXaml(FormMetadata meta)
     {
         return new Page()
         {
             CollectionView = XamlCollectionView(),
-            Children = [IndexPageGrid()],
-            Taskpad = IndexTaskpad()
+            Children = [IndexPageGrid(meta)],
+            Taskpad = IndexTaskpad(meta.TaskPad)
         };
     }
 
     internal Partial CreateIndexPagePartialXaml()
     {
+        var form = Table.IndexForm();
         var collView = XamlCollectionView();
-        collView.Children = [IndexPageGrid()];
+        collView.Children = [IndexPageGrid(form)];
         return new Partial()
         {
             Children = [collView]
         };
     }
 
-    internal Grid IndexPageGrid()
+    UIElementBase ElementToControl(FormElement elem)
+    {
+        return elem switch
+        {
+            FormToolbar tb => new Toolbar(_xamlServiceProvider)
+            {
+                Children = [.. tb.Commands.Select(ToolbarControl)]
+            },
+            FormDataGrid dg => new DataGrid()
+            {
+                FixedHeader = true,
+                Sort = true,
+                Bindings = b =>
+                {
+                    b.SetBinding(nameof(DataGrid.ItemsSource), new Bind("Parent.ItemsSource"));
+                },
+                Columns = [.. IndexColumnsXaml(dg.Columns, false)]
+            },
+            FormPager pg => new Pager()
+            {
+                Bindings = b => b.SetBinding(nameof(Pager.Source), new Bind("Parent.Pager"))
+            },
+            FormGrid fg => new Grid(_xamlServiceProvider)
+            {
+                Children = [..fg.Columns.Select(x => CreateEditControl(x.Value))]
+            },
+            _ => throw new InvalidOperationException($"Invalid control {elem}")
+        };
+    }
+    internal Grid IndexPageGrid(FormMetadata meta)
     {
         return new Grid(_xamlServiceProvider)
         {
             Rows = RowDefinitions.FromString("Auto,1*,Auto"),
             Height = Length.FromString("100%"),
-            Children = [
-                new Toolbar(_xamlServiceProvider)
-                {
-                    Children = [
-                        ButtonCreate(),
-                        ButtonEditSelected(),
-                        new Separator(),
-                        new Button() {
-                            Icon = Icon.Reload,
-                            Bindings = b => b.SetBinding(nameof(Button.Command), new BindCmd(nameof(CommandType.Reload)))
-                        },
-                        new ToolbarAligner(),
-                        new SearchBox()
-                        {
-                            TabIndex = 1,
-                            Placeholder = "@[Search]",
-                            Bindings = b => b.SetBinding(nameof(SearchBox.Value), new Bind("Parent.Filter.Fragment"))
-                        }
-                    ]
-                },
-                new DataGrid()
-                {
-                    FixedHeader = true,
-                    Sort = true,
-                    Bindings = b => {
-                        b.SetBinding(nameof(DataGrid.ItemsSource), new Bind("Parent.ItemsSource"));
-                    },
-                    Columns = [..IndexColumnsXaml(false)]
-                },
-                XamlPager()
-            ]
+            Children = [..meta.Elements.Select(ElementToControl)]
         };
     }
 
@@ -190,10 +231,9 @@ internal partial class XamlBuilder
         };
     }
 
-    internal Taskpad? IndexTaskpad()
+    internal Taskpad? IndexTaskpad(FormTaskPad? taskPad)
     {
-        var filters = Table.IndexForm().Filters;
-        if (filters.Count == 0)
+        if (taskPad == null || taskPad.Filters.Count == 0)
             return null;
         return new Taskpad()
         {
@@ -202,12 +242,12 @@ internal partial class XamlBuilder
                     Header = "@[Filters]",
                     Collapsible = true,
                     Style = PaneStyle.Transparent,
-                    Children = [..filters.Select(CreateFilterControl)]
+                    Children = [..taskPad.Filters.Select(CreateFilterControl)]
                 },
             ]
         };
     }
-    internal Dialog CreateBrowseDialogXaml()
+    internal Dialog CreateBrowseDialogXaml(FormMetadata dialog)
     {
         var selectCommand = new BindCmd() { Command = CommandType.Select };
         selectCommand.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind("Parent.ItemsSource"));
@@ -215,38 +255,36 @@ internal partial class XamlBuilder
         {
             CollectionView = XamlCollectionView(),
             Width = Length.FromString("60rem"), // TODO
+            Height = Length.FromString("40rem"),
             Title = $"@[{Table.Model}.Browse]",
             Buttons = [
-                new Button() {
+                new Button()
+                {
                     Style = ButtonStyle.Primary,
                     Content = "@[Select]",
                     Bindings = b => b.SetBinding(nameof(Button.Command), selectCommand)
                 },
-                new Button() {
+                new Button()
+                {
                     Content = "@[Cancel]",
                     Bindings = b => b.SetBinding(nameof(Button.Command), new BindCmd() {Command = CommandType.Close })
                 },
             ],
             Children = [
-                new Grid(_xamlServiceProvider) {
+                new Grid(_xamlServiceProvider)
+                {
+                    Rows = RowDefinitions.FromString("Auto,1*,Auto"),
+                    Height = Length.FromString("100%"),
                     Children = [
-                        new Toolbar(_xamlServiceProvider),
-                        new DataGrid()
+                        ..dialog.Elements.Select(ElementToControl),
+                        new Pager()
                         {
-                            FixedHeader = true,
-                            Sort = true,
-                            Height = Length.FromString("30rem"), // TODO
-                            Bindings = b => {
-                                b.SetBinding(nameof(DataGrid.ItemsSource), new Bind("Parent.ItemsSource"));
-                                b.SetBinding(nameof(DataGrid.DoubleClick), selectCommand);
-                            },
-                            Columns = [..IndexColumnsXaml(false)],
-                        },
-                        XamlPager()
+                            Bindings = b => b.SetBinding(nameof(Pager.Source), new Bind("Parent.Pager"))
+                        }
                     ]
                 }
             ],
-            Taskpad = IndexTaskpad()
+            Taskpad = IndexTaskpad(dialog.TaskPad)
         };
     }
 }
