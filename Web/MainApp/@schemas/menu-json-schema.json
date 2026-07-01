@@ -1,0 +1,101 @@
+﻿{
+	"$schema": "http://json-schema.org/draft-04/schema",
+	"$version": "10.1.8639",
+	"$date": "2026-06-07",
+	"title": "JSON Schema for menu.json",
+	"type": "object",
+	"required": [ "menu" ],
+	"additionalProperties": false,
+
+	"properties": {
+		"$schema": { "type": "string" },
+		"appTitle": { "type": "string" },
+		"menu": {
+			"type": "array",
+			"items": {
+				"$ref": "#/$defs/menuItem"
+			}
+		}
+	},
+
+	"$defs": {
+		"icon": {
+			"type": "string",
+			"enum": [
+				"access", "account", "account-folder", "add", "address-book", "address-card", "alert", "apply", "approve", "arrow-down", "arrow-down-red", "arrow-export", "arrow-left", "arrow-left-right", "arrow-left-right-full", "arrow-open", "arrow-right", "arrow-sort", "arrow-up", "arrow-up-green", "assets", "attach"
+				"ban", "bank", "bank-account", "bank-uah", "barcode", "bell", "board", "bookmark", "brand-excel"
+				"calc", "calendar", "calendar-today", "calendar-week", "call", "camera", "cart", "chart-area", "chart-bar", "chart-column", "chart-pie", "chart-pivot", "chart-stacked-area", "chart-stacked-bar", "chart-stacked-line", "check", "check-bold", "checkbox", "checkbox-checked", "chevron-double-left", "chevron-double-right", "chevron-down", "chevron-left", "chevron-left-end", "chevron-right", "chevron-right-end", "chevron-up", "circle", "circle-small", "clear", "close", "cloud", "cloud-outline", "code", "code-check", "comment", "comment-add", "comment-discussion", "comment-lines", "comment-next", "comment-outline", "comment-previous", "comment-urgent", "company", "confirm", "copy", "currency-euro", "currency-other", "currency-uah", "currency-usd", "cut"
+				"dashboard", "dashboard-outline", "database", "delete", "delete-box", "delete-red", "devices", "disapprove", "dot", "dot-blue", "dot-green", "dot-red", "download"
+				"edit", "edit-redo", "edit-undo", "ellipsis", "ellipsis-bottom", "ellipsis-vertical", "error", "error-outline", "exit", "export", "export-excel", "external", "eye", "eye-disabled", "eye-disabled-red"
+				"factory", "failure", "failure-outline", "failure-red", "file", "file-content", "file-download-pdf", "file-error", "file-failure", "file-image", "file-import", "file-link", "file-preview", "file-signature", "file-success", "file-user", "file-warning", "filter", "filter-outline", "flag", "flag-blue", "flag-green", "flag-red", "flag-yellow", "flag2", "flame", "folder", "folder-ban", "folder-move-to", "folder-outline", "folder-query", "folders-outline"
+				"gear", "gear-outline", "grid"
+				"help", "help-blue", "help-outline", "history", "home"
+				"image", "import", "info", "info-blue", "info-outline", "items"
+				"link", "list", "list-bullet", "lock", "lock-outline", "log", "logout"
+				"menu", "message", "message-outline", "minus", "minus-box", "minus-circle", "mode-dark", "mode-light"
+				"package", "package-outline", "pane-close", "pane-left", "pane-left-blue", "pane-open", "pane-right", "pane-right-blue", "paste", "pencil", "pencil-outline", "personnel", "pin", "pin-outline", "pinned", "pinned-outline", "play", "play-outline", "plus", "plus-box", "plus-circle", "policy", "power", "print", "process"
+				"qrcode", "query", "queue"
+				"refresh", "reload", "rename", "report", "requery"
+				"save", "save-as", "save-close", "save-close-outline", "save-outline", "search", "security", "send", "send-outline", "server", "share", "smile", "smile-sad", "square", "star", "star-outline", "star-yellow", "step", "steps", "storyboard", "success", "success-green", "success-outline", "switch"
+				"table", "tag", "tag-blue", "tag-green", "tag-outline", "tag-red", "tag-yellow", "task-complete", "trash", "triangle-left", "triangle-right", "truck"
+				"unapply", "unlock", "unlock-outline", "unpin", "unpin-outline", "upgrade", "upload", "upload2", "user", "user-image", "user-minus", "user-plus", "users"
+				"variable",
+				"waiting", "waiting-outline", "warehouse", "warning", "warning-outline", "warning-yellow", "workflow1", "wrench"			
+			]
+		},
+		"menuItem": {
+			"type": "object",
+			"additionalProperties": false,
+
+			"properties": {
+				"title": {
+					"type": "string"
+				},
+
+				"icon": {
+					"$ref": "#/$defs/icon"
+				},
+
+				"url": {
+					"type": "string"
+				},
+
+				"id": {
+					"type": "string"
+				},
+
+				"category": {
+					"type": "string"
+				},
+
+				"create": {
+					"type": "boolean"
+				},
+
+				"underline": {
+					"type": "boolean"
+				},
+
+				"grow": {
+					"type": "boolean"
+				},
+
+				"items": {
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/menuItem"
+					}
+				}
+			},
+
+			"anyOf": [
+				{
+					"required": [ "grow" ]
+				},
+				{
+					"required": [ "title" ]
+				}
+			]
+		}
+	}
+}

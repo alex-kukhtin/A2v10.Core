@@ -1,5 +1,6 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
+using System;
 using System.Linq;
 
 using A2v10.Xaml;
@@ -49,6 +50,16 @@ internal partial class XamlBuilder
                 Label = column.Header,
                 Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
             }
+        };
+    }
+
+    internal Container CreateEditXaml(FormMetadata meta)
+    {
+        return meta.Is switch
+        {
+            FormKind.Dialog => CreateEditDialogXaml(meta),
+            FormKind.Page => CreateDocumentPageXaml(meta),
+            _ => throw new NotSupportedException($"FormKind {meta.Is} is not supported")
         };
     }
 

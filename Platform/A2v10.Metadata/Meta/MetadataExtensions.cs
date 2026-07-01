@@ -61,7 +61,7 @@ internal static class MetadataExtensions
 
     public static IPlatformUrl PlatformUrl(this TableMetadata table, String action)
     {
-        var kind = action == "index" || action == "edit" && table.EditWith == EditWithMode.Page ? "_page" : "_dialog";
+        var kind = action == "index" || action == "edit" && table.EditWithPage ? "_page" : "_dialog";
         var url = $"{kind}/{table.EndpointPath()}/{action}/";
         return new PlatformUrl(url);
     }

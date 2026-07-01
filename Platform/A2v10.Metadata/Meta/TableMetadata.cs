@@ -39,6 +39,7 @@ public enum ColumnType
     Operation,
     Document,
     RowVersion,
+    Color,
     Enum,
     AutoNum,
     Company,
@@ -144,12 +145,6 @@ public record TableColumn
 }
 
 
-public enum EditWithMode
-{
-    Dialog,
-    Page 
-}
-
 public enum ApplySourceKind
 {
     Table,
@@ -211,8 +206,7 @@ public record ReportItemMetadata
 public enum TableTrait
 {
     Audit,
-    Tags,
-    Color
+    Tags
 }
 
 public record TableMetadata
@@ -250,10 +244,13 @@ public record TableMetadata
     public String RefTypeName => $"TR{Model}";
     [JsonIgnore]
     public String CollectionName => Model.Plural();
+
+    [JsonIgnore]
+    public Boolean EditWithPage => IsDocument;
+
     // OLD
     public String? ItemsName { get; init; }
     public String? ItemName { get; init; }
-    public EditWithMode EditWith { get; init; }
 
     #endregion
 
@@ -290,9 +287,11 @@ public record TableMetadata
     internal Boolean IsOperation => Schema == "operation";
 
     [JsonIgnore]
-    internal Boolean IsDocument => Schema == Constants.SchemaNames.Document;
+    internal Boolean IsCatalog => Kind == EndpointKind.Catalog;
     [JsonIgnore]
-    internal Boolean IsJournal => Schema == Constants.SchemaNames.Journal;
+    internal Boolean IsDocument => Kind == EndpointKind.Document;
+    [JsonIgnore]
+    internal Boolean IsJournal => Kind == EndpointKind.Journal;
     [JsonIgnore]
     internal Boolean HasPeriod => IsDocument || IsJournal;
     internal Boolean HasDbTable => !String.IsNullOrEmpty(DbName) && !String.IsNullOrEmpty(DbSchema);

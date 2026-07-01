@@ -24,7 +24,6 @@ public enum EntityCommandType
     Add,
     Edit,
     Delete,
-    Open,
     Save,
     SaveAndClose,
     Print,
@@ -118,8 +117,15 @@ public sealed record FormTaskPad : FormElement
 }
 public sealed record FormPager : FormElement;
 
-public abstract record FormMetadata
+public enum FormKind
+{
+    Unknpwn = 0,
+    Page,
+    Dialog
+}
+public record FormMetadata
 {    
+    public FormKind Is { get; init; }
     public List<FormElement> Elements { get; set; } = [];
     public List<CommandBarItem> Toolbar { get; set; } = [];
     public FormTaskPad? TaskPad { get; init; }
@@ -145,5 +151,3 @@ public abstract record FormMetadata
         }
     }
 }
-public sealed record FormPage : FormMetadata;
-public sealed record FormDialog : FormMetadata;

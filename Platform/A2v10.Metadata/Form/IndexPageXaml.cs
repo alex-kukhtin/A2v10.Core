@@ -48,86 +48,6 @@ internal partial class XamlBuilder
             }
         };
 
-    UIElementBase CommandBarControl(EntityCommandType cmd)
-    {
-        return cmd switch
-        {
-            EntityCommandType.Reload => new Button()
-            {
-                Icon = Icon.Reload,
-                Bindings = b => b.SetBinding(nameof(Button.Command), new BindCmd(nameof(CommandType.Reload)))
-            },
-            EntityCommandType.Search => new SearchBox()
-            {
-                TabIndex = 1,
-                Placeholder = "@[Search]",
-                Bindings = b => b.SetBinding(nameof(SearchBox.Value), new Bind("Parent.Filter.Fragment"))
-            },
-            EntityCommandType.Edit => ButtonEditSelected(),
-            EntityCommandType.Add => ButtonCreate(),
-            EntityCommandType.Delete => new Button() { Icon = Icon.Clear },
-            EntityCommandType.Show => new Button() { Icon = Icon.ArrowOpen, Content="@[Show]" },
-            _ => throw new InvalidOperationException($"Invalid CommandType {cmd}")
-
-        };
-    }
-
-    UIElementBase ToolbarControl(CommandBarItem cmd)
-    {
-        return cmd.Kind switch
-        {
-            CommandBarItemKind.Separator => new Separator(),
-            CommandBarItemKind.Aligner => new ToolbarAligner(),
-            CommandBarItemKind.Command => CommandBarControl(cmd.Command!.Value),
-            _ => throw new InvalidOperationException($"Invalid enum {cmd.Kind}")
-        };
-    }
-
-    Button ButtonCreate()
-    {
-        BindCmd CreateBindCmd()
-        {
-            var bindCmd = new BindCmd();
-            if (Table.EditWith == EditWithMode.Dialog)
-            {
-                bindCmd.Command = CommandType.Dialog;
-                bindCmd.Action = DialogAction.Append;
-                bindCmd.Url = $"{Table.Path}/edit";
-                bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(Table.CollectionName));
-            }
-            return bindCmd;
-        }
-
-        return new Button()
-        {
-            Icon = Icon.Add,
-            Content = "@[Create]",
-            Bindings = b => b.SetBinding(nameof(Button.Command), CreateBindCmd())
-        };
-    }
-
-    Button ButtonEditSelected()
-    {
-        BindCmd CreateBindCmd()
-        {
-            var bindCmd = new BindCmd();
-            if (Table.EditWith == EditWithMode.Dialog)
-            {
-                bindCmd.Command = CommandType.Dialog;
-                bindCmd.Action = DialogAction.EditSelected;
-                bindCmd.Url = $"{Table.Path}/edit";
-                bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(Table.CollectionName));
-            }
-            return bindCmd;
-        }
-
-        return new Button()
-        {
-            Icon = Icon.Edit,
-            Tip = "@[Edit]",
-            Bindings = b => b.SetBinding(nameof(Button.Command), CreateBindCmd())
-        };
-    }
 
     internal UIElement CreateXamlContainer(String action)
     {
@@ -135,7 +55,7 @@ internal partial class XamlBuilder
         {
             "index" => CreateIndexPageXaml(Table.IndexForm()),
             "browse" => CreateBrowseDialogXaml(Table.BrowseForm()),
-            "edit" => CreateEditDialogXaml(Table.EditForm()),
+            "edit" => CreateEditXaml(Table.EditForm()),
             _ => throw new InvalidOperationException($"Invalid action: '{action}'")
         };
     }
@@ -254,7 +174,7 @@ internal partial class XamlBuilder
         return new Dialog()
         {
             CollectionView = XamlCollectionView(),
-            Width = Length.FromString("60rem"), // TODO
+            Width = Length.FromString(dialog.TaskPad?.Filters.Count > 0 ? "80rem" : "60rem"), // TODO
             Height = Length.FromString("40rem"),
             Title = $"@[{Table.Model}.Browse]",
             Buttons = [

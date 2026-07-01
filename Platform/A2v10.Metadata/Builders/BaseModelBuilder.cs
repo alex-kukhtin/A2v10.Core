@@ -57,7 +57,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
             "browse" or "index" or "indexpartial" => Table.UseFolders
                 ? await _sqlBuilder.LoadIndexTreeModelAsync()
                 : await _sqlBuilder.LoadIndexModelAsync(),
-            "edit" => await _sqlBuilder.LoadPlainModelAsync(),
+            "edit" or "show" => await _sqlBuilder.LoadPlainModelAsync(),
             "browsefolder" => await _sqlBuilder.LoadBrowseTreeModelAsync(),
             "editfolder" => await _sqlBuilder.LoadEditFolderModelAsync(),
             _ => throw new NotImplementedException($"Load model for {Action}")

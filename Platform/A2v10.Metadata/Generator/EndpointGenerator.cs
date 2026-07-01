@@ -56,22 +56,22 @@ internal class EndpointGenerator(IModelBuilderFactory _modelBuilderFactory, IApp
             Dialogs = []
         };
 
-        if (table.EditWith == EditWithMode.Dialog)
-        {
-            md.Dialogs.Add("edit", new ModelJsonViewD()
-            {
-                Meta = new(),
-                Template = "edit.template",
-                View = "edit.dialog"
-            });
-        }
-        else
+        if (table.EditWithPage)
         {
             md.Actions.Add("edit", new ModelJsonViewD()
             {
                 Meta = new(),
                 Template = "edit.template",
                 View = "edit.view"
+            });
+        }
+        else
+        {
+            md.Dialogs.Add("edit", new ModelJsonViewD()
+            {
+                Meta = new(),
+                Template = "edit.template",
+                View = "edit.dialog"
             });
         }
 
