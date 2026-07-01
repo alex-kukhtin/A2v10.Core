@@ -66,8 +66,29 @@ internal partial class XamlBuilder
             EntityCommandType.Print => new Button() { Icon = Icon.Print, Content = "@[Print]" },
             EntityCommandType.Attachments => new Button() { Icon = Icon.Attach },
             EntityCommandType.Copy => new Button() { Icon = Icon.Copy },
-            EntityCommandType.Post => new Button() { Icon = Icon.Apply, Content = "@[Post]" },
-            EntityCommandType.UnPost => new Button() { Icon = Icon.Unapply, Content = "@[UnPost]" },
+            EntityCommandType.Post => new Button() 
+                { 
+                    Icon = Icon.Apply, 
+                    Content = "@[Post]",
+                    Bindings = b => {
+                        var cmd = new BindCmd()
+                        {
+                            Command = CommandType.Execute,
+                            CommandName = "post",
+                        };
+                        cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind($"{Table.Model}"));
+                        b.SetBinding(nameof(Button.Command), cmd);
+                        b.SetBinding(nameof(Button.If), new Bind($"!{Table.Model}.Done"));
+                    }
+                },
+            EntityCommandType.UnPost => new Button() 
+                { 
+                    Icon = Icon.Unapply, 
+                    Content = "@[UnPost]",
+                    Bindings = b => {
+                        b.SetBinding(nameof(Button.If), new Bind($"{Table.Model}.Done"));
+                    }
+            },
             _ => throw new InvalidOperationException($"Invalid CommandType {cmd}")
 
         };

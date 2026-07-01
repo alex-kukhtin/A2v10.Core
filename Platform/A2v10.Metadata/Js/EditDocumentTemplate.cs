@@ -14,7 +14,7 @@ internal partial class JavascriptBuilder
     {
         IEnumerable<String> defaults()
         {
-            if (Table.Columns.Any(c => c.Name == "Date"))
+            if (Table.Columns.Any(c => c.Type == ColumnType.Date))
                 yield return $$"""'{{Table.Model}}.Date'() { return du.today(); }""";
             if (Table.Origin != null && Table.Origin.IsOperation)
             {
@@ -83,26 +83,26 @@ internal partial class JavascriptBuilder
                 {{String.Join(jsDivider, validators())}}
             },
             commands: {
-                apply,
-                unApply
+                post,
+                unPost
             }
         };
 
         module.exports = template;
 
-        async function apply() {
+        async function post() {
             const ctrl = this.$ctrl;
-            await ctrl.$invoke('apply', {Id: this.{{Table.Model}}.{{Table.PrimaryKeyField}}}, '{{endpoint}}');
-        	this.{{Table.RealItemName}}.Done = true;
-            ctrl.$emitGlobal('g.document.applied', this);
+            await ctrl.$invoke('post', {Id: this.{{Table.Model}}.Id}, '{{endpoint}}');
+        	this.{{Table.Model}}.Done = true;
+            ctrl.$emitGlobal('g.document.posted', this);
             ctrl.$requery();
         }
 
-        async function unApply() {
+        async function unPost() {
             const ctrl = this.$ctrl;
-            await ctrl.$invoke('unapply', {Id: this.{{Table.Model}}.{{Table.PrimaryKeyField}}}, '{{endpoint}}');
-        	this.{{Table.RealItemName}}.Done = false;
-            ctrl.$emitGlobal('g.document.applied', this);
+            await ctrl.$invoke('unpost', {Id: this.{{Table.Model}}.Id}, '{{endpoint}}');
+        	this.{{Table.Model}}.Done = false;
+            ctrl.$emitGlobal('g.document.posted', this);
             ctrl.$requery();
         }
         """;

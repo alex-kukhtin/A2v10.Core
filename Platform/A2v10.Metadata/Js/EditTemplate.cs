@@ -11,9 +11,9 @@ internal partial class JavascriptBuilder
 {
     internal Task<String> CreateEditTemplate()
     {
-        return Table.Schema switch
+        return Table.Kind switch
         {
-            "doc" => CreateDocumentTemplate(),
+            EndpointKind.Document => CreateDocumentTemplate(),
             _ => CreateGenericEditTemplate()
         };
     }

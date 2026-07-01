@@ -106,7 +106,7 @@ internal static class DefaultFormBuilder
             Toolbar = [
                 EntityCommandType.SaveAndClose, EntityCommandType.Save,
                 EntityCommandType.Print, CommandBarItem.Separator,
-                EntityCommandType.Post, CommandBarItem.Separator, EntityCommandType.Attachments,
+                EntityCommandType.Post, EntityCommandType.UnPost, CommandBarItem.Separator, EntityCommandType.Attachments,
                 CommandBarItem.Separator, EntityCommandType.Reload
             ],
             Elements = [

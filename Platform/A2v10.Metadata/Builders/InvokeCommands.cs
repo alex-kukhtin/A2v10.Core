@@ -14,10 +14,10 @@ internal partial class BaseModelBuilder
     {
         return command.ToLowerInvariant() switch
         {
-            "apply" => ApplyAsync(prms),
+            "apply" or "post" => ApplyAsync(prms),
             "fetch" => _sqlBuilder.FetchAsync(prms),
             "fetchfolder" => _sqlBuilder.FetchFolderAsync(prms),
-            "unapply" => UnApplyAsync(prms),
+            "unapply" or "unapply" => UnApplyAsync(prms),
             var s when s.EndsWith(".unique") => _sqlBuilder.CheckUniqueAsync(prms, command.Split('.')[0]),
             _ => throw new NotImplementedException($"Implement invoke for {command}")
         };

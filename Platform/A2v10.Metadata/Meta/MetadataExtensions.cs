@@ -15,7 +15,7 @@ internal static class TableColumnPredicates
         => col.Type != ColumnType.RowVersion && col.Type != ColumnType.Void && col.Type != ColumnType.IsSystem;
     internal static Boolean IsEditColumn(TableColumn col)
         => col.Type != ColumnType.RowVersion && col.Type != ColumnType.Void && col.Type != ColumnType.IsSystem
-            && col.Type != ColumnType.Id;
+            && col.Type != ColumnType.Id && col.Type != ColumnType.Done;
 }
 
 internal static class MetadataExtensions

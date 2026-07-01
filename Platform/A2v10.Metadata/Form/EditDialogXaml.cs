@@ -68,6 +68,7 @@ internal partial class XamlBuilder
         return new Dialog()
         {
             Overflow = true,
+            Bindings = b => b.SetBinding(nameof(Dialog.Title), new Bind($"{Table.Model}.Id") { Format = $$"""@[{{Table.Model}}] [{0}]"""}),
             Buttons = [
                 new Button()
                 {
