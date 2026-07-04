@@ -100,7 +100,9 @@ internal static class DefaultFormBuilder
             .OrderBy(c => c.IsMemo)
             .ToDictionary(c => c.Name, c => new FormColumn());
 
-        return new FormMetadata()
+        // TODO: разбить cols на ТРИ части. (Date,No), (Refs), (Memo)
+
+        var fd = new FormMetadata()
         {
             Is = FormKind.Page,
             Toolbar = [
@@ -116,6 +118,28 @@ internal static class DefaultFormBuilder
                 }
             ]
         };
+
+        if (table.Details.Count > 0) 
+        {
+            var tabs = new FormTabs();
+            fd.Elements.Add(tabs);
+            foreach (var d in table.Details)
+            {
+                if (d.Value.Kinds.Count > 0)
+                {
+                    foreach (var k in d.Value.Kinds)
+                    {
+                        tabs.Tabs.Add(new FormTab()
+                        {
+                            Scope = k,
+                            Elements = []
+                        });
+                    }
+                }
+            }
+        }
+
+        return fd;
     }
 
     public static FormMetadata CreateEditFormDialog(TableMetadata table)

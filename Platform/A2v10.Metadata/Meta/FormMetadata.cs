@@ -95,15 +95,21 @@ public sealed record FormDataGrid : FormElement
     public Dictionary<String, FormColumn> Columns { get; set; } = [];
 }
 
-public sealed record FormControl : FormElement
-{
-    public String Key { get; init; } = default!;
-    public FormColumn Column { get; init; } = default!;
-}
-
 public sealed record FormGrid : FormElement
 {
     public Dictionary<String, FormColumn> Columns { get; set; } = [];
+}
+
+public sealed record FormTab : FormElement
+{
+    public String Scope { get; init; } = default!;
+    public List<FormElement> Elements { get; set; } = [];
+}
+
+public sealed record FormTabs : FormElement
+{
+    public String Scope { get; init; } = default!;
+    public List<FormTab> Tabs { get; set; } = [];
 }
 
 public sealed record FormToolbar : FormElement

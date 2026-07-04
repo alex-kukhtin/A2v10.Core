@@ -107,6 +107,11 @@ internal partial class XamlBuilder
             {
                 Children = [..fg.Columns.Select(x => CreateEditControl(x.Value))]
             },
+            FormTabs ft => new TabBar()
+            {
+                Bindings = b => b.SetBinding(nameof(TabBar.Value), new Bind($"{Table.Model}.$$Tab")),
+                Buttons = [..ft.Tabs.Select(tab => new TabButton() { Content = $"@[{tab.Scope}]", ActiveValue=tab.Scope })]
+            },
             _ => throw new InvalidOperationException($"Invalid control {elem}")
         };
     }
