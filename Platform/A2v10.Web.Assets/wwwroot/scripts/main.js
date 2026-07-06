@@ -1324,8 +1324,11 @@ app.modules['std:url'] = function () {
 			urlId = urlId.$id;
 		else if (utils.isObjectExact(urlId)) {
 			urlId = data.Id;
-			delete data['Id'];
-			qs = makeQueryString(data);
+			// do not mutate the caller object (it may be a bound reactive model/filter):
+			// clone before stripping Id, otherwise the original loses its Id key
+			let rest = Object.assign({}, data);
+			delete rest['Id'];
+			qs = makeQueryString(rest);
 			if (!utils.isDefined(urlId))
 				urlId = 'new';
 		}
