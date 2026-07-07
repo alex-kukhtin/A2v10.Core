@@ -47,7 +47,7 @@ internal static class SqlExtensions
         return columnDataType switch
         {
             ColumnType.Id or ColumnType.Ref or ColumnType.Owner or 
-                ColumnType.Parent or ColumnType.User => "bigint",
+                ColumnType.Parent or ColumnType.User => "platformid",                                    
             ColumnType.IsSystem or ColumnType.IsFolder or ColumnType.Done or
                 ColumnType.Void or ColumnType.Boolean => "bit",
             ColumnType.Name => "nvarchar(255)",
