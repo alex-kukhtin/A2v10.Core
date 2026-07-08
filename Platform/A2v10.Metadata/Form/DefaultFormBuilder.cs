@@ -132,7 +132,7 @@ internal static class DefaultFormBuilder
                         tabs.Tabs.Add(new FormTab()
                         {
                             Scope = k,
-                            Elements = []
+                            Columns = d.Value.Columns.Where(c => c.Name != "Kind").ToDictionary(c => c.Name, c => new FormColumn())
                         });
                     }
                 }

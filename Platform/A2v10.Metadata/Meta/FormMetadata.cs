@@ -103,7 +103,7 @@ public sealed record FormGrid : FormElement
 public sealed record FormTab : FormElement
 {
     public String Scope { get; init; } = default!;
-    public List<FormElement> Elements { get; set; } = [];
+    public Dictionary<String, FormColumn> Columns { get; set; } = [];
 }
 
 public sealed record FormTabs : FormElement
@@ -154,6 +154,20 @@ public record FormMetadata
                         ?? throw new InvalidOperationException($"FormMetadata. Column {column.Key} not found");
                     column.Value.SetTableColumn(fc);
                 }
+            else if (el is FormTabs fts)
+            {
+                foreach (var ft in fts.Tabs)
+                {
+                    var detailsTable = table.Details.FirstOrDefault(x => x.Value.Kinds.Contains(ft.Scope));
+                    var detailsCols = detailsTable.Value.Columns;
+                    foreach (var column in ft.Columns)
+                    {
+                        var fc = detailsCols.FirstOrDefault(c => c.Name == column.Key)
+                            ?? throw new InvalidOperationException($"FormMetadata. Column {column.Key} not found");
+                        column.Value.SetTableColumn(fc);
+                    }
+                }
+            }
         }
     }
 }

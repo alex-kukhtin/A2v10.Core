@@ -133,11 +133,11 @@ internal partial class SqlBuilder
             // STEP 2: create temp table
             sb.AppendLine();
             sb.AppendLine("-- map table");
-            sb.Append("declare @map table(rowNo int identity(1,1), rowCnt int, Id bigint");
+            sb.Append("declare @map table(rowNo int identity(1,1), rowCnt int, Id platformid");
             if (refs.Count > 0)
             {
                 sb.Append(", ");
-                sb.Append(String.Join(", ", refs.Select(c => $"[{c.Column.Name}] bigint")));
+                sb.Append(String.Join(", ", refs.Select(c => $"[{c.Column.Name}] platformid")));
             }
             sb.AppendLine(");");
 

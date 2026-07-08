@@ -1,4 +1,4 @@
-﻿// Copyright © 2022-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2022-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -17,11 +17,6 @@ public class BindImpl
 		_bindings[name] = bind;
 		return bind;
 	}
-
-	public void RemoveBinding(String name)
-	{
-        _bindings?.Remove(name);
-    }
 
 	public Bind? GetBinding(String name)
 	{

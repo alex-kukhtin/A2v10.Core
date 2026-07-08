@@ -18,11 +18,6 @@ public class BindImpl
         return bind;
 	}
 
-	public void RemoveBinding(String name)
-	{
-		_bindings?.Remove(name);
-	}
-
     public BindBase? GetBindingBase(String name)
     {
         if (_bindings == null)

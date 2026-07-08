@@ -108,6 +108,23 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return list;
     }
 
+    private async Task<AppLevelMetadata> LoadAppLevelMetadataAsync()
+    {
+        using var stream = _codeProvider.FileStreamRO("app.json");
+        var text = "{}"; // empty value;
+        if (stream == null)
+            return new AppLevelMetadata() { IdType = IdentitfierType.Int64 };
+        if (stream != null)
+        {
+            using var sr = new StreamReader(stream);
+            text = await sr.ReadToEndAsync()
+                ?? throw new InvalidOperationException($"app.json is empty");
+        }
+        var meta = JsonConvert.DeserializeObject<AppLevelMetadata>(text, JsonSettings.CamelCaseSerializerSettings)
+            ?? throw new InvalidOperationException("AppLevelMetadata deserialization fails");
+        return meta;
+    }
+
     private async Task<AppMetadata> LoadAppMetadataAsync(String? dataSource)
     {
         var dm = await _dbContext.LoadModelAsync(dataSource, "a2meta.[App.Metadata]")

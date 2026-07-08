@@ -31,11 +31,6 @@ public class XamlElement : ISupportBinding, IInitComplete, IBindWriter
 		return _bindImpl?.GetBinding(name);
 	}
 
-	public void RemoveBinding(String name)
-	{
-		_bindImpl?.RemoveBinding(name);
-	}
-
 
     #region IBindWriter
     public String? CreateMarkup(String name)

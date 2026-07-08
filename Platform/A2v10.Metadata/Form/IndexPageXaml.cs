@@ -81,40 +81,6 @@ internal partial class XamlBuilder
         };
     }
 
-    UIElementBase ElementToControl(FormElement elem)
-    {
-        return elem switch
-        {
-            FormToolbar tb => new Toolbar(_xamlServiceProvider)
-            {
-                Children = [.. tb.Commands.Select(ToolbarControl)]
-            },
-            FormDataGrid dg => new DataGrid()
-            {
-                FixedHeader = true,
-                Sort = true,
-                Bindings = b =>
-                {
-                    b.SetBinding(nameof(DataGrid.ItemsSource), new Bind("Parent.ItemsSource"));
-                },
-                Columns = [.. IndexColumnsXaml(dg.Columns, false)]
-            },
-            FormPager pg => new Pager()
-            {
-                Bindings = b => b.SetBinding(nameof(Pager.Source), new Bind("Parent.Pager"))
-            },
-            FormGrid fg => new Grid(_xamlServiceProvider)
-            {
-                Children = [..fg.Columns.Select(x => CreateEditControl(x.Value))]
-            },
-            FormTabs ft => new TabBar()
-            {
-                Bindings = b => b.SetBinding(nameof(TabBar.Value), new Bind($"{Table.Model}.$$Tab")),
-                Buttons = [..ft.Tabs.Select(tab => new TabButton() { Content = $"@[{tab.Scope}]", ActiveValue=tab.Scope })]
-            },
-            _ => throw new InvalidOperationException($"Invalid control {elem}")
-        };
-    }
     internal Grid IndexPageGrid(FormMetadata meta)
     {
         return new Grid(_xamlServiceProvider)

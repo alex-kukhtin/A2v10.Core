@@ -96,9 +96,7 @@ public class RenderContext(IXamlElement _root, IRenderInfo _ri, ILocalizer _loca
 	public String? RootId { get; set; }
 	public String? Path { get; set; }
 	public Component? RenderedComponent { get; set; }
-
     public TextWriter Writer { get; private set; } = writer;
-
     public Boolean IsDebugConfiguration { get; } = true; // TODO: ri.IsDebugConfiguration;
 
     private readonly Stack<GridRowCol> _stackGrid = new();
@@ -109,6 +107,9 @@ public class RenderContext(IXamlElement _root, IRenderInfo _ri, ILocalizer _loca
 
 	readonly private String? _currentLocale = _ri.CurrentLocale;
 
+    private readonly ISet<Control> _disabledControls = new HashSet<Control>();
+	public void AddDisabledControl(Control control) => _disabledControls.Add(control);
+    public Boolean IsControlDisabled(Control control) => _disabledControls.Contains(control);
     public Boolean IsDialog => _root is Dialog;
 	public Boolean IsWizard => _root is Wizard;
 

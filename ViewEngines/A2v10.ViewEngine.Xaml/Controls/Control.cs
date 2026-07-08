@@ -126,19 +126,28 @@ public abstract class Control : UIElement
 		tag.RenderEnd(context);
 	}
 
-	protected virtual void MergeDisabled(TagBuilder tag, RenderContext context, Boolean nativeControl = false)
+	void DisableControl(TagBuilder tag, Boolean nativeControl = false)
+    {
+        if (nativeControl)
+            tag.MergeAttribute("disabled", String.Empty, replaceExisting: true);
+        else
+            tag.MergeAttribute(":disabled", "true", replaceExisting: true); // jsValue
+
+    }
+
+    protected virtual void MergeDisabled(TagBuilder tag, RenderContext context, Boolean nativeControl = false)
 	{
-		// may override the disabled attribute from the command
-		var disBind = GetBinding(nameof(Disabled));
+		if (context.IsControlDisabled(this)) 
+		{
+			DisableControl(tag, nativeControl);
+			return;
+        }
+        // may override the disabled attribute from the command
+        var disBind = GetBinding(nameof(Disabled));
 		if (disBind != null)
 			tag.MergeAttribute(":disabled", disBind.GetPath(context), replaceExisting: true);
 		else if (Disabled)
-		{
-			if (nativeControl)
-				tag.MergeAttribute("disabled", String.Empty, replaceExisting: true);
-			else
-				tag.MergeAttribute(":disabled", "true", replaceExisting: true); // jsValue
-		}
+            DisableControl(tag, nativeControl);
 	}
 
 	protected virtual Boolean SkipCheckReadOnly()
@@ -159,8 +168,7 @@ public abstract class Control : UIElement
 		{
 			if (SkipCheckReadOnly())
 				return false;
-			Disabled = true;
-			RemoveBinding(nameof(Disabled));
+			context.AddDisabledControl(this);
 		}
 		return false;
 	}

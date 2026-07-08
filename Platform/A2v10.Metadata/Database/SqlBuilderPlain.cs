@@ -104,11 +104,15 @@ internal partial class SqlBuilder
         refMap.WriteRefMap(sb);
 
         // STEP 5: system recorset
-        sb.AppendLine();
-        sb.AppendLine("-- system recordset");
-        sb.Append($"""
-            select [!$System!] = null;
-            """);
+        if (Table.IsDocument)
+        {
+            sb.AppendLine();
+            sb.AppendLine("-- system recordset");
+            sb.Append($"""
+                select [!$System!] = null, [!!ReadOnly] = a.Done
+                from {Table.SqlTableName} a where a.Id = @Id;
+                """);
+        }
         return sb.ToString();
     }
 
@@ -139,8 +143,8 @@ internal partial class SqlBuilder
             set transaction isolation level read committed;
             set xact_abort on;
             
-            declare @rtable table(Id bigint);
-            declare @Id bigint;                        
+            declare @rtable table(Id platformid);
+            declare @Id platformid;                        
 
             """);
 

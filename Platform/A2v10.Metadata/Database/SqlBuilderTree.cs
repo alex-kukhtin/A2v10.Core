@@ -37,18 +37,18 @@ internal partial class SqlBuilder
 
         with T(Id, [Name], Icon, HasChildren, [Order], [Parent], InitExpand)
         as (
-            select Id = cast(0 as bigint), [Name] = N'{Table.RealItemsLabel.LocalizeSql()}', Icon='folder-outline',
-                HasChildren = cast(0 as bit), [Order] = 1, [Parent] = cast(null as bigint),
+            select Id = cast(0 as platformid), [Name] = N'{Table.RealItemsLabel.LocalizeSql()}', Icon='folder-outline',
+                HasChildren = cast(0 as bit), [Order] = 1, [Parent] = cast(null as platformid),
                 [InitExpand] = cast(1 as bit)
             union all
-            select Id = cast(-2 as bigint), [Name] = N'[Не в групах]', Icon='folder-ban',
-                HasChildren = cast(0 as bit), [Order] = 8, [Parent] = cast(null as bigint),
+            select Id = cast(-2 as platformid), [Name] = N'[Не в групах]', Icon='folder-ban',
+                HasChildren = cast(0 as bit), [Order] = 8, [Parent] = cast(null as platformid),
                 [InitExpand] = cast(0 as bit)
             union all
             select Id, [Name], Icon = N'folder-outline',
                 HasChildren = case when exists (select * from {Table.SqlTableName} 
                     where Void = 0 and IsFolder = 1 and Parent = f.Id) then 1 else 0 end,
-                [Order] = 2, [Parent] = cast(0 as bigint), 
+                [Order] = 2, [Parent] = cast(0 as platformid), 
                 [InitExpand] = cast(0 as bit)
             from {Table.SqlTableName} f
             where f.IsFolder = 1 and f.Void = 0 and f.Parent is null
@@ -116,14 +116,14 @@ internal partial class SqlBuilder
 
         with T(Id, [Name], Icon, HasChildren, [Order], [Parent], InitExpand)
         as (
-            select Id = cast(0 as bigint), [Name] = N'{Table.RealItemsLabel.LocalizeSql()}', Icon='folder-outline',
-                HasChildren = cast(0 as bit), [Order] = 1, [Parent] = cast(null as bigint),
+            select Id = cast(0 as platformid), [Name] = N'{Table.RealItemsLabel.LocalizeSql()}', Icon='folder-outline',
+                HasChildren = cast(0 as bit), [Order] = 1, [Parent] = cast(null as platformid),
                 [InitExpand] = cast(1 as bit)
             union all
             select Id, [Name], Icon = N'folder-outline',
                 HasChildren = case when exists (select * from {Table.SqlTableName} 
                     where Void = 0 and IsFolder = 1 and Parent = f.Id) then 1 else 0 end,
-                [Order] = 2, Parent = cast(0 as bigint),
+                [Order] = 2, Parent = cast(0 as platformid),
                 [InitExpand] = cast(0 as bit)
             from {Table.SqlTableName} f
             where f.IsFolder = 1 and f.Void = 0 and f.Parent is null

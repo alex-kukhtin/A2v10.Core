@@ -341,6 +341,19 @@ public record OperationMetadata(String Id, String? Name, String? Category);
 public record EnumValueMetadata(String Id, String Name, Int32 Order, Boolean? Inactive);
 public record EnumMetadata(String Name, EnumValueMetadata[] Values);
 
+public enum IdentitfierType
+{
+    Int64,
+    Guid,
+    Int32,
+    String
+}
+
+public record AppLevelMetadata
+{
+    public IdentitfierType IdType { get; init; } = IdentitfierType.Int64;
+}
+
 public record AppMetadata
 {
     public Guid Id { get; init; } = default!;
