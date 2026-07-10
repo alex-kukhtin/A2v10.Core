@@ -46,7 +46,7 @@ internal partial class XamlBuilder
                 Bindings = b => b.SetBinding(nameof(Button.Command), new BindCmd(nameof(CommandType.SaveAndClose)))
             },
             EntityCommandType.Edit => ButtonEditSelected(),
-            EntityCommandType.Add => ButtonCreate(),
+            EntityCommandType.Create => ButtonCreate(),
             EntityCommandType.Delete => new Button() { Icon = Icon.Clear },
             EntityCommandType.Show => new Button()
             {

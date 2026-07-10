@@ -3,6 +3,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using DocumentFormat.OpenXml.Office2013.Drawing.Chart;
+using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace A2v10.Metadata;
 
@@ -11,21 +13,21 @@ internal static class DefaultFormBuilder
     public static FormMetadata CreateIndexForm(TableMetadata table)
     {
         var cols = table.AllColumns(TableColumnPredicates.IsIndexColumn)
-            .OrderBy(c => c.IsMemo)
-            .ToDictionary(c => c.Name, c => new FormColumn());
+            .OrderBy(c => c.IsMemo);
+            //.ToDictionary(c => c.Name, c => new FormColumn());
 
         List<CommandBarItem> indexCommands() =>
             table.Kind switch
             {
                 EndpointKind.Catalog =>
                     [
-                        EntityCommandType.Add, EntityCommandType.Edit, EntityCommandType.Delete,
+                        EntityCommandType.Create, EntityCommandType.Edit, EntityCommandType.Delete,
                         CommandBarItem.Separator, EntityCommandType.Show, CommandBarItem.Separator, EntityCommandType.Reload,
                         CommandBarItem.Aligner, EntityCommandType.Search
                     ],
                 EndpointKind.Document =>
                     [
-                        EntityCommandType.Add, EntityCommandType.Edit, EntityCommandType.Delete,
+                        EntityCommandType.Create, EntityCommandType.Edit, EntityCommandType.Delete,
                         CommandBarItem.Separator, EntityCommandType.Print, CommandBarItem.Separator, EntityCommandType.Reload,
                         CommandBarItem.Aligner, EntityCommandType.Search
                     ],
@@ -41,21 +43,30 @@ internal static class DefaultFormBuilder
         return new FormMetadata()
         {
             Is = FormKind.Page,
-            Elements = [
-                new FormToolbar() {
+            Body = [
+                new FormElement() {
+                    Is = FormElementKind.Toolbar,
                     Commands = indexCommands()
                 },
-                new FormDataGrid() 
+                new FormElement() 
                 {
-                    Columns = cols
+                    Is = FormElementKind.DataGrid,
+                    Fields = [..cols.Select(c => c.Name)]
                 },
-                new FormPager() 
+                new FormElement() 
                 {
+                    Is = FormElementKind.Pager
                 }
             ],
-            TaskPad = new FormTaskPad()
+            TaskPad = new FormElement()
             {
-                Filters = [.. table.TableFilters()]
+                Is = FormElementKind.Taskpad,
+                Elements = [
+                    new FormElement() {
+                        Is = FormElementKind.Filters,
+                        Fields = [..table.TableFilters().Select(f => f.Name)],
+                    }
+                ]
             }
         };
     }
@@ -63,28 +74,36 @@ internal static class DefaultFormBuilder
     public static FormMetadata CreateBrowseForm(TableMetadata table)
     {
         var cols = table.AllColumns(TableColumnPredicates.IsIndexColumn)
-            .OrderBy(c => c.IsMemo)
-            .ToDictionary(c => c.Name, c => new FormColumn());
+            .OrderBy(c => c.IsMemo);
+            //.ToDictionary(c => c.Name, c => new FormColumn());
 
         return new FormMetadata()
         {
             Is = FormKind.Dialog,
-            Elements = [
-                new FormToolbar() {
+            Body = [
+                new FormElement() {
+                    Is = FormElementKind.Toolbar,
                     Commands = [
-                        EntityCommandType.Add, EntityCommandType.Edit, EntityCommandType.Delete,
+                        EntityCommandType.Create, EntityCommandType.Edit, EntityCommandType.Delete,
                         CommandBarItem.Separator, EntityCommandType.Reload,
                         CommandBarItem.Aligner, EntityCommandType.Search
                     ]
                 },
-                new FormDataGrid()
+                new FormElement()
                 {
-                    Columns = cols
+                    Is = FormElementKind.DataGrid,
+                    Fields = [..cols.Select(c => c.Name)]
                 }
             ],
-            TaskPad = new FormTaskPad()
+            TaskPad = new FormElement()
             {
-                Filters = [.. table.TableFilters()]
+                Is = FormElementKind.Taskpad,
+                Elements = [
+                    new FormElement() {
+                        Is = FormElementKind.Filters,
+                        Fields = [..table.TableFilters().Select(f => f.Name)],
+                    }
+                ]
             }
         };
     }
@@ -97,42 +116,52 @@ internal static class DefaultFormBuilder
     public static FormMetadata CreateEditPage(TableMetadata table)
     {
         var cols = table.AllColumns(TableColumnPredicates.IsEditColumn)
-            .OrderBy(c => c.IsMemo)
-            .ToDictionary(c => c.Name, c => new FormColumn());
+            .OrderBy(c => c.IsMemo);
+            //.ToDictionary(c => c.Name, c => new FormColumn());
 
         // TODO: разбить cols на ТРИ части. (Date,No), (Refs), (Memo)
 
         var fd = new FormMetadata()
         {
             Is = FormKind.Page,
-            Toolbar = [
-                EntityCommandType.SaveAndClose, EntityCommandType.Save,
-                EntityCommandType.Print, CommandBarItem.Separator,
-                EntityCommandType.Post, EntityCommandType.UnPost, CommandBarItem.Separator, EntityCommandType.Attachments,
-                CommandBarItem.Separator, EntityCommandType.Reload
-            ],
-            Elements = [
-                new FormGrid() 
+            Toolbar = new FormElement
+            {
+                Is = FormElementKind.Toolbar,
+                Commands =
+                    [
+                    EntityCommandType.SaveAndClose, EntityCommandType.Save,
+                    EntityCommandType.Print, CommandBarItem.Separator,
+                    EntityCommandType.Post, EntityCommandType.UnPost, CommandBarItem.Separator, EntityCommandType.Attachments,
+                    CommandBarItem.Separator, EntityCommandType.Reload
+                ],
+            },
+            Body = [
+                new FormElement() 
                 {
-                    Columns = cols
+                    Is = FormElementKind.Group,
+                    Fields = [..cols.Select(c => c.Name)]
                 }
             ]
         };
 
         if (table.Details.Count > 0) 
         {
-            var tabs = new FormTabs();
-            fd.Elements.Add(tabs);
+            var tabs = new FormElement()
+            {
+                Is = FormElementKind.Tabs
+            };
+            fd.Body.Add(tabs);
             foreach (var d in table.Details)
             {
                 if (d.Value.Kinds.Count > 0)
                 {
                     foreach (var k in d.Value.Kinds)
                     {
-                        tabs.Tabs.Add(new FormTab()
+                        tabs.Elements.Add(new FormElement()
                         {
+                            Is = FormElementKind.Tab,
                             Scope = k,
-                            Columns = d.Value.Columns.Where(c => c.Name != "Kind").ToDictionary(c => c.Name, c => new FormColumn())
+                            Fields = [..d.Value.Columns.Where(c => c.Name != "Kind").Select(c => c.Name)]
                         });
                     }
                 }
@@ -146,16 +175,17 @@ internal static class DefaultFormBuilder
     {
         // TODO!!!
         var cols = table.AllColumns(TableColumnPredicates.IsEditColumn)
-            .OrderBy(c => c.IsMemo)
-            .ToDictionary(c => c.Name, c => new FormColumn());
+            .OrderBy(c => c.IsMemo);
+            //.ToDictionary(c => c.Name, c => new FormColumn());
 
         return new FormMetadata()
         {
             Is = FormKind.Dialog,
-            Elements = [
-                new FormGrid()
+            Body = [
+                new FormElement()
                 {
-                    Columns = cols
+                    Is = FormElementKind.Group,
+                    Fields = [..cols.Select(c => c.Name)]
                 }
             ]
         };

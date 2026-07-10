@@ -196,7 +196,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
 
     public async Task ResolveReferencesAsyns(TableMetadata meta, String? dataSource)
     {
-        IEnumerable<TableColumn> GetAllReferences(TableMetadata table)
+        static IEnumerable<TableColumn> GetAllReferences(TableMetadata table)
         {
             return table.Columns.Where(c => c.IsRef)
                 .Concat(table.Details.Values.SelectMany(GetAllReferences));

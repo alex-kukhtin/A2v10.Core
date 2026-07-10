@@ -13,12 +13,12 @@ internal partial class XamlBuilder
         {
             Toolbar = new Toolbar(_xamlServiceProvider)
             {
-                Children = [..form.Toolbar.Select(ToolbarControl)]
+                Children = [..form.Toolbar.Commands.Select(ToolbarControl)]
             },
             Children = [
                 new Grid(_xamlServiceProvider)
                 {
-                    Children = [..form.Elements.Select(ElementToControl)]
+                    Children = [..form.Body.Select(ElementToControl)]
                 }
             ]
         };

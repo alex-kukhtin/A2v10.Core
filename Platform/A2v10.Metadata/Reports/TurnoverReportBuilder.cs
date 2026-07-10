@@ -56,9 +56,9 @@ internal class TurnoverReportBuilder(IServiceProvider serviceProvider, TableMeta
         {
             var refMeta = await _metadataProvider.GetSchemaAsync(dataSource, f.RealRefSchema, f.RealRefTable);
             filterMaps.AppendLine($"""
-                select [!T{f.Column}!Map] = null, [Id!!Id] = [{refMeta.PrimaryKeyField}], [Name!!Name] = [Name]
+                select [!T{f.Column}!Map] = null, [Id!!Id] = [Id], [Name!!Name] = [Name]
                 from {f.RealRefSchema}.[{f.RealRefTable}]
-                where [{refMeta.PrimaryKeyField}] = @{f.Column}
+                where [Id] = @{f.Column}
             """);
         }
 

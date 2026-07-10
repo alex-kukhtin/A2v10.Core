@@ -9,10 +9,10 @@ namespace A2v10.Metadata;
 
 internal partial class XamlBuilder
 {
-    Control CreateEditControl(FormColumn column)
+    Control CreateEditControl(TableColumn column)
     {
-        var valueBind = new Bind($"{Table.Model}.{column.TableColumn.Name}");
-        return column.TableColumn.Type switch
+        var valueBind = new Bind($"{Table.Model}.{column.Name}");
+        return column.Type switch
         {
             ColumnType.Date => new DatePicker()
             {
@@ -37,7 +37,7 @@ internal partial class XamlBuilder
             ColumnType.Ref => new SelectorSimple()
             {
                 Label = column.Header,
-                Url = column.TableColumn.RefTableCheck.Path,
+                Url = column.RefTableCheck.Path,
                 Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
             },
             ColumnType.Done or ColumnType.Bit or ColumnType.Boolean => new CheckBox()
@@ -85,7 +85,7 @@ internal partial class XamlBuilder
             Children = [
                 new Grid(_xamlServiceProvider)
                 {
-                    Children = [..meta.Elements.Select(ElementToControl)]
+                    Children = [..meta.Body.Select(ElementToControl)]
                 }
             ]
         };

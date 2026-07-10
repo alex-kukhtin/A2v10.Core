@@ -18,7 +18,7 @@ internal class RefMapBuilder
     public RefMapBuilder(TableMetadata table, Boolean isPlain)
     {
         _isPlain = isPlain;
-        _flat = Flatten(table).ToList();
+        _flat = [.. Flatten(table)];
         _tableStruct = BuildTableStructure();
     }
     public Boolean IsEmpty => _flat.Count == 0;

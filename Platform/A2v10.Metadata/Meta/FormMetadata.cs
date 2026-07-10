@@ -8,20 +8,9 @@ using Newtonsoft.Json;
 
 namespace A2v10.Metadata;
 
-internal enum FormColumnType
-{
-    String,
-    Id,
-    Ref,
-    Date,
-    DateTime,
-    Number,
-    Currency
-}
-
 public enum EntityCommandType
 {
-    Add,
+    Create,
     Edit,
     Delete,
     Save,
@@ -61,113 +50,66 @@ public readonly struct CommandBarItem
     public static readonly CommandBarItem Aligner = new(CommandBarItemKind.Aligner, null);
 }
 
-public enum FormFilterType
+public enum FormElementKind
 {
-    Ref,
-    Period
+    Group,
+    Tabs,
+    Tab,
+    DataGrid,
+    Taskpad,
+    Toolbar,
+    Pager,
+    Filters
 }
-
-public record FormFilter(String Column, FormFilterType? Type);
-
-public record FormColumn
+public record FormElement
 {
-    public String Header { get; set; } = default!;
-    public String Path { get; set; } = default!;
-    [JsonIgnore]
-    internal FormColumnType DataType { get; private set; }
-    [JsonIgnore]
-    internal TableColumn TableColumn { get; private set; } = default!;
+    public FormElementKind Is { get; init; }
+    public String? Scope { get; init; }
+    public List<FormElement> Elements { get; init; } = [];
+    public List<String> Fields { get; init; } = [];
+    public List<CommandBarItem> Commands { get; set; } = [];
 
-    public void SetTableColumn(TableColumn column)
+    [JsonIgnore]
+    internal List<TableColumn> Columns { get; private set; } = [];
+    internal void SetDefaults(TableMetadata table, List<TableColumn> cols)
     {
-        TableColumn = column;
-        Header ??= $"@[{TableColumn.Name}]";
-        Path ??= TableColumn.IsRef ? $"{TableColumn.Name}.{TableColumn.Presentation}" : TableColumn.Name;
-        // set always
-        DataType = TableColumn.Type.ToFormDataType();
+        TableColumn FindColumn(String key) =>
+           cols.FirstOrDefault(c => c.Name == key)
+                ?? throw new InvalidOperationException($"FormMetadata. Column {key} not found");
+        Columns = [.. Fields.Select(FindColumn)];
+        foreach (var el in Elements)
+        {
+            if (!String.IsNullOrEmpty(el.Scope))
+            {
+                var detailsTable = table.Details.First(x => x.Value.Kinds.Contains(el.Scope)).Value;
+                el.SetDefaults(detailsTable, detailsTable.AllColumns(c => c.Type != ColumnType.RowKind).ToList());
+            }
+            else
+                el.SetDefaults(table, cols);
+        }
     }
 }
-
-public abstract record FormElement;
-
-public sealed record FormDataGrid : FormElement
-{
-    public Dictionary<String, FormColumn> Columns { get; set; } = [];
-}
-
-public sealed record FormGrid : FormElement
-{
-    public Dictionary<String, FormColumn> Columns { get; set; } = [];
-}
-
-public sealed record FormTab : FormElement
-{
-    public String Scope { get; init; } = default!;
-    public Dictionary<String, FormColumn> Columns { get; set; } = [];
-}
-
-public sealed record FormTabs : FormElement
-{
-    public String Scope { get; init; } = default!;
-    public List<FormTab> Tabs { get; set; } = [];
-}
-
-public sealed record FormToolbar : FormElement
-{
-    public List<CommandBarItem> Commands { get; set; } = [];
-}
-
-public sealed record FormTaskPad : FormElement
-{    
-    public List<FormFilter> Filters { get; set; } = [];
-}
-public sealed record FormPager : FormElement;
-
 public enum FormKind
 {
     Unknpwn = 0,
     Page,
     Dialog
 }
-public record FormMetadata
+public sealed record FormMetadata
 {    
     public FormKind Is { get; init; }
-    public List<FormElement> Elements { get; set; } = [];
-    public List<CommandBarItem> Toolbar { get; set; } = [];
-    public FormTaskPad? TaskPad { get; init; }
-    public void SetDefaults(TableMetadata table, Func<TableColumn, Boolean> filter)
+    public String? Scope { get; init; }
+    public List<FormElement> Body { get; init; } = [];
+    public FormElement Toolbar { get; init; } = new() { Is = FormElementKind.Toolbar };
+    public FormElement TaskPad { get; init; } = new() { Is = FormElementKind.Taskpad };
+    public FormMetadata SetDefaults(TableMetadata table, Func<TableColumn, Boolean> filter)
     {
         var cols = table.AllColumns(filter).ToList();
-        foreach (var el in Elements)
-        {
-            if (el is FormDataGrid dg)
-                foreach (var column in dg.Columns)
-                {
-                    var fc = cols.FirstOrDefault(c => c.Name == column.Key)
-                        ?? throw new InvalidOperationException($"FormMetadata. Column {column.Key} not found");
-                    column.Value.SetTableColumn(fc);
-                }
-            else if (el is FormGrid fg)
-                foreach (var column in fg.Columns)
-                {
-                    var fc = cols.FirstOrDefault(c => c.Name == column.Key)
-                        ?? throw new InvalidOperationException($"FormMetadata. Column {column.Key} not found");
-                    column.Value.SetTableColumn(fc);
-                }
-            else if (el is FormTabs fts)
-            {
-                foreach (var ft in fts.Tabs)
-                {
-                    var detailsTable = table.Details.FirstOrDefault(x => x.Value.Kinds.Contains(ft.Scope));
-                    var detailsCols = detailsTable.Value.Columns;
-                    foreach (var column in ft.Columns)
-                    {
-                        var fc = detailsCols.FirstOrDefault(c => c.Name == column.Key)
-                            ?? throw new InvalidOperationException($"FormMetadata. Column {column.Key} not found");
-                        column.Value.SetTableColumn(fc);
-                    }
-                }
-            }
-        }
+        foreach (var el in Body)
+            el.SetDefaults(table, cols);
+        TaskPad.SetDefaults(table, cols);
+        return this;
     }
 }
+
+

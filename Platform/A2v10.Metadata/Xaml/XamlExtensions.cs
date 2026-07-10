@@ -23,35 +23,34 @@ internal static class XamlExtensions
         return item.Label.Localize() ?? $"@[{item.Column}]";
     }
 
-    internal static DataType ToXamlDataType(this FormColumnType column) =>
+    internal static DataType ToXamlDataType(this ColumnType column) =>
         column switch
         {
-            FormColumnType.Date => DataType.Date,
-            FormColumnType.DateTime => DataType.DateTime,
-            FormColumnType.Currency => DataType.Currency,
-            FormColumnType.Number => DataType.Number,
+            ColumnType.Date => DataType.Date,
+            ColumnType.DateTime => DataType.DateTime,
+            ColumnType.Money => DataType.Currency,
+            ColumnType.Float or ColumnType.Decimal => DataType.Number,
             _ => DataType.String,
         };
 
-    internal static ColumnRole ToXamlColumnRole(this FormColumnType column) =>
+    internal static TextAlign ToXamlAlign(this ColumnType column) =>
         column switch
         {
-            FormColumnType.Id => ColumnRole.Id,
-            FormColumnType.Date or FormColumnType.DateTime => ColumnRole.Date,
-            FormColumnType.Currency or FormColumnType.Number => ColumnRole.Number,
-            _ => ColumnRole.Default,
+            ColumnType.Date or ColumnType.DateTime => TextAlign.Center,
+            ColumnType.Float or ColumnType.Decimal or ColumnType.Money => TextAlign.Right,
+            ColumnType.RowNumber => TextAlign.Right,
+            ColumnType.Bit => TextAlign.Center,
+            _ => TextAlign.Default,
         };
 
-    internal static FormColumnType ToFormDataType(this ColumnType column) =>
+
+    internal static ColumnRole ToXamlColumnRole(this ColumnType column) =>
         column switch
         {
-            ColumnType.Id => FormColumnType.Id,
-            ColumnType.Ref => FormColumnType.Ref,
-            ColumnType.Date => FormColumnType.Date,
-            ColumnType.DateTime => FormColumnType.DateTime,
-            ColumnType.Money => FormColumnType.Currency,
-            ColumnType.Float => FormColumnType.Number,
-            _ => FormColumnType.String,
+            ColumnType.Id => ColumnRole.Id,
+            ColumnType.Date or ColumnType.DateTime => ColumnRole.Date,
+            ColumnType.Money or ColumnType.Decimal or ColumnType.Float => ColumnRole.Number,
+            _ => ColumnRole.Default,
         };
 
     internal static SheetCell BindSheetCell(this ReportItemMetadata item, String? prefix = null)

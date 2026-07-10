@@ -92,6 +92,7 @@ internal static class SqlExtensions
             ColumnType.Id or ColumnType.Ref or ColumnType.Owner or ColumnType.Parent => typeof(Int64),
             ColumnType.Name or ColumnType.Memo => typeof(String),
             ColumnType.RowNumber => typeof(Int32),
+            ColumnType.RowKind=> typeof(String),
             ColumnType.Operation => typeof(String),
             ColumnType.Enum => typeof(String),
             ColumnType.BigInt => typeof(Int64),

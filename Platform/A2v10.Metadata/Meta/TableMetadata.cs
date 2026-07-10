@@ -142,6 +142,9 @@ public record TableColumn
     internal Boolean IsSearchable => Type == ColumnType.String || Type == ColumnType.Name || Type == ColumnType.Memo;
     [JsonIgnore]
     internal Boolean IsMemo => Type == ColumnType.Memo;
+    [JsonIgnore]
+    internal String Header => $"@[{Name}]";
+    internal String DisplayPath => IsRef ? $"{Name}.{Presentation}" : Name;
 }
 
 
@@ -323,17 +326,17 @@ public record TableMetadata
         foreach (var d in Details)
             d.Value.SetDetailDefaults(this);
 
-        Forms.GetOrAdd(Constants.FormNames.Index, 
-            key => DefaultFormBuilder.CreateIndexForm(this))
-        .SetDefaults(this, TableColumnPredicates.IsIndexColumn);
+        Forms.GetOrAdd(Constants.FormNames.Index,
+            key => DefaultFormBuilder.CreateIndexForm(this)
+                .SetDefaults(this, TableColumnPredicates.IsIndexColumn));
 
         Forms.GetOrAdd(Constants.FormNames.Edit, 
-            key => DefaultFormBuilder.CreateEditForm(this))
-        .SetDefaults(this, TableColumnPredicates.IsEditColumn);
+            key => DefaultFormBuilder.CreateEditForm(this)
+            .SetDefaults(this, TableColumnPredicates.IsEditColumn));
 
         Forms.GetOrAdd(Constants.FormNames.Browse,
-            key => DefaultFormBuilder.CreateBrowseForm(this))
-        .SetDefaults(this, TableColumnPredicates.IsIndexColumn);
+            key => DefaultFormBuilder.CreateBrowseForm(this)
+            .SetDefaults(this, TableColumnPredicates.IsIndexColumn));
     }
 }
 

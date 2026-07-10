@@ -4,27 +4,35 @@ using System;
 using System.Linq;
 
 using A2v10.Xaml;
-
 using XTable = A2v10.Xaml.Table;
 
 namespace A2v10.Metadata;
 
 internal partial class XamlBuilder
 {
-
-    UIElementBase ElementToTableCell(FormColumn elem)
+    UIElementBase ElementToTableCell(TableColumn elem)
     {
-        return elem.DataType switch
+        return elem.Type switch
         {
-            FormColumnType.String => new TableCell()
+            ColumnType.RowNumber => new TableCell()
                 {
-                    Bindings = b => b.SetBinding(nameof(TableCell.Content), new Bind(elem.TableColumn.Name))
+                    Align = TextAlign.Right,
+                    Bindings = b => b.SetBinding(nameof(TableCell.Content), new Bind(elem.Name) { DataType = DataType.Number })
                 },
-            _ => new TableCell() { Content = elem }
+            ColumnType.Ref => new SelectorSimple()
+                {
+                    Url = elem.RefTableCheck.Path,
+                    Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), new Bind(elem.Name))
+                },
+            _ => new TextBox()
+                {
+                    Align = elem.Type.ToXamlAlign(),
+                    Bindings = b => b.SetBinding(nameof(TextBox.Value), new Bind(elem.Name) { DataType = elem.Type.ToXamlDataType() })
+                },
         };
     }
 
-    Table CreateDetailsTable(FormTab tab)
+    XTable CreateDetailsTable(FormElement tab)
     {
         return new Table()
         {
@@ -33,24 +41,40 @@ internal partial class XamlBuilder
             Header = [
                 new TableRow()
                 {
-
+                    Cells = [..tab.Columns.Select(c => 
+                        new TableCell() { 
+                            Content = c.Header 
+                        })
+                    ]
                 }
             ],
             Rows = [
                 new TableRow()
                 {
-                    Cells = [..tab.Columns.Select(c => ElementToTableCell(c.Value))]
+                    Cells = [..tab.Columns.Select(c => ElementToTableCell(c))]
                 }
             ]
         };
     }
 
-    UIElementBase CreateTabsScope(FormTabs tabs)
+    Button AddRowButton(FormElement tab)
+    {
+        var addRowCommand = new BindCmd() { Command = CommandType.Append };
+        addRowCommand.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind($"{Table.Model}.{tab.Scope}"));
+        return new Button()
+        {
+            Content = "@[AddRow]",
+            Icon = Icon.Plus,
+            Bindings = b => b.SetBinding(nameof(Button.Command), addRowCommand)
+        };
+    }
+
+    Switch CreateTabsScope(FormElement tabs)
     {
         return new Switch()
         {
             Bindings = b => b.SetBinding(nameof(Switch.Expression), new Bind($"{Table.Model}.$$Tab")),
-            Cases = [..tabs.Tabs.Select(tab =>
+            Cases = [..tabs.Elements.Select(tab =>
                 new Case()
                 {
                     Value = tab.Scope,
@@ -61,12 +85,7 @@ internal partial class XamlBuilder
                             Children = [
                                 new Toolbar(_xamlServiceProvider)
                                 {
-                                    Children = [
-                                        new Button() {
-                                            Content = "@[AddRow]",
-                                            Icon = Icon.Plus
-                                        }
-                                    ]
+                                    Children = [AddRowButton(tab)]
                                 },
                                 CreateDetailsTable(tab)
                             ]
@@ -77,15 +96,45 @@ internal partial class XamlBuilder
         };
     }
 
+    UIElementBase CreateFilterControl(TableColumn column)
+    {
+        return column.Type switch
+        {
+            ColumnType.Date or ColumnType.DateTime =>
+                new PeriodPicker()
+                {
+                    Label = $"@[Period]",
+                    Placement = DropDownPlacement.BottomRight,
+                    Display = DisplayMode.Name,
+                    Bindings = b =>
+                    {
+                        b.SetBinding(nameof(PeriodPicker.Value), new Bind("Parent.Filter.Period"));
+                        b.SetBinding(nameof(PeriodPicker.Description), new Bind("Parent.Filter.Period.Name"));
+                    }
+                },
+            ColumnType.Ref => new SelectorSimple()
+            {
+                Label = $"@[{column.RefTableCheck.Model}]",
+                ShowClear = true,
+                Highlight = true,
+                Placeholder = $"@[{column.RefTableCheck.Model}.All]",
+                Url = column.RefTableCheck.Path,
+                Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), new Bind($"Parent.Filter.{column.Name}")),
+            },
+            _ =>
+                throw new InvalidOperationException($"Invalid filter control type '{column.Type}'")
+        };
+    }
+
     UIElementBase ElementToControl(FormElement elem)
     {
-        return elem switch
+        return elem.Is switch
         {
-            FormToolbar tb => new Toolbar(_xamlServiceProvider)
+            FormElementKind.Toolbar => new Toolbar(_xamlServiceProvider)
             {
-                Children = [.. tb.Commands.Select(ToolbarControl)]
+                Children = [.. elem.Commands.Select(ToolbarControl)]
             },
-            FormDataGrid dg => new DataGrid()
+            FormElementKind.DataGrid => new DataGrid()
             {
                 FixedHeader = true,
                 Sort = true,
@@ -93,30 +142,40 @@ internal partial class XamlBuilder
                 {
                     b.SetBinding(nameof(DataGrid.ItemsSource), new Bind("Parent.ItemsSource"));
                 },
-                Columns = [.. IndexColumnsXaml(dg.Columns, false)]
+                Columns = [.. IndexColumnsXaml(elem.Columns, false)]
             },
-            FormPager pg => new Pager()
+            FormElementKind.Pager => new Pager()
             {
                 Bindings = b => b.SetBinding(nameof(Pager.Source), new Bind("Parent.Pager"))
             },
-            FormGrid fg => new Grid(_xamlServiceProvider)
+            FormElementKind.Group => new Grid(_xamlServiceProvider)
             {
-                Children = [.. fg.Columns.Select(x => CreateEditControl(x.Value))]
+                Children = [.. elem.Columns.Select(CreateEditControl)]
             },
-            FormTabs ft => new Grid(_xamlServiceProvider)
+            FormElementKind.Tabs => new Grid(_xamlServiceProvider)
             {
                 Rows = RowDefinitions.FromString("Auto,1*"),
                 Children = [
                     new TabBar()
                     {
                         Bindings = b => b.SetBinding(nameof(TabBar.Value), new Bind($"{Table.Model}.$$Tab")),
-                        Buttons = [..ft.Tabs.Select(tab => new TabButton() { Content = $"@[{tab.Scope}]", ActiveValue=tab.Scope })]
+                        Buttons = [..elem.Elements.Select(tab => new TabButton() { Content = $"@[{tab.Scope}]", ActiveValue=tab.Scope })]
                     },
-                    CreateTabsScope(ft)
+                    CreateTabsScope(elem)
                ]
             },
-
-            _ => throw new InvalidOperationException($"Invalid control {elem}")
+            FormElementKind.Filters => new Panel()
+            {
+                Collapsible = true,
+                Header = "@[Filters]",
+                Style = PaneStyle.Transparent,
+                Children = [.. elem.Columns.Select(CreateFilterControl)]
+            },
+            FormElementKind.Taskpad => new Taskpad()
+            {
+                Children = [.. elem.Elements.Select(ElementToControl)]
+            },
+            _ => throw new InvalidOperationException($"Invalid control {elem.Is}")
         };
     }
 }

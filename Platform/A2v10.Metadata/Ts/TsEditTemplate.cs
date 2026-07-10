@@ -209,7 +209,7 @@ internal partial class TypescriptBuilder
 
         async function apply(this: TRoot) {
             const ctrl: IController = this.$ctrl;
-            await ctrl.$invoke('apply', {Id: this.{{Table.RealItemName}}.{{Table.PrimaryKeyField}}}, '{{endpoint}}');
+            await ctrl.$invoke('apply', {Id: this.{{Table.RealItemName}}.Id}, '{{endpoint}}');
         	this.{{Table.RealItemName}}.Done = true;
             ctrl.$emitGlobal('g.document.applied', this);
             ctrl.$requery();
@@ -217,7 +217,7 @@ internal partial class TypescriptBuilder
 
         async function unApply(this: TRoot) {
             const ctrl: IController = this.$ctrl;
-            await ctrl.$invoke('unapply', {Id: this.{{Table.RealItemName}}.{{Table.PrimaryKeyField}}}, '{{endpoint}}');
+            await ctrl.$invoke('unapply', {Id: this.{{Table.RealItemName}}.Id}, '{{endpoint}}');
         	this.{{Table.RealItemName}}.Done = false;
             ctrl.$emitGlobal('g.document.applied', this);
             ctrl.$requery();

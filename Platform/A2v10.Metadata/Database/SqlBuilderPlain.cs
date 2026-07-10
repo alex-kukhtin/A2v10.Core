@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Dynamic;
 using System.Linq;
 using System.Text;
@@ -10,6 +11,7 @@ using System.Threading.Tasks;
 using A2v10.Data.Core.Extensions;
 using A2v10.Data.Core.Extensions.Dynamic;
 using A2v10.Data.Interfaces;
+using DocumentFormat.OpenXml.Office2019.Excel.RichData2;
 
 namespace A2v10.Metadata;
 
@@ -131,6 +133,84 @@ internal partial class SqlBuilder
 
     public async Task<ExpandoObject> SavePlainModelAsync(ExpandoObject data, ExpandoObject savePrms)
     {
+        String CheckRowVersion()
+        {
+            if (Table.AllColumns(c => c.Type == ColumnType.RowVersion).Any())
+            {
+                var elemName = Table.IsDocument ? "Document" : "Element";
+                return $"""
+                    if exists(select * from @{Table.Model} t inner join {Table.SqlTableName} c on c.Id = t.Id
+                        where t.rv is not null and t.rv <> c.rv)
+                    throw 60000, N'UI:@[Error.{elemName}.RowVersion]', 0;
+                """;
+            }
+            return String.Empty;
+        }
+
+        String MergeDetails()
+        {
+            if (Table.Details == null || Table.Details.Count == 0)
+                return String.Empty;
+            var sb = new StringBuilder("-- merge details");
+            sb.AppendLine();
+
+            Boolean updateablePredicate(TableColumn c)
+                => c.Type != ColumnType.Owner && c.Type != ColumnType.RowKind && c.Type != ColumnType.Id;
+
+            String mergeOneDetails(TableMetadata detailsTable)
+            {
+                var updateFields = detailsTable.AllColumns(updateablePredicate);
+
+                return $"""
+				merge {detailsTable.SqlTableName} as t
+				using @{detailsTable.Table} as s
+				on t.[Id]  = s.[Id]
+				when matched then update set
+				    {String.Join(',', updateFields.Select(f => $"t.[{f.Name}] = s.[{f.Name}]"))}
+				when not matched then insert 
+				    ([Owner], {String.Join(',', updateFields.Select(f => $"[{f.Name}]"))}) values
+				    (@Id, {String.Join(',', updateFields.Select(f => $"s.[{f.Name}]"))})
+				when not matched by source and t.[Owner] = @Id then delete;
+				""";
+            }
+
+            String mergeMultiDetails(TableMetadata detailsTable)
+            {
+                var updateFields = detailsTable.AllColumns(updateablePredicate);
+                var kindField = detailsTable.Columns.FirstOrDefault(c => c.Type == ColumnType.RowKind)
+                    ?? throw new InvalidOperationException("Kind field not found");
+
+                var usingDetails = detailsTable.Kinds.Select(k =>
+                    $"select [__Kind__] = N'{k}', * from @{k}"
+                );
+
+                return $"""
+				with ST as (
+				    {String.Join("\nunion all\n", usingDetails)}
+				)
+				merge {detailsTable.SqlTableName} as t
+				using ST as s
+				on t.Id = s.Id
+				when matched then update set
+					{String.Join(',', updateFields.Select(f => $"t.[{f.Name}] = s.[{f.Name}]"))}
+				when not matched then insert 
+					([Owner], [{kindField.Name}], {String.Join(',', updateFields.Select(f => $"[{f.Name}]"))}) values
+					(@Id, s.[__Kind__], {String.Join(',', updateFields.Select(f => $"s.[{f.Name}]"))})
+				when not matched by source and t.[Owner] = @Id then delete;
+				""";
+            }
+
+            foreach (var details in Table.Details.Select(x => x.Value))
+            {
+                if (details.Kinds.Count == 0)
+                    sb.AppendLine(mergeOneDetails(details));
+                else
+                    sb.AppendLine(mergeMultiDetails(details));
+                sb.AppendLine();
+            }
+            return sb.ToString();
+        }
+
 
         String buildSqlUpdateText()
         {
@@ -147,9 +227,12 @@ internal partial class SqlBuilder
             declare @Id platformid;                        
 
             """);
+            // STEP:1 - check row version
+            sb.AppendLine(CheckRowVersion());
 
-            // STEP:1 - merge main
+            // STEP:2 - merge main
             sb.AppendLine($"""
+            -- merge main table
             merge {Table.SqlTableName} as t
             using @{Table.Model} as s
             on t.[Id] = s.[Id]
@@ -164,7 +247,11 @@ internal partial class SqlBuilder
             
             """);
 
-            // STEP:3 return select
+            // STEP:3 update details
+
+            sb.AppendLine(MergeDetails());
+
+            // STEP:4 return select
 
             sb.AppendLine(BuildLoadPlainSqlText());
 
@@ -177,11 +264,31 @@ internal partial class SqlBuilder
         var tableBuilder = new DataTableBuilder(Table);
         var dtable = tableBuilder.BuildDataTable(item);
 
+        List<(String name, String typeName, DataTable table)> detailsTables = [];
+
+        if (Table.Details.Count > 0)
+        {
+            foreach (var t in Table.Details)
+            {
+                var detailsTableBuilder = new DataTableBuilder(t.Value);
+                if (t.Value.Kinds.Count > 0)
+                {
+                    foreach (var k in t.Value.Kinds)
+                    {
+                        var rows = item?.Get<List<Object>>($"{k}");
+                        var dt = detailsTableBuilder.BuildDataTable(rows);
+                        detailsTables.Add(($"@{k}", t.Value.SqlTableTypeName, dt));
+                    }
+                }
+            }
+        }
+
         var dm = await _dbContext.LoadModelSqlAsync(DataSource, sqlText, dbprms =>
         {
             AddDefaultParameters(dbprms);
             dbprms.AddStructured($"@{Table.Model}", Table.SqlTableTypeName, dtable);
-
+            foreach (var d in detailsTables)
+                dbprms.AddStructured(d.name, d.typeName, d.table);
         });
 
         return dm.Root;

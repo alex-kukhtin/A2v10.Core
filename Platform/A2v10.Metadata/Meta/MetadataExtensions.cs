@@ -131,13 +131,11 @@ internal static class MetadataExtensions
     internal static FormMetadata EditForm(this TableMetadata table) =>
         table.Forms.First(x => x.Key == Constants.FormNames.Edit).Value;
 
-    public static IEnumerable<FormFilter> TableFilters(this TableMetadata table)
+    public static IEnumerable<TableColumn> TableFilters(this TableMetadata table)
     {
-        var filters = table.AllColumns(c => c.IsRef)
-            .Select(c => new FormFilter(c.Name, FormFilterType.Ref));
         if (table.HasPeriod)
-            filters = new[] { new FormFilter("Date", FormFilterType.Period) }.Concat(filters);
-        return filters;
+            yield return new TableColumn("Date", ColumnType.Date);
+        foreach (var c in table.AllColumns(c => c.IsRef))
+            yield return c;
     }
-
 }

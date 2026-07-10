@@ -10,15 +10,15 @@ namespace A2v10.Metadata;
 
 internal partial class XamlBuilder
 {
-    IEnumerable<DataGridColumn> IndexColumnsXaml(Dictionary<String, FormColumn> columns, Boolean hasChecked) =>
+    IEnumerable<DataGridColumn> IndexColumnsXaml(List<TableColumn> columns, Boolean hasChecked) =>
         columns.Select(col =>
             new DataGridColumn()
             {
-                Header = col.Value.Header,
-                Role = col.Value.DataType.ToXamlColumnRole(),
-                SortProperty = col.Value.DataType == FormColumnType.Ref ? col.Key : null,
+                Header = col.Header,
+                Role = col.Type.ToXamlColumnRole(),
+                SortProperty = col.IsRef ? col.Name : null,
                 Bindings = b => b.SetBinding(nameof(DataGridColumn.Content),
-                    new Bind(col.Value.Path) { DataType = col.Value.DataType.ToXamlDataType() })
+                    new Bind(col.DisplayPath) { DataType = col.Type.ToXamlDataType() })
             }
          );
 
@@ -32,8 +32,8 @@ internal partial class XamlBuilder
         foreach (var f in Table.TableFilters())
             yield return f.Type switch
             {
-                FormFilterType.Period => new FilterItem() { Property = "Period", DataType = DataType.Period },
-                _ => new FilterItem() { Property = f.Column, DataType = DataType.Object }
+                ColumnType.Date => new FilterItem() { Property = "Period", DataType = DataType.Period },
+                _ => new FilterItem() { Property = f.Name, DataType = DataType.Object }
             };
     }
 
@@ -65,8 +65,14 @@ internal partial class XamlBuilder
         return new Page()
         {
             CollectionView = XamlCollectionView(),
-            Children = [IndexPageGrid(meta)],
-            Taskpad = IndexTaskpad(meta.TaskPad)
+            Children = [
+                new Grid(_xamlServiceProvider) {
+                    Rows = RowDefinitions.FromString("Auto,1*,Auto"),
+                    Height = Length.FromString("100%"),
+                    Children = [..meta.Body.Select(ElementToControl)]
+                }
+            ],
+            Taskpad = ElementToControl(meta.TaskPad)
         };
     }
 
@@ -83,48 +89,29 @@ internal partial class XamlBuilder
 
     internal Grid IndexPageGrid(FormMetadata meta)
     {
+        UIElementBase CreateIndexToolbar(FormElement? tb)
+        {
+            return new Toolbar(_xamlServiceProvider);
+        }
+
         return new Grid(_xamlServiceProvider)
         {
             Rows = RowDefinitions.FromString("Auto,1*,Auto"),
             Height = Length.FromString("100%"),
-            Children = [..meta.Elements.Select(ElementToControl)]
-        };
-    }
-
-    UIElement CreateFilterControl(FormFilter filter)
-    {
-        var elem = Table.AllColumns(x => x.Name == filter.Column).FirstOrDefault();
-        if (elem == null)
-            return new Block();
-        return filter.Type switch
-        {
-            FormFilterType.Period =>
-                new PeriodPicker()
+            Children = [
+                CreateIndexToolbar(meta.Toolbar),
+                //CreateIndexDataGrid(meta.Body[0]),
+                new Pager() 
                 {
-                    Label = $"@[Period]",
-                    Placement = DropDownPlacement.BottomRight,
-                    Display = DisplayMode.Name,
-                    Bindings = b =>
-                    {
-                        b.SetBinding(nameof(PeriodPicker.Value), new Bind("Parent.Filter.Period"));
-                        b.SetBinding(nameof(PeriodPicker.Description), new Bind("Parent.Filter.Period.Name"));
-                    }
-                },
-            _ => new SelectorSimple()
-            {
-                Label = $"@[{elem.RefTableCheck.Model}]",
-                ShowClear = true,
-                Highlight = true,
-                Placeholder = $"@[{elem.RefTableCheck.Model}.All]",
-                Url = elem.RefTableCheck.Path,
-                Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), new Bind($"Parent.Filter.{filter.Column}")),
-            }
+                    Bindings = b => b.SetBinding(nameof(Pager.Source), new Bind("Parent.Pager"))
+                }
+            ]
         };
     }
 
-    internal Taskpad? IndexTaskpad(FormTaskPad? taskPad)
+    internal Taskpad? IndexTaskpad(FormElement taskPad)
     {
-        if (taskPad == null || taskPad.Filters.Count == 0)
+        if (taskPad.Fields.Count == 0)
             return null;
         return new Taskpad()
         {
@@ -133,7 +120,7 @@ internal partial class XamlBuilder
                     Header = "@[Filters]",
                     Collapsible = true,
                     Style = PaneStyle.Transparent,
-                    Children = [..taskPad.Filters.Select(CreateFilterControl)]
+                    //Children = [..taskPad.Filters.Select(CreateFilterControl)]
                 },
             ]
         };
@@ -145,7 +132,7 @@ internal partial class XamlBuilder
         return new Dialog()
         {
             CollectionView = XamlCollectionView(),
-            Width = Length.FromString(dialog.TaskPad?.Filters.Count > 0 ? "80rem" : "60rem"), // TODO
+            //Width = Length.FromString(dialog.TaskPad?.Filters.Count > 0 ? "80rem" : "60rem"), // TODO
             Height = Length.FromString("40rem"),
             Title = $"@[{Table.Model}.Browse]",
             Buttons = [
@@ -167,7 +154,7 @@ internal partial class XamlBuilder
                     Rows = RowDefinitions.FromString("Auto,1*,Auto"),
                     Height = Length.FromString("100%"),
                     Children = [
-                        ..dialog.Elements.Select(ElementToControl),
+                        ..dialog.Body.Select(ElementToControl),
                         new Pager()
                         {
                             Bindings = b => b.SetBinding(nameof(Pager.Source), new Bind("Parent.Pager"))
