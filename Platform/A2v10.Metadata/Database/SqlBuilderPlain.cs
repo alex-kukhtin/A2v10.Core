@@ -287,8 +287,8 @@ internal partial class SqlBuilder
         {
             AddDefaultParameters(dbprms);
             dbprms.AddStructured($"@{Table.Model}", Table.SqlTableTypeName, dtable);
-            foreach (var d in detailsTables)
-                dbprms.AddStructured(d.name, d.typeName, d.table);
+            foreach (var (name, typeName, table) in detailsTables)
+                dbprms.AddStructured(name, typeName, table);
         });
 
         return dm.Root;

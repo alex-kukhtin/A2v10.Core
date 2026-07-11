@@ -75,6 +75,7 @@ internal partial class XamlBuilder
                         {
                             Command = CommandType.Execute,
                             CommandName = "post",
+                            Confirm = new Confirm() { Message = "@[Confirm.Document.Post]"}
                         };
                         cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind($"{Table.Model}"));
                         b.SetBinding(nameof(Button.Command), cmd);
@@ -87,6 +88,15 @@ internal partial class XamlBuilder
                     Content = "@[UnPost]",
                     Bindings = b => {
                         b.SetBinding(nameof(Button.If), new Bind($"{Table.Model}.Done"));
+                        var cmd = new BindCmd()
+                        {
+                            Command = CommandType.Execute,
+                            CommandName = "unPost",
+                            Confirm = new Confirm() { Message = "@[Confirm.Document.UnPost]" },
+                            CheckReadOnly = false
+                        };
+                        cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind($"{Table.Model}"));
+                        b.SetBinding(nameof(Button.Command), cmd);
                     }
             },
             _ => throw new InvalidOperationException($"Invalid CommandType {cmd}")

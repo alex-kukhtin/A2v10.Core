@@ -10,7 +10,7 @@ namespace A2v10.Metadata;
 
 internal partial class XamlBuilder
 {
-    UIElementBase ElementToTableCell(TableColumn elem)
+    static UIElementBase ElementToTableCell(TableColumn elem)
     {
         return elem.Type switch
         {
@@ -34,6 +34,26 @@ internal partial class XamlBuilder
 
     XTable CreateDetailsTable(FormElement tab)
     {
+        TableCell RemoveRowCell()
+        {
+            var removeCmd = new BindCmd()
+            {
+                Command = CommandType.Remove,
+                Confirm = new Confirm() { Message = "@[Confirm.Delete.Row]" }
+
+            };
+            removeCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind());
+            return new TableCell()
+            {
+                Align = TextAlign.Center,
+                Content = new Hyperlink()
+                {
+                    Content = "✕",
+                    Bindings = b => b.SetBinding(nameof(Hyperlink.Command), removeCmd)
+                }
+            };
+        }
+
         return new Table()
         {
             GridLines = GridLinesVisibility.Both,
@@ -44,14 +64,15 @@ internal partial class XamlBuilder
                     Cells = [..tab.Columns.Select(c => 
                         new TableCell() { 
                             Content = c.Header 
-                        })
+                        }), 
+                        new TableCell()
                     ]
                 }
             ],
             Rows = [
                 new TableRow()
                 {
-                    Cells = [..tab.Columns.Select(c => ElementToTableCell(c))]
+                    Cells = [..tab.Columns.Select(c => ElementToTableCell(c)), RemoveRowCell()]
                 }
             ]
         };
@@ -121,6 +142,15 @@ internal partial class XamlBuilder
                 Url = column.RefTableCheck.Path,
                 Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), new Bind($"Parent.Filter.{column.Name}")),
             },
+            ColumnType.Document => new SelectorSimple()
+            {
+                Label = $"@[{column.RefTableCheck.Model}]",
+                ShowClear = true,
+                Highlight = true,
+                Placeholder = $"@[{column.RefTableCheck.Model}.All]",
+                Url = column.RefTableCheck.Path,
+                Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), new Bind($"Parent.Filter.{column.Name}")),
+            },
             _ =>
                 throw new InvalidOperationException($"Invalid filter control type '{column.Type}'")
         };
@@ -178,4 +208,57 @@ internal partial class XamlBuilder
             _ => throw new InvalidOperationException($"Invalid control {elem.Is}")
         };
     }
+    Control CreateEditControl(TableColumn column)
+    {
+        var valueBind = new Bind($"{Table.Model}.{column.Name}")
+        {
+            DataType = column.Type.ToXamlDataType(),
+        };
+        return column.Type switch
+        {
+            ColumnType.Date => new DatePicker()
+            {
+                Label = column.Header,
+                Width = Length.FromString("12rem"),
+                Bindings = b => b.SetBinding(nameof(DatePicker.Value), valueBind)
+            },
+            ColumnType.Name => new TextBox()
+            {
+                Label = column.Header,
+                Bold = true,
+                TabIndex = 1,
+                Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
+            },
+            ColumnType.Memo => new TextBox()
+            {
+                Label = column.Header,
+                Multiline = true,
+                Rows = 3,
+                Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
+            },
+            ColumnType.Ref or ColumnType.Document => new SelectorSimple()
+            {
+                Label = column.Header,
+                Url = column.RefTableCheck.Path,
+                Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
+            },
+            ColumnType.Done or ColumnType.Bit or ColumnType.Boolean => new CheckBox()
+            {
+                Label = column.Header,
+                Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
+            },
+            ColumnType.Money or ColumnType.Float or ColumnType.Decimal => new TextBox()
+            {
+                Label = column.Header,
+                Align = TextAlign.Right,
+                Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
+            },
+            _ => new TextBox()
+            {
+                Label = column.Header,
+                Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
+            }
+        };
+    }
+
 }
