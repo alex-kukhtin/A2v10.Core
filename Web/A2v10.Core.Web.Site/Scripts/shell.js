@@ -1,6 +1,6 @@
 ﻿// Copyright © 2023-2026 Oleksandr Kukhtin. All rights reserved.
 
-/*20260225-8623*/
+/*20260712-8644*/
 
 /* tabbed:shell.js */
 (function () {
@@ -167,6 +167,10 @@
 						await this._alert(err.substring(3));
 					else
 						alert(err);
+					if (tab.root && tab.root.$onError) {
+						tab.root.$onError();
+						return;
+					}
 					this.closeTab(tab);
 				} else
 					alert(err);
