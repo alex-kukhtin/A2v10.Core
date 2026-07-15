@@ -43,6 +43,7 @@ public class LayoutDescription : ILayoutDescription
 
 public class SaveResult : ISaveResult
 {
+	public ExpandoObject Raw { get; init; } = [];
 	public String Data { get; init; } = "{}";
 	public ISignalResult? SignalResult { get; init; }
 
@@ -395,6 +396,7 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 				await _appClrManager.OnAfterSaveModelAsync(platformBaseUrl, saveResult);
             return new SaveResult()
 			{
+				Raw = saveResult,
 				Data = JsonConvert.SerializeObject(saveResult, JsonHelpers.DataSerializerSettings),
                 SignalResult = GetSignalResult(view, saveResult)
             };
@@ -408,7 +410,8 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
                 await _appClrManager.OnAfterSaveModelAsync(platformBaseUrl, saveResult);
             return new SaveResult()
 			{
-				Data = JsonConvert.SerializeObject(saveResult, JsonHelpers.DataSerializerSettings),
+                Raw = saveResult,
+                Data = JsonConvert.SerializeObject(saveResult, JsonHelpers.DataSerializerSettings),
                 SignalResult = GetSignalResult(view, saveResult)
             };
 		}
@@ -421,7 +424,8 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 
         var result = new SaveResult()
 		{
-			Data = JsonConvert.SerializeObject(model.Root, JsonHelpers.DataSerializerSettings),
+            Raw = model.Root,
+            Data = JsonConvert.SerializeObject(model.Root, JsonHelpers.DataSerializerSettings),
 			SignalResult = GetSignalResult(view, model.Root)
 		};
 		return result;

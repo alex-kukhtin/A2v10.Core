@@ -1,9 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
+
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+
+using A2v10.Data.Interfaces;
+using A2v10.Services;
+using A2v10.Services.Api;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -35,6 +37,52 @@ internal static class OptionsExtensions
 
 public static class ServicesExtensions
 {
+    public static IServiceCollection UseApiDataServices(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddSingleton<IAppCodeProvider, AppCodeProvider>()
+            .AddSingleton<IModelJsonPartProvider, ModelJsonPartProvider>()
+            .AddSingleton<IAppVersion, PlatformAppVersion>();
+
+        services.AddScoped<IDataService, DataService>()
+            .AddScoped<IModelJsonReader, ModelJsonReader>()
+            .AddScoped<ISqlQueryTextProvider, NullSqlQueryTextProvider>();
+
+        services.AddScoped<ILocalizer, ApiLocalizer>();
+
+        services.TryAddScoped<IExternalDataProvider, NullExternalDataProvider>();
+
+        services.AddSingleton<IXamlPartProvider, NullXamlPartProvider>()
+            .AddSingleton<IDataScripter, NullDataScripter>();
+
+        services.AddScoped<ApiDataService>();
+
+        services.Configure<AppOptions>(opts =>
+        {
+            configuration.GetSection("application").Bind(opts);
+            var strModules = configuration.GetValue<String>("application:modules");
+
+            if (strModules != null)
+            {
+                opts.Modules = OptionsExtensions.ModulesFromString(strModules);
+            }
+            else
+            {
+                opts.Modules = configuration.GetSection("application:modules")
+                    .GetChildren().ToDictionary<IConfigurationSection, String, ModuleInfo>(
+                        x => x.Key,
+                        x =>
+                        {
+                            var mi = new ModuleInfo();
+                            x.Bind(mi);
+                            return mi;
+                        },
+                        StringComparer.InvariantCultureIgnoreCase);
+            }
+        });
+
+        return services;
+    }
+
     public static IServiceCollection ConfigureAppOptions(this IServiceCollection services, IConfiguration configuration, String cookiePrefix)
     {
         services.Configure<AppOptions>(opts =>

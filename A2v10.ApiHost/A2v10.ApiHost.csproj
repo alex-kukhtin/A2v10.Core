@@ -9,7 +9,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Data.Core" Version="10.1.7604" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+		<PackageReference Include="A2v10.Data.Core" Version="10.1.7605" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
 	</ItemGroup>
 
@@ -17,6 +18,8 @@
 		<ProjectReference Include="..\Identity\A2v10.Identity.Core\A2v10.Identity.Core.csproj" />
 		<ProjectReference Include="..\Identity\A2v10.Web.Identity.ApiKey\A2v10.Web.Identity.ApiKey.csproj" />
 		<ProjectReference Include="..\Identity\A2v10.Identity.Jwt\A2v10.Identity.Jwt.csproj" />
+		<ProjectReference Include="..\Platform\A2v10.Metadata\A2v10.Metadata.csproj" />
+		<ProjectReference Include="..\Platform\A2v10.Services\A2v10.Services.csproj" />
 	</ItemGroup>
 
 	<PropertyGroup>

@@ -93,7 +93,7 @@ internal class DataTableBuilder(TableMetadata table)
                 if (obj is ExpandoObject exp)
                 {
                     obj = exp.Get<Object>("Id");
-                    if (obj is Int64 int64 && int64 == 0)
+                    if (obj is null || (obj is Int64 int64 && int64 == 0))
                         obj = DBNull.Value;
                 }
                 r[col] = obj;

@@ -9,8 +9,8 @@ using System.CommandLine;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
+using A2v10.Services.Api;
 
 namespace A2v10.Cli;
 
@@ -84,7 +84,7 @@ internal class ResolveEndpointCommand(IServiceProvider services)
             { "view", BuildResolvedPath(route, dr.View?.GetRawView(false), "vxaml") },
             { "template", BuildResolvedPath(route, dr.View?.Template, "ts") },
             { "sqlProcedures", BuildSqlProcedures(dr.View!) },
-            { "dataModel", BuildDataModelMeta(dr.Model) }
+            { "dataModel", dr.Model.BuildDataModelMeta() }
         };
     }
 
@@ -96,45 +96,6 @@ internal class ResolveEndpointCommand(IServiceProvider services)
             { "file",  $"{file}.{ext}" }
         };
 
-    }
-
-    private static ExpandoObject BuildDataModelMeta(IDataModel? model)
-    {
-        if (model == null)
-            return [];
-
-        ExpandoObject buildProps(IDataMetadata metadata)
-        {
-            var props = new ExpandoObject();
-            foreach (var p in metadata.Fields)
-            {
-                props.TryAdd(p.Key, new ExpandoObject() {
-                    { "type", p.Value.TypeScriptName },
-                    { "len", p.Value.Length == 0 ? null : p.Value.Length }
-                });
-            }
-            return props;
-        }
-
-        ExpandoObject buildTypes()
-        {
-            var types = new ExpandoObject();
-            foreach (var t in model.Metadata)
-            {
-                types.Add(t.Key, new ExpandoObject()
-                {
-                    {"props", buildProps(t.Value)  },
-                    {"id", t.Value.Id },
-                    {"name", t.Value.Name },
-                });
-            }
-            return types;
-        }
-
-        return new ExpandoObject()
-        {
-            {"types", buildTypes() }
-        };
     }
     private static ExpandoObject BuildSqlProcedures(IModelView view)
     {

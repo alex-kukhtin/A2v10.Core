@@ -1,6 +1,9 @@
 ﻿
 using A2v10.Identity.Jwt;
+using A2v10.Infrastructure;
+using A2v10.Services;
 using A2v10.Web.Identity.ApiKey;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;
 using System.Reflection;
@@ -15,7 +18,16 @@ public class Startup(IConfiguration configuration)
 
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddControllers();
+        services.AddControllers(o => {
+            o.InputFormatters.Insert(0, new ExpandoObjectInputFormatter());
+        });
+
+        services.UseAppMetadata();
+        services.UseApiDataServices(Configuration);
+
+        services.AddHttpContextAccessor();
+
+        services.AddScoped<ICurrentUser, CurrentUser>();
 
         // Data
         services.AddOptions<DataConfigurationOptions>();

@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 using A2v10.Data.Core.Extensions;
 using A2v10.Data.Core.Extensions.Dynamic;
 using A2v10.Data.Interfaces;
-using DocumentFormat.OpenXml.Office2019.Excel.RichData2;
 
 namespace A2v10.Metadata;
 
@@ -279,6 +278,12 @@ internal partial class SqlBuilder
                         var dt = detailsTableBuilder.BuildDataTable(rows);
                         detailsTables.Add(($"@{k}", t.Value.SqlTableTypeName, dt));
                     }
+                }
+                else 
+                {
+                    var rows = item?.Get<List<Object>>($"{t.Key}");
+                    var dt = detailsTableBuilder.BuildDataTable(rows);
+                    detailsTables.Add(($"@{t.Key}", t.Value.SqlTableTypeName, dt));
                 }
             }
         }
