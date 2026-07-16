@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
+
 using A2v10.Data.Interfaces;
 
 namespace A2v10.Services.Api;
@@ -42,9 +39,36 @@ public static class DataModelMeta
             return types;
         }
 
-        return new ExpandoObject()
+        // The filter dictionary is form, not data: project it from the $ModelInfo echo
+        // (keyed by root name; a reference filter is echoed as {Id, Name}, a scalar as a value).
+        ExpandoObject? buildFilters()
+        {
+            if (model.Root is not IDictionary<String, Object?> root
+                || !root.TryGetValue("$ModelInfo", out var mi) || mi is not ExpandoObject modelInfo)
+                return null;
+            var filters = new ExpandoObject();
+            foreach (var (rootKey, entry) in (IDictionary<String, Object?>)modelInfo)
+            {
+                if (entry is not IDictionary<String, Object?> entryDict
+                    || !entryDict.TryGetValue("Filter", out var f) || f is not ExpandoObject filter)
+                    continue;
+                var props = new ExpandoObject();
+                foreach (var (key, value) in (IDictionary<String, Object?>)filter)
+                    props.TryAdd(key, new ExpandoObject() {
+                        { "type", value is ExpandoObject ? "reference" : "value" }
+                    });
+                filters.TryAdd(rootKey, props);
+            }
+            return ((IDictionary<String, Object?>)filters).Count > 0 ? filters : null;
+        }
+
+        var result = new ExpandoObject()
         {
             {"types", buildTypes() }
         };
+        var filters = buildFilters();
+        if (filters != null)
+            result.Add("filters", filters);
+        return result;
     }
 }
