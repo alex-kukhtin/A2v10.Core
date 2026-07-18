@@ -1,7 +1,5 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
-using A2v10.Infrastructure;
-using DocumentFormat.OpenXml.Office2016.Excel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,8 +13,10 @@ internal class RefMapBuilder
     private readonly List<RefMapItem> _flat;
     private readonly Dictionary<String, List<String>> _tableStruct;
     private readonly Boolean _isPlain;
+    private readonly TableMetadata _sourceTable;
     public RefMapBuilder(TableMetadata table, Boolean isPlain)
     {
+        _sourceTable = table;
         _isPlain = isPlain;
         _flat = [.. Flatten(table)];
         _tableStruct = BuildTableStructure();
@@ -143,6 +143,32 @@ internal class RefMapBuilder
         return String.Join("\n\n", blocks);
     }
 
+    String? GenerateInitials()
+    {
+        var origin = _sourceTable.Origin;
+        if (origin == null)
+            return null;
+        if (origin.initialValues.Count == 0)
+            return null;
+        // from user profile
+        var profUser = origin.initialValues.Where(x => x.Value.Source == InitialSource.Profile).ToList();
+        if (profUser.Count == 0) 
+            return null;
+        var sb = new StringBuilder();
+        sb.AppendLine();
+        sb.AppendJoin(Environment.NewLine, profUser.Select(p => $"declare @Init{p.Key} platformid;"));
+        sb.AppendLine();
+        sb.AppendLine();
+        sb.Append("exec usr.GetProfilePreferences @UserId = @UserId, ");
+        sb.AppendJoin(',', profUser.Select(p => $"@{p.Value.Value} = @Init{p.Key} output"));
+        sb.AppendLine(";");
+        sb.AppendLine();
+        var mapKeys = String.Join(',', profUser.Select(p => p.Key));
+        var mapValues = String.Join(",", profUser.Select(p => $"@Init{p.Key}"));
+        sb.AppendLine();
+        sb.AppendLine($"insert into @map({mapKeys}) values ({mapValues});");
+        return sb.ToString();
+    }
     public void WriteRefMap(StringBuilder sb)
     {
         if (IsEmpty)
@@ -159,6 +185,14 @@ internal class RefMapBuilder
             sb.AppendLine();
             sb.AppendLine(inserts);
         }
+
+        var initials = GenerateInitials();
+        if (initials != null)
+        {
+            sb.AppendLine();
+            sb.AppendLine(initials);
+        }
+
         var resolvers = GenerateResolves();
         if (resolvers != null)
         {

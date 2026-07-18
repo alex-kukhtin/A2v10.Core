@@ -15,6 +15,7 @@ internal static class TableDefaultColumns
             EndpointKind.Document => DocumentDefaultColumns(table),
             EndpointKind.Journal => JournalDefaultColumns(table),
             EndpointKind.Details => DetailsDefaultColumns(table),
+            EndpointKind.Operation => OperationDefaultColumns(table),
             _ => throw new InvalidOperationException($"Default columns not defined for {table.Kind}")
         };
     }
@@ -46,5 +47,12 @@ internal static class TableDefaultColumns
         yield return new TableColumn(Constants.FieldNames.Id, ColumnType.Id);
         yield return new TableColumn(Constants.FieldNames.Owner, ColumnType.Owner);
         yield return new TableColumn(Constants.FieldNames.RowNo, ColumnType.RowNumber);
+    }
+
+    static IEnumerable<TableColumn> OperationDefaultColumns(TableMetadata table)
+    {
+        yield return new TableColumn(Constants.FieldNames.Id, ColumnType.Operation);
+        yield return new TableColumn(Constants.FieldNames.Name, ColumnType.Name);
+        yield return new TableColumn(Constants.FieldNames.Name, ColumnType.Memo);
     }
 }

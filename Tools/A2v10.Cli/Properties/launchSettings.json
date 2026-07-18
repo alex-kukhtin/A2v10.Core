@@ -2,8 +2,8 @@
   "profiles": {
     "A2v10.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "endpoint resolve-action catalog/agent/index",
-      "workingDirectory": "D:\\Projects\\RightToProtect\\R2P"
+      "commandLineArgs": "db tables",
+      "workingDirectory": "C:\\Claude\\api_ui_llm"
     }
   }
 }

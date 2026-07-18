@@ -90,7 +90,7 @@ internal static class SqlExtensions
         return column.Type switch
         {
             ColumnType.Id or ColumnType.Ref or ColumnType.Owner or ColumnType.Parent => typeof(Int64),
-            ColumnType.Name or ColumnType.Memo => typeof(String),
+            ColumnType.Name or ColumnType.Memo or ColumnType.Autonum => typeof(String),
             ColumnType.RowNumber => typeof(Int32),
             ColumnType.RowKind=> typeof(String),
             ColumnType.Operation => typeof(String),

@@ -14,6 +14,7 @@ using Newtonsoft.Json;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Xaml;
+using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace A2v10.Metadata;
 
@@ -215,11 +216,14 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                     continue;
                 }
             }
+
+            if (column.Target == null)
+                throw new InvalidOperationException($"Missing target for column '{meta.Table}.{column.Name}'");
+
             var (schema, table) = ParsePath(column.Target);
             var refMeta = await GetSchemaAsync(dataSource, schema, table);
             foreach (var gcol in group)
                 gcol.RefTable = refMeta;
         }
     }
-
 }

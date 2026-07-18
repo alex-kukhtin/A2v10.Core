@@ -55,7 +55,10 @@ public static class DataModelMeta
                 var props = new ExpandoObject();
                 foreach (var (key, value) in (IDictionary<String, Object?>)filter)
                     props.TryAdd(key, new ExpandoObject() {
-                        { "type", value is ExpandoObject ? "reference" : "value" }
+                        // Period* is the platform's naming convention for range filters,
+                        // so the {From, To} shape is not mistaken for a reference.
+                        { "type", key.StartsWith("Period", StringComparison.Ordinal) ? "period"
+                            : value is ExpandoObject ? "reference" : "value" }
                     });
                 filters.TryAdd(rootKey, props);
             }

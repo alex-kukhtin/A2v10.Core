@@ -104,6 +104,12 @@ internal partial class SqlBuilder
 
         refMap.WriteRefMap(sb);
 
+        var defs = GenerateDefaults();
+        if (defs != null) {
+            sb.AppendLine();
+            sb.AppendLine(defs);
+        }
+
         // STEP 5: system recorset
         if (Table.IsDocument)
         {
@@ -117,6 +123,42 @@ internal partial class SqlBuilder
         return sb.ToString();
     }
 
+    String? GenerateDefaults()
+    {
+        var org = Table.Origin;
+        if (org == null)
+            return null;
+        if (org.initialValues.Count == 0)
+            return null;
+        var sb = new StringBuilder("select [!$Defaults!] = null, ");
+
+        String getDefaultProfile(String key)
+        {
+            if (!Table.Fields.TryGetValue(key, out var column))
+                throw new InvalidOperationException($"Column {key} not found in {Table.SqlTableName}");
+            return $"[{Table.Model}.{key}!{column.RefTableCheck.TypeName}!RefId] = @Init{key}";
+        }
+
+        String getDefaultContext(String key, String value)
+        {
+            return value switch
+            {
+                "today" => $"[{Table.Model}.{key}!!Utc] = cast(getutcdate() as date)",
+                _=> throw new InvalidOperationException($"Invalid initial context value '{value}'")
+            };
+        }
+
+        sb.AppendJoin(", ", org.initialValues.Select(p =>
+            p.Value.Source switch
+            {
+                InitialSource.Profile => getDefaultProfile(p.Key),
+                InitialSource.Context => getDefaultContext(p.Key, p.Value.Value),
+                _ => throw new InvalidOperationException($"Invalid initial source {p.Value.Source}")
+            }
+        ));
+        sb.AppendLine(";");
+        return sb.ToString();
+    }
 
     public async Task<IDataModel> LoadPlainModelAsync()
     {

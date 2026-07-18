@@ -66,7 +66,7 @@ public class CliDatabaseCreator()
         var primaryKeys = table.PrimaryKeys.Select(c => $"[{c.Name}]");
 
         var alterFields = table.Columns
-                .Where(c => String.IsNullOrEmpty(c.DbName) && !c.DbDataType.HasValue)
+                .Where(c => String.IsNullOrEmpty(c.Name) && !c.DbDataType.HasValue)
                 .Select(alterCreateField);
 
         if (table.HasDbTable && !skipAlter)

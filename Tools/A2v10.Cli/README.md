@@ -36,7 +36,9 @@ connection relative to the current directory; from the wrong folder it will not 
 
 ## Configuration
 
-The tool reads the connection string from `appsettings.json` in the current directory:
+`a2` loads the **same configuration as the running application**, not a private one. From
+the application root it locates the host folder (`WebApp`/`WebApiHost` — the one with an
+`appsettings.json`) and reads:
 
 ```json
 {
@@ -46,8 +48,16 @@ The tool reads the connection string from `appsettings.json` in the current dire
 }
 ```
 
-User Secrets (`secrets.json`, the same store Visual Studio manages) are also honored and
-override `appsettings.json` — handy for keeping the connection string out of the project.
+Then it layers **User Secrets** on top: it reads the `UserSecretsId` from the host's
+`.csproj` and loads that store (`secrets.json`, the same one Visual Studio and the running
+app use), so secrets override `appsettings.json`. This is deliberate:
+
+- The whole `secrets.json` is loaded, not just the connection string — add a new service
+  with a secret key to the app and the CLI sees it too, no changes here.
+- The CLI has **no secret store of its own**; it always borrows the application's. There is
+  no second, diverging configuration to maintain.
+
+If the host `.csproj` has no `UserSecretsId`, only `appsettings.json` is used.
 
 ## Output format
 

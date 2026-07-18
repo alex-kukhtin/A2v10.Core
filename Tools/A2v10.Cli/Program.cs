@@ -18,6 +18,7 @@ using A2v10.Data.Interfaces;
 using A2v10.Data.Providers;
 using A2v10.ViewEngine.Xaml;
 using A2v10.Platform.Web;
+using System.Xml.Linq;
 
 namespace A2v10.Cli;
 
@@ -41,27 +42,43 @@ internal sealed partial class Program
 
     private readonly IServiceProvider _services;
 
-    private static String? ResolveWebAppFolder()
+    private static String? ResolveWebAppFolder(String dir)
     {
-        var dir = Directory.GetCurrentDirectory();
         foreach (var d in Directory.EnumerateDirectories(dir))
         {
             var fn = Path.GetFileName(d);
             if (fn.Contains("WebApp", StringComparison.OrdinalIgnoreCase) && File.Exists(Path.Combine(d, "appsettings.json")))
                 return fn;
+            if (fn.Contains("WebApiHost", StringComparison.OrdinalIgnoreCase) && File.Exists(Path.Combine(d, "appsettings.json")))
+                return fn;
         }
         return null;
     }
 
+    static String? ResolveUserSecretsId(String webAppFolder)
+    {
+        // one csproj per host folder by design
+        var csproj = Directory.EnumerateFiles(webAppFolder, "*.csproj").FirstOrDefault();
+        if (csproj is null)
+            return null;
+        return XDocument.Load(csproj)
+            .Descendants("UserSecretsId")
+            .FirstOrDefault()?.Value;
+    }
     private Program()
     {
         var host = Host.CreateApplicationBuilder();
 
-        var webAppFolder = ResolveWebAppFolder() 
-            ?? throw new InvalidOperationException("Root host not found");
+        var cdPath = Directory.GetCurrentDirectory();
+        var webAppFolder = ResolveWebAppFolder(cdPath) 
+            ?? throw new InvalidOperationException($"Root host not found. Expected a WebApp or WebApiHost folder in {cdPath} containing appsettings.json.");
+
         host.Configuration
-            .AddJsonFile($"{webAppFolder}/appsettings.json", optional: false)
-            .AddUserSecrets<Program>();
+            .AddJsonFile($"{webAppFolder}/appsettings.json", optional: false);
+
+        var userSecretsId = ResolveUserSecretsId(webAppFolder);
+        if (!String.IsNullOrEmpty(userSecretsId))
+            host.Configuration.AddUserSecrets(userSecretsId);
 
         host.Services.UseSimpleDbContext();
 

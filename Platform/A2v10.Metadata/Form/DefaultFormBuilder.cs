@@ -3,8 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using DocumentFormat.OpenXml.Office2013.Drawing.Chart;
-using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace A2v10.Metadata;
 
@@ -37,6 +35,7 @@ internal static class DefaultFormBuilder
                         CommandBarItem.Separator, EntityCommandType.Reload,
                         CommandBarItem.Aligner, EntityCommandType.Search
                     ],
+                EndpointKind.Operation => [],
                 _ => throw new InvalidOperationException($"Unsupported comamnds for {table.Schema}")
             };
 

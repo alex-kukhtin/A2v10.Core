@@ -41,7 +41,7 @@ public enum ColumnType
     RowVersion,
     Color,
     Enum,
-    AutoNum,
+    Autonum,
     Company,
     // Simple fields
     String,
@@ -93,16 +93,16 @@ public record TableColumn
     public String Name { get; set; } = default!;
     public ColumnType Type { get; init; } = default!;
     public String? Target { get; init; } // for refs
-    public String? Key { get; init; } // for enum, autonum
 
     [JsonIgnore]
     public TableMetadata? RefTable { get; set; }
     [JsonIgnore]
     public TableMetadata RefTableCheck => RefTable ?? throw new InvalidOperationException($"RefTable for '{Name}' is null");
 
-    [JsonIgnore]
+    // platformid only!
+    [JsonIgnore] 
     internal Boolean IsRef => Type == ColumnType.Ref || Type == ColumnType.Owner || 
-            Type == ColumnType.User || Type == ColumnType.Document || Type == ColumnType.Operation || 
+            Type == ColumnType.User || Type == ColumnType.Document || 
             Type == ColumnType.Company;
 
     internal String Presentation
@@ -119,7 +119,6 @@ public record TableColumn
     public Int32 MaxLength { get; init; }
     public Int32 Scale { get; init; }
     public ColumnReference Reference { get; init; } = default!;
-    public String? DbName { get; init; }
     public ColumnType? DbDataType { get; init; }
     
     public String? Computed { get; init; }
@@ -128,6 +127,7 @@ public record TableColumn
     public Boolean Unique { get; init; }
     #endregion
     internal Boolean IsEnum => Type == ColumnType.Enum;
+    internal Boolean IsOperation => Type == ColumnType.Operation;
 
     [JsonIgnore]
     internal Boolean HasDefaultBit => 
@@ -206,13 +206,28 @@ public record ReportItemMetadata
         _ => RefTable
     };
 }
+
+public enum InitialSource
+{
+    Literal,
+    Context,
+    Profile,
+    Policy,
+    Sql
+}
+
 public enum TableTrait
 {
     Audit,
     Tags
 }
 
-public record TableMetadata
+public sealed record InitialMetadata
+{
+    public InitialSource Source { get; init; }
+    public String Value { get; init; } = default!;
+}
+public sealed record TableMetadata
 {
     #region Database fields
     public EndpointKind Kind { get; set; }
@@ -221,7 +236,8 @@ public record TableMetadata
     public String Model { get; set; } = default!;
     public String Path { get; set; } = default!;
     public String Label { get; set; } = default!;
-
+    public String? Autonum { get; set; } // for opertions
+    public Dictionary<String, InitialMetadata> initialValues { get; init; } = [];
     public Dictionary<String, TableColumn> Fields { get; init; } = [];
 
     [JsonIgnore]
@@ -339,7 +355,6 @@ public record TableMetadata
             .SetDefaults(this, TableColumnPredicates.IsIndexColumn));
     }
 }
-
 public record OperationMetadata(String Id, String? Name, String? Category);
 public record EnumValueMetadata(String Id, String Name, Int32 Order, Boolean? Inactive);
 public record EnumMetadata(String Name, EnumValueMetadata[] Values);
