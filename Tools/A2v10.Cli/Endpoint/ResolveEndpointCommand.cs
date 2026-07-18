@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using A2v10.Infrastructure;
 using A2v10.Services.Api;
+using A2v10.Data.Core.Extensions;
 
 namespace A2v10.Cli;
 

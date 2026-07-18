@@ -41,7 +41,7 @@ internal class DataTableBuilder(TableMetadata table)
     private DataTable CreateDataTable()
     {
 
-        DataColumn CreateColumn(TableColumn f)
+        static DataColumn CreateColumn(TableColumn f)
         {
             var c = new DataColumn(f.Name, f.ClrDataType());
             if (f.MaxLength != 0 && f.Type == ColumnType.String)

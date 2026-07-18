@@ -1,5 +1,7 @@
-﻿
+﻿// Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
+
 using System.Threading.Tasks;
+using A2v10.Data.Core.Extensions;
 
 
 namespace A2v10.Services.Api;
