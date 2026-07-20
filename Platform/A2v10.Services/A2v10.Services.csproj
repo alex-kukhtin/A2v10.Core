@@ -24,7 +24,7 @@
 	<ItemGroup>
 		<PackageReference Include="DocumentFormat.OpenXml" Version="3.5.1" />
 		<PackageReference Include="Jint" Version="4.13.0" />
-		<PackageReference Include="A2v10.Data.Core" Version="10.1.7611" />
+		<PackageReference Include="A2v10.Data.Core" Version="10.1.7612" />
 		<PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.10" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.10" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.10" />

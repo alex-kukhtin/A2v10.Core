@@ -114,7 +114,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
         }
         else
         {
-            page = await _metadataProvider.GetXamlFormAsync(descriptor.DataSource, Table.Origin ?? Table, descriptor.PlatformUrl.Action, CreateDefaultXamlForm);
+            page = await _metadataProvider.GetXamlFormAsync(descriptor.DataSource, Table, descriptor.PlatformUrl.Action, CreateDefaultXamlForm);
             templateText = await CreateTemplateAsync();
         }
         if (page == null)

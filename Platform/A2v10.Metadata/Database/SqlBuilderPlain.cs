@@ -7,7 +7,6 @@ using System.Dynamic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
 using A2v10.Data.Core.Extensions;
 using A2v10.Data.Core.Extensions.Dynamic;
 using A2v10.Data.Interfaces;
@@ -16,6 +15,14 @@ namespace A2v10.Metadata;
 
 internal partial class SqlBuilder
 {
+
+    Boolean IsNewModel()
+    {
+        var id = _descr.PlatformUrl.Id;
+        if (String.IsNullOrWhiteSpace(id) || id == "new")
+            return true;
+        return false;
+    }
     String BuildLoadPlainSqlText()
     {
         var allColumns = Table.AllColumns().ToList();
@@ -35,6 +42,59 @@ internal partial class SqlBuilder
                 return $"[{detail.Key}!{dt.TypeName}!Array] = null";
             else
                 return String.Join(", ", dt.Kinds.Select(k => $"[{k}!{dt.TypeName}!Array] = null"));
+        }
+
+        String? generateDefaults()
+        {
+            var org = Table.Origin;
+            if (!IsNewModel())
+                return null;
+            if (org == null)
+                return null;
+            var initValues = org.initialValues;
+            var docOp = Table.DocumentOperation();
+            if (docOp != null)
+                initValues = new Dictionary<string, InitialMetadata>(initValues)
+                {
+                    ["Operation"] = new InitialMetadata()
+                    {
+                        Source = InitialSource.Context,
+                        Value = "$operation$"
+                    }
+                };
+            
+            if (initValues.Count == 0)
+                return null;
+
+            String getDefaultProfile(String key)
+            {
+                if (!Table.Fields.TryGetValue(key, out var column))
+                    throw new InvalidOperationException($"Column {key} not found in {Table.SqlTableName}");
+                return $"[{Table.Model}.{key}!{column.RefTableCheck.TypeName}!RefId] = @Init{key}";
+            }
+
+            String getDefaultContext(String key, String value)
+            {
+                return value switch
+                {
+                    "today" => $"[{Table.Model}.{key}!!Utc] = cast(getutcdate() as date)",
+                    "$operation$" => $"[{Table.Model}.{key}!TOperation!RefId] = N'{docOp}'",
+                    _ => throw new InvalidOperationException($"Invalid initial context value '{value}'")
+                };
+            }
+
+            var sb = new StringBuilder("select [!$Defaults!] = null, ");
+
+            sb.AppendJoin(", ", initValues.Select(p =>
+                p.Value.Source switch
+                {
+                    InitialSource.Profile => getDefaultProfile(p.Key),
+                    InitialSource.Context => getDefaultContext(p.Key, p.Value.Value),
+                    _ => throw new InvalidOperationException($"Invalid initial source {p.Value.Source}")
+                }
+            ));
+            sb.AppendLine(";");
+            return sb.ToString();
         }
 
         var sb = new StringBuilder($"""
@@ -98,13 +158,13 @@ internal partial class SqlBuilder
         }
 
 
-        var refMap = new RefMapBuilder(Table, isPlain: true);
+        var refMap = new RefMapBuilder(Table, isPlain: true, hasDefaults: IsNewModel());
 
         // STEP 3: map recordsets
 
         refMap.WriteRefMap(sb);
 
-        var defs = GenerateDefaults();
+        var defs = generateDefaults();
         if (defs != null) {
             sb.AppendLine();
             sb.AppendLine(defs);
@@ -120,43 +180,6 @@ internal partial class SqlBuilder
                 from {Table.SqlTableName} a where a.Id = @Id;
                 """);
         }
-        return sb.ToString();
-    }
-
-    String? GenerateDefaults()
-    {
-        var org = Table.Origin;
-        if (org == null)
-            return null;
-        if (org.initialValues.Count == 0)
-            return null;
-        var sb = new StringBuilder("select [!$Defaults!] = null, ");
-
-        String getDefaultProfile(String key)
-        {
-            if (!Table.Fields.TryGetValue(key, out var column))
-                throw new InvalidOperationException($"Column {key} not found in {Table.SqlTableName}");
-            return $"[{Table.Model}.{key}!{column.RefTableCheck.TypeName}!RefId] = @Init{key}";
-        }
-
-        String getDefaultContext(String key, String value)
-        {
-            return value switch
-            {
-                "today" => $"[{Table.Model}.{key}!!Utc] = cast(getutcdate() as date)",
-                _=> throw new InvalidOperationException($"Invalid initial context value '{value}'")
-            };
-        }
-
-        sb.AppendJoin(", ", org.initialValues.Select(p =>
-            p.Value.Source switch
-            {
-                InitialSource.Profile => getDefaultProfile(p.Key),
-                InitialSource.Context => getDefaultContext(p.Key, p.Value.Value),
-                _ => throw new InvalidOperationException($"Invalid initial source {p.Value.Source}")
-            }
-        ));
-        sb.AppendLine(";");
         return sb.ToString();
     }
 
@@ -257,7 +280,7 @@ internal partial class SqlBuilder
         {
 
             var updatedFields = Table.AllColumns(c => c.IsFieldUpdated()).Select(c => $"t.[{c.Name}] = s.[{c.Name}]");
-            var insertedFields = Table.AllColumns(c => c.IsFieldUpdated()).Select(c => $"[{c.Name}]");
+            var insertedFields = Table.AllColumns(c => c.IsFieldInserted()).Select(c => $"[{c.Name}]");
 
             var sb = new StringBuilder("""
             set nocount on;

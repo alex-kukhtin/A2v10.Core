@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using DocumentFormat.OpenXml.Office2016.Excel;
 
 namespace A2v10.Metadata;
 
@@ -112,13 +113,51 @@ internal static class DefaultFormBuilder
         return table.EditWithPage ? CreateEditPage(table) : CreateEditFormDialog(table);
     }
 
+    static Boolean IsDetailsColumn(TableColumn col)
+        => col.Type != ColumnType.Id && col.Type != ColumnType.RowKind && col.Type != ColumnType.Owner;
+
+    static IEnumerable<FormElement> DetailsTab(TableMetadata table)
+    {
+        foreach (var d in table.Details)
+        {
+            if (d.Value.Kinds.Count > 0)
+            {
+                foreach (var k in d.Value.Kinds)
+                {
+                    yield return new FormElement()
+                    {
+                        Is = FormElementKind.Tab,
+                        Scope = k,
+                        Fields = [.. d.Value.AllColumns(IsDetailsColumn).Select(c => c.Name)]
+                    };
+                }
+            }
+            else
+            {
+                yield return new FormElement()
+                {
+                    Is = FormElementKind.Tab,
+                    Scope = d.Key,
+                    Fields = [.. d.Value.AllColumns(IsDetailsColumn).Select(c => c.Name)]
+                };
+            }
+        }
+    }
+
     public static FormMetadata CreateEditPage(TableMetadata table)
     {
-        var cols = table.AllColumns(TableColumnPredicates.IsEditColumn)
-            .OrderBy(c => c.IsMemo);
-            //.ToDictionary(c => c.Name, c => new FormColumn());
+        Int32 GroupNumber(TableColumn c) => c.Type switch {
+            ColumnType.Operation => 1,
+            ColumnType.Autonum => 1,
+            ColumnType.Date => 1,
+            ColumnType.Memo => 3,
+            _ => 2
+        };
+        var cols = table.AllColumns(TableColumnPredicates.IsEditColumn).ToList();
 
-        // TODO: разбить cols на ТРИ части. (Date,No), (Refs), (Memo)
+        var topCols = cols.Where(c => GroupNumber(c) == 1).OrderBy(c => !c.IsOperation);
+        var middleCols = cols.Where(c => GroupNumber(c) == 2);
+        var bottomCols = cols.Where(c => GroupNumber(c) == 3);
 
         var fd = new FormMetadata()
         {
@@ -138,7 +177,12 @@ internal static class DefaultFormBuilder
                 new FormElement() 
                 {
                     Is = FormElementKind.Group,
-                    Fields = [..cols.Select(c => c.Name)]
+                    Fields = [..topCols.Select(c => c.Name)]
+                },
+                new FormElement()
+                {
+                    Is = FormElementKind.Group,
+                    Fields = [..middleCols.Select(c => c.Name)]
                 }
             ]
         };
@@ -147,25 +191,17 @@ internal static class DefaultFormBuilder
         {
             var tabs = new FormElement()
             {
-                Is = FormElementKind.Tabs
+                Is = FormElementKind.Tabs,
+                Elements = [.. DetailsTab(table)]
             };
             fd.Body.Add(tabs);
-            foreach (var d in table.Details)
-            {
-                if (d.Value.Kinds.Count > 0)
-                {
-                    foreach (var k in d.Value.Kinds)
-                    {
-                        tabs.Elements.Add(new FormElement()
-                        {
-                            Is = FormElementKind.Tab,
-                            Scope = k,
-                            Fields = [..d.Value.Columns.Where(c => c.Name != "Kind").Select(c => c.Name)]
-                        });
-                    }
-                }
-            }
         }
+
+        fd.Body.Add(new FormElement()
+        {
+            Is = FormElementKind.Group,
+            Fields = [.. bottomCols.Select(c => c.Name)]
+        });
 
         return fd;
     }
@@ -177,7 +213,7 @@ internal static class DefaultFormBuilder
             .OrderBy(c => c.IsMemo);
             //.ToDictionary(c => c.Name, c => new FormColumn());
 
-        return new FormMetadata()
+        var fd = new FormMetadata()
         {
             Is = FormKind.Dialog,
             Body = [
@@ -188,5 +224,16 @@ internal static class DefaultFormBuilder
                 }
             ]
         };
+
+        if (table.Details.Count > 0)
+        {
+            var tabs = new FormElement()
+            {
+                Is = FormElementKind.Tabs,
+                Elements = [..DetailsTab(table)]
+            };
+            fd.Body.Add(tabs);
+        }
+        return fd;
     }
 }

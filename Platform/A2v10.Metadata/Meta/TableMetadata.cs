@@ -24,6 +24,7 @@ public enum EndpointKind
 public enum ColumnType
 {
     // semantic types
+    String, // DEFAULT VALUE!!!
     Id,
     Name,
     Memo,
@@ -44,7 +45,6 @@ public enum ColumnType
     Autonum,
     Company,
     // Simple fields
-    String,
     Ref,
     Date,
     DateTime,
@@ -99,11 +99,10 @@ public record TableColumn
     [JsonIgnore]
     public TableMetadata RefTableCheck => RefTable ?? throw new InvalidOperationException($"RefTable for '{Name}' is null");
 
-    // platformid only!
     [JsonIgnore] 
     internal Boolean IsRef => Type == ColumnType.Ref || Type == ColumnType.Owner || 
             Type == ColumnType.User || Type == ColumnType.Document || 
-            Type == ColumnType.Company;
+            Type == ColumnType.Company || Type == ColumnType.Operation;
 
     internal String Presentation
     {
@@ -144,7 +143,7 @@ public record TableColumn
     internal Boolean IsMemo => Type == ColumnType.Memo;
     [JsonIgnore]
     internal String Header => $"@[{Name}]";
-    internal String DisplayPath => IsRef ? $"{Name}.{Presentation}" : Name;
+    internal String DisplayPath => (IsRef) ? $"{Name}.{Presentation}" : Name;
 }
 
 

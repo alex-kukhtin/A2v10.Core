@@ -61,7 +61,7 @@ public class DatabaseMetadataCache
     public async Task<UIElement> GetOrAddXamlFormAsync(String? dataSource, TableMetadata meta, String key,
          Func<UIElement> getDefaultForm)
     {
-        var dictKey = $"{dataSource}:{meta.Schema}:{meta.Model}:{key.ToLowerInvariant()}";
+        var dictKey = $"{dataSource}:{meta.Schema}:{meta.Path}:{key.ToLowerInvariant()}";
         if (_xamlFormCache.TryGetValue(dictKey, out var form))
             return form;
         form = getDefaultForm();

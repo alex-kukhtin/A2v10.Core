@@ -27,7 +27,6 @@ internal static class MetadataExtensions
             Constants.SchemaNames.Catalog => EndpointKind.Catalog,
             Constants.SchemaNames.Document => EndpointKind.Document,
             Constants.SchemaNames.Journal => EndpointKind.Journal,
-            "operation" => EndpointKind.Operation,
             _ => throw new InvalidOperationException($"Invalid schema for EndpointKind {schema}")
         };
     }
@@ -38,7 +37,6 @@ internal static class MetadataExtensions
         {
             Constants.SchemaNames.Catalog => "cat",
             Constants.SchemaNames.Document => "doc",
-            "operation" => "op",
             Constants.SchemaNames.Journal => "jrn",
             "report" => "rep",
             "account" => "acc",
@@ -121,7 +119,7 @@ internal static class MetadataExtensions
         table.DefaultColumns().Concat(table.Columns).Where(predicate ?? (_ => true));
 
     internal static IEnumerable<RefDescriptor> AllRefs(this IEnumerable<TableColumn> columns) =>
-        columns.Where(c => c.IsRef).Select((c, ix) => new RefDescriptor(ix + 1, c, c.RefTable
+        columns.Where(c => c.IsRef || c.IsOperation).Select((c, ix) => new RefDescriptor(ix + 1, c, c.RefTable
             ?? throw new InvalidOperationException($"RefTable for {c.Name} is null")));
 
     internal static FormMetadata IndexForm(this TableMetadata table) =>
@@ -138,4 +136,7 @@ internal static class MetadataExtensions
         foreach (var c in table.AllColumns(c => c.IsRef))
             yield return c;
     }
+
+    internal static String? DocumentOperation(this TableMetadata table) =>
+        table.IsDocument && table.Columns.Any(c => c.IsOperation) ? table.Path.Split('/')[^1] : null;
 }

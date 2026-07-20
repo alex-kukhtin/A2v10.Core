@@ -13,21 +13,28 @@ public class WaybillController(ApiDataService _dataService) : ControllerBase
     public async Task<IActionResult> Index([FromQuery] IndexQuery query, 
             [ModelBinder(typeof(FilterBagBinder))] ExpandoObject filters)
     {
-        var dm = await _dataService.IndexAsync("document/waybill", query, filters);
+        var dm = await _dataService.IndexAsync("document/waybillin", query, filters);
         return Ok(dm);
     }
 
     [HttpGet]
     public async Task<IActionResult> Load([FromRoute] String id)
     {
-        var dr = await _dataService.LoadAsync("document/waybill", id);
+        var dr = await _dataService.LoadAsync("document/waybillin", id);
+        return Ok(dr.Data);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Create()
+    {
+        var dr = await _dataService.CreateAsync("document/waybillin");
         return Ok(dr.Data);
     }
 
     [HttpPost]
     public async Task<IActionResult> Save([FromBody] ExpandoObject data)
     {
-        var dr = await _dataService.SaveAsync("catalog/agent", data);
+        var dr = await _dataService.SaveAsync("catalog/waybillin", data);
         return Ok(dr);
     }
 }

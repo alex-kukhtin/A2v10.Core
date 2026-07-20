@@ -87,6 +87,10 @@ internal partial class SqlBuilder
             else
                 sb.Append("where 1 = 1"); // TODO:!!!!
 
+            var docOp = Table.DocumentOperation();
+            if (docOp != null)
+                sb.Append($"and a.[Operation] = @RouteOperation");
+
             if (Table.HasPeriod)
                 sb.AppendLine(" and a.[Date] >= @From and a.[Date] < @end");
 
@@ -137,8 +141,9 @@ internal partial class SqlBuilder
             if (refs.Count > 0)
             {
                 sb.Append(", ");
-                sb.Append(String.Join(", ", refs.Select(c => $"[{c.Column.Name}] platformid")));
+                sb.Append(String.Join(", ", refs.Select(c => $"[{c.Column.Name}] {c.Column.SqlDataType()}")));
             }
+
             sb.AppendLine(");");
 
             // STEP 3: main insert into select
@@ -148,7 +153,7 @@ internal partial class SqlBuilder
             if  (refs.Count > 0)
             {
                 sb.Append(", ");
-                sb.Append(String.Join(", ", refs.Select(c => $"a.[{c.Column.Name}]")));
+                sb.Append(String.Join(", ", refs.Select(c => $"[{c.Column.Name}]")));
             }
             sb.AppendLine(")");
             sb.Append("select a.Id, count(*) over()");
@@ -187,7 +192,10 @@ internal partial class SqlBuilder
             order by t.rowNo;
             """);
             // STEP 5: map recordsets
-            if (refs.Count > 0)
+
+            var refMap = new RefMapBuilder(Table, isPlain: false, hasDefaults: false);
+
+            refMap.WriteRefMapIndex(sb, sx =>
             {
                 sb.AppendLine();
                 if (filters.Count > 0)
@@ -196,39 +204,7 @@ internal partial class SqlBuilder
                         sb.Append($"insert into @map([{f.name}]) values (@{f.name});");
                     sb.AppendLine();
                 }
-                sb.AppendLine("-- map recordsets");
-                var groupTables = refs.GroupBy(x => x.Table.Table).ToList();
-                foreach (var gt in groupTables)
-                {
-                    if (gt.Count() == 1)
-                    {
-                        var gx = gt.First();
-                        sb.AppendLine($"""
-                        with TR as (
-                          select Id = [{gx.Column.Name}] from @map where [{gx.Column.Name}] is not null group by [{gx.Column.Name}]
-                        )
-                        select [!{gx.Table.RefTypeName}!Map] = null, [Id!!Id] = r.Id, [{gx.Column.Presentation}!!Name] = r.[{gx.Column.Presentation}]
-                        from {gx.Table.SqlTableName} r inner join TR on r.Id = TR.Id;
-                        """);
-                        sb.AppendLine();
-                    }
-                    else if (gt.Count() > 1)
-                    {
-                        var gx = gt.First();
-                        var sbu = new StringBuilder("with TU as (");
-                        sbu.AppendLine();
-                        sbu.Append("  ");
-                        sbu.AppendLine(String.Join(" union all ", gt.Select(g => $" select Id = [{g.Column.Name}] from @map where [{g.Column.Name}] is not null")));
-                        sbu.AppendLine(")");
-                        sbu.AppendLine($"""
-                        ,TR as (select Id from TU where Id is not null group by Id)
-                        select [!{gx.Table.RefTypeName}!Map] = null, [Id!!Id] = r.Id, [{gx.Column.Presentation}!!Name] = r.[{gx.Column.Presentation}]
-                        from {gx.Table.SqlTableName} r inner join TR on r.Id = TR.Id;
-                        """);
-                        sb.AppendLine(sbu.ToString());
-                    }
-                }
-            }
+            });
 
             // STEP 6: system recorset (filters -> always!)
             sb.AppendLine();
@@ -275,6 +251,9 @@ internal partial class SqlBuilder
             .AddString("@Order", value)
             .AddString("@Dir", dir)
             .AddString("@Fragment", fragment);
+            var docOp = Table.DocumentOperation();
+            if (docOp != null)
+                dbprms.AddString("@RouteOperation", docOp);
             foreach (var rd in refs)
             {
                 Int64? paramValue = null;

@@ -23,7 +23,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="A2v10.Data.Interfaces" Version="10.1.7610" />
-		<PackageReference Include="A2v10.Data.Core" Version="10.1.7611" />
+		<PackageReference Include="A2v10.Data.Core" Version="10.1.7612" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
 	</ItemGroup>
 

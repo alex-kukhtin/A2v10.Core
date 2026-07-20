@@ -11,25 +11,31 @@ internal record RefMapItem(TableMetadata SourceTable, Dictionary<String, TableCo
 internal class RefMapBuilder
 {
     private readonly List<RefMapItem> _flat;
-    private readonly Dictionary<String, List<String>> _tableStruct;
+    private readonly Dictionary<String, List<TableColumn>> _tableStruct;
     private readonly Boolean _isPlain;
+    private readonly Boolean _hasDefaults;
     private readonly TableMetadata _sourceTable;
-    public RefMapBuilder(TableMetadata table, Boolean isPlain)
+    public RefMapBuilder(TableMetadata table, Boolean isPlain, Boolean hasDefaults)
     {
         _sourceTable = table;
         _isPlain = isPlain;
+        _hasDefaults = hasDefaults;
         _flat = [.. Flatten(table)];
         _tableStruct = BuildTableStructure();
     }
     public Boolean IsEmpty => _flat.Count == 0;
 
+
     private IEnumerable<RefMapItem> Flatten(TableMetadata table)
     {
+        String RealTypeName(TableColumn c)
+            => _isPlain ? c.RefTableCheck.TypeName : c.RefTableCheck.RefTypeName;
+
         yield return new RefMapItem(
             table,
             table.Columns
                 .Where(c => c.IsRef)
-                .GroupBy(c => $"{c.RefTableCheck.SqlTableName}|{c.RefTableCheck.TypeName}")
+                .GroupBy(c => $"{c.RefTableCheck.SqlTableName}|{RealTypeName(c)}")
                 .ToDictionary(g => g.Key, g => g.ToArray())
         );
 
@@ -40,7 +46,7 @@ internal class RefMapBuilder
                 yield return item;
     }
 
-    private Dictionary<String, List<String>> BuildTableStructure()
+    private Dictionary<String, List<TableColumn>> BuildTableStructure()
     {
         return _flat
             .SelectMany(x => x.ByTarget)
@@ -49,12 +55,12 @@ internal class RefMapBuilder
                 g => g.Key,
                 g =>
                 {
-                    var first = g.First().Value.Select(c => c.Name).ToList();
+                    var first = g.First().Value.ToArray();
                     var maxCount = g.Max(x => x.Value.Length);
                     return first
                         .Concat(Enumerable
-                            .Range(first.Count + 1, maxCount - first.Count)
-                            .Select(i => $"col_{i}"))
+                            .Range(first.Length + 1, maxCount - first.Length)
+                            .Select(i => first[i]))
                         .ToList();
                 }
             );
@@ -63,7 +69,7 @@ internal class RefMapBuilder
     public String? GenerateDeclare()
     {
         var cols = _tableStruct
-            .SelectMany(kvp => kvp.Value.Select(name => $"[{name}] bigint"));
+            .SelectMany(kvp => kvp.Value.Select(col => $"[{col.Name}] {col.SqlDataType()}"));
         if (!cols.Any())
             return null;
         return $"""
@@ -79,7 +85,7 @@ internal class RefMapBuilder
             var mappings = item.ByTarget
                             .SelectMany(kvp => kvp.Value
                                 .Select((col, i) => (
-                                    Target: $"[{_tableStruct[kvp.Key][i]}]",
+                                    Target: $"[{_tableStruct[kvp.Key][i].Name}]",
                                     Source: $"[{col.Name}]"
                                 )))
                             .ToList();
@@ -112,7 +118,7 @@ internal class RefMapBuilder
 
             var unionLines = kvp.Value
                 .Select(col => $"""
-                select id = [{col}] from @map where [{col}] is not null group by [{col}]
+                select id = [{col.Name}] from @map where [{col.Name}] is not null group by [{col.Name}]
                 """)                
                 .ToList();
 
@@ -145,6 +151,8 @@ internal class RefMapBuilder
 
     String? GenerateInitials()
     {
+        if (!_hasDefaults)
+            return null;
         var origin = _sourceTable.Origin;
         if (origin == null)
             return null;
@@ -162,14 +170,23 @@ internal class RefMapBuilder
         sb.Append("exec usr.GetProfilePreferences @UserId = @UserId, ");
         sb.AppendJoin(',', profUser.Select(p => $"@{p.Value.Value} = @Init{p.Key} output"));
         sb.AppendLine(";");
-        sb.AppendLine();
         var mapKeys = String.Join(',', profUser.Select(p => p.Key));
         var mapValues = String.Join(",", profUser.Select(p => $"@Init{p.Key}"));
         sb.AppendLine();
         sb.AppendLine($"insert into @map({mapKeys}) values ({mapValues});");
         return sb.ToString();
     }
-    public void WriteRefMap(StringBuilder sb)
+    
+    String? GenerateDocOperations()
+    {
+        if (!_hasDefaults) 
+            return null;
+        var docOps = _sourceTable.DocumentOperation();
+        if (docOps == null)
+            return null;
+        return $"insert into @map(Operation) values (N'{docOps}');";
+    }
+    public void WriteRefMap(StringBuilder sb, Action<StringBuilder>? onInsert = null)
     {
         if (IsEmpty)
             return;
@@ -186,12 +203,34 @@ internal class RefMapBuilder
             sb.AppendLine(inserts);
         }
 
+        var docOps = GenerateDocOperations();
+        if (docOps != null)
+        {
+            sb.AppendLine();
+            sb.AppendLine(docOps);
+        }
+
         var initials = GenerateInitials();
         if (initials != null)
         {
             sb.AppendLine();
             sb.AppendLine(initials);
         }
+
+        var resolvers = GenerateResolves();
+        if (resolvers != null)
+        {
+            sb.AppendLine();
+            sb.AppendLine(resolvers);
+        }
+    }
+
+    public void WriteRefMapIndex(StringBuilder sb, Action<StringBuilder>? onInsert = null)
+    {
+        if (IsEmpty)
+            return;
+
+        onInsert?.Invoke(sb);
 
         var resolvers = GenerateResolves();
         if (resolvers != null)

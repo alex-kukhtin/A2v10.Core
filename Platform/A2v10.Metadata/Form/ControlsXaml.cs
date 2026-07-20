@@ -57,14 +57,16 @@ internal partial class XamlBuilder
         return new Table()
         {
             GridLines = GridLinesVisibility.Both,
+            StickyHeaders = true,
+            Height = Length.FromString("100%"),
             Bindings = b => b.SetBinding(nameof(XTable.ItemsSource), new Bind($"{Table.Model}.{tab.Scope}")),
             Header = [
                 new TableRow()
                 {
-                    Cells = [..tab.Columns.Select(c => 
-                        new TableCell() { 
-                            Content = c.Header 
-                        }), 
+                    Cells = [..tab.Columns.Select(c =>
+                        new TableCell() {
+                            Content = c.Header
+                        }),
                         new TableCell()
                     ]
                 }
@@ -103,6 +105,8 @@ internal partial class XamlBuilder
                         new Grid(_xamlServiceProvider)
                         {
                             Rows = RowDefinitions.FromString("Auto,1*"),
+                            MinHeight = Length.FromString("0"),
+                            Height = Length.FromString("100%"),
                             Children = [
                                 new Toolbar(_xamlServiceProvider)
                                 {
@@ -133,7 +137,7 @@ internal partial class XamlBuilder
                         b.SetBinding(nameof(PeriodPicker.Description), new Bind("Parent.Filter.Period.Name"));
                     }
                 },
-            ColumnType.Ref => new SelectorSimple()
+            ColumnType.Ref or ColumnType.Operation => new SelectorSimple()
             {
                 Label = $"@[{column.RefTableCheck.Model}]",
                 ShowClear = true,
@@ -185,11 +189,19 @@ internal partial class XamlBuilder
             FormElementKind.Tabs => new Grid(_xamlServiceProvider)
             {
                 Rows = RowDefinitions.FromString("Auto,1*"),
+                MinHeight = Length.FromString("0"),
+                Height = Length.FromString("100%"),
                 Children = [
                     new TabBar()
                     {
                         Bindings = b => b.SetBinding(nameof(TabBar.Value), new Bind($"{Table.Model}.$$Tab")),
-                        Buttons = [..elem.Elements.Select(tab => new TabButton() { Content = $"@[{tab.Scope}]", ActiveValue=tab.Scope })]
+                        Buttons = [..elem.Elements.Select(tab => 
+                            new TabButton() { 
+                                Content = $"@[{tab.Scope}]", 
+                                ActiveValue=tab.Scope,
+                                Bindings = b => b.SetBinding(nameof(TabButton.Badge), new Bind($"{Table.Model}.{tab.Scope}.Count"))
+                            })
+                        ]
                     },
                     CreateTabsScope(elem)
                ]
@@ -208,7 +220,7 @@ internal partial class XamlBuilder
             _ => throw new InvalidOperationException($"Invalid control {elem.Is}")
         };
     }
-    Control CreateEditControl(TableColumn column)
+    UIElementBase CreateEditControl(TableColumn column)
     {
         var valueBind = new Bind($"{Table.Model}.{column.Name}")
         {
@@ -235,6 +247,11 @@ internal partial class XamlBuilder
                 Multiline = true,
                 Rows = 3,
                 Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
+            },
+            ColumnType.Operation => new Header()
+            {
+                Bold = false,
+                Bindings = b => b.SetBinding(nameof(Header.Content), new Bind($"{Table.Model}.{column.Name}.Name"))
             },
             ColumnType.Ref or ColumnType.Document => new SelectorSimple()
             {

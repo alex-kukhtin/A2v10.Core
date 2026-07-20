@@ -51,7 +51,7 @@ internal class DataTableBuilder(TableMetadata table)
 
         var dtable = new DataTable();
 
-        foreach (var f in table.AllColumns(c => !c.IsOperation))
+        foreach (var f in table.AllColumns())
             dtable.Columns.Add(CreateColumn(f));
         return dtable;
     }

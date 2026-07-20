@@ -49,6 +49,26 @@ public class ApiDataService(IDataService _dataService)
         };
     }
 
+    public async Task<DataResult> CreateAsync(String route)
+    {
+        var url = $"{route}/edit/0";
+        var segments = route.Split("/");
+        if (segments.Length < 1)
+            throw new InvalidOperationException($"Invalid route '{route}'");
+        var kind = segments[0] switch
+        {
+            "catalog" => UrlKind.Dialog,
+            "document" => UrlKind.Page,
+            _ => throw new NotImplementedException($"Edit for {segments[0]}")
+        };
+        var lr = await _dataService.LoadAsync(kind, url, prms => { });
+        return new DataResult()
+        {
+            Data = lr.Model?.BuildNewInstance() ?? throw new InvalidOperationException("Model is null"),
+            Metadata = lr.Model.BuildDataModelMeta()
+        };
+    }
+
     public async Task<ExpandoObject> SaveAsync(String route, ExpandoObject data)
     {
         var segments = route.Split("/");
@@ -65,7 +85,7 @@ public class ApiDataService(IDataService _dataService)
         return lr.Raw;
     }
 
-    String CreateIndexQuery(IndexQuery query, ExpandoObject filters)
+    static String CreateIndexQuery(IndexQuery query, ExpandoObject filters)
     {
         IEnumerable<String> Params()
         {

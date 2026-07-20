@@ -24,6 +24,14 @@ public class AgentController(ApiDataService _dataService) : ControllerBase
         return Ok(dr.Data);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> Create()
+    {
+        var dr = await _dataService.CreateAsync("catalog/agent");
+        return Ok(dr.Data);
+    }
+
+
     [HttpPost]
     public async Task<IActionResult> Save([FromBody] ExpandoObject data)
     {

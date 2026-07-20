@@ -1,4 +1,4 @@
-﻿// Copyright © 2019-2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2019-2026 Oleksandr Kukhtin. All rights reserved.
 
 
 using A2v10.Infrastructure;
@@ -107,6 +107,8 @@ public class TabBar : UIElement
 	protected override void OnEndInit()
 	{
 		base.OnEndInit();
+		foreach (var tb in Buttons)
+			tb.SetParent(this);
 		if (Description is XamlElement xamlElem)
 			xamlElem.SetParent(this);
 	}

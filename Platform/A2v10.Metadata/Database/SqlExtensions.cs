@@ -20,7 +20,7 @@ internal static class SqlExtensions
     {
         return columnDataType switch
         {
-            ColumnType.Id or ColumnType.Ref or 
+            ColumnType.Id or ColumnType.Ref or
                 ColumnType.Parent or ColumnType.Owner or
                 ColumnType.User => SqlDbType.BigInt,
             ColumnType.RowNumber => SqlDbType.Int,
@@ -46,8 +46,8 @@ internal static class SqlExtensions
     {
         return columnDataType switch
         {
-            ColumnType.Id or ColumnType.Ref or ColumnType.Owner or 
-                ColumnType.Parent or ColumnType.User => "platformid",                                    
+            ColumnType.Id or ColumnType.Ref or ColumnType.Owner or
+                ColumnType.Parent or ColumnType.User => "platformid",
             ColumnType.IsSystem or ColumnType.IsFolder or ColumnType.Done or
                 ColumnType.Void or ColumnType.Boolean => "bit",
             ColumnType.Name => "nvarchar(255)",
@@ -73,17 +73,15 @@ internal static class SqlExtensions
     }
 
     public static String SqlModelColumnName(this TableColumn column, String alias, Func<TableMetadata, String> refPredicate)
-    {
-        if (column.Type == ColumnType.Id)
-            return $"[Id!!Id] = {alias}.[Id]";
-        else if (column.Type == ColumnType.Name)
-            return $"[Name!!Name] = {alias}.[Name]";
-        else if (column.Type == ColumnType.RowNumber)
-            return $"[{column.Name}!!RowNumber] = {alias}.[{column.Name}]";
-        else if (column.Type == ColumnType.Ref || column.Type == ColumnType.Document)
-            return $"[{column.Name}!{refPredicate(column.RefTableCheck)}!RefId] = {alias}.[{column.Name}]";
-        return $"{alias}.[{column.Name}]";
-    }
+        => column.Type switch
+        {
+            ColumnType.Id => $"[Id!!Id] = {alias}.[Id]",
+            ColumnType.Name => $"[Name!!Name] = {alias}.[Name]",
+            ColumnType.RowNumber => $"[{column.Name}!!RowNumber] = {alias}.[{column.Name}]",
+            ColumnType.Ref or ColumnType.Document or ColumnType.Operation =>
+                $"[{column.Name}!{refPredicate(column.RefTableCheck)}!RefId] = {alias}.[{column.Name}]",
+            _ => $"{alias}.[{column.Name}]"
+        };
 
     public static Type ClrDataType(this TableColumn column)
     {
@@ -92,7 +90,7 @@ internal static class SqlExtensions
             ColumnType.Id or ColumnType.Ref or ColumnType.Owner or ColumnType.Parent => typeof(Int64),
             ColumnType.Name or ColumnType.Memo or ColumnType.Autonum => typeof(String),
             ColumnType.RowNumber => typeof(Int32),
-            ColumnType.RowKind=> typeof(String),
+            ColumnType.RowKind => typeof(String),
             ColumnType.Operation => typeof(String),
             ColumnType.Enum => typeof(String),
             ColumnType.BigInt => typeof(Int64),
@@ -124,5 +122,9 @@ internal static class SqlExtensions
             && column.Type != ColumnType.Owner
             && column.Type != ColumnType.Parent
             && column.Type != ColumnType.RowVersion;
+    }
+    internal static Boolean IsFieldInserted(this TableColumn column)
+    {
+        return column.IsFieldUpdated() || column.Type == ColumnType.Operation;
     }
 }
