@@ -51,16 +51,15 @@ internal partial class SqlBuilder
                 return null;
             if (org == null)
                 return null;
-            var initValues = org.initialValues;
+            var initValues = org.InitialValues;
             var docOp = Table.DocumentOperation();
             if (docOp != null)
                 initValues = new Dictionary<string, InitialMetadata>(initValues)
                 {
-                    ["Operation"] = new InitialMetadata()
-                    {
-                        Source = InitialSource.Context,
-                        Value = "$operation$"
-                    }
+                    ["Operation"] = new InitialMetadata(
+                        Source: InitialSource.Context,
+                        Value: "$operation$"
+                    )
                 };
             
             if (initValues.Count == 0)
@@ -68,8 +67,8 @@ internal partial class SqlBuilder
 
             String getDefaultProfile(String key)
             {
-                if (!Table.Fields.TryGetValue(key, out var column))
-                    throw new InvalidOperationException($"Column {key} not found in {Table.SqlTableName}");
+                var column = Table.Columns.FirstOrDefault(c => c.Name == key)
+                    ?? throw new InvalidOperationException($"Column {key} not found in {Table.SqlTableName}");
                 return $"[{Table.Model}.{key}!{column.RefTableCheck.TypeName}!RefId] = @Init{key}";
             }
 

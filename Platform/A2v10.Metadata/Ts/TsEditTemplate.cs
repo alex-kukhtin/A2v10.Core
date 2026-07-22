@@ -113,12 +113,12 @@ internal partial class TypescriptBuilder
         IEnumerable<String> defaults()
         {
             if (Table.Columns.Any(c => c.Name == "Date"))
-                yield return $$"""'{{Table.RealItemName}}.Date'() { return du.today(); }""";
+                yield return $$"""'{{Table.Model}}.Date'() { return du.today(); }""";
             if (Table.Origin != null && Table.Origin.IsOperation)
             {
                 var opColumn = Table.Columns.FirstOrDefault(c => c.Type == ColumnType.Operation);
                 if (opColumn != null)
-                    yield return $$"""'{{Table.RealItemName}}.{{opColumn.Name}}'() { return { Id: '{{Table.Origin.Table.ToLowerInvariant()}}', Name: '{{Table.Origin.Model}}'};}""";
+                    yield return $$"""'{{Table.Model}}.{{opColumn.Name}}'() { return { Id: '{{Table.Origin.Table.ToLowerInvariant()}}', Name: '{{Table.Origin.Model}}'};}""";
             }
         }
 
@@ -160,7 +160,33 @@ internal partial class TypescriptBuilder
                 else
                 {
                     foreach (var c in d.Columns.Where(c => c.Required))
-                        yield return $"'{Table.RealItemName}.{d.CollectionName}[].{c.Name}': `@[Error.Required]`";
+                        yield return $"'{Table.Model}.{d.CollectionName}[].{c.Name}': `@[Error.Required]`";
+                }
+            }
+        }
+
+        IEnumerable<String> events()
+        {
+            foreach (var g in Table.AllInherits(Table.Origin).GroupBy(x => x.Ref.Name))
+            {
+                var body = String.Join(" ", g.Select(x => $"doc.{x.Field.Name} = doc.{x.Ref.Name}.{x.Source.Name};"));
+                yield return $$"""'{{Table.Model}}.{{g.Key}}.change'(doc: {{Table.TypeName}}) { {{body}} }""";
+            }
+
+            foreach (var d in Table.Details)
+            {
+                var dt = d.Value;
+                var inherits = dt.AllInherits(Table.Origin?.Details.GetValueOrDefault(d.Key)).ToList();
+                if (inherits.Count == 0)
+                    continue;
+                List<String> paths = dt.Kinds.Count > 0
+                    ? [.. dt.Kinds.Select(k => $"{Table.Model}.{k}[]")]
+                    : [$"{Table.Model}.{dt.CollectionName}[]"];
+                foreach (var g in inherits.GroupBy(x => x.Ref.Name))
+                {
+                    var body = String.Join(" ", g.Select(x => $"row.{x.Field.Name} = row.{x.Ref.Name}.{x.Source.Name};"));
+                    foreach (var p in paths)
+                        yield return $$"""'{{p}}.{{g.Key}}.change'(row: {{dt.TypeName}}) { {{body}} }""";
                 }
             }
         }
@@ -199,6 +225,9 @@ internal partial class TypescriptBuilder
             validators: {
                 {{String.Join(jsDivider, validators())}}
             },
+            events: {
+                {{String.Join(jsDivider, events())}}
+            },
             commands: {
                 apply,
                 unApply
@@ -209,16 +238,16 @@ internal partial class TypescriptBuilder
 
         async function apply(this: TRoot) {
             const ctrl: IController = this.$ctrl;
-            await ctrl.$invoke('apply', {Id: this.{{Table.RealItemName}}.Id}, '{{endpoint}}');
-        	this.{{Table.RealItemName}}.Done = true;
+            await ctrl.$invoke('apply', {Id: this.{{Table.Model}}.Id}, '{{endpoint}}');
+        	this.{{Table.Model}}.Done = true;
             ctrl.$emitGlobal('g.document.applied', this);
             ctrl.$requery();
         }
 
         async function unApply(this: TRoot) {
             const ctrl: IController = this.$ctrl;
-            await ctrl.$invoke('unapply', {Id: this.{{Table.RealItemName}}.Id}, '{{endpoint}}');
-        	this.{{Table.RealItemName}}.Done = false;
+            await ctrl.$invoke('unapply', {Id: this.{{Table.Model}}.Id}, '{{endpoint}}');
+        	this.{{Table.Model}}.Done = false;
             ctrl.$emitGlobal('g.document.applied', this);
             ctrl.$requery();
         }

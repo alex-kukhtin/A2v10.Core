@@ -3,9 +3,18 @@
 Обязательно, чтобы пр добавлении 
 */
 
+1. EditDialog - порядок как в Page (Tabs в середину)
+2. Operation endpoint - убрать фильтр Operation
+3. EditPage - Groups -> Orientation, Header
+4. Xaml Control -> Orientation = Horz -> flex, align-items, gap
+5. EditPage -> Title
+6. EditPage -> Details Table -> порядок колонок
+8. Presentation
+9. AutoNum
+10. BrowseDialog - ширина
+11. 
 
 
-8. Generate view, template ?
 14. Не работает ParentElem в Edit.
 19. ContractKind: нет колонки Void (что-то придумать в БД)
 20. a2security.Users => meta. Name = UserName
@@ -14,7 +23,6 @@
 (чтобы менять код для БД для разных СУБД)
 31. IndexPage: SortProperty (Agent.Name?)
 36. Default Sort Property - сейчас Id - сделать Name? или Date?
-43. Сделать команды как в Xaml (Dialog, Action и т.д)
 
 
 

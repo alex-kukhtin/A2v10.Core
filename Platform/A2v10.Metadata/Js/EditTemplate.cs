@@ -48,7 +48,7 @@ internal partial class JavascriptBuilder
 
             foreach (var d in Table.Details.Select(x => x.Value))
                 foreach (var c in d.Columns.Where(c => c.Required))
-                    yield return $"'{Table.RealItemName}.{d.CollectionName}[].{c.Name}': `@[Error.Required]`";
+                    yield return $"'{Table.Model}.{d.CollectionName}[].{c.Name}': `@[Error.Required]`";
         }
 
         IEnumerable<String> functions()

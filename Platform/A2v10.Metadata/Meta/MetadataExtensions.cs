@@ -93,7 +93,7 @@ internal static class MetadataExtensions
         return new TableMetadata()
         {
             //Schema = col.Reference.RefSchema,
-            Table = col.Reference.RefTable,
+            Table = col.RefTableCheck.Table,
             /*
             Columns = [
                 new TableColumn()
@@ -121,6 +121,43 @@ internal static class MetadataExtensions
     internal static IEnumerable<RefDescriptor> AllRefs(this IEnumerable<TableColumn> columns) =>
         columns.Where(c => c.IsRef || c.IsOperation).Select((c, ix) => new RefDescriptor(ix + 1, c, c.RefTable
             ?? throw new InvalidOperationException($"RefTable for {c.Name} is null")));
+
+
+    internal static IEnumerable<InheritDescriptor> AllInherits(this TableMetadata table, TableMetadata? origin = null)
+    {
+        var declared = new Dictionary<String, InheritMetadata>(table.Inherit);
+        foreach (var kp in origin?.Inherit ?? [])
+            declared[kp.Key] = kp.Value;   
+
+        if (declared.Count == 0)
+            yield break;
+
+        var columns = table.Columns; 
+
+        static TableColumn Find(TableMetadata t, List<TableColumn> cols, String name, String what) =>
+            cols.FirstOrDefault(c => c.Name == name)
+                ?? throw new InvalidOperationException($"inherit: {what} '{name}' not found in {t.SqlTableName}");
+
+        foreach (var kp in declared)
+        {
+            var field = Find(table, columns, kp.Key, "field");
+            var refColumn = Find(table, columns, kp.Value.Ref, "ref");
+            if (!refColumn.IsRef)
+                throw new InvalidOperationException($"inherit: ref '{refColumn.Name}' is not a reference");
+            var refTable = refColumn.RefTableCheck;
+            yield return new InheritDescriptor(field, refColumn,
+                Find(refTable, refTable.Columns, kp.Value.Field, "source"));
+        }
+    }
+    // корінь + деталі; кожна таблиця в парі зі своїм операційним контрагентом
+    internal static IEnumerable<InheritDescriptor> AllInheritsDeep(this TableMetadata table, TableMetadata? origin)
+    {
+        foreach (var d in table.AllInherits(origin))
+            yield return d;
+        foreach (var detail in table.Details)
+            foreach (var d in detail.Value.AllInheritsDeep(origin?.Details.GetValueOrDefault(detail.Key)))
+                yield return d;
+    }
 
     internal static FormMetadata IndexForm(this TableMetadata table) =>
         table.Forms.First(x => x.Key == Constants.FormNames.Index).Value;

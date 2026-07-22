@@ -117,7 +117,6 @@ public record TableColumn
     #region Database Fields
     public Int32 MaxLength { get; init; }
     public Int32 Scale { get; init; }
-    public ColumnReference Reference { get; init; } = default!;
     public ColumnType? DbDataType { get; init; }
     
     public String? Computed { get; init; }
@@ -221,11 +220,10 @@ public enum TableTrait
     Tags
 }
 
-public sealed record InitialMetadata
-{
-    public InitialSource Source { get; init; }
-    public String Value { get; init; } = default!;
-}
+public sealed record InitialMetadata(InitialSource Source, String Value);
+public sealed record InheritMetadata(String Ref, String Field); 
+public sealed record InheritDescriptor(TableColumn Field, TableColumn Ref, TableColumn Source);
+
 public sealed record TableMetadata
 {
     #region Database fields
@@ -236,13 +234,16 @@ public sealed record TableMetadata
     public String Path { get; set; } = default!;
     public String Label { get; set; } = default!;
     public String? Autonum { get; set; } // for opertions
-    public Dictionary<String, InitialMetadata> initialValues { get; init; } = [];
-    public Dictionary<String, TableColumn> Fields { get; init; } = [];
+    public Dictionary<String, InitialMetadata> InitialValues { get; init; } = [];
+
+    [JsonProperty("fields")]
+    private Dictionary<String, TableColumn> _fields { get; init; } = [];
 
     [JsonIgnore]
-    public List<TableColumn> Columns => [.. Fields.Select(
+    public List<TableColumn> Columns => [.. _fields.Select(
         kp => { kp.Value.Name = kp.Key; return kp.Value; }
     )];
+    public Dictionary<String, InheritMetadata> Inherit { get; init; } = [];
 
     public List<TableTrait> Traits { get; init; } = [];
 
@@ -268,7 +269,6 @@ public sealed record TableMetadata
 
     // OLD
     public String? ItemsName { get; init; }
-    public String? ItemName { get; init; }
 
     #endregion
 
@@ -295,11 +295,9 @@ public sealed record TableMetadata
     [JsonIgnore]
     public String? FileHash { get; set; }
 
-    internal String PrimaryKeyField => "Id";
     internal String RowKindField => Columns.FirstOrDefault(c => c.Type == ColumnType.RowKind)?.Name
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a RowKind column");
 
-    internal String RealItemName => ItemsName != null ? ItemsName.Singular() : ItemName ?? Table.Singular();
     internal String RealItemsName => ItemsName ?? Table;  
     internal String RealItemsLabel => ItemsLabel ?? $"@{RealItemsName}";
     internal Boolean IsOperation => Schema == "operation";

@@ -186,6 +186,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
 
     internal static (String schema, String table) ParsePath(String path)
     {
+        path = path.RemoveHeadSlash();
         var split = path.ToLowerInvariant().Split('/');
         if (split.Length == 1)
             return (split[0], String.Empty);

@@ -52,7 +52,7 @@ internal partial class SqlBuilder
             {
                 if (a.DetailsOld == null || String.IsNullOrEmpty(a.DetailsOld.RefTable))
                     return String.Empty;
-                return $"inner join {a.DetailsOld.SqlTableName} {rowsAlias} on {rowsAlias}.[Parent] = {docAlias}.[{Table.PrimaryKeyField}]{onUseKind}";
+                return $"inner join {a.DetailsOld.SqlTableName} {rowsAlias} on {rowsAlias}.[Parent] = {docAlias}.[Id]{onUseKind}";
             }
 
             return $"""
@@ -83,7 +83,7 @@ internal partial class SqlBuilder
         await _dbContext.LoadModelSqlAsync(DataSource, applySql, dbprms =>
         {
             dbprms.AddBigInt("@UserId", _currentUser.Identity.Id)
-            .AddString("@Id", prms?.Get<Object>(Table.PrimaryKeyField)?.ToString());
+            .AddString("@Id", prms?.Get<Object>("Id")?.ToString());
         });
 
         return EmptyInvokeResult.FromString("{}", MimeTypes.Application.Json);

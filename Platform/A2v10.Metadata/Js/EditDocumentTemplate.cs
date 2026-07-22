@@ -63,6 +63,31 @@ internal partial class JavascriptBuilder
             }
         }
 
+        IEnumerable<String> events()
+        {
+            foreach (var g in Table.AllInherits(Table.Origin).GroupBy(x => x.Ref.Name))
+            {
+                var body = String.Join(" ", g.Select(x => $"doc.{x.Field.Name} = doc.{x.Ref.Name}.{x.Source.Name};"));
+                yield return $$"""'{{Table.Model}}.{{g.Key}}.change'(doc) { {{body}} }""";
+            }
+
+            foreach (var d in Table.Details)
+            {
+                var dt = d.Value;
+                var inherits = dt.AllInherits(Table.Origin?.Details.GetValueOrDefault(d.Key)).ToList();
+                if (inherits.Count == 0)
+                    continue;
+                List<String> paths = dt.Kinds.Count > 0
+                    ? [.. dt.Kinds.Select(k => $"{Table.Model}.{k}[]")]
+                    : [$"{Table.Model}.{dt.CollectionName}[]"];
+                foreach (var g in inherits.GroupBy(x => x.Ref.Name))
+                {
+                    var body = String.Join(" ", g.Select(x => $"row.{x.Field.Name} = row.{x.Ref.Name}.{x.Source.Name};"));
+                    foreach (var p in paths)
+                        yield return $$"""'{{p}}.{{g.Key}}.change'(row) { {{body}} }""";
+                }
+            }
+        }
 
         const String jsDivider = ",\n\t\t";
 
@@ -81,6 +106,9 @@ internal partial class JavascriptBuilder
             },
             validators: {
                 {{String.Join(jsDivider, validators())}}
+            },
+            events: {
+                {{String.Join(jsDivider, events())}}
             },
             commands: {
                 post,

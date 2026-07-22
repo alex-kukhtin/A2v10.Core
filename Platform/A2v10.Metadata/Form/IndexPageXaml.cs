@@ -54,6 +54,7 @@ internal partial class XamlBuilder
         return action switch
         {
             "index" => CreateIndexPageXaml(Table.IndexForm()),
+            "indexpartial" => CreateIndexPartialPageXaml(Table.IndexForm()),
             "browse" => CreateBrowseDialogXaml(Table.BrowseForm()),
             "edit" => CreateEditXaml(Table.EditForm()),
             _ => throw new InvalidOperationException($"Invalid action: '{action}'")
@@ -76,14 +77,22 @@ internal partial class XamlBuilder
         };
     }
 
-    internal Partial CreateIndexPagePartialXaml()
+    internal Partial CreateIndexPartialPageXaml(FormMetadata meta)
     {
-        var form = Table.IndexForm();
         var collView = XamlCollectionView();
-        collView.Children = [IndexPageGrid(form)];
+        collView.Children.Add(
+            new Grid(_xamlServiceProvider)
+            {
+                Rows = RowDefinitions.FromString("Auto,1*,Auto"),
+                Height = Length.FromString("100%"),
+                Children = [.. meta.Body.Select(ElementToControl)]
+            }
+        );
         return new Partial()
         {
-            Children = [collView]
+            Children = [
+                collView
+            ],
         };
     }
 

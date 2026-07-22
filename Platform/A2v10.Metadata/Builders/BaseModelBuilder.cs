@@ -75,17 +75,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
     }
 
     public UIElement CreateDefaultXamlForm()
-    {
-        return Action switch
-        {
-            "browse" => _xamlBuilder.CreateXamlContainer(Action),
-            "index" => _xamlBuilder.CreateXamlContainer(Action),
-            "edit" => _xamlBuilder.CreateXamlContainer(Action),
-            "indexpartial" => _xamlBuilder.CreateIndexPagePartialXaml(),
-            //"browsefolder" => _index.CreateBrowseTreeDialogXaml(),
-            _ => throw new NotImplementedException($"Create form for {Action}")
-        };
-    }
+        => _xamlBuilder.CreateXamlContainer(Action);
 
     public Task<ExpandoObject> SaveModelAsync(ExpandoObject data, ExpandoObject savePrms)
     {

@@ -7,11 +7,14 @@ using System.Text;
 
 namespace A2v10.Metadata;
 
-internal record RefMapItem(TableMetadata SourceTable, Dictionary<String, TableColumn[]> ByTarget);
+internal record RefMapItem(TableMetadata SourceTable,
+       Dictionary<String, TableColumn[]> ByTarget
+    );
 internal class RefMapBuilder
 {
     private readonly List<RefMapItem> _flat;
     private readonly Dictionary<String, List<TableColumn>> _tableStruct;
+    private readonly Dictionary<String, List<TableColumn>> _inheritStruct;
     private readonly Boolean _isPlain;
     private readonly Boolean _hasDefaults;
     private readonly TableMetadata _sourceTable;
@@ -22,20 +25,24 @@ internal class RefMapBuilder
         _hasDefaults = hasDefaults;
         _flat = [.. Flatten(table)];
         _tableStruct = BuildTableStructure();
+        _inheritStruct = BuildInheritStructure();
     }
     public Boolean IsEmpty => _flat.Count == 0;
 
 
+    private String RealTypeName(TableMetadata t)
+        => _isPlain ? t.TypeName : t.RefTypeName;
+
+    private String TargetKey(TableColumn c)
+        => $"{c.RefTableCheck.SqlTableName}|{RealTypeName(c.RefTableCheck)}";
+
     private IEnumerable<RefMapItem> Flatten(TableMetadata table)
     {
-        String RealTypeName(TableColumn c)
-            => _isPlain ? c.RefTableCheck.TypeName : c.RefTableCheck.RefTypeName;
-
         yield return new RefMapItem(
             table,
             table.Columns
                 .Where(c => c.IsRef)
-                .GroupBy(c => $"{c.RefTableCheck.SqlTableName}|{RealTypeName(c)}")
+                .GroupBy(TargetKey)
                 .ToDictionary(g => g.Key, g => g.ToArray())
         );
 
@@ -46,6 +53,20 @@ internal class RefMapBuilder
                 yield return item;
     }
 
+    private Dictionary<String, List<TableColumn>> BuildInheritStructure()
+    {
+        if (!_isPlain)
+            return [];
+        return _sourceTable.AllInheritsDeep(_sourceTable.Origin)
+            .GroupBy(d => TargetKey(d.Ref))
+            .ToDictionary(
+                g => g.Key,
+                g => g.Select(d => d.Source)
+                      .Where(c => c.Type != ColumnType.Id && c.Type != ColumnType.Name)
+                      .DistinctBy(c => c.Name)
+                      .ToList()
+            );
+    }
     private Dictionary<String, List<TableColumn>> BuildTableStructure()
     {
         return _flat
@@ -137,8 +158,12 @@ internal class RefMapBuilder
                   ) ids group by id
                 )
                 """;
+            var inherits = _inheritStruct.TryGetValue(kvp.Key, out var inh) && inh.Count > 0
+                ? ", " + String.Join(", ", inh.Select(c => c.SqlModelColumnName("a", RealTypeName)))
+                : String.Empty;
+
             var select = $"""
-            select [!{typeName}!Map] = null, [Id!!Id] = a.Id, [Name!!Name] = a.Name 
+            select [!{typeName}!Map] = null, [Id!!Id] = a.Id, [Name!!Name] = a.Name{inherits}
             from {tableName} a inner join T on a.Id = T.id;
             """;
             return $"{cte}\n{select}";
@@ -156,10 +181,10 @@ internal class RefMapBuilder
         var origin = _sourceTable.Origin;
         if (origin == null)
             return null;
-        if (origin.initialValues.Count == 0)
+        if (origin.InitialValues.Count == 0)
             return null;
         // from user profile
-        var profUser = origin.initialValues.Where(x => x.Value.Source == InitialSource.Profile).ToList();
+        var profUser = origin.InitialValues.Where(x => x.Value.Source == InitialSource.Profile).ToList();
         if (profUser.Count == 0) 
             return null;
         var sb = new StringBuilder();
@@ -236,7 +261,7 @@ internal class RefMapBuilder
         if (resolvers != null)
         {
             sb.AppendLine();
-            sb.AppendLine(GenerateResolves());
+            sb.AppendLine(resolvers);
         }
     }
 }

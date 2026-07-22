@@ -121,17 +121,17 @@ public class CliDatabaseCreator()
             }
             else if (column.Type == ColumnType.Enum)
             {
-                var opConstraintName = $"FK_{table.Table}_{column.Name}_{column.Reference.RefTable}";
+                var opConstraintName = $"FK_{table.Table}_{column.Name}_{column.RefTableCheck.Table}";
 
                 return $"""
                 if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.SqlSchema}' and TABLE_NAME = N'{table.Table}' and CONSTRAINT_NAME = N'{opConstraintName}')
                     alter table {table.SqlTableName} add 
-                        constraint {opConstraintName} foreign key ([{column.Name}]) references {column.Reference.SqlTableName}([Id]);
+                        constraint {opConstraintName} foreign key ([{column.Name}]) references {column.RefTableCheck.SqlTableName}([Id]);
                 alter table {table.SqlTableName} {check} constraint {opConstraintName};
                 """;
             }
 
-            var refs = column.Reference ??
+            var refs = column.RefTable ??
                     throw new InvalidOperationException("Reference is null");
             return String.Empty;
             /*
