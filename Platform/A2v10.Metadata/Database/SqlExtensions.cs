@@ -22,14 +22,14 @@ internal static class SqlExtensions
         {
             ColumnType.Id or ColumnType.Ref or
                 ColumnType.Parent or ColumnType.Owner or
-                ColumnType.User => SqlDbType.BigInt,
+                ColumnType.User or ColumnType.Row => SqlDbType.BigInt,
             ColumnType.RowNumber => SqlDbType.Int,
             // other
-            ColumnType.Operation => SqlDbType.NVarChar,
+            ColumnType.Operation or ColumnType.DocumentType => SqlDbType.NVarChar,
             ColumnType.Enum => SqlDbType.NVarChar,
             ColumnType.BigInt => SqlDbType.BigInt,
             ColumnType.Int => SqlDbType.Int,
-            ColumnType.SmallInt => SqlDbType.SmallInt,
+            ColumnType.SmallInt or ColumnType.Direction => SqlDbType.SmallInt,
             ColumnType.Decimal => SqlDbType.Decimal,
             ColumnType.String => SqlDbType.NVarChar,
             ColumnType.DateTime => SqlDbType.DateTime,
@@ -47,20 +47,22 @@ internal static class SqlExtensions
         return columnDataType switch
         {
             ColumnType.Id or ColumnType.Ref or ColumnType.Owner or
-                ColumnType.Parent or ColumnType.User => "platformid",
+                ColumnType.Parent or ColumnType.User or ColumnType.Row => "platformid",
             ColumnType.IsSystem or ColumnType.IsFolder or ColumnType.Done or
                 ColumnType.Void or ColumnType.Boolean => "bit",
             ColumnType.Name => "nvarchar(255)",
             ColumnType.Memo => "nvarchar(255)",
             ColumnType.Operation => "nvarchar(64)",
+            ColumnType.DocumentType => "nvarchar(128)",
             ColumnType.Money => "money",
-            ColumnType.Enum => "nvarchar(16)",
+            ColumnType.Enum => "nvarchar(32)",
             ColumnType.String => $"nvarchar({maxLength})",
             ColumnType.NVarChar => $"nvarchar({maxLength})",
             ColumnType.NChar => $"nchar({maxLength})",
             ColumnType.Stream => $"varbinary(max)",
             ColumnType.Uniqueidentifier => "uniqueidentifier",
             ColumnType.RowVersion => toTableType ? "varbinary(8)" : "rowversion",
+            ColumnType.Direction => "smallint",
             ColumnType.Decimal => $"decimal({maxLength},{scale})",
             _ => columnDataType.ToString().ToLowerInvariant(),
         };
@@ -87,7 +89,7 @@ internal static class SqlExtensions
     {
         return column.Type switch
         {
-            ColumnType.Id or ColumnType.Ref or ColumnType.Owner or ColumnType.Parent => typeof(Int64),
+            ColumnType.Id or ColumnType.Ref or ColumnType.Owner or ColumnType.Parent or ColumnType.Row => typeof(Int64),
             ColumnType.Name or ColumnType.Memo or ColumnType.Autonum => typeof(String),
             ColumnType.RowNumber => typeof(Int32),
             ColumnType.RowKind => typeof(String),
@@ -95,7 +97,7 @@ internal static class SqlExtensions
             ColumnType.Enum => typeof(String),
             ColumnType.BigInt => typeof(Int64),
             ColumnType.String or ColumnType.NVarChar or
-                ColumnType.NChar => typeof(String),
+                ColumnType.NChar or ColumnType.DocumentType => typeof(String),
             ColumnType.Date or ColumnType.DateTime => typeof(DateTime),
             ColumnType.Bit or ColumnType.Done or ColumnType.Void
                 or ColumnType.IsFolder or ColumnType.IsSystem => typeof(Boolean),
@@ -103,7 +105,7 @@ internal static class SqlExtensions
             ColumnType.Float => typeof(Double),
             ColumnType.Int => typeof(Int32),
             ColumnType.Decimal => typeof(Decimal),
-            ColumnType.SmallInt => typeof(Int16),
+            ColumnType.SmallInt or ColumnType.Direction => typeof(Int16),
             ColumnType.Stream => typeof(Byte[]),
             ColumnType.Uniqueidentifier => typeof(Guid),
             ColumnType.RowVersion => typeof(Byte[]),

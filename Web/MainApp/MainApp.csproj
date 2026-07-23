@@ -8,6 +8,7 @@
 		<OutputType>Library</OutputType>
 		<NoWarn>$(NoWarn);MSB3245</NoWarn>
 		<NoWin32Manifest>true</NoWin32Manifest>
+		<UserSecretsId>87c64379-88eb-4d88-8e36-31863abe136d</UserSecretsId>
 	</PropertyGroup>
 
 	<ItemGroup>

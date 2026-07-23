@@ -14,26 +14,26 @@ internal partial class BaseModelBuilder
     {
         return command.ToLowerInvariant() switch
         {
-            "apply" or "post" => ApplyAsync(prms),
+            "apply" or "post" => PostAsync(prms),
             "fetch" => _sqlBuilder.FetchAsync(prms),
             "fetchfolder" => _sqlBuilder.FetchFolderAsync(prms),
-            "unapply" or "unapply" => UnApplyAsync(prms),
+            "unapply" or "unpost" => UnPostAsync(prms),
             var s when s.EndsWith(".unique") => _sqlBuilder.CheckUniqueAsync(prms, command.Split('.')[0]),
             _ => throw new NotImplementedException($"Implement invoke for {command}")
         };
     }
 
-    private Task<IInvokeResult> ApplyAsync(ExpandoObject? prms)
+    private Task<IInvokeResult> PostAsync(ExpandoObject? prms)
     {
         if (!Table.IsDocument)
-            throw new NotImplementedException($"The Apply command is available for documents only");
-        return _sqlBuilder.ApplyDocumentAsync(prms); 
+            throw new NotImplementedException($"The Post command is available for documents only");
+        return _sqlBuilder.PostDocumentAsync(prms); 
     }
 
-    private Task<IInvokeResult> UnApplyAsync(ExpandoObject? prms)
+    private Task<IInvokeResult> UnPostAsync(ExpandoObject? prms)
     {
         if (!Table.IsDocument)
-            throw new NotImplementedException($"The UnApply command is available for documents only");
-        return _sqlBuilder.UnApplyDocumentAsync(prms);
+            throw new NotImplementedException($"The UnPost command is available for documents only");
+        return _sqlBuilder.UnPostDocumentAsync(prms);
     }
 }

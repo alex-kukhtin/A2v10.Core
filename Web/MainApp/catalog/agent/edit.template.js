@@ -9,6 +9,8 @@ const template = {
 };
 exports.default = template;
 function agentGetter() {
+    let ctrl = this.$ctrl;
+    ctrl.$invoke('/test2/test3');
 }
 function agentSetter(value) {
 }

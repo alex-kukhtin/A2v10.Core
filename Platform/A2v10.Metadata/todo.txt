@@ -12,7 +12,9 @@
 8. Presentation
 9. AutoNum
 10. BrowseDialog - ширина
-11. 
+11. BrowseDialog -> DblClick -> Select
+12. IndexPage -> DblClick -> Open or edit?
+13. Operation/Docunment -> ShowTrans
 
 
 14. Не работает ParentElem в Edit.

@@ -20,6 +20,7 @@ internal static class Constants
         public const String Owner = nameof(Owner);
         public const String Date = nameof(Date);
         public const String Done = nameof(Done);
+        public const String Document = nameof(Document);
         public const String RowVersion = "rv";
     }
     public static class FieldSizes

@@ -39,11 +39,14 @@ public enum ColumnType
     RowKind,
     Operation,
     Document,
+    DocumentType,  // journal provenance discriminator: source document endpoint ((Table.Origin ?? Table).Path)
+    Row,        // journal provenance: Id of the posted detail row (r.[Id]); null when the post has no 'each'
     RowVersion,
     Color,
     Enum,
     Autonum,
     Company,
+    Direction,  // journal leg sign (+1/-1); vocabulary (In/Out, Dt/Ct) is presentation
     // Simple fields
     Ref,
     Date,
@@ -145,29 +148,32 @@ public record TableColumn
     internal String DisplayPath => (IsRef) ? $"{Name}.{Presentation}" : Name;
 }
 
-
-public enum ApplySourceKind
+public enum PostDirection
 {
-    Table,
-    Details
-}
-public record ApplyMapping
-{
-    public String Target { get; init; } = default!;
-    public String Source { get; init; } = default!;
-    public ApplySourceKind Kind {get; init;}
+    None,
+    In,
+    Out,
+    Debit = In,
+    Credit = Out
 }
 
-public record TableApply
+public sealed record PostMetadata
 {
-    #region Database Fields
-    public Int16 InOut { get; init; } = default!;
+    #region JSON Fields
+    public String Journal { get; init; } = default!;
+    public PostDirection Dir { get; init; }
     public Boolean Storno { get; init; }
-    public ColumnReference JournalOld { get; init; } = default!;
-    public ColumnReference? DetailsOld { get; init; }
-    public List<ApplyMapping>? Mapping { get; init; } = [];
-    public String? DetailsKind { get; init; }
+    public List<String> Each { get; init; } = [];
+    public Dictionary<String, String> Document { get; init; } = [];
+    public Dictionary<String, String> Row { get; init; } = [];
     #endregion
+
+    [JsonIgnore]
+    public TableMetadata? JournalTable { get; set; }
+    [JsonIgnore]
+    public TableMetadata JournalTableCheck => JournalTable ?? throw new InvalidOperationException($"RefTable for '{Journal}' is null");
+    [JsonIgnore]
+    public Int16 InOutInt => Dir switch { PostDirection.In => 1, PostDirection.Out => -1, _ => 0 };
 }
 
 public enum ReportItemKind
@@ -279,7 +285,7 @@ public sealed record TableMetadata
     public Boolean UseFolders { get; init; }    
     public String? DbName { get; init; }
     public String? DbSchema { get; init; }
-    public List<TableApply>? ApplyOld { get; init; }
+    public List<PostMetadata>? Post { get; init; }
     public List<ReportItemMetadata> ReportItems { get; init; } = [];
     public List<ColumnReferenceToMe> RefsToMe { get; init; } = [];
 

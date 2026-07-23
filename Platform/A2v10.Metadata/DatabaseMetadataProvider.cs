@@ -22,6 +22,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     public async Task<TableMetadata> GetSchemaAsync(IModelBaseMeta meta, String? dataSource)
     {
         var loaded = await _metadataCache.GetOrAddAsync(dataSource, meta.CurrentSchema, meta.CurrentTable, LoadTableMetadataAsync);
+        var posted = loaded;
         if (!String.IsNullOrEmpty(meta.CurrentTable))
             loaded.Storage = GetDefaultStorage(loaded, meta.CurrentSchema);
         var storage = await ResolveStorageAsync(loaded, dataSource);
@@ -30,7 +31,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             storage.Origin = loaded;
             loaded = storage;
         }
-        await ResolveReferencesAsyns(loaded, dataSource);
+        await ResolveReferencesAsync(loaded, dataSource);
+        await ResolvePostedAsync(posted, dataSource);
         loaded.SetDefaults(meta.CurrentSchema, meta.CurrentTable);
         return loaded;
     }
@@ -45,7 +47,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             storage.Origin = loaded;
             loaded = storage;
         }
-        await ResolveReferencesAsyns(loaded, dataSource);
+        await ResolveReferencesAsync(loaded, dataSource);
         loaded.SetDefaults(schema, table);
         return loaded;
     }
@@ -195,7 +197,19 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return (split[0], split[1]);
     }
 
-    public async Task ResolveReferencesAsyns(TableMetadata meta, String? dataSource)
+    public async Task ResolvePostedAsync(TableMetadata meta, String? dataSource)
+    {
+        if (meta.Post == null)
+            return;
+        foreach (var p in meta.Post)
+        {
+            var (schema, table) = ParsePath(p.Journal);
+            var refJournal = await GetSchemaAsync(dataSource, schema, table);
+            p.JournalTable = refJournal;
+        }
+    }
+
+    public async Task ResolveReferencesAsync(TableMetadata meta, String? dataSource)
     {
         static IEnumerable<TableColumn> GetAllReferences(TableMetadata table)
         {
