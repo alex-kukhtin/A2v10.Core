@@ -15,6 +15,7 @@ internal class InternalNullCodeProvider : IAppCodeProviderImpl
     public string? ModuleVersion => null;
 
     public IEnumerable<string> EnumerateFiles(string path, string searchPattern) => [];
+    public IEnumerable<String> EnumerateFilesRecursive(String path, String searchPattern) => [];
 
     public Stream? FileStreamResource(string path) => null;
     public Stream? FileStreamRO(string path) => null;

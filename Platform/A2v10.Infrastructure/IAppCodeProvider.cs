@@ -15,6 +15,7 @@ public interface IAppCodeProvider
     Stream? FileStreamResource(String path, Boolean primaryOnly = false);
     IEnumerable<Stream> EnumerateFileStreamsRO(String path);
     IEnumerable<String> EnumerateAllFiles(String path, String searchPattern);
+    IEnumerable<String> EnumerateAllFilesRecursive(String path, String searchPattern);
     IEnumerable<String> EnumerateWatchedDirs(String path, String searchPattern);
 
     Boolean HasLicensedModules { get; }

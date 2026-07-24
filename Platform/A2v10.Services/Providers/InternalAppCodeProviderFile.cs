@@ -65,6 +65,23 @@ public class InternalAppCodeProviderFile(String path) : IAppCodeProviderImpl
 			yield return relPath;
 		}
 	}
+
+    public IEnumerable<String> EnumerateFilesRecursive(String path, String searchPattern)
+    {
+        var fullPath = NormalizePath(path);
+        if (!Directory.Exists(fullPath))
+            yield break;
+        var enumOpts = new EnumerationOptions()
+        {
+            RecurseSubdirectories = true,
+            IgnoreInaccessible = true,
+        };
+        foreach (var f in Directory.EnumerateFiles(fullPath, searchPattern, enumOpts))
+        {
+            var relPath = Path.GetRelativePath(AppPath, f);
+            yield return relPath;
+        }
+    }
 }
 
 

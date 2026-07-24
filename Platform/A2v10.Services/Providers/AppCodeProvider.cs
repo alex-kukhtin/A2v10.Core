@@ -114,6 +114,20 @@ public class AppCodeProvider : IAppCodeProvider
         return GetProvider(path).FileStreamResource(path);
     }
 
+    public IEnumerable<String> EnumerateAllFilesRecursive(String path, String searchPattern)
+    {
+        foreach (var (k, v) in _providers)
+        {
+            foreach (var file in v.EnumerateFilesRecursive(path, searchPattern))
+            {
+                if (k != DEFAULT_PROVIDER)
+                    yield return $"${k}/{file}";
+                else
+                    yield return file;
+            }
+        }
+    }
+
     public IEnumerable<String> EnumerateAllFiles(String path, String searchPattern)
 	{
 		foreach (var (k, v) in _providers)

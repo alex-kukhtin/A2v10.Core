@@ -20,8 +20,11 @@ public class DatabaseMetadataCache
     private readonly ConcurrentDictionary<String, EndpointTableInfo> _endpoints = [];
     private readonly ConcurrentDictionary<String, UIElement> _xamlFormCache = [];
     private readonly ConcurrentDictionary<String, AppMetadata> _appMetaCache = [];
-
+    
+    private Boolean _metadataDirty = true; // TODO. ????
     private FileSystemWatcher? FileWatcher { get; init; }
+    public Boolean IsMetadataDirty => _metadataDirty;
+    public void ClearDirty() => _metadataDirty = false;
     public DatabaseMetadataCache(IAppCodeProvider appCodeProvider, IOptions<AppOptions> appOptions)
     {
         if (appOptions.Value.Environment.Watch)
@@ -34,6 +37,7 @@ public class DatabaseMetadataCache
         _endpoints.Clear();
         _appMetaCache.Clear();
         _xamlFormCache.Clear();
+        _metadataDirty = true;
     }
 
     public async Task<TableMetadata> GetOrAddAsync(String? dataSource, String schema, String table, 

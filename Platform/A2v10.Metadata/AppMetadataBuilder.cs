@@ -36,6 +36,7 @@ internal class AppMetadataBuilder(IServiceProvider _serviceProvider,
     }
     public async Task<IAppRuntimeResult> RenderAsync(IPlatformUrl platformUrl, IModelView view, bool isReload)
     {
+        await _metadataProvider.CheckDeployAsync(view.DataSource);
         var iBuilder = await _modelBuilderFactory.BuildAsync(platformUrl, view);
 
         var endpointBuilder = FindEndpointBuilder(iBuilder.MetadataEndpointBuilder, iBuilder);
@@ -52,6 +53,7 @@ internal class AppMetadataBuilder(IServiceProvider _serviceProvider,
 
     public async Task<ExpandoObject> SaveAsync(IPlatformUrl platformUrl, IModelView view, ExpandoObject data, ExpandoObject savePrms)
     {
+        await _metadataProvider.CheckDeployAsync(view.DataSource);
         var iBuilder = await _modelBuilderFactory.BuildAsync(platformUrl, view);
         return await iBuilder.SaveModelAsync(data, savePrms);
     }
@@ -64,6 +66,7 @@ internal class AppMetadataBuilder(IServiceProvider _serviceProvider,
 
     public async Task<IInvokeResult> InvokeAsync(IPlatformUrl platformUrl, String command, IModelCommand cmd, ExpandoObject? prms)
     {
+        await _metadataProvider.CheckDeployAsync(cmd.DataSource);
         var iBuilder = await _modelBuilderFactory.BuildAsync(platformUrl, cmd);
         return await iBuilder.InvokeAsync(cmd, command, prms);
     }
@@ -74,11 +77,13 @@ internal class AppMetadataBuilder(IServiceProvider _serviceProvider,
 
     public async Task<IDataModel> ExpandAsync(IPlatformUrl platformUrl, IModelView view, ExpandoObject execPrms)
     {
+        await _metadataProvider.CheckDeployAsync(view.DataSource);
         var iBuilder = await _modelBuilderFactory.BuildAsync(platformUrl, view);
         return await iBuilder.ExpandAsync(execPrms);
     }
     public async Task<ExpandoObject> LoadLazyAsync(IPlatformUrl platformUrl, IModelView view)
     {
+        await _metadataProvider.CheckDeployAsync(view.DataSource);
         var iBuilder = await _modelBuilderFactory.BuildAsync(platformUrl, view);
         var dm = await  iBuilder.LoadLazyModelAsync();
         return dm.Root;

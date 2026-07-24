@@ -42,6 +42,32 @@ internal static class SqlExtensions
         };
     }
 
+    public static String ToSqlDataTypeDeploy(this ColumnType columnDataType)
+    {
+        return columnDataType switch
+        {
+            ColumnType.Id or ColumnType.Ref or ColumnType.Owner or ColumnType.Document or
+                ColumnType.Parent or ColumnType.User or ColumnType.Row => "platformid",
+            ColumnType.IsSystem or ColumnType.IsFolder or ColumnType.Done or
+                ColumnType.Void or ColumnType.Boolean => "bit",
+            ColumnType.Name or ColumnType.Memo or ColumnType.Operation 
+                or ColumnType.DocumentType or ColumnType.Enum or ColumnType.String  
+                or ColumnType.NVarChar or ColumnType.Autonum or ColumnType.RowKind => "nvarchar",
+            ColumnType.RowNumber or ColumnType.Int => "int",
+            ColumnType.Date => "date",
+            ColumnType.DateTime => "datetime",
+            ColumnType.Money => "money",
+            ColumnType.Float => "float",
+            ColumnType.NChar => "nchar",
+            ColumnType.Stream => "varbinary",
+            ColumnType.Uniqueidentifier => "uniqueidentifier",
+            ColumnType.RowVersion => "timestamp",
+            ColumnType.Direction => "smallint",
+            ColumnType.Decimal => $"decimal",
+            _ => throw new InvalidOperationException($"Invalid ColumnType for deploy '{columnDataType}'")
+        };
+    }
+
     public static String ToSqlDataType(this ColumnType columnDataType, String maxLength = "255", Int32 scale = 0, Boolean toTableType = false)
     {
         return columnDataType switch

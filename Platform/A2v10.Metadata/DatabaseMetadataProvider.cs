@@ -17,8 +17,35 @@ using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
-public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbContext _dbContext, IAppCodeProvider _codeProvider)
+public sealed record DbHash(String? Hash);
+
+public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbContext _dbContext, IAppCodeProvider _codeProvider,
+        SqlDbGenerator _sqlDbGenerator)
 {
+
+    public async Task CheckDeployAsync(String? dataSource)
+    {
+        if (!_metadataCache.IsMetadataDirty)
+            return;
+
+        var allMeta = await AllElementsMetadata(dataSource);
+
+        var seedHash = await _sqlDbGenerator.GenerateMetadataSeedAsync(allMeta);
+
+        // read hash from DB
+        var dbHash = await _dbContext.LoadAsync<DbHash>(dataSource, "a2meta.[GetDbHash]")
+            ?? throw new InvalidOperationException("DbHash is null");
+        if (dbHash.Hash == seedHash) 
+        {
+            _metadataCache.ClearDirty();
+            return;
+        }
+        // DEPLOY DATABASE 
+        await _sqlDbGenerator.DeployDatabaseAsync();
+        // save hash
+        await _dbContext.Execute<DbHash>(dataSource, "a2meta.[SetDbHash]", new DbHash(seedHash);
+    }
+
     public async Task<TableMetadata> GetSchemaAsync(IModelBaseMeta meta, String? dataSource)
     {
         var loaded = await _metadataCache.GetOrAddAsync(dataSource, meta.CurrentSchema, meta.CurrentTable, LoadTableMetadataAsync);
@@ -244,5 +271,25 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             foreach (var gcol in group)
                 gcol.RefTable = refMeta;
         }
+    }
+
+    private async Task<IEnumerable<TableMetadata>> AllElementsMetadata(String? dataSource)
+    {
+        var allMeta = _codeProvider.EnumerateAllFilesRecursive("", "metadata.json");
+        var tables = new List<TableMetadata>();
+        foreach (var file in allMeta)
+        {
+            var endpointPath = Path.GetDirectoryName(file)?.NormalizeSlash();
+            if (endpointPath == null)
+                continue;
+            var (schema, table) = ParsePath(endpointPath);
+            if (schema == "autonum")
+                continue; // TODO: skip other elements
+            var tableMeta = await GetSchemaAsync(dataSource, schema, table);
+            if (tableMeta.Origin != null)
+                continue;
+            tables.Add(tableMeta);
+        }
+        return tables;
     }
 }

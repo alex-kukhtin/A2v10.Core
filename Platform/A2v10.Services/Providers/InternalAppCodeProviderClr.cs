@@ -50,6 +50,8 @@ public class InternalAppCodeProviderClr(IAppContainer _appContainer) : IAppCodeP
 		return assembly.GetManifestResourceStream(resourceName);
     }
 
+	public IEnumerable<String> EnumerateFilesRecursive(String path, String searchPattern) => [];
+
     public IEnumerable<String> EnumerateFiles(String? path, String searchPattern)
 	{
 		if (String.IsNullOrEmpty(path))

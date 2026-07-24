@@ -12,5 +12,6 @@ internal interface IAppCodeProviderImpl
     Stream? FileStreamRO(String path);
     Stream? FileStreamResource(String path);
     IEnumerable<String> EnumerateFiles(String path, String searchPattern);
-	String? ModuleVersion { get; }
+    IEnumerable<String> EnumerateFilesRecursive(String path, String searchPattern);
+    String? ModuleVersion { get; }
 }

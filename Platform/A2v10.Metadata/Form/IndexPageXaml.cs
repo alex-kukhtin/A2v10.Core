@@ -138,7 +138,7 @@ internal partial class XamlBuilder
     {
         var selectCommand = new BindCmd() { Command = CommandType.Select };
         selectCommand.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind("Parent.ItemsSource"));
-        return new Dialog()
+        var dlg = new Dialog()
         {
             CollectionView = XamlCollectionView(),
             //Width = Length.FromString(dialog.TaskPad?.Filters.Count > 0 ? "80rem" : "60rem"), // TODO
@@ -173,5 +173,12 @@ internal partial class XamlBuilder
             ],
             Taskpad = IndexTaskpad(dialog.TaskPad)
         };
+
+        if (dlg.Children[0] is Grid chGrid)
+        {
+            if (chGrid.Children.Count > 1 && chGrid.Children[1] is DataGrid dataGrid)
+                dataGrid.BindImpl.SetBinding(nameof(DataGrid.DoubleClick), selectCommand);
+        }
+        return dlg;
     }
 }
