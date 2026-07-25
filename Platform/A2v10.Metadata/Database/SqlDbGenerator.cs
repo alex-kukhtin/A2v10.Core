@@ -8,13 +8,137 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
+using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
+using A2v10.Metadata.Cli;
 
 namespace A2v10.Metadata;
 
-public class SqlDbGenerator(IAppCodeProvider _appCodeProvider)
+internal sealed record DbHash
 {
-    public async Task<String?> GenerateMetadataSeedAsync(IEnumerable<TableMetadata> tables)
+    public String? Hash { get; set; }
+}
+
+public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext  _dbContext)
+{
+    private const String DB_FILE = "deploydatabase.sql";
+    
+    private readonly CliDatabaseCreator _dbCreator = new();
+
+    private String DatabaseFilePath => _appCodeProvider.GetMainModuleFullPath("_sqlscripts", DB_FILE);
+
+    public async Task<Boolean> CheckDeployAsync(String? dataSource, IEnumerable<TableMetadata> tables)
+    {
+        var seedScript = await GenerateMetadataSeedAsync(tables);
+        var seedHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(seedScript ?? "new"))).ToLowerInvariant();
+        // read hash from DB
+        var dbHash = await _dbContext.LoadAsync<DbHash>(dataSource, "a2meta.[GetDbHash]");
+
+        if (dbHash?.Hash == seedHash)
+            return true;
+
+        var allScript = new StringBuilder();
+
+        // CREATE SCRIPT
+        allScript.AppendLine(seedScript);
+        allScript.AppendLine(CreateTablesScript(tables));
+        allScript.AppendLine(CreateTableTypesScript(tables));
+        allScript.AppendLine(SyncSchemaScript());
+        allScript.AppendLine(CreateForeignKeysScript(tables));
+        //* 5.Deploy INDEXES
+
+       await WriteDeployDatabaseFileAsync(allScript.ToString());
+
+        // DEPLOY DATABASE
+        await DeployDatabaseAsync(dataSource, allScript.ToString());
+
+        // save hash
+        await _dbContext.ExecuteAsync<DbHash>(dataSource, "a2meta.[SetDbHash]", new DbHash() { Hash = seedHash });
+        return true;
+    }
+
+    private Task WriteDeployDatabaseFileAsync(String allScript)
+    {
+        var dbPath = DatabaseFilePath;
+        var dbDir = Path.GetDirectoryName(dbPath);
+        if (String.IsNullOrWhiteSpace(dbDir))
+            throw new InvalidOperationException($"Invalid path '{dbPath}'");
+        Directory.CreateDirectory(dbDir);
+        return File.WriteAllTextAsync(dbPath, allScript, Encoding.UTF8);
+    }
+
+    private static String SyncSchemaScript()
+    {
+        return $"""
+        -- SYNC DATABASE SCHEMA
+        exec a2meta.[SyncSchema]
+        go
+
+        """;
+    }
+    private String CreateTablesScript(IEnumerable<TableMetadata> tables)
+    {
+        var strBuilder = new StringBuilder();
+        strBuilder.AppendLine("-- TABLES");
+        foreach (var table in tables)
+        {
+            strBuilder.AppendLine(_dbCreator.CreateTable(table));
+            strBuilder.AppendLine("go");
+            foreach (var d in table.Details)
+            {
+                strBuilder.AppendLine(_dbCreator.CreateTable(d.Value));
+                strBuilder.AppendLine("go");
+            }
+        }
+        return strBuilder.ToString();
+    }
+
+    private static String CreateTableTypesScript(IEnumerable<TableMetadata> tables)
+    {
+        static Boolean HasTableType(TableMetadata table)
+            => !table.IsJournal;
+
+        var strBuilder = new StringBuilder();
+        strBuilder.AppendLine("-- TABLE TYPES");
+        foreach (var table in tables.Where(HasTableType))
+        {
+            strBuilder.AppendLine(CliDatabaseCreator.CreateTableType(table));
+            strBuilder.AppendLine("go");
+            foreach (var d in table.Details)
+            {
+                strBuilder.AppendLine(CliDatabaseCreator.CreateTableType(d.Value));
+                strBuilder.AppendLine("go");
+            }
+        }
+        return strBuilder.ToString();
+    }
+
+    private static String CreateForeignKeysScript(IEnumerable<TableMetadata> tables)
+    {
+        var strBuilder = new StringBuilder();
+        strBuilder.AppendLine("-- FOREIGN KEYS");
+        foreach (var table in tables)
+        {
+            var fc = CliDatabaseCreator.CreateForeignKeys(table);
+            if (!String.IsNullOrWhiteSpace(fc))
+            {
+                strBuilder.AppendLine(fc);
+                strBuilder.AppendLine("go");
+            }
+            foreach (var d in table.Details)
+            {
+                fc = CliDatabaseCreator.CreateForeignKeys(d.Value, table);
+                if (!String.IsNullOrEmpty(fc))
+                {
+                    strBuilder.AppendLine(fc);
+                    strBuilder.AppendLine("go");
+                }
+            }
+        }
+        return strBuilder.ToString();
+    }
+
+    private static async Task<String?> GenerateMetadataSeedAsync(IEnumerable<TableMetadata> tables)
     {
         if (!tables.Any())
             return null;
@@ -38,7 +162,9 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider)
 
         var rowDiv = $",{Environment.NewLine}\t";
         var sqlScript = $"""
+        /* METADATA SEED */
         begin
+            set nocount on;
             declare @tables table([schema] sysname, [table] sysname);
             declare @columns table([schema] sysname, [table] sysname, [column] sysname, [datatype] sysname);
             
@@ -54,41 +180,37 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider)
             on t.[schema] = s.[schema] and t.[table] = s.[table]
             when not matched then insert([schema], [table]) values
                (s.[schema], s.[table])
-            when not matched then delete;
+            when not matched by source then delete;
 
             -- merge columns
             merge a2meta.Columns as t
             using @columns as s
             on t.[schema] = s.[schema] and t.[table] = s.[table] and t.[column] = s.[column]
-            when matched then update
+            when matched then update set
                 t.[datatype] = s.[datatype]
             when not matched then insert
                 ([schema], [table], [column], [datatype]) values
                 (s.[schema], s.[table], s.[column], s.[datatype])
-            when not matched then delete;
+            when not matched by source then delete;
         end
         go
         """;
 
-        var seedPath = _appCodeProvider.GetMainModuleFullPath("_sql", "_schema_seed.sql");
-        var seedDir = Path.GetDirectoryName(seedPath);
-        if (String.IsNullOrWhiteSpace(seedDir))
-            throw new InvalidOperationException($"Invalid path, {seedPath}");
-        Directory.CreateDirectory(seedDir);
-        await File.WriteAllTextAsync(seedPath, sqlScript, Encoding.UTF8);
-
-       return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(sqlScript))).ToLowerInvariant();
+        return sqlScript;
     }
 
-    public Task DeployDatabaseAsync()
+    public async Task DeployDatabaseAsync(String? dataSource, String allScript)
     {
-        /*
-         * 1. Deploy CREATE_TABLES
-         * 2. Deploy TABLE_TYPES
-         * 3. exec a2meta.[SyncSchema]
-         * 4. Deploy FOREIGN_KEYS
-         * 5. Deploy INDEXES
-         */ 
-        throw new NotFiniteNumberException("DEPLOY DATABASE HERE");
+        var scripts = allScript.Split($"{Environment.NewLine}go");
+        if (scripts.Length == 0)
+            return;
+
+        using var dbConn = await _dbContext.GetDbConnectionAsync(dataSource);
+        using var cmd = dbConn.CreateCommand();
+        foreach (var line in scripts)
+        {
+            cmd.CommandText = line;
+            cmd.ExecuteNonQuery();
+        }
     }
 }

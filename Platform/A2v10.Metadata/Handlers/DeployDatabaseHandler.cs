@@ -103,7 +103,7 @@ public class DeployDatabaseHandler(IServiceProvider _serviceProvider) : IClrInvo
         index = 0;
         foreach (var t in meta.Tables)
         {
-            var createTableType = dbCreator.CreateTableType(t);
+            var createTableType = CliDatabaseCreator.CreateTableType(t);
             await _dbContext.LoadModelSqlAsync(null, createTableType);
             await SendSignalAsync("TableType", t, index++);
         }
@@ -124,7 +124,7 @@ public class DeployDatabaseHandler(IServiceProvider _serviceProvider) : IClrInvo
         index = 0;
         foreach (var t in meta.Tables)
         {
-            var createFK = dbCreator.CreateForeignKeys(t);
+            var createFK = CliDatabaseCreator.CreateForeignKeys(t);
             if (!String.IsNullOrEmpty(createFK))
                 await _dbContext.LoadModelSqlAsync(null, createFK);
             await SendSignalAsync("ForeignKey", t, index++);

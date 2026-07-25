@@ -9,10 +9,11 @@ namespace A2v10.Metadata.Cli;
 
 public class CliDatabaseCreator()
 {
-    internal String CreateTable(TableMetadata table, Boolean skipAlter = false)
+    private const String SQL_DIVIDER = "------------------------------------------------";
+    private static readonly String NL = Environment.NewLine;
+    private static readonly String INDENT = "       ";
+    internal String CreateTable(TableMetadata table)
     {
-
-        var multPrimaryKeys = table.PrimaryKeys.Count() > 1;
 
         String createField(TableColumn column)
         {
@@ -24,67 +25,48 @@ public class CliDatabaseCreator()
             {
                 nullable = NOT_NULL;
                 var colDataType = column.Type;
-                if (!multPrimaryKeys && table.HasSequence) 
+                var defKey = colDataType switch
                 {
-                    var defKey = colDataType switch
-                    {
-                        ColumnType.Id => $"next value for {table.SqlSequenceName}",
-                        ColumnType.Uniqueidentifier => "newsequentialid()",
-                        ColumnType.Int or ColumnType.BigInt => $"next value for {table.SqlSequenceName}]",
-                        _ => null
-                    };
-                    if (defKey != null)
-                        constraint = $"\r\n       constraint DF_{table.Table}_{column.Name} default({defKey})";
-                }
+                    ColumnType.Id => $"next value for {table.SqlSequenceName}",
+                    _ => null
+                };
+                if (defKey != null)
+                    constraint = $"{NL}{INDENT}constraint DF_{table.Table}_{column.Name} default({defKey})";
             }
+            else if (column.Type == ColumnType.Owner)
+                nullable = NOT_NULL;
             else if (column.HasDefaultBit)
             {
                 nullable = NOT_NULL;
-                constraint = $"\r\n       constraint DF_{table.Model}_{column.Name} default(0)";
+                constraint = $"{NL}{INDENT}constraint DF_{table.Model}_{column.Name} default(0)";
             }
             return $"[{column.Name}] {column.SqlDataType()}{nullable}{constraint}";
         }
 
-        String alterCreateField(TableColumn column)
-        {
-            return $"alter table {table.SqlTableName} add {createField(column)}";
-        }
-
         String createSequence()
         {
-            if (!table.HasSequence)
-                return String.Empty;
             return $"""
-            ------------------------------------------------
             if not exists(select * from INFORMATION_SCHEMA.SEQUENCES where SEQUENCE_SCHEMA = N'{table.SqlSchema}' and SEQUENCE_NAME = N'SQ_{table.Table}')
             	create sequence {table.SqlSequenceName} as bigint start with 1000 increment by 1;
             """;
         }
 
-        var fields = table.Columns.Select(createField);
-
-        var primaryKeys = table.PrimaryKeys.Select(c => $"[{c.Name}]");
-
-        var alterFields = table.Columns
-                .Where(c => String.IsNullOrEmpty(c.Name) && !c.DbDataType.HasValue)
-                .Select(alterCreateField);
-
-        if (table.HasDbTable && !skipAlter)
-            return String.Join(Environment.NewLine, alterFields);
+        var fields = table.AllColumns().Select(createField);
 
         return $"""
+        {SQL_DIVIDER}
         {createSequence()}
-        ------------------------------------------------
+
         if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'{table.SqlSchema}' and TABLE_NAME=N'{table.Table}')
         create table {table.SqlTableName}
         (
-            {String.Join(",\r\n    ", fields)},
-            constraint PK_{table.Table} primary key ({String.Join(',', primaryKeys)})
+            {String.Join($",{NL}    ", fields)},
+            constraint PK_{table.Table} primary key (Id)
         );
         """;
     }
 
-    public String CreateTableType(TableMetadata table)
+    public static String CreateTableType(TableMetadata table)
     {
         static String createField(TableColumn column)
         {
@@ -94,21 +76,34 @@ public class CliDatabaseCreator()
         var fields = table.AllColumns().Select(createField);
 
         return $"""
-        ------------------------------------------------
+        {SQL_DIVIDER}
         drop type if exists {table.SqlTableTypeName};
         create type {table.SqlTableTypeName} as table
         (
-            {String.Join(",\r\n    ", fields)}
+            {String.Join($",{NL}    ", fields)}
         );
         """;
     }
 
-    internal String CreateForeignKeys(TableMetadata table)
+    public static String CreateForeignKeys(TableMetadata table, TableMetadata? owner = null)
     {
-        const String check = "nocheck"; // TODO: ????
+        //const String check = "nocheck"; // TODO: ????
         String createReference(TableColumn column)
         {
-            if (column.Type == ColumnType.Operation)
+            if (column.Type == ColumnType.Owner)
+            {
+                if (owner == null)
+                    throw new InvalidOperationException("Owern is null");
+
+                var opConstraintName = $"FK_{table.Table}_{column.Name}_{owner.Table}";
+
+                return $"""
+                if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.SqlSchema}' and TABLE_NAME = N'{table.Table}' and CONSTRAINT_NAME = N'{opConstraintName}')
+                    alter table {table.SqlTableName} add 
+                        constraint {opConstraintName} foreign key ([{column.Name}]) references {owner.SqlTableName}([Id]);
+                """;
+            }
+            else if (column.Type == ColumnType.Operation)
             {
                 var opConstraintName = $"FK_{table.Table}_{column.Name}_Operations";
 
@@ -116,8 +111,8 @@ public class CliDatabaseCreator()
                 if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.SqlSchema}' and TABLE_NAME = N'{table.Table}' and CONSTRAINT_NAME = N'{opConstraintName}')
                     alter table {table.SqlTableName} add 
                         constraint {opConstraintName} foreign key ([{column.Name}]) references op.[Operations]([Id]);
-                alter table {table.SqlTableName} {check} constraint {opConstraintName};
                 """;
+                //alter table {table.SqlTableName} {check} constraint {opConstraintName};
             }
             else if (column.Type == ColumnType.Enum)
             {
@@ -127,41 +122,27 @@ public class CliDatabaseCreator()
                 if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.SqlSchema}' and TABLE_NAME = N'{table.Table}' and CONSTRAINT_NAME = N'{opConstraintName}')
                     alter table {table.SqlTableName} add 
                         constraint {opConstraintName} foreign key ([{column.Name}]) references {column.RefTableCheck.SqlTableName}([Id]);
-                alter table {table.SqlTableName} {check} constraint {opConstraintName};
                 """;
+                //alter table {table.SqlTableName} {check} constraint {opConstraintName};
             }
 
-            var refs = column.RefTable ??
-                    throw new InvalidOperationException("Reference is null");
-            return String.Empty;
-            /*
-            var refTable = _meta.Tables.FirstOrDefault(x => x.Schema == refs.RefSchema && x.Table == refs.RefTable)
-                ?? throw new InvalidOperationException($"Reference table {refs.RefSchema}.{refs.RefTable} not found");
-            var refTablePk = refTable.PrimaryKeys;
-            if (refTablePk.Count() > 1)
-            {
-                throw new InvalidOperationException("TODO: Implement multi-column foreign key");    
-            }
-            var refTablePkName = refTablePk.First().Name;
-
-            var constraintName = $"FK_{table.Table}_{column.Name}_{refs.RefTable}";
+            var constraintName = $"FK_{table.Table}_{column.Name}_{column.RefTableCheck.Table}";
             if (constraintName.Length > 128)
                 constraintName = constraintName[0..127];
             return $"""
-            if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.SqlSchema3}' and TABLE_NAME = N'{table.Table}' and CONSTRAINT_NAME = N'{constraintName}')
+            if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.SqlSchema}' and TABLE_NAME = N'{table.Table}' and CONSTRAINT_NAME = N'{constraintName}')
                 alter table {table.SqlTableName} add 
-                    constraint {constraintName} foreign key ([{column.Name}]) references {refs.RefSchema}.[{refs.RefTable}]([{refTablePkName}]);
-            alter table {table.SqlTableName} {check} constraint {constraintName};
+                    constraint {constraintName} foreign key ([{column.Name}]) references {column.RefTableCheck.SqlTableName}([Id]);
             """;
-            */
+            //alter table {table.SqlTableName} {check} constraint {constraintName};
         }
-        var refs = table.Columns.Where(c => c.IsRef)
+        var refs = table.AllColumns().Where(c => c.IsRef)
             .Select(rc => createReference(rc));
         var res = String.Join(Environment.NewLine, refs);
         if (String.IsNullOrEmpty(res.Trim()))
             return String.Empty;
         return $"""
-            ------------------------------------------------
+            {SQL_DIVIDER}
             {res}
             """;
     }
@@ -225,7 +206,7 @@ public class CliDatabaseCreator()
     internal static String CreateEnum(EnumMetadata enm)
     {
         return $"""
-        ------------------------------------------------
+        {SQL_DIVIDER}
         if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'enm' and TABLE_NAME=N'{enm.Name}')
         create table enm.[{enm.Name}]
         (

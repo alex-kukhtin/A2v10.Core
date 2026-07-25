@@ -72,13 +72,16 @@ internal static class SqlExtensions
     {
         return columnDataType switch
         {
-            ColumnType.Id or ColumnType.Ref or ColumnType.Owner or
+            ColumnType.Id or ColumnType.Ref or ColumnType.Owner or ColumnType.Document or
                 ColumnType.Parent or ColumnType.User or ColumnType.Row => "platformid",
             ColumnType.IsSystem or ColumnType.IsFolder or ColumnType.Done or
                 ColumnType.Void or ColumnType.Boolean => "bit",
             ColumnType.Name => "nvarchar(255)",
             ColumnType.Memo => "nvarchar(255)",
             ColumnType.Operation => "nvarchar(64)",
+            ColumnType.RowNumber => "int",
+            ColumnType.RowKind => "nvarchar(64)",
+            ColumnType.Autonum => "nvarchar(32)",
             ColumnType.DocumentType => "nvarchar(128)",
             ColumnType.Money => "money",
             ColumnType.Enum => "nvarchar(32)",

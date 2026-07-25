@@ -14,7 +14,7 @@ public static class ServicesExtensions
     {
 
         services.AddSingleton<DatabaseMetadataCache>()
-            .AddSingleton<SqlDbGenerator>()
+            .AddScoped<SqlDbGenerator>()
             .AddScoped<DatabaseMetadataProvider>()
             .AddScoped<IAppRuntimeBuilder, AppMetadataBuilder>();
 

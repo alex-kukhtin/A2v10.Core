@@ -10,7 +10,7 @@ namespace A2v10.Metadata;
 
 internal class SqlScriptGenerator(AppMetadata _metadata, String _metaPath)
 {
-    private readonly CliDatabaseCreator _dbCreator = new CliDatabaseCreator();
+    private readonly CliDatabaseCreator _dbCreator = new();
     public async Task GenerateSqlScriptsAsync()
     {
         if (!Directory.Exists(_metaPath))
@@ -28,7 +28,7 @@ internal class SqlScriptGenerator(AppMetadata _metadata, String _metaPath)
         strBuilder.AppendLine("-- TABLES");
         foreach (var table in _metadata.Tables)
         {
-            strBuilder.AppendLine(_dbCreator.CreateTable(table, skipAlter : true));
+            strBuilder.AppendLine(_dbCreator.CreateTable(table));
             strBuilder.AppendLine("go");
         }
         foreach (var enm in _metadata.Enums)
@@ -46,7 +46,7 @@ internal class SqlScriptGenerator(AppMetadata _metadata, String _metaPath)
         foreach (var table in _metadata.Tables)
         {
             strBuilder.AppendLine("------------------------------------------------");
-            strBuilder.AppendLine(_dbCreator.CreateTableType(table));
+            strBuilder.AppendLine(CliDatabaseCreator.CreateTableType(table));
             strBuilder.AppendLine("go");
         }
         String filePath = Path.Combine(_metaPath, "_tabletypes.sql");
@@ -59,7 +59,7 @@ internal class SqlScriptGenerator(AppMetadata _metadata, String _metaPath)
         strBuilder.AppendLine("-- FOREIGN KEYS");
         foreach (var table in _metadata.Tables)
         {
-            var fc = _dbCreator.CreateForeignKeys(table);
+            var fc = CliDatabaseCreator.CreateForeignKeys(table);
             if (!String.IsNullOrWhiteSpace(fc))
             {
                 strBuilder.AppendLine(fc);

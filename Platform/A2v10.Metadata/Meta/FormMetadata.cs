@@ -81,7 +81,7 @@ public record FormElement
         {
             if (!String.IsNullOrEmpty(el.Scope))
             {
-                var detailsTable = table.Details.First(x => x.Value.Table == el.Scope || x.Value.Kinds.Contains(el.Scope)).Value;
+                var detailsTable = table.Details.First(x => x.Key == el.Scope || x.Value.Kinds.Contains(el.Scope)).Value;
                 el.SetDefaults(detailsTable, detailsTable.AllColumns(c => c.Type != ColumnType.RowKind).ToList());
             }
             else

@@ -13,7 +13,7 @@ using A2v10.Infrastructure;
 namespace A2v10.Metadata.Cli;
 
 public class CliDeployDatabase(DatabaseMetadataProvider _metadataProvider, IAppCodeProvider _codeProvider,
-    IDbContext _dbContext, CliDatabaseCreator _dbCreator)
+    IDbContext _dbContext)
 {
     public async Task CreateTableType(String schema, String table)
     {
@@ -23,7 +23,7 @@ public class CliDeployDatabase(DatabaseMetadataProvider _metadataProvider, IAppC
 
     public Task DeployTableType(TableMetadata table)
     {
-        var sqlString = _dbCreator.CreateTableType(table);
+        var sqlString = CliDatabaseCreator.CreateTableType(table);
         return _dbContext.LoadModelSqlAsync(null, sqlString);
     }
 
@@ -105,9 +105,9 @@ public class CliDeployDatabase(DatabaseMetadataProvider _metadataProvider, IAppC
              );
 
         var result = new List<TableMetadata>();
-        foreach (var ep in allEndpoints)
+        foreach (var (schema, table) in allEndpoints)
         {
-            var meta = await _metadataProvider.GetSchemaAsync(null, ep.schema, ep.table);
+            var meta = await _metadataProvider.GetSchemaAsync(null, schema, table);
             result.Add(meta);
         }
         return result;

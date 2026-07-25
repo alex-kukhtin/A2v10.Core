@@ -17,12 +17,9 @@ using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
-public sealed record DbHash(String? Hash);
-
 public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbContext _dbContext, IAppCodeProvider _codeProvider,
         SqlDbGenerator _sqlDbGenerator)
 {
-
     public async Task CheckDeployAsync(String? dataSource)
     {
         if (!_metadataCache.IsMetadataDirty)
@@ -30,20 +27,9 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
 
         var allMeta = await AllElementsMetadata(dataSource);
 
-        var seedHash = await _sqlDbGenerator.GenerateMetadataSeedAsync(allMeta);
-
-        // read hash from DB
-        var dbHash = await _dbContext.LoadAsync<DbHash>(dataSource, "a2meta.[GetDbHash]")
-            ?? throw new InvalidOperationException("DbHash is null");
-        if (dbHash.Hash == seedHash) 
-        {
+        var ok = await _sqlDbGenerator.CheckDeployAsync(dataSource, allMeta);
+        if (ok)
             _metadataCache.ClearDirty();
-            return;
-        }
-        // DEPLOY DATABASE 
-        await _sqlDbGenerator.DeployDatabaseAsync();
-        // save hash
-        await _dbContext.Execute<DbHash>(dataSource, "a2meta.[SetDbHash]", new DbHash(seedHash);
     }
 
     public async Task<TableMetadata> GetSchemaAsync(IModelBaseMeta meta, String? dataSource)

@@ -257,6 +257,7 @@ public sealed record TableMetadata
     public Dictionary<String, TableMetadata> Details { get; private set; } = [];
     public List<String> Kinds { get; init; } = [];
     public ConcurrentDictionary<String, FormMetadata> Forms { get; init; } = [];
+    public List<PostMetadata>? Post { get; init; }
 
     [JsonIgnore]
     public TableMetadata? Origin { get; set; }
@@ -283,9 +284,6 @@ public sealed record TableMetadata
     public String? ItemLabel { get; init; }
     public String? Type { get; init; }
     public Boolean UseFolders { get; init; }    
-    public String? DbName { get; init; }
-    public String? DbSchema { get; init; }
-    public List<PostMetadata>? Post { get; init; }
     public List<ReportItemMetadata> ReportItems { get; init; } = [];
     public List<ColumnReferenceToMe> RefsToMe { get; init; } = [];
 
@@ -316,10 +314,6 @@ public sealed record TableMetadata
     internal Boolean IsJournal => Kind == EndpointKind.Journal;
     [JsonIgnore]
     internal Boolean HasPeriod => IsDocument || IsJournal;
-    internal Boolean HasDbTable => !String.IsNullOrEmpty(DbName) && !String.IsNullOrEmpty(DbSchema);
-
-    internal IEnumerable<TableColumn> PrimaryKeys => Columns.Where(c => c.Type == ColumnType.Id);
-    internal Boolean HasSequence => PrimaryKeys.Count() == 1 && PrimaryKeys.First().Type == ColumnType.Id;
 
     internal void SetDetailDefaults(TableMetadata table)
     {
