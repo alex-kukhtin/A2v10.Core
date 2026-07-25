@@ -68,39 +68,93 @@ internal static class SqlExtensions
         };
     }
 
-    public static String ToSqlDataType(this ColumnType columnDataType, String maxLength = "255", Int32 scale = 0, Boolean toTableType = false)
+    /* Фізичні фасети колонки — те, що має повернути INFORMATION_SCHEMA.COLUMNS.
+     * Єдине джерело і для DDL, і для seed'у a2meta.Columns: якщо вони розійдуться,
+     * SyncSchema генеруватиме ALTER на кожному прогоні.
+     */
+
+    // CHARACTER_MAXIMUM_LENGTH: у символах, -1 = max.
+    // Заповнюється ТІЛЬКИ там, де тип має довжину; решті null — і звіряти її треба
+    // так само вибірково. Ставити сюди «еталонні» значення каталогу для інших типів
+    // означало б вигадувати умовчання заради спрощення одного запиту.
+    public static Int32? DeployLength(this ColumnType columnDataType)
     {
+        return columnDataType switch
+        {
+            ColumnType.Name or ColumnType.Memo => 255,
+            ColumnType.Operation or ColumnType.RowKind => 64,
+            ColumnType.Autonum or ColumnType.Enum => 32,
+            ColumnType.DocumentType => 128,
+            ColumnType.String or ColumnType.NVarChar or ColumnType.NChar => 255,
+            ColumnType.Stream or ColumnType.VarBinary => -1,
+            _ => null
+        };
+    }
+
+    public static Int32? DeployLength(this TableColumn column)
+        => column.Type switch
+        {
+            // довжину задає автор тільки там, де тип її взагалі приймає
+            ColumnType.String or ColumnType.NVarChar or ColumnType.NChar
+                => column.Length ?? column.Type.DeployLength(),
+            _ => column.Type.DeployLength()
+        };
+
+    // NUMERIC_PRECISION / NUMERIC_SCALE: тільки decimal — єдиний тип, де точність
+    // задає автор. Решті null: каталог має там свої значення, але звіряти нам нічого,
+    // бо змінити їх декларація не може.
+    public static Int32? DeployPrecision(this TableColumn column)
+        => column.Type == ColumnType.Decimal ? column.Precision ?? 19 : null;
+
+    public static Int32? DeployScale(this TableColumn column)
+        => column.Type == ColumnType.Decimal ? column.Scale ?? 4 : null;
+
+    /* Готовий SQL-вираз дефолта. У порівнянні НЕ бере участі — потрібен рівно для
+     * add column, бо 'add column [Void] bit not null' без нього впаде.
+     * Дефолта Id тут немає і бути не може: sequence сидить тільки на первинному ключі,
+     * а він з'являється разом із таблицею, через add column — ніколи.
+     */
+    public static String? DeployDefault(this TableColumn column)
+        => column.HasDefaultBit ? "0" : null;
+
+    // IS_NULLABLE. Мусить збігатися з тим, що ставить CreateTable.
+    // RowVersion тут не тому, що ми просимо not null, а тому, що SQL Server ставить
+    // його сам: timestamp — виняток із загального умовчання про nullable (перевірено).
+    public static Boolean DeployNullable(this TableColumn column)
+        => !(column.Type == ColumnType.Id
+            || column.Type == ColumnType.Owner
+            || column.Type == ColumnType.RowVersion
+            || column.HasDefaultBit
+            || column.Required);
+
+    public static String ToSqlDataType(this ColumnType columnDataType, Int32? length = null, Int32? precision = null, Int32? scale = null, Boolean toTableType = false)
+    {
+        var len = length ?? columnDataType.DeployLength();
+        var lenStr = len == -1 ? "max" : len?.ToString() ?? "255";
         return columnDataType switch
         {
             ColumnType.Id or ColumnType.Ref or ColumnType.Owner or ColumnType.Document or
                 ColumnType.Parent or ColumnType.User or ColumnType.Row => "platformid",
             ColumnType.IsSystem or ColumnType.IsFolder or ColumnType.Done or
                 ColumnType.Void or ColumnType.Boolean => "bit",
-            ColumnType.Name => "nvarchar(255)",
-            ColumnType.Memo => "nvarchar(255)",
-            ColumnType.Operation => "nvarchar(64)",
+            ColumnType.Name or ColumnType.Memo or ColumnType.Operation or
+                ColumnType.RowKind or ColumnType.Autonum or ColumnType.DocumentType or
+                ColumnType.Enum or ColumnType.String or ColumnType.NVarChar => $"nvarchar({lenStr})",
             ColumnType.RowNumber => "int",
-            ColumnType.RowKind => "nvarchar(64)",
-            ColumnType.Autonum => "nvarchar(32)",
-            ColumnType.DocumentType => "nvarchar(128)",
             ColumnType.Money => "money",
-            ColumnType.Enum => "nvarchar(32)",
-            ColumnType.String => $"nvarchar({maxLength})",
-            ColumnType.NVarChar => $"nvarchar({maxLength})",
-            ColumnType.NChar => $"nchar({maxLength})",
+            ColumnType.NChar => $"nchar({lenStr})",
             ColumnType.Stream => $"varbinary(max)",
             ColumnType.Uniqueidentifier => "uniqueidentifier",
             ColumnType.RowVersion => toTableType ? "varbinary(8)" : "rowversion",
             ColumnType.Direction => "smallint",
-            ColumnType.Decimal => $"decimal({maxLength},{scale})",
+            ColumnType.Decimal => $"decimal({precision ?? 19},{scale ?? 4})",
             _ => columnDataType.ToString().ToLowerInvariant(),
         };
     }
 
     public static String SqlDataType(this TableColumn column, Boolean toTableType = false)
     {
-        var maxLength = column.MaxLength == 0 ? "max" : column.MaxLength.ToString();
-        return column.Type.ToSqlDataType(maxLength, column.Scale, toTableType);
+        return column.Type.ToSqlDataType(column.DeployLength(), column.Precision, column.Scale, toTableType);
     }
 
     public static String SqlModelColumnName(this TableColumn column, String alias, Func<TableMetadata, String> refPredicate)

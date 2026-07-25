@@ -19,27 +19,14 @@ public class CliDatabaseCreator()
         {
             const String NOT_NULL = " not null";
 
-            String? nullable = null;
             var constraint = String.Empty;
             if (column.Type == ColumnType.Id)
-            {
-                nullable = NOT_NULL;
-                var colDataType = column.Type;
-                var defKey = colDataType switch
-                {
-                    ColumnType.Id => $"next value for {table.SqlSequenceName}",
-                    _ => null
-                };
-                if (defKey != null)
-                    constraint = $"{NL}{INDENT}constraint DF_{table.Table}_{column.Name} default({defKey})";
-            }
-            else if (column.Type == ColumnType.Owner)
-                nullable = NOT_NULL;
+                constraint = $"{NL}{INDENT}constraint DF_{table.Table}_{column.Name} default(next value for {table.SqlSequenceName})";
             else if (column.HasDefaultBit)
-            {
-                nullable = NOT_NULL;
-                constraint = $"{NL}{INDENT}constraint DF_{table.Model}_{column.Name} default(0)";
-            }
+                constraint = $"{NL}{INDENT}constraint DF_{table.Table}_{column.Name} default(0)";
+
+            // nullable рахує DeployNullable — те саме джерело, що й seed
+            var nullable = column.DeployNullable() ? null : NOT_NULL;
             return $"[{column.Name}] {column.SqlDataType()}{nullable}{constraint}";
         }
 

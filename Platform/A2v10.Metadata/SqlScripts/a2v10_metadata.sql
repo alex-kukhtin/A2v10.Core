@@ -41,16 +41,18 @@ create table a2meta.Columns
 	[schema] sysname,
 	[table] sysname,
 	[column] sysname,
-	[datatype] sysname,
+	[datatype] sysname,      /* isnull(DOMAIN_NAME, DATA_TYPE) */
+	[length] int,            /* CHARACTER_MAXIMUM_LENGTH: у символах, -1 = max */
+	[precision] tinyint,     /* NUMERIC_PRECISION */
+	[scale] tinyint,         /* NUMERIC_SCALE */
+	[nullable] bit,          /* IS_NULLABLE */
+	[ref_schema] nvarchar(128), /* ціль FK. Не sysname, бо sysname = nvarchar(128) NOT NULL */
+	[ref_table] nvarchar(128),
+	[default] nvarchar(128), /* значення дефолта для add column; у порівнянні не бере участі.
+	                            Ім'я констрейнта не зберігається — воно завжди DF_{table}_{column} */
 	constraint PK_Columns primary key ([schema], [table], [column])
 );
 go
-
-
-
-
-
-
 ------------------------------------------------
 create or alter procedure a2meta.[GetDbHash]
 as

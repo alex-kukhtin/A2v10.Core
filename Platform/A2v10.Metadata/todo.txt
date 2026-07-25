@@ -14,8 +14,7 @@
 10. BrowseDialog - ширина
 12. IndexPage -> DblClick -> Open or edit?
 13. Operation/Docunment -> ShowTrans
-14. AgentAddresses не сохраняется - ошибка в имени типа.
-15. maxChars - как-то придумать max и default = 255;
+16.
 
 
 

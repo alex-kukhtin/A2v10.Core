@@ -44,8 +44,8 @@ internal class DataTableBuilder(TableMetadata table)
         static DataColumn CreateColumn(TableColumn f)
         {
             var c = new DataColumn(f.Name, f.ClrDataType());
-            if (f.MaxLength != 0 && f.Type == ColumnType.String)
-                c.MaxLength = f.MaxLength;
+            if (f.Length.HasValue && f.Type == ColumnType.String)
+                c.MaxLength = f.Length.Value;
             return c;
         }
 

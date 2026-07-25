@@ -220,13 +220,13 @@ internal partial class SqlBuilder
             Boolean updateablePredicate(TableColumn c)
                 => c.Type != ColumnType.Owner && c.Type != ColumnType.RowKind && c.Type != ColumnType.Id;
 
-            String mergeOneDetails(TableMetadata detailsTable)
+            String mergeOneDetails(TableMetadata detailsTable, String key)
             {
                 var updateFields = detailsTable.AllColumns(updateablePredicate);
 
                 return $"""
 				merge {detailsTable.SqlTableName} as t
-				using @{detailsTable.Table} as s
+				using @{key} as s
 				on t.[Id]  = s.[Id]
 				when matched then update set
 				    {String.Join(',', updateFields.Select(f => $"t.[{f.Name}] = s.[{f.Name}]"))}
@@ -263,12 +263,12 @@ internal partial class SqlBuilder
 				""";
             }
 
-            foreach (var details in Table.Details.Select(x => x.Value))
+            foreach (var details in Table.Details)
             {
-                if (details.Kinds.Count == 0)
-                    sb.AppendLine(mergeOneDetails(details));
+                if (details.Value.Kinds.Count == 0)
+                    sb.AppendLine(mergeOneDetails(details.Value, details.Key));
                 else
-                    sb.AppendLine(mergeMultiDetails(details));
+                    sb.AppendLine(mergeMultiDetails(details.Value));
                 sb.AppendLine();
             }
             return sb.ToString();

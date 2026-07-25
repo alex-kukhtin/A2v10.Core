@@ -25,8 +25,11 @@ internal partial class JavascriptBuilder
         {
             if (Table.Details.Count > 0)
             {
-                var fd = Table.Details.Select(x => x.Value).First();
-                yield return $$"""'{{Table.TypeName}}.$$Tab': {type: String, value: '{{fd.CollectionName}}'}""";
+                var fd = Table.Details.First();
+                if (fd.Value.Kinds.Count > 0)
+                    yield return $$"""'{{Table.TypeName}}.$$Tab': {type: String, value: '{{fd.Value.Kinds[0]}}'}""";
+                else
+                    yield return $$"""'{{Table.TypeName}}.$$Tab': {type: String, value: '{{fd.Key}}'}""";
             }
         }
 

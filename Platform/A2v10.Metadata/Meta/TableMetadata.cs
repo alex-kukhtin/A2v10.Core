@@ -118,10 +118,9 @@ public record TableColumn
     }
 
     #region Database Fields
-    public Int32 MaxLength { get; init; }
-    public Int32 Scale { get; init; }
-    public ColumnType? DbDataType { get; init; }
-    
+    public Int32? Length { get; init; }
+    public Int32? Precision { get; init; }
+    public Int32? Scale { get; init; }    
     public String? Computed { get; init; }
     public Boolean Required { get; init; }
     public Boolean Total { get; init; }

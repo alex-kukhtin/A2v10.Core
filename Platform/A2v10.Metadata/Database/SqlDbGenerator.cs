@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -145,20 +146,36 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext  _dbCo
         var sqlTables = new List<String>();
         var sqlColumns = new List<String>();
 
+        static String Str(String? val) =>
+            val == null ? "null" : $"N'{val.Replace("'", "''")}'";
+        static String Num(Int32? val) =>
+            val?.ToString() ?? "null";
+
+        static String ColumnRow(TableMetadata table, TableColumn col)
+        {
+            var refTable = col.IsRef ? col.RefTable : null;
+            return $"\t({Str(table.SqlSchema)}, {Str(table.Table)}, {Str(col.Name)}, {Str(col.Type.ToSqlDataTypeDeploy())}, " +
+                $"{Num(col.DeployLength())}, {Num(col.DeployPrecision())}, {Num(col.DeployScale())}, " +
+                $"{(col.DeployNullable() ? 1 : 0)}, {Str(refTable?.SqlSchema)}, {Str(refTable?.Table)}, " +
+                $"{Str(col.DeployDefault())})";
+        }
+
         foreach (var t in tables)
         {
-            var tSchema = t.Schema.ToSqlSchema();
-            sqlTables.Add($"\t('{tSchema}', '{t.Table}')");
+            sqlTables.Add($"\t({Str(t.SqlSchema)}, {Str(t.Table)})");
             foreach (var col in t.AllColumns())
-                sqlColumns.Add($"\t('{tSchema}', '{t.Table}', '{col.Name}', '{col.Type.ToSqlDataTypeDeploy()}')");
+                sqlColumns.Add(ColumnRow(t, col));
             foreach (var d in t.Details.Values)
             {
-                var dSchema = d.Schema.ToSqlSchema();   
-                sqlTables.Add($"\t('{dSchema}', '{d.Table}')");
-                foreach (var col in d.Columns)
-                    sqlColumns.Add($"\t('{dSchema}', '{d.Table}', '{col.Name}', '{col.Type.ToSqlDataTypeDeploy()}')");
+                sqlTables.Add($"\t({Str(d.SqlSchema)}, {Str(d.Table)})");
+                foreach (var col in d.AllColumns())
+                    sqlColumns.Add(ColumnRow(d, col));
             }
         }
+
+        // хеш рахується від тексту, тож порядок не має залежати від обходу файлової системи
+        sqlTables.Sort(StringComparer.Ordinal);
+        sqlColumns.Sort(StringComparer.Ordinal);
 
         var rowDiv = $",{Environment.NewLine}\t";
         var sqlScript = $"""
@@ -166,12 +183,15 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext  _dbCo
         begin
             set nocount on;
             declare @tables table([schema] sysname, [table] sysname);
-            declare @columns table([schema] sysname, [table] sysname, [column] sysname, [datatype] sysname);
-            
+            declare @columns table([schema] sysname, [table] sysname, [column] sysname, [datatype] sysname,
+                [length] int, [precision] tinyint, [scale] tinyint, [nullable] bit,
+                [ref_schema] nvarchar(128), [ref_table] nvarchar(128), [default] nvarchar(128));
+
             insert into @tables([schema], [table]) values
             {String.Join(rowDiv, sqlTables)};
 
-            insert into @columns([schema], [table], [column], [datatype]) values
+            insert into @columns([schema], [table], [column], [datatype],
+                [length], [precision], [scale], [nullable], [ref_schema], [ref_table], [default]) values
             {String.Join(rowDiv, sqlColumns)};
 
             -- merge tables
@@ -187,10 +207,19 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext  _dbCo
             using @columns as s
             on t.[schema] = s.[schema] and t.[table] = s.[table] and t.[column] = s.[column]
             when matched then update set
-                t.[datatype] = s.[datatype]
+                t.[datatype] = s.[datatype],
+                t.[length] = s.[length],
+                t.[precision] = s.[precision],
+                t.[scale] = s.[scale],
+                t.[nullable] = s.[nullable],
+                t.[ref_schema] = s.[ref_schema],
+                t.[ref_table] = s.[ref_table],
+                t.[default] = s.[default]
             when not matched then insert
-                ([schema], [table], [column], [datatype]) values
-                (s.[schema], s.[table], s.[column], s.[datatype])
+                ([schema], [table], [column], [datatype],
+                 [length], [precision], [scale], [nullable], [ref_schema], [ref_table], [default]) values
+                (s.[schema], s.[table], s.[column], s.[datatype],
+                 s.[length], s.[precision], s.[scale], s.[nullable], s.[ref_schema], s.[ref_table], s.[default])
             when not matched by source then delete;
         end
         go
