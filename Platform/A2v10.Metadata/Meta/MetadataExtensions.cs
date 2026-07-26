@@ -149,7 +149,7 @@ internal static class MetadataExtensions
                 Find(refTable, refTable.Columns, kp.Value.Field, "source"));
         }
     }
-    // корінь + деталі; кожна таблиця в парі зі своїм операційним контрагентом
+    // root + details; each table paired with its operation counterpart
     internal static IEnumerable<InheritDescriptor> AllInheritsDeep(this TableMetadata table, TableMetadata? origin)
     {
         foreach (var d in table.AllInherits(origin))

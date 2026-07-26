@@ -275,6 +275,10 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             if (tableMeta.Origin != null)
                 continue;
             tables.Add(tableMeta);
+            if (tableMeta.Traits.Contains(TableTrait.Tags))
+            {
+                tables.Add(TableMetadataDefaults.CreateTagsTable(tableMeta));
+            }
         }
         return tables;
     }

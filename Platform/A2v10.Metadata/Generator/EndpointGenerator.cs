@@ -138,7 +138,7 @@ internal class EndpointGenerator(IModelBuilderFactory _modelBuilderFactory, IApp
 
         if (!File.Exists(fullPath))
         {
-            throw new InvalidOperationException("Що тут робити?");
+            throw new InvalidOperationException("What should be done here?");
             /*
             var formIndex = await builder.GetFormAsync();
             var pageIndex = XamlBulder.BuildForm(formIndex.Form);

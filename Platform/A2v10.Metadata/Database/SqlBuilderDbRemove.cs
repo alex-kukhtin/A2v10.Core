@@ -15,7 +15,7 @@ internal partial class SqlBuilder
 {
     public Task DbRemoveAsync(String? propName, ExpandoObject execPrms)
     {
-        var rf = Table.RefsToMe; // таблиці де є reference
+        var rf = Table.RefsToMe; // tables holding a reference to this one
         var checkSql = "";
         if (rf.Count > 0)
         {

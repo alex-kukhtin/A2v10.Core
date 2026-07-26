@@ -16,6 +16,8 @@ internal static class TableDefaultColumns
             EndpointKind.Journal => JournalDefaultColumns(table),
             EndpointKind.Details => DetailsDefaultColumns(table),
             EndpointKind.Operation => OperationDefaultColumns(table),
+            EndpointKind.Folders => FolderDefaultColumns(table),
+            EndpointKind.Tags => TagsDefaultColumns(table),
             _ => throw new InvalidOperationException($"Default columns not defined for {table.Kind}")
         };
     }
@@ -27,6 +29,10 @@ internal static class TableDefaultColumns
         yield return new TableColumn(Constants.FieldNames.RowVersion, ColumnType.RowVersion);
         yield return new TableColumn(Constants.FieldNames.Name, ColumnType.Name);
         yield return new TableColumn(Constants.FieldNames.Memo, ColumnType.Memo);
+        if (table.Traits.Contains(TableTrait.Hierarchy))
+            yield return new TableColumn(Constants.FieldNames.Parent, ColumnType.Parent);
+        if (table.Traits.Contains(TableTrait.Folders))
+            yield return new TableColumn(Constants.FieldNames.Folder, ColumnType.Folder);
     }
     static IEnumerable<TableColumn> DocumentDefaultColumns(TableMetadata table)
     {
@@ -54,5 +60,26 @@ internal static class TableDefaultColumns
         yield return new TableColumn(Constants.FieldNames.Id, ColumnType.Operation);
         yield return new TableColumn(Constants.FieldNames.Name, ColumnType.Name);
         yield return new TableColumn(Constants.FieldNames.Name, ColumnType.Memo);
+    }
+
+    static IEnumerable<TableColumn> FolderDefaultColumns(TableMetadata table)
+    {
+        yield return new TableColumn(Constants.FieldNames.Id, ColumnType.Id);
+        yield return new TableColumn(Constants.FieldNames.Name, ColumnType.Name);
+        yield return new TableColumn(Constants.FieldNames.Name, ColumnType.Memo);
+    }
+
+    static IEnumerable<TableColumn> TagsDefaultColumns(TableMetadata table)
+    {
+        yield return new TableColumn(Constants.FieldNames.Id, ColumnType.Id);
+        yield return new TableColumn(Constants.FieldNames.Name, ColumnType.Name);
+        yield return new TableColumn(Constants.FieldNames.Color, ColumnType.Color);
+    }
+
+    static IEnumerable<TableColumn> TagsEntriesDefaultColumns(TableMetadata table)
+    {
+        yield return new TableColumn(Constants.FieldNames.Id, ColumnType.Id);
+        //yield return new TableColumn(Constants.FieldNames.Tag, ColumnType.Parent);
+        yield return new TableColumn(Constants.FieldNames.Owner, ColumnType.Owner);
     }
 }

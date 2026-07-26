@@ -13,4 +13,15 @@ internal static class TableMetadataDefaults
             Table = "Operations"
         };
     }
+
+    public static TableMetadata CreateTagsTable(TableMetadata parent)
+    {
+        return new TableMetadata()
+        {
+            Kind = EndpointKind.Tags,
+            Schema = parent.Schema,
+            Model = "Tags",
+            Table = $"{parent.Table}Tags"
+        };
+    }
 }

@@ -21,7 +21,7 @@ internal static class SqlExtensions
         return columnDataType switch
         {
             ColumnType.Id or ColumnType.Ref or
-                ColumnType.Parent or ColumnType.Owner or
+                ColumnType.Parent or ColumnType.Owner or ColumnType.Folder or
                 ColumnType.User or ColumnType.Row => SqlDbType.BigInt,
             ColumnType.RowNumber => SqlDbType.Int,
             // other
@@ -47,12 +47,13 @@ internal static class SqlExtensions
         return columnDataType switch
         {
             ColumnType.Id or ColumnType.Ref or ColumnType.Owner or ColumnType.Document or
-                ColumnType.Parent or ColumnType.User or ColumnType.Row => "platformid",
-            ColumnType.IsSystem or ColumnType.IsFolder or ColumnType.Done or
+                ColumnType.Parent or ColumnType.Folder or ColumnType.User or ColumnType.Row => "platformid",
+            ColumnType.IsSystem or ColumnType.Done or
                 ColumnType.Void or ColumnType.Boolean => "bit",
             ColumnType.Name or ColumnType.Memo or ColumnType.Operation 
                 or ColumnType.DocumentType or ColumnType.Enum or ColumnType.String  
-                or ColumnType.NVarChar or ColumnType.Autonum or ColumnType.RowKind => "nvarchar",
+                or ColumnType.NVarChar or ColumnType.Autonum or ColumnType.RowKind 
+                or ColumnType.Color => "nvarchar",
             ColumnType.RowNumber or ColumnType.Int => "int",
             ColumnType.Date => "date",
             ColumnType.DateTime => "datetime",
@@ -68,22 +69,22 @@ internal static class SqlExtensions
         };
     }
 
-    /* Фізичні фасети колонки — те, що має повернути INFORMATION_SCHEMA.COLUMNS.
-     * Єдине джерело і для DDL, і для seed'у a2meta.Columns: якщо вони розійдуться,
-     * SyncSchema генеруватиме ALTER на кожному прогоні.
+    /* Physical facets of a column - what INFORMATION_SCHEMA.COLUMNS is expected to
+     * return. A single source for both the DDL and the a2meta.Columns seed: should the
+     * two ever diverge, SyncSchema would emit an ALTER on every single run.
      */
 
-    // CHARACTER_MAXIMUM_LENGTH: у символах, -1 = max.
-    // Заповнюється ТІЛЬКИ там, де тип має довжину; решті null — і звіряти її треба
-    // так само вибірково. Ставити сюди «еталонні» значення каталогу для інших типів
-    // означало б вигадувати умовчання заради спрощення одного запиту.
+    // CHARACTER_MAXIMUM_LENGTH: in characters, -1 means max.
+    // Filled in ONLY for types that actually have a length; null for the rest - and it
+    // has to be compared just as selectively. Putting the catalog's "reference" values
+    // here for the other types would mean inventing defaults just to simplify one query.
     public static Int32? DeployLength(this ColumnType columnDataType)
     {
         return columnDataType switch
         {
             ColumnType.Name or ColumnType.Memo => 255,
             ColumnType.Operation or ColumnType.RowKind => 64,
-            ColumnType.Autonum or ColumnType.Enum => 32,
+            ColumnType.Autonum or ColumnType.Enum or ColumnType.Color => 32,
             ColumnType.DocumentType => 128,
             ColumnType.String or ColumnType.NVarChar or ColumnType.NChar => 255,
             ColumnType.Stream or ColumnType.VarBinary => -1,
@@ -94,32 +95,33 @@ internal static class SqlExtensions
     public static Int32? DeployLength(this TableColumn column)
         => column.Type switch
         {
-            // довжину задає автор тільки там, де тип її взагалі приймає
+            // the author may set a length only where the type accepts one at all
             ColumnType.String or ColumnType.NVarChar or ColumnType.NChar
                 => column.Length ?? column.Type.DeployLength(),
             _ => column.Type.DeployLength()
         };
 
-    // NUMERIC_PRECISION / NUMERIC_SCALE: тільки decimal — єдиний тип, де точність
-    // задає автор. Решті null: каталог має там свої значення, але звіряти нам нічого,
-    // бо змінити їх декларація не може.
+    // NUMERIC_PRECISION / NUMERIC_SCALE: decimal only - the one type whose precision the
+    // author sets. Null for the rest: the catalog does have values there, but there is
+    // nothing for us to compare, since the declaration cannot change them anyway.
     public static Int32? DeployPrecision(this TableColumn column)
         => column.Type == ColumnType.Decimal ? column.Precision ?? 19 : null;
 
     public static Int32? DeployScale(this TableColumn column)
         => column.Type == ColumnType.Decimal ? column.Scale ?? 4 : null;
 
-    /* Готовий SQL-вираз дефолта. У порівнянні НЕ бере участі — потрібен рівно для
-     * add column, бо 'add column [Void] bit not null' без нього впаде.
-     * Дефолта Id тут немає і бути не може: sequence сидить тільки на первинному ключі,
-     * а він з'являється разом із таблицею, через add column — ніколи.
+    /* A ready-made SQL default expression. Takes NO part in comparison - it exists for
+     * exactly one purpose, to be substituted into an add column, because
+     * 'add column [Void] bit not null' would fail without it.
+     * There is no Id default here and there cannot be: a sequence only ever sits on the
+     * primary key, and that appears together with the table, never via add column.
      */
     public static String? DeployDefault(this TableColumn column)
         => column.HasDefaultBit ? "0" : null;
 
-    // IS_NULLABLE. Мусить збігатися з тим, що ставить CreateTable.
-    // RowVersion тут не тому, що ми просимо not null, а тому, що SQL Server ставить
-    // його сам: timestamp — виняток із загального умовчання про nullable (перевірено).
+    // IS_NULLABLE. Must match whatever CreateTable emits.
+    // RowVersion is listed here not because we ask for not null, but because SQL Server
+    // applies it itself: timestamp is an exception to the usual nullable default.
     public static Boolean DeployNullable(this TableColumn column)
         => !(column.Type == ColumnType.Id
             || column.Type == ColumnType.Owner
@@ -134,12 +136,13 @@ internal static class SqlExtensions
         return columnDataType switch
         {
             ColumnType.Id or ColumnType.Ref or ColumnType.Owner or ColumnType.Document or
-                ColumnType.Parent or ColumnType.User or ColumnType.Row => "platformid",
-            ColumnType.IsSystem or ColumnType.IsFolder or ColumnType.Done or
+                ColumnType.Parent or ColumnType.Folder or ColumnType.User or ColumnType.Row => "platformid",
+            ColumnType.IsSystem or ColumnType.Done or
                 ColumnType.Void or ColumnType.Boolean => "bit",
             ColumnType.Name or ColumnType.Memo or ColumnType.Operation or
                 ColumnType.RowKind or ColumnType.Autonum or ColumnType.DocumentType or
-                ColumnType.Enum or ColumnType.String or ColumnType.NVarChar => $"nvarchar({lenStr})",
+                ColumnType.Enum or ColumnType.String or ColumnType.Color or
+                ColumnType.NVarChar => $"nvarchar({lenStr})",
             ColumnType.RowNumber => "int",
             ColumnType.Money => "money",
             ColumnType.NChar => $"nchar({lenStr})",
@@ -170,9 +173,11 @@ internal static class SqlExtensions
 
     public static Type ClrDataType(this TableColumn column)
     {
+        // TODO: ID REF TYPE
         return column.Type switch
         {
-            ColumnType.Id or ColumnType.Ref or ColumnType.Owner or ColumnType.Parent or ColumnType.Row => typeof(Int64),
+            ColumnType.Id or ColumnType.Ref or ColumnType.Owner or 
+                ColumnType.Parent or ColumnType.Folder or ColumnType.Row => typeof(Int64),
             ColumnType.Name or ColumnType.Memo or ColumnType.Autonum => typeof(String),
             ColumnType.RowNumber => typeof(Int32),
             ColumnType.RowKind => typeof(String),
@@ -183,7 +188,7 @@ internal static class SqlExtensions
                 ColumnType.NChar or ColumnType.DocumentType => typeof(String),
             ColumnType.Date or ColumnType.DateTime => typeof(DateTime),
             ColumnType.Bit or ColumnType.Done or ColumnType.Void
-                or ColumnType.IsFolder or ColumnType.IsSystem => typeof(Boolean),
+                or ColumnType.IsSystem => typeof(Boolean),
             ColumnType.Money => typeof(Decimal),
             ColumnType.Float => typeof(Double),
             ColumnType.Int => typeof(Int32),
@@ -200,7 +205,6 @@ internal static class SqlExtensions
     {
         return column.Type != ColumnType.Id
             && column.Type != ColumnType.Void
-            && column.Type != ColumnType.IsFolder
             && column.Type != ColumnType.Done
             && column.Type != ColumnType.Operation
             && column.Type != ColumnType.IsSystem

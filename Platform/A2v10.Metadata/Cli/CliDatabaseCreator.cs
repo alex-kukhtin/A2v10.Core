@@ -25,7 +25,7 @@ public class CliDatabaseCreator()
             else if (column.HasDefaultBit)
                 constraint = $"{NL}{INDENT}constraint DF_{table.Table}_{column.Name} default(0)";
 
-            // nullable рахує DeployNullable — те саме джерело, що й seed
+            // nullability comes from DeployNullable - the same source the seed uses
             var nullable = column.DeployNullable() ? null : NOT_NULL;
             return $"[{column.Name}] {column.SqlDataType()}{nullable}{constraint}";
         }

@@ -56,7 +56,7 @@ public class CliDeployDatabase(DatabaseMetadataProvider _metadataProvider, IAppC
         var ep = (await CollectEndpointsAsync()).ToList();
         var tables = ep.GroupBy(t => t.SqlTableName).Select(g => g.First()).ToList();
 
-        //TODO: Тут надо загрузить хеши всех таблиц
+        //TODO: load the hashes of all tables here
         writeMsg("Deploying...");
         
         writeVerboseMsg("  Tables:");

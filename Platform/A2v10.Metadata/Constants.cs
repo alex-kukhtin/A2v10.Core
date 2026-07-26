@@ -14,7 +14,6 @@ internal static class Constants
         public const String Name = nameof(Name);
         public const String Memo = nameof(Memo);
         public const String Void = nameof(Void);
-        public const String IsFolder = nameof(IsFolder);
         public const String IsSystem = nameof(IsSystem);
         public const String RowNo = nameof(RowNo);
         public const String Owner = nameof(Owner);
@@ -22,6 +21,9 @@ internal static class Constants
         public const String Done = nameof(Done);
         public const String Document = nameof(Document);
         public const String RowVersion = "rv";
+        public const String Parent = nameof(Parent);
+        public const String Folder = nameof(Folder);
+        public const String Color = nameof(Color);
     }
     public static class FieldSizes
     {

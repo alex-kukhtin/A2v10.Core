@@ -20,10 +20,29 @@ internal sealed record DbHash
     public String? Hash { get; set; }
 }
 
+/*
+ * Generator of deploydatabase.sql.
+ *
+ * THE FILE IS A BUILD ARTIFACT, NOT A SIDE EFFECT OF THE DEPLOYMENT. It is the goal
+ * here, not a log: this very file is what gets applied at the customer site, because
+ * there is no other way into production. In production the metadata is compiled in and
+ * the Clr provider does not enumerate it at all (EnumerateFilesRecursive => []), so the
+ * runtime deployment degenerates there on its own.
+ *
+ * Hence the order: build the WHOLE script -> materialize it -> execute that same text.
+ * Never apply it piecemeal while generating: what is executed and what is written would
+ * stop being the same thing, and the developer would be debugging something other than
+ * what ships.
+ *
+ * The cost of this design falls on the generator rather than on the process: it must be
+ * deterministic (same metadata -> same bytes) and complete (everything deployed is
+ * derived from the declaration). Then the file is correct by construction, and there is
+ * no separate "build a release" step at all.
+ */
 public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext  _dbContext)
 {
     private const String DB_FILE = "deploydatabase.sql";
-    
+
     private readonly CliDatabaseCreator _dbCreator = new();
 
     private String DatabaseFilePath => _appCodeProvider.GetMainModuleFullPath("_sqlscripts", DB_FILE);
@@ -41,6 +60,9 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext  _dbCo
         var allScript = new StringBuilder();
 
         // CREATE SCRIPT
+        // The order is forced from both sides: SyncSchema needs the tables to already
+        // exist (step above), and must run BEFORE the foreign keys, since those
+        // reference columns it has just added.
         allScript.AppendLine(seedScript);
         allScript.AppendLine(CreateTablesScript(tables));
         allScript.AppendLine(CreateTableTypesScript(tables));
@@ -48,9 +70,12 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext  _dbCo
         allScript.AppendLine(CreateForeignKeysScript(tables));
         //* 5.Deploy INDEXES
 
-       await WriteDeployDatabaseFileAsync(allScript.ToString());
+        // Materialize first, execute second - and execute exactly the same text.
+        await WriteDeployDatabaseFileAsync(allScript.ToString());
 
         // DEPLOY DATABASE
+        // Running it here verifies the artifact against a live database;
+        // it is not a separate deployment path.
         await DeployDatabaseAsync(dataSource, allScript.ToString());
 
         // save hash
@@ -97,7 +122,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext  _dbCo
     private static String CreateTableTypesScript(IEnumerable<TableMetadata> tables)
     {
         static Boolean HasTableType(TableMetadata table)
-            => !table.IsJournal;
+            => !table.IsJournal && !table.IsTags;
 
         var strBuilder = new StringBuilder();
         strBuilder.AppendLine("-- TABLE TYPES");
@@ -139,6 +164,14 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext  _dbCo
         return strBuilder.ToString();
     }
 
+    /* The seed is the canonical representation of the schema, not just another chunk of
+     * the script: the rest of the file (tables, types, foreign keys) is derived from the
+     * same declaration. That is why the hash is taken from it - if it matches, there is
+     * nothing to deploy and nothing to rebuild.
+     * The invariant to keep: everything the deployment learns to do (indexes, CHECK
+     * constraints, computed columns) must also make it into the seed. Otherwise the
+     * change is there while the hash stays the same.
+     */
     private static async Task<String?> GenerateMetadataSeedAsync(IEnumerable<TableMetadata> tables)
     {
         if (!tables.Any())
@@ -173,7 +206,8 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext  _dbCo
             }
         }
 
-        // хеш рахується від тексту, тож порядок не має залежати від обходу файлової системи
+        // the hash is taken from the text, so the order must not depend on how the
+        // file system happens to be enumerated
         sqlTables.Sort(StringComparer.Ordinal);
         sqlColumns.Sort(StringComparer.Ordinal);
 

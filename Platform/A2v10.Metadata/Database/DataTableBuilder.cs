@@ -10,7 +10,8 @@ using A2v10.Infrastructure;
 namespace A2v10.Metadata;
 
 /*
- * Важно! Порядок добавления колонок в DataTable должен совпадать с порядком в табличном типе!
+ * Important! The order in which columns are added to the DataTable must match
+ * their order in the table type!
 */
 internal class DataTableBuilder(TableMetadata table)
 {

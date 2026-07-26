@@ -19,7 +19,9 @@ public enum EndpointKind
     Document,
     Operation,
     Journal,
-    Details
+    Details,
+    Folders,
+    Tags
 }
 public enum ColumnType
 {
@@ -35,6 +37,7 @@ public enum ColumnType
     IsFolder,
     Owner,
     Parent,
+    Folder,
     User,
     RowKind,
     Operation,
@@ -222,6 +225,8 @@ public enum InitialSource
 public enum TableTrait
 {
     Audit,
+    Hierarchy,
+    Folders,
     Tags
 }
 
@@ -311,6 +316,8 @@ public sealed record TableMetadata
     internal Boolean IsDocument => Kind == EndpointKind.Document;
     [JsonIgnore]
     internal Boolean IsJournal => Kind == EndpointKind.Journal;
+    [JsonIgnore]
+    internal Boolean IsTags => Kind == EndpointKind.Tags;
     [JsonIgnore]
     internal Boolean HasPeriod => IsDocument || IsJournal;
 
