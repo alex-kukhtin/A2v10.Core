@@ -12,7 +12,28 @@ internal partial class XamlBuilder
 {
     IEnumerable<DataGridColumn> IndexColumnsXaml(List<TableColumn> columns, Boolean hasChecked) =>
         columns.Select(col =>
-            new DataGridColumn()
+            Table.HasTags && col.Type == ColumnType.Name
+            ? new DataGridColumn()
+            {
+                Header = col.Header,
+                SortProperty = col.Name,
+                Content = new Group()
+                {
+                    Children = [
+                        new Span() 
+                        {
+                            Block = true,
+                            Bindings = b => b.SetBinding(nameof(DataGridColumn.Content),
+                            new Bind(col.DisplayPath) { DataType = col.Type.ToXamlDataType() })
+                        },
+                        new TagsList() {
+                            Bindings = b => b.SetBinding(nameof(TagsList.ItemsSource),
+                                new Bind("Tags")),
+                        }
+                    ]
+                }
+            }
+            : new DataGridColumn()
             {
                 Header = col.Header,
                 Role = col.Type.ToXamlColumnRole(),

@@ -110,6 +110,11 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext  _dbCo
         {
             strBuilder.AppendLine(_dbCreator.CreateTable(table));
             strBuilder.AppendLine("go");
+            if (table.HasTags)
+            {
+                strBuilder.AppendLine(_dbCreator.CreateTable(TableMetadataDefaults.CreateTagEntriesTable(table)));
+                strBuilder.AppendLine("go");
+            }
             foreach (var d in table.Details)
             {
                 strBuilder.AppendLine(_dbCreator.CreateTable(d.Value));
@@ -122,7 +127,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext  _dbCo
     private static String CreateTableTypesScript(IEnumerable<TableMetadata> tables)
     {
         static Boolean HasTableType(TableMetadata table)
-            => !table.IsJournal && !table.IsTags;
+            => !table.IsJournal && !table.IsTags && !table.IsTagEntries;
 
         var strBuilder = new StringBuilder();
         strBuilder.AppendLine("-- TABLE TYPES");

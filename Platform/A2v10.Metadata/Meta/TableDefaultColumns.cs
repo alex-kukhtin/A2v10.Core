@@ -18,6 +18,7 @@ internal static class TableDefaultColumns
             EndpointKind.Operation => OperationDefaultColumns(table),
             EndpointKind.Folders => FolderDefaultColumns(table),
             EndpointKind.Tags => TagsDefaultColumns(table),
+            EndpointKind.TagEntries => TagsEntriesDefaultColumns(table),
             _ => throw new InvalidOperationException($"Default columns not defined for {table.Kind}")
         };
     }
@@ -72,6 +73,7 @@ internal static class TableDefaultColumns
     static IEnumerable<TableColumn> TagsDefaultColumns(TableMetadata table)
     {
         yield return new TableColumn(Constants.FieldNames.Id, ColumnType.Id);
+        yield return new TableColumn(Constants.FieldNames.For, ColumnType.RowKind);
         yield return new TableColumn(Constants.FieldNames.Name, ColumnType.Name);
         yield return new TableColumn(Constants.FieldNames.Color, ColumnType.Color);
     }
@@ -79,7 +81,7 @@ internal static class TableDefaultColumns
     static IEnumerable<TableColumn> TagsEntriesDefaultColumns(TableMetadata table)
     {
         yield return new TableColumn(Constants.FieldNames.Id, ColumnType.Id);
-        //yield return new TableColumn(Constants.FieldNames.Tag, ColumnType.Parent);
         yield return new TableColumn(Constants.FieldNames.Owner, ColumnType.Owner);
+        yield return new TableColumn(Constants.FieldNames.Tag, ColumnType.Ref) { Target = "/catalog/tags"};
     }
 }

@@ -24,6 +24,8 @@ internal static class Constants
         public const String Parent = nameof(Parent);
         public const String Folder = nameof(Folder);
         public const String Color = nameof(Color);
+        public const String For = nameof(For);
+        public const String Tag = nameof(Tag);
     }
     public static class FieldSizes
     {

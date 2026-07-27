@@ -21,7 +21,8 @@ public enum EndpointKind
     Journal,
     Details,
     Folders,
-    Tags
+    Tags,
+    TagEntries
 }
 public enum ColumnType
 {
@@ -278,6 +279,11 @@ public sealed record TableMetadata
     [JsonIgnore]
     public Boolean EditWithPage => IsDocument;
 
+
+    [JsonIgnore]
+    public Boolean HasTags => Traits.Contains(TableTrait.Tags);
+    public Boolean HasFolders => Traits.Contains(TableTrait.Folders);
+
     // OLD
     public String? ItemsName { get; init; }
 
@@ -318,6 +324,7 @@ public sealed record TableMetadata
     internal Boolean IsJournal => Kind == EndpointKind.Journal;
     [JsonIgnore]
     internal Boolean IsTags => Kind == EndpointKind.Tags;
+    internal Boolean IsTagEntries => Kind == EndpointKind.TagEntries;
     [JsonIgnore]
     internal Boolean HasPeriod => IsDocument || IsJournal;
 

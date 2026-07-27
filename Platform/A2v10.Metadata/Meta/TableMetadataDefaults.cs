@@ -14,14 +14,25 @@ internal static class TableMetadataDefaults
         };
     }
 
-    public static TableMetadata CreateTagsTable(TableMetadata parent)
+    public static TableMetadata CreateTagsTable()
     {
         return new TableMetadata()
         {
             Kind = EndpointKind.Tags,
-            Schema = parent.Schema,
-            Model = "Tags",
-            Table = $"{parent.Table}Tags"
+            Schema = Constants.SchemaNames.Catalog,
+            Model = "Tag",
+            Table = "Tags"
+        };
+    }
+
+    public static TableMetadata CreateTagEntriesTable(TableMetadata table)
+    {
+        return new TableMetadata()
+        {
+            Kind = EndpointKind.TagEntries,
+            Schema = Constants.SchemaNames.Catalog,
+            Model = $"{table.Model}TagEntry",
+            Table = $"{table.Model}TagEntries"
         };
     }
 }

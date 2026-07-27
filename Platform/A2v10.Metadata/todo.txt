@@ -14,7 +14,7 @@
 10. BrowseDialog - ширина
 12. IndexPage -> DblClick -> Open or edit?
 13. Operation/Docunment -> ShowTrans
-16.
+16. Tags -> Edit, Filter, Settings, FK_, UNQ_
 
 
 

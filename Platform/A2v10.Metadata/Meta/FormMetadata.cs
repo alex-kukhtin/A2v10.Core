@@ -61,6 +61,19 @@ public enum FormElementKind
     Pager,
     Filters
 }
+
+public enum FormAxis
+{
+    Columns, // default
+    Rows
+}
+
+public enum LabelAt
+{
+    Top, // default
+    Left
+}
+
 public record FormElement
 {
     public FormElementKind Is { get; init; }
@@ -68,6 +81,9 @@ public record FormElement
     public List<FormElement> Elements { get; init; } = [];
     public List<String> Fields { get; init; } = [];
     public List<CommandBarItem> Commands { get; set; } = [];
+    public FormAxis Axis { get; init; }
+    public Int32 Count { get; init; } = 1;
+    public LabelAt LabelAt { get; init; }
 
     [JsonIgnore]
     internal List<TableColumn> Columns { get; private set; } = [];
@@ -91,10 +107,11 @@ public record FormElement
 }
 public enum FormKind
 {
-    Unknpwn = 0,
+    Unknown = 0,
     Page,
     Dialog
 }
+
 public sealed record FormMetadata
 {    
     public FormKind Is { get; init; }
@@ -111,5 +128,4 @@ public sealed record FormMetadata
         return this;
     }
 }
-
 
