@@ -23,6 +23,7 @@ internal partial class XamlBuilder
                 {
                     Rows = RowDefinitions.FromString(String.Join(',', columnWidths)),
                     Height = Length.FromString("100%"),
+                    Padding = Thickness.FromString("20px"),
                     Children = [..form.Body.Select(ElementToControl)]
                 }
             ]

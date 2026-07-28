@@ -17,16 +17,19 @@ internal partial class XamlBuilder
             ColumnType.RowNumber => new TableCell()
                 {
                     Align = TextAlign.Right,
+                    CssClass = elem.Type.ToXamlSemanticClass(),
                     Bindings = b => b.SetBinding(nameof(TableCell.Content), new Bind(elem.Name) { DataType = DataType.Number })
                 },
             ColumnType.Ref => new SelectorSimple()
                 {
                     Url = elem.RefTableCheck.Path,
+                    CssClass = elem.Type.ToXamlSemanticClass(),
                     Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), new Bind(elem.Name))
                 },
             _ => new TextBox()
                 {
                     Align = elem.Type.ToXamlAlign(),
+                    CssClass = elem.Type.ToXamlSemanticClass(),
                     Bindings = b => b.SetBinding(nameof(TextBox.Value), new Bind(elem.Name) { DataType = elem.Type.ToXamlDataType() })
                 },
         };
@@ -182,8 +185,10 @@ internal partial class XamlBuilder
             {
                 Bindings = b => b.SetBinding(nameof(Pager.Source), new Bind("Parent.Pager"))
             },
-            FormElementKind.Group => new Grid(_xamlServiceProvider)
+            FormElementKind.Group => new FlowPanel(_xamlServiceProvider)
             {
+                Axis = elem.Axis == FlowAxis.Columns ? Xaml.FlowAxis.Columns : Xaml.FlowAxis.Rows,
+                LabelAt = elem.LabelAt == LabelAt.Top ? FlowLabelAt.Top : FlowLabelAt.Left,
                 Children = [.. elem.Columns.Select(CreateEditControl)]
             },
             FormElementKind.Tabs => new Grid(_xamlServiceProvider)
@@ -195,10 +200,10 @@ internal partial class XamlBuilder
                     new TabBar()
                     {
                         Bindings = b => b.SetBinding(nameof(TabBar.Value), new Bind($"{Table.Model}.$$Tab")),
-                        Buttons = [..elem.Elements.Select(tab => 
-                            new TabButton() { 
-                                Content = $"@[{tab.Scope}]", 
-                                ActiveValue=tab.Scope,
+                        Buttons = [.. elem.Elements.Select<FormElement, TabButton>(tab =>
+                            new TabButton() {
+                                Content = $"@[{tab.Scope}]",
+                                ActiveValue= tab.Scope,
                                 Bindings = b => b.SetBinding(nameof(TabButton.Badge), new Bind($"{Table.Model}.{tab.Scope}.Count"))
                             })
                         ]
@@ -231,7 +236,7 @@ internal partial class XamlBuilder
             ColumnType.Date => new DatePicker()
             {
                 Label = column.Header,
-                Width = Length.FromString("12rem"),
+                CssClass = column.Type.ToXamlSemanticClass(),
                 Bindings = b => b.SetBinding(nameof(DatePicker.Value), valueBind)
             },
             ColumnType.Name => new TextBox()
@@ -239,6 +244,7 @@ internal partial class XamlBuilder
                 Label = column.Header,
                 Bold = true,
                 TabIndex = 1,
+                CssClass = column.Type.ToXamlSemanticClass(),
                 Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
             },
             ColumnType.Memo => new TextBox()
@@ -246,16 +252,17 @@ internal partial class XamlBuilder
                 Label = column.Header,
                 Multiline = true,
                 Rows = 3,
+                CssClass = column.Type.ToXamlSemanticClass(),
                 Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
             },
             ColumnType.Operation => new Header()
             {
-                Bold = false,
                 Bindings = b => b.SetBinding(nameof(Header.Content), new Bind($"{Table.Model}.{column.Name}.Name"))
             },
             ColumnType.Ref or ColumnType.Document => new SelectorSimple()
             {
                 Label = column.Header,
+                CssClass = column.Type.ToXamlSemanticClass(),
                 Url = column.RefTableCheck.Path,
                 Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
             },
@@ -264,15 +271,18 @@ internal partial class XamlBuilder
                 Label = column.Header,
                 Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
             },
-            ColumnType.Money or ColumnType.Float or ColumnType.Decimal => new TextBox()
+            ColumnType.Money or ColumnType.Float or 
+            ColumnType.Decimal => new TextBox()
             {
                 Label = column.Header,
                 Align = TextAlign.Right,
+                CssClass = column.Type.ToXamlSemanticClass(),
                 Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
             },
             _ => new TextBox()
             {
                 Label = column.Header,
+                CssClass = column.Type.ToXamlSemanticClass(),
                 Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
             }
         };

@@ -33,6 +33,9 @@ internal static class XamlExtensions
             _ => DataType.String,
         };
 
+    internal static String ToXamlSemanticClass(this ColumnType column) =>
+        $"dom-{column.ToString().ToLowerInvariant()}";
+
     internal static TextAlign ToXamlAlign(this ColumnType column) =>
         column switch
         {

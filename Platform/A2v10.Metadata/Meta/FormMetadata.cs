@@ -62,7 +62,7 @@ public enum FormElementKind
     Filters
 }
 
-public enum FormAxis
+public enum FlowAxis
 {
     Columns, // default
     Rows
@@ -81,8 +81,7 @@ public record FormElement
     public List<FormElement> Elements { get; init; } = [];
     public List<String> Fields { get; init; } = [];
     public List<CommandBarItem> Commands { get; set; } = [];
-    public FormAxis Axis { get; init; }
-    public Int32 Count { get; init; } = 1;
+    public FlowAxis Axis { get; init; }
     public LabelAt LabelAt { get; init; }
 
     [JsonIgnore]
@@ -98,7 +97,7 @@ public record FormElement
             if (!String.IsNullOrEmpty(el.Scope))
             {
                 var detailsTable = table.Details.First(x => x.Key == el.Scope || x.Value.Kinds.Contains(el.Scope)).Value;
-                el.SetDefaults(detailsTable, detailsTable.AllColumns(c => c.Type != ColumnType.RowKind).ToList());
+                el.SetDefaults(detailsTable, [..detailsTable.AllColumns(c => c.Type != ColumnType.RowKind)]);
             }
             else
                 el.SetDefaults(table, cols);

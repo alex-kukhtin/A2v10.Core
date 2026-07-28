@@ -1,0 +1,33 @@
+﻿@import "Variables.less";
+
+.flow-panel {
+	display: flex;
+	gap: .5rem 1rem;
+	flex-wrap: wrap;
+
+	&.axis-rows {
+		flex-direction: row;
+	}
+
+	&.axis-columns {
+		flex-direction: column;
+	}
+
+	.control-group {
+		flex: 0 0 auto;
+	}
+
+	&.label-at-left {
+		.control-group {
+			display: flex;
+			flex-direction: row;
+			white-space: nowrap;
+			gap: 1rem;
+			align-items: baseline;
+
+			.input-group {
+				flex: 1 1 auto;
+			}
+		}
+	}
+}

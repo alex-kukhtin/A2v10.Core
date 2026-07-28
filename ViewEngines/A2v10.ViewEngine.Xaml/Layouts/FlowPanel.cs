@@ -27,10 +27,22 @@ public enum FlowBehavior
     Popup 
 }
 
-[AttachedProperties("Grow,AlignSelf")]
-public class FlowPanel(IServiceProvider serviceProvider) : Container
+public enum FlowAxis
 {
-    public Orientation Orientation { get; init; }
+    Columns,
+    Rows
+}
+
+public enum FlowLabelAt
+{
+    Top,
+    Left
+}
+
+[AttachedProperties("Grow,AlignSelf")]
+public class FlowPanel(IServiceProvider serviceProvider) : Container, ISupportAttached
+{
+    public FlowAxis Axis { get; init; }
     public FlowWrap WrapMode { get; init; }
     public GapSize? Gap { get; init; }
     public FlowBorderStyle Border {  get; init; }
@@ -39,6 +51,7 @@ public class FlowPanel(IServiceProvider serviceProvider) : Container
     public Object? Header { get; init; }
     public FlowBehavior Behavior { get; init; }
     public Boolean? Collapsed { get; init; }
+    public FlowLabelAt LabelAt { get; init; }
 
     private readonly IAttachedPropertyManager _attachedPropertyManager = serviceProvider.GetRequiredService<IAttachedPropertyManager>();
 
@@ -49,20 +62,24 @@ public class FlowPanel(IServiceProvider serviceProvider) : Container
     #region Attached Properties
     public Int32? GetGrow(Object obj)
     {
-        return _attachedPropertyManager.GetProperty<Int32?>("FlexPanel.Grow", obj);
+        return _attachedPropertyManager.GetProperty<Int32?>("FlowPanel.Grow", obj);
     }
     public void SetGrow(Object obj, Int32 grow)
     {
-        _attachedPropertyManager.SetProperty("FlexPanel.Grow", obj, grow);
+        _attachedPropertyManager.SetProperty("FlowPanel.Grow", obj, grow);
     }
     #endregion
     public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
     {
         if (SkipRender(context))
             return;
+        var cont = new TagBuilder("div", "flow-container");
+        cont.RenderStart(context);
         var flow = new TagBuilder("div", "flow-panel", IsInGrid);
         onRender?.Invoke(flow);
         MergeAttributes(flow, context);
+        flow.AddCssClass($"axis-{Axis.ToString().ToLowerInvariant()}");
+        flow.AddCssClass($"label-at-{LabelAt.ToString().ToLowerInvariant()}");
         if (AlignItems != AlignItems.Default)
             flow.AddCssClass("align-" + AlignItems.ToString().ToLowerInvariant());
         if (JustifyItems != JustifyItems.Default)
@@ -72,6 +89,7 @@ public class FlowPanel(IServiceProvider serviceProvider) : Container
         flow.RenderStart(context);
         RenderChildren(context);
         flow.RenderEnd(context);
+        cont.RenderEnd(context);
     }
 
     protected override void OnEndInit()

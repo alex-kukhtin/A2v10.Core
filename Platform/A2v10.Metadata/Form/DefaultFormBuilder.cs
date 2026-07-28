@@ -115,6 +115,16 @@ internal static class DefaultFormBuilder
     static Boolean IsDetailsColumn(TableColumn col)
         => col.Type != ColumnType.Id && col.Type != ColumnType.RowKind && col.Type != ColumnType.Owner;
 
+    static Int32 SemanticDetailsOrder(TableColumn col)
+        => col.Type switch
+        {
+            ColumnType.RowNumber => 0,
+            ColumnType.Ref => 1,
+            ColumnType.Float or ColumnType.Money => 3,
+            _ => 4
+        };
+
+
     static IEnumerable<FormElement> DetailsTab(TableMetadata table)
     {
         foreach (var d in table.Details)
@@ -127,7 +137,7 @@ internal static class DefaultFormBuilder
                     {
                         Is = FormElementKind.Tab,
                         Scope = k,
-                        Fields = [.. d.Value.AllColumns(IsDetailsColumn).Select(c => c.Name)]
+                        Fields = [.. d.Value.AllColumns(IsDetailsColumn).OrderBy(SemanticDetailsOrder).Select(c => c.Name)]
                     };
                 }
             }
@@ -145,7 +155,7 @@ internal static class DefaultFormBuilder
 
     public static FormMetadata CreateEditPage(TableMetadata table)
     {
-        Int32 GroupNumber(TableColumn c) => c.Type switch {
+        static Int32 GroupNumber(TableColumn c) => c.Type switch {
             ColumnType.Operation => 1,
             ColumnType.Autonum => 1,
             ColumnType.Date => 1,
@@ -176,11 +186,14 @@ internal static class DefaultFormBuilder
                 new FormElement() 
                 {
                     Is = FormElementKind.Group,
+                    LabelAt = LabelAt.Left,
+                    Axis = FlowAxis.Rows,
                     Fields = [..topCols.Select(c => c.Name)]
                 },
                 new FormElement()
                 {
                     Is = FormElementKind.Group,
+                    Axis = FlowAxis.Rows,
                     Fields = [..middleCols.Select(c => c.Name)]
                 }
             ]
@@ -199,6 +212,8 @@ internal static class DefaultFormBuilder
         fd.Body.Add(new FormElement()
         {
             Is = FormElementKind.Group,
+            Axis = FlowAxis.Rows,
+            LabelAt = LabelAt.Left,
             Fields = [.. bottomCols.Select(c => c.Name)]
         });
 
