@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Metadata.Cli;
+using Microsoft.Data.SqlClient;
 
 namespace A2v10.Metadata;
 
@@ -269,16 +270,29 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext  _dbCo
 
     public async Task DeployDatabaseAsync(String? dataSource, String allScript)
     {
-        var scripts = allScript.Split($"{Environment.NewLine}go");
-        if (scripts.Length == 0)
+        if (String.IsNullOrWhiteSpace(allScript))
             return;
+        var scripts = allScript.Split($"{Environment.NewLine}go");
 
         using var dbConn = await _dbContext.GetDbConnectionAsync(dataSource);
-        using var cmd = dbConn.CreateCommand();
+        using var cmd = dbConn.CreateCommand() as SqlCommand
+            ?? throw new InvalidOperationException("Invalid Database provider");
+
+        Int32 lineFrom = 1;
         foreach (var line in scripts)
         {
-            cmd.CommandText = line;
-            cmd.ExecuteNonQuery();
+            var lineTo = lineFrom + line.Count(c => c == '\n');
+            try
+            {
+                cmd.CommandText = line;
+                await cmd.ExecuteNonQueryAsync();
+            } 
+            catch (Exception ex)
+            {
+                throw new DeployScriptException(ex, lineFrom, lineTo);
+            }
+
+            lineFrom = lineTo + 1; // + go
         }
     }
 }
