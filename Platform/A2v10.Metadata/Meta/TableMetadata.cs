@@ -35,7 +35,6 @@ public enum ColumnType
     Done,
     Void,
     IsSystem,
-    IsFolder,
     Owner,
     Parent,
     Folder,
@@ -51,6 +50,12 @@ public enum ColumnType
     Autonum,
     Company,
     Direction,  // journal leg sign (+1/-1); vocabulary (In/Out, Dt/Ct) is presentation
+    // Semantic Values
+    Amount,
+    Price,
+    Qty,
+    Percent,
+    Factor,
     // Simple fields
     Ref,
     Date,
@@ -59,18 +64,19 @@ public enum ColumnType
     Boolean,
     //
     Stream,
-    // sql
+    // neutral tier - values without business semantics, and the only place an author
+    // may refuse behaviour. Raw SQL spellings are gone: one integer, one number, no
+    // floating point, no fixed-length strings.
+    Integer,
+    Number,
+    // raw
     BigInt,
-    Int,
-    SmallInt,
-    Decimal,
-    NVarChar,
-    NChar,
     Bit,
+    NChar,
+    Decimal,
     Float,
-    Uniqueidentifier,
     VarBinary,
-    TimeStamp = RowVersion  // SQL INFORMATION_SCHEMA.DATA_TYPE uses TimeStamp
+    Uniqueidentifier
 }
 
 public record ReferenceMember(TableColumn Column, TableMetadata Table, Int32 Index);
@@ -135,8 +141,7 @@ public record TableColumn
 
     [JsonIgnore]
     internal Boolean HasDefaultBit => 
-           Type == ColumnType.IsFolder
-        || Type == ColumnType.IsSystem
+        Type == ColumnType.IsSystem
         || Type == ColumnType.Void
         || Type == ColumnType.Done;
 

@@ -5,6 +5,20 @@ using System.Data;
 
 namespace A2v10.Metadata;
 
+internal sealed record SqlDbTypeInfo(SqlDbType SqlDbType, Type ClrType, String SqlName, Int32? Length = null, Int32? Precision = null, Int32? Scale = null)
+{
+    // Not stored: it follows from the name plus the facet the type carries, and a stored
+    // copy would be free to drift from it.
+    public String SqlFullName => SqlDbType switch
+    {
+        SqlDbType.NVarChar or SqlDbType.NChar or SqlDbType.VarChar or SqlDbType.Char or
+            SqlDbType.VarBinary or SqlDbType.Binary
+                => Length == -1 ? $"{SqlName}(max)" : $"{SqlName}({Length})",
+        SqlDbType.Decimal => $"{SqlName}({Precision}, {Scale})",
+        _ => SqlName
+    };
+}
+
 internal static class SqlExtensions
 {
     public static String LocalizeSql(this String value)
@@ -16,99 +30,93 @@ internal static class SqlExtensions
             return $"@[{value[1..]}]";
         return value;
     }
-    public static SqlDbType ToSqlDbType(this ColumnType columnDataType)
-    {
-        return columnDataType switch
+
+    // -1 (max) travels through untouched: it is the catalog's own notation, and
+    // SqlFullName renders it.
+    private static Int32 ToColumnLength(this Int32? length) => length ?? 255;
+
+    /* THE single dispatch over ColumnType. Every SQL-side facet of a domain comes from
+     * here, and everything below is a one-liner over it - so disagreeing with it is not
+     * possible any more. The facets the author may set arrive as arguments: that is all
+     * the switch ever needed from a column.
+     */
+    public static SqlDbTypeInfo ToSqlDbTypeInfo(this ColumnType columnType,
+        Int32? length = null, Int32? precision = null, Int32? scale = null)
+        => columnType switch
         {
-            ColumnType.Id or ColumnType.Ref or
-                ColumnType.Parent or ColumnType.Owner or ColumnType.Folder or
-                ColumnType.User or ColumnType.Row => SqlDbType.BigInt,
-            ColumnType.RowNumber => SqlDbType.Int,
-            // other
-            ColumnType.Operation or ColumnType.DocumentType => SqlDbType.NVarChar,
-            ColumnType.Enum => SqlDbType.NVarChar,
-            ColumnType.BigInt => SqlDbType.BigInt,
-            ColumnType.Int => SqlDbType.Int,
-            ColumnType.SmallInt or ColumnType.Direction => SqlDbType.SmallInt,
-            ColumnType.Decimal => SqlDbType.Decimal,
-            ColumnType.String => SqlDbType.NVarChar,
-            ColumnType.DateTime => SqlDbType.DateTime,
-            ColumnType.Date => SqlDbType.Date,
-            ColumnType.Money => SqlDbType.Money,
-            ColumnType.Float => SqlDbType.Float,
-            ColumnType.Stream or ColumnType.VarBinary => SqlDbType.VarBinary,
-            ColumnType.Uniqueidentifier => SqlDbType.UniqueIdentifier,
-            _ => throw new NotSupportedException($"{columnDataType} is not supported")
+            // id + references: every one of them is platformid, the FK carries the meaning
+            ColumnType.Id or ColumnType.Ref or ColumnType.Owner or ColumnType.Parent or
+                ColumnType.Folder or ColumnType.Row or ColumnType.Company or
+                ColumnType.User or ColumnType.Document
+                    => new SqlDbTypeInfo(SqlDbType.BigInt, typeof(Int64), "platformid"),
+            // bit
+            ColumnType.IsSystem or ColumnType.Void or ColumnType.Done or
+                ColumnType.Bit or ColumnType.Boolean
+                    => new SqlDbTypeInfo(SqlDbType.Bit, typeof(Boolean), "bit"),
+            // integers
+            ColumnType.Direction => new SqlDbTypeInfo(SqlDbType.SmallInt, typeof(Int16), "smallint"),
+            ColumnType.RowNumber or ColumnType.Integer => new SqlDbTypeInfo(SqlDbType.Int, typeof(Int32), "int"),
+            ColumnType.BigInt => new SqlDbTypeInfo(SqlDbType.BigInt, typeof(Int64), "bigint"),
+            // rowversion: INFORMATION_SCHEMA reports 'timestamp', so that is the facet.
+            // The DDL spelling ('rowversion') and the TVP one ('varbinary(8)') belong to
+            // the caller - see ToSqlDataType(toTableType).
+            ColumnType.RowVersion => new SqlDbTypeInfo(SqlDbType.Timestamp, typeof(Byte[]), "timestamp"),
+            // date
+            ColumnType.Date => new SqlDbTypeInfo(SqlDbType.Date, typeof(DateTime), "date"),
+            ColumnType.DateTime => new SqlDbTypeInfo(SqlDbType.DateTime, typeof(DateTime), "datetime"),
+            // strings whose length the author may set
+            ColumnType.String
+                => new SqlDbTypeInfo(SqlDbType.NVarChar, typeof(String), "nvarchar", length.ToColumnLength()),
+            ColumnType.NChar => new SqlDbTypeInfo(SqlDbType.NChar, typeof(String), "nchar", length.ToColumnLength()),
+            // strings whose length the domain fixes
+            ColumnType.Name or ColumnType.Memo => new SqlDbTypeInfo(SqlDbType.NVarChar, typeof(String), "nvarchar", 255),
+            ColumnType.DocumentType => new SqlDbTypeInfo(SqlDbType.NVarChar, typeof(String), "nvarchar", 128),
+            // discriminators - one length for all of them
+            ColumnType.Operation or ColumnType.RowKind or
+                ColumnType.Autonum or ColumnType.Enum
+                    => new SqlDbTypeInfo(SqlDbType.NVarChar, typeof(String), "nvarchar", 64),
+            ColumnType.Color => new SqlDbTypeInfo(SqlDbType.NVarChar, typeof(String), "nvarchar", 32),
+            // numbers with business semantics: precision is 19 throughout, only scale varies
+            ColumnType.Amount => new SqlDbTypeInfo(SqlDbType.Decimal, typeof(Decimal), "decimal", null, 19, 4),
+            ColumnType.Price or ColumnType.Qty or
+                ColumnType.Percent => new SqlDbTypeInfo(SqlDbType.Decimal, typeof(Decimal), "decimal", null, 19, 6),
+            ColumnType.Factor => new SqlDbTypeInfo(SqlDbType.Decimal, typeof(Decimal), "decimal", null, 19, 8),
+            // numbers without: the author sets the precision himself
+            ColumnType.Decimal => new SqlDbTypeInfo(SqlDbType.Decimal, typeof(Decimal), "decimal", null, precision ?? 19, scale ?? 4),
+            ColumnType.Money => new SqlDbTypeInfo(SqlDbType.Money, typeof(Decimal), "money"),
+            ColumnType.Float => new SqlDbTypeInfo(SqlDbType.Float, typeof(Double), "float"),
+            // binary
+            ColumnType.Stream or ColumnType.VarBinary => new SqlDbTypeInfo(SqlDbType.VarBinary, typeof(Byte[]), "varbinary", -1),
+            ColumnType.Uniqueidentifier => new SqlDbTypeInfo(SqlDbType.UniqueIdentifier, typeof(Guid), "uniqueidentifier"),
+            _ => throw new InvalidOperationException($"SqlDbTypeInfo. Invalid type '{columnType}'")
         };
-    }
+
+    public static SqlDbTypeInfo ToSqlDbTypeInfo(this TableColumn column)
+        => column.Type.ToSqlDbTypeInfo(column.Length, column.Precision, column.Scale);
 
     public static String ToSqlDataTypeDeploy(this ColumnType columnDataType)
-    {
-        return columnDataType switch
-        {
-            ColumnType.Id or ColumnType.Ref or ColumnType.Owner or ColumnType.Document or
-                ColumnType.Parent or ColumnType.Folder or ColumnType.User or ColumnType.Row => "platformid",
-            ColumnType.IsSystem or ColumnType.Done or
-                ColumnType.Void or ColumnType.Boolean => "bit",
-            ColumnType.Name or ColumnType.Memo or ColumnType.Operation 
-                or ColumnType.DocumentType or ColumnType.Enum or ColumnType.String  
-                or ColumnType.NVarChar or ColumnType.Autonum or ColumnType.RowKind 
-                or ColumnType.Color => "nvarchar",
-            ColumnType.RowNumber or ColumnType.Int => "int",
-            ColumnType.Date => "date",
-            ColumnType.DateTime => "datetime",
-            ColumnType.Money => "money",
-            ColumnType.Float => "float",
-            ColumnType.NChar => "nchar",
-            ColumnType.Stream => "varbinary",
-            ColumnType.Uniqueidentifier => "uniqueidentifier",
-            ColumnType.RowVersion => "timestamp",
-            ColumnType.Direction => "smallint",
-            ColumnType.Decimal => $"decimal",
-            _ => throw new InvalidOperationException($"Invalid ColumnType for deploy '{columnDataType}'")
-        };
-    }
+        => columnDataType.ToSqlDbTypeInfo().SqlName;
 
     /* Physical facets of a column - what INFORMATION_SCHEMA.COLUMNS is expected to
      * return. A single source for both the DDL and the a2meta.Columns seed: should the
      * two ever diverge, SyncSchema would emit an ALTER on every single run.
+     *
+     * All three come straight off the type descriptor now. Precision and scale used to be
+     * blanked for everything but ColumnType.Decimal, on the grounds that the declaration
+     * cannot change them - which is true of the author and false of the platform. A null
+     * there costs the seed its whole purpose: a column left at decimal(19,2) would match
+     * on the type name alone and never be corrected, and 'money -> decimal(19,4)' could
+     * not even name its target. The catalog's own precision for int/bigint must simply be
+     * compared selectively, by type - not erased here, where it is the thing we need.
      */
-
-    // CHARACTER_MAXIMUM_LENGTH: in characters, -1 means max.
-    // Filled in ONLY for types that actually have a length; null for the rest - and it
-    // has to be compared just as selectively. Putting the catalog's "reference" values
-    // here for the other types would mean inventing defaults just to simplify one query.
-    public static Int32? DeployLength(this ColumnType columnDataType)
-    {
-        return columnDataType switch
-        {
-            ColumnType.Name or ColumnType.Memo => 255,
-            ColumnType.Operation or ColumnType.RowKind => 64,
-            ColumnType.Autonum or ColumnType.Enum or ColumnType.Color => 32,
-            ColumnType.DocumentType => 128,
-            ColumnType.String or ColumnType.NVarChar or ColumnType.NChar => 255,
-            ColumnType.Stream or ColumnType.VarBinary => -1,
-            _ => null
-        };
-    }
-
     public static Int32? DeployLength(this TableColumn column)
-        => column.Type switch
-        {
-            // the author may set a length only where the type accepts one at all
-            ColumnType.String or ColumnType.NVarChar or ColumnType.NChar
-                => column.Length ?? column.Type.DeployLength(),
-            _ => column.Type.DeployLength()
-        };
+        => column.ToSqlDbTypeInfo().Length;
 
-    // NUMERIC_PRECISION / NUMERIC_SCALE: decimal only - the one type whose precision the
-    // author sets. Null for the rest: the catalog does have values there, but there is
-    // nothing for us to compare, since the declaration cannot change them anyway.
     public static Int32? DeployPrecision(this TableColumn column)
-        => column.Type == ColumnType.Decimal ? column.Precision ?? 19 : null;
+        => column.ToSqlDbTypeInfo().Precision;
 
     public static Int32? DeployScale(this TableColumn column)
-        => column.Type == ColumnType.Decimal ? column.Scale ?? 4 : null;
+        => column.ToSqlDbTypeInfo().Scale;
 
     /* A ready-made SQL default expression. Takes NO part in comparison - it exists for
      * exactly one purpose, to be substituted into an add column, because
@@ -129,36 +137,18 @@ internal static class SqlExtensions
             || column.HasDefaultBit
             || column.Required);
 
+    /* RowVersion is the one type the descriptor cannot answer for: the catalog calls it
+     * 'timestamp', the DDL wants 'rowversion' and a table type wants 'varbinary(8)'.
+     * Which of the three applies is the caller's context, not a property of the type, so
+     * it stays here as an explicit exception rather than being forced into the record.
+     */
     public static String ToSqlDataType(this ColumnType columnDataType, Int32? length = null, Int32? precision = null, Int32? scale = null, Boolean toTableType = false)
-    {
-        var len = length ?? columnDataType.DeployLength();
-        var lenStr = len == -1 ? "max" : len?.ToString() ?? "255";
-        return columnDataType switch
-        {
-            ColumnType.Id or ColumnType.Ref or ColumnType.Owner or ColumnType.Document or
-                ColumnType.Parent or ColumnType.Folder or ColumnType.User or ColumnType.Row => "platformid",
-            ColumnType.IsSystem or ColumnType.Done or
-                ColumnType.Void or ColumnType.Boolean => "bit",
-            ColumnType.Name or ColumnType.Memo or ColumnType.Operation or
-                ColumnType.RowKind or ColumnType.Autonum or ColumnType.DocumentType or
-                ColumnType.Enum or ColumnType.String or ColumnType.Color or
-                ColumnType.NVarChar => $"nvarchar({lenStr})",
-            ColumnType.RowNumber => "int",
-            ColumnType.Money => "money",
-            ColumnType.NChar => $"nchar({lenStr})",
-            ColumnType.Stream => $"varbinary(max)",
-            ColumnType.Uniqueidentifier => "uniqueidentifier",
-            ColumnType.RowVersion => toTableType ? "varbinary(8)" : "rowversion",
-            ColumnType.Direction => "smallint",
-            ColumnType.Decimal => $"decimal({precision ?? 19},{scale ?? 4})",
-            _ => columnDataType.ToString().ToLowerInvariant(),
-        };
-    }
+        => columnDataType == ColumnType.RowVersion
+            ? (toTableType ? "varbinary(8)" : "rowversion")
+            : columnDataType.ToSqlDbTypeInfo(length, precision, scale).SqlFullName;
 
     public static String SqlDataType(this TableColumn column, Boolean toTableType = false)
-    {
-        return column.Type.ToSqlDataType(column.DeployLength(), column.Precision, column.Scale, toTableType);
-    }
+        => column.Type.ToSqlDataType(column.Length, column.Precision, column.Scale, toTableType);
 
     public static String SqlModelColumnName(this TableColumn column, String alias, Func<TableMetadata, String> refPredicate)
         => column.Type switch
@@ -172,34 +162,7 @@ internal static class SqlExtensions
         };
 
     public static Type ClrDataType(this TableColumn column)
-    {
-        // TODO: ID REF TYPE
-        return column.Type switch
-        {
-            ColumnType.Id or ColumnType.Ref or ColumnType.Owner or 
-                ColumnType.Parent or ColumnType.Folder or ColumnType.Row => typeof(Int64),
-            ColumnType.Name or ColumnType.Memo or ColumnType.Autonum => typeof(String),
-            ColumnType.RowNumber => typeof(Int32),
-            ColumnType.RowKind => typeof(String),
-            ColumnType.Operation => typeof(String),
-            ColumnType.Enum => typeof(String),
-            ColumnType.BigInt => typeof(Int64),
-            ColumnType.String or ColumnType.NVarChar or
-                ColumnType.NChar or ColumnType.DocumentType => typeof(String),
-            ColumnType.Date or ColumnType.DateTime => typeof(DateTime),
-            ColumnType.Bit or ColumnType.Done or ColumnType.Void
-                or ColumnType.IsSystem => typeof(Boolean),
-            ColumnType.Money => typeof(Decimal),
-            ColumnType.Float => typeof(Double),
-            ColumnType.Int => typeof(Int32),
-            ColumnType.Decimal => typeof(Decimal),
-            ColumnType.SmallInt or ColumnType.Direction => typeof(Int16),
-            ColumnType.Stream => typeof(Byte[]),
-            ColumnType.Uniqueidentifier => typeof(Guid),
-            ColumnType.RowVersion => typeof(Byte[]),
-            _ => throw new InvalidOperationException($"Invalid DataType for update. ({column.Type})"),
-        };
-    }
+        => column.ToSqlDbTypeInfo().ClrType;
 
     internal static Boolean IsFieldUpdated(this TableColumn column)
     {

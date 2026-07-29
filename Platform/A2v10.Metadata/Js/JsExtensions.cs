@@ -15,11 +15,10 @@ internal static class JsExtensions
         return columnDataType switch
         {
             ColumnType.Id => TSNumber,
-            ColumnType.String or ColumnType.NChar or ColumnType.Operation
-                or ColumnType.NVarChar => TSString,
-            ColumnType.Float or ColumnType.Money => TSNumber,
-            ColumnType.Bit => TBoolean,
-            ColumnType.BigInt or ColumnType.Int => TSNumber,
+            ColumnType.String or ColumnType.Operation => TSString,
+            ColumnType.Money => TSNumber,
+            ColumnType.Boolean => TBoolean,
+            ColumnType.Integer or ColumnType.Number => TSNumber,
             ColumnType.DateTime 
                 or ColumnType.Date => TSDate,
             ColumnType.Enum => TSString, // TODO: enumerable

@@ -199,8 +199,10 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         static String ColumnRow(TableMetadata table, TableColumn col)
         {
             var refTable = col.IsRef ? col.RefTable : null;
-            return $"\t({Str(table.SqlSchema)}, {Str(table.Table)}, {Str(col.Name)}, {Str(col.Type.ToSqlDataTypeDeploy())}, " +
-                $"{Num(col.DeployLength())}, {Num(col.DeployPrecision())}, {Num(col.DeployScale())}, " +
+            // one descriptor, four facets - this row is exactly where they must agree
+            var ti = col.ToSqlDbTypeInfo();
+            return $"\t({Str(table.SqlSchema)}, {Str(table.Table)}, {Str(col.Name)}, {Str(ti.SqlName)}, " +
+                $"{Num(ti.Length)}, {Num(ti.Precision)}, {Num(ti.Scale)}, " +
                 $"{(col.DeployNullable() ? 1 : 0)}, {Str(refTable?.SqlSchema)}, {Str(refTable?.Table)}, " +
                 $"{Str(col.DeployDefault())})";
         }

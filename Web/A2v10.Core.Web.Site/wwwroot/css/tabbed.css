@@ -8476,7 +8476,7 @@ table.tree-grid a.toggle.expanded:after {
   width: 14rem;
   max-width: 14rem;
 }
-.flow-panel .axis-rows .dom-ref {
+.flow-panel.axis-rows .dom-ref {
   width: 22rem;
   min-width: 22rem;
 }
