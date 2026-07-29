@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -40,7 +41,7 @@ internal sealed record DbHash
  * derived from the declaration). Then the file is correct by construction, and there is
  * no separate "build a release" step at all.
  */
-public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext  _dbContext)
+public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbContext)
 {
     private const String DB_FILE = "deploydatabase.sql";
 
@@ -178,12 +179,17 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext  _dbCo
      * constraints, computed columns) must also make it into the seed. Otherwise the
      * change is there while the hash stays the same.
      */
+
+    private static Version assVersion = Assembly.GetExecutingAssembly().GetName().Version ?? new();
+
     private static async Task<String?> GenerateMetadataSeedAsync(IEnumerable<TableMetadata> tables)
     {
         if (!tables.Any())
             return null;
         var sqlTables = new List<String>();
         var sqlColumns = new List<String>();
+
+        var version = $"{assVersion.Major}.{assVersion.Minor}.{assVersion.Build}";
 
         static String Str(String? val) =>
             val == null ? "null" : $"N'{val.Replace("'", "''")}'";
@@ -219,7 +225,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext  _dbCo
 
         var rowDiv = $",{Environment.NewLine}\t";
         var sqlScript = $"""
-        /* METADATA SEED */
+        /* METADATA SEED. Version: {version} */
         begin
             set nocount on;
             declare @tables table([schema] sysname, [table] sysname);
@@ -279,20 +285,20 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext  _dbCo
             ?? throw new InvalidOperationException("Invalid Database provider");
 
         Int32 lineFrom = 1;
-        foreach (var line in scripts)
+        Int32 lineTo = 1;
+        try
         {
-            var lineTo = lineFrom + line.Count(c => c == '\n');
-            try
+            foreach (var line in scripts)
             {
+                lineTo = lineFrom + line.Count(c => c == '\n');
                 cmd.CommandText = line;
                 await cmd.ExecuteNonQueryAsync();
-            } 
-            catch (Exception ex)
-            {
-                throw new DeployScriptException(ex, lineFrom, lineTo);
+                lineFrom = lineTo + 1; // + go
             }
-
-            lineFrom = lineTo + 1; // + go
+        }
+        catch (Exception ex)
+        {
+            throw new DeployScriptException(ex, lineFrom, lineTo);
         }
     }
 }

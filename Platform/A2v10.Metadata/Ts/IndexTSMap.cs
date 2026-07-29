@@ -27,7 +27,7 @@ internal partial class TypescriptBuilder
 
         var templ = String.Empty;
 
-        if (Table.UseFolders)
+        if (Table.HasFolders)
         {
             templ = $$"""
 

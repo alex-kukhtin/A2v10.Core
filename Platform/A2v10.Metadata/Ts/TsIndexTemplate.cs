@@ -23,7 +23,7 @@ internal partial class TypescriptBuilder
 
         IEnumerable<String> options()
         {
-            if (Table.UseFolders)
+            if (Table.HasFolders)
                 yield return $"persistSelect: ['Folders']";
             else
                 yield return $"persistSelect: ['{Table.CollectionName}']";

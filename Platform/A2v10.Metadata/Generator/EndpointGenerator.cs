@@ -22,7 +22,7 @@ internal class EndpointGenerator(IModelBuilderFactory _modelBuilderFactory, IApp
         await GenerateIndexAsync(table);
         await GenerateEditAsync(table);
         await GenerateBrowseAsync(table);
-        if (table.UseFolders) {
+        if (table.HasFolders) {
             await GenerateEditFolderAsync(table);
         }
     }

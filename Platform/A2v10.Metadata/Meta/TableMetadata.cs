@@ -246,6 +246,9 @@ public sealed record TableMetadata
     public String Label { get; set; } = default!;
     public String? Autonum { get; set; } // for opertions
     public Dictionary<String, InitialMetadata> InitialValues { get; init; } = [];
+    public Dictionary<String, InheritMetadata> Inherit { get; init; } = [];
+    public String[] Required { get; init; } = [];
+
 
     [JsonProperty("fields")]
     private Dictionary<String, TableColumn> _fields { get; init; } = [];
@@ -254,7 +257,6 @@ public sealed record TableMetadata
     public List<TableColumn> Columns => [.. _fields.Select(
         kp => { kp.Value.Name = kp.Key; return kp.Value; }
     )];
-    public Dictionary<String, InheritMetadata> Inherit { get; init; } = [];
 
     public List<TableTrait> Traits { get; init; } = [];
 
@@ -293,7 +295,6 @@ public sealed record TableMetadata
     public String? ItemsLabel { get; init; }
     public String? ItemLabel { get; init; }
     public String? Type { get; init; }
-    public Boolean UseFolders { get; init; }    
     public List<ReportItemMetadata> ReportItems { get; init; } = [];
     public List<ColumnReferenceToMe> RefsToMe { get; init; } = [];
 

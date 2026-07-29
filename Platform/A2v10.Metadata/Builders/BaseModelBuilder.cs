@@ -54,7 +54,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
     {
         return Action switch
         {
-            "browse" or "index" or "indexpartial" => Table.UseFolders
+            "browse" or "index" or "indexpartial" => Table.HasFolders
                 ? await _sqlBuilder.LoadIndexTreeModelAsync()
                 : await _sqlBuilder.LoadIndexModelAsync(),
             "edit" or "show" => await _sqlBuilder.LoadPlainModelAsync(),

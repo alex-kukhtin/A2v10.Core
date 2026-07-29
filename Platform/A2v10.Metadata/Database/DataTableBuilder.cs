@@ -68,7 +68,7 @@ internal class DataTableBuilder(TableMetadata table)
             var col = columns[i];
 
             var realColumnName = col.ColumnName;
-            if (table.UseFolders && col.ColumnName == "Parent")
+            if (table.HasFolders && col.ColumnName == "Parent")
                 realColumnName = "Folder";
 
             if (!src.HasProperty(realColumnName))
