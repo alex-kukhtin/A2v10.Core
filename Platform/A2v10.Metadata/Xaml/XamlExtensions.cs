@@ -28,8 +28,8 @@ internal static class XamlExtensions
         {
             ColumnType.Date => DataType.Date,
             ColumnType.DateTime => DataType.DateTime,
-            ColumnType.Money => DataType.Currency,
-            ColumnType.Float or ColumnType.Decimal => DataType.Number,
+            ColumnType.Money or ColumnType.Amount or ColumnType.Price => DataType.Currency,
+            ColumnType.Float or ColumnType.Decimal or ColumnType.Qty => DataType.Number,
             _ => DataType.String,
         };
 
@@ -40,7 +40,8 @@ internal static class XamlExtensions
         column switch
         {
             ColumnType.Date or ColumnType.DateTime => TextAlign.Center,
-            ColumnType.Float or ColumnType.Decimal or ColumnType.Money => TextAlign.Right,
+            ColumnType.Float or ColumnType.Decimal or ColumnType.Money or
+                ColumnType.Price or ColumnType.Amount or ColumnType.Qty => TextAlign.Right,
             ColumnType.RowNumber => TextAlign.Right,
             ColumnType.Bit => TextAlign.Center,
             _ => TextAlign.Default,
@@ -52,7 +53,8 @@ internal static class XamlExtensions
         {
             ColumnType.Id => ColumnRole.Id,
             ColumnType.Date or ColumnType.DateTime => ColumnRole.Date,
-            ColumnType.Money or ColumnType.Decimal or ColumnType.Float => ColumnRole.Number,
+            ColumnType.Money or ColumnType.Decimal or ColumnType.Float or
+                ColumnType.Amount or ColumnType.Price => ColumnRole.Number,
             _ => ColumnRole.Default,
         };
 

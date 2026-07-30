@@ -32,7 +32,7 @@ internal static class TableDefaultColumns
         yield return new TableColumn(Constants.FieldNames.Memo, ColumnType.Memo);
         if (table.Traits.Contains(TableTrait.Hierarchy))
             yield return new TableColumn(Constants.FieldNames.Parent, ColumnType.Parent);
-        if (table.Traits.Contains(TableTrait.Folders))
+        if (table.HasFolders)
             yield return new TableColumn(Constants.FieldNames.Folder, ColumnType.Folder);
     }
     static IEnumerable<TableColumn> DocumentDefaultColumns(TableMetadata table)

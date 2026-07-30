@@ -131,7 +131,7 @@ public record TableColumn
     public Int32? Length { get; init; }
     public Int32? Precision { get; init; }
     public Int32? Scale { get; init; }    
-    public String? Computed { get; init; }
+    // OLD -> to RULES
     public Boolean Required { get; init; }
     public Boolean Total { get; init; }
     public Boolean Unique { get; init; }
@@ -182,6 +182,12 @@ public sealed record PostMetadata
     public TableMetadata JournalTableCheck => JournalTable ?? throw new InvalidOperationException($"RefTable for '{Journal}' is null");
     [JsonIgnore]
     public Int16 InOutInt => Dir switch { PostDirection.In => 1, PostDirection.Out => -1, _ => 0 };
+}
+
+
+public sealed record RuleMetadata
+{
+    public String? Value { get; set; }
 }
 
 public enum ReportItemKind
@@ -252,8 +258,8 @@ public sealed record TableMetadata
     public String? Autonum { get; set; } // for opertions
     public Dictionary<String, InitialMetadata> InitialValues { get; init; } = [];
     public Dictionary<String, InheritMetadata> Inherit { get; init; } = [];
+    public Dictionary<String, RuleMetadata> Rules { get; init; } = [];
     public String[] Required { get; init; } = [];
-
 
     [JsonProperty("fields")]
     private Dictionary<String, TableColumn> _fields { get; init; } = [];
@@ -262,12 +268,11 @@ public sealed record TableMetadata
     public List<TableColumn> Columns => [.. _fields.Select(
         kp => { kp.Value.Name = kp.Key; return kp.Value; }
     )];
-
+    public Dictionary<String, TableMetadata> Details { get; private set; } = [];
+    public List<String> Kinds { get; init; } = [];
     public List<TableTrait> Traits { get; init; } = [];
 
     public String? Storage { get; set; }
-    public Dictionary<String, TableMetadata> Details { get; private set; } = [];
-    public List<String> Kinds { get; init; } = [];
     public ConcurrentDictionary<String, FormMetadata> Forms { get; init; } = [];
     public List<PostMetadata>? Post { get; init; }
 

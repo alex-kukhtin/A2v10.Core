@@ -14,6 +14,8 @@
 13. Operation/Document -> ShowTrans
 16. Tags -> Edit, Filter, Settings, FK_, UNQ_
 18. Amount/Qty/Price/Factor реализация.
+19. sql schema to databasedeploy.sql
+20.
 
 
 14. Не работает ParentElem в Edit.

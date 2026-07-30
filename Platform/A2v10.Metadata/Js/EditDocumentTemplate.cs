@@ -34,13 +34,13 @@ internal partial class JavascriptBuilder
                 else
                     yield return $$"""'{{Table.TypeName}}.$$Tab': {type: String, value: '{{fd.Kinds.First()}}'}""";
             }
-            foreach (var c in Table.Columns.Where(c => !String.IsNullOrEmpty(c.Computed)))
-                yield return $$"""'{{Table.TypeName}}.{{c.Name}}'() { return {{c.Computed}};}""";
+            foreach (var c in Table.Rules.Where(c => !String.IsNullOrEmpty(c.Value.Value)))
+                yield return $$"""'{{Table.TypeName}}.{{c.Key}}'() { return {{c.Value.Value}};}""";
 
             foreach (var d in Table.Details.Select(x => x.Value))
             {
-                foreach (var c in d.Columns.Where(c => !String.IsNullOrEmpty(c.Computed)))
-                    yield return $$"""'{{d.TypeName}}.{{c.Name}}'() { return {{c.Computed}};}""";
+                foreach (var c in d.Rules.Where(c => !String.IsNullOrEmpty(c.Value.Value)))
+                    yield return $$"""'{{d.TypeName}}.{{c.Key}}'() { return {{c.Value.Value}};}""";
                 foreach (var c in d.Columns.Where(c => c.Total))
                     yield return $$"""'{{d.TypeName}}Array.{{c.Name}}'() { return this.$sum(c => c.{{c.Name}}); }""";
             }

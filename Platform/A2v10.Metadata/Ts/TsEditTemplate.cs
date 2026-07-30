@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -11,9 +11,9 @@ internal partial class TypescriptBuilder
 {
     internal Task<String> CreateEditTSTemplate()
     {
-        return Table.Schema switch
+        return Table.Kind switch
         {
-            "doc" => CreateDocumentTSTemplate(),
+            EndpointKind.Document => CreateDocumentTSTemplate(),
             _ => CreateGenericEditTSTemplate()
         };
     }
@@ -132,13 +132,13 @@ internal partial class TypescriptBuilder
                 else
                     yield return $$"""'{{Table.TypeName}}.$$Tab': {type: String, value: '{{fd.Kinds.First()}}'}""";
             }
-            foreach (var c in Table.Columns.Where(c => !String.IsNullOrEmpty(c.Computed)))
-                yield return $$"""'{{Table.TypeName}}.{{c.Name}}'(this: {{Table.TypeName}}) { return {{c.Computed}};}""";
+            foreach (var (key, value) in Table.Rules.Where(r => !String.IsNullOrEmpty(r.Value.Value)))
+                yield return $$"""'{{Table.TypeName}}.{{key}}'(this: {{Table.TypeName}}) { return {{validators}};}""";
 
             foreach (var d in Table.Details.Select(x => x.Value))
             {
-                foreach (var c in d.Columns.Where(c => !String.IsNullOrEmpty(c.Computed)))
-                    yield return $$"""'{{d.TypeName}}.{{c.Name}}'(this: {{d.TypeName}}) { return {{c.Computed}};}""";
+                foreach (var (key, value) in d.Rules.Where(r => !String.IsNullOrEmpty(r.Value.Value)))
+                    yield return $$"""'{{d.TypeName}}.{{key}}'(this: {{d.TypeName}}) { return {{value}};}""";
                 foreach (var c in d.Columns.Where(c => c.Total))
                     yield return $$"""'{{d.TypeName}}Array.{{c.Name}}'(this: {{d.TypeName}}Array) { return this.$sum(c => c.{{c.Name}}); }""";
             }
