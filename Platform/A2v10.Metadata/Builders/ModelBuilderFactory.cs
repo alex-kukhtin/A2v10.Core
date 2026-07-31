@@ -23,6 +23,7 @@ internal partial class ModelBuilderFactory(
             DataSource = modelBase.DataSource,
             PlatformUrl = platformUrl,
             Table = srcTable,
+            PlatformId = await _metadataProvider.GetPlatformIdAsync(modelBase.DataSource),
         };
 
         return new BaseModelBuilder(_serviceProvider, bd);
@@ -34,6 +35,7 @@ internal partial class ModelBuilderFactory(
             DataSource = dataSource,
             PlatformUrl = platformUrl,
             Table = table,
+            PlatformId = await _metadataProvider.GetPlatformIdAsync(dataSource),
         };
         return new BaseModelBuilder(_serviceProvider, bd);
     }

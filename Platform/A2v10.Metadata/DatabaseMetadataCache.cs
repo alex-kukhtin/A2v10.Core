@@ -16,11 +16,14 @@ namespace A2v10.Metadata;
 
 public class DatabaseMetadataCache
 {
-    private readonly ConcurrentDictionary<String, TableMetadata> _cache = [];
+    private readonly ConcurrentDictionary<String, EndpointMetadata> _cache = [];
     private readonly ConcurrentDictionary<String, EndpointTableInfo> _endpoints = [];
     private readonly ConcurrentDictionary<String, UIElement> _xamlFormCache = [];
     private readonly ConcurrentDictionary<String, AppMetadata> _appMetaCache = [];
-    
+    // Keyed by data source because that is exactly what it describes: one data source is
+    // one database, and the platformid base belongs to the database.
+    private readonly ConcurrentDictionary<String, AppPlatformId> _platformIdCache = [];
+
     private Boolean _metadataDirty = true; // TODO. ????
     private FileSystemWatcher? FileWatcher { get; init; }
     public Boolean IsMetadataDirty => _metadataDirty;
@@ -36,15 +39,16 @@ public class DatabaseMetadataCache
         _cache.Clear();
         _endpoints.Clear();
         _appMetaCache.Clear();
+        _platformIdCache.Clear();
         _xamlFormCache.Clear();
         _metadataDirty = true;
     }
 
-    public async Task<TableMetadata> GetOrAddAsync(String? dataSource, String schema, String table, 
-        Func<String?, String, String, Task<TableMetadata>> getMeta)
+    public async Task<EndpointMetadata> GetOrAddAsync(String? dataSource, String schema, String table,
+        Func<String?, String, String, Task<EndpointMetadata>> getMeta)
     {
         var key = $"{dataSource}:{schema}:{table}";
-        if (_cache.TryGetValue(key, out TableMetadata? meta))
+        if (_cache.TryGetValue(key, out EndpointMetadata? meta))
             return meta;
         meta = await getMeta(dataSource, schema, table);
         //key = $"{dataSource}:{meta.Schema}:{meta.Name}";
@@ -60,6 +64,15 @@ public class DatabaseMetadataCache
             return meta;    
         meta = await func(dataSource);
         return _appMetaCache.GetOrAdd(key, meta);
+    }
+
+    internal async Task<AppPlatformId> GetPlatformIdAsync(String? dataSource, Func<String?, Task<AppPlatformId>> func)
+    {
+        var key = dataSource ?? "default";
+        if (_platformIdCache.TryGetValue(key, out AppPlatformId? platformId))
+            return platformId;
+        platformId = await func(dataSource);
+        return _platformIdCache.GetOrAdd(key, platformId);
     }
 
     public async Task<UIElement> GetOrAddXamlFormAsync(String? dataSource, TableMetadata meta, String key,

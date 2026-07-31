@@ -81,6 +81,18 @@ begin
 end
 go
 ------------------------------------------------
+create or alter procedure a2meta.[GetPlatformIdType]
+as
+begin
+	set nocount on;
+	set transaction isolation level read uncommitted;
+	/* the base the platformid alias rests on. The database is the fact here, not a
+	   declaration: it answers with the type the alias was actually created from.
+	   No rows means the alias does not exist yet - that is an error, not a default. */
+	select [DataType] = DATA_TYPE from INFORMATION_SCHEMA.DOMAINS where DOMAIN_NAME = N'platformid';
+end
+go
+------------------------------------------------
 create or alter procedure a2meta.[SyncSchema]
 as
 begin

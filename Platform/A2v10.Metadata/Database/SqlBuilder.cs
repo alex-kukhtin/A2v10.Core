@@ -20,6 +20,7 @@ internal partial class SqlBuilder(BuilderDescriptor desciptor, IServiceProvider 
     private readonly BuilderDescriptor _descr = desciptor;
     private readonly TableMetadata Table = desciptor.Table;
     private readonly String? DataSource = desciptor.DataSource;
+    private readonly AppPlatformId PlatformId = desciptor.PlatformId;
 
 
     DbParameterCollection AddDefaultParameters(DbParameterCollection prms)

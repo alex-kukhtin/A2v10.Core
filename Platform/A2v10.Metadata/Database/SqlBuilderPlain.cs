@@ -325,7 +325,7 @@ internal partial class SqlBuilder
         var sqlText = buildSqlUpdateText();
 
         var item = data.Get<ExpandoObject>(Table.Model);
-        var tableBuilder = new DataTableBuilder(Table);
+        var tableBuilder = new DataTableBuilder(Table, PlatformId);
         var dtable = tableBuilder.BuildDataTable(item);
 
         List<(String name, String typeName, DataTable table)> detailsTables = [];
@@ -334,7 +334,7 @@ internal partial class SqlBuilder
         {
             foreach (var t in Table.Details)
             {
-                var detailsTableBuilder = new DataTableBuilder(t.Value);
+                var detailsTableBuilder = new DataTableBuilder(t.Value, PlatformId);
                 if (t.Value.Kinds.Count > 0)
                 {
                     foreach (var k in t.Value.Kinds)

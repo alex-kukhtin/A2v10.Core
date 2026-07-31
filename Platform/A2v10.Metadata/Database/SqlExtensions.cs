@@ -1,21 +1,60 @@
 ﻿// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
-using System.Data;
 
 namespace A2v10.Metadata;
 
-internal sealed record SqlDbTypeInfo(SqlDbType SqlDbType, Type ClrType, String SqlName, Int32? Length = null, Int32? Precision = null, Int32? Scale = null)
+/* SQL-side facets of a domain, and nothing else. Every field here is invariant to the
+ * identifier base the application runs on: 'platformid' is spelled the same whether it
+ * sits on bigint or on uniqueidentifier, and SQL Server itself carries the alias name
+ * through INFORMATION_SCHEMA.COLUMNS.DOMAIN_NAME. Anything that DOES depend on that base
+ * lives in AppPlatformId - keeping it out of here is what makes this record answerable
+ * without knowing which database we are on.
+ */
+internal sealed record SqlDbTypeInfo(String SqlName, Int32? Length = null, Int32? Precision = null, Int32? Scale = null)
 {
     // Not stored: it follows from the name plus the facet the type carries, and a stored
-    // copy would be free to drift from it.
-    public String SqlFullName => SqlDbType switch
+    // copy would be free to drift from it. Which facet is present decides the spelling -
+    // there is no second enum to disagree with.
+    public String SqlFullName =>
+        Length.HasValue ? (Length == -1 ? $"{SqlName}(max)" : $"{SqlName}({Length})")
+        : Precision.HasValue ? $"{SqlName}({Precision}, {Scale})"
+        : SqlName;
+}
+
+/* The base the platform identifier rests on. Chosen once per database and never changed
+ * afterwards, so it is resolved once per data source and passed down - never re-derived,
+ * and never defaulted: a wrong guess here would not fail, it would quietly write the
+ * wrong value into a live database.
+ * It is read from the database itself (the base of the 'platformid' alias), so it is a
+ * fact rather than a declaration - there is no second place saying what platformid is,
+ * and therefore nothing to drift from the schema. The vocabulary is the SQL type name,
+ * the same one SqlDbTypeInfo.SqlName speaks, so no third enum stands in between.
+ */
+internal sealed record AppPlatformId(Type ClrType)
+{
+    public static AppPlatformId FromSqlName(String sqlName) => sqlName switch
     {
-        SqlDbType.NVarChar or SqlDbType.NChar or SqlDbType.VarChar or SqlDbType.Char or
-            SqlDbType.VarBinary or SqlDbType.Binary
-                => Length == -1 ? $"{SqlName}(max)" : $"{SqlName}({Length})",
-        SqlDbType.Decimal => $"{SqlName}({Precision}, {Scale})",
-        _ => SqlName
+        "bigint" => new(typeof(Int64)),
+        "int" => new(typeof(Int32)),
+        "uniqueidentifier" => new(typeof(Guid)),
+        _ => throw new InvalidOperationException($"AppPlatformId. Unsupported 'platformid' base type '{sqlName}'")
+    };
+
+    /* An identifier that references nothing. Recognised by shape rather than compared
+     * against one stored empty value: what arrives here has been through an ExpandoObject
+     * and is loosely typed - the same integer id turns up as Int32 or Int64 depending on
+     * how it was parsed - so an Equals against a boxed value would answer false for
+     * exactly the case being asked about, and the empty reference would be written as a
+     * real foreign key. The arms that cannot occur on a given base are simply never hit.
+     */
+    public static Boolean IsEmpty(Object? value) => value switch
+    {
+        null => true,
+        Int64 i64 => i64 == 0,
+        Int32 i32 => i32 == 0,
+        Guid g => g == Guid.Empty,
+        _ => false
     };
 }
 
@@ -44,50 +83,50 @@ internal static class SqlExtensions
         Int32? length = null, Int32? precision = null, Int32? scale = null)
         => columnType switch
         {
-            // id + references: every one of them is platformid, the FK carries the meaning
+            // id + references: every one of them is platformid, the FK carries the meaning.
+            // The base it rests on is deliberately absent - see AppPlatformId.
             ColumnType.Id or ColumnType.Ref or ColumnType.Owner or ColumnType.Parent or
                 ColumnType.Folder or ColumnType.Row or ColumnType.Company or
                 ColumnType.User or ColumnType.Document
-                    => new SqlDbTypeInfo(SqlDbType.BigInt, typeof(Int64), "platformid"),
+                    => new SqlDbTypeInfo("platformid"),
             // bit
             ColumnType.IsSystem or ColumnType.Void or ColumnType.Done or
                 ColumnType.Bit or ColumnType.Boolean
-                    => new SqlDbTypeInfo(SqlDbType.Bit, typeof(Boolean), "bit"),
+                    => new SqlDbTypeInfo("bit"),
             // integers
-            ColumnType.Direction => new SqlDbTypeInfo(SqlDbType.SmallInt, typeof(Int16), "smallint"),
-            ColumnType.RowNumber or ColumnType.Integer => new SqlDbTypeInfo(SqlDbType.Int, typeof(Int32), "int"),
-            ColumnType.BigInt => new SqlDbTypeInfo(SqlDbType.BigInt, typeof(Int64), "bigint"),
+            ColumnType.Direction => new SqlDbTypeInfo("smallint"),
+            ColumnType.RowNumber or ColumnType.Integer => new SqlDbTypeInfo("int"),
+            ColumnType.BigInt => new SqlDbTypeInfo("bigint"),
             // rowversion: INFORMATION_SCHEMA reports 'timestamp', so that is the facet.
             // The DDL spelling ('rowversion') and the TVP one ('varbinary(8)') belong to
             // the caller - see ToSqlDataType(toTableType).
-            ColumnType.RowVersion => new SqlDbTypeInfo(SqlDbType.Timestamp, typeof(Byte[]), "timestamp"),
+            ColumnType.RowVersion => new SqlDbTypeInfo("timestamp"),
             // date
-            ColumnType.Date => new SqlDbTypeInfo(SqlDbType.Date, typeof(DateTime), "date"),
-            ColumnType.DateTime => new SqlDbTypeInfo(SqlDbType.DateTime, typeof(DateTime), "datetime"),
+            ColumnType.Date => new SqlDbTypeInfo("date"),
+            ColumnType.DateTime => new SqlDbTypeInfo("datetime"),
             // strings whose length the author may set
-            ColumnType.String
-                => new SqlDbTypeInfo(SqlDbType.NVarChar, typeof(String), "nvarchar", length.ToColumnLength()),
-            ColumnType.NChar => new SqlDbTypeInfo(SqlDbType.NChar, typeof(String), "nchar", length.ToColumnLength()),
+            ColumnType.String => new SqlDbTypeInfo("nvarchar", length.ToColumnLength()),
+            ColumnType.NChar => new SqlDbTypeInfo("nchar", length.ToColumnLength()),
             // strings whose length the domain fixes
-            ColumnType.Name or ColumnType.Memo => new SqlDbTypeInfo(SqlDbType.NVarChar, typeof(String), "nvarchar", 255),
-            ColumnType.DocumentType => new SqlDbTypeInfo(SqlDbType.NVarChar, typeof(String), "nvarchar", 128),
+            ColumnType.Name or ColumnType.Memo => new SqlDbTypeInfo("nvarchar", 255),
+            ColumnType.DocumentType => new SqlDbTypeInfo("nvarchar", 128),
             // discriminators - one length for all of them
             ColumnType.Operation or ColumnType.RowKind or
                 ColumnType.Autonum or ColumnType.Enum
-                    => new SqlDbTypeInfo(SqlDbType.NVarChar, typeof(String), "nvarchar", 64),
-            ColumnType.Color => new SqlDbTypeInfo(SqlDbType.NVarChar, typeof(String), "nvarchar", 32),
+                    => new SqlDbTypeInfo("nvarchar", 64),
+            ColumnType.Color => new SqlDbTypeInfo("nvarchar", 32),
             // numbers with business semantics: precision is 19 throughout, only scale varies
-            ColumnType.Amount => new SqlDbTypeInfo(SqlDbType.Decimal, typeof(Decimal), "decimal", null, 19, 4),
+            ColumnType.Amount => new SqlDbTypeInfo("decimal", null, 19, 4),
             ColumnType.Price or ColumnType.Qty or
-                ColumnType.Percent => new SqlDbTypeInfo(SqlDbType.Decimal, typeof(Decimal), "decimal", null, 19, 6),
-            ColumnType.Factor => new SqlDbTypeInfo(SqlDbType.Decimal, typeof(Decimal), "decimal", null, 19, 8),
+                ColumnType.Percent => new SqlDbTypeInfo("decimal", null, 19, 6),
+            ColumnType.Factor => new SqlDbTypeInfo("decimal", null, 19, 8),
             // numbers without: the author sets the precision himself
-            ColumnType.Decimal => new SqlDbTypeInfo(SqlDbType.Decimal, typeof(Decimal), "decimal", null, precision ?? 19, scale ?? 4),
-            ColumnType.Money => new SqlDbTypeInfo(SqlDbType.Money, typeof(Decimal), "money"),
-            ColumnType.Float => new SqlDbTypeInfo(SqlDbType.Float, typeof(Double), "float"),
+            ColumnType.Decimal => new SqlDbTypeInfo("decimal", null, precision ?? 19, scale ?? 4),
+            ColumnType.Money => new SqlDbTypeInfo("money"),
+            ColumnType.Float => new SqlDbTypeInfo("float"),
             // binary
-            ColumnType.Stream or ColumnType.VarBinary => new SqlDbTypeInfo(SqlDbType.VarBinary, typeof(Byte[]), "varbinary", -1),
-            ColumnType.Uniqueidentifier => new SqlDbTypeInfo(SqlDbType.UniqueIdentifier, typeof(Guid), "uniqueidentifier"),
+            ColumnType.Stream or ColumnType.VarBinary => new SqlDbTypeInfo("varbinary", -1),
+            ColumnType.Uniqueidentifier => new SqlDbTypeInfo("uniqueidentifier"),
             _ => throw new InvalidOperationException($"SqlDbTypeInfo. Invalid type '{columnType}'")
         };
 
@@ -161,8 +200,30 @@ internal static class SqlExtensions
             _ => $"{alias}.[{column.Name}]"
         };
 
-    public static Type ClrDataType(this TableColumn column)
-        => column.ToSqlDbTypeInfo().ClrType;
+    /* The one place a domain has to be answered for in CLR terms, for the one consumer
+     * that cannot use a SQL type name: a DataColumn wants a System.Type. SQL Server keeps
+     * 'platformid' nominal all the way through (DDL, table types, DOMAIN_NAME), ADO.NET
+     * has no such notion - so this is where the alias is resolved to its base, and the
+     * only reason AppPlatformId has to travel at all.
+     * Keyed on the SQL name rather than on ColumnType: CLR type is a function of the SQL
+     * type, so there is no second table of domains to fall out of step with this one.
+     */
+    public static Type ClrDataType(this TableColumn column, AppPlatformId platformId)
+        => column.ToSqlDbTypeInfo().SqlName switch
+        {
+            "platformid" => platformId.ClrType,
+            "nvarchar" or "nchar" => typeof(String),
+            "bit" => typeof(Boolean),
+            "smallint" => typeof(Int16),
+            "int" => typeof(Int32),
+            "bigint" => typeof(Int64),
+            "date" or "datetime" => typeof(DateTime),
+            "decimal" or "money" => typeof(Decimal),
+            "float" => typeof(Double),
+            "varbinary" or "timestamp" => typeof(Byte[]),
+            "uniqueidentifier" => typeof(Guid),
+            var sqlName => throw new InvalidOperationException($"ClrDataType. No CLR type for '{sqlName}'")
+        };
 
     internal static Boolean IsFieldUpdated(this TableColumn column)
     {

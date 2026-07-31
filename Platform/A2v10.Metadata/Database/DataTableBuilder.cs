@@ -13,7 +13,7 @@ namespace A2v10.Metadata;
  * Important! The order in which columns are added to the DataTable must match
  * their order in the table type!
 */
-internal class DataTableBuilder(TableMetadata table)
+internal class DataTableBuilder(TableMetadata table, AppPlatformId platformId)
 {
     public DataTable BuildDataTable(ExpandoObject? data)
     {
@@ -42,9 +42,9 @@ internal class DataTableBuilder(TableMetadata table)
     private DataTable CreateDataTable()
     {
 
-        static DataColumn CreateColumn(TableColumn f)
+        DataColumn CreateColumn(TableColumn f)
         {
-            var c = new DataColumn(f.Name, f.ClrDataType());
+            var c = new DataColumn(f.Name, f.ClrDataType(platformId));
             if (f.Length.HasValue && f.Type == ColumnType.String)
                 c.MaxLength = f.Length.Value;
             return c;
@@ -94,7 +94,7 @@ internal class DataTableBuilder(TableMetadata table)
                 if (obj is ExpandoObject exp)
                 {
                     obj = exp.Get<Object>("Id");
-                    if (obj is null || (obj is Int64 int64 && int64 == 0))
+                    if (AppPlatformId.IsEmpty(obj))
                         obj = DBNull.Value;
                 }
                 r[col] = obj;

@@ -17,6 +17,11 @@ using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
+internal sealed record PlatformIdType
+{
+    public String? DataType { get; set; }
+}
+
 public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbContext _dbContext, IAppCodeProvider _codeProvider,
         SqlDbGenerator _sqlDbGenerator)
 {
@@ -32,34 +37,28 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             _metadataCache.ClearDirty();
     }
 
+    public Task<EndpointMetadata> GetEndpointAsync(String? dataSource, String schema, String table)
+    {
+        return _metadataCache.GetOrAddAsync(dataSource, schema, table, LoadEndpointAsync);
+    }
+
     public async Task<TableMetadata> GetSchemaAsync(IModelBaseMeta meta, String? dataSource)
     {
-        var loaded = await _metadataCache.GetOrAddAsync(dataSource, meta.CurrentSchema, meta.CurrentTable, LoadTableMetadataAsync);
-        var posted = loaded;
-        if (!String.IsNullOrEmpty(meta.CurrentTable))
-            loaded.Storage = GetDefaultStorage(loaded, meta.CurrentSchema);
-        var storage = await ResolveStorageAsync(loaded, dataSource);
-        if (storage != null)
-        {
-            storage.Origin = loaded;
-            loaded = storage;
-        }
+        var endpoint = await GetEndpointAsync(dataSource, meta.CurrentSchema, meta.CurrentTable);
+        var loaded = endpoint.Table;
+        if (!ReferenceEquals(endpoint.Table, endpoint.Declaration))
+            loaded.Origin = endpoint.Declaration;
         await ResolveReferencesAsync(loaded, dataSource);
-        await ResolvePostedAsync(posted, dataSource);
+        await ResolvePostedAsync(endpoint.Declaration, dataSource);
         loaded.SetDefaults(meta.CurrentSchema, meta.CurrentTable);
         return loaded;
     }
     public async Task<TableMetadata> GetSchemaAsync(String? dataSource, String schema, String table)
     {
-        var loaded = await _metadataCache.GetOrAddAsync(dataSource, schema, table, LoadTableMetadataAsync);
-        if (!String.IsNullOrEmpty(table))
-            loaded.Storage = GetDefaultStorage(loaded, schema);
-        var storage = await ResolveStorageAsync(loaded, dataSource);
-        if (storage != null)
-        {
-            storage.Origin = loaded;
-            loaded = storage;
-        }
+        var endpoint = await GetEndpointAsync(dataSource, schema, table);
+        var loaded = endpoint.Table;
+        if (!ReferenceEquals(endpoint.Table, endpoint.Declaration))
+            loaded.Origin = endpoint.Declaration;
         await ResolveReferencesAsync(loaded, dataSource);
         loaded.SetDefaults(schema, table);
         return loaded;
@@ -72,20 +71,14 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return table.Storage;
     }
 
-    public async Task<TableMetadata?> ResolveStorageAsync(TableMetadata table, String? dataSource)
-    {
-        if (!String.IsNullOrEmpty(table.Storage))
-        {
-            var (storageSchema, storageTable) = ParsePath(table.Storage);
-            return await GetSchemaAsync(dataSource, storageSchema, storageTable)
-                ?? throw new InvalidOperationException($"Parent Table {table.Storage} not found");
-        }
-        return null;
-    }
-
     public Task<AppMetadata> GetAppMetadataAsync(String? dataSource)
     {
         return _metadataCache.GetAppMetadataAsync(dataSource, LoadAppMetadataAsync);
+    }
+
+    internal Task<AppPlatformId> GetPlatformIdAsync(String? dataSource)
+    {
+        return _metadataCache.GetPlatformIdAsync(dataSource, LoadPlatformIdAsync);
     }
 
     public async Task<EndpointTableInfo> GetModelInfoFromPathAsync(String path)
@@ -93,8 +86,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         var modelTableInfo = _metadataCache.GetModelInfoFromPath(path);
         if (modelTableInfo == null) {
             var (schema, table) = ParsePath(path);
-            var tableMeta = await _metadataCache.GetOrAddAsync(null, schema, table,
-                LoadTableMetadataAsync);
+            await GetEndpointAsync(null, schema, table);
             _metadataCache.GetOrAddEndpointPath(null, path, schema, table);
             modelTableInfo = _metadataCache.GetModelInfoFromPath(path);
         }
@@ -123,21 +115,16 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return list;
     }
 
-    private async Task<AppLevelMetadata> LoadAppLevelMetadataAsync()
+    /* No default and no fallback on purpose. An absent answer means the 'platformid' type
+     * is not in the database, and guessing a base here would not surface as a failure -
+     * it would write values of the wrong shape into a live database, which is the one
+     * outcome this whole arrangement exists to prevent.
+     */
+    private async Task<AppPlatformId> LoadPlatformIdAsync(String? dataSource)
     {
-        using var stream = _codeProvider.FileStreamRO("app.json");
-        var text = "{}"; // empty value;
-        if (stream == null)
-            return new AppLevelMetadata() { IdType = IdentitfierType.Int64 };
-        if (stream != null)
-        {
-            using var sr = new StreamReader(stream);
-            text = await sr.ReadToEndAsync()
-                ?? throw new InvalidOperationException($"app.json is empty");
-        }
-        var meta = JsonConvert.DeserializeObject<AppLevelMetadata>(text, JsonSettings.CamelCaseSerializerSettings)
-            ?? throw new InvalidOperationException("AppLevelMetadata deserialization fails");
-        return meta;
+        var found = await _dbContext.LoadAsync<PlatformIdType>(dataSource, "a2meta.[GetPlatformIdType]");
+        return AppPlatformId.FromSqlName(found?.DataType
+            ?? throw new InvalidOperationException("a2meta.[GetPlatformIdType] returns nothing. The 'platformid' type is not defined in the database"));
     }
 
     private async Task<AppMetadata> LoadAppMetadataAsync(String? dataSource)
@@ -152,7 +139,12 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return meta;
     }
 
-    private async Task<TableMetadata> LoadTableMetadataAsync(String? dataSource, String schema, String table)
+    /* The endpoint is built here, once, before it is published to the cache: its own
+     * declaration comes from its own folder, and the shape it works on is resolved
+     * through 'storage'. An endpoint that owns its shape gets Table and Declaration
+     * equal - the same instance, not a copy.
+     */
+    private async Task<EndpointMetadata> LoadEndpointAsync(String? dataSource, String schema, String table)
     {
         var fileName = Path.Combine(schema, table, "metadata.json");
         using var stream = _codeProvider.FileStreamRO(fileName);
@@ -165,10 +157,47 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                 ?? throw new InvalidOperationException($"{fileName} is empty");
             hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text))).ToLowerInvariant();
         }
-        var meta = JsonConvert.DeserializeObject<TableMetadata>(text, JsonSettings.CamelCaseSerializerSettings)
+        var declaration = JsonConvert.DeserializeObject<TableMetadata>(text, JsonSettings.CamelCaseSerializerSettings)
             ?? throw new InvalidOperationException("TableMetadata deserialization fails");
-        meta.FileHash = hash;
-        return meta;
+        declaration.FileHash = hash;
+
+        if (!String.IsNullOrEmpty(table))
+            declaration.Storage = GetDefaultStorage(declaration, schema);
+
+        var shape = declaration;
+        if (!String.IsNullOrEmpty(declaration.Storage))
+        {
+            var (storageSchema, storageTable) = ParsePath(declaration.Storage);
+            shape = await GetSchemaAsync(dataSource, storageSchema, storageTable)
+                ?? throw new InvalidOperationException($"Storage {declaration.Storage} not found");
+        }
+
+        return new EndpointMetadata()
+        {
+            Kind = EndpointKindOf(declaration, schema),
+            Schema = schema,
+            Name = table,
+            Table = shape,
+            Declaration = declaration,
+            FileHash = hash
+        };
+    }
+
+    /* Folders the enum does not know yet ('rep', 'op', 'autonum') resolve to Undefined
+     * rather than throwing: the container carries the kind, nobody reads it yet, and
+     * this is the single place that will learn the new kinds.
+     */
+    private static EndpointKind EndpointKindOf(TableMetadata declaration, String schema)
+    {
+        if (declaration.Kind != EndpointKind.Undefined)
+            return declaration.Kind;
+        return schema switch
+        {
+            Constants.SchemaNames.Catalog => EndpointKind.Catalog,
+            Constants.SchemaNames.Document => EndpointKind.Document,
+            Constants.SchemaNames.Journal => EndpointKind.Journal,
+            _ => EndpointKind.Undefined
+        };
     }
 
     private async Task<TableMetadata> LoadTableMetadataDbAsync(String? dataSource, String schema, String table)
