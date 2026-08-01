@@ -16,13 +16,13 @@ internal partial class SqlBuilder
     // provenance column that ties journal rows to their source document; unpost deletes by it
     static TableColumn JournalDocumentColumn(TableMetadata journal) =>
         journal.Columns.FirstOrDefault(c => c.Type == ColumnType.Document)
-        ?? throw new InvalidOperationException($"Journal '{journal.Table}': no provenance column (ColumnType.Document)");
+        ?? throw new InvalidOperationException($"Journal {journal.Path}: no provenance column (ColumnType.Document)");
 
     internal async Task<IInvokeResult> PostDocumentAsync(ExpandoObject? prms)
     {
         var postTable = Endpoint.Declaration;
         if (postTable.Post == null || postTable.Post.Count == 0)
-            throw new InvalidOperationException($"Table '{Table.Table}'. Nothing to post");
+            throw new InvalidOperationException($"Post: {Endpoint.Path} declares no 'post'");
 
         // every target journal must carry a provenance column (unpost deletes its rows by it)
         foreach (var journal in postTable.Post.Select(c => c.JournalTableCheck))
@@ -31,6 +31,14 @@ internal partial class SqlBuilder
         // domain = semantic type (+ target for references); SQL storage type is not compared
         static Boolean DomainMatch(TableColumn source, TableColumn target) =>
             source.Type == target.Type && (!target.IsRef || source.Target == target.Target);
+
+        /* Names the half that disagrees and shows both sides. 'Does not match' alone sends the
+         * reader to two files to find out what exactly, and the answer is always one of two things.
+         */
+        static String DomainDiff(String side, TableColumn source, TableColumn target) =>
+            source.Type != target.Type
+                ? $"{side}.[{source.Name}] is {source.Type}, journal.[{target.Name}] is {target.Type}"
+                : $"{side}.[{source.Name}] targets '{source.Target}', journal.[{target.Name}] targets '{target.Target}'";
 
         // 'each' names either a kind-less collection directly, or the kinds of a single collection
         (TableMetadata Table, String OnClause) FindDetailsTable(PostMetadata p)
@@ -46,10 +54,10 @@ internal partial class SqlBuilder
                 .ToList();
             if (byKind.Count == 0)
                 throw new InvalidOperationException(
-                    $"Post to '{journal.Table}': cannot resolve each [{String.Join(", ", p.Each)}] to a details collection of {Table.SqlTableName}");
+                    $"Post {Endpoint.Path} -> {journal.Path}: cannot resolve each [{String.Join(", ", p.Each)}] to a details collection of {Table.Path}");
             if (byKind.Count > 1)
                 throw new InvalidOperationException(
-                    $"Post to '{journal.Table}': each [{String.Join(", ", p.Each)}] is ambiguous across details collections of {Table.SqlTableName}");
+                    $"Post {Endpoint.Path} -> {journal.Path}: each [{String.Join(", ", p.Each)}] is ambiguous across details collections of {Table.Path}");
 
             var dt = byKind[0];
             var kinds = String.Join(", ", p.Each.Select(k => $"N'{k}'"));
@@ -109,10 +117,10 @@ internal partial class SqlBuilder
                 {
                     var src = headerColumns.FirstOrDefault(c => c.Name == docField)
                         ?? throw new InvalidOperationException(
-                            $"Post to '{journal.Table}': document field '{docField}' for [{name}] not found in {Table.SqlTableName}");
+                            $"Post {Endpoint.Path} -> {journal.Path}: document field '{docField}' for [{name}] not found in {Table.Path}");
                     if (!DomainMatch(src, col))
                         throw new InvalidOperationException(
-                            $"Post to '{journal.Table}': domain of document field '{docField}' does not match journal column [{name}]");
+                            $"Post {Endpoint.Path} -> {journal.Path}: document field '{docField}' does not match journal column [{name}] ({DomainDiff("document", src, col)})");
                     result.Add((Signed($"d.[{docField}]"), name));
                     continue;
                 }
@@ -120,13 +128,13 @@ internal partial class SqlBuilder
                 {
                     if (rowColumns == null)
                         throw new InvalidOperationException(
-                            $"Post to '{journal.Table}': row mapping for [{name}] requires 'each'");
+                            $"Post {Endpoint.Path} -> {journal.Path}: row mapping for [{name}] requires 'each'");
                     var src = rowColumns.FirstOrDefault(c => c.Name == rowField)
                         ?? throw new InvalidOperationException(
-                            $"Post to '{journal.Table}': row field '{rowField}' for [{name}] not found in {detailsTable!.SqlTableName}");
+                            $"Post {Endpoint.Path} -> {journal.Path}: row field '{rowField}' for [{name}] not found in the rows of {Table.Path}");
                     if (!DomainMatch(src, col))
                         throw new InvalidOperationException(
-                            $"Post to '{journal.Table}': domain of row field '{rowField}' does not match journal column [{name}]");
+                            $"Post {Endpoint.Path} -> {journal.Path}: row field '{rowField}' does not match journal column [{name}] ({DomainDiff("row", src, col)})");
                     result.Add((Signed($"r.[{rowField}]"), name));
                     continue;
                 }
@@ -137,24 +145,24 @@ internal partial class SqlBuilder
 
                 if (inHeader != null && !DomainMatch(inHeader, col))
                     throw new InvalidOperationException(
-                        $"Post to '{journal.Table}': [{name}] exists in {Table.SqlTableName} but domain does not match; map it explicitly in 'document'");
+                        $"Post {Endpoint.Path} -> {journal.Path}: [{name}] exists in {Table.Path} but the domain differs ({DomainDiff("document", inHeader, col)}); map it explicitly in 'document'");
                 if (inRow != null && !DomainMatch(inRow, col))
                     throw new InvalidOperationException(
-                        $"Post to '{journal.Table}': [{name}] exists in {detailsTable!.SqlTableName} but domain does not match; map it explicitly in 'row'");
+                        $"Post {Endpoint.Path} -> {journal.Path}: [{name}] exists in the rows of {Table.Path} but the domain differs ({DomainDiff("row", inRow, col)}); map it explicitly in 'row'");
 
                 var hasHeader = inHeader != null;
                 var hasRow = inRow != null;
 
                 if (hasHeader && hasRow)
                     throw new InvalidOperationException(
-                        $"Post to '{journal.Table}': [{name}] is ambiguous (present in both header and rows); disambiguate in 'document' or 'row'");
+                        $"Post {Endpoint.Path} -> {journal.Path}: [{name}] is ambiguous (present in both header and rows); disambiguate in 'document' or 'row'");
                 if (hasHeader)
                     result.Add((Signed($"d.[{name}]"), name));
                 else if (hasRow)
                     result.Add((Signed($"r.[{name}]"), name));
                 else
                     throw new InvalidOperationException(
-                        $"Post to '{journal.Table}': cannot resolve journal column [{name}] in {Table.SqlTableName} or its rows");
+                        $"Post {Endpoint.Path} -> {journal.Path}: cannot resolve journal column [{name}] in {Table.Path} or its rows");
             }
             return result;
         }
@@ -173,7 +181,7 @@ internal partial class SqlBuilder
 
             var map = CreateMapping(p, detailsTable).ToList();
             if (map.Count == 0)
-                throw new InvalidOperationException($"Post to '{journal.Table}': mapping is empty");
+                throw new InvalidOperationException($"Post {Endpoint.Path} -> {journal.Path}: mapping is empty");
 
             return $"""
 
