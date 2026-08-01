@@ -14,11 +14,11 @@ using A2v10.System.Xaml;
 
 namespace A2v10.Metadata;
 
-internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, TableMetadata report, TableMetadata source)
+internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, ReportMetadata report, TableMetadata source)
 {
     protected IServiceProvider _serviceProvider = serviceProvider;
 #pragma warning disable IDE1006 // Naming Styles
-    protected TableMetadata _report => report;
+    protected ReportMetadata _report => report;
     protected TableMetadata _source => source;
     protected IDbContext _dbContext => _serviceProvider.GetRequiredService<IDbContext>();
     protected ICurrentUser _currentUser => _serviceProvider.GetRequiredService<ICurrentUser>();

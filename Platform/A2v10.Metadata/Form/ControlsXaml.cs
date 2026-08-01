@@ -142,19 +142,19 @@ internal partial class XamlBuilder
                 },
             ColumnType.Ref or ColumnType.Operation => new SelectorSimple()
             {
-                Label = $"@[{column.RefTableCheck.Model}]",
+                Label = $"@[{column.RefTableCheck.Storage.Model}]",
                 ShowClear = true,
                 Highlight = true,
-                Placeholder = $"@[{column.RefTableCheck.Model}.All]",
+                Placeholder = $"@[{column.RefTableCheck.Storage.Model}.All]",
                 Url = column.RefTableCheck.Path,
                 Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), new Bind($"Parent.Filter.{column.Name}")),
             },
             ColumnType.Document => new SelectorSimple()
             {
-                Label = $"@[{column.RefTableCheck.Model}]",
+                Label = $"@[{column.RefTableCheck.Storage.Model}]",
                 ShowClear = true,
                 Highlight = true,
-                Placeholder = $"@[{column.RefTableCheck.Model}.All]",
+                Placeholder = $"@[{column.RefTableCheck.Storage.Model}.All]",
                 Url = column.RefTableCheck.Path,
                 Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), new Bind($"Parent.Filter.{column.Name}")),
             },

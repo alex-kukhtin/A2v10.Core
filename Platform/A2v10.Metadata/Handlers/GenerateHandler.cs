@@ -22,9 +22,9 @@ public class GenerateHandler(IServiceProvider _serviceProvider) : IClrInvokeTarg
         var name = args.Get<String>("Name")
             ?? throw new InvalidOperationException("Argument 'Name' not found");
 
-        var table = await _metadataProvider.GetSchemaAsync(null, schema, name);
+        var endpoint = await _metadataProvider.GetNormalEndpointAsync(null, schema, name);
 
-        await _endpointGenerator.BuildEndpointAsync(table);
+        await _endpointGenerator.BuildEndpointAsync(endpoint);
 
         return new ExpandoObject();
     }

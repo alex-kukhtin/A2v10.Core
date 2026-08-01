@@ -47,13 +47,11 @@ internal partial class SqlBuilder
 
         String? generateDefaults()
         {
-            var org = Table.Origin;
+            var org = Endpoint.Declaration;
             if (!IsNewModel())
                 return null;
-            if (org == null)
-                return null;
             var initValues = org.InitialValues;
-            var docOp = Table.DocumentOperation();
+            var docOp = Endpoint.DocumentOperation();
             if (docOp != null)
                 initValues = new Dictionary<string, InitialMetadata>(initValues)
                 {
@@ -70,7 +68,7 @@ internal partial class SqlBuilder
             {
                 var column = Table.Columns.FirstOrDefault(c => c.Name == key)
                     ?? throw new InvalidOperationException($"Column {key} not found in {Table.SqlTableName}");
-                return $"[{Table.Model}.{key}!{column.RefTableCheck.TypeName}!RefId] = @Init{key}";
+                return $"[{Table.Model}.{key}!{column.RefTableCheck.Storage.TypeName}!RefId] = @Init{key}";
             }
 
             String getDefaultContext(String key, String value)
@@ -158,7 +156,7 @@ internal partial class SqlBuilder
         }
 
 
-        var refMap = new RefMapBuilder(Table, isPlain: true, hasDefaults: IsNewModel());
+        var refMap = new RefMapBuilder(Endpoint, isPlain: true, hasDefaults: IsNewModel());
 
         // STEP 3: map recordsets
 

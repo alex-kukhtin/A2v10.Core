@@ -198,7 +198,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
 
         static String ColumnRow(TableMetadata table, TableColumn col)
         {
-            var refTable = col.IsRef ? col.RefTable : null;
+            var refTable = col.IsRef ? col.RefTable?.Storage : null;
             // one descriptor, four facets - this row is exactly where they must agree
             var ti = col.ToSqlDbTypeInfo();
             return $"\t({Str(table.SqlSchema)}, {Str(table.Table)}, {Str(col.Name)}, {Str(ti.SqlName)}, " +

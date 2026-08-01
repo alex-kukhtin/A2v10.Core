@@ -6,5 +6,5 @@ namespace A2v10.Metadata;
 
 internal interface IEndpointGenerator
 {
-    Task BuildEndpointAsync(TableMetadata table);
+    Task BuildEndpointAsync(NormalEndpointMetadata endpoint);
 }

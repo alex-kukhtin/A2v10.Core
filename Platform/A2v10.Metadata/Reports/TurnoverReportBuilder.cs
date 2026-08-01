@@ -14,7 +14,7 @@ using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
-internal class TurnoverReportBuilder(IServiceProvider serviceProvider, TableMetadata report, TableMetadata source) 
+internal class TurnoverReportBuilder(IServiceProvider serviceProvider, ReportMetadata report, TableMetadata source) 
     : BaseReportBuilder(serviceProvider, report, source)
 {
     public override async Task<IDataModel> LoadReportModelAsync(IModelView view, ExpandoObject prms)

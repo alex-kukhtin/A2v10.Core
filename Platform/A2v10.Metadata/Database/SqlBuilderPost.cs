@@ -20,7 +20,7 @@ internal partial class SqlBuilder
 
     internal async Task<IInvokeResult> PostDocumentAsync(ExpandoObject? prms)
     {
-        TableMetadata postTable = Table.Origin ?? Table;
+        var postTable = Endpoint.Declaration;
         if (postTable.Post == null || postTable.Post.Count == 0)
             throw new InvalidOperationException($"Table '{Table.Table}'. Nothing to post");
 
@@ -79,8 +79,19 @@ internal partial class SqlBuilder
                     case ColumnType.Document:
                         result.Add(($"d.[{Constants.FieldNames.Id}]", name));
                         continue;
-                    case ColumnType.DocumentType:                   // provenance discriminator: source endpoint
-                        result.Add(($"N'{postTable.Path}'", name));
+                    /* Which table the Document id lives in - the one fact that cannot be recovered
+                     * from the id itself, and the only reason this column exists. It becomes load
+                     * bearing when documents stop sharing a single table.
+                     *
+                     * The storage, not the endpoint that posted. The endpoint IS recoverable: from
+                     * the document row's own Operation column (filled at creation from initialValues),
+                     * or trivially when a table has one endpoint. Writing it here would copy a fact
+                     * that already exists into every leg of every posting - and would put an endpoint
+                     * path, a behaviour-layer name that renames freely, into stored data. A storage
+                     * path renames only through a migration, which the table needs anyway.
+                     */
+                    case ColumnType.DocumentType:
+                        result.Add(($"N'{Table.Path}'", name));
                         continue;
                     case ColumnType.Row:                            // detail-row provenance; null when header-only
                         result.Add((detailsTable != null ? $"r.[{Constants.FieldNames.Id}]" : "null", name));
@@ -204,9 +215,9 @@ internal partial class SqlBuilder
 
     internal async Task<IInvokeResult> UnPostDocumentAsync(ExpandoObject? prms)
     {
-        TableMetadata postTable =  Table.Origin ?? Table;
+        var postTable = Endpoint.Declaration;
         if (postTable.Post == null || postTable.Post.Count == 0)
-            throw new InvalidOperationException($"Table {postTable.Schema}.[{postTable.Table}]. Nothing to UnPost");
+            throw new InvalidOperationException($"Endpoint {Endpoint.Path}. Nothing to UnPost");
 
         var journals = postTable.Post.Select(c => c.JournalTableCheck).DistinctBy(j => j.SqlTableName);
 

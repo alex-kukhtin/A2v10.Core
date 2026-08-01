@@ -37,38 +37,37 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             _metadataCache.ClearDirty();
     }
 
-    public Task<EndpointMetadata> GetEndpointAsync(String? dataSource, String schema, String table)
-    {
-        return _metadataCache.GetOrAddAsync(dataSource, schema, table, LoadEndpointAsync);
-    }
-
-    public async Task<TableMetadata> GetSchemaAsync(IModelBaseMeta meta, String? dataSource)
+    /* Phase 2: the reference graph is built after the endpoint is published to the cache,
+     * because it is cyclic - a re-entry has to find the instance, not build it again.
+     */
+    public async Task<EndpointMetadata> GetEndpointAsync(IModelBaseMeta meta, String? dataSource)
     {
         var endpoint = await GetEndpointAsync(dataSource, meta.CurrentSchema, meta.CurrentTable);
-        var loaded = endpoint.Table;
-        if (!ReferenceEquals(endpoint.Table, endpoint.Declaration))
-            loaded.Origin = endpoint.Declaration;
-        await ResolveReferencesAsync(loaded, dataSource);
-        await ResolvePostedAsync(endpoint.Declaration, dataSource);
-        loaded.SetDefaults(meta.CurrentSchema, meta.CurrentTable);
-        return loaded;
-    }
-    public async Task<TableMetadata> GetSchemaAsync(String? dataSource, String schema, String table)
-    {
-        var endpoint = await GetEndpointAsync(dataSource, schema, table);
-        var loaded = endpoint.Table;
-        if (!ReferenceEquals(endpoint.Table, endpoint.Declaration))
-            loaded.Origin = endpoint.Declaration;
-        await ResolveReferencesAsync(loaded, dataSource);
-        loaded.SetDefaults(schema, table);
-        return loaded;
+        if (endpoint is NormalEndpointMetadata normal)
+            await ResolvePostedAsync(normal.Declaration, dataSource);
+        return endpoint;
     }
 
-    String? GetDefaultStorage(TableMetadata table, String schema)
+    public async Task<EndpointMetadata> GetEndpointAsync(String? dataSource, String schema, String table)
     {
-        if (String.IsNullOrEmpty(table.Storage) && schema == Constants.SchemaNames.Document)
+        var endpoint = await _metadataCache.GetOrAddAsync(dataSource, schema, table, LoadEndpointAsync);
+        await ResolveReferencesAsync(endpoint, dataSource);
+        return endpoint;
+    }
+
+    // a reference target must resolve to one of our tables, so a report is not a legal target
+    public async Task<NormalEndpointMetadata> GetNormalEndpointAsync(String? dataSource, String schema, String table)
+        => await GetEndpointAsync(dataSource, schema, table) as NormalEndpointMetadata
+            ?? throw new InvalidOperationException($"Endpoint /{schema}/{table} is not a data endpoint");
+
+    public async Task<TableMetadata> GetSchemaAsync(String? dataSource, String schema, String table)
+        => (await GetNormalEndpointAsync(dataSource, schema, table)).Storage;
+
+    static String? GetDefaultStorage(DeclarationMetadata declaration, String schema)
+    {
+        if (declaration.HasOwnStorage && schema == Constants.SchemaNames.Document)
             return Constants.SchemaNames.Document;
-        return table.Storage;
+        return declaration.Storage;
     }
 
     public Task<AppMetadata> GetAppMetadataAsync(String? dataSource)
@@ -94,9 +93,9 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             throw new InvalidOperationException("GetModelInfo fails");
         return modelTableInfo;
     }
-    public Task<UIElement> GetXamlFormAsync(String? dataSource, TableMetadata meta, String key, Func<UIElement> defForm)
+    public Task<UIElement> GetXamlFormAsync(String? dataSource, EndpointMetadata endpoint, String key, Func<UIElement> defForm)
     {
-        return _metadataCache.GetOrAddXamlFormAsync(dataSource, meta, key, defForm);
+        return _metadataCache.GetOrAddXamlFormAsync(dataSource, endpoint, key, defForm);
     }
 
     public static IEnumerable<ReferenceMember> EnumFields(TableMetadata table, Boolean withDetails)
@@ -144,53 +143,98 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
      * through 'storage'. An endpoint that owns its shape gets Table and Declaration
      * equal - the same instance, not a copy.
      */
-    private async Task<EndpointMetadata> LoadEndpointAsync(String? dataSource, String schema, String table)
+    private async Task<(String Text, String? Hash)> ReadMetadataFileAsync(String schema, String table)
     {
         var fileName = Path.Combine(schema, table, "metadata.json");
         using var stream = _codeProvider.FileStreamRO(fileName);
-        var text = "{}"; // empty value;
-        String? hash = null;
-        if (stream != null)
+        if (stream == null)
+            return ("{}", null); // empty value
+        using var sr = new StreamReader(stream);
+        var text = await sr.ReadToEndAsync()
+            ?? throw new InvalidOperationException($"{fileName} is empty");
+        return (text, Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text))).ToLowerInvariant());
+    }
+
+    /* One of our tables, built from the file that declares it and defaulted from its own
+     * folder - never from the folder of whoever asked for it.
+     */
+    private async Task<TableMetadata> LoadStorageAsync(String? dataSource, String schema, String table)
+    {
+        // declared in code, not in a file - defaults and address are applied the same way
+        var system = TableMetadataDefaults.SystemTable(schema, table);
+        if (system != null)
         {
-            using var sr = new StreamReader(stream);
-            text = await sr.ReadToEndAsync()
-                ?? throw new InvalidOperationException($"{fileName} is empty");
-            hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text))).ToLowerInvariant();
+            system.SetDefaults(schema, table);
+            return system;
         }
-        var declaration = JsonConvert.DeserializeObject<TableMetadata>(text, JsonSettings.CamelCaseSerializerSettings)
+        var (text, hash) = await ReadMetadataFileAsync(schema, table);
+        var storage = JsonConvert.DeserializeObject<TableMetadata>(text, JsonSettings.CamelCaseSerializerSettings)
             ?? throw new InvalidOperationException("TableMetadata deserialization fails");
-        declaration.FileHash = hash;
+        storage.FileHash = hash;
+        storage.SetDefaults(schema, table);
+        return storage;
+    }
+
+    public Task<TableMetadata> GetStorageAsync(String? dataSource, String schema, String table)
+    {
+        return _metadataCache.GetOrAddStorageAsync(dataSource, schema, table, LoadStorageAsync);
+    }
+
+    /* The endpoint is built here, once, before it is published to the cache: its own
+     * declaration comes from its own file, and the table it works on comes from the storage
+     * cache - the same instance for every endpoint that points at it.
+     *
+     * The same text is deserialized twice, once per type; each picks up the keys it declares.
+     * A key both types declare (today only 'inherit') is legitimately read twice - the storage
+     * carries the base, the endpoint the override.
+     */
+    private async Task<EndpointMetadata> LoadEndpointAsync(String? dataSource, String schema, String table)
+    {
+        var (text, hash) = await ReadMetadataFileAsync(schema, table);
+        var declaration = JsonConvert.DeserializeObject<DeclarationMetadata>(text, JsonSettings.CamelCaseSerializerSettings)
+            ?? throw new InvalidOperationException("DeclarationMetadata deserialization fails");
 
         if (!String.IsNullOrEmpty(table))
             declaration.Storage = GetDefaultStorage(declaration, schema);
 
-        var shape = declaration;
-        if (!String.IsNullOrEmpty(declaration.Storage))
-        {
-            var (storageSchema, storageTable) = ParsePath(declaration.Storage);
-            shape = await GetSchemaAsync(dataSource, storageSchema, storageTable)
-                ?? throw new InvalidOperationException($"Storage {declaration.Storage} not found");
-        }
+        var (storageSchema, storageTable) = declaration.HasOwnStorage
+            ? (schema, table)
+            : ParsePath(declaration.Storage!);
+        var storage = await GetStorageAsync(dataSource, storageSchema, storageTable);
 
-        return new EndpointMetadata()
+        /* The only place that decides which kind of endpoint this is. The discriminator is the
+         * folder, not a key in the file: a file cannot lie about what it is.
+         */
+        if (schema == Constants.SchemaNames.Report)
+            return new ReportEndpointMetadata()
+            {
+                Kind = EndpointKindOf(schema),
+                Schema = schema,
+                Name = table,
+                // the surface a report reads; today addressed by 'storage', by 'source' later
+                Surface = storage,
+                Report = JsonConvert.DeserializeObject<ReportMetadata>(text, JsonSettings.CamelCaseSerializerSettings)
+                    ?? throw new InvalidOperationException("ReportMetadata deserialization fails"),
+                FileHash = hash
+            };
+
+        return new NormalEndpointMetadata()
         {
-            Kind = EndpointKindOf(declaration, schema),
+            Kind = EndpointKindOf(schema),
             Schema = schema,
             Name = table,
-            Table = shape,
+            Storage = storage,
             Declaration = declaration,
             FileHash = hash
         };
     }
 
-    /* Folders the enum does not know yet ('rep', 'op', 'autonum') resolve to Undefined
-     * rather than throwing: the container carries the kind, nobody reads it yet, and
-     * this is the single place that will learn the new kinds.
+    /* Folders the enum does not know yet ('report', 'autonum') resolve to Undefined rather
+     * than throwing: every endpoint gets a container, and this is the single place that will
+     * learn the new kinds.
      */
-    private static EndpointKind EndpointKindOf(TableMetadata declaration, String schema)
+    private static EndpointKind EndpointKindOf(String schema)
     {
-        if (declaration.Kind != EndpointKind.Undefined)
-            return declaration.Kind;
         return schema switch
         {
             Constants.SchemaNames.Catalog => EndpointKind.Catalog,
@@ -239,7 +283,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return (split[0], split[1]);
     }
 
-    public async Task ResolvePostedAsync(TableMetadata meta, String? dataSource)
+    public async Task ResolvePostedAsync(DeclarationMetadata meta, String? dataSource)
     {
         if (meta.Post == null)
             return;
@@ -251,8 +295,9 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         }
     }
 
-    public async Task ResolveReferencesAsync(TableMetadata meta, String? dataSource)
+    public async Task ResolveReferencesAsync(EndpointMetadata endpoint, String? dataSource)
     {
+        var meta = endpoint switch { NormalEndpointMetadata n => n.Storage, ReportEndpointMetadata r => r.Surface, _ => throw new InvalidOperationException($"Unknown endpoint {endpoint.Path}") };
         static IEnumerable<TableColumn> GetAllReferences(TableMetadata table)
         {
             return table.Columns.Where(c => c.IsRef)
@@ -268,12 +313,14 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
 
                 if (gcol.Type == ColumnType.Parent)
                 {
-                    gcol.RefTable = meta; // self!
+                    // self! - and a report has no columns, so this can only be a data endpoint
+                    gcol.RefTable = endpoint as NormalEndpointMetadata
+                        ?? throw new InvalidOperationException($"{endpoint.Path} cannot have a Parent column");
                     continue;
                 }
                 else if (gcol.Type == ColumnType.Operation)
                 {
-                    gcol.RefTable = TableMetadataDefaults.CreateOperationsTable();
+                    gcol.RefTable = await GetNormalEndpointAsync(dataSource, Constants.SchemaNames.Operations, String.Empty);
                     continue;
                 }
             }
@@ -282,7 +329,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                 continue;
 
             var (schema, table) = ParsePath(column.Target);
-            var refMeta = await GetSchemaAsync(dataSource, schema, table);
+            var refMeta = await GetNormalEndpointAsync(dataSource, schema, table);
             foreach (var gcol in group)
                 gcol.RefTable = refMeta;
         }
@@ -300,13 +347,17 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             var (schema, table) = ParsePath(endpointPath);
             if (schema == "autonum")
                 continue; // TODO: skip other elements
-            var tableMeta = await GetSchemaAsync(dataSource, schema, table);
-            if (tableMeta.Origin != null)
+            /* Only a data endpoint declares a table, and only one that does not point elsewhere:
+             * a shared storage is deployed by the file that declares it, a report declares none.
+             */
+            if (await GetEndpointAsync(dataSource, schema, table) is not NormalEndpointMetadata endpoint)
                 continue;
-            tables.Add(tableMeta);
+            if (!endpoint.Declaration.HasOwnStorage)
+                continue;
+            tables.Add(endpoint.Storage);
         }
         if (tables.Any(t => t.HasTags) && !tables.Any(t => t.IsTags))
-            tables.Add(TableMetadataDefaults.CreateTagsTable());
+            tables.Add(await GetStorageAsync(dataSource, Constants.SchemaNames.Tags, String.Empty));
         return tables;
     }
 }

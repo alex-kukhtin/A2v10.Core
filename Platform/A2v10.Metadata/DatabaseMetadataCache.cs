@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -17,6 +18,10 @@ namespace A2v10.Metadata;
 public class DatabaseMetadataCache
 {
     private readonly ConcurrentDictionary<String, EndpointMetadata> _cache = [];
+    /* Our tables, keyed by the file that declares them - not by the endpoint that asks.
+     * Several endpoints share one entry, and this is also the deploy set.
+     */
+    private readonly ConcurrentDictionary<String, TableMetadata> _storages = [];
     private readonly ConcurrentDictionary<String, EndpointTableInfo> _endpoints = [];
     private readonly ConcurrentDictionary<String, UIElement> _xamlFormCache = [];
     private readonly ConcurrentDictionary<String, AppMetadata> _appMetaCache = [];
@@ -37,6 +42,7 @@ public class DatabaseMetadataCache
     public void ClearAll()
     {
         _cache.Clear();
+        _storages.Clear();   // both, always: a container must never keep a table of an older generation
         _endpoints.Clear();
         _appMetaCache.Clear();
         _platformIdCache.Clear();
@@ -57,6 +63,18 @@ public class DatabaseMetadataCache
         return _cache.GetOrAdd(key, meta);
     }
 
+    public async Task<TableMetadata> GetOrAddStorageAsync(String? dataSource, String schema, String table,
+        Func<String?, String, String, Task<TableMetadata>> getStorage)
+    {
+        var key = $"{dataSource}:{schema}:{table}";
+        if (_storages.TryGetValue(key, out TableMetadata? storage))
+            return storage;
+        storage = await getStorage(dataSource, schema, table);
+        return _storages.GetOrAdd(key, storage);
+    }
+
+    public IEnumerable<TableMetadata> Storages => _storages.Values;
+
     public async Task<AppMetadata> GetAppMetadataAsync(String? dataSource, Func<String?, Task<AppMetadata>> func)
     {
         var key = dataSource ?? "default";
@@ -75,10 +93,11 @@ public class DatabaseMetadataCache
         return _platformIdCache.GetOrAdd(key, platformId);
     }
 
-    public async Task<UIElement> GetOrAddXamlFormAsync(String? dataSource, TableMetadata meta, String key,
+    public async Task<UIElement> GetOrAddXamlFormAsync(String? dataSource, EndpointMetadata endpoint, String key,
          Func<UIElement> getDefaultForm)
     {
-        var dictKey = $"{dataSource}:{meta.Schema}:{meta.Path}:{key.ToLowerInvariant()}";
+        // keyed by the endpoint, not by the table: endpoints sharing a table do not share forms
+        var dictKey = $"{dataSource}:{endpoint.Path}:{key.ToLowerInvariant()}";
         if (_xamlFormCache.TryGetValue(dictKey, out var form))
             return form;
         form = getDefaultForm();

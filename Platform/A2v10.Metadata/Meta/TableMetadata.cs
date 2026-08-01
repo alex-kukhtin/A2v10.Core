@@ -42,7 +42,7 @@ public enum ColumnType
     RowKind,
     Operation,
     Document,
-    DocumentType,  // journal provenance discriminator: source document endpoint ((Table.Origin ?? Table).Path)
+    DocumentType,  // polymorphic Document reference: which storage the id lives in (see SqlBuilderPost)
     Row,        // journal provenance: Id of the posted detail row (r.[Id]); null when the post has no 'each'
     RowVersion,
     Color,
@@ -107,10 +107,14 @@ public record TableColumn
     public ColumnType Type { get; init; } = default!;
     public String? Target { get; init; } // for refs
 
+    /* A reference points at an ENDPOINT that must resolve to one of our tables: the address
+     * comes from the endpoint, the type and column names from its table. Neither is derivable
+     * from the other, which is why the resolved link is the container and not the table.
+     */
     [JsonIgnore]
-    public TableMetadata? RefTable { get; set; }
+    public NormalEndpointMetadata? RefTable { get; set; }
     [JsonIgnore]
-    public TableMetadata RefTableCheck => RefTable ?? throw new InvalidOperationException($"RefTable for '{Name}' is null");
+    public NormalEndpointMetadata RefTableCheck => RefTable ?? throw new InvalidOperationException($"RefTable for '{Name}' is null");
 
     [JsonIgnore] 
     internal Boolean IsRef => Type == ColumnType.Ref || Type == ColumnType.Owner || 
@@ -122,7 +126,7 @@ public record TableColumn
         get
         {
             if (Type == ColumnType.Ref)
-                return RefTableCheck.Label;
+                return RefTableCheck.Storage.Label;
             return Constants.FieldNames.Name;
         }
     }
@@ -255,11 +259,11 @@ public sealed record TableMetadata
     public String Model { get; set; } = default!;
     public String Path { get; set; } = default!;
     public String Label { get; set; } = default!;
-    public String? Autonum { get; set; } // for opertions
-    public Dictionary<String, InitialMetadata> InitialValues { get; init; } = [];
+    /* Declarations that stay here: 'inherit' is genuinely two-layer - the storage carries the
+     * base, the endpoint overrides it in DeclarationMetadata. A key belongs in both types only
+     * under that test.
+     */
     public Dictionary<String, InheritMetadata> Inherit { get; init; } = [];
-    public Dictionary<String, RuleMetadata> Rules { get; init; } = [];
-    public String[] Required { get; init; } = [];
 
     [JsonProperty("fields")]
     private Dictionary<String, TableColumn> _fields { get; init; } = [];
@@ -272,13 +276,7 @@ public sealed record TableMetadata
     public List<String> Kinds { get; init; } = [];
     public List<TableTrait> Traits { get; init; } = [];
 
-    public String? Storage { get; set; }
     public ConcurrentDictionary<String, FormMetadata> Forms { get; init; } = [];
-    public List<PostMetadata>? Post { get; init; }
-
-    [JsonIgnore]
-    public TableMetadata? Origin { get; set; }
-
 
     // for sql
     [JsonIgnore]
@@ -303,9 +301,6 @@ public sealed record TableMetadata
 
 
     public String? ItemsLabel { get; init; }
-    public String? ItemLabel { get; init; }
-    public String? Type { get; init; }
-    public List<ReportItemMetadata> ReportItems { get; init; } = [];
     public List<ColumnReferenceToMe> RefsToMe { get; init; } = [];
 
     // Service variables
@@ -325,7 +320,6 @@ public sealed record TableMetadata
 
     internal String RealItemsName => ItemsName ?? Table;  
     internal String RealItemsLabel => ItemsLabel ?? $"@{RealItemsName}";
-    internal Boolean IsOperation => Schema == "operation";
 
     [JsonIgnore]
     internal Boolean IsCatalog => Kind == EndpointKind.Catalog;
@@ -348,7 +342,9 @@ public sealed record TableMetadata
     }
     internal void SetDefaults(String schema, String table)
     {
-        Path = $"/{schema}/{table}";
+        // the file that declares this table; spelled like EndpointMetadata.Path, because a
+        // DocumentType discriminator is this value and has to be comparable to an address
+        Path = String.IsNullOrEmpty(table) ? $"/{schema}" : $"/{schema}/{table}";
         if (String.IsNullOrEmpty(Schema))
             Schema = schema;
         if (String.IsNullOrEmpty(Table))
@@ -362,18 +358,6 @@ public sealed record TableMetadata
 
         foreach (var d in Details)
             d.Value.SetDetailDefaults(this);
-
-        Forms.GetOrAdd(Constants.FormNames.Index,
-            key => DefaultFormBuilder.CreateIndexForm(this)
-                .SetDefaults(this, TableColumnPredicates.IsIndexColumn));
-
-        Forms.GetOrAdd(Constants.FormNames.Edit, 
-            key => DefaultFormBuilder.CreateEditForm(this)
-            .SetDefaults(this, TableColumnPredicates.IsEditColumn));
-
-        Forms.GetOrAdd(Constants.FormNames.Browse,
-            key => DefaultFormBuilder.CreateBrowseForm(this)
-            .SetDefaults(this, TableColumnPredicates.IsIndexColumn));
     }
 }
 public record OperationMetadata(String Id, String? Name, String? Category);

@@ -39,42 +39,23 @@ internal static class MetadataExtensions
             Constants.SchemaNames.Document => "doc",
             Constants.SchemaNames.Journal => "jrn",
             "report" => "rep",
+            Constants.SchemaNames.Operations => "op",
             "account" => "acc",
             "inforegister" => "regi",
             _ => folder
         };
     }
 
-    internal static String EndpointPath(this TableMetadata table)
+    // the address is the endpoint's, not the table's: several endpoints share one table
+    public static IPlatformUrl PlatformUrl(this NormalEndpointMetadata endpoint, String action)
     {
-        return $"/{table.Schema}/{table.Model}".ToLowerInvariant();
-    }
-
-    internal static String EndpointPathUseBase(this TableMetadata table, TableMetadata? baseTable)
-    {
-        if (baseTable != null)
-            return baseTable.Path;
-        return table.Path;
-    }
-
-    public static IPlatformUrl PlatformUrl(this TableMetadata table, String action)
-    {
-        var kind = action == "index" || action == "edit" && table.EditWithPage ? "_page" : "_dialog";
-        var url = $"{kind}/{table.EndpointPath()}/{action}/";
+        var kind = action == "index" || action == "edit" && endpoint.Storage.EditWithPage ? "_page" : "_dialog";
+        var url = $"{kind}{endpoint.Path}/{action}/".ToLowerInvariant();
         return new PlatformUrl(url);
     }
 
-    internal static String EditEndpoint(this TableMetadata table, TableMetadata? baseTable)
-    {
-        var editEndpoint = $"{table.EndpointPathUseBase(baseTable)}";
 
-        if (table.Columns.Any(c => c.Type == ColumnType.Operation))
-            editEndpoint = "{Operation.Url}";
-
-        return editEndpoint;
-    }
-
-    internal static IEnumerable<ReportItemMetadata> TypedReportItems(this TableMetadata table, ReportItemKind kind)
+    internal static IEnumerable<ReportItemMetadata> TypedReportItems(this ReportMetadata table, ReportItemKind kind)
     {
         return table.ReportItems.Where(ri => ri.Kind == kind).OrderBy(r => r.Order);
     }
@@ -93,7 +74,7 @@ internal static class MetadataExtensions
         return new TableMetadata()
         {
             //Schema = col.Reference.RefSchema,
-            Table = col.RefTableCheck.Table,
+            Table = col.RefTableCheck.Storage.Table,
             /*
             Columns = [
                 new TableColumn()
@@ -119,11 +100,11 @@ internal static class MetadataExtensions
         table.DefaultColumns().Concat(table.Columns).Where(predicate ?? (_ => true));
 
     internal static IEnumerable<RefDescriptor> AllRefs(this IEnumerable<TableColumn> columns) =>
-        columns.Where(c => c.IsRef || c.IsOperation).Select((c, ix) => new RefDescriptor(ix + 1, c, c.RefTable
-            ?? throw new InvalidOperationException($"RefTable for {c.Name} is null")));
+        columns.Where(c => c.IsRef || c.IsOperation).Select((c, ix) => new RefDescriptor(ix + 1, c, (c.RefTable
+            ?? throw new InvalidOperationException($"RefTable for {c.Name} is null")).Storage));
 
 
-    internal static IEnumerable<InheritDescriptor> AllInherits(this TableMetadata table, TableMetadata? origin = null)
+    internal static IEnumerable<InheritDescriptor> AllInherits(this TableMetadata table, DeclarationMetadata? origin = null)
     {
         var declared = new Dictionary<String, InheritMetadata>(table.Inherit);
         foreach (var kp in origin?.Inherit ?? [])
@@ -144,13 +125,13 @@ internal static class MetadataExtensions
             var refColumn = Find(table, columns, kp.Value.Ref, "ref");
             if (!refColumn.IsRef)
                 throw new InvalidOperationException($"inherit: ref '{refColumn.Name}' is not a reference");
-            var refTable = refColumn.RefTableCheck;
+            var refTable = refColumn.RefTableCheck.Storage;
             yield return new InheritDescriptor(field, refColumn,
                 Find(refTable, refTable.Columns, kp.Value.Field, "source"));
         }
     }
     // root + details; each table paired with its operation counterpart
-    internal static IEnumerable<InheritDescriptor> AllInheritsDeep(this TableMetadata table, TableMetadata? origin)
+    internal static IEnumerable<InheritDescriptor> AllInheritsDeep(this TableMetadata table, DeclarationMetadata? origin)
     {
         foreach (var d in table.AllInherits(origin))
             yield return d;
@@ -159,12 +140,19 @@ internal static class MetadataExtensions
                 yield return d;
     }
 
+    /* Default forms are built on demand, not while the table is being constructed: a table that is
+     * deployed but never rendered (tags) has no forms to build, and asking for them throws. A form
+     * declared in the file is already in the dictionary and wins.
+     */
     internal static FormMetadata IndexForm(this TableMetadata table) =>
-        table.Forms.First(x => x.Key == Constants.FormNames.Index).Value;
+        table.Forms.GetOrAdd(Constants.FormNames.Index,
+            _ => DefaultFormBuilder.CreateIndexForm(table).SetDefaults(table, TableColumnPredicates.IsIndexColumn));
     internal static FormMetadata BrowseForm(this TableMetadata table) =>
-        table.Forms.First(x => x.Key == Constants.FormNames.Browse).Value;
+        table.Forms.GetOrAdd(Constants.FormNames.Browse,
+            _ => DefaultFormBuilder.CreateBrowseForm(table).SetDefaults(table, TableColumnPredicates.IsIndexColumn));
     internal static FormMetadata EditForm(this TableMetadata table) =>
-        table.Forms.First(x => x.Key == Constants.FormNames.Edit).Value;
+        table.Forms.GetOrAdd(Constants.FormNames.Edit,
+            _ => DefaultFormBuilder.CreateEditForm(table).SetDefaults(table, TableColumnPredicates.IsEditColumn));
 
     public static IEnumerable<TableColumn> TableFilters(this TableMetadata table)
     {
@@ -174,6 +162,7 @@ internal static class MetadataExtensions
             yield return c;
     }
 
-    internal static String? DocumentOperation(this TableMetadata table) =>
-        table.IsDocument && table.Columns.Any(c => c.IsOperation) ? table.Path.Split('/')[^1] : null;
+    // the operation is the endpoint, so its key is the endpoint name - not a slice of a path
+    internal static String? DocumentOperation(this NormalEndpointMetadata endpoint) =>
+        endpoint.Storage.IsDocument && endpoint.Storage.Columns.Any(c => c.IsOperation) ? endpoint.Name : null;
 }

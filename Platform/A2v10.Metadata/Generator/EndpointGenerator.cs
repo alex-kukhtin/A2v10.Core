@@ -16,20 +16,21 @@ internal record CreatedFile(String Path, Boolean Created);
 
 internal class EndpointGenerator(IModelBuilderFactory _modelBuilderFactory, IAppCodeProvider _appCodeProvider) : IEndpointGenerator
 {
-    public async Task BuildEndpointAsync(TableMetadata table)
+    public async Task BuildEndpointAsync(NormalEndpointMetadata endpoint)
     {
-        await GenerateModelJsonAsync(table);
-        await GenerateIndexAsync(table);
-        await GenerateEditAsync(table);
-        await GenerateBrowseAsync(table);
-        if (table.HasFolders) {
-            await GenerateEditFolderAsync(table);
+        await GenerateModelJsonAsync(endpoint);
+        await GenerateIndexAsync(endpoint);
+        await GenerateEditAsync(endpoint);
+        await GenerateBrowseAsync(endpoint);
+        if (endpoint.Storage.HasFolders) {
+            await GenerateEditFolderAsync(endpoint);
         }
     }
 
-    private Task GenerateModelJsonAsync(TableMetadata table)
+    private Task GenerateModelJsonAsync(NormalEndpointMetadata endpoint)
     {
-        var platformUrl = table.PlatformUrl("index");
+        var table = endpoint.Storage;
+        var platformUrl = endpoint.PlatformUrl("index");
         var fullPath = _appCodeProvider.GetMainModuleFullPath(platformUrl.LocalPath.RemoveHeadSlash(), $"model.json");
 
         if (File.Exists(fullPath))
@@ -102,39 +103,39 @@ internal class EndpointGenerator(IModelBuilderFactory _modelBuilderFactory, IApp
 
         return sw.ToString();
     }
-    private async Task GenerateIndexAsync(TableMetadata table)
+    private async Task GenerateIndexAsync(NormalEndpointMetadata endpoint)
     {
-        var platformUrl = table.PlatformUrl("index");
-        var formFile = await GenerateFormAsync(table, platformUrl);
+        var platformUrl = endpoint.PlatformUrl("index");
+        var formFile = await GenerateFormAsync(endpoint, platformUrl);
 
     }
-    private async Task GenerateEditAsync(TableMetadata table)
+    private async Task GenerateEditAsync(NormalEndpointMetadata endpoint)
     {
-        var platformUrl = table.PlatformUrl("edit");
-        var formFile = await GenerateFormAsync(table, platformUrl);
+        var platformUrl = endpoint.PlatformUrl("edit");
+        var formFile = await GenerateFormAsync(endpoint, platformUrl);
     }
 
-    private async Task GenerateBrowseAsync(TableMetadata table)
+    private async Task GenerateBrowseAsync(NormalEndpointMetadata endpoint)
     {
-        var platformUrl = table.PlatformUrl("browse");
-        await GenerateFormAsync(table, platformUrl, true);
+        var platformUrl = endpoint.PlatformUrl("browse");
+        await GenerateFormAsync(endpoint, platformUrl, true);
     }
 
-    private async Task GenerateEditFolderAsync(TableMetadata table)
+    private async Task GenerateEditFolderAsync(NormalEndpointMetadata endpoint)
     {
-        var platformUrl = table.PlatformUrl("editFolder");
-        await GenerateFormAsync(table, platformUrl);
+        var platformUrl = endpoint.PlatformUrl("editFolder");
+        await GenerateFormAsync(endpoint, platformUrl);
     }
 
-    private async Task<CreatedFile> GenerateFormAsync(TableMetadata table, IPlatformUrl platformUrl, Boolean formOnly = false)
+    private async Task<CreatedFile> GenerateFormAsync(NormalEndpointMetadata endpoint, IPlatformUrl platformUrl, Boolean formOnly = false)
     {
-        
+
         var fileType = platformUrl.Kind == UrlKind.Dialog ? "dialog" : "view";
         var fileName = $"{platformUrl.Action}.{fileType}.vxaml";
         var fullPath = _appCodeProvider.GetMainModuleFullPath(platformUrl.LocalPath.RemoveHeadSlash(), fileName);
         var filePath = Path.Combine(fullPath, fileName);
 
-        var builder = _modelBuilderFactory.BuildEndpoint(platformUrl, table, null);
+        var builder = _modelBuilderFactory.BuildEndpoint(platformUrl, endpoint, null);
 
         if (!File.Exists(fullPath))
         {

@@ -57,7 +57,7 @@ internal partial class XamlBuilder
                     var cmd = new BindCmd()
                     {
                         Command = CommandType.OpenSelected,
-                        Url = $"{Table.Path}/show"
+                        Url = $"{Endpoint.Path}/show"
                     };
                     cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind("Parent.ItemsSource"));
                     b.SetBinding(nameof(Button.Command), cmd);
@@ -108,7 +108,7 @@ internal partial class XamlBuilder
     {
         var bindCmd = new BindCmd()
         {
-            Url = $"{Table.Path}/edit"
+            Url = $"{Endpoint.Path}/edit"
         };
         if (Table.EditWithPage)
         {
@@ -134,7 +134,7 @@ internal partial class XamlBuilder
     {
         var bindCmd = new BindCmd()
         {
-            Url = $"{Table.Path}/edit"
+            Url = $"{Endpoint.Path}/edit"
         };
         bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(Table.CollectionName));
         if (Table.EditWithPage)

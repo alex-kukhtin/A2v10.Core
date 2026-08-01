@@ -7,6 +7,7 @@ namespace A2v10.Metadata
 {
     internal partial class XamlBuilder(BuilderDescriptor desciptor, IServiceProvider serviceProvider)
     {
+        private readonly NormalEndpointMetadata Endpoint = desciptor.Endpoint;
         private readonly TableMetadata Table = desciptor.Table;
         protected readonly IServiceProvider _xamlServiceProvider = new XamlServiceProvider();
     }

@@ -37,11 +37,16 @@ internal class AppMetadataBuilder(IServiceProvider _serviceProvider,
     public async Task<IAppRuntimeResult> RenderAsync(IPlatformUrl platformUrl, IModelView view, bool isReload)
     {
         await _metadataProvider.CheckDeployAsync(view.DataSource);
-        var iBuilder = await _modelBuilderFactory.BuildAsync(platformUrl, view);
 
-        var endpointBuilder = FindEndpointBuilder(iBuilder.MetadataEndpointBuilder, iBuilder);
-        if (endpointBuilder != null)
-              return await endpointBuilder.RenderAsync(platformUrl, view, isReload);
+        /* The one place the kind of endpoint is dispatched on, and it is the type that says it -
+         * no string travels from the builder to here and back to name what this is.
+         */
+        var endpoint = await _metadataProvider.GetEndpointAsync(
+            view.Meta ?? throw new InvalidOperationException("Meta is null"), view.DataSource);
+        if (endpoint is ReportEndpointMetadata report)
+            return await new ReportEndpointBuilder(_serviceProvider, report).RenderAsync(platformUrl, view, isReload);
+
+        var iBuilder = await _modelBuilderFactory.BuildAsync(platformUrl, view);
 
         var dm = await iBuilder.LoadModelAsync();
 
@@ -89,14 +94,4 @@ internal class AppMetadataBuilder(IServiceProvider _serviceProvider,
         return dm.Root;
     }
 
-    private IMetaEndpointBuilder? FindEndpointBuilder(String? name, IModelBuilder baseBuilder)
-    {
-        if (String.IsNullOrEmpty(name))
-            return null;
-        return name switch
-        {
-            "rep:report.render" => new ReportEndpointBuilder(_serviceProvider, baseBuilder),
-            _ => throw new InvalidOperationException("IMetaEndpointBuilder for {name} not found")
-        };
-    }
 }

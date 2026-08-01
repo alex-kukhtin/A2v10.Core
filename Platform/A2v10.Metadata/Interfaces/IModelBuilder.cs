@@ -19,8 +19,7 @@ internal interface IModelBuilder
     Task<IInvokeResult> InvokeAsync(IModelCommand cmd, String command, ExpandoObject? prms);
     Task DbRemoveAsync(String? propName, ExpandoObject execPrms);
     Task<String> CreateTemplateAsync();
-    String? MetadataEndpointBuilder { get; }
-
+    NormalEndpointMetadata Endpoint { get; }
     TableMetadata Table { get; }
 }
 

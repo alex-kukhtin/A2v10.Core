@@ -16,37 +16,38 @@ internal partial class ModelBuilderFactory(
         if (modelBase.Meta == null)
             throw new InvalidOperationException("Meta is null");
 
-        var srcTable = await _metadataProvider.GetSchemaAsync(modelBase.Meta, modelBase.DataSource);
+        var endpoint = await _metadataProvider.GetEndpointAsync(modelBase.Meta, modelBase.DataSource) as NormalEndpointMetadata
+            ?? throw new InvalidOperationException($"{modelBase.Meta.CurrentSchema}/{modelBase.Meta.CurrentTable} is not a data endpoint");
 
         var bd = new BuilderDescriptor()
         {
             DataSource = modelBase.DataSource,
             PlatformUrl = platformUrl,
-            Table = srcTable,
+            Endpoint = endpoint,
             PlatformId = await _metadataProvider.GetPlatformIdAsync(modelBase.DataSource),
         };
 
         return new BaseModelBuilder(_serviceProvider, bd);
     }
-    public async Task<IModelBuilder> BuildAsync(IPlatformUrl platformUrl, TableMetadata table, String? dataSource)
+    public async Task<IModelBuilder> BuildAsync(IPlatformUrl platformUrl, NormalEndpointMetadata endpoint, String? dataSource)
     {
         var bd = new BuilderDescriptor()
         {
             DataSource = dataSource,
             PlatformUrl = platformUrl,
-            Table = table,
+            Endpoint = endpoint,
             PlatformId = await _metadataProvider.GetPlatformIdAsync(dataSource),
         };
         return new BaseModelBuilder(_serviceProvider, bd);
     }
 
-    public IEndpointModelBuilder BuildEndpoint(IPlatformUrl platformUrl, TableMetadata table, String? dataSource)
+    public IEndpointModelBuilder BuildEndpoint(IPlatformUrl platformUrl, NormalEndpointMetadata endpoint, String? dataSource)
     {
         var bd = new BuilderDescriptor()
         {
             DataSource = dataSource,
             PlatformUrl = platformUrl,
-            Table = table,
+            Endpoint = endpoint,
         };
         return new EndpointModelBuilder(_serviceProvider, bd);
 

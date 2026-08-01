@@ -28,13 +28,9 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
     protected Boolean IsDialog => descriptor.PlatformUrl.Kind == UrlKind.Dialog;
     protected String Action => descriptor.PlatformUrl.Action.ToLowerInvariant();
 
+    public NormalEndpointMetadata Endpoint => descriptor.Endpoint;
     public TableMetadata Table => descriptor.Table;
 
-    public String? MetadataEndpointBuilder => Table.Origin?.Schema switch
-    {
-        "report" => "rep:report.render",
-        _ => null
-    };
     public Task<IDataModel> LoadLazyModelAsync()
     {
         return _sqlBuilder.LoadIndexModelAsync(true);
@@ -104,7 +100,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
         }
         else
         {
-            page = await _metadataProvider.GetXamlFormAsync(descriptor.DataSource, Table, descriptor.PlatformUrl.Action, CreateDefaultXamlForm);
+            page = await _metadataProvider.GetXamlFormAsync(descriptor.DataSource, Endpoint, descriptor.PlatformUrl.Action, CreateDefaultXamlForm);
             templateText = await CreateTemplateAsync();
         }
         if (page == null)

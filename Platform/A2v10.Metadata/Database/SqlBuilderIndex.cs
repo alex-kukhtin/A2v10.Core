@@ -87,7 +87,7 @@ internal partial class SqlBuilder
             else
                 sb.Append("where 1 = 1"); // TODO:!!!!
 
-            var docOp = Table.DocumentOperation();
+            var docOp = Endpoint.DocumentOperation();
             if (docOp != null)
                 sb.Append($"and a.[Operation] = @RouteOperation");
 
@@ -193,7 +193,7 @@ internal partial class SqlBuilder
             """);
             // STEP 5: map recordsets
 
-            var refMap = new RefMapBuilder(Table, isPlain: false, hasDefaults: false);
+            var refMap = new RefMapBuilder(Endpoint, isPlain: false, hasDefaults: false);
 
             refMap.WriteRefMapIndex(sb, sx =>
             {
@@ -277,7 +277,7 @@ internal partial class SqlBuilder
             .AddString("@Order", value)
             .AddString("@Dir", dir)
             .AddString("@Fragment", fragment);
-            var docOp = Table.DocumentOperation();
+            var docOp = Endpoint.DocumentOperation();
             if (docOp != null)
                 dbprms.AddString("@RouteOperation", docOp);
             foreach (var rd in refs)

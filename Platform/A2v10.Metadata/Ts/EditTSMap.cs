@@ -37,9 +37,12 @@ internal partial class TypescriptBuilder
 
         IEnumerable<String> detailsComputed()
         {
-            foreach (var t in Table.Details.Select(x => x.Value))
-                foreach (var (key, value) in t.Rules.Where(c => !String.IsNullOrEmpty(c.Value.Value)))
+            foreach (var name in Table.Details.Keys)
+            {
+                var declared = Endpoint.Declaration.Details.GetValueOrDefault(name);
+                foreach (var (key, value) in (declared?.Rules ?? []).Where(c => !String.IsNullOrEmpty(c.Value.Value)))
                     yield return $"    readonly {key}: any;";
+            }
         }
 
         if (refElems.Any())

@@ -103,23 +103,23 @@ public class CliDatabaseCreator()
             }
             else if (column.Type == ColumnType.Enum)
             {
-                var opConstraintName = $"FK_{table.Table}_{column.Name}_{column.RefTableCheck.Table}";
+                var opConstraintName = $"FK_{table.Table}_{column.Name}_{column.RefTableCheck.Storage.Table}";
 
                 return $"""
                 if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.SqlSchema}' and TABLE_NAME = N'{table.Table}' and CONSTRAINT_NAME = N'{opConstraintName}')
                     alter table {table.SqlTableName} add 
-                        constraint {opConstraintName} foreign key ([{column.Name}]) references {column.RefTableCheck.SqlTableName}([Id]);
+                        constraint {opConstraintName} foreign key ([{column.Name}]) references {column.RefTableCheck.Storage.SqlTableName}([Id]);
                 """;
                 //alter table {table.SqlTableName} {check} constraint {opConstraintName};
             }
 
-            var constraintName = $"FK_{table.Table}_{column.Name}_{column.RefTableCheck.Table}";
+            var constraintName = $"FK_{table.Table}_{column.Name}_{column.RefTableCheck.Storage.Table}";
             if (constraintName.Length > 128)
                 constraintName = constraintName[0..127];
             return $"""
             if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.SqlSchema}' and TABLE_NAME = N'{table.Table}' and CONSTRAINT_NAME = N'{constraintName}')
                 alter table {table.SqlTableName} add 
-                    constraint {constraintName} foreign key ([{column.Name}]) references {column.RefTableCheck.SqlTableName}([Id]);
+                    constraint {constraintName} foreign key ([{column.Name}]) references {column.RefTableCheck.Storage.SqlTableName}([Id]);
             """;
             //alter table {table.SqlTableName} {check} constraint {constraintName};
         }

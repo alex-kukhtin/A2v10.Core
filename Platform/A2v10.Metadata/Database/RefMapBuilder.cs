@@ -18,9 +18,14 @@ internal class RefMapBuilder
     private readonly Boolean _isPlain;
     private readonly Boolean _hasDefaults;
     private readonly TableMetadata _sourceTable;
-    public RefMapBuilder(TableMetadata table, Boolean isPlain, Boolean hasDefaults)
+    private readonly DeclarationMetadata _declaration;
+    private readonly NormalEndpointMetadata _endpoint;
+    public RefMapBuilder(NormalEndpointMetadata endpoint, Boolean isPlain, Boolean hasDefaults)
     {
+        var table = endpoint.Storage;
         _sourceTable = table;
+        _declaration = endpoint.Declaration;
+        _endpoint = endpoint;
         _isPlain = isPlain;
         _hasDefaults = hasDefaults;
         _flat = [.. Flatten(table)];
@@ -34,7 +39,7 @@ internal class RefMapBuilder
         => _isPlain ? t.TypeName : t.RefTypeName;
 
     private String TargetKey(TableColumn c)
-        => $"{c.RefTableCheck.SqlTableName}|{RealTypeName(c.RefTableCheck)}";
+        => $"{c.RefTableCheck.Storage.SqlTableName}|{RealTypeName(c.RefTableCheck.Storage)}";
 
     private IEnumerable<RefMapItem> Flatten(TableMetadata table)
     {
@@ -57,7 +62,7 @@ internal class RefMapBuilder
     {
         if (!_isPlain)
             return [];
-        return _sourceTable.AllInheritsDeep(_sourceTable.Origin)
+        return _sourceTable.AllInheritsDeep(_declaration)
             .GroupBy(d => TargetKey(d.Ref))
             .ToDictionary(
                 g => g.Key,
@@ -178,9 +183,7 @@ internal class RefMapBuilder
     {
         if (!_hasDefaults)
             return null;
-        var origin = _sourceTable.Origin;
-        if (origin == null)
-            return null;
+        var origin = _declaration;
         if (origin.InitialValues.Count == 0)
             return null;
         // from user profile
@@ -206,7 +209,7 @@ internal class RefMapBuilder
     {
         if (!_hasDefaults) 
             return null;
-        var docOps = _sourceTable.DocumentOperation();
+        var docOps = _endpoint.DocumentOperation();
         if (docOps == null)
             return null;
         return $"insert into @map(Operation) values (N'{docOps}');";

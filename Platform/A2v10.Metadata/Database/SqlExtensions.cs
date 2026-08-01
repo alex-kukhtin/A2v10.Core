@@ -196,7 +196,7 @@ internal static class SqlExtensions
             ColumnType.Name => $"[Name!!Name] = {alias}.[Name]",
             ColumnType.RowNumber => $"[{column.Name}!!RowNumber] = {alias}.[{column.Name}]",
             ColumnType.Ref or ColumnType.Document or ColumnType.Operation =>
-                $"[{column.Name}!{refPredicate(column.RefTableCheck)}!RefId] = {alias}.[{column.Name}]",
+                $"[{column.Name}!{refPredicate(column.RefTableCheck.Storage)}!RefId] = {alias}.[{column.Name}]",
             _ => $"{alias}.[{column.Name}]"
         };
 

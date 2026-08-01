@@ -10,6 +10,6 @@ namespace A2v10.Metadata;
 internal interface IModelBuilderFactory
 {
     Task<IModelBuilder> BuildAsync(IPlatformUrl platformUrl, IModelBase modelBase);
-    Task<IModelBuilder> BuildAsync(IPlatformUrl platformUrl, TableMetadata table, String? dataSource);
-    IEndpointModelBuilder BuildEndpoint(IPlatformUrl platformUrl, TableMetadata table, String? dataSource);
+    Task<IModelBuilder> BuildAsync(IPlatformUrl platformUrl, NormalEndpointMetadata endpoint, String? dataSource);
+    IEndpointModelBuilder BuildEndpoint(IPlatformUrl platformUrl, NormalEndpointMetadata endpoint, String? dataSource);
 }

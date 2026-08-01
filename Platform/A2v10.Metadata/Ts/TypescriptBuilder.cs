@@ -9,6 +9,7 @@ namespace A2v10.Metadata;
 internal partial class TypescriptBuilder(BuilderDescriptor desciptor)
 {
     private readonly BuilderDescriptor _descr = desciptor;
+    private readonly NormalEndpointMetadata Endpoint = desciptor.Endpoint;
     private readonly TableMetadata Table = desciptor.Table;
 
     public IEnumerable<String> TsProperties(TableMetadata table)
@@ -17,7 +18,7 @@ internal partial class TypescriptBuilder(BuilderDescriptor desciptor)
         {
             var ro = column.IsFieldUpdated() ? "" : "readonly ";
             if (column.IsRef)
-                return $"\t{ro}{column.Name}: {column.RefTableCheck.TypeName};";
+                return $"\t{ro}{column.Name}: {column.RefTableCheck.Storage.TypeName};";
             return $"\t{ro}{column.Name}: {column.Type.ToTsType()};";
         }
 

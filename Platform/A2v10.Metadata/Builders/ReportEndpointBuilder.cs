@@ -11,20 +11,22 @@ using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
-internal class ReportEndpointBuilder(IServiceProvider _serviceProvider, IModelBuilder _baseBuilder) : IMetaEndpointBuilder
+/* A report never goes through BaseModelBuilder: it has no table of its own to load, save or
+ * render, and everything it needs is in its own container.
+ */
+internal class ReportEndpointBuilder(IServiceProvider _serviceProvider, ReportEndpointMetadata _endpoint) : IMetaEndpointBuilder
 {
     private readonly DynamicRenderer _dynamicRenderer = new(_serviceProvider);
 
     public async Task<IAppRuntimeResult> RenderAsync(IPlatformUrl platformUrl, IModelView view, bool isReload)
     {
-        var _source = _baseBuilder.Table;
-        var _report = _baseBuilder.Table.Origin
-            ?? throw new InvalidOperationException("Report is null");
+        var _source = _endpoint.Surface;
+        var _report = _endpoint.Report;
 
-        var reportBuilder = _report?.Type switch
+        var reportBuilder = _report.Type switch
         {
             "turnover" => new TurnoverReportBuilder(_serviceProvider, _report, _source),
-            _ => throw new NotImplementedException(_report?.Type)
+            _ => throw new NotImplementedException($"Report layout '{_report.Type}' for {_endpoint.Path}")
         };
 
         var dm = await reportBuilder.LoadReportModelAsync(view,  platformUrl.Query ?? []);

@@ -114,11 +114,11 @@ internal partial class TypescriptBuilder
         {
             if (Table.Columns.Any(c => c.Name == "Date"))
                 yield return $$"""'{{Table.Model}}.Date'() { return du.today(); }""";
-            if (Table.Origin != null && Table.Origin.IsOperation)
+            if (Endpoint.Kind == EndpointKind.Operation)
             {
                 var opColumn = Table.Columns.FirstOrDefault(c => c.Type == ColumnType.Operation);
                 if (opColumn != null)
-                    yield return $$"""'{{Table.Model}}.{{opColumn.Name}}'() { return { Id: '{{Table.Origin.Table.ToLowerInvariant()}}', Name: '{{Table.Origin.Model}}'};}""";
+                    yield return $$"""'{{Table.Model}}.{{opColumn.Name}}'() { return { Id: '{{Endpoint.Name}}', Name: '{{Endpoint.Storage.Model}}'};}""";
             }
         }
 
@@ -132,12 +132,14 @@ internal partial class TypescriptBuilder
                 else
                     yield return $$"""'{{Table.TypeName}}.$$Tab': {type: String, value: '{{fd.Kinds.First()}}'}""";
             }
-            foreach (var (key, value) in Table.Rules.Where(r => !String.IsNullOrEmpty(r.Value.Value)))
+            foreach (var (key, value) in Endpoint.Declaration.Rules.Where(r => !String.IsNullOrEmpty(r.Value.Value)))
                 yield return $$"""'{{Table.TypeName}}.{{key}}'(this: {{Table.TypeName}}) { return {{validators}};}""";
 
-            foreach (var d in Table.Details.Select(x => x.Value))
+            foreach (var (name, d) in Table.Details)
             {
-                foreach (var (key, value) in d.Rules.Where(r => !String.IsNullOrEmpty(r.Value.Value)))
+                // rows are two-layer as well: columns from the shape, rules from the declaration
+                var declared = Endpoint.Declaration.Details.GetValueOrDefault(name);
+                foreach (var (key, value) in (declared?.Rules ?? []).Where(r => !String.IsNullOrEmpty(r.Value.Value)))
                     yield return $$"""'{{d.TypeName}}.{{key}}'(this: {{d.TypeName}}) { return {{value}};}""";
                 foreach (var c in d.Columns.Where(c => c.Total))
                     yield return $$"""'{{d.TypeName}}Array.{{c.Name}}'(this: {{d.TypeName}}Array) { return this.$sum(c => c.{{c.Name}}); }""";
@@ -167,7 +169,7 @@ internal partial class TypescriptBuilder
 
         IEnumerable<String> events()
         {
-            foreach (var g in Table.AllInherits(Table.Origin).GroupBy(x => x.Ref.Name))
+            foreach (var g in Table.AllInherits(Endpoint.Declaration).GroupBy(x => x.Ref.Name))
             {
                 var body = String.Join(" ", g.Select(x => $"doc.{x.Field.Name} = doc.{x.Ref.Name}.{x.Source.Name};"));
                 yield return $$"""'{{Table.Model}}.{{g.Key}}.change'(doc: {{Table.TypeName}}) { {{body}} }""";
@@ -176,7 +178,7 @@ internal partial class TypescriptBuilder
             foreach (var d in Table.Details)
             {
                 var dt = d.Value;
-                var inherits = dt.AllInherits(Table.Origin?.Details.GetValueOrDefault(d.Key)).ToList();
+                var inherits = dt.AllInherits(Endpoint.Declaration.Details.GetValueOrDefault(d.Key)).ToList();
                 if (inherits.Count == 0)
                     continue;
                 List<String> paths = dt.Kinds.Count > 0
@@ -206,7 +208,7 @@ internal partial class TypescriptBuilder
 
         const String jsDivider = ",\n\t\t";
 
-        var endpoint = Table.EndpointPathUseBase(Table.Origin);
+        var endpoint = Endpoint.Path;
         var templ = $$"""
 
         import { {{String.Join(", ", types())}} } from './edit';

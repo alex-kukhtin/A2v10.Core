@@ -48,5 +48,12 @@ internal static class Constants
         public const String Document = "document";
         public const String Journal = "journal";
         public const String Details = "details";
+        public const String Report = "report";
+        /* Platform-owned namespaces: their endpoints are declared in code, not in files. Own
+         * namespaces on purpose - inside catalog/ or document/ they would be shadowed by, or
+         * confused with, an application endpoint of the same name.
+         */
+        public const String Operations = "operations";
+        public const String Tags = "tags";
     }
 }

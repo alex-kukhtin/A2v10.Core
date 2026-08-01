@@ -15,9 +15,9 @@ internal class ReportGrouping
     internal List<ReportItemMetadata> Grouping { get; }
     internal List<ReportItemMetadata> Data { get; }
 
-    private readonly TableMetadata _report;
+    private readonly ReportMetadata _report;
     private readonly ExpandoObject _prms;
-    public ReportGrouping(TableMetadata report, ExpandoObject prms)
+    public ReportGrouping(ReportMetadata report, ExpandoObject prms)
     {
         _prms = prms;
         _report = report;   
