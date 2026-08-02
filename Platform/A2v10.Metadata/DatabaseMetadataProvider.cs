@@ -63,13 +63,6 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     public async Task<TableMetadata> GetSchemaAsync(String? dataSource, String schema, String table)
         => (await GetNormalEndpointAsync(dataSource, schema, table)).Storage;
 
-    static String? GetDefaultStorage(DeclarationMetadata declaration, String schema)
-    {
-        if (declaration.HasOwnStorage && schema == Constants.SchemaNames.Document)
-            return Constants.SchemaNames.Document;
-        return declaration.Storage;
-    }
-
     public Task<AppMetadata> GetAppMetadataAsync(String? dataSource)
     {
         return _metadataCache.GetAppMetadataAsync(dataSource, LoadAppMetadataAsync);
@@ -143,9 +136,15 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
      * through 'storage'. An endpoint that owns its shape gets Table and Declaration
      * equal - the same instance, not a copy.
      */
+    /* The address as the author sees it - what goes into a message they have to act on, so
+     * always the path they would open, never the internal (schema, table) pair.
+     */
+    private static String MetadataFileName(String schema, String table) =>
+        Path.Combine(schema, table, "metadata.json");
+
     private async Task<(String Text, String? Hash)> ReadMetadataFileAsync(String schema, String table)
     {
-        var fileName = Path.Combine(schema, table, "metadata.json");
+        var fileName = MetadataFileName(schema, table);
         using var stream = _codeProvider.FileStreamRO(fileName);
         if (stream == null)
             return ("{}", null); // empty value
@@ -157,22 +156,27 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
 
     /* One of our tables, built from the file that declares it and defaulted from its own
      * folder - never from the folder of whoever asked for it.
+     *
+     * Takes the text instead of reading it, so that an endpoint which owns its storage builds
+     * it from the same read: one file, one read, one hash. Two reads of one file are not only
+     * wasted io - they can see two different contents and put a declaration and a shape that
+     * never coexisted into the same endpoint.
      */
-    private async Task<TableMetadata> LoadStorageAsync(String? dataSource, String schema, String table)
+    private static TableMetadata BuildStorage(String schema, String table, String text, String? hash)
     {
         // declared in code, not in a file - defaults and address are applied the same way
-        var system = TableMetadataDefaults.SystemTable(schema, table);
-        if (system != null)
-        {
-            system.SetDefaults(schema, table);
-            return system;
-        }
-        var (text, hash) = await ReadMetadataFileAsync(schema, table);
-        var storage = JsonConvert.DeserializeObject<TableMetadata>(text, JsonSettings.CamelCaseSerializerSettings)
-            ?? throw new InvalidOperationException("TableMetadata deserialization fails");
+        var storage = TableMetadataDefaults.SystemTable(schema, table)
+            ?? JsonConvert.DeserializeObject<TableMetadata>(text, JsonSettings.CamelCaseSerializerSettings)
+            ?? throw new InvalidOperationException($"{MetadataFileName(schema, table)}: TableMetadata deserialization fails");
         storage.FileHash = hash;
         storage.SetDefaults(schema, table);
         return storage;
+    }
+
+    private async Task<TableMetadata> LoadStorageAsync(String? dataSource, String schema, String table)
+    {
+        var (text, hash) = await ReadMetadataFileAsync(schema, table);
+        return BuildStorage(schema, table, text, hash);
     }
 
     public Task<TableMetadata> GetStorageAsync(String? dataSource, String schema, String table)
@@ -184,23 +188,31 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
      * declaration comes from its own file, and the table it works on comes from the storage
      * cache - the same instance for every endpoint that points at it.
      *
-     * The same text is deserialized twice, once per type; each picks up the keys it declares.
-     * A key both types declare (today only 'inherit') is legitimately read twice - the storage
-     * carries the base, the endpoint the override.
+     * The file is read once. The text is deserialized twice, once per type; each picks up the
+     * keys it declares, and a key both types declare ('inherit', 'table') is legitimately read
+     * twice - see DeclarationMetadata.
      */
     private async Task<EndpointMetadata> LoadEndpointAsync(String? dataSource, String schema, String table)
     {
         var (text, hash) = await ReadMetadataFileAsync(schema, table);
         var declaration = JsonConvert.DeserializeObject<DeclarationMetadata>(text, JsonSettings.CamelCaseSerializerSettings)
-            ?? throw new InvalidOperationException("DeclarationMetadata deserialization fails");
+            ?? throw new InvalidOperationException($"{MetadataFileName(schema, table)}: DeclarationMetadata deserialization fails");
 
-        if (!String.IsNullOrEmpty(table))
-            declaration.Storage = GetDefaultStorage(declaration, schema);
+        CheckDataLocation(schema, table, declaration);
 
-        var (storageSchema, storageTable) = declaration.HasOwnStorage
-            ? (schema, table)
-            : ParsePath(declaration.Storage!);
-        var storage = await GetStorageAsync(dataSource, storageSchema, storageTable);
+        /* An endpoint that owns its storage builds it from the text already in hand; one that
+         * points elsewhere goes to the cache for that address. Both go through the same cache,
+         * so every endpoint pointing at one table still gets one instance.
+         */
+        TableMetadata storage;
+        if (declaration.HasOwnStorage)
+            storage = await _metadataCache.GetOrAddStorageAsync(dataSource, schema, table,
+                (_, s, t) => Task.FromResult(BuildStorage(s, t, text, hash)));
+        else
+        {
+            var (storageSchema, storageTable) = ParsePath(declaration.Storage!);
+            storage = await GetStorageAsync(dataSource, storageSchema, storageTable);
+        }
 
         /* The only place that decides which kind of endpoint this is. The discriminator is the
          * folder, not a key in the file: a file cannot lie about what it is.
@@ -242,6 +254,70 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             Constants.SchemaNames.Journal => EndpointKind.Journal,
             _ => EndpointKind.Undefined
         };
+    }
+
+    /* Kinds whose endpoints work on a table of ours and therefore have to say which one.
+     * Everything else falls through EndpointKindOf as Undefined and is not asked: platform
+     * namespaces (operations, tags) declare their tables in code, autonum is a registry and not
+     * a table endpoint, and a report owns no table at all - it names a surface it reads, which
+     * is a different key under a different rule.
+     */
+    private static Boolean DeclaresDataLocation(String schema) =>
+        EndpointKindOf(schema) != EndpointKind.Undefined;
+
+    /* Where the data lives is declared, never guessed.
+     *
+     * 'storage' - working on a table declared elsewhere - exists for one kind only: a family of
+     * operations over one document table. Every other endpoint owns its table, so its rule is
+     * not a choice between two keys but simply 'name it'. Two rules, and which one applies is
+     * decided by the folder, so neither can be reached by writing the wrong key.
+     *
+     * There used to be a default - an absent 'storage' under document/ meant the shared
+     * doc.Documents - and it was the single place in the format where writing nothing meant
+     * *someone else's* table, while everywhere else writing nothing means your own. Nothing
+     * replaces it: both readings of an undeclared endpoint are plausible and the wrong one is
+     * silent, so the file is asked instead of guessed at.
+     *
+     * A missing metadata.json and an empty {} arrive here as the same text and get the same
+     * message on purpose: 'the file is empty' would say less than 'nothing says where the data
+     * lives', and the fix is identical.
+     */
+    private static void CheckDataLocation(String schema, String table, DeclarationMetadata declaration)
+    {
+        if (!DeclaresDataLocation(schema))
+            return;
+
+        var hasTable = !String.IsNullOrEmpty(declaration.Table);
+        var hasStorage = !String.IsNullOrEmpty(declaration.Storage);
+        var file = MetadataFileName(schema, table);
+
+        if (schema != Constants.SchemaNames.Document)
+        {
+            if (hasStorage)
+                throw new InvalidOperationException(String.Join(Environment.NewLine,
+                    $"{file}: declares 'storage', which only a document endpoint may do.",
+                    "  'storage' shares one table across a family of operations; every other kind owns its table.",
+                    "  Declare \"table\": \"<TableName>\" instead."));
+            if (!hasTable)
+                throw new InvalidOperationException(String.Join(Environment.NewLine,
+                    $"{file}: does not declare 'table', so nothing says where the data lives.",
+                    "  Add \"table\": \"<TableName>\".",
+                    "  There is no default: a table name is never derived from the folder name."));
+            return;
+        }
+
+        if (hasTable == hasStorage)
+            throw new InvalidOperationException(hasTable
+                ? String.Join(Environment.NewLine,
+                    $"{file}: declares both 'table' and 'storage'. These are two different layouts:",
+                    $"    \"table\":   \"{declaration.Table}\" - this document has its own table;",
+                    $"    \"storage\": \"{declaration.Storage}\" - this document is an operation over a table declared elsewhere.",
+                    "  Keep one.")
+                : String.Join(Environment.NewLine,
+                    $"{file}: declares neither 'table' nor 'storage', so nothing says where the data lives.",
+                    "    \"table\":   \"<TableName>\" - if this document has its own table;",
+                    "    \"storage\": \"document\"    - if it is an operation over a table declared elsewhere.",
+                    "  There is no default: an absent 'table' is not a shared table and not a derived name."));
     }
 
     private async Task<TableMetadata> LoadTableMetadataDbAsync(String? dataSource, String schema, String table)

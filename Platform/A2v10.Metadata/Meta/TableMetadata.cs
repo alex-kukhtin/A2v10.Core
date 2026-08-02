@@ -347,8 +347,12 @@ public sealed record TableMetadata
         Path = String.IsNullOrEmpty(table) ? $"/{schema}" : $"/{schema}/{table}";
         if (String.IsNullOrEmpty(Schema))
             Schema = schema;
-        if (String.IsNullOrEmpty(Table))
-            Table = table.ToPascalCase().Plural();
+        /* No default for Table. Pluralising the folder name looks like a convention but is a
+         * guess: English plurals are irregular, and the name has to be reproduced exactly
+         * wherever it surfaces later - migrations, deploy, ejected SQL, legacy mapping - where
+         * a near miss creates a second table instead of failing. DatabaseMetadataProvider
+         * requires it to be declared, so an empty Table here belongs to a kind that has none.
+         */
         if (String.IsNullOrEmpty(Model))
             Model = table.ToPascalCase();
         if (Kind == EndpointKind.Undefined)
