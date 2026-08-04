@@ -10,9 +10,10 @@ internal partial class JavascriptBuilder
 {
     internal Task<String> CreateIndexTemplate()
     {
+        var table = Endpoint.Storage;
         IEnumerable<String> events()
         {
-            if (Table.IsDocument) {
+            if (table.IsDocument) {
                 yield return "'g.document.saved': handleSaved";
                 yield return "'g.document.applied': handleApply";
 
@@ -21,20 +22,20 @@ internal partial class JavascriptBuilder
 
         IEnumerable<String> options()
         {
-            if (Table.HasFolders)
+            if (table.HasFolders)
                 yield return $"persistSelect: ['Folders']";
             else
-                yield return $"persistSelect: ['{Table.CollectionName}']";
+                yield return $"persistSelect: ['{table.CollectionName}']";
         }
 
         IEnumerable<String> functions()
         {
-            if (Table.IsDocument)
+            if (table.IsDocument)
             {
                 yield return $$"""
                 function handleApply(elem) {
-                    let doc = elem.{{Table.Model}};
-                    let found = this.{{Table.CollectionName}}.find(d => d.Id == doc.Id);
+                    let doc = elem.{{table.Model}};
+                    let found = this.{{table.CollectionName}}.find(d => d.Id == doc.Id);
                     if (!found) return;
                     found.Done = doc.Done;
                 }
@@ -42,8 +43,8 @@ internal partial class JavascriptBuilder
 
                 yield return $$"""
                 function handleSaved(elem) {
-                    let doc = elem.{{Table.Model}};
-                    let found = this.{{Table.CollectionName}}.$find(d => d.Id === doc.Id);
+                    let doc = elem.{{table.Model}};
+                    let found = this.{{table.CollectionName}}.$find(d => d.Id === doc.Id);
                     if (found)
                         found.$merge(doc).$select();
                 }

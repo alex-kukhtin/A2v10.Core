@@ -12,32 +12,34 @@ internal partial class JavascriptBuilder
 
     private Task<String> CreateDocumentTemplate()
     {
+        var table = Endpoint.Storage;
+
         IEnumerable<String> defaults()
         {
-            if (Table.Columns.Any(c => c.Type == ColumnType.Date))
-                yield return $$"""'{{Table.Model}}.Date'() { return du.today(); }""";
+            if (table.Columns.Any(c => c.Type == ColumnType.Date))
+                yield return $$"""'{{table.Model}}.Date'() { return du.today(); }""";
             if (Endpoint.Kind == EndpointKind.Operation)
             {
-                var opColumn = Table.Columns.FirstOrDefault(c => c.Type == ColumnType.Operation);
+                var opColumn = table.Columns.FirstOrDefault(c => c.Type == ColumnType.Operation);
                 if (opColumn != null)
-                    yield return $$"""'{{Table.Model}}.{{opColumn.Name}}'() { return { Id: '{{Endpoint.Name}}', Name: '{{Endpoint.Storage.Model}}'};}""";
+                    yield return $$"""'{{table.Model}}.{{opColumn.Name}}'() { return { Id: '{{Endpoint.Name}}', Name: '{{Endpoint.Storage.Model}}'};}""";
             }
         }
 
         IEnumerable<String> properties()
         {
-            if (Table.Details.Count > 0)
+            if (table.Details.Count > 0)
             {
-                var fd = Table.Details.Select(x => x.Value).First();
+                var fd = table.Details.Select(x => x.Value).First();
                 if (fd.Kinds.Count == 0)
-                    yield return $$"""'{{Table.TypeName}}.$$Tab': {type: String, value: '{{fd.Table}}'}""";
+                    yield return $$"""'{{table.TypeName}}.$$Tab': {type: String, value: '{{fd.Table}}'}""";
                 else
-                    yield return $$"""'{{Table.TypeName}}.$$Tab': {type: String, value: '{{fd.Kinds.First()}}'}""";
+                    yield return $$"""'{{table.TypeName}}.$$Tab': {type: String, value: '{{fd.Kinds.First()}}'}""";
             }
             foreach (var c in Endpoint.Declaration.Rules.Where(c => !String.IsNullOrEmpty(c.Value.Value)))
-                yield return $$"""'{{Table.TypeName}}.{{c.Key}}'() { return {{c.Value.Value}};}""";
+                yield return $$"""'{{table.TypeName}}.{{c.Key}}'() { return {{c.Value.Value}};}""";
 
-            foreach (var (name, d) in Table.Details)
+            foreach (var (name, d) in table.Details)
             {
                 // rows are two-layer as well: columns from the shape, rules from the declaration
                 var declared = Endpoint.Declaration.Details.GetValueOrDefault(name);
@@ -50,38 +52,38 @@ internal partial class JavascriptBuilder
 
         IEnumerable<String> validators()
         {
-            foreach (var col in Table.Columns.Where(c => c.Required))
-                yield return $"'{Table.Model}.{col.Name}': `@[Error.Required]`";
+            foreach (var col in table.Columns.Where(c => c.Required))
+                yield return $"'{table.Model}.{col.Name}': `@[Error.Required]`";
 
-            foreach (var d in Table.Details.Select(x => x.Value))
+            foreach (var d in table.Details.Select(x => x.Value))
             {
                 if (d.Kinds.Count > 0)
                     foreach (var k in d.Kinds)
                         foreach (var c in d.Columns.Where(c => c.Required))
-                            yield return $"'{Table.Model}.{k}[].{c.Name}': `@[Error.Required]`";
+                            yield return $"'{table.Model}.{k}[].{c.Name}': `@[Error.Required]`";
                 else
                     foreach (var c in d.Columns.Where(c => c.Required))
-                        yield return $"'{Table.Model}.{d.CollectionName}[].{c.Name}': `@[Error.Required]`";
+                        yield return $"'{table.Model}.{d.CollectionName}[].{c.Name}': `@[Error.Required]`";
             }
         }
 
         IEnumerable<String> events()
         {
-            foreach (var g in Table.AllInherits(Endpoint.Declaration).GroupBy(x => x.Ref.Name))
+            foreach (var g in table.AllInherits(Endpoint.Declaration).GroupBy(x => x.Ref.Name))
             {
                 var body = String.Join(" ", g.Select(x => $"doc.{x.Field.Name} = doc.{x.Ref.Name}.{x.Source.Name};"));
-                yield return $$"""'{{Table.Model}}.{{g.Key}}.change'(doc) { {{body}} }""";
+                yield return $$"""'{{table.Model}}.{{g.Key}}.change'(doc) { {{body}} }""";
             }
 
-            foreach (var d in Table.Details)
+            foreach (var d in table.Details)
             {
                 var dt = d.Value;
                 var inherits = dt.AllInherits(Endpoint.Declaration.Details.GetValueOrDefault(d.Key)).ToList();
                 if (inherits.Count == 0)
                     continue;
                 List<String> paths = dt.Kinds.Count > 0
-                    ? [.. dt.Kinds.Select(k => $"{Table.Model}.{k}[]")]
-                    : [$"{Table.Model}.{dt.CollectionName}[]"];
+                    ? [.. dt.Kinds.Select(k => $"{table.Model}.{k}[]")]
+                    : [$"{table.Model}.{dt.CollectionName}[]"];
                 foreach (var g in inherits.GroupBy(x => x.Ref.Name))
                 {
                     var body = String.Join(" ", g.Select(x => $"row.{x.Field.Name} = row.{x.Ref.Name}.{x.Source.Name};"));
@@ -122,16 +124,16 @@ internal partial class JavascriptBuilder
 
         async function post() {
             const ctrl = this.$ctrl;
-            await ctrl.$invoke('post', {Id: this.{{Table.Model}}.Id}, '{{endpoint}}');
-        	this.{{Table.Model}}.Done = true;
+            await ctrl.$invoke('post', {Id: this.{{table.Model}}.Id}, '{{endpoint}}');
+        	this.{{table.Model}}.Done = true;
             ctrl.$emitGlobal('g.document.posted', this);
             ctrl.$requery();
         }
 
         async function unPost() {
             const ctrl = this.$ctrl;
-            await ctrl.$invoke('unpost', {Id: this.{{Table.Model}}.Id}, '{{endpoint}}');
-        	this.{{Table.Model}}.Done = false;
+            await ctrl.$invoke('unpost', {Id: this.{{table.Model}}.Id}, '{{endpoint}}');
+        	this.{{table.Model}}.Done = false;
             ctrl.$emitGlobal('g.document.posted', this);
             ctrl.$requery();
         }

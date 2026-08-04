@@ -25,10 +25,22 @@ public class JsonEmptyStringEnumConverter : StringEnumConverter
     }
 }
 
+/* Fields, not expression-bodied properties - and that is the whole content of this file.
+ *
+ * Newtonsoft keeps its contract cache (the reflected shape of every type it has seen) in the
+ * ContractResolver instance. A property written as '=> new()' hands out a fresh resolver on
+ * every access, so every single Deserialize rebuilds the contracts for TableMetadata and
+ * everything under it instead of reusing them. One instance, shared: the resolver is built for
+ * that and its cache is thread-safe. Same as JsonHelpers.CamelCaseSerializerSettings, which is
+ * already written this way.
+ *
+ * The converters here hold no state, so sharing them is safe too. Nothing may mutate a settings
+ * object taken from here - it is now everyone's, not a copy.
+ */
 public static class JsonSettings
 {
-    public static JsonSerializerSettings IgnoreNull => new()
-    {   
+    public static readonly JsonSerializerSettings IgnoreNull = new()
+    {
         NullValueHandling = NullValueHandling.Ignore,
         DefaultValueHandling = DefaultValueHandling.Ignore,
         Converters = [
@@ -36,7 +48,7 @@ public static class JsonSettings
         ],
     };
 
-    public static JsonSerializerSettings CamelCaseSerializerSettings => new()
+    public static readonly JsonSerializerSettings CamelCaseSerializerSettings = new()
     {
         NullValueHandling = NullValueHandling.Ignore,
         DefaultValueHandling = DefaultValueHandling.Ignore,
@@ -46,19 +58,19 @@ public static class JsonSettings
         }
     };
 
-    public static JsonSerializerSettings CamelCaseSerializerSettingsFormat => new()
+    public static readonly JsonSerializerSettings CamelCaseSerializerSettingsFormat = new()
     {
         NullValueHandling = NullValueHandling.Ignore,
         DefaultValueHandling = DefaultValueHandling.Ignore,
         Formatting = Formatting.Indented,
-        
+
         ContractResolver = new DefaultContractResolver()
         {
             NamingStrategy = new CamelCaseNamingStrategy()
         }
     };
 
-    public static JsonSerializerSettings WithNull => new()
+    public static readonly JsonSerializerSettings WithNull = new()
     {
         NullValueHandling = NullValueHandling.Include,
         Converters = [
@@ -66,22 +78,21 @@ public static class JsonSettings
         ]
     };
 
-    public static JsonSerializerSettings Default => new()
+    public static readonly JsonSerializerSettings Default = new()
     {
         Converters = [
             new JsonEmptyStringEnumConverter()
         ]
     };
 
-    public static JsonSerializerSettings DefaultExpando =>
-        new()
-        {
-            NullValueHandling = NullValueHandling.Ignore,
-            DefaultValueHandling = DefaultValueHandling.Ignore,
-            Converters =
-            [
-                new IgnoreNullValueExpandoObjectConverter()
-            ]
-        };
+    public static readonly JsonSerializerSettings DefaultExpando = new()
+    {
+        NullValueHandling = NullValueHandling.Ignore,
+        DefaultValueHandling = DefaultValueHandling.Ignore,
+        Converters =
+        [
+            new IgnoreNullValueExpandoObjectConverter()
+        ]
+    };
 
 }

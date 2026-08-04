@@ -11,7 +11,7 @@ internal partial class JavascriptBuilder
 {
     internal Task<String> CreateEditTemplate()
     {
-        return Table.Kind switch
+        return Endpoint.Storage.Kind switch
         {
             EndpointKind.Document => CreateDocumentTemplate(),
             _ => CreateGenericEditTemplate()
@@ -20,43 +20,43 @@ internal partial class JavascriptBuilder
 
     private Task<String> CreateGenericEditTemplate()
     {
-
+        var table = Endpoint.Storage;
         IEnumerable<String> properties()
         {
-            if (Table.Details.Count > 0)
+            if (table.Details.Count > 0)
             {
-                var fd = Table.Details.First();
+                var fd = table.Details.First();
                 if (fd.Value.Kinds.Count > 0)
-                    yield return $$"""'{{Table.TypeName}}.$$Tab': {type: String, value: '{{fd.Value.Kinds[0]}}'}""";
+                    yield return $$"""'{{table.TypeName}}.$$Tab': {type: String, value: '{{fd.Value.Kinds[0]}}'}""";
                 else
-                    yield return $$"""'{{Table.TypeName}}.$$Tab': {type: String, value: '{{fd.Key}}'}""";
+                    yield return $$"""'{{table.TypeName}}.$$Tab': {type: String, value: '{{fd.Key}}'}""";
             }
         }
 
         IEnumerable<String> validators()
         {
-            foreach (var col in Table.Columns.Where(c => c.Required || c.Unique))
+            foreach (var col in table.Columns.Where(c => c.Required || c.Unique))
             {
                 if (col.Unique && col.Required)
                     yield return $$"""
-                '{{Table.Model}}.{{col.Name}}': [
+                '{{table.Model}}.{{col.Name}}': [
                     `@[Error.Required]`,
                     {valid: {{col.Name.ToLowerInvariant()}}Duplicate, async: true, msg: `@[Error.Duplicate]`}]
                 """;
                 else if (col.Required)
-                    yield return $"'{Table.Model}.{col.Name}': `@[Error.Required]`";
+                    yield return $"'{table.Model}.{col.Name}': `@[Error.Required]`";
                 else if (col.Unique)
-                    yield return $$"""'{{Table.Model}}.{{col.Name}}': {valid: {{col.Name.ToLowerInvariant()}}Duplicate, async: true, msg: `@[Error.{{Table.CollectionName}}.Duplicate.{{col.Name}}]`}""";
+                    yield return $$"""'{{table.Model}}.{{col.Name}}': {valid: {{col.Name.ToLowerInvariant()}}Duplicate, async: true, msg: `@[Error.{{table.CollectionName}}.Duplicate.{{col.Name}}]`}""";
             }
 
-            foreach (var d in Table.Details.Select(x => x.Value))
+            foreach (var d in table.Details.Select(x => x.Value))
                 foreach (var c in d.Columns.Where(c => c.Required))
-                    yield return $"'{Table.Model}.{d.CollectionName}[].{c.Name}': `@[Error.Required]`";
+                    yield return $"'{table.Model}.{d.CollectionName}[].{c.Name}': `@[Error.Required]`";
         }
 
         IEnumerable<String> functions()
         {
-            foreach (var c in Table.Columns.Where(c => c.Unique))
+            foreach (var c in table.Columns.Where(c => c.Unique))
             {
                 yield return $$"""
                 function {{c.Name.ToLowerInvariant()}}Duplicate(el, val) {

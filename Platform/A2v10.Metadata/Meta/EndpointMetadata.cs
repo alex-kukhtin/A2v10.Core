@@ -1,6 +1,9 @@
 // Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+using System.Collections.Generic;
+using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Vml;
 
 namespace A2v10.Metadata;
 

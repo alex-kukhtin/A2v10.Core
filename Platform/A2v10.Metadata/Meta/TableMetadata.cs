@@ -189,11 +189,6 @@ public sealed record PostMetadata
 }
 
 
-public sealed record RuleMetadata
-{
-    public String? Value { get; set; }
-}
-
 public enum ReportItemKind
 {
     G,
@@ -245,10 +240,6 @@ public enum TableTrait
     Folders,
     Tags
 }
-
-public sealed record InitialMetadata(InitialSource Source, String Value);
-public sealed record InheritMetadata(String Ref, String Field); 
-public sealed record InheritDescriptor(TableColumn Field, TableColumn Ref, TableColumn Source);
 
 public sealed record TableMetadata
 {

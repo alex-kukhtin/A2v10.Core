@@ -4,6 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Options;
@@ -29,6 +30,12 @@ public class DatabaseMetadataCache
     // one database, and the platformid base belongs to the database.
     private readonly ConcurrentDictionary<String, AppPlatformId> _platformIdCache = [];
 
+    /* Held for the whole of one cold load - see GetOrLoadAsync - and by ClearAll, so that a
+     * file change cannot land in the middle of a load and let it publish a table of the
+     * generation that was just dropped.
+     */
+    private readonly SemaphoreSlim _loadGate = new(1, 1);
+
     private Boolean _metadataDirty = true; // TODO. ????
     private FileSystemWatcher? FileWatcher { get; init; }
     public Boolean IsMetadataDirty => _metadataDirty;
@@ -41,26 +48,62 @@ public class DatabaseMetadataCache
     }
     public void ClearAll()
     {
-        _cache.Clear();
-        _storages.Clear();   // both, always: a container must never keep a table of an older generation
-        _endpoints.Clear();
-        _appMetaCache.Clear();
-        _platformIdCache.Clear();
-        _xamlFormCache.Clear();
-        _metadataDirty = true;
+        _loadGate.Wait();    // never between the first build of a load and its publication
+        try
+        {
+            _cache.Clear();
+            _storages.Clear();   // both, always: a container must never keep a table of an older generation
+            _endpoints.Clear();
+            _appMetaCache.Clear();
+            _platformIdCache.Clear();
+            _xamlFormCache.Clear();
+            _metadataDirty = true;
+        }
+        finally
+        {
+            _loadGate.Release();
+        }
     }
 
-    public async Task<EndpointMetadata> GetOrAddAsync(String? dataSource, String schema, String table,
-        Func<String?, String, String, Task<EndpointMetadata>> getMeta)
+    /* An endpoint is not finished when it is built: the reference graph it points into is built
+     * afterwards, and that graph is cyclic - two catalogs may name each other. So two things
+     * have to hold at once, and they pull in opposite directions:
+     *
+     *   a descent that comes back around must find the instance and return, or it never ends;
+     *   nobody else may receive an endpoint whose references are still being filled.
+     *
+     * What separates the two is not the endpoint's state but who is asking, so that is what is
+     * distinguished here. The load in progress is an object, and only the descent holding it
+     * can see into it. Everyone else sees _cache, which holds finished endpoints only and
+     * receives a whole load at once.
+     *
+     * The gate is therefore not about the dictionary - that one is concurrent already - but
+     * about the interval between the first build and the last link, which has no other way to
+     * be made indivisible. It is taken on a miss only, so a warm cache is lock-free.
+     *
+     * A load that throws publishes nothing: the next request builds again and throws again,
+     * which is the behaviour a broken metadata.json should have.
+     */
+    internal async Task<EndpointMetadata> GetOrLoadAsync(String? dataSource, String schema, String table,
+        Func<EndpointLoad, String?, String, String, Task<EndpointMetadata>> load)
     {
-        var key = $"{dataSource}:{schema}:{table}";
-        if (_cache.TryGetValue(key, out EndpointMetadata? meta))
-            return meta;
-        meta = await getMeta(dataSource, schema, table);
-        //key = $"{dataSource}:{meta.Schema}:{meta.Name}";
-        //var globalMeta = await GetGlobalMetaAsync(dataSource, getMeta);
-        //meta = meta.MergeGlobal(globalMeta);
-        return _cache.GetOrAdd(key, meta);
+        var key = EndpointLoad.KeyOf(dataSource, schema, table);
+        if (_cache.TryGetValue(key, out EndpointMetadata? finished))
+            return finished;
+        await _loadGate.WaitAsync();
+        try
+        {
+            if (_cache.TryGetValue(key, out finished))
+                return finished;
+            var inLoad = new EndpointLoad(_cache);
+            var endpoint = await load(inLoad, dataSource, schema, table);
+            inLoad.Publish();
+            return endpoint;
+        }
+        finally
+        {
+            _loadGate.Release();
+        }
     }
 
     public async Task<TableMetadata> GetOrAddStorageAsync(String? dataSource, String schema, String table,

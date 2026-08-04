@@ -27,7 +27,7 @@ internal partial class SqlBuilder
     String BuildLoadPlainSqlText()
     {
         var allColumns = Table.AllColumns().ToList();
-        var refs = allColumns.AllRefs().ToList();
+        // var refs = allColumns.AllRefs().ToList();
 
         IEnumerable<String> plainSqlFields(String alias)
         {

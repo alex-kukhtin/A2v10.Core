@@ -15,12 +15,14 @@
 16. Tags -> Edit, Filter, Settings, FK_, UNQ_
 18. Amount/Qty/Price/Factor реализация.
 19. sql schema to databasedeploy.sql
-20.
+20. Item.Fetch - не возвращает Unit.
+22. platformid to databasedeploy.sql
+23. Browse Operation
+25. Required
 
 
 14. Не работает ParentElem в Edit.
 20. a2security.Users => meta. Name = UserName
-21. Color в метаданные для TagLabel
 22. Переименовать сам пакет и разделить его на две части - Xaml и БД.
 (чтобы менять код для БД для разных СУБД)
 31. IndexPage: SortProperty (Agent.Name?)

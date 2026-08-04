@@ -28,15 +28,15 @@ internal static class TableMetadataDefaults
         };
     }
 
-    // op.[operations] - the same table the report grouping left-joins to
+    // doc.[Operations] - the same table the report grouping left-joins to
     private static TableMetadata OperationsTable()
     {
         return new TableMetadata()
         {
             Kind = EndpointKind.Operation,
-            Schema = Constants.SchemaNames.Operations,
+            Schema = Constants.SchemaNames.Document,
             Model = "Operation",
-            Table = "operations"   // lower case is important
+            Table = "Operations"
         };
     }
 

@@ -37,9 +37,6 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             _metadataCache.ClearDirty();
     }
 
-    /* Phase 2: the reference graph is built after the endpoint is published to the cache,
-     * because it is cyclic - a re-entry has to find the instance, not build it again.
-     */
     public async Task<EndpointMetadata> GetEndpointAsync(IModelBaseMeta meta, String? dataSource)
     {
         var endpoint = await GetEndpointAsync(dataSource, meta.CurrentSchema, meta.CurrentTable);
@@ -48,16 +45,36 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return endpoint;
     }
 
-    public async Task<EndpointMetadata> GetEndpointAsync(String? dataSource, String schema, String table)
+    /* The entry point: no load is running yet, so the cache opens one and publishes it whole.
+     * Everything below takes that load as a parameter, which is what tells the two roles apart -
+     * see EndpointLoad.
+     */
+    public Task<EndpointMetadata> GetEndpointAsync(String? dataSource, String schema, String table)
     {
-        var endpoint = await _metadataCache.GetOrAddAsync(dataSource, schema, table, LoadEndpointAsync);
-        await ResolveReferencesAsync(endpoint, dataSource);
+        return _metadataCache.GetOrLoadAsync(dataSource, schema, table, LoadAsync);
+    }
+
+    /* Build, then link, and between the two the endpoint is put into the load: the graph is
+     * cyclic, so a descent that comes back around has to find the instance and return.
+     */
+    private async Task<EndpointMetadata> LoadAsync(EndpointLoad load, String? dataSource, String schema, String table)
+    {
+        var found = load.Find(dataSource, schema, table);
+        if (found != null)
+            return found;
+        var endpoint = await LoadEndpointAsync(load, dataSource, schema, table);
+        load.Add(dataSource, schema, table, endpoint);
+        await ResolveReferencesAsync(load, endpoint, dataSource);
         return endpoint;
     }
 
     // a reference target must resolve to one of our tables, so a report is not a legal target
     public async Task<NormalEndpointMetadata> GetNormalEndpointAsync(String? dataSource, String schema, String table)
         => await GetEndpointAsync(dataSource, schema, table) as NormalEndpointMetadata
+            ?? throw new InvalidOperationException($"Endpoint /{schema}/{table} is not a data endpoint");
+
+    private async Task<NormalEndpointMetadata> GetNormalEndpointAsync(EndpointLoad load, String? dataSource, String schema, String table)
+        => await LoadAsync(load, dataSource, schema, table) as NormalEndpointMetadata
             ?? throw new InvalidOperationException($"Endpoint /{schema}/{table} is not a data endpoint");
 
     public async Task<TableMetadata> GetSchemaAsync(String? dataSource, String schema, String table)
@@ -184,15 +201,15 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return _metadataCache.GetOrAddStorageAsync(dataSource, schema, table, LoadStorageAsync);
     }
 
-    /* The endpoint is built here, once, before it is published to the cache: its own
-     * declaration comes from its own file, and the table it works on comes from the storage
-     * cache - the same instance for every endpoint that points at it.
+    /* The endpoint is built here, once, before it is published to the cache: the table it works
+     * on is the same instance for every endpoint that points at it, and its declaration is what
+     * that table declares with this file's own declaration on top.
      *
      * The file is read once. The text is deserialized twice, once per type; each picks up the
      * keys it declares, and a key both types declare ('inherit', 'table') is legitimately read
      * twice - see DeclarationMetadata.
      */
-    private async Task<EndpointMetadata> LoadEndpointAsync(String? dataSource, String schema, String table)
+    private async Task<EndpointMetadata> LoadEndpointAsync(EndpointLoad load, String? dataSource, String schema, String table)
     {
         var (text, hash) = await ReadMetadataFileAsync(schema, table);
         var declaration = JsonConvert.DeserializeObject<DeclarationMetadata>(text, JsonSettings.CamelCaseSerializerSettings)
@@ -201,17 +218,24 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         CheckDataLocation(schema, table, declaration);
 
         /* An endpoint that owns its storage builds it from the text already in hand; one that
-         * points elsewhere goes to the cache for that address. Both go through the same cache,
-         * so every endpoint pointing at one table still gets one instance.
+         * points elsewhere asks for the endpoint at that address, because a shared table comes
+         * with a shared declaration - what /document says about its columns holds for every
+         * operation over it. Both roads end in the same storage cache, so every endpoint
+         * pointing at one table still gets one instance.
          */
         TableMetadata storage;
+        DeclarationMetadata? storageDeclaration = null;
         if (declaration.HasOwnStorage)
             storage = await _metadataCache.GetOrAddStorageAsync(dataSource, schema, table,
                 (_, s, t) => Task.FromResult(BuildStorage(s, t, text, hash)));
         else
         {
             var (storageSchema, storageTable) = ParsePath(declaration.Storage!);
-            storage = await GetStorageAsync(dataSource, storageSchema, storageTable);
+            CheckStorageTarget(schema, table, declaration, storageSchema, storageTable);
+            var storageEndpoint = await GetNormalEndpointAsync(load, dataSource, storageSchema, storageTable);
+            CheckStorageOwnsTable(schema, table, declaration, storageEndpoint);
+            storage = storageEndpoint.Storage;
+            storageDeclaration = storageEndpoint.Declaration;
         }
 
         /* The only place that decides which kind of endpoint this is. The discriminator is the
@@ -236,9 +260,105 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             Schema = schema,
             Name = table,
             Storage = storage,
-            Declaration = declaration,
+            Declaration = MergeDeclaration(declaration, storageDeclaration),
             FileHash = hash
         };
+    }
+
+    /* 'storage' names a table, and a table is declared by the endpoint that owns it. Both rules
+     * below say that, and they are two because they can be asked at different moments: pointing
+     * at yourself is answerable from the path alone, before anything is loaded, and it has to
+     * be - the descent would re-enter this very endpoint, which is not in the cache yet.
+     *
+     * The remaining shape - a and b naming each other - is not caught: answering it means
+     * loading b, which is the descent itself. It takes two files written to point at one
+     * another, and it ends in a stack overflow rather than a message.
+     */
+    private static void CheckStorageTarget(String schema, String table, DeclarationMetadata declaration,
+        String storageSchema, String storageTable)
+    {
+        if (!String.Equals(schema, storageSchema, StringComparison.OrdinalIgnoreCase)
+            || !String.Equals(table, storageTable, StringComparison.OrdinalIgnoreCase))
+            return;
+        throw new InvalidOperationException(String.Join(Environment.NewLine,
+            $"{MetadataFileName(schema, table)}: 'storage' points at this endpoint itself.",
+            $"    \"storage\": \"{declaration.Storage}\"",
+            "  'storage' names the endpoint that declares the table, which is never the one declaring 'storage'.",
+            "  Point at that endpoint, or declare \"table\" here instead."));
+    }
+
+    private static void CheckStorageOwnsTable(String schema, String table, DeclarationMetadata declaration,
+        NormalEndpointMetadata storageEndpoint)
+    {
+        if (storageEndpoint.Declaration.HasOwnStorage)
+            return;
+        throw new InvalidOperationException(String.Join(Environment.NewLine,
+            $"{MetadataFileName(schema, table)}: 'storage' points at {storageEndpoint.Path}, which declares 'storage' itself.",
+            $"    \"storage\": \"{declaration.Storage}\"    - here;",
+            $"    \"storage\": \"{storageEndpoint.Declaration.Storage}\"    - there.",
+            "  'storage' is one hop: it names the endpoint that declares the table, not another operation over it.",
+            $"  Point at {storageEndpoint.Declaration.Storage} instead."));
+    }
+
+    /* The two layers a declaration comes in: what the shared table declares about itself, and
+     * what this endpoint declares on top of it. An endpoint owning its table has no layer below
+     * and is returned untouched.
+     *
+     * The law is one sentence - mine wins - and the shape of the value decides at what
+     * granularity: a map merges by key, a set unions, a scalar is all-or-nothing.
+     *
+     * Written as 'own with', so only the keys named here are layered and everything else stays
+     * the endpoint's own. What is deliberately not named:
+     *
+     *   'table'/'storage' - where MY data lives. Inheriting them would produce a declaration
+     *                       naming both, the one state CheckDataLocation exists to make
+     *                       unreachable.
+     *   'post'            - what the operation DOES. The table is shared, the act is not: two
+     *                       operations over one table post in opposite directions, which is
+     *                       most of why they are two.
+     */
+    private static DeclarationMetadata MergeDeclaration(DeclarationMetadata own, DeclarationMetadata? storage)
+    {
+        if (storage == null)
+            return own;
+        return own with
+        {
+            InitialValues = MergeByKey(own.InitialValues, storage.InitialValues),
+            Inherit = MergeByKey(own.Inherit, storage.Inherit),
+            Rules = MergeByKey(own.Rules, storage.Rules),
+            Required = [.. storage.Required.Union(own.Required)],
+            Autonum = Mine(own.Autonum, storage.Autonum),
+            ItemsLabel = Mine(own.ItemsLabel, storage.ItemsLabel),
+            ItemLabel = Mine(own.ItemLabel, storage.ItemLabel),
+            Details = MergeDetails(own.Details, storage.Details)
+        };
+    }
+
+    private static String? Mine(String? own, String? storage) =>
+        String.IsNullOrEmpty(own) ? storage : own;
+
+    private static Dictionary<String, T> MergeByKey<T>(Dictionary<String, T> own, Dictionary<String, T> storage)
+    {
+        if (storage.Count == 0)
+            return own;
+        var merged = new Dictionary<String, T>(storage);
+        foreach (var (key, value) in own)
+            merged[key] = value;
+        return merged;
+    }
+
+    /* Rows layer the same way rows are shaped: by detail name, which is a key of the shared
+     * TableMetadata.Details, so the two sides are talking about the same collection.
+     */
+    private static Dictionary<String, DeclarationMetadata> MergeDetails(
+        Dictionary<String, DeclarationMetadata> own, Dictionary<String, DeclarationMetadata> storage)
+    {
+        if (storage.Count == 0)
+            return own;
+        var merged = new Dictionary<String, DeclarationMetadata>(storage);
+        foreach (var (key, value) in own)
+            merged[key] = MergeDeclaration(value, storage.GetValueOrDefault(key));
+        return merged;
     }
 
     /* Folders the enum does not know yet ('report', 'autonum') resolve to Undefined rather
@@ -371,7 +491,11 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         }
     }
 
-    public async Task ResolveReferencesAsync(EndpointMetadata endpoint, String? dataSource)
+    /* Phase 2, run once per endpoint by LoadAsync and by nobody else. Reachable targets descend
+     * through the same load, so one that comes back around finds the instance and returns -
+     * which is what terminates a cycle, and what a second call from outside would undo.
+     */
+    private async Task ResolveReferencesAsync(EndpointLoad load, EndpointMetadata endpoint, String? dataSource)
     {
         var meta = endpoint switch { NormalEndpointMetadata n => n.Storage, ReportEndpointMetadata r => r.Surface, _ => throw new InvalidOperationException($"Unknown endpoint {endpoint.Path}") };
         static IEnumerable<TableColumn> GetAllReferences(TableMetadata table)
@@ -396,7 +520,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                 }
                 else if (gcol.Type == ColumnType.Operation)
                 {
-                    gcol.RefTable = await GetNormalEndpointAsync(dataSource, Constants.SchemaNames.Operations, String.Empty);
+                    gcol.RefTable = await GetNormalEndpointAsync(load, dataSource, Constants.SchemaNames.Operations, String.Empty);
                     continue;
                 }
             }
@@ -405,7 +529,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                 continue;
 
             var (schema, table) = ParsePath(column.Target);
-            var refMeta = await GetNormalEndpointAsync(dataSource, schema, table);
+            var refMeta = await GetNormalEndpointAsync(load, dataSource, schema, table);
             foreach (var gcol in group)
                 gcol.RefTable = refMeta;
         }
