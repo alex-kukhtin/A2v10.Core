@@ -16,8 +16,6 @@ internal partial class JavascriptBuilder
 
         IEnumerable<String> defaults()
         {
-            if (table.Columns.Any(c => c.Type == ColumnType.Date))
-                yield return $$"""'{{table.Model}}.Date'() { return du.today(); }""";
             if (Endpoint.Kind == EndpointKind.Operation)
             {
                 var opColumn = table.Columns.FirstOrDefault(c => c.Type == ColumnType.Operation);
@@ -36,15 +34,15 @@ internal partial class JavascriptBuilder
                 else
                     yield return $$"""'{{table.TypeName}}.$$Tab': {type: String, value: '{{fd.Kinds.First()}}'}""";
             }
-            foreach (var c in Endpoint.Declaration.Rules.Where(c => !String.IsNullOrEmpty(c.Value.Value)))
-                yield return $$"""'{{table.TypeName}}.{{c.Key}}'() { return {{c.Value.Value}};}""";
+            foreach (var (key, expr) in Endpoint.Declaration.Rules.Computed)
+                yield return $$"""'{{table.TypeName}}.{{key}}'() { return {{expr}};}""";
 
             foreach (var (name, d) in table.Details)
             {
                 // rows are two-layer as well: columns from the shape, rules from the declaration
                 var declared = Endpoint.Declaration.Details.GetValueOrDefault(name);
-                foreach (var c in (declared?.Rules ?? []).Where(c => !String.IsNullOrEmpty(c.Value.Value)))
-                    yield return $$"""'{{d.TypeName}}.{{c.Key}}'() { return {{c.Value.Value}};}""";
+                foreach (var (key, expr) in declared?.Rules.Computed ?? [])
+                    yield return $$"""'{{d.TypeName}}.{{key}}'() { return {{expr}};}""";
                 foreach (var c in d.Columns.Where(c => c.Total))
                     yield return $$"""'{{d.TypeName}}Array.{{c.Name}}'() { return this.$sum(c => c.{{c.Name}}); }""";
             }
@@ -52,18 +50,22 @@ internal partial class JavascriptBuilder
 
         IEnumerable<String> validators()
         {
-            foreach (var col in table.Columns.Where(c => c.Required))
-                yield return $"'{table.Model}.{col.Name}': `@[Error.Required]`";
+            foreach (var f in table.RequiredFields(Endpoint.Declaration))
+                yield return $"'{table.Model}.{f}': `@[Error.Required]`";
 
-            foreach (var d in table.Details.Select(x => x.Value))
+            foreach (var (name, d) in table.Details)
             {
+                var declared = Endpoint.Declaration.Details.GetValueOrDefault(name);
+                if (declared == null)
+                    continue;
+                var required = d.RequiredFields(declared);
                 if (d.Kinds.Count > 0)
                     foreach (var k in d.Kinds)
-                        foreach (var c in d.Columns.Where(c => c.Required))
-                            yield return $"'{table.Model}.{k}[].{c.Name}': `@[Error.Required]`";
+                        foreach (var f in required)
+                            yield return $"'{table.Model}.{k}[].{f}': `@[Error.Required]`";
                 else
-                    foreach (var c in d.Columns.Where(c => c.Required))
-                        yield return $"'{table.Model}.{d.CollectionName}[].{c.Name}': `@[Error.Required]`";
+                    foreach (var f in required)
+                        yield return $"'{table.Model}.{d.CollectionName}[].{f}': `@[Error.Required]`";
             }
         }
 
@@ -78,7 +80,10 @@ internal partial class JavascriptBuilder
             foreach (var d in table.Details)
             {
                 var dt = d.Value;
-                var inherits = dt.AllInherits(Endpoint.Declaration.Details.GetValueOrDefault(d.Key)).ToList();
+                var declared = Endpoint.Declaration.Details.GetValueOrDefault(d.Key);
+                if (declared == null)
+                    continue;
+                var inherits = dt.AllInherits(declared).ToList();
                 if (inherits.Count == 0)
                     continue;
                 List<String> paths = dt.Kinds.Count > 0

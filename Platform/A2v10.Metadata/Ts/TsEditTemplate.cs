@@ -32,23 +32,30 @@ internal partial class TypescriptBuilder
 
         IEnumerable<String> validators()
         {
-            foreach (var col in Table.Columns.Where(c => c.Required || c.Unique))
+            var required = Table.RequiredFields(Endpoint.Declaration).ToHashSet();
+            foreach (var col in Table.AllColumns(c => c.Unique || required.Contains(c.Name)))
             {
-                if (col.Unique && col.Required)
+                if (col.Unique && required.Contains(col.Name))
                     yield return $$"""
                 '{{Table.Model}}.{{col.Name}}': [
                     `@[Error.Required]`,
                     {valid: {{col.Name.ToLowerInvariant()}}Duplicate, async: true, msg: `@[Error.Duplicate]`}]
                 """;
-                else if (col.Required)
+                else if (required.Contains(col.Name))
                     yield return $"'{Table.Model}.{col.Name}': `@[Error.Required]`";
                 else if (col.Unique)
                     yield return $$"""'{{Table.Model}}.{{col.Name}}': {valid: {{col.Name.ToLowerInvariant()}}Duplicate, async: true, msg: `@[Error.{{Table.CollectionName}}.Duplicate.{{col.Name}}]`}""";
             }
 
-            foreach (var d in Table.Details.Select(x => x.Value))
-                foreach (var c in d.Columns.Where(c => c.Required))
-                    yield return $"'{Table.Model}.{d.CollectionName}[].{c.Name}': `@[Error.Required]`";
+            foreach (var (name, d) in Table.Details)
+            {
+                // rows are two-layer as well: columns from the shape, rules from the declaration
+                var declared = Endpoint.Declaration.Details.GetValueOrDefault(name);
+                if (declared == null)
+                    continue;
+                foreach (var f in d.RequiredFields(declared))
+                    yield return $"'{Table.Model}.{d.CollectionName}[].{f}': `@[Error.Required]`";
+            }
         }
 
         IEnumerable<String> functions()
@@ -132,15 +139,15 @@ internal partial class TypescriptBuilder
                 else
                     yield return $$"""'{{Table.TypeName}}.$$Tab': {type: String, value: '{{fd.Kinds.First()}}'}""";
             }
-            foreach (var (key, value) in Endpoint.Declaration.Rules.Where(r => !String.IsNullOrEmpty(r.Value.Value)))
-                yield return $$"""'{{Table.TypeName}}.{{key}}'(this: {{Table.TypeName}}) { return {{validators}};}""";
+            foreach (var (key, expr) in Endpoint.Declaration.Rules.Computed)
+                yield return $$"""'{{Table.TypeName}}.{{key}}'(this: {{Table.TypeName}}) { return {{expr}};}""";
 
             foreach (var (name, d) in Table.Details)
             {
                 // rows are two-layer as well: columns from the shape, rules from the declaration
                 var declared = Endpoint.Declaration.Details.GetValueOrDefault(name);
-                foreach (var (key, value) in (declared?.Rules ?? []).Where(r => !String.IsNullOrEmpty(r.Value.Value)))
-                    yield return $$"""'{{d.TypeName}}.{{key}}'(this: {{d.TypeName}}) { return {{value}};}""";
+                foreach (var (key, expr) in declared?.Rules.Computed ?? [])
+                    yield return $$"""'{{d.TypeName}}.{{key}}'(this: {{d.TypeName}}) { return {{expr}};}""";
                 foreach (var c in d.Columns.Where(c => c.Total))
                     yield return $$"""'{{d.TypeName}}Array.{{c.Name}}'(this: {{d.TypeName}}Array) { return this.$sum(c => c.{{c.Name}}); }""";
             }
@@ -148,21 +155,25 @@ internal partial class TypescriptBuilder
 
         IEnumerable<String> validators()
         {
-            foreach (var col in Table.Columns.Where(c => c.Required))
-                yield return $"'{Table.Model}.{col.Name}': `@[Error.Required]`";
+            foreach (var f in Table.RequiredFields(Endpoint.Declaration))
+                yield return $"'{Table.Model}.{f}': `@[Error.Required]`";
 
-            foreach (var d in Table.Details.Select(x => x.Value))
+            foreach (var (name, d) in Table.Details)
             {
+                var declared = Endpoint.Declaration.Details.GetValueOrDefault(name);
+                if (declared == null)
+                    continue;
+                var required = d.RequiredFields(declared);
                 if (d.Kinds.Count > 0)
                 {
                     foreach (var k in d.Kinds)
-                        foreach (var c in d.Columns.Where(c => c.Required))
-                            yield return $"'{Table.Model}.{k}[].{c.Name}': `@[Error.Required]`";
+                        foreach (var f in required)
+                            yield return $"'{Table.Model}.{k}[].{f}': `@[Error.Required]`";
                 }
                 else
                 {
-                    foreach (var c in d.Columns.Where(c => c.Required))
-                        yield return $"'{Table.Model}.{d.CollectionName}[].{c.Name}': `@[Error.Required]`";
+                    foreach (var f in required)
+                        yield return $"'{Table.Model}.{d.CollectionName}[].{f}': `@[Error.Required]`";
                 }
             }
         }
@@ -178,7 +189,10 @@ internal partial class TypescriptBuilder
             foreach (var d in Table.Details)
             {
                 var dt = d.Value;
-                var inherits = dt.AllInherits(Endpoint.Declaration.Details.GetValueOrDefault(d.Key)).ToList();
+                var declared = Endpoint.Declaration.Details.GetValueOrDefault(d.Key);
+                if (declared == null)
+                    continue;
+                var inherits = dt.AllInherits(declared).ToList();
                 if (inherits.Count == 0)
                     continue;
                 List<String> paths = dt.Kinds.Count > 0

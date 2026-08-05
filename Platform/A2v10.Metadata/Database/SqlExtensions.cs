@@ -173,8 +173,7 @@ internal static class SqlExtensions
         => !(column.Type == ColumnType.Id
             || column.Type == ColumnType.Owner
             || column.Type == ColumnType.RowVersion
-            || column.HasDefaultBit
-            || column.Required);
+            || column.HasDefaultBit);
 
     /* RowVersion is the one type the descriptor cannot answer for: the catalog calls it
      * 'timestamp', the DDL wants 'rowversion' and a table type wants 'varbinary(8)'.

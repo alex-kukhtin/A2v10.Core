@@ -35,6 +35,7 @@ public enum ColumnType
     Done,
     Void,
     IsSystem,
+    IsFolder,
     Owner,
     Parent,
     Folder,
@@ -135,8 +136,10 @@ public record TableColumn
     public Int32? Length { get; init; }
     public Int32? Precision { get; init; }
     public Int32? Scale { get; init; }    
+    /* No 'Required' here: it is a rule, not a property of the column - see
+     * DeclarationMetadata.RuleSet and MetadataExtensions.RequiredFields.
+     */
     // OLD -> to RULES
-    public Boolean Required { get; init; }
     public Boolean Total { get; init; }
     public Boolean Unique { get; init; }
     #endregion
@@ -146,6 +149,7 @@ public record TableColumn
     [JsonIgnore]
     internal Boolean HasDefaultBit => 
         Type == ColumnType.IsSystem
+        || Type == ColumnType.IsFolder
         || Type == ColumnType.Void
         || Type == ColumnType.Done;
 
@@ -189,40 +193,6 @@ public sealed record PostMetadata
 }
 
 
-public enum ReportItemKind
-{
-    G,
-    F,
-    D,
-    Grouping = G,
-    Filter = F,
-    Data = D
-}
-public record ReportItemMetadata
-{
-    #region Database Fields 
-    public ReportItemKind Kind { get; init; }
-    public String Column { get; init; } = default!;
-    public ColumnType DataType { get; init; } = default!;
-    public String RefSchema { get; init; } = default!;
-    public String RefTable { get; init; } = default!;
-    public Boolean Checked { get; init; }
-    public Int32 Order { get; init; }
-    public String? Label { get; init; }
-    public String? Func { get; init; }
-    #endregion
-
-    public String RealRefSchema => DataType switch
-    {
-        ColumnType.Operation => "op",
-        _ => RefSchema
-    };
-    public String RealRefTable => DataType switch
-    {
-        ColumnType.Operation => "operations", // Lower case is important!
-        _ => RefTable
-    };
-}
 
 public enum InitialSource
 {
@@ -250,12 +220,6 @@ public sealed record TableMetadata
     public String Model { get; set; } = default!;
     public String Path { get; set; } = default!;
     public String Label { get; set; } = default!;
-    /* Declarations that stay here: 'inherit' is genuinely two-layer - the storage carries the
-     * base, the endpoint overrides it in DeclarationMetadata. A key belongs in both types only
-     * under that test.
-     */
-    public Dictionary<String, InheritMetadata> Inherit { get; init; } = [];
-
     [JsonProperty("fields")]
     private Dictionary<String, TableColumn> _fields { get; init; } = [];
 
@@ -285,13 +249,8 @@ public sealed record TableMetadata
     public Boolean HasTags => Traits.Contains(TableTrait.Tags);
     public Boolean HasFolders => Traits.Contains(TableTrait.Folders);
 
-    // OLD
-    public String? ItemsName { get; init; }
-
     #endregion
 
-
-    public String? ItemsLabel { get; init; }
     public List<ColumnReferenceToMe> RefsToMe { get; init; } = [];
 
     // Service variables
@@ -309,9 +268,6 @@ public sealed record TableMetadata
     internal String RowKindField => Columns.FirstOrDefault(c => c.Type == ColumnType.RowKind)?.Name
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a RowKind column");
 
-    internal String RealItemsName => ItemsName ?? Table;  
-    internal String RealItemsLabel => ItemsLabel ?? $"@{RealItemsName}";
-
     [JsonIgnore]
     internal Boolean IsCatalog => Kind == EndpointKind.Catalog;
     [JsonIgnore]
@@ -320,6 +276,7 @@ public sealed record TableMetadata
     internal Boolean IsJournal => Kind == EndpointKind.Journal;
     [JsonIgnore]
     internal Boolean IsTags => Kind == EndpointKind.Tags;
+    [JsonIgnore]
     internal Boolean IsTagEntries => Kind == EndpointKind.TagEntries;
     [JsonIgnore]
     internal Boolean HasPeriod => IsDocument || IsJournal;

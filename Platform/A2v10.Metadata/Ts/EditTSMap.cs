@@ -40,7 +40,7 @@ internal partial class TypescriptBuilder
             foreach (var name in Table.Details.Keys)
             {
                 var declared = Endpoint.Declaration.Details.GetValueOrDefault(name);
-                foreach (var (key, value) in (declared?.Rules ?? []).Where(c => !String.IsNullOrEmpty(c.Value.Value)))
+                foreach (var key in (declared?.Rules.Computed ?? []).Keys)
                     yield return $"    readonly {key}: any;";
             }
         }

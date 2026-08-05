@@ -35,23 +35,30 @@ internal partial class JavascriptBuilder
 
         IEnumerable<String> validators()
         {
-            foreach (var col in table.Columns.Where(c => c.Required || c.Unique))
+            var required = table.RequiredFields(Endpoint.Declaration).ToHashSet();
+            foreach (var col in table.AllColumns(c => c.Unique || required.Contains(c.Name)))
             {
-                if (col.Unique && col.Required)
+                if (col.Unique && required.Contains(col.Name))
                     yield return $$"""
                 '{{table.Model}}.{{col.Name}}': [
                     `@[Error.Required]`,
                     {valid: {{col.Name.ToLowerInvariant()}}Duplicate, async: true, msg: `@[Error.Duplicate]`}]
                 """;
-                else if (col.Required)
+                else if (required.Contains(col.Name))
                     yield return $"'{table.Model}.{col.Name}': `@[Error.Required]`";
                 else if (col.Unique)
                     yield return $$"""'{{table.Model}}.{{col.Name}}': {valid: {{col.Name.ToLowerInvariant()}}Duplicate, async: true, msg: `@[Error.{{table.CollectionName}}.Duplicate.{{col.Name}}]`}""";
             }
 
-            foreach (var d in table.Details.Select(x => x.Value))
-                foreach (var c in d.Columns.Where(c => c.Required))
-                    yield return $"'{table.Model}.{d.CollectionName}[].{c.Name}': `@[Error.Required]`";
+            foreach (var (name, d) in table.Details)
+            {
+                // rows are two-layer as well: columns from the shape, rules from the declaration
+                var declared = Endpoint.Declaration.Details.GetValueOrDefault(name);
+                if (declared == null)
+                    continue;
+                foreach (var f in d.RequiredFields(declared))
+                    yield return $"'{table.Model}.{d.CollectionName}[].{f}': `@[Error.Required]`";
+            }
         }
 
         IEnumerable<String> functions()

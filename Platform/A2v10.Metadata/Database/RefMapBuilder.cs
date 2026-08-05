@@ -183,11 +183,10 @@ internal class RefMapBuilder
     {
         if (!_hasDefaults)
             return null;
-        var origin = _declaration;
-        if (origin.InitialValues.Count == 0)
+        if (_declaration.InitialValues.Count == 0)
             return null;
         // from user profile
-        var profUser = origin.InitialValues.Where(x => x.Value.Source == InitialSource.Profile).ToList();
+        var profUser = _declaration.InitialValues.Where(x => x.Value.Source == InitialSource.Profile).ToList();
         if (profUser.Count == 0) 
             return null;
         var sb = new StringBuilder();

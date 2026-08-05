@@ -13,6 +13,42 @@ namespace A2v10.Metadata;
  * filters / data) plus defaults, where the key IS the discriminator - is described in the skill's
  * references/report.md and is a separate step: it changes the runtime, not just the type.
  */
+
+public enum ReportItemKind
+{
+    G,
+    F,
+    D,
+    Grouping = G,
+    Filter = F,
+    Data = D
+}
+public record ReportItemMetadata
+{
+    #region Database Fields 
+    public ReportItemKind Kind { get; init; }
+    public String Column { get; init; } = default!;
+    public ColumnType DataType { get; init; } = default!;
+    public String RefSchema { get; init; } = default!;
+    public String RefTable { get; init; } = default!;
+    public Boolean Checked { get; init; }
+    public Int32 Order { get; init; }
+    public String? Label { get; init; }
+    public String? Func { get; init; }
+    #endregion
+
+    public String RealRefSchema => DataType switch
+    {
+        ColumnType.Operation => "op",
+        _ => RefSchema
+    };
+    public String RealRefTable => DataType switch
+    {
+        ColumnType.Operation => "operations", // Lower case is important!
+        _ => RefTable
+    };
+}
+
 public sealed record ReportMetadata
 {
     // layout discriminator; today 'turnover' is the only one

@@ -37,7 +37,7 @@ internal partial class SqlBuilder
 
         with T(Id, [Name], Icon, HasChildren, [Order], [Parent], InitExpand)
         as (
-            select Id = cast(0 as platformid), [Name] = N'{Table.RealItemsLabel.LocalizeSql()}', Icon='folder-outline',
+            select Id = cast(0 as platformid), [Name] = N'@[{Table.CollectionName}]', Icon='folder-outline',
                 HasChildren = cast(0 as bit), [Order] = 1, [Parent] = cast(null as platformid),
                 [InitExpand] = cast(1 as bit)
             union all
@@ -116,7 +116,7 @@ internal partial class SqlBuilder
 
         with T(Id, [Name], Icon, HasChildren, [Order], [Parent], InitExpand)
         as (
-            select Id = cast(0 as platformid), [Name] = N'{Table.RealItemsLabel.LocalizeSql()}', Icon='folder-outline',
+            select Id = cast(0 as platformid), [Name] = N'@[{Table.CollectionName}]', Icon='folder-outline',
                 HasChildren = cast(0 as bit), [Order] = 1, [Parent] = cast(null as platformid),
                 [InitExpand] = cast(1 as bit)
             union all

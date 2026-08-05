@@ -104,12 +104,40 @@ internal static class MetadataExtensions
             ?? throw new InvalidOperationException($"RefTable for {c.Name} is null")).Storage));
 
 
-    internal static IEnumerable<InheritDescriptor> AllInherits(this TableMetadata table, DeclarationMetadata? origin = null)
+    /* 'required' is a KIND of rule, so it is read from the declaration and from nowhere else.
+     * The shape knows that a field exists; that completing the record takes it is a fact of the
+     * layer that owns the moment of completion, and that layer is the declaration.
+     *
+     * The names are checked against the shape here, where the table is at hand: a misspelled
+     * name would otherwise produce no validator at all, which is exactly the failure a missing
+     * validator cannot be told apart from.
+     *
+     * Default columns count as fields: 'Name' and 'Date' are part of the record, they are only
+     * not spelled in 'fields'.
+     */
+    internal static String[] RequiredFields(this TableMetadata table, DeclarationMetadata declaration)
     {
-        var declared = new Dictionary<String, InheritMetadata>(table.Inherit);
-        foreach (var kp in origin?.Inherit ?? [])
-            declared[kp.Key] = kp.Value;   
+        var declared = declaration.Rules.Required;
+        if (declared.Length == 0)
+            return [];
+        foreach (var name in declared)
+            if (!table.AllColumns().Any(c => c.Name == name))
+                throw new InvalidOperationException($"required: field '{name}' not found in {table.SqlTableName}");
+        return declared;
+    }
 
+    /* 'inherit' is a KIND of rule, so it is read from the declaration and from nowhere else.
+     * There is no second source to merge with: the endpoint's declaration already carries the
+     * storage layer under its own (DatabaseMetadataProvider.MergeDeclaration), so a shape-side
+     * copy would only re-read what is here.
+     *
+     * The declaration is required, not optional: 'no declaration' and 'a declaration with no
+     * inherits' are the same answer, and a defaulted parameter would let a caller ask for the
+     * first while meaning neither.
+     */
+    internal static IEnumerable<InheritDescriptor> AllInherits(this TableMetadata table, DeclarationMetadata declaration)
+    {
+        var declared = declaration.Rules.Inherit;
         if (declared.Count == 0)
             yield break;
 
@@ -130,14 +158,20 @@ internal static class MetadataExtensions
                 Find(refTable, refTable.Columns, kp.Value.Field, "source"));
         }
     }
-    // root + details; each table paired with its operation counterpart
-    internal static IEnumerable<InheritDescriptor> AllInheritsDeep(this TableMetadata table, DeclarationMetadata? origin)
+    // root + details; each table paired with the declaration that speaks about it
+    internal static IEnumerable<InheritDescriptor> AllInheritsDeep(this TableMetadata table, DeclarationMetadata declaration)
     {
-        foreach (var d in table.AllInherits(origin))
+        foreach (var d in table.AllInherits(declaration))
             yield return d;
-        foreach (var detail in table.Details)
-            foreach (var d in detail.Value.AllInheritsDeep(origin?.Details.GetValueOrDefault(detail.Key)))
+        foreach (var (name, detail) in table.Details)
+        {
+            // a collection nobody declared rules for has no rules - not an empty layer to visit
+            var declared = declaration.Details.GetValueOrDefault(name);
+            if (declared == null)
+                continue;
+            foreach (var d in detail.AllInheritsDeep(declared))
                 yield return d;
+        }
     }
 
     /* Default forms are built on demand, not while the table is being constructed: a table that is

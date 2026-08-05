@@ -75,7 +75,7 @@ internal partial class SqlBuilder
             {
                 return value switch
                 {
-                    "today" => $"[{Table.Model}.{key}!!Utc] = cast(getutcdate() as date)",
+                    "today" => $"[{Table.Model}.{key}!!Utc] = a2meta.fn_getUtcDate()",
                     "$operation$" => $"[{Table.Model}.{key}!TOperation!RefId] = N'{docOp}'",
                     _ => throw new InvalidOperationException($"Invalid initial context value '{value}'")
                 };

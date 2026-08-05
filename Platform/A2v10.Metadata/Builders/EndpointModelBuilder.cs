@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace A2v10.Metadata;
 
-internal class EndpointModelBuilder(IServiceProvider _serviceProvider, BuilderDescriptor descriptor) : IEndpointModelBuilder
+internal class EndpointModelBuilder(IServiceProvider _, BuilderDescriptor descriptor) : IEndpointModelBuilder
 {
     private readonly TypescriptBuilder _tsBuilder = new(descriptor);
     protected String Action => descriptor.PlatformUrl.Action.ToLowerInvariant();

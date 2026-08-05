@@ -324,12 +324,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return own with
         {
             InitialValues = MergeByKey(own.InitialValues, storage.InitialValues),
-            Inherit = MergeByKey(own.Inherit, storage.Inherit),
-            Rules = MergeByKey(own.Rules, storage.Rules),
-            Required = [.. storage.Required.Union(own.Required)],
+            Rules = MergeRules(own.Rules, storage.Rules),
             Autonum = Mine(own.Autonum, storage.Autonum),
-            ItemsLabel = Mine(own.ItemsLabel, storage.ItemsLabel),
-            ItemLabel = Mine(own.ItemLabel, storage.ItemLabel),
             Details = MergeDetails(own.Details, storage.Details)
         };
     }
@@ -346,6 +342,36 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             merged[key] = value;
         return merged;
     }
+
+    /* Rules layer kind by kind, and inside a kind at the granularity its shape gives - the same
+     * law as everywhere else here, applied one level deeper because the block's key is the kind.
+     *
+     * 'Required' unions, and the reason is what the layer below MEANS. Completing a record is
+     * the operation's moment - it is the one that posts - and a shared table has no moment of
+     * its own, so the storage layer cannot be saying 'what this table takes'. It can only be
+     * saying 'what EVERY operation of the family takes', and a baseline defined as true for all
+     * is not something one of them gets to weaken: a requirement that does not hold for all is
+     * written in the wrong layer, and belongs moved, not overridden.
+     *
+     * That failure is loud - an operation carrying a requirement it should not shows up as a
+     * validator in the generated template. The one this replaces was silent: an operation that
+     * named a single field of its own dropped the family's list entirely, and nothing anywhere
+     * said so. A name repeated in both layers is harmless, Union keeps one.
+     *
+     * The maps merge by key: visibility of one field and visibility of another are independent
+     * facts that happen to share a kind.
+     *
+     * 'When' is left all-or-nothing rather than decided: no generator reads it yet, so there is
+     * no case in hand to decide its granularity by.
+     */
+    private static RuleMetadata MergeRules(RuleMetadata own, RuleMetadata storage) => new()
+    {
+        Required = [.. storage.Required.Union(own.Required)],
+        When = own.When.Count > 0 ? own.When : storage.When,
+        Visible = MergeByKey(own.Visible, storage.Visible),
+        Computed = MergeByKey(own.Computed, storage.Computed),
+        Inherit = MergeByKey(own.Inherit, storage.Inherit)
+    };
 
     /* Rows layer the same way rows are shaped: by detail name, which is a key of the shared
      * TableMetadata.Details, so the two sides are talking about the same collection.
