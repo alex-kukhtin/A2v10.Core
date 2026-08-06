@@ -54,6 +54,15 @@ create table a2meta.Columns
 );
 go
 ------------------------------------------------
+create or alter function a2meta.fn_getUtcDate()
+returns datetime as
+begin
+	declare @offset int = datediff(minute, getdate(), getutcdate());
+	declare @date datetime = cast(cast(getutcdate() as date) as datetime);
+	return dateadd(minute, @offset, @date);
+end
+go
+------------------------------------------------
 create or alter procedure a2meta.[GetDbHash]
 as
 begin

@@ -1,6 +1,6 @@
 ﻿// Copyright © 2023-2026 Oleksandr Kukhtin. All rights reserved.
 
-/*20260712-8644*/
+/*20260806-8650*/
 
 /* tabbed:shell.js */
 (function () {
@@ -436,6 +436,7 @@
 				return this.tabs.length >= MAX_OPENED_TABS && t.cnt === this.maxUsed;
 			},
 			pointerDown(ev, t) {
+				if (ev.target.closest('.close')) return; // the close button is not a drag handle
 				let li = getClosestLi(ev)
 				if (!li) return;
 				ev.target.setPointerCapture(ev.pointerId);
@@ -444,6 +445,7 @@
 				this._dragContext = { tabs: [], currentTab: -1, pointTab: -1, left: 0 };
 			},
 			pointerUp(ev, t) {
+				if (!this.movedTab) return;
 				ev.target.releasePointerCapture(ev.pointerId);
 				this.movedTab = null;
 				this._dragContext = null;

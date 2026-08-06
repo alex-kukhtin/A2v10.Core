@@ -102,7 +102,6 @@ internal partial class JavascriptBuilder
 
         var endpoint = Endpoint.Path;
         var templ = $$"""
-        const du = require('std:utils').date;
         const template = {
             options: {
                 globalSaveEvent: 'g.document.saved'

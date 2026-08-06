@@ -46,6 +46,14 @@ This repo has **little code and many decisions** (rare; typical enterprise is th
 
 Division of labor: the human designs the boxes and holds composition/intent (the decision-dense work); the LLM fills boxes with imperative code; the platform guards that nothing escapes the frame.
 
+## The `a2` CLI: shape of the command tree
+
+`Tools/A2v10.Cli` (package `A2v10.CLI`, command `a2`) is the model's feedback loop — the ground-truth beam of #1. Its tree is a surface navigated blind, so its shape is a decision, not styling. Decided 2026-08.
+
+- **A first-level command is never a verb.** The top level holds areas only (`app`, `db`, `endpoint`, `meta`, `view`); verbs are leaves inside them. Break it once and every later capability has two possible homes (`validate view` vs `view validate`) — placement stops being derivable and the model guesses. A cross-cutting action is not a fifth area: it is a leaf repeated in each area it applies to.
+- **A group is named by the platform role, not by the file format.** `view validate`, not `xaml validate`. `view` is the platform's own word (the `view:` key of `model.json`); `.vxaml`/`.xaml` is a per-project convention, and one xaml format carries two unrelated element sets (views, report templates) — a format-named group promises both and delivers one.
+- **Picking the area costs the model nothing; the output shape costs it everything.** Measured: it never picks the wrong area for a file it just edited. So don't buy facades that save it a token (dispatch by extension, one universal `validate`) — that budget belongs to the result JSON: one shape per command, findings distinguishable from "the tool could not run", and no shape bought before the feature that needs it exists.
+
 ## Skills as spec: a firewall between two instances
 
 Skills (stubs for the application developer building on the platform) are a **contract for the target state**, not instructions to execute. Their value is that they work for a reader who **cannot see the implementation**. Hence two roles in different contexts:

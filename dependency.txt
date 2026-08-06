@@ -21,6 +21,7 @@ A2v10.Scheduling.Commands
 A2v10.Services
 A2v10.ViewEngine.Xaml
 A2v10.ViewEngine.Html
+A2v10.Web.Assets
 
 =======================
 !do not update Microsoft.OpenApi to 1.6.23 (https://github.com/microsoft/OpenAPI.NET/issues/2030)

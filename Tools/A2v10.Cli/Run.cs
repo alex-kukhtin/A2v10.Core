@@ -43,6 +43,14 @@ internal sealed partial class Program
         mdCommands.Add(new EndpointListCommand(_services).Build());
         root.Subcommands.Add(endpointCommand);
 
+        // view commands
+        var viewCommand = new Command("view")
+        {
+            Description = "View commands"
+        };
+        viewCommand.Subcommands.Add(new ViewValidateCommand(_services).Build());
+        root.Subcommands.Add(viewCommand);
+
         // metadata commands
         var metaCommand = new Command("meta")
         {
