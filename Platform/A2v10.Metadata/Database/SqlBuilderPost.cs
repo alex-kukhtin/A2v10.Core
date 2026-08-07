@@ -40,27 +40,18 @@ internal partial class SqlBuilder
                 ? $"{side}.[{source.Name}] is {source.Type}, journal.[{target.Name}] is {target.Type}"
                 : $"{side}.[{source.Name}] targets '{source.Target}', journal.[{target.Name}] targets '{target.Target}'";
 
-        // 'each' names either a kind-less collection directly, or the kinds of a single collection
-        (TableMetadata Table, String OnClause) FindDetailsTable(PostMetadata p)
+        /* One collection and some of its kinds - see PostEachMetadata. The shape is why this
+         * method has no ambiguity to resolve and no spanning to reject: 'r' below is a single
+         * join and the row overrides resolve against its columns, and naming two collections
+         * is simply not writable.
+         */
+        (TableMetadata Table, String OnClause) FindDetailsTable(PostEachMetadata each)
         {
-            var journal = p.JournalTableCheck;
-            if (p.Each.Count == 1
-                && Table.Details.TryGetValue(p.Each[0], out var direct)
-                && direct.Kinds.Count == 0)
-                return (direct, String.Empty);
-
-            var byKind = Table.Details.Values
-                .Where(d => d.Kinds.Count > 0 && p.Each.All(k => d.Kinds.Contains(k)))
-                .ToList();
-            if (byKind.Count == 0)
-                throw new InvalidOperationException(
-                    $"Post {Endpoint.Path} -> {journal.Path}: cannot resolve each [{String.Join(", ", p.Each)}] to a details collection of {Table.Path}");
-            if (byKind.Count > 1)
-                throw new InvalidOperationException(
-                    $"Post {Endpoint.Path} -> {journal.Path}: each [{String.Join(", ", p.Each)}] is ambiguous across details collections of {Table.Path}");
-
-            var dt = byKind[0];
-            var kinds = String.Join(", ", p.Each.Select(k => $"N'{k}'"));
+            var dt = Table.FindDetails(each.Details);
+            dt.CheckKinds(each.Kinds);
+            if (each.Kinds.Count == 0)
+                return (dt, String.Empty);
+            var kinds = String.Join(", ", each.Kinds.Select(k => $"N'{k}'"));
             return (dt, $" and r.[{dt.RowKindField}] in ({kinds})");
         }
 
@@ -172,9 +163,9 @@ internal partial class SqlBuilder
             var journal = p.JournalTableCheck;
             TableMetadata? detailsTable = null;
             var join = String.Empty;
-            if (p.Each.Count > 0)
+            if (p.Each != null)
             {
-                var (dt, onClause) = FindDetailsTable(p);
+                var (dt, onClause) = FindDetailsTable(p.Each);
                 detailsTable = dt;
                 join = $"inner join {dt.SqlTableName} r on r.[{Constants.FieldNames.Owner}] = d.[{Constants.FieldNames.Id}]{onClause}";
             }

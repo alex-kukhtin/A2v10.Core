@@ -115,63 +115,146 @@ internal static class MetadataExtensions
      * Default columns count as fields: 'Name' and 'Date' are part of the record, they are only
      * not spelled in 'fields'.
      */
-    internal static String[] RequiredFields(this TableMetadata table, DeclarationMetadata declaration)
+    private static void CheckNames(TableMetadata table, String[] names, String what)
     {
-        var declared = declaration.Rules.Required;
-        if (declared.Length == 0)
-            return [];
-        foreach (var name in declared)
+        foreach (var name in names)
             if (!table.AllColumns().Any(c => c.Name == name))
-                throw new InvalidOperationException($"required: field '{name}' not found in {table.SqlTableName}");
-        return declared;
+                throw new InvalidOperationException($"{what}: field '{name}' not found in {table.SqlTableName}");
     }
 
-    /* 'inherit' is a KIND of rule, so it is read from the declaration and from nowhere else.
-     * There is no second source to merge with: the endpoint's declaration already carries the
-     * storage layer under its own (DatabaseMetadataProvider.MergeDeclaration), so a shape-side
+    /* 'inherit' is a KIND of rule, so it is read from the rules and from nowhere else. There is
+     * no second source to merge with: what arrives here is already layered - storage under
+     * operation by MergeDeclaration, collection under row kind by RulesFor - so a shape-side
      * copy would only re-read what is here.
      *
-     * The declaration is required, not optional: 'no declaration' and 'a declaration with no
-     * inherits' are the same answer, and a defaulted parameter would let a caller ask for the
-     * first while meaning neither.
+     * The one place a name is turned into a column, and the only place that needs the table for
+     * it. Private on purpose: every reader takes the answer off the declaration, and a second
+     * caller would be a second moment at which 'what is in force' could be decided.
      */
-    internal static IEnumerable<InheritDescriptor> AllInherits(this TableMetadata table, DeclarationMetadata declaration)
+    private static Dictionary<String, InheritDescriptor[]> BuildInherits(TableMetadata table, RuleMetadata rules)
     {
-        var declared = declaration.Rules.Inherit;
+        var declared = rules.Inherit;
         if (declared.Count == 0)
-            yield break;
+            return [];
 
-        var columns = table.Columns; 
+        var columns = table.Columns;
 
         static TableColumn Find(TableMetadata t, List<TableColumn> cols, String name, String what) =>
             cols.FirstOrDefault(c => c.Name == name)
                 ?? throw new InvalidOperationException($"inherit: {what} '{name}' not found in {t.SqlTableName}");
 
-        foreach (var kp in declared)
+        IEnumerable<InheritDescriptor> Resolve()
         {
-            var field = Find(table, columns, kp.Key, "field");
-            var refColumn = Find(table, columns, kp.Value.Ref, "ref");
-            if (!refColumn.IsRef)
-                throw new InvalidOperationException($"inherit: ref '{refColumn.Name}' is not a reference");
-            var refTable = refColumn.RefTableCheck.Storage;
-            yield return new InheritDescriptor(field, refColumn,
-                Find(refTable, refTable.Columns, kp.Value.Field, "source"));
+            foreach (var kp in declared)
+            {
+                var field = Find(table, columns, kp.Key, "field");
+                var refColumn = Find(table, columns, kp.Value.Ref, "ref");
+                if (!refColumn.IsRef)
+                    throw new InvalidOperationException($"inherit: ref '{refColumn.Name}' is not a reference");
+                yield return new InheritDescriptor(field, refColumn, kp.Value.Field);
+            }
         }
+
+        return Resolve().GroupBy(d => d.Ref.Name).ToDictionary(g => g.Key, g => g.ToArray());
     }
-    // root + details; each table paired with the declaration that speaks about it
-    internal static IEnumerable<InheritDescriptor> AllInheritsDeep(this TableMetadata table, DeclarationMetadata declaration)
+
+    /* The other half of InheritDescriptor's asymmetry, asked once the reference graph is linked.
+     * Late, and therefore the one name of the three that a typo carries past load - so it says
+     * where it looked, in the same words the other two do.
+     */
+    internal static TableColumn SourceColumn(this InheritDescriptor descriptor)
     {
-        foreach (var d in table.AllInherits(declaration))
-            yield return d;
-        foreach (var (name, detail) in table.Details)
+        var refTable = descriptor.Ref.RefTableCheck.Storage;
+        return refTable.Columns.FirstOrDefault(c => c.Name == descriptor.Source)
+            ?? throw new InvalidOperationException(
+                $"inherit: source '{descriptor.Source}' not found in {refTable.SqlTableName}");
+    }
+
+    /* Names the file wrote that the shape has no counterpart for. Silently skipping them is what
+     * made a typo in a collection or kind key produce an endpoint that simply generated less.
+     */
+    private static void NoLeftovers(TableMetadata table, IEnumerable<String> declared,
+        IEnumerable<String> shape, String what)
+    {
+        var extra = declared.Except(shape).ToList();
+        if (extra.Count == 0)
+            return;
+        var available = String.Join(", ", shape);
+        throw new InvalidOperationException(
+            $"{what}: [{String.Join(", ", extra)}] declared for {table.SqlTableName}, which has no such {what}. "
+            + (available.Length == 0 ? $"It declares no {what} at all." : $"Available: {available}"));
+    }
+
+    /* The one walk that pairs a declaration node with the shape node it speaks about. Run while
+     * the endpoint is being constructed, which is possible only because nothing here reaches
+     * outside its own table - see InheritDescriptor. That is what keeps the endpoint immutable:
+     * a bake that needed the reference graph would have to run after publication, and there is
+     * no way to put a new declaration into a record everyone already points at.
+     *
+     * Rebuilds rather than fills: an operation that declares no rows of its own gets the storage
+     * endpoint's detail nodes by reference (MergeDetails), and writing into what was found would
+     * be writing into another endpoint's declaration. With 'with' there is nothing to write into.
+     *
+     * Driven from the SHAPE, which is what makes the result total: every collection of the table
+     * gets a node and every row set gets an entry, whether the file mentioned them or not. That
+     * is the difference between 'nothing was declared' and 'nothing is declared', and collapsing
+     * the two is what deletes the 'if (declared == null)' every generator used to carry.
+     */
+    internal static DeclarationMetadata Bake(this DeclarationMetadata declaration, TableMetadata table)
+    {
+        CheckNames(table, declaration.Rules.Required, "required");
+        if (declaration.Rules.Total.Length > 0)
+            throw new InvalidOperationException(
+                $"total: declared on {table.SqlTableName}, which is a record. A sum is a member of a collection.");
+        NoLeftovers(table, declaration.Kinds.Keys, [], "kinds");
+        return declaration.BakeNode(table);
+    }
+
+    private static DeclarationMetadata BakeNode(this DeclarationMetadata declaration, TableMetadata table)
+    {
+        NoLeftovers(table, declaration.Details.Keys, table.Details.Keys, "details");
+        return declaration with
         {
-            // a collection nobody declared rules for has no rules - not an empty layer to visit
-            var declared = declaration.Details.GetValueOrDefault(name);
-            if (declared == null)
-                continue;
-            foreach (var d in detail.AllInheritsDeep(declared))
+            Inherits = BuildInherits(table, declaration.Rules),
+            Details = table.Details.ToDictionary(
+                kp => kp.Key,
+                kp => (declaration.Details.GetValueOrDefault(kp.Key) ?? new()).BakeCollection(kp.Value))
+        };
+    }
+
+    private static DeclarationMetadata BakeCollection(this DeclarationMetadata declaration, TableMetadata table)
+    {
+        NoLeftovers(table, declaration.Kinds.Keys, table.Kinds.Keys, "kinds");
+        return declaration.BakeNode(table) with
+        {
+            RowSets = [.. table.RowSets().Select(rs =>
+            {
+                var rules = declaration.RulesFor(rs.Kind);
+                CheckNames(table, rules.Required, "required");
+                CheckNames(table, rules.Total, "total");
+                return new RowSetDeclaration(rs.Kind, rs.Collection, rs.Type, rules,
+                    BuildInherits(table, rules));
+            })]
+        };
+    }
+
+    /* Every inherit of an endpoint, root and rows alike. The consumer is the ref-map closure -
+     * which columns a picked object has to carry - and there the union over kinds is what is
+     * wanted, because the slot has to exist in the type of whichever kind declared it.
+     *
+     * A kind that declared nothing contributes the collection's, which its row set already
+     * carries; the duplicates that produces are the caller's to fold, and it does.
+     */
+    internal static IEnumerable<InheritDescriptor> AllInherits(this DeclarationMetadata declaration)
+    {
+        foreach (var d in declaration.Inherits.Values.SelectMany(x => x))
+            yield return d;
+        foreach (var rowSet in declaration.RowSets)
+            foreach (var d in rowSet.Inherits.Values.SelectMany(x => x))
                 yield return d;
-        }
+        foreach (var detail in declaration.Details.Values)
+            foreach (var d in detail.AllInherits())
+                yield return d;
     }
 
     /* Default forms are built on demand, not while the table is being constructed: a table that is

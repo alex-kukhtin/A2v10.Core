@@ -18,7 +18,7 @@
 20. Item.Fetch - не возвращает Unit.
 22. platformid to databasedeploy.sql
 23. Browse Operation
-25. Required
+26.
 
 
 14. Не работает ParentElem в Edit.

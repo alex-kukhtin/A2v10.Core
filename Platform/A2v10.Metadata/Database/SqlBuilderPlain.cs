@@ -42,7 +42,8 @@ internal partial class SqlBuilder
             if (dt.Kinds.Count == 0)
                 return $"[{detail.Key}!{dt.TypeName}!Array] = null";
             else
-                return String.Join(", ", dt.Kinds.Select(k => $"[{k}!{dt.TypeName}!Array] = null"));
+                return String.Join(", ", dt.Kinds.Keys.Select(
+                    k => $"[{dt.KindCollectionName(k)}!{dt.KindTypeName(k)}!Array] = null"));
         }
 
         String? generateDefaults()
@@ -131,27 +132,41 @@ internal partial class SqlBuilder
             foreach (var d in Table.Details)
             {
                 var dt = d.Value;
-                var detailsParents = dt.Kinds.Count > 0
-                    ? String.Join(",\n  ", dt.Kinds.Select(k => $"[!{Table.TypeName}.{k}!ParentId] = case when d.[{dt.RowKindField}] = N'{k}' then d.[Owner] else null end"))
-                    : $"[!{Table.TypeName}.{d.Key}!ParentId] = d.[Owner]";
 
                 static Boolean includeDetailsColumn(TableColumn col)
                     => col.Type != ColumnType.RowKind && col.Type != ColumnType.Id;
 
-                var detailsFields = d.Value.Columns.Where(c => includeDetailsColumn(c)).Select(col => col.SqlModelColumnName("d", t => t.TypeName)).ToList();
-                sb.AppendLine($"""
-                select [!{dt.TypeName}!Array] = null, [Id!!Id] = d.Id, [RowNo!!RowNumber] = d.RowNo,
-                """);
-                if (detailsFields.Count > 0)
+                var detailsFields = dt.Columns.Where(c => includeDetailsColumn(c)).Select(col => col.SqlModelColumnName("d", t => t.TypeName)).ToList();
+
+                /* One recordset per kind, each with its own type and its own collection in the
+                 * envelope. The discriminator never leaves the server: a row's kind is the
+                 * collection it arrives in, which is why the filter sits here and RowKind is
+                 * not among the columns sent (includeDetailsColumn).
+                 *
+                 * A collection without kinds is the same shape with a single pass - so the two
+                 * cases differ in the list, not in the emitting code below.
+                 */
+                List<(String Type, String Parent, String Filter)> passes = dt.Kinds.Count > 0
+                    ? [.. dt.Kinds.Keys.Select(k => (dt.KindTypeName(k), dt.KindCollectionName(k),
+                        $" and d.[{dt.RowKindField}] = N'{k}'"))]
+                    : [(dt.TypeName, d.Key, String.Empty)];
+
+                foreach (var (type, parent, filter) in passes)
                 {
-                    sb.Append($"  {String.Join(", ", detailsFields)}");
-                    sb.AppendLine(",");
+                    sb.AppendLine($"""
+                    select [!{type}!Array] = null, [Id!!Id] = d.Id, [RowNo!!RowNumber] = d.RowNo,
+                    """);
+                    if (detailsFields.Count > 0)
+                    {
+                        sb.Append($"  {String.Join(", ", detailsFields)}");
+                        sb.AppendLine(",");
+                    }
+                    sb.AppendLine($"""
+                      [!{Table.TypeName}.{parent}!ParentId] = d.[Owner]
+                    from {dt.SqlTableName} d where d.[Owner] = @Id{filter}
+                    order by d.RowNo;
+                    """);
                 }
-                sb.AppendLine($"""
-                  {detailsParents}
-                from {dt.SqlTableName} d where d.[Owner] = @Id
-                order by d.RowNo;
-                """);
             }
         }
 
@@ -236,15 +251,26 @@ internal partial class SqlBuilder
 				""";
             }
 
+            /* One table, N table-valued parameters - one per kind, since that is how the model
+             * splits. The kind itself is never sent: it is a literal here, so a row cannot
+             * arrive claiming a kind other than the collection it came in, and it is excluded
+             * from 'update set' (updateablePredicate) so an existing row never changes kind.
+             *
+             * The delete pass is limited to the DECLARED kinds. Without that, a row whose kind
+             * was removed from the metadata - and which therefore arrives in no parameter -
+             * matches nothing in the source and is deleted on the next save of the document.
+             * Bounded this way it is only orphaned, and an orphan can still be recovered.
+             */
             String mergeMultiDetails(TableMetadata detailsTable)
             {
                 var updateFields = detailsTable.AllColumns(updateablePredicate);
                 var kindField = detailsTable.Columns.FirstOrDefault(c => c.Type == ColumnType.RowKind)
                     ?? throw new InvalidOperationException("Kind field not found");
 
-                var usingDetails = detailsTable.Kinds.Select(k =>
-                    $"select [__Kind__] = N'{k}', * from @{k}"
+                var usingDetails = detailsTable.Kinds.Keys.Select(k =>
+                    $"select [__Kind__] = N'{k}', * from @{detailsTable.KindCollectionName(k)}"
                 );
+                var declaredKinds = String.Join(", ", detailsTable.Kinds.Keys.Select(k => $"N'{k}'"));
 
                 return $"""
 				with ST as (
@@ -255,10 +281,10 @@ internal partial class SqlBuilder
 				on t.Id = s.Id
 				when matched then update set
 					{String.Join(',', updateFields.Select(f => $"t.[{f.Name}] = s.[{f.Name}]"))}
-				when not matched then insert 
+				when not matched then insert
 					([Owner], [{kindField.Name}], {String.Join(',', updateFields.Select(f => $"[{f.Name}]"))}) values
 					(@Id, s.[__Kind__], {String.Join(',', updateFields.Select(f => $"s.[{f.Name}]"))})
-				when not matched by source and t.[Owner] = @Id then delete;
+				when not matched by source and t.[Owner] = @Id and t.[{kindField.Name}] in ({declaredKinds}) then delete;
 				""";
             }
 
@@ -333,20 +359,18 @@ internal partial class SqlBuilder
             foreach (var t in Table.Details)
             {
                 var detailsTableBuilder = new DataTableBuilder(t.Value, PlatformId);
-                if (t.Value.Kinds.Count > 0)
+                /* The parameter is named after the collection it carries, not after the kind:
+                 * 'Stock' declared in both Rows and Links is legal and would give two @Stock
+                 * in one batch. The table type is one either way - one table, one shape.
+                 */
+                IEnumerable<String> sources = t.Value.Kinds.Count > 0
+                    ? t.Value.Kinds.Keys.Select(t.Value.KindCollectionName)
+                    : [t.Key];
+                foreach (var name in sources)
                 {
-                    foreach (var k in t.Value.Kinds)
-                    {
-                        var rows = item?.Get<List<Object>>($"{k}");
-                        var dt = detailsTableBuilder.BuildDataTable(rows);
-                        detailsTables.Add(($"@{k}", t.Value.SqlTableTypeName, dt));
-                    }
-                }
-                else 
-                {
-                    var rows = item?.Get<List<Object>>($"{t.Key}");
+                    var rows = item?.Get<List<Object>>(name);
                     var dt = detailsTableBuilder.BuildDataTable(rows);
-                    detailsTables.Add(($"@{t.Key}", t.Value.SqlTableTypeName, dt));
+                    detailsTables.Add(($"@{name}", t.Value.SqlTableTypeName, dt));
                 }
             }
         }

@@ -56,6 +56,5 @@ public sealed record ReportMetadata
 
     public List<ReportItemMetadata> ReportItems { get; init; } = [];
 
-    public String? ItemsLabel { get; init; }
     public String? ItemLabel { get; init; }
 }

@@ -1,6 +1,7 @@
 ﻿// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using A2v10.Xaml;
@@ -10,7 +11,32 @@ namespace A2v10.Metadata;
 
 internal partial class XamlBuilder
 {
-    static UIElementBase ElementToTableCell(TableColumn elem)
+    /* What this part of the form inherits, by the reference that drives it. The root is the
+     * endpoint's own; a scoped element asks the collection it is anchored to, for its kind.
+     */
+    private Dictionary<String, InheritDescriptor[]> InheritsOf(FormElement elem) =>
+        String.IsNullOrEmpty(elem.Scope)
+            ? Endpoint.Declaration.Inherits
+            : Endpoint.Declaration.Details[elem.Scope].RowSets
+                .First(rs => rs.Kind == elem.Kind).Inherits;
+
+    /* A selector picks by typing as well as from the dialog, and the two have to hand the row
+     * the same object. The dialog returns the element whole; fetch returns Id and Name, so what
+     * else this reference feeds has to be named to it - and it is named here, because the
+     * catalog on the other end has no way to know who is picking from it.
+     *
+     * The names are the SOURCE columns - what the catalog is asked for - not the fields they
+     * land in here. Both spellings exist because they are different tables.
+     */
+    private static String SelectorUrl(Dictionary<String, InheritDescriptor[]> inherits, TableColumn column)
+    {
+        var path = column.RefTableCheck.Path;
+        return inherits.TryGetValue(column.Name, out var inh) && inh.Length > 0
+            ? $"{path}?inherit={String.Join(',', inh.Select(x => x.Source))}"
+            : path;
+    }
+
+    static UIElementBase ElementToTableCell(TableColumn elem, Dictionary<String, InheritDescriptor[]> inherits)
     {
         return elem.Type switch
         {
@@ -22,7 +48,7 @@ internal partial class XamlBuilder
                 },
             ColumnType.Ref => new SelectorSimple()
                 {
-                    Url = elem.RefTableCheck.Path,
+                    Url = SelectorUrl(inherits, elem),
                     CssClass = elem.Type.ToXamlSemanticClass(),
                     Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), new Bind(elem.Name))
                 },
@@ -37,6 +63,8 @@ internal partial class XamlBuilder
 
     XTable CreateDetailsTable(FormElement tab)
     {
+        var inherits = InheritsOf(tab);
+
         TableCell RemoveRowCell()
         {
             var removeCmd = new BindCmd()
@@ -62,7 +90,7 @@ internal partial class XamlBuilder
             GridLines = GridLinesVisibility.Both,
             StickyHeaders = true,
             Height = Length.FromString("100%"),
-            Bindings = b => b.SetBinding(nameof(XTable.ItemsSource), new Bind($"{Table.Model}.{tab.Scope}")),
+            Bindings = b => b.SetBinding(nameof(XTable.ItemsSource), new Bind($"{Table.Model}.{tab.RowSet}")),
             Header = [
                 new TableRow()
                 {
@@ -77,7 +105,7 @@ internal partial class XamlBuilder
             Rows = [
                 new TableRow()
                 {
-                    Cells = [..tab.Columns.Select(c => ElementToTableCell(c)), RemoveRowCell()]
+                    Cells = [..tab.Columns.Select(c => ElementToTableCell(c, inherits)), RemoveRowCell()]
                 }
             ]
         };
@@ -86,7 +114,7 @@ internal partial class XamlBuilder
     Button AddRowButton(FormElement tab)
     {
         var addRowCommand = new BindCmd() { Command = CommandType.Append };
-        addRowCommand.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind($"{Table.Model}.{tab.Scope}"));
+        addRowCommand.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind($"{Table.Model}.{tab.RowSet}"));
         return new Button()
         {
             Content = "@[AddRow]",
@@ -99,11 +127,11 @@ internal partial class XamlBuilder
     {
         return new Switch()
         {
-            Bindings = b => b.SetBinding(nameof(Switch.Expression), new Bind($"{Table.Model}.$$Tab")),
+            Bindings = b => b.SetBinding(nameof(Switch.Expression), new Bind($"{Table.Model}.{tabs.TabState}")),
             Cases = [..tabs.Elements.Select(tab =>
                 new Case()
                 {
-                    Value = tab.Scope,
+                    Value = tab.RowSet,
                     Children = [
                         new Grid(_xamlServiceProvider)
                         {
@@ -185,12 +213,7 @@ internal partial class XamlBuilder
             {
                 Bindings = b => b.SetBinding(nameof(Pager.Source), new Bind("Parent.Pager"))
             },
-            FormElementKind.Group => new FlowPanel(_xamlServiceProvider)
-            {
-                Axis = elem.Axis == FlowAxis.Columns ? Xaml.FlowAxis.Columns : Xaml.FlowAxis.Rows,
-                LabelAt = elem.LabelAt == LabelAt.Top ? FlowLabelAt.Top : FlowLabelAt.Left,
-                Children = [.. elem.Columns.Select(CreateEditControl)]
-            },
+            FormElementKind.Group => CreateGroupPanel(elem),
             FormElementKind.Tabs => new Grid(_xamlServiceProvider)
             {
                 Rows = RowDefinitions.FromString("Auto,1*"),
@@ -199,12 +222,14 @@ internal partial class XamlBuilder
                 Children = [
                     new TabBar()
                     {
-                        Bindings = b => b.SetBinding(nameof(TabBar.Value), new Bind($"{Table.Model}.$$Tab")),
+                        Bindings = b => b.SetBinding(nameof(TabBar.Value), new Bind($"{Table.Model}.{elem.TabState}")),
                         Buttons = [.. elem.Elements.Select<FormElement, TabButton>(tab =>
                             new TabButton() {
-                                Content = $"@[{tab.Scope}]",
-                                ActiveValue= tab.Scope,
-                                Bindings = b => b.SetBinding(nameof(TabButton.Badge), new Bind($"{Table.Model}.{tab.Scope}.Count"))
+                                // caption keys off the part the user sees named - the kind,
+                                // or the collection when there are none
+                                Content = $"@[{tab.Kind ?? tab.Scope}]",
+                                ActiveValue= tab.RowSet,
+                                Bindings = b => b.SetBinding(nameof(TabButton.Badge), new Bind($"{Table.Model}.{tab.RowSet}.Count"))
                             })
                         ]
                     },
@@ -225,7 +250,18 @@ internal partial class XamlBuilder
             _ => throw new InvalidOperationException($"Invalid control {elem.Is}")
         };
     }
-    UIElementBase CreateEditControl(TableColumn column)
+    FlowPanel CreateGroupPanel(FormElement elem)
+    {
+        var inherits = InheritsOf(elem);
+        return new FlowPanel(_xamlServiceProvider)
+        {
+            Axis = elem.Axis == FlowAxis.Columns ? Xaml.FlowAxis.Columns : Xaml.FlowAxis.Rows,
+            LabelAt = elem.LabelAt == LabelAt.Top ? FlowLabelAt.Top : FlowLabelAt.Left,
+            Children = [.. elem.Columns.Select(c => CreateEditControl(c, inherits))]
+        };
+    }
+
+    UIElementBase CreateEditControl(TableColumn column, Dictionary<String, InheritDescriptor[]> inherits)
     {
         var valueBind = new Bind($"{Table.Model}.{column.Name}")
         {
@@ -263,7 +299,7 @@ internal partial class XamlBuilder
             {
                 Label = column.Header,
                 CssClass = column.Type.ToXamlSemanticClass(),
-                Url = column.RefTableCheck.Path,
+                Url = SelectorUrl(inherits, column),
                 Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
             },
             ColumnType.Done or ColumnType.Bit or ColumnType.Boolean => new CheckBox()

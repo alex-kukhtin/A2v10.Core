@@ -260,7 +260,9 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             Schema = schema,
             Name = table,
             Storage = storage,
-            Declaration = MergeDeclaration(declaration, storageDeclaration),
+            // layered first, then read against the shape - both while the endpoint is built,
+            // so what leaves here is finished and nothing has to come back to it
+            Declaration = MergeDeclaration(declaration, storageDeclaration).Bake(storage),
             FileHash = hash
         };
     }
@@ -324,7 +326,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return own with
         {
             InitialValues = MergeByKey(own.InitialValues, storage.InitialValues),
-            Rules = MergeRules(own.Rules, storage.Rules),
+            Rules = RuleMetadata.Merge(own.Rules, storage.Rules),
+            Kinds = MergeKinds(own.Kinds, storage.Kinds),
             Autonum = Mine(own.Autonum, storage.Autonum),
             Details = MergeDetails(own.Details, storage.Details)
         };
@@ -343,35 +346,28 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return merged;
     }
 
-    /* Rules layer kind by kind, and inside a kind at the granularity its shape gives - the same
-     * law as everywhere else here, applied one level deeper because the block's key is the kind.
+    /* The merge law itself lives on RuleMetadata.Merge - it is asked on two axes (storage under
+     * operation here, collection under row kind in DeclarationMetadata.RulesFor) and one law
+     * with two implementations is one law that can drift.
      *
-     * 'Required' unions, and the reason is what the layer below MEANS. Completing a record is
-     * the operation's moment - it is the one that posts - and a shared table has no moment of
-     * its own, so the storage layer cannot be saying 'what this table takes'. It can only be
-     * saying 'what EVERY operation of the family takes', and a baseline defined as true for all
-     * is not something one of them gets to weaken: a requirement that does not hold for all is
-     * written in the wrong layer, and belongs moved, not overridden.
-     *
-     * That failure is loud - an operation carrying a requirement it should not shows up as a
-     * validator in the generated template. The one this replaces was silent: an operation that
-     * named a single field of its own dropped the family's list entirely, and nothing anywhere
-     * said so. A name repeated in both layers is harmless, Union keeps one.
-     *
-     * The maps merge by key: visibility of one field and visibility of another are independent
-     * facts that happen to share a kind.
-     *
-     * 'When' is left all-or-nothing rather than decided: no generator reads it yet, so there is
-     * no case in hand to decide its granularity by.
+     * Kinds layer by kind key, and inside a kind by the same law: an operation refining the
+     * rules of one kind says nothing about the others.
      */
-    private static RuleMetadata MergeRules(RuleMetadata own, RuleMetadata storage) => new()
+    private static Dictionary<String, KindDeclarationMetadata> MergeKinds(
+        Dictionary<String, KindDeclarationMetadata> own, Dictionary<String, KindDeclarationMetadata> storage)
     {
-        Required = [.. storage.Required.Union(own.Required)],
-        When = own.When.Count > 0 ? own.When : storage.When,
-        Visible = MergeByKey(own.Visible, storage.Visible),
-        Computed = MergeByKey(own.Computed, storage.Computed),
-        Inherit = MergeByKey(own.Inherit, storage.Inherit)
-    };
+        if (storage.Count == 0)
+            return own;
+        var merged = new Dictionary<String, KindDeclarationMetadata>(storage);
+        foreach (var (key, value) in own)
+            merged[key] = new KindDeclarationMetadata()
+            {
+                Rules = storage.TryGetValue(key, out var below)
+                    ? RuleMetadata.Merge(value.Rules, below.Rules)
+                    : value.Rules
+            };
+        return merged;
+    }
 
     /* Rows layer the same way rows are shaped: by detail name, which is a key of the shared
      * TableMetadata.Details, so the two sides are talking about the same collection.

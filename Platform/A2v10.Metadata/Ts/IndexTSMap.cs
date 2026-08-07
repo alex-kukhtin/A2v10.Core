@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace A2v10.Metadata;
 
-internal partial class TypescriptBuilder
+internal partial class ScriptBuilder
 {
     internal Task<String> CreateIndexMapTS()
     {

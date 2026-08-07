@@ -7,14 +7,15 @@ namespace A2v10.Metadata;
 
 internal class EndpointModelBuilder(IServiceProvider _, BuilderDescriptor descriptor) : IEndpointModelBuilder
 {
-    private readonly TypescriptBuilder _tsBuilder = new(descriptor);
+    // the same emitter as the runtime uses, printing the types this time
+    private readonly ScriptBuilder _tsBuilder = new(descriptor, isTs: true);
     protected String Action => descriptor.PlatformUrl.Action.ToLowerInvariant();
     public async Task<String> CreateTemplateTSAsync()
     {
         return Action switch
         {
-            "index" => await _tsBuilder.CreateIndexTSTemplate(),
-            "edit" => await _tsBuilder.CreateEditTSTemplate(),
+            "index" => await _tsBuilder.CreateIndexTemplate(),
+            "edit" => await _tsBuilder.CreateEditTemplate(),
             "browse" => String.Empty,
             "browsefolder" => String.Empty,
             _ => throw new NotImplementedException($"Create ts template for {Action}")

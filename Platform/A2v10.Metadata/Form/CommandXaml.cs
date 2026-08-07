@@ -63,8 +63,8 @@ internal partial class XamlBuilder
                     b.SetBinding(nameof(Button.Command), cmd);
                 }
             },
-            EntityCommandType.Print => new Button() { Icon = Icon.Print, Content = "@[Print]" },
-            EntityCommandType.Attachments => new Button() { Icon = Icon.Attach },
+            EntityCommandType.Print => new Button() { Icon = Icon.Print, Content = "@[Print]", Render=RenderMode.Show },
+            EntityCommandType.Attachments => new Button() { Icon = Icon.Attach, Render=RenderMode.Show },
             EntityCommandType.Copy => new Button() { Icon = Icon.Copy },
             EntityCommandType.Post => new Button() 
                 { 
@@ -75,6 +75,8 @@ internal partial class XamlBuilder
                         {
                             Command = CommandType.Execute,
                             CommandName = "post",
+                            ValidRequired = true,
+                            SaveRequired = true,
                             Confirm = new Confirm() { Message = "@[Confirm.Document.Post]"}
                         };
                         cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind($"{Table.Model}"));

@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
+// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -7,17 +7,17 @@ using System.Threading.Tasks;
 
 namespace A2v10.Metadata;
 
-internal partial class TypescriptBuilder
+internal partial class ScriptBuilder
 {
-    internal Task<String> CreateIndexTSTemplate()
+    internal Task<String> CreateIndexTemplate()
     {
         IEnumerable<String> events()
         {
             if (Table.IsDocument)
             {
                 yield return "'g.document.saved': handleSaved";
-                yield return "'g.document.applied': handleApply";
-
+                // the name the document page emits - see CreateDocumentTemplate
+                yield return "'g.document.posted': handlePosted";
             }
         }
 
@@ -34,7 +34,7 @@ internal partial class TypescriptBuilder
             if (Table.IsDocument)
             {
                 yield return $$"""
-                function handleApply(elem: TRoot) {
+                function handlePosted(elem{{Ann("TRoot")}}) {
                     let doc = elem.{{Table.Model}};
                     let found = this.{{Table.CollectionName}}.find(d => d.Id == doc.Id);
                     if (!found) return;
@@ -43,7 +43,7 @@ internal partial class TypescriptBuilder
                 """;
 
                 yield return $$"""
-                function handleSaved(elem : TItemRoot) {
+                function handleSaved(elem{{Ann("TRoot")}}) {
                     let doc = elem.{{Table.Model}};
                     let found = this.{{Table.CollectionName}}.$find(d => d.Id === doc.Id);
                     if (found)
@@ -64,35 +64,17 @@ internal partial class TypescriptBuilder
 
         const String jsDivider = ",\n\t\t";
 
-
-        var optionsList = options().ToList();
-        var eventsList = events().ToList(); 
-
-        IEnumerable<String> templateProps()
-        {
-            if (optionsList.Count > 0)
-                yield return $$"""
-                        options: {
-                            {{String.Join(jsDivider, optionsList)}}
-                        }
-                    """;
-            if (eventsList.Count > 0)
-                yield return $$"""
-                        events: {
-                            {{String.Join(jsDivider, eventsList)}}
-                        }
-                    """;
-        }
-
         var templ = $$"""
-
-        import { {{String.Join(", ", types())}} } from './index';
-        
-        const template: Template = {
-        {{String.Join(",\n", templateProps())}}
+        {{Imports(types(), "./index")}}{{TemplateDecl}} {
+            options: {
+                {{String.Join(jsDivider, options())}}
+            },
+            events: {
+                {{String.Join(jsDivider, events())}}
+            }
         };
 
-        export default template;
+        {{TemplateExport}}
 
         {{String.Join("\n", functions())}}
         """;

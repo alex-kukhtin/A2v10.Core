@@ -77,7 +77,17 @@ public enum LabelAt
 public record FormElement
 {
     public FormElementKind Is { get; init; }
+
+    /* The row set this node is anchored to, written as its parts: 'Scope' is the collection,
+     * 'Kind' one of its kinds. Required together exactly when the collection declared kinds -
+     * see TableMetadata.CheckKinds. 'RowSet' is the composed name they resolve to, and it is
+     * the generator's, which is why the author writes neither it nor its rule.
+     */
     public String? Scope { get; init; }
+    public String? Kind { get; init; }
+
+    [JsonIgnore]
+    internal String? RowSet { get; private set; }
     public List<FormElement> Elements { get; init; } = [];
     public List<String> Fields { get; init; } = [];
     public List<CommandBarItem> Commands { get; set; } = [];
@@ -86,6 +96,14 @@ public record FormElement
 
     [JsonIgnore]
     internal List<TableColumn> Columns { get; private set; } = [];
+
+    /* Which state property this tab strip drives - derived from the children, not declared.
+     * The tabs of one strip are the kinds of one collection, so the collection is already
+     * said by them; asking the author to repeat it would let the two disagree.
+     */
+    [JsonIgnore]
+    internal String? TabState { get; private set; }
+
     internal void SetDefaults(TableMetadata table, List<TableColumn> cols)
     {
         TableColumn FindColumn(String key) =>
@@ -96,8 +114,19 @@ public record FormElement
         {
             if (!String.IsNullOrEmpty(el.Scope))
             {
-                var detailsTable = table.Details.First(x => x.Key == el.Scope || x.Value.Kinds.Contains(el.Scope)).Value;
+                var detailsTable = table.FindDetails(el.Scope);
+                IReadOnlyList<String> named = el.Kind == null ? [] : [el.Kind];
+                detailsTable.CheckKinds(named);
+                el.RowSet = detailsTable.RowSetName(el.Kind);
                 el.SetDefaults(detailsTable, [..detailsTable.AllColumns(c => c.Type != ColumnType.RowKind)]);
+                if (Is == FormElementKind.Tabs)
+                {
+                    var state = detailsTable.TabStateName;
+                    if (TabState != null && TabState != state)
+                        throw new InvalidOperationException(
+                            $"FormMetadata. Tabs mix collections ({TabState}, {state}). One strip switches one collection.");
+                    TabState = state;
+                }
             }
             else
                 el.SetDefaults(table, cols);

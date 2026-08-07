@@ -12,7 +12,6 @@ internal static class DefaultFormBuilder
     {
         var cols = table.AllColumns(TableColumnPredicates.IsIndexColumn)
             .OrderBy(c => c.IsMemo);
-            //.ToDictionary(c => c.Name, c => new FormColumn());
 
         List<CommandBarItem> indexCommands() =>
             table.Kind switch
@@ -25,6 +24,7 @@ internal static class DefaultFormBuilder
                     ],
                 EndpointKind.Document =>
                     [
+                        // TODO: print command for traits = Print
                         EntityCommandType.Create, EntityCommandType.Edit, EntityCommandType.Delete,
                         CommandBarItem.Separator, EntityCommandType.Print, CommandBarItem.Separator, EntityCommandType.Reload,
                         CommandBarItem.Aligner, EntityCommandType.Search
@@ -125,31 +125,34 @@ internal static class DefaultFormBuilder
         };
 
 
-    static IEnumerable<FormElement> DetailsTab(TableMetadata table)
+    /* One strip per collection, holding that collection's kinds - because the state a strip
+     * drives is per collection too. Flattening every collection into a single strip would put
+     * the kinds of 'Rows' and of 'Links' on one switch with one value.
+     */
+    static IEnumerable<FormElement> DetailsTabs(TableMetadata table)
     {
         foreach (var d in table.Details)
         {
-            if (d.Value.Kinds.Count > 0)
-            {
-                foreach (var k in d.Value.Kinds)
-                {
-                    yield return new FormElement()
+            var dt = d.Value;
+            List<FormElement> tabs = dt.Kinds.Count > 0
+                ? [.. dt.Kinds.Keys.Select(k => new FormElement()
                     {
                         Is = FormElementKind.Tab,
-                        Scope = k,
-                        Fields = [.. d.Value.AllColumns(IsDetailsColumn).OrderBy(SemanticDetailsOrder).Select(c => c.Name)]
-                    };
-                }
-            }
-            else
+                        Scope = d.Key,
+                        Kind = k,
+                        Fields = [.. dt.AllColumns(IsDetailsColumn).OrderBy(SemanticDetailsOrder).Select(c => c.Name)]
+                    })]
+                : [new FormElement()
+                    {
+                        Is = FormElementKind.Tab,
+                        Scope = d.Key,
+                        Fields = [.. dt.AllColumns(IsDetailsColumn).Select(c => c.Name)]
+                    }];
+            yield return new FormElement()
             {
-                yield return new FormElement()
-                {
-                    Is = FormElementKind.Tab,
-                    Scope = d.Key,
-                    Fields = [.. d.Value.AllColumns(IsDetailsColumn).Select(c => c.Name)]
-                };
-            }
+                Is = FormElementKind.Tabs,
+                Elements = tabs
+            };
         }
     }
 
@@ -168,19 +171,31 @@ internal static class DefaultFormBuilder
         var middleCols = cols.Where(c => GroupNumber(c) == 2);
         var bottomCols = cols.Where(c => GroupNumber(c) == 3);
 
+        IEnumerable<CommandBarItem> Commands()
+        {
+            yield return EntityCommandType.SaveAndClose; 
+            yield return EntityCommandType.Save;
+            if (table.Traits.Contains(TableTrait.Print))
+                yield return EntityCommandType.Print;
+            yield return CommandBarItem.Separator;
+            yield return EntityCommandType.Post;
+            yield return EntityCommandType.UnPost;
+            yield return CommandBarItem.Separator;
+            if (table.Traits.Contains(TableTrait.Attachments))
+            {
+                yield return EntityCommandType.Attachments;
+                yield return CommandBarItem.Separator;
+            }
+            yield return EntityCommandType.Reload;
+        }
+
         var fd = new FormMetadata()
         {
             Is = FormKind.Page,
             Toolbar = new FormElement
             {
                 Is = FormElementKind.Toolbar,
-                Commands =
-                    [
-                    EntityCommandType.SaveAndClose, EntityCommandType.Save,
-                    EntityCommandType.Print, CommandBarItem.Separator,
-                    EntityCommandType.Post, EntityCommandType.UnPost, CommandBarItem.Separator, EntityCommandType.Attachments,
-                    CommandBarItem.Separator, EntityCommandType.Reload
-                ],
+                Commands = [..Commands()]
             },
             Body = [
                 new FormElement() 
@@ -199,15 +214,8 @@ internal static class DefaultFormBuilder
             ]
         };
 
-        if (table.Details.Count > 0) 
-        {
-            var tabs = new FormElement()
-            {
-                Is = FormElementKind.Tabs,
-                Elements = [.. DetailsTab(table)]
-            };
+        foreach (var tabs in DetailsTabs(table))
             fd.Body.Add(tabs);
-        }
 
         fd.Body.Add(new FormElement()
         {
@@ -239,15 +247,8 @@ internal static class DefaultFormBuilder
             ]
         };
 
-        if (table.Details.Count > 0)
-        {
-            var tabs = new FormElement()
-            {
-                Is = FormElementKind.Tabs,
-                Elements = [..DetailsTab(table)]
-            };
+        foreach (var tabs in DetailsTabs(table))
             fd.Body.Add(tabs);
-        }
         return fd;
     }
 }

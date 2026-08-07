@@ -17,13 +17,11 @@ internal class RefMapBuilder
     private readonly Dictionary<String, List<TableColumn>> _inheritStruct;
     private readonly Boolean _isPlain;
     private readonly Boolean _hasDefaults;
-    private readonly TableMetadata _sourceTable;
     private readonly DeclarationMetadata _declaration;
     private readonly NormalEndpointMetadata _endpoint;
     public RefMapBuilder(NormalEndpointMetadata endpoint, Boolean isPlain, Boolean hasDefaults)
     {
         var table = endpoint.Storage;
-        _sourceTable = table;
         _declaration = endpoint.Declaration;
         _endpoint = endpoint;
         _isPlain = isPlain;
@@ -62,11 +60,11 @@ internal class RefMapBuilder
     {
         if (!_isPlain)
             return [];
-        return _sourceTable.AllInheritsDeep(_declaration)
+        return _declaration.AllInherits()
             .GroupBy(d => TargetKey(d.Ref))
             .ToDictionary(
                 g => g.Key,
-                g => g.Select(d => d.Source)
+                g => g.Select(d => d.SourceColumn())
                       .Where(c => c.Type != ColumnType.Id && c.Type != ColumnType.Name)
                       .DistinctBy(c => c.Name)
                       .ToList()

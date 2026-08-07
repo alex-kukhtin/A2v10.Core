@@ -23,7 +23,8 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
 
     private readonly SqlBuilder _sqlBuilder = new(descriptor, _serviceProvider);
     private readonly XamlBuilder _xamlBuilder = new(descriptor, _serviceProvider); 
-    private readonly JavascriptBuilder _jsBuilder = new(descriptor);
+    // types erased: the browser runs this text as it is, there is no compiler here
+    private readonly ScriptBuilder _jsBuilder = new(descriptor, isTs: false);
 
     protected Boolean IsDialog => descriptor.PlatformUrl.Kind == UrlKind.Dialog;
     protected String Action => descriptor.PlatformUrl.Action.ToLowerInvariant();
