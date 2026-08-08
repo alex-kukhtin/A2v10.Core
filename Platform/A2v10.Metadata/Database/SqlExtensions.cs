@@ -41,6 +41,14 @@ internal sealed record AppPlatformId(Type ClrType)
         _ => throw new InvalidOperationException($"AppPlatformId. Unsupported 'platformid' base type '{sqlName}'")
     };
 
+    public String SqlTypeName => ClrType switch
+    {
+        Type t when t == typeof(Int64) => "bigint",
+        Type t when t == typeof(Int32) => "int",
+        Type t when t == typeof(Guid) => "uniqueidentifier",
+        _ => throw new InvalidOperationException($"AppPlatformId. Unsupported CLR type '{ClrType}'")
+    };
+
     /* An identifier that references nothing. Recognised by shape rather than compared
      * against one stored empty value: what arrives here has been through an ExpandoObject
      * and is loosely typed - the same integer id turns up as Int32 or Int64 depending on

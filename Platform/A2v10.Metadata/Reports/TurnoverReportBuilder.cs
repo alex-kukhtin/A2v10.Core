@@ -14,13 +14,13 @@ using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
-internal class TurnoverReportBuilder(IServiceProvider serviceProvider, ReportMetadata report, TableMetadata source) 
-    : BaseReportBuilder(serviceProvider, report, source)
+internal class TurnoverReportBuilder(IServiceProvider serviceProvider, ReportMetadata report, TableMetadata source, AppPlatformId platformId) 
+    : BaseReportBuilder(serviceProvider, report, source, platformId)
 {
     public override async Task<IDataModel> LoadReportModelAsync(IModelView view, ExpandoObject prms)
     {
-        _grouping = new ReportGrouping(_report, prms);
-        var sqlString = await CreateSqlTextAsync(view.DataSource);
+        _grouping = new ReportGrouping(_report, _source,  prms);
+        var sqlString = await CreateSqlTextAsync();
 
         return await _dbContext.LoadModelSqlAsync(view.DataSource, sqlString, dbprms =>
         {
@@ -40,10 +40,8 @@ internal class TurnoverReportBuilder(IServiceProvider serviceProvider, ReportMet
         });
     }
 
-    private async Task<String> CreateSqlTextAsync(String? dataSource)
+    private async Task<String> CreateSqlTextAsync()
     {
-        var appMeta = await _metadataProvider.GetAppMetadataAsync(dataSource);
-
         var filterFields = _grouping.Filters.Select(f =>
             $"[{f.Column}!T{f.Column}!RefId] = @{f.Column}");
 
@@ -54,10 +52,9 @@ internal class TurnoverReportBuilder(IServiceProvider serviceProvider, ReportMet
         var filterMaps = new StringBuilder();
         foreach (var f in _grouping.Filters)
         {
-            var refMeta = await _metadataProvider.GetSchemaAsync(dataSource, f.RealRefSchema, f.RealRefTable);
             filterMaps.AppendLine($"""
                 select [!T{f.Column}!Map] = null, [Id!!Id] = [Id], [Name!!Name] = [Name]
-                from {f.RealRefSchema}.[{f.RealRefTable}]
+                from {f.SqlTableName}
                 where [Id] = @{f.Column}
             """);
         }
@@ -65,12 +62,12 @@ internal class TurnoverReportBuilder(IServiceProvider serviceProvider, ReportMet
         IEnumerable<String> createTempTableFeilds()
         {
             foreach (var f in _grouping.Filters.Union(_grouping.Grouping).Distinct(Comparers.ReportItemMetadata))
-                yield return f.CreateField();
+                yield return CreateField(f);
             foreach (var f in _grouping.Data)
             {
-                yield return f.CreateField("Start");
-                yield return f.CreateField("In");
-                yield return f.CreateField("Out");
+                yield return CreateField(f, "Start");
+                yield return CreateField(f, "In");
+                yield return CreateField(f, "Out");
             }
         }
 

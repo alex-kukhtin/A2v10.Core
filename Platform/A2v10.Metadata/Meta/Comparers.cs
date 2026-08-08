@@ -12,12 +12,12 @@ internal class ReportItemMetadataComparer : IEqualityComparer<ReportItemMetadata
     {
         if (Object.ReferenceEquals(x, y))
             return true;
-        return x?.Column == y?.Column && x?.RealRefSchema == y?.RealRefSchema && x?.RealRefTable == y?.RealRefTable;
+        return x?.Column == y?.Column && x?.SqlTableName == y?.SqlTableName;
     }
 
     public int GetHashCode([DisallowNull] ReportItemMetadata item)
     {
-        return item.Column.GetHashCode() ^ item.RealRefSchema.GetHashCode() ^ item.RealRefTable.GetHashCode();
+        return item.Column.GetHashCode() ^ (item.SqlTableName ?? String.Empty).GetHashCode();
     }
 }
 

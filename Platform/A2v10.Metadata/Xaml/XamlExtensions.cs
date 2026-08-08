@@ -62,14 +62,15 @@ internal static class XamlExtensions
     {
         var bind = item.DataType switch
         {
-            ColumnType.Money => new BindSum($"{prefix}{item.Column}"),
-            ColumnType.Float => new BindNumber($"{prefix}{item.Column}"),
+            ColumnType.Money or ColumnType.Amount => new BindSum($"{prefix}{item.Column}"),
+            ColumnType.Float or ColumnType.Qty => new BindNumber($"{prefix}{item.Column}"),
             _ => new Bind($"{prefix}{item.Column}")
         };
         var align = item.DataType switch
         {
-            ColumnType.Money => TextAlign.Right,
-            ColumnType.Float => TextAlign.Right,
+            ColumnType.Money or ColumnType.Amount or ColumnType.Qty or ColumnType.Float 
+                or ColumnType.Price or ColumnType.Factor => TextAlign.Right,
+            ColumnType.Date => TextAlign.Right,
             _ => TextAlign.Left
         };
         return new SheetCell()

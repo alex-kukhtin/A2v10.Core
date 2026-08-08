@@ -165,13 +165,15 @@ public sealed record RowSetDeclaration(
 
 public sealed record DeclarationMetadata
 {
-    /* Where the data lives - one axis, two spellings, exactly one of them written.
-     * 'Table' names my own table, 'Storage' points at one declared elsewhere. Neither has a
-     * default, so 'empty' here means 'not written' and nothing else; the pair is checked in
-     * DatabaseMetadataProvider.CheckDataLocation.
+    /* Where the shape this endpoint works on comes from - one axis, three spellings, exactly one
+     * of them written. 'Table' names my own table; 'Storage' points at a table declared elsewhere,
+     * which I write to; 'Surface' points at a shape I only read. None has a default, so 'empty'
+     * here means 'not written' and nothing else, and which of the three is legal is decided by the
+     * folder - see DatabaseMetadataProvider.CheckShapeSource.
      */
     public String? Table { get; init; }
     public String? Storage { get; init; }
+    public String? Surface { get; init; }
 
     public Dictionary<String, InitialMetadata> InitialValues { get; init; } = [];
     public RuleMetadata Rules { get; init; } = new();
@@ -210,6 +212,20 @@ public sealed record DeclarationMetadata
     [JsonIgnore]
     public IReadOnlyList<RowSetDeclaration> RowSets { get; init; } = [];
 
+    /* The two ways of pointing elsewhere answer one question, so the loader asks them as one: a
+     * path, and the key it was written under. The key travels with the path because every message
+     * about it has to name what the author actually wrote, not what the other case is called.
+     */
     [JsonIgnore]
-    public Boolean HasOwnStorage => String.IsNullOrEmpty(Storage);
+    public String? SharedShape =>
+        !String.IsNullOrEmpty(Storage) ? Storage
+        : !String.IsNullOrEmpty(Surface) ? Surface
+        : null;
+
+    [JsonIgnore]
+    public String SharedShapeKey => String.IsNullOrEmpty(Storage) ? "surface" : "storage";
+
+    // my own file declares the shape: nothing to resolve, and it is mine to deploy
+    [JsonIgnore]
+    public Boolean HasOwnShape => SharedShape is null;
 }

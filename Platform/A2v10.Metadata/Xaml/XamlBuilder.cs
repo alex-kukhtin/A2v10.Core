@@ -3,12 +3,11 @@
 using A2v10.System.Xaml;
 using System;
 
-namespace A2v10.Metadata
+namespace A2v10.Metadata;
+
+internal partial class XamlBuilder(BuilderDescriptor desciptor)
 {
-    internal partial class XamlBuilder(BuilderDescriptor desciptor, IServiceProvider _)
-    {
-        private readonly NormalEndpointMetadata Endpoint = desciptor.Endpoint;
-        private readonly TableMetadata Table = desciptor.Table;
-        protected readonly IServiceProvider _xamlServiceProvider = new XamlServiceProvider();
-    }
+    private readonly NormalEndpointMetadata Endpoint = desciptor.Endpoint;
+    private readonly TableMetadata Table = desciptor.Table;
+    protected readonly IServiceProvider _xamlServiceProvider = new XamlServiceProvider();
 }

@@ -19,6 +19,7 @@ public enum EndpointKind
     Document,
     Operation,
     Journal,
+    Report,
     Details,
     Folders,
     Tags,

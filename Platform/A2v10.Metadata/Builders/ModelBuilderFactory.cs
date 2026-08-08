@@ -49,7 +49,7 @@ internal partial class ModelBuilderFactory(
             PlatformUrl = platformUrl,
             Endpoint = endpoint,
         };
-        return new EndpointModelBuilder(_serviceProvider, bd);
+        return new EndpointModelBuilder(bd);
 
     }
 }

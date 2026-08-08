@@ -215,27 +215,34 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         var declaration = JsonConvert.DeserializeObject<DeclarationMetadata>(text, JsonSettings.CamelCaseSerializerSettings)
             ?? throw new InvalidOperationException($"{MetadataFileName(schema, table)}: DeclarationMetadata deserialization fails");
 
-        CheckDataLocation(schema, table, declaration);
+        CheckShapeSource(schema, table, declaration);
 
-        /* An endpoint that owns its storage builds it from the text already in hand; one that
-         * points elsewhere asks for the endpoint at that address, because a shared table comes
-         * with a shared declaration - what /document says about its columns holds for every
-         * operation over it. Both roads end in the same storage cache, so every endpoint
-         * pointing at one table still gets one instance.
+        /* An endpoint that owns its shape builds it from the text already in hand; one that points
+         * elsewhere asks for the endpoint at that address, because a shared table comes with a
+         * shared declaration - what /document says about its columns holds for every operation
+         * over it. Both roads end in the same storage cache, so every endpoint pointing at one
+         * table still gets one instance.
+         *
+         * A report takes the first half only - the shape it reads. It lays no behaviour over the
+         * journal's, so the declaration fetched here reaches the normal endpoint below and nobody
+         * else.
+         *
+         * The path is there for certain: a kind that may point elsewhere was made to say where by
+         * the check above, and a kind that may not never leaves the first branch.
          */
         TableMetadata storage;
         DeclarationMetadata? storageDeclaration = null;
-        if (declaration.HasOwnStorage)
+        if (declaration.HasOwnShape)
             storage = await _metadataCache.GetOrAddStorageAsync(dataSource, schema, table,
                 (_, s, t) => Task.FromResult(BuildStorage(s, t, text, hash)));
         else
         {
-            var (storageSchema, storageTable) = ParsePath(declaration.Storage!);
-            CheckStorageTarget(schema, table, declaration, storageSchema, storageTable);
-            var storageEndpoint = await GetNormalEndpointAsync(load, dataSource, storageSchema, storageTable);
-            CheckStorageOwnsTable(schema, table, declaration, storageEndpoint);
-            storage = storageEndpoint.Storage;
-            storageDeclaration = storageEndpoint.Declaration;
+            var (targetSchema, targetTable) = ParsePath(declaration.SharedShape!);
+            CheckSharedShapeTarget(schema, table, declaration, targetSchema, targetTable);
+            var targetEndpoint = await GetNormalEndpointAsync(load, dataSource, targetSchema, targetTable);
+            CheckSharedShapeOwnsTable(schema, table, declaration, targetEndpoint);
+            storage = targetEndpoint.Storage;
+            storageDeclaration = targetEndpoint.Declaration;
         }
 
         /* The only place that decides which kind of endpoint this is. The discriminator is the
@@ -247,7 +254,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                 Kind = EndpointKindOf(schema),
                 Schema = schema,
                 Name = table,
-                // the surface a report reads; today addressed by 'storage', by 'source' later
+                // the shape a report reads, resolved from 'surface'. It owns none of it
                 Surface = storage,
                 Report = JsonConvert.DeserializeObject<ReportMetadata>(text, JsonSettings.CamelCaseSerializerSettings)
                     ?? throw new InvalidOperationException("ReportMetadata deserialization fails"),
@@ -267,39 +274,49 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         };
     }
 
-    /* 'storage' names a table, and a table is declared by the endpoint that owns it. Both rules
-     * below say that, and they are two because they can be asked at different moments: pointing
-     * at yourself is answerable from the path alone, before anything is loaded, and it has to
-     * be - the descent would re-enter this very endpoint, which is not in the cache yet.
+    /* 'storage' and 'surface' both name another endpoint, and a shape is declared by the endpoint
+     * that owns it. Both rules below say that, and they are two because they can be asked at
+     * different moments: pointing at yourself is answerable from the path alone, before anything
+     * is loaded, and it has to be - the descent would re-enter this very endpoint, which is not
+     * in the cache yet.
      *
      * The remaining shape - a and b naming each other - is not caught: answering it means
      * loading b, which is the descent itself. It takes two files written to point at one
      * another, and it ends in a stack overflow rather than a message.
+     *
+     * The messages name the key the author wrote, never the other one: a report told to fix its
+     * 'storage' would be told to fix something it does not have.
      */
-    private static void CheckStorageTarget(String schema, String table, DeclarationMetadata declaration,
-        String storageSchema, String storageTable)
+    private static void CheckSharedShapeTarget(String schema, String table, DeclarationMetadata declaration,
+        String targetSchema, String targetTable)
     {
-        if (!String.Equals(schema, storageSchema, StringComparison.OrdinalIgnoreCase)
-            || !String.Equals(table, storageTable, StringComparison.OrdinalIgnoreCase))
+        if (!String.Equals(schema, targetSchema, StringComparison.OrdinalIgnoreCase)
+            || !String.Equals(table, targetTable, StringComparison.OrdinalIgnoreCase))
             return;
-        throw new InvalidOperationException(String.Join(Environment.NewLine,
-            $"{MetadataFileName(schema, table)}: 'storage' points at this endpoint itself.",
-            $"    \"storage\": \"{declaration.Storage}\"",
-            "  'storage' names the endpoint that declares the table, which is never the one declaring 'storage'.",
-            "  Point at that endpoint, or declare \"table\" here instead."));
+        var key = declaration.SharedShapeKey;
+        var hint = key == "storage" ? ", or declare \"table\" here instead" : "";
+        throw new InvalidOperationException($"""
+            {MetadataFileName(schema, table)}: '{key}' points at this endpoint itself.
+                "{key}": "{declaration.SharedShape}"
+              '{key}' names the endpoint that declares the shape, which is never the one declaring '{key}'.
+              Point at that endpoint{hint}.
+            """);
     }
 
-    private static void CheckStorageOwnsTable(String schema, String table, DeclarationMetadata declaration,
-        NormalEndpointMetadata storageEndpoint)
+    private static void CheckSharedShapeOwnsTable(String schema, String table, DeclarationMetadata declaration,
+        NormalEndpointMetadata targetEndpoint)
     {
-        if (storageEndpoint.Declaration.HasOwnStorage)
+        if (targetEndpoint.Declaration.HasOwnShape)
             return;
-        throw new InvalidOperationException(String.Join(Environment.NewLine,
-            $"{MetadataFileName(schema, table)}: 'storage' points at {storageEndpoint.Path}, which declares 'storage' itself.",
-            $"    \"storage\": \"{declaration.Storage}\"    - here;",
-            $"    \"storage\": \"{storageEndpoint.Declaration.Storage}\"    - there.",
-            "  'storage' is one hop: it names the endpoint that declares the table, not another operation over it.",
-            $"  Point at {storageEndpoint.Declaration.Storage} instead."));
+        var key = declaration.SharedShapeKey;
+        var targetKey = targetEndpoint.Declaration.SharedShapeKey;
+        throw new InvalidOperationException($"""
+            {MetadataFileName(schema, table)}: '{key}' points at {targetEndpoint.Path}, which declares '{targetKey}' itself.
+                "{key}": "{declaration.SharedShape}"    - here;
+                "{targetKey}": "{targetEndpoint.Declaration.SharedShape}"    - there.
+              '{key}' is one hop: it names the endpoint that declares the shape, not another one pointing at it.
+              Point at {targetEndpoint.Declaration.SharedShape} instead.
+            """);
     }
 
     /* The two layers a declaration comes in: what the shared table declares about itself, and
@@ -312,9 +329,9 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
      * Written as 'own with', so only the keys named here are layered and everything else stays
      * the endpoint's own. What is deliberately not named:
      *
-     *   'table'/'storage' - where MY data lives. Inheriting them would produce a declaration
-     *                       naming both, the one state CheckDataLocation exists to make
-     *                       unreachable.
+     *   'table'/'storage'/'surface' - where MY shape comes from. Inheriting them would produce a
+     *                       declaration naming two of them at once, the one state CheckShapeSource
+     *                       exists to make unreachable.
      *   'post'            - what the operation DOES. The table is shared, the act is not: two
      *                       operations over one table post in opposite directions, which is
      *                       most of why they are two.
@@ -383,9 +400,14 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return merged;
     }
 
-    /* Folders the enum does not know yet ('report', 'autonum') resolve to Undefined rather
-     * than throwing: every endpoint gets a container, and this is the single place that will
-     * learn the new kinds.
+    /* The kind of an endpoint declared by a folder. Platform namespaces ('operations', 'tags')
+     * and registries ('autonum') resolve to Undefined rather than throwing: their kind, where
+     * they have one, is set on the table by TableMetadataDefaults, and every endpoint gets a
+     * container either way. This is the single place that learns a new file-declared kind.
+     *
+     * MetadataExtensions.ToEndpointKind answers the same question and throws on the rest - one
+     * law in two spellings, and this one is how it drifted: it stayed silent about 'report'
+     * long after the enum had the value.
      */
     private static EndpointKind EndpointKindOf(String schema)
     {
@@ -394,72 +416,106 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             Constants.SchemaNames.Catalog => EndpointKind.Catalog,
             Constants.SchemaNames.Document => EndpointKind.Document,
             Constants.SchemaNames.Journal => EndpointKind.Journal,
+            Constants.SchemaNames.Report => EndpointKind.Report,
             _ => EndpointKind.Undefined
         };
     }
 
-    /* Kinds whose endpoints work on a table of ours and therefore have to say which one.
-     * Everything else falls through EndpointKindOf as Undefined and is not asked: platform
-     * namespaces (operations, tags) declare their tables in code, autonum is a registry and not
-     * a table endpoint, and a report owns no table at all - it names a surface it reads, which
-     * is a different key under a different rule.
+    /* Kinds whose endpoints have to say where the shape they work on comes from. Everything else
+     * falls through EndpointKindOf as Undefined and is not asked: platform namespaces (operations,
+     * tags) declare their tables in code, and autonum is a registry, not a table endpoint.
      */
-    private static Boolean DeclaresDataLocation(String schema) =>
+    private static Boolean DeclaresShapeSource(String schema) =>
         EndpointKindOf(schema) != EndpointKind.Undefined;
 
-    /* Where the data lives is declared, never guessed.
+    /* Where the shape comes from is declared, never guessed.
      *
-     * 'storage' - working on a table declared elsewhere - exists for one kind only: a family of
-     * operations over one document table. Every other endpoint owns its table, so its rule is
-     * not a choice between two keys but simply 'name it'. Two rules, and which one applies is
-     * decided by the folder, so neither can be reached by writing the wrong key.
+     * Three keys on one axis - 'table' (my own), 'storage' (a table declared elsewhere, which I
+     * write to), 'surface' (a shape I only read) - and exactly one of them is legal per folder:
+     * 'storage' for a family of operations over one document table, 'surface' for a report, which
+     * owns no table and therefore never reaches deploy, 'table' for everyone else. Which rule
+     * applies is decided by the folder, so writing the wrong key never moves an endpoint into
+     * another rule - it is an error naming the rule it broke.
      *
      * There used to be a default - an absent 'storage' under document/ meant the shared
      * doc.Documents - and it was the single place in the format where writing nothing meant
      * *someone else's* table, while everywhere else writing nothing means your own. Nothing
      * replaces it: both readings of an undeclared endpoint are plausible and the wrong one is
-     * silent, so the file is asked instead of guessed at.
+     * silent, so the file is asked instead of guessed at. The same reasoning brought the report
+     * in here: an unasked report built an empty shape out of its own file and reported nothing.
      *
      * A missing metadata.json and an empty {} arrive here as the same text and get the same
-     * message on purpose: 'the file is empty' would say less than 'nothing says where the data
-     * lives', and the fix is identical.
+     * message on purpose: 'the file is empty' would say less than 'nothing says where the shape
+     * comes from', and the fix is identical.
      */
-    private static void CheckDataLocation(String schema, String table, DeclarationMetadata declaration)
+    private static void CheckShapeSource(String schema, String table, DeclarationMetadata declaration)
     {
-        if (!DeclaresDataLocation(schema))
+        if (!DeclaresShapeSource(schema))
             return;
 
         var hasTable = !String.IsNullOrEmpty(declaration.Table);
         var hasStorage = !String.IsNullOrEmpty(declaration.Storage);
+        var hasSurface = !String.IsNullOrEmpty(declaration.Surface);
         var file = MetadataFileName(schema, table);
+
+        if (schema == Constants.SchemaNames.Report)
+        {
+            if (hasTable || hasStorage)
+            {
+                var owning = hasTable ? "table" : "storage";
+                throw new InvalidOperationException($"""
+                    {file}: declares '{owning}', which a report may not do.
+                      A report is a window into a shape declared elsewhere: it owns no table and writes to none.
+                      Declare "surface": "<path to a journal>" instead.
+                    """);
+            }
+            if (!hasSurface)
+                throw new InvalidOperationException($"""
+                    {file}: does not declare 'surface', so nothing says which shape this report reads.
+                      Add "surface": "/journal/<name>".
+                      There is no default: an absent 'surface' is not a shape of the report's own.
+                    """);
+            return;
+        }
+
+        if (hasSurface)
+            throw new InvalidOperationException($"""
+                {file}: declares 'surface', which only a report may do.
+                  'surface' names a shape that is read and never written; every other kind works on data of its own.
+                  Declare "table": "<TableName>" instead.
+                """);
 
         if (schema != Constants.SchemaNames.Document)
         {
             if (hasStorage)
-                throw new InvalidOperationException(String.Join(Environment.NewLine,
-                    $"{file}: declares 'storage', which only a document endpoint may do.",
-                    "  'storage' shares one table across a family of operations; every other kind owns its table.",
-                    "  Declare \"table\": \"<TableName>\" instead."));
+                throw new InvalidOperationException($"""
+                    {file}: declares 'storage', which only a document endpoint may do.
+                      'storage' shares one table across a family of operations; every other kind owns its table.
+                      Declare "table": "<TableName>" instead.
+                    """);
             if (!hasTable)
-                throw new InvalidOperationException(String.Join(Environment.NewLine,
-                    $"{file}: does not declare 'table', so nothing says where the data lives.",
-                    "  Add \"table\": \"<TableName>\".",
-                    "  There is no default: a table name is never derived from the folder name."));
+                throw new InvalidOperationException($"""
+                    {file}: does not declare 'table', so nothing says where the data lives.
+                      Add "table": "<TableName>".
+                      There is no default: a table name is never derived from the folder name.
+                    """);
             return;
         }
 
         if (hasTable == hasStorage)
             throw new InvalidOperationException(hasTable
-                ? String.Join(Environment.NewLine,
-                    $"{file}: declares both 'table' and 'storage'. These are two different layouts:",
-                    $"    \"table\":   \"{declaration.Table}\" - this document has its own table;",
-                    $"    \"storage\": \"{declaration.Storage}\" - this document is an operation over a table declared elsewhere.",
-                    "  Keep one.")
-                : String.Join(Environment.NewLine,
-                    $"{file}: declares neither 'table' nor 'storage', so nothing says where the data lives.",
-                    "    \"table\":   \"<TableName>\" - if this document has its own table;",
-                    "    \"storage\": \"document\"    - if it is an operation over a table declared elsewhere.",
-                    "  There is no default: an absent 'table' is not a shared table and not a derived name."));
+                ? $"""
+                    {file}: declares both 'table' and 'storage'. These are two different layouts:
+                        "table":   "{declaration.Table}" - this document has its own table;
+                        "storage": "{declaration.Storage}" - this document is an operation over a table declared elsewhere.
+                      Keep one.
+                    """
+                : $"""
+                    {file}: declares neither 'table' nor 'storage', so nothing says where the data lives.
+                        "table":   "<TableName>" - if this document has its own table;
+                        "storage": "document"    - if it is an operation over a table declared elsewhere.
+                      There is no default: an absent 'table' is not a shared table and not a derived name.
+                    """);
     }
 
     private async Task<TableMetadata> LoadTableMetadataDbAsync(String? dataSource, String schema, String table)
@@ -574,7 +630,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
              */
             if (await GetEndpointAsync(dataSource, schema, table) is not NormalEndpointMetadata endpoint)
                 continue;
-            if (!endpoint.Declaration.HasOwnStorage)
+            if (!endpoint.Declaration.HasOwnShape)
                 continue;
             tables.Add(endpoint.Storage);
         }

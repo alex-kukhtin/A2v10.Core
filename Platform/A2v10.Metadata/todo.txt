@@ -15,10 +15,13 @@
 16. Tags -> Edit, Filter, Settings, FK_, UNQ_
 18. Amount/Qty/Price/Factor реализация.
 19. sql schema to databasedeploy.sql
-20. Item.Fetch - не возвращает Unit.
 22. platformid to databasedeploy.sql
 23. Browse Operation
-26.
+26. IndexPage -> Dedup Filters
+27. Element.Show Endpoint
+28. IndexPage -> Traits.Print
+29. Report - Title & PageTitle - что-то придумать.
+
 
 
 14. Не работает ParentElem в Edit.

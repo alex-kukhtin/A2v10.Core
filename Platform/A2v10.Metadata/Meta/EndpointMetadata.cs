@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using DocumentFormat.OpenXml.Bibliography;
 using DocumentFormat.OpenXml.Vml;
 
@@ -58,4 +59,14 @@ public sealed record ReportEndpointMetadata : EndpointMetadata
 {
     public required TableMetadata Surface { get; init; }
     public required ReportMetadata Report { get; init; }
+
+    private TableColumn FindSurfaceColumn(String columnName)
+    {
+        var column = Surface.Columns.FirstOrDefault(c => c.Name == columnName);
+        if (column is null)
+            throw new InvalidOperationException($"Report '{Path}' refers to unknown column '{columnName}'");
+        return column;
+    }
+    internal IEnumerable<TableColumn> Filters() => Report.Filters.Select(FindSurfaceColumn);
+    internal IEnumerable<TableColumn> Groups() => Report.Groups.Select(FindSurfaceColumn);
 }

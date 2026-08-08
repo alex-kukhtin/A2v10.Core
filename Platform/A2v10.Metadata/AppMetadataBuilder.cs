@@ -44,7 +44,7 @@ internal class AppMetadataBuilder(IServiceProvider _serviceProvider,
         var endpoint = await _metadataProvider.GetEndpointAsync(
             view.Meta ?? throw new InvalidOperationException("Meta is null"), view.DataSource);
         if (endpoint is ReportEndpointMetadata report)
-            return await new ReportEndpointBuilder(_serviceProvider, report).RenderAsync(platformUrl, view, isReload);
+            return await new ReportEndpointBuilder(_serviceProvider, report, await _metadataProvider.GetPlatformIdAsync(view.DataSource)).RenderAsync(platformUrl, view, isReload);
 
         var iBuilder = await _modelBuilderFactory.BuildAsync(platformUrl, view);
 

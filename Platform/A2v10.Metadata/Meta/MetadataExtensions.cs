@@ -27,7 +27,8 @@ internal static class MetadataExtensions
             Constants.SchemaNames.Catalog => EndpointKind.Catalog,
             Constants.SchemaNames.Document => EndpointKind.Document,
             Constants.SchemaNames.Journal => EndpointKind.Journal,
-            _ => throw new InvalidOperationException($"Invalid schema for EndpointKind {schema}")
+            Constants.SchemaNames.Report => EndpointKind.Report,
+            _ => throw new InvalidOperationException($"Invalid schema for EndpointKind '{schema}'")
         };
     }
 
@@ -38,7 +39,7 @@ internal static class MetadataExtensions
             Constants.SchemaNames.Catalog => "cat",
             Constants.SchemaNames.Document => "doc",
             Constants.SchemaNames.Journal => "jrn",
-            "report" => "rep",
+            Constants.SchemaNames.Report => "rep",
             Constants.SchemaNames.Operations => "op",
             "account" => "acc",
             "inforegister" => "regi",
@@ -52,21 +53,6 @@ internal static class MetadataExtensions
         var kind = action == "index" || action == "edit" && endpoint.Storage.EditWithPage ? "_page" : "_dialog";
         var url = $"{kind}{endpoint.Path}/{action}/".ToLowerInvariant();
         return new PlatformUrl(url);
-    }
-
-
-    internal static IEnumerable<ReportItemMetadata> TypedReportItems(this ReportMetadata table, ReportItemKind kind)
-    {
-        return table.ReportItems.Where(ri => ri.Kind == kind).OrderBy(r => r.Order);
-    }
-
-    internal static String Endpoint(this ReportItemMetadata item)
-    {
-        return $"/{item.RealRefSchema}/{item.RealRefTable}";
-    }
-    internal static String CreateField(this ReportItemMetadata item, String? prefix = null)
-    {
-        return $"[{prefix}{item.Column}] {item.DataType.ToSqlDataType()}";
     }
 
     internal static TableMetadata CreateEnumMeta(TableColumn col)

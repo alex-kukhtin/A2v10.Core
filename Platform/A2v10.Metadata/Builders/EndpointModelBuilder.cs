@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace A2v10.Metadata;
 
-internal class EndpointModelBuilder(IServiceProvider _, BuilderDescriptor descriptor) : IEndpointModelBuilder
+internal class EndpointModelBuilder(BuilderDescriptor descriptor) : IEndpointModelBuilder
 {
     // the same emitter as the runtime uses, printing the types this time
     private readonly ScriptBuilder _tsBuilder = new(descriptor, isTs: true);

@@ -9,6 +9,27 @@ using A2v10.Data.Core.Extensions.Dynamic;
 
 namespace A2v10.Metadata;
 
+public enum ReportItemKind
+{
+    G,
+    F,
+    D,
+    Grouping = G,
+    Filter = F,
+    Data = D
+}
+public record ReportItemMetadata
+{
+    public ReportItemKind Kind { get; init; }
+    public String Column { get; init; } = default!;
+    public ColumnType DataType { get; init; } = default!;
+    public String? SqlTableName { get; init; }
+    public String? Endpoint { get; init; }
+    public Boolean Checked { get; init; }
+    public Int32 Order { get; init; }
+    public String? Label { get; init; }
+}
+
 internal class ReportGrouping
 {
     internal List<ReportItemMetadata> Filters { get; }
@@ -16,27 +37,30 @@ internal class ReportGrouping
     internal List<ReportItemMetadata> Data { get; }
 
     private readonly ReportMetadata _report;
+    private readonly TableMetadata _surface;
     private readonly ExpandoObject _prms;
-    public ReportGrouping(ReportMetadata report, ExpandoObject prms)
+
+    public ReportGrouping(ReportMetadata report, TableMetadata surface, ExpandoObject prms)
     {
         _prms = prms;
         _report = report;   
-        Filters = [.. report.TypedReportItems(ReportItemKind.Filter)];
+        _surface = surface;
+        Filters = [.. TypedReportItems(ReportItemKind.Filter)];
 
         var gparam = GroupParams;
         if (String.IsNullOrEmpty(gparam))
-            Grouping = [.. report.TypedReportItems(ReportItemKind.Grouping).Where(c => c.Checked)];
+            Grouping = [.. TypedReportItems(ReportItemKind.Grouping).Where(c => c.Checked)];
         else
         {
-            var gitems = report.TypedReportItems(ReportItemKind.Grouping);
+            var gitems = TypedReportItems(ReportItemKind.Grouping);
             Grouping = [..gparam.Split('!').Join(gitems, x => x, y => y.Column, (x, y) => y)];
         }
         var dparam = DataParams;
         if (String.IsNullOrEmpty(dparam))
-            Data = [.. report.TypedReportItems(ReportItemKind.Data).Where(c => c.Checked)];
+            Data = [.. TypedReportItems(ReportItemKind.Data).Where(c => c.Checked)];
         else
         {
-            var ditems = report.TypedReportItems(ReportItemKind.Data);
+            var ditems = TypedReportItems(ReportItemKind.Data);
             Data = [.. dparam.Split('!').Join(ditems, x => x, y => y.Column, (x, y) => y)];
         }
     }
@@ -56,7 +80,7 @@ internal class ReportGrouping
         => String.Join(", ", Grouping.Select((c, ix) => $"[{c.Column}.Id!T{c.Column}!Id] = T.{c.Column}, [{c.Column}.Name!T{c.Column}!Name] = isnull(r{ix + 1}.[Name], N'@[{c.Column}.NoData]'), [{c.Column}!!GroupMarker] = {c.Column}Grp"));
 
     internal String ReferenceJoins()
-        => String.Join(" ", Grouping.Select((c, ix) => $"left join {c.RealRefSchema}.[{c.RealRefTable}] r{ix + 1} on T.[{c.Column}] = r{ix + 1}.[Id]"));
+        => String.Join(" ", Grouping.Select((c, ix) => $"left join {c.SqlTableName} r{ix + 1} on T.[{c.Column}] = r{ix + 1}.[Id]"));
 
     internal String ReferenceOrderByGrp()
         => String.Join(", ", Grouping.Select(c => $"{c.Column}Grp desc"));
@@ -90,10 +114,42 @@ internal class ReportGrouping
             """)
         );
 
+
+    internal IEnumerable<ReportItemMetadata> TypedReportItems(ReportItemKind kind)
+    {
+        ReportItemMetadata CreateReportItemMetadata(String name)
+        {
+            var column = _surface.Columns.FirstOrDefault(c => c.Name == name)
+                ?? throw new InvalidOperationException($"Column '{name}' not found in surface '{_surface.Path}'");
+            Boolean isChecked = false;
+            if (kind == ReportItemKind.Grouping)
+                isChecked = _report.Defaults.Groups.Contains(name);
+            else if (kind == ReportItemKind.Data)
+                isChecked = _report.Defaults.Data.Contains(name);
+            return new ReportItemMetadata()
+            {
+                Kind = kind,
+                Column = name,
+                DataType = column.Type,
+                SqlTableName = column.IsRef ? column.RefTableCheck.Storage.SqlTableName : null,
+                Endpoint = column.IsRef ? column.RefTableCheck.Path : null,
+                Checked = isChecked
+            };
+        }
+
+        return kind switch
+        {
+            ReportItemKind.Grouping => _report.Groups.Select(CreateReportItemMetadata),
+            ReportItemKind.Data => _report.Data.Select(CreateReportItemMetadata),
+            ReportItemKind.Filter => _report.Filters.Select(CreateReportItemMetadata),
+            _ => throw new InvalidOperationException($"Unknown kind {kind}")
+        };
+    }
+
     internal String RepInfoSql()
     {
-        var otherItems = _report.TypedReportItems(ReportItemKind.Grouping).Except(Grouping);
-        var otherData = _report.TypedReportItems(ReportItemKind.Data).Except(Data);
+        var otherItems = TypedReportItems(ReportItemKind.Grouping).Except(Grouping);
+        var otherData = TypedReportItems(ReportItemKind.Data).Except(Data);
 
         String isCheckedGroup(ReportItemMetadata item)
             => Grouping.Any(c => c.Column == item.Column) ? "1" : "0";

@@ -14,23 +14,34 @@ using A2v10.System.Xaml;
 
 namespace A2v10.Metadata;
 
-internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, ReportMetadata report, TableMetadata source)
+internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, ReportMetadata report, TableMetadata source, AppPlatformId platformId)
 {
     protected IServiceProvider _serviceProvider = serviceProvider;
 #pragma warning disable IDE1006 // Naming Styles
-    protected ReportMetadata _report => report;
     protected TableMetadata _source => source;
+    protected ReportMetadata _report => report;
     protected IDbContext _dbContext => _serviceProvider.GetRequiredService<IDbContext>();
     protected ICurrentUser _currentUser => _serviceProvider.GetRequiredService<ICurrentUser>();
-    protected DatabaseMetadataProvider _metadataProvider => _serviceProvider.GetRequiredService<DatabaseMetadataProvider>();
 
     protected readonly IServiceProvider _xamlServiceProvider = new XamlServiceProvider();
 
     protected ReportGrouping _grouping = default!;
 #pragma warning restore IDE1006 // Naming Styles
 
+    internal String CreateField(ReportItemMetadata item, String? prefix = null)
+    {
+        // TODO : PlatformId DataType
+
+        var dt = item.DataType.ToSqlDataType();
+        if (dt == "platformid")
+            dt = platformId.SqlTypeName;
+        return $"[{prefix}{item.Column}] {dt}";
+    }
+
     public abstract Task<IDataModel> LoadReportModelAsync(IModelView view, ExpandoObject prms);
     public abstract UIElement CreatePage();
+
+
     protected Toolbar CreateToolbar()
     {
         return new Toolbar(_xamlServiceProvider)
@@ -93,12 +104,12 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Repo
                 }
             };
 
-            foreach (var r in _report.TypedReportItems(ReportItemKind.Filter))
+            foreach (var r in _grouping.TypedReportItems(ReportItemKind.Filter))
             {
                 yield return new SelectorSimple()
                 {
                     Label = r.LocalizeLabel(),
-                    Url = r.Endpoint(),
+                    Url = r.Endpoint,
                     ShowClear = true,
                     Highlight = true,
                     Placeholder = $"@[{r.Column}.AllData]",
