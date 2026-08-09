@@ -41,6 +41,9 @@ internal sealed record DbHash
  * derived from the declaration). Then the file is correct by construction, and there is
  * no separate "build a release" step at all.
  */
+
+public sealed record DeployDatabaseResult(String File, Boolean Applied);
+
 public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbContext)
 {
     private const String DB_FILE = "deploydatabase.sql";
@@ -49,7 +52,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
 
     private String DatabaseFilePath => _appCodeProvider.GetMainModuleFullPath("_sqlscripts", DB_FILE);
 
-    public async Task<Boolean> CheckDeployAsync(String? dataSource, IEnumerable<TableMetadata> tables)
+    public async Task<DeployDatabaseResult> CheckDeployAsync(String? dataSource, IEnumerable<TableMetadata> tables)
     {
         var seedScript = await GenerateMetadataSeedAsync(tables);
         var seedHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(seedScript ?? "new"))).ToLowerInvariant();
@@ -57,7 +60,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         var dbHash = await _dbContext.LoadAsync<DbHash>(dataSource, "a2meta.[GetDbHash]");
 
         if (dbHash?.Hash == seedHash)
-            return true;
+            return new DeployDatabaseResult(DatabaseFilePath, false);
 
         var allScript = new StringBuilder();
 
@@ -82,7 +85,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
 
         // save hash
         await _dbContext.ExecuteAsync<DbHash>(dataSource, "a2meta.[SetDbHash]", new DbHash() { Hash = seedHash });
-        return true;
+        return new DeployDatabaseResult(DatabaseFilePath, true);
     }
 
     private Task WriteDeployDatabaseFileAsync(String allScript)

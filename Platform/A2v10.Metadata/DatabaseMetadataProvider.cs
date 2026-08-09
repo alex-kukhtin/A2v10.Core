@@ -32,9 +32,14 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
 
         var allMeta = await AllElementsMetadata(dataSource);
 
-        var ok = await _sqlDbGenerator.CheckDeployAsync(dataSource, allMeta);
-        if (ok)
-            _metadataCache.ClearDirty();
+        await _sqlDbGenerator.CheckDeployAsync(dataSource, allMeta);
+        _metadataCache.ClearDirty();
+    }
+
+    public async Task<DeployDatabaseResult> DeployDatabaseAllAsync(String? dataSource)
+    {
+        var allMeta = await AllElementsMetadata(dataSource);
+        return await _sqlDbGenerator.CheckDeployAsync(dataSource, allMeta);
     }
 
     public async Task<EndpointMetadata> GetEndpointAsync(IModelBaseMeta meta, String? dataSource)
@@ -157,7 +162,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
      * always the path they would open, never the internal (schema, table) pair.
      */
     private static String MetadataFileName(String schema, String table) =>
-        Path.Combine(schema, table, "metadata.json");
+        Path.Combine(schema, table, "metadata.json").NormalizeSlash();
 
     private async Task<(String Text, String? Hash)> ReadMetadataFileAsync(String schema, String table)
     {
@@ -294,12 +299,12 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             || !String.Equals(table, targetTable, StringComparison.OrdinalIgnoreCase))
             return;
         var key = declaration.SharedShapeKey;
-        var hint = key == "storage" ? ", or declare \"table\" here instead" : "";
+        var hint = key == "storage" ? ", or declare 'table' here instead" : "";
         throw new InvalidOperationException($"""
             {MetadataFileName(schema, table)}: '{key}' points at this endpoint itself.
-                "{key}": "{declaration.SharedShape}"
-              '{key}' names the endpoint that declares the shape, which is never the one declaring '{key}'.
-              Point at that endpoint{hint}.
+            '{key}': "{declaration.SharedShape}"
+            '{key}' names the endpoint that declares the shape, which is never the one declaring '{key}'.
+            Point at that endpoint{hint}.
             """);
     }
 
@@ -312,10 +317,10 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         var targetKey = targetEndpoint.Declaration.SharedShapeKey;
         throw new InvalidOperationException($"""
             {MetadataFileName(schema, table)}: '{key}' points at {targetEndpoint.Path}, which declares '{targetKey}' itself.
-                "{key}": "{declaration.SharedShape}"    - here;
-                "{targetKey}": "{targetEndpoint.Declaration.SharedShape}"    - there.
-              '{key}' is one hop: it names the endpoint that declares the shape, not another one pointing at it.
-              Point at {targetEndpoint.Declaration.SharedShape} instead.
+            '{key}': '{declaration.SharedShape}' - here;
+            '{targetKey}': '{targetEndpoint.Declaration.SharedShape}' - there.
+            '{key}' is one hop: it names the endpoint that declares the shape, not another one pointing at it.
+            Point at {targetEndpoint.Declaration.SharedShape} instead.
             """);
     }
 

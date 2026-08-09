@@ -58,7 +58,7 @@ internal sealed partial class Program
         };
         metaCommand.Subcommands.Add(new DeployCommand(_services).Build());
         metaCommand.Subcommands.Add(new EndpointListCommand(_services).Build());
-        //root.Subcommands.Add(metaCommand);
+        root.Subcommands.Add(metaCommand);
 
         return root.Parse(args).InvokeAsync();
     }

@@ -92,10 +92,8 @@ internal sealed partial class Program
             .AddSingleton<ISqlQueryTextProvider, NullSqlQueryTextProvider>()
             .AddSingleton<ILocalizer, EmptyLocalizer>()
             .AddSingleton<DatabaseMetadataProvider>()
-            .AddSingleton<CliDatabaseCreator>()
             .AddSingleton<IApplicationHost, WebApplicationHost>()
             .AddSingleton<IDataScripter, VueDataScripter>()
-            .AddSingleton<CliDeployDatabase>()
             .AddSingleton<HostRoot>((_) => new HostRoot(webAppFolder));
 
         host.Services.AddSingleton<IAppCodeProvider, AppCodeProvider>()
