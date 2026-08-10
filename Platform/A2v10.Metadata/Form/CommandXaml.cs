@@ -47,7 +47,20 @@ internal partial class XamlBuilder
             },
             EntityCommandType.Edit => ButtonEditSelected(),
             EntityCommandType.Create => ButtonCreate(),
-            EntityCommandType.Delete => new Button() { Icon = Icon.Clear },
+            EntityCommandType.Delete => new Button() 
+            { 
+                Icon = Icon.Clear,
+                Bindings = b =>
+                {
+                    var cmd = new BindCmd()
+                    {
+                        Command = CommandType.DbRemoveSelected,
+                        Confirm = new Confirm() { Message = "@[Confirm.Delete]" }
+                    };
+                    cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind("Parent.ItemsSource"));
+                    b.SetBinding(nameof(Button.Command), cmd);
+                }
+            },
             EntityCommandType.Show => new Button()
             {
                 Icon = Icon.ArrowOpen,

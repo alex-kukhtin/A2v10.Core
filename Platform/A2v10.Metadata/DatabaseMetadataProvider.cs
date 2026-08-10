@@ -85,11 +85,6 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     public async Task<TableMetadata> GetSchemaAsync(String? dataSource, String schema, String table)
         => (await GetNormalEndpointAsync(dataSource, schema, table)).Storage;
 
-    public Task<AppMetadata> GetAppMetadataAsync(String? dataSource)
-    {
-        return _metadataCache.GetAppMetadataAsync(dataSource, LoadAppMetadataAsync);
-    }
-
     internal Task<AppPlatformId> GetPlatformIdAsync(String? dataSource)
     {
         return _metadataCache.GetPlatformIdAsync(dataSource, LoadPlatformIdAsync);
@@ -141,17 +136,6 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             ?? throw new InvalidOperationException("a2meta.[GetPlatformIdType] returns nothing. The 'platformid' type is not defined in the database"));
     }
 
-    private async Task<AppMetadata> LoadAppMetadataAsync(String? dataSource)
-    {
-        var dm = await _dbContext.LoadModelAsync(dataSource, "a2meta.[App.Metadata]")
-            ?? throw new InvalidOperationException("a2meta.[App.Metadata] returns null");
-        var appExpando = dm.Eval<ExpandoObject>("Application");
-        var json = JsonConvert.SerializeObject(appExpando) ??
-            throw new InvalidOperationException("AppMetadata not found");
-        var meta = JsonConvert.DeserializeObject<AppMetadata>(json, JsonSettings.IgnoreNull)
-            ?? throw new InvalidOperationException("AppMetadata deserialization fails");
-        return meta;
-    }
 
     /* The endpoint is built here, once, before it is published to the cache: its own
      * declaration comes from its own folder, and the shape it works on is resolved
@@ -618,6 +602,12 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         }
     }
 
+
+    public Task<IEnumerable<TableReferrer>> GetTableReferrersAsync(String? dataSource, TableMetadata table)
+    {
+        return _metadataCache.GetTableReferrersAsync(dataSource, table, LoadTableReferrersAsync);
+    }
+
     private async Task<IEnumerable<TableMetadata>> AllElementsMetadata(String? dataSource)
     {
         var allMeta = _codeProvider.EnumerateAllFilesRecursive("", "metadata.json");
@@ -642,5 +632,15 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         if (tables.Any(t => t.HasTags) && !tables.Any(t => t.IsTags))
             tables.Add(await GetStorageAsync(dataSource, Constants.SchemaNames.Tags, String.Empty));
         return tables;
+    }
+    private async Task<IEnumerable<TableReferrer>> LoadTableReferrersAsync(String? dataSource, TableMetadata table)
+    {
+        var prms = new ExpandoObject()
+        {
+            {"Schema", table.SqlSchema},
+            {"Table", table.Table},
+        };
+        return await _dbContext.LoadListAsync<TableReferrer>(dataSource, "a2meta.[GetFkReferrers]", prms)
+            ?? throw new InvalidOperationException("a2meta.[GetFkReferrers] returns null");
     }
 }

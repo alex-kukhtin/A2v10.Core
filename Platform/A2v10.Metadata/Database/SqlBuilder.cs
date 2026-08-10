@@ -17,6 +17,7 @@ internal partial class SqlBuilder(BuilderDescriptor desciptor, IServiceProvider 
 {
     private readonly IDbContext _dbContext = serviceProvider.GetRequiredService<IDbContext>();
     private readonly ICurrentUser _currentUser = serviceProvider.GetRequiredService<ICurrentUser>();
+    private readonly DatabaseMetadataProvider _metadataProvider = serviceProvider.GetRequiredService<DatabaseMetadataProvider>();
     private readonly BuilderDescriptor _descr = desciptor;
     private readonly NormalEndpointMetadata Endpoint = desciptor.Endpoint;
     private readonly TableMetadata Table = desciptor.Table;

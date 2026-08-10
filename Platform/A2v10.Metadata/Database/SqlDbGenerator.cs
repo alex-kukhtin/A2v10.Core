@@ -60,7 +60,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         var dbHash = await _dbContext.LoadAsync<DbHash>(dataSource, "a2meta.[GetDbHash]");
 
         if (dbHash?.Hash == seedHash)
-            return new DeployDatabaseResult(DatabaseFilePath, false);
+            return new DeployDatabaseResult(DatabaseFilePath.NormalizeSlash(), false);
 
         var allScript = new StringBuilder();
 
@@ -85,7 +85,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
 
         // save hash
         await _dbContext.ExecuteAsync<DbHash>(dataSource, "a2meta.[SetDbHash]", new DbHash() { Hash = seedHash });
-        return new DeployDatabaseResult(DatabaseFilePath, true);
+        return new DeployDatabaseResult(DatabaseFilePath.NormalizeSlash(), true);
     }
 
     private Task WriteDeployDatabaseFileAsync(String allScript)

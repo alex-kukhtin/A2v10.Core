@@ -25,7 +25,7 @@ public class DatabaseMetadataCache
     private readonly ConcurrentDictionary<String, TableMetadata> _storages = [];
     private readonly ConcurrentDictionary<String, EndpointTableInfo> _endpoints = [];
     private readonly ConcurrentDictionary<String, UIElement> _xamlFormCache = [];
-    private readonly ConcurrentDictionary<String, AppMetadata> _appMetaCache = [];
+    private readonly ConcurrentDictionary<String, IEnumerable<TableReferrer>> _referrers = [];
     // Keyed by data source because that is exactly what it describes: one data source is
     // one database, and the platformid base belongs to the database.
     private readonly ConcurrentDictionary<String, AppPlatformId> _platformIdCache = [];
@@ -54,7 +54,6 @@ public class DatabaseMetadataCache
             _cache.Clear();
             _storages.Clear();   // both, always: a container must never keep a table of an older generation
             _endpoints.Clear();
-            _appMetaCache.Clear();
             _platformIdCache.Clear();
             _xamlFormCache.Clear();
             _metadataDirty = true;
@@ -116,15 +115,14 @@ public class DatabaseMetadataCache
         return _storages.GetOrAdd(key, storage);
     }
 
-    public IEnumerable<TableMetadata> Storages => _storages.Values;
-
-    public async Task<AppMetadata> GetAppMetadataAsync(String? dataSource, Func<String?, Task<AppMetadata>> func)
+    internal async Task<IEnumerable<TableReferrer>> GetTableReferrersAsync(String? dataSource, TableMetadata table,
+        Func<String?, TableMetadata, Task<IEnumerable<TableReferrer>>> loader)
     {
-        var key = dataSource ?? "default";
-        if (_appMetaCache.TryGetValue(key, out AppMetadata? meta))
-            return meta;    
-        meta = await func(dataSource);
-        return _appMetaCache.GetOrAdd(key, meta);
+        var key = $"{dataSource}:{table.Schema}:{table.Table}";
+        if (_referrers.TryGetValue(key, out IEnumerable<TableReferrer>? referrers))
+            return referrers;
+        var res = await loader(dataSource, table);
+        return _referrers.GetOrAdd(key, res);
     }
 
     internal async Task<AppPlatformId> GetPlatformIdAsync(String? dataSource, Func<String?, Task<AppPlatformId>> func)

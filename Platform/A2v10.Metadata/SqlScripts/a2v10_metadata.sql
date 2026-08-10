@@ -102,6 +102,21 @@ begin
 end
 go
 ------------------------------------------------
+create or alter procedure a2meta.[GetFkReferrers]
+@Schema sysname,
+@Table sysname
+as
+begin
+	set nocount on;
+	set transaction isolation level read uncommitted;
+
+	select [schema], [table], [column] 
+	from a2meta.Columns 
+	where ref_schema = @Schema and ref_table=@Table and datatype = N'platformid'
+	and [schema] not in (N'jrn', N'rep');
+end
+go
+------------------------------------------------
 create or alter procedure a2meta.[SyncSchema]
 as
 begin

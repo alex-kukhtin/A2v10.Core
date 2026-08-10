@@ -13,13 +13,18 @@ namespace A2v10.Metadata;
 
 internal partial class SqlBuilder
 {
-    public Task DbRemoveAsync(String? propName, ExpandoObject execPrms)
+    public async Task DbRemoveAsync(String? propName, ExpandoObject execPrms)
     {
-        var rf = Table.RefsToMe; // tables holding a reference to this one
+        var refsToMe = await _metadataProvider.GetTableReferrersAsync(DataSource, Table);
+        var rf = refsToMe.GroupBy(x => x.SqlTableName).ToList(); // tables holding a reference to this one
         var checkSql = "";
         if (rf.Count > 0)
         {
-            var existsRef = rf.Select(tr => $"exists (select 1 from {tr.SqlTableName} where Void = 0 and [{tr.Column}] = @Id)");
+            var existsRef = rf.Select(tr => {
+                var columnList = String.Join(", ", tr.Select(x => $"[{x.Column}]"));
+                return $"exists (select 1 from {tr.Key} where Void = 0 and @Id in ({columnList}))";
+            });
+
             checkSql = $"""
             if {String.Join(" or\n", existsRef)}
                 throw 60000, N'UI:@[Error.Delete.Used]', 0;
@@ -52,9 +57,10 @@ internal partial class SqlBuilder
             update {Table.SqlTableName} set [Void] = 1 where [Id] = @Id;
             """;
         }
-        return _dbContext.LoadModelSqlAsync(DataSource, sqlString, dbprms =>
+        await _dbContext.LoadModelSqlAsync(DataSource, sqlString, dbprms =>
         {
             AddDefaultParameters(dbprms);
+            // TODO: platformid
             dbprms.AddTyped("@Id", SqlDbType.BigInt, execPrms.Get<Object>("Id"));
         });
     }

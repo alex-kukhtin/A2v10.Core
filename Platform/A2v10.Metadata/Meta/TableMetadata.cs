@@ -7,7 +7,6 @@ using System.Collections.Concurrent;
 
 using Newtonsoft.Json;
 
-using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 
 namespace A2v10.Metadata;
@@ -83,19 +82,6 @@ public enum ColumnType
 
 public record ReferenceMember(TableColumn Column, TableMetadata Table, Int32 Index);
 public record RefDescriptor(Int32 Index, TableColumn Column, TableMetadata Table);
-
-public record ColumnReference
-{
-    public String RefSchema { get; init; } = default!;
-    public String RefTable { get; init; } = default!;
-    internal String SqlTableName => $"{RefSchema}.[{RefTable}]";
-}
-
-
-public record ColumnReferenceToMe : ColumnReference
-{
-    public String Column { get; init; } = default!;
-}
 
 public record TableColumn
 {
@@ -358,8 +344,6 @@ public sealed record TableMetadata
 
     #endregion
 
-    public List<ColumnReferenceToMe> RefsToMe { get; init; } = [];
-
     // Service variables
     [JsonIgnore]
     public String SqlSchema => Schema.ToSqlSchema();
@@ -424,19 +408,3 @@ public record OperationMetadata(String Id, String? Name, String? Category);
 public record EnumValueMetadata(String Id, String Name, Int32 Order, Boolean? Inactive);
 public record EnumMetadata(String Name, EnumValueMetadata[] Values);
 
-public record AppMetadata
-{
-    public Guid Id { get; init; } = default!;
-    public TableMetadata[] Tables { get; init; } = [];
-    public OperationMetadata[] Operations { get; init; } = [];
-    public EnumMetadata[] Enums { get; init; } = [];
-    public String Title { get; init; } = default!;
-    // internal
-    internal static AppMetadata FromDataModel(IDataModel model)
-    {
-        var json = JsonConvert.SerializeObject(model.Root.Get<Object>("Application"))
-            ?? throw new InvalidOperationException("Application is null");
-        return JsonConvert.DeserializeObject<AppMetadata>(json, JsonSettings.IgnoreNull)
-            ?? throw new InvalidOperationException("AppMetadata deserialization fails");
-    }
-}
