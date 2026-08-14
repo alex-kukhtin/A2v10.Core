@@ -24,7 +24,7 @@
 		}
 	</a2-mdi-header>
 	<div class="load-indicator" v-show="processing"></div>
-	<a2-mdi-navbar :menu="menu"></a2-mdi-navbar>
+	<a2-mdi-navbar :menu="menu" :columns="columns"></a2-mdi-navbar>
 	<div class="mdi-tabs-container" v-on:contextmenu.stop.prevent="tabsContextMenu">
 		<ul class="mdi-tabs" :style="{'--maxTabWidth': maxTabWidth}">
 			<li ref="home" v-on:click.stop.prevent="selectHome()" tab-key="10" class="tab-home" v-bind:class="{active: isHomeActive()}">

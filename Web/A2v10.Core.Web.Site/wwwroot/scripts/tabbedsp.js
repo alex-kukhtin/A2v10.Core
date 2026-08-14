@@ -109,9 +109,9 @@ app.modules['std:signalR'] = function () {
 		}
 	});
 })();
-// Copyright © 2023-2024 Oleksandr Kukhtin. All rights reserved.
+// Copyright © 2023-2026 Oleksandr Kukhtin. All rights reserved.
 
-/*20240807-8333*/
+/*20260814-8650*/
 /* tabbed:navbar.js */
 (function () {
 
@@ -129,8 +129,8 @@ app.modules['std:signalR'] = function () {
 	</ul>
 	<div class="mdi-menu" v-if="isMenuVisible">
 		<div class="menu-title" v-text=activeMenu.Name></div>
-		<ul>
-			<li v-for="m in activeMenu.Menu" class="level-0">
+		<ul :style="mdiMenuStyle" :class="mdiMenuClass">
+			<li v-for="m in activeMenu.Menu" class="level-0" :style="lev0Style(m)">
 				<span class="folder" v-text="m.Name"></span>
 				<ul v-if="!!m.Menu">
 					<li v-for="im in m.Menu" class="level-1" @click.stop.prevent="clickSubMenu(im.Url, im.Name)">
@@ -146,6 +146,7 @@ app.modules['std:signalR'] = function () {
 	`,
 		props: {
 			menu: Array,
+			columns: Number
 		},
 		data() {
 			return {
@@ -155,6 +156,14 @@ app.modules['std:signalR'] = function () {
 		computed: {
 			isMenuVisible() {
 				return !!this.activeMenu;
+			},
+			mdiMenuClass() {
+				return this.columns > 1 ? 'mdi-menu-grid' : '';
+			},
+			mdiMenuStyle() {
+				if (this.columns > 1)
+					return { 'grid-template-columns': "auto ".repeat(this.columns) };	
+				return {};
 			}
 		},
 		methods: {
@@ -190,6 +199,14 @@ app.modules['std:signalR'] = function () {
 			},
 			menuIcon(m) {
 				return 'ico-' + m.Icon;
+			},
+			lev0Style(m) {
+				let s = {};
+				if (m.Row > 0)
+					s['grid-row'] = '' + m.Row;
+				if (m.Col > 0)
+					s['grid-column'] = '' + m.Col;
+				return s;
 			},
 			__clickOutside() {
 				this.activeMenu = null;

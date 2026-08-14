@@ -24,6 +24,7 @@
 		data: {
 			version: '$(AppVersion)',
 			menu: menu.Menu ? menu.Menu[0].Menu : null,
+			columns: menu.Columns || 1,
 			newMenu: menu.NewMenu,
 			settingsMenu: menu.SettingsMenu,
 			companies: companies,

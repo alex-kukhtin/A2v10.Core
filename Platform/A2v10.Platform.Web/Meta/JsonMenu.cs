@@ -33,6 +33,9 @@ internal record JsonPlatfomMenu
     public String? CreateName { get; init; }
     public List<JsonPlatfomMenu>? Menu { get; init; }
     public JsonSysParams? SysParams { get; init;  }
+    public Int32? Columns { get; init; }
+    public Int32? Row { get; init; }
+    public Int32? Col { get; init; }
 }
 
 
@@ -40,6 +43,7 @@ internal record JsonMenuRoot
 {
     public String AppTitle { get; init; } = String.Empty;
     public List<JsonMenu>? Menu { get; init; }
+    public Int32? Columns { get; init; }
 
     internal static String ConvertToPlatformMenu(String json, ILocalizer localizer)
     {
@@ -52,7 +56,8 @@ internal record JsonMenuRoot
         var newTop = new JsonPlatfomMenu()
         {
             Menu = newRoot,
-            SysParams = new JsonSysParams() { AppTitle = root.AppTitle }
+            SysParams = new JsonSysParams() { AppTitle = root.AppTitle },
+            Columns = root.Columns
         };
 
         return JsonConvert.SerializeObject(newTop, JsonHelpers.StandardSerializerSettings);
@@ -67,12 +72,15 @@ internal record JsonMenuRoot
         {
             Name = root.Title,
             Icon = root.Icon,
+            Row = level == 2 ? root.Row : null,
+            Col = level == 2 ? root.Col : null, 
             ClassName = root.ToClassName(),
             CreateUrl = root.ToCreateUrl(),
             CreateName = root.ToCreateName(localizer),
             Url = isAux ? $"page:/_auxmenu/any?mode={root.Id}" : $"page:{root.Url}/index/0",
             Menu = isAux ? null : root.Items?.Select(i => ToPlatform(i, level + 1, localizer))?.ToList()
         };
+
         return platfom;
     }
 }
@@ -88,6 +96,8 @@ internal record JsonMenu
     public Boolean Underline { get; init; }
     public Boolean Create { get; init; }
     public List<JsonMenu>? Items { get; init; }
+    public Int32? Row { get; init; }
+    public Int32? Col { get; init; }
 
     internal String? ToClassName()
     {
