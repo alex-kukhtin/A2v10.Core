@@ -112,6 +112,48 @@ a2 app config
   `$`; `""` is the main app) and a `root` (the module's source folder from the project
   root, or `null` when the module has no local folder).
 
+### `a2 db info`
+
+Shows which database the application is actually connected to — the target of every other
+`a2 db` command, and the database the user must apply generated SQL to.
+
+```
+a2 db info
+```
+
+```json
+{
+  "success": true,
+  "data": {
+    "server": "localhost\\SQLEXPRESS",
+    "database": "mydb",
+    "source": "WebApp/appsettings.json",
+    "exists": true,
+    "platform": true
+  }
+}
+```
+
+- `server`, `database` — taken from the resolved connection string. The connection string
+  itself is never printed: it may carry a password from user secrets.
+- `source` — the configuration layer the connection string came from, i.e. the file to fix:
+  a path from the project root, or `user secrets (secrets.json)`.
+- `exists` — whether that database exists on that server. `false` means the connection
+  string names a database the server does not have. A server that cannot be reached at all
+  is a different thing: the command fails (`success: false`).
+- `platform` — the database carries the A2v10 schema (`a2security.[Users]` is present).
+  `false` on an existing database means it is some other database, not an A2v10 one.
+
+**System-database guard.** If `Database=` resolves to `master`, `model`, `msdb` or `tempdb`,
+every `a2 db` command fails with
+
+```
+The connection string points to the system database [master]. Fix `Database=` in WebApp/appsettings.json.
+```
+
+The guard is on all `db` commands, not just `info`: pointed at `master`, `a2 db tables`
+would otherwise return an empty list — a confident, silent, wrong answer.
+
 ### `a2 db tables [schema]`
 
 Lists database tables, grouped by schema. Optional `schema` filters by schema name.

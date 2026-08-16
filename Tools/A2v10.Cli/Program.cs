@@ -94,7 +94,8 @@ internal sealed partial class Program
             .AddSingleton<DatabaseMetadataProvider>()
             .AddSingleton<IApplicationHost, WebApplicationHost>()
             .AddSingleton<IDataScripter, VueDataScripter>()
-            .AddSingleton<HostRoot>((_) => new HostRoot(webAppFolder));
+            .AddSingleton<HostRoot>((_) => new HostRoot(webAppFolder))
+            .AddSingleton<DbTarget>();
 
         host.Services.AddSingleton<IAppCodeProvider, AppCodeProvider>()
            .AddSingleton<IModelJsonPartProvider, ModelJsonPartProvider>()

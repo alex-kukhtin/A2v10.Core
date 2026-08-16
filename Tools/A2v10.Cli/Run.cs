@@ -29,6 +29,7 @@ internal sealed partial class Program
         {
             Description = "Database commands"
         };
+        dbCommand.Subcommands.Add(new InfoCommand(_services).Build());
         dbCommand.Subcommands.Add(new TablesCommand(_services).Build());
         dbCommand.Subcommands.Add(new ColumnsCommand(_services).Build());
         dbCommand.Subcommands.Add(new ReferencedByCommand(_services).Build());

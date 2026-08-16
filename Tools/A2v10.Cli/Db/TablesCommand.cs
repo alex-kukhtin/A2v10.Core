@@ -19,6 +19,7 @@ namespace A2v10.Cli;
 internal class TablesCommand(IServiceProvider services)
 {
     private readonly IDbContext _dbContext = services.GetRequiredService<IDbContext>();
+    private readonly DbTarget _target = services.GetRequiredService<DbTarget>();
     internal Command Build()
     {
         var cmd = new Command("tables", "List database tables");
@@ -34,6 +35,8 @@ internal class TablesCommand(IServiceProvider services)
     }
     async Task<Object> DbList(String? schema)
     {
+        _target.EnsureNotSystem();
+
         var sqlString = """
         set nocount on;
         set transaction isolation level read uncommitted;
