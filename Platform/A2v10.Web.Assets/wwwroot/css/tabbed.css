@@ -7448,6 +7448,13 @@ input::placeholder {
   padding: 0;
   margin: 0;
 }
+.mdi-navbar .mdi-menu ul.mdi-menu-grid {
+  display: grid;
+  gap: 2rem;
+}
+.mdi-navbar .mdi-menu ul.mdi-menu-grid > li {
+  min-width: 250px;
+}
 .mdi-navbar .mdi-menu li {
   line-height: 2.25rem;
   white-space: nowrap;
@@ -8444,6 +8451,51 @@ table.tree-grid a.toggle.expanded:after {
   left: 0;
   border-left: 1px solid var(--neutral300);
   top: -17px;
+}
+.flow-panel {
+  display: flex;
+  gap: 0.5rem 1rem;
+  flex-wrap: wrap;
+}
+.flow-panel.axis-rows {
+  flex-direction: row;
+}
+.flow-panel.axis-columns {
+  flex-direction: column;
+}
+.flow-panel .control-group {
+  flex: 0 0 auto;
+}
+.flow-panel.label-at-left .control-group {
+  display: flex;
+  flex-direction: row;
+  white-space: nowrap;
+  gap: 1rem;
+  align-items: baseline;
+}
+.flow-panel.label-at-left .control-group .input-group {
+  flex: 1 1 auto;
+}
+.flow-panel .dom-memo {
+  flex: 1 1 auto;
+}
+.flow-panel .dom-date {
+  width: 14rem;
+  max-width: 14rem;
+}
+.flow-panel.axis-rows .dom-ref {
+  width: 22rem;
+  min-width: 22rem;
+}
+.a2-table tbody .dom-float,
+.a2-table tbody .dom-money {
+  min-width: 8rem;
+}
+.a2-table tbody .dom-ref {
+  min-width: 20rem;
+}
+.a2-table tbody .dom-rownumber {
+  min-width: 32px;
 }
 .initial-form .external-providers {
   display: flex;
