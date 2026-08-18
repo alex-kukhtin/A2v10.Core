@@ -24,7 +24,6 @@ internal class AppConfigCommand(IServiceProvider services)
     private readonly AppOptions _appOptions = services.GetRequiredService<IOptions<AppOptions>>().Value;
     private readonly IHostEnvironment _hostEnvironment = services.GetRequiredService<IHostEnvironment>();
     private readonly HostRoot _rootHost = services.GetRequiredService<HostRoot>();
-    private readonly MetadataSupport _metadataSupport = services.GetRequiredService<MetadataSupport>();
 
     internal Command Build()
     {
@@ -39,7 +38,7 @@ internal class AppConfigCommand(IServiceProvider services)
         var info = new ExpandoObject()
         {
             { "multiTenant", _config.GetValue<Boolean>("Application:MultiTenant") },
-            { "metadataEnabled", _metadataSupport.IsEnabled },
+            { "metadataEnabled", MetadataSupport.Create(services).IsEnabled },
             { "hostRoot", _rootHost.Host },
             { "modules", GetModules() }
         };

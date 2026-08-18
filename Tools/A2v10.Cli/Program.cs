@@ -70,15 +70,17 @@ internal sealed partial class Program
         var host = Host.CreateApplicationBuilder();
 
         var cdPath = Directory.GetCurrentDirectory();
-        var webAppFolder = ResolveWebAppFolder(cdPath) 
-            ?? throw new InvalidOperationException($"Root host not found. Expected a WebApp or WebApiHost folder in {cdPath} containing appsettings.json.");
+        var webAppFolder = ResolveWebAppFolder(cdPath);
+        if (webAppFolder != null)
+        {
 
-        host.Configuration
-            .AddJsonFile($"{webAppFolder}/appsettings.json", optional: false);
+            host.Configuration
+                .AddJsonFile($"{webAppFolder}/appsettings.json", optional: false);
 
-        var userSecretsId = ResolveUserSecretsId(webAppFolder);
-        if (!String.IsNullOrEmpty(userSecretsId))
-            host.Configuration.AddUserSecrets(userSecretsId);
+            var userSecretsId = ResolveUserSecretsId(webAppFolder);
+            if (!String.IsNullOrEmpty(userSecretsId))
+                host.Configuration.AddUserSecrets(userSecretsId);
+        }
 
         host.Services.UseSimpleDbContext();
 
@@ -94,9 +96,7 @@ internal sealed partial class Program
             .AddSingleton<DatabaseMetadataProvider>()
             .AddSingleton<IApplicationHost, WebApplicationHost>()
             .AddSingleton<IDataScripter, VueDataScripter>()
-            .AddSingleton<HostRoot>((_) => new HostRoot(webAppFolder))
-            .AddSingleton<DbTarget>()
-            .AddSingleton<MetadataSupport>();
+            .AddSingleton<HostRoot>((_) => new HostRoot(webAppFolder, cdPath));
 
         host.Services.AddSingleton<IAppCodeProvider, AppCodeProvider>()
            .AddSingleton<IModelJsonPartProvider, ModelJsonPartProvider>()
@@ -115,7 +115,7 @@ internal sealed partial class Program
                     return NULL_MARKER;
                 if (mi.Path.StartsWith("clr-type:"))
                     return NULL_MARKER;
-                return Path.Combine(webAppFolder, mi.Path);
+                return webAppFolder != null ? Path.Combine(webAppFolder, mi.Path) : null;
             }
 
             host.Configuration.GetSection("application").Bind(opts);

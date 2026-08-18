@@ -3,6 +3,7 @@
 
 using System;
 using System.Threading.Tasks;
+using System.Xml;
 
 using Newtonsoft.Json;
 
@@ -30,16 +31,22 @@ internal record JsonResult
 
     public static void Fail(Exception ex)
     {
+        // message and line come from the same exception - taken from different ones they would lie
         var ex2 = ex.InnerException ?? ex;
         Write(new JsonResult()
         {
             Success = false,
             Error = new JsonError()
             {
-                Message = ex2.Message
+                Message = ex2.Message,
+                LineNo = LineNo(ex2)
             }
         });
     }
+
+    // only malformed markup knows its position: XamlException does not carry one yet
+    private static Int32? LineNo(Exception ex) =>
+        ex is XmlException xmlEx && xmlEx.LineNumber > 0 ? xmlEx.LineNumber : null;
 
     private static void Write(JsonResult res)
     {

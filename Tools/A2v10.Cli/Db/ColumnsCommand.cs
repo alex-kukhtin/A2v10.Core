@@ -16,7 +16,6 @@ namespace A2v10.Cli;
 internal class ColumnsCommand(IServiceProvider services)
 {
     private readonly IDbContext _dbContext = services.GetRequiredService<IDbContext>();
-    private readonly DbTarget _target = services.GetRequiredService<DbTarget>();
     internal Command Build()
     {
         var cmd = new Command("table-columns", "List table columns");
@@ -33,7 +32,7 @@ internal class ColumnsCommand(IServiceProvider services)
 
     private async Task<Object> ColumnList(String table)
     {
-        _target.EnsureNotSystem();
+        DbTarget.Create(services).EnsureNotSystem();
 
         var sqlString = """
         set nocount on;

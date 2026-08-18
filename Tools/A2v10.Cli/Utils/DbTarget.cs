@@ -6,44 +6,39 @@ using System.Linq;
 
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace A2v10.Cli;
-
-internal sealed record DbTargetInfo(String Server, String Database, String Source);
 
 /*
 * The connection target as the configuration sees it: server and database only.
 * The connection string itself is never printed - it may carry a password from user secrets.
-* Resolved lazily: an unusable connection string must not break the command tree.
+* Source - the configuration layer the connection string came from, i.e. the file to fix.
 */
-internal sealed class DbTarget(IConfiguration config, HostRoot hostRoot)
+internal sealed record DbTarget(String Server, String Database, String Source)
 {
     private const String CONNECTION_STRING_NAME = "Default";
     private const String CONNECTION_STRING_KEY = $"ConnectionStrings:{CONNECTION_STRING_NAME}";
 
     private static readonly String[] _systemDatabases = ["master", "model", "msdb", "tempdb"];
 
-    private readonly Lazy<DbTargetInfo> _info = new(() => Resolve(config, hostRoot));
-
-    public String Server => _info.Value.Server;
-    public String Database => _info.Value.Database;
-    // the configuration layer the connection string actually came from - the file to fix
-    public String Source => _info.Value.Source;
+    // created where it is needed, not in DI - nothing here is worth sharing
+    internal static DbTarget Create(IServiceProvider services)
+    {
+        var config = services.GetRequiredService<IConfiguration>();
+        var hostRoot = services.GetRequiredService<HostRoot>();
+        var connectionString = config.GetConnectionString(CONNECTION_STRING_NAME)
+            ?? throw new InvalidOperationException(
+                $"Connection string '{CONNECTION_STRING_NAME}' not found. Add it to ConnectionStrings in {hostRoot.Host}/appsettings.json.");
+        var builder = new SqlConnectionStringBuilder(connectionString);
+        return new DbTarget(builder.DataSource, builder.InitialCatalog, ResolveSource(config));
+    }
 
     public void EnsureNotSystem()
     {
         if (_systemDatabases.Contains(Database, StringComparer.OrdinalIgnoreCase))
             throw new InvalidOperationException(
                 $"The connection string points to the system database [{Database}]. Fix `Database=` in {Source}.");
-    }
-
-    private static DbTargetInfo Resolve(IConfiguration config, HostRoot hostRoot)
-    {
-        var connectionString = config.GetConnectionString(CONNECTION_STRING_NAME)
-            ?? throw new InvalidOperationException(
-                $"Connection string '{CONNECTION_STRING_NAME}' not found. Add it to ConnectionStrings in {hostRoot.Host}/appsettings.json.");
-        var builder = new SqlConnectionStringBuilder(connectionString);
-        return new DbTargetInfo(builder.DataSource, builder.InitialCatalog, ResolveSource(config));
     }
 
     private static String ResolveSource(IConfiguration config)

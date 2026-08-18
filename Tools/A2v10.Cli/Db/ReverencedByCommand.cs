@@ -16,7 +16,6 @@ namespace A2v10.Cli;
 internal class ReferencedByCommand(IServiceProvider services)
 {
     private readonly IDbContext _dbContext = services.GetRequiredService<IDbContext>();
-    private readonly DbTarget _target = services.GetRequiredService<DbTarget>();
     internal Command Build()
     {
         var cmd = new Command("referenced-by", "List tables and columns that reference the given table");
@@ -32,7 +31,7 @@ internal class ReferencedByCommand(IServiceProvider services)
 
     private async Task<Object> ReferencedByList(String table)
     {
-        _target.EnsureNotSystem();
+        DbTarget.Create(services).EnsureNotSystem();
 
         var sqlString = """
         set nocount on;

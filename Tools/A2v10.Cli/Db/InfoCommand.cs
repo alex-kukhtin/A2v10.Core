@@ -16,7 +16,6 @@ namespace A2v10.Cli;
 internal class InfoCommand(IServiceProvider services)
 {
     private readonly IDbContext _dbContext = services.GetRequiredService<IDbContext>();
-    private readonly DbTarget _target = services.GetRequiredService<DbTarget>();
 
     private const Int32 CANNOT_OPEN_DATABASE = 4060;
 
@@ -30,15 +29,16 @@ internal class InfoCommand(IServiceProvider services)
 
     private async Task<Object> Info()
     {
-        _target.EnsureNotSystem();
+        var target = DbTarget.Create(services);
+        target.EnsureNotSystem();
 
         var (exists, platform) = await Probe();
 
         return new ExpandoObject()
         {
-            { "server", _target.Server },
-            { "database", _target.Database },
-            { "source", _target.Source },
+            { "server", target.Server },
+            { "database", target.Database },
+            { "source", target.Source },
             { "exists", exists },
             { "platform", platform }
         };

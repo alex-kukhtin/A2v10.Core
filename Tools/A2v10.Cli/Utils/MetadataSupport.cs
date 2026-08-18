@@ -5,34 +5,24 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace A2v10.Cli;
 
-internal sealed record HostProject(String Path, Boolean MetadataEnabled);
-
 /*
 * Is the application metadata-driven? The host project references A2v10.Metadata - the same
-* fact `a2 app config` reports as metadataEnabled. Resolved lazily: the `meta` commands ask
-* for it before they touch anything.
+* fact `a2 app config` reports as metadataEnabled.
 */
-internal sealed class MetadataSupport(IHostEnvironment hostEnvironment, HostRoot hostRoot)
+internal sealed record MetadataSupport(String ProjectPath, Boolean IsEnabled)
 {
     private const String METADATA_PACKAGE = "A2v10.Metadata";
 
-    private readonly Lazy<HostProject> _project = new(() => Resolve(hostEnvironment, hostRoot));
-
-    public Boolean IsEnabled => _project.Value.MetadataEnabled;
-
-    public void EnsureEnabled()
+    // created where it is needed, not in DI - nothing here is worth sharing
+    internal static MetadataSupport Create(IServiceProvider services)
     {
-        if (!IsEnabled)
-            throw new InvalidOperationException(
-                $"The application is not metadata-driven: {_project.Value.Path} has no PackageReference to {METADATA_PACKAGE}. The `meta` commands apply to metadata-driven applications only.");
-    }
-
-    private static HostProject Resolve(IHostEnvironment hostEnvironment, HostRoot hostRoot)
-    {
+        var hostEnvironment = services.GetRequiredService<IHostEnvironment>();
+        var hostRoot = services.GetRequiredService<HostRoot>();
         var hostFolder = Path.Combine(hostEnvironment.ContentRootPath, hostRoot.Host);
         // one csproj per host folder by design
         var csproj = Directory.EnumerateFiles(hostFolder, "*.csproj").FirstOrDefault()
@@ -41,6 +31,13 @@ internal sealed class MetadataSupport(IHostEnvironment hostEnvironment, HostRoot
             .Descendants("PackageReference")
             .Any(x => x.Attribute("Include")?.Value == METADATA_PACKAGE);
         var path = Path.GetRelativePath(hostEnvironment.ContentRootPath, csproj).Replace('\\', '/');
-        return new HostProject(path, enabled);
+        return new MetadataSupport(path, enabled);
+    }
+
+    public void EnsureEnabled()
+    {
+        if (!IsEnabled)
+            throw new InvalidOperationException(
+                $"The application is not metadata-driven: {ProjectPath} has no PackageReference to {METADATA_PACKAGE}. The `meta` commands apply to metadata-driven applications only.");
     }
 }
