@@ -23,12 +23,12 @@
 
 	<ItemGroup>
 		<PackageReference Include="A2v10.Data.Interfaces" Version="10.1.7610" />
-		<PackageReference Include="A2v10.Data.Core" Version="10.1.7615" />
+		<PackageReference Include="A2v10.Data.Core" Version="10.1.7616" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.301" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.400" PrivateAssets="All" />
 	</ItemGroup>
 
 	<ItemGroup>

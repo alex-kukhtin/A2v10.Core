@@ -22,7 +22,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="QRCoder" Version="1.8.0" />
-		<PackageReference Include="QuestPDF" Version="2026.7.2" />
+		<PackageReference Include="QuestPDF" Version="2026.7.3" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -41,7 +41,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.301" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.400" PrivateAssets="All" />
 	</ItemGroup>
 
 	<ItemGroup>

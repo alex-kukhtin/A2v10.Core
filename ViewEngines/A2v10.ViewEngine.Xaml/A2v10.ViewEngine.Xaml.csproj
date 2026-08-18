@@ -27,8 +27,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="A2v10.System.Xaml" Version="10.1.8053" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.10" />
-		<PackageReference Include="Microsoft.Extensions.Options" Version="10.0.10" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.11" />
+		<PackageReference Include="Microsoft.Extensions.Options" Version="10.0.11" />
 	</ItemGroup>
 
 	<PropertyGroup>
@@ -39,7 +39,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.301" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.400" PrivateAssets="All" />
 	</ItemGroup>
 
 	<ItemGroup>

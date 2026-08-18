@@ -23,4 +23,8 @@
 		<None Remove="bin\**\*;obj\**\*"/>
 		<None Remove="@assemblies\*" />
 	</ItemGroup>
+
+	<ItemGroup>
+		<Content Include="tsconfig.json" Condition="'$(EnableDefaultContentItems)' != 'true'" />
+	</ItemGroup>
 </Project>

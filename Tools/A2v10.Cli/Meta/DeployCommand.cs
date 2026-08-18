@@ -16,6 +16,8 @@ public sealed class DeployCommand(IServiceProvider services)
 {
     private readonly IConfiguration _config = services.GetRequiredService<IConfiguration>();
     private readonly DatabaseMetadataProvider _metadataProvider = services.GetRequiredService<DatabaseMetadataProvider>();
+    private readonly MetadataSupport _metadataSupport = services.GetRequiredService<MetadataSupport>();
+    private readonly DbTarget _target = services.GetRequiredService<DbTarget>();
     public Command Build()
     {
         var cmd = new Command("deploy", "Deploy A2v10 application");
@@ -25,8 +27,12 @@ public sealed class DeployCommand(IServiceProvider services)
         return cmd;
     }
 
-    async Task<Object> DeployDatabase() 
+    async Task<Object> DeployDatabase()
     {
+        _metadataSupport.EnsureEnabled();
+        // the only command that writes to the database - it must never write to a system one
+        _target.EnsureNotSystem();
+
         return await _metadataProvider.DeployDatabaseAllAsync(null); // TODO: DB Schema????
     }
 }
