@@ -28,12 +28,13 @@ static internal class SCRIPT_PARTS
 		const currentModule = $(CurrentModule);
 	""";
 
-	internal const String DATAFUNC ="""
+	internal const String DATAFUNC = """
 		function() {
 			$(RequiredModules)
 
-			const rawData = $(DataModelText);
 			const template = $(TemplateText);
+		
+			const rawData = $(DataModelText);
 
 			$(ModelScript)
 		
@@ -44,14 +45,14 @@ static internal class SCRIPT_PARTS
 		""";
 
 	internal const String DATAFUNC_SERVER =
-	@"
+    @"
 	const $$server = function() {
 		$(RequiredModules)
 
+		const template = $(TemplateText);
+
 		const rawData = $(DataModelText);
 		const rawDataRq = $(RawDataText);
-
-		const template = $(TemplateText);
 
 		$(ModelScript)
 		
@@ -81,7 +82,7 @@ static internal class SCRIPT_PARTS
 ";
 
 	internal const String FOOTER =
-	@"
+    @"
 eventBus.$emit('beginLoad');
 const vm = new DataModelController({
 	el:'#$(RootId)',
@@ -109,6 +110,7 @@ vm.$data._host_ = {
 vm.__doInit__('$(BaseUrl)');
 
 })();
+//# sourceURL=a2v10://$(BaseUrl)
 </script>
 ";
 }
