@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2022 Alex Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
 
 namespace A2v10.Xaml;
 
@@ -16,13 +16,15 @@ public class Graphics : UIElementBase
 	public WatchMode Watch { get; set; }
 	public Boolean CenterContent { get; set; }
 	public Length? Height { get; set; }
+    public String? CssClass { get; set; }
 
-	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
+    public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
 		if (SkipRender(context))
 			return;
 		var g = new TagBuilder("a2-graphics", null, IsInGrid);
 		MergeAttributes(g, context);
+		MergeBindingAttributeString(g, context, "class", nameof(CssClass), CssClass);
 		if (CenterContent)
 			g.AddCssClass("center-content");
 

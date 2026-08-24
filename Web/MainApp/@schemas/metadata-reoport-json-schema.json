@@ -1,0 +1,49 @@
+﻿{
+	"$schema": "http://json-schema.org/draft-04/schema",
+	"$version": "10.0.8650",
+	"$date": "2026-08-10",
+	"title": "JSON Schema for report/metadata.json",
+	"type": "object",
+
+	"definitions": {
+		"stringarray": {
+			"type": "array",
+			"items": { "type": "string" }
+		}
+	},
+
+	"properties": {
+		"$schema": { "type": "string" },
+		"title": { "type": "string" },
+		"version": { "type": "string" },
+		"copyright": { "type": "string" },
+		"surface": { "type": "string" },
+		"type": {
+			"type": "string",
+			"enum": [ "turnover" ]
+		},
+		"groups": {
+			"$ref": "#/definitions/stringarray"
+		},
+		"filters": {
+			"$ref": "#/definitions/stringarray"
+		},
+		"data": {
+			"$ref": "#/definitions/stringarray"
+		},
+		"defaults": {
+			"type": "object",
+			"properties": {
+				"groups": {
+					"$ref": "#/definitions/stringarray"
+				},
+				"data": {
+					"$ref": "#/definitions/stringarray"
+				}
+			},
+			"additionalProperties": false
+		}
+	},
+	"required": [ "surface", "type" ],
+	"additionalProperties": false
+}
