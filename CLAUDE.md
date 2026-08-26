@@ -54,6 +54,15 @@ Division of labor: the human designs the boxes and holds composition/intent (the
 - **A group is named by the platform role, not by the file format.** `view validate`, not `xaml validate`. `view` is the platform's own word (the `view:` key of `model.json`); `.vxaml`/`.xaml` is a per-project convention, and one xaml format carries two unrelated element sets (views, report templates) — a format-named group promises both and delivers one.
 - **Picking the area costs the model nothing; the output shape costs it everything.** Measured: it never picks the wrong area for a file it just edited. So don't buy facades that save it a token (dispatch by extension, one universal `validate`) — that budget belongs to the result JSON: one shape per command, findings distinguishable from "the tool could not run", and no shape bought before the feature that needs it exists.
 
+## Forms: whole or nothing
+
+A form is per **endpoint**, not per shape — an operation and the document storage behind it are one table and two screens. So `forms` lives in `DeclarationMetadata` and `TableMetadata` stays the shape alone. Decided 2026-08.
+
+- **A declared form replaces the default entirely.** Never merged node by node. A partial override adds a second, invisible question at every node — "is this instead of the default, or on top of it?" — and the file carries no answer to it; the model would keep guessing, per node. A declared form has to be readable on its own, without holding `DefaultFormBuilder`'s rules in your head.
+- **Across endpoints it layers by form key, and the value is all-or-nothing.** A form is a tree whose nodes carry no names, so there is nothing inside one to address. An operation declaring its own `edit` still shows the storage's `index`.
+- **Declared and default take the same walk.** One bake resolves both against the shape, eagerly, while the endpoint is built — so a form the file got wrong fails the load, where a throw publishes nothing, rather than the first request that opens the page. The lazy path is what let a declared form reach the generator unresolved.
+- **The price: the default has to be obtainable as text.** "Whole or nothing" means "type it from scratch" until it can be ejected — the eject is therefore owed, not optional. See ISSUES 3.6.
+
 ## Skills as spec: a firewall between two instances
 
 Skills (stubs for the application developer building on the platform) are a **contract for the target state**, not instructions to execute. Their value is that they work for a reader who **cannot see the implementation**. Hence two roles in different contexts:

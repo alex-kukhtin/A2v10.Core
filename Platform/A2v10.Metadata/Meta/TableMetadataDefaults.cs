@@ -47,7 +47,7 @@ internal static class TableMetadataDefaults
             Kind = EndpointKind.Tags,
             Schema = Constants.SchemaNames.Catalog,
             Model = "Tag",
-            Table = "Tags"
+            Table = "$Tags"
         };
     }
 
@@ -61,7 +61,7 @@ internal static class TableMetadataDefaults
             Kind = EndpointKind.TagEntries,
             Schema = Constants.SchemaNames.Catalog,
             Model = $"{table.Model}TagEntry",
-            Table = $"{table.Model}TagEntries"
+            Table = $"{table.Model}$TagEntries"
         };
     }
 }

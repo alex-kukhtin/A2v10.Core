@@ -3,7 +3,6 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 
 using Newtonsoft.Json;
 
@@ -253,8 +252,6 @@ public sealed record TableMetadata
     public Dictionary<String, TableKindMetadata> Kinds { get; init; } = [];
     public List<TableTrait> Traits { get; init; } = [];
 
-    public ConcurrentDictionary<String, FormMetadata> Forms { get; init; } = [];
-
     // for sql
     [JsonIgnore]
     public String TypeName => $"T{Model}";
@@ -298,10 +295,33 @@ public sealed record TableMetadata
      * The form's (scope, kind) and post's (details, kinds) ask the same question, so they ask
      * it here.
      */
-    internal TableMetadata FindDetails(String details) =>
-        Details.TryGetValue(details, out var d) ? d
-        : throw new InvalidOperationException(
-            $"Details '{details}' not found in {Path}. Available: {String.Join(", ", Details.Keys)}");
+    internal TableMetadata FindDetails(String details)
+    {
+        if (Details.TryGetValue(details, out var d))
+            return d;
+        throw new InvalidOperationException(ComposedRowSetHint(details)
+            ?? $"Details '{details}' not found in {Path}. Available: {String.Join(", ", Details.Keys)}");
+    }
+
+    /* The one wrong spelling that is not a typo, and therefore the only one worth its own
+     * message: the name the generated side calls a row set by. It is built from the two parts
+     * that ARE written, so a reader who has met it in the model, in a tab or in a table type will
+     * try it here - and 'Available: Rows' answers a question they did not ask, twice, because
+     * their name looks nothing like a misspelling of it.
+     *
+     * Only kinded collections can produce the confusion: without kinds the composed name and the
+     * declared key are the same string, so there is nothing to tell apart.
+     */
+    private String? ComposedRowSetHint(String name)
+    {
+        foreach (var (key, detail) in Details)
+            foreach (var kind in detail.Kinds.Keys)
+                if (detail.KindCollectionName(kind) == name)
+                    return $"'{name}' is the name of the generated side (model property, tab value, "
+                        + $"table type) and is never written in metadata. Name its parts instead: "
+                        + $"scope '{key}', kind '{kind}'.";
+        return null;
+    }
 
     /* Only emptiness is examined, never presence - an absent key and an empty list are one
      * value (see PostEachMetadata). Both directions throw, and the first one is the load
@@ -377,8 +397,7 @@ public sealed record TableMetadata
         Schema = table.Schema;
         Kind = EndpointKind.Details;
         DetailsKey = key;
-        if (String.IsNullOrEmpty(Table))
-            Table = Model.ToPascalCase().Plural();
+        Table = $"{table.Model}{key}";
     }
     internal void SetDefaults(String schema, String table)
     {

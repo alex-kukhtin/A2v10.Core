@@ -189,6 +189,36 @@ public sealed record DeclarationMetadata
      */
     public Dictionary<String, KindDeclarationMetadata> Kinds { get; init; } = [];
 
+    /* The forms this endpoint shows, as the file writes them - keyed by the action that opens
+     * them, and that key set is closed (see MetadataExtensions.BuildForms).
+     *
+     * A form is per ENDPOINT, which is why it lives here and not on the shape: an operation and
+     * the document storage behind it are one table and two screens, and while forms sat on the
+     * table the operation had nowhere to write its own - its file never reached TableMetadata at
+     * all.
+     */
+    public Dictionary<String, FormMetadata> Forms { get; init; } = [];
+
+    /* The forms in force: declared or default, and every name in them already resolved against
+     * the shape. Filled by the bake.
+     *
+     * Two fields for the two roles, and that is the whole repair: one dictionary serving as both
+     * the deserialization target and the memo of the default builder could not tell 'the author
+     * wrote this' from 'I built and resolved this', so a declared form was handed out unresolved
+     * - a page whose columns had never been looked up.
+     *
+     * Empty for a shape nothing renders (tags, the rows of a collection): a table is deployed
+     * whether or not anything shows it.
+     */
+    [JsonIgnore]
+    public IReadOnlyDictionary<String, FormMetadata> BakedForms { get; init; }
+        = new Dictionary<String, FormMetadata>();
+
+    internal FormMetadata Form(String name) =>
+        BakedForms.TryGetValue(name, out var form)
+            ? form
+            : throw new InvalidOperationException($"The form '{name}' is not built for this endpoint");
+
     /* The rules in force for one row set. A kind that says nothing is not an empty layer to
      * visit - it is the collection's rules unchanged.
      */

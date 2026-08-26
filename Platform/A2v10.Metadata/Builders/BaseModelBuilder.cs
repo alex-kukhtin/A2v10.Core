@@ -30,7 +30,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
     protected String Action => descriptor.PlatformUrl.Action.ToLowerInvariant();
 
     public NormalEndpointMetadata Endpoint => descriptor.Endpoint;
-    public TableMetadata Table => descriptor.Table;
+    public TableMetadata Table => descriptor.Endpoint.Storage;
 
     public Task<IDataModel> LoadLazyModelAsync()
     {

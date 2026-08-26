@@ -23,7 +23,7 @@ internal partial class ScriptBuilder(BuilderDescriptor desciptor, Boolean isTs)
 {
     private readonly BuilderDescriptor _descr = desciptor;
     private readonly NormalEndpointMetadata Endpoint = desciptor.Endpoint;
-    private readonly TableMetadata Table = desciptor.Table;
+    private readonly TableMetadata Table = desciptor.Endpoint.Storage;
     private readonly Boolean IsTs = isTs;
 
     // ': T' after a name

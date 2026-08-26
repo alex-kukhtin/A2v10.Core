@@ -18,9 +18,13 @@ internal static class StringExtensions
     }
     public static String Plural(this String src)
     {
-        if (src.EndsWith("y"))
-            return src + "ies";
-        else if (src.EndsWith("s"))
+        if (String.IsNullOrEmpty(src))
+            return src;
+        if (src.Length > 1 && src[^1] == 'y' && !"aeiouAEIOU".Contains(src[^2]))
+            return src[..^1] + "ies";
+        if (src[^1] is 's' or 'x' or 'z' or 'S' or 'X' or 'Z'
+            || src.EndsWith("ch", StringComparison.OrdinalIgnoreCase)
+            || src.EndsWith("sh", StringComparison.OrdinalIgnoreCase))
             return src + "es";
         return src + "s";
     }

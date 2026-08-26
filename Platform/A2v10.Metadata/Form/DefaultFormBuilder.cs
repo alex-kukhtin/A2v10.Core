@@ -57,7 +57,7 @@ internal static class DefaultFormBuilder
                     Is = FormElementKind.Pager
                 }
             ],
-            TaskPad = new FormElement()
+            Taskpad = new FormElement()
             {
                 Is = FormElementKind.Taskpad,
                 Elements = [
@@ -94,7 +94,7 @@ internal static class DefaultFormBuilder
                     Fields = [..cols.Select(c => c.Name)]
                 }
             ],
-            TaskPad = new FormElement()
+            Taskpad = new FormElement()
             {
                 Is = FormElementKind.Taskpad,
                 Elements = [

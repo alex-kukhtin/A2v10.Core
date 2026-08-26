@@ -10,10 +10,11 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
+using Microsoft.Data.SqlClient;
+
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Metadata.Cli;
-using Microsoft.Data.SqlClient;
 
 namespace A2v10.Metadata;
 

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Collections.Generic;
 
 using A2v10.Xaml;
+using Acornima.Ast;
 
 namespace A2v10.Metadata;
 
@@ -74,10 +75,10 @@ internal partial class XamlBuilder
     {
         return action switch
         {
-            "index" => CreateIndexPageXaml(Table.IndexForm()),
-            "indexpartial" => CreateIndexPartialPageXaml(Table.IndexForm()),
-            "browse" => CreateBrowseDialogXaml(Table.BrowseForm()),
-            "edit" => CreateEditXaml(Table.EditForm()),
+            "index" => CreateIndexPageXaml(Declaration.Form(Constants.FormNames.Index)),
+            "indexpartial" => CreateIndexPartialPageXaml(Declaration.Form(Constants.FormNames.Index)),
+            "browse" => CreateBrowseDialogXaml(Declaration.Form(Constants.FormNames.Browse)),
+            "edit" => CreateEditXaml(Declaration.Form(Constants.FormNames.Edit)),
             _ => throw new InvalidOperationException($"Invalid action: '{action}'")
         };
     }
@@ -94,7 +95,7 @@ internal partial class XamlBuilder
                     Children = [..meta.Body.Select(ElementToControl)]
                 }
             ],
-            Taskpad = ElementToControl(meta.TaskPad)
+            Taskpad = ElementToControl(meta.Taskpad)
         };
     }
 
@@ -192,7 +193,7 @@ internal partial class XamlBuilder
                     ]
                 }
             ],
-            Taskpad = IndexTaskpad(dialog.TaskPad)
+            Taskpad = IndexTaskpad(dialog.Taskpad)
         };
 
         if (dlg.Children[0] is Grid chGrid)

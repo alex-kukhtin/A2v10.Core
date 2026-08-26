@@ -213,13 +213,13 @@ internal partial class SqlBuilder
                 select [!TTag!Array] = null, [Id!!Id] = t.Id, [Name!!Name] = t.[Name], [Color] = t.[Color],
                     [!{Table.TypeName}.Tags!ParentId] = m.[Id]
                 from @map m 
-                    inner join {Table.SqlSchema}.[{Table.Model}TagEntries] e on e.[Owner] = m.[Id]
-                    inner join cat.[Tags] t on t.[Id] = e.[Tag]
+                    inner join {Table.SqlSchema}.[{Table.Model}$TagEntries] e on e.[Owner] = m.[Id]
+                    inner join cat.[$Tags] t on t.[Id] = e.[Tag]
                 where t.[For] = N'{Table.Model}';
 
                 -- for filter
                 select [Tags!TTag!Array] = null, [Id!!Id] = t.Id, [Name!!Name] = t.[Name], [Color] = t.[Color]
-                from cat.Tags t where t.[For] = N'{Table.Model}'
+                from cat.[$Tags] t where t.[For] = N'{Table.Model}'
                 order by t.[Id];
                 """);
             }

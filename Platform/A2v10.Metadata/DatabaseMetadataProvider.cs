@@ -258,9 +258,32 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             Storage = storage,
             // layered first, then read against the shape - both while the endpoint is built,
             // so what leaves here is finished and nothing has to come back to it
-            Declaration = MergeDeclaration(declaration, storageDeclaration).Bake(storage),
+            Declaration = BakeDeclaration(MergeDeclaration(declaration, storageDeclaration), storage, schema, table),
             FileHash = hash
         };
+    }
+
+    /* Everything the bake can say is about the file being loaded, and not one of its messages can
+     * name it: the bake is handed a table, never an address, and for an endpoint over a shared
+     * table the two are different files - a message reading 'not found in /document' sends the
+     * author to the wrong one.
+     *
+     * So the name is put on here, once, at the only level that knows both, rather than threaded
+     * through six methods that would each have to remember to pass it on. Nothing loaded through
+     * 'storage' is inside this try: that endpoint is built by its own call and carries its own
+     * name already, so a message is never prefixed twice.
+     */
+    private static DeclarationMetadata BakeDeclaration(DeclarationMetadata declaration, TableMetadata storage,
+        String schema, String table)
+    {
+        try
+        {
+            return declaration.Bake(storage);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"{MetadataFileName(schema, table)}: {ex.Message}", ex);
+        }
     }
 
     /* 'storage' and 'surface' both name another endpoint, and a shape is declared by the endpoint
@@ -315,6 +338,10 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
      * The law is one sentence - mine wins - and the shape of the value decides at what
      * granularity: a map merges by key, a set unions, a scalar is all-or-nothing.
      *
+     * 'forms' is a map whose value is all-or-nothing. A form is a tree and its nodes carry no
+     * names, so there is nothing inside one to address, and the only unit that can be chosen is
+     * the whole form: an operation writing its own 'edit' still shows the storage's 'index'.
+     *
      * Written as 'own with', so only the keys named here are layered and everything else stays
      * the endpoint's own. What is deliberately not named:
      *
@@ -335,7 +362,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             Rules = RuleMetadata.Merge(own.Rules, storage.Rules),
             Kinds = MergeKinds(own.Kinds, storage.Kinds),
             Autonum = Mine(own.Autonum, storage.Autonum),
-            Details = MergeDetails(own.Details, storage.Details)
+            Details = MergeDetails(own.Details, storage.Details),
+            Forms = MergeByKey(own.Forms, storage.Forms)
         };
     }
 

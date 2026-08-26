@@ -193,7 +193,65 @@ internal static class MetadataExtensions
             throw new InvalidOperationException(
                 $"total: declared on {table.SqlTableName}, which is a record. A sum is a member of a collection.");
         NoLeftovers(table, declaration.Kinds.Keys, [], "kinds");
-        return declaration.BakeNode(table);
+        return declaration.BakeNode(table) with { BakedForms = BuildForms(declaration, table) };
+    }
+
+    /* Which shapes have forms at all. A table is deployed whether or not anything renders it, and
+     * DefaultFormBuilder knows the command bar of the rendered kinds only - asking it for a form
+     * of the rest is what made the forms lazy before they were total.
+     *
+     * Asked of the TABLE, not of the endpoint: EndpointKindOf resolves the platform namespaces
+     * ('operations', 'tags') to Undefined, so the kind that can answer this is the one the shape
+     * carries.
+     */
+    private static Boolean HasForms(this TableMetadata table) =>
+        table.Kind is EndpointKind.Catalog or EndpointKind.Document
+            or EndpointKind.Journal or EndpointKind.Operation;
+
+    /* Every form of the endpoint, built while the endpoint is - declared or default, and resolved
+     * against the shape either way. Possible here, and this is why forms could move at all: the
+     * resolution never leaves its own table, exactly as InheritDescriptor's near half does not.
+     * A bake that needed the reference graph would have to run after publication.
+     *
+     * Total, like the rest of the bake: for a shape that renders, all three keys are present, so
+     * no reader downstream carries an 'and if none was declared' branch. And eager rather than on
+     * demand, which moves the failure of a form the file got wrong from the first request that
+     * opens the page to the load - where a throw publishes nothing.
+     */
+    private static IReadOnlyDictionary<String, FormMetadata> BuildForms(DeclarationMetadata declaration,
+        TableMetadata table)
+    {
+        String[] names = [Constants.FormNames.Index, Constants.FormNames.Browse, Constants.FormNames.Edit];
+        NoLeftovers(table, declaration.Forms.Keys, names, "forms");
+
+        if (!table.HasForms())
+            return new Dictionary<String, FormMetadata>();
+
+        /* Which form, on the way out. All three are built in one breath now, so nothing in the
+         * message below it can say which of them the author has to go and look at.
+         */
+        FormMetadata Build(String name, Func<TableMetadata, FormMetadata> createDefault,
+            Func<TableColumn, Boolean> filter)
+        {
+            try
+            {
+                return (declaration.Forms.GetValueOrDefault(name) ?? createDefault(table)).Bake(table, filter);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"form '{name}': {ex.Message}", ex);
+            }
+        }
+
+        return new Dictionary<String, FormMetadata>()
+        {
+            { Constants.FormNames.Index,
+                Build(Constants.FormNames.Index, DefaultFormBuilder.CreateIndexForm, TableColumnPredicates.IsIndexColumn) },
+            { Constants.FormNames.Browse,
+                Build(Constants.FormNames.Browse, DefaultFormBuilder.CreateBrowseForm, TableColumnPredicates.IsIndexColumn) },
+            { Constants.FormNames.Edit,
+                Build(Constants.FormNames.Edit, DefaultFormBuilder.CreateEditForm, TableColumnPredicates.IsEditColumn) }
+        };
     }
 
     private static DeclarationMetadata BakeNode(this DeclarationMetadata declaration, TableMetadata table)
@@ -210,6 +268,14 @@ internal static class MetadataExtensions
 
     private static DeclarationMetadata BakeCollection(this DeclarationMetadata declaration, TableMetadata table)
     {
+        /* Symmetric to 'total' on the root, and needed for the same reason: 'details' holds the
+         * very same record type, so a key it has no answer for deserializes and then vanishes.
+         * The rows of a collection are shown by whoever shows the record they belong to.
+         */
+        if (declaration.Forms.Count > 0)
+            throw new InvalidOperationException(
+                $"forms: declared on '{table.DetailsKey}', which is a collection. A form belongs to the "
+                + "endpoint that shows it and reaches the rows through 'scope'.");
         NoLeftovers(table, declaration.Kinds.Keys, table.Kinds.Keys, "kinds");
         return declaration.BakeNode(table) with
         {
@@ -242,20 +308,6 @@ internal static class MetadataExtensions
             foreach (var d in detail.AllInherits())
                 yield return d;
     }
-
-    /* Default forms are built on demand, not while the table is being constructed: a table that is
-     * deployed but never rendered (tags) has no forms to build, and asking for them throws. A form
-     * declared in the file is already in the dictionary and wins.
-     */
-    internal static FormMetadata IndexForm(this TableMetadata table) =>
-        table.Forms.GetOrAdd(Constants.FormNames.Index,
-            _ => DefaultFormBuilder.CreateIndexForm(table).SetDefaults(table, TableColumnPredicates.IsIndexColumn));
-    internal static FormMetadata BrowseForm(this TableMetadata table) =>
-        table.Forms.GetOrAdd(Constants.FormNames.Browse,
-            _ => DefaultFormBuilder.CreateBrowseForm(table).SetDefaults(table, TableColumnPredicates.IsIndexColumn));
-    internal static FormMetadata EditForm(this TableMetadata table) =>
-        table.Forms.GetOrAdd(Constants.FormNames.Edit,
-            _ => DefaultFormBuilder.CreateEditForm(table).SetDefaults(table, TableColumnPredicates.IsEditColumn));
 
     public static IEnumerable<TableColumn> TableFilters(this TableMetadata table)
     {

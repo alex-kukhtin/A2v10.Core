@@ -156,6 +156,78 @@ endpoint'а.
 только report, `table` — все остальные. И `CheckDataLocation` перестаёт пропускать отчёт
 по случайности (сейчас он выпадает через `Undefined` — верно по факту, но не по правилу).
 
+### 3.4. Значения перечислений: два написания в схеме и один расходящийся парсер
+
+`@schemas/metadata-endpoint-json-schema.json` — две копии, правятся синхронно:
+`Platform/A2v10.App.Assets2026/Application/@schemas/` и `Web/MainApp/@schemas/`.
+
+Восемь перечислений перечислены дважды, в PascalCase и в camelCase: `columnType` — это 45
+значений против 90, `endpointKind` — 10 против 20. Схема тем самым говорит «оба написания
+одинаково правильны», хотя ключи файла уже camelCase (`fields`, `taskpad`) — их делает
+`CamelCaseNamingStrategy`. Пока в схеме оба, разнобой не ловит никто: Newtonsoft парсит
+перечисления регистронезависимо, так что `"MoNeY"` тоже загрузится.
+
+Исключение одно, и это не решение, а расхождение: `CommandBarItemConverter.ReadJson`
+(`Meta/Converters.cs:38`) вызывает `Enum.Parse<EntityCommandType>(token)` **без**
+`ignoreCase`. Схема это честно помечает комментарием «Case-sensitive: unlike every other
+enum here» — то есть документирует случайность одного написанного руками конвертера.
+
+Порядок правки: `ignoreCase: true` в `Enum.Parse` → единое camelCase-написание в обеих
+схемах → комментарий про исключение снять, исключения больше нет. Коллизий по регистру в
+`EntityCommandType` нет.
+
+Цена: существующие `metadata.json` в PascalCase продолжат грузиться (парсер не строже
+схемы), но редактор со схемой начнёт их подчёркивать. Лечится массовой заменой, момент
+выбирает автор.
+
+### 3.5. Неизвестный ключ в `metadata.json` пропадает молча
+
+`JsonSettings.cs:51` — `MissingMemberHandling` не задан, то есть `Ignore`.
+
+Опечатка в имени ключа не даёт ни ошибки, ни предупреждения: узел просто приезжает пустым.
+Живой случай — `"body"` вместо `"elements"` внутри `formElement` (`body` есть только у корня
+формы): таскпад разобрался, отрендерился пустым, сообщения нет ни одного.
+
+В схеме у `formElement` стоит `additionalProperties: false`, так что редактор с поддержкой
+схемы такое показывает. Загрузчик — нет, а он единственный, кто работает и в CI, и в рантайме.
+
+Закрывается одной строкой `MissingMemberHandling = Error`, но она касается всей
+десериализации метаданных — `TableMetadata`, `DeclarationMetadata`, `ReportMetadata`,
+`AppMetadata`. Решение не принято.
+
+### 3.6. Дефолтную форму неоткуда взять текстом
+
+Решение — в `CLAUDE.md`, «Forms: whole or nothing»: объявленная форма заменяет дефолтную
+целиком, по частям не дописывается. Здесь — его невыполненное следствие.
+
+Раз форму нельзя дописать, её надо уметь **получить**.
+Сегодня взять дефолт как текст неоткуда — `EndpointGenerator.GenerateFormAsync` на этом
+месте бросает `"What should be done here?"`. То есть «всё или ничего» на практике означает
+«набирай с нуля», а формат при этом такой, что три опечатки подряд — норма (см. 3.5).
+
+Само дерево уже есть и уже правильное: `DefaultFormBuilder.Create*Form(table)` выдаёт ровно
+то, что кладётся в файл — `Columns`/`RowSet`/`TabState` помечены `[JsonIgnore]`. Эжектить
+надо **до** `Bake`.
+
+Что мешает:
+
+- `DefaultFormBuilder`, `Constants.FormNames`, `TableColumnPredicates` — `internal`, а CLI
+  это другая сборка. Ни `public` на билдере, ни `InternalsVisibleTo`, а порт на
+  `DatabaseMetadataProvider`: он уже public и уже инжектится в CLI (`DeployCommand`), а
+  написание формы в JSON принадлежит слою метаданных — он владеет схемой;
+- перечисления сериализуются числами: `StringEnumConverter` не подключён ни в
+  `A2v10.Metadata/JsonSettings.cs`, ни в `A2v10.Cli/Utils/JsonSettings.cs` — выйдет
+  `"is": 3` вместо `"is": "dataGrid"`;
+- пустые коллекции печатаются: `DefaultValueHandling.Ignore` сравнивает с `null`, а пустой
+  список не null — каждый узел получит `"elements": [], "fields": [], "commands": []`;
+- `CommandBarItemConverter.WriteJson` пишет PascalCase.
+
+Последнее делает 3.4 **предусловием**, а не косметикой: эжект выдаёт текст, который автор
+вставляет обратно, значит писатель и схема обязаны совпадать.
+
+Место в дереве команд: `meta form <endpoint> --name index|edit|browse`. Лист называет то,
+что получаешь, — ближайший сосед `db table-columns`.
+
 ---
 
 ## 4. Сообщения об ошибках без адреса

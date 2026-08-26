@@ -20,7 +20,7 @@ internal partial class SqlBuilder(BuilderDescriptor desciptor, IServiceProvider 
     private readonly DatabaseMetadataProvider _metadataProvider = serviceProvider.GetRequiredService<DatabaseMetadataProvider>();
     private readonly BuilderDescriptor _descr = desciptor;
     private readonly NormalEndpointMetadata Endpoint = desciptor.Endpoint;
-    private readonly TableMetadata Table = desciptor.Table;
+    private readonly TableMetadata Table = desciptor.Endpoint.Storage;
     private readonly String? DataSource = desciptor.DataSource;
     private readonly AppPlatformId PlatformId = desciptor.PlatformId;
 

@@ -74,7 +74,7 @@ public enum LabelAt
     Left
 }
 
-public record FormElement
+public sealed record FormElement
 {
     public FormElementKind Is { get; init; }
 
@@ -87,50 +87,66 @@ public record FormElement
     public String? Kind { get; init; }
 
     [JsonIgnore]
-    internal String? RowSet { get; private set; }
+    internal String? RowSet { get; init; }
     public List<FormElement> Elements { get; init; } = [];
     public List<String> Fields { get; init; } = [];
-    public List<CommandBarItem> Commands { get; set; } = [];
+    public List<CommandBarItem> Commands { get; init; } = [];
     public FlowAxis Axis { get; init; }
     public LabelAt LabelAt { get; init; }
 
     [JsonIgnore]
-    internal List<TableColumn> Columns { get; private set; } = [];
+    internal List<TableColumn> Columns { get; init; } = [];
 
     /* Which state property this tab strip drives - derived from the children, not declared.
      * The tabs of one strip are the kinds of one collection, so the collection is already
      * said by them; asking the author to repeat it would let the two disagree.
      */
     [JsonIgnore]
-    internal String? TabState { get; private set; }
+    internal String? TabState { get; init; }
 
-    internal void SetDefaults(TableMetadata table, List<TableColumn> cols)
+    /* Resolves what the file wrote against the shape - names to columns, (scope, kind) to a row
+     * set - and REBUILDS rather than fills, for the reason DeclarationMetadata.Bake rebuilds:
+     * what arrives here may belong to another endpoint. An operation that declares no form of
+     * its own gets the storage endpoint's by reference (MergeDeclaration), and that endpoint is
+     * already published - resolving in place would be writing into its declaration.
+     *
+     * One walk for declared and default forms alike. The default used to be the only one that
+     * ever got here, which is why a declared form reached the generator with no columns at all.
+     */
+    internal FormElement Bake(TableMetadata table, List<TableColumn> cols)
     {
         TableColumn FindColumn(String key) =>
            cols.FirstOrDefault(c => c.Name == key)
-                ?? throw new InvalidOperationException($"FormMetadata. Column {key} not found");
-        Columns = [.. Fields.Select(FindColumn)];
+                ?? throw new InvalidOperationException($"field '{key}' not found in {table.SqlTableName}");
+
+        var elements = new List<FormElement>(Elements.Count);
+        String? tabState = null;
         foreach (var el in Elements)
         {
-            if (!String.IsNullOrEmpty(el.Scope))
+            if (String.IsNullOrEmpty(el.Scope))
             {
-                var detailsTable = table.FindDetails(el.Scope);
-                IReadOnlyList<String> named = el.Kind == null ? [] : [el.Kind];
-                detailsTable.CheckKinds(named);
-                el.RowSet = detailsTable.RowSetName(el.Kind);
-                el.SetDefaults(detailsTable, [..detailsTable.AllColumns(c => c.Type != ColumnType.RowKind)]);
-                if (Is == FormElementKind.Tabs)
-                {
-                    var state = detailsTable.TabStateName;
-                    if (TabState != null && TabState != state)
-                        throw new InvalidOperationException(
-                            $"FormMetadata. Tabs mix collections ({TabState}, {state}). One strip switches one collection.");
-                    TabState = state;
-                }
+                elements.Add(el.Bake(table, cols));
+                continue;
             }
-            else
-                el.SetDefaults(table, cols);
+            var detailsTable = table.FindDetails(el.Scope);
+            IReadOnlyList<String> named = el.Kind == null ? [] : [el.Kind];
+            detailsTable.CheckKinds(named);
+            elements.Add(el.Bake(detailsTable, [.. detailsTable.AllColumns(c => c.Type != ColumnType.RowKind)])
+                with { RowSet = detailsTable.RowSetName(el.Kind) });
+            if (Is != FormElementKind.Tabs)
+                continue;
+            var state = detailsTable.TabStateName;
+            if (tabState != null && tabState != state)
+                throw new InvalidOperationException(
+                    $"tabs mix collections ({tabState}, {state}). One strip switches one collection.");
+            tabState = state;
         }
+        return this with
+        {
+            Columns = [.. Fields.Select(FindColumn)],
+            Elements = elements,
+            TabState = tabState
+        };
     }
 }
 public enum FormKind
@@ -146,14 +162,21 @@ public sealed record FormMetadata
     public String? Scope { get; init; }
     public List<FormElement> Body { get; init; } = [];
     public FormElement Toolbar { get; init; } = new() { Is = FormElementKind.Toolbar };
-    public FormElement TaskPad { get; init; } = new() { Is = FormElementKind.Taskpad };
-    public FormMetadata SetDefaults(TableMetadata table, Func<TableColumn, Boolean> filter)
+    public FormElement Taskpad { get; init; } = new() { Is = FormElementKind.Taskpad };
+
+    /* Every branch of the form, by one walk. The filter is the column set this form may name at
+     * all - what an index shows is not what an edit lets you write - and it is applied to the
+     * candidates, so a field the form may not carry reads as a field it cannot find.
+     */
+    internal FormMetadata Bake(TableMetadata table, Func<TableColumn, Boolean> filter)
     {
         var cols = table.AllColumns(filter).ToList();
-        foreach (var el in Body)
-            el.SetDefaults(table, cols);
-        TaskPad.SetDefaults(table, cols);
-        return this;
+        return this with
+        {
+            Body = [.. Body.Select(el => el.Bake(table, cols))],
+            Toolbar = Toolbar.Bake(table, cols),
+            Taskpad = Taskpad.Bake(table, cols)
+        };
     }
 }
 
