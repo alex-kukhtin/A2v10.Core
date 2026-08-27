@@ -39,6 +39,26 @@ internal class DataTableBuilder(TableMetadata table, AppPlatformId platformId)
         return dtable;
     }
 
+    /* A TVP of ids for Constants.SqlNames.IdTableType - one column, no shape behind it. Rows arrive
+     * as whole objects (a tag carries Name and Color too), so each is reduced to its Id here, the
+     * same way a reference column is reduced in AddRow.
+     */
+    public static DataTable BuildIdTable(List<Object>? rows, AppPlatformId platformId)
+    {
+        var dtable = new DataTable();
+        dtable.Columns.Add(new DataColumn(Constants.FieldNames.Id, platformId.ClrType));
+        foreach (var src in rows ?? [])
+        {
+            var id = src is ExpandoObject eo ? eo.Get<Object>(Constants.FieldNames.Id) : src;
+            if (AppPlatformId.IsEmpty(id))
+                continue;
+            var r = dtable.NewRow();
+            r[0] = id!;
+            dtable.Rows.Add(r);
+        }
+        return dtable;
+    }
+
     private DataTable CreateDataTable()
     {
 

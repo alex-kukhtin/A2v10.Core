@@ -417,7 +417,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return merged;
     }
 
-    /* The kind of an endpoint declared by a folder. Platform namespaces ('operations', 'tags')
+    /* The kind of an endpoint declared by a folder. Platform namespaces ('operations', 'tag')
      * and registries ('autonum') resolve to Undefined rather than throwing: their kind, where
      * they have one, is set on the table by TableMetadataDefaults, and every endpoint gets a
      * container either way. This is the single place that learns a new file-declared kind.
@@ -440,7 +440,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
 
     /* Kinds whose endpoints have to say where the shape they work on comes from. Everything else
      * falls through EndpointKindOf as Undefined and is not asked: platform namespaces (operations,
-     * tags) declare their tables in code, and autonum is a registry, not a table endpoint.
+     * tag) declare their tables in code, and autonum is a registry, not a table endpoint.
      */
     private static Boolean DeclaresShapeSource(String schema) =>
         EndpointKindOf(schema) != EndpointKind.Undefined;
@@ -657,8 +657,6 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                 continue;
             tables.Add(endpoint.Storage);
         }
-        if (tables.Any(t => t.HasTags) && !tables.Any(t => t.IsTags))
-            tables.Add(await GetStorageAsync(dataSource, Constants.SchemaNames.Tags, String.Empty));
         return tables;
     }
     private async Task<IEnumerable<TableReferrer>> LoadTableReferrersAsync(String? dataSource, TableMetadata table)

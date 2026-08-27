@@ -82,6 +82,10 @@ internal static class TableDefaultColumns
     {
         yield return new TableColumn(Constants.FieldNames.Id, ColumnType.Id);
         yield return new TableColumn(Constants.FieldNames.Owner, ColumnType.Owner);
-        yield return new TableColumn(Constants.FieldNames.Tag, ColumnType.Ref) { Target = "/catalog/tags"};
+        /* No Target on purpose. This table is built for DDL and is never resolved as an endpoint,
+         * so the reference has nobody to point at - and a plausible-looking address here would be
+         * read as the address of the tags endpoint, which it is not.
+         */
+        yield return new TableColumn(Constants.FieldNames.Tag, ColumnType.Ref);
     }
 }

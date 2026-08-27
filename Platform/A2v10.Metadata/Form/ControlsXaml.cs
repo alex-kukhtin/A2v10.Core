@@ -36,8 +36,10 @@ internal partial class XamlBuilder
             : path;
     }
 
-    static UIElementBase ElementToTableCell(TableColumn elem, Dictionary<String, InheritDescriptor[]> inherits)
+    // rows of a collection are columns and nothing else, so the member unwraps on the way in
+    static UIElementBase ElementToTableCell(MemberDescriptor member, Dictionary<String, InheritDescriptor[]> inherits)
     {
+        var elem = member.ColumnCheck;
         return elem.Type switch
         {
             ColumnType.RowNumber => new TableCell()
@@ -94,9 +96,9 @@ internal partial class XamlBuilder
             Header = [
                 new TableRow()
                 {
-                    Cells = [..tab.Columns.Select(c =>
+                    Cells = [..tab.Members.Select(m =>
                         new TableCell() {
-                            Content = c.Header
+                            Content = m.ColumnCheck.Header
                         }),
                         new TableCell()
                     ]
@@ -105,7 +107,7 @@ internal partial class XamlBuilder
             Rows = [
                 new TableRow()
                 {
-                    Cells = [..tab.Columns.Select(c => ElementToTableCell(c, inherits)), RemoveRowCell()]
+                    Cells = [..tab.Members.Select(m => ElementToTableCell(m, inherits)), RemoveRowCell()]
                 }
             ]
         };
@@ -152,42 +154,44 @@ internal partial class XamlBuilder
         };
     }
 
-    UIElementBase CreateFilterControl(TableColumn column)
+    // one control per filter, by KIND: the panel can no longer be handed a column it cannot draw
+    UIElementBase CreateFilterControl(FilterDescriptor filter)
     {
-        return column.Type switch
+        return filter.Kind switch
         {
-            ColumnType.Date or ColumnType.DateTime =>
-                new PeriodPicker()
+            FilterKind.Period => new PeriodPicker()
+            {
+                Label = $"@[{filter.Name}]",
+                Placement = DropDownPlacement.BottomRight,
+                Display = DisplayMode.Name,
+                Bindings = b =>
                 {
-                    Label = $"@[Period]",
-                    Placement = DropDownPlacement.BottomRight,
-                    Display = DisplayMode.Name,
-                    Bindings = b =>
-                    {
-                        b.SetBinding(nameof(PeriodPicker.Value), new Bind("Parent.Filter.Period"));
-                        b.SetBinding(nameof(PeriodPicker.Description), new Bind("Parent.Filter.Period.Name"));
-                    }
-                },
-            ColumnType.Ref or ColumnType.Operation => new SelectorSimple()
-            {
-                Label = $"@[{column.RefTableCheck.Storage.Model}]",
-                ShowClear = true,
-                Highlight = true,
-                Placeholder = $"@[{column.RefTableCheck.Storage.Model}.All]",
-                Url = column.RefTableCheck.Path,
-                Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), new Bind($"Parent.Filter.{column.Name}")),
+                    b.SetBinding(nameof(PeriodPicker.Value), new Bind($"Parent.Filter.{filter.Name}"));
+                    b.SetBinding(nameof(PeriodPicker.Description), new Bind($"Parent.Filter.{filter.Name}.Name"));
+                }
             },
-            ColumnType.Document => new SelectorSimple()
+            FilterKind.Ref => new SelectorSimple()
             {
-                Label = $"@[{column.RefTableCheck.Storage.Model}]",
+                Label = $"@[{filter.ColumnCheck.RefTableCheck.Storage.Model}]",
                 ShowClear = true,
                 Highlight = true,
-                Placeholder = $"@[{column.RefTableCheck.Storage.Model}.All]",
-                Url = column.RefTableCheck.Path,
-                Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), new Bind($"Parent.Filter.{column.Name}")),
+                Placeholder = $"@[{filter.ColumnCheck.RefTableCheck.Storage.Model}.All]",
+                Url = filter.ColumnCheck.RefTableCheck.Path,
+                Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), new Bind($"Parent.Filter.{filter.Name}")),
+            },
+            // candidates are rows, not a shape: ItemsSource is the root 'Tags' recordset, unprefixed
+            FilterKind.Tags => new TagsFilter()
+            {
+                Label = $"@[{filter.Name}]",
+                Placeholder = "@[Placeholder.AllTags]",
+                Bindings = b =>
+                {
+                    b.SetBinding(nameof(TagsFilter.Value), new Bind($"Parent.Filter.{filter.Name}"));
+                    b.SetBinding(nameof(TagsFilter.ItemsSource), new Bind(filter.Name));
+                }
             },
             _ =>
-                throw new InvalidOperationException($"Invalid filter control type '{column.Type}'")
+                throw new InvalidOperationException($"Invalid filter kind '{filter.Kind}'")
         };
     }
 
@@ -207,7 +211,7 @@ internal partial class XamlBuilder
                 {
                     b.SetBinding(nameof(DataGrid.ItemsSource), new Bind("Parent.ItemsSource"));
                 },
-                Columns = [.. IndexColumnsXaml(elem.Columns, false)]
+                Columns = [.. IndexColumnsXaml(elem.Members, false)]
             },
             FormElementKind.Pager => new Pager()
             {
@@ -241,7 +245,7 @@ internal partial class XamlBuilder
                 Collapsible = true,
                 Header = "@[Filters]",
                 Style = PaneStyle.Transparent,
-                Children = [.. elem.Columns.Select(CreateFilterControl)]
+                Children = [.. elem.BakedFilters.Select(CreateFilterControl)]
             },
             FormElementKind.Taskpad => new Taskpad()
             {
@@ -257,9 +261,28 @@ internal partial class XamlBuilder
         {
             Axis = elem.Axis == FlowAxis.Columns ? Xaml.FlowAxis.Columns : Xaml.FlowAxis.Rows,
             LabelAt = elem.LabelAt == LabelAt.Top ? FlowLabelAt.Top : FlowLabelAt.Left,
-            Children = [.. elem.Columns.Select(c => CreateEditControl(c, inherits))]
+            Children = [.. elem.Members.Select(m => CreateMemberControl(m, inherits))]
         };
     }
+
+    // the only place a member that is not a column reaches a control - see CLAUDE.md, "Members"
+    UIElementBase CreateMemberControl(MemberDescriptor member,
+        Dictionary<String, InheritDescriptor[]> inherits) => member.Kind switch
+    {
+        MemberKind.Column => CreateEditControl(member.ColumnCheck, inherits),
+        // value is the record's own tags, candidates the root 'Tags' array - the pair Load emits
+        MemberKind.Tags => new TagsControl()
+        {
+            Label = $"@[{member.Name}]",
+            Placeholder = "@[Tag.Choose]",
+            Bindings = b =>
+            {
+                b.SetBinding(nameof(TagsControl.Value), new Bind($"{Table.Model}.{member.Name}"));
+                b.SetBinding(nameof(TagsControl.ItemsSource), new Bind(member.Name));
+            }
+        },
+        _ => throw new InvalidOperationException($"Invalid member kind '{member.Kind}'")
+    };
 
     UIElementBase CreateEditControl(TableColumn column, Dictionary<String, InheritDescriptor[]> inherits)
     {

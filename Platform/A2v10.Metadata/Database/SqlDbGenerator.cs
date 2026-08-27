@@ -127,6 +127,12 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
                 strBuilder.AppendLine("go");
             }
         }
+
+        if (tables.Any(t => t.HasTags)) 
+        {
+            strBuilder.AppendLine(_dbCreator.CreateTable(TableMetadataDefaults.TagsTable()));
+            strBuilder.AppendLine("go");
+        }
         return strBuilder.ToString();
     }
 
@@ -137,6 +143,8 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
 
         var strBuilder = new StringBuilder();
         strBuilder.AppendLine("-- TABLE TYPES");
+        strBuilder.AppendLine(CliDatabaseCreator.CreateIdTableType());
+        strBuilder.AppendLine("go");
         foreach (var table in tables.Where(HasTableType))
         {
             strBuilder.AppendLine(CliDatabaseCreator.CreateTableType(table));
@@ -162,6 +170,17 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
                 strBuilder.AppendLine(fc);
                 strBuilder.AppendLine("go");
             }
+            // Owner -> the tagged table, Tag -> the tags catalog. Both addresses are known
+            // right here, which is why the tag entries table is passed its owner like a detail.
+            if (table.HasTags)
+            {
+                fc = CliDatabaseCreator.CreateForeignKeys(TableMetadataDefaults.CreateTagEntriesTable(table), table);
+                if (!String.IsNullOrWhiteSpace(fc))
+                {
+                    strBuilder.AppendLine(fc);
+                    strBuilder.AppendLine("go");
+                }
+            }
             foreach (var d in table.Details)
             {
                 fc = CliDatabaseCreator.CreateForeignKeys(d.Value, table);
@@ -184,7 +203,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
      * change is there while the hash stays the same.
      */
 
-    private static Version assVersion = Assembly.GetExecutingAssembly().GetName().Version ?? new();
+    private static readonly Version assVersion = Assembly.GetExecutingAssembly().GetName().Version ?? new();
 
     private static async Task<String?> GenerateMetadataSeedAsync(IEnumerable<TableMetadata> tables)
     {
@@ -211,18 +230,24 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
                 $"{Str(col.DeployDefault())})";
         }
 
-        foreach (var t in tables)
+        void AddTable(TableMetadata t)
         {
             sqlTables.Add($"\t({Str(t.SqlSchema)}, {Str(t.Table)})");
             foreach (var col in t.AllColumns())
                 sqlColumns.Add(ColumnRow(t, col));
-            foreach (var d in t.Details.Values)
-            {
-                sqlTables.Add($"\t({Str(d.SqlSchema)}, {Str(d.Table)})");
-                foreach (var col in d.AllColumns())
-                    sqlColumns.Add(ColumnRow(d, col));
-            }
         }
+
+        foreach (var t in tables)
+        {
+            AddTable(t);
+            if (t.HasTags)
+                AddTable(TableMetadataDefaults.CreateTagEntriesTable(t));
+            foreach (var d in t.Details.Values)
+                AddTable(d);
+        }
+
+        if (tables.Any(t => t.HasTags))
+            AddTable(TableMetadataDefaults.TagsTable());
 
         // the hash is taken from the text, so the order must not depend on how the
         // file system happens to be enumerated

@@ -20,6 +20,7 @@ internal static class TableMetadataDefaults
      */
     public static TableMetadata? SystemTable(String schema, String name)
     {
+        // TODO: system SCHEMAS ????
         return (schema, name) switch
         {
             (Constants.SchemaNames.Operations, "") => OperationsTable(),
@@ -40,7 +41,7 @@ internal static class TableMetadataDefaults
         };
     }
 
-    private static TableMetadata TagsTable()
+    public static TableMetadata TagsTable()
     {
         return new TableMetadata()
         {

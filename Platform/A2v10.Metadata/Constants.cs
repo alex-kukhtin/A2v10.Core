@@ -26,6 +26,7 @@ internal static class Constants
         public const String Color = nameof(Color);
         public const String For = nameof(For);
         public const String Tag = nameof(Tag);
+        public const String Tags = nameof(Tags);
     }
     public static class FieldSizes
     {
@@ -42,6 +43,24 @@ internal static class Constants
         public const String Browse = "browse";
     }
 
+    public static class SqlNames
+    {
+        /* A list of ids and nothing else, on the real 'platformid' - which is why it is ours and
+         * not a2sys.[Id.TableType]: that one is declared 'bigint', and a database whose platformid
+         * is uniqueidentifier would take the rows and write none. Lives beside 'platformid' itself.
+         */
+        public const String IdTableType = "dbo.[PlatformId.TableType]";
+    }
+
+    /* Platform entries of the filter namespace - the ones a trait or the kind contributes, as
+     * opposed to the ones a column contributes under its own name. See FilterMetadata.
+     */
+    public static class FilterNames
+    {
+        public const String Period = nameof(Period);
+        public const String Tags = nameof(Tags);
+    }
+
     public static class SchemaNames
     {
         public const String Catalog = "catalog";
@@ -54,6 +73,6 @@ internal static class Constants
          * confused with, an application endpoint of the same name.
          */
         public const String Operations = "operations";
-        public const String Tags = "tags";
+        public const String Tags = "tag";
     }
 }

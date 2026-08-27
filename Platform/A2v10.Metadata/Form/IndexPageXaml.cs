@@ -5,14 +5,14 @@ using System.Linq;
 using System.Collections.Generic;
 
 using A2v10.Xaml;
-using Acornima.Ast;
 
 namespace A2v10.Metadata;
 
 internal partial class XamlBuilder
 {
-    IEnumerable<DataGridColumn> IndexColumnsXaml(List<TableColumn> columns, Boolean hasChecked) =>
-        columns.Select(col =>
+    // an index grid shows columns only: the tags of a row are spliced into Name below, not a member
+    IEnumerable<DataGridColumn> IndexColumnsXaml(List<MemberDescriptor> members, Boolean hasChecked) =>
+        members.Select(m => m.ColumnCheck).Select(col =>
             Table.HasTags && col.Type == ColumnType.Name
             ? new DataGridColumn()
             {
@@ -44,6 +44,7 @@ internal partial class XamlBuilder
             }
          );
 
+    // the ENDPOINT's filters, not the form's - see CLAUDE.md, "Filters"
     IEnumerable<FilterItem> CollectionViewFilters()
     {
         yield return new FilterItem()
@@ -51,10 +52,11 @@ internal partial class XamlBuilder
             Property = "Fragment",
             DataType = DataType.String
         };
-        foreach (var f in Table.TableFilters())
-            yield return f.Type switch
+        foreach (var f in Table.Filters())
+            yield return f.Kind switch
             {
-                ColumnType.Date => new FilterItem() { Property = "Period", DataType = DataType.Period },
+                FilterKind.Period => new FilterItem() { Property = f.Name, DataType = DataType.Period },
+                FilterKind.Tags => new FilterItem() { Property = f.Name, DataType = DataType.String },
                 _ => new FilterItem() { Property = f.Name, DataType = DataType.Object }
             };
     }

@@ -46,6 +46,24 @@ internal partial class SqlBuilder
                     k => $"[{dt.KindCollectionName(k)}!{dt.KindTypeName(k)}!Array] = null"));
         }
 
+        /* The record's own tags, and the list it may pick from. The same pair the index emits and
+         * under the same names: '{Model}.Tags' is what the editor binds to, the root 'Tags' is its
+         * candidates.
+         */
+        String tagsRecordsets() => $"""
+            -- tags
+            select [!TTag!Array] = null, [Id!!Id] = t.Id, [Name!!Name] = t.[Name], [Color] = t.[Color],
+              [!{Table.TypeName}.{Constants.FieldNames.Tags}!ParentId] = e.[Owner]
+            from {Table.SqlSchema}.[{Table.Model}$TagEntries] e
+              inner join cat.[$Tags] t on t.[Id] = e.[Tag]
+            where e.[Owner] = @Id and t.[For] = N'{Table.Model}';
+
+            select [{Constants.FieldNames.Tags}!TTag!Array] = null, [Id!!Id] = t.Id,
+              [Name!!Name] = t.[Name], [Color] = t.[Color]
+            from cat.[$Tags] t where t.[For] = N'{Table.Model}'
+            order by t.[Id];
+            """;
+
         String? generateDefaults()
         {
             var org = Endpoint.Declaration;
@@ -111,11 +129,16 @@ internal partial class SqlBuilder
         sb.Append($"""
             select [{Table.Model}!{Table.TypeName}!Object] = null, {String.Join(", ", plainSqlFields("a"))}
             """);
-        if (Table.Details.Count > 0)
+        // slots the object carries beyond its own columns: one per collection, and the tags array
+        List<String> arraySlots = [.. Table.Details.Select(mainDetailsFields)];
+        if (Table.HasTags)
+            arraySlots.Add($"[{Constants.FieldNames.Tags}!TTag!Array] = null");
+
+        if (arraySlots.Count > 0)
         {
             sb.AppendLine(",");
             sb.Append("  ");
-            sb.AppendJoin(", ", Table.Details.Select(mainDetailsFields));
+            sb.AppendJoin(", ", arraySlots);
             sb.AppendLine();
         }
         else
@@ -170,6 +193,12 @@ internal partial class SqlBuilder
             }
         }
 
+
+        if (Table.HasTags)
+        {
+            sb.AppendLine();
+            sb.AppendLine(tagsRecordsets());
+        }
 
         var refMap = new RefMapBuilder(Endpoint, isPlain: true, hasDefaults: IsNewModel());
 
@@ -300,6 +329,24 @@ internal partial class SqlBuilder
         }
 
 
+        /* Tags are not a detail: no fields of their own, no RowNo, nothing to update - a row either
+         * is in the set or is not. So the merge has no 'when matched' arm, and what is deleted is
+         * bounded by the owner exactly as the details merges bound theirs.
+         */
+        String MergeTags()
+        {
+            if (!Table.HasTags)
+                return String.Empty;
+            return $"""
+            -- merge tags
+            merge {Table.SqlSchema}.[{Table.Model}$TagEntries] as t
+            using @{Constants.FieldNames.Tags} as s
+            on t.[Owner] = @Id and t.[Tag] = s.[Id]
+            when not matched then insert ([Owner], [Tag]) values (@Id, s.[Id])
+            when not matched by source and t.[Owner] = @Id then delete;
+            """;
+        }
+
         String buildSqlUpdateText()
         {
 
@@ -338,6 +385,8 @@ internal partial class SqlBuilder
             // STEP:3 update details
 
             sb.AppendLine(MergeDetails());
+
+            sb.AppendLine(MergeTags());
 
             // STEP:4 return select
 
@@ -381,6 +430,9 @@ internal partial class SqlBuilder
             dbprms.AddStructured($"@{Table.Model}", Table.SqlTableTypeName, dtable);
             foreach (var (name, typeName, table) in detailsTables)
                 dbprms.AddStructured(name, typeName, table);
+            if (Table.HasTags)
+                dbprms.AddStructured($"@{Constants.FieldNames.Tags}", Constants.SqlNames.IdTableType,
+                    DataTableBuilder.BuildIdTable(item?.Get<List<Object>>(Constants.FieldNames.Tags), PlatformId));
         });
 
         return dm.Root;

@@ -23,7 +23,9 @@ internal partial class SqlBuilder
         Int32 offset = 0;
         Int32 pageSize = DEFAULT_PAGE_SIZE;
         String? fragment = null;
-        
+        // ids joined by '-', split in SQL; empty means the filter is off and nothing is emitted
+        String? tags = null;
+
         (String field, String value, RefDescriptor? refdescr) = ("a.Id", "Id", null);
 
         String dir = DEFAULT_DIR;
@@ -44,6 +46,8 @@ internal partial class SqlBuilder
                 if (!Int32.TryParse(qry.Get<String>("PageSize") ?? DEFAULT_PAGE_SIZE.ToString(), out pageSize))
                     pageSize = DEFAULT_PAGE_SIZE;
             fragment = qry.Get<String?>("Fragment");
+            if (Table.HasTags)
+                tags = qry.Get<String?>(Constants.FilterNames.Tags);
             dir = qry.Get<String>("Dir")?.ToLowerInvariant() ?? DEFAULT_DIR;
             if (dir != "asc" && dir != "desc")
                 dir = DEFAULT_DIR;
@@ -94,6 +98,14 @@ internal partial class SqlBuilder
             if (Table.HasPeriod)
                 sb.AppendLine(" and a.[Date] >= @From and a.[Date] < @end");
 
+            // a row passes when it carries any of the picked tags; nothing picked, nothing emitted
+            if (!String.IsNullOrEmpty(tags))
+                sb.AppendLine($$"""
+                 and exists(select 1 from @ftags f
+                    inner join {{Table.SqlSchema}}.[{{Table.Model}}$TagEntries] ta
+                        on ta.[Owner] = a.Id and ta.[Tag] = f.Id)
+                """);
+
             if (filters.Count > 0)
                 sb.AppendLine($" and {String.Join(" and ", filters.Select(f => $"a.[{f.name}] = @{f.name}"))}");
             if (!String.IsNullOrEmpty(fragment))
@@ -132,6 +144,16 @@ internal partial class SqlBuilder
                 sb.AppendLine("set @From = isnull(@From, getdate());");
                 sb.AppendLine("set @To = isnull(@To, getdate());");
                 sb.AppendLine("declare @end date = dateadd(day, 1, @To)");
+            }
+
+            // CAST takes system types only, so it names the base the database reported for
+            // 'platformid' - a hardcoded bigint would drop every tag on a uniqueidentifier base
+            if (!String.IsNullOrEmpty(tags))
+            {
+                sb.AppendLine();
+                sb.AppendLine("declare @ftags table(Id platformid);");
+                sb.AppendLine("insert into @ftags(Id) select try_cast([value] as "
+                    + $"{_descr.PlatformId.SqlTypeName}) from string_split(@Tags, N'-');");
             }
 
             // STEP 2: create temp table
@@ -240,6 +262,9 @@ internal partial class SqlBuilder
                 sb.Append($", [!{collectionName}.Period.From!Filter] = @From");
                 sb.Append($", [!{collectionName}.Period.To!Filter] = @To");
             }
+            // always, not only when picked: the Filter has to come back the way every other one does
+            if (Table.HasTags)
+                sb.Append($", [!{collectionName}.{Constants.FilterNames.Tags}!Filter] = @Tags");
             if (refs.Count > 0) {
                 sb.Append(", ");
                 sb.Append(String.Join(", ", refs.Select(rt => $"[!{collectionName}.{rt.Column.Name}.{rt.Table.RefTypeName}.RefId!Filter] = @{rt.Column.Name}")));
@@ -277,6 +302,8 @@ internal partial class SqlBuilder
             .AddString("@Order", value)
             .AddString("@Dir", dir)
             .AddString("@Fragment", fragment);
+            if (Table.HasTags)
+                dbprms.AddString("@Tags", tags);
             var docOp = Endpoint.DocumentOperation();
             if (docOp != null)
                 dbprms.AddString("@RouteOperation", docOp);

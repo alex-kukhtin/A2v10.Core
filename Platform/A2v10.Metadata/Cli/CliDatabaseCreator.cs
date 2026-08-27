@@ -53,6 +53,16 @@ public class CliDatabaseCreator()
         """;
     }
 
+    // generic, so it is not gated on the trait that happens to be its first consumer
+    public static String CreateIdTableType() => $"""
+        {SQL_DIVIDER}
+        drop type if exists {Constants.SqlNames.IdTableType};
+        create type {Constants.SqlNames.IdTableType} as table
+        (
+            [{Constants.FieldNames.Id}] platformid
+        );
+        """;
+
     public static String CreateTableType(TableMetadata table)
     {
         static String createField(TableColumn column)
@@ -75,53 +85,49 @@ public class CliDatabaseCreator()
     public static String CreateForeignKeys(TableMetadata table, TableMetadata? owner = null)
     {
         //const String check = "nocheck"; // TODO: ????
+
+        /* One shape for every foreign key here - only the name and the target differ. The
+         * truncation used to sit on the last branch alone, so a long name was a SQL error on
+         * the other three; it belongs to the shape, not to one case.
+         */
+        String Constraint(String name, TableColumn column, String targetTableName)
+        {
+            if (name.Length > 128)
+                name = name[0..127];
+            return $"""
+            if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.SqlSchema}' and TABLE_NAME = N'{table.Table}' and CONSTRAINT_NAME = N'{name}')
+                alter table {table.SqlTableName} add
+                    constraint {name} foreign key ([{column.Name}]) references {targetTableName}([Id]);
+            """;
+            //alter table {table.SqlTableName} {check} constraint {name};
+        }
+
         String createReference(TableColumn column)
         {
             if (column.Type == ColumnType.Owner)
             {
                 if (owner == null)
                     throw new InvalidOperationException("Owern is null");
-
-                var opConstraintName = $"FK_{table.Table}_{column.Name}_{owner.Table}";
-
-                return $"""
-                if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.SqlSchema}' and TABLE_NAME = N'{table.Table}' and CONSTRAINT_NAME = N'{opConstraintName}')
-                    alter table {table.SqlTableName} add 
-                        constraint {opConstraintName} foreign key ([{column.Name}]) references {owner.SqlTableName}([Id]);
-                """;
+                return Constraint($"FK_{table.Table}_{column.Name}_{owner.Table}", column, owner.SqlTableName);
             }
             else if (column.Type == ColumnType.Operation)
+                return Constraint($"FK_{table.Table}_{column.Name}_Operations", column, "op.[Operations]");
+            else if (table.IsTagEntries)
             {
-                var opConstraintName = $"FK_{table.Table}_{column.Name}_Operations";
-
-                return $"""
-                if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.SqlSchema}' and TABLE_NAME = N'{table.Table}' and CONSTRAINT_NAME = N'{opConstraintName}')
-                    alter table {table.SqlTableName} add 
-                        constraint {opConstraintName} foreign key ([{column.Name}]) references op.[Operations]([Id]);
-                """;
-                //alter table {table.SqlTableName} {check} constraint {opConstraintName};
+                /* The tags catalog is platform-owned and sits at a fixed address - the same case
+                 * as Operations above, and for the same reason there is nothing to resolve: a
+                 * tag entries table is built on the fly (CreateTagEntriesTable) and never goes
+                 * through reference linking, so its RefTable is null.
+                 */
+                var tags = TableMetadataDefaults.TagsTable();
+                return Constraint($"FK_{table.Table}_{column.Name}_{tags.Table}", column, tags.SqlTableName);
             }
             else if (column.Type == ColumnType.Enum)
-            {
-                var opConstraintName = $"FK_{table.Table}_{column.Name}_{column.RefTableCheck.Storage.Table}";
+                return Constraint($"FK_{table.Table}_{column.Name}_{column.RefTableCheck.Storage.Table}",
+                    column, column.RefTableCheck.Storage.SqlTableName);
 
-                return $"""
-                if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.SqlSchema}' and TABLE_NAME = N'{table.Table}' and CONSTRAINT_NAME = N'{opConstraintName}')
-                    alter table {table.SqlTableName} add 
-                        constraint {opConstraintName} foreign key ([{column.Name}]) references {column.RefTableCheck.Storage.SqlTableName}([Id]);
-                """;
-                //alter table {table.SqlTableName} {check} constraint {opConstraintName};
-            }
-
-            var constraintName = $"FK_{table.Table}_{column.Name}_{column.RefTableCheck.Storage.Table}";
-            if (constraintName.Length > 128)
-                constraintName = constraintName[0..127];
-            return $"""
-            if not exists(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where TABLE_SCHEMA = N'{table.SqlSchema}' and TABLE_NAME = N'{table.Table}' and CONSTRAINT_NAME = N'{constraintName}')
-                alter table {table.SqlTableName} add 
-                    constraint {constraintName} foreign key ([{column.Name}]) references {column.RefTableCheck.Storage.SqlTableName}([Id]);
-            """;
-            //alter table {table.SqlTableName} {check} constraint {constraintName};
+            var refStorage = column.RefTableCheck.Storage;
+            return Constraint($"FK_{table.Table}_{column.Name}_{refStorage.Table}", column, refStorage.SqlTableName);
         }
         var refs = table.AllColumns().Where(c => c.IsRef)
             .Select(rc => createReference(rc));

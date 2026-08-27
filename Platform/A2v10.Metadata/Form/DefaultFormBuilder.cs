@@ -63,7 +63,7 @@ internal static class DefaultFormBuilder
                 Elements = [
                     new FormElement() {
                         Is = FormElementKind.Filters,
-                        Fields = [..table.TableFilters().Select(f => f.Name)],
+                        Filters = [..table.Filters().Select(f => f.Name)],
                     }
                 ]
             }
@@ -100,7 +100,7 @@ internal static class DefaultFormBuilder
                 Elements = [
                     new FormElement() {
                         Is = FormElementKind.Filters,
-                        Fields = [..table.TableFilters().Select(f => f.Name)],
+                        Filters = [..table.Filters().Select(f => f.Name)],
                     }
                 ]
             }
@@ -110,6 +110,15 @@ internal static class DefaultFormBuilder
     public static FormMetadata CreateEditForm(TableMetadata table)
     {
         return table.EditWithPage ? CreateEditPage(table) : CreateEditFormDialog(table);
+    }
+
+    /* Members an edit form carries after its columns - what a trait contributes to the record, in
+     * the same 'fields' list. Last, because they are about the record rather than its fields.
+     */
+    static IEnumerable<String> TrailingMembers(TableMetadata table)
+    {
+        if (table.HasTags)
+            yield return Constants.FieldNames.Tags;
     }
 
     static Boolean IsDetailsColumn(TableColumn col)
@@ -222,7 +231,7 @@ internal static class DefaultFormBuilder
             Is = FormElementKind.Group,
             Axis = FlowAxis.Rows,
             LabelAt = LabelAt.Left,
-            Fields = [.. bottomCols.Select(c => c.Name)]
+            Fields = [.. bottomCols.Select(c => c.Name), .. TrailingMembers(table)]
         });
 
         return fd;
@@ -242,7 +251,7 @@ internal static class DefaultFormBuilder
                 new FormElement()
                 {
                     Is = FormElementKind.Group,
-                    Fields = [..cols.Select(c => c.Name)]
+                    Fields = [..cols.Select(c => c.Name), .. TrailingMembers(table)]
                 }
             ]
         };

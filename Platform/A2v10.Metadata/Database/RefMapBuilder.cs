@@ -60,11 +60,27 @@ internal class RefMapBuilder
     {
         if (!_isPlain)
             return [];
+
+        /* The other half of InheritDescriptor's asymmetry: 'field' and 'ref' belong to the table
+         * the rule is written on and are resolved at load, this one belongs to the table the
+         * reference points at and can only be asked once the graph is linked. Local because that
+         * moment is this method and nothing else - and here it is visible that the third name is
+         * the one a typo carries past load, into SQL generation. It says where it looked in the
+         * same words the other two do (DeclarationBake.BuildInherits).
+         */
+        static TableColumn SourceColumn(InheritDescriptor descriptor)
+        {
+            var refTable = descriptor.Ref.RefTableCheck.Storage;
+            return refTable.Columns.FirstOrDefault(c => c.Name == descriptor.Source)
+                ?? throw new InvalidOperationException(
+                    $"inherit: source '{descriptor.Source}' not found in {refTable.SqlTableName}");
+        }
+
         return _declaration.AllInherits()
             .GroupBy(d => TargetKey(d.Ref))
             .ToDictionary(
                 g => g.Key,
-                g => g.Select(d => d.SourceColumn())
+                g => g.Select(SourceColumn)
                       .Where(c => c.Type != ColumnType.Id && c.Type != ColumnType.Name)
                       .DistinctBy(c => c.Name)
                       .ToList()
