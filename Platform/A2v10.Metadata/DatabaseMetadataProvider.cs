@@ -170,9 +170,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
      */
     private static TableMetadata BuildStorage(String schema, String table, String text, String? hash)
     {
-        // declared in code, not in a file - defaults and address are applied the same way
-        var storage = TableMetadataDefaults.SystemTable(schema, table)
-            ?? JsonConvert.DeserializeObject<TableMetadata>(text, JsonSettings.CamelCaseSerializerSettings)
+        var storage = JsonConvert.DeserializeObject<TableMetadata>(text, JsonSettings.CamelCaseSerializerSettings)
             ?? throw new InvalidOperationException($"{MetadataFileName(schema, table)}: TableMetadata deserialization fails");
         storage.FileHash = hash;
         storage.SetDefaults(schema, table);
@@ -195,17 +193,27 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
      * and a folder declares nothing here. Teaching it this namespace would also make
      * DeclaresShapeSource demand a 'table' key from an endpoint that has no file to put it in.
      */
-    private static EndpointMetadata? GetInternalEndpoint(String schema, String table)
-         => schema switch
-         {
-             Constants.SchemaNames.Tag => new TagEndpointMetadata()
-             {
-                 Kind = EndpointKind.Tags,
-                 Schema = schema,
-                 Name = table
-             },
-             _ => null
-         };
+    private async Task<EndpointMetadata?> GetInternalEndpointAsync(String? dataSource, String schema, String table)
+    {
+        if (schema == Constants.SchemaNames.Tag)
+            return new TagEndpointMetadata()
+            {
+                Kind = EndpointKind.Tags,
+                Schema = schema,
+                Name = table
+            };
+        if (schema == Constants.SchemaNames.Operation)
+            return new OperationEndpointMetadata()
+            {
+                Kind = EndpointKind.Operation,
+                Schema = schema,
+                Name = table,
+                // through the cache like every other storage: the instance is shared, not remade
+                Storage = await _metadataCache.GetOrAddStorageAsync(dataSource, schema, table,
+                    (_, _, _) => Task.FromResult(TableMetadataDefaults.OperationsTable()))
+            };
+        return null;
+    }
 
     /* The endpoint is built here, once, before it is published to the cache: the table it works
      * on is the same instance for every endpoint that points at it, and its declaration is what
@@ -217,7 +225,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
      */
     private async Task<EndpointMetadata> LoadEndpointAsync(EndpointLoad load, String? dataSource, String schema, String table)
     {
-        var internalEndpoint = GetInternalEndpoint(schema, table);
+        var internalEndpoint = await GetInternalEndpointAsync(dataSource, schema, table);
         if (internalEndpoint != null)
             return internalEndpoint;
 
@@ -617,6 +625,9 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         var meta = endpoint switch {
             NormalEndpointMetadata n => n.Storage,
             ReportEndpointMetadata r => r.Surface,
+            // a shape with no declared columns: the walk below finds nothing and that is correct,
+            // its only column is the operation code and it points at this very endpoint
+            OperationEndpointMetadata o => o.Storage,
             // no shape, so no references - said by name, so an unknown subtype still fails loudly
             TagEndpointMetadata => null,
             _ => throw new InvalidOperationException($"Unknown endpoint {endpoint.Path}")
@@ -646,7 +657,11 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                 }
                 else if (gcol.Type == ColumnType.Operation)
                 {
-                    gcol.RefTable = await GetNormalEndpointAsync(load, dataSource, Constants.SchemaNames.Operations, String.Empty);
+                    // a system endpoint, so not a data endpoint - asked for as a reference target
+                    gcol.RefTable = await LoadAsync(load, dataSource, Constants.SchemaNames.Operation,
+                            String.Empty) as IRefTarget
+                        ?? throw new InvalidOperationException(
+                            $"/{Constants.SchemaNames.Operation} is not a reference target");
                     continue;
                 }
             }

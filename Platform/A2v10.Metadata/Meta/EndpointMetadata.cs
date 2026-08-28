@@ -39,12 +39,23 @@ public abstract record EndpointMetadata
     public String Path => String.IsNullOrEmpty(Name) ? $"/{Schema}" : $"/{Schema}/{Name}";
 }
 
+/* What a reference resolves to: an address to browse and a shape to read columns from. Exactly
+ * the two things every reader of TableColumn.RefTable asks for, and nothing else - which is what
+ * lets an endpoint the platform implements itself be a reference target without any of them
+ * learning about it. A report deliberately does not implement it: it owns no data to point at.
+ */
+public interface IRefTarget
+{
+    TableMetadata Storage { get; }
+    String Path { get; }
+}
+
 /* An endpoint over data: catalog, document, operation, journal. Both slots are always set - for
  * an endpoint that owns its table they come from the same file, for an operation from two. No
  * consumer asks which case it is in: structure is read from Storage, declared behaviour from
  * Declaration, and both roads are always open.
  */
-public sealed record NormalEndpointMetadata : EndpointMetadata
+public sealed record NormalEndpointMetadata : EndpointMetadata, IRefTarget
 {
     public required TableMetadata Storage { get; init; }
     public required DeclarationMetadata Declaration { get; init; }
@@ -81,4 +92,20 @@ public sealed record TagEndpointMetadata : EndpointMetadata
 
     internal static String SettingsUrl(String forEntity) =>
         $"/{Constants.SchemaNames.Tag}/{SettingsAction}?{Constants.FieldNames.For}={forEntity}";
+}
+
+/* The registry of operation codes. Also a system endpoint - nothing describes it, its one screen
+ * is written in code - but unlike the tags dialog it IS pointed at: every document's 'operation'
+ * column resolves here. So this one carries a shape, and that is the whole difference between the
+ * two so far. See CLAUDE.md, "System endpoints".
+ */
+public sealed record OperationEndpointMetadata : EndpointMetadata, IRefTarget
+{
+    internal const String BrowseAction = "browse";
+
+    /* Handed in, not built here, and that is not ceremony: one TableMetadata per
+     * (dataSource, schema, table) for every endpoint that points at it is what the storage cache
+     * is for. A property initializer would make a fresh instance per endpoint and quietly break it.
+     */
+    public required TableMetadata Storage { get; init; }
 }

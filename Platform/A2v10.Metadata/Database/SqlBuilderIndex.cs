@@ -316,13 +316,20 @@ internal partial class SqlBuilder
             var docOp = Endpoint.DocumentOperation();
             if (docOp != null)
                 dbprms.AddString("@RouteOperation", docOp);
+            /* The parameter is declared as what the COLUMN is, never as what a filter usually turns
+             * out to be. An operation is keyed by its code; everything else by an identifier whose
+             * base the database reported. Assuming bigint for both was silent in the same way: the
+             * value came back null, which reads downstream as 'no filter picked' and clears the
+             * selector on the way back, rather than failing anywhere visible.
+             */
             foreach (var rd in refs)
             {
-                Int64? paramValue = null;
-                var val = filters.FirstOrDefault(f => f.name == rd.Column.Name);
-                if (!String.IsNullOrEmpty(val.value) && Int64.TryParse(val.value, out var fval))
-                    paramValue = fval;
-                dbprms.AddBigInt($"@{rd.Column.Name}", paramValue);
+                var val = filters.FirstOrDefault(f => f.name == rd.Column.Name).value;
+                var name = $"@{rd.Column.Name}";
+                if (rd.Column.IsOperation)
+                    dbprms.AddString(name, String.IsNullOrEmpty(val) ? null : val);
+                else
+                    dbprms.AddTyped(name, _descr.PlatformId.SqlDbType, _descr.PlatformId.ParseId(val));
             }
         });
     }

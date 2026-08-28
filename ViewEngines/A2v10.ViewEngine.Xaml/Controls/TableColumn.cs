@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -82,6 +82,17 @@ public class TableColumnCollection : List<TableColumn>
 			col.Render(context);
 		cols.RenderEnd(context);
 	}
+
+	public static TableColumnCollection FromString(String strVal)
+	{
+        var vals = strVal.Split(',');
+        var coll = new TableColumnCollection();
+        foreach (var val in vals)
+        {
+            coll.Add(new TableColumn(val.Trim()));
+        }
+        return coll;
+    }
 }
 
 public class TableColumnCollectionConverter : TypeConverter
@@ -102,15 +113,7 @@ public class TableColumnCollectionConverter : TypeConverter
 		else if (value is TableColumnCollection)
 			return value;
 		if (value is String strVal)
-		{
-			var vals = strVal.Split(',');
-			var coll = new TableColumnCollection();
-			foreach (var val in vals)
-			{
-				coll.Add(new TableColumn(val.Trim()));
-			}
-			return coll;
-		}
+			return TableColumnCollection.FromString(strVal);
 		throw new XamlException($"Invalid value '{value}'");
 	}
 }

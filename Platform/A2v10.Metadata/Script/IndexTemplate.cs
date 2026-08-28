@@ -19,6 +19,8 @@ internal partial class ScriptBuilder
                 // the name the document page emits - see CreateDocumentTemplate
                 yield return "'g.document.posted': handlePosted";
             }
+            if (Table.HasTags)
+                yield return "'g.tags.saved': tagsSaved";
         }
 
         IEnumerable<String> options()
@@ -50,6 +52,27 @@ internal partial class ScriptBuilder
                         found.$merge(doc).$select();
                 }
                 """;
+            }
+            if (Table.HasTags)
+            {
+                var tags = Constants.FieldNames.Tags;
+                yield return $$"""
+                    function tagsSaved(root) {
+                    	if (root.Params.For !== '{{Table.Model}}') return;
+
+                    	let tags = root.{{tags}};
+                    	this.{{tags}}.$copy(tags);
+
+                    	let ag = this.{{Table.CollectionName}};
+                    	ag.forEach(ag => {
+                    		ag.{{tags}}.forEach(at => {
+                    			let nt = tags.find(tg => tg.Id == at.Id);
+                    			if (nt) at.$merge(nt);
+                    		});
+                    	});
+                    }
+                    
+                    """;
             }
         }
 

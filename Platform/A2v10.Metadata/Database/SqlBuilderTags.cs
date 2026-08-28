@@ -39,6 +39,8 @@ internal class SqlBuilderTags(IServiceProvider serviceProvider, AppPlatformId _p
         from {TableMetadataDefaults.TagsTableName()} t
         where t.[For] = @{Constants.FieldNames.For}
         order by t.[Id];
+
+        select [Params!TParam!Object] = null, [For] = N'{tagsFor}';
         """;
 
     public Task<IDataModel> LoadTagsModel(String? dataSource, String tagsFor)

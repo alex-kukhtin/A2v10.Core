@@ -29,8 +29,21 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
     protected Boolean IsDialog => descriptor.PlatformUrl.Kind == UrlKind.Dialog;
     protected String Action => descriptor.PlatformUrl.Action.ToLowerInvariant();
 
+    // off the interface now - both are this class's own business, and nobody outside asked
     public NormalEndpointMetadata Endpoint => descriptor.Endpoint;
     public TableMetadata Table => descriptor.Endpoint.Storage;
+    public String Path => descriptor.Endpoint.Path;
+
+    /* The load/render split that used to live in AppMetadataBuilder. It belongs here: it is the
+     * shape of THIS builder's work, and the caller has no business knowing there are two halves.
+     */
+    public async Task<IAppRuntimeResult> RenderAsync(IModelView view, Boolean isReload)
+    {
+        var dm = await LoadModelAsync();
+        if (isReload)
+            return new AppRuntimeResult(dm, null);
+        return new AppRuntimeResult(dm, await RenderPageAsync(view, dm));
+    }
 
     public Task<IDataModel> LoadLazyModelAsync()
     {

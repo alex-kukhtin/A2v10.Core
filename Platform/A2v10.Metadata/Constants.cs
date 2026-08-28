@@ -72,7 +72,7 @@ internal static class Constants
          * namespaces on purpose - inside catalog/ or document/ they would be shadowed by, or
          * confused with, an application endpoint of the same name.
          */
-        public const String Operations = "operations";
+        public const String Operation = "operation";
         public const String Tag = "tag";
     }
 }

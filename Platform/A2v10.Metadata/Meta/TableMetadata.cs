@@ -97,11 +97,15 @@ public record TableColumn
     /* A reference points at an ENDPOINT that must resolve to one of our tables: the address
      * comes from the endpoint, the type and column names from its table. Neither is derivable
      * from the other, which is why the resolved link is the container and not the table.
+     *
+     * IRefTarget and not NormalEndpointMetadata, because a shape can also be served by an
+     * endpoint the platform implements itself - see CLAUDE.md, "System endpoints". Every reader
+     * asks for exactly the two things the interface carries, so widening it moved no call site.
      */
     [JsonIgnore]
-    public NormalEndpointMetadata? RefTable { get; set; }
+    public IRefTarget? RefTable { get; set; }
     [JsonIgnore]
-    public NormalEndpointMetadata RefTableCheck => RefTable ?? throw new InvalidOperationException($"RefTable for '{Name}' is null");
+    public IRefTarget RefTableCheck => RefTable ?? throw new InvalidOperationException($"RefTable for '{Name}' is null");
 
     [JsonIgnore] 
     internal Boolean IsRef => Type == ColumnType.Ref || Type == ColumnType.Owner || 

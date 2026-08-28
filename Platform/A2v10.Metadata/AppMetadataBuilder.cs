@@ -9,7 +9,12 @@ using A2v10.Infrastructure;
 
 namespace A2v10.Metadata;
 
-internal class AppMetadataBuilder(IServiceProvider _serviceProvider,
+/* Eight entry points, one shape each: get the builder, ask it. The factory decides what kind of
+ * builder that is, and the builder decides whether it serves the question - so nothing here knows
+ * the kinds of endpoint, and nothing here constructs a builder. Which is why the service provider
+ * is gone from this class: it was only ever here to 'new' three of them.
+ */
+internal class AppMetadataBuilder(
     DatabaseMetadataProvider _metadataProvider,
     IModelBuilderFactory _modelBuilderFactory,
     IAppVersion _appVersion) : IAppRuntimeBuilder
@@ -38,35 +43,13 @@ internal class AppMetadataBuilder(IServiceProvider _serviceProvider,
     {
         await _metadataProvider.CheckDeployAsync(view.DataSource);
 
-        /* The one place the kind of endpoint is dispatched on, and it is the type that says it -
-         * no string travels from the builder to here and back to name what this is.
-         */
-        var platformId = await _metadataProvider.GetPlatformIdAsync(view.DataSource);
-        var endpoint = await _metadataProvider.GetEndpointAsync(
-            view.Meta ?? throw new InvalidOperationException("Meta is null"), view.DataSource);
-        if (endpoint is ReportEndpointMetadata report)
-            return await new ReportEndpointBuilder(_serviceProvider, report, platformId).RenderAsync(platformUrl, view, isReload);
-        else if (endpoint is TagEndpointMetadata)
-            return await new TagEndpointBuilder(_serviceProvider, platformId).RenderAsync(platformUrl, view, isReload);
-
         var iBuilder = await _modelBuilderFactory.BuildAsync(platformUrl, view);
-
-        var dm = await iBuilder.LoadModelAsync();
-
-        if (isReload)
-            return new AppRuntimeResult(dm, null);
-        var page = await iBuilder.RenderPageAsync(view, dm);
-        return new AppRuntimeResult(dm, page);
+        return await iBuilder.RenderAsync(view, isReload);
     }
 
     public async Task<ExpandoObject> SaveAsync(IPlatformUrl platformUrl, IModelView view, ExpandoObject data, ExpandoObject savePrms)
     {
         await _metadataProvider.CheckDeployAsync(view.DataSource);
-        var platformId = await _metadataProvider.GetPlatformIdAsync(view.DataSource);
-        var endpoint = await _metadataProvider.GetEndpointAsync(
-            view.Meta ?? throw new InvalidOperationException("Meta is null"), view.DataSource);
-        if (endpoint is TagEndpointMetadata)
-            return await new TagEndpointBuilder(_serviceProvider, platformId).SaveModelAsync(platformUrl, view.DataSource, data, savePrms);
         var iBuilder = await _modelBuilderFactory.BuildAsync(platformUrl, view);
         return await iBuilder.SaveModelAsync(data, savePrms);
     }

@@ -20,6 +20,7 @@ internal class XamlTagsBuilder
                 Width = Length.FromString("100%"),
                 CellSpacing = CellSpacingMode.Medium,
                 StickyHeaders = true,
+                Columns = TableColumnCollection.FromString("15rem,4rem,Auto,2px"),
                 Bindings = b => b.SetBinding(nameof(Table.ItemsSource), new Bind(Constants.FieldNames.Tags)),
                 Rows = [
                     new TableRow()
@@ -50,18 +51,29 @@ internal class XamlTagsBuilder
                             }
                         ]
                     }
+                ],
+                Header = [
+                    new TableRow() 
+                    {
+                        Cells = [
+                            new TableCell() { Content = "@[Tag]" },
+                            new TableCell() { Content = "@[Color]" },
+                            new TableCell() { Content = "@[Memo]" },
+                            new TableCell()
+                        ]
+                    }
                 ]
             };
 
         return new Dialog()
         {
             Title = "@[Tags]",
-            Width = Length.FromString("45rem"),
+            Width = Length.FromString("40rem"),
             Buttons = [
                 new Button() {
                     Content = "@[SaveAndClose]",
                     Style = ButtonStyle.Primary,
-                    Bindings = b => b.SetBinding(nameof(Button.Command), new BindCmd(CommandType.SaveAndClose))
+                    Bindings = b => b.SetBinding(nameof(Button.Command), new BindCmd(CommandType.SaveAndClose) { ValidRequired = true})
                 },
                 new Button() {
                     Content = "@[Cancel]",
@@ -71,6 +83,7 @@ internal class XamlTagsBuilder
             Children = [
                 new Grid(_xamlServiceProvider) {
                     Rows = RowDefinitions.FromString("Auto,Auto"),
+                    Padding = Thickness.FromString("1rem,.25rem,1rem,1rem"),
                     Children = [
                         new Toolbar(_xamlServiceProvider) 
                         {

@@ -27,6 +27,12 @@ internal partial class ScriptBuilder
                 yield return $$"""'{{Table.TypeName}}.{{d.TabStateName}}': {type: String, value: '{{d.FirstTabName}}'}""";
         }
 
+        IEnumerable<String> events()
+        {
+            if (Table.HasTags)
+                yield return """'g.tags.saved': tagsSaved""";
+        }
+
         IEnumerable<String> validators()
         {
             var required = Endpoint.Declaration.Rules.Required.ToHashSet();
@@ -60,6 +66,22 @@ internal partial class ScriptBuilder
                 }
                 """;
             }
+
+            if (Table.HasTags)
+            {
+                var tags = Constants.FieldNames.Tags;
+                yield return $$"""
+                function tagsSaved(root) {
+                	if (root.Params.For !== '{{Table.Model}}') return;
+                	let tags = root.{{tags}};
+                	this.Tags.$copy(tags);
+                	this.{{Table.Model}}.{{tags}}.forEach(lt => {
+                		let nt = tags.find(t => t.Id == lt.Id);
+                		if (nt) lt.$merge(nt);
+                	});
+                }
+                """;
+            }
         }
 
         IEnumerable<String> types()
@@ -78,6 +100,9 @@ internal partial class ScriptBuilder
             validators: {
                 {{String.Join(jsDivider, validators())}}
             },
+            events: {
+                {{String.Join(jsDivider, events())}}
+            }
         };
 
         {{TemplateExport}}

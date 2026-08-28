@@ -1,6 +1,7 @@
 ﻿// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+using System.Data;
 
 namespace A2v10.Metadata;
 
@@ -48,6 +49,32 @@ internal sealed record AppPlatformId(Type ClrType)
         Type t when t == typeof(Guid) => "uniqueidentifier",
         _ => throw new InvalidOperationException($"AppPlatformId. Unsupported CLR type '{ClrType}'")
     };
+
+    // the third projection of the same three, for a parameter that must be declared, not inferred
+    public SqlDbType SqlDbType => ClrType switch
+    {
+        Type t when t == typeof(Int64) => SqlDbType.BigInt,
+        Type t when t == typeof(Int32) => SqlDbType.Int,
+        Type t when t == typeof(Guid) => SqlDbType.UniqueIdentifier,
+        _ => throw new InvalidOperationException($"AppPlatformId. Unsupported CLR type '{ClrType}'")
+    };
+
+    /* An id as it arrives from a query string. Unparseable is null and not an error: the caller is
+     * a filter, and 'this is not an id' means the filter is not set - the same answer an absent
+     * key gives. A malformed id that threw here would take the whole page down instead.
+     */
+    public Object? ParseId(String? value)
+    {
+        if (String.IsNullOrEmpty(value))
+            return null;
+        return ClrType switch
+        {
+            Type t when t == typeof(Int64) => Int64.TryParse(value, out var i64) ? i64 : null,
+            Type t when t == typeof(Int32) => Int32.TryParse(value, out var i32) ? i32 : null,
+            Type t when t == typeof(Guid) => Guid.TryParse(value, out var g) ? g : null,
+            _ => throw new InvalidOperationException($"AppPlatformId. Unsupported CLR type '{ClrType}'")
+        };
+    }
 
     /* An identifier that references nothing. Recognised by shape rather than compared
      * against one stored empty value: what arrives here has been through an ExpandoObject

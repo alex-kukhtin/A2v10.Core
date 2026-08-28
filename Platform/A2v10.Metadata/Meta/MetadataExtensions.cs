@@ -40,7 +40,6 @@ internal static class MetadataExtensions
             Constants.SchemaNames.Document => "doc",
             Constants.SchemaNames.Journal => "jrn",
             Constants.SchemaNames.Report => "rep",
-            Constants.SchemaNames.Operations => "op",
             "account" => "acc",
             "inforegister" => "regi",
             _ => folder

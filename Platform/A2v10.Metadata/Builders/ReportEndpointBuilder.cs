@@ -13,11 +13,14 @@ namespace A2v10.Metadata;
 /* A report never goes through BaseModelBuilder: it has no table of its own to load, save or
  * render, and everything it needs is in its own container.
  */
-internal class ReportEndpointBuilder(IServiceProvider _serviceProvider, ReportEndpointMetadata _endpoint, AppPlatformId _platformId) : IMetaEndpointBuilder
+internal class ReportEndpointBuilder(IServiceProvider _serviceProvider, ReportEndpointMetadata _endpoint,
+    IPlatformUrl platformUrl, AppPlatformId _platformId) : IModelBuilder
 {
     private readonly DynamicRenderer _dynamicRenderer = new(_serviceProvider);
 
-    public async Task<IAppRuntimeResult> RenderAsync(IPlatformUrl platformUrl, IModelView view, bool isReload)
+    public String Path => _endpoint.Path;
+
+    public async Task<IAppRuntimeResult> RenderAsync(IModelView view, Boolean isReload)
     {
         var _source = _endpoint.Surface;
         var _report = _endpoint.Report;
