@@ -3,8 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using DocumentFormat.OpenXml.Bibliography;
-using DocumentFormat.OpenXml.Vml;
 
 namespace A2v10.Metadata;
 
@@ -62,11 +60,25 @@ public sealed record ReportEndpointMetadata : EndpointMetadata
 
     private TableColumn FindSurfaceColumn(String columnName)
     {
-        var column = Surface.Columns.FirstOrDefault(c => c.Name == columnName);
-        if (column is null)
+        return Surface.Columns.FirstOrDefault(c => c.Name == columnName) ??
             throw new InvalidOperationException($"Report '{Path}' refers to unknown column '{columnName}'");
-        return column;
     }
     internal IEnumerable<TableColumn> Filters() => Report.Filters.Select(FindSurfaceColumn);
     internal IEnumerable<TableColumn> Groups() => Report.Groups.Select(FindSurfaceColumn);
+}
+
+
+/* A system endpoint: behaviour in code, no shape, no declaration and no forms. Which is why it is
+ * a type and not a kind - the dispatch in AppMetadataBuilder asks what it IS, and nothing has to
+ * read a string to find out.
+ *
+ * Its address is written here once. The control that opens the dialog and the builder that serves
+ * it both read it from this type, so the two cannot drift apart.
+ */
+public sealed record TagEndpointMetadata : EndpointMetadata
+{
+    internal const String SettingsAction = "settings";
+
+    internal static String SettingsUrl(String forEntity) =>
+        $"/{Constants.SchemaNames.Tag}/{SettingsAction}?{Constants.FieldNames.For}={forEntity}";
 }

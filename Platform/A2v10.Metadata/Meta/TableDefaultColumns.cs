@@ -60,14 +60,14 @@ internal static class TableDefaultColumns
     {
         yield return new TableColumn(Constants.FieldNames.Id, ColumnType.Operation);
         yield return new TableColumn(Constants.FieldNames.Name, ColumnType.Name);
-        yield return new TableColumn(Constants.FieldNames.Name, ColumnType.Memo);
+        yield return new TableColumn(Constants.FieldNames.Memo, ColumnType.Memo);
     }
 
     static IEnumerable<TableColumn> FolderDefaultColumns(TableMetadata table)
     {
         yield return new TableColumn(Constants.FieldNames.Id, ColumnType.Id);
         yield return new TableColumn(Constants.FieldNames.Name, ColumnType.Name);
-        yield return new TableColumn(Constants.FieldNames.Name, ColumnType.Memo);
+        yield return new TableColumn(Constants.FieldNames.Memo, ColumnType.Memo);
     }
 
     static IEnumerable<TableColumn> TagsDefaultColumns(TableMetadata table)
@@ -76,6 +76,7 @@ internal static class TableDefaultColumns
         yield return new TableColumn(Constants.FieldNames.For, ColumnType.RowKind);
         yield return new TableColumn(Constants.FieldNames.Name, ColumnType.Name);
         yield return new TableColumn(Constants.FieldNames.Color, ColumnType.Color);
+        yield return new TableColumn(Constants.FieldNames.Memo, ColumnType.Memo);
     }
 
     static IEnumerable<TableColumn> TagsEntriesDefaultColumns(TableMetadata table)

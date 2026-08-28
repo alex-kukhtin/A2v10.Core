@@ -52,15 +52,16 @@ internal partial class SqlBuilder
          */
         String tagsRecordsets() => $"""
             -- tags
-            select [!TTag!Array] = null, [Id!!Id] = t.Id, [Name!!Name] = t.[Name], [Color] = t.[Color],
-              [!{Table.TypeName}.{Constants.FieldNames.Tags}!ParentId] = e.[Owner]
-            from {Table.SqlSchema}.[{Table.Model}$TagEntries] e
-              inner join cat.[$Tags] t on t.[Id] = e.[Tag]
+            select [!{TableMetadataDefaults.TagsTypeName()}!Array] = null, [Id!!Id] = t.Id,
+                [Name!!Name] = t.[Name], t.[Color], t.[Memo],
+                [!{Table.TypeName}.{Constants.FieldNames.Tags}!ParentId] = e.[Owner]
+            from {TableMetadataDefaults.TagEntriesTableName(Table.Model)} e
+                inner join {TableMetadataDefaults.TagsTableName()} t on t.[Id] = e.[Tag]
             where e.[Owner] = @Id and t.[For] = N'{Table.Model}';
 
-            select [{Constants.FieldNames.Tags}!TTag!Array] = null, [Id!!Id] = t.Id,
-              [Name!!Name] = t.[Name], [Color] = t.[Color]
-            from cat.[$Tags] t where t.[For] = N'{Table.Model}'
+            select [{Constants.FieldNames.Tags}!{TableMetadataDefaults.TagsTypeName()}!Array] = null,
+                [Id!!Id] = t.Id, [Name!!Name] = t.[Name], t.[Color], t.[Memo]
+            from {TableMetadataDefaults.TagsTableName()} t where t.[For] = N'{Table.Model}'
             order by t.[Id];
             """;
 
@@ -132,7 +133,8 @@ internal partial class SqlBuilder
         // slots the object carries beyond its own columns: one per collection, and the tags array
         List<String> arraySlots = [.. Table.Details.Select(mainDetailsFields)];
         if (Table.HasTags)
-            arraySlots.Add($"[{Constants.FieldNames.Tags}!TTag!Array] = null");
+            arraySlots.Add(
+                $"[{Constants.FieldNames.Tags}!{TableMetadataDefaults.TagsTypeName()}!Array] = null");
 
         if (arraySlots.Count > 0)
         {
@@ -339,7 +341,7 @@ internal partial class SqlBuilder
                 return String.Empty;
             return $"""
             -- merge tags
-            merge {Table.SqlSchema}.[{Table.Model}$TagEntries] as t
+            merge {TableMetadataDefaults.TagEntriesTableName(Table.Model)} as t
             using @{Constants.FieldNames.Tags} as s
             on t.[Owner] = @Id and t.[Tag] = s.[Id]
             when not matched then insert ([Owner], [Tag]) values (@Id, s.[Id])

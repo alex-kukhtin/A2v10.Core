@@ -279,6 +279,13 @@ internal partial class XamlBuilder
             {
                 b.SetBinding(nameof(TagsControl.Value), new Bind($"{Table.Model}.{member.Name}"));
                 b.SetBinding(nameof(TagsControl.ItemsSource), new Bind(member.Name));
+                var cmd = new BindCmd()
+                {
+                    Command = CommandType.Dialog,
+                    Action = DialogAction.Show,
+                    Url = TagEndpointMetadata.SettingsUrl(Table.Model)
+                };
+                b.SetBinding(nameof(TagsControl.SettingsCommand), cmd);
             }
         },
         _ => throw new InvalidOperationException($"Invalid member kind '{member.Kind}'")

@@ -155,6 +155,12 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
                 strBuilder.AppendLine("go");
             }
         }
+        if (tables.Any(t => t.HasTags))
+        {
+            var tagsTable = TableMetadataDefaults.TagsTable();
+            strBuilder.AppendLine(CliDatabaseCreator.CreateTableType(tagsTable));
+            strBuilder.AppendLine("go");
+        }
         return strBuilder.ToString();
     }
 

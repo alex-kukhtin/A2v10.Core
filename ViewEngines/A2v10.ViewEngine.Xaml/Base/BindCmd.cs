@@ -1,7 +1,6 @@
-﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
-using System.IO;
 using System.Text;
 
 using A2v10.Infrastructure;
@@ -143,7 +142,11 @@ public class BindCmd : BindBase
 
 	public BindCmd()
 	{
+	}
 
+	public BindCmd(CommandType cmdType)
+	{
+		Command = cmdType;
 	}
 	public BindCmd(String command)
 	{
@@ -722,7 +725,7 @@ public class BindCmd : BindBase
 		else if (!String.IsNullOrEmpty(Url))
             sw.Append($", Url='{Url}'");
 		AddXtraMarkup(sw);
-        sw.Append("}");
+        sw.Append('}');
 		return sw.ToString();
 	}
 }

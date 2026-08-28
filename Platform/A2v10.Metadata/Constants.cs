@@ -73,6 +73,6 @@ internal static class Constants
          * confused with, an application endpoint of the same name.
          */
         public const String Operations = "operations";
-        public const String Tags = "tag";
+        public const String Tag = "tag";
     }
 }

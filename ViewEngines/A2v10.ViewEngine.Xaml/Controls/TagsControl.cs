@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
 
 
 namespace A2v10.Xaml;
@@ -13,8 +13,9 @@ public class TagsControl : ValuedControl, ITableControl
 	public String? ColorProperty { get; set; }
 
 	public String? SettingsText { get; set; }
+    public Command? SettingsCommand { get; set; }
 
-	public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
+    public override void RenderElement(RenderContext context, Action<TagBuilder>? onRender = null)
 	{
 		if (CheckDisabledModel(context))
 			return;
@@ -26,7 +27,14 @@ public class TagsControl : ValuedControl, ITableControl
 		if (!String.IsNullOrEmpty(SettingsDelegate))
 			input.MergeAttribute(":settings-func", $"$delegate('{SettingsDelegate}')");
 
-		var isBind = GetBinding(nameof(ItemsSource));
+		var cmdBind = GetBindingCommand(nameof(SettingsCommand));
+		if (cmdBind != null)
+		{
+            // Function!
+            input.MergeAttribute(":settings-command", "() => " + cmdBind.GetCommand(context));
+        }
+
+        var isBind = GetBinding(nameof(ItemsSource));
 		if (isBind != null)
 			input.MergeAttribute(":items-source", isBind.GetPath(context));
 

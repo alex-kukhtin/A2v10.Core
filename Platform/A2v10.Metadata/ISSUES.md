@@ -174,14 +174,7 @@ happens to be enumerated». Остальные три куска идут `forea
   `ScriptBuilder.cs`). Разойдутся — не разобьётся ничего, и в SQL Server уедет один батч со
   словом `go` внутри.
 
-### 2.9. Дубль `Name` доезжает до MERGE
-
-`TableDefaultColumns.cs:62-63`, `:69-70` — сам дефект уже отмечен в TESTS.md §6.
-
-Здесь — куда он приезжает: в seed это две строки с одинаковым `(schema, table, column)`, то
-есть прямо в источник `merge a2meta.Columns ... using @columns`.
-
-### 2.10. Сиквенс и таблица создаются под двумя независимыми `if not exists`
+### 2.9. Сиквенс и таблица создаются под двумя независимыми `if not exists`
 
 `CliDatabaseCreator.CreateTable` (`:33-39`, `:47`): `create sequence` защищён проверкой
 `INFORMATION_SCHEMA.SEQUENCES`, `create table` — проверкой `INFORMATION_SCHEMA.TABLES`.

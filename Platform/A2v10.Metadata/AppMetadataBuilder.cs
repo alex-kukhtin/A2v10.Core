@@ -41,10 +41,13 @@ internal class AppMetadataBuilder(IServiceProvider _serviceProvider,
         /* The one place the kind of endpoint is dispatched on, and it is the type that says it -
          * no string travels from the builder to here and back to name what this is.
          */
+        var platformId = await _metadataProvider.GetPlatformIdAsync(view.DataSource);
         var endpoint = await _metadataProvider.GetEndpointAsync(
             view.Meta ?? throw new InvalidOperationException("Meta is null"), view.DataSource);
         if (endpoint is ReportEndpointMetadata report)
-            return await new ReportEndpointBuilder(_serviceProvider, report, await _metadataProvider.GetPlatformIdAsync(view.DataSource)).RenderAsync(platformUrl, view, isReload);
+            return await new ReportEndpointBuilder(_serviceProvider, report, platformId).RenderAsync(platformUrl, view, isReload);
+        else if (endpoint is TagEndpointMetadata)
+            return await new TagEndpointBuilder(_serviceProvider, platformId).RenderAsync(platformUrl, view, isReload);
 
         var iBuilder = await _modelBuilderFactory.BuildAsync(platformUrl, view);
 
@@ -59,6 +62,11 @@ internal class AppMetadataBuilder(IServiceProvider _serviceProvider,
     public async Task<ExpandoObject> SaveAsync(IPlatformUrl platformUrl, IModelView view, ExpandoObject data, ExpandoObject savePrms)
     {
         await _metadataProvider.CheckDeployAsync(view.DataSource);
+        var platformId = await _metadataProvider.GetPlatformIdAsync(view.DataSource);
+        var endpoint = await _metadataProvider.GetEndpointAsync(
+            view.Meta ?? throw new InvalidOperationException("Meta is null"), view.DataSource);
+        if (endpoint is TagEndpointMetadata)
+            return await new TagEndpointBuilder(_serviceProvider, platformId).SaveModelAsync(platformUrl, view.DataSource, data, savePrms);
         var iBuilder = await _modelBuilderFactory.BuildAsync(platformUrl, view);
         return await iBuilder.SaveModelAsync(data, savePrms);
     }

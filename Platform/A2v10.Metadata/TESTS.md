@@ -211,7 +211,7 @@ switch — обязательство тотальности, и проверя�
 
 | Что | Где | Ловит |
 |---|---|---|
-| `OperationDefaultColumns` и `FolderDefaultColumns` возвращают `Name` дважды — второй раз с типом `Memo`, но с именем `Name` | `TableDefaultColumns.cs:62-63`, `:69-70` | A |
+| `OperationDefaultColumns` и `FolderDefaultColumns` возвращают `Name` дважды — второй раз с типом `Memo`, но с именем `Name` | `TableDefaultColumns.cs:62-63`, `:69-70` | A — **починено 2026-08** |
 | `ToSqlDbTypeInfo` не покрывает `ColumnType.IsFolder` и `ColumnType.Number` → `InvalidOperationException`. Оба не случайны: `IsFolder` числится в `HasDefaultBit`, то есть остальной код уже считает его bit-колонкой; `Number` объявлен в enum как половина нейтрального яруса | `SqlExtensions.cs:82` | A |
 | `Enumerable.Range(first.Length + 1, ...).Select(i => first[i])` при валидных индексах `0..first.Length-1` → `IndexOutOfRange`, как только деталь ссылается на одну цель бо́льшим числом колонок, чем шапка | `RefMapBuilder.cs:87` | D |
 | Ветка `ColumnType.Parent` недостижима: цикл идёт по `Columns.Where(c => c.IsRef)`, а `Parent` в `IsRef` не входит | `DatabaseMetadataProvider.cs:540` | C (после 4.1) |

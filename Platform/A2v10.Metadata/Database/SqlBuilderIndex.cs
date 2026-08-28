@@ -102,7 +102,7 @@ internal partial class SqlBuilder
             if (!String.IsNullOrEmpty(tags))
                 sb.AppendLine($$"""
                  and exists(select 1 from @ftags f
-                    inner join {{Table.SqlSchema}}.[{{Table.Model}}$TagEntries] ta
+                    inner join {{TableMetadataDefaults.TagEntriesTableName(Table.Model)}} ta
                         on ta.[Owner] = a.Id and ta.[Tag] = f.Id)
                 """);
 
@@ -153,7 +153,8 @@ internal partial class SqlBuilder
                 sb.AppendLine();
                 sb.AppendLine("declare @ftags table(Id platformid);");
                 sb.AppendLine("insert into @ftags(Id) select try_cast([value] as "
-                    + $"{_descr.PlatformId.SqlTypeName}) from string_split(@Tags, N'-');");
+                    + $"{_descr.PlatformId.SqlTypeName}) "
+                    + $"from string_split(@{Constants.FilterNames.Tags}, N'-');");
             }
 
             // STEP 2: create temp table
@@ -228,20 +229,26 @@ internal partial class SqlBuilder
                 }
             });
 
+            /* Two recordsets, one word, two namespaces: the first is the row's own tags and hangs
+             * off the element as a MEMBER, the second is the candidate list the filter picks from.
+             * Hence the two constants - see CLAUDE.md, "Members" and "Filters".
+             */
             if (Table.HasTags)
             {
-                // tags - for elements
                 sb.AppendLine($"""
-                select [!TTag!Array] = null, [Id!!Id] = t.Id, [Name!!Name] = t.[Name], [Color] = t.[Color],
-                    [!{Table.TypeName}.Tags!ParentId] = m.[Id]
-                from @map m 
-                    inner join {Table.SqlSchema}.[{Table.Model}$TagEntries] e on e.[Owner] = m.[Id]
-                    inner join cat.[$Tags] t on t.[Id] = e.[Tag]
+                -- tags - for elements
+                select [!{TableMetadataDefaults.TagsTypeName()}!Array] = null, [Id!!Id] = t.Id,
+                    [Name!!Name] = t.[Name], t.[Color], t.[Memo],
+                    [!{Table.TypeName}.{Constants.FieldNames.Tags}!ParentId] = m.[Id]
+                from @map m
+                    inner join {TableMetadataDefaults.TagEntriesTableName(Table.Model)} e on e.[Owner] = m.[Id]
+                    inner join {TableMetadataDefaults.TagsTableName()} t on t.[Id] = e.[Tag]
                 where t.[For] = N'{Table.Model}';
 
-                -- for filter
-                select [Tags!TTag!Array] = null, [Id!!Id] = t.Id, [Name!!Name] = t.[Name], [Color] = t.[Color]
-                from cat.[$Tags] t where t.[For] = N'{Table.Model}'
+                -- tags - for filter
+                select [{Constants.FilterNames.Tags}!{TableMetadataDefaults.TagsTypeName()}!Array] = null,
+                    [Id!!Id] = t.Id, [Name!!Name] = t.[Name], t.[Color], t.[Memo]
+                from {TableMetadataDefaults.TagsTableName()} t where t.[For] = N'{Table.Model}'
                 order by t.[Id];
                 """);
             }
@@ -264,7 +271,8 @@ internal partial class SqlBuilder
             }
             // always, not only when picked: the Filter has to come back the way every other one does
             if (Table.HasTags)
-                sb.Append($", [!{collectionName}.{Constants.FilterNames.Tags}!Filter] = @Tags");
+                sb.Append($", [!{collectionName}.{Constants.FilterNames.Tags}!Filter] "
+                    + $"= @{Constants.FilterNames.Tags}");
             if (refs.Count > 0) {
                 sb.Append(", ");
                 sb.Append(String.Join(", ", refs.Select(rt => $"[!{collectionName}.{rt.Column.Name}.{rt.Table.RefTypeName}.RefId!Filter] = @{rt.Column.Name}")));
@@ -275,8 +283,9 @@ internal partial class SqlBuilder
 
         IEnumerable <String> XtraIndexColumns()
         {
+            // the row's own tags, so the MEMBER name - the filter's candidate list is a root array
             if (Table.HasTags)
-                yield return "[Tags!TTag!Array] = null";
+                yield return $"[{Constants.FieldNames.Tags}!{TableMetadataDefaults.TagsTypeName()}!Array] = null";
         }
 
         IEnumerable<String> indexSqlFields(String alias)
@@ -303,7 +312,7 @@ internal partial class SqlBuilder
             .AddString("@Dir", dir)
             .AddString("@Fragment", fragment);
             if (Table.HasTags)
-                dbprms.AddString("@Tags", tags);
+                dbprms.AddString($"@{Constants.FilterNames.Tags}", tags);
             var docOp = Endpoint.DocumentOperation();
             if (docOp != null)
                 dbprms.AddString("@RouteOperation", docOp);

@@ -190,6 +190,23 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return _metadataCache.GetOrAddStorageAsync(dataSource, schema, table, LoadStorageAsync);
     }
 
+    /* Endpoints the platform serves itself - no file to read, no shape to build. The kind is set
+     * literally and not through EndpointKindOf: that one answers 'what did the FOLDER declare',
+     * and a folder declares nothing here. Teaching it this namespace would also make
+     * DeclaresShapeSource demand a 'table' key from an endpoint that has no file to put it in.
+     */
+    private static EndpointMetadata? GetInternalEndpoint(String schema, String table)
+         => schema switch
+         {
+             Constants.SchemaNames.Tag => new TagEndpointMetadata()
+             {
+                 Kind = EndpointKind.Tags,
+                 Schema = schema,
+                 Name = table
+             },
+             _ => null
+         };
+
     /* The endpoint is built here, once, before it is published to the cache: the table it works
      * on is the same instance for every endpoint that points at it, and its declaration is what
      * that table declares with this file's own declaration on top.
@@ -200,6 +217,10 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
      */
     private async Task<EndpointMetadata> LoadEndpointAsync(EndpointLoad load, String? dataSource, String schema, String table)
     {
+        var internalEndpoint = GetInternalEndpoint(schema, table);
+        if (internalEndpoint != null)
+            return internalEndpoint;
+
         var (text, hash) = await ReadMetadataFileAsync(schema, table);
         var declaration = JsonConvert.DeserializeObject<DeclarationMetadata>(text, JsonSettings.CamelCaseSerializerSettings)
             ?? throw new InvalidOperationException($"{MetadataFileName(schema, table)}: DeclarationMetadata deserialization fails");
@@ -237,29 +258,30 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         /* The only place that decides which kind of endpoint this is. The discriminator is the
          * folder, not a key in the file: a file cannot lie about what it is.
          */
-        if (schema == Constants.SchemaNames.Report)
-            return new ReportEndpointMetadata()
-            {
-                Kind = EndpointKindOf(schema),
-                Schema = schema,
-                Name = table,
-                // the shape a report reads, resolved from 'surface'. It owns none of it
-                Surface = storage,
-                Report = JsonConvert.DeserializeObject<ReportMetadata>(text, JsonSettings.CamelCaseSerializerSettings)
-                    ?? throw new InvalidOperationException("ReportMetadata deserialization fails"),
-                FileHash = hash
-            };
-
-        return new NormalEndpointMetadata()
+        return schema switch
         {
-            Kind = EndpointKindOf(schema),
-            Schema = schema,
-            Name = table,
-            Storage = storage,
-            // layered first, then read against the shape - both while the endpoint is built,
-            // so what leaves here is finished and nothing has to come back to it
-            Declaration = BakeDeclaration(MergeDeclaration(declaration, storageDeclaration), storage, schema, table),
-            FileHash = hash
+            Constants.SchemaNames.Report => new ReportEndpointMetadata()
+                {
+                    Kind = EndpointKindOf(schema),
+                    Schema = schema,
+                    Name = table,
+                    // the shape a report reads, resolved from 'surface'. It owns none of it
+                    Surface = storage,
+                    Report = JsonConvert.DeserializeObject<ReportMetadata>(text, JsonSettings.CamelCaseSerializerSettings)
+                        ?? throw new InvalidOperationException("ReportMetadata deserialization fails"),
+                    FileHash = hash
+                },
+            _ => new NormalEndpointMetadata()
+                {
+                    Kind = EndpointKindOf(schema),
+                    Schema = schema,
+                    Name = table,
+                    Storage = storage,
+                    // layered first, then read against the shape - both while the endpoint is built,
+                    // so what leaves here is finished and nothing has to come back to it
+                    Declaration = BakeDeclaration(MergeDeclaration(declaration, storageDeclaration), storage, schema, table),
+                    FileHash = hash
+                }
         };
     }
 
@@ -592,7 +614,16 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
      */
     private async Task ResolveReferencesAsync(EndpointLoad load, EndpointMetadata endpoint, String? dataSource)
     {
-        var meta = endpoint switch { NormalEndpointMetadata n => n.Storage, ReportEndpointMetadata r => r.Surface, _ => throw new InvalidOperationException($"Unknown endpoint {endpoint.Path}") };
+        var meta = endpoint switch {
+            NormalEndpointMetadata n => n.Storage,
+            ReportEndpointMetadata r => r.Surface,
+            // no shape, so no references - said by name, so an unknown subtype still fails loudly
+            TagEndpointMetadata => null,
+            _ => throw new InvalidOperationException($"Unknown endpoint {endpoint.Path}")
+        };
+        if (meta == null)
+            return;
+
         static IEnumerable<TableColumn> GetAllReferences(TableMetadata table)
         {
             return table.Columns.Where(c => c.IsRef)

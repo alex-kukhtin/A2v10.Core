@@ -24,7 +24,6 @@ internal static class TableMetadataDefaults
         return (schema, name) switch
         {
             (Constants.SchemaNames.Operations, "") => OperationsTable(),
-            (Constants.SchemaNames.Tags, "") => TagsTable(),
             _ => null
         };
     }
@@ -41,6 +40,10 @@ internal static class TableMetadataDefaults
         };
     }
 
+    /* Not a registry entry either, and for a different reason than the tag entries below: /tag is
+     * served by TagEndpointMetadata, which never builds a storage, so nothing would ever ask the
+     * registry for it. The table itself is alive - the deploy and SqlBuilderTags take it directly.
+     */
     public static TableMetadata TagsTable()
     {
         return new TableMetadata()
@@ -52,8 +55,26 @@ internal static class TableMetadataDefaults
         };
     }
 
+    /* The tags catalog as the generated SQL names it, and the type its rows arrive under. Both come
+     * off TagsTable, so a rename of the model or the schema moves every query with them.
+     */
+    public static String TagsTableName() => TagsTable().SqlTableName;
+    public static String TagsTypeName() => TagsTable().TypeName;
+
+    /* The tag entries table by the owner's MODEL alone, for the one caller that has the name and
+     * not the table - the tags dialog, which is handed 'For' and nothing else. It can be built
+     * from the model because the schema is not the owner's: see CreateTagEntriesTable.
+     */
+    public static String TagEntriesTableName(String forModel) =>
+        $"{Constants.SchemaNames.Catalog.ToSqlSchema()}.[{forModel}$TagEntries]";
+
     /* Not a registry entry: there is one of these per tagged table, so it is parameterized and
      * has no address of its own.
+     *
+     * The schema is CATALOG and not the owner's, whoever the owner is - tag entries of a document
+     * still land in 'cat'. Every reader has to take the name from here for that reason; spelling
+     * it as '{owner.SqlSchema}.[{Model}$TagEntries]' is right for a catalog by accident and wrong
+     * for everyone else.
      */
     public static TableMetadata CreateTagEntriesTable(TableMetadata table)
     {
