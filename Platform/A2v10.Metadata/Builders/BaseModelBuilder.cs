@@ -68,6 +68,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
                 ? await _sqlBuilder.LoadIndexTreeModelAsync()
                 : await _sqlBuilder.LoadIndexModelAsync(),
             "edit" or "show" => await _sqlBuilder.LoadPlainModelAsync(),
+            Constants.Trans.Action => await _sqlBuilder.LoadTransModelAsync(),
             "browsefolder" => await _sqlBuilder.LoadBrowseTreeModelAsync(),
             "editfolder" => await _sqlBuilder.LoadEditFolderModelAsync(),
             _ => throw new NotImplementedException($"Load model for {Action}")
@@ -79,6 +80,8 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
         {
             "browse" or "index" or "indexpartial" => await _jsBuilder.CreateIndexTemplate(),
             "edit" => await _jsBuilder.CreateEditTemplate(),
+            // read-only, and the one piece of state it has is a field of its own model
+            Constants.Trans.Action => String.Empty,
             "browsefolder" => String.Empty,
             _ => throw new NotImplementedException($"Create template for {Action}")
         };

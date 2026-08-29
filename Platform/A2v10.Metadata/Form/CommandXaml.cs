@@ -26,7 +26,7 @@ internal partial class XamlBuilder
             EntityCommandType.Reload => new Button()
             {
                 Icon = Icon.Reload,
-                Bindings = b => b.SetBinding(nameof(Button.Command), new BindCmd(nameof(CommandType.Reload)))
+                Bindings = b => b.SetBinding(nameof(Button.Command), new BindCmd(CommandType.Reload))
             },
             EntityCommandType.Search => new SearchBox()
             {
@@ -37,13 +37,13 @@ internal partial class XamlBuilder
             EntityCommandType.Save => new Button()
             {
                 Icon = Icon.SaveOutline,
-                Bindings = b => b.SetBinding(nameof(Button.Command), new BindCmd(nameof(CommandType.Save)))
+                Bindings = b => b.SetBinding(nameof(Button.Command), new BindCmd(CommandType.Save))
             },
             EntityCommandType.SaveAndClose => new Button()
             {
                 Icon = Icon.SaveCloseOutline,
                 Content = "@[SaveAndClose]",
-                Bindings = b => b.SetBinding(nameof(Button.Command), new BindCmd(nameof(CommandType.SaveAndClose)))
+                Bindings = b => b.SetBinding(nameof(Button.Command), new BindCmd(CommandType.SaveAndClose))
             },
             EntityCommandType.Edit => ButtonEditSelected(),
             EntityCommandType.Create => ButtonCreate(),
@@ -84,9 +84,8 @@ internal partial class XamlBuilder
                     Icon = Icon.Apply, 
                     Content = "@[Post]",
                     Bindings = b => {
-                        var cmd = new BindCmd()
+                        var cmd = new BindCmd(CommandType.Execute)
                         {
-                            Command = CommandType.Execute,
                             CommandName = "post",
                             ValidRequired = true,
                             SaveRequired = true,
@@ -103,9 +102,8 @@ internal partial class XamlBuilder
                     Content = "@[UnPost]",
                     Bindings = b => {
                         b.SetBinding(nameof(Button.If), new Bind($"{Table.Model}.Done"));
-                        var cmd = new BindCmd()
+                        var cmd = new BindCmd(CommandType.Execute)
                         {
-                            Command = CommandType.Execute,
                             CommandName = "unPost",
                             Confirm = new Confirm() { Message = "@[Confirm.Document.UnPost]" },
                             CheckReadOnly = false
@@ -114,7 +112,24 @@ internal partial class XamlBuilder
                         b.SetBinding(nameof(Button.Command), cmd);
                     }
             },
-            _ => throw new InvalidOperationException($"Invalid CommandType {cmd}")
+        EntityCommandType.ShowTrans => new Button
+            {
+                Icon = Icon.Apply,
+                Content = "@[Transactions]",
+                Render = RenderMode.Show,
+                Bindings = b =>
+                {
+                    b.SetBinding(nameof(Button.If), new Bind($"{Table.Model}.Done"));
+                    var cmd = new BindCmd(CommandType.Dialog)
+                    {
+                        Action = DialogAction.Show,
+                        Url = $"{Endpoint.Path}/{Constants.Trans.Action}",
+                    };
+                    cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind($"{Table.Model}"));
+                    b.SetBinding(nameof(Button.Command), cmd);
+                }
+        },
+        _ => throw new InvalidOperationException($"Invalid CommandType {cmd}")
 
         };
     }

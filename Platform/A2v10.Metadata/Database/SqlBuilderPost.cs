@@ -218,9 +218,7 @@ internal partial class SqlBuilder
         if (postTable.Post == null || postTable.Post.Count == 0)
             throw new InvalidOperationException($"Endpoint {Endpoint.Path}. Nothing to UnPost");
 
-        var journals = postTable.Post.Select(c => c.JournalTableCheck).DistinctBy(j => j.SqlTableName);
-
-        var deleteFromJournals = journals.Select(j =>
+        var deleteFromJournals = postTable.PostJournals().Select(j =>
             $"delete from {j.SqlTableName} where [{JournalDocumentColumn(j).Name}] = @Id");
 
         var unPostSql = $"""

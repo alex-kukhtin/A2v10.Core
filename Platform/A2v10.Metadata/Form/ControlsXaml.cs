@@ -211,7 +211,7 @@ internal partial class XamlBuilder
                 {
                     b.SetBinding(nameof(DataGrid.ItemsSource), new Bind("Parent.ItemsSource"));
                 },
-                Columns = [.. IndexColumnsXaml(elem.Members, false)]
+                Columns = [.. IndexColumnsXaml(Table, elem.Members)]
             },
             FormElementKind.Pager => new Pager()
             {

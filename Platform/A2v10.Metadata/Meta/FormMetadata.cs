@@ -18,6 +18,7 @@ public enum EntityCommandType
     Print,
     Copy,
     Show,
+    ShowTrans,
     Search,
     Reload,
     Post,

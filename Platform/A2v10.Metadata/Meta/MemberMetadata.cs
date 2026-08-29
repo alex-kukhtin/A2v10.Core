@@ -46,4 +46,23 @@ internal static class MemberMetadata
     // the rows of a collection: columns and nothing else, the discriminator excluded
     public static List<MemberDescriptor> RowMembers(this TableMetadata table) =>
         [.. table.AllColumns(c => c.Type != ColumnType.RowKind).Select(MemberDescriptor.Of)];
+
+    /* A journal's rows seen from the document that posted them: its index columns minus the four
+     * the document FIXES. Every row of the dialog shares one document, one date, one operation, so
+     * those columns carry no information here and the Document one would render as a link back to
+     * the page you are standing on.
+     *
+     * By ColumnType, not by the post mapping. 'Filled from the header' is not the same question:
+     * a journal's Agent comes from the header too, is equally constant for this document, and is
+     * exactly what the dialog is read for.
+     */
+    public static List<MemberDescriptor> TransMembers(this TableMetadata journal)
+    {
+        static Boolean FixedByDocument(TableColumn col) =>
+            col.Type is ColumnType.Document or ColumnType.DocumentType
+                or ColumnType.Date or ColumnType.Operation;
+
+        return [.. journal.AllColumns(c => TableColumnPredicates.IsIndexColumn(c) && !FixedByDocument(c))
+            .Select(MemberDescriptor.Of)];
+    }
 }

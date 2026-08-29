@@ -107,9 +107,13 @@ internal static class DefaultFormBuilder
         };
     }
 
-    public static FormMetadata CreateEditForm(TableMetadata table)
+    /* The declaration and not only the shape: which commands EXIST for this entity is the
+     * endpoint's question, not the table's - a document whose endpoint declares no 'post' has no
+     * Post, no UnPost and nothing to show in the transactions dialog. See CLAUDE.md, "Commands".
+     */
+    public static FormMetadata CreateEditForm(TableMetadata table, DeclarationMetadata declaration)
     {
-        return table.EditWithPage ? CreateEditPage(table) : CreateEditFormDialog(table);
+        return table.EditWithPage ? CreateEditPage(table, declaration) : CreateEditFormDialog(table);
     }
 
     /* Members an edit form carries after its columns - what a trait contributes to the record, in
@@ -165,7 +169,7 @@ internal static class DefaultFormBuilder
         }
     }
 
-    public static FormMetadata CreateEditPage(TableMetadata table)
+    public static FormMetadata CreateEditPage(TableMetadata table, DeclarationMetadata declaration)
     {
         static Int32 GroupNumber(TableColumn c) => c.Type switch {
             ColumnType.Operation => 1,
@@ -182,13 +186,21 @@ internal static class DefaultFormBuilder
 
         IEnumerable<CommandBarItem> Commands()
         {
-            yield return EntityCommandType.SaveAndClose; 
+            yield return EntityCommandType.SaveAndClose;
             yield return EntityCommandType.Save;
             if (table.Traits.Contains(TableTrait.Print))
                 yield return EntityCommandType.Print;
-            yield return CommandBarItem.Separator;
-            yield return EntityCommandType.Post;
-            yield return EntityCommandType.UnPost;
+            /* The whole posting group or none of it - including its leading separator, which
+             * otherwise doubles up with the next one. Removing the button is not the same act as
+             * the entity not having the command: this is the second.
+             */
+            if (declaration.Post is { Count: > 0 })
+            {
+                yield return CommandBarItem.Separator;
+                yield return EntityCommandType.Post;
+                yield return EntityCommandType.UnPost;
+                yield return EntityCommandType.ShowTrans;
+            }
             yield return CommandBarItem.Separator;
             if (table.Traits.Contains(TableTrait.Attachments))
             {

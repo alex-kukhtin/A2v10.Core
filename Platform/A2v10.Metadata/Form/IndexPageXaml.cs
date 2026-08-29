@@ -10,10 +10,15 @@ namespace A2v10.Metadata;
 
 internal partial class XamlBuilder
 {
-    // an index grid shows columns only: the tags of a row are spliced into Name below, not a member
-    IEnumerable<DataGridColumn> IndexColumnsXaml(List<MemberDescriptor> members, Boolean hasChecked) =>
+    /* An index grid shows columns only: the tags of a row are spliced into Name below, not a member.
+     *
+     * The table is a parameter and not 'Table' - the tags splice is a question about the table these
+     * COLUMNS belong to, and the transactions dialog draws the columns of a journal while standing
+     * on a document endpoint. Read off the endpoint it answered for the wrong table.
+     */
+    IEnumerable<DataGridColumn> IndexColumnsXaml(TableMetadata table, List<MemberDescriptor> members) =>
         members.Select(m => m.ColumnCheck).Select(col =>
-            Table.HasTags && col.Type == ColumnType.Name
+            table.HasTags && col.Type == ColumnType.Name
             ? new DataGridColumn()
             {
                 Header = col.Header,
@@ -81,6 +86,8 @@ internal partial class XamlBuilder
             "indexpartial" => CreateIndexPartialPageXaml(Declaration.Form(Constants.FormNames.Index)),
             "browse" => CreateBrowseDialogXaml(Declaration.Form(Constants.FormNames.Browse)),
             "edit" => CreateEditXaml(Declaration.Form(Constants.FormNames.Edit)),
+            // no form: what it shows is derived from 'post' - see TransDialogXaml
+            Constants.Trans.Action => CreateTransDialogXaml(),
             _ => throw new InvalidOperationException($"Invalid action: '{action}'")
         };
     }

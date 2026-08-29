@@ -138,7 +138,8 @@ internal static class DeclarationBake
             { Constants.FormNames.Browse,
                 Build(Constants.FormNames.Browse, DefaultFormBuilder.CreateBrowseForm, MemberMetadata.IndexMembers) },
             { Constants.FormNames.Edit,
-                Build(Constants.FormNames.Edit, DefaultFormBuilder.CreateEditForm, MemberMetadata.EditMembers) }
+                Build(Constants.FormNames.Edit, t => DefaultFormBuilder.CreateEditForm(t, declaration),
+                    MemberMetadata.EditMembers) }
         };
     }
 

@@ -84,6 +84,24 @@ internal static class MetadataExtensions
     internal static IEnumerable<TableColumn> AllColumns(this TableMetadata table, Func<TableColumn, Boolean>? predicate = null) =>
         table.DefaultColumns().Concat(table.Columns).Where(predicate ?? (_ => true));
 
+    /* The names the transactions dialog calls one journal by - its array, its row type, the value
+     * its tab switches on and the key its caption is localized under. All four are the journal's
+     * own NAME, and they are one function because a drift between them is a tab that matches no
+     * case.
+     *
+     * The name is the folder the journal is declared in - the second segment of its address, which
+     * is what the platform's grammar calls a thing and what TableMetadata.SetDefaults itself
+     * PascalCases into the default Model. Neither of the two stored spellings answers this:
+     * 'Model' is a shape and several journals may share one ('Transaction' would name two different
+     * arrays, of two different column sets, in one model); 'Table' is where the rows are stored,
+     * which renames only through a migration and reads as 'jrn.StockJournal', not as the journal.
+     *
+     * Unique because a folder is: PostJournals is distinct by table, and one schema has one 'stock'.
+     */
+    internal static String TransName(this TableMetadata journal) =>
+        journal.Path.Split('/')[^1].ToPascalCase();
+    internal static String TransTypeName(this TableMetadata journal) => $"T{journal.TransName()}";
+
     internal static IEnumerable<RefDescriptor> AllRefs(this IEnumerable<TableColumn> columns) =>
         columns.Where(c => c.IsRef || c.IsOperation).Select((c, ix) => new RefDescriptor(ix + 1, c, (c.RefTable
             ?? throw new InvalidOperationException($"RefTable for {c.Name} is null")).Storage));

@@ -154,6 +154,16 @@ public sealed record DeclarationMetadata
             ? form
             : throw new InvalidOperationException($"The form '{name}' is not built for this endpoint");
 
+    /* The journals this endpoint posts to, once each. Two legs into one journal (in/out, storno)
+     * are two postings and one journal: everything that reads the RESULT of posting - the unpost
+     * delete, the transactions dialog - counts tables, not postings.
+     *
+     * Empty when nothing is declared, which is the same answer as 'this document does not post':
+     * the command bar asks it that way and so does the dialog.
+     */
+    internal IEnumerable<TableMetadata> PostJournals() =>
+        (Post ?? []).Select(p => p.JournalTableCheck).DistinctBy(j => j.SqlTableName);
+
     /* The rules in force for one row set. A kind that says nothing is not an empty layer to
      * visit - it is the collection's rules unchanged.
      */

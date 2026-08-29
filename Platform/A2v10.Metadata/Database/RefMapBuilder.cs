@@ -7,7 +7,11 @@ using System.Text;
 
 namespace A2v10.Metadata;
 
-internal record RefMapItem(TableMetadata SourceTable,
+/* One source of references, and how to reach ITS rows. 'Where' travels with the table because the
+ * two are one answer: a header is found by Id, a collection by Owner, a journal by the document
+ * that posted it - and nothing downstream can derive which from the table alone.
+ */
+internal record RefMapItem(TableMetadata SourceTable, String Where,
        Dictionary<String, TableColumn[]> ByTarget
     );
 internal class RefMapBuilder
@@ -17,8 +21,14 @@ internal class RefMapBuilder
     private readonly Dictionary<String, List<TableColumn>> _inheritStruct;
     private readonly Boolean _isPlain;
     private readonly Boolean _hasDefaults;
-    private readonly DeclarationMetadata _declaration;
-    private readonly NormalEndpointMetadata _endpoint;
+
+    /* The endpoint's own, and null when this map spans SEVERAL tables and therefore belongs to no
+     * single endpoint. The three readers that need them - inherits, initials, the document
+     * operation - all run on the plain path only, which is never that mode.
+     */
+    private readonly DeclarationMetadata? _declaration;
+    private readonly NormalEndpointMetadata? _endpoint;
+
     public RefMapBuilder(NormalEndpointMetadata endpoint, Boolean isPlain, Boolean hasDefaults)
     {
         var table = endpoint.Storage;
@@ -26,10 +36,25 @@ internal class RefMapBuilder
         _endpoint = endpoint;
         _isPlain = isPlain;
         _hasDefaults = hasDefaults;
-        _flat = [.. Flatten(table)];
+        _flat = [.. Flatten(table, "Id = @Id")];
         _tableStruct = BuildTableStructure();
         _inheritStruct = BuildInheritStructure();
     }
+
+    /* The UNION of several tables into one map - which is the same machine, fed a list instead of
+     * a table and its details: '_flat' has always been a list and '_tableStruct' has always been
+     * the union over it. One '@map', one resolve recordset per target, so a catalog three journals
+     * point at is fetched once. See CLAUDE.md, "System endpoints" for why this is not an endpoint.
+     */
+    public RefMapBuilder(IEnumerable<(TableMetadata Table, String Where, IEnumerable<TableColumn> Columns)> sources)
+    {
+        _isPlain = false;
+        _hasDefaults = false;
+        _flat = [.. sources.Select(s => RefsOf(s.Table, s.Where, s.Columns))];
+        _tableStruct = BuildTableStructure();
+        _inheritStruct = [];
+    }
+
     public Boolean IsEmpty => _flat.Count == 0;
 
 
@@ -39,26 +64,33 @@ internal class RefMapBuilder
     private String TargetKey(TableColumn c)
         => $"{c.RefTableCheck.Storage.SqlTableName}|{RealTypeName(c.RefTableCheck.Storage)}";
 
-    private IEnumerable<RefMapItem> Flatten(TableMetadata table)
-    {
-        yield return new RefMapItem(
-            table,
-            table.Columns
+    /* The columns are a parameter, not 'table.Columns': the map exists to resolve what a recordset
+     * SENT, and a caller that emits a subset would otherwise fetch objects for columns nobody
+     * shows - a journal's Document among them, resolved on every row of the very document you are
+     * standing on.
+     */
+    private RefMapItem RefsOf(TableMetadata table, String where, IEnumerable<TableColumn> columns) =>
+        new(table, where,
+            columns
                 .Where(c => c.IsRef)
                 .GroupBy(TargetKey)
                 .ToDictionary(g => g.Key, g => g.ToArray())
         );
 
+    private IEnumerable<RefMapItem> Flatten(TableMetadata table, String where)
+    {
+        yield return RefsOf(table, where, table.Columns);
+
         if (!_isPlain)
             yield break;
         foreach (var detail in table.Details ?? [])
-            foreach (var item in Flatten(detail.Value))
+            foreach (var item in Flatten(detail.Value, $"[{Constants.FieldNames.Owner}] = @Id"))
                 yield return item;
     }
 
     private Dictionary<String, List<TableColumn>> BuildInheritStructure()
     {
-        if (!_isPlain)
+        if (!_isPlain || _declaration == null)
             return [];
 
         /* The other half of InheritDescriptor's asymmetry: 'field' and 'ref' belong to the table
@@ -86,6 +118,14 @@ internal class RefMapBuilder
                       .ToList()
             );
     }
+    /* The slots of '@map' for one target: as many as the WIDEST source needs, named after that
+     * source's own columns. Positional - GenerateInserts writes a source's i-th column into the
+     * i-th slot - so a narrower source simply leaves the tail null.
+     *
+     * Widest and not first: taking the first and then reaching past its end for the missing names
+     * was an index out of range. Unreachable while a header always out-numbered its details;
+     * reachable the moment several tables are unioned, where nothing orders them at all.
+     */
     private Dictionary<String, List<TableColumn>> BuildTableStructure()
     {
         return _flat
@@ -93,16 +133,7 @@ internal class RefMapBuilder
             .GroupBy(kvp => kvp.Key)
             .ToDictionary(
                 g => g.Key,
-                g =>
-                {
-                    var first = g.First().Value.ToArray();
-                    var maxCount = g.Max(x => x.Value.Length);
-                    return first
-                        .Concat(Enumerable
-                            .Range(first.Length + 1, maxCount - first.Length)
-                            .Select(i => first[i]))
-                        .ToList();
-                }
+                g => g.MaxBy(x => x.Value.Length).Value.ToList()
             );
     }
 
@@ -132,16 +163,13 @@ internal class RefMapBuilder
 
             var targetCols = String.Join(", ", mappings.Select(m => m.Target));
             var sourceCols = String.Join(", ", mappings.Select(m => m.Source));
-            var where = item.SourceTable.Kind == EndpointKind.Details
-               ? "[Owner] = @Id"
-               : "Id = @Id";
             if (String.IsNullOrEmpty(targetCols) || String.IsNullOrEmpty(sourceCols))
                 return null;
             return $"""
-            insert into @map({targetCols}) 
-            select {sourceCols} 
+            insert into @map({targetCols})
+            select {sourceCols}
             from {item.SourceTable.SqlTableName}
-            where {where};
+            where {item.Where};
             """;
         });
 
@@ -195,7 +223,7 @@ internal class RefMapBuilder
 
     String? GenerateInitials()
     {
-        if (!_hasDefaults)
+        if (!_hasDefaults || _declaration == null)
             return null;
         if (_declaration.InitialValues.Count == 0)
             return null;
@@ -220,7 +248,7 @@ internal class RefMapBuilder
     
     String? GenerateDocOperations()
     {
-        if (!_hasDefaults) 
+        if (!_hasDefaults || _endpoint == null)
             return null;
         var docOps = _endpoint.DocumentOperation();
         if (docOps == null)
