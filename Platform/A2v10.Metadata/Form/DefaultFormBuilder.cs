@@ -8,7 +8,21 @@ namespace A2v10.Metadata;
 
 internal static class DefaultFormBuilder
 {
-    public static FormMetadata CreateIndexForm(TableMetadata table)
+    /* Print exists when the endpoint declares a blank to print, and it carries its own leading
+     * separator so that it leaves without doubling the next one - the posting group below is the
+     * same shape. Asked identically by both toolbars that have it, which is why it is one function:
+     * a screen may hide the button, but whether the entity has the command is not a per-screen
+     * answer. See CLAUDE.md, "Commands".
+     */
+    static List<CommandBarItem> PrintCommand(DeclarationMetadata declaration) =>
+        declaration.PrintForms.Count > 0
+            ? [CommandBarItem.Separator, EntityCommandType.Print]
+            : [];
+
+    /* The declaration for the same reason the edit form takes one: whether this endpoint prints at
+     * all is answered by its blanks, not by the shape. See CLAUDE.md, "Commands".
+     */
+    public static FormMetadata CreateIndexForm(TableMetadata table, DeclarationMetadata declaration)
     {
         var cols = table.AllColumns(TableColumnPredicates.IsIndexColumn)
             .OrderBy(c => c.IsMemo);
@@ -24,9 +38,9 @@ internal static class DefaultFormBuilder
                     ],
                 EndpointKind.Document =>
                     [
-                        // TODO: print command for traits = Print
                         EntityCommandType.Create, EntityCommandType.Edit, EntityCommandType.Delete,
-                        CommandBarItem.Separator, EntityCommandType.Print, CommandBarItem.Separator, EntityCommandType.Reload,
+                        .. PrintCommand(declaration),
+                        CommandBarItem.Separator, EntityCommandType.Reload,
                         CommandBarItem.Aligner, EntityCommandType.Search
                     ],
                 EndpointKind.Journal =>
@@ -188,8 +202,8 @@ internal static class DefaultFormBuilder
         {
             yield return EntityCommandType.SaveAndClose;
             yield return EntityCommandType.Save;
-            if (table.Traits.Contains(TableTrait.Print))
-                yield return EntityCommandType.Print;
+            foreach (var p in PrintCommand(declaration))
+                yield return p;
             /* The whole posting group or none of it - including its leading separator, which
              * otherwise doubles up with the next one. Removing the button is not the same act as
              * the entity not having the command: this is the second.

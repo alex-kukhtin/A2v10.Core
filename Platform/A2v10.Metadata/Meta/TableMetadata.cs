@@ -215,13 +215,16 @@ public enum InitialSource
     Sql
 }
 
+/* What the SHAPE has. Printing is deliberately not here: which blanks exist is declared by the
+ * endpoint ('printForms'), and one shape shared by several operations cannot answer it - they
+ * print different papers. See CLAUDE.md, "Commands".
+ */
 public enum TableTrait
 {
     Audit,
     Hierarchy,
     Folders,
     Tags,
-    Print,
     Attachments,
 }
 

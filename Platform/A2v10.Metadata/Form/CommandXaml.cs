@@ -1,6 +1,7 @@
 ﻿// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+using System.Linq;
 
 using A2v10.Xaml;
 
@@ -76,7 +77,7 @@ internal partial class XamlBuilder
                     b.SetBinding(nameof(Button.Command), cmd);
                 }
             },
-            EntityCommandType.Print => new Button() { Icon = Icon.Print, Content = "@[Print]", Render=RenderMode.Show },
+            EntityCommandType.Print => ButtonPrint(),
             EntityCommandType.Attachments => new Button() { Icon = Icon.Attach, Render=RenderMode.Show },
             EntityCommandType.Copy => new Button() { Icon = Icon.Copy },
             EntityCommandType.Post => new Button() 
@@ -133,6 +134,24 @@ internal partial class XamlBuilder
 
         };
     }
+
+    /* One item per declared blank. The list is never empty here: the button exists only because
+     * there was one to print (DefaultFormBuilder.PrintCommand), so an empty menu has no spelling
+     * rather than being guarded against.
+     *
+     * The items carry no command - which command prints, and what it is handed, is not decided.
+     */
+    Button ButtonPrint() => new()
+    {
+        Icon = Icon.Print,
+        Content = "@[Print]",
+        Render = RenderMode.Show,
+        DropDown = new DropDownMenu()
+        {
+            // qualified: A2v10.Metadata has a MenuItem of its own - the application menu tree
+            Children = [.. Declaration.PrintForms.Select(pf => new A2v10.Xaml.MenuItem() { Content = pf.Title })]
+        }
+    };
 
     Button ButtonCreate()
     {

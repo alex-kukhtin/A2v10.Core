@@ -9,7 +9,7 @@ namespace A2v10.Metadata.Cli;
 
 public class CliDatabaseCreator()
 {
-    private const String SQL_DIVIDER = "------------------------------------------------";
+    public const String SQL_DIVIDER = "------------------------------------------------";
     private static readonly String NL = Environment.NewLine;
     private static readonly String INDENT = "       ";
     internal String CreateTable(TableMetadata table)

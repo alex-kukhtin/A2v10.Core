@@ -53,7 +53,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
 
     private String DatabaseFilePath => _appCodeProvider.GetMainModuleFullPath("_sqlscripts", DB_FILE);
 
-    public async Task<DeployDatabaseResult> CheckDeployAsync(String? dataSource, IEnumerable<TableMetadata> tables)
+    public async Task<DeployDatabaseResult> CheckDeployAsync(String? dataSource, IEnumerable<TableMetadata> tables, AppPlatformId platformId)
     {
         var seedScript = await GenerateMetadataSeedAsync(tables);
         var seedHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(seedScript ?? "new"))).ToLowerInvariant();
@@ -70,11 +70,13 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         // exist (step above), and must run BEFORE the foreign keys, since those
         // reference columns it has just added.
         allScript.AppendLine(seedScript);
+        allScript.AppendLine(CreatePlatformIdScript(platformId));
+        allScript.AppendLine(CreateSchemasScript(tables));
         allScript.AppendLine(CreateTablesScript(tables));
         allScript.AppendLine(CreateTableTypesScript(tables));
         allScript.AppendLine(SyncSchemaScript());
         allScript.AppendLine(CreateForeignKeysScript(tables));
-        //* 5.Deploy INDEXES
+        //* 5. INDEXES
 
         // Materialize first, execute second - and execute exactly the same text.
         await WriteDeployDatabaseFileAsync(allScript.ToString());
@@ -108,6 +110,38 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
 
         """;
     }
+
+    private String CreatePlatformIdScript(AppPlatformId platformId)
+    {
+        return $"""
+
+        -- PLATFORM ID TYPE
+        {CliDatabaseCreator.SQL_DIVIDER}
+        if type_id(N'dbo.platformid') is null
+        	create type dbo.platformid from {platformId.SqlTypeName};
+        go        
+        """;
+    }
+
+    private String CreateSchemasScript(IEnumerable<TableMetadata> tables)
+    {
+        var schemas = tables.GroupBy(t => t.SqlSchema).Select(g => g.Key).ToList();
+        var sb = new StringBuilder();
+        sb.AppendLine("-- SCHEMAS");
+        sb.AppendLine(CliDatabaseCreator.SQL_DIVIDER);
+        foreach (var s in schemas)
+            sb.AppendLine($"""
+            if not exists(select * from INFORMATION_SCHEMA.SCHEMATA where SCHEMA_NAME=N'{s}')
+            	exec sp_executesql N'create schema {s} authorization dbo';
+            go
+            """);
+        sb.AppendLine();
+        foreach (var s in schemas)
+            sb.AppendLine($"grant select, insert, update, execute on schema::{s} to public;");
+        sb.AppendLine("go");
+        return sb.ToString();
+    }
+
     private String CreateTablesScript(IEnumerable<TableMetadata> tables)
     {
         var strBuilder = new StringBuilder();

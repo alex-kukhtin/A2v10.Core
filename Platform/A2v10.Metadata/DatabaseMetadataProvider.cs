@@ -32,14 +32,16 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
 
         var allMeta = await AllElementsMetadata(dataSource);
 
-        await _sqlDbGenerator.CheckDeployAsync(dataSource, allMeta);
+        var platformId = await GetPlatformIdAsync(dataSource);
+        await _sqlDbGenerator.CheckDeployAsync(dataSource, allMeta, platformId);
         _metadataCache.ClearDirty();
     }
 
     public async Task<DeployDatabaseResult> DeployDatabaseAllAsync(String? dataSource)
     {
+        var platformId = await GetPlatformIdAsync(dataSource);
         var allMeta = await AllElementsMetadata(dataSource);
-        return await _sqlDbGenerator.CheckDeployAsync(dataSource, allMeta);
+        return await _sqlDbGenerator.CheckDeployAsync(dataSource, allMeta, platformId);
     }
 
     public async Task<EndpointMetadata> GetEndpointAsync(IModelBaseMeta meta, String? dataSource)
@@ -381,6 +383,9 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
      *   'post'            - what the operation DOES. The table is shared, the act is not: two
      *                       operations over one table post in opposite directions, which is
      *                       most of why they are two.
+     *   'printForms'      - the blanks, for the same reason: a blank is paper under one act, and
+     *                       two operations over one table print different papers. Storage holds
+     *                       the shape and has no act, so there is nothing there to inherit.
      */
     private static DeclarationMetadata MergeDeclaration(DeclarationMetadata own, DeclarationMetadata? storage)
     {

@@ -32,7 +32,7 @@ internal sealed record SqlDbTypeInfo(String SqlName, Int32? Length = null, Int32
  * and therefore nothing to drift from the schema. The vocabulary is the SQL type name,
  * the same one SqlDbTypeInfo.SqlName speaks, so no third enum stands in between.
  */
-internal sealed record AppPlatformId(Type ClrType)
+public sealed record AppPlatformId(Type ClrType)
 {
     public static AppPlatformId FromSqlName(String sqlName) => sqlName switch
     {

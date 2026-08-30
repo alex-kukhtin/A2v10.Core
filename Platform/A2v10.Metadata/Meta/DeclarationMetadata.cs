@@ -85,6 +85,12 @@ public sealed record ConditionalRuleMetadata : RuleSet
 public sealed record InitialMetadata(InitialSource Source, String Value);
 public sealed record InheritMetadata(String Ref, String Field);
 
+/* One print blank: the file that holds it, and what the menu item calling it is called. A blank is
+ * not a kind - it has no window of its own and is opened from inside the endpoint - so it is a flat
+ * list here, and the file it names is addressed by path and need not lie anywhere near.
+ */
+public sealed record PrintFormMetadata(String Path, String Title);
+
 /* Two columns and a name. 'Field' and 'Ref' belong to the table the rule is written on and are
  * resolved at load; 'Source' belongs to the table the reference points at, reachable only once the
  * reference graph is linked, so it stays a name - RefMapBuilder.BuildInheritStructure resolves it
@@ -137,6 +143,14 @@ public sealed record DeclarationMetadata
      * per shape - see CLAUDE.md, "Forms: whole or nothing".
      */
     public Dictionary<String, FormMetadata> Forms { get; init; } = [];
+
+    /* The print blanks this endpoint offers, in menu order. Per endpoint and NOT layered from
+     * storage - see MergeDeclaration.
+     *
+     * Empty is the whole answer to 'does this print', the way an empty 'post' answers 'does this
+     * post'.
+     */
+    public List<PrintFormMetadata> PrintForms { get; init; } = [];
 
     /* The forms in force: declared or default, and every name in them already resolved against the
      * shape. Filled by the bake. Empty for a shape nothing renders (tags, the rows of a

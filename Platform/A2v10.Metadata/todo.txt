@@ -1,6 +1,5 @@
 ﻿-- УВАГА--
 /* Порядок при обновлении стуктурных типов имеет значение!
-Обязательно, чтобы пр добавлении 
 */
 
 1. EditDialog - порядок как в Page (Tabs в середину)
@@ -11,14 +10,13 @@
 9. AutoNum
 10. BrowseDialog - ширина
 12. IndexPage -> DblClick -> Open or edit?
-13. Operation/Document -> ShowTrans
 18. Amount/Qty/Price/Factor реализация.
-19. sql schema to databasedeploy.sql
-22. platformid to databasedeploy.sql
-26. IndexPage -> Dedup Filters
+26. IndexPage -> Dedup Filters ???
 27. Element.Show Endpoint
 28. IndexPage -> Traits.Print
 29. Report - Title & PageTitle - что-то придумать.
+30. Print Trait
+31. 
 
 
 

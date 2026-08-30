@@ -134,7 +134,8 @@ internal static class DeclarationBake
         return new Dictionary<String, FormMetadata>()
         {
             { Constants.FormNames.Index,
-                Build(Constants.FormNames.Index, DefaultFormBuilder.CreateIndexForm, MemberMetadata.IndexMembers) },
+                Build(Constants.FormNames.Index, t => DefaultFormBuilder.CreateIndexForm(t, declaration),
+                    MemberMetadata.IndexMembers) },
             { Constants.FormNames.Browse,
                 Build(Constants.FormNames.Browse, DefaultFormBuilder.CreateBrowseForm, MemberMetadata.IndexMembers) },
             { Constants.FormNames.Edit,
