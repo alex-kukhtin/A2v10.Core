@@ -16,7 +16,7 @@ internal partial class XamlBuilder
         {
             Toolbar = new Toolbar(_xamlServiceProvider)
             {
-                Children = [..form.Toolbar.Commands.Select(ToolbarControl)]
+                Children = [..form.Toolbar.Commands.Select(c => ToolbarControl(c, CommandScope.Record))]
             },
             Children = [
                 new Grid(_xamlServiceProvider)

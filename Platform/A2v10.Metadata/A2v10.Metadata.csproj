@@ -45,4 +45,9 @@
 	<ItemGroup>
 		<None Include="README.md" Pack="true" PackagePath="\" />
 	</ItemGroup>
+
+	<!-- almost everything worth asserting about is internal -->
+	<ItemGroup>
+		<InternalsVisibleTo Include="TestsMetadata" />
+	</ItemGroup>
 </Project>

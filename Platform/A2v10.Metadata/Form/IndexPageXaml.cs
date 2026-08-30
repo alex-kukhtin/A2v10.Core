@@ -88,6 +88,10 @@ internal partial class XamlBuilder
             "edit" => CreateEditXaml(Declaration.Form(Constants.FormNames.Edit)),
             // no form: what it shows is derived from 'post' - see TransDialogXaml
             Constants.Trans.Action => CreateTransDialogXaml(),
+            /* Nothing to draw: a blank is rendered by a report engine from its own layout, and the
+             * hand-off to it is not built yet. An empty page keeps the address reachable meanwhile.
+             */
+            Constants.Print.Action => new Page(),
             _ => throw new InvalidOperationException($"Invalid action: '{action}'")
         };
     }

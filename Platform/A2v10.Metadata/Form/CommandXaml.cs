@@ -4,23 +4,38 @@ using System;
 using System.Linq;
 
 using A2v10.Xaml;
+using XMenuItem = A2v10.Xaml.MenuItem;
 
 namespace A2v10.Metadata;
 
+/* Which screen a toolbar is being built for. Passed in, never looked up: a command whose rendering
+ * depends on where it sits would otherwise have to reach for the current action, which is not in
+ * its signature - and a button that draws differently depending on who called it is the hardest
+ * kind of drift to see. Two call sites, both of which know the answer statically.
+ *
+ * NOT a second EntityCommandType: printing from a card and from a grid is one act with two argument
+ * sources, and the entity's command namespace answers what it can DO. See CLAUDE.md, "Commands".
+ */
+internal enum CommandScope
+{
+    Record,
+    Grid
+}
+
 internal partial class XamlBuilder
 {
-    UIElementBase ToolbarControl(CommandBarItem cmd)
+    UIElementBase ToolbarControl(CommandBarItem cmd, CommandScope scope)
     {
         return cmd.Kind switch
         {
             CommandBarItemKind.Separator => new Separator(),
             CommandBarItemKind.Aligner => new ToolbarAligner(),
-            CommandBarItemKind.Command => CommandBarControl(cmd.Command!.Value),
+            CommandBarItemKind.Command => CommandBarControl(cmd.Command!.Value, scope),
             _ => throw new InvalidOperationException($"Invalid enum {cmd.Kind}")
         };
     }
 
-    UIElementBase CommandBarControl(EntityCommandType cmd)
+    UIElementBase CommandBarControl(EntityCommandType cmd, CommandScope scope)
     {
         return cmd switch
         {
@@ -77,7 +92,7 @@ internal partial class XamlBuilder
                     b.SetBinding(nameof(Button.Command), cmd);
                 }
             },
-            EntityCommandType.Print => ButtonPrint(),
+            EntityCommandType.Print => ButtonPrint(scope),
             EntityCommandType.Attachments => new Button() { Icon = Icon.Attach, Render=RenderMode.Show },
             EntityCommandType.Copy => new Button() { Icon = Icon.Copy },
             EntityCommandType.Post => new Button() 
@@ -138,18 +153,40 @@ internal partial class XamlBuilder
     /* One item per declared blank. The list is never empty here: the button exists only because
      * there was one to print (DefaultFormBuilder.PrintCommand), so an empty menu has no spelling
      * rather than being guarded against.
-     *
-     * The items carry no command - which command prints, and what it is handed, is not decided.
      */
-    Button ButtonPrint() => new()
+    Button ButtonPrint(CommandScope scope) => new()
     {
         Icon = Icon.Print,
         Content = "@[Print]",
         Render = RenderMode.Show,
         DropDown = new DropDownMenu()
         {
-            // qualified: A2v10.Metadata has a MenuItem of its own - the application menu tree
-            Children = [.. Declaration.PrintForms.Select(pf => new A2v10.Xaml.MenuItem() { Content = pf.Title })]
+            Children = [.. Declaration.PrintForms.Select(pf => PrintMenuItem(pf, scope))]
+        }
+    };
+
+    /* The address is written whole, blank and all: '<endpoint>/print?form=<name>'. The name comes
+     * from PrintFormMetadata, which is also what the loader resolves '?form=' against, so the two
+     * cannot drift.
+     *
+     * 'Open' takes the record the card is showing; 'OpenSelected' takes the row the grid has. One
+     * command either way - the screen is a parameter, not a second name.
+     *
+     * Qualified: A2v10.Metadata has a MenuItem of its own - the application menu tree.
+     */
+    XMenuItem PrintMenuItem(PrintFormMetadata form, CommandScope scope) => new()
+    {
+        Content = form.Title,
+        Bindings = b =>
+        {
+            var grid = scope == CommandScope.Grid;
+            var cmd = new BindCmd(grid ? CommandType.OpenSelected : CommandType.Open)
+            {
+                Url = $"{Endpoint.Path}/{Constants.Print.Action}/{{0}}?{Constants.Print.FormQuery}={form.Name}",
+            };
+            cmd.BindImpl.SetBinding(nameof(BindCmd.Argument),
+                new Bind(grid ? "Parent.ItemsSource" : Table.Model));
+            b.SetBinding(nameof(XMenuItem.Command), cmd);
         }
     };
 

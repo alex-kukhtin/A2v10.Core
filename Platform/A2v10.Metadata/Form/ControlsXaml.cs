@@ -201,7 +201,7 @@ internal partial class XamlBuilder
         {
             FormElementKind.Toolbar => new Toolbar(_xamlServiceProvider)
             {
-                Children = [.. elem.Commands.Select(ToolbarControl)]
+                Children = [.. elem.Commands.Select(c => ToolbarControl(c, CommandScope.Grid))]
             },
             FormElementKind.DataGrid => new DataGrid()
             {

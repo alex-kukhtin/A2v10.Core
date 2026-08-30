@@ -56,11 +56,6 @@
             "type": "object",
             "additionalProperties": { "$ref": "#/definitions/form" }
         },
-        "printForms": {
-            "type": "array",
-            "description": "The print blanks this endpoint offers, in menu order. Declared per endpoint and never inherited from 'storage': a blank is paper under one act, and two operations over one table print different papers. A non-empty list is what puts the Print command on the toolbars - there is no trait for it.",
-            "items": { "$ref": "#/definitions/printForm" }
-        },
 
         "initialValues": { "$ref": "#/definitions/initialValues" },
         "rules": { "$ref": "#/definitions/rules" },
@@ -299,24 +294,8 @@
             "enum": [
                 "$sep", "$toRight",
                 "Create", "Edit", "Delete", "Save", "SaveAndClose", "Print", "Copy",
-                "Show", "ShowTrans", "Search", "Reload", "Post", "UnPost", "Attachments"
+                "Show", "Search", "Reload", "Post", "UnPost", "Attachments"
             ]
-        },
-
-        "printForm": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [ "path", "title" ],
-            "properties": {
-                "path": {
-                    "type": "string",
-                    "description": "Path of the blank file. A blank has no window of its own and is not an endpoint, so it is addressed by path and need not lie next to this file."
-                },
-                "title": {
-                    "type": "string",
-                    "description": "Caption of the menu item that prints it. Localized like any other caption: '@[...]' is resolved at render."
-                }
-            }
         },
 
         "endpointKind": {
@@ -333,8 +312,8 @@
         "trait": {
             "type": "string",
             "enum": [
-                "Audit", "Hierarchy", "Folders", "Tags", "Attachments",
-                "audit", "hierarchy", "folders", "tags", "attachments"
+                "Audit", "Hierarchy", "Folders", "Tags", "Print", "Attachments",
+                "audit", "hierarchy", "folders", "tags", "print", "attachments"
             ]
         },
 

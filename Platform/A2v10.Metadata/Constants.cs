@@ -55,6 +55,16 @@ internal static class Constants
         public const String Tab = nameof(Tab);
     }
 
+    /* A print blank is reached by an action of the endpoint, with the blank named in the query -
+     * 'document/waybillin/print/2222?Form=printform1'. Two segments and an id, like every other
+     * action; WHICH blank cannot ride in the path, because ParsePath takes no third segment.
+     */
+    public static class Print
+    {
+        public const String Action = "print";
+        public const String FormQuery = "Form";
+    }
+
     public static class SqlNames
     {
         /* A list of ids and nothing else, on the real 'platformid' - which is why it is ours and

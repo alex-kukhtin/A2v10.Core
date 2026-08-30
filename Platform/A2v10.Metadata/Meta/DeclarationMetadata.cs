@@ -89,7 +89,15 @@ public sealed record InheritMetadata(String Ref, String Field);
  * not a kind - it has no window of its own and is opened from inside the endpoint - so it is a flat
  * list here, and the file it names is addressed by path and need not lie anywhere near.
  */
-public sealed record PrintFormMetadata(String Path, String Title);
+public sealed record PrintFormMetadata(String Path, String Title)
+{
+    /* What '?form=' names, and what the menu item that opens it is built with - so the address the
+     * button writes and the one the loader resolves cannot drift. The last segment of the path:
+     * 'print/printform1' answers to 'printform1'.
+     */
+    [JsonIgnore]
+    public String Name => Path.Split('/')[^1];
+}
 
 /* Two columns and a name. 'Field' and 'Ref' belong to the table the rule is written on and are
  * resolved at load; 'Source' belongs to the table the reference points at, reachable only once the

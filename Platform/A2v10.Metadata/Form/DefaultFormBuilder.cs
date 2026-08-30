@@ -10,9 +10,10 @@ internal static class DefaultFormBuilder
 {
     /* Print exists when the endpoint declares a blank to print, and it carries its own leading
      * separator so that it leaves without doubling the next one - the posting group below is the
-     * same shape. Asked identically by both toolbars that have it, which is why it is one function:
-     * a screen may hide the button, but whether the entity has the command is not a per-screen
-     * answer. See CLAUDE.md, "Commands".
+     * same shape. ONE command on both toolbars: printing is one act, and that the card hands it the
+     * record while the grid hands it the selected row is a property of the screen, not a second
+     * command - see CommandScope. A screen may hide the button, but whether the entity prints at
+     * all is not a per-screen answer. See CLAUDE.md, "Commands".
      */
     static List<CommandBarItem> PrintCommand(DeclarationMetadata declaration) =>
         declaration.PrintForms.Count > 0
