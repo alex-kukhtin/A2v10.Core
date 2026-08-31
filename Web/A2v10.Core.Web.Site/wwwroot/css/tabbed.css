@@ -1708,6 +1708,10 @@ header .include.nav-pane .partial-block .control-group,
 .center-page .initial-form p {
   margin-bottom: 2rem;
 }
+object.a2-pdf-viewer {
+  display: block;
+  height: 100%;
+}
 .splitter {
   display: grid;
   position: relative;

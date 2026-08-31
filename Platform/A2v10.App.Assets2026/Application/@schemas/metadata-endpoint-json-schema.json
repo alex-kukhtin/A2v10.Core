@@ -310,11 +310,15 @@
             "properties": {
                 "path": {
                     "type": "string",
-                    "description": "Path of the blank file. A blank has no window of its own and is not an endpoint, so it is addressed by path and need not lie next to this file."
+                    "description": "Path of the blank file, relative to the endpoint folder and WITHOUT an extension - named the way a view is; '.json' is appended. A blank has no window of its own and is not an endpoint, so it need not lie next to this file."
                 },
                 "title": {
                     "type": "string",
                     "description": "Caption of the menu item that prints it. Localized like any other caption: '@[...]' is resolved at render."
+                },
+                "header": {
+                    "type": "string",
+                    "description": "Title of the page that hosts the viewer, as a template over the record: 'Prykhodna nakladna No {Document.Number} vid {Document.Date}'. Every path starts with the model name and is resolved against the shape, so a typo fails like any other; the values are substituted in the browser. Omitted, the menu caption stands in. This is NOT the blank's own heading - the paper draws that in a cell of its layout, which is never read."
                 }
             }
         },

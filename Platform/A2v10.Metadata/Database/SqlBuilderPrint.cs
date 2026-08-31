@@ -1,4 +1,4 @@
-// Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -341,87 +341,68 @@ internal sealed class PrintSqlBuilder(TableMetadata table, PrintNode model)
             ?? throw new InvalidOperationException(
                 $"print model: '{name}[]' is not a collection of {owner.SqlTableName}");
 
-    /* The ways a name can be wrong, each said with the table it was looked for in and in the same
-     * words the inherit rules use. Nothing here guesses: a name is a column, a reference or a
-     * collection, and which one was meant is written in the blank, not inferred.
+    /* The ways a name can be wrong. Nothing here guesses: a name is a column, a reference or a
+     * collection, and which one was meant is written in the blank, not inferred. Only the third
+     * question is local - the other two are the same lookups the title does, so they are shared.
      */
+    private const String Where = "print model";
+
     private static TableColumn Column(TableMetadata owner, String name) =>
-        owner.AllColumns().FirstOrDefault(c => c.Name == name)
-            ?? throw new InvalidOperationException(
-                $"print model: '{name}' not found in {owner.SqlTableName}");
+        PrintShape.Column(owner, name, Where);
 
     private static TableColumn RefColumn(TableMetadata owner, String name)
     {
         if (FindCollection(owner, name) != null)
             throw new InvalidOperationException(
-                $"print model: '{name}' of {owner.SqlTableName} is a collection - write it as '{name}[]'");
+                $"{Where}: '{name}' of {owner.SqlTableName} is a collection - write it as '{name}[]'");
         var column = Column(owner, name);
         return column.IsRef
             ? column
             : throw new InvalidOperationException(
-                $"print model: '{name}' of {owner.SqlTableName} is not a reference - write it as a field, not an object");
+                $"{Where}: '{name}' of {owner.SqlTableName} is not a reference - write it as a field, not an object");
     }
 }
 
 internal partial class SqlBuilder
 {
-    /* The IO edge: pick the blank, read it, parse it, hand the text over. Everything that can be
-     * wrong about the blank is decided by PrintSqlBuilder, before the database is touched.
+    /* One place the print SQL is executed, whatever built it: the id is the only parameter a
+     * blank has, and it is the same one on both roads below.
      */
-    public async Task<IDataModel> LoadPrintModelAsync()
-    {
-        var forms = Endpoint.Declaration.PrintForms;
-        if (forms.Count == 0)
-            throw new InvalidOperationException($"print: {Endpoint.Path} declares no 'printForms'");
-
-        var text = await ReadPrintFormAsync(PrintFormPath(forms));
-        var sql = new PrintSqlBuilder(Table, PrintModel.Parse(text)).Build();
-
-        return await _dbContext.LoadModelSqlAsync(_descr.DataSource, sql, dbprms =>
+    private Task<IDataModel> RunPrintAsync(String sql) =>
+        _dbContext.LoadModelSqlAsync(_descr.DataSource, sql, dbprms =>
         {
             AddDefaultParameters(dbprms);
             dbprms.AddString("@Id", _descr.PlatformUrl.Id);
         });
-    }
 
-    /* '?form=' NAMES one of the blanks the endpoint declared - it is never a path from the client,
-     * which would be a request for an arbitrary file. The name is the last segment of the declared
-     * path, so 'print/printform1' answers to 'printform1'.
+    /* The page that HOSTS the viewer, not the blank. It needs the record's Id, to compose the
+     * report address - and whatever its title mentions, because that title is computed in the
+     * browser from this model. Both come from one tiny node: no collections, no blank read.
      *
-     * REQUIRED, with no first-blank default. A print request that does not say what to print asks
-     * for nothing, and answering it with whichever blank happens to be first hands back a
-     * plausible wrong document instead of an error - the caller forgot a parameter and never
-     * learns it. Same reason two blanks sharing a name is refused rather than won by the first.
+     * A blank without a header is one empty node - the root recordset and its implicit Id.
      */
-    private String PrintFormPath(List<PrintFormMetadata> forms)
+    public Task<IDataModel> LoadPrintPageModelAsync()
     {
-        var names = String.Join(", ", forms.Select(f => $"'{f.Name}'"));
-        var asked = _descr.PlatformUrl.Query?.Get<String>(Constants.Print.FormQuery);
-        if (String.IsNullOrEmpty(asked))
-            throw new InvalidOperationException(
-                $"print: {Endpoint.Path} was asked to print without '{Constants.Print.FormQuery}'. "
-                    + $"It declares: {names}");
-
-        var found = forms
-            .Where(f => f.Name.Equals(asked, StringComparison.OrdinalIgnoreCase))
-            .ToList();
-        return found.Count switch
-        {
-            1 => found[0].Path,
-            0 => throw new InvalidOperationException(
-                $"print: {Endpoint.Path} declares no print form named '{asked}'. It has: {names}"),
-            _ => throw new InvalidOperationException(
-                $"print: {Endpoint.Path} declares {found.Count} print forms named '{asked}'")
-        };
+        var form = PrintRequest.FormOf(Endpoint, _descr.PlatformUrl);
+        var node = String.IsNullOrEmpty(form.Header)
+            ? new PrintNode(Table.Model, false, [], [])
+            : PrintTitle.Parse(form.Header, Table).Model;
+        return RunPrintAsync(new PrintSqlBuilder(Table, node).Build());
     }
 
-    /* Addressed by path from the endpoint's own folder, extension implied - the way a view is
-     * named. A blank is not an endpoint and has no folder of its own.
+    /* The blank itself, named by whoever asked - today PrintReportHandler, resolving '?rep=' against
+     * what the endpoint declared. A path never arrives from the client.
      */
+    public async Task<IDataModel> LoadPrintModelAsync(PrintFormMetadata form)
+    {
+        var text = await ReadPrintFormAsync(form.Path);
+        return await RunPrintAsync(new PrintSqlBuilder(Table, PrintModel.Parse(text)).Build());
+    }
+
     private async Task<String> ReadPrintFormAsync(String path)
     {
         var codeProvider = serviceProvider.GetRequiredService<IAppCodeProvider>();
-        var fileName = $"{Endpoint.Path.Trim('/')}/{path}.json";
+        var fileName = PrintRequest.FileOf(Endpoint, path);
         using var stream = codeProvider.FileStreamRO(fileName)
             ?? throw new InvalidOperationException($"print: '{fileName}' not found");
         using var sr = new StreamReader(stream);

@@ -1,6 +1,7 @@
 ﻿// Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 using A2v10.Infrastructure;
@@ -275,7 +276,7 @@ public class BindCmd : BindBase
 					return $"{{cmd:$navigate, eval: true, arg1:{CommandUrl(context, true)}, arg2:'{argSting}', arg3:{NewWindowJS}, arg4:{UpdateAfterArgument(context)}}}";
 				}
 				else
-					return $"$navigate({CommandUrl(context)}, {CommandArgument(context)}, {NewWindowJS}, {UpdateAfterArgument(context)})";
+					return $"$navigate({CommandUrl(context)}, {CommandArgument(context)}, {NewWindowJS}, {UpdateAfterArgument(context)}, {GetOptionsGeneral(context)})";
 
 			case CommandType.Create:
 				return $"$navigate({CommandUrl(context)}, {CommandArgument(context, nullable: true)}, {NewWindowJS}, {UpdateAfterArgument(context)}, {GetOptions(context)})";
@@ -405,7 +406,21 @@ public class BindCmd : BindBase
 		return sb.ToString();
 	}
 
-	String GetOptionsForFile(RenderContext _)
+    String GetOptionsGeneral(RenderContext _)
+    {
+		IEnumerable<String> getOptions()
+		{
+			if (SaveRequired)
+				yield return "saveRequired: true";
+        }
+
+        var list = getOptions().ToList();
+		if (list.Count == 0)
+			return nullString;
+        return $"{{{String.Join(", ", list)}}}";
+    }
+
+    String GetOptionsForFile(RenderContext _)
 	{
 		if (FileAction == FileAction.Unknown && !SaveRequired)
 			return nullString;

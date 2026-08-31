@@ -15,8 +15,7 @@
 27. Element.Show Endpoint
 28. IndexPage -> Traits.Print
 29. Report - Title & PageTitle - что-то придумать.
-30. Print Trait
-31. 
+31. PRINT -> доделать SaveRequired для $navigate (в A2v10). opts уже передается.
 
 
 

@@ -11,6 +11,7 @@ using A2v10.Infrastructure;
 using A2v10.System.Xaml;
 using A2v10.Xaml;
 using A2v10.Xaml.DynamicRendrer;
+using A2v10.Data;
 
 namespace A2v10.Metadata;
 
@@ -69,7 +70,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
                 : await _sqlBuilder.LoadIndexModelAsync(),
             "edit" or "show" => await _sqlBuilder.LoadPlainModelAsync(),
             Constants.Trans.Action => await _sqlBuilder.LoadTransModelAsync(),
-            Constants.Print.Action => await _sqlBuilder.LoadPrintModelAsync(),
+            Constants.Print.Action => await _sqlBuilder.LoadPrintPageModelAsync(),
             "browsefolder" => await _sqlBuilder.LoadBrowseTreeModelAsync(),
             "editfolder" => await _sqlBuilder.LoadEditFolderModelAsync(),
             _ => throw new NotImplementedException($"Load model for {Action}")
@@ -83,8 +84,11 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
             "edit" => await _jsBuilder.CreateEditTemplate(),
             // read-only, and the one piece of state it has is a field of its own model
             Constants.Trans.Action => String.Empty,
-            // the blank is rendered by a report engine, not by a Vue component: nothing to script
-            Constants.Print.Action => String.Empty,
+            /* One computed property and nothing else: the blank is drawn by a report engine, so the
+             * page has no fields to bind - what it needs is the address to point the viewer at, and
+             * that address carries the chosen blank, which only the query knows.
+             */
+            Constants.Print.Action => await _jsBuilder.CreatePrintTemplate(),
             "browsefolder" => String.Empty,
             _ => throw new NotImplementedException($"Create template for {Action}")
         };

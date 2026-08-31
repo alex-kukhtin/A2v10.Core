@@ -39,28 +39,15 @@ internal partial class XamlBuilder
     {
         return cmd switch
         {
-            EntityCommandType.Reload => new Button()
-            {
-                Icon = Icon.Reload,
-                Bindings = b => b.SetBinding(nameof(Button.Command), new BindCmd(CommandType.Reload))
-            },
+            EntityCommandType.Reload => FormButtons.Reload,
             EntityCommandType.Search => new SearchBox()
             {
                 TabIndex = 1,
                 Placeholder = "@[Search]",
                 Bindings = b => b.SetBinding(nameof(SearchBox.Value), new Bind("Parent.Filter.Fragment"))
             },
-            EntityCommandType.Save => new Button()
-            {
-                Icon = Icon.SaveOutline,
-                Bindings = b => b.SetBinding(nameof(Button.Command), new BindCmd(CommandType.Save))
-            },
-            EntityCommandType.SaveAndClose => new Button()
-            {
-                Icon = Icon.SaveCloseOutline,
-                Content = "@[SaveAndClose]",
-                Bindings = b => b.SetBinding(nameof(Button.Command), new BindCmd(CommandType.SaveAndClose))
-            },
+            EntityCommandType.Save => FormButtons.Save,
+            EntityCommandType.SaveAndClose => FormButtons.SaveAndClose,
             EntityCommandType.Edit => ButtonEditSelected(),
             EntityCommandType.Create => ButtonCreate(),
             EntityCommandType.Delete => new Button() 
@@ -165,14 +152,18 @@ internal partial class XamlBuilder
         }
     };
 
-    /* The address is written whole, blank and all: '<endpoint>/print?form=<name>'. The name comes
-     * from PrintFormMetadata, which is also what the loader resolves '?form=' against, so the two
-     * cannot drift.
+    /* '<endpoint>/print/{0}?Form=<name>'. The '{0}' is where the command puts the id, and it has to
+     * be written: without it the id is appended to the END of the string, past the '?', and the
+     * platform then reads the action out of the wrong segment. A route with a query must say where
+     * its id belongs.
+     *
+     * The name comes from PrintFormMetadata, which is also what the loader resolves '?Form='
+     * against, so the address written here and the blank opened there cannot drift.
      *
      * 'Open' takes the record the card is showing; 'OpenSelected' takes the row the grid has. One
      * command either way - the screen is a parameter, not a second name.
      *
-     * Qualified: A2v10.Metadata has a MenuItem of its own - the application menu tree.
+     * Aliased: A2v10.Metadata has a MenuItem of its own - the application menu tree.
      */
     XMenuItem PrintMenuItem(PrintFormMetadata form, CommandScope scope) => new()
     {
@@ -182,6 +173,7 @@ internal partial class XamlBuilder
             var grid = scope == CommandScope.Grid;
             var cmd = new BindCmd(grid ? CommandType.OpenSelected : CommandType.Open)
             {
+                SaveRequired = true,
                 Url = $"{Endpoint.Path}/{Constants.Print.Action}/{{0}}?{Constants.Print.FormQuery}={form.Name}",
             };
             cmd.BindImpl.SetBinding(nameof(BindCmd.Argument),

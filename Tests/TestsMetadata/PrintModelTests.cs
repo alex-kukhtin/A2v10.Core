@@ -225,8 +225,7 @@ public class PrintModelTests
 
         var sql = Build(doc, model);
 
-        Assert.Equal(1, sql.Split('
-').Count(l => l.Contains($"from {unit.SqlTableName} ")));
+        Assert.Equal(1, sql.Split('.').Count(l => l.Contains($"from {unit.SqlTableName} ")));
 
         var map = sql[sql.IndexOf($"-- {unit.Model} map", StringComparison.Ordinal)..];
         Assert.Contains("union all", map);          // the row's Unit and the item's Unit

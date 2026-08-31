@@ -23,6 +23,8 @@ public static class ServicesExtensions
 
         services.AddScoped<ILicenseManager, LicenseManager>();  
 
+        services.AddKeyedScoped<IModelReportHandler, PrintReportHandler>(":Metadata.Report");
+
         return services;
     }
 

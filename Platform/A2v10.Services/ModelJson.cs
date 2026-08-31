@@ -380,6 +380,13 @@ public class ModelJsonReport : ModelJsonBase, IModelReport
 	{
 		var provider = serviceProvider.GetRequiredService<IReportEngineProvider>();
 
+		if (this.Meta != null)
+		{
+			var rt = serviceProvider.GetService<IAppRuntimeBuilder>();
+			if (rt != null && rt.IsMetaSupported)
+				return serviceProvider.GetRequiredKeyedService<IModelReportHandler>(":Metadata.Report");
+		}
+
 		// default report type is "stimulsoft" (DotNet Framework compatibility);
 		return new ServerReport(provider.FindReportEngine(Type ?? "stimulsoft"),
 			serviceProvider.GetRequiredService<IDbContext>()
@@ -540,6 +547,15 @@ public class ModelJson
 	{
 		if (Reports.TryGetValue(key, out ModelJsonReport? report))
 			return report;
+		if (Meta != null)
+		{
+			var empty = new ModelJsonReport()
+			{
+				Meta = new ModelBaseMeta()
+			};
+			empty.SetParent(this);
+			return empty;
+		}
 		throw new ModelJsonException($"Report: {key} not found");
 	}
 

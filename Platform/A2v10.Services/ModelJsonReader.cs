@@ -31,7 +31,7 @@ public class ModelJsonReader(IModelJsonPartProvider _partProvider, IAppRuntimeBu
 		return ms;
     }
 
-    ModelJson CreateAuto(IPlatformUrl url, String? command = null)
+    static ModelJson CreateAuto(IPlatformUrl url, String? command = null)
 	{
 		var model = String.Join('.', url.LocalPath.Split('/').Select(s => s.ToPascalCase()));
 		var ms = new ModelJson()

@@ -1,4 +1,4 @@
-﻿// Copyright © 2022-2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2022-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.IO;
@@ -51,21 +51,36 @@ public class PdfReportEngine : IReportEngine
 		return new (ss, path);
 	}
 
-	public Task<IInvokeResult> ExportAsync(IReportInfo reportInfo, ExportReportFormat format)
+    private static (Page page, String path) ReadTemplateFromStream(Stream stream, String path)
+    {
+		using var sr = new StreamReader(stream);
+        var json = sr.ReadToEnd();
+        var ss = SpreadsheetJson.FromJson(json);
+        ss.ApplyStyles("Root", new StyleBag());
+        return new(ss, path);
+    }
+
+    public Task<IInvokeResult> ExportAsync(IReportInfo reportInfo, ExportReportFormat format)
 	{
 		String repPathA = String.Empty;
         String repPathX = String.Empty;
         Boolean readFromModel = false;
+		Boolean readFromStream = false;
 
-		if (reportInfo.Report.StartsWith("{{") && reportInfo.Report.EndsWith("}}"))
+		if (reportInfo.Stream != null)
+			readFromStream = true;
+		else if (reportInfo.Report.StartsWith("{{") && reportInfo.Report.EndsWith("}}"))
 			readFromModel = true;
 		else
 		{
 			repPathA = Path.Combine(reportInfo.Path, reportInfo.Report) + ".vxaml";
-            repPathX = Path.Combine(reportInfo.Path, reportInfo.Report) + ".xaml";
-        }
+			repPathX = Path.Combine(reportInfo.Path, reportInfo.Report) + ".xaml";
+		}
 
-        var (page, path)  = readFromModel ? ReadTemplateFromDb(reportInfo, repPathA) : ReadTemplate(repPathA, repPathX);
+        var (page, path)  = 
+			readFromStream ? ReadTemplateFromStream(reportInfo.Stream!, repPathA)
+			: readFromModel ? ReadTemplateFromDb(reportInfo, repPathA) 
+			: ReadTemplate(repPathA, repPathX);
 
 		if (page.Title == null && reportInfo.Name != null)
 			page.Title = reportInfo.Name;

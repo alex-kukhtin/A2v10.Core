@@ -1,4 +1,4 @@
-// Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -89,7 +89,7 @@ public sealed record InheritMetadata(String Ref, String Field);
  * not a kind - it has no window of its own and is opened from inside the endpoint - so it is a flat
  * list here, and the file it names is addressed by path and need not lie anywhere near.
  */
-public sealed record PrintFormMetadata(String Path, String Title)
+public sealed record PrintFormMetadata(String Path, String Title, String? Header = null)
 {
     /* What '?form=' names, and what the menu item that opens it is built with - so the address the
      * button writes and the one the loader resolves cannot drift. The last segment of the path:
@@ -170,6 +170,26 @@ public sealed record DeclarationMetadata
     [JsonIgnore]
     public IReadOnlyDictionary<String, FormMetadata> BakedForms { get; init; }
         = new Dictionary<String, FormMetadata>();
+
+    /* The blank a request names. One place, because the fetch, the template and the page all ask -
+     * and two blanks answering to one name is refused rather than won by the first: the URL would
+     * then address neither of them in particular.
+     */
+    internal PrintFormMetadata PrintForm(String name)
+    {
+        var names = String.Join(", ", PrintForms.Select(f => $"'{f.Name}'"));
+        var found = PrintForms
+            .Where(f => f.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        return found.Count switch
+        {
+            1 => found[0],
+            0 => throw new InvalidOperationException(
+                $"print: no print form named '{name}' is declared. Declared: {names}"),
+            _ => throw new InvalidOperationException(
+                $"print: {found.Count} print forms are named '{name}'")
+        };
+    }
 
     internal FormMetadata Form(String name) =>
         BakedForms.TryGetValue(name, out var form)
