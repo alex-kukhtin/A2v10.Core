@@ -31,8 +31,16 @@ create table a2meta.Tables
 (
 	[schema] sysname,
 	[table] sysname,
+	[xtra] nvarchar(64), /* fingerprint of everything about this table that is NOT its schema -
+	                        today the declared values of an enum. The seed is what the deploy hash
+	                        is taken from, so a change here is what makes a changed declaration
+	                        reach the database at all. */
 	constraint PK_Tables primary key ([schema], [table])
 );
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = N'a2meta' and TABLE_NAME = N'Tables' and COLUMN_NAME = N'xtra')
+	alter table a2meta.Tables add [xtra] nvarchar(64) null;
 go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'Columns')

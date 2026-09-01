@@ -110,22 +110,6 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return _metadataCache.GetOrAddXamlFormAsync(dataSource, endpoint, key, defForm);
     }
 
-    public static IEnumerable<ReferenceMember> EnumFields(TableMetadata table, Boolean withDetails)
-    {
-        static ReferenceMember CreateMember(TableColumn column, Int32 index) => 
-            new(column, MetadataExtensions.CreateEnumMeta(column), index);
-
-        Int32 index = 0;
-        var list = new List<ReferenceMember>();
-        foreach (var cx in table.Columns.Where(c => c.IsEnum))
-            list.Add(CreateMember(cx, index++));
-        if (withDetails)
-            foreach (var dt in table.Details.Select(x => x.Value))
-                foreach (var ct in dt.Columns.Where(c => c.IsEnum))
-                    list.Add(CreateMember(ct, index++));
-        return list;
-    }
-
     /* No default and no fallback on purpose. An absent answer means the 'platformid' type
      * is not in the database, and guessing a base here would not surface as a failure -
      * it would write values of the wrong shape into a live database, which is the one
@@ -469,6 +453,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             Constants.SchemaNames.Document => EndpointKind.Document,
             Constants.SchemaNames.Journal => EndpointKind.Journal,
             Constants.SchemaNames.Report => EndpointKind.Report,
+            Constants.SchemaNames.Enum => EndpointKind.Enum,
             _ => EndpointKind.Undefined
         };
     }
@@ -579,7 +564,6 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         };
         String procedure = schema switch {
             "rep" => "a2meta.[Report.Schema]",
-            "enm" => "a2meta.[Enum.Schema]",
             "op" => table switch {
                 "operations" => "a2meta.[Operation.Schema]",
                 _ => "a2meta.[Table.Schema]"
@@ -678,6 +662,39 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             var refMeta = await GetNormalEndpointAsync(load, dataSource, schema, table);
             foreach (var gcol in group)
                 gcol.RefTable = refMeta;
+        }
+
+        CheckLiteralInitials(endpoint, meta);
+    }
+
+    /* A literal initial value on an enum column names a code, and here - and only here - is the
+     * first moment the codes are known: the set is the far half of a reference, linked just above.
+     * Without this the typo is silent in the worst way: '@map' finds no row, the RefId resolves to
+     * nothing, and a NEW card simply opens with an empty control.
+     *
+     * Only enums are checked, because only they declare their rows. A literal pointing at a catalog
+     * names an identifier that exists in the database and not in any file.
+     */
+    private static void CheckLiteralInitials(EndpointMetadata endpoint, TableMetadata meta)
+    {
+        if (endpoint is not NormalEndpointMetadata normal)
+            return;
+        foreach (var (key, initial) in normal.Declaration.InitialValues)
+        {
+            if (initial.Source != InitialSource.Literal)
+                continue;
+            var column = meta.Columns.FirstOrDefault(c => c.Name == key && c.IsEnum);
+            if (column == null)
+                continue;
+            var target = column.RefTableCheck.Storage;
+            if (target.Values.Count == 0)
+                continue;
+            var value = target.Values.FirstOrDefault(v => v.Id == initial.Value)
+                ?? throw new InvalidOperationException(
+                    $"{endpoint.Path}: initial value '{initial.Value}' for '{key}' is not a value of {target.Path}");
+            if (value.Void)
+                throw new InvalidOperationException(
+                    $"{endpoint.Path}: initial value '{initial.Value}' for '{key}' is void in {target.Path}");
         }
     }
 

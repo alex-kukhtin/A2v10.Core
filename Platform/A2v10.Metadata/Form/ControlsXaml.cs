@@ -54,6 +54,30 @@ internal partial class XamlBuilder
                     CssClass = elem.Type.ToXamlSemanticClass(),
                     Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), new Bind(elem.Name))
                 },
+            /* The same control as in the card, and the same reason - see CreateEditControl. The one
+             * difference is the reach: here the scope is the ROW, and the candidates are an array at
+             * the model root, which is what 'Root.' says ($data, RenderContext.GetNormalizedPath).
+             */
+            ColumnType.Enum => new ComboBox()
+                {
+                    CssClass = elem.Type.ToXamlSemanticClass(),
+                    Children = [
+                        new ComboBoxItem()
+                        {
+                            Bindings = b =>
+                            {
+                                b.SetBinding(nameof(ComboBoxItem.Content), new Bind(Constants.FieldNames.Name));
+                                b.SetBinding(nameof(ComboBoxItem.Value), new Bind());
+                            }
+                        }
+                    ],
+                    Bindings = b =>
+                    {
+                        b.SetBinding(nameof(ComboBox.ItemsSource),
+                            new Bind($"Root.{elem.RefTableCheck.Storage.CollectionName}"));
+                        b.SetBinding(nameof(ComboBox.Value), new Bind(elem.Name));
+                    }
+                },
             _ => new TextBox()
                 {
                     Align = elem.Type.ToXamlAlign(),
@@ -178,6 +202,34 @@ internal partial class XamlBuilder
                 Placeholder = $"@[{filter.ColumnCheck.RefTableCheck.Storage.Model}.All]",
                 Url = filter.ColumnCheck.RefTableCheck.Path,
                 Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), new Bind($"Parent.Filter.{filter.Name}")),
+            },
+            /* The whole set arrives with the page, so the candidates are an array in the model and
+             * not an address to browse - which is the entire difference from the branch above.
+             *
+             * What lands in the Filter is the CODE and not an object: it is what the column stores
+             * and what the WHERE compares, and it lets the set's own 'All' row (Id = N'') be a
+             * value like any other instead of a state the control would have to invent.
+             */
+            FilterKind.Enum => new ComboBox()
+            {
+                Label = $"@[{filter.ColumnCheck.RefTableCheck.Storage.Model}]",
+                Highlight = true,
+                Children = [
+                    new ComboBoxItem()
+                    {
+                        Bindings = b =>
+                        {
+                            b.SetBinding(nameof(ComboBoxItem.Content), new Bind(Constants.FieldNames.Name));
+                            b.SetBinding(nameof(ComboBoxItem.Value), new Bind(Constants.FieldNames.Id));
+                        }
+                    }
+                ],
+                Bindings = b =>
+                {
+                    b.SetBinding(nameof(ComboBox.ItemsSource),
+                        new Bind(filter.ColumnCheck.RefTableCheck.Storage.CollectionName));
+                    b.SetBinding(nameof(ComboBox.Value), new Bind($"Parent.Filter.{filter.Name}"));
+                }
             },
             // candidates are rows, not a shape: ItemsSource is the root 'Tags' recordset, unprefixed
             FilterKind.Tags => new TagsFilter()
@@ -331,6 +383,33 @@ internal partial class XamlBuilder
                 CssClass = column.Type.ToXamlSemanticClass(),
                 Url = SelectorUrl(inherits, column),
                 Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
+            },
+            /* The set arrives with the record, so there is nothing to browse - the same reason the
+             * filter is a ComboBox. The item's Value binds to the ELEMENT and not to its Id: what
+             * the property holds stays an object, resolved through the map like every other
+             * reference, so the save reads its Id the way it does for all of them. The filter is
+             * the opposite case and for its own reason - there the value IS the code.
+             */
+            ColumnType.Enum => new ComboBox()
+            {
+                Label = column.Header,
+                CssClass = column.Type.ToXamlSemanticClass(),
+                Children = [
+                    new ComboBoxItem()
+                    {
+                        Bindings = b =>
+                        {
+                            b.SetBinding(nameof(ComboBoxItem.Content), new Bind(Constants.FieldNames.Name));
+                            b.SetBinding(nameof(ComboBoxItem.Value), new Bind());
+                        }
+                    }
+                ],
+                Bindings = b =>
+                {
+                    b.SetBinding(nameof(ComboBox.ItemsSource),
+                        new Bind(column.RefTableCheck.Storage.CollectionName));
+                    b.SetBinding(nameof(ComboBox.Value), valueBind);
+                }
             },
             ColumnType.Done or ColumnType.Bit or ColumnType.Boolean => new CheckBox()
             {

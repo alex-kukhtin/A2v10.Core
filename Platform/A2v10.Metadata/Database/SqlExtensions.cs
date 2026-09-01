@@ -2,6 +2,7 @@
 
 using System;
 using System.Data;
+using System.Globalization;
 
 namespace A2v10.Metadata;
 
@@ -201,11 +202,19 @@ internal static class SqlExtensions
     public static String? DeployDefault(this TableColumn column)
         => column.HasDefaultBit ? "0" : null;
 
-    // IS_NULLABLE. Must match whatever CreateTable emits.
-    // RowVersion is listed here not because we ask for not null, but because SQL Server
-    // applies it itself: timestamp is an exception to the usual nullable default.
+    /* IS_NULLABLE. Must match whatever CreateTable emits.
+     * RowVersion is listed here not because we ask for not null, but because SQL Server
+     * applies it itself: timestamp is an exception to the usual nullable default.
+     *
+     * 'Id' is asked by NAME and not by ColumnType. The primary key is always on Id - the
+     * convention CreateTable itself writes out - and it is the table that makes a column not
+     * null, not the type in it: the key of an enum set is a code, ColumnType.String, and the
+     * type-based answer said 'nullable' about a column SQL Server had already made NOT NULL.
+     * That disagreement is invisible until something compares the seed with the catalog, and
+     * then it is unfixable from the seed side: a primary key cannot be altered to null.
+     */
     public static Boolean DeployNullable(this TableColumn column)
-        => !(column.Type == ColumnType.Id
+        => !(column.Name == Constants.FieldNames.Id
             || column.Type == ColumnType.Owner
             || column.Type == ColumnType.RowVersion
             || column.HasDefaultBit);
@@ -223,13 +232,36 @@ internal static class SqlExtensions
     public static String SqlDataType(this TableColumn column, Boolean toTableType = false)
         => column.Type.ToSqlDataType(column.Length, column.Precision, column.Scale, toTableType);
 
+    /* A value the declaration wrote, as SQL spells it. Quoted by what the COLUMN is and never by
+     * what the text looks like: '20' is a code in one column and a number in another, and guessing
+     * from the spelling would make the meaning of a declaration depend on how it was typed.
+     * A reference is spelled by its KEY here - platformid is deliberately absent, because its base
+     * is a property of the database and a literal identifier in a file is not a thing we support.
+     */
+    public static String SqlLiteral(this TableColumn column, String value)
+    {
+        var ti = column.ToSqlDbTypeInfo();
+        return ti.SqlName switch
+        {
+            "nvarchar" or "nchar" => $"N'{value.Replace("'", "''")}'",
+            "bit" => value == "1" || value.Equals("true", StringComparison.OrdinalIgnoreCase) ? "1" : "0",
+            "int" or "bigint" or "smallint" or "decimal" or "money" or "float" =>
+                Decimal.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var num)
+                    ? num.ToString(CultureInfo.InvariantCulture)
+                    : throw new InvalidOperationException(
+                        $"'{value}' is not a number, and column '{column.Name}' is {ti.SqlName}"),
+            _ => throw new InvalidOperationException(
+                $"A literal value is not supported for column '{column.Name}' ({column.Type})")
+        };
+    }
+
     public static String SqlModelColumnName(this TableColumn column, String alias, Func<TableMetadata, String> refPredicate)
         => column.Type switch
         {
             ColumnType.Id => $"[Id!!Id] = {alias}.[Id]",
             ColumnType.Name => $"[Name!!Name] = {alias}.[Name]",
             ColumnType.RowNumber => $"[{column.Name}!!RowNumber] = {alias}.[{column.Name}]",
-            ColumnType.Ref or ColumnType.Document or ColumnType.Operation =>
+            ColumnType.Ref or ColumnType.Document or ColumnType.Operation or ColumnType.Enum =>
                 $"[{column.Name}!{refPredicate(column.RefTableCheck.Storage)}!RefId] = {alias}.[{column.Name}]",
             _ => $"{alias}.[{column.Name}]"
         };

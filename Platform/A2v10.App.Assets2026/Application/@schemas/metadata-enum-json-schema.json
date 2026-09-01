@@ -1,0 +1,45 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://a2v10.com/schemas/metadata-enum-json-schema.json",
+    "title": "A2v10 metadata.json (enum)",
+    "description": "One enum set: a closed list of codes that a column points at and that code branches on. An open list somebody browses is a catalog, not this. The shape of the table is fixed by the platform (Id, Name, Memo, Order, Void), so this file says only where the rows live and what they are - no fields, no forms, no rules: nothing renders a page here, the values arrive with whatever screen references them.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [ "table" ],
+    "properties": {
+        "$schema": { "type": "string" },
+        "table": {
+            "type": "string",
+            "description": "The SQL table of the set, in schema 'enm'. Declared and never derived from the folder - the same rule every other endpoint follows."
+        },
+        "model": {
+            "type": "string",
+            "description": "Base of the generated names: the row type ('T' + model), the array (its plural) and the localization keys of the values. Defaults to the endpoint folder name in PascalCase, so a folder written in kebab-case ('vat-rate') gives 'VatRate'."
+        },
+        "values": {
+            "type": "array",
+            "description": "The values of the set, in the order they are shown - 'order' is the position here and is never written. The list is the whole truth about the set: a value dropped from it is marked void on deploy, never deleted, so the records that carry it keep it and it merely stops being offered. The 'All' row a filter shows is not declared here - the platform adds it, with the empty string for a key.",
+            "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [ "id" ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "description": "The code, as the referencing column stores it."
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Presentation. Defaults to the localization key '@[{model}.{id}]'. The key carries the set's name on purpose: two equal codes in two sets would otherwise collapse into one translation, and that does not surface until the second language."
+                    },
+                    "memo": { "type": "string" },
+                    "void": {
+                        "type": "boolean",
+                        "description": "Withdrawn from use: stays in the records that already carry it and leaves the list of candidates. A record holding a void value opens with an empty control and cannot be saved until a live value is picked - which is the intended migration, not a defect."
+                    }
+                }
+            }
+        }
+    }
+}

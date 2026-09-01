@@ -11,7 +11,8 @@ public enum FilterKind
 {
     Period,
     Ref,
-    Tags
+    Tags,
+    Enum
 }
 
 /* One filter an endpoint has. 'Name' is all three at once: the namespace entry, the property under
@@ -35,8 +36,13 @@ internal static class FilterMetadata
         if (table.HasPeriod)
             yield return new FilterDescriptor(FilterKind.Period, Constants.FilterNames.Period);
 
+        /* Two kinds, not one with a branch in the control: 'Ref' means the candidates are fetched
+         * by address, and an enum has no address to fetch from - its whole set rides with the page.
+         * The value differs with it (a code, not a reference), so the SQL, the CollectionView and
+         * the panel all read one answer instead of each asking 'but is this one an enum?'.
+         */
         foreach (var col in table.AllColumns(c => c.IsRef))
-            yield return new FilterDescriptor(FilterKind.Ref, col.Name, col);
+            yield return new FilterDescriptor(col.IsEnum ? FilterKind.Enum : FilterKind.Ref, col.Name, col);
 
         if (table.HasTags)
             yield return new FilterDescriptor(FilterKind.Tags, Constants.FilterNames.Tags);

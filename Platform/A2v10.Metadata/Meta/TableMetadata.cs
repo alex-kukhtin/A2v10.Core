@@ -21,7 +21,8 @@ public enum EndpointKind
     Details,
     Folders,
     Tags,
-    TagEntries
+    TagEntries,
+    Enum
 }
 public enum ColumnType
 {
@@ -79,7 +80,6 @@ public enum ColumnType
     Uniqueidentifier
 }
 
-public record ReferenceMember(TableColumn Column, TableMetadata Table, Int32 Index);
 public record RefDescriptor(Int32 Index, TableColumn Column, TableMetadata Table);
 
 public record TableColumn
@@ -108,9 +108,10 @@ public record TableColumn
     public IRefTarget RefTableCheck => RefTable ?? throw new InvalidOperationException($"RefTable for '{Name}' is null");
 
     [JsonIgnore] 
-    internal Boolean IsRef => Type == ColumnType.Ref || Type == ColumnType.Owner || 
-            Type == ColumnType.User || Type == ColumnType.Document || 
-            Type == ColumnType.Company || Type == ColumnType.Operation;
+    internal Boolean IsRef => Type == ColumnType.Ref || Type == ColumnType.Owner ||
+            Type == ColumnType.User || Type == ColumnType.Document ||
+            Type == ColumnType.Company || Type == ColumnType.Operation ||
+            Type == ColumnType.Enum;
 
     internal String Presentation
     {
@@ -257,6 +258,11 @@ public sealed record TableMetadata
     )];
     public Dictionary<String, TableMetadata> Details { get; private set; } = [];
     public Dictionary<String, TableKindMetadata> Kinds { get; init; } = [];
+    /* The rows of a set, in the shape and not in the declaration: they are deployed with the table
+     * and the whole deploy pipeline is a function of TableMetadata. 'Kinds' above is the same kind
+     * of thing - a closed vocabulary declared with the shape, ordered by the order it is written in.
+     */
+    public List<EnumValueMetadata> Values { get; init; } = [];
     public List<TableTrait> Traits { get; init; } = [];
 
     // for sql
@@ -419,8 +425,13 @@ public sealed record TableMetadata
          * a near miss creates a second table instead of failing. DatabaseMetadataProvider
          * requires it to be declared, so an empty Table here belongs to a kind that has none.
          */
+        /* Kebab, not just capitalized: the folder is an address segment and may be written
+         * 'vat-rates', while Model is the stem of a TYPE name (TVatRates, TRVatRates) and of the
+         * collection. A dash survives every quoted place it lands in and fails in the unquoted
+         * ones - a generated class name among them - which is a break far from its cause.
+         */
         if (String.IsNullOrEmpty(Model))
-            Model = table.ToPascalCase();
+            Model = table.KebabToPascal();
         if (Kind == EndpointKind.Undefined)
             Kind = schema.ToEndpointKind();
         if (String.IsNullOrEmpty(Label))
@@ -431,6 +442,14 @@ public sealed record TableMetadata
     }
 }
 public record OperationMetadata(String Id, String? Name, String? Category);
-public record EnumValueMetadata(String Id, String Name, Int32 Order, Boolean? Inactive);
-public record EnumMetadata(String Name, EnumValueMetadata[] Values);
+
+/* One value of a set. Only 'id' is required: 'name' defaults to the localization key
+ * '@[{Model}.{Id}]' (the key must carry the set's name, or two 'Complete' in two sets collapse
+ * into one translation), and 'order' is not written at all - it is the position in the list, the
+ * same rule the tabs of 'kinds' follow.
+ *
+ * 'void' is a withdrawn value: it stays in the records that already carry it and leaves the list
+ * of candidates.
+ */
+public record EnumValueMetadata(String Id, String? Name, String? Memo, Boolean Void);
 

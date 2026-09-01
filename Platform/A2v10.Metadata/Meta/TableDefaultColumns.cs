@@ -17,6 +17,7 @@ internal static class TableDefaultColumns
             EndpointKind.Details => DetailsDefaultColumns(table),
             EndpointKind.Operation => OperationDefaultColumns(table),
             EndpointKind.Folders => FolderDefaultColumns(table),
+            EndpointKind.Enum => EnumDefaultColumns(table),
             EndpointKind.Tags => TagsDefaultColumns(table),
             EndpointKind.TagEntries => TagsEntriesDefaultColumns(table),
             _ => throw new InvalidOperationException($"Default columns not defined for {table.Kind}")
@@ -68,6 +69,26 @@ internal static class TableDefaultColumns
         yield return new TableColumn(Constants.FieldNames.Id, ColumnType.Id);
         yield return new TableColumn(Constants.FieldNames.Name, ColumnType.Name);
         yield return new TableColumn(Constants.FieldNames.Memo, ColumnType.Memo);
+    }
+
+    /* A set of codes: the key is the code itself, so it is a string and not ColumnType.Id - which
+     * would be platformid, and would bring a sequence default onto a key the declaration writes.
+     * Not ColumnType.Enum either: that one means 'a reference to a set', IsRef says yes to it, and
+     * a set whose own key is a reference to itself is the double role that was removed elsewhere.
+     * The length is the one every discriminator has, so both sides of the FK are spelled by the
+     * same ToSqlDbTypeInfo branch.
+     */
+    static IEnumerable<TableColumn> EnumDefaultColumns(TableMetadata table)
+    {
+        yield return new TableColumn(Constants.FieldNames.Id, ColumnType.String) { Length = 64 };
+        /* Void and not a bit of its own: 'withdrawn from use' is the same statement the platform
+         * already makes about a catalog row, and it is the same everywhere - not null, default 0,
+         * never an index column. A value that is void keeps its rows and leaves the candidate list.
+         */
+        yield return new TableColumn(Constants.FieldNames.Void, ColumnType.Void);
+        yield return new TableColumn(Constants.FieldNames.Name, ColumnType.Name);
+        yield return new TableColumn(Constants.FieldNames.Memo, ColumnType.Memo);
+        yield return new TableColumn(Constants.FieldNames.Order, ColumnType.Integer);
     }
 
     static IEnumerable<TableColumn> TagsDefaultColumns(TableMetadata table)

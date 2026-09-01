@@ -43,6 +43,12 @@ internal partial class XamlBuilder
             {
                 Header = col.Header,
                 Role = col.Type.ToXamlColumnRole(),
+                /* No sort on an enum: neither its Order nor its Name is the alphabet the cell
+                 * shows. Said with Sort and not by leaving SortProperty empty - an empty one is
+                 * filled from the binding path at init, so that would have changed the sort key
+                 * rather than removed the sort.
+                 */
+                Sort = col.IsEnum ? false : null,
                 SortProperty = col.IsRef ? col.Name : null,
                 Bindings = b => b.SetBinding(nameof(DataGridColumn.Content),
                     new Bind(col.DisplayPath) { DataType = col.Type.ToXamlDataType() })
@@ -62,6 +68,8 @@ internal partial class XamlBuilder
             {
                 FilterKind.Period => new FilterItem() { Property = f.Name, DataType = DataType.Period },
                 FilterKind.Tags => new FilterItem() { Property = f.Name, DataType = DataType.String },
+                // the code itself, not an object - see the ComboBox in ControlsXaml
+                FilterKind.Enum => new FilterItem() { Property = f.Name, DataType = DataType.String },
                 _ => new FilterItem() { Property = f.Name, DataType = DataType.Object }
             };
     }

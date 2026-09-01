@@ -3,6 +3,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 
 using A2v10.Infrastructure;
 using A2v10.Services;
@@ -28,6 +30,7 @@ internal static class MetadataExtensions
             Constants.SchemaNames.Document => EndpointKind.Document,
             Constants.SchemaNames.Journal => EndpointKind.Journal,
             Constants.SchemaNames.Report => EndpointKind.Report,
+            Constants.SchemaNames.Enum => EndpointKind.Enum,
             _ => throw new InvalidOperationException($"Invalid schema for EndpointKind '{schema}'")
         };
     }
@@ -40,6 +43,7 @@ internal static class MetadataExtensions
             Constants.SchemaNames.Document => "doc",
             Constants.SchemaNames.Journal => "jrn",
             Constants.SchemaNames.Report => "rep",
+            Constants.SchemaNames.Enum => "enm",
             "account" => "acc",
             "inforegister" => "regi",
             _ => folder
@@ -54,35 +58,26 @@ internal static class MetadataExtensions
         return new PlatformUrl(url);
     }
 
-    internal static TableMetadata CreateEnumMeta(TableColumn col)
-    {
-        return new TableMetadata()
-        {
-            //Schema = col.Reference.RefSchema,
-            Table = col.RefTableCheck.Storage.Table,
-            /*
-            Columns = [
-                new TableColumn()
-                    {
-                        Name = "Id",
-                        DataType = ColumnDataType.String,
-                        MaxLength = 16,
-                        Role = TableColumnRole.PrimaryKey,
-                    },
-                    new TableColumn()
-                    {
-                        Name = "Name",
-                        DataType = ColumnDataType.String,
-                        MaxLength = 255,
-                        Role = TableColumnRole.Name,
-                    }
-            ]
-            */
-        };
-    }
-
     internal static IEnumerable<TableColumn> AllColumns(this TableMetadata table, Func<TableColumn, Boolean>? predicate = null) =>
         table.DefaultColumns().Concat(table.Columns).Where(predicate ?? (_ => true));
+
+    /* Everything about a table that the seed cannot say in columns, as one fingerprint. The deploy
+     * hash is taken from the seed - so what is not in the seed cannot start a deployment, and a
+     * declaration that changed would silently never reach the database. A hash and not the content
+     * itself: the seed answers 'has this changed', and the content is deployed by the script that
+     * owns it.
+     *
+     * Today its only filler is the declared values of an enum.
+     */
+    internal static String? Xtra(this TableMetadata table)
+    {
+        if (table.Values.Count == 0)
+            return null;
+        // the position is part of the value (it becomes Order), so the index is in the text
+        var text = String.Join('\n', table.Values.Select((v, ix) =>
+            $"{ix}|{v.Id}|{v.Name}|{v.Memo}|{(v.Void ? 1 : 0)}"));
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text))).ToLowerInvariant();
+    }
 
     /* The names the transactions dialog calls one journal by - its array, its row type, the value
      * its tab switches on and the key its caption is localized under. All four are the journal's

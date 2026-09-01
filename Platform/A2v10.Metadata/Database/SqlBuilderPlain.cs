@@ -91,6 +91,20 @@ internal partial class SqlBuilder
                 return $"[{Table.Model}.{key}!{column.RefTableCheck.Storage.TypeName}!RefId] = @Init{key}";
             }
 
+            /* A value written in the file. A reference is declared by its KEY and comes back as an
+             * object, so it is emitted as a RefId and resolved through the map - the same shape the
+             * document operation has always had, one line below. The map is filled for it by
+             * RefMapBuilder.GenerateInitialRefs; without that the control opens empty.
+             */
+            String getDefaultLiteral(String key, String value)
+            {
+                var column = Table.Columns.FirstOrDefault(c => c.Name == key)
+                    ?? throw new InvalidOperationException($"Column {key} not found in {Table.SqlTableName}");
+                return column.IsRef
+                    ? $"[{Table.Model}.{key}!{column.RefTableCheck.Storage.TypeName}!RefId] = {column.SqlLiteral(value)}"
+                    : $"[{Table.Model}.{key}] = {column.SqlLiteral(value)}";
+            }
+
             String getDefaultContext(String key, String value)
             {
                 return value switch
@@ -107,6 +121,7 @@ internal partial class SqlBuilder
                 p.Value.Source switch
                 {
                     InitialSource.Profile => getDefaultProfile(p.Key),
+                    InitialSource.Literal => getDefaultLiteral(p.Key, p.Value.Value),
                     InitialSource.Context => getDefaultContext(p.Key, p.Value.Value),
                     _ => throw new InvalidOperationException($"Invalid initial source {p.Value.Source}")
                 }
@@ -207,6 +222,13 @@ internal partial class SqlBuilder
         // STEP 3: map recordsets
 
         refMap.WriteRefMap(sb);
+
+        // without the 'All' row: a record picks a value, and 'all of them' is not one
+        foreach (var en in EnumTargets(withDetails: true))
+        {
+            sb.AppendLine();
+            sb.AppendLine(EnumValuesRecordset(en, withAll: false));
+        }
 
         var defs = generateDefaults();
         if (defs != null) {

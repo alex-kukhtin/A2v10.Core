@@ -246,6 +246,25 @@ internal class RefMapBuilder
         return sb.ToString();
     }
     
+    /* What a NEW record starts on has to be in the map too, or its RefId resolves to nothing and
+     * the card opens on an empty control. Only references: a literal in a scalar column is written
+     * into the defaults recordset and has nothing to resolve.
+     */
+    String? GenerateInitialRefs()
+    {
+        if (!_hasDefaults || _declaration == null || _endpoint == null)
+            return null;
+        var refs = _declaration.InitialValues
+            .Where(x => x.Value.Source == InitialSource.Literal)
+            .Select(x => (Column: _endpoint.Storage.Columns.FirstOrDefault(c => c.Name == x.Key), x.Value.Value))
+            .Where(x => x.Column != null && x.Column.IsRef)
+            .ToList();
+        if (refs.Count == 0)
+            return null;
+        return String.Join(Environment.NewLine, refs.Select(r =>
+            $"insert into @map([{r.Column!.Name}]) values ({r.Column.SqlLiteral(r.Value)});"));
+    }
+
     String? GenerateDocOperations()
     {
         if (!_hasDefaults || _endpoint == null)
@@ -277,6 +296,13 @@ internal class RefMapBuilder
         {
             sb.AppendLine();
             sb.AppendLine(docOps);
+        }
+
+        var initRefs = GenerateInitialRefs();
+        if (initRefs != null)
+        {
+            sb.AppendLine();
+            sb.AppendLine(initRefs);
         }
 
         var initials = GenerateInitials();

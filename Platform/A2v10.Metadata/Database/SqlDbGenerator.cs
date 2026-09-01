@@ -75,6 +75,12 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         allScript.AppendLine(CreateTablesScript(tables));
         allScript.AppendLine(CreateTableTypesScript(tables));
         allScript.AppendLine(SyncSchemaScript());
+        /* After SyncSchema, because a column added to the shape of a set is written by this merge;
+         * before the foreign keys, because 'alter table add constraint foreign key' validates the
+         * rows that are already there - a document on a code the set does not carry yet would
+         * fail the deploy instead of being corrected by it.
+         */
+        allScript.AppendLine(CreateEnumValuesScript(tables));
         allScript.AppendLine(CreateForeignKeysScript(tables));
         //* 5. INDEXES
 
@@ -170,6 +176,68 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         return strBuilder.ToString();
     }
 
+    /* The rows of every declared set. Not part of the metadata seed even though it is declaration:
+     * the seed runs first, before the tables exist, and it answers 'what is the schema'. What makes
+     * a changed list of values reach the database at all is the fingerprint the seed carries for the
+     * table (TableMetadata.Xtra) - without it the hash would match and this script would never run.
+     *
+     * A value that disappears from the file is WITHDRAWN, not erased: records already point at it,
+     * and 'no longer choosable' is exactly what Void says. So dropping a value from the file and
+     * writing 'void': true mean the same thing on the database side. Deleting would fail on the
+     * foreign key wherever the value is used, and lose the name of the code wherever it is not.
+     *
+     * The 'All' row is added here and never declared: its key is the empty string, it means 'do not
+     * restrict', and that is a state of a filter rather than a value a record can hold.
+     */
+    private static String CreateEnumValuesScript(IEnumerable<TableMetadata> tables)
+    {
+        static String Str(String? val) =>
+            val == null ? "null" : $"N'{val.Replace("'", "''")}'";
+
+        var enums = tables.Where(t => t.Kind == EndpointKind.Enum && t.Values.Count > 0).ToList();
+        if (enums.Count == 0)
+            return String.Empty;
+
+        var sb = new StringBuilder();
+        sb.AppendLine("-- ENUM VALUES");
+        foreach (var e in enums)
+        {
+            var rows = new List<String>
+            {
+                $"\t({Str(String.Empty)}, {Str($"@[{e.Model}.All]")}, null, -1, 0)"
+            };
+            rows.AddRange(e.Values.Select((v, ix) =>
+                $"\t({Str(v.Id)}, {Str(v.Name ?? $"@[{e.Model}.{v.Id}]")}, {Str(v.Memo)}, {ix}, {(v.Void ? 1 : 0)})"));
+
+            sb.AppendLine($"""
+            {CliDatabaseCreator.SQL_DIVIDER}
+            begin
+                set nocount on;
+                declare @{e.Model} table([Id] nvarchar(64), [Name] nvarchar(255), [Memo] nvarchar(255),
+                    [Order] int, [Void] bit);
+
+                insert into @{e.Model}([Id], [Name], [Memo], [Order], [Void]) values
+            {String.Join($",{Environment.NewLine}", rows)};
+
+                merge {e.SqlTableName} as t
+                using @{e.Model} as s
+                on t.[Id] = s.[Id]
+                when matched then update set
+                    t.[Name] = s.[Name],
+                    t.[Memo] = s.[Memo],
+                    t.[Order] = s.[Order],
+                    t.[Void] = s.[Void]
+                when not matched then insert ([Id], [Name], [Memo], [Order], [Void]) values
+                    (s.[Id], s.[Name], s.[Memo], s.[Order], s.[Void])
+                when not matched by source then update set
+                    t.[Void] = 1;
+            end
+            go
+            """);
+        }
+        return sb.ToString();
+    }
+
     private static String CreateTableTypesScript(IEnumerable<TableMetadata> tables)
     {
         static Boolean HasTableType(TableMetadata table)
@@ -241,6 +309,15 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
      * The invariant to keep: everything the deployment learns to do (indexes, CHECK
      * constraints, computed columns) must also make it into the seed. Otherwise the
      * change is there while the hash stays the same.
+     *
+     * And that is why the hash is NOT taken from the whole generated script, however
+     * tempting that looks as a way to keep the invariant automatically. The hash has to be
+     * a function of the DECLARATION: over the script it would answer 'did the generator's
+     * output change' instead, so a reformatting in a platform release would re-run a full
+     * deploy on every customer database - and CreatePlatformIdScript depends on the base the
+     * database runs on, so one declaration would even hash differently on two of them.
+     * A new fact reaches the hash by being written into the seed - see the 'xtra'
+     * fingerprint of a table, which is what carries the declared values of an enum.
      */
 
     private static readonly Version assVersion = Assembly.GetExecutingAssembly().GetName().Version ?? new();
@@ -272,7 +349,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
 
         void AddTable(TableMetadata t)
         {
-            sqlTables.Add($"\t({Str(t.SqlSchema)}, {Str(t.Table)})");
+            sqlTables.Add($"\t({Str(t.SqlSchema)}, {Str(t.Table)}, {Str(t.Xtra())})");
             foreach (var col in t.AllColumns())
                 sqlColumns.Add(ColumnRow(t, col));
         }
@@ -299,12 +376,12 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         /* METADATA SEED. Version: {version} */
         begin
             set nocount on;
-            declare @tables table([schema] sysname, [table] sysname);
+            declare @tables table([schema] sysname, [table] sysname, [xtra] nvarchar(64));
             declare @columns table([schema] sysname, [table] sysname, [column] sysname, [datatype] sysname,
                 [length] int, [precision] tinyint, [scale] tinyint, [nullable] bit,
                 [ref_schema] nvarchar(128), [ref_table] nvarchar(128), [default] nvarchar(128));
 
-            insert into @tables([schema], [table]) values
+            insert into @tables([schema], [table], [xtra]) values
             {String.Join(rowDiv, sqlTables)};
 
             insert into @columns([schema], [table], [column], [datatype],
@@ -315,8 +392,10 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
             merge a2meta.Tables as t
             using @tables as s
             on t.[schema] = s.[schema] and t.[table] = s.[table]
-            when not matched then insert([schema], [table]) values
-               (s.[schema], s.[table])
+            when matched then update set
+                t.[xtra] = s.[xtra]
+            when not matched then insert([schema], [table], [xtra]) values
+               (s.[schema], s.[table], s.[xtra])
             when not matched by source then delete;
 
             -- merge columns

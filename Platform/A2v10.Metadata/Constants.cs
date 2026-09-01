@@ -27,6 +27,7 @@ internal static class Constants
         public const String For = nameof(For);
         public const String Tag = nameof(Tag);
         public const String Tags = nameof(Tags);
+        public const String Order = nameof(Order);
     }
     public static class FieldSizes
     {
@@ -96,5 +97,9 @@ internal static class Constants
          */
         public const String Operation = "operation";
         public const String Tag = "tag";
+        /* One step further than those two: an enum has no endpoint at all, in code or in files.
+         * The namespace exists so that a reference can name a set by address.
+         */
+        public const String Enum = "enum";
     }
 }

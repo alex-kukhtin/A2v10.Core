@@ -36,6 +36,13 @@ internal partial class SqlBuilder
         var allColumns = Table.AllColumns().ToList();
         var refs = allColumns.AllRefs().ToList();
 
+        /* Searchable references only. A set is not one: its Name is a localization key, so a
+         * fragment would be matched against '@[VatRate.20]' - the English code is findable, the
+         * translation the user is actually reading is not. The join has no other purpose here, so
+         * it goes with the predicate rather than staying as a cost with no function.
+         */
+        var searchRefs = refs.Where(r => !r.Column.IsEnum).ToList();
+
         // parse query
         if (qry != null)
         {
@@ -53,7 +60,14 @@ internal partial class SqlBuilder
                 dir = DEFAULT_DIR;
             var queryOrder = qry.Get<String>("Order");
 
-            var orderColumn = allColumns.FirstOrDefault(c => c.Name.Equals(queryOrder, StringComparison.OrdinalIgnoreCase));
+            /* An enum column is not sortable at all, and the header offers no sort on it. Both
+             * candidates lie about what the column shows: 'Order' is the order the set was
+             * declared in, 'Name' is a localization key, and the cell displays the translation of
+             * that key - so neither is the alphabet the reader sees. An unsortable name falls back
+             * to the default, exactly like an unknown one.
+             */
+            var orderColumn = allColumns.FirstOrDefault(c =>
+                c.Name.Equals(queryOrder, StringComparison.OrdinalIgnoreCase) && !c.IsEnum);
             if (orderColumn != null)
             {
                 var rd = refs.FirstOrDefault(r => r.Column == orderColumn);
@@ -106,12 +120,22 @@ internal partial class SqlBuilder
                         on ta.[Owner] = a.Id and ta.[Tag] = f.Id)
                 """);
 
+            /* An enum filter has a value meaning 'no restriction' - the set's own 'All' row, whose
+             * key is the empty string. Nothing else in the platform has such a value, which is why
+             * this predicate is not the general one. Null is not among the cases: it was turned
+             * into the empty string at the top, in one place, before anything reads the parameter.
+             */
+            String filterPredicate((String name, String value) f) =>
+                allColumns.FirstOrDefault(c => c.Name == f.name)?.IsEnum == true
+                    ? $"(@{f.name} = N'' or a.[{f.name}] = @{f.name})"
+                    : $"a.[{f.name}] = @{f.name}";
+
             if (filters.Count > 0)
-                sb.AppendLine($" and {String.Join(" and ", filters.Select(f => $"a.[{f.name}] = @{f.name}"))}");
+                sb.AppendLine($" and {String.Join(" and ", filters.Select(filterPredicate))}");
             if (!String.IsNullOrEmpty(fragment))
             {
                 var searchColumns = allColumns.Where(c => c.IsSearchable).Select(x => $"a.[{x.Name}] like @fr")
-                    .Concat(refs.Select(r => $"r{r.Index}.[{r.Column.Presentation}] like @fr")).ToList();
+                    .Concat(searchRefs.Select(r => $"r{r.Index}.[{r.Column.Presentation}] like @fr")).ToList();
                 if (searchColumns.Count > 0)
                 {
                     sb.Append($" and ({String.Join(" or ", searchColumns)})");
@@ -144,6 +168,18 @@ internal partial class SqlBuilder
                 sb.AppendLine("set @From = isnull(@From, getdate());");
                 sb.AppendLine("set @To = isnull(@To, getdate());");
                 sb.AppendLine("declare @end date = dateadd(day, 1, @To)");
+            }
+
+            /* An enum filter has no state between 'nothing was sent' and 'everything': the set
+             * carries an 'All' row of its own and its key is the empty string. Normalized once,
+             * here, so that the WHERE, the map insert and the Filter that goes back all read the
+             * same value - a null reaching the control would match no item in the list and leave
+             * the ComboBox blank on the first load. Same as the hand-written '@X nvarchar(64) = N'''.
+             */
+            foreach (var en in refs.Where(r => r.Column.IsEnum))
+            {
+                sb.AppendLine();
+                sb.AppendLine($"set @{en.Column.Name} = isnull(@{en.Column.Name}, N'');");
             }
 
             // CAST takes system types only, so it names the base the database reported for
@@ -189,8 +225,9 @@ internal partial class SqlBuilder
             sb.AppendLine($"from {Table.SqlTableName} a");
             if (!String.IsNullOrEmpty(fragment))
             {
-                // find always
-                foreach (var (index, column, table) in refs)
+                // find always. The sorted-on reference is among these: an enum, the one kind that is
+                // not searchable, is not sortable either, so no ORDER BY names an alias missing here
+                foreach (var (index, column, table) in searchRefs)
                     sb.AppendLine($"  left join {table.SqlTableName} r{index} on r{index}.Id = a.[{column.Name}]");
             }
             else if (refdescr != null)
@@ -201,7 +238,30 @@ internal partial class SqlBuilder
 
             sb.AppendLine(buildWhereClause());
 
-            sb.AppendLine($"order by {field} {dir}");
+            /* The tiebreaker is what makes paging deterministic. OFFSET/FETCH re-runs the whole
+             * query for every page, and rows equal on the sort key have no order between two
+             * executions - so one row lands on two pages and another on none, with the data
+             * unchanged. option(recompile) below makes that MORE likely, not less: consecutive
+             * pages are compiled separately.
+             *
+             * It must be unique per row of the RESULT, and the result is rows of 'a'. Not the
+             * joined ref's Id, and not the foreign key beside it: both are one value inside a tie
+             * group by construction (r.Id = a.[Col]), so neither splits anything. There is exactly
+             * one such column, so the tiebreaker is the same whatever the sort is - except when the
+             * sort IS that column: 'order by a.Id desc, a.[Id] desc' is not a tiebreak but error
+             * 169, and the default sort is precisely that case.
+             *
+             * Asked of 'value' and not of 'field': 'value' is the sort key in the model's terms,
+             * while 'field' is the SQL spelling and has three of them ('a.Id', 'a.{Name}',
+             * 'r1.[Name]') - comparing that would tie this to how the string is formatted.
+             *
+             * Same direction as the sort: a nonclustered index is ordered by (key, clustering key),
+             * so 'desc, desc' is still a backward scan while 'desc, asc' would force a Sort.
+             */
+            var tiebreaker = value == Constants.FieldNames.Id
+                ? String.Empty
+                : $", a.[{Constants.FieldNames.Id}] {dir}";
+            sb.AppendLine($"order by {field} {dir}{tiebreaker}");
             sb.AppendLine("offset @Offset rows fetch next @PageSize rows only option(recompile);");
             sb.AppendLine();
 
@@ -253,6 +313,13 @@ internal partial class SqlBuilder
                 """);
             }
 
+            // with the 'All' row: here the list is what a FILTER picks from
+            foreach (var en in EnumTargets(withDetails: false))
+            {
+                sb.AppendLine();
+                sb.AppendLine(EnumValuesRecordset(en, withAll: true));
+            }
+
 
 
             // STEP 6: system recorset (filters -> always!)
@@ -275,7 +342,15 @@ internal partial class SqlBuilder
                     + $"= @{Constants.FilterNames.Tags}");
             if (refs.Count > 0) {
                 sb.Append(", ");
-                sb.Append(String.Join(", ", refs.Select(rt => $"[!{collectionName}.{rt.Column.Name}.{rt.Table.RefTypeName}.RefId!Filter] = @{rt.Column.Name}")));
+                /* An enum filter comes back as the bare code: that is what the ComboBox writes into
+                 * the Filter and what the WHERE compares. A RefId here would resolve it through the
+                 * map instead - an object of the map's type, which is not the type of the candidate
+                 * list, so the control would find nothing to select.
+                 *
+                 */
+                sb.Append(String.Join(", ", refs.Select(rt => rt.Column.IsEnum
+                    ? $"[!{collectionName}.{rt.Column.Name}!Filter] = @{rt.Column.Name}"
+                    : $"[!{collectionName}.{rt.Column.Name}.{rt.Table.RefTypeName}.RefId!Filter] = @{rt.Column.Name}")));
             }
             sb.AppendLine(";");
             return sb.ToString();
@@ -328,6 +403,14 @@ internal partial class SqlBuilder
                 var name = $"@{rd.Column.Name}";
                 if (rd.Column.IsOperation)
                     dbprms.AddString(name, String.IsNullOrEmpty(val) ? null : val);
+                /* Deliberately NOT the line above. There an empty value means the filter was not
+                 * picked, so it is erased to null; here the empty string is the key of a real row -
+                 * the set's 'All' - and the WHERE reads it as such. Blanking it would make the
+                 * chosen 'All' indistinguishable from an untouched filter, on the way in and in the
+                 * Filter property that comes back.
+                 */
+                else if (rd.Column.IsEnum)
+                    dbprms.AddString(name, val);
                 else
                     dbprms.AddTyped(name, _descr.PlatformId.SqlDbType, _descr.PlatformId.ParseId(val));
             }

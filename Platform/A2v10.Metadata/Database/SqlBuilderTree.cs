@@ -30,7 +30,6 @@ internal partial class SqlBuilder
             return Table.AllColumns(includeColumn).Select(col => col.SqlModelColumnName(alias, t => t.RefTypeName));
         }
 
-        var enumFields = DatabaseMetadataProvider.EnumFields(Table, false);
         var sqlString = $"""
         set nocount on;
         set transaction isolation level read uncommitted;
