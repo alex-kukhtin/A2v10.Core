@@ -28,6 +28,14 @@ internal static class Constants
         public const String Tag = nameof(Tag);
         public const String Tags = nameof(Tags);
         public const String Order = nameof(Order);
+        public const String Pattern = nameof(Pattern);
+        public const String Period = nameof(Period);
+        // the counters table: which numbering, which period, where it has got to
+        public const String Autonum = nameof(Autonum);
+        public const String Year = nameof(Year);
+        public const String Quart = nameof(Quart);
+        public const String Month = nameof(Month);
+        public const String CurrentNumber = nameof(CurrentNumber);
     }
     public static class FieldSizes
     {
@@ -101,5 +109,12 @@ internal static class Constants
          * The namespace exists so that a reference can name a set by address.
          */
         public const String Enum = "enum";
+        /* One file at the root and no folders under it: there is one registry of numberings, and
+         * its schema, table and model default in TableMetadata.SetDefaults. The price is locality -
+         * what 'waybill' is cannot be read beside the endpoint that names it, and the file grows
+         * with the application. What makes that affordable is that the name resolves at load, so a
+         * wrong one fails there and not at the first save.
+         */
+        public const String Autonum = "autonum";
     }
 }

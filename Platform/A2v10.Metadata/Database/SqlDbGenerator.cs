@@ -81,8 +81,10 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
          * fail the deploy instead of being corrected by it.
          */
         allScript.AppendLine(CreateEnumValuesScript(tables));
+        allScript.AppendLine(CreateAutonumsScript(tables));
+        allScript.AppendLine(CreateAutonumProcedureScript(tables));
         allScript.AppendLine(CreateForeignKeysScript(tables));
-        //* 5. INDEXES
+        allScript.AppendLine(CreateIndexesScript(tables));
 
         // Materialize first, execute second - and execute exactly the same text.
         await WriteDeployDatabaseFileAsync(allScript.ToString());
@@ -148,29 +150,41 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         return sb.ToString();
     }
 
+    /* Every table the deploy touches: the ones declared in files, and the satellites the platform
+     * adds to them - tag entries, autonum counters, the rows of a collection. Four steps walk this
+     * (tables, seed, foreign keys, indexes) and they used to walk it four times, agreeing only
+     * because someone kept them equal.
+     *
+     * The owner travels with the table because a foreign key needs it and nothing else does. It is
+     * cheaper to hand it out here than to have a second walk repeat the same three rules to find
+     * out who owns what.
+     *
+     * The tags catalog is nobody's satellite - one table for the whole application - so it comes
+     * once, after the walk, and only if anything is tagged.
+     */
+    private static IEnumerable<(TableMetadata Table, TableMetadata? Owner)> DeployTables(IEnumerable<TableMetadata> tables)
+    {
+        foreach (var table in tables)
+        {
+            yield return (table, null);
+            if (table.HasTags)
+                yield return (TableMetadataDefaults.CreateTagEntriesTable(table), table);
+            if (table.Kind == EndpointKind.Autonum)
+                yield return (TableMetadataDefaults.CreateAutonumValuesTable(table), table);
+            foreach (var d in table.Details.Values)
+                yield return (d, table);
+        }
+        if (tables.Any(t => t.HasTags))
+            yield return (TableMetadataDefaults.TagsTable(), null);
+    }
+
     private String CreateTablesScript(IEnumerable<TableMetadata> tables)
     {
         var strBuilder = new StringBuilder();
         strBuilder.AppendLine("-- TABLES");
-        foreach (var table in tables)
+        foreach (var (table, _) in DeployTables(tables))
         {
             strBuilder.AppendLine(_dbCreator.CreateTable(table));
-            strBuilder.AppendLine("go");
-            if (table.HasTags)
-            {
-                strBuilder.AppendLine(_dbCreator.CreateTable(TableMetadataDefaults.CreateTagEntriesTable(table)));
-                strBuilder.AppendLine("go");
-            }
-            foreach (var d in table.Details)
-            {
-                strBuilder.AppendLine(_dbCreator.CreateTable(d.Value));
-                strBuilder.AppendLine("go");
-            }
-        }
-
-        if (tables.Any(t => t.HasTags)) 
-        {
-            strBuilder.AppendLine(_dbCreator.CreateTable(TableMetadataDefaults.TagsTable()));
             strBuilder.AppendLine("go");
         }
         return strBuilder.ToString();
@@ -238,6 +252,159 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         return sb.ToString();
     }
 
+    /* The declared numberings, merged by key. Neither arm the enum script has for a row that left
+     * the file: nothing withdraws a numbering (no 'void' - nobody picks one at run time) and
+     * nothing deletes it, because its counters outlive it and documents carry the numbers it
+     * issued. The price is a registry that only grows; the row is two hundred bytes and the
+     * alternative loses the meaning of numbers already printed.
+     */
+    private static String CreateAutonumsScript(IEnumerable<TableMetadata> tables)
+    {
+        static String Str(String? val) =>
+            val == null ? "null" : $"N'{val.Replace("'", "''")}'";
+
+        var registries = tables.Where(t => t.Kind == EndpointKind.Autonum && t.Autonums.Count > 0).ToList();
+        if (registries.Count == 0)
+            return String.Empty;
+
+        var sb = new StringBuilder();
+        sb.AppendLine("-- AUTONUMS");
+        foreach (var reg in registries)
+        {
+            var rows = reg.Autonums.Select(a =>
+                $"\t({Str(a.Id)}, {Str(a.Name ?? $"@[{reg.Model}.{a.Id}]")}, {Str(a.Pattern)}, {Str(a.Period.ToString())})");
+
+            sb.AppendLine($"""
+            {CliDatabaseCreator.SQL_DIVIDER}
+            begin
+                set nocount on;
+                declare @{reg.Model} table([Id] nvarchar(64), [Name] nvarchar(255),
+                    [Pattern] nvarchar(255), [Period] nvarchar(16));
+
+                insert into @{reg.Model}([Id], [Name], [Pattern], [Period]) values
+            {String.Join($",{Environment.NewLine}", rows)};
+
+                merge {reg.SqlTableName} as t
+                using @{reg.Model} as s
+                on t.[Id] = s.[Id]
+                when matched then update set
+                    t.[Name] = s.[Name],
+                    t.[Pattern] = s.[Pattern],
+                    t.[Period] = s.[Period]
+                when not matched then insert ([Id], [Name], [Pattern], [Period]) values
+                    (s.[Id], s.[Name], s.[Pattern], s.[Period]);
+            end
+            go
+            """);
+        }
+        return sb.ToString();
+    }
+
+    /* The one place a number is issued. A procedure and not inline SQL in every save: the pattern
+     * is substituted in a dozen statements, and repeated per numbered endpoint it would be a dozen
+     * chances for two of them to differ.
+     *
+     * Two ports, @Autonum and @Date, and a number out - the document's own date, because a number
+     * belongs to the period the document is IN, not to the moment it was typed.
+     *
+     * The counter is advanced by one statement and is committed with it, before the save that
+     * asked continues. That is what makes gaps normal here - a save that fails afterwards has
+     * already spent the number - and it is the deliberate choice, see CLAUDE.md, "Autonums".
+     */
+    private static String CreateAutonumProcedureScript(IEnumerable<TableMetadata> tables)
+    {
+        var registry = tables.FirstOrDefault(t => t.Kind == EndpointKind.Autonum);
+        if (registry == null)
+            return String.Empty;
+        var values = TableMetadataDefaults.CreateAutonumValuesTable(registry);
+
+        // '$$' so that a single brace is content: the body is full of '{yyyy}' and two of them are
+        // scanned for at run time, where doubling them would be a bug that only shows in output
+        return $$"""
+        -- AUTONUM
+        {{CliDatabaseCreator.SQL_DIVIDER}}
+        create or alter procedure {{TableMetadataDefaults.AutonumProcedureName()}}
+        @Autonum nvarchar(64),
+        @Date date,
+        @Number nvarchar(64) output
+        as
+        begin
+            set nocount on;
+            set transaction isolation level read committed;
+
+            declare @pattern nvarchar(255), @y int, @q int, @m int;
+
+            select @pattern = [Pattern],
+                @y = case when [Period] <> N'{{AutonumPeriod.None}}' then year(@Date) else 0 end,
+                @q = case when [Period] = N'{{AutonumPeriod.Quarter}}' then datepart(quarter, @Date) else 0 end,
+                @m = case when [Period] = N'{{AutonumPeriod.Month}}' then month(@Date) else 0 end
+            from {{registry.SqlTableName}} where [Id] = @Autonum;
+
+            /* Not a 'UI:' message: nothing here is the user's to fix, and the load refuses a
+             * numbering that is not declared (CheckAutonumDeclaredAsync), so what is left to reach
+             * this is a database behind its own metadata. That reader needs the key and the table,
+             * which is exactly what a localized string cannot carry.
+             */
+            if @pattern is null
+            begin
+                declare @msg nvarchar(255) = concat(N'Autonum ''', @Autonum, N''' is not found in {{registry.SqlTableName}}. Redeploy the database');
+                throw 60000, @msg, 0;
+            end
+
+            /* One statement, and 'holdlock' is what makes it one: update-then-insert lets two
+             * callers both find no row for a period that has just begun and both insert one - a
+             * counter split in two, and from then on every number issued twice. The lock is taken
+             * over the table's unique index, so it is on that one key and not on a range of them.
+             */
+            declare @rtable table(number int);
+            merge into {{values.SqlTableName}} with (holdlock) as t
+            using (select @Autonum, @y, @q, @m) as s([Autonum], [Year], [Quart], [Month])
+                on t.[Autonum] = s.[Autonum] and t.[Year] = s.[Year]
+                    and t.[Quart] = s.[Quart] and t.[Month] = s.[Month]
+            when matched then update set t.[CurrentNumber] = t.[CurrentNumber] + 1
+            when not matched then insert ([Autonum], [Year], [Quart], [Month], [CurrentNumber])
+                values (s.[Autonum], s.[Year], s.[Quart], s.[Month], 1)
+            output inserted.[CurrentNumber] into @rtable(number);
+
+            declare @n int;
+            select @n = number from @rtable;
+
+            set @Number = replace(@pattern, N'{yyyy}', format(@Date, N'yyyy'));
+            set @Number = replace(@Number, N'{yy}', format(@Date, N'yy'));
+            set @Number = replace(@Number, N'{mm}', format(@Date, N'MM'));
+            set @Number = replace(@Number, N'{qq}', format(datepart(quarter, @Date), N'00'));
+
+            -- the counter's own token carries its width: '{nnnnn}' is five digits, zero padded
+            declare @p0 int, @p1 int;
+            set @p0 = charindex(N'{n', @Number);
+            set @p1 = charindex(N'n}', @Number);
+            set @Number = stuff(@Number, @p0, @p1 - @p0 + 2, format(@n, replicate(N'0', @p1 - @p0)));
+        end
+        go
+
+        """;
+    }
+
+    // Last, so a unique index meets the rows already in the table
+
+    private static String CreateIndexesScript(IEnumerable<TableMetadata> tables)
+    {
+        var scripts = DeployTables(tables).Select(t => CliDatabaseCreator.CreateIndexes(t.Table))
+            .Where(s => !String.IsNullOrWhiteSpace(s))
+            .ToList();
+        if (scripts.Count == 0)
+            return String.Empty;
+
+        var sb = new StringBuilder();
+        sb.AppendLine("-- INDEXES");
+        foreach (var script in scripts)
+        {
+            sb.AppendLine(script);
+            sb.AppendLine("go");
+        }
+        return sb.ToString();
+    }
+
     private static String CreateTableTypesScript(IEnumerable<TableMetadata> tables)
     {
         static Boolean HasTableType(TableMetadata table)
@@ -270,33 +437,15 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
     {
         var strBuilder = new StringBuilder();
         strBuilder.AppendLine("-- FOREIGN KEYS");
-        foreach (var table in tables)
+        // Owner -> the tagged table for tag entries, the header for a detail: the walk hands it
+        // out, which is the only reason it carries one.
+        foreach (var (table, owner) in DeployTables(tables))
         {
-            var fc = CliDatabaseCreator.CreateForeignKeys(table);
+            var fc = CliDatabaseCreator.CreateForeignKeys(table, owner);
             if (!String.IsNullOrWhiteSpace(fc))
             {
                 strBuilder.AppendLine(fc);
                 strBuilder.AppendLine("go");
-            }
-            // Owner -> the tagged table, Tag -> the tags catalog. Both addresses are known
-            // right here, which is why the tag entries table is passed its owner like a detail.
-            if (table.HasTags)
-            {
-                fc = CliDatabaseCreator.CreateForeignKeys(TableMetadataDefaults.CreateTagEntriesTable(table), table);
-                if (!String.IsNullOrWhiteSpace(fc))
-                {
-                    strBuilder.AppendLine(fc);
-                    strBuilder.AppendLine("go");
-                }
-            }
-            foreach (var d in table.Details)
-            {
-                fc = CliDatabaseCreator.CreateForeignKeys(d.Value, table);
-                if (!String.IsNullOrEmpty(fc))
-                {
-                    strBuilder.AppendLine(fc);
-                    strBuilder.AppendLine("go");
-                }
             }
         }
         return strBuilder.ToString();
@@ -354,17 +503,8 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
                 sqlColumns.Add(ColumnRow(t, col));
         }
 
-        foreach (var t in tables)
-        {
+        foreach (var (t, _) in DeployTables(tables))
             AddTable(t);
-            if (t.HasTags)
-                AddTable(TableMetadataDefaults.CreateTagEntriesTable(t));
-            foreach (var d in t.Details.Values)
-                AddTable(d);
-        }
-
-        if (tables.Any(t => t.HasTags))
-            AddTable(TableMetadataDefaults.TagsTable());
 
         // the hash is taken from the text, so the order must not depend on how the
         // file system happens to be enumerated

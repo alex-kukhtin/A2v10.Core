@@ -1,0 +1,43 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://a2v10.com/schemas/metadata-autonum-json-schema.json",
+    "title": "A2v10 metadata.json (autonum)",
+    "description": "The numberings of the application: one file, at the root of the 'autonum' folder, with no folders under it. An endpoint draws from one of these by writing \"autonum\": \"<id>\" in its own metadata.json, and the number lands in its column of type 'autonum'. What is NOT here: the counters. A numbering has one counter per period it has been used in, they change with every document, and they live in a table of their own - nothing about them is declared.",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "$schema": { "type": "string" },
+        "table": {
+            "type": "string",
+            "description": "The SQL table of the registry. There is one registry, at one address, so this defaults to 'Autonums' in schema 'doc' and there is no reason to write it. Written, it wins."
+        },
+        "model": {
+            "type": "string",
+            "description": "Base of the generated names and of the localization keys of the numberings. Defaults to 'Autonum', for the same reason as 'table'."
+        },
+        "autonums": {
+            "type": "object",
+            "description": "Numbering by id. The key is the id - it is what an endpoint's 'autonum' names, and there is no 'id' inside. A key dropped from this file keeps its row and its counter: documents carry the numbers it issued, and the counter must not restart.",
+            "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [ "pattern" ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Presentation. Defaults to the localization key '@[{model}.{id}]' - the rule an enum value follows."
+                    },
+                    "pattern": {
+                        "type": "string",
+                        "description": "The number itself, as a template. '{n}' is the counter and its width is what it says - '{nnnnn}' pads to five digits; it is required, and may appear once. The date placeholders are '{yy}', '{yyyy}', '{mm}' and '{qq}', filled from the DOCUMENT's date, not from the moment it was saved. Anything else in braces is refused when the file is loaded, because nothing downstream would substitute it: it would simply stand in the number. Example: 'ВН-{yyyy}/{nnnnn}'."
+                    },
+                    "period": {
+                        "type": "string",
+                        "description": "When the counter restarts. Defaults to 'none' - a numbering that never restarts only grows, while a reset under a pattern that cannot tell its periods apart issues one number twice. Which is why a period other than 'none' REQUIRES its own placeholder in the pattern: 'year' needs {yyyy} or {yy}, 'quarter' needs {qq} and a year, 'month' needs {mm} and a year. Refused at load otherwise.",
+                        "enum": [ "None", "Year", "Quarter", "Month", "none", "year", "quarter", "month" ]
+                    }
+                }
+            }
+        }
+    }
+}

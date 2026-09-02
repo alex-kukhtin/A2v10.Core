@@ -19,6 +19,7 @@
 		"strictNullChecks": false,
 		"lib": [ "es2017", "dom" ],
 		"typeRoots": [ "./@types" ],
+		"newLine": "crlf",
 		"paths": {
 		}
 	},

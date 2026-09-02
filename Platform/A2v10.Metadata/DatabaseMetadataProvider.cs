@@ -155,7 +155,91 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             ?? throw new InvalidOperationException($"{MetadataFileName(schema, table)}: TableMetadata deserialization fails");
         storage.FileHash = hash;
         storage.SetDefaults(schema, table);
+        CheckAutonums(storage, schema, table);
         return storage;
+    }
+
+    /* Refused where the file is read, because nothing downstream can report it: the SQL that issues
+     * a number cannot parse a pattern it was handed - a pattern with no counter in it yields a
+     * number, the same one for every document, and it gets saved.
+     *
+     * Asked of every file and not only of /autonum, so 'autonums' written somewhere it means
+     * nothing is an error rather than a key silently dropped on the way to the deploy.
+     */
+    private static void CheckAutonums(TableMetadata storage, String schema, String table)
+    {
+        if (storage.Autonums.Count == 0)
+            return;
+        var file = MetadataFileName(schema, table);
+        if (storage.Kind != EndpointKind.Autonum)
+            throw new InvalidOperationException(
+                $"{file}: 'autonums' declares numberings, and they are declared in autonum/metadata.json. Name one here with \"autonum\": \"<id>\" instead");
+
+        foreach (var autonum in storage.Autonums)
+        {
+            if (String.IsNullOrEmpty(autonum.Id))
+                throw new InvalidOperationException($"{file}: 'autonums' declares a numbering under an empty key");
+            if (String.IsNullOrEmpty(autonum.Pattern))
+                throw new InvalidOperationException(
+                    $"{file}: '{autonum.Id}' declares no 'pattern'. The pattern IS the number: \"{{yyyy}}-{{nnnnn}}\"");
+            CheckPattern(file, autonum);
+        }
+    }
+
+    // The date placeholders the procedure substitutes. '{n}' through '{nnnnn}' is the counter and
+    // is checked apart: its length is what it says, so it is not a name in a list.
+    private static readonly String[] _autonumPlaceholders = ["yy", "yyyy", "mm", "qq"];
+
+    /* Every '{...}' is read, because the procedure does not read them - it substitutes the ones it
+     * knows and leaves the rest standing in the number. And the counter is checked twice: that it
+     * is there at all, and that the pattern tells its periods apart. A monthly counter under a
+     * pattern with no month issues '5' twice a year, which is the one failure here that produces a
+     * plausible document rather than an error.
+     */
+    private static void CheckPattern(String file, AutonumMetadata autonum)
+    {
+        var pattern = autonum.Pattern;
+        var head = $"{file}: pattern '{pattern}' of '{autonum.Id}'";
+        var found = new List<String>();
+        var counter = false;
+        var ix = 0;
+        while (ix < pattern.Length)
+        {
+            var start = pattern.IndexOf('{', ix);
+            if (start < 0)
+                break;
+            var end = pattern.IndexOf('}', start);
+            if (end < 0)
+                throw new InvalidOperationException($"{head} has a '{{' that is never closed");
+            var token = pattern[(start + 1)..end];
+            if (token.Length > 0 && token.All(c => c == 'n'))
+            {
+                if (counter)
+                    throw new InvalidOperationException(
+                        $"{head} writes the counter twice; only the first would be filled in");
+                counter = true;
+            }
+            else if (!_autonumPlaceholders.Contains(token))
+                throw new InvalidOperationException(
+                    $"{head} uses '{{{token}}}', which is nothing. Known: {{yy}}, {{yyyy}}, {{mm}}, {{qq}}, and {{n}} to {{nnnnn}} for the counter");
+            found.Add(token);
+            ix = end + 1;
+        }
+        if (!counter)
+            throw new InvalidOperationException(
+                $"{head} has no counter in it. Write it as '{{n}}', one 'n' per digit - '{{nnnnn}}' pads to five");
+
+        var year = found.Contains("yy") || found.Contains("yyyy");
+        var missing = autonum.Period switch
+        {
+            AutonumPeriod.Year => year ? null : "{yyyy}",
+            AutonumPeriod.Quarter => !year ? "{yyyy}" : found.Contains("qq") ? null : "{qq}",
+            AutonumPeriod.Month => !year ? "{yyyy}" : found.Contains("mm") ? null : "{mm}",
+            _ => null
+        };
+        if (missing != null)
+            throw new InvalidOperationException(
+                $"{head} restarts every {autonum.Period.ToString().ToLowerInvariant()}, so it has to carry {missing} - without it one number is issued in two periods");
     }
 
     private async Task<TableMetadata> LoadStorageAsync(String? dataSource, String schema, String table)
@@ -289,12 +373,30 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     {
         try
         {
+            CheckAutonumColumn(declaration, storage);
             return declaration.Bake(storage);
         }
         catch (Exception ex)
         {
             throw new InvalidOperationException($"{MetadataFileName(schema, table)}: {ex.Message}", ex);
         }
+    }
+
+    /* 'autonum' says which numbering to draw from; the column of that type is where the number is
+     * written. One without the other is unusable in a way nothing downstream reports - the save has
+     * nowhere to put what it was given. The reverse is legitimate and is not checked: a column with
+     * no numbering is a document numbered by hand.
+     *
+     * Called from inside the bake's try, which is what puts the file name on the message.
+     */
+    private static void CheckAutonumColumn(DeclarationMetadata declaration, TableMetadata storage)
+    {
+        if (String.IsNullOrEmpty(declaration.Autonum))
+            return;
+        if (storage.AllColumns().Any(c => c.Type == ColumnType.Autonum))
+            return;
+        throw new InvalidOperationException(
+            $"'autonum' names the numbering '{declaration.Autonum}', but {storage.Path} declares no column of type 'autonum' for the number to land in");
     }
 
     /* 'storage' and 'surface' both name another endpoint, and a shape is declared by the endpoint
@@ -687,7 +789,38 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
 
         CheckLiteralInitials(endpoint, meta);
 
+        await CheckAutonumDeclaredAsync(load, endpoint, dataSource);
+
         await ResolvePostAsync(load, endpoint, dataSource);
+    }
+
+    /* 'autonum' names a row of another endpoint's file, so it can only be checked here - phase 2,
+     * through the same load, the way a reference target is resolved. Deferring it was a mistake
+     * paid for once already: the failure surfaced at the first save of the first document, from
+     * inside a procedure, which is as far from the file as it gets.
+     *
+     * The numbering is not stored on the endpoint afterwards. It is a key the save writes into a
+     * call and nothing else reads, so keeping the resolved row would put a second copy of what the
+     * file says next to the file's own word.
+     */
+    private async Task CheckAutonumDeclaredAsync(EndpointLoad load, EndpointMetadata endpoint, String? dataSource)
+    {
+        if (endpoint is not NormalEndpointMetadata normal)
+            return;
+        var autonum = normal.Declaration.Autonum;
+        if (String.IsNullOrEmpty(autonum))
+            return;
+
+        var registry = (await GetNormalEndpointAsync(load, dataSource,
+            Constants.SchemaNames.Autonum, String.Empty)).Storage;
+        if (registry.Autonums.Any(a => a.Id == autonum))
+            return;
+
+        var declared = registry.Autonums.Count == 0
+            ? "it declares none"
+            : $"declared: {String.Join(", ", registry.Autonums.Select(a => $"'{a.Id}'"))}";
+        throw new InvalidOperationException(
+            $"{endpoint.Path}: 'autonum' names '{autonum}', which {MetadataFileName(Constants.SchemaNames.Autonum, String.Empty)} does not declare - {declared}");
     }
 
     /* A literal initial value on an enum column names a code, and here - and only here - is the
@@ -737,8 +870,6 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             if (endpointPath == null)
                 continue;
             var (schema, table) = ParsePath(endpointPath);
-            if (schema == "autonum")
-                continue; // TODO: skip other elements
             /* Only a data endpoint declares a table, and only one that does not point elsewhere:
              * a shared storage is deployed by the file that declares it, a report declares none.
              */

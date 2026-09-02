@@ -136,6 +136,31 @@ public class CliDatabaseCreator()
             """;
     }
 
+    /* Created after the table and its rows, so a unique index meets the data that is already there:
+     * duplicates fail the deploy loudly instead of being carried forward under a promise the
+     * database does not keep.
+     */
+    public static String CreateIndexes(TableMetadata table)
+    {
+        if (table.Indexes.Count == 0)
+            return String.Empty;
+
+        String createIndex(TableIndex index)
+        {
+            var name = index.Name(table);
+            var columns = String.Join(", ", index.Columns.Select(c => $"[{c}]"));
+            return $"""
+            if not exists(select * from sys.indexes where object_id = object_id(N'{table.SqlTableName}') and name = N'{name}')
+                create {(index.Unique ? "unique " : "")}index {name} on {table.SqlTableName} ({columns});
+            """;
+        }
+
+        return $"""
+        {SQL_DIVIDER}
+        {String.Join(NL, table.Indexes.Select(createIndex))}
+        """;
+    }
+
     internal static String MergeOperations()
     {
         return """

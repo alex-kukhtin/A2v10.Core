@@ -70,7 +70,7 @@
         },
         "autonum": {
             "type": "string",
-            "description": "Id of the series in the 'autonum' endpoint. Required exactly when the storage declares a field of type Autonum."
+            "description": "Which numbering this endpoint draws from - a key of autonum/metadata.json, refused at load if that file does not declare it. The number lands in the shape's column of type 'autonum', so writing this without such a column is refused too. The other way round is legitimate and is not checked: a column with no 'autonum' is a document numbered by hand. Layered like every other key - an operation with none of its own draws from the storage's. The number is issued when the row is INSERTED and only if it arrived empty, so a document may be renumbered by hand and re-saving never overwrites it."
         }
     },
 

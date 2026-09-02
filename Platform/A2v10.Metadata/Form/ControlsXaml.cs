@@ -411,6 +411,23 @@ internal partial class XamlBuilder
                     b.SetBinding(nameof(ComboBox.Value), valueBind);
                 }
             },
+            /* A blank number on a new card reads as something forgotten, so the box says who will
+             * fill it. A placeholder and not a value: it is what a field shows INSTEAD of one, and
+             * the number arrives on save - writing anything into the binding would send that text
+             * back as a number the user typed.
+             *
+             * Only where a numbering is declared. The same column without one is numbered by hand,
+             * and '(Auto)' there is a promise nobody keeps.
+             */
+            ColumnType.Autonum => new TextBox()
+            {
+                Label = column.Header,
+                CssClass = column.Type.ToXamlSemanticClass(),
+                Placeholder = String.IsNullOrEmpty(Endpoint.Declaration.Autonum)
+                    ? null
+                    : "@[Autonum.Auto]",
+                Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
+            },
             ColumnType.Done or ColumnType.Bit or ColumnType.Boolean => new CheckBox()
             {
                 Label = column.Header,

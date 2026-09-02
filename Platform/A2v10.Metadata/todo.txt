@@ -7,7 +7,6 @@
 5. EditPage Document -> Title
 6. EditPage -> Details Table -> порядок колонок
 8. Presentation (for unit)
-9. AutoNum
 10. BrowseDialog - ширина
 12. IndexPage -> DblClick -> Open or edit?
 18. Amount/Qty/Price/Factor реализация.

@@ -371,19 +371,76 @@ internal partial class SqlBuilder
             """;
         }
 
+        /* Where a numbering is declared, the merge is asked for two more things about the row it
+         * wrote: whether it inserted one, and what stood in the number column afterwards. Both
+         * answers are about what LANDED - reading the parameter again would answer what was sent,
+         * which is a different question and takes its own scan to ask.
+         *
+         * The pair is checked at load (DatabaseMetadataProvider.CheckAutonumColumn), so First()
+         * here cannot come up empty.
+         */
+        var autonumColumn = String.IsNullOrEmpty(Endpoint.Declaration.Autonum)
+            ? null
+            : Table.AllColumns().First(c => c.Type == ColumnType.Autonum);
+        // a catalog numbered by a code has no date of its own; a document always has one
+        var autonumDate = autonumColumn == null
+            ? null
+            : Table.AllColumns().FirstOrDefault(c => c.Type == ColumnType.Date);
+
+        List<(String Declared, String Output, String Into)> extras = [];
+        if (autonumColumn != null)
+        {
+            extras.Add(("[act] nvarchar(10)", "$action", "[act]"));
+            extras.Add(("[num] nvarchar(64)", $"inserted.[{autonumColumn.Name}]", "[num]"));
+            if (autonumDate != null)
+                extras.Add(("[dt] date", $"inserted.[{autonumDate.Name}]", "[dt]"));
+        }
+        var rtableExtra = String.Concat(extras.Select(e => $", {e.Declared}"));
+        var outputExtra = String.Concat(extras.Select(e => $", {e.Output}"));
+        var outputIntoExtra = String.Concat(extras.Select(e => $", {e.Into}"));
+
+        /* Issued after the merge, not inside it: there the insert list and its values are one
+         * string, and wrapping one column in isnull() would have to break them apart for every
+         * table.
+         *
+         * One condition, and both halves of it are load bearing. Only over an empty column, because
+         * the user may write a number himself and correcting one is his right. And only on an
+         * insert - not 'whenever it is empty', which would number a document dated 2023 out of the
+         * 2023 counter today: a row of authentic-looking last-year numbers, ordered by who opened
+         * what. The price is that turning numbering on leaves old documents unnumbered and nothing
+         * says so; that is a migration, where the order can be chosen. See ISSUES 3.8.
+         */
+        String Autonum()
+        {
+            if (autonumColumn == null)
+                return String.Empty;
+            var date = autonumDate != null ? "(select top(1) [dt] from @rtable)" : "getdate()";
+            return $"""
+            -- autonum
+            if exists(select 1 from @rtable where [act] = N'INSERT' and isnull([num], N'') = N'')
+            begin
+                declare @AutonumNo nvarchar(64), @AutonumDate date = {date};
+                exec {TableMetadataDefaults.AutonumProcedureName()} @Autonum = N'{Endpoint.Declaration.Autonum}',
+                    @Date = @AutonumDate, @Number = @AutonumNo output;
+                update {Table.SqlTableName} set [{autonumColumn.Name}] = @AutonumNo where [Id] = @Id;
+            end;
+
+            """;
+        }
+
         String buildSqlUpdateText()
         {
 
             var updatedFields = Table.AllColumns(c => c.IsFieldUpdated()).Select(c => $"t.[{c.Name}] = s.[{c.Name}]");
             var insertedFields = Table.AllColumns(c => c.IsFieldInserted()).Select(c => $"[{c.Name}]");
 
-            var sb = new StringBuilder("""
+            var sb = new StringBuilder($"""
             set nocount on;
             set transaction isolation level read committed;
             set xact_abort on;
-            
-            declare @rtable table(Id platformid);
-            declare @Id platformid;                        
+
+            declare @rtable table(Id platformid{rtableExtra});
+            declare @Id platformid;
 
             """);
             // STEP:1 - check row version
@@ -400,11 +457,14 @@ internal partial class SqlBuilder
             when not matched then insert
               ({String.Join(',', insertedFields)}) values
               ({String.Join(',', insertedFields)}) 
-            output inserted.[Id] into @rtable([Id]);
-            
+            output inserted.[Id]{outputExtra} into @rtable([Id]{outputIntoExtra});
+
             select @Id = [Id] from @rtable;
-            
+
             """);
+
+            // STEP:2a - the number, if this endpoint issues one
+            sb.AppendLine(Autonum());
 
             // STEP:3 update details
 

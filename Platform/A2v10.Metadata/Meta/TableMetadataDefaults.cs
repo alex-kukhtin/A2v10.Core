@@ -24,6 +24,38 @@ internal static class TableMetadataDefaults
         return table;
     }
 
+    /* The three names of the numbering registry, in one place: SetDefaults gives them to the file,
+     * the deploy writes the procedure with them and the save writes the call. Two files apart, so a
+     * literal in each is a drift waiting for a rename.
+     */
+    public const String AutonumModel = "Autonum";
+    public const String AutonumTable = "Autonums";
+
+    public static String AutonumProcedureName() =>
+        $"{Constants.SchemaNames.Document.ToSqlSchema()}.[{AutonumModel}.NextValue]";
+
+    /* The counters of that registry - one row per numbering and period. Parameterized like the tag
+     * entries and for the same reason: it is built for DDL and never resolved as an endpoint,
+     * because nothing addresses a counter.
+     */
+    public static TableMetadata CreateAutonumValuesTable(TableMetadata table)
+    {
+        return new TableMetadata()
+        {
+            Kind = EndpointKind.AutonumValues,
+            Schema = table.Schema,
+            Model = $"{table.Model}Value",
+            Table = $"{table.Model}$Values",
+            /* The key that matters here, since the primary key is on the surrogate Id. It is what
+             * makes 'merge with (holdlock)' in the issuing procedure lock one key instead of a
+             * range, and what turns a counter split by a race into a failed insert.
+             */
+            Indexes = [new TableIndex(true, [
+                Constants.FieldNames.Autonum, Constants.FieldNames.Year,
+                Constants.FieldNames.Quart, Constants.FieldNames.Month])]
+        };
+    }
+
     /* Not a registry entry either, and for a different reason than the tag entries below: /tag is
      * served by TagEndpointMetadata, which never builds a storage, so nothing would ever ask the
      * registry for it. The table itself is alive - the deploy and SqlBuilderTags take it directly.

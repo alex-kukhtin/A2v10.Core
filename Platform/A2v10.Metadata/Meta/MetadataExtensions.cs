@@ -31,6 +31,7 @@ internal static class MetadataExtensions
             Constants.SchemaNames.Journal => EndpointKind.Journal,
             Constants.SchemaNames.Report => EndpointKind.Report,
             Constants.SchemaNames.Enum => EndpointKind.Enum,
+            Constants.SchemaNames.Autonum => EndpointKind.Autonum,
             _ => throw new InvalidOperationException($"Invalid schema for EndpointKind '{schema}'")
         };
     }
@@ -67,15 +68,21 @@ internal static class MetadataExtensions
      * itself: the seed answers 'has this changed', and the content is deployed by the script that
      * owns it.
      *
-     * Today its only filler is the declared values of an enum.
+     * Its fillers are the rows a file declares: the values of an enum, the numberings of /autonum.
+     * A table holding neither has none, and a kind is never asked - what a table declares is what
+     * it has.
      */
     internal static String? Xtra(this TableMetadata table)
     {
-        if (table.Values.Count == 0)
+        // the position is part of a value (it becomes Order), so the index is in the text; a
+        // numbering is addressed by its key alone and its position says nothing
+        var lines = table.Values
+            .Select((v, ix) => $"{ix}|{v.Id}|{v.Name}|{v.Memo}|{(v.Void ? 1 : 0)}")
+            .Concat(table.Autonums.Select(a => $"{a.Id}|{a.Name}|{a.Pattern}|{a.Period}"))
+            .ToList();
+        if (lines.Count == 0)
             return null;
-        // the position is part of the value (it becomes Order), so the index is in the text
-        var text = String.Join('\n', table.Values.Select((v, ix) =>
-            $"{ix}|{v.Id}|{v.Name}|{v.Memo}|{(v.Void ? 1 : 0)}"));
+        var text = String.Join('\n', lines);
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text))).ToLowerInvariant();
     }
 

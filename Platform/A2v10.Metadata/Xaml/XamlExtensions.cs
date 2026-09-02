@@ -52,6 +52,8 @@ internal static class XamlExtensions
         column switch
         {
             ColumnType.Id => ColumnRole.Id,
+            // a number is as wide as its pattern and never wider: the grid gives it exactly that
+            ColumnType.Autonum => ColumnRole.Fit,
             ColumnType.Date or ColumnType.DateTime => ColumnRole.Date,
             ColumnType.Money or ColumnType.Decimal or ColumnType.Float or
                 ColumnType.Amount or ColumnType.Price => ColumnRole.Number,

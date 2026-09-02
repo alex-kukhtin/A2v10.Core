@@ -22,7 +22,9 @@ public enum EndpointKind
     Folders,
     Tags,
     TagEntries,
-    Enum
+    Enum,
+    Autonum,
+    AutonumValues
 }
 public enum ColumnType
 {
@@ -146,7 +148,8 @@ public record TableColumn
     [JsonIgnore]
     internal Boolean IsVoid => Type == ColumnType.Void;
     [JsonIgnore]
-    internal Boolean IsSearchable => Type == ColumnType.String || Type == ColumnType.Name || Type == ColumnType.Memo;
+    internal Boolean IsSearchable => Type == ColumnType.String || Type == ColumnType.Name
+        || Type == ColumnType.Memo || Type == ColumnType.Autonum;
     [JsonIgnore]
     internal Boolean IsMemo => Type == ColumnType.Memo;
     [JsonIgnore]
@@ -295,6 +298,25 @@ public sealed record TableMetadata
      * of thing - a closed vocabulary declared with the shape, ordered by the order it is written in.
      */
     public List<EnumValueMetadata> Values { get; init; } = [];
+
+    /* Rows deployed with the table, so they are the shape's - the reason 'Values' is here too. A
+     * key of its own and not 'values': another record shape, and one key shaped by the endpoint
+     * kind is two questions under one name. The cost is that every such registry buys a key here
+     * and a branch in the deploy - there is no shared 'rows the file declares' mechanism, and a
+     * third one is where writing it would start to pay. See CLAUDE.md, "Autonums".
+     *
+     * A map and not a list, unlike 'values': there the position IS data (it becomes Order), here
+     * nothing but the key means anything - so the key stays outside, as it does in 'fields'. The
+     * price is that two identical keys are silently collapsed to the last by the parser, where a
+     * list could be checked; that is the trade the format already makes everywhere else.
+     */
+    [JsonProperty("autonums")]
+    private Dictionary<String, AutonumMetadata> _autonums { get; init; } = [];
+
+    [JsonIgnore]
+    public List<AutonumMetadata> Autonums => [.. _autonums.Select(
+        kp => { kp.Value.Id = kp.Key; return kp.Value; }
+    )];
     public List<TableTrait> Traits { get; init; } = [];
 
     // for sql
@@ -414,6 +436,14 @@ public sealed record TableMetadata
     public String SqlSchema => Schema.ToSqlSchema();
     [JsonIgnore]
     public String SqlTableName => $"{SqlSchema}.[{Table}]";
+    /* Indexes the PLATFORM needs, not indexes an application wants: code-only, no file key. An
+     * index is safe to hold here in a way a primary key was not - nothing else in the platform
+     * reads one, so this cannot become a knob that only the DDL honours. What it does buy is a
+     * uniqueness the generated SQL can then lean on.
+     */
+    [JsonIgnore]
+    public List<TableIndex> Indexes { get; init; } = [];
+
     [JsonIgnore]
     public String SqlSequenceName => $"{SqlSchema}.[SQ_{Table}]";
     [JsonIgnore]
@@ -449,6 +479,20 @@ public sealed record TableMetadata
         // the file that declares this table; spelled like EndpointMetadata.Path, because a
         // DocumentType discriminator is this value and has to be comparable to an address
         Path = String.IsNullOrEmpty(table) ? $"/{schema}" : $"/{schema}/{table}";
+        /* One registry at one address, so all three are defaults nobody needs to write; written,
+         * they win. The rows land where documents do - a namespace of its own is the address, not
+         * their home. The price is this 'if': the method now knows one namespace by name, and the
+         * next registry adds a branch here rather than following a rule.
+         */
+        if (schema == Constants.SchemaNames.Autonum)
+        {
+            if (String.IsNullOrEmpty(Schema))
+                Schema = Constants.SchemaNames.Document;
+            if (String.IsNullOrEmpty(Model))
+                Model = TableMetadataDefaults.AutonumModel;
+            if (String.IsNullOrEmpty(Table))
+                Table = TableMetadataDefaults.AutonumTable;
+        }
         if (String.IsNullOrEmpty(Schema))
             Schema = schema;
         /* No default for Table. Pluralising the folder name looks like a convention but is a
@@ -473,6 +517,16 @@ public sealed record TableMetadata
             d.Value.SetDetailDefaults(this, d.Key);
     }
 }
+/* One index. The name is not written: it is composed from the table and the columns, so two
+ * declarations of the same index are the same object and a renamed column cannot leave a name
+ * behind that says something else.
+ */
+public sealed record TableIndex(Boolean Unique, String[] Columns)
+{
+    internal String Name(TableMetadata table) =>
+        $"{(Unique ? "UX" : "IX")}_{table.Table}_{String.Join('_', Columns)}";
+}
+
 public record OperationMetadata(String Id, String? Name, String? Category);
 
 /* One value of a set. Only 'id' is required: 'name' defaults to the localization key
@@ -484,4 +538,31 @@ public record OperationMetadata(String Id, String? Name, String? Category);
  * of candidates.
  */
 public record EnumValueMetadata(String Id, String? Name, String? Memo, Boolean Void);
+
+/* What the counter restarts on. Default None, because only that half is silent: a yearly reset
+ * under a pattern with no year reissues last year's numbers; never restarting only grows.
+ */
+public enum AutonumPeriod
+{
+    None,
+    Year,
+    Quarter,
+    Month
+}
+
+/* One numbering: the key an endpoint's 'autonum' names, the pattern its numbers are built from,
+ * the span its counter restarts on. 'Name' defaults to '@[{Model}.{Id}]', as an enum value's does.
+ * No 'void' - nobody picks a numbering at run time, a file names it - and the price is that a key
+ * deleted from the file leaves a row nothing marks as dead; its counter has to outlive the key
+ * anyway. Renaming one costs more than it looks: the counters stay under the old key and the
+ * numbering silently restarts from one.
+ */
+public record AutonumMetadata
+{
+    // from the key of the map, the way TableColumn takes its Name
+    public String Id { get; set; } = default!;
+    public String? Name { get; init; }
+    public String Pattern { get; init; } = default!;
+    public AutonumPeriod Period { get; init; }
+}
 
