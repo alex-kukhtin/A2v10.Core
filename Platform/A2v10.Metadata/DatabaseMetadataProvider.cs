@@ -44,13 +44,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return await _sqlDbGenerator.CheckDeployAsync(dataSource, allMeta, platformId);
     }
 
-    public async Task<EndpointMetadata> GetEndpointAsync(IModelBaseMeta meta, String? dataSource)
-    {
-        var endpoint = await GetEndpointAsync(dataSource, meta.CurrentSchema, meta.CurrentTable);
-        if (endpoint is NormalEndpointMetadata normal)
-            await ResolvePostedAsync(normal.Declaration, dataSource);
-        return endpoint;
-    }
+    public Task<EndpointMetadata> GetEndpointAsync(IModelBaseMeta meta, String? dataSource)
+        => GetEndpointAsync(dataSource, meta.CurrentSchema, meta.CurrentTable);
 
     /* The entry point: no load is running yet, so the cache opens one and publishes it whole.
      * Everything below takes that load as a parameter, which is what tells the two roles apart -
@@ -593,16 +588,42 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return (split[0], split[1]);
     }
 
-    public async Task ResolvePostedAsync(DeclarationMetadata meta, String? dataSource)
+    /* The targets of 'post' are references like any other, so they are linked where the others
+     * are: phase 2, through the same load - once, before publication, and cycle-safe (a journal's
+     * Document column points back at the document). It used to run from the request pipeline,
+     * after publication: it wrote into a container the loader declares immutable, on every request,
+     * and left every entry point that is not a request holding null journals.
+     *
+     * The mapping is then built and dropped - the throw is what it is built for.
+     */
+    private async Task ResolvePostAsync(EndpointLoad load, EndpointMetadata endpoint, String? dataSource)
     {
-        if (meta.Post == null)
+        if (endpoint is not NormalEndpointMetadata normal)
             return;
-        foreach (var p in meta.Post)
+        normal.Declaration.CheckPost(normal.Path);
+        if (normal.Declaration.Post is not { Count: > 0 } post)
+            return;
+
+        async Task<TableMetadata> JournalAsync(String path)
         {
-            var (schema, table) = ParsePath(p.Journal);
-            var refJournal = await GetSchemaAsync(dataSource, schema, table);
-            p.JournalTable = refJournal;
+            var (schema, table) = ParsePath(path);
+            return (await GetNormalEndpointAsync(load, dataSource, schema, table)).Storage;
         }
+
+        foreach (var p in post)
+        {
+            if (!p.IsSql)
+            {
+                p.JournalTable = await JournalAsync(p.Journal!);
+                continue;
+            }
+            // assigned, never appended: a second pass would otherwise double the list
+            var journals = new List<TableMetadata>();
+            foreach (var path in p.Journals)
+                journals.Add(await JournalAsync(path));
+            p.JournalTables = journals;
+        }
+        _ = new PostStatements(normal);
     }
 
     /* Phase 2, run once per endpoint by LoadAsync and by nobody else. Reachable targets descend
@@ -665,6 +686,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         }
 
         CheckLiteralInitials(endpoint, meta);
+
+        await ResolvePostAsync(load, endpoint, dataSource);
     }
 
     /* A literal initial value on an enum column names a code, and here - and only here - is the

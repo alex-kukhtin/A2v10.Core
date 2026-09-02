@@ -186,21 +186,53 @@ public sealed record PostEachMetadata
     public List<String> Kinds { get; init; } = [];
 }
 
+/* The procedures behind a posting the platform does not write itself. A pair, because a procedure
+ * that writes the journals owns the inverse too - and 'unpost' is optional: a procedure that wrote
+ * the provenance is undone by the same derived delete as any other posting, and only an inverse
+ * that is not a delete (a reversal that keeps the rows) has to be authored.
+ */
+public sealed record PostSqlMetadata
+{
+    public String Post { get; init; } = default!;
+    // 'unpost' in the file; the camel-case strategy would otherwise ask for 'unPost'
+    [JsonProperty("unpost")]
+    public String? UnPost { get; init; }
+}
+
+/* One posting, in one of two spellings: a leg into a journal that the platform maps, or a procedure
+ * that posts the whole document. Which key is written decides every other key of the entry, and
+ * DeclarationMetadata.CheckPost refuses the combinations that mean nothing.
+ */
 public sealed record PostMetadata
 {
     #region JSON Fields
-    public String Journal { get; init; } = default!;
+    public String? Journal { get; init; }
     public PostDirection Dir { get; init; }
     public Boolean Storno { get; init; }
     public PostEachMetadata? Each { get; init; }
     public Dictionary<String, String> Document { get; init; } = [];
     public Dictionary<String, String> Row { get; init; } = [];
+
+    public PostSqlMetadata? Sql { get; init; }
+    /* What the procedure writes into, named because nothing can read it out of the procedure. The
+     * transactions dialog is built from this list, and so is the unpost when it is not declared.
+     */
+    public List<String> Journals { get; init; } = [];
     #endregion
 
     [JsonIgnore]
     public TableMetadata? JournalTable { get; set; }
     [JsonIgnore]
+    public List<TableMetadata> JournalTables { get; set; } = [];
+    [JsonIgnore]
     public TableMetadata JournalTableCheck => JournalTable ?? throw new InvalidOperationException($"RefTable for '{Journal}' is null");
+    [JsonIgnore]
+    public Boolean IsSql => Sql != null;
+
+    // the journals this posting touches, whoever writes them: what reads the RESULT counts tables
+    [JsonIgnore]
+    internal IEnumerable<TableMetadata> Targets => IsSql ? JournalTables : [JournalTableCheck];
+
     [JsonIgnore]
     public Int16 InOutInt => Dir switch { PostDirection.In => 1, PostDirection.Out => -1, _ => 0 };
 }

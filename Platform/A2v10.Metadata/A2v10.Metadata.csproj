@@ -43,6 +43,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Content Include="SqlScripts/a2v10_metadata.sql" Pack="true" PackagePath="contentFiles/sql" />
+		<Content Include="A2v10.Metadata.targets" Pack="True" PackagePath="build/A2v10.Metadata.targets" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<None Include="README.md" Pack="true" PackagePath="\" />
 	</ItemGroup>
 

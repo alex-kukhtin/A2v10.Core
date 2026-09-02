@@ -204,7 +204,52 @@ public sealed record DeclarationMetadata
      * the command bar asks it that way and so does the dialog.
      */
     internal IEnumerable<TableMetadata> PostJournals() =>
-        (Post ?? []).Select(p => p.JournalTableCheck).DistinctBy(j => j.SqlTableName);
+        (Post ?? []).SelectMany(p => p.Targets).DistinctBy(j => j.SqlTableName);
+
+    /* Which of the two spellings each entry uses, before anything is resolved - the resolve itself
+     * differs by kind, so this runs first.
+     *
+     * A 'sql' entry is the ONLY entry. Half the document posted by the platform and half by a
+     * procedure cannot say which wrote a row, and its unpost has no order to undo in; two
+     * procedures raise the same question and answer it in the file, where nothing shows it. Two
+     * procedures are written as one that calls two, where the order is visible in the code.
+     */
+    internal void CheckPost(String path)
+    {
+        if (Post is not { Count: > 0 } post)
+            return;
+
+        if (!post.Any(p => p.IsSql))
+        {
+            if (post.Any(p => String.IsNullOrEmpty(p.Journal)))
+                throw new InvalidOperationException(
+                    $"post: {path}: an entry declares neither 'journal' nor 'sql'");
+            return;
+        }
+
+        if (post.Count > 1)
+            throw new InvalidOperationException(
+                $"post: {path}: 'sql' posts the whole document, so it is the only entry ({post.Count} written)");
+
+        var one = post[0];
+        if (String.IsNullOrEmpty(one.Sql!.Post))
+            throw new InvalidOperationException($"post: {path}: 'sql' declares no 'post'");
+        if (one.Journals.Count == 0)
+            throw new InvalidOperationException(
+                $"post: {path}: 'sql' declares no 'journals'. Name every journal the procedure writes - the transactions dialog is built from them, and so is the unpost when it is not declared");
+
+        // keys of the other spelling, which a procedure maps itself: silently ignored otherwise
+        List<String> mapping = [];
+        if (!String.IsNullOrEmpty(one.Journal)) mapping.Add("journal");
+        if (one.Dir != PostDirection.None) mapping.Add("dir");
+        if (one.Storno) mapping.Add("storno");
+        if (one.Each != null) mapping.Add("each");
+        if (one.Document.Count > 0) mapping.Add("document");
+        if (one.Row.Count > 0) mapping.Add("row");
+        if (mapping.Count > 0)
+            throw new InvalidOperationException(
+                $"post: {path}: 'sql' does the mapping itself, so {String.Join(", ", mapping.Select(m => $"'{m}'"))} say nothing here");
+    }
 
     /* The rules in force for one row set. A kind that says nothing is not an empty layer to
      * visit - it is the collection's rules unchanged.

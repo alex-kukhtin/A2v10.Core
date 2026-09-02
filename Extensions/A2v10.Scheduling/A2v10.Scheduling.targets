@@ -1,8 +1,8 @@
 ﻿<Project>
 	<ItemGroup>
-		<Files Include="$(MSBuildThisFileDirectory)/../contentFiles/sql/*" />
+		<A2v10SchedulingSqlFiles Include="$(MSBuildThisFileDirectory)/../contentFiles/sql/*" />
 	</ItemGroup>
-	<Target Name="CopyFiles" AfterTargets="Build">
-		<Copy SourceFiles="@(Files)" DestinationFolder="$(ProjectDir)/_assets/sql" SkipUnchangedFiles="true"/>
+	<Target Name="A2v10SchedulingCopySqlFiles" AfterTargets="Build">
+		<Copy SourceFiles="@(A2v10SchedulingSqlFiles)" DestinationFolder="$(ProjectDir)/_assets/sql" SkipUnchangedFiles="true"/>
 	</Target>
 </Project>

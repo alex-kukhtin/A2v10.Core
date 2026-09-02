@@ -212,6 +212,41 @@
         },
 
         "post": {
+            "oneOf": [
+                { "$ref": "#/definitions/postMapped" },
+                { "$ref": "#/definitions/postSql" }
+            ]
+        },
+
+        "postSql": {
+            "type": "object",
+            "description": "Posting done by a stored procedure. It posts the whole document, so it is the only entry of 'post' - the platform maps nothing alongside it.",
+            "additionalProperties": false,
+            "required": [ "sql", "journals" ],
+            "properties": {
+                "sql": {
+                    "type": "object",
+                    "description": "The procedures. Both are called with @Id and @UserId and nothing else, inside a transaction they do not own: they must not commit or roll back, and fail by throwing.",
+                    "additionalProperties": false,
+                    "required": [ "post" ],
+                    "properties": {
+                        "post": { "type": "string" },
+                        "unpost": {
+                            "type": "string",
+                            "description": "Optional. Without it the rows are deleted by provenance, like any other posting; write it only when the inverse is not a delete."
+                        }
+                    }
+                },
+                "journals": {
+                    "type": "array",
+                    "description": "Every journal the procedure writes into. Nothing can read this out of the procedure, and the transactions dialog is built from it - as is the unpost, when it is not declared.",
+                    "minItems": 1,
+                    "items": { "type": "string" }
+                }
+            }
+        },
+
+        "postMapped": {
             "type": "object",
             "additionalProperties": false,
             "required": [ "journal" ],

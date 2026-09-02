@@ -22,9 +22,7 @@
 
 
 	<ItemGroup>
-		<Content Include="sql/a2_scheduling.sql" Pack="true" PackagePath="contentFiles/sql">
-			<PackageCopyToOutput>true</PackageCopyToOutput>		
-		</Content>
+		<Content Include="sql/a2_scheduling.sql" Pack="true" PackagePath="contentFiles/sql" />
 		<Content Include="A2v10.Scheduling.targets" Pack="True" PackagePath="build/A2v10.Scheduling.targets" />
 	</ItemGroup>
 

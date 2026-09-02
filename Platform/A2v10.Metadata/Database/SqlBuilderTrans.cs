@@ -28,10 +28,11 @@ internal partial class SqlBuilder
         if (journals.Count == 0)
             throw new InvalidOperationException($"ShowTrans: {Endpoint.Path} declares no 'post'");
 
-        // the same column the posting fills and the unpost deletes by - so a journal reachable
-        // here is reachable there, and the check that it exists has already run
-        String DocumentFilter(TableMetadata journal) =>
-            $"[{JournalDocumentColumn(journal).Name}] = @Id";
+        /* The predicate the posting writes and the unpost deletes by: it is not this screen that
+         * decides what 'rows of this document' means. The prefix differs by consumer.
+         */
+        String DocumentFilter(TableMetadata journal, String prefix) =>
+            PostStatements.DocumentFilter(journal, Table, prefix);
 
         // what this dialog shows of a journal, and the only answer to it
         static IEnumerable<TableColumn> TransColumns(TableMetadata journal) =>
@@ -46,7 +47,7 @@ internal partial class SqlBuilder
             select [{journal.TransName()}!{journal.TransTypeName()}!Array] = null,
               {String.Join(", ", fields)}
             from {journal.SqlTableName} a
-            where a.{DocumentFilter(journal)}
+            where {DocumentFilter(journal, "a.")}
             order by a.[{Constants.FieldNames.Id}];
             """;
         }
@@ -83,7 +84,7 @@ internal partial class SqlBuilder
 
         // one @map over ALL the journals: a catalog three of them point at is resolved once
         var refMap = new RefMapBuilder(
-            journals.Select(j => (j, DocumentFilter(j), TransColumns(j))));
+            journals.Select(j => (j, DocumentFilter(j, String.Empty), TransColumns(j))));
         refMap.WriteRefMap(sb);
 
         return await _dbContext.LoadModelSqlAsync(_descr.DataSource, sb.ToString(), dbprms =>

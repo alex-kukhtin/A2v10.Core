@@ -1,0 +1,8 @@
+﻿<Project>
+	<ItemGroup>
+		<A2v10MetadataSqlFiles Include="$(MSBuildThisFileDirectory)/../contentFiles/sql/*" />
+	</ItemGroup>
+	<Target Name="A2v10MetadataCopySqlFiles" AfterTargets="Build">
+		<Copy SourceFiles="@(A2v10MetadataSqlFiles)" DestinationFolder="$(ProjectDir)/_assets/sql" SkipUnchangedFiles="true"/>
+	</Target>
+</Project>
