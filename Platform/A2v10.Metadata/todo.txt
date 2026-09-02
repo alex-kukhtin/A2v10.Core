@@ -14,7 +14,6 @@
 27. Element.Show Endpoint
 28. IndexPage -> Traits.Print
 29. Report - Title & PageTitle - что-то придумать.
-31. !!!!PRINT -> доделать SaveRequired для $navigate (в A2v10). opts уже передается.
 32. Hierarchy - реализация
 33. Folders - реализация
 34. Permissions - начинаем делать
