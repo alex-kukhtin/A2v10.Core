@@ -104,7 +104,7 @@
 
         "details": {
             "type": "object",
-            "description": "Collection key -> the rows of that collection. The key is what the generated side composes names from.",
+            "description": "Collection key -> the rows of that collection. The key is what the generated side composes names from, the SQL table among them: rows live in '<owner model><key>' and there is no key to write it - a row set is not addressable on its own, so its table is the platform's to name.",
             "additionalProperties": { "$ref": "#/definitions/detail" }
         },
 
@@ -112,7 +112,6 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
-                "table": { "type": "string" },
                 "model": { "type": "string" },
                 "label": { "type": "string" },
                 "fields": { "$ref": "#/definitions/fields" },

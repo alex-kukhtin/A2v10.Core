@@ -54,6 +54,17 @@ public class DatabaseMetadataCache
             _cache.Clear();
             _storages.Clear();   // both, always: a container must never keep a table of an older generation
             _endpoints.Clear();
+            /* Not metadata - this one comes from the database (a2meta.[GetFkReferrers]) - and the
+             * only thing that moves it is a deploy. It belongs here anyway: the deploy is what the
+             * next request runs because of the _metadataDirty set at the end of this block, so it
+             * always follows this reset. Dropping it after the deploy instead would put the
+             * invalidation in the one place that has no other reason to know this cache exists.
+             *
+             * What it costs to keep is not a stale message: DbRemove deletes by 'Void = 1', so no
+             * row ever leaves and the foreign key the deploy has just created never fires. A set
+             * that is one referrer short is a permitted delete of something already referenced.
+             */
+            _referrers.Clear();
             _platformIdCache.Clear();
             _xamlFormCache.Clear();
             _metadataDirty = true;

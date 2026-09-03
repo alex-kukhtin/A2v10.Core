@@ -1,5 +1,6 @@
 ﻿{
 	"$schema": "http://json-schema.org/draft-04/schema",
+	"$id": "https://a2v10.com/schemas/metadata-report-json-schema.json",
 	"$version": "10.0.8650",
 	"$date": "2026-08-10",
 	"title": "JSON Schema for report/metadata.json",
