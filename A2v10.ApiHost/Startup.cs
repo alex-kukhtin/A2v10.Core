@@ -1,12 +1,13 @@
 ﻿
+using System.Reflection;
+
 using A2v10.Identity.Jwt;
 using A2v10.Infrastructure;
-using A2v10.Services;
 using A2v10.Web.Identity.ApiKey;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Options;
+using A2v10.Metadata;
+
 using Microsoft.OpenApi;
-using System.Reflection;
+
 
 namespace A2v10.ApiHost;
 
@@ -24,6 +25,8 @@ public class Startup(IConfiguration configuration)
 
         services.UseAppMetadata();
         services.UseApiDataServices(Configuration);
+
+        services.AddSingleton<IReportEngineProvider, NullReportEngineProvider>();
 
         services.AddHttpContextAccessor();
 
