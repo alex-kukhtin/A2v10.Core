@@ -82,7 +82,7 @@ public class CliDatabaseCreator()
         """;
     }
 
-    public static String CreateForeignKeys(TableMetadata table, TableMetadata? owner = null)
+    public static String CreateForeignKeys(TableMetadata table, TableMetadata? master = null)
     {
         //const String check = "nocheck"; // TODO: ????
 
@@ -104,11 +104,15 @@ public class CliDatabaseCreator()
 
         String createReference(TableColumn column)
         {
-            if (column.Type == ColumnType.Owner)
+            if (column.Type == ColumnType.Master)
             {
-                if (owner == null)
-                    throw new InvalidOperationException("Owern is null");
-                return Constraint($"FK_{table.Table}_{column.Name}_{owner.Table}", column, owner.SqlTableName);
+                /* The target is not on the column: it is the table this one hangs under, and only
+                 * the deploy walk knows it (SqlDbGenerator.DeployTables). A master column reaching
+                 * here without it means the walk yielded this table as a top-level one.
+                 */
+                if (master == null)
+                    throw new InvalidOperationException($"The master table for {table.SqlTableName} is null");
+                return Constraint($"FK_{table.Table}_{column.Name}_{master.Table}", column, master.SqlTableName);
             }
             else if (column.Type == ColumnType.Operation)
                 return Constraint($"FK_{table.Table}_{column.Name}_Operations", column, "op.[Operations]");

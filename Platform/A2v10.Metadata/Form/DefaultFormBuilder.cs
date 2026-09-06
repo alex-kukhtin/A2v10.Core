@@ -141,7 +141,7 @@ internal static class DefaultFormBuilder
     }
 
     static Boolean IsDetailsColumn(TableColumn col)
-        => col.Type != ColumnType.Id && col.Type != ColumnType.RowKind && col.Type != ColumnType.Owner;
+        => col.Type != ColumnType.Id && col.Type != ColumnType.RowKind && col.Type != ColumnType.Master;
 
     static Int32 SemanticDetailsOrder(TableColumn col)
         => col.Type switch

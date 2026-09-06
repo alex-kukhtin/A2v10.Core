@@ -1,0 +1,12 @@
+{
+	"$schema": "../../../../../Platform/A2v10.App.Assets2026/Application/@schemas/metadata-report-json-schema.json#",
+	"surface": "journal/stock",
+	"type": "turnover",
+	"groups": [ "Agent", "Store", "Item" ],
+	"filters": [ "Agent", "Store", "Item" ],
+	"data": [ "Qty", "Sum" ],
+	"defaults": {
+		"groups": [ "Store", "Item" ],
+		"data": [ "Qty", "Sum" ]
+	}
+}

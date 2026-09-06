@@ -216,7 +216,7 @@ internal sealed class PostStatements
         {
             var (dt, onClause) = FindDetailsTable(p.Each);
             detailsTable = dt;
-            join = $"inner join {dt.SqlTableName} r on r.[{Constants.FieldNames.Owner}] = d.[{Constants.FieldNames.Id}]{onClause}";
+            join = $"inner join {dt.SqlTableName} r on r.[{dt.MasterField}] = d.[{Constants.FieldNames.Id}]{onClause}";
         }
 
         var map = CreateMapping(p, detailsTable).ToList();

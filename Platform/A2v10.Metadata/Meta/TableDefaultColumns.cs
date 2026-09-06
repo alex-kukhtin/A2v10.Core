@@ -55,7 +55,7 @@ internal static class TableDefaultColumns
     static IEnumerable<TableColumn> DetailsDefaultColumns(TableMetadata table)
     {
         yield return new TableColumn(Constants.FieldNames.Id, ColumnType.Id);
-        yield return new TableColumn(Constants.FieldNames.Owner, ColumnType.Owner);
+        yield return new TableColumn(table.MasterField, ColumnType.Master);
         yield return new TableColumn(Constants.FieldNames.RowNo, ColumnType.RowNumber);
     }
 
@@ -143,10 +143,13 @@ internal static class TableDefaultColumns
         yield return new TableColumn(Constants.FieldNames.Memo, ColumnType.Memo);
     }
 
+    /* Master, like a details row: a tag entry is part of the record it points at, dies with it and
+     * is never shown - so it is named by the same rule, after the master's Model.
+     */
     static IEnumerable<TableColumn> TagsEntriesDefaultColumns(TableMetadata table)
     {
         yield return new TableColumn(Constants.FieldNames.Id, ColumnType.Id);
-        yield return new TableColumn(Constants.FieldNames.Owner, ColumnType.Owner);
+        yield return new TableColumn(table.MasterField, ColumnType.Master);
         /* No Target on purpose. This table is built for DDL and is never resolved as an endpoint,
          * so the reference has nobody to point at - and a plausible-looking address here would be
          * read as the address of the tags endpoint, which it is not.

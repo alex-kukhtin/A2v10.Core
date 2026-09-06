@@ -420,7 +420,7 @@
             "type": "string",
             "enum": [
                 "String", "Id", "Name", "Memo", "RowNumber", "Done", "Void", "IsSystem",
-                "IsFolder", "Owner", "Parent", "Folder", "User", "RowKind", "Operation",
+                "IsFolder", "Parent", "Folder", "User", "RowKind", "Operation",
                 "Document", "DocumentType", "Row", "RowVersion", "Color", "Enum", "Autonum",
                 "Company", "Direction",
                 "Amount", "Price", "Qty", "Percent", "Factor",
@@ -429,7 +429,7 @@
                 "BigInt", "Bit", "NChar", "Decimal", "Float", "VarBinary", "Uniqueidentifier",
 
                 "string", "id", "name", "memo", "rowNumber", "done", "void", "isSystem",
-                "isFolder", "owner", "parent", "folder", "user", "rowKind", "operation",
+                "isFolder", "parent", "folder", "user", "rowKind", "operation",
                 "document", "documentType", "row", "rowVersion", "color", "enum", "autonum",
                 "company", "direction",
                 "amount", "price", "qty", "percent", "factor",

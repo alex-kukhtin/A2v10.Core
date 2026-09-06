@@ -1,0 +1,38 @@
+{
+	"$schema": "../../../../../Platform/A2v10.App.Assets2026/Application/@schemas/metadata-endpoint-json-schema.json#",
+	"schema": "jrn",
+	"table": "StockJournal",
+	"model": "Transaction",
+	"fields": {
+		"InOut": {
+			"type": "Direction"
+		},
+		"Document": {
+			"type": "Document", "target": "/document"
+		},
+		"Operation": {
+			"type": "Operation"
+		},
+		"Detail": {
+			"type": "Row"
+		},
+		"Qty": {
+			"type": "Qty"
+		},
+		"Sum": {
+			"type": "Amount"
+		},
+		"Store": {
+			"type": "Ref",
+			"target": "/catalog/store"
+		},
+		"Agent": {
+			"type": "Ref",
+			"target": "/catalog/agent"
+		},
+		"Item": {
+			"type": "Ref",
+			"target": "/catalog/item"
+		}
+	}
+}

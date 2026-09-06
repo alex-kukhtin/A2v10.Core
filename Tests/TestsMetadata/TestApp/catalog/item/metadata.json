@@ -1,0 +1,20 @@
+{
+	"$schema": "../../../../../Platform/A2v10.App.Assets2026/Application/@schemas/metadata-endpoint-json-schema.json#",
+	"table": "Items",
+	"fields": {
+		"Unit": {
+			"type": "Ref",
+			"target": "/catalog/unit"
+		},
+		"VatRate": {
+			"type": "Enum",
+			"target": "/enum/vatrate"
+		}
+	},
+	"initialValues": {
+		"VatRate": { "source": "literal", "value": "20" }
+	},
+	"rules": {
+		"required": [ "VatRate", "Name" ]
+	}
+}

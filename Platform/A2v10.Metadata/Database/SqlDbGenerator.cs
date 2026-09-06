@@ -155,14 +155,15 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
      * (tables, seed, foreign keys, indexes) and they used to walk it four times, agreeing only
      * because someone kept them equal.
      *
-     * The owner travels with the table because a foreign key needs it and nothing else does. It is
-     * cheaper to hand it out here than to have a second walk repeat the same three rules to find
-     * out who owns what.
+     * The master travels with the table because a foreign key needs it and nothing else does - a
+     * master column carries no target of its own, so this walk is the only place that knows what
+     * it points at. Cheaper to hand it out here than to have a second walk repeat the same three
+     * rules to find out what hangs under what.
      *
      * The tags catalog is nobody's satellite - one table for the whole application - so it comes
      * once, after the walk, and only if anything is tagged.
      */
-    private static IEnumerable<(TableMetadata Table, TableMetadata? Owner)> DeployTables(IEnumerable<TableMetadata> tables)
+    private static IEnumerable<(TableMetadata Table, TableMetadata? Master)> DeployTables(IEnumerable<TableMetadata> tables)
     {
         foreach (var table in tables)
         {
@@ -437,11 +438,11 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
     {
         var strBuilder = new StringBuilder();
         strBuilder.AppendLine("-- FOREIGN KEYS");
-        // Owner -> the tagged table for tag entries, the header for a detail: the walk hands it
-        // out, which is the only reason it carries one.
-        foreach (var (table, owner) in DeployTables(tables))
+        // the master -> the tagged table for tag entries, the header for a detail: the walk hands
+        // it out, which is the only reason it carries one.
+        foreach (var (table, master) in DeployTables(tables))
         {
-            var fc = CliDatabaseCreator.CreateForeignKeys(table, owner);
+            var fc = CliDatabaseCreator.CreateForeignKeys(table, master);
             if (!String.IsNullOrWhiteSpace(fc))
             {
                 strBuilder.AppendLine(fc);

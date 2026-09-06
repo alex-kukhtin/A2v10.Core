@@ -1,0 +1,72 @@
+{
+	"$schema": "../../../../../Platform/A2v10.App.Assets2026/Application/@schemas/metadata-endpoint-json-schema.json#",
+	"kind": "Catalog",
+	"schema": "cat",
+	"table": "Agents",
+	"model": "Agent",
+	"traits": [ "Tags", "Audit" ],
+	"fields": {
+		"Date": {
+			"type": "Date"
+		},
+		"Store": {
+			"type": "Ref",
+			"target": "/catalog/store"
+		}
+	},
+	"rules": {
+		"required": [ "Date" ]
+	},
+	"details": {
+		"Addresses": {
+			"model": "AgentAddress",
+			"fields": {
+				"Text": {"type": "String"}
+			}
+		}
+	},
+	"forms2": {
+		"index": {
+			"page": {
+				"toolbar": [ "add", "edit", "delete", "sep", "show", "sep", "reload", "toRight", "search" ],
+				"datagrid": {
+					"Id": {},
+					"Name": { "clamp": 2 },
+					"Date": {},
+					"Store": {},
+					"Memo": { "clamp": 2 }
+				}
+			},
+			"commands": [ "add", "edit", "delete", "sep", "show", "sep", "reload", "toRight", "search" ],
+			"columns": {
+				"Id": {},
+				"Name": { "clamp": 2 },
+				"Date": {},
+				"Store": {},
+				"Memo": { "clamp": 2 }
+			},
+			"filters": {
+				"Store": {}
+			}
+		},
+		"edit": {
+			"dialog": {
+				"controls": {
+					"Name": { "clamp": 2 },
+					"Date": {},
+					"Store": {},
+					"Memo": { "multiline": true }
+				}
+			}
+		},
+		"show": {
+			"tabs": [
+				{
+				},
+				{
+
+				}
+			]
+		}
+	}
+}

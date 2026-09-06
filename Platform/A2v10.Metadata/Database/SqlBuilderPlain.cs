@@ -54,10 +54,10 @@ internal partial class SqlBuilder
             -- tags
             select [!{TableMetadataDefaults.TagsTypeName()}!Array] = null, [Id!!Id] = t.Id,
                 [Name!!Name] = t.[Name], t.[Color], t.[Memo],
-                [!{Table.TypeName}.{Constants.FieldNames.Tags}!ParentId] = e.[Owner]
+                [!{Table.TypeName}.{Constants.FieldNames.Tags}!ParentId] = e.[{Table.Model}]
             from {TableMetadataDefaults.TagEntriesTableName(Table.Model)} e
                 inner join {TableMetadataDefaults.TagsTableName()} t on t.[Id] = e.[Tag]
-            where e.[Owner] = @Id and t.[For] = N'{Table.Model}';
+            where e.[{Table.Model}] = @Id and t.[For] = N'{Table.Model}';
 
             select [{Constants.FieldNames.Tags}!{TableMetadataDefaults.TagsTypeName()}!Array] = null,
                 [Id!!Id] = t.Id, [Name!!Name] = t.[Name], t.[Color], t.[Memo]
@@ -202,8 +202,8 @@ internal partial class SqlBuilder
                         sb.AppendLine(",");
                     }
                     sb.AppendLine($"""
-                      [!{Table.TypeName}.{parent}!ParentId] = d.[Owner]
-                    from {dt.SqlTableName} d where d.[Owner] = @Id{filter}
+                      [!{Table.TypeName}.{parent}!ParentId] = d.[{dt.MasterField}]
+                    from {dt.SqlTableName} d where d.[{dt.MasterField}] = @Id{filter}
                     order by d.RowNo;
                     """);
                 }
@@ -285,7 +285,7 @@ internal partial class SqlBuilder
             sb.AppendLine();
 
             Boolean updateablePredicate(TableColumn c)
-                => c.Type != ColumnType.Owner && c.Type != ColumnType.RowKind && c.Type != ColumnType.Id;
+                => c.Type != ColumnType.Master && c.Type != ColumnType.RowKind && c.Type != ColumnType.Id;
 
             String mergeOneDetails(TableMetadata detailsTable, String key)
             {
@@ -297,10 +297,10 @@ internal partial class SqlBuilder
 				on t.[Id]  = s.[Id]
 				when matched then update set
 				    {String.Join(',', updateFields.Select(f => $"t.[{f.Name}] = s.[{f.Name}]"))}
-				when not matched then insert 
-				    ([Owner], {String.Join(',', updateFields.Select(f => $"[{f.Name}]"))}) values
+				when not matched then insert
+				    ([{detailsTable.MasterField}], {String.Join(',', updateFields.Select(f => $"[{f.Name}]"))}) values
 				    (@Id, {String.Join(',', updateFields.Select(f => $"s.[{f.Name}]"))})
-				when not matched by source and t.[Owner] = @Id then delete;
+				when not matched by source and t.[{detailsTable.MasterField}] = @Id then delete;
 				""";
             }
 
@@ -335,9 +335,9 @@ internal partial class SqlBuilder
 				when matched then update set
 					{String.Join(',', updateFields.Select(f => $"t.[{f.Name}] = s.[{f.Name}]"))}
 				when not matched then insert
-					([Owner], [{kindField.Name}], {String.Join(',', updateFields.Select(f => $"[{f.Name}]"))}) values
+					([{detailsTable.MasterField}], [{kindField.Name}], {String.Join(',', updateFields.Select(f => $"[{f.Name}]"))}) values
 					(@Id, s.[__Kind__], {String.Join(',', updateFields.Select(f => $"s.[{f.Name}]"))})
-				when not matched by source and t.[Owner] = @Id and t.[{kindField.Name}] in ({declaredKinds}) then delete;
+				when not matched by source and t.[{detailsTable.MasterField}] = @Id and t.[{kindField.Name}] in ({declaredKinds}) then delete;
 				""";
             }
 
@@ -355,7 +355,7 @@ internal partial class SqlBuilder
 
         /* Tags are not a detail: no fields of their own, no RowNo, nothing to update - a row either
          * is in the set or is not. So the merge has no 'when matched' arm, and what is deleted is
-         * bounded by the owner exactly as the details merges bound theirs.
+         * bounded by the master exactly as the details merges bound theirs.
          */
         String MergeTags()
         {
@@ -365,9 +365,9 @@ internal partial class SqlBuilder
             -- merge tags
             merge {TableMetadataDefaults.TagEntriesTableName(Table.Model)} as t
             using @{Constants.FieldNames.Tags} as s
-            on t.[Owner] = @Id and t.[Tag] = s.[Id]
-            when not matched then insert ([Owner], [Tag]) values (@Id, s.[Id])
-            when not matched by source and t.[Owner] = @Id then delete;
+            on t.[{Table.Model}] = @Id and t.[Tag] = s.[Id]
+            when not matched then insert ([{Table.Model}], [Tag]) values (@Id, s.[Id])
+            when not matched by source and t.[{Table.Model}] = @Id then delete;
             """;
         }
 

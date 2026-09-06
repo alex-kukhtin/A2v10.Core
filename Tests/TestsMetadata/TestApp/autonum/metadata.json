@@ -1,0 +1,9 @@
+{
+	"$schema": "../../../../Platform/A2v10.App.Assets2026/Application/@schemas/metadata-autonum-json-schema.json#",
+	"autonums": {
+		"waybill": {
+			"pattern": "Н-{yyyy}/{nnnnn}",
+			"period": "year"
+		}
+	}
+} 

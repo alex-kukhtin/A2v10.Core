@@ -38,7 +38,13 @@ public enum ColumnType
     Void,
     IsSystem,
     IsFolder,
-    Owner,
+    /* The link from a row to the record it is PART of - a details row to its header, a tag entry
+     * to the tagged record. Never declared in a file: the platform emits it, names it after the
+     * master's Model and finds it back by this type. The word 'Owner' deliberately no longer
+     * means this: belonging (a subordinate catalog to the entity it belongs to) is a different
+     * relation - declared target, several per table, an entity of its own - and it gets the word.
+     */
+    Master,
     Parent,
     Folder,
     User,
@@ -110,7 +116,7 @@ public record TableColumn
     public IRefTarget RefTableCheck => RefTable ?? throw new InvalidOperationException($"RefTable for '{Name}' is null");
 
     [JsonIgnore] 
-    internal Boolean IsRef => Type == ColumnType.Ref || Type == ColumnType.Owner ||
+    internal Boolean IsRef => Type == ColumnType.Ref || Type == ColumnType.Master ||
             Type == ColumnType.User || Type == ColumnType.Document ||
             Type == ColumnType.Company || Type == ColumnType.Operation ||
             Type == ColumnType.Enum;
@@ -334,6 +340,23 @@ public sealed record TableMetadata
     [JsonIgnore]
     public String DetailsKey { get; private set; } = String.Empty;
 
+    /* The name of the link back to the header, and it is the MASTER'S Model - so a waybill's rows
+     * carry [Waybill], not one word repeated in every details table in the database. One rule for
+     * every link column then: it is named for what it points at, the way refs already are.
+     *
+     * Held rather than derived because the column is emitted from the hanging table alone
+     * (DetailsDefaultColumns, TagsEntriesDefaultColumns), which does not know its master; this is
+     * set where the master IS in hand, beside Table, which is built from the same Model. Everything
+     * else asks here, and the places that used to spell the name literally now find the column the
+     * way the platform finds every other one - by its type.
+     *
+     * Two setters, one per satellite kind (SetDetailDefaults, CreateTagEntriesTable), and nothing
+     * else may write it: a table that hangs under nobody has no master field, and an empty string
+     * is that answer rather than a name nobody chose.
+     */
+    [JsonIgnore]
+    public String MasterField { get; internal set; } = String.Empty;
+
     /* Both names of one kind, and neither part is a constant.
      *
      * The collection is kind + the declared key ('Stock' + 'Rows'), the row type is 'T' + kind
@@ -472,6 +495,7 @@ public sealed record TableMetadata
         Schema = table.Schema;
         Kind = EndpointKind.Details;
         DetailsKey = key;
+        MasterField = table.Model;
         Table = $"{table.Model}{key}";
     }
     internal void SetDefaults(String schema, String table)

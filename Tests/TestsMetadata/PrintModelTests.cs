@@ -39,7 +39,9 @@ public class PrintModelTests
         Assert.Contains($"select [{doc.Model}!{doc.TypeName}!Object] = null", sql);
         Assert.Contains("[Id!!Id] = t0.[Id]", sql);       // implicit, never written in the blank
         Assert.Contains("t0.[Date]", sql);
-        Assert.Contains($"[Agent!{agent.RefTypeName}!RefId] = t0.[Agent]", sql);
+        // TAgent, not TRAgent: a print map carries whatever the blank asked for, which is wider
+        // than the index's Id+Name stub - see PrintSqlBuilder.TypeOfRef
+        Assert.Contains($"[Agent!{agent.TypeName}!RefId] = t0.[Agent]", sql);
         Assert.Contains($"[Rows!{rows.TypeName}!Array] = null", sql);
     }
 
@@ -57,7 +59,7 @@ public class PrintModelTests
         var sql = Build(doc, Root(Rows("Rows", ["Qty"])));
 
         Assert.Contains($"select [!{rows.TypeName}!Array] = null", sql);
-        Assert.Contains($"[!{doc.TypeName}.Rows!ParentId] = t1.[Owner]", sql);
+        Assert.Contains($"[!{doc.TypeName}.Rows!ParentId] = t1.[{rows.MasterField}]", sql);
         Assert.DoesNotContain(rows.RowKindField, sql);
     }
 
@@ -102,7 +104,7 @@ public class PrintModelTests
 
         var sql = Build(doc, Root(Rows("Rows", ["Qty"], Node("Item", "Name"))));
 
-        Assert.Contains($"select [!{item.RefTypeName}!Map] = null", sql);
+        Assert.Contains($"select [!{item.TypeName}!Map] = null", sql);
         Assert.Contains($"select t1.[Item] from {rows.SqlTableName} t1", sql);
     }
 
@@ -225,7 +227,7 @@ public class PrintModelTests
 
         var sql = Build(doc, model);
 
-        Assert.Equal(1, sql.Split('.').Count(l => l.Contains($"from {unit.SqlTableName} ")));
+        Assert.Equal(1, sql.Split('\n').Count(l => l.Contains($"from {unit.SqlTableName} ")));
 
         var map = sql[sql.IndexOf($"-- {unit.Model} map", StringComparison.Ordinal)..];
         Assert.Contains("union all", map);          // the row's Unit and the item's Unit

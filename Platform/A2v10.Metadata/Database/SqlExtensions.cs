@@ -121,7 +121,7 @@ internal static class SqlExtensions
         {
             // id + references: every one of them is platformid, the FK carries the meaning.
             // The base it rests on is deliberately absent - see AppPlatformId.
-            ColumnType.Id or ColumnType.Ref or ColumnType.Owner or ColumnType.Parent or
+            ColumnType.Id or ColumnType.Ref or ColumnType.Master or ColumnType.Parent or
                 ColumnType.Folder or ColumnType.Row or ColumnType.Company or
                 ColumnType.User or ColumnType.Document
                     => new SqlDbTypeInfo("platformid"),
@@ -215,7 +215,7 @@ internal static class SqlExtensions
      */
     public static Boolean DeployNullable(this TableColumn column)
         => !(column.Name == Constants.FieldNames.Id
-            || column.Type == ColumnType.Owner
+            || column.Type == ColumnType.Master
             || column.Type == ColumnType.RowVersion
             || column.HasDefaultBit);
 
@@ -298,7 +298,7 @@ internal static class SqlExtensions
             && column.Type != ColumnType.Done
             && column.Type != ColumnType.Operation
             && column.Type != ColumnType.IsSystem
-            && column.Type != ColumnType.Owner
+            && column.Type != ColumnType.Master
             && column.Type != ColumnType.Parent
             && column.Type != ColumnType.RowVersion;
     }

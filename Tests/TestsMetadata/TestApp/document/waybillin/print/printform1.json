@@ -1,0 +1,331 @@
+{
+	"Model": {
+		"Document": [
+			"Number",
+			"Date",
+			"Sum",
+			{
+				"Agent": [ "Name", "Memo" ]
+			},
+			{
+				"StoreTo": ["Name", "Memo"]
+			},
+			{
+				"Rows[]": [
+					"RowNo",
+					"Qty",
+					"Price",
+					"Sum",
+					{
+						"Item": [
+							"Id",
+							"Name",
+							{ "Unit": [ "Short", "Denom" ] }
+						]
+					},
+					{ "Unit": [ "Short" ] }
+				]
+			}
+		]
+	},
+	"Workbook": {
+		"RowCount": 15,
+		"ColumnCount": 8,
+		"Columns": {
+			"A": { "Width": 21.75 },
+			"B": { "Width": 61.5 },
+			"C": { "Width": 159.75 },
+			"D": { "Width": 78 },
+			"E": { "Width": 37.5 },
+			"F": { "Width": 45.75 },
+			"G": { "Width": 48 },
+			"H": { "Width": 54 }
+		},
+		"Rows": { "1": { "Height": 31.5 } },
+		"Cells": {
+			"A1": {
+				"Value": "Прибуткова накладна № {Document.Number} від {Document.Date:dd-MM-yyyy} р.",
+				"ColSpan": 8,
+				"Style": "S32"
+			},
+			"B1": { "Style": "S32" },
+			"C1": { "Style": "S32" },
+			"D1": { "Style": "S32" },
+			"E1": { "Style": "S32" },
+			"F1": { "Style": "S32" },
+			"G1": { "Style": "S32" },
+			"H1": { "Style": "S32" },
+			"A3": {
+				"Value": "Постачальник",
+				"ColSpan": 2,
+				"Style": "S21"
+			},
+			"B3": { "Style": "S21" },
+			"C3": {
+				"Value": "{Document.Company.Name}",
+				"ColSpan": 3,
+				"Style": "S30"
+			},
+			"D3": { "Style": "S30" },
+			"E3": { "Style": "S30" },
+			"A4": { "Style": "S14" },
+			"B4": { "Style": "S14" },
+			"C4": { "Style": "S31" },
+			"D4": { "Style": "S31" },
+			"E4": { "Style": "S31" },
+			"A5": {
+				"Value": "Покупець",
+				"ColSpan": 2,
+				"Style": "S21"
+			},
+			"B5": { "Style": "S21" },
+			"C5": {
+				"Value": "{Document.Agent.Name}",
+				"ColSpan": 3,
+				"Style": "S30"
+			},
+			"D5": { "Style": "S30" },
+			"E5": { "Style": "S30" },
+			"A6": {
+				"Value": "Договір",
+				"ColSpan": 2,
+				"Style": "S21"
+			},
+			"B6": { "Style": "S21" },
+			"C6": {
+				"Value": "{Document.Contract.Name}",
+				"ColSpan": 3,
+				"Style": "S30"
+			},
+			"D6": { "Style": "S30" },
+			"E6": { "Style": "S30" },
+			"A7": {
+				"Value": "Склад",
+				"ColSpan": 2,
+				"Style": "S21"
+			},
+			"B7": { "Style": "S21" },
+			"C7": {
+				"Value": "{Document.StoreTo.Name}",
+				"ColSpan": 3,
+				"Style": "S30"
+			},
+			"D7": { "Style": "S30" },
+			"E7": { "Style": "S30" },
+			"A9": {
+				"Value": "№",
+				"Style": "S19"
+			},
+			"B9": {
+				"Value": "Артикул",
+				"Style": "S15"
+			},
+			"C9": {
+				"Value": "Товар/послуга",
+				"ColSpan": 2,
+				"Style": "S22"
+			},
+			"D9": { "Style": "S22" },
+			"E9": {
+				"Value": "Кільк.",
+				"Style": "S15"
+			},
+			"F9": {
+				"Value": "Од.вим.",
+				"Style": "S18"
+			},
+			"G9": {
+				"Value": "Ціна",
+				"Style": "S16"
+			},
+			"H9": {
+				"Value": "Сума",
+				"Style": "S17"
+			},
+			"A10": {
+				"Value": "{RowNo}",
+				"Style": "S12"
+			},
+			"B10": {
+				"Value": "{Item.Article}",
+				"Style": "S13"
+			},
+			"C10": {
+				"Value": "{Item.Name}",
+				"ColSpan": 2,
+				"Style": "S23"
+			},
+			"D10": { "Style": "S23" },
+			"E10": {
+				"Value": "{Qty}",
+				"Style": "S9"
+			},
+			"F10": {
+				"Value": "{Unit.Short}",
+				"Style": "S10"
+			},
+			"G10": {
+				"Value": "{Price}",
+				"Style": "S11"
+			},
+			"H10": {
+				"Value": "{Sum}",
+				"Style": "S6"
+			},
+			"A11": {
+				"Value": "Всього",
+				"ColSpan": 7,
+				"Style": "S24"
+			},
+			"B11": { "Style": "S25" },
+			"C11": { "Style": "S25" },
+			"D11": { "Style": "S25" },
+			"E11": { "Style": "S25" },
+			"F11": { "Style": "S25" },
+			"G11": { "Style": "S26" },
+			"H11": {
+				"Value": "{Document.Sum}",
+				"Style": "S5"
+			},
+			"A13": {
+				"Value": "{spellMoney(Document.Sum)}",
+				"ColSpan": 8,
+				"Style": "S20"
+			},
+			"B13": { "Style": "S20" },
+			"C13": { "Style": "S20" },
+			"D13": { "Style": "S20" },
+			"E13": { "Style": "S20" },
+			"F13": { "Style": "S20" },
+			"G13": { "Style": "S20" },
+			"H13": { "Style": "S20" },
+			"A15": {
+				"Value": "Видав",
+				"ColSpan": 2,
+				"Style": "S29"
+			},
+			"B15": { "Style": "S27" },
+			"C15": { "Style": "S4" },
+			"D15": {
+				"Value": "Отримав",
+				"ColSpan": 2,
+				"Style": "S27"
+			},
+			"E15": { "Style": "S27" },
+			"F15": {
+				"ColSpan": 3,
+				"Style": "S28"
+			},
+			"G15": { "Style": "S28" },
+			"H15": { "Style": "S28" }
+		},
+		"Ranges": [
+			{
+				"Value": "{Document.Rows}",
+				"Start": 10,
+				"End": 10
+			}
+		],
+		"Styles": {
+			"S4": { "Border": "0,0,0.2,0" },
+			"S5": {
+				"Align": "Right",
+				"Bold": true,
+				"Border": "0.2,1,1,0.2",
+				"Format": "0.00"
+			},
+			"S6": {
+				"Align": "Right",
+				"Border": "0,1,0.2,0.2",
+				"Format": "0.00"
+			},
+			"S9": {
+				"Align": "Right",
+				"Border": "0.2"
+			},
+			"S10": {
+				"Align": "Center",
+				"Border": "0.2"
+			},
+			"S11": {
+				"Align": "Right",
+				"Border": "0.2",
+				"Format": "0.00"
+			},
+			"S12": {
+				"Align": "Right",
+				"Border": "0,0.2,0.2,1"
+			},
+			"S13": { "Border": "0.2" },
+			"S14": { "VAlign": "Top" },
+			"S15": {
+				"Background": "f5f5f5",
+				"Border": "1,0.2,0.2,0.2"
+			},
+			"S16": {
+				"Align": "Right",
+				"Background": "f5f5f5",
+				"Border": "1,0.2,0.2,0.2"
+			},
+			"S17": {
+				"Align": "Right",
+				"Background": "f5f5f5",
+				"Border": "1,1,0.2,0.2"
+			},
+			"S18": {
+				"Align": "Center",
+				"Background": "f5f5f5",
+				"Border": "1,0.2,0.2,0.2"
+			},
+			"S19": {
+				"Align": "Right",
+				"Background": "f5f5f5",
+				"Border": "1,0.2,0.2,1"
+			},
+			"S20": {
+				"Bold": true,
+				"Border": "0,0,0.2,0"
+			},
+			"S21": { "VAlign": "Top" },
+			"S22": {
+				"Background": "f5f5f5",
+				"Border": "1,0.2,0.2,0.2"
+			},
+			"S23": { "Border": "0.2" },
+			"S24": {
+				"Align": "Right",
+				"Bold": true,
+				"Border": "0.2,0,1,1"
+			},
+			"S25": {
+				"Align": "Right",
+				"Bold": true,
+				"Border": "0.2,0,1,0"
+			},
+			"S26": {
+				"Align": "Right",
+				"Bold": true,
+				"Border": "0.2,0.2,1,0"
+			},
+			"S27": { "Align": "Right" },
+			"S28": { "Border": "0,0,0.2,0" },
+			"S29": { "Align": "Right" },
+			"S30": {
+				"VAlign": "Top",
+				"Bold": true
+			},
+			"S31": {
+				"VAlign": "Top",
+				"Bold": true
+			},
+			"S32": {
+				"FontSize": 14,
+				"Align": "Center",
+				"Border": "0,0,0.2,0"
+			}
+		}
+	},
+	"FontFamily": "Verdana",
+	"FontSize": 8,
+	"Margin": "28.346457"
+}

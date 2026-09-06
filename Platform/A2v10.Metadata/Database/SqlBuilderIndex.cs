@@ -117,7 +117,7 @@ internal partial class SqlBuilder
                 sb.AppendLine($$"""
                  and exists(select 1 from @ftags f
                     inner join {{TableMetadataDefaults.TagEntriesTableName(Table.Model)}} ta
-                        on ta.[Owner] = a.Id and ta.[Tag] = f.Id)
+                        on ta.[{{Table.Model}}] = a.Id and ta.[Tag] = f.Id)
                 """);
 
             /* An enum filter has a value meaning 'no restriction' - the set's own 'All' row, whose
@@ -301,7 +301,7 @@ internal partial class SqlBuilder
                     [Name!!Name] = t.[Name], t.[Color], t.[Memo],
                     [!{Table.TypeName}.{Constants.FieldNames.Tags}!ParentId] = m.[Id]
                 from @map m
-                    inner join {TableMetadataDefaults.TagEntriesTableName(Table.Model)} e on e.[Owner] = m.[Id]
+                    inner join {TableMetadataDefaults.TagEntriesTableName(Table.Model)} e on e.[{Table.Model}] = m.[Id]
                     inner join {TableMetadataDefaults.TagsTableName()} t on t.[Id] = e.[Tag]
                 where t.[For] = N'{Table.Model}';
 

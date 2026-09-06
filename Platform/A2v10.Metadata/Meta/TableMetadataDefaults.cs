@@ -91,9 +91,9 @@ internal static class TableMetadataDefaults
     /* Not a registry entry: there is one of these per tagged table, so it is parameterized and
      * has no address of its own.
      *
-     * The schema is CATALOG and not the owner's, whoever the owner is - tag entries of a document
+     * The schema is CATALOG and not the master's, whoever the master is - tag entries of a document
      * still land in 'cat'. Every reader has to take the name from here for that reason; spelling
-     * it as '{owner.SqlSchema}.[{Model}$TagEntries]' is right for a catalog by accident and wrong
+     * it as '{master.SqlSchema}.[{Model}$TagEntries]' is right for a catalog by accident and wrong
      * for everyone else.
      */
     public static TableMetadata CreateTagEntriesTable(TableMetadata table)
@@ -103,7 +103,9 @@ internal static class TableMetadataDefaults
             Kind = EndpointKind.TagEntries,
             Schema = Constants.SchemaNames.Catalog,
             Model = $"{table.Model}TagEntry",
-            Table = $"{table.Model}$TagEntries"
+            Table = $"{table.Model}$TagEntries",
+            // the same rule a details row follows: the link back is named for what it points at
+            MasterField = table.Model
         };
     }
 }

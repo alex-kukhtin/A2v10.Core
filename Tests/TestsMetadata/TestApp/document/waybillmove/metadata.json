@@ -1,0 +1,105 @@
+{
+	"$schema": "../../../../../Platform/A2v10.App.Assets2026/Application/@schemas/metadata-endpoint-json-schema.json#",
+	"storage": "/document",
+	"autonum": "waybill",
+	"initialValues": {
+		"StoreFrom": {
+			"source": "profile",
+			"value": "Store"
+		},
+		"Agent": {
+			"source": "profile",
+			"value": "Agent"
+		},
+		"Date": {
+			"source": "context",
+			"value": "today"
+		}
+	},
+	"rules": {
+		"required": [ "StoreFrom", "StoreTo", "Agent" ]
+	},
+	"post": [
+		{
+			"journal": "/journal/stock",
+			"dir": "out",
+			"each": { "details": "Rows", "kinds": ["Stock"] },
+			"document": {
+				"Store": "StoreTo"
+			}
+		},
+		{
+			"journal": "/journal/stock",
+			"dir": "in",
+			"each": {
+				"details": "Rows",
+				"kinds": [ "Stock" ]
+			},
+			"document": {
+				"Store": "StoreFrom"
+			}
+		}
+	],
+	"forms2": {
+		"index": {
+			"is": "page",
+			"scope": "Documents",
+			// collection view always
+			"body": [
+				{
+					"is": "toolbar",
+					"commands": [ "Create", "Edit", "Delete" ]
+				},
+				{
+					"is": "datagrid", // height: 1*
+					"fields": [ "Id", "Date", "Agent", "StoreFrom" ]
+				},
+				{
+					"is": "pager"
+				}
+			],
+			"taskpad": {
+				"is": "taskpad",
+				"body": [
+					{
+						"is": "panel",
+						"fields": "Date,Agent,Store"
+					}
+				]
+			}
+		},
+		"edit": {
+			"is": "page",
+			"scope": "Document",
+			"body": [
+				{
+					"is": "group",
+					"fields": [ "Number", "Date" ]
+				},
+				{
+					"is": "group",
+					"fields": [ "Agent", "StoreFrom", "StoreTo" ]
+				},
+				{
+					"is": "tabs",
+					"elements": [
+						{
+							"is": "tab",
+							"scope": "Rows", "kind": "Stock",
+							"fields": [ "RowNo", "Item", "Qty", "Price", "Sum" ]
+						},
+						{
+							"is": "tab",
+							"scope": "Rows", "kind": "Service",
+							"fields": [ "RowNo", "Item", "Qty", "Price", "Sum" ]
+						}
+					]
+				},
+				{
+					"is": "group",
+					"fields": [ "Memo" ]
+				}
+			]
+		}
+	}
+} 

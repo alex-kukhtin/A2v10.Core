@@ -1,0 +1,101 @@
+{
+	"$schema": "../../../../../Platform/A2v10.App.Assets2026/Application/@schemas/metadata-endpoint-json-schema.json#",
+	"storage": "/document",
+	"autonum": "waybill",
+	"initialValues": {
+		"StoreFrom": {
+			"source": "profile",
+			"value": "Store"
+		},
+		"Agent": {
+			"source": "profile",
+			"value": "Agent"
+		},
+		"Date": {
+			"source": "context",
+			"value": "today"
+		}
+	},
+	"rules": {
+		"required": [ "StoreFrom", "Agent" ]
+	},
+	"post": [
+		{
+			"journal": "/journal/stock",
+			"dir": "out",
+			"each": {
+				"details": "Rows",
+				"kinds": [ "Stock" ]
+			},
+			"document": {
+				"Store": "StoreFrom"
+			}
+		}
+	],
+	"forms": {
+		"index": {
+			"is": "page",
+			"scope": "Documents",
+			// collection view always
+			"body": [
+				{
+					"is": "toolbar",
+					"commands": [ "Create", "Edit", "Delete", "$sep", "Print", "$sep", "Reload", "$toRight", "Search" ]
+				},
+				{
+					"is": "datagrid", // height: 1*
+					"fields": [ "Id", "Date", "Number", "Operation", "Sum", "Agent", "StoreFrom", "Memo" ]
+				},
+				{
+					"is": "pager"
+				}
+			],
+			"taskpad": {
+				"is": "taskpad",
+				"elements": [
+					{
+						"is": "filters",
+						"fields": [ "Date", "Agent", "StoreFrom" ]
+					}
+				]
+			}
+		},
+		"edit": {
+			"is": "page",
+			"scope": "Document",
+			"toolbar": {
+				"is": "toolbar",
+				"commands": ["SaveAndClose", "Save", "$sep", "Reload"]
+			},
+			"body": [
+				{
+					"is": "group", "axis": "rows", "labelAt": "left",
+					"fields": [ "Operation", "Number", "Date" ]
+				},
+				{
+					"is": "group", "axis": "rows",
+					"fields": [ "Agent", "StoreFrom" ]
+				},
+				{
+					"is": "tabs",
+					"elements": [
+						{
+							"is": "tab",
+							"scope": "Rows", "kind": "Stock",
+							"fields": [ "RowNo", "Item", "Qty", "Price", "Sum" ]
+						},
+						{
+							"is": "tab",
+							"scope": "Rows", "kind": "Stock",
+							"fields": [ "RowNo", "Item", "Qty", "Price", "Sum" ]
+						}
+					]
+				},
+				{
+					"is": "group",
+					"fields": [ "Memo" ]
+				}
+			]
+		}
+	}
+} 

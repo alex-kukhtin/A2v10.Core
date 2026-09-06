@@ -1,0 +1,99 @@
+{
+	"$schema": "../../../../Platform/A2v10.App.Assets2026/Application/@schemas/metadata-endpoint-json-schema.json#",
+	"table": "StockDocuments",
+	"model": "Document",
+	"traits": [ "Attachments" ],
+	"fields": {
+		"Number": {
+			"type": "Autonum"
+		},
+		"Operation": {
+			"type": "Operation"
+		},
+		"StoreFrom": {
+			"type": "Ref",
+			"target": "/catalog/store"
+		},
+		"StoreTo": {
+			"type": "Ref",
+			"target": "/catalog/store"
+		},
+		"Agent": {
+			"type": "Ref",
+			"target": "/catalog/agent"
+		},
+		"Sum": {
+			"type": "Amount"
+		}
+	},
+	"rules": {
+		"required": [ "Date" ],
+		"computed": {
+			"Sum": "this.StockRows.$sum(r => r.Sum) + this.ServiceRows.$sum(r => r.Sum)"
+		}
+	},
+	"details": {
+		"Rows": {
+			"model": "Row",
+			"fields": {
+				"Kind": {
+					"type": "RowKind"
+				},
+				"Qty": {
+					"type": "Qty"
+				},
+				"Price": {
+					"type": "Price"
+				},
+				"Sum": {
+					"type": "Amount"
+				},
+				"Item": {
+					"type": "Ref",
+					"target": "/catalog/item"
+				},
+				"Unit": {
+					"type": "Ref",
+					"target": "/catalog/unit"
+				},
+				"VatRate": {
+					"type": "Enum",
+					"target": "/enum/vatrate"
+				}
+			},
+			"lookup": {
+				"Item": [ "Article", "Barcode" ]
+			},
+			"rules": {
+				"inherit": {
+					"Unit": {
+						"ref": "Item",
+						"field": "Unit"
+					},
+					"VatRate": {
+						"ref": "Item",
+						"field": "VatRate"
+					}
+				}
+			},
+			"kinds": {
+				"Stock": {
+					"rules": {
+						"computed": {
+							"Sum": "this.Qty * this.Price"
+						},
+						"required": [ "Item", "Qty", "Price" ]
+					}
+				},
+				"Service": {
+					"computed": {
+						"Sum": "this.Qty * this.Price"
+					},
+					"rules": {
+						"required": [ "Item" ]
+					}
+				}
+			}
+		}
+	}
+}

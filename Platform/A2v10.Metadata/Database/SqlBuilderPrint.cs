@@ -82,7 +82,6 @@ internal sealed class PrintSqlBuilder(TableMetadata table, PrintNode model)
     }
 
     private static String Id => Constants.FieldNames.Id;
-    private static String Owner => Constants.FieldNames.Owner;
 
     /* 'TAgent', not 'TRAgent'. The 'TR' form belongs to the index, where a reference is resolved to
      * a stub of Id and Name and is a narrower thing than the record; here a map carries whatever the
@@ -137,24 +136,24 @@ internal sealed class PrintSqlBuilder(TableMetadata table, PrintNode model)
             yield return c;
     }
 
-    private IEnumerable<Container> Nested(Container owner)
+    private IEnumerable<Container> Nested(Container master)
     {
-        foreach (var node in owner.Node.Nodes.Where(n => n.IsCollection))
+        foreach (var node in master.Node.Nodes.Where(n => n.IsCollection))
         {
-            var collection = CollectionOf(owner.Table, node.Name);
+            var collection = CollectionOf(master.Table, node.Name);
             var alias = NextAlias();
 
-            /* Composed, with no special case for the first level. 'Owner = @Id' would be true of a
-             * detail of the record and false of a detail of a detail: one law written twice, and
+            /* Composed, with no special case for the first level. '<master> = @Id' would be true of
+             * a detail of the record and false of a detail of a detail: one law written twice, and
              * the second spelling wrong. Depth 1 pays one subquery for that.
              *
              * The parent's own predicate carries its kind filter, so rows of 'StockRows.SubRows'
              * come from the stock rows only - which is the whole point of addressing a kind.
              */
-            var rows = $"{alias}.[{Owner}] in ({Ids(owner)}){collection.Filter(alias)}";
+            var rows = $"{alias}.[{collection.Table.MasterField}] in ({Ids(master)}){collection.Filter(alias)}";
 
             var container = new Container(
-                node.Name, collection.Table, collection.TypeName, node, rows, alias, owner);
+                node.Name, collection.Table, collection.TypeName, node, rows, alias, master);
             yield return container;
             foreach (var c in Nested(container))
                 yield return c;
@@ -265,7 +264,7 @@ internal sealed class PrintSqlBuilder(TableMetadata table, PrintNode model)
             -- {parent.Name}.{c.Name}
             select [!{c.TypeName}!Array] = null,
               {String.Join(", ", Fields(c.Table, c.Node, c.Alias, arrays: true))},
-              [!{parent.TypeName}.{c.Name}!ParentId] = {c.Alias}.[{Owner}]
+              [!{parent.TypeName}.{c.Name}!ParentId] = {c.Alias}.[{c.Table.MasterField}]
             from {c.Table.SqlTableName} {c.Alias} where {c.Rows}
             order by {c.Alias}.[{Constants.FieldNames.RowNo}];
             """);

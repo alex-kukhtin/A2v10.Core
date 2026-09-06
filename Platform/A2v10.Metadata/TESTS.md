@@ -112,7 +112,7 @@ switch — обязательство тотальности, и проверя�
 - алиасы `r{N}` в index-SQL — ровно те рефы, что перечислил `AllRefs`, и с той же
   нумерацией. `Index = ix + 1` берётся из позиции в перечислении, то есть зависит от
   предиката: `SqlBuilderIndex.cs:34` считает по `AllColumns()`, `RefMapBuilder.Flatten`
-  (`:48`) — по `Columns`. `Owner` есть только в первом;
+  (`:48`) — по `Columns`. Мастер-колонка есть только в первом;
 - каждая колонка, названная в `SELECT`, существует в `AllColumns`;
 - множество колонок `@map` из `GenerateDeclare` покрывает всё, что используют
   `GenerateInserts` и `GenerateResolves`;

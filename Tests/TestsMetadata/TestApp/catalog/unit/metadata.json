@@ -1,0 +1,14 @@
+{
+	"$schema": "../../../../../Platform/A2v10.App.Assets2026/Application/@schemas/metadata-endpoint-json-schema.json#",
+	"table": "Units",
+	"presentation": "{Short}",
+	"fields": {
+		"Short": {
+			"type": "String",
+			"length": 8
+		},
+		"Denom": {
+			"type": "Money"
+		}
+	}
+}

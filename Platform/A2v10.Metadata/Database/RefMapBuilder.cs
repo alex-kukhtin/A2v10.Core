@@ -8,7 +8,7 @@ using System.Text;
 namespace A2v10.Metadata;
 
 /* One source of references, and how to reach ITS rows. 'Where' travels with the table because the
- * two are one answer: a header is found by Id, a collection by Owner, a journal by the document
+ * two are one answer: a header is found by Id, a collection by its master column, a journal by the document
  * that posted it - and nothing downstream can derive which from the table alone.
  */
 internal record RefMapItem(TableMetadata SourceTable, String Where,
@@ -84,7 +84,7 @@ internal class RefMapBuilder
         if (!_isPlain)
             yield break;
         foreach (var detail in table.Details ?? [])
-            foreach (var item in Flatten(detail.Value, $"[{Constants.FieldNames.Owner}] = @Id"))
+            foreach (var item in Flatten(detail.Value, $"[{detail.Value.MasterField}] = @Id"))
                 yield return item;
     }
 
