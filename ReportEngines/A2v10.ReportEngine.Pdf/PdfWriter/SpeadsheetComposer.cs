@@ -79,7 +79,7 @@ internal class SpreadsheetComposer
 		{
 			container.Column(column =>
 			{
-				wbComposer.Compose(column);
+				wbComposer.Compose(column, _context.DataModel);
 			});
 		});
 		if (_ssheet.Workbook.Footer != null)

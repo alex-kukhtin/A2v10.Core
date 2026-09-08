@@ -1,6 +1,7 @@
 ﻿// Copyright © 2022-2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+using System.Dynamic;
 
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
@@ -21,27 +22,27 @@ internal class InlinedComposer : FlowElementComposer
 		_context = context;
 	}
 
-	internal override void Compose(IContainer container, Object? value = null)
+	internal override void Compose(IContainer container, ExpandoObject scope)
 	{
-		if (!_context.IsVisible(_inlined))
+		if (!_context.IsVisible(_inlined, scope))
 			return;
-		container.ApplyDecoration(_inlined.RuntimeStyle).Inlined(Compose);
+		container.ApplyDecoration(_inlined.RuntimeStyle).Inlined(inl => Compose(inl, scope));
 	}
 
-	public void Compose(InlinedDescriptor inl)
+	public void Compose(InlinedDescriptor inl, ExpandoObject scope)
 	{
 		foreach (var ch in _inlined.Children)
 		{
 			inl.Item().Element(elem =>
 			{
-				ComposeElement(elem, ch);
+				ComposeElement(elem, ch, scope);
 			});
 		}
 	}
 
-	void ComposeElement(IContainer container, FlowElement elem)
+	void ComposeElement(IContainer container, FlowElement elem, ExpandoObject scope)
 	{
 		var comp = elem.CreateComposer(_context);
-		comp.Compose(container);
+		comp.Compose(container, scope);
 	}
 }

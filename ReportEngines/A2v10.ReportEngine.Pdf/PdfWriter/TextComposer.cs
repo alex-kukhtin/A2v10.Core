@@ -1,6 +1,7 @@
 ﻿// Copyright © 2022 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+using System.Dynamic;
 
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
@@ -58,9 +59,9 @@ internal class TextComposer(Text text, RenderContext context) : FlowElementCompo
 		return descr;
 	}
 
-	internal override void Compose(IContainer container, Object? value = null)
+	internal override void Compose(IContainer container, ExpandoObject scope)
 	{
-		if (!_context.IsVisible(_text))
+		if (!_context.IsVisible(_text, scope))
 			return;
 		container
 		.ApplyLayoutOptions(_text)
@@ -79,7 +80,7 @@ internal class TextComposer(Text text, RenderContext context) : FlowElementCompo
 						txt.Element().MinWidth(elemSpace.Width.Value, elemSpace.Width.Unit.ToUnit());
 					continue;
 				}
-				var val = _context.GetValueAsString(elem);
+				var val = _context.GetValueAsString(elem, scope);
 				if (val != null)
 				{
 					var txtVal = val.TrimForSpan();

@@ -1,6 +1,7 @@
 ﻿// Copyright © 2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+using System.Dynamic;
 
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
@@ -13,9 +14,9 @@ using A2v10.ReportEngine.Excel;
 namespace A2v10.ReportEngine.Pdf;
 
 internal class WorkbookComposer(Workbook _workbook, WorkbookHelper _helper, RenderContext _context) : FlowElementComposer
-{	internal override void Compose(IContainer container, Object? value = null)
+{	internal override void Compose(IContainer container, ExpandoObject scope)
 	{
-		if (!_context.IsVisible(_workbook))
+		if (!_context.IsVisible(_workbook, scope))
 			return;
 		container
 			.ApplyLayoutOptions(_workbook)
@@ -23,9 +24,9 @@ internal class WorkbookComposer(Workbook _workbook, WorkbookHelper _helper, Rend
 			.Table(table => ComposeTable(table, _helper.CellMatrix, _helper.RowHeight));
 	}
 
-	private void ComposeTable(ColumnDescriptor column)
+	private void ComposeTable(ColumnDescriptor column, ExpandoObject scope)
 	{
-		if (!_context.IsVisible(_workbook))
+		if (!_context.IsVisible(_workbook, scope))
 			return;
 		column.Item().Element(container =>
 			container.ApplyLayoutOptions(_workbook)
@@ -46,17 +47,17 @@ internal class WorkbookComposer(Workbook _workbook, WorkbookHelper _helper, Rend
 			.Table(table => ComposeTable(table, _helper.BottomPartMatrix, _helper.BottomPartRowHeight))
 		);
 	}
-	public void Compose(ColumnDescriptor column)
+	public void Compose(ColumnDescriptor column, ExpandoObject scope)
 	{
 		if (_helper.CellMatrix != null)
 		{
 			column.Item().Element(cont =>
 			{
-				Compose(cont);
+				Compose(cont, scope);
 			});
 		}
 		else
-			ComposeTable(column);
+			ComposeTable(column, scope);
 	}
 
 	public void ComposeFooter(ColumnDescriptor column)

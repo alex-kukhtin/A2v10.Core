@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Globalization;
+using System.Text.RegularExpressions;
+
 using Jint;
 using Jint.Native;
 
@@ -11,7 +13,7 @@ using A2v10.Infrastructure;
 
 namespace A2v10.ReportEngine.Script;
 
-public class ScriptEngine
+public partial class ScriptEngine
 {
 	private readonly Engine _engine;
 	private readonly CultureInfo _culture;
@@ -29,10 +31,13 @@ public class ScriptEngine
 		if (!String.IsNullOrEmpty(code))
 			_engine.Evaluate(code!);
 
-		// all properties as Root objects
+		// Свободное имя читается от корня: так написаны боевые формы, поэтому хостинг остаётся.
+		// Root даёт то же самое явно — единственный способ выйти из scope на любой глубине
 		foreach (var item in model)
 			if (item.Value != null)
 				_engine.SetValue(item.Key, item.Value);
+
+		_engine.SetValue("Root", model);
 
 		_engine.SetValue("spellMoney", SpellMoney);
         _engine.SetValue("spellMoneyEn", SpellMoneyEn);
@@ -40,47 +45,38 @@ public class ScriptEngine
 		_engine.SetValue("qrCode", QrCodeFunc);
 	}
 
-	public IList<ExpandoObject> EvaluateCollection(String expression)
-	{
-		var list = _engine.Evaluate(expression).ToObject();
-		if (list is IList<ExpandoObject> listExp)
-			return listExp;
-		throw new InvalidOperationException($"'{expression}' is not a collection");
-	}
-    public static IList<ExpandoObject>? GetCollection(ExpandoObject value, String expression)
-    {
-        var list = value.Eval<Object>(expression);
-		if (list == null)
-			return null;
-        if (list is IList<ExpandoObject> listExp)
-            return listExp;
-        throw new InvalidOperationException($"'{expression}' is not a collection");
-    }
-
-    public Object? EvaluateValue(String? expression)
-	{
-		if (expression == null)
-			return null;
-		return _engine.Evaluate(expression).ToObject();
-	}
-
+	// Голый путь читается от текущего scope, всё остальное — обычный JS, где this и есть scope.
+	// Обёртка именно function, а не стрелка: у стрелки this лексический, связать ресивер нечем,
+	// и его приходилось заменять в тексте — ценой идентификаторов вроде thisYear и литералов.
+	// Выражение в скобках: без них перевод строки в начале съедает ASI после return.
 	public JsValue CreateAccessFunction(String expression)
 	{
-		var exp = $"_elem_ => _elem_.{expression}";
-		if (expression.Contains('(')) // call function
-			exp = $"_elem_ => {expression.Replace("this", "_elem_").Replace("Root.", "")}";
-		else if (expression.StartsWith("Root."))
-			exp = $"_elem_ => {expression.Replace("Root.", "")}";
-		return _engine.Evaluate(exp);
+		var body = IsScopePath(expression) ? $"this.{expression}" : expression;
+		return _engine.Evaluate($"(function() {{ return ({body}); }})");
 	}
 
-	public Object? Invoke(JsValue func, ExpandoObject? data, String? expression)
+	// Один вопрос отвечает на два: получит ли путь префикс this. внутри выражения и может ли
+	// его пройти C#-ный Eval по scope. Поэтому правило одно и живёт здесь, а не в двух местах
+	public static Boolean IsScopePath(String expression)
 	{
-		if (data != null)
-			return _engine.Invoke(func, data).ToObject();
-		else if (!String.IsNullOrEmpty(expression))
-			return _engine.Evaluate(expression!)?.ToObject();
-		return null;
+		return BarePathRegex().IsMatch(expression)
+			&& !StartsWith(expression, "Root") && !StartsWith(expression, "this");
+	}
+
+	// Root и this — единственные начала, которые C#-ный обход по данным пройти не может:
+	// первого в модели нет, второе называет сам scope. Оба уходят в выражение
+	private static Boolean StartsWith(String expression, String name)
+	{
+		return expression == name || expression.StartsWith($"{name}.", StringComparison.Ordinal);
+	}
+
+	const String BARE_PATH_PATTERN = @"^[A-Za-z_$][A-Za-z0-9_$]*(\.[A-Za-z_$][A-Za-z0-9_$]*)*$";
+	[GeneratedRegex(BARE_PATH_PATTERN)]
+	private static partial Regex BarePathRegex();
+
+	public Object? Invoke(JsValue func, ExpandoObject scope)
+	{
+		return _engine.Invoke(func, scope, []).ToObject();
 	}
 
 	String SpellMoney(Object value, String currencyCode)

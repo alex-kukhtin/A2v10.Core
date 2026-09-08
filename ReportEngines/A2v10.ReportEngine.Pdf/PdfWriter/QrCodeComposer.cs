@@ -1,6 +1,7 @@
 ﻿// Copyright © 2024 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+using System.Dynamic;
 
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
@@ -28,23 +29,20 @@ internal class QrCodeComposer(QrCode _code, RenderContext _context) : FlowElemen
 		container.Image(stream).FitArea();
 	}
 
-	internal override void Compose(IContainer container, Object? value = null)
+	internal override void Compose(IContainer container, ExpandoObject scope)
 	{
-		if (!_context.IsVisible(_code))
+		if (!_context.IsVisible(_code, scope))
 			return;
 		container = container.ApplyDecoration(_code.RuntimeStyle);
-		if (_context.IsVisible(_code))
+
+		var strCode = _context.GetValueAsString(_code, scope, nameof(QrCode.Value)) ?? String.Empty;
+		var stream = CreateQrCodeStream(strCode);
+
+		if (_code.Size != null)
 		{
-			var strCode = _context.GetValueAsString(_code, nameof(QrCode.Value)) ?? String.Empty;
-
-			var stream = CreateQrCodeStream(strCode);
-
-			if (_code.Size != null)
-			{
-				container = container.Width(_code.Size.Value, _code.Size.Unit.ToUnit());
-				container = container.Height(_code.Size.Value, _code.Size.Unit.ToUnit());
-			}
-			container.Image(stream).FitArea();
+			container = container.Width(_code.Size.Value, _code.Size.Unit.ToUnit());
+			container = container.Height(_code.Size.Value, _code.Size.Unit.ToUnit());
 		}
+		container.Image(stream).FitArea();
 	}
 }

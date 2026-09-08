@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Dynamic;
 using System.Globalization;
 using System.IO;
@@ -82,7 +83,7 @@ public partial class RenderContext
 		return File.ReadAllBytes(fullPath);
 	}
 
-	public Byte[]? GetValueAsByteArray(Object value, String propertyName)
+	public Byte[]? GetValueAsByteArray(Object value, ExpandoObject scope, String propertyName)
 	{
 		if (value == null)
 			return null;
@@ -94,13 +95,13 @@ public partial class RenderContext
 		var lastDot = bindRuntime.Expression.LastIndexOf('.');
 		if (lastDot == -1)
 			return null;
-		var objVal = Engine.EvaluateValue(bindRuntime.Expression[..lastDot]);
+		var objVal = Evaluate(bindRuntime.Expression[..lastDot], scope);
 		if (objVal == null || objVal is not ExpandoObject eoVal)
 			return null;
 		return eoVal.Get<Byte[]>(bindRuntime.Expression[(lastDot + 1)..]);
 	}
 
-	public String? GetValueAsString(Object value, String propertyName = "Content")
+	public String? GetValueAsString(Object value, ExpandoObject scope, String propertyName = "Content")
 	{
 		if (value == null)
 			return null;
@@ -111,7 +112,7 @@ public partial class RenderContext
 			var contBind = contElem.GetBindRuntime("Content");
 			if (contBind != null)
 			{
-				var val = Engine.EvaluateValue(contBind.Expression);
+				var val = Evaluate(contBind.Expression, scope);
 				if (val != null)
 					return ValueToString(val, contBind.DataType, contBind.Format);
 			}
@@ -123,7 +124,7 @@ public partial class RenderContext
 			var contBind = xamlElem.GetBindRuntime(propertyName);
 			if (contBind != null)
 			{
-				var val = Engine.EvaluateValue(contBind.Expression);
+				var val = Evaluate(contBind.Expression, scope);
 				if (val != null)
 					return ValueToString(val, contBind.DataType, contBind.Format);
 			}
@@ -144,13 +145,32 @@ public partial class RenderContext
 		};
 	}
 
-	private JsValue? GetOrCreateAccessFunc(String source)
+	// Кеш один и ключ один — само выражение: и {(...)} из ячейки, и Expression биндинга
+	// компилируются в одну и ту же функцию, поэтому композерам своих кешей не нужно
+	private JsValue GetOrCreateAccessFunc(String expression)
 	{
-		if (_accessFuncs.TryGetValue(source, out JsValue? func))
+		if (_accessFuncs.TryGetValue(expression, out JsValue? func))
 			return func;
-		func = Engine.CreateAccessFunction(source[1..^1]);
-		_accessFuncs.TryAdd(source, func);
+		func = Engine.CreateAccessFunction(expression);
+		_accessFuncs.TryAdd(expression, func);
 		return func;
+	}
+
+	public Object? Evaluate(String? expression, ExpandoObject scope)
+	{
+		if (String.IsNullOrEmpty(expression))
+			return null;
+		return Engine.Invoke(GetOrCreateAccessFunc(expression!), scope);
+	}
+
+	public IList<ExpandoObject>? EvaluateCollection(String expression, ExpandoObject scope)
+	{
+		var list = Evaluate(expression, scope);
+		if (list == null)
+			return null;
+		if (list is IList<ExpandoObject> listExp)
+			return listExp;
+		throw new InvalidOperationException($"'{expression}' is not a collection");
 	}
 
 
@@ -163,44 +183,49 @@ public partial class RenderContext
 	private static Regex ResolveRegex() => RESOLVEREGEX;
 #endif
 
-	public ResolveResult? Resolve(String? source, ExpandoObject? item, DataType dataType, String? format)
+	// Формат отделяется только у пути: двоеточие внутри выражения — тернарник, а не формат
+	private static String? ScopePath(String key, ref String? format)
+	{
+		if (ScriptEngine.IsScopePath(key))
+			return key;
+		var spos = key.IndexOf(':');
+		if (spos == -1)
+			return null;
+		var path = key[..spos];
+		if (!ScriptEngine.IsScopePath(path))
+			return null;
+		format = key[(spos + 1)..];
+		return path;
+	}
+
+	public ResolveResult? Resolve(String? source, ExpandoObject scope, DataType dataType, String? format)
 	{
 		if (String.IsNullOrEmpty(source))
 			return new ResolveResult(source);
 		var ms = ResolveRegex().Matches(source);
 		if (ms.Count == 0)
 			return new ResolveResult(source);
-		if (item == null)
-			return null;
 		var sb = new StringBuilder(source);
 		foreach (Match m in ms.Cast<Match>())
 		{
 			String? valResult = null;
 			String key = m.Groups[1].Value;
-			if (key.StartsWith('(') && key.EndsWith(')'))
+			// Ветку выбирает форма записи, а не маркер: путь по scope (и он же с форматом)
+			// проходится C#-ом, всё остальное — выражение. Внешние скобки больше ничего
+			// не значат: {(f(x))} это то же выражение, взятое в скобки
+			var path = ScopePath(key, ref format);
+			if (path != null)
 			{
-				// JS expression
-				var f = GetOrCreateAccessFunc(key);
-				if (f != null)
-				{
-					var valObj = Engine.Invoke(f, item, null);
-					if (valObj is QrCodeValue qrCodeValue)
-						return new ResolveResult(qrCodeValue.Value, null, ResolveResultType.QrCode);
-					valResult = ValueToString(valObj, MatchDataType(dataType, valObj), format);
-				}
+				var valObj = scope.Eval<Object>(path);
+				if (valObj is Byte[] bytes)
+					return new ResolveResult(null, bytes);
+				valResult = ValueToString(valObj, MatchDataType(dataType, valObj), format);
 			}
 			else
 			{
-				if (key.Contains(':'))
-				{
-					var spos = key.IndexOf(':');
-					var exp = key[..spos];
-					format = key[(spos + 1)..];
-					key = exp;
-				}
-				var valObj = item.Eval<Object>(key);
-				if (valObj is Byte[] bytes)
-					return new ResolveResult(null, bytes);
+				var valObj = Evaluate(key, scope);
+				if (valObj is QrCodeValue qrCodeValue)
+					return new ResolveResult(qrCodeValue.Value, null, ResolveResultType.QrCode);
 				valResult = ValueToString(valObj, MatchDataType(dataType, valObj), format);
 			}
 			if (ms.Count == 1 && m.Groups[0].Value == source)
@@ -223,40 +248,27 @@ public partial class RenderContext
 		return Resolve(rx?.Value, DataModel, DataType.String, null)?.Value;
 	}
 
-    private Boolean GetBoolVal(ExpandoObject data, String? path)
-    {
-        if (path == null)
-            return false;
-        Boolean bInvert = false;
-        if (path.StartsWith("!"))
-        {
-            bInvert = true;
-            path = path[1..];
-        }
-        var val = data.Eval<Object>(path);
-        if (val is Boolean boolVal)
-            return bInvert ? !boolVal : boolVal;
-        if (val == null)
-            return bInvert ? true : false;
-        return bInvert ? false : true;
-    }
-
-    public Boolean IsVisible(XamlElement elem, ExpandoObject? data = null)
+	public Boolean IsVisible(XamlElement elem, ExpandoObject scope)
 	{
 		var ifbind = elem.GetBindRuntime(nameof(elem.If));
 		if (ifbind == null)
-		{
-			if (elem.If != null && !elem.If.Value)
-				return false;
+			return elem.If == null || elem.If.Value;
+
+		var expression = ifbind.Expression;
+		if (String.IsNullOrEmpty(expression))
 			return true;
-		}
-        if (data != null)
-            return GetBoolVal(data, ifbind.Expression);
-        var val = Engine.EvaluateValue(ifbind.Expression);
-		if (val is Boolean boolVal)
-			return boolVal;
-		else if (val == null)
-			return false;
-		return true;
+		// Отрицание снимается здесь, а не в правиле пути: '!' говорит о булевом значении,
+		// а не об адресе, и без этого !Done стал бы обращением к корню вместо строки
+		var invert = expression!.StartsWith('!');
+		if (invert)
+			expression = expression[1..];
+		var val = Evaluate(expression, scope);
+		var visible = val switch
+		{
+			Boolean boolVal => boolVal,
+			null => false,
+			_ => true
+		};
+		return invert ? !visible : visible;
 	}
 }

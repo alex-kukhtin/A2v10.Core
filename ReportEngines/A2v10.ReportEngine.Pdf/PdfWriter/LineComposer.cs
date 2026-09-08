@@ -1,6 +1,7 @@
 ﻿// Copyright © 2022 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+using System.Dynamic;
 
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
@@ -13,7 +14,7 @@ internal class LineComposer(Line line) : FlowElementComposer
 {
 	private readonly Line _line = line;
 
-    internal override void Compose(IContainer container, Object? value = null	)
+    internal override void Compose(IContainer container, ExpandoObject scope)
 	{
 		container.ApplyDecoration(_line.RuntimeStyle).LineHorizontal(_line.Thickness.Value, _line.Thickness.Unit.ToUnit());
 	}

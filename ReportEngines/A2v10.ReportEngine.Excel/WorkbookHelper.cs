@@ -186,7 +186,7 @@ public partial class WorkbookHelper
 				yield return new RealRow(r + 1);
 			else
 			{
-				var coll = _context.Engine.EvaluateCollection(rng.Value[1..^1]);
+				var coll = _context.EvaluateCollection(rng.Value[1..^1], _context.DataModel);
 				if (coll == null)
 					continue;
 				foreach (var colElem in coll)
@@ -199,7 +199,7 @@ public partial class WorkbookHelper
 							yield return new RealRow(k, colElem);
 						else
 						{
-							var innerColl = ScriptEngine.GetCollection(colElem, innerRng.Value[1..^1]);
+							var innerColl = _context.EvaluateCollection(innerRng.Value[1..^1], colElem);
 							if (innerColl == null)
 								continue;
 							foreach (var innerElem in innerColl)
@@ -224,7 +224,7 @@ public partial class WorkbookHelper
 		{
 			if (rng == null)
 				yield break;
-			var coll = _context.Engine.EvaluateCollection(rng.Value[1..^1]);
+			var coll = _context.EvaluateCollection(rng.Value[1..^1], _context.DataModel);
 			if (coll == null)
 				continue;
 			foreach (var colElem in coll)
@@ -237,7 +237,7 @@ public partial class WorkbookHelper
 						yield return new RealRow(k, colElem);
 					else
 					{
-						var innerColl = ScriptEngine.GetCollection(colElem, innerRng.Value[1..^1]);
+						var innerColl = _context.EvaluateCollection(innerRng.Value[1..^1], colElem);
 						if (innerColl == null)
 							continue;
 						foreach (var innerElem in innerColl)

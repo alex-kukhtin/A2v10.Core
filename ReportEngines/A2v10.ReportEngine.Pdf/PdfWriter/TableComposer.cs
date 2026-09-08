@@ -1,10 +1,7 @@
-﻿// Copyright © 2022-2025 Oleksandr Kukhtin. All rights reserved.
+// Copyright © 2022-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Dynamic;
-using System.Collections.Generic;
-
-using Jint.Native;
 
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
@@ -17,7 +14,7 @@ namespace A2v10.ReportEngine.Pdf;
 
 internal enum CellKind
 {
-	Body, 
+	Body,
 	Header,
 	Footer
 }
@@ -27,11 +24,9 @@ internal class TableComposer(Table table, RenderContext context) : FlowElementCo
 	private readonly Table _table = table;
 	private readonly RenderContext _context = context;
 
-	private readonly Dictionary<TableCell, JsValue> _accessFuncs = [];
-
-    internal override void Compose(IContainer container, Object? value = null)
+    internal override void Compose(IContainer container, ExpandoObject scope)
 	{
-		if (!_context.IsVisible(_table))
+		if (!_context.IsVisible(_table, scope))
 			return;
 		container
 			.ApplyLayoutOptions(_table)
@@ -48,66 +43,34 @@ internal class TableComposer(Table table, RenderContext context) : FlowElementCo
 				});
 
 				if (_table.Header.Count != 0)
-					tblDescr.Header(ComposeHeader);
+					tblDescr.Header(header => ComposeHeader(header, scope));
 
-				CreateAccessFunc(_table.Body);
-				IList<ExpandoObject>? coll = null;
-				if (value != null && value is IList<ExpandoObject> list)
-					coll = list;
-				else
-				{
-					var isbind = _table.GetBindRuntime("ItemsSource");
-					if (isbind != null && isbind.Expression != null)
-					{
-						coll = _context.Engine.EvaluateCollection(isbind.Expression);
-					}
-				}
+				// ItemsSource читается в полученном scope, поэтому вложенная таблица считает свою
+				// коллекцию сама, на любой глубине — родителю нечего для неё предвычислять
+				var isbind = _table.GetBindRuntime("ItemsSource");
+				var coll = isbind?.Expression != null
+					? _context.EvaluateCollection(isbind.Expression, scope)
+					: null;
 				if (coll != null)
 					foreach (var elem in coll)
 						ComposeRowCollection(CellKind.Body, tblDescr, _table.Body, elem);
 				else
-					ComposeRowCollection(CellKind.Body, tblDescr, _table.Body);
+					ComposeRowCollection(CellKind.Body, tblDescr, _table.Body, scope);
 
 				// not footer! inside body
-				ComposeRowCollection(CellKind.Footer, tblDescr, _table.Footer);
+				ComposeRowCollection(CellKind.Footer, tblDescr, _table.Footer, scope);
 			});
 	}
 
-
-	void ComposeHeader(TableCellDescriptor header)
+	void ComposeHeader(TableCellDescriptor header, ExpandoObject scope)
 	{
 		foreach (var cell in _table.Header.Cells())
-			ComposeCell(CellKind.Header, cell, () => header.Cell());
+			ComposeCell(CellKind.Header, cell, () => header.Cell(), scope);
 	}
 
-	private void CreateAccessFunc(TableRowCollection body)
+	private void ComposeCell(CellKind _1/*kind*/, TableCell cell, Func<ITableCellContainer> createCell, ExpandoObject scope)
 	{
-		foreach (var row in body)
-		{
-			foreach (var cell in row.Cells)
-			{
-				var cont = cell.GetBindRuntime("Content");
-				if (cont != null && cont.Expression != null)
-				{
-					var func = _context.Engine.CreateAccessFunction(cont.Expression);
-					_accessFuncs.Add(cell, func);
-				}
-				else if (cell.Content is FlowElement flowElem)
-				{
-					var isbind = flowElem.GetBindRuntime("ItemsSource");
-					if (isbind != null && isbind.Expression != null)
-					{
-						var func = _context.Engine.CreateAccessFunction(isbind.Expression);
-						_accessFuncs.Add(cell, func);
-					}
-				}
-			}
-		}
-	}
-
-	private void ComposeCell(CellKind _1/*kind*/, TableCell cell, Func<ITableCellContainer> createCell, ExpandoObject? data = null)
-	{
-		if (!_context.IsVisible(cell))
+		if (!_context.IsVisible(cell, scope))
 			return;
 		var cellCont = createCell();
 		if (cell.RowSpan > 1)
@@ -115,53 +78,27 @@ internal class TableComposer(Table table, RenderContext context) : FlowElementCo
 		if (cell.ColSpan > 1)
 			cellCont = cellCont.ColumnSpan(cell.ColSpan);
 
-		DataType cellDataType = DataType.String;
-		String? cellFormat = null;
-		var bind = cell.GetBindRuntime("Content");
-		if (bind != null)
-		{
-			cellDataType = bind.DataType;
-			cellFormat = bind.Format;
-		}
-
 		var ci = cellCont.ApplyCellDecoration(cell.RuntimeStyle);
 
-		if (!_context.IsVisible(cell))
-			return;
-
-		// TODO: style here
-		// var ci = cellCont.Background("#f5f5f5").Border(.2F).Padding(2F);
-
-		if (_accessFuncs.TryGetValue(cell, out var contentFunc))
-		{
-			var value = _context.Engine.Invoke(contentFunc, data, bind?.Expression);
-			if (cell.Content is FlowElement nestedFlow)
-				nestedFlow.CreateComposer(_context).Compose(ci, value);
-			else if (value != null)
-				ci.Text(_context.ValueToString(value, cellDataType, cellFormat)).ApplyText(cell.RuntimeStyle);
-			return;
-		}
-
 		if (cell.Content is FlowElement flowElem)
-			flowElem.CreateComposer(_context).Compose(ci, data);
-		else
 		{
-			var val = _context.GetValueAsString(cell);
-			if (val != null)
-			{
-				ci.Text(val).ApplyText(cell.RuntimeStyle);
-			}
+			flowElem.CreateComposer(_context).Compose(ci, scope);
+			return;
 		}
+
+		var val = _context.GetValueAsString(cell, scope);
+		if (val != null)
+			ci.Text(val).ApplyText(cell.RuntimeStyle);
 	}
 
-	private void ComposeRowCollection(CellKind kind, TableDescriptor tbl, TableRowCollection body, ExpandoObject? data = null)
+	private void ComposeRowCollection(CellKind kind, TableDescriptor tbl, TableRowCollection body, ExpandoObject scope)
 	{
 		foreach (var row in body)
 		{
-			if (!_context.IsVisible(row, data))
+			if (!_context.IsVisible(row, scope))
 				continue;
 			foreach (var cell in row.Cells)
-				ComposeCell(kind, cell, () => tbl.Cell(), data);
+				ComposeCell(kind, cell, () => tbl.Cell(), scope);
 		}
 	}
 }

@@ -74,7 +74,7 @@ internal class PageComposer
 			{
 				container.Column(column =>
 				{
-					wbComposer.Compose(column);
+					wbComposer.Compose(column, _context.DataModel);
 				});
 			});
 			if (ps.Workbook.Footer != null)
@@ -119,7 +119,7 @@ internal class PageComposer
 		container.Column(column =>
 		{
 			var cc = new ColumnComposer(_page.Header, _context);
-			cc.Compose(column);
+			cc.Compose(column, _context.DataModel);
 		});
 	}
 
@@ -132,7 +132,7 @@ internal class PageComposer
 				container.Column(column =>
 				{
 					var cc = new ColumnComposer(c, _context);
-					cc.Compose(column);
+					cc.Compose(column, _context.DataModel);
 				});
 			}
 		}
@@ -145,7 +145,7 @@ internal class PageComposer
 		container.Column(column =>
 		{
 			var cc = new ColumnComposer(_page.Footer, _context);
-			cc.Compose(column);
+			cc.Compose(column, _context.DataModel);
 		});
 	}
 }
