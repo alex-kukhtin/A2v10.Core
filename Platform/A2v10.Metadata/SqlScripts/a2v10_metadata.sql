@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2026 Oleksandr Kukhtin
 
-Last updated : 25 jul 2026
-module version : 8650
+Last updated : 08 sep 2026
+module version : 8653
 */
 ------------------------------------------------
 set nocount on;
@@ -35,12 +35,22 @@ create table a2meta.Tables
 	                        today the declared values of an enum. The seed is what the deploy hash
 	                        is taken from, so a change here is what makes a changed declaration
 	                        reach the database at all. */
+	/* The table this one is PART of, and the column here that links back to it. Null for a table
+	   that hangs under nobody, which is most of them. */
+	[master_schema] nvarchar(128),
+	[master_table] nvarchar(128),
+	[master_column] nvarchar(128),
 	constraint PK_Tables primary key ([schema], [table])
 );
 go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = N'a2meta' and TABLE_NAME = N'Tables' and COLUMN_NAME = N'xtra')
 	alter table a2meta.Tables add [xtra] nvarchar(64) null;
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = N'a2meta' and TABLE_NAME = N'Tables' and COLUMN_NAME = N'master_table')
+	alter table a2meta.Tables add [master_schema] nvarchar(128) null,
+		[master_table] nvarchar(128) null, [master_column] nvarchar(128) null;
 go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2meta' and TABLE_NAME=N'Columns')
@@ -118,10 +128,17 @@ begin
 	set nocount on;
 	set transaction isolation level read uncommitted;
 
-	select [schema], [table], [column] 
-	from a2meta.Columns 
-	where ref_schema = @Schema and ref_table=@Table and datatype = N'platformid'
-	and [schema] not in (N'jrn', N'rep');
+	/* Aliased to the PROPERTY names of TableReferrer: the list loader matches them ordinally, so
+	   a lower-case one fills nothing and the row arrives empty instead of failing.
+	   left, not inner - a missing Tables row must not DROP the referrer, which would be a
+	   permitted delete of something already referenced. */
+	select [Schema] = c.[schema], [Table] = c.[table], [Column] = c.[column],
+		[MasterSchema] = t.[master_schema], [MasterTable] = t.[master_table],
+		[MasterColumn] = t.[master_column]
+	from a2meta.Columns c
+		left join a2meta.Tables t on t.[schema] = c.[schema] and t.[table] = c.[table]
+	where c.ref_schema = @Schema and c.ref_table = @Table and c.datatype = N'platformid'
+	and c.[schema] not in (N'jrn', N'rep');
 end
 go
 ------------------------------------------------

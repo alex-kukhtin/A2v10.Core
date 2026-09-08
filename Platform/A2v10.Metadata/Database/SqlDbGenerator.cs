@@ -497,15 +497,21 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
                 $"{Str(col.DeployDefault())})";
         }
 
-        void AddTable(TableMetadata t)
+        /* The master is the one the foreign keys are built from - same walk, so the seed cannot
+         * disagree with the DDL. Written only where a link column exists: the walk hands a master
+         * to the autonum counters too, and those are keyed by a code with no link at all.
+         */
+        void AddTable(TableMetadata t, TableMetadata? master)
         {
-            sqlTables.Add($"\t({Str(t.SqlSchema)}, {Str(t.Table)}, {Str(t.Xtra())})");
+            var m = String.IsNullOrEmpty(t.MasterField) ? null : master;
+            sqlTables.Add($"\t({Str(t.SqlSchema)}, {Str(t.Table)}, {Str(t.Xtra())}, " +
+                $"{Str(m?.SqlSchema)}, {Str(m?.Table)}, {Str(m == null ? null : t.MasterField)})");
             foreach (var col in t.AllColumns())
                 sqlColumns.Add(ColumnRow(t, col));
         }
 
-        foreach (var (t, _) in DeployTables(tables))
-            AddTable(t);
+        foreach (var (t, master) in DeployTables(tables))
+            AddTable(t, master);
 
         // the hash is taken from the text, so the order must not depend on how the
         // file system happens to be enumerated
@@ -517,12 +523,15 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         /* METADATA SEED. Version: {version} */
         begin
             set nocount on;
-            declare @tables table([schema] sysname, [table] sysname, [xtra] nvarchar(64));
+            declare @tables table([schema] sysname, [table] sysname, [xtra] nvarchar(64),
+                [master_schema] nvarchar(128), [master_table] nvarchar(128),
+                [master_column] nvarchar(128));
             declare @columns table([schema] sysname, [table] sysname, [column] sysname, [datatype] sysname,
                 [length] int, [precision] tinyint, [scale] tinyint, [nullable] bit,
                 [ref_schema] nvarchar(128), [ref_table] nvarchar(128), [default] nvarchar(128));
 
-            insert into @tables([schema], [table], [xtra]) values
+            insert into @tables([schema], [table], [xtra],
+                [master_schema], [master_table], [master_column]) values
             {String.Join(rowDiv, sqlTables)};
 
             insert into @columns([schema], [table], [column], [datatype],
@@ -534,9 +543,14 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
             using @tables as s
             on t.[schema] = s.[schema] and t.[table] = s.[table]
             when matched then update set
-                t.[xtra] = s.[xtra]
-            when not matched then insert([schema], [table], [xtra]) values
-               (s.[schema], s.[table], s.[xtra])
+                t.[xtra] = s.[xtra],
+                t.[master_schema] = s.[master_schema],
+                t.[master_table] = s.[master_table],
+                t.[master_column] = s.[master_column]
+            when not matched then insert([schema], [table], [xtra],
+                [master_schema], [master_table], [master_column]) values
+               (s.[schema], s.[table], s.[xtra],
+                s.[master_schema], s.[master_table], s.[master_column])
             when not matched by source then delete;
 
             -- merge columns

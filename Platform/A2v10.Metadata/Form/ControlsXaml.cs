@@ -235,7 +235,7 @@ internal partial class XamlBuilder
             FilterKind.Tags => new TagsFilter()
             {
                 Label = $"@[{filter.Name}]",
-                Placeholder = "@[Placeholder.AllTags]",
+                Placeholder = "@[Filter.Tag.All]",
                 Bindings = b =>
                 {
                     b.SetBinding(nameof(TagsFilter.Value), new Bind($"Parent.Filter.{filter.Name}"));

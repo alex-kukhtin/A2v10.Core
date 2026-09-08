@@ -1,7 +1,6 @@
-﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
-using System.Data;
 using System.Dynamic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -20,9 +19,19 @@ internal partial class SqlBuilder
         var checkSql = "";
         if (rf.Count > 0)
         {
+            // Void is asked of the RECORD, and for a table that is part of another one the record
+            // is the master: a details row has no Void of its own and never had one
             var existsRef = rf.Select(tr => {
-                var columnList = String.Join(", ", tr.Select(x => $"[{x.Column}]"));
-                return $"exists (select 1 from {tr.Key} where Void = 0 and @Id in ({columnList}))";
+                var first = tr.First();
+                var columnList = String.Join(", ", tr.Select(x => $"r.[{x.Column}]"));
+                var master = first.MasterSqlTableName;
+                var join = master == null ? String.Empty
+                    : $"{Environment.NewLine}        inner join {master} m"
+                        + $" on m.[{Constants.FieldNames.Id}] = r.[{first.MasterColumn}]";
+                var voidFrom = master == null ? "r" : "m";
+                return $"exists (select 1 from {tr.Key} r{join}{Environment.NewLine}"
+                    + $"        where {voidFrom}.[{Constants.FieldNames.Void}] = 0"
+                    + $" and @Id in ({columnList}))";
             });
 
             checkSql = $"""
@@ -60,8 +69,9 @@ internal partial class SqlBuilder
         await _dbContext.LoadModelSqlAsync(DataSource, sqlString, dbprms =>
         {
             AddDefaultParameters(dbprms);
-            // TODO: platformid
-            dbprms.AddTyped("@Id", SqlDbType.BigInt, execPrms.Get<Object>("Id"));
+            // through ToString() first: the id comes out of an ExpandoObject loosely typed
+            dbprms.AddTyped("@Id", PlatformId.SqlDbType,
+                PlatformId.ParseId(execPrms.Get<Object>("Id")?.ToString()));
         });
     }
 }

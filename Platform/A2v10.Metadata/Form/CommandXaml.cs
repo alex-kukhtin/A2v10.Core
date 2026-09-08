@@ -37,6 +37,8 @@ internal partial class XamlBuilder
 
     UIElementBase CommandBarControl(EntityCommandType cmd, CommandScope scope)
     {
+        var elemOrDoc = Table.IsDocument ? "Document" : "Element";
+
         return cmd switch
         {
             EntityCommandType.Reload => FormButtons.Reload,
@@ -58,7 +60,7 @@ internal partial class XamlBuilder
                     var cmd = new BindCmd()
                     {
                         Command = CommandType.DbRemoveSelected,
-                        Confirm = new Confirm() { Message = "@[Confirm.Delete]" }
+                        Confirm = new Confirm() { Message = $"@[Confirm.Delete.{elemOrDoc}]" }
                     };
                     cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind("Parent.ItemsSource"));
                     b.SetBinding(nameof(Button.Command), cmd);
