@@ -6,9 +6,8 @@ using QuestPDF.Infrastructure;
 
 namespace A2v10.ReportEngine.Pdf;
 
-// scope не бывает пустым: наверху это модель, ниже — элемент коллекции.
-// Он приходит параметром, а не хранится в контексте: композеры отдают замыкания
-// в QuestPDF, и момент их вызова принадлежит библиотеке, а не нам
+// scope: наверху модель, ниже элемент коллекции. Параметром, а не полем контекста —
+// момент вызова замыканий принадлежит QuestPDF
 internal abstract class FlowElementComposer
 {
 	internal abstract void Compose(IContainer container, ExpandoObject scope);

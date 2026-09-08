@@ -1,4 +1,4 @@
-// Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
 
 using System.Dynamic;
 
@@ -12,9 +12,7 @@ using XRange = A2v10.Xaml.Report.Spreadsheet.Range;
 namespace Test.PdfReportEngine;
 
 /*
-Развёртка книги в матрицу: строка без диапазона считается от корня, строка внутри диапазона —
-от его элемента, вложенный диапазон — от элемента внешнего. Ни PDF, ни файла Excel: матрица
-строится в конструкторе WorkbookHelper и содержит готовые строки.
+Развёртка книги в матрицу: ни PDF, ни файла Excel — WorkbookHelper строит её в конструкторе.
 
 Лист (1-based):
   1              {Document.No}                      корень
@@ -113,8 +111,7 @@ public class WorkbookScope
 	[TestMethod]
 	public void NestedRangeReadsOuterElement()
 	{
-		// два уровня — предел плоской развёртки строк (два вложенных цикла в GetRealRows),
-		// третьему лечь некуда; scope тут ни при чём
+		// два уровня — предел плоской развёртки (GetRealRows), scope тут ни при чём
 		Assert.AreEqual("Ten", Cell(3, 0));
 		Assert.AreEqual("Ten-1", Cell(4, 0));
 		Assert.AreEqual("Ten-2", Cell(5, 0));

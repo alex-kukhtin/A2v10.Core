@@ -145,8 +145,7 @@ public partial class RenderContext
 		};
 	}
 
-	// Кеш один и ключ один — само выражение: и {(...)} из ячейки, и Expression биндинга
-	// компилируются в одну и ту же функцию, поэтому композерам своих кешей не нужно
+	// Ключ — само выражение, поэтому кеш один на ячейки и биндинги
 	private JsValue GetOrCreateAccessFunc(String expression)
 	{
 		if (_accessFuncs.TryGetValue(expression, out JsValue? func))
@@ -183,7 +182,7 @@ public partial class RenderContext
 	private static Regex ResolveRegex() => RESOLVEREGEX;
 #endif
 
-	// Формат отделяется только у пути: двоеточие внутри выражения — тернарник, а не формат
+	// Двоеточие делит только путь: внутри выражения это тернарник
 	private static String? ScopePath(String key, ref String? format)
 	{
 		if (ScriptEngine.IsScopePath(key))
@@ -210,9 +209,7 @@ public partial class RenderContext
 		{
 			String? valResult = null;
 			String key = m.Groups[1].Value;
-			// Ветку выбирает форма записи, а не маркер: путь по scope (и он же с форматом)
-			// проходится C#-ом, всё остальное — выражение. Внешние скобки больше ничего
-			// не значат: {(f(x))} это то же выражение, взятое в скобки
+			// Ветку выбирает форма записи, а не скобки: {a.b} — путь, {f(x)} — выражение
 			var path = ScopePath(key, ref format);
 			if (path != null)
 			{
@@ -257,8 +254,7 @@ public partial class RenderContext
 		var expression = ifbind.Expression;
 		if (String.IsNullOrEmpty(expression))
 			return true;
-		// Отрицание снимается здесь, а не в правиле пути: '!' говорит о булевом значении,
-		// а не об адресе, и без этого !Done стал бы обращением к корню вместо строки
+		// '!' про значение, а не про адрес: иначе !Done в строке ушло бы к корню
 		var invert = expression!.StartsWith('!');
 		if (invert)
 			expression = expression[1..];

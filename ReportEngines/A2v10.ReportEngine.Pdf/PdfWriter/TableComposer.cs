@@ -45,8 +45,7 @@ internal class TableComposer(Table table, RenderContext context) : FlowElementCo
 				if (_table.Header.Count != 0)
 					tblDescr.Header(header => ComposeHeader(header, scope));
 
-				// ItemsSource читается в полученном scope, поэтому вложенная таблица считает свою
-				// коллекцию сама, на любой глубине — родителю нечего для неё предвычислять
+				// ItemsSource — в полученном scope, поэтому вложенная таблица считает себя сама
 				var isbind = _table.GetBindRuntime("ItemsSource");
 				var coll = isbind?.Expression != null
 					? _context.EvaluateCollection(isbind.Expression, scope)

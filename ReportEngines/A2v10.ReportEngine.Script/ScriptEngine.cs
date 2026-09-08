@@ -31,8 +31,7 @@ public partial class ScriptEngine
 		if (!String.IsNullOrEmpty(code))
 			_engine.Evaluate(code!);
 
-		// Свободное имя читается от корня: так написаны боевые формы, поэтому хостинг остаётся.
-		// Root даёт то же самое явно — единственный способ выйти из scope на любой глубине
+		// Свободное имя — от корня, так написаны боевые формы. Root — то же самое явно
 		foreach (var item in model)
 			if (item.Value != null)
 				_engine.SetValue(item.Key, item.Value);
@@ -45,26 +44,22 @@ public partial class ScriptEngine
 		_engine.SetValue("qrCode", QrCodeFunc);
 	}
 
-	// Голый путь читается от текущего scope, всё остальное — обычный JS, где this и есть scope.
-	// Обёртка именно function, а не стрелка: у стрелки this лексический, связать ресивер нечем,
-	// и его приходилось заменять в тексте — ценой идентификаторов вроде thisYear и литералов.
-	// Выражение в скобках: без них перевод строки в начале съедает ASI после return.
+	// Обёртка — function, а не стрелка: у стрелки this лексический, и его пришлось бы
+	// подставлять в текст, ломая thisYear и литералы. Скобки вокруг тела — от ASI
 	public JsValue CreateAccessFunction(String expression)
 	{
 		var body = IsScopePath(expression) ? $"this.{expression}" : expression;
 		return _engine.Evaluate($"(function() {{ return ({body}); }})");
 	}
 
-	// Один вопрос отвечает на два: получит ли путь префикс this. внутри выражения и может ли
-	// его пройти C#-ный Eval по scope. Поэтому правило одно и живёт здесь, а не в двух местах
+	// Один вопрос на два: ставить ли this. в выражении и пройдёт ли путь C#-обход по данным
 	public static Boolean IsScopePath(String expression)
 	{
 		return BarePathRegex().IsMatch(expression)
 			&& !StartsWith(expression, "Root") && !StartsWith(expression, "this");
 	}
 
-	// Root и this — единственные начала, которые C#-ный обход по данным пройти не может:
-	// первого в модели нет, второе называет сам scope. Оба уходят в выражение
+	// Root в модели нет, this называет сам scope — обход по данным не пройдёт ни то, ни другое
 	private static Boolean StartsWith(String expression, String name)
 	{
 		return expression == name || expression.StartsWith($"{name}.", StringComparison.Ordinal);

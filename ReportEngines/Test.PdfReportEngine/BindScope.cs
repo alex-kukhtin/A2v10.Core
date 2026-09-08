@@ -10,9 +10,8 @@ using A2v10.ReportEngine.Script;
 namespace Test.PdfReportEngine;
 
 /*
-Фиксирует СЕГОДНЯШНЕЕ поведение вычисления выражений: что работает (боевые написания,
-которые обязаны пережить правку) и что сломано (пометка EXPECTED называет будущий ответ).
-Правка scope/this переворачивает вторую группу и не должна трогать первую.
+Правило целиком: голый путь — от текущего scope, всё остальное — обычный JS,
+где this и есть scope, свободные имена от корня, Root — явный корень.
 */
 
 internal class TestLocalizer : IReportLocalizer
@@ -72,7 +71,7 @@ public class BindScope
 		return _context.Resolve(source, scope ?? _model, DataType.String, null)?.Value;
 	}
 
-	// Тип исключения как значение: сегодняшнее падение видно в таблице ожиданий, а не в стек-трейсе.
+	// Тип исключения как значение: падение видно в ожидании, а не в стек-трейсе
 	static String Caught(Func<String?> fn)
 	{
 		try
@@ -84,8 +83,6 @@ public class BindScope
 			return $"!{ex.GetType().Name}";
 		}
 	}
-
-	/* ------------ работает сегодня; обязано работать после ------------ */
 
 	[TestMethod]
 	public void PathFromRoot()
@@ -110,8 +107,8 @@ public class BindScope
 	[TestMethod]
 	public void ComputedDecimalLosesCurrency()
 	{
-		// то, что реально посчитано выражением, приходит из JS уже Double: угадывание
-		// по CLR-типу даёт Number вместо Currency. Лечится объявленным DataType
+		// из JS число приходит Double, и угадывание по CLR-типу даёт Number вместо
+		// Currency. Лечится объявленным DataType
 		Assert.AreEqual("10.00", Resolve("{Price}", _row));
 		Assert.AreEqual("20", Resolve("{(rowTotalArrow(this))}", _row));
 	}
@@ -119,7 +116,6 @@ public class BindScope
 	[TestMethod]
 	public void ScriptFreeNameFromRoot()
 	{
-		// имя, поднятое в глобалы из корня модели — так написаны боевые формы
 		Assert.AreEqual("A-1", Resolve("{(nameOf(Document))}", _row));
 	}
 
@@ -132,8 +128,7 @@ public class BindScope
 	[TestMethod]
 	public void CollectionIsRealArray()
 	{
-		// Jint отдаёт IList<ExpandoObject> с семантикой массива, так что итог по строкам
-		// пишется прямо в ячейке, без функции в Code
+		// Jint отдаёт IList<ExpandoObject> массивом: итог пишется в ячейке, без функции в Code
 		Assert.AreEqual("80", Resolve("{(Document.Rows.reduce((s, r) => s + r.Price * r.Qty, 0))}"));
 		Assert.AreEqual("Ten, Twenty", Resolve("{(Document.Rows.map(r => r.Name).join(', '))}"));
 		Assert.AreEqual("1", Resolve("{(Document.Rows.filter(r => r.Price > 15).length)}"));
@@ -144,7 +139,7 @@ public class BindScope
 	[TestMethod]
 	public void JsOnlyMemberNeedsExpression()
 	{
-		// length живёт в JS, а не в данных: голый путь идёт C#-обходом и молча пустеет
+		// length живёт в JS, а не в данных, поэтому путём его не достать
 		Assert.AreEqual(String.Empty, Resolve("{Document.Rows.length}"));
 		Assert.AreEqual("2", Resolve("{(Document.Rows.length)}"));
 	}
@@ -152,8 +147,7 @@ public class BindScope
 	[TestMethod]
 	public void BuiltinsCrossTheBranch()
 	{
-		// встроенные функции — свободные имена, значит выражение в обоих написаниях.
-		// qrCode отдаёт не строку, а тип результата, и это тоже ветка выражения
+		// qrCode отдаёт не строку, а тип результата — тоже ветка выражения
 		Assert.AreEqual("08.09.2026", Resolve("{formatDate(Document.Date, 'dd.MM.yyyy')}"));
 		var qr = _context.Resolve("{qrCode(Document.No)}", _model, DataType.String, null);
 		Assert.AreEqual(ResolveResultType.QrCode, qr?.ResultType);
@@ -170,8 +164,7 @@ public class BindScope
 	[TestMethod]
 	public void CallWithOrWithoutOuterParens()
 	{
-		// ветку выбирает форма записи; внешние скобки перестали быть маркером,
-		// но остались валидным выражением — старые формы работают как работали
+		// скобки больше не маркер, но остаются валидным выражением
 		Assert.AreEqual("A-1", Resolve("{nameOf(Document)}"));
 		Assert.AreEqual("A-1", Resolve("{(nameOf(Document))}"));
 	}
@@ -179,7 +172,7 @@ public class BindScope
 	[TestMethod]
 	public void RootPathNeedsNoParens()
 	{
-		// Root не проходится C#-ным Eval, поэтому такой путь идёт выражением
+		// Root не проходится обходом по данным, значит выражение
 		Assert.AreEqual("A-1", Resolve("{Root.Document.No}", _row));
 	}
 
@@ -194,18 +187,17 @@ public class BindScope
 	[TestMethod]
 	public void PathOutsideScopeIsEmpty()
 	{
-		// строка не знает про Document. Путь молча пуст (C#-ный обход по данным),
-		// а this. — уже выражение, и обращение к полю undefined падает
+		// строка не знает про Document: путь молча пуст, выражение падает
 		Assert.AreEqual(String.Empty, Resolve("{Document.No}", _row));
 		Assert.AreEqual("!JavaScriptException", Caught(() => Resolve("{this.Document.No}", _row)));
 	}
 
-	/* ------------ было сломано подстановкой this; чинится связанным ресивером ------------ */
+	/* ------------ ломала подстановка this ------------ */
 
 	[TestMethod]
 	public void ThisWithoutParens()
 	{
-		// раньше ветка замены включалась по наличию '(' в выражении, и выходило _elem_.this.Price
+		// замена включалась по наличию '(' — выходило _elem_.this.Price
 		Assert.AreEqual("20", Resolve("{(this.Price * this.Qty)}", _row));
 	}
 
@@ -219,15 +211,14 @@ public class BindScope
 	[TestMethod]
 	public void LiteralContainingThis()
 	{
-		// замена лезла внутрь строкового литерала: молча неверное значение, хуже падения
+		// замена лезла внутрь литерала: молча неверное значение, хуже падения
 		Assert.AreEqual("A-1this", Resolve("{(nameOf(Document) + 'this')}", _row));
 	}
 
 	[TestMethod]
 	public void RootPrefixFromAnyScope()
 	{
-		// раньше это выражение имело два входа с разными ответами: через Resolve работало,
-		// через EvaluateValue (текст и If в PDF) падало. Вход остался один
+		// было два входа с разными ответами; остался один
 		Assert.AreEqual("A-1", _context.Evaluate("Document.No", _model)?.ToString());
 		Assert.AreEqual("A-1", _context.Evaluate("Root.Document.No", _row)?.ToString());
 		Assert.AreEqual("A-1", Resolve("{(nameOf(Root.Document))}", _row));
