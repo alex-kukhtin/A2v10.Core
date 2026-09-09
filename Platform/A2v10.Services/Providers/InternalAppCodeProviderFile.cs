@@ -49,9 +49,12 @@ public class InternalAppCodeProviderFile(String path) : IAppCodeProviderImpl
         return new FileStream(fullPath,  StreamOptions);
     }
 
-    public Stream? FileStreamResource(String path)
+    public Stream FileStreamResource(String path)
     {
-        return FileStreamRO(path);
+        // У файлового провайдера оба канала — один и тот же файл; расходятся они только
+        // ответом на промах, и здесь назвать нечего, кроме полного пути
+        return FileStreamRO(path)
+            ?? throw new FileNotFoundException($"File not found '{NormalizePath(path)}'");
     }
 
     public IEnumerable<String> EnumerateFiles(String path, String searchPattern)

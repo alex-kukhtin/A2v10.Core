@@ -31,33 +31,33 @@ public class PdfReportEngine : IReportEngine
 		_localizer = new DefaultReportLocalizer(user.Locale.Locale, localizer);
 	}
 
-	private (Page page, String path)  ReadTemplate(String pathA, String pathX)
+	private Page ReadTemplate(String pathA, String pathX)
 	{
 		using var streamA = _appCodeProvider.FileStreamRO(pathA);
 		if (streamA != null)
-            return new (TemplateReader.ReadReport(streamA), pathA);
+            return TemplateReader.ReadReport(streamA);
         using var streamX = _appCodeProvider.FileStreamRO(pathX);
         if (streamX != null)
-            return new (TemplateReader.ReadReport(streamX), pathX);
+            return TemplateReader.ReadReport(streamX);
 		throw new InvalidOperationException($"File not found '{pathA}' or '{pathX}'");
 	}
 
-	private static (Page page, String path)  ReadTemplateFromDb(IReportInfo reportInfo, String path)
+	private static Page ReadTemplateFromDb(IReportInfo reportInfo)
 	{
 		var json = reportInfo.DataModel?.Resolve(reportInfo.Report)
 			?? throw new InvalidOperationException("Data is null");
 		var ss = SpreadsheetJson.FromJson(json);
 		ss.ApplyStyles("Root", new StyleBag());
-		return new (ss, path);
+		return ss;
 	}
 
-    private static (Page page, String path) ReadTemplateFromStream(Stream stream, String path)
+    private static Page ReadTemplateFromStream(Stream stream)
     {
 		using var sr = new StreamReader(stream);
         var json = sr.ReadToEnd();
         var ss = SpreadsheetJson.FromJson(json);
         ss.ApplyStyles("Root", new StyleBag());
-        return new(ss, path);
+        return ss;
     }
 
     public Task<IInvokeResult> ExportAsync(IReportInfo reportInfo, ExportReportFormat format)
@@ -77,9 +77,9 @@ public class PdfReportEngine : IReportEngine
 			repPathX = Path.Combine(reportInfo.Path, reportInfo.Report) + ".xaml";
 		}
 
-        var (page, path)  = 
-			readFromStream ? ReadTemplateFromStream(reportInfo.Stream!, repPathA)
-			: readFromModel ? ReadTemplateFromDb(reportInfo, repPathA) 
+        var page =
+			readFromStream ? ReadTemplateFromStream(reportInfo.Stream!)
+			: readFromModel ? ReadTemplateFromDb(reportInfo)
 			: ReadTemplate(repPathA, repPathX);
 
 		if (page.Title == null && reportInfo.Name != null)
@@ -88,7 +88,9 @@ public class PdfReportEngine : IReportEngine
 		var name = reportInfo.DataModel?.Root?.Resolve(reportInfo.Name) ?? "report";
 
 		var model = reportInfo.DataModel?.Root ?? [];
-		var context = new RenderContext(path, _localizer, model, page.Code);
+		// Папка отчёта на всех трёх маршрутах, а не только на файловом: файлы, названные
+		// изнутри бланка, лежат рядом с ним и тогда, когда сам бланк приехал из базы
+		var context = new RenderContext(_appCodeProvider, reportInfo.Path, _localizer, model, page.Code);
 		var doc = new ReportDocument(page, context);
 
 		var resultTitle = doc.GetMetadata().Title;

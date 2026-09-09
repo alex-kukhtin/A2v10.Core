@@ -17,7 +17,10 @@ internal class InternalNullCodeProvider : IAppCodeProviderImpl
     public IEnumerable<string> EnumerateFiles(string path, string searchPattern) => [];
     public IEnumerable<String> EnumerateFilesRecursive(String path, String searchPattern) => [];
 
-    public Stream? FileStreamResource(string path) => null;
+    // «null:» — приложение без файлов вообще, поэтому промах тут не «ресурса нет»,
+    // а «спросили не у того»; сообщение говорит именно это
+    public Stream FileStreamResource(string path) =>
+        throw new FileNotFoundException($"There is no application to read '{path}' from");
     public Stream? FileStreamRO(string path) => null;
     public bool IsFileExists(string path) => false;
     public string NormalizePath(string path) => path;

@@ -183,8 +183,12 @@ internal class WorkbookComposer(Workbook _workbook, WorkbookHelper _helper, Rend
 
 	private static void ComposeCell(WorkbookCell wbCell, IContainer cellCont)
 	{
-		if (wbCell.Image != null)
-			cellCont.Image(wbCell.Image.Stream);
+		// Не общий DrawImage: у ячейки ширина задана колонкой, и растр тут рисуется
+		// подгонкой QuestPDF по умолчанию — менять её значит менять вёрстку боевых бланков
+		if (wbCell.Image is ReportImage.Svg svg)
+			cellCont.Svg(svg.Text);
+		else if (wbCell.Image is ReportImage.Raster raster)
+			cellCont.Image(raster.Bytes);
 		else if (wbCell.QrCode != null)
 			QrCodeComposer.DrawQrCode(cellCont, wbCell.QrCode.Value);
 		else if (!String.IsNullOrEmpty(wbCell.Value))

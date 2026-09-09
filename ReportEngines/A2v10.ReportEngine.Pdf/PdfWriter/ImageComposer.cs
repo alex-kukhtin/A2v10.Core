@@ -20,23 +20,16 @@ internal class ImageComposer(Image _image, RenderContext _context) : FlowElement
 			return;
 		container = container.ApplyDecoration(_image.RuntimeStyle);
 
-		Byte[]? stream;
-		var rtBind = _image.GetBindRuntime("FileName");
-		if (rtBind != null && rtBind.Expression != null)
-		{
-			var fileName = _context.Evaluate(rtBind.Expression, scope)?.ToString();
-			stream = fileName != null ? _context.GetFileAsByteArray(fileName) : null;
-		}
-		else if (!String.IsNullOrEmpty(_image.FileName))
-			stream = _context.GetFileAsByteArray(_image.FileName);
-		else
-			stream = _context.GetValueAsByteArray(_image, scope, "Source");
-		if (stream == null)
+		// Source и FileName — одно место с двумя написаниями: дальше резолвера различие
+		// не идёт, он сам решает, байты это или имя файла
+		var image = _context.ResolveImage(_image, scope, nameof(Image.Source), _image.Source)
+			?? _context.ResolveImage(_image, scope, nameof(Image.FileName), _image.FileName);
+		if (image == null)
 			return;
 		if (_image.Width != null)
 			container = container.Width(_image.Width.Value, _image.Width.Unit.ToUnit());
 		if (_image.Height != null)
 			container = container.Width(_image.Height.Value, _image.Height.Unit.ToUnit());
-		container.Image(stream).FitArea();
+		container.DrawImage(image);
 	}
 }

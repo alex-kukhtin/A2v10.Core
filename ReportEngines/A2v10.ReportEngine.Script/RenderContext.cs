@@ -23,19 +23,31 @@ public enum ResolveResultType
 	QrCode
 }
 public record ResolveResult(String? Value, Byte[]? Stream = null, ResolveResultType ResultType = ResolveResultType.Default);
+
+// Растр и SVG рисуются разными вызовами, поэтому различие названо типом, а не флагом:
+// слот картинки не может оказаться «и то, и другое» или «ни то, ни другое»
+public abstract record ReportImage
+{
+	public sealed record Raster(Byte[] Bytes) : ReportImage;
+	public sealed record Svg(String Text) : ReportImage;
+}
+
 public partial class RenderContext
 {
 	private readonly IReportLocalizer _localizer;
 
 	private readonly CultureInfo _formatProvider;
-	private readonly String _templatePath;
+	private readonly IAppCodeProvider _codeProvider;
+	private readonly String _basePath;
 	private readonly ConcurrentDictionary<String, JsValue> _accessFuncs = [];
 
-	public RenderContext(String templatePath, IReportLocalizer localizer, ExpandoObject model, String? code)
+	public RenderContext(IAppCodeProvider codeProvider, String basePath, IReportLocalizer localizer, ExpandoObject model, String? code)
 	{
 		_localizer = localizer;
-        // TODO: replace _templatePath to _appCodeReader;
-        _templatePath = templatePath;
+		_codeProvider = codeProvider;
+		// Папка отчёта в терминах провайдера, а не файловой системы: на маршрутах потока
+		// и базы файлов нет, но имя внутри бланка всё равно ищется рядом с бланком
+		_basePath = basePath;
 		DataModel = model;
 		var  clone = _localizer.CurrentCulture.Clone();
 		if (clone is CultureInfo cloneCI && cloneCI != null)
@@ -72,33 +84,59 @@ public partial class RenderContext
 		return result;
 	}
 
-	public Byte[]? GetFileAsByteArray(String? fileName)
+	// Единственный вход для слотов, ждущих картинку. Значение либо байты (varbinary из
+	// модели), либо строка — тогда это имя файла. Строка остаётся текстом везде, кроме
+	// таких слотов: иначе каждая текстовая ячейка книги стала бы именем файла
+	public ReportImage? ResolveImage(Object? value)
 	{
-		if (String.IsNullOrEmpty(fileName))
-			return null;
-		if (Path.IsPathRooted(fileName))
-			throw new InvalidDataException("Invalid path. The path must be relative");
-		var templDir = Path.GetDirectoryName(_templatePath) ?? String.Empty;
-		var fullPath = Path.GetFullPath(Path.Combine(templDir, fileName));
-		return File.ReadAllBytes(fullPath);
+		return value switch
+		{
+			Byte[] bytes => bytes.Length > 0 ? ImageFromBytes(bytes) : null,
+			String fileName => String.IsNullOrEmpty(fileName) ? null : ImageFromBytes(ReadFile(fileName)),
+			_ => null
+		};
 	}
 
-	public Byte[]? GetValueAsByteArray(Object value, ExpandoObject scope, String propertyName)
+	// Слот картинки в разметке: связанное выражение, иначе литерал
+	public ReportImage? ResolveImage(XamlElement elem, ExpandoObject scope, String propertyName, Object? literal)
 	{
-		if (value == null)
-			return null;
-		if (value is not XamlElement xamlElem)
-			return null;
-		var bindRuntime = xamlElem.GetBindRuntime(propertyName);
-		if (bindRuntime == null || bindRuntime.Expression == null)
-			return null;
-		var lastDot = bindRuntime.Expression.LastIndexOf('.');
-		if (lastDot == -1)
-			return null;
-		var objVal = Evaluate(bindRuntime.Expression[..lastDot], scope);
-		if (objVal == null || objVal is not ExpandoObject eoVal)
-			return null;
-		return eoVal.Get<Byte[]>(bindRuntime.Expression[(lastDot + 1)..]);
+		var bind = elem.GetBindRuntime(propertyName);
+		return ResolveImage(bind != null ? EvaluateValue(bind.Expression, scope) : literal);
+	}
+
+	// Растр или SVG решают первые байты, а не расширение: у байтов из varbinary имени нет,
+	// а имя файла может врать. Побочно рисуется SVG, лежащий в базе — раньше он молча пустой
+	public static ReportImage ImageFromBytes(Byte[] bytes)
+	{
+		var start = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF ? 3 : 0;
+		var sig = start;
+		while (sig < bytes.Length && bytes[sig] <= 0x20)
+			sig++;
+		if (StartsWith(bytes, sig, "<svg") || StartsWith(bytes, sig, "<?xml"))
+			return new ReportImage.Svg(Encoding.UTF8.GetString(bytes, start, bytes.Length - start));
+		return new ReportImage.Raster(bytes);
+	}
+
+	private static Boolean StartsWith(Byte[] bytes, Int32 offset, String prefix)
+	{
+		if (offset + prefix.Length > bytes.Length)
+			return false;
+		for (var i = 0; i < prefix.Length; i++)
+			if (bytes[offset + i] != (Byte)prefix[i])
+				return false;
+		return true;
+	}
+
+	// Всегда байты и всегда ресурсный канал: FileStreamRO у CLR-провайдера отдаёт
+	// GetText через UTF8, то есть растр вернулся бы мусором и молча. Ни путь, ни промах
+	// тут не проверяются — и то и другое забота провайдера, он один знает, что искал
+	private Byte[] ReadFile(String fileName)
+	{
+		var path = _codeProvider.MakePath(_basePath, fileName);
+		using var stream = _codeProvider.FileStreamResource(path);
+		using var mem = new MemoryStream();
+		stream.CopyTo(mem);
+		return mem.ToArray();
 	}
 
 	public String? GetValueAsString(Object value, ExpandoObject scope, String propertyName = "Content")
@@ -160,6 +198,18 @@ public partial class RenderContext
 		if (String.IsNullOrEmpty(expression))
 			return null;
 		return Engine.Invoke(GetOrCreateAccessFunc(expression!), scope);
+	}
+
+	// Значение как оно есть, без приведения к строке. Ветку выбирает форма записи — то же
+	// правило, что и в Resolve, и по той же причине: Byte[] через Jint возвращается
+	// массивом чисел, и картинка теряется молча
+	public Object? EvaluateValue(String? expression, ExpandoObject scope)
+	{
+		if (String.IsNullOrEmpty(expression))
+			return null;
+		if (ScriptEngine.IsScopePath(expression!))
+			return scope.Eval<Object>(expression!);
+		return Evaluate(expression, scope);
 	}
 
 	public IList<ExpandoObject>? EvaluateCollection(String expression, ExpandoObject scope)

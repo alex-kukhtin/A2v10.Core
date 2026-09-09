@@ -32,6 +32,21 @@ internal static class Extensions
 		};
 	}
 
+	// Рисование — единственное место, где различие растр/SVG вообще видно: резолвер уже
+	// его сделал, а дальше по коду картинка одна
+	public static void DrawImage(this IContainer container, ReportImage image)
+	{
+		switch (image)
+		{
+			case ReportImage.Svg svg:
+				container.Svg(svg.Text).FitArea();
+				break;
+			case ReportImage.Raster raster:
+				container.Image(raster.Bytes).FitArea();
+				break;
+		}
+	}
+
 	public static void TableColumn(this TableColumnsDefinitionDescriptor desc, TableColumn column)
 	{
 		if (column.Width?.Unit == "fr")

@@ -22,6 +22,11 @@ public class Page : XamlElement
 	public String? FontFamily { get; set; }
 	public PageOrientation Orientation { get; set; }
 
+	// Имя файла, либо байты через привязку. Геометрия — поворот, прозрачность, размер —
+	// живёт внутри SVG: у контейнера QuestPDF нет Opacity, и заводить три свойства,
+	// которые всё равно не покрывают знак целиком, дороже, чем не заводить ни одного
+	public String? Watermark { get; set; }
+
 	public override void ApplyStyles(String selector, StyleBag styles)
 	{
 		var sel = "Page";

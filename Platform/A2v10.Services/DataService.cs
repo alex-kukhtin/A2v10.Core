@@ -97,8 +97,7 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
         {
             var fileName = export.Template.AddExtension(export.Format.ToString());
             var pathToRead = _codeProvider.MakePath(view.Path, fileName);
-            stream = _codeProvider.FileStreamResource(pathToRead) ??
-                throw new DataServiceException($"Template file not found ({fileName})");
+            stream = _codeProvider.FileStreamResource(pathToRead);
         }
         else
 			throw new DataServiceException($"Export template not defined");

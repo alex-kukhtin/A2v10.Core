@@ -12,7 +12,6 @@ using A2v10.ReportEngine.Script;
 
 namespace A2v10.ReportEngine.Excel;
 
-public record CellImage(Byte[] Stream);
 public record CellQrCode(String Value);
 public record WorkbookCell
 {
@@ -32,7 +31,7 @@ public record WorkbookCell
 	public UInt32 RowSpan => Cell.RowSpan;
 	public Boolean IsSpanPart { get; init; }
 	public String? Value { get; set; }
-	public CellImage? Image { get; set; }
+	public ReportImage? Image { get; set; }
 	public CellQrCode? QrCode { get; set; }
 	public Boolean NoWrap { get; set; }
 }
@@ -264,8 +263,10 @@ public partial class WorkbookHelper
 		{
 			wbCell.Value = rr.Value;
 			wbCell.NoWrap = cell.DataType != DataType.String;
+			// Только байты: имя файла в ячейку не приходит, иначе каждая текстовая ячейка
+			// стала бы именем файла
 			if (rr.Stream != null)
-				wbCell.Image = new CellImage(rr.Stream);
+				wbCell.Image = RenderContext.ImageFromBytes(rr.Stream);
 			else if (rr.ResultType == ResolveResultType.QrCode)
 				wbCell.QrCode = new CellQrCode(rr.Value ?? String.Empty);
 		}

@@ -38,7 +38,7 @@ public class BindScope
 	{
 		_model = CreateModel();
 		_row = _model.Eval<List<ExpandoObject>>("Document.Rows")![0];
-		_context = new RenderContext(String.Empty, new TestLocalizer(), _model, CODE);
+		_context = new RenderContext(new TestCodeProvider(), String.Empty, new TestLocalizer(), _model, CODE);
 	}
 
 	static ExpandoObject CreateModel()

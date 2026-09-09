@@ -32,7 +32,7 @@ public class WorkbookScope
 	public WorkbookScope()
 	{
 		var model = CreateModel();
-		var context = new RenderContext(String.Empty, new TestLocalizer(), model, CODE);
+		var context = new RenderContext(new TestCodeProvider(), String.Empty, new TestLocalizer(), model, CODE);
 		_helper = new WorkbookHelper(CreateWorkbook(), context);
 	}
 

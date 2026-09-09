@@ -41,13 +41,17 @@ public class InternalAppCodeProviderClr(IAppContainer _appContainer) : IAppCodeP
         return new MemoryStream(Encoding.UTF8.GetBytes(_appContainer.GetText(fullPath) ?? String.Empty));
     }
 
-    public Stream? FileStreamResource(String path)
+    public Stream FileStreamResource(String path)
     {
 		var mainType = _appContainer.GetType();
 		var assembly = Assembly.GetAssembly(mainType)
 			?? throw new InvalidOperationException($"Assembly with type '{mainType}' not found");
+		// MSBuild заменяет недопустимые символы в именах ПАПОК на '_', а тут замены нет,
+		// поэтому вычисленное имя названо в сообщении: GetManifestResourceStream отдаёт
+		// просто null, и без имени промах не отлаживается
 		var resourceName = $"{mainType.Namespace}.{path.Replace('/', '.')}";
-		return assembly.GetManifestResourceStream(resourceName);
+		return assembly.GetManifestResourceStream(resourceName)
+			?? throw new FileNotFoundException($"Resource '{resourceName}' not found in '{assembly.GetName().Name}'");
     }
 
 	public IEnumerable<String> EnumerateFilesRecursive(String path, String searchPattern) => [];

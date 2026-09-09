@@ -93,7 +93,7 @@ public class AppCodeProvider : IAppCodeProvider
 	public Stream? FileStreamRO(String path, Boolean primaryOnly = false)
 	{
 		if (primaryOnly)
-			GetProvider(DEFAULT_PROVIDER).FileStreamRO(path);
+			return GetProvider(DEFAULT_PROVIDER).FileStreamRO(path);
 		return GetProvider(path).FileStreamRO(path);
 	}
 
@@ -107,10 +107,10 @@ public class AppCodeProvider : IAppCodeProvider
         }
     }
 
-    public Stream? FileStreamResource(String path, Boolean primaryOnly = false)
+    public Stream FileStreamResource(String path, Boolean primaryOnly = false)
     {
         if (primaryOnly)
-            GetProvider(DEFAULT_PROVIDER).FileStreamResource(path);
+            return GetProvider(DEFAULT_PROVIDER).FileStreamResource(path);
         return GetProvider(path).FileStreamResource(path);
     }
 
