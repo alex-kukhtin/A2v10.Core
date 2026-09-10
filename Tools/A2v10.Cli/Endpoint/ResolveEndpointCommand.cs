@@ -10,7 +10,6 @@ using System.CommandLine;
 using Microsoft.Extensions.DependencyInjection;
 
 using A2v10.Infrastructure;
-using A2v10.Services.Api;
 using A2v10.Data.Core.Extensions;
 
 namespace A2v10.Cli;
@@ -69,7 +68,7 @@ internal class ResolveEndpointCommand(IServiceProvider services)
 
     private async Task<Object> ResolveAction(String prefix, String route)
     {
-        var path = Path.Combine(prefix, route, "0").Replace('\\', '/');
+        var path = Path.Combine(prefix, route.RemoveHeadSlash(), "0").Replace('\\', '/');
         var dr = await _dataService.LoadAsync(path, p =>
         {
             p.Add("UserId", 99);

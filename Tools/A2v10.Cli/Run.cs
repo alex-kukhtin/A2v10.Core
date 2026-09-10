@@ -41,7 +41,7 @@ internal sealed partial class Program
             Description = "Endpoint commands"
         };
         var mdCommands = new  ResolveEndpointCommand(_services).Register(endpointCommand);
-        mdCommands.Add(new EndpointListCommand(_services).Build());
+        mdCommands.Add(new EndpointListCommand(_services, "model.json").Build());
         root.Subcommands.Add(endpointCommand);
 
         // view commands
@@ -58,7 +58,7 @@ internal sealed partial class Program
             Description = "Metdata-driven platform commands"
         };
         metaCommand.Subcommands.Add(new DeployCommand(_services).Build());
-        metaCommand.Subcommands.Add(new EndpointListCommand(_services).Build());
+        metaCommand.Subcommands.Add(new EndpointListCommand(_services, "metadata.json").Build());
         root.Subcommands.Add(metaCommand);
 
         return root.Parse(args).InvokeAsync();

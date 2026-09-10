@@ -15,7 +15,7 @@ using A2v10.Infrastructure;
 
 namespace A2v10.Cli;
 
-internal class EndpointListCommand(IServiceProvider services)
+internal class EndpointListCommand(IServiceProvider services, String _marker)
 {
     private readonly IHostEnvironment _hostEnvironment = services.GetRequiredService<IHostEnvironment>();
     private readonly AppOptions _appOptions = services.GetRequiredService<IOptions<AppOptions>>().Value;
@@ -26,9 +26,9 @@ internal class EndpointListCommand(IServiceProvider services)
         return cmd;
     }
 
-    static IEnumerable<String> FindModelFolders(String root)
+    IEnumerable<String> FindModelFolders(String root)
     {
-        if (File.Exists(Path.Combine(root, "model.json")))
+        if (File.Exists(Path.Combine(root, _marker)))
             yield return root;
 
         IEnumerable<String> subDirs;
@@ -82,6 +82,14 @@ internal class EndpointListCommand(IServiceProvider services)
         String? endpointPath(String path)
         {
             var r = Path.GetRelativePath(_hostEnvironment.ContentRootPath, path).NormalizePath();
+            /* Nothing above the application root is an endpoint. The descent cannot get there by
+             * itself - only a directory link inside the root can - and this is not a guard against
+             * one: it is the invariant of the ANSWER, so that a path from outside is never spelled
+             * as an endpoint of this application. Rooted covers the other drive, where a relative
+             * path has no '..' to start with.
+             */
+            if (r == ".." || r.StartsWith("../") || Path.IsPathRooted(r))
+                return null;
             return replaceModule(r);
         }
 
