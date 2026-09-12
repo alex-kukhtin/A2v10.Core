@@ -12,6 +12,13 @@ public class Page : XamlElement
 	public String? Title { get; set; }
 	public String? Code { get; init; }
 
+	// Объявление выборки для слоя метаданных, а не разметка: рендерер сюда не смотрит. Живёт
+	// на странице, а не на книге, потому что книга бланком не бывает — им бывает Spreadsheet,
+	// и он Page. [JsonIgnore] обязателен, а не для красоты: в JSON-бланке "Model" — объект
+	// верхнего уровня, иначе System.Text.Json положит его в String и уронит каждую печатную форму
+	[JsonIgnore]
+	public String? Model { get; init; }
+
 	[JsonIgnore]
 	public ColumnCollection Columns { get; init; } = [];
 	[JsonIgnore]

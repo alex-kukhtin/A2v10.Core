@@ -17,6 +17,7 @@ public class Column : FlowElement
 	{
 		var sel = selector + ">Column";
 		_runtimeStyle = styles.GetRuntimeStyle(sel);
+		ApplyStylesSelf();
 		foreach (var ch in Children)
 			ch.ApplyStyles(sel, styles);
 	}

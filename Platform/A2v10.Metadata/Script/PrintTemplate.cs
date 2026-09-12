@@ -20,11 +20,6 @@ internal partial class ScriptBuilder
 
         IEnumerable<String> functions()
         {
-            yield return $$"""
-            function reportUrl() {
-                return `/report/show/${this.Id}?base={{Endpoint.Path}}&rep={{form.Name}}`;
-            }
-            """;
             /* The tab caption, evaluated here rather than on the server: the values live in the
              * model the page already holds, and the paths were checked when that model was built.
              */
@@ -38,7 +33,6 @@ internal partial class ScriptBuilder
 
         IEnumerable<String> properties()
         {
-            yield return $"'{Table.TypeName}.$ReportUrl': reportUrl";
             if (title != null)
                 yield return $"'{Table.TypeName}.$Title': pageTitle";
         }

@@ -28,14 +28,46 @@ internal partial class XamlBuilder
                 : null,
             Toolbar = new Toolbar(_xamlServiceProvider)
             {
-                Children = [
+                Children = 
+                [
+                    new Button() 
+                    {
+                        Icon = Icon.Print,
+                        Content = "@[Print]",
+                        Bindings = b => {
+                            var cmd = new BindCmd(CommandType.Report) {
+                                Report = form.Name,
+                                Url = Endpoint.Path,
+                                Print = true
+                            };
+                            cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(Table.Model));
+                            b.SetBinding(nameof(Button.Command), cmd);
+                         }
+                    },
+                    new Button()
+                    {
+                        Icon = Icon.Download,
+                        Content = "@[Download]",
+                        Bindings = b => {
+                            var cmd = new BindCmd(CommandType.Report) {
+                                Report = form.Name,
+                                Url = Endpoint.Path,
+                                Export = true
+                            };
+                            cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(Table.Model));
+                            b.SetBinding(nameof(Button.Command), cmd);
+                         }
+                    },
+                    new Separator(),
                     FormButtons.Reload
                 ]
             },
             Children = [
-                new PdfViewer() {
-                    Bindings = b => b.SetBinding(nameof(PdfViewer.Source),
-                        new Bind($"{Table.Model}.$ReportUrl"))
+                new PdfReportViewer() 
+                {
+                    Report = form.Name,
+                    Url = Endpoint.Path,
+                    Bindings = b => b.SetBinding(nameof(PdfReportViewer.Argument), new Bind(Table.Model))
                 }
             ]
         };

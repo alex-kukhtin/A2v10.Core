@@ -101,7 +101,7 @@ public partial class RenderContext
 	public ReportImage? ResolveImage(XamlElement elem, ExpandoObject scope, String propertyName, Object? literal)
 	{
 		var bind = elem.GetBindRuntime(propertyName);
-		return ResolveImage(bind != null ? EvaluateValue(bind.Expression, scope) : literal);
+		return ResolveImage(bind != null ? Evaluate(bind.Expression, scope) : literal);
 	}
 
 	// Растр или SVG решают первые байты, а не расширение: у байтов из varbinary имени нет,
@@ -193,23 +193,34 @@ public partial class RenderContext
 		return func;
 	}
 
-	public Object? Evaluate(String? expression, ExpandoObject scope)
+	// Единственный вход для всего, что пишется в бланке. Путь отвечают данные, остальное — JS.
+	// Путь в JS не заходит никогда: там Decimal становится Double, а Byte[] — массивом чисел
+	public Object? Evaluate(String? text, ExpandoObject scope)
 	{
-		if (String.IsNullOrEmpty(expression))
+		if (String.IsNullOrWhiteSpace(text))
 			return null;
-		return Engine.Invoke(GetOrCreateAccessFunc(expression!), scope);
+		// Пробелы по краям смысла не несут, но меняли ветку: " Name " — уже не путь, и уходило
+		// в JS, где свободное имя читается от корня. В книге их ставят, не думая об этом
+		var expr = text!.Trim();
+		if (PathRegex().IsMatch(expr))
+			return Walk(expr, scope);
+		return Engine.Invoke(GetOrCreateAccessFunc(expr), scope);
 	}
 
-	// Значение как оно есть, без приведения к строке. Ветку выбирает форма записи — то же
-	// правило, что и в Resolve, и по той же причине: Byte[] через Jint возвращается
-	// массивом чисел, и картинка теряется молча
-	public Object? EvaluateValue(String? expression, ExpandoObject scope)
+	// Root и this — два слова, с которых путь может начаться; без них он идёт от scope
+	private Object? Walk(String path, ExpandoObject scope)
 	{
-		if (String.IsNullOrEmpty(expression))
-			return null;
-		if (ScriptEngine.IsScopePath(expression!))
-			return scope.Eval<Object>(expression!);
-		return Evaluate(expression, scope);
+		var dot = path.IndexOf('.');
+		var head = dot == -1 ? path : path[..dot];
+		ExpandoObject? start = head switch
+		{
+			"Root" => DataModel,
+			"this" => scope,
+			_ => null
+		};
+		if (start == null)
+			return scope.Eval<Object>(path);
+		return dot == -1 ? start : start.Eval<Object>(path[(dot + 1)..]);
 	}
 
 	public IList<ExpandoObject>? EvaluateCollection(String expression, ExpandoObject scope)
@@ -224,28 +235,18 @@ public partial class RenderContext
 
 
 	const String RESOLVE_PATTERN = "\\{(.+?)\\}";
-#if NET7_0_OR_GREATER
 	[GeneratedRegex(RESOLVE_PATTERN, RegexOptions.None, "en-US")]
 	private static partial Regex ResolveRegex();
-#else
-	private static Regex RESOLVEREGEX => new(RESOLVE_PATTERN, RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase );
-	private static Regex ResolveRegex() => RESOLVEREGEX;
-#endif
 
-	// Двоеточие делит только путь: внутри выражения это тернарник
-	private static String? ScopePath(String key, ref String? format)
-	{
-		if (ScriptEngine.IsScopePath(key))
-			return key;
-		var spos = key.IndexOf(':');
-		if (spos == -1)
-			return null;
-		var path = key[..spos];
-		if (!ScriptEngine.IsScopePath(path))
-			return null;
-		format = key[(spos + 1)..];
-		return path;
-	}
+	// Путь — имена через точку, у имени может быть индекс: ровно то, что проходит обход
+	const String PATH = @"[\p{L}_$][\w$]*(?:\[\d+\])?(?:\.[\p{L}_$][\w$]*(?:\[\d+\])?)*";
+
+	[GeneratedRegex($"^{PATH}$")]
+	private static partial Regex PathRegex();
+
+	// Формат — хвост после пути. У тернарника слева от двоеточия не путь, он не совпадёт
+	[GeneratedRegex($"^({PATH}):(.+)$", RegexOptions.Singleline)]
+	private static partial Regex FormattedPathRegex();
 
 	public ResolveResult? Resolve(String? source, ExpandoObject scope, DataType dataType, String? format)
 	{
@@ -257,24 +258,21 @@ public partial class RenderContext
 		var sb = new StringBuilder(source);
 		foreach (Match m in ms.Cast<Match>())
 		{
-			String? valResult = null;
-			String key = m.Groups[1].Value;
-			// Ветку выбирает форма записи, а не скобки: {a.b} — путь, {f(x)} — выражение
-			var path = ScopePath(key, ref format);
-			if (path != null)
+			// Trim до разбора формата, иначе " Sum:#,##0.00 " не узнаётся как путь с форматом
+			String key = m.Groups[1].Value.Trim();
+			var keyFormat = format;
+			var fm = FormattedPathRegex().Match(key);
+			if (fm.Success)
 			{
-				var valObj = scope.Eval<Object>(path);
-				if (valObj is Byte[] bytes)
-					return new ResolveResult(null, bytes);
-				valResult = ValueToString(valObj, MatchDataType(dataType, valObj), format);
+				key = fm.Groups[1].Value;
+				keyFormat = fm.Groups[2].Value;
 			}
-			else
-			{
-				var valObj = Evaluate(key, scope);
-				if (valObj is QrCodeValue qrCodeValue)
-					return new ResolveResult(qrCodeValue.Value, null, ResolveResultType.QrCode);
-				valResult = ValueToString(valObj, MatchDataType(dataType, valObj), format);
-			}
+			var valObj = Evaluate(key, scope);
+			if (valObj is Byte[] bytes)
+				return new ResolveResult(null, bytes);
+			if (valObj is QrCodeValue qrCodeValue)
+				return new ResolveResult(qrCodeValue.Value, null, ResolveResultType.QrCode);
+			var valResult = ValueToString(valObj, MatchDataType(dataType, valObj), keyFormat);
 			if (ms.Count == 1 && m.Groups[0].Value == source)
 				return new ResolveResult(valResult ?? String.Empty); // single element
 			sb.Replace(m.Value, valResult);
@@ -302,10 +300,13 @@ public partial class RenderContext
 			return elem.If == null || elem.If.Value;
 
 		var expression = ifbind.Expression;
-		if (String.IsNullOrEmpty(expression))
+		if (String.IsNullOrWhiteSpace(expression))
 			return true;
-		// '!' про значение, а не про адрес: иначе !Done в строке ушло бы к корню
-		var invert = expression!.StartsWith('!');
+		expression = expression!.Trim();
+		// '!' снимается только с пути: путь проходится по данным, отрицать его там нечем, а
+		// оставить его путём обязательно - иначе !Done в строке ушло бы искаться к корню.
+		// Выражение отрицает себя само, в JS, и с правильным приоритетом: '!A && B' там не '!(A && B)'
+		var invert = expression.StartsWith('!') && PathRegex().IsMatch(expression[1..].Trim());
 		if (invert)
 			expression = expression[1..];
 		var val = Evaluate(expression, scope);

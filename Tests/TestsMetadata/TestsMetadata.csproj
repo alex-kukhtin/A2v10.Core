@@ -22,11 +22,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Data.Core" Version="10.1.7617" />
+		<PackageReference Include="A2v10.Data.Core" Version="10.1.7619" />
 		<PackageReference Include="A2v10.Data.Providers" Version="10.1.7610" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.11" />
-		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.11" />
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.12" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.0" />
 		<PackageReference Include="xunit.v3" Version="3.2.2" />
 		<PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

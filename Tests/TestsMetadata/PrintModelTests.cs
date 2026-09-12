@@ -204,6 +204,41 @@ public class PrintModelTests
             Error(doc, new PrintNode("Invoice", false, [], [])));
     }
 
+    // ---- the other format --------------------------------------------------------------------
+
+    /* A blank may be a XAML page, and then the fetch is declared in <Page.Model> with the very same
+     * JSON - one grammar, two places to sit. Nothing below that element is read: it is the layout.
+     * The attribute spelling is XAML's too, and a blank that declared its fetch there and was not
+     * heard would print an empty page without a word.
+     */
+    [Fact]
+    public async Task A_xaml_blank_declares_its_fetch_the_same_way()
+    {
+        var doc = (await WaybillInAsync()).Storage;
+
+        const String MODEL = """{ "Document": [ "Date", { "Agent": [ "Name" ] }, { "Rows[]": [ "Qty" ] } ] }""";
+        var json = $$"""{ "Model": {{MODEL}}, "Workbook": { "RowCount": 1 } }""";
+        var element = $"""
+            <Page xmlns="clr-namespace:A2v10.Xaml.Report;assembly=A2v10.Xaml.Report">
+                <Page.Model>{MODEL}</Page.Model>
+                <Text>Anything at all</Text>
+            </Page>
+            """;
+        var attribute = $"""<Page xmlns="clr-namespace:A2v10.Xaml.Report;assembly=A2v10.Xaml.Report" Model='{MODEL}'/>""";
+
+        var expected = Build(doc, PrintModel.Parse(json));
+        Assert.Equal(expected, Build(doc, PrintModel.Parse(element)));
+        Assert.Equal(expected, Build(doc, PrintModel.Parse(attribute)));
+    }
+
+    [Fact]
+    public void A_blank_without_a_model_section_says_so()
+    {
+        var xaml = """<Page xmlns="clr-namespace:A2v10.Xaml.Report;assembly=A2v10.Xaml.Report"/>""";
+        Assert.Contains("no 'Model' section",
+            Assert.Throws<InvalidOperationException>(() => PrintModel.Parse(xaml)).Message);
+    }
+
     // ---- the example blank -------------------------------------------------------------------
 
     /* The real blank, end to end. It earns its place by what it happens to ask for: 'Unit' both on
@@ -219,9 +254,9 @@ public class PrintModelTests
         var unit = rows.Columns.First(c => c.Name == "Unit").RefTableCheck.Storage;
 
         var form = endpoint.Declaration.PrintForms[0];
-        var fileName = $"{endpoint.Path.Trim('/')}/{form.Path}.json";
-        using var stream = TestHost.GetService<IAppCodeProvider>().FileStreamRO(fileName)
-            ?? throw new InvalidOperationException($"'{fileName}' not found");
+        // the declared path names no extension: which file is the blank is the probe's answer
+        using var stream = ReportTemplateFile.Open(TestHost.GetService<IAppCodeProvider>(),
+            PrintRequest.FileOf(endpoint, form.Path));
         using var sr = new StreamReader(stream);
         var model = PrintModel.Parse(await sr.ReadToEndAsync(TestContext.Current.CancellationToken));
 

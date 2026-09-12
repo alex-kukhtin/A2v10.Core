@@ -21,7 +21,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Jint" Version="4.16.1" />
+		<PackageReference Include="Jint" Version="4.16.2" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -29,7 +29,7 @@ internal class ImageComposer(Image _image, RenderContext _context) : FlowElement
 		if (_image.Width != null)
 			container = container.Width(_image.Width.Value, _image.Width.Unit.ToUnit());
 		if (_image.Height != null)
-			container = container.Width(_image.Height.Value, _image.Height.Unit.ToUnit());
+			container = container.Height(_image.Height.Value, _image.Height.Unit.ToUnit());
 		container.DrawImage(image);
 	}
 }

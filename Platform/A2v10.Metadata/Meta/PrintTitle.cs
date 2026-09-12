@@ -130,13 +130,13 @@ internal static class PrintRequest
         return endpoint.Declaration.PrintForm(asked);
     }
 
-    /* Where a blank's file lives, composed once. The declared path carries NO extension - it is
-     * named the way a view is - so '.json' is appended and never swapped: 'print/f1.json' would
-     * then quietly mean the same file as 'print/f1', and two spellings of one name is how the two
-     * readers of this drifted apart in the first place.
+    /* Where a blank's file lives, composed once - WITHOUT an extension, because the declared path
+     * carries none: it is named the way a view is, and 'print/f1.json' would then quietly mean the
+     * same file as 'print/f1'. Which extension exists is the probe's answer (ReportTemplateFile),
+     * and what the file holds - a workbook in JSON, a page in XAML - is the first byte's.
      */
     public static String FileOf(NormalEndpointMetadata endpoint, String path) =>
-        $"{endpoint.Path.Trim('/')}/{path}.json";
+        $"{endpoint.Path.Trim('/')}/{path}";
 }
 
 /* The two lookups everything about printing does against the shape, in one place: the title walks

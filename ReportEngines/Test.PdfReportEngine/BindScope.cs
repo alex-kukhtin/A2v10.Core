@@ -10,8 +10,9 @@ using A2v10.ReportEngine.Script;
 namespace Test.PdfReportEngine;
 
 /*
-Правило целиком: голый путь — от текущего scope, всё остальное — обычный JS,
-где this и есть scope, свободные имена от корня, Root — явный корень.
+Правило целиком: путь читается из данных — от текущего scope, либо от Root или this
+в его начале; всё остальное — обычный JS, где this и есть scope, свободные имена от
+корня, Root — явный корень. Один вход для ячеек, биндингов, If, ItemsSource и картинок.
 */
 
 internal class TestLocalizer : IReportLocalizer
@@ -132,8 +133,8 @@ public class BindScope
 		Assert.AreEqual("80", Resolve("{(Document.Rows.reduce((s, r) => s + r.Price * r.Qty, 0))}"));
 		Assert.AreEqual("Ten, Twenty", Resolve("{(Document.Rows.map(r => r.Name).join(', '))}"));
 		Assert.AreEqual("1", Resolve("{(Document.Rows.filter(r => r.Price > 15).length)}"));
-		// индекс — уже не путь, поэтому значение идёт через JS и теряет Decimal
-		Assert.AreEqual("10", Resolve("{Document.Rows[0].Price}"));
+		// индекс — часть пути: значение из данных, Decimal сохраняется
+		Assert.AreEqual("10.00", Resolve("{Document.Rows[0].Price}"));
 	}
 
 	[TestMethod]
@@ -172,7 +173,7 @@ public class BindScope
 	[TestMethod]
 	public void RootPathNeedsNoParens()
 	{
-		// Root не проходится обходом по данным, значит выражение
+		// Root — начало пути, обход идёт от корня
 		Assert.AreEqual("A-1", Resolve("{Root.Document.No}", _row));
 	}
 
@@ -187,9 +188,68 @@ public class BindScope
 	[TestMethod]
 	public void PathOutsideScopeIsEmpty()
 	{
-		// строка не знает про Document: путь молча пуст, выражение падает
+		// строка не знает про Document: путь молча пуст (с this — тоже путь), выражение падает
 		Assert.AreEqual(String.Empty, Resolve("{Document.No}", _row));
-		Assert.AreEqual("!JavaScriptException", Caught(() => Resolve("{this.Document.No}", _row)));
+		Assert.AreEqual(String.Empty, Resolve("{this.Document.No}", _row));
+		Assert.AreEqual("!JavaScriptException", Caught(() => Resolve("{(this.Document.No)}", _row)));
+	}
+
+	[TestMethod]
+	public void BlanksAroundKeepThePath()
+	{
+		// в книге пробелы внутри скобок ставят не думая; раньше они уводили путь в JS,
+		// и {' Name '} в строке молча печатало корневой Name вместо поля строки
+		Assert.AreEqual("Ten", Resolve("{ Name }", _row));
+		Assert.AreEqual("ROOT", Resolve("{ Name }"));
+		Assert.AreEqual("10.00", Resolve("{ Price }", _row));
+		Assert.AreEqual("10.00", Resolve("{ Price:#,##0.00 }", _row));
+		Assert.AreEqual(String.Empty, Resolve("{   }", _row));
+		// то же самое для биндинга: Evaluate — общий вход, и обрезает он сам
+		Assert.AreEqual("Ten", _context.Evaluate(" Name ", _row));
+	}
+
+	[TestMethod]
+	public void NegationBelongsToTheBranchThatEvaluates()
+	{
+		static TableCell IfBound(String expr)
+		{
+			var cell = new TableCell();
+			cell.BindImpl.SetBinding("If", new Bind(expr));
+			return cell;
+		}
+		// путь: '!' снимает C#, потому что остаток обязан остаться путём и читаться от строки.
+		// Уйди он в JS - свободное имя искалось бы от корня и упало бы на необъявленном Void
+		Assert.IsTrue(_context.IsVisible(IfBound("!Void"), _row));
+		Assert.IsFalse(_context.IsVisible(IfBound("Void"), _row));
+		Assert.IsFalse(_context.IsVisible(IfBound("!Name"), _row));
+		// выражение: '!' уходит в JS вместе со всем остальным. Здесь левая часть истинна,
+		// правая ложна: '(!Missing) && false' - не видно, а '!(Missing && false)' было бы видно
+		Assert.IsFalse(_context.IsVisible(IfBound("!Document.Missing && Document.Total > 9999"), _model));
+		Assert.IsTrue(_context.IsVisible(IfBound("!Document.Missing && Document.Total > 0"), _model));
+	}
+
+	[TestMethod]
+	public void PathNeverEntersJs()
+	{
+		Assert.IsInstanceOfType<Decimal>(_context.Evaluate("Document.Total", _model));
+		Assert.IsInstanceOfType<Decimal>(_context.Evaluate("Root.Document.Total", _row));
+		Assert.IsInstanceOfType<Double>(_context.Evaluate("(Document.Total)", _model));
+	}
+
+	[TestMethod]
+	public void BindReadsLikeCell()
+	{
+		// биндинг Page и ячейка книги — один вход: промах пути пуст, а не TypeError
+		static TableCell Bound(String path)
+		{
+			var cell = new TableCell();
+			cell.BindImpl.SetBinding("Content", new Bind(path));
+			return cell;
+		}
+		Assert.AreEqual("Ten", _context.GetValueAsString(Bound("Name"), _row));
+		Assert.AreEqual("A-1", _context.GetValueAsString(Bound("Root.Document.No"), _row));
+		Assert.IsNull(_context.GetValueAsString(Bound("Document.No"), _row));
+		Assert.AreEqual("20", _context.GetValueAsString(Bound("rowTotalArrow(this)"), _row));
 	}
 
 	/* ------------ ломала подстановка this ------------ */

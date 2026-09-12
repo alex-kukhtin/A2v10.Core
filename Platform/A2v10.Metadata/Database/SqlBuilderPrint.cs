@@ -401,9 +401,7 @@ internal partial class SqlBuilder
     private async Task<String> ReadPrintFormAsync(String path)
     {
         var codeProvider = serviceProvider.GetRequiredService<IAppCodeProvider>();
-        var fileName = PrintRequest.FileOf(Endpoint, path);
-        using var stream = codeProvider.FileStreamRO(fileName)
-            ?? throw new InvalidOperationException($"print: '{fileName}' not found");
+        using var stream = ReportTemplateFile.Open(codeProvider, PrintRequest.FileOf(Endpoint, path));
         using var sr = new StreamReader(stream);
         return await sr.ReadToEndAsync();
     }

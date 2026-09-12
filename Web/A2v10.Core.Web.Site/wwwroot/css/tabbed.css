@@ -1712,6 +1712,10 @@ object.a2-pdf-viewer {
   display: block;
   height: 100%;
 }
+.a2-pdfreport-viewer {
+  display: flex;
+  height: 100%;
+}
 .splitter {
   display: grid;
   position: relative;

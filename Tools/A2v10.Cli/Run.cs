@@ -41,7 +41,8 @@ internal sealed partial class Program
             Description = "Endpoint commands"
         };
         var mdCommands = new  ResolveEndpointCommand(_services).Register(endpointCommand);
-        mdCommands.Add(new EndpointListCommand(_services, "model.json").Build());
+        mdCommands.Add(new EndpointListCommand(_services, "model.json",
+            "List the endpoints declared by a model.json").Build());
         root.Subcommands.Add(endpointCommand);
 
         // view commands
@@ -55,10 +56,11 @@ internal sealed partial class Program
         // metadata commands
         var metaCommand = new Command("meta")
         {
-            Description = "Metdata-driven platform commands"
+            Description = "Metadata-driven platform commands"
         };
         metaCommand.Subcommands.Add(new DeployCommand(_services).Build());
-        metaCommand.Subcommands.Add(new EndpointListCommand(_services, "metadata.json").Build());
+        metaCommand.Subcommands.Add(new EndpointListCommand(_services, "metadata.json",
+            "List the metadata-driven endpoints - the folders with a metadata.json").Build());
         root.Subcommands.Add(metaCommand);
 
         return root.Parse(args).InvokeAsync();

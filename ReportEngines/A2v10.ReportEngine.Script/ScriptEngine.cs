@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Globalization;
-using System.Text.RegularExpressions;
 
 using Jint;
 using Jint.Native;
@@ -13,10 +12,19 @@ using A2v10.Infrastructure;
 
 namespace A2v10.ReportEngine.Script;
 
-public partial class ScriptEngine
+public class ScriptEngine
 {
 	private readonly Engine _engine;
 	private readonly CultureInfo _culture;
+
+	// Бюджет коробки. Власти у выражения нет (без AllowClr оно видит только модель), остались
+	// ресурсы: без глубины рекурсия в Code — StackOverflowException, который не ловится и
+	// роняет процесс целиком; без счётчика while(true) вешает поток запроса. Счётчик
+	// детерминирован, таймер — страховка для того, что счётчик не видит (тяжёлый нативный вызов).
+	// Цифры — с запасом на reduce по десяткам тысяч строк, а не на здравый смысл шаблона
+	const Int32 MAX_RECURSION = 256;
+	const Int32 MAX_STATEMENTS = 1_000_000;
+	static readonly TimeSpan TIMEOUT = TimeSpan.FromSeconds(5);
 
 	public ScriptEngine(ExpandoObject model, CultureInfo cultureInfo, String? code)
 	{
@@ -27,6 +35,9 @@ public partial class ScriptEngine
 			//opts.Debugger.Enabled = true;
 			opts.LocalTimeZone(TimeZoneInfo.Utc);
 			opts.Culture(cultureInfo);
+			opts.LimitRecursion(MAX_RECURSION);
+			opts.MaxStatements(MAX_STATEMENTS);
+			opts.TimeoutInterval(TIMEOUT);
 		});
 		if (!String.IsNullOrEmpty(code))
 			_engine.Evaluate(code!);
@@ -48,26 +59,8 @@ public partial class ScriptEngine
 	// подставлять в текст, ломая thisYear и литералы. Скобки вокруг тела — от ASI
 	public JsValue CreateAccessFunction(String expression)
 	{
-		var body = IsScopePath(expression) ? $"this.{expression}" : expression;
-		return _engine.Evaluate($"(function() {{ return ({body}); }})");
+		return _engine.Evaluate($"(function() {{ return ({expression}); }})");
 	}
-
-	// Один вопрос на два: ставить ли this. в выражении и пройдёт ли путь C#-обход по данным
-	public static Boolean IsScopePath(String expression)
-	{
-		return BarePathRegex().IsMatch(expression)
-			&& !StartsWith(expression, "Root") && !StartsWith(expression, "this");
-	}
-
-	// Root в модели нет, this называет сам scope — обход по данным не пройдёт ни то, ни другое
-	private static Boolean StartsWith(String expression, String name)
-	{
-		return expression == name || expression.StartsWith($"{name}.", StringComparison.Ordinal);
-	}
-
-	const String BARE_PATH_PATTERN = @"^[A-Za-z_$][A-Za-z0-9_$]*(\.[A-Za-z_$][A-Za-z0-9_$]*)*$";
-	[GeneratedRegex(BARE_PATH_PATTERN)]
-	private static partial Regex BarePathRegex();
 
 	public Object? Invoke(JsValue func, ExpandoObject scope)
 	{

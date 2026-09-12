@@ -34,9 +34,7 @@ internal class PrintReportHandler(IReportEngineProvider _reportEngineProvider, D
 
         var printTemplate = endpoint.Declaration.PrintForm(repName);
 
-        var filePath = PrintRequest.FileOf(endpoint, printTemplate.Path);
-        var stream = _appCodeProvider.FileStreamRO(filePath)
-            ?? throw new InvalidOperationException($"print: blank '{filePath}' not found");
+        var stream = ReportTemplateFile.Open(_appCodeProvider, PrintRequest.FileOf(endpoint, printTemplate.Path));
 
         var bd = new BuilderDescriptor()
         {

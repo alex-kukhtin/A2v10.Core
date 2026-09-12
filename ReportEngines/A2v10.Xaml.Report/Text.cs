@@ -49,12 +49,10 @@ public class Space : ContentElement
 	public Length? Width { get; init; }
 }
 
+// Пустой: перенос рисует композитор, как и пробел. Содержимым "\n" он быть перестал -
+// текст спана перед выводом обрезается, и такой перенос молча исчезал
 public class Break : ContentElement
 {
-	public Break()
-	{
-		this.Content = "\n";
-	}
 }
 
 

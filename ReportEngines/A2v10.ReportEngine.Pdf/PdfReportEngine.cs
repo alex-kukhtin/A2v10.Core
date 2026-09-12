@@ -2,6 +2,7 @@
 
 using System;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 
 using QuestPDF;
@@ -11,7 +12,6 @@ using QuestPDF.Infrastructure;
 using A2v10.Infrastructure;
 using A2v10.Xaml.Report;
 
-using A2v10.Xaml.Report.Spreadsheet;
 using A2v10.ReportEngine.Script;
 
 namespace A2v10.ReportEngine.Pdf;
@@ -31,56 +31,25 @@ public class PdfReportEngine : IReportEngine
 		_localizer = new DefaultReportLocalizer(user.Locale.Locale, localizer);
 	}
 
-	private Page ReadTemplate(String pathA, String pathX)
+	// Маршруты отличаются только тем, откуда берутся байты; что в них — XAML или JSON —
+	// решает один распознаватель в TemplateReader, одинаково для всех трёх
+	private Page ReadTemplate(IReportInfo reportInfo)
 	{
-		using var streamA = _appCodeProvider.FileStreamRO(pathA);
-		if (streamA != null)
-            return TemplateReader.ReadReport(streamA);
-        using var streamX = _appCodeProvider.FileStreamRO(pathX);
-        if (streamX != null)
-            return TemplateReader.ReadReport(streamX);
-		throw new InvalidOperationException($"File not found '{pathA}' or '{pathX}'");
+		if (reportInfo.Stream != null)
+			return TemplateReader.ReadReport(reportInfo.Stream);
+		if (reportInfo.Report.StartsWith("{{") && reportInfo.Report.EndsWith("}}"))
+		{
+			var text = reportInfo.DataModel?.Resolve(reportInfo.Report)
+				?? throw new InvalidOperationException("Data is null");
+			return TemplateReader.ReadReport(Encoding.UTF8.GetBytes(text));
+		}
+		using var file = ReportTemplateFile.Open(_appCodeProvider, Path.Combine(reportInfo.Path, reportInfo.Report));
+		return TemplateReader.ReadReport(file);
 	}
-
-	private static Page ReadTemplateFromDb(IReportInfo reportInfo)
-	{
-		var json = reportInfo.DataModel?.Resolve(reportInfo.Report)
-			?? throw new InvalidOperationException("Data is null");
-		var ss = SpreadsheetJson.FromJson(json);
-		ss.ApplyStyles("Root", new StyleBag());
-		return ss;
-	}
-
-    private static Page ReadTemplateFromStream(Stream stream)
-    {
-		using var sr = new StreamReader(stream);
-        var json = sr.ReadToEnd();
-        var ss = SpreadsheetJson.FromJson(json);
-        ss.ApplyStyles("Root", new StyleBag());
-        return ss;
-    }
 
     public Task<IInvokeResult> ExportAsync(IReportInfo reportInfo, ExportReportFormat format)
 	{
-		String repPathA = String.Empty;
-        String repPathX = String.Empty;
-        Boolean readFromModel = false;
-		Boolean readFromStream = false;
-
-		if (reportInfo.Stream != null)
-			readFromStream = true;
-		else if (reportInfo.Report.StartsWith("{{") && reportInfo.Report.EndsWith("}}"))
-			readFromModel = true;
-		else
-		{
-			repPathA = Path.Combine(reportInfo.Path, reportInfo.Report) + ".vxaml";
-			repPathX = Path.Combine(reportInfo.Path, reportInfo.Report) + ".xaml";
-		}
-
-        var page =
-			readFromStream ? ReadTemplateFromStream(reportInfo.Stream!)
-			: readFromModel ? ReadTemplateFromDb(reportInfo)
-			: ReadTemplate(repPathA, repPathX);
+		var page = ReadTemplate(reportInfo);
 
 		if (page.Title == null && reportInfo.Name != null)
 			page.Title = reportInfo.Name;

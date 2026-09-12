@@ -24,7 +24,7 @@ internal static class Extensions
 			Image image => new ImageComposer(image, context),
 			QrCode qrCode => new QrCodeComposer(qrCode, context),
 			Barcode barcode => new BarcodeComposer(barcode, context),
-            Line line => new LineComposer(line),
+            Line line => new LineComposer(line, context),
 			List list => new ListComposer(list, context),
 			Inlined inlined => new InlinedComposer(inlined, context),
 			Checkbox checkbox => new CheckboxComposer(checkbox, context),

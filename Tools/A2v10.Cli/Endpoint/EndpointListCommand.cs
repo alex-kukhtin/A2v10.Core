@@ -1,100 +1,50 @@
-﻿// Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
+// Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
-using System.Collections.Generic;
 using System.CommandLine;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
 
 using A2v10.Infrastructure;
 
 namespace A2v10.Cli;
 
-internal class EndpointListCommand(IServiceProvider services, String _marker)
+/* The application's own view of its files, not a walk of the disk. The code provider enumerates
+ * every REGISTERED module from that module's own root and returns paths relative to it, already
+ * prefixed with '$<module>/' for all but the default one - which is exactly how an endpoint is
+ * addressed. So there is no module mapping here, and nothing to guard: a folder belonging to no
+ * module cannot be reached (the disk walk found those by matching the first path segment and had
+ * to drop them again), and neither can anything above the application root.
+ *
+ * It is the same call DatabaseMetadataProvider.AllElementsMetadata makes, so 'list' and 'deploy'
+ * see one set by construction rather than by coincidence. AllElementsMetadata itself is not
+ * reusable here: it loads each endpoint and then keeps only the owners of a shape, which drops
+ * the operations and the report - right for a deploy, wrong for a list.
+ */
+internal class EndpointListCommand(IServiceProvider services, String _marker, String _description)
 {
-    private readonly IHostEnvironment _hostEnvironment = services.GetRequiredService<IHostEnvironment>();
-    private readonly AppOptions _appOptions = services.GetRequiredService<IOptions<AppOptions>>().Value;
+    private readonly IAppCodeProvider _codeProvider = services.GetRequiredService<IAppCodeProvider>();
+
     internal Command Build()
     {
-        var cmd = new Command("list", "List available endpoints");
+        var cmd = new Command("list", _description);
         cmd.SetAction(r => JsonResult.Try(() => EndpointList()));
         return cmd;
     }
 
-    IEnumerable<String> FindModelFolders(String root)
+    Task<Object> EndpointList()
     {
-        if (File.Exists(Path.Combine(root, _marker)))
-            yield return root;
-
-        IEnumerable<String> subDirs;
-        try
-        {
-            subDirs = Directory.EnumerateDirectories(root);
-        }
-        catch (UnauthorizedAccessException)
-        {
-            yield break;
-        }
-        catch (DirectoryNotFoundException)
-        {
-            yield break;
-        }
-
-        foreach (String dir in subDirs)
-        {
-            String name = Path.GetFileName(dir);
-            if (String.Equals(name, "bin", StringComparison.OrdinalIgnoreCase) ||
-                String.Equals(name, "obj", StringComparison.OrdinalIgnoreCase))
-                continue;
-
-            foreach (String found in FindModelFolders(dir))
-                yield return found;
-        }
-    }
-    async Task<Object> EndpointList()
-    {
-        var rootPath = _hostEnvironment.ContentRootPath;
-        var md = _appOptions.Modules?.Select(m =>
-            (
-                key: $"${m.Key.ToLowerInvariant()}",
-                segment: Path.GetFileName(m.Value.Path),
-                isMain: m.Value.Default
-            )
-        ) ?? [];
-
-        String? replaceModule(String path)
-        {
-            var ps = path.Split('/');
-            var mx = md.FirstOrDefault(m => m.segment == ps[0]);
-            if (mx.segment is null)
-                return null; // folder outside any module — skip it
-            if (mx.isMain)
-                return String.Join('/', ps[1..]);
-            else
-                return String.Join("/", [mx.key, ..ps[1..]]);
-        }
-
-        String? endpointPath(String path)
-        {
-            var r = Path.GetRelativePath(_hostEnvironment.ContentRootPath, path).NormalizePath();
-            /* Nothing above the application root is an endpoint. The descent cannot get there by
-             * itself - only a directory link inside the root can - and this is not a guard against
-             * one: it is the invariant of the ANSWER, so that a path from outside is never spelled
-             * as an endpoint of this application. Rooted covers the other drive, where a relative
-             * path has no '..' to start with.
-             */
-            if (r == ".." || r.StartsWith("../") || Path.IsPathRooted(r))
-                return null;
-            return replaceModule(r);
-        }
-
-        var list = FindModelFolders(rootPath);
-        return list.Select(endpointPath).Where(p => p is not null).ToList();
+        var list = _codeProvider.EnumerateAllFilesRecursive("", _marker)
+            // the marker at a module root has no endpoint folder over it, so it names nothing
+            .Select(f => Path.GetDirectoryName(f) ?? String.Empty)
+            .Where(p => p.Length > 0)
+            .Select(p => p.NormalizeSlash())
+            // ordinal: the output is read by a program, so the order may not depend on the machine
+            .OrderBy(p => p, StringComparer.Ordinal)
+            .ToList();
+        return Task.FromResult<Object>(list);
     }
 }
-
