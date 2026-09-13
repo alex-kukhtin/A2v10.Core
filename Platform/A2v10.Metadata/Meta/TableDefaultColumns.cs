@@ -37,6 +37,8 @@ internal static class TableDefaultColumns
             yield return new TableColumn(Constants.FieldNames.Parent, ColumnType.Parent);
         if (table.HasFolders)
             yield return new TableColumn(Constants.FieldNames.Folder, ColumnType.Folder);
+        foreach (var stamp in Stamps())
+            yield return stamp;
     }
     static IEnumerable<TableColumn> DocumentDefaultColumns(TableMetadata table)
     {
@@ -46,6 +48,24 @@ internal static class TableDefaultColumns
         yield return new TableColumn(Constants.FieldNames.Date, ColumnType.Date);
         yield return new TableColumn(Constants.FieldNames.RowVersion, ColumnType.RowVersion);
         yield return new TableColumn(Constants.FieldNames.Memo, ColumnType.Memo);
+        foreach (var stamp in Stamps())
+            yield return stamp;
+        // who posted - emptied by unpost, which leaves nothing of a posting behind
+        yield return new TableColumn(Constants.FieldNames.UserPosted, ColumnType.StampUserNull);
+        yield return new TableColumn(Constants.FieldNames.UtcDatePosted, ColumnType.StampDateNull);
+    }
+
+    /* Creation and modification, on every record the user keeps - a catalog, a document, and the
+     * catalogs a trait brings along (folders, tags). Not on a details row or a tag entry: those are
+     * part of a record, and the record carries the stamp. Not on a journal: its rows are rewritten
+     * on every posting, and who posted is the document's own stamp.
+     */
+    static IEnumerable<TableColumn> Stamps()
+    {
+        yield return new TableColumn(Constants.FieldNames.UserCreated, ColumnType.StampUser);
+        yield return new TableColumn(Constants.FieldNames.UtcDateCreated, ColumnType.StampDate);
+        yield return new TableColumn(Constants.FieldNames.UserModified, ColumnType.StampUser);
+        yield return new TableColumn(Constants.FieldNames.UtcDateModified, ColumnType.StampDate);
     }
     static IEnumerable<TableColumn> JournalDefaultColumns(TableMetadata table)
     {
@@ -71,6 +91,8 @@ internal static class TableDefaultColumns
         yield return new TableColumn(Constants.FieldNames.Id, ColumnType.Id);
         yield return new TableColumn(Constants.FieldNames.Name, ColumnType.Name);
         yield return new TableColumn(Constants.FieldNames.Memo, ColumnType.Memo);
+        foreach (var stamp in Stamps())
+            yield return stamp;
     }
 
     /* A set of codes: the key is the code itself, so it is a string and not ColumnType.Id - which
@@ -141,6 +163,8 @@ internal static class TableDefaultColumns
         yield return new TableColumn(Constants.FieldNames.Name, ColumnType.Name);
         yield return new TableColumn(Constants.FieldNames.Color, ColumnType.Color);
         yield return new TableColumn(Constants.FieldNames.Memo, ColumnType.Memo);
+        foreach (var stamp in Stamps())
+            yield return stamp;
     }
 
     /* Master, like a details row: a tag entry is part of the record it points at, dies with it and

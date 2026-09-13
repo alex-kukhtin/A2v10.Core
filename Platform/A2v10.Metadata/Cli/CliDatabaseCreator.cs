@@ -22,8 +22,8 @@ public class CliDatabaseCreator()
             var constraint = String.Empty;
             if (column.Type == ColumnType.Id)
                 constraint = $"{NL}{INDENT}constraint DF_{table.Table}_{column.Name} default(next value for {table.SqlSequenceName})";
-            else if (column.HasDefaultBit)
-                constraint = $"{NL}{INDENT}constraint DF_{table.Table}_{column.Name} default(0)";
+            else if (column.DeployDefault() is String dflt)
+                constraint = $"{NL}{INDENT}constraint DF_{table.Table}_{column.Name} default({dflt})";
 
             // nullability comes from DeployNullable - the same source the seed uses
             var nullable = column.DeployNullable() ? null : NOT_NULL;
@@ -70,7 +70,7 @@ public class CliDatabaseCreator()
             return $"[{column.Name}] {column.SqlDataType(true)}";
         }
 
-        var fields = table.AllColumns().Select(createField);
+        var fields = table.AllColumns(TableColumnPredicates.IsSentColumn).Select(createField);
 
         return $"""
         {SQL_DIVIDER}
@@ -131,7 +131,10 @@ public class CliDatabaseCreator()
         }
         var refs = table.AllColumns().Where(c => c.IsRef)
             .Select(rc => createReference(rc));
-        var res = String.Join(Environment.NewLine, refs);
+        // a login is not an endpoint: the target is fixed, as Operations is above
+        var stamps = table.AllColumns(c => c.Type is ColumnType.StampUser or ColumnType.StampUserNull)
+            .Select(c => Constraint($"FK_{table.Table}_{c.Name}_Users", c, "a2security.Users"));
+        var res = String.Join(Environment.NewLine, refs.Concat(stamps));
         if (String.IsNullOrEmpty(res.Trim()))
             return String.Empty;
         return $"""

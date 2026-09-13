@@ -8,6 +8,7 @@
     "required": [ "table" ],
     "properties": {
         "$schema": { "type": "string" },
+        "description": { "type": "string", "description": "For the model, not the platform: nothing reads it - no generator, runtime or deploy. Where the model writes down what it must know about this endpoint - its rules and the reasons for them - so the next session finds them here." },
         "table": {
             "type": "string",
             "description": "The SQL table of the set, in schema 'enm'. Declared and never derived from the folder - the same rule every other endpoint follows."

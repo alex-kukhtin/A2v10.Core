@@ -72,7 +72,7 @@ internal class DataTableBuilder(TableMetadata table, AppPlatformId platformId)
 
         var dtable = new DataTable();
 
-        foreach (var f in table.AllColumns())
+        foreach (var f in table.AllColumns(TableColumnPredicates.IsSentColumn))
             dtable.Columns.Add(CreateColumn(f));
         return dtable;
     }

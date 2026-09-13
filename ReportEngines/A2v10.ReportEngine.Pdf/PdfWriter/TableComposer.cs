@@ -45,14 +45,17 @@ internal class TableComposer(Table table, RenderContext context) : FlowElementCo
 				if (_table.Header.Count != 0)
 					tblDescr.Header(header => ComposeHeader(header, scope));
 
-				// ItemsSource — в полученном scope, поэтому вложенная таблица считает себя сама
+				// ItemsSource — в полученном scope, поэтому вложенная таблица считает себя сама.
+				// Связанный null — пустая коллекция, а не «биндинга нет»: иначе у листа дерева без
+				// Parents тело печаталось бы раз от самого элемента, и он становился своим родителем
 				var isbind = _table.GetBindRuntime("ItemsSource");
-				var coll = isbind?.Expression != null
-					? _context.EvaluateCollection(isbind.Expression, scope)
-					: null;
-				if (coll != null)
-					foreach (var elem in coll)
-						ComposeRowCollection(CellKind.Body, tblDescr, _table.Body, elem);
+				if (isbind?.Expression != null)
+				{
+					var coll = _context.EvaluateCollection(isbind.Expression, scope);
+					if (coll != null)
+						foreach (var elem in coll)
+							ComposeRowCollection(CellKind.Body, tblDescr, _table.Body, elem);
+				}
 				else
 					ComposeRowCollection(CellKind.Body, tblDescr, _table.Body, scope);
 
@@ -63,8 +66,13 @@ internal class TableComposer(Table table, RenderContext context) : FlowElementCo
 
 	void ComposeHeader(TableCellDescriptor header, ExpandoObject scope)
 	{
-		foreach (var cell in _table.Header.Cells())
-			ComposeCell(CellKind.Header, cell, () => header.Cell(), scope);
+		foreach (var row in _table.Header)
+		{
+			if (!_context.IsVisible(row, scope))
+				continue;
+			foreach (var cell in row.Cells)
+				ComposeCell(CellKind.Header, cell, () => header.Cell(), scope);
+		}
 	}
 
 	private void ComposeCell(CellKind _1/*kind*/, TableCell cell, Func<ITableCellContainer> createCell, ExpandoObject scope)

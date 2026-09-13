@@ -35,6 +35,14 @@ internal partial class SqlBuilder(BuilderDescriptor desciptor, IServiceProvider 
         return prms;
     }
 
+    /* The modification stamp as the tail of a SET list - one spelling for the save and for Void,
+     * the two statements that change a record. Empty for a table without stamps (an enum set).
+     * Reads @UserId, which AddDefaultParameters always passes.
+     */
+    String ModifiedStamp(String alias = "") => Table.HasStamps
+        ? $", {alias}[{Constants.FieldNames.UserModified}] = @UserId, {alias}[{Constants.FieldNames.UtcDateModified}] = getutcdate()"
+        : String.Empty;
+
     DbParameterCollection AddPeriodParameters(DbParameterCollection prms, ExpandoObject? qry)
     {
         if (!Table.HasPeriod)

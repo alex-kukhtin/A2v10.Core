@@ -56,14 +56,14 @@ internal partial class SqlBuilder
             if @Done = 1
                 throw 600000, N'@[Error.Document.AlreadyApplied]', 0;
             else
-                update {Table.SqlTableName} set [Void] = 1 where [Id] = @Id;          
+                update {Table.SqlTableName} set [Void] = 1{ModifiedStamp()} where [Id] = @Id;          
             """;
         }
         else
         {
             sqlString += $"""
 
-            update {Table.SqlTableName} set [Void] = 1 where [Id] = @Id;
+            update {Table.SqlTableName} set [Void] = 1{ModifiedStamp()} where [Id] = @Id;
             """;
         }
         await _dbContext.LoadModelSqlAsync(DataSource, sqlString, dbprms =>

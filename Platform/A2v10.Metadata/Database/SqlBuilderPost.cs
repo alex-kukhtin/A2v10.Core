@@ -38,7 +38,8 @@ internal partial class SqlBuilder
 
         begin tran;
 
-        update {Table.SqlTableName} set [{Constants.FieldNames.Done}] = 1
+        update {Table.SqlTableName} set [{Constants.FieldNames.Done}] = 1,
+            [{Constants.FieldNames.UserPosted}] = @UserId, [{Constants.FieldNames.UtcDatePosted}] = getutcdate()
         where [{Constants.FieldNames.Id}] = @Id and [{Constants.FieldNames.Done}] = 0;
         if @@rowcount = 0
             throw 600000, N'@[Error.Document.AlreadyPosted]', 0;
@@ -64,7 +65,8 @@ internal partial class SqlBuilder
 
         begin tran;
 
-        update {Table.SqlTableName} set [{Constants.FieldNames.Done}] = 0
+        update {Table.SqlTableName} set [{Constants.FieldNames.Done}] = 0,
+            [{Constants.FieldNames.UserPosted}] = null, [{Constants.FieldNames.UtcDatePosted}] = null
         where [{Constants.FieldNames.Id}] = @Id and [{Constants.FieldNames.Done}] = 1;
         if @@rowcount = 0
             throw 600000, N'@[Error.Document.NotPosted]', 0;

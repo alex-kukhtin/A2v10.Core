@@ -14,10 +14,16 @@ namespace A2v10.Metadata;
 internal static class TableColumnPredicates
 {
     internal static Boolean IsIndexColumn(TableColumn col)
-        => col.Type != ColumnType.RowVersion && col.Type != ColumnType.Void && col.Type != ColumnType.IsSystem;
+        => col.Type != ColumnType.RowVersion && col.Type != ColumnType.Void && col.Type != ColumnType.IsSystem
+            && !col.IsStamp;
     internal static Boolean IsEditColumn(TableColumn col)
         => col.Type != ColumnType.RowVersion && col.Type != ColumnType.Void && col.Type != ColumnType.IsSystem
-            && col.Type != ColumnType.Id && col.Type != ColumnType.Done;
+            && col.Type != ColumnType.Id && col.Type != ColumnType.Done && !col.IsStamp;
+    /* What the client sends: the table type and the DataTable filling it are built from this one
+     * answer, since their column order must match. A stamp is written by the statement itself.
+     */
+    internal static Boolean IsSentColumn(TableColumn col)
+        => !col.IsStamp;
 }
 
 internal static class MetadataExtensions

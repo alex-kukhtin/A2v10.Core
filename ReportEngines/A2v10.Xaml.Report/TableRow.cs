@@ -25,10 +25,4 @@ public class TableRow : XamlElement
 
 public class TableRowCollection : List<TableRow>
 {
-	public IEnumerable<TableCell> Cells()
-	{
-		foreach (var row in this)
-			foreach (var c in row.Cells)
-				yield return c;
-	}
 }

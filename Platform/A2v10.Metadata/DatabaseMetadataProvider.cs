@@ -155,8 +155,52 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             ?? throw new InvalidOperationException($"{MetadataFileName(schema, table)}: TableMetadata deserialization fails");
         storage.FileHash = hash;
         storage.SetDefaults(schema, table);
+        CheckNames(storage, schema, table);
         CheckAutonums(storage, schema, table);
         return storage;
+    }
+
+    /* A name becomes a SQL identifier, a TS type or member and a step of a binding path - and only
+     * the first of these is quoted. So the rule is what all of them accept: letters, digits and '_',
+     * not starting with a digit; letters of any script, as a JS identifier allows. '$' falls out of
+     * it and is why the rule exists: it separates what the platform adds to a name
+     * (cat.[Agent$TagEntries]), and an author name holding one could spell that table - two CREATE
+     * TABLEs collapsing into one, silently.
+     *
+     * Asked after SetDefaults, so a name derived from the folder is checked with the written ones.
+     * The platform's own '$' tables are built in code and never pass through here.
+     */
+    private static void CheckNames(TableMetadata storage, String schema, String table)
+    {
+        var file = MetadataFileName(schema, table);
+
+        void Check(String? name, String what)
+        {
+            if (String.IsNullOrEmpty(name))
+                return;
+            if ((Char.IsLetter(name[0]) || name[0] == '_') && name.All(ch => Char.IsLetterOrDigit(ch) || ch == '_'))
+                return;
+            throw new InvalidOperationException(
+                $"{file}: '{name}' ({what}) - a name is letters, digits and '_', not starting with a digit. '$' separates what the platform adds: cat.[Agent$TagEntries]");
+        }
+
+        void CheckShape(TableMetadata t, String where)
+        {
+            Check(t.Table, $"{where}table");
+            Check(t.Model, $"{where}model");
+            foreach (var column in t.Columns)
+                Check(column.Name, $"{where}fields");
+        }
+
+        Check(storage.Schema, "schema");
+        CheckShape(storage, String.Empty);
+        foreach (var (key, details) in storage.Details)
+        {
+            Check(key, "details");
+            CheckShape(details, $"details.{key}.");
+            foreach (var kind in details.Kinds.Keys)
+                Check(kind, $"details.{key}.kinds");
+        }
     }
 
     /* Refused where the file is read, because nothing downstream can report it: the SQL that issues

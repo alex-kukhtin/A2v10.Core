@@ -8,9 +8,9 @@ using System.Collections.Generic;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using A2v10.Data.Core.Extensions.Dynamic;
 using A2v10.Data.Interfaces;
 using A2v10.Data.Core.Extensions;
+using A2v10.Infrastructure;
 
 
 namespace A2v10.Metadata;
@@ -18,6 +18,7 @@ namespace A2v10.Metadata;
 internal class SqlBuilderTags(IServiceProvider serviceProvider, AppPlatformId _platformId)
 {
     private readonly IDbContext _dbContext = serviceProvider.GetRequiredService<IDbContext>();
+    private readonly ICurrentUser _currentUser = serviceProvider.GetRequiredService<ICurrentUser>();
 
     /* 'Used' says the tag is on at least one record, and the dialog refuses to delete it - so it
      * is computed, never stored: a stored bit would be a second truth to keep in step with the
@@ -56,6 +57,10 @@ internal class SqlBuilderTags(IServiceProvider serviceProvider, AppPlatformId _p
         return _dbContext.LoadModelSqlAsync(dataSource, sql, prms);
     }
 
+    /* The dialog sends the whole set, so 'matched' is every tag, edited or not. The update is taken
+     * only where a value differs - otherwise one renamed tag would stamp the rest as modified by
+     * whoever pressed save. 'except' compares nulls as equal, which '<>' does not.
+     */
     public async Task<ExpandoObject> SaveModelAsync(String? dataSource, ExpandoObject data, String tagsFor)
     {
         var sql = $"""
@@ -64,12 +69,16 @@ internal class SqlBuilderTags(IServiceProvider serviceProvider, AppPlatformId _p
         merge {TableMetadataDefaults.TagsTableName()} as t
         using @{Constants.FieldNames.Tags} as s
         on t.[Id] = s.[Id] and t.[For] = @{Constants.FieldNames.For}
-        when matched then update set
+        when matched and exists(select s.[Name], s.[Color], s.[Memo] except select t.[Name], t.[Color], t.[Memo]) then update set
             t.[Name] = s.[Name],
             t.[Color] = s.[Color],
-            t.[Memo] = s.[Memo]
-        when not matched then insert([For], [Name], [Color], [Memo]) values
-            (@{Constants.FieldNames.For}, s.[Name], s.[Color], s.[Memo])
+            t.[Memo] = s.[Memo],
+            t.[{Constants.FieldNames.UserModified}] = @UserId,
+            t.[{Constants.FieldNames.UtcDateModified}] = getutcdate()
+        when not matched then insert([For], [Name], [Color], [Memo],
+            [{Constants.FieldNames.UserCreated}], [{Constants.FieldNames.UtcDateCreated}],
+            [{Constants.FieldNames.UserModified}], [{Constants.FieldNames.UtcDateModified}]) values
+            (@{Constants.FieldNames.For}, s.[Name], s.[Color], s.[Memo], @UserId, getutcdate(), @UserId, getutcdate())
         when not matched by source and t.[For] = @{Constants.FieldNames.For} then delete;
         """ + LoadSql(tagsFor);
 
@@ -81,6 +90,7 @@ internal class SqlBuilderTags(IServiceProvider serviceProvider, AppPlatformId _p
         void SaveParams(DbParameterCollection prms)
         {
             prms.AddString(Constants.FieldNames.For, tagsFor);
+            prms.AddBigInt("@UserId", _currentUser.Identity.Id);
             prms.AddStructured(Constants.FieldNames.Tags, tagsTable.SqlTableTypeName, dtb.BuildDataTable(rows));
         }
 

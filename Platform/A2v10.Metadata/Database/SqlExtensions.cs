@@ -123,8 +123,11 @@ internal static class SqlExtensions
             // The base it rests on is deliberately absent - see AppPlatformId.
             ColumnType.Id or ColumnType.Ref or ColumnType.Master or ColumnType.Parent or
                 ColumnType.Folder or ColumnType.Row or ColumnType.Company or
-                ColumnType.User or ColumnType.Document
+                ColumnType.Document
                     => new SqlDbTypeInfo("platformid"),
+            // a login: a2security.Users is keyed bigint whatever base the application rests on
+            ColumnType.User or ColumnType.StampUser or ColumnType.StampUserNull
+                    => new SqlDbTypeInfo("bigint"),
             // bit
             ColumnType.IsSystem or ColumnType.Void or ColumnType.Done or
                 ColumnType.Bit or ColumnType.Boolean
@@ -139,7 +142,8 @@ internal static class SqlExtensions
             ColumnType.RowVersion => new SqlDbTypeInfo("timestamp"),
             // date
             ColumnType.Date => new SqlDbTypeInfo("date"),
-            ColumnType.DateTime => new SqlDbTypeInfo("datetime"),
+            ColumnType.DateTime or ColumnType.StampDate or ColumnType.StampDateNull
+                => new SqlDbTypeInfo("datetime"),
             // strings whose length the author may set
             ColumnType.String => new SqlDbTypeInfo("nvarchar", length.ToColumnLength()),
             ColumnType.NChar => new SqlDbTypeInfo("nchar", length.ToColumnLength()),
@@ -193,14 +197,20 @@ internal static class SqlExtensions
     public static Int32? DeployScale(this TableColumn column)
         => column.ToSqlDbTypeInfo().Scale;
 
-    /* A ready-made SQL default expression. Takes NO part in comparison - it exists for
-     * exactly one purpose, to be substituted into an add column, because
-     * 'add column [Void] bit not null' would fail without it.
+    /* A ready-made SQL default expression, for CreateTable and for an add column - where
+     * 'add column [Void] bit not null' would fail without it. Takes NO part in comparison.
      * There is no Id default here and there cannot be: a sequence only ever sits on the
      * primary key, and that appears together with the table, never via add column.
+     * A stamp defaults to the system user (Id 0) and the moment of writing: a row no person
+     * wrote - a seed, a filled table meeting a new column.
      */
     public static String? DeployDefault(this TableColumn column)
-        => column.HasDefaultBit ? "0" : null;
+        => column.Type switch
+        {
+            ColumnType.StampUser => "0",
+            ColumnType.StampDate => "getutcdate()",
+            _ => column.HasDefaultBit ? "0" : null
+        };
 
     /* IS_NULLABLE. Must match whatever CreateTable emits.
      * RowVersion is listed here not because we ask for not null, but because SQL Server
@@ -212,12 +222,15 @@ internal static class SqlExtensions
      * type-based answer said 'nullable' about a column SQL Server had already made NOT NULL.
      * That disagreement is invisible until something compares the seed with the catalog, and
      * then it is unfixable from the seed side: a primary key cannot be altered to null.
+     *
+     * A default makes a column not null, and nothing else among the types does: the one road
+     * to NOT NULL, as in the declaration.
      */
     public static Boolean DeployNullable(this TableColumn column)
         => !(column.Name == Constants.FieldNames.Id
             || column.Type == ColumnType.Master
             || column.Type == ColumnType.RowVersion
-            || column.HasDefaultBit);
+            || column.DeployDefault() != null);
 
     /* RowVersion is the one type the descriptor cannot answer for: the catalog calls it
      * 'timestamp', the DDL wants 'rowversion' and a table type wants 'varbinary(8)'.
@@ -300,7 +313,8 @@ internal static class SqlExtensions
             && column.Type != ColumnType.IsSystem
             && column.Type != ColumnType.Master
             && column.Type != ColumnType.Parent
-            && column.Type != ColumnType.RowVersion;
+            && column.Type != ColumnType.RowVersion
+            && !column.IsStamp;
     }
     internal static Boolean IsFieldInserted(this TableColumn column)
     {

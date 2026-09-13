@@ -134,6 +134,26 @@ Two relations wore one word. A details row and a tag entry are **part of** the r
 - **Neither word can be declared in a file.** `owner` left the json schema's `ColumnType` enum and `master` was not added: the platform emits this column, and an author reaching for the familiar word gets a schema error instead of a silent second column. When `Owner` exists, the load refuses it on a details table for the same reason.
 - **Belonging is designed, not built.** Beyond the type it needs one form rule (a master is shown and editable while the record is new, gone after the first save — the creation context supplies one of several, the rest have nowhere else to come from) and one new capability: a reference to a subordinate catalog whose candidates are filtered by the owner of the same record. That capability is the whole cost, and deferring leaves no trace in data — an import writes rows directly, only a user typing a new document meets a picker. One owner or several at once is deliberately not asked: every consumer (seeding, embedded list, code series, immutability) reads the same either way, so a check would be an assertion nobody reads and wrong on half the real tables.
 
+## Names: what every place a name lands in accepts
+
+A name from a file — `schema`, `table`, `model`, `fields`, `details` keys and their `kinds` — is letters, digits and `_`, not starting with a digit. Refused at load (`CheckNames`, after `SetDefaults`). Decided 2026-09.
+
+- **A whitelist, not a ban on `$`.** SQL brackets the name; a TS type, a model member and a binding path do not; `.` and `!` are data-model metacharacters, `]` breaks the brackets. Banning one character left the rest open.
+- **`$` is why it exists.** It separates what the platform adds (`cat.[Agent$TagEntries]`); an author name holding one could spell that table, and two `CREATE TABLE`s would collapse silently.
+- **Letters of any script.** A JS identifier allows them, and SQL quotes them.
+- **The platform's own names live under `$`.** Its tables are built in code and never pass the check; an alias inside generated SQL takes `$` too (`[$Kind]`), so no author name can meet it.
+
+## Stamps: typed by what a walk asks, written by name
+
+Who + when on every record the user keeps: creation and modification on a catalog, a document, folders and tags; posting on a document. Not on details, tag entries, journals — a part's record carries the stamp, a journal is rewritten by posting. Decided 2026-09.
+
+- **Four types, because nullability is a type's answer.** A type answers what a walk over columns asks: SQL type, FK, nullability (`DeployNullable`), whether the client sends it. The posting stamp differs in nullability alone, hence `StampUserNull` / `StampDateNull`. WHICH stamp a column is stays its name: every statement writing one names it, as posting names `Done`, so no walk dispatches on it.
+- **Never sent.** Out of the table type and the DataTable by one predicate (`IsSentColumn`), whose column order must match. Written by the merge (insert: both stamps; `when matched`: modification), by Void, by post; unpost empties the posting stamp — nothing of a posting is left behind it.
+- **A default is what makes a stamp not null** (`0`, `getutcdate()`). `DeployNullable` reads `DeployDefault`, and `CreateTable` writes the same expression — one road to NOT NULL, as in the declaration.
+- **'Who' is bigint, FK on `a2security.Users(Id)`** — and so is `ColumnType.User`: a login is keyed bigint whatever base the application rests on.
+- **The system user (Id 0) is seeded by the application deploy, before the keys.** Not by the platform script: its administrator seed is guarded by "the table is empty", which an earlier row would turn off silently.
+- **Not history.** A stamp names the author of the current state. `TableTrait.Audit` is to mean the change history (a `$History` table and a trigger); not built.
+
 ## Seed: what the database is told about itself
 
 `a2meta.Tables` / `a2meta.Columns` are the deploy's own picture of the schema, and the referrer set is read from there rather than from metadata — in release there is no `AllElementsMetadata` walk, so SQL is the only thing that can answer a question about the whole application. Decided 2026-09.

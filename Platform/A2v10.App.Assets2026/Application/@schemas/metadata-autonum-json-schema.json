@@ -7,6 +7,7 @@
     "additionalProperties": false,
     "properties": {
         "$schema": { "type": "string" },
+        "description": { "type": "string", "description": "For the model, not the platform: nothing reads it - no generator, runtime or deploy. Where the model writes down what it must know about this endpoint - its rules and the reasons for them - so the next session finds them here." },
         "table": {
             "type": "string",
             "description": "The SQL table of the registry. There is one registry, at one address, so this defaults to 'Autonums' in schema 'doc' and there is no reason to write it. Written, it wins."

@@ -24,16 +24,15 @@ internal class ListComposer(List list, RenderContext context) : FlowElementCompo
 		.ApplyLayoutOptions(_list)
 		.ApplyDecoration(_list.RuntimeStyle).Column(column =>
 		{
+			// связанный null — пустая коллекция, как в таблице
 			var isbind = _list.GetBindRuntime("ItemsSource");
-			var coll = isbind?.Expression != null
-				? _context.EvaluateCollection(isbind.Expression, scope)
-				: null;
-
-			if (coll != null)
+			if (isbind?.Expression != null)
 			{
-				foreach (var elem in coll)
-					foreach (var itm in _list.Items)
-						column.Item().Row(row => ComposeRow(itm, elem, row));
+				var coll = _context.EvaluateCollection(isbind.Expression, scope);
+				if (coll != null)
+					foreach (var elem in coll)
+						foreach (var itm in _list.Items)
+							column.Item().Row(row => ComposeRow(itm, elem, row));
 			}
 			else
 			{

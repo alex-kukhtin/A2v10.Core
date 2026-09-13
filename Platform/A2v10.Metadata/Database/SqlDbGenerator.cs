@@ -83,6 +83,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         allScript.AppendLine(CreateEnumValuesScript(tables));
         allScript.AppendLine(CreateAutonumsScript(tables));
         allScript.AppendLine(CreateAutonumProcedureScript(tables));
+        allScript.AppendLine(SystemUserScript());
         allScript.AppendLine(CreateForeignKeysScript(tables));
         allScript.AppendLine(CreateIndexesScript(tables));
 
@@ -108,6 +109,22 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         Directory.CreateDirectory(dbDir);
         return File.WriteAllTextAsync(dbPath, allScript, Encoding.UTF8);
     }
+
+    /* The system user: who wrote a row no person wrote - the default of every stamp. Before the
+     * foreign keys, which validate the rows already there.
+     *
+     * Here and not in the platform script, for its order. The stamps' keys need a2security.Users to
+     * exist, so by now that script has run and seeded its administrator - under 'the table is
+     * empty', a guard a row inserted any earlier would have silently turned off. ViewUsers already
+     * leaves Id 0 out, so it is never a login.
+     */
+    private static String SystemUserScript() => """
+        -- SYSTEM USER
+        if not exists(select * from a2security.Users where Id = 0)
+            insert into a2security.Users(Id, UserName, SecurityStamp) values (0, N'System', N'');
+        go
+
+        """;
 
     private static String SyncSchemaScript()
     {

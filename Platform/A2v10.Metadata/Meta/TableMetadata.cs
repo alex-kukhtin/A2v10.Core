@@ -59,6 +59,17 @@ public enum ColumnType
     Autonum,
     Company,
     Direction,  // journal leg sign (+1/-1); vocabulary (In/Out, Dt/Ct) is presentation
+    /* A stamp is who + when, written by the platform and never sent by the client. Four types and
+     * not two, because nullability is answered by type (DeployNullable): the posting stamp is empty
+     * on a draft, the creation and modification stamps never are. WHICH stamp a column is, is its
+     * name - every statement writing one names it (Constants.FieldNames), as posting names Done.
+     * 'Who' is bigint and not platformid: a login lives in a2security.Users, whatever base the
+     * application rests on.
+     */
+    StampUser,
+    StampDate,
+    StampUserNull,
+    StampDateNull,
     // Semantic Values
     Amount,
     Price,
@@ -150,6 +161,10 @@ public record TableColumn
         || Type == ColumnType.IsFolder
         || Type == ColumnType.Void
         || Type == ColumnType.Done;
+
+    [JsonIgnore]
+    internal Boolean IsStamp => Type is ColumnType.StampUser or ColumnType.StampDate
+        or ColumnType.StampUserNull or ColumnType.StampDateNull;
 
     [JsonIgnore]
     internal Boolean IsVoid => Type == ColumnType.Void;
@@ -451,6 +466,9 @@ public sealed record TableMetadata
     [JsonIgnore]
     public Boolean HasTags => Traits.Contains(TableTrait.Tags);
     public Boolean HasFolders => Traits.Contains(TableTrait.Folders);
+    // the stamps come with the kind (TableDefaultColumns), so the table answers by its columns
+    [JsonIgnore]
+    internal Boolean HasStamps => this.AllColumns(c => c.IsStamp).Any();
 
     #endregion
 

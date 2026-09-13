@@ -321,7 +321,7 @@ internal partial class SqlBuilder
                     ?? throw new InvalidOperationException("Kind field not found");
 
                 var usingDetails = detailsTable.Kinds.Keys.Select(k =>
-                    $"select [__Kind__] = N'{k}', * from @{detailsTable.KindCollectionName(k)}"
+                    $"select [$Kind] = N'{k}', * from @{detailsTable.KindCollectionName(k)}"
                 );
                 var declaredKinds = String.Join(", ", detailsTable.Kinds.Keys.Select(k => $"N'{k}'"));
 
@@ -336,7 +336,7 @@ internal partial class SqlBuilder
 					{String.Join(',', updateFields.Select(f => $"t.[{f.Name}] = s.[{f.Name}]"))}
 				when not matched then insert
 					([{detailsTable.MasterField}], [{kindField.Name}], {String.Join(',', updateFields.Select(f => $"[{f.Name}]"))}) values
-					(@Id, s.[__Kind__], {String.Join(',', updateFields.Select(f => $"s.[{f.Name}]"))})
+					(@Id, s.[$Kind], {String.Join(',', updateFields.Select(f => $"s.[{f.Name}]"))})
 				when not matched by source and t.[{detailsTable.MasterField}] = @Id and t.[{kindField.Name}] in ({declaredKinds}) then delete;
 				""";
             }
@@ -432,7 +432,17 @@ internal partial class SqlBuilder
         {
 
             var updatedFields = Table.AllColumns(c => c.IsFieldUpdated()).Select(c => $"t.[{c.Name}] = s.[{c.Name}]");
-            var insertedFields = Table.AllColumns(c => c.IsFieldInserted()).Select(c => $"[{c.Name}]");
+            var insertedFields = Table.AllColumns(c => c.IsFieldInserted()).Select(c => $"[{c.Name}]").ToList();
+            List<String> insertedValues = [.. insertedFields];
+            /* A new record is created and modified by the same hand, so both stamps are written on
+             * insert: left to its default, the modification stamp would name the system user.
+             */
+            if (Table.HasStamps)
+            {
+                insertedFields.AddRange([$"[{Constants.FieldNames.UserCreated}]", $"[{Constants.FieldNames.UtcDateCreated}]",
+                    $"[{Constants.FieldNames.UserModified}]", $"[{Constants.FieldNames.UtcDateModified}]"]);
+                insertedValues.AddRange(["@UserId", "getutcdate()", "@UserId", "getutcdate()"]);
+            }
 
             var sb = new StringBuilder($"""
             set nocount on;
@@ -453,10 +463,10 @@ internal partial class SqlBuilder
             using @{Table.Model} as s
             on t.[Id] = s.[Id]
             when matched then update set
-              {String.Join(",\n", updatedFields)}
+              {String.Join(",\n", updatedFields)}{ModifiedStamp("t.")}
             when not matched then insert
               ({String.Join(',', insertedFields)}) values
-              ({String.Join(',', insertedFields)}) 
+              ({String.Join(',', insertedValues)})
             output inserted.[Id]{outputExtra} into @rtable([Id]{outputIntoExtra});
 
             select @Id = [Id] from @rtable;

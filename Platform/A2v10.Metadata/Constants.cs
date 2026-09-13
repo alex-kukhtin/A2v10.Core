@@ -35,6 +35,13 @@ internal static class Constants
         public const String Quart = nameof(Quart);
         public const String Month = nameof(Month);
         public const String CurrentNumber = nameof(CurrentNumber);
+        // stamps: who + when, see ColumnType.StampUser
+        public const String UserCreated = nameof(UserCreated);
+        public const String UtcDateCreated = nameof(UtcDateCreated);
+        public const String UserModified = nameof(UserModified);
+        public const String UtcDateModified = nameof(UtcDateModified);
+        public const String UserPosted = nameof(UserPosted);
+        public const String UtcDatePosted = nameof(UtcDatePosted);
     }
     public static class FieldSizes
     {

@@ -124,7 +124,12 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
         }
         else
         {
-            page = await _metadataProvider.GetXamlFormAsync(descriptor.DataSource, Endpoint, descriptor.PlatformUrl.Action, CreateDefaultXamlForm);
+            /* The print page is not cached: it depends on '?Form=', which the cache key does not
+             * carry - keyed by action, the first blank opened answered for every other.
+             */
+            page = Action == Constants.Print.Action
+                ? CreateDefaultXamlForm()
+                : await _metadataProvider.GetXamlFormAsync(descriptor.DataSource, Endpoint, descriptor.PlatformUrl.Action, CreateDefaultXamlForm);
             templateText = await CreateTemplateAsync();
         }
         if (page == null)
