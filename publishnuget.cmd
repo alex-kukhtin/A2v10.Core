@@ -56,6 +56,8 @@ del /q BlobStorages\AzureBlobStorage\bin\Release\*.snupkg
 del /q BlobStorages\FileSystemBlobStorage\bin\Release\*.nupkg
 del /q BlobStorages\FileSystemBlobStorage\bin\Release\*.snupkg
 
+del /q Tools\A2v10.CLI\bin\Release\*.nupkg
+
 dotnet pack -c Release
 
 del /q ..\NuGet.local\*.*
@@ -134,5 +136,6 @@ copy BlobStorages\AzureBlobStorage\bin\Release\*.snupkg ..\NuGet.local
 copy BlobStorages\FileSystemBlobStorage\bin\Release\*.nupkg ..\NuGet.local
 copy BlobStorages\FileSystemBlobStorage\bin\Release\*.snupkg ..\NuGet.local
 
+copy Tools\A2v10.CLI\bin\Release\*.nupkg ..\NuGet.local
 
 pause

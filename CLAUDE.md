@@ -33,6 +33,7 @@ Little code, many decisions — the reverse of typical enterprise. No legacy bec
 - **Code is a compile target.** Wrong output → fix the intent (this file / a test), regenerate. Never patch `.cs` to silence a symptom. Correctness is behaviour (test green, expected JSON), not the look of generated code.
 - **Make decisions, don't hand them back.** Obvious cut → cut, and say what was cut. No menu of two tracks. Default **"don't build"** over "build the general case"; typical, not exhaustive; defer dead code.
 - **Don't touch working code you weren't pointed at.**
+- **`A2v10.Infrastructure` is a published contract, not a shared drawer.** Any change there is named before the commit: every package built on it silently requires a version that may not exist. "Two assemblies need it" places a type by the dependency graph, not by its owner.
 - **Probe, don't theorize.** Beam first (build / test / validate+JSON), assertion second.
 - **Don't extend to the uncomfortable end for beauty** — that is agreement-as-performance. Restraint is the judgment being asked for.
 

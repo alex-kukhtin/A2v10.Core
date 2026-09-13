@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -130,13 +131,36 @@ internal static class PrintRequest
         return endpoint.Declaration.PrintForm(asked);
     }
 
-    /* Where a blank's file lives, composed once - WITHOUT an extension, because the declared path
-     * carries none: it is named the way a view is, and 'print/f1.json' would then quietly mean the
-     * same file as 'print/f1'. Which extension exists is the probe's answer (ReportTemplateFile),
-     * and what the file holds - a workbook in JSON, a page in XAML - is the first byte's.
+    /* The blank, read once per request: the fetch parses its Text, the engine draws its Bytes. The
+     * declared path carries no extension - named the way a view is, so 'print/f1.json' would quietly
+     * mean the same file as 'print/f1' - and which file exists is this probe's answer. The list is
+     * this layer's own: the engine gets the blank as a stream and never probes, so two lists cannot
+     * pick two files for one request; a candidate missing here costs a loud throw. What the file
+     * holds - a workbook in JSON, a page in XAML - is the first byte's.
      */
-    public static String FileOf(NormalEndpointMetadata endpoint, String path) =>
-        $"{endpoint.Path.Trim('/')}/{path}";
+    static readonly String[] Extensions = [".vxaml", ".xaml", ".json"];
+
+    public static PrintBlank BlankOf(IAppCodeProvider provider, NormalEndpointMetadata endpoint, String path)
+    {
+        var file = $"{endpoint.Path.Trim('/')}/{path}";
+        foreach (var ext in Extensions)
+        {
+            using var stream = provider.FileStreamRO(file + ext);
+            if (stream == null)
+                continue;
+            using var mem = new MemoryStream();
+            stream.CopyTo(mem);
+            return new PrintBlank(mem.ToArray());
+        }
+        throw new InvalidOperationException(
+            $"Report template not found: '{file}' ({String.Join(", ", Extensions)})");
+    }
+}
+
+// Text goes through StreamReader: it drops the BOM, which Parse would otherwise meet before the root
+internal sealed record PrintBlank(Byte[] Bytes)
+{
+    public String Text => new StreamReader(new MemoryStream(Bytes)).ReadToEnd();
 }
 
 /* The two lookups everything about printing does against the shape, in one place: the title walks

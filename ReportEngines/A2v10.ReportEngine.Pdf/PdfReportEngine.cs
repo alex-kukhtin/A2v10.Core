@@ -43,8 +43,17 @@ public class PdfReportEngine : IReportEngine
 				?? throw new InvalidOperationException("Data is null");
 			return TemplateReader.ReadReport(Encoding.UTF8.GetBytes(text));
 		}
-		using var file = ReportTemplateFile.Open(_appCodeProvider, Path.Combine(reportInfo.Path, reportInfo.Report));
+		using var file = OpenTemplateFile(Path.Combine(reportInfo.Path, reportInfo.Report));
 		return TemplateReader.ReadReport(file);
+	}
+
+	private Stream OpenTemplateFile(String path)
+	{
+		foreach (var ext in TemplateReader.Extensions)
+			if (_appCodeProvider.FileStreamRO(path + ext) is { } stream)
+				return stream;
+		throw new InvalidOperationException(
+			$"Report template not found: '{path}' ({String.Join(", ", TemplateReader.Extensions)})");
 	}
 
     public Task<IInvokeResult> ExportAsync(IReportInfo reportInfo, ExportReportFormat format)

@@ -255,10 +255,8 @@ public class PrintModelTests
 
         var form = endpoint.Declaration.PrintForms[0];
         // the declared path names no extension: which file is the blank is the probe's answer
-        using var stream = ReportTemplateFile.Open(TestHost.GetService<IAppCodeProvider>(),
-            PrintRequest.FileOf(endpoint, form.Path));
-        using var sr = new StreamReader(stream);
-        var model = PrintModel.Parse(await sr.ReadToEndAsync(TestContext.Current.CancellationToken));
+        var blank = PrintRequest.BlankOf(TestHost.GetService<IAppCodeProvider>(), endpoint, form.Path);
+        var model = PrintModel.Parse(blank.Text);
 
         var sql = Build(doc, model);
 

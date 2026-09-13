@@ -1,7 +1,8 @@
-﻿// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
+// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Dynamic;
+using System.IO;
 using System.Threading.Tasks;
 
 using A2v10.Infrastructure;
@@ -34,7 +35,7 @@ internal class PrintReportHandler(IReportEngineProvider _reportEngineProvider, D
 
         var printTemplate = endpoint.Declaration.PrintForm(repName);
 
-        var stream = ReportTemplateFile.Open(_appCodeProvider, PrintRequest.FileOf(endpoint, printTemplate.Path));
+        var blank = PrintRequest.BlankOf(_appCodeProvider, endpoint, printTemplate.Path);
 
         var bd = new BuilderDescriptor()
         {
@@ -43,12 +44,12 @@ internal class PrintReportHandler(IReportEngineProvider _reportEngineProvider, D
             PlatformUrl = new PlatformUrl(UrlKind.Page, report.BaseUrl.Trim('/'))
         };
         var sqlBuilder = new SqlBuilder(bd, _serviceProvider);
-        var dm = await sqlBuilder.LoadPrintModelAsync(printTemplate);
+        var dm = await sqlBuilder.LoadPrintModelAsync(PrintModel.Parse(blank.Text));
 
         return new ExternalReportInfo(report: report.Report ?? "report", path: report.Path)
         {
-            Name = printTemplate.Title,          
-            Stream = stream,
+            Name = printTemplate.Title,
+            Stream = new MemoryStream(blank.Bytes),
             DataModel = dm,
             Variables = vars.IsEmpty() ? null : vars
         };

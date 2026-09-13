@@ -2,12 +2,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
-using Microsoft.Extensions.DependencyInjection;
 
 using A2v10.Data.Core.Extensions;
 using A2v10.Data.Interfaces;
@@ -389,20 +386,9 @@ internal partial class SqlBuilder
         return RunPrintAsync(new PrintSqlBuilder(Table, node).Build());
     }
 
-    /* The blank itself, named by whoever asked - today PrintReportHandler, resolving '?rep=' against
-     * what the endpoint declared. A path never arrives from the client.
+    /* The blank's 'Model' tree, parsed by whoever read the blank - today PrintReportHandler, which reads
+     * the file once for this fetch and the engine both. The builder never reaches for a file.
      */
-    public async Task<IDataModel> LoadPrintModelAsync(PrintFormMetadata form)
-    {
-        var text = await ReadPrintFormAsync(form.Path);
-        return await RunPrintAsync(new PrintSqlBuilder(Table, PrintModel.Parse(text)).Build());
-    }
-
-    private async Task<String> ReadPrintFormAsync(String path)
-    {
-        var codeProvider = serviceProvider.GetRequiredService<IAppCodeProvider>();
-        using var stream = ReportTemplateFile.Open(codeProvider, PrintRequest.FileOf(Endpoint, path));
-        using var sr = new StreamReader(stream);
-        return await sr.ReadToEndAsync();
-    }
+    public Task<IDataModel> LoadPrintModelAsync(PrintNode model) =>
+        RunPrintAsync(new PrintSqlBuilder(Table, model).Build());
 }
