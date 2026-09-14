@@ -1,4 +1,4 @@
-﻿// Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
+// Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using Newtonsoft.Json;
@@ -8,7 +8,6 @@ namespace A2v10.Metadata;
 public class CommandBarItemConverter : JsonConverter<CommandBarItem>
 {
     private const String SepToken = "$sep";
-    private const String ToRightToken = "$toRight";
 
     public override void WriteJson(JsonWriter writer, CommandBarItem value, JsonSerializer serializer)
     {
@@ -16,7 +15,6 @@ public class CommandBarItemConverter : JsonConverter<CommandBarItem>
         {
             CommandBarItemKind.Command => value.Command!.Value.ToString(),
             CommandBarItemKind.Separator => SepToken,
-            CommandBarItemKind.Aligner => ToRightToken,
             _ => throw new JsonSerializationException($"Unknown ToolbarItemKind: {value.Kind}")
         };
         writer.WriteValue(token);
@@ -34,7 +32,6 @@ public class CommandBarItemConverter : JsonConverter<CommandBarItem>
         return token switch
         {
             SepToken => CommandBarItem.Separator,
-            ToRightToken => CommandBarItem.Aligner,
             _ => Enum.Parse<EntityCommandType>(token)
         };
     }

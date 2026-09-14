@@ -79,9 +79,10 @@ internal static class TableDefaultColumns
         yield return new TableColumn(Constants.FieldNames.RowNo, ColumnType.RowNumber);
     }
 
+    // the key is the operation's code, so String - see EnumDefaultColumns, the same double role
     static IEnumerable<TableColumn> OperationDefaultColumns(TableMetadata table)
     {
-        yield return new TableColumn(Constants.FieldNames.Id, ColumnType.Operation);
+        yield return new TableColumn(Constants.FieldNames.Id, ColumnType.String) { Length = 64 };
         yield return new TableColumn(Constants.FieldNames.Name, ColumnType.Name);
         yield return new TableColumn(Constants.FieldNames.Memo, ColumnType.Memo);
     }

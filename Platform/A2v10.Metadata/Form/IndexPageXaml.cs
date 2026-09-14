@@ -102,18 +102,29 @@ internal partial class XamlBuilder
         };
     }
 
+    /* A row per child, the grid taking the slack: the standard bar first, then the body as written.
+     * A body toolbar is a second bar of the author's own commands, one more 'Auto'.
+     */
+    static RowDefinitions GridRows(IEnumerable<FormElement> body, Boolean pager = false)
+    {
+        var rows = body.Select(e => e.Is == FormElementKind.DataGrid ? "1*" : "Auto").Prepend("Auto");
+        return RowDefinitions.FromString(String.Join(",", pager ? rows.Append("Auto") : rows));
+    }
+
+    Grid IndexGrid(FormMetadata meta) =>
+        new(_xamlServiceProvider)
+        {
+            Rows = GridRows(meta.Body),
+            Height = Length.FromString("100%"),
+            Children = [IndexToolbar(meta.Toolbar), ..meta.Body.Select(ElementToControl)]
+        };
+
     internal Page CreateIndexPageXaml(FormMetadata meta)
     {
         return new Page()
         {
             CollectionView = XamlCollectionView(),
-            Children = [
-                new Grid(_xamlServiceProvider) {
-                    Rows = RowDefinitions.FromString("Auto,1*,Auto"),
-                    Height = Length.FromString("100%"),
-                    Children = [..meta.Body.Select(ElementToControl)]
-                }
-            ],
+            Children = [IndexGrid(meta)],
             Taskpad = ElementToControl(meta.Taskpad)
         };
     }
@@ -121,14 +132,7 @@ internal partial class XamlBuilder
     internal Partial CreateIndexPartialPageXaml(FormMetadata meta)
     {
         var collView = XamlCollectionView();
-        collView.Children.Add(
-            new Grid(_xamlServiceProvider)
-            {
-                Rows = RowDefinitions.FromString("Auto,1*,Auto"),
-                Height = Length.FromString("100%"),
-                Children = [.. meta.Body.Select(ElementToControl)]
-            }
-        );
+        collView.Children.Add(IndexGrid(meta));
         return new Partial()
         {
             Children = [
@@ -201,9 +205,10 @@ internal partial class XamlBuilder
             Children = [
                 new Grid(_xamlServiceProvider)
                 {
-                    Rows = RowDefinitions.FromString("Auto,1*,Auto"),
+                    Rows = GridRows(dialog.Body, pager: true),
                     Height = Length.FromString("100%"),
                     Children = [
+                        BrowseToolbar(dialog.Toolbar),
                         ..dialog.Body.Select(ElementToControl),
                         new Pager()
                         {
@@ -215,11 +220,9 @@ internal partial class XamlBuilder
             Taskpad = IndexTaskpad(dialog.Taskpad)
         };
 
-        if (dlg.Children[0] is Grid chGrid)
-        {
-            if (chGrid.Children.Count > 1 && chGrid.Children[1] is DataGrid dataGrid)
-                dataGrid.BindImpl.SetBinding(nameof(DataGrid.DoubleClick), selectCommand);
-        }
+        // by type, not by position: the body may carry a bar of its own before the grid
+        if (dlg.Children[0] is Grid chGrid && chGrid.Children.OfType<DataGrid>().FirstOrDefault() is { } dataGrid)
+            dataGrid.BindImpl.SetBinding(nameof(DataGrid.DoubleClick), selectCommand);
         return dlg;
     }
 }

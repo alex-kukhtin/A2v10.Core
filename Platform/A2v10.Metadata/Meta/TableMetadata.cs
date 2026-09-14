@@ -320,6 +320,13 @@ public sealed record TableMetadata
      */
     public List<EnumValueMetadata> Values { get; init; } = [];
 
+    /* The rows of the operation registry. Not declared by any file - each operation is an endpoint
+     * pointing at a document storage - so the deploy walk fills it (AllElementsMetadata) and json
+     * never can.
+     */
+    [JsonIgnore]
+    public List<OperationMetadata> Operations { get; init; } = [];
+
     /* Rows deployed with the table, so they are the shape's - the reason 'Values' is here too. A
      * key of its own and not 'values': another record shape, and one key shaped by the endpoint
      * kind is two questions under one name. The cost is that every such registry buys a key here
@@ -569,7 +576,8 @@ public sealed record TableIndex(Boolean Unique, String[] Columns)
         $"{(Unique ? "UX" : "IX")}_{table.Table}_{String.Join('_', Columns)}";
 }
 
-public record OperationMetadata(String Id, String? Name, String? Category);
+// one operation of a document family: its code is the name of the endpoint - see DocumentOperation
+public record OperationMetadata(String Id);
 
 /* One value of a set. Only 'id' is required: 'name' defaults to the localization key
  * '@[{Model}.{Id}]' (the key must carry the set's name, or two 'Complete' in two sets collapse

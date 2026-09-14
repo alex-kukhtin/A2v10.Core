@@ -24,49 +24,5 @@
 				"Text": {"type": "String"}
 			}
 		}
-	},
-	"forms2": {
-		"index": {
-			"page": {
-				"toolbar": [ "add", "edit", "delete", "sep", "show", "sep", "reload", "toRight", "search" ],
-				"datagrid": {
-					"Id": {},
-					"Name": { "clamp": 2 },
-					"Date": {},
-					"Store": {},
-					"Memo": { "clamp": 2 }
-				}
-			},
-			"commands": [ "add", "edit", "delete", "sep", "show", "sep", "reload", "toRight", "search" ],
-			"columns": {
-				"Id": {},
-				"Name": { "clamp": 2 },
-				"Date": {},
-				"Store": {},
-				"Memo": { "clamp": 2 }
-			},
-			"filters": {
-				"Store": {}
-			}
-		},
-		"edit": {
-			"dialog": {
-				"controls": {
-					"Name": { "clamp": 2 },
-					"Date": {},
-					"Store": {},
-					"Memo": { "multiline": true }
-				}
-			}
-		},
-		"show": {
-			"tabs": [
-				{
-				},
-				{
-
-				}
-			]
-		}
 	}
 }

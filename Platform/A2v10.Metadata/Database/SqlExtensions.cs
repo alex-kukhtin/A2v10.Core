@@ -29,8 +29,9 @@ internal sealed record SqlDbTypeInfo(String SqlName, Int32? Length = null, Int32
  * and never defaulted: a wrong guess here would not fail, it would quietly write the
  * wrong value into a live database.
  * It is read from the database itself (the base of the 'platformid' alias), so it is a
- * fact rather than a declaration - there is no second place saying what platformid is,
- * and therefore nothing to drift from the schema. The vocabulary is the SQL type name,
+ * fact rather than a declaration. app.json declares it only for a database that does not
+ * hold the type yet - the first deploy creates it from there - and a declaration that
+ * disagrees with the database afterwards fails the load. The vocabulary is the SQL type name,
  * the same one SqlDbTypeInfo.SqlName speaks, so no third enum stands in between.
  */
 public sealed record AppPlatformId(Type ClrType)

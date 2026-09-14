@@ -91,7 +91,7 @@ internal static class DeclarationBake
     }
 
     /* Which shapes have forms at all - a table is deployed whether or not anything renders it, and
-     * DefaultFormBuilder knows the command bar of the rendered kinds only.
+     * the template knows the standard command bar of the rendered kinds only.
      *
      * Asked of the TABLE, not of the endpoint: EndpointKindOf resolves the platform namespaces
      * ('operations', 'tag') to Undefined, so the kind that can answer this is the shape's.
@@ -112,6 +112,11 @@ internal static class DeclarationBake
 
         if (!table.HasForms())
             return new Dictionary<String, FormMetadata>();
+
+        // the edit dialog has no bar - its commands are the buttons at its foot - so a slot there never renders
+        if (declaration.Forms.GetValueOrDefault(Constants.FormNames.Edit) is { Is: FormKind.Dialog, Toolbar.Commands.Count: > 0 })
+            throw new InvalidOperationException(
+                $"form '{Constants.FormNames.Edit}': 'toolbar' declared on a dialog, which has no command bar.");
 
         // which form, on the way out: three are built in one breath, and nothing deeper knows which
         FormMetadata Build(String name, Func<TableMetadata, FormMetadata> createDefault,
@@ -134,13 +139,11 @@ internal static class DeclarationBake
         return new Dictionary<String, FormMetadata>()
         {
             { Constants.FormNames.Index,
-                Build(Constants.FormNames.Index, t => DefaultFormBuilder.CreateIndexForm(t, declaration),
-                    MemberMetadata.IndexMembers) },
+                Build(Constants.FormNames.Index, DefaultFormBuilder.CreateIndexForm, MemberMetadata.IndexMembers) },
             { Constants.FormNames.Browse,
                 Build(Constants.FormNames.Browse, DefaultFormBuilder.CreateBrowseForm, MemberMetadata.IndexMembers) },
             { Constants.FormNames.Edit,
-                Build(Constants.FormNames.Edit, t => DefaultFormBuilder.CreateEditForm(t, declaration),
-                    MemberMetadata.EditMembers) }
+                Build(Constants.FormNames.Edit, DefaultFormBuilder.CreateEditForm, MemberMetadata.EditMembers) }
         };
     }
 

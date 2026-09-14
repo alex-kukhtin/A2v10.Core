@@ -39,10 +39,6 @@
 			// collection view always
 			"body": [
 				{
-					"is": "toolbar",
-					"commands": [ "Create", "Edit", "Delete", "$sep", "Print", "$sep", "Reload", "$toRight", "Search" ]
-				},
-				{
 					"is": "datagrid", // height: 1*
 					"fields": [ "Id", "Date", "Number", "Operation", "Sum", "Agent", "StoreFrom", "Memo" ]
 				},
@@ -63,10 +59,6 @@
 		"edit": {
 			"is": "page",
 			"scope": "Document",
-			"toolbar": {
-				"is": "toolbar",
-				"commands": ["SaveAndClose", "Save", "$sep", "Reload"]
-			},
 			"body": [
 				{
 					"is": "group", "axis": "rows", "labelAt": "left",

@@ -1,6 +1,7 @@
 ﻿// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using A2v10.Xaml;
@@ -24,16 +25,106 @@ internal enum CommandScope
 
 internal partial class XamlBuilder
 {
+    /* The standard bar of a screen: derived, never declared - which commands exist is answered by
+     * the kind, 'post', 'printForms' and traits, and no form takes one away. The form's 'toolbar'
+     * slot adds its own in ONE place, between the entity's commands and the chrome tail, behind a
+     * separator of its own. Where that place is belongs to the template, so the author has no
+     * alignment token to write. See CLAUDE.md, "Commands".
+     */
+    Toolbar StandardToolbar(IReadOnlyList<CommandBarItem> entity, FormElement slot,
+        IEnumerable<UIElementBase> chrome, CommandScope scope)
+    {
+        IEnumerable<CommandBarItem> own = slot.Commands.Count == 0 || entity.Count == 0
+            ? slot.Commands
+            : [CommandBarItem.Separator, .. slot.Commands];
+        return new Toolbar(_xamlServiceProvider)
+        {
+            Children = [.. entity.Concat(own).Select(c => ToolbarControl(c, scope)), .. chrome]
+        };
+    }
+
+    // the tail of a grid screen: reload, and the search pushed to the right edge
+    IEnumerable<UIElementBase> GridChrome() =>
+        [new Separator(), FormButtons.Reload, new ToolbarAligner(), SearchControl()];
+
+    /* Print exists when the endpoint declares a blank to print, and it carries its own leading
+     * separator so that it leaves without doubling the next one - the posting group is the same
+     * shape. ONE command on both bars: printing is one act, and that the card hands it the record
+     * while the grid hands it the selected row is a property of the screen - see CommandScope.
+     */
+    List<CommandBarItem> PrintCommand() =>
+        Declaration.PrintForms.Count > 0
+            ? [CommandBarItem.Separator, EntityCommandType.Print]
+            : [];
+
+    Toolbar IndexToolbar(FormElement slot) => Table.Kind switch
+    {
+        EndpointKind.Catalog => StandardToolbar(
+            [EntityCommandType.Create, EntityCommandType.Edit, EntityCommandType.Delete,
+                CommandBarItem.Separator, EntityCommandType.Show],
+            slot, GridChrome(), CommandScope.Grid),
+        EndpointKind.Document => StandardToolbar(
+            [EntityCommandType.Create, EntityCommandType.Edit, EntityCommandType.Delete, .. PrintCommand()],
+            slot, GridChrome(), CommandScope.Grid),
+        EndpointKind.Journal => StandardToolbar([EntityCommandType.Edit], slot, GridChrome(), CommandScope.Grid),
+        EndpointKind.Operation => StandardToolbar([], slot, [], CommandScope.Grid),
+        _ => throw new InvalidOperationException($"No standard commands for {Table.Schema}")
+    };
+
+    Toolbar BrowseToolbar(FormElement slot) =>
+        StandardToolbar([EntityCommandType.Create, EntityCommandType.Edit, EntityCommandType.Delete],
+            slot, GridChrome(), CommandScope.Grid);
+
+    Toolbar EditToolbar(FormElement slot)
+    {
+        IEnumerable<CommandBarItem> entity()
+        {
+            yield return EntityCommandType.SaveAndClose;
+            yield return EntityCommandType.Save;
+            foreach (var p in PrintCommand())
+                yield return p;
+            /* The whole posting group or none of it - including its leading separator, which
+             * otherwise doubles up with the next one. A document whose endpoint declares no 'post'
+             * has no Post, no UnPost and nothing to show in the transactions dialog.
+             */
+            if (Declaration.Post is { Count: > 0 })
+            {
+                yield return CommandBarItem.Separator;
+                yield return EntityCommandType.Post;
+                yield return EntityCommandType.UnPost;
+                yield return EntityCommandType.ShowTrans;
+            }
+        }
+        IEnumerable<CommandBarItem> chrome()
+        {
+            yield return CommandBarItem.Separator;
+            if (Table.Traits.Contains(TableTrait.Attachments))
+            {
+                yield return EntityCommandType.Attachments;
+                yield return CommandBarItem.Separator;
+            }
+            yield return EntityCommandType.Reload;
+        }
+        return StandardToolbar([.. entity()], slot,
+            chrome().Select(c => ToolbarControl(c, CommandScope.Record)), CommandScope.Record);
+    }
+
     UIElementBase ToolbarControl(CommandBarItem cmd, CommandScope scope)
     {
         return cmd.Kind switch
         {
             CommandBarItemKind.Separator => new Separator(),
-            CommandBarItemKind.Aligner => new ToolbarAligner(),
             CommandBarItemKind.Command => CommandBarControl(cmd.Command!.Value, scope),
             _ => throw new InvalidOperationException($"Invalid enum {cmd.Kind}")
         };
     }
+
+    SearchBox SearchControl() => new()
+    {
+        TabIndex = 1,
+        Placeholder = "@[Search]",
+        Bindings = b => b.SetBinding(nameof(SearchBox.Value), new Bind("Parent.Filter.Fragment"))
+    };
 
     UIElementBase CommandBarControl(EntityCommandType cmd, CommandScope scope)
     {
@@ -42,12 +133,7 @@ internal partial class XamlBuilder
         return cmd switch
         {
             EntityCommandType.Reload => FormButtons.Reload,
-            EntityCommandType.Search => new SearchBox()
-            {
-                TabIndex = 1,
-                Placeholder = "@[Search]",
-                Bindings = b => b.SetBinding(nameof(SearchBox.Value), new Bind("Parent.Filter.Fragment"))
-            },
+            EntityCommandType.Search => SearchControl(),
             EntityCommandType.Save => FormButtons.Save,
             EntityCommandType.SaveAndClose => FormButtons.SaveAndClose,
             EntityCommandType.Edit => ButtonEditSelected(),
@@ -139,8 +225,8 @@ internal partial class XamlBuilder
         };
     }
 
-    /* One item per declared blank. The list is never empty here: the button exists only because
-     * there was one to print (DefaultFormBuilder.PrintCommand), so an empty menu has no spelling
+    /* One item per declared blank. The list is never empty on the standard bar: the button exists
+     * there only because there was one to print (PrintCommand), so an empty menu has no spelling
      * rather than being guarded against.
      */
     Button ButtonPrint(CommandScope scope) => new()

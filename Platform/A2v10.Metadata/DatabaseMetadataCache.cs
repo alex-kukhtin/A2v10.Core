@@ -187,6 +187,12 @@ public class DatabaseMetadataCache
         };
         watcher.Changed += Watcher_Changed;
         watcher.Created += Watcher_Changed;
+        /* An editor that saves atomically writes a temp file and renames it over the original: the
+         * only events naming metadata.json are then Deleted and Renamed. Deleted is also a real
+         * change - an endpoint removed.
+         */
+        watcher.Renamed += Watcher_Changed;
+        watcher.Deleted += Watcher_Changed;
         watcher.EnableRaisingEvents = true;
         return watcher;
     }

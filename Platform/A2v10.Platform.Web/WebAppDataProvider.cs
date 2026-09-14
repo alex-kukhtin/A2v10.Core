@@ -32,6 +32,9 @@ public class WebAppDataProvider(IAppCodeProvider codeProvider, ILocalizer locali
 			using var sr = new StreamReader(stream);
 			var appJson = await sr.ReadToEndAsync();
 			var result = JsonConvert.DeserializeObject<ExpandoObject>(appJson) ?? [];
+			// the client compares these with the App-Version/Module-Version headers on every request
+			result.Add("version", _appVersion.AppVersion);
+			result.Add("moduleVersion", _appVersion.ModuleVersion ?? String.Empty);
 			result.Add("appId", _codeProvider.AppId);
 			if (userId != 0)
 				result.Add("userId", userId);

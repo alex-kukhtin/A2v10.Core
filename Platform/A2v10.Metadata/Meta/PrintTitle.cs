@@ -137,23 +137,37 @@ internal static class PrintRequest
      * this layer's own: the engine gets the blank as a stream and never probes, so two lists cannot
      * pick two files for one request; a candidate missing here costs a loud throw. What the file
      * holds - a workbook in JSON, a page in XAML - is the first byte's.
+     *
+     * Two candidates are a refusal, not 'the first in the list wins': 'f1.vxaml' next to 'f1.json'
+     * is the case of two blanks under one name, and the order here would silently hide one of them.
      */
     static readonly String[] Extensions = [".vxaml", ".xaml", ".json"];
 
     public static PrintBlank BlankOf(IAppCodeProvider provider, NormalEndpointMetadata endpoint, String path)
     {
         var file = $"{endpoint.Path.Trim('/')}/{path}";
+        var found = new List<String>();
+        Byte[]? bytes = null;
         foreach (var ext in Extensions)
         {
             using var stream = provider.FileStreamRO(file + ext);
             if (stream == null)
                 continue;
+            found.Add(file + ext);
+            if (bytes != null)
+                continue;
             using var mem = new MemoryStream();
             stream.CopyTo(mem);
-            return new PrintBlank(mem.ToArray());
+            bytes = mem.ToArray();
         }
-        throw new InvalidOperationException(
-            $"Report template not found: '{file}' ({String.Join(", ", Extensions)})");
+        return found.Count switch
+        {
+            1 => new PrintBlank(bytes!),
+            0 => throw new InvalidOperationException(
+                $"Report template not found: '{file}' ({String.Join(", ", Extensions)})"),
+            _ => throw new InvalidOperationException(
+                $"print: '{file}' names {found.Count} files ({String.Join(", ", found)}). One blank, one file.")
+        };
     }
 }
 

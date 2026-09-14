@@ -14,10 +14,7 @@ internal partial class XamlBuilder
         var columnWidths = form.Body.Select(x => x.Is == FormElementKind.Tabs ? "1*" : "auto");
         return new Page()
         {
-            Toolbar = new Toolbar(_xamlServiceProvider)
-            {
-                Children = [..form.Toolbar.Commands.Select(c => ToolbarControl(c, CommandScope.Record))]
-            },
+            Toolbar = EditToolbar(form.Toolbar),
             Children = [
                 new Grid(_xamlServiceProvider)
                 {

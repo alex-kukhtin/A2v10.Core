@@ -26,11 +26,10 @@ public enum EntityCommandType
     Attachments
 }
 
-public enum CommandBarItemKind 
-{ 
-    Command, 
-    Separator, 
-    Aligner 
+public enum CommandBarItemKind
+{
+    Command,
+    Separator
 }
 
 [JsonConverter(typeof(CommandBarItemConverter))]
@@ -48,7 +47,6 @@ public readonly struct CommandBarItem
         => new(CommandBarItemKind.Command, command);
 
     public static readonly CommandBarItem Separator = new(CommandBarItemKind.Separator, null);
-    public static readonly CommandBarItem Aligner = new(CommandBarItemKind.Aligner, null);
 }
 
 public enum FormElementKind

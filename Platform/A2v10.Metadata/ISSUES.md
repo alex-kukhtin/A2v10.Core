@@ -349,7 +349,7 @@ of type Autonum», и двух файлов нет вовсе — `metadata-auto
 перечисления регистронезависимо, так что `"MoNeY"` тоже загрузится.
 
 Исключение одно, и это не решение, а расхождение: `CommandBarItemConverter.ReadJson`
-(`Meta/Converters.cs:38`) вызывает `Enum.Parse<EntityCommandType>(token)` **без**
+(`Meta/Converters.cs`, `ReadJson`) вызывает `Enum.Parse<EntityCommandType>(token)` **без**
 `ignoreCase`. Схема это честно помечает комментарием «Case-sensitive: unlike every other
 enum here» — то есть документирует случайность одного написанного руками конвертера.
 

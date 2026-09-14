@@ -115,7 +115,10 @@ public class CliDatabaseCreator()
                 return Constraint($"FK_{table.Table}_{column.Name}_{master.Table}", column, master.SqlTableName);
             }
             else if (column.Type == ColumnType.Operation)
-                return Constraint($"FK_{table.Table}_{column.Name}_Operations", column, "op.[Operations]");
+            {
+                var ops = TableMetadataDefaults.OperationsTable();
+                return Constraint($"FK_{table.Table}_{column.Name}_{ops.Table}", column, ops.SqlTableName);
+            }
             else if (table.IsTagEntries)
             {
                 /* The tags catalog is platform-owned and sits at a fixed address - the same case
@@ -167,61 +170,4 @@ public class CliDatabaseCreator()
         {String.Join(NL, table.Indexes.Select(createIndex))}
         """;
     }
-
-    internal static String MergeOperations()
-    {
-        return """
-        merge op.Operations as t
-        using @Operations as s
-        on t.Id = s.Id
-        when matched then update set
-            t.[Name] = s.[Name],
-            t.[Url] = s.[Url],
-            t.[Category] = s.[Category]
-        when not matched then insert
-            (Id, [Name], [Url], [Category]) values
-            (s.Id, s.[Name], s.[Url], [Category]);
-        """;
-    }
-
-    internal static DataTable CreateOperationTable(IEnumerable<OperationMetadata> ops)
-    {
-        var dt = new DataTable();
-        dt.Columns.Add("Id", typeof(String)).MaxLength = 64;
-        dt.Columns.Add("Name", typeof(String)).MaxLength = 255;
-        dt.Columns.Add("Url", typeof(String)).MaxLength = 255;
-        dt.Columns.Add("Category", typeof(String)).MaxLength = 32;
-
-        foreach (var op in ops)
-        {
-            var dr = dt.NewRow();
-            dr["Id"] = op.Id;
-            dr["Name"] = op.Name ?? op.Id;
-            dr["Url"] = $"/operation/{op.Id.ToLowerInvariant()}/edit";
-            dr["Category"] = op.Category;
-            dt.Rows.Add(dr);
-        }
-        return dt;
-    }
-
-    internal static String CreateOperations(IEnumerable<OperationMetadata> ops)
-    {
-        if (!ops.Any())
-            return String.Empty;
-
-        return $"""
-        if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'op' and TABLE_NAME=N'Operations')
-        create table op.[Operations] 
-        (
-            [Id] nvarchar(64) not null
-                constraint PK_Operations primary key,
-            [Void] bit not null
-                constraint DF_Operations_Void default(0),
-            [Name] nvarchar(255),
-            [Category] nvarchar(255),
-            [Url] nvarchar(255)
-        );
-        """;
-    }
-
 }

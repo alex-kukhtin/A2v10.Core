@@ -85,6 +85,7 @@ internal static class MetadataExtensions
         var lines = table.Values
             .Select((v, ix) => $"{ix}|{v.Id}|{v.Name}|{v.Memo}|{(v.Void ? 1 : 0)}")
             .Concat(table.Autonums.Select(a => $"{a.Id}|{a.Name}|{a.Pattern}|{a.Period}"))
+            .Concat(table.Operations.Select(o => o.Id))
             .ToList();
         if (lines.Count == 0)
             return null;

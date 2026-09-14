@@ -332,7 +332,7 @@
             "description": "A command name, or a bar token. Case-sensitive: unlike every other enum here, this one is parsed without ignoreCase.",
             "type": "string",
             "enum": [
-                "$sep", "$toRight",
+                "$sep",
                 "Create", "Edit", "Delete", "Save", "SaveAndClose", "Print", "Copy",
                 "Show", "ShowTrans", "Search", "Reload", "Post", "UnPost", "Attachments"
             ]

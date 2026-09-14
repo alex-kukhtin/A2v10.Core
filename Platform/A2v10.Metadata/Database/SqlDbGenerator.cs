@@ -82,6 +82,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
          */
         allScript.AppendLine(CreateEnumValuesScript(tables));
         allScript.AppendLine(CreateAutonumsScript(tables));
+        allScript.AppendLine(CreateOperationsScript(tables));
         allScript.AppendLine(CreateAutonumProcedureScript(tables));
         allScript.AppendLine(SystemUserScript());
         allScript.AppendLine(CreateForeignKeysScript(tables));
@@ -316,6 +317,45 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
             """);
         }
         return sb.ToString();
+    }
+
+    /* The operations of the document families - the rows the documents' Operation column points at,
+     * so before the foreign keys. Shaped as the numbering merge: an operation dropped from the files
+     * keeps its row, documents carry its code. The name is the localization key, as a set's is.
+     */
+    private static String CreateOperationsScript(IEnumerable<TableMetadata> tables)
+    {
+        static String Str(String? val) =>
+            val == null ? "null" : $"N'{val.Replace("'", "''")}'";
+
+        var registry = tables.FirstOrDefault(t => t.Operations.Count > 0);
+        if (registry == null)
+            return String.Empty;
+
+        var rows = registry.Operations.Select(o =>
+            $"\t({Str(o.Id)}, {Str($"@[{registry.Model}.{o.Id}]")})");
+
+        return $"""
+            -- OPERATIONS
+            {CliDatabaseCreator.SQL_DIVIDER}
+            begin
+                set nocount on;
+                declare @{registry.Model} table([Id] nvarchar(64), [Name] nvarchar(255));
+
+                insert into @{registry.Model}([Id], [Name]) values
+            {String.Join($",{Environment.NewLine}", rows)};
+
+                merge {registry.SqlTableName} as t
+                using @{registry.Model} as s
+                on t.[Id] = s.[Id]
+                when matched then update set
+                    t.[Name] = s.[Name]
+                when not matched then insert ([Id], [Name]) values
+                    (s.[Id], s.[Name]);
+            end
+            go
+
+            """;
     }
 
     /* The one place a number is issued. A procedure and not inline SQL in every save: the pattern

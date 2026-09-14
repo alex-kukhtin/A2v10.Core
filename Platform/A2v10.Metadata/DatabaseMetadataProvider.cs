@@ -22,6 +22,12 @@ internal sealed record PlatformIdType
     public String? DataType { get; set; }
 }
 
+// the one key of app.json the generator reads; the rest of the file belongs to the client
+internal sealed record AppJsonPlatformId
+{
+    public String? PlatformId { get; set; }
+}
+
 public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbContext _dbContext, IAppCodeProvider _codeProvider,
         SqlDbGenerator _sqlDbGenerator)
 {
@@ -105,16 +111,37 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return _metadataCache.GetOrAddXamlFormAsync(dataSource, endpoint, key, defForm);
     }
 
-    /* No default and no fallback on purpose. An absent answer means the 'platformid' type
-     * is not in the database, and guessing a base here would not surface as a failure -
-     * it would write values of the wrong shape into a live database, which is the one
-     * outcome this whole arrangement exists to prevent.
+    /* The database is the fact once it holds the type. Before the first deploy it holds nothing,
+     * and then - only then - app.json says what the deploy creates it from. No default and no
+     * fallback: guessing a base would not surface as a failure, it would write values of the wrong
+     * shape into a live database. So absent in both is an error, and a declaration disagreeing
+     * with the database is one too - the base never changes.
      */
     private async Task<AppPlatformId> LoadPlatformIdAsync(String? dataSource)
     {
         var found = await _dbContext.LoadAsync<PlatformIdType>(dataSource, "a2meta.[GetPlatformIdType]");
-        return AppPlatformId.FromSqlName(found?.DataType
-            ?? throw new InvalidOperationException("a2meta.[GetPlatformIdType] returns nothing. The 'platformid' type is not defined in the database"));
+        var declared = await DeclaredPlatformIdAsync();
+        if (found?.DataType is String fact)
+        {
+            var actual = AppPlatformId.FromSqlName(fact);
+            if (declared != null && declared != actual)
+                throw new InvalidOperationException(
+                    $"app.json: 'platformid' is '{declared.SqlTypeName}', but the database rests on '{fact}'. The base never changes.");
+            return actual;
+        }
+        return declared
+            ?? throw new InvalidOperationException(
+                "The 'platformid' type is not defined in the database, and app.json declares no 'platformid' to create it from");
+    }
+
+    private async Task<AppPlatformId?> DeclaredPlatformIdAsync()
+    {
+        using var stream = _codeProvider.FileStreamRO("app.json", primaryOnly: true);
+        if (stream == null)
+            return null;
+        using var sr = new StreamReader(stream);
+        var app = JsonConvert.DeserializeObject<AppJsonPlatformId>(await sr.ReadToEndAsync());
+        return app?.PlatformId is String name ? AppPlatformId.FromSqlName(name) : null;
     }
 
 
@@ -904,11 +931,18 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return _metadataCache.GetTableReferrersAsync(dataSource, table, LoadTableReferrersAsync);
     }
 
+    /* A build copies the declarations next to its output, and the walk would read 'bin/Debug' as an
+     * endpoint address. Only the first segment of the module is asked: 'obj' deeper down is a table.
+     */
+    private static Boolean IsBuildOutput(String file) =>
+        file.NormalizeSlash().Split('/').SkipWhile(s => s.StartsWith('$')).FirstOrDefault() is "bin" or "obj";
+
     private async Task<IEnumerable<TableMetadata>> AllElementsMetadata(String? dataSource)
     {
         var allMeta = _codeProvider.EnumerateAllFilesRecursive("", "metadata.json");
         var tables = new List<TableMetadata>();
-        foreach (var file in allMeta)
+        var operations = new List<OperationMetadata>();
+        foreach (var file in allMeta.Where(f => !IsBuildOutput(f)))
         {
             var endpointPath = Path.GetDirectoryName(file)?.NormalizeSlash();
             if (endpointPath == null)
@@ -916,13 +950,27 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             var (schema, table) = ParsePath(endpointPath);
             /* Only a data endpoint declares a table, and only one that does not point elsewhere:
              * a shared storage is deployed by the file that declares it, a report declares none.
+             * One that points at a document storage is an operation of it - a row of the registry.
              */
             if (await GetEndpointAsync(dataSource, schema, table) is not NormalEndpointMetadata endpoint)
                 continue;
             if (!endpoint.Declaration.HasOwnShape)
+            {
+                if (endpoint.DocumentOperation() is { Length: > 0 } op)
+                    operations.Add(new OperationMetadata(op));
                 continue;
+            }
             tables.Add(endpoint.Storage);
         }
+        /* The registry is a table like an enum set: deployed with its rows, and the rows reach the
+         * hash through Xtra. Sorted, because the fingerprint is taken from the text and must not
+         * depend on how the file system is enumerated.
+         */
+        if (operations.Count > 0)
+            tables.Add(TableMetadataDefaults.OperationsTable() with
+            {
+                Operations = [.. operations.DistinctBy(o => o.Id).OrderBy(o => o.Id, StringComparer.Ordinal)]
+            });
         return tables;
     }
     private async Task<IEnumerable<TableReferrer>> LoadTableReferrersAsync(String? dataSource, TableMetadata table)
