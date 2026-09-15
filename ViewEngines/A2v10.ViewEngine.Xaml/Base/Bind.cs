@@ -127,6 +127,11 @@ public partial class Bind : BindBase, ISupportInitialize
 			sw.Append($" {Path}");
         if (DataType != DataType.String)
             sw.Append($", DataType={DataType}");
+        // what the generated dialog title is made of; dropped, the materialized view showed a bare id
+        if (!String.IsNullOrEmpty(Format))
+            sw.Append($", Format='{Format}'");
+        if (!String.IsNullOrEmpty(Mask))
+            sw.Append($", Mask='{Mask}'");
         if (HideZeros)
             sw.Append(", HideZeros=True");
         if (NegativeRed)

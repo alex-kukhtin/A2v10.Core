@@ -20,6 +20,7 @@ public static class ServicesExtensions
 
         services.AddScoped<IModelBuilderFactory, ModelBuilderFactory>();
         services.AddScoped<IEndpointGenerator, EndpointGenerator>();
+        services.AddScoped<EndpointMaterializer>();
 
         services.AddScoped<ILicenseManager, LicenseManager>();  
 

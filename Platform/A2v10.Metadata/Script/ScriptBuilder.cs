@@ -43,17 +43,27 @@ internal partial class ScriptBuilder(BuilderDescriptor desciptor, Boolean isTs)
 
     private String TemplateExport => IsTs ? "export default template;" : "module.exports = template;";
 
+    /* Every member the MODEL carries, not every field the file wrote: the columns the kind adds
+     * (Id, Name, Memo, Date, Done, the stamps) reach the browser like the declared ones and a
+     * hand-written template names them. Left out is what the recordsets do not send - Void, the
+     * row version, and on a row its master link and kind, which travel as ParentId and as the
+     * collection the row arrives in (SqlBuilderPlain). Read-only where the save would not take
+     * the value back.
+     */
     public IEnumerable<String> TsProperties(TableMetadata table)
     {
-        static String property(TableColumn column)
+        String property(TableColumn column)
         {
             var ro = column.IsFieldUpdated() ? "" : "readonly ";
             if (column.IsRef)
                 return $"\t{ro}{column.Name}: {column.RefTableCheck.Storage.TypeName};";
-            return $"\t{ro}{column.Name}: {column.Type.ToTsType()};";
+            return $"\t{ro}{column.Name}: {column.ToTsType(_descr.PlatformId)};";
         }
 
-        foreach (var p in table.Columns.Where(c => !c.IsVoid && c.Type != ColumnType.RowVersion))
+        static Boolean inModel(TableColumn c) =>
+            !c.IsVoid && c.Type is not (ColumnType.RowVersion or ColumnType.Master or ColumnType.RowKind);
+
+        foreach (var p in table.AllColumns(inModel))
             yield return property(p);
     }
 }

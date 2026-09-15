@@ -11,5 +11,5 @@ internal interface IModelBuilderFactory
 {
     Task<IModelBuilder> BuildAsync(IPlatformUrl platformUrl, IModelBase modelBase);
     Task<IModelBuilder> BuildAsync(IPlatformUrl platformUrl, NormalEndpointMetadata endpoint, String? dataSource);
-    IEndpointModelBuilder BuildEndpoint(IPlatformUrl platformUrl, NormalEndpointMetadata endpoint, String? dataSource);
+    Task<IEndpointModelBuilder> BuildEndpointAsync(IPlatformUrl platformUrl, NormalEndpointMetadata endpoint, String? dataSource);
 }

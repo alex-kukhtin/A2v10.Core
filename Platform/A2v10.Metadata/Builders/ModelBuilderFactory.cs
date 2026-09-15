@@ -56,15 +56,16 @@ internal partial class ModelBuilderFactory(
         return new BaseModelBuilder(_serviceProvider, bd);
     }
 
-    public IEndpointModelBuilder BuildEndpoint(IPlatformUrl platformUrl, NormalEndpointMetadata endpoint, String? dataSource)
+    // the platform id is needed here too: the .d.ts types an Id by the base the database rests on
+    public async Task<IEndpointModelBuilder> BuildEndpointAsync(IPlatformUrl platformUrl, NormalEndpointMetadata endpoint, String? dataSource)
     {
         var bd = new BuilderDescriptor()
         {
             DataSource = dataSource,
             PlatformUrl = platformUrl,
             Endpoint = endpoint,
+            PlatformId = await _metadataProvider.GetPlatformIdAsync(dataSource),
         };
         return new EndpointModelBuilder(bd);
-
     }
 }

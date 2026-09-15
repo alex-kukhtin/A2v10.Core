@@ -59,6 +59,7 @@ internal sealed partial class Program
             Description = "Metadata-driven platform commands"
         };
         metaCommand.Subcommands.Add(new DeployCommand(_services).Build());
+        metaCommand.Subcommands.Add(new MaterializeCommand(_services).Build());
         metaCommand.Subcommands.Add(new EndpointListCommand(_services, "metadata.json",
             "List the metadata-driven endpoints - the folders with a metadata.json").Build());
         root.Subcommands.Add(metaCommand);

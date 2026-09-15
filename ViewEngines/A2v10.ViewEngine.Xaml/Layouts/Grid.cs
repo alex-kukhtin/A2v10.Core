@@ -234,8 +234,11 @@ public class RowDefinitions : List<RowDefinition>, IXamlConverter
 	}
 
     #region IXamlConverter
+    // null, not "": the reader refuses an empty grid length, so an empty list is no attribute at all
     public string? ToXamlString()
     {
+		if (Count == 0)
+			return null;
 		return String.Join(", ", this.Select(w => w.Height is IXamlConverter xamlConvert ? xamlConvert.ToXamlString() : w.Height?.Value));
     }
     #endregion
@@ -301,6 +304,8 @@ public partial class ColumnDefinitions : List<ColumnDefinition>, IXamlConverter
     #region IXamlConverter
     public string? ToXamlString()
     {
+        if (Count == 0)
+            return null;
         return String.Join(", ", this.Select(w => w.Width is IXamlConverter xamlConvert ? xamlConvert.ToXamlString() : w.Width?.Value));
     }
     #endregion
