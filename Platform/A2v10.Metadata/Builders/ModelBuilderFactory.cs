@@ -18,11 +18,10 @@ internal partial class ModelBuilderFactory(
      */
     public async Task<IModelBuilder> BuildAsync(IPlatformUrl platformUrl, IModelBase modelBase)
     {
-        if (modelBase.Meta == null)
-            throw new InvalidOperationException("Meta is null");
-
+        // the endpoint is the folder the request names; model.json never repeats the address
         var dataSource = modelBase.DataSource;
-        var endpoint = await _metadataProvider.GetEndpointAsync(modelBase.Meta, dataSource);
+        var (schema, table) = DatabaseMetadataProvider.ParsePath(platformUrl.LocalPath);
+        var endpoint = await _metadataProvider.GetEndpointAsync(dataSource, schema, table);
         var platformId = await _metadataProvider.GetPlatformIdAsync(dataSource);
 
         switch (endpoint)

@@ -50,9 +50,6 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return await _sqlDbGenerator.CheckDeployAsync(dataSource, allMeta, platformId);
     }
 
-    public Task<EndpointMetadata> GetEndpointAsync(IModelBaseMeta meta, String? dataSource)
-        => GetEndpointAsync(dataSource, meta.CurrentSchema, meta.CurrentTable);
-
     /* The entry point: no load is running yet, so the cache opens one and publishes it whole.
      * Everything below takes that load as a parameter, which is what tells the two roles apart -
      * see EndpointLoad.
@@ -93,19 +90,6 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return _metadataCache.GetPlatformIdAsync(dataSource, LoadPlatformIdAsync);
     }
 
-    public async Task<EndpointTableInfo> GetModelInfoFromPathAsync(String path)
-    {
-        var modelTableInfo = _metadataCache.GetModelInfoFromPath(path);
-        if (modelTableInfo == null) {
-            var (schema, table) = ParsePath(path);
-            await GetEndpointAsync(null, schema, table);
-            _metadataCache.GetOrAddEndpointPath(null, path, schema, table);
-            modelTableInfo = _metadataCache.GetModelInfoFromPath(path);
-        }
-        if (modelTableInfo == null)
-            throw new InvalidOperationException("GetModelInfo fails");
-        return modelTableInfo;
-    }
     public Task<UIElement> GetXamlFormAsync(String? dataSource, EndpointMetadata endpoint, String key, Func<UIElement> defForm)
     {
         return _metadataCache.GetOrAddXamlFormAsync(dataSource, endpoint, key, defForm);
@@ -723,42 +707,22 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                     """);
     }
 
-    private async Task<TableMetadata> LoadTableMetadataDbAsync(String? dataSource, String schema, String table)
-    {
-        var prms = new ExpandoObject()
-        {
-            {"Schema", schema},
-            {"Table", table},
-        };
-        String procedure = schema switch {
-            "rep" => "a2meta.[Report.Schema]",
-            "op" => table switch {
-                "operations" => "a2meta.[Operation.Schema]",
-                _ => "a2meta.[Table.Schema]"
-            },
-            _ => "a2meta.[Table.Schema]"
-        };
-        var dm = await _dbContext.LoadModelAsync(dataSource, procedure, prms)
-            ?? throw new InvalidOperationException("a2meta.[Table.Schema] returns null");
-        var tableExpando = dm.Eval<ExpandoObject>("Table")
-            ?? throw new InvalidOperationException($"Metadata for {schema}.{table} not found");
-        var json = JsonConvert.SerializeObject(tableExpando) 
-            ?? throw new InvalidOperationException("TableMetadata not found");
-        var meta = JsonConvert.DeserializeObject<TableMetadata>(json, JsonSettings.IgnoreNull)
-            ?? throw new InvalidOperationException("TableMetadata deserialization fails");
-        return meta;
-    }
-
-
+    /* The address of an endpoint: the folder, two segments. One segment is a registry with no name
+     * of its own (/autonum, /operation). A third is refused, never dropped: it used to be cut off
+     * silently, and while only paths the platform composed from a metadata.json folder came here
+     * that was unreachable - now a 'model: $meta' written by hand in a deeper folder comes here too,
+     * and truncating it would serve another endpoint's data under this one's screen.
+     */
     internal static (String schema, String table) ParsePath(String path)
     {
-        path = path.RemoveHeadSlash();
-        var split = path.ToLowerInvariant().Split('/');
-        if (split.Length == 1)
-            return (split[0], String.Empty);
-        if (split.Length < 2 )
-            throw new InvalidOperationException($"Invalid path: {path}");
-        return (split[0], split[1]);
+        var split = path.RemoveHeadSlash().ToLowerInvariant().Split('/', StringSplitOptions.RemoveEmptyEntries);
+        return split.Length switch
+        {
+            1 => (split[0], String.Empty),
+            2 => (split[0], split[1]),
+            _ => throw new InvalidOperationException(
+                $"'{path}': the metadata layer is addressed by two segments, <kind>/<name>; this path has {split.Length}")
+        };
     }
 
     /* The targets of 'post' are references like any other, so they are linked where the others

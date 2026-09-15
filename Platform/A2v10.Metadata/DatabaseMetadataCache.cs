@@ -23,7 +23,6 @@ public class DatabaseMetadataCache
      * Several endpoints share one entry, and this is also the deploy set.
      */
     private readonly ConcurrentDictionary<String, TableMetadata> _storages = [];
-    private readonly ConcurrentDictionary<String, EndpointTableInfo> _endpoints = [];
     private readonly ConcurrentDictionary<String, UIElement> _xamlFormCache = [];
     private readonly ConcurrentDictionary<String, IEnumerable<TableReferrer>> _referrers = [];
     // Keyed by data source because that is exactly what it describes: one data source is
@@ -53,7 +52,6 @@ public class DatabaseMetadataCache
         {
             _cache.Clear();
             _storages.Clear();   // both, always: a container must never keep a table of an older generation
-            _endpoints.Clear();
             /* Not metadata - this one comes from the database (a2meta.[GetFkReferrers]) - and the
              * only thing that moves it is a deploy. It belongs here anyway: the deploy is what the
              * next request runs because of the _metadataDirty set at the end of this block, so it
@@ -154,19 +152,6 @@ public class DatabaseMetadataCache
             return form;
         form = getDefaultForm();
         return _xamlFormCache.GetOrAdd(dictKey, form);
-    }
-
-    public String GetOrAddEndpointPath(String? dataSource, String path, String schema, String table)
-    {
-        _endpoints.TryAdd(path, new EndpointTableInfo(dataSource, schema, table));
-        return path;
-    }
-
-    public EndpointTableInfo? GetModelInfoFromPath(String path)
-    {
-        if (_endpoints.TryGetValue(path, out var modelInfo))
-            return modelInfo;
-        return null;
     }
 
     private void Watcher_Changed(Object sender, FileSystemEventArgs e)

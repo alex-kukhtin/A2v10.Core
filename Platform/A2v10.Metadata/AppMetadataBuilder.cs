@@ -35,10 +35,6 @@ internal class AppMetadataBuilder(
             """;
     }
 
-    public Task<EndpointTableInfo> ModelInfoFromPathAsync(String path)
-    {
-        return _metadataProvider.GetModelInfoFromPathAsync(path);
-    }
     public async Task<IAppRuntimeResult> RenderAsync(IPlatformUrl platformUrl, IModelView view, bool isReload)
     {
         await _metadataProvider.CheckDeployAsync(view.DataSource);

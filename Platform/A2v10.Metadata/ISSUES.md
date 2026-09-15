@@ -55,7 +55,10 @@
 Следствие для `TESTS.md` (раздел B): свойство `Singular ∘ Plural = id` фиксировать не на
 чем, а оговорка «сначала зафиксировать текущее кривое поведение» ссылается на снятый 2.1.
 
-### 2.3. Мёртвый метод `LoadTableMetadataDbAsync`
+### 2.3. Мёртвый метод `LoadTableMetadataDbAsync` — удалён (2026-09-15)
+
+Ушёл вместе с ключом `meta` в model.json: оба остались от чтения метаданных из базы по
+SQL-имени (см. `CLAUDE.md`, «Two files in one folder»).
 
 `DatabaseMetadataProvider.cs:655` — ни одного вызова во всём проекте (проверено grep'ом
 по `--include="*.cs"`).
@@ -84,7 +87,11 @@ fails"`. Имя файла там теперь есть (см. 4), так что
 Отсутствующего файла это не касается: `ReadMetadataFileAsync` отдаёт за него `"{}"`, и
 разговор про него ведёт `CheckShapeSource` — намеренно тем же сообщением, что и про `{}`.
 
-### 2.5. `ParsePath`: мёртвая ветка и живой тихий обрез
+### 2.5. `ParsePath`: мёртвая ветка и живой тихий обрез — закрыто (2026-09-15)
+
+Третий сегмент теперь throw с полным путём. Сделано в той же правке, что `model: "$meta"`:
+до неё сюда попадали только пути, составленные платформой из папки с metadata.json, после —
+ключ, написанный рукой в папке любой глубины.
 
 `DatabaseMetadataProvider.cs:682`
 
@@ -529,9 +536,8 @@ enum here» — то есть документирует случайность 
 
 - `:344` — `"ReportMetadata deserialization fails"`. Соседние две строки имя файла несут,
   эта пропущена; правка механическая;
-- `:100` — `"GetModelInfo fails"`. Здесь имени файла нет и быть не может: это не разбор
-  файла, а промах кеша путей после успешной загрузки endpoint'а. Сказать есть что другое —
-  `path`, он на руках у метода.
+- ~~`:100` — `"GetModelInfo fails"`~~ — снято 2026-09-15: метод и кеш путей удалены, адрес
+  берётся из `platformUrl.LocalPath` напрямую.
 
 ---
 
@@ -543,3 +549,92 @@ enum here» — то есть документирует случайность 
   словаря (`_storages` и `_cache`), а ключ у обоих — `(dataSource, schema, table)` папки:
   `document/invoice` даёт `:document:invoice`, её storage — `:document:`. Заодно нашлась
   соседняя дыра в том же классе, но уже с адресом — она в 2.10, а не здесь.
+
+---
+
+## 6. Прогон папки 2026-09-15
+
+Чтение всего слоя целиком после сентябрьских правок (autonum, Owner/Master, стемпы, печать,
+тулбар). Каждый пункт назван строкой; что не подтвердилось (`Document` без `target` — в
+приложении он объявлен с `"target": "/document"`), сюда не попало. Номера строк на 2026-09-15.
+
+### 6.1. Storno не переворачивает семантические типы
+
+`PostStatements.cs:155`: `isMeasure` = `Money`/`Float`/`Decimal`. Нейтральный ярус (`Amount`,
+`Price`, `Qty`, `Percent`, `Factor`, добавлен 2026-07-29) в список не вошёл, а `Signed()`
+написан 2026-09-02 — уже после него. `journal/stock` в приложении объявлен на `Qty` и `Amount`,
+то есть первая проводка со `storno: true` запишет в журнал **положительные** количества. Тихо:
+ни ошибки, ни предупреждения, только неверные строки.
+
+Правило: список «что есть мера» — второй перечень поверх `ColumnType`, и он разошёлся в ту
+же сторону, что `XamlExtensions` до него. Ответ на «мера ли это» должен быть один, рядом с
+типом.
+
+### 6.2. `SystemUserScript` не пишет `Tenant`
+
+`SqlDbGenerator.cs:122`: `insert into a2security.Users(Id, UserName, SecurityStamp)`. В
+`a2v10_platform.sql` и обоих `mt_*` (`A2v10.App.Assets2026/Application/@sql`) колонка `Tenant int
+not null` без default — батч упадёт. Проходит только на `_simple.sql`, на которой и разрабатывалось.
+Добавлено 2026-09-13.
+
+### 6.3. `a2meta.SyncSchema` пустая
+
+`SqlScripts/a2v10_metadata.sql:145`: тело — три `set`, и так с 2026-07-25. При этом
+`SqlDbGenerator.cs:69`, `SqlExtensions.cs:182` и TESTS.md (слой E) описывают процедуру, которая
+добавляет колонки и «выдаёт ALTER на каждом прогоне».
+
+Следствие: дописал поле в существующую таблицу → seed изменился → хеш разошёлся → скрипт
+перегенерирован → `create table` пропущен по `if not exists` → колонки в базе **нет**. Table type
+при этом пересоздан с новой колонкой (`drop type if exists`), так что save падает на `merge`
+с «invalid column name», а деплой уже отчитался `Applied = true`. Комментарий про «changed
+declaration reaches the database» (`MetadataExtensions.Xtra`) верен для строк (enum, autonums),
+не для колонок. Всё нужное для процедуры в `a2meta.Columns` уже лежит: тип, длина, nullable,
+default.
+
+### 6.4. Реестр операций деплоится только при наличии операций
+
+`DatabaseMetadataProvider.cs:969` добавляет `doc.Operations` в список при `operations.Count > 0`,
+а `CliDatabaseCreator.cs:117` пишет FK на неё для **любой** колонки `Operation`. Промежуточное
+состояние «написал `/document` с полем `operation`, операций ещё нет» роняет деплой на внешних
+ключах — ровно тот шаг, с которого приложение начинают писать.
+
+### 6.5. `user` и `company` объявляемы, но неразрешимы
+
+`TableMetadata.cs:128` считает оба ссылками; `DatabaseMetadataProvider.cs:852` пропускает
+колонки без `target`; дальше `RefTableCheck` бросает в `CliDatabaseCreator.cs:132` и в
+`MetadataExtensions.AllRefs`. Схема оба типа предлагает. Стемпы (2026-09-13) сделаны отдельным
+`StampUser`, а `User` остался как был — с мая. Громко, но два слова в словаре, которыми нельзя
+воспользоваться. Тот же класс, что `Number`/`IsFolder` в TESTS.md §6.
+
+### 6.6. Схемы считаются по `tables`, а не по `DeployTables`
+
+`SqlDbGenerator.cs:154`. `$Tags` и `$TagEntries` всегда в `cat`; приложение, где единственная
+таблица с тегами — документ, а справочников нет, упадёт на `create table cat.[...]` раньше
+`create schema`. Практически недостижимо, но `DeployTables` заводился как «четыре обхода стали
+одним», и это пятый, который он не покрыл.
+
+### 6.7. Тихие пропадания
+
+- **`forms` на нерендерящейся форме.** `DeclarationBake.cs:111` проверяет ключи, потом
+  `HasForms` возвращает пустой словарь: `forms.index` в enum-е грузится и исчезает. Для
+  `presentation` на журнале тот же случай отказан с сообщением (`TableMetadata.SetDefaults`).
+- **`visible` и `when`** не читает ни один генератор и не проверяет `CheckNames`; опечатка в
+  имени поля внутри них — тот же класс, что 3.5.
+- **Autonum при пустой дате.** `SqlBuilderPlain.cs:417` берёт дату документа; в процедуре
+  `replace(@pattern, N'{yyyy}', null)` даёт `NULL`, номер не записывается молча; второй такой
+  документ ловит нарушение уникального индекса по строке `Year = null`.
+
+### 6.8. Разъехавшиеся записи
+
+- **Print на индексе только у документа.** `CommandXaml.cs:62`: справочник с `printForms`
+  получает кнопку в карточке (`EditToolbar` кладёт её для любого kind-а), но не в гриде.
+  `CLAUDE.md`, «Print forms»: «`Print` sits on both toolbars».
+- **Путь бланка.** `DeclarationMetadata.cs:89`: «addressed by path and need not lie anywhere
+  near». `PrintTitle.cs:148` (`BlankOf`) приклеивает путь эндпоинта — бланк обязан лежать под
+  его папкой. Одно из двух неверно.
+- **Мёртвые ветки `Operation`.** Таблица с `Kind == Operation` — только `OperationsTable()`, и
+  её обслуживает свой билдер, минуя `BuildForms` и `XamlBuilder`: `DeclarationBake.cs:100` и
+  `CommandXaml.cs:70` недостижимы. `EditTemplate.cs:119` сравнивает `Endpoint.Kind` с
+  `Operation`, а операция получает `Kind = Document` (`EndpointKindOf`) — блок не исполняется
+  никогда; дефолт операции уже даёт SQL через `$operation$`. Слово `Operation` означает два
+  разных kind-а — реестра и эндпоинта, — и ветки писались под второй.

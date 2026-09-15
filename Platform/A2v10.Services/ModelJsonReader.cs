@@ -16,16 +16,12 @@ public class ModelJsonReader(IModelJsonPartProvider _partProvider, IAppRuntimeBu
 		return rm.GetAction(url.Action);
 	}
 
-	async Task<ModelJson> CreateMeta(IPlatformUrl url, String? command = null)
+	// a folder with no model.json at all: the whole of it is served by the metadata layer
+	static ModelJson CreateMeta(IPlatformUrl url)
 	{
-		var tableInfo = await _appRuntimeBuilder.ModelInfoFromPathAsync(url.LocalPath);
         var ms = new ModelJson()
         {
-			Schema = tableInfo.Schema,	
-			Meta = new DatabaseMeta()
-			{
-				Table = tableInfo.Table,
-			}
+			Model = IModelBase.MetaModel
         };
         ms.OnEndInit(url);
 		return ms;
@@ -106,7 +102,7 @@ public class ModelJsonReader(IModelJsonPartProvider _partProvider, IAppRuntimeBu
 		if (_appRuntimeBuilder.IsAutoSupported)
 			return CreateAuto(url, command);
 		else if (_appRuntimeBuilder.IsMetaSupported)
-			return await CreateMeta(url, command);
+			return CreateMeta(url);
 		throw new ModelJsonException($"File not found '{url.LocalPath}/model.json'");
 	}
 

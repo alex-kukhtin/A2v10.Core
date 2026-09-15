@@ -112,28 +112,26 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
         var dynamicRenderer = new DynamicRenderer(_serviceProvider);
 
         String rootId = $"el{Guid.NewGuid()}";
-        String templateText = String.Empty;
-        if (!String.IsNullOrEmpty(modelView.Template))
-            templateText = await codeLoader.GetTemplateScriptAsync(modelView);
 
-        UIElement? page = null;
+        /* Each of the two taken on its own: written in model.json, the file; absent, generated. The
+         * generated template used to be the ELSE of the view, so a hand-written template under a
+         * generated view was read and then overwritten. See CLAUDE.md, "Two files in one folder".
+         */
+        var templateText = !String.IsNullOrEmpty(modelView.Template)
+            ? await codeLoader.GetTemplateScriptAsync(modelView)
+            : await CreateTemplateAsync();
+
         var rawView = modelView.GetRawView(false);
+        UIElement page;
         if (!String.IsNullOrEmpty(rawView))
-        {
             page = codeLoader.LoadPage(modelView, rawView);
-        }
         else
-        {
             /* The print page is not cached: it depends on '?Form=', which the cache key does not
              * carry - keyed by action, the first blank opened answered for every other.
              */
             page = Action == Constants.Print.Action
                 ? CreateDefaultXamlForm()
                 : await _metadataProvider.GetXamlFormAsync(descriptor.DataSource, Endpoint, descriptor.PlatformUrl.Action, CreateDefaultXamlForm);
-            templateText = await CreateTemplateAsync();
-        }
-        if (page == null)
-            throw new InvalidOperationException("Page is null");
 
         if (page is ISupportPlatformUrl supportPlatformUrl)
             supportPlatformUrl.SetPlatformUrl(descriptor.PlatformUrl);

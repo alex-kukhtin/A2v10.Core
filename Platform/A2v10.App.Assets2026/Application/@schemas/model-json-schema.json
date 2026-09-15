@@ -24,20 +24,9 @@
 				}
 			}
 		},
-		"meta": {
-			"type": "object",
-			"properties": {
-				"table": {
-					"type": "string"
-				},
-				"schema": {
-					"type": "string"
-				},
-				"edit": {
-					"type": "string",
-					"enum": [ "default", "page", "dialog"]
-				}
-			}
+		"model": {
+			"type": "string",
+			"description": "Where the data come from: a name (procedures [schema].[Model.Load] etc.), \"$sql:key\" (a text), \"$meta\" (the metadata layer of this folder - metadata.json beside this file), \"\" (a screen with no model). Inherits from the root to an action."
 		}
 	},
 
@@ -47,12 +36,11 @@
 			"type": "string"
 		},
 		"description": {"type": "string"},
-		"model": { "type": "string" },
+		"model": { "$ref": "#/definitions/model" },
 		"schema": { "type": "string" },
 		"module": { "type": "string" },
 		"allowAddress": { "type": "string" },
 		"allowOrigin": { "type,": "string" },
-		"meta": { "$ref": "#/definitions/meta" },
 		"actions": {
 			"type": "object",
 			"patternProperties": {
@@ -62,7 +50,7 @@
 						"index": { "type": "boolean" },
 						"source": { "type": "string" },
 						"schema": { "type": "string" },
-						"model": { "type": "string" },
+						"model": { "$ref": "#/definitions/model" },
 						"view": { "type": "string" },
 						"viewMobile": { "type": "string" },
 						"template": { "type": "string" },
@@ -80,7 +68,7 @@
 							"type": "object",
 							"properties": {
 								"source": { "type": "string" },
-								"model": { "type": "string" },
+								"model": { "$ref": "#/definitions/model" },
 								"schema": { "type": "string" },
 								"parameters": { "type": "object" }
 							},
@@ -115,8 +103,7 @@
 						"parameters": { "type": "object" },
 						"permissions": { "$ref": "#/definitions/permissions" },
 						"auto": { "$ref": "#/definitions/auto" },
-						"meta": { "$ref": "#/definitions/meta" },
-						"roles": {
+										"roles": {
 							"type": "array",
 							"items": { "type": "string" }
 						},
@@ -142,7 +129,7 @@
 						"index": { "type": "boolean" },
 						"source": { "type": "string" },
 						"schema": { "type": "string" },
-						"model": { "type": "string" },
+						"model": { "$ref": "#/definitions/model" },
 						"view": { "type": "string" },
 						"viewMobile": { "type": "string" },
 						"template": { "type": "string" },
@@ -160,7 +147,7 @@
 							"type": "object",
 							"properties": {
 								"source": { "type": "string" },
-								"model": { "type": "string" },
+								"model": { "$ref": "#/definitions/model" },
 								"schema": { "type": "string" },
 								"parameters": { "type": "object" }
 							},
@@ -170,8 +157,7 @@
 						"parameters": { "type": "object" },
 						"permissions": { "$ref": "#/definitions/permissions" },
 						"auto": { "$ref": "#/definitions/auto" },
-						"meta": { "$ref": "#/definitions/meta" },
-						"roles": {
+										"roles": {
 							"type": "array",
 							"items": { "type": "string" }
 						}
@@ -188,7 +174,7 @@
 					"properties": {
 						"schema": { "type": "string" },
 						"source": { "type": "string" },
-						"model": { "type": "string" },
+						"model": { "$ref": "#/definitions/model" },
 						"view": { "type": "string" },
 						"viewMobile": { "type": "string" },
 						"template": { "type": "string" },
@@ -199,8 +185,7 @@
 						"endpointHandler": { "type": "string" },
 						"permissions": { "$ref": "#/definitions/permissions" },
 						"auto": { "$ref": "#/definitions/auto" },
-						"meta": { "$ref": "#/definitions/meta" },
-						"roles": {
+										"roles": {
 							"type": "array",
 							"items": { "type": "string" }
 						}
@@ -238,7 +223,7 @@
 						},
 						"schema": { "type": "string" },
 						"source": { "type": "string" },
-						"model": { "type": "string" },
+						"model": { "$ref": "#/definitions/model" },
 						"command": { "type": "string" },
 						"procedure": { "type": "string" },
 						"target": {
@@ -270,8 +255,7 @@
 						"debugOnly": { "type": "boolean" },
 						"permissions": { "$ref": "#/definitions/permissions" },
 						"auto": { "$ref": "#/definitions/auto" },
-						"meta": { "$ref": "#/definitions/meta" },
-						"signal": { "type": "boolean" },
+										"signal": { "type": "boolean" },
 						"roles": {
 							"type": "array",
 							"items": { "type": "string" }
@@ -289,7 +273,7 @@
 					"properties": {
 						"schema": { "type": "string" },
 						"source": { "type": "string" },
-						"model": { "type": "string" },
+						"model": { "$ref": "#/definitions/model" },
 						"name": { "type": "string" },
 						"report": { "type": "string" },
 						"checkTypes": { "type": "string" },
@@ -304,8 +288,7 @@
 							"enum": [ "stimulsoft", "xml", "json", "pdf", "xlsx" ]
 						},
 						"permissions": { "$ref": "#/definitions/permissions" },
-						"auto": { "$ref": "#/definitions/auto" },
-						"meta": { "$ref": "#/definitions/meta" }
+						"auto": { "$ref": "#/definitions/auto" }
 					},
 					"additionalProperties": false
 				}
@@ -317,7 +300,7 @@
 				".+": {
 					"type": "object",
 					"properties": {
-						"model": { "type": "string" },
+						"model": { "$ref": "#/definitions/model" },
 						"schema": { "type": "string" },
 						"source": { "type": "string" },
 						"type": {
@@ -357,7 +340,7 @@
 									"columns": { "type": "string" },
 									"source": { "type": "string" },
 									"schema": { "type": "string" },
-									"model": { "type": "string" },
+									"model": { "$ref": "#/definitions/model" },
 									"checkTypes": { "type": "string" },
 									"parameters": { "type": "object" }
 								},
@@ -366,8 +349,7 @@
 						},
 						"permissions": { "$ref": "#/definitions/permissions" },
 						"auto": { "$ref": "#/definitions/auto" },
-						"meta": { "$ref": "#/definitions/meta" },
-						"key": { "type": "string" }
+										"key": { "type": "string" }
 					},
 					"additionalProperties": false
 				}

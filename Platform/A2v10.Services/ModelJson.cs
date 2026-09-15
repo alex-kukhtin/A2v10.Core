@@ -20,18 +20,15 @@ public class ModelJsonBase : IModelBase
 	public String? Model { get; init; }
 	public ModelJsonAuto? Auto { get; init; }
 	IModelJsonAuto? IModelBase.Auto => Auto;
-    IModelBaseMeta? IModelBase.Meta => Meta;
     public Boolean Signal { get; init; }
-	public List<String>? Roles { get; init; }	
+	public List<String>? Roles { get; init; }
 	public Int32 CommandTimeout { get; init; }
 
-    public ModelBaseMeta? Meta { get; init; }
     public ExpandoObject? Parameters { get; set; }
 	public Dictionary<String, PermissionBits>? Permissions { get; init; }
 	internal virtual void SetParent(ModelJson rm)
 	{
 		_parent = rm;
-        Meta?.SetParent(rm.Meta);
     }
 
     public Boolean CheckRoles(IEnumerable<String>? roles)
@@ -131,7 +128,6 @@ public class ModelJsonViewBase : ModelJsonBase
 	{
 		base.SetParent(rm);
 		Merge?.SetParent(rm);
-		Meta?.SetParent(rm.Meta);	
 	}
 }
 
@@ -226,7 +222,8 @@ public class ModelJsonView : ModelJsonViewBase, IModelView
 		var cm = CurrentModel;
 		if (cm == null)
 			return null;
-		if (cm.StartsWith("@sql:"))
+		// '$' marks a platform value of 'model', as '$meta' does - see IModelBase.MetaModel
+		if (cm.StartsWith("$sql:"))
 			return cm[5..];
 		return null;
 	}
@@ -380,7 +377,7 @@ public class ModelJsonReport : ModelJsonBase, IModelReport
 	{
 		var provider = serviceProvider.GetRequiredService<IReportEngineProvider>();
 
-		if (this.Meta != null)
+		if (((IModelBase)this).IsMeta)
 		{
 			var rt = serviceProvider.GetService<IAppRuntimeBuilder>();
 			if (rt != null && rt.IsMetaSupported)
@@ -415,51 +412,6 @@ public class ModelJsonReport : ModelJsonBase, IModelReport
 	}
 }
 
-public class DatabaseMeta : IModelJsonMeta
-{
-	public String Table { get; set; } = default!;
-
-    public String Schema => _parent?.Schema ?? throw new InvalidOperationException("schema is null");
-
-	private ModelJson? _parent;
-	public void SetParent(ModelJson? parent)
-	{
-		_parent = parent;	
-	}
-}
-
-public class ModelBaseMeta : IModelBaseMeta
-{
-    public String? Columns { get; init; }
-    public String? Table { get; init; }
-    public String? Schema { get; init; }
-    public MetaEditMode Edit { get; init; }
-
-    IModelJsonMeta? _parent;
-    public void SetParent(IModelJsonMeta? parent)
-    {
-        _parent = parent;
-    }
-	public String CurrentTable => Table ?? _parent?.Table
-		?? throw new InvalidOperationException("Table is null");
-    public String CurrentSchema => Schema ?? _parent?.Schema
-        ?? throw new InvalidOperationException("Schema is null");
-
-    public MetaEditMode EditMode 
-	{ 
-		get 
-		{ 
-			if (Edit != MetaEditMode.Default)
-				return Edit;
-			return CurrentSchema switch {
-				"cat" => MetaEditMode.Dialog,
-				"doc" or "op" => MetaEditMode.Page,
-				_ => throw new InvalidOperationException($"Unknonwn edit mode for {CurrentSchema}")
-			};
-		}
-	}
-}
-
 public class ModelJson
 {
 	private String? _localPath;
@@ -471,7 +423,6 @@ public class ModelJson
 	#region JSON
 	public String? Source { get; init; }
 	public String? Schema { get; init; }
-    public DatabaseMeta? Meta { get; init; }
     public String? Model { get; init; }
 	public List<String>? Roles { get; init; }
 
@@ -487,19 +438,24 @@ public class ModelJson
 
 	public String BaseUrl => _baseUrl ?? throw new InvalidProgramException("BaseUrl is null");
 
+	/* A root on the metadata layer answers for everything the file does not write: an action, a
+	 * dialog, a command or a report that is not listed is synthesized empty and inherits 'model',
+	 * which is what routes it. See A2v10.Metadata/CLAUDE.md, "Two files in one folder".
+	 */
+	private Boolean IsMeta => Model == IModelBase.MetaModel;
+
 	public ModelJsonView? TryGetAction(String key)
 	{
 		if (Actions.TryGetValue(key ?? "index", out ModelJsonView? view))
 			return view;
-        if (Meta != null)
+        if (IsMeta)
         {
 			var empty = new ModelJsonView()
 			{
-				Index = key == "index",
-				Meta = new ModelBaseMeta()
+				Index = key == "index"
 			};
 			empty.SetParent(this);
-			return empty;	
+			return empty;
         }
         return null;
 	}
@@ -508,12 +464,9 @@ public class ModelJson
     {
         if (Commands.TryGetValue(key, out ModelJsonCommand? command))
             return command;
-        if (Meta != null)
+        if (IsMeta)
         {
-            var empty = new ModelJsonCommand()
-            {				
-                Meta = new ModelBaseMeta()
-            };
+            var empty = new ModelJsonCommand();
             empty.SetParent(this);
             return empty;
         }
@@ -530,12 +483,11 @@ public class ModelJson
 	{
 		if (Dialogs.TryGetValue(key, out ModelJsonDialog? view))
 			return view;
-		if (Meta != null)
+		if (IsMeta)
 		{
 			var empty = new ModelJsonDialog()
 			{
-				Index = key.StartsWith("browse"),
-				Meta = new ModelBaseMeta()
+				Index = key.StartsWith("browse")
 			};
             empty.SetParent(this);
             return empty;
@@ -547,12 +499,9 @@ public class ModelJson
 	{
 		if (Reports.TryGetValue(key, out ModelJsonReport? report))
 			return report;
-		if (Meta != null)
+		if (IsMeta)
 		{
-			var empty = new ModelJsonReport()
-			{
-				Meta = new ModelBaseMeta()
-			};
+			var empty = new ModelJsonReport();
 			empty.SetParent(this);
 			return empty;
 		}
@@ -610,7 +559,6 @@ public class ModelJson
 			c.SetParent(this);
 		foreach (var (_, r) in Reports)
 			r.SetParent(this);
-		Meta?.SetParent(this);
 	}
 }
 

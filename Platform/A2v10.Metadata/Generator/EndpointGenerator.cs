@@ -39,15 +39,10 @@ internal class EndpointGenerator(IModelBuilderFactory _modelBuilderFactory, IApp
         var md = new ModelJsonD()
         {
             RefSchema = "../../@schemas/model-json-schema.json#",
-            Schema = table.Schema,
-            Meta = new DatabaseMetaD()
-            {
-                Table = table.Table
-            },
+            Model = IModelBase.MetaModel,
             Actions = new Dictionary<String, ModelJsonViewD>() {
                 { "index", new ModelJsonViewD()
                     {
-                        Meta = new(),
                         Index = true,
                         Template = "index.template",
                         View = "index.view"
@@ -61,7 +56,6 @@ internal class EndpointGenerator(IModelBuilderFactory _modelBuilderFactory, IApp
         {
             md.Actions.Add("edit", new ModelJsonViewD()
             {
-                Meta = new(),
                 Template = "edit.template",
                 View = "edit.view"
             });
@@ -70,7 +64,6 @@ internal class EndpointGenerator(IModelBuilderFactory _modelBuilderFactory, IApp
         {
             md.Dialogs.Add("edit", new ModelJsonViewD()
             {
-                Meta = new(),
                 Template = "edit.template",
                 View = "edit.dialog"
             });
@@ -78,7 +71,6 @@ internal class EndpointGenerator(IModelBuilderFactory _modelBuilderFactory, IApp
 
         md.Dialogs.Add("browse", new ModelJsonViewD()
         {
-            Meta = new(),
             Index = true,
             Template = "index.template",
             View = "browse.dialog"

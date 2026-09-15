@@ -20,30 +20,6 @@ public interface IModelJsonAuto
 	public AutoRender Render { get; }
 }
 
-public interface IModelJsonMeta
-{
-	public String Table { get; }
-	public String Schema { get; }
-}
-
-public enum MetaEditMode
-{
-	Default,
-	Dialog,
-	Page
-}
-public interface IModelBaseMeta
-{
-	public String? Table { get; }
-	public String? Schema { get; }
-	public MetaEditMode Edit { get; }
-
-    // calculated	
-    public String CurrentTable { get; }
-    public String CurrentSchema { get; }
-    public MetaEditMode EditMode {get;}
-}
-
 // as model.json.schema
 public enum PermissionBits
 {
@@ -82,10 +58,18 @@ public interface IModelBase
 	String BaseUrl { get; }
 	Int32 CommandTimeout { get; }
 	IModelJsonAuto? Auto { get; }
-    IModelBaseMeta? Meta { get; }
 	ExpandoObject CreateParameters(IPlatformUrl url, Object? id, Action<ExpandoObject>? setParams = null, ParametersFlags flags = ParametersFlags.None);
 	Dictionary<String, PermissionBits>? Permissions { get; }
-    Boolean HasMetadata => Auto != null || Meta != null;
+
+	/* The fourth value of 'model': the data come from the metadata layer of THIS folder. Beside
+	 * "" (no model), a name (procedures) and "$sql:key" (a text) - one key answers where the data
+	 * come from, and it inherits from the root to an action as it always has. No address travels
+	 * with it: the endpoint is the folder the file lies in. '$' is the platform's mark on a value
+	 * that is not a name.
+	 */
+	const String MetaModel = "$meta";
+	Boolean IsMeta => CurrentModel == MetaModel;
+    Boolean HasMetadata => Auto != null || IsMeta;
 
 }
 

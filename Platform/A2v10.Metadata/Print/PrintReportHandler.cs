@@ -30,8 +30,8 @@ internal class PrintReportHandler(IReportEngineProvider _reportEngineProvider, D
             ?? throw new InvalidOperationException("PrintReportHandler: Base is null");
         var repName = query?.Get<String>("Rep")
             ?? throw new InvalidOperationException("PrintReportHandler: Rep is null");
-        var endpointInfo = await _metadataProvider.GetModelInfoFromPathAsync(baseUrl);
-        var endpoint = await _metadataProvider.GetNormalEndpointAsync(report.DataSource, endpointInfo.Schema, endpointInfo.Table);
+        var (schema, table) = DatabaseMetadataProvider.ParsePath(baseUrl);
+        var endpoint = await _metadataProvider.GetNormalEndpointAsync(report.DataSource, schema, table);
 
         var printTemplate = endpoint.Declaration.PrintForm(repName);
 

@@ -24,11 +24,6 @@ public class NullAppRuntimeBuilder : IAppRuntimeBuilder
 
     const String THROW_MESSAGE = "Install package A2v10.AppRuntimeBuilder or A2v10.Metadata.SqlServer";
 
-    public Task<EndpointTableInfo> ModelInfoFromPathAsync(String path)
-    {
-        throw new NotImplementedException(THROW_MESSAGE);
-    }
-
     public Task<IInvokeResult> InvokeAsync(IPlatformUrl platformUrl, String command, IModelCommand cmd, ExpandoObject? prms)
 	{
         throw new NotImplementedException(THROW_MESSAGE);

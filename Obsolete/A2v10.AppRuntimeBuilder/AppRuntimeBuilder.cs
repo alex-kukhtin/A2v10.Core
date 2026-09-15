@@ -26,11 +26,6 @@ public class AppRuntimeBuilder(IServiceProvider _serviceProvider,
 		return String.Empty;
 	}
 
-    public Task<EndpointTableInfo> ModelInfoFromPathAsync(String path)
-	{
-        throw new NotImplementedException();
-    }
-
     public Task<IInvokeResult> InvokeAsync(IPlatformUrl platformUrl, String command, IModelCommand cmd, ExpandoObject? prms)
     {
         throw new NotImplementedException();

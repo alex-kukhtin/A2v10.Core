@@ -6,19 +6,11 @@ using System.Collections.Generic;
 
 namespace A2v10.Metadata;
 
-internal record ModelJsonMetaD { }
-
 internal record ModelJsonViewD
 {
-    public ModelJsonD? Meta { get; init; }
     public Boolean Index {  get; init; }
     public String? Template { get; init; }
     public String? View { get; init; }
-}
-
-internal record DatabaseMetaD
-{
-    public String Table { get; set; } = default!;
 }
 
 internal record ModelJsonCommandD
@@ -31,8 +23,8 @@ internal record ModelJsonD
 
     [JsonProperty("$schema")]
     public String? RefSchema { get; set; }
-    public String? Schema {  get; set; }
-    public DatabaseMetaD? Meta { get; init; }
+    // '$meta': the data stay on the metadata layer, the file only names the screens
+    public String? Model { get; set; }
 
     public Dictionary<String, ModelJsonViewD>? Actions { get; init; }
     public Dictionary<String, ModelJsonViewD>? Dialogs { get; init; }
