@@ -18,7 +18,8 @@
 33. Folders - реализация
 34. Permissions - начинаем делать
 36. Attachments trait.
-
+37. Нужно разрешить details в details (для таблиц в таблицах)
+38. Profile/Preferences - реализация
 
 
 

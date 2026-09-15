@@ -134,6 +134,17 @@ public sealed record DeclarationMetadata
     public String? Surface { get; init; }
 
     public Dictionary<String, InitialMetadata> InitialValues { get; init; } = [];
+
+    /* The fields this endpoint FIXES, and to what: the rows it is about carry these values, and a
+     * new row gets them. One key, two derivations - the WHERE of the index and the fetch
+     * (SqlBuilder.FixedPredicate), and a literal initial (Initials). A second endpoint over one table
+     * says with this which SUBSET it is a window on; without it, it is the same rows. Per endpoint,
+     * never layered from 'storage': which rows an address is about is the address's own act.
+     * Values come as JSON writes them (true, 5, "code") and are spelled by the COLUMN - see
+     * DeclarationBake.CheckFixed.
+     */
+    public Dictionary<String, Object> Fixed { get; init; } = [];
+
     public RuleMetadata Rules { get; init; } = new();
     public List<PostMetadata>? Post { get; init; }
     public String? Autonum { get; init; }
@@ -256,6 +267,15 @@ public sealed record DeclarationMetadata
      */
     public RuleMetadata RulesFor(String? kind) =>
         kind != null && Kinds.TryGetValue(kind, out var k) ? RuleMetadata.Merge(k.Rules, Rules) : Rules;
+
+    /* What a NEW record starts on: the declared initials plus the fixed fields as literals. Every
+     * reader of initials reads this and not InitialValues - the defaults recordset, the map of a
+     * literal reference, the check of an enum code. Filled by the bake; declared and derived never
+     * share a field.
+     */
+    [JsonIgnore]
+    public IReadOnlyDictionary<String, InitialMetadata> Initials { get; init; }
+        = new Dictionary<String, InitialMetadata>();
 
     /* What this node's own rules inherit, keyed by the reference that drives it - one handler per
      * reference, one fetch projection per selector. Read by the ROOT; for a collection the answer

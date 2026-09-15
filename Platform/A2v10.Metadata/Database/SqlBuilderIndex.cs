@@ -107,7 +107,9 @@ internal partial class SqlBuilder
 
             var docOp = Endpoint.DocumentOperation();
             if (docOp != null)
-                sb.Append($"and a.[Operation] = @RouteOperation");
+                sb.Append($" and a.[Operation] = @RouteOperation");
+
+            sb.Append(FixedPredicate("a"));
 
             if (Table.HasPeriod)
                 sb.AppendLine(" and a.[Date] >= @From and a.[Date] < @end");

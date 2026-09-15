@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace A2v10.Metadata;
@@ -87,7 +88,44 @@ internal static class DeclarationBake
             throw new InvalidOperationException(
                 $"total: declared on {table.SqlTableName}, which is a record. A sum is a member of a collection.");
         NoLeftovers(table, declaration.Kinds.Keys, [], "kinds");
-        return declaration.BakeNode(table) with { BakedForms = BuildForms(declaration, table) };
+        return declaration.BakeNode(table) with
+        {
+            BakedForms = BuildForms(declaration, table),
+            Initials = BuildInitials(declaration, table)
+        };
+    }
+
+    /* A fixed value as SQL will spell it, by the column and never by the look of the text - the
+     * same rule a literal initial follows (SqlExtensions.SqlLiteral). JSON hands over a Boolean, a
+     * number or a string; a reference key is refused there, as it is for a literal initial.
+     */
+    internal static String FixedText(Object value) => value switch
+    {
+        Boolean b => b ? "1" : "0",
+        null => throw new InvalidOperationException("fixed: a value is null"),
+        _ => Convert.ToString(value, CultureInfo.InvariantCulture)!
+    };
+
+    /* The initials of a new record: what the file declared, and the fixed fields on top as literals.
+     * Checked here, where the table is at hand: a fixed field must be a column, its value must be
+     * spellable for that column, and a field cannot be both fixed and given an initial - two
+     * answers to what a new row starts on.
+     */
+    private static IReadOnlyDictionary<String, InitialMetadata> BuildInitials(DeclarationMetadata declaration, TableMetadata table)
+    {
+        var initials = new Dictionary<String, InitialMetadata>(declaration.InitialValues);
+        foreach (var (name, value) in declaration.Fixed)
+        {
+            var column = table.AllColumns().FirstOrDefault(c => c.Name == name)
+                ?? throw new InvalidOperationException($"fixed: field '{name}' not found in {table.SqlTableName}");
+            var text = FixedText(value);
+            column.SqlLiteral(text); // throws for a column no literal can address
+            if (initials.ContainsKey(name))
+                throw new InvalidOperationException(
+                    $"fixed: '{name}' is also in 'initialValues'. A fixed field IS the initial of a new record; keep one.");
+            initials[name] = new InitialMetadata(InitialSource.Literal, text);
+        }
+        return initials;
     }
 
     /* Which shapes have forms at all - a table is deployed whether or not anything renders it, and

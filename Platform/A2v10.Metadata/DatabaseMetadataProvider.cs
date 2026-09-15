@@ -620,11 +620,12 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     /* Where the shape comes from is declared, never guessed.
      *
      * Three keys on one axis - 'table' (my own), 'storage' (a table declared elsewhere, which I
-     * write to), 'surface' (a shape I only read) - and exactly one of them is legal per folder:
-     * 'storage' for a family of operations over one document table, 'surface' for a report, which
-     * owns no table and therefore never reaches deploy, 'table' for everyone else. Which rule
-     * applies is decided by the folder, so writing the wrong key never moves an endpoint into
-     * another rule - it is an error naming the rule it broke.
+     * write to), 'surface' (a shape I only read) - and which are legal is decided per folder:
+     * 'table' or 'storage' for the kinds that render (document, catalog, journal - an operation,
+     * or a second address with screens of its own over the same rows), 'surface' for a report,
+     * which owns no table and therefore never reaches deploy, 'table' alone for a set. Writing the
+     * wrong key never moves an endpoint into another rule - it is an error naming the rule it
+     * broke.
      *
      * There used to be a default - an absent 'storage' under document/ meant the shared
      * doc.Documents - and it was the single place in the format where writing nothing meant
@@ -674,12 +675,16 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                   Declare "table": "<TableName>" instead.
                 """);
 
-        if (schema != Constants.SchemaNames.Document)
+        /* The kinds that render: a second endpoint over one table is a second window on the same
+         * rows - an operation of a document, a catalog or a journal with its own screens and its own
+         * address. A set has no screen, so a second address to it would be an address to nothing.
+         */
+        if (schema is not (Constants.SchemaNames.Document or Constants.SchemaNames.Catalog or Constants.SchemaNames.Journal))
         {
             if (hasStorage)
                 throw new InvalidOperationException($"""
-                    {file}: declares 'storage', which only a document endpoint may do.
-                      'storage' shares one table across a family of operations; every other kind owns its table.
+                    {file}: declares 'storage', which '{schema}/' may not do.
+                      'storage' is a second endpoint over one table, with screens of its own; a set has no screens.
                       Declare "table": "<TableName>" instead.
                     """);
             if (!hasTable)
@@ -695,14 +700,14 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             throw new InvalidOperationException(hasTable
                 ? $"""
                     {file}: declares both 'table' and 'storage'. These are two different layouts:
-                        "table":   "{declaration.Table}" - this document has its own table;
-                        "storage": "{declaration.Storage}" - this document is an operation over a table declared elsewhere.
+                        "table":   "{declaration.Table}" - this endpoint has its own table;
+                        "storage": "{declaration.Storage}" - this endpoint is a second one over a table declared elsewhere.
                       Keep one.
                     """
                 : $"""
                     {file}: declares neither 'table' nor 'storage', so nothing says where the data lives.
-                        "table":   "<TableName>" - if this document has its own table;
-                        "storage": "document"    - if it is an operation over a table declared elsewhere.
+                        "table":   "<TableName>"     - if this endpoint has its own table;
+                        "storage": "/{schema}/<name>" - if it is a second one over a table declared elsewhere (an operation, a second screen).
                       There is no default: an absent 'table' is not a shared table and not a derived name.
                     """);
     }
@@ -870,11 +875,11 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     {
         if (endpoint is not NormalEndpointMetadata normal)
             return;
-        foreach (var (key, initial) in normal.Declaration.InitialValues)
+        foreach (var (key, initial) in normal.Declaration.Initials)
         {
             if (initial.Source != InitialSource.Literal)
                 continue;
-            var column = meta.Columns.FirstOrDefault(c => c.Name == key && c.IsEnum);
+            var column = meta.AllColumns().FirstOrDefault(c => c.Name == key && c.IsEnum);
             if (column == null)
                 continue;
             var target = column.RefTableCheck.Storage;

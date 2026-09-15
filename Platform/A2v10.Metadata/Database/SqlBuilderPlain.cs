@@ -70,10 +70,11 @@ internal partial class SqlBuilder
             var org = Endpoint.Declaration;
             if (!IsNewModel())
                 return null;
-            var initValues = org.InitialValues;
+            // declared initials plus the fixed fields - what a new record of THIS address starts on
+            var initValues = org.Initials;
             var docOp = Endpoint.DocumentOperation();
             if (docOp != null)
-                initValues = new Dictionary<string, InitialMetadata>(initValues)
+                initValues = new Dictionary<String, InitialMetadata>(initValues)
                 {
                     ["Operation"] = new InitialMetadata(
                         Source: InitialSource.Context,
@@ -98,7 +99,8 @@ internal partial class SqlBuilder
              */
             String getDefaultLiteral(String key, String value)
             {
-                var column = Table.Columns.FirstOrDefault(c => c.Name == key)
+                // AllColumns: a fixed field may be one the kind adds (Done, IsSystem), not only a declared one
+                var column = Table.AllColumns().FirstOrDefault(c => c.Name == key)
                     ?? throw new InvalidOperationException($"Column {key} not found in {Table.SqlTableName}");
                 return column.IsRef
                     ? $"[{Table.Model}.{key}!{column.RefTableCheck.Storage.TypeName}!RefId] = {column.SqlLiteral(value)}"

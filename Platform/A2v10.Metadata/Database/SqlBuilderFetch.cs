@@ -74,6 +74,8 @@ internal partial class SqlBuilder
             .Select(c => $",\n    {c.SqlModelColumnName("a", t => t.TypeName)}"));
 
         var refColumns = columns.Where(c => c.IsRef).ToList();
+        // the same rows the browse dialog of this address shows - see FixedPredicate
+        var fixedRows = FixedPredicate("a");
 
         /* Two shapes, and the difference is real: without references there is nothing to resolve
          * and one select answers; with them the same hundred rows are needed twice, so they are
@@ -90,7 +92,7 @@ internal partial class SqlBuilder
             select top(100) [{Table.CollectionName}!{Table.TypeName}!Array] = null,
                 [Id!!Id] = a.Id, [Name!!Name] = a.[Name]{extra}
             from {Table.SqlTableName} a
-            where a.[Void] = 0 and
+            where a.[Void] = 0{fixedRows} and
                 (a.[Name] like @fr)
             order by a.[Name];
             """
@@ -106,7 +108,7 @@ internal partial class SqlBuilder
             insert into @map(Id, {String.Join(", ", refColumns.Select(c => $"[{c.Name}]"))})
             select top(100) a.Id, {String.Join(", ", refColumns.Select(c => $"a.[{c.Name}]"))}
             from {Table.SqlTableName} a
-            where a.[Void] = 0 and
+            where a.[Void] = 0{fixedRows} and
                 (a.[Name] like @fr)
             order by a.[Name];
 

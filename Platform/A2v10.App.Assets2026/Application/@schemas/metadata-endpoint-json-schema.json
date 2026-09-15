@@ -25,7 +25,7 @@
         },
         "storage": {
             "type": "string",
-            "description": "Path to the endpoint that declares the table this one writes into. Documents only. One hop: it must point at an endpoint that declares 'table'."
+            "description": "Path to the endpoint that declares the table this one writes into: an operation of a document, or a catalog/journal with screens of its own over the same rows (a second window, never a subset). Document, catalog and journal only. One hop: it must point at an endpoint that declares 'table'."
         },
         "surface": {
             "type": "string",
@@ -64,6 +64,11 @@
         },
 
         "initialValues": { "$ref": "#/definitions/initialValues" },
+        "fixed": {
+            "type": "object",
+            "description": "Field -> value this endpoint FIXES: the rows it is about carry these values (the WHERE of the index and of the selector fetch), and a new record starts on them. What makes a second endpoint over one table ('storage') a window on a SUBSET; without it, the same rows. Spelled by the column's type, so a bit is written true, a code \"code\". A field cannot also be in 'initialValues'. Per endpoint, never inherited from 'storage'.",
+            "additionalProperties": { "type": [ "boolean", "string", "number" ] }
+        },
         "rules": { "$ref": "#/definitions/rules" },
         "post": {
             "type": "array",

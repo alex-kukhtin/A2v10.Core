@@ -43,6 +43,22 @@ internal partial class SqlBuilder(BuilderDescriptor desciptor, IServiceProvider 
         ? $", {alias}[{Constants.FieldNames.UserModified}] = @UserId, {alias}[{Constants.FieldNames.UtcDateModified}] = getutcdate()"
         : String.Empty;
 
+    /* The rows this endpoint is about, as the tail of a WHERE: every fixed field equal to its value.
+     * Read by the index (and so browse and indexpartial) and by the fetch a selector types into -
+     * the two roads to the rows of an address, which have to agree on which rows those are.
+     */
+    String FixedPredicate(String alias)
+    {
+        var fixedFields = Endpoint.Declaration.Fixed;
+        if (fixedFields.Count == 0)
+            return String.Empty;
+        return String.Concat(fixedFields.Select(kp =>
+        {
+            var column = Table.AllColumns().First(c => c.Name == kp.Key);
+            return $" and {alias}.[{kp.Key}] = {column.SqlLiteral(DeclarationBake.FixedText(kp.Value))}";
+        }));
+    }
+
     DbParameterCollection AddPeriodParameters(DbParameterCollection prms, ExpandoObject? qry)
     {
         if (!Table.HasPeriod)

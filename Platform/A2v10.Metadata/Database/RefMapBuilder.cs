@@ -227,10 +227,10 @@ internal class RefMapBuilder
     {
         if (!_hasDefaults || _declaration == null)
             return null;
-        if (_declaration.InitialValues.Count == 0)
+        if (_declaration.Initials.Count == 0)
             return null;
         // from user profile
-        var profUser = _declaration.InitialValues.Where(x => x.Value.Source == InitialSource.Profile).ToList();
+        var profUser = _declaration.Initials.Where(x => x.Value.Source == InitialSource.Profile).ToList();
         if (profUser.Count == 0) 
             return null;
         var sb = new StringBuilder();
@@ -256,9 +256,9 @@ internal class RefMapBuilder
     {
         if (!_hasDefaults || _declaration == null || _endpoint == null)
             return null;
-        var refs = _declaration.InitialValues
+        var refs = _declaration.Initials
             .Where(x => x.Value.Source == InitialSource.Literal)
-            .Select(x => (Column: _endpoint.Storage.Columns.FirstOrDefault(c => c.Name == x.Key), x.Value.Value))
+            .Select(x => (Column: _endpoint.Storage.AllColumns().FirstOrDefault(c => c.Name == x.Key), x.Value.Value))
             .Where(x => x.Column != null && x.Column.IsRef)
             .ToList();
         if (refs.Count == 0)
