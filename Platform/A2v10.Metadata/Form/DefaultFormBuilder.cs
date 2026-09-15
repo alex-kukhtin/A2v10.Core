@@ -11,6 +11,12 @@ namespace A2v10.Metadata;
  */
 internal static class DefaultFormBuilder
 {
+    // no filters, no node: an empty panel still counts as content, and the taskpad would render for it
+    static List<FormElement> FilterElements(TableMetadata table) =>
+        table.Filters().Select(f => f.Name).ToList() is { Count: > 0 } names
+            ? [new FormElement() { Is = FormElementKind.Filters, Filters = names }]
+            : [];
+
     public static FormMetadata CreateIndexForm(TableMetadata table)
     {
         var cols = table.AllColumns(TableColumnPredicates.IsIndexColumn)
@@ -33,12 +39,7 @@ internal static class DefaultFormBuilder
             Taskpad = new FormElement()
             {
                 Is = FormElementKind.Taskpad,
-                Elements = [
-                    new FormElement() {
-                        Is = FormElementKind.Filters,
-                        Filters = [..table.Filters().Select(f => f.Name)],
-                    }
-                ]
+                Elements = FilterElements(table)
             }
         };
     }
@@ -62,12 +63,7 @@ internal static class DefaultFormBuilder
             Taskpad = new FormElement()
             {
                 Is = FormElementKind.Taskpad,
-                Elements = [
-                    new FormElement() {
-                        Is = FormElementKind.Filters,
-                        Filters = [..table.Filters().Select(f => f.Name)],
-                    }
-                ]
+                Elements = FilterElements(table)
             }
         };
     }

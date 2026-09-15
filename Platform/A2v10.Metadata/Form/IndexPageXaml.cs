@@ -125,7 +125,7 @@ internal partial class XamlBuilder
         {
             CollectionView = XamlCollectionView(),
             Children = [IndexGrid(meta)],
-            Taskpad = ElementToControl(meta.Taskpad)
+            Taskpad = ElementToControl(meta.Taskpad) is Taskpad { Children.Count: > 0 } taskpad ? taskpad : null
         };
     }
 
@@ -141,44 +141,6 @@ internal partial class XamlBuilder
         };
     }
 
-    internal Grid IndexPageGrid(FormMetadata meta)
-    {
-        UIElementBase CreateIndexToolbar(FormElement? tb)
-        {
-            return new Toolbar(_xamlServiceProvider);
-        }
-
-        return new Grid(_xamlServiceProvider)
-        {
-            Rows = RowDefinitions.FromString("Auto,1*,Auto"),
-            Height = Length.FromString("100%"),
-            Children = [
-                CreateIndexToolbar(meta.Toolbar),
-                //CreateIndexDataGrid(meta.Body[0]),
-                new Pager() 
-                {
-                    Bindings = b => b.SetBinding(nameof(Pager.Source), new Bind("Parent.Pager"))
-                }
-            ]
-        };
-    }
-
-    internal Taskpad? IndexTaskpad(FormElement taskPad)
-    {
-        if (taskPad.Fields.Count == 0)
-            return null;
-        return new Taskpad()
-        {
-            Children = [
-                new Panel() {
-                    Header = "@[Filters]",
-                    Collapsible = true,
-                    Style = PaneStyle.Transparent,
-                    //Children = [..taskPad.Filters.Select(CreateFilterControl)]
-                },
-            ]
-        };
-    }
     internal Dialog CreateBrowseDialogXaml(FormMetadata dialog)
     {
         var selectCommand = new BindCmd() { Command = CommandType.Select };
@@ -186,7 +148,7 @@ internal partial class XamlBuilder
         var dlg = new Dialog()
         {
             CollectionView = XamlCollectionView(),
-            //Width = Length.FromString(dialog.TaskPad?.Filters.Count > 0 ? "80rem" : "60rem"), // TODO
+            Width = Length.FromString(dialog.Taskpad.Elements.Count > 0 ? "80rem" : "60rem"), // TODO: calculate width from columns
             Height = Length.FromString("40rem"),
             Title = $"@[{Table.Model}.Browse]",
             Buttons = [
@@ -217,7 +179,7 @@ internal partial class XamlBuilder
                     ]
                 }
             ],
-            Taskpad = IndexTaskpad(dialog.Taskpad)
+            Taskpad = ElementToControl(dialog.Taskpad) is Taskpad { Children.Count: > 0 } taskpad ? taskpad : null
         };
 
         // by type, not by position: the body may carry a bar of its own before the grid

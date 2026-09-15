@@ -73,7 +73,7 @@ internal partial class SqlBuilder
                 var rd = refs.FirstOrDefault(r => r.Column == orderColumn);
                 if (rd != null)
                 {
-                    field = $"r{rd.Index}.[{rd.Column.Presentation}]";
+                    field = $"r{rd.Index}.[{rd.Table.Presentation}]";
                     value = rd.Column.Name;
                     refdescr = rd;
                 }
@@ -135,7 +135,7 @@ internal partial class SqlBuilder
             if (!String.IsNullOrEmpty(fragment))
             {
                 var searchColumns = allColumns.Where(c => c.IsSearchable).Select(x => $"a.[{x.Name}] like @fr")
-                    .Concat(searchRefs.Select(r => $"r{r.Index}.[{r.Column.Presentation}] like @fr")).ToList();
+                    .Concat(searchRefs.Select(r => $"r{r.Index}.[{r.Table.Presentation}] like @fr")).ToList();
                 if (searchColumns.Count > 0)
                 {
                     sb.Append($" and ({String.Join(" or ", searchColumns)})");

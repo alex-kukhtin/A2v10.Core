@@ -209,8 +209,10 @@ internal class RefMapBuilder
                 ? ", " + String.Join(", ", inh.Select(c => c.SqlModelColumnName("a", RealTypeName)))
                 : String.Empty;
 
+            // the role 'Name' carries the target's presentation - every display binds to it
+            var presentation = kvp.Value[0].RefTableCheck.Storage.Presentation;
             var select = $"""
-            select [!{typeName}!Map] = null, [Id!!Id] = a.Id, [Name!!Name] = a.Name{inherits}
+            select [!{typeName}!Map] = null, [Id!!Id] = a.Id, [Name!!Name] = a.[{presentation}]{inherits}
             from {tableName} a inner join T on a.Id = T.id;
             """;
             return $"{cte}\n{select}";

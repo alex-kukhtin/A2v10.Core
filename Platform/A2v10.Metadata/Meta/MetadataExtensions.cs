@@ -115,7 +115,11 @@ internal static class MetadataExtensions
         columns.Where(c => c.IsRef || c.IsOperation).Select((c, ix) => new RefDescriptor(ix + 1, c, (c.RefTable
             ?? throw new InvalidOperationException($"RefTable for {c.Name} is null")).Storage));
 
-    // the operation is the endpoint, so its key is the endpoint name - not a slice of a path
+    /* The operation is the endpoint, so its key is the endpoint name - not a slice of a path. Only an
+     * endpoint over a storage declared elsewhere is one: the storage itself (/document, an empty name)
+     * is the whole family, and answering '' for it filtered its list down to nothing.
+     */
     internal static String? DocumentOperation(this NormalEndpointMetadata endpoint) =>
-        endpoint.Storage.IsDocument && endpoint.Storage.Columns.Any(c => c.IsOperation) ? endpoint.Name : null;
+        !endpoint.Declaration.HasOwnShape && endpoint.Storage.IsDocument && endpoint.Storage.Columns.Any(c => c.IsOperation)
+            ? endpoint.Name : null;
 }

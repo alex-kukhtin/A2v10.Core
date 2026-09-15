@@ -111,6 +111,21 @@ public sealed record FormElement
      * set. One walk for declared and default forms alike, and it rebuilds rather than fills - see
      * CLAUDE.md, "Declarations".
      */
+    /* 'scope' re-roots onto a collection, and only a tab shows one: a group lays out the editors of a
+     * record, and its axis and labelAt mean nothing over rows. A tab in turn is drawn only by its strip
+     * (XamlBuilder.CreateTabsScope). Refused while baking - otherwise a scoped group is read against the
+     * header, and the author gets "field not found" about a field that is right there in the rows.
+     */
+    internal static void CheckPlacement(FormElementKind? parent, FormElement el)
+    {
+        if (!String.IsNullOrEmpty(el.Scope) && el.Is != FormElementKind.Tab)
+            throw new InvalidOperationException(
+                $"'{el.Is}' with scope '{el.Scope}': a collection is shown only by a tab inside tabs");
+        if (el.Is == FormElementKind.Tab && parent != FormElementKind.Tabs)
+            throw new InvalidOperationException(
+                $"tab '{el.Scope}' outside tabs: a tab is drawn only by its strip");
+    }
+
     internal FormElement Bake(TableMetadata table, List<MemberDescriptor> members)
     {
         MemberDescriptor FindMember(String key) =>
@@ -133,6 +148,7 @@ public sealed record FormElement
         String? tabState = null;
         foreach (var el in Elements)
         {
+            CheckPlacement(Is, el);
             if (String.IsNullOrEmpty(el.Scope))
             {
                 elements.Add(el.Bake(table, members));
@@ -183,7 +199,7 @@ public sealed record FormMetadata
     {
         return this with
         {
-            Body = [.. Body.Select(el => el.Bake(table, members))],
+            Body = [.. Body.Select(el => { FormElement.CheckPlacement(null, el); return el.Bake(table, members); })],
             Toolbar = Toolbar.Bake(table, members),
             Taskpad = Taskpad.Bake(table, members)
         };

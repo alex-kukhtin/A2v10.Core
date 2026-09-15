@@ -6,8 +6,6 @@ using System.Collections.Generic;
 
 using Newtonsoft.Json;
 
-using A2v10.Infrastructure;
-
 namespace A2v10.Metadata;
 
 public enum EndpointKind
@@ -126,26 +124,16 @@ public record TableColumn
     [JsonIgnore]
     public IRefTarget RefTableCheck => RefTable ?? throw new InvalidOperationException($"RefTable for '{Name}' is null");
 
-    [JsonIgnore] 
+    [JsonIgnore]
     internal Boolean IsRef => Type == ColumnType.Ref || Type == ColumnType.Master ||
             Type == ColumnType.User || Type == ColumnType.Document ||
             Type == ColumnType.Company || Type == ColumnType.Operation ||
             Type == ColumnType.Enum;
 
-    internal String Presentation
-    {
-        get
-        {
-            if (Type == ColumnType.Ref)
-                return RefTableCheck.Storage.Label;
-            return Constants.FieldNames.Name;
-        }
-    }
-
     #region Database Fields
     public Int32? Length { get; init; }
     public Int32? Precision { get; init; }
-    public Int32? Scale { get; init; }    
+    public Int32? Scale { get; init; }
     /* No 'Required' here: it is a rule, not a property of the column - see
      * DeclarationMetadata.RuleSet and MetadataExtensions.RequiredFields.
      */
@@ -156,7 +144,7 @@ public record TableColumn
     internal Boolean IsOperation => Type == ColumnType.Operation;
 
     [JsonIgnore]
-    internal Boolean HasDefaultBit => 
+    internal Boolean HasDefaultBit =>
         Type == ColumnType.IsSystem
         || Type == ColumnType.IsFolder
         || Type == ColumnType.Void
@@ -175,7 +163,8 @@ public record TableColumn
     internal Boolean IsMemo => Type == ColumnType.Memo;
     [JsonIgnore]
     internal String Header => $"@[{Name}]";
-    internal String DisplayPath => (IsRef) ? $"{Name}.{Presentation}" : Name;
+    // a reference shows its 'Name' property: the resolver fills it from the target's Presentation
+    internal String DisplayPath => (IsRef) ? $"{Name}.{Constants.FieldNames.Name}" : Name;
 }
 
 public enum PostDirection
@@ -304,7 +293,14 @@ public sealed record TableMetadata
     public String Table { get; set; } = default!;
     public String Model { get; set; } = default!;
     public String Path { get; set; } = default!;
-    public String Label { get; set; } = default!;
+    /* The column a row of this table is shown by wherever it is referenced. One column and not a
+     * template: it is spelled into SQL (resolve, sort, search), where a template would mean formatting
+     * values in the server's locale. A composite display is two columns in the markup.
+     */
+    // empty for a kind no reference points at, as Table is for a kind that has none - see SetDefaults
+    [JsonProperty("presentation")]
+    internal String Presentation { get; private set; } = default!;
+
     [JsonProperty("fields")]
     private Dictionary<String, TableColumn> _fields { get; init; } = [];
 
@@ -559,8 +555,26 @@ public sealed record TableMetadata
             Model = table.KebabToPascal();
         if (Kind == EndpointKind.Undefined)
             Kind = schema.ToEndpointKind();
-        if (String.IsNullOrEmpty(Label))
-            Label = Constants.FieldNames.Name;
+
+        /* Only the kinds a reference points at are shown by anything; a journal or the numbering
+         * registry is nobody's target, so 'presentation' written there is refused rather than left a
+         * key with no effect. Not written: the Name column, then the autonum one - a document is
+         * shown by its number. Written: it must be a column, because downstream it is an identifier
+         * inside SQL.
+         */
+        if (Kind is EndpointKind.Catalog or EndpointKind.Document or EndpointKind.Enum or EndpointKind.Operation)
+        {
+            var cols = this.AllColumns().ToList();
+            if (String.IsNullOrEmpty(Presentation))
+                Presentation = (cols.FirstOrDefault(c => c.Type is ColumnType.Name)
+                    ?? cols.FirstOrDefault(c => c.Type is ColumnType.Autonum))?.Name
+                    ?? throw new InvalidOperationException(
+                        $"{Path}: nothing to be shown by - declare 'presentation', or add a Name or autonum column");
+            else if (!cols.Any(c => c.Name == Presentation))
+                throw new InvalidOperationException($"{Path}: presentation '{Presentation}' is not a column of this table");
+        }
+        else if (!String.IsNullOrEmpty(Presentation))
+            throw new InvalidOperationException($"{Path}: 'presentation' on a {Kind} - nothing references it, so nothing is shown by it");
 
         foreach (var d in Details)
             d.Value.SetDetailDefaults(this, d.Key);
