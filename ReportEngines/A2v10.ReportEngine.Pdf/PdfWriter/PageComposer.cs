@@ -53,7 +53,7 @@ internal class PageComposer
 			if (!String.IsNullOrEmpty(_page.FontFamily))
 				ts = ts.FontFamily(_page.FontFamily!);
 			else
-				ts = ts.FontFamily(Fonts.Verdana);
+				ts = ts.FontFamily("Verdana");
 			if (rs != null && rs.FontSize != null)
 				ts = ts.FontSize(rs.FontSize.Value);
 			else

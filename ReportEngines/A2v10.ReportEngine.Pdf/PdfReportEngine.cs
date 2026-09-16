@@ -24,6 +24,11 @@ public class PdfReportEngine : IReportEngine
 	public PdfReportEngine(IAppCodeProvider appCodeProvider, ILocalizer localizer, ICurrentUser user)
 	{
         Settings.License ??= LicenseType.Community;
+		// 2026.9.0 перевернул оба умолчания. Бланки называют системные шрифты (Calibri —
+		// наш же дефолт, поставлять его нельзя), а отсутствующее семейство — резервный шрифт
+		// на бумаге, не упавшая печать на сервере без Calibri
+		Settings.UseSystemFonts = true;
+		Settings.ThrowOnMissingFontFamilies = false;
 
 		// Settings.EnableDebugging = true;
 

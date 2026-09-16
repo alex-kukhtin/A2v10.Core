@@ -52,7 +52,7 @@ internal class SpreadsheetComposer
 			if (!String.IsNullOrEmpty(_ssheet.FontFamily))
 				ts = ts.FontFamily(_ssheet.FontFamily!);
 			else
-				ts = ts.FontFamily(Fonts.Calibri);
+				ts = ts.FontFamily("Calibri");
 			if (rs != null && rs.FontSize != null)
 				ts = ts.FontSize(rs.FontSize.Value);
 			else if (_ssheet.FontSize != null)
