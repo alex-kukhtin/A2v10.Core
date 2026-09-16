@@ -76,26 +76,43 @@ internal class ResolveEndpointCommand(IServiceProvider services)
         if (dr.View == null)
             throw new InvalidOperationException("Can't resolve action or dialog");    
 
-        //var view = dr.View.GetRawView(false);
+        /* On '$meta' what is not a file is the platform's, and it is named by the platform's own
+         * word: a procedure slot reads '$meta' (the SQL is generated), a screen slot reads '$meta'
+         * where model.json names no file (generated at render; a2 meta materialize writes one).
+         * One shape either way - a string where a name would be.
+         */
+        var meta = dr.View.IsMeta;
         return new ExpandoObject()
         {
             { "route", route },
             { "model", dr.View.CurrentModel },
-            { "view", BuildResolvedPath(route, dr.View?.GetRawView(false), "vxaml") },
-            { "template", BuildResolvedPath(route, dr.View?.Template, "ts") },
-            { "sqlProcedures", BuildSqlProcedures(dr.View!) },
+            { "view", BuildResolvedPath(route, dr.View.GetRawView(false), "vxaml", meta) },
+            { "template", BuildResolvedPath(route, dr.View.Template, "ts", meta) },
+            { "sqlProcedures", meta ? MetaSqlProcedures(route) : BuildSqlProcedures(dr.View) },
             { "dataModel", dr.Model.BuildDataModelMeta() }
         };
     }
 
-    private static ExpandoObject BuildResolvedPath(String route, String? file, String ext)
+    /* By the action's name, not by model.json's 'index' flag: on '$meta' nobody writes the flag,
+     * the action is dispatched by name, and the metadata layer saves 'edit' and nothing else.
+     */
+    private static ExpandoObject MetaSqlProcedures(String route)
+    {
+        var action = route.TrimEnd('/').Split('/')[^1].ToLowerInvariant();
+        return new ExpandoObject()
+        {
+            { "load", IModelBase.MetaModel },
+            { "update", action == "edit" ? IModelBase.MetaModel : null }
+        };
+    }
+
+    private static ExpandoObject BuildResolvedPath(String route, String? file, String ext, Boolean meta)
     {
         return new ExpandoObject()
         {
             { "route", route.NormalizePath() },
-            { "file",  $"{file}.{ext}" }
+            { "file", !String.IsNullOrEmpty(file) ? $"{file}.{ext}" : meta ? IModelBase.MetaModel : null }
         };
-
     }
     private static ExpandoObject BuildSqlProcedures(IModelView view)
     {
