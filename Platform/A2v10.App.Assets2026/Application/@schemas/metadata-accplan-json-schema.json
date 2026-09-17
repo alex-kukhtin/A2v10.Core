@@ -1,0 +1,34 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://a2v10.com/schemas/metadata-accplan-json-schema.json",
+    "title": "A2v10 metadata.json (accplan)",
+    "description": "A chart of accounts: accplan/<name>/metadata.json, always named, even when there is only one. The table is keyed by the account code; its rows are declared in the seed file beside this one and written by the deploy. The baseline (Id, Name, Parent, AccountType, NormalBalance, Void, IsSystem, RowVersion, stamps) is the platform's and is not written here.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [ "table", "seed" ],
+    "properties": {
+        "$schema": { "type": "string" },
+        "description": { "type": "string", "description": "For the model, not the platform: nothing reads it - no generator, runtime or deploy. Where the model writes down what it must know about this endpoint - its rules and the reasons for them - so the next session finds them here." },
+        "table": {
+            "type": "string",
+            "description": "The SQL table of this chart, in schema 'acc'. No default - a table name is never derived from the folder name."
+        },
+        "origin": { "$ref": "metadata-endpoint-json-schema.json#/definitions/origin" },
+        "model": {
+            "type": "string",
+            "description": "Base of the generated names: collection, row type, card title. Defaults to the folder name in PascalCase; a chart usually writes 'Account'."
+        },
+        "seed": {
+            "type": "string",
+            "description": "The file of rows, in this folder: a map 'account code -> { column: value }'. Required - nothing is inferred from a file lying in the folder. Checked at load: columns exist and are not the platform's, Name/AccountType/NormalBalance present, AccountType and NormalBalance spelled as their values, Parent is a code of the same file with no cycles, no '.' in a code (reserved for user sub-accounts), at most 64 characters."
+        },
+        "fields": {
+            "$ref": "metadata-endpoint-json-schema.json#/definitions/fields",
+            "description": "The author's own attributes of an account, next to the baseline."
+        },
+        "forms": {
+            "type": "object",
+            "additionalProperties": { "$ref": "metadata-endpoint-json-schema.json#/definitions/form" }
+        }
+    }
+}

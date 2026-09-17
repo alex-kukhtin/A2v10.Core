@@ -25,9 +25,11 @@ internal class ReportEndpointBuilder(IServiceProvider _serviceProvider, ReportEn
         var _source = _endpoint.Surface;
         var _report = _endpoint.Report;
 
-        var reportBuilder = _report.Type switch
+        BaseReportBuilder reportBuilder = _report.Type switch
         {
             "turnover" => new TurnoverReportBuilder(_serviceProvider, _report, _source, _platformId),
+            "trialBalance" => new TrialBalanceReportBuilder(_serviceProvider, _report, _source, _platformId),
+            "chessboard" => new ChessboardReportBuilder(_serviceProvider, _report, _source, _platformId),
             _ => throw new NotImplementedException($"Invalid Report type '{_report.Type}' for {_endpoint.Path}")
         };
 

@@ -94,8 +94,8 @@ internal class ReportGrouping
         => String.Join(", ", Data.Select(c =>
             $"""                        
             [Start{c.Column}] = sum(case when {alias}.[Date] < @From then {alias}.[{c.Column}]* j.[InOut] else 0 end),
-            [In{c.Column}] = sum(case when {alias}.Date > @From and InOut = 1 then {alias}.[{c.Column}] else 0 end),
-            [Out{c.Column}] = sum(case when {alias}.Date > @From and InOut = -1 then {alias}.[{c.Column}] else 0 end)
+            [In{c.Column}] = sum(case when {alias}.Date >= @From and InOut = 1 then {alias}.[{c.Column}] else 0 end),
+            [Out{c.Column}] = sum(case when {alias}.Date >= @From and InOut = -1 then {alias}.[{c.Column}] else 0 end)
             """)
         );
 

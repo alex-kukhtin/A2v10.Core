@@ -44,6 +44,7 @@ public class SheetCellGroup : XamlElement, ISheetCell
 
 	protected override void OnEndInit()
 	{
+		base.OnEndInit();
 		foreach (var c in Cells)
 			c.SetParent(this);
 	}

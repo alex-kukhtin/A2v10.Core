@@ -43,7 +43,7 @@ internal static class XamlExtensions
             ColumnType.Float or ColumnType.Decimal or ColumnType.Money or
                 ColumnType.Price or ColumnType.Amount or ColumnType.Qty => TextAlign.Right,
             ColumnType.RowNumber => TextAlign.Right,
-            ColumnType.Bit => TextAlign.Center,
+            ColumnType.Bit or ColumnType.Boolean => TextAlign.Center,
             _ => TextAlign.Default,
         };
 
@@ -57,6 +57,7 @@ internal static class XamlExtensions
             ColumnType.Date or ColumnType.DateTime => ColumnRole.Date,
             ColumnType.Money or ColumnType.Decimal or ColumnType.Float or
                 ColumnType.Amount or ColumnType.Price => ColumnRole.Number,
+            ColumnType.Bit or ColumnType.Boolean => ColumnRole.CheckBox,
             _ => ColumnRole.Default,
         };
 

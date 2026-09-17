@@ -38,7 +38,7 @@ internal sealed class PostStatements
         var sql = _post[0].Sql;
         Post = sql != null
             ? Exec(sql.Post)
-            : String.Join("\n\n", _post.Select(InsertIntoJournal));
+            : String.Join("\n\n", _post.Select(p => p.IsLedger ? InsertIntoLedger(p) : InsertIntoJournal(p)));
         UnPost = sql?.UnPost != null
             ? Exec(sql.UnPost)
             : String.Join("\n", _endpoint.Declaration.PostJournals()
@@ -205,19 +205,21 @@ internal sealed class PostStatements
         return result;
     }
 
+    // the rows a posting iterates: none without 'each', one join with it
+    private (TableMetadata? Table, String Join) EachJoin(PostMetadata p)
+    {
+        if (p.Each == null)
+            return (null, String.Empty);
+        var (dt, onClause) = FindDetailsTable(p.Each);
+        return (dt, $"inner join {dt.SqlTableName} r on r.[{dt.MasterField}] = d.[{Constants.FieldNames.Id}]{onClause}");
+    }
+
     private String InsertIntoJournal(PostMetadata p)
     {
         var journal = p.JournalTableCheck;
         CheckDirection(p, journal);
 
-        TableMetadata? detailsTable = null;
-        var join = String.Empty;
-        if (p.Each != null)
-        {
-            var (dt, onClause) = FindDetailsTable(p.Each);
-            detailsTable = dt;
-            join = $"inner join {dt.SqlTableName} r on r.[{dt.MasterField}] = d.[{Constants.FieldNames.Id}]{onClause}";
-        }
+        var (detailsTable, join) = EachJoin(p);
 
         var map = CreateMapping(p, detailsTable).ToList();
         if (map.Count == 0)
@@ -229,6 +231,161 @@ internal sealed class PostStatements
             from {_table.SqlTableName} d
             {join}
             where d.[{Constants.FieldNames.Id}] = @Id;
+            """;
+    }
+
+    /* A posting into a ledger: one declaration, two rows. The CTE reads the document once and carries
+     * both legs side by side - [Dt$X] and [Ct$X], '$' because the platform composes these names and an
+     * author name cannot hold one. The insert selects it twice, the second time mirrored: Acc and
+     * CorrAcc swap, the analytics of the other leg are taken, the sum is the same - so debit equals
+     * credit by construction and nothing checks it.
+     *
+     * Nothing is mapped by name: a name does not know its leg and would fill both rows. The legs name
+     * Acc and the author's columns; the provenance is found by type, the rest of the baseline is the
+     * platform's.
+     */
+    private String InsertIntoLedger(PostMetadata p)
+    {
+        var ledger = p.JournalTableCheck;
+        var head = $"Post {_endpoint.Path} -> {ledger.Path}";
+        var (detailsTable, join) = EachJoin(p);
+        var headerColumns = _table.AllColumns().ToList();
+        var rowColumns = detailsTable?.AllColumns().ToList();
+
+        TableColumn Source(String block, String field, String name)
+        {
+            var columns = block == "row"
+                ? rowColumns ?? throw new InvalidOperationException($"{head}: 'row' for [{name}] requires 'each'")
+                : headerColumns;
+            return columns.FirstOrDefault(c => c.Name == field)
+                ?? throw new InvalidOperationException(
+                    $"{head}: {block} field '{field}' for [{name}] not found in {(block == "row" ? $"the rows of {_table.Path}" : _table.Path)}");
+        }
+
+        String Expr(String block, String field, TableColumn col)
+        {
+            if (block == "const")
+            {
+                try
+                {
+                    return col.SqlLiteral(field);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    throw new InvalidOperationException($"{head}: const [{col.Name}] - {ex.Message}", ex);
+                }
+            }
+            var src = Source(block, field, col.Name);
+            if (!DomainMatch(src, col))
+                throw new InvalidOperationException(
+                    $"{head}: {block} field '{field}' does not match ledger column [{col.Name}] ({DomainDiff(block, src, col)})");
+            return $"{(block == "row" ? "r" : "d")}.[{field}]";
+        }
+
+        // what a leg may name: its account and the author's own columns - not the provenance
+        TableColumn LegColumn(String leg, String name)
+        {
+            var col = ledger.AllColumns().FirstOrDefault(c => c.Name == name)
+                ?? throw new InvalidOperationException($"{head}: '{leg}' names [{name}], which is not a column of the ledger");
+            var legal = name == Constants.FieldNames.Acc
+                || ledger.Columns.Contains(col) && col.Type is not (ColumnType.Document or ColumnType.DocumentType
+                    or ColumnType.Row or ColumnType.Operation);
+            return legal ? col
+                : throw new InvalidOperationException($"{head}: '{leg}' names [{name}], which the platform fills");
+        }
+
+        Dictionary<String, String> Leg(String leg, PostLegMetadata blocks)
+        {
+            var map = new Dictionary<String, String>();
+            foreach (var (block, entries) in new[] { ("const", blocks.Const), ("document", blocks.Document), ("row", blocks.Row) })
+                foreach (var (name, field) in entries)
+                {
+                    var col = LegColumn(leg, name);
+                    if (!map.TryAdd(name, Expr(block, field, col)))
+                        throw new InvalidOperationException($"{head}: '{leg}' names [{name}] in two blocks");
+                }
+            if (!map.ContainsKey(Constants.FieldNames.Acc))
+                throw new InvalidOperationException($"{head}: '{leg}' declares no [{Constants.FieldNames.Acc}] - one account per leg, in any block");
+            return map;
+        }
+
+        var dt = Leg("dt", p.Dt!);
+        var ct = Leg("ct", p.Ct!);
+
+        // the sum is of the rows under 'each', of the header otherwise - one per posting either way
+        var sumCol = ledger.AllColumns().First(c => c.Name == Constants.FieldNames.Sum);
+        var sum = Expr(detailsTable != null ? "row" : "document", p.Sum!, sumCol);
+
+        // one value for both legs: the date and the document's provenance
+        List<(String Target, String Source)> common = [(Constants.FieldNames.Date, $"d.[{Constants.FieldNames.Date}]")];
+        foreach (var col in ledger.Columns)
+        {
+            String? source = col.Type switch
+            {
+                ColumnType.Document => $"d.[{Constants.FieldNames.Id}]",
+                ColumnType.DocumentType => DocumentTypeValue(_table),
+                // a document without operations posts none
+                ColumnType.Operation => headerColumns.FirstOrDefault(c => c.IsOperation) is { } op ? $"d.[{op.Name}]" : "null",
+                _ => null
+            };
+            if (source != null)
+                common.Add((col.Name, source));
+        }
+
+        /* The row is the provenance of a LEG, not of the posting: a leg that takes nothing from the row
+         * is the header's, carries no row and collapses - its rows differ in nothing but the sum, so
+         * they group into one. A leg that reads the row stays one per row. Everything a collapsed leg
+         * holds besides the sum is a constant or a header value, so grouping by it is exact; the sum
+         * of both legs is still read from the same rows, and debit equals credit as before.
+         */
+        var rowColumn = ledger.Columns.FirstOrDefault(c => c.Type == ColumnType.Row);
+        Boolean ReadsRow(PostLegMetadata leg) => detailsTable != null && leg.Row.Count > 0;
+
+        // the author's columns either leg names, in the ledger's order; the other leg writes null there
+        var analytics = ledger.Columns.Select(c => c.Name)
+            .Where(n => dt.ContainsKey(n) || ct.ContainsKey(n)).ToList();
+
+        String Both(String name) =>
+            $"[Dt${name}] = {dt.GetValueOrDefault(name, "null")}, [Ct${name}] = {ct.GetValueOrDefault(name, "null")}";
+
+        var cte = common.Select(c => $"[{c.Target}] = {c.Source}")
+            .Concat(rowColumn != null && detailsTable != null ? [$"[{rowColumn.Name}] = r.[{Constants.FieldNames.Id}]"] : [])
+            .Append($"[{Constants.FieldNames.Sum}] = {sum}")
+            .Append(Both(Constants.FieldNames.Acc))
+            .Concat(analytics.Select(Both));
+
+        var targets = common.Select(c => c.Target)
+            .Concat(rowColumn != null ? [rowColumn.Name] : [])
+            .Concat([Constants.FieldNames.InOut, Constants.FieldNames.Acc, Constants.FieldNames.CorrAcc, Constants.FieldNames.Sum])
+            .Concat(analytics);
+
+        // one leg: every column but the sum is the key it collapses by
+        String Select(String inOut, String self, String other, PostLegMetadata leg)
+        {
+            var keys = common.Select(c => $"[{c.Target}]")
+                .Concat(rowColumn != null && ReadsRow(leg) ? [$"[{rowColumn.Name}]"] : [])
+                .Concat([$"[{self}${Constants.FieldNames.Acc}]", $"[{other}${Constants.FieldNames.Acc}]"])
+                .Concat(analytics.Select(n => $"[{self}${n}]"))
+                .ToList();
+            var row = rowColumn == null ? [] : ReadsRow(leg) ? new[] { $"[{rowColumn.Name}]" } : ["null"];
+            var fields = common.Select(c => $"[{c.Target}]")
+                .Concat(row)
+                .Concat([inOut, $"[{self}${Constants.FieldNames.Acc}]", $"[{other}${Constants.FieldNames.Acc}]", $"sum([{Constants.FieldNames.Sum}])"])
+                .Concat(analytics.Select(n => $"[{self}${n}]"));
+            return $"select {String.Join(", ", fields)} from P group by {String.Join(", ", keys)}";
+        }
+
+        return $"""
+            with P as (
+                select {String.Join(",\n        ", cte)}
+                from {_table.SqlTableName} d
+                {join}
+                where d.[{Constants.FieldNames.Id}] = @Id
+            )
+            insert into {ledger.SqlTableName} ({String.Join(", ", targets.Select(t => $"[{t}]"))})
+            {Select("1", "Dt", "Ct", p.Dt!)}
+            union all
+            {Select("-1", "Ct", "Dt", p.Ct!)};
             """;
     }
 }

@@ -33,7 +33,7 @@ internal partial class SqlBuilder
         {
             static Boolean includeColumn(TableColumn col)
                 => col.Type != ColumnType.Void;
-            return Table.AllColumns(includeColumn).Select(col => col.SqlModelColumnName(alias, t => t.TypeName));
+            return Table.AllColumns(includeColumn).Select(col => col.SqlModelColumnName(alias));
         }
 
         String mainDetailsFields(KeyValuePair<String, TableMetadata> detail)
@@ -89,7 +89,7 @@ internal partial class SqlBuilder
             {
                 var column = Table.Columns.FirstOrDefault(c => c.Name == key)
                     ?? throw new InvalidOperationException($"Column {key} not found in {Table.SqlTableName}");
-                return $"[{Table.Model}.{key}!{column.RefTableCheck.Storage.TypeName}!RefId] = @Init{key}";
+                return $"[{Table.Model}.{key}!{column.RefTableCheck.Storage.RefTypeName}!RefId] = @Init{key}";
             }
 
             /* A value written in the file. A reference is declared by its KEY and comes back as an
@@ -103,7 +103,7 @@ internal partial class SqlBuilder
                 var column = Table.AllColumns().FirstOrDefault(c => c.Name == key)
                     ?? throw new InvalidOperationException($"Column {key} not found in {Table.SqlTableName}");
                 return column.IsRef
-                    ? $"[{Table.Model}.{key}!{column.RefTableCheck.Storage.TypeName}!RefId] = {column.SqlLiteral(value)}"
+                    ? $"[{Table.Model}.{key}!{column.RefTableCheck.Storage.RefTypeName}!RefId] = {column.SqlLiteral(value)}"
                     : $"[{Table.Model}.{key}] = {column.SqlLiteral(value)}";
             }
 
@@ -112,7 +112,7 @@ internal partial class SqlBuilder
                 return value switch
                 {
                     "today" => $"[{Table.Model}.{key}!!Utc] = a2meta.fn_getUtcDate()",
-                    "$operation$" => $"[{Table.Model}.{key}!TOperation!RefId] = N'{docOp}'",
+                    "$operation$" => $"[{Table.Model}.{key}!{TableMetadataDefaults.OperationsTable().RefTypeName}!RefId] = N'{docOp}'",
                     _ => throw new InvalidOperationException($"Invalid initial context value '{value}'")
                 };
             }
@@ -178,7 +178,7 @@ internal partial class SqlBuilder
                 static Boolean includeDetailsColumn(TableColumn col)
                     => col.Type != ColumnType.RowKind && col.Type != ColumnType.Id;
 
-                var detailsFields = dt.Columns.Where(c => includeDetailsColumn(c)).Select(col => col.SqlModelColumnName("d", t => t.TypeName)).ToList();
+                var detailsFields = dt.Columns.Where(c => includeDetailsColumn(c)).Select(col => col.SqlModelColumnName("d")).ToList();
 
                 /* One recordset per kind, each with its own type and its own collection in the
                  * envelope. The discriminator never leaves the server: a row's kind is the
@@ -238,13 +238,18 @@ internal partial class SqlBuilder
             sb.AppendLine(defs);
         }
 
-        // STEP 5: system recorset
-        if (Table.IsDocument)
+        /* STEP 5: system recorset. What makes a record read-only: a posted document, a row the
+         * deploy writes (IsSystem - editing it is forbidden whole, see CLAUDE.md, "Chart of accounts").
+         */
+        var readOnly = Table.IsDocument ? "a.[Done]"
+            : Table.AllColumns().Any(c => c.Type == ColumnType.IsSystem) ? $"a.[{Constants.FieldNames.IsSystem}]"
+            : null;
+        if (readOnly != null)
         {
             sb.AppendLine();
             sb.AppendLine("-- system recordset");
             sb.Append($"""
-                select [!$System!] = null, [!!ReadOnly] = a.Done
+                select [!$System!] = null, [!!ReadOnly] = {readOnly}
                 from {Table.SqlTableName} a where a.Id = @Id;
                 """);
         }
@@ -432,6 +437,8 @@ internal partial class SqlBuilder
 
         String buildSqlUpdateText()
         {
+            // the key of THIS table: platformid for most, an account code for a chart of accounts
+            var keyType = Table.KeyColumn.SqlDataType();
 
             var updatedFields = Table.AllColumns(c => c.IsFieldUpdated()).Select(c => $"t.[{c.Name}] = s.[{c.Name}]");
             var insertedFields = Table.AllColumns(c => c.IsFieldInserted()).Select(c => $"[{c.Name}]").ToList();
@@ -451,8 +458,8 @@ internal partial class SqlBuilder
             set transaction isolation level read committed;
             set xact_abort on;
 
-            declare @rtable table(Id platformid{rtableExtra});
-            declare @Id platformid;
+            declare @rtable table(Id {keyType}{rtableExtra});
+            declare @Id {keyType};
 
             """);
             // STEP:1 - check row version

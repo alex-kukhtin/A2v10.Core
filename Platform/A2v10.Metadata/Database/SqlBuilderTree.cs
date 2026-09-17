@@ -27,7 +27,7 @@ internal partial class SqlBuilder
         {
             static Boolean includeColumn(TableColumn col)
                 => col.Type != ColumnType.RowVersion && col.Type != ColumnType.Void;
-            return Table.AllColumns(includeColumn).Select(col => col.SqlModelColumnName(alias, t => t.RefTypeName));
+            return Table.AllColumns(includeColumn).Select(col => col.SqlModelColumnName(alias));
         }
 
         var sqlString = $"""
@@ -69,6 +69,54 @@ internal partial class SqlBuilder
         """;
 
         // { RefTableJoins(refFields, "c")} ???
+
+        return await _dbContext.LoadModelSqlAsync(DataSource, sqlString, dbprms =>
+        {
+            AddDefaultParameters(dbprms);
+        });
+    }
+
+    /* A chart of accounts, whole, as a tree. Read in one go - a chart is hundreds of rows, not a
+     * register - so no lazy expand and no HasChildren.
+     *
+     * A node is attached to its parent by ParentId, so a parent must come first: the level is counted
+     * from Parent by the CTE, never read off the code, where a prefix is a convention of one plan.
+     *
+     * The closed sets are sent as their localization keys: the column stores the name, the user reads
+     * the translation, and a binding cannot compose a key.
+     */
+    /* 'open' is the tree a picker offers: closed accounts are not candidates. No child hangs from a
+     * closed parent - the Parent of a file row is a row of the same file, so it closes with it.
+     */
+    public async Task<IDataModel> LoadAccountTreeModelAsync(Boolean open)
+    {
+        var parent = Constants.FieldNames.Parent;
+        var items = Constants.FieldNames.Items;
+        var onlyOpen = open ? $" and a.[{Constants.FieldNames.Void}] = 0" : String.Empty;
+
+        String Field(TableColumn col) => col.Name is Constants.FieldNames.AccountType or Constants.FieldNames.NormalBalance
+            ? $"[{col.Name}] = N'@[{col.Name}.' + a.[{col.Name}] + N']'"
+            : col.SqlModelColumnName("a");
+
+        var fields = Table.AllColumns(c => TableColumnPredicates.IsIndexColumn(c) && c.Type != ColumnType.Parent)
+            .Select(Field);
+
+        var sqlString = $"""
+        set nocount on;
+        set transaction isolation level read uncommitted;
+
+        with T([Id], [Level])
+        as (
+            select a.[Id], 0 from {Table.SqlTableName} a where a.[{parent}] is null{onlyOpen}
+            union all
+            select a.[Id], T.[Level] + 1 from {Table.SqlTableName} a inner join T on a.[{parent}] = T.[Id]{onlyOpen}
+        )
+        select [{Table.CollectionName}!{Table.TypeName}!Tree] = null, {String.Join(", ", fields)},
+            [{items}!{Table.TypeName}!Items] = null,
+            [!{Table.TypeName}.{items}!ParentId] = a.[{parent}]
+        from T inner join {Table.SqlTableName} a on a.[Id] = T.[Id]
+        order by T.[Level], a.[Id];
+        """;
 
         return await _dbContext.LoadModelSqlAsync(DataSource, sqlString, dbprms =>
         {

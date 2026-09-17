@@ -15,9 +15,8 @@ internal partial class ScriptBuilder
 
         var refs = Table.AllColumns().AllRefs().ToList();
 
-        // exclude self-references
-        var refElems = refs.Where(x => x.Table.SqlTableName != Table.SqlTableName).Select(x => $$"""
-        export interface {{x.Table.TypeName}} extends IElement {
+        var refElems = refs.Select(x => $$"""
+        export interface {{x.Table.RefTypeName}} extends IElement {
         {{String.Join("\n", TsProperties(x.Table))}}
         }
         """);

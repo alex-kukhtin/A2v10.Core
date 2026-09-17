@@ -12,8 +12,12 @@ public class CliDatabaseCreator()
     public const String SQL_DIVIDER = "------------------------------------------------";
     private static readonly String NL = Environment.NewLine;
     private static readonly String INDENT = "       ";
-    internal String CreateTable(TableMetadata table)
+    internal String CreateTable(TableMetadata table, AppPlatformId platformId)
     {
+        // a sequence cannot yield a GUID: on that base the key comes from newsequentialid() instead
+        var isGuid = platformId.ClrType == typeof(Guid);
+        // the sequence is the default of an Id column and nothing else: a code key (enum, accplan) has none
+        var needSequence = !isGuid && table.AllColumns().Any(c => c.Type == ColumnType.Id);
 
         String createField(TableColumn column)
         {
@@ -21,7 +25,7 @@ public class CliDatabaseCreator()
 
             var constraint = String.Empty;
             if (column.Type == ColumnType.Id)
-                constraint = $"{NL}{INDENT}constraint DF_{table.Table}_{column.Name} default(next value for {table.SqlSequenceName})";
+                constraint = $"{NL}{INDENT}constraint DF_{table.Table}_{column.Name} default({(isGuid ? "newsequentialid()" : $"next value for {table.SqlSequenceName}")})";
             else if (column.DeployDefault() is String dflt)
                 constraint = $"{NL}{INDENT}constraint DF_{table.Table}_{column.Name} default({dflt})";
 
@@ -32,9 +36,11 @@ public class CliDatabaseCreator()
 
         String createSequence()
         {
+            if (!needSequence)
+                return String.Empty;
             return $"""
             if not exists(select * from INFORMATION_SCHEMA.SEQUENCES where SEQUENCE_SCHEMA = N'{table.SqlSchema}' and SEQUENCE_NAME = N'SQ_{table.Table}')
-            	create sequence {table.SqlSequenceName} as bigint start with 1000 increment by 1;
+            	create sequence {table.SqlSequenceName} as {platformId.SqlTypeName} start with 1000 increment by 1;
             """;
         }
 
@@ -114,6 +120,11 @@ public class CliDatabaseCreator()
                     throw new InvalidOperationException($"The master table for {table.SqlTableName} is null");
                 return Constraint($"FK_{table.Table}_{column.Name}_{master.Table}", column, master.SqlTableName);
             }
+            else if (column.Type == ColumnType.Parent)
+            {
+                // a self link: the target is this very table, and a default column carries no RefTable
+                return Constraint($"FK_{table.Table}_{column.Name}_{table.Table}", column, table.SqlTableName);
+            }
             else if (column.Type == ColumnType.Operation)
             {
                 var ops = TableMetadataDefaults.OperationsTable();
@@ -132,7 +143,7 @@ public class CliDatabaseCreator()
             var refStorage = column.RefTableCheck.Storage;
             return Constraint($"FK_{table.Table}_{column.Name}_{refStorage.Table}", column, refStorage.SqlTableName);
         }
-        var refs = table.AllColumns().Where(c => c.IsRef)
+        var refs = table.AllColumns().Where(c => c.IsRef || c.Type == ColumnType.Parent)
             .Select(rc => createReference(rc));
         // a login is not an endpoint: the target is fixed, as Operations is above
         var stamps = table.AllColumns(c => c.Type is ColumnType.StampUser or ColumnType.StampUserNull)

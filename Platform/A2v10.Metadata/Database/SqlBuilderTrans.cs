@@ -41,7 +41,7 @@ internal partial class SqlBuilder
         String JournalRecordset(TableMetadata journal)
         {
             var fields = TransColumns(journal)
-                .Select(c => c.SqlModelColumnName("a", t => t.RefTypeName));
+                .Select(c => c.SqlModelColumnName("a"));
             return $"""
             -- {journal.Path}
             select [{journal.TransName()}!{journal.TransTypeName()}!Array] = null,

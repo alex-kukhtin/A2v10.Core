@@ -21,6 +21,8 @@ internal static class Constants
         public const String Document = nameof(Document);
         public const String RowVersion = "rv";
         public const String Parent = nameof(Parent);
+        // 'Parent' in the model: the word is reserved there - see TableColumn.ModelName
+        public const String ParentElem = nameof(ParentElem);
         public const String Folder = nameof(Folder);
         public const String Color = nameof(Color);
         public const String For = nameof(For);
@@ -35,6 +37,16 @@ internal static class Constants
         public const String Quart = nameof(Quart);
         public const String Month = nameof(Month);
         public const String CurrentNumber = nameof(CurrentNumber);
+        // a chart of accounts
+        public const String AccountType = nameof(AccountType);
+        public const String NormalBalance = nameof(NormalBalance);
+        // a ledger: the leg's sign, its account, the account it corresponds to, its sum
+        public const String InOut = nameof(InOut);
+        public const String Acc = nameof(Acc);
+        public const String CorrAcc = nameof(CorrAcc);
+        public const String Sum = nameof(Sum);
+        // the children of a tree node: the SQL declares it ('!Items'), the TreeGrid walks it
+        public const String Items = nameof(Items);
         // stamps: who + when, see ColumnType.StampUser
         public const String UserCreated = nameof(UserCreated);
         public const String UtcDateCreated = nameof(UtcDateCreated);
@@ -122,5 +134,12 @@ internal static class Constants
          * wrong one fails there and not at the first save.
          */
         public const String Autonum = "autonum";
+        /* A chart of accounts, always named - /accplan/national - even when there is one: a bare
+         * accplan/metadata.json would be a second spelling of the same fact, and a second plan would
+         * move the first one together with every reference to it.
+         */
+        public const String AccPlan = "accplan";
+        // the postings against one chart of accounts - two mirrored legs per posting
+        public const String Ledger = "ledger";
     }
 }

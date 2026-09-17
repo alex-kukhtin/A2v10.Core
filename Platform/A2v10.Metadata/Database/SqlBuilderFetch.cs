@@ -51,7 +51,7 @@ internal partial class SqlBuilder
     private static String FetchMaps(List<TableColumn> refColumns)
     {
         return String.Join("\n\n", refColumns
-            .GroupBy(c => c.RefTableCheck.Storage.TypeName)
+            .GroupBy(c => c.RefTableCheck.Storage.RefTypeName)
             .Select(g =>
             {
                 var refTable = g.First().RefTableCheck.Storage;
@@ -61,7 +61,7 @@ internal partial class SqlBuilder
                 with T as (
                     {ids}
                 )
-                select [!{g.Key}!Map] = null, [Id!!Id] = a.Id, [Name!!Name] = a.[Name]
+                select [!{g.Key}!Map] = null, [Id!!Id] = a.Id, [Name!!Name] = a.[{refTable.Presentation}]
                 from {refTable.SqlTableName} a inner join T on a.Id = T.id;
                 """;
             }));
@@ -71,11 +71,13 @@ internal partial class SqlBuilder
     {
         var columns = FetchColumns(prms?.Get<String>("inherit"));
         var extra = String.Join("", columns
-            .Select(c => $",\n    {c.SqlModelColumnName("a", t => t.TypeName)}"));
+            .Select(c => $",\n    {c.SqlModelColumnName("a")}"));
 
         var refColumns = columns.Where(c => c.IsRef).ToList();
         // the same rows the browse dialog of this address shows - see FixedPredicate
         var fixedRows = FixedPredicate("a");
+        // what the selector shows is what it is searched by: the presentation, as in every map
+        var shown = Table.Presentation;
 
         /* Two shapes, and the difference is real: without references there is nothing to resolve
          * and one select answers; with them the same hundred rows are needed twice, so they are
@@ -90,11 +92,11 @@ internal partial class SqlBuilder
             set @fr = N'%' + @Text + N'%';
 
             select top(100) [{Table.CollectionName}!{Table.TypeName}!Array] = null,
-                [Id!!Id] = a.Id, [Name!!Name] = a.[Name]{extra}
+                [Id!!Id] = a.Id, [Name!!Name] = a.[{shown}]{extra}
             from {Table.SqlTableName} a
             where a.[Void] = 0{fixedRows} and
-                (a.[Name] like @fr)
-            order by a.[Name];
+                (a.[{shown}] like @fr)
+            order by a.[{shown}];
             """
             : $"""
             set nocount on;
@@ -109,14 +111,14 @@ internal partial class SqlBuilder
             select top(100) a.Id, {String.Join(", ", refColumns.Select(c => $"a.[{c.Name}]"))}
             from {Table.SqlTableName} a
             where a.[Void] = 0{fixedRows} and
-                (a.[Name] like @fr)
-            order by a.[Name];
+                (a.[{shown}] like @fr)
+            order by a.[{shown}];
 
             select [{Table.CollectionName}!{Table.TypeName}!Array] = null,
-                [Id!!Id] = a.Id, [Name!!Name] = a.[Name]{extra}
+                [Id!!Id] = a.Id, [Name!!Name] = a.[{shown}]{extra}
             from {Table.SqlTableName} a
                 inner join @map m on m.Id = a.Id
-            order by a.[Name];
+            order by a.[{shown}];
 
             {FetchMaps(refColumns)}
             """;

@@ -42,7 +42,7 @@ internal static class DeclarationBake
 
         var columns = table.Columns;
 
-        static TableColumn Find(TableMetadata t, List<TableColumn> cols, String name, String what) =>
+        static TableColumn Find(TableMetadata t, IReadOnlyList<TableColumn> cols, String name, String what) =>
             cols.FirstOrDefault(c => c.Name == name)
                 ?? throw new InvalidOperationException($"inherit: {what} '{name}' not found in {t.SqlTableName}");
 
@@ -81,7 +81,7 @@ internal static class DeclarationBake
      * the reference graph would have to run after publication, and there is no way to put a new
      * declaration into a record everyone already points at.
      */
-    internal static DeclarationMetadata Bake(this DeclarationMetadata declaration, TableMetadata table)
+    internal static DeclarationMetadata Bake(this DeclarationMetadata declaration, TableMetadata table, AppPlatformId platformId)
     {
         CheckNames(table, declaration.Rules.Required, "required");
         if (declaration.Rules.Total.Length > 0)
@@ -90,7 +90,7 @@ internal static class DeclarationBake
         NoLeftovers(table, declaration.Kinds.Keys, [], "kinds");
         return declaration.BakeNode(table) with
         {
-            BakedForms = BuildForms(declaration, table),
+            BakedForms = BuildForms(declaration, table, platformId),
             Initials = BuildInitials(declaration, table)
         };
     }
@@ -136,14 +136,14 @@ internal static class DeclarationBake
      */
     private static Boolean HasForms(this TableMetadata table) =>
         table.Kind is EndpointKind.Catalog or EndpointKind.Document
-            or EndpointKind.Journal or EndpointKind.Operation;
+            or EndpointKind.Journal or EndpointKind.Operation or EndpointKind.AccPlan or EndpointKind.Ledger;
 
     /* Every form of the endpoint - declared or default, resolved against the shape either way, and
      * total: for a shape that renders, all three keys are present. See CLAUDE.md, "Forms: whole or
      * nothing".
      */
     private static IReadOnlyDictionary<String, FormMetadata> BuildForms(DeclarationMetadata declaration,
-        TableMetadata table)
+        TableMetadata table, AppPlatformId platformId)
     {
         String[] names = [Constants.FormNames.Index, Constants.FormNames.Browse, Constants.FormNames.Edit];
         NoLeftovers(table, declaration.Forms.Keys, names, "forms");
@@ -177,9 +177,9 @@ internal static class DeclarationBake
         return new Dictionary<String, FormMetadata>()
         {
             { Constants.FormNames.Index,
-                Build(Constants.FormNames.Index, DefaultFormBuilder.CreateIndexForm, MemberMetadata.IndexMembers) },
+                Build(Constants.FormNames.Index, t => DefaultFormBuilder.CreateIndexForm(t, platformId), MemberMetadata.IndexMembers) },
             { Constants.FormNames.Browse,
-                Build(Constants.FormNames.Browse, DefaultFormBuilder.CreateBrowseForm, MemberMetadata.IndexMembers) },
+                Build(Constants.FormNames.Browse, t => DefaultFormBuilder.CreateBrowseForm(t, platformId), MemberMetadata.IndexMembers) },
             { Constants.FormNames.Edit,
                 Build(Constants.FormNames.Edit, DefaultFormBuilder.CreateEditForm, MemberMetadata.EditMembers) }
         };

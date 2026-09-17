@@ -41,6 +41,13 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Repo
     public abstract Task<IDataModel> LoadReportModelAsync(IModelView view, ExpandoObject prms);
     public abstract UIElement CreatePage();
 
+    // what the user picks besides the period and the filters: groups and data; a fixed report has none
+    protected virtual Boolean HasChoices => true;
+
+    // what a page computes on the client: template properties, and the functions they name
+    protected virtual String TemplateProperties => String.Empty;
+    protected virtual String TemplateFunctions => String.Empty;
+
 
     protected Toolbar CreateToolbar()
     {
@@ -120,6 +127,18 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Repo
                 };
             }
         }
+        if (!HasChoices)
+            return new Taskpad()
+            {
+                CssClass = "report-taskpad bg-primary",
+                Width = Length.FromString("24rem"),
+                Children = [
+                    new Grid(_xamlServiceProvider) {
+                        Children = [..filters()],
+                    }
+                ]
+            };
+
         return new Taskpad()
         {
             CssClass = "report-taskpad bg-primary",
@@ -384,7 +403,34 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Repo
     }
     public virtual String CreateTemplate()
     {
-        return """
+        var choices = HasChoices ? """
+            let group = this.GroupingInfo.filter(f => f.Checked).map(f => f.Id).join('!');
+            let datinfo = this.DataInfo.filter(f => f.Checked).map(f => f.Id).join('!');
+
+            if (!group) {
+                ctrl.$alert('@[Report.Error.AtLeastGroup]');
+                return;
+            }
+
+            if (!datinfo) {
+                ctrl.$alert('@[Report.Error.AtLeastData]');
+                return;
+            }
+
+            let filter = {
+                Run : true,
+                Group: group,
+                Data: datinfo,
+                Tab : repFilter.Tab
+            };
+            """ : """
+            let filter = {
+                Run : true,
+                Tab : repFilter.Tab
+            };
+            """;
+
+        return $$"""
         const utils = require("std:utils");
         const template = {
             options: {
@@ -394,7 +440,8 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Repo
                 'TRoot.$$Dirty': Boolean,
                 'TRoot.$$Loading': Boolean,
                 'TRoot.$AlertVisible'() { return this.$$Dirty && !this.$$Loading && this.Filter.Run; },
-                'TRoot.$SheetPageClass'() { return this.$AlertVisible ? 'sheet-dirty' : undefined }
+                'TRoot.$SheetPageClass'() { return this.$AlertVisible ? 'sheet-dirty' : undefined },
+                {{TemplateProperties}}
             },
             commands: {
                 generate
@@ -418,26 +465,7 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Repo
             
             let repFilter = this.Filter;
 
-            let group = this.GroupingInfo.filter(f => f.Checked).map(f => f.Id).join('!');
-            let datinfo = this.DataInfo.filter(f => f.Checked).map(f => f.Id).join('!');
-
-            if (!group) {
-                ctrl.$alert('@[Report.Error.AtLeastGroup]');
-                return;
-            }
-        
-            if (!datinfo) {
-                ctrl.$alert('@[Report.Error.AtLeastData]');
-                return;
-            }
-                
-            let filter = {
-                Run : true,
-                Group: group,
-                Data: datinfo,
-                Tab : repFilter.Tab
-            };
-
+        {{choices}}
             this.$$Loading = true;
             let defNames = ['Run', 'Tab'];
 
@@ -450,7 +478,9 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Repo
             }
             ctrl.$requery(filter);
         }
-        
+
+        {{TemplateFunctions}}
+
         """;
     }
 

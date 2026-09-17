@@ -80,12 +80,6 @@ internal sealed class PrintSqlBuilder(TableMetadata table, PrintNode model)
 
     private static String Id => Constants.FieldNames.Id;
 
-    /* 'TAgent', not 'TRAgent'. The 'TR' form belongs to the index, where a reference is resolved to
-     * a stub of Id and Name and is a narrower thing than the record; here a map carries whatever the
-     * blank asked of it, so it is the type - the same choice the plain model makes.
-     */
-    private static String TypeOfRef(TableMetadata t) => t.TypeName;
-
     public String Build()
     {
         if (model.IsCollection)
@@ -272,7 +266,7 @@ internal sealed class PrintSqlBuilder(TableMetadata table, PrintNode model)
     {
         sb.AppendLine($"""
             -- {map.Target.Model} map
-            select [!{TypeOfRef(map.Target)}!Map] = null,
+            select [!{map.Target.RefTypeName}!Map] = null,
               {String.Join(", ", Fields(map.Target, map.Node, map.Alias, arrays: false))}
             from {map.Target.SqlTableName} {map.Alias} where {map.Rows};
             """);
@@ -296,7 +290,7 @@ internal sealed class PrintSqlBuilder(TableMetadata table, PrintNode model)
             if (column.IsRef)
                 throw new InvalidOperationException(
                     $"print model: '{name}' of {owner.SqlTableName} is a reference - write it as an object, not a field");
-            yield return column.SqlModelColumnName(alias, TypeOfRef);
+            yield return column.SqlModelColumnName(alias);
         }
 
         foreach (var child in node.Nodes)
@@ -309,7 +303,7 @@ internal sealed class PrintSqlBuilder(TableMetadata table, PrintNode model)
                 yield return $"[{child.Name}!{CollectionOf(owner, child.Name).TypeName}!Array] = null";
             }
             else
-                yield return RefColumn(owner, child.Name).SqlModelColumnName(alias, TypeOfRef);
+                yield return RefColumn(owner, child.Name).SqlModelColumnName(alias);
         }
     }
 

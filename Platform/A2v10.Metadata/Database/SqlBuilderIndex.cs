@@ -367,7 +367,7 @@ internal partial class SqlBuilder
 
         IEnumerable<String> indexSqlFields(String alias)
         {
-            return Table.AllColumns(TableColumnPredicates.IsIndexColumn).Select(col => col.SqlModelColumnName(alias, t => t.RefTypeName))
+            return Table.AllColumns(TableColumnPredicates.IsIndexColumn).Select(col => col.SqlModelColumnName(alias))
                 .Concat(XtraIndexColumns());
         }
 
@@ -403,7 +403,8 @@ internal partial class SqlBuilder
             {
                 var val = filters.FirstOrDefault(f => f.name == rd.Column.Name).value;
                 var name = $"@{rd.Column.Name}";
-                if (rd.Column.IsOperation)
+                // keyed by a code: an operation, an account
+                if (rd.Column.IsOperation || rd.Column.Type == ColumnType.Account)
                     dbprms.AddString(name, String.IsNullOrEmpty(val) ? null : val);
                 /* Deliberately NOT the line above. There an empty value means the filter was not
                  * picked, so it is erased to null; here the empty string is the key of a real row -

@@ -65,6 +65,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
     {
         return Action switch
         {
+            "index" or "browse" when Table.Kind == EndpointKind.AccPlan => await _sqlBuilder.LoadAccountTreeModelAsync(Action == "browse"),
             "browse" or "index" or "indexpartial" => Table.HasFolders
                 ? await _sqlBuilder.LoadIndexTreeModelAsync()
                 : await _sqlBuilder.LoadIndexModelAsync(),

@@ -13,6 +13,7 @@
             "type": "string",
             "description": "The SQL table of the set, in schema 'enm'. Declared and never derived from the folder - the same rule every other endpoint follows."
         },
+        "origin": { "$ref": "metadata-endpoint-json-schema.json#/definitions/origin" },
         "model": {
             "type": "string",
             "description": "Base of the generated names: the row type ('T' + model), the array (its plural) and the localization keys of the values. Defaults to the endpoint folder name in PascalCase, so a folder written in kebab-case ('vat-rate') gives 'VatRate'."
@@ -35,6 +36,7 @@
                         "description": "Presentation. Defaults to the localization key '@[{model}.{id}]'. The key carries the set's name on purpose: two equal codes in two sets would otherwise collapse into one translation, and that does not surface until the second language."
                     },
                     "memo": { "type": "string" },
+                    "origin": { "$ref": "metadata-endpoint-json-schema.json#/definitions/origin" },
                     "void": {
                         "type": "boolean",
                         "description": "Withdrawn from use: stays in the records that already carry it and leaves the list of candidates. A record holding a void value opens with an empty control and cannot be saved until a live value is picked - which is the intended migration, not a defect."

@@ -1,51 +1,57 @@
-﻿{
-	"$schema": "http://json-schema.org/draft-04/schema",
-	"$id": "https://a2v10.com/schemas/metadata-report-json-schema.json",
-	"$version": "10.0.8650",
-	"$date": "2026-08-10",
-	"title": "JSON Schema for report/metadata.json",
-	"type": "object",
-
-	"definitions": {
-		"stringarray": {
-			"type": "array",
-			"items": { "type": "string" }
-		}
-	},
-
-	"properties": {
-		"$schema": { "type": "string" },
-		"description": { "type": "string", "description": "For the model, not the platform: nothing reads it - no generator, runtime or deploy. Where the model writes down what it must know about this endpoint - its rules and the reasons for them - so the next session finds them here." },
-		"title": { "type": "string" },
-		"version": { "type": "string" },
-		"copyright": { "type": "string" },
-		"surface": { "type": "string" },
-		"type": {
-			"type": "string",
-			"enum": [ "turnover" ]
-		},
-		"groups": {
-			"$ref": "#/definitions/stringarray"
-		},
-		"filters": {
-			"$ref": "#/definitions/stringarray"
-		},
-		"data": {
-			"$ref": "#/definitions/stringarray"
-		},
-		"defaults": {
-			"type": "object",
-			"properties": {
-				"groups": {
-					"$ref": "#/definitions/stringarray"
-				},
-				"data": {
-					"$ref": "#/definitions/stringarray"
-				}
-			},
-			"additionalProperties": false
-		}
-	},
-	"required": [ "surface", "type" ],
-	"additionalProperties": false
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://a2v10.com/schemas/metadata-report-json-schema.json",
+    "title": "A2v10 metadata.json (report)",
+    "description": "A report: a window into a surface, no data of its own. Declares the SUBSET that may be asked, not a query - the client picks one inside it at runtime. surface >= subset >= query: the first is checked at build, the second at runtime. Not here: SQL, presentation, captions, the user's saved choice. Irregular report -> eject to a handler. Enum values are written as listed, in camelCase.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [ "type", "surface" ],
+    "if": { "properties": { "type": { "enum": [ "trialBalance", "chessboard" ] } } },
+    "then": {
+        "description": "A report over a ledger groups by the account and measures the sum - both the ledger's baseline, so there is no subset to offer: only 'filters'.",
+        "properties": { "groups": false, "data": false, "defaults": false }
+    },
+    "properties": {
+        "$schema": { "type": "string" },
+        "description": { "type": "string", "description": "For the model, not the platform: nothing reads it - no generator, runtime or deploy. Where the model writes down what it must know about this endpoint - its rules and the reasons for them - so the next session finds them here." },
+        "type": {
+            "description": "Form of the answer. 'turnover' - opening balance, movements of the period, closing balance, in the groupings picked. 'trialBalance' - the trial balance of a ledger: per account, opening balance, debit and credit turnover, closing balance, each balance a debit/credit pair laid out by the account's NormalBalance; nothing to pick but the period and the filters. 'chessboard' - the turnover of a ledger in account correspondence: debit accounts down, credit accounts across, read from the debit legs; nothing to pick but the period and the filters.",
+            "type": "string",
+            "enum": [ "turnover", "trialBalance", "chessboard" ]
+        },
+        "surface": {
+            "type": "string",
+            "description": "The shape this report reads: a journal for 'turnover' ('/journal/stock'), a ledger for 'trialBalance' and 'chessboard' ('/ledger/national'). Not 'table' or 'storage': a report owns no rows and inherits no declaration."
+        },
+        "groups": {
+            "description": "Dimensions offered for grouping, resolved into the surface at build. Order here is order in the taskpad - there is no 'order' key.",
+            "type": "array",
+            "items": { "type": "string" }
+        },
+        "filters": {
+            "description": "Dimensions offered for filtering. Resolved and ordered as 'groups'.",
+            "type": "array",
+            "items": { "type": "string" }
+        },
+        "data": {
+            "description": "Measures offered for display, resolved into the surface at build.",
+            "type": "array",
+            "items": { "type": "string" }
+        },
+        "defaults": {
+            "description": "Ticked on open. Each name repeats one from the list it belongs to; absent there - refused at build. No 'filters' here: a filter opens empty.",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "groups": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                },
+                "data": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                }
+            }
+        }
+    }
 }

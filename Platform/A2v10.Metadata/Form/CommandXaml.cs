@@ -66,8 +66,11 @@ internal partial class XamlBuilder
         EndpointKind.Document => StandardToolbar(
             [EntityCommandType.Create, EntityCommandType.Edit, EntityCommandType.Delete, .. PrintCommand()],
             slot, GridChrome(), CommandScope.Grid),
-        EndpointKind.Journal => StandardToolbar([EntityCommandType.Edit], slot, GridChrome(), CommandScope.Grid),
+        EndpointKind.Journal or EndpointKind.Ledger => StandardToolbar([EntityCommandType.Edit], slot, GridChrome(), CommandScope.Grid),
         EndpointKind.Operation => StandardToolbar([], slot, [], CommandScope.Grid),
+        // the rows are the file's: nothing to create or delete, the card opens read-only; the tree is read whole, so no search
+        EndpointKind.AccPlan => StandardToolbar([EntityCommandType.Edit], slot,
+            [new Separator(), FormButtons.Reload], CommandScope.Grid),
         _ => throw new InvalidOperationException($"No standard commands for {Table.Schema}")
     };
 

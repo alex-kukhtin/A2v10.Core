@@ -17,10 +17,19 @@ internal static class DefaultFormBuilder
             ? [new FormElement() { Is = FormElementKind.Filters, Filters = names }]
             : [];
 
-    public static FormMetadata CreateIndexForm(TableMetadata table)
-    {
-        var cols = table.AllColumns(TableColumnPredicates.IsIndexColumn)
+    /* The columns an index grid shows by default. A GUID key is nobody's reading - it stays in the
+     * model ([Id!!Id]) and leaves the grid; a form that names Id keeps it, that is the author's call.
+     */
+    static IEnumerable<TableColumn> IndexGridColumns(TableMetadata table, AppPlatformId platformId) =>
+        table.AllColumns(TableColumnPredicates.IsIndexColumn)
+            .Where(c => !(c.Type == ColumnType.Id && platformId.ClrType == typeof(Guid)))
             .OrderBy(c => c.IsMemo);
+
+    public static FormMetadata CreateIndexForm(TableMetadata table, AppPlatformId platformId)
+    {
+        if (table.Kind == EndpointKind.AccPlan)
+            return CreateTreeIndexForm(table);
+        var cols = IndexGridColumns(table, platformId);
 
         return new FormMetadata()
         {
@@ -44,11 +53,32 @@ internal static class DefaultFormBuilder
         };
     }
 
-    public static FormMetadata CreateBrowseForm(TableMetadata table)
+    /* A chart of accounts is read whole, as a tree: no pager, no filters. Parent is not a column
+     * here - the tree itself shows it.
+     */
+    static FormMetadata CreateTreeIndexForm(TableMetadata table)
     {
         var cols = table.AllColumns(TableColumnPredicates.IsIndexColumn)
-            .OrderBy(c => c.IsMemo);
-            //.ToDictionary(c => c.Name, c => new FormColumn());
+            .Where(c => c.Type != ColumnType.Parent);
+        return new FormMetadata()
+        {
+            Is = FormKind.Page,
+            Body = [
+                new FormElement()
+                {
+                    Is = FormElementKind.TreeGrid,
+                    Fields = [.. cols.Select(c => c.Name)]
+                }
+            ]
+        };
+    }
+
+    public static FormMetadata CreateBrowseForm(TableMetadata table, AppPlatformId platformId)
+    {
+        // an account is picked from the tree the index shows
+        if (table.Kind == EndpointKind.AccPlan)
+            return CreateTreeIndexForm(table) with { Is = FormKind.Dialog };
+        var cols = IndexGridColumns(table, platformId);
 
         return new FormMetadata()
         {

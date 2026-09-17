@@ -91,6 +91,8 @@ public sealed record AppPlatformId(Type ClrType)
         Int64 i64 => i64 == 0,
         Int32 i32 => i32 == 0,
         Guid g => g == Guid.Empty,
+        // a uniqueidentifier travels from the browser as a string
+        String s => s.Length == 0,
         _ => false
     };
 }
@@ -114,18 +116,27 @@ internal static class SqlExtensions
     /* THE single dispatch over ColumnType. Every SQL-side facet of a domain comes from
      * here, and everything below is a one-liner over it - so disagreeing with it is not
      * possible any more. The facets the author may set arrive as arguments: that is all
-     * the switch ever needed from a column.
+     * the switch ever needed from a column. 'key' is the one facet the platform sets: the key a
+     * self link points at.
      */
     public static SqlDbTypeInfo ToSqlDbTypeInfo(this ColumnType columnType,
-        Int32? length = null, Int32? precision = null, Int32? scale = null)
+        Int32? length = null, Int32? precision = null, Int32? scale = null, ColumnType key = ColumnType.Id)
         => columnType switch
         {
             // id + references: every one of them is platformid, the FK carries the meaning.
             // The base it rests on is deliberately absent - see AppPlatformId.
-            ColumnType.Id or ColumnType.Ref or ColumnType.Master or ColumnType.Parent or
+            ColumnType.Id or ColumnType.Ref or ColumnType.Master or
                 ColumnType.Folder or ColumnType.Row or ColumnType.Company or
                 ColumnType.Document
                     => new SqlDbTypeInfo("platformid"),
+            // a self link is spelled as the key of its own table
+            ColumnType.Parent => key is ColumnType.Id or ColumnType.NaturalKey
+                ? key.ToSqlDbTypeInfo()
+                : throw new InvalidOperationException($"SqlDbTypeInfo. '{key}' is not a key"),
+            // a code the declaration writes - an account, an enum value, an operation; one length for every such key
+            ColumnType.NaturalKey => new SqlDbTypeInfo("nvarchar", 64),
+            // a reference to a code is spelled as the key it points at, so the FK cannot disagree with it
+            ColumnType.Account or ColumnType.Enum or ColumnType.Operation => ColumnType.NaturalKey.ToSqlDbTypeInfo(),
             // a login: a2security.Users is keyed bigint whatever base the application rests on
             ColumnType.User or ColumnType.StampUser or ColumnType.StampUserNull
                     => new SqlDbTypeInfo("bigint"),
@@ -152,8 +163,7 @@ internal static class SqlExtensions
             ColumnType.Name or ColumnType.Memo => new SqlDbTypeInfo("nvarchar", 255),
             ColumnType.DocumentType => new SqlDbTypeInfo("nvarchar", 128),
             // discriminators - one length for all of them
-            ColumnType.Operation or ColumnType.RowKind or
-                ColumnType.Autonum or ColumnType.Enum
+            ColumnType.RowKind or ColumnType.Autonum
                     => new SqlDbTypeInfo("nvarchar", 64),
             ColumnType.Color => new SqlDbTypeInfo("nvarchar", 32),
             // numbers with business semantics: precision is 19 throughout, only scale varies
@@ -172,7 +182,7 @@ internal static class SqlExtensions
         };
 
     public static SqlDbTypeInfo ToSqlDbTypeInfo(this TableColumn column)
-        => column.Type.ToSqlDbTypeInfo(column.Length, column.Precision, column.Scale);
+        => column.Type.ToSqlDbTypeInfo(column.Length, column.Precision, column.Scale, column.KeyType);
 
     public static String ToSqlDataTypeDeploy(this ColumnType columnDataType)
         => columnDataType.ToSqlDbTypeInfo().SqlName;
@@ -219,8 +229,8 @@ internal static class SqlExtensions
      *
      * 'Id' is asked by NAME and not by ColumnType. The primary key is always on Id - the
      * convention CreateTable itself writes out - and it is the table that makes a column not
-     * null, not the type in it: the key of an enum set is a code, ColumnType.String, and the
-     * type-based answer said 'nullable' about a column SQL Server had already made NOT NULL.
+     * null, not the type in it: a key is platformid or a code (NaturalKey), and whichever it is,
+     * a type-based answer can say 'nullable' about a column SQL Server has already made NOT NULL.
      * That disagreement is invisible until something compares the seed with the catalog, and
      * then it is unfixable from the seed side: a primary key cannot be altered to null.
      *
@@ -238,13 +248,14 @@ internal static class SqlExtensions
      * Which of the three applies is the caller's context, not a property of the type, so
      * it stays here as an explicit exception rather than being forced into the record.
      */
-    public static String ToSqlDataType(this ColumnType columnDataType, Int32? length = null, Int32? precision = null, Int32? scale = null, Boolean toTableType = false)
+    public static String ToSqlDataType(this ColumnType columnDataType, Int32? length = null, Int32? precision = null, Int32? scale = null,
+        Boolean toTableType = false, ColumnType key = ColumnType.Id)
         => columnDataType == ColumnType.RowVersion
             ? (toTableType ? "varbinary(8)" : "rowversion")
-            : columnDataType.ToSqlDbTypeInfo(length, precision, scale).SqlFullName;
+            : columnDataType.ToSqlDbTypeInfo(length, precision, scale, key).SqlFullName;
 
     public static String SqlDataType(this TableColumn column, Boolean toTableType = false)
-        => column.Type.ToSqlDataType(column.Length, column.Precision, column.Scale, toTableType);
+        => column.Type.ToSqlDataType(column.Length, column.Precision, column.Scale, toTableType, column.KeyType);
 
     /* A value the declaration wrote, as SQL spells it. Quoted by what the COLUMN is and never by
      * what the text looks like: '20' is a code in one column and a number in another, and guessing
@@ -269,14 +280,19 @@ internal static class SqlExtensions
         };
     }
 
-    public static String SqlModelColumnName(this TableColumn column, String alias, Func<TableMetadata, String> refPredicate)
+    /* A reference is always TR{Model}, whatever it carries: T{Model} is the record a recordset is
+     * about, and the two must never share a name - a record pointing at its own table would be a
+     * type containing itself, which the client model unfolds without end.
+     */
+    public static String SqlModelColumnName(this TableColumn column, String alias)
         => column.Type switch
         {
-            ColumnType.Id => $"[Id!!Id] = {alias}.[Id]",
+            ColumnType.Id or ColumnType.NaturalKey => $"[Id!!Id] = {alias}.[Id]",
             ColumnType.Name => $"[Name!!Name] = {alias}.[Name]",
             ColumnType.RowNumber => $"[{column.Name}!!RowNumber] = {alias}.[{column.Name}]",
-            ColumnType.Ref or ColumnType.Document or ColumnType.Operation or ColumnType.Enum =>
-                $"[{column.Name}!{refPredicate(column.RefTableCheck.Storage)}!RefId] = {alias}.[{column.Name}]",
+            ColumnType.Parent => $"[{column.ModelName}] = {alias}.[{column.Name}]",
+            ColumnType.Ref or ColumnType.Document or ColumnType.Operation or ColumnType.Enum or ColumnType.Account =>
+                $"[{column.Name}!{column.RefTableCheck.Storage.RefTypeName}!RefId] = {alias}.[{column.Name}]",
             _ => $"{alias}.[{column.Name}]"
         };
 
@@ -307,7 +323,7 @@ internal static class SqlExtensions
 
     internal static Boolean IsFieldUpdated(this TableColumn column)
     {
-        return column.Type != ColumnType.Id
+        return !column.IsKey
             && column.Type != ColumnType.Void
             && column.Type != ColumnType.Done
             && column.Type != ColumnType.Operation

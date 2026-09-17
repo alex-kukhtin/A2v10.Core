@@ -1,0 +1,34 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://a2v10.com/schemas/metadata-ledger-json-schema.json",
+    "title": "A2v10 metadata.json (ledger)",
+    "description": "Postings against one chart of accounts: ledger/<name>/metadata.json. Written only by 'post' of documents, in mirrored legs - a debit row and a credit row, each carrying the other's account in CorrAcc. The baseline (Id, Date, InOut, Acc, CorrAcc, Sum) is the platform's and is not written here; the provenance (a column of type 'document', and 'operation', 'row' where needed) is declared in 'fields', as in a journal.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [ "table", "accplan", "fields" ],
+    "properties": {
+        "$schema": { "type": "string" },
+        "description": { "type": "string", "description": "For the model, not the platform: nothing reads it - no generator, runtime or deploy. Where the model writes down what it must know about this endpoint - its rules and the reasons for them - so the next session finds them here." },
+        "table": {
+            "type": "string",
+            "description": "The SQL table of this ledger, in schema 'led'. No default - a table name is never derived from the folder name."
+        },
+        "origin": { "$ref": "metadata-endpoint-json-schema.json#/definitions/origin" },
+        "model": {
+            "type": "string",
+            "description": "Base of the generated names. Defaults to the folder name in PascalCase."
+        },
+        "accplan": {
+            "type": "string",
+            "description": "The chart this ledger posts against, e.g. '/accplan/national': the target of Acc and CorrAcc. Required, no default - the folder name of the ledger says nothing about its chart. A path that is not a chart of accounts is refused at load. One chart per ledger."
+        },
+        "fields": {
+            "$ref": "metadata-endpoint-json-schema.json#/definitions/fields",
+            "description": "Provenance, analytics and measures. A column of type 'document' is required (unpost and the transactions dialog find the rows by it); 'operation' and 'row' are found by type as well. Analytics are nullable and sparse - each leg fills its own."
+        },
+        "forms": {
+            "type": "object",
+            "additionalProperties": { "$ref": "metadata-endpoint-json-schema.json#/definitions/form" }
+        }
+    }
+}

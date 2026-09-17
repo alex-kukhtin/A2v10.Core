@@ -17,7 +17,7 @@ internal partial class ScriptBuilder
         var refs = Table.AllColumns().AllRefs().ToList();
 
         var refElems = refs.Select(x => $$"""
-        export interface {{x.Table.TypeName}} extends IElement {
+        export interface {{x.Table.RefTypeName}} extends IElement {
         {{String.Join("\n", TsProperties(x.Table))}}
         }
 

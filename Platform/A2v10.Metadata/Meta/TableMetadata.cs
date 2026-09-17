@@ -22,13 +22,21 @@ public enum EndpointKind
     TagEntries,
     Enum,
     Autonum,
-    AutonumValues
+    AutonumValues,
+    AccPlan,
+    Ledger
 }
 public enum ColumnType
 {
     // semantic types
     String, // DEFAULT VALUE!!!
     Id,
+    /* A key with a meaning outside the database - an account code, written by a file or a person.
+     * The same role as Id (the primary key, never updated, [Id!!Id] in the model), a different
+     * domain: nvarchar and no sequence. Two types and not a facet on Id: a length turning platformid
+     * into nvarchar is a discriminator nobody sees. The role is asked by TableColumn.IsKey.
+     */
+    NaturalKey,
     Name,
     Memo,
     RowNumber,
@@ -54,6 +62,11 @@ public enum ColumnType
     RowVersion,
     Color,
     Enum,
+    /* A reference to an account of a chart (/accplan/...): keyed by the account code, so spelled as
+     * that key and not as platformid - which is why it is a domain of its own and not a Ref. Its own
+     * behaviour (the tree picker, 'subtree') is not built yet.
+     */
+    Account,
     Autonum,
     Company,
     Direction,  // journal leg sign (+1/-1); vocabulary (In/Out, Dt/Ct) is presentation
@@ -128,18 +141,25 @@ public record TableColumn
     internal Boolean IsRef => Type == ColumnType.Ref || Type == ColumnType.Master ||
             Type == ColumnType.User || Type == ColumnType.Document ||
             Type == ColumnType.Company || Type == ColumnType.Operation ||
-            Type == ColumnType.Enum;
+            Type == ColumnType.Enum || Type == ColumnType.Account;
 
     #region Database Fields
     public Int32? Length { get; init; }
     public Int32? Precision { get; init; }
     public Int32? Scale { get; init; }
+    /* The key a self link points at, so Parent is spelled as the key of its own table. Set by the
+     * platform where the table is in hand (TableDefaultColumns), never in a file.
+     */
+    [JsonIgnore]
+    internal ColumnType KeyType { get; init; } = ColumnType.Id;
     /* No 'Required' here: it is a rule, not a property of the column - see
      * DeclarationMetadata.RuleSet and MetadataExtensions.RequiredFields.
      */
     // OLD -> to RULES
     public Boolean Unique { get; init; }
     #endregion
+    [JsonIgnore]
+    internal Boolean IsKey => Type is ColumnType.Id or ColumnType.NaturalKey;
     internal Boolean IsEnum => Type == ColumnType.Enum;
     internal Boolean IsOperation => Type == ColumnType.Operation;
 
@@ -162,9 +182,15 @@ public record TableColumn
     [JsonIgnore]
     internal Boolean IsMemo => Type == ColumnType.Memo;
     [JsonIgnore]
-    internal String Header => $"@[{Name}]";
+    // a natural key is a code the user reads, not the '#' of a surrogate
+    internal String Header => Type == ColumnType.NaturalKey ? "@[Code]" : $"@[{Name}]";
+    /* The property the column is under in the model. Its own name, except where the data model reserves
+     * the word: 'Parent' is every element's link to its container, so a self link travels as 'ParentElem'.
+     */
+    [JsonIgnore]
+    internal String ModelName => Type == ColumnType.Parent ? Constants.FieldNames.ParentElem : Name;
     // a reference shows its 'Name' property: the resolver fills it from the target's Presentation
-    internal String DisplayPath => (IsRef) ? $"{Name}.{Constants.FieldNames.Name}" : Name;
+    internal String DisplayPath => (IsRef) ? $"{Name}.{Constants.FieldNames.Name}" : ModelName;
 }
 
 public enum PostDirection
@@ -212,14 +238,30 @@ public sealed record PostSqlMetadata
     public String? UnPost { get; init; }
 }
 
-/* One posting, in one of two spellings: a leg into a journal that the platform maps, or a procedure
- * that posts the whole document. Which key is written decides every other key of the entry, and
+/* One leg of a ledger posting: where each column of the leg takes its value. The source is the key
+ * of the block, never the look of the value - a literal and a field name are both strings.
+ */
+public sealed record PostLegMetadata
+{
+    public Dictionary<String, String> Const { get; init; } = [];
+    public Dictionary<String, String> Document { get; init; } = [];
+    public Dictionary<String, String> Row { get; init; } = [];
+}
+
+/* One posting, in one of three spellings: a leg into a journal that the platform maps, a posting
+ * into a ledger (two mirrored legs from one declaration), or a procedure that posts the whole
+ * document. Which key is written decides every other key of the entry, and
  * DeclarationMetadata.CheckPost refuses the combinations that mean nothing.
  */
 public sealed record PostMetadata
 {
     #region JSON Fields
     public String? Journal { get; init; }
+    public String? Ledger { get; init; }
+    // one sum for both legs - the balance is structural; the field is of the rows under 'each'
+    public String? Sum { get; init; }
+    public PostLegMetadata? Dt { get; init; }
+    public PostLegMetadata? Ct { get; init; }
     public PostDirection Dir { get; init; }
     public Boolean Storno { get; init; }
     public PostEachMetadata? Each { get; init; }
@@ -241,6 +283,11 @@ public sealed record PostMetadata
     public TableMetadata JournalTableCheck => JournalTable ?? throw new InvalidOperationException($"RefTable for '{Journal}' is null");
     [JsonIgnore]
     public Boolean IsSql => Sql != null;
+    [JsonIgnore]
+    public Boolean IsLedger => Ledger != null;
+    // the path a mapped entry writes to; JournalTable holds its table for a journal and a ledger alike
+    [JsonIgnore]
+    internal String? TargetPath => Journal ?? Ledger;
 
     // the journals this posting touches, whoever writes them: what reads the RESULT counts tables
     [JsonIgnore]
@@ -304,10 +351,9 @@ public sealed record TableMetadata
     [JsonProperty("fields")]
     private Dictionary<String, TableColumn> _fields { get; init; } = [];
 
+    // the authored columns, materialized by Construct
     [JsonIgnore]
-    public List<TableColumn> Columns => [.. _fields.Select(
-        kp => { kp.Value.Name = kp.Key; return kp.Value; }
-    )];
+    public IReadOnlyList<TableColumn> Columns { get; private set; } = default!;
     public Dictionary<String, TableMetadata> Details { get; private set; } = [];
     public Dictionary<String, TableKindMetadata> Kinds { get; init; } = [];
     /* The rows of a set, in the shape and not in the declaration: they are deployed with the table
@@ -342,6 +388,23 @@ public sealed record TableMetadata
         kp => { kp.Value.Id = kp.Key; return kp.Value; }
     )];
     public List<TableTrait> Traits { get; init; } = [];
+
+    /* The file beside metadata.json that holds the rows the deploy merges into this table. A key
+     * of every table, processed per kind: today only a chart of accounts reads it, and the load
+     * refuses it anywhere else (DatabaseMetadataProvider.LoadSeedAsync).
+     */
+    public String? Seed { get; init; }
+
+    /* The chart a ledger posts against - the target of its Acc and CorrAcc. One chart per ledger: a
+     * Plan column would make every foreign key composite. Required on a ledger and refused elsewhere
+     * (DatabaseMetadataProvider.CheckAccPlan). The key is named for the kind of its target.
+     */
+    [JsonProperty("accplan")]
+    public String? AccPlan { get; init; }
+
+    // the rows of that file, sorted by key - filled by the load, before the table is published
+    [JsonIgnore]
+    public List<SeedRow> SeedRows { get; internal set; } = [];
 
     // for sql
     [JsonIgnore]
@@ -495,7 +558,24 @@ public sealed record TableMetadata
     [JsonIgnore]
     public String? FileHash { get; set; }
 
-    internal String RowKindField => Columns.FirstOrDefault(c => c.Type == ColumnType.RowKind)?.Name
+    /* The baseline, materialized by Construct. Built once and not per call: a column is an object the
+     * load writes into (RefTable), and a fresh one per call would lose it.
+     */
+    [JsonIgnore]
+    internal IReadOnlyList<TableColumn> DefaultColumns { get; private set; } = default!;
+
+    // every input of the baseline (Kind, Traits, MasterField) is set before the call
+    internal void Construct()
+    {
+        DefaultColumns = [.. this.CreateDefaultColumns()];
+        Columns = [.. _fields.Select(kp => { kp.Value.Name = kp.Key; return kp.Value; })];
+    }
+
+    // the primary key: always named Id (CreateTable), found by its role like every other column
+    [JsonIgnore]
+    internal TableColumn KeyColumn => this.AllColumns().First(c => c.IsKey);
+
+    internal String RowKindField =>Columns.FirstOrDefault(c => c.Type == ColumnType.RowKind)?.Name
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a RowKind column");
 
     [JsonIgnore]
@@ -505,11 +585,13 @@ public sealed record TableMetadata
     [JsonIgnore]
     internal Boolean IsJournal => Kind == EndpointKind.Journal;
     [JsonIgnore]
+    internal Boolean IsLedger => Kind == EndpointKind.Ledger;
+    [JsonIgnore]
     internal Boolean IsTags => Kind == EndpointKind.Tags;
     [JsonIgnore]
     internal Boolean IsTagEntries => Kind == EndpointKind.TagEntries;
     [JsonIgnore]
-    internal Boolean HasPeriod => IsDocument || IsJournal;
+    internal Boolean HasPeriod => IsDocument || IsJournal || IsLedger;
 
     internal void SetDetailDefaults(TableMetadata table, String key)
     {
@@ -518,6 +600,7 @@ public sealed record TableMetadata
         DetailsKey = key;
         MasterField = table.Model;
         Table = $"{table.Model}{key}";
+        Construct();
     }
     internal void SetDefaults(String schema, String table)
     {
@@ -555,26 +638,45 @@ public sealed record TableMetadata
             Model = table.KebabToPascal();
         if (Kind == EndpointKind.Undefined)
             Kind = schema.ToEndpointKind();
+        Construct();
 
         /* Only the kinds a reference points at are shown by anything; a journal or the numbering
          * registry is nobody's target, so 'presentation' written there is refused rather than left a
-         * key with no effect. Not written: the Name column, then the autonum one - a document is
-         * shown by its number. Written: it must be a column, because downstream it is an identifier
-         * inside SQL.
+         * key with no effect. Not written: each kind answers for itself - an account is known by its
+         * code, a document by its number, the rest by Name. A natural key is not a code the user reads
+         * by itself: an enum's key is written by the file and read by nobody. Written: it must be a
+         * column, because downstream it is an identifier inside SQL.
          */
-        if (Kind is EndpointKind.Catalog or EndpointKind.Document or EndpointKind.Enum or EndpointKind.Operation)
+        TableColumn? column(ColumnType type) => this.AllColumns().FirstOrDefault(c => c.Type == type);
+
+        void present(TableColumn? byDefault)
         {
-            var cols = this.AllColumns().ToList();
             if (String.IsNullOrEmpty(Presentation))
-                Presentation = (cols.FirstOrDefault(c => c.Type is ColumnType.Name)
-                    ?? cols.FirstOrDefault(c => c.Type is ColumnType.Autonum))?.Name
+                Presentation = byDefault?.Name
                     ?? throw new InvalidOperationException(
                         $"{Path}: nothing to be shown by - declare 'presentation', or add a Name or autonum column");
-            else if (!cols.Any(c => c.Name == Presentation))
+            else if (!this.AllColumns().Any(c => c.Name == Presentation))
                 throw new InvalidOperationException($"{Path}: presentation '{Presentation}' is not a column of this table");
         }
-        else if (!String.IsNullOrEmpty(Presentation))
-            throw new InvalidOperationException($"{Path}: 'presentation' on a {Kind} - nothing references it, so nothing is shown by it");
+
+        switch (Kind)
+        {
+            case EndpointKind.Catalog:
+            case EndpointKind.Enum:
+            case EndpointKind.Operation:
+                present(column(ColumnType.Name));
+                break;
+            case EndpointKind.Document:
+                present(column(ColumnType.Name) ?? column(ColumnType.Autonum));
+                break;
+            case EndpointKind.AccPlan:
+                present(column(ColumnType.NaturalKey));
+                break;
+            default:
+                if (!String.IsNullOrEmpty(Presentation))
+                    throw new InvalidOperationException($"{Path}: 'presentation' on a {Kind} - nothing references it, so nothing is shown by it");
+                break;
+        }
 
         foreach (var d in Details)
             d.Value.SetDetailDefaults(this, d.Key);
@@ -602,6 +704,35 @@ public record OperationMetadata(String Id);
  * of candidates.
  */
 public record EnumValueMetadata(String Id, String? Name, String? Memo, Boolean Void);
+
+/* One row of a seed file: the key, and the columns the row names with their values as written.
+ * A column the row does not name is absent from Values, not null - the merge leaves it untouched.
+ */
+public sealed record SeedRow(String Id, IReadOnlyDictionary<String, String?> Values);
+
+/* The section of the reports an account belongs to. Stored by NAME, as AutonumPeriod is.
+ * OffBalance is a value here and not a flag: an off-balance account is neither an asset nor a
+ * liability, so the two axes coincide.
+ */
+public enum AccountType
+{
+    Asset,
+    Liability,
+    Equity,
+    Income,
+    Expense,
+    OffBalance
+}
+
+/* The side the balance of an account is shown on. Not derived from AccountType: accumulated
+ * depreciation is an Asset with a Credit balance.
+ */
+public enum NormalBalance
+{
+    Debit,
+    Credit,
+    Both
+}
 
 /* What the counter restarts on. Default None, because only that half is silent: a yearly reset
  * under a pattern with no year reissues last year's numbers; never restarting only grows.

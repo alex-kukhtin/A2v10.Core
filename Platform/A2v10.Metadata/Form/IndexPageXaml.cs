@@ -107,7 +107,7 @@ internal partial class XamlBuilder
      */
     static RowDefinitions GridRows(IEnumerable<FormElement> body, Boolean pager = false)
     {
-        var rows = body.Select(e => e.Is == FormElementKind.DataGrid ? "1*" : "Auto").Prepend("Auto");
+        var rows = body.Select(e => e.Is is FormElementKind.DataGrid or FormElementKind.TreeGrid ? "1*" : "Auto").Prepend("Auto");
         return RowDefinitions.FromString(String.Join(",", pager ? rows.Append("Auto") : rows));
     }
 
@@ -123,7 +123,8 @@ internal partial class XamlBuilder
     {
         return new Page()
         {
-            CollectionView = XamlCollectionView(),
+            // what a DataGrid reads through (Parent.ItemsSource, Parent.Pager); a tree is bound to its collection
+            CollectionView = meta.Body.Any(e => e.Is == FormElementKind.DataGrid) ? XamlCollectionView() : null,
             Children = [IndexGrid(meta)],
             Taskpad = ElementToControl(meta.Taskpad) is Taskpad { Children.Count: > 0 } taskpad ? taskpad : null
         };
@@ -143,11 +144,13 @@ internal partial class XamlBuilder
 
     internal Dialog CreateBrowseDialogXaml(FormMetadata dialog)
     {
+        // a grid reads through the collection view and pages; a tree is bound to its collection, read whole
+        var isGrid = dialog.Body.Any(e => e.Is == FormElementKind.DataGrid);
         var selectCommand = new BindCmd() { Command = CommandType.Select };
-        selectCommand.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind("Parent.ItemsSource"));
+        selectCommand.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(isGrid ? "Parent.ItemsSource" : Table.CollectionName));
         var dlg = new Dialog()
         {
-            CollectionView = XamlCollectionView(),
+            CollectionView = isGrid ? XamlCollectionView() : null,
             Width = Length.FromString(dialog.Taskpad.Elements.Count > 0 ? "80rem" : "60rem"), // TODO: calculate width from columns
             Height = Length.FromString("40rem"),
             Title = $"@[{Table.Model}.Browse]",
@@ -167,15 +170,15 @@ internal partial class XamlBuilder
             Children = [
                 new Grid(_xamlServiceProvider)
                 {
-                    Rows = GridRows(dialog.Body, pager: true),
+                    Rows = GridRows(dialog.Body, pager: isGrid),
                     Height = Length.FromString("100%"),
                     Children = [
                         BrowseToolbar(dialog.Toolbar),
                         ..dialog.Body.Select(ElementToControl),
-                        new Pager()
+                        ..(isGrid ? new UIElementBase[] { new Pager()
                         {
                             Bindings = b => b.SetBinding(nameof(Pager.Source), new Bind("Parent.Pager"))
-                        }
+                        } } : [])
                     ]
                 }
             ],
@@ -185,6 +188,8 @@ internal partial class XamlBuilder
         // by type, not by position: the body may carry a bar of its own before the grid
         if (dlg.Children[0] is Grid chGrid && chGrid.Children.OfType<DataGrid>().FirstOrDefault() is { } dataGrid)
             dataGrid.BindImpl.SetBinding(nameof(DataGrid.DoubleClick), selectCommand);
+        if (dlg.Children[0] is Grid trGrid && trGrid.Children.OfType<TreeGrid>().FirstOrDefault() is { } treeGrid)
+            treeGrid.BindImpl.SetBinding(nameof(TreeGrid.DoubleClick), selectCommand);
         return dlg;
     }
 }

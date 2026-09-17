@@ -81,7 +81,7 @@ internal partial class ScriptBuilder
             yield return Table.TypeName;
             yield return $"{Table.TypeName}Array"; // collection type
             foreach (var r in Table.AllColumns().AllRefs())
-                yield return r.Table.TypeName;
+                yield return r.Table.RefTypeName;
         }
 
         const String jsDivider = ",\n\t\t";

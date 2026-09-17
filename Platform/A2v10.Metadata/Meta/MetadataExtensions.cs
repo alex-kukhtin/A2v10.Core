@@ -38,6 +38,8 @@ internal static class MetadataExtensions
             Constants.SchemaNames.Report => EndpointKind.Report,
             Constants.SchemaNames.Enum => EndpointKind.Enum,
             Constants.SchemaNames.Autonum => EndpointKind.Autonum,
+            Constants.SchemaNames.AccPlan => EndpointKind.AccPlan,
+            Constants.SchemaNames.Ledger => EndpointKind.Ledger,
             _ => throw new InvalidOperationException($"Invalid schema for EndpointKind '{schema}'")
         };
     }
@@ -51,6 +53,8 @@ internal static class MetadataExtensions
             Constants.SchemaNames.Journal => "jrn",
             Constants.SchemaNames.Report => "rep",
             Constants.SchemaNames.Enum => "enm",
+            Constants.SchemaNames.AccPlan => "acc",
+            Constants.SchemaNames.Ledger => "led",
             "account" => "acc",
             "inforegister" => "regi",
             _ => folder
@@ -66,7 +70,7 @@ internal static class MetadataExtensions
     }
 
     internal static IEnumerable<TableColumn> AllColumns(this TableMetadata table, Func<TableColumn, Boolean>? predicate = null) =>
-        table.DefaultColumns().Concat(table.Columns).Where(predicate ?? (_ => true));
+        table.DefaultColumns.Concat(table.Columns).Where(predicate ?? (_ => true));
 
     /* Everything about a table that the seed cannot say in columns, as one fingerprint. The deploy
      * hash is taken from the seed - so what is not in the seed cannot start a deployment, and a
@@ -74,18 +78,24 @@ internal static class MetadataExtensions
      * itself: the seed answers 'has this changed', and the content is deployed by the script that
      * owns it.
      *
-     * Its fillers are the rows a file declares: the values of an enum, the numberings of /autonum.
-     * A table holding neither has none, and a kind is never asked - what a table declares is what
-     * it has.
+     * Its fillers are the rows a file declares: the values of an enum, the numberings of /autonum,
+     * the rows of a seed file. A table holding none has none, and a kind is never asked - what a
+     * table declares is what it has.
      */
     internal static String? Xtra(this TableMetadata table)
     {
+        // a seed value that is not named and one named null are different rows to the merge
+        static String SeedLine(SeedRow row) =>
+            $"{row.Id}|{String.Join('|', row.Values.OrderBy(kv => kv.Key, StringComparer.Ordinal)
+                .Select(kv => kv.Value == null ? $"{kv.Key}~" : $"{kv.Key}={kv.Value}"))}";
+
         // the position is part of a value (it becomes Order), so the index is in the text; a
         // numbering is addressed by its key alone and its position says nothing
         var lines = table.Values
             .Select((v, ix) => $"{ix}|{v.Id}|{v.Name}|{v.Memo}|{(v.Void ? 1 : 0)}")
             .Concat(table.Autonums.Select(a => $"{a.Id}|{a.Name}|{a.Pattern}|{a.Period}"))
             .Concat(table.Operations.Select(o => o.Id))
+            .Concat(table.SeedRows.Select(SeedLine))
             .ToList();
         if (lines.Count == 0)
             return null;

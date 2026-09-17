@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ using System.Security.Cryptography;
 using System.Text;
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
@@ -160,7 +162,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
      * wasted io - they can see two different contents and put a declaration and a shape that
      * never coexisted into the same endpoint.
      */
-    private static TableMetadata BuildStorage(String schema, String table, String text, String? hash)
+    private async Task<TableMetadata> BuildStorageAsync(String schema, String table, String text, String? hash)
     {
         var storage = JsonConvert.DeserializeObject<TableMetadata>(text, JsonSettings.CamelCaseSerializerSettings)
             ?? throw new InvalidOperationException($"{MetadataFileName(schema, table)}: TableMetadata deserialization fails");
@@ -168,7 +170,148 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         storage.SetDefaults(schema, table);
         CheckNames(storage, schema, table);
         CheckAutonums(storage, schema, table);
+        CheckAccPlan(storage, schema, table);
+        await LoadSeedAsync(storage, schema, table);
         return storage;
+    }
+
+    /* A ledger posts against one chart, and nothing names it but this key - no default, and not the
+     * ledger's folder name: ledger/national -> accplan/national is a coincidence, not a rule. Anywhere
+     * else the key is refused rather than dropped. That the path is a chart is asked in phase 2, where
+     * the target is linked (ResolveReferencesAsync).
+     */
+    private static void CheckAccPlan(TableMetadata storage, String schema, String table)
+    {
+        var file = MetadataFileName(schema, table);
+        if (storage.Kind != EndpointKind.Ledger)
+        {
+            if (!String.IsNullOrEmpty(storage.AccPlan))
+                throw new InvalidOperationException(
+                    $"{file}: 'accplan' names the chart a ledger posts against; {schema}/ is not {Constants.SchemaNames.Ledger}/");
+            return;
+        }
+        if (String.IsNullOrEmpty(storage.AccPlan))
+            throw new InvalidOperationException(
+                $"{file}: does not declare 'accplan'. A ledger posts against one chart of accounts: \"accplan\": \"/{Constants.SchemaNames.AccPlan}/<name>\"");
+    }
+
+    /* 'seed' is a key of every table and is processed per kind; today only a chart of accounts has
+     * the processing, so anywhere else it is refused rather than dropped. On a chart it is required:
+     * nothing is inferred from a file lying in the folder.
+     *
+     * Everything about the rows is checked here, without a database, so a wrong file fails the load
+     * and never the deploy: keys against the columns, values against their columns' literal, the
+     * closed sets, the tree. The deploy then writes what was checked (SqlDbGenerator.CreateSeedScript).
+     */
+    private async Task LoadSeedAsync(TableMetadata storage, String schema, String table)
+    {
+        var file = MetadataFileName(schema, table);
+        if (storage.Kind != EndpointKind.AccPlan)
+        {
+            if (!String.IsNullOrEmpty(storage.Seed))
+                throw new InvalidOperationException(
+                    $"{file}: 'seed' is read for {Constants.SchemaNames.AccPlan}/ only; for {schema}/ it is not processed yet");
+            return;
+        }
+        if (String.IsNullOrEmpty(storage.Seed))
+            throw new InvalidOperationException(
+                $"{file}: does not declare 'seed'. A chart of accounts is its seed file: \"seed\": \"seed.json\"");
+
+        var seedFile = Path.Combine(schema, table, storage.Seed).NormalizeSlash();
+        using var stream = _codeProvider.FileStreamRO(seedFile)
+            ?? throw new InvalidOperationException($"{file}: 'seed' names {seedFile}, which does not exist");
+        using var sr = new StreamReader(stream);
+        var json = JsonConvert.DeserializeObject<Dictionary<String, Dictionary<String, JToken>>>(await sr.ReadToEndAsync())
+            ?? throw new InvalidOperationException($"{seedFile}: expected an object - account code: {{ column: value }}");
+
+        storage.SeedRows = [.. json.Select(kv => AccountRow(seedFile, storage, kv.Key, kv.Value))
+            .OrderBy(r => r.Id, StringComparer.Ordinal)];
+        CheckAccountTree(seedFile, storage.SeedRows);
+    }
+
+    // what a seed row names: the columns the platform reads, and the author's own
+    private static readonly String[] _accountColumns = [Constants.FieldNames.Name, Constants.FieldNames.Parent,
+        Constants.FieldNames.AccountType, Constants.FieldNames.NormalBalance];
+    private static readonly String[] _accountRequired = [Constants.FieldNames.Name,
+        Constants.FieldNames.AccountType, Constants.FieldNames.NormalBalance];
+
+    private static SeedRow AccountRow(String seedFile, TableMetadata storage, String id, Dictionary<String, JToken> row)
+    {
+        var head = $"{seedFile}: account '{id}'";
+        if (String.IsNullOrEmpty(id))
+            throw new InvalidOperationException($"{seedFile}: an account under an empty code");
+        /* '.' separates what the user adds under an account of the file (361.1) - the same figure as
+         * '$' in table names. Refused here, a release cannot declare a code a user may already hold.
+         */
+        if (id.Contains('.'))
+            throw new InvalidOperationException(
+                $"{head} - '.' is not allowed in a code of the file; it separates the sub-accounts a user adds (361.1)");
+        var keyLength = storage.KeyColumn.DeployLength();
+        if (id.Length > keyLength)
+            throw new InvalidOperationException($"{head} - a code is at most {keyLength} characters");
+
+        var values = new Dictionary<String, String?>();
+        foreach (var (name, token) in row)
+        {
+            var column = storage.AllColumns().FirstOrDefault(c => c.Name == name)
+                ?? throw new InvalidOperationException(
+                    $"{head} - '{name}' is not a column of {storage.SqlTableName}");
+            if (!_accountColumns.Contains(name) && !storage.Columns.Any(c => c.Name == name))
+                throw new InvalidOperationException(
+                    $"{head} - '{name}' is written by the platform, not by the seed");
+            var value = token.Type switch
+            {
+                JTokenType.Null => null,
+                JTokenType.String or JTokenType.Integer or JTokenType.Float or JTokenType.Boolean
+                    => ((JValue)token).ToString(CultureInfo.InvariantCulture),
+                _ => throw new InvalidOperationException($"{head} - '{name}' is not a scalar value")
+            };
+            if (value != null)
+            {
+                try
+                {
+                    column.SqlLiteral(value);
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException($"{head} - {ex.Message}", ex);
+                }
+            }
+            values.Add(name, value);
+        }
+
+        foreach (var name in _accountRequired)
+            if (values.GetValueOrDefault(name) == null)
+                throw new InvalidOperationException($"{head} - '{name}' is required");
+        CheckClosedSet<AccountType>(head, values, Constants.FieldNames.AccountType);
+        CheckClosedSet<NormalBalance>(head, values, Constants.FieldNames.NormalBalance);
+        return new SeedRow(id, values);
+    }
+
+    // spelled exactly as the enum member: the value is stored by name and compared by name
+    private static void CheckClosedSet<T>(String head, Dictionary<String, String?> values, String name) where T : struct, Enum
+    {
+        var value = values[name]!;
+        if (!Enum.GetNames<T>().Contains(value))
+            throw new InvalidOperationException(
+                $"{head} - {name} '{value}' is not one of {String.Join(", ", Enum.GetNames<T>())}");
+    }
+
+    // a Parent is a code of the same file, and following Parents never comes back
+    private static void CheckAccountTree(String seedFile, List<SeedRow> rows)
+    {
+        var parents = rows.ToDictionary(r => r.Id, r => r.Values.GetValueOrDefault(Constants.FieldNames.Parent));
+        foreach (var (id, parent) in parents)
+        {
+            if (parent != null && !parents.ContainsKey(parent))
+                throw new InvalidOperationException(
+                    $"{seedFile}: account '{id}' - Parent '{parent}' is not an account of this file");
+            var seen = new HashSet<String> { id };
+            for (var p = parent; p != null; p = parents[p])
+                if (!seen.Add(p))
+                    throw new InvalidOperationException(
+                        $"{seedFile}: account '{id}' - the Parent chain comes back to '{p}'");
+        }
     }
 
     /* A name becomes a SQL identifier, a TS type or member and a step of a binding path - and only
@@ -300,7 +443,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     private async Task<TableMetadata> LoadStorageAsync(String? dataSource, String schema, String table)
     {
         var (text, hash) = await ReadMetadataFileAsync(schema, table);
-        return BuildStorage(schema, table, text, hash);
+        return await BuildStorageAsync(schema, table, text, hash);
     }
 
     public Task<TableMetadata> GetStorageAsync(String? dataSource, String schema, String table)
@@ -372,7 +515,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         DeclarationMetadata? storageDeclaration = null;
         if (declaration.HasOwnShape)
             storage = await _metadataCache.GetOrAddStorageAsync(dataSource, schema, table,
-                (_, s, t) => Task.FromResult(BuildStorage(s, t, text, hash)));
+                (_, s, t) => BuildStorageAsync(s, t, text, hash));
         else
         {
             var (targetSchema, targetTable) = ParsePath(declaration.SharedShape!);
@@ -407,7 +550,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                     Storage = storage,
                     // layered first, then read against the shape - both while the endpoint is built,
                     // so what leaves here is finished and nothing has to come back to it
-                    Declaration = BakeDeclaration(MergeDeclaration(declaration, storageDeclaration), storage, schema, table),
+                    Declaration = BakeDeclaration(MergeDeclaration(declaration, storageDeclaration), storage, schema, table,
+                        await GetPlatformIdAsync(dataSource)),
                     FileHash = hash
                 }
         };
@@ -424,12 +568,12 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
      * name already, so a message is never prefixed twice.
      */
     private static DeclarationMetadata BakeDeclaration(DeclarationMetadata declaration, TableMetadata storage,
-        String schema, String table)
+        String schema, String table, AppPlatformId platformId)
     {
         try
         {
             CheckAutonumColumn(declaration, storage);
-            return declaration.Bake(storage);
+            return declaration.Bake(storage, platformId);
         }
         catch (Exception ex)
         {
@@ -606,6 +750,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             Constants.SchemaNames.Journal => EndpointKind.Journal,
             Constants.SchemaNames.Report => EndpointKind.Report,
             Constants.SchemaNames.Enum => EndpointKind.Enum,
+            Constants.SchemaNames.AccPlan => EndpointKind.AccPlan,
+            Constants.SchemaNames.Ledger => EndpointKind.Ledger,
             _ => EndpointKind.Undefined
         };
     }
@@ -752,17 +898,53 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             return (await GetNormalEndpointAsync(load, dataSource, schema, table)).Storage;
         }
 
+        /* The key names the kind of its target, so a path of the other kind is refused here - past this
+         * point a ledger under 'journal' fails as a column nobody can resolve, far from the cause.
+         * 'journals' of a procedure do not take a ledger yet.
+         */
+        /* An account literal in a leg is referenced by code, and the code is in the chart's file - so it
+         * is checked here, without a database, like an autonum name. Only the file: code does not refer
+         * to an account a user adds. The rest of the legs is checked by PostStatements below.
+         */
+        async Task CheckConstAccountsAsync(PostMetadata p)
+        {
+            var ledger = p.JournalTableCheck;
+            foreach (var (leg, blocks) in new[] { ("dt", p.Dt!), ("ct", p.Ct!) })
+                foreach (var (name, code) in blocks.Const)
+                {
+                    if (ledger.AllColumns().FirstOrDefault(c => c.Name == name && c.Type == ColumnType.Account) is not { } column)
+                        continue;
+                    var chart = await JournalAsync(column.Target!);
+                    if (!chart.SeedRows.Any(r => r.Id == code))
+                        throw new InvalidOperationException(
+                            $"post: {normal.Path} -> {ledger.Path}: '{leg}' const [{name}] = '{code}' is not an account of {chart.Path}");
+                }
+        }
+
+        async Task<TableMetadata> TargetAsync(String key, String path, EndpointKind kind)
+        {
+            var target = await JournalAsync(path);
+            if (target.Kind != kind)
+                throw new InvalidOperationException(
+                    $"post: {normal.Path}: '{key}' names {path}, which is a {target.Kind}, not a {kind}");
+            return target;
+        }
+
         foreach (var p in post)
         {
             if (!p.IsSql)
             {
-                p.JournalTable = await JournalAsync(p.Journal!);
+                p.JournalTable = p.IsLedger
+                    ? await TargetAsync("ledger", p.Ledger!, EndpointKind.Ledger)
+                    : await TargetAsync("journal", p.Journal!, EndpointKind.Journal);
+                if (p.IsLedger)
+                    await CheckConstAccountsAsync(p);
                 continue;
             }
             // assigned, never appended: a second pass would otherwise double the list
             var journals = new List<TableMetadata>();
             foreach (var path in p.Journals)
-                journals.Add(await JournalAsync(path));
+                journals.Add(await TargetAsync("journals", path, EndpointKind.Journal));
             p.JournalTables = journals;
         }
         _ = new PostStatements(normal);
@@ -789,7 +971,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
 
         static IEnumerable<TableColumn> GetAllReferences(TableMetadata table)
         {
-            return table.Columns.Where(c => c.IsRef)
+            // the baseline too: its columns are materialized (TableMetadata.Construct) and keep RefTable
+            return table.AllColumns(c => c.IsRef)
                 .Concat(table.Details.Values.SelectMany(GetAllReferences));
         }
 
@@ -824,7 +1007,13 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             var (schema, table) = ParsePath(column.Target);
             var refMeta = await GetNormalEndpointAsync(load, dataSource, schema, table);
             foreach (var gcol in group)
+            {
+                // an account is keyed by its code: any other target breaks the foreign key at deploy
+                if (gcol.Type == ColumnType.Account && refMeta.Storage.Kind != EndpointKind.AccPlan)
+                    throw new InvalidOperationException(
+                        $"{endpoint.Path}: [{gcol.Name}] is an account, and '{gcol.Target}' is not a chart of accounts (/{Constants.SchemaNames.AccPlan}/<name>)");
                 gcol.RefTable = refMeta;
+            }
         }
 
         CheckLiteralInitials(endpoint, meta);

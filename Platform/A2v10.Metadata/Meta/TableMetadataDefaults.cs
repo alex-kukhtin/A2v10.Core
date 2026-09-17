@@ -40,7 +40,7 @@ internal static class TableMetadataDefaults
      */
     public static TableMetadata CreateAutonumValuesTable(TableMetadata table)
     {
-        return new TableMetadata()
+        var values = new TableMetadata()
         {
             Kind = EndpointKind.AutonumValues,
             Schema = table.Schema,
@@ -54,6 +54,9 @@ internal static class TableMetadataDefaults
                 Constants.FieldNames.Autonum, Constants.FieldNames.Year,
                 Constants.FieldNames.Quart, Constants.FieldNames.Month])]
         };
+        // never reaches SetDefaults, so the baseline is built here
+        values.Construct();
+        return values;
     }
 
     /* Not a registry entry either, and for a different reason than the tag entries below: /tag is
@@ -98,7 +101,7 @@ internal static class TableMetadataDefaults
      */
     public static TableMetadata CreateTagEntriesTable(TableMetadata table)
     {
-        return new TableMetadata()
+        var entries = new TableMetadata()
         {
             Kind = EndpointKind.TagEntries,
             Schema = Constants.SchemaNames.Catalog,
@@ -107,5 +110,8 @@ internal static class TableMetadataDefaults
             // the same rule a details row follows: the link back is named for what it points at
             MasterField = table.Model
         };
+        // never reaches SetDefaults, so the baseline is built here
+        entries.Construct();
+        return entries;
     }
 }

@@ -55,6 +55,7 @@ public enum FormElementKind
     Tabs,
     Tab,
     DataGrid,
+    TreeGrid,
     Taskpad,
     Toolbar,
     Pager,

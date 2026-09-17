@@ -56,8 +56,8 @@ internal partial class ScriptBuilder(BuilderDescriptor desciptor, Boolean isTs)
         {
             var ro = column.IsFieldUpdated() ? "" : "readonly ";
             if (column.IsRef)
-                return $"\t{ro}{column.Name}: {column.RefTableCheck.Storage.TypeName};";
-            return $"\t{ro}{column.Name}: {column.ToTsType(_descr.PlatformId)};";
+                return $"\t{ro}{column.Name}: {column.RefTableCheck.Storage.RefTypeName};";
+            return $"\t{ro}{column.ModelName}: {column.ToTsType(_descr.PlatformId)};";
         }
 
         static Boolean inModel(TableColumn c) =>

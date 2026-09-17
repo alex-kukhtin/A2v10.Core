@@ -187,6 +187,9 @@ public partial class Sheet : UIElement
 		if (_footer != null)
 			foreach (var f in Footer)
 				f.SetParent(this);
+		if (_columns != null)
+			foreach (var c in Columns)
+				c.SetParent(this);
 		foreach (var s in Sections)
 			s.SetParent(this);
 	}

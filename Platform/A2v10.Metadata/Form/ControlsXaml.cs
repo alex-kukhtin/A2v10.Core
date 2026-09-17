@@ -48,7 +48,7 @@ internal partial class XamlBuilder
                     CssClass = elem.Type.ToXamlSemanticClass(),
                     Bindings = b => b.SetBinding(nameof(TableCell.Content), new Bind(elem.Name) { DataType = DataType.Number })
                 },
-            ColumnType.Ref => new SelectorSimple()
+            ColumnType.Ref or ColumnType.Account => new SelectorSimple()
                 {
                     Url = SelectorUrl(inherits, elem),
                     CssClass = elem.Type.ToXamlSemanticClass(),
@@ -265,6 +265,26 @@ internal partial class XamlBuilder
                 },
                 Columns = [.. IndexColumnsXaml(Table, elem.Members)]
             },
+            // the whole tree is in the model: bound to the collection itself, not to a collection view
+            FormElementKind.TreeGrid => new TreeGrid()
+            {
+                Hover = true,
+                StickyHeaders = true,
+                Height = Length.FromString("100%"),
+                GridLines = GridLinesVisibility.Horizontal,
+                ItemsProperty = Constants.FieldNames.Items,
+                Bindings = b => b.SetBinding(nameof(TreeGrid.ItemsSource), new Bind(Table.CollectionName)),
+                Columns = [.. elem.Members.Select(m => m.ColumnCheck).Select((col, ix) => new TreeGridColumn()
+                {
+                    Header = col.Header,
+                    // the first column carries the expand toggle
+                    ShowButton = ix == 0,
+                    Fit = col.IsKey,
+                    Wrap = col.IsKey ? WrapMode.NoWrap : WrapMode.Default,
+                    Bindings = b => b.SetBinding(nameof(TreeGridColumn.Content),
+                        new Bind(col.DisplayPath) { DataType = col.Type.ToXamlDataType() })
+                })]
+            },
             FormElementKind.Pager => new Pager()
             {
                 Bindings = b => b.SetBinding(nameof(Pager.Source), new Bind("Parent.Pager"))
@@ -345,10 +365,30 @@ internal partial class XamlBuilder
 
     UIElementBase CreateEditControl(TableColumn column, Dictionary<String, InheritDescriptor[]> inherits)
     {
-        var valueBind = new Bind($"{Table.Model}.{column.Name}")
+        var valueBind = new Bind($"{Table.Model}.{column.ModelName}")
         {
             DataType = column.Type.ToXamlDataType(),
         };
+        /* A closed set of the platform, stored by name: the items are the enum's members, the text
+         * their localization keys - the same keys the tree sends.
+         */
+        ComboBox ClosedSet<T>() where T : struct, Enum => new()
+        {
+            Label = column.Header,
+            Children = [.. Enum.GetNames<T>().Select(n => new ComboBoxItem()
+            {
+                Content = $"@[{column.Name}.{n}]",
+                Value = n
+            })],
+            Bindings = b => b.SetBinding(nameof(ComboBox.Value), valueBind)
+        };
+
+        // the chart's own columns; an author field of the same name elsewhere is an ordinary string
+        if (Table.Kind == EndpointKind.AccPlan && column.Name == Constants.FieldNames.AccountType)
+            return ClosedSet<AccountType>();
+        if (Table.Kind == EndpointKind.AccPlan && column.Name == Constants.FieldNames.NormalBalance)
+            return ClosedSet<NormalBalance>();
+
         return column.Type switch
         {
             ColumnType.Date => new DatePicker()
@@ -377,7 +417,7 @@ internal partial class XamlBuilder
             {
                 Bindings = b => b.SetBinding(nameof(Header.Content), new Bind($"{Table.Model}.{column.Name}.Name"))
             },
-            ColumnType.Ref or ColumnType.Document => new SelectorSimple()
+            ColumnType.Ref or ColumnType.Document or ColumnType.Account => new SelectorSimple()
             {
                 Label = column.Header,
                 CssClass = column.Type.ToXamlSemanticClass(),

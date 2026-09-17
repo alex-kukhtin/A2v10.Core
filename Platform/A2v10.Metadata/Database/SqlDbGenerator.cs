@@ -72,7 +72,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         allScript.AppendLine(seedScript);
         allScript.AppendLine(CreatePlatformIdScript(platformId));
         allScript.AppendLine(CreateSchemasScript(tables));
-        allScript.AppendLine(CreateTablesScript(tables));
+        allScript.AppendLine(CreateTablesScript(tables, platformId));
         allScript.AppendLine(CreateTableTypesScript(tables));
         allScript.AppendLine(SyncSchemaScript());
         /* After SyncSchema, because a column added to the shape of a set is written by this merge;
@@ -82,6 +82,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
          */
         allScript.AppendLine(CreateEnumValuesScript(tables));
         allScript.AppendLine(CreateAutonumsScript(tables));
+        allScript.AppendLine(CreateSeedScript(tables));
         allScript.AppendLine(CreateOperationsScript(tables));
         allScript.AppendLine(CreateAutonumProcedureScript(tables));
         allScript.AppendLine(SystemUserScript());
@@ -197,13 +198,13 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
             yield return (TableMetadataDefaults.TagsTable(), null);
     }
 
-    private String CreateTablesScript(IEnumerable<TableMetadata> tables)
+    private String CreateTablesScript(IEnumerable<TableMetadata> tables, AppPlatformId platformId)
     {
         var strBuilder = new StringBuilder();
         strBuilder.AppendLine("-- TABLES");
         foreach (var (table, _) in DeployTables(tables))
         {
-            strBuilder.AppendLine(_dbCreator.CreateTable(table));
+            strBuilder.AppendLine(_dbCreator.CreateTable(table, platformId));
             strBuilder.AppendLine("go");
         }
         return strBuilder.ToString();
@@ -246,7 +247,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
             {CliDatabaseCreator.SQL_DIVIDER}
             begin
                 set nocount on;
-                declare @{e.Model} table([Id] nvarchar(64), [Name] nvarchar(255), [Memo] nvarchar(255),
+                declare @{e.Model} table([Id] {e.KeyColumn.SqlDataType()}, [Name] nvarchar(255), [Memo] nvarchar(255),
                     [Order] int, [Void] bit);
 
                 insert into @{e.Model}([Id], [Name], [Memo], [Order], [Void]) values
@@ -297,7 +298,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
             {CliDatabaseCreator.SQL_DIVIDER}
             begin
                 set nocount on;
-                declare @{reg.Model} table([Id] nvarchar(64), [Name] nvarchar(255),
+                declare @{reg.Model} table([Id] {reg.KeyColumn.SqlDataType()}, [Name] nvarchar(255),
                     [Pattern] nvarchar(255), [Period] nvarchar(16));
 
                 insert into @{reg.Model}([Id], [Name], [Pattern], [Period]) values
@@ -312,6 +313,92 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
                     t.[Period] = s.[Period]
                 when not matched then insert ([Id], [Name], [Pattern], [Period]) values
                     (s.[Id], s.[Name], s.[Pattern], s.[Period]);
+            end
+            go
+            """);
+        }
+        return sb.ToString();
+    }
+
+    /* The rows of a chart of accounts, merged from its seed file. A dumb merge, and every arm of it
+     * is a rule of the chart:
+     * - a row of the file is the configuration: IsSystem = 1, Void = 0, the columns the file names;
+     * - a column a row does not name is left as it is - an author field is written only where the
+     *   row speaks about it, so each one travels with a '$'-bit saying whether it was named;
+     * - a row of the file that has left it keeps its row (the postings hold it by FK) and becomes
+     *   the user's: IsSystem = 0, closed for choosing. Void = 0 would leave an account the code gave
+     *   up silently available. Put back into the file, the same merge restores it.
+     * A row with IsSystem = 0 is the user's and the merge never touches it.
+     *
+     * Emitted for a chart with no rows as well: emptying the file is the last arm for every row.
+     */
+    private static String CreateSeedScript(IEnumerable<TableMetadata> tables)
+    {
+        static String Str(String? val) =>
+            val == null ? "null" : $"N'{val.Replace("'", "''")}'";
+
+        var charts = tables.Where(t => t.Kind == EndpointKind.AccPlan).ToList();
+        if (charts.Count == 0)
+            return String.Empty;
+
+        String[] baseline = [Constants.FieldNames.Id, Constants.FieldNames.Name, Constants.FieldNames.Parent,
+            Constants.FieldNames.AccountType, Constants.FieldNames.NormalBalance];
+
+        var sb = new StringBuilder();
+        sb.AppendLine("-- SEED");
+        foreach (var chart in charts)
+        {
+            var columns = chart.AllColumns().ToDictionary(c => c.Name);
+            // in declaration order, only those some row names
+            var authored = chart.Columns
+                .Where(c => chart.SeedRows.Any(r => r.Values.ContainsKey(c.Name)))
+                .ToList();
+
+            var declared = baseline.Select(n => $"[{n}] {columns[n].SqlDataType()}")
+                .Concat(authored.Select(c => $"[{c.Name}] {c.SqlDataType()}, [${c.Name}] bit"));
+
+            // the key is outside the row's values, as it is outside a row of the file
+            String Value(SeedRow row, String name) =>
+                name == Constants.FieldNames.Id ? Str(row.Id)
+                : row.Values.GetValueOrDefault(name) is String v ? columns[name].SqlLiteral(v) : "null";
+
+            var rows = chart.SeedRows.Select(r => $"\t({String.Join(", ",
+                baseline.Select(n => Value(r, n))
+                    .Concat(authored.SelectMany(c => new[] { Value(r, c.Name), r.Values.ContainsKey(c.Name) ? "1" : "0" })))})");
+
+            var names = baseline.Select(n => $"[{n}]")
+                .Concat(authored.SelectMany(c => new[] { $"[{c.Name}]", $"[${c.Name}]" }));
+
+            var insert = chart.SeedRows.Count == 0 ? String.Empty : $"""
+                insert into @{chart.Model}({String.Join(", ", names)}) values
+            {String.Join($",{Environment.NewLine}", rows)};
+
+            """;
+
+            var updated = baseline.Where(n => n != Constants.FieldNames.Id).Select(n => $"t.[{n}] = s.[{n}]")
+                .Concat(authored.Select(c => $"t.[{c.Name}] = case when s.[${c.Name}] = 1 then s.[{c.Name}] else t.[{c.Name}] end"))
+                .Concat([$"t.[{Constants.FieldNames.IsSystem}] = 1", $"t.[{Constants.FieldNames.Void}] = 0"]);
+            var inserted = baseline.Concat(authored.Select(c => c.Name))
+                .Concat([Constants.FieldNames.IsSystem, Constants.FieldNames.Void]);
+            var insertedValues = baseline.Concat(authored.Select(c => c.Name)).Select(n => $"s.[{n}]")
+                .Concat(["1", "0"]);
+
+            sb.AppendLine($"""
+            {CliDatabaseCreator.SQL_DIVIDER}
+            begin
+                set nocount on;
+                declare @{chart.Model} table({String.Join(", ", declared)});
+
+            {insert}    merge {chart.SqlTableName} as t
+                using @{chart.Model} as s
+                on t.[Id] = s.[Id]
+                when matched then update set
+                    {String.Join($",{Environment.NewLine}        ", updated)}
+                when not matched then insert ({String.Join(", ", inserted.Select(n => $"[{n}]"))}) values
+                    ({String.Join(", ", insertedValues)})
+                when not matched by source and t.[{Constants.FieldNames.IsSystem}] = 1 then update set
+                    t.[{Constants.FieldNames.IsSystem}] = 0,
+                    t.[{Constants.FieldNames.Void}] = 1;
             end
             go
             """);
@@ -340,7 +427,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
             {CliDatabaseCreator.SQL_DIVIDER}
             begin
                 set nocount on;
-                declare @{registry.Model} table([Id] nvarchar(64), [Name] nvarchar(255));
+                declare @{registry.Model} table([Id] {registry.KeyColumn.SqlDataType()}, [Name] nvarchar(255));
 
                 insert into @{registry.Model}([Id], [Name]) values
             {String.Join($",{Environment.NewLine}", rows)};
@@ -382,7 +469,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         -- AUTONUM
         {{CliDatabaseCreator.SQL_DIVIDER}}
         create or alter procedure {{TableMetadataDefaults.AutonumProcedureName()}}
-        @Autonum nvarchar(64),
+        @Autonum {{registry.KeyColumn.SqlDataType()}},
         @Date date,
         @Number nvarchar(64) output
         as
@@ -466,7 +553,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
     private static String CreateTableTypesScript(IEnumerable<TableMetadata> tables)
     {
         static Boolean HasTableType(TableMetadata table)
-            => !table.IsJournal && !table.IsTags && !table.IsTagEntries;
+            => !table.IsJournal && !table.IsLedger && !table.IsTags && !table.IsTagEntries;
 
         var strBuilder = new StringBuilder();
         strBuilder.AppendLine("-- TABLE TYPES");
@@ -545,7 +632,9 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
 
         static String ColumnRow(TableMetadata table, TableColumn col)
         {
-            var refTable = col.IsRef ? col.RefTable?.Storage : null;
+            // a self link has no RefTable - it points at this table, as its foreign key does (CreateForeignKeys)
+            var refTable = col.Type == ColumnType.Parent ? table
+                : col.IsRef ? col.RefTable?.Storage : null;
             // one descriptor, four facets - this row is exactly where they must agree
             var ti = col.ToSqlDbTypeInfo();
             return $"\t({Str(table.SqlSchema)}, {Str(table.Table)}, {Str(col.Name)}, {Str(ti.SqlName)}, " +

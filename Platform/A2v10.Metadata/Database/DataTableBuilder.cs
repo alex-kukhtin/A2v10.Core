@@ -98,6 +98,13 @@ internal class DataTableBuilder(TableMetadata table, AppPlatformId platformId)
             else
             { 
                 var obj = src.Get<Object>(realColumnName);
+                // a reference first: what it carries is an id, and the checks below are about that id
+                if (obj is ExpandoObject exp)
+                {
+                    obj = exp.Get<Object>("Id");
+                    if (AppPlatformId.IsEmpty(obj))
+                        obj = DBNull.Value;
+                }
                 if (obj == null)
                     obj = DBNull.Value;
                 else if (col.DataType == typeof(Guid))
@@ -110,12 +117,6 @@ internal class DataTableBuilder(TableMetadata table, AppPlatformId platformId)
                     if (obj is String strObj)
                         obj =  (String.IsNullOrWhiteSpace(strObj)) ? DBNull.Value
                             : Convert.FromHexString(strObj);
-                }
-                if (obj is ExpandoObject exp)
-                {
-                    obj = exp.Get<Object>("Id");
-                    if (AppPlatformId.IsEmpty(obj))
-                        obj = DBNull.Value;
                 }
                 r[col] = obj;
             }

@@ -232,9 +232,8 @@ public sealed record DeclarationMetadata
 
         if (!post.Any(p => p.IsSql))
         {
-            if (post.Any(p => String.IsNullOrEmpty(p.Journal)))
-                throw new InvalidOperationException(
-                    $"post: {path}: an entry declares neither 'journal' nor 'sql'");
+            foreach (var p in post)
+                CheckMapped(path, p);
             return;
         }
 
@@ -257,9 +256,49 @@ public sealed record DeclarationMetadata
         if (one.Each != null) mapping.Add("each");
         if (one.Document.Count > 0) mapping.Add("document");
         if (one.Row.Count > 0) mapping.Add("row");
+        if (!String.IsNullOrEmpty(one.Ledger)) mapping.Add("ledger");
+        mapping.AddRange(LedgerKeys(one));
         if (mapping.Count > 0)
             throw new InvalidOperationException(
                 $"post: {path}: 'sql' does the mapping itself, so {String.Join(", ", mapping.Select(m => $"'{m}'"))} say nothing here");
+    }
+
+    private static IEnumerable<String> LedgerKeys(PostMetadata p)
+    {
+        if (p.Sum != null) yield return "sum";
+        if (p.Dt != null) yield return "dt";
+        if (p.Ct != null) yield return "ct";
+    }
+
+    /* A mapped entry names one target, and the target decides the keys: a journal leg is one row
+     * with its direction ('dir', 'storno', blocks of the entry), a ledger posting is two legs with
+     * blocks of their own ('sum', 'dt', 'ct'). A key of the other spelling would be silently ignored.
+     */
+    private static void CheckMapped(String path, PostMetadata p)
+    {
+        var hasJournal = !String.IsNullOrEmpty(p.Journal);
+        if (hasJournal == p.IsLedger)
+            throw new InvalidOperationException(hasJournal
+                ? $"post: {path}: an entry declares both 'journal' and 'ledger'"
+                : $"post: {path}: an entry declares none of 'journal', 'ledger', 'sql'");
+
+        List<String> foreign = [];
+        if (hasJournal)
+            foreign.AddRange(LedgerKeys(p));
+        else
+        {
+            if (p.Dir != PostDirection.None) foreign.Add("dir");
+            if (p.Storno) foreign.Add("storno");
+            if (p.Document.Count > 0) foreign.Add("document");
+            if (p.Row.Count > 0) foreign.Add("row");
+        }
+        if (foreign.Count > 0)
+            throw new InvalidOperationException(hasJournal
+                ? $"post: {path} -> {p.Journal}: {String.Join(", ", foreign.Select(m => $"'{m}'"))} belong to a ledger posting"
+                : $"post: {path} -> {p.Ledger}: {String.Join(", ", foreign.Select(m => $"'{m}'"))} say nothing to a ledger - the legs are 'dt' and 'ct', each with its own 'const', 'document', 'row'");
+        if (p.IsLedger && (p.Dt == null || p.Ct == null || String.IsNullOrEmpty(p.Sum)))
+            throw new InvalidOperationException(
+                $"post: {path} -> {p.Ledger}: a ledger posting declares 'dt', 'ct' and 'sum'");
     }
 
     /* The rules in force for one row set. A kind that says nothing is not an empty layer to

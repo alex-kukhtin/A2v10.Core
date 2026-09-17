@@ -7,7 +7,8 @@ namespace A2v10.Metadata;
 
 internal static class TableDefaultColumns
 {
-    internal static IEnumerable<TableColumn> DefaultColumns(this TableMetadata table)
+    // called once, by TableMetadata.Construct: the columns are objects that keep what the load writes into them
+    internal static IEnumerable<TableColumn> CreateDefaultColumns(this TableMetadata table)
     {
         return table.Kind switch
         {
@@ -22,6 +23,8 @@ internal static class TableDefaultColumns
             EndpointKind.AutonumValues => AutonumValuesDefaultColumns(table),
             EndpointKind.Tags => TagsDefaultColumns(table),
             EndpointKind.TagEntries => TagsEntriesDefaultColumns(table),
+            EndpointKind.AccPlan => AccPlanDefaultColumns(table),
+            EndpointKind.Ledger => LedgerDefaultColumns(table),
             _ => throw new InvalidOperationException($"Default columns not defined for {table.Kind}")
         };
     }
@@ -79,10 +82,10 @@ internal static class TableDefaultColumns
         yield return new TableColumn(Constants.FieldNames.RowNo, ColumnType.RowNumber);
     }
 
-    // the key is the operation's code, so String - see EnumDefaultColumns, the same double role
+    // the key is the operation's code - a NaturalKey, see EnumDefaultColumns
     static IEnumerable<TableColumn> OperationDefaultColumns(TableMetadata table)
     {
-        yield return new TableColumn(Constants.FieldNames.Id, ColumnType.String) { Length = 64 };
+        yield return new TableColumn(Constants.FieldNames.Id, ColumnType.NaturalKey);
         yield return new TableColumn(Constants.FieldNames.Name, ColumnType.Name);
         yield return new TableColumn(Constants.FieldNames.Memo, ColumnType.Memo);
     }
@@ -96,16 +99,15 @@ internal static class TableDefaultColumns
             yield return stamp;
     }
 
-    /* A set of codes: the key is the code itself, so it is a string and not ColumnType.Id - which
-     * would be platformid, and would bring a sequence default onto a key the declaration writes.
-     * Not ColumnType.Enum either: that one means 'a reference to a set', IsRef says yes to it, and
-     * a set whose own key is a reference to itself is the double role that was removed elsewhere.
-     * The length is the one every discriminator has, so both sides of the FK are spelled by the
-     * same ToSqlDbTypeInfo branch.
+    /* A set of codes: the key is the code the declaration writes - a NaturalKey, as an account code
+     * is. Not ColumnType.Id - platformid, with a sequence default. Not ColumnType.Enum either: that
+     * one means 'a reference to a set', IsRef says yes to it, and a set whose own key is a reference
+     * to itself is the double role that was removed elsewhere. A reference to the set is spelled by
+     * this key (ToSqlDbTypeInfo), so both sides of the FK cannot disagree.
      */
     static IEnumerable<TableColumn> EnumDefaultColumns(TableMetadata table)
     {
-        yield return new TableColumn(Constants.FieldNames.Id, ColumnType.String) { Length = 64 };
+        yield return new TableColumn(Constants.FieldNames.Id, ColumnType.NaturalKey);
         /* Void and not a bit of its own: 'withdrawn from use' is the same statement the platform
          * already makes about a catalog row, and it is the same everywhere - not null, default 0,
          * never an index column. A value that is void keeps its rows and leaves the candidate list.
@@ -116,14 +118,14 @@ internal static class TableDefaultColumns
         yield return new TableColumn(Constants.FieldNames.Order, ColumnType.Integer);
     }
 
-    /* The key is a code the file writes, so String and not ColumnType.Id - see EnumDefaultColumns,
-     * which is this case exactly. Not ColumnType.Autonum either: that one means the number OF a
-     * document. No 'void' - nobody picks a numbering at run time. No counter column: counters are
-     * rows of a table of their own, keyed by numbering and period.
+    /* The key is a code the file writes, so a NaturalKey - see EnumDefaultColumns, which is this case
+     * exactly. Not ColumnType.Autonum: that one means the number OF a document. No 'void' - nobody
+     * picks a numbering at run time. No counter column: counters are rows of a table of their own,
+     * keyed by numbering and period.
      */
     static IEnumerable<TableColumn> AutonumDefaultColumns(TableMetadata table)
     {
-        yield return new TableColumn(Constants.FieldNames.Id, ColumnType.String) { Length = 64 };
+        yield return new TableColumn(Constants.FieldNames.Id, ColumnType.NaturalKey);
         yield return new TableColumn(Constants.FieldNames.Name, ColumnType.Name);
         yield return new TableColumn(Constants.FieldNames.Pattern, ColumnType.String) { Length = 255 };
         /* By NAME, not by the enum's number: reordering AutonumPeriod would rewrite what the rows
@@ -155,6 +157,42 @@ internal static class TableDefaultColumns
         yield return new TableColumn(Constants.FieldNames.Quart, ColumnType.Integer);
         yield return new TableColumn(Constants.FieldNames.Month, ColumnType.Integer);
         yield return new TableColumn(Constants.FieldNames.CurrentNumber, ColumnType.Integer);
+    }
+
+    /* A chart of accounts. The key is the account code - no Code beside Id, one concept, one name.
+     * The tree is in the baseline and Parent is its only carrier: never derived from the code,
+     * where a prefix is a convention of one plan. AccountType and NormalBalance are closed sets of
+     * the platform, stored by name. IsSystem says the row comes from the seed file and is written
+     * by the deploy alone.
+     */
+    static IEnumerable<TableColumn> AccPlanDefaultColumns(TableMetadata table)
+    {
+        yield return new TableColumn(Constants.FieldNames.Id, ColumnType.NaturalKey);
+        yield return new TableColumn(Constants.FieldNames.Void, ColumnType.Void);
+        yield return new TableColumn(Constants.FieldNames.IsSystem, ColumnType.IsSystem);
+        yield return new TableColumn(Constants.FieldNames.RowVersion, ColumnType.RowVersion);
+        yield return new TableColumn(Constants.FieldNames.Name, ColumnType.Name);
+        yield return new TableColumn(Constants.FieldNames.Parent, ColumnType.Parent) { KeyType = ColumnType.NaturalKey };
+        yield return new TableColumn(Constants.FieldNames.AccountType, ColumnType.String) { Length = 16 };
+        yield return new TableColumn(Constants.FieldNames.NormalBalance, ColumnType.String) { Length = 16 };
+        foreach (var stamp in Stamps())
+            yield return stamp;
+    }
+
+    /* A ledger: one row per leg, two legs per posting. The baseline is what 'post' writes from its
+     * own keys (dt/ct, sum), so the platform knows these names ahead. CorrAcc is the Acc of the other
+     * leg. The provenance (Document, Operation, Row) is not here: its target is where the documents
+     * of the application live, and an application may have documents without operations - so it is
+     * declared, as in a journal, and found by type.
+     */
+    static IEnumerable<TableColumn> LedgerDefaultColumns(TableMetadata table)
+    {
+        yield return new TableColumn(Constants.FieldNames.Id, ColumnType.Id);
+        yield return new TableColumn(Constants.FieldNames.Date, ColumnType.Date);
+        yield return new TableColumn(Constants.FieldNames.InOut, ColumnType.Direction);
+        yield return new TableColumn(Constants.FieldNames.Acc, ColumnType.Account) { Target = table.AccPlan };
+        yield return new TableColumn(Constants.FieldNames.CorrAcc, ColumnType.Account) { Target = table.AccPlan };
+        yield return new TableColumn(Constants.FieldNames.Sum, ColumnType.Amount);
     }
 
     static IEnumerable<TableColumn> TagsDefaultColumns(TableMetadata table)

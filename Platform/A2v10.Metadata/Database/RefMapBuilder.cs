@@ -58,11 +58,8 @@ internal class RefMapBuilder
     public Boolean IsEmpty => _flat.Count == 0;
 
 
-    private String RealTypeName(TableMetadata t)
-        => _isPlain ? t.TypeName : t.RefTypeName;
-
-    private String TargetKey(TableColumn c)
-        => $"{c.RefTableCheck.Storage.SqlTableName}|{RealTypeName(c.RefTableCheck.Storage)}";
+    private static String TargetKey(TableColumn c)
+        => $"{c.RefTableCheck.Storage.SqlTableName}|{c.RefTableCheck.Storage.RefTypeName}";
 
     /* The columns are a parameter, not 'table.Columns': the map exists to resolve what a recordset
      * SENT, and a caller that emits a subset would otherwise fetch objects for columns nobody
@@ -79,7 +76,8 @@ internal class RefMapBuilder
 
     private IEnumerable<RefMapItem> Flatten(TableMetadata table, String where)
     {
-        yield return RefsOf(table, where, table.Columns);
+        // the baseline too (a ledger's Acc); not the link to the header, which is nobody's display
+        yield return RefsOf(table, where, table.AllColumns(c => c.Type != ColumnType.Master));
 
         if (!_isPlain)
             yield break;
@@ -206,7 +204,7 @@ internal class RefMapBuilder
                 )
                 """;
             var inherits = _inheritStruct.TryGetValue(kvp.Key, out var inh) && inh.Count > 0
-                ? ", " + String.Join(", ", inh.Select(c => c.SqlModelColumnName("a", RealTypeName)))
+                ? ", " + String.Join(", ", inh.Select(c => c.SqlModelColumnName("a")))
                 : String.Empty;
 
             // the role 'Name' carries the target's presentation - every display binds to it
