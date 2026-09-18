@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2008-2024 Oleksandr Kukhtin
 
-Last updated : 24 may 2024
-module version : 8283
+Last updated : 18 09 2026
+module version : 8662
 */
 
 /*
@@ -71,10 +71,15 @@ begin
 	
 	declare @inst table(Id bigint);
 
-	update top(@Limit) a2sch.Commands set Lock = newid(), LockDate = getutcdate()
-	output inserted.Id into @inst
-	where Lock is null and Complete = 0 and 
-		(UtcRunAt is null or UtcRunAt < getutcdate());
+	with T as (
+		select top(@Limit) Lock, LockDate, Id
+		from a2sch.Commands
+		where Lock is null and Complete = 0 and
+			(UtcRunAt is null or UtcRunAt < getutcdate())
+		order by Id -- required!
+	)
+	update T set Lock = newid(), LockDate = getutcdate()
+	output inserted.Id into @inst;
 
 	select b.Id, b.Command, b.[Data], b.Lock
 	from @inst t inner join a2sch.Commands b on t.Id = b.Id

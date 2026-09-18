@@ -1,10 +1,14 @@
-﻿2026-09-16 (next: 8662)
+﻿2026-09-18 (next: 8663)
 
 A2v10.App.Assets
 A2v10.Cli
 A2v10.Metadata
 A2v10.Platform
+A2v10.Platform.Web
+A2v10.ReportEngine.Pdf
+A2v10.Scheduling
 A2v10.ViewEngine.Xaml
+A2v10.Web.Assets
 
 !Workflow.Module (scheduling, workflow.engine)
 
@@ -15,6 +19,7 @@ A2v10.Platform
 	A2v10.Platform.Web
 		A2v10.Identity.Core
 		A2v10.Infrastructure
+		A2v10.ViewEngine.Xaml
 	A2v10.ReportEngine.Pdf
 		A2v10.ReportEngine.Excel
 			A2v10.ReportEngine.Script

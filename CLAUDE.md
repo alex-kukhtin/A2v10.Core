@@ -44,6 +44,7 @@ Labor: the human designs boxes and holds composition/intent; the LLM fills boxes
 A decision sits next to the code it compiles into. This file keeps what holds for the whole repo — goal, axis, method — and a map; an area file is read deliberately, by the line that names it. No `@`-imports: they would inline eagerly and this file would be the same size again.
 
 - [Platform/A2v10.Metadata/CLAUDE.md](Platform/A2v10.Metadata/CLAUDE.md) — Declarations: rules by kind, layered by "mine wins" · System endpoints: behaviour is a type, not a kind · Forms: whole or nothing · Commands: a derived set, plus what the endpoint declares · Members: a form node shows members, not columns · Filters: a namespace on the shape, referenced by the form · Posting by procedure: a box with two ports · Transactions: a projection of `post`, not a screen · Print forms: paper under one act · Autonums: a column and a key, never a trait · Links: part and belonging, and one naming rule · Seed: what the database is told about itself
+- [Extensions/A2v10.Scheduling/CLAUDE.md](Extensions/A2v10.Scheduling/CLAUDE.md) — The command queue is FIFO, so "after a batch" is just a later command · Ordering inside one queue call: not built
 - [ReportEngines/CLAUDE.md](ReportEngines/CLAUDE.md) — Report expressions: a path, or JS with one scope · Report images: one value, one resolver
 - [Tools/A2v10.Cli/CLAUDE.md](Tools/A2v10.Cli/CLAUDE.md) — The `a2` CLI: shape of the command tree
 

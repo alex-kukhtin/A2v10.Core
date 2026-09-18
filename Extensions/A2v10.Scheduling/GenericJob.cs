@@ -1,4 +1,4 @@
-﻿// Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2023-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Threading.Tasks;
@@ -12,6 +12,7 @@ using A2v10.Scheduling.Infrastructure;
 
 namespace A2v10.Scheduling;
 
+[DisallowConcurrentExecution]
 internal class GenericJob(ILogger<GenericJob> logger, IServiceProvider serviceProvider) : IJob
 {
     private readonly IServiceProvider _serviceProvider = serviceProvider;
