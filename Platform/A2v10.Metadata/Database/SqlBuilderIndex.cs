@@ -30,18 +30,26 @@ internal partial class SqlBuilder
 
         String dir = DEFAULT_DIR;
         List<(String name, String value)> filters = [];
+        // by filter name, not by column: one column may carry more than one of them
+        Dictionary<String, String> roleValues = [];
 
         var qry = _descr.PlatformUrl.Query;
 
         var allColumns = Table.AllColumns().ToList();
         var refs = allColumns.AllRefs().ToList();
 
+        /* The filters that are not columns of this table. A role lives on the SET, so it is read,
+         * declared and compared apart from the loop over references below - the same shape the tags
+         * filter has, and for the same reason: nothing in 'a' holds the value being filtered on.
+         */
+        var roles = Table.Filters().Where(f => f.Kind == FilterKind.Role).ToList();
+
         /* Searchable references only. A set is not one: its Name is a localization key, so a
          * fragment would be matched against '@[VatRate.20]' - the English code is findable, the
          * translation the user is actually reading is not. The join has no other purpose here, so
          * it goes with the predicate rather than staying as a cost with no function.
          */
-        var searchRefs = refs.Where(r => !r.Column.IsEnum).ToList();
+        var searchRefs = refs.Where(r => !r.Column.IsSetRef).ToList();
 
         // parse query
         if (qry != null)
@@ -60,14 +68,14 @@ internal partial class SqlBuilder
                 dir = DEFAULT_DIR;
             var queryOrder = qry.Get<String>("Order");
 
-            /* An enum column is not sortable at all, and the header offers no sort on it. Both
+            /* A set column is not sortable at all, and the header offers no sort on it. Both
              * candidates lie about what the column shows: 'Order' is the order the set was
              * declared in, 'Name' is a localization key, and the cell displays the translation of
              * that key - so neither is the alphabet the reader sees. An unsortable name falls back
              * to the default, exactly like an unknown one.
              */
             var orderColumn = allColumns.FirstOrDefault(c =>
-                c.Name.Equals(queryOrder, StringComparison.OrdinalIgnoreCase) && !c.IsEnum);
+                c.Name.Equals(queryOrder, StringComparison.OrdinalIgnoreCase) && !c.IsSetRef);
             if (orderColumn != null)
             {
                 var rd = refs.FirstOrDefault(r => r.Column == orderColumn);
@@ -89,6 +97,12 @@ internal partial class SqlBuilder
                 var f = qry.Get<Object>(column.Name) ?? qry.Get<Object>(column.Name.ToLowerInvariant());
                 if (f != null)
                     filters.Add((column.Name, f.ToString()!));
+            }
+            foreach (var role in roles)
+            {
+                var f = qry.Get<Object>(role.Name) ?? qry.Get<Object>(role.Name.ToLowerInvariant());
+                if (f != null)
+                    roleValues[role.Name] = f.ToString()!;
             }
         }
 
@@ -122,18 +136,33 @@ internal partial class SqlBuilder
                         on ta.[{{Table.Model}}] = a.Id and ta.[Tag] = f.Id)
                 """);
 
-            /* An enum filter has a value meaning 'no restriction' - the set's own 'All' row, whose
+            /* A set filter has a value meaning 'no restriction' - the set's own 'All' row, whose
              * key is the empty string. Nothing else in the platform has such a value, which is why
              * this predicate is not the general one. Null is not among the cases: it was turned
              * into the empty string at the top, in one place, before anything reads the parameter.
              */
             String filterPredicate((String name, String value) f) =>
-                allColumns.FirstOrDefault(c => c.Name == f.name)?.IsEnum == true
+                allColumns.FirstOrDefault(c => c.Name == f.name)?.IsSetRef == true
                     ? $"(@{f.name} = N'' or a.[{f.name}] = @{f.name})"
                     : $"a.[{f.name}] = @{f.name}";
 
             if (filters.Count > 0)
                 sb.AppendLine($" and {String.Join(" and ", filters.Select(filterPredicate))}");
+
+            /* The role is a fact of the SET, so the predicate goes there instead of expanding the
+             * codes that happen to hold it right now. It says what it means, and the reader of the
+             * generated SQL is not handed a list whose origin is nowhere in the text. The set is a
+             * handful of rows behind its primary key.
+             */
+            foreach (var role in roles)
+            {
+                var target = role.ColumnCheck.RefTableCheck.Storage;
+                sb.AppendLine($$"""
+                 and (@{{role.Name}} = N'' or exists(select 1 from {{target.SqlTableName}} s
+                    where s.[{{Constants.FieldNames.Id}}] = a.[{{role.ColumnCheck.Name}}]
+                        and s.[{{Constants.FieldNames.Role}}] = @{{role.Name}}))
+                """);
+            }
             if (!String.IsNullOrEmpty(fragment))
             {
                 var searchColumns = allColumns.Where(c => c.IsSearchable).Select(x => $"a.[{x.Name}] like @fr")
@@ -172,16 +201,22 @@ internal partial class SqlBuilder
                 sb.AppendLine("declare @end date = dateadd(day, 1, @To)");
             }
 
-            /* An enum filter has no state between 'nothing was sent' and 'everything': the set
+            /* A set filter has no state between 'nothing was sent' and 'everything': the set
              * carries an 'All' row of its own and its key is the empty string. Normalized once,
              * here, so that the WHERE, the map insert and the Filter that goes back all read the
              * same value - a null reaching the control would match no item in the list and leave
              * the ComboBox blank on the first load. Same as the hand-written '@X nvarchar(64) = N'''.
              */
-            foreach (var en in refs.Where(r => r.Column.IsEnum))
+            foreach (var en in refs.Where(r => r.Column.IsSetRef))
             {
                 sb.AppendLine();
                 sb.AppendLine($"set @{en.Column.Name} = isnull(@{en.Column.Name}, N'');");
+            }
+            // 'no role picked' and 'every role' are one state here too, and the empty string is it
+            foreach (var role in roles)
+            {
+                sb.AppendLine();
+                sb.AppendLine($"set @{role.Name} = isnull(@{role.Name}, N'');");
             }
 
             // CAST takes system types only, so it names the base the database reported for
@@ -227,7 +262,7 @@ internal partial class SqlBuilder
             sb.AppendLine($"from {Table.SqlTableName} a");
             if (!String.IsNullOrEmpty(fragment))
             {
-                // find always. The sorted-on reference is among these: an enum, the one kind that is
+                // find always. The sorted-on reference is among these: a set, the one kind that is
                 // not searchable, is not sortable either, so no ORDER BY names an alias missing here
                 foreach (var (index, column, table) in searchRefs)
                     sb.AppendLine($"  left join {table.SqlTableName} r{index} on r{index}.Id = a.[{column.Name}]");
@@ -316,10 +351,10 @@ internal partial class SqlBuilder
             }
 
             // with the 'All' row: here the list is what a FILTER picks from
-            foreach (var en in EnumTargets(withDetails: false))
+            foreach (var en in ReferencedSets(withDetails: false))
             {
                 sb.AppendLine();
-                sb.AppendLine(EnumValuesRecordset(en, withAll: true));
+                sb.AppendLine(ValuesRecordset(en, withAll: true));
             }
 
 
@@ -342,15 +377,17 @@ internal partial class SqlBuilder
             if (Table.HasTags)
                 sb.Append($", [!{collectionName}.{Constants.FilterNames.Tags}!Filter] "
                     + $"= @{Constants.FilterNames.Tags}");
+            foreach (var role in roles)
+                sb.Append($", [!{collectionName}.{role.Name}!Filter] = @{role.Name}");
             if (refs.Count > 0) {
                 sb.Append(", ");
-                /* An enum filter comes back as the bare code: that is what the ComboBox writes into
+                /* A set filter comes back as the bare code: that is what the ComboBox writes into
                  * the Filter and what the WHERE compares. A RefId here would resolve it through the
                  * map instead - an object of the map's type, which is not the type of the candidate
                  * list, so the control would find nothing to select.
                  *
                  */
-                sb.Append(String.Join(", ", refs.Select(rt => rt.Column.IsEnum
+                sb.Append(String.Join(", ", refs.Select(rt => rt.Column.IsSetRef
                     ? $"[!{collectionName}.{rt.Column.Name}!Filter] = @{rt.Column.Name}"
                     : $"[!{collectionName}.{rt.Column.Name}.{rt.Table.RefTypeName}.RefId!Filter] = @{rt.Column.Name}")));
             }
@@ -390,6 +427,12 @@ internal partial class SqlBuilder
             .AddString("@Fragment", fragment);
             if (Table.HasTags)
                 dbprms.AddString($"@{Constants.FilterNames.Tags}", tags);
+            /* Never erased to null: the empty string is what 'every role' is, here as in the set
+             * filter beside it, and blanking it would make the chosen 'all' indistinguishable from
+             * an untouched filter on the way in and in the Filter that comes back.
+             */
+            foreach (var role in roles)
+                dbprms.AddString($"@{role.Name}", roleValues.GetValueOrDefault(role.Name));
             var docOp = Endpoint.DocumentOperation();
             if (docOp != null)
                 dbprms.AddString("@RouteOperation", docOp);
@@ -412,7 +455,7 @@ internal partial class SqlBuilder
                  * chosen 'All' indistinguishable from an untouched filter, on the way in and in the
                  * Filter property that comes back.
                  */
-                else if (rd.Column.IsEnum)
+                else if (rd.Column.IsSetRef)
                     dbprms.AddString(name, val);
                 else
                     dbprms.AddTyped(name, _descr.PlatformId.SqlDbType, _descr.PlatformId.ParseId(val));

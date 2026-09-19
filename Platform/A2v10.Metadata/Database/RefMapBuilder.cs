@@ -208,9 +208,9 @@ internal class RefMapBuilder
                 : String.Empty;
 
             // the role 'Name' carries the target's presentation - every display binds to it
-            var presentation = kvp.Value[0].RefTableCheck.Storage.Presentation;
+            var target = kvp.Value[0].RefTableCheck.Storage;
             var select = $"""
-            select [!{typeName}!Map] = null, [Id!!Id] = a.Id, [Name!!Name] = a.[{presentation}]{inherits}
+            select [!{typeName}!Map] = null, [Id!!Id] = a.Id, [Name!!Name] = a.[{target.Presentation}]{SqlBuilder.StateFields(target, "a")}{inherits}
             from {tableName} a inner join T on a.Id = T.id;
             """;
             return $"{cte}\n{select}";
@@ -223,12 +223,10 @@ internal class RefMapBuilder
 
     String? GenerateInitials()
     {
-        if (!_hasDefaults || _declaration == null)
+        if (!_hasDefaults || _endpoint == null)
             return null;
-        if (_declaration.Initials.Count == 0)
-            return null;
-        // from user profile
-        var profUser = _declaration.Initials.Where(x => x.Value.Source == InitialSource.Profile).ToList();
+        // from user profile - the same one list, so there is no second place to ask what a new record starts on
+        var profUser = _endpoint.AllInitials().Where(x => x.Value.Source == InitialSource.Profile).ToList();
         if (profUser.Count == 0) 
             return null;
         var sb = new StringBuilder();
@@ -249,12 +247,16 @@ internal class RefMapBuilder
     /* What a NEW record starts on has to be in the map too, or its RefId resolves to nothing and
      * the card opens on an empty control. Only references: a literal in a scalar column is written
      * into the defaults recordset and has nothing to resolve.
+     *
+     * The list is the endpoint's whole answer (AllInitials), so the operation and the initial state
+     * arrive here by being literals rather than by a method apiece. The one they replaced spelled
+     * the column name 'Operation' into the SQL; this one asks the column for it.
      */
     String? GenerateInitialRefs()
     {
-        if (!_hasDefaults || _declaration == null || _endpoint == null)
+        if (!_hasDefaults || _endpoint == null)
             return null;
-        var refs = _declaration.Initials
+        var refs = _endpoint.AllInitials()
             .Where(x => x.Value.Source == InitialSource.Literal)
             .Select(x => (Column: _endpoint.Storage.AllColumns().FirstOrDefault(c => c.Name == x.Key), x.Value.Value))
             .Where(x => x.Column != null && x.Column.IsRef)
@@ -263,16 +265,6 @@ internal class RefMapBuilder
             return null;
         return String.Join(Environment.NewLine, refs.Select(r =>
             $"insert into @map([{r.Column!.Name}]) values ({r.Column.SqlLiteral(r.Value)});"));
-    }
-
-    String? GenerateDocOperations()
-    {
-        if (!_hasDefaults || _endpoint == null)
-            return null;
-        var docOps = _endpoint.DocumentOperation();
-        if (docOps == null)
-            return null;
-        return $"insert into @map(Operation) values (N'{docOps}');";
     }
     public void WriteRefMap(StringBuilder sb, Action<StringBuilder>? onInsert = null)
     {
@@ -289,13 +281,6 @@ internal class RefMapBuilder
         {
             sb.AppendLine();
             sb.AppendLine(inserts);
-        }
-
-        var docOps = GenerateDocOperations();
-        if (docOps != null)
-        {
-            sb.AppendLine();
-            sb.AppendLine(docOps);
         }
 
         var initRefs = GenerateInitialRefs();

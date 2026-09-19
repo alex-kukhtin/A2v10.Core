@@ -80,7 +80,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
          * rows that are already there - a document on a code the set does not carry yet would
          * fail the deploy instead of being corrected by it.
          */
-        allScript.AppendLine(CreateEnumValuesScript(tables));
+        allScript.AppendLine(CreateSetValuesScript(tables));
         allScript.AppendLine(CreateAutonumsScript(tables));
         allScript.AppendLine(CreateSeedScript(tables));
         allScript.AppendLine(CreateOperationsScript(tables));
@@ -222,49 +222,80 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
      *
      * The 'All' row is added here and never declared: its key is the empty string, it means 'do not
      * restrict', and that is a state of a filter rather than a value a record can hold.
+     *
+     * The column list is the TABLE's, not a list written here: a set of states carries two columns
+     * an enum does not, and a merge spelled out by hand would write the rows and leave those two
+     * null - silently, since they are nullable. Every column is answered for by name, and a column
+     * with no answer throws: the baseline of a set and this statement are one thing said twice, and
+     * the second saying must fail loudly rather than fall through to a default.
      */
-    private static String CreateEnumValuesScript(IEnumerable<TableMetadata> tables)
+    // internal, not private: the script IS the artifact (see the header), and nothing else can read it
+    internal static String CreateSetValuesScript(IEnumerable<TableMetadata> tables)
     {
-        static String Str(String? val) =>
-            val == null ? "null" : $"N'{val.Replace("'", "''")}'";
-
-        var enums = tables.Where(t => t.Kind == EndpointKind.Enum && t.Values.Count > 0).ToList();
-        if (enums.Count == 0)
+        var sets = tables.Where(t => t.IsSet && t.Values.Count > 0).ToList();
+        if (sets.Count == 0)
             return String.Empty;
 
         var sb = new StringBuilder();
-        sb.AppendLine("-- ENUM VALUES");
-        foreach (var e in enums)
+        sb.AppendLine("-- SET VALUES");
+        foreach (var e in sets)
         {
-            var rows = new List<String>
+            var columns = e.AllColumns().ToList();
+
+            /* What one column of one value holds. The 'All' row is the same walk with no value:
+             * its name is the set's own key, its order puts it first, and everything else is null -
+             * a role least of all, because it is not a state.
+             */
+            String Cell(TableColumn column, SetValueMetadata? value, Int32 order)
             {
-                $"\t({Str(String.Empty)}, {Str($"@[{e.Model}.All]")}, null, -1, 0)"
-            };
-            rows.AddRange(e.Values.Select((v, ix) =>
-                $"\t({Str(v.Id)}, {Str(v.Name ?? $"@[{e.Model}.{v.Id}]")}, {Str(v.Memo)}, {ix}, {(v.Void ? 1 : 0)})"));
+                var text = column.Name switch
+                {
+                    Constants.FieldNames.Id => value?.Id ?? String.Empty,
+                    Constants.FieldNames.Name => value == null
+                        ? $"@[{e.Model}.All]"
+                        : value.Name ?? $"@[{e.Model}.{value.Id}]",
+                    Constants.FieldNames.Memo => value?.Memo,
+                    Constants.FieldNames.Order => order.ToString(),
+                    Constants.FieldNames.Void => value != null && value.Void ? "1" : "0",
+                    Constants.FieldNames.Color => value?.Color,
+                    Constants.FieldNames.Role => value?.Role?.ToString(),
+                    _ => throw new InvalidOperationException(
+                        $"{e.Path}: nothing to write into '{column.Name}' - a column of a set that a value does not answer for")
+                };
+                return text == null ? "null" : column.SqlLiteral(text);
+            }
+
+            String Row(SetValueMetadata? value, Int32 order) =>
+                $"\t({String.Join(", ", columns.Select(c => Cell(c, value, order)))})";
+
+            var rows = new List<String> { Row(null, -1) };
+            rows.AddRange(e.Values.Select((v, ix) => Row(v, ix)));
+
+            var key = e.KeyColumn.Name;
+            var names = String.Join(", ", columns.Select(c => $"[{c.Name}]"));
+            var sources = String.Join(", ", columns.Select(c => $"s.[{c.Name}]"));
+            // the continuation lines carry their own indent: an interpolation is not re-indented
+            var updates = String.Join($",{Environment.NewLine}        ",
+                columns.Where(c => !c.IsKey).Select(c => $"t.[{c.Name}] = s.[{c.Name}]"));
 
             sb.AppendLine($"""
             {CliDatabaseCreator.SQL_DIVIDER}
             begin
                 set nocount on;
-                declare @{e.Model} table([Id] {e.KeyColumn.SqlDataType()}, [Name] nvarchar(255), [Memo] nvarchar(255),
-                    [Order] int, [Void] bit);
+                declare @{e.Model} table({String.Join(", ", columns.Select(c => $"[{c.Name}] {c.SqlDataType()}"))});
 
-                insert into @{e.Model}([Id], [Name], [Memo], [Order], [Void]) values
+                insert into @{e.Model}({names}) values
             {String.Join($",{Environment.NewLine}", rows)};
 
                 merge {e.SqlTableName} as t
                 using @{e.Model} as s
-                on t.[Id] = s.[Id]
+                on t.[{key}] = s.[{key}]
                 when matched then update set
-                    t.[Name] = s.[Name],
-                    t.[Memo] = s.[Memo],
-                    t.[Order] = s.[Order],
-                    t.[Void] = s.[Void]
-                when not matched then insert ([Id], [Name], [Memo], [Order], [Void]) values
-                    (s.[Id], s.[Name], s.[Memo], s.[Order], s.[Void])
+                    {updates}
+                when not matched then insert ({names}) values
+                    ({sources})
                 when not matched by source then update set
-                    t.[Void] = 1;
+                    t.[{Constants.FieldNames.Void}] = 1;
             end
             go
             """);
@@ -272,7 +303,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         return sb.ToString();
     }
 
-    /* The declared numberings, merged by key. Neither arm the enum script has for a row that left
+    /* The declared numberings, merged by key. Neither arm the set values script has for a row that left
      * the file: nothing withdraws a numbering (no 'void' - nobody picks one at run time) and
      * nothing deletes it, because its counters outlive it and documents carry the numbers it
      * issued. The price is a registry that only grows; the row is two hundred bytes and the
@@ -611,7 +642,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
      * deploy on every customer database - and CreatePlatformIdScript depends on the base the
      * database runs on, so one declaration would even hash differently on two of them.
      * A new fact reaches the hash by being written into the seed - see the 'xtra'
-     * fingerprint of a table, which is what carries the declared values of an enum.
+     * fingerprint of a table, which is what carries the declared values of a set.
      */
 
     private static readonly Version assVersion = Assembly.GetExecutingAssembly().GetName().Version ?? new();

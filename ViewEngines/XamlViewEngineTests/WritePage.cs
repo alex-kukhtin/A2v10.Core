@@ -56,7 +56,7 @@ public class XamlWritersTests
         	<Page.CollectionView>
         		<CollectionView ItemsSource="{Bind Agents}" />
         	</Page.CollectionView>
-        	<Grid Rows="Auto, 1*, Auto" Columns="">
+        	<Grid Rows="Auto, 1*, Auto">
         		<Toolbar>
         			<Button Icon="Calc" Command="{BindCmd Open, Url='/agents/edit', Argument='new'}" Content="Create" />
         		</Toolbar>

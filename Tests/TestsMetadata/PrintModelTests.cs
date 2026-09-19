@@ -39,9 +39,12 @@ public class PrintModelTests
         Assert.Contains($"select [{doc.Model}!{doc.TypeName}!Object] = null", sql);
         Assert.Contains("[Id!!Id] = t0.[Id]", sql);       // implicit, never written in the blank
         Assert.Contains("t0.[Date]", sql);
-        // TAgent, not TRAgent: a print map carries whatever the blank asked for, which is wider
-        // than the index's Id+Name stub - see PrintSqlBuilder.TypeOfRef
-        Assert.Contains($"[Agent!{agent.TypeName}!RefId] = t0.[Agent]", sql);
+        /* TRAgent and not TAgent: a reference is spelled by SqlModelColumnName here like everywhere
+         * else in the platform, and the two names must stay apart - a blank whose root is an agent
+         * would otherwise give one name to the record and to the map it points at, which is a type
+         * containing itself.
+         */
+        Assert.Contains($"[Agent!{agent.RefTypeName}!RefId] = t0.[Agent]", sql);
         Assert.Contains($"[Rows!{rows.TypeName}!Array] = null", sql);
     }
 
@@ -104,7 +107,7 @@ public class PrintModelTests
 
         var sql = Build(doc, Root(Rows("Rows", ["Qty"], Node("Item", "Name"))));
 
-        Assert.Contains($"select [!{item.TypeName}!Map] = null", sql);
+        Assert.Contains($"select [!{item.RefTypeName}!Map] = null", sql);
         Assert.Contains($"select t1.[Item] from {rows.SqlTableName} t1", sql);
     }
 

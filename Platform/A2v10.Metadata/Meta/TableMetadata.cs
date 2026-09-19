@@ -21,6 +21,7 @@ public enum EndpointKind
     Tags,
     TagEntries,
     Enum,
+    State,
     Autonum,
     AutonumValues,
     AccPlan,
@@ -62,6 +63,13 @@ public enum ColumnType
     RowVersion,
     Color,
     Enum,
+    /* A reference to a set of STATES (/state/...). Keyed by a code exactly as an enum is, and a
+     * type of its own all the same: the column has to SAY that the record it sits on has a life
+     * cycle, instead of making every reader walk RefTable.Storage.Kind to find out - behaviour
+     * dispatches on the type here, where everything else in the platform dispatches. One check
+     * comes free with it: a state column whose target is not a set of states fails at load.
+     */
+    State,
     /* A reference to an account of a chart (/accplan/...): keyed by the account code, so spelled as
      * that key and not as platformid - which is why it is a domain of its own and not a Ref. Its own
      * behaviour (the tree picker, 'subtree') is not built yet.
@@ -141,7 +149,7 @@ public record TableColumn
     internal Boolean IsRef => Type == ColumnType.Ref || Type == ColumnType.Master ||
             Type == ColumnType.User || Type == ColumnType.Document ||
             Type == ColumnType.Company || Type == ColumnType.Operation ||
-            Type == ColumnType.Enum || Type == ColumnType.Account;
+            Type == ColumnType.Enum || Type == ColumnType.State || Type == ColumnType.Account;
 
     #region Database Fields
     public Int32? Length { get; init; }
@@ -160,7 +168,14 @@ public record TableColumn
     #endregion
     [JsonIgnore]
     internal Boolean IsKey => Type is ColumnType.Id or ColumnType.NaturalKey;
-    internal Boolean IsEnum => Type == ColumnType.Enum;
+    /* A reference to a SET - a closed list of values declared in a file, which rides with the page
+     * whole: there is nothing to browse, and the value travels as its own code. Deliberately not
+     * 'keyed by a code': an account and an operation are keyed by one too, and both are fetched by
+     * address like any catalog. Asked wherever that difference shows - the search join, the sort,
+     * the filter's 'All' row, the type of the parameter - so the sites read one word instead of
+     * each comparing types and drifting apart.
+     */
+    internal Boolean IsSetRef => Type is ColumnType.Enum or ColumnType.State;
     internal Boolean IsOperation => Type == ColumnType.Operation;
 
     [JsonIgnore]
@@ -360,7 +375,7 @@ public sealed record TableMetadata
      * and the whole deploy pipeline is a function of TableMetadata. 'Kinds' above is the same kind
      * of thing - a closed vocabulary declared with the shape, ordered by the order it is written in.
      */
-    public List<EnumValueMetadata> Values { get; init; } = [];
+    public List<SetValueMetadata> Values { get; init; } = [];
 
     /* The rows of the operation registry. Not declared by any file - each operation is an endpoint
      * pointing at a document storage - so the deploy walk fills it (AllElementsMetadata) and json
@@ -553,8 +568,20 @@ public sealed record TableMetadata
 
     [JsonIgnore]
     public String SqlSequenceName => $"{SqlSchema}.[SQ_{Table}]";
+    /* The type the rows of this table arrive in, named by the PATH in the model and not by the
+     * model alone: a type name is global to its schema, while a collection's model is a word
+     * inside its master's model. Every document writes "model": "Row" - that is the natural word -
+     * so the unqualified name gave every one of them doc.[Row.Meta.TableType]: the deploy emits
+     * drop + create per collection, the last shape wins, and the saves of the others hand a
+     * DataTable of another shape to a type that no longer describes it. The table itself never
+     * collided, because SetDetailDefaults prefixes it with the master's model.
+     *
+     * Written rather than derived, for the reason MasterField is: the hanging table does not know
+     * its master, and the one place that does is the factory below - so nothing has to be held
+     * for a reader that only composes a name.
+     */
     [JsonIgnore]
-    internal String SqlTableTypeName => $"{SqlSchema}.[{Model}.Meta.TableType]";
+    internal String SqlTableTypeName { get; private set; } = default!;
     [JsonIgnore]
     public String? FileHash { get; set; }
 
@@ -564,11 +591,20 @@ public sealed record TableMetadata
     [JsonIgnore]
     internal IReadOnlyList<TableColumn> DefaultColumns { get; private set; } = default!;
 
-    // every input of the baseline (Kind, Traits, MasterField) is set before the call
-    internal void Construct()
+    /* Every input of the baseline (Kind, Traits, MasterField) is set before the call, and so are
+     * the two the type name is composed of. The master's model is a PARAMETER and not a member:
+     * it is an input of one name and nothing else reads it, so a caller that has the master hands
+     * it over instead of every table carrying a field for it. Null is the answer of everything
+     * whose model already stands alone in its schema: a shape addressed by a folder, and the two
+     * satellites built in code (tag entries, autonum counters), whose model is composed from the
+     * master's at the factory.
+     */
+    internal void Construct(String? masterModel = null)
     {
         DefaultColumns = [.. this.CreateDefaultColumns()];
         Columns = [.. _fields.Select(kp => { kp.Value.Name = kp.Key; return kp.Value; })];
+        var path = masterModel == null ? Model : $"{masterModel}.{Model}";
+        SqlTableTypeName = $"{SqlSchema}.[{path}.Meta.TableType]";
     }
 
     // the primary key: always named Id (CreateTable), found by its role like every other column
@@ -586,6 +622,14 @@ public sealed record TableMetadata
     internal Boolean IsJournal => Kind == EndpointKind.Journal;
     [JsonIgnore]
     internal Boolean IsLedger => Kind == EndpointKind.Ledger;
+    /* A set: rows declared in the file, deployed with the table, no screen of its own, reached only
+     * through the columns pointing at it. Asked by everything that walks values, so that a kind
+     * added to the family is added here and not to a comparison in five generators.
+     */
+    [JsonIgnore]
+    internal Boolean IsSet => Kind is EndpointKind.Enum or EndpointKind.State;
+    [JsonIgnore]
+    internal Boolean IsState => Kind == EndpointKind.State;
     [JsonIgnore]
     internal Boolean IsTags => Kind == EndpointKind.Tags;
     [JsonIgnore]
@@ -600,7 +644,7 @@ public sealed record TableMetadata
         DetailsKey = key;
         MasterField = table.Model;
         Table = $"{table.Model}{key}";
-        Construct();
+        Construct(table.Model);
     }
     internal void SetDefaults(String schema, String table)
     {
@@ -621,6 +665,21 @@ public sealed record TableMetadata
             if (String.IsNullOrEmpty(Table))
                 Table = TableMetadataDefaults.AutonumTable;
         }
+        /* A set of states is named after the ENTITY whose states they are - /state/order - and its
+         * model may not be that entity's word. Model is the stem of five names, and one of them is
+         * the collection the candidates arrive in: they arrive in the root of the model of the very
+         * page that shows the record, where 'Orders' is already the records themselves. Two arrays
+         * under one name, two TROrder in one .d.ts, '@[Order.packed]' over the document's own keys -
+         * all silent, and all unavoidable, because a set of states is always named after something
+         * that has a screen. An enum escapes it by being named after a concept ('vatrate'), not
+         * after an owner.
+         *
+         * So the default is composed, not the folder alone. Not a guess of the kind refused for
+         * table names: nothing is inflected, and 'order' + 'State' is reproducible in the head. A
+         * written 'model' still wins - this only makes the readable address safe by default.
+         */
+        if (schema == Constants.SchemaNames.State && String.IsNullOrEmpty(Model))
+            Model = $"{table.KebabToPascal()}State";
         if (String.IsNullOrEmpty(Schema))
             Schema = schema;
         /* No default for Table. Pluralising the folder name looks like a convention but is a
@@ -663,6 +722,7 @@ public sealed record TableMetadata
         {
             case EndpointKind.Catalog:
             case EndpointKind.Enum:
+            case EndpointKind.State:
             case EndpointKind.Operation:
                 present(column(ColumnType.Name));
                 break;
@@ -702,8 +762,15 @@ public record OperationMetadata(String Id);
  *
  * 'void' is a withdrawn value: it stays in the records that already carry it and leaves the list
  * of candidates.
+ *
+ * The last two belong to a set of STATES and are refused on an enum (CheckValues). Both are
+ * written in the file exactly as they will be stored, because nothing translates them on the way:
+ * 'role' lands in the column and in a generated predicate, so it is spelled as the member of
+ * StateRole; 'color' goes straight into a CSS class, so it is lower case. One is a name of the
+ * platform and the other a name of the stylesheet - hence the two registers in one row.
  */
-public record EnumValueMetadata(String Id, String? Name, String? Memo, Boolean Void);
+public record SetValueMetadata(String Id, String? Name, String? Memo, Boolean Void,
+    String? Color, StateRole? Role);
 
 /* One row of a seed file: the key, and the columns the row names with their values as written.
  * A column the row does not name is absent from Values, not null - the merge leaves it untouched.
@@ -734,6 +801,34 @@ public enum NormalBalance
     Both
 }
 
+/* What a value of a set of states IS to the cycle - the whole reason the kind exists beside an
+ * enum, together with the colour. Stored by name, as AccountType is.
+ *
+ * The cardinalities are unequal, and that is the content: exactly one Initial (a new record has to
+ * start somewhere definite) and exactly one Success, any number of InProgress and of Failure.
+ * Success is MEASURED, so it is one - 'did it get there' becomes a single comparison instead of a
+ * test for membership, and the conversion of the whole set falls out with nothing declared.
+ * Failure is CLASSIFIED, so there are many - 'customer refused', 'no budget', 'duplicate' are
+ * reasons, not outcomes. The price is named: a cycle with two different good endings must pick one
+ * Success and tell the rest apart by a field of its own.
+ *
+ * 'InProgress' and not 'Processing': the other three are a word each, and the -ing one read as
+ * 'something is processing this record right now' - a job, not a phase of the cycle. Two words
+ * joined are already the shape of a member here (AccountType.OffBalance).
+ *
+ * Nothing needs to be declared beside it. Terminality is Success/Failure; 'the open ones' is
+ * Initial/InProgress, generated as a predicate over the values - a 'Closed' column would be a
+ * second Done. Where a new record starts is Initial, so an endpoint declaring an initial value for
+ * a state column is a second spelling of the same fact and is refused.
+ */
+public enum StateRole
+{
+    Initial,
+    InProgress,
+    Success,
+    Failure
+}
+
 /* What the counter restarts on. Default None, because only that half is silent: a yearly reset
  * under a pattern with no year reissues last year's numbers; never restarting only grows.
  */
@@ -746,7 +841,7 @@ public enum AutonumPeriod
 }
 
 /* One numbering: the key an endpoint's 'autonum' names, the pattern its numbers are built from,
- * the span its counter restarts on. 'Name' defaults to '@[{Model}.{Id}]', as an enum value's does.
+ * the span its counter restarts on. 'Name' defaults to '@[{Model}.{Id}]', as a set value's does.
  * No 'void' - nobody picks a numbering at run time, a file names it - and the price is that a key
  * deleted from the file leaves a row nothing marks as dead; its counter has to outlive the key
  * anyway. Renaming one costs more than it looks: the counters stay under the old key and the

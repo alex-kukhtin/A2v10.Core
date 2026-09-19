@@ -114,10 +114,24 @@ internal static class DeclarationBake
     private static IReadOnlyDictionary<String, InitialMetadata> BuildInitials(DeclarationMetadata declaration, TableMetadata table)
     {
         var initials = new Dictionary<String, InitialMetadata>(declaration.InitialValues);
+
+        /* Asked here and not where literal initials are checked against the codes, because there
+         * the two keys have already been merged into one map and the message would name the key
+         * the author did not write. The type is enough to ask it this early: whether a column is a
+         * state is on the column, and only the CODE it starts on lives in the far half.
+         */
+        foreach (var name in declaration.InitialValues.Keys)
+            if (table.AllColumns().FirstOrDefault(c => c.Name == name)?.Type == ColumnType.State)
+                throw new InvalidOperationException(
+                    $"initialValues: '{name}' is a state column. Where a new record starts is the SET's own answer - its value with role '{StateRole.Initial}' - and a second spelling of one fact is free to disagree with it.");
+
         foreach (var (name, value) in declaration.Fixed)
         {
             var column = table.AllColumns().FirstOrDefault(c => c.Name == name)
                 ?? throw new InvalidOperationException($"fixed: field '{name}' not found in {table.SqlTableName}");
+            if (column.Type == ColumnType.State)
+                throw new InvalidOperationException(
+                    $"fixed: '{name}' is a state column. A fixed field IS the initial of a new record, and a state's initial is the set's - its value with role '{StateRole.Initial}'. An address about some of the states is a filter, not a fixed field.");
             var text = FixedText(value);
             column.SqlLiteral(text); // throws for a column no literal can address
             if (initials.ContainsKey(name))

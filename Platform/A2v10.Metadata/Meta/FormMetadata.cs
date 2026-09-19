@@ -112,19 +112,80 @@ public sealed record FormElement
      * set. One walk for declared and default forms alike, and it rebuilds rather than fills - see
      * CLAUDE.md, "Declarations".
      */
-    /* 'scope' re-roots onto a collection, and only a tab shows one: a group lays out the editors of a
-     * record, and its axis and labelAt mean nothing over rows. A tab in turn is drawn only by its strip
-     * (XamlBuilder.CreateTabsScope). Refused while baking - otherwise a scoped group is read against the
-     * header, and the author gets "field not found" about a field that is right there in the rows.
+    /* Every refusal one node of a form can earn, in one place, run on each node while the form is
+     * baked. It grows: a rule lands here the day a written form silently did nothing, and the cost
+     * of each is one line against an author (or a model) writing into a key nobody reads.
+     *
+     * Placement first. 'scope' re-roots onto a collection, and only a tab shows one: a group lays out
+     * the editors of a record, and its axis and labelAt mean nothing over rows. A tab in turn is drawn
+     * only by its strip (XamlBuilder.CreateTabsScope). Refused while baking - otherwise a scoped group
+     * is read against the header, and the author gets "field not found" about a field that is right
+     * there in the rows.
      */
-    internal static void CheckPlacement(FormElementKind? parent, FormElement el)
+    internal static void CheckElement(FormElementKind? parent, FormElement el)
     {
         if (!String.IsNullOrEmpty(el.Scope) && el.Is != FormElementKind.Tab)
             throw new InvalidOperationException(
-                $"'{el.Is}' with scope '{el.Scope}': a collection is shown only by a tab inside tabs");
+                $"'{Word(el.Is)}' with scope '{el.Scope}': a collection is shown only by a tab inside tabs");
         if (el.Is == FormElementKind.Tab && parent != FormElementKind.Tabs)
             throw new InvalidOperationException(
                 $"tab '{el.Scope}' outside tabs: a tab is drawn only by its strip");
+        CheckContents(el);
+    }
+
+    // as the file spells it: the message names the key the author wrote, never the C# member
+    private static String Word(FormElementKind kind) =>
+        Char.ToLowerInvariant(kind.ToString()[0]) + kind.ToString()[1..];
+
+    /* What the RENDER of each kind reads - taken from XamlBuilder.ElementToControl and from nowhere
+     * else, so this list is a second reading of that switch rather than a rule of its own. A kind
+     * absent here is one whose content has not been described yet, and nothing is refused on it.
+     *
+     * Only the list-valued keys, because only they can be told apart from an absent key. 'axis' and
+     * 'labelAt' are enums whose first member is the default, so 'written' and 'not written' are one
+     * value - the same reason 'kinds' is examined for emptiness alone (TableMetadata.CheckKinds).
+     *
+     * 'tab' is absent: its content is drawn by the strip as one table of its rows, and what else it
+     * may carry has not been decided. A kind is described here only from the renderer as it stands.
+     */
+    private static String[]? ContentKeys(FormElementKind kind) => kind switch
+    {
+        FormElementKind.Filters => ["filters"],
+        FormElementKind.Taskpad or FormElementKind.Tabs => ["elements"],
+        FormElementKind.Toolbar => ["commands"],
+        FormElementKind.DataGrid or FormElementKind.TreeGrid => ["fields"],
+        // its own editors, and the groups under it
+        FormElementKind.Group => ["fields", "elements"],
+        FormElementKind.Pager => [],
+        _ => null
+    };
+
+    /* A key written on a node that never reads it is the one failure of this format that leaves no
+     * trace at all: the node renders, empty, and the author writes the same thing into the next
+     * place. Louder than a wrong value, because a wrong value at least draws something.
+     */
+    private static void CheckContents(FormElement el)
+    {
+        var reads = ContentKeys(el.Is);
+        if (reads == null)
+            return;
+
+        IEnumerable<String> Written()
+        {
+            if (el.Elements.Count > 0) yield return "elements";
+            if (el.Fields.Count > 0) yield return "fields";
+            if (el.Filters.Count > 0) yield return "filters";
+            if (el.Commands.Count > 0) yield return "commands";
+        }
+
+        var unread = Written().Where(k => !reads.Contains(k)).ToList();
+        if (unread.Count == 0)
+            return;
+        throw new InvalidOperationException(
+            $"'{Word(el.Is)}' declares {String.Join(", ", unread.Select(k => $"'{k}'"))}, which nothing reads. "
+            + (reads.Length == 0
+                ? "It shows no content of its own."
+                : $"It shows {String.Join(", ", reads.Select(k => $"'{k}'"))} and nothing else."));
     }
 
     internal FormElement Bake(TableMetadata table, List<MemberDescriptor> members)
@@ -149,7 +210,7 @@ public sealed record FormElement
         String? tabState = null;
         foreach (var el in Elements)
         {
-            CheckPlacement(Is, el);
+            CheckElement(Is, el);
             if (String.IsNullOrEmpty(el.Scope))
             {
                 elements.Add(el.Bake(table, members));
@@ -198,9 +259,12 @@ public sealed record FormMetadata
      */
     internal FormMetadata Bake(TableMetadata table, List<MemberDescriptor> members)
     {
+        // the two slots are nodes too: 'fields' written into a toolbar is read by nobody either
+        FormElement.CheckElement(null, Toolbar);
+        FormElement.CheckElement(null, Taskpad);
         return this with
         {
-            Body = [.. Body.Select(el => { FormElement.CheckPlacement(null, el); return el.Bake(table, members); })],
+            Body = [.. Body.Select(el => { FormElement.CheckElement(null, el); return el.Bake(table, members); })],
             Toolbar = Toolbar.Bake(table, members),
             Taskpad = Taskpad.Bake(table, members)
         };

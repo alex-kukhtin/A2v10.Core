@@ -16,44 +16,74 @@ internal partial class XamlBuilder
      * COLUMNS belong to, and the transactions dialog draws the columns of a journal while standing
      * on a document endpoint. Read off the endpoint it answered for the wrong table.
      */
-    IEnumerable<DataGridColumn> IndexColumnsXaml(TableMetadata table, List<MemberDescriptor> members) =>
-        members.Select(m => m.ColumnCheck).Select(col =>
-            table.HasTags && col.Type == ColumnType.Name
-            ? new DataGridColumn()
+    IEnumerable<DataGridColumn> IndexColumnsXaml(TableMetadata table, List<MemberDescriptor> members)
+    {
+        DataGridColumn WithTags(TableColumn col) => new()
+        {
+            Header = col.Header,
+            SortProperty = col.Name,
+            Content = new Group()
             {
-                Header = col.Header,
-                SortProperty = col.Name,
-                Content = new Group()
+                Children = [
+                    new Span()
+                    {
+                        Block = true,
+                        Bindings = b => b.SetBinding(nameof(DataGridColumn.Content),
+                        new Bind(col.DisplayPath) { DataType = col.Type.ToXamlDataType() })
+                    },
+                    new TagsList() {
+                        Bindings = b => b.SetBinding(nameof(TagsList.ItemsSource),
+                            new Bind("Tags")),
+                    }
+                ]
+            }
+        };
+
+        /* A state is drawn and not spelled - the same badge the picker offers, so a row and the
+         * panel read as one thing. Style is a BINDING: TagLabel then emits ':class' and every row
+         * takes the colour of its own state, where a static Style would paint the column alike.
+         */
+        DataGridColumn Badge(TableColumn col) => new()
+        {
+            Header = col.Header,
+            Sort = false,
+            Content = new TagLabel()
+            {
+                Outline = true,
+                Bindings = b =>
                 {
-                    Children = [
-                        new Span() 
-                        {
-                            Block = true,
-                            Bindings = b => b.SetBinding(nameof(DataGridColumn.Content),
-                            new Bind(col.DisplayPath) { DataType = col.Type.ToXamlDataType() })
-                        },
-                        new TagsList() {
-                            Bindings = b => b.SetBinding(nameof(TagsList.ItemsSource),
-                                new Bind("Tags")),
-                        }
-                    ]
+                    b.SetBinding(nameof(TagLabel.Content), new Bind(col.DisplayPath));
+                    b.SetBinding(nameof(TagLabel.Style), new Bind($"{col.Name}.{Constants.FieldNames.Color}"));
                 }
             }
-            : new DataGridColumn()
-            {
-                Header = col.Header,
-                Role = col.Type.ToXamlColumnRole(),
-                /* No sort on an enum: neither its Order nor its Name is the alphabet the cell
-                 * shows. Said with Sort and not by leaving SortProperty empty - an empty one is
-                 * filled from the binding path at init, so that would have changed the sort key
-                 * rather than removed the sort.
-                 */
-                Sort = col.IsEnum ? false : null,
-                SortProperty = col.IsRef ? col.Name : null,
-                Bindings = b => b.SetBinding(nameof(DataGridColumn.Content),
-                    new Bind(col.DisplayPath) { DataType = col.Type.ToXamlDataType() })
-            }
-         );
+        };
+
+        DataGridColumn Plain(TableColumn col) => new()
+        {
+            Header = col.Header,
+            Role = col.Type.ToXamlColumnRole(),
+            /* No sort on a set: neither its Order nor its Name is the alphabet the cell
+             * shows. Said with Sort and not by leaving SortProperty empty - an empty one is
+             * filled from the binding path at init, so that would have changed the sort key
+             * rather than removed the sort.
+             *
+             * The key is withheld with it, and this changes nothing at run time - it is a tidy-up,
+             * not a fix. A set is a reference, so the two lines used to put 'do not sort' and a
+             * sort key on one column; the key is simply unread there, and an absent one is filled
+             * from the binding path at init anyway. Removed because two attributes of one column
+             * must not say different things - the next reader would have to find out which wins.
+             */
+            Sort = col.IsSetRef ? false : null,
+            SortProperty = col.IsRef && !col.IsSetRef ? col.Name : null,
+            Bindings = b => b.SetBinding(nameof(DataGridColumn.Content),
+                new Bind(col.DisplayPath) { DataType = col.Type.ToXamlDataType() })
+        };
+
+        return members.Select(m => m.ColumnCheck).Select(col =>
+            table.HasTags && col.Type == ColumnType.Name ? WithTags(col)
+            : col.Type == ColumnType.State ? Badge(col)
+            : Plain(col));
+    }
 
     // the ENDPOINT's filters, not the form's - see CLAUDE.md, "Filters"
     IEnumerable<FilterItem> CollectionViewFilters()
@@ -69,7 +99,7 @@ internal partial class XamlBuilder
                 FilterKind.Period => new FilterItem() { Property = f.Name, DataType = DataType.Period },
                 FilterKind.Tags => new FilterItem() { Property = f.Name, DataType = DataType.String },
                 // the code itself, not an object - see the ComboBox in ControlsXaml
-                FilterKind.Enum => new FilterItem() { Property = f.Name, DataType = DataType.String },
+                FilterKind.Set or FilterKind.Role => new FilterItem() { Property = f.Name, DataType = DataType.String },
                 _ => new FilterItem() { Property = f.Name, DataType = DataType.Object }
             };
     }

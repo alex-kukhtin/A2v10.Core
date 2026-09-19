@@ -36,7 +36,7 @@ internal partial class SqlBuilder(BuilderDescriptor desciptor, IServiceProvider 
     }
 
     /* The modification stamp as the tail of a SET list - one spelling for the save and for Void,
-     * the two statements that change a record. Empty for a table without stamps (an enum set).
+     * the two statements that change a record. Empty for a table without stamps (a set).
      * Reads @UserId, which AddDefaultParameters always passes.
      */
     String ModifiedStamp(String alias = "") => Table.HasStamps
@@ -79,17 +79,17 @@ internal partial class SqlBuilder(BuilderDescriptor desciptor, IServiceProvider 
      * model, exactly as they share one map. The details are walked only where the model carries
      * them - a row in a details table picks from the same list its header does.
      */
-    IEnumerable<TableMetadata> EnumTargets(Boolean withDetails)
+    IEnumerable<TableMetadata> ReferencedSets(Boolean withDetails)
     {
         var columns = withDetails
             ? Table.AllColumns().Concat(Table.Details.Values.SelectMany(d => d.AllColumns()))
             : Table.AllColumns();
-        return columns.Where(c => c.IsEnum)
+        return columns.Where(c => c.IsSetRef)
             .Select(c => c.RefTableCheck.Storage)
             .DistinctBy(t => t.SqlTableName);
     }
 
-    /* The candidates of an enum: the whole set, and therefore never the map. The map holds the
+    /* The candidates of a set: the whole list, and therefore never the map. The map holds the
      * values the loaded rows happen to reference - it must, so that a record on a withdrawn code
      * still shows its name - which makes it both too short to choose from and too long to offer.
      * Ordered by the set's own Order, never by Name: Name is a resource key, so alphabetical there
@@ -99,15 +99,28 @@ internal partial class SqlBuilder(BuilderDescriptor desciptor, IServiceProvider 
      * empty string), and it says 'do not restrict' - a statement about a query, which a record
      * cannot make about its own value.
      */
-    String EnumValuesRecordset(TableMetadata target, Boolean withAll)
+    String ValuesRecordset(TableMetadata target, Boolean withAll)
     {
         var exceptAll = withAll ? String.Empty : $" and e.[{Constants.FieldNames.Id}] <> N''";
         return $"""
         -- {target.Model} - values
         select [{target.CollectionName}!{target.TypeName}!Array] = null,
-            [Id!!Id] = e.[Id], [Name!!Name] = e.[Name]
+            [Id!!Id] = e.[Id], [Name!!Name] = e.[Name]{StateFields(target, "e")}
         from {target.SqlTableName} e where e.[{Constants.FieldNames.Void}] = 0{exceptAll}
         order by e.[{Constants.FieldNames.Order}];
         """;
     }
+
+    /* What a state carries beyond a code and a name: how it is drawn, and what it is to the cycle.
+     * Both recordsets that hand a value to the client send them - the candidates, which the picker
+     * colours, and the map, which is what a LOADED row's value resolves to. Sending them in one and
+     * not the other is a grid of grey badges beside a colourful picker, with nothing said anywhere.
+     *
+     * An enum gets neither, and the type printed for it says so too: TsProperties walks the set's
+     * own columns, so what is not a column here is not promised there.
+     */
+    internal static String StateFields(TableMetadata target, String alias) =>
+        target.IsState
+            ? $", {alias}.[{Constants.FieldNames.Color}], {alias}.[{Constants.FieldNames.Role}]"
+            : String.Empty;
 }

@@ -136,7 +136,8 @@ internal static class SqlExtensions
             // a code the declaration writes - an account, an enum value, an operation; one length for every such key
             ColumnType.NaturalKey => new SqlDbTypeInfo("nvarchar", 64),
             // a reference to a code is spelled as the key it points at, so the FK cannot disagree with it
-            ColumnType.Account or ColumnType.Enum or ColumnType.Operation => ColumnType.NaturalKey.ToSqlDbTypeInfo(),
+            ColumnType.Account or ColumnType.Enum or ColumnType.State or ColumnType.Operation
+                => ColumnType.NaturalKey.ToSqlDbTypeInfo(),
             // a login: a2security.Users is keyed bigint whatever base the application rests on
             ColumnType.User or ColumnType.StampUser or ColumnType.StampUserNull
                     => new SqlDbTypeInfo("bigint"),
@@ -291,7 +292,8 @@ internal static class SqlExtensions
             ColumnType.Name => $"[Name!!Name] = {alias}.[Name]",
             ColumnType.RowNumber => $"[{column.Name}!!RowNumber] = {alias}.[{column.Name}]",
             ColumnType.Parent => $"[{column.ModelName}] = {alias}.[{column.Name}]",
-            ColumnType.Ref or ColumnType.Document or ColumnType.Operation or ColumnType.Enum or ColumnType.Account =>
+            ColumnType.Ref or ColumnType.Document or ColumnType.Operation or ColumnType.Enum
+                or ColumnType.State or ColumnType.Account =>
                 $"[{column.Name}!{column.RefTableCheck.Storage.RefTypeName}!RefId] = {alias}.[{column.Name}]",
             _ => $"{alias}.[{column.Name}]"
         };

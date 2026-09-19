@@ -169,6 +169,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         storage.FileHash = hash;
         storage.SetDefaults(schema, table);
         CheckNames(storage, schema, table);
+        CheckValues(storage, schema, table);
         CheckAutonums(storage, schema, table);
         CheckAccPlan(storage, schema, table);
         await LoadSeedAsync(storage, schema, table);
@@ -351,10 +352,133 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         foreach (var (key, details) in storage.Details)
         {
             Check(key, "details");
+            /* Refused and never defaulted: singularising the key is the guess SetDefaults refuses
+             * to make with a folder name, and only the main table has a default at all. Unwritten,
+             * it used to travel empty into the row type ('T'), into the type the rows are saved in
+             * (doc.[.Meta.TableType]) and into the envelope ([Rows!T!Array]) - all silently.
+             */
+            if (String.IsNullOrEmpty(details.Model))
+                throw new InvalidOperationException(
+                    $"{file}: details '{key}' does not declare 'model'. It names the row type (T<model>) and the type its rows are saved in");
             CheckShape(details, $"details.{key}.");
             foreach (var kind in details.Kinds.Keys)
                 Check(kind, $"details.{key}.kinds");
         }
+    }
+
+    /* The rows of a set, checked where the file is read and without a database - keys, colours and
+     * roles - so a wrong file fails the load and never the deploy. Asked of EVERY file and not only
+     * of a set: 'values' written where nothing reads them was silently dropped, which is the one
+     * failure of this format that leaves no trace at all.
+     *
+     * The two halves refuse each other's keys. A colour and a role on an enum have no column to
+     * land in; a role missing on a state leaves the cycle without the three facts it is read for.
+     * A key with no effect is worse than a missing one - it teaches the next reader that it has one.
+     */
+    private static void CheckValues(TableMetadata storage, String schema, String table)
+    {
+        var file = MetadataFileName(schema, table);
+
+        /* The same key one floor down. A collection is a TableMetadata too and is deserialized from
+         * the same text, so 'values' written inside 'details' arrives in a node nothing walks - the
+         * identical silence, closed here rather than left to the schema, which is read by an editor
+         * and not by the loader.
+         */
+        foreach (var (key, detail) in storage.Details)
+            if (detail.Values.Count > 0)
+                throw new InvalidOperationException(
+                    $"{file}: 'values' inside details '{key}'. Rows of a collection are data; a closed list a column points at is a set of its own, declared in {Constants.SchemaNames.Enum}/<name> or {Constants.SchemaNames.State}/<name>");
+
+        if (!storage.IsSet)
+        {
+            if (storage.Values.Count > 0)
+                throw new InvalidOperationException($"""
+                    {file}: declares 'values', which are the rows of a SET, and {schema}/ is not one.
+                      A closed list a column points at is declared in {Constants.SchemaNames.Enum}/<name> (a code and a name)
+                      or in {Constants.SchemaNames.State}/<name> (a life cycle: a colour and a role as well).
+                    """);
+            return;
+        }
+
+        var keyLength = storage.KeyColumn.DeployLength();
+        foreach (var value in storage.Values)
+        {
+            if (String.IsNullOrEmpty(value.Id))
+                throw new InvalidOperationException($"{file}: a value with no 'id'. The id is the code the referencing column stores");
+            if (value.Id.Length > keyLength)
+                throw new InvalidOperationException($"{file}: value '{value.Id}' - a code is at most {keyLength} characters");
+        }
+
+        /* Case-insensitively, because that is how the database will compare them: the merge matches
+         * on the key under the server's collation, and two codes differing only in case meet there
+         * as one row - 'attempted to UPDATE or DELETE the same row more than once', at deploy time,
+         * naming neither the file nor the value.
+         */
+        var twice = storage.Values.GroupBy(v => v.Id, StringComparer.OrdinalIgnoreCase)
+            .FirstOrDefault(g => g.Count() > 1);
+        if (twice != null)
+            throw new InvalidOperationException(
+                $"{file}: '{twice.Key}' is declared {twice.Count()} times. A code names one value of the set");
+
+        if (!storage.IsState)
+        {
+            var extra = storage.Values.FirstOrDefault(v => v.Color != null || v.Role != null);
+            if (extra != null)
+                throw new InvalidOperationException($"""
+                    {file}: value '{extra.Id}' declares '{(extra.Color != null ? "color" : "role")}', which belongs to a set of states.
+                      An enum value is a code and a name; a colour and a role are read from {Constants.SchemaNames.State}/<name>.
+                    """);
+            return;
+        }
+
+        foreach (var value in storage.Values)
+        {
+            if (value.Role == null)
+                throw new InvalidOperationException($"""
+                    {file}: state '{value.Id}' declares no 'role', so nothing says what it is to the cycle.
+                      One of: {String.Join(", ", Enum.GetNames<StateRole>())}.
+                    """);
+            CheckColor(file, value);
+        }
+
+        /* Over the living values alone. A void state is withdrawn - it keeps the records that
+         * already carry it and leaves the candidates - so a new record cannot start on it and a
+         * cycle cannot end there. A void Initial beside a live one is the legitimate shape of a
+         * migration, and counting it would refuse exactly that.
+         */
+        void Exactly(StateRole role, String what)
+        {
+            var found = storage.Values.Where(v => !v.Void && v.Role == role).ToList();
+            if (found.Count == 1)
+                return;
+            throw new InvalidOperationException(found.Count == 0
+                ? $"{file}: no state is '{role}', and {what}"
+                : $"{file}: {String.Join(" and ", found.Select(v => $"'{v.Id}'"))} are all '{role}', and {what}");
+        }
+
+        Exactly(StateRole.Initial, "a new record has to start on one definite state");
+        Exactly(StateRole.Success, "success is measured, so one state IS reaching the goal - a cycle with two good endings picks one and tells the rest apart by a field of its own");
+    }
+
+    /* Against the styles the view engine draws, which is the list the CSS agrees with - so a colour
+     * the load accepts is a colour that renders. Not the picker's list (main.js): that one answers
+     * 'what to offer', a shorter question, and would refuse names that draw perfectly well.
+     *
+     * Lower case exactly, not case-insensitively: the value is written into a class attribute and
+     * CSS class names are case-sensitive, so 'Green' would pass a lenient check and then render a
+     * badge with no colour and no error anywhere.
+     */
+    private static void CheckColor(String file, SetValueMetadata value)
+    {
+        if (value.Color == null)
+            return;
+        if (Enum.GetNames<TagLabelStyle>().Any(n => n.ToLowerInvariant() == value.Color))
+            return;
+        var known = Enum.GetNames<TagLabelStyle>().Select(n => n.ToLowerInvariant());
+        throw new InvalidOperationException($"""
+            {file}: state '{value.Id}' - '{value.Color}' is not a colour. They are written in lower case, and they are:
+              {String.Join(", ", known)}.
+            """);
     }
 
     /* Refused where the file is read, because nothing downstream can report it: the SQL that issues
@@ -750,6 +874,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             Constants.SchemaNames.Journal => EndpointKind.Journal,
             Constants.SchemaNames.Report => EndpointKind.Report,
             Constants.SchemaNames.Enum => EndpointKind.Enum,
+            Constants.SchemaNames.State => EndpointKind.State,
             Constants.SchemaNames.AccPlan => EndpointKind.AccPlan,
             Constants.SchemaNames.Ledger => EndpointKind.Ledger,
             _ => EndpointKind.Undefined
@@ -1008,10 +1133,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             var refMeta = await GetNormalEndpointAsync(load, dataSource, schema, table);
             foreach (var gcol in group)
             {
-                // an account is keyed by its code: any other target breaks the foreign key at deploy
-                if (gcol.Type == ColumnType.Account && refMeta.Storage.Kind != EndpointKind.AccPlan)
-                    throw new InvalidOperationException(
-                        $"{endpoint.Path}: [{gcol.Name}] is an account, and '{gcol.Target}' is not a chart of accounts (/{Constants.SchemaNames.AccPlan}/<name>)");
+                CheckTargetKind(endpoint, gcol, refMeta.Storage);
                 gcol.RefTable = refMeta;
             }
         }
@@ -1052,12 +1174,38 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             $"{endpoint.Path}: 'autonum' names '{autonum}', which {MetadataFileName(Constants.SchemaNames.Autonum, String.Empty)} does not declare - {declared}");
     }
 
-    /* A literal initial value on an enum column names a code, and here - and only here - is the
+    /* Three column types name WHAT they point at and not merely that they point: an account is a
+     * code of a chart, a value a code of a set, a state a code of a set that carries a life cycle.
+     * Each is spelled as its target's key (ToSqlDbTypeInfo), so a target of another kind is a
+     * foreign key that cannot hold - platformid against nvarchar, discovered at deploy.
+     *
+     * One table rather than an 'if' per type: until now only the account was asked, and an enum
+     * column pointing at a catalog went all the way to the database before saying anything. The
+     * two facts travel together because the message needs both - the kind to compare and the
+     * address to suggest.
+     */
+    private static (EndpointKind Kind, String What)? TargetOf(ColumnType type) => type switch
+    {
+        ColumnType.Account => (EndpointKind.AccPlan, $"a chart of accounts (/{Constants.SchemaNames.AccPlan}/<name>)"),
+        ColumnType.Enum => (EndpointKind.Enum, $"a set of values (/{Constants.SchemaNames.Enum}/<name>)"),
+        ColumnType.State => (EndpointKind.State, $"a set of states (/{Constants.SchemaNames.State}/<name>)"),
+        _ => null
+    };
+
+    private static void CheckTargetKind(EndpointMetadata endpoint, TableColumn column, TableMetadata target)
+    {
+        if (TargetOf(column.Type) is not { } required || target.Kind == required.Kind)
+            return;
+        throw new InvalidOperationException(
+            $"{endpoint.Path}: [{column.Name}] is '{column.Type}', so '{column.Target}' has to name {required.What} - and {target.Path} is a {target.Kind}");
+    }
+
+    /* A literal initial value on a set column names a code, and here - and only here - is the
      * first moment the codes are known: the set is the far half of a reference, linked just above.
      * Without this the typo is silent in the worst way: '@map' finds no row, the RefId resolves to
      * nothing, and a NEW card simply opens with an empty control.
      *
-     * Only enums are checked, because only they declare their rows. A literal pointing at a catalog
+     * Only sets are checked, because only they declare their rows. A literal pointing at a catalog
      * names an identifier that exists in the database and not in any file.
      */
     private static void CheckLiteralInitials(EndpointMetadata endpoint, TableMetadata meta)
@@ -1068,7 +1216,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         {
             if (initial.Source != InitialSource.Literal)
                 continue;
-            var column = meta.AllColumns().FirstOrDefault(c => c.Name == key && c.IsEnum);
+            var column = meta.AllColumns().FirstOrDefault(c => c.Name == key && c.IsSetRef);
             if (column == null)
                 continue;
             var target = column.RefTableCheck.Storage;
@@ -1120,7 +1268,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             }
             tables.Add(endpoint.Storage);
         }
-        /* The registry is a table like an enum set: deployed with its rows, and the rows reach the
+        /* The registry is a table like a set: deployed with its rows, and the rows reach the
          * hash through Xtra. Sorted, because the fingerprint is taken from the text and must not
          * depend on how the file system is enumerated.
          */

@@ -40,6 +40,8 @@ internal static class Constants
         // a chart of accounts
         public const String AccountType = nameof(AccountType);
         public const String NormalBalance = nameof(NormalBalance);
+        // a set of states: what the value is to the cycle - see StateRole
+        public const String Role = nameof(Role);
         // a ledger: the leg's sign, its account, the account it corresponds to, its sum
         public const String InOut = nameof(InOut);
         public const String Acc = nameof(Acc);
@@ -127,6 +129,13 @@ internal static class Constants
          * The namespace exists so that a reference can name a set by address.
          */
         public const String Enum = "enum";
+        /* The second kind of set: its values carry a colour and a role in a life cycle, so a
+         * reference to one says the record HAS a life cycle. Named after the entity whose states
+         * they are - /state/order - which is why the model is composed and not the folder alone
+         * (TableMetadata.SetDefaults): the candidates ride in the root of that entity's own page,
+         * where 'Order' is already taken by the entity itself.
+         */
+        public const String State = "state";
         /* One file at the root and no folders under it: there is one registry of numberings, and
          * its schema, table and model default in TableMetadata.SetDefaults. The price is locality -
          * what 'waybill' is cannot be read beside the endpoint that names it, and the file grows

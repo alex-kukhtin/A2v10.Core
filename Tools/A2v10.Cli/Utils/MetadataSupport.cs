@@ -13,6 +13,11 @@ namespace A2v10.Cli;
 /*
 * Is the application metadata-driven? The host project references A2v10.Metadata - the same
 * fact `a2 app config` reports as metadataEnabled.
+*
+* Either spelling of a reference answers it. An application built on releases names a package; a
+* stand standing beside the repository names the project, precisely so that a change in the layer
+* is visible without building one - and a probe that knew only packages called that stand, which
+* exists to be driven by this tool, not metadata-driven at all.
 */
 internal sealed record MetadataSupport(String ProjectPath, Boolean IsEnabled)
 {
@@ -27,9 +32,11 @@ internal sealed record MetadataSupport(String ProjectPath, Boolean IsEnabled)
         // one csproj per host folder by design
         var csproj = Directory.EnumerateFiles(hostFolder, "*.csproj").FirstOrDefault()
             ?? throw new InvalidOperationException($"Host project not found. Expected a .csproj in {hostRoot.Host}.");
-        var enabled = XDocument.Load(csproj)
-            .Descendants("PackageReference")
-            .Any(x => x.Attribute("Include")?.Value == METADATA_PACKAGE);
+        var project = XDocument.Load(csproj);
+        var enabled = project.Descendants("PackageReference")
+                .Any(x => x.Attribute("Include")?.Value == METADATA_PACKAGE)
+            || project.Descendants("ProjectReference")
+                .Any(x => Path.GetFileNameWithoutExtension(x.Attribute("Include")?.Value ?? String.Empty) == METADATA_PACKAGE);
         var path = Path.GetRelativePath(hostEnvironment.ContentRootPath, csproj).Replace('\\', '/');
         return new MetadataSupport(path, enabled);
     }

@@ -89,7 +89,7 @@
                 "type": { "$ref": "#/definitions/columnType" },
                 "target": {
                     "type": "string",
-                    "description": "For a reference: path of the endpoint it points at, e.g. '/catalog/item'. For 'account': a chart of accounts, '/accplan/national'."
+                    "description": "For a reference: path of the endpoint it points at, e.g. '/catalog/item'. Three types name the kind they point at, and the load refuses anything else: for 'enum' a set of values, '/enum/vatrate'; for 'state' a set of states, '/state/order'; for 'account' a chart of accounts, '/accplan/national'."
                 },
                 "length": {
                     "type": "integer",
@@ -468,7 +468,7 @@
             "enum": [
                 "string", "id", "name", "memo", "rowNumber", "done", "void", "isSystem",
                 "isFolder", "parent", "folder", "user", "rowKind", "operation",
-                "document", "documentType", "row", "rowVersion", "color", "enum", "account", "autonum",
+                "document", "documentType", "row", "rowVersion", "color", "enum", "state", "account", "autonum",
                 "company", "direction",
                 "amount", "price", "qty", "percent", "factor",
                 "ref", "date", "dateTime", "money", "boolean",

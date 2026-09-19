@@ -36,6 +36,39 @@ internal partial class XamlBuilder
             : path;
     }
 
+    /* The picker for a state, in the three places one appears - the card, a row of a collection,
+     * the filter panel. Everything but the reach is the same, and the one difference that matters
+     * is the ITEM's value: in the card and in a row the property holds the element resolved through
+     * the map, so the item binds to the element itself; in the filter it holds the bare code, which
+     * is what the WHERE compares (see FilterKind.Set).
+     *
+     * A ColorComboBox and not a ComboBox with a colour: the list is what a state IS, and the grid
+     * draws the same badge. The control is old - it is what the tags dialog picks a colour with -
+     * so the kind added a vocabulary entry, not a control.
+     */
+    static ColorComboBox StatePicker(String itemsSource, Bind value, Bind itemValue,
+        String? label = null, String? cssClass = null) => new()
+    {
+        Label = label,
+        CssClass = cssClass,
+        Children = [
+            new ColorComboBoxItem()
+            {
+                Bindings = b =>
+                {
+                    b.SetBinding(nameof(ColorComboBoxItem.Content), new Bind(Constants.FieldNames.Name));
+                    b.SetBinding(nameof(ColorComboBoxItem.Value), itemValue);
+                    b.SetBinding(nameof(ColorComboBoxItem.Color), new Bind(Constants.FieldNames.Color));
+                }
+            }
+        ],
+        Bindings = b =>
+        {
+            b.SetBinding(nameof(ColorComboBox.ItemsSource), new Bind(itemsSource));
+            b.SetBinding(nameof(ColorComboBox.Value), value);
+        }
+    };
+
     // rows of a collection are columns and nothing else, so the member unwraps on the way in
     static UIElementBase ElementToTableCell(MemberDescriptor member, Dictionary<String, InheritDescriptor[]> inherits)
     {
@@ -54,6 +87,11 @@ internal partial class XamlBuilder
                     CssClass = elem.Type.ToXamlSemanticClass(),
                     Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), new Bind(elem.Name))
                 },
+            // the row's own picker; 'Root.' is the reach - the candidates are an array at the model
+            // root, not a property of the row ($data, RenderContext.GetNormalizedPath)
+            ColumnType.State => StatePicker(
+                $"Root.{elem.RefTableCheck.Storage.CollectionName}",
+                new Bind(elem.Name), new Bind(), cssClass: elem.Type.ToXamlSemanticClass()),
             /* The same control as in the card, and the same reason - see CreateEditControl. The one
              * difference is the reach: here the scope is the ROW, and the candidates are an array at
              * the model root, which is what 'Root.' says ($data, RenderContext.GetNormalizedPath).
@@ -210,7 +248,14 @@ internal partial class XamlBuilder
              * and what the WHERE compares, and it lets the set's own 'All' row (Id = N'') be a
              * value like any other instead of a state the control would have to invent.
              */
-            FilterKind.Enum => new ComboBox()
+            /* The same badge the grid draws, so the panel and the rows read as one thing. The item's
+             * value is the CODE here and the element everywhere else - the line above says why.
+             */
+            FilterKind.Set when filter.ColumnCheck.Type == ColumnType.State => StatePicker(
+                filter.ColumnCheck.RefTableCheck.Storage.CollectionName,
+                new Bind($"Parent.Filter.{filter.Name}"), new Bind(Constants.FieldNames.Id),
+                label: $"@[{filter.ColumnCheck.RefTableCheck.Storage.Model}]"),
+            FilterKind.Set => new ComboBox()
             {
                 Label = $"@[{filter.ColumnCheck.RefTableCheck.Storage.Model}]",
                 Highlight = true,
@@ -230,6 +275,30 @@ internal partial class XamlBuilder
                         new Bind(filter.ColumnCheck.RefTableCheck.Storage.CollectionName));
                     b.SetBinding(nameof(ComboBox.Value), new Bind($"Parent.Filter.{filter.Name}"));
                 }
+            },
+            /* The one filter whose candidates are not data: the roles are a closed set of the
+             * platform, so the items are written out here and no recordset carries them. 'All' is
+             * written out with them for the same reason - a set gets that row from the deploy,
+             * this list has no deploy to get it from.
+             *
+             * The keys name the set, as a value's do ('@[{Model}.{Id}]'): two enums with a member
+             * called 'Initial' must not collapse into one translation.
+             */
+            FilterKind.Role => new ComboBox()
+            {
+                Label = $"@[{nameof(StateRole)}]",
+                Highlight = true,
+                Children = [
+                    // 'All' is written out with them: a set is given that row by the deploy, and
+                    // this list has no deploy to be given anything by
+                    new ComboBoxItem() { Content = $"@[{nameof(StateRole)}.All]", Value = String.Empty },
+                    .. Enum.GetNames<StateRole>().Select(n => new ComboBoxItem()
+                    {
+                        Content = $"@[{nameof(StateRole)}.{n}]",
+                        Value = n
+                    })
+                ],
+                Bindings = b => b.SetBinding(nameof(ComboBox.Value), new Bind($"Parent.Filter.{filter.Name}"))
             },
             // candidates are rows, not a shape: ItemsSource is the root 'Tags' recordset, unprefixed
             FilterKind.Tags => new TagsFilter()
@@ -326,6 +395,15 @@ internal partial class XamlBuilder
             _ => throw new InvalidOperationException($"Invalid control {elem.Is}")
         };
     }
+    /* A group lays out members and groups alike: 'fields' are the editors it carries itself,
+     * 'elements' the groups under it - a row of two columns is one of these inside another, and
+     * that is the ordinary way to lay out a card. Fields come first because the file is read top to
+     * bottom and they are written first; two keys cannot interleave, so the order is decided once
+     * here rather than guessed per form.
+     *
+     * A nested group is never scoped - CheckElement refuses a scope anywhere but on a tab - so what
+     * it inherits is the record's own, the same thing the group above it reads.
+     */
     FlowPanel CreateGroupPanel(FormElement elem)
     {
         var inherits = InheritsOf(elem);
@@ -333,7 +411,10 @@ internal partial class XamlBuilder
         {
             Axis = elem.Axis == FlowAxis.Columns ? Xaml.FlowAxis.Columns : Xaml.FlowAxis.Rows,
             LabelAt = elem.LabelAt == LabelAt.Top ? FlowLabelAt.Top : FlowLabelAt.Left,
-            Children = [.. elem.Members.Select(m => CreateMemberControl(m, inherits))]
+            Children = [
+                .. elem.Members.Select(m => CreateMemberControl(m, inherits)),
+                .. elem.Elements.Select(ElementToControl)
+            ]
         };
     }
 
@@ -430,6 +511,10 @@ internal partial class XamlBuilder
              * reference, so the save reads its Id the way it does for all of them. The filter is
              * the opposite case and for its own reason - there the value IS the code.
              */
+            // the whole list rides with the record, as an enum's does; what it adds is the colour
+            ColumnType.State => StatePicker(
+                column.RefTableCheck.Storage.CollectionName, valueBind, new Bind(),
+                label: column.Header, cssClass: column.Type.ToXamlSemanticClass()),
             ColumnType.Enum => new ComboBox()
             {
                 Label = column.Header,

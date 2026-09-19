@@ -307,10 +307,11 @@ public sealed record DeclarationMetadata
     public RuleMetadata RulesFor(String? kind) =>
         kind != null && Kinds.TryGetValue(kind, out var k) ? RuleMetadata.Merge(k.Rules, Rules) : Rules;
 
-    /* What a NEW record starts on: the declared initials plus the fixed fields as literals. Every
-     * reader of initials reads this and not InitialValues - the defaults recordset, the map of a
-     * literal reference, the check of an enum code. Filled by the bake; declared and derived never
-     * share a field.
+    /* What a new record starts on AS THE FILE SAYS IT: the declared initials plus the fixed fields
+     * as literals. Nothing reads InitialValues past the bake - the check of a set's code reads
+     * this, and the two SQL readers read MetadataExtensions.AllInitials, which is this plus what
+     * only the linked reference graph can answer (the operation, the initial state). Declared and
+     * derived never share a field, which is why there are two properties and not one filled twice.
      */
     [JsonIgnore]
     public IReadOnlyDictionary<String, InitialMetadata> Initials { get; init; }

@@ -67,21 +67,10 @@ internal partial class SqlBuilder
 
         String? generateDefaults()
         {
-            var org = Endpoint.Declaration;
             if (!IsNewModel())
                 return null;
-            // declared initials plus the fixed fields - what a new record of THIS address starts on
-            var initValues = org.Initials;
-            var docOp = Endpoint.DocumentOperation();
-            if (docOp != null)
-                initValues = new Dictionary<String, InitialMetadata>(initValues)
-                {
-                    ["Operation"] = new InitialMetadata(
-                        Source: InitialSource.Context,
-                        Value: "$operation$"
-                    )
-                };
-            
+            // everything a new record of THIS address starts on, declared and derived alike
+            var initValues = Endpoint.AllInitials();
             if (initValues.Count == 0)
                 return null;
 
@@ -92,10 +81,11 @@ internal partial class SqlBuilder
                 return $"[{Table.Model}.{key}!{column.RefTableCheck.Storage.RefTypeName}!RefId] = @Init{key}";
             }
 
-            /* A value written in the file. A reference is declared by its KEY and comes back as an
-             * object, so it is emitted as a RefId and resolved through the map - the same shape the
-             * document operation has always had, one line below. The map is filled for it by
-             * RefMapBuilder.GenerateInitialRefs; without that the control opens empty.
+            /* A value, whoever decided it - the file, the endpoint's own operation, the set's
+             * initial state. A reference is written by its KEY and comes back as an object, so it
+             * is emitted as a RefId and resolved through the map; the map is filled for it by
+             * RefMapBuilder.GenerateInitialRefs, from the same list, and without that the control
+             * opens empty.
              */
             String getDefaultLiteral(String key, String value)
             {
@@ -107,12 +97,16 @@ internal partial class SqlBuilder
                     : $"[{Table.Model}.{key}] = {column.SqlLiteral(value)}";
             }
 
+            /* '$operation$' used to be a case here. It was the platform telling itself a fact it
+             * already knew, through a marker in a value, and it had to be spelled a second time in
+             * the map - so the operation is now an ordinary literal (MetadataExtensions.AllInitials)
+             * and this reads what a file can actually write.
+             */
             String getDefaultContext(String key, String value)
             {
                 return value switch
                 {
                     "today" => $"[{Table.Model}.{key}!!Utc] = a2meta.fn_getUtcDate()",
-                    "$operation$" => $"[{Table.Model}.{key}!{TableMetadataDefaults.OperationsTable().RefTypeName}!RefId] = N'{docOp}'",
                     _ => throw new InvalidOperationException($"Invalid initial context value '{value}'")
                 };
             }
@@ -226,10 +220,10 @@ internal partial class SqlBuilder
         refMap.WriteRefMap(sb);
 
         // without the 'All' row: a record picks a value, and 'all of them' is not one
-        foreach (var en in EnumTargets(withDetails: true))
+        foreach (var en in ReferencedSets(withDetails: true))
         {
             sb.AppendLine();
-            sb.AppendLine(EnumValuesRecordset(en, withAll: false));
+            sb.AppendLine(ValuesRecordset(en, withAll: false));
         }
 
         var defs = generateDefaults();

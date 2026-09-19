@@ -37,6 +37,7 @@ internal static class MetadataExtensions
             Constants.SchemaNames.Journal => EndpointKind.Journal,
             Constants.SchemaNames.Report => EndpointKind.Report,
             Constants.SchemaNames.Enum => EndpointKind.Enum,
+            Constants.SchemaNames.State => EndpointKind.State,
             Constants.SchemaNames.Autonum => EndpointKind.Autonum,
             Constants.SchemaNames.AccPlan => EndpointKind.AccPlan,
             Constants.SchemaNames.Ledger => EndpointKind.Ledger,
@@ -53,6 +54,13 @@ internal static class MetadataExtensions
             Constants.SchemaNames.Journal => "jrn",
             Constants.SchemaNames.Report => "rep",
             Constants.SchemaNames.Enum => "enm",
+            /* Not shortened, and that is the rule rather than an exception: the names above
+             * abbreviate long words, and 'state' is already short - 'sta' would cost the reader of
+             * generated SQL a decoding and buy nothing. Written out all the same: a folder falling
+             * through to '_' is indistinguishable from a schema name an author wrote in the file,
+             * so only a line here says this was decided.
+             */
+            Constants.SchemaNames.State => "state",
             Constants.SchemaNames.AccPlan => "acc",
             Constants.SchemaNames.Ledger => "led",
             "account" => "acc",
@@ -78,7 +86,7 @@ internal static class MetadataExtensions
      * itself: the seed answers 'has this changed', and the content is deployed by the script that
      * owns it.
      *
-     * Its fillers are the rows a file declares: the values of an enum, the numberings of /autonum,
+     * Its fillers are the rows a file declares: the values of a set, the numberings of /autonum,
      * the rows of a seed file. A table holding none has none, and a kind is never asked - what a
      * table declares is what it has.
      */
@@ -91,8 +99,10 @@ internal static class MetadataExtensions
 
         // the position is part of a value (it becomes Order), so the index is in the text; a
         // numbering is addressed by its key alone and its position says nothing
+        // every field of a value, unconditionally: appended only when set, a colour and a role
+        // would produce one text for two different rows
         var lines = table.Values
-            .Select((v, ix) => $"{ix}|{v.Id}|{v.Name}|{v.Memo}|{(v.Void ? 1 : 0)}")
+            .Select((v, ix) => $"{ix}|{v.Id}|{v.Name}|{v.Memo}|{(v.Void ? 1 : 0)}|{v.Color}|{v.Role}")
             .Concat(table.Autonums.Select(a => $"{a.Id}|{a.Name}|{a.Pattern}|{a.Period}"))
             .Concat(table.Operations.Select(o => o.Id))
             .Concat(table.SeedRows.Select(SeedLine))
@@ -124,6 +134,47 @@ internal static class MetadataExtensions
     internal static IEnumerable<RefDescriptor> AllRefs(this IEnumerable<TableColumn> columns) =>
         columns.Where(c => c.IsRef || c.IsOperation).Select((c, ix) => new RefDescriptor(ix + 1, c, (c.RefTable
             ?? throw new InvalidOperationException($"RefTable for {c.Name} is null")).Storage));
+
+    /* What a NEW record of this endpoint starts on, with every far half resolved: what the file
+     * declared (its initialValues and its fixed fields, already merged by the bake), the operation
+     * an endpoint over a shared document storage IS, and the initial state of every state column.
+     *
+     * Not folded into the bake, and the line is the one the inherit rules are already cut along:
+     * the bake runs before the reference graph is linked, and the last two are the FAR half - a
+     * code the SET declares, a row of a registry. Asked here instead, where the SQL is written and
+     * the graph is complete.
+     *
+     * One answer for the two readers that need it - the defaults recordset, which sends the values,
+     * and the map, which resolves the references among them into objects. They were two lists kept
+     * equal by hand, and the operation appeared in both under two different spellings; a third
+     * source would have made it six places.
+     */
+    internal static IReadOnlyDictionary<String, InitialMetadata> AllInitials(this NormalEndpointMetadata endpoint)
+    {
+        var initials = new Dictionary<String, InitialMetadata>(endpoint.Declaration.Initials);
+
+        /* A literal like any other: the value is the code, and the column is found BY TYPE. The
+         * name was spelled 'Operation' literally in both readers, so a document that called the
+         * column anything else got a map insert into a column that is not there and a default for
+         * a property the model does not carry.
+         */
+        if (endpoint.DocumentOperation() is { Length: > 0 } operation)
+        {
+            var column = endpoint.Storage.AllColumns().First(c => c.IsOperation);
+            initials[column.Name] = new InitialMetadata(InitialSource.Literal, operation);
+        }
+
+        // the set says where its cycle begins; the endpoint may not say it again (DeclarationBake)
+        foreach (var column in endpoint.Storage.AllColumns(c => c.Type == ColumnType.State))
+        {
+            var set = column.RefTableCheck.Storage;
+            var initial = set.Values.FirstOrDefault(v => !v.Void && v.Role == StateRole.Initial)
+                ?? throw new InvalidOperationException(
+                    $"{set.Path}: no living state has the role '{StateRole.Initial}'");
+            initials[column.Name] = new InitialMetadata(InitialSource.Literal, initial.Id);
+        }
+        return initials;
+    }
 
     /* The operation is the endpoint, so its key is the endpoint name - not a slice of a path. Only an
      * endpoint over a storage declared elsewhere is one: the storage itself (/document, an empty name)

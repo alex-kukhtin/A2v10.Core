@@ -19,6 +19,7 @@ internal static class TableDefaultColumns
             EndpointKind.Operation => OperationDefaultColumns(table),
             EndpointKind.Folders => FolderDefaultColumns(table),
             EndpointKind.Enum => EnumDefaultColumns(table),
+            EndpointKind.State => StateDefaultColumns(table),
             EndpointKind.Autonum => AutonumDefaultColumns(table),
             EndpointKind.AutonumValues => AutonumValuesDefaultColumns(table),
             EndpointKind.Tags => TagsDefaultColumns(table),
@@ -116,6 +117,31 @@ internal static class TableDefaultColumns
         yield return new TableColumn(Constants.FieldNames.Name, ColumnType.Name);
         yield return new TableColumn(Constants.FieldNames.Memo, ColumnType.Memo);
         yield return new TableColumn(Constants.FieldNames.Order, ColumnType.Integer);
+    }
+
+    /* An enum's row plus the two facts that make a set of states one: how the value is drawn, and
+     * what it is to the cycle. Everything above the two is the enum's, word for word - the key, the
+     * withdrawal, the declared order - because a state IS a value of a set; the kind exists for
+     * what follows, not for a different row.
+     *
+     * Color is the existing ColumnType.Color and the existing dictionary (a tag's colour, the CSS
+     * that draws it), so a badge and a picker were already there and nothing new is rendered.
+     *
+     * Role is a closed set of the platform stored by name and without a CHECK, exactly as
+     * AccountType is: no CHECK generation exists, and in this direction only the deploy writes the
+     * column, from values checked at load. Nullable, because the 'All' row the deploy adds (an
+     * empty key) has no role - it is a state of a FILTER, and any of the four on it would be a
+     * lie; so 'exactly one Initial, exactly one Success' is counted over the declared rows.
+     */
+    static IEnumerable<TableColumn> StateDefaultColumns(TableMetadata table)
+    {
+        yield return new TableColumn(Constants.FieldNames.Id, ColumnType.NaturalKey);
+        yield return new TableColumn(Constants.FieldNames.Void, ColumnType.Void);
+        yield return new TableColumn(Constants.FieldNames.Name, ColumnType.Name);
+        yield return new TableColumn(Constants.FieldNames.Memo, ColumnType.Memo);
+        yield return new TableColumn(Constants.FieldNames.Order, ColumnType.Integer);
+        yield return new TableColumn(Constants.FieldNames.Color, ColumnType.Color);
+        yield return new TableColumn(Constants.FieldNames.Role, ColumnType.String) { Length = 16 };
     }
 
     /* The key is a code the file writes, so a NaturalKey - see EnumDefaultColumns, which is this case

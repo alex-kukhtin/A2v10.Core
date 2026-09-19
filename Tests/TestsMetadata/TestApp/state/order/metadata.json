@@ -1,0 +1,11 @@
+{
+	"$schema": "../../../../../Platform/A2v10.App.Assets2026/Application/@schemas/metadata-state-json-schema.json#",
+	"table": "OrderStates",
+	"values": [
+		{ "id": "new", "name": "New", "color": "lightgray", "role": "Initial" },
+		{ "id": "packed", "name": "Packed", "color": "blue", "role": "InProgress" },
+		{ "id": "shipped", "name": "Shipped", "color": "cyan", "role": "InProgress" },
+		{ "id": "delivered", "name": "Delivered", "color": "green", "role": "Success" },
+		{ "id": "cancelled", "name": "Cancelled", "color": "red", "role": "Failure" }
+	]
+}

@@ -22,6 +22,10 @@
 			"type": "Ref",
 			"target": "/catalog/agent"
 		},
+		"State": {
+			"type": "State",
+			"target": "/state/order"
+		},
 		"Sum": {
 			"type": "Amount"
 		}

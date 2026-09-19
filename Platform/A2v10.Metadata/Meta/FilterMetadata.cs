@@ -12,7 +12,12 @@ public enum FilterKind
     Period,
     Ref,
     Tags,
-    Enum
+    Set,
+    /* By the ROLE of a state rather than by the state itself. Its own kind because the fact is on
+     * another table: the WHERE has to go there ('exists'), where every other kind compares a column
+     * of this one. What it draws with follows from that and not the other way round.
+     */
+    Role
 }
 
 /* One filter an endpoint has. 'Name' is all three at once: the namespace entry, the property under
@@ -37,12 +42,27 @@ internal static class FilterMetadata
             yield return new FilterDescriptor(FilterKind.Period, Constants.FilterNames.Period);
 
         /* Two kinds, not one with a branch in the control: 'Ref' means the candidates are fetched
-         * by address, and an enum has no address to fetch from - its whole set rides with the page.
+         * by address, and a set has no address to fetch from - its whole list rides with the page.
          * The value differs with it (a code, not a reference), so the SQL, the CollectionView and
-         * the panel all read one answer instead of each asking 'but is this one an enum?'.
+         * the panel all read one answer instead of each asking 'but is this one a set?'.
          */
         foreach (var col in table.AllColumns(c => c.IsRef))
-            yield return new FilterDescriptor(col.IsEnum ? FilterKind.Enum : FilterKind.Ref, col.Name, col);
+        {
+            yield return new FilterDescriptor(col.IsSetRef ? FilterKind.Set : FilterKind.Ref, col.Name, col);
+
+            /* A state column contributes two entries, because there are two questions and neither
+             * is the other's coarser version: 'which state' picks one of the set, 'which role'
+             * picks a stage of the cycle - and the four roles are not four states. A screen shows
+             * whichever its form names, and a form can show both; nothing here decides that.
+             *
+             * Named after the column, so two state columns give four entries that cannot meet.
+             * Not checked against the column names of the table - the namespace never has been, and
+             * guarding one name of several reads as an invariant while being none (see CLAUDE.md).
+             */
+            if (col.Type == ColumnType.State)
+                yield return new FilterDescriptor(FilterKind.Role,
+                    $"{col.Name}{Constants.FieldNames.Role}", col);
+        }
 
         if (table.HasTags)
             yield return new FilterDescriptor(FilterKind.Tags, Constants.FilterNames.Tags);
