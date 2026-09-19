@@ -8,6 +8,10 @@ rem This script is the stopgap between those two moments.
 rem
 rem Only folders that ALREADY hold @schemas are updated: it syncs copies, it never creates one in
 rem a project that does not use them.
+rem
+rem robocopy /PURGE, not copy: a schema RENAMED at the source used to leave its old name in every
+rem copy forever, because copy only adds and overwrites. The folder is build output whole, so
+rem mirroring it costs nothing and is the only way the old name dies.
 
 setlocal
 set "SRC=%~dp0Platform\A2v10.App.Assets2026\Application\@schemas"
@@ -19,7 +23,9 @@ if not exist "%DST%" echo Target repo not found: %DST% & exit /b 1
 for /d %%D in ("%DST%\*") do (
     if exist "%%~fD\@schemas" (
         echo   %%~nxD
-        copy /y "%SRC%\*.json" "%%~fD\@schemas\" >nul || exit /b 1
+        robocopy "%SRC%" "%%~fD\@schemas" *.json /PURGE >nul
+        rem robocopy: 0-7 is success (1 = something was copied), 8+ is failure. '|| exit' would read a copy as an error.
+        if errorlevel 8 exit /b 1
     )
 )
 
