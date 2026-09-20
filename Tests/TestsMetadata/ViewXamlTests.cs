@@ -26,7 +26,13 @@ public class ViewXamlTests
     {
         var xaml = await ViewOf("/document/waybillin", "index");
 
-        Assert.Contains("""<TagLabel Content="{Bind State.Name}" Style="{Bind State.Color}" />""", xaml);
+        /* The two bindings and not the whole element: what must hold is that the cell is a badge
+         * whose CLASS comes from the row's own colour - how the badge is dressed (Outline and
+         * whatever follows it) is the author's, and a test that pinned the line would fight him.
+         */
+        var badge = xaml.Split('\n').Single(l => l.Contains("<TagLabel"));
+        Assert.Contains("""Content="{Bind State.Name}""", badge);
+        Assert.Contains("""Style="{Bind State.Color}""", badge);
     }
 
     /* A column of a set offers no sort: neither the set's Order nor its Name is the alphabet the
@@ -49,19 +55,17 @@ public class ViewXamlTests
         Assert.Contains("""Sort="False" """.TrimEnd(), column);
     }
 
-    /* The panel shows both questions, each drawn by what its candidates ARE: the states come from
-     * the set and carry colours, the roles are a closed set of the platform and are written out -
-     * 'All' with them, since there is no deploy here to add that row.
+    /* One control per column: the states themselves, drawn as the picker draws them. The roles a
+     * state groups into are a second question about the same field, and the default panel does not
+     * ask it - the entry stays in the namespace for a form that wants it (EndpointLoadTests).
      */
     [Fact]
-    public async Task The_panel_filters_by_state_and_by_role()
+    public async Task The_panel_filters_by_state_and_not_by_role()
     {
         var xaml = await ViewOf("/document/waybillin", "index");
 
         Assert.Contains("""<ColorComboBox ItemsSource="{Bind OrderStates}" Value="{Bind Parent.Filter.State}" """, xaml);
-        Assert.Contains("""<ComboBox Highlight="True" Value="{Bind Parent.Filter.StateRole}" """, xaml);
-        foreach (var role in Enum.GetNames<StateRole>())
-            Assert.Contains($"""<ComboBoxItem Value="{role}">@[StateRole.{role}]</ComboBoxItem>""", xaml);
+        Assert.DoesNotContain("Parent.Filter.StateRole", xaml);
     }
 
     /* The card holds the ELEMENT resolved through the map, so the item binds to it and the save

@@ -18,19 +18,42 @@ internal partial class XamlBuilder
      */
     IEnumerable<DataGridColumn> IndexColumnsXaml(TableMetadata table, List<MemberDescriptor> members)
     {
-        DataGridColumn WithTags(TableColumn col) => new()
+        /* The name as a cell draws it. A row carrying a colour of its own is PAINTED by it - the
+         * same badge a state gets, with the style read from this row instead of a referenced one.
+         * The tags line is untouched by that: a record may carry both, and they are two facts.
+         */
+        UIElementBase NameContent(TableColumn col, TableColumn? paint) => paint == null
+            ? new Span()
+            {
+                Block = true,
+                Bindings = b => b.SetBinding(nameof(DataGridColumn.Content),
+                    new Bind(col.DisplayPath) { DataType = col.Type.ToXamlDataType() })
+            }
+            : new TagLabel()
+            {
+                Outline = true,
+                Bindings = b =>
+                {
+                    b.SetBinding(nameof(TagLabel.Content), new Bind(col.DisplayPath));
+                    b.SetBinding(nameof(TagLabel.Style), new Bind(paint.DisplayPath));
+                }
+            };
+
+        DataGridColumn Name(TableColumn col, TableColumn? paint) => new()
+        {
+            Header = col.Header,
+            SortProperty = col.Name,
+            Content = NameContent(col, paint)
+        };
+
+        DataGridColumn WithTags(TableColumn col, TableColumn? paint) => new()
         {
             Header = col.Header,
             SortProperty = col.Name,
             Content = new Group()
             {
                 Children = [
-                    new Span()
-                    {
-                        Block = true,
-                        Bindings = b => b.SetBinding(nameof(DataGridColumn.Content),
-                        new Bind(col.DisplayPath) { DataType = col.Type.ToXamlDataType() })
-                    },
+                    NameContent(col, paint),
                     new TagsList() {
                         Bindings = b => b.SetBinding(nameof(TagsList.ItemsSource),
                             new Bind("Tags")),
@@ -39,21 +62,55 @@ internal partial class XamlBuilder
             }
         };
 
-        /* A state is drawn and not spelled - the same badge the picker offers, so a row and the
-         * panel read as one thing. Style is a BINDING: TagLabel then emits ':class' and every row
-         * takes the colour of its own state, where a static Style would paint the column alike.
+        /* A referenced row is drawn in ITS colour, not spelled - the same badge the picker offers,
+         * so a row and the panel read as one thing. Style is a BINDING: TagLabel then emits
+         * ':class' and every row takes its own colour, where a static Style would paint the whole
+         * column alike.
+         *
+         * WHICH reference draws this way is the target's answer and not the column's type - a
+         * state and a catalog that declared a colour arrive at this one branch, because the map
+         * sent a colour for both (SqlBuilder.RefFields). Sorting follows the general rule for a
+         * reference: a set's Name is a resource key and not the alphabet the cell shows, a
+         * catalog's Name is.
          */
-        DataGridColumn Badge(TableColumn col) => new()
+        DataGridColumn Badge(TableColumn col, TableColumn color) => new()
         {
             Header = col.Header,
-            Sort = false,
+            Sort = col.IsSetRef ? false : null,
+            SortProperty = col.IsSetRef ? null : col.Name,
+            Content = new TagLabel()
+            {
+                Outline = true,
+                Bindings = b =>
+                {
+                    /* Nothing referenced, nothing drawn: without this an empty reference renders
+                     * an empty badge, and a frame around no text reads as a control that failed
+                     * rather than as a blank cell. Asked of the Id, which is what 'a reference
+                     * holds a row' means - a name may legitimately be empty.
+                     */
+                    b.SetBinding(nameof(TagLabel.If), new Bind($"{col.Name}.{Constants.FieldNames.Id}"));
+                    b.SetBinding(nameof(TagLabel.Content), new Bind(col.DisplayPath));
+                    b.SetBinding(nameof(TagLabel.Style), new Bind($"{col.Name}.{color.Name}"));
+                }
+            }
+        };
+
+        /* A colour column that is SHOWN draws itself: style and text are the one value, so the cell
+         * reads 'green' in green. Reached only where nothing is painted by it - a table with no
+         * name to paint, or with two colours. Sorted by the stored name, unlike a set's: this one
+         * is what is written in the column and not a resource key.
+         */
+        DataGridColumn ColorCell(TableColumn col) => new()
+        {
+            Header = col.Header,
+            SortProperty = col.Name,
             Content = new TagLabel()
             {
                 Outline = true,
                 Bindings = b =>
                 {
                     b.SetBinding(nameof(TagLabel.Content), new Bind(col.DisplayPath));
-                    b.SetBinding(nameof(TagLabel.Style), new Bind($"{col.Name}.{Constants.FieldNames.Color}"));
+                    b.SetBinding(nameof(TagLabel.Style), new Bind(col.DisplayPath));
                 }
             }
         };
@@ -79,9 +136,20 @@ internal partial class XamlBuilder
                 new Bind(col.DisplayPath) { DataType = col.Type.ToXamlDataType() })
         };
 
-        return members.Select(m => m.ColumnCheck).Select(col =>
-            table.HasTags && col.Type == ColumnType.Name ? WithTags(col)
-            : col.Type == ColumnType.State ? Badge(col)
+        var columns = members.Select(m => m.ColumnCheck).ToList();
+
+        /* The row's own colour, put on its NAME: the colour is HOW the name draws and not a column
+         * of its own - 'green' beside a green name is one fact written twice, and the tags splice
+         * is the same act. The same colour the map sends to everyone referencing this row, so the
+         * grid here and the badge there cannot show different things.
+         */
+        var paint = columns.Any(c => c.Type == ColumnType.Name) ? table.ColorColumn : null;
+
+        return columns.Where(col => col != paint).Select(col =>
+            table.HasTags && col.Type == ColumnType.Name ? WithTags(col, paint)
+            : col.Type == ColumnType.Name && paint != null ? Name(col, paint)
+            : col.RefTable?.Storage.ColorColumn is { } color ? Badge(col, color)
+            : col.Type == ColumnType.Color ? ColorCell(col)
             : Plain(col));
     }
 

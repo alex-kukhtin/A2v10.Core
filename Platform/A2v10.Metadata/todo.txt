@@ -20,7 +20,10 @@
 36. Attachments trait.
 37. Нужно разрешить details в details (для таблиц в таблицах)
 38. Profile/Preferences - реализация
-
+39. ColorProperty в SelectorSimple
+40. Сделать form:edit (axis:rows) [Name, Color] если есть Color
+41. Comments trait
+42. 
 
 
 14. Не работает ParentElem в Edit.

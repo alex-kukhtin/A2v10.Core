@@ -19,7 +19,7 @@ internal class TurnoverReportBuilder(IServiceProvider serviceProvider, ReportMet
 {
     public override async Task<IDataModel> LoadReportModelAsync(IModelView view, ExpandoObject prms)
     {
-        _grouping = new ReportGrouping(_report, _source,  prms);
+        SetGrouping(prms);
         var sqlString = await CreateSqlTextAsync();
 
         return await _dbContext.LoadModelSqlAsync(view.DataSource, sqlString, dbprms =>

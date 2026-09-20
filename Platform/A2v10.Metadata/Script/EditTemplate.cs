@@ -18,13 +18,23 @@ internal partial class ScriptBuilder
         };
     }
 
+    /* One property per strip of the form this template serves, opening on the strip's first tab -
+     * read off the FORM and not off the collections, because that is where strips exist. Driven
+     * from the shape it declared a property for every collection: one too few for a form with two
+     * strips over one collection, and one too many for every collection no strip shows.
+     */
+    private IEnumerable<String> TabStateProperties()
+    {
+        foreach (var strip in Endpoint.Declaration.Form(Constants.FormNames.Edit).TabStrips())
+            yield return $$"""'{{Table.TypeName}}.{{strip.TabState}}': {type: String, value: '{{strip.Elements[0].RowSet}}'}""";
+    }
+
     private Task<String> CreateGenericEditTemplate()
     {
         IEnumerable<String> properties()
         {
-            // one state property per collection - see TableMetadata.TabStateName
-            foreach (var d in Table.Details.Values)
-                yield return $$"""'{{Table.TypeName}}.{{d.TabStateName}}': {type: String, value: '{{d.FirstTabName}}'}""";
+            foreach (var state in TabStateProperties())
+                yield return state;
         }
 
         IEnumerable<String> events()
@@ -126,9 +136,8 @@ internal partial class ScriptBuilder
 
         IEnumerable<String> properties()
         {
-            // one state property per collection - see TableMetadata.TabStateName
-            foreach (var d in Table.Details.Values)
-                yield return $$"""'{{Table.TypeName}}.{{d.TabStateName}}': {type: String, value: '{{d.FirstTabName}}'}""";
+            foreach (var state in TabStateProperties())
+                yield return state;
             foreach (var (key, expr) in Endpoint.Declaration.Rules.Computed)
                 yield return $$"""'{{Table.TypeName}}.{{key}}'({{Self(Table.TypeName)}}) { return {{expr}};}""";
 

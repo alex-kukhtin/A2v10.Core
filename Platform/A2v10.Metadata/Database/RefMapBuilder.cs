@@ -210,7 +210,7 @@ internal class RefMapBuilder
             // the role 'Name' carries the target's presentation - every display binds to it
             var target = kvp.Value[0].RefTableCheck.Storage;
             var select = $"""
-            select [!{typeName}!Map] = null, [Id!!Id] = a.Id, [Name!!Name] = a.[{target.Presentation}]{SqlBuilder.StateFields(target, "a")}{inherits}
+            select [!{typeName}!Map] = null, [Id!!Id] = a.Id, [Name!!Name] = a.[{target.Presentation}]{SqlBuilder.RefFields(target, "a")}{inherits}
             from {tableName} a inner join T on a.Id = T.id;
             """;
             return $"{cte}\n{select}";

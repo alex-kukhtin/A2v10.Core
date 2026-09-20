@@ -25,7 +25,8 @@ public enum TagLabelStyle
 	Magenta,
 	LightGray,
 	Olive,
-	Teal
+	Teal,
+	White
 }
 
 [ContentProperty("Content")]

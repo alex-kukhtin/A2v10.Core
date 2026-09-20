@@ -11,9 +11,16 @@ namespace A2v10.Metadata;
  */
 internal static class DefaultFormBuilder
 {
-    // no filters, no node: an empty panel still counts as content, and the taskpad would render for it
+    /* No filters, no node: an empty panel still counts as content, and the taskpad would render for it.
+     *
+     * One control per column: the panel offers the values themselves, and a second entry over the
+     * same column - the roles a state groups into - would put two questions about one field side by
+     * side on every screen that never asked. The entry stays in the namespace, so a declared form
+     * names it when a screen wants it; the default hides it, which is the one thing a form may do
+     * to a filter (see CLAUDE.md, "Filters").
+     */
     static List<FormElement> FilterElements(TableMetadata table) =>
-        table.Filters().Select(f => f.Name).ToList() is { Count: > 0 } names
+        table.Filters().Where(f => f.Kind != FilterKind.Role).Select(f => f.Name).ToList() is { Count: > 0 } names
             ? [new FormElement() { Is = FormElementKind.Filters, Filters = names }]
             : [];
 
@@ -125,35 +132,38 @@ internal static class DefaultFormBuilder
         };
 
 
-    /* One strip per collection, holding that collection's kinds - because the state a strip
-     * drives is per collection too. Flattening every collection into a single strip would put
-     * the kinds of 'Rows' and of 'Links' on one switch with one value.
+    /* One strip over every row set the record has - the kinds of a collection and the collections
+     * themselves are the same kind of thing here: mutually exclusive views of what is inside this
+     * record, which is what a strip says. A strip per collection instead gives a page of stacked
+     * tab bars, each with one tab and nothing to switch, sharing the height between them - a
+     * document with six collections reads as six sections, and the screen the user knows is gone.
+     *
+     * Nothing about the collection decides this any more: the state a strip drives belongs to the
+     * strip (FormElement.TabState), so what is in one is a question of layout, and the default is
+     * the layout that puts every row set under one switch.
      */
-    static IEnumerable<FormElement> DetailsTabs(TableMetadata table)
+    static FormElement? DetailsTabs(TableMetadata table)
     {
-        foreach (var d in table.Details)
-        {
-            var dt = d.Value;
-            List<FormElement> tabs = dt.Kinds.Count > 0
-                ? [.. dt.Kinds.Keys.Select(k => new FormElement()
+        static IEnumerable<FormElement> CollectionTabs(String key, TableMetadata dt) =>
+            dt.Kinds.Count > 0
+                ? dt.Kinds.Keys.Select(k => new FormElement()
                     {
                         Is = FormElementKind.Tab,
-                        Scope = d.Key,
+                        Scope = key,
                         Kind = k,
                         Fields = [.. dt.AllColumns(IsDetailsColumn).OrderBy(SemanticDetailsOrder).Select(c => c.Name)]
-                    })]
+                    })
                 : [new FormElement()
                     {
                         Is = FormElementKind.Tab,
-                        Scope = d.Key,
+                        Scope = key,
                         Fields = [.. dt.AllColumns(IsDetailsColumn).Select(c => c.Name)]
                     }];
-            yield return new FormElement()
-            {
-                Is = FormElementKind.Tabs,
-                Elements = tabs
-            };
-        }
+
+        List<FormElement> tabs = [.. table.Details.SelectMany(d => CollectionTabs(d.Key, d.Value))];
+        return tabs.Count == 0
+            ? null
+            : new FormElement() { Is = FormElementKind.Tabs, Elements = tabs };
     }
 
     public static FormMetadata CreateEditPage(TableMetadata table)
@@ -191,7 +201,7 @@ internal static class DefaultFormBuilder
             ]
         };
 
-        foreach (var tabs in DetailsTabs(table))
+        if (DetailsTabs(table) is FormElement tabs)
             fd.Body.Add(tabs);
 
         fd.Body.Add(new FormElement()
@@ -224,7 +234,7 @@ internal static class DefaultFormBuilder
             ]
         };
 
-        foreach (var tabs in DetailsTabs(table))
+        if (DetailsTabs(table) is FormElement tabs)
             fd.Body.Add(tabs);
         return fd;
     }

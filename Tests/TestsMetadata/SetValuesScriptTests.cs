@@ -43,9 +43,12 @@ public class SetValuesScriptTests
 
     /* The 'All' row is the platform's, never declared, and it is not a state: a role on it would be
      * a lie whichever of the four it was. It comes first, by an order below every declared one.
+     *
+     * A colour it does get. The picker draws this row like the others, and one with no colour draws
+     * as nothing - white on white, which reads as a control that failed rather than as 'no filter'.
      */
     [Fact]
-    public async Task The_All_row_is_added_with_no_role_and_no_colour()
+    public async Task The_All_row_is_added_white_and_with_no_role()
     {
         var states = await SetAsync("state", "order");
 
@@ -54,7 +57,8 @@ public class SetValuesScriptTests
 
         Assert.Contains("@[OrderState.All]", all);
         Assert.Contains("-1", all);
-        Assert.Equal(3, all.Split("null").Length - 1);   // memo, colour, role
+        Assert.Contains("N'white'", all);
+        Assert.Equal(2, all.Split("null").Length - 1);   // memo and the role
     }
 
     // an enum has five columns and a set of states seven, from one walk over the shape

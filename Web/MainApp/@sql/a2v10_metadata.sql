@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2026 Oleksandr Kukhtin
 
-Last updated : 19 sep 2026
-module version : 8663
+Last updated : 08 sep 2026
+module version : 8653
 */
 ------------------------------------------------
 set nocount on;
@@ -148,82 +148,5 @@ begin
 	set nocount on;
 	set transaction isolation level read committed;
 	set xact_abort on;
-
-	/* What the declaration says the schema is, against what the database has. a2meta.Columns is the
-	   DESIRED state and not the previous one: the metadata seed is the first batch of the deploy
-	   script, and its 'not matched by source then delete' makes that table exactly the declaration.
-	   INFORMATION_SCHEMA is the fact. So a row missing there is a column to add, and this procedure
-	   needs no parameters and keeps no state of its own.
-
-	   Stage 1 adds columns and does nothing else: a changed type, a dropped column and the indexes
-	   are not its business yet.
-
-	   No transaction around the walk. 'add column' is additive and autonomous - a run that fails
-	   halfway leaves what it added and the next one adds the rest - while one transaction over all
-	   of it would hold schema locks for the whole deploy and disagree with the rest of the script,
-	   where every batch stands alone. */
-
-	declare @alters table([schema] sysname, [table] sysname, [stmt] nvarchar(max));
-
-	/* The type is rendered here from the three facets, by the same fork SqlDbTypeInfo.SqlFullName
-	   has: whichever facet is present decides the spelling. Not a stored full name - a fact enters
-	   the seed only when SQL must answer it for the whole application at once, and this one follows
-	   from facts already lying there. The price, named: the fork now lives in two languages, and a
-	   divergence shows up as wrong DDL on this path alone.
-
-	   Nullability and the default are one decision, as they are in the declaration: a default is the
-	   only road to NOT NULL (DeployNullable), so a not-null add always carries one. The two columns
-	   that carry none - Id and Master - can reach here only on a table that is not supposed to gain
-	   them, and the ALTER then fails on a non-empty table. Deliberately not filtered out: silence
-	   there is the very bug this procedure exists to end. The constraint name is never stored - it
-	   is always DF_{table}_{column}, the name CreateTable writes.
-
-	   The join to TABLES is not for the deploy, where create table has already run over the same
-	   walk: it is what lets anyone exec this procedure on its own without an ALTER on a table that
-	   is not there. */
-
-	insert into @alters([schema], [table], [stmt])
-	select d.[schema], d.[table],
-		N'alter table [' + d.[schema] + N'].[' + d.[table] + N'] add ' +
-			string_agg(d.[def], N', ') within group (order by d.[column])
-	from (
-		select c.[schema], c.[table], c.[column],
-			[def] = cast(N'[' + c.[column] + N'] ' + c.[datatype] +
-				case
-					when c.[length] = -1 then N'(max)'
-					when c.[length] is not null then N'(' + cast(c.[length] as nvarchar(16)) + N')'
-					when c.[precision] is not null then
-						N'(' + cast(c.[precision] as nvarchar(8)) + N', ' + cast(c.[scale] as nvarchar(8)) + N')'
-					else N''
-				end +
-				case when c.[nullable] = 1 then N'' else N' not null' end +
-				case when c.[default] is null then N''
-					else N' constraint DF_' + c.[table] + N'_' + c.[column] + N' default(' + c.[default] + N')'
-				end as nvarchar(max))
-		from a2meta.Columns c
-			inner join INFORMATION_SCHEMA.TABLES t on t.TABLE_SCHEMA = c.[schema] and t.TABLE_NAME = c.[table]
-				and t.TABLE_TYPE = N'BASE TABLE'
-		where not exists(select * from INFORMATION_SCHEMA.COLUMNS ic
-			where ic.TABLE_SCHEMA = c.[schema] and ic.TABLE_NAME = c.[table] and ic.COLUMN_NAME = c.[column])
-	) d
-	group by d.[schema], d.[table];
-
-	/* Printed and not returned: the deploy runs this through ExecuteNonQuery and would drop a result
-	   set, while deploydatabase.sql is an artifact applied by hand at the customer site - that
-	   reader is the one a print has. */
-
-	declare @stmt nvarchar(max);
-	declare #crs cursor local fast_forward read_only for
-		select [stmt] from @alters order by [schema], [table];
-	open #crs;
-	fetch next from #crs into @stmt;
-	while @@fetch_status = 0
-	begin
-		print @stmt;
-		exec sp_executesql @stmt;
-		fetch next from #crs into @stmt;
-	end
-	close #crs;
-	deallocate #crs;
 end
 go

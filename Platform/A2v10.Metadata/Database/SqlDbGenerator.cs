@@ -15,6 +15,7 @@ using Microsoft.Data.SqlClient;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Metadata.Cli;
+using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
@@ -257,7 +258,16 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
                     Constants.FieldNames.Memo => value?.Memo,
                     Constants.FieldNames.Order => order.ToString(),
                     Constants.FieldNames.Void => value != null && value.Void ? "1" : "0",
-                    Constants.FieldNames.Color => value?.Color,
+                    /* The 'All' row is drawn by the same picker as the rest, so it needs a colour
+                     * of its own: with none it renders as nothing at all, and an empty badge reads
+                     * as a control that failed rather than as 'no filter'. White is the platform's
+                     * answer and comes from the vocabulary the load checks against, so the row it
+                     * writes is a row an author could have written. A declared value with no colour
+                     * keeps none - that one is a choice, and it draws as a plain label.
+                     */
+                    Constants.FieldNames.Color => value == null
+                        ? nameof(TagLabelStyle.White).ToLowerInvariant()
+                        : value.Color,
                     Constants.FieldNames.Role => value?.Role?.ToString(),
                     _ => throw new InvalidOperationException(
                         $"{e.Path}: nothing to write into '{column.Name}' - a column of a set that a value does not answer for")

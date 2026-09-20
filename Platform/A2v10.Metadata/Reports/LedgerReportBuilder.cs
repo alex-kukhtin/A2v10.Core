@@ -40,7 +40,7 @@ internal abstract class LedgerReportBuilder : BaseReportBuilder
 
     public override async Task<IDataModel> LoadReportModelAsync(IModelView view, ExpandoObject prms)
     {
-        _grouping = new ReportGrouping(_report, _source, prms);
+        SetGrouping(prms);
         return await _dbContext.LoadModelSqlAsync(view.DataSource, CreateSqlText(), dbprms =>
         {
             dbprms.AddBigInt("@UserId", _currentUser.Identity.Id);

@@ -102,8 +102,16 @@ public sealed record FormElement
     [JsonIgnore]
     internal List<FilterDescriptor> BakedFilters { get; init; } = [];
 
-    /* Which state property this tab strip drives - derived from the children, not declared: the
-     * tabs of one strip are the kinds of one collection, so the collection is already said by them.
+    /* Which state property this tab strip drives - the STRIP's own, not the collection's. A strip
+     * is a screen and not a row set: the tabs of one may be the kinds of one collection, several
+     * collections, or both at once, and "which tab is open" is a fact about the strip, which the
+     * record owns, not about any collection in it - a collection does not know it is being shown,
+     * let alone beside whom.
+     *
+     * Named after the tab it opens on ($$TabRows, $$TabStockRows), which is unique among the strips
+     * of one form as long as their first tabs differ, and a strip showing one row set twice is
+     * refused below. Named after the collection, it could not tell two of them apart, and that -
+     * nothing in the model - is what used to forbid a strip over several collections.
      */
     [JsonIgnore]
     internal String? TabState { get; init; }
@@ -130,6 +138,17 @@ public sealed record FormElement
         if (el.Is == FormElementKind.Tab && parent != FormElementKind.Tabs)
             throw new InvalidOperationException(
                 $"tab '{el.Scope}' outside tabs: a tab is drawn only by its strip");
+        /* The other half of that sentence. A strip draws its children as tabs and nothing else
+         * (XamlBuilder.CreateTabsScope), so anything else inside one is a node that renders as a
+         * nameless empty case; and a tab without a scope is the same thing spelled shorter - it is
+         * the row set that gives a tab its content, its caption and the value the strip switches on.
+         */
+        if (parent == FormElementKind.Tabs && el.Is != FormElementKind.Tab)
+            throw new InvalidOperationException(
+                $"'{Word(el.Is)}' inside tabs: a strip shows tabs and nothing else");
+        if (el.Is == FormElementKind.Tab && String.IsNullOrEmpty(el.Scope))
+            throw new InvalidOperationException(
+                "tab: 'scope' is not declared. A tab shows one row set, and 'scope' is how it names one");
         CheckContents(el);
     }
 
@@ -207,7 +226,6 @@ public sealed record FormElement
         }
 
         var elements = new List<FormElement>(Elements.Count);
-        String? tabState = null;
         foreach (var el in Elements)
         {
             CheckElement(Is, el);
@@ -221,21 +239,31 @@ public sealed record FormElement
             detailsTable.CheckKinds(named);
             elements.Add(el.Bake(detailsTable, detailsTable.RowMembers())
                 with { RowSet = detailsTable.RowSetName(el.Kind) });
-            if (Is != FormElementKind.Tabs)
-                continue;
-            var state = detailsTable.TabStateName;
-            if (tabState != null && tabState != state)
-                throw new InvalidOperationException(
-                    $"tabs mix collections ({tabState}, {state}). One strip switches one collection.");
-            tabState = state;
         }
         return this with
         {
             Members = [.. Fields.Select(FindMember)],
             BakedFilters = FindFilters(),
             Elements = elements,
-            TabState = tabState
+            TabState = Is == FormElementKind.Tabs ? StripState(elements) : null
         };
+    }
+
+    /* Asked of the BAKED tabs, because both answers are about row sets and only the bake resolves
+     * (scope, kind) into one. A strip showing the same row set twice draws a second button onto a
+     * case the switch can never reach - the one failure this format leaves no trace of - and an
+     * empty strip is a tab bar with nothing to switch, which is what the author meant to fill.
+     */
+    private static String StripState(List<FormElement> tabs)
+    {
+        if (tabs.Count == 0)
+            throw new InvalidOperationException("tabs: no tab declared. A strip switches between row sets and has none");
+        var shown = new HashSet<String>();
+        foreach (var tab in tabs)
+            if (!shown.Add(tab.RowSet!))
+                throw new InvalidOperationException(
+                    $"tabs: '{tab.RowSet}' is shown by two tabs of one strip. A strip switches, so its tabs are different row sets");
+        return $"$$Tab{tabs[0].RowSet}";
     }
 }
 public enum FormKind
@@ -257,6 +285,23 @@ public sealed record FormMetadata
      * index shows is not what an edit lets you write - so a member the form may not carry reads as
      * a member it cannot find. See CLAUDE.md, "Members".
      */
+    /* The strips this form lays out, in the order it lays them out. One walk, because the template
+     * declares a state property per strip and the XAML binds one per strip - two readers of a fact
+     * that belongs to neither, and the list of collections is not that fact: a form may show a
+     * collection without a strip, or several collections in one.
+     */
+    internal IEnumerable<FormElement> TabStrips()
+    {
+        static IEnumerable<FormElement> Walk(FormElement el)
+        {
+            if (el.Is == FormElementKind.Tabs)
+                yield return el;
+            foreach (var strip in el.Elements.SelectMany(Walk))
+                yield return strip;
+        }
+        return Body.Append(Taskpad).SelectMany(Walk);
+    }
+
     internal FormMetadata Bake(TableMetadata table, List<MemberDescriptor> members)
     {
         // the two slots are nodes too: 'fields' written into a toolbar is read by nobody either

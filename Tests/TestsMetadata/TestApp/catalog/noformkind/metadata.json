@@ -1,0 +1,21 @@
+{
+	"$schema": "../../../../../Platform/A2v10.App.Assets2026/Application/@schemas/metadata-endpoint-json-schema.json#",
+	"description": "A NEGATIVE fixture, and it is schema-invalid on purpose: 'edit' declares no 'is'. The loader has no opinion on it - FormKind.Unknown is C#'s zero - and the screen it builds throws instead, which is the one thing here that is being pinned: a stage past the declaration failing, and the stage after it left unknown. The editor flags this file; the schema is exactly the beam this file says the loader does not have.",
+	"table": "NoFormKinds",
+	"fields": {
+		"Short": {
+			"type": "String",
+			"length": 8
+		}
+	},
+	"forms": {
+		"edit": {
+			"body": [
+				{
+					"is": "group",
+					"fields": [ "Name", "Short" ]
+				}
+			]
+		}
+	}
+}

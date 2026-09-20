@@ -8468,6 +8468,13 @@ table.tree-grid a.toggle.expanded:after {
 .flow-panel.axis-rows {
   flex-direction: row;
 }
+.flow-panel.axis-rows > .control-group:not(.with-width) {
+  flex: 1 1 auto;
+}
+.flow-panel.axis-rows > .flow-container {
+  flex: 1 1 0;
+  min-width: 0;
+}
 .flow-panel.axis-columns {
   flex-direction: column;
 }

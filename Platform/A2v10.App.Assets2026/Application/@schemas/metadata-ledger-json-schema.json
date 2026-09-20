@@ -1,6 +1,5 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "https://a2v10.com/schemas/metadata-ledger-json-schema.json",
     "title": "A2v10 metadata.json (ledger)",
     "description": "Postings against one chart of accounts: ledger/<name>/metadata.json. Written only by 'post' of documents, in mirrored legs - a debit row and a credit row, each carrying the other's account in CorrAcc. The baseline (Id, Date, InOut, Acc, CorrAcc, Sum) is the platform's and is not written here; the provenance (a column of type 'document', and 'operation', 'row' where needed) is declared in 'fields', as in a journal.",
     "type": "object",
@@ -26,9 +25,6 @@
             "$ref": "metadata-endpoint-json-schema.json#/definitions/fields",
             "description": "Provenance, analytics and measures. A column of type 'document' is required (unpost and the transactions dialog find the rows by it); 'operation' and 'row' are found by type as well. Analytics are nullable and sparse - each leg fills its own."
         },
-        "forms": {
-            "type": "object",
-            "additionalProperties": { "$ref": "metadata-endpoint-json-schema.json#/definitions/form" }
-        }
+        "forms": { "$ref": "metadata-endpoint-json-schema.json#/definitions/formSet" }
     }
 }

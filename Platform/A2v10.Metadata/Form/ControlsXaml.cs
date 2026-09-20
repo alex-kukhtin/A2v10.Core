@@ -116,6 +116,22 @@ internal partial class XamlBuilder
                         b.SetBinding(nameof(ComboBox.Value), new Bind(elem.Name));
                     }
                 },
+            /* The card's control, and a cell is where it was missing: a date fell through to the
+             * default and was edited as text, typed by DataType alone. No width - in a cell the
+             * column decides, which is why the card's 12rem does not travel here.
+             */
+            ColumnType.Date => new DatePicker()
+            {
+                CssClass = elem.Type.ToXamlSemanticClass(),
+                Bindings = b => b.SetBinding(nameof(DatePicker.Value), new Bind(elem.Name) { DataType = elem.Type.ToXamlDataType() })
+            },
+            // the card's control, compact because it stands in a cell - the tags dialog's own shape
+            ColumnType.Color => new ColorPicker()
+            {
+                Compact = true,
+                CssClass = elem.Type.ToXamlSemanticClass(),
+                Bindings = b => b.SetBinding(nameof(ColorPicker.Value), new Bind(elem.Name))
+            },
             _ => new TextBox()
                 {
                     Align = elem.Type.ToXamlAlign(),
@@ -472,9 +488,14 @@ internal partial class XamlBuilder
 
         return column.Type switch
         {
+            /* A width, for the same reason the colour has one: a date is a control of a known size,
+             * and in a row everything that names no width takes the leftover. It holds in a column
+             * too - a date box across the whole card was never what it is.
+             */
             ColumnType.Date => new DatePicker()
             {
                 Label = column.Header,
+                Width = Length.FromString("12rem"),
                 CssClass = column.Type.ToXamlSemanticClass(),
                 Bindings = b => b.SetBinding(nameof(DatePicker.Value), valueBind)
             },
@@ -497,6 +518,18 @@ internal partial class XamlBuilder
             ColumnType.Operation => new Header()
             {
                 Bindings = b => b.SetBinding(nameof(Header.Content), new Bind($"{Table.Model}.{column.Name}.Name"))
+            },
+            /* The control the tags dialog has picked a colour with all along, so the vocabulary and
+             * what draws it are the same on both roads. Until now the column fell through to the
+             * default and a colour was typed as a string - the one value where a typo is invisible
+             * on the card and shows as an unpainted badge somewhere else.
+             */
+            ColumnType.Color => new ColorPicker()
+            {
+                Label = column.Header,
+                Width = Length.FromString("8rem"),
+                CssClass = column.Type.ToXamlSemanticClass(),
+                Bindings = b => b.SetBinding(nameof(ColorPicker.Value), valueBind)
             },
             ColumnType.Ref or ColumnType.Document or ColumnType.Account => new SelectorSimple()
             {

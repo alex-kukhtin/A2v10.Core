@@ -105,22 +105,27 @@ internal partial class SqlBuilder(BuilderDescriptor desciptor, IServiceProvider 
         return $"""
         -- {target.Model} - values
         select [{target.CollectionName}!{target.TypeName}!Array] = null,
-            [Id!!Id] = e.[Id], [Name!!Name] = e.[Name]{StateFields(target, "e")}
+            [Id!!Id] = e.[Id], [Name!!Name] = e.[Name]{RefFields(target, "e")}
         from {target.SqlTableName} e where e.[{Constants.FieldNames.Void}] = 0{exceptAll}
         order by e.[{Constants.FieldNames.Order}];
         """;
     }
 
-    /* What a state carries beyond a code and a name: how it is drawn, and what it is to the cycle.
-     * Both recordsets that hand a value to the client send them - the candidates, which the picker
-     * colours, and the map, which is what a LOADED row's value resolves to. Sending them in one and
-     * not the other is a grid of grey badges beside a colourful picker, with nothing said anywhere.
+    /* What a referenced row carries beyond a key and a name. Both recordsets that hand one to the
+     * client send them - the candidates, which the picker colours, and the map, which is what a
+     * LOADED row's value resolves to. Sending them in one and not the other is a grid of grey
+     * badges beside a colourful picker, with nothing said anywhere.
      *
-     * An enum gets neither, and the type printed for it says so too: TsProperties walks the set's
-     * own columns, so what is not a column here is not promised there.
+     * The colour is asked of the SHAPE (TableMetadata.ColorColumn), and that is the whole rule: a
+     * row that has a colour draws in it wherever it is shown, so nothing is declared on the
+     * referring side and no column type carries 'draw me'. A state answers yes because its
+     * baseline holds the column, a catalog because the author wrote one.
+     *
+     * Role stays the state's own - it is not drawing but what the value is to the cycle. An enum
+     * gets neither, and the type printed for it says so too: TsProperties walks the target's own
+     * columns, so what is not a column here is not promised there.
      */
-    internal static String StateFields(TableMetadata target, String alias) =>
-        target.IsState
-            ? $", {alias}.[{Constants.FieldNames.Color}], {alias}.[{Constants.FieldNames.Role}]"
-            : String.Empty;
+    internal static String RefFields(TableMetadata target, String alias) =>
+        (target.ColorColumn is { } color ? $", {alias}.[{color.Name}]" : String.Empty)
+        + (target.IsState ? $", {alias}.[{Constants.FieldNames.Role}]" : String.Empty);
 }

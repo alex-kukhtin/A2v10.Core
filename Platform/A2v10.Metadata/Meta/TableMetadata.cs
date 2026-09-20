@@ -463,16 +463,6 @@ public sealed record TableMetadata
     public String KindCollectionName(String kind) => $"{kind}{DetailsKey}";
     public String KindTypeName(String kind) => $"T{kind}{Model}";
 
-    /* Tab state is per collection, not per document: the strip switching the kinds of 'Rows'
-     * has nothing to say about 'Links'. So there are as many state properties as there are
-     * collections, each named after its own, holding the name of the collection on screen.
-     *
-     * 'First' is declaration order - Kinds is filled from the JSON object and never has an
-     * entry removed, so the order the author wrote the kinds in is the order of the tabs.
-     */
-    public String TabStateName => $"$$Tab{DetailsKey}";
-    public String FirstTabName => Kinds.Count > 0 ? KindCollectionName(Kinds.Keys.First()) : DetailsKey;
-
     /* A row set is addressed by its PARTS - the collection key and the kind key, both written
      * exactly as they were declared. The composed name ('StockRows') is the generated side and
      * never appears in metadata: written there, the composition rule would live twice, once in
@@ -636,6 +626,26 @@ public sealed record TableMetadata
     internal Boolean IsTagEntries => Kind == EndpointKind.TagEntries;
     [JsonIgnore]
     internal Boolean HasPeriod => IsDocument || IsJournal || IsLedger;
+
+    /* The colour a ROW draws in. A property of the row and not of the reference to it, so it is
+     * asked of the shape and never of the kind: a state carries one because its baseline does, a
+     * catalog because the author declared the column, and both paint the same badge wherever the
+     * row is shown. That is why nothing has to be declared on the referring side - the colour
+     * travels with every resolve (SqlBuilder.RefFields) and with every candidate list.
+     *
+     * Two such columns are not an answer: which of them is the row's colour would be a guess, so
+     * none is, and each then draws as an ordinary column of its own. Said here rather than at the
+     * three readers, so they cannot drift on what 'has a colour' means.
+     */
+    [JsonIgnore]
+    internal TableColumn? ColorColumn
+    {
+        get
+        {
+            var colors = this.AllColumns(c => c.Type == ColumnType.Color).Take(2).ToList();
+            return colors.Count == 1 ? colors[0] : null;
+        }
+    }
 
     internal void SetDetailDefaults(TableMetadata table, String key)
     {

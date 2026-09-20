@@ -38,6 +38,26 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Repo
         return $"[{prefix}{item.Column}] {dt}";
     }
 
+    /* What a report TYPE means, in one place. The runtime asks on its way to rendering and the
+     * validator on its way to building the page and nothing else; two copies of this switch would
+     * differ the day a fourth type arrives, and the tool's copy is the one nobody would update.
+     */
+    internal static BaseReportBuilder Create(IServiceProvider serviceProvider,
+        ReportEndpointMetadata endpoint, AppPlatformId platformId) => endpoint.Report.Type switch
+    {
+        "turnover" => new TurnoverReportBuilder(serviceProvider, endpoint.Report, endpoint.Surface, platformId),
+        "trialBalance" => new TrialBalanceReportBuilder(serviceProvider, endpoint.Report, endpoint.Surface, platformId),
+        "chessboard" => new ChessboardReportBuilder(serviceProvider, endpoint.Report, endpoint.Surface, platformId),
+        _ => throw new NotImplementedException($"Invalid Report type '{endpoint.Report.Type}' for {endpoint.Path}")
+    };
+
+    /* The picks a page is drawn for - which groups, which data - resolved against the surface. A
+     * page reads them and nothing else reads them, so drawing one before this is a null reference;
+     * loading builds them from the query, validation from nothing, which is the first open.
+     */
+    internal void SetGrouping(ExpandoObject prms) =>
+        _grouping = new ReportGrouping(_report, _source, prms);
+
     public abstract Task<IDataModel> LoadReportModelAsync(IModelView view, ExpandoObject prms);
     public abstract UIElement CreatePage();
 

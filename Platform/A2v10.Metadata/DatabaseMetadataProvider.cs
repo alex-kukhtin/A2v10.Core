@@ -120,7 +120,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                 "The 'platformid' type is not defined in the database, and app.json declares no 'platformid' to create it from");
     }
 
-    private async Task<AppPlatformId?> DeclaredPlatformIdAsync()
+    // internal for EndpointValidator: the declaration is the only answer a check that never reads the database can have
+    internal async Task<AppPlatformId?> DeclaredPlatformIdAsync()
     {
         using var stream = _codeProvider.FileStreamRO("app.json", primaryOnly: true);
         if (stream == null)

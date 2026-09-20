@@ -22,16 +22,7 @@ internal class ReportEndpointBuilder(IServiceProvider _serviceProvider, ReportEn
 
     public async Task<IAppRuntimeResult> RenderAsync(IModelView view, Boolean isReload)
     {
-        var _source = _endpoint.Surface;
-        var _report = _endpoint.Report;
-
-        BaseReportBuilder reportBuilder = _report.Type switch
-        {
-            "turnover" => new TurnoverReportBuilder(_serviceProvider, _report, _source, _platformId),
-            "trialBalance" => new TrialBalanceReportBuilder(_serviceProvider, _report, _source, _platformId),
-            "chessboard" => new ChessboardReportBuilder(_serviceProvider, _report, _source, _platformId),
-            _ => throw new NotImplementedException($"Invalid Report type '{_report.Type}' for {_endpoint.Path}")
-        };
+        var reportBuilder = BaseReportBuilder.Create(_serviceProvider, _endpoint, _platformId);
 
         var dm = await reportBuilder.LoadReportModelAsync(view,  platformUrl.Query ?? []);
 

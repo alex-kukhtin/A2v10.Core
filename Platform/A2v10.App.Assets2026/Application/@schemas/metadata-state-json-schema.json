@@ -1,6 +1,5 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "https://a2v10.com/schemas/metadata-state-json-schema.json",
     "title": "A2v10 metadata.json (state)",
     "description": "One set of states: the life cycle of an entity, as a closed list of codes each carrying a colour and a role. An enum plus those two, and the two are why it is a kind of its own - a column pointing here says the record HAS a life cycle. Named after the ENTITY whose states these are: 'state/order'. The shape of the table is fixed by the platform (Id, Name, Memo, Order, Void, Color, Role), so this file says only where the rows live and what they are - no fields, no forms, no rules. Transitions are not declared yet.",
     "type": "object",
@@ -42,7 +41,7 @@
                         "enum": [
                             "default", "success", "green", "warning", "orange", "info", "cyan",
                             "danger", "red", "error", "purple", "pink", "gold", "blue", "salmon",
-                            "seagreen", "tan", "magenta", "lightgray", "olive", "teal"
+                            "seagreen", "tan", "magenta", "lightgray", "olive", "teal", "white"
                         ]
                     },
                     "origin": { "$ref": "metadata-endpoint-json-schema.json#/definitions/origin" },

@@ -7,6 +7,13 @@
 
 	&.axis-rows {
 		flex-direction: row;
+		> .control-group:not(.with-width) {
+			flex: 1 1 auto;
+		}
+		> .flow-container {
+			flex: 1 1 0;
+			min-width: 0;
+		}
 	}
 
 	&.axis-columns {

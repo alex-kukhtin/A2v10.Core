@@ -1,6 +1,5 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "https://a2v10.com/schemas/metadata-accplan-json-schema.json",
     "title": "A2v10 metadata.json (accplan)",
     "description": "A chart of accounts: accplan/<name>/metadata.json, always named, even when there is only one. The table is keyed by the account code; its rows are declared in the seed file beside this one and written by the deploy. The baseline (Id, Name, Parent, AccountType, NormalBalance, Void, IsSystem, RowVersion, stamps) is the platform's and is not written here.",
     "type": "object",
@@ -26,9 +25,6 @@
             "$ref": "metadata-endpoint-json-schema.json#/definitions/fields",
             "description": "The author's own attributes of an account, next to the baseline."
         },
-        "forms": {
-            "type": "object",
-            "additionalProperties": { "$ref": "metadata-endpoint-json-schema.json#/definitions/form" }
-        }
+        "forms": { "$ref": "metadata-endpoint-json-schema.json#/definitions/formSet" }
     }
 }
