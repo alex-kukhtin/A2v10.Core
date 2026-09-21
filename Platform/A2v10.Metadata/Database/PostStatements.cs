@@ -120,7 +120,7 @@ internal sealed class PostStatements
 
     private IEnumerable<(String Source, String Target)> CreateMapping(PostMetadata p, TableMetadata? detailsTable)
     {
-        var journal = p.JournalTableCheck;
+        var journal = p.TargetTableCheck;
         var headerColumns = _table.AllColumns().ToList();
         var rowColumns = detailsTable?.AllColumns().ToList();
 
@@ -216,7 +216,7 @@ internal sealed class PostStatements
 
     private String InsertIntoJournal(PostMetadata p)
     {
-        var journal = p.JournalTableCheck;
+        var journal = p.TargetTableCheck;
         CheckDirection(p, journal);
 
         var (detailsTable, join) = EachJoin(p);
@@ -246,7 +246,7 @@ internal sealed class PostStatements
      */
     private String InsertIntoLedger(PostMetadata p)
     {
-        var ledger = p.JournalTableCheck;
+        var ledger = p.TargetTableCheck;
         var head = $"Post {_endpoint.Path} -> {ledger.Path}";
         var (detailsTable, join) = EachJoin(p);
         var headerColumns = _table.AllColumns().ToList();

@@ -365,6 +365,36 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             foreach (var kind in details.Kinds.Keys)
                 Check(kind, $"details.{key}.kinds");
         }
+
+        /* Legal names, composed, may still meet: a type is T{kind}{model}, a row set's array is
+         * {kind}{key}, and neither composition knows the others. Two shapes under one type name, or
+         * two things under one member of the record, reach the model and the .d.ts as one - silently,
+         * the second wins. So the check is on what lands, not on what was written: a repeated
+         * 'model' is one way to collide, a kind spelling another collection's name is the other.
+         */
+        static String RowSetOf(String key, String? kind) =>
+            kind == null ? $"details '{key}'" : $"details '{key}' (kind '{kind}')";
+
+        void Unique(IEnumerable<(String Name, String Source)> landed, String what)
+        {
+            foreach (var g in landed.GroupBy(x => x.Name).Where(g => g.Count() > 1))
+                throw new InvalidOperationException(
+                    $"{file}: {String.Join(" and ", g.Select(x => x.Source))} all produce {what} '{g.Key}' - one name, two things under it");
+        }
+
+        Unique([
+            (storage.TypeName, "the record"),
+            .. storage.Details.SelectMany(d => d.Value.RowSets().Select(rs => (rs.Type, RowSetOf(d.Key, rs.Kind))))
+        ], "type");
+
+        // the members of the record object: its columns, an array per row set, and the tags slot
+        List<(String Name, String Source)> members = [
+            .. storage.AllColumns().Select(c => (c.ModelName, $"field '{c.Name}'")),
+            .. storage.Details.SelectMany(d => d.Value.RowSets().Select(rs => (rs.Collection, RowSetOf(d.Key, rs.Kind))))
+        ];
+        if (storage.HasTags)
+            members.Add((Constants.FieldNames.Tags, "the tags trait"));
+        Unique(members, $"member of {storage.Model}");
     }
 
     /* The rows of a set, checked where the file is read and without a database - keys, colours and
@@ -1034,7 +1064,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
          */
         async Task CheckConstAccountsAsync(PostMetadata p)
         {
-            var ledger = p.JournalTableCheck;
+            var ledger = p.TargetTableCheck;
             foreach (var (leg, blocks) in new[] { ("dt", p.Dt!), ("ct", p.Ct!) })
                 foreach (var (name, code) in blocks.Const)
                 {
@@ -1060,7 +1090,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         {
             if (!p.IsSql)
             {
-                p.JournalTable = p.IsLedger
+                p.TargetTable = p.IsLedger
                     ? await TargetAsync("ledger", p.Ledger!, EndpointKind.Ledger)
                     : await TargetAsync("journal", p.Journal!, EndpointKind.Journal);
                 if (p.IsLedger)
@@ -1071,7 +1101,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             var journals = new List<TableMetadata>();
             foreach (var path in p.Journals)
                 journals.Add(await TargetAsync("journals", path, EndpointKind.Journal));
-            p.JournalTables = journals;
+            p.SqlTargets = journals;
         }
         _ = new PostStatements(normal);
     }

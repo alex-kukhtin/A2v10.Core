@@ -128,7 +128,7 @@ public record TableColumn
         Name = name;
         Type = type;
     }
-    public String Name { get; set; } = default!;
+    public String Name { get; private set; } = default!;
     public ColumnType Type { get; init; } = default!;
     public String? Target { get; init; } // for refs
 
@@ -206,6 +206,8 @@ public record TableColumn
     internal String ModelName => Type == ColumnType.Parent ? Constants.FieldNames.ParentElem : Name;
     // a reference shows its 'Name' property: the resolver fills it from the target's Presentation
     internal String DisplayPath => (IsRef) ? $"{Name}.{Constants.FieldNames.Name}" : ModelName;
+
+    internal void SetName(String name) => Name = name;
 }
 
 public enum PostDirection
@@ -291,22 +293,22 @@ public sealed record PostMetadata
     #endregion
 
     [JsonIgnore]
-    public TableMetadata? JournalTable { get; set; }
+    public TableMetadata? TargetTable { get; set; }
     [JsonIgnore]
-    public List<TableMetadata> JournalTables { get; set; } = [];
+    public List<TableMetadata> SqlTargets { get; set; } = [];
     [JsonIgnore]
-    public TableMetadata JournalTableCheck => JournalTable ?? throw new InvalidOperationException($"RefTable for '{Journal}' is null");
+    public TableMetadata TargetTableCheck => TargetTable ?? throw new InvalidOperationException($"Target table for '{TargetPath}' is null");
     [JsonIgnore]
     public Boolean IsSql => Sql != null;
     [JsonIgnore]
     public Boolean IsLedger => Ledger != null;
-    // the path a mapped entry writes to; JournalTable holds its table for a journal and a ledger alike
+    // the path a mapped entry writes to - a journal or a ledger
     [JsonIgnore]
     internal String? TargetPath => Journal ?? Ledger;
 
     // the journals this posting touches, whoever writes them: what reads the RESULT counts tables
     [JsonIgnore]
-    internal IEnumerable<TableMetadata> Targets => IsSql ? JournalTables : [JournalTableCheck];
+    internal IEnumerable<TableMetadata> Targets => IsSql ? SqlTargets : [TargetTableCheck];
 
     [JsonIgnore]
     public Int16 InOutInt => Dir switch { PostDirection.In => 1, PostDirection.Out => -1, _ => 0 };
@@ -592,7 +594,7 @@ public sealed record TableMetadata
     internal void Construct(String? masterModel = null)
     {
         DefaultColumns = [.. this.CreateDefaultColumns()];
-        Columns = [.. _fields.Select(kp => { kp.Value.Name = kp.Key; return kp.Value; })];
+        Columns = [.. _fields.Select(kp => { kp.Value.SetName(kp.Key); return kp.Value; })];
         var path = masterModel == null ? Model : $"{masterModel}.{Model}";
         SqlTableTypeName = $"{SqlSchema}.[{path}.Meta.TableType]";
     }
