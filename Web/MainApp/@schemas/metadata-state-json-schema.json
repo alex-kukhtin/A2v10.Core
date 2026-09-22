@@ -1,0 +1,61 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "A2v10 metadata.json (state)",
+    "description": "One set of states: the life cycle of an entity, as a closed list of codes each carrying a colour and a role. An enum plus those two, and the two are why it is a kind of its own - a column pointing here says the record HAS a life cycle. Named after the ENTITY whose states these are: 'state/order'. The shape of the table is fixed by the platform (Id, Name, Memo, Order, Void, Color, Role), so this file says only where the rows live and what they are - no fields, no forms, no rules. Transitions are not declared yet.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [ "table" ],
+    "properties": {
+        "$schema": { "type": "string" },
+        "description": { "type": "string", "description": "For the model, not the platform: nothing reads it - no generator, runtime or deploy. Where the model writes down what it must know about this endpoint - its rules and the reasons for them - so the next session finds them here." },
+        "table": {
+            "type": "string",
+            "description": "The SQL table of the set, in schema 'state'. Declared and never derived from the folder - the same rule every other endpoint follows."
+        },
+        "origin": { "$ref": "metadata-endpoint-json-schema.json#/definitions/origin" },
+        "model": {
+            "type": "string",
+            "description": "Base of the generated names: the row type ('T' + model), the array (its plural) and the localization keys of the values. Defaults to the folder name in PascalCase plus 'State' - 'order' gives 'OrderState' - because the entity's own word already names its records."
+        },
+        "values": {
+            "type": "array",
+            "description": "The states, in the order they are shown - 'order' is the position here and is never written. The list is the whole truth about the set: a state dropped from it is marked void on deploy, never deleted, so the records that carry it keep it and it merely stops being offered. The 'All' row a filter shows is not declared here - the platform adds it, with the empty string for a key and no role.",
+            "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [ "id", "role" ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "maxLength": 64,
+                        "description": "The code, as the referencing column stores it."
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Presentation. Defaults to the localization key '@[{model}.{id}]'. The key carries the set's name on purpose: two equal codes in two sets would otherwise collapse into one translation, and that does not surface until the second language."
+                    },
+                    "memo": { "type": "string" },
+                    "color": {
+                        "type": "string",
+                        "description": "How the state is drawn - a badge in the grid, a coloured item in the picker. Lower case: the value goes straight into a CSS class, where case matters. Optional; without one the state draws as a plain label. A colour named 'success' is not the role of that name.",
+                        "enum": [
+                            "default", "success", "green", "warning", "orange", "info", "cyan",
+                            "danger", "red", "error", "purple", "pink", "gold", "blue", "salmon",
+                            "seagreen", "tan", "magenta", "lightgray", "olive", "teal", "white"
+                        ]
+                    },
+                    "origin": { "$ref": "metadata-endpoint-json-schema.json#/definitions/origin" },
+                    "role": {
+                        "type": "string",
+                        "description": "What this state is to the cycle, spelled exactly as it is stored. 'Initial' - a new record starts here; exactly one state is it. 'InProgress' - the cycle is under way; any number. 'Success' - it reached its goal; exactly one state is it. 'Failure' - it ended without reaching the goal; any number, and none of them means a technical error. Nothing else is declared: 'is it over' is Success or Failure, 'is it still open' is Initial or InProgress.",
+                        "enum": [ "Initial", "InProgress", "Success", "Failure" ]
+                    },
+                    "void": {
+                        "type": "boolean",
+                        "description": "Withdrawn from use: stays in the records that already carry it and leaves the list of candidates. A record holding a void state opens with an empty control and cannot be saved until a live one is picked - which is the intended migration, not a defect. Void states are not counted when the platform checks for exactly one 'Initial' and one 'Success'."
+                    }
+                }
+            }
+        }
+    }
+}

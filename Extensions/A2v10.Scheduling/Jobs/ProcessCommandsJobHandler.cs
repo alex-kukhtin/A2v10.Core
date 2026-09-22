@@ -20,7 +20,11 @@ public class ProcessCommandsJobHandler(ILogger<ProcessCommandsJobHandler> _logge
         try
         {
             _logger.LogInformation("ProcessCommandsJob at {Time}, DataSource = {ds}", DateTime.Now, jobInfo.DataSource);
-            var list = await _dbContext.LoadListAsync<CommandJobData>(jobInfo.DataSource, "a2sch.[Command.List]", null);
+            // only Limit: Command.List rejects unknown parameters; absent => SQL default (10)
+            var prms = new ExpandoObject();
+            if (jobInfo.Parameters is IDictionary<String, Object?> src && src.TryGetValue("Limit", out var limit) && limit != null)
+                prms.TryAdd("Limit", Convert.ToInt32(limit)); // Bind yields a string
+            var list = await _dbContext.LoadListAsync<CommandJobData>(jobInfo.DataSource, "a2sch.[Command.List]", prms);
             if (list == null || list.Count == 0)
                 return;
             foreach (var itm in list)
@@ -42,6 +46,7 @@ public class ProcessCommandsJobHandler(ILogger<ProcessCommandsJobHandler> _logge
             var commandType = _commandProvider.FindCommand(job.Command);
             if (_serviceProvider.GetRequiredService(commandType) is not IScheduledCommand commandHandler)
                 throw new InvalidOperationException($"Type {commandType} does not implement IScheduledCommand");
+            await WriteStart(dataSource, job);
             await commandHandler.ExecuteAsync(job.Data);
             await WriteComplete(dataSource, job, true);
         }
@@ -50,6 +55,14 @@ public class ProcessCommandsJobHandler(ILogger<ProcessCommandsJobHandler> _logge
 			_logger.LogCritical("Failed to command '{cmd}'. {ex}", job.Command, ex);
 			await WriteComplete(dataSource, job, false, ex);
         }
+    }
+
+    private Task WriteStart(String? dataSource, CommandJobData job)
+    {
+        var prms = new ExpandoObject();
+        prms.TryAdd("Id", job.Id);
+        prms.TryAdd("Lock", job.Lock);
+        return _dbContext.ExecuteExpandoAsync(dataSource, "a2sch.[Command.Start]", prms);
     }
 
     private Task WriteComplete(String? dataSource, CommandJobData job, Boolean success, Exception? ex = null)

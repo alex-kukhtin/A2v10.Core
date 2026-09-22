@@ -14,6 +14,12 @@ This is a decision about what the queue guarantees, and it rests on three things
 
 Stale locks are pre-existing and untouched: a process killed mid-command leaves `Lock is not null, Complete = 0` forever, and nothing ever reclaims it. Ordering is unaffected — `Command.List` skips locked rows rather than waiting — so a trailing command will run as if the dead one had finished.
 
+## Run time is `UtcDateComplete − UtcDateStarted`, never from `LockDate`
+
+`Command.List` stamps one `LockDate` on the whole batch, and the batch runs sequentially, so `LockDate` is when a command was taken, not when it started. `Command.Start` stamps `UtcDateStarted` per command, right before `ExecuteAsync` and after the handler resolves — an unknown command never started. `LockDate → UtcDateStarted` is then the wait inside the batch.
+
+The package code now calls `Command.Start`: deploy `a2_scheduling.sql` together with the package. Old SQL + new code fails every command into `Complete = -1`, which is never retried.
+
 ## Ordering inside one Collection.Queue call — not built (2026-09)
 
 `a2sch.[Command.TableType]` has no ordering column, and it cannot be faked: TVP rows have no order, and `insert ... select` fires the `Id` default constraint (`next value for a2sch.SQ_Commands`) per row in an undefined order. So a single `QueueCommandsAsync` call cannot say "this one goes last". Queue the trailing command with a separate `Command.Queue` call after the list, or queue the items one by one — insert time then orders the Ids.

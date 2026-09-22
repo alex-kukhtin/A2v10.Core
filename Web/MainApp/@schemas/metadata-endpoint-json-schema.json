@@ -45,10 +45,7 @@
             "type": "array",
             "items": { "$ref": "#/definitions/trait" }
         },
-        "forms": {
-            "type": "object",
-            "additionalProperties": { "$ref": "#/definitions/form" }
-        },
+        "forms": { "$ref": "#/definitions/formSet" },
         "printForms": {
             "type": "array",
             "description": "Print blanks of this endpoint - a flat list, one entry per blank, in menu order. A blank is not a kind: it has no window of its own and is invoked from inside the endpoint. The blank file is addressed by path and need not sit next to the endpoint; its data model ('Model') is declared inside the blank file, not here. A non-empty list is what puts the Print command on the default toolbars - there is no trait for it. Never inherited from 'storage': a blank is paper under one act.",
@@ -84,12 +81,11 @@
         "column": {
             "type": "object",
             "additionalProperties": false,
-            "required": [ "type" ],
             "properties": {
                 "type": { "$ref": "#/definitions/columnType" },
                 "target": {
                     "type": "string",
-                    "description": "For a reference: path of the endpoint it points at, e.g. '/catalog/item'. For 'account': a chart of accounts, '/accplan/national'."
+                    "description": "For a reference: path of the endpoint it points at, e.g. '/catalog/item'. Three types name the kind they point at, and the load refuses anything else: for 'enum' a set of values, '/enum/vatrate'; for 'state' a set of states, '/state/order'; for 'account' a chart of accounts, '/accplan/national'."
                 },
                 "length": {
                     "type": "integer",
@@ -335,24 +331,95 @@
             }
         },
 
-        "form": {
+        "formSet": {
+            "description": "Three forms and no more: the key set is closed (DeclarationBake.BuildForms refuses a fourth with 'Available: index, browse, edit'). A declared form replaces the default entirely, never node by node. Written per endpoint, so an operation declaring its own 'edit' still shows the storage's 'index'.",
             "type": "object",
             "additionalProperties": false,
             "properties": {
-                "is": { "$ref": "#/definitions/formKind" },
-                "scope": { "type": "string" },
+                "index": { "$ref": "#/definitions/listForm" },
+                "browse": { "$ref": "#/definitions/listForm" },
+                "edit": { "$ref": "#/definitions/editForm" }
+            }
+        },
+
+        "listForm": {
+            "description": "'index' - the page over the collection - and 'browse', the dialog picked from. Which of the two is drawn follows the ACTION (IndexPageXaml.CreateXamlContainer), so there is no root kind to write here.",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
                 "body": {
                     "type": "array",
-                    "items": { "$ref": "#/definitions/formElement" }
+                    "items": { "$ref": "#/definitions/formNode" }
                 },
-                "toolbar": { "$ref": "#/definitions/formElement" },
-                "taskpad": { "$ref": "#/definitions/formElement" }
+                "toolbar": { "$ref": "#/definitions/toolbarSlot" },
+                "taskpad": { "$ref": "#/definitions/taskpadSlot" }
             }
+        },
+
+        "editForm": {
+            "description": "The record's own form - the only one whose root kind is a choice, and the only place 'is' is read at all.",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [ "is" ],
+            "$comment": "'is' is required rather than defaulted: FormKind.Unknown is C#'s zero, 'not written', and EditDialogXaml throws on it - so a form leaving it out fails at the first render, not at the load.",
+            "properties": {
+                "is": { "$ref": "#/definitions/formKind" },
+                "body": {
+                    "type": "array",
+                    "items": { "$ref": "#/definitions/formNode" }
+                },
+                "toolbar": { "$ref": "#/definitions/toolbarSlot" },
+                "taskpad": { "$ref": "#/definitions/taskpadSlot" }
+            },
+            "allOf": [
+                {
+                    "$comment": "DeclarationBake: \"form 'edit': 'toolbar' declared on a dialog, which has no command bar.\" Refused here on the key, where the load refuses it on a non-empty 'commands'.",
+                    "if": { "properties": { "is": { "const": "dialog" } }, "required": [ "is" ] },
+                    "then": { "properties": { "toolbar": false } }
+                }
+            ]
+        },
+
+        "formNode": {
+            "description": "A form element anywhere but inside a tab strip - that is, anything but a tab: a tab is drawn only by its strip.",
+            "allOf": [
+                { "$ref": "#/definitions/formElement" },
+                {
+                    "properties": {
+                        "is": {
+                            "enum": [ "group", "tabs", "dataGrid", "treeGrid", "taskpad", "toolbar", "pager", "filters" ]
+                        }
+                    }
+                }
+            ]
+        },
+
+        "formTab": {
+            "description": "A strip shows tabs and nothing else.",
+            "allOf": [
+                { "$ref": "#/definitions/formElement" },
+                { "properties": { "is": { "const": "tab" } } }
+            ]
+        },
+
+        "toolbarSlot": {
+            "allOf": [
+                { "$ref": "#/definitions/formElement" },
+                { "properties": { "is": { "const": "toolbar" } } }
+            ]
+        },
+
+        "taskpadSlot": {
+            "allOf": [
+                { "$ref": "#/definitions/formElement" },
+                { "properties": { "is": { "const": "taskpad" } } }
+            ]
         },
 
         "formElement": {
             "type": "object",
             "additionalProperties": false,
+            "required": [ "is" ],
             "properties": {
                 "is": { "$ref": "#/definitions/formElementKind" },
                 "scope": {
@@ -382,7 +449,85 @@
                 },
                 "axis": { "$ref": "#/definitions/flowAxis" },
                 "labelAt": { "$ref": "#/definitions/labelAt" }
-            }
+            },
+            "$comment": "The branches below are a second reading of FormElement.ContentKeys and CheckElement and of nothing else: what each kind's render reads, and where it may stand. Refused here in the editor, one step before the load refuses the same thing. 'axis'/'labelAt' are refused off a group as well - only CreateGroupPanel reads them, and a schema, unlike the loader, can tell a written enum from an absent one. 'tab' keeps its list keys: the platform has not described what else a tab may carry, and a schema is not the place to decide it - but a tab inside a tab is placement, which is decided (CheckElement: 'a tab is drawn only by its strip'), so a tab's 'elements' take the same node as a body's. An empty strip is refused for the same reason the load refuses it (StripState: 'tabs: no tab declared'). 'is' is required and never defaulted: FormElementKind.Group is C#'s zero, so a node that leaves it out becomes a group in silence, and this file is the only place that can tell an absent key from a written one.",
+            "allOf": [
+                {
+                    "if": { "properties": { "is": { "const": "group" } }, "required": [ "is" ] },
+                    "then": {
+                        "properties": {
+                            "scope": false, "kind": false, "filters": false, "commands": false,
+                            "elements": { "items": { "$ref": "#/definitions/formNode" } }
+                        }
+                    }
+                },
+                {
+                    "if": { "properties": { "is": { "const": "tabs" } }, "required": [ "is" ] },
+                    "then": {
+                        "properties": {
+                            "scope": false, "kind": false, "fields": false, "filters": false,
+                            "commands": false, "axis": false, "labelAt": false,
+                            "elements": { "minItems": 1, "items": { "$ref": "#/definitions/formTab" } }
+                        }
+                    }
+                },
+                {
+                    "if": { "properties": { "is": { "const": "tab" } }, "required": [ "is" ] },
+                    "then": {
+                        "required": [ "scope" ],
+                        "properties": {
+                            "axis": false, "labelAt": false,
+                            "elements": { "items": { "$ref": "#/definitions/formNode" } }
+                        }
+                    }
+                },
+                {
+                    "if": { "properties": { "is": { "enum": [ "dataGrid", "treeGrid" ] } }, "required": [ "is" ] },
+                    "then": {
+                        "properties": {
+                            "scope": false, "kind": false, "elements": false, "filters": false,
+                            "commands": false, "axis": false, "labelAt": false
+                        }
+                    }
+                },
+                {
+                    "if": { "properties": { "is": { "const": "taskpad" } }, "required": [ "is" ] },
+                    "then": {
+                        "properties": {
+                            "scope": false, "kind": false, "fields": false, "filters": false,
+                            "commands": false, "axis": false, "labelAt": false,
+                            "elements": { "items": { "$ref": "#/definitions/formNode" } }
+                        }
+                    }
+                },
+                {
+                    "if": { "properties": { "is": { "const": "toolbar" } }, "required": [ "is" ] },
+                    "then": {
+                        "properties": {
+                            "scope": false, "kind": false, "elements": false, "fields": false,
+                            "filters": false, "axis": false, "labelAt": false
+                        }
+                    }
+                },
+                {
+                    "if": { "properties": { "is": { "const": "pager" } }, "required": [ "is" ] },
+                    "then": {
+                        "properties": {
+                            "scope": false, "kind": false, "elements": false, "fields": false,
+                            "filters": false, "commands": false, "axis": false, "labelAt": false
+                        }
+                    }
+                },
+                {
+                    "if": { "properties": { "is": { "const": "filters" } }, "required": [ "is" ] },
+                    "then": {
+                        "properties": {
+                            "scope": false, "kind": false, "elements": false, "fields": false,
+                            "commands": false, "axis": false, "labelAt": false
+                        }
+                    }
+                }
+            ]
         },
 
         "commandBarItem": {
@@ -442,14 +587,26 @@
         },
 
         "formKind": {
+            "description": "Read for 'edit' only, where the same record is edited on a page or in a dialog. 'unknown' is not a spelling: it is the C# zero standing for a key nobody wrote.",
             "type": "string",
-            "enum": [ "unknown", "page", "dialog" ]
+            "enum": [ "page", "dialog" ]
         },
 
         "formElementKind": {
             "type": "string",
             "enum": [
                 "group", "tabs", "tab", "dataGrid", "treeGrid", "taskpad", "toolbar", "pager", "filters"
+            ],
+            "enumDescriptions": [
+                "A layout panel: the editors it carries ('fields') and the groups under it ('elements'). The only kind that reads 'axis' and 'labelAt'.",
+                "A tab strip. Holds tabs and nothing else; the tabs of one strip are different row sets.",
+                "One row set inside a strip: 'scope' names the collection, 'kind' one of its kinds. Drawn only by its strip.",
+                "A grid over the collection this form is scoped to. Shows 'fields'.",
+                "A tree over the collection this form is scoped to, read whole. Shows 'fields'.",
+                "The side panel. Holds 'elements'.",
+                "A command bar. Holds 'commands' - the author's own; the standard bar is the template's and no form declares it.",
+                "The pager of the grid. Shows nothing of its own.",
+                "The filter panel. 'filters' are references into the endpoint's filter namespace, not fields."
             ]
         },
 
@@ -464,11 +621,12 @@
         },
 
         "columnType": {
+            "description": "What is stored in the column and how. Not required: not written = default: string (ColumnType.String is the platform's default), so a column declared as {} is a string one.",
             "type": "string",
             "enum": [
                 "string", "id", "name", "memo", "rowNumber", "done", "void", "isSystem",
                 "isFolder", "parent", "folder", "user", "rowKind", "operation",
-                "document", "documentType", "row", "rowVersion", "color", "enum", "account", "autonum",
+                "document", "documentType", "row", "rowVersion", "color", "enum", "state", "account", "autonum",
                 "company", "direction",
                 "amount", "price", "qty", "percent", "factor",
                 "ref", "date", "dateTime", "money", "boolean",

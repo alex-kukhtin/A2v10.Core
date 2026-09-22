@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2026 Oleksandr Kukhtin
 
-Last updated : 08 sep 2026
-module version : 8653
+Last updated : 19 sep 2026
+module version : 8663
 */
 ------------------------------------------------
 set nocount on;
@@ -148,5 +148,62 @@ begin
 	set nocount on;
 	set transaction isolation level read committed;
 	set xact_abort on;
+
+	/* a2meta.Columns is the DESIRED schema, not the previous one: the seed is the deploy's first
+	   batch and its 'not matched by source' arm deletes, so the table IS the declaration.
+	   INFORMATION_SCHEMA is the fact, and a row missing there is a column to add. Adding is all: a
+	   changed type, a dropped column and the indexes are not its business yet. No transaction:
+	   'add column' is additive, so a half-done run is finished by the next one, while one over the
+	   whole walk would hold schema locks for the length of the deploy. */
+
+	declare @alters table([schema] sysname, [table] sysname, [stmt] nvarchar(max));
+
+	/* Type rendered from the three facets by the same fork as SqlDbTypeInfo.SqlFullName. Not stored:
+	   the seed takes a fact only when SQL must answer it for the whole application - the price is one
+	   fork in two languages. Nullable and default are one decision, as in the declaration: a default
+	   is the only road to NOT NULL (DeployNullable), so a not-null add carries one. Id and Master
+	   carry none and fail loudly on a non-empty table - not filtered out, since silence there is the
+	   bug being ended. The join to TABLES is for whoever execs this procedure on its own. */
+
+	insert into @alters([schema], [table], [stmt])
+	select d.[schema], d.[table],
+		N'alter table [' + d.[schema] + N'].[' + d.[table] + N'] add ' +
+			string_agg(d.[def], N', ') within group (order by d.[column])
+	from (
+		select c.[schema], c.[table], c.[column],
+			[def] = cast(N'[' + c.[column] + N'] ' + c.[datatype] +
+				case
+					when c.[length] = -1 then N'(max)'
+					when c.[length] is not null then N'(' + cast(c.[length] as nvarchar(16)) + N')'
+					when c.[precision] is not null then
+						N'(' + cast(c.[precision] as nvarchar(8)) + N', ' + cast(c.[scale] as nvarchar(8)) + N')'
+					else N''
+				end +
+				case when c.[nullable] = 1 then N'' else N' not null' end +
+				case when c.[default] is null then N''
+					else N' constraint DF_' + c.[table] + N'_' + c.[column] + N' default(' + c.[default] + N')'
+				end as nvarchar(max))
+		from a2meta.Columns c
+			inner join INFORMATION_SCHEMA.TABLES t on t.TABLE_SCHEMA = c.[schema] and t.TABLE_NAME = c.[table]
+				and t.TABLE_TYPE = N'BASE TABLE'
+		where not exists(select * from INFORMATION_SCHEMA.COLUMNS ic
+			where ic.TABLE_SCHEMA = c.[schema] and ic.TABLE_NAME = c.[table] and ic.COLUMN_NAME = c.[column])
+	) d
+	group by d.[schema], d.[table];
+
+	-- printed and not returned: the deploy runs this through ExecuteNonQuery, which drops a result set
+	declare @stmt nvarchar(max);
+	declare #crs cursor local fast_forward read_only for
+		select [stmt] from @alters order by [schema], [table];
+	open #crs;
+	fetch next from #crs into @stmt;
+	while @@fetch_status = 0
+	begin
+		print @stmt;
+		exec sp_executesql @stmt;
+		fetch next from #crs into @stmt;
+	end
+	close #crs;
+	deallocate #crs;
 end
 go

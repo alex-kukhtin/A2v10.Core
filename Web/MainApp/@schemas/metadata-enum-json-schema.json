@@ -1,6 +1,5 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "https://a2v10.com/schemas/metadata-enum-json-schema.json",
     "title": "A2v10 metadata.json (enum)",
     "description": "One enum set: a closed list of codes that a column points at and that code branches on. An open list somebody browses is a catalog, not this. The shape of the table is fixed by the platform (Id, Name, Memo, Order, Void), so this file says only where the rows live and what they are - no fields, no forms, no rules: nothing renders a page here, the values arrive with whatever screen references them.",
     "type": "object",

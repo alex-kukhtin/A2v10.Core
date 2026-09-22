@@ -43,7 +43,8 @@ Rest parameters depend on the handler type.
 # Hanlder types in this package
 
 * **A2v10.Scheduling.ExecuteSqlJobHandler** - executes a stored procedure
-* **A2v10.Scheduling.ProcessCommandsJobHandler** - processes the command queue
+* **A2v10.Scheduling.ProcessCommandsJobHandler** - processes the command queue.
+  `Parameters.Limit` - max commands per run (default 10)
 
 
 

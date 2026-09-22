@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2008-2024 Oleksandr Kukhtin
 
-Last updated : 18 09 2026
-module version : 8662
+Last updated : 22 09 2026
+module version : 8665
 */
 
 /*
@@ -40,11 +40,16 @@ create table a2sch.Commands
 	UtcRunAt datetime null,
 	Lock uniqueidentifier null,
 	LockDate datetime null,
+	UtcDateStarted datetime null,
 	[UtcDateCreated] datetime not null
 		constraint DF_Commands_UtcDateCreated default(getutcdate()),
 	[UtcDateComplete] datetime null,
-	Error nvarchar(1024) sparse null 
+	Error nvarchar(1024) sparse null
 );
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA=N'a2sch' and TABLE_NAME=N'Commands' and COLUMN_NAME=N'UtcDateStarted')
+	alter table a2sch.Commands add UtcDateStarted datetime null;
 go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2sch' and TABLE_NAME=N'Exceptions')
@@ -84,6 +89,19 @@ begin
 	select b.Id, b.Command, b.[Data], b.Lock
 	from @inst t inner join a2sch.Commands b on t.Id = b.Id
 	order by b.Id; -- required!
+end
+go
+------------------------------------------------
+create or alter procedure a2sch.[Command.Start]
+@Id bigint,
+@Lock uniqueidentifier
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+
+	update a2sch.Commands set UtcDateStarted = getutcdate()
+	where Id = @Id and Lock = @Lock;
 end
 go
 ------------------------------------------------

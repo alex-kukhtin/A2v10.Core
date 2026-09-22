@@ -1,4 +1,5 @@
-﻿2026-09-20 (next: 8665)
+﻿2026-09-22 (next: 8666)
+
 
 !Workflow.Module (scheduling, workflow.engine)
 
@@ -54,3 +55,9 @@ A2v10.Web.Assets
 A2v10.App.Assets
 
 A2v10.CodeGen.Support
+
+A2v10.Cli
+	A2v10.Metadata	
+		A2v10.ViewEngine.Xaml
+		A2v10.Services
+	A2v10.Platform.Web

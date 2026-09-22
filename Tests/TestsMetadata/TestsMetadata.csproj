@@ -22,7 +22,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Data.Core" Version="10.1.7620" />
+		<PackageReference Include="A2v10.Data.Core" Version="10.1.7621" />
 		<PackageReference Include="A2v10.Data.Providers" Version="10.1.7610" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.12" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
