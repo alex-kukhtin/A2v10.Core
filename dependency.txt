@@ -1,5 +1,8 @@
 ﻿2026-09-22 (next: 8666)
 
+A2v10.App.Assets2026
+A2v10.Cli
+A2v10.Metadata	
 
 !Workflow.Module (scheduling, workflow.engine)
 
@@ -53,6 +56,7 @@ A2v10.Metadata
 
 A2v10.Web.Assets
 A2v10.App.Assets
+A2v10.App.Assets2026
 
 A2v10.CodeGen.Support
 
