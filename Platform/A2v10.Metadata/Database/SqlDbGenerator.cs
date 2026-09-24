@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 using Microsoft.Data.SqlClient;
@@ -54,7 +55,29 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
 
     private String DatabaseFilePath => _appCodeProvider.GetMainModuleFullPath("_sqlscripts", DB_FILE);
 
+    private String DeployFile => DatabaseFilePath.NormalizeSlash();
+
     public async Task<DeployDatabaseResult> CheckDeployAsync(String? dataSource, IEnumerable<TableMetadata> tables, AppPlatformId platformId)
+    {
+        if (await WriteDeployAsync(dataSource, tables, platformId) is not var (script, hash))
+            return new DeployDatabaseResult(DeployFile, false);
+
+        // DEPLOY DATABASE
+        // Running it here verifies the artifact against a live database;
+        // it is not a separate deployment path.
+        await DeployDatabaseAsync(dataSource, DatabaseFilePath, script);
+
+        // save hash
+        await _dbContext.ExecuteAsync<DbHash>(dataSource, "a2meta.[SetDbHash]", new DbHash() { Hash = hash });
+        return new DeployDatabaseResult(DeployFile, true);
+    }
+
+    /* Generate and write deploydatabase.sql, without executing it. On its own - for
+     * 'a2 meta deploy --full', where the file is executed inside full.sql and the hash is left to the
+     * next plain deploy: that one sees the mismatch, runs the idempotent script again and writes it.
+     * null - the hash matched: the database got this very file already, and it lies on disk.
+     */
+    public async Task<(String Script, String Hash)?> WriteDeployAsync(String? dataSource, IEnumerable<TableMetadata> tables, AppPlatformId platformId)
     {
         var seedScript = await GenerateMetadataSeedAsync(tables);
         var seedHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(seedScript ?? "new"))).ToLowerInvariant();
@@ -62,7 +85,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         var dbHash = await _dbContext.LoadAsync<DbHash>(dataSource, "a2meta.[GetDbHash]");
 
         if (dbHash?.Hash == seedHash)
-            return new DeployDatabaseResult(DatabaseFilePath.NormalizeSlash(), false);
+            return null;
 
         var allScript = new StringBuilder();
 
@@ -91,16 +114,9 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         allScript.AppendLine(CreateIndexesScript(tables));
 
         // Materialize first, execute second - and execute exactly the same text.
-        await WriteDeployDatabaseFileAsync(allScript.ToString());
-
-        // DEPLOY DATABASE
-        // Running it here verifies the artifact against a live database;
-        // it is not a separate deployment path.
-        await DeployDatabaseAsync(dataSource, allScript.ToString());
-
-        // save hash
-        await _dbContext.ExecuteAsync<DbHash>(dataSource, "a2meta.[SetDbHash]", new DbHash() { Hash = seedHash });
-        return new DeployDatabaseResult(DatabaseFilePath.NormalizeSlash(), true);
+        var script = allScript.ToString();
+        await WriteDeployDatabaseFileAsync(script);
+        return (script, seedHash);
     }
 
     private Task WriteDeployDatabaseFileAsync(String allScript)
@@ -766,11 +782,18 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         return sqlScript;
     }
 
-    public async Task DeployDatabaseAsync(String? dataSource, String allScript)
+    /* 'go' alone on its line, in any case and with any line ending - as SSMS reads it. The generated
+     * file has CRLF, but app.sql and full.sql carry scripts written by hand, and those come with LF too.
+     * The line break before 'go' stays in the batch above it, so the count of lines below holds.
+     */
+    private static readonly Regex _goLine = new(@"^[ \t]*go[ \t]*\r?$", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+
+    // 'file' is where allScript lies on disk: the coordinates of a failure are lines in it
+    public async Task DeployDatabaseAsync(String? dataSource, String file, String allScript)
     {
         if (String.IsNullOrWhiteSpace(allScript))
             return;
-        var scripts = allScript.Split($"{Environment.NewLine}go");
+        var scripts = _goLine.Split(allScript);
 
         using var dbConn = await _dbContext.GetDbConnectionAsync(dataSource);
         using var cmd = dbConn.CreateCommand() as SqlCommand
@@ -785,12 +808,12 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
                 lineTo = lineFrom + line.Count(c => c == '\n');
                 cmd.CommandText = line;
                 await cmd.ExecuteNonQueryAsync();
-                lineFrom = lineTo + 1; // + go
+                lineFrom = lineTo; // the 'go' line: the break that ends it opens the next batch
             }
         }
         catch (Exception ex)
         {
-            throw new DeployScriptException(ex, lineFrom, lineTo);
+            throw new DeployScriptException(ex, file, lineFrom, lineTo);
         }
     }
 }

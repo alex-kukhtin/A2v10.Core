@@ -135,11 +135,13 @@ internal partial class SqlBuilder
             """);
         sb.AppendLine();
 
-        // STEP 1: main recordset
+        /* STEP 1: main recordset. 'MainObject', not 'Object': the record this page edits. The reader
+         * fills TRoot.MainObject and IDataModel.MainElement by it, the client gets '$main'.
+         */
         sb.AppendLine("-- main recordset");
 
         sb.Append($"""
-            select [{Table.Model}!{Table.TypeName}!Object] = null, {String.Join(", ", plainSqlFields("a"))}
+            select [{Table.Model}!{Table.TypeName}!MainObject] = null, {String.Join(", ", plainSqlFields("a"))}
             """);
         // slots the object carries beyond its own columns: one per collection, and the tags array
         List<String> arraySlots = [.. Table.Details.Select(mainDetailsFields)];

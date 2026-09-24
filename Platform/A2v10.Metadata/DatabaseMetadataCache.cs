@@ -28,6 +28,8 @@ public class DatabaseMetadataCache
     // Keyed by data source because that is exactly what it describes: one data source is
     // one database, and the platformid base belongs to the database.
     private readonly ConcurrentDictionary<String, AppPlatformId> _platformIdCache = [];
+    // app.json 'aliases': one per application, not per data source - folders are the application's
+    private KindFolders? _kindFolders;
 
     /* Held for the whole of one cold load - see GetOrLoadAsync - and by ClearAll, so that a
      * file change cannot land in the middle of a load and let it publish a table of the
@@ -64,6 +66,7 @@ public class DatabaseMetadataCache
              */
             _referrers.Clear();
             _platformIdCache.Clear();
+            _kindFolders = null;
             _xamlFormCache.Clear();
             _metadataDirty = true;
         }
@@ -142,6 +145,10 @@ public class DatabaseMetadataCache
         platformId = await func(dataSource);
         return _platformIdCache.GetOrAdd(key, platformId);
     }
+
+    // a race builds the map twice from one file and keeps either: both are the same answer
+    internal async Task<KindFolders> GetKindFoldersAsync(Func<Task<KindFolders>> load) =>
+        _kindFolders ??= await load();
 
     public async Task<UIElement> GetOrAddXamlFormAsync(String? dataSource, EndpointMetadata endpoint, String key,
          Func<UIElement> getDefaultForm)

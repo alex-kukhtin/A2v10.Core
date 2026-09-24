@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 using System.Security.Cryptography;
 using System.Text;
 
+using Microsoft.Data.SqlClient;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -24,10 +26,11 @@ internal sealed record PlatformIdType
     public String? DataType { get; set; }
 }
 
-// the one key of app.json the generator reads; the rest of the file belongs to the client
-internal sealed record AppJsonPlatformId
+// the keys of app.json the generator reads; the rest of the file belongs to the client
+internal sealed record AppJsonMetadata
 {
     public String? PlatformId { get; set; }
+    public Dictionary<String, String[]>? Aliases { get; set; }
 }
 
 public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbContext _dbContext, IAppCodeProvider _codeProvider,
@@ -50,6 +53,33 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         var platformId = await GetPlatformIdAsync(dataSource);
         var allMeta = await AllElementsMetadata(dataSource);
         return await _sqlDbGenerator.CheckDeployAsync(dataSource, allMeta, platformId);
+    }
+
+    // 'a2 meta deploy --full': the file only, executed inside full.sql
+    public async Task WriteDeployDatabaseAllAsync(String? dataSource)
+    {
+        var platformId = await GetPlatformIdAsync(dataSource);
+        var allMeta = await AllElementsMetadata(dataSource);
+        await _sqlDbGenerator.WriteDeployAsync(dataSource, allMeta, platformId);
+    }
+
+    /* Is the platform in the database? a2meta is created by a2v10_metadata.sql - by full.sql, never
+     * by the metadata deploy - and all the deploy reads (the hash, the platformid) lives in it.
+     */
+    public async Task<Boolean> HasMetaAsync(String? dataSource)
+    {
+        using var dbConn = await _dbContext.GetDbConnectionAsync(dataSource);
+        using var cmd = dbConn.CreateCommand() as SqlCommand
+            ?? throw new InvalidOperationException("Invalid Database provider");
+        cmd.CommandText = "select schema_id(N'a2meta')";
+        return await cmd.ExecuteScalarAsync() is not (null or DBNull);
+    }
+
+    public async Task EnsureMetaAsync(String? dataSource)
+    {
+        if (!await HasMetaAsync(dataSource))
+            throw new InvalidOperationException(
+                "The database has no a2meta schema: the platform is not deployed to it yet. Run 'a2 meta deploy --full' right after the build of the host.");
     }
 
     /* The entry point: no load is running yet, so the cache opens one and publishes it whole.
@@ -123,13 +153,26 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     // internal for EndpointValidator: the declaration is the only answer a check that never reads the database can have
     internal async Task<AppPlatformId?> DeclaredPlatformIdAsync()
     {
+        var app = await ReadAppJsonAsync();
+        return app?.PlatformId is String name ? AppPlatformId.FromSqlName(name) : null;
+    }
+
+    private async Task<AppJsonMetadata?> ReadAppJsonAsync()
+    {
         using var stream = _codeProvider.FileStreamRO("app.json", primaryOnly: true);
         if (stream == null)
             return null;
         using var sr = new StreamReader(stream);
-        var app = JsonConvert.DeserializeObject<AppJsonPlatformId>(await sr.ReadToEndAsync());
-        return app?.PlatformId is String name ? AppPlatformId.FromSqlName(name) : null;
+        return JsonConvert.DeserializeObject<AppJsonMetadata>(await sr.ReadToEndAsync());
     }
+
+    /* The kind a folder is written for. The address stays the folder - the file is read from it,
+     * the cache is keyed by it, messages name it - and only what the folder IS is asked here: every
+     * decision the loader takes by the first segment takes it by this answer instead.
+     */
+    private async Task<String> KindFolderAsync(String folder) =>
+        (await _metadataCache.GetKindFoldersAsync(async () => KindFolders.From((await ReadAppJsonAsync())?.Aliases)))
+            .KindOf(folder);
 
 
     /* The endpoint is built here, once, before it is published to the cache: its own
@@ -896,7 +939,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
      * law in two spellings, and this one is how it drifted: it stayed silent about 'report'
      * long after the enum had the value.
      */
-    private static EndpointKind EndpointKindOf(String schema)
+    internal static EndpointKind EndpointKindOf(String schema)
     {
         return schema switch
         {

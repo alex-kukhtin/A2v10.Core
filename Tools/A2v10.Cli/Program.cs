@@ -31,13 +31,16 @@ internal sealed partial class Program
     {
         try
         {
-            await (new Program().RunAsync(args));
+            // a parse error is the parser's own code; a failed command sets ExitCode in JsonResult.Fail
+            var code = await (new Program().RunAsync(args));
+            if (code != 0)
+                return code;
         }
         catch (Exception ex)
         {
             JsonResult.Fail(ex);
         }
-        return 0;
+        return Environment.ExitCode;
     }
 
     private readonly IServiceProvider _services;

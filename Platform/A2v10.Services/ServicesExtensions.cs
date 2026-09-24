@@ -54,7 +54,7 @@ public static class ServicesExtensions
         services.AddSingleton<IXamlPartProvider, NullXamlPartProvider>()
             .AddSingleton<IDataScripter, NullDataScripter>();
 
-        services.AddScoped<ApiDataService>();
+        services.UseEndpointDataServices();
 
         services.Configure<AppOptions>(opts =>
         {
@@ -80,6 +80,13 @@ public static class ServicesExtensions
             }
         });
 
+        return services;
+    }
+
+    // endpoints by route, for the callers without a browser; the platform host does not call it
+    public static IServiceCollection UseEndpointDataServices(this IServiceCollection services)
+    {
+        services.AddScoped<EndpointDataService>();
         return services;
     }
 

@@ -22,8 +22,6 @@
 	<files>
 		<file src="A2v10.App.Assets2026.targets" target="build/A2v10.App.Assets2026.targets" />
 		<file src="Application/**/*" target="content/assets"/>
-		<!-- owned by A2v10.Metadata; delivered here because @sql is where a module's build-time sql inputs arrive -->
-		<file src="../A2v10.Metadata/SqlScripts/a2v10_metadata.sql" target="content/assets/Application/@sql"/>
 		<file src="assemblies/**/*" target="content"/>
 		<file src="README.md" target="docs\" />
 	</files>

@@ -1175,3 +1175,150 @@ master-ссылки и kind-а), и `ToTsType` ключуется по SQL-им�
 `Rows=""`/`Columns=""` у `Grid` (читатель отказывал), и потерянный `Bind.Format` (заголовок
 диалога без шаблона). Правило пункта 3.6 подтвердилось буквально: «что генерируется, то и
 рендерится» держится только там, где сгенерированное кто-то прочитал обратно.
+
+---
+
+## 7. Сценарии: что раннер держит вместо платформы (2026-09-23)
+
+Раннер сценариев написан на стенде — `MetaAppStand/Tests/Runner`, норма формата — скил,
+`references/tests.md`. Сценарий идёт через `IDataService` в контейнере хоста
+(`WebApplicationFactory<Startup>`) и сверяет модель, которую получает экран. Прогон зелёный,
+но половину раннера занимает знание, которое принадлежит платформе и продублировано в тестах.
+Ниже — что куда уходит. Цель: логика раннера живёт в `A2v10.Metadata`, в `scaffold/Tests`
+остаётся страница обвязки (фабрика, фикстура, `[Theory]` по файлам) — туда, а не в пакет,
+потому что тянет Mvc.Testing и xUnit, которым в продакшен-пакете не место.
+
+Порядок: 7.1–7.4 сначала, 7.5 поверх них. Иначе в scaffold уедет `Door` с продублированными
+соглашениями, и его придётся выкидывать.
+
+### ~~7.1. У `ApiDataService` нет `post` / `unpost`~~
+
+**Сделано 2026-09-23.** `ApiDataService` → `EndpointDataService` (имя было по одному потребителю;
+их три — API, CLI, тесты), `PostAsync`/`UnPostAsync`, выбор вида по сегменту — одна функция
+`KindOf`. В хосте платформы не регистрируется: вызывающий берёт `UseEndpointDataServices()`
+(`ApiHost` — внутри `UseApiDataServices`, стенд — в `StandFactory`). Раннер проводит через
+сервис; `SetParams` на invoke не нужен и был лишним — metadata-ветка `InvokeAsync` его не зовёт,
+`@UserId` берётся из `ICurrentUser`. Далее — история пункта.
+
+`A2v10.Services/Api/ApiDataService.cs`: `IndexAsync`, `LoadAsync`, `CreateAsync`, `SaveAsync` —
+проведения нет. Раннер поэтому зовёт `IDataService.InvokeAsync` сам и повторяет соглашение
+клиента: `$invoke('post', {Id}, endpoint)` (`Script/EditTemplate.cs:227`, `:235`) →
+`baseUrl = _page/<endpoint>/index/0` (`main.js`, `$invoke`, `urltools.combine('_page', base,
+'index', 0)`). Соглашение знает клиент и теперь ещё тест; третьим его знать не должен никто.
+
+Туда же — выбор `UrlKind` по первому сегменту (`catalog → Dialog`, `document → Page`): он уже
+есть в `ApiDataService` трижды, раннер повторил его четвёртый.
+
+### ~~7.2. `EndpointDataService.CreateAsync` открывает не новую запись~~
+
+**Сделано 2026-09-23.** `CreateAsync` открывает `edit/new`. Обоснование пункта было неверным:
+для сервера `0` и `new` одно и то же — `PlatformUrl.Construct` (`A2v10.Services/PlatformUrl.cs:83`)
+сводит `""`, `"0"`, `"new"` к `Id = null`, и `IsNewModel` видит новую запись в обоих случаях
+(ветка `id == "new"` в нём мёртвая). Различает клиент: `urltools.isNewPath` (`main.js`) считает
+новым `/new` всегда, а `/0` — только в диалоге. Страница, открытая `edit/0`, после сохранения
+не получает id в маршрут (`setnewid` не вызывается), и следующий `$requery` — его зовут
+сгенерированные `post`/`unPost` — открывает пустую новую запись. Генератор это соблюдает
+(`CommandXaml.ButtonCreate`: страница — `"new"`, диалог — `append` с `0`); `new` — единственное
+написание, верное для обоих.
+
+Заодно — форма сервиса: `svc.At(route, render)` → `DataAt` с `Index/Load/Create/Save/Post/UnPost`;
+вид по маршруту считается один раз. `render` — режим вызывающего, не вызова: загрузка строит
+страницу и шаблон и выбрасывает (`isReload: !render`), исключение проваливает вызов. Тест
+рендерит, API — нет (до этого сервис рендерил всегда и выбрасывал HTML). Раннер: проведение
+через `At(…, render: true)`; его загрузки пока на `IDataService`, но уже без `isReload: true`.
+Загрузка и сохранение раннера уезжают в `DataAt` после 7.3 — раннеру нужен главный объект.
+
+### ~~7.3. Генератор не помечает главный объект модели~~
+
+**Сделано 2026-09-23.** `SqlBuilderPlain`: основной recordset — `!MainObject`; та же выборка
+отдаёт модель после сохранения, пометка есть и там. Больше нигде: `Trans`, `Print`, `Unique`,
+`Tags`, фильтры отчётов записи не редактируют. Кто читает пометку: сервер — только
+`DataService.cs:226`, ветка без метаданных, т.е. на metadata-пути без изменений; клиент — `$main`
+(`VueDataScripter`): сохранение берёт главный объект по нему вместо первого свойства ответа (тот
+же объект — он первый recordset), `$mainObject` читает один `$dialog` с `saveRequired`, таких
+команд генератор не выпускает. Раннер читает `TRoot.MainObject`, эвристика снята; пропавшая
+пометка роняет сценарии. `BuildDataModelMeta` главного объекта не отдаёт — понадобится `IdOf`.
+Далее — история пункта.
+
+`SqlBuilderPlain.cs:142`: `[{Table.Model}!{Table.TypeName}!Object]` — без `Main`. Читатель
+(`A2v10.Data`) ставит `IsMain` по вхождению `Main` в тип (`FieldInfo.cs:44`) и заполняет
+`TRoot.MainObject` только для такого поля (`DataModelReader.cs:692`). Значит, у любой
+edit-модели metadata-endpoint-а `TRoot.MainObject == null` и `IDataModel.MainElement` пуст.
+
+Раннер обходит это эвристикой «единственное поле корня с `ItemType == Object`»
+(`ScenarioRunner.MainObject`). Правильно — `!MainObject`: словарь читателя его знает
+(`InternalHelpers.cs:247`, `["MainObject"] = FieldType.Object`). Проверить заодно, кто ещё
+читает `MainElement` у metadata-модели: `DataService.cs:226` сверку делает только в ветке без
+метаданных, так что сегодня пустота не ловится ничем.
+
+### ~~7.4. Пользователя вне HTTP-запроса открыть нечем~~
+
+**Сделано 2026-09-24.** Входа «scope от имени пользователя» не понадобилось: пользователя
+выбирает хост, раннер его не открывает. `A2v10.Services/Api/DefaultAdminUser` — `ICurrentUser`
+(99, админ, все права, локаль потока); `UseEndpointDataServices` его не регистрирует — у API
+будет своя аутентификация. Обвязка (`StandFactory`) регистрирует его после `UsePlatform`;
+`RunnerTests.UserIsTheDefaultAdmin` держит это, потому что сценарии пустого пользователя не
+заметили бы. `Door` — просто `CreateScope()`. `IDbIdentity` не нужен: на пути стенда его не
+читает никто (только workflow-движок); конкретный `CurrentUser` просит лишь
+`CurrentUserMiddleware`. Вопрос «`Metadata` не видит `Platform.Web`» снят. Далее — история.
+
+`A2v10.Platform.Web/Middleware/CurrentUser.cs:98`: единственный вход — `Setup(HttpContext)`.
+Раннер подделывает `DefaultHttpContext` с principal (`NameIdentifier = 99`, `Admin`) и
+зовёт `SetUserState(admin: true, …)`, чтобы `DataService.CheckPermissions` и
+`SqlBuilder.AddDefaultParameters` (`@UserId` из `ICurrentUser.Identity.Id`) увидели того же
+пользователя, что увидел бы запрос.
+
+Нужен один вход: «scope от имени пользователя». Решить, где: `A2v10.Metadata` на
+`Platform.Web` не ссылается (ссылки — `Services`, `Infrastructure`, `App.Infrastructure`,
+`ViewEngine.Xaml`), так что раннер, переехавший в Metadata, не сможет позвать `CurrentUser`
+сам. Либо метод за абстракцией в `Infrastructure`, либо фабрику scope-а раннеру подаёт обвязка.
+
+Пользователь `99` — факт `a2v10_platform_simple.sql` (вставляется, когда пользователей нет),
+в раннере он константа с этим адресом.
+
+### 7.5. Раннер и тестовая база — в `A2v10.Metadata`
+
+После 7.1–7.4 раннер зависит только от `EndpointDataService` и `A2v10.Data.Core`, и переезжает:
+
+**Сделано 2026-09-24 — `Door` целиком на `DataAt`:** открыть, создать, список, сохранить,
+провести — всё через `At(at, render: true)`; `KindOf`, построение URL и `SetParams` из раннера
+ушли. `SetParams` (`@UserId`) был мёртв на metadata-пути: загрузка уходит в builder до
+`CreateParameters`, invoke — до `setParams`, а `SavePlainModelAsync` свой `savePrms` не читает;
+`@UserId` берётся из `ICurrentUser`. `DataResult` несёт `[JsonIgnore] Model` — вызывающим в
+процессе нужна модель (главный объект, типы), а не JSON-проекция API — и `IdOf(saved)`: id по
+`MainObject` открытой модели, потому что сохранённый корень метаданных не несёт. 7.4 — сделано
+2026-09-24; раннер зависит только от `EndpointDataService` и `A2v10.Data.Core`.
+
+- **`ScenarioRunner`** — формат сценария и сверка (~250 строк). Формат — контракт
+  metadata-driven, норма в скиле. Бросает свой `ScenarioException`, от тест-фреймворка не
+  зависит.
+- **`TestDatabase`** — имя `<Default>_Test` выводится (не объявляется: выведенное не может
+  совпасть с исходным, так что базу приложения этот вызов задеть не может), `DROP`/`CREATE`,
+  `main.sql` по батчам, затем `DeployDatabaseAllAsync`. Та же последовательность подъёма базы,
+  что onboarding Phase 3, — место рядом с деплоем. Разбивку на батчи взять у деплоя, не
+  заводить вторую: у раннера свой `Regex` по `^\s*go\s*$`, а у деплоя свои претензии (2.8).
+- **`RunnerTests` + `probes/`** проверяют движок (нарочно неверные ожидания обязаны упасть и
+  назвать место). Им нужно приложение с endpoint-ами — в `A2v10.Core` такого нет, остаются на
+  стенде.
+
+### ~~7.6. Путь модуля считается от текущего каталога процесса~~
+
+**Сделано 2026-09-24 — без правки платформы.** Вывод пункта («разрешать от content root» в
+`AppCodeProvider`) неверен: в платформе уже есть конвенция — абсолютный путь модуля даёт хост,
+`AppCodeProvider` берёт его как есть. Так делают `TestsMetadata/TestHost.cs` (`Configure<AppOptions>`,
+`GetFullPath(Combine(ProjectDir, …))`) и CLI (`Program.cs:118`, `Combine(webAppFolder, …)`); веб-хост
+не делает и не должен — у него текущий каталог и есть корень. CLI от текущего каталога **не**
+зависит, путь склеивает сам; «CurrentDirectory is Root!!!» — про место запуска CLI. Обвязка
+стенда выполнила конвенцию: `StandFactory.ModulePaths` — пути файловых модулей от
+`ContentRootPath`, в конфигурацию рядом с подменой `Default`; `main.sql` берётся по тому же пути;
+`SetCurrentDirectory` снят (без него падали все 10 тестов — проверено). Далее — история.
+
+`A2v10.Services/InternalAppCodeProviderFile.cs:24`: `Path.GetFullPath(Path.Combine(AppPath,
+path))`, где `AppPath` — `Modules.<M>.Path` из `appsettings.json` (`"../MainApp"`). Относительный
+путь разрешается от `Environment.CurrentDirectory`, не от `ContentRootPath`. Хост, запущенный
+из своей папки, этого не замечает; тестовый процесс стартует в `Tests/bin/Debug/net8.0` и
+падает в `DatabaseMetadataCache.CreateWatcher` (`DatabaseMetadataCache.cs:166`):
+`The directory name '…\Tests\bin\Debug\MainApp' does not exist`. Раннер сейчас делает
+`Directory.SetCurrentDirectory(ContentRootPath)` до старта хоста. CLI живёт с тем же
+(`A2v10.Cli/Program.cs:132`, «CurrentDirectory is Root!!!»). Правильно — разрешать от content
+root; тогда обход уходит из обоих.
