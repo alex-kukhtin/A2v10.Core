@@ -205,13 +205,16 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
      * it from the same read: one file, one read, one hash. Two reads of one file are not only
      * wasted io - they can see two different contents and put a declaration and a shape that
      * never coexisted into the same endpoint.
+     *
+     * The kind comes in beside the folder, not instead of it: under an alias the two differ, and the
+     * table is defaulted from what the folder IS, while its Path is still where the file lies.
      */
-    private async Task<TableMetadata> BuildStorageAsync(String schema, String table, String text, String? hash)
+    private async Task<TableMetadata> BuildStorageAsync(String kind, String schema, String table, String text, String? hash)
     {
         var storage = JsonConvert.DeserializeObject<TableMetadata>(text, JsonSettings.CamelCaseSerializerSettings)
             ?? throw new InvalidOperationException($"{MetadataFileName(schema, table)}: TableMetadata deserialization fails");
         storage.FileHash = hash;
-        storage.SetDefaults(schema, table);
+        storage.SetDefaults(kind, schema, table);
         CheckNames(storage, schema, table);
         CheckValues(storage, schema, table);
         CheckAutonums(storage, schema, table);
@@ -641,7 +644,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     private async Task<TableMetadata> LoadStorageAsync(String? dataSource, String schema, String table)
     {
         var (text, hash) = await ReadMetadataFileAsync(schema, table);
-        return await BuildStorageAsync(schema, table, text, hash);
+        return await BuildStorageAsync(await KindFolderAsync(schema), schema, table, text, hash);
     }
 
     public Task<TableMetadata> GetStorageAsync(String? dataSource, String schema, String table)
@@ -694,7 +697,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         var declaration = JsonConvert.DeserializeObject<DeclarationMetadata>(text, JsonSettings.CamelCaseSerializerSettings)
             ?? throw new InvalidOperationException($"{MetadataFileName(schema, table)}: DeclarationMetadata deserialization fails");
 
-        CheckShapeSource(schema, table, declaration);
+        var kind = await KindFolderAsync(schema);
+        CheckShapeSource(kind, schema, table, declaration);
 
         /* An endpoint that owns its shape builds it from the text already in hand; one that points
          * elsewhere asks for the endpoint at that address, because a shared table comes with a
@@ -713,7 +717,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         DeclarationMetadata? storageDeclaration = null;
         if (declaration.HasOwnShape)
             storage = await _metadataCache.GetOrAddStorageAsync(dataSource, schema, table,
-                (_, s, t) => BuildStorageAsync(s, t, text, hash));
+                (_, s, t) => BuildStorageAsync(kind, s, t, text, hash));
         else
         {
             var (targetSchema, targetTable) = ParsePath(declaration.SharedShape!);
@@ -725,13 +729,14 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         }
 
         /* The only place that decides which kind of endpoint this is. The discriminator is the
-         * folder, not a key in the file: a file cannot lie about what it is.
+         * folder, not a key in the file: a file cannot lie about what it is. An alias names the
+         * folder's kind in app.json, which is the same answer given one step away.
          */
-        return schema switch
+        return kind switch
         {
             Constants.SchemaNames.Report => new ReportEndpointMetadata()
                 {
-                    Kind = EndpointKindOf(schema),
+                    Kind = EndpointKindOf(kind),
                     Schema = schema,
                     Name = table,
                     // the shape a report reads, resolved from 'surface'. It owns none of it
@@ -742,7 +747,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                 },
             _ => new NormalEndpointMetadata()
                 {
-                    Kind = EndpointKindOf(schema),
+                    Kind = EndpointKindOf(kind),
                     Schema = schema,
                     Name = table,
                     Storage = storage,
@@ -982,10 +987,12 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
      * A missing metadata.json and an empty {} arrive here as the same text and get the same
      * message on purpose: 'the file is empty' would say less than 'nothing says where the shape
      * comes from', and the fix is identical.
+     *
+     * The rules are asked by kind and the messages name the folder: under an alias the two differ.
      */
-    private static void CheckShapeSource(String schema, String table, DeclarationMetadata declaration)
+    private static void CheckShapeSource(String kind, String schema, String table, DeclarationMetadata declaration)
     {
-        if (!DeclaresShapeSource(schema))
+        if (!DeclaresShapeSource(kind))
             return;
 
         var hasTable = !String.IsNullOrEmpty(declaration.Table);
@@ -993,7 +1000,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         var hasSurface = !String.IsNullOrEmpty(declaration.Surface);
         var file = MetadataFileName(schema, table);
 
-        if (schema == Constants.SchemaNames.Report)
+        if (kind == Constants.SchemaNames.Report)
         {
             if (hasTable || hasStorage)
             {
@@ -1024,11 +1031,11 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
          * rows - an operation of a document, a catalog or a journal with its own screens and its own
          * address. A set has no screen, so a second address to it would be an address to nothing.
          */
-        if (schema is not (Constants.SchemaNames.Document or Constants.SchemaNames.Catalog or Constants.SchemaNames.Journal))
+        if (kind is not (Constants.SchemaNames.Document or Constants.SchemaNames.Catalog or Constants.SchemaNames.Journal))
         {
             if (hasStorage)
                 throw new InvalidOperationException($"""
-                    {file}: declares 'storage', which '{schema}/' may not do.
+                    {file}: declares 'storage', which '{kind}/' may not do.
                       'storage' is a second endpoint over one table, with screens of its own; a set has no screens.
                       Declare "table": "<TableName>" instead.
                     """);
@@ -1052,7 +1059,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                 : $"""
                     {file}: declares neither 'table' nor 'storage', so nothing says where the data lives.
                         "table":   "<TableName>"     - if this endpoint has its own table;
-                        "storage": "/{schema}/<name>" - if it is a second one over a table declared elsewhere (an operation, a second screen).
+                        "storage": "/{kind}/<name>" - if it is a second one over a table declared elsewhere (an operation, a second screen).
                       There is no default: an absent 'table' is not a shared table and not a derived name.
                     """);
     }
@@ -1321,7 +1328,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     {
         var allMeta = _codeProvider.EnumerateAllFilesRecursive("", "metadata.json");
         var tables = new List<TableMetadata>();
-        var operations = new List<OperationMetadata>();
+        var operations = new List<(String Id, String Path)>();
         foreach (var file in allMeta.Where(f => !IsBuildOutput(f)))
         {
             var endpointPath = Path.GetDirectoryName(file)?.NormalizeSlash();
@@ -1337,7 +1344,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             if (!endpoint.Declaration.HasOwnShape)
             {
                 if (endpoint.DocumentOperation() is { Length: > 0 } op)
-                    operations.Add(new OperationMetadata(op));
+                    operations.Add((op, endpoint.Path));
                 continue;
             }
             tables.Add(endpoint.Storage);
@@ -1345,11 +1352,22 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         /* The registry is a table like a set: deployed with its rows, and the rows reach the
          * hash through Xtra. Sorted, because the fingerprint is taken from the text and must not
          * depend on how the file system is enumerated.
+         *
+         * An operation's Id is the last segment of its address, so two folders of one kind (an
+         * alias, app.json) can give two endpoints one Id. Merged, they would be one row, and both
+         * registers would filter by it and show each other's documents - so it is refused here,
+         * where both addresses are still known.
          */
+        var twice = operations.GroupBy(o => o.Id).FirstOrDefault(g => g.Count() > 1);
+        if (twice != null)
+            throw new InvalidOperationException($"""
+                {String.Join(" and ", twice.Select(o => o.Path))} are one operation '{twice.Key}': an operation's Id is the name of its folder, and the folders around it do not count.
+                  Rename one of them.
+                """);
         if (operations.Count > 0)
             tables.Add(TableMetadataDefaults.OperationsTable() with
             {
-                Operations = [.. operations.DistinctBy(o => o.Id).OrderBy(o => o.Id, StringComparer.Ordinal)]
+                Operations = [.. operations.Select(o => new OperationMetadata(o.Id)).OrderBy(o => o.Id, StringComparer.Ordinal)]
             });
         return tables;
     }

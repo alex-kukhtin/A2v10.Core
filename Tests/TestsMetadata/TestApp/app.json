@@ -1,5 +1,8 @@
 {
 	"platformid": "bigint",
+	"aliases": {
+		"document": [ "sale" ]
+	},
 	"title": "Test MODULE METADATA",
 	"copyright": "Copyright © 2026 Oleksandr Kukhtin"
 }

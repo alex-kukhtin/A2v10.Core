@@ -30,6 +30,16 @@ public static class ServicesExtensions
         return services;
     }
 
+    /* The test host only: the database a run owns and the scenarios. The scenarios open endpoints
+     * through EndpointDataService, so it comes along; who the user is stays the harness's to say.
+     */
+    public static IServiceCollection UseTestEnvironment(this IServiceCollection services)
+    {
+        services.UseEndpointDataServices()
+            .AddScoped<TestEnvironment>();
+        return services;
+    }
+
     public static IServiceCollection UseApplicationClr(this IServiceCollection services,
         Action<AppMetadataClrOptions> action)
     {

@@ -658,11 +658,17 @@ public sealed record TableMetadata
         Table = $"{table.Model}{key}";
         Construct(table.Model);
     }
-    internal void SetDefaults(String schema, String table)
+    internal void SetDefaults(String schema, String table) => SetDefaults(schema, schema, table);
+
+    /* 'schema' is the kind the folder is of, 'folder' where the file lies - one word unless an
+     * alias (app.json) puts a kind's endpoints into a folder of another name. Everything below is
+     * defaulted from the kind; only Path is the folder's.
+     */
+    internal void SetDefaults(String schema, String folder, String table)
     {
         // the file that declares this table; spelled like EndpointMetadata.Path, because a
         // DocumentType discriminator is this value and has to be comparable to an address
-        Path = String.IsNullOrEmpty(table) ? $"/{schema}" : $"/{schema}/{table}";
+        Path = String.IsNullOrEmpty(table) ? $"/{folder}" : $"/{folder}/{table}";
         /* One registry at one address, so all three are defaults nobody needs to write; written,
          * they win. The rows land where documents do - a namespace of its own is the address, not
          * their home. The price is this 'if': the method now knows one namespace by name, and the
