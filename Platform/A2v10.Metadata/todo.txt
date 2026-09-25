@@ -23,7 +23,8 @@
 39. ColorProperty в SelectorSimple
 40. Сделать form:edit (axis:rows) [Name, Color] если есть Color
 41. Comments trait
-42. 
+42. Folders - есть класс на панели. Сделать для нее css правила
+  flex, grow, height.
 
 
 14. Не работает ParentElem в Edit.

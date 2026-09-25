@@ -78,6 +78,16 @@ public sealed record AppPlatformId(Type ClrType)
         };
     }
 
+    /* Two values of the domain the platform reserves, for the folder tree: All, the view of the whole
+     * catalog, and Root, the place that holds what lies in no folder. Named by role and spelled per
+     * base - under an integer they collapse to cheap literals, a guid spells them apart. Never the key
+     * of a row: a sequence starts at 1000, and newsequentialid() does not yield a repdigit. Digits
+     * only, so a guid compares as text whatever case the browser sends it in. SQL casts either from a
+     * string to SqlTypeName - never to 'platformid': CAST takes system types only.
+     */
+    public String All => ClrType == typeof(Guid) ? "11111111-1111-1111-1111-111111111111" : "0";
+    public String Root => ClrType == typeof(Guid) ? "22222222-2222-2222-2222-222222222222" : "-2";
+
     /* An identifier that references nothing. Recognised by shape rather than compared
      * against one stored empty value: what arrives here has been through an ExpandoObject
      * and is loosely typed - the same integer id turns up as Int32 or Int64 depending on
@@ -293,7 +303,7 @@ internal static class SqlExtensions
             ColumnType.RowNumber => $"[{column.Name}!!RowNumber] = {alias}.[{column.Name}]",
             ColumnType.Parent => $"[{column.ModelName}] = {alias}.[{column.Name}]",
             ColumnType.Ref or ColumnType.Document or ColumnType.Operation or ColumnType.Enum
-                or ColumnType.State or ColumnType.Account =>
+                or ColumnType.State or ColumnType.Account or ColumnType.Folder =>
                 $"[{column.Name}!{column.RefTableCheck.Storage.RefTypeName}!RefId] = {alias}.[{column.Name}]",
             _ => $"{alias}.[{column.Name}]"
         };

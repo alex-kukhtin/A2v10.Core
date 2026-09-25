@@ -151,4 +151,14 @@ internal static class Constants
         // the postings against one chart of accounts - two mirrored legs per posting
         public const String Ledger = "ledger";
     }
+
+    /* Folders of a module's own layout: first segments with no endpoints of their own, so not a
+     * namespace and not in SchemaNames. Reserved beside them all the same - an alias of that name
+     * would make a path read two ways.
+     */
+    public static class ModuleFolders
+    {
+        // $crm/patches/catalog/agent - what follows is the address of the node patched, not a node of the module
+        public const String Patches = "patches";
+    }
 }

@@ -50,6 +50,11 @@ public interface IRefTarget
     String Path { get; }
 }
 
+/* The folders of a catalog as a reference target: the rows are $Folders, the address is the owner's -
+ * a folder is picked through the owner's actions (browsefolder, fetchfolder), it has none of its own.
+ */
+internal sealed record FoldersTarget(TableMetadata Storage, String Path) : IRefTarget;
+
 /* An endpoint over data: catalog, document, operation, journal. Both slots are always set - for
  * an endpoint that owns its table they come from the same file, for an operation from two. No
  * consumer asks which case it is in: structure is read from Storage, declared behaviour from

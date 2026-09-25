@@ -14,8 +14,9 @@ namespace A2v10.Metadata;
  * operation's Id) stays the last segment and does not carry the alias.
  *
  * Refused while the map is built, each naming what it broke: a key that is not a kind a folder
- * declares; an alias that is a name the platform gives a first segment itself, which it would
- * shadow or be shadowed by; one folder listed twice.
+ * declares; an alias on '$', which is how a first segment names a module ($crm/...); an alias that
+ * is a name the platform gives a first segment itself, which it would shadow or be shadowed by;
+ * one folder listed twice.
  */
 internal sealed class KindFolders
 {
@@ -27,11 +28,14 @@ internal sealed class KindFolders
     internal String KindOf(String folder) =>
         _kindOf.TryGetValue(folder, out var kind) ? kind : folder;
 
-    // read off the constants, so that a namespace added there is refused here without anyone remembering to
-    private static readonly HashSet<String> _reserved = [.. typeof(Constants.SchemaNames)
+    // read off the constants, so that a name added there is refused here without anyone remembering to
+    private static readonly HashSet<String> _reserved = [.. Literals(typeof(Constants.SchemaNames)),
+        .. Literals(typeof(Constants.ModuleFolders))];
+
+    private static IEnumerable<String> Literals(Type type) => type
         .GetFields(BindingFlags.Public | BindingFlags.Static)
         .Where(f => f.IsLiteral)
-        .Select(f => (String)f.GetValue(null)!)];
+        .Select(f => (String)f.GetValue(null)!);
 
     // lower case, as ParsePath hands the folder over
     internal static KindFolders From(IReadOnlyDictionary<String, String[]>? aliases)
@@ -50,6 +54,11 @@ internal sealed class KindFolders
             foreach (var alias in folders)
             {
                 var folder = alias.ToLowerInvariant();
+                if (folder.StartsWith('$'))
+                    throw new InvalidOperationException($"""
+                        app.json: 'aliases' gives '{kind}' the folder '{alias}' - a first segment on '$' names a module ($crm/...), not a folder.
+                          Name the alias without '$' ('sale', 'purchase').
+                        """);
                 if (_reserved.Contains(folder))
                     throw new InvalidOperationException($"""
                         app.json: 'aliases' gives '{kind}' the folder '{alias}', which is a name of the platform's own.

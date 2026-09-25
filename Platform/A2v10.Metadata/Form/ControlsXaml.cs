@@ -538,6 +538,15 @@ internal partial class XamlBuilder
                 Url = SelectorUrl(inherits, column),
                 Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
             },
+            // picked at the owner's address: Folder turns it into browsefolder / fetchfolder
+            ColumnType.Folder => new SelectorSimple()
+            {
+                Label = column.Header,
+                CssClass = column.Type.ToXamlSemanticClass(),
+                Url = column.RefTableCheck.Path,
+                Folder = true,
+                Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
+            },
             /* The set arrives with the record, so there is nothing to browse - the same reason the
              * filter is a ComboBox. The item's Value binds to the ELEMENT and not to its Id: what
              * the property holds stays an object, resolved through the map like every other

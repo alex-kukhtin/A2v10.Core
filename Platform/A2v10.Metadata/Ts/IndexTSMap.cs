@@ -41,9 +41,8 @@ internal partial class ScriptBuilder
                 readonly Id: number;
                 Icon: string;
                 SubItems: TFolderArray;
-                HasSubItems: boolean;
                 {{Table.CollectionName}}: {{collType}};
-                InitExpanded: boolean;
+                InitExpand: boolean;
             }
 
             declare type TFolderArray = IElementArray<TFolder>;

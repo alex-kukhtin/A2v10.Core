@@ -13,9 +13,33 @@ namespace A2v10.Metadata;
 
 internal partial class SqlBuilder
 {
-    internal Task<IInvokeResult> FetchFolderAsync(ExpandoObject? prms)
+    /* A folder picked by typing, at the owner's address: the rows are the owner's $Folders. The same
+     * answer the fetch below gives, without its extras - a folder is a name and nothing else.
+     */
+    internal async Task<IInvokeResult> FetchFolderAsync(ExpandoObject? prms)
     {
-        throw new InvalidOperationException("IMPLEMENT FETCH FOLDER");
+        var folders = TableMetadataDefaults.CreateFoldersTable(Table);
+        var sql = $"""
+            set nocount on;
+            set transaction isolation level read uncommitted;
+
+            declare @fr nvarchar(255);
+            set @fr = N'%' + @Text + N'%';
+
+            select top(100) [{folders.CollectionName}!{folders.TypeName}!Array] = null,
+                [Id!!Id] = a.Id, [Name!!Name] = a.[{folders.Presentation}]
+            from {folders.SqlTableName} a
+            where a.[Void] = 0 and a.[{folders.Presentation}] like @fr
+            order by a.[{folders.Presentation}];
+            """;
+
+        var model = await _dbContext.LoadModelSqlAsync(DataSource, sql, dbprms =>
+        {
+            dbprms.AddBigInt("@UserId", _currentUser.Identity.Id)
+            .AddString("@Text", prms?.Get<String>("Text"));
+        });
+
+        return model.ToInvokeResult();
     }
 
     /* Which columns beyond Id and Name the answer has to carry, asked for by the caller.

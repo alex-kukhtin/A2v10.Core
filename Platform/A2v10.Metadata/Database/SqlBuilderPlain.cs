@@ -24,6 +24,43 @@ internal partial class SqlBuilder
             return true;
         return false;
     }
+
+    /* The initial values a new record takes from the url that opened it (InitialSource.Query). The
+     * value arrives from the browser, so it never enters the SQL as text: a string parameter named
+     * after the FIELD - a column name, already an identifier; the declared value is only the key it
+     * is looked up by. Cast in SQL to the column's type with try_cast, so a value that does not parse
+     * leaves the field empty, as an absent one does. Declared once, before the map, and read by both
+     * the map (RefMapBuilder.GenerateInitialRefs) and the defaults.
+     */
+    IReadOnlyList<(String Key, String Param)> QueryInitials() =>
+        IsNewModel()
+            ? [.. Endpoint.AllInitials().Where(x => x.Value.Source == InitialSource.Query).Select(x => (x.Key, x.Value.Value))]
+            : [];
+
+    TableColumn QueryColumn(String key) =>
+        Table.AllColumns().FirstOrDefault(c => c.Name == key)
+            ?? throw new InvalidOperationException($"initialValues: '{key}' is not a column of {Table.SqlTableName}");
+
+    String? QueryInitialsSql()
+    {
+        var initials = QueryInitials();
+        if (initials.Count == 0)
+            return null;
+        return String.Join(Environment.NewLine, initials.Select(q =>
+        {
+            var column = QueryColumn(q.Key);
+            // CAST takes system types only: an identifier is cast to the base the database reported
+            var castTo = column.ToSqlDbTypeInfo().SqlName == "platformid" ? _descr.PlatformId.SqlTypeName : column.SqlDataType();
+            return $"declare @Init{q.Key} {column.SqlDataType()} = try_cast(@Query{q.Key} as {castTo});";
+        }));
+    }
+
+    // the query keeps the name as the url spelled it, and a client may lower it
+    String? QueryValue(String name)
+    {
+        var query = _descr.PlatformUrl.Query;
+        return (query?.Get<Object>(name) ?? query?.Get<Object>(name.ToLowerInvariant()))?.ToString();
+    }
     String BuildLoadPlainSqlText()
     {
         var allColumns = Table.AllColumns().ToList();
@@ -111,6 +148,15 @@ internal partial class SqlBuilder
                 };
             }
 
+            // the variable QueryInitialsSql declared - a reference comes back as an object, as a literal does
+            String getDefaultQuery(String key)
+            {
+                var column = QueryColumn(key);
+                return column.IsRef
+                    ? $"[{Table.Model}.{key}!{column.RefTableCheck.Storage.RefTypeName}!RefId] = @Init{key}"
+                    : $"[{Table.Model}.{key}] = @Init{key}";
+            }
+
             var sb = new StringBuilder("select [!$Defaults!] = null, ");
 
             sb.AppendJoin(", ", initValues.Select(p =>
@@ -119,6 +165,7 @@ internal partial class SqlBuilder
                     InitialSource.Profile => getDefaultProfile(p.Key),
                     InitialSource.Literal => getDefaultLiteral(p.Key, p.Value.Value),
                     InitialSource.Context => getDefaultContext(p.Key, p.Value.Value),
+                    InitialSource.Query => getDefaultQuery(p.Key),
                     _ => throw new InvalidOperationException($"Invalid initial source {p.Value.Source}")
                 }
             ));
@@ -215,6 +262,13 @@ internal partial class SqlBuilder
             sb.AppendLine(tagsRecordsets());
         }
 
+        // before the map: it reads these for the references among them
+        if (QueryInitialsSql() is { } queryInitials)
+        {
+            sb.AppendLine();
+            sb.AppendLine(queryInitials);
+        }
+
         var refMap = new RefMapBuilder(Endpoint, isPlain: true, hasDefaults: IsNewModel());
 
         // STEP 3: map recordsets
@@ -261,6 +315,8 @@ internal partial class SqlBuilder
         {
             AddDefaultParameters(dbprms);
             dbprms.AddString("@Id", _descr.PlatformUrl.Id);
+            foreach (var (key, param) in QueryInitials())
+                dbprms.AddString($"@Query{key}", QueryValue(param));
         });
     }
 
@@ -532,6 +588,9 @@ internal partial class SqlBuilder
             if (Table.HasTags)
                 dbprms.AddStructured($"@{Constants.FieldNames.Tags}", Constants.SqlNames.IdTableType,
                     DataTableBuilder.BuildIdTable(item?.Get<List<Object>>(Constants.FieldNames.Tags), PlatformId));
+            // the load after the save reads them too (BuildLoadPlainSqlText); a save has no url to take them from
+            foreach (var (key, _) in QueryInitials())
+                dbprms.AddString($"@Query{key}", null);
         });
 
         return dm.Root;

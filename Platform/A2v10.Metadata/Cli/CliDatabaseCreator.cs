@@ -125,6 +125,12 @@ public class CliDatabaseCreator()
                 // a self link: the target is this very table, and a default column carries no RefTable
                 return Constraint($"FK_{table.Table}_{column.Name}_{table.Table}", column, table.SqlTableName);
             }
+            else if (column.Type == ColumnType.Folder)
+            {
+                // the owner's folders: built on the fly (CreateFoldersTable), never resolved, so no RefTable
+                var folders = TableMetadataDefaults.CreateFoldersTable(table);
+                return Constraint($"FK_{table.Table}_{column.Name}_{folders.Table}", column, folders.SqlTableName);
+            }
             else if (column.Type == ColumnType.Operation)
             {
                 var ops = TableMetadataDefaults.OperationsTable();
@@ -143,7 +149,7 @@ public class CliDatabaseCreator()
             var refStorage = column.RefTableCheck.Storage;
             return Constraint($"FK_{table.Table}_{column.Name}_{refStorage.Table}", column, refStorage.SqlTableName);
         }
-        var refs = table.AllColumns().Where(c => c.IsRef || c.Type == ColumnType.Parent)
+        var refs = table.AllColumns().Where(c => c.IsRef || c.Type is ColumnType.Parent or ColumnType.Folder)
             .Select(rc => createReference(rc));
         // a login is not an endpoint: the target is fixed, as Operations is above
         var stamps = table.AllColumns(c => c.Type is ColumnType.StampUser or ColumnType.StampUserNull)

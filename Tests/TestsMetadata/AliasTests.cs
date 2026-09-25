@@ -45,9 +45,15 @@ public class AliasTests
     [InlineData("catalog")]
     [InlineData("operation")]
     [InlineData("autonum")]
+    [InlineData("patches")]
     public void An_alias_that_is_a_platform_name_is_refused(String alias) =>
         Assert.Throws<InvalidOperationException>(() =>
             KindFolders.From(new Dictionary<String, String[]> { ["document"] = [alias] }));
+
+    [Fact]
+    public void An_alias_on_dollar_is_refused_as_a_module_segment() =>
+        Assert.Throws<InvalidOperationException>(() =>
+            KindFolders.From(new Dictionary<String, String[]> { ["document"] = ["$sale"] }));
 
     [Fact]
     public void One_folder_under_two_kinds_is_refused() =>

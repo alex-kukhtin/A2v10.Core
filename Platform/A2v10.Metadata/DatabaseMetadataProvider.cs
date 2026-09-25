@@ -1196,6 +1196,12 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                         ?? throw new InvalidOperationException($"{endpoint.Path} cannot have a Parent column");
                     continue;
                 }
+                else if (gcol.Type == ColumnType.Folder)
+                {
+                    // no address of their own: the rows are the owner's $Folders, picked at the owner's address
+                    gcol.RefTable = new FoldersTarget(TableMetadataDefaults.CreateFoldersTable(meta), endpoint.Path);
+                    continue;
+                }
                 else if (gcol.Type == ColumnType.Operation)
                 {
                     // a system endpoint, so not a data endpoint - asked for as a reference target

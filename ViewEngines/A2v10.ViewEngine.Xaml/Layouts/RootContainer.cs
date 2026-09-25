@@ -18,8 +18,13 @@ public abstract class RootContainer : Container, IUriContext, IRootContainer
 
 
 	#region IRootContainer
+	/* Once per styles object: a cached root is rendered many times with the same one. By reference and
+	 * not by a flag - an edited styles.xaml (Watch) arrives as a new object, and the root takes it.
+	 */
 	public void SetStyles(Styles styles)
 	{
+		if (ReferenceEquals(Styles, styles))
+			return;
 		Styles = styles;
 		OnSetStyles(this);
 		foreach (var c in Components)
@@ -27,6 +32,19 @@ public abstract class RootContainer : Container, IUriContext, IRootContainer
 	}
 
 	#endregion
+
+	/* Once per root. A page may be built once and rendered many times (a cached form), and the
+	 * renderer initializes whatever it is given - so the second call is the one that does nothing.
+	 * No lock: a root is shared only after its owner has initialized it (see the metadata form cache).
+	 */
+	private Boolean _initComplete;
+	public override void InitComplete()
+	{
+		if (_initComplete)
+			return;
+		base.InitComplete();
+		_initComplete = true;
+	}
 
 	protected ResourceDictionary? _resources;
 

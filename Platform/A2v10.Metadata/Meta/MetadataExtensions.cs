@@ -173,6 +173,11 @@ internal static class MetadataExtensions
                     $"{set.Path}: no living state has the role '{StateRole.Initial}'");
             initials[column.Name] = new InitialMetadata(InitialSource.Literal, initial.Id);
         }
+
+        // the folder the list has selected: the url that opens creation carries it (XamlBuilder.ButtonCreate)
+        if (endpoint.Storage.HasFolders)
+            initials.TryAdd(Constants.FieldNames.Folder,
+                new InitialMetadata(InitialSource.Query, Constants.FieldNames.Folder));
         return initials;
     }
 

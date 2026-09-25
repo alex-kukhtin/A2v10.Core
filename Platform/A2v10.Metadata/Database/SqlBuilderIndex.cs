@@ -108,6 +108,13 @@ internal partial class SqlBuilder
 
         var collectionName = Table.CollectionName;
 
+        /* The elements of the place the tree has picked: those directly in it, not the subtree - a
+         * folder is the one place of an element, and the root holds what lies in no folder. All is the
+         * whole catalog, and a search looks through all of it, so the tree collapses into a flat result.
+         */
+        var folder = lazy && Table.HasFolders && String.IsNullOrEmpty(fragment)
+            && _descr.PlatformUrl.Id is { } node && node != _descr.PlatformId.All ? node : null;
+
         String buildWhereClause()
         {
             var sb = new StringBuilder();
@@ -127,6 +134,11 @@ internal partial class SqlBuilder
 
             if (Table.HasPeriod)
                 sb.AppendLine(" and a.[Date] >= @From and a.[Date] < @end");
+
+            if (folder != null)
+                sb.AppendLine(folder == _descr.PlatformId.Root
+                    ? $" and a.[{Constants.FieldNames.Folder}] is null"
+                    : $" and a.[{Constants.FieldNames.Folder}] = @FolderNode");
 
             // a row passes when it carries any of the picked tags; nothing picked, nothing emitted
             if (!String.IsNullOrEmpty(tags))
@@ -419,6 +431,9 @@ internal partial class SqlBuilder
 
             if (lazy)
                 dbprms.AddString("@Id", _descr.PlatformUrl.Id);
+            if (folder != null && folder != _descr.PlatformId.Root)
+                // not '@Folder': the column is a reference, and every reference already has its parameter below
+                dbprms.AddTyped("@FolderNode", _descr.PlatformId.SqlDbType, _descr.PlatformId.ParseId(folder));
 
             dbprms.AddInt("@Offset", offset)
             .AddInt("@PageSize", pageSize)

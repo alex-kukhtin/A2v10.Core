@@ -46,7 +46,8 @@ internal static class FilterMetadata
          * The value differs with it (a code, not a reference), so the SQL, the CollectionView and
          * the panel all read one answer instead of each asking 'but is this one a set?'.
          */
-        foreach (var col in table.AllColumns(c => c.IsRef))
+        // not the folder: the tree is its filter, and a second one in the panel would say it twice
+        foreach (var col in table.AllColumns(c => c.IsRef && c.Type != ColumnType.Folder))
         {
             yield return new FilterDescriptor(col.IsSetRef ? FilterKind.Set : FilterKind.Ref, col.Name, col);
 

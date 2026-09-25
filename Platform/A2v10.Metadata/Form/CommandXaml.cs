@@ -288,7 +288,10 @@ internal partial class XamlBuilder
         {
             bindCmd.Command = CommandType.Dialog;
             bindCmd.Action = DialogAction.Append;
-            bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(Table.CollectionName));
+            bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind("Parent.ItemsSource"));
+            // the dialog's query: the selected folder, which the card starts on (InitialSource.Query)
+            if (Table.HasFolders)
+                bindCmd.BindImpl.SetBinding(nameof(BindCmd.Data), new Bind($"Root.{ScriptBuilder.CreateArgProperty}"));
         }
 
         return new Button()
@@ -305,7 +308,7 @@ internal partial class XamlBuilder
         {
             Url = $"{Endpoint.Path}/edit"
         };
-        bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(Table.CollectionName));
+        bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind("Parent.ItemsSource"));
         if (Table.EditWithPage)
         {
             bindCmd.Command = CommandType.OpenSelected;

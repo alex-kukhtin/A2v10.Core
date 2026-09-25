@@ -206,6 +206,9 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
             yield return (table, null);
             if (table.HasTags)
                 yield return (TableMetadataDefaults.CreateTagEntriesTable(table), table);
+            // no master: the link runs the other way, from the owner's Folder (CreateForeignKeys)
+            if (table.HasFolders)
+                yield return (TableMetadataDefaults.CreateFoldersTable(table), null);
             if (table.Kind == EndpointKind.Autonum)
                 yield return (TableMetadataDefaults.CreateAutonumValuesTable(table), table);
             foreach (var d in table.Details.Values)
@@ -635,7 +638,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         return strBuilder.ToString();
     }
 
-    private static String CreateForeignKeysScript(IEnumerable<TableMetadata> tables)
+    internal static String CreateForeignKeysScript(IEnumerable<TableMetadata> tables)
     {
         var strBuilder = new StringBuilder();
         strBuilder.AppendLine("-- FOREIGN KEYS");
@@ -673,7 +676,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
 
     private static readonly Version assVersion = Assembly.GetExecutingAssembly().GetName().Version ?? new();
 
-    private static async Task<String?> GenerateMetadataSeedAsync(IEnumerable<TableMetadata> tables)
+    internal static async Task<String?> GenerateMetadataSeedAsync(IEnumerable<TableMetadata> tables)
     {
         if (!tables.Any())
             return null;
@@ -689,8 +692,11 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
 
         static String ColumnRow(TableMetadata table, TableColumn col)
         {
-            // a self link has no RefTable - it points at this table, as its foreign key does (CreateForeignKeys)
+            /* A self link and a folder link have no RefTable - one points at this table, the other at
+             * the owner's folders; so does its foreign key (CreateForeignKeys)
+             */
             var refTable = col.Type == ColumnType.Parent ? table
+                : col.Type == ColumnType.Folder ? TableMetadataDefaults.CreateFoldersTable(table)
                 : col.IsRef ? col.RefTable?.Storage : null;
             // one descriptor, four facets - this row is exactly where they must agree
             var ti = col.ToSqlDbTypeInfo();

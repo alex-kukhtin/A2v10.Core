@@ -158,6 +158,11 @@ public class DatabaseMetadataCache
         if (_xamlFormCache.TryGetValue(dictKey, out var form))
             return form;
         form = getDefaultForm();
+        /* Initialized before it is shared: every request renders this one object, and a form other
+         * threads could see half-initialized would be initialized by all of them at once. Two first
+         * requests build and initialize two forms, and the cache keeps one.
+         */
+        form.InitComplete();
         return _xamlFormCache.GetOrAdd(dictKey, form);
     }
 

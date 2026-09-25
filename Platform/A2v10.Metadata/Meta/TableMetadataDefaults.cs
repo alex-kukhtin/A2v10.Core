@@ -114,4 +114,17 @@ internal static class TableMetadataDefaults
         entries.Construct();
         return entries;
     }
+
+    /* The folders of one catalog - a place of its elements, not a value: a reference to the catalog
+     * cannot land on a folder, which is what a table of their own buys over a flag in the catalog.
+     * Not a registry entry and no address: every gesture on a folder is an action of the owner, so
+     * the table is built for DDL and the owner's column points at it directly, as the tag entries do.
+     * The schema is the owner's - the trait is a catalog's.
+     */
+    public static TableMetadata CreateFoldersTable(TableMetadata table)
+    {
+        var folders = new TableMetadata();
+        folders.SetFolderDefaults(table);
+        return folders;
+    }
 }

@@ -44,7 +44,6 @@ public enum ColumnType
     Done,
     Void,
     IsSystem,
-    IsFolder,
     /* The link from a row to the record it is PART of - a details row to its header, a tag entry
      * to the tagged record. Never declared in a file: the platform emits it, names it after the
      * master's Model and finds it back by this type. The word 'Owner' deliberately no longer
@@ -149,7 +148,8 @@ public record TableColumn
     internal Boolean IsRef => Type == ColumnType.Ref || Type == ColumnType.Master ||
             Type == ColumnType.User || Type == ColumnType.Document ||
             Type == ColumnType.Company || Type == ColumnType.Operation ||
-            Type == ColumnType.Enum || Type == ColumnType.State || Type == ColumnType.Account;
+            Type == ColumnType.Enum || Type == ColumnType.State || Type == ColumnType.Account ||
+            Type == ColumnType.Folder;
 
     #region Database Fields
     public Int32? Length { get; init; }
@@ -181,7 +181,6 @@ public record TableColumn
     [JsonIgnore]
     internal Boolean HasDefaultBit =>
         Type == ColumnType.IsSystem
-        || Type == ColumnType.IsFolder
         || Type == ColumnType.Void
         || Type == ColumnType.Done;
 
@@ -322,7 +321,9 @@ public enum InitialSource
     Context,
     Profile,
     Policy,
-    Sql
+    Sql,
+    // a parameter of the url that opens creation; the value is its name, owned by whoever builds the url
+    Query
 }
 
 /* What the SHAPE has. Printing is deliberately not here: which blanks exist is declared by the
@@ -657,6 +658,20 @@ public sealed record TableMetadata
         MasterField = table.Model;
         Table = $"{table.Model}{key}";
         Construct(table.Model);
+    }
+    /* The folders of a catalog: declared by the owner's trait and served by the owner's actions, so
+     * the owner's address is theirs too. Shown by Name - Folder is a reference, and the map resolves
+     * it by the presentation like any other.
+     */
+    internal void SetFolderDefaults(TableMetadata owner)
+    {
+        Kind = EndpointKind.Folders;
+        Schema = owner.Schema;
+        Model = $"{owner.Model}Folder";
+        Table = $"{owner.Model}$Folders";
+        Path = owner.Path;
+        Construct();
+        Presentation = Constants.FieldNames.Name;
     }
     internal void SetDefaults(String schema, String table) => SetDefaults(schema, schema, table);
 

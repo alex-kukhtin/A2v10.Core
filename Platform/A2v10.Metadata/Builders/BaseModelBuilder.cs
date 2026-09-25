@@ -51,10 +51,9 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
         return _sqlBuilder.LoadIndexModelAsync(true);
     }
 
-    public Task<IDataModel> ExpandAsync(ExpandoObject expandPrms)
-    {
-        return _sqlBuilder.ExpandAsync(expandPrms);
-    }
+    // no tree here expands on demand: the folders and the chart of accounts are read whole
+    public Task<IDataModel> ExpandAsync(ExpandoObject expandPrms) =>
+        throw new InvalidOperationException($"Expand. {Path}: a tree is read whole, nothing expands on demand");
 
     public Task DbRemoveAsync(String? propName, ExpandoObject execPrms)
     {
@@ -91,6 +90,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
              */
             Constants.Print.Action => await _jsBuilder.CreatePrintTemplate(),
             "browsefolder" => String.Empty,
+            "editfolder" => await _jsBuilder.CreateEditFolderTemplate(),
             _ => throw new NotImplementedException($"Create template for {Action}")
         };
     }
@@ -103,6 +103,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
         return Action switch
         {
             "edit" => _sqlBuilder.SavePlainModelAsync(data, savePrms),
+            "editfolder" => _sqlBuilder.SaveFolderModelAsync(data),
             _ => throw new NotImplementedException($"Save Model Async for {Action}")
         };
     }

@@ -17,6 +17,7 @@ internal partial class BaseModelBuilder
             "apply" or "post" => PostAsync(prms),
             "fetch" => _sqlBuilder.FetchAsync(prms),
             "fetchfolder" => _sqlBuilder.FetchFolderAsync(prms),
+            "deletefolder" => _sqlBuilder.DeleteFolderAsync(prms),
             "unapply" or "unpost" => UnPostAsync(prms),
             var s when s.EndsWith(".unique") => _sqlBuilder.CheckUniqueAsync(prms, command.Split('.')[0]),
             _ => throw new NotImplementedException($"Implement invoke for {command}")

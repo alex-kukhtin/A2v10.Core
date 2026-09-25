@@ -91,11 +91,16 @@ internal static class TableDefaultColumns
         yield return new TableColumn(Constants.FieldNames.Memo, ColumnType.Memo);
     }
 
+    /* A closed set of columns: a folder carries a name and nothing the application reads, or moving
+     * an element between folders would silently change what the element means. Always a tree.
+     */
     static IEnumerable<TableColumn> FolderDefaultColumns(TableMetadata table)
     {
         yield return new TableColumn(Constants.FieldNames.Id, ColumnType.Id);
+        yield return new TableColumn(Constants.FieldNames.Void, ColumnType.Void);
         yield return new TableColumn(Constants.FieldNames.Name, ColumnType.Name);
         yield return new TableColumn(Constants.FieldNames.Memo, ColumnType.Memo);
+        yield return new TableColumn(Constants.FieldNames.Parent, ColumnType.Parent);
         foreach (var stamp in Stamps())
             yield return stamp;
     }

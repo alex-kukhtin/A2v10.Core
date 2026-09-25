@@ -22,6 +22,9 @@ public class SelectorSimple : Selector
         if (urlData != null)
             Data = urlData;
 
+        // before the check below: a cached element is initialized again, and its lens is found by the url it was given
+        var suffix = Folder ? "folder" : String.Empty;
+
 		if (AddOns.Count > 0)
 		{
 			for (int i = 0; i < AddOns.Count; i++)
@@ -29,7 +32,7 @@ public class SelectorSimple : Selector
 				var command = AddOns[i].GetBindingCommand(nameof(Command));
 				if (command != null)
 				{
-					if (command.Command == CommandType.Browse && command.Url == $"{Url}/browse")
+					if (command.Command == CommandType.Browse && command.Url == $"{Url}/browse{suffix}")
 					{
 						_renderAction = null;
 						return;
@@ -40,8 +43,6 @@ public class SelectorSimple : Selector
 
         if (String.IsNullOrEmpty(DisplayProperty))
             DisplayProperty = "Name";
-
-        var suffix = Folder ? "folder" : String.Empty;
 
         var urlBind = GetBinding(nameof(Url));
         var cmd = new BindCmd()

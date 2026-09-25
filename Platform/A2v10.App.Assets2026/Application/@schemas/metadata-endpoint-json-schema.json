@@ -577,7 +577,7 @@
 
         "initialSource": {
             "type": "string",
-            "enum": [ "literal", "context", "profile", "policy", "sql" ]
+            "enum": [ "literal", "context", "profile", "policy", "sql", "query" ]
         },
 
         "postDirection": {

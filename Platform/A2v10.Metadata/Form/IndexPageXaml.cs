@@ -172,16 +172,206 @@ internal partial class XamlBuilder
             };
     }
 
-    CollectionView XamlCollectionView() =>
+    /* In a folder, the grid reads the elements of the node the tree has selected - a LazyArray, loaded
+     * by the node's id (SqlBuilder.LoadIndexModelAsync, lazy). The grid itself does not change: it
+     * reads Parent.ItemsSource either way. A page carries the node in its url; a dialog has no url of
+     * its own, and CollectionView refuses ServerUrl there.
+     */
+    CollectionView XamlCollectionView(Boolean inFolder = false, Boolean inDialog = false) =>
         new()
         {
-            RunAt = RunMode.Server,
-            Bindings = b => b.SetBinding(nameof(CollectionView.ItemsSource), new Bind(Table.CollectionName)),
+            RunAt = inFolder && !inDialog ? RunMode.ServerUrl : RunMode.Server,
+            Bindings = b => b.SetBinding(nameof(CollectionView.ItemsSource),
+                new Bind(inFolder ? $"Folders.Selected({Table.CollectionName})" : Table.CollectionName)),
             Filter = new FilterDescription()
             {
                 Items = [.. CollectionViewFilters()]
             }
         };
+
+    /* The folder tree - the trait's and not the form's: without it the grid has no source, so it is
+     * not a thing an author could leave out, and a role nobody may omit would be one more spelling
+     * and a check to force it. Read whole (SqlBuilder.FolderTreeSql), so nothing expands on demand;
+     * the first node, the root, is selected at once and the grid opens on the whole catalog.
+     */
+    /* Classed by what it belongs to, as a field is by its domain (dom-*): the panel is the trait's,
+     * so an application styles every folder panel in one rule. The bar carries what acts on the
+     * folders themselves.
+     */
+    Panel FolderTree() => new()
+    {
+        Collapsible = true,
+        Header = "@[Folders]",
+        Style = PaneStyle.Transparent,
+        CssClass = "trait-folders",
+        Children = [
+            new Toolbar(_xamlServiceProvider)
+            {
+                Children = [ButtonCreateFolder(), ButtonEditFolder(), ButtonDeleteFolder(), new Separator(), FormButtons.Reload]
+            },
+            FolderTreeView()
+        ]
+    };
+
+    /* A folder inside the selected place: under a folder, or at the top when the place is the root -
+     * the root is a node like the others, so its SubItems ARE the top folders. Not on All, which is
+     * no place. The place travels as the element's Create sends it (ScriptBuilder.CreateArgProperty):
+     * where an element would land, a folder lands too, and the card takes it as its Parent.
+     */
+    Button ButtonCreateFolder()
+    {
+        var cmd = new BindCmd()
+        {
+            Command = CommandType.Dialog,
+            Action = DialogAction.Append,
+            Url = $"{Endpoint.Path}/editFolder"
+        };
+        cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind($"Root.{ScriptBuilder.SelectedPlaceProperty}.SubItems"));
+        cmd.BindImpl.SetBinding(nameof(BindCmd.Data), new Bind($"Root.{ScriptBuilder.CreateArgProperty}"));
+        return new Button()
+        {
+            Icon = Icon.Add,
+            Content = "@[Create]",
+            Bindings = b =>
+            {
+                b.SetBinding(nameof(Button.Command), cmd);
+                b.SetBinding(nameof(Button.Disabled), new Bind($"!Root.{ScriptBuilder.SelectedPlaceProperty}"));
+            }
+        };
+    }
+
+    // the template's command: it asks the server and takes the node out of the tree (ScriptBuilder.DeleteFolderCommand)
+    static Button ButtonDeleteFolder() => new()
+    {
+        Icon = Icon.Clear,
+        Tip = "@[Delete]",
+        Bindings = b => b.SetBinding(nameof(Button.Command),
+            new BindCmd(CommandType.Execute) { CommandName = ScriptBuilder.DeleteFolderCommand })
+    };
+
+    /* The folder the tree has selected, in the owner's editFolder dialog - an action of the owner, the
+     * folders have no address. Not on All or the root: neither is a folder (ScriptBuilder.SelectedFolderProperty).
+     * EditSelected and not ShowSelected: the renamed folder is merged back into its node.
+     */
+    Button ButtonEditFolder()
+    {
+        var cmd = new BindCmd()
+        {
+            Command = CommandType.Dialog,
+            Action = DialogAction.EditSelected,
+            Url = $"{Endpoint.Path}/editFolder"
+        };
+        cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind("Folders"));
+        return new Button()
+        {
+            Icon = Icon.Edit,
+            Tip = "@[Edit]",
+            Bindings = b =>
+            {
+                b.SetBinding(nameof(Button.Command), cmd);
+                b.SetBinding(nameof(Button.Disabled), new Bind($"!Root.{ScriptBuilder.SelectedFolderProperty}"));
+            }
+        };
+    }
+
+    // one tree for the page and for the picker of a folder - both read Folders, the same recordset
+    static TreeView FolderTreeView() => new()
+    {
+        AutoSelect = AutoSelectMode.FirstItem,
+        FolderSelect = true,
+        Bindings = b => b.SetBinding(nameof(TreeView.ItemsSource), new Bind("Folders")),
+        Children = [
+            new TreeViewItem()
+            {
+                Bindings = b =>
+                {
+                    b.SetBinding(nameof(TreeViewItem.ItemsSource), new Bind("SubItems"));
+                    b.SetBinding(nameof(TreeViewItem.Label), new Bind("Name"));
+                    b.SetBinding(nameof(TreeViewItem.Icon), new Bind("Icon"));
+                }
+            }
+        ]
+    };
+
+    /* The card of a folder: its name and its memo, nothing else to lay out (SqlBuilder.FolderSelectSql),
+     * so no form. The same buttons and the same title shape as the card of a record.
+     */
+    internal Dialog CreateEditFolderDialogXaml()
+    {
+        var folder = Constants.FieldNames.Folder;
+        return new Dialog()
+        {
+            Width = Length.FromString("30rem"),
+            Bindings = b => b.SetBinding(nameof(Dialog.Title), new Bind($"{folder}.Id") { Format = $$"""@[{{folder}}] [{0}]""" }),
+            Buttons = [
+                new Button()
+                {
+                    Content = "@[SaveAndClose]",
+                    Style = ButtonStyle.Primary,
+                    Bindings = b => b.SetBinding(nameof(Button.Command), new BindCmd(nameof(CommandType.SaveAndClose)))
+                },
+                new Button()
+                {
+                    Content = "@[Cancel]",
+                    Bindings = b => b.SetBinding(nameof(Button.Command), new BindCmd(nameof(CommandType.Close)))
+                }
+            ],
+            Children = [
+                new Grid(_xamlServiceProvider)
+                {
+                    Children = [
+                        new TextBox()
+                        {
+                            Label = "@[Name]",
+                            Bold = true,
+                            TabIndex = 1,
+                            CssClass = ColumnType.Name.ToXamlSemanticClass(),
+                            Bindings = b => b.SetBinding(nameof(TextBox.Value), new Bind($"{folder}.{Constants.FieldNames.Name}"))
+                        },
+                        new TextBox()
+                        {
+                            Label = "@[Memo]",
+                            Multiline = true,
+                            Rows = 3,
+                            CssClass = ColumnType.Memo.ToXamlSemanticClass(),
+                            Bindings = b => b.SetBinding(nameof(TextBox.Value), new Bind($"{folder}.{Constants.FieldNames.Memo}"))
+                        }
+                    ]
+                }
+            ]
+        };
+    }
+
+    /* The picker of Folder in the card (SelectorSimple, Folder = true): the tree alone, without the
+     * view of the whole catalog and the root place - neither is a value of the column (SqlBuilder.FolderTreeSql).
+     */
+    internal Dialog CreateBrowseFolderDialogXaml()
+    {
+        var selectCommand = new BindCmd() { Command = CommandType.Select };
+        selectCommand.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind("Folders"));
+        var tree = FolderTreeView();
+        tree.BindImpl.SetBinding(nameof(TreeView.DoubleClick), selectCommand);
+        return new Dialog()
+        {
+            Width = Length.FromString("30rem"),
+            Height = Length.FromString("40rem"),
+            Title = "@[Folders]",
+            Buttons = [
+                new Button()
+                {
+                    Style = ButtonStyle.Primary,
+                    Content = "@[Select]",
+                    Bindings = b => b.SetBinding(nameof(Button.Command), selectCommand)
+                },
+                new Button()
+                {
+                    Content = "@[Cancel]",
+                    Bindings = b => b.SetBinding(nameof(Button.Command), new BindCmd() { Command = CommandType.Close })
+                },
+            ],
+            Children = [tree]
+        };
+    }
 
 
     internal UIElement CreateXamlContainer(String action)
@@ -191,6 +381,9 @@ internal partial class XamlBuilder
             "index" => CreateIndexPageXaml(Declaration.Form(Constants.FormNames.Index)),
             "indexpartial" => CreateIndexPartialPageXaml(Declaration.Form(Constants.FormNames.Index)),
             "browse" => CreateBrowseDialogXaml(Declaration.Form(Constants.FormNames.Browse)),
+            // no form: the tree of the owner's folders, nothing to lay out
+            "browsefolder" => CreateBrowseFolderDialogXaml(),
+            "editfolder" => CreateEditFolderDialogXaml(),
             "edit" => CreateEditXaml(Declaration.Form(Constants.FormNames.Edit)),
             // no form: what it shows is derived from 'post' - see TransDialogXaml
             Constants.Trans.Action => CreateTransDialogXaml(),
@@ -219,12 +412,16 @@ internal partial class XamlBuilder
 
     internal Page CreateIndexPageXaml(FormMetadata meta)
     {
+        var taskpad = (Taskpad)ElementToControl(meta.Taskpad);
+        // first: the tree decides what everything below it filters
+        if (Table.HasFolders)
+            taskpad.Children.Insert(0, FolderTree());
         return new Page()
         {
             // what a DataGrid reads through (Parent.ItemsSource, Parent.Pager); a tree is bound to its collection
-            CollectionView = meta.Body.Any(e => e.Is == FormElementKind.DataGrid) ? XamlCollectionView() : null,
+            CollectionView = meta.Body.Any(e => e.Is == FormElementKind.DataGrid) ? XamlCollectionView(Table.HasFolders) : null,
             Children = [IndexGrid(meta)],
-            Taskpad = ElementToControl(meta.Taskpad) is Taskpad { Children.Count: > 0 } taskpad ? taskpad : null
+            Taskpad = taskpad.Children.Count > 0 ? taskpad : null
         };
     }
 
@@ -246,10 +443,13 @@ internal partial class XamlBuilder
         var isGrid = dialog.Body.Any(e => e.Is == FormElementKind.DataGrid);
         var selectCommand = new BindCmd() { Command = CommandType.Select };
         selectCommand.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(isGrid ? "Parent.ItemsSource" : Table.CollectionName));
+        var taskpad = (Taskpad)ElementToControl(dialog.Taskpad);
+        if (Table.HasFolders)
+            taskpad.Children.Insert(0, FolderTree());
         var dlg = new Dialog()
         {
-            CollectionView = isGrid ? XamlCollectionView() : null,
-            Width = Length.FromString(dialog.Taskpad.Elements.Count > 0 ? "80rem" : "60rem"), // TODO: calculate width from columns
+            CollectionView = isGrid ? XamlCollectionView(Table.HasFolders, inDialog: true) : null,
+            Width = Length.FromString(taskpad.Children.Count > 0 ? "80rem" : "60rem"), // TODO: calculate width from columns
             Height = Length.FromString("40rem"),
             Title = $"@[{Table.Model}.Browse]",
             Buttons = [
@@ -280,7 +480,7 @@ internal partial class XamlBuilder
                     ]
                 }
             ],
-            Taskpad = ElementToControl(dialog.Taskpad) is Taskpad { Children.Count: > 0 } taskpad ? taskpad : null
+            Taskpad = taskpad.Children.Count > 0 ? taskpad : null
         };
 
         // by type, not by position: the body may carry a bar of its own before the grid

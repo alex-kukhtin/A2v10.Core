@@ -191,7 +191,7 @@ public class XamlElement : ISupportBinding, IInitComplete, IBindWriter
 	}
 
 	#region IInitComplete
-	public void InitComplete()
+	public virtual void InitComplete()
 	{
 		OnEndInit();
 	}
