@@ -333,6 +333,10 @@ internal partial class SqlBuilder
 
         var sqlQuery = BuildLoadPlainSqlText();
 
+        // a document listing no operations declares no query initial for the column, so nothing else would read '?Op=' to refuse it
+        if (IsNewModel() && Endpoint.Declaration.OperationDeclarations.Count == 0)
+            Endpoint.StartOperation(QueryValue(Constants.FieldNames.OperationQuery));
+
         return await _dbContext.LoadModelSqlAsync(_descr.DataSource, sqlQuery, dbprms =>
         {
             AddDefaultParameters(dbprms);

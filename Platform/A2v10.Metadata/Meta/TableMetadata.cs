@@ -188,6 +188,14 @@ public record TableColumn
     internal Boolean IsStamp => Type is ColumnType.StampUser or ColumnType.StampDate
         or ColumnType.StampUserNull or ColumnType.StampDateNull;
 
+    /* A value that adds up: a sum of rows means something, so storno negates it. Price, Percent,
+     * Factor are rates - a reversed row keeps its price. Float, Decimal are numbers with no business
+     * meaning, and the platform does not guess one: to be flipped, a column is declared Amount or Qty.
+     * See CLAUDE.md, "Storno: what adds up is negated".
+     */
+    [JsonIgnore]
+    internal Boolean IsAdditive => Type is ColumnType.Amount or ColumnType.Qty or ColumnType.Money;
+
     [JsonIgnore]
     internal Boolean IsVoid => Type == ColumnType.Void;
     [JsonIgnore]

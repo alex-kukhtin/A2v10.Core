@@ -127,7 +127,7 @@ internal static class DefaultFormBuilder
         {
             ColumnType.RowNumber => 0,
             ColumnType.Ref => 1,
-            ColumnType.Float or ColumnType.Money => 3,
+            _ when col.Type.IsNumber() => 3,
             _ => 4
         };
 

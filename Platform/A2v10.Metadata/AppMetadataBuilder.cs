@@ -31,7 +31,7 @@ internal class AppMetadataBuilder(
     public String MetadataStyles(String minify)
     {
         return $"""
-            <link rel="stylesheet" href="/css/meta/a2v10spreadsheet.{minify}css?v={_appVersion.AppVersion}\">
+            <link rel="stylesheet" href="/css/meta/a2v10spreadsheet.{minify}css?v={_appVersion.AppVersion}">
             """;
     }
 
@@ -52,6 +52,8 @@ internal class AppMetadataBuilder(
 
     public async Task DbRemoveAsync(IPlatformUrl platformUrl, IModelView view, String? propName, ExpandoObject execPrms)
     {
+        // not only for symmetry: the referrers the remove checks are read from the deployed seed
+        await _metadataProvider.CheckDeployAsync(view.DataSource);
         var iBuilder = await _modelBuilderFactory.BuildAsync(platformUrl, view);
         await iBuilder.DbRemoveAsync(propName, execPrms);
     }
@@ -64,7 +66,8 @@ internal class AppMetadataBuilder(
     }
     public Task<IDataModel> ExecuteCommandAsync(IModelCommand command, ExpandoObject parameters)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException(
+            "A model.json command of type 'auto' is not supported on a metadata endpoint: the layer has no procedures to run");
     }
 
     public async Task<IDataModel> ExpandAsync(IPlatformUrl platformUrl, IModelView view, ExpandoObject execPrms)

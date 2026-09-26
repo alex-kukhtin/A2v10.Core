@@ -9,11 +9,11 @@ namespace A2v10.Metadata;
 
 internal partial class XamlBuilder
 {
-    /* A document that switches between operations is titled by ITSELF: the operation is a value
-     * picked on the page, and a title that changed with it would name the switch, not the document.
-     * The key is the one the codes of its operations start with - '@[Operation.receipt]' over
-     * 'receipt.supplier' - and for a document that is one implicit operation it is that operation's
-     * own key, which its Operation field shows as the title already (ControlsXaml).
+    /* Why the document name and not the operation: the operation is switched on the page, and a
+     * title that changed with it would name the switch, not the document. Why the Operation model
+     * as the key prefix: operation codes start with the document name, so the dictionary has one
+     * family for the document and its operations. Why no header for one implicit operation: its
+     * Operation field already shows that key (ControlsXaml), a header would repeat it.
      */
     internal Page CreateDocumentPageXaml(FormMetadata form)
     {

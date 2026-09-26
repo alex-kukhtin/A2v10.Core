@@ -62,7 +62,7 @@ internal partial class SqlBuilder
         return [.. inherit
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Distinct()
-            .Select(name => Table.Columns.FirstOrDefault(c => c.Name == name)
+            .Select(name => Table.AllColumns().FirstOrDefault(c => c.Name == name)
                 ?? throw new InvalidOperationException(
                     $"fetch: column '{name}' not found in {Table.SqlTableName}"))];
     }

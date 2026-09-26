@@ -49,13 +49,7 @@ internal abstract class LedgerReportBuilder : BaseReportBuilder
              .AddDateFromQuery("@To", prms, "To")
              .AddBitFromQuery("@Run", prms, "Run")
              .AddStringFromQuery("@Tab", prms, "Tab");
-            foreach (var r in _grouping.Filters)
-            {
-                if (r.DataType == ColumnType.Operation)
-                    dbprms.AddStringFromQuery($"@{r.Column}", prms, r.Column);
-                else
-                    dbprms.AddBigIntFromQuery($"@{r.Column}", prms, r.Column);
-            }
+            AddFilterParameters(dbprms, prms);
         });
     }
 

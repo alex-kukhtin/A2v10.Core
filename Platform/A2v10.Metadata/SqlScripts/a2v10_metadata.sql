@@ -138,7 +138,9 @@ begin
 	from a2meta.Columns c
 		left join a2meta.Tables t on t.[schema] = c.[schema] and t.[table] = c.[table]
 	where c.ref_schema = @Schema and c.ref_table = @Table and c.datatype = N'platformid'
-	and c.[schema] not in (N'jrn', N'rep');
+	/* Tables posting writes: no Void, and a row exists only while its document is posted - the
+	   document references the same record itself. Every such kind is listed here (reg with it). */
+	and c.[schema] not in (N'jrn', N'led');
 end
 go
 ------------------------------------------------

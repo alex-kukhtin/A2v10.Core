@@ -2,6 +2,7 @@
 
 > A durable artifact of **decisions**, not documentation. Intent lives here; `.cs` is its compile target.
 > Platform-wide goal and working method: [/CLAUDE.md](../../CLAUDE.md). Open issues and design debts: [ISSUES.md](ISSUES.md).
+> Analysis of the package, 2026-09-26 (findings by line, the approach, ERP on metadata, where it slows): [REVIEW-2026-09-26.md](REVIEW-2026-09-26.md).
 
 ## Declarations: rules by kind, layered by "mine wins"
 
@@ -71,6 +72,15 @@ Never a field list: three of four kinds have no column (`Fragment`, `Period`, `T
 - **Three consumers that do not see each other:** the index SQL, the CollectionView's `FilterDescription`, the taskpad panel. Only the panel goes through a form, and only as references — a form can hide a filter, never invent one. The namespace is derived from `TableMetadata` and the endpoint's declaration together (`Filters(table, declaration)`), because one column can mean different things over one table: the operation column is a selector over every operation at the storage, a set-like choice among the document's own where it lists `operations`, and absent where the address IS the one operation. Every consumer holds the declaration; the bake hands the namespace to the form with its members. It becomes declarable the day a filter does — not before. Decided 2026-09-26.
 - **SQL cannot follow a form.** One index procedure serves `index`, `indexpartial` and `browse`, and the last has its own form: following a form means choosing which to believe, or writing two procedures.
 - **No collision check between platform names and column names.** Tried and removed: the real collision surface is the SQL parameter space (`@Fragment`, `@From`, `@Order`, `@Offset`, …), which nothing has ever checked, so guarding two names of ten inside the namespace builder was worse than guarding none — it read as an invariant while being disabled by reordering two lines. A ref column named `Period` gives two controls on one Filter property, visible on the first page load.
+
+## Storno: what adds up is negated
+
+`"storno": true` on a mapped leg writes the movement negated in the same direction. Which columns it negates is one predicate, `TableColumn.IsAdditive`. Decided 2026-09-26 ([ISSUES 6.1](ISSUES.md)).
+
+- **Negated: `Amount`, `Qty`, `Money`** — values whose sum over rows means something. `Direction` never: the leg keeps its side.
+- **Not negated: `Price`, `Percent`, `Factor`** — rates. A reversed row keeps its price; its quantity and amount carry the sign.
+- **Not negated: `Float`, `Decimal`.** Numbers without business meaning, and the platform does not guess one for them. A column meant to flip is declared `Amount` or `Qty` — the type is where the author says it adds up.
+- **The question is "does it add up", not "is it a number".** Alignment and column role ask the second — `IsNumber` (XamlExtensions); the format splits on `IsSum`.
 
 ## Posting by procedure: a box with two ports
 

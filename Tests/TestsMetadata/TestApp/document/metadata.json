@@ -28,6 +28,9 @@
 		},
 		"Sum": {
 			"type": "Amount"
+		},
+		"DueDate": {
+			"type": "Date"
 		}
 	},
 	"rules": {

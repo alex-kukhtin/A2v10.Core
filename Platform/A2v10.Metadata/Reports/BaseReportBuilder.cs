@@ -3,10 +3,12 @@
 using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Dynamic;
 
 using Microsoft.Extensions.DependencyInjection;
 
+using A2v10.Data.Core.Extensions;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Xaml;
@@ -36,6 +38,22 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Repo
         if (dt == "platformid")
             dt = platformId.SqlTypeName;
         return $"[{prefix}{item.Column}] {dt}";
+    }
+
+    /* A filter parameter is declared as the key of its column (ToSqlDbTypeInfo): a platformid in the
+     * application's base, a code as a string. Bigint for everything but an operation sent an enum code
+     * to an int and a guid to nothing. Empty is 'not picked' - the WHERE reads null as no filter.
+     */
+    protected void AddFilterParameters(DbParameterCollection dbprms, ExpandoObject prms)
+    {
+        foreach (var f in _grouping.Filters)
+        {
+            var value = prms.Get<Object>(f.Column)?.ToString();
+            if (f.DataType.ToSqlDbTypeInfo().SqlName == "platformid")
+                dbprms.AddTyped($"@{f.Column}", platformId.SqlDbType, platformId.ParseId(value));
+            else
+                dbprms.AddString($"@{f.Column}", String.IsNullOrEmpty(value) ? null : value);
+        }
     }
 
     /* What a report TYPE means, in one place. The runtime asks on its way to rendering and the

@@ -40,7 +40,8 @@ internal static class DeclarationBake
         if (declared.Count == 0)
             return [];
 
-        var columns = table.Columns;
+        // Default columns count, as in CheckNames: 'Memo' and 'Folder' are the record's too
+        var columns = table.AllColumns().ToList();
 
         static TableColumn Find(TableMetadata t, IReadOnlyList<TableColumn> cols, String name, String what) =>
             cols.FirstOrDefault(c => c.Name == name)

@@ -45,7 +45,7 @@ internal partial class SqlBuilder
         var root = Id($"N'{_descr.PlatformId.Root}'");
 
         var platformNodes = withElements ? $"""
-            select {Id($"N'{_descr.PlatformId.All}'")}, cast(N'[Без групування]' as nvarchar(255)), cast(N'folder-ban' as nvarchar(32)),
+            select {Id($"N'{_descr.PlatformId.All}'")}, cast(N'@[Ungrouped]' as nvarchar(255)), cast(N'folder-ban' as nvarchar(32)),
                 {Id("null")}, 0, 1, cast(0 as bit)
             union all
             select {root}, cast(N'@[{Table.CollectionName}]' as nvarchar(255)), cast(N'folder-outline' as nvarchar(32)),

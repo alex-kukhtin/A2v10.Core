@@ -1,0 +1,18 @@
+{
+	"$schema": "../../../../../Platform/A2v10.App.Assets2026/Application/@schemas/metadata-endpoint-json-schema.json#",
+	"storage": "/document",
+	"post": [
+		{
+			"journal": "/journal/stock",
+			"dir": "out",
+			"storno": true,
+			"each": {
+				"details": "Rows",
+				"kinds": [ "Stock" ]
+			},
+			"document": {
+				"Store": "StoreTo"
+			}
+		}
+	]
+}

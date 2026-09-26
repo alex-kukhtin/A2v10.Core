@@ -119,7 +119,8 @@ internal class ReportGrouping
     {
         ReportItemMetadata CreateReportItemMetadata(String name)
         {
-            var column = _surface.Columns.FirstOrDefault(c => c.Name == name)
+            // the baseline counts: a ledger's Sum, Acc, CorrAcc are columns of the surface too
+            var column = _surface.AllColumns().FirstOrDefault(c => c.Name == name)
                 ?? throw new InvalidOperationException($"Column '{name}' not found in surface '{_surface.Path}'");
             Boolean isChecked = false;
             if (kind == ReportItemKind.Grouping)

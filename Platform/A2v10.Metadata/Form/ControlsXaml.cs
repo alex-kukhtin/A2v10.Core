@@ -643,17 +643,10 @@ internal partial class XamlBuilder
                 Label = column.Header,
                 Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
             },
-            ColumnType.Money or ColumnType.Float or 
-            ColumnType.Decimal => new TextBox()
-            {
-                Label = column.Header,
-                Align = TextAlign.Right,
-                CssClass = column.Type.ToXamlSemanticClass(),
-                Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
-            },
             _ => new TextBox()
             {
                 Label = column.Header,
+                Align = column.Type.ToXamlAlign(),
                 CssClass = column.Type.ToXamlSemanticClass(),
                 Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
             }

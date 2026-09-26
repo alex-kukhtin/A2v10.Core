@@ -168,7 +168,16 @@ internal sealed class PostStatements
         {
             var name = col.Name;
 
-            // baseline journal columns filled by the platform
+            /* The baseline date, by NAME as the ledger takes it: an author's date column is of the
+             * same type, and dispatching on it wrote the document's date into every one of them.
+             */
+            if (name == Constants.FieldNames.Date)
+            {
+                result.Add(($"d.[{Constants.FieldNames.Date}]", name));
+                continue;
+            }
+
+            // baseline journal columns filled by the platform, found by type
             switch (col.Type)
             {
                 case ColumnType.Id:                             // identity
@@ -185,13 +194,9 @@ internal sealed class PostStatements
                 case ColumnType.Row:                            // detail-row provenance; null when header-only
                     result.Add((detailsTable != null ? $"r.[{Constants.FieldNames.Id}]" : "null", name));
                     continue;
-                case ColumnType.Date:
-                    result.Add(($"d.[{Constants.FieldNames.Date}]", name));
-                    continue;
             }
 
-            var isMeasure = col.Type is ColumnType.Money or ColumnType.Float or ColumnType.Decimal;
-            String Signed(String expr) => p.Storno && isMeasure ? $"-{expr}" : expr;
+            String Signed(String expr) => p.Storno && col.IsAdditive ? $"-{expr}" : expr;
 
             // 1. explicit overrides
             if (p.Document.TryGetValue(name, out var docField))

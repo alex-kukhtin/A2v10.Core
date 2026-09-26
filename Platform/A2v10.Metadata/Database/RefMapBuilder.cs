@@ -101,7 +101,7 @@ internal class RefMapBuilder
         static TableColumn SourceColumn(InheritDescriptor descriptor)
         {
             var refTable = descriptor.Ref.RefTableCheck.Storage;
-            return refTable.Columns.FirstOrDefault(c => c.Name == descriptor.Source)
+            return refTable.AllColumns().FirstOrDefault(c => c.Name == descriptor.Source)
                 ?? throw new InvalidOperationException(
                     $"inherit: source '{descriptor.Source}' not found in {refTable.SqlTableName}");
         }

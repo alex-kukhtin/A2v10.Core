@@ -32,7 +32,7 @@ internal partial class SqlBuilder
         var model = await _dbContext.LoadModelSqlAsync(DataSource, sql, dbprms =>
         {
             dbprms.AddBigInt("@UserId", _currentUser.Identity.Id)
-            .AddBigInt("@Id", prms?.Get<Int64>("Id"))
+            .AddTyped("@Id", PlatformId.SqlDbType, PlatformId.ParseId(prms?.Get<Object>("Id")?.ToString()))
             .AddString("@Value", prms?.Get<String>("Value"));
         });
         return model.ToInvokeResult();

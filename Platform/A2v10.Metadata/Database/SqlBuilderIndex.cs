@@ -94,7 +94,7 @@ internal partial class SqlBuilder
                 }
                 else
                 {
-                    field = $"a.{orderColumn.Name}";
+                    field = $"a.[{orderColumn.Name}]";
                     value = orderColumn.Name;
                 }
             }

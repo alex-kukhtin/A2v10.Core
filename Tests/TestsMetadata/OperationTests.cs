@@ -64,6 +64,16 @@ public class OperationTests
         Assert.Throws<InvalidOperationException>(() => receipt.StartOperation("waybillin"));
     }
 
+    // '?Op=' where the document lists none names a choice it does not offer: refused, not ignored
+    [Fact]
+    public async Task A_document_listing_no_operations_refuses_the_url_parameter()
+    {
+        var waybill = await LoadNormalAsync(Document, "waybillin");
+
+        Assert.Null(waybill.StartOperation(null));
+        Assert.Throws<InvalidOperationException>(() => waybill.StartOperation("gratis"));
+    }
+
     // exactly one 'post' is in force: the one of the code the document carries when it is posted
     [Fact]
     public async Task Posting_is_chosen_by_the_code_in_the_row()

@@ -128,7 +128,7 @@ internal static class MetadataExtensions
      * Unique because a folder is: PostJournals is distinct by table, and one schema has one 'stock'.
      */
     internal static String TransName(this TableMetadata journal) =>
-        journal.Path.Split('/')[^1].ToPascalCase();
+        journal.Path.Split('/')[^1].KebabToPascal();
     internal static String TransTypeName(this TableMetadata journal) => $"T{journal.TransName()}";
 
     internal static IEnumerable<RefDescriptor> AllRefs(this IEnumerable<TableColumn> columns) =>
@@ -203,11 +203,16 @@ internal static class MetadataExtensions
     /* The code a new document starts on, from the name '?Op=' carries: that operation, or the first
      * when none is named. A name that is not one of this document's is refused rather than left
      * empty, as an unparsable query value would be: an address naming another document's operation
-     * is a link that is wrong, and an empty operation is a document nothing can post.
+     * is a link that is wrong, and an empty operation is a document nothing can post. A document
+     * listing none refuses any name for the same reason - the address names a choice the document
+     * does not offer - and answers null, since its code is not the url's to give.
      */
-    internal static String StartOperation(this NormalEndpointMetadata endpoint, String? name)
+    internal static String? StartOperation(this NormalEndpointMetadata endpoint, String? name)
     {
         var operations = endpoint.Declaration.OperationDeclarations;
+        if (operations.Count == 0)
+            return String.IsNullOrEmpty(name) ? null : throw new InvalidOperationException(
+                $"{endpoint.Path}: '?{Constants.FieldNames.OperationQuery}={name}' names an operation, and this document lists none. Drop the parameter.");
         if (String.IsNullOrEmpty(name))
             return operations[0].Id;
         return operations.FirstOrDefault(o => o.Name == name)?.Id
