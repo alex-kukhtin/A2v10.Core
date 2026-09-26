@@ -1,0 +1,18 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "A2v10 <name>.operation.json (operation of a document)",
+    "description": "One operation of a document: document/<x>/<name>.operation.json, listed in 'operations' of document/<x>/metadata.json. An operation is what the user switches inside an open document, so it holds only what is re-evaluated on a switch - 'post'. Birth and address (initialValues, autonum, fixed, forms, traits) belong to the document. The rules of an operation are not generated yet and are refused at load.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [ "post" ],
+    "properties": {
+        "$schema": { "type": "string" },
+        "description": { "type": "string", "description": "For the model, not the platform: nothing reads it - no generator, runtime or deploy." },
+        "post": {
+            "type": "array",
+            "description": "What posting a document of this operation does - the same entries as 'post' of a document. Exactly one 'post' is in force at the moment of posting: the one of the operation the document carries.",
+            "minItems": 1,
+            "items": { "$ref": "metadata-endpoint-json-schema.json#/definitions/post" }
+        }
+    }
+}

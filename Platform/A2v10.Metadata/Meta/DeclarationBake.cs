@@ -177,7 +177,7 @@ internal static class DeclarationBake
             try
             {
                 return (declaration.Forms.GetValueOrDefault(name) ?? createDefault(table))
-                    .Bake(table, candidates(table));
+                    .Bake(table, candidates(table), [.. table.Filters(declaration)]);
             }
             catch (Exception ex)
             {
@@ -191,11 +191,12 @@ internal static class DeclarationBake
         return new Dictionary<String, FormMetadata>()
         {
             { Constants.FormNames.Index,
-                Build(Constants.FormNames.Index, t => DefaultFormBuilder.CreateIndexForm(t, platformId), MemberMetadata.IndexMembers) },
+                Build(Constants.FormNames.Index, t => DefaultFormBuilder.CreateIndexForm(t, declaration, platformId), MemberMetadata.IndexMembers) },
             { Constants.FormNames.Browse,
-                Build(Constants.FormNames.Browse, t => DefaultFormBuilder.CreateBrowseForm(t, platformId), MemberMetadata.IndexMembers) },
+                Build(Constants.FormNames.Browse, t => DefaultFormBuilder.CreateBrowseForm(t, declaration, platformId), MemberMetadata.IndexMembers) },
             { Constants.FormNames.Edit,
-                Build(Constants.FormNames.Edit, DefaultFormBuilder.CreateEditForm, MemberMetadata.EditMembers) }
+                Build(Constants.FormNames.Edit, t => DefaultFormBuilder.CreateEditForm(t, switchesOperation: declaration.Operations.Count > 0),
+                    MemberMetadata.EditMembers) }
         };
     }
 

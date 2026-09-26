@@ -161,7 +161,7 @@ internal partial class XamlBuilder
             Property = "Fragment",
             DataType = DataType.String
         };
-        foreach (var f in Table.Filters())
+        foreach (var f in Table.Filters(Declaration))
             yield return f.Kind switch
             {
                 FilterKind.Period => new FilterItem() { Property = f.Name, DataType = DataType.Period },

@@ -380,9 +380,9 @@ public sealed record TableMetadata
      */
     public List<SetValueMetadata> Values { get; init; } = [];
 
-    /* The rows of the operation registry. Not declared by any file - each operation is an endpoint
-     * pointing at a document storage - so the deploy walk fills it (AllElementsMetadata) and json
-     * never can.
+    /* The rows of the operation registry. Not declared by any file as rows - a document lists its
+     * operations, or is one itself over a document storage - so the deploy walk fills it
+     * (AllElementsMetadata) and json never can.
      */
     [JsonIgnore]
     public List<OperationMetadata> Operations { get; init; } = [];
@@ -785,8 +785,12 @@ public sealed record TableIndex(Boolean Unique, String[] Columns)
         $"{(Unique ? "UX" : "IX")}_{table.Table}_{String.Join('_', Columns)}";
 }
 
-// one operation of a document family: its code is the name of the endpoint - see DocumentOperation
-public record OperationMetadata(String Id);
+/* One row of the operation registry: the code (see MetadataExtensions.DocumentOperations), the
+ * document it belongs to and its place in that document's list. The last two are a projection of
+ * the files, kept by the deploy, so SQL finds a document's operations by equality and in order
+ * instead of spelling the list out in every statement.
+ */
+public record OperationMetadata(String Id, String Document, Int32 Order);
 
 /* One value of a set. Only 'id' is required: 'name' defaults to the localization key
  * '@[{Model}.{Id}]' (the key must carry the set's name, or two 'Complete' in two sets collapse

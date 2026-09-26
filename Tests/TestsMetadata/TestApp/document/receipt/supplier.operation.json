@@ -1,0 +1,16 @@
+{
+	"$schema": "../../../../../Platform/A2v10.App.Assets2026/Application/@schemas/metadata-operation-json-schema.json#",
+	"post": [
+		{
+			"journal": "/journal/stock",
+			"dir": "in",
+			"each": {
+				"details": "Rows",
+				"kinds": [ "Stock" ]
+			},
+			"document": {
+				"Store": "StoreTo"
+			}
+		}
+	]
+}

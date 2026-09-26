@@ -61,6 +61,10 @@ internal partial class SqlBuilder
         var query = _descr.PlatformUrl.Query;
         return (query?.Get<Object>(name) ?? query?.Get<Object>(name.ToLowerInvariant()))?.ToString();
     }
+
+    // '?Op=' carries the name the file uses; the column holds the code (MetadataExtensions.StartOperation)
+    String? QueryInitialValue(String key, String param) =>
+        QueryColumn(key).IsOperation ? Endpoint.StartOperation(QueryValue(param)) : QueryValue(param);
     String BuildLoadPlainSqlText()
     {
         var allColumns = Table.AllColumns().ToList();
@@ -282,6 +286,24 @@ internal partial class SqlBuilder
             sb.AppendLine(ValuesRecordset(en, withAll: false));
         }
 
+        /* The operations a document switches between ride with the record, as a set's values do: the
+         * living ones of THIS document, in the order its file lists them. A document on an operation
+         * that has since become void still shows its name - that comes through the map.
+         */
+        if (Endpoint.Declaration.OperationDeclarations.Count > 0)
+        {
+            var registry = Table.AllColumns().First(c => c.IsOperation).RefTableCheck.Storage;
+            sb.AppendLine();
+            sb.AppendLine($"""
+                -- operations of the document
+                select [{registry.CollectionName}!{registry.TypeName}!Array] = null,
+                    [Id!!Id] = e.[{Constants.FieldNames.Id}], [Name!!Name] = e.[{Constants.FieldNames.Name}]
+                from {registry.SqlTableName} e
+                where e.[{Constants.FieldNames.Document}] = N'{Endpoint.Name}' and e.[{Constants.FieldNames.Void}] = 0
+                order by e.[{Constants.FieldNames.Order}];
+                """);
+        }
+
         var defs = generateDefaults();
         if (defs != null) {
             sb.AppendLine();
@@ -316,7 +338,7 @@ internal partial class SqlBuilder
             AddDefaultParameters(dbprms);
             dbprms.AddString("@Id", _descr.PlatformUrl.Id);
             foreach (var (key, param) in QueryInitials())
-                dbprms.AddString($"@Query{key}", QueryValue(param));
+                dbprms.AddString($"@Query{key}", QueryInitialValue(key, param));
         });
     }
 
@@ -492,7 +514,12 @@ internal partial class SqlBuilder
             // the key of THIS table: platformid for most, an account code for a chart of accounts
             var keyType = Table.KeyColumn.SqlDataType();
 
-            var updatedFields = Table.AllColumns(c => c.IsFieldUpdated()).Select(c => $"t.[{c.Name}] = s.[{c.Name}]");
+            /* A document with a list of operations is switched between them while it is edited, so its
+             * operation is saved like any field; one implicit operation is the endpoint and never changes.
+             */
+            var switches = Endpoint.Declaration.OperationDeclarations.Count > 0;
+            var updatedFields = Table.AllColumns(c => c.IsFieldUpdated() || switches && c.IsOperation)
+                .Select(c => $"t.[{c.Name}] = s.[{c.Name}]");
             var insertedFields = Table.AllColumns(c => c.IsFieldInserted()).Select(c => $"[{c.Name}]").ToList();
             List<String> insertedValues = [.. insertedFields];
             /* A new record is created and modified by the same hand, so both stamps are written on

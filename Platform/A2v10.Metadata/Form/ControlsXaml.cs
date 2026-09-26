@@ -267,6 +267,25 @@ internal partial class XamlBuilder
             /* The same badge the grid draws, so the panel and the rows read as one thing. The item's
              * value is the CODE here and the element everywhere else - the line above says why.
              */
+            /* The operations of a document listing several are the file's list, so the items are
+             * written from it, as Create's menu is (XamlBuilder.ButtonCreate) - one list on one page
+             * from one source. The value is the code, as in any set filter; 'All' is written with them,
+             * the registry has no such row to give.
+             */
+            FilterKind.Set when filter.ColumnCheck.IsOperation => new ComboBox()
+            {
+                Label = $"@[{filter.ColumnCheck.RefTableCheck.Storage.Model}]",
+                Highlight = true,
+                Children = [
+                    new ComboBoxItem() { Content = $"@[{filter.ColumnCheck.RefTableCheck.Storage.Model}.All]", Value = String.Empty },
+                    .. Endpoint.Declaration.OperationDeclarations.Select(op => new ComboBoxItem()
+                    {
+                        Content = $"@[{filter.ColumnCheck.RefTableCheck.Storage.Model}.{op.Id}]",
+                        Value = op.Id
+                    })
+                ],
+                Bindings = b => b.SetBinding(nameof(ComboBox.Value), new Bind($"Parent.Filter.{filter.Name}"))
+            },
             FilterKind.Set when filter.ColumnCheck.Type == ColumnType.State => StatePicker(
                 filter.ColumnCheck.RefTableCheck.Storage.CollectionName,
                 new Bind($"Parent.Filter.{filter.Name}"), new Bind(Constants.FieldNames.Id),
@@ -514,6 +533,30 @@ internal partial class XamlBuilder
                 Rows = 3,
                 CssClass = column.Type.ToXamlSemanticClass(),
                 Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
+            },
+            /* One implicit operation IS the document, so its name is the page's title. A list is what
+             * the user switches between, so it is picked like a set's value: the candidates ride with
+             * the record (SqlBuilderPlain), the value is the element, and the title is the document's
+             * (DocumentPageXaml).
+             */
+            ColumnType.Operation when Endpoint.Declaration.OperationDeclarations.Count > 0 => new ComboBox()
+            {
+                Label = column.Header,
+                Children = [
+                    new ComboBoxItem()
+                    {
+                        Bindings = b =>
+                        {
+                            b.SetBinding(nameof(ComboBoxItem.Content), new Bind(Constants.FieldNames.Name));
+                            b.SetBinding(nameof(ComboBoxItem.Value), new Bind());
+                        }
+                    }
+                ],
+                Bindings = b =>
+                {
+                    b.SetBinding(nameof(ComboBox.ItemsSource), new Bind(column.RefTableCheck.Storage.CollectionName));
+                    b.SetBinding(nameof(ComboBox.Value), valueBind);
+                }
             },
             ColumnType.Operation => new Header()
             {

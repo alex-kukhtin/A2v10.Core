@@ -104,7 +104,7 @@ internal static class MetadataExtensions
         var lines = table.Values
             .Select((v, ix) => $"{ix}|{v.Id}|{v.Name}|{v.Memo}|{(v.Void ? 1 : 0)}|{v.Color}|{v.Role}")
             .Concat(table.Autonums.Select(a => $"{a.Id}|{a.Name}|{a.Pattern}|{a.Period}"))
-            .Concat(table.Operations.Select(o => o.Id))
+            .Concat(table.Operations.Select(o => $"{o.Id}|{o.Document}|{o.Order}"))
             .Concat(table.SeedRows.Select(SeedLine))
             .ToList();
         if (lines.Count == 0)
@@ -153,15 +153,21 @@ internal static class MetadataExtensions
     {
         var initials = new Dictionary<String, InitialMetadata>(endpoint.Declaration.Initials);
 
-        /* A literal like any other: the value is the code, and the column is found BY TYPE. The
-         * name was spelled 'Operation' literally in both readers, so a document that called the
-         * column anything else got a map insert into a column that is not there and a default for
-         * a property the model does not carry.
+        /* The column is found BY TYPE. The name was spelled 'Operation' literally in both readers,
+         * so a document that called the column anything else got a map insert into a column that is
+         * not there and a default for a property the model does not carry.
+         *
+         * One implicit operation is a literal like any other. A list is chosen by the url that
+         * opens the new document ('?Op=', by the name the file uses) and falls back to the first -
+         * the query value is turned into the code by StartOperation, where it is read.
          */
-        if (endpoint.DocumentOperation() is { Length: > 0 } operation)
+        var operations = endpoint.DocumentOperations();
+        if (operations.Count > 0)
         {
             var column = endpoint.Storage.AllColumns().First(c => c.IsOperation);
-            initials[column.Name] = new InitialMetadata(InitialSource.Literal, operation);
+            initials[column.Name] = endpoint.Declaration.OperationDeclarations.Count > 0
+                ? new InitialMetadata(InitialSource.Query, Constants.FieldNames.OperationQuery)
+                : new InitialMetadata(InitialSource.Literal, operations[0]);
         }
 
         // the set says where its cycle begins; the endpoint may not say it again (DeclarationBake)
@@ -181,11 +187,31 @@ internal static class MetadataExtensions
         return initials;
     }
 
-    /* The operation is the endpoint, so its key is the endpoint name - not a slice of a path. Only an
-     * endpoint over a storage declared elsewhere is one: the storage itself (/document, an empty name)
-     * is the whole family, and answering '' for it filtered its list down to nothing.
+    /* The codes of this document's operations, as the registry and every row carry them. A document
+     * listing 'operations' has one per name, '<document>.<name>'. A document over a storage declared
+     * elsewhere that lists none is ONE operation, implicit, and its code is the endpoint name - not a
+     * slice of a path. Anything else has none: the storage itself (/document, an empty name) is every
+     * document, and answering '' for it filtered its list down to nothing.
      */
-    internal static String? DocumentOperation(this NormalEndpointMetadata endpoint) =>
-        !endpoint.Declaration.HasOwnShape && endpoint.Storage.IsDocument && endpoint.Storage.Columns.Any(c => c.IsOperation)
-            ? endpoint.Name : null;
+    internal static IReadOnlyList<String> DocumentOperations(this NormalEndpointMetadata endpoint) =>
+        endpoint.Declaration.OperationDeclarations.Count > 0
+            ? [.. endpoint.Declaration.OperationDeclarations.Select(o => o.Id)]
+            : !endpoint.Declaration.HasOwnShape && endpoint.Storage.IsDocument && endpoint.Storage.Columns.Any(c => c.IsOperation)
+                ? [endpoint.Name]
+                : [];
+
+    /* The code a new document starts on, from the name '?Op=' carries: that operation, or the first
+     * when none is named. A name that is not one of this document's is refused rather than left
+     * empty, as an unparsable query value would be: an address naming another document's operation
+     * is a link that is wrong, and an empty operation is a document nothing can post.
+     */
+    internal static String StartOperation(this NormalEndpointMetadata endpoint, String? name)
+    {
+        var operations = endpoint.Declaration.OperationDeclarations;
+        if (String.IsNullOrEmpty(name))
+            return operations[0].Id;
+        return operations.FirstOrDefault(o => o.Name == name)?.Id
+            ?? throw new InvalidOperationException(
+                $"{endpoint.Path}: '?{Constants.FieldNames.OperationQuery}={name}' is not an operation of this document. Its operations: {String.Join(", ", operations.Select(o => o.Name))}");
+    }
 }

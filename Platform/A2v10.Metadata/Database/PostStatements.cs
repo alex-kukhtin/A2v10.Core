@@ -18,31 +18,69 @@ internal sealed class PostStatements
 {
     private readonly NormalEndpointMetadata _endpoint;
     private readonly TableMetadata _table;
-    private readonly List<PostMetadata> _post;
 
     internal PostStatements(NormalEndpointMetadata endpoint)
     {
         _endpoint = endpoint;
         _table = endpoint.Storage;
-        _post = endpoint.Declaration.Post is { Count: > 0 } post
-            ? post
-            : throw new InvalidOperationException($"Post: {endpoint.Path} declares no 'post'");
+        var posts = endpoint.Declaration.Posts().ToList();
+        if (posts.Count == 0)
+            throw new InvalidOperationException($"Post: {endpoint.Path} declares no 'post'");
 
         /* Whoever writes the rows: the dialog filters by provenance, and so does an unpost that was
          * not declared. A journal without it takes rows nothing can find again.
          */
-        foreach (var journal in _post.SelectMany(p => p.Targets))
+        foreach (var journal in posts.SelectMany(p => p.Post).SelectMany(p => p.Targets))
             JournalDocumentColumn(journal);
 
-        // CheckPost has run: a 'sql' entry is the only entry, so the first one answers for the list
-        var sql = _post[0].Sql;
-        Post = sql != null
+        if (posts is [(null, var own)])
+        {
+            (Post, UnPost) = Bodies(own);
+            return;
+        }
+
+        /* One body per operation, chosen by the code the document carries when it is posted. The
+         * switch costs the server nothing: the code is read at the moment of posting, and a posted
+         * document is read-only, so the unpost meets the same code the post did.
+         */
+        var bodies = posts.Select(p => (p.Operation!.Id, Bodies: Bodies(p.Post))).ToList();
+        Post = Dispatch(bodies.Select(b => (b.Id, b.Bodies.Post)));
+        UnPost = Dispatch(bodies.Select(b => (b.Id, b.Bodies.UnPost)));
+    }
+
+    // CheckPost has run: a 'sql' entry is the only entry, so the first one answers for the list
+    private (String Post, String UnPost) Bodies(List<PostMetadata> post)
+    {
+        var sql = post[0].Sql;
+        var postBody = sql != null
             ? Exec(sql.Post)
-            : String.Join("\n\n", _post.Select(p => p.IsLedger ? InsertIntoLedger(p) : InsertIntoJournal(p)));
-        UnPost = sql?.UnPost != null
+            : String.Join("\n\n", post.Select(p => p.IsLedger ? InsertIntoLedger(p) : InsertIntoJournal(p)));
+        var unPostBody = sql?.UnPost != null
             ? Exec(sql.UnPost)
-            : String.Join("\n", _endpoint.Declaration.PostJournals()
+            : String.Join("\n", post.SelectMany(p => p.Targets).DistinctBy(j => j.SqlTableName)
                 .Select(j => $"delete from {j.SqlTableName} where {DocumentFilter(j, _table, String.Empty)};"));
+        return (postBody, unPostBody);
+    }
+
+    /* A code the endpoint does not declare is refused rather than posted as nothing: it is a document
+     * whose operation was removed from 'operations' after it was saved, and an empty posting would
+     * mark it Done with no movements.
+     */
+    private String Dispatch(IEnumerable<(String Id, String Body)> bodies)
+    {
+        var column = _table.AllColumns().First(c => c.IsOperation);
+        var branches = String.Join("\nelse ", bodies.Select(b => $"""
+            if @OperationId = {column.SqlLiteral(b.Id)}
+            begin
+            {b.Body}
+            end
+            """));
+        return $"""
+            declare @OperationId {column.SqlDataType()} = (select [{column.Name}] from {_table.SqlTableName} where [{Constants.FieldNames.Id}] = @Id);
+            {branches}
+            else
+                throw 600000, N'The operation of the document is not one of {_endpoint.Path}', 0;
+            """;
     }
 
     // both run inside the platform's transaction, after the Done flag has been claimed

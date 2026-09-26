@@ -466,9 +466,11 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         return sb.ToString();
     }
 
-    /* The operations of the document families - the rows the documents' Operation column points at,
-     * so before the foreign keys. Shaped as the numbering merge: an operation dropped from the files
-     * keeps its row, documents carry its code. The name is the localization key, as a set's is.
+    /* The operations of the documents - the rows the documents' Operation column points at, so
+     * before the foreign keys. Shaped as the set values merge: an operation dropped from the files
+     * keeps its row (documents and journals carry its code) and becomes void, put back it is restored.
+     * The name is the localization key, as a set's is; the document and the order are rewritten on
+     * every deploy, since they are the files' and reach the hash through Xtra.
      */
     private static String CreateOperationsScript(IEnumerable<TableMetadata> tables)
     {
@@ -480,25 +482,31 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
             return String.Empty;
 
         var rows = registry.Operations.Select(o =>
-            $"\t({Str(o.Id)}, {Str($"@[{registry.Model}.{o.Id}]")})");
+            $"\t({Str(o.Id)}, {Str($"@[{registry.Model}.{o.Id}]")}, {Str(o.Document)}, {o.Order})");
 
         return $"""
             -- OPERATIONS
             {CliDatabaseCreator.SQL_DIVIDER}
             begin
                 set nocount on;
-                declare @{registry.Model} table([Id] {registry.KeyColumn.SqlDataType()}, [Name] nvarchar(255));
+                declare @{registry.Model} table([Id] {registry.KeyColumn.SqlDataType()}, [Name] nvarchar(255),
+                    [Document] nvarchar(64), [Order] int);
 
-                insert into @{registry.Model}([Id], [Name]) values
+                insert into @{registry.Model}([Id], [Name], [Document], [Order]) values
             {String.Join($",{Environment.NewLine}", rows)};
 
                 merge {registry.SqlTableName} as t
                 using @{registry.Model} as s
                 on t.[Id] = s.[Id]
                 when matched then update set
-                    t.[Name] = s.[Name]
-                when not matched then insert ([Id], [Name]) values
-                    (s.[Id], s.[Name]);
+                    t.[Name] = s.[Name],
+                    t.[Document] = s.[Document],
+                    t.[Order] = s.[Order],
+                    t.[Void] = 0
+                when not matched then insert ([Id], [Name], [Document], [Order], [Void]) values
+                    (s.[Id], s.[Name], s.[Document], s.[Order], 0)
+                when not matched by source then update set
+                    t.[Void] = 1;
             end
             go
 

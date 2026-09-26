@@ -19,8 +19,8 @@ internal static class DefaultFormBuilder
      * names it when a screen wants it; the default hides it, which is the one thing a form may do
      * to a filter (see CLAUDE.md, "Filters").
      */
-    static List<FormElement> FilterElements(TableMetadata table) =>
-        table.Filters().Where(f => f.Kind != FilterKind.Role).Select(f => f.Name).ToList() is { Count: > 0 } names
+    static List<FormElement> FilterElements(TableMetadata table, DeclarationMetadata declaration) =>
+        table.Filters(declaration).Where(f => f.Kind != FilterKind.Role).Select(f => f.Name).ToList() is { Count: > 0 } names
             ? [new FormElement() { Is = FormElementKind.Filters, Filters = names }]
             : [];
 
@@ -32,7 +32,7 @@ internal static class DefaultFormBuilder
             .Where(c => !(c.Type == ColumnType.Id && platformId.ClrType == typeof(Guid)))
             .OrderBy(c => c.IsMemo);
 
-    public static FormMetadata CreateIndexForm(TableMetadata table, AppPlatformId platformId)
+    public static FormMetadata CreateIndexForm(TableMetadata table, DeclarationMetadata declaration, AppPlatformId platformId)
     {
         if (table.Kind == EndpointKind.AccPlan)
             return CreateTreeIndexForm(table);
@@ -55,7 +55,7 @@ internal static class DefaultFormBuilder
             Taskpad = new FormElement()
             {
                 Is = FormElementKind.Taskpad,
-                Elements = FilterElements(table)
+                Elements = FilterElements(table, declaration)
             }
         };
     }
@@ -80,7 +80,7 @@ internal static class DefaultFormBuilder
         };
     }
 
-    public static FormMetadata CreateBrowseForm(TableMetadata table, AppPlatformId platformId)
+    public static FormMetadata CreateBrowseForm(TableMetadata table, DeclarationMetadata declaration, AppPlatformId platformId)
     {
         // an account is picked from the tree the index shows
         if (table.Kind == EndpointKind.AccPlan)
@@ -100,14 +100,14 @@ internal static class DefaultFormBuilder
             Taskpad = new FormElement()
             {
                 Is = FormElementKind.Taskpad,
-                Elements = FilterElements(table)
+                Elements = FilterElements(table, declaration)
             }
         };
     }
 
-    public static FormMetadata CreateEditForm(TableMetadata table)
+    public static FormMetadata CreateEditForm(TableMetadata table, Boolean switchesOperation = false)
     {
-        return table.EditWithPage ? CreateEditPage(table) : CreateEditFormDialog(table);
+        return table.EditWithPage ? CreateEditPage(table, switchesOperation) : CreateEditFormDialog(table);
     }
 
     /* Members an edit form carries after its columns - what a trait contributes to the record, in
@@ -166,10 +166,14 @@ internal static class DefaultFormBuilder
             : new FormElement() { Is = FormElementKind.Tabs, Elements = tabs };
     }
 
-    public static FormMetadata CreateEditPage(TableMetadata table)
+    /* 'switchesOperation': the document lists its operations, so the operation is a mode of the
+     * whole page, picked in the taskpad - not the title it is for a document that is one operation
+     * (DocumentPageXaml titles the page then).
+     */
+    public static FormMetadata CreateEditPage(TableMetadata table, Boolean switchesOperation = false)
     {
-        static Int32 GroupNumber(TableColumn c) => c.Type switch {
-            ColumnType.Operation => 1,
+        Int32 GroupNumber(TableColumn c) => c.Type switch {
+            ColumnType.Operation => switchesOperation ? 0 : 1,
             ColumnType.Autonum => 1,
             ColumnType.Date => 1,
             ColumnType.Memo => 3,
@@ -177,6 +181,7 @@ internal static class DefaultFormBuilder
         };
         var cols = table.AllColumns(TableColumnPredicates.IsEditColumn).ToList();
 
+        var taskpadCols = cols.Where(c => GroupNumber(c) == 0).ToList();
         var topCols = cols.Where(c => GroupNumber(c) == 1).OrderBy(c => !c.IsOperation);
         var middleCols = cols.Where(c => GroupNumber(c) == 2);
         var bottomCols = cols.Where(c => GroupNumber(c) == 3);
@@ -184,6 +189,17 @@ internal static class DefaultFormBuilder
         var fd = new FormMetadata()
         {
             Is = FormKind.Page,
+            Taskpad = new FormElement()
+            {
+                Is = FormElementKind.Taskpad,
+                Elements = taskpadCols.Count == 0 ? [] : [
+                    new FormElement()
+                    {
+                        Is = FormElementKind.Group,
+                        Fields = [.. taskpadCols.Select(c => c.Name)]
+                    }
+                ]
+            },
             Body = [
                 new FormElement()
                 {

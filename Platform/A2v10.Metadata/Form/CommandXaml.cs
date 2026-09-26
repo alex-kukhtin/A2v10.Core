@@ -90,7 +90,7 @@ internal partial class XamlBuilder
              * otherwise doubles up with the next one. A document whose endpoint declares no 'post'
              * has no Post, no UnPost and nothing to show in the transactions dialog.
              */
-            if (Declaration.Post is { Count: > 0 })
+            if (Declaration.Posts().Any())
             {
                 yield return CommandBarItem.Separator;
                 yield return EntityCommandType.Post;
@@ -273,8 +273,33 @@ internal partial class XamlBuilder
         }
     };
 
+    /* A document listing its operations is created ON one of them: one item per operation, in the
+     * order of the list, each opening the card with '?Op=' - the name the file uses, turned into the
+     * code by the load (MetadataExtensions.StartOperation). The '{0}' is where 'new' goes, as the id
+     * goes into a print url: without it the argument lands past the query.
+     */
     Button ButtonCreate()
     {
+        if (Endpoint.Declaration.OperationDeclarations is { Count: > 0 } operations && Table.EditWithPage)
+            return new Button()
+            {
+                Icon = Icon.Add,
+                Content = "@[Create]",
+                DropDown = new DropDownMenu()
+                {
+                    Children = [.. operations.Select(op => new XMenuItem()
+                    {
+                        Content = $"@[{TableMetadataDefaults.OperationsTable().Model}.{op.Id}]",
+                        Bindings = b => b.SetBinding(nameof(XMenuItem.Command), new BindCmd()
+                        {
+                            Command = CommandType.Open,
+                            Url = $"{Endpoint.Path}/edit/{{0}}?{Constants.FieldNames.OperationQuery}={op.Name}",
+                            Argument = "new"
+                        })
+                    })]
+                }
+            };
+
         var bindCmd = new BindCmd()
         {
             Url = $"{Endpoint.Path}/edit"

@@ -82,6 +82,31 @@ public sealed record ConditionalRuleMetadata : RuleSet
     public String Test { get; init; } = default!;
 }
 
+/* One operation of a document as its own file declares it: '<name>.operation.json' beside the
+ * document's metadata.json. An operation is what the user switches INSIDE an open document, so it
+ * carries only what is re-evaluated on a switch - 'post' and 'rules'. Birth and address (initial
+ * values, numbering, fixed fields, forms) belong to the document. See a2v10-md-skill,
+ * concepts/operations.
+ *
+ * 'rules' and 'details' are read so that they can be refused: an operation's rules land on the
+ * client as a 'when' over the Operation column, and no generator reads 'when' yet. Dropped silently
+ * they would be a rule that is written and never holds.
+ */
+public sealed record OperationFileMetadata
+{
+    public List<PostMetadata>? Post { get; init; }
+    public RuleMetadata Rules { get; init; } = new();
+    public Dictionary<String, DeclarationMetadata> Details { get; init; } = [];
+}
+
+/* One operation as the rest of the platform needs it. 'Name' is what the file and the url say
+ * ('export', ?Op=export); 'Id' is what the registry and every row carry - '<document>.<name>', unique
+ * by construction because a document's name is. An endpoint over a document storage that declares
+ * no operations is one operation too, implicit, and its Id is the document's name alone - that one
+ * has no declaration of its own and never appears here.
+ */
+public sealed record OperationDeclaration(String Name, String Id, List<PostMetadata> Post);
+
 public sealed record InitialMetadata(InitialSource Source, String Value);
 public sealed record InheritMetadata(String Ref, String Field);
 
@@ -149,6 +174,17 @@ public sealed record DeclarationMetadata
     public List<PostMetadata>? Post { get; init; }
     public String? Autonum { get; init; }
 
+    /* The operations of this document, as written: names, in the order the selector shows them, and
+     * the first is where a new document starts. Each is a file beside this one; the files are read
+     * by the loader into OperationDeclarations. Never layered from 'storage' - the storage is every
+     * document and has no operations of its own.
+     */
+    public List<String> Operations { get; init; } = [];
+
+    // the operations resolved: one per name in 'Operations', each with its file read
+    [JsonIgnore]
+    public IReadOnlyList<OperationDeclaration> OperationDeclarations { get; init; } = [];
+
     // rules and inherit declared for the rows of a detail; keys match TableMetadata.Details
     public Dictionary<String, DeclarationMetadata> Details { get; init; } = [];
 
@@ -215,7 +251,17 @@ public sealed record DeclarationMetadata
      * the command bar asks it that way and so does the dialog.
      */
     internal IEnumerable<TableMetadata> PostJournals() =>
-        (Post ?? []).SelectMany(p => p.Targets).DistinctBy(j => j.SqlTableName);
+        Posts().SelectMany(p => p.Post).SelectMany(p => p.Targets).DistinctBy(j => j.SqlTableName);
+
+    /* Every 'post' this endpoint runs, with the operation it belongs to: the endpoint's own (no
+     * operation), or one per operation. Never both - a document with operations writes 'post' in
+     * each operation's file and not in its own (DatabaseMetadataProvider.CheckOperations), so exactly
+     * one 'post' is in force for any document at the moment it is posted.
+     */
+    internal IEnumerable<(OperationDeclaration? Operation, List<PostMetadata> Post)> Posts() =>
+        OperationDeclarations.Count > 0
+            ? OperationDeclarations.Select(o => ((OperationDeclaration?)o, o.Post))
+            : Post is { Count: > 0 } post ? [(null, post)] : [];
 
     /* Which of the two spellings each entry uses, before anything is resolved - the resolve itself
      * differs by kind, so this runs first.
@@ -227,9 +273,12 @@ public sealed record DeclarationMetadata
      */
     internal void CheckPost(String path)
     {
-        if (Post is not { Count: > 0 } post)
-            return;
+        foreach (var (operation, post) in Posts())
+            CheckPost(operation == null ? path : $"{path} ({operation.Name})", post);
+    }
 
+    private static void CheckPost(String path, List<PostMetadata> post)
+    {
         if (!post.Any(p => p.IsSql))
         {
             foreach (var p in post)

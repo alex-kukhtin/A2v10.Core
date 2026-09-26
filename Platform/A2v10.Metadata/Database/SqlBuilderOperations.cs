@@ -33,14 +33,15 @@ internal class SqlBuilderOperations(IServiceProvider serviceProvider)
         select [{table.CollectionName}!{table.TypeName}!Array] = null,
           [Id!!Id] = a.[Id], [Name!!Name] = a.[Name], a.[Memo]
         from {table.SqlTableName} a
+        where a.[Void] = 0
         order by a.[Name];
         """;
         return _dbContext.LoadModelSqlAsync(dataSource, sql, _ => { });
     }
 
     /* Type-ahead in a selector pointing here. The shape is the one SqlBuilder.FetchAsync returns,
-     * minus everything the registry has no room for: no 'Void' (the table has none) and no extra
-     * columns, because Id and Name are all it holds worth carrying.
+     * minus everything the registry has no room for: no extra columns, because Id and Name are all
+     * it holds worth carrying. A void operation leaves the candidates, as a void value of a set does.
      */
     public async Task<IInvokeResult> FetchAsync(String? dataSource, ExpandoObject? prms)
     {
@@ -54,7 +55,7 @@ internal class SqlBuilderOperations(IServiceProvider serviceProvider)
         select top(100) [{table.CollectionName}!{table.TypeName}!Array] = null,
           [Id!!Id] = a.[Id], [Name!!Name] = a.[Name]
         from {table.SqlTableName} a
-        where a.[Name] like @fr
+        where a.[Void] = 0 and a.[Name] like @fr
         order by a.[Name];
         """;
         var model = await _dbContext.LoadModelSqlAsync(dataSource, sql,

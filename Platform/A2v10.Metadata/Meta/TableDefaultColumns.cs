@@ -83,12 +83,19 @@ internal static class TableDefaultColumns
         yield return new TableColumn(Constants.FieldNames.RowNo, ColumnType.RowNumber);
     }
 
-    // the key is the operation's code - a NaturalKey, see EnumDefaultColumns
+    /* The key is the operation's code - a NaturalKey, see EnumDefaultColumns. Void as a set's value
+     * has it: an operation that left the files keeps its row (documents and journals carry its code)
+     * and leaves the candidate list. Document and Order are the deploy's projection of the files - the
+     * document's name, the position in its 'operations' - see OperationMetadata.
+     */
     static IEnumerable<TableColumn> OperationDefaultColumns(TableMetadata table)
     {
         yield return new TableColumn(Constants.FieldNames.Id, ColumnType.NaturalKey);
+        yield return new TableColumn(Constants.FieldNames.Void, ColumnType.Void);
         yield return new TableColumn(Constants.FieldNames.Name, ColumnType.Name);
         yield return new TableColumn(Constants.FieldNames.Memo, ColumnType.Memo);
+        yield return new TableColumn(Constants.FieldNames.Document, ColumnType.String) { Length = 64 };
+        yield return new TableColumn(Constants.FieldNames.Order, ColumnType.Integer);
     }
 
     /* A closed set of columns: a folder carries a name and nothing the application reads, or moving

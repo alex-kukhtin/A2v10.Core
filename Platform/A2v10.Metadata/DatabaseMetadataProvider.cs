@@ -699,6 +699,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
 
         var kind = await KindFolderAsync(schema);
         CheckShapeSource(kind, schema, table, declaration);
+        if (kind == Constants.SchemaNames.Document)
+            declaration = await LoadOperationsAsync(schema, table, declaration);
 
         /* An endpoint that owns its shape builds it from the text already in hand; one that points
          * elsewhere asks for the endpoint at that address, because a shared table comes with a
@@ -727,6 +729,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             storage = targetEndpoint.Storage;
             storageDeclaration = targetEndpoint.Declaration;
         }
+        if (kind == Constants.SchemaNames.Document)
+            CheckOperationColumn(MetadataFileName(schema, table), declaration, storage);
 
         /* The only place that decides which kind of endpoint this is. The discriminator is the
          * folder, not a key in the file: a file cannot lie about what it is. An alias names the
@@ -799,6 +803,112 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             return;
         throw new InvalidOperationException(
             $"'autonum' names the numbering '{declaration.Autonum}', but {storage.Path} declares no column of type 'autonum' for the number to land in");
+    }
+
+    internal const String OperationFileSuffix = ".operation.json";
+
+    /* A document's operations: every name in 'operations' is a file '<name>.operation.json' beside
+     * metadata.json, and every such file is a name in the list. Both ways - a name without a file is
+     * an operation that cannot post, a file nobody lists is one that silently does not exist. Read
+     * here, with the document's own text, so the endpoint is published whole.
+     */
+    private async Task<DeclarationMetadata> LoadOperationsAsync(String schema, String table, DeclarationMetadata declaration)
+    {
+        var folder = Path.Combine(schema, table).NormalizeSlash();
+        var files = _codeProvider.EnumerateAllFiles(folder, $"*{OperationFileSuffix}")
+            .Select(f => Path.GetFileName(f)[..^OperationFileSuffix.Length])
+            .ToList();
+        CheckOperations(MetadataFileName(schema, table), table, declaration, files);
+        if (declaration.Operations.Count == 0)
+            return declaration;
+
+        var operations = new List<OperationDeclaration>();
+        foreach (var name in declaration.Operations)
+        {
+            var fileName = Path.Combine(folder, $"{name}{OperationFileSuffix}").NormalizeSlash();
+            using var stream = _codeProvider.FileStreamRO(fileName)
+                ?? throw new InvalidOperationException($"{fileName}: not found");
+            using var sr = new StreamReader(stream);
+            var operation = JsonConvert.DeserializeObject<OperationFileMetadata>(await sr.ReadToEndAsync(),
+                JsonSettings.CamelCaseSerializerSettings)
+                ?? throw new InvalidOperationException($"{fileName}: OperationFileMetadata deserialization fails");
+            operations.Add(ToOperationDeclaration(fileName, table, name, operation));
+        }
+        return declaration with { OperationDeclarations = operations };
+    }
+
+    /* What 'operations' says in metadata.json, checked against the files that lie beside it. The
+     * storage (/document, no name of its own) is every document, not one act, so it has none.
+     */
+    internal static void CheckOperations(String file, String table, DeclarationMetadata declaration, IReadOnlyCollection<String> files)
+    {
+        var names = declaration.Operations;
+        if (names.Count > 0 && String.IsNullOrEmpty(table))
+            throw new InvalidOperationException(
+                $"{file}: declares 'operations', and this is the storage - every document, not one of them. Declare them on the document that is opened from the menu.");
+        foreach (var name in names)
+            if (!IsIdentifier(name))
+                throw new InvalidOperationException(
+                    $"{file}: operation '{name}' - a name is letters, digits and '_', not starting with a digit: it is a file name, a url parameter and the tail of a code");
+        if (names.GroupBy(n => n).FirstOrDefault(g => g.Count() > 1) is { } twice)
+            throw new InvalidOperationException($"{file}: operation '{twice.Key}' is listed twice");
+        if (names.Count > 0 && declaration.Post != null)
+            throw new InvalidOperationException(
+                $"{file}: declares both 'operations' and 'post'. Each operation posts in its own way, so 'post' is written in each {OperationFileSuffix} and not here.");
+        if (names.FirstOrDefault(n => !files.Contains(n)) is { } noFile)
+            throw new InvalidOperationException(
+                $"{file}: operation '{noFile}' has no file. Add '{noFile}{OperationFileSuffix}' beside metadata.json.");
+        if (files.FirstOrDefault(f => !names.Contains(f)) is { } noName)
+            throw new InvalidOperationException(names.Count == 0
+                ? $"{file}: '{noName}{OperationFileSuffix}' lies beside it, and it declares no 'operations'. List it there, or remove the file."
+                : $"{file}: '{noName}{OperationFileSuffix}' lies beside it and is not in 'operations': [{String.Join(", ", names)}]. List it, or remove the file.");
+    }
+
+    private static Boolean IsIdentifier(String name) =>
+        name.Length > 0 && !Char.IsDigit(name[0]) && name.All(c => Char.IsLetterOrDigit(c) || c == '_');
+
+    // 'post' is required: an operation IS what posting does, so one without it is a switch that changes nothing
+    internal static OperationDeclaration ToOperationDeclaration(String fileName, String document, String name, OperationFileMetadata operation)
+    {
+        if (operation.Post is not { Count: > 0 } post)
+            throw new InvalidOperationException($"{fileName}: declares no 'post'. What posting does is the whole of an operation.");
+        var rules = operation.Rules;
+        if (rules.Required.Length > 0 || rules.Total.Length > 0 || rules.Visible.Count > 0 || rules.Computed.Count > 0
+            || rules.Inherit.Count > 0 || rules.When.Count > 0 || operation.Details.Count > 0)
+            throw new InvalidOperationException(
+                $"{fileName}: declares 'rules'. The rules of an operation are not generated yet (they need 'when' on the client), so they would be written and never hold. Put them on the document for now.");
+        return new OperationDeclaration(name, $"{document}.{name}", post);
+    }
+
+    /* Which rows of the table are this document's is told by the column of type 'operation', so every
+     * rule that needs to tell them apart needs that column - and one that has it must use it.
+     *
+     *  - 'operations' writes a code per document into it;
+     *  - 'storage' shares the table with other documents, and the code is what separates their rows:
+     *    a storage without the column mixes them, and nothing can sort them out again;
+     *  - a document with the column, its own table and its own 'post' but no 'operations' puts one
+     *    value into it forever: the column carries nothing, and it reads as a missing 'operations';
+     *  - the column is never an initial value: where a new document starts is the list and the url.
+     */
+    internal static void CheckOperationColumn(String file, DeclarationMetadata declaration, TableMetadata storage)
+    {
+        var column = storage.AllColumns().FirstOrDefault(c => c.IsOperation);
+        if (column == null)
+        {
+            if (declaration.Operations.Count > 0)
+                throw new InvalidOperationException(
+                    $"{file}: declares 'operations', and {storage.Path} has no field of type 'operation' to hold the code. Add one to its 'fields'.");
+            if (!String.IsNullOrEmpty(declaration.Storage))
+                throw new InvalidOperationException(
+                    $"{file}: 'storage' points at {storage.Path}, which has no field of type 'operation'. The rows of the documents over one table are told apart by it; add one to the 'fields' of {storage.Path}.");
+            return;
+        }
+        if (declaration.HasOwnShape && declaration.Operations.Count == 0 && declaration.Post != null)
+            throw new InvalidOperationException(
+                $"{file}: has a field of type 'operation' and a 'post' of its own, and no 'operations' - the field would hold one value forever. Add 'operations', or remove the field.");
+        if (declaration.InitialValues.ContainsKey(column.Name))
+            throw new InvalidOperationException(
+                $"{file}: 'initialValues' names [{column.Name}], the operation. Where a new document starts is the first of 'operations', or the one '?Op=' names.");
     }
 
     /* 'storage' and 'surface' both name another endpoint, and a shape is declared by the endpoint
@@ -1059,7 +1169,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                 : $"""
                     {file}: declares neither 'table' nor 'storage', so nothing says where the data lives.
                         "table":   "<TableName>"     - if this endpoint has its own table;
-                        "storage": "/{kind}/<name>" - if it is a second one over a table declared elsewhere (an operation, a second screen).
+                        "storage": "/{kind}/<name>" - if it is a second one over a table declared elsewhere (a document over a shared table, a second screen).
                       There is no default: an absent 'table' is not a shared table and not a derived name.
                     """);
     }
@@ -1095,7 +1205,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         if (endpoint is not NormalEndpointMetadata normal)
             return;
         normal.Declaration.CheckPost(normal.Path);
-        if (normal.Declaration.Post is not { Count: > 0 } post)
+        var post = normal.Declaration.Posts().SelectMany(p => p.Post).ToList();
+        if (post.Count == 0)
             return;
 
         async Task<TableMetadata> JournalAsync(String path)
@@ -1106,7 +1217,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
 
         /* The key names the kind of its target, so a path of the other kind is refused here - past this
          * point a ledger under 'journal' fails as a column nobody can resolve, far from the cause.
-         * 'journals' of a procedure do not take a ledger yet.
+         * 'journals' of a procedure takes both: what reads a procedure's result (the provenance delete,
+         * the transactions dialog) counts tables, and a ledger is one.
          */
         /* An account literal in a leg is referenced by code, and the code is in the chart's file - so it
          * is checked here, without a database, like an autonum name. Only the file: code does not refer
@@ -1127,12 +1239,12 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                 }
         }
 
-        async Task<TableMetadata> TargetAsync(String key, String path, EndpointKind kind)
+        async Task<TableMetadata> TargetAsync(String key, String path, params EndpointKind[] kinds)
         {
             var target = await JournalAsync(path);
-            if (target.Kind != kind)
+            if (!kinds.Contains(target.Kind))
                 throw new InvalidOperationException(
-                    $"post: {normal.Path}: '{key}' names {path}, which is a {target.Kind}, not a {kind}");
+                    $"post: {normal.Path}: '{key}' names {path}, which is a {target.Kind}, not a {String.Join(" or ", kinds)}");
             return target;
         }
 
@@ -1150,7 +1262,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             // assigned, never appended: a second pass would otherwise double the list
             var journals = new List<TableMetadata>();
             foreach (var path in p.Journals)
-                journals.Add(await TargetAsync("journals", path, EndpointKind.Journal));
+                journals.Add(await TargetAsync("journals", path, EndpointKind.Journal, EndpointKind.Ledger));
             p.SqlTargets = journals;
         }
         _ = new PostStatements(normal);
@@ -1334,7 +1446,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     {
         var allMeta = _codeProvider.EnumerateAllFilesRecursive("", "metadata.json");
         var tables = new List<TableMetadata>();
-        var operations = new List<(String Id, String Path)>();
+        var operations = new List<(OperationMetadata Operation, String Path)>();
         foreach (var file in allMeta.Where(f => !IsBuildOutput(f)))
         {
             var endpointPath = Path.GetDirectoryName(file)?.NormalizeSlash();
@@ -1343,37 +1455,36 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             var (schema, table) = ParsePath(endpointPath);
             /* Only a data endpoint declares a table, and only one that does not point elsewhere:
              * a shared storage is deployed by the file that declares it, a report declares none.
-             * One that points at a document storage is an operation of it - a row of the registry.
+             * Every operation of a document is a row of the registry - the ones it lists, whatever
+             * table it lives in, and the implicit one of a document over a shared storage.
              */
             if (await GetEndpointAsync(dataSource, schema, table) is not NormalEndpointMetadata endpoint)
                 continue;
+            operations.AddRange(endpoint.DocumentOperations()
+                .Select((id, ix) => (new OperationMetadata(id, endpoint.Name, ix + 1), endpoint.Path)));
             if (!endpoint.Declaration.HasOwnShape)
-            {
-                if (endpoint.DocumentOperation() is { Length: > 0 } op)
-                    operations.Add((op, endpoint.Path));
                 continue;
-            }
             tables.Add(endpoint.Storage);
         }
         /* The registry is a table like a set: deployed with its rows, and the rows reach the
          * hash through Xtra. Sorted, because the fingerprint is taken from the text and must not
          * depend on how the file system is enumerated.
          *
-         * An operation's Id is the last segment of its address, so two folders of one kind (an
-         * alias, app.json) can give two endpoints one Id. Merged, they would be one row, and both
-         * registers would filter by it and show each other's documents - so it is refused here,
-         * where both addresses are still known.
+         * An operation's Id starts with the last segment of its document's address, so two folders
+         * of one kind (an alias, app.json) can give two documents one name and their operations one
+         * Id. Merged, they would be one row, and both registers would filter by it and show each
+         * other's documents - so it is refused here, where both addresses are still known.
          */
-        var twice = operations.GroupBy(o => o.Id).FirstOrDefault(g => g.Count() > 1);
+        var twice = operations.GroupBy(o => o.Operation.Id).FirstOrDefault(g => g.Count() > 1);
         if (twice != null)
             throw new InvalidOperationException($"""
-                {String.Join(" and ", twice.Select(o => o.Path))} are one operation '{twice.Key}': an operation's Id is the name of its folder, and the folders around it do not count.
+                {String.Join(" and ", twice.Select(o => o.Path))} give one operation '{twice.Key}': an operation's Id is the name of its document's folder (and '.<operation>'), and the folders around it do not count.
                   Rename one of them.
                 """);
         if (operations.Count > 0)
             tables.Add(TableMetadataDefaults.OperationsTable() with
             {
-                Operations = [.. operations.Select(o => new OperationMetadata(o.Id)).OrderBy(o => o.Id, StringComparer.Ordinal)]
+                Operations = [.. operations.Select(o => o.Operation).OrderBy(o => o.Id, StringComparer.Ordinal)]
             });
         return tables;
     }

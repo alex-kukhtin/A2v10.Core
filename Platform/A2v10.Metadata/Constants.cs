@@ -26,6 +26,11 @@ internal static class Constants
         public const String Folder = nameof(Folder);
         public const String Color = nameof(Color);
         public const String For = nameof(For);
+        /* The url parameter a new document's operation is named by: /document/invoice/new?Op=export.
+         * PascalCase because the platform stores every query key so (PlatformUrl.AddQueryParam) - a
+         * lower-case spelling here is a key nobody finds, and the document silently starts on the first.
+         */
+        public const String OperationQuery = "Op";
         public const String Tag = nameof(Tag);
         public const String Tags = nameof(Tags);
         public const String Order = nameof(Order);

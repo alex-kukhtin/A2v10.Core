@@ -23,7 +23,7 @@ public class AliasTests
         Assert.Equal("/sale/invoice", operation.Path);
         Assert.Same(storage.Storage, operation.Storage);
         // the Id is the last segment: the alias is where the file lies, not a part of the name
-        Assert.Equal("invoice", operation.DocumentOperation());
+        Assert.Equal(["invoice"], operation.DocumentOperations());
     }
 
     [Fact]

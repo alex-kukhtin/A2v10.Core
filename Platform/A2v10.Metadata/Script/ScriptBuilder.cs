@@ -54,7 +54,9 @@ internal partial class ScriptBuilder(BuilderDescriptor desciptor, Boolean isTs)
     {
         String property(TableColumn column)
         {
-            var ro = column.IsFieldUpdated() ? "" : "readonly ";
+            // the operation of a document listing several is switched on the page, and saved (SqlBuilderPlain)
+            var switches = column.IsOperation && Endpoint.Declaration.OperationDeclarations.Count > 0;
+            var ro = column.IsFieldUpdated() || switches ? "" : "readonly ";
             if (column.IsRef)
                 return $"\t{ro}{column.Name}: {column.RefTableCheck.Storage.RefTypeName};";
             return $"\t{ro}{column.ModelName}: {column.ToTsType(_descr.PlatformId)};";

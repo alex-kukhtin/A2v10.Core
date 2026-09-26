@@ -62,7 +62,18 @@
         "rules": { "$ref": "#/definitions/rules" },
         "post": {
             "type": "array",
+            "description": "What posting does. With 'operations' it is not written here: each operation posts in its own way, in its own file.",
             "items": { "$ref": "#/definitions/post" }
+        },
+        "operations": {
+            "type": "array",
+            "description": "Document only, never on the storage (document/metadata.json). The operations of this document - what the user switches INSIDE an open document ('from a supplier', 'free of charge'); a thing opened from the menu is a document, not an operation. Names in selector order; the first is where a new document starts, '/document/<x>/new?Op=<name>' starts on another. Each name is a file '<name>.operation.json' beside this one holding its 'post' (metadata-operation-json-schema.json), and each such file is listed here - both ways are checked at load. Requires a field of type 'operation' in the shape (here or in 'storage'); 'post' is then written in the operation files and not here, and 'initialValues' may not name that field. The code stored in the rows and in the registry is '<document>.<name>'; its title is the localization key @[Operation.<document>.<name>].",
+            "items": {
+                "type": "string",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            },
+            "minItems": 1,
+            "uniqueItems": true
         },
         "autonum": {
             "type": "string",

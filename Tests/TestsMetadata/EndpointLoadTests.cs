@@ -146,7 +146,8 @@ public class EndpointLoadTests
     [Fact]
     public async Task A_state_column_points_at_a_set_of_states_and_travels_as_its_code()
     {
-        var doc = (await LoadNormalAsync(Document, String.Empty)).Storage;
+        var root = await LoadNormalAsync(Document, String.Empty);
+        var doc = root.Storage;
 
         var state = Assert.Single(doc.AllColumns(c => c.Type == ColumnType.State));
         Assert.Equal(EndpointKind.State, state.RefTableCheck.Storage.Kind);
@@ -154,7 +155,7 @@ public class EndpointLoadTests
         Assert.Equal("nvarchar(64)", state.SqlDataType());
         Assert.True(state.IsSetRef);
 
-        var filter = Assert.Single(doc.Filters(), f => f.Name == "State");
+        var filter = Assert.Single(doc.Filters(root.Declaration), f => f.Name == "State");
         Assert.Equal(FilterKind.Set, filter.Kind);
     }
 
@@ -165,14 +166,15 @@ public class EndpointLoadTests
     [Fact]
     public async Task A_state_column_gives_the_namespace_two_filters()
     {
-        var doc = (await LoadNormalAsync(Document, String.Empty)).Storage;
+        var root = await LoadNormalAsync(Document, String.Empty);
+        var doc = root.Storage;
 
-        var role = Assert.Single(doc.Filters(), f => f.Kind == FilterKind.Role);
+        var role = Assert.Single(doc.Filters(root.Declaration), f => f.Kind == FilterKind.Role);
         Assert.Equal("StateRole", role.Name);
         Assert.Equal("State", role.ColumnCheck.Name);
 
         // an enum contributes one: it has no roles to ask about
-        Assert.DoesNotContain(doc.Filters(), f => f.Name == "VatRateRole");
+        Assert.DoesNotContain(doc.Filters(root.Declaration), f => f.Name == "VatRateRole");
     }
 
     // an enum value is a code and a name: the two keys of a state set have nowhere to land here

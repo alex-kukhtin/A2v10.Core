@@ -207,7 +207,11 @@ public sealed record FormElement
                 : $"It shows {String.Join(", ", reads.Select(k => $"'{k}'"))} and nothing else."));
     }
 
-    internal FormElement Bake(TableMetadata table, List<MemberDescriptor> members)
+    /* 'filters' is the endpoint's namespace (FilterMetadata.Filters), handed down with the members:
+     * both are what this form may name, and neither is a question the shape alone can answer. A row
+     * set has none - the index filters the records, never the rows inside one.
+     */
+    internal FormElement Bake(TableMetadata table, List<MemberDescriptor> members, IReadOnlyList<FilterDescriptor> filters)
     {
         MemberDescriptor FindMember(String key) =>
            members.FirstOrDefault(m => m.Name == key)
@@ -218,11 +222,10 @@ public sealed record FormElement
         {
             if (Filters.Count == 0)
                 return [];
-            var available = table.Filters().ToList();
-            return [.. Filters.Select(key => available.FirstOrDefault(f => f.Name == key)
+            return [.. Filters.Select(key => filters.FirstOrDefault(f => f.Name == key)
                 ?? throw new InvalidOperationException(
                     $"filter '{key}' not found in {table.SqlTableName}. Available: "
-                    + String.Join(", ", available.Select(f => f.Name))))];
+                    + String.Join(", ", filters.Select(f => f.Name))))];
         }
 
         var elements = new List<FormElement>(Elements.Count);
@@ -231,13 +234,13 @@ public sealed record FormElement
             CheckElement(Is, el);
             if (String.IsNullOrEmpty(el.Scope))
             {
-                elements.Add(el.Bake(table, members));
+                elements.Add(el.Bake(table, members, filters));
                 continue;
             }
             var detailsTable = table.FindDetails(el.Scope);
             IReadOnlyList<String> named = el.Kind == null ? [] : [el.Kind];
             detailsTable.CheckKinds(named);
-            elements.Add(el.Bake(detailsTable, detailsTable.RowMembers())
+            elements.Add(el.Bake(detailsTable, detailsTable.RowMembers(), [])
                 with { RowSet = detailsTable.RowSetName(el.Kind) });
         }
         return this with
@@ -302,16 +305,16 @@ public sealed record FormMetadata
         return Body.Append(Taskpad).SelectMany(Walk);
     }
 
-    internal FormMetadata Bake(TableMetadata table, List<MemberDescriptor> members)
+    internal FormMetadata Bake(TableMetadata table, List<MemberDescriptor> members, IReadOnlyList<FilterDescriptor> filters)
     {
         // the two slots are nodes too: 'fields' written into a toolbar is read by nobody either
         FormElement.CheckElement(null, Toolbar);
         FormElement.CheckElement(null, Taskpad);
         return this with
         {
-            Body = [.. Body.Select(el => { FormElement.CheckElement(null, el); return el.Bake(table, members); })],
-            Toolbar = Toolbar.Bake(table, members),
-            Taskpad = Taskpad.Bake(table, members)
+            Body = [.. Body.Select(el => { FormElement.CheckElement(null, el); return el.Bake(table, members, filters); })],
+            Toolbar = Toolbar.Bake(table, members, filters),
+            Taskpad = Taskpad.Bake(table, members, filters)
         };
     }
 }

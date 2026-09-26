@@ -35,8 +35,12 @@ internal static class FilterMetadata
 {
     /* Which filters this endpoint has - derived, never declared, and read by the index SQL, the
      * CollectionView and the taskpad panel alike. See CLAUDE.md, "Filters".
+     *
+     * Of the ENDPOINT and not of the shape, because one column means different things over one
+     * table: the operation is every document's at the storage (/document), a choice among a few at a
+     * document listing its operations, and fixed by the address at a document that is one.
      */
-    public static IEnumerable<FilterDescriptor> Filters(this TableMetadata table)
+    public static IEnumerable<FilterDescriptor> Filters(this TableMetadata table, DeclarationMetadata declaration)
     {
         if (table.HasPeriod)
             yield return new FilterDescriptor(FilterKind.Period, Constants.FilterNames.Period);
@@ -49,6 +53,18 @@ internal static class FilterMetadata
         // not the folder: the tree is its filter, and a second one in the panel would say it twice
         foreach (var col in table.AllColumns(c => c.IsRef && c.Type != ColumnType.Folder))
         {
+            if (col.IsOperation)
+            {
+                /* A document listing its operations picks among them as among a set's values - the
+                 * list rides with the page (SqlBuilderIndex). A document over a storage that is ONE
+                 * operation has nothing to pick: its address already fixes the column.
+                 */
+                if (declaration.Operations.Count > 0)
+                    yield return new FilterDescriptor(FilterKind.Set, col.Name, col);
+                else if (declaration.HasOwnShape)
+                    yield return new FilterDescriptor(FilterKind.Ref, col.Name, col);
+                continue;
+            }
             yield return new FilterDescriptor(col.IsSetRef ? FilterKind.Set : FilterKind.Ref, col.Name, col);
 
             /* A state column contributes two entries, because there are two questions and neither

@@ -42,7 +42,14 @@ internal partial class SqlBuilder
          * declared and compared apart from the loop over references below - the same shape the tags
          * filter has, and for the same reason: nothing in 'a' holds the value being filtered on.
          */
-        var roles = Table.Filters().Where(f => f.Kind == FilterKind.Role).ToList();
+        var endpointFilters = Table.Filters(Endpoint.Declaration).ToList();
+        var roles = endpointFilters.Where(f => f.Kind == FilterKind.Role).ToList();
+
+        /* What is picked from a list riding with the page, by its code, with an 'All' row meaning 'no
+         * restriction': a set's column, and the operation of a document listing several. Asked of the
+         * filter and not of the column, because the second is a reference like any other elsewhere.
+         */
+        var setFilters = endpointFilters.Where(f => f.Kind == FilterKind.Set).Select(f => f.Name).ToHashSet();
 
         /* Searchable references only. A set is not one: its Name is a localization key, so a
          * fragment would be matched against '@[VatRate.20]' - the English code is findable, the
@@ -126,9 +133,16 @@ internal partial class SqlBuilder
             else
                 sb.Append("where 1 = 1"); // TODO:!!!!
 
-            var docOp = Endpoint.DocumentOperation();
-            if (docOp != null)
-                sb.Append($" and a.[Operation] = @RouteOperation");
+            /* The rows of THIS document among those sharing its table: every operation the registry
+             * says is its own, void ones included - a document saved under an operation that has since
+             * left the files is still this document's. The column is found by type, as everywhere else.
+             */
+            if (Endpoint.DocumentOperations().Count > 0)
+            {
+                var column = Table.AllColumns().First(c => c.IsOperation);
+                var registry = TableMetadataDefaults.OperationsTable();
+                sb.Append($" and a.[{column.Name}] in (select [{Constants.FieldNames.Id}] from {registry.SqlTableName} where [{Constants.FieldNames.Document}] = N'{Endpoint.Name}')");
+            }
 
             sb.Append(FixedPredicate("a"));
 
@@ -154,7 +168,7 @@ internal partial class SqlBuilder
              * into the empty string at the top, in one place, before anything reads the parameter.
              */
             String filterPredicate((String name, String value) f) =>
-                allColumns.FirstOrDefault(c => c.Name == f.name)?.IsSetRef == true
+                setFilters.Contains(f.name)
                     ? $"(@{f.name} = N'' or a.[{f.name}] = @{f.name})"
                     : $"a.[{f.name}] = @{f.name}";
 
@@ -219,7 +233,7 @@ internal partial class SqlBuilder
              * same value - a null reaching the control would match no item in the list and leave
              * the ComboBox blank on the first load. Same as the hand-written '@X nvarchar(64) = N'''.
              */
-            foreach (var en in refs.Where(r => r.Column.IsSetRef))
+            foreach (var en in refs.Where(r => setFilters.Contains(r.Column.Name)))
             {
                 sb.AppendLine();
                 sb.AppendLine($"set @{en.Column.Name} = isnull(@{en.Column.Name}, N'');");
@@ -399,7 +413,7 @@ internal partial class SqlBuilder
                  * list, so the control would find nothing to select.
                  *
                  */
-                sb.Append(String.Join(", ", refs.Select(rt => rt.Column.IsSetRef
+                sb.Append(String.Join(", ", refs.Select(rt => setFilters.Contains(rt.Column.Name)
                     ? $"[!{collectionName}.{rt.Column.Name}!Filter] = @{rt.Column.Name}"
                     : $"[!{collectionName}.{rt.Column.Name}.{rt.Table.RefTypeName}.RefId!Filter] = @{rt.Column.Name}")));
             }
@@ -448,9 +462,6 @@ internal partial class SqlBuilder
              */
             foreach (var role in roles)
                 dbprms.AddString($"@{role.Name}", roleValues.GetValueOrDefault(role.Name));
-            var docOp = Endpoint.DocumentOperation();
-            if (docOp != null)
-                dbprms.AddString("@RouteOperation", docOp);
             /* The parameter is declared as what the COLUMN is, never as what a filter usually turns
              * out to be. An operation is keyed by its code; everything else by an identifier whose
              * base the database reported. Assuming bigint for both was silent in the same way: the
