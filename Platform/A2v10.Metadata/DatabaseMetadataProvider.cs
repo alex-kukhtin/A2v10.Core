@@ -1442,11 +1442,11 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     private static Boolean IsBuildOutput(String file) =>
         file.NormalizeSlash().Split('/').SkipWhile(s => s.StartsWith('$')).FirstOrDefault() is "bin" or "obj";
 
-    private async Task<IEnumerable<TableMetadata>> AllElementsMetadata(String? dataSource)
+    internal async Task<IEnumerable<TableMetadata>> AllElementsMetadata(String? dataSource)
     {
         var allMeta = _codeProvider.EnumerateAllFilesRecursive("", "metadata.json");
         var tables = new List<TableMetadata>();
-        var operations = new List<(OperationMetadata Operation, String Path)>();
+        var operations = new List<OperationMetadata>();
         foreach (var file in allMeta.Where(f => !IsBuildOutput(f)))
         {
             var endpointPath = Path.GetDirectoryName(file)?.NormalizeSlash();
@@ -1461,7 +1461,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             if (await GetEndpointAsync(dataSource, schema, table) is not NormalEndpointMetadata endpoint)
                 continue;
             operations.AddRange(endpoint.DocumentOperations()
-                .Select((id, ix) => (new OperationMetadata(id, endpoint.Name, ix + 1), endpoint.Path)));
+                .Select((id, ix) => new OperationMetadata(id, endpoint.Name, endpoint.Path, ix + 1)));
             if (!endpoint.Declaration.HasOwnShape)
                 continue;
             tables.Add(endpoint.Storage);
@@ -1475,7 +1475,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
          * Id. Merged, they would be one row, and both registers would filter by it and show each
          * other's documents - so it is refused here, where both addresses are still known.
          */
-        var twice = operations.GroupBy(o => o.Operation.Id).FirstOrDefault(g => g.Count() > 1);
+        var twice = operations.GroupBy(o => o.Id).FirstOrDefault(g => g.Count() > 1);
         if (twice != null)
             throw new InvalidOperationException($"""
                 {String.Join(" and ", twice.Select(o => o.Path))} give one operation '{twice.Key}': an operation's Id is the name of its document's folder (and '.<operation>'), and the folders around it do not count.
@@ -1484,7 +1484,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         if (operations.Count > 0)
             tables.Add(TableMetadataDefaults.OperationsTable() with
             {
-                Operations = [.. operations.Select(o => o.Operation).OrderBy(o => o.Id, StringComparer.Ordinal)]
+                Operations = [.. operations.OrderBy(o => o.Id, StringComparer.Ordinal)]
             });
         return tables;
     }

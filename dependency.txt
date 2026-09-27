@@ -1,5 +1,7 @@
 ﻿2026-09-27 (next: 8667)
 
+A2v10.Metadata
+A2v10.Cli
 
 !Workflow.Module (scheduling, workflow.engine)
 

@@ -95,6 +95,30 @@ internal partial class XamlBuilder
             }
         };
 
+        /* A referenced document opens from its cell, wherever it is shown - the target's answer, as
+         * the colour is. The address is the document's own (SqlBuilder.RefFields), so a journal row
+         * posted by a receipt opens the receipt, not the storage. Nothing referenced, nothing drawn,
+         * for the badge's reason and one more: an empty link navigates to '/edit/null'.
+         */
+        DataGridColumn DocumentLink(TableColumn col) => new()
+        {
+            Header = col.Header,
+            SortProperty = col.Name,
+            Content = new Hyperlink()
+            {
+                Bindings = b =>
+                {
+                    b.SetBinding(nameof(Hyperlink.If), new Bind($"{col.Name}.{Constants.FieldNames.Id}"));
+                    b.SetBinding(nameof(Hyperlink.Content), new Bind(col.DisplayPath));
+                    b.SetBinding(nameof(Hyperlink.Icon), new Bind($"{col.Name}.{Constants.FieldNames.Icon}"));
+                    var open = new BindCmd() { Command = CommandType.Open };
+                    open.BindImpl.SetBinding(nameof(BindCmd.Url), new Bind($"{col.Name}.{Constants.FieldNames.Url}"));
+                    open.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(col.Name));
+                    b.SetBinding(nameof(Hyperlink.Command), open);
+                }
+            }
+        };
+
         /* A colour column that is SHOWN draws itself: style and text are the one value, so the cell
          * reads 'green' in green. Reached only where nothing is painted by it - a table with no
          * name to paint, or with two colours. Sorted by the stored name, unlike a set's: this one
@@ -148,6 +172,7 @@ internal partial class XamlBuilder
         return columns.Where(col => col != paint).Select(col =>
             table.HasTags && col.Type == ColumnType.Name ? WithTags(col, paint)
             : col.Type == ColumnType.Name && paint != null ? Name(col, paint)
+            : col.RefTable?.Storage.IsDocument == true ? DocumentLink(col)
             : col.RefTable?.Storage.ColorColumn is { } color ? Badge(col, color)
             : col.Type == ColumnType.Color ? ColorCell(col)
             : Plain(col));

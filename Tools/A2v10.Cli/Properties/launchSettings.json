@@ -2,8 +2,8 @@
   "profiles": {
     "A2v10.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "endpoint resolve-action /sales/sales/index",
-      "workingDirectory": "C:\\Projects\\NovaEra.2023"
+      "commandLineArgs": "db info",
+      "workingDirectory": "C:\\A2v10_Net6\\MetaAppStand"
     }
   }
 }

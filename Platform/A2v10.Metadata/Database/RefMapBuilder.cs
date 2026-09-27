@@ -178,9 +178,9 @@ internal class RefMapBuilder
     {
         var blocks = _tableStruct.Select(kvp =>
         {
-            var spl = kvp.Key.Split('|');
-            var tableName = spl[0];
-            var typeName = spl[1];
+            var typeName = kvp.Key.Split('|')[1];
+            // the role 'Name' carries the target's presentation - every display binds to it
+            var target = kvp.Value[0].RefTableCheck.Storage;
 
             var unionLines = kvp.Value
                 .Select(col => $"""
@@ -207,11 +207,9 @@ internal class RefMapBuilder
                 ? ", " + String.Join(", ", inh.Select(c => c.SqlModelColumnName("a")))
                 : String.Empty;
 
-            // the role 'Name' carries the target's presentation - every display binds to it
-            var target = kvp.Value[0].RefTableCheck.Storage;
             var select = $"""
             select [!{typeName}!Map] = null, [Id!!Id] = a.Id, [Name!!Name] = a.[{target.Presentation}]{SqlBuilder.RefFields(target, "a")}{inherits}
-            from {tableName} a inner join T on a.Id = T.id;
+            from {target.RefSourceName} a inner join T on a.Id = T.id;
             """;
             return $"{cte}\n{select}";
         });

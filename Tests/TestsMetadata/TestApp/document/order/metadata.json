@@ -1,0 +1,11 @@
+{
+	"$schema": "../../../../../Platform/A2v10.App.Assets2026/Application/@schemas/metadata-endpoint-json-schema.json#",
+	"table": "Orders",
+	"model": "Order",
+	"presentation": "Number",
+	"fields": {
+		"Number": {
+			"type": "String"
+		}
+	}
+}

@@ -50,6 +50,13 @@ A decision sits next to the code it compiles into. This file keeps what holds fo
 
 Open issues and design debts of the metadata layer: [Platform/A2v10.Metadata/ISSUES.md](Platform/A2v10.Metadata/ISSUES.md).
 
+## Release: what to check
+
+No code keeps these true — the release does. The skill tells the model they hold and forbids it to repair a mismatch itself.
+
+- **`A2v10.Metadata` and the `a2` CLI ship as one version** — `<Version>` equal in `Platform/A2v10.Metadata/A2v10.Metadata.csproj` and `Tools/A2v10.Cli/A2v10.Cli.csproj`. The CLI carries its own copy of `A2v10.Metadata` (ProjectReference, packed as a tool) and generates `deploydatabase.sql` with it; the `a2meta` procedures that file calls come from the host's package (`a2v10_metadata.sql` → `full.sql`). Two versions → the deploy refuses the database (`SqlDbGenerator.EnsurePlatformVersionAsync`), and `--full` cannot cure it.
+- **The stamp in `Platform/A2v10.Metadata/SqlScripts/a2v10_metadata.sql` equals `<Version>` of `A2v10.Metadata`** — the literal in its last batch. A stale stamp → every database deployed from the new package is refused.
+
 ## Skills as spec: a firewall between two instances
 
 Skills (stubs for the application developer building on the platform) are a **contract for the target state**, not instructions to execute. Their value is that they work for a reader who **cannot see the implementation**. Two roles, two contexts:

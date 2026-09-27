@@ -23,6 +23,7 @@ namespace A2v10.Metadata;
 internal sealed record DbHash
 {
     public String? Hash { get; set; }
+    public String? Version { get; set; }
 }
 
 /*
@@ -62,6 +63,8 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         if (await WriteDeployAsync(dataSource, tables, platformId) is not var (script, hash))
             return new DeployDatabaseResult(DeployFile, false);
 
+        await EnsurePlatformVersionAsync(dataSource);
+
         // DEPLOY DATABASE
         // Running it here verifies the artifact against a live database;
         // it is not a separate deployment path.
@@ -70,6 +73,21 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         // save hash
         await _dbContext.ExecuteAsync<DbHash>(dataSource, "a2meta.[SetDbHash]", new DbHash() { Hash = hash });
         return new DeployDatabaseResult(DeployFile, true);
+    }
+
+    /* The script calls a2meta procedures of this very version, and an older one does not fail - it
+     * does less: SyncSchema before 10.1.8663 is empty, so a new column is never added and the deploy
+     * breaks further on, on a statement that uses it, the same way on every run. Equality and not
+     * 'at least': the procedures and the generator are one design, released together.
+     * Here and not in WriteDeployAsync: --full writes the file against exactly such a database,
+     * and it is what brings the procedures up to date.
+     */
+    private async Task EnsurePlatformVersionAsync(String? dataSource)
+    {
+        var dbVersion = (await _dbContext.LoadAsync<DbHash>(dataSource, "a2meta.[GetDbHash]"))?.Version;
+        if (dbVersion != PlatformVersion)
+            throw new InvalidOperationException(
+                $"The a2meta procedures in the database are {dbVersion ?? "of no version (the script before its stamp)"}, this deploy is {PlatformVersion}. The host's A2v10.Metadata and the a2 CLI must be one version; with them matching, build the host and run 'a2 meta deploy --full', then deploy again.");
     }
 
     /* Generate and write deploydatabase.sql, without executing it. On its own - for
@@ -99,6 +117,8 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         allScript.AppendLine(CreateTablesScript(tables, platformId));
         allScript.AppendLine(CreateTableTypesScript(tables));
         allScript.AppendLine(SyncSchemaScript());
+        // after SyncSchema: a view is bound to the columns that exist when it is created
+        allScript.AppendLine(CreateRefViewsScript(tables));
         /* After SyncSchema, because a column added to the shape of a set is written by this merge;
          * before the foreign keys, because 'alter table add constraint foreign key' validates the
          * rows that are already there - a document on a code the set does not carry yet would
@@ -144,6 +164,50 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         go
 
         """;
+
+    /* What a reference to a document reads (TableMetadata.RefSourceName): the row, plus where it
+     * opens. One view per document table, not a union over them - ids are per table. A view and not
+     * an expression in the resolve, so every reader - the map, a mart, a hand-written procedure, BI -
+     * gets the address from one place. The icon is the same kind of answer: how a reference to the
+     * document draws, stored as the platform's icon name the way a colour is stored as a class.
+     *
+     * The address is the document's own, not its storage's: several documents share one table and
+     * the row's operation says whose it is. A table with no operation column is one document, and
+     * its address is its own. The text depends on the columns only through 'a.*', and those reach
+     * the hash, so a changed table is rebound on the deploy that changes it.
+     */
+    internal static String CreateRefViewsScript(IEnumerable<TableMetadata> tables)
+    {
+        var registry = TableMetadataDefaults.OperationsTable();
+        var sb = new StringBuilder();
+        var icon = $"[{Constants.FieldNames.Icon}] = case when a.[{Constants.FieldNames.Done}] = 1 then N'success-outline-green' else N'warning-outline-yellow' end";
+        foreach (var table in tables.Where(t => t.IsDocument))
+        {
+            var url = $"[{Constants.FieldNames.Url}]";
+            var operation = table.Columns.FirstOrDefault(c => c.IsOperation);
+            sb.AppendLine(operation == null
+                ? $"""
+                create or alter view {table.RefSourceName} as
+                select a.*, {url} = N'{table.Path}/edit', {icon}
+                from {table.SqlTableName} a;
+                go
+
+                """
+                : $"""
+                create or alter view {table.RefSourceName} as
+                select a.*, {url} = o.[{Constants.FieldNames.Path}] + N'/edit', {icon}
+                from {table.SqlTableName} a
+                    left join {registry.SqlTableName} o on o.[{Constants.FieldNames.Id}] = a.[{operation.Name}];
+                go
+
+                """);
+        }
+        return sb.Length == 0 ? String.Empty : $"""
+            -- REFERENCE VIEWS
+            {CliDatabaseCreator.SQL_DIVIDER}
+            {sb}
+            """;
+    }
 
     private static String SyncSchemaScript()
     {
@@ -469,8 +533,8 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
     /* The operations of the documents - the rows the documents' Operation column points at, so
      * before the foreign keys. Shaped as the set values merge: an operation dropped from the files
      * keeps its row (documents and journals carry its code) and becomes void, put back it is restored.
-     * The name is the localization key, as a set's is; the document and the order are rewritten on
-     * every deploy, since they are the files' and reach the hash through Xtra.
+     * The name is the localization key, as a set's is; the document, its path and the order are
+     * rewritten on every deploy, since they are the files' and reach the hash through Xtra.
      */
     private static String CreateOperationsScript(IEnumerable<TableMetadata> tables)
     {
@@ -482,7 +546,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
             return String.Empty;
 
         var rows = registry.Operations.Select(o =>
-            $"\t({Str(o.Id)}, {Str($"@[{registry.Model}.{o.Id}]")}, {Str(o.Document)}, {o.Order})");
+            $"\t({Str(o.Id)}, {Str($"@[{registry.Model}.{o.Id}]")}, {Str(o.Document)}, {Str(o.Path)}, {o.Order})");
 
         return $"""
             -- OPERATIONS
@@ -490,9 +554,9 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
             begin
                 set nocount on;
                 declare @{registry.Model} table([Id] {registry.KeyColumn.SqlDataType()}, [Name] nvarchar(255),
-                    [Document] nvarchar(64), [Order] int);
+                    [Document] nvarchar(64), [Path] nvarchar(128), [Order] int);
 
-                insert into @{registry.Model}([Id], [Name], [Document], [Order]) values
+                insert into @{registry.Model}([Id], [Name], [Document], [Path], [Order]) values
             {String.Join($",{Environment.NewLine}", rows)};
 
                 merge {registry.SqlTableName} as t
@@ -501,10 +565,11 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
                 when matched then update set
                     t.[Name] = s.[Name],
                     t.[Document] = s.[Document],
+                    t.[Path] = s.[Path],
                     t.[Order] = s.[Order],
                     t.[Void] = 0
-                when not matched then insert ([Id], [Name], [Document], [Order], [Void]) values
-                    (s.[Id], s.[Name], s.[Document], s.[Order], 0)
+                when not matched then insert ([Id], [Name], [Document], [Path], [Order], [Void]) values
+                    (s.[Id], s.[Name], s.[Document], s.[Path], s.[Order], 0)
                 when not matched by source then update set
                     t.[Void] = 1;
             end
@@ -684,14 +749,15 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
 
     private static readonly Version assVersion = Assembly.GetExecutingAssembly().GetName().Version ?? new();
 
+    // the package's <Version>, the form a2v10_metadata.sql stamps into a2meta.SysParams
+    internal static readonly String PlatformVersion = $"{assVersion.Major}.{assVersion.Minor}.{assVersion.Build}";
+
     internal static async Task<String?> GenerateMetadataSeedAsync(IEnumerable<TableMetadata> tables)
     {
         if (!tables.Any())
             return null;
         var sqlTables = new List<String>();
         var sqlColumns = new List<String>();
-
-        var version = $"{assVersion.Major}.{assVersion.Minor}.{assVersion.Build}";
 
         static String Str(String? val) =>
             val == null ? "null" : $"N'{val.Replace("'", "''")}'";
@@ -737,7 +803,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
 
         var rowDiv = $",{Environment.NewLine}\t";
         var sqlScript = $"""
-        /* METADATA SEED. Version: {version} */
+        /* METADATA SEED. Version: {PlatformVersion} */
         begin
             set nocount on;
             declare @tables table([schema] sysname, [table] sysname, [xtra] nvarchar(64),

@@ -68,4 +68,15 @@ internal partial class ScriptBuilder(BuilderDescriptor desciptor, Boolean isTs)
         foreach (var p in table.AllColumns(inModel))
             yield return property(p);
     }
+
+    // the type a reference to 'target' resolves to: its columns, and a document's address and icon (SqlBuilder.RefFields)
+    public IEnumerable<String> RefTsProperties(TableMetadata target)
+    {
+        foreach (var p in TsProperties(target))
+            yield return p;
+        if (!target.IsDocument)
+            yield break;
+        foreach (var m in Constants.FieldNames.RefViewMembers)
+            yield return $"\treadonly {m}: string;";
+    }
 }

@@ -559,6 +559,9 @@ public sealed record TableMetadata
     public String SqlSchema => Schema.ToSqlSchema();
     [JsonIgnore]
     public String SqlTableName => $"{SqlSchema}.[{Table}]";
+    // what a reference to this table is resolved from - a document's carries its address (SqlDbGenerator.CreateRefViewsScript)
+    [JsonIgnore]
+    internal String RefSourceName => IsDocument ? $"{SqlSchema}.[{Table}$Ref]" : SqlTableName;
     /* Indexes the PLATFORM needs, not indexes an application wants: code-only, no file key. An
      * index is safe to hold here in a way a primary key was not - nothing else in the platform
      * reads one, so this cannot become a knob that only the DDL honours. What it does buy is a
@@ -794,11 +797,15 @@ public sealed record TableIndex(Boolean Unique, String[] Columns)
 }
 
 /* One row of the operation registry: the code (see MetadataExtensions.DocumentOperations), the
- * document it belongs to and its place in that document's list. The last two are a projection of
+ * document it belongs to and its place in that document's list. The last three are a projection of
  * the files, kept by the deploy, so SQL finds a document's operations by equality and in order
  * instead of spelling the list out in every statement.
+ *
+ * The document twice, by name and by address, because they differ under an alias: 'invoice' is
+ * /sale/invoice, and nothing rewrites /document/invoice to it (KindFolders). The name is what a
+ * document compares its own rows by; the address is where a reference to one of them opens.
  */
-public record OperationMetadata(String Id, String Document, Int32 Order);
+public record OperationMetadata(String Id, String Document, String Path, Int32 Order);
 
 /* One value of a set. Only 'id' is required: 'name' defaults to the localization key
  * '@[{Model}.{Id}]' (the key must carry the set's name, or two 'Complete' in two sets collapse

@@ -1,8 +1,9 @@
 ﻿/*
 Copyright © 2026 Oleksandr Kukhtin
 
-Last updated : 19 sep 2026
-module version : 8663
+Last updated : 27 sep 2026
+DO NOT FORGET TO BUMP THE VERSION: the last batch stamps N'10.1.8666', and it must equal
+<Version> in A2v10.Metadata.csproj - the deploy refuses a database stamped with another one.
 */
 ------------------------------------------------
 set nocount on;
@@ -86,7 +87,8 @@ as
 begin
 	set nocount on;
 	set transaction isolation level read uncommitted;
-	select [Hash] = [value] from a2meta.SysParams where [name] = 'dbhash';
+	select [Hash] = (select [value] from a2meta.SysParams where [name] = N'dbhash'),
+		[Version] = (select [value] from a2meta.SysParams where [name] = N'version');
 end
 go
 ------------------------------------------------
@@ -138,7 +140,9 @@ begin
 	from a2meta.Columns c
 		left join a2meta.Tables t on t.[schema] = c.[schema] and t.[table] = c.[table]
 	where c.ref_schema = @Schema and c.ref_table = @Table and c.datatype = N'platformid'
-	and c.[schema] not in (N'jrn', N'rep');
+	/* Tables posting writes: no Void, and a row exists only while its document is posted - the
+	   document references the same record itself. Every such kind is listed here (reg with it). */
+	and c.[schema] not in (N'jrn', N'led');
 end
 go
 ------------------------------------------------
@@ -206,4 +210,14 @@ begin
 	close #crs;
 	deallocate #crs;
 end
+go
+------------------------------------------------
+/* Which script this is. The metadata deploy runs the procedures above and refuses a database whose
+   a2meta came from another version (SqlDbGenerator.EnsurePlatformVersionAsync). The literal is the
+   package's <Version>, exactly. Last, so a run that failed halfway does not claim the version. */
+merge a2meta.SysParams t
+using (select [name] = N'version', [value] = N'10.1.8666') s
+on t.[name] = s.[name]
+when matched then update set t.[value] = s.[value]
+when not matched then insert ([name], [value]) values (s.[name], s.[value]);
 go

@@ -19,6 +19,20 @@ internal static class Constants
         public const String Date = nameof(Date);
         public const String Done = nameof(Done);
         public const String Document = nameof(Document);
+        public const String Path = nameof(Path);
+        /* Where a referenced document opens - a member of its reference view, never of a table. '$'
+         * because no name from a file can take it (CheckNames), and the client does not send a '$'
+         * member back.
+         */
+        public const String Url = "$Url";
+        // how its cell draws whether it is posted - a platform icon name, as a colour is a class name
+        public const String Icon = "$Icon";
+        /* What a document's reference view adds to the row, in the order the resolve sends it. The one
+         * list: the resolve, the TS type and the deploy hash read it (every document table carries it
+         * in its Xtra), so a member added here moves the hash and reaches a deployed database. A
+         * member here that the view does not make fails the first page that resolves a document.
+         */
+        public static readonly String[] RefViewMembers = [Url, Icon];
         public const String RowVersion = "rv";
         public const String Parent = nameof(Parent);
         // 'Parent' in the model: the word is reserved there - see TableColumn.ModelName

@@ -82,6 +82,22 @@ public class ViewXamlTests
         Assert.Contains("""<ColorComboBoxItem Content="{Bind Name}" Value="{Bind Id}" Color="{Bind Color}" />""", index);
     }
 
+    /* A referenced document opens from its cell, by the address the map sent - and only a document:
+     * the journal's store, agent and item stay text. Single() is that half.
+     */
+    [Fact]
+    public async Task A_document_in_the_grid_opens_by_its_address()
+    {
+        var xaml = await ViewOf("/journal/stock", "index");
+
+        var link = xaml.Split('\n').Single(l => l.Contains("<Hyperlink"));
+        Assert.Contains("""If="{Bind Document.Id}""", link);
+        Assert.Contains("""Content="{Bind Document.Name}""", link);
+        Assert.Contains("""Icon="{Bind Document.$Icon}""", link);
+        Assert.Contains("Url={Bind Document.$Url}", link);
+        Assert.Contains("Argument={Bind Document}", link);
+    }
+
     /* A tree has no CollectionView, so nothing on its screen may read through Parent - the page
      * would not render at all. Written red: Edit took the grid's source (8666) and the picker had the
      * grid's whole bar.

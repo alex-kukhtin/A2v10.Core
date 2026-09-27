@@ -87,8 +87,14 @@ internal static class MetadataExtensions
      * owns it.
      *
      * Its fillers are the rows a file declares: the values of a set, the numberings of /autonum,
-     * the rows of a seed file. A table holding none has none, and a kind is never asked - what a
+     * the rows of a seed file. A table holding none has none, and no kind is asked for them - what a
      * table declares is what it has.
+     *
+     * One filler is not rows, and it is asked of the kind: a document table carries the members of its reference view
+     * (Constants.FieldNames.RefViewMembers). The view is generated, not declared, so its text is
+     * invisible to the seed (ISSUES 2.6); the list is the part that changes. On the document and
+     * not on the operations registry: a document with its own table has a view and no operations,
+     * and an application of only such documents deploys no registry at all.
      */
     internal static String? Xtra(this TableMetadata table)
     {
@@ -104,7 +110,8 @@ internal static class MetadataExtensions
         var lines = table.Values
             .Select((v, ix) => $"{ix}|{v.Id}|{v.Name}|{v.Memo}|{(v.Void ? 1 : 0)}|{v.Color}|{v.Role}")
             .Concat(table.Autonums.Select(a => $"{a.Id}|{a.Name}|{a.Pattern}|{a.Period}"))
-            .Concat(table.Operations.Select(o => $"{o.Id}|{o.Document}|{o.Order}"))
+            .Concat(table.Operations.Select(o => $"{o.Id}|{o.Document}|{o.Path}|{o.Order}"))
+            .Concat(table.IsDocument ? [String.Join('|', Constants.FieldNames.RefViewMembers)] : [])
             .Concat(table.SeedRows.Select(SeedLine))
             .ToList();
         if (lines.Count == 0)

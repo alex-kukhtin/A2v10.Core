@@ -40,6 +40,19 @@ public class RefMapTests
         Assert.DoesNotContain("[Role]", rates);
     }
 
+    /* A document is read through its reference view, which alone carries the address; the table has
+     * no such column, so reading the table would be an error the first page raises.
+     */
+    [Fact]
+    public async Task A_document_resolves_from_its_view_with_done_and_its_address()
+    {
+        var sql = await ResolvesOf("journal", "stock");
+
+        var documents = sql.Split("with T as").Single(s => s.Contains("!TRDocument!Map"));
+        Assert.Contains("[Name!!Name] = a.[Number], a.[Done], a.[$Url], a.[$Icon]", documents);
+        Assert.Contains("from doc.[StockDocuments$Ref] a inner join T", documents);
+    }
+
     // the presentation is what 'Name' carries, and a set is shown by its own Name like any target
     [Fact]
     public async Task Every_target_still_resolves_to_an_id_and_a_name()

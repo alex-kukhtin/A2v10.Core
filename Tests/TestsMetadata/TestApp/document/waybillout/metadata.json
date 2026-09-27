@@ -51,7 +51,7 @@
 				"elements": [
 					{
 						"is": "filters",
-						"fields": [ "Date", "Agent", "StoreFrom" ]
+						"filters": [ "Period", "Agent", "StoreFrom" ]
 					}
 				]
 			}
@@ -78,7 +78,7 @@
 						},
 						{
 							"is": "tab",
-							"scope": "Rows", "kind": "Stock",
+							"scope": "Rows", "kind": "Service",
 							"fields": [ "RowNo", "Item", "Qty", "Price", "Sum" ]
 						}
 					]

@@ -85,8 +85,8 @@ internal static class TableDefaultColumns
 
     /* The key is the operation's code - a NaturalKey, see EnumDefaultColumns. Void as a set's value
      * has it: an operation that left the files keeps its row (documents and journals carry its code)
-     * and leaves the candidate list. Document and Order are the deploy's projection of the files - the
-     * document's name, the position in its 'operations' - see OperationMetadata.
+     * and leaves the candidate list. Document, Path and Order are the deploy's projection of the files -
+     * the document's name, its address, the position in its 'operations' - see OperationMetadata.
      */
     static IEnumerable<TableColumn> OperationDefaultColumns(TableMetadata table)
     {
@@ -95,6 +95,7 @@ internal static class TableDefaultColumns
         yield return new TableColumn(Constants.FieldNames.Name, ColumnType.Name);
         yield return new TableColumn(Constants.FieldNames.Memo, ColumnType.Memo);
         yield return new TableColumn(Constants.FieldNames.Document, ColumnType.String) { Length = 64 };
+        yield return new TableColumn(Constants.FieldNames.Path, ColumnType.String) { Length = 128 };
         yield return new TableColumn(Constants.FieldNames.Order, ColumnType.Integer);
     }
 

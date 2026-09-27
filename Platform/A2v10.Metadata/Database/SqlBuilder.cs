@@ -124,8 +124,15 @@ internal partial class SqlBuilder(BuilderDescriptor desciptor, IServiceProvider 
      * Role stays the state's own - it is not drawing but what the value is to the cycle. An enum
      * gets neither, and the type printed for it says so too: TsProperties walks the target's own
      * columns, so what is not a column here is not promised there.
+     *
+     * A document sends whether it is posted, where it opens and how it draws. The last two are not
+     * columns: they come from the reference view (TableMetadata.RefSourceName), and
+     * ScriptBuilder.RefTsProperties promises them by name.
      */
     internal static String RefFields(TableMetadata target, String alias) =>
         (target.ColorColumn is { } color ? $", {alias}.[{color.Name}]" : String.Empty)
-        + (target.IsState ? $", {alias}.[{Constants.FieldNames.Role}]" : String.Empty);
+        + (target.IsState ? $", {alias}.[{Constants.FieldNames.Role}]" : String.Empty)
+        + (target.IsDocument
+            ? $", {alias}.[{Constants.FieldNames.Done}]" + String.Concat(Constants.FieldNames.RefViewMembers.Select(m => $", {alias}.[{m}]"))
+            : String.Empty);
 }
