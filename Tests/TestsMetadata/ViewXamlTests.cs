@@ -81,4 +81,19 @@ public class ViewXamlTests
         Assert.Contains("""<ColorComboBoxItem Content="{Bind Name}" Value="{Bind}" Color="{Bind Color}" />""", card);
         Assert.Contains("""<ColorComboBoxItem Content="{Bind Name}" Value="{Bind Id}" Color="{Bind Color}" />""", index);
     }
+
+    /* A tree has no CollectionView, so nothing on its screen may read through Parent - the page
+     * would not render at all. Written red: Edit took the grid's source (8666) and the picker had the
+     * grid's whole bar.
+     */
+    [Theory]
+    [InlineData("index")]
+    [InlineData("browse")]
+    public async Task A_chart_of_accounts_reads_its_collection_not_a_view(String action)
+    {
+        var xaml = await ViewOf("/accplan/national", action);
+
+        Assert.DoesNotContain("Parent.", xaml);
+        Assert.Contains("{Bind Accounts}", xaml);
+    }
 }

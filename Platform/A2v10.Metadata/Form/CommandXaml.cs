@@ -20,7 +20,9 @@ namespace A2v10.Metadata;
 internal enum CommandScope
 {
     Record,
-    Grid
+    Grid,
+    // a tree has no CollectionView to read through (CreateIndexPageXaml) - it is its collection
+    Tree
 }
 
 internal partial class XamlBuilder
@@ -68,15 +70,33 @@ internal partial class XamlBuilder
             slot, GridChrome(), CommandScope.Grid),
         EndpointKind.Journal or EndpointKind.Ledger => StandardToolbar([EntityCommandType.Edit], slot, GridChrome(), CommandScope.Grid),
         EndpointKind.Operation => StandardToolbar([], slot, [], CommandScope.Grid),
-        // the rows are the file's: nothing to create or delete, the card opens read-only; the tree is read whole, so no search
-        EndpointKind.AccPlan => StandardToolbar([EntityCommandType.Edit], slot,
-            [new Separator(), FormButtons.Reload], CommandScope.Grid),
+        EndpointKind.AccPlan => TreeToolbar(slot),
         _ => throw new InvalidOperationException($"No standard commands for {Table.Schema}")
     };
 
-    Toolbar BrowseToolbar(FormElement slot) =>
-        StandardToolbar([EntityCommandType.Create, EntityCommandType.Edit, EntityCommandType.Delete],
-            slot, GridChrome(), CommandScope.Grid);
+    // the picker of an account is the tree the index shows, so the bar is the index's too
+    Toolbar BrowseToolbar(FormElement slot) => Table.Kind switch
+    {
+        EndpointKind.AccPlan => TreeToolbar(slot),
+        _ => StandardToolbar([EntityCommandType.Create, EntityCommandType.Edit, EntityCommandType.Delete],
+            slot, GridChrome(), CommandScope.Grid)
+    };
+
+    // the rows are the file's: nothing to create or delete, the card opens read-only; the tree is read whole, so no search
+    Toolbar TreeToolbar(FormElement slot) =>
+        StandardToolbar([EntityCommandType.Edit], slot, [new Separator(), FormButtons.Reload], CommandScope.Tree);
+
+    /* Where a command takes its record: the card's own, or the selected one of what the screen
+     * shows - through the view for a grid, the collection itself for a tree. Not the collection for
+     * both: in a folder the grid reads the node's elements (XamlCollectionView), not the collection.
+     */
+    String CommandSource(CommandScope scope) => scope switch
+    {
+        CommandScope.Record => Table.Model,
+        CommandScope.Grid => "Parent.ItemsSource",
+        CommandScope.Tree => Table.CollectionName,
+        _ => throw new InvalidOperationException($"Invalid enum {scope}")
+    };
 
     Toolbar EditToolbar(FormElement slot)
     {
@@ -139,8 +159,8 @@ internal partial class XamlBuilder
             EntityCommandType.Search => SearchControl(),
             EntityCommandType.Save => FormButtons.Save,
             EntityCommandType.SaveAndClose => FormButtons.SaveAndClose,
-            EntityCommandType.Edit => ButtonEditSelected(),
-            EntityCommandType.Create => ButtonCreate(),
+            EntityCommandType.Edit => ButtonEditSelected(scope),
+            EntityCommandType.Create => ButtonCreate(scope),
             EntityCommandType.Delete => new Button() 
             { 
                 Icon = Icon.Clear,
@@ -151,7 +171,7 @@ internal partial class XamlBuilder
                         Command = CommandType.DbRemoveSelected,
                         Confirm = new Confirm() { Message = $"@[Confirm.Delete.{elemOrDoc}]" }
                     };
-                    cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind("Parent.ItemsSource"));
+                    cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(CommandSource(scope)));
                     b.SetBinding(nameof(Button.Command), cmd);
                 }
             },
@@ -166,7 +186,7 @@ internal partial class XamlBuilder
                         Command = CommandType.OpenSelected,
                         Url = $"{Endpoint.Path}/show"
                     };
-                    cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind("Parent.ItemsSource"));
+                    cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(CommandSource(scope)));
                     b.SetBinding(nameof(Button.Command), cmd);
                 }
             },
@@ -251,7 +271,7 @@ internal partial class XamlBuilder
      * The name comes from PrintFormMetadata, which is also what the loader resolves '?Form='
      * against, so the address written here and the blank opened there cannot drift.
      *
-     * 'Open' takes the record the card is showing; 'OpenSelected' takes the row the grid has. One
+     * 'Open' takes the record the card is showing; 'OpenSelected' takes the row the grid or tree has. One
      * command either way - the screen is a parameter, not a second name.
      *
      * Aliased: A2v10.Metadata has a MenuItem of its own - the application menu tree.
@@ -261,14 +281,12 @@ internal partial class XamlBuilder
         Content = form.Title,
         Bindings = b =>
         {
-            var grid = scope == CommandScope.Grid;
-            var cmd = new BindCmd(grid ? CommandType.OpenSelected : CommandType.Open)
+            var cmd = new BindCmd(scope == CommandScope.Record ? CommandType.Open : CommandType.OpenSelected)
             {
                 SaveRequired = true,
                 Url = $"{Endpoint.Path}/{Constants.Print.Action}/{{0}}?{Constants.Print.FormQuery}={form.Name}",
             };
-            cmd.BindImpl.SetBinding(nameof(BindCmd.Argument),
-                new Bind(grid ? "Parent.ItemsSource" : Table.Model));
+            cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(CommandSource(scope)));
             b.SetBinding(nameof(XMenuItem.Command), cmd);
         }
     };
@@ -278,7 +296,7 @@ internal partial class XamlBuilder
      * code by the load (MetadataExtensions.StartOperation). The '{0}' is where 'new' goes, as the id
      * goes into a print url: without it the argument lands past the query.
      */
-    Button ButtonCreate()
+    Button ButtonCreate(CommandScope scope)
     {
         if (Endpoint.Declaration.OperationDeclarations is { Count: > 0 } operations && Table.EditWithPage)
             return new Button()
@@ -313,7 +331,7 @@ internal partial class XamlBuilder
         {
             bindCmd.Command = CommandType.Dialog;
             bindCmd.Action = DialogAction.Append;
-            bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind("Parent.ItemsSource"));
+            bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(CommandSource(scope)));
             // the dialog's query: the selected folder, which the card starts on (InitialSource.Query)
             if (Table.HasFolders)
                 bindCmd.BindImpl.SetBinding(nameof(BindCmd.Data), new Bind($"Root.{ScriptBuilder.CreateArgProperty}"));
@@ -327,13 +345,13 @@ internal partial class XamlBuilder
         };
     }
 
-    Button ButtonEditSelected()
+    Button ButtonEditSelected(CommandScope scope)
     {
         var bindCmd = new BindCmd()
         {
             Url = $"{Endpoint.Path}/edit"
         };
-        bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind("Parent.ItemsSource"));
+        bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(CommandSource(scope)));
         if (Table.EditWithPage)
         {
             bindCmd.Command = CommandType.OpenSelected;

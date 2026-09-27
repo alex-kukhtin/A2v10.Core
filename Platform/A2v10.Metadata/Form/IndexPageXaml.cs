@@ -442,7 +442,7 @@ internal partial class XamlBuilder
         // a grid reads through the collection view and pages; a tree is bound to its collection, read whole
         var isGrid = dialog.Body.Any(e => e.Is == FormElementKind.DataGrid);
         var selectCommand = new BindCmd() { Command = CommandType.Select };
-        selectCommand.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(isGrid ? "Parent.ItemsSource" : Table.CollectionName));
+        selectCommand.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(CommandSource(isGrid ? CommandScope.Grid : CommandScope.Tree)));
         var taskpad = (Taskpad)ElementToControl(dialog.Taskpad);
         if (Table.HasFolders)
             taskpad.Children.Insert(0, FolderTree());
