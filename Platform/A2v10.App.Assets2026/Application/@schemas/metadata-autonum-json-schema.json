@@ -30,7 +30,7 @@
                     },
                     "pattern": {
                         "type": "string",
-                        "description": "The number itself, as a template. '{n}' is the counter and its width is what it says - '{nnnnn}' pads to five digits; it is required, and may appear once. The date placeholders are '{yy}', '{yyyy}', '{mm}' and '{qq}', filled from the DOCUMENT's date, not from the moment it was saved. Anything else in braces is refused when the file is loaded, because nothing downstream would substitute it: it would simply stand in the number. Example: 'ВН-{yyyy}/{nnnnn}'."
+                        "description": "The number itself, as a template. '{n}' is the counter and its width is what it says - '{nnnnn}' pads to five digits; it is required, and may appear once. The date placeholders are '{yy}', '{yyyy}', '{mm}' and '{qq}', filled from the DOCUMENT's date, not from the moment it was saved. '{p}' is the company's prefix: the 'prefix' column of the catalog the document's 'company' column points at - an endpoint drawing from this numbering without both is refused at load. Anything else in braces is refused when the file is loaded, because nothing downstream would substitute it: it would simply stand in the number. Example: 'ВН-{yyyy}/{nnnnn}'."
                     },
                     "period": {
                         "type": "string",

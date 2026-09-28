@@ -51,7 +51,7 @@ internal static class TableMetadataDefaults
              * range, and what turns a counter split by a race into a failed insert.
              */
             Indexes = [new TableIndex(true, [
-                Constants.FieldNames.Autonum, Constants.FieldNames.Year,
+                Constants.FieldNames.Autonum, Constants.FieldNames.Company, Constants.FieldNames.Year,
                 Constants.FieldNames.Quart, Constants.FieldNames.Month])]
         };
         // never reaches SetDefaults, so the baseline is built here

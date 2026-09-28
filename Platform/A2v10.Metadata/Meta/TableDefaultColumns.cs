@@ -185,13 +185,15 @@ internal static class TableDefaultColumns
      *
      * 'Id' is here because CreateTable always puts the primary key on it, and that convention is
      * worth more than this one table: made settable, it would be honoured by the DDL alone while
-     * every generated statement went on joining by Id. The key that matters - (Autonum, Year,
-     * Quart, Month) - is a unique index instead, declared with the table in TableMetadataDefaults.
+     * every generated statement went on joining by Id. The key that matters - (Autonum, Company,
+     * Year, Quart, Month) - is a unique index instead, declared with the table in TableMetadataDefaults.
      */
     static IEnumerable<TableColumn> AutonumValuesDefaultColumns(TableMetadata table)
     {
         yield return new TableColumn(Constants.FieldNames.Id, ColumnType.Id);
         yield return new TableColumn(Constants.FieldNames.Autonum, ColumnType.String) { Length = 64 };
+        // null for a document with no company: every company counts on its own, there is no shared counter
+        yield return new TableColumn(Constants.FieldNames.Company, ColumnType.PlatformId);
         yield return new TableColumn(Constants.FieldNames.Year, ColumnType.Integer);
         yield return new TableColumn(Constants.FieldNames.Quart, ColumnType.Integer);
         yield return new TableColumn(Constants.FieldNames.Month, ColumnType.Integer);

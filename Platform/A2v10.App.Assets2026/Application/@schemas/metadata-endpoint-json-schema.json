@@ -77,7 +77,7 @@
         },
         "autonum": {
             "type": "string",
-            "description": "Which numbering this endpoint draws from - a key of autonum/metadata.json, refused at load if that file does not declare it. The number lands in the shape's column of type 'autonum', so writing this without such a column is refused too. The other way round is legitimate and is not checked: a column with no 'autonum' is a document numbered by hand. Layered like every other key - an operation with none of its own draws from the storage's. The number is issued when the row is INSERTED and only if it arrived empty, so a document may be renumbered by hand and re-saving never overwrites it."
+            "description": "Which numbering this endpoint draws from - a key of autonum/metadata.json, refused at load if that file does not declare it. The number lands in the shape's column of type 'autonum', so writing this without such a column is refused too. The other way round is legitimate and is not checked: a column with no 'autonum' is a document numbered by hand. Layered like every other key - an operation with none of its own draws from the storage's. The number is issued only if it is empty, at the moment the record first has all of the counter's key: on INSERT, or - where the table has a 'company' column - on the save where the company becomes filled. So a document may be renumbered by hand and re-saving never overwrites it. A 'company' column splits the counter: every company counts on its own."
         }
     },
 
@@ -96,7 +96,7 @@
                 "type": { "$ref": "#/definitions/columnType" },
                 "target": {
                     "type": "string",
-                    "description": "For a reference: path of the endpoint it points at, e.g. '/catalog/item'. Three types name the kind they point at, and the load refuses anything else: for 'enum' a set of values, '/enum/vatrate'; for 'state' a set of states, '/state/order'; for 'account' a chart of accounts, '/accplan/national'."
+                    "description": "For a reference: path of the endpoint it points at, e.g. '/catalog/item'. Four types name the kind they point at, require the target and refuse anything else at load: for 'enum' a set of values, '/enum/vatrate'; for 'state' a set of states, '/state/order'; for 'account' a chart of accounts, '/accplan/national'; for 'company' the catalog of companies, '/catalog/company' - one per application, at most one 'company' column per table and none in a collection."
                 },
                 "length": {
                     "type": "integer",
@@ -638,7 +638,7 @@
                 "string", "id", "name", "memo", "rowNumber", "done", "void", "isSystem",
                 "isFolder", "parent", "folder", "user", "rowKind", "operation",
                 "document", "documentType", "row", "rowVersion", "color", "enum", "state", "account", "autonum",
-                "company", "direction",
+                "company", "prefix", "direction",
                 "amount", "price", "qty", "percent", "factor",
                 "ref", "date", "dateTime", "money", "boolean",
                 "stream", "integer",

@@ -75,7 +75,14 @@ public enum ColumnType
      */
     Account,
     Autonum,
+    /* The enterprise the books are kept for: a reference to the author's catalog, picked as a Ref
+     * is. A type of its own because the platform reads it - it splits a numbering's counter and
+     * gives '{p}' - so it is found by type, at most one per table and none in a collection: a
+     * document belongs to one company, and a row to its record.
+     */
     Company,
+    // the number prefix of a company, '{p}' of a numbering; found by type in the catalog Company points at
+    Prefix,
     Direction,  // journal leg sign (+1/-1); vocabulary (In/Out, Dt/Ct) is presentation
     /* A stamp is who + when, written by the platform and never sent by the client. Four types and
      * not two, because nullability is answered by type (DeployNullable): the posting stamp is empty
@@ -112,7 +119,13 @@ public enum ColumnType
     Decimal,
     Float,
     VarBinary,
-    Uniqueidentifier
+    Uniqueidentifier,
+    /* platformid with no meaning, for a table the platform builds for itself: the company of a
+     * numbering's counter. Not Company - that is a reference, and the counters have no foreign keys,
+     * the numbering's own column included. Not Id - that is the key. Not in the schema: no file
+     * writes it.
+     */
+    PlatformId
 }
 
 public record RefDescriptor(Int32 Index, TableColumn Column, TableMetadata Table);

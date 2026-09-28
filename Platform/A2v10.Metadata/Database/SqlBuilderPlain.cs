@@ -471,14 +471,25 @@ internal partial class SqlBuilder
         var autonumDate = autonumColumn == null
             ? null
             : Table.AllColumns().FirstOrDefault(c => c.Type == ColumnType.Date);
+        // the company splits the counter; at most one, checked at load (CheckCompanyColumn)
+        var autonumCompany = autonumColumn == null
+            ? null
+            : Table.AllColumns().FirstOrDefault(c => c.Type == ColumnType.Company);
 
         List<(String Declared, String Output, String Into)> extras = [];
         if (autonumColumn != null)
         {
-            extras.Add(("[act] nvarchar(10)", "$action", "[act]"));
+            if (autonumCompany == null)
+                extras.Add(("[act] nvarchar(10)", "$action", "[act]"));
             extras.Add(("[num] nvarchar(64)", $"inserted.[{autonumColumn.Name}]", "[num]"));
             if (autonumDate != null)
                 extras.Add(("[dt] date", $"inserted.[{autonumDate.Name}]", "[dt]"));
+            if (autonumCompany != null)
+            {
+                var type = autonumCompany.SqlDataType();
+                extras.Add(($"[comp] {type}", $"inserted.[{autonumCompany.Name}]", "[comp]"));
+                extras.Add(($"[oldcomp] {type}", $"deleted.[{autonumCompany.Name}]", "[oldcomp]"));
+            }
         }
         var rtableExtra = String.Concat(extras.Select(e => $", {e.Declared}"));
         var outputExtra = String.Concat(extras.Select(e => $", {e.Output}"));
@@ -490,23 +501,47 @@ internal partial class SqlBuilder
          *
          * One condition, and both halves of it are load bearing. Only over an empty column, because
          * the user may write a number himself and correcting one is his right. And only on an
-         * insert - not 'whenever it is empty', which would number a document dated 2023 out of the
+         * event - not 'whenever it is empty', which would number a document dated 2023 out of the
          * 2023 counter today: a row of authentic-looking last-year numbers, ordered by who opened
          * what. The price is that turning numbering on leaves old documents unnumbered and nothing
          * says so; that is a migration, where the order can be chosen. See ISSUES 3.8.
+         *
+         * The event is the moment the record first has all of the counter's key. Without a company
+         * that is the insert. With one it is the save where the company goes from empty to filled -
+         * the insert with a company among them, since 'deleted' is empty there: a draft saved with
+         * no company would otherwise draw from the counter of no company, and repeat a number of the
+         * company it is given later.
          */
         String Autonum()
         {
             if (autonumColumn == null)
                 return String.Empty;
             var date = autonumDate != null ? "(select top(1) [dt] from @rtable)" : "getdate()";
+            var issued = autonumCompany == null
+                ? "[act] = N'INSERT'"
+                : "[comp] is not null and [oldcomp] is null";
+            List<String> declares = [$"declare @AutonumNo nvarchar(64), @AutonumDate date = {date};"];
+            List<String> args = [$"@Autonum = N'{Endpoint.Declaration.Autonum}'", "@Date = @AutonumDate"];
+            if (autonumCompany != null)
+            {
+                declares.Add($"declare @AutonumCompany {autonumCompany.SqlDataType()} = (select top(1) [comp] from @rtable);");
+                args.Add("@Company = @AutonumCompany");
+                // one prefix column or none is an answer; two is a guess, refused at load where '{p}' is written
+                var catalog = autonumCompany.RefTableCheck.Storage;
+                var prefixes = catalog.AllColumns(c => c.Type == ColumnType.Prefix).Take(2).ToList();
+                if (prefixes.Count == 1)
+                {
+                    declares.Add($"declare @AutonumPrefix {prefixes[0].SqlDataType()} = (select [{prefixes[0].Name}] from {catalog.SqlTableName} where [Id] = @AutonumCompany);");
+                    args.Add("@Prefix = @AutonumPrefix");
+                }
+            }
+            args.Add("@Number = @AutonumNo output");
             return $"""
             -- autonum
-            if exists(select 1 from @rtable where [act] = N'INSERT' and isnull([num], N'') = N'')
+            if exists(select 1 from @rtable where {issued} and isnull([num], N'') = N'')
             begin
-                declare @AutonumNo nvarchar(64), @AutonumDate date = {date};
-                exec {TableMetadataDefaults.AutonumProcedureName()} @Autonum = N'{Endpoint.Declaration.Autonum}',
-                    @Date = @AutonumDate, @Number = @AutonumNo output;
+                {String.Join($"{Environment.NewLine}    ", declares)}
+                exec {TableMetadataDefaults.AutonumProcedureName()} {String.Join(", ", args)};
                 update {Table.SqlTableName} set [{autonumColumn.Name}] = @AutonumNo where [Id] = @Id;
             end;
 

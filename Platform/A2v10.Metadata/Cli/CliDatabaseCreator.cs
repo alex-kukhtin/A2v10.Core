@@ -166,11 +166,27 @@ public class CliDatabaseCreator()
     /* Created after the table and its rows, so a unique index meets the data that is already there:
      * duplicates fail the deploy loudly instead of being carried forward under a promise the
      * database does not keep.
+     *
+     * The table's other indexes are dropped first. The name is composed from the columns, so a key
+     * that changes creates a new index and leaves the old one standing - still unique, and refusing
+     * rows the new key allows (the counters gained Company: the old key kept one row per numbering
+     * and period, and the first company's counter failed on it). Safe here and only here: indexes are
+     * declared in code, by the platform, for tables it builds itself - no author owns one of these,
+     * so no author's index can be dropped. The primary key is not an index of this list.
      */
     public static String CreateIndexes(TableMetadata table)
     {
         if (table.Indexes.Count == 0)
             return String.Empty;
+
+        var declared = String.Join(", ", table.Indexes.Select(i => $"N'{i.Name(table)}'"));
+        var dropStale = $"""
+            declare @dropIndexes nvarchar(max) = N'';
+            select @dropIndexes += N'drop index ' + quotename(name) + N' on {table.SqlTableName};'
+            from sys.indexes where object_id = object_id(N'{table.SqlTableName}')
+                and type > 0 and is_primary_key = 0 and is_unique_constraint = 0 and name not in ({declared});
+            exec sp_executesql @dropIndexes;
+            """;
 
         String createIndex(TableIndex index)
         {
@@ -184,6 +200,7 @@ public class CliDatabaseCreator()
 
         return $"""
         {SQL_DIVIDER}
+        {dropStale}
         {String.Join(NL, table.Indexes.Select(createIndex))}
         """;
     }

@@ -122,6 +122,29 @@ internal sealed class PostStatements
             : $"{byDocument} and {prefix}[{docType.Name}] = {DocumentTypeValue(document)}";
     }
 
+    /* The company of a movement is the company of its document - one for the whole posting, both legs
+     * of a ledger included: a debit in one company and a credit in another balance neither. So the
+     * platform fills it, found by type like the provenance, and a block naming it is refused - two
+     * spellings of one value could disagree. A journal with the column over a document without one has
+     * nothing to fill it from; the other way round is a journal that does not split by company.
+     */
+    internal static String CompanyValue(TableMetadata document, TableMetadata journal, TableColumn column, String head, PostMetadata p)
+    {
+        static Boolean Names(PostLegMetadata? leg, String name) =>
+            leg != null && (leg.Const.ContainsKey(name) || leg.Document.ContainsKey(name) || leg.Row.ContainsKey(name));
+        if (p.Document.ContainsKey(column.Name) || p.Row.ContainsKey(column.Name)
+            || Names(p.Dt, column.Name) || Names(p.Ct, column.Name))
+            throw new InvalidOperationException(
+                $"{head}: [{column.Name}] is the company, which the platform takes from the document - it is not written in 'post'");
+        var source = document.AllColumns().FirstOrDefault(c => c.Type == ColumnType.Company)
+            ?? throw new InvalidOperationException(
+                $"{head}: {journal.Path} splits by company ([{column.Name}]), and {document.Path} declares no column of type 'company' to take it from");
+        if (!DomainMatch(source, column))
+            throw new InvalidOperationException(
+                $"{head}: {DomainDiff("document", source, column)}");
+        return $"d.[{source.Name}]";
+    }
+
     // domain = semantic type (+ target for references); SQL storage type is not compared
     private static Boolean DomainMatch(TableColumn source, TableColumn target) =>
         source.Type == target.Type && (!target.IsRef || source.Target == target.Target);
@@ -193,6 +216,9 @@ internal sealed class PostStatements
                     continue;
                 case ColumnType.Row:                            // detail-row provenance; null when header-only
                     result.Add((detailsTable != null ? $"r.[{Constants.FieldNames.Id}]" : "null", name));
+                    continue;
+                case ColumnType.Company:
+                    result.Add((CompanyValue(_table, journal, col, $"Post {_endpoint.Path} -> {journal.Path}", p), name));
                     continue;
             }
 
@@ -332,7 +358,7 @@ internal sealed class PostStatements
                 ?? throw new InvalidOperationException($"{head}: '{leg}' names [{name}], which is not a column of the ledger");
             var legal = name == Constants.FieldNames.Acc
                 || ledger.Columns.Contains(col) && col.Type is not (ColumnType.Document or ColumnType.DocumentType
-                    or ColumnType.Row or ColumnType.Operation);
+                    or ColumnType.Row or ColumnType.Operation or ColumnType.Company);
             return legal ? col
                 : throw new InvalidOperationException($"{head}: '{leg}' names [{name}], which the platform fills");
         }
@@ -352,6 +378,11 @@ internal sealed class PostStatements
             return map;
         }
 
+        // before the legs: a leg naming the company is told why, not only that the platform fills it
+        var company = ledger.Columns.FirstOrDefault(c => c.Type == ColumnType.Company) is { } companyColumn
+            ? (companyColumn.Name, CompanyValue(_table, ledger, companyColumn, head, p))
+            : default((String Name, String Source)?);
+
         var dt = Leg("dt", p.Dt!);
         var ct = Leg("ct", p.Ct!);
 
@@ -359,8 +390,10 @@ internal sealed class PostStatements
         var sumCol = ledger.AllColumns().First(c => c.Name == Constants.FieldNames.Sum);
         var sum = Expr(detailsTable != null ? "row" : "document", p.Sum!, sumCol);
 
-        // one value for both legs: the date and the document's provenance
+        // one value for both legs: the date, the company and the document's provenance
         List<(String Target, String Source)> common = [(Constants.FieldNames.Date, $"d.[{Constants.FieldNames.Date}]")];
+        if (company is var (companyName, companySource))
+            common.Add((companyName, companySource));
         foreach (var col in ledger.Columns)
         {
             String? source = col.Type switch

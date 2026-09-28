@@ -7,6 +7,7 @@
 		"Document": { "type": "Document", "target": "/document" },
 		"Operation": { "type": "Operation" },
 		"Row": { "type": "Row" },
+		"Company": { "type": "Company", "target": "/catalog/company" },
 		"Item": { "type": "Ref", "target": "/catalog/item" },
 		"Qty": { "type": "Qty" },
 		"Agent": { "type": "Ref", "target": "/catalog/agent" }

@@ -97,6 +97,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
      */
     public async Task<(String Script, String Hash)?> WriteDeployAsync(String? dataSource, IEnumerable<TableMetadata> tables, AppPlatformId platformId)
     {
+        CheckOneCompanyCatalog(tables);
         var seedScript = await GenerateMetadataSeedAsync(tables);
         var seedHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(seedScript ?? "new"))).ToLowerInvariant();
         // read hash from DB
@@ -137,6 +138,25 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         var script = allScript.ToString();
         await WriteDeployDatabaseFileAsync(script);
         return (script, seedHash);
+    }
+
+    /* The counters of one numbering hold the companies of every document drawing from it, and two
+     * catalogs number their rows each from its own sequence: company 1 of one and company 1 of the
+     * other would count in one row. Asked here because only the deploy sees every endpoint at once.
+     */
+    internal static void CheckOneCompanyCatalog(IEnumerable<TableMetadata> tables)
+    {
+        var targets = tables
+            .SelectMany(t => t.AllColumns(c => c.Type == ColumnType.Company).Select(c => (t.Path, c.Name, c.Target)))
+            .GroupBy(x => x.Target)
+            .ToList();
+        if (targets.Count <= 1)
+            return;
+        var uses = targets.Select(g => $"{g.Key}: {String.Join(", ", g.Select(x => $"{x.Path} [{x.Name}]"))}");
+        throw new InvalidOperationException($"""
+            Columns of type 'company' point at {targets.Count} catalogs. An application keeps its companies in one:
+              {String.Join($"{Environment.NewLine}  ", uses)}
+            """);
     }
 
     private Task WriteDeployDatabaseFileAsync(String allScript)
@@ -586,13 +606,16 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
      * chances for two of them to differ.
      *
      * Two ports, @Autonum and @Date, and a number out - the document's own date, because a number
-     * belongs to the period the document is IN, not to the moment it was typed.
+     * belongs to the period the document is IN, not to the moment it was typed. A document with a
+     * company adds two more: the company, which splits the counter, and its prefix, read by the
+     * caller - the caller knows the catalog its company column points at, so the procedure stays
+     * one for every numbering.
      *
      * The counter is advanced by one statement and is committed with it, before the save that
      * asked continues. That is what makes gaps normal here - a save that fails afterwards has
      * already spent the number - and it is the deliberate choice, see CLAUDE.md, "Autonums".
      */
-    private static String CreateAutonumProcedureScript(IEnumerable<TableMetadata> tables)
+    internal static String CreateAutonumProcedureScript(IEnumerable<TableMetadata> tables)
     {
         var registry = tables.FirstOrDefault(t => t.Kind == EndpointKind.Autonum);
         if (registry == null)
@@ -607,6 +630,8 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         create or alter procedure {{TableMetadataDefaults.AutonumProcedureName()}}
         @Autonum {{registry.KeyColumn.SqlDataType()}},
         @Date date,
+        @Company {{ColumnType.PlatformId.ToSqlDbTypeInfo().SqlFullName}} = null,
+        @Prefix {{ColumnType.Prefix.ToSqlDbTypeInfo().SqlFullName}} = null,
         @Number nvarchar(64) output
         as
         begin
@@ -636,15 +661,19 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
              * callers both find no row for a period that has just begun and both insert one - a
              * counter split in two, and from then on every number issued twice. The lock is taken
              * over the table's unique index, so it is on that one key and not on a range of them.
+             *
+             * The company is compared so that null meets null: a document with no company counts in
+             * the row whose company is empty, and the unique index already treats two nulls as one key.
              */
             declare @rtable table(number int);
             merge into {{values.SqlTableName}} with (holdlock) as t
-            using (select @Autonum, @y, @q, @m) as s([Autonum], [Year], [Quart], [Month])
-                on t.[Autonum] = s.[Autonum] and t.[Year] = s.[Year]
-                    and t.[Quart] = s.[Quart] and t.[Month] = s.[Month]
+            using (select @Autonum, @Company, @y, @q, @m) as s([Autonum], [Company], [Year], [Quart], [Month])
+                on t.[Autonum] = s.[Autonum]
+                    and (t.[Company] = s.[Company] or t.[Company] is null and s.[Company] is null)
+                    and t.[Year] = s.[Year] and t.[Quart] = s.[Quart] and t.[Month] = s.[Month]
             when matched then update set t.[CurrentNumber] = t.[CurrentNumber] + 1
-            when not matched then insert ([Autonum], [Year], [Quart], [Month], [CurrentNumber])
-                values (s.[Autonum], s.[Year], s.[Quart], s.[Month], 1)
+            when not matched then insert ([Autonum], [Company], [Year], [Quart], [Month], [CurrentNumber])
+                values (s.[Autonum], s.[Company], s.[Year], s.[Quart], s.[Month], 1)
             output inserted.[CurrentNumber] into @rtable(number);
 
             declare @n int;
@@ -660,6 +689,10 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
             set @p0 = charindex(N'{n', @Number);
             set @p1 = charindex(N'n}', @Number);
             set @Number = stuff(@Number, @p0, @p1 - @p0 + 2, format(@n, replicate(N'0', @p1 - @p0)));
+
+            -- last: a prefix is the user's text, and one holding '{n' must not be taken for the counter.
+            -- isnull, because replace() with a null gives null and the number would silently not be written
+            set @Number = replace(@Number, N'{p}', isnull(@Prefix, N''));
         end
         go
 

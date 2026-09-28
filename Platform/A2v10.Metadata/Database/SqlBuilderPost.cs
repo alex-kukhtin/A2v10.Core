@@ -1,6 +1,7 @@
 // Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+using System.Linq;
 using System.Data.Common;
 using System.Threading.Tasks;
 using System.Dynamic;
@@ -31,6 +32,18 @@ internal partial class SqlBuilder
     {
         var statements = new PostStatements(Endpoint);
 
+        /* A draft may be saved before it is decided whose it is; a posted document may not. The
+         * movements are the company's, and a document with no company would post movements that
+         * belong to none - in the frame and not in the mapping, because a procedure posts them too.
+         */
+        var company = Table.AllColumns().FirstOrDefault(c => c.Type == ColumnType.Company) is { } column
+            ? $"""
+            if exists(select 1 from {Table.SqlTableName} where [{Constants.FieldNames.Id}] = @Id and [{column.Name}] is null)
+                throw 600000, N'@[Error.Document.NoCompany]', 0;
+
+            """
+            : String.Empty;
+
         var postSql = $"""
         set nocount on;
         set transaction isolation level read committed;
@@ -38,7 +51,7 @@ internal partial class SqlBuilder
 
         begin tran;
 
-        update {Table.SqlTableName} set [{Constants.FieldNames.Done}] = 1,
+        {company}update {Table.SqlTableName} set [{Constants.FieldNames.Done}] = 1,
             [{Constants.FieldNames.UserPosted}] = @UserId, [{Constants.FieldNames.UtcDatePosted}] = getutcdate()
         where [{Constants.FieldNames.Id}] = @Id and [{Constants.FieldNames.Done}] = 0;
         if @@rowcount = 0

@@ -10,6 +10,10 @@
 		"Operation": {
 			"type": "Operation"
 		},
+		"Company": {
+			"type": "Company",
+			"target": "/catalog/company"
+		},
 		"StoreFrom": {
 			"type": "Ref",
 			"target": "/catalog/store"

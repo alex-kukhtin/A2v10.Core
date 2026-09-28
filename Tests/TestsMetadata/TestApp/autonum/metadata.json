@@ -4,6 +4,10 @@
 		"waybill": {
 			"pattern": "Н-{yyyy}/{nnnnn}",
 			"period": "year"
+		},
+		"order": {
+			"pattern": "{p}-{yyyy}/{nnnnn}",
+			"period": "year"
 		}
 	}
 } 

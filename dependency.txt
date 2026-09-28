@@ -1,5 +1,6 @@
 ﻿2026-09-27 (next: 8667)
 
+A2v10.App.Assets2026
 A2v10.Metadata
 A2v10.Cli
 

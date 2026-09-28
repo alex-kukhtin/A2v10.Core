@@ -218,9 +218,27 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         CheckNames(storage, schema, table);
         CheckValues(storage, schema, table);
         CheckAutonums(storage, schema, table);
+        CheckCompanyColumn(storage, schema, table);
         CheckAccPlan(storage, schema, table);
         await LoadSeedAsync(storage, schema, table);
         return storage;
+    }
+
+    /* The company is found by type - the counter is split by it and '{p}' is read through it - so
+     * two of them make which one a guess. A collection carries none: a row belongs to its record,
+     * and the record to one company.
+     */
+    internal static void CheckCompanyColumn(TableMetadata storage, String schema, String table)
+    {
+        var file = MetadataFileName(schema, table);
+        var companies = storage.AllColumns(c => c.Type == ColumnType.Company).ToList();
+        if (companies.Count > 1)
+            throw new InvalidOperationException(
+                $"{file}: {String.Join(", ", companies.Select(c => $"[{c.Name}]"))} are all 'company'. A record belongs to one company; another reference to the same catalog is a 'ref'");
+        foreach (var (key, details) in storage.Details)
+            if (details.Columns.FirstOrDefault(c => c.Type == ColumnType.Company) is { } column)
+                throw new InvalidOperationException(
+                    $"{file}: [{column.Name}] in '{key}' is 'company'. A row belongs to its record, so the company is a field of the record");
     }
 
     /* A ledger posts against one chart, and nothing names it but this key - no default, and not the
@@ -585,9 +603,9 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         }
     }
 
-    // The date placeholders the procedure substitutes. '{n}' through '{nnnnn}' is the counter and
-    // is checked apart: its length is what it says, so it is not a name in a list.
-    private static readonly String[] _autonumPlaceholders = ["yy", "yyyy", "mm", "qq"];
+    // The placeholders the procedure substitutes: the dates and the company's prefix. '{n}' through
+    // '{nnnnn}' is the counter and is checked apart: its length is what it says, so it is not a name in a list.
+    private static readonly String[] _autonumPlaceholders = ["yy", "yyyy", "mm", "qq", "p"];
 
     /* Every '{...}' is read, because the procedure does not read them - it substitutes the ones it
      * knows and leaves the rest standing in the number. And the counter is checked twice: that it
@@ -620,7 +638,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             }
             else if (!_autonumPlaceholders.Contains(token))
                 throw new InvalidOperationException(
-                    $"{head} uses '{{{token}}}', which is nothing. Known: {{yy}}, {{yyyy}}, {{mm}}, {{qq}}, and {{n}} to {{nnnnn}} for the counter");
+                    $"{head} uses '{{{token}}}', which is nothing. Known: {{yy}}, {{yyyy}}, {{mm}}, {{qq}}, {{p}} for the company's prefix, and {{n}} to {{nnnnn}} for the counter");
             found.Add(token);
             ix = end + 1;
         }
@@ -1326,7 +1344,13 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             }
 
             if (column.Target == null)
+            {
+                // a type that names what it points at has nothing to point at without one
+                if (group.FirstOrDefault(c => TargetOf(c.Type) != null) is { } untargeted)
+                    throw new InvalidOperationException(
+                        $"{endpoint.Path}: [{untargeted.Name}] is '{untargeted.Type}' and declares no 'target' - it has to name {TargetOf(untargeted.Type)!.Value.What}");
                 continue;
+            }
 
             var (schema, table) = ParsePath(column.Target);
             var refMeta = await GetNormalEndpointAsync(load, dataSource, schema, table);
@@ -1363,8 +1387,11 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
 
         var registry = (await GetNormalEndpointAsync(load, dataSource,
             Constants.SchemaNames.Autonum, String.Empty)).Storage;
-        if (registry.Autonums.Any(a => a.Id == autonum))
+        if (registry.Autonums.FirstOrDefault(a => a.Id == autonum) is { } numbering)
+        {
+            CheckPrefix(normal, numbering);
             return;
+        }
 
         var declared = registry.Autonums.Count == 0
             ? "it declares none"
@@ -1373,10 +1400,34 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             $"{endpoint.Path}: 'autonum' names '{autonum}', which {MetadataFileName(Constants.SchemaNames.Autonum, String.Empty)} does not declare - {declared}");
     }
 
-    /* Three column types name WHAT they point at and not merely that they point: an account is a
-     * code of a chart, a value a code of a set, a state a code of a set that carries a life cycle.
-     * Each is spelled as its target's key (ToSqlDbTypeInfo), so a target of another kind is a
-     * foreign key that cannot hold - platformid against nvarchar, discovered at deploy.
+    /* '{p}' is read at the far end of a chain - the company column of this table, the catalog it
+     * points at, the prefix column there - and the procedure substitutes whatever arrives, so a
+     * missing link would issue numbers with the prefix silently gone. Asked per endpoint and not per
+     * numbering: documents share one, and only some of them may have a company. Here, because the
+     * company's target is linked just above.
+     */
+    internal static void CheckPrefix(NormalEndpointMetadata endpoint, AutonumMetadata numbering)
+    {
+        if (!numbering.Pattern.Contains("{p}"))
+            return;
+        var head = $"{endpoint.Path}: numbering '{numbering.Id}' writes {{p}}";
+        var company = endpoint.Storage.AllColumns().FirstOrDefault(c => c.Type == ColumnType.Company)
+            ?? throw new InvalidOperationException(
+                $"{head}, the company's prefix, and {endpoint.Storage.Path} declares no column of type 'company'");
+        var catalog = company.RefTableCheck.Storage;
+        var prefixes = catalog.AllColumns(c => c.Type == ColumnType.Prefix).ToList();
+        if (prefixes.Count != 1)
+            throw new InvalidOperationException(prefixes.Count == 0
+                ? $"{head}, and {catalog.Path}, the catalog [{company.Name}] points at, declares no column of type 'prefix'"
+                : $"{head}, and {catalog.Path} declares {String.Join(", ", prefixes.Select(c => $"[{c.Name}]"))} of type 'prefix' - which one is the prefix would be a guess");
+    }
+
+    /* Four column types name WHAT they point at and not merely that they point: an account is a
+     * code of a chart, a value a code of a set, a state a code of a set that carries a life cycle,
+     * a company a row of a catalog. The first three are spelled as their target's key
+     * (ToSqlDbTypeInfo), so a target of another kind is a foreign key that cannot hold - platformid
+     * against nvarchar, discovered at deploy. The company's would hold, and '{p}' would then read a
+     * prefix off a document.
      *
      * One table rather than an 'if' per type: until now only the account was asked, and an enum
      * column pointing at a catalog went all the way to the database before saying anything. The
@@ -1388,6 +1439,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         ColumnType.Account => (EndpointKind.AccPlan, $"a chart of accounts (/{Constants.SchemaNames.AccPlan}/<name>)"),
         ColumnType.Enum => (EndpointKind.Enum, $"a set of values (/{Constants.SchemaNames.Enum}/<name>)"),
         ColumnType.State => (EndpointKind.State, $"a set of states (/{Constants.SchemaNames.State}/<name>)"),
+        ColumnType.Company => (EndpointKind.Catalog, $"a catalog (/{Constants.SchemaNames.Catalog}/<name>)"),
         _ => null
     };
 

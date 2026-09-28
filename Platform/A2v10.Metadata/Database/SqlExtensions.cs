@@ -137,7 +137,7 @@ internal static class SqlExtensions
             // The base it rests on is deliberately absent - see AppPlatformId.
             ColumnType.Id or ColumnType.Ref or ColumnType.Master or
                 ColumnType.Folder or ColumnType.Row or ColumnType.Company or
-                ColumnType.Document
+                ColumnType.Document or ColumnType.PlatformId
                     => new SqlDbTypeInfo("platformid"),
             // a self link is spelled as the key of its own table
             ColumnType.Parent => key is ColumnType.Id or ColumnType.NaturalKey
@@ -176,6 +176,7 @@ internal static class SqlExtensions
             ColumnType.RowKind or ColumnType.Autonum
                     => new SqlDbTypeInfo("nvarchar", 64),
             ColumnType.Color => new SqlDbTypeInfo("nvarchar", 32),
+            ColumnType.Prefix => new SqlDbTypeInfo("nvarchar", 16),
             // numbers with business semantics: precision is 19 throughout, only scale varies
             ColumnType.Amount => new SqlDbTypeInfo("decimal", null, 19, 4),
             ColumnType.Price or ColumnType.Qty or
@@ -305,7 +306,7 @@ internal static class SqlExtensions
             ColumnType.Name => $"[Name!!Name] = {alias}.[Name]",
             ColumnType.RowNumber => $"[{column.Name}!!RowNumber] = {alias}.[{column.Name}]",
             ColumnType.Parent => $"[{column.ModelName}] = {alias}.[{column.Name}]",
-            ColumnType.Ref or ColumnType.Document or ColumnType.Operation or ColumnType.Enum
+            ColumnType.Ref or ColumnType.Company or ColumnType.Document or ColumnType.Operation or ColumnType.Enum
                 or ColumnType.State or ColumnType.Account or ColumnType.Folder =>
                 $"[{column.Name}!{column.RefTableCheck.Storage.RefTypeName}!RefId] = {alias}.[{column.Name}]",
             _ => $"{alias}.[{column.Name}]"

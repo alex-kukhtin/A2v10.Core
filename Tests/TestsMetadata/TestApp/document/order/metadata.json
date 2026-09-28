@@ -3,9 +3,14 @@
 	"table": "Orders",
 	"model": "Order",
 	"presentation": "Number",
+	"autonum": "order",
 	"fields": {
 		"Number": {
-			"type": "String"
+			"type": "Autonum"
+		},
+		"Company": {
+			"type": "Company",
+			"target": "/catalog/company"
 		}
 	}
 }

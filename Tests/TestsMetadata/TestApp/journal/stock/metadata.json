@@ -16,6 +16,10 @@
 		"Detail": {
 			"type": "Row"
 		},
+		"Firm": {
+			"type": "Company",
+			"target": "/catalog/company"
+		},
 		"Qty": {
 			"type": "Qty"
 		},

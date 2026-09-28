@@ -81,7 +81,7 @@ internal partial class XamlBuilder
                     CssClass = elem.Type.ToXamlSemanticClass(),
                     Bindings = b => b.SetBinding(nameof(TableCell.Content), new Bind(elem.Name) { DataType = DataType.Number })
                 },
-            ColumnType.Ref or ColumnType.Account => new SelectorSimple()
+            ColumnType.Ref or ColumnType.Company or ColumnType.Account => new SelectorSimple()
                 {
                     Url = SelectorUrl(inherits, elem),
                     CssClass = elem.Type.ToXamlSemanticClass(),
@@ -574,7 +574,7 @@ internal partial class XamlBuilder
                 CssClass = column.Type.ToXamlSemanticClass(),
                 Bindings = b => b.SetBinding(nameof(ColorPicker.Value), valueBind)
             },
-            ColumnType.Ref or ColumnType.Document or ColumnType.Account => new SelectorSimple()
+            ColumnType.Ref or ColumnType.Company or ColumnType.Document or ColumnType.Account => new SelectorSimple()
             {
                 Label = column.Header,
                 CssClass = column.Type.ToXamlSemanticClass(),

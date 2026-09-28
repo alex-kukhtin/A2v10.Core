@@ -50,8 +50,9 @@ internal static class Constants
         public const String Order = nameof(Order);
         public const String Pattern = nameof(Pattern);
         public const String Period = nameof(Period);
-        // the counters table: which numbering, which period, where it has got to
+        // the counters table: which numbering, whose company, which period, where it has got to
         public const String Autonum = nameof(Autonum);
+        public const String Company = nameof(Company);
         public const String Year = nameof(Year);
         public const String Quart = nameof(Quart);
         public const String Month = nameof(Month);
