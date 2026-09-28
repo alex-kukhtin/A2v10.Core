@@ -632,7 +632,7 @@
         },
 
         "columnType": {
-            "description": "What is stored in the column and how. Not required: not written = default: string (ColumnType.String is the platform's default), so a column declared as {} is a string one.",
+            "description": "What is stored in the column and how. Not required: not written = default: string (ColumnType.String is the platform's default), so a column declared as {} is a string one. The domain also answers NULL: a magnitude (amount, qty, price, percent, factor, money, decimal, float) and boolean are NOT NULL DEFAULT 0 - their zero is a value; the rest are nullable. There is no 'default' or 'notNull' key: what a new record starts with is 'initialValues'.",
             "type": "string",
             "enum": [
                 "string", "id", "name", "memo", "rowNumber", "done", "void", "isSystem",
@@ -641,8 +641,8 @@
                 "company", "direction",
                 "amount", "price", "qty", "percent", "factor",
                 "ref", "date", "dateTime", "money", "boolean",
-                "stream", "integer", "number",
-                "bigInt", "bit", "nChar", "decimal", "float", "varBinary", "uniqueidentifier"
+                "stream", "integer",
+                "bigInt", "nChar", "decimal", "float", "varBinary", "uniqueidentifier"
             ]
         }
     }

@@ -456,7 +456,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
      *
      * Emitted for a chart with no rows as well: emptying the file is the last arm for every row.
      */
-    private static String CreateSeedScript(IEnumerable<TableMetadata> tables)
+    internal static String CreateSeedScript(IEnumerable<TableMetadata> tables)
     {
         static String Str(String? val) =>
             val == null ? "null" : $"N'{val.Replace("'", "''")}'";
@@ -481,10 +481,13 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
             var declared = baseline.Select(n => $"[{n}] {columns[n].SqlDataType()}")
                 .Concat(authored.Select(c => $"[{c.Name}] {c.SqlDataType()}, [${c.Name}] bit"));
 
-            // the key is outside the row's values, as it is outside a row of the file
+            /* The key is outside the row's values, as it is outside a row of the file. A column the row
+             * does not name gets its empty: the update arm skips it by the '$'-bit, but the insert arm
+             * writes it, and a Boolean or an Amount is NOT NULL (TableColumn.HasZero).
+             */
             String Value(SeedRow row, String name) =>
                 name == Constants.FieldNames.Id ? Str(row.Id)
-                : row.Values.GetValueOrDefault(name) is String v ? columns[name].SqlLiteral(v) : "null";
+                : row.Values.GetValueOrDefault(name) is String v ? columns[name].SqlLiteral(v) : columns[name].EmptyLiteral();
 
             var rows = chart.SeedRows.Select(r => $"\t({String.Join(", ",
                 baseline.Select(n => Value(r, n))

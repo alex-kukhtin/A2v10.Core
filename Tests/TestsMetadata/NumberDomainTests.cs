@@ -27,7 +27,6 @@ public class NumberDomainTests
     [InlineData(ColumnType.Percent)]
     [InlineData(ColumnType.Factor)]
     [InlineData(ColumnType.Integer)]
-    [InlineData(ColumnType.Number)]
     [InlineData(ColumnType.Decimal)]
     [InlineData(ColumnType.Float)]
     public void A_number_that_is_not_a_sum(ColumnType type)

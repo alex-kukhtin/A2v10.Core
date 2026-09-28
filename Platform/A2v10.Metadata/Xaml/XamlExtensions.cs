@@ -28,7 +28,7 @@ internal static class XamlExtensions
      */
     internal static Boolean IsNumber(this ColumnType column) =>
         column.IsSum() || column is ColumnType.Price or ColumnType.Percent or ColumnType.Factor
-            or ColumnType.Integer or ColumnType.Number or ColumnType.Decimal or ColumnType.Float;
+            or ColumnType.Integer or ColumnType.Decimal or ColumnType.Float;
 
     // the fork inside numbers: a sum shows at least two decimals, any other number as many as it has
     internal static Boolean IsSum(this ColumnType column) =>
@@ -55,7 +55,7 @@ internal static class XamlExtensions
             ColumnType.Date or ColumnType.DateTime => TextAlign.Center,
             ColumnType.RowNumber => TextAlign.Right,
             _ when column.IsNumber() => TextAlign.Right,
-            ColumnType.Bit or ColumnType.Boolean => TextAlign.Center,
+            ColumnType.Boolean => TextAlign.Center,
             _ => TextAlign.Default,
         };
 
@@ -67,7 +67,7 @@ internal static class XamlExtensions
             // a number is as wide as its pattern and never wider: the grid gives it exactly that
             ColumnType.Autonum => ColumnRole.Fit,
             ColumnType.Date or ColumnType.DateTime => ColumnRole.Date,
-            ColumnType.Bit or ColumnType.Boolean => ColumnRole.CheckBox,
+            ColumnType.Boolean => ColumnRole.CheckBox,
             _ when column.IsNumber() => ColumnRole.Number,
             _ => ColumnRole.Default,
         };

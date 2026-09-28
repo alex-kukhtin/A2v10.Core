@@ -2,5 +2,8 @@
 	"$schema": "../../../../../Platform/A2v10.App.Assets2026/Application/@schemas/metadata-accplan-json-schema.json#",
 	"table": "National",
 	"model": "Account",
-	"seed": "seed.json"
+	"seed": "seed.json",
+	"fields": {
+		"Quantitative": { "type": "Boolean" }
+	}
 }

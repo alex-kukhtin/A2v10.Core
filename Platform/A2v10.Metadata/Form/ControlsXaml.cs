@@ -638,7 +638,7 @@ internal partial class XamlBuilder
                     : "@[Autonum.Auto]",
                 Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
             },
-            ColumnType.Done or ColumnType.Bit or ColumnType.Boolean => new CheckBox()
+            ColumnType.Done or ColumnType.Boolean => new CheckBox()
             {
                 Label = column.Header,
                 Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)

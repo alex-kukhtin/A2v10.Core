@@ -82,6 +82,17 @@ Never a field list: three of four kinds have no column (`Fragment`, `Period`, `T
 - **Not negated: `Float`, `Decimal`.** Numbers without business meaning, and the platform does not guess one for them. A column meant to flip is declared `Amount` or `Qty` — the type is where the author says it adds up.
 - **The question is "does it add up", not "is it a number".** Alignment and column role ask the second — `IsNumber` (XamlExtensions); the format splits on `IsSum`.
 
+## NOT NULL: the domain's zero
+
+A column is `NOT NULL DEFAULT 0` exactly when its domain has a zero — one predicate, `TableColumn.HasZero`; there is no `default` or `notNull` key on a field. Decided 2026-09-28 (skill: `metadata.md` → «`NOT NULL`»).
+
+- **A zero: magnitudes and the flag.** `Amount`, `Qty`, `Price`, `Percent`, `Factor`, `Money`, `Decimal`, `Float` — 0 is none, not unknown; `Boolean` — false is 'no'. Plus the platform's own `Void`, `Done`, `IsSystem`.
+- **None: a key, a code, a reference, a date, a string** (`Integer`, `BigInt`, `Ref`, …). Their 'nothing' is an absence, carried by NULL.
+- **By meaning, not by the client.** The client sends 0 for every number, but also '' and a zero date — asked that way, NOT NULL would spread to everything.
+- **`Factor` is 0, not its neutral 1.** A rate of 1 in a new document is the author's (`initialValues`); DEFAULT 1 would reach only an insert past the platform, since the client builds a row with 0 and the merge writes every column.
+- **A statement that names such a column with nothing for it writes the zero** (`EmptyLiteral`): the ledger leg that does not name a measure, the seed row that does not name a column. NULL there is refused.
+- **No `Bit`, no `Number`.** `Bit` was `Boolean` spelled by SQL; `Number` never had an SQL type, and `Decimal` is the number without semantics.
+
 ## Posting by procedure: a box with two ports
 
 Some postings are not a column mapping — a cost calculation reads the journal it is about to write, which no `document`/`row` pair expresses. So `post` has a second spelling: `sql: { post, unpost }` plus `journals`. Not the ambient hatch Commands refuses: a procedure is imperative code in a box, and it is a box because its ports are declared here rather than reached for. Decided 2026-09.
@@ -264,7 +275,7 @@ Who + when on every record the user keeps: creation and modification on a catalo
 
 - **Four types, because nullability is a type's answer.** A type answers what a walk over columns asks: SQL type, FK, nullability (`DeployNullable`), whether the client sends it. The posting stamp differs in nullability alone, hence `StampUserNull` / `StampDateNull`. WHICH stamp a column is stays its name: every statement writing one names it, as posting names `Done`, so no walk dispatches on it.
 - **Never sent.** Out of the table type and the DataTable by one predicate (`IsSentColumn`), whose column order must match. Written by the merge (insert: both stamps; `when matched`: modification), by Void, by post; unpost empties the posting stamp — nothing of a posting is left behind it.
-- **A default is what makes a stamp not null** (`0`, `getutcdate()`). `DeployNullable` reads `DeployDefault`, and `CreateTable` writes the same expression — one road to NOT NULL, as in the declaration.
+- **A default is what makes a stamp not null** (`0`, `getutcdate()`). `DeployNullable` reads `DeployDefault`, and `CreateTable` writes the same expression — one road to NOT NULL, the same a domain's zero takes ("NOT NULL: the domain's zero").
 - **'Who' is bigint, FK on `a2security.Users(Id)`** — and so is `ColumnType.User`: a login is keyed bigint whatever base the application rests on.
 - **The system user (Id 0) is seeded by the application deploy, before the keys.** Not by the platform script: its administrator seed is guarded by "the table is empty", which an earlier row would turn off silently.
 - **Not history.** A stamp names the author of the current state. `TableTrait.Audit` is to mean the change history (a `$History` table and a trigger); not built.

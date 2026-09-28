@@ -30,6 +30,22 @@
 			"document": {
 				"Store": "StoreFrom"
 			}
+		},
+		{
+			"ledger": "/ledger/national",
+			"each": {
+				"details": "Rows",
+				"kinds": [ "Stock" ]
+			},
+			"sum": "Sum",
+			"dt": {
+				"const": { "Acc": "28" },
+				"document": { "Agent": "Agent" }
+			},
+			"ct": {
+				"const": { "Acc": "281" },
+				"row": { "Item": "Item", "Qty": "Qty" }
+			}
 		}
 	],
 	"forms": {

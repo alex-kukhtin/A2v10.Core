@@ -1,0 +1,14 @@
+{
+	"$schema": "../../../../../Platform/A2v10.App.Assets2026/Application/@schemas/metadata-ledger-json-schema.json#",
+	"table": "National",
+	"model": "Entry",
+	"accplan": "/accplan/national",
+	"fields": {
+		"Document": { "type": "Document", "target": "/document" },
+		"Operation": { "type": "Operation" },
+		"Row": { "type": "Row" },
+		"Item": { "type": "Ref", "target": "/catalog/item" },
+		"Qty": { "type": "Qty" },
+		"Agent": { "type": "Ref", "target": "/catalog/agent" }
+	}
+}

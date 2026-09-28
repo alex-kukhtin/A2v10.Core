@@ -1,4 +1,4 @@
 {
 	"28":  { "Name": "Товари", "AccountType": "Asset", "NormalBalance": "Debit" },
-	"281": { "Name": "Товари на складі", "AccountType": "Asset", "NormalBalance": "Debit", "Parent": "28" }
+	"281": { "Name": "Товари на складі", "AccountType": "Asset", "NormalBalance": "Debit", "Parent": "28", "Quantitative": true }
 }

@@ -103,13 +103,11 @@ public enum ColumnType
     //
     Stream,
     // neutral tier - values without business semantics, and the only place an author
-    // may refuse behaviour. Raw SQL spellings are gone: one integer, one number, no
-    // floating point, no fixed-length strings.
+    // may refuse behaviour
     Integer,
-    Number,
-    // raw
+    // raw - SQL spellings, for when exactly that type is needed. No Bit: it is Boolean spelled
+    // by SQL; no Number: Decimal is the number without semantics
     BigInt,
-    Bit,
     NChar,
     Decimal,
     Float,
@@ -178,11 +176,20 @@ public record TableColumn
     internal Boolean IsSetRef => Type is ColumnType.Enum or ColumnType.State;
     internal Boolean IsOperation => Type == ColumnType.Operation;
 
+    /* The domain has a zero: 'nothing' is a value of it, stored and never NULL. A magnitude has one
+     * (0 is not 'unknown', it is none), a flag has one (false is 'no'); a key, a code, a reference,
+     * a date, a string have none - their 'nothing' is an absence, and NULL carries it. Asked by
+     * meaning, not by what the client sends: the client sends '' and a zero date too.
+     * Factor is 0 and not its neutral 1: a rate of 1 in a new document is the author's (initialValues),
+     * and DEFAULT 1 would reach only an insert past the platform - the client builds a new row with 0
+     * and the merge writes every column.
+     * The one road to NOT NULL (DeployDefault), so a statement that names such a column with no source
+     * for it - a ledger leg, a seed row - writes the zero: NULL there is refused.
+     */
     [JsonIgnore]
-    internal Boolean HasDefaultBit =>
-        Type == ColumnType.IsSystem
-        || Type == ColumnType.Void
-        || Type == ColumnType.Done;
+    internal Boolean HasZero => Type is ColumnType.Amount or ColumnType.Qty or ColumnType.Price
+        or ColumnType.Percent or ColumnType.Factor or ColumnType.Money or ColumnType.Decimal or ColumnType.Float
+        or ColumnType.Boolean or ColumnType.IsSystem or ColumnType.Void or ColumnType.Done;
 
     [JsonIgnore]
     internal Boolean IsStamp => Type is ColumnType.StampUser or ColumnType.StampDate

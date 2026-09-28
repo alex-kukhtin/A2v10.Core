@@ -152,8 +152,7 @@ internal static class SqlExtensions
             ColumnType.User or ColumnType.StampUser or ColumnType.StampUserNull
                     => new SqlDbTypeInfo("bigint"),
             // bit
-            ColumnType.IsSystem or ColumnType.Void or ColumnType.Done or
-                ColumnType.Bit or ColumnType.Boolean
+            ColumnType.IsSystem or ColumnType.Void or ColumnType.Done or ColumnType.Boolean
                     => new SqlDbTypeInfo("bit"),
             // integers
             ColumnType.Direction => new SqlDbTypeInfo("smallint"),
@@ -220,7 +219,7 @@ internal static class SqlExtensions
         => column.ToSqlDbTypeInfo().Scale;
 
     /* A ready-made SQL default expression, for CreateTable and for an add column - where
-     * 'add column [Void] bit not null' would fail without it. Takes NO part in comparison.
+     * 'add column [Qty] decimal(19,6) not null' would fail without it. Takes NO part in comparison.
      * There is no Id default here and there cannot be: a sequence only ever sits on the
      * primary key, and that appears together with the table, never via add column.
      * A stamp defaults to the system user (Id 0) and the moment of writing: a row no person
@@ -231,8 +230,12 @@ internal static class SqlExtensions
         {
             ColumnType.StampUser => "0",
             ColumnType.StampDate => "getutcdate()",
-            _ => column.HasDefaultBit ? "0" : null
+            _ => column.HasZero ? "0" : null
         };
+
+    // what a statement writes into a column it names but has nothing for (see TableColumn.HasZero)
+    public static String EmptyLiteral(this TableColumn column)
+        => column.HasZero ? "0" : "null";
 
     /* IS_NULLABLE. Must match whatever CreateTable emits.
      * RowVersion is listed here not because we ask for not null, but because SQL Server

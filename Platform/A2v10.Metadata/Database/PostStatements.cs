@@ -384,23 +384,26 @@ internal sealed class PostStatements
         var rowColumn = ledger.Columns.FirstOrDefault(c => c.Type == ColumnType.Row);
         Boolean ReadsRow(PostLegMetadata leg) => detailsTable != null && leg.Row.Count > 0;
 
-        // the author's columns either leg names, in the ledger's order; the other leg writes null there
-        var analytics = ledger.Columns.Select(c => c.Name)
-            .Where(n => dt.ContainsKey(n) || ct.ContainsKey(n)).ToList();
+        /* The author's columns either leg names, in the ledger's order. The other leg has nothing for
+         * the column and writes its empty: null for an analytic, the zero for a measure - a Qty is
+         * NOT NULL and would refuse null (TableColumn.HasZero).
+         */
+        var analytics = ledger.Columns
+            .Where(c => dt.ContainsKey(c.Name) || ct.ContainsKey(c.Name)).ToList();
 
-        String Both(String name) =>
-            $"[Dt${name}] = {dt.GetValueOrDefault(name, "null")}, [Ct${name}] = {ct.GetValueOrDefault(name, "null")}";
+        String Both(TableColumn col) =>
+            $"[Dt${col.Name}] = {dt.GetValueOrDefault(col.Name, col.EmptyLiteral())}, [Ct${col.Name}] = {ct.GetValueOrDefault(col.Name, col.EmptyLiteral())}";
 
         var cte = common.Select(c => $"[{c.Target}] = {c.Source}")
             .Concat(rowColumn != null && detailsTable != null ? [$"[{rowColumn.Name}] = r.[{Constants.FieldNames.Id}]"] : [])
             .Append($"[{Constants.FieldNames.Sum}] = {sum}")
-            .Append(Both(Constants.FieldNames.Acc))
+            .Append(Both(ledger.AllColumns().First(c => c.Name == Constants.FieldNames.Acc)))
             .Concat(analytics.Select(Both));
 
         var targets = common.Select(c => c.Target)
             .Concat(rowColumn != null ? [rowColumn.Name] : [])
             .Concat([Constants.FieldNames.InOut, Constants.FieldNames.Acc, Constants.FieldNames.CorrAcc, Constants.FieldNames.Sum])
-            .Concat(analytics);
+            .Concat(analytics.Select(c => c.Name));
 
         // one leg: every column but the sum is the key it collapses by
         String Select(String inOut, String self, String other, PostLegMetadata leg)
@@ -408,13 +411,13 @@ internal sealed class PostStatements
             var keys = common.Select(c => $"[{c.Target}]")
                 .Concat(rowColumn != null && ReadsRow(leg) ? [$"[{rowColumn.Name}]"] : [])
                 .Concat([$"[{self}${Constants.FieldNames.Acc}]", $"[{other}${Constants.FieldNames.Acc}]"])
-                .Concat(analytics.Select(n => $"[{self}${n}]"))
+                .Concat(analytics.Select(c => $"[{self}${c.Name}]"))
                 .ToList();
             var row = rowColumn == null ? [] : ReadsRow(leg) ? new[] { $"[{rowColumn.Name}]" } : ["null"];
             var fields = common.Select(c => $"[{c.Target}]")
                 .Concat(row)
                 .Concat([inOut, $"[{self}${Constants.FieldNames.Acc}]", $"[{other}${Constants.FieldNames.Acc}]", $"sum([{Constants.FieldNames.Sum}])"])
-                .Concat(analytics.Select(n => $"[{self}${n}]"));
+                .Concat(analytics.Select(c => $"[{self}${c.Name}]"));
             return $"select {String.Join(", ", fields)} from P group by {String.Join(", ", keys)}";
         }
 
