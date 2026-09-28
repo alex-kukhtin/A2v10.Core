@@ -381,7 +381,11 @@ public sealed record TableKindMetadata;
 public sealed record TableMetadata
 {
     #region Database fields
-    public EndpointKind Kind { get; set; }
+    // set by code only: the folder decides the kind (LoadEndpointAsync), and the tables with no
+    // folder of their own are made by TableMetadataDefaults. A file that could set it would be a
+    // second discriminator, free to disagree with the first.
+    [JsonIgnore]
+    public EndpointKind Kind { get; internal set; }
     public String Schema { get; set; } = default!;
     public String Table { get; set; } = default!;
     public String Model { get; set; } = default!;
@@ -759,6 +763,8 @@ public sealed record TableMetadata
          */
         if (String.IsNullOrEmpty(Model))
             Model = table.KebabToPascal();
+        // already set for a table with no folder (TableMetadataDefaults): 'operation' and 'tag' are
+        // not folder kinds, and ToEndpointKind refuses them. Never set from the file - see Kind.
         if (Kind == EndpointKind.Undefined)
             Kind = schema.ToEndpointKind();
         Construct();
