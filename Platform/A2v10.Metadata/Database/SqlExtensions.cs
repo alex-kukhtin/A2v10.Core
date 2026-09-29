@@ -136,7 +136,7 @@ internal static class SqlExtensions
             // id + references: every one of them is platformid, the FK carries the meaning.
             // The base it rests on is deliberately absent - see AppPlatformId.
             ColumnType.Id or ColumnType.Ref or ColumnType.Master or
-                ColumnType.Folder or ColumnType.Row or ColumnType.Company or
+                ColumnType.Folder or ColumnType.Row or ColumnType.Company or ColumnType.Owner or
                 ColumnType.Document or ColumnType.PlatformId
                     => new SqlDbTypeInfo("platformid"),
             // a self link is spelled as the key of its own table
@@ -306,8 +306,8 @@ internal static class SqlExtensions
             ColumnType.Name => $"[Name!!Name] = {alias}.[Name]",
             ColumnType.RowNumber => $"[{column.Name}!!RowNumber] = {alias}.[{column.Name}]",
             ColumnType.Parent => $"[{column.ModelName}] = {alias}.[{column.Name}]",
-            ColumnType.Ref or ColumnType.Company or ColumnType.Document or ColumnType.Operation or ColumnType.Enum
-                or ColumnType.State or ColumnType.Account or ColumnType.Folder =>
+            ColumnType.Ref or ColumnType.Company or ColumnType.Owner or ColumnType.Document or ColumnType.Operation
+                or ColumnType.Enum or ColumnType.State or ColumnType.Account or ColumnType.Folder =>
                 $"[{column.Name}!{column.RefTableCheck.Storage.RefTypeName}!RefId] = {alias}.[{column.Name}]",
             _ => $"{alias}.[{column.Name}]"
         };

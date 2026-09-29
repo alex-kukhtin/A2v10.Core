@@ -70,7 +70,7 @@ internal partial class XamlBuilder
     };
 
     // rows of a collection are columns and nothing else, so the member unwraps on the way in
-    static UIElementBase ElementToTableCell(MemberDescriptor member, Dictionary<String, InheritDescriptor[]> inherits)
+    UIElementBase ElementToTableCell(MemberDescriptor member, TableMetadata rows, Dictionary<String, InheritDescriptor[]> inherits)
     {
         var elem = member.ColumnCheck;
         return elem.Type switch
@@ -81,11 +81,16 @@ internal partial class XamlBuilder
                     CssClass = elem.Type.ToXamlSemanticClass(),
                     Bindings = b => b.SetBinding(nameof(TableCell.Content), new Bind(elem.Name) { DataType = DataType.Number })
                 },
-            ColumnType.Ref or ColumnType.Company or ColumnType.Account => new SelectorSimple()
+            ColumnType.Ref or ColumnType.Company or ColumnType.Owner or ColumnType.Account => new SelectorSimple()
                 {
                     Url = SelectorUrl(inherits, elem),
                     CssClass = elem.Type.ToXamlSemanticClass(),
-                    Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), new Bind(elem.Name))
+                    Bindings = b =>
+                    {
+                        b.SetBinding(nameof(SelectorSimple.Value), new Bind(elem.Name));
+                        if (elem.OwnerLinks(rows, Table).Count > 0)
+                            b.SetBinding(nameof(SelectorSimple.Data), new Bind(elem.OwnersName()));
+                    }
                 },
             // the row's own picker; 'Root.' is the reach - the candidates are an array at the model
             // root, not a property of the row ($data, RenderContext.GetNormalizedPath)
@@ -185,7 +190,7 @@ internal partial class XamlBuilder
             Rows = [
                 new TableRow()
                 {
-                    Cells = [..tab.Members.Select(m => ElementToTableCell(m, inherits)), RemoveRowCell()]
+                    Cells = [..tab.Members.Select(m => ElementToTableCell(m, Table.Details[tab.Scope!], inherits)), RemoveRowCell()]
                 }
             ]
         };
@@ -574,12 +579,17 @@ internal partial class XamlBuilder
                 CssClass = column.Type.ToXamlSemanticClass(),
                 Bindings = b => b.SetBinding(nameof(ColorPicker.Value), valueBind)
             },
-            ColumnType.Ref or ColumnType.Company or ColumnType.Document or ColumnType.Account => new SelectorSimple()
+            ColumnType.Ref or ColumnType.Company or ColumnType.Owner or ColumnType.Document or ColumnType.Account => new SelectorSimple()
             {
                 Label = column.Header,
                 CssClass = column.Type.ToXamlSemanticClass(),
                 Url = SelectorUrl(inherits, column),
-                Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
+                Bindings = b =>
+                {
+                    b.SetBinding(nameof(TextBox.Value), valueBind);
+                    if (column.OwnerLinks(Table, null).Count > 0)
+                        b.SetBinding(nameof(SelectorSimple.Data), new Bind($"{Table.Model}.{column.OwnersName()}"));
+                }
             },
             // picked at the owner's address: Folder turns it into browsefolder / fetchfolder
             ColumnType.Folder => new SelectorSimple()

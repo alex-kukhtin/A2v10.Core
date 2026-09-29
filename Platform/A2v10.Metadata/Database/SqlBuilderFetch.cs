@@ -91,6 +91,16 @@ internal partial class SqlBuilder
             }));
     }
 
+    /* The owners the picker sends (ScriptBuilder.OwnerProperties) - the browse gets the same ones
+     * through its url, as filters of the index. Only owner columns are read: the arguments come
+     * from the browser, and nothing else narrows a fetch. An empty id is no owner, as an absent one.
+     */
+    internal static List<(TableColumn Column, Object Id)> FetchOwners(TableMetadata table, AppPlatformId platformId, ExpandoObject? prms) =>
+        [.. table.AllColumns(c => c.Type is ColumnType.Owner or ColumnType.Company)
+            .Select(c => (Column: c, Id: platformId.ParseId(prms?.Get<Object>(c.Name)?.ToString())))
+            .Where(o => !AppPlatformId.IsEmpty(o.Id))
+            .Select(o => (o.Column, o.Id!))];
+
     internal async Task<IInvokeResult> FetchAsync(ExpandoObject? prms)
     {
         var columns = FetchColumns(prms?.Get<String>("inherit"));
@@ -98,8 +108,10 @@ internal partial class SqlBuilder
             .Select(c => $",\n    {c.SqlModelColumnName("a")}"));
 
         var refColumns = columns.Where(c => c.IsRef).ToList();
+        var owners = FetchOwners(Table, PlatformId, prms);
         // the same rows the browse dialog of this address shows - see FixedPredicate
-        var fixedRows = FixedPredicate("a");
+        var fixedRows = FixedPredicate("a")
+            + String.Concat(owners.Select(o => $" and a.[{o.Column.Name}] = @{o.Column.Name}"));
         // what the selector shows is what it is searched by: the presentation, as in every map
         var shown = Table.Presentation;
 
@@ -151,6 +163,8 @@ internal partial class SqlBuilder
         {
             dbprms.AddBigInt("@UserId", _currentUser.Identity.Id)
             .AddString("@Text", prms?.Get<String>("Text"));
+            foreach (var (column, id) in owners)
+                dbprms.AddTyped($"@{column.Name}", PlatformId.SqlDbType, id);
         });
 
         return model.ToInvokeResult();

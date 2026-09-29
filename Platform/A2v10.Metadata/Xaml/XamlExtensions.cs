@@ -27,12 +27,14 @@ internal static class XamlExtensions
      * so a new domain cannot land in some of these sites and miss the others.
      */
     internal static Boolean IsNumber(this ColumnType column) =>
-        column.IsSum() || column is ColumnType.Price or ColumnType.Percent or ColumnType.Factor
+        column.IsCurrency() || column is ColumnType.Qty or ColumnType.Percent or ColumnType.Factor
             or ColumnType.Integer or ColumnType.Decimal or ColumnType.Float;
 
-    // the fork inside numbers: a sum shows at least two decimals, any other number as many as it has
-    internal static Boolean IsSum(this ColumnType column) =>
-        column is ColumnType.Amount or ColumnType.Qty or ColumnType.Money;
+    /* The fork inside numbers: money shows at least two decimals, any other number as many as it
+     * has. A price is money and a quantity is not - what adds up is another question (IsAdditive).
+     */
+    internal static Boolean IsCurrency(this ColumnType column) =>
+        column is ColumnType.Amount or ColumnType.Price or ColumnType.Money;
 
     internal static DataType ToXamlDataType(this ColumnType column) =>
         column switch
@@ -41,7 +43,7 @@ internal static class XamlExtensions
             ColumnType.DateTime => DataType.DateTime,
             // stored as a fraction: the client multiplies by 100 and adds '%'
             ColumnType.Percent => DataType.Percent,
-            _ when column.IsSum() => DataType.Currency,
+            _ when column.IsCurrency() => DataType.Currency,
             _ when column.IsNumber() => DataType.Number,
             _ => DataType.String,
         };
@@ -77,7 +79,7 @@ internal static class XamlExtensions
         var type = item.DataType;
         Bind bind = type switch
         {
-            _ when type.IsSum() => new BindSum($"{prefix}{item.Column}"),
+            _ when type.IsCurrency() => new BindSum($"{prefix}{item.Column}"),
             _ when type.IsNumber() => new BindNumber($"{prefix}{item.Column}") { DataType = type.ToXamlDataType() },
             _ => new Bind($"{prefix}{item.Column}")
         };

@@ -26,6 +26,10 @@
 			"type": "Ref",
 			"target": "/catalog/agent"
 		},
+		"Contract": {
+			"type": "Ref",
+			"target": "/catalog/contract"
+		},
 		"State": {
 			"type": "State",
 			"target": "/state/order"
@@ -70,6 +74,10 @@
 				"VatRate": {
 					"type": "Enum",
 					"target": "/enum/vatrate"
+				},
+				"Contract": {
+					"type": "Ref",
+					"target": "/catalog/contract"
 				}
 			},
 			"lookup": {

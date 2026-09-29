@@ -5,7 +5,7 @@ using A2v10.Xaml;
 
 namespace A2v10.Metadata.Tests;
 
-/* IsNumber and IsSum exist so the display sites cannot drift apart. The theories pin who is in;
+/* IsNumber and IsCurrency exist so the display sites cannot drift apart. The theories pin who is in;
  * the facts walk every ColumnType, so a site that answers by its own list fails here.
  */
 public class NumberDomainTests
@@ -14,31 +14,31 @@ public class NumberDomainTests
 
     [Theory]
     [InlineData(ColumnType.Amount)]
-    [InlineData(ColumnType.Qty)]
+    [InlineData(ColumnType.Price)]
     [InlineData(ColumnType.Money)]
-    public void A_sum(ColumnType type)
+    public void Money(ColumnType type)
     {
-        Assert.True(type.IsSum());
+        Assert.True(type.IsCurrency());
         Assert.True(type.IsNumber());
     }
 
     [Theory]
-    [InlineData(ColumnType.Price)]
+    [InlineData(ColumnType.Qty)]
     [InlineData(ColumnType.Percent)]
     [InlineData(ColumnType.Factor)]
     [InlineData(ColumnType.Integer)]
     [InlineData(ColumnType.Decimal)]
     [InlineData(ColumnType.Float)]
-    public void A_number_that_is_not_a_sum(ColumnType type)
+    public void A_number_that_is_not_money(ColumnType type)
     {
         Assert.True(type.IsNumber());
-        Assert.False(type.IsSum());
+        Assert.False(type.IsCurrency());
     }
 
     [Theory]
     [MemberData(nameof(AllTypes))]
-    public void A_sum_is_a_number(ColumnType type) =>
-        Assert.True(!type.IsSum() || type.IsNumber());
+    public void Money_is_a_number(ColumnType type) =>
+        Assert.True(!type.IsCurrency() || type.IsNumber());
 
     [Theory]
     [MemberData(nameof(AllTypes))]
@@ -52,9 +52,9 @@ public class NumberDomainTests
 
     [Theory]
     [InlineData(ColumnType.Amount, DataType.Currency)]
-    [InlineData(ColumnType.Qty, DataType.Currency)]
+    [InlineData(ColumnType.Price, DataType.Currency)]
     [InlineData(ColumnType.Money, DataType.Currency)]
-    [InlineData(ColumnType.Price, DataType.Number)]
+    [InlineData(ColumnType.Qty, DataType.Number)]
     [InlineData(ColumnType.Factor, DataType.Number)]
     [InlineData(ColumnType.Integer, DataType.Number)]
     [InlineData(ColumnType.Percent, DataType.Percent)]

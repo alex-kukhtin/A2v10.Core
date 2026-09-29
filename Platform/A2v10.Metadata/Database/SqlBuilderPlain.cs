@@ -346,6 +346,48 @@ internal partial class SqlBuilder
         });
     }
 
+    /* A reference to an owned record, held against the owner its picker filtered by
+     * (MetadataExtensions.OwnerLinks): a record owned by someone else is refused, and one owned by
+     * nobody too. An empty field checks nothing, as it filtered nothing. Over what was SENT and
+     * before the merge: the picker is the browser's half, this is the half that is not.
+     */
+    internal static String OwnerCheck(TableMetadata table)
+    {
+        var sb = new StringBuilder();
+
+        void check(String source, TableMetadata scope, TableMetadata? header)
+        {
+            foreach (var reference in scope.AllColumns())
+            {
+                var links = reference.OwnerLinks(scope, header);
+                if (links.Count == 0)
+                    continue;
+                var mismatch = links.Select(l =>
+                {
+                    var value = $"{(l.Header ? "h" : "s")}.[{l.Field.Name}]";
+                    return $"{value} is not null and (r.[{l.Owner.Name}] is null or r.[{l.Owner.Name}] <> {value})";
+                });
+                var joinHeader = links.Any(l => l.Header) ? $" cross join @{table.Model} h" : String.Empty;
+                sb.AppendLine($"""
+                if exists(select 1 from {source} s{joinHeader}
+                    inner join {reference.RefTableCheck.Storage.SqlTableName} r on r.[Id] = s.[{reference.Name}]
+                    where {String.Join(" or ", mismatch.Select(m => $"({m})"))})
+                    throw 60000, N'UI:@[Error.Owner]', 0;
+                """);
+            }
+        }
+
+        check($"@{table.Model}", table, null);
+        // the parameters the save sends: one per kind, or one per collection (SavePlainModelAsync)
+        foreach (var (collection, rows) in table.Details)
+        {
+            IEnumerable<String> sources = rows.Kinds.Count > 0 ? rows.Kinds.Keys.Select(rows.KindCollectionName) : [collection];
+            foreach (var source in sources)
+                check($"@{source}", rows, table);
+        }
+        return sb.ToString();
+    }
+
     public async Task<ExpandoObject> SavePlainModelAsync(ExpandoObject data, ExpandoObject savePrms)
     {
         String CheckRowVersion()
@@ -582,6 +624,7 @@ internal partial class SqlBuilder
             """);
             // STEP:1 - check row version
             sb.AppendLine(CheckRowVersion());
+            sb.AppendLine(OwnerCheck(Table));
 
             // STEP:2 - merge main
             sb.AppendLine($"""

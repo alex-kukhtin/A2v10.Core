@@ -628,7 +628,7 @@
                 "string", "id", "name", "memo", "rowNumber", "done", "void", "isSystem",
                 "isFolder", "parent", "folder", "user", "rowKind", "operation",
                 "document", "documentType", "row", "rowVersion", "color", "enum", "state", "account", "autonum",
-                "company", "prefix", "direction",
+                "company", "owner", "prefix", "direction",
                 "amount", "price", "qty", "percent", "factor",
                 "ref", "date", "dateTime", "money", "boolean",
                 "stream", "integer",

@@ -46,9 +46,7 @@ public enum ColumnType
     IsSystem,
     /* The link from a row to the record it is PART of - a details row to its header, a tag entry
      * to the tagged record. Never declared in a file: the platform emits it, names it after the
-     * master's Model and finds it back by this type. The word 'Owner' deliberately no longer
-     * means this: belonging (a subordinate catalog to the entity it belongs to) is a different
-     * relation - declared target, several per table, an entity of its own - and it gets the word.
+     * master's Model and finds it back by this type. Belonging is Owner, below.
      */
     Master,
     Parent,
@@ -81,6 +79,12 @@ public enum ColumnType
      * document belongs to one company, and a row to its record.
      */
     Company,
+    /* The entity a record BELONGS to: a contract to its agent, a bank account to its owner. A Ref
+     * with one behaviour the platform reads - a reference to such a record picks only among those
+     * whose owner is the value of the matching field beside it (MetadataExtensions.OwnerLinks).
+     * Company is the same behaviour with a fixed target, plus the counter and '{p}'.
+     */
+    Owner,
     // the number prefix of a company, '{p}' of a numbering; found by type in the catalog Company points at
     Prefix,
     Direction,  // journal leg sign (+1/-1); vocabulary (In/Out, Dt/Ct) is presentation
@@ -158,7 +162,7 @@ public record TableColumn
     [JsonIgnore]
     internal Boolean IsRef => Type == ColumnType.Ref || Type == ColumnType.Master ||
             Type == ColumnType.User || Type == ColumnType.Document ||
-            Type == ColumnType.Company || Type == ColumnType.Operation ||
+            Type == ColumnType.Company || Type == ColumnType.Owner || Type == ColumnType.Operation ||
             Type == ColumnType.Enum || Type == ColumnType.State || Type == ColumnType.Account ||
             Type == ColumnType.Folder;
 

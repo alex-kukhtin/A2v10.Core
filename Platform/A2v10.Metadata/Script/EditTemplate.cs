@@ -29,12 +29,38 @@ internal partial class ScriptBuilder
             yield return $$"""'{{Table.TypeName}}.{{strip.TabState}}': {type: String, value: '{{strip.Elements[0].RowSet}}'}""";
     }
 
+    /* The query a picker sends - to its browse as the url's, to its fetch as arguments: every owner
+     * of the target by the name it has THERE, valued from the field here (MetadataExtensions.OwnerLinks).
+     * The id and not the element: the fetch reads its arguments as JSON, where an element would
+     * arrive whole. An empty one is no filter on both roads - the url drops it, the fetch skips it.
+     */
+    private IEnumerable<String> OwnerProperties()
+    {
+        String query(TableColumn reference, String type, TableMetadata scope, TableMetadata? header)
+        {
+            var owners = reference.OwnerLinks(scope, header).Select(l =>
+                $"{l.Owner.Name}: {(l.Header ? $"this.$root.{Table.Model}" : "this")}.{l.Field.ModelName}.$id");
+            return $$"""'{{type}}.{{reference.OwnersName()}}'({{Self(type)}}) { return { {{String.Join(", ", owners)}} }; }""";
+        }
+
+        foreach (var column in Table.AllColumns(c => c.OwnerLinks(Table, null).Count > 0))
+            yield return query(column, Table.TypeName, Table, null);
+
+        // a property of the TYPE, and a kind is its own type
+        foreach (var (collection, rows) in Table.Details)
+            foreach (var column in rows.AllColumns(c => c.OwnerLinks(rows, Table).Count > 0))
+                foreach (var rs in Endpoint.Declaration.Details[collection].RowSets)
+                    yield return query(column, rs.Type, rows, Table);
+    }
+
     private Task<String> CreateGenericEditTemplate()
     {
         IEnumerable<String> properties()
         {
             foreach (var state in TabStateProperties())
                 yield return state;
+            foreach (var owners in OwnerProperties())
+                yield return owners;
         }
 
         IEnumerable<String> events()
@@ -153,6 +179,8 @@ internal partial class ScriptBuilder
                 foreach (var name in rs.Rules.Total)
                     yield return $$"""'{{rs.Type}}Array.{{name}}'({{Self($"{rs.Type}Array")}}) { return this.$sum(c => c.{{name}}); }""";
             }
+            foreach (var owners in OwnerProperties())
+                yield return owners;
         }
 
         IEnumerable<String> validators()

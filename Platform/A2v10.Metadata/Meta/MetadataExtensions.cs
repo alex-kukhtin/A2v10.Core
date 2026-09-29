@@ -26,6 +26,9 @@ internal static class TableColumnPredicates
         => !col.IsStamp;
 }
 
+// an owner column of the target, and the field that holds its value - of the record itself when Header
+internal record OwnerLink(TableColumn Owner, TableColumn Field, Boolean Header);
+
 internal static class MetadataExtensions
 {
     internal static EndpointKind ToEndpointKind(this String schema)
@@ -141,6 +144,47 @@ internal static class MetadataExtensions
     internal static IEnumerable<RefDescriptor> AllRefs(this IEnumerable<TableColumn> columns) =>
         columns.Where(c => c.IsRef || c.IsOperation).Select((c, ix) => new RefDescriptor(ix + 1, c, (c.RefTable
             ?? throw new InvalidOperationException($"RefTable for {c.Name} is null")).Storage));
+
+    /* Whose candidates a reference picks among: every owner column of its target - Owner, and
+     * Company, the same behaviour with a fixed target - paired with the field HERE that holds that
+     * owner. The one answer for the three readers: the picker's query (XamlBuilder, ScriptBuilder),
+     * the fetch it types into (SqlBuilder.FetchAsync) and the check on save (SqlBuilder.OwnerCheck).
+     *
+     * Found where the reference sits, then in the header: a contract in a row is picked by the
+     * agent of the document. Company by TYPE, as everywhere - a second reference to the company
+     * catalog is not the company of the record. Owner by TARGET, compared as the table and not the
+     * address, so a reference to a second address over the same catalog still holds the owner.
+     * No field is no filter; two are a guess, and refused.
+     *
+     * Asked where the SQL and the screen are written, not in the bake: the owner columns are the
+     * far half of the reference, linked after publication.
+     */
+    internal static IReadOnlyList<OwnerLink> OwnerLinks(this TableColumn reference, TableMetadata scope, TableMetadata? header)
+    {
+        if (!reference.IsRef || reference.RefTable is not { } target)
+            return [];
+        List<OwnerLink> links = [];
+        foreach (var owner in target.Storage.AllColumns(c => c.Type is ColumnType.Owner or ColumnType.Company))
+        {
+            if (OwnerField(reference, owner, scope) is { } field)
+                links.Add(new OwnerLink(owner, field, false));
+            else if (header != null && OwnerField(reference, owner, header) is { } headerField)
+                links.Add(new OwnerLink(owner, headerField, true));
+        }
+        return links;
+    }
+
+    static TableColumn? OwnerField(TableColumn reference, TableColumn owner, TableMetadata table)
+    {
+        var found = table.AllColumns(c => !ReferenceEquals(c, reference) && (owner.Type == ColumnType.Company
+            ? c.Type == ColumnType.Company
+            : c.IsRef && ReferenceEquals(c.RefTable?.Storage, owner.RefTableCheck.Storage))).ToList();
+        return found.Count <= 1 ? found.FirstOrDefault() : throw new InvalidOperationException(
+            $"{table.SqlTableName}: [{reference.Name}] picks among records owned by [{owner.Name}], and {String.Join(", ", found.Select(c => $"[{c.Name}]"))} could hold it - which one is a guess");
+    }
+
+    // the picker's query: a property of the record, '$' so it never travels back on save
+    internal static String OwnersName(this TableColumn reference) => $"${reference.Name}Owners";
 
     /* What a NEW record of this endpoint starts on, with every far half resolved: what the file
      * declared (its initialValues and its fixed fields, already merged by the bake), the operation
