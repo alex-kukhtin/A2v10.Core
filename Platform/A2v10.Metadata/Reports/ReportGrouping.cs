@@ -101,7 +101,8 @@ internal class ReportGrouping
 
     internal String SqlWhereClause(String alias)
     {
-        var where = String.Join(" and ", Filters.Select(c => $"(@{c.Column} is null or {alias}.[{c.Column}] = @{c.Column})"));
+        var where = String.Join(" and ", Filters.Select(c =>
+            $"({SqlExtensions.ColumnParam(c.Column)} is null or {alias}.[{c.Column}] = {SqlExtensions.ColumnParam(c.Column)})"));
         if (String.IsNullOrEmpty(where))
             return String.Empty;
         return $" and {where}";

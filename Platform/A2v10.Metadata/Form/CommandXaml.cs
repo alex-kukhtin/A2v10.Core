@@ -59,6 +59,12 @@ internal partial class XamlBuilder
             ? [CommandBarItem.Separator, EntityCommandType.Print]
             : [];
 
+    // what may be created from the document: the same shape as print, and on the same two bars
+    List<CommandBarItem> BasedOnCommand() =>
+        Declaration.BasedOn.Count > 0
+            ? [CommandBarItem.Separator, EntityCommandType.BasedOn]
+            : [];
+
     Toolbar IndexToolbar(FormElement slot) => Table.Kind switch
     {
         EndpointKind.Catalog => StandardToolbar(
@@ -66,7 +72,7 @@ internal partial class XamlBuilder
                 CommandBarItem.Separator, EntityCommandType.Show],
             slot, GridChrome(), CommandScope.Grid),
         EndpointKind.Document => StandardToolbar(
-            [EntityCommandType.Create, EntityCommandType.Edit, EntityCommandType.Delete, .. PrintCommand()],
+            [EntityCommandType.Create, EntityCommandType.Edit, EntityCommandType.Delete, .. PrintCommand(), .. BasedOnCommand()],
             slot, GridChrome(), CommandScope.Grid),
         EndpointKind.Journal or EndpointKind.Ledger => StandardToolbar([EntityCommandType.Edit], slot, GridChrome(), CommandScope.Grid),
         EndpointKind.Operation => StandardToolbar([], slot, [], CommandScope.Grid),
@@ -106,6 +112,8 @@ internal partial class XamlBuilder
             yield return EntityCommandType.Save;
             foreach (var p in PrintCommand())
                 yield return p;
+            foreach (var b in BasedOnCommand())
+                yield return b;
             /* The whole posting group or none of it - including its leading separator, which
              * otherwise doubles up with the next one. A document whose endpoint declares no 'post'
              * has no Post, no UnPost and nothing to show in the transactions dialog.
@@ -191,6 +199,7 @@ internal partial class XamlBuilder
                 }
             },
             EntityCommandType.Print => ButtonPrint(scope),
+            EntityCommandType.BasedOn => ButtonBasedOn(scope),
             EntityCommandType.Attachments => new Button() { Icon = Icon.Attach, Render=RenderMode.Show },
             EntityCommandType.Copy => new Button() { Icon = Icon.Copy },
             EntityCommandType.Post => new Button() 
@@ -290,6 +299,46 @@ internal partial class XamlBuilder
             b.SetBinding(nameof(XMenuItem.Command), cmd);
         }
     };
+
+    // shown on a posted document too: a basis is usually posted
+    Button ButtonBasedOn(CommandScope scope) => new()
+    {
+        Icon = Icon.File,
+        Content = "@[BasedOn]",
+        Render = RenderMode.Show,
+        DropDown = new DropDownMenu()
+        {
+            Children = [.. Declaration.BasedOn.Select(b => BasedOnMenuItem(b, scope))]
+        }
+    };
+
+    /* The birth of the target. The basis travels as its id ('{0}', filled from the argument as print
+     * fills it) and its ADDRESS: ids are per table, and with the address the target knows what it
+     * copies without reading the row first. The operation, when the entry names one, by '?Op=' - the
+     * road a new document already takes. The caption is what is created, as the registry names it.
+     */
+    XMenuItem BasedOnMenuItem(BasedOnMetadata basedOn, CommandScope scope)
+    {
+        var target = basedOn.TargetEndpoint
+            ?? throw new InvalidOperationException($"basedOn: {Endpoint.Path} -> {basedOn.Target} is not resolved");
+        var code = basedOn.Operation == null ? target.Name
+            : target.Declaration.OperationDeclarations.First(o => o.Name == basedOn.Operation).Id;
+        var op = basedOn.Operation == null ? String.Empty : $"{Constants.FieldNames.OperationQuery}={basedOn.Operation}&";
+        return new()
+        {
+            Content = $"@[{TableMetadataDefaults.OperationsTable().Model}.{code}]",
+            Bindings = b =>
+            {
+                var cmd = new BindCmd(scope == CommandScope.Record ? CommandType.Open : CommandType.OpenSelected)
+                {
+                    SaveRequired = true,
+                    Url = $"{target.Path}/edit/new?{op}{Constants.FieldNames.BasedOnQuery}={{0}}&{Constants.FieldNames.BaseQuery}={Endpoint.Path}"
+                };
+                cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(CommandSource(scope)));
+                b.SetBinding(nameof(XMenuItem.Command), cmd);
+            }
+        };
+    }
 
     /* A document listing its operations is created ON one of them: one item per operation, in the
      * order of the list, each opening the card with '?Op=' - the name the file uses, turned into the

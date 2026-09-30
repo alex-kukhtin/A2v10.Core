@@ -9,9 +9,10 @@ namespace A2v10.Metadata;
 
 /* One source of references, and how to reach ITS rows. 'Where' travels with the table because the
  * two are one answer: a header is found by Id, a collection by its master column, a journal by the document
- * that posted it - and nothing downstream can derive which from the table alone.
+ * that posted it - and nothing downstream can derive which from the table alone. 'From' is the table as
+ * the statement reads it: its name, or at birth the table variable holding the record (LoadRows).
  */
-internal record RefMapItem(TableMetadata SourceTable, String Where,
+internal record RefMapItem(String From, String Where,
        Dictionary<String, TableColumn[]> ByTarget
     );
 internal class RefMapBuilder
@@ -29,14 +30,15 @@ internal class RefMapBuilder
     private readonly DeclarationMetadata? _declaration;
     private readonly NormalEndpointMetadata? _endpoint;
 
-    public RefMapBuilder(NormalEndpointMetadata endpoint, Boolean isPlain, Boolean hasDefaults)
+    public RefMapBuilder(NormalEndpointMetadata endpoint, Boolean isPlain, Boolean hasDefaults, LoadRows? rows = null)
     {
         var table = endpoint.Storage;
         _declaration = endpoint.Declaration;
         _endpoint = endpoint;
         _isPlain = isPlain;
         _hasDefaults = hasDefaults;
-        _flat = [.. Flatten(table, "Id = @Id")];
+        rows ??= LoadRows.Stored;
+        _flat = [.. Flatten(table, $"Id = {rows.Key}", rows)];
         _tableStruct = BuildTableStructure();
         _inheritStruct = BuildInheritStructure();
     }
@@ -50,7 +52,7 @@ internal class RefMapBuilder
     {
         _isPlain = false;
         _hasDefaults = false;
-        _flat = [.. sources.Select(s => RefsOf(s.Table, s.Where, s.Columns))];
+        _flat = [.. sources.Select(s => RefsOf(s.Table.SqlTableName, s.Where, s.Columns))];
         _tableStruct = BuildTableStructure();
         _inheritStruct = [];
     }
@@ -66,23 +68,23 @@ internal class RefMapBuilder
      * shows - a journal's Document among them, resolved on every row of the very document you are
      * standing on.
      */
-    private RefMapItem RefsOf(TableMetadata table, String where, IEnumerable<TableColumn> columns) =>
-        new(table, where,
+    private RefMapItem RefsOf(String from, String where, IEnumerable<TableColumn> columns) =>
+        new(from, where,
             columns
                 .Where(c => c.IsRef)
                 .GroupBy(TargetKey)
                 .ToDictionary(g => g.Key, g => g.ToArray())
         );
 
-    private IEnumerable<RefMapItem> Flatten(TableMetadata table, String where)
+    private IEnumerable<RefMapItem> Flatten(TableMetadata table, String where, LoadRows rows)
     {
         // the baseline too (a ledger's Acc); not the link to the header, which is nobody's display
-        yield return RefsOf(table, where, table.AllColumns(c => c.Type != ColumnType.Master));
+        yield return RefsOf(rows.From(table), where, table.AllColumns(c => c.Type != ColumnType.Master));
 
         if (!_isPlain)
             yield break;
         foreach (var detail in table.Details ?? [])
-            foreach (var item in Flatten(detail.Value, $"[{detail.Value.MasterField}] = @Id"))
+            foreach (var item in Flatten(detail.Value, $"[{detail.Value.MasterField}] = {rows.Key}", rows))
                 yield return item;
     }
 
@@ -166,7 +168,7 @@ internal class RefMapBuilder
             return $"""
             insert into @map({targetCols})
             select {sourceCols}
-            from {item.SourceTable.SqlTableName}
+            from {item.From}
             where {item.Where};
             """;
         });

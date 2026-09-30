@@ -45,6 +45,9 @@ internal static class Constants
          * lower-case spelling here is a key nobody finds, and the document silently starts on the first.
          */
         public const String OperationQuery = "Op";
+        // birth on basis: /document/waybillout/edit/new?BasedOn=123&Base=/document/order - PascalCase for the reason above
+        public const String BasedOnQuery = "BasedOn";
+        public const String BaseQuery = "Base";
         public const String Tag = nameof(Tag);
         public const String Tags = nameof(Tags);
         public const String Order = nameof(Order);

@@ -39,6 +39,10 @@
 		},
 		"DueDate": {
 			"type": "Date"
+		},
+		"Order": {
+			"type": "BasedOn",
+			"target": "/document/order"
 		}
 	},
 	"rules": {

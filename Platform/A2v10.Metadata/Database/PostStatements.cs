@@ -146,7 +146,7 @@ internal sealed class PostStatements
     }
 
     // domain = semantic type (+ target for references); SQL storage type is not compared
-    private static Boolean DomainMatch(TableColumn source, TableColumn target) =>
+    internal static Boolean DomainMatch(TableColumn source, TableColumn target) =>
         source.Type == target.Type && (!target.IsRef || source.Target == target.Target);
 
     // names the half that disagrees: 'does not match' alone sends the reader to two files

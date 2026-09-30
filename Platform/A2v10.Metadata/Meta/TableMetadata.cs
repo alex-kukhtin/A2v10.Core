@@ -85,6 +85,13 @@ public enum ColumnType
      * Company is the same behaviour with a fixed target, plus the counter and '{p}'.
      */
     Owner,
+    /* The document a document was created FROM. A reference whose target must be a document
+     * (DatabaseMetadataProvider.TargetOf); a type of its own because the platform reads it - birth
+     * from the basis writes the source's Id into it, and in a header nothing else does, so it is
+     * shown as a link and not picked. Not Document: that is a journal's provenance, written by
+     * posting - one word for two relations is what Master and Owner were split over.
+     */
+    BasedOn,
     // the number prefix of a company, '{p}' of a numbering; found by type in the catalog Company points at
     Prefix,
     Direction,  // journal leg sign (+1/-1); vocabulary (In/Out, Dt/Ct) is presentation
@@ -162,7 +169,7 @@ public record TableColumn
     [JsonIgnore]
     internal Boolean IsRef => Type == ColumnType.Ref || Type == ColumnType.Master ||
             Type == ColumnType.User || Type == ColumnType.Document ||
-            Type == ColumnType.Company || Type == ColumnType.Owner || Type == ColumnType.Operation ||
+            Type == ColumnType.Company || Type == ColumnType.Owner || Type == ColumnType.BasedOn || Type == ColumnType.Operation ||
             Type == ColumnType.Enum || Type == ColumnType.State || Type == ColumnType.Account ||
             Type == ColumnType.Folder;
 
@@ -343,6 +350,28 @@ public sealed record PostMetadata
 
     [JsonIgnore]
     public Int16 InOutInt => Dir switch { PostDirection.In => 1, PostDirection.Out => -1, _ => 0 };
+}
+
+/* A document that may be created from this one: a command 'create on basis' of this document, and
+ * the birth it opens. Declared on the SOURCE, so the command is read off the file of the screen it
+ * shows on, as ShowTrans is off 'post'. A list and not a map by path: one source may give two
+ * operations of one document, and the order is the menu's.
+ *
+ * Copying is by name and domain; 'document' holds the deviations only, { field of the target: field
+ * of this document }. 'each' names the TARGET's collection and kinds - the rows come from the
+ * collection of the same name here.
+ */
+public sealed record BasedOnMetadata
+{
+    public String Target { get; init; } = default!;
+    // by the name the file and '?Op=' use; written exactly when the target lists operations
+    public String? Operation { get; init; }
+    public Dictionary<String, String> Document { get; init; } = [];
+    public PostEachMetadata? Each { get; init; }
+
+    // phase 2 (DatabaseMetadataProvider.ResolveBasedOnAsync): the document born
+    [JsonIgnore]
+    public NormalEndpointMetadata? TargetEndpoint { get; set; }
 }
 
 

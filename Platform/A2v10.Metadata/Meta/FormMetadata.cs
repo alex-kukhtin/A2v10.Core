@@ -16,6 +16,7 @@ public enum EntityCommandType
     Save,
     SaveAndClose,
     Print,
+    BasedOn,
     Copy,
     Show,
     ShowTrans,

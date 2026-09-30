@@ -64,6 +64,11 @@
             "description": "What posting does. With 'operations' it is not written here: each operation posts in its own way, in its own file.",
             "items": { "$ref": "#/definitions/post" }
         },
+        "basedOn": {
+            "type": "array",
+            "description": "Documents that may be created from this one, in the order of the 'create on basis' menu; each target once. Of the document, never of an operation. Not inherited from 'storage'.",
+            "items": { "$ref": "#/definitions/basedOn" }
+        },
         "operations": {
             "type": "array",
             "description": "Document only, never on the storage. Operation names in selector order; the first is where a new document starts. Each name is a file '<name>.operation.json' beside this one (metadata-operation-json-schema.json), and every such file is listed here; both checked at load. Requires a field of type 'operation' in the shape; 'post' is then written in the operation files, and 'initialValues' may not name that field.",
@@ -95,7 +100,7 @@
                 "type": { "$ref": "#/definitions/columnType" },
                 "target": {
                     "type": "string",
-                    "description": "For a reference: path of the endpoint it points at, e.g. '/catalog/item'. Required, and checked against the kind, for 'enum' ('/enum/...'), 'state' ('/state/...'), 'account' ('/accplan/...') and 'company' ('/catalog/company'). At most one 'company' column per table, none in a collection."
+                    "description": "For a reference: path of the endpoint it points at, e.g. '/catalog/item'. Required, and checked against the kind, for 'enum' ('/enum/...'), 'state' ('/state/...'), 'account' ('/accplan/...'), 'company' ('/catalog/company') and 'basedOn' ('/document/...'). At most one 'company' column per table, none in a collection."
                 },
                 "length": {
                     "type": "integer",
@@ -341,6 +346,40 @@
             }
         },
 
+        "basedOn": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [ "target" ],
+            "properties": {
+                "target": {
+                    "type": "string",
+                    "description": "Path of the document created, e.g. '/document/waybillout'. Its header needs exactly one field of type 'basedOn' targeting this document: the basis is written there."
+                },
+                "operation": {
+                    "type": "string",
+                    "description": "The operation of the target, by the name its 'operations' lists. Written exactly when the target lists operations."
+                },
+                "document": {
+                    "type": "object",
+                    "description": "Deviations only: field of the target header -> field of this header. The rest is copied by name and domain.",
+                    "additionalProperties": { "type": "string" }
+                },
+                "each": {
+                    "type": "object",
+                    "description": "Copy rows: the target's collection and its kinds; rows come from the collection of the same name here. Without it only the header is copied.",
+                    "additionalProperties": false,
+                    "required": [ "details" ],
+                    "properties": {
+                        "details": { "type": "string" },
+                        "kinds": {
+                            "type": "array",
+                            "items": { "type": "string" }
+                        }
+                    }
+                }
+            }
+        },
+
         "formSet": {
             "description": "The keys are closed: index, browse, edit. A declared form replaces the default entirely. Per endpoint, not inherited from 'storage'.",
             "type": "object",
@@ -545,7 +584,7 @@
             "type": "string",
             "enum": [
                 "$sep",
-                "Create", "Edit", "Delete", "Save", "SaveAndClose", "Print", "Copy",
+                "Create", "Edit", "Delete", "Save", "SaveAndClose", "Print", "BasedOn", "Copy",
                 "Show", "ShowTrans", "Search", "Reload", "Post", "UnPost", "Attachments"
             ]
         },
@@ -628,7 +667,7 @@
                 "string", "id", "name", "memo", "rowNumber", "done", "void", "isSystem",
                 "isFolder", "parent", "folder", "user", "rowKind", "operation",
                 "document", "documentType", "row", "rowVersion", "color", "enum", "state", "account", "autonum",
-                "company", "owner", "prefix", "direction",
+                "company", "owner", "basedOn", "prefix", "direction",
                 "amount", "price", "qty", "percent", "factor",
                 "ref", "date", "dateTime", "money", "boolean",
                 "stream", "integer",

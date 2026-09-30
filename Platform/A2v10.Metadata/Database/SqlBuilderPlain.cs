@@ -14,6 +14,16 @@ using A2v10.Data.Interfaces;
 
 namespace A2v10.Metadata;
 
+/* Where the load reads a record and its rows: each table by name, the record by its id - or, at birth
+ * on basis, table variables of the same shape, filled from the source, and the empty key the new
+ * record carries (SqlBuilder.BuildBirthSqlTextAsync). Everything that reads rows - the recordsets, the
+ * map - asks this, so a born record is loaded by the same text as a stored one.
+ */
+internal sealed record LoadRows(Func<TableMetadata, String> From, String Key)
+{
+    internal static readonly LoadRows Stored = new(t => t.SqlTableName, "@Id");
+}
+
 internal partial class SqlBuilder
 {
 
@@ -65,7 +75,11 @@ internal partial class SqlBuilder
     // '?Op=' carries the name the file uses; the column holds the code (MetadataExtensions.StartOperation)
     String? QueryInitialValue(String key, String param) =>
         QueryColumn(key).IsOperation ? Endpoint.StartOperation(QueryValue(param)) : QueryValue(param);
-    String BuildLoadPlainSqlText()
+
+    internal String BuildLoadPlainSqlText() => BuildLoadPlainSqlText(LoadRows.Stored, birth: null);
+
+    // 'birth' fills the table variables 'rows' reads (BirthPrelude), so it runs before everything that reads the rows
+    String BuildLoadPlainSqlText(LoadRows rows, String? birth)
     {
         var allColumns = Table.AllColumns().ToList();
         // var refs = allColumns.AllRefs().ToList();
@@ -186,6 +200,12 @@ internal partial class SqlBuilder
             """);
         sb.AppendLine();
 
+        if (birth != null)
+        {
+            sb.AppendLine(birth);
+            sb.AppendLine();
+        }
+
         /* STEP 1: main recordset. 'MainObject', not 'Object': the record this page edits. The reader
          * fills TRoot.MainObject and IDataModel.MainElement by it, the client gets '$main'.
          */
@@ -211,7 +231,7 @@ internal partial class SqlBuilder
         {
             sb.AppendLine();
         }
-        sb.AppendLine($"from {Table.SqlTableName} a where a.Id = @Id;");
+        sb.AppendLine($"from {rows.From(Table)} a where a.Id = {rows.Key};");
 
 
         if (Table.Details.Count > 0)
@@ -252,7 +272,7 @@ internal partial class SqlBuilder
                     }
                     sb.AppendLine($"""
                       [!{Table.TypeName}.{parent}!ParentId] = d.[{dt.MasterField}]
-                    from {dt.SqlTableName} d where d.[{dt.MasterField}] = @Id{filter}
+                    from {rows.From(dt)} d where d.[{dt.MasterField}] = {rows.Key}{filter}
                     order by d.RowNo;
                     """);
                 }
@@ -273,7 +293,7 @@ internal partial class SqlBuilder
             sb.AppendLine(queryInitials);
         }
 
-        var refMap = new RefMapBuilder(Endpoint, isPlain: true, hasDefaults: IsNewModel());
+        var refMap = new RefMapBuilder(Endpoint, isPlain: true, hasDefaults: IsNewModel(), rows);
 
         // STEP 3: map recordsets
 
@@ -330,8 +350,10 @@ internal partial class SqlBuilder
 
     public async Task<IDataModel> LoadPlainModelAsync()
     {
-
-        var sqlQuery = BuildLoadPlainSqlText();
+        var basedOn = BasedOnQueryValue();
+        var sqlQuery = basedOn == null ? BuildLoadPlainSqlText() : await BuildBirthSqlTextAsync();
+        var basisId = basedOn == null ? null : PlatformId.ParseId(basedOn)
+            ?? throw new InvalidOperationException($"{Endpoint.Path}: '?{Constants.FieldNames.BasedOnQuery}={basedOn}' is not an id");
 
         // a document listing no operations declares no query initial for the column, so nothing else would read '?Op=' to refuse it
         if (IsNewModel() && Endpoint.Declaration.OperationDeclarations.Count == 0)
@@ -343,6 +365,8 @@ internal partial class SqlBuilder
             dbprms.AddString("@Id", _descr.PlatformUrl.Id);
             foreach (var (key, param) in QueryInitials())
                 dbprms.AddString($"@Query{key}", QueryInitialValue(key, param));
+            if (basisId != null)
+                dbprms.AddTyped("@BasedOn", PlatformId.SqlDbType, basisId);
         });
     }
 

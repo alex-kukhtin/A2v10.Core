@@ -96,27 +96,14 @@ internal partial class XamlBuilder
         };
 
         /* A referenced document opens from its cell, wherever it is shown - the target's answer, as
-         * the colour is. The address is the document's own (SqlBuilder.RefFields), so a journal row
-         * posted by a receipt opens the receipt, not the storage. Nothing referenced, nothing drawn,
-         * for the badge's reason and one more: an empty link navigates to '/edit/null'.
+         * the colour is. The address is the document's own, so a journal row posted by a receipt
+         * opens the receipt, not the storage.
          */
         DataGridColumn DocumentLink(TableColumn col) => new()
         {
             Header = col.Header,
             SortProperty = col.Name,
-            Content = new Hyperlink()
-            {
-                Bindings = b =>
-                {
-                    b.SetBinding(nameof(Hyperlink.If), new Bind($"{col.Name}.{Constants.FieldNames.Id}"));
-                    b.SetBinding(nameof(Hyperlink.Content), new Bind(col.DisplayPath));
-                    b.SetBinding(nameof(Hyperlink.Icon), new Bind($"{col.Name}.{Constants.FieldNames.Icon}"));
-                    var open = new BindCmd() { Command = CommandType.Open };
-                    open.BindImpl.SetBinding(nameof(BindCmd.Url), new Bind($"{col.Name}.{Constants.FieldNames.Url}"));
-                    open.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(col.Name));
-                    b.SetBinding(nameof(Hyperlink.Command), open);
-                }
-            }
+            Content = DocumentHyperlink(col.Name)
         };
 
         /* A colour column that is SHOWN draws itself: style and text are the one value, so the cell

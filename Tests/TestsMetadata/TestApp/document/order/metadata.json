@@ -11,6 +11,45 @@
 		"Company": {
 			"type": "Company",
 			"target": "/catalog/company"
+		},
+		"Agent": {
+			"type": "Ref",
+			"target": "/catalog/agent"
+		},
+		"Store": {
+			"type": "Ref",
+			"target": "/catalog/store"
+		},
+		"Sum": {
+			"type": "Amount"
 		}
-	}
+	},
+	"details": {
+		"Rows": {
+			"model": "Row",
+			"fields": {
+				"Item": {
+					"type": "Ref",
+					"target": "/catalog/item"
+				},
+				"Qty": {
+					"type": "Qty"
+				},
+				"Price": {
+					"type": "Price"
+				},
+				"Sum": {
+					"type": "Amount"
+				}
+			}
+		}
+	},
+	"basedOn": [
+		{ "target": "/document/waybillout" },
+		{
+			"target": "/document/receipt", "operation": "supplier",
+			"document": { "StoreTo": "Store" },
+			"each": { "details": "Rows", "kinds": [ "Stock" ] }
+		}
+	]
 }

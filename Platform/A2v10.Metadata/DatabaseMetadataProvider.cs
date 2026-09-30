@@ -997,6 +997,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
      *   'printForms'      - the blanks, for the same reason: a blank is paper under one act, and
      *                       two operations over one table print different papers. Storage holds
      *                       the shape and has no act, so there is nothing there to inherit.
+     *   'basedOn'         - what may be created from this document: a command of its screen, and
+     *                       two documents over one table give rise to different ones.
      */
     private static DeclarationMetadata MergeDeclaration(DeclarationMetadata own, DeclarationMetadata? storage)
     {
@@ -1286,6 +1288,58 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         _ = new PostStatements(normal);
     }
 
+    /* 'basedOn' names other documents, so it is resolved where references are: phase 2, through the
+     * same load. The target is a document; its operation is named exactly when it lists some, and is
+     * one of them; a target is offered once; what is copied can be (BasedOnMapping) - asked in the
+     * direction the file points, from this document to the target's columns. Where the basis lands in
+     * the target is the target's question, asked at birth - it knows its source from the url.
+     */
+    private async Task ResolveBasedOnAsync(EndpointLoad load, EndpointMetadata endpoint, String? dataSource)
+    {
+        if (endpoint is not NormalEndpointMetadata normal)
+            return;
+        var declaration = normal.Declaration;
+        foreach (var b in declaration.BasedOn)
+        {
+            if (String.IsNullOrEmpty(b.Target))
+                throw new InvalidOperationException($"basedOn: {normal.Path}: an entry declares no 'target'");
+            var head = $"basedOn: {normal.Path} -> {b.Target}";
+            var (schema, table) = ParsePath(b.Target);
+            var target = await GetNormalEndpointAsync(load, dataSource, schema, table);
+            if (target.Storage.Kind != EndpointKind.Document)
+                throw new InvalidOperationException($"{head}: a {target.Storage.Kind}, and only a document is created on basis");
+            CheckBasedOnOperation(head, b, target);
+            BasedOnMapping.CheckDocument(head, b, target.Storage, normal.Storage);
+            BasedOnMapping.Rows(head, b, target.Storage, normal.Storage);
+            b.TargetEndpoint = target;
+        }
+        CheckOfferedOnce(normal.Path, declaration);
+    }
+
+    // the target finds its entry by two paths, this one and its own
+    internal static void CheckOfferedOnce(String path, DeclarationMetadata declaration)
+    {
+        var twice = declaration.BasedOn.GroupBy(b => ParsePath(b.Target)).FirstOrDefault(g => g.Count() > 1);
+        if (twice != null)
+            throw new InvalidOperationException($"basedOn: {path}: {twice.First().Target} is offered twice");
+    }
+
+    // the rule '?Op=' follows: the name is the target's choice to offer, and a target with a list needs one
+    internal static void CheckBasedOnOperation(String head, BasedOnMetadata b, NormalEndpointMetadata target)
+    {
+        var names = target.Declaration.Operations;
+        if (names.Count == 0)
+        {
+            if (b.Operation != null)
+                throw new InvalidOperationException($"{head}: names the operation '{b.Operation}', and {target.Path} lists none. Drop 'operation'.");
+            return;
+        }
+        if (b.Operation == null)
+            throw new InvalidOperationException($"{head}: {target.Path} lists operations - name one in 'operation': {String.Join(", ", names)}");
+        if (!names.Contains(b.Operation))
+            throw new InvalidOperationException($"{head}: '{b.Operation}' is not an operation of {target.Path}. Its operations: {String.Join(", ", names)}");
+    }
+
     /* Phase 2, run once per endpoint by LoadAsync and by nobody else. Reachable targets descend
      * through the same load, so one that comes back around finds the instance and returns -
      * which is what terminates a cycle, and what a second call from outside would undo.
@@ -1366,6 +1420,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         await CheckAutonumDeclaredAsync(load, endpoint, dataSource);
 
         await ResolvePostAsync(load, endpoint, dataSource);
+
+        await ResolveBasedOnAsync(load, endpoint, dataSource);
     }
 
     /* 'autonum' names a row of another endpoint's file, so it can only be checked here - phase 2,
@@ -1422,12 +1478,12 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                 : $"{head}, and {catalog.Path} declares {String.Join(", ", prefixes.Select(c => $"[{c.Name}]"))} of type 'prefix' - which one is the prefix would be a guess");
     }
 
-    /* Four column types name WHAT they point at and not merely that they point: an account is a
+    /* Five column types name WHAT they point at and not merely that they point: an account is a
      * code of a chart, a value a code of a set, a state a code of a set that carries a life cycle,
-     * a company a row of a catalog. The first three are spelled as their target's key
-     * (ToSqlDbTypeInfo), so a target of another kind is a foreign key that cannot hold - platformid
-     * against nvarchar, discovered at deploy. The company's would hold, and '{p}' would then read a
-     * prefix off a document.
+     * a company a row of a catalog, a basis a document. The first three are spelled as their target's
+     * key (ToSqlDbTypeInfo), so a target of another kind is a foreign key that cannot hold - platformid
+     * against nvarchar, discovered at deploy. The last two would hold: '{p}' would then read a prefix
+     * off a document, and a document would be born from a catalog row.
      *
      * One table rather than an 'if' per type: until now only the account was asked, and an enum
      * column pointing at a catalog went all the way to the database before saying anything. The
@@ -1440,10 +1496,11 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         ColumnType.Enum => (EndpointKind.Enum, $"a set of values (/{Constants.SchemaNames.Enum}/<name>)"),
         ColumnType.State => (EndpointKind.State, $"a set of states (/{Constants.SchemaNames.State}/<name>)"),
         ColumnType.Company => (EndpointKind.Catalog, $"a catalog (/{Constants.SchemaNames.Catalog}/<name>)"),
+        ColumnType.BasedOn => (EndpointKind.Document, $"a document (/{Constants.SchemaNames.Document}/<name>)"),
         _ => null
     };
 
-    private static void CheckTargetKind(EndpointMetadata endpoint, TableColumn column, TableMetadata target)
+    internal static void CheckTargetKind(EndpointMetadata endpoint, TableColumn column, TableMetadata target)
     {
         if (TargetOf(column.Type) is not { } required || target.Kind == required.Kind)
             return;

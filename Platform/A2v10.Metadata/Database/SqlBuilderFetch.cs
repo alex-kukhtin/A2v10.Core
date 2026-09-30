@@ -9,6 +9,8 @@ using System.Dynamic;
 using A2v10.Infrastructure;
 using A2v10.Data.Core.Extensions;
 
+using static A2v10.Metadata.SqlExtensions;
+
 namespace A2v10.Metadata;
 
 internal partial class SqlBuilder
@@ -111,7 +113,7 @@ internal partial class SqlBuilder
         var owners = FetchOwners(Table, PlatformId, prms);
         // the same rows the browse dialog of this address shows - see FixedPredicate
         var fixedRows = FixedPredicate("a")
-            + String.Concat(owners.Select(o => $" and a.[{o.Column.Name}] = @{o.Column.Name}"));
+            + String.Concat(owners.Select(o => $" and a.[{o.Column.Name}] = {ColumnParam(o.Column.Name)}"));
         // what the selector shows is what it is searched by: the presentation, as in every map
         var shown = Table.Presentation;
 
@@ -164,7 +166,7 @@ internal partial class SqlBuilder
             dbprms.AddBigInt("@UserId", _currentUser.Identity.Id)
             .AddString("@Text", prms?.Get<String>("Text"));
             foreach (var (column, id) in owners)
-                dbprms.AddTyped($"@{column.Name}", PlatformId.SqlDbType, id);
+                dbprms.AddTyped(ColumnParam(column.Name), PlatformId.SqlDbType, id);
         });
 
         return model.ToInvokeResult();

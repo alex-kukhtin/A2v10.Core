@@ -55,7 +55,7 @@ internal abstract class LedgerReportBuilder : BaseReportBuilder
 
     private String CreateSqlText()
     {
-        var filterFields = _grouping.Filters.Select(f => $"[{f.Column}!T{f.Column}!RefId] = @{f.Column}");
+        var filterFields = _grouping.Filters.Select(f => $"[{f.Column}!T{f.Column}!RefId] = {SqlExtensions.ColumnParam(f.Column)}");
         var filterSql = filterFields.Any() ? $"{String.Join(", ", filterFields)}, " : String.Empty;
 
         var filterMaps = new StringBuilder();
@@ -63,7 +63,7 @@ internal abstract class LedgerReportBuilder : BaseReportBuilder
             filterMaps.AppendLine($"""
                 select [!T{f.Column}!Map] = null, [Id!!Id] = [Id], [Name!!Name] = [Name]
                 from {f.SqlTableName}
-                where [Id] = @{f.Column};
+                where [Id] = {SqlExtensions.ColumnParam(f.Column)};
                 """);
 
         return $"""

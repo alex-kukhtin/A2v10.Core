@@ -50,9 +50,9 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Repo
         {
             var value = prms.Get<Object>(f.Column)?.ToString();
             if (f.DataType.ToSqlDbTypeInfo().SqlName == "platformid")
-                dbprms.AddTyped($"@{f.Column}", platformId.SqlDbType, platformId.ParseId(value));
+                dbprms.AddTyped(SqlExtensions.ColumnParam(f.Column), platformId.SqlDbType, platformId.ParseId(value));
             else
-                dbprms.AddString($"@{f.Column}", String.IsNullOrEmpty(value) ? null : value);
+                dbprms.AddString(SqlExtensions.ColumnParam(f.Column), String.IsNullOrEmpty(value) ? null : value);
         }
     }
 

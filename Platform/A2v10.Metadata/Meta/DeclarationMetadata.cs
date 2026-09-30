@@ -174,6 +174,11 @@ public sealed record DeclarationMetadata
     public List<PostMetadata>? Post { get; init; }
     public String? Autonum { get; init; }
 
+    /* What may be created from this document. The document's and not an operation's: the menu is built
+     * once per screen, and in a grid the row it acts on is not known when it is.
+     */
+    public List<BasedOnMetadata> BasedOn { get; init; } = [];
+
     /* The operations of this document, as written: names, in the order the selector shows them, and
      * the first is where a new document starts. Each is a file beside this one; the files are read
      * by the loader into OperationDeclarations. Never layered from 'storage' - the storage is every

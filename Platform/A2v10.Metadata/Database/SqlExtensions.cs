@@ -88,6 +88,11 @@ public sealed record AppPlatformId(Type ClrType)
     public String All => ClrType == typeof(Guid) ? "11111111-1111-1111-1111-111111111111" : "0";
     public String Root => ClrType == typeof(Guid) ? "22222222-2222-2222-2222-222222222222" : "-2";
 
+    /* The key a record under birth carries until it is saved: non-null, so its rows can hang under it
+     * in the loaded model, and empty, so the client and the save take it for new (IsEmpty).
+     */
+    public String Empty => ClrType == typeof(Guid) ? "00000000-0000-0000-0000-000000000000" : "0";
+
     /* An identifier that references nothing. Recognised by shape rather than compared
      * against one stored empty value: what arrives here has been through an ExpandoObject
      * and is loosely typed - the same integer id turns up as Int32 or Int64 depending on
@@ -109,6 +114,13 @@ public sealed record AppPlatformId(Type ClrType)
 
 internal static class SqlExtensions
 {
+    /* A parameter named after an author's column - a filter, a role, an owner - carries '$', the sigil
+     * of the generated side. The platform's own parameters (@Order, @From, @Offset, @Fragment, ...) and
+     * the author's names are two namespaces in one batch: a reference column called 'Order' declared
+     * '@Order' a second time. A column name cannot hold '$' (CheckNames), so the two cannot meet.
+     */
+    public static String ColumnParam(String name) => $"@${name}";
+
     public static String LocalizeSql(this String value)
     {
         if (String.IsNullOrEmpty(value))
@@ -137,7 +149,7 @@ internal static class SqlExtensions
             // The base it rests on is deliberately absent - see AppPlatformId.
             ColumnType.Id or ColumnType.Ref or ColumnType.Master or
                 ColumnType.Folder or ColumnType.Row or ColumnType.Company or ColumnType.Owner or
-                ColumnType.Document or ColumnType.PlatformId
+                ColumnType.BasedOn or ColumnType.Document or ColumnType.PlatformId
                     => new SqlDbTypeInfo("platformid"),
             // a self link is spelled as the key of its own table
             ColumnType.Parent => key is ColumnType.Id or ColumnType.NaturalKey
@@ -306,8 +318,8 @@ internal static class SqlExtensions
             ColumnType.Name => $"[Name!!Name] = {alias}.[Name]",
             ColumnType.RowNumber => $"[{column.Name}!!RowNumber] = {alias}.[{column.Name}]",
             ColumnType.Parent => $"[{column.ModelName}] = {alias}.[{column.Name}]",
-            ColumnType.Ref or ColumnType.Company or ColumnType.Owner or ColumnType.Document or ColumnType.Operation
-                or ColumnType.Enum or ColumnType.State or ColumnType.Account or ColumnType.Folder =>
+            ColumnType.Ref or ColumnType.Company or ColumnType.Owner or ColumnType.BasedOn or ColumnType.Document
+                or ColumnType.Operation or ColumnType.Enum or ColumnType.State or ColumnType.Account or ColumnType.Folder =>
                 $"[{column.Name}!{column.RefTableCheck.Storage.RefTypeName}!RefId] = {alias}.[{column.Name}]",
             _ => $"{alias}.[{column.Name}]"
         };

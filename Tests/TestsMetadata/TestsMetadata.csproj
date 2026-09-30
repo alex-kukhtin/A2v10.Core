@@ -22,7 +22,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Data.Core" Version="10.1.7622" />
+		<PackageReference Include="A2v10.Data.Core" Version="10.1.7623" />
 		<PackageReference Include="A2v10.Data.Providers" Version="10.1.7610" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.12" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
@@ -32,7 +32,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
-		<PackageReference Include="coverlet.collector" Version="10.0.1">
+		<PackageReference Include="coverlet.collector" Version="10.1.0">
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>

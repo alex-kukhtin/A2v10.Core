@@ -10,6 +10,8 @@ using A2v10.Data.Core.Extensions;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 
+using static A2v10.Metadata.SqlExtensions;
+
 namespace A2v10.Metadata;
 
 internal partial class SqlBuilder
@@ -169,8 +171,8 @@ internal partial class SqlBuilder
              */
             String filterPredicate((String name, String value) f) =>
                 setFilters.Contains(f.name)
-                    ? $"(@{f.name} = N'' or a.[{f.name}] = @{f.name})"
-                    : $"a.[{f.name}] = @{f.name}";
+                    ? $"({ColumnParam(f.name)} = N'' or a.[{f.name}] = {ColumnParam(f.name)})"
+                    : $"a.[{f.name}] = {ColumnParam(f.name)}";
 
             if (filters.Count > 0)
                 sb.AppendLine($" and {String.Join(" and ", filters.Select(filterPredicate))}");
@@ -184,9 +186,9 @@ internal partial class SqlBuilder
             {
                 var target = role.ColumnCheck.RefTableCheck.Storage;
                 sb.AppendLine($$"""
-                 and (@{{role.Name}} = N'' or exists(select 1 from {{target.SqlTableName}} s
+                 and ({{ColumnParam(role.Name)}} = N'' or exists(select 1 from {{target.SqlTableName}} s
                     where s.[{{Constants.FieldNames.Id}}] = a.[{{role.ColumnCheck.Name}}]
-                        and s.[{{Constants.FieldNames.Role}}] = @{{role.Name}}))
+                        and s.[{{Constants.FieldNames.Role}}] = {{ColumnParam(role.Name)}}))
                 """);
             }
             if (!String.IsNullOrEmpty(fragment))
@@ -236,13 +238,13 @@ internal partial class SqlBuilder
             foreach (var en in refs.Where(r => setFilters.Contains(r.Column.Name)))
             {
                 sb.AppendLine();
-                sb.AppendLine($"set @{en.Column.Name} = isnull(@{en.Column.Name}, N'');");
+                sb.AppendLine($"set {ColumnParam(en.Column.Name)} = isnull({ColumnParam(en.Column.Name)}, N'');");
             }
             // 'no role picked' and 'every role' are one state here too, and the empty string is it
             foreach (var role in roles)
             {
                 sb.AppendLine();
-                sb.AppendLine($"set @{role.Name} = isnull(@{role.Name}, N'');");
+                sb.AppendLine($"set {ColumnParam(role.Name)} = isnull({ColumnParam(role.Name)}, N'');");
             }
 
             // CAST takes system types only, so it names the base the database reported for
@@ -347,7 +349,7 @@ internal partial class SqlBuilder
                 if (filters.Count > 0)
                 {
                     foreach (var f in filters)
-                        sb.Append($"insert into @map([{f.name}]) values (@{f.name});");
+                        sb.Append($"insert into @map([{f.name}]) values ({ColumnParam(f.name)});");
                     sb.AppendLine();
                 }
             });
@@ -404,7 +406,7 @@ internal partial class SqlBuilder
                 sb.Append($", [!{collectionName}.{Constants.FilterNames.Tags}!Filter] "
                     + $"= @{Constants.FilterNames.Tags}");
             foreach (var role in roles)
-                sb.Append($", [!{collectionName}.{role.Name}!Filter] = @{role.Name}");
+                sb.Append($", [!{collectionName}.{role.Name}!Filter] = {ColumnParam(role.Name)}");
             if (refs.Count > 0) {
                 sb.Append(", ");
                 /* A set filter comes back as the bare code: that is what the ComboBox writes into
@@ -414,8 +416,8 @@ internal partial class SqlBuilder
                  *
                  */
                 sb.Append(String.Join(", ", refs.Select(rt => setFilters.Contains(rt.Column.Name)
-                    ? $"[!{collectionName}.{rt.Column.Name}!Filter] = @{rt.Column.Name}"
-                    : $"[!{collectionName}.{rt.Column.Name}.{rt.Table.RefTypeName}.RefId!Filter] = @{rt.Column.Name}")));
+                    ? $"[!{collectionName}.{rt.Column.Name}!Filter] = {ColumnParam(rt.Column.Name)}"
+                    : $"[!{collectionName}.{rt.Column.Name}.{rt.Table.RefTypeName}.RefId!Filter] = {ColumnParam(rt.Column.Name)}")));
             }
             sb.AppendLine(";");
             return sb.ToString();
@@ -461,7 +463,7 @@ internal partial class SqlBuilder
              * an untouched filter on the way in and in the Filter that comes back.
              */
             foreach (var role in roles)
-                dbprms.AddString($"@{role.Name}", roleValues.GetValueOrDefault(role.Name));
+                dbprms.AddString(ColumnParam(role.Name), roleValues.GetValueOrDefault(role.Name));
             /* The parameter is declared as what the COLUMN is, never as what a filter usually turns
              * out to be. An operation is keyed by its code; everything else by an identifier whose
              * base the database reported. Assuming bigint for both was silent in the same way: the
@@ -471,7 +473,7 @@ internal partial class SqlBuilder
             foreach (var rd in refs)
             {
                 var val = filters.FirstOrDefault(f => f.name == rd.Column.Name).value;
-                var name = $"@{rd.Column.Name}";
+                var name = ColumnParam(rd.Column.Name);
                 // keyed by a code: an operation, an account
                 if (rd.Column.IsOperation || rd.Column.Type == ColumnType.Account)
                     dbprms.AddString(name, String.IsNullOrEmpty(val) ? null : val);

@@ -36,6 +36,25 @@ internal partial class XamlBuilder
             : path;
     }
 
+    /* A referenced document drawn as a link to it - in a grid cell and as the basis on a card. It
+     * opens at the document's own address (SqlBuilder.RefFields), handed the reference itself.
+     * Nothing referenced, nothing drawn: an empty link navigates to '/edit/null'. 'reference' is the
+     * path to the property holding it.
+     */
+    private static Hyperlink DocumentHyperlink(String reference) => new()
+    {
+        Bindings = b =>
+        {
+            b.SetBinding(nameof(Hyperlink.If), new Bind($"{reference}.{Constants.FieldNames.Id}"));
+            b.SetBinding(nameof(Hyperlink.Content), new Bind($"{reference}.{Constants.FieldNames.Name}"));
+            b.SetBinding(nameof(Hyperlink.Icon), new Bind($"{reference}.{Constants.FieldNames.Icon}"));
+            var open = new BindCmd() { Command = CommandType.Open };
+            open.BindImpl.SetBinding(nameof(BindCmd.Url), new Bind($"{reference}.{Constants.FieldNames.Url}"));
+            open.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(reference));
+            b.SetBinding(nameof(Hyperlink.Command), open);
+        }
+    };
+
     /* The picker for a state, in the three places one appears - the card, a row of a collection,
      * the filter panel. Everything but the reach is the same, and the one difference that matters
      * is the ITEM's value: in the card and in a row the property holds the element resolved through
@@ -81,7 +100,8 @@ internal partial class XamlBuilder
                     CssClass = elem.Type.ToXamlSemanticClass(),
                     Bindings = b => b.SetBinding(nameof(TableCell.Content), new Bind(elem.Name) { DataType = DataType.Number })
                 },
-            ColumnType.Ref or ColumnType.Company or ColumnType.Owner or ColumnType.Account => new SelectorSimple()
+            // a basis in a row is picked - an allocation over several; only the header's is born
+            ColumnType.Ref or ColumnType.Company or ColumnType.Owner or ColumnType.BasedOn or ColumnType.Account => new SelectorSimple()
                 {
                     Url = SelectorUrl(inherits, elem),
                     CssClass = elem.Type.ToXamlSemanticClass(),
@@ -579,6 +599,8 @@ internal partial class XamlBuilder
                 CssClass = column.Type.ToXamlSemanticClass(),
                 Bindings = b => b.SetBinding(nameof(ColorPicker.Value), valueBind)
             },
+            // set by birth and by nothing else (ColumnType.BasedOn): shown, not picked
+            ColumnType.BasedOn => DocumentHyperlink($"{Table.Model}.{column.Name}"),
             ColumnType.Ref or ColumnType.Company or ColumnType.Owner or ColumnType.Document or ColumnType.Account => new SelectorSimple()
             {
                 Label = column.Header,
