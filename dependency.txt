@@ -1,13 +1,5 @@
-﻿2026-09-27 (next: 8667)
+﻿2026-09-30 (next: 8668)
 
-A2v10.App.Assets2026
-A2v10.Cli
-A2v10.MailClient
-A2v10.Metadata
-A2v10.Platform
-A2v10.Platform.Web
-A2v10.ReportEngine.Pdf
-A2v10.Services
 
 !Workflow.Module (scheduling, workflow.engine)
 
