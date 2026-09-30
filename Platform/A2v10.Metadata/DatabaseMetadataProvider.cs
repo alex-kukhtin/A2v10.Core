@@ -297,11 +297,11 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
 
     // what a seed row names: the columns the platform reads, and the author's own
     private static readonly String[] _accountColumns = [Constants.FieldNames.Name, Constants.FieldNames.Parent,
-        Constants.FieldNames.AccountType, Constants.FieldNames.NormalBalance];
+        Constants.FieldNames.AccountType, Constants.FieldNames.NormalBalance, Constants.FieldNames.SplitBy];
     private static readonly String[] _accountRequired = [Constants.FieldNames.Name,
         Constants.FieldNames.AccountType, Constants.FieldNames.NormalBalance];
 
-    private static SeedRow AccountRow(String seedFile, TableMetadata storage, String id, Dictionary<String, JToken> row)
+    internal static SeedRow AccountRow(String seedFile, TableMetadata storage, String id, Dictionary<String, JToken> row)
     {
         var head = $"{seedFile}: account '{id}'";
         if (String.IsNullOrEmpty(id))
@@ -325,7 +325,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             if (!_accountColumns.Contains(name) && !storage.Columns.Any(c => c.Name == name))
                 throw new InvalidOperationException(
                     $"{head} - '{name}' is written by the platform, not by the seed");
-            var value = token.Type switch
+            var value = name == Constants.FieldNames.SplitBy ? SplitByValue(head, token) : token.Type switch
             {
                 JTokenType.Null => null,
                 JTokenType.String or JTokenType.Integer or JTokenType.Float or JTokenType.Boolean
@@ -351,7 +351,37 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                 throw new InvalidOperationException($"{head} - '{name}' is required");
         CheckClosedSet<AccountType>(head, values, Constants.FieldNames.AccountType);
         CheckClosedSet<NormalBalance>(head, values, Constants.FieldNames.NormalBalance);
+        CheckSplit(head, values);
         return new SeedRow(id, values);
+    }
+
+    /* A list of column names, written as a list: a string would let "Agent, Contract" and
+     * "Agent,Contract" be two spellings of one value. Stored joined - no column name holds ','.
+     */
+    private static String SplitByValue(String head, JToken token)
+    {
+        var names = token is JArray array && array.All(t => t.Type == JTokenType.String)
+            ? array.Select(t => t.Value<String>()!).ToList()
+            : throw new InvalidOperationException(
+                $"{head} - '{Constants.FieldNames.SplitBy}' is an array of ledger columns: [\"Agent\"]");
+        if (names.Count == 0 || names.Any(String.IsNullOrEmpty))
+            throw new InvalidOperationException($"{head} - '{Constants.FieldNames.SplitBy}' names no column");
+        if (names.Distinct().Count() != names.Count)
+            throw new InvalidOperationException($"{head} - '{Constants.FieldNames.SplitBy}' names a column twice");
+        return String.Join(',', names);
+    }
+
+    // one fact in two keys, so each without the other is refused: Split with nothing to split by, or a list nobody reads
+    private static void CheckSplit(String head, Dictionary<String, String?> values)
+    {
+        var split = values[Constants.FieldNames.NormalBalance] == nameof(NormalBalance.Split);
+        var splitBy = values.GetValueOrDefault(Constants.FieldNames.SplitBy) != null;
+        if (split && !splitBy)
+            throw new InvalidOperationException(
+                $"{head} - NormalBalance 'Split' says the balance is laid out by analytics, and '{Constants.FieldNames.SplitBy}' names none");
+        if (!split && splitBy)
+            throw new InvalidOperationException(
+                $"{head} - '{Constants.FieldNames.SplitBy}' is read for NormalBalance 'Split' only; this account is '{values[Constants.FieldNames.NormalBalance]}'");
     }
 
     // spelled exactly as the enum member: the value is stored by name and compared by name
@@ -1253,9 +1283,10 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                     if (ledger.AllColumns().FirstOrDefault(c => c.Name == name && c.Type == ColumnType.Account) is not { } column)
                         continue;
                     var chart = await JournalAsync(column.Target!);
-                    if (!chart.SeedRows.Any(r => r.Id == code))
-                        throw new InvalidOperationException(
+                    var account = chart.SeedRows.FirstOrDefault(r => r.Id == code)
+                        ?? throw new InvalidOperationException(
                             $"post: {normal.Path} -> {ledger.Path}: '{leg}' const [{name}] = '{code}' is not an account of {chart.Path}");
+                    CheckSplitLeg($"post: {normal.Path} -> {ledger.Path}", leg, blocks, account);
                 }
         }
 
@@ -1286,6 +1317,20 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             p.SqlTargets = journals;
         }
         _ = new PostStatements(normal);
+    }
+
+    /* A leg onto a Split account fills every column the account is split by: a payment leg without
+     * the Agent a sale leg carries lands at another object, and the two never net - a receivable and
+     * a payable that are one debt. Only a literal account is known here; one taken from a field of
+     * the document is the Account domain's, not built.
+     */
+    internal static void CheckSplitLeg(String head, String leg, PostLegMetadata blocks, SeedRow account)
+    {
+        var named = blocks.Const.Keys.Concat(blocks.Document.Keys).Concat(blocks.Row.Keys).ToHashSet();
+        var missing = account.SplitBy.Where(c => !named.Contains(c)).ToList();
+        if (missing.Count > 0)
+            throw new InvalidOperationException(
+                $"{head}: '{leg}' posts to '{account.Id}', which is split by {String.Join(", ", account.SplitBy.Select(c => $"[{c}]"))}, and names no {String.Join(", ", missing.Select(c => $"[{c}]"))}");
     }
 
     /* 'basedOn' names other documents, so it is resolved where references are: phase 2, through the
@@ -1417,6 +1462,9 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
 
         CheckLiteralInitials(endpoint, meta);
 
+        if (endpoint is NormalEndpointMetadata { Storage.Kind: EndpointKind.Ledger } ledger)
+            CheckSplitColumns(ledger.Storage);
+
         await CheckAutonumDeclaredAsync(load, endpoint, dataSource);
 
         await ResolvePostAsync(load, endpoint, dataSource);
@@ -1499,6 +1547,25 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         ColumnType.BasedOn => (EndpointKind.Document, $"a document (/{Constants.SchemaNames.Document}/<name>)"),
         _ => null
     };
+
+    /* SplitBy is written in the chart and names columns of the ledger, so it is checked where the two
+     * meet - here, the chart linked just above. Every ledger over the chart must have them: one chart
+     * says one thing about 361 to all of its ledgers. An analytic of the author, never the provenance
+     * (the posting document would split every invoice from its payment) nor a measure.
+     */
+    internal static void CheckSplitColumns(TableMetadata ledger)
+    {
+        var chart = ledger.AllColumns().First(c => c.Name == Constants.FieldNames.Acc).RefTableCheck.Storage;
+        foreach (var row in chart.SeedRows)
+            foreach (var name in row.SplitBy)
+            {
+                var column = ledger.Columns.FirstOrDefault(c => c.Name == name);
+                if (column == null || column.IsProvenance || column.IsAdditive)
+                    throw new InvalidOperationException(
+                        $"{ledger.Path}: account '{row.Id}' of {chart.Path} is split by [{name}], which {(column == null
+                            ? "is not a column of the ledger" : column.IsProvenance ? "the platform fills" : "is a measure")} - SplitBy names an analytic the ledger declares");
+            }
+    }
 
     internal static void CheckTargetKind(EndpointMetadata endpoint, TableColumn column, TableMetadata target)
     {

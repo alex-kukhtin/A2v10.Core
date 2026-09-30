@@ -486,7 +486,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
             return String.Empty;
 
         String[] baseline = [Constants.FieldNames.Id, Constants.FieldNames.Name, Constants.FieldNames.Parent,
-            Constants.FieldNames.AccountType, Constants.FieldNames.NormalBalance];
+            Constants.FieldNames.AccountType, Constants.FieldNames.NormalBalance, Constants.FieldNames.SplitBy];
 
         var sb = new StringBuilder();
         sb.AppendLine("-- SEED");

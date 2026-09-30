@@ -43,6 +43,10 @@
 		"Order": {
 			"type": "BasedOn",
 			"target": "/document/order"
+		},
+		"Shipment": {
+			"type": "BasedOn",
+			"target": "/document/waybillout"
 		}
 	},
 	"rules": {

@@ -227,6 +227,11 @@ public record TableColumn
     [JsonIgnore]
     internal Boolean IsAdditive => Type is ColumnType.Amount or ColumnType.Qty or ColumnType.Money;
 
+    // who wrote a posting row: filled by the platform from the document, never by a leg or an author
+    [JsonIgnore]
+    internal Boolean IsProvenance => Type is ColumnType.Document or ColumnType.DocumentType
+        or ColumnType.Row or ColumnType.Operation or ColumnType.Company;
+
     [JsonIgnore]
     internal Boolean IsVoid => Type == ColumnType.Void;
     [JsonIgnore]
@@ -886,7 +891,15 @@ public record SetValueMetadata(String Id, String? Name, String? Memo, Boolean Vo
 /* One row of a seed file: the key, and the columns the row names with their values as written.
  * A column the row does not name is absent from Values, not null - the merge leaves it untouched.
  */
-public sealed record SeedRow(String Id, IReadOnlyDictionary<String, String?> Values);
+public sealed record SeedRow(String Id, IReadOnlyDictionary<String, String?> Values)
+{
+    /* The columns a Split account is laid out by. The file writes an array, the column keeps it
+     * joined by ',' (DatabaseMetadataProvider.AccountRow) - the platform splits its own text, no
+     * author ever writes the string.
+     */
+    public IReadOnlyList<String> SplitBy =>
+        Values.GetValueOrDefault(Constants.FieldNames.SplitBy) is String s ? s.Split(',') : [];
+}
 
 /* The section of the reports an account belongs to. Stored by NAME, as AutonumPeriod is.
  * OffBalance is a value here and not a flag: an off-balance account is neither an asset nor a
@@ -904,12 +917,19 @@ public enum AccountType
 
 /* The side the balance of an account is shown on. Not derived from AccountType: accumulated
  * depreciation is an Asset with a Credit balance.
+ *
+ * Both and Split are two answers, not one: Both is a single balance whose sign picks the side (441,
+ * profit or loss), Split is a debit and a credit balance at once, one per object of the analytics
+ * (361: what customers owe, and what they paid ahead). Netted, a Split account hides both behind
+ * their difference - receivables and payables wrong in the balance sheet. Which analytics it is
+ * split by is SplitBy, beside it in the seed row.
  */
 public enum NormalBalance
 {
     Debit,
     Credit,
-    Both
+    Both,
+    Split
 }
 
 /* What a value of a set of states IS to the cycle - the whole reason the kind exists beside an

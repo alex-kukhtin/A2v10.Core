@@ -203,7 +203,8 @@ internal static class TableDefaultColumns
     /* A chart of accounts. The key is the account code - no Code beside Id, one concept, one name.
      * The tree is in the baseline and Parent is its only carrier: never derived from the code,
      * where a prefix is a convention of one plan. AccountType and NormalBalance are closed sets of
-     * the platform, stored by name. IsSystem says the row comes from the seed file and is written
+     * the platform, stored by name. SplitBy - the ledger columns a Split account is laid out by,
+     * joined by ',' (SeedRow.SplitBy). IsSystem says the row comes from the seed file and is written
      * by the deploy alone.
      */
     static IEnumerable<TableColumn> AccPlanDefaultColumns(TableMetadata table)
@@ -216,6 +217,7 @@ internal static class TableDefaultColumns
         yield return new TableColumn(Constants.FieldNames.Parent, ColumnType.Parent) { KeyType = ColumnType.NaturalKey };
         yield return new TableColumn(Constants.FieldNames.AccountType, ColumnType.String) { Length = 16 };
         yield return new TableColumn(Constants.FieldNames.NormalBalance, ColumnType.String) { Length = 16 };
+        yield return new TableColumn(Constants.FieldNames.SplitBy, ColumnType.String) { Length = 255 };
         foreach (var stamp in Stamps())
             yield return stamp;
     }

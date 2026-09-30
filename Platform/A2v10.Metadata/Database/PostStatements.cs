@@ -356,9 +356,7 @@ internal sealed class PostStatements
         {
             var col = ledger.AllColumns().FirstOrDefault(c => c.Name == name)
                 ?? throw new InvalidOperationException($"{head}: '{leg}' names [{name}], which is not a column of the ledger");
-            var legal = name == Constants.FieldNames.Acc
-                || ledger.Columns.Contains(col) && col.Type is not (ColumnType.Document or ColumnType.DocumentType
-                    or ColumnType.Row or ColumnType.Operation or ColumnType.Company);
+            var legal = name == Constants.FieldNames.Acc || ledger.Columns.Contains(col) && !col.IsProvenance;
             return legal ? col
                 : throw new InvalidOperationException($"{head}: '{leg}' names [{name}], which the platform fills");
         }

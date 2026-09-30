@@ -39,7 +39,7 @@
 			},
 			"sum": "Sum",
 			"dt": {
-				"const": { "Acc": "28" },
+				"const": { "Acc": "361" },
 				"document": { "Agent": "Agent" }
 			},
 			"ct": {
@@ -105,5 +105,11 @@
 				}
 			]
 		}
-	}
-} 
+	},
+	"basedOn": [
+		{
+			"target": "/document/waybillreturn",
+			"each": { "details": "Rows", "kinds": [ "Stock" ] }
+		}
+	]
+}

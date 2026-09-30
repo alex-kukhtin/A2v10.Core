@@ -63,6 +63,7 @@ internal static class Constants
         // a chart of accounts
         public const String AccountType = nameof(AccountType);
         public const String NormalBalance = nameof(NormalBalance);
+        public const String SplitBy = nameof(SplitBy);
         // a set of states: what the value is to the cycle - see StateRole
         public const String Role = nameof(Role);
         // a ledger: the leg's sign, its account, the account it corresponds to, its sum

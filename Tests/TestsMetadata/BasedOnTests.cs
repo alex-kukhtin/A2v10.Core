@@ -193,6 +193,32 @@ public class BasedOnTests
         Assert.Contains("where v.[VatRate] is null and v.[Kind] = N'Stock';", sql);
     }
 
+    /* A customer return from a shipment - both over one table, as in the skill's example. Every column
+     * meets itself: another basis rides along (the shipment's order), and kinds of the source meet the
+     * target's by name, the other kinds of the shipment left behind.
+     */
+    [Fact]
+    public async Task Birth_between_documents_of_one_table()
+    {
+        var rows = (await LoadNormalAsync("document", String.Empty)).Storage.Details["Rows"];
+        var sql = await (await BuilderOf("/document/waybillreturn", "BasedOn=5&Base=/document/waybillout")).BuildBirthSqlTextAsync();
+        var record = Fill(sql, "@$Record");
+        var row = Fill(sql, "@$Record$Rows");
+
+        Assert.Equal("s.[Id]", record["Shipment"]);          // the basis
+        Assert.Equal("s.[Order]", record["Order"]);          // the shipment's own basis, by name
+        Assert.Equal("s.[StoreFrom]", record["StoreFrom"]);
+        Assert.Equal("s.[Agent]", record["Agent"]);
+        Assert.Equal("null", record["Number"]);
+        Assert.Equal("null", record["Operation"]);           // the return's own, by the defaults
+        Assert.Equal("N'Stock'", row["Kind"]);
+        Assert.Equal("r.[Item]", row["Item"]);
+        Assert.Equal("r.[VatRate]", row["VatRate"]);         // the source has it, inherit fills only what is empty
+        Assert.Contains("from doc.[StockDocuments] s where s.[Id] = @BasedOn;", sql);
+        Assert.Contains($"from {rows.SqlTableName} r where r.[{rows.MasterField}] = @BasedOn and r.[Kind] = N'Stock';", sql);
+        Assert.Equal(2, sql.Split("insert into @$Record$Rows (").Length);   // one insert: Service stays behind
+    }
+
     // past the fill the load is that of any new record, reading the variables: recordsets, the map, the defaults
     [Fact]
     public async Task A_born_record_is_loaded_from_the_variables()

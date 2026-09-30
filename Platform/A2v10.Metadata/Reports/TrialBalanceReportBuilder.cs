@@ -14,6 +14,10 @@ namespace A2v10.Metadata;
  * column even when negative (a minus on 281 is a visible error, moved to credit it would be a
  * plausible number), Credit mirrors that, Both goes by sign. It is laid out per account and only then
  * summed - the signed total of a balanced ledger is zero, so the total row is the sum of the pairs.
+ *
+ * Split goes by sign as Both does, one grain finer: per account and object of its SplitBy, then summed
+ * into the account. The grain is all it changes - for Debit and Credit a finer grain sums to the same
+ * number, only a layout by sign is not additive.
  */
 internal class TrialBalanceReportBuilder(IServiceProvider serviceProvider, ReportMetadata report, TableMetadata source, AppPlatformId platformId)
     : LedgerReportBuilder(serviceProvider, report, source, platformId)
@@ -28,11 +32,34 @@ internal class TrialBalanceReportBuilder(IServiceProvider serviceProvider, Repor
             when N'{nameof(NormalBalance.Credit)}' then -{balance} else iif({balance} < 0, -{balance}, 0) end
         """;
 
+    /* The grain of J, beyond the account: a column per name some account is split by, holding the
+     * leg's value on those accounts and null on the rest - so an account not split by it keeps the
+     * account as its grain. The accounts come from the chart's file (SeedRow.SplitBy), not the table:
+     * the column list shapes the query, and a query is not composed from data.
+     */
+    internal (String Apply, String GroupBy) SplitGrain()
+    {
+        var acc = Constants.FieldNames.Acc;
+        var split = _acc.RefTableCheck.Storage.SeedRows
+            .SelectMany(r => r.SplitBy.Select(c => (Column: c, Account: r.Id)))
+            .GroupBy(x => x.Column, x => x.Account)
+            .ToList();
+        if (split.Count == 0)
+            return (String.Empty, String.Empty);
+        var values = split.Select(g => $"case when j.[{acc}] in ({String.Join(", ", g.Select(_acc.SqlLiteral))}) then j.[{g.Key}] end");
+        var names = split.Select(g => $"[{g.Key}]");
+        return ($"""
+
+                cross apply (values ({String.Join(", ", values)})) k({String.Join(", ", names)})
+            """, String.Concat(names.Select(n => $", k.{n}")));
+    }
+
     protected override String CreateBodySql()
     {
         var acc = Constants.FieldNames.Acc;
         var sum = Constants.FieldNames.Sum;
         var inOut = Constants.FieldNames.InOut;
+        var (apply, groupBy) = SplitGrain();
 
         return $"""
         with J as (
@@ -41,9 +68,9 @@ internal class TrialBalanceReportBuilder(IServiceProvider serviceProvider, Repor
                 [DtSum] = sum(case when j.[Date] >= @From and j.[{inOut}] = 1 then j.[{sum}] else 0 end),
                 [CtSum] = sum(case when j.[Date] >= @From and j.[{inOut}] = -1 then j.[{sum}] else 0 end),
                 [End] = sum(j.[{sum}] * j.[{inOut}])
-            from {_source.SqlTableName} j
+            from {_source.SqlTableName} j{apply}
             where @Run = 1 and j.[Date] < @end{_grouping.SqlWhereClause("j")}
-            group by j.[{acc}]
+            group by j.[{acc}]{groupBy}
         ),
         S as (
             select J.[{acc}], J.[DtSum], J.[CtSum],
