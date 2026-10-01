@@ -13,7 +13,6 @@ using ModelContextProtocol.AspNetCore.Authentication;
 using A2v10.Web.Identity;
 using A2v10.Mcp;
 using A2v10.Mcp.OAuth;
-using A2v10.Mcp.Tools;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -22,7 +21,8 @@ public static class ServicesExtensions
 	const String McpScheme = OAuthController.AccessTokenScheme;
 	const String McpPolicy = "A2v10.Mcp";
 
-	public static IServiceCollection UseMcp(this IServiceCollection services, IConfiguration configuration)
+	public static IServiceCollection UseMcp(this IServiceCollection services, IConfiguration configuration,
+		Action<McpToolsBuilder>? tools = null)
 	{
 		var publicUrl = configuration.GetValue<String>(McpAddress.ConfigurationKey)?.TrimEnd('/')
 			?? throw new InvalidOperationException($"Configuration key '{McpAddress.ConfigurationKey}' not found");
@@ -48,7 +48,9 @@ public static class ServicesExtensions
 		// Stateless: a tool runs in the request's scope, where CurrentUserMiddleware has set up ICurrentUser.
 		services.AddMcpServer()
 			.WithHttpTransport(o => o.Stateless = true)
-			.WithTools<WhoAmITool>();
+			.WithListToolsHandler(McpToolHandlers.ListTools)
+			.WithCallToolHandler(McpToolHandlers.CallTool);
+		tools?.Invoke(new McpToolsBuilder(services));
 
 		services.AddSingleton<OAuthProtector>();
 		services.AddScoped<IOAuthConsent, OAuthConsent>();

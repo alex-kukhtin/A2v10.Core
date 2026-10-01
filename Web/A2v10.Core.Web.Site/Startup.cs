@@ -70,7 +70,7 @@ public class Startup(IConfiguration configuration)
 
 		var builders = services.UsePlatform(Configuration);
 
-		services.UseMcp(Configuration);
+		services.UseMcp(Configuration, tools => tools.Add<WhoAmITool>());
 
 		builders.AuthenticationBuilder.AddGoogle(opts =>
 		{
