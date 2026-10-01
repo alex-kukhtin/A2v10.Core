@@ -43,7 +43,8 @@ public class AccountController(
     IDataProtectionProvider protectionProvider,
 	ICurrentUser _currentUser,
 	IAppCodeProvider _appCodeProvider,
-    IOptions<AppUserStoreOptions<Int64>> userStoreOptions) : Controller
+    IOptions<AppUserStoreOptions<Int64>> userStoreOptions,
+	IOAuthConsent? _oauthConsent = null /* registered by the MCP package; without it there is no consent screen */) : Controller
 {
     private readonly IDataProtector _protector = protectionProvider.CreateProtector("Login");
 	private readonly AppUserStoreOptions<Int64> _userStoreOptions = userStoreOptions.Value;
@@ -686,6 +687,43 @@ public class AccountController(
 		return View("Error", model);
 	}
 
+	/* OAuth consent: the browser arrives from the authorization server's /authorize already signed in,
+	 * and leaves by the redirect the server builds. The screen knows nothing of the protocol.
+	 */
+	[HttpGet]
+	public async Task<IActionResult> Consent([FromQuery] String? request)
+	{
+		if (_oauthConsent == null)
+			return NotFound();
+		var info = request != null ? _oauthConsent.Read(request) : null;
+		if (info == null || User.Identity?.IsAuthenticated != true)
+			return await Error("The authorization request is damaged or expired");
+		var m = new ConsentViewModel()
+		{
+			Title = await LoadTitleAsync(),
+			Theme = _appTheme.MakeTheme(),
+			RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken,
+			Request = request,
+			ClientName = info.ClientName ?? info.RedirectHost,
+			RedirectHost = info.RedirectHost,
+			IsLoopback = info.IsLoopback
+		};
+		return View(m);
+	}
+
+	[HttpPost]
+	public async Task<IActionResult> Consent([FromForm] String? request, [FromForm] String? decision)
+	{
+		if (_oauthConsent == null)
+			return NotFound();
+		if (!await _antiforgery.IsRequestValidAsync(HttpContext))
+			return await Error("AntiForgery");
+		String? redirect = null;
+		if (request != null && User.Identity?.IsAuthenticated == true)
+			redirect = decision == "allow" ? await _oauthConsent.ApproveAsync(request, User) : _oauthConsent.Deny(request);
+		return redirect != null ? Redirect(redirect) : await Error("The authorization request is damaged or expired");
+	}
+
 	[HttpGet]
 	[ActionName("loginexternal")]
     [AllowAnonymous]
@@ -886,8 +924,8 @@ public class AccountController(
 			if (signInResult.Succeeded)
 			{
 				RemoveAntiforgeryCookie();
-				var returnUrl = model.ReturnUrl?.ToLowerInvariant();
-				if (returnUrl == null || returnUrl.StartsWith("/account"))
+				var returnUrl = model.ReturnUrl;
+				if (returnUrl == null || returnUrl.StartsWith("/account", StringComparison.OrdinalIgnoreCase))
 					returnUrl = "/";
 				return new JsonResult(JsonResponse.Redirect(returnUrl));
 			}

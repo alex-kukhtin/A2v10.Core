@@ -144,3 +144,9 @@
 @ErrorAntiForgery=Заявката вече е изпълнена в друг прозорец на браузъра. Страницата ще бъде презаредена
 @IHaveCode=Имам код за потвърждение
 @AvailableLocales={"uk-UA": "Украински","ru-RU": "Руски","en-US": "Английски","de-DE": "Немски","bg-BG": "Български"}
+@OAuthConsentPrompt=Application access
+@OAuthConsentText=asks to act on your behalf.
+@OAuthConsentRedirect=The answer will be sent to
+@OAuthConsentLoopback=This is a local address: any program on this computer could have sent the request.
+@OAuthAllow=Allow
+@OAuthDeny=Deny

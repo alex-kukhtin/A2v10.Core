@@ -567,6 +567,29 @@ public sealed class AppUserStore<T>(IDbContext dbContext, IOptions<AppUserStoreO
 		return _dbContext.ExecuteExpandoAsync(_dataSource, $"[{_dbSchema}].AddToken", exp);
 	}
 
+	/* One call for check and swap: GetToken + AddToken would let two parallel refreshes with one token
+	 * both pass. Without newToken the token is only spent (single use). False - there was no such token;
+	 * when rotating, its whole provider family is gone too.
+	 */
+	public async Task<Boolean> RotateTokenAsync(AppUser<T> user, String provider, String token, String? newToken = null, DateTime? expires = null)
+	{
+		var exp = new ExpandoObject()
+		{
+			{ ParamNames.Id, user.Id },
+			{ ParamNames.Provider, provider },
+			{ ParamNames.Token, token }
+		};
+		if (_multiTenant && user.Tenant != null)
+			exp.Add(ParamNames.Tenant, user.Tenant);
+		if (newToken != null)
+		{
+			exp.Add("NewToken", newToken);
+			exp.Add(ParamNames.Expires, expires);
+		}
+		var res = await _dbContext.ReadExpandoAsync(_dataSource, $"[{_dbSchema}].RotateToken", exp);
+		return res is IDictionary<String, Object?> row && row.TryGetValue("Rotated", out var rotated) && rotated is true;
+	}
+
 	public async Task<String?> GetTokenAsync(AppUser<T> user, String provider, String token)
 	{
 		var exp = new ExpandoObject()

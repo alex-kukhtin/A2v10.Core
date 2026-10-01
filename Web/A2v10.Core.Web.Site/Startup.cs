@@ -1,4 +1,4 @@
-// Copyright � 2020-2025 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2020-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -69,6 +69,8 @@ public class Startup(IConfiguration configuration)
 		services.AddScoped<ISqlQueryTextProvider, SqlQueryTextProvider>();
 
 		var builders = services.UsePlatform(Configuration);
+
+		services.UseMcp(Configuration);
 
 		builders.AuthenticationBuilder.AddGoogle(opts =>
 		{

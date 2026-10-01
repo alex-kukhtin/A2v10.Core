@@ -74,3 +74,11 @@ public record TwoFactorViewModel : SimpleIdentityViewModel
 	public Boolean IsPersistent => RememberMe;
 	public String? ReturnUrl { get; init; }
 }
+
+public record ConsentViewModel : SimpleIdentityViewModel
+{
+	public String? Request { get; init; }
+	public String? ClientName { get; init; }
+	public String RedirectHost { get; init; } = String.Empty;
+	public Boolean IsLoopback { get; init; }
+}

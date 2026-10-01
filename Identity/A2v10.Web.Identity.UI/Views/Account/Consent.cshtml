@@ -1,0 +1,29 @@
+@model ConsentViewModel
+@inject ILocalizer _loc
+
+@* v-pre: the client name comes from dynamic registration, and Vue would evaluate a {{ }} in it. *@
+<div class="center-page">
+	<div class="initial-form" v-pre>
+		<h3 class="a2-header text-center">@Html.Raw(_loc["OAuthConsentPrompt"])</h3>
+		<hr />
+		<p><b>@Model.ClientName</b> @Html.Raw(_loc["OAuthConsentText"])</p>
+		<p>@Html.Raw(_loc["OAuthConsentRedirect"]) <b>@Model.RedirectHost</b></p>
+		@if (Model.IsLoopback)
+		{
+			<p class="error">@Html.Raw(_loc["OAuthConsentLoopback"])</p>
+		}
+		<form method="post" action="/account/consent">
+			<input type="hidden" name="__RequestVerificationToken" value="@Model.RequestToken" />
+			<input type="hidden" name="request" value="@Model.Request" />
+			<button class="btn btn-primary" name="decision" value="allow" tabindex="1">@Html.Raw(_loc["OAuthAllow"])</button>
+			<button class="btn" name="decision" value="deny" tabindex="2">@Html.Raw(_loc["OAuthDeny"])</button>
+		</form>
+	</div>
+</div>
+
+@section Scripts
+{
+<script type="text/javascript">
+	new Vue({ el: "#app" });
+</script>
+}

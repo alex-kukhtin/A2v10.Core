@@ -173,3 +173,9 @@
 @LogOutMessage=You have successfully logged out of the application.
 
 
+@OAuthConsentPrompt=Application access
+@OAuthConsentText=asks to act on your behalf.
+@OAuthConsentRedirect=The answer will be sent to
+@OAuthConsentLoopback=This is a local address: any program on this computer could have sent the request.
+@OAuthAllow=Allow
+@OAuthDeny=Deny

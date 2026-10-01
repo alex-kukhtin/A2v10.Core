@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "A2v10.Mcp": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:62663;http://localhost:62664"
+    }
+  }
+}

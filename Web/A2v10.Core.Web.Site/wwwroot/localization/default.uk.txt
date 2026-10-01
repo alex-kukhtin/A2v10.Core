@@ -170,4 +170,10 @@
 @LogOutPrompt=Вихід із системи
 @LoginAgain=Увійти знову
 @LogOutMessage=Ви завершили сеанс роботи з системою.
+@OAuthConsentPrompt=Доступ для застосунку
+@OAuthConsentText=просить дозволу діяти від вашого імені.
+@OAuthConsentRedirect=Відповідь буде надіслано на
+@OAuthConsentLoopback=Це локальна адреса: запит міг надіслати будь-який застосунок на цьому комп'ютері.
+@OAuthAllow=Дозволити
+@OAuthDeny=Відхилити
 ;
