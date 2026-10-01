@@ -65,8 +65,10 @@ Only in `a2v10_security_simple.sql`. The multi-tenant scripts have no `RotateTok
 
 A tool is always a C# type: `IMcpTool` — `Name`, `Description`, `InputSchema`, `Roles`, `ExecuteAsync(JsonElement args, CancellationToken)`. How it reaches data is its own business, through constructor dependencies; no door is imposed on it.
 
+- **`IMcpTool` is the contract of INTERACTION with a tool — one seam: what `tools/list` shows and how `tools/call` runs it.** Not a universal contract of "a capability of the system". What stands behind a tool (a catalogue, metadata reports, entity shapes, rows of a table) speaks any contract of its own; the tool translates it to the model. So how tools are chosen and delivered (a catalogue, entity tools) is the implementation of particular tools and touches nothing here.
+
 - **Rejected: a tool per endpoint × verb, derived from `model.json`/`metadata.json`.** Classic `model.json` types no parameter, so a description needs a second file per action; ~30 places × 3–4 verbs is ~100 schemas, 30–50k tokens in `tools/list` before the first question; a raw `IDataModel` result carries every column and `$` member. A domain tool with a shaped result (rows, total, `Truncated`) costs ~450 tokens of description + schema.
-- **Rejected: a generic `describe` → `call` pair.** Untyped for the model, and every place costs a load to be described.
+- **Rejected: a generic `describe` → `call` pair as THE surface.** Untyped for the model, and every place costs a load to be described. It returns only as the implementation of particular tools (the catalogue in "Idea" below), beside typed listed ones.
 - **Rejected: `mcp.json` (the concept's "menu for the model").** The registry is code; a second list of the same tools in a file drifts from the classes.
 - **Registration is a builder inside `UseMcp`:** `services.UseMcp(Configuration, tools => tools.Add<T>().AddProvider<P>())`. A tool cannot be registered without MCP wired; `UseMcp` stays the whole wiring.
 - **`AddProvider<P>`** — scoped `IMcpToolProvider` returning `IEnumerable<IMcpTool>`. **`Add<T>`** — scoped `T` wrapped in a one-tool provider; the usual case. The registry is `IEnumerable<IMcpToolProvider>` of the request scope; there is no registry class. One method for both is impossible: C# does not overload by constraint.
@@ -74,7 +76,9 @@ A tool is always a C# type: `IMcpTool` — `Name`, `Description`, `InputSchema`,
 - **Every request creates every tool.** Stateless: `tools/list` and the lookup in `tools/call` both enumerate the providers. So a constructor takes dependencies and nothing else — no database, no computation; the work is in `ExecuteAsync`. A provider reads cached declarations, never files.
 - **`McpTool<TArgs>` is what an application writes.** The schema is derived from the args record (`[Description]` on its members), the input arrives deserialized: a hand-written schema says `agent` while the code reads `agentId`. Raw `IMcpTool` remains for a schema that varies per request.
 - **Around the tool, the platform.** `tools/list` / `tools/call` are handlers (`WithListToolsHandler` / `WithCallToolHandler`), not static `WithTools<>` — the list depends on the user. They filter by `Roles`; a name collision throws naming both providers (caught at list, not at start — a provider returns anything); arguments are checked against `InputSchema` before `ExecuteAsync`, a violation goes back as `isError` naming the field; a tool the user may not see answers as an unknown one, so the difference does not reveal it exists. `whoami` is registered by `Add<>` like any other.
-- **Not verified:** that the SDK's handlers run in the request scope in stateless mode. The first probe.
+- **A refusal is an exception**, turned into `isError` with text for the model by our own `tools/call` handler; the interface has no llmInfo channel of its own. What the SDK does with an exception does not matter — the handler is ours.
+- **The developer's loop:** invent the tool → args record, description, `ExecuteAsync` → `Add<T>()` with `Roles` → MCP Inspector locally (it does DCR and OAuth itself, shows `tools/list`, calls the tool) → Claude through ngrok. Inspector has not been run against this host yet.
+- **Verified (probe, SDK 2.2.0, stateless, 2026-10-01): the handlers run in the request scope.** In both `WithListToolsHandler` and `WithCallToolHandler`, `RequestContext.Services` is `HttpContext.RequestServices` itself (reference-equal), and a scoped service filled by middleware from the request's header is seen with that request's value. So the providers resolved there see `ICurrentUser` of the request.
 
 ## Rights: roles from the ticket, on the tool (decided 2026-10-01, not built)
 
@@ -112,7 +116,7 @@ A tool is always a C# type: `IMcpTool` — `Name`, `Description`, `InputSchema`,
 - `entity_crud` — create, read, update, delete;
 - `tool_info` / `tool_run` — the description and the call of a catalogued tool.
 
-**A tool has a delivery mode, not a second kind.** *Listed*: description and schema in `tools/list`, called directly. *Catalogued*: in `map`, described by `tool_info`, called by `tool_run`. `IMcpTool` is unchanged — only the road to the model differs; a report, a domain tool, a metadata report are all catalogued tools. Price: a catalogued question is 2–3 calls instead of one, and each description lands in the history; without a good one-line area in `instructions` the model does not know to look. It is `describe` → `call` again, but only for the catalogue — frequent tools stay typed in the list; the author decides which goes where.
+**Listed or catalogued — the implementation of the catalogue, not of the platform.** *Listed*: registered, so in `tools/list`, called directly. *Catalogued*: held by the catalogue itself — `map` names it, `tool_info` describes it, `tool_run` runs it; only those three are registered. What the catalogue holds needs not be `IMcpTool` at all (see Tools: the interaction contract); `tool_run` filters by roles and checks arguments itself. Price: a catalogued question is 2–3 calls instead of one, and each description lands in the history; without a good one-line area in `instructions` the model does not know to look. It is `describe` → `call` again, but only for the catalogue — frequent tools stay typed in the list; the author decides which goes where.
 
 **Entity tools are beside the domain tools, not instead.** Those answer questions (`cash_flow`), these enter and edit data. What an entity is reaches the model on demand; the cost stays fixed however many entities there are.
 
@@ -162,3 +166,5 @@ Done and run on `Web/A2v10.Core.Web.Site`:
 Not verified: refresh with a different `client_id`; Claude Code as a local client (Node must trust the dev certificate via `NODE_EXTRA_CA_CERTS`).
 
 Not built: `IMcpTool`, the registry and its handlers, rights by roles, `resolve_names`, the metadata provider; `RotateToken` for multi-tenant scripts; "disconnect" in the UI.
+
+Next — the first slice of tools, decided parts only (sections Tools, Rights): `IMcpTool`, `McpTool<TArgs>`, `IMcpToolProvider`, the builder in `UseMcp`, the list/call handlers (roles filter, name collision, schema check, not-allowed = unknown), `whoami` moved onto `Add<>()`. Verified by Inspector and by `whoami` through ngrok. Not in it: `resolve_names`, the catalogue, entity tools, the metadata provider.
