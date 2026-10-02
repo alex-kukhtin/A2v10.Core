@@ -239,6 +239,14 @@ public record TableColumn
         || Type == ColumnType.Memo || Type == ColumnType.Autonum;
     [JsonIgnore]
     internal Boolean IsMemo => Type == ColumnType.Memo;
+    /* What the model sees of a record (Mcp/McpProjection) - every column but those that say nothing to it:
+     * rv is binary; Void is always 0, a voided record is never shown; Master and RowKind are the same
+     * value in every row of a collection, the header's id and the composed collection's kind; a stamp is
+     * a bare user id and a time the model never sends and nothing asks it to read - posted or not is Done.
+     */
+    [JsonIgnore]
+    internal Boolean IsMcpColumn => !IsStamp && Type is not (ColumnType.RowVersion or ColumnType.Void
+        or ColumnType.Master or ColumnType.RowKind);
     [JsonIgnore]
     // a natural key is a code the user reads, not the '#' of a surrogate
     internal String Header => Type == ColumnType.NaturalKey ? "@[Code]" : $"@[{Name}]";

@@ -174,6 +174,10 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         (await _metadataCache.GetKindFoldersAsync(async () => KindFolders.From((await ReadAppJsonAsync())?.Aliases)))
             .KindOf(folder);
 
+    // the endpoints open to the model - see Mcp/McpIndex
+    internal Task<McpIndex> GetMcpIndexAsync() =>
+        _metadataCache.GetMcpIndexAsync(() => McpIndex.LoadAsync(_codeProvider, KindFolderAsync));
+
 
     /* The endpoint is built here, once, before it is published to the cache: its own
      * declaration comes from its own folder, and the shape it works on is resolved

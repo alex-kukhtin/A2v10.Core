@@ -20,6 +20,7 @@ using A2v10.Core.Web.Site.TestServices;
 using A2v10.BlobStorage.Azure;
 using A2v10.BlobStorage.FileSystem;
 using A2v10.Identity.Core;
+using A2v10.Metadata;
 
 using MainApp;
 
@@ -70,7 +71,10 @@ public class Startup(IConfiguration configuration)
 
 		var builders = services.UsePlatform(Configuration);
 
-		services.UseMcp(Configuration, tools => tools.Add<WhoAmITool>());
+		services.UseMcp(Configuration, mcp => mcp
+			.Add<WhoAmITool>()
+			.AddProvider<MetadataMcpToolProvider>()
+			.Instructions<MetadataMcpInstructions>());
 
 		builders.AuthenticationBuilder.AddGoogle(opts =>
 		{

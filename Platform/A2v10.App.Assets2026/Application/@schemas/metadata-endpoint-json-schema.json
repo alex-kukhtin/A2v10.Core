@@ -82,7 +82,8 @@
         "autonum": {
             "type": "string",
             "description": "Key of autonum/metadata.json this endpoint numbers from. Refused at load if that file does not declare it, or if the shape has no column of type 'autonum'. An operation without its own draws from the storage's."
-        }
+        },
+        "mcp": { "$ref": "#/definitions/mcp" }
     },
 
     "definitions": {
@@ -587,6 +588,24 @@
                 "Create", "Edit", "Delete", "Save", "SaveAndClose", "Print", "BasedOn", "Copy",
                 "Show", "ShowTrans", "Search", "Reload", "Post", "UnPost", "Attachments"
             ]
+        },
+
+        "mcp": {
+            "type": "object",
+            "description": "What the model is told about this address beyond what derives. Only on an endpoint listed in mcp.json. Per address, not inherited from 'storage'.",
+            "additionalProperties": false,
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "description": "Shown by domain_info when the folder name is not enough."
+                },
+                "searchBy": {
+                    "type": "object",
+                    "description": "Catalog only. Field -> how catalog_find matches it: 'exact' (=) or 'contains' (substring). Written, it replaces the derived set whole (the presentation as 'contains', a 'unique' string field as 'exact').",
+                    "minProperties": 1,
+                    "additionalProperties": { "type": "string", "enum": [ "exact", "contains" ] }
+                }
+            }
         },
 
         "printForm": {

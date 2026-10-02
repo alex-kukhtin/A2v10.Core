@@ -15,6 +15,8 @@ public class WhoAmITool(ICurrentUser _currentUser) : IPlatformMcpTool
 	private static readonly JsonElement _schema = JsonDocument.Parse("""{"type":"object"}""").RootElement;
 
 	public String Name => "whoami";
+	public String Title => "Who am I";
+	public PlatformMcpToolHints Hints => PlatformMcpToolHints.ReadOnly;
 	public String Description => "Returns the user this connection is signed in as.";
 	public JsonElement InputSchema => _schema;
 	public String[]? Roles => null;

@@ -18,7 +18,7 @@ internal partial class XamlBuilder
     internal Page CreateDocumentPageXaml(FormMetadata form)
     {
         UIElementBase[] title = Endpoint.Declaration.OperationDeclarations.Count > 0
-            ? [new Header() { Content = $"@[{TableMetadataDefaults.OperationsTable().Model}.{Endpoint.Name}]" }]
+            ? [new Header() { Content = MetadataExtensions.OperationLabel(Endpoint.Name) }]
             : [];
         var columnWidths = title.Select(_ => "auto")
             .Concat(form.Body.Select(x => x.Is == FormElementKind.Tabs ? "1*" : "auto"));

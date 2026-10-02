@@ -44,20 +44,23 @@ internal partial class SqlBuilder(BuilderDescriptor desciptor, IServiceProvider 
         : String.Empty;
 
     /* The rows this endpoint is about, as the tail of a WHERE: every fixed field equal to its value.
-     * Read by the index (and so browse and indexpartial) and by the fetch a selector types into -
-     * the two roads to the rows of an address, which have to agree on which rows those are.
+     * Read by the index (and so browse and indexpartial), by the fetch a selector types into and by
+     * catalog_find (Mcp/CatalogFindTool) - the roads to the rows of an address, which have to agree on
+     * which rows those are. Static for the last: find is not a command any screen calls.
      */
-    String FixedPredicate(String alias)
+    internal static String FixedPredicate(NormalEndpointMetadata endpoint, String alias)
     {
-        var fixedFields = Endpoint.Declaration.Fixed;
+        var fixedFields = endpoint.Declaration.Fixed;
         if (fixedFields.Count == 0)
             return String.Empty;
         return String.Concat(fixedFields.Select(kp =>
         {
-            var column = Table.AllColumns().First(c => c.Name == kp.Key);
+            var column = endpoint.Storage.AllColumns().First(c => c.Name == kp.Key);
             return $" and {alias}.[{kp.Key}] = {column.SqlLiteral(DeclarationBake.FixedText(kp.Value))}";
         }));
     }
+
+    String FixedPredicate(String alias) => FixedPredicate(Endpoint, alias);
 
     DbParameterCollection AddPeriodParameters(DbParameterCollection prms, ExpandoObject? qry)
     {

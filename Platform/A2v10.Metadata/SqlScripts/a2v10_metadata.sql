@@ -2,7 +2,7 @@
 Copyright © 2026 Oleksandr Kukhtin
 
 Last updated : 27 sep 2026
-DO NOT FORGET TO BUMP THE VERSION: the last batch stamps N'10.1.8667', and it must equal
+DO NOT FORGET TO BUMP THE VERSION: the last batch stamps N'10.1.8668', and it must equal
 <Version> in A2v10.Metadata.csproj - the deploy refuses a database stamped with another one.
 */
 ------------------------------------------------
@@ -216,7 +216,7 @@ go
    a2meta came from another version (SqlDbGenerator.EnsurePlatformVersionAsync). The literal is the
    package's <Version>, exactly. Last, so a run that failed halfway does not claim the version. */
 merge a2meta.SysParams t
-using (select [name] = N'version', [value] = N'10.1.8667') s
+using (select [name] = N'version', [value] = N'10.1.8668') s
 on t.[name] = s.[name]
 when matched then update set t.[value] = s.[value]
 when not matched then insert ([name], [value]) values (s.[name], s.[value]);

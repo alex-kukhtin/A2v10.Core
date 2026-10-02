@@ -137,6 +137,14 @@ internal static class MetadataExtensions
      *
      * Unique because a folder is: PostJournals is distinct by table, and one schema has one 'stock'.
      */
+    /* The words the user calls a thing by, as the screens show them - and domain_info hands the model
+     * the same words, so a key spelled once cannot name one thing on the screen and another to the
+     * model. A document's operation by its code ('waybillin', 'receipt.supplier'): the page header,
+     * the create and the basis menus. A record by the model: the title of a catalog's dialog.
+     */
+    internal static String OperationLabel(String code) => $"@[{TableMetadataDefaults.OperationsTable().Model}.{code}]";
+    internal static String RecordLabel(this TableMetadata table) => $"@[{table.Model}]";
+
     internal static String TransName(this TableMetadata journal) =>
         journal.Path.Split('/')[^1].KebabToPascal();
     internal static String TransTypeName(this TableMetadata journal) => $"T{journal.TransName()}";

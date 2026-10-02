@@ -326,7 +326,7 @@ internal partial class XamlBuilder
         var op = basedOn.Operation == null ? String.Empty : $"{Constants.FieldNames.OperationQuery}={basedOn.Operation}&";
         return new()
         {
-            Content = $"@[{TableMetadataDefaults.OperationsTable().Model}.{code}]",
+            Content = MetadataExtensions.OperationLabel(code),
             Bindings = b =>
             {
                 var cmd = new BindCmd(scope == CommandScope.Record ? CommandType.Open : CommandType.OpenSelected)
@@ -356,7 +356,7 @@ internal partial class XamlBuilder
                 {
                     Children = [.. operations.Select(op => new XMenuItem()
                     {
-                        Content = $"@[{TableMetadataDefaults.OperationsTable().Model}.{op.Id}]",
+                        Content = MetadataExtensions.OperationLabel(op.Id),
                         Bindings = b => b.SetBinding(nameof(XMenuItem.Command), new BindCmd()
                         {
                             Command = CommandType.Open,

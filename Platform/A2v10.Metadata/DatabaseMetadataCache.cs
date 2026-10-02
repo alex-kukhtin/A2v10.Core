@@ -30,6 +30,8 @@ public class DatabaseMetadataCache
     private readonly ConcurrentDictionary<String, AppPlatformId> _platformIdCache = [];
     // app.json 'aliases': one per application, not per data source - folders are the application's
     private KindFolders? _kindFolders;
+    // mcp.json and the roles of its paths; dropped with everything else, and alone by an edit of mcp.json or model.json
+    private McpIndex? _mcpIndex;
 
     /* Held for the whole of one cold load - see GetOrLoadAsync - and by ClearAll, so that a
      * file change cannot land in the middle of a load and let it publish a table of the
@@ -67,6 +69,7 @@ public class DatabaseMetadataCache
             _referrers.Clear();
             _platformIdCache.Clear();
             _kindFolders = null;
+            _mcpIndex = null;
             _xamlFormCache.Clear();
             _metadataDirty = true;
         }
@@ -150,6 +153,10 @@ public class DatabaseMetadataCache
     internal async Task<KindFolders> GetKindFoldersAsync(Func<Task<KindFolders>> load) =>
         _kindFolders ??= await load();
 
+    // the same race, the same answer
+    internal async Task<McpIndex> GetMcpIndexAsync(Func<Task<McpIndex>> load) =>
+        _mcpIndex ??= await load();
+
     public async Task<UIElement> GetOrAddXamlFormAsync(String? dataSource, EndpointMetadata endpoint, String key,
          Func<UIElement> getDefaultForm)
     {
@@ -168,7 +175,11 @@ public class DatabaseMetadataCache
 
     private void Watcher_Changed(Object sender, FileSystemEventArgs e)
     {
-        ClearAll(); // All items! References!
+        // mcp.json and model.json feed the MCP index only; a metadata.json change drops it with the rest
+        if (Path.GetFileName(e.FullPath).Equals("metadata.json", StringComparison.OrdinalIgnoreCase))
+            ClearAll(); // All items! References!
+        else
+            _mcpIndex = null;
     }
     private FileSystemWatcher? CreateWatcher(IAppCodeProvider appCodeProvider)
     {
@@ -182,6 +193,8 @@ public class DatabaseMetadataCache
                 NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.Attributes
                 | NotifyFilters.FileName | NotifyFilters.CreationTime
         };
+        watcher.Filters.Add("mcp.json");
+        watcher.Filters.Add("model.json");
         watcher.Changed += Watcher_Changed;
         watcher.Created += Watcher_Changed;
         /* An editor that saves atomically writes a temp file and renames it over the original: the

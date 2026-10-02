@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,24 +23,41 @@ namespace A2v10.Mcp;
  */
 internal static class McpToolHandlers
 {
-	static readonly JsonSerializerOptions _resultOptions = new(JsonSerializerDefaults.Web);
-
-	public static ValueTask<ListToolsResult> ListTools(RequestContext<ListToolsRequestParams> request, CancellationToken _)
+	/* Relaxed: the default encoder writes every non-ASCII letter as \uXXXX - twice the text for Ukrainian
+	 * data, more in tokens, and the model decodes each name. A Create(ranges) encoder still escapes the
+	 * apostrophe of "Об'єкт" and needs the list of languages the data may hold. 'Unsafe' is about
+	 * embedding in HTML; this text goes to the model inside JSON-RPC.
+	 */
+	static readonly JsonSerializerOptions _resultOptions = new(JsonSerializerDefaults.Web)
 	{
-		var tools = VisibleTools(request.Services!).Select(t => new Tool()
+		Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+	};
+
+	public static async ValueTask<ListToolsResult> ListTools(RequestContext<ListToolsRequestParams> request, CancellationToken _)
+	{
+		var tools = (await VisibleToolsAsync(request.Services!)).Select(t => new Tool()
 		{
 			Name = t.Name,
+			Title = t.Title,
 			Description = t.Description,
 			InputSchema = t.InputSchema,
+			// all four, always: an absent hint means the spec's default, and two of those are 'true'
+			Annotations = new ToolAnnotations()
+			{
+				ReadOnlyHint = t.Hints.HasFlag(PlatformMcpToolHints.ReadOnly),
+				DestructiveHint = t.Hints.HasFlag(PlatformMcpToolHints.Destructive),
+				IdempotentHint = t.Hints.HasFlag(PlatformMcpToolHints.Idempotent),
+				OpenWorldHint = t.Hints.HasFlag(PlatformMcpToolHints.OpenWorld),
+			}
 		});
-		return ValueTask.FromResult(new ListToolsResult() { Tools = [.. tools] });
+		return new ListToolsResult() { Tools = [.. tools] };
 	}
 
 	public static async ValueTask<CallToolResult> CallTool(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
 	{
 		var name = request.Params?.Name;
 		// Hidden by roles answers exactly as absent: the difference would reveal the tool exists.
-		var tool = VisibleTools(request.Services!).FirstOrDefault(t => t.Name == name)
+		var tool = (await VisibleToolsAsync(request.Services!)).FirstOrDefault(t => t.Name == name)
 			?? throw new McpProtocolException($"Unknown tool: '{name}'", McpErrorCode.InvalidParams);
 		var args = JsonSerializer.SerializeToElement(request.Params?.Arguments ?? new Dictionary<String, JsonElement>());
 		try
@@ -58,11 +76,11 @@ internal static class McpToolHandlers
 	 * tool fails for some users and not for others. A provider returns anything, so this is the
 	 * earliest place to catch it.
 	 */
-	static IEnumerable<IPlatformMcpTool> VisibleTools(IServiceProvider services)
+	static async Task<IEnumerable<IPlatformMcpTool>> VisibleToolsAsync(IServiceProvider services)
 	{
-		var all = services.GetServices<IPlatformMcpToolProvider>()
-			.SelectMany(p => p.GetTools().Select(t => (Provider: p, Tool: t)))
-			.ToList();
+		var all = new List<(IPlatformMcpToolProvider Provider, IPlatformMcpTool Tool)>();
+		foreach (var p in services.GetServices<IPlatformMcpToolProvider>())
+			all.AddRange((await p.GetToolsAsync()).Select(t => (p, t)));
 		foreach (var g in all.GroupBy(x => x.Tool.Name).Where(g => g.Count() > 1))
 			throw new InvalidOperationException($"MCP tool '{g.Key}' is declared more than once: {String.Join(", ", g.Select(x => Source(x.Provider, x.Tool)))}");
 		var roles = services.GetRequiredService<ICurrentUser>().Identity.Roles;
