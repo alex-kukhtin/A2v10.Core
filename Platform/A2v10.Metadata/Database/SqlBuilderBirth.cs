@@ -78,9 +78,10 @@ internal partial class SqlBuilder
         var sb = new StringBuilder($"-- birth on basis of {source.Path}");
         sb.AppendLine();
 
+        // a computed column computes here as it does in the table, so the new card shows it before the save
         foreach (var (table, variable) in variables)
             sb.AppendLine($"declare {variable} table({String.Join(", ",
-                table.AllColumns().Select(c => $"[{c.Name}] {c.SqlDataType(toTableType: true)}"))});");
+                table.AllColumns().Select(c => $"[{c.Name}] {(c.HasSqlAs ? c.SqlAsDefinition() : c.SqlDataType(toTableType: true))}"))});");
 
         String headValue(TableColumn column)
         {
@@ -92,7 +93,7 @@ internal partial class SqlBuilder
                 ? $"s.[{from.Name}]"
                 : initials.ContainsKey(column.Name) ? "null" : column.EmptyLiteral();
         }
-        var headColumns = Table.AllColumns().ToList();
+        var headColumns = Table.AllColumns(c => !c.HasSqlAs).ToList();
         sb.AppendLine($"""
             insert into {variables[Table]} ({String.Join(", ", headColumns.Select(c => $"[{c.Name}]"))})
             select {String.Join(", ", headColumns.Select(headValue))}
@@ -105,7 +106,7 @@ internal partial class SqlBuilder
         if (BasedOnMapping.Rows(head, entry, Table, sourceTable) is not { } copy)
             return sb.ToString();
 
-        var rowColumns = copy.Target.AllColumns().ToList();
+        var rowColumns = copy.Target.AllColumns(c => !c.HasSqlAs).ToList();
         var sourceRowNo = copy.Source.AllColumns().First(c => c.Type == ColumnType.RowNumber);
         var collection = Endpoint.Declaration.Details[copy.Target.DetailsKey];
         foreach (var (kind, sourceKind) in copy.Kinds)

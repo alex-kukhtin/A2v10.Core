@@ -191,6 +191,15 @@ internal sealed class PostStatements
         {
             var name = col.Name;
 
+            // nobody writes it, so it is not mapped - and a mapping that names it is a target that cannot be
+            if (col.HasSqlAs)
+            {
+                if (p.Document.ContainsKey(name) || p.Row.ContainsKey(name))
+                    throw new InvalidOperationException(
+                        $"Post {_endpoint.Path} -> {journal.Path}: [{name}] has 'sqlAs' - its value is the database's, nothing is posted into it");
+                continue;
+            }
+
             /* The baseline date, by NAME as the ledger takes it: an author's date column is of the
              * same type, and dispatching on it wrote the document's date into every one of them.
              */
@@ -356,6 +365,8 @@ internal sealed class PostStatements
         {
             var col = ledger.AllColumns().FirstOrDefault(c => c.Name == name)
                 ?? throw new InvalidOperationException($"{head}: '{leg}' names [{name}], which is not a column of the ledger");
+            if (col.HasSqlAs)
+                throw new InvalidOperationException($"{head}: '{leg}' names [{name}], which has 'sqlAs' - nothing is posted into it");
             var legal = name == Constants.FieldNames.Acc || ledger.Columns.Contains(col) && !col.IsProvenance;
             return legal ? col
                 : throw new InvalidOperationException($"{head}: '{leg}' names [{name}], which the platform fills");

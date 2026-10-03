@@ -83,6 +83,30 @@ Never a field list: three of four kinds have no column (`Fragment`, `Period`, `T
 - **Not negated: `Float`, `Decimal`.** Numbers without business meaning, and the platform does not guess one for them. A column meant to flip is declared `Amount` or `Qty` — the type is where the author says it adds up.
 - **The question is "does it add up", not "is it a number".** Alignment and column role ask the second — `IsNumber` (XamlExtensions); the format splits on `IsCurrency`: `Amount`, `Price`, `Money` show two decimals, `Qty` as many as it has.
 
+## Computed columns: read by all, written by none
+
+`"sqlAs": "<T-SQL>"` on a field makes the column `as cast((<expr>) as <type of the domain>)` (`TableColumn.SqlAs`, `HasSqlAs`, `SqlExtensions.SqlAsDefinition`). The chart's `DisplayName` (code + name, its `DisplayAs`) is the first user, declared in the baseline the way an author declares one. Decided 2026-10-02 (skill: `metadata.md` → the invariants of a field).
+
+- **A column, so every reader is unchanged.** `Presentation` is an identifier inside SQL (map, fetch, search, a reference column in another grid); an expression there would have rewritten each of them. `derived` (`$X`) is not a column and stays out of these positions.
+- **Not `computed` - two layers, two words.** `rules.computed` is the form's: a Vue computed (a getter, maybe a setter) over a column the save writes. This one is the database's and nothing sends it. One word for both, told apart by position, was refused: beside `this.Qty * this.Price` in `rules`, a model writes JS into the database key by analogy. `sqlAs` names the language and the T-SQL it ends up in (`[X] as (...)`). They may coexist on one field, the author keeps the two expressions in step.
+- **The cast makes the declared type the stored one.** Without it the database infers its own (`nvarchar(64) + nvarchar(255)` is 320), and the seed would carry a type the column does not have. Price: a longer string is truncated silently - the author sets `length`.
+- **Written by nothing; named as a target, refused at load.** Out of `IsSentColumn` (table type and DataTable), `IsFieldUpdated`, the details merge, the birth's inserts, journal auto-mapping. Refused: `initialValues`, `fixed`, `inherit` into it, `basedOn.document`, a posting's `document`/`row` or a ledger leg, a seed row. No default and nullable whatever the domain - the value is the expression's.
+- **The birth computes it too.** The table variables declare it with the same definition, so a card born on basis shows it before the save.
+- **The expression is not parsed.** A wrong one fails the deploy. Only its own row: SQL Server refuses a subquery there.
+- **Added, never altered.** `a2meta.Columns.[sql_as]` carries the text (so a new one moves the hash), `SyncSchema` adds it in a statement after the plain columns - the expression may read columns added in the same run. A changed expression of an existing column is not applied: the catalog keeps it normalized, the seed is overwritten before `SyncSchema`, so there is nothing to compare with. Deferred.
+- **Shown read-only:** `Static` in the card and in a row.
+
+## Shown and chosen: `presentation` and `displayAs`
+
+A reference is either SHOWN (a cell of another index, the transactions of a document, a blank) or CHOSEN (a selector in a card or a row, the filter's selector, the combo of a set, the text typed to find it, the model's find). Two keys, one per kind of place: `presentation` and `displayAs`, the latter defaulting to the former. Decided 2026-10-03 (skill: `metadata.md` → `presentation` / `displayAs`).
+
+- **Both, because one column could not answer both.** A chart is read by its code in a list and chosen by code and name; with one column the ledger's Acc/CorrAcc became 'code name' everywhere. Every place knows which of the two it is, so nothing decides at run time.
+- **One element carries both.** `Name` is the presentation, as it always was; the choice column rides beside it under its own name (`SqlBuilder.ChoiceField`, through `RefFields` - the map, the candidates of a set, the fetch and its maps). Under its own name and not a `$` member, because an element picked in the browse is a row of the target itself and has the column already. A control of choice reads `TableMetadata.ChoiceProperty` - `DisplayProperty` of a selector, the item `Content` of a combo; `Name` when the two keys are one column.
+- **`displayAs: "Name"` with another presentation is refused at load:** the element's `Name` is the presentation, so the two would be one property.
+- **Allowed wherever `presentation` is, sets included** - an enum or a state is an ordinary table and may have columns of its own. Refused where `presentation` is (a journal): nothing references it.
+- **The fetch searches and orders by the choice column; the index searches a reference column by the presentation** - what the cell shows.
+- **Not reached:** the selector of a report filter (its value is built by the report builders), the operations list (a registry with Name only).
+
 ## NOT NULL: the domain's zero
 
 A column is `NOT NULL DEFAULT 0` exactly when its domain has a zero — one predicate, `TableColumn.HasZero`; there is no `default` or `notNull` key on a field. Decided 2026-09-28 (skill: `metadata.md` → «`NOT NULL`»).

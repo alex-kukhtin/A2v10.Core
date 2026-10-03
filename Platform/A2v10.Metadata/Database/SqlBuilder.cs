@@ -108,7 +108,7 @@ internal partial class SqlBuilder(BuilderDescriptor desciptor, IServiceProvider 
         return $"""
         -- {target.Model} - values
         select [{target.CollectionName}!{target.TypeName}!Array] = null,
-            [Id!!Id] = e.[Id], [Name!!Name] = e.[Name]{RefFields(target, "e")}
+            [Id!!Id] = e.[Id], [Name!!Name] = e.[{target.Presentation}]{RefFields(target, "e")}
         from {target.SqlTableName} e where e.[{Constants.FieldNames.Void}] = 0{exceptAll}
         order by e.[{Constants.FieldNames.Order}];
         """;
@@ -131,11 +131,19 @@ internal partial class SqlBuilder(BuilderDescriptor desciptor, IServiceProvider 
      * A document sends whether it is posted, where it opens and how it draws. The last two are not
      * columns: they come from the reference view (TableMetadata.RefSourceName), and
      * ScriptBuilder.RefTsProperties promises them by name.
+     *
+     * The column a row is chosen by rides beside Name, which holds what it is shown by - one element
+     * for both kinds of place, each reading its own property (TableMetadata.ChoiceProperty).
      */
     internal static String RefFields(TableMetadata target, String alias) =>
-        (target.ColorColumn is { } color ? $", {alias}.[{color.Name}]" : String.Empty)
+        ChoiceField(target, alias)
+        + (target.ColorColumn is { } color ? $", {alias}.[{color.Name}]" : String.Empty)
         + (target.IsState ? $", {alias}.[{Constants.FieldNames.Role}]" : String.Empty)
         + (target.IsDocument
             ? $", {alias}.[{Constants.FieldNames.Done}]" + String.Concat(Constants.FieldNames.RefViewMembers.Select(m => $", {alias}.[{m}]"))
             : String.Empty);
+
+    // nothing when the choice is the presentation: then it is Name itself
+    internal static String ChoiceField(TableMetadata target, String alias) =>
+        target.ChoiceProperty != Constants.FieldNames.Name ? $", {alias}.[{target.DisplayAs}]" : String.Empty;
 }

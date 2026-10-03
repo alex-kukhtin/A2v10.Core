@@ -20,10 +20,11 @@ internal static class TableColumnPredicates
         => col.Type != ColumnType.RowVersion && col.Type != ColumnType.Void && col.Type != ColumnType.IsSystem
             && col.Type != ColumnType.Id && col.Type != ColumnType.Done && !col.IsStamp;
     /* What the client sends: the table type and the DataTable filling it are built from this one
-     * answer, since their column order must match. A stamp is written by the statement itself.
+     * answer, since their column order must match. A stamp is written by the statement itself, a
+     * computed column by nobody.
      */
     internal static Boolean IsSentColumn(TableColumn col)
-        => !col.IsStamp;
+        => !col.IsStamp && !col.HasSqlAs;
 }
 
 // an owner column of the target, and the field that holds its value - of the record itself when Header

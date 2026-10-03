@@ -1,0 +1,12 @@
+﻿<Project>
+	<UsingTask TaskName="A2v10.CheckUpdates.CheckUpdatesTask"
+		AssemblyFile="$(MSBuildThisFileDirectory)..\tasks\netstandard2.0\A2v10.CheckUpdates.dll" />
+
+	<!-- BeforeTargets="BeforeBuild": runs before compilation, so the warning shows on a failed build too.
+	     Not BeforeTargets="Build" — that runs after Build's DependsOnTargets (CoreBuild).
+	     DesignTimeBuild: VS runs these constantly in the background; never touch the network there. -->
+	<Target Name="A2v10CheckUpdates" BeforeTargets="BeforeBuild"
+		Condition="'$(A2v10CheckUpdates)' != 'false' and '$(DesignTimeBuild)' != 'true'">
+		<CheckUpdatesTask />
+	</Target>
+</Project>

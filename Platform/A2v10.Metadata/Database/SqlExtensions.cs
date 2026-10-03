@@ -237,14 +237,19 @@ internal static class SqlExtensions
      * primary key, and that appears together with the table, never via add column.
      * A stamp defaults to the system user (Id 0) and the moment of writing: a row no person
      * wrote - a seed, a filled table meeting a new column.
+     * A computed column has none whatever its domain: its value is the expression's, NULL included.
      */
     public static String? DeployDefault(this TableColumn column)
-        => column.Type switch
+        => column.HasSqlAs ? null : column.Type switch
         {
             ColumnType.StampUser => "0",
             ColumnType.StampDate => "getutcdate()",
             _ => column.HasZero ? "0" : null
         };
+
+    // the expression parenthesized: a cast takes one expression, and the author's may be 'a + b'
+    public static String SqlAsDefinition(this TableColumn column)
+        => $"as cast(({column.SqlAs}) as {column.SqlDataType()})";
 
     // what a statement writes into a column it names but has nothing for (see TableColumn.HasZero)
     public static String EmptyLiteral(this TableColumn column)
@@ -359,7 +364,8 @@ internal static class SqlExtensions
             && column.Type != ColumnType.Master
             && column.Type != ColumnType.Parent
             && column.Type != ColumnType.RowVersion
-            && !column.IsStamp;
+            && !column.IsStamp
+            && !column.HasSqlAs;
     }
     internal static Boolean IsFieldInserted(this TableColumn column)
     {

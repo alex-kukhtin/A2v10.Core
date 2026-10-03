@@ -73,7 +73,7 @@ internal static class McpProjection
     }
 
     /* What catalog_find matches a catalog by - and entity_info marks it, so the model knows which text finds what.
-     * Written: 'mcp.searchBy' of the address, whole. Derived: the presentation as a substring, a declared
+     * Written: 'mcp.searchBy' of the address, whole. Derived: the column a record is chosen by (displayAs) as a substring - finding is choosing - a declared
      * unique string field exactly - a code that is not unique is a bad exact key anyway.
      */
     internal static IEnumerable<(TableColumn Column, McpSearchMode Mode)> SearchSet(NormalEndpointMetadata endpoint, McpEntity catalog)
@@ -82,8 +82,8 @@ internal static class McpProjection
         if (catalog.Mcp?.SearchBy is { } written)
             return written.Select(kp => (table.AllColumns().FirstOrDefault(c => c.Name == kp.Key)
                 ?? throw new InvalidOperationException($"{catalog.Path}: mcp.searchBy names '{kp.Key}', which is not a field of it"), kp.Value));
-        return table.AllColumns(c => c.Name == table.Presentation || c.Unique && c.Type is ColumnType.String or ColumnType.Name)
-            .Select(c => (c, c.Name == table.Presentation ? McpSearchMode.Contains : McpSearchMode.Exact));
+        return table.AllColumns(c => c.Name == table.DisplayAs || c.Unique && c.Type is ColumnType.String or ColumnType.Name)
+            .Select(c => (c, c.Name == table.DisplayAs ? McpSearchMode.Contains : McpSearchMode.Exact));
     }
 
     static McpField Field(TableColumn column, RuleMetadata rules, DeclarationMetadata declaration,
@@ -100,7 +100,7 @@ internal static class McpProjection
         return new McpField(column.Name, TypeName(column))
         {
             Required = rules.Required.Contains(column.Name) ? true : null,
-            Computed = rules.Computed.ContainsKey(column.Name) ? true : null,
+            Computed = column.HasSqlAs || rules.Computed.ContainsKey(column.Name) ? true : null,
             ReadOnly = readOnly ? true : null,
             Default = Default(column, rules, initials),
             Catalog = catalog,

@@ -143,7 +143,7 @@ internal sealed class CatalogFindTool(IReadOnlyList<McpEntity> catalogs, Databas
             from {table.SqlTableName} a{String.Concat(joins)}
             where {voidPredicate}{SqlBuilder.FixedPredicate(endpoint, "a")}
                 and ({String.Join(" or ", predicates.Select(p => p.Sql))})
-            order by {(exactHit.Length > 0 ? $"case when {exactHit} then 0 else 1 end, " : "")}a.[{table.Presentation}];
+            order by {(exactHit.Length > 0 ? $"case when {exactHit} then 0 else 1 end, " : "")}a.[{table.DisplayAs}];
             """;
 
         var model = await dbContext.LoadModelSqlAsync(null, sql, dbprms =>

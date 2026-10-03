@@ -23,6 +23,9 @@ public class CliDatabaseCreator()
         {
             const String NOT_NULL = " not null";
 
+            if (column.HasSqlAs)
+                return $"[{column.Name}] {column.SqlAsDefinition()}";
+
             var constraint = String.Empty;
             if (column.Type == ColumnType.Id)
                 constraint = $"{NL}{INDENT}constraint DF_{table.Table}_{column.Name} default({(isGuid ? "newsequentialid()" : $"next value for {table.SqlSequenceName}")})";

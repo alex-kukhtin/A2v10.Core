@@ -7,6 +7,10 @@
 		"InOut": {
 			"type": "Direction"
 		},
+		"SignedQty": {
+			"type": "Qty",
+			"sqlAs": "[InOut] * [Qty]"
+		},
 		"Document": {
 			"type": "Document", "target": "/document"
 		},

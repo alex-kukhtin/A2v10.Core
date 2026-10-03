@@ -60,13 +60,17 @@ internal static class DefaultFormBuilder
         };
     }
 
+    // the code and the name in one string is what a reference shows; the chart's own screens show the two
+    static Boolean IsChartDisplay(TableMetadata table, TableColumn column) =>
+        table.Kind == EndpointKind.AccPlan && column.Name == Constants.FieldNames.DisplayName;
+
     /* A chart of accounts is read whole, as a tree: no pager, no filters. Parent is not a column
      * here - the tree itself shows it.
      */
     static FormMetadata CreateTreeIndexForm(TableMetadata table)
     {
         var cols = table.AllColumns(TableColumnPredicates.IsIndexColumn)
-            .Where(c => c.Type != ColumnType.Parent);
+            .Where(c => c.Type != ColumnType.Parent && !IsChartDisplay(table, c));
         return new FormMetadata()
         {
             Is = FormKind.Page,
@@ -235,6 +239,7 @@ internal static class DefaultFormBuilder
     {
         // TODO!!!
         var cols = table.AllColumns(TableColumnPredicates.IsEditColumn)
+            .Where(c => !IsChartDisplay(table, c))
             .OrderBy(c => c.IsMemo);
             //.ToDictionary(c => c.Name, c => new FormColumn());
 

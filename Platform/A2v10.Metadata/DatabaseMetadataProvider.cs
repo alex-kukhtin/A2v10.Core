@@ -329,6 +329,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             if (!_accountColumns.Contains(name) && !storage.Columns.Any(c => c.Name == name))
                 throw new InvalidOperationException(
                     $"{head} - '{name}' is written by the platform, not by the seed");
+            if (column.HasSqlAs)
+                throw new InvalidOperationException($"{head} - '{name}' has 'sqlAs', nothing writes it");
             var value = name == Constants.FieldNames.SplitBy ? SplitByValue(head, token) : token.Type switch
             {
                 JTokenType.Null => null,

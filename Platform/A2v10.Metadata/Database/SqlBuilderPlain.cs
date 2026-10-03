@@ -436,7 +436,7 @@ internal partial class SqlBuilder
             sb.AppendLine();
 
             Boolean updateablePredicate(TableColumn c)
-                => c.Type != ColumnType.Master && c.Type != ColumnType.RowKind && c.Type != ColumnType.Id;
+                => c.Type != ColumnType.Master && c.Type != ColumnType.RowKind && c.Type != ColumnType.Id && !c.HasSqlAs;
 
             String mergeOneDetails(TableMetadata detailsTable, String key)
             {

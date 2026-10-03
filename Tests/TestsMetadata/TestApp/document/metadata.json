@@ -65,6 +65,10 @@
 				"Qty": {
 					"type": "Qty"
 				},
+				"Cost": {
+					"type": "Amount",
+					"sqlAs": "[Qty] * [Price]"
+				},
 				"Price": {
 					"type": "Price"
 				},

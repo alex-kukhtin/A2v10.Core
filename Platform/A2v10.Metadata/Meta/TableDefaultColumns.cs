@@ -205,7 +205,9 @@ internal static class TableDefaultColumns
      * where a prefix is a convention of one plan. AccountType and NormalBalance are closed sets of
      * the platform, stored by name. SplitBy - the ledger columns a Split account is laid out by,
      * joined by ',' (SeedRow.SplitBy). IsSystem says the row comes from the seed file and is written
-     * by the deploy alone.
+     * by the deploy alone. DisplayName is what an account is shown and searched by wherever it is
+     * referenced - the code and the name in one string, so one 'like' finds it by either; computed,
+     * as an author would compute one. Long enough for both: the key (64), a space, a Name (255).
      */
     static IEnumerable<TableColumn> AccPlanDefaultColumns(TableMetadata table)
     {
@@ -214,6 +216,11 @@ internal static class TableDefaultColumns
         yield return new TableColumn(Constants.FieldNames.IsSystem, ColumnType.IsSystem);
         yield return new TableColumn(Constants.FieldNames.RowVersion, ColumnType.RowVersion);
         yield return new TableColumn(Constants.FieldNames.Name, ColumnType.Name);
+        yield return new TableColumn(Constants.FieldNames.DisplayName, ColumnType.String)
+        {
+            Length = 320,
+            SqlAs = $"concat([{Constants.FieldNames.Id}], N' ', [{Constants.FieldNames.Name}])"
+        };
         yield return new TableColumn(Constants.FieldNames.Parent, ColumnType.Parent) { KeyType = ColumnType.NaturalKey };
         yield return new TableColumn(Constants.FieldNames.AccountType, ColumnType.String) { Length = 16 };
         yield return new TableColumn(Constants.FieldNames.NormalBalance, ColumnType.String) { Length = 16 };

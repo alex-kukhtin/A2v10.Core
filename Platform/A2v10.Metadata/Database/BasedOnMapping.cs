@@ -27,7 +27,7 @@ internal static class BasedOnMapping
     internal static TableColumn? SourceOf(TableColumn target, TableMetadata targetTable, TableMetadata sourceTable,
         IReadOnlyDictionary<String, String> overrides)
     {
-        if (!targetTable.Columns.Contains(target) || IsIssued(target))
+        if (!targetTable.Columns.Contains(target) || IsIssued(target) || target.HasSqlAs)
             return null;
         if (overrides.TryGetValue(target.Name, out var name))
             return sourceTable.Columns.First(c => c.Name == name);
@@ -46,6 +46,8 @@ internal static class BasedOnMapping
                 ?? throw new InvalidOperationException($"{head}: 'document' names [{to}], which {targetTable.Path} does not declare");
             if (IsIssued(target))
                 throw new InvalidOperationException($"{head}: 'document' names [{to}], a {target.Type} - it is issued to the new document, never copied");
+            if (target.HasSqlAs)
+                throw new InvalidOperationException($"{head}: 'document' names [{to}], which has 'sqlAs' - its value is the database's, never copied");
             var source = sourceTable.Columns.FirstOrDefault(c => c.Name == from)
                 ?? throw new InvalidOperationException($"{head}: 'document' takes [{to}] from [{from}], which {sourceTable.Path} does not declare");
             if (!PostStatements.DomainMatch(source, target))

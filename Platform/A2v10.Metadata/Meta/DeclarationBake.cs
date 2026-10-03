@@ -52,6 +52,9 @@ internal static class DeclarationBake
             foreach (var kp in declared)
             {
                 var field = Find(table, columns, kp.Key, "field");
+                if (field.HasSqlAs)
+                    throw new InvalidOperationException(
+                        $"inherit: field '{field.Name}' has 'sqlAs' - its value is the database's, a snapshot has nowhere to land");
                 var refColumn = Find(table, columns, kp.Value.Ref, "ref");
                 if (!refColumn.IsRef)
                     throw new InvalidOperationException($"inherit: ref '{refColumn.Name}' is not a reference");
@@ -122,9 +125,15 @@ internal static class DeclarationBake
          * state is on the column, and only the CODE it starts on lives in the far half.
          */
         foreach (var name in declaration.InitialValues.Keys)
-            if (table.AllColumns().FirstOrDefault(c => c.Name == name)?.Type == ColumnType.State)
+        {
+            var column = table.AllColumns().FirstOrDefault(c => c.Name == name);
+            if (column?.Type == ColumnType.State)
                 throw new InvalidOperationException(
                     $"initialValues: '{name}' is a state column. Where a new record starts is the SET's own answer - its value with role '{StateRole.Initial}' - and a second spelling of one fact is free to disagree with it.");
+            if (column?.HasSqlAs == true)
+                throw new InvalidOperationException(
+                    $"initialValues: '{name}' has 'sqlAs' - its value is the database's, a new record does not start on one.");
+        }
 
         foreach (var (name, value) in declaration.Fixed)
         {
@@ -133,6 +142,9 @@ internal static class DeclarationBake
             if (column.Type == ColumnType.State)
                 throw new InvalidOperationException(
                     $"fixed: '{name}' is a state column. A fixed field IS the initial of a new record, and a state's initial is the set's - its value with role '{StateRole.Initial}'. An address about some of the states is a filter, not a fixed field.");
+            if (column.HasSqlAs)
+                throw new InvalidOperationException(
+                    $"fixed: '{name}' has 'sqlAs'. A fixed field IS the initial of a new record, and nothing writes one the database computes.");
             var text = FixedText(value);
             column.SqlLiteral(text); // throws for a column no literal can address
             if (initials.ContainsKey(name))

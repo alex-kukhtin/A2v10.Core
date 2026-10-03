@@ -1,7 +1,7 @@
 ﻿/*
 Copyright © 2026 Oleksandr Kukhtin
 
-Last updated : 27 sep 2026
+Last updated : 02 oct 2026
 DO NOT FORGET TO BUMP THE VERSION: the last batch stamps N'10.1.8668', and it must equal
 <Version> in A2v10.Metadata.csproj - the deploy refuses a database stamped with another one.
 */
@@ -69,8 +69,14 @@ create table a2meta.Columns
 	[ref_table] nvarchar(128),
 	[default] nvarchar(128), /* default value for add column; takes no part in comparison.
 	                            The constraint name is not stored - it is always DF_{table}_{column} */
+	[sql_as] nvarchar(max), /* the expression of a computed column, as the author wrote it; the
+	                             column is added 'as cast(<expr> as <type>)' and never altered */
 	constraint PK_Columns primary key ([schema], [table], [column])
 );
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = N'a2meta' and TABLE_NAME = N'Columns' and COLUMN_NAME = N'sql_as')
+	alter table a2meta.Columns add [sql_as] nvarchar(max) null;
 go
 ------------------------------------------------
 create or alter function a2meta.fn_getUtcDate()
@@ -160,45 +166,54 @@ begin
 	   'add column' is additive, so a half-done run is finished by the next one, while one over the
 	   whole walk would hold schema locks for the length of the deploy. */
 
-	declare @alters table([schema] sysname, [table] sysname, [stmt] nvarchar(max));
+	declare @alters table([schema] sysname, [table] sysname, [phase] int, [stmt] nvarchar(max));
 
 	/* Type rendered from the three facets by the same fork as SqlDbTypeInfo.SqlFullName. Not stored:
 	   the seed takes a fact only when SQL must answer it for the whole application - the price is one
 	   fork in two languages. Nullable and default are one decision, as in the declaration: a default
 	   is the only road to NOT NULL (DeployNullable), so a not-null add carries one. Id and Master
 	   carry none and fail loudly on a non-empty table - not filtered out, since silence there is the
-	   bug being ended. The join to TABLES is for whoever execs this procedure on its own. */
+	   bug being ended. The join to TABLES is for whoever execs this procedure on its own.
+	   A computed column is the same type around the author's expression (SqlAsDefinition), added in
+	   a statement of its own after the plain ones: the expression reads columns that may be added in
+	   this very run. Only added - a changed expression of an existing column is not applied. */
 
-	insert into @alters([schema], [table], [stmt])
-	select d.[schema], d.[table],
+	insert into @alters([schema], [table], [phase], [stmt])
+	select d.[schema], d.[table], d.[phase],
 		N'alter table [' + d.[schema] + N'].[' + d.[table] + N'] add ' +
 			string_agg(d.[def], N', ') within group (order by d.[column])
 	from (
 		select c.[schema], c.[table], c.[column],
-			[def] = cast(N'[' + c.[column] + N'] ' + c.[datatype] +
+			[phase] = case when c.[sql_as] is null then 0 else 1 end,
+			[def] = cast(N'[' + c.[column] + N'] ' +
+				case when c.[sql_as] is not null
+					then N'as cast((' + c.[sql_as] + N') as ' + ty.[type] + N')'
+					else ty.[type] +
+						case when c.[nullable] = 1 then N'' else N' not null' end +
+						case when c.[default] is null then N''
+							else N' constraint DF_' + c.[table] + N'_' + c.[column] + N' default(' + c.[default] + N')'
+						end
+				end as nvarchar(max))
+		from a2meta.Columns c
+			inner join INFORMATION_SCHEMA.TABLES t on t.TABLE_SCHEMA = c.[schema] and t.TABLE_NAME = c.[table]
+				and t.TABLE_TYPE = N'BASE TABLE'
+			cross apply (select [type] = c.[datatype] +
 				case
 					when c.[length] = -1 then N'(max)'
 					when c.[length] is not null then N'(' + cast(c.[length] as nvarchar(16)) + N')'
 					when c.[precision] is not null then
 						N'(' + cast(c.[precision] as nvarchar(8)) + N', ' + cast(c.[scale] as nvarchar(8)) + N')'
 					else N''
-				end +
-				case when c.[nullable] = 1 then N'' else N' not null' end +
-				case when c.[default] is null then N''
-					else N' constraint DF_' + c.[table] + N'_' + c.[column] + N' default(' + c.[default] + N')'
-				end as nvarchar(max))
-		from a2meta.Columns c
-			inner join INFORMATION_SCHEMA.TABLES t on t.TABLE_SCHEMA = c.[schema] and t.TABLE_NAME = c.[table]
-				and t.TABLE_TYPE = N'BASE TABLE'
+				end) ty
 		where not exists(select * from INFORMATION_SCHEMA.COLUMNS ic
 			where ic.TABLE_SCHEMA = c.[schema] and ic.TABLE_NAME = c.[table] and ic.COLUMN_NAME = c.[column])
 	) d
-	group by d.[schema], d.[table];
+	group by d.[schema], d.[table], d.[phase];
 
 	-- printed and not returned: the deploy runs this through ExecuteNonQuery, which drops a result set
 	declare @stmt nvarchar(max);
 	declare #crs cursor local fast_forward read_only for
-		select [stmt] from @alters order by [schema], [table];
+		select [stmt] from @alters order by [phase], [schema], [table];
 	open #crs;
 	fetch next from #crs into @stmt;
 	while @@fetch_status = 0

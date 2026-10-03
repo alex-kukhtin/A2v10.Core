@@ -187,7 +187,20 @@ public record TableColumn
      */
     // OLD -> to RULES
     public Boolean Unique { get; init; }
+    /* An SQL expression over the columns of the same row: the column is 'as cast(<expr> as <type>)'
+     * (SqlExtensions.SqlAsDefinition). T-SQL as written - nothing here parses it, the deploy is
+     * where a wrong one fails. The type is the domain's, so the cast makes the declared type the
+     * stored one, and the seed compares one type as for any column.
+     * Not 'computed': that word is the form's (rules.computed, a Vue getter over a column the save
+     * writes). The name says the language, so a JS expression is not written here by analogy.
+     */
+    public String? SqlAs { get; init; }
     #endregion
+    /* Nothing writes the column - the save, the seed, a posting, a birth - and a declaration naming it
+     * as a target is refused at load. Read like any other: a presentation, a filter, a source.
+     */
+    [JsonIgnore]
+    internal Boolean HasSqlAs => SqlAs != null;
     [JsonIgnore]
     internal Boolean IsKey => Type is ColumnType.Id or ColumnType.NaturalKey;
     /* A reference to a SET - a closed list of values declared in a file, which rides with the page
@@ -436,13 +449,29 @@ public sealed record TableMetadata
     public String Table { get; set; } = default!;
     public String Model { get; set; } = default!;
     public String Path { get; set; } = default!;
-    /* The column a row of this table is shown by wherever it is referenced. One column and not a
-     * template: it is spelled into SQL (resolve, sort, search), where a template would mean formatting
-     * values in the server's locale. A composite display is two columns in the markup.
+    /* The column a row of this table is SHOWN by wherever it is referenced: a cell of another index,
+     * the transactions of a document, a blank. One column and not a template: it is spelled into SQL
+     * (resolve, sort, search), where a template would mean formatting values in the server's locale.
+     * A composite one is a column the database computes ('sqlAs').
      */
     // empty for a kind no reference points at, as Table is for a kind that has none - see SetDefaults
     [JsonProperty("presentation")]
     internal String Presentation { get; private set; } = default!;
+
+    /* The column a row is CHOSEN by: the selector, the combo of a set, the filter's selector, the text
+     * typed to find it. Not the presentation where that cannot be chosen by - a chart is shown by its
+     * code and chosen by code and name. Every place knows which of the two it is, so no place decides.
+     * Defaults to the presentation.
+     */
+    [JsonProperty("displayAs")]
+    internal String DisplayAs { get; private set; } = default!;
+
+    /* Where a control of choice finds the column on the element. The map carries the presentation as
+     * 'Name' and the choice column beside it under its own name - so an element picked in the browse,
+     * a row of the target itself, has it already. Equal to the presentation, it IS 'Name'.
+     */
+    [JsonIgnore]
+    internal String ChoiceProperty => DisplayAs == Presentation ? Constants.FieldNames.Name : DisplayAs;
 
     [JsonProperty("fields")]
     private Dictionary<String, TableColumn> _fields { get; init; } = [];
@@ -753,6 +782,7 @@ public sealed record TableMetadata
         Path = owner.Path;
         Construct();
         Presentation = Constants.FieldNames.Name;
+        DisplayAs = Constants.FieldNames.Name;
     }
     internal void SetDefaults(String schema, String table) => SetDefaults(schema, schema, table);
 
@@ -817,14 +847,14 @@ public sealed record TableMetadata
 
         /* Only the kinds a reference points at are shown by anything; a journal or the numbering
          * registry is nobody's target, so 'presentation' written there is refused rather than left a
-         * key with no effect. Not written: each kind answers for itself - an account is known by its
-         * code, a document by its number, the rest by Name. A natural key is not a code the user reads
+         * key with no effect. Not written: each kind answers for itself - an account is shown by its
+         * code and chosen by code and name (DisplayName), a document by its number, the rest by Name. A natural key is not a code the user reads
          * by itself: an enum's key is written by the file and read by nobody. Written: it must be a
          * column, because downstream it is an identifier inside SQL.
          */
         TableColumn? column(ColumnType type) => this.AllColumns().FirstOrDefault(c => c.Type == type);
 
-        void present(TableColumn? byDefault)
+        void present(TableColumn? byDefault, TableColumn? chosenBy = null)
         {
             if (String.IsNullOrEmpty(Presentation))
                 Presentation = byDefault?.Name
@@ -832,6 +862,15 @@ public sealed record TableMetadata
                         $"{Path}: nothing to be shown by - declare 'presentation', or add a Name or autonum column");
             else if (!this.AllColumns().Any(c => c.Name == Presentation))
                 throw new InvalidOperationException($"{Path}: presentation '{Presentation}' is not a column of this table");
+
+            if (String.IsNullOrEmpty(DisplayAs))
+                DisplayAs = chosenBy?.Name ?? Presentation;
+            else if (!this.AllColumns().Any(c => c.Name == DisplayAs))
+                throw new InvalidOperationException($"{Path}: displayAs '{DisplayAs}' is not a column of this table");
+            // 'Name' of the element is the presentation (ChoiceProperty), so a choice column called so has no place of its own
+            if (DisplayAs == Constants.FieldNames.Name && Presentation != Constants.FieldNames.Name)
+                throw new InvalidOperationException(
+                    $"{Path}: displayAs is [Name] and presentation [{Presentation}] - a reference carries the presentation as its Name, so the two would be one property. Choose by a column of another name");
         }
 
         switch (Kind)
@@ -846,11 +885,13 @@ public sealed record TableMetadata
                 present(column(ColumnType.Name) ?? column(ColumnType.Autonum));
                 break;
             case EndpointKind.AccPlan:
-                present(column(ColumnType.NaturalKey));
+                present(column(ColumnType.NaturalKey), this.AllColumns().FirstOrDefault(c => c.Name == Constants.FieldNames.DisplayName));
                 break;
             default:
                 if (!String.IsNullOrEmpty(Presentation))
                     throw new InvalidOperationException($"{Path}: 'presentation' on a {Kind} - nothing references it, so nothing is shown by it");
+                if (!String.IsNullOrEmpty(DisplayAs))
+                    throw new InvalidOperationException($"{Path}: 'displayAs' on a {Kind} - nothing references it, so nothing is chosen by it");
                 break;
         }
 

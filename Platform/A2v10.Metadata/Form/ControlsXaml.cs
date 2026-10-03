@@ -63,9 +63,10 @@ internal partial class XamlBuilder
      *
      * A ColorComboBox and not a ComboBox with a colour: the list is what a state IS, and the grid
      * draws the same badge. The control is old - it is what the tags dialog picks a colour with -
-     * so the kind added a vocabulary entry, not a control.
+     * so the kind added a vocabulary entry, not a control. An item reads the column the set is
+     * chosen by (TableMetadata.ChoiceProperty): a list to pick from is a place of choice.
      */
-    static ColorComboBox StatePicker(String itemsSource, Bind value, Bind itemValue,
+    static ColorComboBox StatePicker(String itemsSource, String choice, Bind value, Bind itemValue,
         String? label = null, String? cssClass = null) => new()
     {
         Label = label,
@@ -75,7 +76,7 @@ internal partial class XamlBuilder
             {
                 Bindings = b =>
                 {
-                    b.SetBinding(nameof(ColorComboBoxItem.Content), new Bind(Constants.FieldNames.Name));
+                    b.SetBinding(nameof(ColorComboBoxItem.Content), new Bind(choice));
                     b.SetBinding(nameof(ColorComboBoxItem.Value), itemValue);
                     b.SetBinding(nameof(ColorComboBoxItem.Color), new Bind(Constants.FieldNames.Color));
                 }
@@ -92,6 +93,14 @@ internal partial class XamlBuilder
     UIElementBase ElementToTableCell(MemberDescriptor member, TableMetadata rows, Dictionary<String, InheritDescriptor[]> inherits)
     {
         var elem = member.ColumnCheck;
+        // the card's control, for the card's reason
+        if (elem.HasSqlAs)
+            return new Static()
+            {
+                Align = elem.Type.ToXamlAlign(),
+                CssClass = elem.Type.ToXamlSemanticClass(),
+                Bindings = b => b.SetBinding(nameof(Static.Value), new Bind(elem.Name) { DataType = elem.Type.ToXamlDataType() })
+            };
         return elem.Type switch
         {
             ColumnType.RowNumber => new TableCell()
@@ -104,6 +113,7 @@ internal partial class XamlBuilder
             ColumnType.Ref or ColumnType.Company or ColumnType.Owner or ColumnType.BasedOn or ColumnType.Account => new SelectorSimple()
                 {
                     Url = SelectorUrl(inherits, elem),
+                    DisplayProperty = elem.RefTableCheck.Storage.ChoiceProperty,
                     CssClass = elem.Type.ToXamlSemanticClass(),
                     Bindings = b =>
                     {
@@ -115,7 +125,7 @@ internal partial class XamlBuilder
             // the row's own picker; 'Root.' is the reach - the candidates are an array at the model
             // root, not a property of the row ($data, RenderContext.GetNormalizedPath)
             ColumnType.State => StatePicker(
-                $"Root.{elem.RefTableCheck.Storage.CollectionName}",
+                $"Root.{elem.RefTableCheck.Storage.CollectionName}", elem.RefTableCheck.Storage.ChoiceProperty,
                 new Bind(elem.Name), new Bind(), cssClass: elem.Type.ToXamlSemanticClass()),
             /* The same control as in the card, and the same reason - see CreateEditControl. The one
              * difference is the reach: here the scope is the ROW, and the candidates are an array at
@@ -129,7 +139,7 @@ internal partial class XamlBuilder
                         {
                             Bindings = b =>
                             {
-                                b.SetBinding(nameof(ComboBoxItem.Content), new Bind(Constants.FieldNames.Name));
+                                b.SetBinding(nameof(ComboBoxItem.Content), new Bind(elem.RefTableCheck.Storage.ChoiceProperty));
                                 b.SetBinding(nameof(ComboBoxItem.Value), new Bind());
                             }
                         }
@@ -280,6 +290,7 @@ internal partial class XamlBuilder
                 Highlight = true,
                 Placeholder = $"@[{filter.ColumnCheck.RefTableCheck.Storage.Model}.All]",
                 Url = filter.ColumnCheck.RefTableCheck.Path,
+                DisplayProperty = filter.ColumnCheck.RefTableCheck.Storage.ChoiceProperty,
                 Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), new Bind($"Parent.Filter.{filter.Name}")),
             },
             /* The whole set arrives with the page, so the candidates are an array in the model and
@@ -312,7 +323,7 @@ internal partial class XamlBuilder
                 Bindings = b => b.SetBinding(nameof(ComboBox.Value), new Bind($"Parent.Filter.{filter.Name}"))
             },
             FilterKind.Set when filter.ColumnCheck.Type == ColumnType.State => StatePicker(
-                filter.ColumnCheck.RefTableCheck.Storage.CollectionName,
+                filter.ColumnCheck.RefTableCheck.Storage.CollectionName, filter.ColumnCheck.RefTableCheck.Storage.ChoiceProperty,
                 new Bind($"Parent.Filter.{filter.Name}"), new Bind(Constants.FieldNames.Id),
                 label: $"@[{filter.ColumnCheck.RefTableCheck.Storage.Model}]"),
             FilterKind.Set => new ComboBox()
@@ -324,7 +335,7 @@ internal partial class XamlBuilder
                     {
                         Bindings = b =>
                         {
-                            b.SetBinding(nameof(ComboBoxItem.Content), new Bind(Constants.FieldNames.Name));
+                            b.SetBinding(nameof(ComboBoxItem.Content), new Bind(filter.ColumnCheck.RefTableCheck.Storage.ChoiceProperty));
                             b.SetBinding(nameof(ComboBoxItem.Value), new Bind(Constants.FieldNames.Id));
                         }
                     }
@@ -524,6 +535,16 @@ internal partial class XamlBuilder
             Bindings = b => b.SetBinding(nameof(ComboBox.Value), valueBind)
         };
 
+        // shown, never edited: what was typed would not be saved
+        if (column.HasSqlAs)
+            return new Static()
+            {
+                Label = column.Header,
+                Align = column.Type.ToXamlAlign(),
+                CssClass = column.Type.ToXamlSemanticClass(),
+                Bindings = b => b.SetBinding(nameof(Static.Value), valueBind)
+            };
+
         // the chart's own columns; an author field of the same name elsewhere is an ordinary string
         if (Table.Kind == EndpointKind.AccPlan && column.Name == Constants.FieldNames.AccountType)
             return ClosedSet<AccountType>();
@@ -606,6 +627,7 @@ internal partial class XamlBuilder
                 Label = column.Header,
                 CssClass = column.Type.ToXamlSemanticClass(),
                 Url = SelectorUrl(inherits, column),
+                DisplayProperty = column.RefTableCheck.Storage.ChoiceProperty,
                 Bindings = b =>
                 {
                     b.SetBinding(nameof(TextBox.Value), valueBind);
@@ -630,7 +652,7 @@ internal partial class XamlBuilder
              */
             // the whole list rides with the record, as an enum's does; what it adds is the colour
             ColumnType.State => StatePicker(
-                column.RefTableCheck.Storage.CollectionName, valueBind, new Bind(),
+                column.RefTableCheck.Storage.CollectionName, column.RefTableCheck.Storage.ChoiceProperty, valueBind, new Bind(),
                 label: column.Header, cssClass: column.Type.ToXamlSemanticClass()),
             ColumnType.Enum => new ComboBox()
             {
@@ -641,7 +663,7 @@ internal partial class XamlBuilder
                     {
                         Bindings = b =>
                         {
-                            b.SetBinding(nameof(ComboBoxItem.Content), new Bind(Constants.FieldNames.Name));
+                            b.SetBinding(nameof(ComboBoxItem.Content), new Bind(column.RefTableCheck.Storage.ChoiceProperty));
                             b.SetBinding(nameof(ComboBoxItem.Value), new Bind());
                         }
                     }

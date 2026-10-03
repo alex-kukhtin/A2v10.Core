@@ -9,6 +9,11 @@
 		},
 		"Denom": {
 			"type": "Money"
+		},
+		"Title": {
+			"type": "String",
+			"length": 40,
+			"sqlAs": "concat([Short], N' ', [Name])"
 		}
 	}
 }

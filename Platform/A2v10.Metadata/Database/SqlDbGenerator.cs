@@ -813,7 +813,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
             return $"\t({Str(table.SqlSchema)}, {Str(table.Table)}, {Str(col.Name)}, {Str(ti.SqlName)}, " +
                 $"{Num(ti.Length)}, {Num(ti.Precision)}, {Num(ti.Scale)}, " +
                 $"{(col.DeployNullable() ? 1 : 0)}, {Str(refTable?.SqlSchema)}, {Str(refTable?.Table)}, " +
-                $"{Str(col.DeployDefault())})";
+                $"{Str(col.DeployDefault())}, {Str(col.SqlAs)})";
         }
 
         /* The master is the one the foreign keys are built from - same walk, so the seed cannot
@@ -847,14 +847,14 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
                 [master_column] nvarchar(128));
             declare @columns table([schema] sysname, [table] sysname, [column] sysname, [datatype] sysname,
                 [length] int, [precision] tinyint, [scale] tinyint, [nullable] bit,
-                [ref_schema] nvarchar(128), [ref_table] nvarchar(128), [default] nvarchar(128));
+                [ref_schema] nvarchar(128), [ref_table] nvarchar(128), [default] nvarchar(128), [sql_as] nvarchar(max));
 
             insert into @tables([schema], [table], [xtra],
                 [master_schema], [master_table], [master_column]) values
             {String.Join(rowDiv, sqlTables)};
 
             insert into @columns([schema], [table], [column], [datatype],
-                [length], [precision], [scale], [nullable], [ref_schema], [ref_table], [default]) values
+                [length], [precision], [scale], [nullable], [ref_schema], [ref_table], [default], [sql_as]) values
             {String.Join(rowDiv, sqlColumns)};
 
             -- merge tables
@@ -884,12 +884,13 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
                 t.[nullable] = s.[nullable],
                 t.[ref_schema] = s.[ref_schema],
                 t.[ref_table] = s.[ref_table],
-                t.[default] = s.[default]
+                t.[default] = s.[default],
+                t.[sql_as] = s.[sql_as]
             when not matched then insert
                 ([schema], [table], [column], [datatype],
-                 [length], [precision], [scale], [nullable], [ref_schema], [ref_table], [default]) values
+                 [length], [precision], [scale], [nullable], [ref_schema], [ref_table], [default], [sql_as]) values
                 (s.[schema], s.[table], s.[column], s.[datatype],
-                 s.[length], s.[precision], s.[scale], s.[nullable], s.[ref_schema], s.[ref_table], s.[default])
+                 s.[length], s.[precision], s.[scale], s.[nullable], s.[ref_schema], s.[ref_table], s.[default], s.[sql_as])
             when not matched by source then delete;
         end
         go
