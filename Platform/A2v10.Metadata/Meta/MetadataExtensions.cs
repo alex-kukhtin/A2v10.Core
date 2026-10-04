@@ -96,7 +96,7 @@ internal static class MetadataExtensions
      *
      * One filler is not rows, and it is asked of the kind: a document table carries the members of its reference view
      * (Constants.FieldNames.RefViewMembers). The view is generated, not declared, so its text is
-     * invisible to the seed (ISSUES 2.6); the list is the part that changes. On the document and
+     * invisible to the seed (CLAUDE.md, Seed: the seed-blind class); the list is the part that changes. On the document and
      * not on the operations registry: a document with its own table has a view and no operations,
      * and an application of only such documents deploys no registry at all.
      */

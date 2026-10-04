@@ -40,7 +40,7 @@ public class ViewXamlTests
      *
      * Written red: the attribute was lost on the way to the text - the object carried it, the
      * runtime honoured it, and a page ejected as text sorted where the runtime refuses to, which is
-     * the rule ISSUES 6.9 exists for. The loss was in the writer, and it is green since
+     * the rule "generated output is checked only where something reads it back" (CLAUDE.md, Two files in one folder). The loss was in the writer, and it is green since
      * A2v10.System.Xaml 10.1.8057. It stays because nothing else notices the difference: both
      * halves render, and only one of them obeys.
      */

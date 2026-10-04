@@ -82,10 +82,8 @@ switch — обязательство тотальности, и проверя�
 
 ### B. Свойства чистых функций
 
-- `Singular ∘ Plural = id` на корпусе имён моделей. С оговоркой из ISSUES 2.1: функцию
-  чинить нельзя без сверки с развёрнутой базой, поэтому **сначала тест фиксирует
-  текущее поведение как известно-кривое**, и только после решения по миграции
-  переворачивается в утверждение.
+- ~~`Singular ∘ Plural = id` на корпусе имён моделей~~ — фиксировать не на чем: `Singular()`
+  мёртв (ISSUES 2.2), `Plural()` починен 2026-09-02 и таблиц больше не называет.
 - `SqlDbTypeInfo.SqlFullName` рендерит ровно ту фасетку, которая присутствует
   (`Length` xor `Precision` xor ничего) — свойство, а не таблица примеров.
 - `DeployNullable` совпадает с тем, что реально пишет `CliDatabaseCreator.CreateTable`
@@ -234,7 +232,7 @@ switch — обязательство тотальности, и проверя�
 | `ToSqlDbTypeInfo` не покрывает `ColumnType.IsFolder` и `ColumnType.Number` → `InvalidOperationException`. Оба не случайны: `IsFolder` числится в `HasDefaultBit`, то есть остальной код уже считает его bit-колонкой; `Number` объявлен в enum как половина нейтрального яруса | `SqlExtensions.cs:82` | A — **снято 2026-09-28**: `IsFolder` в enum уже нет, `Number` удалён (`HasDefaultBit` → `HasZero`, `DomainZeroTests`) |
 | `Enumerable.Range(first.Length + 1, ...).Select(i => first[i])` при валидных индексах `0..first.Length-1` → `IndexOutOfRange`, как только деталь ссылается на одну цель бо́льшим числом колонок, чем шапка | `RefMapBuilder.cs:87` | D |
 | Ветка `ColumnType.Parent` недостижима: цикл идёт по `Columns.Where(c => c.IsRef)`, а `Parent` в `IsRef` не входит | `DatabaseMetadataProvider.cs:540` | C (после 4.1) |
-| `Plural("Company") → "Companyies"` | `StringExtensions.cs:19` | B — уже в ISSUES 2.1 |
+| `Plural("Company") → "Companyies"` | `StringExtensions.cs:19` | B — починено 2026-09-02 |
 
 Пять мест, все найдены перебором, а не изобретательностью. Это и есть довод за план:
 **находит не догадка, а перечисление.**
