@@ -1,4 +1,4 @@
-﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.Infrastructure;
 
@@ -20,7 +20,8 @@ public class Selector : ValuedControl, ITableControl
 	public String? Fetch { get; set; }
 	public String? FetchData { get; set; }
 	public String? DisplayProperty { get; set; }
-	public String? Placeholder { get; set; }
+    public String? ColorProperty { get; set; }
+    public String? Placeholder { get; set; }
 
 	public Size? ListSize { get; set; }
 	public UIElementBase? NewPane { get; set; }
@@ -57,8 +58,9 @@ public class Selector : ValuedControl, ITableControl
         else if (!String.IsNullOrEmpty(Fetch))
             input.MergeAttribute("fetch-command", Fetch);
 
-		input.MergeAttribute("display", DisplayProperty);
-		if (PanelPlacement != DropDownPlacement.BottomLeft)
+		input.MergeAttribute("display", DisplayProperty ?? "Name");
+        input.MergeAttribute("color-prop", ColorProperty);
+        if (PanelPlacement != DropDownPlacement.BottomLeft)
 			input.MergeAttribute("placement", PanelPlacement.ToString().ToKebabCase());
 		if (Style != SelectorStyle.Default)
 			input.MergeAttribute("mode", Style.ToString().ToKebabCase());

@@ -64,9 +64,11 @@ internal partial class XamlBuilder
      * A ColorComboBox and not a ComboBox with a colour: the list is what a state IS, and the grid
      * draws the same badge. The control is old - it is what the tags dialog picks a colour with -
      * so the kind added a vocabulary entry, not a control. An item reads the column the set is
-     * chosen by (TableMetadata.ChoiceProperty): a list to pick from is a place of choice.
+     * chosen by (TableMetadata.ChoiceProperty): a list to pick from is a place of choice. 'Name'
+     * spelled out, because this control has no default - the item template is its only way to
+     * be told a property.
      */
-    static ColorComboBox StatePicker(String itemsSource, String choice, Bind value, Bind itemValue,
+    static ColorComboBox StatePicker(String itemsSource, String? choice, Bind value, Bind itemValue,
         String? label = null, String? cssClass = null) => new()
     {
         Label = label,
@@ -76,7 +78,7 @@ internal partial class XamlBuilder
             {
                 Bindings = b =>
                 {
-                    b.SetBinding(nameof(ColorComboBoxItem.Content), new Bind(choice));
+                    b.SetBinding(nameof(ColorComboBoxItem.Content), new Bind(choice ?? Constants.FieldNames.Name));
                     b.SetBinding(nameof(ColorComboBoxItem.Value), itemValue);
                     b.SetBinding(nameof(ColorComboBoxItem.Color), new Bind(Constants.FieldNames.Color));
                 }
@@ -114,6 +116,7 @@ internal partial class XamlBuilder
                 {
                     Url = SelectorUrl(inherits, elem),
                     DisplayProperty = elem.RefTableCheck.Storage.ChoiceProperty,
+                    ColorProperty = elem.RefTableCheck.Storage.ColorColumn?.Name,
                     CssClass = elem.Type.ToXamlSemanticClass(),
                     Bindings = b =>
                     {
@@ -134,16 +137,7 @@ internal partial class XamlBuilder
             ColumnType.Enum => new ComboBox()
                 {
                     CssClass = elem.Type.ToXamlSemanticClass(),
-                    Children = [
-                        new ComboBoxItem()
-                        {
-                            Bindings = b =>
-                            {
-                                b.SetBinding(nameof(ComboBoxItem.Content), new Bind(elem.RefTableCheck.Storage.ChoiceProperty));
-                                b.SetBinding(nameof(ComboBoxItem.Value), new Bind());
-                            }
-                        }
-                    ],
+                    DisplayProperty = elem.RefTableCheck.Storage.ChoiceProperty,
                     Bindings = b =>
                     {
                         b.SetBinding(nameof(ComboBox.ItemsSource),
@@ -291,6 +285,7 @@ internal partial class XamlBuilder
                 Placeholder = $"@[{filter.ColumnCheck.RefTableCheck.Storage.Model}.All]",
                 Url = filter.ColumnCheck.RefTableCheck.Path,
                 DisplayProperty = filter.ColumnCheck.RefTableCheck.Storage.ChoiceProperty,
+                ColorProperty = filter.ColumnCheck.RefTableCheck.Storage.ColorColumn?.Name,
                 Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), new Bind($"Parent.Filter.{filter.Name}")),
             },
             /* The whole set arrives with the page, so the candidates are an array in the model and
@@ -335,7 +330,8 @@ internal partial class XamlBuilder
                     {
                         Bindings = b =>
                         {
-                            b.SetBinding(nameof(ComboBoxItem.Content), new Bind(filter.ColumnCheck.RefTableCheck.Storage.ChoiceProperty));
+                            // the value is the code, which only the item template can say - and with it the name path
+                            b.SetBinding(nameof(ComboBoxItem.Content), new Bind(filter.ColumnCheck.RefTableCheck.Storage.ChoiceProperty ?? Constants.FieldNames.Name));
                             b.SetBinding(nameof(ComboBoxItem.Value), new Bind(Constants.FieldNames.Id));
                         }
                     }
@@ -628,6 +624,7 @@ internal partial class XamlBuilder
                 CssClass = column.Type.ToXamlSemanticClass(),
                 Url = SelectorUrl(inherits, column),
                 DisplayProperty = column.RefTableCheck.Storage.ChoiceProperty,
+                ColorProperty = column.RefTableCheck.Storage.ColorColumn?.Name,
                 Bindings = b =>
                 {
                     b.SetBinding(nameof(TextBox.Value), valueBind);
@@ -645,10 +642,12 @@ internal partial class XamlBuilder
                 Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
             },
             /* The set arrives with the record, so there is nothing to browse - the same reason the
-             * filter is a ComboBox. The item's Value binds to the ELEMENT and not to its Id: what
-             * the property holds stays an object, resolved through the map like every other
-             * reference, so the save reads its Id the way it does for all of them. The filter is
-             * the opposite case and for its own reason - there the value IS the code.
+             * filter is a ComboBox. The value is the ELEMENT and not its Id: what the property holds
+             * stays an object, resolved through the map like every other reference, so the save reads
+             * its Id the way it does for all of them. That is the combo's own default with no item
+             * template, so none is written - only DisplayProperty, and that only when the set is chosen
+             * by another column than its Name. The filter is the opposite case and for its own reason -
+             * there the value IS the code.
              */
             // the whole list rides with the record, as an enum's does; what it adds is the colour
             ColumnType.State => StatePicker(
@@ -658,16 +657,7 @@ internal partial class XamlBuilder
             {
                 Label = column.Header,
                 CssClass = column.Type.ToXamlSemanticClass(),
-                Children = [
-                    new ComboBoxItem()
-                    {
-                        Bindings = b =>
-                        {
-                            b.SetBinding(nameof(ComboBoxItem.Content), new Bind(column.RefTableCheck.Storage.ChoiceProperty));
-                            b.SetBinding(nameof(ComboBoxItem.Value), new Bind());
-                        }
-                    }
-                ],
+                DisplayProperty = column.RefTableCheck.Storage.ChoiceProperty,
                 Bindings = b =>
                 {
                     b.SetBinding(nameof(ComboBox.ItemsSource),

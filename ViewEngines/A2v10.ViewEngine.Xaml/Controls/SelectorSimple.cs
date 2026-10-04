@@ -1,10 +1,10 @@
-﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
 
 using A2v10.ViewEngine.Xaml;
 
 namespace A2v10.Xaml;
 
-[IgnoreWriteProperties("Fetch,FetchData,AddOns,DisplayProperty")]
+[IgnoreWriteProperties("Fetch,FetchData,AddOns")]
 public class SelectorSimple : Selector
 {
 	public String? Url { get; set; }
@@ -40,9 +40,6 @@ public class SelectorSimple : Selector
 				}
             }
         }
-
-        if (String.IsNullOrEmpty(DisplayProperty))
-            DisplayProperty = "Name";
 
         var urlBind = GetBinding(nameof(Url));
         var cmd = new BindCmd()

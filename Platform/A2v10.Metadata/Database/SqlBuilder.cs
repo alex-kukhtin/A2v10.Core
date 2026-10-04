@@ -137,7 +137,7 @@ internal partial class SqlBuilder(BuilderDescriptor desciptor, IServiceProvider 
      */
     internal static String RefFields(TableMetadata target, String alias) =>
         ChoiceField(target, alias)
-        + (target.ColorColumn is { } color ? $", {alias}.[{color.Name}]" : String.Empty)
+        + ColorField(target, alias)
         + (target.IsState ? $", {alias}.[{Constants.FieldNames.Role}]" : String.Empty)
         + (target.IsDocument
             ? $", {alias}.[{Constants.FieldNames.Done}]" + String.Concat(Constants.FieldNames.RefViewMembers.Select(m => $", {alias}.[{m}]"))
@@ -145,5 +145,9 @@ internal partial class SqlBuilder(BuilderDescriptor desciptor, IServiceProvider 
 
     // nothing when the choice is the presentation: then it is Name itself
     internal static String ChoiceField(TableMetadata target, String alias) =>
-        target.ChoiceProperty != Constants.FieldNames.Name ? $", {alias}.[{target.DisplayAs}]" : String.Empty;
+        target.ChoiceProperty is { } choice ? $", {alias}.[{choice}]" : String.Empty;
+
+    // apart from RefFields for the fetch, which reads the table itself and not the reference view
+    internal static String ColorField(TableMetadata target, String alias) =>
+        target.ColorColumn is { } color ? $", {alias}.[{color.Name}]" : String.Empty;
 }

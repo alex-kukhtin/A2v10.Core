@@ -87,7 +87,7 @@ internal partial class SqlBuilder
                 with T as (
                     {ids}
                 )
-                select [!{g.Key}!Map] = null, [Id!!Id] = a.Id, [Name!!Name] = a.[{refTable.Presentation}]{ChoiceField(refTable, "a")}
+                select [!{g.Key}!Map] = null, [Id!!Id] = a.Id, [Name!!Name] = a.[{refTable.Presentation}]{ChoiceField(refTable, "a")}{ColorField(refTable, "a")}
                 from {refTable.SqlTableName} a inner join T on a.Id = T.id;
                 """;
             }));
@@ -115,12 +115,12 @@ internal partial class SqlBuilder
         var fixedRows = FixedPredicate("a")
             + String.Concat(owners.Select(o => $" and a.[{o.Column.Name}] = {ColumnParam(o.Column.Name)}"));
         /* A fetch is a place of choice: searched and ordered by the column the selector shows
-         * (DisplayAs), and the element carries both - Name the presentation, as in every map, and the
-         * choice column beside it - so it has one shape however it reached the record.
+         * (DisplayAs), and the element carries what a map would - Name the presentation, the choice
+         * column, the colour - so it has one shape however it reached the record.
          */
         var shown = Table.Presentation;
         var chosen = Table.DisplayAs;
-        var choice = ChoiceField(Table, "a");
+        var carried = ChoiceField(Table, "a") + ColorField(Table, "a");
 
         /* Two shapes, and the difference is real: without references there is nothing to resolve
          * and one select answers; with them the same hundred rows are needed twice, so they are
@@ -135,7 +135,7 @@ internal partial class SqlBuilder
             set @fr = N'%' + @Text + N'%';
 
             select top(100) [{Table.CollectionName}!{Table.TypeName}!Array] = null,
-                [Id!!Id] = a.Id, [Name!!Name] = a.[{shown}]{choice}{extra}
+                [Id!!Id] = a.Id, [Name!!Name] = a.[{shown}]{carried}{extra}
             from {Table.SqlTableName} a
             where a.[Void] = 0{fixedRows} and
                 (a.[{chosen}] like @fr)
@@ -158,7 +158,7 @@ internal partial class SqlBuilder
             order by a.[{chosen}];
 
             select [{Table.CollectionName}!{Table.TypeName}!Array] = null,
-                [Id!!Id] = a.Id, [Name!!Name] = a.[{shown}]{choice}{extra}
+                [Id!!Id] = a.Id, [Name!!Name] = a.[{shown}]{carried}{extra}
             from {Table.SqlTableName} a
                 inner join @map m on m.Id = a.Id
             order by a.[{chosen}];

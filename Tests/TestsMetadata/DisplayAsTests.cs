@@ -3,6 +3,7 @@
 using Newtonsoft.Json;
 
 using A2v10.Metadata;
+using A2v10.Services;
 
 namespace A2v10.Metadata.Tests;
 
@@ -41,7 +42,7 @@ public class DisplayAsTests
         var unit = await StorageAsync("catalog", "unit");
 
         Assert.Equal("Short", unit.DisplayAs);
-        Assert.Equal(Constants.FieldNames.Name, unit.ChoiceProperty);
+        Assert.Null(unit.ChoiceProperty);
         Assert.Equal(String.Empty, SqlBuilder.ChoiceField(unit, "a"));
     }
 
@@ -52,6 +53,57 @@ public class DisplayAsTests
         var chart = await StorageAsync("accplan", "national");
 
         Assert.StartsWith(", a.[DisplayName]", SqlBuilder.RefFields(chart, "a"));
+    }
+
+    static async Task<String> ViewOf(String endpoint, String action)
+    {
+        var mat = new EndpointMaterializer(TestHost.GetService<DatabaseMetadataProvider>());
+        return (await mat.MaterializeAsync(endpoint, action, MaterializeWhat.View)).Files[0].Text;
+    }
+
+    /* Chosen by another column, the selector says which - in the text too, so an ejected view keeps it;
+     * chosen by Name, nothing is written: that is the selector's own default.
+     */
+    [Fact]
+    public async Task A_selector_names_the_choice_column_only_when_it_is_not_Name()
+    {
+        var card = await ViewOf("/catalog/agent", "edit");
+
+        Assert.Contains("""DisplayProperty="DisplayName" """, card);
+        Assert.Single(card.Split("DisplayProperty=").Skip(1));
+    }
+
+    /* A selector paints itself in the chosen row's colour when the target has one - the row's
+     * property, as everywhere else it is drawn; no target colour, nothing written. TestApp: the
+     * agent's Region is a coloured catalog, its Account a chart without a colour.
+     */
+    [Fact]
+    public async Task A_selector_is_painted_by_the_target_row()
+    {
+        var card = await ViewOf("/catalog/agent", "edit");
+
+        Assert.Single(card.Split("ColorProperty=").Skip(1));
+        Assert.Contains("""ColorProperty="Color" """, card);
+    }
+
+    // the element picked by typing carries the colour as the map's does
+    [Fact]
+    public async Task A_fetched_element_carries_the_colour()
+    {
+        var region = await StorageAsync("catalog", "region");
+
+        Assert.Equal(", a.[Color]", SqlBuilder.ColorField(region, "a"));
+    }
+
+    // the value is the element itself, the combo's default without an item template - so none is written
+    [Fact]
+    public async Task A_set_chosen_by_its_name_needs_no_item_template()
+    {
+        var card = await ViewOf("/catalog/item", "edit");
+
+        Assert.Contains("<ComboBox ", card);
+        Assert.DoesNotContain("ComboBoxItem", card);
+        Assert.DoesNotContain("DisplayProperty", card);
     }
 
     [Theory]

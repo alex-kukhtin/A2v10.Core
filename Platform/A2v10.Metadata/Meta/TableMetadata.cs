@@ -468,10 +468,11 @@ public sealed record TableMetadata
 
     /* Where a control of choice finds the column on the element. The map carries the presentation as
      * 'Name' and the choice column beside it under its own name - so an element picked in the browse,
-     * a row of the target itself, has it already. Equal to the presentation, it IS 'Name'.
+     * a row of the target itself, has it already. Null when chosen by what it is shown by: the
+     * element's Name, so there is nothing to carry and nothing to write - a control's own default.
      */
     [JsonIgnore]
-    internal String ChoiceProperty => DisplayAs == Presentation ? Constants.FieldNames.Name : DisplayAs;
+    internal String? ChoiceProperty => DisplayAs == Presentation ? null : DisplayAs;
 
     [JsonProperty("fields")]
     private Dictionary<String, TableColumn> _fields { get; init; } = [];
