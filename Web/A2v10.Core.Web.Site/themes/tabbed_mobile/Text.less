@@ -2,8 +2,7 @@
 @import "Variables.less";
 
 .tag-label {
-	background-color: #8f94b0;
-	color: white;
+	.palette-fill();
 	font-size: 0.85rem;
 	padding: 0 6px 1px 6px;
 	border-radius: 2px;
@@ -11,142 +10,16 @@
 	margin: 1px;
 	line-height: normal;
 	white-space: nowrap;
-	border-radius:@control-brd-radius;
-
-	&.success, &.green {
-		background-color: @success-base-color;
-
-		&.outline {
-			color: @success-base-color;
-		}
-	}
-
-	&.warning, &.orange {
-		background-color: @warning-base-color;
-
-		&.outline {
-			color: @warning-base-color;
-		}
-	}
-
-	&.danger, &.red, &.error {
-		background-color: @danger-base-color;
-
-		&.outline {
-			color: @danger-base-color;
-		}
-	}
-
-	&.info, &.cyan {
-		background-color: @info-base-color;
-
-		&.outline {
-			color: @info-base-color;
-		}
-	}
-
-	&.purple {
-		background-color: mediumpurple;
-
-		&.outline {
-			color: mediumpurple;
-		}
-	}
-
-	&.pink {
-		background-color: hotpink;
-
-		&.outline {
-			color: hotpink;
-		}
-	}
-
-	&.gold {
-		background-color: #eac500;
-
-		&.outline {
-			color: #eac500;
-		}
-	}
-
-	&.blue {
-		background-color: cornflowerblue;
-
-		&.outline {
-			color: cornflowerblue;
-		}
-	}
-
-	&.salmon {
-		background-color: salmon;
-
-		&.outline {
-			color: salmon;
-		}
-	}
-
-	&.seagreen {
-		background-color: darkseagreen;
-
-		&.outline {
-			color: darkseagreen;
-		}
-	}
-
-	&.tan {
-		background-color: tan;
-
-		&.outline {
-			color: tan;
-		}
-	}
-
-	&.magenta {
-		background-color: darkmagenta;
-
-		&.outline {
-			color: darkmagenta;
-		}
-	}
-
-	&.lightgray {
-		background-color: #ccc;
-
-		&.outline {
-			color: #ccc;
-		}
-	}
-
-
-	&.olive {
-		background-color: #b5cc18;
-
-		&.outline {
-			color: #b5cc18;
-		}
-	}
-
-	&.teal {
-		background-color: #00b5ad;
-
-		&.outline {
-			color: #00b5ad;
-		}
-	}
-
-	&.white {
-		background-color: white;
-		color: black;
-	}
+	border-radius: @control-brd-radius;
 
 	&.transparent {
 		background-color: transparent;
 	}
 
 	&.outline {
-		background-color: white;
+		background-color: var(--bgWhite);
 		border: 1px solid currentColor;
-		color: #8f94b0;
+		color: var(--color, var(--clr-default));
 	}
 
 	&.hidden {

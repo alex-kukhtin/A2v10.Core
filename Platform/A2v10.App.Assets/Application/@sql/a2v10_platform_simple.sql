@@ -233,8 +233,8 @@ go
 /*
 Copyright © 2008-2026 Oleksandr Kukhtin
 
-Last updated : 18 apr 2025
-module version : 8634
+Last updated : 30 sep 2026
+module version : 8668
 */
 
 -- SECURITY
@@ -712,8 +712,46 @@ begin
 	set transaction isolation level read committed;
 	set xact_abort on;
 
-	delete from a2security.RefreshTokens 
+	delete from a2security.RefreshTokens
 	where UserId = @Id and [Provider] = @Provider and Token = @Token;
+end
+go
+
+------------------------------------------------
+/* The check is the delete itself: of two parallel calls with one token the second waits for the
+ * first one's lock and finds no row. No row while rotating (@NewToken given) - the token was spent
+ * or revoked, so the whole family of @Provider goes. Without @NewToken it is single use, nothing more.
+ */
+create or alter procedure a2security.[RotateToken]
+@Id bigint,
+@Provider nvarchar(64),
+@Token nvarchar(255),
+@NewToken nvarchar(255) = null,
+@Expires datetime = null
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+	set xact_abort on;
+
+	declare @rotated int;
+	begin tran;
+	delete from a2security.RefreshTokens
+	where UserId = @Id and [Provider] = @Provider and Token = @Token;
+	set @rotated = @@rowcount;
+
+	if @rotated = 1 and @NewToken is not null
+		insert into a2security.RefreshTokens(UserId, [Provider], Token, Expires)
+			values (@Id, @Provider, @NewToken, @Expires);
+	else if @rotated = 0 and @NewToken is not null
+		delete from a2security.RefreshTokens where UserId = @Id and [Provider] = @Provider;
+
+	-- whatever was issued and never came back
+	delete from a2security.RefreshTokens
+	where UserId = @Id and [Provider] = @Provider and Expires < getutcdate();
+	commit tran;
+
+	select Rotated = cast(@rotated as bit);
 end
 go
 

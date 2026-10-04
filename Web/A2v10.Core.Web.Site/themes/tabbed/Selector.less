@@ -13,6 +13,17 @@
 	padding-right: 8px;
 }
 
+// The colour of the chosen row writes its value (Palette.less); the border stays the control's states'.
+.input-group > input.color {
+	.palette-outline(var(--input-text, @text-color));
+	margin: 2px;
+	height: ~"calc(2em - 4px)";
+}
+
+.input-group > .selector-combo.color {
+	color: var(--color, @text-color);
+}
+
 .input-group > .selector-pane {
 	//border: 1px solid @dropdown-brd-color;
 	border: 1px solid @control-focus-color;
@@ -79,6 +90,13 @@
 
 			&.active {
 				background-color: @active-bg-color;
+			}
+
+			// a coloured row is an outline badge
+			> .color {
+				.palette-outline(@text-color);
+				padding: 0 6px 1px 6px;
+				border-radius: @control-brd-radius;
 			}
 		}
 	}

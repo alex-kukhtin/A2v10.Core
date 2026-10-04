@@ -7267,9 +7267,9 @@ Vue.component('validator-control', {
 		template: `
 <div :class="cssClass2()"  :test-id="testId">
 	<label v-if="hasLabel"><span v-text="label"/><slot name="hint"/><slot name="link"></slot></label>
-	<div class="input-group" :class="colorClass">
-		<div v-if="isCombo" class="selector-combo" @click.stop.prevent="open"><span tabindex="-1" class="select-text" v-text="valueText" @keydown="keyDown" ref="xcombo"/></div>
-		<input v-focus v-model="query" :class="inputClass" :placeholder="placeholder" v-else
+	<div class="input-group">
+		<div v-if="isCombo" class="selector-combo" :class="colorClass" @click.stop.prevent="open"><span tabindex="-1" class="select-text" v-text="valueText" @keydown="keyDown" ref="xcombo"/></div>
+		<input v-focus v-model="query" :class="[inputClass, colorClass]" :placeholder="placeholder" v-else
 			@input="debouncedUpdate" @blur.stop="blur" @keydown="keyDown" @keyup="keyUp" ref="input" 
 			:readonly="disabled" @click="clickInput($event)" :tabindex="tabIndex"/>
 		<slot></slot>

@@ -1,4 +1,116 @@
-﻿@font-face {
+﻿.color-default,
+.tag-label.default,
+.tag-body.default {
+  --color: var(--clr-default);
+  --color-fill: var(--clr-default-fill);
+}
+.color-success,
+.tag-label.success,
+.tag-body.success {
+  --color: var(--clr-green);
+}
+.color-green,
+.tag-label.green,
+.tag-body.green {
+  --color: var(--clr-green);
+}
+.color-warning,
+.tag-label.warning,
+.tag-body.warning {
+  --color: var(--clr-orange);
+}
+.color-orange,
+.tag-label.orange,
+.tag-body.orange {
+  --color: var(--clr-orange);
+}
+.color-danger,
+.tag-label.danger,
+.tag-body.danger {
+  --color: var(--clr-red);
+}
+.color-red,
+.tag-label.red,
+.tag-body.red {
+  --color: var(--clr-red);
+}
+.color-error,
+.tag-label.error,
+.tag-body.error {
+  --color: var(--clr-red);
+}
+.color-info,
+.tag-label.info,
+.tag-body.info {
+  --color: var(--clr-cyan);
+}
+.color-cyan,
+.tag-label.cyan,
+.tag-body.cyan {
+  --color: var(--clr-cyan);
+}
+.color-purple,
+.tag-label.purple,
+.tag-body.purple {
+  --color: var(--clr-purple);
+}
+.color-pink,
+.tag-label.pink,
+.tag-body.pink {
+  --color: var(--clr-pink);
+}
+.color-gold,
+.tag-label.gold,
+.tag-body.gold {
+  --color: var(--clr-gold);
+}
+.color-blue,
+.tag-label.blue,
+.tag-body.blue {
+  --color: var(--clr-blue);
+}
+.color-salmon,
+.tag-label.salmon,
+.tag-body.salmon {
+  --color: var(--clr-salmon);
+}
+.color-seagreen,
+.tag-label.seagreen,
+.tag-body.seagreen {
+  --color: var(--clr-seagreen);
+}
+.color-tan,
+.tag-label.tan,
+.tag-body.tan {
+  --color: var(--clr-tan);
+}
+.color-magenta,
+.tag-label.magenta,
+.tag-body.magenta {
+  --color: var(--clr-magenta);
+}
+.color-lightgray,
+.tag-label.lightgray,
+.tag-body.lightgray {
+  --color: var(--clr-lightgray);
+}
+.color-olive,
+.tag-label.olive,
+.tag-body.olive {
+  --color: var(--clr-olive);
+}
+.color-teal,
+.tag-label.teal,
+.tag-body.teal {
+  --color: var(--clr-teal);
+}
+.color-white,
+.tag-label.white,
+.tag-body.white {
+  --color-fill: var(--bgWhite);
+  --color-text: var(--text);
+}
+@font-face {
   font-family: 'A2v10';
   font-display: fallback;
   src: url('/css/fonts/A2v10.eot');
@@ -1064,8 +1176,8 @@ h5,
   border-radius: 8px;
 }
 .tag-label {
-  background-color: #8f94b0;
-  color: white;
+  background-color: var(--color-fill, var(--color, var(--clr-default-fill)));
+  color: var(--color-text, white);
   font-size: 0.85rem;
   padding: 0 6px 1px 6px;
   border-radius: 2px;
@@ -1075,117 +1187,13 @@ h5,
   white-space: nowrap;
   border-radius: 4px;
 }
-.tag-label.success,
-.tag-label.green {
-  background-color: var(--success-base);
-}
-.tag-label.success.outline,
-.tag-label.green.outline {
-  color: var(--success-base);
-}
-.tag-label.warning,
-.tag-label.orange {
-  background-color: var(--warning-base);
-}
-.tag-label.warning.outline,
-.tag-label.orange.outline {
-  color: var(--warning-base);
-}
-.tag-label.danger,
-.tag-label.red,
-.tag-label.error {
-  background-color: var(--danger-base);
-}
-.tag-label.danger.outline,
-.tag-label.red.outline,
-.tag-label.error.outline {
-  color: var(--danger-base);
-}
-.tag-label.info,
-.tag-label.cyan {
-  background-color: var(--info-base);
-}
-.tag-label.info.outline,
-.tag-label.cyan.outline {
-  color: var(--info-base);
-}
-.tag-label.purple {
-  background-color: var(--tag-purple);
-}
-.tag-label.purple.outline {
-  color: var(--tag-purple);
-}
-.tag-label.pink {
-  background-color: var(--tag-pink);
-}
-.tag-label.pink.outline {
-  color: var(--tag-pink);
-}
-.tag-label.gold {
-  background-color: var(--tag-gold);
-}
-.tag-label.gold.outline {
-  color: var(--tag-gold);
-}
-.tag-label.blue {
-  background-color: cornflowerblue;
-}
-.tag-label.blue.outline {
-  color: cornflowerblue;
-}
-.tag-label.salmon {
-  background-color: var(--tag-salmon);
-}
-.tag-label.salmon.outline {
-  color: var(--tag-salmon);
-}
-.tag-label.seagreen {
-  background-color: var(--tag_seagreen);
-}
-.tag-label.seagreen.outline {
-  color: var(--tag_seagreen);
-}
-.tag-label.tan {
-  background-color: tan;
-}
-.tag-label.tan.outline {
-  color: tan;
-}
-.tag-label.magenta {
-  background-color: var(--tag-magenta);
-}
-.tag-label.magenta.outline {
-  color: var(--tag-magenta);
-}
-.tag-label.lightgray {
-  background-color: #ccc;
-}
-.tag-label.lightgray.outline {
-  color: #ccc;
-}
-.tag-label.olive {
-  background-color: var(--tag-olive);
-}
-.tag-label.olive.outline {
-  color: var(--tag-olive);
-}
-.tag-label.teal {
-  background-color: var(--tag-teal);
-}
-.tag-label.teal.outline {
-  color: var(--tag-teal);
-}
-.tag-label.white {
-  background-color: var(--bgWhite);
-  color: black;
-}
 .tag-label.transparent {
   background-color: transparent;
 }
 .tag-label.outline {
   background-color: var(--bgWhite);
   border: 1px solid currentColor;
-  color: #8f94b0;
+  color: var(--color, var(--clr-default));
 }
 .tag-label.hidden {
   display: none;
@@ -3025,6 +3033,15 @@ a.btn {
 .input-group a.selector-clear {
   padding-right: 8px;
 }
+.input-group > input.color {
+  color: var(--color, var(--input-text, var(--text)));
+  border: 1px solid var(--color, transparent);
+  margin: 2px;
+  height: calc(2em - 4px);
+}
+.input-group > .selector-combo.color {
+  color: var(--color, var(--text));
+}
 .input-group > .selector-pane {
   border: 1px solid var(--link);
   border-radius: 4px;
@@ -3085,6 +3102,12 @@ a.btn {
 }
 .input-group > .selector-pane ul.selector-ul li.active {
   background-color: var(--activeBk);
+}
+.input-group > .selector-pane ul.selector-ul li > .color {
+  color: var(--color, var(--text));
+  border: 1px solid var(--color, transparent);
+  padding: 0 6px 1px 6px;
+  border-radius: 4px;
 }
 .input-group > .selector-pane a.create-elem {
   padding: 4px;
@@ -8153,54 +8176,7 @@ table.tree-grid a.toggle.expanded:after {
   margin: 1px;
   display: inline-flex;
   align-items: stretch;
-}
-.tag-body.default {
-  color: #8f94b0;
-}
-.tag-body.green {
-  color: var(--success-base);
-}
-.tag-body.orange {
-  color: var(--warning-base);
-}
-.tag-body.red {
-  color: var(--danger-base);
-}
-.tag-body.cyan {
-  color: var(--info-base);
-}
-.tag-body.purple {
-  color: var(--tag-purple);
-}
-.tag-body.pink {
-  color: var(--tag-pink);
-}
-.tag-body.gold {
-  color: var(--tag-gold);
-}
-.tag-body.blue {
-  color: cornflowerblue;
-}
-.tag-body.salmon {
-  color: var(--tag-salmon);
-}
-.tag-body.seagreen {
-  color: var(--tag_seagreen);
-}
-.tag-body.tan {
-  color: tan;
-}
-.tag-body.magenta {
-  color: var(--tag-magenta);
-}
-.tag-body.lightgray {
-  color: #ccc;
-}
-.tag-body.olive {
-  color: var(--tag-olive);
-}
-.tag-body.teal {
-  color: var(--tag-teal);
+  color: var(--color);
 }
 .kanban {
   overflow: auto;

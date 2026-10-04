@@ -2,8 +2,7 @@
 @import "Variables.less";
 
 .tag-label {
-	background-color: #8f94b0;
-	color: white;
+	.palette-fill();
 	font-size: 0.85rem;
 	padding: 0 6px 1px 6px;
 	border-radius: 2px;
@@ -13,132 +12,6 @@
 	white-space: nowrap;
 	border-radius: @control-brd-radius;
 
-	&.success, &.green {
-		background-color: @success-base-color;
-
-		&.outline {
-			color: @success-base-color;
-		}
-	}
-
-	&.warning, &.orange {
-		background-color: @warning-base-color;
-
-		&.outline {
-			color: @warning-base-color;
-		}
-	}
-
-	&.danger, &.red, &.error {
-		background-color: @danger-base-color;
-
-		&.outline {
-			color: @danger-base-color;
-		}
-	}
-
-	&.info, &.cyan {
-		background-color: @info-base-color;
-
-		&.outline {
-			color: @info-base-color;
-		}
-	}
-
-	&.purple {
-		background-color: var(--tag-purple);
-
-		&.outline {
-			color: var(--tag-purple);
-		}
-	}
-
-	&.pink {
-		background-color: var(--tag-pink);
-
-		&.outline {
-			color: var(--tag-pink);
-		}
-	}
-
-	&.gold {
-		background-color: var(--tag-gold);
-
-		&.outline {
-			color: var(--tag-gold);
-		}
-	}
-
-	&.blue {
-		background-color: cornflowerblue;
-
-		&.outline {
-			color: cornflowerblue;
-		}
-	}
-
-	&.salmon {
-		background-color: var(--tag-salmon);
-
-		&.outline {
-			color: var(--tag-salmon);
-		}
-	}
-
-	&.seagreen {
-		background-color: var(--tag_seagreen);
-
-		&.outline {
-			color: var(--tag_seagreen);
-		}
-	}
-
-	&.tan {
-		background-color: tan;
-
-		&.outline {
-			color: tan;
-		}
-	}
-
-	&.magenta {
-		background-color: var(--tag-magenta);
-
-		&.outline {
-			color: var(--tag-magenta);
-		}
-	}
-
-	&.lightgray {
-		background-color: #ccc;
-
-		&.outline {
-			color: #ccc;
-		}
-	}
-
-
-	&.olive {
-		background-color: var(--tag-olive);
-
-		&.outline {
-			color: var(--tag-olive);
-		}
-	}
-
-	&.teal {
-		background-color: var(--tag-teal);
-
-		&.outline {
-			color: var(--tag-teal);
-		}
-	}
-
-	&.white {
-		background-color: var(--bgWhite);
-		color: black;
-	}
-
 	&.transparent {
 		background-color: transparent;
 	}
@@ -146,7 +19,7 @@
 	&.outline {
 		background-color: var(--bgWhite);
 		border: 1px solid currentColor;
-		color: #8f94b0;
+		color: var(--color, var(--clr-default));
 	}
 
 	&.hidden {

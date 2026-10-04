@@ -87,16 +87,24 @@
     --text-disabled: #4E5058;
     --text-disabled-on-light: #7b7c82; /*нова змінна*/
     --shadow: 0 5px 20px 0 rgba(0, 0, 0, 0.20); /*нова змінна- тінь для модалок - якщо можете, замініть скрізь у всіх модалок*/
-    //
-    --tag_seagreen: #7bc17b;
-    --tag-gold: #cca348;
-    --tag-magenta: #b651a2;
-    --tag-olive: #96b653;
-    //
-    --tag-teal: #00b5ad;
-    --tag-salmon: #e9967a;
-    --tag-pink: hotpink;
-    --tag-purple: mediumpurple;
+    // palette: one variable per hue, named by Palette.less
+    --clr-default: #8f94b0;
+    --clr-default-fill: #636674;
+    --clr-green: var(--success-base);
+    --clr-orange: var(--warning-base);
+    --clr-red: var(--danger-base);
+    --clr-cyan: var(--info-base);
+    --clr-purple: mediumpurple;
+    --clr-pink: hotpink;
+    --clr-gold: #cca348;
+    --clr-blue: cornflowerblue;
+    --clr-salmon: #e9967a;
+    --clr-seagreen: #7bc17b;
+    --clr-tan: tan;
+    --clr-magenta: #b651a2;
+    --clr-lightgray: #ccc;
+    --clr-olive: #96b653;
+    --clr-teal: #00b5ad;
     //
     --menu-shadow: 0 0 0 1px #404249, 0 5px 20px 0 rgba(0, 0, 0, 0.20);
     --progress-bar-color: #60aafd; // theme light
@@ -104,10 +112,6 @@
 
     table.sheet tr.row-header {
         background-color: #2c2d31;
-    }
-  
-    .tag-label.white {
-        color: var(--text);
     }
 
     .card {
@@ -152,10 +156,6 @@
 
     .kanban .kanban-trash {
         color: var(--danger-base);
-    }
-
-    .tag-label {
-        background-color: #636674;
     }
 
     .tags-control .tags-pane {

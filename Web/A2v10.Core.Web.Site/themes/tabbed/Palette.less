@@ -1,0 +1,66 @@
+
+// Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
+
+// The palette: a colour name -> the scheme's --clr-* variable. The one list of names.
+// Invariant: every member of TagLabelStyle (A2v10.Xaml) is named here,
+// or a name accepted by the metadata load paints nothing.
+// A name lands in three carriers (.palette-name): .color-<name> (the selector),
+// .tag-label.<name>, .tag-body.<name> - the old classes keep their spelling, vxaml binds them raw.
+// A carrier puts --color; a control paints through .palette-fill() or .palette-outline().
+// Fill and outline differ for two names: default (darker fill in a dark scheme) and white (no hue).
+// Only var(), no LESS variables: tabbed_mobile imports this very file.
+
+.palette-name(@n; @rules) {
+	.color-@{n}, .tag-label.@{n}, .tag-body.@{n} {
+		@rules();
+	}
+}
+
+.palette-hue(@n; @hue) {
+	@v: ~"var(--clr-@{hue})";
+	.palette-name(@n; { --color: @v; });
+}
+
+.palette-name(default; {
+	--color: var(--clr-default);
+	--color-fill: var(--clr-default-fill);
+});
+
+.palette-hue(success; green);
+.palette-hue(green; green);
+.palette-hue(warning; orange);
+.palette-hue(orange; orange);
+.palette-hue(danger; red);
+.palette-hue(red; red);
+.palette-hue(error; red);
+.palette-hue(info; cyan);
+.palette-hue(cyan; cyan);
+.palette-hue(purple; purple);
+.palette-hue(pink; pink);
+.palette-hue(gold; gold);
+.palette-hue(blue; blue);
+.palette-hue(salmon; salmon);
+.palette-hue(seagreen; seagreen);
+.palette-hue(tan; tan);
+.palette-hue(magenta; magenta);
+.palette-hue(lightgray; lightgray);
+.palette-hue(olive; olive);
+.palette-hue(teal; teal);
+
+// White is no hue: its fill is the page, its text the page's text. No --color, so an outline keeps the control's own.
+.palette-name(white; {
+	--color-fill: var(--bgWhite);
+	--color-text: var(--text);
+});
+
+// A badge: the hue under white text; no name - the default fill.
+.palette-fill() {
+	background-color: var(--color-fill, var(--color, var(--clr-default-fill)));
+	color: var(--color-text, white);
+}
+
+// Text and frame in the hue. Where the name has no hue (white), @own is the control's colour and the frame is not seen.
+.palette-outline(@own) {
+	color: var(--color, @own);
+	border: 1px solid var(--color, transparent);
+}
