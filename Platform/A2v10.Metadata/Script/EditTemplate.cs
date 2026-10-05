@@ -53,12 +53,32 @@ internal partial class ScriptBuilder
                     yield return query(column, rs.Type, rows, Table);
     }
 
+    /* A declared property lands on the TYPE, and a kind is its own type - which is why the types had
+     * to be split before a property could differ per kind at all. 'Sum' computed in one kind and
+     * entered in another is not two expressions, it is a getter here and data there, and one type
+     * cannot be both. With a setter it is Vue's { get, set }.
+     */
+    private IEnumerable<String> DeclaredProperties()
+    {
+        String property(String type, String key, PropertyMetadata p) => p.Set == null
+            ? $$"""'{{type}}.{{key}}'({{Self(type)}}) { return {{p.Get}}; }"""
+            : $$"""'{{type}}.{{key}}': { get({{Self(type)}}) { return {{p.Get}}; }, set({{Self(type)}}{{(IsTs ? ", " : "")}}value{{Ann("any")}}) { {{p.Set}}; } }""";
+
+        foreach (var (key, p) in Endpoint.Declaration.Properties)
+            yield return property(Table.TypeName, key, p);
+        foreach (var rs in Endpoint.Declaration.Details.Values.SelectMany(d => d.RowSets))
+            foreach (var (key, p) in rs.Properties)
+                yield return property(rs.Type, key, p);
+    }
+
     private Task<String> CreateGenericEditTemplate()
     {
         IEnumerable<String> properties()
         {
             foreach (var state in TabStateProperties())
                 yield return state;
+            foreach (var p in DeclaredProperties())
+                yield return p;
             foreach (var owners in OwnerProperties())
                 yield return owners;
         }
@@ -164,21 +184,13 @@ internal partial class ScriptBuilder
         {
             foreach (var state in TabStateProperties())
                 yield return state;
-            foreach (var (key, expr) in Endpoint.Declaration.Rules.Computed)
-                yield return $$"""'{{Table.TypeName}}.{{key}}'({{Self(Table.TypeName)}}) { return {{expr}};}""";
+            foreach (var p in DeclaredProperties())
+                yield return p;
 
-            /* Computed lands on the TYPE, and a kind is its own type - which is why the types had
-             * to be split before rules could speak per kind at all. 'Sum' computed in one kind
-             * and entered in another is not two expressions, it is a getter here and data there,
-             * and one type cannot be both. A total lands on the ARRAY of that type.
-             */
+            // a total lands on the ARRAY of the row set's type
             foreach (var rs in Endpoint.Declaration.Details.Values.SelectMany(d => d.RowSets))
-            {
-                foreach (var (key, expr) in rs.Rules.Computed)
-                    yield return $$"""'{{rs.Type}}.{{key}}'({{Self(rs.Type)}}) { return {{expr}};}""";
                 foreach (var name in rs.Rules.Total)
                     yield return $$"""'{{rs.Type}}Array.{{name}}'({{Self($"{rs.Type}Array")}}) { return this.$sum(c => c.{{name}}); }""";
-            }
             foreach (var owners in OwnerProperties())
                 yield return owners;
         }

@@ -64,11 +64,11 @@ internal static class McpProjection
             ? SearchSet(endpoint, entity).ToDictionary(s => s.Column.Name, s => JsonNamingPolicy.CamelCase.ConvertName(s.Mode.ToString()))
             : [];
         var fields = endpoint.Storage.AllColumns(c => c.IsMcpColumn)
-            .Select(c => Field(c, declaration.Rules, declaration, initials, header: true, catalogOf)
+            .Select(c => Field(c, declaration.Rules, declaration.Properties, declaration, initials, header: true, catalogOf)
                 with { Search = search.GetValueOrDefault(c.Name) });
         var collections = endpoint.Storage.Details.SelectMany(d => declaration.Details[d.Key].RowSets
             .Select(rs => new McpCollection(rs.Collection, [.. d.Value.AllColumns(c => c.IsMcpColumn)
-                .Select(c => Field(c, rs.Rules, declaration, null, header: false, catalogOf))])));
+                .Select(c => Field(c, rs.Rules, rs.Properties, declaration, null, header: false, catalogOf))])));
         return new McpEntityInfo(entity.Name, entity.Kind, entity.Mcp?.Description, [.. fields], [.. collections]);
     }
 
@@ -86,8 +86,13 @@ internal static class McpProjection
             .Select(c => (c, c.Name == table.DisplayAs ? McpSearchMode.Contains : McpSearchMode.Exact));
     }
 
-    static McpField Field(TableColumn column, RuleMetadata rules, DeclarationMetadata declaration,
-        IReadOnlyDictionary<String, InitialMetadata>? initials, Boolean header, Func<String, String?> catalogOf)
+    /* A column under a property is computed for the model even when the property has a setter: the
+     * setter runs in the browser and writes the primary fields there, and the model has no browser -
+     * it sends the primary fields itself.
+     */
+    static McpField Field(TableColumn column, RuleMetadata rules, IReadOnlyDictionary<String, PropertyMetadata> properties,
+        DeclarationMetadata declaration, IReadOnlyDictionary<String, InitialMetadata>? initials, Boolean header,
+        Func<String, String?> catalogOf)
     {
         var readOnly = IsReadOnly(column, declaration, header);
         String? catalog = null;
@@ -100,7 +105,7 @@ internal static class McpProjection
         return new McpField(column.Name, TypeName(column))
         {
             Required = rules.Required.Contains(column.Name) ? true : null,
-            Computed = column.HasSqlAs || rules.Computed.ContainsKey(column.Name) ? true : null,
+            Computed = column.HasSqlAs || properties.ContainsKey(column.Name) ? true : null,
             ReadOnly = readOnly ? true : null,
             Default = Default(column, rules, initials),
             Catalog = catalog,

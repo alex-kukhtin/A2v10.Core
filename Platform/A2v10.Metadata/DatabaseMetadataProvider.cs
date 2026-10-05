@@ -927,10 +927,13 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         if (operation.Post is not { Count: > 0 } post)
             throw new InvalidOperationException($"{fileName}: declares no 'post'. What posting does is the whole of an operation.");
         var rules = operation.Rules;
-        if (rules.Required.Length > 0 || rules.Total.Length > 0 || rules.Visible.Count > 0 || rules.Computed.Count > 0
+        if (rules.Required.Length > 0 || rules.Total.Length > 0 || rules.Visible.Count > 0
             || rules.Inherit.Count > 0 || rules.When.Count > 0 || operation.Details.Count > 0)
             throw new InvalidOperationException(
                 $"{fileName}: declares 'rules'. The rules of an operation are not generated yet (they need 'when' on the client), so they would be written and never hold. Put them on the document for now.");
+        if (operation.Properties.Count > 0)
+            throw new InvalidOperationException(
+                $"{fileName}: declares 'properties'. One type serves every operation of the document, so a property of one operation is a test of the Operation column, and that is not generated yet. Put them on the document for now.");
         return new OperationDeclaration(name, $"{document}.{name}", post);
     }
 
@@ -1044,6 +1047,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         {
             InitialValues = MergeByKey(own.InitialValues, storage.InitialValues),
             Rules = RuleMetadata.Merge(own.Rules, storage.Rules),
+            Properties = RuleMetadata.ByKey(own.Properties, storage.Properties),
             Kinds = MergeKinds(own.Kinds, storage.Kinds),
             Autonum = Mine(own.Autonum, storage.Autonum),
             Details = MergeDetails(own.Details, storage.Details),
@@ -1078,12 +1082,13 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             return own;
         var merged = new Dictionary<String, KindDeclarationMetadata>(storage);
         foreach (var (key, value) in own)
-            merged[key] = new KindDeclarationMetadata()
-            {
-                Rules = storage.TryGetValue(key, out var below)
-                    ? RuleMetadata.Merge(value.Rules, below.Rules)
-                    : value.Rules
-            };
+            merged[key] = storage.TryGetValue(key, out var below)
+                ? new KindDeclarationMetadata()
+                {
+                    Rules = RuleMetadata.Merge(value.Rules, below.Rules),
+                    Properties = RuleMetadata.ByKey(value.Properties, below.Properties)
+                }
+                : value;
         return merged;
     }
 

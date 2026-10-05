@@ -211,8 +211,12 @@ public sealed record FormElement
     /* 'filters' is the endpoint's namespace (FilterMetadata.Filters), handed down with the members:
      * both are what this form may name, and neither is a question the shape alone can answer. A row
      * set has none - the index filters the records, never the rows inside one.
+     *
+     * 'rows' gives the candidates of a row set by (scope, table, kind): a kind is its own type and may
+     * carry properties its neighbour does not, so the shape alone cannot answer that either.
      */
-    internal FormElement Bake(TableMetadata table, List<MemberDescriptor> members, IReadOnlyList<FilterDescriptor> filters)
+    internal FormElement Bake(TableMetadata table, List<MemberDescriptor> members, IReadOnlyList<FilterDescriptor> filters,
+        RowCandidates rows)
     {
         MemberDescriptor FindMember(String key) =>
            members.FirstOrDefault(m => m.Name == key)
@@ -235,13 +239,13 @@ public sealed record FormElement
             CheckElement(Is, el);
             if (String.IsNullOrEmpty(el.Scope))
             {
-                elements.Add(el.Bake(table, members, filters));
+                elements.Add(el.Bake(table, members, filters, rows));
                 continue;
             }
             var detailsTable = table.FindDetails(el.Scope);
             IReadOnlyList<String> named = el.Kind == null ? [] : [el.Kind];
             detailsTable.CheckKinds(named);
-            elements.Add(el.Bake(detailsTable, detailsTable.RowMembers(), [])
+            elements.Add(el.Bake(detailsTable, rows(el.Scope, detailsTable, el.Kind), [], rows)
                 with { RowSet = detailsTable.RowSetName(el.Kind) });
         }
         return this with
@@ -306,17 +310,21 @@ public sealed record FormMetadata
         return Body.Append(Taskpad).SelectMany(Walk);
     }
 
-    internal FormMetadata Bake(TableMetadata table, List<MemberDescriptor> members, IReadOnlyList<FilterDescriptor> filters)
+    internal FormMetadata Bake(TableMetadata table, List<MemberDescriptor> members, IReadOnlyList<FilterDescriptor> filters,
+        RowCandidates rows)
     {
         // the two slots are nodes too: 'fields' written into a toolbar is read by nobody either
         FormElement.CheckElement(null, Toolbar);
         FormElement.CheckElement(null, Taskpad);
         return this with
         {
-            Body = [.. Body.Select(el => { FormElement.CheckElement(null, el); return el.Bake(table, members, filters); })],
-            Toolbar = Toolbar.Bake(table, members, filters),
-            Taskpad = Taskpad.Bake(table, members, filters)
+            Body = [.. Body.Select(el => { FormElement.CheckElement(null, el); return el.Bake(table, members, filters, rows); })],
+            Toolbar = Toolbar.Bake(table, members, filters, rows),
+            Taskpad = Taskpad.Bake(table, members, filters, rows)
         };
     }
 }
+
+// what a form may name inside one row set: (the scope as written, its table, the kind or none)
+internal delegate List<MemberDescriptor> RowCandidates(String scope, TableMetadata rows, String? kind);
 

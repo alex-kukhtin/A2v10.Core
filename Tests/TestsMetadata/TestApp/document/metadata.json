@@ -50,10 +50,10 @@
 		}
 	},
 	"rules": {
-		"required": [ "Date" ],
-		"computed": {
-			"Sum": "this.StockRows.$sum(r => r.Sum) + this.ServiceRows.$sum(r => r.Sum)"
-		}
+		"required": [ "Date" ]
+	},
+	"properties": {
+		"Sum": { "get": "this.StockRows.$sum(r => r.Sum) + this.ServiceRows.$sum(r => r.Sum)" }
 	},
 	"details": {
 		"Rows": {
@@ -109,16 +109,17 @@
 			},
 			"kinds": {
 				"Stock": {
+					"properties": {
+						"Sum": { "get": "this.Qty * this.Price" }
+					},
 					"rules": {
-						"computed": {
-							"Sum": "this.Qty * this.Price"
-						},
 						"required": [ "Item", "Qty", "Price" ]
 					}
 				},
 				"Service": {
-					"computed": {
-						"Sum": "this.Qty * this.Price"
+					"properties": {
+						"Sum": { "get": "this.Qty * this.Price", "set": "this.Qty = value / this.Price" },
+						"$Base": { "type": "Amount", "get": "this.Qty * this.Price" }
 					},
 					"rules": {
 						"required": [ "Item" ]

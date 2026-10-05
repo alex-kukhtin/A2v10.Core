@@ -22,12 +22,26 @@ public abstract record RuleSet
     public String[] Required { get; init; } = [];
 
     /* Which members the ARRAY of a row set carries a sum for: a total is a member of the
-     * collection, where 'computed' is a member of the element. It says nothing about storage.
+     * collection, where a property is a member of the element. It says nothing about storage.
      */
     public String[] Total { get; init; } = [];
     public Dictionary<String, String> Visible { get; init; } = [];
-    public Dictionary<String, String> Computed { get; init; } = [];
     public Dictionary<String, InheritMetadata> Inherit { get; init; } = [];
+}
+
+/* A member of the model whose value is JS - a Vue computed: a getter, and a setter when what it
+ * shows can be typed. Not a rule: the author names it, where 'visible' and 'total' are named by the
+ * platform. The key is a field (the property stands over its column, and the save sends what the
+ * getter returns) or a '$' name of its own (no column, the client never sends it - so 'type' says
+ * what it is). The type of a field is in 'fields', and one fact is written once.
+ */
+public sealed record PropertyMetadata
+{
+    public ColumnType? Type { get; init; }
+    public String Get { get; init; } = default!;
+    public String? Set { get; init; }
+
+    internal static Boolean IsOwnName(String key) => key.StartsWith('$');
 }
 
 public sealed record RuleMetadata : RuleSet
@@ -48,11 +62,11 @@ public sealed record RuleMetadata : RuleSet
         Total = [.. storage.Total.Union(own.Total)],
         When = own.When.Count > 0 ? own.When : storage.When,
         Visible = ByKey(own.Visible, storage.Visible),
-        Computed = ByKey(own.Computed, storage.Computed),
         Inherit = ByKey(own.Inherit, storage.Inherit)
     };
 
-    private static Dictionary<String, T> ByKey<T>(Dictionary<String, T> own, Dictionary<String, T> storage)
+    // properties layer by the same law, so they take the same implementation
+    internal static Dictionary<String, T> ByKey<T>(Dictionary<String, T> own, Dictionary<String, T> storage)
     {
         if (storage.Count == 0)
             return own;
@@ -63,12 +77,14 @@ public sealed record RuleMetadata : RuleSet
     }
 }
 
-/* What one row kind declares. Rules and nothing else: 'post' is what an operation does and
- * 'table'/'storage' is where data lives - neither is a question a subset of rows can answer.
+/* What one row kind declares. Rules and properties and nothing else: 'post' is what an operation
+ * does and 'table'/'storage' is where data lives - neither is a question a subset of rows can
+ * answer. A property can be answered per kind because a kind is its own type.
  */
 public sealed record KindDeclarationMetadata
 {
     public RuleMetadata Rules { get; init; } = new();
+    public Dictionary<String, PropertyMetadata> Properties { get; init; } = [];
 }
 
 /* The same kinds under a condition, which scopes rules instead of being a parameter of one ('on
@@ -88,14 +104,16 @@ public sealed record ConditionalRuleMetadata : RuleSet
  * values, numbering, fixed fields, forms) belong to the document. See a2v10-md-skill,
  * concepts/operations.
  *
- * 'rules' and 'details' are read so that they can be refused: an operation's rules land on the
- * client as a 'when' over the Operation column, and no generator reads 'when' yet. Dropped silently
- * they would be a rule that is written and never holds.
+ * 'rules', 'properties' and 'details' are read so that they can be refused: what an operation
+ * declares lands on the client as a test of the Operation column - one type serves every operation
+ * of the document - and no generator writes that test yet. Dropped silently they would be written
+ * and never hold.
  */
 public sealed record OperationFileMetadata
 {
     public List<PostMetadata>? Post { get; init; }
     public RuleMetadata Rules { get; init; } = new();
+    public Dictionary<String, PropertyMetadata> Properties { get; init; } = [];
     public Dictionary<String, DeclarationMetadata> Details { get; init; } = [];
 }
 
@@ -144,6 +162,7 @@ public sealed record RowSetDeclaration(
     String Collection,
     String Type,
     RuleMetadata Rules,
+    Dictionary<String, PropertyMetadata> Properties,
     Dictionary<String, InheritDescriptor[]> Inherits);
 
 public sealed record DeclarationMetadata
@@ -171,6 +190,11 @@ public sealed record DeclarationMetadata
     public Dictionary<String, Object> Fixed { get; init; } = [];
 
     public RuleMetadata Rules { get; init; } = new();
+
+    /* Not storage, so a document over a storage declares its own: each document is its own
+     * template and its own types.
+     */
+    public Dictionary<String, PropertyMetadata> Properties { get; init; } = [];
     public List<PostMetadata>? Post { get; init; }
     public String? Autonum { get; init; }
 
@@ -360,6 +384,9 @@ public sealed record DeclarationMetadata
      */
     public RuleMetadata RulesFor(String? kind) =>
         kind != null && Kinds.TryGetValue(kind, out var k) ? RuleMetadata.Merge(k.Rules, Rules) : Rules;
+
+    public Dictionary<String, PropertyMetadata> PropertiesFor(String? kind) =>
+        kind != null && Kinds.TryGetValue(kind, out var k) ? RuleMetadata.ByKey(k.Properties, Properties) : Properties;
 
     /* What a new record starts on AS THE FILE SAYS IT: the declared initials plus the fixed fields
      * as literals. Nothing reads InitialValues past the bake - the check of a set's code reads

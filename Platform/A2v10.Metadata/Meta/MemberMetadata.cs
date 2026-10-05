@@ -10,16 +10,30 @@ namespace A2v10.Metadata;
 public enum MemberKind
 {
     Column,
-    Tags
+    Tags,
+    // a '$' name of the declaration's 'properties': a value the client holds, with no column
+    Property
 }
 
 /* One member of the record a form node may show. 'Column' for the kind a column contributes and
- * for no other, so a consumer that only ever draws columns says ColumnCheck and is done.
+ * for no other, so a consumer that only ever draws columns says ColumnCheck and is done. A property
+ * over a column rides on the column's member: the control is still the column's, and the property
+ * only says whether it can be typed into.
  */
-public sealed record MemberDescriptor(MemberKind Kind, String Name, TableColumn? Column = null)
+public sealed record MemberDescriptor(MemberKind Kind, String Name, TableColumn? Column = null, PropertyMetadata? Property = null)
 {
     internal TableColumn ColumnCheck => Column
         ?? throw new InvalidOperationException($"Member '{Name}' ({Kind}) has no column");
+
+    internal ColumnType Type => Column?.Type ?? Property?.Type
+        ?? throw new InvalidOperationException($"Member '{Name}' ({Kind}) has no type");
+
+    internal String ModelName => Column?.ModelName ?? Name;
+
+    internal String Header => Column?.Header ?? $"@[{Name.TrimStart('$')}]";
+
+    // what was typed into it would not be kept: a getter without a setter, a column the database computes
+    internal Boolean IsShownOnly => Property is { Set: null } || Column?.HasSqlAs == true;
 
     internal static MemberDescriptor Of(TableColumn column) =>
         new(MemberKind.Column, column.Name, column);
@@ -46,6 +60,21 @@ internal static class MemberMetadata
     // the rows of a collection: columns and nothing else, the discriminator excluded
     public static List<MemberDescriptor> RowMembers(this TableMetadata table) =>
         [.. table.AllColumns(c => c.Type != ColumnType.RowKind).Select(MemberDescriptor.Of)];
+
+    /* The declared properties added to the candidates of a form. Only the edit form is handed them:
+     * the edit template is where properties are generated, and a list or a picker has none.
+     */
+    public static List<MemberDescriptor> WithProperties(this List<MemberDescriptor> members,
+        IReadOnlyDictionary<String, PropertyMetadata> properties)
+    {
+        if (properties.Count == 0)
+            return members;
+        return [
+            .. members.Select(m => properties.TryGetValue(m.Name, out var p) ? m with { Property = p } : m),
+            .. properties.Where(kp => PropertyMetadata.IsOwnName(kp.Key))
+                .Select(kp => new MemberDescriptor(MemberKind.Property, kp.Key, Property: kp.Value))
+        ];
+    }
 
     /* A journal's rows seen from the document that posted them: its index columns minus the four
      * the document FIXES. Every row of the dialog shares one document, one date, one operation, so

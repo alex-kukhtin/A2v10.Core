@@ -30,19 +30,16 @@ internal partial class ScriptBuilder
                     yield return $"    readonly {collection}: {type}Array;";
         }
 
-        /* Computed lands on the ELEMENT, always - it is a member of the record, and a kind that
+        /* A property lands on the ELEMENT, always - it is a member of the record, and a kind that
          * computes differently from its neighbour declares different members, which is the whole
-         * reason the types are separate. A key that is also a column is already declared there,
-         * with its real type; repeating it would be a duplicate member, not a second fact.
+         * reason the types are separate. A property over a column is already declared there, with
+         * its real type; repeating it would be a duplicate member, not a second fact. A '$' name is
+         * 'any': the TS type is read off the SQL type of a column (ToTsType), and it has none.
          */
-        IEnumerable<String> computedMembers(TableMetadata table, RuleMetadata rules)
+        static IEnumerable<String> propertyMembers(IReadOnlyDictionary<String, PropertyMetadata> properties)
         {
-            var columns = table.Columns
-                .Where(c => !c.IsVoid && c.Type != ColumnType.RowVersion)
-                .Select(c => c.Name)
-                .ToHashSet();
-            foreach (var key in rules.Computed.Keys.Where(k => !columns.Contains(k)))
-                yield return $"\treadonly {key}: any;";
+            foreach (var (key, p) in properties.Where(kp => PropertyMetadata.IsOwnName(kp.Key)))
+                yield return $"\t{(p.Set == null ? "readonly " : "")}{key}: any;";
         }
 
         // a total lands on the ARRAY - it is what the table footer shows, and the footer belongs
@@ -64,7 +61,7 @@ internal partial class ScriptBuilder
         var detailElems = Table.Details
             .SelectMany(x => Endpoint.Declaration.Details[x.Key].RowSets.Select(rs => $$"""
         export interface {{rs.Type}} extends IArrayElement {
-        {{String.Join("\n", TsProperties(x.Value).Concat(computedMembers(x.Value, rs.Rules)))}}
+        {{String.Join("\n", TsProperties(x.Value).Concat(propertyMembers(rs.Properties)))}}
         }
 
         export interface {{rs.Type}}Array extends IElementArray<{{rs.Type}}> {
@@ -77,7 +74,7 @@ internal partial class ScriptBuilder
         {
             foreach (var p in TsProperties(Table))
                 yield return p;
-            foreach (var p in computedMembers(Table, Endpoint.Declaration.Rules))
+            foreach (var p in propertyMembers(Endpoint.Declaration.Properties))
                 yield return p;
             var detFields = detailsFields().ToList();
             if (detFields.Count == 0)

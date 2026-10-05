@@ -59,6 +59,7 @@
             "additionalProperties": { "type": [ "boolean", "string", "number" ] }
         },
         "rules": { "$ref": "#/definitions/rules" },
+        "properties": { "$ref": "#/definitions/modelProperties" },
         "post": {
             "type": "array",
             "description": "What posting does. With 'operations' it is not written here: each operation posts in its own way, in its own file.",
@@ -136,18 +137,20 @@
                 "details": { "$ref": "#/definitions/details" },
                 "kinds": { "$ref": "#/definitions/kinds" },
                 "initialValues": { "$ref": "#/definitions/initialValues" },
-                "rules": { "$ref": "#/definitions/rules" }
+                "rules": { "$ref": "#/definitions/rules" },
+                "properties": { "$ref": "#/definitions/modelProperties" }
             }
         },
 
         "kinds": {
             "type": "object",
-            "description": "Row kind key -> what that kind declares. The keys are the value set of the discriminator column; the value carries rules and nothing else.",
+            "description": "Row kind key -> what that kind declares. The keys are the value set of the discriminator column; the value carries rules and properties and nothing else - a kind is its own type.",
             "additionalProperties": {
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                    "rules": { "$ref": "#/definitions/rules" }
+                    "rules": { "$ref": "#/definitions/rules" },
+                    "properties": { "$ref": "#/definitions/modelProperties" }
                 }
             }
         },
@@ -176,7 +179,6 @@
                 "required": { "$ref": "#/definitions/fieldNames" },
                 "total": { "$ref": "#/definitions/fieldNames" },
                 "visible": { "$ref": "#/definitions/expressions" },
-                "computed": { "$ref": "#/definitions/expressions" },
                 "inherit": { "$ref": "#/definitions/inherits" },
                 "when": {
                     "type": "array",
@@ -195,9 +197,56 @@
                 "required": { "$ref": "#/definitions/fieldNames" },
                 "total": { "$ref": "#/definitions/fieldNames" },
                 "visible": { "$ref": "#/definitions/expressions" },
-                "computed": { "$ref": "#/definitions/expressions" },
                 "inherit": { "$ref": "#/definitions/inherits" }
             }
+        },
+
+        "modelProperties": {
+            "type": "object",
+            "description": "Members of the model whose value is JavaScript - a Vue computed: a getter, and a setter when it can be typed into. Not a rule: the author names it. The key is a field of this scope (the property stands over its column; the save sends what 'get' returns) or a name of its own starting with '$' (no column, never sent to the server). Layers by key over the storage and over the collection; refused in an operation file.",
+            "patternProperties": {
+                "^\\$": { "$ref": "#/definitions/ownProperty" }
+            },
+            "additionalProperties": { "$ref": "#/definitions/fieldProperty" }
+        },
+
+        "fieldProperty": {
+            "type": "object",
+            "description": "A property over a field: its type is the one in 'fields'. A field with 'inherit' cannot have one.",
+            "additionalProperties": false,
+            "required": [ "get" ],
+            "properties": {
+                "get": { "$ref": "#/definitions/propertyGet" },
+                "set": { "$ref": "#/definitions/propertySet" }
+            }
+        },
+
+        "ownProperty": {
+            "type": "object",
+            "description": "A '$' name: no column, so 'type' says what it is - the form takes format and control from it. Named in 'fields' of the edit form only.",
+            "additionalProperties": false,
+            "required": [ "type", "get" ],
+            "properties": {
+                "type": {
+                    "description": "A value the client holds, never a reference: a reference is drawn through the map, and nothing loads one for a name with no column.",
+                    "allOf": [
+                        { "$ref": "#/definitions/columnType" },
+                        { "not": { "enum": [ "ref", "user", "document", "company", "owner", "basedOn", "operation", "enum", "state", "account", "folder" ] } }
+                    ]
+                },
+                "get": { "$ref": "#/definitions/propertyGet" },
+                "set": { "$ref": "#/definitions/propertySet" }
+            }
+        },
+
+        "propertyGet": {
+            "type": "string",
+            "description": "JavaScript expression, written in full with 'this.'."
+        },
+
+        "propertySet": {
+            "type": "string",
+            "description": "JavaScript statement over 'value' - what the user typed - writing the fields of this record, e.g. 'this.Qty = value / this.Price'. Without it the property is shown and never typed into."
         },
 
         "fieldNames": {

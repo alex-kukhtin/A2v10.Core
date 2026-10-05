@@ -91,18 +91,36 @@ internal partial class XamlBuilder
         }
     };
 
-    // rows of a collection are columns and nothing else, so the member unwraps on the way in
+    /* A member nothing can type into: a getter without a setter, a column the database computes.
+     * Shown, never edited - what was typed would not be kept. 'path' is where the value is, from
+     * the scope the control stands in.
+     */
+    static Static ShownControl(MemberDescriptor member, String path, String? label = null) => new()
+    {
+        Label = label,
+        Align = member.Type.ToXamlAlign(),
+        CssClass = member.Type.ToXamlSemanticClass(),
+        Bindings = b => b.SetBinding(nameof(Static.Value), new Bind(path) { DataType = member.Type.ToXamlDataType() })
+    };
+
+    // a '$' property with a setter: typed into like a column of its type, with nothing to pick
+    static TextBox PropertyControl(MemberDescriptor member, String path, String? label = null) => new()
+    {
+        Label = label,
+        Align = member.Type.ToXamlAlign(),
+        CssClass = member.Type.ToXamlSemanticClass(),
+        Bindings = b => b.SetBinding(nameof(TextBox.Value), new Bind(path) { DataType = member.Type.ToXamlDataType() })
+    };
+
+    // rows of a collection are columns and their properties, so the member unwraps on the way in
     UIElementBase ElementToTableCell(MemberDescriptor member, TableMetadata rows, Dictionary<String, InheritDescriptor[]> inherits)
     {
-        var elem = member.ColumnCheck;
         // the card's control, for the card's reason
-        if (elem.HasSqlAs)
-            return new Static()
-            {
-                Align = elem.Type.ToXamlAlign(),
-                CssClass = elem.Type.ToXamlSemanticClass(),
-                Bindings = b => b.SetBinding(nameof(Static.Value), new Bind(elem.Name) { DataType = elem.Type.ToXamlDataType() })
-            };
+        if (member.IsShownOnly)
+            return ShownControl(member, member.ModelName);
+        if (member.Kind == MemberKind.Property)
+            return PropertyControl(member, member.Name);
+        var elem = member.ColumnCheck;
         return elem.Type switch
         {
             ColumnType.RowNumber => new TableCell()
@@ -205,7 +223,7 @@ internal partial class XamlBuilder
                 {
                     Cells = [..tab.Members.Select(m =>
                         new TableCell() {
-                            Content = m.ColumnCheck.Header
+                            Content = m.Header
                         }),
                         new TableCell()
                     ]
@@ -489,7 +507,9 @@ internal partial class XamlBuilder
     UIElementBase CreateMemberControl(MemberDescriptor member,
         Dictionary<String, InheritDescriptor[]> inherits) => member.Kind switch
     {
+        _ when member.IsShownOnly => ShownControl(member, $"{Table.Model}.{member.ModelName}", member.Header),
         MemberKind.Column => CreateEditControl(member.ColumnCheck, inherits),
+        MemberKind.Property => PropertyControl(member, $"{Table.Model}.{member.Name}", member.Header),
         // value is the record's own tags, candidates the root 'Tags' array - the pair Load emits
         MemberKind.Tags => new TagsControl()
         {
@@ -530,16 +550,6 @@ internal partial class XamlBuilder
             })],
             Bindings = b => b.SetBinding(nameof(ComboBox.Value), valueBind)
         };
-
-        // shown, never edited: what was typed would not be saved
-        if (column.HasSqlAs)
-            return new Static()
-            {
-                Label = column.Header,
-                Align = column.Type.ToXamlAlign(),
-                CssClass = column.Type.ToXamlSemanticClass(),
-                Bindings = b => b.SetBinding(nameof(Static.Value), valueBind)
-            };
 
         // the chart's own columns; an author field of the same name elsewhere is an ordinary string
         if (Table.Kind == EndpointKind.AccPlan && column.Name == Constants.FieldNames.AccountType)

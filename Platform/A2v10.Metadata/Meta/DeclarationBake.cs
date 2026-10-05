@@ -65,6 +65,42 @@ internal static class DeclarationBake
         return Resolve().GroupBy(d => d.Ref.Name).ToDictionary(g => g.Key, g => g.ToArray());
     }
 
+    /* A property over a field stands in for its column, so the field must be one, and its type is
+     * the one in 'fields'. A '$' name has no column to take a type from, and the form takes format
+     * and control from the type, so it is written here - a value the client holds, never a
+     * reference: a reference is drawn through the map, and a name nothing loads has none.
+     *
+     * 'inherit' on the same field is refused: inherited, the value is the record's snapshot; under a
+     * property it is the getter's. One field, one source of value.
+     */
+    private static void CheckProperties(TableMetadata table, Dictionary<String, PropertyMetadata> properties, RuleMetadata rules)
+    {
+        foreach (var (key, p) in properties)
+        {
+            if (String.IsNullOrEmpty(p.Get))
+                throw new InvalidOperationException($"properties: '{key}' declares no 'get'");
+            if (PropertyMetadata.IsOwnName(key))
+            {
+                if (p.Type is not { } type)
+                    throw new InvalidOperationException(
+                        $"properties: '{key}' has no column, so 'type' says what it is - the form takes its format and control from it");
+                if (TableColumn.IsRefType(type))
+                    throw new InvalidOperationException(
+                        $"properties: '{key}' is of type '{type}'. A '$' name is a value the client holds; a reference is drawn through the map, and nothing loads one for it");
+                continue;
+            }
+            if (!table.AllColumns().Any(c => c.Name == key))
+                throw new InvalidOperationException(
+                    $"properties: field '{key}' not found in {table.SqlTableName}. A name of its own, with no column, starts with '$'");
+            if (p.Type != null)
+                throw new InvalidOperationException(
+                    $"properties: '{key}' declares 'type'. It is a field, and its type is the one in 'fields'");
+            if (rules.Inherit.ContainsKey(key))
+                throw new InvalidOperationException(
+                    $"properties: '{key}' is also in 'inherit'. Inherited, the value is the record's; under a property it is the getter's - one field, one source of value");
+        }
+    }
+
     /* Names the file wrote that the shape has no counterpart for. Silently skipping them is what
      * made a typo in a collection or kind key produce an endpoint that simply generated less.
      */
@@ -91,6 +127,7 @@ internal static class DeclarationBake
         if (declaration.Rules.Total.Length > 0)
             throw new InvalidOperationException(
                 $"total: declared on {table.SqlTableName}, which is a record. A sum is a member of a collection.");
+        CheckProperties(table, declaration.Properties, declaration.Rules);
         NoLeftovers(table, declaration.Kinds.Keys, [], "kinds");
         return declaration.BakeNode(table) with
         {
@@ -185,12 +222,12 @@ internal static class DeclarationBake
 
         // which form, on the way out: three are built in one breath, and nothing deeper knows which
         FormMetadata Build(String name, Func<TableMetadata, FormMetadata> createDefault,
-            Func<TableMetadata, List<MemberDescriptor>> candidates)
+            Func<TableMetadata, List<MemberDescriptor>> candidates, RowCandidates rows)
         {
             try
             {
                 return (declaration.Forms.GetValueOrDefault(name) ?? createDefault(table))
-                    .Bake(table, candidates(table), [.. table.Filters(declaration)]);
+                    .Bake(table, candidates(table), [.. table.Filters(declaration)], rows);
             }
             catch (Exception ex)
             {
@@ -198,18 +235,26 @@ internal static class DeclarationBake
             }
         }
 
+        static List<MemberDescriptor> plainRows(String scope, TableMetadata rows, String? kind) => rows.RowMembers();
+
+        List<MemberDescriptor> editRows(String scope, TableMetadata rows, String? kind) =>
+            rows.RowMembers().WithProperties(declaration.Details.GetValueOrDefault(scope)?.PropertiesFor(kind) ?? []);
+
         /* The one place that says which form sees what: the index forms show columns, the edit form
-         * shows columns plus whatever a trait contributes. See CLAUDE.md, "Members".
+         * shows columns plus whatever a trait contributes, plus the declared properties - the edit
+         * template is the one that carries them. See CLAUDE.md, "Members".
          */
         return new Dictionary<String, FormMetadata>()
         {
             { Constants.FormNames.Index,
-                Build(Constants.FormNames.Index, t => DefaultFormBuilder.CreateIndexForm(t, declaration, platformId), MemberMetadata.IndexMembers) },
+                Build(Constants.FormNames.Index, t => DefaultFormBuilder.CreateIndexForm(t, declaration, platformId),
+                    MemberMetadata.IndexMembers, plainRows) },
             { Constants.FormNames.Browse,
-                Build(Constants.FormNames.Browse, t => DefaultFormBuilder.CreateBrowseForm(t, declaration, platformId), MemberMetadata.IndexMembers) },
+                Build(Constants.FormNames.Browse, t => DefaultFormBuilder.CreateBrowseForm(t, declaration, platformId),
+                    MemberMetadata.IndexMembers, plainRows) },
             { Constants.FormNames.Edit,
                 Build(Constants.FormNames.Edit, t => DefaultFormBuilder.CreateEditForm(t, switchesOperation: declaration.Operations.Count > 0),
-                    MemberMetadata.EditMembers) }
+                    t => t.EditMembers().WithProperties(declaration.Properties), editRows) }
         };
     }
 
@@ -239,9 +284,11 @@ internal static class DeclarationBake
             RowSets = [.. table.RowSets().Select(rs =>
             {
                 var rules = declaration.RulesFor(rs.Kind);
+                var properties = declaration.PropertiesFor(rs.Kind);
                 CheckNames(table, rules.Required, "required");
                 CheckNames(table, rules.Total, "total");
-                return new RowSetDeclaration(rs.Kind, rs.Collection, rs.Type, rules,
+                CheckProperties(table, properties, rules);
+                return new RowSetDeclaration(rs.Kind, rs.Collection, rs.Type, rules, properties,
                     BuildInherits(table, rules));
             })]
         };

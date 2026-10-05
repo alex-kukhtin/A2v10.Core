@@ -167,11 +167,14 @@ public record TableColumn
     public IRefTarget RefTableCheck => RefTable ?? throw new InvalidOperationException($"RefTable for '{Name}' is null");
 
     [JsonIgnore]
-    internal Boolean IsRef => Type == ColumnType.Ref || Type == ColumnType.Master ||
-            Type == ColumnType.User || Type == ColumnType.Document ||
-            Type == ColumnType.Company || Type == ColumnType.Owner || Type == ColumnType.BasedOn || Type == ColumnType.Operation ||
-            Type == ColumnType.Enum || Type == ColumnType.State || Type == ColumnType.Account ||
-            Type == ColumnType.Folder;
+    internal Boolean IsRef => IsRefType(Type);
+
+    // of the type alone, because a '$' property has a type and no column (DeclarationBake.CheckProperties)
+    internal static Boolean IsRefType(ColumnType type) => type is ColumnType.Ref or ColumnType.Master
+        or ColumnType.User or ColumnType.Document
+        or ColumnType.Company or ColumnType.Owner or ColumnType.BasedOn or ColumnType.Operation
+        or ColumnType.Enum or ColumnType.State or ColumnType.Account
+        or ColumnType.Folder;
 
     #region Database Fields
     public Int32? Length { get; init; }
@@ -191,8 +194,8 @@ public record TableColumn
      * (SqlExtensions.SqlAsDefinition). T-SQL as written - nothing here parses it, the deploy is
      * where a wrong one fails. The type is the domain's, so the cast makes the declared type the
      * stored one, and the seed compares one type as for any column.
-     * Not 'computed': that word is the form's (rules.computed, a Vue getter over a column the save
-     * writes). The name says the language, so a JS expression is not written here by analogy.
+     * Not a property: that is the form's ('properties', a Vue getter over a column the save writes).
+     * The name says the language, so a JS expression is not written here by analogy.
      */
     public String? SqlAs { get; init; }
     #endregion
