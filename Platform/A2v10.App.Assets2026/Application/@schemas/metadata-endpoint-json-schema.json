@@ -84,6 +84,7 @@
             "type": "string",
             "description": "Key of autonum/metadata.json this endpoint numbers from. Refused at load if that file does not declare it, or if the shape has no column of type 'autonum'. An operation without its own draws from the storage's."
         },
+        "grants": { "$ref": "#/definitions/grants" },
         "mcp": { "$ref": "#/definitions/mcp" }
     },
 
@@ -427,6 +428,20 @@
                         }
                     }
                 }
+            }
+        },
+
+        "grants": {
+            "type": "object",
+            "description": "Role -> the verbs it may on this endpoint. The role is a key of app.json 'roles', or 'Everyone' (every user, no assignment); 'Admin' is never written - it passes everything. '{}' - no one but the admin. A role not granted here has nothing; there is no 'all' and no 'deny'. The deploy writes it into a2security.Grants whatever 'useGrants' says. Not inherited from 'storage', not written in an operation file.",
+            "propertyNames": {
+                "pattern": "^[A-Z][A-Za-z0-9]*$",
+                "not": { "const": "Admin" }
+            },
+            "additionalProperties": {
+                "type": "array",
+                "items": { "enum": [ "view", "create", "edit", "delete", "post", "unpost" ] },
+                "uniqueItems": true
             }
         },
 

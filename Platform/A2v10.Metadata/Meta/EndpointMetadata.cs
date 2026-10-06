@@ -33,6 +33,11 @@ public abstract record EndpointMetadata
     // property of the file, not of the table
     public String? FileHash { get; init; }
 
+    /* 'grants', one row per role. On the base and not on the data endpoint: a right is held on an
+     * address, and a report has one. null - the file does not write the key.
+     */
+    public IReadOnlyList<EndpointGrant>? Grants { get; init; }
+
     /* Not a field. The address is a function of the identity, so there is nothing to assign and
      * nothing for a request to stamp.
      */

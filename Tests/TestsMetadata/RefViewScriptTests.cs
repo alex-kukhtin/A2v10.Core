@@ -45,7 +45,7 @@ public class RefViewScriptTests
     [Fact]
     public async Task The_registry_keeps_the_address_the_file_lies_at()
     {
-        var tables = await TestHost.GetService<DatabaseMetadataProvider>().AllElementsMetadata(null);
+        var (tables, _) = await TestHost.GetService<DatabaseMetadataProvider>().AllElementsMetadata(null);
         var operations = tables.Single(t => t.Operations.Count > 0).Operations;
 
         var invoice = operations.Single(o => o.Id == "invoice");

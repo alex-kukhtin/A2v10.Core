@@ -1,7 +1,7 @@
 ﻿{
 	"$schema": "http://json-schema.org/draft-04/schema",
-	"$version": "10.1.8666",
-	"$date": "2026-09-24",
+	"$version": "10.1.8670",
+	"$date": "2026-10-06",
 	"title": "JSON Schema for app.json",
 	"type": "object",
 
@@ -12,6 +12,23 @@
 			"enum": [ "bigint", "int", "uniqueidentifier" ]
 		},
 		"useGrants": { "type": "boolean" },
+		"roles": {
+			"description": "The application's roles: the key is the role, PascalCase, the one 'grants' names; 'Admin' and 'Everyone' are the platform's and are not declared. The deploy writes them to a2security.Roles; a role taken out of the map becomes void, put back it is restored. No 'roles' - the table is left alone; an empty map voids every role.",
+			"type": "object",
+			"patternProperties": {
+				"^[A-Z][A-Za-z0-9]{0,63}$": {
+					"type": "object",
+					"properties": {
+						"Name": { "type": "string", "minLength": 1, "maxLength": 255 },
+						"Memo": { "type": "string", "maxLength": 255 }
+					},
+					"required": [ "Name" ],
+					"additionalProperties": false
+				}
+			},
+			"not": { "anyOf": [ { "required": [ "Admin" ] }, { "required": [ "Everyone" ] } ] },
+			"additionalProperties": false
+		},
 		"aliases": {
 			"description": "More folders of one kind: \"document\": [\"sale\"] makes sale/invoice the endpoint /sale/invoice of kind document. An operation's Id stays the last segment.",
 			"type": "object",

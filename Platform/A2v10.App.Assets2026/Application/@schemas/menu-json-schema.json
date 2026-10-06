@@ -85,6 +85,14 @@
 					"type": "boolean"
 				},
 
+				"roles": {
+					"description": "Whose workplace the section is: seen by a user holding one of these roles (and only while an entry is left in it). Not written - the section is everyone's. Read on first-level items only, and only under app.json 'useGrants'; the admin sees all. Keys of app.json 'roles', or 'Everyone'.",
+					"type": "array",
+					"items": { "type": "string", "pattern": "^[A-Z][A-Za-z0-9]*$" },
+					"minItems": 1,
+					"uniqueItems": true
+				},
+
 				"row": {
 					"description": "Row of the item in the section panel (see root 'columns'), 1-based as CSS grid-row. Read on second-level items only.",
 					"type": "integer",

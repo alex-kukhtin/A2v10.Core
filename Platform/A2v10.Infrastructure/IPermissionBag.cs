@@ -1,4 +1,4 @@
-﻿// Copyright © 2024 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2024-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -20,6 +20,11 @@ public enum PermissionFlag
 	CanFlag64 = 64,
 	CanFlag128 = 128,
 	CanFlag256 = 256,
+	/* The metadata names of the same bits - the 'post' key, the CanPost column of a2security.Grants.
+	 * Aliases, so ToString of 8 or 16 may answer either name: map by value, never by name.
+	 */
+	CanPost = CanApply,
+	CanUnpost = CanUnapply,
 }
 
 public interface IPermissionBag

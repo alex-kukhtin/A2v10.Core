@@ -78,8 +78,8 @@ public class ViewXamlTests
         var card = await ViewOf("/document/waybillin", "edit");
         var index = await ViewOf("/document/waybillin", "index");
 
-        Assert.Contains("""<ColorComboBoxItem Content="{Bind Name}" Value="{Bind}" Color="{Bind Color}" />""", card);
-        Assert.Contains("""<ColorComboBoxItem Content="{Bind Name}" Value="{Bind Id}" Color="{Bind Color}" />""", index);
+        Assert.Contains("""<ColorComboBoxItem Content="{Bind Name}" Value="{Bind}" Color="{Bind Color}" Outline="True" />""", card);
+        Assert.Contains("""<ColorComboBoxItem Content="{Bind Name}" Value="{Bind Id}" Color="{Bind Color}" Outline="True" />""", index);
     }
 
     /* A referenced document opens from its cell, by the address the map sent - and only a document:

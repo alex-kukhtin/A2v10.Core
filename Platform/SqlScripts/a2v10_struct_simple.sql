@@ -1,8 +1,8 @@
 ﻿/*
 Copyright © 2008-2026 Oleksandr Kukhtin
 
-Last updated : 18 apr 2026
-module version : 8634
+Last updated : 06 oct 2026
+module version : 8670
 */
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.SCHEMATA where SCHEMA_NAME=N'a2sys')
@@ -163,13 +163,59 @@ create table a2security.[KeyVaults]
 )
 go
 ------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where [TABLE_SCHEMA] = N'a2security' and TABLE_NAME = N'Roles')
+create table a2security.[Roles]
+(
+	[Id] nvarchar(64) not null
+		constraint PK_Roles primary key,	
+	Void bit not null constraint DF_Roles_Void default(0),
+	[Name] nvarchar(255),
+	[Memo] nvarchar(255)
+)
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2security' and TABLE_NAME=N'UserRoles')
+create table a2security.UserRoles
+(
+	UserId bigint not null
+		constraint FK_UserRoles_UserId_Users foreign key references a2security.Users(Id),
+	[Role] nvarchar(64) not null
+		constraint FK_UserRoles_Role_Roles foreign key references a2security.Roles(Id),
+	constraint PK_UserRoles primary key (UserId, [Role])
+);
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2security' and TABLE_NAME=N'Grants')
+create table a2security.Grants
+(
+	[Endpoint] nvarchar(128) not null,
+	[Role] nvarchar(64) not null
+		constraint FK_Grants_Role_Roles foreign key references a2security.Roles(Id),
+	CanView bit not null constraint DF_Grants_CanView default(0),
+	CanCreate bit not null constraint DF_Grants_CanCreate default(0),
+	CanEdit bit not null constraint DF_Grants_CanEdit default(0),
+	CanDelete bit not null constraint DF_Grants_CanDelete default(0),
+	CanPost bit not null constraint DF_Grants_CanPost default(0),
+	CanUnpost bit not null constraint DF_Grants_CanUnpost default(0),
+	CanFlag64 bit not null constraint DF_Grants_CanFlag64 default(0),
+	CanFlag128 bit not null constraint DF_Grants_CanFlag128 default(0),
+	CanFlag256 bit not null constraint DF_Grants_CanFlag256 default(0),
+	constraint PK_Grants primary key ([Endpoint], [Role])
+);
+go
+------------------------------------------------
 create or alter view a2security.ViewUsers
 as
 	select Id, UserName, DomainUser, PasswordHash, SecurityStamp, Email, PhoneNumber,
 		LockoutEnabled, AccessFailedCount, LockoutEndDateUtc, TwoFactorEnabled, [Locale],
 		PersonName, Memo, Void, LastLoginDate, LastLoginHost, EmailConfirmed,
 		PhoneNumberConfirmed, RegisterHost, ChangePasswordEnabled,
-		SecurityStamp2, PasswordHash2, SetPassword, IsBlocked, AuthenticatorKey
+		SecurityStamp2, PasswordHash2, SetPassword, IsBlocked, AuthenticatorKey,
+		[Roles] = (
+			select string_agg(ur.[Role], N',') within group (order by ur.[Role])
+			from a2security.UserRoles ur
+				inner join a2security.Roles r on ur.[Role] = r.Id
+			where ur.UserId = u.Id and r.Void = 0)
 	from a2security.Users u
 	where Void = 0 and Id <> 0;
 go

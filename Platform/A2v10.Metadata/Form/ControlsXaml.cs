@@ -76,6 +76,7 @@ internal partial class XamlBuilder
         Children = [
             new ColorComboBoxItem()
             {
+                Outline = true,
                 Bindings = b =>
                 {
                     b.SetBinding(nameof(ColorComboBoxItem.Content), new Bind(choice ?? Constants.FieldNames.Name));

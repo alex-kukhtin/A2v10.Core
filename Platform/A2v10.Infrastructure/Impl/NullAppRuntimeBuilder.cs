@@ -12,6 +12,7 @@ public class NullAppRuntimeBuilder : IAppRuntimeBuilder
 {
 	public bool IsAutoSupported => false;
     public Boolean IsMetaSupported => false;
+    public Task<Boolean> UseGrantsAsync() => Task.FromResult(false);
 
     public String MetadataScripts(String _)
     {

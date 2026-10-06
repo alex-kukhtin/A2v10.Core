@@ -28,8 +28,8 @@ public class DatabaseMetadataCache
     // Keyed by data source because that is exactly what it describes: one data source is
     // one database, and the platformid base belongs to the database.
     private readonly ConcurrentDictionary<String, AppPlatformId> _platformIdCache = [];
-    // app.json 'aliases': one per application, not per data source - folders are the application's
-    private KindFolders? _kindFolders;
+    // app.json, read and checked once: one per application, not per data source - the file is the application's
+    private AppJson? _appJson;
     // mcp.json and the roles of its paths; dropped with everything else, and alone by an edit of mcp.json or model.json
     private McpIndex? _mcpIndex;
 
@@ -68,7 +68,7 @@ public class DatabaseMetadataCache
              */
             _referrers.Clear();
             _platformIdCache.Clear();
-            _kindFolders = null;
+            _appJson = null;
             _mcpIndex = null;
             _xamlFormCache.Clear();
             _metadataDirty = true;
@@ -149,9 +149,9 @@ public class DatabaseMetadataCache
         return _platformIdCache.GetOrAdd(key, platformId);
     }
 
-    // a race builds the map twice from one file and keeps either: both are the same answer
-    internal async Task<KindFolders> GetKindFoldersAsync(Func<Task<KindFolders>> load) =>
-        _kindFolders ??= await load();
+    // a race reads the file twice and keeps either: both are the same answer
+    internal async Task<AppJson> GetAppJsonAsync(Func<Task<AppJson>> load) =>
+        _appJson ??= await load();
 
     // the same race, the same answer
     internal async Task<McpIndex> GetMcpIndexAsync(Func<Task<McpIndex>> load) =>
@@ -175,8 +175,12 @@ public class DatabaseMetadataCache
 
     private void Watcher_Changed(Object sender, FileSystemEventArgs e)
     {
-        // mcp.json and model.json feed the MCP index only; a metadata.json change drops it with the rest
-        if (Path.GetFileName(e.FullPath).Equals("metadata.json", StringComparison.OrdinalIgnoreCase))
+        /* mcp.json and model.json feed the MCP index only. metadata.json and app.json drop everything:
+         * app.json holds what every load and the deploy read - aliases, platformid, roles.
+         */
+        var name = Path.GetFileName(e.FullPath);
+        if (name.Equals("metadata.json", StringComparison.OrdinalIgnoreCase)
+            || name.Equals("app.json", StringComparison.OrdinalIgnoreCase))
             ClearAll(); // All items! References!
         else
             _mcpIndex = null;
@@ -193,6 +197,7 @@ public class DatabaseMetadataCache
                 NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.Attributes
                 | NotifyFilters.FileName | NotifyFilters.CreationTime
         };
+        watcher.Filters.Add("app.json");
         watcher.Filters.Add("mcp.json");
         watcher.Filters.Add("model.json");
         watcher.Changed += Watcher_Changed;

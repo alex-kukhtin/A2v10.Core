@@ -8017,6 +8017,9 @@ table.tree-grid a.toggle.expanded:after {
   flex-direction: column;
   padding: 2px;
 }
+.color-picker .color-picker-pane .color-picker-list .outline {
+  line-height: 1.5;
+}
 .color-picker .color-picker-wrapper {
   padding: 0;
   margin: 0;
@@ -8030,6 +8033,9 @@ table.tree-grid a.toggle.expanded:after {
 }
 .color-picker .color-picker-wrapper .tag-label {
   width: 100%;
+}
+.color-picker .color-picker-wrapper .outline {
+  line-height: 1.5;
 }
 .color-picker .tag-label {
   font-size: 1rem;

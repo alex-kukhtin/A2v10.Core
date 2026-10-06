@@ -26,13 +26,6 @@ internal sealed record PlatformIdType
     public String? DataType { get; set; }
 }
 
-// the keys of app.json the generator reads; the rest of the file belongs to the client
-internal sealed record AppJsonMetadata
-{
-    public String? PlatformId { get; set; }
-    public Dictionary<String, String[]>? Aliases { get; set; }
-}
-
 public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbContext _dbContext, IAppCodeProvider _codeProvider,
         SqlDbGenerator _sqlDbGenerator)
 {
@@ -41,26 +34,26 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         if (!_metadataCache.IsMetadataDirty)
             return;
 
-        var allMeta = await AllElementsMetadata(dataSource);
+        var (tables, grants) = await AllElementsMetadata(dataSource);
 
         var platformId = await GetPlatformIdAsync(dataSource);
-        await _sqlDbGenerator.CheckDeployAsync(dataSource, allMeta, platformId);
+        await _sqlDbGenerator.CheckDeployAsync(dataSource, tables, await DeclaredRolesAsync(), grants, platformId);
         _metadataCache.ClearDirty();
     }
 
     public async Task<DeployDatabaseResult> DeployDatabaseAllAsync(String? dataSource)
     {
         var platformId = await GetPlatformIdAsync(dataSource);
-        var allMeta = await AllElementsMetadata(dataSource);
-        return await _sqlDbGenerator.CheckDeployAsync(dataSource, allMeta, platformId);
+        var (tables, grants) = await AllElementsMetadata(dataSource);
+        return await _sqlDbGenerator.CheckDeployAsync(dataSource, tables, await DeclaredRolesAsync(), grants, platformId);
     }
 
     // 'a2 meta deploy --full': the file only, executed inside full.sql
     public async Task WriteDeployDatabaseAllAsync(String? dataSource)
     {
         var platformId = await GetPlatformIdAsync(dataSource);
-        var allMeta = await AllElementsMetadata(dataSource);
-        await _sqlDbGenerator.WriteDeployAsync(dataSource, allMeta, platformId);
+        var (tables, grants) = await AllElementsMetadata(dataSource);
+        await _sqlDbGenerator.WriteDeployAsync(dataSource, tables, await DeclaredRolesAsync(), grants, platformId);
     }
 
     /* Is the platform in the database? a2meta is created by a2v10_metadata.sql - by full.sql, never
@@ -151,11 +144,19 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     }
 
     // internal for EndpointValidator: the declaration is the only answer a check that never reads the database can have
-    internal async Task<AppPlatformId?> DeclaredPlatformIdAsync()
-    {
-        var app = await ReadAppJsonAsync();
-        return app?.PlatformId is String name ? AppPlatformId.FromSqlName(name) : null;
-    }
+    internal async Task<AppPlatformId?> DeclaredPlatformIdAsync() =>
+        (await AppJsonAsync()).DeclaredPlatformId;
+
+    // rows of a platform table, not a table: they travel to the deploy beside the tables, not among them
+    internal async Task<IReadOnlyList<AppRole>?> DeclaredRolesAsync() =>
+        (await AppJsonAsync()).Roles;
+
+    // the switch of the rights; read by the runtime only - the deploy writes Grants whatever it says
+    internal async Task<Boolean> UseGrantsAsync() =>
+        (await AppJsonAsync()).UseGrants;
+
+    private Task<AppJson> AppJsonAsync() =>
+        _metadataCache.GetAppJsonAsync(async () => AppJson.From(await ReadAppJsonAsync()));
 
     private async Task<AppJsonMetadata?> ReadAppJsonAsync()
     {
@@ -171,8 +172,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
      * decision the loader takes by the first segment takes it by this answer instead.
      */
     private async Task<String> KindFolderAsync(String folder) =>
-        (await _metadataCache.GetKindFoldersAsync(async () => KindFolders.From((await ReadAppJsonAsync())?.Aliases)))
-            .KindOf(folder);
+        (await AppJsonAsync()).Folders.KindOf(folder);
 
     // the endpoints open to the model - see Mcp/McpIndex
     internal Task<McpIndex> GetMcpIndexAsync() =>
@@ -786,6 +786,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         if (kind == Constants.SchemaNames.Document)
             CheckOperationColumn(MetadataFileName(schema, table), declaration, storage);
 
+        var grants = EndpointGrants.From(MetadataFileName(schema, table), declaration.Grants);
+
         /* The only place that decides which kind of endpoint this is. The discriminator is the
          * folder, not a key in the file: a file cannot lie about what it is. An alias names the
          * folder's kind in app.json, which is the same answer given one step away.
@@ -801,7 +803,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                     Surface = storage,
                     Report = JsonConvert.DeserializeObject<ReportMetadata>(text, JsonSettings.CamelCaseSerializerSettings)
                         ?? throw new InvalidOperationException("ReportMetadata deserialization fails"),
-                    FileHash = hash
+                    FileHash = hash,
+                    Grants = grants
                 },
             _ => new NormalEndpointMetadata()
                 {
@@ -813,7 +816,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                     // so what leaves here is finished and nothing has to come back to it
                     Declaration = BakeDeclaration(MergeDeclaration(declaration, storageDeclaration), storage, schema, table,
                         await GetPlatformIdAsync(dataSource)),
-                    FileHash = hash
+                    FileHash = hash,
+                    Grants = grants
                 }
         };
     }
@@ -1038,6 +1042,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
      *                       the shape and has no act, so there is nothing there to inherit.
      *   'basedOn'         - what may be created from this document: a command of its screen, and
      *                       two documents over one table give rise to different ones.
+     *   'grants'          - the rights on an address, and every document over the storage is an
+     *                       address of its own. Read off the endpoint's file before this merge.
      */
     private static DeclarationMetadata MergeDeclaration(DeclarationMetadata own, DeclarationMetadata? storage)
     {
@@ -1629,23 +1635,28 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     private static Boolean IsBuildOutput(String file) =>
         file.NormalizeSlash().Split('/').SkipWhile(s => s.StartsWith('$')).FirstOrDefault() is "bin" or "obj";
 
-    internal async Task<IEnumerable<TableMetadata>> AllElementsMetadata(String? dataSource)
+    internal async Task<(IEnumerable<TableMetadata> Tables, IReadOnlyList<(String Endpoint, EndpointGrant Grant)> Grants)>
+        AllElementsMetadata(String? dataSource)
     {
         var allMeta = _codeProvider.EnumerateAllFilesRecursive("", "metadata.json");
         var tables = new List<TableMetadata>();
         var operations = new List<OperationMetadata>();
+        var grants = new List<(String Endpoint, EndpointGrant Grant)>();
         foreach (var file in allMeta.Where(f => !IsBuildOutput(f)))
         {
             var endpointPath = Path.GetDirectoryName(file)?.NormalizeSlash();
             if (endpointPath == null)
                 continue;
             var (schema, table) = ParsePath(endpointPath);
+            // rights are held on an address, a report's and a document's over a storage too - so before both filters
+            var loaded = await GetEndpointAsync(dataSource, schema, table);
+            grants.AddRange((loaded.Grants ?? []).Select(g => (loaded.Path, g)));
             /* Only a data endpoint declares a table, and only one that does not point elsewhere:
              * a shared storage is deployed by the file that declares it, a report declares none.
              * Every operation of a document is a row of the registry - the ones it lists, whatever
              * table it lives in, and the implicit one of a document over a shared storage.
              */
-            if (await GetEndpointAsync(dataSource, schema, table) is not NormalEndpointMetadata endpoint)
+            if (loaded is not NormalEndpointMetadata endpoint)
                 continue;
             operations.AddRange(endpoint.DocumentOperations()
                 .Select((id, ix) => new OperationMetadata(id, endpoint.Name, endpoint.Path, ix + 1)));
@@ -1673,7 +1684,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             {
                 Operations = [.. operations.OrderBy(o => o.Id, StringComparer.Ordinal)]
             });
-        return tables;
+        return (tables, grants);
     }
     private async Task<IEnumerable<TableReferrer>> LoadTableReferrersAsync(String? dataSource, TableMetadata table)
     {

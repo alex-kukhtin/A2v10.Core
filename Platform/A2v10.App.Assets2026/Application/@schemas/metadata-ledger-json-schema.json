@@ -25,6 +25,7 @@
             "$ref": "metadata-endpoint-json-schema.json#/definitions/fields",
             "description": "Provenance, analytics and measures. A column of type 'document' is required (unpost and the transactions dialog find the rows by it); 'operation' and 'row' are found by type as well, and so is 'company': the platform fills it from the document's company column, the same in both legs, and a leg naming it is refused. Sparse - each leg fills its own: an analytic the leg does not name is null, a measure (qty, amount) is 0 - its domain makes it NOT NULL."
         },
-        "forms": { "$ref": "metadata-endpoint-json-schema.json#/definitions/formSet" }
+        "forms": { "$ref": "metadata-endpoint-json-schema.json#/definitions/formSet" },
+        "grants": { "$ref": "metadata-endpoint-json-schema.json#/definitions/grants" }
     }
 }

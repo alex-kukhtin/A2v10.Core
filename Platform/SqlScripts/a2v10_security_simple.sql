@@ -282,6 +282,43 @@ begin
 end
 go
 ------------------------------------------------
+-- what the menu shows a user (metadata, useGrants): the admin sees all; the rest by their roles and Everyone - sections by the roles, entries by the grants
+create or alter procedure a2security.[User.Grants.Load]
+@UserId bigint
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+
+	declare @IsAdmin bit = case when exists(select * from a2security.UserRoles
+		where UserId = @UserId and [Role] = N'Admin') then 1 else 0 end;
+
+	select [UserState!TUserState!Object] = null, IsAdmin = @IsAdmin;
+
+	if @IsAdmin = 1
+		return;
+
+	-- the roles the user holds: assigned and living, and Everyone held by all
+	declare @roles table([Role] nvarchar(64));
+	insert into @roles([Role])
+	select ur.[Role] from a2security.UserRoles ur
+		inner join a2security.Roles r on ur.[Role] = r.Id
+	where ur.UserId = @UserId and r.Void = 0
+	union
+	select N'Everyone';
+
+	-- 'roles' of the menu sections read them
+	select [Roles!TRole!Array] = null, [Id] = [Role] from @roles;
+
+	select [Grants!TGrant!Array] = null, g.[Endpoint],
+		CanView = cast(max(cast(g.CanView as int)) as bit),
+		CanCreate = cast(max(cast(g.CanCreate as int)) as bit)
+	from a2security.Grants g
+	where g.[Role] in (select [Role] from @roles)
+	group by g.[Endpoint];
+end
+go
+------------------------------------------------
 create or alter procedure a2security.[User.UpdateParts]
 @Id bigint,
 @PhoneNumber nvarchar(255) = null,

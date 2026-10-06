@@ -21,6 +21,7 @@ internal class AppMetadataBuilder(
 {
     public bool IsAutoSupported => false;
     public Boolean IsMetaSupported => true;
+    public Task<Boolean> UseGrantsAsync() => _metadataProvider.UseGrantsAsync();
 
     public String MetadataScripts(String minify)
     {

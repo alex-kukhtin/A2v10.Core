@@ -349,6 +349,28 @@ Who + when on every record the user keeps: creation and modification on a catalo
 - **'The current user' lands in `InitialSource.Context`, beside `today`.** The one place the two shapes are not symmetric: on `user` the value is `@UserId`, which every statement already receives; on a catalog of employees it is the profile road that exists (`usr.GetProfilePreferences`, `platformid`), with the procedure written by the application. Deferred until the first screen asks for "assigned to me" — then it is one word.
 - **`company` was decided apart** (2026-09-29, "Owner"): an owner with a fixed target, a catalog with a shape. It shared with `user` only the symptom in ISSUES 6.5.
 
+## Roles: rows of a platform table, declared in app.json
+
+`app.json` `roles` — a map `Key → { Name, Memo }` — is the application's closed dictionary of roles; the deploy writes it into `a2security.Roles`. Decided 2026-10-06; norm — skill `permissions.md` → «Роль».
+
+- **Not a kind.** A role has no address, screen, fields or forms; a folder with two files for a list beside `useGrants` would be ceremony. A map, not an array: roles have no order, and the key is the one `grants` will name.
+- **The table is the platform script's** (`Platform/SqlScripts/a2v10_struct_simple.sql`, beside `Users`), so roles never enter the `TableMetadata` walk: that walk creates, syncs and keys every table it holds, and a flag "but not this one" would be checked in three places. They travel to the deploy beside the tables (`DeclaredRolesAsync` → `SqlDbGenerator.CreateRolesScript`), and since a2meta does not carry them, their script joins the hash itself — empty without `roles`, so an application declaring none keeps its hash.
+- **Checked at load, without a database** (`Meta/AppRoles.cs`): PascalCase key (a name the author gives, as a field's is; compared ordinal; the CI collation would not tell `accountant` from `Accountant`), `Admin` and `Everyone` refused (`AppRoles.Predefined`), `Name`/`Memo` only, the column lengths.
+- **The merge voids, never deletes**: `UserRoles` holds the row. The predefined two are the platform's — inserted by `a2v10_admin_simple.sql` — and never voided. `Admin` is assigned to user 99 and passes everything; `Everyone` is assigned to nobody and held by every user, so `grants` opens an endpoint to all in one explicit line, and a forgotten line keeps it closed. No `roles` key — the table is left alone; `{}` voids every role.
+- **Roles reach the claims through `ViewUsers.Roles`** (void roles left out); the security stamp validation rebuilds the principal every interval, so an assignment changes the claim without a new login.
+
+## Grants: rows of a platform table, declared on the endpoint
+
+`grants` in an endpoint's `metadata.json` — `Role → [verbs]` — becomes rows of `a2security.Grants` (`Endpoint`, `Role`, `Can*` bits). Decided 2026-10-06; norm — skill `permissions.md` → «`grants`».
+
+- **On `EndpointMetadata`, not on the data endpoint** (`Grants`, `null` = not written ≠ `{}`): a right is held on an address, and a report has one. Read off the endpoint's own file before `MergeDeclaration` — never layered from `storage`, absent from the operation file.
+- **Verb → bit by value** (`Meta/EndpointGrants.cs`): `CanPost` is `CanApply`, one bit under two names. An unknown verb fails the load — it has no bit; nothing else is checked yet (role in the dictionary, `Admin`, obligation, closure over `Ref`: skill `TODO.md`). A role missing from `roles` fails the deploy on `FK_Grants_Role_Roles`, which is why the grants script runs after the roles'.
+- **Written always, whatever `useGrants` says.** One switch, one reader: the gate and the menu read `useGrants` at runtime, so turning it on needs no deploy, and the table can be looked at before it is.
+- **The merge deletes** (`SqlDbGenerator.CreateGrantsScript`): nothing points at a grant, the table is derived and equals the files — the merge runs with nothing declared too and empties it. Unlike roles, where an absent key leaves the table alone. Rows sorted by `(Endpoint, Role)`; the script joins the hash, as the roles'.
+- **The menu asks two things** (Platform.Web `JsonMenuRoot.Transform`): an entry by `CanView`, a first-level section also by its `roles` - whose workplace it is. `CanView` alone cannot say it: a catalog open to `Everyone` for its picker would keep another role's section alive.
+- **`useGrants` has one reader today — the menu** (Platform.Web `JsonMenuRoot.LoadAsync`, through `IAppRuntimeBuilder.UseGrantsAsync`); the gate in the generated SQL is not built. app.json is read once into `Meta/AppJson.cs` and cached whole (`DatabaseMetadataCache._appJson`): a new key is a field there, not another read.
+- **Collected in `AllElementsMetadata`** before both of its filters — a report is not a `NormalEndpointMetadata`, a document over a storage has no own shape. `Endpoint` = `EndpointMetadata.Path` (`/catalog/agent`), the folder the file lies in, alias included.
+
 ## Seed: what the database is told about itself
 
 `a2meta.Tables` / `a2meta.Columns` are the deploy's own picture of the schema, and the referrer set is read from there rather than from metadata — in release there is no `AllElementsMetadata` walk, so SQL is the only thing that can answer a question about the whole application. Decided 2026-09.

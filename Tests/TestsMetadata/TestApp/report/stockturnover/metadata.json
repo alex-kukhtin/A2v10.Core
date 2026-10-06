@@ -8,5 +8,8 @@
 	"defaults": {
 		"groups": [ "Store", "Item" ],
 		"data": [ "Qty", "Sum" ]
+	},
+	"grants": {
+		"Accountant": [ "view" ]
 	}
 }

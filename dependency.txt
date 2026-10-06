@@ -1,14 +1,25 @@
-﻿2026-10-05 (next: 8669)
+﻿2026-10-06 (next: 8670)
 
 A2v10.App.Assets2026
 A2v10.BlobStorage.Azure
+A2v10.BlobStorage.FileSystem
 A2v10.CheckUpdates
 A2v10.Cli
+A2v10.Identity.UI
+A2v10.Infrastructure
+A2v10.MailClient
 A2v10.Mcp
 A2v10.Metadata
 A2v10.Platform
+A2v10.Platform.Web
+A2v10.ReportEngine.Excel
 A2v10.ReportEngine.Pdf
+A2v10.ReportEngine.Script
 A2v10.Scheduling
+A2v10.Scheduling.Commands
+A2v10.Services
+A2v10.ViewEngine.Html
+A2v10.ViewEngine.Xaml
 A2v10.Web.Assets
 
 

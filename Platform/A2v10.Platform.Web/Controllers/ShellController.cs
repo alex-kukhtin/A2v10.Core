@@ -29,7 +29,7 @@ public record MultiTenantParamJson(String Companies, String Period);
 [ExecutingFilter]
 public class ShellController(IDbContext _dbContext, IApplicationHost _host, ICurrentUser _currentUser, IProfiler _profiler,
 	ILocalizer _localizer, IAppCodeProvider _codeProvider, IAppDataProvider _appDataProvider, IOptions<AppOptions> appOptions,
-	ILogger<ShellController> _logger, IPermissionBag _pemissionBag, IUserDevice _userDevice) : Controller
+	ILogger<ShellController> _logger, IPermissionBag _pemissionBag, IUserDevice _userDevice, IAppRuntimeBuilder _runtimeBuilder) : Controller
 {
 	private readonly AppOptions _appOptions = appOptions.Value;
 
@@ -249,7 +249,7 @@ public class ShellController(IDbContext _dbContext, IApplicationHost _host, ICur
 
 		await EnsurePermissionObjects();
 
-		var menuFromJson = LoadMenuFromJsonAsync();
+		var menuFromJson = await LoadMenuFromJsonAsync();
 		if (menuFromJson != null)
 		{
             macros.Set("Menu", menuFromJson);
@@ -347,17 +347,8 @@ public class ShellController(IDbContext _dbContext, IApplicationHost _host, ICur
 
     private async Task<String?> LoadMenuFromJsonAsync()
 	{
-		using var stream = _codeProvider.FileStreamRO("menu.json", true);
-		if (stream == null)
-			return null;
-        using var sr = new StreamReader(stream);
-        var txt = await sr.ReadToEndAsync();
-		txt = _localizer.Localize(null, txt, false);
-        if (txt == null)
-            return null;
-        var menu = JsonMenuRoot.ConvertToPlatformMenu(txt, _localizer);
-
-        return menu;
+		var root = await JsonMenuRoot.LoadAsync(_codeProvider, _localizer, _runtimeBuilder, _dbContext, _host.TenantDataSource, UserId);
+		return root == null ? null : JsonMenuRoot.ConvertToPlatformMenu(root, _localizer);
 	}
 }
 

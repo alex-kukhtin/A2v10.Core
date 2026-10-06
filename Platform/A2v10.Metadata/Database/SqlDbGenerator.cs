@@ -58,9 +58,10 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
 
     private String DeployFile => DatabaseFilePath.NormalizeSlash();
 
-    public async Task<DeployDatabaseResult> CheckDeployAsync(String? dataSource, IEnumerable<TableMetadata> tables, AppPlatformId platformId)
+    internal async Task<DeployDatabaseResult> CheckDeployAsync(String? dataSource, IEnumerable<TableMetadata> tables,
+        IReadOnlyList<AppRole>? roles, IEnumerable<(String Endpoint, EndpointGrant Grant)> grants, AppPlatformId platformId)
     {
-        if (await WriteDeployAsync(dataSource, tables, platformId) is not var (script, hash))
+        if (await WriteDeployAsync(dataSource, tables, roles, grants, platformId) is not var (script, hash))
             return new DeployDatabaseResult(DeployFile, false);
 
         await EnsurePlatformVersionAsync(dataSource);
@@ -95,11 +96,18 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
      * next plain deploy: that one sees the mismatch, runs the idempotent script again and writes it.
      * null - the hash matched: the database got this very file already, and it lies on disk.
      */
-    public async Task<(String Script, String Hash)?> WriteDeployAsync(String? dataSource, IEnumerable<TableMetadata> tables, AppPlatformId platformId)
+    internal async Task<(String Script, String Hash)?> WriteDeployAsync(String? dataSource, IEnumerable<TableMetadata> tables,
+        IReadOnlyList<AppRole>? roles, IEnumerable<(String Endpoint, EndpointGrant Grant)> grants, AppPlatformId platformId)
     {
         CheckOneCompanyCatalog(tables);
         var seedScript = await GenerateMetadataSeedAsync(tables);
-        var seedHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(seedScript ?? "new"))).ToLowerInvariant();
+        /* The roles and the grants are no table, so a2meta does not carry them and its seed cannot
+         * fingerprint them: their scripts join the hash themselves. Empty without 'roles' - the hash of
+         * an application declaring none stays what it was.
+         */
+        var rolesScript = CreateRolesScript(roles);
+        var grantsScript = CreateGrantsScript(grants);
+        var seedHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes((seedScript ?? "new") + rolesScript + grantsScript))).ToLowerInvariant();
         // read hash from DB
         var dbHash = await _dbContext.LoadAsync<DbHash>(dataSource, "a2meta.[GetDbHash]");
 
@@ -131,6 +139,9 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         allScript.AppendLine(CreateOperationsScript(tables));
         allScript.AppendLine(CreateAutonumProcedureScript(tables));
         allScript.AppendLine(SystemUserScript());
+        allScript.AppendLine(rolesScript);
+        // after the roles: a2security.Grants keys its Role to a2security.Roles
+        allScript.AppendLine(grantsScript);
         allScript.AppendLine(CreateForeignKeysScript(tables));
         allScript.AppendLine(CreateIndexesScript(tables));
 
@@ -184,6 +195,105 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         go
 
         """;
+
+    /* app.json 'roles' into a2security.Roles - the rows only: the table is the platform script's, as
+     * Users is. Shaped as the operations merge: a role dropped from the map keeps its row (UserRoles
+     * holds it) and becomes void, put back it is restored with its assignments. Admin and Everyone
+     * are the platform's and the merge never voids them. No 'roles' in app.json - nothing declared, the table is
+     * left alone; an empty map voids every role.
+     * Nothing of the application points at a role, so the place in the script is free.
+     */
+    internal static String CreateRolesScript(IReadOnlyList<AppRole>? roles)
+    {
+        static String Str(String? val) =>
+            val == null ? "null" : $"N'{val.Replace("'", "''")}'";
+
+        if (roles == null)
+            return String.Empty;
+
+        var rows = roles.Select(r => $"\t({Str(r.Id)}, {Str(r.Name)}, {Str(r.Memo)})");
+        var insert = roles.Count == 0 ? String.Empty : $"""
+                insert into @Roles([Id], [Name], [Memo]) values
+            {String.Join($",{Environment.NewLine}", rows)};
+
+            """;
+
+        return $"""
+            -- ROLES
+            {CliDatabaseCreator.SQL_DIVIDER}
+            begin
+                set nocount on;
+                declare @Roles table([Id] nvarchar(64), [Name] nvarchar(255), [Memo] nvarchar(255));
+
+            {insert}    merge a2security.Roles as t
+                using @Roles as s
+                on t.[Id] = s.[Id]
+                when matched then update set
+                    t.[Name] = s.[Name],
+                    t.[Memo] = s.[Memo],
+                    t.[Void] = 0
+                when not matched then insert ([Id], [Name], [Memo]) values
+                    (s.[Id], s.[Name], s.[Memo])
+                when not matched by source and t.[Id] not in ({String.Join(", ", AppRoles.Predefined.Select(Str))}) then update set
+                    t.[Void] = 1;
+            end
+            go
+
+            """;
+    }
+
+    /* 'grants' of every endpoint into a2security.Grants - the rows only, the table is the platform
+     * script's. Unlike the roles, nothing points at a grant: the table is derived and equals the files,
+     * so it is merged whole whether or not anything is declared, and a grant gone from the files is
+     * deleted. Written whether 'useGrants' is on or off: only the gate reads the switch, so turning it
+     * on needs no deploy.
+     * The free bits (CanFlag*) have no verb and keep their default 0.
+     */
+    internal static String CreateGrantsScript(IEnumerable<(String Endpoint, EndpointGrant Grant)> grants)
+    {
+        static String Str(String val) => $"N'{val.Replace("'", "''")}'";
+        static String Bit(EndpointGrant grant, PermissionFlag flag) => grant.Flags.HasFlag(flag) ? "1" : "0";
+
+        // the hash is taken from the text, so the order must not depend on how the files are enumerated
+        var rows = grants
+            .OrderBy(g => g.Endpoint, StringComparer.Ordinal)
+            .ThenBy(g => g.Grant.Role, StringComparer.Ordinal)
+            .Select(g => $"\t({Str(g.Endpoint)}, {Str(g.Grant.Role)}, {Bit(g.Grant, PermissionFlag.CanView)}, " +
+                $"{Bit(g.Grant, PermissionFlag.CanCreate)}, {Bit(g.Grant, PermissionFlag.CanEdit)}, {Bit(g.Grant, PermissionFlag.CanDelete)}, " +
+                $"{Bit(g.Grant, PermissionFlag.CanPost)}, {Bit(g.Grant, PermissionFlag.CanUnpost)})")
+            .ToList();
+        var insert = rows.Count == 0 ? String.Empty : $"""
+                insert into @Grants([Endpoint], [Role], [CanView], [CanCreate], [CanEdit], [CanDelete], [CanPost], [CanUnpost]) values
+            {String.Join($",{Environment.NewLine}", rows)};
+
+            """;
+
+        return $"""
+            -- GRANTS
+            {CliDatabaseCreator.SQL_DIVIDER}
+            begin
+                set nocount on;
+                declare @Grants table([Endpoint] nvarchar(128), [Role] nvarchar(64), [CanView] bit, [CanCreate] bit,
+                    [CanEdit] bit, [CanDelete] bit, [CanPost] bit, [CanUnpost] bit);
+
+            {insert}    merge a2security.Grants as t
+                using @Grants as s
+                on t.[Endpoint] = s.[Endpoint] and t.[Role] = s.[Role]
+                when matched then update set
+                    t.[CanView] = s.[CanView],
+                    t.[CanCreate] = s.[CanCreate],
+                    t.[CanEdit] = s.[CanEdit],
+                    t.[CanDelete] = s.[CanDelete],
+                    t.[CanPost] = s.[CanPost],
+                    t.[CanUnpost] = s.[CanUnpost]
+                when not matched then insert ([Endpoint], [Role], [CanView], [CanCreate], [CanEdit], [CanDelete], [CanPost], [CanUnpost]) values
+                    (s.[Endpoint], s.[Role], s.[CanView], s.[CanCreate], s.[CanEdit], s.[CanDelete], s.[CanPost], s.[CanUnpost])
+                when not matched by source then delete;
+            end
+            go
+
+            """;
+    }
 
     /* What a reference to a document reads (TableMetadata.RefSourceName): the row, plus where it
      * opens. One view per document table, not a union over them - ids are per table. A view and not

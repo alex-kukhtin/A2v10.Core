@@ -24,6 +24,10 @@
 	"rules": {
 		"required": [ "Date" ]
 	},
+	"grants": {
+		"Everyone": [ "view" ],
+		"Accountant": [ "view", "create", "edit", "delete" ]
+	},
 	"details": {
 		"Addresses": {
 			"model": "AgentAddress",

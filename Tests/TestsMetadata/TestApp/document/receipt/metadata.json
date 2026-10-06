@@ -5,5 +5,9 @@
 	"operations": [ "supplier", "gratis" ],
 	"rules": {
 		"required": [ "StoreTo" ]
+	},
+	"grants": {
+		"Storekeeper": [ "view", "create", "edit", "post" ],
+		"Accountant": [ "view", "post", "unpost" ]
 	}
 }

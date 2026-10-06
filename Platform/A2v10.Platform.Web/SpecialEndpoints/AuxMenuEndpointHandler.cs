@@ -9,8 +9,6 @@ using System.Threading.Tasks;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using Newtonsoft.Json;
-
 using A2v10.Data.Interfaces;
 using A2v10.Data;
 using A2v10.Infrastructure;
@@ -28,16 +26,11 @@ public class AuxMenuEndpointHandler(IServiceProvider _serviceProvider, ILocalize
 
     public async Task<String> RenderResultAsync(IPlatformUrl platformUrl, IModelView modelView, ExpandoObject prms)
     {
-        using var stream = _codeProvider.FileStreamRO("menu.json", true)
+        var menu = await JsonMenuRoot.LoadAsync(_codeProvider, _localizer,
+            _serviceProvider.GetRequiredService<IAppRuntimeBuilder>(), _serviceProvider.GetRequiredService<IDbContext>(),
+            _serviceProvider.GetRequiredService<IApplicationHost>().TenantDataSource,
+            _serviceProvider.GetRequiredService<ICurrentUser>().Identity.Id)
             ?? throw new InvalidOperationException("menu.json not found");
-        using var sr = new StreamReader(stream);
-        var json = await sr.ReadToEndAsync()
-            ?? throw new InvalidOperationException("menu.json is empty");
-        json = _localizer.Localize(null, json, false)
-            ?? throw new InvalidOperationException("menu.json is empty");
-
-        var menu = JsonConvert.DeserializeObject<JsonMenuRoot>(json)
-            ?? throw new InvalidOperationException("deserialize menu.json fail");
 
         var menuId = platformUrl.Query?.Get<String>("Mode")
             ?? throw new InvalidOperationException("Query parameter 'Mode' not found");

@@ -52,6 +52,10 @@
                     "items": { "type": "string" }
                 }
             }
+        },
+        "grants": {
+            "$ref": "metadata-endpoint-json-schema.json#/definitions/grants",
+            "description": "A report is read only: 'view' is the verb it means."
         }
     }
 }

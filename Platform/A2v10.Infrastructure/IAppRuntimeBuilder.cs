@@ -17,6 +17,8 @@ public interface IAppRuntimeBuilder
 {
 	Boolean IsAutoSupported { get; }
     Boolean IsMetaSupported { get; }
+    // app.json 'useGrants' of a metadata application; false where there are no metadata
+    Task<Boolean> UseGrantsAsync();
 
 	String MetadataScripts(String minify);
 	String MetadataStyles(String minify);
