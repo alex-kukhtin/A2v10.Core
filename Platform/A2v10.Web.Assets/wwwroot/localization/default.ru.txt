@@ -172,3 +172,19 @@
 @LoginAgain=Login Again
 @LogOutMessage=You have successfully logged out of the application.
 ;
+@Admin.Login=Логин
+@Admin.PersonName=Имя
+@Admin.LastLogin=Последний вход
+@Admin.NewUser=Новый пользователь
+@Admin.Block=Заблокировать
+@Admin.Unblock=Разблокировать
+@Admin.Confirm.Delete=Удалить пользователя?
+@Admin.Confirm.Block=Заблокировать пользователя? Его открытые сеансы будут завершены.
+@Admin.Error.Self=Это действие нельзя выполнить над собственной учётной записью
+@Admin.Error.SelfAdmin=Нельзя снять с себя роль администратора
+;
+@Role.Admin=Администратор
+@Role.Everyone=Все пользователи
+;
+@Admin.BoundaryAll=Ничего не отмечено — вся сеть
+;

@@ -25,7 +25,8 @@ public enum EndpointKind
     Autonum,
     AutonumValues,
     AccPlan,
-    Ledger
+    Ledger,
+    Admin
 }
 public enum ColumnType
 {

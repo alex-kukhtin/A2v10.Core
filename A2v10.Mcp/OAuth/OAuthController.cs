@@ -161,14 +161,15 @@ public class OAuthController(McpAddress address, OAuthProtector protector, AppUs
 		return await Issue(grant);
 	}
 
-	/* The user is read again on every issue, so a lockout or changed roles take effect at the next
-	 * refresh. The principal comes from the same factory as the login cookie's; the ticket is sealed
-	 * with the MCP scheme's own protector, so no other scheme of the host can read it.
+	/* The user is read again on every issue, so a deletion, a lockout (a block is reported as one) or
+	 * changed roles take effect at the next refresh. A deleted user comes back empty, not null. The
+	 * principal comes from the same factory as the login cookie's; the ticket is sealed with the MCP
+	 * scheme's own protector, so no other scheme of the host can read it.
 	 */
 	async Task<IActionResult> Issue(RefreshGrant grant)
 	{
 		var user = await userManager.FindByIdAsync(grant.UserId.ToString());
-		if (user == null || await userManager.IsLockedOutAsync(user))
+		if (user == null || user.IsEmpty || await userManager.IsLockedOutAsync(user))
 			return Error("invalid_grant", "the user is not available");
 		var principal = await signInManager.CreateUserPrincipalAsync(user);
 		var now = DateTimeOffset.UtcNow;

@@ -37,7 +37,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         var (tables, grants) = await AllElementsMetadata(dataSource);
 
         var platformId = await GetPlatformIdAsync(dataSource);
-        await _sqlDbGenerator.CheckDeployAsync(dataSource, tables, await DeclaredRolesAsync(), grants, platformId);
+        await _sqlDbGenerator.CheckDeployAsync(dataSource, tables, await DeclaredRolesAsync(), grants, await BoundaryAsync(dataSource), platformId);
         _metadataCache.ClearDirty();
     }
 
@@ -45,7 +45,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     {
         var platformId = await GetPlatformIdAsync(dataSource);
         var (tables, grants) = await AllElementsMetadata(dataSource);
-        return await _sqlDbGenerator.CheckDeployAsync(dataSource, tables, await DeclaredRolesAsync(), grants, platformId);
+        return await _sqlDbGenerator.CheckDeployAsync(dataSource, tables, await DeclaredRolesAsync(), grants, await BoundaryAsync(dataSource), platformId);
     }
 
     // 'a2 meta deploy --full': the file only, executed inside full.sql
@@ -53,7 +53,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     {
         var platformId = await GetPlatformIdAsync(dataSource);
         var (tables, grants) = await AllElementsMetadata(dataSource);
-        await _sqlDbGenerator.WriteDeployAsync(dataSource, tables, await DeclaredRolesAsync(), grants, platformId);
+        await _sqlDbGenerator.WriteDeployAsync(dataSource, tables, await DeclaredRolesAsync(), grants, await BoundaryAsync(dataSource), platformId);
     }
 
     /* Is the platform in the database? a2meta is created by a2v10_metadata.sql - by full.sql, never
@@ -154,6 +154,18 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     // the switch of the rights; read by the runtime only - the deploy writes Grants whatever it says
     internal async Task<Boolean> UseGrantsAsync() =>
         (await AppJsonAsync()).UseGrants;
+
+    // the deploy makes a table per dimension, the users screen a tab per dimension
+    internal async Task<IReadOnlyList<BoundaryDimension>> BoundaryAsync(String? dataSource)
+    {
+        List<BoundaryDimension> dimensions = [];
+        foreach (var path in (await AppJsonAsync()).Boundary)
+        {
+            var (schema, table) = ParsePath(path);
+            dimensions.Add(new BoundaryDimension(path, (await GetNormalEndpointAsync(dataSource, schema, table)).Storage));
+        }
+        return dimensions;
+    }
 
     private Task<AppJson> AppJsonAsync() =>
         _metadataCache.GetAppJsonAsync(async () => AppJson.From(await ReadAppJsonAsync()));
@@ -730,6 +742,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                 Storage = await _metadataCache.GetOrAddStorageAsync(dataSource, schema, table,
                     (_, _, _) => Task.FromResult(TableMetadataDefaults.OperationsTable()))
             };
+        if (schema == Constants.SchemaNames.Admin)
+            return AdminEndpointMetadata.Create(table);
         return null;
     }
 
@@ -1415,7 +1429,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             // its only column is the operation code and it points at this very endpoint
             OperationEndpointMetadata o => o.Storage,
             // no shape, so no references - said by name, so an unknown subtype still fails loudly
-            TagEndpointMetadata => null,
+            TagEndpointMetadata or AdminEndpointMetadata => null,
             _ => throw new InvalidOperationException($"Unknown endpoint {endpoint.Path}")
         };
         if (meta == null)

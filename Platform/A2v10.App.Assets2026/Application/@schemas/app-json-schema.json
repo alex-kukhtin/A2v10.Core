@@ -29,6 +29,12 @@
 			"not": { "anyOf": [ { "required": [ "Admin" ] }, { "required": [ "Everyone" ] } ] },
 			"additionalProperties": false
 		},
+		"boundary": {
+			"description": "The catalogs the user's boundary is cut by - places people answer for (a store, a legal entity): \"/catalog/store\". A field pointing at one of them is under the boundary unless 'skipBoundary' takes it out. No 'boundary' - nothing is cut. Declared only: the platform does not enforce the boundary yet.",
+			"type": "array",
+			"items": { "type": "string", "pattern": "^/[a-z0-9_-]+/[a-z0-9_-]+$" },
+			"uniqueItems": true
+		},
 		"aliases": {
 			"description": "More folders of one kind: \"document\": [\"sale\"] makes sale/invoice the endpoint /sale/invoice of kind document. An operation's Id stays the last segment.",
 			"type": "object",

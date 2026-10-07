@@ -113,6 +113,18 @@ begin
 	update a2security.ViewUsers set LockoutEndDateUtc = @LockoutEndDate where Id=@Id;
 end
 go
+------------------------------------------------
+create or alter procedure a2security.[User.SetBlocked]
+@Id bigint,
+@IsBlocked bit
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+
+	update a2security.ViewUsers set IsBlocked = @IsBlocked where Id = @Id;
+end
+go
 
 ------------------------------------------------
 create or alter procedure a2security.[User.SetPasswordHash]

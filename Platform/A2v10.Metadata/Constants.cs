@@ -126,6 +126,10 @@ internal static class Constants
          * is uniqueidentifier would take the rows and write none. Lives beside 'platformid' itself.
          */
         public const String IdTableType = "dbo.[PlatformId.TableType]";
+        // the roles of the user's card on its save (/admin/user) - see CliDatabaseCreator.CreateUserRoleTableType
+        public const String UserRoleTableType = "a2security.[UserRole.TableType]";
+        // the boundary of the user's card on its save - see CliDatabaseCreator.CreateUserBoundaryTableType
+        public const String UserBoundaryTableType = "a2security.[UserBoundary.TableType]";
     }
 
     /* Platform entries of the filter namespace - the ones a trait or the kind contributes, as
@@ -150,6 +154,8 @@ internal static class Constants
          */
         public const String Operation = "operation";
         public const String Tag = "tag";
+        // the platform's screens for running the application, one endpoint per screen - see AdminEndpointMetadata
+        public const String Admin = "admin";
         /* One step further than those two: an enum has no endpoint at all, in code or in files.
          * The namespace exists so that a reference can name a set by address.
          */

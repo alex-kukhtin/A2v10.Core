@@ -70,6 +70,7 @@ public sealed class AppUserStore<T>(IDbContext dbContext, IOptions<AppUserStoreO
 		public const String TwoFactorEnabled = nameof(TwoFactorEnabled);
 		public const String AuthenticatorKey = nameof(AuthenticatorKey);
         public const String Theme = nameof(Theme);
+		public const String IsBlocked = nameof(IsBlocked);
 
     }
 
@@ -652,9 +653,13 @@ public sealed class AppUserStore<T>(IDbContext dbContext, IOptions<AppUserStoreO
 	#endregion
 
 	#region IUserLockoutStore
+	/* A block is reported as a lockout with no end: every sign-in - password, external, the second
+	 * factor, MCP - already asks IsLockedOutAsync, so a block needs no check of its own. The columns
+	 * stay the failed attempts' alone; unblocking gives their own value back.
+	 */
 	public Task<DateTimeOffset?> GetLockoutEndDateAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
-		return Task.FromResult<DateTimeOffset?>(user.LockoutEndDateUtc);
+		return Task.FromResult<DateTimeOffset?>(user.IsBlocked ? DateTimeOffset.MaxValue : user.LockoutEndDateUtc);
 	}
 
 	public async Task SetLockoutEndDateAsync(AppUser<T> user, DateTimeOffset? lockoutEnd, CancellationToken cancellationToken)
@@ -700,13 +705,24 @@ public sealed class AppUserStore<T>(IDbContext dbContext, IOptions<AppUserStoreO
 
 	public Task<Boolean> GetLockoutEnabledAsync(AppUser<T> user, CancellationToken cancellationToken)
 	{
-		return Task.FromResult(user.LockoutEnabled);
+		return Task.FromResult(user.LockoutEnabled || user.IsBlocked);
 	}
 
 	public Task SetLockoutEnabledAsync(AppUser<T> user, bool enabled, CancellationToken cancellationToken)
 	{
 		user.LockoutEnabled = enabled;
 		return Task.CompletedTask;
+	}
+
+	public async Task SetBlockedAsync(AppUser<T> user, Boolean blocked)
+	{
+		var prm = new ExpandoObject()
+		{
+			{ ParamNames.Id,  user.Id },
+			{ ParamNames.IsBlocked,  blocked }
+		};
+		await _dbContext.ExecuteExpandoAsync(_dataSource, $"[{_dbSchema}].[User.SetBlocked]", prm);
+		user.IsBlocked = blocked;
 	}
 
 	#endregion

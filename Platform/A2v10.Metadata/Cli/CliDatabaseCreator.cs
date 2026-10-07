@@ -72,6 +72,31 @@ public class CliDatabaseCreator()
         );
         """;
 
+    /* A row per role the card offers. The deploy's and not the platform script's: the boundary's type
+     * beside it is on platformid, which the platform script does not know - the screen's types live together.
+     */
+    public static String CreateUserRoleTableType() => $"""
+        {SQL_DIVIDER}
+        drop type if exists {Constants.SqlNames.UserRoleTableType};
+        create type {Constants.SqlNames.UserRoleTableType} as table
+        (
+            [{Constants.FieldNames.Id}] nvarchar(64),
+            [Checked] bit
+        );
+        """;
+
+    // a row per value the card offers, of every dimension at once - Boundary is the dimension's Path
+    public static String CreateUserBoundaryTableType() => $"""
+        {SQL_DIVIDER}
+        drop type if exists {Constants.SqlNames.UserBoundaryTableType};
+        create type {Constants.SqlNames.UserBoundaryTableType} as table
+        (
+            [Boundary] nvarchar(255),
+            [{Constants.FieldNames.Id}] platformid,
+            [Checked] bit
+        );
+        """;
+
     public static String CreateTableType(TableMetadata table)
     {
         static String createField(TableColumn column)

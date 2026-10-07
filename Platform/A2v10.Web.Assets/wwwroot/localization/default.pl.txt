@@ -172,3 +172,19 @@
 @LoginAgain=Login Again
 @LogOutMessage=You have successfully logged out of the application.
 ;
+@Admin.Login=Login
+@Admin.PersonName=Imię i nazwisko
+@Admin.LastLogin=Ostatnie logowanie
+@Admin.NewUser=Nowy użytkownik
+@Admin.Block=Zablokuj
+@Admin.Unblock=Odblokuj
+@Admin.Confirm.Delete=Usunąć użytkownika?
+@Admin.Confirm.Block=Zablokować użytkownika? Jego otwarte sesje zostaną zakończone.
+@Admin.Error.Self=Tej operacji nie można wykonać na własnym koncie
+@Admin.Error.SelfAdmin=Nie można odebrać sobie roli administratora
+;
+@Role.Admin=Administrator
+@Role.Everyone=Wszyscy użytkownicy
+;
+@Admin.BoundaryAll=Nic nie zaznaczono — cała sieć
+;

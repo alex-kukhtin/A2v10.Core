@@ -173,3 +173,19 @@
 @LogOutMessage=You have successfully logged out of the application.
 
 
+@Admin.Login=Login
+@Admin.PersonName=Name
+@Admin.LastLogin=Last login
+@Admin.NewUser=New user
+@Admin.Block=Block
+@Admin.Unblock=Unblock
+@Admin.Confirm.Delete=Delete the user?
+@Admin.Confirm.Block=Block the user? Their open sessions will be ended.
+@Admin.Error.Self=This action cannot be applied to your own account
+@Admin.Error.SelfAdmin=You cannot take the administrator role from yourself
+;
+@Role.Admin=Administrator
+@Role.Everyone=All users
+;
+@Admin.BoundaryAll=Nothing ticked means the whole network
+;

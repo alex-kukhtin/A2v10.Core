@@ -24,6 +24,10 @@ internal partial class ModelBuilderFactory(
         var endpoint = await _metadataProvider.GetEndpointAsync(dataSource, schema, table);
         var platformId = await _metadataProvider.GetPlatformIdAsync(dataSource);
 
+        // the namespace's one right, before any of its screens is built - see AdminEndpointMetadata
+        if (endpoint is AdminEndpointMetadata)
+            await AdminGate.CheckAsync(_serviceProvider, dataSource);
+
         switch (endpoint)
         {
             case ReportEndpointMetadata report:
@@ -32,6 +36,8 @@ internal partial class ModelBuilderFactory(
                 return new TagEndpointBuilder(_serviceProvider, tag, platformUrl, dataSource, platformId);
             case OperationEndpointMetadata operation:
                 return new OperationEndpointBuilder(_serviceProvider, operation, platformUrl, dataSource);
+            case UserAdminEndpointMetadata user:
+                return new UserAdminBuilder(_serviceProvider, user, platformUrl, dataSource, platformId);
             case NormalEndpointMetadata normal:
                 return new BaseModelBuilder(_serviceProvider, new BuilderDescriptor()
                 {

@@ -59,9 +59,10 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
     private String DeployFile => DatabaseFilePath.NormalizeSlash();
 
     internal async Task<DeployDatabaseResult> CheckDeployAsync(String? dataSource, IEnumerable<TableMetadata> tables,
-        IReadOnlyList<AppRole>? roles, IEnumerable<(String Endpoint, EndpointGrant Grant)> grants, AppPlatformId platformId)
+        IReadOnlyList<AppRole>? roles, IEnumerable<(String Endpoint, EndpointGrant Grant)> grants,
+        IReadOnlyList<BoundaryDimension> boundary, AppPlatformId platformId)
     {
-        if (await WriteDeployAsync(dataSource, tables, roles, grants, platformId) is not var (script, hash))
+        if (await WriteDeployAsync(dataSource, tables, roles, grants, boundary, platformId) is not var (script, hash))
             return new DeployDatabaseResult(DeployFile, false);
 
         await EnsurePlatformVersionAsync(dataSource);
@@ -97,17 +98,19 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
      * null - the hash matched: the database got this very file already, and it lies on disk.
      */
     internal async Task<(String Script, String Hash)?> WriteDeployAsync(String? dataSource, IEnumerable<TableMetadata> tables,
-        IReadOnlyList<AppRole>? roles, IEnumerable<(String Endpoint, EndpointGrant Grant)> grants, AppPlatformId platformId)
+        IReadOnlyList<AppRole>? roles, IEnumerable<(String Endpoint, EndpointGrant Grant)> grants,
+        IReadOnlyList<BoundaryDimension> boundary, AppPlatformId platformId)
     {
         CheckOneCompanyCatalog(tables);
         var seedScript = await GenerateMetadataSeedAsync(tables);
-        /* The roles and the grants are no table, so a2meta does not carry them and its seed cannot
-         * fingerprint them: their scripts join the hash themselves. Empty without 'roles' - the hash of
-         * an application declaring none stays what it was.
+        /* The roles, the grants and the boundary are not in a2meta, so its seed cannot fingerprint
+         * them: their scripts join the hash themselves. Empty when app.json declares none - the hash
+         * of such an application stays what it was.
          */
         var rolesScript = CreateRolesScript(roles);
         var grantsScript = CreateGrantsScript(grants);
-        var seedHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes((seedScript ?? "new") + rolesScript + grantsScript))).ToLowerInvariant();
+        var boundaryScript = CreateBoundaryScript(boundary);
+        var seedHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes((seedScript ?? "new") + rolesScript + grantsScript + boundaryScript))).ToLowerInvariant();
         // read hash from DB
         var dbHash = await _dbContext.LoadAsync<DbHash>(dataSource, "a2meta.[GetDbHash]");
 
@@ -142,6 +145,8 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         allScript.AppendLine(rolesScript);
         // after the roles: a2security.Grants keys its Role to a2security.Roles
         allScript.AppendLine(grantsScript);
+        // after the tables: a boundary table keys its value to the catalog
+        allScript.AppendLine(boundaryScript);
         allScript.AppendLine(CreateForeignKeysScript(tables));
         allScript.AppendLine(CreateIndexesScript(tables));
 
@@ -203,6 +208,33 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
      * left alone; an empty map voids every role.
      * Nothing of the application points at a role, so the place in the script is free.
      */
+    /* app.json 'boundary': a table per dimension for the users' values (BoundaryDimension). Created and
+     * never dropped: a dimension taken out of the list keeps its rows, and put back finds them, as a
+     * voided role keeps its assignments. Written here and not as a TableMetadata: no endpoint, no
+     * surrogate Id - the key is the pair, as in UserRoles.
+     */
+    internal static String CreateBoundaryScript(IReadOnlyList<BoundaryDimension> boundary)
+    {
+        if (boundary.Count == 0)
+            return String.Empty;
+        var sb = new StringBuilder();
+        sb.AppendLine("-- BOUNDARY");
+        foreach (var d in boundary)
+            sb.AppendLine($"""
+            if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA = N'{d.Catalog.SqlSchema}' and TABLE_NAME = N'{d.Table}')
+            create table {d.SqlTableName}
+            (
+                UserId bigint not null
+                    constraint FK_{d.Table}_UserId_Users foreign key references a2security.Users(Id),
+                [{d.Column}] platformid not null
+                    constraint FK_{d.Table}_{d.Column}_{d.Catalog.Table} foreign key references {d.Catalog.SqlTableName}(Id),
+                constraint PK_{d.Table} primary key (UserId, [{d.Column}])
+            );
+            go
+            """);
+        return sb.ToString();
+    }
+
     internal static String CreateRolesScript(IReadOnlyList<AppRole>? roles)
     {
         static String Str(String? val) =>
@@ -837,6 +869,10 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         var strBuilder = new StringBuilder();
         strBuilder.AppendLine("-- TABLE TYPES");
         strBuilder.AppendLine(CliDatabaseCreator.CreateIdTableType());
+        strBuilder.AppendLine("go");
+        strBuilder.AppendLine(CliDatabaseCreator.CreateUserRoleTableType());
+        strBuilder.AppendLine("go");
+        strBuilder.AppendLine(CliDatabaseCreator.CreateUserBoundaryTableType());
         strBuilder.AppendLine("go");
         foreach (var table in tables.Where(HasTableType))
         {

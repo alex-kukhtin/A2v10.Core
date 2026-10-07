@@ -171,3 +171,19 @@
 @LoginAgain=Увійти знову
 @LogOutMessage=Ви завершили сеанс роботи з системою.
 ;
+@Admin.Login=Логін
+@Admin.PersonName=Ім'я
+@Admin.LastLogin=Останній вхід
+@Admin.NewUser=Новий користувач
+@Admin.Block=Заблокувати
+@Admin.Unblock=Розблокувати
+@Admin.Confirm.Delete=Видалити користувача?
+@Admin.Confirm.Block=Заблокувати користувача? Його відкриті сеанси буде завершено.
+@Admin.Error.Self=Цю дію не можна виконати над власним обліковим записом
+@Admin.Error.SelfAdmin=Не можна зняти з себе роль адміністратора
+;
+@Role.Admin=Адміністратор
+@Role.Everyone=Усі користувачі
+;
+@Admin.BoundaryAll=Нічого не відмічено — уся мережа
+;

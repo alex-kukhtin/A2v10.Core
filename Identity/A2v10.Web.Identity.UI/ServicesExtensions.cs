@@ -3,6 +3,7 @@
 
 using Microsoft.AspNetCore.Http;
 
+using A2v10.Infrastructure;
 using A2v10.Identity.UI;
 
 namespace Microsoft.Extensions.DependencyInjection;
@@ -17,6 +18,7 @@ public static class ServicesExtensions
 		{
 			opts.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 		});
+		builder.Services.AddScoped<IAppUserAdmin, AppUserAdmin>();
 		return builder;
 	}
 }
