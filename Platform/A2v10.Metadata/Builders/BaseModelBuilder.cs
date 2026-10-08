@@ -19,7 +19,6 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
 {
     internal readonly DatabaseMetadataProvider _metadataProvider = _serviceProvider.GetRequiredService<DatabaseMetadataProvider>();
     internal readonly ICurrentUser _currentUser = _serviceProvider.GetRequiredService<ICurrentUser>();
-    internal readonly IDbContext _dbContext = _serviceProvider.GetRequiredService<IDbContext>();
     internal readonly IServiceProvider _xamlServiceProvider = new XamlServiceProvider();
 
     private readonly SqlBuilder _sqlBuilder = new(descriptor, _serviceProvider);

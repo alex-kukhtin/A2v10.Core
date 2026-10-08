@@ -30,6 +30,13 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Repo
     protected ReportGrouping _grouping = default!;
 #pragma warning restore IDE1006 // Naming Styles
 
+    // the report's own address: the right is on it, not on the surface it reads
+    internal required String Path { get; init; }
+    internal required Boolean UseGrants { get; init; }
+
+    // a report only reads
+    protected String GateSql() => UseGrants ? Gate.View.Sql(Path) : String.Empty;
+
     internal String CreateField(ReportItemMetadata item, String? prefix = null)
     {
         // TODO : PlatformId DataType
@@ -61,11 +68,11 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Repo
      * differ the day a fourth type arrives, and the tool's copy is the one nobody would update.
      */
     internal static BaseReportBuilder Create(IServiceProvider serviceProvider,
-        ReportEndpointMetadata endpoint, AppPlatformId platformId) => endpoint.Report.Type switch
+        ReportEndpointMetadata endpoint, AppPlatformId platformId, Boolean useGrants) => endpoint.Report.Type switch
     {
-        "turnover" => new TurnoverReportBuilder(serviceProvider, endpoint.Report, endpoint.Surface, platformId),
-        "trialBalance" => new TrialBalanceReportBuilder(serviceProvider, endpoint.Report, endpoint.Surface, platformId),
-        "chessboard" => new ChessboardReportBuilder(serviceProvider, endpoint.Report, endpoint.Surface, platformId),
+        "turnover" => new TurnoverReportBuilder(serviceProvider, endpoint.Report, endpoint.Surface, platformId) { Path = endpoint.Path, UseGrants = useGrants },
+        "trialBalance" => new TrialBalanceReportBuilder(serviceProvider, endpoint.Report, endpoint.Surface, platformId) { Path = endpoint.Path, UseGrants = useGrants },
+        "chessboard" => new ChessboardReportBuilder(serviceProvider, endpoint.Report, endpoint.Surface, platformId) { Path = endpoint.Path, UseGrants = useGrants },
         _ => throw new NotImplementedException($"Invalid Report type '{endpoint.Report.Type}' for {endpoint.Path}")
     };
 

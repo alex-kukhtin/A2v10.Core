@@ -14,7 +14,7 @@ namespace A2v10.Metadata;
  * render, and everything it needs is in its own container.
  */
 internal class ReportEndpointBuilder(IServiceProvider _serviceProvider, ReportEndpointMetadata _endpoint,
-    IPlatformUrl platformUrl, AppPlatformId _platformId) : IModelBuilder
+    IPlatformUrl platformUrl, AppPlatformId _platformId, Boolean _useGrants) : IModelBuilder
 {
     private readonly DynamicRenderer _dynamicRenderer = new(_serviceProvider);
 
@@ -22,7 +22,7 @@ internal class ReportEndpointBuilder(IServiceProvider _serviceProvider, ReportEn
 
     public async Task<IAppRuntimeResult> RenderAsync(IModelView view, Boolean isReload)
     {
-        var reportBuilder = BaseReportBuilder.Create(_serviceProvider, _endpoint, _platformId);
+        var reportBuilder = BaseReportBuilder.Create(_serviceProvider, _endpoint, _platformId, _useGrants);
 
         var dm = await reportBuilder.LoadReportModelAsync(view,  platformUrl.Query ?? []);
 

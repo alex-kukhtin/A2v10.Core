@@ -43,8 +43,8 @@ internal partial class SqlBuilder
         var sqlString = $"""
             set nocount on;
             set transaction isolation level read committed;
-            set xact_abort on;            
-
+            set xact_abort on;
+            {GateSql(Gate.Delete)}{RecordCheck("@Id")}
             {checkSql}
             """;
         if (Table.IsDocument)

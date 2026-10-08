@@ -20,6 +20,7 @@ internal partial class SqlBuilder
         var sql = $"""
         set nocount on;
         set transaction isolation level read uncommitted;
+        {GateSql(Gate.View)}
 
         declare @valid bit = 1;
 

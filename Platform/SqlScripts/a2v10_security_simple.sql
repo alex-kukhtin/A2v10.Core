@@ -331,6 +331,48 @@ begin
 end
 go
 ------------------------------------------------
+-- the gate of a metadata endpoint (useGrants), ahead of every batch the builders run;
+-- the roles as in [User.Grants.Load]: assigned and living, and Everyone held by all
+create or alter procedure a2security.[Permission.Check]
+@UserId bigint,
+@Url nvarchar(128),
+@Flag nvarchar(16),
+@Message nvarchar(255) = N'UI:@[UIError.AccessDenied]'
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+
+	if exists(select 1 from a2security.UserRoles where UserId = @UserId and [Role] = N'Admin')
+		return;
+
+	declare @roles table([Role] nvarchar(64));
+	insert into @roles([Role])
+	select ur.[Role] from a2security.UserRoles ur
+		inner join a2security.Roles r on ur.[Role] = r.Id
+	where ur.UserId = @UserId and r.Void = 0
+	union
+	select N'Everyone';
+
+	declare @canView bit, @canCreate bit, @canEdit bit, @canDelete bit, @canPost bit, @canUnpost bit;
+
+	select @canView = max(cast(g.CanView as int)), @canCreate = max(cast(g.CanCreate as int)),
+		@canEdit = max(cast(g.CanEdit as int)), @canDelete = max(cast(g.CanDelete as int)),
+		@canPost = max(cast(g.CanPost as int)), @canUnpost = max(cast(g.CanUnpost as int))
+	from a2security.Grants g
+	where g.[Endpoint] = @Url and g.[Role] in (select [Role] from @roles);
+
+	declare @allowed bit = case @Flag
+		when N'View' then @canView when N'Create' then @canCreate when N'Edit' then @canEdit
+		when N'Delete' then @canDelete when N'Post' then @canPost when N'Unpost' then @canUnpost
+	end;
+
+	-- no grant row is null, not 0
+	if isnull(@allowed, 0) = 0
+		throw 60000, @Message, 0;
+end
+go
+------------------------------------------------
 create or alter procedure a2security.[User.UpdateParts]
 @Id bigint,
 @PhoneNumber nvarchar(255) = null,

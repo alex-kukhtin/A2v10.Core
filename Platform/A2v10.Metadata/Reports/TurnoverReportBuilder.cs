@@ -68,6 +68,7 @@ internal class TurnoverReportBuilder(IServiceProvider serviceProvider, ReportMet
         var sqlString = $"""
         set nocount on;
         set transaction isolation level read uncommitted;
+        {GateSql()}
 
         drop table if exists #tmpturn;
         create table #tmpturn({String.Join(',', createTempTableFeilds())});

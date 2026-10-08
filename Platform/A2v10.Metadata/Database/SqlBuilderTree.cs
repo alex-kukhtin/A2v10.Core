@@ -101,6 +101,7 @@ internal partial class SqlBuilder
         var sqlString = $"""
         set nocount on;
         set transaction isolation level read uncommitted;
+        {GateSql(Gate.View)}
 
         {FolderTreeSql(withElements: true)}
 
@@ -151,6 +152,7 @@ internal partial class SqlBuilder
         var sqlString = $"""
         set nocount on;
         set transaction isolation level read uncommitted;
+        {GateSql(Gate.View)}
 
         with T([Id], [Level])
         as (
@@ -210,6 +212,7 @@ internal partial class SqlBuilder
         var sqlString = $"""
         set nocount on;
         set transaction isolation level read uncommitted;
+        {GateSql(isNew ? Gate.Create : Gate.View)}
 
         {FolderSelectSql(folders)}
         {(isNew ? NewFolderDefaultsSql(folders) : String.Empty)}
@@ -238,6 +241,7 @@ internal partial class SqlBuilder
         set nocount on;
         set transaction isolation level read committed;
         set xact_abort on;
+        {GateSql(Gate.Delete)}
 
         if exists(select 1 from {folders.SqlTableName} where [{parent.Name}] = @Id and [{voidCol}] = 0)
             or exists(select 1 from {Table.SqlTableName} where [{Constants.FieldNames.Folder}] = @Id and [{voidCol}] = 0)
@@ -275,6 +279,7 @@ internal partial class SqlBuilder
         set nocount on;
         set transaction isolation level read committed;
         set xact_abort on;
+        {GateSql(Gate.Save(folders.SqlTableName, "@Id"))}
 
         if @Id is null
         begin
@@ -311,6 +316,7 @@ internal partial class SqlBuilder
         var sqlString = $"""
         set nocount on;
         set transaction isolation level read uncommitted;
+        {GateSql(Gate.View)}
 
         {FolderTreeSql(withElements: false)}
         """;

@@ -135,16 +135,8 @@ internal partial class SqlBuilder
             else
                 sb.Append("where 1 = 1"); // TODO:!!!!
 
-            /* The rows of THIS document among those sharing its table: every operation the registry
-             * says is its own, void ones included - a document saved under an operation that has since
-             * left the files is still this document's. The column is found by type, as everywhere else.
-             */
-            if (Endpoint.DocumentOperations().Count > 0)
-            {
-                var column = Table.AllColumns().First(c => c.IsOperation);
-                var registry = TableMetadataDefaults.OperationsTable();
-                sb.Append($" and a.[{column.Name}] in (select [{Constants.FieldNames.Id}] from {registry.SqlTableName} where [{Constants.FieldNames.Document}] = N'{Endpoint.Name}')");
-            }
+            if (OwnOperations("a") is { } own)
+                sb.Append($" and {own}");
 
             sb.Append(FixedPredicate("a"));
 
@@ -211,6 +203,7 @@ internal partial class SqlBuilder
 
             set nocount on;
             set transaction isolation level read uncommitted;
+            {GateSql(Gate.View)}
             """);
             sb.AppendLine();
 

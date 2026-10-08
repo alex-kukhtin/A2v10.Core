@@ -23,7 +23,7 @@ public class PrintModelTests
         => new(name, true, fields, nodes);
     static PrintNode Root(params PrintNode[] nodes) => new("Document", false, ["Date"], nodes);
 
-    static String Build(TableMetadata doc, PrintNode model) => new PrintSqlBuilder(doc, model).Build();
+    static String Build(TableMetadata doc, PrintNode model) => new PrintSqlBuilder(doc, model, String.Empty).Build();
 
     // ---- what the record carries -----------------------------------------------------------
 

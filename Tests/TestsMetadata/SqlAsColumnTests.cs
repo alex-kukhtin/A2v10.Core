@@ -88,7 +88,8 @@ public class SqlAsColumnTests
         {
             Endpoint = await provider.GetNormalEndpointAsync(null, "document", "receipt"),
             PlatformUrl = new PlatformUrl("_page/document/receipt/edit/new?Op=supplier&BasedOn=5&Base=/document/order"),
-            PlatformId = await provider.GetPlatformIdAsync(null)
+            PlatformId = await provider.GetPlatformIdAsync(null),
+            UseGrants = false,
         }, TestHost.Services);
 
         var sql = await builder.BuildBirthSqlTextAsync();

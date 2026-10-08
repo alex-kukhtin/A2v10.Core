@@ -152,7 +152,9 @@ public sealed class EndpointValidator(DatabaseMetadataProvider _metadataProvider
             {
                 Endpoint = endpoint,
                 PlatformUrl = endpoint.PlatformUrl(action),
-                PlatformId = platformId
+                PlatformId = platformId,
+                // XAML and TS only - no batch to gate
+                UseGrants = false,
             };
             XamlTextBulder.GetXaml(new XamlBuilder(descriptor).CreateXamlContainer(action));
 
@@ -185,7 +187,7 @@ public sealed class EndpointValidator(DatabaseMetadataProvider _metadataProvider
      */
     private void ReportScreen(ReportEndpointMetadata endpoint, AppPlatformId platformId)
     {
-        var builder = BaseReportBuilder.Create(_serviceProvider, endpoint, platformId);
+        var builder = BaseReportBuilder.Create(_serviceProvider, endpoint, platformId, useGrants: false);
         builder.SetGrouping(new ExpandoObject());
         builder.CreatePage();
         builder.CreateTemplate();
@@ -201,7 +203,8 @@ public sealed class EndpointValidator(DatabaseMetadataProvider _metadataProvider
         foreach (var form in endpoint.Declaration.PrintForms)
         {
             var blank = PrintRequest.BlankOf(_codeProvider, endpoint, form.Path);
-            new PrintSqlBuilder(endpoint.Storage, PrintModel.Parse(blank.Text)).Build();
+            // built, never run: the gate is not what is checked here
+            new PrintSqlBuilder(endpoint.Storage, PrintModel.Parse(blank.Text), head: String.Empty).Build();
         }
     }
 }

@@ -30,7 +30,8 @@ public class BasedOnTests
         {
             Endpoint = await provider.GetNormalEndpointAsync(null, schema, table),
             PlatformUrl = new PlatformUrl($"_page{endpointPath}/edit/new?{query}"),
-            PlatformId = await provider.GetPlatformIdAsync(null)
+            PlatformId = await provider.GetPlatformIdAsync(null),
+            UseGrants = false,
         };
         return new SqlBuilder(descriptor, TestHost.Services);
     }

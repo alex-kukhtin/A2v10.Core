@@ -55,7 +55,9 @@ public sealed class EndpointMaterializer(DatabaseMetadataProvider _metadataProvi
             Endpoint = endpoint,
             PlatformUrl = platformUrl,
             // the base the database rests on: an Id is typed by it in the .d.ts
-            PlatformId = await _metadataProvider.GetPlatformIdAsync(null)
+            PlatformId = await _metadataProvider.GetPlatformIdAsync(null),
+            // XAML and TS only - no batch to gate
+            UseGrants = false,
         };
         // the folder as the code provider names it - a '$module/' prefix included, a slash not
         var folder = endpointPath.NormalizeSlash().Trim('/');

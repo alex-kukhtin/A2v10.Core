@@ -57,6 +57,7 @@ internal partial class SqlBuilder
 
         set nocount on;
         set transaction isolation level read uncommitted;
+        {GateSql(Gate.View)}{RecordCheck("@Id")}
 
         """);
         sb.AppendLine();
@@ -87,7 +88,7 @@ internal partial class SqlBuilder
             journals.Select(j => (j, DocumentFilter(j, String.Empty), TransColumns(j))));
         refMap.WriteRefMap(sb);
 
-        return await _dbContext.LoadModelSqlAsync(_descr.DataSource, sb.ToString(), dbprms =>
+        return await _dbContext.LoadModelSqlAsync(DataSource, sb.ToString(), dbprms =>
         {
             AddDefaultParameters(dbprms);
             dbprms.AddString("@Id", _descr.PlatformUrl.Id);

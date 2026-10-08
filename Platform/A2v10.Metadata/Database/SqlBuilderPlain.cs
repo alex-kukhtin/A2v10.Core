@@ -76,10 +76,15 @@ internal partial class SqlBuilder
     String? QueryInitialValue(String key, String param) =>
         QueryColumn(key).IsOperation ? Endpoint.StartOperation(QueryValue(param)) : QueryValue(param);
 
-    internal String BuildLoadPlainSqlText() => BuildLoadPlainSqlText(LoadRows.Stored, birth: null);
+    internal String BuildLoadPlainSqlText() =>
+        BuildLoadPlainSqlText(LoadRows.Stored, birth: null,
+            IsNewModel() ? GateSql(Gate.Create) : GateSql(Gate.View) + RecordCheck("@Id"));
 
-    // 'birth' fills the table variables 'rows' reads (BirthPrelude), so it runs before everything that reads the rows
-    String BuildLoadPlainSqlText(LoadRows rows, String? birth)
+    /* 'birth' fills the table variables 'rows' reads (BirthPrelude), so it runs before everything that reads the rows.
+     * 'head' - the gate and the record check - is empty inside a save: the text is its tail there, and the
+     * save's own are at its head.
+     */
+    String BuildLoadPlainSqlText(LoadRows rows, String? birth, String head)
     {
         var allColumns = Table.AllColumns().ToList();
         // var refs = allColumns.AllRefs().ToList();
@@ -196,6 +201,7 @@ internal partial class SqlBuilder
 
             set nocount on;
             set transaction isolation level read uncommitted;
+            {head}
 
             """);
         sb.AppendLine();
@@ -359,7 +365,7 @@ internal partial class SqlBuilder
         if (IsNewModel() && Endpoint.Declaration.OperationDeclarations.Count == 0)
             Endpoint.StartOperation(QueryValue(Constants.FieldNames.OperationQuery));
 
-        return await _dbContext.LoadModelSqlAsync(_descr.DataSource, sqlQuery, dbprms =>
+        return await _dbContext.LoadModelSqlAsync(DataSource, sqlQuery, dbprms =>
         {
             AddDefaultParameters(dbprms);
             dbprms.AddString("@Id", _descr.PlatformUrl.Id);
@@ -412,6 +418,100 @@ internal partial class SqlBuilder
         return sb.ToString();
     }
 
+    // the record the save sends is the one row of the table-valued parameter named after the model
+    String SentId => $"(select [{Constants.FieldNames.Id}] from @{Table.Model})";
+
+    internal Gate SaveGate() => Gate.Save(Table.SqlTableName, SentId);
+
+    /* What was sent keeps an operation of this document: a foreign one would move the row into
+     * another document, or create one of it under this document's gate.
+     */
+    internal String SentOperationCheck() => OwnOperations("s") is { } own
+        ? $"""
+        if exists(select 1 from @{Table.Model} s where not ({own}))
+            throw 60000, N'UI:@[UIError.AccessDenied]', 0;
+        """
+        : String.Empty;
+
+    /* The rows of every collection, merged into their tables. Matched by Id AND by the master: an id is per
+     * table, so without the master a row id of another document would update that document's row through
+     * this one's gate. Unmatched, it is inserted as a new row of this document; the foreign row is untouched.
+     */
+    internal String MergeDetailsSql()
+    {
+        if (Table.Details == null || Table.Details.Count == 0)
+            return String.Empty;
+        var sb = new StringBuilder("-- merge details");
+        sb.AppendLine();
+
+        Boolean updateablePredicate(TableColumn c)
+            => c.Type != ColumnType.Master && c.Type != ColumnType.RowKind && c.Type != ColumnType.Id && !c.HasSqlAs;
+
+        String mergeOneDetails(TableMetadata detailsTable, String key)
+        {
+            var updateFields = detailsTable.AllColumns(updateablePredicate);
+
+            return $"""
+				merge {detailsTable.SqlTableName} as t
+				using @{key} as s
+				on t.[Id] = s.[Id] and t.[{detailsTable.MasterField}] = @Id
+				when matched then update set
+				    {String.Join(',', updateFields.Select(f => $"t.[{f.Name}] = s.[{f.Name}]"))}
+				when not matched then insert
+				    ([{detailsTable.MasterField}], {String.Join(',', updateFields.Select(f => $"[{f.Name}]"))}) values
+				    (@Id, {String.Join(',', updateFields.Select(f => $"s.[{f.Name}]"))})
+				when not matched by source and t.[{detailsTable.MasterField}] = @Id then delete;
+				""";
+        }
+
+        /* One table, N table-valued parameters - one per kind, since that is how the model
+         * splits. The kind itself is never sent: it is a literal here, so a row cannot
+         * arrive claiming a kind other than the collection it came in, and it is excluded
+         * from 'update set' (updateablePredicate) so an existing row never changes kind.
+         *
+         * The delete pass is limited to the DECLARED kinds. Without that, a row whose kind
+         * was removed from the metadata - and which therefore arrives in no parameter -
+         * matches nothing in the source and is deleted on the next save of the document.
+         * Bounded this way it is only orphaned, and an orphan can still be recovered.
+         */
+        String mergeMultiDetails(TableMetadata detailsTable)
+        {
+            var updateFields = detailsTable.AllColumns(updateablePredicate);
+            var kindField = detailsTable.Columns.FirstOrDefault(c => c.Type == ColumnType.RowKind)
+                ?? throw new InvalidOperationException("Kind field not found");
+
+            var usingDetails = detailsTable.Kinds.Keys.Select(k =>
+                $"select [$Kind] = N'{k}', * from @{detailsTable.KindCollectionName(k)}"
+            );
+            var declaredKinds = String.Join(", ", detailsTable.Kinds.Keys.Select(k => $"N'{k}'"));
+
+            return $"""
+				with ST as (
+				    {String.Join("\nunion all\n", usingDetails)}
+				)
+				merge {detailsTable.SqlTableName} as t
+				using ST as s
+				on t.[Id] = s.[Id] and t.[{detailsTable.MasterField}] = @Id
+				when matched then update set
+					{String.Join(',', updateFields.Select(f => $"t.[{f.Name}] = s.[{f.Name}]"))}
+				when not matched then insert
+					([{detailsTable.MasterField}], [{kindField.Name}], {String.Join(',', updateFields.Select(f => $"[{f.Name}]"))}) values
+					(@Id, s.[$Kind], {String.Join(',', updateFields.Select(f => $"s.[{f.Name}]"))})
+				when not matched by source and t.[{detailsTable.MasterField}] = @Id and t.[{kindField.Name}] in ({declaredKinds}) then delete;
+				""";
+        }
+
+        foreach (var details in Table.Details)
+        {
+            if (details.Value.Kinds.Count == 0)
+                sb.AppendLine(mergeOneDetails(details.Value, details.Key));
+            else
+                sb.AppendLine(mergeMultiDetails(details.Value));
+            sb.AppendLine();
+        }
+        return sb.ToString();
+    }
+
     public async Task<ExpandoObject> SavePlainModelAsync(ExpandoObject data, ExpandoObject savePrms)
     {
         String CheckRowVersion()
@@ -426,81 +526,6 @@ internal partial class SqlBuilder
                 """;
             }
             return String.Empty;
-        }
-
-        String MergeDetails()
-        {
-            if (Table.Details == null || Table.Details.Count == 0)
-                return String.Empty;
-            var sb = new StringBuilder("-- merge details");
-            sb.AppendLine();
-
-            Boolean updateablePredicate(TableColumn c)
-                => c.Type != ColumnType.Master && c.Type != ColumnType.RowKind && c.Type != ColumnType.Id && !c.HasSqlAs;
-
-            String mergeOneDetails(TableMetadata detailsTable, String key)
-            {
-                var updateFields = detailsTable.AllColumns(updateablePredicate);
-
-                return $"""
-				merge {detailsTable.SqlTableName} as t
-				using @{key} as s
-				on t.[Id]  = s.[Id]
-				when matched then update set
-				    {String.Join(',', updateFields.Select(f => $"t.[{f.Name}] = s.[{f.Name}]"))}
-				when not matched then insert
-				    ([{detailsTable.MasterField}], {String.Join(',', updateFields.Select(f => $"[{f.Name}]"))}) values
-				    (@Id, {String.Join(',', updateFields.Select(f => $"s.[{f.Name}]"))})
-				when not matched by source and t.[{detailsTable.MasterField}] = @Id then delete;
-				""";
-            }
-
-            /* One table, N table-valued parameters - one per kind, since that is how the model
-             * splits. The kind itself is never sent: it is a literal here, so a row cannot
-             * arrive claiming a kind other than the collection it came in, and it is excluded
-             * from 'update set' (updateablePredicate) so an existing row never changes kind.
-             *
-             * The delete pass is limited to the DECLARED kinds. Without that, a row whose kind
-             * was removed from the metadata - and which therefore arrives in no parameter -
-             * matches nothing in the source and is deleted on the next save of the document.
-             * Bounded this way it is only orphaned, and an orphan can still be recovered.
-             */
-            String mergeMultiDetails(TableMetadata detailsTable)
-            {
-                var updateFields = detailsTable.AllColumns(updateablePredicate);
-                var kindField = detailsTable.Columns.FirstOrDefault(c => c.Type == ColumnType.RowKind)
-                    ?? throw new InvalidOperationException("Kind field not found");
-
-                var usingDetails = detailsTable.Kinds.Keys.Select(k =>
-                    $"select [$Kind] = N'{k}', * from @{detailsTable.KindCollectionName(k)}"
-                );
-                var declaredKinds = String.Join(", ", detailsTable.Kinds.Keys.Select(k => $"N'{k}'"));
-
-                return $"""
-				with ST as (
-				    {String.Join("\nunion all\n", usingDetails)}
-				)
-				merge {detailsTable.SqlTableName} as t
-				using ST as s
-				on t.Id = s.Id
-				when matched then update set
-					{String.Join(',', updateFields.Select(f => $"t.[{f.Name}] = s.[{f.Name}]"))}
-				when not matched then insert
-					([{detailsTable.MasterField}], [{kindField.Name}], {String.Join(',', updateFields.Select(f => $"[{f.Name}]"))}) values
-					(@Id, s.[$Kind], {String.Join(',', updateFields.Select(f => $"s.[{f.Name}]"))})
-				when not matched by source and t.[{detailsTable.MasterField}] = @Id and t.[{kindField.Name}] in ({declaredKinds}) then delete;
-				""";
-            }
-
-            foreach (var details in Table.Details)
-            {
-                if (details.Value.Kinds.Count == 0)
-                    sb.AppendLine(mergeOneDetails(details.Value, details.Key));
-                else
-                    sb.AppendLine(mergeMultiDetails(details.Value));
-                sb.AppendLine();
-            }
-            return sb.ToString();
         }
 
 
@@ -641,6 +666,7 @@ internal partial class SqlBuilder
             set nocount on;
             set transaction isolation level read committed;
             set xact_abort on;
+            {GateSql(SaveGate())}{RecordCheck(SentId)}
 
             declare @rtable table(Id {keyType}{rtableExtra});
             declare @Id {keyType};
@@ -649,6 +675,7 @@ internal partial class SqlBuilder
             // STEP:1 - check row version
             sb.AppendLine(CheckRowVersion());
             sb.AppendLine(OwnerCheck(Table));
+            sb.AppendLine(SentOperationCheck());
 
             // STEP:2 - merge main
             sb.AppendLine($"""
@@ -672,13 +699,13 @@ internal partial class SqlBuilder
 
             // STEP:3 update details
 
-            sb.AppendLine(MergeDetails());
+            sb.AppendLine(MergeDetailsSql());
 
             sb.AppendLine(MergeTags());
 
             // STEP:4 return select
 
-            sb.AppendLine(BuildLoadPlainSqlText());
+            sb.AppendLine(BuildLoadPlainSqlText(LoadRows.Stored, birth: null, head: String.Empty));
 
             return sb.ToString();
         }

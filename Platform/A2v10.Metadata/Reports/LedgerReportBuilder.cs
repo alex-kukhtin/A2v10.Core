@@ -69,6 +69,7 @@ internal abstract class LedgerReportBuilder : BaseReportBuilder
         return $"""
         set nocount on;
         set transaction isolation level read uncommitted;
+        {GateSql()}
 
         declare @now date = getdate();
         set @From = isnull(@From, datefromparts(year(@now), month(@now), 1));

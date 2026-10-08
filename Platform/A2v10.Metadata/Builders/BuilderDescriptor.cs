@@ -12,4 +12,6 @@ internal record BuilderDescriptor
     internal String? DataSource { get; init; }
     internal IPlatformUrl PlatformUrl { get; init; } = default!;
     internal AppPlatformId PlatformId { get; init; } = default!;
+    // app.json useGrants: whether the batches carry the gate. Required - a descriptor that forgot it would open them all
+    internal required Boolean UseGrants { get; init; }
 }

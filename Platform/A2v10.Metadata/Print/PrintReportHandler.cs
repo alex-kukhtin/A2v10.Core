@@ -41,7 +41,8 @@ internal class PrintReportHandler(IReportEngineProvider _reportEngineProvider, D
         {
             Endpoint = endpoint,
             DataSource = report.DataSource,
-            PlatformUrl = new PlatformUrl(UrlKind.Page, report.BaseUrl.Trim('/'))
+            PlatformUrl = new PlatformUrl(UrlKind.Page, report.BaseUrl.Trim('/')),
+            UseGrants = await _metadataProvider.UseGrantsAsync(),
         };
         var sqlBuilder = new SqlBuilder(bd, _serviceProvider);
         var dm = await sqlBuilder.LoadPrintModelAsync(PrintModel.Parse(blank.Text));

@@ -24,6 +24,7 @@ internal partial class SqlBuilder
         var sql = $"""
             set nocount on;
             set transaction isolation level read uncommitted;
+            {GateSql(Gate.View)}
 
             declare @fr nvarchar(255);
             set @fr = N'%' + @Text + N'%';
@@ -130,6 +131,7 @@ internal partial class SqlBuilder
             ? $"""
             set nocount on;
             set transaction isolation level read uncommitted;
+            {GateSql(Gate.View)}
 
             declare @fr nvarchar(255);
             set @fr = N'%' + @Text + N'%';
@@ -144,6 +146,7 @@ internal partial class SqlBuilder
             : $"""
             set nocount on;
             set transaction isolation level read uncommitted;
+            {GateSql(Gate.View)}
 
             declare @fr nvarchar(255);
             set @fr = N'%' + @Text + N'%';

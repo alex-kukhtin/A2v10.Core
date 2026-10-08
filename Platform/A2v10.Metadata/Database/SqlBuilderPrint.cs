@@ -25,9 +25,10 @@ namespace A2v10.Metadata;
  * fetched once.
  *
  * Nothing here holds an IDbContext or an ICurrentUser: it turns metadata into text and that is all,
- * so it is assertable without DI - TESTS.md 4.2, met by being born on the right side of it.
+ * so it is assertable without DI - TESTS.md 4.2, met by being born on the right side of it. The head
+ * - the gate and the record check (SqlBuilder.GateSql, RecordCheck) - comes in as text for the same reason.
  */
-internal sealed class PrintSqlBuilder(TableMetadata table, PrintNode model)
+internal sealed class PrintSqlBuilder(TableMetadata table, PrintNode model, String head)
 {
     /* A recordset of our OWN tree - the record, or a collection at any depth - and the predicate
      * that selects its rows. There are only two kinds of them, and a Map is not one: it is reached
@@ -99,6 +100,7 @@ internal sealed class PrintSqlBuilder(TableMetadata table, PrintNode model)
 
             set nocount on;
             set transaction isolation level read uncommitted;
+            {head}
 
             """);
         sb.AppendLine();
@@ -359,7 +361,7 @@ internal partial class SqlBuilder
      * blank has, and it is the same one on both roads below.
      */
     private Task<IDataModel> RunPrintAsync(String sql) =>
-        _dbContext.LoadModelSqlAsync(_descr.DataSource, sql, dbprms =>
+        _dbContext.LoadModelSqlAsync(DataSource, sql, dbprms =>
         {
             AddDefaultParameters(dbprms);
             dbprms.AddString("@Id", _descr.PlatformUrl.Id);
@@ -377,12 +379,12 @@ internal partial class SqlBuilder
         var node = String.IsNullOrEmpty(form.Header)
             ? new PrintNode(Table.Model, false, [], [])
             : PrintTitle.Parse(form.Header, Table).Model;
-        return RunPrintAsync(new PrintSqlBuilder(Table, node).Build());
+        return RunPrintAsync(new PrintSqlBuilder(Table, node, GateSql(Gate.View) + RecordCheck("@Id")).Build());
     }
 
     /* The blank's 'Model' tree, parsed by whoever read the blank - today PrintReportHandler, which reads
      * the file once for this fetch and the engine both. The builder never reaches for a file.
      */
     public Task<IDataModel> LoadPrintModelAsync(PrintNode model) =>
-        RunPrintAsync(new PrintSqlBuilder(Table, model).Build());
+        RunPrintAsync(new PrintSqlBuilder(Table, model, GateSql(Gate.View) + RecordCheck("@Id")).Build());
 }

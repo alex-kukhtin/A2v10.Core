@@ -43,7 +43,9 @@ internal partial class SqlBuilder
         variableOf(Table, "@$Record");
 
         var rows = new LoadRows(t => variables[t], $"cast(N'{PlatformId.Empty}' as {PlatformId.SqlTypeName})");
-        return BuildLoadPlainSqlText(rows, BirthPrelude(head, source, entry, variables, rows.Key));
+        // the source is read whole, not shown by a reference: so its right is asked as its own card asks it
+        var gates = GateSql(Gate.Create) + GateSql(Gate.View, source) + RecordCheck(source, "@BasedOn");
+        return BuildLoadPlainSqlText(rows, BirthPrelude(head, source, entry, variables, rows.Key), gates);
     }
 
     /* Exactly one field of this header holds the basis: of type basedOn, targeting the source. None, and

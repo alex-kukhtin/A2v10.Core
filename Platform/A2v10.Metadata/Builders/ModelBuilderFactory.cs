@@ -23,6 +23,7 @@ internal partial class ModelBuilderFactory(
         var (schema, table) = DatabaseMetadataProvider.ParsePath(platformUrl.LocalPath);
         var endpoint = await _metadataProvider.GetEndpointAsync(dataSource, schema, table);
         var platformId = await _metadataProvider.GetPlatformIdAsync(dataSource);
+        var useGrants = await _metadataProvider.UseGrantsAsync();
 
         // the namespace's one right, before any of its screens is built - see AdminEndpointMetadata
         if (endpoint is AdminEndpointMetadata)
@@ -31,7 +32,7 @@ internal partial class ModelBuilderFactory(
         switch (endpoint)
         {
             case ReportEndpointMetadata report:
-                return new ReportEndpointBuilder(_serviceProvider, report, platformUrl, platformId);
+                return new ReportEndpointBuilder(_serviceProvider, report, platformUrl, platformId, useGrants);
             case TagEndpointMetadata tag:
                 return new TagEndpointBuilder(_serviceProvider, tag, platformUrl, dataSource, platformId);
             case OperationEndpointMetadata operation:
@@ -45,6 +46,7 @@ internal partial class ModelBuilderFactory(
                     PlatformUrl = platformUrl,
                     Endpoint = normal,
                     PlatformId = platformId,
+                    UseGrants = useGrants,
                 });
             default:
                 throw new InvalidOperationException($"No builder for endpoint '{endpoint.Path}'");
@@ -58,6 +60,7 @@ internal partial class ModelBuilderFactory(
             PlatformUrl = platformUrl,
             Endpoint = endpoint,
             PlatformId = await _metadataProvider.GetPlatformIdAsync(dataSource),
+            UseGrants = await _metadataProvider.UseGrantsAsync(),
         };
         return new BaseModelBuilder(_serviceProvider, bd);
     }
@@ -71,6 +74,8 @@ internal partial class ModelBuilderFactory(
             PlatformUrl = platformUrl,
             Endpoint = endpoint,
             PlatformId = await _metadataProvider.GetPlatformIdAsync(dataSource),
+            // the .d.ts has no batch to gate
+            UseGrants = false,
         };
         return new EndpointModelBuilder(bd);
     }

@@ -48,6 +48,7 @@ internal partial class SqlBuilder
         set nocount on;
         set transaction isolation level read committed;
         set xact_abort on;
+        {GateSql(Gate.Post)}{RecordCheck("@Id")}
 
         begin tran;
 
@@ -75,6 +76,7 @@ internal partial class SqlBuilder
         set nocount on;
         set transaction isolation level read committed;
         set xact_abort on;
+        {GateSql(Gate.Unpost)}{RecordCheck("@Id")}
 
         begin tran;
 

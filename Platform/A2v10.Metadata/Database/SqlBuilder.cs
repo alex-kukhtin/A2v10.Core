@@ -35,6 +35,13 @@ internal partial class SqlBuilder(BuilderDescriptor desciptor, IServiceProvider 
         return prms;
     }
 
+    /* The gate line of a batch, nothing when app.json does not use grants - see Gate. On this endpoint,
+     * or on another one the batch reads whole (the source of a birth).
+     */
+    String GateSql(Gate gate) => GateSql(gate, Endpoint);
+
+    String GateSql(Gate gate, NormalEndpointMetadata endpoint) => _descr.UseGrants ? gate.Sql(endpoint.Path) : String.Empty;
+
     /* The modification stamp as the tail of a SET list - one spelling for the save and for Void,
      * the two statements that change a record. Empty for a table without stamps (a set).
      * Reads @UserId, which AddDefaultParameters always passes.
@@ -61,6 +68,40 @@ internal partial class SqlBuilder(BuilderDescriptor desciptor, IServiceProvider 
     }
 
     String FixedPredicate(String alias) => FixedPredicate(Endpoint, alias);
+
+    /* The rows of THIS document among those sharing its table: every operation the registry says is
+     * its own, void ones included - a document saved under an operation that has since left the files
+     * is still this document's. Null where the table is the document's alone. The column is found by
+     * type, as everywhere else.
+     */
+    static String? OwnOperations(NormalEndpointMetadata endpoint, String alias)
+    {
+        if (endpoint.DocumentOperations().Count == 0)
+            return null;
+        var column = endpoint.Storage.AllColumns().First(c => c.IsOperation);
+        var registry = TableMetadataDefaults.OperationsTable();
+        return $"{alias}.[{column.Name}] in (select [{Constants.FieldNames.Id}] from {registry.SqlTableName} where [{Constants.FieldNames.Document}] = N'{endpoint.Name}')";
+    }
+
+    String? OwnOperations(String alias) => OwnOperations(Endpoint, alias);
+
+    /* A record is opened, saved, posted and deleted by its id, and an id is per table: over a table
+     * documents share, another document's row would pass this document's gate. So a row with this id
+     * that is not one of this document's is refused - a missing one is not, that is an empty load or a
+     * create. Not 'fixed': an operation is what a record IS, a fixed field only which list shows it, and
+     * unticking it is data. Always, not with useGrants: it is about what the address holds, not who asks.
+     * Refused as the gate refuses, saying no more to whoever forged the address.
+     */
+    static String RecordCheck(NormalEndpointMetadata endpoint, String id) => OwnOperations(endpoint, "a") is { } own
+        ? $"""
+
+        if exists(select 1 from {endpoint.Storage.SqlTableName} a where a.[{Constants.FieldNames.Id}] = {id} and not ({own}))
+            throw 60000, N'UI:@[UIError.AccessDenied]', 0;
+
+        """
+        : String.Empty;
+
+    String RecordCheck(String id) => RecordCheck(Endpoint, id);
 
     DbParameterCollection AddPeriodParameters(DbParameterCollection prms, ExpandoObject? qry)
     {

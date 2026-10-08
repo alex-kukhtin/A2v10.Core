@@ -96,7 +96,7 @@ public class SplitBalanceTests
     {
         var report = Assert.IsType<ReportEndpointMetadata>(await LoadAsync("report", "trialbalance"));
         var builder = Assert.IsType<TrialBalanceReportBuilder>(
-            BaseReportBuilder.Create(TestHost.Services, report, new AppPlatformId(typeof(Int64))));
+            BaseReportBuilder.Create(TestHost.Services, report, new AppPlatformId(typeof(Int64)), useGrants: false));
 
         var (apply, groupBy) = builder.SplitGrain();
 
