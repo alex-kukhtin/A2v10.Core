@@ -1,0 +1,123 @@
+﻿; A2v10.Metadata - the keys of the screens, templates and messages it generates. Delivered beside default.*.txt by A2v10.Metadata.targets. No key repeats one of default.*.txt: the order the two files are read in is not defined. An application overrides any of them from its _localization
+;
+; Users (/admin)
+@Admin.Login=Потребителско име
+@Admin.PersonName=Име
+@Admin.LastLogin=Последно влизане
+@Admin.NewUser=Нов потребител
+@Admin.Block=Блокирай
+@Admin.Unblock=Отблокирай
+@Admin.Confirm.Delete=Да се изтрие ли потребителят?
+@Admin.Confirm.Block=Да се блокира ли потребителят? Отворените му сесии ще бъдат прекратени.
+@Admin.Error.Self=Това действие не може да се приложи към собствения ви акаунт
+@Admin.Error.SelfAdmin=Не можете да премахнете от себе си ролята на администратор
+@Admin.BoundaryAll=Нищо не е отметнато — цялата мрежа
+;
+; Roles
+@Role.Admin=Администратор
+@Role.Everyone=Всички потребители
+;
+; Commands
+@Add=Добави
+@AddRow=Добави ред
+@Show=Покажи
+@Download=Изтегли
+@Post=Осчетоводи
+@UnPost=Отмени осчетоводяването
+@Transactions=Счетоводни статии
+@BasedOn=Създай на основание
+@Filters=Филтри
+@Autonum.Auto=Автоматично
+;
+; Confirmations
+@Confirm.Delete.Element=Сигурни ли сте, че искате да изтриете елемента?
+@Confirm.Delete.Document=Сигурни ли сте, че искате да изтриете документа?
+@Confirm.Delete.Row=Изтриване на реда?
+@Confirm.Delete.Folder=Изтриване на папката?
+@Confirm.Document.Post=Осчетоводяване на документа?
+@Confirm.Document.UnPost=Отмяна на осчетоводяването на документа?
+;
+; Validation and errors
+@Error.Required=Задължително поле
+@Error.Duplicate=Тази стойност вече съществува
+@Error.Owner=Избраният запис принадлежи на друг собственик
+@Error.Delete.Used=Елементът не може да бъде изтрит, той се използва
+@Error.Element.RowVersion=Елементът е променен от друг потребител. Отворете го отново
+@Error.Document.RowVersion=Документът е променен от друг потребител. Отворете го отново
+@Error.Document.NoCompany=Документ без фирма не може да бъде осчетоводен
+@Error.Document.AlreadyPosted=Документът вече е осчетоводен
+@Error.Document.NotPosted=Документът не е осчетоводен
+@Error.Document.AlreadyApplied=Документът е осчетоводен и не може да бъде променен
+;
+; Folders and tags
+@Folder=Папка
+@Folders=Папки
+@Ungrouped=Без групиране
+@Parent=Родителски елемент
+@Tags=Етикети
+@Color=Цвят
+@Tag.Choose=Изберете етикети
+@Filter.Tag.All=Всички етикети
+;
+; Operations - the platform's table; Operation.<code> is the application's
+@Operation=Операция
+@Operation.All=Всички операции
+@Operation.Browse=Избор на операция
+;
+; Set of states - StateRole
+@StateRole=Етап
+@StateRole.All=Всички етапи
+@StateRole.Initial=Начален
+@StateRole.InProgress=В процес
+@StateRole.Success=Успешно
+@StateRole.Failure=Неуспешно
+;
+; Chart of accounts - AccountType, NormalBalance
+@AccountType=Вид сметка
+@AccountType.Asset=Активи
+@AccountType.Liability=Пасиви
+@AccountType.Equity=Собствен капитал
+@AccountType.Income=Приходи
+@AccountType.Expense=Разходи
+@AccountType.OffBalance=Задбалансова
+@NormalBalance=Салдо
+@NormalBalance.Debit=Дебитно
+@NormalBalance.Credit=Кредитно
+@NormalBalance.Both=Нетно
+@NormalBalance.Split=Разгърнато
+@SplitBy=Разгърнато по
+;
+; Ledger
+@InOut=Посока
+@Acc=Сметка
+@CorrAcc=Кор. сметка
+;
+; Reports
+@Report=Справка
+@Report.Run=Генерирай
+@Report.RunNow=Генерирай сега
+@Report.Param.Changed=Параметрите са променени.
+@Report.NotYetBuild=Справката още не е генерирана.
+@Report.Error.AtLeastGroup=Изберете поне едно групиране
+@Report.Error.AtLeastData=Изберете поне един показател
+@Period=Период
+@Grouping=Групиране
+@Data=Показатели
+@Total=Общо
+;
+; Turnover report
+@TurnOver.Start=Начална наличност
+@TurnOver.In=Постъпления
+@TurnOver.Out=Разход
+@TurnOver.End=Крайна наличност
+;
+; Trial balance, chessboard
+@TrialBalance=Оборотна ведомост
+@TrialBalance.Start=Начално салдо
+@TrialBalance.Turnover=Обороти
+@TrialBalance.End=Крайно салдо
+@Account=Сметка
+@Debit=Дебит
+@Credit=Кредит
+@Chessboard=Шахматна ведомост
+@Chessboard.Header=От дебит към кредит на сметките

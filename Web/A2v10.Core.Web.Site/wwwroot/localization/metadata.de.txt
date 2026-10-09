@@ -1,0 +1,123 @@
+﻿; A2v10.Metadata - the keys of the screens, templates and messages it generates. Delivered beside default.*.txt by A2v10.Metadata.targets. No key repeats one of default.*.txt: the order the two files are read in is not defined. An application overrides any of them from its _localization
+;
+; Users (/admin)
+@Admin.Login=Anmeldename
+@Admin.PersonName=Name
+@Admin.LastLogin=Letzte Anmeldung
+@Admin.NewUser=Neuer Benutzer
+@Admin.Block=Sperren
+@Admin.Unblock=Entsperren
+@Admin.Confirm.Delete=Benutzer löschen?
+@Admin.Confirm.Block=Benutzer sperren? Seine offenen Sitzungen werden beendet.
+@Admin.Error.Self=Diese Aktion ist auf das eigene Konto nicht anwendbar
+@Admin.Error.SelfAdmin=Sie können sich die Administratorrolle nicht selbst entziehen
+@Admin.BoundaryAll=Nichts ausgewählt bedeutet das ganze Netz
+;
+; Roles
+@Role.Admin=Administrator
+@Role.Everyone=Alle Benutzer
+;
+; Commands
+@Add=Hinzufügen
+@AddRow=Zeile hinzufügen
+@Show=Anzeigen
+@Download=Herunterladen
+@Post=Buchen
+@UnPost=Buchung stornieren
+@Transactions=Buchungen
+@BasedOn=Erstellen auf Basis
+@Filters=Filter
+@Autonum.Auto=Automatisch
+;
+; Confirmations
+@Confirm.Delete.Element=Element wirklich löschen?
+@Confirm.Delete.Document=Beleg wirklich löschen?
+@Confirm.Delete.Row=Zeile löschen?
+@Confirm.Delete.Folder=Ordner löschen?
+@Confirm.Document.Post=Beleg buchen?
+@Confirm.Document.UnPost=Buchung des Belegs stornieren?
+;
+; Validation and errors
+@Error.Required=Pflichtfeld
+@Error.Duplicate=Dieser Wert ist bereits vorhanden
+@Error.Owner=Der ausgewählte Datensatz gehört einem anderen Eigentümer
+@Error.Delete.Used=Das Element kann nicht gelöscht werden, es wird verwendet
+@Error.Element.RowVersion=Das Element wurde von einem anderen Benutzer geändert. Öffnen Sie es erneut
+@Error.Document.RowVersion=Der Beleg wurde von einem anderen Benutzer geändert. Öffnen Sie ihn erneut
+@Error.Document.NoCompany=Ein Beleg ohne Unternehmen kann nicht gebucht werden
+@Error.Document.AlreadyPosted=Der Beleg ist bereits gebucht
+@Error.Document.NotPosted=Der Beleg ist nicht gebucht
+@Error.Document.AlreadyApplied=Der Beleg ist gebucht und kann nicht geändert werden
+;
+; Folders and tags
+@Folder=Ordner
+@Folders=Ordner
+@Ungrouped=Ohne Gruppierung
+@Parent=Übergeordnetes Element
+@Tags=Tags
+@Color=Farbe
+@Tag.Choose=Tags auswählen
+@Filter.Tag.All=Alle Tags
+;
+; Operations - the platform's table; Operation.<code> is the application's
+@Operation=Vorgang
+@Operation.All=Alle Vorgänge
+@Operation.Browse=Vorgang auswählen
+;
+; Set of states - StateRole
+@StateRole=Phase
+@StateRole.All=Alle Phasen
+@StateRole.Initial=Anfang
+@StateRole.InProgress=In Bearbeitung
+@StateRole.Success=Erfolgreich
+@StateRole.Failure=Fehlgeschlagen
+;
+; Chart of accounts - AccountType, NormalBalance
+@AccountType=Kontotyp
+@AccountType.Asset=Aktiva
+@AccountType.Liability=Verbindlichkeiten
+@AccountType.Equity=Eigenkapital
+@AccountType.Income=Erträge
+@AccountType.Expense=Aufwendungen
+@AccountType.OffBalance=Außerbilanziell
+@NormalBalance=Saldo
+@NormalBalance.Debit=Soll
+@NormalBalance.Credit=Haben
+@NormalBalance.Both=Saldiert
+@NormalBalance.Split=Aufgegliedert
+@SplitBy=Aufgegliedert nach
+;
+; Ledger
+@InOut=Richtung
+@Acc=Konto
+@CorrAcc=Gegenkonto
+;
+; Reports
+@Report=Bericht
+@Report.Run=Erstellen
+@Report.RunNow=Jetzt erstellen
+@Report.Param.Changed=Parameter geändert.
+@Report.NotYetBuild=Der Bericht wurde noch nicht erstellt.
+@Report.Error.AtLeastGroup=Wählen Sie mindestens eine Gruppierung
+@Report.Error.AtLeastData=Wählen Sie mindestens eine Kennzahl
+@Period=Zeitraum
+@Grouping=Gruppierung
+@Data=Kennzahlen
+@Total=Gesamt
+;
+; Turnover report
+@TurnOver.Start=Anfangsbestand
+@TurnOver.In=Zugang
+@TurnOver.Out=Abgang
+@TurnOver.End=Endbestand
+;
+; Trial balance, chessboard
+@TrialBalance=Summen- und Saldenliste
+@TrialBalance.Start=Anfangssaldo
+@TrialBalance.Turnover=Umsatz
+@TrialBalance.End=Endsaldo
+@Account=Konto
+@Debit=Soll
+@Credit=Haben
+@Chessboard=Kontenmatrix
+@Chessboard.Header=Aus dem Soll ins Haben der Konten
