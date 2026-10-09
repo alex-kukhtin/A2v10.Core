@@ -44,12 +44,12 @@ internal static class UsersTemplateBuilder
                 {{CreateUser}},
                 {{DeleteUser}}: {
                     exec: {{DeleteUser}},
-                    confirm: '@[Admin.Confirm.Delete]'
+                    confirm: `@[Admin.Confirm.Delete]`
                 },
                 {{Block}}: {
                     exec: {{Block}},
                     canExec: user => !!user && !user.IsBlocked,
-                    confirm: '@[Admin.Confirm.Block]'
+                    confirm: `@[Admin.Confirm.Block]`
                 },
                 {{Unblock}}: {
                     exec: {{Unblock}},
@@ -148,7 +148,7 @@ internal static class UsersTemplateBuilder
         module.exports = template;
 
         function confirmValid(user, confirm) {
-            return user.Password === confirm ? '' : '@[MatchError]';
+            return user.Password === confirm ? '' : `@[MatchError]`;
         }
 
         async function {{Create}}() {
@@ -174,7 +174,7 @@ internal static class UsersTemplateBuilder
         module.exports = template;
 
         function confirmValid(user, confirm) {
-            return user.Password === confirm ? '' : '@[MatchError]';
+            return user.Password === confirm ? '' : `@[MatchError]`;
         }
 
         async function {{SetPassword}}() {

@@ -169,4 +169,14 @@ public class MockDbContext : IDbContext
     {
         throw new NotImplementedException();
     }
+
+    public Task LoadStreamAsync(string? source, string procedure, object? prms, Func<IDataReader, Task> onMetadata, Func<IDataReader, Task> onRecord, CancellationToken token = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task LoadStreamSqlAsync(string? source, string sqlString, object? prms, Func<IDataReader, Task> onMetadata, Func<IDataReader, Task> onRecord, CancellationToken token = default)
+    {
+        throw new NotImplementedException();
+    }
 }

@@ -81,6 +81,7 @@
 @Memo=Бележка
 ;
 @Confirm=Потвърждение
+@PasswordAgain=Парола отново
 @ConfirmDeleteDocument=Изтриване на документа?
 @DocumentSaved=Документът е запазен.
 ;
@@ -144,19 +145,3 @@
 @ErrorAntiForgery=Заявката вече е изпълнена в друг прозорец на браузъра. Страницата ще бъде презаредена
 @IHaveCode=Имам код за потвърждение
 @AvailableLocales={"uk-UA": "Украински","ru-RU": "Руски","en-US": "Английски","de-DE": "Немски","bg-BG": "Български"}
-@Admin.Login=Потребителско име
-@Admin.PersonName=Име
-@Admin.LastLogin=Последно влизане
-@Admin.NewUser=Нов потребител
-@Admin.Block=Блокирай
-@Admin.Unblock=Отблокирай
-@Admin.Confirm.Delete=Да се изтрие ли потребителят?
-@Admin.Confirm.Block=Да се блокира ли потребителят? Отворените му сесии ще бъдат прекратени.
-@Admin.Error.Self=Това действие не може да се приложи към собствения ви акаунт
-@Admin.Error.SelfAdmin=Не можете да премахнете от себе си ролята на администратор
-;
-@Role.Admin=Администратор
-@Role.Everyone=Всички потребители
-;
-@Admin.BoundaryAll=Нищо не е отметнато — цялата мрежа
-;

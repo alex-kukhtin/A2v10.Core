@@ -1,8 +1,11 @@
 ﻿<Project>
 	<ItemGroup>
 		<A2v10MetadataSqlFiles Include="$(MSBuildThisFileDirectory)/../contentFiles/sql/*" />
+		<!-- metadata.*.txt beside the platform's default.*.txt: the localizer reads every *.{locale}.txt there -->
+		<A2v10MetadataLocFiles Include="$(MSBuildThisFileDirectory)/../contentFiles/localization/*" />
 	</ItemGroup>
 	<Target Name="A2v10MetadataCopySqlFiles" BeforeTargets="Build">
 		<Copy SourceFiles="@(A2v10MetadataSqlFiles)" DestinationFolder="$(ProjectDir)/_assets/sql" SkipUnchangedFiles="true"/>
+		<Copy SourceFiles="@(A2v10MetadataLocFiles)" DestinationFolder="$(ProjectDir)/wwwroot/localization" SkipUnchangedFiles="true"/>
 	</Target>
 </Project>

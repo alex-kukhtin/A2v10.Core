@@ -1,0 +1,123 @@
+﻿; A2v10.Metadata - the keys of the screens, templates and messages it generates. Delivered beside default.*.txt by A2v10.Metadata.targets. No key repeats one of default.*.txt: the order the two files are read in is not defined. An application overrides any of them from its _localization
+;
+; Users (/admin)
+@Admin.Login=Usuario
+@Admin.PersonName=Nombre
+@Admin.LastLogin=Último acceso
+@Admin.NewUser=Nuevo usuario
+@Admin.Block=Bloquear
+@Admin.Unblock=Desbloquear
+@Admin.Confirm.Delete=¿Eliminar el usuario?
+@Admin.Confirm.Block=¿Bloquear el usuario? Sus sesiones abiertas se cerrarán.
+@Admin.Error.Self=Esta acción no se puede aplicar a su propia cuenta
+@Admin.Error.SelfAdmin=No puede quitarse a sí mismo el rol de administrador
+@Admin.BoundaryAll=Nada marcado significa toda la red
+;
+; Roles
+@Role.Admin=Administrador
+@Role.Everyone=Todos los usuarios
+;
+; Commands
+@Add=Añadir
+@AddRow=Añadir fila
+@Show=Mostrar
+@Download=Descargar
+@Post=Contabilizar
+@UnPost=Anular contabilización
+@Transactions=Asientos
+@BasedOn=Crear a partir de
+@Filters=Filtros
+@Autonum.Auto=Automático
+;
+; Confirmations
+@Confirm.Delete.Element=¿Seguro que desea eliminar el elemento?
+@Confirm.Delete.Document=¿Seguro que desea eliminar el documento?
+@Confirm.Delete.Row=¿Eliminar la fila?
+@Confirm.Delete.Folder=¿Eliminar la carpeta?
+@Confirm.Document.Post=¿Contabilizar el documento?
+@Confirm.Document.UnPost=¿Anular la contabilización del documento?
+;
+; Validation and errors
+@Error.Required=Campo obligatorio
+@Error.Duplicate=Este valor ya existe
+@Error.Owner=El registro seleccionado pertenece a otro propietario
+@Error.Delete.Used=No se puede eliminar el elemento: está en uso
+@Error.Element.RowVersion=Otro usuario ha modificado el elemento. Vuelva a abrirlo
+@Error.Document.RowVersion=Otro usuario ha modificado el documento. Vuelva a abrirlo
+@Error.Document.NoCompany=Un documento sin empresa no se puede contabilizar
+@Error.Document.AlreadyPosted=El documento ya está contabilizado
+@Error.Document.NotPosted=El documento no está contabilizado
+@Error.Document.AlreadyApplied=El documento está contabilizado y no se puede modificar
+;
+; Folders and tags
+@Folder=Carpeta
+@Folders=Carpetas
+@Ungrouped=Sin agrupar
+@Parent=Elemento padre
+@Tags=Etiquetas
+@Color=Color
+@Tag.Choose=Elija etiquetas
+@Filter.Tag.All=Todas las etiquetas
+;
+; Operations - the platform's table; Operation.<code> is the application's
+@Operation=Operación
+@Operation.All=Todas las operaciones
+@Operation.Browse=Seleccionar operación
+;
+; Set of states - StateRole
+@StateRole=Etapa
+@StateRole.All=Todas las etapas
+@StateRole.Initial=Inicial
+@StateRole.InProgress=En curso
+@StateRole.Success=Con éxito
+@StateRole.Failure=Fallido
+;
+; Chart of accounts - AccountType, NormalBalance
+@AccountType=Tipo de cuenta
+@AccountType.Asset=Activos
+@AccountType.Liability=Pasivos
+@AccountType.Equity=Patrimonio neto
+@AccountType.Income=Ingresos
+@AccountType.Expense=Gastos
+@AccountType.OffBalance=Fuera de balance
+@NormalBalance=Saldo
+@NormalBalance.Debit=Deudor
+@NormalBalance.Credit=Acreedor
+@NormalBalance.Both=Neto
+@NormalBalance.Split=Desglosado
+@SplitBy=Desglosado por
+;
+; Ledger
+@InOut=Dirección
+@Acc=Cuenta
+@CorrAcc=Contrapartida
+;
+; Reports
+@Report=Informe
+@Report.Run=Generar
+@Report.RunNow=Generar ahora
+@Report.Param.Changed=Parámetros modificados.
+@Report.NotYetBuild=El informe aún no se ha generado.
+@Report.Error.AtLeastGroup=Seleccione al menos una agrupación
+@Report.Error.AtLeastData=Seleccione al menos un indicador
+@Period=Periodo
+@Grouping=Agrupación
+@Data=Indicadores
+@Total=Total
+;
+; Turnover report
+@TurnOver.Start=Saldo inicial
+@TurnOver.In=Entradas
+@TurnOver.Out=Salidas
+@TurnOver.End=Saldo final
+;
+; Trial balance, chessboard
+@TrialBalance=Balance de comprobación
+@TrialBalance.Start=Saldo inicial
+@TrialBalance.Turnover=Movimientos
+@TrialBalance.End=Saldo final
+@Account=Cuenta
+@Debit=Debe
+@Credit=Haber
+@Chessboard=Matriz de cuentas
+@Chessboard.Header=Del debe al haber de las cuentas

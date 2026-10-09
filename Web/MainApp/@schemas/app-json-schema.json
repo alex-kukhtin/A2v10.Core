@@ -1,14 +1,33 @@
 ﻿{
 	"$schema": "http://json-schema.org/draft-04/schema",
-	"$version": "10.0.7789",
-	"$date": "2026-04-07",
+	"$version": "10.1.8666",
+	"$date": "2026-09-24",
 	"title": "JSON Schema for app.json",
 	"type": "object",
 
 	"properties": {
 		"$schema": { "type": "string" },
+		"platformid": {
+			"type": "string",
+			"enum": [ "bigint", "int", "uniqueidentifier" ]
+		},
+		"useGrants": { "type": "boolean" },
+		"aliases": {
+			"description": "More folders of one kind: \"document\": [\"sale\"] makes sale/invoice the endpoint /sale/invoice of kind document. An operation's Id stays the last segment.",
+			"type": "object",
+			"properties": {
+				"catalog": { "$ref": "#/definitions/aliasFolders" },
+				"document": { "$ref": "#/definitions/aliasFolders" },
+				"journal": { "$ref": "#/definitions/aliasFolders" },
+				"report": { "$ref": "#/definitions/aliasFolders" },
+				"enum": { "$ref": "#/definitions/aliasFolders" },
+				"state": { "$ref": "#/definitions/aliasFolders" },
+				"accplan": { "$ref": "#/definitions/aliasFolders" },
+				"ledger": { "$ref": "#/definitions/aliasFolders" }
+			},
+			"additionalProperties": false
+		},
 		"title": { "type": "string" },
-		"version": { "type": "string" },
 		"copyright": { "type": "string" },
 		"appLogo": { "type": "string" },
 		"links": {
@@ -46,5 +65,12 @@
 		}
 
 	},
-	"additionalProperties": false
+	"additionalProperties": false,
+	"definitions": {
+		"aliasFolders": {
+			"type": "array",
+			"items": { "type": "string" },
+			"uniqueItems": true
+		}
+	}
 }

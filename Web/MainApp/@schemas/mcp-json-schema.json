@@ -1,0 +1,21 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://a2v10.com/schemas/mcp-json-schema.json",
+    "title": "A2v10 mcp.json",
+    "description": "In the application root: which endpoints are open to the model connected through MCP. Everything else is derived from the endpoints; an 'mcp' key of an endpoint's metadata.json corrects what derives wrong. The instructions are the plain-text file mcp-instructions.txt beside this one.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [ "endpoints" ],
+    "properties": {
+        "$schema": { "type": "string" },
+        "endpoints": {
+            "type": "array",
+            "description": "Paths of catalogs and documents open to the model, '/<kind>/<name>'. The name (second segment) is the entity name the model uses; two equal names are refused. Roles come from the folder's model.json.",
+            "items": {
+                "type": "string",
+                "pattern": "^/?[A-Za-z0-9_-]+/[A-Za-z0-9_-]+$"
+            },
+            "uniqueItems": true
+        }
+    }
+}

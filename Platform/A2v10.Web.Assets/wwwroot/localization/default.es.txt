@@ -173,19 +173,3 @@
 @LogOutMessage=You have successfully logged out of the application.
 ;
 
-@Admin.Login=Usuario
-@Admin.PersonName=Nombre
-@Admin.LastLogin=Último acceso
-@Admin.NewUser=Nuevo usuario
-@Admin.Block=Bloquear
-@Admin.Unblock=Desbloquear
-@Admin.Confirm.Delete=¿Eliminar el usuario?
-@Admin.Confirm.Block=¿Bloquear el usuario? Sus sesiones abiertas se cerrarán.
-@Admin.Error.Self=Esta acción no se puede aplicar a su propia cuenta
-@Admin.Error.SelfAdmin=No puede quitarse a sí mismo el rol de administrador
-;
-@Role.Admin=Administrador
-@Role.Everyone=Todos los usuarios
-;
-@Admin.BoundaryAll=Nada marcado significa toda la red
-;

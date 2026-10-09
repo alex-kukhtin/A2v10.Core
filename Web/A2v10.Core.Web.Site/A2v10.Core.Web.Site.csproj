@@ -18,7 +18,10 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.31" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="8.0.31" />
-		<PackageReference Include="A2v10.Module.Workflow" Version="10.1.1107" />
+		<PackageReference Include="A2v10.Module.Workflow" Version="10.1.1110" />
+		<!-- bundleconfig.json on every build, not only from the VS extension: the platform sql bundles feed
+		     the stand's full.sql, and a stale one fails its scenarios on the first deploy -->
+		<PackageReference Include="BuildBundlerMinifier" Version="3.2.449" />
 		<!--
 		<PackageReference Include="A2v10.Module.Metadata" Version="10.1.1082" />
 		-->

@@ -95,6 +95,7 @@
 @Error.Link=Zur Homepage gehen
 @Error.FileFormatException=Falsches Dateiformat
 @Error.DataReadOnly=Datenbank ist schreibgeschützt
+@UIError.AccessDenied=UI:Zugriff verweigert
 ;
 @Placeholder.Search=Geben Sie Ihren Suchtext ein
 ;
@@ -169,20 +170,4 @@
 @LogOutPrompt=Log Out
 @LoginAgain=Login Again
 @LogOutMessage=You have successfully logged out of the application.
-;
-@Admin.Login=Anmeldename
-@Admin.PersonName=Name
-@Admin.LastLogin=Letzte Anmeldung
-@Admin.NewUser=Neuer Benutzer
-@Admin.Block=Sperren
-@Admin.Unblock=Entsperren
-@Admin.Confirm.Delete=Benutzer löschen?
-@Admin.Confirm.Block=Benutzer sperren? Seine offenen Sitzungen werden beendet.
-@Admin.Error.Self=Diese Aktion ist auf das eigene Konto nicht anwendbar
-@Admin.Error.SelfAdmin=Sie können sich die Administratorrolle nicht selbst entziehen
-;
-@Role.Admin=Administrator
-@Role.Everyone=Alle Benutzer
-;
-@Admin.BoundaryAll=Nichts ausgewählt bedeutet das ganze Netz
 ;

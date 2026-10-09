@@ -1,0 +1,123 @@
+﻿; A2v10.Metadata - the keys of the screens, templates and messages it generates. Delivered beside default.*.txt by A2v10.Metadata.targets. No key repeats one of default.*.txt: the order the two files are read in is not defined. An application overrides any of them from its _localization
+;
+; Users (/admin)
+@Admin.Login=Логін
+@Admin.PersonName=Ім'я
+@Admin.LastLogin=Останній вхід
+@Admin.NewUser=Новий користувач
+@Admin.Block=Заблокувати
+@Admin.Unblock=Розблокувати
+@Admin.Confirm.Delete=Видалити користувача?
+@Admin.Confirm.Block=Заблокувати користувача? Його відкриті сеанси буде завершено.
+@Admin.Error.Self=Цю дію не можна виконати над власним обліковим записом
+@Admin.Error.SelfAdmin=Не можна зняти з себе роль адміністратора
+@Admin.BoundaryAll=Нічого не відмічено — уся мережа
+;
+; Roles
+@Role.Admin=Адміністратор
+@Role.Everyone=Усі користувачі
+;
+; Commands
+@Add=Додати
+@AddRow=Додати рядок
+@Show=Показати
+@Download=Завантажити
+@Post=Провести
+@UnPost=Скасувати проведення
+@Transactions=Проводки
+@BasedOn=Створити на підставі
+@Filters=Фільтри
+@Autonum.Auto=Автоматично
+;
+; Confirmations
+@Confirm.Delete.Element=Ви впевнені, що бажаєте видалити елемент?
+@Confirm.Delete.Document=Ви впевнені, що бажаєте видалити документ?
+@Confirm.Delete.Row=Видалити рядок?
+@Confirm.Delete.Folder=Видалити папку?
+@Confirm.Document.Post=Провести документ?
+@Confirm.Document.UnPost=Скасувати проведення документа?
+;
+; Validation and errors
+@Error.Required=Обов'язкове поле
+@Error.Duplicate=Таке значення вже існує
+@Error.Owner=Обраний запис належить іншому власнику
+@Error.Delete.Used=Неможливо видалити елемент, він використовується в системі
+@Error.Element.RowVersion=Елемент змінено іншим користувачем. Відкрийте його заново
+@Error.Document.RowVersion=Документ змінено іншим користувачем. Відкрийте його заново
+@Error.Document.NoCompany=Документ без компанії не проводиться
+@Error.Document.AlreadyPosted=Документ уже проведено
+@Error.Document.NotPosted=Документ не проведено
+@Error.Document.AlreadyApplied=Документ проведено, змінити його неможливо
+;
+; Folders and tags
+@Folder=Папка
+@Folders=Папки
+@Ungrouped=Без групування
+@Parent=Батьківський елемент
+@Tags=Ознаки
+@Color=Колір
+@Tag.Choose=Оберіть ознаки
+@Filter.Tag.All=Усі ознаки
+;
+; Operations - the platform's table; Operation.<code> is the application's
+@Operation=Операція
+@Operation.All=Усі операції
+@Operation.Browse=Вибір операції
+;
+; Set of states - StateRole
+@StateRole=Етап
+@StateRole.All=Усі етапи
+@StateRole.Initial=Початковий
+@StateRole.InProgress=У роботі
+@StateRole.Success=Успішно
+@StateRole.Failure=Неуспішно
+;
+; Chart of accounts - AccountType, NormalBalance
+@AccountType=Тип рахунку
+@AccountType.Asset=Активи
+@AccountType.Liability=Зобов'язання
+@AccountType.Equity=Власний капітал
+@AccountType.Income=Доходи
+@AccountType.Expense=Витрати
+@AccountType.OffBalance=Позабалансовий
+@NormalBalance=Сальдо
+@NormalBalance.Debit=Дебетове
+@NormalBalance.Credit=Кредитове
+@NormalBalance.Both=Згорнуте
+@NormalBalance.Split=Розгорнуте
+@SplitBy=Розгорнуто за
+;
+; Ledger
+@InOut=Напрямок
+@Acc=Рахунок
+@CorrAcc=Кор. рахунок
+;
+; Reports
+@Report=Звіт
+@Report.Run=Сформувати
+@Report.RunNow=Сформувати зараз
+@Report.Param.Changed=Параметри змінено.
+@Report.NotYetBuild=Звіт ще не сформовано.
+@Report.Error.AtLeastGroup=Оберіть хоча б одне групування
+@Report.Error.AtLeastData=Оберіть хоча б один показник
+@Period=Період
+@Grouping=Групування
+@Data=Показники
+@Total=Разом
+;
+; Turnover report
+@TurnOver.Start=Початковий залишок
+@TurnOver.In=Надходження
+@TurnOver.Out=Витрата
+@TurnOver.End=Кінцевий залишок
+;
+; Trial balance, chessboard
+@TrialBalance=Оборотно-сальдова відомість
+@TrialBalance.Start=Сальдо на початок
+@TrialBalance.Turnover=Обороти за період
+@TrialBalance.End=Сальдо на кінець
+@Account=Рахунок
+@Debit=Дебет
+@Credit=Кредит
+@Chessboard=Шахова відомість
+@Chessboard.Header=З дебету в кредит рахунків

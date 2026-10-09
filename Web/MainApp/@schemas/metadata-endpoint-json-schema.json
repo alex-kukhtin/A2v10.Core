@@ -2,7 +2,7 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "$id": "https://a2v10.com/schemas/metadata-endpoint-json-schema.json",
     "title": "A2v10 metadata.json (endpoint)",
-    "description": "One normal endpoint - catalog, document, journal, and the operations of a document. A report has its own schema (metadata-report-json-schema.json), as do the autonum registry, an enum set, a chart of accounts and a ledger. The same file is deserialized twice by the platform - into TableMetadata (the shape) and into DeclarationMetadata (what this endpoint declares over it) - so this schema is the union of the two. Every enum value is written as listed here, in camelCase: the loader also accepts other casings, but one spelling is canonical. Command tokens are the exception - parsed without ignoreCase, they are PascalCase and accept nothing else.",
+    "description": "One endpoint: catalog, document, journal, or an operation of a document. A report, the autonum registry, an enum set, a chart of accounts and a ledger have schemas of their own. Enum values are written in camelCase as listed; command tokens are PascalCase and case-sensitive.",
     "type": "object",
     "additionalProperties": false,
     "anyOf": [
@@ -14,28 +14,27 @@
     ],
     "properties": {
         "$schema": { "type": "string" },
-        "description": { "type": "string", "description": "For the model, not the platform: nothing reads it - no generator, runtime or deploy. Where the model writes down what it must know about this endpoint - its rules and the reasons for them - so the next session finds them here." },
+        "description": { "type": "string", "description": "Read by the model only, never by the platform: the rules of this endpoint and their reasons." },
 
         "table": {
             "type": "string",
-            "description": "This endpoint owns the table. No default - a table name is never derived from the folder name."
+            "description": "The table this endpoint owns. No default."
         },
         "storage": {
             "type": "string",
-            "description": "Path to the endpoint that declares the table this one writes into: an operation of a document, or a catalog/journal with screens of its own over the same rows (a second window; 'fixed' makes it a subset). Document, catalog and journal only. One hop: it must point at an endpoint that declares 'table'."
+            "description": "Path of the endpoint that declares the table this one writes into. Document, catalog and journal only. One hop: the target must declare 'table'."
         },
-        "kind": { "$ref": "#/definitions/endpointKind" },
         "schema": {
             "type": "string",
             "description": "Defaults to the folder the endpoint lives in."
         },
         "model": {
             "type": "string",
-            "description": "Base of the generated names (TVP, row type, collection). Defaults to the endpoint folder name in PascalCase."
+            "description": "Stem of the generated names. Defaults to the endpoint folder name in PascalCase."
         },
         "presentation": {
             "type": "string",
-            "description": "The column a row is shown by wherever it is referenced - a column name, not a template. Not written: the Name column, else the autonum one; a catalog or document with neither is refused at load."
+            "description": "The column a record is shown by where it is referenced. Not written: the Name column, else the autonum one; neither is refused at load."
         },
 
         "fields": { "$ref": "#/definitions/fields" },
@@ -48,7 +47,7 @@
         "forms": { "$ref": "#/definitions/formSet" },
         "printForms": {
             "type": "array",
-            "description": "Print blanks of this endpoint - a flat list, one entry per blank, in menu order. A blank is not a kind: it has no window of its own and is invoked from inside the endpoint. The blank file is addressed by path and need not sit next to the endpoint; its data model ('Model') is declared inside the blank file, not here. A non-empty list is what puts the Print command on the default toolbars - there is no trait for it. Never inherited from 'storage': a blank is paper under one act.",
+            "description": "Print blanks, one entry per blank, in menu order. Non-empty puts the Print command on the default toolbars. Not inherited from 'storage'.",
             "items": { "$ref": "#/definitions/printForm" }
         },
 
@@ -56,18 +55,35 @@
         "origin": { "$ref": "#/definitions/origin" },
         "fixed": {
             "type": "object",
-            "description": "Field -> value this endpoint FIXES: the rows it is about carry these values (the WHERE of the index and of the selector fetch), and a new record starts on them. What makes a second endpoint over one table ('storage') a window on a SUBSET; without it, the same rows. Spelled by the column's type, so a bit is written true, a code \"code\". A field cannot also be in 'initialValues'. Per endpoint, never inherited from 'storage'.",
+            "description": "Field -> value this endpoint fixes: its rows carry these values and a new record starts on them. Written in the column's JSON type. A field may not also be in 'initialValues'. Not inherited from 'storage'.",
             "additionalProperties": { "type": [ "boolean", "string", "number" ] }
         },
         "rules": { "$ref": "#/definitions/rules" },
         "post": {
             "type": "array",
+            "description": "What posting does. With 'operations' it is not written here: each operation posts in its own way, in its own file.",
             "items": { "$ref": "#/definitions/post" }
+        },
+        "basedOn": {
+            "type": "array",
+            "description": "Documents that may be created from this one, in the order of the 'create on basis' menu; each target once. Of the document, never of an operation. Not inherited from 'storage'.",
+            "items": { "$ref": "#/definitions/basedOn" }
+        },
+        "operations": {
+            "type": "array",
+            "description": "Document only, never on the storage. Operation names in selector order; the first is where a new document starts. Each name is a file '<name>.operation.json' beside this one (metadata-operation-json-schema.json), and every such file is listed here; both checked at load. Requires a field of type 'operation' in the shape; 'post' is then written in the operation files, and 'initialValues' may not name that field.",
+            "items": {
+                "type": "string",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            },
+            "minItems": 1,
+            "uniqueItems": true
         },
         "autonum": {
             "type": "string",
-            "description": "Which numbering this endpoint draws from - a key of autonum/metadata.json, refused at load if that file does not declare it. The number lands in the shape's column of type 'autonum', so writing this without such a column is refused too. The other way round is legitimate and is not checked: a column with no 'autonum' is a document numbered by hand. Layered like every other key - an operation with none of its own draws from the storage's. The number is issued when the row is INSERTED and only if it arrived empty, so a document may be renumbered by hand and re-saving never overwrites it."
-        }
+            "description": "Key of autonum/metadata.json this endpoint numbers from. Refused at load if that file does not declare it, or if the shape has no column of type 'autonum'. An operation without its own draws from the storage's."
+        },
+        "mcp": { "$ref": "#/definitions/mcp" }
     },
 
     "definitions": {
@@ -85,7 +101,7 @@
                 "type": { "$ref": "#/definitions/columnType" },
                 "target": {
                     "type": "string",
-                    "description": "For a reference: path of the endpoint it points at, e.g. '/catalog/item'. Three types name the kind they point at, and the load refuses anything else: for 'enum' a set of values, '/enum/vatrate'; for 'state' a set of states, '/state/order'; for 'account' a chart of accounts, '/accplan/national'."
+                    "description": "For a reference: path of the endpoint it points at, e.g. '/catalog/item'. Required, and checked against the kind, for 'enum' ('/enum/...'), 'state' ('/state/...'), 'account' ('/accplan/...'), 'company' ('/catalog/company') and 'basedOn' ('/document/...'). At most one 'company' column per table, none in a collection."
                 },
                 "length": {
                     "type": "integer",
@@ -100,7 +116,7 @@
 
         "origin": {
             "type": "string",
-            "description": "The original name of this table, column or value in the system it was carried over from. Written by the model during a transfer from another system; the platform ignores it."
+            "description": "Name of this table, column or value in the system it was carried over from. Written by the model; the platform ignores it."
         },
 
         "details": {
@@ -225,7 +241,7 @@
 
         "postLedger": {
             "type": "object",
-            "description": "Posting into a ledger: one declaration, two mirrored legs. Nothing is mapped by name - a name does not know its leg. The platform fills CorrAcc (the other leg's Acc), InOut, Date and the provenance. A leg with no 'row' block collapses to the header: one row per distinct value, the sum summed.",
+            "description": "Posting into a ledger: two mirrored legs. CorrAcc, InOut, Date and the provenance are filled by the platform, never mapped. A leg with no 'row' block is collapsed to the header.",
             "additionalProperties": false,
             "required": [ "ledger", "sum", "dt", "ct" ],
             "properties": {
@@ -236,7 +252,7 @@
                 "each": { "$ref": "#/definitions/postMapped/properties/each" },
                 "sum": {
                     "type": "string",
-                    "description": "The sum field - of the iterated row under 'each', of the header otherwise. One for both legs, so debit equals credit by construction."
+                    "description": "The sum field: of the iterated row under 'each', else of the header. One for both legs."
                 },
                 "dt": { "$ref": "#/definitions/postLeg" },
                 "ct": { "$ref": "#/definitions/postLeg" }
@@ -245,7 +261,7 @@
 
         "postLeg": {
             "type": "object",
-            "description": "One leg: ledger column -> where its value comes from, the source being the key of the block. Exactly one 'Acc' across the blocks. Keys are 'Acc' or the author's columns of the ledger, never the provenance; one column in one block only.",
+            "description": "One leg: ledger column -> its source, the source being the block key. Keys are 'Acc' or the author's columns of the ledger, never the provenance; a column in one block only; exactly one 'Acc' across the blocks.",
             "additionalProperties": false,
             "properties": {
                 "const": {
@@ -260,7 +276,7 @@
                 },
                 "row": {
                     "type": "object",
-                    "description": "Ledger column -> field of the iterated row. Requires 'each'; a leg that reads the row is not collapsed.",
+                    "description": "Ledger column -> field of the iterated row. Requires 'each'.",
                     "additionalProperties": { "type": "string" }
                 }
             }
@@ -268,26 +284,26 @@
 
         "postSql": {
             "type": "object",
-            "description": "Posting done by a stored procedure. It posts the whole document, so it is the only entry of 'post' - the platform maps nothing alongside it.",
+            "description": "Posting by a stored procedure. The only entry of 'post'.",
             "additionalProperties": false,
             "required": [ "sql", "journals" ],
             "properties": {
                 "sql": {
                     "type": "object",
-                    "description": "The procedures. Both are called with @Id and @UserId and nothing else, inside a transaction they do not own: they must not commit or roll back, and fail by throwing.",
+                    "description": "The procedures. Called with @Id and @UserId inside a transaction they do not own: no commit or rollback, fail by throwing.",
                     "additionalProperties": false,
                     "required": [ "post" ],
                     "properties": {
                         "post": { "type": "string" },
                         "unpost": {
                             "type": "string",
-                            "description": "Optional. Without it the rows are deleted by provenance, like any other posting; write it only when the inverse is not a delete."
+                            "description": "Not written: the posted rows are deleted by provenance."
                         }
                     }
                 },
                 "journals": {
                     "type": "array",
-                    "description": "Every journal the procedure writes into. Nothing can read this out of the procedure, and the transactions dialog is built from it - as is the unpost, when it is not declared.",
+                    "description": "Every journal the procedure writes into.",
                     "minItems": 1,
                     "items": { "type": "string" }
                 }
@@ -307,7 +323,7 @@
                 "storno": { "type": "boolean" },
                 "each": {
                     "type": "object",
-                    "description": "The one collection this posting iterates, and which of its kinds. Name the kinds exactly when the collection declares them - 'all of them' has no spelling.",
+                    "description": "The collection this posting iterates, and which of its kinds. 'kinds' is required when the collection declares kinds.",
                     "additionalProperties": false,
                     "required": [ "details" ],
                     "properties": {
@@ -331,8 +347,42 @@
             }
         },
 
+        "basedOn": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [ "target" ],
+            "properties": {
+                "target": {
+                    "type": "string",
+                    "description": "Path of the document created, e.g. '/document/waybillout'. Its header needs exactly one field of type 'basedOn' targeting this document: the basis is written there."
+                },
+                "operation": {
+                    "type": "string",
+                    "description": "The operation of the target, by the name its 'operations' lists. Written exactly when the target lists operations."
+                },
+                "document": {
+                    "type": "object",
+                    "description": "Deviations only: field of the target header -> field of this header. The rest is copied by name and domain.",
+                    "additionalProperties": { "type": "string" }
+                },
+                "each": {
+                    "type": "object",
+                    "description": "Copy rows: the target's collection and its kinds; rows come from the collection of the same name here. Without it only the header is copied.",
+                    "additionalProperties": false,
+                    "required": [ "details" ],
+                    "properties": {
+                        "details": { "type": "string" },
+                        "kinds": {
+                            "type": "array",
+                            "items": { "type": "string" }
+                        }
+                    }
+                }
+            }
+        },
+
         "formSet": {
-            "description": "Three forms and no more: the key set is closed (DeclarationBake.BuildForms refuses a fourth with 'Available: index, browse, edit'). A declared form replaces the default entirely, never node by node. Written per endpoint, so an operation declaring its own 'edit' still shows the storage's 'index'.",
+            "description": "The keys are closed: index, browse, edit. A declared form replaces the default entirely. Per endpoint, not inherited from 'storage'.",
             "type": "object",
             "additionalProperties": false,
             "properties": {
@@ -343,7 +393,7 @@
         },
 
         "listForm": {
-            "description": "'index' - the page over the collection - and 'browse', the dialog picked from. Which of the two is drawn follows the ACTION (IndexPageXaml.CreateXamlContainer), so there is no root kind to write here.",
+            "description": "'index': the page over the collection; 'browse': the pick dialog. No root kind: the action decides.",
             "type": "object",
             "additionalProperties": false,
             "properties": {
@@ -357,7 +407,7 @@
         },
 
         "editForm": {
-            "description": "The record's own form - the only one whose root kind is a choice, and the only place 'is' is read at all.",
+            "description": "The record's form: a page or a dialog, by 'is'.",
             "type": "object",
             "additionalProperties": false,
             "required": [ "is" ],
@@ -381,7 +431,7 @@
         },
 
         "formNode": {
-            "description": "A form element anywhere but inside a tab strip - that is, anything but a tab: a tab is drawn only by its strip.",
+            "description": "A form element outside a tab strip: anything but a tab.",
             "allOf": [
                 { "$ref": "#/definitions/formElement" },
                 {
@@ -440,7 +490,7 @@
                 },
                 "filters": {
                     "type": "array",
-                    "description": "References into the endpoint's filter namespace - not fields: most filters have no column. A name the namespace does not have is refused at load.",
+                    "description": "Names of the endpoint's filters, not fields. An unknown name is refused at load.",
                     "items": { "type": "string" }
                 },
                 "commands": {
@@ -531,13 +581,31 @@
         },
 
         "commandBarItem": {
-            "description": "A command name, or a bar token. Case-sensitive: unlike every other enum here, this one is parsed without ignoreCase.",
+            "description": "A command name or a bar token. Case-sensitive.",
             "type": "string",
             "enum": [
                 "$sep",
-                "Create", "Edit", "Delete", "Save", "SaveAndClose", "Print", "Copy",
+                "Create", "Edit", "Delete", "Save", "SaveAndClose", "Print", "BasedOn", "Copy",
                 "Show", "ShowTrans", "Search", "Reload", "Post", "UnPost", "Attachments"
             ]
+        },
+
+        "mcp": {
+            "type": "object",
+            "description": "What the model is told about this address beyond what derives. Only on an endpoint listed in mcp.json. Per address, not inherited from 'storage'.",
+            "additionalProperties": false,
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "description": "Shown by domain_info when the folder name is not enough."
+                },
+                "searchBy": {
+                    "type": "object",
+                    "description": "Catalog only. Field -> how catalog_find matches it: 'exact' (=) or 'contains' (substring). Written, it replaces the derived set whole (the presentation as 'contains', a 'unique' string field as 'exact').",
+                    "minProperties": 1,
+                    "additionalProperties": { "type": "string", "enum": [ "exact", "contains" ] }
+                }
+            }
         },
 
         "printForm": {
@@ -547,37 +615,28 @@
             "properties": {
                 "path": {
                     "type": "string",
-                    "description": "Path of the blank file, relative to the endpoint folder and WITHOUT an extension - named the way a view is; '.json' is appended, never swapped. The last segment is the blank's name: 'print/waybill' answers to 'waybill', and two blanks under one name are refused."
+                    "description": "Path of the blank file, relative to the endpoint folder, without extension ('.json' is appended). The last segment is the blank's name; two blanks under one name are refused."
                 },
                 "title": {
                     "type": "string",
-                    "description": "Caption of the menu item that prints it. Localized like any other caption: '@[...]' is resolved at render."
+                    "description": "Caption of the menu item that prints it. Localizable: '@[...]'."
                 },
                 "header": {
                     "type": "string",
-                    "description": "Title of the WINDOW hosting the viewer, as a template over the record: 'Waybill No {Document.Number} of {Document.Date}'. Every path starts with the model name and is resolved against the shape at build, through references only - so no collection, and the model name alone is an error. Values are substituted in the browser. Omitted, 'title' stands in. This is NOT the blank's own heading - the paper draws that in a cell of its layout, which is never read."
+                    "description": "Title of the viewer window, a template over the record: 'Waybill No {Document.Number} of {Document.Date}'. A path starts with the model name and goes through references only: no collection, and the model name alone is refused. Not written: 'title'. Not the blank's own heading."
                 }
             }
         },
 
-        "endpointKind": {
-            "description": "Normally derived from the folder; written only to override it.",
-            "type": "string",
-            "enum": [
-                "undefined", "catalog", "document", "operation", "journal", "report",
-                "details", "folders", "tags", "tagEntries"
-            ]
-        },
-
         "trait": {
-            "description": "'Print' is deliberately absent: whether an endpoint prints is answered by 'printForms' being non-empty, and a trait would be a second spelling of that, free to disagree with it.",
+            "description": "No 'print': printing is 'printForms' being non-empty.",
             "type": "string",
             "enum": [ "audit", "hierarchy", "folders", "tags", "attachments" ]
         },
 
         "initialSource": {
             "type": "string",
-            "enum": [ "literal", "context", "profile", "policy", "sql" ]
+            "enum": [ "literal", "context", "profile", "policy", "sql", "query" ]
         },
 
         "postDirection": {
@@ -587,7 +646,7 @@
         },
 
         "formKind": {
-            "description": "Read for 'edit' only, where the same record is edited on a page or in a dialog. 'unknown' is not a spelling: it is the C# zero standing for a key nobody wrote.",
+            "description": "Read for 'edit' only.",
             "type": "string",
             "enum": [ "page", "dialog" ]
         },
@@ -621,17 +680,17 @@
         },
 
         "columnType": {
-            "description": "What is stored in the column and how. Not required: not written = default: string (ColumnType.String is the platform's default), so a column declared as {} is a string one.",
+            "description": "What the column stores. Not written: string. NULL follows the type: amount, qty, price, percent, factor, money, decimal, float and boolean are NOT NULL DEFAULT 0, the rest nullable. No 'default' or 'notNull' key: a new record starts from 'initialValues'.",
             "type": "string",
             "enum": [
                 "string", "id", "name", "memo", "rowNumber", "done", "void", "isSystem",
                 "isFolder", "parent", "folder", "user", "rowKind", "operation",
                 "document", "documentType", "row", "rowVersion", "color", "enum", "state", "account", "autonum",
-                "company", "direction",
+                "company", "owner", "basedOn", "prefix", "direction",
                 "amount", "price", "qty", "percent", "factor",
                 "ref", "date", "dateTime", "money", "boolean",
-                "stream", "integer", "number",
-                "bigInt", "bit", "nChar", "decimal", "float", "varBinary", "uniqueidentifier"
+                "stream", "integer",
+                "bigInt", "nChar", "decimal", "float", "varBinary", "uniqueidentifier"
             ]
         }
     }

@@ -10,8 +10,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-		<PackageReference Include="A2v10.Data.Core" Version="10.1.7623" />
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
+		<PackageReference Include="A2v10.Data.Core" Version="10.1.7625" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="10.3.0" />
 	</ItemGroup>
 
 	<ItemGroup>

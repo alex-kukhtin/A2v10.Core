@@ -453,12 +453,12 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Repo
             let datinfo = this.DataInfo.filter(f => f.Checked).map(f => f.Id).join('!');
 
             if (!group) {
-                ctrl.$alert('@[Report.Error.AtLeastGroup]');
+                ctrl.$alert(`@[Report.Error.AtLeastGroup]`);
                 return;
             }
 
             if (!datinfo) {
-                ctrl.$alert('@[Report.Error.AtLeastData]');
+                ctrl.$alert(`@[Report.Error.AtLeastData]`);
                 return;
             }
 

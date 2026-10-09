@@ -36,7 +36,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="A2v10.Data.Core" Version="10.1.7623" />
+		<PackageReference Include="A2v10.Data.Core" Version="10.1.7625" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.12" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.401" PrivateAssets="All" />
@@ -44,6 +44,7 @@
 
 	<ItemGroup>
 		<Content Include="SqlScripts/a2v10_metadata.sql" Pack="true" PackagePath="contentFiles/sql" />
+		<Content Include="Localization/*.txt" Pack="true" PackagePath="contentFiles/localization" />
 		<Content Include="A2v10.Metadata.targets" Pack="True" PackagePath="build/A2v10.Metadata.targets" />
 	</ItemGroup>
 

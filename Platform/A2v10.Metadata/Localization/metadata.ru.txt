@@ -1,0 +1,123 @@
+﻿; A2v10.Metadata - the keys of the screens, templates and messages it generates. Delivered beside default.*.txt by A2v10.Metadata.targets. No key repeats one of default.*.txt: the order the two files are read in is not defined. An application overrides any of them from its _localization
+;
+; Users (/admin)
+@Admin.Login=Логин
+@Admin.PersonName=Имя
+@Admin.LastLogin=Последний вход
+@Admin.NewUser=Новый пользователь
+@Admin.Block=Заблокировать
+@Admin.Unblock=Разблокировать
+@Admin.Confirm.Delete=Удалить пользователя?
+@Admin.Confirm.Block=Заблокировать пользователя? Его открытые сеансы будут завершены.
+@Admin.Error.Self=Это действие нельзя выполнить над собственной учётной записью
+@Admin.Error.SelfAdmin=Нельзя снять с себя роль администратора
+@Admin.BoundaryAll=Ничего не отмечено — вся сеть
+;
+; Roles
+@Role.Admin=Администратор
+@Role.Everyone=Все пользователи
+;
+; Commands
+@Add=Добавить
+@AddRow=Добавить строку
+@Show=Показать
+@Download=Скачать
+@Post=Провести
+@UnPost=Отменить проведение
+@Transactions=Проводки
+@BasedOn=Создать на основании
+@Filters=Фильтры
+@Autonum.Auto=Автоматически
+;
+; Confirmations
+@Confirm.Delete.Element=Вы уверены, что хотите удалить элемент?
+@Confirm.Delete.Document=Вы уверены, что хотите удалить документ?
+@Confirm.Delete.Row=Удалить строку?
+@Confirm.Delete.Folder=Удалить папку?
+@Confirm.Document.Post=Провести документ?
+@Confirm.Document.UnPost=Отменить проведение документа?
+;
+; Validation and errors
+@Error.Required=Обязательное поле
+@Error.Duplicate=Такое значение уже существует
+@Error.Owner=Выбранная запись принадлежит другому владельцу
+@Error.Delete.Used=Невозможно удалить элемент, он используется в системе
+@Error.Element.RowVersion=Элемент изменён другим пользователем. Откройте его заново
+@Error.Document.RowVersion=Документ изменён другим пользователем. Откройте его заново
+@Error.Document.NoCompany=Документ без компании не проводится
+@Error.Document.AlreadyPosted=Документ уже проведён
+@Error.Document.NotPosted=Документ не проведён
+@Error.Document.AlreadyApplied=Документ проведён, изменить его невозможно
+;
+; Folders and tags
+@Folder=Папка
+@Folders=Папки
+@Ungrouped=Без группировки
+@Parent=Родительский элемент
+@Tags=Признаки
+@Color=Цвет
+@Tag.Choose=Выберите признаки
+@Filter.Tag.All=Все признаки
+;
+; Operations - the platform's table; Operation.<code> is the application's
+@Operation=Операция
+@Operation.All=Все операции
+@Operation.Browse=Выбор операции
+;
+; Set of states - StateRole
+@StateRole=Этап
+@StateRole.All=Все этапы
+@StateRole.Initial=Начальный
+@StateRole.InProgress=В работе
+@StateRole.Success=Успешно
+@StateRole.Failure=Неуспешно
+;
+; Chart of accounts - AccountType, NormalBalance
+@AccountType=Тип счёта
+@AccountType.Asset=Активы
+@AccountType.Liability=Обязательства
+@AccountType.Equity=Собственный капитал
+@AccountType.Income=Доходы
+@AccountType.Expense=Расходы
+@AccountType.OffBalance=Забалансовый
+@NormalBalance=Сальдо
+@NormalBalance.Debit=Дебетовое
+@NormalBalance.Credit=Кредитовое
+@NormalBalance.Both=Свёрнутое
+@NormalBalance.Split=Развёрнутое
+@SplitBy=Развёрнуто по
+;
+; Ledger
+@InOut=Направление
+@Acc=Счёт
+@CorrAcc=Корр. счёт
+;
+; Reports
+@Report=Отчёт
+@Report.Run=Сформировать
+@Report.RunNow=Сформировать сейчас
+@Report.Param.Changed=Параметры изменены.
+@Report.NotYetBuild=Отчёт ещё не сформирован.
+@Report.Error.AtLeastGroup=Выберите хотя бы одну группировку
+@Report.Error.AtLeastData=Выберите хотя бы один показатель
+@Period=Период
+@Grouping=Группировка
+@Data=Показатели
+@Total=Итого
+;
+; Turnover report
+@TurnOver.Start=Начальный остаток
+@TurnOver.In=Приход
+@TurnOver.Out=Расход
+@TurnOver.End=Конечный остаток
+;
+; Trial balance, chessboard
+@TrialBalance=Оборотно-сальдовая ведомость
+@TrialBalance.Start=Сальдо на начало
+@TrialBalance.Turnover=Обороты за период
+@TrialBalance.End=Сальдо на конец
+@Account=Счёт
+@Debit=Дебет
+@Credit=Кредит
+@Chessboard=Шахматная ведомость
+@Chessboard.Header=С дебета в кредит счетов

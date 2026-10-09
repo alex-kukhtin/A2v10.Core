@@ -1,8 +1,8 @@
 /*
 Copyright © 2008-2026 Oleksandr Kukhtin
 
-Last updated : 18 apr 2026
-module version : 8634
+Last updated : 06 oct 2026
+module version : 8670
 */
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.SCHEMATA where SCHEMA_NAME=N'a2sys')
@@ -163,13 +163,59 @@ create table a2security.[KeyVaults]
 )
 go
 ------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where [TABLE_SCHEMA] = N'a2security' and TABLE_NAME = N'Roles')
+create table a2security.[Roles]
+(
+	[Id] nvarchar(64) not null
+		constraint PK_Roles primary key,	
+	Void bit not null constraint DF_Roles_Void default(0),
+	[Name] nvarchar(255),
+	[Memo] nvarchar(255)
+)
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2security' and TABLE_NAME=N'UserRoles')
+create table a2security.UserRoles
+(
+	UserId bigint not null
+		constraint FK_UserRoles_UserId_Users foreign key references a2security.Users(Id),
+	[Role] nvarchar(64) not null
+		constraint FK_UserRoles_Role_Roles foreign key references a2security.Roles(Id),
+	constraint PK_UserRoles primary key (UserId, [Role])
+);
+go
+------------------------------------------------
+if not exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_SCHEMA=N'a2security' and TABLE_NAME=N'Grants')
+create table a2security.Grants
+(
+	[Endpoint] nvarchar(128) not null,
+	[Role] nvarchar(64) not null
+		constraint FK_Grants_Role_Roles foreign key references a2security.Roles(Id),
+	CanView bit not null constraint DF_Grants_CanView default(0),
+	CanCreate bit not null constraint DF_Grants_CanCreate default(0),
+	CanEdit bit not null constraint DF_Grants_CanEdit default(0),
+	CanDelete bit not null constraint DF_Grants_CanDelete default(0),
+	CanPost bit not null constraint DF_Grants_CanPost default(0),
+	CanUnpost bit not null constraint DF_Grants_CanUnpost default(0),
+	CanFlag64 bit not null constraint DF_Grants_CanFlag64 default(0),
+	CanFlag128 bit not null constraint DF_Grants_CanFlag128 default(0),
+	CanFlag256 bit not null constraint DF_Grants_CanFlag256 default(0),
+	constraint PK_Grants primary key ([Endpoint], [Role])
+);
+go
+------------------------------------------------
 create or alter view a2security.ViewUsers
 as
 	select Id, UserName, DomainUser, PasswordHash, SecurityStamp, Email, PhoneNumber,
 		LockoutEnabled, AccessFailedCount, LockoutEndDateUtc, TwoFactorEnabled, [Locale],
 		PersonName, Memo, Void, LastLoginDate, LastLoginHost, EmailConfirmed,
 		PhoneNumberConfirmed, RegisterHost, ChangePasswordEnabled,
-		SecurityStamp2, PasswordHash2, SetPassword, IsBlocked, AuthenticatorKey
+		SecurityStamp2, PasswordHash2, SetPassword, IsBlocked, AuthenticatorKey,
+		[Roles] = (
+			select string_agg(ur.[Role], N',') within group (order by ur.[Role])
+			from a2security.UserRoles ur
+				inner join a2security.Roles r on ur.[Role] = r.Id
+			where ur.UserId = u.Id and r.Void = 0)
 	from a2security.Users u
 	where Void = 0 and Id <> 0;
 go
@@ -345,6 +391,18 @@ begin
 	update a2security.ViewUsers set LockoutEndDateUtc = @LockoutEndDate where Id=@Id;
 end
 go
+------------------------------------------------
+create or alter procedure a2security.[User.SetBlocked]
+@Id bigint,
+@IsBlocked bit
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+
+	update a2security.ViewUsers set IsBlocked = @IsBlocked where Id = @Id;
+end
+go
 
 ------------------------------------------------
 create or alter procedure a2security.[User.SetPasswordHash]
@@ -511,6 +569,85 @@ as
 begin
 	set nocount on;
 	set transaction isolation level read uncommitted;
+end
+go
+------------------------------------------------
+-- what the menu shows a user (metadata, useGrants): the admin sees all; the rest by their roles and Everyone - sections by the roles, entries by the grants
+create or alter procedure a2security.[User.Grants.Load]
+@UserId bigint
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+
+	declare @IsAdmin bit = case when exists(select * from a2security.UserRoles
+		where UserId = @UserId and [Role] = N'Admin') then 1 else 0 end;
+
+	select [UserState!TUserState!Object] = null, IsAdmin = @IsAdmin;
+
+	if @IsAdmin = 1
+		return;
+
+	-- the roles the user holds: assigned and living, and Everyone held by all
+	declare @roles table([Role] nvarchar(64));
+	insert into @roles([Role])
+	select ur.[Role] from a2security.UserRoles ur
+		inner join a2security.Roles r on ur.[Role] = r.Id
+	where ur.UserId = @UserId and r.Void = 0
+	union
+	select N'Everyone';
+
+	-- 'roles' of the menu sections read them
+	select [Roles!TRole!Array] = null, [Id] = [Role] from @roles;
+
+	select [Grants!TGrant!Array] = null, g.[Endpoint],
+		CanView = cast(max(cast(g.CanView as int)) as bit),
+		CanCreate = cast(max(cast(g.CanCreate as int)) as bit)
+	from a2security.Grants g
+	where g.[Role] in (select [Role] from @roles)
+	group by g.[Endpoint];
+end
+go
+------------------------------------------------
+-- the gate of a metadata endpoint (useGrants), ahead of every batch the builders run;
+-- the roles as in [User.Grants.Load]: assigned and living, and Everyone held by all
+create or alter procedure a2security.[Permission.Check]
+@UserId bigint,
+@Url nvarchar(128),
+@Flag nvarchar(16),
+@Message nvarchar(255) = N'UI:@[UIError.AccessDenied]'
+as
+begin
+	set nocount on;
+	set transaction isolation level read committed;
+
+	if exists(select 1 from a2security.UserRoles where UserId = @UserId and [Role] = N'Admin')
+		return;
+
+	declare @roles table([Role] nvarchar(64));
+	insert into @roles([Role])
+	select ur.[Role] from a2security.UserRoles ur
+		inner join a2security.Roles r on ur.[Role] = r.Id
+	where ur.UserId = @UserId and r.Void = 0
+	union
+	select N'Everyone';
+
+	declare @canView bit, @canCreate bit, @canEdit bit, @canDelete bit, @canPost bit, @canUnpost bit;
+
+	select @canView = max(cast(g.CanView as int)), @canCreate = max(cast(g.CanCreate as int)),
+		@canEdit = max(cast(g.CanEdit as int)), @canDelete = max(cast(g.CanDelete as int)),
+		@canPost = max(cast(g.CanPost as int)), @canUnpost = max(cast(g.CanUnpost as int))
+	from a2security.Grants g
+	where g.[Endpoint] = @Url and g.[Role] in (select [Role] from @roles);
+
+	declare @allowed bit = case @Flag
+		when N'View' then @canView when N'Create' then @canCreate when N'Edit' then @canEdit
+		when N'Delete' then @canDelete when N'Post' then @canPost when N'Unpost' then @canUnpost
+	end;
+
+	-- no grant row is null, not 0
+	if isnull(@allowed, 0) = 0
+		throw 60000, @Message, 0;
 end
 go
 ------------------------------------------------
@@ -892,10 +1029,10 @@ end
 go
 
 /*
-Copyright © 2008-2025 Oleksandr Kukhtin
+Copyright © 2008-2026 Oleksandr Kukhtin
 
-Last updated : 31 may 2025
-module version : 8553
+Last updated : 06 oct 2026
+module version : 8670
 */
 ------------------------------------------------
 if not exists(select * from a2security.Users)
@@ -907,5 +1044,18 @@ begin
 	values (99, N'admin@admin.com', N'admin@admin.com', N'c9bb451a-9d2b-4b26-9499-2d7d408ce54e', N'AJcfzvC7DCiRrfPmbVoigR7J8fHoK/xdtcWwahHDYJfKSKSWwX5pu9ChtxmE7Rs4Vg==',
 		N'System administrator', 1);
 end
+go
+------------------------------------------------
+if not exists(select * from a2security.Roles where Id = N'Admin')
+	insert into a2security.Roles(Id, [Name]) values (N'Admin', N'@[Role.Admin]');
+go
+------------------------------------------------
+-- every user holds it without an assignment, so it has no UserRoles rows
+if not exists(select * from a2security.Roles where Id = N'Everyone')
+	insert into a2security.Roles(Id, [Name]) values (N'Everyone', N'@[Role.Everyone]');
+go
+------------------------------------------------
+if not exists(select * from a2security.UserRoles where UserId = 99 and [Role] = N'Admin')
+	insert into a2security.UserRoles(UserId, [Role]) values (99, N'Admin');
 go
 

@@ -1,0 +1,123 @@
+﻿; A2v10.Metadata - the keys of the screens, templates and messages it generates. Delivered beside default.*.txt by A2v10.Metadata.targets. No key repeats one of default.*.txt: the order the two files are read in is not defined. An application overrides any of them from its _localization
+;
+; Users (/admin)
+@Admin.Login=Login
+@Admin.PersonName=Imię i nazwisko
+@Admin.LastLogin=Ostatnie logowanie
+@Admin.NewUser=Nowy użytkownik
+@Admin.Block=Zablokuj
+@Admin.Unblock=Odblokuj
+@Admin.Confirm.Delete=Usunąć użytkownika?
+@Admin.Confirm.Block=Zablokować użytkownika? Jego otwarte sesje zostaną zakończone.
+@Admin.Error.Self=Tej operacji nie można wykonać na własnym koncie
+@Admin.Error.SelfAdmin=Nie można odebrać sobie roli administratora
+@Admin.BoundaryAll=Nic nie zaznaczono — cała sieć
+;
+; Roles
+@Role.Admin=Administrator
+@Role.Everyone=Wszyscy użytkownicy
+;
+; Commands
+@Add=Dodaj
+@AddRow=Dodaj wiersz
+@Show=Pokaż
+@Download=Pobierz
+@Post=Zaksięguj
+@UnPost=Anuluj księgowanie
+@Transactions=Księgowania
+@BasedOn=Utwórz na podstawie
+@Filters=Filtry
+@Autonum.Auto=Automatycznie
+;
+; Confirmations
+@Confirm.Delete.Element=Czy na pewno usunąć element?
+@Confirm.Delete.Document=Czy na pewno usunąć dokument?
+@Confirm.Delete.Row=Usunąć wiersz?
+@Confirm.Delete.Folder=Usunąć folder?
+@Confirm.Document.Post=Zaksięgować dokument?
+@Confirm.Document.UnPost=Anulować księgowanie dokumentu?
+;
+; Validation and errors
+@Error.Required=Pole wymagane
+@Error.Duplicate=Taka wartość już istnieje
+@Error.Owner=Wybrany rekord należy do innego właściciela
+@Error.Delete.Used=Nie można usunąć elementu, jest używany
+@Error.Element.RowVersion=Element został zmieniony przez innego użytkownika. Otwórz go ponownie
+@Error.Document.RowVersion=Dokument został zmieniony przez innego użytkownika. Otwórz go ponownie
+@Error.Document.NoCompany=Dokumentu bez firmy nie można zaksięgować
+@Error.Document.AlreadyPosted=Dokument jest już zaksięgowany
+@Error.Document.NotPosted=Dokument nie jest zaksięgowany
+@Error.Document.AlreadyApplied=Dokument jest zaksięgowany, nie można go zmienić
+;
+; Folders and tags
+@Folder=Folder
+@Folders=Foldery
+@Ungrouped=Bez grupowania
+@Parent=Element nadrzędny
+@Tags=Tagi
+@Color=Kolor
+@Tag.Choose=Wybierz tagi
+@Filter.Tag.All=Wszystkie tagi
+;
+; Operations - the platform's table; Operation.<code> is the application's
+@Operation=Operacja
+@Operation.All=Wszystkie operacje
+@Operation.Browse=Wybór operacji
+;
+; Set of states - StateRole
+@StateRole=Etap
+@StateRole.All=Wszystkie etapy
+@StateRole.Initial=Początkowy
+@StateRole.InProgress=W toku
+@StateRole.Success=Pomyślnie
+@StateRole.Failure=Niepomyślnie
+;
+; Chart of accounts - AccountType, NormalBalance
+@AccountType=Typ konta
+@AccountType.Asset=Aktywa
+@AccountType.Liability=Zobowiązania
+@AccountType.Equity=Kapitał własny
+@AccountType.Income=Przychody
+@AccountType.Expense=Koszty
+@AccountType.OffBalance=Pozabilansowe
+@NormalBalance=Saldo
+@NormalBalance.Debit=Debetowe
+@NormalBalance.Credit=Kredytowe
+@NormalBalance.Both=Per saldo
+@NormalBalance.Split=Rozwinięte
+@SplitBy=Rozwinięte według
+;
+; Ledger
+@InOut=Kierunek
+@Acc=Konto
+@CorrAcc=Konto przeciwstawne
+;
+; Reports
+@Report=Raport
+@Report.Run=Generuj
+@Report.RunNow=Generuj teraz
+@Report.Param.Changed=Parametry zmienione.
+@Report.NotYetBuild=Raport nie został jeszcze wygenerowany.
+@Report.Error.AtLeastGroup=Wybierz co najmniej jedno grupowanie
+@Report.Error.AtLeastData=Wybierz co najmniej jeden wskaźnik
+@Period=Okres
+@Grouping=Grupowanie
+@Data=Wskaźniki
+@Total=Razem
+;
+; Turnover report
+@TurnOver.Start=Stan początkowy
+@TurnOver.In=Przychód
+@TurnOver.Out=Rozchód
+@TurnOver.End=Stan końcowy
+;
+; Trial balance, chessboard
+@TrialBalance=Zestawienie obrotów i sald
+@TrialBalance.Start=Saldo początkowe
+@TrialBalance.Turnover=Obroty
+@TrialBalance.End=Saldo końcowe
+@Account=Konto
+@Debit=Winien
+@Credit=Ma
+@Chessboard=Zestawienie szachownicowe
+@Chessboard.Header=Ze strony Winien na stronę Ma kont

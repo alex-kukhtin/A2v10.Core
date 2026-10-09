@@ -1,0 +1,123 @@
+﻿; A2v10.Metadata - the keys of the screens, templates and messages it generates. Delivered beside default.*.txt by A2v10.Metadata.targets. No key repeats one of default.*.txt: the order the two files are read in is not defined. An application overrides any of them from its _localization
+;
+; Users (/admin)
+@Admin.Login=Login
+@Admin.PersonName=Name
+@Admin.LastLogin=Last login
+@Admin.NewUser=New user
+@Admin.Block=Block
+@Admin.Unblock=Unblock
+@Admin.Confirm.Delete=Delete the user?
+@Admin.Confirm.Block=Block the user? Their open sessions will be ended.
+@Admin.Error.Self=This action cannot be applied to your own account
+@Admin.Error.SelfAdmin=You cannot take the administrator role from yourself
+@Admin.BoundaryAll=Nothing ticked means the whole network
+;
+; Roles
+@Role.Admin=Administrator
+@Role.Everyone=All users
+;
+; Commands
+@Add=Add
+@AddRow=Add row
+@Show=Show
+@Download=Download
+@Post=Post
+@UnPost=Unpost
+@Transactions=Transactions
+@BasedOn=Create based on
+@Filters=Filters
+@Autonum.Auto=Automatic
+;
+; Confirmations
+@Confirm.Delete.Element=Are you sure you want to delete the item?
+@Confirm.Delete.Document=Are you sure you want to delete the document?
+@Confirm.Delete.Row=Delete the row?
+@Confirm.Delete.Folder=Delete the folder?
+@Confirm.Document.Post=Post the document?
+@Confirm.Document.UnPost=Unpost the document?
+;
+; Validation and errors
+@Error.Required=Required field
+@Error.Duplicate=This value already exists
+@Error.Owner=The selected record belongs to another owner
+@Error.Delete.Used=The item cannot be deleted: it is in use
+@Error.Element.RowVersion=The item was changed by another user. Open it again
+@Error.Document.RowVersion=The document was changed by another user. Open it again
+@Error.Document.NoCompany=A document without a company cannot be posted
+@Error.Document.AlreadyPosted=The document is already posted
+@Error.Document.NotPosted=The document is not posted
+@Error.Document.AlreadyApplied=The document is posted and cannot be changed
+;
+; Folders and tags
+@Folder=Folder
+@Folders=Folders
+@Ungrouped=Ungrouped
+@Parent=Parent
+@Tags=Tags
+@Color=Color
+@Tag.Choose=Choose tags
+@Filter.Tag.All=All tags
+;
+; Operations - the platform's table; Operation.<code> is the application's
+@Operation=Operation
+@Operation.All=All operations
+@Operation.Browse=Select operation
+;
+; Set of states - StateRole
+@StateRole=Stage
+@StateRole.All=All stages
+@StateRole.Initial=Initial
+@StateRole.InProgress=In progress
+@StateRole.Success=Succeeded
+@StateRole.Failure=Failed
+;
+; Chart of accounts - AccountType, NormalBalance
+@AccountType=Account type
+@AccountType.Asset=Assets
+@AccountType.Liability=Liabilities
+@AccountType.Equity=Equity
+@AccountType.Income=Income
+@AccountType.Expense=Expenses
+@AccountType.OffBalance=Off-balance
+@NormalBalance=Normal balance
+@NormalBalance.Debit=Debit
+@NormalBalance.Credit=Credit
+@NormalBalance.Both=Net
+@NormalBalance.Split=Split
+@SplitBy=Split by
+;
+; Ledger
+@InOut=Direction
+@Acc=Account
+@CorrAcc=Corr. account
+;
+; Reports
+@Report=Report
+@Report.Run=Run
+@Report.RunNow=Run now
+@Report.Param.Changed=Parameters changed.
+@Report.NotYetBuild=The report has not been run yet.
+@Report.Error.AtLeastGroup=Select at least one grouping
+@Report.Error.AtLeastData=Select at least one measure
+@Period=Period
+@Grouping=Grouping
+@Data=Measures
+@Total=Total
+;
+; Turnover report
+@TurnOver.Start=Opening balance
+@TurnOver.In=Receipts
+@TurnOver.Out=Issues
+@TurnOver.End=Closing balance
+;
+; Trial balance, chessboard
+@TrialBalance=Trial balance
+@TrialBalance.Start=Opening balance
+@TrialBalance.Turnover=Turnover
+@TrialBalance.End=Closing balance
+@Account=Account
+@Debit=Debit
+@Credit=Credit
+@Chessboard=Account matrix
+@Chessboard.Header=From the debit to the credit of accounts
