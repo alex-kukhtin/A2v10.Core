@@ -92,14 +92,23 @@ internal class RefMapBuilder
     {
         if (!_isPlain || _declaration == null)
             return [];
+        return _declaration.AllInherits()
+            .GroupBy(d => TargetKey(d.Ref))
+            .ToDictionary(g => g.Key, g => InheritSources(_declaration, g.First().Ref.RefTableCheck.Storage));
+    }
 
-        /* The other half of InheritDescriptor's asymmetry: 'field' and 'ref' belong to the table
-         * the rule is written on and are resolved at load, this one belongs to the table the
-         * reference points at and can only be asked once the graph is linked. Local because that
-         * moment is this method and nothing else - and here it is visible that the third name is
-         * the one a typo carries past load, into SQL generation. It says where it looked in the
-         * same words the other two do (DeclarationBake.BuildInherits).
-         */
+    /* The columns of 'target' the inherits of an endpoint read, so the resolve of that target sends
+     * them beside its key and name. One answer for the map that sends them and the type that
+     * promises them (ScriptBuilder.RefTsProperties).
+     *
+     * The other half of InheritDescriptor's asymmetry: 'field' and 'ref' belong to the table the
+     * rule is written on and are resolved at load, 'source' belongs to the table the reference
+     * points at and can only be asked once the graph is linked - which is here, and nothing else.
+     * So the third name is the one a typo carries past load, into SQL generation; it says where it
+     * looked in the same words the other two do (DeclarationBake.BuildInherits).
+     */
+    internal static List<TableColumn> InheritSources(DeclarationMetadata declaration, TableMetadata target)
+    {
         static TableColumn SourceColumn(InheritDescriptor descriptor)
         {
             var refTable = descriptor.Ref.RefTableCheck.Storage;
@@ -108,15 +117,12 @@ internal class RefMapBuilder
                     $"inherit: source '{descriptor.Source}' not found in {refTable.SqlTableName}");
         }
 
-        return _declaration.AllInherits()
-            .GroupBy(d => TargetKey(d.Ref))
-            .ToDictionary(
-                g => g.Key,
-                g => g.Select(SourceColumn)
-                      .Where(c => c.Type != ColumnType.Id && c.Type != ColumnType.Name)
-                      .DistinctBy(c => c.Name)
-                      .ToList()
-            );
+        return declaration.AllInherits()
+            .Where(d => ReferenceEquals(d.Ref.RefTableCheck.Storage, target))
+            .Select(SourceColumn)
+            .Where(c => c.Type != ColumnType.Id && c.Type != ColumnType.Name)
+            .DistinctBy(c => c.Name)
+            .ToList();
     }
     /* The slots of '@map' for one target: as many as the WIDEST source needs, named after that
      * source's own columns. Positional - GenerateInserts writes a source's i-th column into the
@@ -269,7 +275,7 @@ internal class RefMapBuilder
                 ? $"@Init{r.Column.Name}"
                 : r.Column.SqlLiteral(r.Initial.Value))});"));
     }
-    public void WriteRefMap(StringBuilder sb, Action<StringBuilder>? onInsert = null)
+    public void WriteRefMap(StringBuilder sb)
     {
         if (IsEmpty)
             return;

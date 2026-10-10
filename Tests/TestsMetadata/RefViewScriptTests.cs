@@ -46,11 +46,11 @@ public class RefViewScriptTests
     public async Task The_registry_keeps_the_address_the_file_lies_at()
     {
         var (tables, _) = await TestHost.GetService<DatabaseMetadataProvider>().AllElementsMetadata(null);
-        var operations = tables.Single(t => t.Operations.Count > 0).Operations;
+        var operations = tables.Single(t => t.Kind == TableKind.Operation).Rows;
 
         var invoice = operations.Single(o => o.Id == "invoice");
-        Assert.Equal("invoice", invoice.Document);
-        Assert.Equal("/sale/invoice", invoice.Path);
-        Assert.Equal("/document/receipt", operations.Single(o => o.Id == "receipt.supplier").Path);
+        Assert.Equal("invoice", invoice.Values[Constants.FieldNames.Document]);
+        Assert.Equal("/sale/invoice", invoice.Values[Constants.FieldNames.Path]);
+        Assert.Equal("/document/receipt", operations.Single(o => o.Id == "receipt.supplier").Values[Constants.FieldNames.Path]);
     }
 }

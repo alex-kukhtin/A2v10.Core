@@ -16,9 +16,9 @@ internal static class TableColumnPredicates
     internal static Boolean IsIndexColumn(TableColumn col)
         => col.Type != ColumnType.RowVersion && col.Type != ColumnType.Void && col.Type != ColumnType.IsSystem
             && !col.IsStamp;
+    // what the index shows, less the two the card does not edit: the key, and the posting flag the buttons drive
     internal static Boolean IsEditColumn(TableColumn col)
-        => col.Type != ColumnType.RowVersion && col.Type != ColumnType.Void && col.Type != ColumnType.IsSystem
-            && col.Type != ColumnType.Id && col.Type != ColumnType.Done && !col.IsStamp;
+        => IsIndexColumn(col) && col.Type != ColumnType.Id && col.Type != ColumnType.Done;
     /* What the client sends: the table type and the DataTable filling it are built from this one
      * answer, since their column order must match. A stamp is written by the statement itself, a
      * computed column by nobody.
@@ -32,22 +32,26 @@ internal record OwnerLink(TableColumn Owner, TableColumn Field, Boolean Header);
 
 internal static class MetadataExtensions
 {
-    internal static EndpointKind ToEndpointKind(this String schema)
+    /* The kind of table a folder's file declares; null for a folder that declares none - 'tag' and
+     * 'operation' are served in code, 'report' reads another endpoint's shape. The one function for
+     * both readers, the load and the alias check: two spellings of it once drifted on 'report'.
+     */
+    internal static TableKind? ToTableKind(this String folder) => folder switch
     {
-        return schema switch
-        {
-            Constants.SchemaNames.Catalog => EndpointKind.Catalog,
-            Constants.SchemaNames.Document => EndpointKind.Document,
-            Constants.SchemaNames.Journal => EndpointKind.Journal,
-            Constants.SchemaNames.Report => EndpointKind.Report,
-            Constants.SchemaNames.Enum => EndpointKind.Enum,
-            Constants.SchemaNames.State => EndpointKind.State,
-            Constants.SchemaNames.Autonum => EndpointKind.Autonum,
-            Constants.SchemaNames.AccPlan => EndpointKind.AccPlan,
-            Constants.SchemaNames.Ledger => EndpointKind.Ledger,
-            _ => throw new InvalidOperationException($"Invalid schema for EndpointKind '{schema}'")
-        };
-    }
+        Constants.SchemaNames.Catalog => TableKind.Catalog,
+        Constants.SchemaNames.Document => TableKind.Document,
+        Constants.SchemaNames.Journal => TableKind.Journal,
+        Constants.SchemaNames.Ledger => TableKind.Ledger,
+        Constants.SchemaNames.Enum => TableKind.Enum,
+        Constants.SchemaNames.State => TableKind.State,
+        Constants.SchemaNames.AccPlan => TableKind.AccPlan,
+        Constants.SchemaNames.Autonum => TableKind.Autonum,
+        _ => null
+    };
+
+    // a folder the platform reads a metadata.json from: one declaring a table, or a report
+    internal static Boolean IsFolderKind(this String folder) =>
+        folder.ToTableKind() != null || folder == Constants.SchemaNames.Report;
 
     internal static String ToSqlSchema(this String folder)
     {
@@ -67,8 +71,6 @@ internal static class MetadataExtensions
             Constants.SchemaNames.State => "state",
             Constants.SchemaNames.AccPlan => "acc",
             Constants.SchemaNames.Ledger => "led",
-            "account" => "acc",
-            "inforegister" => "regi",
             _ => folder
         };
     }
@@ -90,9 +92,10 @@ internal static class MetadataExtensions
      * itself: the seed answers 'has this changed', and the content is deployed by the script that
      * owns it.
      *
-     * Its fillers are the rows a file declares: the values of a set, the numberings of /autonum,
-     * the rows of a seed file. A table holding none has none, and no kind is asked for them - what a
-     * table declares is what it has.
+     * Its filler is Rows - whatever a file declared with the table, whichever grammar wrote it. A
+     * table holding none has none, and no kind is asked for them - what a table declares is what it
+     * has. A row that does not name a column and one naming it null are different rows to the merge,
+     * so the text tells them apart.
      *
      * One filler is not rows, and it is asked of the kind: a document table carries the members of its reference view
      * (Constants.FieldNames.RefViewMembers). The view is generated, not declared, so its text is
@@ -102,21 +105,12 @@ internal static class MetadataExtensions
      */
     internal static String? Xtra(this TableMetadata table)
     {
-        // a seed value that is not named and one named null are different rows to the merge
-        static String SeedLine(SeedRow row) =>
+        static String Line(SeedRow row) =>
             $"{row.Id}|{String.Join('|', row.Values.OrderBy(kv => kv.Key, StringComparer.Ordinal)
                 .Select(kv => kv.Value == null ? $"{kv.Key}~" : $"{kv.Key}={kv.Value}"))}";
 
-        // the position is part of a value (it becomes Order), so the index is in the text; a
-        // numbering is addressed by its key alone and its position says nothing
-        // every field of a value, unconditionally: appended only when set, a colour and a role
-        // would produce one text for two different rows
-        var lines = table.Values
-            .Select((v, ix) => $"{ix}|{v.Id}|{v.Name}|{v.Memo}|{(v.Void ? 1 : 0)}|{v.Color}|{v.Role}")
-            .Concat(table.Autonums.Select(a => $"{a.Id}|{a.Name}|{a.Pattern}|{a.Period}"))
-            .Concat(table.Operations.Select(o => $"{o.Id}|{o.Document}|{o.Path}|{o.Order}"))
+        var lines = table.Rows.Select(Line)
             .Concat(table.IsDocument ? [String.Join('|', Constants.FieldNames.RefViewMembers)] : [])
-            .Concat(table.SeedRows.Select(SeedLine))
             .ToList();
         if (lines.Count == 0)
             return null;
@@ -143,7 +137,7 @@ internal static class MetadataExtensions
      * model. A document's operation by its code ('waybillin', 'receipt.supplier'): the page header,
      * the create and the basis menus. A record by the model: the title of a catalog's dialog.
      */
-    internal static String OperationLabel(String code) => $"@[{TableMetadataDefaults.OperationsTable().Model}.{code}]";
+    internal static String OperationLabel(String code) => $"@[{TableMetadataDefaults.OperationModel}.{code}]";
     internal static String RecordLabel(this TableMetadata table) => $"@[{table.Model}]";
 
     internal static String TransName(this TableMetadata journal) =>
@@ -151,7 +145,7 @@ internal static class MetadataExtensions
     internal static String TransTypeName(this TableMetadata journal) => $"T{journal.TransName()}";
 
     internal static IEnumerable<RefDescriptor> AllRefs(this IEnumerable<TableColumn> columns) =>
-        columns.Where(c => c.IsRef || c.IsOperation).Select((c, ix) => new RefDescriptor(ix + 1, c, (c.RefTable
+        columns.Where(c => c.IsRef).Select((c, ix) => new RefDescriptor(ix + 1, c, (c.RefTable
             ?? throw new InvalidOperationException($"RefTable for {c.Name} is null")).Storage));
 
     /* Whose candidates a reference picks among: every owner column of its target - Owner, and

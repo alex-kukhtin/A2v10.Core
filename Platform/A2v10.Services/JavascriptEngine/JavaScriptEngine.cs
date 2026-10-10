@@ -13,11 +13,25 @@ public class JavaScriptEngine
 	private readonly Engine _engine;
 	private readonly ScriptEnvironment _environment;
 
+	// Бюджет коробки. Без глубины рекурсия — StackOverflowException, который не ловится и
+	// роняет процесс; без счётчика цикл вешает поток запроса и держит ядро до рестарта: клиент
+	// отвалился по таймауту, поток — нет. Счётчик ловит цикл на чистом JS, таймер — цикл вокруг
+	// нативного вызова (loadModel, saveModel, fetch), который счётчик почти не видит.
+	// 30 секунд — by design, серверному скрипту дольше делать нечего; длинная интеграция —
+	// не сюда. Время идёт и внутри нативных вызовов, но вызов таймер не прерывает: срабатывает
+	// на первом операторе после него
+	const Int32 MAX_RECURSION = 256;
+	const Int32 MAX_STATEMENTS = 10_000_000;
+	static readonly TimeSpan TIMEOUT = TimeSpan.FromSeconds(30);
+
 	public JavaScriptEngine(IServiceProvider serviceProvider)
 	{
 		_engine = new Engine((opts) =>
 		{
 			opts.Strict(true);
+			opts.LimitRecursion(MAX_RECURSION);
+			opts.MaxStatements(MAX_STATEMENTS);
+			opts.TimeoutInterval(TIMEOUT);
 		});
 		_engine.SetValue("DateUtils", TypeReference.CreateTypeReference(_engine, typeof(DateUtils)));
 		_environment = new ScriptEnvironment(_engine, serviceProvider);

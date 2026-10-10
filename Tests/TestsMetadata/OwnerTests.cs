@@ -71,7 +71,7 @@ public class OwnerTests
                 "Payer": { "type": "ref", "target": "/catalog/agent" },
                 "Contract": { "type": "ref", "target": "/catalog/contract" } } }
             """, JsonSettings.CamelCaseSerializerSettings)!;
-        table.SetDefaults("document", "x");
+        table.SetDefaults(TableKind.Document, "document", "x");
         foreach (var c in table.Columns.Where(c => c.IsRef))
             c.RefTable = c.Name == "Contract" ? contract : agent;
 

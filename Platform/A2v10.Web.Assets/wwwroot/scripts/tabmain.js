@@ -2340,9 +2340,9 @@ app.modules['std:console'] = function () {
 		}
 	}
 };
-// Copyright © 2015-2021 Oleksandr Kukhtin. All rights reserved.
+// Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
 
-/*20210223-7751*/
+/*20261010-7986*/
 /*validators.js*/
 
 app.modules['std:validators'] = function () {
@@ -2447,6 +2447,9 @@ app.modules['std:validators'] = function () {
 			const sev = rule.severity || ERROR;
 			if (utils.isFunction(rule.applyIf)) {
 				if (!rule.applyIf(item, val)) return;
+			}
+			if (utils.isFunction(rule.when)) {
+				if (!rule.when.call(item, val)) return;
 			}
 			if (utils.isString(rule)) {
 				if (!validateStd({ valid: 'notBlank' }, val))
@@ -6882,9 +6885,9 @@ Vue.component('validator-control', {
 		}
 	});
 })();
-// Copyright © 2019-2024 Oleksandr Kukhtin. All rights reserved.
+// Copyright © 2019-2026 Oleksandr Kukhtin. All rights reserved.
 
-// 20240528-7968
+// 20261010-7969
 // components/colorcombobox.js*/
 
 (function () {
@@ -6955,7 +6958,7 @@ Vue.component('validator-control', {
 					let v = this.item[this.prop];
 					if (utils.isObjectExact(v))
 						return v;
-					return this.itemsSource.find(s => s.$id === v);
+					return this.itemsSource.find(s => s[this.valueProp] === v);
 				},
 				set(val) {
 					let v = this.item[this.prop];

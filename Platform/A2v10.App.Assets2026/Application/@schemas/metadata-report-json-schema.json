@@ -52,6 +52,10 @@
                 }
             }
         },
+        "itemLabel": {
+            "type": "string",
+            "description": "The title of the page and the name of the exported file. A localization key ('@[Turnover]') or text."
+        },
         "grants": {
             "$ref": "metadata-endpoint-json-schema.json#/definitions/grants",
             "description": "A report is read only: 'view' is the verb it means."

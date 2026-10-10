@@ -48,23 +48,25 @@
 Следствие для `TESTS.md` (раздел B): свойство `Singular ∘ Plural = id` фиксировать не на
 чем, а оговорка «сначала зафиксировать текущее кривое поведение» ссылается на кривизну `Plural()`, починенную 2026-09-02.
 
-### 2.4. Мёртвая проверка «файл пуст»
+### 2.20. Селектор с владельцем и `inherit` теряет `inherit` (2026-10-10)
 
-`DatabaseMetadataProvider.cs:139`
+`ViewEngines/A2v10.ViewEngine.Xaml/Controls/SelectorSimple.cs`, `OnEndInit`: данные для fetch берутся
+либо из привязки `Data` (владельцы, `$<Ref>Owners`), либо из литерала, который дал `?inherit=` в
+`Url` — привязка побеждает, литерал отброшен. Колонка-ссылка, у которой есть и владелец, и
+`inherit` (`ControlsXaml.cs:143` ставит привязку, `SelectorUrl` кладёт запрос в `Url`), при выборе
+набором текста получает кандидатов без унаследованных полей; из диалога — с ними. В TestApp такой
+колонки нет (владельцы у `Contract`, `inherit` у `Item`), потому beam не видит. Найдено чтением при
+правке контрола под XAML-beam. Починка — слить объект владельцев и объект `inherit` в один; где
+сливать, решить: на клиенте (`a2-selector` принимает один `fetch-command-data`) или в шаблоне, где
+свойство `$<Ref>Owners` уже строится и могло бы нести `inherit` рядом.
 
-```csharp
-var text = await sr.ReadToEndAsync()
-    ?? throw new InvalidOperationException($"{fileName} is empty");
-```
+### 2.21. Писатель XAML не экранирует литерал, начинающийся с `{` (пакет)
 
-`ReadToEndAsync()` возвращает non-nullable `String` — `??` не срабатывает никогда.
-Реально пустой файл даёт `""` и проходит дальше, до `"TableMetadata deserialization
-fails"`. Имя файла там теперь есть, так что цена упала до формулировки: про
-файл нулевой длины сказано «не разобрался», хотя разбирать было нечего, и автор идёт
-искать синтаксическую ошибку там, где её нет.
-
-Отсутствующего файла это не касается: `ReadMetadataFileAsync` отдаёт за него `"{}"`, и
-разговор про него ведёт `CheckShapeSource` — намеренно тем же сообщением, что и про `{}`.
+`A2v10.System.Xaml` 10.1.8057, `XamlWriter`: объявленное значение вида `Data="{x: 1}"` печатается как
+есть, ридер того же пакета берёт его за markup extension; читаемая форма — `{}{x: 1}`, и ридер её
+понимает (проверено `XamlBeamTests`-зондом 2026-10-10). Генерируемые экраны таких литералов не
+пишут (данные селектора идут привязкой), так что beam зелёный; рукописный view с таким значением
+материализацией не воспроизводится. Чинится в пакете, не здесь.
 
 ### 2.9. Сиквенс и таблица создаются под двумя независимыми `if not exists`
 
@@ -567,12 +569,40 @@ journal it is about to write»). Запрос на дату читает рег�
 Порядок: енумератор и тест над собранным XAML → настоящий `ILocalizer` в CLI → `locMismatch`
 в `validate`.
 
----
+### 3.20. Ключ не в том блоке: предсказуемая ошибка без своего сообщения — решено, не построено
 
-## 4. Сообщения об ошибках без адреса — остался один
+Перенесено из нормы скила (`validate.md`, 2026-10-10): это дизайн сообщений платформы, а не норма
+для автора приложения.
 
-`DatabaseMetadataProvider.cs:803` — `"ReportMetadata deserialization fails"` без имени файла; соседние
-сообщения о десериализации его несут (`MetadataFileName`). Правка механическая.
+Ключ, у которого есть дом, но не тут, загрузчик пропускает молча; этап `schema` у `meta validate`
+отказывает общим `'required' is not a key here. Allowed: …`. Задумано другое: ошибка предсказуема
+(индустрия пишет её именно там), поэтому сообщение пишется заранее и называет НОВОЕ МЕСТО, а не факт
+незнакомства.
+
+| Написано в поле | Сообщение ведёт | Почему |
+|---|---|---|
+| `required`, `visible`, `inherit` | блок `rules` своей области | правило поля, не форма колонки |
+| `computed` | блок `properties` своей области (`{ "get": "…" }`) | значение-выражение — свойство модели |
+| `notNull`, `nullable` | домен поля и `rules.required` | `NOT NULL` — следствие домена |
+| `default` | `initialValues` | начальное значение — Load нового объекта; ноль колонки даёт домен |
+| `grid`, `searchable`, `sortable`, `total`, `rows` | блок `forms` | что и где показывать, решает форма |
+| `control`, `multilineHeight` | домен поля | контрол и вид выводятся |
+| `label`, `caption` | `title` этого поля (🚧 в норме) | подпись — locale-binding |
+
+Второй случай того же класса — верный блок, но ключом взято поле: `"rules": { "FullName": { "required": true } }`.
+Сообщение называет инверсию прямо и перечисляет виды правил.
+
+Сообщение для `notNull` — как цена входа, не как запрет: одно «ключа нет» оставляет модель с задачей
+«сделать поле обязательным» без адреса, и кратчайшим ответом становится подмена домена ради `NOT NULL`.
+
+Тексты, принятые в норме:
+- `'required' is not part of a field: 'fields' describes the column, completeness is checked by the application at a moment the field cannot know. It is declared in the 'rules' block next to 'fields', and the key there is the rule, not the field: "rules": { "required": ["FullName"] }.` В документе над `storage` — `details.Rows.rules`.
+- `in 'rules' the key is the rule, not the field: "rules": { "required": ["FullName"] }. Each rule has its own shape - 'required' takes names, 'visible' takes field-to-expression, 'inherit' takes field-to-source. Available: required, visible, inherit, when`
+- `there is no 'notNull' key. Whether a column can hold NULL is its domain's answer: magnitudes (amount, qty, price, percent, factor, money, decimal, float) and boolean are NOT NULL with 0/false; a ref, a code, a date, a string are nullable. If what you need is a completeness check on save, that is "rules": { "required": ["Region"] } and it leaves the column as the domain made it.`
+- `there is no 'default' key on a field. What a new record starts with is "initialValues": { "Status": { "source": "literal", "value": "draft" } }. A field not named there starts at its domain's zero (0, false) or empty.`
+
+Где строить: таблица «ключ на пути → куда ведёт» перед общим сообщением `JsonSchemaSet` (она знает путь
+и ключ), а не в загрузчике — он такие ключи не видит.
 
 ---
 
@@ -646,12 +676,9 @@ not null` без default — батч упадёт. Проходит тольк�
 - **Путь бланка.** `DeclarationMetadata.cs:89`: «addressed by path and need not lie anywhere
   near». `PrintTitle.cs:148` (`BlankOf`) приклеивает путь эндпоинта — бланк обязан лежать под
   его папкой. Одно из двух неверно.
-- **Мёртвые ветки `Operation`.** Таблица с `Kind == Operation` — только `OperationsTable()`, и
-  её обслуживает свой билдер, минуя `BuildForms` и `XamlBuilder`: `DeclarationBake.cs:100` и
-  `CommandXaml.cs:70` недостижимы. `EditTemplate.cs:119` сравнивает `Endpoint.Kind` с
-  `Operation`, а операция получает `Kind = Document` (`EndpointKindOf`) — блок не исполняется
-  никогда; дефолт операции уже даёт SQL через `$operation$`. Слово `Operation` означает два
-  разных kind-а — реестра и эндпоинта, — и ветки писались под второй.
+- **Мёртвые ветки `Operation`** — закрыто 2026-10-10: `EndpointMetadata.Kind` удалён, ветки в
+  `EditTemplate` и `CommandXaml` сняты (`CLAUDE.md`, «System endpoints»). Осталась `HasForms`
+  в `DeclarationBake` с `Operation` в списке — реестр через бейк не идёт, строка безвредна.
 
 ---
 

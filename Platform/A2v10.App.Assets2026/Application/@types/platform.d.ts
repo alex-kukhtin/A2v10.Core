@@ -1,7 +1,7 @@
 ﻿/* Copyright © 2019-2026 Oleksandr Kukhtin. All rights reserved. */
 
-/* Version 10.0.7994  */
-/* Date    2026.05.08 */
+/* Version 10.0.7998  */
+/* Date    2026.10.10 */
 
 declare function require(url: string): any;
 
@@ -226,12 +226,14 @@ declare type templateValidatorResult = { msg: string, severity: Severity };
 type tempateValidatorFunc = (elem: IElement, value?: any) => boolean | string | templateValidatorResult | Promise<any>;
 
 interface templateValidatorObj {
-	valid: tempateValidatorFunc | StdValidator,
+	// the standard validators by name as well: a template written as text names them ('notBlank')
+	valid: tempateValidatorFunc | StdValidator | `${StdValidator}`,
 	async?: boolean,
 	msg?: string,
 	regExp?: RegExp,
 	severity?: Severity,
-	applyIf?: (elem: IElement, value?: any) => boolean
+	applyIf?(elem: IElement, value?: any): boolean,
+	when?(this: IElement, value?: any): boolean
 }
 
 declare type templateValidator = String | tempateValidatorFunc | templateValidatorObj | undefined;

@@ -85,6 +85,9 @@ internal partial class SqlBuilder(BuilderDescriptor desciptor, IServiceProvider 
 
     String? OwnOperations(String alias) => OwnOperations(Endpoint, alias);
 
+    // the tag ids of the record on save - the platform's parameter, so under '$' (SqlBuilderPlain.MergeTags)
+    const String TagsParam = "@$Tags";
+
     /* A record is opened, saved, posted and deleted by its id, and an id is per table: over a table
      * documents share, another document's row would pass this document's gate. So a row with this id
      * that is not one of this document's is refused - a missing one is not, that is an empty load or a

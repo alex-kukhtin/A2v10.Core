@@ -1,0 +1,6 @@
+{
+  "name": "testsmetadata-ts-beam",
+  "private": true,
+  "description": "tsc for the TS beam of TestsMetadata (TsBeamTests): npm ci here once",
+  "devDependencies": { "typescript": "^5.9.0" }
+}

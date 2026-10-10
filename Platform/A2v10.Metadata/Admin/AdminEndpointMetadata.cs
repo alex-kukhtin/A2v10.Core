@@ -16,7 +16,6 @@ public abstract record AdminEndpointMetadata : EndpointMetadata
     {
         UserAdminEndpointMetadata.ScreenName => new UserAdminEndpointMetadata()
         {
-            Kind = EndpointKind.Admin,
             Schema = Constants.SchemaNames.Admin,
             Name = name
         },

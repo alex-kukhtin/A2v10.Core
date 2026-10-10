@@ -24,7 +24,7 @@ internal abstract class LedgerReportBuilder : BaseReportBuilder
     protected LedgerReportBuilder(IServiceProvider serviceProvider, ReportMetadata report, TableMetadata source, AppPlatformId platformId)
         : base(serviceProvider, report, source, platformId)
     {
-        if (source.Kind != EndpointKind.Ledger)
+        if (source.Kind != TableKind.Ledger)
             throw new InvalidOperationException(
                 $"Report '{report.Type}': surface {source.Path} is a {source.Kind}; this report reads a ledger");
         _acc = source.AllColumns().First(c => c.Name == Constants.FieldNames.Acc);

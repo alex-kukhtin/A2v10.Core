@@ -47,9 +47,3 @@ internal interface IModelBuilder
     Task DbRemoveAsync(String? propName, ExpandoObject execPrms) =>
         throw NotHere(nameof(DbRemoveAsync), Path);
 }
-
-internal interface IEndpointModelBuilder
-{
-    Task<String> CreateTemplateTSAsync();
-    Task<String> CreateMapTSAsync();
-}

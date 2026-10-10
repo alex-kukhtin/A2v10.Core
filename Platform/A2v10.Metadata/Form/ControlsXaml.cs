@@ -298,7 +298,7 @@ internal partial class XamlBuilder
             },
             FilterKind.Ref => new SelectorSimple()
             {
-                Label = $"@[{filter.ColumnCheck.RefTableCheck.Storage.Model}]",
+                Label = filter.ColumnCheck.RefTableCheck.Storage.RecordLabel(),
                 ShowClear = true,
                 Highlight = true,
                 Placeholder = $"@[{filter.ColumnCheck.RefTableCheck.Storage.Model}.All]",
@@ -324,13 +324,13 @@ internal partial class XamlBuilder
              */
             FilterKind.Set when filter.ColumnCheck.IsOperation => new ComboBox()
             {
-                Label = $"@[{filter.ColumnCheck.RefTableCheck.Storage.Model}]",
+                Label = filter.ColumnCheck.RefTableCheck.Storage.RecordLabel(),
                 Highlight = true,
                 Children = [
                     new ComboBoxItem() { Content = $"@[{filter.ColumnCheck.RefTableCheck.Storage.Model}.All]", Value = String.Empty },
                     .. Endpoint.Declaration.OperationDeclarations.Select(op => new ComboBoxItem()
                     {
-                        Content = $"@[{filter.ColumnCheck.RefTableCheck.Storage.Model}.{op.Id}]",
+                        Content = MetadataExtensions.OperationLabel(op.Id),
                         Value = op.Id
                     })
                 ],
@@ -339,10 +339,10 @@ internal partial class XamlBuilder
             FilterKind.Set when filter.ColumnCheck.Type == ColumnType.State => StatePicker(
                 filter.ColumnCheck.RefTableCheck.Storage.CollectionName, filter.ColumnCheck.RefTableCheck.Storage.ChoiceProperty,
                 new Bind($"Parent.Filter.{filter.Name}"), new Bind(Constants.FieldNames.Id),
-                label: $"@[{filter.ColumnCheck.RefTableCheck.Storage.Model}]"),
+                label: filter.ColumnCheck.RefTableCheck.Storage.RecordLabel()),
             FilterKind.Set => new ComboBox()
             {
-                Label = $"@[{filter.ColumnCheck.RefTableCheck.Storage.Model}]",
+                Label = filter.ColumnCheck.RefTableCheck.Storage.RecordLabel(),
                 Highlight = true,
                 Children = [
                     new ComboBoxItem()
@@ -553,9 +553,9 @@ internal partial class XamlBuilder
         };
 
         // the chart's own columns; an author field of the same name elsewhere is an ordinary string
-        if (Table.Kind == EndpointKind.AccPlan && column.Name == Constants.FieldNames.AccountType)
+        if (Table.Kind == TableKind.AccPlan && column.Name == Constants.FieldNames.AccountType)
             return ClosedSet<AccountType>();
-        if (Table.Kind == EndpointKind.AccPlan && column.Name == Constants.FieldNames.NormalBalance)
+        if (Table.Kind == TableKind.AccPlan && column.Name == Constants.FieldNames.NormalBalance)
             return ClosedSet<NormalBalance>();
 
         return column.Type switch

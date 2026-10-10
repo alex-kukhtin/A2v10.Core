@@ -153,6 +153,6 @@ public class SqlAsColumnTests
             """{ "Name": "x", "AccountType": "Asset", "NormalBalance": "Debit", "DisplayName": "28 x" }""")!;
 
         Assert.Throws<InvalidOperationException>(() =>
-            DatabaseMetadataProvider.AccountRow("accplan/national/seed.json", chart, "28", row));
+            AccountRows.Row("accplan/national/seed.json", chart, "28", row));
     }
 }

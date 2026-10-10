@@ -4,7 +4,10 @@
 	"autonum": "waybill",
 	"operations": [ "supplier", "gratis" ],
 	"rules": {
-		"required": [ "StoreTo" ]
+		"required": [ "StoreTo" ],
+		"when": [
+			{ "test": "this.Sum > 1000", "required": [ "Agent", "StoreTo" ] }
+		]
 	},
 	"grants": {
 		"Storekeeper": [ "view", "create", "edit", "post" ],

@@ -36,6 +36,10 @@
             "type": "string",
             "description": "The column a record is shown by where it is referenced. Not written: the Name column, else the autonum one; neither is refused at load."
         },
+        "displayAs": {
+            "type": "string",
+            "description": "The column a record is chosen by - a selector, the combo of a set, the text typed to find it. Defaults to 'presentation'. 'Name' with another presentation is refused: the element's Name IS the presentation."
+        },
 
         "fields": { "$ref": "#/definitions/fields" },
         "details": { "$ref": "#/definitions/details" },
@@ -762,9 +766,9 @@
             "description": "What the column stores. Not written: string. NULL follows the type: amount, qty, price, percent, factor, money, decimal, float and boolean are NOT NULL DEFAULT 0, the rest nullable. No 'default' or 'notNull' key: a new record starts from 'initialValues'.",
             "type": "string",
             "enum": [
-                "string", "id", "name", "memo", "rowNumber", "done", "void", "isSystem",
-                "isFolder", "parent", "folder", "user", "rowKind", "operation",
-                "document", "documentType", "row", "rowVersion", "color", "enum", "state", "account", "autonum",
+                "string", "memo", "rowNumber", "done", "void", "isSystem",
+                "user", "rowKind", "operation",
+                "document", "documentType", "row", "color", "enum", "state", "account", "autonum",
                 "company", "owner", "basedOn", "prefix", "direction",
                 "amount", "price", "qty", "percent", "factor",
                 "ref", "date", "dateTime", "money", "boolean",

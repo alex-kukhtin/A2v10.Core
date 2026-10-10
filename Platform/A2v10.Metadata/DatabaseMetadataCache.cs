@@ -39,10 +39,15 @@ public class DatabaseMetadataCache
      */
     private readonly SemaphoreSlim _loadGate = new(1, 1);
 
-    private Boolean _metadataDirty = true; // TODO. ????
+    /* The metadata may differ from the database: true at start and after every file change, cleared
+     * by a deploy of the generation that was dirty. The generation counts file changes, so a change
+     * arriving DURING a deploy is not cleared by it - it belongs to the next.
+     */
+    private volatile Boolean _metadataDirty = true;
+    private Int32 _generation;
+    private readonly SemaphoreSlim _deployGate = new(1, 1);
     private FileSystemWatcher? FileWatcher { get; init; }
-    public Boolean IsMetadataDirty => _metadataDirty;
-    public void ClearDirty() => _metadataDirty = false;
+
     public DatabaseMetadataCache(IAppCodeProvider appCodeProvider, IOptions<AppOptions> appOptions)
     {
         if (appOptions.Value.Environment.Watch)
@@ -71,11 +76,35 @@ public class DatabaseMetadataCache
             _appJson = null;
             _mcpIndex = null;
             _xamlFormCache.Clear();
+            Interlocked.Increment(ref _generation);
             _metadataDirty = true;
         }
         finally
         {
             _loadGate.Release();
+        }
+    }
+
+    /* One deploy at a time - two first requests both saw the flag and ran the DDL on two connections -
+     * and the flag is cleared for the generation that was deployed only.
+     */
+    internal async Task CheckDeployAsync(Func<Task> deploy)
+    {
+        if (!_metadataDirty)
+            return;
+        await _deployGate.WaitAsync();
+        try
+        {
+            if (!_metadataDirty)
+                return;
+            var generation = _generation;
+            await deploy();
+            if (generation == _generation)
+                _metadataDirty = false;
+        }
+        finally
+        {
+            _deployGate.Release();
         }
     }
 
@@ -109,7 +138,7 @@ public class DatabaseMetadataCache
         {
             if (_cache.TryGetValue(key, out finished))
                 return finished;
-            var inLoad = new EndpointLoad(_cache);
+            var inLoad = new EndpointLoad(_cache, _storages);
             var endpoint = await load(inLoad, dataSource, schema, table);
             inLoad.Publish();
             return endpoint;
@@ -120,20 +149,10 @@ public class DatabaseMetadataCache
         }
     }
 
-    public async Task<TableMetadata> GetOrAddStorageAsync(String? dataSource, String schema, String table,
-        Func<String?, String, String, Task<TableMetadata>> getStorage)
-    {
-        var key = $"{dataSource}:{schema}:{table}";
-        if (_storages.TryGetValue(key, out TableMetadata? storage))
-            return storage;
-        storage = await getStorage(dataSource, schema, table);
-        return _storages.GetOrAdd(key, storage);
-    }
-
     internal async Task<IEnumerable<TableReferrer>> GetTableReferrersAsync(String? dataSource, TableMetadata table,
         Func<String?, TableMetadata, Task<IEnumerable<TableReferrer>>> loader)
     {
-        var key = $"{dataSource}:{table.Schema}:{table.Table}";
+        var key = EndpointLoad.KeyOf(dataSource, table.Schema, table.Table);
         if (_referrers.TryGetValue(key, out IEnumerable<TableReferrer>? referrers))
             return referrers;
         var res = await loader(dataSource, table);
@@ -175,15 +194,16 @@ public class DatabaseMetadataCache
 
     private void Watcher_Changed(Object sender, FileSystemEventArgs e)
     {
-        /* mcp.json and model.json feed the MCP index only. metadata.json and app.json drop everything:
-         * app.json holds what every load and the deploy read - aliases, platformid, roles.
+        /* mcp.json and model.json feed the MCP index only. Everything else watched drops everything:
+         * app.json holds what every load and the deploy read - aliases, platformid, roles; an
+         * operation file and a seed file are baked into the endpoint beside them.
          */
         var name = Path.GetFileName(e.FullPath);
-        if (name.Equals("metadata.json", StringComparison.OrdinalIgnoreCase)
-            || name.Equals("app.json", StringComparison.OrdinalIgnoreCase))
-            ClearAll(); // All items! References!
-        else
+        if (name.Equals("mcp.json", StringComparison.OrdinalIgnoreCase)
+            || name.Equals("model.json", StringComparison.OrdinalIgnoreCase))
             _mcpIndex = null;
+        else
+            ClearAll(); // All items! References!
     }
     private FileSystemWatcher? CreateWatcher(IAppCodeProvider appCodeProvider)
     {
@@ -200,6 +220,9 @@ public class DatabaseMetadataCache
         watcher.Filters.Add("app.json");
         watcher.Filters.Add("mcp.json");
         watcher.Filters.Add("model.json");
+        watcher.Filters.Add($"*{DatabaseMetadataProvider.OperationFileSuffix}");
+        // by the convention the skill writes ('seed': 'seed.json'); a seed under another name is read, not watched
+        watcher.Filters.Add("seed.json");
         watcher.Changed += Watcher_Changed;
         watcher.Created += Watcher_Changed;
         /* An editor that saves atomically writes a temp file and renames it over the original: the

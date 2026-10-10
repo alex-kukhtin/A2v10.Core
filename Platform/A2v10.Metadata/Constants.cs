@@ -6,7 +6,11 @@ namespace A2v10.Metadata;
 
 internal static class Constants
 {
-    public const Int32 MultilineThreshold = 200;
+    // what 'initialValues' may take from the context (InitialSource.Context); the SQL of the load spells each
+    public static class ContextValues
+    {
+        public const String Today = "today";
+    }
 
     public static class FieldNames
     {
@@ -82,18 +86,10 @@ internal static class Constants
         public const String UserPosted = nameof(UserPosted);
         public const String UtcDatePosted = nameof(UtcDatePosted);
     }
-    public static class FieldSizes
-    {
-        public const Int32 Name = 255;
-        public const Int32 Memo = 255;
-    }
-
     public static class FormNames
     {
         public const String Index  = "index";
         public const String Edit   = "edit";
-        public const String Open   = "open";
-        public const String Show   = "show";
         public const String Browse = "browse";
     }
 

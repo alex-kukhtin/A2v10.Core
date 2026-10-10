@@ -91,17 +91,23 @@ internal partial class ScriptBuilder
             }
             if (Table.IsDocument)
             {
+                /* What the card emits is ITS root, not this page's: an element carrying the record
+                 * under the model's name. Typed by that alone - the index map knows the record's
+                 * columns and nothing of the card's root - and as an element, which is what a
+                 * template event is handed (templateEvent).
+                 */
+                var card = $"IElement & {{ {Table.Model}: {Table.TypeName} }}";
                 yield return $$"""
-                function handlePosted(elem{{Ann("TRoot")}}) {
+                function handlePosted({{Self("TRoot")}}{{(IsTs ? ", " : "")}}elem{{Ann(card)}}) {
                     let doc = elem.{{Table.Model}};
-                    let found = this.{{Table.CollectionName}}.find(d => d.Id == doc.Id);
+                    let found = this.{{Table.CollectionName}}.$find(d => d.Id === doc.Id);
                     if (!found) return;
                     found.Done = doc.Done;
                 }
                 """;
 
                 yield return $$"""
-                function handleSaved(elem{{Ann("TRoot")}}) {
+                function handleSaved({{Self("TRoot")}}{{(IsTs ? ", " : "")}}elem{{Ann(card)}}) {
                     let doc = elem.{{Table.Model}};
                     let found = this.{{Table.CollectionName}}.$find(d => d.Id === doc.Id);
                     if (found)

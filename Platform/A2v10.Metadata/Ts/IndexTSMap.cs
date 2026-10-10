@@ -1,4 +1,4 @@
-﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
+// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Linq;
@@ -8,66 +8,57 @@ namespace A2v10.Metadata;
 
 internal partial class ScriptBuilder
 {
+    /* The types of the index model. Exported, every one of them - the template imports what it
+     * names, and a 'declare type' in a file that exports is local to it.
+     */
     internal Task<String> CreateIndexMapTS()
     {
         var collType = $"{Table.TypeName}Array";
-        var refDecl = String.Empty;
+        var refDecl = String.Join("\n", RefTargets(withDetails: false).Select(RefTsInterface));
 
-        var refs = Table.AllColumns().AllRefs().ToList();
-
-        var refElems = refs.Select(x => $$"""
-        export interface {{x.Table.RefTypeName}} extends IElement {
-        {{String.Join("\n", RefTsProperties(x.Table))}}
-        }
-        """);
-
-        if (refElems.Any())
-            refDecl = $"\n{String.Join("\n", refElems)}\n";
-
-        var templ = String.Empty;
-
-        if (Table.HasFolders)
-        {
-            templ = $$"""
+        var templ = Table.HasFolders
+            ? $$"""
 
             {{refDecl}}
             export interface {{Table.TypeName}} extends IArrayElement {
             {{String.Join("\n", TsProperties(Table))}}
             }
 
-            declare type {{collType}} = IElementArray<{{Table.TypeName}}>;
+            export type {{collType}} = IElementArray<{{Table.TypeName}}>;
 
-            export interface TFolder extends IArrayElement {
-                readonly Id: number;
+            export interface TFolder extends ITreeElement {
+                readonly Id: {{Table.KeyColumn.ToTsType(_descr.PlatformId)}};
                 Icon: string;
                 SubItems: TFolderArray;
                 {{Table.CollectionName}}: {{collType}};
                 InitExpand: boolean;
             }
 
-            declare type TFolderArray = IElementArray<TFolder>;
-            
+            export type TFolderArray = IElementArray<TFolder>;
+
+            /* The properties the template declares on the root (CreateIndexTemplate): the selected
+             * place and folder, and what Create opens the card with.
+             */
             export interface TRoot extends IRoot {
                 readonly Folders: TFolderArray;
+                readonly {{SelectedPlaceProperty}}: TFolder;
+                readonly {{SelectedFolderProperty}}: TFolder;
+                readonly {{CreateArgProperty}}: object;
             }
-            """;
-        }
-        else
-        {
-            templ = $$"""
+            """
+            : $$"""
 
             {{refDecl}}
             export interface {{Table.TypeName}} extends IArrayElement {
             {{String.Join("\n", TsProperties(Table))}}
             }
 
-            declare type {{collType}} = IElementArray<{{Table.TypeName}}>;
+            export type {{collType}} = IElementArray<{{Table.TypeName}}>;
 
             export interface TRoot extends IRoot {
                 readonly {{Table.CollectionName}}: {{collType}};
             }
             """;
-        }
-        return Task.FromResult<String>(templ);
+        return Task.FromResult(templ);
     }
 }

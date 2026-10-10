@@ -1,29 +1,9 @@
-﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
-
-using System;
+// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
-using A2v10.Services;
-
 namespace A2v10.Metadata;
-
-
-public class JsonEmptyStringEnumConverter : StringEnumConverter
-{
-    public override Object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
-    {
-        if (String.IsNullOrEmpty(reader.Value?.ToString()))
-        {
-            if (!objectType.IsEnum)
-                throw new ArgumentException("Expected enum", nameof(objectType));
-            return Enum.ToObject(objectType, 0);
-        }
-        return base.ReadJson(reader, objectType, existingValue, serializer);
-    }
-}
 
 /* Fields, not expression-bodied properties - and that is the whole content of this file.
  *
@@ -34,20 +14,10 @@ public class JsonEmptyStringEnumConverter : StringEnumConverter
  * that and its cache is thread-safe. Same as JsonHelpers.CamelCaseSerializerSettings, which is
  * already written this way.
  *
- * The converters here hold no state, so sharing them is safe too. Nothing may mutate a settings
- * object taken from here - it is now everyone's, not a copy.
+ * Nothing may mutate a settings object taken from here - it is now everyone's, not a copy.
  */
 public static class JsonSettings
 {
-    public static readonly JsonSerializerSettings IgnoreNull = new()
-    {
-        NullValueHandling = NullValueHandling.Ignore,
-        DefaultValueHandling = DefaultValueHandling.Ignore,
-        Converters = [
-            new JsonEmptyStringEnumConverter(),
-        ],
-    };
-
     public static readonly JsonSerializerSettings CamelCaseSerializerSettings = new()
     {
         NullValueHandling = NullValueHandling.Ignore,
@@ -69,30 +39,4 @@ public static class JsonSettings
             NamingStrategy = new CamelCaseNamingStrategy()
         }
     };
-
-    public static readonly JsonSerializerSettings WithNull = new()
-    {
-        NullValueHandling = NullValueHandling.Include,
-        Converters = [
-            new JsonEmptyStringEnumConverter()
-        ]
-    };
-
-    public static readonly JsonSerializerSettings Default = new()
-    {
-        Converters = [
-            new JsonEmptyStringEnumConverter()
-        ]
-    };
-
-    public static readonly JsonSerializerSettings DefaultExpando = new()
-    {
-        NullValueHandling = NullValueHandling.Ignore,
-        DefaultValueHandling = DefaultValueHandling.Ignore,
-        Converters =
-        [
-            new IgnoreNullValueExpandoObjectConverter()
-        ]
-    };
-
 }

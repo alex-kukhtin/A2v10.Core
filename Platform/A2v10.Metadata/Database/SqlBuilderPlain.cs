@@ -166,7 +166,7 @@ internal partial class SqlBuilder
             {
                 return value switch
                 {
-                    "today" => $"[{Table.Model}.{key}!!Utc] = a2meta.fn_getUtcDate()",
+                    Constants.ContextValues.Today => $"[{Table.Model}.{key}!!Utc] = a2meta.fn_getUtcDate()",
                     _ => throw new InvalidOperationException($"Invalid initial context value '{value}'")
                 };
             }
@@ -532,6 +532,10 @@ internal partial class SqlBuilder
         /* Tags are not a detail: no fields of their own, no RowNo, nothing to update - a row either
          * is in the set or is not. So the merge has no 'when matched' arm, and what is deleted is
          * bounded by the master exactly as the details merges bound theirs.
+         *
+         * The parameter is the platform's, so it lives under '$' (CLAUDE.md, "Names"): the record's
+         * own TVP and its collections' are named after the model and the collection keys, and an
+         * author's 'Tags' collection would have declared @Tags a second time.
          */
         String MergeTags()
         {
@@ -540,7 +544,7 @@ internal partial class SqlBuilder
             return $"""
             -- merge tags
             merge {TableMetadataDefaults.TagEntriesTableName(Table.Model)} as t
-            using @{Constants.FieldNames.Tags} as s
+            using {TagsParam} as s
             on t.[{Table.Model}] = @Id and t.[Tag] = s.[Id]
             when not matched then insert ([{Table.Model}], [Tag]) values (@Id, s.[Id])
             when not matched by source and t.[{Table.Model}] = @Id then delete;
@@ -746,7 +750,7 @@ internal partial class SqlBuilder
             foreach (var (name, typeName, table) in detailsTables)
                 dbprms.AddStructured(name, typeName, table);
             if (Table.HasTags)
-                dbprms.AddStructured($"@{Constants.FieldNames.Tags}", Constants.SqlNames.IdTableType,
+                dbprms.AddStructured(TagsParam, Constants.SqlNames.IdTableType,
                     DataTableBuilder.BuildIdTable(item?.Get<List<Object>>(Constants.FieldNames.Tags), PlatformId));
             // the load after the save reads them too (BuildLoadPlainSqlText); a save has no url to take them from
             foreach (var (key, _) in QueryInitials())

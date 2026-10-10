@@ -195,12 +195,6 @@ public class OperationTests
         Assert.Throws<InvalidOperationException>(() => DatabaseMetadataProvider.ToOperationDeclaration(
             File, "x", "a", new OperationFileMetadata()));
 
-    // not generated yet: dropped, they would be written and never hold
-    [Fact]
-    public void Rules_of_an_operation_are_refused_until_they_are_generated() =>
-        Assert.Throws<InvalidOperationException>(() => DatabaseMetadataProvider.ToOperationDeclaration(
-            File, "x", "a", new OperationFileMetadata() { Post = [new PostMetadata()], Rules = new() { Required = ["Agent"] } }));
-
     [Fact]
     public async Task Operations_need_a_column_to_hold_the_code()
     {

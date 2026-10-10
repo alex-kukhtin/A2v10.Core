@@ -46,7 +46,7 @@ internal sealed class KindFolders
         foreach (var (key, folders) in aliases)
         {
             var kind = key.ToLowerInvariant();
-            if (DatabaseMetadataProvider.EndpointKindOf(kind) == EndpointKind.Undefined)
+            if (!kind.IsFolderKind())
                 throw new InvalidOperationException($"""
                     app.json: 'aliases' names '{key}', which is not a kind.
                       The key is the kind whose folders follow: "aliases": {"{"} "document": ["sale", "purchase"] {"}"}.

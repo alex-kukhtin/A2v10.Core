@@ -19,7 +19,6 @@ public static class ServicesExtensions
             .AddScoped<IAppRuntimeBuilder, AppMetadataBuilder>();
 
         services.AddScoped<IModelBuilderFactory, ModelBuilderFactory>();
-        services.AddScoped<IEndpointGenerator, EndpointGenerator>();
         services.AddScoped<EndpointMaterializer>();
         services.AddScoped<EndpointValidator>();
 

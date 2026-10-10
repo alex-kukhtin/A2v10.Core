@@ -40,7 +40,7 @@ internal class TrialBalanceReportBuilder(IServiceProvider serviceProvider, Repor
     internal (String Apply, String GroupBy) SplitGrain()
     {
         var acc = Constants.FieldNames.Acc;
-        var split = _acc.RefTableCheck.Storage.SeedRows
+        var split = _acc.RefTableCheck.Storage.Rows
             .SelectMany(r => r.SplitBy.Select(c => (Column: c, Account: r.Id)))
             .GroupBy(x => x.Column, x => x.Account)
             .ToList();

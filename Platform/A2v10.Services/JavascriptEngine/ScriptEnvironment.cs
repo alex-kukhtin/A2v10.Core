@@ -102,9 +102,12 @@ public class ScriptEnvironment
 		return fetch(url, null);
 	}
 
+	// Таймер скрипта нативный вызов не прерывает, поэтому свой потолок у fetch - тот же, что у скрипта
+	static readonly TimeSpan FETCH_TIMEOUT = TimeSpan.FromSeconds(30);
+
 	public FetchResponse fetch(String url, ExpandoObject? prms)
 	{
-		return FetchCommand.Execute(_httpClientFactory, url, prms);
+		return FetchCommand.Execute(_httpClientFactory, url, prms, FETCH_TIMEOUT);
 	}
 
 	public FetchResponse invokeCommand(String cmd, String baseUrl, ExpandoObject parameters)

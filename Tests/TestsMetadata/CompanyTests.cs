@@ -22,7 +22,7 @@ public class CompanyTests
     {
         var table = JsonConvert.DeserializeObject<TableMetadata>(json, JsonSettings.CamelCaseSerializerSettings)!;
         var segments = path.Trim('/').Split('/');
-        table.SetDefaults(segments[0], segments[1]);
+        table.SetDefaults(segments[0].ToTableKind()!.Value, segments[0], segments[1]);
         return table;
     }
 

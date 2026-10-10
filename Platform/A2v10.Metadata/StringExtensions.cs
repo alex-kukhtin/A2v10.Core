@@ -20,16 +20,6 @@ internal static class StringExtensions
     public static String KebabToPascal(this String src) =>
         String.Concat(src.Split('-').Select(p => p.ToPascalCase()));
 
-    public static String Singular(this String src)
-    {
-        if (src.EndsWith("ies"))
-            return src[..^3] + "y";
-        if (src.EndsWith("ses"))
-            return src[..^2]; // remove 'es'
-        if (src.EndsWith("s"))
-            return src[..^1];
-        return src;  
-    }
     public static String Plural(this String src)
     {
         if (String.IsNullOrEmpty(src))

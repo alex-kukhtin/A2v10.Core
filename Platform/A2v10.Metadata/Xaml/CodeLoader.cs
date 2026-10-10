@@ -24,9 +24,7 @@ internal class CodeLoader(IServiceProvider _serviceProvider)
         using var stream = _codeProvider.FileStreamRO(pathToRead)
             ?? throw new FileNotFoundException($"Template file '{pathToRead}' not found.");
         using var sr = new StreamReader(stream);
-        var fileTemplateText = await sr.ReadToEndAsync() ??
-            throw new FileNotFoundException($"Template file '{pathToRead}' not found.");
-        return fileTemplateText;
+        return await sr.ReadToEndAsync();
     }
 
     /* The same probe the platform makes for every other view (WebViewEngineProvider, Components):

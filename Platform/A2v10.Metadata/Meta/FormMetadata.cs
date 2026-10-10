@@ -136,20 +136,21 @@ public sealed record FormElement
         if (!String.IsNullOrEmpty(el.Scope) && el.Is != FormElementKind.Tab)
             throw new InvalidOperationException(
                 $"'{Word(el.Is)}' with scope '{el.Scope}': a collection is shown only by a tab inside tabs");
-        if (el.Is == FormElementKind.Tab && parent != FormElementKind.Tabs)
-            throw new InvalidOperationException(
-                $"tab '{el.Scope}' outside tabs: a tab is drawn only by its strip");
-        /* The other half of that sentence. A strip draws its children as tabs and nothing else
-         * (XamlBuilder.CreateTabsScope), so anything else inside one is a node that renders as a
-         * nameless empty case; and a tab without a scope is the same thing spelled shorter - it is
-         * the row set that gives a tab its content, its caption and the value the strip switches on.
+        /* A tab without a scope is asked first: the message below names the tab by its scope. A strip
+         * draws its children as tabs and nothing else (XamlBuilder.CreateTabsScope), so anything else
+         * inside one is a node that renders as a nameless empty case; and a tab without a scope is the
+         * same thing spelled shorter - it is the row set that gives a tab its content, its caption and
+         * the value the strip switches on.
          */
-        if (parent == FormElementKind.Tabs && el.Is != FormElementKind.Tab)
-            throw new InvalidOperationException(
-                $"'{Word(el.Is)}' inside tabs: a strip shows tabs and nothing else");
         if (el.Is == FormElementKind.Tab && String.IsNullOrEmpty(el.Scope))
             throw new InvalidOperationException(
                 "tab: 'scope' is not declared. A tab shows one row set, and 'scope' is how it names one");
+        if (el.Is == FormElementKind.Tab && parent != FormElementKind.Tabs)
+            throw new InvalidOperationException(
+                $"tab '{el.Scope}' outside tabs: a tab is drawn only by its strip");
+        if (parent == FormElementKind.Tabs && el.Is != FormElementKind.Tab)
+            throw new InvalidOperationException(
+                $"'{Word(el.Is)}' inside tabs: a strip shows tabs and nothing else");
         CheckContents(el);
     }
 
@@ -284,7 +285,6 @@ public enum FormKind
 public sealed record FormMetadata
 {    
     public FormKind Is { get; init; }
-    public String? Scope { get; init; }
     public List<FormElement> Body { get; init; } = [];
     public FormElement Toolbar { get; init; } = new() { Is = FormElementKind.Toolbar };
     public FormElement Taskpad { get; init; } = new() { Is = FormElementKind.Taskpad };

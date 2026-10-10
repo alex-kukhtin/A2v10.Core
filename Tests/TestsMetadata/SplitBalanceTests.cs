@@ -29,7 +29,7 @@ public class SplitBalanceTests
     {
         var chart = await ChartAsync();
 
-        var row = DatabaseMetadataProvider.AccountRow(Seed, chart, "631", Row("""
+        var row = AccountRows.Row(Seed, chart, "631", Row("""
             { "Name": "x", "AccountType": "Liability", "NormalBalance": "Split", "SplitBy": ["Agent", "Contract"] }
             """));
 
@@ -50,7 +50,7 @@ public class SplitBalanceTests
     {
         var chart = await ChartAsync();
 
-        Assert.Throws<InvalidOperationException>(() => DatabaseMetadataProvider.AccountRow(Seed, chart, "361", Row(json)));
+        Assert.Throws<InvalidOperationException>(() => AccountRows.Row(Seed, chart, "361", Row(json)));
     }
 
     // the deploy writes the joined list, and null into an account that is not split
@@ -59,7 +59,7 @@ public class SplitBalanceTests
     {
         var chart = await ChartAsync();
 
-        var sql = SqlDbGenerator.CreateSeedScript([chart]);
+        var sql = SqlDbGenerator.CreateRowsScript([chart]);
 
         var row361 = sql.Split('\n').Single(l => l.TrimStart().StartsWith("(N'361',"));
         var row28 = sql.Split('\n').Single(l => l.TrimStart().StartsWith("(N'28',"));
@@ -79,7 +79,7 @@ public class SplitBalanceTests
     [Fact]
     public async Task A_leg_onto_a_split_account_without_its_analytics_is_refused()
     {
-        var account = (await ChartAsync()).SeedRows.Single(r => r.Id == "361");
+        var account = (await ChartAsync()).Rows.Single(r => r.Id == "361");
 
         DatabaseMetadataProvider.CheckSplitLeg("p", "dt",
             new() { Const = new() { ["Acc"] = "361" }, Document = new() { ["Agent"] = "Agent" } }, account);

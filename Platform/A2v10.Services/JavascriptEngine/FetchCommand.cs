@@ -67,9 +67,10 @@ public static class FetchCommand
 		return eo;
 	}
 
-	public static FetchResponse Execute(IHttpClientFactory factory, String url, ExpandoObject? prms)
+	public static FetchResponse Execute(IHttpClientFactory factory, String url, ExpandoObject? prms, TimeSpan timeout)
 	{
 		using var client = factory.CreateClient();
+		client.Timeout = timeout;
 
 		String mtdString = prms?.Get<String>("method")?.ToUpperInvariant() ?? "get";
 

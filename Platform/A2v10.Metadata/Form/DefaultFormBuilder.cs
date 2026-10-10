@@ -34,7 +34,7 @@ internal static class DefaultFormBuilder
 
     public static FormMetadata CreateIndexForm(TableMetadata table, DeclarationMetadata declaration, AppPlatformId platformId)
     {
-        if (table.Kind == EndpointKind.AccPlan)
+        if (table.Kind == TableKind.AccPlan)
             return CreateTreeIndexForm(table);
         var cols = IndexGridColumns(table, platformId);
 
@@ -62,7 +62,7 @@ internal static class DefaultFormBuilder
 
     // the code and the name in one string is what a reference shows; the chart's own screens show the two
     static Boolean IsChartDisplay(TableMetadata table, TableColumn column) =>
-        table.Kind == EndpointKind.AccPlan && column.Name == Constants.FieldNames.DisplayName;
+        table.Kind == TableKind.AccPlan && column.Name == Constants.FieldNames.DisplayName;
 
     /* A chart of accounts is read whole, as a tree: no pager, no filters. Parent is not a column
      * here - the tree itself shows it.
@@ -87,7 +87,7 @@ internal static class DefaultFormBuilder
     public static FormMetadata CreateBrowseForm(TableMetadata table, DeclarationMetadata declaration, AppPlatformId platformId)
     {
         // an account is picked from the tree the index shows
-        if (table.Kind == EndpointKind.AccPlan)
+        if (table.Kind == TableKind.AccPlan)
             return CreateTreeIndexForm(table) with { Is = FormKind.Dialog };
         var cols = IndexGridColumns(table, platformId);
 

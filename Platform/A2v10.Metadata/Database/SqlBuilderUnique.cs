@@ -17,6 +17,12 @@ internal partial class SqlBuilder
         var column = Table.AllColumns().FirstOrDefault(c => c.Name.Equals(property, StringComparison.OrdinalIgnoreCase))
             ?? throw new InvalidOperationException($"Column {property} not found in table {Table.Table}");
 
+        /* A new record has no id, and 'Id <> null' is unknown - so the null is said out loud, or every
+         * value of a new record is unique. Over a shared table, the rows of this document alone: another
+         * document's number is not a duplicate of this one's. A voided row keeps its code and blocks it,
+         * as the unique index to come will (ISSUES 3.9).
+         */
+        var own = OwnOperations("t") is { } ownRows ? $" and {ownRows}" : String.Empty;
         var sql = $"""
         set nocount on;
         set transaction isolation level read uncommitted;
@@ -24,7 +30,7 @@ internal partial class SqlBuilder
 
         declare @valid bit = 1;
 
-        if exists(select 1 from {Table.SqlTableName} t where t.[{column.Name}] = @Value and t.Id <> @Id)
+        if exists(select 1 from {Table.SqlTableName} t where t.[{column.Name}] = @Value and (@Id is null or t.Id <> @Id){own})
             set @valid = 0;
 
         select [Result!TResult!Object] = null, [Value] = @valid;

@@ -13,14 +13,19 @@ public class SelectorSimple : Selector
 
     public Action<RenderContext>? _renderAction = null;
 
+    /* A query on Url is a shortcut for Data ('?inherit=a,b' is Data="{inherit: 'a,b'}"), so both
+     * written is one thing said twice and is refused. What is derived here stays here: Url and
+     * Data keep what was declared, the address without its query and the data the query spelled
+     * are locals - a declared property is what the element is written back as.
+     */
     protected override void OnEndInit()
 	{
 		base.OnEndInit();
 
-        String? urlData = null;
-        (Url, urlData) = Url.ParseUrlQuery();
-        if (urlData != null)
-            Data = urlData;
+        var (url, urlData) = Url.ParseUrlQuery();
+        if (urlData != null && Data != null)
+            throw new XamlException($"SelectorSimple. Url '{Url}' carries a query and Data is set: the query is a shortcut for Data, write one of them");
+        var data = urlData ?? Data;
 
         // before the check below: a cached element is initialized again, and its lens is found by the url it was given
         var suffix = Folder ? "folder" : String.Empty;
@@ -32,7 +37,7 @@ public class SelectorSimple : Selector
 				var command = AddOns[i].GetBindingCommand(nameof(Command));
 				if (command != null)
 				{
-					if (command.Command == CommandType.Browse && command.Url == $"{Url}/browse{suffix}")
+					if (command.Command == CommandType.Browse && command.Url == $"{url}/browse{suffix}")
 					{
 						_renderAction = null;
 						return;
@@ -56,8 +61,8 @@ public class SelectorSimple : Selector
         }
         else
         {
-            Fetch = $"{Url}/fetch{suffix}";
-            cmd.Url = $"{Url}/browse{suffix}";
+            Fetch = $"{url}/fetch{suffix}";
+            cmd.Url = $"{url}/browse{suffix}";
         }
         var hlink = new Hyperlink()
         {
@@ -72,10 +77,10 @@ public class SelectorSimple : Selector
             cmd.BindImpl.SetBinding("Data", dat);
             this.BindImpl.SetBinding(nameof(FetchData), dat);
         }
-        else if (Data != null)
+        else if (data != null)
         {
-            cmd.Data = Data;
-            this.FetchData = Data;
+            cmd.Data = data;
+            this.FetchData = data;
         }
         hlink.BindImpl.SetBinding("Command", cmd);
         AddOns.Insert(0, hlink);

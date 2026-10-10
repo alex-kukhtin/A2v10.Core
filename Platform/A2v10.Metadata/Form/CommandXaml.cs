@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using A2v10.Xaml;
-using XMenuItem = A2v10.Xaml.MenuItem;
+using MenuItem = A2v10.Xaml.MenuItem;
 
 namespace A2v10.Metadata;
 
@@ -67,23 +67,22 @@ internal partial class XamlBuilder
 
     Toolbar IndexToolbar(FormElement slot) => Table.Kind switch
     {
-        EndpointKind.Catalog => StandardToolbar(
+        TableKind.Catalog => StandardToolbar(
             [EntityCommandType.Create, EntityCommandType.Edit, EntityCommandType.Delete,
                 CommandBarItem.Separator, EntityCommandType.Show],
             slot, GridChrome(), CommandScope.Grid),
-        EndpointKind.Document => StandardToolbar(
+        TableKind.Document => StandardToolbar(
             [EntityCommandType.Create, EntityCommandType.Edit, EntityCommandType.Delete, .. PrintCommand(), .. BasedOnCommand()],
             slot, GridChrome(), CommandScope.Grid),
-        EndpointKind.Journal or EndpointKind.Ledger => StandardToolbar([EntityCommandType.Edit], slot, GridChrome(), CommandScope.Grid),
-        EndpointKind.Operation => StandardToolbar([], slot, [], CommandScope.Grid),
-        EndpointKind.AccPlan => TreeToolbar(slot),
+        TableKind.Journal or TableKind.Ledger => StandardToolbar([EntityCommandType.Edit], slot, GridChrome(), CommandScope.Grid),
+        TableKind.AccPlan => TreeToolbar(slot),
         _ => throw new InvalidOperationException($"No standard commands for {Table.Schema}")
     };
 
     // the picker of an account is the tree the index shows, so the bar is the index's too
     Toolbar BrowseToolbar(FormElement slot) => Table.Kind switch
     {
-        EndpointKind.AccPlan => TreeToolbar(slot),
+        TableKind.AccPlan => TreeToolbar(slot),
         _ => StandardToolbar([EntityCommandType.Create, EntityCommandType.Edit, EntityCommandType.Delete],
             slot, GridChrome(), CommandScope.Grid)
     };
@@ -283,9 +282,8 @@ internal partial class XamlBuilder
      * 'Open' takes the record the card is showing; 'OpenSelected' takes the row the grid or tree has. One
      * command either way - the screen is a parameter, not a second name.
      *
-     * Aliased: A2v10.Metadata has a MenuItem of its own - the application menu tree.
      */
-    XMenuItem PrintMenuItem(PrintFormMetadata form, CommandScope scope) => new()
+    MenuItem PrintMenuItem(PrintFormMetadata form, CommandScope scope) => new()
     {
         Content = form.Title,
         Bindings = b =>
@@ -296,7 +294,7 @@ internal partial class XamlBuilder
                 Url = $"{Endpoint.Path}/{Constants.Print.Action}/{{0}}?{Constants.Print.FormQuery}={form.Name}",
             };
             cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(CommandSource(scope)));
-            b.SetBinding(nameof(XMenuItem.Command), cmd);
+            b.SetBinding(nameof(MenuItem.Command), cmd);
         }
     };
 
@@ -317,7 +315,7 @@ internal partial class XamlBuilder
      * copies without reading the row first. The operation, when the entry names one, by '?Op=' - the
      * road a new document already takes. The caption is what is created, as the registry names it.
      */
-    XMenuItem BasedOnMenuItem(BasedOnMetadata basedOn, CommandScope scope)
+    MenuItem BasedOnMenuItem(BasedOnMetadata basedOn, CommandScope scope)
     {
         var target = basedOn.TargetEndpoint
             ?? throw new InvalidOperationException($"basedOn: {Endpoint.Path} -> {basedOn.Target} is not resolved");
@@ -335,7 +333,7 @@ internal partial class XamlBuilder
                     Url = $"{target.Path}/edit/new?{op}{Constants.FieldNames.BasedOnQuery}={{0}}&{Constants.FieldNames.BaseQuery}={Endpoint.Path}"
                 };
                 cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(CommandSource(scope)));
-                b.SetBinding(nameof(XMenuItem.Command), cmd);
+                b.SetBinding(nameof(MenuItem.Command), cmd);
             }
         };
     }
@@ -354,10 +352,10 @@ internal partial class XamlBuilder
                 Content = "@[Create]",
                 DropDown = new DropDownMenu()
                 {
-                    Children = [.. operations.Select(op => new XMenuItem()
+                    Children = [.. operations.Select(op => new MenuItem()
                     {
                         Content = MetadataExtensions.OperationLabel(op.Id),
-                        Bindings = b => b.SetBinding(nameof(XMenuItem.Command), new BindCmd()
+                        Bindings = b => b.SetBinding(nameof(MenuItem.Command), new BindCmd()
                         {
                             Command = CommandType.Open,
                             Url = $"{Endpoint.Path}/edit/{{0}}?{Constants.FieldNames.OperationQuery}={op.Name}",

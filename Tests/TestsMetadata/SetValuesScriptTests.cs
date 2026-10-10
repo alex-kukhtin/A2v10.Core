@@ -17,7 +17,7 @@ public class SetValuesScriptTests
             .GetEndpointAsync(null, schema, table)).Storage;
 
     static String ScriptOf(params TableMetadata[] sets) =>
-        SqlDbGenerator.CreateSetValuesScript(sets);
+        SqlDbGenerator.CreateRowsScript(sets);
 
     /* Every column of the set's own baseline, on both arms of the merge. The colour and the role
      * are nullable, so a statement that forgot them would deploy without a word and leave every

@@ -11,17 +11,10 @@ internal partial class ScriptBuilder
 {
     internal Task<String> CreateEditMapTS()
     {
-        var refDecl = String.Empty;
         var detailsDecl = String.Empty;
 
-        var refs = Table.AllColumns().AllRefs().ToList();
-
-        var refElems = refs.Select(x => $$"""
-        export interface {{x.Table.RefTypeName}} extends IElement {
-        {{String.Join("\n", RefTsProperties(x.Table))}}
-        }
-
-        """);
+        // the record's references and its rows': both are resolved into this one model
+        var refDecl = String.Join("\n", RefTargets(withDetails: true).Select(RefTsInterface));
 
         IEnumerable<String> detailsFields()
         {
@@ -50,17 +43,19 @@ internal partial class ScriptBuilder
                 yield return $"\treadonly {name}: any;";
         }
 
-        if (refElems.Any())
-            refDecl = $"\n{String.Join("\n", refElems)}\n";
-
         /* The one artifact that is genuinely a join: a row's TYPE is its columns, which only the
          * shape knows, plus what was declared for that row set, which only the declaration knows.
          * One lookup, by the collection key, and it cannot miss - the baked declaration has a
          * node for every collection the shape has.
+         *
+         * '$root' is this page's root on every element of it: a rule reads the record through it
+         * ('this.$root.Document.Operation', DeclarationBake.WithOperationRules), and IElement's own
+         * says IRoot, which has no record.
          */
         var detailElems = Table.Details
             .SelectMany(x => Endpoint.Declaration.Details[x.Key].RowSets.Select(rs => $$"""
         export interface {{rs.Type}} extends IArrayElement {
+            readonly $root: TRoot;
         {{String.Join("\n", TsProperties(x.Value).Concat(propertyMembers(rs.Properties)))}}
         }
 
@@ -91,11 +86,12 @@ internal partial class ScriptBuilder
 
         {{refDecl}}{{detailsDecl}}
         export interface {{Table.TypeName}} extends IElement {
+            readonly $root: TRoot;
         {{String.Join("\n", elemProperties())}}
-        }   
+        }
 
         export interface TRoot extends IRoot {
-            readonly {{Table.Model}}: {{Table.TypeName}}; 
+            readonly {{Table.Model}}: {{Table.TypeName}};
         }
         """;
         return Task.FromResult<String>(templ);

@@ -21,7 +21,7 @@ public class DisplayAsTests
     static TableMetadata Declared(String schema, String json)
     {
         var table = JsonConvert.DeserializeObject<TableMetadata>(json, JsonSettings.CamelCaseSerializerSettings)!;
-        table.SetDefaults(schema, "x");
+        table.SetDefaults(schema.ToTableKind()!.Value, schema, "x");
         return table;
     }
 

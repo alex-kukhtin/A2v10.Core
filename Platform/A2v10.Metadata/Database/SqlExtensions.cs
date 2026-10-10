@@ -121,16 +121,6 @@ internal static class SqlExtensions
      */
     public static String ColumnParam(String name) => $"@${name}";
 
-    public static String LocalizeSql(this String value)
-    {
-        if (String.IsNullOrEmpty(value))
-            return String.Empty;
-        value = value.Replace("'", "''");
-        if (value.StartsWith('@'))
-            return $"@[{value[1..]}]";
-        return value;
-    }
-
     // -1 (max) travels through untouched: it is the catalog's own notation, and
     // SqlFullName renders it.
     private static Int32 ToColumnLength(this Int32? length) => length ?? 255;
@@ -207,29 +197,11 @@ internal static class SqlExtensions
     public static SqlDbTypeInfo ToSqlDbTypeInfo(this TableColumn column)
         => column.Type.ToSqlDbTypeInfo(column.Length, column.Precision, column.Scale, column.KeyType);
 
-    public static String ToSqlDataTypeDeploy(this ColumnType columnDataType)
-        => columnDataType.ToSqlDbTypeInfo().SqlName;
-
-    /* Physical facets of a column - what INFORMATION_SCHEMA.COLUMNS is expected to
-     * return. A single source for both the DDL and the a2meta.Columns seed: should the
-     * two ever diverge, SyncSchema would emit an ALTER on every single run.
-     *
-     * All three come straight off the type descriptor now. Precision and scale used to be
-     * blanked for everything but ColumnType.Decimal, on the grounds that the declaration
-     * cannot change them - which is true of the author and false of the platform. A null
-     * there costs the seed its whole purpose: a column left at decimal(19,2) would match
-     * on the type name alone and never be corrected, and 'money -> decimal(19,4)' could
-     * not even name its target. The catalog's own precision for int/bigint must simply be
-     * compared selectively, by type - not erased here, where it is the thing we need.
+    /* The physical length - what INFORMATION_SCHEMA.COLUMNS is expected to return, straight off the
+     * type descriptor; the seed reads precision and scale off the same descriptor itself.
      */
     public static Int32? DeployLength(this TableColumn column)
         => column.ToSqlDbTypeInfo().Length;
-
-    public static Int32? DeployPrecision(this TableColumn column)
-        => column.ToSqlDbTypeInfo().Precision;
-
-    public static Int32? DeployScale(this TableColumn column)
-        => column.ToSqlDbTypeInfo().Scale;
 
     /* A ready-made SQL default expression, for CreateTable and for an add column - where
      * 'add column [Qty] decimal(19,6) not null' would fail without it. Takes NO part in comparison.

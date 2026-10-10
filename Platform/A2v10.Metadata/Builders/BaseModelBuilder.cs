@@ -18,15 +18,12 @@ namespace A2v10.Metadata;
 internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, BuilderDescriptor descriptor) : IModelBuilder
 {
     internal readonly DatabaseMetadataProvider _metadataProvider = _serviceProvider.GetRequiredService<DatabaseMetadataProvider>();
-    internal readonly ICurrentUser _currentUser = _serviceProvider.GetRequiredService<ICurrentUser>();
-    internal readonly IServiceProvider _xamlServiceProvider = new XamlServiceProvider();
 
     private readonly SqlBuilder _sqlBuilder = new(descriptor, _serviceProvider);
-    private readonly XamlBuilder _xamlBuilder = new(descriptor); 
+    private readonly XamlBuilder _xamlBuilder = new(descriptor);
     // types erased: the browser runs this text as it is, there is no compiler here
     private readonly ScriptBuilder _jsBuilder = new(descriptor, isTs: false);
 
-    protected Boolean IsDialog => descriptor.PlatformUrl.Kind == UrlKind.Dialog;
     protected String Action => descriptor.PlatformUrl.Action.ToLowerInvariant();
 
     // off the interface now - both are this class's own business, and nobody outside asked
@@ -63,10 +60,12 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
     {
         return Action switch
         {
-            "index" or "browse" when Table.Kind == EndpointKind.AccPlan => await _sqlBuilder.LoadAccountTreeModelAsync(Action == "browse"),
-            "browse" or "index" or "indexpartial" => Table.HasFolders
+            "index" or "browse" when Table.Kind == TableKind.AccPlan => await _sqlBuilder.LoadAccountTreeModelAsync(Action == "browse"),
+            "browse" or "index" => Table.HasFolders
                 ? await _sqlBuilder.LoadIndexTreeModelAsync()
                 : await _sqlBuilder.LoadIndexModelAsync(),
+            // embedded in another page: the list alone, whatever the owner's own screen shows beside it
+            "indexpartial" => await _sqlBuilder.LoadIndexModelAsync(),
             "edit" or "show" => await _sqlBuilder.LoadPlainModelAsync(),
             Constants.Trans.Action => await _sqlBuilder.LoadTransModelAsync(),
             Constants.Print.Action => await _sqlBuilder.LoadPrintPageModelAsync(),

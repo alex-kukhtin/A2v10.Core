@@ -32,6 +32,6 @@ internal static class AdminGate
         var dm = await dbContext.LoadModelSqlAsync(dataSource, sql,
             dbprms => dbprms.AddBigInt("@UserId", currentUser.Identity.Id));
         if (!dm.Eval<Boolean>("State.IsAdmin"))
-            throw new InvalidOperationException("@[UIError.AccessDenied]");
+            throw new InvalidOperationException("UI:@[UIError.AccessDenied]");
     }
 }

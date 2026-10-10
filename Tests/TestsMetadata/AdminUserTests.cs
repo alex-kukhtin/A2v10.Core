@@ -21,7 +21,6 @@ public class AdminUserTests
         var endpoint = Assert.IsType<UserAdminEndpointMetadata>(await LoadAsync("admin", "user"));
 
         Assert.Equal("/admin/user", endpoint.Path);
-        Assert.Equal(EndpointKind.Admin, endpoint.Kind);
     }
 
     // an unknown name is no endpoint with nothing behind it

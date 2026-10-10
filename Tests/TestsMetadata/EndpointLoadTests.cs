@@ -100,7 +100,7 @@ public class EndpointLoadTests
     {
         var states = (await LoadNormalAsync(State, "order")).Storage;
 
-        Assert.Equal(EndpointKind.State, states.Kind);
+        Assert.Equal(TableKind.State, states.Kind);
         Assert.Equal("OrderState", states.Model);
         Assert.Equal("OrderStates", states.CollectionName);
         // the SQL schema is the folder itself: only long words are abbreviated
@@ -150,7 +150,7 @@ public class EndpointLoadTests
         var doc = root.Storage;
 
         var state = Assert.Single(doc.AllColumns(c => c.Type == ColumnType.State));
-        Assert.Equal(EndpointKind.State, state.RefTableCheck.Storage.Kind);
+        Assert.Equal(TableKind.State, state.RefTableCheck.Storage.Kind);
         // spelled as the key it points at, or the foreign key could not hold
         Assert.Equal("nvarchar(64)", state.SqlDataType());
         Assert.True(state.IsSetRef);

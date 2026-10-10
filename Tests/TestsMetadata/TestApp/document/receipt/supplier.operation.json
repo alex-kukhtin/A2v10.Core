@@ -12,5 +12,19 @@
 				"Store": "StoreTo"
 			}
 		}
-	]
+	],
+	"rules": {
+		"required": [ "Agent" ]
+	},
+	"details": {
+		"Rows": {
+			"kinds": {
+				"Stock": {
+					"rules": {
+						"required": [ "Contract" ]
+					}
+				}
+			}
+		}
+	}
 }

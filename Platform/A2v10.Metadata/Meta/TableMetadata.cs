@@ -8,25 +8,29 @@ using Newtonsoft.Json;
 
 namespace A2v10.Metadata;
 
-public enum EndpointKind
+/* What a TABLE is: which baseline it carries (TableDefaultColumns) and what the platform does with
+ * its rows. Of the table alone - an endpoint is told apart by its TYPE (ModelBuilderFactory), never
+ * by a kind, so a report or an admin screen has no member here: they own no table.
+ */
+public enum TableKind
 {
-    Undefined,
+    // declared by a folder's metadata.json
     Catalog,
     Document,
-    Operation,
     Journal,
-    Report,
+    Ledger,
+    Enum,
+    State,
+    AccPlan,
+    Autonum,
+    // declared in code: the registry of operation codes (TableMetadataDefaults.OperationsTable)
+    Operation,
+    // satellites of a table above - built beside it, no address of their own
     Details,
     Folders,
     Tags,
     TagEntries,
-    Enum,
-    State,
-    Autonum,
-    AutonumValues,
-    AccPlan,
-    Ledger,
-    Admin
+    AutonumValues
 }
 public enum ColumnType
 {
@@ -444,11 +448,11 @@ public sealed record TableKindMetadata;
 public sealed record TableMetadata
 {
     #region Database fields
-    // set by code only: the folder decides the kind (LoadEndpointAsync), and the tables with no
-    // folder of their own are made by TableMetadataDefaults. A file that could set it would be a
-    // second discriminator, free to disagree with the first.
+    // set once, by whoever builds the table: SetDefaults for a folder's file (the folder decides),
+    // the factory for a satellite. Never from the file: a key that could set it would be a second
+    // discriminator, free to disagree with the first.
     [JsonIgnore]
-    public EndpointKind Kind { get; internal set; }
+    public TableKind Kind { get; internal set; }
     public String Schema { get; set; } = default!;
     public String Table { get; set; } = default!;
     public String Model { get; set; } = default!;
@@ -486,24 +490,14 @@ public sealed record TableMetadata
     public IReadOnlyList<TableColumn> Columns { get; private set; } = default!;
     public Dictionary<String, TableMetadata> Details { get; private set; } = [];
     public Dictionary<String, TableKindMetadata> Kinds { get; init; } = [];
-    /* The rows of a set, in the shape and not in the declaration: they are deployed with the table
-     * and the whole deploy pipeline is a function of TableMetadata. 'Kinds' above is the same kind
-     * of thing - a closed vocabulary declared with the shape, ordered by the order it is written in.
+    /* The rows of a set, as the file writes them: a closed vocabulary declared with the shape, ordered
+     * by the order it is written in - 'Kinds' above is the same kind of thing. Read for what a value
+     * IS (its role, whether it is void); what the deploy writes is Rows, below.
      */
     public List<SetValueMetadata> Values { get; init; } = [];
 
-    /* The rows of the operation registry. Not declared by any file as rows - a document lists its
-     * operations, or is one itself over a document storage - so the deploy walk fills it
-     * (AllElementsMetadata) and json never can.
-     */
-    [JsonIgnore]
-    public List<OperationMetadata> Operations { get; init; } = [];
-
-    /* Rows deployed with the table, so they are the shape's - the reason 'Values' is here too. A
-     * key of its own and not 'values': another record shape, and one key shaped by the endpoint
-     * kind is two questions under one name. The cost is that every such registry buys a key here
-     * and a branch in the deploy - there is no shared 'rows the file declares' mechanism, and a
-     * third one is where writing it would start to pay. See CLAUDE.md, "Autonums".
+    /* The numberings of /autonum, as the file writes them. A key of its own and not 'values': another
+     * record shape, and one key shaped by the endpoint kind is two questions under one name.
      *
      * A map and not a list, unlike 'values': there the position IS data (it becomes Order), here
      * nothing but the key means anything - so the key stays outside, as it does in 'fields'. The
@@ -513,17 +507,26 @@ public sealed record TableMetadata
     [JsonProperty("autonums")]
     private Dictionary<String, AutonumMetadata> _autonums { get; init; } = [];
 
+    // materialized by Construct, the key written into each, as a column takes its Name
     [JsonIgnore]
-    public List<AutonumMetadata> Autonums => [.. _autonums.Select(
-        kp => { kp.Value.Id = kp.Key; return kp.Value; }
-    )];
+    public IReadOnlyList<AutonumMetadata> Autonums { get; private set; } = [];
     public List<TableTrait> Traits { get; init; } = [];
 
     /* The file beside metadata.json that holds the rows the deploy merges into this table. A key
      * of every table, processed per kind: today only a chart of accounts reads it, and the load
-     * refuses it anywhere else (DatabaseMetadataProvider.LoadSeedAsync).
+     * refuses it anywhere else (AccountRows.Check).
      */
     public String? Seed { get; init; }
+
+    /* The rows a file declares WITH the table, whatever grammar declared them - a set's values, the
+     * numberings, a chart's seed, the operation codes - as one thing: the key and the columns the row
+     * names. Filled by the load (RegistryRows), before the table is published; read by the
+     * fingerprint (Xtra) and by the one merge the deploy writes. Declared and derived never share a
+     * field: Values and Autonums stay the file's form, read for their meaning. See CLAUDE.md, "Rows
+     * declared with the table".
+     */
+    [JsonIgnore]
+    public IReadOnlyList<SeedRow> Rows { get; internal set; } = [];
 
     /* The chart a ledger posts against - the target of its Acc and CorrAcc. One chart per ledger: a
      * Plan column would make every foreign key composite. Required on a ledger and refused elsewhere
@@ -531,10 +534,6 @@ public sealed record TableMetadata
      */
     [JsonProperty("accplan")]
     public String? AccPlan { get; init; }
-
-    // the rows of that file, sorted by key - filled by the load, before the table is published
-    [JsonIgnore]
-    public List<SeedRow> SeedRows { get; internal set; } = [];
 
     // for sql
     [JsonIgnore]
@@ -711,6 +710,7 @@ public sealed record TableMetadata
     {
         DefaultColumns = [.. this.CreateDefaultColumns()];
         Columns = [.. _fields.Select(kp => { kp.Value.SetName(kp.Key); return kp.Value; })];
+        Autonums = [.. _autonums.Select(kp => kp.Value with { Id = kp.Key })];
         var path = masterModel == null ? Model : $"{masterModel}.{Model}";
         SqlTableTypeName = $"{SqlSchema}.[{path}.Meta.TableType]";
     }
@@ -719,29 +719,29 @@ public sealed record TableMetadata
     [JsonIgnore]
     internal TableColumn KeyColumn => this.AllColumns().First(c => c.IsKey);
 
-    internal String RowKindField =>Columns.FirstOrDefault(c => c.Type == ColumnType.RowKind)?.Name
+    internal String RowKindField => this.AllColumns().FirstOrDefault(c => c.Type == ColumnType.RowKind)?.Name
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a RowKind column");
 
     [JsonIgnore]
-    internal Boolean IsCatalog => Kind == EndpointKind.Catalog;
+    internal Boolean IsCatalog => Kind == TableKind.Catalog;
     [JsonIgnore]
-    internal Boolean IsDocument => Kind == EndpointKind.Document;
+    internal Boolean IsDocument => Kind == TableKind.Document;
     [JsonIgnore]
-    internal Boolean IsJournal => Kind == EndpointKind.Journal;
+    internal Boolean IsJournal => Kind == TableKind.Journal;
     [JsonIgnore]
-    internal Boolean IsLedger => Kind == EndpointKind.Ledger;
+    internal Boolean IsLedger => Kind == TableKind.Ledger;
     /* A set: rows declared in the file, deployed with the table, no screen of its own, reached only
      * through the columns pointing at it. Asked by everything that walks values, so that a kind
      * added to the family is added here and not to a comparison in five generators.
      */
     [JsonIgnore]
-    internal Boolean IsSet => Kind is EndpointKind.Enum or EndpointKind.State;
+    internal Boolean IsSet => Kind is TableKind.Enum or TableKind.State;
     [JsonIgnore]
-    internal Boolean IsState => Kind == EndpointKind.State;
+    internal Boolean IsState => Kind == TableKind.State;
     [JsonIgnore]
-    internal Boolean IsTags => Kind == EndpointKind.Tags;
+    internal Boolean IsTags => Kind == TableKind.Tags;
     [JsonIgnore]
-    internal Boolean IsTagEntries => Kind == EndpointKind.TagEntries;
+    internal Boolean IsTagEntries => Kind == TableKind.TagEntries;
     [JsonIgnore]
     internal Boolean HasPeriod => IsDocument || IsJournal || IsLedger;
 
@@ -768,7 +768,7 @@ public sealed record TableMetadata
     internal void SetDetailDefaults(TableMetadata table, String key)
     {
         Schema = table.Schema;
-        Kind = EndpointKind.Details;
+        Kind = TableKind.Details;
         DetailsKey = key;
         MasterField = table.Model;
         Table = $"{table.Model}{key}";
@@ -780,7 +780,7 @@ public sealed record TableMetadata
      */
     internal void SetFolderDefaults(TableMetadata owner)
     {
-        Kind = EndpointKind.Folders;
+        Kind = TableKind.Folders;
         Schema = owner.Schema;
         Model = $"{owner.Model}Folder";
         Table = $"{owner.Model}$Folders";
@@ -789,14 +789,15 @@ public sealed record TableMetadata
         Presentation = Constants.FieldNames.Name;
         DisplayAs = Constants.FieldNames.Name;
     }
-    internal void SetDefaults(String schema, String table) => SetDefaults(schema, schema, table);
+    internal void SetDefaults(TableKind kind, String schema, String table) => SetDefaults(kind, schema, schema, table);
 
     /* 'schema' is the kind the folder is of, 'folder' where the file lies - one word unless an
      * alias (app.json) puts a kind's endpoints into a folder of another name. Everything below is
      * defaulted from the kind; only Path is the folder's.
      */
-    internal void SetDefaults(String schema, String folder, String table)
+    internal void SetDefaults(TableKind kind, String schema, String folder, String table)
     {
+        Kind = kind;
         // the file that declares this table; spelled like EndpointMetadata.Path, because a
         // DocumentType discriminator is this value and has to be comparable to an address
         Path = String.IsNullOrEmpty(table) ? $"/{folder}" : $"/{folder}/{table}";
@@ -844,10 +845,6 @@ public sealed record TableMetadata
          */
         if (String.IsNullOrEmpty(Model))
             Model = table.KebabToPascal();
-        // already set for a table with no folder (TableMetadataDefaults): 'operation' and 'tag' are
-        // not folder kinds, and ToEndpointKind refuses them. Never set from the file - see Kind.
-        if (Kind == EndpointKind.Undefined)
-            Kind = schema.ToEndpointKind();
         Construct();
 
         /* Only the kinds a reference points at are shown by anything; a journal or the numbering
@@ -880,16 +877,16 @@ public sealed record TableMetadata
 
         switch (Kind)
         {
-            case EndpointKind.Catalog:
-            case EndpointKind.Enum:
-            case EndpointKind.State:
-            case EndpointKind.Operation:
+            case TableKind.Catalog:
+            case TableKind.Enum:
+            case TableKind.State:
+            case TableKind.Operation:
                 present(column(ColumnType.Name));
                 break;
-            case EndpointKind.Document:
+            case TableKind.Document:
                 present(column(ColumnType.Name) ?? column(ColumnType.Autonum));
                 break;
-            case EndpointKind.AccPlan:
+            case TableKind.AccPlan:
                 present(column(ColumnType.NaturalKey), this.AllColumns().FirstOrDefault(c => c.Name == Constants.FieldNames.DisplayName));
                 break;
             default:
@@ -933,7 +930,7 @@ public record OperationMetadata(String Id, String Document, String Path, Int32 O
  * 'void' is a withdrawn value: it stays in the records that already carry it and leaves the list
  * of candidates.
  *
- * The last two belong to a set of STATES and are refused on an enum (CheckValues). Both are
+ * The last two belong to a set of STATES and are refused on an enum (SetRows.Check). Both are
  * written in the file exactly as they will be stored, because nothing translates them on the way:
  * 'role' lands in the column and in a generated predicate, so it is spelled as the member of
  * StateRole; 'color' goes straight into a CSS class, so it is lower case. One is a name of the
@@ -942,8 +939,9 @@ public record OperationMetadata(String Id, String Document, String Path, Int32 O
 public record SetValueMetadata(String Id, String? Name, String? Memo, Boolean Void,
     String? Color, StateRole? Role);
 
-/* One row of a seed file: the key, and the columns the row names with their values as written.
- * A column the row does not name is absent from Values, not null - the merge leaves it untouched.
+/* One row declared with a table (TableMetadata.Rows): the key, and the columns the row names with
+ * their values as text. An author column the row does not name is absent from Values, not null - the
+ * merge leaves it untouched; a baseline column it does not name gets its empty (EmptyLiteral).
  */
 public sealed record SeedRow(String Id, IReadOnlyDictionary<String, String?> Values)
 {
@@ -1035,7 +1033,7 @@ public enum AutonumPeriod
 public record AutonumMetadata
 {
     // from the key of the map, the way TableColumn takes its Name
-    public String Id { get; set; } = default!;
+    public String Id { get; init; } = default!;
     public String? Name { get; init; }
     public String Pattern { get; init; } = default!;
     public AutonumPeriod Period { get; init; }

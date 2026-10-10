@@ -209,10 +209,18 @@ internal sealed class PostStatements
                 continue;
             }
 
+            // who wrote the row is the platform's to say, by type; a block naming it is a second spelling free to disagree
+            if (col.IsProvenance && (p.Document.ContainsKey(name) || p.Row.ContainsKey(name)))
+                throw new InvalidOperationException(
+                    $"Post {_endpoint.Path} -> {journal.Path}: [{name}] is {col.Type}, which the platform fills from the document - it is not written in 'post'");
+
             // baseline journal columns filled by the platform, found by type
             switch (col.Type)
             {
                 case ColumnType.Id:                             // identity
+                    continue;
+                case ColumnType.Operation:                      // the document's own; a document without operations posts none
+                    result.Add((headerColumns.FirstOrDefault(c => c.IsOperation) is { } op ? $"d.[{op.Name}]" : "null", name));
                     continue;
                 case ColumnType.Direction:                      // leg sign from 'dir'; storno never flips it
                     result.Add((p.InOutInt.ToString(), name));

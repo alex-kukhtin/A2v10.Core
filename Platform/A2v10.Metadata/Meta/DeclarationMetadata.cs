@@ -53,14 +53,14 @@ public sealed record RuleMetadata : RuleSet
      * collection under row kind (RulesFor) - so it is one implementation. See CLAUDE.md,
      * "Declarations".
      *
-     * 'When' is left all-or-nothing rather than decided: no generator reads it yet, so there is
-     * no case in hand to decide its granularity by.
+     * 'When' is a list and concatenates, storage first: a condition of the storage is said of every
+     * document over it, for the same reason its 'required' is.
      */
     public static RuleMetadata Merge(RuleMetadata own, RuleMetadata storage) => new()
     {
         Required = [.. storage.Required.Union(own.Required)],
         Total = [.. storage.Total.Union(own.Total)],
-        When = own.When.Count > 0 ? own.When : storage.When,
+        When = [.. storage.When, .. own.When],
         Visible = ByKey(own.Visible, storage.Visible),
         Inherit = ByKey(own.Inherit, storage.Inherit)
     };
@@ -104,10 +104,11 @@ public sealed record ConditionalRuleMetadata : RuleSet
  * values, numbering, fixed fields, forms) belong to the document. See a2v10-md-skill,
  * concepts/operations.
  *
- * 'rules', 'properties' and 'details' are read so that they can be refused: what an operation
- * declares lands on the client as a test of the Operation column - one type serves every operation
- * of the document - and no generator writes that test yet. Dropped silently they would be written
- * and never hold.
+ * 'rules' and 'details' (rules of a collection and of its kinds) become 'when' under a test of the
+ * Operation column - one type serves every operation of the document, so the operation in force is
+ * a value on the client, not a type (DeclarationBake.WithOperationRules). 'properties' are read so
+ * that they can be refused: a property of one operation is that test inside a getter, and nothing
+ * writes it. Dropped silently it would be written and never hold.
  */
 public sealed record OperationFileMetadata
 {
@@ -123,7 +124,8 @@ public sealed record OperationFileMetadata
  * no operations is one operation too, implicit, and its Id is the document's name alone - that one
  * has no declaration of its own and never appears here.
  */
-public sealed record OperationDeclaration(String Name, String Id, List<PostMetadata> Post);
+public sealed record OperationDeclaration(String Name, String Id, List<PostMetadata> Post,
+    RuleMetadata Rules, Dictionary<String, DeclarationMetadata> Details);
 
 public sealed record InitialMetadata(InitialSource Source, String Value);
 public sealed record InheritMetadata(String Ref, String Field);
@@ -364,6 +366,9 @@ public sealed record DeclarationMetadata
             throw new InvalidOperationException(hasJournal
                 ? $"post: {path}: an entry declares both 'journal' and 'ledger'"
                 : $"post: {path}: an entry declares none of 'journal', 'ledger', 'sql'");
+        if (p.Journals.Count > 0)
+            throw new InvalidOperationException(
+                $"post: {path}: 'journals' names what a procedure writes and belongs to 'sql'; a mapped entry writes the one '{(hasJournal ? "journal" : "ledger")}' it names");
 
         List<String> foreign = [];
         if (hasJournal)

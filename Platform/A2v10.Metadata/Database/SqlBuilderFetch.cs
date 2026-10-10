@@ -122,6 +122,8 @@ internal partial class SqlBuilder
         var shown = Table.Presentation;
         var chosen = Table.DisplayAs;
         var carried = ChoiceField(Table, "a") + ColorField(Table, "a");
+        // the rows of this address, as the index has them: over a shared table, this document's alone
+        var own = OwnOperations("a") is { } ownRows ? $" and {ownRows}" : String.Empty;
 
         /* Two shapes, and the difference is real: without references there is nothing to resolve
          * and one select answers; with them the same hundred rows are needed twice, so they are
@@ -139,7 +141,7 @@ internal partial class SqlBuilder
             select top(100) [{Table.CollectionName}!{Table.TypeName}!Array] = null,
                 [Id!!Id] = a.Id, [Name!!Name] = a.[{shown}]{carried}{extra}
             from {Table.SqlTableName} a
-            where a.[Void] = 0{fixedRows} and
+            where a.[Void] = 0{fixedRows}{own} and
                 (a.[{chosen}] like @fr)
             order by a.[{chosen}];
             """
@@ -156,7 +158,7 @@ internal partial class SqlBuilder
             insert into @map(Id, {String.Join(", ", refColumns.Select(c => $"[{c.Name}]"))})
             select top(100) a.Id, {String.Join(", ", refColumns.Select(c => $"a.[{c.Name}]"))}
             from {Table.SqlTableName} a
-            where a.[Void] = 0{fixedRows} and
+            where a.[Void] = 0{fixedRows}{own} and
                 (a.[{chosen}] like @fr)
             order by a.[{chosen}];
 

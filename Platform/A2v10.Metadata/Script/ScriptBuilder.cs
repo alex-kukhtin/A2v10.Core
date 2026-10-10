@@ -18,6 +18,10 @@ namespace A2v10.Metadata;
  *
  * The map (.d.ts) needs no flag either. It is types and nothing else, so erasing them leaves
  * nothing at all - which is why JS has no such file rather than an empty one.
+ *
+ * What the map promises is read by one thing, the compiler, and TsBeamTests is where it reads:
+ * every template and map of TestApp, compiled together. A promise nothing reads drifts - the
+ * types once declared every column of a referenced table where the resolve sends five.
  */
 internal partial class ScriptBuilder(BuilderDescriptor desciptor, Boolean isTs)
 {
@@ -34,10 +38,10 @@ internal partial class ScriptBuilder(BuilderDescriptor desciptor, Boolean isTs)
 
     /* A type-only import erases to nothing - so it carries its own trailing blank line and is
      * written flush against what follows it, or JS would begin with the blank line where the
-     * import used to be.
+     * import used to be. Once each: two references to one table named its type twice.
      */
     private String Imports(IEnumerable<String> types, String from) =>
-        IsTs ? $"import {{ {String.Join(", ", types)} }} from '{from}';\n\n" : String.Empty;
+        IsTs ? $"import {{ {String.Join(", ", types.Distinct())} }} from '{from}';\n\n" : String.Empty;
 
     private String TemplateDecl => IsTs ? "const template: Template =" : "const template =";
 
@@ -48,7 +52,8 @@ internal partial class ScriptBuilder(BuilderDescriptor desciptor, Boolean isTs)
      * hand-written template names them. Left out is what the recordsets do not send - Void, the
      * row version, and on a row its master link and kind, which travel as ParentId and as the
      * collection the row arrives in (SqlBuilderPlain). Read-only where the save would not take
-     * the value back.
+     * the value back - except Done, which the posting commands of the template set on the client
+     * after the server did, so that the card reads as posted before it is requeried.
      */
     public IEnumerable<String> TsProperties(TableMetadata table)
     {
@@ -56,10 +61,8 @@ internal partial class ScriptBuilder(BuilderDescriptor desciptor, Boolean isTs)
         {
             // the operation of a document listing several is switched on the page, and saved (SqlBuilderPlain)
             var switches = column.IsOperation && Endpoint.Declaration.OperationDeclarations.Count > 0;
-            var ro = column.IsFieldUpdated() || switches ? "" : "readonly ";
-            if (column.IsRef)
-                return $"\t{ro}{column.Name}: {column.RefTableCheck.Storage.RefTypeName};";
-            return $"\t{ro}{column.ModelName}: {column.ToTsType(_descr.PlatformId)};";
+            var ro = column.IsFieldUpdated() || switches || column.Type == ColumnType.Done ? "" : "readonly ";
+            return $"\t{ro}{TsMember(column)};";
         }
 
         static Boolean inModel(TableColumn c) =>
@@ -69,14 +72,63 @@ internal partial class ScriptBuilder(BuilderDescriptor desciptor, Boolean isTs)
             yield return property(p);
     }
 
-    // the type a reference to 'target' resolves to: its columns, and a document's address and icon (SqlBuilder.RefFields)
+    // 'name: type' of one column as the model carries it: a reference is the target's element
+    private String TsMember(TableColumn column) =>
+        column.IsRef
+            ? $"{column.Name}: {column.RefTableCheck.Storage.RefTypeName}"
+            : $"{column.ModelName}: {column.ToTsType(_descr.PlatformId)}";
+
+    /* The type a reference to 'target' resolves to: exactly what the map sends and nothing more
+     * (SqlBuilder.RefFields, RefMapBuilder.GenerateResolves) - the key, the presentation as Name,
+     * the choice column, the colour, a state's role, a document's Done with its address and icon,
+     * and the columns an inherit of this endpoint reads off it. All read-only: a referenced element
+     * is never edited through the reference.
+     *
+     * Not the target's own columns: that promised every field, a stamp, a reference of the target's
+     * own to a type the map never declared - and nothing read the promise until the compiler did.
+     */
     public IEnumerable<String> RefTsProperties(TableMetadata target)
     {
-        foreach (var p in TsProperties(target))
-            yield return p;
-        if (!target.IsDocument)
-            yield break;
-        foreach (var m in Constants.FieldNames.RefViewMembers)
-            yield return $"\treadonly {m}: string;";
+        yield return $"\treadonly {Constants.FieldNames.Id}: {target.KeyColumn.ToTsType(_descr.PlatformId)};";
+        yield return $"\treadonly {Constants.FieldNames.Name}: string;";
+        if (target.ChoiceProperty is { } choice)
+            yield return $"\treadonly {TsMember(target.AllColumns().First(c => c.Name == choice))};";
+        if (target.ColorColumn is { } color)
+            yield return $"\treadonly {color.Name}: string;";
+        if (target.IsState)
+            yield return $"\treadonly {Constants.FieldNames.Role}: string;";
+        if (target.IsDocument)
+        {
+            yield return $"\treadonly {Constants.FieldNames.Done}: boolean;";
+            foreach (var m in Constants.FieldNames.RefViewMembers)
+                yield return $"\treadonly {m}: string;";
+        }
+        foreach (var c in RefMapBuilder.InheritSources(Endpoint.Declaration, target))
+            yield return $"\treadonly {TsMember(c)};";
     }
+
+    /* Every table a type of the map is declared for: the targets of the references the recordsets
+     * send - the record's, and its rows' when the card is built - and the targets of the references
+     * an inherit reads off one of them, since those ride in the resolve too. Once per table: the map
+     * has one resolve per target, whatever points at it.
+     */
+    public IEnumerable<TableMetadata> RefTargets(Boolean withDetails)
+    {
+        // not a row's link to its header: nobody's display, and it resolves to nothing (RefMapBuilder.Flatten)
+        var columns = withDetails
+            ? Table.AllColumns().Concat(Table.Details.Values.SelectMany(d => d.AllColumns(c => c.Type != ColumnType.Master)))
+            : Table.AllColumns();
+        var direct = columns.AllRefs().Select(r => r.Table).ToList();
+        var inherited = direct.SelectMany(t => RefMapBuilder.InheritSources(Endpoint.Declaration, t))
+            .Where(c => c.IsRef).Select(c => c.RefTableCheck.Storage);
+        return direct.Concat(inherited).DistinctBy(t => t.SqlTableName);
+    }
+
+    // the declaration of one referenced type, for both maps
+    private String RefTsInterface(TableMetadata target) => $$"""
+        export interface {{target.RefTypeName}} extends IElement {
+        {{String.Join("\n", RefTsProperties(target))}}
+        }
+
+        """;
 }

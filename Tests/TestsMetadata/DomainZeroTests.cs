@@ -83,7 +83,7 @@ public class DomainZeroTests
     {
         var chart = (await LoadNormalAsync("accplan", "national")).Storage;
 
-        var sql = SqlDbGenerator.CreateSeedScript([chart]);
+        var sql = SqlDbGenerator.CreateRowsScript([chart]);
 
         var row28 = sql.Split('\n').Single(l => l.TrimStart().StartsWith("(N'28',"));
         var row281 = sql.Split('\n').Single(l => l.TrimStart().StartsWith("(N'281',"));

@@ -26,7 +26,6 @@ namespace A2v10.Metadata;
 public abstract record EndpointMetadata
 {
     // identity: the folder the metadata.json was found in
-    public required EndpointKind Kind { get; init; }
     public required String Schema { get; init; }
     public required String Name { get; init; }
 
@@ -78,14 +77,6 @@ public sealed record ReportEndpointMetadata : EndpointMetadata
 {
     public required TableMetadata Surface { get; init; }
     public required ReportMetadata Report { get; init; }
-
-    private TableColumn FindSurfaceColumn(String columnName)
-    {
-        return Surface.Columns.FirstOrDefault(c => c.Name == columnName) ??
-            throw new InvalidOperationException($"Report '{Path}' refers to unknown column '{columnName}'");
-    }
-    internal IEnumerable<TableColumn> Filters() => Report.Filters.Select(FindSurfaceColumn);
-    internal IEnumerable<TableColumn> Groups() => Report.Groups.Select(FindSurfaceColumn);
 }
 
 

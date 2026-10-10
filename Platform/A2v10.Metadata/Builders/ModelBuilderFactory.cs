@@ -52,31 +52,4 @@ internal partial class ModelBuilderFactory(
                 throw new InvalidOperationException($"No builder for endpoint '{endpoint.Path}'");
         }
     }
-    public async Task<IModelBuilder> BuildAsync(IPlatformUrl platformUrl, NormalEndpointMetadata endpoint, String? dataSource)
-    {
-        var bd = new BuilderDescriptor()
-        {
-            DataSource = dataSource,
-            PlatformUrl = platformUrl,
-            Endpoint = endpoint,
-            PlatformId = await _metadataProvider.GetPlatformIdAsync(dataSource),
-            UseGrants = await _metadataProvider.UseGrantsAsync(),
-        };
-        return new BaseModelBuilder(_serviceProvider, bd);
-    }
-
-    // the platform id is needed here too: the .d.ts types an Id by the base the database rests on
-    public async Task<IEndpointModelBuilder> BuildEndpointAsync(IPlatformUrl platformUrl, NormalEndpointMetadata endpoint, String? dataSource)
-    {
-        var bd = new BuilderDescriptor()
-        {
-            DataSource = dataSource,
-            PlatformUrl = platformUrl,
-            Endpoint = endpoint,
-            PlatformId = await _metadataProvider.GetPlatformIdAsync(dataSource),
-            // the .d.ts has no batch to gate
-            UseGrants = false,
-        };
-        return new EndpointModelBuilder(bd);
-    }
 }

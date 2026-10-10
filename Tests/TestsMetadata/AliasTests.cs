@@ -19,7 +19,7 @@ public class AliasTests
         var operation = await LoadNormalAsync("sale", "invoice");
         var storage = await LoadNormalAsync("document", String.Empty);
 
-        Assert.Equal(EndpointKind.Document, operation.Kind);
+        Assert.Equal(TableKind.Document, operation.Storage.Kind);
         Assert.Equal("/sale/invoice", operation.Path);
         Assert.Same(storage.Storage, operation.Storage);
         // the Id is the last segment: the alias is where the file lies, not a part of the name

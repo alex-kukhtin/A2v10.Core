@@ -101,6 +101,83 @@ internal static class DeclarationBake
         }
     }
 
+    /* A condition holds the same rules as the block it stands in, and they are checked the same way.
+     * 'inherit' and 'total' under one are refused rather than dropped: no generator writes them, and
+     * 'inherit' also lands in the SQL of a birth, where a client test cannot run.
+     */
+    private static void CheckWhen(TableMetadata table, RuleMetadata rules)
+    {
+        foreach (var w in rules.When)
+        {
+            if (String.IsNullOrWhiteSpace(w.Test))
+                throw new InvalidOperationException("when: an entry declares no 'test'");
+            CheckNames(table, w.Required, $"when '{w.Test}': required");
+            if (w.Inherit.Count > 0)
+                throw new InvalidOperationException(
+                    $"when '{w.Test}': declares 'inherit'. An inherit under a condition is not generated yet; declare it unconditionally.");
+            if (w.Total.Length > 0)
+                throw new InvalidOperationException(
+                    $"when '{w.Test}': declares 'total'. A total under a condition is not generated yet; declare it unconditionally.");
+        }
+    }
+
+    /* The rules an operation declares are 'when' under a test of the operation column: one type
+     * serves every operation of the document, so the operation in force is a value the client holds.
+     * The test is derived, never written - the code is the platform's - and it reads the column
+     * through $root, so one spelling serves the header and the rows. A 'when' of the operation's own
+     * holds under both tests.
+     *
+     * The column is there for certain: a document listing operations without it is refused before
+     * the bake (DatabaseMetadataProvider.CheckOperationColumn).
+     */
+    private static DeclarationMetadata WithOperationRules(this DeclarationMetadata declaration, TableMetadata table)
+    {
+        if (declaration.OperationDeclarations.Count == 0)
+            return declaration;
+        var column = table.AllColumns().First(c => c.IsOperation);
+
+        static RuleMetadata Under(RuleMetadata into, RuleMetadata rules, String test)
+        {
+            IEnumerable<ConditionalRuleMetadata> conditional()
+            {
+                if (rules.Required.Length > 0 || rules.Total.Length > 0 || rules.Visible.Count > 0 || rules.Inherit.Count > 0)
+                    yield return new()
+                    {
+                        Test = test,
+                        Required = rules.Required,
+                        Total = rules.Total,
+                        Visible = rules.Visible,
+                        Inherit = rules.Inherit
+                    };
+                foreach (var w in rules.When)
+                    yield return w with { Test = $"({test}) && ({w.Test})" };
+            }
+            return into with { When = [.. into.When, .. conditional()] };
+        }
+
+        static DeclarationMetadata Collection(DeclarationMetadata into, DeclarationMetadata rules, String test)
+        {
+            var kinds = new Dictionary<String, KindDeclarationMetadata>(into.Kinds);
+            foreach (var (name, kind) in rules.Kinds)
+            {
+                var target = kinds.GetValueOrDefault(name) ?? new();
+                kinds[name] = target with { Rules = Under(target.Rules, kind.Rules, test) };
+            }
+            return into with { Rules = Under(into.Rules, rules.Rules, test), Kinds = kinds };
+        }
+
+        var result = declaration;
+        foreach (var operation in declaration.OperationDeclarations)
+        {
+            var test = $"this.$root.{table.Model}.{column.Name}.Id === '{operation.Id}'";
+            var details = new Dictionary<String, DeclarationMetadata>(result.Details);
+            foreach (var (name, rules) in operation.Details)
+                details[name] = Collection(details.GetValueOrDefault(name) ?? new(), rules, test);
+            result = result with { Rules = Under(result.Rules, operation.Rules, test), Details = details };
+        }
+        return result;
+    }
+
     /* Names the file wrote that the shape has no counterpart for. Silently skipping them is what
      * made a typo in a collection or kind key produce an endpoint that simply generated less.
      */
@@ -123,7 +200,9 @@ internal static class DeclarationBake
      */
     internal static DeclarationMetadata Bake(this DeclarationMetadata declaration, TableMetadata table, AppPlatformId platformId)
     {
+        declaration = declaration.WithOperationRules(table);
         CheckNames(table, declaration.Rules.Required, "required");
+        CheckWhen(table, declaration.Rules);
         if (declaration.Rules.Total.Length > 0)
             throw new InvalidOperationException(
                 $"total: declared on {table.SqlTableName}, which is a record. A sum is a member of a collection.");
@@ -161,15 +240,20 @@ internal static class DeclarationBake
          * the author did not write. The type is enough to ask it this early: whether a column is a
          * state is on the column, and only the CODE it starts on lives in the far half.
          */
-        foreach (var name in declaration.InitialValues.Keys)
+        foreach (var (name, initial) in declaration.InitialValues)
         {
-            var column = table.AllColumns().FirstOrDefault(c => c.Name == name);
-            if (column?.Type == ColumnType.State)
+            // a name the shape has not: unrefused, it failed at the first 'edit/new', and 'context' never even there
+            var column = table.AllColumns().FirstOrDefault(c => c.Name == name)
+                ?? throw new InvalidOperationException($"initialValues: field '{name}' not found in {table.SqlTableName}");
+            if (column.Type == ColumnType.State)
                 throw new InvalidOperationException(
                     $"initialValues: '{name}' is a state column. Where a new record starts is the SET's own answer - its value with role '{StateRole.Initial}' - and a second spelling of one fact is free to disagree with it.");
-            if (column?.HasSqlAs == true)
+            if (column.HasSqlAs)
                 throw new InvalidOperationException(
                     $"initialValues: '{name}' has 'sqlAs' - its value is the database's, a new record does not start on one.");
+            if (initial.Source == InitialSource.Context && initial.Value != Constants.ContextValues.Today)
+                throw new InvalidOperationException(
+                    $"initialValues: '{name}' - '{initial.Value}' is not a value of the context. Known: {Constants.ContextValues.Today}");
         }
 
         foreach (var (name, value) in declaration.Fixed)
@@ -195,12 +279,12 @@ internal static class DeclarationBake
     /* Which shapes have forms at all - a table is deployed whether or not anything renders it, and
      * the template knows the standard command bar of the rendered kinds only.
      *
-     * Asked of the TABLE, not of the endpoint: EndpointKindOf resolves the platform namespaces
-     * ('operations', 'tag') to Undefined, so the kind that can answer this is the shape's.
+     * Asked of the TABLE: an endpoint has a type and no kind, and the registry of operations is a
+     * table of this kind served by an endpoint of its own.
      */
     private static Boolean HasForms(this TableMetadata table) =>
-        table.Kind is EndpointKind.Catalog or EndpointKind.Document
-            or EndpointKind.Journal or EndpointKind.Operation or EndpointKind.AccPlan or EndpointKind.Ledger;
+        table.Kind is TableKind.Catalog or TableKind.Document
+            or TableKind.Journal or TableKind.Operation or TableKind.AccPlan or TableKind.Ledger;
 
     /* Every form of the endpoint - declared or default, resolved against the shape either way, and
      * total: for a shape that renders, all three keys are present. See CLAUDE.md, "Forms: whole or
@@ -287,6 +371,7 @@ internal static class DeclarationBake
                 var properties = declaration.PropertiesFor(rs.Kind);
                 CheckNames(table, rules.Required, "required");
                 CheckNames(table, rules.Total, "total");
+                CheckWhen(table, rules);
                 CheckProperties(table, properties, rules);
                 return new RowSetDeclaration(rs.Kind, rs.Collection, rs.Type, rules, properties,
                     BuildInherits(table, rules));

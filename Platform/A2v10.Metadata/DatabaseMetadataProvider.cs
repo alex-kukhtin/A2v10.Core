@@ -29,31 +29,36 @@ internal sealed record PlatformIdType
 public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbContext _dbContext, IAppCodeProvider _codeProvider,
         SqlDbGenerator _sqlDbGenerator)
 {
-    public async Task CheckDeployAsync(String? dataSource)
-    {
-        if (!_metadataCache.IsMetadataDirty)
-            return;
-
-        var (tables, grants) = await AllElementsMetadata(dataSource);
-
-        var platformId = await GetPlatformIdAsync(dataSource);
-        await _sqlDbGenerator.CheckDeployAsync(dataSource, tables, await DeclaredRolesAsync(), grants, await BoundaryAsync(dataSource), platformId);
-        _metadataCache.ClearDirty();
-    }
+    // the request path: when the metadata may differ from the database, once, under the cache's gate
+    public Task CheckDeployAsync(String? dataSource) =>
+        _metadataCache.CheckDeployAsync(() => DeployDatabaseAllAsync(dataSource));
 
     public async Task<DeployDatabaseResult> DeployDatabaseAllAsync(String? dataSource)
     {
-        var platformId = await GetPlatformIdAsync(dataSource);
-        var (tables, grants) = await AllElementsMetadata(dataSource);
-        return await _sqlDbGenerator.CheckDeployAsync(dataSource, tables, await DeclaredRolesAsync(), grants, await BoundaryAsync(dataSource), platformId);
+        var (tables, roles, grants, boundary, platformId) = await DeployInputsAsync(dataSource);
+        return await _sqlDbGenerator.CheckDeployAsync(dataSource, tables, roles, grants, boundary, platformId);
     }
 
     // 'a2 meta deploy --full': the file only, executed inside full.sql
     public async Task WriteDeployDatabaseAllAsync(String? dataSource)
     {
+        var (tables, roles, grants, boundary, platformId) = await DeployInputsAsync(dataSource);
+        await _sqlDbGenerator.WriteDeployAsync(dataSource, tables, roles, grants, boundary, platformId);
+    }
+
+    /* Everything a deploy is handed, gathered once for its callers. The one place the database is
+     * asked about the platform at all before the script runs: that a2meta is there, and that the base
+     * it rests on is the declared one.
+     */
+    private async Task<(IEnumerable<TableMetadata> Tables, IReadOnlyList<AppRole>? Roles,
+        IReadOnlyList<(String Endpoint, EndpointGrant Grant)> Grants, IReadOnlyList<BoundaryDimension> Boundary, AppPlatformId PlatformId)>
+        DeployInputsAsync(String? dataSource)
+    {
+        await EnsureMetaAsync(dataSource);
         var platformId = await GetPlatformIdAsync(dataSource);
+        await CheckPlatformIdAsync(dataSource, platformId);
         var (tables, grants) = await AllElementsMetadata(dataSource);
-        await _sqlDbGenerator.WriteDeployAsync(dataSource, tables, await DeclaredRolesAsync(), grants, await BoundaryAsync(dataSource), platformId);
+        return (tables, await DeclaredRolesAsync(), grants, await BoundaryAsync(dataSource), platformId);
     }
 
     /* Is the platform in the database? a2meta is created by a2v10_metadata.sql - by full.sql, never
@@ -107,9 +112,6 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         => await LoadAsync(load, dataSource, schema, table) as NormalEndpointMetadata
             ?? throw new InvalidOperationException($"Endpoint /{schema}/{table} is not a data endpoint");
 
-    public async Task<TableMetadata> GetSchemaAsync(String? dataSource, String schema, String table)
-        => (await GetNormalEndpointAsync(dataSource, schema, table)).Storage;
-
     internal Task<AppPlatformId> GetPlatformIdAsync(String? dataSource)
     {
         return _metadataCache.GetPlatformIdAsync(dataSource, LoadPlatformIdAsync);
@@ -120,27 +122,33 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return _metadataCache.GetOrAddXamlFormAsync(dataSource, endpoint, key, defForm);
     }
 
-    /* The database is the fact once it holds the type. Before the first deploy it holds nothing,
-     * and then - only then - app.json says what the deploy creates it from. No default and no
-     * fallback: guessing a base would not surface as a failure, it would write values of the wrong
-     * shape into a live database. So absent in both is an error, and a declaration disagreeing
-     * with the database is one too - the base never changes.
+    /* The base an Id rests on. Declared in app.json, that is the answer and no database is read: a
+     * load - and so a validate - types an Id from the declaration alone. Not declared, the database is
+     * asked; it holds the type once the first deploy made it. Absent in both is an error: guessing a
+     * base would not surface as a failure, it would write values of the wrong shape into a live
+     * database. The two are compared where the database is read anyway, by the deploy
+     * (CheckPlatformIdAsync): the base never changes, and a declaration disagreeing with it is refused
+     * there - before, every cold load paid the round trip for that check.
      */
     private async Task<AppPlatformId> LoadPlatformIdAsync(String? dataSource)
     {
-        var found = await _dbContext.LoadAsync<PlatformIdType>(dataSource, "a2meta.[GetPlatformIdType]");
-        var declared = await DeclaredPlatformIdAsync();
-        if (found?.DataType is String fact)
-        {
-            var actual = AppPlatformId.FromSqlName(fact);
-            if (declared != null && declared != actual)
-                throw new InvalidOperationException(
-                    $"app.json: 'platformid' is '{declared.SqlTypeName}', but the database rests on '{fact}'. The base never changes.");
-            return actual;
-        }
-        return declared
+        if (await DeclaredPlatformIdAsync() is { } declared)
+            return declared;
+        return await DatabasePlatformIdAsync(dataSource)
             ?? throw new InvalidOperationException(
                 "The 'platformid' type is not defined in the database, and app.json declares no 'platformid' to create it from");
+    }
+
+    private async Task<AppPlatformId?> DatabasePlatformIdAsync(String? dataSource) =>
+        (await _dbContext.LoadAsync<PlatformIdType>(dataSource, "a2meta.[GetPlatformIdType]"))?.DataType is String fact
+            ? AppPlatformId.FromSqlName(fact)
+            : null;
+
+    private async Task CheckPlatformIdAsync(String? dataSource, AppPlatformId platformId)
+    {
+        if (await DatabasePlatformIdAsync(dataSource) is { } fact && fact != platformId)
+            throw new InvalidOperationException(
+                $"app.json: 'platformid' is '{platformId.SqlTypeName}', but the database rests on '{fact.SqlTypeName}'. The base never changes.");
     }
 
     // internal for EndpointValidator: the declaration is the only answer a check that never reads the database can have
@@ -209,8 +217,10 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         if (stream == null)
             return ("{}", null); // empty value
         using var sr = new StreamReader(stream);
-        var text = await sr.ReadToEndAsync()
-            ?? throw new InvalidOperationException($"{fileName} is empty");
+        var text = await sr.ReadToEndAsync();
+        // a file of nothing is not '{}': there is nothing to parse, and 'deserialization fails' would send the author to look for a syntax error
+        if (String.IsNullOrWhiteSpace(text))
+            throw new InvalidOperationException($"{fileName} is empty");
         return (text, Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text))).ToLowerInvariant());
     }
 
@@ -225,19 +235,35 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
      * The kind comes in beside the folder, not instead of it: under an alias the two differ, and the
      * table is defaulted from what the folder IS, while its Path is still where the file lies.
      */
-    private async Task<TableMetadata> BuildStorageAsync(String kind, String schema, String table, String text, String? hash)
+    private async Task<TableMetadata> BuildStorageAsync(TableKind kind, String folderKind, String schema, String table, String text, String? hash)
     {
         var storage = JsonConvert.DeserializeObject<TableMetadata>(text, JsonSettings.CamelCaseSerializerSettings)
             ?? throw new InvalidOperationException($"{MetadataFileName(schema, table)}: TableMetadata deserialization fails");
         storage.FileHash = hash;
-        storage.SetDefaults(kind, schema, table);
+        storage.SetDefaults(kind, folderKind, schema, table);
         CheckNames(storage, schema, table);
-        CheckValues(storage, schema, table);
-        CheckAutonums(storage, schema, table);
+        CheckPlatformColumns(storage, schema, table);
         CheckCompanyColumn(storage, schema, table);
         CheckAccPlan(storage, schema, table);
-        await LoadSeedAsync(storage, schema, table);
+        await RegistryRows.LoadAsync(storage, schema, table, _codeProvider);
         return storage;
+    }
+
+    /* Columns the platform declares itself and reads by their platform name: a key, the presentation
+     * (SqlModelColumnName spells [Name] for a column of that type whatever it is called), a link the
+     * platform emits, a stamp the statements write by name. An author column of such a type is a
+     * second one standing under the first's name - refused rather than spelled wrong.
+     */
+    private static readonly ColumnType[] _platformTypes = [ColumnType.Id, ColumnType.NaturalKey, ColumnType.Name,
+        ColumnType.Master, ColumnType.Parent, ColumnType.Folder, ColumnType.RowVersion, ColumnType.PlatformId,
+        ColumnType.StampUser, ColumnType.StampDate, ColumnType.StampUserNull, ColumnType.StampDateNull];
+
+    private static void CheckPlatformColumns(TableMetadata storage, String schema, String table)
+    {
+        foreach (var (where, columns) in new[] { ("", storage.Columns) }.Concat(storage.Details.Select(d => ($"details '{d.Key}': ", d.Value.Columns))))
+            if (columns.FirstOrDefault(c => _platformTypes.Contains(c.Type)) is { } column)
+                throw new InvalidOperationException(
+                    $"{MetadataFileName(schema, table)}: {where}[{column.Name}] is '{column.Type}', a column the platform declares itself - it is in the record already, under its own name");
     }
 
     /* The company is found by type - the counter is split by it and '{p}' is read through it - so
@@ -265,7 +291,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     private static void CheckAccPlan(TableMetadata storage, String schema, String table)
     {
         var file = MetadataFileName(schema, table);
-        if (storage.Kind != EndpointKind.Ledger)
+        if (storage.Kind != TableKind.Ledger)
         {
             if (!String.IsNullOrEmpty(storage.AccPlan))
                 throw new InvalidOperationException(
@@ -275,157 +301,6 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         if (String.IsNullOrEmpty(storage.AccPlan))
             throw new InvalidOperationException(
                 $"{file}: does not declare 'accplan'. A ledger posts against one chart of accounts: \"accplan\": \"/{Constants.SchemaNames.AccPlan}/<name>\"");
-    }
-
-    /* 'seed' is a key of every table and is processed per kind; today only a chart of accounts has
-     * the processing, so anywhere else it is refused rather than dropped. On a chart it is required:
-     * nothing is inferred from a file lying in the folder.
-     *
-     * Everything about the rows is checked here, without a database, so a wrong file fails the load
-     * and never the deploy: keys against the columns, values against their columns' literal, the
-     * closed sets, the tree. The deploy then writes what was checked (SqlDbGenerator.CreateSeedScript).
-     */
-    private async Task LoadSeedAsync(TableMetadata storage, String schema, String table)
-    {
-        var file = MetadataFileName(schema, table);
-        if (storage.Kind != EndpointKind.AccPlan)
-        {
-            if (!String.IsNullOrEmpty(storage.Seed))
-                throw new InvalidOperationException(
-                    $"{file}: 'seed' is read for {Constants.SchemaNames.AccPlan}/ only; for {schema}/ it is not processed yet");
-            return;
-        }
-        if (String.IsNullOrEmpty(storage.Seed))
-            throw new InvalidOperationException(
-                $"{file}: does not declare 'seed'. A chart of accounts is its seed file: \"seed\": \"seed.json\"");
-
-        var seedFile = Path.Combine(schema, table, storage.Seed).NormalizeSlash();
-        using var stream = _codeProvider.FileStreamRO(seedFile)
-            ?? throw new InvalidOperationException($"{file}: 'seed' names {seedFile}, which does not exist");
-        using var sr = new StreamReader(stream);
-        var json = JsonConvert.DeserializeObject<Dictionary<String, Dictionary<String, JToken>>>(await sr.ReadToEndAsync())
-            ?? throw new InvalidOperationException($"{seedFile}: expected an object - account code: {{ column: value }}");
-
-        storage.SeedRows = [.. json.Select(kv => AccountRow(seedFile, storage, kv.Key, kv.Value))
-            .OrderBy(r => r.Id, StringComparer.Ordinal)];
-        CheckAccountTree(seedFile, storage.SeedRows);
-    }
-
-    // what a seed row names: the columns the platform reads, and the author's own
-    private static readonly String[] _accountColumns = [Constants.FieldNames.Name, Constants.FieldNames.Parent,
-        Constants.FieldNames.AccountType, Constants.FieldNames.NormalBalance, Constants.FieldNames.SplitBy];
-    private static readonly String[] _accountRequired = [Constants.FieldNames.Name,
-        Constants.FieldNames.AccountType, Constants.FieldNames.NormalBalance];
-
-    internal static SeedRow AccountRow(String seedFile, TableMetadata storage, String id, Dictionary<String, JToken> row)
-    {
-        var head = $"{seedFile}: account '{id}'";
-        if (String.IsNullOrEmpty(id))
-            throw new InvalidOperationException($"{seedFile}: an account under an empty code");
-        /* '.' separates what the user adds under an account of the file (361.1) - the same figure as
-         * '$' in table names. Refused here, a release cannot declare a code a user may already hold.
-         */
-        if (id.Contains('.'))
-            throw new InvalidOperationException(
-                $"{head} - '.' is not allowed in a code of the file; it separates the sub-accounts a user adds (361.1)");
-        var keyLength = storage.KeyColumn.DeployLength();
-        if (id.Length > keyLength)
-            throw new InvalidOperationException($"{head} - a code is at most {keyLength} characters");
-
-        var values = new Dictionary<String, String?>();
-        foreach (var (name, token) in row)
-        {
-            var column = storage.AllColumns().FirstOrDefault(c => c.Name == name)
-                ?? throw new InvalidOperationException(
-                    $"{head} - '{name}' is not a column of {storage.SqlTableName}");
-            if (!_accountColumns.Contains(name) && !storage.Columns.Any(c => c.Name == name))
-                throw new InvalidOperationException(
-                    $"{head} - '{name}' is written by the platform, not by the seed");
-            if (column.HasSqlAs)
-                throw new InvalidOperationException($"{head} - '{name}' has 'sqlAs', nothing writes it");
-            var value = name == Constants.FieldNames.SplitBy ? SplitByValue(head, token) : token.Type switch
-            {
-                JTokenType.Null => null,
-                JTokenType.String or JTokenType.Integer or JTokenType.Float or JTokenType.Boolean
-                    => ((JValue)token).ToString(CultureInfo.InvariantCulture),
-                _ => throw new InvalidOperationException($"{head} - '{name}' is not a scalar value")
-            };
-            if (value != null)
-            {
-                try
-                {
-                    column.SqlLiteral(value);
-                }
-                catch (Exception ex)
-                {
-                    throw new InvalidOperationException($"{head} - {ex.Message}", ex);
-                }
-            }
-            values.Add(name, value);
-        }
-
-        foreach (var name in _accountRequired)
-            if (values.GetValueOrDefault(name) == null)
-                throw new InvalidOperationException($"{head} - '{name}' is required");
-        CheckClosedSet<AccountType>(head, values, Constants.FieldNames.AccountType);
-        CheckClosedSet<NormalBalance>(head, values, Constants.FieldNames.NormalBalance);
-        CheckSplit(head, values);
-        return new SeedRow(id, values);
-    }
-
-    /* A list of column names, written as a list: a string would let "Agent, Contract" and
-     * "Agent,Contract" be two spellings of one value. Stored joined - no column name holds ','.
-     */
-    private static String SplitByValue(String head, JToken token)
-    {
-        var names = token is JArray array && array.All(t => t.Type == JTokenType.String)
-            ? array.Select(t => t.Value<String>()!).ToList()
-            : throw new InvalidOperationException(
-                $"{head} - '{Constants.FieldNames.SplitBy}' is an array of ledger columns: [\"Agent\"]");
-        if (names.Count == 0 || names.Any(String.IsNullOrEmpty))
-            throw new InvalidOperationException($"{head} - '{Constants.FieldNames.SplitBy}' names no column");
-        if (names.Distinct().Count() != names.Count)
-            throw new InvalidOperationException($"{head} - '{Constants.FieldNames.SplitBy}' names a column twice");
-        return String.Join(',', names);
-    }
-
-    // one fact in two keys, so each without the other is refused: Split with nothing to split by, or a list nobody reads
-    private static void CheckSplit(String head, Dictionary<String, String?> values)
-    {
-        var split = values[Constants.FieldNames.NormalBalance] == nameof(NormalBalance.Split);
-        var splitBy = values.GetValueOrDefault(Constants.FieldNames.SplitBy) != null;
-        if (split && !splitBy)
-            throw new InvalidOperationException(
-                $"{head} - NormalBalance 'Split' says the balance is laid out by analytics, and '{Constants.FieldNames.SplitBy}' names none");
-        if (!split && splitBy)
-            throw new InvalidOperationException(
-                $"{head} - '{Constants.FieldNames.SplitBy}' is read for NormalBalance 'Split' only; this account is '{values[Constants.FieldNames.NormalBalance]}'");
-    }
-
-    // spelled exactly as the enum member: the value is stored by name and compared by name
-    private static void CheckClosedSet<T>(String head, Dictionary<String, String?> values, String name) where T : struct, Enum
-    {
-        var value = values[name]!;
-        if (!Enum.GetNames<T>().Contains(value))
-            throw new InvalidOperationException(
-                $"{head} - {name} '{value}' is not one of {String.Join(", ", Enum.GetNames<T>())}");
-    }
-
-    // a Parent is a code of the same file, and following Parents never comes back
-    private static void CheckAccountTree(String seedFile, List<SeedRow> rows)
-    {
-        var parents = rows.ToDictionary(r => r.Id, r => r.Values.GetValueOrDefault(Constants.FieldNames.Parent));
-        foreach (var (id, parent) in parents)
-        {
-            if (parent != null && !parents.ContainsKey(parent))
-                throw new InvalidOperationException(
-                    $"{seedFile}: account '{id}' - Parent '{parent}' is not an account of this file");
-            var seen = new HashSet<String> { id };
-            for (var p = parent; p != null; p = parents[p])
-                if (!seen.Add(p))
-                    throw new InvalidOperationException(
-                        $"{seedFile}: account '{id}' - the Parent chain comes back to '{p}'");
-        }
     }
 
     /* A name becomes a SQL identifier, a TS type or member and a step of a binding path - and only
@@ -509,238 +384,25 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         Unique(members, $"member of {storage.Model}");
     }
 
-    /* The rows of a set, checked where the file is read and without a database - keys, colours and
-     * roles - so a wrong file fails the load and never the deploy. Asked of EVERY file and not only
-     * of a set: 'values' written where nothing reads them was silently dropped, which is the one
-     * failure of this format that leaves no trace at all.
-     *
-     * The two halves refuse each other's keys. A colour and a role on an enum have no column to
-     * land in; a role missing on a state leaves the cycle without the three facts it is read for.
-     * A key with no effect is worse than a missing one - it teaches the next reader that it has one.
+    /* Endpoints the platform serves itself - no file to read, no shape to build, told apart by their
+     * type. Recognised before the folder is asked what it declares, since it declares nothing.
      */
-    private static void CheckValues(TableMetadata storage, String schema, String table)
-    {
-        var file = MetadataFileName(schema, table);
-
-        /* The same key one floor down. A collection is a TableMetadata too and is deserialized from
-         * the same text, so 'values' written inside 'details' arrives in a node nothing walks - the
-         * identical silence, closed here rather than left to the schema, which is read by an editor
-         * and not by the loader.
-         */
-        foreach (var (key, detail) in storage.Details)
-            if (detail.Values.Count > 0)
-                throw new InvalidOperationException(
-                    $"{file}: 'values' inside details '{key}'. Rows of a collection are data; a closed list a column points at is a set of its own, declared in {Constants.SchemaNames.Enum}/<name> or {Constants.SchemaNames.State}/<name>");
-
-        if (!storage.IsSet)
-        {
-            if (storage.Values.Count > 0)
-                throw new InvalidOperationException($"""
-                    {file}: declares 'values', which are the rows of a SET, and {schema}/ is not one.
-                      A closed list a column points at is declared in {Constants.SchemaNames.Enum}/<name> (a code and a name)
-                      or in {Constants.SchemaNames.State}/<name> (a life cycle: a colour and a role as well).
-                    """);
-            return;
-        }
-
-        var keyLength = storage.KeyColumn.DeployLength();
-        foreach (var value in storage.Values)
-        {
-            if (String.IsNullOrEmpty(value.Id))
-                throw new InvalidOperationException($"{file}: a value with no 'id'. The id is the code the referencing column stores");
-            if (value.Id.Length > keyLength)
-                throw new InvalidOperationException($"{file}: value '{value.Id}' - a code is at most {keyLength} characters");
-        }
-
-        /* Case-insensitively, because that is how the database will compare them: the merge matches
-         * on the key under the server's collation, and two codes differing only in case meet there
-         * as one row - 'attempted to UPDATE or DELETE the same row more than once', at deploy time,
-         * naming neither the file nor the value.
-         */
-        var twice = storage.Values.GroupBy(v => v.Id, StringComparer.OrdinalIgnoreCase)
-            .FirstOrDefault(g => g.Count() > 1);
-        if (twice != null)
-            throw new InvalidOperationException(
-                $"{file}: '{twice.Key}' is declared {twice.Count()} times. A code names one value of the set");
-
-        if (!storage.IsState)
-        {
-            var extra = storage.Values.FirstOrDefault(v => v.Color != null || v.Role != null);
-            if (extra != null)
-                throw new InvalidOperationException($"""
-                    {file}: value '{extra.Id}' declares '{(extra.Color != null ? "color" : "role")}', which belongs to a set of states.
-                      An enum value is a code and a name; a colour and a role are read from {Constants.SchemaNames.State}/<name>.
-                    """);
-            return;
-        }
-
-        foreach (var value in storage.Values)
-        {
-            if (value.Role == null)
-                throw new InvalidOperationException($"""
-                    {file}: state '{value.Id}' declares no 'role', so nothing says what it is to the cycle.
-                      One of: {String.Join(", ", Enum.GetNames<StateRole>())}.
-                    """);
-            CheckColor(file, value);
-        }
-
-        /* Over the living values alone. A void state is withdrawn - it keeps the records that
-         * already carry it and leaves the candidates - so a new record cannot start on it and a
-         * cycle cannot end there. A void Initial beside a live one is the legitimate shape of a
-         * migration, and counting it would refuse exactly that.
-         */
-        void Exactly(StateRole role, String what)
-        {
-            var found = storage.Values.Where(v => !v.Void && v.Role == role).ToList();
-            if (found.Count == 1)
-                return;
-            throw new InvalidOperationException(found.Count == 0
-                ? $"{file}: no state is '{role}', and {what}"
-                : $"{file}: {String.Join(" and ", found.Select(v => $"'{v.Id}'"))} are all '{role}', and {what}");
-        }
-
-        Exactly(StateRole.Initial, "a new record has to start on one definite state");
-        Exactly(StateRole.Success, "success is measured, so one state IS reaching the goal - a cycle with two good endings picks one and tells the rest apart by a field of its own");
-    }
-
-    /* Against the styles the view engine draws, which is the list the CSS agrees with - so a colour
-     * the load accepts is a colour that renders. Not the picker's list (main.js): that one answers
-     * 'what to offer', a shorter question, and would refuse names that draw perfectly well.
-     *
-     * Lower case exactly, not case-insensitively: the value is written into a class attribute and
-     * CSS class names are case-sensitive, so 'Green' would pass a lenient check and then render a
-     * badge with no colour and no error anywhere.
-     */
-    private static void CheckColor(String file, SetValueMetadata value)
-    {
-        if (value.Color == null)
-            return;
-        if (Enum.GetNames<TagLabelStyle>().Any(n => n.ToLowerInvariant() == value.Color))
-            return;
-        var known = Enum.GetNames<TagLabelStyle>().Select(n => n.ToLowerInvariant());
-        throw new InvalidOperationException($"""
-            {file}: state '{value.Id}' - '{value.Color}' is not a colour. They are written in lower case, and they are:
-              {String.Join(", ", known)}.
-            """);
-    }
-
-    /* Refused where the file is read, because nothing downstream can report it: the SQL that issues
-     * a number cannot parse a pattern it was handed - a pattern with no counter in it yields a
-     * number, the same one for every document, and it gets saved.
-     *
-     * Asked of every file and not only of /autonum, so 'autonums' written somewhere it means
-     * nothing is an error rather than a key silently dropped on the way to the deploy.
-     */
-    private static void CheckAutonums(TableMetadata storage, String schema, String table)
-    {
-        if (storage.Autonums.Count == 0)
-            return;
-        var file = MetadataFileName(schema, table);
-        if (storage.Kind != EndpointKind.Autonum)
-            throw new InvalidOperationException(
-                $"{file}: 'autonums' declares numberings, and they are declared in autonum/metadata.json. Name one here with \"autonum\": \"<id>\" instead");
-
-        foreach (var autonum in storage.Autonums)
-        {
-            if (String.IsNullOrEmpty(autonum.Id))
-                throw new InvalidOperationException($"{file}: 'autonums' declares a numbering under an empty key");
-            if (String.IsNullOrEmpty(autonum.Pattern))
-                throw new InvalidOperationException(
-                    $"{file}: '{autonum.Id}' declares no 'pattern'. The pattern IS the number: \"{{yyyy}}-{{nnnnn}}\"");
-            CheckPattern(file, autonum);
-        }
-    }
-
-    // The placeholders the procedure substitutes: the dates and the company's prefix. '{n}' through
-    // '{nnnnn}' is the counter and is checked apart: its length is what it says, so it is not a name in a list.
-    private static readonly String[] _autonumPlaceholders = ["yy", "yyyy", "mm", "qq", "p"];
-
-    /* Every '{...}' is read, because the procedure does not read them - it substitutes the ones it
-     * knows and leaves the rest standing in the number. And the counter is checked twice: that it
-     * is there at all, and that the pattern tells its periods apart. A monthly counter under a
-     * pattern with no month issues '5' twice a year, which is the one failure here that produces a
-     * plausible document rather than an error.
-     */
-    private static void CheckPattern(String file, AutonumMetadata autonum)
-    {
-        var pattern = autonum.Pattern;
-        var head = $"{file}: pattern '{pattern}' of '{autonum.Id}'";
-        var found = new List<String>();
-        var counter = false;
-        var ix = 0;
-        while (ix < pattern.Length)
-        {
-            var start = pattern.IndexOf('{', ix);
-            if (start < 0)
-                break;
-            var end = pattern.IndexOf('}', start);
-            if (end < 0)
-                throw new InvalidOperationException($"{head} has a '{{' that is never closed");
-            var token = pattern[(start + 1)..end];
-            if (token.Length > 0 && token.All(c => c == 'n'))
-            {
-                if (counter)
-                    throw new InvalidOperationException(
-                        $"{head} writes the counter twice; only the first would be filled in");
-                counter = true;
-            }
-            else if (!_autonumPlaceholders.Contains(token))
-                throw new InvalidOperationException(
-                    $"{head} uses '{{{token}}}', which is nothing. Known: {{yy}}, {{yyyy}}, {{mm}}, {{qq}}, {{p}} for the company's prefix, and {{n}} to {{nnnnn}} for the counter");
-            found.Add(token);
-            ix = end + 1;
-        }
-        if (!counter)
-            throw new InvalidOperationException(
-                $"{head} has no counter in it. Write it as '{{n}}', one 'n' per digit - '{{nnnnn}}' pads to five");
-
-        var year = found.Contains("yy") || found.Contains("yyyy");
-        var missing = autonum.Period switch
-        {
-            AutonumPeriod.Year => year ? null : "{yyyy}",
-            AutonumPeriod.Quarter => !year ? "{yyyy}" : found.Contains("qq") ? null : "{qq}",
-            AutonumPeriod.Month => !year ? "{yyyy}" : found.Contains("mm") ? null : "{mm}",
-            _ => null
-        };
-        if (missing != null)
-            throw new InvalidOperationException(
-                $"{head} restarts every {autonum.Period.ToString().ToLowerInvariant()}, so it has to carry {missing} - without it one number is issued in two periods");
-    }
-
-    private async Task<TableMetadata> LoadStorageAsync(String? dataSource, String schema, String table)
-    {
-        var (text, hash) = await ReadMetadataFileAsync(schema, table);
-        return await BuildStorageAsync(await KindFolderAsync(schema), schema, table, text, hash);
-    }
-
-    public Task<TableMetadata> GetStorageAsync(String? dataSource, String schema, String table)
-    {
-        return _metadataCache.GetOrAddStorageAsync(dataSource, schema, table, LoadStorageAsync);
-    }
-
-    /* Endpoints the platform serves itself - no file to read, no shape to build. The kind is set
-     * literally and not through EndpointKindOf: that one answers 'what did the FOLDER declare',
-     * and a folder declares nothing here. Teaching it this namespace would also make
-     * DeclaresShapeSource demand a 'table' key from an endpoint that has no file to put it in.
-     */
-    private async Task<EndpointMetadata?> GetInternalEndpointAsync(String? dataSource, String schema, String table)
+    private static async Task<EndpointMetadata?> GetInternalEndpointAsync(EndpointLoad load, String? dataSource, String schema, String table)
     {
         if (schema == Constants.SchemaNames.Tag)
             return new TagEndpointMetadata()
             {
-                Kind = EndpointKind.Tags,
                 Schema = schema,
                 Name = table
             };
         if (schema == Constants.SchemaNames.Operation)
             return new OperationEndpointMetadata()
             {
-                Kind = EndpointKind.Operation,
                 Schema = schema,
                 Name = table,
-                // through the cache like every other storage: the instance is shared, not remade
-                Storage = await _metadataCache.GetOrAddStorageAsync(dataSource, schema, table,
-                    (_, _, _) => Task.FromResult(TableMetadataDefaults.OperationsTable()))
+                // through the load like every other storage: the instance is shared, not remade
+                Storage = await load.StorageAsync(dataSource, schema, table,
+                    () => Task.FromResult(TableMetadataDefaults.OperationsTable()))
             };
         if (schema == Constants.SchemaNames.Admin)
             return AdminEndpointMetadata.Create(table);
@@ -757,7 +419,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
      */
     private async Task<EndpointMetadata> LoadEndpointAsync(EndpointLoad load, String? dataSource, String schema, String table)
     {
-        var internalEndpoint = await GetInternalEndpointAsync(dataSource, schema, table);
+        var internalEndpoint = await GetInternalEndpointAsync(load, dataSource, schema, table);
         if (internalEndpoint != null)
             return internalEndpoint;
 
@@ -765,7 +427,13 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         var declaration = JsonConvert.DeserializeObject<DeclarationMetadata>(text, JsonSettings.CamelCaseSerializerSettings)
             ?? throw new InvalidOperationException($"{MetadataFileName(schema, table)}: DeclarationMetadata deserialization fails");
 
+        /* What the folder IS decides everything below; a folder that is nothing to the platform is
+         * refused here with its name, not three calls later as a table with no baseline.
+         */
         var kind = await KindFolderAsync(schema);
+        if (!kind.IsFolderKind())
+            throw new InvalidOperationException(
+                $"{MetadataFileName(schema, table)}: '{schema}/' is not a kind of endpoint. A first segment is a kind ({String.Join(", ", Enum.GetNames<TableKind>().Take(8).Select(k => k.ToLowerInvariant()))}, report) or an alias of one (app.json 'aliases')");
         CheckShapeSource(kind, schema, table, declaration);
         if (kind == Constants.SchemaNames.Document)
             declaration = await LoadOperationsAsync(schema, table, declaration);
@@ -786,8 +454,9 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         TableMetadata storage;
         DeclarationMetadata? storageDeclaration = null;
         if (declaration.HasOwnShape)
-            storage = await _metadataCache.GetOrAddStorageAsync(dataSource, schema, table,
-                (_, s, t) => BuildStorageAsync(kind, s, t, text, hash));
+            // a report never owns a shape (CheckShapeSource), so the folder's kind is a table's here
+            storage = await load.StorageAsync(dataSource, schema, table,
+                () => BuildStorageAsync(kind.ToTableKind()!.Value, kind, schema, table, text, hash));
         else
         {
             var (targetSchema, targetTable) = ParsePath(declaration.SharedShape!);
@@ -810,19 +479,17 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         {
             Constants.SchemaNames.Report => new ReportEndpointMetadata()
                 {
-                    Kind = EndpointKindOf(kind),
                     Schema = schema,
                     Name = table,
                     // the shape a report reads, resolved from 'surface'. It owns none of it
                     Surface = storage,
                     Report = JsonConvert.DeserializeObject<ReportMetadata>(text, JsonSettings.CamelCaseSerializerSettings)
-                        ?? throw new InvalidOperationException("ReportMetadata deserialization fails"),
+                        ?? throw new InvalidOperationException($"{MetadataFileName(schema, table)}: ReportMetadata deserialization fails"),
                     FileHash = hash,
                     Grants = grants
                 },
             _ => new NormalEndpointMetadata()
                 {
-                    Kind = EndpointKindOf(kind),
                     Schema = schema,
                     Name = table,
                     Storage = storage,
@@ -944,15 +611,12 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     {
         if (operation.Post is not { Count: > 0 } post)
             throw new InvalidOperationException($"{fileName}: declares no 'post'. What posting does is the whole of an operation.");
-        var rules = operation.Rules;
-        if (rules.Required.Length > 0 || rules.Total.Length > 0 || rules.Visible.Count > 0
-            || rules.Inherit.Count > 0 || rules.When.Count > 0 || operation.Details.Count > 0)
-            throw new InvalidOperationException(
-                $"{fileName}: declares 'rules'. The rules of an operation are not generated yet (they need 'when' on the client), so they would be written and never hold. Put them on the document for now.");
-        if (operation.Properties.Count > 0)
+        if (operation.Properties.Count > 0
+            || operation.Details.Values.Any(d => d.Properties.Count > 0 || d.Kinds.Values.Any(k => k.Properties.Count > 0)))
             throw new InvalidOperationException(
                 $"{fileName}: declares 'properties'. One type serves every operation of the document, so a property of one operation is a test of the Operation column, and that is not generated yet. Put them on the document for now.");
-        return new OperationDeclaration(name, $"{document}.{name}", post);
+        // the rules become 'when' under the operation's code, and are checked as such by the bake
+        return new OperationDeclaration(name, $"{document}.{name}", post, operation.Rules, operation.Details);
     }
 
     /* Which rows of the table are this document's is told by the column of type 'operation', so every
@@ -1126,47 +790,15 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return merged;
     }
 
-    /* The kind of an endpoint declared by a folder. Platform namespaces ('operations', 'tag')
-     * and registries ('autonum') resolve to Undefined rather than throwing: their kind, where
-     * they have one, is set on the table by TableMetadataDefaults, and every endpoint gets a
-     * container either way. This is the single place that learns a new file-declared kind.
-     *
-     * MetadataExtensions.ToEndpointKind answers the same question and throws on the rest - one
-     * law in two spellings, and this one is how it drifted: it stayed silent about 'report'
-     * long after the enum had the value.
-     */
-    internal static EndpointKind EndpointKindOf(String schema)
-    {
-        return schema switch
-        {
-            Constants.SchemaNames.Catalog => EndpointKind.Catalog,
-            Constants.SchemaNames.Document => EndpointKind.Document,
-            Constants.SchemaNames.Journal => EndpointKind.Journal,
-            Constants.SchemaNames.Report => EndpointKind.Report,
-            Constants.SchemaNames.Enum => EndpointKind.Enum,
-            Constants.SchemaNames.State => EndpointKind.State,
-            Constants.SchemaNames.AccPlan => EndpointKind.AccPlan,
-            Constants.SchemaNames.Ledger => EndpointKind.Ledger,
-            _ => EndpointKind.Undefined
-        };
-    }
-
-    /* Kinds whose endpoints have to say where the shape they work on comes from. Everything else
-     * falls through EndpointKindOf as Undefined and is not asked: platform namespaces (operations,
-     * tag) declare their tables in code, and autonum is a registry, not a table endpoint.
-     */
-    private static Boolean DeclaresShapeSource(String schema) =>
-        EndpointKindOf(schema) != EndpointKind.Undefined;
-
     /* Where the shape comes from is declared, never guessed.
      *
      * Three keys on one axis - 'table' (my own), 'storage' (a table declared elsewhere, which I
      * write to), 'surface' (a shape I only read) - and which are legal is decided per folder:
      * 'table' or 'storage' for the kinds that render (document, catalog, journal - an operation,
      * or a second address with screens of its own over the same rows), 'surface' for a report,
-     * which owns no table and therefore never reaches deploy, 'table' alone for a set. Writing the
-     * wrong key never moves an endpoint into another rule - it is an error naming the rule it
-     * broke.
+     * which owns no table and therefore never reaches deploy, 'table' alone for a set, nothing at
+     * all for the numbering registry, whose names default. Writing the wrong key never moves an
+     * endpoint into another rule - it is an error naming the rule it broke.
      *
      * There used to be a default - an absent 'storage' under document/ meant the shared
      * doc.Documents - and it was the single place in the format where writing nothing meant
@@ -1183,13 +815,24 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
      */
     private static void CheckShapeSource(String kind, String schema, String table, DeclarationMetadata declaration)
     {
-        if (!DeclaresShapeSource(kind))
-            return;
-
         var hasTable = !String.IsNullOrEmpty(declaration.Table);
         var hasStorage = !String.IsNullOrEmpty(declaration.Storage);
         var hasSurface = !String.IsNullOrEmpty(declaration.Surface);
         var file = MetadataFileName(schema, table);
+
+        /* One registry at one address: its names default and a written 'table' wins (SetDefaults).
+         * Nothing to point elsewhere with - a second address to it would address nothing, as for a
+         * set, and it reads no shape but its own.
+         */
+        if (kind == Constants.SchemaNames.Autonum)
+        {
+            if (hasStorage || hasSurface)
+                throw new InvalidOperationException($"""
+                    {file}: declares '{(hasStorage ? "storage" : "surface")}', which {kind}/ may not do.
+                      The numbering registry has one address and its table defaults; the numberings are declared under 'autonums'.
+                    """);
+            return;
+        }
 
         if (kind == Constants.SchemaNames.Report)
         {
@@ -1314,14 +957,14 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                     if (ledger.AllColumns().FirstOrDefault(c => c.Name == name && c.Type == ColumnType.Account) is not { } column)
                         continue;
                     var chart = await JournalAsync(column.Target!);
-                    var account = chart.SeedRows.FirstOrDefault(r => r.Id == code)
+                    var account = chart.Rows.FirstOrDefault(r => r.Id == code)
                         ?? throw new InvalidOperationException(
                             $"post: {normal.Path} -> {ledger.Path}: '{leg}' const [{name}] = '{code}' is not an account of {chart.Path}");
                     CheckSplitLeg($"post: {normal.Path} -> {ledger.Path}", leg, blocks, account);
                 }
         }
 
-        async Task<TableMetadata> TargetAsync(String key, String path, params EndpointKind[] kinds)
+        async Task<TableMetadata> TargetAsync(String key, String path, params TableKind[] kinds)
         {
             var target = await JournalAsync(path);
             if (!kinds.Contains(target.Kind))
@@ -1335,8 +978,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             if (!p.IsSql)
             {
                 p.TargetTable = p.IsLedger
-                    ? await TargetAsync("ledger", p.Ledger!, EndpointKind.Ledger)
-                    : await TargetAsync("journal", p.Journal!, EndpointKind.Journal);
+                    ? await TargetAsync("ledger", p.Ledger!, TableKind.Ledger)
+                    : await TargetAsync("journal", p.Journal!, TableKind.Journal);
                 if (p.IsLedger)
                     await CheckConstAccountsAsync(p);
                 continue;
@@ -1344,7 +987,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             // assigned, never appended: a second pass would otherwise double the list
             var journals = new List<TableMetadata>();
             foreach (var path in p.Journals)
-                journals.Add(await TargetAsync("journals", path, EndpointKind.Journal, EndpointKind.Ledger));
+                journals.Add(await TargetAsync("journals", path, TableKind.Journal, TableKind.Ledger));
             p.SqlTargets = journals;
         }
         _ = new PostStatements(normal);
@@ -1382,7 +1025,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             var head = $"basedOn: {normal.Path} -> {b.Target}";
             var (schema, table) = ParsePath(b.Target);
             var target = await GetNormalEndpointAsync(load, dataSource, schema, table);
-            if (target.Storage.Kind != EndpointKind.Document)
+            if (target.Storage.Kind != TableKind.Document)
                 throw new InvalidOperationException($"{head}: a {target.Storage.Kind}, and only a document is created on basis");
             CheckBasedOnOperation(head, b, target);
             BasedOnMapping.CheckDocument(head, b, target.Storage, normal.Storage);
@@ -1493,7 +1136,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
 
         CheckLiteralInitials(endpoint, meta);
 
-        if (endpoint is NormalEndpointMetadata { Storage.Kind: EndpointKind.Ledger } ledger)
+        if (endpoint is NormalEndpointMetadata { Storage.Kind: TableKind.Ledger } ledger)
             CheckSplitColumns(ledger.Storage);
 
         await CheckAutonumDeclaredAsync(load, endpoint, dataSource);
@@ -1569,13 +1212,13 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
      * two facts travel together because the message needs both - the kind to compare and the
      * address to suggest.
      */
-    private static (EndpointKind Kind, String What)? TargetOf(ColumnType type) => type switch
+    private static (TableKind Kind, String What)? TargetOf(ColumnType type) => type switch
     {
-        ColumnType.Account => (EndpointKind.AccPlan, $"a chart of accounts (/{Constants.SchemaNames.AccPlan}/<name>)"),
-        ColumnType.Enum => (EndpointKind.Enum, $"a set of values (/{Constants.SchemaNames.Enum}/<name>)"),
-        ColumnType.State => (EndpointKind.State, $"a set of states (/{Constants.SchemaNames.State}/<name>)"),
-        ColumnType.Company => (EndpointKind.Catalog, $"a catalog (/{Constants.SchemaNames.Catalog}/<name>)"),
-        ColumnType.BasedOn => (EndpointKind.Document, $"a document (/{Constants.SchemaNames.Document}/<name>)"),
+        ColumnType.Account => (TableKind.AccPlan, $"a chart of accounts (/{Constants.SchemaNames.AccPlan}/<name>)"),
+        ColumnType.Enum => (TableKind.Enum, $"a set of values (/{Constants.SchemaNames.Enum}/<name>)"),
+        ColumnType.State => (TableKind.State, $"a set of states (/{Constants.SchemaNames.State}/<name>)"),
+        ColumnType.Company => (TableKind.Catalog, $"a catalog (/{Constants.SchemaNames.Catalog}/<name>)"),
+        ColumnType.BasedOn => (TableKind.Document, $"a document (/{Constants.SchemaNames.Document}/<name>)"),
         _ => null
     };
 
@@ -1587,7 +1230,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     internal static void CheckSplitColumns(TableMetadata ledger)
     {
         var chart = ledger.AllColumns().First(c => c.Name == Constants.FieldNames.Acc).RefTableCheck.Storage;
-        foreach (var row in chart.SeedRows)
+        foreach (var row in chart.Rows)
             foreach (var name in row.SplitBy)
             {
                 var column = ledger.Columns.FirstOrDefault(c => c.Name == name);
@@ -1678,9 +1321,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                 continue;
             tables.Add(endpoint.Storage);
         }
-        /* The registry is a table like a set: deployed with its rows, and the rows reach the
-         * hash through Xtra. Sorted, because the fingerprint is taken from the text and must not
-         * depend on how the file system is enumerated.
+        /* The registry is a table like a set: deployed with its rows (OperationRows), and the rows
+         * reach the hash through Xtra.
          *
          * An operation's Id starts with the last segment of its document's address, so two folders
          * of one kind (an alias, app.json) can give two documents one name and their operations one
@@ -1694,10 +1336,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                   Rename one of them.
                 """);
         if (operations.Count > 0)
-            tables.Add(TableMetadataDefaults.OperationsTable() with
-            {
-                Operations = [.. operations.OrderBy(o => o.Id, StringComparer.Ordinal)]
-            });
+            tables.Add(TableMetadataDefaults.OperationsTable() with { Rows = OperationRows.Rows(operations) });
         return (tables, grants);
     }
     private async Task<IEnumerable<TableReferrer>> LoadTableReferrersAsync(String? dataSource, TableMetadata table)

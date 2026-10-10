@@ -54,6 +54,10 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
 
     private readonly CliDatabaseCreator _dbCreator = new();
 
+    // a text as a literal of a script this class writes, null as null; a column's value goes through SqlLiteral
+    private static String Str(String? val) =>
+        val == null ? "null" : $"N'{val.Replace("'", "''")}'";
+
     private String DatabaseFilePath => _appCodeProvider.GetMainModuleFullPath("_sqlscripts", DB_FILE);
 
     private String DeployFile => DatabaseFilePath.NormalizeSlash();
@@ -136,10 +140,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
          * rows that are already there - a document on a code the set does not carry yet would
          * fail the deploy instead of being corrected by it.
          */
-        allScript.AppendLine(CreateSetValuesScript(tables));
-        allScript.AppendLine(CreateAutonumsScript(tables));
-        allScript.AppendLine(CreateSeedScript(tables));
-        allScript.AppendLine(CreateOperationsScript(tables));
+        allScript.AppendLine(CreateRowsScript(tables));
         allScript.AppendLine(CreateAutonumProcedureScript(tables));
         allScript.AppendLine(SystemUserScript());
         allScript.AppendLine(rolesScript);
@@ -237,8 +238,6 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
 
     internal static String CreateRolesScript(IReadOnlyList<AppRole>? roles)
     {
-        static String Str(String? val) =>
-            val == null ? "null" : $"N'{val.Replace("'", "''")}'";
 
         if (roles == null)
             return String.Empty;
@@ -283,7 +282,6 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
      */
     internal static String CreateGrantsScript(IEnumerable<(String Endpoint, EndpointGrant Grant)> grants)
     {
-        static String Str(String val) => $"N'{val.Replace("'", "''")}'";
         static String Bit(EndpointGrant grant, PermissionFlag flag) => grant.Flags.HasFlag(flag) ? "1" : "0";
 
         // the hash is taken from the text, so the order must not depend on how the files are enumerated
@@ -435,7 +433,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
             // no master: the link runs the other way, from the owner's Folder (CreateForeignKeys)
             if (table.HasFolders)
                 yield return (TableMetadataDefaults.CreateFoldersTable(table), null);
-            if (table.Kind == EndpointKind.Autonum)
+            if (table.Kind == TableKind.Autonum)
                 yield return (TableMetadataDefaults.CreateAutonumValuesTable(table), table);
             foreach (var d in table.Details.Values)
                 yield return (d, table);
@@ -456,291 +454,100 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         return strBuilder.ToString();
     }
 
-    /* The rows of every declared set. Not part of the metadata seed even though it is declaration:
-     * the seed runs first, before the tables exist, and it answers 'what is the schema'. What makes
-     * a changed list of values reach the database at all is the fingerprint the seed carries for the
-     * table (TableMetadata.Xtra) - without it the hash would match and this script would never run.
+    /* The rows a file declares with its table (TableMetadata.Rows) - a set's values, the numberings,
+     * a chart's seed, the operation codes - merged by key, one statement per table. Not part of the
+     * metadata seed even though it is declaration: the seed runs first, before the tables exist, and
+     * it answers 'what is the schema'. What makes a changed row reach the database at all is the
+     * fingerprint the seed carries for the table (TableMetadata.Xtra) - without it the hash would
+     * match and this script would never run.
      *
-     * A value that disappears from the file is WITHDRAWN, not erased: records already point at it,
-     * and 'no longer choosable' is exactly what Void says. So dropping a value from the file and
-     * writing 'void': true mean the same thing on the database side. Deleting would fail on the
-     * foreign key wherever the value is used, and lose the name of the code wherever it is not.
+     * ONE writer for every kind, and the arms are read off the BASELINE, never off the kind:
+     * - a row of the file writes every column the deploy may write - not a stamp, not rv, not a
+     *   computed one. The baseline's as the row names them or their empty (EmptyLiteral), IsSystem
+     *   as 1: the row comes from the file and is written by the deploy alone. The author's only where
+     *   the row names them, each travelling with a '$'-bit saying so - an author column the file did
+     *   not speak about is left as it is;
+     * - a row that LEFT the file is withdrawn, never erased: records point at it, deleting would fail
+     *   on the foreign key wherever it is used and lose the name of the code wherever it is not. Void
+     *   where the baseline has one ('no longer choosable' is exactly what Void says - dropping a value
+     *   and writing 'void': true mean the same thing); handed to the user where it has IsSystem too
+     *   (a chart's account stays for the postings holding it, closed for choosing; put back, the same
+     *   merge restores it); kept where it has neither - a numbering's counters outlive it and the
+     *   documents carry the numbers it issued, so that registry only grows;
+     * - a row with IsSystem = 0 is the user's and the withdrawal never touches it.
+     * Emitted for a declared seed file even when it is empty: emptying the file is the last arm for
+     * every row. A set always has rows - its 'All' row is the platform's (SetRows).
      *
-     * The 'All' row is added here and never declared: its key is the empty string, it means 'do not
-     * restrict', and that is a state of a filter rather than a value a record can hold.
-     *
-     * The column list is the TABLE's, not a list written here: a set of states carries two columns
-     * an enum does not, and a merge spelled out by hand would write the rows and leave those two
-     * null - silently, since they are nullable. Every column is answered for by name, and a column
-     * with no answer throws: the baseline of a set and this statement are one thing said twice, and
-     * the second saying must fail loudly rather than fall through to a default.
+     * The column list is the TABLE's, not a list written here: a set of states carries two columns an
+     * enum does not, and a merge spelled out by hand would write the rows and leave those two null -
+     * silently, since they are nullable.
      */
     // internal, not private: the script IS the artifact (see the header), and nothing else can read it
-    internal static String CreateSetValuesScript(IEnumerable<TableMetadata> tables)
+    internal static String CreateRowsScript(IEnumerable<TableMetadata> tables)
     {
-        var sets = tables.Where(t => t.IsSet && t.Values.Count > 0).ToList();
-        if (sets.Count == 0)
-            return String.Empty;
-
         var sb = new StringBuilder();
-        sb.AppendLine("-- SET VALUES");
-        foreach (var e in sets)
+        foreach (var t in tables.Where(t => t.Rows.Count > 0 || t.Seed != null))
         {
-            var columns = e.AllColumns().ToList();
+            static Boolean Writable(TableColumn c) => !c.IsStamp && !c.HasSqlAs && c.Type != ColumnType.RowVersion;
+            var baseline = t.DefaultColumns.Where(Writable).ToList();
+            var authored = t.Columns.Where(c => Writable(c) && t.Rows.Any(r => r.Values.ContainsKey(c.Name))).ToList();
+            var hasVoid = baseline.Any(c => c.Type == ColumnType.Void);
+            var hasSystem = baseline.Any(c => c.Type == ColumnType.IsSystem);
 
-            /* What one column of one value holds. The 'All' row is the same walk with no value:
-             * its name is the set's own key, its order puts it first, and everything else is null -
-             * a role least of all, because it is not a state.
-             */
-            String Cell(TableColumn column, SetValueMetadata? value, Int32 order)
-            {
-                var text = column.Name switch
-                {
-                    Constants.FieldNames.Id => value?.Id ?? String.Empty,
-                    Constants.FieldNames.Name => value == null
-                        ? $"@[{e.Model}.All]"
-                        : value.Name ?? $"@[{e.Model}.{value.Id}]",
-                    Constants.FieldNames.Memo => value?.Memo,
-                    Constants.FieldNames.Order => order.ToString(),
-                    Constants.FieldNames.Void => value != null && value.Void ? "1" : "0",
-                    /* The 'All' row is drawn by the same picker as the rest, so it needs a colour
-                     * of its own: with none it renders as nothing at all, and an empty badge reads
-                     * as a control that failed rather than as 'no filter'. White is the platform's
-                     * answer and comes from the vocabulary the load checks against, so the row it
-                     * writes is a row an author could have written. A declared value with no colour
-                     * keeps none - that one is a choice, and it draws as a plain label.
-                     */
-                    Constants.FieldNames.Color => value == null
-                        ? nameof(TagLabelStyle.White).ToLowerInvariant()
-                        : value.Color,
-                    Constants.FieldNames.Role => value?.Role?.ToString(),
-                    _ => throw new InvalidOperationException(
-                        $"{e.Path}: nothing to write into '{column.Name}' - a column of a set that a value does not answer for")
-                };
-                return text == null ? "null" : column.SqlLiteral(text);
-            }
+            String Value(SeedRow row, TableColumn c) =>
+                c.IsKey ? c.SqlLiteral(row.Id)
+                : c.Type == ColumnType.IsSystem ? "1"
+                : row.Values.GetValueOrDefault(c.Name) is String v ? c.SqlLiteral(v) : c.EmptyLiteral();
 
-            String Row(SetValueMetadata? value, Int32 order) =>
-                $"\t({String.Join(", ", columns.Select(c => Cell(c, value, order)))})";
-
-            var rows = new List<String> { Row(null, -1) };
-            rows.AddRange(e.Values.Select((v, ix) => Row(v, ix)));
-
-            var key = e.KeyColumn.Name;
-            var names = String.Join(", ", columns.Select(c => $"[{c.Name}]"));
-            var sources = String.Join(", ", columns.Select(c => $"s.[{c.Name}]"));
-            // the continuation lines carry their own indent: an interpolation is not re-indented
-            var updates = String.Join($",{Environment.NewLine}        ",
-                columns.Where(c => !c.IsKey).Select(c => $"t.[{c.Name}] = s.[{c.Name}]"));
-
-            sb.AppendLine($"""
-            {CliDatabaseCreator.SQL_DIVIDER}
-            begin
-                set nocount on;
-                declare @{e.Model} table({String.Join(", ", columns.Select(c => $"[{c.Name}] {c.SqlDataType()}"))});
-
-                insert into @{e.Model}({names}) values
-            {String.Join($",{Environment.NewLine}", rows)};
-
-                merge {e.SqlTableName} as t
-                using @{e.Model} as s
-                on t.[{key}] = s.[{key}]
-                when matched then update set
-                    {updates}
-                when not matched then insert ({names}) values
-                    ({sources})
-                when not matched by source then update set
-                    t.[{Constants.FieldNames.Void}] = 1;
-            end
-            go
-            """);
-        }
-        return sb.ToString();
-    }
-
-    /* The declared numberings, merged by key. Neither arm the set values script has for a row that left
-     * the file: nothing withdraws a numbering (no 'void' - nobody picks one at run time) and
-     * nothing deletes it, because its counters outlive it and documents carry the numbers it
-     * issued. The price is a registry that only grows; the row is two hundred bytes and the
-     * alternative loses the meaning of numbers already printed.
-     */
-    private static String CreateAutonumsScript(IEnumerable<TableMetadata> tables)
-    {
-        static String Str(String? val) =>
-            val == null ? "null" : $"N'{val.Replace("'", "''")}'";
-
-        var registries = tables.Where(t => t.Kind == EndpointKind.Autonum && t.Autonums.Count > 0).ToList();
-        if (registries.Count == 0)
-            return String.Empty;
-
-        var sb = new StringBuilder();
-        sb.AppendLine("-- AUTONUMS");
-        foreach (var reg in registries)
-        {
-            var rows = reg.Autonums.Select(a =>
-                $"\t({Str(a.Id)}, {Str(a.Name ?? $"@[{reg.Model}.{a.Id}]")}, {Str(a.Pattern)}, {Str(a.Period.ToString())})");
-
-            sb.AppendLine($"""
-            {CliDatabaseCreator.SQL_DIVIDER}
-            begin
-                set nocount on;
-                declare @{reg.Model} table([Id] {reg.KeyColumn.SqlDataType()}, [Name] nvarchar(255),
-                    [Pattern] nvarchar(255), [Period] nvarchar(16));
-
-                insert into @{reg.Model}([Id], [Name], [Pattern], [Period]) values
-            {String.Join($",{Environment.NewLine}", rows)};
-
-                merge {reg.SqlTableName} as t
-                using @{reg.Model} as s
-                on t.[Id] = s.[Id]
-                when matched then update set
-                    t.[Name] = s.[Name],
-                    t.[Pattern] = s.[Pattern],
-                    t.[Period] = s.[Period]
-                when not matched then insert ([Id], [Name], [Pattern], [Period]) values
-                    (s.[Id], s.[Name], s.[Pattern], s.[Period]);
-            end
-            go
-            """);
-        }
-        return sb.ToString();
-    }
-
-    /* The rows of a chart of accounts, merged from its seed file. A dumb merge, and every arm of it
-     * is a rule of the chart:
-     * - a row of the file is the configuration: IsSystem = 1, Void = 0, the columns the file names;
-     * - a column a row does not name is left as it is - an author field is written only where the
-     *   row speaks about it, so each one travels with a '$'-bit saying whether it was named;
-     * - a row of the file that has left it keeps its row (the postings hold it by FK) and becomes
-     *   the user's: IsSystem = 0, closed for choosing. Void = 0 would leave an account the code gave
-     *   up silently available. Put back into the file, the same merge restores it.
-     * A row with IsSystem = 0 is the user's and the merge never touches it.
-     *
-     * Emitted for a chart with no rows as well: emptying the file is the last arm for every row.
-     */
-    internal static String CreateSeedScript(IEnumerable<TableMetadata> tables)
-    {
-        static String Str(String? val) =>
-            val == null ? "null" : $"N'{val.Replace("'", "''")}'";
-
-        var charts = tables.Where(t => t.Kind == EndpointKind.AccPlan).ToList();
-        if (charts.Count == 0)
-            return String.Empty;
-
-        String[] baseline = [Constants.FieldNames.Id, Constants.FieldNames.Name, Constants.FieldNames.Parent,
-            Constants.FieldNames.AccountType, Constants.FieldNames.NormalBalance, Constants.FieldNames.SplitBy];
-
-        var sb = new StringBuilder();
-        sb.AppendLine("-- SEED");
-        foreach (var chart in charts)
-        {
-            var columns = chart.AllColumns().ToDictionary(c => c.Name);
-            // in declaration order, only those some row names
-            var authored = chart.Columns
-                .Where(c => chart.SeedRows.Any(r => r.Values.ContainsKey(c.Name)))
-                .ToList();
-
-            var declared = baseline.Select(n => $"[{n}] {columns[n].SqlDataType()}")
+            var declared = baseline.Select(c => $"[{c.Name}] {c.SqlDataType()}")
                 .Concat(authored.Select(c => $"[{c.Name}] {c.SqlDataType()}, [${c.Name}] bit"));
-
-            /* The key is outside the row's values, as it is outside a row of the file. A column the row
-             * does not name gets its empty: the update arm skips it by the '$'-bit, but the insert arm
-             * writes it, and a Boolean or an Amount is NOT NULL (TableColumn.HasZero).
-             */
-            String Value(SeedRow row, String name) =>
-                name == Constants.FieldNames.Id ? Str(row.Id)
-                : row.Values.GetValueOrDefault(name) is String v ? columns[name].SqlLiteral(v) : columns[name].EmptyLiteral();
-
-            var rows = chart.SeedRows.Select(r => $"\t({String.Join(", ",
-                baseline.Select(n => Value(r, n))
-                    .Concat(authored.SelectMany(c => new[] { Value(r, c.Name), r.Values.ContainsKey(c.Name) ? "1" : "0" })))})");
-
-            var names = baseline.Select(n => $"[{n}]")
+            var names = baseline.Select(c => $"[{c.Name}]")
                 .Concat(authored.SelectMany(c => new[] { $"[{c.Name}]", $"[${c.Name}]" }));
+            var rows = t.Rows.Select(r => $"\t({String.Join(", ",
+                baseline.Select(c => Value(r, c))
+                    .Concat(authored.SelectMany(c => new[] { Value(r, c), r.Values.ContainsKey(c.Name) ? "1" : "0" })))})");
+            var updated = baseline.Where(c => !c.IsKey).Select(c => $"t.[{c.Name}] = s.[{c.Name}]")
+                .Concat(authored.Select(c => $"t.[{c.Name}] = case when s.[${c.Name}] = 1 then s.[{c.Name}] else t.[{c.Name}] end"));
+            var inserted = baseline.Concat(authored).Select(c => $"[{c.Name}]");
+            var sources = baseline.Concat(authored).Select(c => $"s.[{c.Name}]");
 
-            var insert = chart.SeedRows.Count == 0 ? String.Empty : $"""
-                insert into @{chart.Model}({String.Join(", ", names)}) values
+            var insert = t.Rows.Count == 0 ? String.Empty : $"""
+                insert into @{t.Model}({String.Join(", ", names)}) values
             {String.Join($",{Environment.NewLine}", rows)};
 
             """;
+            var left = hasVoid && hasSystem ? $"""
 
-            var updated = baseline.Where(n => n != Constants.FieldNames.Id).Select(n => $"t.[{n}] = s.[{n}]")
-                .Concat(authored.Select(c => $"t.[{c.Name}] = case when s.[${c.Name}] = 1 then s.[{c.Name}] else t.[{c.Name}] end"))
-                .Concat([$"t.[{Constants.FieldNames.IsSystem}] = 1", $"t.[{Constants.FieldNames.Void}] = 0"]);
-            var inserted = baseline.Concat(authored.Select(c => c.Name))
-                .Concat([Constants.FieldNames.IsSystem, Constants.FieldNames.Void]);
-            var insertedValues = baseline.Concat(authored.Select(c => c.Name)).Select(n => $"s.[{n}]")
-                .Concat(["1", "0"]);
-
-            sb.AppendLine($"""
-            {CliDatabaseCreator.SQL_DIVIDER}
-            begin
-                set nocount on;
-                declare @{chart.Model} table({String.Join(", ", declared)});
-
-            {insert}    merge {chart.SqlTableName} as t
-                using @{chart.Model} as s
-                on t.[Id] = s.[Id]
-                when matched then update set
-                    {String.Join($",{Environment.NewLine}        ", updated)}
-                when not matched then insert ({String.Join(", ", inserted.Select(n => $"[{n}]"))}) values
-                    ({String.Join(", ", insertedValues)})
                 when not matched by source and t.[{Constants.FieldNames.IsSystem}] = 1 then update set
                     t.[{Constants.FieldNames.IsSystem}] = 0,
-                    t.[{Constants.FieldNames.Void}] = 1;
+                    t.[{Constants.FieldNames.Void}] = 1
+            """
+                : hasVoid ? $"""
+
+                when not matched by source then update set
+                    t.[{Constants.FieldNames.Void}] = 1
+            """
+                : String.Empty;
+
+            sb.AppendLine($"""
+            -- ROWS {t.SqlTableName}
+            {CliDatabaseCreator.SQL_DIVIDER}
+            begin
+                set nocount on;
+                declare @{t.Model} table({String.Join(", ", declared)});
+
+            {insert}    merge {t.SqlTableName} as t
+                using @{t.Model} as s
+                on t.[{t.KeyColumn.Name}] = s.[{t.KeyColumn.Name}]
+                when matched then update set
+                    {String.Join($",{Environment.NewLine}        ", updated)}
+                when not matched then insert ({String.Join(", ", inserted)}) values
+                    ({String.Join(", ", sources)}){left};
             end
             go
             """);
         }
         return sb.ToString();
-    }
-
-    /* The operations of the documents - the rows the documents' Operation column points at, so
-     * before the foreign keys. Shaped as the set values merge: an operation dropped from the files
-     * keeps its row (documents and journals carry its code) and becomes void, put back it is restored.
-     * The name is the localization key, as a set's is; the document, its path and the order are
-     * rewritten on every deploy, since they are the files' and reach the hash through Xtra.
-     */
-    private static String CreateOperationsScript(IEnumerable<TableMetadata> tables)
-    {
-        static String Str(String? val) =>
-            val == null ? "null" : $"N'{val.Replace("'", "''")}'";
-
-        var registry = tables.FirstOrDefault(t => t.Operations.Count > 0);
-        if (registry == null)
-            return String.Empty;
-
-        var rows = registry.Operations.Select(o =>
-            $"\t({Str(o.Id)}, {Str($"@[{registry.Model}.{o.Id}]")}, {Str(o.Document)}, {Str(o.Path)}, {o.Order})");
-
-        return $"""
-            -- OPERATIONS
-            {CliDatabaseCreator.SQL_DIVIDER}
-            begin
-                set nocount on;
-                declare @{registry.Model} table([Id] {registry.KeyColumn.SqlDataType()}, [Name] nvarchar(255),
-                    [Document] nvarchar(64), [Path] nvarchar(128), [Order] int);
-
-                insert into @{registry.Model}([Id], [Name], [Document], [Path], [Order]) values
-            {String.Join($",{Environment.NewLine}", rows)};
-
-                merge {registry.SqlTableName} as t
-                using @{registry.Model} as s
-                on t.[Id] = s.[Id]
-                when matched then update set
-                    t.[Name] = s.[Name],
-                    t.[Document] = s.[Document],
-                    t.[Path] = s.[Path],
-                    t.[Order] = s.[Order],
-                    t.[Void] = 0
-                when not matched then insert ([Id], [Name], [Document], [Path], [Order], [Void]) values
-                    (s.[Id], s.[Name], s.[Document], s.[Path], s.[Order], 0)
-                when not matched by source then update set
-                    t.[Void] = 1;
-            end
-            go
-
-            """;
     }
 
     /* The one place a number is issued. A procedure and not inline SQL in every save: the pattern
@@ -759,7 +566,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
      */
     internal static String CreateAutonumProcedureScript(IEnumerable<TableMetadata> tables)
     {
-        var registry = tables.FirstOrDefault(t => t.Kind == EndpointKind.Autonum);
+        var registry = tables.FirstOrDefault(t => t.Kind == TableKind.Autonum);
         if (registry == null)
             return String.Empty;
         var values = TableMetadataDefaults.CreateAutonumValuesTable(registry);
@@ -941,8 +748,6 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         var sqlTables = new List<String>();
         var sqlColumns = new List<String>();
 
-        static String Str(String? val) =>
-            val == null ? "null" : $"N'{val.Replace("'", "''")}'";
         static String Num(Int32? val) =>
             val?.ToString() ?? "null";
 

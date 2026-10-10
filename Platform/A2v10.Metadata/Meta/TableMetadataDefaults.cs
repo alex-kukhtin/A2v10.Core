@@ -11,16 +11,18 @@ internal static class TableMetadataDefaults
      * more: the table used to reach SetDefaults through BuildStorage, and a system endpoint never
      * goes that way. 'Path' and 'Label' are what that call leaves behind, and both are read later.
      */
+    // the stem of the registry's names, read without building the table (MetadataExtensions.OperationLabel)
+    public const String OperationModel = "Operation";
+
     public static TableMetadata OperationsTable()
     {
         var table = new TableMetadata()
         {
-            Kind = EndpointKind.Operation,
             Schema = Constants.SchemaNames.Document,
-            Model = "Operation",
+            Model = OperationModel,
             Table = "Operations"
         };
-        table.SetDefaults(Constants.SchemaNames.Operation, String.Empty);
+        table.SetDefaults(TableKind.Operation, Constants.SchemaNames.Operation, String.Empty);
         return table;
     }
 
@@ -42,7 +44,7 @@ internal static class TableMetadataDefaults
     {
         var values = new TableMetadata()
         {
-            Kind = EndpointKind.AutonumValues,
+            Kind = TableKind.AutonumValues,
             Schema = table.Schema,
             Model = $"{table.Model}Value",
             Table = $"{table.Model}$Values",
@@ -63,26 +65,28 @@ internal static class TableMetadataDefaults
      * served by TagEndpointMetadata, which never builds a storage, so nothing would ever ask the
      * registry for it. The table itself is alive - the deploy and SqlBuilderTags take it directly.
      */
+    private const String TagsModel = "Tag";
+    private const String TagsTable_ = "$Tags";
+
     public static TableMetadata TagsTable()
     {
         var table = new TableMetadata()
         {
-            Kind = EndpointKind.Tags,
             Schema = Constants.SchemaNames.Catalog,
-            Model = "Tag",
-            Table = "$Tags"
+            Model = TagsModel,
+            Table = TagsTable_
         };
         // same call its sibling makes: nothing reads Path or Label here yet, and two factories
         // differing without a reason is how the next reader learns the wrong rule
-        table.SetDefaults(Constants.SchemaNames.Tag, String.Empty);
+        table.SetDefaults(TableKind.Tags, Constants.SchemaNames.Tag, String.Empty);
         return table;
     }
 
-    /* The tags catalog as the generated SQL names it, and the type its rows arrive under. Both come
-     * off TagsTable, so a rename of the model or the schema moves every query with them.
+    /* The tags catalog as the generated SQL names it, and the type its rows arrive under. Off the
+     * same three literals TagsTable is built from, without building it: every tagged query asked.
      */
-    public static String TagsTableName() => TagsTable().SqlTableName;
-    public static String TagsTypeName() => TagsTable().TypeName;
+    public static String TagsTableName() => $"{Constants.SchemaNames.Catalog.ToSqlSchema()}.[{TagsTable_}]";
+    public static String TagsTypeName() => $"T{TagsModel}";
 
     /* The tag entries table by the owner's MODEL alone, for the one caller that has the name and
      * not the table - the tags dialog, which is handed 'For' and nothing else. It can be built
@@ -103,7 +107,7 @@ internal static class TableMetadataDefaults
     {
         var entries = new TableMetadata()
         {
-            Kind = EndpointKind.TagEntries,
+            Kind = TableKind.TagEntries,
             Schema = Constants.SchemaNames.Catalog,
             Model = $"{table.Model}TagEntry",
             Table = $"{table.Model}$TagEntries",

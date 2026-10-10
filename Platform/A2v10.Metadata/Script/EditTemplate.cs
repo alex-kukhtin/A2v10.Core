@@ -13,7 +13,7 @@ internal partial class ScriptBuilder
     {
         return Table.Kind switch
         {
-            EndpointKind.Document => CreateDocumentTemplate(),
+            TableKind.Document => CreateDocumentTemplate(),
             _ => CreateGenericEditTemplate()
         };
     }
@@ -71,6 +71,26 @@ internal partial class ScriptBuilder
                 yield return property(rs.Type, key, p);
     }
 
+    /* 'required' of one scope, field by field. Unconditional, it is the platform's shorthand; only
+     * under conditions, it is one rule whose 'when' holds if any of them does - 'required' unions, so
+     * two conditions on one field are one requirement, and two rules would report it twice. The test
+     * is the author's text with 'this' as the record, which is how the platform calls 'when'.
+     */
+    private Dictionary<String, String> RequiredRules(RuleMetadata rules, String type)
+    {
+        var result = rules.Required.ToDictionary(f => f, _ => "`@[Error.Required]`");
+        var conditional = rules.When
+            .SelectMany(w => w.Required.Select(f => (Field: f, w.Test)))
+            .Where(x => !result.ContainsKey(x.Field))
+            .GroupBy(x => x.Field);
+        foreach (var g in conditional)
+        {
+            var test = g.Count() == 1 ? g.First().Test : String.Join(" || ", g.Select(x => $"({x.Test})"));
+            result[g.Key] = $$$"""{valid: 'notBlank', msg: `@[Error.Required]`, when({{{Self(type)}}}) { return {{{test}}}; }}""";
+        }
+        return result;
+    }
+
     private Task<String> CreateGenericEditTemplate()
     {
         IEnumerable<String> properties()
@@ -91,24 +111,24 @@ internal partial class ScriptBuilder
 
         IEnumerable<String> validators()
         {
-            var required = Endpoint.Declaration.Rules.Required.ToHashSet();
-            foreach (var col in Table.AllColumns(c => c.Unique || required.Contains(c.Name)))
+            var required = RequiredRules(Endpoint.Declaration.Rules, Table.TypeName);
+            foreach (var col in Table.AllColumns(c => c.Unique || required.ContainsKey(c.Name)))
             {
-                if (col.Unique && required.Contains(col.Name))
+                if (col.Unique && required.TryGetValue(col.Name, out var both))
                     yield return $$"""
                 '{{Table.Model}}.{{col.Name}}': [
-                    `@[Error.Required]`,
+                    {{both}},
                     {valid: {{col.Name.ToLowerInvariant()}}Duplicate, async: true, msg: `@[Error.Duplicate]`}]
                 """;
-                else if (required.Contains(col.Name))
-                    yield return $"'{Table.Model}.{col.Name}': `@[Error.Required]`";
+                else if (required.TryGetValue(col.Name, out var rule))
+                    yield return $"'{Table.Model}.{col.Name}': {rule}";
                 else if (col.Unique)
                     yield return $$"""'{{Table.Model}}.{{col.Name}}': {valid: {{col.Name.ToLowerInvariant()}}Duplicate, async: true, msg: `@[Error.{{Table.CollectionName}}.Duplicate.{{col.Name}}]`}""";
             }
 
             foreach (var rs in Endpoint.Declaration.Details.Values.SelectMany(d => d.RowSets))
-                foreach (var f in rs.Rules.Required)
-                    yield return $"'{Table.Model}.{rs.Collection}[].{f}': `@[Error.Required]`";
+                foreach (var (f, rule) in RequiredRules(rs.Rules, rs.Type))
+                    yield return $"'{Table.Model}.{rs.Collection}[].{f}': {rule}";
         }
 
         IEnumerable<String> functions()
@@ -170,16 +190,6 @@ internal partial class ScriptBuilder
 
     private Task<String> CreateDocumentTemplate()
     {
-        IEnumerable<String> defaults()
-        {
-            if (Endpoint.Kind == EndpointKind.Operation)
-            {
-                var opColumn = Table.Columns.FirstOrDefault(c => c.Type == ColumnType.Operation);
-                if (opColumn != null)
-                    yield return $$"""'{{Table.Model}}.{{opColumn.Name}}'() { return { Id: '{{Endpoint.Name}}', Name: '{{Endpoint.Storage.Model}}'};}""";
-            }
-        }
-
         IEnumerable<String> properties()
         {
             foreach (var state in TabStateProperties())
@@ -197,13 +207,13 @@ internal partial class ScriptBuilder
 
         IEnumerable<String> validators()
         {
-            foreach (var f in Endpoint.Declaration.Rules.Required)
-                yield return $"'{Table.Model}.{f}': `@[Error.Required]`";
+            foreach (var (f, rule) in RequiredRules(Endpoint.Declaration.Rules, Table.TypeName))
+                yield return $"'{Table.Model}.{f}': {rule}";
 
             // required lands on the PATH, and each row set has its own
             foreach (var rs in Endpoint.Declaration.Details.Values.SelectMany(d => d.RowSets))
-                foreach (var f in rs.Rules.Required)
-                    yield return $"'{Table.Model}.{rs.Collection}[].{f}': `@[Error.Required]`";
+                foreach (var (f, rule) in RequiredRules(rs.Rules, rs.Type))
+                    yield return $"'{Table.Model}.{rs.Collection}[].{f}': {rule}";
         }
 
         IEnumerable<String> events()
@@ -223,14 +233,15 @@ internal partial class ScriptBuilder
                 }
         }
 
+        // a kind is its own type (EditTSMap), so what is imported is the row sets' and not the collections'
         IEnumerable<String> types()
         {
             yield return "TRoot";
             yield return Table.TypeName;
-            foreach (var d in Table.Details.Select(x => x.Value))
+            foreach (var rs in Endpoint.Declaration.Details.Values.SelectMany(d => d.RowSets))
             {
-                yield return d.TypeName;
-                yield return $"{d.TypeName}Array";
+                yield return rs.Type;
+                yield return $"{rs.Type}Array";
             }
         }
 
@@ -244,9 +255,6 @@ internal partial class ScriptBuilder
             },
             properties: {
                 {{String.Join(jsDivider, properties())}}
-            },
-            defaults: {
-                {{String.Join(jsDivider, defaults())}}
             },
             validators: {
                 {{String.Join(jsDivider, validators())}}

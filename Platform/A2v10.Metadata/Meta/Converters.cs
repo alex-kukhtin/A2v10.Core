@@ -15,7 +15,7 @@ public class CommandBarItemConverter : JsonConverter<CommandBarItem>
         {
             CommandBarItemKind.Command => value.Command!.Value.ToString(),
             CommandBarItemKind.Separator => SepToken,
-            _ => throw new JsonSerializationException($"Unknown ToolbarItemKind: {value.Kind}")
+            _ => throw new JsonSerializationException($"Unknown CommandBarItemKind: {value.Kind}")
         };
         writer.WriteValue(token);
     }
@@ -25,7 +25,7 @@ public class CommandBarItemConverter : JsonConverter<CommandBarItem>
     {
         if (reader.TokenType != JsonToken.String)
             throw new JsonSerializationException(
-                $"Expected string for ToolbarItem, got {reader.TokenType}");
+                $"A command bar item is a string - a command name or '{SepToken}' - got {reader.TokenType}");
 
         String token = (String)reader.Value!;
 

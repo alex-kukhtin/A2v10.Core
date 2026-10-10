@@ -12,20 +12,20 @@ internal static class TableDefaultColumns
     {
         return table.Kind switch
         {
-            EndpointKind.Catalog => CatalogDefaultColumns(table),
-            EndpointKind.Document => DocumentDefaultColumns(table),
-            EndpointKind.Journal => JournalDefaultColumns(table),
-            EndpointKind.Details => DetailsDefaultColumns(table),
-            EndpointKind.Operation => OperationDefaultColumns(table),
-            EndpointKind.Folders => FolderDefaultColumns(table),
-            EndpointKind.Enum => EnumDefaultColumns(table),
-            EndpointKind.State => StateDefaultColumns(table),
-            EndpointKind.Autonum => AutonumDefaultColumns(table),
-            EndpointKind.AutonumValues => AutonumValuesDefaultColumns(table),
-            EndpointKind.Tags => TagsDefaultColumns(table),
-            EndpointKind.TagEntries => TagsEntriesDefaultColumns(table),
-            EndpointKind.AccPlan => AccPlanDefaultColumns(table),
-            EndpointKind.Ledger => LedgerDefaultColumns(table),
+            TableKind.Catalog => CatalogDefaultColumns(table),
+            TableKind.Document => DocumentDefaultColumns(table),
+            TableKind.Journal => JournalDefaultColumns(table),
+            TableKind.Details => DetailsDefaultColumns(table),
+            TableKind.Operation => OperationDefaultColumns(table),
+            TableKind.Folders => FolderDefaultColumns(table),
+            TableKind.Enum => EnumDefaultColumns(table),
+            TableKind.State => StateDefaultColumns(table),
+            TableKind.Autonum => AutonumDefaultColumns(table),
+            TableKind.AutonumValues => AutonumValuesDefaultColumns(table),
+            TableKind.Tags => TagsDefaultColumns(table),
+            TableKind.TagEntries => TagsEntriesDefaultColumns(table),
+            TableKind.AccPlan => AccPlanDefaultColumns(table),
+            TableKind.Ledger => LedgerDefaultColumns(table),
             _ => throw new InvalidOperationException($"Default columns not defined for {table.Kind}")
         };
     }
