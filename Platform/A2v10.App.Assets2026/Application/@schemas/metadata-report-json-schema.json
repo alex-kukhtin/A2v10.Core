@@ -1,6 +1,5 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "https://a2v10.com/schemas/metadata-report-json-schema.json",
     "title": "A2v10 metadata.json (report)",
     "description": "A report: a window into a surface, no data of its own. Declares the SUBSET that may be asked, not a query - the client picks one inside it at runtime. surface >= subset >= query: the first is checked at build, the second at runtime. Not here: SQL, presentation, captions, the user's saved choice. Irregular report -> eject to a handler. Enum values are written as listed, in camelCase.",
     "type": "object",

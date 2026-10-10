@@ -38,6 +38,16 @@
 		</PackageReference>
 	</ItemGroup>
 
+	<!-- What A2v10.App.Assets2026.targets does for an application: the validator reads TestApp/@schemas,
+	     so the fixture app gets the schemas as written today. A copy, never edited. -->
+	<ItemGroup>
+		<TestAppSchemas Include="..\..\Platform\A2v10.App.Assets2026\Application\@schemas\*" />
+	</ItemGroup>
+
+	<Target Name="CopyTestAppSchemas" BeforeTargets="Build">
+		<Copy SourceFiles="@(TestAppSchemas)" DestinationFolder="$(ProjectDir)TestApp\@schemas" SkipUnchangedFiles="true" />
+	</Target>
+
 	<ItemGroup>
 		<ProjectReference Include="..\..\Platform\A2v10.Metadata\A2v10.Metadata.csproj" />
 		<ProjectReference Include="..\..\Platform\A2v10.Platform.Web\A2v10.Platform.Web.csproj" />

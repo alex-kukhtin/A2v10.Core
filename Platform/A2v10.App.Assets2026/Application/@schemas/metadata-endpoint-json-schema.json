@@ -112,6 +112,10 @@
                 "precision": { "type": "integer" },
                 "scale": { "type": "integer" },
                 "unique": { "type": "boolean" },
+                "sqlAs": {
+                    "type": "string",
+                    "description": "T-SQL over the columns of the same row: the column is computed by the database, 'as cast(<expr> as <type>)'. Read like any column; nothing writes it, and naming it as a target - a posting, an initial value, a birth - is refused at load. Not a form property: that is 'properties', JavaScript over a column the save writes."
+                },
                 "origin": { "$ref": "#/definitions/origin" }
             }
         },
@@ -282,10 +286,21 @@
         },
 
         "post": {
-            "oneOf": [
-                { "$ref": "#/definitions/postMapped" },
-                { "$ref": "#/definitions/postLedger" },
-                { "$ref": "#/definitions/postSql" }
+            "$comment": "Three shapes told apart by one key: 'ledger', 'sql', else a journal. 'if'/'then' and not 'oneOf': a broken entry is reported against its own shape, not against all three.",
+            "type": "object",
+            "allOf": [
+                {
+                    "if": { "required": [ "ledger" ] },
+                    "then": { "$ref": "#/definitions/postLedger" }
+                },
+                {
+                    "if": { "required": [ "sql" ] },
+                    "then": { "$ref": "#/definitions/postSql" }
+                },
+                {
+                    "if": { "not": { "anyOf": [ { "required": [ "ledger" ] }, { "required": [ "sql" ] } ] } },
+                    "then": { "$ref": "#/definitions/postMapped" }
+                }
             ]
         },
 

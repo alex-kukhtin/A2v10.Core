@@ -21,8 +21,8 @@ public class EndpointValidateTests
             TestHost.GetService<IAppCodeProvider>(),
             TestHost.Services).ValidateAsync(endpoint);
 
-    static Dictionary<String, String> Checks(String declaration, String screen, String print) =>
-        new() { ["declaration"] = declaration, ["screen"] = screen, ["print"] = print };
+    static Dictionary<String, String> Checks(String declaration, String schema, String screen, String print) =>
+        new() { ["declaration"] = declaration, ["schema"] = schema, ["screen"] = screen, ["print"] = print };
 
     // a document with two blanks: all three stages have something to build, none of them vacuous
     [Fact]
@@ -31,7 +31,7 @@ public class EndpointValidateTests
         var result = await ValidateAsync("/document/waybillin");
 
         Assert.Null(result.Error);
-        Assert.Equal(Checks("passed", "passed", "passed"), result.Checks);
+        Assert.Equal(Checks("passed", "passed", "passed", "passed"), result.Checks);
     }
 
     /* Two keys and not three: which stages exist follows the endpoint's TYPE, and a report has no
@@ -47,6 +47,7 @@ public class EndpointValidateTests
         Assert.Equal(new Dictionary<String, String>()
         {
             ["declaration"] = "passed",
+            ["schema"] = "passed",
             ["screen"] = "passed"
         }, result.Checks);
     }
@@ -63,6 +64,7 @@ public class EndpointValidateTests
         Assert.Equal(new Dictionary<String, String>()
         {
             ["declaration"] = "passed",
+            ["schema"] = "passed",
             ["screen"] = "failed"
         }, result.Checks);
         Assert.False(String.IsNullOrEmpty(result.Error));
@@ -70,15 +72,15 @@ public class EndpointValidateTests
 
     /* 'unknown' and not a missing key: a stage that was requested and never reached has to read on
      * the spot, or its absence is read as consent. The fixture is an 'edit' form with no 'is' - the
-     * load has no opinion on it, the screen it builds throws, and 'print' never runs.
+     * load has no opinion on it, the schema refuses it, and 'screen' and 'print' never run.
      */
     [Fact]
     public async Task A_stage_that_throws_stops_the_chain_and_leaves_the_rest_unknown()
     {
         var result = await ValidateAsync("/catalog/noformkind");
 
-        Assert.Equal(Checks("passed", "failed", "unknown"), result.Checks);
-        Assert.False(String.IsNullOrEmpty(result.Error));
+        Assert.Equal(Checks("passed", "failed", "unknown", "unknown"), result.Checks);
+        Assert.Contains("forms.edit: 'is' is required here", result.Error);
     }
 
     /* One key, and the rest are not 'unknown' but ABSENT: the load is what says which stages an

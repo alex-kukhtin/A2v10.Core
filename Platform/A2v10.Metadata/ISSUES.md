@@ -99,28 +99,13 @@ select s.name, s.current_value from sys.sequences s where s.name like 'SQ[_]%';
 
 ## 3. Долги дизайна
 
-### 3.5. Неизвестный ключ в `metadata.json` пропадает молча
-
-`JsonSettings.cs:51` — `MissingMemberHandling` не задан, то есть `Ignore`.
-
-Опечатка в имени ключа не даёт ни ошибки, ни предупреждения: узел просто приезжает пустым.
-Живой случай — `"body"` вместо `"elements"` внутри `formElement` (`body` есть только у корня
-формы): таскпад разобрался, отрендерился пустым, сообщения нет ни одного.
-
-В схеме у `formElement` стоит `additionalProperties: false`, так что редактор с поддержкой
-схемы такое показывает. Загрузчик — нет, а он единственный, кто работает и в CI, и в рантайме.
-
-Закрывается одной строкой `MissingMemberHandling = Error`, но она касается всей
-десериализации метаданных — `TableMetadata`, `DeclarationMetadata`, `ReportMetadata`,
-`AppMetadata`. Решение не принято.
-
 ### 3.6. Дефолтную форму неоткуда взять JSON-ом — первая ступень не построена
 
 Вторая ступень сделана — `a2 meta materialize` (`CLAUDE.md`, «Two files in one folder»). Первая — форма
 как JSON под `forms` (`meta form <endpoint> --name index|edit|browse`, сосед `db table-columns`) — нет:
 `EndpointGenerator.GenerateFormAsync` на этом месте бросает `"What should be done here?"`. Без неё
 «форма целиком или никак» (`CLAUDE.md`, «Forms») на практике значит «набирай с нуля», а формат такой,
-что три опечатки подряд — норма (см. 3.5).
+что три опечатки подряд — норма (ловит их этап `schema` у `meta validate`, но после набора).
 
 Дерево уже есть и правильное: `DefaultFormBuilder.Create*Form(table)` выдаёт ровно то, что кладётся в
 файл (`Columns`/`RowSet`/`TabState` — `[JsonIgnore]`). Эжектить надо **до** `Bake`. Мешает:
@@ -475,7 +460,7 @@ journal it is about to write»). Запрос на дату читает рег�
 ### 3.16. Селектор ищет по одной колонке
 
 Найдено 2026-09-20: на стенде в `document/metadata.json` на `Rows` был написан ключ, которого нет в
-слое, — `"lookup": { "Item": [ "Article", "Barcode" ] }`; загрузчик выбросил его молча (3.5). Просит он
+слое, — `"lookup": { "Item": [ "Article", "Barcode" ] }`; загрузчик выбросил его молча. Просит он
 одного: товар в строке документа искать по артикулу **и** штрихкоду. С 2026-10-03 fetch ищет и
 сортирует по колонке выбора (`displayAs`; `CLAUDE.md`, «Shown and chosen»), и она же показывается, — но
 колонка одна.
@@ -648,7 +633,7 @@ not null` без default — батч упадёт. Проходит тольк�
   `HasForms` возвращает пустой словарь: `forms.index` в enum-е грузится и исчезает. Для
   `presentation` на журнале тот же случай отказан с сообщением (`TableMetadata.SetDefaults`).
 - **`visible` и `when`** не читает ни один генератор и не проверяет `CheckNames`; опечатка в
-  имени поля внутри них — тот же класс, что 3.5.
+  имени поля внутри них молчит и под `meta validate`: это значение, а схема видит ключи.
 - **Autonum при пустой дате.** `SqlBuilderPlain.cs:417` берёт дату документа; в процедуре
   `replace(@pattern, N'{yyyy}', null)` даёт `NULL`, номер не записывается молча; второй такой
   документ ловит нарушение уникального индекса по строке `Year = null`.

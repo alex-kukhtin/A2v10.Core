@@ -183,7 +183,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
      * the cache is keyed by it, messages name it - and only what the folder IS is asked here: every
      * decision the loader takes by the first segment takes it by this answer instead.
      */
-    private async Task<String> KindFolderAsync(String folder) =>
+    internal async Task<String> KindFolderAsync(String folder) =>
         (await AppJsonAsync()).Folders.KindOf(folder);
 
     // the endpoints open to the model - see Mcp/McpIndex
@@ -199,7 +199,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     /* The address as the author sees it - what goes into a message they have to act on, so
      * always the path they would open, never the internal (schema, table) pair.
      */
-    private static String MetadataFileName(String schema, String table) =>
+    internal static String MetadataFileName(String schema, String table) =>
         Path.Combine(schema, table, "metadata.json").NormalizeSlash();
 
     private async Task<(String Text, String? Hash)> ReadMetadataFileAsync(String schema, String table)

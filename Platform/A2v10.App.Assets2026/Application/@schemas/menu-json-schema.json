@@ -18,12 +18,12 @@
 		"menu": {
 			"type": "array",
 			"items": {
-				"$ref": "#/$defs/menuItem"
+				"$ref": "#/definitions/menuItem"
 			}
 		}
 	},
 
-	"$defs": {
+	"definitions": {
 		"icon": {
 			"type": "string",
 			"enum": [
@@ -58,7 +58,7 @@
 				},
 
 				"icon": {
-					"$ref": "#/$defs/icon"
+					"$ref": "#/definitions/icon"
 				},
 
 				"url": {
@@ -108,7 +108,7 @@
 				"items": {
 					"type": "array",
 					"items": {
-						"$ref": "#/$defs/menuItem"
+						"$ref": "#/definitions/menuItem"
 					}
 				}
 			},

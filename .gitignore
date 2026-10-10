@@ -349,3 +349,5 @@ healthchecksdb
 
 # Local read-only junctions to skill canon repos (c:\Claude\*); read, never tracked here
 /SKILLS/
+# build copy of Assets2026 @schemas for the validator tests (TestsMetadata.csproj)
+/Tests/TestsMetadata/TestApp/@schemas/

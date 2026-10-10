@@ -3,6 +3,8 @@
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 using A2v10.Infrastructure;
@@ -35,6 +37,7 @@ public sealed class EndpointValidator(DatabaseMetadataProvider _metadataProvider
     IAppCodeProvider _codeProvider, IServiceProvider _serviceProvider)
 {
     private const String Declaration = "declaration";
+    private const String Schema = "schema";
     private const String Screen = "screen";
     private const String Print = "print";
 
@@ -75,7 +78,9 @@ public sealed class EndpointValidator(DatabaseMetadataProvider _metadataProvider
             return new EndpointValidation(name, checks, ex.Message);
         }
 
-        var stages = StagesOf(endpoint, platformId);
+        // outside the stages: a schema that cannot be read says nothing about the endpoint
+        var files = await SchemaFilesAsync(endpoint);
+        var stages = StagesOf(endpoint, platformId, files);
         foreach (var (stage, _) in stages)
             checks[stage] = Unknown;
 
@@ -108,17 +113,19 @@ public sealed class EndpointValidator(DatabaseMetadataProvider _metadataProvider
      * Everything after the load is synchronous by construction: nothing a generator builds touches
      * IO, and a stage that did would be a stage this tool cannot own.
      */
-    private (String Stage, Action Run)[] StagesOf(EndpointMetadata endpoint, AppPlatformId platformId) =>
+    private (String Stage, Action Run)[] StagesOf(EndpointMetadata endpoint, AppPlatformId platformId, SchemaFiles? files) =>
         endpoint switch
         {
             NormalEndpointMetadata normal =>
             [
+                (Schema, () => Schemas(files!)),
                 (Screen, () => Screens(normal, platformId)),
                 (Print, () => Prints(normal))
             ],
             // a report prints from the page it renders, so it has no blank of its own to resolve
             ReportEndpointMetadata report =>
             [
+                (Schema, () => Schemas(files!)),
                 (Screen, () => ReportScreen(report, platformId))
             ],
             // a system endpoint: described nowhere, screen and data in code, so the load is all there is
@@ -134,6 +141,73 @@ public sealed class EndpointValidator(DatabaseMetadataProvider _metadataProvider
     {
         var (schema, table) = DatabaseMetadataProvider.ParsePath(endpointPath);
         return _metadataProvider.GetEndpointAsync(null, schema, table);
+    }
+
+    // the files an endpoint writes itself, each with the schema it is read against
+    private sealed record SchemaFiles(JsonSchemaSet Set, IReadOnlyList<(String File, String Schema)> Files);
+
+    private const String OperationSchema = "metadata-operation-json-schema.json";
+
+    /* By the folder's kind, never by '$schema' in the file: the pointer is optional and can be
+     * wrong, and a file cannot say what it is - the same rule the loader keeps. A kind that writes a
+     * metadata.json and is missing here is the tool not knowing it, so it is not a finding.
+     */
+    private static String SchemaOf(String kind) => kind switch
+    {
+        Constants.SchemaNames.Catalog or Constants.SchemaNames.Document or Constants.SchemaNames.Journal
+            => "metadata-endpoint-json-schema.json",
+        Constants.SchemaNames.Report or Constants.SchemaNames.Enum or Constants.SchemaNames.State
+            or Constants.SchemaNames.AccPlan or Constants.SchemaNames.Ledger or Constants.SchemaNames.Autonum
+            => $"metadata-{kind}-json-schema.json",
+        _ => throw new InvalidOperationException($"No schema is known for {kind}/")
+    };
+
+    /* metadata.json and the operation files it lists - what the author wrote for THIS address.
+     * The files it points at (storage, autonum, a state) are checked when they are validated: the
+     * unit stays the endpoint. The list of operations is the loaded one, and the load has already
+     * refused a file the list does not name.
+     *
+     * Schemas come from the application's own @schemas, the copy the editor reads: one format for
+     * both, of the package version the application is built with.
+     */
+    private async Task<SchemaFiles?> SchemaFilesAsync(EndpointMetadata endpoint)
+    {
+        if (endpoint is not (NormalEndpointMetadata or ReportEndpointMetadata))
+            return null;
+        var schema = SchemaOf(await _metadataProvider.KindFolderAsync(endpoint.Schema));
+        List<(String File, String Schema)> files = [(DatabaseMetadataProvider.MetadataFileName(endpoint.Schema, endpoint.Name), schema)];
+        if (endpoint is NormalEndpointMetadata normal)
+            files.AddRange(normal.Declaration.Operations.Select(op =>
+                (Path.Combine(endpoint.Schema, endpoint.Name, $"{op}{DatabaseMetadataProvider.OperationFileSuffix}").NormalizeSlash(),
+                    OperationSchema)));
+        var set = JsonSchemaSet.Load(ReadSchema, [.. files.Select(f => f.Schema).Distinct()]);
+        return new SchemaFiles(set, files);
+    }
+
+    private String? ReadSchema(String file)
+    {
+        using var stream = _codeProvider.FileStreamRO($"@schemas/{file}");
+        if (stream == null)
+            return null;
+        using var sr = new StreamReader(stream);
+        return sr.ReadToEnd();
+    }
+
+    /* The file as written, against every key the format has. The one stage that reads the text
+     * and not the assembled endpoint, because what it catches never reaches the assembly: a key
+     * no type of the loader declares is dropped while the file is read, so the endpoint builds,
+     * renders and passes - without it.
+     */
+    private void Schemas(SchemaFiles files)
+    {
+        foreach (var (file, schema) in files.Files)
+        {
+            using var stream = _codeProvider.FileStreamRO(file)
+                ?? throw new InvalidOperationException($"{file}: not found");
+            using var sr = new StreamReader(stream);
+            if (files.Set.Validate(schema, JsonSchemaSet.Parse(sr.ReadToEnd())) is { } finding)
+                throw new InvalidOperationException(finding.Format(file));
+        }
     }
 
     /* Every screen of the endpoint, built exactly as EndpointMaterializer builds it - the XAML, the
