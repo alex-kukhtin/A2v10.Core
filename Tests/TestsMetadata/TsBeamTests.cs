@@ -53,16 +53,16 @@ public class TsBeamTests
             // browse runs the index template (EndpointMaterializer refuses it by design)
             foreach (var action in new[] { "index", "edit" })
             {
-                Materialization files;
+                Materialization materialized;
                 try
                 {
-                    files = await materializer.MaterializeAsync(folder, action, MaterializeWhat.Template);
+                    materialized = await materializer.MaterializeAsync(folder, action, MaterializeWhat.Template);
                 }
                 catch (Exception ex)
                 {
                     throw new InvalidOperationException($"{folder} {action}: {ex.Message}", ex);
                 }
-                foreach (var f in files.Files)
+                foreach (var f in materialized.Files)
                 {
                     var path = Path.Combine(dir, f.Path);
                     Directory.CreateDirectory(Path.GetDirectoryName(path)!);

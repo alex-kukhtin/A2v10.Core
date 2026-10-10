@@ -433,7 +433,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         var kind = await KindFolderAsync(schema);
         if (!kind.IsFolderKind())
             throw new InvalidOperationException(
-                $"{MetadataFileName(schema, table)}: '{schema}/' is not a kind of endpoint. A first segment is a kind ({String.Join(", ", Enum.GetNames<TableKind>().Take(8).Select(k => k.ToLowerInvariant()))}, report) or an alias of one (app.json 'aliases')");
+                $"{MetadataFileName(schema, table)}: '{schema}/' is not a kind of endpoint. A first segment is a kind ({String.Join(", ", MetadataExtensions.FolderKinds.Keys)}) or an alias of one (app.json 'aliases')");
         CheckShapeSource(kind, schema, table, declaration);
         if (kind == Constants.SchemaNames.Document)
             declaration = await LoadOperationsAsync(schema, table, declaration);
@@ -456,7 +456,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         if (declaration.HasOwnShape)
             // a report never owns a shape (CheckShapeSource), so the folder's kind is a table's here
             storage = await load.StorageAsync(dataSource, schema, table,
-                () => BuildStorageAsync(kind.ToTableKind()!.Value, kind, schema, table, text, hash));
+                () => BuildStorageAsync(kind.ToTableKind() ?? throw new InvalidOperationException(
+                    $"{MetadataFileName(schema, table)}: '{kind}/' declares no table of its own"), kind, schema, table, text, hash));
         else
         {
             var (targetSchema, targetTable) = ParsePath(declaration.SharedShape!);

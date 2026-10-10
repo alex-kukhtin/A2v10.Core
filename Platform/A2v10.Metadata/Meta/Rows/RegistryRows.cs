@@ -41,7 +41,10 @@ internal static class RegistryRows
     {
         if (storage.Rows.Count == 0)
             return;
-        var keyLength = storage.KeyColumn.DeployLength();
+        // rows a file declares are keyed by a code (NaturalKey); a key with no length is not one a file can write
+        if (storage.KeyColumn.DeployLength() is not { } keyLength)
+            throw new InvalidOperationException(
+                $"{file}: declares rows under a key of type '{storage.KeyColumn.Type}', which a file cannot write");
         foreach (var row in storage.Rows)
             if (row.Id.Length > keyLength)
                 throw new InvalidOperationException($"{file}: '{row.Id}' - a key is at most {keyLength} characters");

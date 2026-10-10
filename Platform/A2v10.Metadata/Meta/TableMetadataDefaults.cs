@@ -65,16 +65,13 @@ internal static class TableMetadataDefaults
      * served by TagEndpointMetadata, which never builds a storage, so nothing would ever ask the
      * registry for it. The table itself is alive - the deploy and SqlBuilderTags take it directly.
      */
-    private const String TagsModel = "Tag";
-    private const String TagsTable_ = "$Tags";
-
     public static TableMetadata TagsTable()
     {
         var table = new TableMetadata()
         {
             Schema = Constants.SchemaNames.Catalog,
-            Model = TagsModel,
-            Table = TagsTable_
+            Model = "Tag",
+            Table = "$Tags"
         };
         // same call its sibling makes: nothing reads Path or Label here yet, and two factories
         // differing without a reason is how the next reader learns the wrong rule
@@ -82,11 +79,13 @@ internal static class TableMetadataDefaults
         return table;
     }
 
-    /* The tags catalog as the generated SQL names it, and the type its rows arrive under. Off the
-     * same three literals TagsTable is built from, without building it: every tagged query asked.
+    /* The tags catalog as the generated SQL names it, and the type its rows arrive under. Read off
+     * the table itself - built once for every tagged query that asks - so the spelling is
+     * SqlTableName's and cannot drift from it.
      */
-    public static String TagsTableName() => $"{Constants.SchemaNames.Catalog.ToSqlSchema()}.[{TagsTable_}]";
-    public static String TagsTypeName() => $"T{TagsModel}";
+    private static readonly Lazy<TableMetadata> _tags = new(TagsTable);
+    public static String TagsTableName() => _tags.Value.SqlTableName;
+    public static String TagsTypeName() => _tags.Value.TypeName;
 
     /* The tag entries table by the owner's MODEL alone, for the one caller that has the name and
      * not the table - the tags dialog, which is handed 'For' and nothing else. It can be built

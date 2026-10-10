@@ -113,79 +113,50 @@ internal partial class XamlBuilder
         Bindings = b => b.SetBinding(nameof(TextBox.Value), new Bind(path) { DataType = member.Type.ToXamlDataType() })
     };
 
-    // rows of a collection are columns and their properties, so the member unwraps on the way in
-    UIElementBase ElementToTableCell(MemberDescriptor member, TableMetadata rows, Dictionary<String, InheritDescriptor[]> inherits)
+    /* Where a member's control stands - the card, or a cell of a collection's table - as the facts
+     * the controls read: the path a value is reached by (the record's name, or nothing - a cell is
+     * bound in the row's own scope); the reach of the model root (a set's candidates are an array at
+     * the root, which a row names 'Root.' - $data, RenderContext.GetNormalizedPath); the table the
+     * control's own scope is and the header beyond it (an owner is found in the row first, then in
+     * the header); and whether it stands in a cell, where the column gives the width and the header
+     * the caption, so a control takes neither.
+     */
+    private sealed record Reach(String Prefix, String Root, TableMetadata Scope, TableMetadata? Header, Boolean InRow);
+
+    private Reach Card => new($"{Table.Model}.", String.Empty, Table, null, InRow: false);
+    private Reach Row(TableMetadata rows) => new(String.Empty, "Root.", rows, Table, InRow: true);
+
+    /* The one place a member becomes a control, wherever it stands - see CLAUDE.md, "Members". A
+     * column goes to the editor table below; what a trait or a property contributes has a control
+     * of its own, and a label where there is room for one.
+     */
+    UIElementBase MemberControl(MemberDescriptor member, Reach at, Dictionary<String, InheritDescriptor[]> inherits)
     {
-        // the card's control, for the card's reason
-        if (member.IsShownOnly)
-            return ShownControl(member, member.ModelName);
-        if (member.Kind == MemberKind.Property)
-            return PropertyControl(member, member.Name);
-        var elem = member.ColumnCheck;
-        return elem.Type switch
+        var label = at.InRow ? null : member.Header;
+        return member.Kind switch
         {
-            ColumnType.RowNumber => new TableCell()
-                {
-                    Align = TextAlign.Right,
-                    CssClass = elem.Type.ToXamlSemanticClass(),
-                    Bindings = b => b.SetBinding(nameof(TableCell.Content), new Bind(elem.Name) { DataType = DataType.Number })
-                },
-            // a basis in a row is picked - an allocation over several; only the header's is born
-            ColumnType.Ref or ColumnType.Company or ColumnType.Owner or ColumnType.BasedOn or ColumnType.Account => new SelectorSimple()
-                {
-                    Url = SelectorUrl(inherits, elem),
-                    DisplayProperty = elem.RefTableCheck.Storage.ChoiceProperty,
-                    ColorProperty = elem.RefTableCheck.Storage.ColorColumn?.Name,
-                    CssClass = elem.Type.ToXamlSemanticClass(),
-                    Bindings = b =>
-                    {
-                        b.SetBinding(nameof(SelectorSimple.Value), new Bind(elem.Name));
-                        if (elem.OwnerLinks(rows, Table).Count > 0)
-                            b.SetBinding(nameof(SelectorSimple.Data), new Bind(elem.OwnersName()));
-                    }
-                },
-            // the row's own picker; 'Root.' is the reach - the candidates are an array at the model
-            // root, not a property of the row ($data, RenderContext.GetNormalizedPath)
-            ColumnType.State => StatePicker(
-                $"Root.{elem.RefTableCheck.Storage.CollectionName}", elem.RefTableCheck.Storage.ChoiceProperty,
-                new Bind(elem.Name), new Bind(), cssClass: elem.Type.ToXamlSemanticClass()),
-            /* The same control as in the card, and the same reason - see CreateEditControl. The one
-             * difference is the reach: here the scope is the ROW, and the candidates are an array at
-             * the model root, which is what 'Root.' says ($data, RenderContext.GetNormalizedPath).
-             */
-            ColumnType.Enum => new ComboBox()
-                {
-                    CssClass = elem.Type.ToXamlSemanticClass(),
-                    DisplayProperty = elem.RefTableCheck.Storage.ChoiceProperty,
-                    Bindings = b =>
-                    {
-                        b.SetBinding(nameof(ComboBox.ItemsSource),
-                            new Bind($"Root.{elem.RefTableCheck.Storage.CollectionName}"));
-                        b.SetBinding(nameof(ComboBox.Value), new Bind(elem.Name));
-                    }
-                },
-            /* The card's control, and a cell is where it was missing: a date fell through to the
-             * default and was edited as text, typed by DataType alone. No width - in a cell the
-             * column decides, which is why the card's 12rem does not travel here.
-             */
-            ColumnType.Date => new DatePicker()
+            _ when member.IsShownOnly => ShownControl(member, $"{at.Prefix}{member.ModelName}", label),
+            MemberKind.Column => Editor(member.ColumnCheck, at, inherits),
+            MemberKind.Property => PropertyControl(member, $"{at.Prefix}{member.Name}", label),
+            // value is the record's own tags, candidates the root 'Tags' array - the pair Load emits
+            MemberKind.Tags => new TagsControl()
             {
-                CssClass = elem.Type.ToXamlSemanticClass(),
-                Bindings = b => b.SetBinding(nameof(DatePicker.Value), new Bind(elem.Name) { DataType = elem.Type.ToXamlDataType() })
-            },
-            // the card's control, compact because it stands in a cell - the tags dialog's own shape
-            ColumnType.Color => new ColorPicker()
-            {
-                Compact = true,
-                CssClass = elem.Type.ToXamlSemanticClass(),
-                Bindings = b => b.SetBinding(nameof(ColorPicker.Value), new Bind(elem.Name))
-            },
-            _ => new TextBox()
+                Label = label,
+                Placeholder = "@[Tag.Choose]",
+                Bindings = b =>
                 {
-                    Align = elem.Type.ToXamlAlign(),
-                    CssClass = elem.Type.ToXamlSemanticClass(),
-                    Bindings = b => b.SetBinding(nameof(TextBox.Value), new Bind(elem.Name) { DataType = elem.Type.ToXamlDataType() })
-                },
+                    b.SetBinding(nameof(TagsControl.Value), new Bind($"{at.Prefix}{member.Name}"));
+                    b.SetBinding(nameof(TagsControl.ItemsSource), new Bind(member.Name));
+                    var cmd = new BindCmd()
+                    {
+                        Command = CommandType.Dialog,
+                        Action = DialogAction.Show,
+                        Url = TagEndpointMetadata.SettingsUrl(Table.Model)
+                    };
+                    b.SetBinding(nameof(TagsControl.SettingsCommand), cmd);
+                }
+            },
+            _ => throw new InvalidOperationException($"Invalid member kind '{member.Kind}'")
         };
     }
 
@@ -233,7 +204,7 @@ internal partial class XamlBuilder
             Rows = [
                 new TableRow()
                 {
-                    Cells = [..tab.Members.Select(m => ElementToTableCell(m, Table.Details[tab.Scope!], inherits)), RemoveRowCell()]
+                    Cells = [..tab.Members.Select(m => MemberControl(m, Row(Table.Details[tab.Scope!]), inherits)), RemoveRowCell()]
                 }
             ]
         };
@@ -498,52 +469,36 @@ internal partial class XamlBuilder
             Axis = elem.Axis == FlowAxis.Columns ? Xaml.FlowAxis.Columns : Xaml.FlowAxis.Rows,
             LabelAt = elem.LabelAt == LabelAt.Top ? FlowLabelAt.Top : FlowLabelAt.Left,
             Children = [
-                .. elem.Members.Select(m => CreateMemberControl(m, inherits)),
+                .. elem.Members.Select(m => MemberControl(m, Card, inherits)),
                 .. elem.Elements.Select(ElementToControl)
             ]
         };
     }
 
-    // the only place a member that is not a column reaches a control - see CLAUDE.md, "Members"
-    UIElementBase CreateMemberControl(MemberDescriptor member,
-        Dictionary<String, InheritDescriptor[]> inherits) => member.Kind switch
+    /* ONE table from the type of a column to the control that edits it, read for the card and for
+     * a row of a collection alike. The arms read Reach where the place matters - a label, a width,
+     * the lines of a memo, a basis shown in a header and picked in a row - and nothing else about the
+     * place is decided here. It used to be two tables, one per place, and they drifted on what they
+     * never meant to decide differently: a boolean in a row was edited as text, a memo in a row lost
+     * its lines, a document in a row was a text box over an object.
+     */
+    UIElementBase Editor(TableColumn column, Reach at, Dictionary<String, InheritDescriptor[]> inherits)
     {
-        _ when member.IsShownOnly => ShownControl(member, $"{Table.Model}.{member.ModelName}", member.Header),
-        MemberKind.Column => CreateEditControl(member.ColumnCheck, inherits),
-        MemberKind.Property => PropertyControl(member, $"{Table.Model}.{member.Name}", member.Header),
-        // value is the record's own tags, candidates the root 'Tags' array - the pair Load emits
-        MemberKind.Tags => new TagsControl()
-        {
-            Label = $"@[{member.Name}]",
-            Placeholder = "@[Tag.Choose]",
-            Bindings = b =>
-            {
-                b.SetBinding(nameof(TagsControl.Value), new Bind($"{Table.Model}.{member.Name}"));
-                b.SetBinding(nameof(TagsControl.ItemsSource), new Bind(member.Name));
-                var cmd = new BindCmd()
-                {
-                    Command = CommandType.Dialog,
-                    Action = DialogAction.Show,
-                    Url = TagEndpointMetadata.SettingsUrl(Table.Model)
-                };
-                b.SetBinding(nameof(TagsControl.SettingsCommand), cmd);
-            }
-        },
-        _ => throw new InvalidOperationException($"Invalid member kind '{member.Kind}'")
-    };
-
-    UIElementBase CreateEditControl(TableColumn column, Dictionary<String, InheritDescriptor[]> inherits)
-    {
-        var valueBind = new Bind($"{Table.Model}.{column.ModelName}")
+        var valueBind = new Bind($"{at.Prefix}{column.ModelName}")
         {
             DataType = column.Type.ToXamlDataType(),
         };
+        var label = at.InRow ? null : column.Header;
+        var cssClass = column.Type.ToXamlSemanticClass();
+        // what rides with the record - a set's candidates, an operation's - from the model's own root
+        String Candidates() => $"{at.Root}{column.RefTableCheck.Storage.CollectionName}";
+
         /* A closed set of the platform, stored by name: the items are the enum's members, the text
          * their localization keys - the same keys the tree sends.
          */
         ComboBox ClosedSet<T>() where T : struct, Enum => new()
         {
-            Label = column.Header,
+            Label = label,
             Children = [.. Enum.GetNames<T>().Select(n => new ComboBoxItem()
             {
                 Content = $"@[{column.Name}.{n}]",
@@ -553,38 +508,52 @@ internal partial class XamlBuilder
         };
 
         // the chart's own columns; an author field of the same name elsewhere is an ordinary string
-        if (Table.Kind == TableKind.AccPlan && column.Name == Constants.FieldNames.AccountType)
+        if (at.Scope.Kind == TableKind.AccPlan && column.Name == Constants.FieldNames.AccountType)
             return ClosedSet<AccountType>();
-        if (Table.Kind == TableKind.AccPlan && column.Name == Constants.FieldNames.NormalBalance)
+        if (at.Scope.Kind == TableKind.AccPlan && column.Name == Constants.FieldNames.NormalBalance)
             return ClosedSet<NormalBalance>();
 
         return column.Type switch
         {
-            /* A width, for the same reason the colour has one: a date is a control of a known size,
-             * and in a row everything that names no width takes the leftover. It holds in a column
-             * too - a date box across the whole card was never what it is.
+            // a row's number, drawn and never typed
+            ColumnType.RowNumber => new TableCell()
+            {
+                Align = TextAlign.Right,
+                CssClass = cssClass,
+                Bindings = b => b.SetBinding(nameof(TableCell.Content), new Bind(column.Name) { DataType = DataType.Number })
+            },
+            /* A width on the card, for the same reason the colour has one: a date is a control of a
+             * known size, and in a row everything that names no width takes the leftover. In a cell
+             * the column decides.
              */
             ColumnType.Date => new DatePicker()
             {
-                Label = column.Header,
-                Width = Length.FromString("12rem"),
-                CssClass = column.Type.ToXamlSemanticClass(),
+                Label = label,
+                Width = at.InRow ? null : Length.FromString("12rem"),
+                CssClass = cssClass,
                 Bindings = b => b.SetBinding(nameof(DatePicker.Value), valueBind)
+            },
+            // the card's title field, first in its tab order; in a cell one of the row's own
+            ColumnType.Name when at.InRow => new TextBox()
+            {
+                CssClass = cssClass,
+                Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
             },
             ColumnType.Name => new TextBox()
             {
-                Label = column.Header,
+                Label = label,
                 Bold = true,
                 TabIndex = 1,
-                CssClass = column.Type.ToXamlSemanticClass(),
+                CssClass = cssClass,
                 Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
             },
+            // a cell is one line; the card gives a memo its three
             ColumnType.Memo => new TextBox()
             {
-                Label = column.Header,
-                Multiline = true,
-                Rows = 3,
-                CssClass = column.Type.ToXamlSemanticClass(),
+                Label = label,
+                Multiline = !at.InRow,
+                Rows = at.InRow ? null : 3,
+                CssClass = cssClass,
                 Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
             },
             /* One implicit operation IS the document, so its name is the page's title. A list is what
@@ -594,7 +563,7 @@ internal partial class XamlBuilder
              */
             ColumnType.Operation when Endpoint.Declaration.OperationDeclarations.Count > 0 => new ComboBox()
             {
-                Label = column.Header,
+                Label = label,
                 Children = [
                     new ComboBoxItem()
                     {
@@ -607,50 +576,51 @@ internal partial class XamlBuilder
                 ],
                 Bindings = b =>
                 {
-                    b.SetBinding(nameof(ComboBox.ItemsSource), new Bind(column.RefTableCheck.Storage.CollectionName));
+                    b.SetBinding(nameof(ComboBox.ItemsSource), new Bind(Candidates()));
                     b.SetBinding(nameof(ComboBox.Value), valueBind);
                 }
             },
             ColumnType.Operation => new Header()
             {
-                Bindings = b => b.SetBinding(nameof(Header.Content), new Bind($"{Table.Model}.{column.Name}.Name"))
+                Bindings = b => b.SetBinding(nameof(Header.Content), new Bind($"{at.Prefix}{column.Name}.Name"))
             },
             /* The control the tags dialog has picked a colour with all along, so the vocabulary and
-             * what draws it are the same on both roads. Until now the column fell through to the
-             * default and a colour was typed as a string - the one value where a typo is invisible
-             * on the card and shows as an unpainted badge somewhere else.
+             * what draws it are the same on both roads. Compact in a cell - the tags dialog's own shape.
              */
             ColumnType.Color => new ColorPicker()
             {
-                Label = column.Header,
-                Width = Length.FromString("8rem"),
-                CssClass = column.Type.ToXamlSemanticClass(),
+                Label = label,
+                Compact = at.InRow,
+                Width = at.InRow ? null : Length.FromString("8rem"),
+                CssClass = cssClass,
                 Bindings = b => b.SetBinding(nameof(ColorPicker.Value), valueBind)
             },
-            // set by birth and by nothing else (ColumnType.BasedOn): shown, not picked
-            ColumnType.BasedOn => DocumentHyperlink($"{Table.Model}.{column.Name}"),
-            ColumnType.Ref or ColumnType.Company or ColumnType.Owner or ColumnType.Document or ColumnType.Account => new SelectorSimple()
+            // in a header set by birth and by nothing else: shown, not picked; in a row picked - an allocation over several
+            ColumnType.BasedOn when !at.InRow => DocumentHyperlink($"{at.Prefix}{column.Name}"),
+            ColumnType.Ref or ColumnType.Company or ColumnType.Owner or ColumnType.Document or ColumnType.Account
+                or ColumnType.BasedOn => new SelectorSimple()
             {
-                Label = column.Header,
-                CssClass = column.Type.ToXamlSemanticClass(),
+                Label = label,
+                CssClass = cssClass,
                 Url = SelectorUrl(inherits, column),
                 DisplayProperty = column.RefTableCheck.Storage.ChoiceProperty,
                 ColorProperty = column.RefTableCheck.Storage.ColorColumn?.Name,
                 Bindings = b =>
                 {
-                    b.SetBinding(nameof(TextBox.Value), valueBind);
-                    if (column.OwnerLinks(Table, null).Count > 0)
-                        b.SetBinding(nameof(SelectorSimple.Data), new Bind($"{Table.Model}.{column.OwnersName()}"));
+                    b.SetBinding(nameof(SelectorSimple.Value), valueBind);
+                    // the owner is found in the editor's own scope first, then in the header beyond it
+                    if (column.OwnerLinks(at.Scope, at.Header).Count > 0)
+                        b.SetBinding(nameof(SelectorSimple.Data), new Bind($"{at.Prefix}{column.OwnersName()}"));
                 }
             },
             // picked at the owner's address: Folder turns it into browsefolder / fetchfolder
             ColumnType.Folder => new SelectorSimple()
             {
-                Label = column.Header,
-                CssClass = column.Type.ToXamlSemanticClass(),
+                Label = label,
+                CssClass = cssClass,
                 Url = column.RefTableCheck.Path,
                 Folder = true,
-                Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
+                Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), valueBind)
             },
             /* The set arrives with the record, so there is nothing to browse - the same reason the
              * filter is a ComboBox. The value is the ELEMENT and not its Id: what the property holds
@@ -661,18 +631,16 @@ internal partial class XamlBuilder
              * there the value IS the code.
              */
             // the whole list rides with the record, as an enum's does; what it adds is the colour
-            ColumnType.State => StatePicker(
-                column.RefTableCheck.Storage.CollectionName, column.RefTableCheck.Storage.ChoiceProperty, valueBind, new Bind(),
-                label: column.Header, cssClass: column.Type.ToXamlSemanticClass()),
+            ColumnType.State => StatePicker(Candidates(), column.RefTableCheck.Storage.ChoiceProperty, valueBind, new Bind(),
+                label: label, cssClass: cssClass),
             ColumnType.Enum => new ComboBox()
             {
-                Label = column.Header,
-                CssClass = column.Type.ToXamlSemanticClass(),
+                Label = label,
+                CssClass = cssClass,
                 DisplayProperty = column.RefTableCheck.Storage.ChoiceProperty,
                 Bindings = b =>
                 {
-                    b.SetBinding(nameof(ComboBox.ItemsSource),
-                        new Bind(column.RefTableCheck.Storage.CollectionName));
+                    b.SetBinding(nameof(ComboBox.ItemsSource), new Bind(Candidates()));
                     b.SetBinding(nameof(ComboBox.Value), valueBind);
                 }
             },
@@ -686,8 +654,8 @@ internal partial class XamlBuilder
              */
             ColumnType.Autonum => new TextBox()
             {
-                Label = column.Header,
-                CssClass = column.Type.ToXamlSemanticClass(),
+                Label = label,
+                CssClass = cssClass,
                 Placeholder = String.IsNullOrEmpty(Endpoint.Declaration.Autonum)
                     ? null
                     : "@[Autonum.Auto]",
@@ -695,17 +663,16 @@ internal partial class XamlBuilder
             },
             ColumnType.Done or ColumnType.Boolean => new CheckBox()
             {
-                Label = column.Header,
-                Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
+                Label = label,
+                Bindings = b => b.SetBinding(nameof(CheckBox.Value), valueBind)
             },
             _ => new TextBox()
             {
-                Label = column.Header,
+                Label = label,
                 Align = column.Type.ToXamlAlign(),
-                CssClass = column.Type.ToXamlSemanticClass(),
+                CssClass = cssClass,
                 Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
             }
         };
     }
-
 }

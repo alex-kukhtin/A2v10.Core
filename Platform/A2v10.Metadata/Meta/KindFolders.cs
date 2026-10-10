@@ -48,7 +48,7 @@ internal sealed class KindFolders
             var kind = key.ToLowerInvariant();
             if (!kind.IsFolderKind())
                 throw new InvalidOperationException($"""
-                    app.json: 'aliases' names '{key}', which is not a kind.
+                    app.json: 'aliases' names '{key}', which is not a kind ({String.Join(", ", MetadataExtensions.FolderKinds.Keys)}).
                       The key is the kind whose folders follow: "aliases": {"{"} "document": ["sale", "purchase"] {"}"}.
                     """);
             foreach (var alias in folders)

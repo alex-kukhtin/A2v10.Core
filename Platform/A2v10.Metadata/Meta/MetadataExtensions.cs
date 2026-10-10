@@ -32,26 +32,27 @@ internal record OwnerLink(TableColumn Owner, TableColumn Field, Boolean Header);
 
 internal static class MetadataExtensions
 {
-    /* The kind of table a folder's file declares; null for a folder that declares none - 'tag' and
-     * 'operation' are served in code, 'report' reads another endpoint's shape. The one function for
-     * both readers, the load and the alias check: two spellings of it once drifted on 'report'.
+    /* The folders the platform reads a metadata.json from, and the kind of table each one's file
+     * declares - null for 'report', which reads another endpoint's shape. Data and not a switch, so
+     * the check and a message listing what it accepts are one source: two spellings of this once
+     * drifted on 'report'. 'tag' and 'operation' are absent - served in code, no file to read.
      */
-    internal static TableKind? ToTableKind(this String folder) => folder switch
+    internal static readonly IReadOnlyDictionary<String, TableKind?> FolderKinds = new Dictionary<String, TableKind?>()
     {
-        Constants.SchemaNames.Catalog => TableKind.Catalog,
-        Constants.SchemaNames.Document => TableKind.Document,
-        Constants.SchemaNames.Journal => TableKind.Journal,
-        Constants.SchemaNames.Ledger => TableKind.Ledger,
-        Constants.SchemaNames.Enum => TableKind.Enum,
-        Constants.SchemaNames.State => TableKind.State,
-        Constants.SchemaNames.AccPlan => TableKind.AccPlan,
-        Constants.SchemaNames.Autonum => TableKind.Autonum,
-        _ => null
+        [Constants.SchemaNames.Catalog] = TableKind.Catalog,
+        [Constants.SchemaNames.Document] = TableKind.Document,
+        [Constants.SchemaNames.Journal] = TableKind.Journal,
+        [Constants.SchemaNames.Ledger] = TableKind.Ledger,
+        [Constants.SchemaNames.Enum] = TableKind.Enum,
+        [Constants.SchemaNames.State] = TableKind.State,
+        [Constants.SchemaNames.AccPlan] = TableKind.AccPlan,
+        [Constants.SchemaNames.Autonum] = TableKind.Autonum,
+        [Constants.SchemaNames.Report] = null
     };
 
-    // a folder the platform reads a metadata.json from: one declaring a table, or a report
-    internal static Boolean IsFolderKind(this String folder) =>
-        folder.ToTableKind() != null || folder == Constants.SchemaNames.Report;
+    internal static TableKind? ToTableKind(this String folder) => FolderKinds.GetValueOrDefault(folder);
+
+    internal static Boolean IsFolderKind(this String folder) => FolderKinds.ContainsKey(folder);
 
     internal static String ToSqlSchema(this String folder)
     {
@@ -75,12 +76,15 @@ internal static class MetadataExtensions
         };
     }
 
-    // the address is the endpoint's, not the table's: several endpoints share one table
-    public static IPlatformUrl PlatformUrl(this NormalEndpointMetadata endpoint, String action)
+    /* The address is the endpoint's, not the table's: several endpoints share one table. The one
+     * place the url of an action is composed; 'query' is what follows '?', as the print page is
+     * asked for its blank ('Form=…').
+     */
+    public static IPlatformUrl PlatformUrl(this NormalEndpointMetadata endpoint, String action, String? query = null)
     {
         var kind = action == "index" || action == "edit" && endpoint.Storage.EditWithPage ? "_page" : "_dialog";
         var url = $"{kind}{endpoint.Path}/{action}/".ToLowerInvariant();
-        return new PlatformUrl(url);
+        return new PlatformUrl(query == null ? url : $"{url}?{query}");
     }
 
     internal static IEnumerable<TableColumn> AllColumns(this TableMetadata table, Func<TableColumn, Boolean>? predicate = null) =>

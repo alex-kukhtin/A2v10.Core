@@ -100,7 +100,7 @@ public class XamlBeamTests
         }
         foreach (var form in endpoint.Declaration.PrintForms)
             yield return (Constants.Print.Action,
-                new PlatformUrl($"_page{endpoint.Path}/{Constants.Print.Action}/?{Constants.Print.FormQuery}={form.Name}"));
+                endpoint.PlatformUrl(Constants.Print.Action, $"{Constants.Print.FormQuery}={form.Name}"));
     }
 
     private static String FirstDifference(String expected, String actual)

@@ -143,13 +143,19 @@ internal static class SetRows
                 [Constants.FieldNames.Order] = order.ToString(),
                 [Constants.FieldNames.Void] = value is { Void: true } ? "1" : "0"
             };
-            if (value?.Memo != null)
+            if (value == null)
+            {
+                if (draws)
+                    values[Constants.FieldNames.Color] = nameof(TagLabelStyle.White).ToLowerInvariant();
+                return new SeedRow(String.Empty, values);
+            }
+            if (value.Memo != null)
                 values[Constants.FieldNames.Memo] = value.Memo;
-            if (value == null ? draws : value.Color != null)
-                values[Constants.FieldNames.Color] = value?.Color ?? nameof(TagLabelStyle.White).ToLowerInvariant();
-            if (value?.Role != null)
+            if (value.Color != null)
+                values[Constants.FieldNames.Color] = value.Color;
+            if (value.Role != null)
                 values[Constants.FieldNames.Role] = value.Role.ToString();
-            return new SeedRow(value?.Id ?? String.Empty, values);
+            return new SeedRow(value.Id, values);
         }
 
         return [Row(null, -1), .. set.Values.Select((v, ix) => Row(v, ix))];
