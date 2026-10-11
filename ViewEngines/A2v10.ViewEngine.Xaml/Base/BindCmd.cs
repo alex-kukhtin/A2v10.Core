@@ -192,7 +192,7 @@ public class BindCmd : BindBase
 		switch (Command)
 		{
 			case CommandType.Unknown:
-				throw new NotImplementedException($"Command required for BindCmd extension");
+				throw new XamlException($"Command required for BindCmd extension");
 			case CommandType.Refresh:
 			case CommandType.Reload:
 				return $"$reload({CommandArgument(context, nullable: true)})";
@@ -556,7 +556,7 @@ public class BindCmd : BindBase
 		else if (String.IsNullOrEmpty(Url))
 			return nullString;
 		if (!Url.StartsWith('/'))
-			throw new NotImplementedException($"Url '{Url}' must start with '/'");
+			throw new XamlException($"Url '{Url}' must start with '/'");
 		return $"'{Url}'";
 	}
 
@@ -570,12 +570,12 @@ public class BindCmd : BindBase
 			return urlBind.GetPath(context);
 		}
 		if (String.IsNullOrEmpty(Url))
-			throw new NotImplementedException($"Url required for {Command} command");
+			throw new XamlException($"Url required for {Command} command");
 		// TODO: check URL format
 		if (!skipCheck)
 		{
 			if (!Url.StartsWith('/'))
-				throw new NotImplementedException($"Url '{Url}' must start with '/'");
+				throw new XamlException($"Url '{Url}' must start with '/'");
 		}
 		return $"'{Url}'";
 	}

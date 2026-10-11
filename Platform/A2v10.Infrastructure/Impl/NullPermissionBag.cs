@@ -10,7 +10,7 @@ namespace A2v10.Infrastructure;
 
 public class NullPermissionBag : IPermissionBag
 {
-	public Task LoadPermisionBagAsync(IDbContext _1 /*dbContext*/, String? _2 /*dataSource*/)
+	public Task LoadPermissionBagAsync(IDbContext _1 /*dbContext*/, String? _2 /*dataSource*/)
 	{
 		return Task.FromResult(0);	
 	}

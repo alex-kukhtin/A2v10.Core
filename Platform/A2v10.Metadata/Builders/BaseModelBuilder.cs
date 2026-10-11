@@ -104,7 +104,7 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
         {
             Constants.Actions.Edit => _sqlBuilder.SavePlainModelAsync(data, savePrms),
             Constants.Actions.EditFolder => _sqlBuilder.SaveFolderModelAsync(data),
-            _ => throw new NotImplementedException($"Save Model Async for {Action}")
+            _ => throw IModelBuilder.NotHere($"save on '{Action}'", Path)
         };
     }
 

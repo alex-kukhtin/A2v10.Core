@@ -7,7 +7,7 @@ namespace A2v10.Infrastructure;
 
 public static class CollectionHelpers
 {
-	public static IDictionary<TKey, TValue> Append<TKey, TValue>(this IDictionary<TKey, TValue> dst, IDictionary<TKey, TValue>? src, Boolean replaceExisiting = false)
+	public static IDictionary<TKey, TValue> Append<TKey, TValue>(this IDictionary<TKey, TValue> dst, IDictionary<TKey, TValue>? src, Boolean replaceExisting = false)
 	{
 		if (src == null)
 			return dst;
@@ -15,7 +15,7 @@ public static class CollectionHelpers
 		{
 			if (!dst.ContainsKey(c.Key))
 				dst.Add(c.Key, c.Value);
-			if (replaceExisiting)
+			if (replaceExisting)
 				dst[c.Key] = c.Value;
 		}
 		return dst;

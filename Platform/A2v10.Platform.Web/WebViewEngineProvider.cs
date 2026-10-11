@@ -72,7 +72,7 @@ public class WebViewEngineProvider : IViewEngineProvider
 		}
 		var locations = String.Join('\n', _engines.Select(e => $"/{path}/{viewName}{e.Extension}"));
 
-        throw new InvalidReqestExecption($"The view '{viewName}' was not found. The following locations were searched:\n{locations} ");
+        throw new InvalidRequestException($"The view '{viewName}' was not found. The following locations were searched:\n{locations} ");
 	}
 }
 

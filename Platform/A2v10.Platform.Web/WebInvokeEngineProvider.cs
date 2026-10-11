@@ -35,7 +35,7 @@ public class WebInvokeEngineProvider(IServiceProvider serviceProvider, IList<Inv
 	public IRuntimeInvokeTarget FindEngine(String name)
 	{
 		var engine = Engines.FirstOrDefault(x => x.Name == name) 
-			?? throw new InvalidReqestExecption($"Invoke engine not found for '{name}' not found");
+			?? throw new InvalidRequestException($"Invoke engine not found for '{name}' not found");
         return _serviceProvider.GetRequiredService(engine.EngineType) as IRuntimeInvokeTarget ?? 
 			throw new InvalidProgramException($"Service {engine.EngineType} is not an IRuntimeInvokeTarget");
 	}

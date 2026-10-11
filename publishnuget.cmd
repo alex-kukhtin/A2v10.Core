@@ -16,9 +16,6 @@ del /q Platform\A2v10.Platform.Web\bin\Release\*.nupkg
 del /q Platform\A2v10.Platform.Web\bin\Release\*.snupkg
 del /q Platform\A2v10.Services\bin\Release\*.nupkg
 del /q Platform\A2v10.Services\bin\Release\*.snupkg
-del /q Platform\A2v10.Services\bin\Release\*.nupkg
-del /q Platform\A2v10.AppRuntimeBuilder\bin\Release\*.snupkg
-del /q Platform\A2v10.AppRuntimeBuilder\bin\Release\*.nupkg
 del /q Platform\A2v10.Metadata\bin\Release\*.snupkg
 del /q Platform\A2v10.Metadata\bin\Release\*.nupkg
 
@@ -94,9 +91,6 @@ copy Platform\A2v10.Platform.Web\bin\Release\*.snupkg ..\NuGet.local
 copy Platform\A2v10.Services\bin\Release\*.nupkg ..\NuGet.local
 copy Platform\A2v10.Services\bin\Release\*.snupkg ..\NuGet.local
 
-copy Platform\A2v10.AppRuntimeBuilder\bin\Release\*.nupkg ..\NuGet.local
-copy Platform\A2v10.AppRuntimeBuilder\bin\Release\*.snupkg ..\NuGet.local
-
 copy Platform\A2v10.Metadata\bin\Release\*.nupkg ..\NuGet.local
 copy Platform\A2v10.Metadata\bin\Release\*.snupkg ..\NuGet.local
 
@@ -118,8 +112,8 @@ copy ReportEngines\A2v10.ReportEngine.Excel\bin\Release\*.snupkg ..\NuGet.local
 copy ReportEngines\A2v10.Xaml.Report\bin\Release\*.nupkg ..\NuGet.local
 copy ReportEngines\A2v10.Xaml.Report\bin\Release\*.snupkg ..\NuGet.local
 
-copy ReportEngines\A2v10.ReportEngine.Stimulsoft\bin\Release\*.nupkg ..\NuGet.local
-copy ReportEngines\A2v10.ReportEngine.Stimulsoft\bin\Release\*.snupkg ..\NuGet.local
+rem copy ReportEngines\A2v10.ReportEngine.Stimulsoft\bin\Release\*.nupkg ..\NuGet.local
+rem copy ReportEngines\A2v10.ReportEngine.Stimulsoft\bin\Release\*.snupkg ..\NuGet.local
 
 copy CodeGen\A2v10.Module.Infrastructure\bin\Release\*.nupkg ..\NuGet.local
 copy CodeGen\A2v10.Module.Infrastructure\bin\Release\*.snupkg ..\NuGet.local

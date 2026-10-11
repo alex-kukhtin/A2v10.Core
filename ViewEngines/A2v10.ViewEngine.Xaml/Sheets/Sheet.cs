@@ -217,7 +217,7 @@ public partial class Sheet : UIElement
         {
             SheetAutoGenerateMode.FromDataModel => new SheetGeneratorDataModel(this),
             SheetAutoGenerateMode.FromReportInfo => new SheetGeneratorReportInfo(this),
-            _ => throw new NotImplementedException(nameof(GenerateSheet))
+            _ => throw new XamlException($"Unknown Sheet.AutoGenerate mode {AutoGenerate.Mode}")
         };
         _generatorWrapper = new SheetGeneratorWrapper(generator, AutoGenerate.PropertyName);
 		return _generatorWrapper;

@@ -22,7 +22,8 @@ internal interface IModelBuilder
 {
     String Path { get; }
 
-    private static NotSupportedException NotHere(String action, String path) =>
+    // the one refusal: a builder's own switch over what it serves says it the same way
+    internal static NotSupportedException NotHere(String action, String path) =>
         new($"'{action}' is not supported for '{path}'");
 
     /* Load and render are one member and not two: the split is the normal builder's business, and

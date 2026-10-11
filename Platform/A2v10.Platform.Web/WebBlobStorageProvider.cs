@@ -29,10 +29,10 @@ public class WebBlobStorageProvider(IServiceProvider _serviceProvider, IList<Blo
 	public IBlobStorage FindBlobStorage(String name)
 	{
 		var storage = _storages.FirstOrDefault(x => x.Name == name) 
-			?? throw new InvalidReqestExecption($"Blob storage for '{name}' not found");
+			?? throw new InvalidRequestException($"Blob storage for '{name}' not found");
             var rs = _serviceProvider.GetRequiredService(storage.StorageType);
 		if (rs is IBlobStorage be)
 			return be;
-		throw new InvalidReqestExecption($"Blob storage '{storage.StorageType}' is not an IBlobStorage");
+		throw new InvalidRequestException($"Blob storage '{storage.StorageType}' is not an IBlobStorage");
 	}
 }

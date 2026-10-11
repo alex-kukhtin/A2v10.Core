@@ -29,7 +29,7 @@ public record MultiTenantParamJson(String Companies, String Period);
 [ExecutingFilter]
 public class ShellController(IDbContext _dbContext, IApplicationHost _host, ICurrentUser _currentUser, IProfiler _profiler,
 	ILocalizer _localizer, IAppCodeProvider _codeProvider, IAppDataProvider _appDataProvider, IOptions<AppOptions> appOptions,
-	ILogger<ShellController> _logger, IPermissionBag _pemissionBag, IUserDevice _userDevice, IAppRuntimeBuilder _runtimeBuilder) : Controller
+	ILogger<ShellController> _logger, IPermissionBag _permissionBag, IUserDevice _userDevice, IAppRuntimeBuilder _runtimeBuilder) : Controller
 {
 	private readonly AppOptions _appOptions = appOptions.Value;
 
@@ -218,7 +218,7 @@ public class ShellController(IDbContext _dbContext, IApplicationHost _host, ICur
 
 	async Task EnsurePermissionObjects()
 	{
-		await _pemissionBag.LoadPermisionBagAsync(_dbContext, _currentUser.Identity.Segment);
+		await _permissionBag.LoadPermissionBagAsync(_dbContext, _currentUser.Identity.Segment);
 	}
 
 	async Task<String> BuildScript()

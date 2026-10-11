@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace A2v10.Infrastructure;
 
-public interface ILocalizerDictiorany
+public interface ILocalizerDictionary
 {
 	IDictionary<String, String> GetLocalizerDictionary(String locale);
 }

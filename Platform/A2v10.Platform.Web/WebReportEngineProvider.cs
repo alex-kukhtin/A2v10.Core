@@ -36,10 +36,10 @@ public class WebReportEngineProvider(IServiceProvider serviceProvider, IList<Rep
 	public IReportEngine FindReportEngine(String name)
 	{
 		var engine = _engines.FirstOrDefault(x => x.Name == name) 
-			?? throw new InvalidReqestExecption($"Report engine for '{name}' not found");
+			?? throw new InvalidRequestException($"Report engine for '{name}' not found");
             var rs = _serviceProvider.GetRequiredService(engine.EngineType);
 		if (rs is IReportEngine re)
 			return re;
-		throw new InvalidReqestExecption($"Report engine '{engine.EngineType}' is not an IReportEngine");
+		throw new InvalidRequestException($"Report engine '{engine.EngineType}' is not an IReportEngine");
 	}
 }

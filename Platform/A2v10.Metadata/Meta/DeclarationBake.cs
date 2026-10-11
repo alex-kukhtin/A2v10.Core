@@ -313,7 +313,8 @@ internal static class DeclarationBake
                 return (declaration.Forms.GetValueOrDefault(name) ?? createDefault(table))
                     .Bake(table, candidates(table), [.. table.Filters(declaration)], rows);
             }
-            catch (Exception ex)
+            // the author's refusals only; a fault of the platform passes as it is, not as this form's
+            catch (InvalidOperationException ex)
             {
                 throw new InvalidOperationException($"form '{name}': {ex.Message}", ex);
             }

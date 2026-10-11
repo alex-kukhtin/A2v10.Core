@@ -24,7 +24,7 @@ class LocaleMapItem
 
 internal record LocalePath(String Path, Boolean IsHostFile);
 
-public class WebLocalizerDictiorany(IWebHostFilesProvider hostFilesProvider, IAppCodeProvider appCodeProvider, IOptions<AppOptions> appOptions) : ILocalizerDictiorany
+public class WebLocalizerDictionary(IWebHostFilesProvider hostFilesProvider, IAppCodeProvider appCodeProvider, IOptions<AppOptions> appOptions) : ILocalizerDictionary
 {
 	private readonly ConcurrentDictionary<String, LocaleMapItem> _maps = new();
 

@@ -20,21 +20,22 @@ internal partial class BaseModelBuilder
             "deletefolder" => _sqlBuilder.DeleteFolderAsync(prms),
             "unapply" or "unpost" => UnPostAsync(prms),
             var s when s.EndsWith(".unique") => _sqlBuilder.CheckUniqueAsync(prms, command.Split('.')[0]),
-            _ => throw new NotImplementedException($"Implement invoke for {command}")
+            _ => throw IModelBuilder.NotHere(command, Path)
         };
     }
 
+    // a document posts; anything else is refused as every builder refuses what it does not serve
     private Task<IInvokeResult> PostAsync(ExpandoObject? prms)
     {
         if (!Table.IsDocument)
-            throw new NotImplementedException($"The Post command is available for documents only");
-        return _sqlBuilder.PostDocumentAsync(prms); 
+            throw IModelBuilder.NotHere("post", Path);
+        return _sqlBuilder.PostDocumentAsync(prms);
     }
 
     private Task<IInvokeResult> UnPostAsync(ExpandoObject? prms)
     {
         if (!Table.IsDocument)
-            throw new NotImplementedException($"The UnPost command is available for documents only");
+            throw IModelBuilder.NotHere("unpost", Path);
         return _sqlBuilder.UnPostDocumentAsync(prms);
     }
 }

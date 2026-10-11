@@ -64,7 +64,7 @@ public class XamlBeamTests
                     var text = XamlTextBulder.GetXaml(built);
                     var path = Path.Combine(dir, folder, $"{action}.vxaml");
                     Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-                    await File.WriteAllTextAsync(path, text);
+                    await File.WriteAllTextAsync(path, text, TestContext.Current.CancellationToken);
                     var read = reader.GetXamlPartText(text, $"{folder}/{action}.vxaml")
                         ?? throw new InvalidOperationException("the reader returned nothing");
                     if (read.GetType() != built.GetType())

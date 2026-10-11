@@ -43,7 +43,7 @@ public class FileController(IApplicationHost host,
                 ValidateToken(blob.Token);
 
             if (blob.Stream == null)
-				throw new InvalidReqestExecption($"Blob not found. ({pathInfo})");
+				throw new InvalidRequestException($"Blob not found. ({pathInfo})");
 
 			var ar = new WebBinaryActionResult(blob.Stream, blob.Mime ?? MimeTypes.Text.Plain);
 			if (Request.Query["export"].Count > 0)
@@ -157,9 +157,9 @@ public class FileController(IApplicationHost host,
 	{
 		var token = Request.Query["token"];
 		if (token.Count == 0)
-			throw new InvalidReqestExecption("Invalid token");
+			throw new InvalidRequestException("Invalid token");
 		var strToken = token[0] ??
-			throw new InvalidReqestExecption("Invalid token");
+			throw new InvalidRequestException("Invalid token");
 		ValidateToken(dbToken, strToken);
 	}
 
@@ -168,7 +168,7 @@ public class FileController(IApplicationHost host,
 		var generated = _tokenProvider.GenerateToken(dbToken);
 		if (generated == token)
 			return;
-		throw new InvalidReqestExecption("Invalid image token");
+		throw new InvalidRequestException("Invalid image token");
 	}
 
     [ResponseCache(Duration = 2592000, Location = ResponseCacheLocation.Client)]

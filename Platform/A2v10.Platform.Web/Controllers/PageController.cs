@@ -186,12 +186,12 @@ public class PageController(IApplicationHost _host, ILocalizer _localizer, ICurr
 
 	async Task<IActionResult> RenderApplicationPage(UrlKind urlKind, String pathInfo)
 	{
-		String exceptionInfo = $"Invald application url: '{pathInfo}'";
+		String exceptionInfo = $"Invalid application url: '{pathInfo}'";
 		if (pathInfo == null)
-			throw new InvalidReqestExecption(exceptionInfo);
+			throw new InvalidRequestException(exceptionInfo);
 		var info = pathInfo.Split([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar]);
 		if (info.Length < 2)
-			throw new InvalidReqestExecption(exceptionInfo);
+			throw new InvalidRequestException(exceptionInfo);
 		var kind = info[1].ToLowerInvariant();
 		switch (kind)
 		{
@@ -199,11 +199,11 @@ public class PageController(IApplicationHost _host, ILocalizer _localizer, ICurr
 				return View("About", new AboutViewModel() { AppData = await _appDataProvider.GetAppDataAsStringAsync()});
 			case "changepassword":
 				if (urlKind != UrlKind.Dialog)
-					throw new InvalidReqestExecption(exceptionInfo);
+					throw new InvalidRequestException(exceptionInfo);
 				return View("ChangePassword", new ChangePasswordViewModel { UserName = _currentUser.Identity.Name});
 			default:
 				if (urlKind != UrlKind.Page)
-					throw new InvalidReqestExecption(exceptionInfo);
+					throw new InvalidRequestException(exceptionInfo);
 				//var m = new AppPageModel();
 				ViewBag.PageKind = kind;
 				return View("Default" /*m*/);

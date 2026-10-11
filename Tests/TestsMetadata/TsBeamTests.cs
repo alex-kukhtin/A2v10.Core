@@ -66,7 +66,7 @@ public class TsBeamTests
                 {
                     var path = Path.Combine(dir, f.Path);
                     Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-                    await File.WriteAllTextAsync(path, f.Text);
+                    await File.WriteAllTextAsync(path, f.Text, TestContext.Current.CancellationToken);
                     written.Add(f.Path);
                 }
             }
@@ -81,8 +81,9 @@ public class TsBeamTests
             UseShellExecute = false
         };
         using var tscProcess = Process.Start(psi) ?? throw new InvalidOperationException("node did not start");
-        var output = await tscProcess.StandardOutput.ReadToEndAsync() + await tscProcess.StandardError.ReadToEndAsync();
-        await tscProcess.WaitForExitAsync();
+        var cancel = TestContext.Current.CancellationToken;
+        var output = await tscProcess.StandardOutput.ReadToEndAsync(cancel) + await tscProcess.StandardError.ReadToEndAsync(cancel);
+        await tscProcess.WaitForExitAsync(cancel);
         Assert.True(tscProcess.ExitCode == 0, $"tsc over {written.Count} files in {dir}:\n{output}");
     }
 }

@@ -112,7 +112,7 @@ public static class ServicesExtensions
 		return new Builders(builder, authBuilder);
 	}
 
-    public static void ConfigurePlatform(this IApplicationBuilder app, IWebHostEnvironment env, IConfiguration configuration = null)
+    public static void ConfigurePlatform(this IApplicationBuilder app, IWebHostEnvironment env, IConfiguration? configuration = null)
 	{
 		if (env.IsDevelopment())
 		{
@@ -164,7 +164,7 @@ public static class ServicesExtensions
 
 	public static IServiceCollection UsePermissions(this IServiceCollection services)
 	{
-		return services.AddSingleton<IPermissionBag, WebPermissonBug>();
+		return services.AddSingleton<IPermissionBag, WebPermissionBag>();
 	}
 }
 

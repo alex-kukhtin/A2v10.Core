@@ -50,7 +50,7 @@ public class ApplicationController(IApplicationHost _host,
         using var tr = new StreamReader(Request.Body, Encoding.UTF8);
         var json = await tr.ReadToEndAsync();
         return JsonConvert.DeserializeObject<ExpandoObject>(json, JsonHelpers.ExpandoObjectSettings)
-            ?? throw new InvalidReqestExecption(nameof(SetPeriod));
+            ?? throw new InvalidRequestException(nameof(SetPeriod));
     }
 
     public async Task SwitchToCompany(ExpandoObject data)

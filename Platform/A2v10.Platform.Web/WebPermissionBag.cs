@@ -20,17 +20,17 @@ public record PermissionObject
 	public Int64 Id { get; init; }	
 }
 
-public class WebPermissonBug(IOptions<AppUserStoreOptions<Int64>> _userStoreOptions) : IPermissionBag
+public class WebPermissionBag(IOptions<AppUserStoreOptions<Int64>> _userStoreOptions) : IPermissionBag
 {
 	private Dictionary<Int64, PermissionObject>? _dictionary = null;
 
-	public async Task LoadPermisionBagAsync(IDbContext dbContext, String? dataSource)
+	public async Task LoadPermissionBagAsync(IDbContext dbContext, String? dataSource)
 	{
 		if (_dictionary != null)
 			return;
 
         var so = _userStoreOptions.Value;
-		var list = await dbContext.LoadListAsync<PermissionObject>(dataSource, $"[{so.SecuritySchema}].[PemissionObjects]", null);
+		var list = await dbContext.LoadListAsync<PermissionObject>(dataSource, $"[{so.SecuritySchema}].[PermissionObjects]", null);
 		Dictionary<Int64, PermissionObject>? dict = null;
 		if (list != null)
 			dict = list.ToDictionary(l => l.Id);

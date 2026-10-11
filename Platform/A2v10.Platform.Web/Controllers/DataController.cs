@@ -29,9 +29,9 @@ public class DataController(IApplicationHost host,
 		return await TryCatch(async () =>
 		{ 
 			var eo = await Request.ExpandoFromBodyAsync() 
-				?? throw new InvalidReqestExecption(Request.Path);
+				?? throw new InvalidRequestException(Request.Path);
 			var baseUrl = eo.Get<String>("baseUrl") 
-				?? throw new InvalidReqestExecption(nameof(Reload));
+				?? throw new InvalidRequestException(nameof(Reload));
 			String data = await _dataService.ReloadAsync(baseUrl, SetSqlQueryParams);
 
 			return new WebActionResult(data);
@@ -44,7 +44,7 @@ public class DataController(IApplicationHost host,
 		return TryCatch(async () =>
 		{
 			var eo = await Request.ExpandoFromBodyAsync() 
-				?? throw new InvalidReqestExecption(Request.Path);
+				?? throw new InvalidRequestException(Request.Path);
 			var expandData = await _dataService.ExpandAsync(eo, SetSqlQueryParams);
 
 			return new WebActionResult(expandData);
@@ -57,7 +57,7 @@ public class DataController(IApplicationHost host,
 		return TryCatch(async () =>
 		{
 			var eo = await Request.ExpandoFromBodyAsync() 
-				?? throw new InvalidReqestExecption(Request.Path);
+				?? throw new InvalidRequestException(Request.Path);
 			var lazyData = await _dataService.LoadLazyAsync(eo, SetSqlQueryParams);
 
 			return new WebActionResult(lazyData);
@@ -70,9 +70,9 @@ public class DataController(IApplicationHost host,
 		return TryCatch(async () =>
 		{
 			var eo = await Request.ExpandoFromBodyAsync() 
-				?? throw new InvalidReqestExecption(Request.Path);
+				?? throw new InvalidRequestException(Request.Path);
 			String? baseUrl = eo.Get<String>("baseUrl") 
-				?? throw new InvalidReqestExecption(nameof(Save));
+				?? throw new InvalidRequestException(nameof(Save));
 			ExpandoObject data = eo.GetNotNull<ExpandoObject>("data");
 
 			var savedData = await _dataService.SaveAsync(baseUrl, data, SetSqlQueryParams);
@@ -90,11 +90,11 @@ public class DataController(IApplicationHost host,
 		return TryCatch(async () =>
 		{
 			var eo = await Request.ExpandoFromBodyAsync() 
-				?? throw new InvalidReqestExecption(Request.Path);
+				?? throw new InvalidRequestException(Request.Path);
 			String? baseUrl = eo.Get<String>("baseUrl") 
-				?? throw new InvalidReqestExecption(nameof(Invoke));
+				?? throw new InvalidRequestException(nameof(Invoke));
 			String? cmd = eo.Get<String>("cmd") 
-				?? throw new InvalidReqestExecption(nameof(Invoke));
+				?? throw new InvalidRequestException(nameof(Invoke));
 			ExpandoObject? data = eo.Get<ExpandoObject>("data");
 
 			var result = await _dataService.InvokeAsync(baseUrl, cmd, data, SetSqlQueryParams);
@@ -112,9 +112,9 @@ public class DataController(IApplicationHost host,
 		return TryCatch(async () =>
 		{
 			var eo = await Request.ExpandoFromBodyAsync() 
-				?? throw new InvalidReqestExecption(Request.Path);
+				?? throw new InvalidRequestException(Request.Path);
 			var baseUrl = eo.Get<String>("baseUrl") 
-				?? throw new InvalidReqestExecption(nameof(DbRemove));
+				?? throw new InvalidRequestException(nameof(DbRemove));
 			Object id = eo.GetNotNull<Object>("id");
 			String? propName = eo.Get<String>("prop");
 
@@ -128,7 +128,7 @@ public class DataController(IApplicationHost host,
 	public async Task<IActionResult> ExportTo()
 	{
 		var eo = await Request.ExpandoFromBodyAsync() 
-			?? throw new InvalidReqestExecption(Request.Path);
+			?? throw new InvalidRequestException(Request.Path);
 		try
 		{
 			//String format = eo.Get<String>("format");

@@ -524,7 +524,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             CheckAutonumColumn(declaration, storage);
             return declaration.Bake(storage, platformId);
         }
-        catch (Exception ex)
+        // the author's refusals only - all InvalidOperationException; a fault of the platform passes as it is, not as this file's
+        catch (InvalidOperationException ex)
         {
             throw new InvalidOperationException($"{MetadataFileName(schema, table)}: {ex.Message}", ex);
         }

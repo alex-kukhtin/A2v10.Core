@@ -36,7 +36,7 @@ public class FilterItem : XamlElement
 					if (strVal == "True" || strVal == "False")
 						return strVal.ToLowerInvariant();
 				}
-				throw new NotImplementedException($"Invalid value for Boolean FilterItem '{Value}'");
+				throw new XamlException($"Invalid value for Boolean FilterItem '{Value}'");
 			case DataType.Object:
 				if (bind == null)
 					return "null";
@@ -51,7 +51,7 @@ public class FilterItem : XamlElement
 					return "period.all()";
 				return "null"; // TODO: initial value
 			default:
-				throw new NotImplementedException("type for FilterItem");
+				throw new XamlException($"FilterItem does not support the data type {DataType}");
 		}
 	}
 }

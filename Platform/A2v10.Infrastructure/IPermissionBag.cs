@@ -29,6 +29,6 @@ public enum PermissionFlag
 
 public interface IPermissionBag
 {
-	Task LoadPermisionBagAsync(IDbContext dbContext, String? dataSource);
+	Task LoadPermissionBagAsync(IDbContext dbContext, String? dataSource);
 	Dictionary<String, PermissionFlag> DecodePermissions(String? permissions);
 }

@@ -27,6 +27,10 @@
 		-->
 	</ItemGroup>
 
+	<!-- the bundler hooks BeforeCompile, but static web assets resolve earlier (AssignTargetPaths):
+	     after Clean deletes tabbed.js, Rebuild fails on a missing asset -->
+	<Target Name="BundleBeforeStaticWebAssets" BeforeTargets="ResolveProjectStaticWebAssets" DependsOnTargets="BundleMinify" />
+
 	<ItemGroup>
 		<ProjectReference Include="..\..\BlobStorages\AzureBlobStorage\AzureBlobStorage.csproj" />
 		<ProjectReference Include="..\..\BlobStorages\FileSystemBlobStorage\FileSystemBlobStorage.csproj" />

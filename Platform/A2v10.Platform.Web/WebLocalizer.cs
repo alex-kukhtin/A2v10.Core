@@ -7,9 +7,9 @@ using A2v10.Infrastructure;
 
 namespace A2v10.Platform.Web;
 
-public class WebLocalizer(ILocalizerDictiorany dictiorany, ICurrentUser user) : BaseLocalizer(user)
+public class WebLocalizer(ILocalizerDictionary dictiorany, ICurrentUser user) : BaseLocalizer(user)
 {
-	private readonly ILocalizerDictiorany _dictionary = dictiorany;
+	private readonly ILocalizerDictionary _dictionary = dictiorany;
 
     protected override IDictionary<String, String> GetLocalizerDictionary(String locale)
 	{

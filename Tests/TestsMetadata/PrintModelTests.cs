@@ -144,10 +144,9 @@ public class PrintModelTests
         var agent = doc.Columns.First(c => c.Name == "Agent").RefTableCheck.Storage;
         var model = Root(Node("Agent", ["Name"], Node("Store", ["Name"], Node("Agent", "Name"))));
 
-        var build = Task.Run(() => Build(doc, model));
-        Assert.True(build.Wait(TimeSpan.FromSeconds(10)), "the build did not end");
-
-        var sql = build.Result;
+        // a build that never ends is the defect: TimeoutException after 10 s fails the test
+        var sql = await Task.Run(() => Build(doc, model), TestContext.Current.CancellationToken)
+            .WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
         Assert.Equal(1, sql.Split('\n').Count(l => l.TrimStart().StartsWith($"-- {agent.Model} map")));
         var map = sql[sql.IndexOf($"-- {agent.Model} map", StringComparison.Ordinal)..];
         Assert.Contains("union all", map);

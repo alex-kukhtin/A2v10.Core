@@ -34,20 +34,6 @@
 
 ## 2. Баги
 
-### 2.2. `Singular()` — мёртвый код
-
-`StringExtensions.cs:23`
-
-После правки `Plural()` пара round-trip'ится на `-ies`, но `"ses"` по-прежнему режет два
-символа: `Houses → Hous`, `Cases → Cas`.
-
-Проверять это незачем: в `A2v10.Metadata` у метода **ноль вызовов**. Все живые
-`.Singular()` — в `Obsolete/A2v10.AppRuntimeBuilder`, и там своя копия `StringExtensions`.
-То есть это не баг, а мёртвый код: удалить или вернуть в оборот.
-
-Следствие для `TESTS.md` (раздел B): свойство `Singular ∘ Plural = id` фиксировать не на
-чем, а оговорка «сначала зафиксировать текущее кривое поведение» ссылается на кривизну `Plural()`, починенную 2026-09-02.
-
 ### 2.20. Селектор с владельцем и `inherit` теряет `inherit` (2026-10-10)
 
 `ViewEngines/A2v10.ViewEngine.Xaml/Controls/SelectorSimple.cs`, `OnEndInit`: данные для fetch берутся
@@ -534,7 +520,7 @@ journal it is about to write»). Запрос на дату читает рег�
   `null` — до него не дошли (цепочка остановилась раньше; отсутствие не читается как «всё
   переведено», то же правило, что для `checks`); `[]` — всё переведено; `[{ key, from, missing:
   [locales] }]`. «Mismatch», а не «missing»: ключ может быть в `uk` и отсутствовать в `en`.
-- **CLI подключает настоящий `ILocalizer`** (`WebLocalizer` над `WebLocalizerDictiorany`), а не
+- **CLI подключает настоящий `ILocalizer`** (`WebLocalizer` над `WebLocalizerDictionary`), а не
   второй разборщик `_localization/*.txt`: формат (`;`-комментарии, `key=value`, слияние словаря
   хоста со словарём приложения, откат `uk-UA` → `uk`) читается в одном месте, и `validate` видит
   словарь ровно так, как экран. Пропуск — `Localize(locale, key)` вернул сам ключ: то же
@@ -544,7 +530,7 @@ journal it is about to write»). Запрос на дату читает рег�
 - **Локали — `Globalization:AvailableLocales` из appsettings.json** (строка через запятую,
   `WebGlobalization.cs:26`): то, что приложение предлагает пользователю. Не суффиксы файлов
   `*.{locale}.txt`: это второе прочтение правила имён, которое знает только
-  `WebLocalizerDictiorany`. Открыто: у стенда этого ключа нет, есть только
+  `WebLocalizerDictionary`. Открыто: у стенда этого ключа нет, есть только
   `Globalization:Locale` (`uk-UA`). Предложено: нет `AvailableLocales` — проверяется одна
   `Locale`.
 

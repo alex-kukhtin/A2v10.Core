@@ -43,7 +43,7 @@ public static class ServiceExtensions
 			.AddScoped<IProfiler>(s => s.GetRequiredService<WebProfiler>())
 			.AddScoped<IDataProfiler>(s => s.GetRequiredService<WebProfiler>());
 
-		services.AddSingleton<ILocalizerDictiorany, WebLocalizerDictiorany>();
+		services.AddSingleton<ILocalizerDictionary, WebLocalizerDictionary>();
 		services.AddScoped<IAppDataProvider, WebAppDataProvider>();
 
 		services.AddKeyedScoped<IEndpointHandler, AuxMenuEndpointHandler>("AuxMenu");

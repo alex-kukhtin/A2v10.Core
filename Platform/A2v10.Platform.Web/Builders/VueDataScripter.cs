@@ -132,7 +132,7 @@ public class VueDataScripter(
     public String CreateDataModelScript(IDataModel? model, Boolean isPlain)
 	{
 		if (model == null)
-			return CreateEmptyStript();
+			return CreateEmptyScript();
 		if (isPlain)
 			return CreatePlainScript();
 		return model.CreateScript(this);
@@ -170,7 +170,7 @@ function modelData(template, data) {
 ";
 	}
 
-	static String CreateEmptyStript()
+	static String CreateEmptyScript()
 	{
 		return @"
 function modelData(template, data) {

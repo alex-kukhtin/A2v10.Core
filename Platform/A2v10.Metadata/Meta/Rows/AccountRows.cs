@@ -98,7 +98,8 @@ internal static class AccountRows
                 {
                     column.SqlLiteral(value);
                 }
-                catch (Exception ex)
+                // SqlLiteral refuses a value the column cannot hold with InvalidOperationException; anything else is ours
+                catch (InvalidOperationException ex)
                 {
                     throw new InvalidOperationException($"{head} - {ex.Message}", ex);
                 }
