@@ -34,7 +34,7 @@ internal class TurnoverReportBuilder(IServiceProvider serviceProvider, ReportMet
         });
     }
 
-    private async Task<String> CreateSqlTextAsync()
+    internal async Task<String> CreateSqlTextAsync()
     {
         var filterFields = _grouping.Filters.Select(f =>
             $"[{f.Column}!T{f.Column}!RefId] = {SqlExtensions.ColumnParam(f.Column)}");
@@ -105,7 +105,7 @@ internal class TurnoverReportBuilder(IServiceProvider serviceProvider, ReportMet
         order by {_grouping.ReferenceOrderByGrp()};
 
         select [Filter!TFilter!Object] = null, {filterSql}
-            [Group] = N'{_grouping.GroupParams}',
+            [Group] = N'{_grouping.GroupColumns()}',
             [Period.From!TPeriod!] = @From, [Period.To!TPeriod!] = @To, Run = @Run, Tab = @Tab;
 
         {filterMaps}

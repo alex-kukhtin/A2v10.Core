@@ -65,8 +65,14 @@ internal class ReportGrouping
         }
     }
 
-    public String? GroupParams => _prms.Get<String>("Group");
+    // the browser's text: read here, resolved against the declared items, and nowhere else
+    private String? GroupParams => _prms.Get<String>("Group");
     public String? DataParams => _prms.Get<String>("Data");
+
+    // the picked groups as resolved - declared names only, so the echo of '?Group=' can be SQL text
+    internal String GroupColumns()
+        => String.Join("!", Grouping.Select(c => c.Column));
+
     internal String SelectFields(String alias)
         => String.Join(", ", Grouping.Select(c => $"{alias}.[{c.Column}]"));
 
