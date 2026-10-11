@@ -40,6 +40,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\Platform\A2v10.Platform\A2v10.Platform.csproj" />
 		<ProjectReference Include="..\..\Platform\A2v10.Services\A2v10.Services.csproj" />
+		<ProjectReference Include="..\..\BlobStorages\FileSystemBlobStorage\FileSystemBlobStorage.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -21,9 +21,14 @@ public class InternalAppCodeProviderFile(String path) : IAppCodeProviderImpl
             path = path[(ix + 1)..];
         }
 
-        String fullPath = Path.Combine($"{AppPath}", path);
-
-        return Path.GetFullPath(fullPath);
+        // the one bound of every file the application serves: '..' and a rooted path stop here,
+        // not in each controller that hands a path from the url
+        var root = Path.TrimEndingDirectorySeparator(Path.GetFullPath(AppPath));
+        var fullPath = Path.GetFullPath(Path.Combine(root, path));
+        var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        if (fullPath.Equals(root, comparison) || fullPath.StartsWith(root + Path.DirectorySeparatorChar, comparison))
+            return fullPath;
+        throw new UnauthorizedAccessException($"Path '{path}' is outside the application");
     }
 
    
