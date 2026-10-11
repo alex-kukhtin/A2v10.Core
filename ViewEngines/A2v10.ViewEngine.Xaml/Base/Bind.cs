@@ -68,7 +68,7 @@ public partial class Bind : BindBase, ISupportInitialize
 			opts.Add($"dataType: '{DataType}'");
 
 		if (formatBind != null)
-			opts.Add($"format: {formatBind.GetPathFormat(context)},");
+			opts.Add($"format: {formatBind.GetPathFormat(context)}");
 		else if (!String.IsNullOrEmpty(Format))
 			opts.Add($"format: `{context.Localize(Format.ToJsString())}`");
 

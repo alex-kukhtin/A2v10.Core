@@ -75,11 +75,15 @@ internal sealed class PostStatements
             {b.Body}
             end
             """));
+        /* Not a 'UI:' message, as SqlDbGenerator's autonum is not: a document of another endpoint is refused
+         * earlier (RecordCheck), so what reaches 'else' is an operation with no body here - the metadata's
+         * gap, nothing the user can fix. Its reader needs the address, which a dictionary key cannot carry.
+         */
         return $"""
             declare @OperationId {column.SqlDataType()} = (select [{column.Name}] from {_table.SqlTableName} where [{Constants.FieldNames.Id}] = @Id);
             {branches}
             else
-                throw 600000, N'The operation of the document is not one of {_endpoint.Path}', 0;
+                throw 60000, N'The operation of the document is not one of {_endpoint.Path}', 0;
             """;
     }
 
@@ -375,7 +379,8 @@ internal sealed class PostStatements
                 ?? throw new InvalidOperationException($"{head}: '{leg}' names [{name}], which is not a column of the ledger");
             if (col.HasSqlAs)
                 throw new InvalidOperationException($"{head}: '{leg}' names [{name}], which has 'sqlAs' - nothing is posted into it");
-            var legal = name == Constants.FieldNames.Acc || ledger.Columns.Contains(col) && !col.IsProvenance;
+            // the author's column, by instance: a record's Equals would walk RefTable, which the load writes late
+            var legal = name == Constants.FieldNames.Acc || ledger.Columns.Any(c => ReferenceEquals(c, col)) && !col.IsProvenance;
             return legal ? col
                 : throw new InvalidOperationException($"{head}: '{leg}' names [{name}], which the platform fills");
         }

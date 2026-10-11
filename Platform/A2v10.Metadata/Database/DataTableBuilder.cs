@@ -13,7 +13,7 @@ namespace A2v10.Metadata;
  * Important! The order in which columns are added to the DataTable must match
  * their order in the table type!
 */
-internal class DataTableBuilder(TableMetadata table, AppPlatformId platformId)
+internal class DataTableBuilder(TableMetadata table, AppPlatformId platformId, Boolean allowEmptyStrings)
 {
     public DataTable BuildDataTable(ExpandoObject? data)
     {
@@ -76,48 +76,19 @@ internal class DataTableBuilder(TableMetadata table, AppPlatformId platformId)
             dtable.Columns.Add(CreateColumn(f));
         return dtable;
     }
+    /* The shape is ours (the table type's columns, in its order); the value is the core's, by the one
+     * conversion the classic save writes through (A2v10.Data DataModelWriter): a reference is its Id, ''
+     * is NULL unless the host allows empty strings (DataConfigurationOptions.AllowEmptyStrings), rv is
+     * hex, a string is parsed invariantly. A conversion of our own wrote '' where the classic one wrote
+     * NULL, threw on '' in a date or a number, and parsed '12.5' in the process's culture.
+     */
     private void AddRow(DataTable dtable, ExpandoObject src)
     {
         var r = dtable.NewRow();
-
         dtable.Rows.Add(r);
-
-        var columns = dtable.Columns;
-        for (int i = 0; i < columns.Count; i++)
-        {
-            var col = columns[i];
-
-            var realColumnName = col.ColumnName;
-
-            if (!src.HasProperty(realColumnName))
-            {
-                r[col] = DBNull.Value;
-            }
-            else
-            { 
-                var obj = src.Get<Object>(realColumnName);
-                // a reference first: what it carries is an id, and the checks below are about that id
-                if (obj is ExpandoObject exp)
-                {
-                    obj = exp.Get<Object>("Id");
-                    if (AppPlatformId.IsEmpty(obj))
-                        obj = DBNull.Value;
-                }
-                if (obj == null)
-                    obj = DBNull.Value;
-                else if (col.DataType == typeof(Guid))
-                {
-                    if (obj is String strObj && String.IsNullOrWhiteSpace(strObj))
-                        obj = DBNull.Value;
-                }
-                else if (col.ColumnName == "rv")
-                {
-                    if (obj is String strObj)
-                        obj =  (String.IsNullOrWhiteSpace(strObj)) ? DBNull.Value
-                            : Convert.FromHexString(strObj);
-                }
-                r[col] = obj;
-            }
-        }
+        foreach (DataColumn col in dtable.Columns)
+            r[col] = src.HasProperty(col.ColumnName)
+                ? A2v10.Data.SqlExtensions.ConvertTo(src.Get<Object>(col.ColumnName), col.DataType, allowEmptyStrings, col.ColumnName)
+                : DBNull.Value;
     }
 }

@@ -90,9 +90,12 @@ internal class UserAdminBuilder(IServiceProvider _serviceProvider, UserAdminEndp
         var user = data.Get<ExpandoObject>("User")
             ?? throw new InvalidOperationException("Users. User is null");
         var roles = (data.Get<List<Object>>("Roles") ?? []).OfType<ExpandoObject>().ToList();
-        // the last admin would leave no one to give the role back - only SQL could
+        /* The last admin would leave no one to give the role back - only SQL could. Compared as the
+         * roles merge finds the role: the collation ignores case and trailing spaces, so 'admin ' is Admin.
+         */
         if (id == _currentUser.Identity.Id
-            && roles.Any(r => r.Get<String>("Id") == AppRoles.Admin && !r.Get<Boolean>("Checked")))
+            && roles.Any(r => String.Equals(r.Get<String>("Id")?.TrimEnd(), AppRoles.Admin, StringComparison.OrdinalIgnoreCase)
+                && !r.Get<Boolean>("Checked")))
             throw new InvalidOperationException("UI:@[Admin.Error.SelfAdmin]");
         var boundaryRows = (data.Get<List<Object>>(SqlBuilderUsers.BoundaryRows) ?? []).OfType<ExpandoObject>();
         return await _sqlBuilder.SaveCardAsync(_dataSource, id, user, roles, boundaryRows, await BoundaryAsync());

@@ -48,6 +48,7 @@
 @Error.Document.AlreadyPosted=Документът вече е осчетоводен
 @Error.Document.NotPosted=Документът не е осчетоводен
 @Error.Document.AlreadyApplied=Документът е осчетоводен и не може да бъде променен
+@Error.Document.BasedOnNotFound=Документът-основание не е намерен
 ;
 ; Folders and tags
 @Folder=Папка

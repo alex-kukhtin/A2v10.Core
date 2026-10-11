@@ -390,18 +390,19 @@ internal partial class XamlBuilder
     {
         return action switch
         {
-            "index" => CreateIndexPageXaml(Declaration.Form(Constants.FormNames.Index)),
-            "indexpartial" => CreateIndexPartialPageXaml(Declaration.Form(Constants.FormNames.Index)),
-            "browse" => CreateBrowseDialogXaml(Declaration.Form(Constants.FormNames.Browse)),
+            Constants.Actions.Index => CreateIndexPageXaml(Declaration.Form(Constants.FormNames.Index)),
+            Constants.Actions.IndexPartial => CreateIndexPartialPageXaml(Declaration.Form(Constants.FormNames.Index)),
+            Constants.Actions.Browse => CreateBrowseDialogXaml(Declaration.Form(Constants.FormNames.Browse)),
             // no form: the tree of the owner's folders, nothing to lay out
-            "browsefolder" => CreateBrowseFolderDialogXaml(),
-            "editfolder" => CreateEditFolderDialogXaml(),
-            "edit" => CreateEditXaml(Declaration.Form(Constants.FormNames.Edit)),
+            Constants.Actions.BrowseFolder => CreateBrowseFolderDialogXaml(),
+            Constants.Actions.EditFolder => CreateEditFolderDialogXaml(),
+            Constants.Actions.Edit => CreateEditXaml(Declaration.Form(Constants.FormNames.Edit)),
+            Constants.Actions.Show => throw Constants.Actions.NotBuilt(action, "XAML"),
             // no form: what it shows is derived from 'post' - see TransDialogXaml
             Constants.Trans.Action => CreateTransDialogXaml(),
             // no form
             Constants.Print.Action => CreatePrintPageXaml(),
-            _ => throw new InvalidOperationException($"Invalid action: '{action}'")
+            _ => throw Constants.Actions.Unknown(action)
         };
     }
 

@@ -62,6 +62,29 @@ internal sealed class EndpointLoad(ConcurrentDictionary<String, EndpointMetadata
         return built;
     }
 
+    /* The addresses on their 'storage' hop. Each declared 'storage', so none has a shape of its own,
+     * and a hop that lands on one is a cycle (a -> b -> a) - the descent would build a forever. Only
+     * the hop asks: a reference of phase 2 may come back to an address still being built, and that
+     * is legal. Per load like the rest of this class, so no lock: the cache's gate runs one load at
+     * a time, and a load is one descent.
+     */
+    private readonly HashSet<String> _hopping = [];
+
+    public IDisposable Hop(String? dataSource, String schema, String table, String key, String targetSchema, String targetTable)
+    {
+        if (_hopping.Contains(KeyOf(dataSource, targetSchema, targetTable)))
+            throw new InvalidOperationException(
+                $"/{schema}/{table}: '{key}' points at /{targetSchema}/{targetTable}, whose own 'storage' leads back here. One of them declares 'table'.");
+        var mine = KeyOf(dataSource, schema, table);
+        _hopping.Add(mine);
+        return new Leave(() => _hopping.Remove(mine));
+    }
+
+    private sealed class Leave(Action leave) : IDisposable
+    {
+        public void Dispose() => leave();
+    }
+
     // Once, at the end, for all of them: a load is visible whole or not at all.
     public void Publish()
     {

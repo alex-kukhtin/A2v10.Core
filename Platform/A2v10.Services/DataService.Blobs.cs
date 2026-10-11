@@ -36,6 +36,7 @@ public partial class DataService
 		var platformUrl = CreatePlatformUrl(kind, baseUrl);
 		IModelBlob blob = await _modelReader.GetBlobAsync(platformUrl, suffix)
 			?? throw new DataServiceException($"Blob is null");
+		CheckAccess(blob, write: false);
 
 		var prms = new ExpandoObject();
 		prms.Set("Id", blob.Id);
@@ -185,6 +186,7 @@ public partial class DataService
 		var platformUrl = CreatePlatformUrl(urlKind, baseUrl);
 		var blobModel = await _modelReader.GetBlobAsync(platformUrl)
 			?? throw new DataServiceException($"Blob is null");
+		CheckAccess(blobModel, write: true);
 		var (BlobType, StorageName) = GetBlobType(blobModel);
 		return BlobType switch
 		{
@@ -441,6 +443,7 @@ public partial class DataService
 		var platformUrl = CreatePlatformUrl(UrlKind.File, baseUrl);
 		var blobModel = await _modelReader.GetBlobAsync(platformUrl)
 			?? throw new DataServiceException($"Blob is null");
+		CheckAccess(blobModel, write: true);
 		var (BlobType, StorageName) = GetBlobType(blobModel);
 		return BlobType switch
 		{

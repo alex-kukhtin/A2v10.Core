@@ -185,10 +185,10 @@ public partial class WorkbookHelper
 				yield return new RealRow(r + 1);
 			else
 			{
+				// a missed path is an empty range (CLAUDE.md, Report expressions) - its rows are passed like any range's;
+				// 'continue' here kept r and found the same range again, forever
 				var coll = _context.EvaluateCollection(rng.Value[1..^1], _context.DataModel);
-				if (coll == null)
-					continue;
-				foreach (var colElem in coll)
+				foreach (var colElem in coll ?? [])
 				{
 					for (UInt32 k = rng.Start; k <= rng.End; k++)
 					{

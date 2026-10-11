@@ -48,6 +48,7 @@
 @Error.Document.AlreadyPosted=The document is already posted
 @Error.Document.NotPosted=The document is not posted
 @Error.Document.AlreadyApplied=The document is posted and cannot be changed
+@Error.Document.BasedOnNotFound=The document to base on is not found
 ;
 ; Folders and tags
 @Folder=Folder

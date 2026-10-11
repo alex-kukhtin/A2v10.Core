@@ -23,7 +23,8 @@ public record ReportItemMetadata
     public ReportItemKind Kind { get; init; }
     public String Column { get; init; } = default!;
     public ColumnType DataType { get; init; } = default!;
-    public String? SqlTableName { get; init; }
+    // the referenced table: a report shows its Presentation, read from RefSourceName, as everywhere else
+    public TableMetadata? Target { get; init; }
     public String? Endpoint { get; init; }
     public Boolean Checked { get; init; }
     public Int32 Order { get; init; }
@@ -67,7 +68,7 @@ internal class ReportGrouping
 
     // the browser's text: read here, resolved against the declared items, and nowhere else
     private String? GroupParams => _prms.Get<String>("Group");
-    public String? DataParams => _prms.Get<String>("Data");
+    private String? DataParams => _prms.Get<String>("Data");
 
     // the picked groups as resolved - declared names only, so the echo of '?Group=' can be SQL text
     internal String GroupColumns()
@@ -82,11 +83,25 @@ internal class ReportGrouping
     internal String FieldsWithGrouping()
         => String.Join(", ", Grouping.Select(c => $"[{c.Column}], {c.Column}Grp = grouping([{c.Column}])"));
 
+    /* A group and a filter show a reference the way the platform shows one: the target's Presentation, read
+     * from RefSourceName - a document's reference view. Read as [Name] of the table, a document (no Name)
+     * failed the report and a catalog with another presentation showed what the index does not.
+     */
     internal String ReferenceWithGrouping()
-        => String.Join(", ", Grouping.Select((c, ix) => $"[{c.Column}.Id!T{c.Column}!Id] = T.{c.Column}, [{c.Column}.Name!T{c.Column}!Name] = isnull(r{ix + 1}.[Name], N'@[{c.Column}.NoData]'), [{c.Column}!!GroupMarker] = {c.Column}Grp"));
+        => String.Join(", ", Grouping.Select((c, ix) => $"[{c.Column}.Id!T{c.Column}!Id] = T.{c.Column}, [{c.Column}.Name!T{c.Column}!Name] = isnull(r{ix + 1}.[{c.Target!.Presentation}], N'@[{c.Column}.NoData]'), [{c.Column}!!GroupMarker] = {c.Column}Grp"));
 
     internal String ReferenceJoins()
-        => String.Join(" ", Grouping.Select((c, ix) => $"left join {c.SqlTableName} r{ix + 1} on T.[{c.Column}] = r{ix + 1}.[Id]"));
+        => String.Join(" ", Grouping.Select((c, ix) => $"left join {c.Target!.RefSourceName} r{ix + 1} on T.[{c.Column}] = r{ix + 1}.[Id]"));
+
+    /* The object each filter's RefId points at. One for every report type - it was written twice, in the
+     * turnover and the ledger builder. The type stays T{Column}, one per filter, as the page binds it.
+     */
+    internal String FilterMapsSql()
+        => String.Join("\n", Filters.Select(f => $"""
+            select [!T{f.Column}!Map] = null, [Id!!Id] = a.[Id], [Name!!Name] = a.[{f.Target!.Presentation}]{SqlBuilder.RefFields(f.Target, "a")}
+            from {f.Target.RefSourceName} a
+            where a.[Id] = {SqlExtensions.ColumnParam(f.Column)};
+            """));
 
     internal String ReferenceOrderByGrp()
         => String.Join(", ", Grouping.Select(c => $"{c.Column}Grp desc"));
@@ -139,7 +154,7 @@ internal class ReportGrouping
                 Kind = kind,
                 Column = name,
                 DataType = column.Type,
-                SqlTableName = column.IsRef ? column.RefTableCheck.Storage.SqlTableName : null,
+                Target = column.IsRef ? column.RefTableCheck.Storage : null,
                 Endpoint = column.IsRef ? column.RefTableCheck.Path : null,
                 Checked = isChecked
             };

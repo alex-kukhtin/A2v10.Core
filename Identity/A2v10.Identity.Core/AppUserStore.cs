@@ -435,7 +435,7 @@ public sealed class AppUserStore<T>(IDbContext dbContext, IOptions<AppUserStoreO
 
 	public Task ReplaceClaimAsync(AppUser<T> user, Claim claim, Claim newClaim, CancellationToken cancellationToken)
 	{
-		return UpdateClaim(user, claim);
+		return UpdateClaim(user, newClaim);
 	}
 
 	public Task RemoveClaimsAsync(AppUser<T> user, IEnumerable<Claim> claims, CancellationToken cancellationToken)

@@ -133,6 +133,26 @@ public class PrintModelTests
         Assert.Contains("[Store]", map);
     }
 
+    /* A path back into a table already mapped: agent -> store -> agent. Driven by the merged maps, the
+     * agent map's rows were fed into themselves each round and the build never ended. Walked along the
+     * written paths it ends, and the agent map still takes both: the document's agent and the store's.
+     */
+    [Fact]
+    public async Task A_path_back_into_a_mapped_table_ends()
+    {
+        var doc = (await WaybillInAsync()).Storage;
+        var agent = doc.Columns.First(c => c.Name == "Agent").RefTableCheck.Storage;
+        var model = Root(Node("Agent", ["Name"], Node("Store", ["Name"], Node("Agent", "Name"))));
+
+        var build = Task.Run(() => Build(doc, model));
+        Assert.True(build.Wait(TimeSpan.FromSeconds(10)), "the build did not end");
+
+        var sql = build.Result;
+        Assert.Equal(1, sql.Split('\n').Count(l => l.TrimStart().StartsWith($"-- {agent.Model} map")));
+        var map = sql[sql.IndexOf($"-- {agent.Model} map", StringComparison.Ordinal)..];
+        Assert.Contains("union all", map);
+    }
+
     /* A predicate is reused verbatim inside the subquery of whatever hangs below it, and an
      * unqualified name there binds to the innermost scope that has such a column - so a column the
      * inner table happens to lack becomes a correlated reference to the outer one, silently. The

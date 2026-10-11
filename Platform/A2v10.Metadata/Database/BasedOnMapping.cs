@@ -27,7 +27,8 @@ internal static class BasedOnMapping
     internal static TableColumn? SourceOf(TableColumn target, TableMetadata targetTable, TableMetadata sourceTable,
         IReadOnlyDictionary<String, String> overrides)
     {
-        if (!targetTable.Columns.Contains(target) || IsIssued(target) || target.HasSqlAs)
+        // the author's column, by instance: a record's Equals would walk RefTable, which the load writes late
+        if (!targetTable.Columns.Any(c => ReferenceEquals(c, target)) || IsIssued(target) || target.HasSqlAs)
             return null;
         if (overrides.TryGetValue(target.Name, out var name))
             return sourceTable.Columns.First(c => c.Name == name);

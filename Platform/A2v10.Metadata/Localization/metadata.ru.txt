@@ -48,6 +48,7 @@
 @Error.Document.AlreadyPosted=Документ уже проведён
 @Error.Document.NotPosted=Документ не проведён
 @Error.Document.AlreadyApplied=Документ проведён, изменить его невозможно
+@Error.Document.BasedOnNotFound=Документ-основание не найден
 ;
 ; Folders and tags
 @Folder=Папка

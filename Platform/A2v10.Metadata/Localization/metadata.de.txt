@@ -48,6 +48,7 @@
 @Error.Document.AlreadyPosted=Der Beleg ist bereits gebucht
 @Error.Document.NotPosted=Der Beleg ist nicht gebucht
 @Error.Document.AlreadyApplied=Der Beleg ist gebucht und kann nicht geändert werden
+@Error.Document.BasedOnNotFound=Das Basisdokument wurde nicht gefunden
 ;
 ; Folders and tags
 @Folder=Ordner

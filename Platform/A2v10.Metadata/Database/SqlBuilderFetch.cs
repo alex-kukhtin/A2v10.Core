@@ -70,29 +70,14 @@ internal partial class SqlBuilder
                     $"fetch: column '{name}' not found in {Table.SqlTableName}"))];
     }
 
-    /* A reference among them is resolved the way the index resolves its own - RefId in the row,
-     * the object itself in a Map recordset - and not as a nested join, because the object the
-     * selector hands to the row has to have the same shape as the one the document load hands
-     * to it. One shape, one place that decides it.
+    /* A reference among them is resolved the way the index resolves its own - RefId in the row, the
+     * object itself in a Map recordset - and BY the same resolve (RefMapBuilder.GenerateResolves): the
+     * object the selector hands to the row has the shape the document load hands to it. The fetch's own
+     * @map names its slots after these columns, which is what the resolve reads. A second resolve kept
+     * here once sent no Role, Done, $Url or $Icon, and read a document's table instead of its view.
      */
-    private static String FetchMaps(List<TableColumn> refColumns)
-    {
-        return String.Join("\n\n", refColumns
-            .GroupBy(c => c.RefTableCheck.Storage.RefTypeName)
-            .Select(g =>
-            {
-                var refTable = g.First().RefTableCheck.Storage;
-                var ids = String.Join("\n    union all\n    ", g
-                    .Select(c => $"select id = [{c.Name}] from @map where [{c.Name}] is not null group by [{c.Name}]"));
-                return $"""
-                with T as (
-                    {ids}
-                )
-                select [!{g.Key}!Map] = null, [Id!!Id] = a.Id, [Name!!Name] = a.[{refTable.Presentation}]{ChoiceField(refTable, "a")}{ColorField(refTable, "a")}
-                from {refTable.SqlTableName} a inner join T on a.Id = T.id;
-                """;
-            }));
-    }
+    private static String FetchMaps(TableMetadata table, List<TableColumn> refColumns) =>
+        new RefMapBuilder([(table, String.Empty, refColumns)]).GenerateResolves() ?? String.Empty;
 
     /* The owners the picker sends (ScriptBuilder.OwnerProperties) - the browse gets the same ones
      * through its url, as filters of the index. Only owner columns are read: the arguments come
@@ -105,6 +90,23 @@ internal partial class SqlBuilder
             .Select(o => (o.Column, o.Id!))];
 
     internal async Task<IInvokeResult> FetchAsync(ExpandoObject? prms)
+    {
+        var sql = FetchSqlText(prms);
+        var owners = FetchOwners(Table, PlatformId, prms);
+
+        var model = await _dbContext.LoadModelSqlAsync(DataSource, sql, dbprms =>
+        {
+            dbprms.AddBigInt("@UserId", _currentUser.Identity.Id)
+            .AddString("@Text", prms?.Get<String>("Text"));
+            foreach (var (column, id) in owners)
+                dbprms.AddTyped(ColumnParam(column.Name), PlatformId.SqlDbType, id);
+        });
+
+        return model.ToInvokeResult();
+    }
+
+    // the text of the fetch, built without the database
+    internal String FetchSqlText(ExpandoObject? prms)
     {
         var columns = FetchColumns(prms?.Get<String>("inherit"));
         var extra = String.Join("", columns
@@ -129,7 +131,7 @@ internal partial class SqlBuilder
          * and one select answers; with them the same hundred rows are needed twice, so they are
          * materialized once instead of being selected twice under a LIKE.
          */
-        var sql = refColumns.Count == 0
+        return refColumns.Count == 0
             ? $"""
             set nocount on;
             set transaction isolation level read uncommitted;
@@ -168,17 +170,7 @@ internal partial class SqlBuilder
                 inner join @map m on m.Id = a.Id
             order by a.[{chosen}];
 
-            {FetchMaps(refColumns)}
+            {FetchMaps(Table, refColumns)}
             """;
-
-        var model = await _dbContext.LoadModelSqlAsync(DataSource, sql, dbprms =>
-        {
-            dbprms.AddBigInt("@UserId", _currentUser.Identity.Id)
-            .AddString("@Text", prms?.Get<String>("Text"));
-            foreach (var (column, id) in owners)
-                dbprms.AddTyped(ColumnParam(column.Name), PlatformId.SqlDbType, id);
-        });
-
-        return model.ToInvokeResult();
     }
 }

@@ -19,6 +19,7 @@ internal class SqlBuilderTags(IServiceProvider serviceProvider, AppPlatformId _p
 {
     private readonly IDbContext _dbContext = serviceProvider.GetRequiredService<IDbContext>();
     private readonly ICurrentUser _currentUser = serviceProvider.GetRequiredService<ICurrentUser>();
+    private readonly Boolean _allowEmptyStrings = serviceProvider.GetRequiredService<IDataConfiguration>().AllowEmptyStrings;
 
     /* 'Used' says the tag is on at least one record, and the dialog refuses to delete it - so it
      * is computed, never stored: a stored bit would be a second truth to keep in step with the
@@ -84,7 +85,7 @@ internal class SqlBuilderTags(IServiceProvider serviceProvider, AppPlatformId _p
 
         // the type name comes off the same table the deploy generates it from, so a rename moves both
         var tagsTable = TableMetadataDefaults.TagsTable();
-        var dtb = new DataTableBuilder(tagsTable, _platformId);
+        var dtb = new DataTableBuilder(tagsTable, _platformId, _allowEmptyStrings);
         var rows = data.Get<List<Object>>(Constants.FieldNames.Tags);
 
         void SaveParams(DbParameterCollection prms)

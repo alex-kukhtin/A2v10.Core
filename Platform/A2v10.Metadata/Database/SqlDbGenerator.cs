@@ -560,9 +560,9 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
      * caller - the caller knows the catalog its company column points at, so the procedure stays
      * one for every numbering.
      *
-     * The counter is advanced by one statement and is committed with it, before the save that
-     * asked continues. That is what makes gaps normal here - a save that fails afterwards has
-     * already spent the number - and it is the deliberate choice, see CLAUDE.md, "Autonums".
+     * No transaction of its own: the save calls it last inside its own, so the counter's lock is
+     * held from here to the save's commit, and a rollback returns the number. See CLAUDE.md,
+     * "Autonums".
      */
     internal static String CreateAutonumProcedureScript(IEnumerable<TableMetadata> tables)
     {

@@ -1,0 +1,13 @@
+{
+	"$schema": "../../../../../Platform/A2v10.App.Assets2026/Application/@schemas/metadata-report-json-schema.json#",
+	"description": "A turnover grouped and filtered by the document that posted it: a document has no Name, it is shown by its Presentation from the reference view (ReportQueryTests).",
+	"surface": "journal/stock",
+	"type": "turnover",
+	"groups": [ "Document", "Store" ],
+	"filters": [ "Document", "Store" ],
+	"data": [ "Qty" ],
+	"defaults": {
+		"groups": [ "Document" ],
+		"data": [ "Qty" ]
+	}
+}

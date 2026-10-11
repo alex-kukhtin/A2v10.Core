@@ -42,6 +42,15 @@ public class PlatformUrl : IPlatformUrl
 	public Boolean Auto { get; private set; }
 	public ExpandoObject? Query { get; private set; }
 
+	// the posted data of an invoke join what the client sent: one layer with the query, under model.json (ModelJsonBase.CreateParameters)
+	public void AppendPosted(ExpandoObject? data)
+	{
+		if (data == null)
+			return;
+		Query ??= [];
+		Query.Append(data);
+	}
+
 	public void Redirect(String? path)
 	{
 		if (path == null || LocalPath == path)

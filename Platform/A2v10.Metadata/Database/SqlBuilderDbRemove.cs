@@ -36,7 +36,7 @@ internal partial class SqlBuilder
 
             checkSql = $"""
             if {String.Join(" or\n", existsRef)}
-                throw 60000, N'UI:@[Error.Delete.Used]', 0;
+                {SqlExtensions.UserError("Error.Delete.Used")}
             """;
         }
 
@@ -54,7 +54,7 @@ internal partial class SqlBuilder
             declare @Done bit;
             select @Done = Done from {Table.SqlTableName} where Id = @Id;
             if @Done = 1
-                throw 600000, N'@[Error.Document.AlreadyApplied]', 0;
+                {SqlExtensions.UserError("Error.Document.AlreadyApplied")}
             else
                 update {Table.SqlTableName} set [Void] = 1{ModifiedStamp()} where [Id] = @Id;          
             """;

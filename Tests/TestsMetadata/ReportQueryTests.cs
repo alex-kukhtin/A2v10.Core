@@ -12,12 +12,12 @@ namespace A2v10.Metadata.Tests;
  */
 public class ReportQueryTests
 {
-    static async Task<TurnoverReportBuilder> TurnoverAsync(ExpandoObject query)
+    static async Task<TurnoverReportBuilder> TurnoverAsync(ExpandoObject query, String report = "stockturnover")
     {
-        var report = Assert.IsType<ReportEndpointMetadata>(
-            await TestHost.GetService<DatabaseMetadataProvider>().GetEndpointAsync(null, "report", "stockturnover"));
+        var endpoint = Assert.IsType<ReportEndpointMetadata>(
+            await TestHost.GetService<DatabaseMetadataProvider>().GetEndpointAsync(null, "report", report));
         var builder = Assert.IsType<TurnoverReportBuilder>(
-            BaseReportBuilder.Create(TestHost.Services, report, new AppPlatformId(typeof(Int64)), useGrants: false));
+            BaseReportBuilder.Create(TestHost.Services, endpoint, new AppPlatformId(typeof(Int64)), useGrants: false));
         builder.SetGrouping(query);
         return builder;
     }
@@ -50,5 +50,25 @@ public class ReportQueryTests
         var sql = await builder.CreateSqlTextAsync();
 
         Assert.Contains("[Group] = N'Item!Agent'", sql);
+    }
+
+    /* A reference in a report is shown as the platform shows one: Presentation, from RefSourceName. A
+     * document has no Name - read as [Name] of its table, a group or a filter by it failed the report.
+     */
+    [Fact]
+    public async Task A_document_is_grouped_and_filtered_by_its_reference_view()
+    {
+        var builder = await TurnoverAsync(Query("Document"), "stockbydocument");
+        var journal = Assert.IsType<NormalEndpointMetadata>(
+            await TestHost.GetService<DatabaseMetadataProvider>().GetEndpointAsync(null, "journal", "stock")).Storage;
+        var document = journal.AllColumns().First(c => c.Name == "Document").RefTableCheck.Storage;
+
+        var sql = await builder.CreateSqlTextAsync();
+
+        Assert.Contains($"left join {document.RefSourceName} r1", sql);
+        Assert.Contains($"isnull(r1.[{document.Presentation}]", sql);
+        Assert.Contains($"[Name!!Name] = a.[{document.Presentation}]{SqlBuilder.RefFields(document, "a")}", sql);
+        Assert.Contains($"from {document.RefSourceName} a", sql);
+        Assert.DoesNotContain($"from {document.SqlTableName}\n", sql);
     }
 }

@@ -613,12 +613,12 @@ internal partial class XamlBuilder
                         b.SetBinding(nameof(SelectorSimple.Data), new Bind($"{at.Prefix}{column.OwnersName()}"));
                 }
             },
-            // picked at the owner's address: Folder turns it into browsefolder / fetchfolder
+            // the folders of this endpoint are its own actions: Folder turns the url into browsefolder / fetchfolder
             ColumnType.Folder => new SelectorSimple()
             {
                 Label = label,
                 CssClass = cssClass,
-                Url = column.RefTableCheck.Path,
+                Url = Endpoint.Path,
                 Folder = true,
                 Bindings = b => b.SetBinding(nameof(SelectorSimple.Value), valueBind)
             },

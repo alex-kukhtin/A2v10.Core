@@ -90,8 +90,19 @@ public class Startup(IConfiguration configuration)
 				?? throw new InvalidOperationException("Identity:Microsoft:ClientId not found");
 			opts.ClientSecret = Configuration.GetValue<String>("Identity:Microsoft:ClientSecret")
 				?? throw new InvalidOperationException("Identity:Microsoft:ClientSecret not found");
+			/* One tenant, never '/common/': there any tenant in the world signs in, and its admin writes
+			 * any address into 'mail', which is the email the account is found by (nOAuth).
+			 */
+			var tenant = Configuration.GetValue<String>("Identity:Microsoft:TenantId")
+				?? throw new InvalidOperationException("Identity:Microsoft:TenantId not found");
+			opts.AuthorizationEndpoint = $"https://login.microsoftonline.com/{tenant}/oauth2/v2.0/authorize";
+			opts.TokenEndpoint = $"https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token";
 			opts.Events.OnRemoteFailure = OpenIdErrorHandlers.OnRemoteFailure;
-			opts.Events.OnTicketReceived = OpenIdTicketHandler<Int64>.OnTickedReceived;
+			/* Off: it creates an A2v10 user for anyone the provider signs in (User.EnsureExternalLogin),
+			 * before LoginExternal - so 'not registered, contact your administrator' never comes, and the
+			 * Registration flag is not asked. Users are created by the admin; the first sign-in links them.
+			 */
+			//opts.Events.OnTicketReceived = OpenIdTicketHandler<Int64>.OnTickedReceived;
         });
 	
 		services.AddSingleton<TestBusinessAppProvider>();

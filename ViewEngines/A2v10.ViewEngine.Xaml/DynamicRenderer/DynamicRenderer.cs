@@ -44,7 +44,9 @@ public class DynamicRenderer(IServiceProvider serviceProvider)
 		var ri = new RenderInfo()
 		{
 			RootId = info.RootId,
-			DataModel = info.Model
+			DataModel = info.Model,
+			// asked here, not in the constructor: a builder makes this renderer on hosts that never render (the API)
+			IsDebugConfiguration = serviceProvider.GetRequiredService<IApplicationHost>().IsDebugConfiguration
 		};
 		var ctx = new RenderContext(info.Page, ri, _localizer, stringWriter)
 		{

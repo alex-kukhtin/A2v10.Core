@@ -54,10 +54,17 @@ public interface IRefTarget
     String Path { get; }
 }
 
-/* The folders of a catalog as a reference target: the rows are $Folders, the address is the owner's -
- * a folder is picked through the owner's actions (browsefolder, fetchfolder), it has none of its own.
+/* The folders of a catalog as a reference target: the rows are $Folders, and there is no address. A
+ * folder is reached through the actions of the endpoint that reads the record (browsefolder,
+ * fetchfolder) - /catalog/agent for an agent, /catalog/customer for the same row read there. A
+ * column of the shared table cannot hold an answer that differs by endpoint; given the owner's,
+ * a reader at a second address would route silently wrong. So asking throws.
  */
-internal sealed record FoldersTarget(TableMetadata Storage, String Path) : IRefTarget;
+internal sealed record FoldersTarget(TableMetadata Storage) : IRefTarget
+{
+    public String Path => throw new NotSupportedException(
+        $"{Storage.Path}: folders have no address of their own - ask the endpoint that reads the record");
+}
 
 /* An endpoint over data: catalog, document, operation, journal. Both slots are always set - for
  * an endpoint that owns its table they come from the same file, for an operation from two. No
@@ -102,7 +109,7 @@ public sealed record TagEndpointMetadata : EndpointMetadata
  */
 public sealed record OperationEndpointMetadata : EndpointMetadata, IRefTarget
 {
-    internal const String BrowseAction = "browse";
+    internal const String BrowseAction = Constants.Actions.Browse;
 
     /* Handed in, not built here, and that is not ceremony: one TableMetadata per
      * (dataSource, schema, table) for every endpoint that points at it is what the storage cache

@@ -79,7 +79,7 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
     public async Task<IInvokeResult> ExportAsync(String baseUrl, Action<ExpandoObject> setParams)
     {
         var platformUrl = CreatePlatformUrl(UrlKind.Page, baseUrl);
-        var view = await _modelReader.GetViewAsync(platformUrl);
+        var view = await LoadViewAsync(platformUrl);
         if (view.Export == null)
 			throw new DataServiceException("model.json. export element not found");
         var loadPrms = view.CreateParameters(platformUrl, null, setParams);
@@ -132,28 +132,29 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
         }
     }
 
-    private void CheckRoles(IModelBase modelBase)
+	/* Who may do what, in one place: every entry calls it before the fork 'classic | metadata', so no
+	 * branch leaves without it. Roles and permissions of model.json for every access; a read-only user
+	 * is refused a write. An invoke is not a write here: a command may only read (a fetch, a '.unique'),
+	 * and which one writes is known to the command. The read-only mark of a metadata card is not set:
+	 * its builder renders the page inside IAppRuntimeBuilder.RenderAsync - a contract change, P4.
+	 */
+	void CheckAccess(IModelBase model, Boolean write)
 	{
-		if (!modelBase.CheckRoles(_currentUser.Identity.Roles))
+		if (!model.CheckRoles(_currentUser.Identity.Roles))
 			throw new DataServiceException("Access denied");
+		if (model.Permissions != null)
+			foreach (var (k, v) in model.Permissions)
+				if (!_currentUser.IsPermissionEnabled(k, (PermissionFlag)v))
+					throw new DataServiceException("UI:Access denied");
+		if (write && _currentUser.State.IsReadOnly)
+			throw new DataServiceException("UI:@[Error.DataReadOnly]");
 	}
 
-	async Task<IModelView> LoadViewAsync(IPlatformUrl platformUrl)
+	async Task<IModelView> LoadViewAsync(IPlatformUrl platformUrl, Boolean write = false)
 	{
 		var view = await _modelReader.GetViewAsync(platformUrl);
-		CheckRoles(view);
+		CheckAccess(view, write);
 		return view;
-	}
-
-	void CheckPermissions(IModelBase modelBase)
-	{
-		if (modelBase.Permissions == null)
-			return;
-		foreach (var (k, v) in modelBase.Permissions)
-		{
-			if (!_currentUser.IsPermissionEnabled(k, (PermissionFlag) v))
-				throw new DataServiceException("UI:Access denied");
-		}
 	}
 
 	async Task<IDataLoadResult> Load(PlatformUrl platformUrl, Action<ExpandoObject> setParams, Boolean isReload = false)
@@ -166,8 +167,6 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
         }
 
         var view = await LoadViewAsync(platformUrl);
-
-		CheckPermissions(view);
 
         if (view.HasMetadata)
 		{
@@ -280,7 +279,7 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 	public async Task DbRemoveAsync(String baseUrl, Object Id, String? propertyName, Action<ExpandoObject> setParams)
 	{
 		var platformBaseUrl = CreatePlatformUrl(baseUrl);
-		var view = await LoadViewAsync(platformBaseUrl);
+		var view = await LoadViewAsync(platformBaseUrl, write: true);
 
 		var execPrms = view.CreateParameters(platformBaseUrl, Id, setParams);
 		execPrms.SetNotNull("Id", Id);
@@ -372,18 +371,11 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 	public async Task<ISaveResult> SaveAsync(String baseUrl, ExpandoObject data, Action<ExpandoObject> setParams)
 	{
 		var platformBaseUrl = CreatePlatformUrl(baseUrl);
-		var view = await LoadViewAsync(platformBaseUrl);
-
-        if (_currentUser.State.IsReadOnly)
-			throw new DataServiceException("UI:Access denied");
-
-		CheckPermissions(view);
+		var view = await LoadViewAsync(platformBaseUrl, write: true);
 
 		var savePrms = view.CreateParameters(platformBaseUrl, null, setParams);
 
 		ResolveParams(savePrms, data);
-
-		CheckUserState();
 
 		if (_appClrManager != null && !await _appClrManager.OnBeforeSaveModelAsync(platformBaseUrl, data))
 			return new SaveResult();
@@ -435,32 +427,18 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 		var platformBaseUrl = CreatePlatformUrl(baseUrl);
 		var cmd = await _modelReader.GetCommandAsync(platformBaseUrl, command);
 
+		CheckAccess(cmd, write: false);
+
         if (cmd.HasMetadata)
             return await _appRuntimeBuilder.InvokeAsync(platformBaseUrl, command, cmd, data);
 
-        CheckPermissions(cmd);
-
-		CheckRoles(cmd);
-
-		var prms = cmd.CreateParameters(platformBaseUrl, null, (eo) =>
-			{
-				setParams?.Invoke(eo);
-				eo.Append(data);
-			},
-			IModelBase.ParametersFlags.SkipId
-		);
-		setParams?.Invoke(prms);
+		platformBaseUrl.AppendPosted(data);
+		var prms = cmd.CreateParameters(platformBaseUrl, null, setParams, IModelBase.ParametersFlags.SkipId);
 
 		var invokeCommand = cmd.GetCommandHandler(_serviceProvider);
 		var result = await invokeCommand.ExecuteAsync(cmd, prms);
 		//await ProcessDbEvents();
 		return result;
-	}
-
-	void CheckUserState()
-	{
-		if (_currentUser.State.IsReadOnly)
-			throw new DataServiceException("UI:@[Error.DataReadOnly]");
 	}
 
 	void SetReadOnly(IDataModel model)

@@ -39,7 +39,7 @@ internal partial class SqlBuilder
         var company = Table.AllColumns().FirstOrDefault(c => c.Type == ColumnType.Company) is { } column
             ? $"""
             if exists(select 1 from {Table.SqlTableName} where [{Constants.FieldNames.Id}] = @Id and [{column.Name}] is null)
-                throw 600000, N'@[Error.Document.NoCompany]', 0;
+                {SqlExtensions.UserError("Error.Document.NoCompany")}
 
             """
             : String.Empty;
@@ -56,7 +56,7 @@ internal partial class SqlBuilder
             [{Constants.FieldNames.UserPosted}] = @UserId, [{Constants.FieldNames.UtcDatePosted}] = getutcdate()
         where [{Constants.FieldNames.Id}] = @Id and [{Constants.FieldNames.Done}] = 0;
         if @@rowcount = 0
-            throw 600000, N'@[Error.Document.AlreadyPosted]', 0;
+            {SqlExtensions.UserError("Error.Document.AlreadyPosted")}
 
         {statements.Post}
 
@@ -84,7 +84,7 @@ internal partial class SqlBuilder
             [{Constants.FieldNames.UserPosted}] = null, [{Constants.FieldNames.UtcDatePosted}] = null
         where [{Constants.FieldNames.Id}] = @Id and [{Constants.FieldNames.Done}] = 1;
         if @@rowcount = 0
-            throw 600000, N'@[Error.Document.NotPosted]', 0;
+            {SqlExtensions.UserError("Error.Document.NotPosted")}
 
         {statements.UnPost}
 

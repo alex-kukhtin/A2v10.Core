@@ -86,6 +86,32 @@ internal static class Constants
         public const String UserPosted = nameof(UserPosted);
         public const String UtcDatePosted = nameof(UtcDatePosted);
     }
+    /* The actions an endpoint answers, in the one spelling every dispatch reads: the model, the template,
+     * the XAML (BaseModelBuilder, XamlBuilder.CreateXamlContainer). Four switches that never saw each other
+     * let a button reach an action with a half missing. Every switch names every action of 'All'; an action
+     * not built yet says so with NotImplementedException, and only an action a switch forgot reaches its
+     * default arm (Unknown) - held by ActionDispatchTests, so a forgotten one fails a test, not a click.
+     */
+    public static class Actions
+    {
+        public const String Index = "index";
+        public const String IndexPartial = "indexpartial";
+        public const String Browse = "browse";
+        public const String Edit = "edit";
+        // not built yet: the page of an owner (CLAUDE.md, "Owner") - its model loads, its template and XAML do not exist
+        public const String Show = "show";
+        public const String BrowseFolder = "browsefolder";
+        public const String EditFolder = "editfolder";
+
+        public static readonly String[] All = [Index, IndexPartial, Browse, Edit, Show, BrowseFolder, EditFolder, Trans.Action, Print.Action];
+
+        public static Exception Unknown(String action) =>
+            new ArgumentOutOfRangeException(nameof(action), action, $"Unknown action '{action}'");
+
+        public static Exception NotBuilt(String action, String what) =>
+            new NotImplementedException($"The {what} of '{action}' is not built yet");
+    }
+
     public static class FormNames
     {
         public const String Index  = "index";

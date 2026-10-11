@@ -402,7 +402,7 @@ internal partial class SqlBuilder
                 if exists(select 1 from {source} s{joinHeader}
                     inner join {reference.RefTableCheck.Storage.SqlTableName} r on r.[Id] = s.[{reference.Name}]
                     where {String.Join(" or ", mismatch.Select(m => $"({m})"))})
-                    throw 60000, N'UI:@[Error.Owner]', 0;
+                    {SqlExtensions.UserError("Error.Owner")}
                 """);
             }
         }
@@ -429,7 +429,7 @@ internal partial class SqlBuilder
     internal String SentOperationCheck() => OwnOperations("s") is { } own
         ? $"""
         if exists(select 1 from @{Table.Model} s where not ({own}))
-            throw 60000, N'UI:@[UIError.AccessDenied]', 0;
+            {SqlExtensions.UserError("UIError.AccessDenied")}
         """
         : String.Empty;
 
@@ -512,17 +512,22 @@ internal partial class SqlBuilder
         return sb.ToString();
     }
 
-    public async Task<ExpandoObject> SavePlainModelAsync(ExpandoObject data, ExpandoObject savePrms)
+    // the text of the save, built without the database
+    internal String SaveSqlText()
     {
+        /* Read 'with (updlock)' inside the save's transaction: the lock is held to the commit, so a
+         * second save of the same record waits here and then sees the new rv. Read plainly, both
+         * passed the check and the second overwrote the first.
+         */
         String CheckRowVersion()
         {
             if (Table.AllColumns(c => c.Type == ColumnType.RowVersion).Any())
             {
                 var elemName = Table.IsDocument ? "Document" : "Element";
                 return $"""
-                    if exists(select * from @{Table.Model} t inner join {Table.SqlTableName} c on c.Id = t.Id
+                    if exists(select * from @{Table.Model} t inner join {Table.SqlTableName} c with (updlock) on c.Id = t.Id
                         where t.rv is not null and t.rv <> c.rv)
-                    throw 60000, N'UI:@[Error.{elemName}.RowVersion]', 0;
+                    {SqlExtensions.UserError($"Error.{elemName}.RowVersion")}
                 """;
             }
             return String.Empty;
@@ -675,7 +680,13 @@ internal partial class SqlBuilder
             declare @rtable table(Id {keyType}{rtableExtra});
             declare @Id {keyType};
 
+            begin tran;
+
             """);
+            /* One transaction from the row-version check to the number; 'xact_abort' rolls all of it
+             * back on any error. Without it every statement committed alone, and a row that failed
+             * left the header written and the number spent. See CLAUDE.md, "Autonums".
+             */
             // STEP:1 - check row version
             sb.AppendLine(CheckRowVersion());
             sb.AppendLine(OwnerCheck(Table));
@@ -698,14 +709,16 @@ internal partial class SqlBuilder
 
             """);
 
-            // STEP:2a - the number, if this endpoint issues one
-            sb.AppendLine(Autonum());
-
             // STEP:3 update details
 
             sb.AppendLine(MergeDetailsSql());
 
             sb.AppendLine(MergeTags());
+
+            // STEP:3a - the number, last: the counter's lock is held from here to the commit only
+            sb.AppendLine(Autonum());
+
+            sb.AppendLine("commit tran;");
 
             // STEP:4 return select
 
@@ -714,10 +727,15 @@ internal partial class SqlBuilder
             return sb.ToString();
         }
 
-        var sqlText = buildSqlUpdateText();
+        return buildSqlUpdateText();
+    }
+
+    public async Task<ExpandoObject> SavePlainModelAsync(ExpandoObject data, ExpandoObject savePrms)
+    {
+        var sqlText = SaveSqlText();
 
         var item = data.Get<ExpandoObject>(Table.Model);
-        var tableBuilder = new DataTableBuilder(Table, PlatformId);
+        var tableBuilder = new DataTableBuilder(Table, PlatformId, AllowEmptyStrings);
         var dtable = tableBuilder.BuildDataTable(item);
 
         List<(String name, String typeName, DataTable table)> detailsTables = [];
@@ -726,7 +744,7 @@ internal partial class SqlBuilder
         {
             foreach (var t in Table.Details)
             {
-                var detailsTableBuilder = new DataTableBuilder(t.Value, PlatformId);
+                var detailsTableBuilder = new DataTableBuilder(t.Value, PlatformId, AllowEmptyStrings);
                 /* The parameter is named after the collection it carries, not after the kind:
                  * 'Stock' declared in both Rows and Links is legal and would give two @Stock
                  * in one batch. The table type is one either way - one table, one shape.

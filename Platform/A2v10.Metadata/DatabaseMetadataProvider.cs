@@ -462,7 +462,9 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         {
             var (targetSchema, targetTable) = ParsePath(declaration.SharedShape!);
             CheckSharedShapeTarget(schema, table, declaration, targetSchema, targetTable);
-            var targetEndpoint = await GetNormalEndpointAsync(load, dataSource, targetSchema, targetTable);
+            NormalEndpointMetadata targetEndpoint;
+            using (load.Hop(dataSource, schema, table, declaration.SharedShapeKey, targetSchema, targetTable))
+                targetEndpoint = await GetNormalEndpointAsync(load, dataSource, targetSchema, targetTable);
             CheckSharedShapeOwnsTable(schema, table, declaration, targetEndpoint);
             storage = targetEndpoint.Storage;
             storageDeclaration = targetEndpoint.Declaration;
@@ -657,9 +659,9 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
      * is loaded, and it has to be - the descent would re-enter this very endpoint, which is not
      * in the cache yet.
      *
-     * The remaining shape - a and b naming each other - is not caught: answering it means
-     * loading b, which is the descent itself. It takes two files written to point at one
-     * another, and it ends in a stack overflow rather than a message.
+     * The remaining shape - a and b naming each other - cannot be answered here: it means
+     * loading b, which is the descent itself. The descent answers it (EndpointLoad.Hop): a hop
+     * that lands on an address still on its own hop is the cycle, named by both paths.
      *
      * The messages name the key the author wrote, never the other one: a report told to fix its
      * 'storage' would be told to fix something it does not have.
@@ -1079,6 +1081,28 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         if (meta == null)
             return;
 
+        if (meta.Path == endpoint.Path)
+            await ResolveColumnsAsync(load, endpoint, meta, dataSource);
+
+        CheckLiteralInitials(endpoint, meta);
+
+        if (endpoint is NormalEndpointMetadata { Storage.Kind: TableKind.Ledger } ledger)
+            CheckSplitColumns(ledger.Storage);
+
+        await CheckAutonumDeclaredAsync(load, endpoint, dataSource);
+
+        await ResolvePostAsync(load, endpoint, dataSource);
+
+        await ResolveBasedOnAsync(load, endpoint, dataSource);
+    }
+
+    /* The columns of a table are linked once, by the endpoint at the table's own address (TableMetadata.Path
+     * is the declaring file's). A second address ('storage') and a report ('surface') find the table linked:
+     * its owner was loaded first, in the same load. Walking it again wrote into a table already published
+     * to another endpoint - and what differs by endpoint (the folders' address) went to the last writer.
+     */
+    private async Task ResolveColumnsAsync(EndpointLoad load, EndpointMetadata endpoint, TableMetadata meta, String? dataSource)
+    {
         static IEnumerable<TableColumn> GetAllReferences(TableMetadata table)
         {
             // the baseline too: its columns are materialized (TableMetadata.Construct) and keep RefTable
@@ -1102,8 +1126,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                 }
                 else if (gcol.Type == ColumnType.Folder)
                 {
-                    // no address of their own: the rows are the owner's $Folders, picked at the owner's address
-                    gcol.RefTable = new FoldersTarget(TableMetadataDefaults.CreateFoldersTable(meta), endpoint.Path);
+                    // the rows are the owner's $Folders; no address - see FoldersTarget
+                    gcol.RefTable = new FoldersTarget(TableMetadataDefaults.CreateFoldersTable(meta));
                     continue;
                 }
                 else if (gcol.Type == ColumnType.Operation)
@@ -1134,17 +1158,6 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                 gcol.RefTable = refMeta;
             }
         }
-
-        CheckLiteralInitials(endpoint, meta);
-
-        if (endpoint is NormalEndpointMetadata { Storage.Kind: TableKind.Ledger } ledger)
-            CheckSplitColumns(ledger.Storage);
-
-        await CheckAutonumDeclaredAsync(load, endpoint, dataSource);
-
-        await ResolvePostAsync(load, endpoint, dataSource);
-
-        await ResolveBasedOnAsync(load, endpoint, dataSource);
     }
 
     /* 'autonum' names a row of another endpoint's file, so it can only be checked here - phase 2,

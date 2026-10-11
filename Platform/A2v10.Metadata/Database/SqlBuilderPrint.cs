@@ -159,35 +159,34 @@ internal sealed class PrintSqlBuilder(TableMetadata table, PrintNode model, Stri
 
     // ---- the maps -------------------------------------------------------------------------
 
-    /* Run to a fixed point, and regrouped from scratch each round rather than walked in waves.
+    /* Every WRITTEN path first, then one map per table over all of them.
      *
-     * Two DIFFERENT paths of a finite tree reach one table at different depths - 'Document.
-     * StoreFrom' and 'Document.Agent.Store' are both stores - and a table is ONE map, so its rows
-     * are the union over every path onto it. A walk that emits a table when it is first reached
-     * drops whatever arrives later, silently: the map is short some rows and the cell comes out
-     * empty. Recomputing is what makes 'later' impossible.
+     * Two different paths reach one table at different depths - 'Document.StoreFrom' and
+     * 'Document.Agent.Store' are both stores - and a table is ONE map, so its rows are the union over
+     * every path onto it. A walk that emits a table when it is first reached drops whatever arrives
+     * later, silently: the map is short some rows and the cell comes out empty. So nothing is emitted
+     * before the walk is over.
      *
-     * It settles because each round only reaches one level deeper than the last and the written
-     * tree has a bottom; when a round changes no map's rows, nothing deeper exists.
+     * A path reads the ids its own parent selects, never the merged map's. Driven by the maps, a path
+     * back into a table already mapped ('Agent.Store.Agent') fed a map's rows into themselves, and a
+     * fixed point over the text never came. The written tree has a bottom, so this walk has one. A
+     * row that only another path brought into a map keeps a reference the blank never follows from
+     * there: it stays unresolved, and nothing reads it.
      */
     private List<MapTarget> CollectMaps(List<Container> containers)
     {
-        IEnumerable<RefUse> seed() =>
-            containers.SelectMany(c => Refs(c.Table, c.Node, c.Rows, c.Alias));
-
-        var maps = GroupMaps(seed());
-        while (true)
+        IEnumerable<RefUse> walk(TableMetadata owner, PrintNode node, String rows, String alias)
         {
-            var next = GroupMaps(
-                [.. seed(), .. maps.SelectMany(m => Refs(m.Target, m.Node, m.Rows, m.Alias))]);
-            if (Signature(next) == Signature(maps))
-                return maps;
-            maps = next;
+            foreach (var use in Refs(owner, node, rows, alias))
+            {
+                yield return use;
+                var next = MapAlias(use.Target);
+                foreach (var deeper in walk(use.Target, use.Node, $"{next}.[{Id}] in ({use.IdSource})", next))
+                    yield return deeper;
+            }
         }
+        return GroupMaps(containers.SelectMany(c => walk(c.Table, c.Node, c.Rows, c.Alias)));
     }
-
-    private static String Signature(List<MapTarget> maps) =>
-        String.Join("|", maps.Select(m => $"{m.Target.SqlTableName}:{m.Rows}"));
 
     /* One map per TABLE, however many paths point at it: ids are the union of what those paths
      * select, fields the union of what they asked for. That is what makes the dedup real, and what

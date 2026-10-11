@@ -18,6 +18,8 @@ public interface IRenderInfo
 	IDataModel? DataModel { get; }
 	String? CurrentLocale { get; }
 	Boolean SecondPhase { get; }
+	// Render="Debug" elements and TestId are written only under it
+	Boolean IsDebugConfiguration { get; }
 }
 
 public interface IRenderResult

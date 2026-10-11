@@ -1,0 +1,5 @@
+{
+	"$schema": "../../../../../Platform/A2v10.App.Assets2026/Application/@schemas/metadata-endpoint-json-schema.json#",
+	"description": "A second address over /catalog/item, which has folders: the folders of a record are reached through the address that reads it (FolderTargetTests).",
+	"storage": "/catalog/item"
+}

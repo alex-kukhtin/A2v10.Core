@@ -48,6 +48,7 @@
 @Error.Document.AlreadyPosted=El documento ya está contabilizado
 @Error.Document.NotPosted=El documento no está contabilizado
 @Error.Document.AlreadyApplied=El documento está contabilizado y no se puede modificar
+@Error.Document.BasedOnNotFound=No se encontró el documento de origen
 ;
 ; Folders and tags
 @Folder=Carpeta

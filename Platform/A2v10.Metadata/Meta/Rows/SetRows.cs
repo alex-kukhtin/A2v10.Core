@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 using A2v10.Xaml;
@@ -140,7 +141,7 @@ internal static class SetRows
                 [Constants.FieldNames.Name] = value == null
                     ? $"@[{set.Model}.All]"
                     : value.Name ?? $"@[{set.Model}.{value.Id}]",
-                [Constants.FieldNames.Order] = order.ToString(),
+                [Constants.FieldNames.Order] = order.ToString(CultureInfo.InvariantCulture),
                 [Constants.FieldNames.Void] = value is { Void: true } ? "1" : "0"
             };
             if (value == null)

@@ -3,6 +3,7 @@
 using System;
 using System.Net;
 using System.Dynamic;
+using System.Security;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Mvc;
@@ -125,10 +126,11 @@ public class BaseController : Controller, IControllerProfiler
 			ex = ex.InnerException;
 
 		var len = ex.Message.Length * 5;
+		// the message may carry the url's path: as XML text, or '<svg onload=...>' in the path is the page's script
 		var svg =
 		$@"<svg width='{len}px' height='40px' xmlns='http://www.w3.org/2000/svg'>
 			<rect width='{len}' height='40' fill='#fff0f5' stroke='#880000' stroke-width='1'/>
-			<text x='{len / 2}' y='25' fill='#880000' font-size='11px' text-anchor='middle'>{ex.Message}</text>
+			<text x='{len / 2}' y='25' fill='#880000' font-size='11px' text-anchor='middle'>{SecurityElement.Escape(ex.Message)}</text>
 		</svg>";
 		var res = new WebActionResult(svg, MimeTypes.Image.Svg);
 		res.AddHeader("cache-control", "no-store,no-cache");

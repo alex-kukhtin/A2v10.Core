@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace A2v10.Metadata;
@@ -21,6 +22,6 @@ internal static class OperationRows
                 [Constants.FieldNames.Name] = MetadataExtensions.OperationLabel(o.Id),
                 [Constants.FieldNames.Document] = o.Document,
                 [Constants.FieldNames.Path] = o.Path,
-                [Constants.FieldNames.Order] = o.Order.ToString()
+                [Constants.FieldNames.Order] = o.Order.ToString(CultureInfo.InvariantCulture)
             }))];
 }

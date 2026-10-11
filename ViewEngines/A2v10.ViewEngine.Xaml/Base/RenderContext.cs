@@ -97,7 +97,7 @@ public class RenderContext(IXamlElement _root, IRenderInfo _ri, ILocalizer _loca
 	public String? Path { get; set; }
 	public Component? RenderedComponent { get; set; }
     public TextWriter Writer { get; private set; } = writer;
-    public Boolean IsDebugConfiguration { get; } = true; // TODO: ri.IsDebugConfiguration;
+    public Boolean IsDebugConfiguration { get; } = _ri.IsDebugConfiguration;
 
     private readonly Stack<GridRowCol> _stackGrid = new();
 	private readonly Stack<ScopeElem> _stackScope = new();

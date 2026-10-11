@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using System.Dynamic;
 using System.Linq;
 using System.Collections.Generic;
-using System.Text;
 
 using A2v10.Data.Core.Extensions;
 using A2v10.Data.Interfaces;
@@ -42,16 +41,6 @@ internal class TurnoverReportBuilder(IServiceProvider serviceProvider, ReportMet
         var filterSql = filterFields.Any()
             ? $"{String.Join(", ", filterFields)}, "
             : String.Empty;
-
-        var filterMaps = new StringBuilder();
-        foreach (var f in _grouping.Filters)
-        {
-            filterMaps.AppendLine($"""
-                select [!T{f.Column}!Map] = null, [Id!!Id] = [Id], [Name!!Name] = [Name]
-                from {f.SqlTableName}
-                where [Id] = {SqlExtensions.ColumnParam(f.Column)}
-            """);
-        }
 
         IEnumerable<String> createTempTableFeilds()
         {
@@ -108,7 +97,7 @@ internal class TurnoverReportBuilder(IServiceProvider serviceProvider, ReportMet
             [Group] = N'{_grouping.GroupColumns()}',
             [Period.From!TPeriod!] = @From, [Period.To!TPeriod!] = @To, Run = @Run, Tab = @Tab;
 
-        {filterMaps}
+        {_grouping.FilterMapsSql()}
 
         {_grouping.RepInfoSql()}
         """;

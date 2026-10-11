@@ -222,14 +222,11 @@ public class AccountController(
 				};
                 await _dbContext.ExecuteExpandoAsync(CatalogDataSource, $"[{SecuritySchema}].[UpdateUserLogin]", llprms);
 				RemoveAntiforgeryCookie();
-				var returnUrl = model.ReturnUrl;
-				if (returnUrl == null || returnUrl.StartsWith("/account", StringComparison.OrdinalIgnoreCase))
-					returnUrl = "/";
-				return new JsonResult(JsonResponse.Redirect(returnUrl));
+				return new JsonResult(JsonResponse.Redirect(ReturnUrls.LocalOrRoot(Url, model.ReturnUrl)));
 			}
 			else if (result.RequiresTwoFactor)
 			{
-				return new JsonResult(JsonResponse.Redirect($"/account/twofactor?login={model.Login}&returnUrl={_urlEncoder.Encode(model.ReturnUrl ?? "/")}"));
+				return new JsonResult(JsonResponse.Redirect($"/account/twofactor?login={_urlEncoder.Encode(model.Login ?? String.Empty)}&returnUrl={_urlEncoder.Encode(model.ReturnUrl ?? "/")}"));
 			}
 			else
 			{
@@ -244,6 +241,7 @@ public class AccountController(
 
 
 	[HttpGet]
+	[Registration]
 	public async Task<IActionResult> Register()
 	{
 		RemoveNonAntiforgeryCookies();
@@ -279,6 +277,7 @@ public class AccountController(
 	}
 
 	[HttpPost]
+	[Registration]
 	public async Task<IActionResult> Register([FromForm] RegisterViewModel model)
 	{
 		try
@@ -393,7 +392,7 @@ public class AccountController(
         var user = await _userManager.FindByNameAsync(model.Login);
         if (user == null)
             return new JsonResult(JsonResponse.Error("Failed"));
-        var result = await _userManager.VerifyTwoFactorTokenAsync(user, TokenOptions.DefaultEmailProvider, model.Code);
+        var result = await EmailCodes.VerifyAsync(_userManager, user, model.Code);
         if (result)
             return new JsonResult(JsonResponse.Ok());
         else
@@ -413,7 +412,7 @@ public class AccountController(
             var user = await _userManager.FindByNameAsync(model.Login);
             if (user == null)
                 return new JsonResult(JsonResponse.Error("Failed"));
-            var result = await _userManager.VerifyTwoFactorTokenAsync(user, TokenOptions.DefaultEmailProvider, model.Code);
+            var result = await EmailCodes.VerifyAsync(_userManager, user, model.Code);
             if (!result)
                 return new JsonResult(JsonResponse.Error("Failed"));
 			var changePasswordToken = await _userManager.GeneratePasswordResetTokenAsync(user);
@@ -592,6 +591,7 @@ public class AccountController(
 	}
 
 	[HttpGet]
+	[Registration]
 	public async Task<IActionResult> ConfirmCode([FromQuery] String? Token)
 	{
 		if (Token == null)
@@ -609,6 +609,7 @@ public class AccountController(
 	}
 
 	[HttpPost]
+	[Registration]
 	public async Task<IActionResult> ConfirmCode([FromForm] ConfirmCodeViewModel model)
 	{
 		try
@@ -631,7 +632,7 @@ public class AccountController(
 			if (user.EmailConfirmed)
 				return new JsonResult(JsonResponse.Error("AlreadyConfirmed"));
 
-			var verified = await _userManager.VerifyTwoFactorTokenAsync(user, TokenOptions.DefaultEmailProvider, model.Code.Trim());
+			var verified = await EmailCodes.VerifyAsync(_userManager, user, model.Code?.Trim());
 			if (!verified)
 				return new JsonResult(JsonResponse.Error("InvalidConfirmCode"));
 
@@ -646,6 +647,7 @@ public class AccountController(
 	}
 
 	[HttpGet]
+	[Registration]
 	[ActionName("confirmemail")]
 	public async Task<IActionResult> ConfirmEmail([FromQuery] String Token)
 	{
@@ -724,6 +726,12 @@ public class AccountController(
 		return redirect != null ? Redirect(redirect) : await Error("The authorization request is damaged or expired");
 	}
 
+	/* The provider's email finds the account on the first external sign-in, and its second factor
+	 * stands for ours (bypassTwoFactor). Both hold only while the email is the owner's: Google gives a
+	 * verified one; Microsoft only on one tenant - on '/common/' any tenant's admin writes any address
+	 * into 'mail' (nOAuth). The host configures that, see Web.Site Startup. Later sign-ins find the
+	 * account by the provider's key, never by email.
+	 */
 	[HttpGet]
 	[ActionName("loginexternal")]
     [AllowAnonymous]
@@ -814,7 +822,8 @@ public class AccountController(
 		{
 			var model = GetModelFromToken(token);
 
-			if (model.Time - DateTime.UtcNow > TimeSpan.FromMinutes(5))
+			// Time is when the token was issued: its age, not its distance to now
+			if (DateTime.UtcNow - model.Time > TimeSpan.FromMinutes(5))
 				return NotFound();
 
 			var user = await _userManager.FindByIdAsync(model.UserId.ToString())
@@ -924,10 +933,7 @@ public class AccountController(
 			if (signInResult.Succeeded)
 			{
 				RemoveAntiforgeryCookie();
-				var returnUrl = model.ReturnUrl;
-				if (returnUrl == null || returnUrl.StartsWith("/account", StringComparison.OrdinalIgnoreCase))
-					returnUrl = "/";
-				return new JsonResult(JsonResponse.Redirect(returnUrl));
+				return new JsonResult(JsonResponse.Redirect(ReturnUrls.LocalOrRoot(Url, model.ReturnUrl)));
 			}
 			else
 				return new JsonResult(JsonResponse.Error("InvalidCode"));

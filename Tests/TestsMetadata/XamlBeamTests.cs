@@ -89,14 +89,14 @@ public class XamlBeamTests
      */
     private static IEnumerable<(String Action, IPlatformUrl Url)> ScreensOf(NormalEndpointMetadata endpoint)
     {
-        foreach (var action in new[] { "index", "indexpartial", "browse", "edit" })
+        foreach (var action in new[] { Constants.Actions.Index, Constants.Actions.IndexPartial, Constants.Actions.Browse, Constants.Actions.Edit })
             yield return (action, endpoint.PlatformUrl(action));
         if (endpoint.Declaration.PostJournals().Any())
             yield return (Constants.Trans.Action, endpoint.PlatformUrl(Constants.Trans.Action));
         if (endpoint.Storage.HasFolders)
         {
-            yield return ("browsefolder", endpoint.PlatformUrl("browsefolder"));
-            yield return ("editfolder", endpoint.PlatformUrl("editfolder"));
+            yield return (Constants.Actions.BrowseFolder, endpoint.PlatformUrl(Constants.Actions.BrowseFolder));
+            yield return (Constants.Actions.EditFolder, endpoint.PlatformUrl(Constants.Actions.EditFolder));
         }
         foreach (var form in endpoint.Declaration.PrintForms)
             yield return (Constants.Print.Action,

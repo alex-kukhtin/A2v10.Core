@@ -101,7 +101,7 @@ internal partial class SqlBuilder
             select {String.Join(", ", headColumns.Select(headValue))}
             from {sourceTable.SqlTableName} s where s.[{Constants.FieldNames.Id}] = @BasedOn;
             if not exists(select 1 from {variables[Table]})
-                throw 60000, N'The document to base on is not found', 0;
+                {SqlExtensions.UserError("Error.Document.BasedOnNotFound")}
             """);
         WriteInherits(sb, variables[Table], Endpoint.Declaration.Inherits, null, null);
 

@@ -48,6 +48,7 @@
 @Error.Document.AlreadyPosted=Dokument jest już zaksięgowany
 @Error.Document.NotPosted=Dokument nie jest zaksięgowany
 @Error.Document.AlreadyApplied=Dokument jest zaksięgowany, nie można go zmienić
+@Error.Document.BasedOnNotFound=Nie znaleziono dokumentu źródłowego
 ;
 ; Folders and tags
 @Folder=Folder

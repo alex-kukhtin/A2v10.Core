@@ -245,7 +245,7 @@ internal partial class SqlBuilder
 
         if exists(select 1 from {folders.SqlTableName} where [{parent.Name}] = @Id and [{voidCol}] = 0)
             or exists(select 1 from {Table.SqlTableName} where [{Constants.FieldNames.Folder}] = @Id and [{voidCol}] = 0)
-            throw 60000, N'UI:@[Error.Delete.Used]', 0;
+            {SqlExtensions.UserError("Error.Delete.Used")}
 
         update {folders.SqlTableName} set [{voidCol}] = 1,
             [{Constants.FieldNames.UserModified}] = @UserId, [{Constants.FieldNames.UtcDateModified}] = getutcdate()

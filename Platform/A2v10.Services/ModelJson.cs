@@ -1,5 +1,7 @@
 ﻿// Copyright © 2015-2025 Oleksandr Kukhtin. All rights reserved.
 
+using System.Collections.Frozen;
+using System.Reflection;
 using System.Text;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -7,6 +9,39 @@ using Microsoft.Extensions.DependencyInjection;
 using A2v10.Data.Interfaces;
 
 namespace A2v10.Services;
+
+/* The suffixes the platform composes procedure names from. A name the client sends - a lazy
+ * property, a removed property, an image key - lands in the same slot of [Model.<name>...], so
+ * prop=delete reached [Model.Delete] through the lazy load, past read-only and permissions.
+ * The refused set is read off the constants: a suffix added here is refused the day it is written.
+ */
+internal static class ProcedureSuffix
+{
+	public const String Load = "Load";
+	public const String Index = "Index";
+	public const String Copy = "Copy";
+	public const String Export = "Export";
+	public const String Update = "Update";
+	public const String Delete = "Delete";
+	public const String Expand = "Expand";
+	public const String Report = "Report";
+
+	// the collation of the database ignores case, so 'DELETE' is [Model.Delete] too
+	private static readonly FrozenSet<String> _platform = typeof(ProcedureSuffix)
+		.GetFields(BindingFlags.Public | BindingFlags.Static)
+		.Where(f => f.IsLiteral)
+		.Select(f => (String)f.GetRawConstantValue()!)
+		.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
+
+	// a name from the client: an identifier, and never a suffix of the platform's
+	public static String CheckClientName(String name)
+	{
+		if (name.Length == 0 || !name.All(c => Char.IsLetterOrDigit(c) || c == '_') || _platform.Contains(name))
+			throw new ModelJsonException($"Invalid name '{name}'");
+		return name;
+	}
+}
+
 public class ModelJsonAuto : IModelJsonAuto
 {
 	public AutoRender Render { get; init; }	
@@ -55,7 +90,7 @@ public class ModelJsonBase : IModelBase
 		var cm = CurrentModel;
 		if (String.IsNullOrEmpty(cm))
 			throw new ModelJsonException("The model is empty (Load))");
-		return $"[{CurrentSchema}].[{cm}.Load]";
+		return $"[{CurrentSchema}].[{cm}.{ProcedureSuffix.Load}]";
 	}
 
     public virtual String ExportProcedure()
@@ -63,7 +98,7 @@ public class ModelJsonBase : IModelBase
         var cm = CurrentModel;
         if (String.IsNullOrEmpty(cm))
             throw new ModelJsonException("The model is empty (Load.Export))");
-        return $"[{CurrentSchema}].[{cm}.Load.Export]";
+        return $"[{CurrentSchema}].[{cm}.{ProcedureSuffix.Load}.{ProcedureSuffix.Export}]";
     }
 
     public virtual String UpdateProcedure()
@@ -71,7 +106,7 @@ public class ModelJsonBase : IModelBase
         var cm = CurrentModel;
         if (String.IsNullOrEmpty(cm))
             throw new ModelJsonException("The model is empty (Update))");
-        return $"[{CurrentSchema}].[{cm}.Update]";
+        return $"[{CurrentSchema}].[{cm}.{ProcedureSuffix.Update}]";
     }
 
     public String Path => Parent.LocalPath;
@@ -79,11 +114,15 @@ public class ModelJsonBase : IModelBase
 
     public virtual ExpandoObject CreateParameters(IPlatformUrl url, Object? id,  Action<ExpandoObject>? setParams = null, IModelBase.ParametersFlags flags = IModelBase.ParametersFlags.None)
 	{
-		// model.json, query, id, system
+		/* Layers, last wins: what the client sent (the query, then the posted data of an invoke -
+		 * PlatformUrl.AppendPosted) → model.json 'parameters' → the url's Id → the user (UserId,
+		 * TenantId, CompanyId), set once by the caller's setParams. A declared parameter is a binding
+		 * of the address ('Operation', 'Kind', 'Schema'), not a default the url may override.
+		 */
 		var eo = new ExpandoObject();
+		eo.Append(url.Query);
 		if (!flags.HasFlag(IModelBase.ParametersFlags.SkipModelJsonParams) && Parameters != null)
 			eo.Append(Parameters);
-		eo.Append(url.Query);
 		if (!flags.HasFlag(IModelBase.ParametersFlags.SkipId))
 		{
 			eo.SetNotNull("Id", url.Id);
@@ -148,21 +187,21 @@ public class ModelJsonBlob : ModelJsonViewBase, IModelBlob
 
 	public String LoadBlobProcedure()
 	{
-		var strSuffix = Suffix ?? "Load";
+		var strSuffix = Suffix ?? ProcedureSuffix.Load;
 		var strKey = Key != null ? $"{Key}." : String.Empty;
 		return $"[{CurrentSchema}].[{CurrentModel}.{strKey}{strSuffix}]";
 	}
 
     public String UpdateBlobProcedure()
     {
-        var strSuffix = Suffix ?? "Update";
+        var strSuffix = Suffix ?? ProcedureSuffix.Update;
         var strKey = Key != null ? $"{Key}." : String.Empty;
         return $"[{CurrentSchema}].[{CurrentModel}.{strKey}{strSuffix}]";
     }
 
 	public String DeleteBlobProcedure()
 	{
-		var strSuffix = "Delete";
+		var strSuffix = ProcedureSuffix.Delete;
 		var strKey = Key != null ? $"{Key}." : String.Empty;
 		return $"[{CurrentSchema}].[{CurrentModel}.{strKey}{strSuffix}]";
 	}
@@ -255,7 +294,7 @@ public class ModelJsonView : ModelJsonViewBase, IModelView
 	public override String LoadProcedure()
 	{
 		var cm = CurrentModel;
-		String action = Index ? "Index" : Copy ? "Copy" : "Load";
+		String action = Index ? ProcedureSuffix.Index : Copy ? ProcedureSuffix.Copy : ProcedureSuffix.Load;
 		if (String.IsNullOrEmpty(cm))
 			throw new ModelJsonException($"The model is empty ({action})");
 		return $"[{CurrentSchema}].[{cm}.{action}]";
@@ -264,18 +303,18 @@ public class ModelJsonView : ModelJsonViewBase, IModelView
     public override String ExportProcedure()
     {
         var cm = CurrentModel;
-        String action = Index ? "Index" : "Load";
+        String action = Index ? ProcedureSuffix.Index : ProcedureSuffix.Load;
         if (String.IsNullOrEmpty(cm))
             throw new ModelJsonException($"The model is empty ({action})");
-        return $"[{CurrentSchema}].[{cm}.{action}.Export]";
+        return $"[{CurrentSchema}].[{cm}.{action}.{ProcedureSuffix.Export}]";
     }
 
     public String DeleteProcedure(String? propName)
 	{
 		var cm = CurrentModel;
 		if (!String.IsNullOrEmpty(propName))
-			propName = "." + propName;
-		return $"[{CurrentSchema}].[{cm}{propName}.Delete]";
+			propName = "." + ProcedureSuffix.CheckClientName(propName);
+		return $"[{CurrentSchema}].[{cm}{propName}.{ProcedureSuffix.Delete}]";
 	}
 
 	public String ExpandProcedure()
@@ -283,7 +322,7 @@ public class ModelJsonView : ModelJsonViewBase, IModelView
 		var cm = CurrentModel;
 		if (String.IsNullOrEmpty(cm))
 			throw new ModelJsonException("The model is empty (Expand)");
-		return $"[{CurrentSchema}].[{cm}.Expand]";
+		return $"[{CurrentSchema}].[{cm}.{ProcedureSuffix.Expand}]";
 	}
 
 	public String LoadLazyProcedure(String propName)
@@ -291,7 +330,7 @@ public class ModelJsonView : ModelJsonViewBase, IModelView
 		var cm = CurrentModel;
 		if (String.IsNullOrEmpty(cm))
 			throw new ModelJsonException($"The model is empty (LoadLazy.{propName})");
-		return $"[{CurrentSchema}].[{cm}.{propName}]";
+		return $"[{CurrentSchema}].[{cm}.{ProcedureSuffix.CheckClientName(propName)}]";
 	}
 
 	public override String UpdateProcedure()
@@ -301,7 +340,7 @@ public class ModelJsonView : ModelJsonViewBase, IModelView
 		var cm = CurrentModel;
 		if (String.IsNullOrEmpty(cm))
 			throw new ModelJsonException("The model is empty (Update)");
-		return $"[{CurrentSchema}].[{cm}.Update]";
+		return $"[{CurrentSchema}].[{cm}.{ProcedureSuffix.Update}]";
 	}
 }
 
@@ -370,7 +409,7 @@ public class ModelJsonReport : ModelJsonBase, IModelReport
 		var cm = CurrentModel;
 		if (String.IsNullOrEmpty(cm))
 			throw new ModelJsonException("The model is empty (Report))");
-		return $"[{CurrentSchema}].[{cm}.Report]";
+		return $"[{CurrentSchema}].[{cm}.{ProcedureSuffix.Report}]";
 	}
 
 	public IModelReportHandler GetReportHandler(IServiceProvider serviceProvider)
@@ -521,7 +560,7 @@ public class ModelJson
 			Schema = this.Schema,
 			Source = this.Source,
 			Model = this.Model,
-			Key = key.ToPascalCase(),
+			Key = ProcedureSuffix.CheckClientName(key.ToPascalCase()),
 			Suffix = suffix
 		};
 		blob.SetParent(this);

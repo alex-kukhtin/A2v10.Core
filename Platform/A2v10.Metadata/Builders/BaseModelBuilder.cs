@@ -60,26 +60,28 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
     {
         return Action switch
         {
-            "index" or "browse" when Table.Kind == TableKind.AccPlan => await _sqlBuilder.LoadAccountTreeModelAsync(Action == "browse"),
-            "browse" or "index" => Table.HasFolders
+            Constants.Actions.Index or Constants.Actions.Browse when Table.Kind == TableKind.AccPlan
+                => await _sqlBuilder.LoadAccountTreeModelAsync(Action == Constants.Actions.Browse),
+            Constants.Actions.Browse or Constants.Actions.Index => Table.HasFolders
                 ? await _sqlBuilder.LoadIndexTreeModelAsync()
                 : await _sqlBuilder.LoadIndexModelAsync(),
             // embedded in another page: the list alone, whatever the owner's own screen shows beside it
-            "indexpartial" => await _sqlBuilder.LoadIndexModelAsync(),
-            "edit" or "show" => await _sqlBuilder.LoadPlainModelAsync(),
+            Constants.Actions.IndexPartial => await _sqlBuilder.LoadIndexModelAsync(),
+            Constants.Actions.Edit or Constants.Actions.Show => await _sqlBuilder.LoadPlainModelAsync(),
             Constants.Trans.Action => await _sqlBuilder.LoadTransModelAsync(),
             Constants.Print.Action => await _sqlBuilder.LoadPrintPageModelAsync(),
-            "browsefolder" => await _sqlBuilder.LoadBrowseTreeModelAsync(),
-            "editfolder" => await _sqlBuilder.LoadEditFolderModelAsync(),
-            _ => throw new NotImplementedException($"Load model for {Action}")
+            Constants.Actions.BrowseFolder => await _sqlBuilder.LoadBrowseTreeModelAsync(),
+            Constants.Actions.EditFolder => await _sqlBuilder.LoadEditFolderModelAsync(),
+            _ => throw Constants.Actions.Unknown(Action)
         };
     }
     public async Task<String> CreateTemplateAsync()
     {
         return Action switch
         {
-            "browse" or "index" or "indexpartial" => await _jsBuilder.CreateIndexTemplate(),
-            "edit" => await _jsBuilder.CreateEditTemplate(),
+            Constants.Actions.Browse or Constants.Actions.Index or Constants.Actions.IndexPartial => await _jsBuilder.CreateIndexTemplate(),
+            Constants.Actions.Edit => await _jsBuilder.CreateEditTemplate(),
+            Constants.Actions.Show => throw Constants.Actions.NotBuilt(Action, "template"),
             // read-only, and the one piece of state it has is a field of its own model
             Constants.Trans.Action => String.Empty,
             /* One computed property and nothing else: the blank is drawn by a report engine, so the
@@ -87,9 +89,9 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
              * that address carries the chosen blank, which only the query knows.
              */
             Constants.Print.Action => await _jsBuilder.CreatePrintTemplate(),
-            "browsefolder" => String.Empty,
-            "editfolder" => await _jsBuilder.CreateEditFolderTemplate(),
-            _ => throw new NotImplementedException($"Create template for {Action}")
+            Constants.Actions.BrowseFolder => String.Empty,
+            Constants.Actions.EditFolder => await _jsBuilder.CreateEditFolderTemplate(),
+            _ => throw Constants.Actions.Unknown(Action)
         };
     }
 
@@ -100,8 +102,8 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
     {
         return Action switch
         {
-            "edit" => _sqlBuilder.SavePlainModelAsync(data, savePrms),
-            "editfolder" => _sqlBuilder.SaveFolderModelAsync(data),
+            Constants.Actions.Edit => _sqlBuilder.SavePlainModelAsync(data, savePrms),
+            Constants.Actions.EditFolder => _sqlBuilder.SaveFolderModelAsync(data),
             _ => throw new NotImplementedException($"Save Model Async for {Action}")
         };
     }

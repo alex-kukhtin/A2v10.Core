@@ -25,6 +25,8 @@ internal partial class SqlBuilder(BuilderDescriptor desciptor, IServiceProvider 
     private readonly TableMetadata Table = desciptor.Endpoint.Storage;
     private readonly String? DataSource = desciptor.DataSource;
     private readonly AppPlatformId PlatformId = desciptor.PlatformId;
+    // the host's, read by the core's conversion of a TVP's values (DataTableBuilder)
+    private readonly Boolean AllowEmptyStrings = serviceProvider.GetRequiredService<IDataConfiguration>().AllowEmptyStrings;
 
 
     DbParameterCollection AddDefaultParameters(DbParameterCollection prms)
@@ -99,7 +101,7 @@ internal partial class SqlBuilder(BuilderDescriptor desciptor, IServiceProvider 
         ? $"""
 
         if exists(select 1 from {endpoint.Storage.SqlTableName} a where a.[{Constants.FieldNames.Id}] = {id} and not ({own}))
-            throw 60000, N'UI:@[UIError.AccessDenied]', 0;
+            {SqlExtensions.UserError("UIError.AccessDenied")}
 
         """
         : String.Empty;

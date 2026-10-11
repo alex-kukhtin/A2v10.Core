@@ -87,18 +87,17 @@ internal sealed partial class Program
 
         host.Services.UseSimpleDbContext();
 
+        // the metadata layer registers itself (UseAppMetadata below); the platform's services keep the host's lifetimes
         host.Services
-            .AddSingleton<DatabaseMetadataCache>()
-            .AddSingleton<IDataService, DataService>()
-            .AddSingleton<IModelJsonReader, ModelJsonReader>()
-            .AddSingleton<IExternalDataProvider, ExternalDataContext>()
+            .AddScoped<IDataService, DataService>()
+            .AddScoped<IModelJsonReader, ModelJsonReader>()
+            .AddScoped<IExternalDataProvider, ExternalDataContext>()
             .AddSingleton<IAppVersion, PlatformAppVersion>()
-            .AddSingleton<ICurrentUser, CurrentUser>()
+            .AddScoped<ICurrentUser, CurrentUser>()
             .AddSingleton<ISqlQueryTextProvider, NullSqlQueryTextProvider>()
-            .AddSingleton<ILocalizer, EmptyLocalizer>()
-            .AddSingleton<DatabaseMetadataProvider>()
-            .AddSingleton<IApplicationHost, WebApplicationHost>()
-            .AddSingleton<IDataScripter, VueDataScripter>()
+            .AddScoped<ILocalizer, EmptyLocalizer>()
+            .AddScoped<IApplicationHost, WebApplicationHost>()
+            .AddScoped<IDataScripter, VueDataScripter>()
             .AddSingleton<HostRoot>((_) => new HostRoot(webAppFolder, cdPath));
 
         host.Services.AddSingleton<IAppCodeProvider, AppCodeProvider>()
@@ -148,7 +147,18 @@ internal sealed partial class Program
 
         Console.OutputEncoding = Encoding.UTF8;
 
-        _services = host.Build().Services;
+        /* Scopes are checked on every run, not only under Development (the host's default): a singleton
+         * holding a scoped service builds silently elsewhere, and 'a2' failed only on a machine that set
+         * DOTNET_ENVIRONMENT. RunAsync constructs every command, and each takes its services in the
+         * constructor, so every run resolves - and checks - all the CLI uses. Not ValidateOnBuild: it
+         * demands what the CLI never asks for (the print handler's report engines). One run is one
+         * request, so one scope.
+         */
+        host.ConfigureContainer(new DefaultServiceProviderFactory(new ServiceProviderOptions()
+        {
+            ValidateScopes = true
+        }));
+        _services = host.Build().Services.CreateScope().ServiceProvider;
     }
 
 }

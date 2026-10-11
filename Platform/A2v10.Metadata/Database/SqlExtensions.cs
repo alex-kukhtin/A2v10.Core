@@ -114,6 +114,14 @@ public sealed record AppPlatformId(Type ClrType)
 
 internal static class SqlExtensions
 {
+    /* The one form of a refusal the user reads: 60000, 'UI:' and a key of the dictionary (metadata.*.txt).
+     * Written by hand, the form was taken from the neighbouring lines, and two spread: 600000 and a key
+     * without 'UI:'. A refusal nobody but the developer can act on (the database behind its metadata)
+     * stays text naming what to fix - SqlDbGenerator's autonum, PostStatements' operation.
+     * Held by SqlErrorConventionTests.
+     */
+    internal static String UserError(String key) => $"throw 60000, N'UI:@[{key}]', 0;";
+
     /* A parameter named after an author's column - a filter, a role, an owner - carries '$', the sigil
      * of the generated side. The platform's own parameters (@Order, @From, @Offset, @Fragment, ...) and
      * the author's names are two namespaces in one batch: a reference column called 'Order' declared

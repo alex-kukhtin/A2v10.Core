@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Http;
@@ -107,8 +108,9 @@ public class ScriptExceptionResult(Exception ex) : IActionResult
     {
         var resp = context.HttpContext.Response;
         resp.ContentType = MimeTypes.Application.Javascript;
-		var msg = (ex.InnerException ?? ex).Message;	
-        return resp.WriteAsync($"alert(`{msg}`)", Encoding.UTF8);
+		// a JSON string is a JS literal; a template literal ran '`' and '${...}' of the message as code
+		var msg = JsonSerializer.Serialize((ex.InnerException ?? ex).Message);
+        return resp.WriteAsync($"alert({msg})", Encoding.UTF8);
     }
 
 }

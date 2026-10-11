@@ -135,6 +135,10 @@ public class LicenseManager(ILogger<LicenseManager> _logger) : ILicenseManager
             licenseInfo.LicenseState = LicenseState.Expired;
         }
 
+        /* Deliberate, not a slip (the author's decision, 2026-10-11): a license whose signature holds is
+         * Ok whatever ExpiresOn says, so the branch above is overwritten here. Title and Message answer
+         * Ok and NotFound only for the same reason - do not "fix" either alone.
+         */
         licenseInfo.LicenseState = LicenseState.Ok;
         return licenseInfo;
     }

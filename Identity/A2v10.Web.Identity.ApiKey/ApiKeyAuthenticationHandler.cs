@@ -8,6 +8,7 @@ using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Security.Cryptography;
+using System.Text.Json;
 
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
@@ -48,7 +49,7 @@ public class ApiKeyAuthenticationHandler<T>(IOptionsMonitor<ApiKeyAuthentication
 				_ => throw new InvalidOperationException("Yet not implemented")
 			};
 			if (appUser == null || appUser.IsEmpty)
-				return AuthenticateResult.NoResult();
+				return InvalidKey;
 			var claims = await _claimStore.GetClaimsAsync(appUser, CancellationToken.None);
 			// ID is required
 			claims.Add(new Claim(WellKnownClaims.NameIdentifier, appUser.Id.ToString()!));
@@ -58,18 +59,19 @@ public class ApiKeyAuthenticationHandler<T>(IOptionsMonitor<ApiKeyAuthentication
 			var principal = new ClaimsPrincipal(identities);
 			var ticket = new AuthenticationTicket(principal, ApiKeyAuthenticationOptions.DefaultScheme);
 
-			Response.Headers.Append("WWW-Authenticate", apiKey);
 			return AuthenticateResult.Success(ticket);
-		} 
-		catch (CryptographicException)
-		{
-			return AuthenticateResult.Fail("Invalid API key");
 		}
-        catch (FormatException)
-        {
-            return AuthenticateResult.Fail("Invalid API key format");
-        }
-    }
+		/* One refusal for every key that does not hold: a bad padding, bad Base64, a body that is not a
+		 * user, a key the store does not know. Two answers tell a padding that holds from one that does
+		 * not - an oracle on AES-CBC, enough to decrypt a key and to forge one (P1.5 removes the cause).
+		 */
+		catch (Exception ex) when (ex is CryptographicException or FormatException or JsonException)
+		{
+			return InvalidKey;
+		}
+	}
+
+	private static AuthenticateResult InvalidKey => AuthenticateResult.Fail("Invalid API key");
 
     private async Task<AppUser<T>?> GetApiUserFromClaimsAsync(String apiKey)
 	{
