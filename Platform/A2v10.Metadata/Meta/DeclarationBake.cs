@@ -193,6 +193,18 @@ internal static class DeclarationBake
             + (available.Length == 0 ? $"It declares no {what} at all." : $"Available: {available}"));
     }
 
+    /* A filter a column contributes travels in the index query under its own name, beside the keys the
+     * index reads for itself - one flat query, so the two cannot be told apart there. Ignoring case: the
+     * index looks a filter up in lower case too.
+     */
+    private static void CheckFilterNames(TableMetadata table, DeclarationMetadata declaration)
+    {
+        foreach (var f in table.Filters(declaration).Where(f => f.Column != null))
+            if (Constants.QueryNames.All.Contains(f.Name, StringComparer.OrdinalIgnoreCase))
+                throw new InvalidOperationException(
+                    $"field '{f.Column!.Name}' of {table.SqlTableName}: its filter '{f.Name}' is a key the index query reserves ({String.Join(", ", Constants.QueryNames.All)}). Rename the field.");
+    }
+
     /* The root of the walk. It can run this early only because nothing here reaches outside its own
      * table - see InheritDescriptor - and that is what keeps the endpoint immutable: a bake needing
      * the reference graph would have to run after publication, and there is no way to put a new
@@ -208,6 +220,7 @@ internal static class DeclarationBake
                 $"total: declared on {table.SqlTableName}, which is a record. A sum is a member of a collection.");
         CheckProperties(table, declaration.Properties, declaration.Rules);
         NoLeftovers(table, declaration.Kinds.Keys, [], "kinds");
+        CheckFilterNames(table, declaration);
         return declaration.BakeNode(table) with
         {
             BakedForms = BuildForms(declaration, table, platformId),

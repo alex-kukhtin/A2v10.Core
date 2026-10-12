@@ -34,12 +34,12 @@ public class FetchResolveTests
     {
         var (builder, table) = await BuilderAsync();
         dynamic prms = new ExpandoObject();
-        prms.inherit = "State,Order,Shipment";
+        prms.inherit = "State,BaseOrder,Shipment";
 
         String sql = builder.FetchSqlText(prms);
 
         var state = table.AllColumns().First(c => c.Name == "State").RefTableCheck.Storage;
-        var order = table.AllColumns().First(c => c.Name == "Order").RefTableCheck.Storage;
+        var order = table.AllColumns().First(c => c.Name == "BaseOrder").RefTableCheck.Storage;
 
         Assert.Contains($"[Name!!Name] = a.[{state.Presentation}]{SqlBuilder.RefFields(state, "a")}", sql);
         Assert.Contains($"[{Constants.FieldNames.Role}]", sql);

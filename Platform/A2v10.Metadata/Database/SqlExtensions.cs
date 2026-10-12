@@ -129,6 +129,12 @@ internal static class SqlExtensions
      */
     public static String ColumnParam(String name) => $"@${name}";
 
+    /* A candidate whose owner is the given one - or none: an owner left empty is everyone's (a store of
+     * every company). The picker's two roads and the save read this one predicate; the save refuses its
+     * negation (SqlBuilder.OwnerCheck).
+     */
+    internal static String OwnerMatch(String owner, String value) => $"({owner} = {value} or {owner} is null)";
+
     // -1 (max) travels through untouched: it is the catalog's own notation, and
     // SqlFullName renders it.
     private static Int32 ToColumnLength(this Int32? length) => length ?? 255;

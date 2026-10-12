@@ -54,12 +54,12 @@ public class BasedOnTests
     {
         var documents = (await LoadNormalAsync("document", String.Empty)).Storage;
 
-        var order = documents.AllColumns().Single(c => c.Name == "Order");
+        var order = documents.AllColumns().Single(c => c.Name == "BaseOrder");
         var fk = CliDatabaseCreator.CreateForeignKeys(documents);
 
         Assert.Equal("/document/order", order.RefTableCheck.Path);
         Assert.Equal("platformid", order.ToSqlDbTypeInfo().SqlName);
-        Assert.Contains("constraint FK_StockDocuments_Order_Orders foreign key ([Order]) references doc.[Orders]([Id])", fk);
+        Assert.Contains("constraint FK_StockDocuments_BaseOrder_Orders foreign key ([BaseOrder]) references doc.[Orders]([Id])", fk);
     }
 
     [Fact]
@@ -160,7 +160,7 @@ public class BasedOnTests
         var sql = await (await BuilderOf("/document/receipt", "Op=supplier&BasedOn=5&Base=/document/order")).BuildBirthSqlTextAsync();        var record = Fill(sql, "@$Record");
 
         Assert.Equal("cast(N'0' as bigint)", record["Id"]);
-        Assert.Equal("s.[Id]", record["Order"]);             // the basis
+        Assert.Equal("s.[Id]", record["BaseOrder"]);         // the basis
         Assert.Equal("s.[Store]", record["StoreTo"]);        // 'document'
         Assert.Equal("s.[Agent]", record["Agent"]);          // by name and domain
         Assert.Equal("s.[Sum]", record["Sum"]);
@@ -207,7 +207,7 @@ public class BasedOnTests
         var row = Fill(sql, "@$Record$Rows");
 
         Assert.Equal("s.[Id]", record["Shipment"]);          // the basis
-        Assert.Equal("s.[Order]", record["Order"]);          // the shipment's own basis, by name
+        Assert.Equal("s.[BaseOrder]", record["BaseOrder"]);  // the shipment's own basis, by name
         Assert.Equal("s.[StoreFrom]", record["StoreFrom"]);
         Assert.Equal("s.[Agent]", record["Agent"]);
         Assert.Equal("null", record["Number"]);
@@ -283,11 +283,11 @@ public class BasedOnTests
     {
         var lines = (await ViewOf("/document/waybillin", "edit")).Split('\n');
 
-        var link = lines.Single(l => l.Contains("<Hyperlink") && l.Contains("Document.Order"));
-        Assert.Contains("""If="{Bind Document.Order.Id}""", link);
-        Assert.Contains("""Content="{Bind Document.Order.Name}""", link);
-        Assert.Contains("""Icon="{Bind Document.Order.$Icon}""", link);
-        Assert.Contains("Url={Bind Document.Order.$Url}", link);
-        Assert.DoesNotContain(lines, l => l.Contains("<SelectorSimple") && l.Contains("Document.Order"));
+        var link = lines.Single(l => l.Contains("<Hyperlink") && l.Contains("Document.BaseOrder"));
+        Assert.Contains("""If="{Bind Document.BaseOrder.Id}""", link);
+        Assert.Contains("""Content="{Bind Document.BaseOrder.Name}""", link);
+        Assert.Contains("""Icon="{Bind Document.BaseOrder.$Icon}""", link);
+        Assert.Contains("Url={Bind Document.BaseOrder.$Url}", link);
+        Assert.DoesNotContain(lines, l => l.Contains("<SelectorSimple") && l.Contains("Document.BaseOrder"));
     }
 }

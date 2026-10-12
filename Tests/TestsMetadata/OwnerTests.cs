@@ -5,6 +5,7 @@ using System.Dynamic;
 using Newtonsoft.Json;
 
 using A2v10.Metadata;
+using A2v10.Services;
 
 namespace A2v10.Metadata.Tests;
 
@@ -120,9 +121,59 @@ public class OwnerTests
         var sql = SqlBuilder.OwnerCheck(documents);
 
         Assert.Contains("from @Document s\n", sql.Replace("\r", ""));
-        Assert.Contains("s.[Agent] is not null and (r.[Agent] is null or r.[Agent] <> s.[Agent])", sql);
+        Assert.Contains("s.[Agent] is not null and not (r.[Agent] = s.[Agent] or r.[Agent] is null)", sql);
         Assert.Contains("cross join @Document h", sql);
-        Assert.Contains("h.[Company] is not null and (r.[Company] is null or r.[Company] <> h.[Company])", sql);
+        Assert.Contains("h.[Company] is not null and not (r.[Company] = h.[Company] or r.[Company] is null)", sql);
         Assert.Contains("N'UI:@[Error.Owner]'", sql);
+    }
+
+    /* A document is subordinate to nothing: its Company is the enterprise of its books, no owner. The
+     * basis points at an order with a company, and nothing filters or checks it by that.
+     */
+    [Fact]
+    public async Task A_reference_to_a_document_is_not_filtered_by_its_company()
+    {
+        var documents = (await LoadNormalAsync("document", String.Empty)).Storage;
+        var order = (await LoadNormalAsync("document", "order")).Storage;
+
+        Assert.Contains(order.AllColumns(), c => c.Type == ColumnType.Company);
+        Assert.Empty(order.OwnerColumns());
+        Assert.Empty(Column(documents, "BaseOrder").OwnerLinks(documents, null));
+        Assert.DoesNotContain("[BaseOrder]", SqlBuilder.OwnerCheck(documents));
+    }
+
+    [Fact]
+    public void An_owner_outside_a_catalog_is_refused()
+    {
+        var table = JsonConvert.DeserializeObject<TableMetadata>("""
+            { "table": "T", "fields": { "Number": { "type": "autonum" },
+                "Agent": { "type": "owner", "target": "/catalog/agent" } } }
+            """, JsonSettings.CamelCaseSerializerSettings)!;
+        table.SetDefaults(TableKind.Document, "document", "x");
+
+        var ex = Assert.Throws<InvalidOperationException>(() => DatabaseMetadataProvider.CheckOwnerColumn(table, "document", "x"));
+        Assert.Contains("[Agent] is 'owner'", ex.Message);
+    }
+
+    // a record whose owner is empty is everyone's: both roads of the picker offer it
+    [Fact]
+    public async Task A_record_with_no_owner_is_offered_to_every_owner()
+    {
+        var provider = TestHost.GetService<DatabaseMetadataProvider>();
+        SqlBuilder Builder(String url, NormalEndpointMetadata endpoint, AppPlatformId platformId) => new(new BuilderDescriptor()
+        {
+            Endpoint = endpoint,
+            PlatformUrl = new PlatformUrl(url),
+            PlatformId = platformId,
+            UseGrants = false,
+        }, TestHost.Services);
+        var contract = await provider.GetNormalEndpointAsync(null, "catalog", "contract");
+        var platformId = await provider.GetPlatformIdAsync(null);
+        var prms = new ExpandoObject();
+        ((IDictionary<String, Object?>)prms)["Agent"] = 5L;
+
+        var fetch = Builder("_page/catalog/contract/index/0", contract, platformId).FetchSqlText(prms);
+
+        Assert.Contains("(a.[Agent] = @$Agent or a.[Agent] is null)", fetch);
     }
 }

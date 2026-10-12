@@ -377,9 +377,10 @@ internal partial class SqlBuilder
     }
 
     /* A reference to an owned record, held against the owner its picker filtered by
-     * (MetadataExtensions.OwnerLinks): a record owned by someone else is refused, and one owned by
-     * nobody too. An empty field checks nothing, as it filtered nothing. Over what was SENT and
-     * before the merge: the picker is the browser's half, this is the half that is not.
+     * (MetadataExtensions.OwnerLinks): a record owned by someone else is refused, one owned by nobody
+     * is everyone's and passes (SqlExtensions.OwnerMatch). An empty field checks nothing, as it filtered
+     * nothing. Over what was SENT and before the merge: the picker is the browser's half, this is the
+     * half that is not.
      */
     internal static String OwnerCheck(TableMetadata table)
     {
@@ -395,7 +396,7 @@ internal partial class SqlBuilder
                 var mismatch = links.Select(l =>
                 {
                     var value = $"{(l.Header ? "h" : "s")}.[{l.Field.Name}]";
-                    return $"{value} is not null and (r.[{l.Owner.Name}] is null or r.[{l.Owner.Name}] <> {value})";
+                    return $"{value} is not null and not {SqlExtensions.OwnerMatch($"r.[{l.Owner.Name}]", value)}";
                 });
                 var joinHeader = links.Any(l => l.Header) ? $" cross join @{table.Model} h" : String.Empty;
                 sb.AppendLine($"""

@@ -120,8 +120,8 @@ internal partial class SqlBuilder(BuilderDescriptor desciptor, IServiceProvider 
             return DateTime.ParseExact(value, "yyyyMMdd", CultureInfo.InvariantCulture);
         }
 
-        return prms.AddDate("@From", DateTimeFromString(qry?.Get<String>("From")))
-            .AddDate("@To", DateTimeFromString(qry?.Get<String>("To")));
+        return prms.AddDate("@From", DateTimeFromString(qry?.Get<String>(Constants.QueryNames.From)))
+            .AddDate("@To", DateTimeFromString(qry?.Get<String>(Constants.QueryNames.To)));
     }
 
     /* One entry per SET and not per column: two columns onto one set share a single array in the

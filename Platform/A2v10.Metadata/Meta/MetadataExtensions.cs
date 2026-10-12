@@ -171,7 +171,7 @@ internal static class MetadataExtensions
         if (!reference.IsRef || reference.RefTable is not { } target)
             return [];
         List<OwnerLink> links = [];
-        foreach (var owner in target.Storage.AllColumns(c => c.Type is ColumnType.Owner or ColumnType.Company))
+        foreach (var owner in target.Storage.OwnerColumns())
         {
             if (OwnerField(reference, owner, scope) is { } field)
                 links.Add(new OwnerLink(owner, field, false));
@@ -180,6 +180,14 @@ internal static class MetadataExtensions
         }
         return links;
     }
+
+    /* The columns that make a record subordinate, so that the owner filters who picks it: Owner, and
+     * Company - an owner with a fixed target. A catalog only: a document is subordinate to nothing, and
+     * its Company is the enterprise of its books (the counter, '{p}', the posting), no owner. Owner on
+     * any other kind is refused at load (DatabaseMetadataProvider.CheckOwnerColumn).
+     */
+    internal static IEnumerable<TableColumn> OwnerColumns(this TableMetadata table) =>
+        table.Kind == TableKind.Catalog ? table.AllColumns(c => c.Type is ColumnType.Owner or ColumnType.Company) : [];
 
     static TableColumn? OwnerField(TableColumn reference, TableColumn owner, TableMetadata table)
     {

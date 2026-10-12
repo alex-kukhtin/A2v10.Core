@@ -244,6 +244,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         CheckNames(storage, schema, table);
         CheckPlatformColumns(storage, schema, table);
         CheckCompanyColumn(storage, schema, table);
+        CheckOwnerColumn(storage, schema, table);
         CheckAccPlan(storage, schema, table);
         await RegistryRows.LoadAsync(storage, schema, table, _codeProvider);
         return storage;
@@ -281,6 +282,16 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             if (details.Columns.FirstOrDefault(c => c.Type == ColumnType.Company) is { } column)
                 throw new InvalidOperationException(
                     $"{file}: [{column.Name}] in '{key}' is 'company'. A row belongs to its record, so the company is a field of the record");
+    }
+
+    /* The owner makes the record subordinate - a contract of an agent - and only a catalog is: a record
+     * of any other kind belongs to nobody, so nothing would ever filter by it (MetadataExtensions.OwnerColumns).
+     */
+    internal static void CheckOwnerColumn(TableMetadata storage, String schema, String table)
+    {
+        if (storage.Kind != TableKind.Catalog && storage.AllColumns(c => c.Type == ColumnType.Owner).FirstOrDefault() is { } column)
+            throw new InvalidOperationException(
+                $"{MetadataFileName(schema, table)}: [{column.Name}] is 'owner'. A record with an owner is subordinate, and only a catalog is; elsewhere it is a 'ref'");
     }
 
     /* A ledger posts against one chart, and nothing names it but this key - no default, and not the

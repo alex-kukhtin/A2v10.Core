@@ -226,8 +226,7 @@ declare type templateValidatorResult = { msg: string, severity: Severity };
 type tempateValidatorFunc = (elem: IElement, value?: any) => boolean | string | templateValidatorResult | Promise<any>;
 
 interface templateValidatorObj {
-	// the standard validators by name as well: a template written as text names them ('notBlank')
-	valid: tempateValidatorFunc | StdValidator | `${StdValidator}`,
+	valid: tempateValidatorFunc | StdValidator,
 	async?: boolean,
 	msg?: string,
 	regExp?: RegExp,

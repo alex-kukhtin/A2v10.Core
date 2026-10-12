@@ -40,7 +40,7 @@
 		"DueDate": {
 			"type": "Date"
 		},
-		"Order": {
+		"BaseOrder": {
 			"type": "BasedOn",
 			"target": "/document/order"
 		},

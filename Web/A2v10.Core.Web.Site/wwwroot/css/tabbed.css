@@ -8449,6 +8449,7 @@ table.tree-grid a.toggle.expanded:after {
 }
 .flow-panel.axis-rows {
   flex-direction: row;
+  align-items: baseline;
 }
 .flow-panel.axis-rows > .control-group:not(.with-width) {
   flex: 1 1 auto;
@@ -8477,8 +8478,16 @@ table.tree-grid a.toggle.expanded:after {
   flex: 1 1 auto;
 }
 .flow-panel .dom-date {
-  width: 14rem;
-  max-width: 14rem;
+  max-width: fit-content;
+}
+.flow-panel .dom-date .input-group {
+  width: 15rem!important;
+}
+.flow-panel .dom-autonum {
+  max-width: fit-content;
+}
+.flow-panel .dom-autonum .input-group {
+  width: 15rem;
 }
 .flow-panel.axis-rows .dom-ref {
   width: 22rem;

@@ -163,6 +163,23 @@ internal static class Constants
         public const String Tags = nameof(Tags);
     }
 
+    /* The keys the index reads from its query besides the filters, and the filters arrive in the same
+     * flat query under their own names - so a filter named as one of these reads the platform's value
+     * (a ref column 'Order' took the sort key 'Id', and the list came back empty on reload). Refused at
+     * the bake (DeclarationBake.CheckFilterNames).
+     */
+    public static class QueryNames
+    {
+        public const String Offset = nameof(Offset);
+        public const String PageSize = nameof(PageSize);
+        public const String Order = nameof(Order);
+        public const String Dir = nameof(Dir);
+        public const String Fragment = nameof(Fragment);
+        public const String From = nameof(From);
+        public const String To = nameof(To);
+        public static readonly String[] All = [Offset, PageSize, Order, Dir, Fragment, From, To, FilterNames.Tags];
+    }
+
     public static class SchemaNames
     {
         public const String Catalog = "catalog";

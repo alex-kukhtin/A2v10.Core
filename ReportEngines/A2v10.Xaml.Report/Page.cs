@@ -10,6 +10,7 @@ namespace A2v10.Xaml.Report;
 public class Page : XamlElement
 {
 	public String? Title { get; set; }
+	[WriteAsCData]
 	public String? Code { get; init; }
 
 	// Объявление выборки для слоя метаданных, а не разметка: рендерер сюда не смотрит. Живёт
@@ -17,6 +18,7 @@ public class Page : XamlElement
 	// и он Page. [JsonIgnore] обязателен, а не для красоты: в JSON-бланке "Model" — объект
 	// верхнего уровня, иначе System.Text.Json положит его в String и уронит каждую печатную форму
 	[JsonIgnore]
+	[WriteAsCData]
 	public String? Model { get; init; }
 
 	[JsonIgnore]

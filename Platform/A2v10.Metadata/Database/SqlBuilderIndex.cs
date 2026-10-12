@@ -52,6 +52,7 @@ internal partial class SqlBuilder
          * filter and not of the column, because the second is a reference like any other elsewhere.
          */
         var setFilters = endpointFilters.Where(f => f.Kind == FilterKind.Set).Select(f => f.Name).ToHashSet();
+        var ownerFilters = Table.OwnerColumns().Select(c => c.Name).ToHashSet();
 
         /* Searchable references only. A set is not one: its Name is a localization key, so a
          * fragment would be matched against '@[VatRate.20]' - the English code is findable, the
@@ -63,19 +64,19 @@ internal partial class SqlBuilder
         // parse query
         if (qry != null)
         {
-            if (qry.HasProperty("Offset"))
-                if (!Int32.TryParse(qry.Get<String>("Offset") ?? "0", out offset))
+            if (qry.HasProperty(Constants.QueryNames.Offset))
+                if (!Int32.TryParse(qry.Get<String>(Constants.QueryNames.Offset) ?? "0", out offset))
                     offset = 0;
-            if (qry.HasProperty("PageSize"))
-                if (!Int32.TryParse(qry.Get<String>("PageSize") ?? DEFAULT_PAGE_SIZE.ToString(), out pageSize))
+            if (qry.HasProperty(Constants.QueryNames.PageSize))
+                if (!Int32.TryParse(qry.Get<String>(Constants.QueryNames.PageSize) ?? DEFAULT_PAGE_SIZE.ToString(), out pageSize))
                     pageSize = DEFAULT_PAGE_SIZE;
-            fragment = qry.Get<String?>("Fragment");
+            fragment = qry.Get<String?>(Constants.QueryNames.Fragment);
             if (Table.HasTags)
                 tags = qry.Get<String?>(Constants.FilterNames.Tags);
-            dir = qry.Get<String>("Dir")?.ToLowerInvariant() ?? DEFAULT_DIR;
+            dir = qry.Get<String>(Constants.QueryNames.Dir)?.ToLowerInvariant() ?? DEFAULT_DIR;
             if (dir != "asc" && dir != "desc")
                 dir = DEFAULT_DIR;
-            var queryOrder = qry.Get<String>("Order");
+            var queryOrder = qry.Get<String>(Constants.QueryNames.Order);
 
             /* A set column is not sortable at all, and the header offers no sort on it. Both
              * candidates lie about what the column shows: 'Order' is the order the set was
@@ -161,10 +162,13 @@ internal partial class SqlBuilder
              * this predicate is not the general one. Null is not among the cases: it was turned
              * into the empty string at the top, in one place, before anything reads the parameter.
              */
+            // an owner filters as the picker's fetch does: the browse is its other road (OwnerMatch)
             String filterPredicate((String name, String value) f) =>
                 setFilters.Contains(f.name)
                     ? $"({ColumnParam(f.name)} = N'' or a.[{f.name}] = {ColumnParam(f.name)})"
-                    : $"a.[{f.name}] = {ColumnParam(f.name)}";
+                    : ownerFilters.Contains(f.name)
+                        ? OwnerMatch($"a.[{f.name}]", ColumnParam(f.name))
+                        : $"a.[{f.name}] = {ColumnParam(f.name)}";
 
             if (filters.Count > 0)
                 sb.AppendLine($" and {String.Join(" and ", filters.Select(filterPredicate))}");

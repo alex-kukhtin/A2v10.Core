@@ -84,7 +84,7 @@ internal partial class SqlBuilder
      * from the browser, and nothing else narrows a fetch. An empty id is no owner, as an absent one.
      */
     internal static List<(TableColumn Column, Object Id)> FetchOwners(TableMetadata table, AppPlatformId platformId, ExpandoObject? prms) =>
-        [.. table.AllColumns(c => c.Type is ColumnType.Owner or ColumnType.Company)
+        [.. table.OwnerColumns()
             .Select(c => (Column: c, Id: platformId.ParseId(prms?.Get<Object>(c.Name)?.ToString())))
             .Where(o => !AppPlatformId.IsEmpty(o.Id))
             .Select(o => (o.Column, o.Id!))];
@@ -116,7 +116,7 @@ internal partial class SqlBuilder
         var owners = FetchOwners(Table, PlatformId, prms);
         // the same rows the browse dialog of this address shows - see FixedPredicate
         var fixedRows = FixedPredicate("a")
-            + String.Concat(owners.Select(o => $" and a.[{o.Column.Name}] = {ColumnParam(o.Column.Name)}"));
+            + String.Concat(owners.Select(o => $" and {OwnerMatch($"a.[{o.Column.Name}]", ColumnParam(o.Column.Name))}"));
         /* A fetch is a place of choice: searched and ordered by the column the selector shows
          * (DisplayAs), and the element carries what a map would - Name the presentation, the choice
          * column, the colour - so it has one shape however it reached the record.

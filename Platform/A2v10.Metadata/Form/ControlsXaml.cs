@@ -529,7 +529,7 @@ internal partial class XamlBuilder
             ColumnType.Date => new DatePicker()
             {
                 Label = label,
-                Width = at.InRow ? null : Length.FromString("12rem"),
+                //Width = at.InRow ? null : Length.FromString("15rem"),
                 CssClass = cssClass,
                 Bindings = b => b.SetBinding(nameof(DatePicker.Value), valueBind)
             },

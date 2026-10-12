@@ -27,9 +27,15 @@
 		-->
 	</ItemGroup>
 
-	<!-- the bundler hooks BeforeCompile, but static web assets resolve earlier (AssignTargetPaths):
-	     after Clean deletes tabbed.js, Rebuild fails on a missing asset -->
-	<Target Name="BundleBeforeStaticWebAssets" BeforeTargets="ResolveProjectStaticWebAssets" DependsOnTargets="BundleMinify" />
+	<!-- the package's targets are off: its Clean deletes each output and its .min sibling (terser's
+	     tabbed.min.js too), and the outputs are under git anyway. Build only, and before static web
+	     assets resolve: the package hooks BeforeCompile, later than AssignTargetPaths -->
+	<PropertyGroup>
+		<RunBundleMinify>False</RunBundleMinify>
+	</PropertyGroup>
+	<Target Name="BundleBeforeStaticWebAssets" BeforeTargets="ResolveProjectStaticWebAssets">
+		<BundlerMinifier.BundlerBuildTask FileName="$(MSBuildProjectDirectory)\bundleconfig.json" />
+	</Target>
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\BlobStorages\AzureBlobStorage\AzureBlobStorage.csproj" />
