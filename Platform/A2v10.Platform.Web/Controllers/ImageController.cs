@@ -17,7 +17,6 @@ namespace A2v10.Platform.Web.Controllers;
 
 [ExecutingFilter]
 [Authorize]
-[ResponseCache(Duration = 2592000, Location = ResponseCacheLocation.Client)]
 public class ImageController(IApplicationHost host,
     ILocalizer localizer, ICurrentUser currentUser, IProfiler profiler,
     IDataService dataService, ITokenProvider tokenProvider, IAppCodeProvider appCodeProvider) : BaseController(host, localizer, currentUser, profiler)
@@ -46,7 +45,13 @@ public class ImageController(IApplicationHost host,
 				throw new InvalidRequestException($"Invalid mime type for image. ({pathInfo})");
 			if (!IsTokenValid(blob.Token, strToken))
 				throw new InvalidRequestException("Invalid image token");
-			return new WebBinaryActionResult(blob.Stream, blob.Mime);
+			// cached on success only: [ResponseCache] on the class cached an error too
+			var ar = new WebBinaryActionResult(blob.Stream, blob.Mime)
+				.EnableCache()
+				.AddHeader("X-Content-Type-Options", "nosniff");
+			if (!IsInlineMime(blob.Mime))
+				ar.AddHeader("Content-Disposition", "attachment");
+			return ar;
 		}
 		catch (Exception ex)
 		{
@@ -107,6 +112,8 @@ public class ImageController(IApplicationHost host,
         }
     }
 
+	// an error here is WriteImageException, whose no-store replaces this header
+	[ResponseCache(Duration = 2592000, Location = ResponseCacheLocation.Client)]
     [Route("_static_image/{*pathInfo}")]
 	[HttpGet]
 	public IActionResult StaticImage(String pathInfo)

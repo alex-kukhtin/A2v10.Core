@@ -48,6 +48,10 @@
 		},
 		"description": {"type": "string"},
 		"model": { "type": "string" },
+		"requireBase": {
+			"type": "boolean",
+			"description": "The endpoint lives under ?base= (an owner's endpoint address): every call carries it, its roles are checked, an upload into its blobs links the file to ?owner= in a2blob.BlobLinks"
+		},
 		"schema": { "type": "string" },
 		"module": { "type": "string" },
 		"allowAddress": { "type": "string" },
@@ -368,6 +372,20 @@
 						"auto": { "$ref": "#/definitions/auto" },
 						"meta": { "$ref": "#/definitions/meta" },
 						"key": { "type": "string" }
+					},
+					"additionalProperties": false
+				}
+			}
+		},
+		"blobs": {
+			"type": "object",
+			"description": "Uploadable files. The key names the field <model>.<Key> (case-insensitive, written PascalCase)",
+			"patternProperties": {
+				".+": {
+					"type": "object",
+					"properties": {
+						"accept": { "type": "string", "description": "Accepted MIME types, comma-separated" },
+						"maxSize": { "type": "number", "description": "Maximum file size, KB" }
 					},
 					"additionalProperties": false
 				}

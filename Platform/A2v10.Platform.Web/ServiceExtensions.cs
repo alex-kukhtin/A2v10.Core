@@ -54,9 +54,6 @@ public static class ServiceExtensions
 			.AddScoped<ICurrentUser>(s => s.GetRequiredService<CurrentUser>())
 			.AddScoped<IDbIdentity>(s => s.GetRequiredService<CurrentUser>());
 
-		services.AddDistributedMemoryCache();
-		services.AddSession();
-
 		services.AddSingleton<ISignalSender, SignalSender>();
 
 		return builder;

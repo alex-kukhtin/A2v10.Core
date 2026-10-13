@@ -47,6 +47,8 @@ public interface IModelBase
 	String? DataSource { get; }
 	String? CurrentModel { get; }
 	Boolean Signal { get; }
+	// the endpoint lives under ?base=: every call carries it, and the base's roles are checked
+	Boolean RequireBase { get; }
 
 	String LoadProcedure();
     String ExportProcedure();
@@ -150,6 +152,9 @@ public interface IModelView : IModelBase
 	String? Target { get; }
 	String? TargetId { get; }
 	IModelView? TargetModel { get; }
+
+	// the "blobs" keys of the endpoint: the Save of this view checks the references <model>.<Key>
+	IReadOnlyCollection<String> BlobKeys { get; }
 
 	IModelMerge? Merge { get; }
 

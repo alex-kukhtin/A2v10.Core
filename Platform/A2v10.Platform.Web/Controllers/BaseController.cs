@@ -120,6 +120,14 @@ public class BaseController : Controller, IControllerProfiler
 		return Task.CompletedTask;
 	}
 
+	// An uploaded file's Mime came from the client. Inline only what the browser will not execute: raster
+	// and PDF; SVG carries script. Content-Disposition does not affect <img>, <object> or XHR — only a tab
+	protected static Boolean IsInlineMime(String? mime) =>
+		mime != null
+		&& (mime.StartsWith(MimeTypes.Application.Pdf, StringComparison.OrdinalIgnoreCase)
+			|| mime.StartsWith("image/", StringComparison.OrdinalIgnoreCase)
+				&& !mime.StartsWith(MimeTypes.Image.Svg, StringComparison.OrdinalIgnoreCase));
+
 	public static IActionResult WriteImageException(Exception ex)
 	{
 		if (ex.InnerException != null)

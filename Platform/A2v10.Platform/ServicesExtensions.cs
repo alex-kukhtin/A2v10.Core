@@ -97,6 +97,7 @@ public static class ServicesExtensions
 		services.ConfigureAppOptions(configuration, cookiePrefix);
 
 		services.AddScoped<IDataService, DataService>();
+		services.AddScoped<IBlobService, BlobService>();
 		services.AddScoped<IModelJsonReader, ModelJsonReader>();
 		services.AddScoped<IReportService, ReportService>();
 		services.AddScoped<IExternalDataProvider, ExternalDataContext>();
@@ -130,7 +131,6 @@ public static class ServicesExtensions
 		app.UseRouting();
 		app.UseAuthentication();
 		app.UseAuthorization();
-		app.UseSession();
 
 		app.UseCookiePolicy(new CookiePolicyOptions()
 		{

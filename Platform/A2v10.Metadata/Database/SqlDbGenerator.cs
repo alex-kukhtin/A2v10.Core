@@ -128,7 +128,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         // exist (step above), and must run BEFORE the foreign keys, since those
         // reference columns it has just added.
         allScript.AppendLine(seedScript);
-        allScript.AppendLine(CreatePlatformIdScript(platformId));
+        // dbo.platformid is not created here: the application declares it, first in full.sql (design/platformid.md)
         allScript.AppendLine(CreateSchemasScript(tables));
         allScript.AppendLine(CreateTablesScript(tables, platformId));
         allScript.AppendLine(CreateTableTypesScript(tables));
@@ -376,18 +376,6 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         exec a2meta.[SyncSchema]
         go
 
-        """;
-    }
-
-    private String CreatePlatformIdScript(AppPlatformId platformId)
-    {
-        return $"""
-
-        -- PLATFORM ID TYPE
-        {CliDatabaseCreator.SQL_DIVIDER}
-        if type_id(N'dbo.platformid') is null
-        	create type dbo.platformid from {platformId.SqlTypeName};
-        go        
         """;
     }
 
@@ -730,7 +718,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
      * tempting that looks as a way to keep the invariant automatically. The hash has to be
      * a function of the DECLARATION: over the script it would answer 'did the generator's
      * output change' instead, so a reformatting in a platform release would re-run a full
-     * deploy on every customer database - and CreatePlatformIdScript depends on the base the
+     * deploy on every customer database - and the tables' DDL depends on the base the
      * database runs on, so one declaration would even hash differently on two of them.
      * A new fact reaches the hash by being written into the seed - see the 'xtra'
      * fingerprint of a table, which is what carries the declared values of a set.

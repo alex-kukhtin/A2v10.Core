@@ -32,6 +32,7 @@ public static class MimeTypes
 	{
 		public const String Png = "image/png";
 		public const String Jpg = "image/jpeg";
+		public const String Gif = "image/gif";
 		public const String Svg = "image/svg+xml";
 		public const String Bmp = "image/bmp";
 		public const String Tif = "image/tiff";

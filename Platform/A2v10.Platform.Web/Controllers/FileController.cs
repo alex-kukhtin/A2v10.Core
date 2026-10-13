@@ -24,8 +24,6 @@ public class FileController(IApplicationHost host,
     ILocalizer localizer, ICurrentUser currentUser, IProfiler profiler,
     IDataService _dataService, ITokenProvider _tokenProvider, IAppCodeProvider _appCodeProvider) : BaseController(host, localizer, currentUser, profiler)
 {
-	// always Cached!
-	[ResponseCache(Duration = 2592000, Location = ResponseCacheLocation.Client)]
 	[Route("_file/{*pathInfo}")]
 	[HttpGet]
 	public async Task<IActionResult> DefaultGet(String pathInfo)
@@ -45,8 +43,11 @@ public class FileController(IApplicationHost host,
             if (blob.Stream == null)
 				throw new InvalidRequestException($"Blob not found. ({pathInfo})");
 
-			var ar = new WebBinaryActionResult(blob.Stream, blob.Mime ?? MimeTypes.Text.Plain);
-			if (Request.Query["export"].Count > 0)
+			// cached on success only: [ResponseCache] on the method cached an error too
+			var ar = new WebBinaryActionResult(blob.Stream, blob.Mime ?? MimeTypes.Text.Plain).EnableCache();
+			// Mime came from the uploading client: text/html would open in our origin with the viewer's cookies
+			ar.AddHeader("X-Content-Type-Options", "nosniff");
+			if (Request.Query["export"].Count > 0 || !IsInlineMime(blob.Mime))
 			{
 				var fileName = _localizer.Localize(null, blob.Name) ?? "file";
 				if (!fileName.Contains('.'))

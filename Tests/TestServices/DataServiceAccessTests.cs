@@ -15,59 +15,6 @@ namespace TestServices;
 [TestCategory("Access")]
 public class DataServiceAccessTests
 {
-	private sealed class User(IEnumerable<String> roles, Boolean readOnly, Boolean permitted) : ICurrentUser
-	{
-		private sealed class UserIdentity(IEnumerable<String> roles) : IUserIdentity
-		{
-			public Int64? Id => 1;
-			public String? Name => "user";
-			public String? PersonName => null;
-			public Int32? Tenant => null;
-			public String? Segment => null;
-			public Boolean IsAdmin => false;
-			public Boolean IsTenantAdmin => false;
-			public String? Theme => null;
-			public void SetInitialTenantId(Int32 tenant) { }
-			public IEnumerable<String>? Roles => roles;
-		}
-		private sealed class UserState(Boolean readOnly) : IUserState
-		{
-			public Int64? Company => null;
-			public Boolean IsReadOnly => readOnly;
-			public IEnumerable<Guid> Modules => [];
-		}
-		public IUserIdentity Identity { get; } = new UserIdentity(roles);
-		public IUserState State { get; } = new UserState(readOnly);
-		public IUserLocale Locale => throw new NotSupportedException();
-		public void SetCompanyId(Int64 id) { }
-		public void SetInitialTenantId(Int32 tenantId) { }
-		public void SetUserState(Boolean admin, Boolean readOnly, String? permissions) { }
-		public void AddModules(IEnumerable<Guid> modules) { }
-		public ExpandoObject DefaultParams() => [];
-		public Boolean IsPermissionEnabled(String key, PermissionFlag flag) => permitted;
-	}
-
-	// the same dispatch as ModelJsonReader, over a model.json built in code
-	private sealed class Reader(Func<ModelJson> file) : IModelJsonReader
-	{
-		ModelJson Load(IPlatformUrl url)
-		{
-			var rm = file();
-			rm.OnEndInit(url);
-			return rm;
-		}
-		public Task<IModelView?> TryGetViewAsync(IPlatformUrl url) => throw new NotSupportedException();
-		public Task<IModelView> GetViewAsync(IPlatformUrl url) => Task.FromResult<IModelView>(Load(url).GetAction(url.Action));
-		public Task<IModelBlob?> GetBlobAsync(IPlatformUrl url, String? suffix = null) => Task.FromResult<IModelBlob?>(url.Kind switch
-		{
-			UrlKind.Image => Load(url).GetBlob(url.Action, suffix),
-			UrlKind.File => Load(url).GetFile(url.Action),
-			_ => null
-		});
-		public Task<IModelCommand> GetCommandAsync(IPlatformUrl url, String command) => Task.FromResult<IModelCommand>(Load(url).GetCommand(command));
-		public Task<IModelReport> GetReportAsync(IPlatformUrl url) => throw new NotSupportedException();
-	}
-
 	private static ModelJson Classic(Dictionary<String, PermissionBits>? permissions = null) => new()
 	{
 		Schema = "cat",
@@ -88,8 +35,8 @@ public class DataServiceAccessTests
 		Roles = ["Manager"],
 	};
 
-	private static DataService Service(Func<ModelJson> file, User user)
-		=> new(null!, new Reader(file), null!, user, null!, null!, null!, null!, null!, null!);
+	private static DataService Service(Func<ModelJson> file, TestUser user)
+		=> new(null!, new TestModelReader(file), null!, user, null!, null!, null!, null!, null!, null!, null!);
 
 	private static readonly Action<ExpandoObject> NoParams = _ => { };
 
@@ -147,7 +94,7 @@ public class DataServiceAccessTests
 	[TestMethod]
 	public async Task A_user_without_the_role_is_refused_everywhere()
 	{
-		var service = Service(() => Classic(), new User([], readOnly: false, permitted: true));
+		var service = Service(() => Classic(), new TestUser([], readOnly: false, permitted: true));
 
 		await Refused("Access denied", service, [.. Reads, .. Writes]);
 	}
@@ -155,7 +102,7 @@ public class DataServiceAccessTests
 	[TestMethod]
 	public async Task A_user_without_the_permission_is_refused_on_the_view()
 	{
-		var service = Service(() => Classic(new() { ["Agents"] = PermissionBits.Edit }), new User(["Manager"], readOnly: false, permitted: false));
+		var service = Service(() => Classic(new() { ["Agents"] = PermissionBits.Edit }), new TestUser(["Manager"], readOnly: false, permitted: false));
 
 		await Refused("UI:Access denied", service, [.. Reads.Where(r => r.Name is "Load" or "Expand" or "LoadLazy" or "Export"),
 			.. Writes.Where(w => w.Name is "Save" or "DbRemove")]);
@@ -164,7 +111,7 @@ public class DataServiceAccessTests
 	[TestMethod]
 	public async Task A_read_only_user_reads_and_is_refused_every_write()
 	{
-		var service = Service(() => Classic(), new User(["Manager"], readOnly: true, permitted: true));
+		var service = Service(() => Classic(), new TestUser(["Manager"], readOnly: true, permitted: true));
 
 		await Refused("UI:@[Error.DataReadOnly]", service, Writes);
 		await Passed(service, Reads);
@@ -174,7 +121,7 @@ public class DataServiceAccessTests
 	[TestMethod]
 	public async Task A_metadata_command_is_checked_before_the_builder()
 	{
-		var service = Service(Meta, new User([], readOnly: false, permitted: true));
+		var service = Service(Meta, new TestUser([], readOnly: false, permitted: true));
 
 		await Refused("Access denied", service, [("Invoke", s => s.InvokeAsync("_page/catalog/agent/index/0", "post", null, NoParams))]);
 	}
@@ -182,7 +129,7 @@ public class DataServiceAccessTests
 	[TestMethod]
 	public async Task A_metadata_remove_is_refused_to_a_read_only_user()
 	{
-		var service = Service(Meta, new User(["Manager"], readOnly: true, permitted: true));
+		var service = Service(Meta, new TestUser(["Manager"], readOnly: true, permitted: true));
 
 		await Refused("UI:@[Error.DataReadOnly]", service, [("DbRemove", s => s.DbRemoveAsync("_page/catalog/agent/index/0", 1, null, NoParams))]);
 	}

@@ -61,6 +61,7 @@
 			"../../Platform/SqlScripts/a2v10_struct_simple.sql",
 			"../../Platform/SqlScripts/a2v10_system_simple.sql",
 			"../../Platform/SqlScripts/a2v10_security_simple.sql",
+			"../../Platform/SqlScripts/a2v10_blobs_simple.sql",
 			"../../Platform/SqlScripts/a2v10_ui_simple.sql",
 			"../../Platform/SqlScripts/a2v10_admin_simple.sql"
 		],

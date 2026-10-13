@@ -503,7 +503,6 @@ public class AccountController(
     private async Task DoLogout()
 	{
 		await _signInManager.SignOutAsync();
-		HttpContext.Session.Clear();
 		RemoveAllCookies();
 	}
 

@@ -18,7 +18,6 @@ public class DemoController(SignInManager<AppUser<Int64>> _signInManager, IConfi
 	public async Task<IActionResult> Demo()
 	{
 		await _signInManager.SignOutAsync();
-		HttpContext.Session.Clear();
 
 		foreach (var key in Request.Cookies.Keys)
 			Response.Cookies.Delete(key);

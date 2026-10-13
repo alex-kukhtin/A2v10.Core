@@ -51,7 +51,7 @@ public class SaveResult : ISaveResult
 public partial class DataService(IServiceProvider _serviceProvider, IModelJsonReader _modelReader, IDbContext _dbContext, ICurrentUser _currentUser,
     ISqlQueryTextProvider _sqlQueryTextProvider, IAppCodeProvider _codeProvider, IConfiguration _configuration,
     IExternalDataProvider _externalDataProvider, ILocalizer _localizer, IAppRuntimeBuilder _appRuntimeBuilder,
-    IAppClrManager? _appClrManager = null) : IDataService
+    IModelJsonPartProvider _partProvider, IAppClrManager? _appClrManager = null, IBlobService? _blobService = null) : IDataService
 {
     static PlatformUrl CreatePlatformUrl(UrlKind kind, String baseUrl)
 	{
@@ -138,15 +138,17 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 	 * and which one writes is known to the command. The read-only mark of a metadata card is not set:
 	 * its builder renders the page inside IAppRuntimeBuilder.RenderAsync - a contract change, P4.
 	 */
-	void CheckAccess(IModelBase model, Boolean write)
+	void CheckAccess(IModelBase model, Boolean write) => CheckAccess(_currentUser, model, write);
+
+	internal static void CheckAccess(ICurrentUser currentUser, IModelBase model, Boolean write)
 	{
-		if (!model.CheckRoles(_currentUser.Identity.Roles))
+		if (!model.CheckRoles(currentUser.Identity.Roles))
 			throw new DataServiceException("Access denied");
 		if (model.Permissions != null)
 			foreach (var (k, v) in model.Permissions)
-				if (!_currentUser.IsPermissionEnabled(k, (PermissionFlag)v))
+				if (!currentUser.IsPermissionEnabled(k, (PermissionFlag)v))
 					throw new DataServiceException("UI:Access denied");
-		if (write && _currentUser.State.IsReadOnly)
+		if (write && currentUser.State.IsReadOnly)
 			throw new DataServiceException("UI:@[Error.DataReadOnly]");
 	}
 
@@ -154,8 +156,14 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 	{
 		var view = await _modelReader.GetViewAsync(platformUrl);
 		CheckAccess(view, write);
+		// a view posts nothing that could replace the query's Base
+		await CheckBaseAsync(view, platformUrl.Query?.Get<String>("Base"));
 		return view;
 	}
+
+	// the Base the procedure will receive, whichever layer it came from
+	Task CheckBaseAsync(IModelBase model, String? @base) =>
+		model.RequireBase ? BaseAccess.CheckAsync(_partProvider, _currentUser, @base) : Task.CompletedTask;
 
 	async Task<IDataLoadResult> Load(PlatformUrl platformUrl, Action<ExpandoObject> setParams, Boolean isReload = false)
 	{
@@ -377,6 +385,11 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 
 		ResolveParams(savePrms, data);
 
+		// before every branch; a host without blobs may have no IBlobService
+		if (view.BlobKeys.Count > 0)
+			await (_blobService ?? throw new InvalidOperationException("IBlobService is not registered"))
+				.CheckReferencesAsync(view, data);
+
 		if (_appClrManager != null && !await _appClrManager.OnBeforeSaveModelAsync(platformBaseUrl, data))
 			return new SaveResult();
 
@@ -434,6 +447,8 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 
 		platformBaseUrl.AppendPosted(data);
 		var prms = cmd.CreateParameters(platformBaseUrl, null, setParams, IModelBase.ParametersFlags.SkipId);
+		// a command may post its Base (attachment delete does): checked as the procedure gets it
+		await CheckBaseAsync(cmd, prms.Get<String>("Base"));
 
 		var invokeCommand = cmd.GetCommandHandler(_serviceProvider);
 		var result = await invokeCommand.ExecuteAsync(cmd, prms);

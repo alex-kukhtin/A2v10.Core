@@ -66,16 +66,19 @@ public class ModelJsonBase : IModelBase
 		_parent = rm;
     }
 
-    public Boolean CheckRoles(IEnumerable<String>? roles)
+    public Boolean CheckRoles(IEnumerable<String>? roles) => CheckRoles(CurrentRoles, roles);
+
+	// required null - open to all; otherwise the user holds one of them. Also the roles of a base's model.json
+	internal static Boolean CheckRoles(IEnumerable<String>? required, IEnumerable<String>? roles)
 	{
-		if (CurrentRoles == null) 
+		if (required == null)
 			return true;
 		if (roles == null)
 			return false;
-		foreach (var r in CurrentRoles)
+		foreach (var r in required)
 		{
 			if (roles.FirstOrDefault(x => x == r) != null)
-				return true;	
+				return true;
 		}
 		return false;
 	}
@@ -83,6 +86,7 @@ public class ModelJsonBase : IModelBase
 	public String? CurrentModel => String.IsNullOrEmpty(Model) ? Parent.Model : Model;
 	public String CurrentSchema => (String.IsNullOrEmpty(Schema) ? Parent.Schema : Schema) ?? "dbo";
 	public IEnumerable<String>? CurrentRoles => Roles ?? Parent.Roles;
+	public Boolean RequireBase => _parent?.RequireBase ?? false;
 	public Boolean HasModel() => Model != String.Empty && !String.IsNullOrEmpty(CurrentModel);
 
 	public virtual String LoadProcedure()
@@ -207,6 +211,14 @@ public class ModelJsonBlob : ModelJsonViewBase, IModelBlob
 	}
 }
 
+// An entry of "blobs": the key names the field <model>.<Key>; the limits are checked by the server.
+// ModelJsonBase for the roles and the source of the endpoint, inherited through the parent
+public class ModelJsonBlobNew : ModelJsonBase
+{
+	public String? Accept { get; init; }
+	public Int32? MaxSize { get; init; } // KB
+}
+
 public class ModelJsonExport : IModelExport
 {
     public String? FileName { get; init; }
@@ -237,6 +249,7 @@ public class ModelJsonView : ModelJsonViewBase, IModelView
 	IModelMerge? IModelView.Merge => Merge;
 	IModelView? IModelView.TargetModel => TargetModel;
     IModelExport? IModelView.Export => Export;
+	IReadOnlyCollection<String> IModelView.BlobKeys => Parent.Blobs.Keys;
 	public String? EndpointHandler { get; set; }
     public String? View { get; set; }
 	public String? ViewMobile { get; set; }
@@ -464,11 +477,14 @@ public class ModelJson
 	public String? Schema { get; init; }
     public String? Model { get; init; }
 	public List<String>? Roles { get; init; }
+	// lives under ?base=: an upload into its blobs links the file to the owner (a2blob.BlobLinks)
+	public Boolean RequireBase { get; init; }
 
 	public Dictionary<String, ModelJsonView> Actions { get; init; } = new(StringComparer.OrdinalIgnoreCase);
 	public Dictionary<String, ModelJsonDialog> Dialogs { get; init; } = new(StringComparer.OrdinalIgnoreCase);
 	public Dictionary<String, ModelJsonView> Popups { get; init;  } = new(StringComparer.OrdinalIgnoreCase);
 	public Dictionary<String, ModelJsonBlob> Files { get; init; } = new(StringComparer.OrdinalIgnoreCase);
+	public Dictionary<String, ModelJsonBlobNew> Blobs { get; init; } = new(StringComparer.OrdinalIgnoreCase);
 	public Dictionary<String, ModelJsonCommand> Commands { get; init; } = new(StringComparer.OrdinalIgnoreCase);
 	public Dictionary<String, ModelJsonReport> Reports { get; init; } = new(StringComparer.OrdinalIgnoreCase);
 	#endregion
@@ -594,6 +610,8 @@ public class ModelJson
 			v.SetParent(this);
 		foreach (var (_, f) in Files)
 			f.SetParent(this);
+		foreach (var (_, b) in Blobs)
+			b.SetParent(this);
 		foreach (var (_, c) in Commands)
 			c.SetParent(this);
 		foreach (var (_, r) in Reports)

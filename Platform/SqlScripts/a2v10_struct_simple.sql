@@ -5,6 +5,11 @@ Last updated : 06 oct 2026
 module version : 8670
 */
 ------------------------------------------------
+-- the type of the application's keys is the application's: declared by _sql/platformid.sql, first in full.sql
+if type_id(N'dbo.platformid') is null
+	throw 60000, N'dbo.platformid is not declared. Add _sql/platformid.sql (the main module) to the host sql.json, first, before the platform scripts: "if type_id(N''dbo.platformid'') is null create type dbo.platformid from bigint;" - bigint, int or uniqueidentifier, the same as "platformid" in app.json. Never changed afterwards.', 1;
+go
+------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.SCHEMATA where SCHEMA_NAME=N'a2sys')
 	exec sp_executesql N'create schema a2sys authorization dbo';
 go

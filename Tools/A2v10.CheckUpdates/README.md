@@ -11,8 +11,8 @@ prints a warning; nothing else changes.
 
 Add it to the application module project (`MainApp`), not to the host:
 
-```xml
-<PackageReference Include="A2v10.CheckUpdates" Version="10.1.8668" />
+```
+dotnet add MainApp package A2v10.CheckUpdates
 ```
 
 It is a development dependency: nothing is referenced by the application and nothing flows to
