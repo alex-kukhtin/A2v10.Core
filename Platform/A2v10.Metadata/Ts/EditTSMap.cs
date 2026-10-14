@@ -14,7 +14,7 @@ internal partial class ScriptBuilder
         var detailsDecl = String.Empty;
 
         // the record's references and its rows': both are resolved into this one model
-        var refDecl = String.Join("\n", RefTargets(withDetails: true).Select(RefTsInterface));
+        var refDecl = String.Join("\n", RefTargets(withDetails: true).Select(RefTsInterface)) + BlobTsInterface();
 
         IEnumerable<String> detailsFields()
         {
@@ -56,7 +56,7 @@ internal partial class ScriptBuilder
             .SelectMany(x => Endpoint.Declaration.Details[x.Key].RowSets.Select(rs => $$"""
         export interface {{rs.Type}} extends IArrayElement {
             readonly $root: TRoot;
-        {{String.Join("\n", TsProperties(x.Value).Concat(propertyMembers(rs.Properties)))}}
+        {{String.Join("\n", TsProperties(x.Value, card: false).Concat(propertyMembers(rs.Properties)))}}
         }
 
         export interface {{rs.Type}}Array extends IElementArray<{{rs.Type}}> {
@@ -67,7 +67,7 @@ internal partial class ScriptBuilder
 
         IEnumerable<String> elemProperties()
         {
-            foreach (var p in TsProperties(Table))
+            foreach (var p in TsProperties(Table, card: true))
                 yield return p;
             foreach (var p in propertyMembers(Endpoint.Declaration.Properties))
                 yield return p;

@@ -17,6 +17,11 @@
 @Role.Admin=Администратор
 @Role.Everyone=Всички потребители
 ;
+; Attachments (/attachment)
+@Attachments=Прикачени файлове
+@Attachment.Upload=Качване на файл
+@Attachment.Empty=Този елемент все още няма прикачени файлове
+;
 ; Commands
 @Add=Добави
 @AddRow=Добави ред

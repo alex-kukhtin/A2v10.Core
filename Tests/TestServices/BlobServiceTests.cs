@@ -147,8 +147,7 @@ public class BlobServiceTests
 		}
 	}
 
-	private sealed record Stand(BlobService Service, Db Db, Storage Storage, IModelView Edit, ModelJson File,
-		ModelJson Attachment, Parts Parts);
+	private sealed record Stand(BlobService Service, Db Db, Storage Storage, IModelView Edit, Parts Parts);
 
 	// attachment: requireBase, the door Upload, the dialog index, the command delete; open to all roles
 	private static ModelJson AttachmentFile() => new()
@@ -197,8 +196,9 @@ public class BlobServiceTests
 			["catalog/locked"] = new ModelJson() { Roles = ["Admin"] },
 			["attachment"] = attachment
 		});
-		var service = new BlobService(sp, parts, db, user ?? new TestUser(["Manager"]), config, new Tokens());
-		return new Stand(service, db, storage, file.GetDialog("edit"), file, attachment, parts);
+		var service = new BlobService(sp, new ModelJsonReader(parts, new NullAppRuntimeBuilder()), db,
+			user ?? new TestUser(["Manager"]), config, new Tokens());
+		return new Stand(service, db, storage, file.GetDialog("edit"), parts);
 	}
 
 	private static readonly Byte[] Png = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D];
@@ -384,7 +384,7 @@ public class BlobServiceTests
 	{
 		var stand = Create();
 
-		CollectionAssert.AreEqual(new[] { "Logo" }, stand.Edit.BlobKeys.ToArray());
+		CollectionAssert.AreEqual(new[] { "Logo" }, stand.Edit.BlobDoors.Keys.ToArray());
 	}
 
 	[TestMethod]
@@ -445,11 +445,33 @@ public class BlobServiceTests
 		await RefusedOnSave(stand, foreign.Id, Saved(Obj(("id", foreign.Id), ("token", mine.Token)), root: "agent", field: "logo"));
 	}
 
+	// a metadata folder: the root routes ('$meta'), the door names the model the data come as
+	[TestMethod]
+	public async Task A_synthesized_door_is_checked_under_its_own_model()
+	{
+		var stand = Create();
+		var mine = await Upload(stand, "a.png", MimeTypes.Image.Png, Png);
+		var foreign = await Upload(stand, "b.png", MimeTypes.Image.Png, Png);
+		var meta = new ModelJson()
+		{
+			Model = IModelBase.MetaModel,
+			Blobs = new(StringComparer.OrdinalIgnoreCase) { ["Logo"] = new ModelJsonBlobNew() { Model = "Agent" } }
+		};
+		meta.OnEndInit(new PlatformUrl(UrlKind.Dialog, "catalog/agent/edit/"));
+		var edit = meta.GetDialog("edit");
+
+		await stand.Service.CheckReferencesAsync(edit, Saved(Obj(("Id", mine.Id), ("Token", mine.Token))));
+		var ex = await Assert.ThrowsExactlyAsync<DataServiceException>(
+			() => stand.Service.CheckReferencesAsync(edit, Saved(Obj(("Id", foreign.Id), ("Token", mine.Token)))));
+		Assert.AreEqual($"Invalid blob token ({foreign.Id})", ex.Message);
+	}
+
 	// Save through DataService: the database is null - a Save that passes the check fails there
 
-	private static DataService Data(Stand stand, IBlobService? blobService, ModelJson? file = null)
-		=> new(null!, new TestModelReader(() => file ?? stand.File), null!, new TestUser(["Manager"]), null!, null!, null!, null!, null!, null!,
-			stand.Parts, _blobService: blobService);
+	// the platform's reader over the stand's files: a base is looked up by its own address
+	private static DataService Data(Stand stand, IBlobService? blobService)
+		=> new(null!, new ModelJsonReader(stand.Parts, new NullAppRuntimeBuilder()), null!, new TestUser(["Manager"]), null!, null!, null!, null!, null!, null!,
+			_blobService: blobService);
 
 	private static Task SaveAsync(DataService data, ExpandoObject posted)
 		=> data.SaveAsync("_dialog/catalog/agentblob/edit/1", posted, _ => { });
@@ -521,12 +543,16 @@ public class BlobServiceTests
 		await Refused(stand, "An upload into an attachment requires owner", () => Attach(stand, "/catalog/agentblob", ""));
 	}
 
+	// the reader's own refusal: no model.json and no metadata layer to synthesize one
 	[TestMethod]
 	public async Task A_base_without_model_json_is_loud()
 	{
 		var stand = Create();
 
-		await Refused(stand, "base '/catalog/none' has no model.json", () => Attach(stand, "/catalog/none", "1002"));
+		var ex = await Assert.ThrowsExactlyAsync<ModelJsonException>(() => Attach(stand, "/catalog/none", "1002"));
+		Assert.AreEqual("File not found 'catalog/none/model.json'", ex.Message);
+		Assert.IsEmpty(stand.Storage.Files, "a refused upload wrote Storage");
+		Assert.IsEmpty(stand.Db.Rows, "a refused upload wrote the database");
 	}
 
 	[TestMethod]
@@ -565,7 +591,7 @@ public class BlobServiceTests
 	public async Task A_load_without_base_is_loud()
 	{
 		var stand = Create();
-		var data = Data(stand, stand.Service, stand.Attachment);
+		var data = Data(stand, stand.Service);
 
 		var ex = await Assert.ThrowsExactlyAsync<DataServiceException>(() => data.LoadAsync("_dialog/attachment/index/1002", NoParams));
 		Assert.AreEqual("The endpoint requires base", ex.Message);
@@ -575,7 +601,7 @@ public class BlobServiceTests
 	public async Task A_load_checks_the_roles_of_its_base()
 	{
 		var stand = Create();
-		var data = Data(stand, stand.Service, stand.Attachment);
+		var data = Data(stand, stand.Service);
 
 		var ex = await Assert.ThrowsExactlyAsync<DataServiceException>(() => data.LoadAsync("_dialog/attachment/index/1002?base=/catalog/locked", NoParams));
 		Assert.AreEqual("Access denied", ex.Message);
@@ -586,7 +612,7 @@ public class BlobServiceTests
 	public async Task A_command_is_checked_by_the_Base_it_posts()
 	{
 		var stand = Create();
-		var data = Data(stand, stand.Service, stand.Attachment);
+		var data = Data(stand, stand.Service);
 		static ExpandoObject Posted(String? @base) => @base == null ? Obj(("Id", 5000L)) : Obj(("Id", 5000L), ("Base", @base), ("Owner", 1002L));
 
 		var missing = await Assert.ThrowsExactlyAsync<DataServiceException>(() => data.InvokeAsync("_dialog/attachment/index/1002", "delete", Posted(null), NoParams));

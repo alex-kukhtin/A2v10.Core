@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+using A2v10.Infrastructure;
+
 namespace A2v10.Metadata;
 
 /* The endpoint container.
@@ -41,6 +43,13 @@ public abstract record EndpointMetadata
      * nothing for a request to stamp.
      */
     public String Path => String.IsNullOrEmpty(Name) ? $"/{Schema}" : $"/{Schema}/{Name}";
+
+    /* What the model.json the reader synthesizes for its folder says (design/blobs.md): whether the
+     * endpoint lives under ?base=, and its doors. A behaviour, so the type answers
+     */
+    public virtual Boolean RequireBase => false;
+    public virtual IReadOnlyDictionary<String, BlobDoor> Blobs => _noBlobs;
+    private static readonly IReadOnlyDictionary<String, BlobDoor> _noBlobs = new Dictionary<String, BlobDoor>();
 }
 
 /* What a reference resolves to: an address to browse and a shape to read columns from. Exactly
@@ -75,6 +84,13 @@ public sealed record NormalEndpointMetadata : EndpointMetadata, IRefTarget
 {
     public required TableMetadata Storage { get; init; }
     public required DeclarationMetadata Declaration { get; init; }
+
+    /* The Image columns of the shape, under its model: every address over one table has them. Root
+     * columns only - a row set is another table
+     */
+    public override IReadOnlyDictionary<String, BlobDoor> Blobs =>
+        Storage.Columns.Where(c => c.Type == ColumnType.Image)
+            .ToDictionary(c => c.Name, c => new BlobDoor(Storage.Model, Constants.Blobs.ImageAccept, c.MaxSize));
 }
 
 /* A report has no data of its own: it is a window into a surface it does not own and never
@@ -100,6 +116,28 @@ public sealed record TagEndpointMetadata : EndpointMetadata
 
     internal static String SettingsUrl(String forEntity) =>
         $"/{Constants.SchemaNames.Tag}/{SettingsAction}?{Constants.FieldNames.For}={forEntity}";
+}
+
+/* The attachments of any record: rows of a2blob.BlobLinks under ?base= - the address of the owner's
+ * table - and the owner's id (design/blobs.md, attachments). A system endpoint, so it lives under
+ * base by its type, and its one door is the upload: no field of any data, so it names no model, and
+ * no limits - anything, up to the host's own request limit
+ */
+public sealed record AttachmentEndpointMetadata : EndpointMetadata
+{
+    internal const String IndexAction = Constants.Actions.Index;
+    internal const String UploadKey = "Upload";
+
+    // the owner rides as the dialog's argument (its id), the base in the query - the owner's table address
+    internal static String IndexUrl(String @base) =>
+        $"/{Constants.SchemaNames.Attachment}/{IndexAction}?{Constants.FieldNames.BaseQuery}={@base}";
+
+    public override Boolean RequireBase => true;
+    public override IReadOnlyDictionary<String, BlobDoor> Blobs => _blobs;
+    private static readonly IReadOnlyDictionary<String, BlobDoor> _blobs = new Dictionary<String, BlobDoor>()
+    {
+        [UploadKey] = new BlobDoor(null, null, null)
+    };
 }
 
 /* The registry of operation codes. Also a system endpoint - nothing describes it, its one screen

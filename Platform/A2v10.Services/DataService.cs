@@ -51,7 +51,7 @@ public class SaveResult : ISaveResult
 public partial class DataService(IServiceProvider _serviceProvider, IModelJsonReader _modelReader, IDbContext _dbContext, ICurrentUser _currentUser,
     ISqlQueryTextProvider _sqlQueryTextProvider, IAppCodeProvider _codeProvider, IConfiguration _configuration,
     IExternalDataProvider _externalDataProvider, ILocalizer _localizer, IAppRuntimeBuilder _appRuntimeBuilder,
-    IModelJsonPartProvider _partProvider, IAppClrManager? _appClrManager = null, IBlobService? _blobService = null) : IDataService
+    IAppClrManager? _appClrManager = null, IBlobService? _blobService = null) : IDataService
 {
     static PlatformUrl CreatePlatformUrl(UrlKind kind, String baseUrl)
 	{
@@ -163,7 +163,7 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 
 	// the Base the procedure will receive, whichever layer it came from
 	Task CheckBaseAsync(IModelBase model, String? @base) =>
-		model.RequireBase ? BaseAccess.CheckAsync(_partProvider, _currentUser, @base) : Task.CompletedTask;
+		model.RequireBase ? BaseAccess.CheckAsync(_modelReader, _currentUser, @base) : Task.CompletedTask;
 
 	async Task<IDataLoadResult> Load(PlatformUrl platformUrl, Action<ExpandoObject> setParams, Boolean isReload = false)
 	{
@@ -386,7 +386,7 @@ public partial class DataService(IServiceProvider _serviceProvider, IModelJsonRe
 		ResolveParams(savePrms, data);
 
 		// before every branch; a host without blobs may have no IBlobService
-		if (view.BlobKeys.Count > 0)
+		if (view.BlobDoors.Count > 0)
 			await (_blobService ?? throw new InvalidOperationException("IBlobService is not registered"))
 				.CheckReferencesAsync(view, data);
 

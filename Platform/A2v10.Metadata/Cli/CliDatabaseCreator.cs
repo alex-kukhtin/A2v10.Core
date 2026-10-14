@@ -182,7 +182,10 @@ public class CliDatabaseCreator()
         // a login is not an endpoint: the target is fixed, as Operations is above
         var stamps = table.AllColumns(c => c.Type is ColumnType.StampUser or ColumnType.StampUserNull)
             .Select(c => Constraint($"FK_{table.Table}_{c.Name}_Users", c, "a2security.Users"));
-        var res = String.Join(Environment.NewLine, refs.Concat(stamps));
+        // nor is a blob: the FK is what keeps a future collector possible (design/blobs.md)
+        var images = table.AllColumns(c => c.Type == ColumnType.Image)
+            .Select(c => Constraint($"FK_{table.Table}_{c.Name}_Blobs", c, Constants.Blobs.Table));
+        var res = String.Join(Environment.NewLine, refs.Concat(stamps).Concat(images));
         if (String.IsNullOrEmpty(res.Trim()))
             return String.Empty;
         return $"""

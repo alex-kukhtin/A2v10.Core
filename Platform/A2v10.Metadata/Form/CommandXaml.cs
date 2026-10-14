@@ -199,7 +199,27 @@ internal partial class XamlBuilder
             },
             EntityCommandType.Print => ButtonPrint(scope),
             EntityCommandType.BasedOn => ButtonBasedOn(scope),
-            EntityCommandType.Attachments => new Button() { Icon = Icon.Attach, Render=RenderMode.Show },
+            /* The attachments of this record under the table's address: one area for every address over
+             * the table, so a second window on the same rows shows the same files. A new record has no
+             * owner yet - the dialog opens on the saved one
+             */
+            EntityCommandType.Attachments => new Button()
+            {
+                Icon = Icon.Attach,
+                Render = RenderMode.Show,
+                Bindings = b =>
+                {
+                    var cmd = new BindCmd()
+                    {
+                        Command = CommandType.Dialog,
+                        Action = DialogAction.Show,
+                        Url = AttachmentEndpointMetadata.IndexUrl(Table.Path),
+                        SaveRequired = true
+                    };
+                    cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(CommandSource(scope)));
+                    b.SetBinding(nameof(Button.Command), cmd);
+                }
+            },
             EntityCommandType.Copy => new Button() { Icon = Icon.Copy },
             EntityCommandType.Post => new Button() 
                 { 

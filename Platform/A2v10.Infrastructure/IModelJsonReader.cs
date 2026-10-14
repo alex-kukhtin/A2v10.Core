@@ -119,6 +119,13 @@ public interface IModelBlob : IModelBase
     
 }
 
+// an entry of "blobs": the field <model>.<Key> an upload goes into, with the limits the server checks
+public interface IModelBlobDoor : IModelBase
+{
+	String? Accept { get; }
+	Int32? MaxSize { get; } // KB
+}
+
 public interface IModelMerge : IModelBase
 {
 	ExpandoObject CreateMergeParameters(IDataModel model, ExpandoObject prms);
@@ -153,8 +160,8 @@ public interface IModelView : IModelBase
 	String? TargetId { get; }
 	IModelView? TargetModel { get; }
 
-	// the "blobs" keys of the endpoint: the Save of this view checks the references <model>.<Key>
-	IReadOnlyCollection<String> BlobKeys { get; }
+	// the "blobs" of the endpoint: the Save of this view checks the references <door model>.<Key>
+	IReadOnlyDictionary<String, IModelBlobDoor> BlobDoors { get; }
 
 	IModelMerge? Merge { get; }
 
@@ -214,6 +221,10 @@ public interface IModelJsonReader
 	Task<IModelView?> TryGetViewAsync(IPlatformUrl url);
 	Task<IModelView> GetViewAsync(IPlatformUrl url);
 	Task<IModelBlob?> GetBlobAsync(IPlatformUrl url, String? suffix = null);
+	// url.Action = the door key; null - the endpoint has no such door
+	Task<IModelBlobDoor?> GetBlobDoorAsync(IPlatformUrl url);
+	// the root as an element - its roles, as a base checks them
+	Task<IModelBase> GetBaseAsync(IPlatformUrl url);
 	Task<IModelCommand> GetCommandAsync(IPlatformUrl url, String command);
 	Task<IModelReport> GetReportAsync(IPlatformUrl url);
 }

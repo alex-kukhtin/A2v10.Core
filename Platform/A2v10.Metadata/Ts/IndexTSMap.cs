@@ -21,7 +21,7 @@ internal partial class ScriptBuilder
 
             {{refDecl}}
             export interface {{Table.TypeName}} extends IArrayElement {
-            {{String.Join("\n", TsProperties(Table))}}
+            {{String.Join("\n", TsProperties(Table, card: false))}}
             }
 
             export type {{collType}} = IElementArray<{{Table.TypeName}}>;
@@ -50,7 +50,7 @@ internal partial class ScriptBuilder
 
             {{refDecl}}
             export interface {{Table.TypeName}} extends IArrayElement {
-            {{String.Join("\n", TsProperties(Table))}}
+            {{String.Join("\n", TsProperties(Table, card: false))}}
             }
 
             export type {{collType}} = IElementArray<{{Table.TypeName}}>;

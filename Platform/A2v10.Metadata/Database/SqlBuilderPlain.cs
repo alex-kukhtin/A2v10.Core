@@ -76,6 +76,23 @@ internal partial class SqlBuilder
     String? QueryInitialValue(String key, String param) =>
         QueryColumn(key).IsOperation ? Endpoint.StartOperation(QueryValue(param)) : QueryValue(param);
 
+    /* The blobs the record's Image columns point at, under the type their RefIds name, with the token
+     * the client reads by and posts back on Save (BlobService.CheckReferencesAsync). Root columns only:
+     * an Image in a row set is refused at load.
+     */
+    String? BlobMap(LoadRows rows)
+    {
+        var images = Table.Columns.Where(c => c.Type == ColumnType.Image).Select(c => $"a.[{c.Name}]").ToList();
+        if (images.Count == 0)
+            return null;
+        return $"""
+            -- blobs
+            select [!{Constants.Blobs.TypeName}!Map] = null, [Id!!Id] = b.Id, b.[Name], b.Mime, [Token!!Token] = b.AccessToken
+            from {Constants.Blobs.Table} b inner join {rows.From(Table)} a on b.Id in ({String.Join(", ", images)})
+            where a.Id = {rows.Key};
+            """;
+    }
+
     internal String BuildLoadPlainSqlText() =>
         BuildLoadPlainSqlText(LoadRows.Stored, birth: null,
             IsNewModel() ? GateSql(Gate.Create) : GateSql(Gate.View) + RecordCheck("@Id"));
@@ -304,6 +321,12 @@ internal partial class SqlBuilder
         // STEP 3: map recordsets
 
         refMap.WriteRefMap(sb);
+
+        if (BlobMap(rows) is { } blobMap)
+        {
+            sb.AppendLine();
+            sb.AppendLine(blobMap);
+        }
 
         // without the 'All' row: a record picks a value, and 'all of them' is not one
         foreach (var en in ReferencedSets(withDetails: true))

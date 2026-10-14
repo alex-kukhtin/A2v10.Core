@@ -245,6 +245,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         CheckPlatformColumns(storage, schema, table);
         CheckCompanyColumn(storage, schema, table);
         CheckOwnerColumn(storage, schema, table);
+        CheckImageColumns(storage, schema, table);
+        CheckAttachments(storage, schema, table);
         CheckAccPlan(storage, schema, table);
         await RegistryRows.LoadAsync(storage, schema, table, _codeProvider);
         return storage;
@@ -292,6 +294,33 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         if (storage.Kind != TableKind.Catalog && storage.AllColumns(c => c.Type == ColumnType.Owner).FirstOrDefault() is { } column)
             throw new InvalidOperationException(
                 $"{MetadataFileName(schema, table)}: [{column.Name}] is 'owner'. A record with an owner is subordinate, and only a catalog is; elsewhere it is a 'ref'");
+    }
+
+    /* A blob reference is checked on Save by <model>.<Key> (BlobService.CheckReferencesAsync), so only a
+     * root field of a record the user keeps can hold one: in a row it is unaddressed, and unchecked it
+     * is a leak (design/blobs.md, "Only a root field"). maxSize is the upload limit of an Image alone.
+     */
+    internal static void CheckImageColumns(TableMetadata storage, String schema, String table)
+    {
+        var file = MetadataFileName(schema, table);
+        foreach (var (key, details) in storage.Details)
+            if (details.Columns.FirstOrDefault(c => c.Type == ColumnType.Image) is { } row)
+                throw new InvalidOperationException(
+                    $"{file}: [{row.Name}] in '{key}' is 'image'. An image is a field of the record, never of a row");
+        if (storage.Kind is not (TableKind.Catalog or TableKind.Document) && storage.Columns.FirstOrDefault(c => c.Type == ColumnType.Image) is { } column)
+            throw new InvalidOperationException(
+                $"{file}: [{column.Name}] is 'image'. Only a catalog or a document holds one");
+        if (storage.AllColumns(c => c.MaxSize != null && c.Type != ColumnType.Image).FirstOrDefault() is { } sized)
+            throw new InvalidOperationException(
+                $"{file}: [{sized.Name}] has 'maxSize', which is the upload limit of an 'image' alone");
+    }
+
+    // attachments hang on a record the user keeps, and the button is on its card - which only these have
+    internal static void CheckAttachments(TableMetadata storage, String schema, String table)
+    {
+        if (storage.Traits.Contains(TableTrait.Attachments) && storage.Kind is not (TableKind.Catalog or TableKind.Document))
+            throw new InvalidOperationException(
+                $"{MetadataFileName(schema, table)}: 'attachments' is a trait of a catalog or a document");
     }
 
     /* A ledger posts against one chart, and nothing names it but this key - no default, and not the
@@ -417,6 +446,12 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             };
         if (schema == Constants.SchemaNames.Admin)
             return AdminEndpointMetadata.Create(table);
+        if (schema == Constants.SchemaNames.Attachment)
+            return new AttachmentEndpointMetadata()
+            {
+                Schema = schema,
+                Name = table
+            };
         return null;
     }
 
@@ -1087,7 +1122,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             // its only column is the operation code and it points at this very endpoint
             OperationEndpointMetadata o => o.Storage,
             // no shape, so no references - said by name, so an unknown subtype still fails loudly
-            TagEndpointMetadata or AdminEndpointMetadata => null,
+            TagEndpointMetadata or AdminEndpointMetadata or AttachmentEndpointMetadata => null,
             _ => throw new InvalidOperationException($"Unknown endpoint {endpoint.Path}")
         };
         if (meta == null)

@@ -38,13 +38,12 @@ internal record BlobLoadOutput
 }
 
 // IBlobStorageProvider is resolved on use: it is registered only by an application that calls AddBlobStorages
-public class BlobService(IServiceProvider _serviceProvider, IModelJsonPartProvider _partProvider, IDbContext _dbContext,
-	ICurrentUser _currentUser, IConfiguration _configuration, ITokenProvider _tokenProvider) : IBlobService
+public class BlobService(IServiceProvider _serviceProvider, IModelJsonReader _modelReader, IDbContext _dbContext, ICurrentUser _currentUser, IConfiguration _configuration, ITokenProvider _tokenProvider) : IBlobService
 {
 	public async Task<BlobUploadResult> UploadAsync(String path, String name, String mime, Stream stream)
 	{
-		var (url, rm, blob) = await DoorAsync(path);
-		if (rm.RequireBase)
+		var (url, blob) = await DoorAsync(path);
+		if (blob.RequireBase)
 			throw new DataServiceException($"'{url.LocalPath}' requires base: an upload there links the file to an owner");
 		var (output, realMime) = await StoreAsync(blob, name, mime, stream, null, null);
 		return Uploaded(output, name, realMime);
@@ -52,31 +51,29 @@ public class BlobService(IServiceProvider _serviceProvider, IModelJsonPartProvid
 
 	public async Task<BlobLinkUploadResult> UploadLinkAsync(String path, String @base, String owner, String name, String mime, Stream stream)
 	{
-		var (url, rm, blob) = await DoorAsync(path);
-		if (!rm.RequireBase)
+		var (url, blob) = await DoorAsync(path);
+		if (!blob.RequireBase)
 			throw new DataServiceException($"'{url.LocalPath}' has no requireBase: nothing to link a file to");
 		if (String.IsNullOrEmpty(owner))
 			throw new DataServiceException("An upload into an attachment requires owner");
-		await BaseAccess.CheckAsync(_partProvider, _currentUser, @base);
+		await BaseAccess.CheckAsync(_modelReader, _currentUser, @base);
 		var (output, realMime) = await StoreAsync(blob, name, mime, stream, @base, owner);
 		var link = output.Link ?? throw new InvalidOperationException("Blob.Insert returned no link");
 		return new BlobLinkUploadResult(link, Uploaded(output, name, realMime));
 	}
 
 	// "<endpoint>/<Key>": the trailing slash leaves the url without an id - Action = Key, LocalPath = endpoint
-	async Task<(PlatformUrl Url, ModelJson File, ModelJsonBlobNew Blob)> DoorAsync(String path)
+	async Task<(PlatformUrl Url, IModelBlobDoor Blob)> DoorAsync(String path)
 	{
 		var url = new PlatformUrl(UrlKind.Image, path + '/');
-		var rm = await _partProvider.GetModelJsonAsync(url)
-			?? throw new DataServiceException($"model.json not found for '{path}'");
-		if (!rm.Blobs.TryGetValue(url.Action, out var blob))
-			throw new DataServiceException($"Blob '{url.Action}' not found in '{url.LocalPath}/model.json'");
+		var blob = await _modelReader.GetBlobDoorAsync(url)
+			?? throw new DataServiceException($"Blob '{url.Action}' not found in '{url.LocalPath}/model.json'");
 		DataService.CheckAccess(_currentUser, blob, write: true);
-		return (url, rm, blob);
+		return (url, blob);
 	}
 
 	// every check before Storage and the database; the blob and its link are one insert
-	async Task<(BlobInsertOutput Output, String Mime)> StoreAsync(ModelJsonBlobNew blob, String name, String mime, Stream stream,
+	async Task<(BlobInsertOutput Output, String Mime)> StoreAsync(IModelBlobDoor blob, String name, String mime, Stream stream,
 		String? @base, String? owner)
 	{
 		mime = await RealMimeAsync(stream, mime);
@@ -121,14 +118,15 @@ public class BlobService(IServiceProvider _serviceProvider, IModelJsonPartProvid
 	/* Save: a non-empty reference <model>.<Key> must carry the token that Load or the upload issued,
 	 * or a guessed Id makes the next Load issue a token for any blob of the database. Empty is an
 	 * object with Id 0 (or null) and is always allowed. A bare scalar is a reference without a token.
-	 * The token field is named Token, as in the upload response
+	 * The token field is named Token, as in the upload response. The model is the door's: the endpoint's
+	 * own, or the one a synthesized door names - the model of a metadata view is '$meta', which routes
 	 */
 	public async Task CheckReferencesAsync(IModelView view, ExpandoObject data)
 	{
-		if (FindIgnoreCase(data, view.CurrentModel) is not ExpandoObject root)
-			return;
-		foreach (var key in view.BlobKeys)
+		foreach (var (key, door) in view.BlobDoors)
 		{
+			if (FindIgnoreCase(data, door.CurrentModel) is not ExpandoObject root)
+				continue;
 			var value = FindIgnoreCase(root, key);
 			var reference = value as ExpandoObject;
 			var id = Convert.ToInt64(reference != null ? FindIgnoreCase(reference, "Id") ?? 0 : value ?? 0);

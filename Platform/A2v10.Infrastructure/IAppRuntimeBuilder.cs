@@ -1,6 +1,7 @@
 ﻿// Copyright © 2024-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+using System.Collections.Generic;
 using System.Dynamic;
 using System.Threading.Tasks;
 
@@ -13,6 +14,14 @@ public interface IAppRuntimeResult
 	public IDataModel? DataModel { get; }
 	public String? ActionResult { get; }
 }
+/* A door of a metadata folder, as an entry of "blobs": a field of the data names the model the data
+ * come as (the Save checks <Model>.<Key>); a door that is no field - an attachment's upload - names none
+ */
+public record BlobDoor(String? Model, String? Accept, Int32? MaxSize /*KB*/);
+
+// what the model.json the reader synthesizes for a folder without one says of it; Blobs: key -> door
+public record EndpointDescriptor(Boolean RequireBase, IReadOnlyDictionary<String, BlobDoor> Blobs);
+
 public interface IAppRuntimeBuilder
 {
 	Boolean IsAutoSupported { get; }
@@ -30,4 +39,5 @@ public interface IAppRuntimeBuilder
 	Task DbRemoveAsync(IPlatformUrl platformUrl, IModelView view, String? propName, ExpandoObject execPrms);
 	Task<IDataModel> ExpandAsync(IPlatformUrl platformUrl, IModelView view, ExpandoObject execPrms);
     Task<ExpandoObject> LoadLazyAsync(IPlatformUrl platformUrl, IModelView view);
+    Task<EndpointDescriptor> DescribeAsync(String path);
 }

@@ -17,6 +17,11 @@
 @Role.Admin=Администратор
 @Role.Everyone=Все пользователи
 ;
+; Attachments (/attachment)
+@Attachments=Вложения
+@Attachment.Upload=Добавить файл
+@Attachment.Empty=У этого элемента ещё нет вложений
+;
 ; Commands
 @Add=Добавить
 @AddRow=Добавить строку

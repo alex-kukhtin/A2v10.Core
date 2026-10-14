@@ -25,6 +25,7 @@
             "$ref": "metadata-endpoint-json-schema.json#/definitions/fields",
             "description": "The author's own attributes of an account, next to the baseline."
         },
-        "forms": { "$ref": "metadata-endpoint-json-schema.json#/definitions/formSet" }
+        "forms": { "$ref": "metadata-endpoint-json-schema.json#/definitions/formSet" },
+        "grants": { "$ref": "metadata-endpoint-json-schema.json#/definitions/grants" }
     }
 }

@@ -55,7 +55,8 @@ internal partial class ScriptBuilder(BuilderDescriptor desciptor, Boolean isTs)
      * the value back - except Done, which the posting commands of the template set on the client
      * after the server did, so that the card reads as posted before it is requeried.
      */
-    public IEnumerable<String> TsProperties(TableMetadata table)
+    // card: the edit model, the one that carries an Image (SqlBuilderPlain.BlobMap); a list does not
+    public IEnumerable<String> TsProperties(TableMetadata table, Boolean card)
     {
         String property(TableColumn column)
         {
@@ -65,8 +66,9 @@ internal partial class ScriptBuilder(BuilderDescriptor desciptor, Boolean isTs)
             return $"\t{ro}{TsMember(column)};";
         }
 
-        static Boolean inModel(TableColumn c) =>
-            !c.IsVoid && c.Type is not (ColumnType.RowVersion or ColumnType.Master or ColumnType.RowKind);
+        Boolean inModel(TableColumn c) =>
+            !c.IsVoid && c.Type is not (ColumnType.RowVersion or ColumnType.Master or ColumnType.RowKind)
+                && (card || c.Type != ColumnType.Image);
 
         foreach (var p in table.AllColumns(inModel))
             yield return property(p);
@@ -76,7 +78,22 @@ internal partial class ScriptBuilder(BuilderDescriptor desciptor, Boolean isTs)
     private String TsMember(TableColumn column) =>
         column.IsRef
             ? $"{column.Name}: {column.RefTableCheck.Storage.RefTypeName}"
-            : $"{column.ModelName}: {column.ToTsType(_descr.PlatformId)}";
+            : column.Type == ColumnType.Image
+                ? $"{column.Name}: {Constants.Blobs.TypeName}"
+                : $"{column.ModelName}: {column.ToTsType(_descr.PlatformId)}";
+
+    // what the blob map sends (SqlBuilderPlain.BlobMap); declared where the card has an Image
+    private String BlobTsInterface() => Table.Columns.Any(c => c.Type == ColumnType.Image)
+        ? $$"""
+        export interface {{Constants.Blobs.TypeName}} extends IElement {
+        	readonly Id: number;
+        	readonly Name: string;
+        	readonly Mime: string;
+        	readonly Token: string;
+        }
+
+        """
+        : String.Empty;
 
     /* The type a reference to 'target' resolves to: exactly what the map sends and nothing more
      * (SqlBuilder.RefFields, RefMapBuilder.GenerateResolves) - the key, the presentation as Name,

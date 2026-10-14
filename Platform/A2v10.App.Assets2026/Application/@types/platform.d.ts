@@ -1,7 +1,7 @@
 ﻿/* Copyright © 2019-2026 Oleksandr Kukhtin. All rights reserved. */
 
-/* Version 10.0.7998  */
-/* Date    2026.10.10 */
+/* Version 10.0.7999  */
+/* Date    2026.10.14 */
 
 declare function require(url: string): any;
 
@@ -226,7 +226,8 @@ declare type templateValidatorResult = { msg: string, severity: Severity };
 type tempateValidatorFunc = (elem: IElement, value?: any) => boolean | string | templateValidatorResult | Promise<any>;
 
 interface templateValidatorObj {
-	valid: tempateValidatorFunc | StdValidator,
+	// the standard validators by name as well: a template written as text names them ('notBlank')
+	valid: tempateValidatorFunc | StdValidator | `${StdValidator}`,
 	async?: boolean,
 	msg?: string,
 	regExp?: RegExp,
@@ -319,6 +320,7 @@ interface IController {
 	$focus(htmlid: string): void;
 	$report(report: string, arg: object, opts?: { export?: Boolean, attach?: Boolean, print?: Boolean, format?: ReportFormat }, url?: string, data?: object): void;
 	$upload(url: string, accept?: string | AcceptFormat, data?: { Id?: any, Key?: any }, opts?: { catchError?: boolean }): Promise<any>;
+	$uploadBlob(url: string, accept?: string | AcceptFormat, data?: { Id: any, Base: string }, opts?: { catchError?: boolean }): Promise<any>;
 	$file(url: string, arg: any, opts?: { action: FileActions }, data?: object): void;
 	$emitCaller(event: string, ...params: any[]): void;
 	$emitSaveEvent(): void;

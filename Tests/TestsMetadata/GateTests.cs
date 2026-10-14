@@ -61,7 +61,7 @@ public class GateTests
     public void Every_flag_the_gate_sends_is_one_the_procedure_knows()
     {
         var procedure = Procedure();
-        var sent = String.Concat(new[] { Gate.View, Gate.Create, Gate.Delete, Gate.Post, Gate.Unpost, Gate.Save("t", "@Id") }
+        var sent = String.Concat(new[] { Gate.View, Gate.Create, Gate.Edit, Gate.Delete, Gate.Post, Gate.Unpost, Gate.Save("t", "@Id") }
             .Select(g => g.Sql("/x")));
 
         foreach (var flag in new[] { "View", "Create", "Edit", "Delete", "Post", "Unpost" })

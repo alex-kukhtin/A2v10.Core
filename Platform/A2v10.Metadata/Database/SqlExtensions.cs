@@ -167,6 +167,8 @@ internal static class SqlExtensions
             // a login: a2security.Users is keyed bigint whatever base the application rests on
             ColumnType.User or ColumnType.StampUser or ColumnType.StampUserNull
                     => new SqlDbTypeInfo("bigint"),
+            // a blob: a2blob.Blobs is keyed bigint, as the login is
+            ColumnType.Image => new SqlDbTypeInfo("bigint"),
             // bit
             ColumnType.IsSystem or ColumnType.Void or ColumnType.Done or ColumnType.Boolean
                     => new SqlDbTypeInfo("bit"),
@@ -312,6 +314,8 @@ internal static class SqlExtensions
             ColumnType.Ref or ColumnType.Company or ColumnType.Owner or ColumnType.BasedOn or ColumnType.Document
                 or ColumnType.Operation or ColumnType.Enum or ColumnType.State or ColumnType.Account or ColumnType.Folder =>
                 $"[{column.Name}!{column.RefTableCheck.Storage.RefTypeName}!RefId] = {alias}.[{column.Name}]",
+            // not an endpoint, so no RefTable: the type is the platform's, resolved by the blob map
+            ColumnType.Image => $"[{column.Name}!{Constants.Blobs.TypeName}!RefId] = {alias}.[{column.Name}]",
             _ => $"{alias}.[{column.Name}]"
         };
 

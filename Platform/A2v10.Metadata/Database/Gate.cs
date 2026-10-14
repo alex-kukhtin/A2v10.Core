@@ -20,6 +20,8 @@ internal sealed class Gate
 
     internal static readonly Gate View = new("N'View'");
     internal static readonly Gate Create = new("N'Create'");
+    // an act on a part of a record that is no save of it - an attachment removed
+    internal static readonly Gate Edit = new("N'Edit'");
     internal static readonly Gate Delete = new("N'Delete'");
     internal static readonly Gate Post = new("N'Post'");
     internal static readonly Gate Unpost = new("N'Unpost'");
@@ -29,9 +31,12 @@ internal sealed class Gate
         new("@_flag", $"case when exists(select 1 from {sqlTable} where [Id] = {id}) then N'Edit' else N'Create' end");
 
     // @UserId is passed by every batch
-    internal String Sql(String path)
+    internal String Sql(String path) => SqlAt($"N'{path}'");
+
+    // the address a parameter holds: a base the client sent, which never enters the text
+    internal String SqlAt(String urlParameter)
     {
-        var exec = $"exec a2security.[Permission.Check] @UserId = @UserId, @Url = N'{path}', @Flag = {_flag};";
+        var exec = $"exec a2security.[Permission.Check] @UserId = @UserId, @Url = {urlParameter}, @Flag = {_flag};";
         return _computed == null
             ? $"""
 

@@ -661,6 +661,13 @@ internal partial class XamlBuilder
                     : "@[Autonum.Auto]",
                 Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
             },
+            // the url is the endpoint: its doors are the Image fields, the bound property is the door key
+            ColumnType.Image => new BlobImage()
+            {
+                Url = Endpoint.Path,
+                Height = Length.FromString("10rem"),
+                Bindings = b => b.SetBinding(nameof(BlobImage.Value), valueBind)
+            },
             ColumnType.Done or ColumnType.Boolean => new CheckBox()
             {
                 Label = label,

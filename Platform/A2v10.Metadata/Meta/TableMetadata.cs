@@ -123,6 +123,10 @@ public enum ColumnType
     DateTime,
     Money,
     Boolean,
+    /* A reference to one blob of a2blob.Blobs: bytes never in the table, only the Id. The type says
+     * everything the upload needs - an image, nothing of the endpoint - and the Save checks its token.
+     */
+    Image,
     //
     Stream,
     // neutral tier - values without business semantics, and the only place an author
@@ -204,6 +208,8 @@ public record TableColumn
      */
     public String? SqlAs { get; init; }
     #endregion
+    // KB, an Image only; checked by the upload, none - no limit, as maxSize of a model.json door
+    public Int32? MaxSize { get; init; }
     /* Nothing writes the column - the save, the seed, a posting, a birth - and a declaration naming it
      * as a target is refused at load. Read like any other: a presentation, a filter, a source.
      */
@@ -263,11 +269,12 @@ public record TableColumn
     /* What the model sees of a record (Mcp/McpProjection) - every column but those that say nothing to it:
      * rv is binary; Void is always 0, a voided record is never shown; Master and RowKind are the same
      * value in every row of a collection, the header's id and the composed collection's kind; a stamp is
-     * a bare user id and a time the model never sends and nothing asks it to read - posted or not is Done.
+     * a bare user id and a time the model never sends and nothing asks it to read - posted or not is Done;
+     * an Image is a blob id, which the model can neither read nor write.
      */
     [JsonIgnore]
     internal Boolean IsMcpColumn => !IsStamp && Type is not (ColumnType.RowVersion or ColumnType.Void
-        or ColumnType.Master or ColumnType.RowKind);
+        or ColumnType.Master or ColumnType.RowKind or ColumnType.Image);
     [JsonIgnore]
     // a natural key is a code the user reads, not the '#' of a surrogate
     internal String Header => Type == ColumnType.NaturalKey ? "@[Code]" : $"@[{Name}]";

@@ -13,12 +13,16 @@ namespace A2v10.Metadata;
 
 internal static class TableColumnPredicates
 {
-    internal static Boolean IsIndexColumn(TableColumn col)
+    // what the record shows of itself
+    static Boolean IsShownColumn(TableColumn col)
         => col.Type != ColumnType.RowVersion && col.Type != ColumnType.Void && col.Type != ColumnType.IsSystem
             && !col.IsStamp;
-    // what the index shows, less the two the card does not edit: the key, and the posting flag the buttons drive
+    // a list has no place for a picture: an Image rides with the card alone (SqlBuilderPlain.BlobMap)
+    internal static Boolean IsIndexColumn(TableColumn col)
+        => IsShownColumn(col) && col.Type != ColumnType.Image;
+    // what the record shows, less the two the card does not edit: the key, and the posting flag the buttons drive
     internal static Boolean IsEditColumn(TableColumn col)
-        => IsIndexColumn(col) && col.Type != ColumnType.Id && col.Type != ColumnType.Done;
+        => IsShownColumn(col) && col.Type != ColumnType.Id && col.Type != ColumnType.Done;
     /* What the client sends: the table type and the DataTable filling it are built from this one
      * answer, since their column order must match. A stamp is written by the statement itself, a
      * computed column by nobody.

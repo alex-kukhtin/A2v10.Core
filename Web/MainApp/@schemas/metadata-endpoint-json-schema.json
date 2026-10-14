@@ -36,6 +36,10 @@
             "type": "string",
             "description": "The column a record is shown by where it is referenced. Not written: the Name column, else the autonum one; neither is refused at load."
         },
+        "displayAs": {
+            "type": "string",
+            "description": "The column a record is chosen by - a selector, the combo of a set, the text typed to find it. Defaults to 'presentation'. 'Name' with another presentation is refused: the element's Name IS the presentation."
+        },
 
         "fields": { "$ref": "#/definitions/fields" },
         "details": { "$ref": "#/definitions/details" },
@@ -59,6 +63,7 @@
             "additionalProperties": { "type": [ "boolean", "string", "number" ] }
         },
         "rules": { "$ref": "#/definitions/rules" },
+        "properties": { "$ref": "#/definitions/modelProperties" },
         "post": {
             "type": "array",
             "description": "What posting does. With 'operations' it is not written here: each operation posts in its own way, in its own file.",
@@ -83,6 +88,7 @@
             "type": "string",
             "description": "Key of autonum/metadata.json this endpoint numbers from. Refused at load if that file does not declare it, or if the shape has no column of type 'autonum'. An operation without its own draws from the storage's."
         },
+        "grants": { "$ref": "#/definitions/grants" },
         "mcp": { "$ref": "#/definitions/mcp" }
     },
 
@@ -110,6 +116,10 @@
                 "precision": { "type": "integer" },
                 "scale": { "type": "integer" },
                 "unique": { "type": "boolean" },
+                "sqlAs": {
+                    "type": "string",
+                    "description": "T-SQL over the columns of the same row: the column is computed by the database, 'as cast(<expr> as <type>)'. Read like any column; nothing writes it, and naming it as a target - a posting, an initial value, a birth - is refused at load. Not a form property: that is 'properties', JavaScript over a column the save writes."
+                },
                 "origin": { "$ref": "#/definitions/origin" }
             }
         },
@@ -136,18 +146,20 @@
                 "details": { "$ref": "#/definitions/details" },
                 "kinds": { "$ref": "#/definitions/kinds" },
                 "initialValues": { "$ref": "#/definitions/initialValues" },
-                "rules": { "$ref": "#/definitions/rules" }
+                "rules": { "$ref": "#/definitions/rules" },
+                "properties": { "$ref": "#/definitions/modelProperties" }
             }
         },
 
         "kinds": {
             "type": "object",
-            "description": "Row kind key -> what that kind declares. The keys are the value set of the discriminator column; the value carries rules and nothing else.",
+            "description": "Row kind key -> what that kind declares. The keys are the value set of the discriminator column; the value carries rules and properties and nothing else - a kind is its own type.",
             "additionalProperties": {
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                    "rules": { "$ref": "#/definitions/rules" }
+                    "rules": { "$ref": "#/definitions/rules" },
+                    "properties": { "$ref": "#/definitions/modelProperties" }
                 }
             }
         },
@@ -176,7 +188,6 @@
                 "required": { "$ref": "#/definitions/fieldNames" },
                 "total": { "$ref": "#/definitions/fieldNames" },
                 "visible": { "$ref": "#/definitions/expressions" },
-                "computed": { "$ref": "#/definitions/expressions" },
                 "inherit": { "$ref": "#/definitions/inherits" },
                 "when": {
                     "type": "array",
@@ -195,9 +206,56 @@
                 "required": { "$ref": "#/definitions/fieldNames" },
                 "total": { "$ref": "#/definitions/fieldNames" },
                 "visible": { "$ref": "#/definitions/expressions" },
-                "computed": { "$ref": "#/definitions/expressions" },
                 "inherit": { "$ref": "#/definitions/inherits" }
             }
+        },
+
+        "modelProperties": {
+            "type": "object",
+            "description": "Members of the model whose value is JavaScript - a Vue computed: a getter, and a setter when it can be typed into. Not a rule: the author names it. The key is a field of this scope (the property stands over its column; the save sends what 'get' returns) or a name of its own starting with '$' (no column, never sent to the server). Layers by key over the storage and over the collection; refused in an operation file.",
+            "patternProperties": {
+                "^\\$": { "$ref": "#/definitions/ownProperty" }
+            },
+            "additionalProperties": { "$ref": "#/definitions/fieldProperty" }
+        },
+
+        "fieldProperty": {
+            "type": "object",
+            "description": "A property over a field: its type is the one in 'fields'. A field with 'inherit' cannot have one.",
+            "additionalProperties": false,
+            "required": [ "get" ],
+            "properties": {
+                "get": { "$ref": "#/definitions/propertyGet" },
+                "set": { "$ref": "#/definitions/propertySet" }
+            }
+        },
+
+        "ownProperty": {
+            "type": "object",
+            "description": "A '$' name: no column, so 'type' says what it is - the form takes format and control from it. Named in 'fields' of the edit form only.",
+            "additionalProperties": false,
+            "required": [ "type", "get" ],
+            "properties": {
+                "type": {
+                    "description": "A value the client holds, never a reference: a reference is drawn through the map, and nothing loads one for a name with no column.",
+                    "allOf": [
+                        { "$ref": "#/definitions/columnType" },
+                        { "not": { "enum": [ "ref", "user", "document", "company", "owner", "basedOn", "operation", "enum", "state", "account", "folder" ] } }
+                    ]
+                },
+                "get": { "$ref": "#/definitions/propertyGet" },
+                "set": { "$ref": "#/definitions/propertySet" }
+            }
+        },
+
+        "propertyGet": {
+            "type": "string",
+            "description": "JavaScript expression, written in full with 'this.'."
+        },
+
+        "propertySet": {
+            "type": "string",
+            "description": "JavaScript statement over 'value' - what the user typed - writing the fields of this record, e.g. 'this.Qty = value / this.Price'. Without it the property is shown and never typed into."
         },
 
         "fieldNames": {
@@ -232,10 +290,21 @@
         },
 
         "post": {
-            "oneOf": [
-                { "$ref": "#/definitions/postMapped" },
-                { "$ref": "#/definitions/postLedger" },
-                { "$ref": "#/definitions/postSql" }
+            "$comment": "Three shapes told apart by one key: 'ledger', 'sql', else a journal. 'if'/'then' and not 'oneOf': a broken entry is reported against its own shape, not against all three.",
+            "type": "object",
+            "allOf": [
+                {
+                    "if": { "required": [ "ledger" ] },
+                    "then": { "$ref": "#/definitions/postLedger" }
+                },
+                {
+                    "if": { "required": [ "sql" ] },
+                    "then": { "$ref": "#/definitions/postSql" }
+                },
+                {
+                    "if": { "not": { "anyOf": [ { "required": [ "ledger" ] }, { "required": [ "sql" ] } ] } },
+                    "then": { "$ref": "#/definitions/postMapped" }
+                }
             ]
         },
 
@@ -378,6 +447,20 @@
                         }
                     }
                 }
+            }
+        },
+
+        "grants": {
+            "type": "object",
+            "description": "Role -> the verbs it may on this endpoint. The role is a key of app.json 'roles', or 'Everyone' (every user, no assignment); 'Admin' is never written - it passes everything. '{}' - no one but the admin. A role not granted here has nothing; there is no 'all' and no 'deny'. The deploy writes it into a2security.Grants whatever 'useGrants' says. Not inherited from 'storage', not written in an operation file.",
+            "propertyNames": {
+                "pattern": "^[A-Z][A-Za-z0-9]*$",
+                "not": { "const": "Admin" }
+            },
+            "additionalProperties": {
+                "type": "array",
+                "items": { "enum": [ "view", "create", "edit", "delete", "post", "unpost" ] },
+                "uniqueItems": true
             }
         },
 
@@ -683,9 +766,9 @@
             "description": "What the column stores. Not written: string. NULL follows the type: amount, qty, price, percent, factor, money, decimal, float and boolean are NOT NULL DEFAULT 0, the rest nullable. No 'default' or 'notNull' key: a new record starts from 'initialValues'.",
             "type": "string",
             "enum": [
-                "string", "id", "name", "memo", "rowNumber", "done", "void", "isSystem",
-                "isFolder", "parent", "folder", "user", "rowKind", "operation",
-                "document", "documentType", "row", "rowVersion", "color", "enum", "state", "account", "autonum",
+                "string", "memo", "rowNumber", "done", "void", "isSystem",
+                "user", "rowKind", "operation",
+                "document", "documentType", "row", "color", "enum", "state", "account", "autonum",
                 "company", "owner", "basedOn", "prefix", "direction",
                 "amount", "price", "qty", "percent", "factor",
                 "ref", "date", "dateTime", "money", "boolean",

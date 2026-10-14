@@ -16,12 +16,21 @@ public class ModelJsonReader(IModelJsonPartProvider _partProvider, IAppRuntimeBu
 		return rm.GetAction(url.Action);
 	}
 
-	// a folder with no model.json at all: the whole of it is served by the metadata layer
-	static ModelJson CreateMeta(IPlatformUrl url)
+	/* A folder with no model.json at all: the whole of it is served by the metadata layer, and so is
+	 * what its model.json would say - requireBase, and the doors: the fields the layer says hold a blob,
+	 * each under the model the data come as ('$meta' routes, it names nothing). A model.json the author
+	 * wrote is never added to
+	 */
+	async Task<ModelJson> CreateMetaAsync(IPlatformUrl url)
 	{
+		var endpoint = await _appRuntimeBuilder.DescribeAsync(url.LocalPath);
         var ms = new ModelJson()
         {
-			Model = IModelBase.MetaModel
+			Model = IModelBase.MetaModel,
+			RequireBase = endpoint.RequireBase,
+			Blobs = endpoint.Blobs.ToDictionary(kv => kv.Key,
+				kv => new ModelJsonBlobNew() { Model = kv.Value.Model, Accept = kv.Value.Accept, MaxSize = kv.Value.MaxSize },
+				StringComparer.OrdinalIgnoreCase)
         };
         ms.OnEndInit(url);
 		return ms;
@@ -83,6 +92,15 @@ public class ModelJsonReader(IModelJsonPartProvider _partProvider, IAppRuntimeBu
 		return rm.GetReport(url.Action);
 	}
 
+	// through Load, as every element: the doors of a metadata folder exist only in the root it synthesizes
+	public async Task<IModelBlobDoor?> GetBlobDoorAsync(IPlatformUrl url)
+	{
+		var rm = await Load(url);
+		return rm.Blobs.GetValueOrDefault(url.Action);
+	}
+
+	public async Task<IModelBase> GetBaseAsync(IPlatformUrl url) => (await Load(url)).GetBase();
+
 	public async Task<IModelBlob?> GetBlobAsync(IPlatformUrl url, String? suffix = null)
 	{
 		var rm = await Load(url);
@@ -102,7 +120,7 @@ public class ModelJsonReader(IModelJsonPartProvider _partProvider, IAppRuntimeBu
 		if (_appRuntimeBuilder.IsAutoSupported)
 			return CreateAuto(url, command);
 		else if (_appRuntimeBuilder.IsMetaSupported)
-			return CreateMeta(url);
+			return await CreateMetaAsync(url);
 		throw new ModelJsonException($"File not found '{url.LocalPath}/model.json'");
 	}
 

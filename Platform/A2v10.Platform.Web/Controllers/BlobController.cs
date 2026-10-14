@@ -60,7 +60,7 @@ public class BlobController(IApplicationHost host,
 		{
 			var token = Request.Query["token"].ToString();
 			var blob = await _blobService.LoadAsync(id, token, Request.Query.ContainsKey("thumb"));
-			// a blob is immutable and the token lives one session: a long cache is safe — on success only,
+			// a blob is immutable and its token stable (AccessToken + user): a long cache is safe — on success only,
 			// an error is another result and stays uncached ([ResponseCache] would cache it too)
 			var ar = new WebBinaryActionResult(blob.Data.ToArray(), blob.Mime)
 				.EnableCache()

@@ -36,7 +36,7 @@ public class DataServiceAccessTests
 	};
 
 	private static DataService Service(Func<ModelJson> file, TestUser user)
-		=> new(null!, new TestModelReader(file), null!, user, null!, null!, null!, null!, null!, null!, null!);
+		=> new(null!, new TestModelReader(file), null!, user, null!, null!, null!, null!, null!, null!);
 
 	private static readonly Action<ExpandoObject> NoParams = _ => { };
 

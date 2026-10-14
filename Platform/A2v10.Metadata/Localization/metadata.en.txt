@@ -17,6 +17,11 @@
 @Role.Admin=Administrator
 @Role.Everyone=All users
 ;
+; Attachments (/attachment)
+@Attachments=Attachments
+@Attachment.Upload=Upload a file
+@Attachment.Empty=This item has no attachments yet
+;
 ; Commands
 @Add=Add
 @AddRow=Add row

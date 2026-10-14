@@ -26,6 +26,8 @@ internal sealed class TestModelReader(Func<ModelJson> file) : IModelJsonReader
 		UrlKind.File => Load(url).GetFile(url.Action),
 		_ => null
 	});
+	public Task<IModelBase> GetBaseAsync(IPlatformUrl url) => Task.FromResult(Load(url).GetBase());
+	public Task<IModelBlobDoor?> GetBlobDoorAsync(IPlatformUrl url) => Task.FromResult<IModelBlobDoor?>(Load(url).Blobs.GetValueOrDefault(url.Action));
 	public Task<IModelCommand> GetCommandAsync(IPlatformUrl url, String command) => Task.FromResult<IModelCommand>(Load(url).GetCommand(command));
 	public Task<IModelReport> GetReportAsync(IPlatformUrl url) => throw new NotSupportedException();
 }

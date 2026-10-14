@@ -68,8 +68,8 @@ public class ModelJsonBase : IModelBase
 
     public Boolean CheckRoles(IEnumerable<String>? roles) => CheckRoles(CurrentRoles, roles);
 
-	// required null - open to all; otherwise the user holds one of them. Also the roles of a base's model.json
-	internal static Boolean CheckRoles(IEnumerable<String>? required, IEnumerable<String>? roles)
+	// required null - open to all; otherwise the user holds one of them
+	static Boolean CheckRoles(IEnumerable<String>? required, IEnumerable<String>? roles)
 	{
 		if (required == null)
 			return true;
@@ -213,7 +213,7 @@ public class ModelJsonBlob : ModelJsonViewBase, IModelBlob
 
 // An entry of "blobs": the key names the field <model>.<Key>; the limits are checked by the server.
 // ModelJsonBase for the roles and the source of the endpoint, inherited through the parent
-public class ModelJsonBlobNew : ModelJsonBase
+public class ModelJsonBlobNew : ModelJsonBase, IModelBlobDoor
 {
 	public String? Accept { get; init; }
 	public Int32? MaxSize { get; init; } // KB
@@ -249,7 +249,8 @@ public class ModelJsonView : ModelJsonViewBase, IModelView
 	IModelMerge? IModelView.Merge => Merge;
 	IModelView? IModelView.TargetModel => TargetModel;
     IModelExport? IModelView.Export => Export;
-	IReadOnlyCollection<String> IModelView.BlobKeys => Parent.Blobs.Keys;
+	IReadOnlyDictionary<String, IModelBlobDoor> IModelView.BlobDoors =>
+		Parent.Blobs.ToDictionary(kv => kv.Key, kv => (IModelBlobDoor)kv.Value, StringComparer.OrdinalIgnoreCase);
 	public String? EndpointHandler { get; set; }
     public String? View { get; set; }
 	public String? ViewMobile { get; set; }
@@ -527,6 +528,14 @@ public class ModelJson
         }
         return null;
     }
+
+	// an empty element under the root: it inherits what the root declares, as a synthesized action does
+	public IModelBase GetBase()
+	{
+		var b = new ModelJsonBase();
+		b.SetParent(this);
+		return b;
+	}
 
     public ModelJsonView GetAction(String key)
 	{

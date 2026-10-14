@@ -154,6 +154,18 @@ internal static class Constants
         public const String UserBoundaryTableType = "a2security.[UserBoundary.TableType]";
     }
 
+    /* The blob an Image column points at (a2v10_blobs_simple.sql): no endpoint and no shape, so the
+     * names are fixed here. The token field is Token, as the Save check and the upload response name it.
+     * TR, as every reference: an author model named Blob would take the same type.
+     */
+    public static class Blobs
+    {
+        public const String Table = "a2blob.Blobs";
+        public const String TypeName = "TRBlob";
+        // what an Image takes: anything an <img> may draw, svg included - it is never served inline
+        public const String ImageAccept = "image/*";
+    }
+
     /* Platform entries of the filter namespace - the ones a trait or the kind contributes, as
      * opposed to the ones a column contributes under its own name. See FilterMetadata.
      */
@@ -193,6 +205,8 @@ internal static class Constants
          */
         public const String Operation = "operation";
         public const String Tag = "tag";
+        // the attachments of any record, under ?base= - see AttachmentEndpointMetadata
+        public const String Attachment = "attachment";
         // the platform's screens for running the application, one endpoint per screen - see AdminEndpointMetadata
         public const String Admin = "admin";
         /* One step further than those two: an enum has no endpoint at all, in code or in files.

@@ -85,4 +85,11 @@ internal class AppMetadataBuilder(
         return dm.Root;
     }
 
+    // the answer for the model.json the reader synthesizes - the endpoint's own; no source: that model.json has none
+    public async Task<EndpointDescriptor> DescribeAsync(String path)
+    {
+        var (schema, table) = DatabaseMetadataProvider.ParsePath(path);
+        var endpoint = await _metadataProvider.GetEndpointAsync(null, schema, table);
+        return new EndpointDescriptor(endpoint.RequireBase, endpoint.Blobs);
+    }
 }

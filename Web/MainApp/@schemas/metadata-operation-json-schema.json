@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "A2v10 <name>.operation.json (operation of a document)",
-    "description": "One operation of a document: document/<x>/<name>.operation.json, listed in 'operations' of document/<x>/metadata.json. An operation is what the user switches inside an open document, so it holds only what is re-evaluated on a switch - 'post'. Birth and address (initialValues, autonum, fixed, forms, traits) belong to the document. The rules of an operation are not generated yet and are refused at load.",
+    "description": "One operation of a document: document/<x>/<name>.operation.json, listed in 'operations' of document/<x>/metadata.json. An operation is what the user switches inside an open document, so it holds only what is re-evaluated on a switch - 'post' and 'rules'. Birth and address (initialValues, autonum, fixed, forms, traits) belong to the document.",
     "type": "object",
     "additionalProperties": false,
     "required": [ "post" ],
@@ -13,6 +13,31 @@
             "description": "What posting a document of this operation does - the same entries as 'post' of a document. Exactly one 'post' is in force at the moment of posting: the one of the operation the document carries.",
             "minItems": 1,
             "items": { "$ref": "metadata-endpoint-json-schema.json#/definitions/post" }
+        },
+        "rules": {
+            "$ref": "metadata-endpoint-json-schema.json#/definitions/rules",
+            "description": "Rules of the header that hold while the document carries this operation: the platform turns them into 'when' under the operation's code, layered over the document's. 'inherit' and 'total' are refused at load - not generated under a condition."
+        },
+        "details": {
+            "type": "object",
+            "description": "Collection key -> rules of that collection, and of its kinds, under this operation. The shape is the document's; nothing else is declared here.",
+            "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "rules": { "$ref": "metadata-endpoint-json-schema.json#/definitions/rules" },
+                    "kinds": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "rules": { "$ref": "metadata-endpoint-json-schema.json#/definitions/rules" }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

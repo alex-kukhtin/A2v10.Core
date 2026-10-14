@@ -12,7 +12,7 @@ public record BlobUploadResult(Int64 Id, String Token, String Name, String Mime)
 public record BlobLinkUploadResult(Int64 Id, BlobUploadResult Blob);
 public record BlobContent(String Name, String Mime, ReadOnlyMemory<Byte> Data);
 
-// The token (session + AccessToken + user) is issued and checked here, in one place
+// The token (AccessToken + user) is issued and checked here, in one place
 public interface IBlobService
 {
 	// path = "<endpoint>/<Key>", e.g. "catalog/agentblob/Logo"; mime = the type by the file name,
