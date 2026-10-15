@@ -278,6 +278,15 @@ public abstract class UIElementBase : XamlElement, IXamlElement
 		return null;
 	}
 
+	// The one rule of "read only by the model": Show and Debug (when rendered) skip it, ReadOnly forces it.
+	// rm is GetRenderMode, passed in so the Render expression is not evaluated twice
+	protected static Boolean IsReadOnlyByModel(RenderContext context, RenderMode? rm)
+	{
+		if (rm == RenderMode.Show || rm == RenderMode.Debug)
+			return false;
+		return context.IsDataModelIsReadOnly || rm == RenderMode.ReadOnly;
+	}
+
 	public void InvokeEndInit()
 	{
 		OnEndInit();

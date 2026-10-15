@@ -162,14 +162,8 @@ public abstract class Control : UIElement
 			return true;
 		if (rm == RenderMode.Debug)
 			return !context.IsDebugConfiguration;
-		if (rm == RenderMode.Show)
-			return false; // skip read only
-		if (context.IsDataModelIsReadOnly || rm == RenderMode.ReadOnly)
-		{
-			if (SkipCheckReadOnly())
-				return false;
+		if (IsReadOnlyByModel(context, rm) && !SkipCheckReadOnly())
 			context.AddDisabledControl(this);
-		}
 		return false;
 	}
 

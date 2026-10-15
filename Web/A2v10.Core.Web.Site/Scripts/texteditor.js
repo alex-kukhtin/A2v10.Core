@@ -34,6 +34,27 @@
 		return out + escapeHtml(s.substring(last));
 	}
 
+	// The links of the editor's text, as ranges over its text nodes: the highlight paints them, a click opens them — one rule.
+	// A link cut by bold into two text nodes is not a link here — accepted
+	function linkRanges(el) {
+		let ranges = [];
+		let walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+		for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+			for (let { index, url } of findLinks(n.nodeValue)) {
+				let r = new Range();
+				r.setStart(n, index);
+				r.setEnd(n, index + url.length);
+				ranges.push(r);
+			}
+		}
+		return ranges;
+	}
+
+	// by the rects, not by the caret: a caret lands on the nearest boundary, a click past the end of a line would open the link
+	function hit(range, x, y) {
+		return Array.from(range.getClientRects()).some(c => x >= c.left && x <= c.right && y >= c.top && y <= c.bottom);
+	}
+
 	// The CSS Custom Highlight API paints over the text: the DOM, the caret and undo stay as they are.
 	// The registry is global, so editors share one Highlight, each holding its own ranges. No API — no highlight
 	const HIGHLIGHT = 'a2-link';
@@ -95,6 +116,12 @@
 		}
 		flush();
 		return out;
+	}
+
+	// A hook is called as a template's function is: this = the model of the page (as emptyPanelCallback). No hook — undefined
+	function hook(vm, name, ...args) {
+		let d = vm.delegates;
+		return d && d[name] ? d[name].apply(vm.$root.$data, args) : undefined;
 	}
 
 	// load/error do not bubble — the root sees them on capture. An error too: a broken image, not an endless spinner
@@ -215,7 +242,7 @@
 	Vue.component('a2-text-editor', {
 		template: `
 <div class="a2-text-editor" :contenteditable="disabled ? 'false' : 'true'" :data-placeholder="placeholder"
-	@input="sync" @keydown="keydown" @focus="focus" @paste="paste" @load.capture="loaded" @error.capture="loaded"
+	@input="sync" @keydown="keydown" @focus="focus" @paste="paste" @click="open" @load.capture="loaded" @error.capture="loaded"
 	@dragstart="dragInside(true)" @dragend="dragInside(false)" @drop="drop"></div>
 `,
 		props: {
@@ -240,32 +267,42 @@
 		methods: {
 			loaded,
 			imageUrl(src) {
-				let d = this.delegates;
-				return d && d.ImageUrl ? d.ImageUrl(src) : null;
+				return hook(this, 'ImageUrl', src) || null;
 			},
 			render(md) {
 				this.md = md;
 				this.$el.innerHTML = toHtml(md, src => this.imageUrl(src), false);
 				this.highlight();
 			},
-			// a link cut by bold into two text nodes is not highlighted whole — accepted
 			highlight() {
 				let hl = linkHighlight();
 				if (!hl) return;
 				for (let r of this.ranges)
 					hl.delete(r);
-				this.ranges = [];
-				if (this.gone) return;
-				let walker = document.createTreeWalker(this.$el, NodeFilter.SHOW_TEXT);
-				for (let n = walker.nextNode(); n; n = walker.nextNode()) {
-					for (let { index, url } of findLinks(n.nodeValue)) {
-						let r = new Range();
-						r.setStart(n, index);
-						r.setEnd(n, index + url.length);
-						hl.add(r);
-						this.ranges.push(r);
-					}
+				this.ranges = this.gone ? [] : linkRanges(this.$el);
+				for (let r of this.ranges)
+					hl.add(r);
+			},
+			// Ctrl/⌘+click opens an image or a link, as a click in the view does; a plain click edits (places the caret,
+			// selects an image). A disabled editor cannot be edited, so any click opens. An image still uploading
+			// (blob:, no data-src) has nothing to open yet
+			open(ev) {
+				if (!(ev.ctrlKey || ev.metaKey) && !this.disabled)
+					return;
+				let url = null;
+				let t = ev.target;
+				if (t.tagName === 'IMG') {
+					if (t.getAttribute('data-src'))
+						url = t.src;
+				} else {
+					let link = linkRanges(this.$el).find(r => hit(r, ev.clientX, ev.clientY));
+					if (link)
+						url = link.toString();
 				}
+				if (!url)
+					return;
+				ev.preventDefault();
+				window.open(url, '_blank', 'noopener');
 			},
 			sync() {
 				if (this.gone) return;
@@ -286,8 +323,7 @@
 				if (!(ev.ctrlKey || ev.metaKey)) return;
 				if (ev.key === 'Enter') {
 					ev.preventDefault();
-					if (this.delegates && this.delegates.Submit)
-						this.delegates.Submit();
+					hook(this, 'Submit');
 				} else if (ev.code === 'KeyI' || ev.code === 'KeyU')
 					ev.preventDefault(); // italic and underline would be lost on save
 			},
@@ -339,7 +375,7 @@
 			async upload(x) {
 				let src = null;
 				try {
-					src = await this.delegates.UploadImage(x.file);
+					src = await hook(this, 'UploadImage', x.file);
 				} catch (err) {
 					console.error(err);
 				}
@@ -384,9 +420,7 @@
 		},
 		computed: {
 			html() {
-				let d = this.delegates;
-				let imageUrl = src => d && d.ImageUrl ? d.ImageUrl(src) : null;
-				return toHtml(this.value || '', imageUrl, true);
+				return toHtml(this.value || '', src => hook(this, 'ImageUrl', src) || null, true);
 			}
 		},
 		methods: {

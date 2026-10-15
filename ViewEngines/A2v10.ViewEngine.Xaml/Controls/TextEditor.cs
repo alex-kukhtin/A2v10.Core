@@ -3,7 +3,8 @@
 namespace A2v10.Xaml;
 
 // a2-text-editor (Scripts/texteditor.js): a comment, markdown of three elements. Decisions — design/texteditor.md.
-// The control writes the value back, so item + prop; Delegates — an object of hooks (UploadImage, ImageUrl, Submit), as Calendar
+// The control writes the value back, so item + prop; Delegates — an object of hooks (UploadImage, ImageUrl, Submit),
+// bound as Calendar's, but each hook is called with this = the model of the page, as a template's function
 public class TextEditor : UIElementBase
 {
 	public Object? Value { get; set; }
@@ -22,7 +23,11 @@ public class TextEditor : UIElementBase
 			?? throw new XamlException("Value binding is required for the TextEditor element");
 		MergeValueItemProp(tag, context, nameof(Value));
 		MergeBindingAttributeString(tag, context, "placeholder", nameof(Placeholder), Placeholder);
-		MergeBoolAttribute(tag, context, nameof(Disabled), Disabled);
+		// a read-only model closes the editor as it closes every Control — typing and image uploads alike
+		if (IsReadOnlyByModel(context, GetRenderMode(context)))
+			tag.MergeAttribute(":disabled", "true");
+		else
+			MergeBoolAttribute(tag, context, nameof(Disabled), Disabled);
 		var delegatesBind = GetBinding(nameof(Delegates));
 		if (delegatesBind != null)
 			tag.MergeAttribute(":delegates", delegatesBind.GetPath(context));
