@@ -1,0 +1,61 @@
+@import "Variables.less";
+
+// a data-URL cannot read CSS variables: the colour is fixed
+@text-editor-spinner: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23999' stroke-width='3' stroke-linecap='round' stroke-dasharray='42 16'%3E%3CanimateTransform attributeName='transform' type='rotate' from='0 12 12' to='360 12 12' dur='1s' repeatCount='indefinite'/%3E%3C/circle%3E%3C/svg%3E";
+
+// pre-wrap: spaces stay spaces (Chrome inserts no &nbsp;), the editor and the view wrap the same way
+.a2-text-editor, .a2-text-view {
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	line-height: 1.4;
+	background-color: var(--bgWhite);
+	padding: 6px 8px;
+	border: 1px solid @control-brd-color;
+	border-radius: @control-brd-radius;
+	outline: none;
+
+	img {
+		max-width: 100%;
+		max-height: 12rem;
+		vertical-align: bottom;
+		border: 1px solid @border-light;
+		border-radius: @control-brd-radius;
+		// the size is unknown until loaded: a fixed block, which a lazy image also needs to start loading
+		&.loading {
+			width: 16rem;
+			height: 10rem;
+			background: var(--neutral100) url(@text-editor-spinner) center no-repeat;
+			background-size: 24px;
+		}
+	}
+}
+
+.a2-text-editor {
+	min-height: 4.5em;
+
+	&:focus {
+		border-color: @control-focus-color;
+	}
+
+	&:empty::before {
+		content: attr(data-placeholder);
+		color: var(--neutral400);
+		pointer-events: none;
+	}
+
+	&[contenteditable=false] {
+		border-color: @control-disabled-brd-color;
+		background-color: @disabled-bg-color;
+	}
+
+	// ranges of texteditor.js: a text node right in the editor belongs to the editor itself, not to a descendant
+	&::highlight(a2-link), & ::highlight(a2-link) {
+		color: @link-color;
+		text-decoration: underline;
+	}
+
+	// no skeleton: a wrapper around img in contenteditable breaks editing
+	img.uploading {
+		opacity: .5;
+	}
+}

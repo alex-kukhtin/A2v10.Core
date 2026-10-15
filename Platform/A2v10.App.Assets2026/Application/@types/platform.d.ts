@@ -242,6 +242,7 @@ interface Template {
 	options?: {
 		noDirty?: boolean,
 		persistSelect?: string[],
+		/** changes that do not make the model dirty: 'Path.Prop' of an element ('Comments[].Text'), or 'Path' of an array — its $append, $remove, $empty ('Comments'). Not the root's own props: use '$$Prop' for those */
 		skipDirty?: string[],
 		bindOnce?: string[],
 		globalSaveEvent?: string
@@ -294,6 +295,7 @@ declare const enum AcceptFormat {
 
 interface IController {
 	$save(): Promise<object>;
+	$ensureSaved(): Promise<boolean>;
 	$savePart(data: object, url: string, dialog?: boolean): Promise<object>;
 	$requery(query?: object): void;
 	$reload(args?: any): Promise<void>;
@@ -321,7 +323,7 @@ interface IController {
 	$report(report: string, arg: object, opts?: { export?: Boolean, attach?: Boolean, print?: Boolean, format?: ReportFormat }, url?: string, data?: object): void;
 	$upload(url: string, accept?: string | AcceptFormat, data?: { Id?: any, Key?: any }, opts?: { catchError?: boolean }): Promise<any>;
 	$uploadBlob(url: string, accept?: string | AcceptFormat, data?: { Id: any, Base: string }, opts?: { catchError?: boolean }): Promise<any>;
-	$file(url: string, arg: any, opts?: { action: FileActions }, data?: object): void;
+	$uploadBlobFile(url: string, file: File, data?: { Id: any, Base: string }, opts?: { catchError?: boolean }): Promise<any>;	$file(url: string, arg: any, opts?: { action: FileActions }, data?: object): void;
 	$emitCaller(event: string, ...params: any[]): void;
 	$emitSaveEvent(): void;
 	$emitGlobal(event: string, data?: any): void;

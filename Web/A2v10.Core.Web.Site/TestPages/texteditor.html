@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+	<meta charset="utf-8">
+	<title>a2-text-editor</title>
+	<link rel="stylesheet" href="../wwwroot/css/light.colorscheme.css">
+	<link rel="stylesheet" href="../wwwroot/css/tabbed.css">
+	<style>
+		body { overflow: auto; }
+		.tp { max-width: 720px; margin: 24px auto; display: flex; flex-direction: column; gap: 10px; }
+		.tp-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+		.tp-bar input[type=number] { width: 70px; }
+		.tp pre { margin: 0; padding: 6px 8px; min-height: 2em; background: var(--neutral100); white-space: pre-wrap; overflow-wrap: anywhere; }
+		.tp h4 { margin: 12px 0 0; }
+		.tp-sent { padding: 6px 8px; border-bottom: 1px solid var(--neutral300); }
+	</style>
+</head>
+<body>
+	<div id="app" class="tp">
+		<a2-text-editor :item="item" prop="Text" placeholder="Коментар… Ctrl+Enter — надіслати"
+			:disabled="disabled" :delegates="delegates"></a2-text-editor>
+		<div class="tp-bar">
+			<button class="btn btn-primary" @click="send" :disabled="pending > 0">Надіслати</button>
+			<button class="btn" @click="item.Text = ''">Очистити</button>
+			<button class="btn" @click="item.Text = sample">Завантажити запис</button>
+			<label><input type="checkbox" v-model="fail"> помилка завантаження</label>
+			<label><input type="checkbox" v-model="disabled"> disabled</label>
+			<label>затримка, мс <input type="number" v-model.number="delay" step="500" min="0"></label>
+			<span>завантажується: {{pending}}</span>
+		</div>
+		<h4>item.Text</h4>
+		<pre v-text="item.Text"></pre>
+		<h4>a2-text-view</h4>
+		<a2-text-view :value="item.Text" :delegates="delegates"></a2-text-view>
+		<h4>Надіслані</h4>
+		<div v-for="s in sent" class="tp-sent">
+			<a2-text-view :value="s.Text" :delegates="delegates"></a2-text-view>
+		</div>
+	</div>
+	<script src="../wwwroot/scripts/vue.js"></script>
+	<script src="../Scripts/texteditor.js"></script>
+	<script src="texteditor.test.js"></script>
+</body>
+</html>

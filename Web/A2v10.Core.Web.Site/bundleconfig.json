@@ -7,7 +7,8 @@
 			"Scripts/navbar.js",
 			"Scripts/shell.js",
 			"Scripts/bigcalendar.js",
-			"Scripts/multiselect.js"
+			"Scripts/multiselect.js",
+			"Scripts/texteditor.js"
 		],
 		"minify": { "enabled": false }
 	},
@@ -19,7 +20,8 @@
 			"Scripts/navbar.js",
 			"Scripts/shellsp.js",
 			"Scripts/bigcalendar.js",
-			"Scripts/multiselect.js"
+			"Scripts/multiselect.js",
+			"Scripts/texteditor.js"
 		],
 		"minify": { "enabled": false }
 	},

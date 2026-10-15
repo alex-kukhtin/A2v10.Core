@@ -1145,7 +1145,7 @@ app.modules['std:utils'] = function () {
 
 // Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
 
-/*20261012-7985*/
+/*20261014-7990*/
 /* services/url.js */
 
 app.modules['std:url'] = function () {
@@ -1170,7 +1170,8 @@ app.modules['std:url'] = function () {
 		replaceSegment,
 		removeFirstSlash,
 		isNewPath,
-		splitCommand
+		splitCommand,
+		blobUrl
 	};
 
 	function normalize(elem) {
@@ -1393,6 +1394,15 @@ app.modules['std:url'] = function () {
 			url: seg.join('/')
 		};
 	}
+
+
+	// a blob of the model: $id and the token by its meta name; an empty reference has $id = 0
+	function blobUrl(blob) {
+		if (!blob || !blob.$id)
+			return undefined;
+		return combine(window.$$rootUrl, '_blob', blob.$id) + makeQueryString({ token: blob[blob._meta_.$token] });
+	}
+
 };
 
 
@@ -2558,7 +2568,7 @@ app.modules['std:validators'] = function () {
 
 // Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
 
-/*20260508-7993*/
+/*20261015-7995*/
 /* services/impl/array.js */
 
 app.modules['std:impl:array'] = function () {
@@ -2728,7 +2738,7 @@ app.modules['std:impl:array'] = function () {
 		arr.$empty = function () {
 			if (this.$root.isReadOnly)
 				return this;
-			this._root_.$setDirty(true);
+			this._root_.$setDirty(true, this._path_);
 			return this.__empty__();
 		};
 
@@ -2778,7 +2788,7 @@ app.modules['std:impl:array'] = function () {
 				}
 				if ('$RowCount' in that) that.$RowCount += 1;
 				let eventName = that._path_ + '[].add';
-				that._root_.$setDirty(true);
+				that._root_.$setDirty(true, that._path_);
 				that._root_.$emit(eventName, that /*array*/, ne /*elem*/, len - 1 /*index*/);
 				if (select) {
 					ne.$select();
@@ -2840,7 +2850,7 @@ app.modules['std:impl:array'] = function () {
 			if ('$RowCount' in this) this.$RowCount -= 1;
 			// EVENT
 			let eventName = this._path_ + '[].remove';
-			this._root_.$setDirty(true);
+			this._root_.$setDirty(true, this._path_);
 			this._root_.$emit(eventName, this /*array*/, item /*elem*/, index);
 
 			if (!this.length) {
@@ -4094,14 +4104,15 @@ app.modules['std:impl:array'] = function () {
 		if (val === this.$dirty) return;
 		if (this.$root.$readOnly)
 			return;
-		this.$root.$emit('Model.dirty.change', val, `${path}.${prop}`);
+		const key = prop ? `${path}.${prop}` : path;
+		this.$root.$emit('Model.dirty.change', val, key);
 		if (this.$vm && this.$vm.isIndex)
 			return;
 		if (isNoDirty(this.$root))
 			return;
 		if (path && path.toLowerCase().startsWith('query'))
 			return;
-		if (path && prop && isSkipDirty(this.$root, `${path}.${prop}`))
+		if (path && isSkipDirty(this.$root, key))
 			return;
 		this.$dirty = val;
 	}
@@ -11125,10 +11136,7 @@ TODO:
 				return this.item[this.prop];
 			},
 			href() {
-				let b = this.blob;
-				if (!b || !b.$id)
-					return undefined;
-				return url.combine(window.$$rootUrl, '_blob', b.$id) + url.makeQueryString({ token: b[b._meta_.$token] });
+				return url.blobUrl(this.blob);
 			},
 			hasImage() {
 				return !!this.href;
@@ -11234,8 +11242,7 @@ TODO:
 			href() {
 				if (!this.hasBlob)
 					return undefined;
-				let b = this.value;
-				return url.combine(window.$$rootUrl, '_blob', b.$id) + url.makeQueryString({ token: b[b._meta_.$token] });
+				return url.blobUrl(this.value);
 			},
 			pdfWidth() {
 				return this.width || '100%';
@@ -14100,6 +14107,25 @@ Vue.directive('resize', {
 					});
 				});
 			},
+
+
+			async $ensureSaved() {
+				// as $save: the main object, else the first one of the model
+				const name = this.$data._meta_.$main || Object.keys(this.$data._meta_.props)[0];
+				const elem = this.$data[name];
+				if (!elem || Array.isArray(elem))
+					throw new Error(`$ensureSaved: '${name}' is not an object`);
+				if (!elem.$isNew)
+					return true;
+				if (!this.__ensureSaving__) {
+					this.$data.$setDirty(true);
+					this.__ensureSaving__ = Promise.resolve(this.$save()).finally(() => { this.__ensureSaving__ = null; });
+				}
+				await this.__ensureSaving__;
+				// $save merges into the root, and the root replaces an object property — read it again
+				return !this.$data[name].$isNew;
+			},
+
 			$notifyOwner(id, toast) {
 				if (!window.opener) return;
 				if (!window.$$token) return;
@@ -14339,9 +14365,24 @@ Vue.directive('resize', {
 			},
 			async $uploadBlob(url, accept, data, opts) {
 				eventBus.$emit('closeAllPopups');
-				const root = window.$$rootUrl;
 				try {
 					let file = await htmlTools.uploadFile(accept);
+					return await this.$uploadBlobFile(url, file, data, { catchError: true });
+				} catch (err) {
+					err = err || 'unknown error';
+					if (opts && opts.catchError)
+						throw err;
+					else if (err.indexOf('UI:') === 0)
+						this.$alert(err.substring(3).replace('\\n', '\n'));
+					else
+						alert(err);
+					return false;
+				}
+			},
+			// a ready file (paste, drop): no picker. No closeAllPopups either — the editor may itself live in a popup
+			async $uploadBlobFile(url, file, data, opts) {
+				const root = window.$$rootUrl;
+				try {
 					let dat = new FormData();
 					dat.append('file', file, file.name);
 					// an attachment: exactly Id and Base of data, nothing else reaches the query
@@ -14359,6 +14400,7 @@ Vue.directive('resize', {
 					return false;
 				}
 			},
+
 			async $upload(url, accept, data, opts) {
 				eventBus.$emit('closeAllPopups');
 				let root = window.$$rootUrl;
@@ -15250,6 +15292,7 @@ Vue.directive('resize', {
 			__createController__() {
 				let ctrl = {
 					$save: this.$save,
+					$ensureSaved: this.$ensureSaved,
 					$savePart: this.$savePart,
 					$invoke: this.$invoke,
 					$close: this.$close,
@@ -15276,6 +15319,7 @@ Vue.directive('resize', {
 					$report: this.$report,
 					$upload: this.$upload,
 					$uploadBlob: this.$uploadBlob,
+					$uploadBlobFile: this.$uploadBlobFile,
 					$file: this.$file,
 					$emitCaller: this.$emitCaller,
 					$emitSaveEvent: this.$emitSaveEvent,
