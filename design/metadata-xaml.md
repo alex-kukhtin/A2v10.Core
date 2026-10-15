@@ -63,9 +63,6 @@
 - **Hence one version**: `A2v10.Metadata`, `A2v10.Metadata.Xaml` and the `a2` CLI ship together (/CLAUDE.md, "Release"). A pair of two versions fails at run time on a member that moved, not at the build of the host.
 - **A host that renders registers two calls**, `UseAppMetadata().UseAppMetadataXaml()`. Forgotten, every page is refused by name on the first open.
 
-## Not built — the direction this cut serves
+## The direction this cut serves
 
-- **The canonical data-only application**: an ASP.NET host on `UseAppMetadata()`, platform users, a Nuxt client with our model (events on data, getters — the NewVue concept). Concepts: `D:\CLAUDE\VueCore`, `D:\CLAUDE\NewVue`; to be invented, not reconciled. Its skill is written by the blind instance against the platform's anchors (/CLAUDE.md, "Skills as spec").
-- **Controllers are the host's, per entity** — `[HttpPost("domycommand")]` beside the standard verbs, through `EndpointDataService.At(route)`. A base `PlatformController("/catalog/agent")` with attributes (a declared right for an own action is the one place safety can break silently) — built when the stand's friction asks, not before.
-- **The generator retargeted to the new model**: the `.d.ts` (today `IElement`-based, the Vue 2 runtime) and the template's rules (`properties` → getters, `inherit` → an event at the type). Waits for the model's open questions.
-- **The mart** is designed in its concept (`a2v10-md-skill/concepts/mart`), not here. Carried there: a derived measure (`max(Closing, 0)`) is not additive and needs a declared grain; the trial balance already lays out per account before summing.
+The application on the data layer alone — an ASP.NET host, controllers per entity, a Nuxt client with our model: [aspnet-nuxt.md](aspnet-nuxt.md). The next cut — the client on Vue 3 in shelves, a view engine shipping its own components, a replaceable shell, a second engine: [view-engines.md](view-engines.md).

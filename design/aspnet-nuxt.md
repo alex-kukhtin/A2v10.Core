@@ -58,4 +58,4 @@ WebApp/catalog/agent/
 
 - **Next probe: the whole flow on a document** - a header reference with its selector, a collection of rows, save, post. Everything so far is the easy case; the rest is a block of details.
 - **Not built:** errors (a refusal reaches the client as 500 with a stack and a raw `UI:@[...]` - wanted `UI:` → 409 with text, `AccessDenied` → 403), localization of `@[...]` keys in data and errors, login, a wrapper over requests (pages call `$fetch` directly), the shell (menu, header), `full.sql` through `sql.json`, serving the static client, git on the stand.
-- **The mart** is not this canon's - designed in its concept (`a2v10-md-skill/concepts/mart`).
+- **The mart** is not this canon's - designed in its concept (`a2v10-md-skill/concepts/mart`). Carried there: a derived measure (`max(Closing, 0)`) is not additive and needs a declared grain; the trial balance already lays out per account before summing.
