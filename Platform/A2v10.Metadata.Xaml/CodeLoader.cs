@@ -1,8 +1,6 @@
 ﻿// Copyright © 2025 Oleksandr Kukhtin. All rights reserved.
 
 using System;
-using System.IO;
-using System.Threading.Tasks;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -15,17 +13,6 @@ internal class CodeLoader(IServiceProvider _serviceProvider)
 {
     private readonly IAppCodeProvider _codeProvider = _serviceProvider.GetRequiredService<IAppCodeProvider>();
     private readonly IXamlPartProvider _xamlPartProvider = _serviceProvider.GetRequiredService<IXamlPartProvider>();
-
-    public async Task<String> GetTemplateScriptAsync(IModelView view)
-    {
-        if (view.Path == null)
-            throw new InvalidOperationException("Model.Path is null");
-        var pathToRead = _codeProvider.MakePath(view.Path, $"{view.Template}.js");
-        using var stream = _codeProvider.FileStreamRO(pathToRead)
-            ?? throw new FileNotFoundException($"Template file '{pathToRead}' not found.");
-        using var sr = new StreamReader(stream);
-        return await sr.ReadToEndAsync();
-    }
 
     /* The same probe the platform makes for every other view (WebViewEngineProvider, Components):
      * '.vxaml' first, then '.xaml'. Asked for '.xaml' alone, a view materialized by the platform

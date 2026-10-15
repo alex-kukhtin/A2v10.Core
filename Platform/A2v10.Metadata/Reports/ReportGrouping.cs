@@ -29,6 +29,9 @@ public record ReportItemMetadata
     public Boolean Checked { get; init; }
     public Int32 Order { get; init; }
     public String? Label { get; init; }
+
+    // the header of the item, on the page and in the picks the query sends back (RepInfoSql)
+    internal String LocalizeLabel() => Label.Localize() ?? $"@[{Column}]";
 }
 
 internal class ReportGrouping

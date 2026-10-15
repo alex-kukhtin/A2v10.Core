@@ -2,25 +2,20 @@
 
 using System;
 using System.Dynamic;
+using System.IO;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.DependencyInjection;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
-using A2v10.System.Xaml;
-using A2v10.Xaml;
-using A2v10.Xaml.DynamicRendrer;
 using A2v10.Data;
 
 namespace A2v10.Metadata;
 
 internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, BuilderDescriptor descriptor) : IModelBuilder
 {
-    internal readonly DatabaseMetadataProvider _metadataProvider = _serviceProvider.GetRequiredService<DatabaseMetadataProvider>();
-
     private readonly SqlBuilder _sqlBuilder = new(descriptor, _serviceProvider);
-    private readonly XamlBuilder _xamlBuilder = new(descriptor);
     // types erased: the browser runs this text as it is, there is no compiler here
     private readonly ScriptBuilder _jsBuilder = new(descriptor, isTs: false);
 
@@ -39,7 +34,26 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
         var dm = await LoadModelAsync();
         if (isReload)
             return new AppRuntimeResult(dm, null);
-        return new AppRuntimeResult(dm, await RenderPageAsync(view, dm));
+        var request = new PageRequest(Endpoint, descriptor.PlatformUrl, descriptor.DataSource, view, dm, await TemplateAsync(view));
+        return new AppRuntimeResult(dm, await IPageRenderer.Of(_serviceProvider, Path).RenderPageAsync(request));
+    }
+
+    /* Taken apart from the view: written in model.json, the file; absent, generated. The generated
+     * template used to be the ELSE of the view, so a hand-written template under a generated view was
+     * read and then overwritten. See CLAUDE.md, "Two files in one folder".
+     */
+    async Task<String> TemplateAsync(IModelView view)
+    {
+        if (String.IsNullOrEmpty(view.Template))
+            return await CreateTemplateAsync();
+        if (view.Path == null)
+            throw new InvalidOperationException("Model.Path is null");
+        var codeProvider = _serviceProvider.GetRequiredService<IAppCodeProvider>();
+        var pathToRead = codeProvider.MakePath(view.Path, $"{view.Template}.js");
+        using var stream = codeProvider.FileStreamRO(pathToRead)
+            ?? throw new FileNotFoundException($"Template file '{pathToRead}' not found.");
+        using var sr = new StreamReader(stream);
+        return await sr.ReadToEndAsync();
     }
 
     public Task<IDataModel> LoadLazyModelAsync()
@@ -95,9 +109,6 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
         };
     }
 
-    public UIElement CreateDefaultXamlForm()
-        => _xamlBuilder.CreateXamlContainer(Action);
-
     public Task<ExpandoObject> SaveModelAsync(ExpandoObject data, ExpandoObject savePrms)
     {
         return Action switch
@@ -106,47 +117,5 @@ internal partial class BaseModelBuilder(IServiceProvider _serviceProvider, Build
             Constants.Actions.EditFolder => _sqlBuilder.SaveFolderModelAsync(data),
             _ => throw IModelBuilder.NotHere($"save on '{Action}'", Path)
         };
-    }
-
-    public async Task<String> RenderPageAsync(IModelView modelView, IDataModel dataModel)
-    {
-        var codeLoader = new CodeLoader(_serviceProvider);
-        var dynamicRenderer = new DynamicRenderer(_serviceProvider);
-
-        String rootId = $"el{Guid.NewGuid()}";
-
-        /* Each of the two taken on its own: written in model.json, the file; absent, generated. The
-         * generated template used to be the ELSE of the view, so a hand-written template under a
-         * generated view was read and then overwritten. See CLAUDE.md, "Two files in one folder".
-         */
-        var templateText = !String.IsNullOrEmpty(modelView.Template)
-            ? await codeLoader.GetTemplateScriptAsync(modelView)
-            : await CreateTemplateAsync();
-
-        var rawView = modelView.GetRawView(false);
-        UIElement page;
-        if (!String.IsNullOrEmpty(rawView))
-            page = codeLoader.LoadPage(modelView, rawView);
-        else
-            /* The print page is not cached: it depends on '?Form=', which the cache key does not
-             * carry - keyed by action, the first blank opened answered for every other.
-             */
-            page = Action == Constants.Print.Action
-                ? CreateDefaultXamlForm()
-                : await _metadataProvider.GetXamlFormAsync(descriptor.DataSource, Endpoint, descriptor.PlatformUrl.Action, CreateDefaultXamlForm);
-
-        if (page is ISupportPlatformUrl supportPlatformUrl)
-            supportPlatformUrl.SetPlatformUrl(descriptor.PlatformUrl);
-
-        var rri = new DynamicRenderPageInfo()
-        {
-            RootId = rootId,
-            Page = page,
-            ModelView = modelView,
-            PlatformUrl = descriptor.PlatformUrl,
-            Model = dataModel,
-            Template = templateText
-        };
-        return await dynamicRenderer.RenderPage(rri);
     }
 }

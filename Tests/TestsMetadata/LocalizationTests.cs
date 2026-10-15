@@ -44,7 +44,9 @@ public partial class LocalizationTests
     {
         var known = Keys(MetadataFile("uk")).Union(Keys(DefaultFile("uk"))).ToHashSet();
 
-        var literal = Directory.EnumerateFiles(RepoPath("Platform/A2v10.Metadata"), "*.cs", SearchOption.AllDirectories)
+        // the layer and its pages: the keys a page writes are translated in the layer's file
+        var literal = new[] { "Platform/A2v10.Metadata", "Platform/A2v10.Metadata.Xaml" }
+            .SelectMany(dir => Directory.EnumerateFiles(RepoPath(dir), "*.cs", SearchOption.AllDirectories))
             .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"))
             .SelectMany(f => LiteralKey().Matches(Comment().Replace(File.ReadAllText(f), String.Empty)))
             .Select(m => m.Groups[1].Value);

@@ -1,12 +1,9 @@
-﻿// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
+// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Threading.Tasks;
 
 using A2v10.Infrastructure;
-using A2v10.Xaml.DynamicRendrer;
-using A2v10.Xaml;
-
 
 namespace A2v10.Metadata;
 
@@ -16,36 +13,18 @@ namespace A2v10.Metadata;
 internal class ReportEndpointBuilder(IServiceProvider _serviceProvider, ReportEndpointMetadata _endpoint,
     IPlatformUrl platformUrl, AppPlatformId _platformId, Boolean _useGrants) : IModelBuilder
 {
-    private readonly DynamicRenderer _dynamicRenderer = new(_serviceProvider);
-
     public String Path => _endpoint.Path;
 
     public async Task<IAppRuntimeResult> RenderAsync(IModelView view, Boolean isReload)
     {
         var reportBuilder = BaseReportBuilder.Create(_serviceProvider, _endpoint, _platformId, _useGrants);
 
-        var dm = await reportBuilder.LoadReportModelAsync(view,  platformUrl.Query ?? []);
+        var dm = await reportBuilder.LoadReportModelAsync(view, platformUrl.Query ?? []);
 
         if (isReload)
             return new AppRuntimeResult(dm, null);
 
-        String rootId = $"el{Guid.NewGuid()}";
-        String templateText = reportBuilder.CreateTemplate();
-
-        UIElement page = reportBuilder.CreatePage();
-
-        if (page is ISupportPlatformUrl supportPlatformUrl)
-            supportPlatformUrl.SetPlatformUrl(platformUrl);
-
-        var rri = new DynamicRenderPageInfo()
-        {
-            RootId = rootId,
-            Page = page,
-            ModelView = view,
-            PlatformUrl = platformUrl,
-            Model = dm,
-            Template = templateText
-        };
-        return new AppRuntimeResult(dm, await _dynamicRenderer.RenderPage(rri));
+        var request = new PageRequest(_endpoint, platformUrl, view.DataSource, view, dm, reportBuilder.CreateTemplate());
+        return new AppRuntimeResult(dm, await IPageRenderer.Of(_serviceProvider, Path).RenderPageAsync(request));
     }
 }

@@ -15,7 +15,7 @@ public class ViewXamlTests
 {
     static async Task<String> ViewOf(String endpoint, String action)
     {
-        var mat = new EndpointMaterializer(TestHost.GetService<DatabaseMetadataProvider>());
+        var mat = TestHost.GetService<EndpointMaterializer>();
         var res = await mat.MaterializeAsync(endpoint, action, MaterializeWhat.View);
         return res.Files[0].Text;
     }

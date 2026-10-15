@@ -16,7 +16,6 @@ using Microsoft.Data.SqlClient;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Metadata.Cli;
-using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 

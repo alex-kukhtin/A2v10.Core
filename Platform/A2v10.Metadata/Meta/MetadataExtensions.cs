@@ -31,6 +31,22 @@ internal static class TableColumnPredicates
         => !col.IsStamp && !col.HasSqlAs;
 }
 
+internal static class ColumnTypePredicates
+{
+    /* A number: aligned right, a number column, ordered before the rest of a row. Asked as one word
+     * so a new domain cannot land in some of these sites and miss the others.
+     */
+    internal static Boolean IsNumber(this ColumnType column) =>
+        column.IsCurrency() || column is ColumnType.Qty or ColumnType.Percent or ColumnType.Factor
+            or ColumnType.Integer or ColumnType.Decimal or ColumnType.Float;
+
+    /* The fork inside numbers: money shows at least two decimals, any other number as many as it
+     * has. A price is money and a quantity is not - what adds up is another question (IsAdditive).
+     */
+    internal static Boolean IsCurrency(this ColumnType column) =>
+        column is ColumnType.Amount or ColumnType.Price or ColumnType.Money;
+}
+
 // an owner column of the target, and the field that holds its value - of the record itself when Header
 internal record OwnerLink(TableColumn Owner, TableColumn Field, Boolean Header);
 

@@ -56,7 +56,7 @@ public class FolderTargetTests
             UseGrants = false
         };
 
-        var xaml = XamlTextBulder.GetXaml(new XamlBuilder(descriptor).CreateXamlContainer("edit"));
+        var xaml = XamlTextBulder.GetXaml(new XamlBuilder(descriptor.Endpoint, descriptor.PlatformUrl).CreateXamlContainer("edit"));
 
         Assert.Contains($"Url=\"/catalog/{table}\" Folder=\"True\"", xaml);
     }

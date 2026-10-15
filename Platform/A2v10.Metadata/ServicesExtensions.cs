@@ -19,6 +19,7 @@ public static class ServicesExtensions
             .AddScoped<IAppRuntimeBuilder, AppMetadataBuilder>();
 
         services.AddScoped<IModelBuilderFactory, ModelBuilderFactory>();
+        // no page renderer: the view engine's half is A2v10.Metadata.Xaml (UseAppMetadataXaml)
         services.AddScoped<EndpointMaterializer>();
         services.AddScoped<EndpointValidator>();
 

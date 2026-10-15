@@ -104,7 +104,9 @@ internal sealed partial class Program
            .AddSingleton<IModelJsonPartProvider, ModelJsonPartProvider>()
            .AddSingleton<IXamlPartProvider, XamlPartProvider>();
 
-        host.Services.UseAppMetadata();
+        // the pages too: validate builds every view, materialize writes one
+        host.Services.UseAppMetadata()
+            .UseAppMetadataXaml();
 
         host.Services.Configure<AppOptions>(opts =>
         {

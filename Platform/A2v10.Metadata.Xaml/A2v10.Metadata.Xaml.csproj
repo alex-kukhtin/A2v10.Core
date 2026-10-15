@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+		<!-- one version with A2v10.Metadata and the a2 CLI: it reads the layer's internals -->
+		<Version>10.1.8670</Version>
+		<LangVersion>Latest</LangVersion>
+		<Product>A2v10</Product>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<RootNamespace>A2v10.Metadata</RootNamespace>
+		<PackageId>A2v10.Metadata.Xaml</PackageId>
+		<Authors>Oleksandr Kukhtin</Authors>
+		<Company>Oleksandr Kukhtin</Company>
+		<Description>A2v10 Platform Application Metadata: the pages, drawn by the XAML view engine</Description>
+		<Copyright>Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.</Copyright>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/alex-kukhtin/A2v10.Core</RepositoryUrl>
+		<PackageTags>A2v10 Platform</PackageTags>
+		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<Deterministic>true</Deterministic>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\A2v10.Metadata\A2v10.Metadata.csproj" />
+		<ProjectReference Include="..\..\ViewEngines\A2v10.ViewEngine.Xaml\A2v10.ViewEngine.Xaml.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.402" PrivateAssets="All" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="TestsMetadata" />
+	</ItemGroup>
+</Project>

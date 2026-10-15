@@ -51,6 +51,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Platform\A2v10.Metadata\A2v10.Metadata.csproj" />
+		<ProjectReference Include="..\..\Platform\A2v10.Metadata.Xaml\A2v10.Metadata.Xaml.csproj" />
 		<ProjectReference Include="..\..\Platform\A2v10.Platform.Web\A2v10.Platform.Web.csproj" />
 		<ProjectReference Include="..\..\Platform\A2v10.Services\A2v10.Services.csproj" />
 	</ItemGroup>

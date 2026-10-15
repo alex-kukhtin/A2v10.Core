@@ -5,37 +5,9 @@ using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
+// a domain as the view engine draws it; what a domain IS (IsNumber, IsCurrency) is the layer's, ColumnTypePredicates
 internal static class XamlExtensions
 {
-
-    public static String? Localize(this String? source)
-    {
-        if (source == null) 
-            return null;
-        if (source.StartsWith('@'))
-            return $"@[{source[1..]}]";
-        return source.Replace("\"", "&quot;");
-    }
-
-
-    internal static String LocalizeLabel(this ReportItemMetadata item)
-    {
-        return item.Label.Localize() ?? $"@[{item.Column}]";
-    }
-
-    /* A number: aligned right, a number column, ordered before the rest of a row. Asked as one word
-     * so a new domain cannot land in some of these sites and miss the others.
-     */
-    internal static Boolean IsNumber(this ColumnType column) =>
-        column.IsCurrency() || column is ColumnType.Qty or ColumnType.Percent or ColumnType.Factor
-            or ColumnType.Integer or ColumnType.Decimal or ColumnType.Float;
-
-    /* The fork inside numbers: money shows at least two decimals, any other number as many as it
-     * has. A price is money and a quantity is not - what adds up is another question (IsAdditive).
-     */
-    internal static Boolean IsCurrency(this ColumnType column) =>
-        column is ColumnType.Amount or ColumnType.Price or ColumnType.Money;
-
     internal static DataType ToXamlDataType(this ColumnType column) =>
         column switch
         {

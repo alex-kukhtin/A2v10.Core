@@ -60,7 +60,7 @@ public class XamlBeamTests
                 var where = $"{endpoint.Path} {action}";
                 try
                 {
-                    var built = new XamlBuilder(descriptor).CreateXamlContainer(action);
+                    var built = new XamlBuilder(descriptor.Endpoint, descriptor.PlatformUrl).CreateXamlContainer(action);
                     var text = XamlTextBulder.GetXaml(built);
                     var path = Path.Combine(dir, folder, $"{action}.vxaml");
                     Directory.CreateDirectory(Path.GetDirectoryName(path)!);

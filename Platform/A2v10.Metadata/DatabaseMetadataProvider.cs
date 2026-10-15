@@ -17,7 +17,6 @@ using Newtonsoft.Json.Linq;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
-using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
@@ -117,10 +116,9 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return _metadataCache.GetPlatformIdAsync(dataSource, LoadPlatformIdAsync);
     }
 
-    public Task<UIElement> GetXamlFormAsync(String? dataSource, EndpointMetadata endpoint, String key, Func<UIElement> defForm)
-    {
-        return _metadataCache.GetOrAddXamlFormAsync(dataSource, endpoint, key, defForm);
-    }
+    internal T GetOrAddArtifact<T>(String? dataSource, EndpointMetadata endpoint, String key, Func<T> build)
+        where T : class =>
+        _metadataCache.GetOrAddArtifact(dataSource, endpoint, key, build);
 
     /* The base an Id rests on. Declared in app.json, that is the answer and no database is read: a
      * load - and so a validate - types an Id from the declaration alone. Not declared, the database is

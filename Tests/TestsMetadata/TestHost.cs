@@ -58,7 +58,8 @@ internal static class TestHost
             .AddSingleton<IModelJsonPartProvider, ModelJsonPartProvider>()
             .AddSingleton<IXamlPartProvider, XamlPartProvider>();
 
-        host.Services.UseAppMetadata();
+        host.Services.UseAppMetadata()
+            .UseAppMetadataXaml();
 
         /* Module paths become ABSOLUTE here. AppCodeProvider resolves a relative one against the
          * current directory, and a test run has no meaningful one - so the only place that knows

@@ -20,7 +20,7 @@ public class WhenTests
 
     static async Task<String> EditTemplate(String endpoint)
     {
-        var mat = new EndpointMaterializer(TestHost.GetService<DatabaseMetadataProvider>());
+        var mat = TestHost.GetService<EndpointMaterializer>();
         return (await mat.MaterializeAsync(endpoint, "edit", MaterializeWhat.Template)).Files[0].Text;
     }
 

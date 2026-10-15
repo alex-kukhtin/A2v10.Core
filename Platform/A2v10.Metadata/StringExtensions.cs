@@ -20,6 +20,16 @@ internal static class StringExtensions
     public static String KebabToPascal(this String src) =>
         String.Concat(src.Split('-').Select(p => p.ToPascalCase()));
 
+    // '@Key' as the localizer's key, anything else as text safe inside an attribute; the page and the report's SQL read it
+    public static String? Localize(this String? source)
+    {
+        if (source == null)
+            return null;
+        if (source.StartsWith('@'))
+            return $"@[{source[1..]}]";
+        return source.Replace("\"", "&quot;");
+    }
+
     public static String Plural(this String src)
     {
         if (String.IsNullOrEmpty(src))

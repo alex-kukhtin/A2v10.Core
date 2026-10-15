@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -210,16 +209,19 @@ public sealed class EndpointValidator(DatabaseMetadataProvider _metadataProvider
         }
     }
 
-    /* Every screen of the endpoint, built exactly as EndpointMaterializer builds it - the XAML, the
-     * template and the .d.ts map - with the text dropped.
+    /* Every screen of the endpoint, built exactly as EndpointMaterializer builds it - the view (the
+     * renderer's, IPageRenderer.BuildPages), the template and the .d.ts map - with the text dropped.
+     * No renderer registered is a failed stage, never a skipped one: an unchecked view must not read
+     * as a passing one.
      *
      * The set is the BAKED FORMS and not a list of actions: a shape nothing renders (a set, a
      * numbering) has none, and "there is nothing to build" is not a finding. Same reason the
      * template of 'browse' is skipped: it shares the index one, and the materializer refuses to
      * write a second copy of it.
      */
-    private static void Screens(NormalEndpointMetadata endpoint, AppPlatformId platformId)
+    private void Screens(NormalEndpointMetadata endpoint, AppPlatformId platformId)
     {
+        IPageRenderer.Of(_serviceProvider, endpoint.Path).BuildPages(endpoint);
         foreach (var action in endpoint.Declaration.BakedForms.Keys)
         {
             var descriptor = new BuilderDescriptor()
@@ -227,10 +229,9 @@ public sealed class EndpointValidator(DatabaseMetadataProvider _metadataProvider
                 Endpoint = endpoint,
                 PlatformUrl = endpoint.PlatformUrl(action),
                 PlatformId = platformId,
-                // XAML and TS only - no batch to gate
+                // TS only - no batch to gate
                 UseGrants = false,
             };
-            XamlTextBulder.GetXaml(new XamlBuilder(descriptor).CreateXamlContainer(action));
 
             if (action == Constants.FormNames.Browse)
                 continue;
@@ -249,22 +250,17 @@ public sealed class EndpointValidator(DatabaseMetadataProvider _metadataProvider
         }
     }
 
-    /* A report's screen, which is three refusals in a row: the type names a builder, the builder
+    /* A report's screen, which is three refusals in a row: the type names a builder and a page, the builder
      * over a ledger demands a ledger, and the picks - filters, groups, data - resolve against the
-     * surface column by column. Then the page and the template are built.
+     * surface column by column. Then the template and the page are built.
      *
      * Built with NO parameters, which is the first open: a report is drawn before it is run, so
-     * the defaults of its own declaration are what a page has to survive. Not serialized to XAML
-     * afterwards, unlike a generated screen: nothing ever writes a report page as text - the
-     * runtime renders the tree against data - so serializing it here would exercise a road that
-     * does not exist.
+     * the defaults of its own declaration are what a page has to survive (IPageRenderer.BuildPages).
      */
     private void ReportScreen(ReportEndpointMetadata endpoint, AppPlatformId platformId)
     {
-        var builder = BaseReportBuilder.Create(_serviceProvider, endpoint, platformId, useGrants: false);
-        builder.SetGrouping(new ExpandoObject());
-        builder.CreatePage();
-        builder.CreateTemplate();
+        BaseReportBuilder.Create(_serviceProvider, endpoint, platformId, useGrants: false).CreateTemplate();
+        IPageRenderer.Of(_serviceProvider, endpoint.Path).BuildPages(endpoint);
     }
 
     /* The 'Model' of every declared blank, resolved against the shape and turned into SQL. The

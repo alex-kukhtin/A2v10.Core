@@ -27,14 +27,15 @@ public sealed record MaterializedFile(String Path, String Text, Boolean Regenera
 public sealed record Materialization(IReadOnlyList<MaterializedFile> Files, Object ModelJson);
 
 /* The default screen of an endpoint, obtained as text - the eject the "whole or nothing" rule owes
- * (ISSUES 3.6). What is written is what the runtime renders: the same XamlBuilder and the same
- * ScriptBuilder, the latter with its types printed, so the first diff after an edit reads.
+ * (ISSUES 3.6). What is written is what the runtime renders: the view from the page renderer
+ * (IPageRenderer.ViewText) and the same ScriptBuilder, the latter with its types printed, so the
+ * first diff after an edit reads.
  *
  * View and template are taken one by one, never as a pair: a hand-written view loses only the
  * load-time check, a hand-written template loses the RULES compiled into it, and one call that
  * hands out both would offer the dear one at the price of the cheap one.
  */
-public sealed class EndpointMaterializer(DatabaseMetadataProvider _metadataProvider)
+public sealed class EndpointMaterializer(DatabaseMetadataProvider _metadataProvider, IServiceProvider _serviceProvider)
 {
     private static readonly String[] _actions =
         [Constants.FormNames.Index, Constants.FormNames.Browse, Constants.FormNames.Edit];
@@ -71,11 +72,11 @@ public sealed class EndpointMaterializer(DatabaseMetadataProvider _metadataProvi
         };
     }
 
-    private static Materialization View(BuilderDescriptor descriptor, String folder, String action, Boolean isDialog)
+    private Materialization View(BuilderDescriptor descriptor, String folder, String action, Boolean isDialog)
     {
         // 'edit.view' on a page, 'edit.dialog' in a dialog: the name model.json refers to
         var name = $"{action}.{(isDialog ? "dialog" : "view")}";
-        var xaml = XamlTextBulder.GetXaml(new XamlBuilder(descriptor).CreateXamlContainer(action));
+        var xaml = IPageRenderer.Of(_serviceProvider, descriptor.Endpoint.Path).ViewText(descriptor.Endpoint, action);
         return new Materialization(
             [new MaterializedFile($"{folder}/{name}.vxaml", xaml, Regenerated: false)],
             Fragment(action, isDialog, "view", name));

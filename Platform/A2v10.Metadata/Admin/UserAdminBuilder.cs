@@ -12,8 +12,6 @@ using Microsoft.Extensions.DependencyInjection;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 using A2v10.Services;
-using A2v10.Xaml;
-using A2v10.Xaml.DynamicRendrer;
 
 namespace A2v10.Metadata;
 
@@ -30,9 +28,7 @@ internal class UserAdminBuilder(IServiceProvider _serviceProvider, UserAdminEndp
     internal const String SetBlockedCommand = "setBlocked";
     internal const String DeleteCommand = "delete";
 
-    private readonly DynamicRenderer _dynamicRenderer = new(_serviceProvider);
     private readonly SqlBuilderUsers _sqlBuilder = new(_serviceProvider, _platformId);
-    private readonly XamlUsersBuilder _xamlBuilder = new(_endpoint.Path);
     private readonly ICurrentUser _currentUser = _serviceProvider.GetRequiredService<ICurrentUser>();
     private readonly DatabaseMetadataProvider _metadataProvider = _serviceProvider.GetRequiredService<DatabaseMetadataProvider>();
 
@@ -60,26 +56,16 @@ internal class UserAdminBuilder(IServiceProvider _serviceProvider, UserAdminEndp
         if (isReload)
             return new AppRuntimeResult(dm, null);
 
-        var (page, template) = Action switch
+        // the page of each action is the renderer's (XamlPageRenderer.UsersPageAsync)
+        var template = Action switch
         {
-            UserAdminEndpointMetadata.IndexAction => ((UIElement)_xamlBuilder.IndexPage(), UsersTemplateBuilder.IndexTemplate),
-            UserAdminEndpointMetadata.EditAction => (_xamlBuilder.EditDialog(boundary), UsersTemplateBuilder.EditTemplate(boundary)),
-            UserAdminEndpointMetadata.CreateAction => (_xamlBuilder.CreateDialog(), UsersTemplateBuilder.CreateTemplate),
-            _ => (_xamlBuilder.PasswordDialog(), UsersTemplateBuilder.PasswordTemplate)
+            UserAdminEndpointMetadata.IndexAction => UsersTemplateBuilder.IndexTemplate,
+            UserAdminEndpointMetadata.EditAction => UsersTemplateBuilder.EditTemplate(boundary),
+            UserAdminEndpointMetadata.CreateAction => UsersTemplateBuilder.CreateTemplate,
+            _ => UsersTemplateBuilder.PasswordTemplate
         };
-        if (page is ISupportPlatformUrl supportPlatformUrl)
-            supportPlatformUrl.SetPlatformUrl(_platformUrl);
-
-        var rri = new DynamicRenderPageInfo()
-        {
-            RootId = $"el{Guid.NewGuid()}",
-            Page = page,
-            ModelView = view,
-            PlatformUrl = _platformUrl,
-            Template = template,
-            Model = dm
-        };
-        return new AppRuntimeResult(dm, await _dynamicRenderer.RenderPage(rri));
+        var request = new PageRequest(_endpoint, _platformUrl, _dataSource, view, dm, template);
+        return new AppRuntimeResult(dm, await IPageRenderer.Of(_serviceProvider, Path).RenderPageAsync(request));
     }
 
     public async Task<ExpandoObject> SaveModelAsync(ExpandoObject data, ExpandoObject savePrms)

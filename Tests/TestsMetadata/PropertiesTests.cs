@@ -21,7 +21,7 @@ public class PropertiesTests
 
     static async Task<IReadOnlyList<MaterializedFile>> Materialize(String endpoint, String action, MaterializeWhat what)
     {
-        var mat = new EndpointMaterializer(TestHost.GetService<DatabaseMetadataProvider>());
+        var mat = TestHost.GetService<EndpointMaterializer>();
         return (await mat.MaterializeAsync(endpoint, action, what)).Files;
     }
 

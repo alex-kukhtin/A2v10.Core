@@ -5,8 +5,6 @@ using System.Dynamic;
 using System.Threading.Tasks;
 
 using A2v10.Infrastructure;
-using A2v10.Xaml;
-using A2v10.Xaml.DynamicRendrer;
 
 namespace A2v10.Metadata;
 
@@ -16,9 +14,7 @@ namespace A2v10.Metadata;
 internal class OperationEndpointBuilder(IServiceProvider _serviceProvider,
     OperationEndpointMetadata _endpoint, IPlatformUrl _platformUrl, String? _dataSource) : IModelBuilder
 {
-    private readonly DynamicRenderer _dynamicRenderer = new(_serviceProvider);
     private readonly SqlBuilderOperations _sqlBuilder = new(_serviceProvider);
-    private readonly XamlOperationsBuilder _xamlBuilder = new();
 
     public String Path => _endpoint.Path;
 
@@ -44,19 +40,9 @@ internal class OperationEndpointBuilder(IServiceProvider _serviceProvider,
             throw new InvalidOperationException($"Operations. Unsupported action '{_platformUrl.Action}'");
 
         var dm = await _sqlBuilder.LoadBrowseModel(_dataSource);
-
-        UIElement page = _xamlBuilder.RenderBrowseDialog();
-        if (page is ISupportPlatformUrl supportPlatformUrl)
-            supportPlatformUrl.SetPlatformUrl(_platformUrl);
-
-        var rri = new DynamicRenderPageInfo()
-        {
-            RootId = $"el{Guid.NewGuid()}",
-            Page = page,
-            ModelView = view,
-            PlatformUrl = _platformUrl,
-            Model = dm
-        };
-        return new AppRuntimeResult(dm, await _dynamicRenderer.RenderPage(rri));
+        if (isReload)
+            return new AppRuntimeResult(dm, null);
+        var request = new PageRequest(_endpoint, _platformUrl, _dataSource, view, dm, null);
+        return new AppRuntimeResult(dm, await IPageRenderer.Of(_serviceProvider, Path).RenderPageAsync(request));
     }
 }

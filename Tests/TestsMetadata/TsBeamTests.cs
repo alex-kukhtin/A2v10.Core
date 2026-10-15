@@ -41,7 +41,7 @@ public class TsBeamTests
         File.Copy(Path.Combine(AssetsDir, "tsconfig.json"), Path.Combine(dir, "tsconfig.json"));
 
         var provider = TestHost.GetService<DatabaseMetadataProvider>();
-        var materializer = new EndpointMaterializer(provider);
+        var materializer = TestHost.GetService<EndpointMaterializer>();
         var written = new List<String>();
         foreach (var file in TestHost.GetService<IAppCodeProvider>().EnumerateAllFilesRecursive("", "metadata.json"))
         {

@@ -40,17 +40,18 @@ public class ActionDispatchTests
         foreach (var action in Constants.Actions.All)
         {
             var (endpoint, url) = await UrlFor(action);
-            var builder = new BaseModelBuilder(TestHost.Services, new BuilderDescriptor()
+            var descriptor = new BuilderDescriptor()
             {
                 Endpoint = endpoint,
                 PlatformUrl = url,
                 PlatformId = platformId,
                 UseGrants = false
-            });
+            };
+            var builder = new BaseModelBuilder(TestHost.Services, descriptor);
             foreach (var (half, run) in new (String, Func<Task>)[]
             {
                 ("template", () => builder.CreateTemplateAsync()),
-                ("xaml", () => Task.FromResult(builder.CreateDefaultXamlForm()))
+                ("xaml", () => Task.FromResult(new XamlBuilder(descriptor.Endpoint, descriptor.PlatformUrl).CreateXamlContainer(action)))
             })
             {
                 try

@@ -1,23 +1,17 @@
 ﻿// Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+using System.Dynamic;
 using System.Threading.Tasks;
 
 using A2v10.Infrastructure;
-using A2v10.Xaml.DynamicRendrer;
-
-using A2v10.Xaml;
-using System.Dynamic;
-
 
 namespace A2v10.Metadata;
 
 internal class TagEndpointBuilder(IServiceProvider _serviceProvider, TagEndpointMetadata _endpoint,
     IPlatformUrl _platformUrl, String? _dataSource, AppPlatformId _platformId) : IModelBuilder
 {
-    private readonly DynamicRenderer _dynamicRenderer = new(_serviceProvider);
     private readonly SqlBuilderTags _sqlBuilder = new(_serviceProvider, _platformId);
-    private readonly XamlTagsBuilder _xamlBuilder = new();
     private readonly TagsTemplateBuilder _templateBuilder = new();
 
     public String Path => _endpoint.Path;
@@ -25,22 +19,10 @@ internal class TagEndpointBuilder(IServiceProvider _serviceProvider, TagEndpoint
     public async Task<IAppRuntimeResult> RenderAsync(IModelView view, Boolean isReload)
     {
         var dm = await _sqlBuilder.LoadTagsModel(_dataSource, TagsFor());
-
-        UIElement page = _xamlBuilder.RenderSettingsDialog();
-
-        if (page is ISupportPlatformUrl supportPlatformUrl)
-            supportPlatformUrl.SetPlatformUrl(_platformUrl);
-
-        var rri = new DynamicRenderPageInfo()
-        {
-            RootId = $"el{Guid.NewGuid()}",
-            Page = page,
-            ModelView = view,
-            PlatformUrl = _platformUrl,
-            Template = _templateBuilder.CreateIndexTemplate(),
-            Model = dm
-        };
-        return new AppRuntimeResult(dm, await _dynamicRenderer.RenderPage(rri));
+        if (isReload)
+            return new AppRuntimeResult(dm, null);
+        var request = new PageRequest(_endpoint, _platformUrl, _dataSource, view, dm, _templateBuilder.CreateIndexTemplate());
+        return new AppRuntimeResult(dm, await IPageRenderer.Of(_serviceProvider, Path).RenderPageAsync(request));
     }
 
     public Task<ExpandoObject> SaveModelAsync(ExpandoObject data, ExpandoObject savePrms)

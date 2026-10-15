@@ -18,7 +18,7 @@ public class BasedOnTests
 
     static async Task<String> ViewOf(String endpoint, String action)
     {
-        var mat = new EndpointMaterializer(TestHost.GetService<DatabaseMetadataProvider>());
+        var mat = TestHost.GetService<EndpointMaterializer>();
         return (await mat.MaterializeAsync(endpoint, action, MaterializeWhat.View)).Files[0].Text;
     }
 

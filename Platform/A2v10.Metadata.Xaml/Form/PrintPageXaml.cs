@@ -17,7 +17,7 @@ internal partial class XamlBuilder
      */
     public Page CreatePrintPageXaml()
     {
-        var form = PrintRequest.FormOf(Endpoint, desciptor.PlatformUrl);
+        var form = PrintRequest.FormOf(Endpoint, platformUrl);
         var computed = !String.IsNullOrEmpty(form.Header);
 
         return new Page()

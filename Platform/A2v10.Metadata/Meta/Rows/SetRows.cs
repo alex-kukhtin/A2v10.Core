@@ -5,8 +5,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
-using A2v10.Xaml;
-
 namespace A2v10.Metadata;
 
 /* The rows of a set ('values'): checked where the file is read and without a database - keys,
@@ -96,8 +94,7 @@ internal static class SetRows
         Exactly(StateRole.Success, "success is measured, so one state IS reaching the goal - a cycle with two good endings picks one and tells the rest apart by a field of its own");
     }
 
-    /* Against the styles the view engine draws, which is the list the CSS agrees with - so a colour
-     * the load accepts is a colour that renders. Not the picker's list (main.js): that one answers
+    /* Against the palette (Palette.Colors). Not the picker's list (main.js): that one answers
      * 'what to offer', a shorter question, and would refuse names that draw perfectly well.
      *
      * Lower case exactly, not case-insensitively: the value is written into a class attribute and
@@ -108,12 +105,11 @@ internal static class SetRows
     {
         if (value.Color == null)
             return;
-        if (Enum.GetNames<TagLabelStyle>().Any(n => n.ToLowerInvariant() == value.Color))
+        if (Palette.Colors.Contains(value.Color))
             return;
-        var known = Enum.GetNames<TagLabelStyle>().Select(n => n.ToLowerInvariant());
         throw new InvalidOperationException($"""
             {file}: state '{value.Id}' - '{value.Color}' is not a colour. They are written in lower case, and they are:
-              {String.Join(", ", known)}.
+              {String.Join(", ", Palette.Colors)}.
             """);
     }
 
@@ -147,7 +143,7 @@ internal static class SetRows
             if (value == null)
             {
                 if (draws)
-                    values[Constants.FieldNames.Color] = nameof(TagLabelStyle.White).ToLowerInvariant();
+                    values[Constants.FieldNames.Color] = Palette.White;
                 return new SeedRow(String.Empty, values);
             }
             if (value.Memo != null)

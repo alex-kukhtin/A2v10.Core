@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 
 using A2v10.Infrastructure;
-using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
@@ -23,7 +22,8 @@ public class DatabaseMetadataCache
      * Several endpoints share one entry, and this is also the deploy set.
      */
     private readonly ConcurrentDictionary<String, TableMetadata> _storages = [];
-    private readonly ConcurrentDictionary<String, UIElement> _xamlFormCache = [];
+    // built from an endpoint by a consumer this class does not know (the XAML page of a form) - see GetOrAddArtifact
+    private readonly ConcurrentDictionary<String, Object> _artifacts = [];
     private readonly ConcurrentDictionary<String, IEnumerable<TableReferrer>> _referrers = [];
     // Keyed by data source because that is exactly what it describes: one data source is
     // one database, and the platformid base belongs to the database.
@@ -75,7 +75,7 @@ public class DatabaseMetadataCache
             _platformIdCache.Clear();
             _appJson = null;
             _mcpIndex = null;
-            _xamlFormCache.Clear();
+            _artifacts.Clear();
             Interlocked.Increment(ref _generation);
             _metadataDirty = true;
         }
@@ -176,20 +176,20 @@ public class DatabaseMetadataCache
     internal async Task<McpIndex> GetMcpIndexAsync(Func<Task<McpIndex>> load) =>
         _mcpIndex ??= await load();
 
-    public async Task<UIElement> GetOrAddXamlFormAsync(String? dataSource, EndpointMetadata endpoint, String key,
-         Func<UIElement> getDefaultForm)
+    /* What a consumer builds from an endpoint and keeps past the request, dropped with the endpoint
+     * (ClearAll) - one invalidation, so the consumer needs no watcher of its own. Keyed by the
+     * endpoint, not by the table: endpoints sharing a table do not share what is built from them; and
+     * by the type, so two consumers with one key cannot read each other's object.
+     * 'build' returns the object finished: it is shared from the moment it is added. Two first
+     * requests build two, and the cache keeps one.
+     */
+    internal T GetOrAddArtifact<T>(String? dataSource, EndpointMetadata endpoint, String key, Func<T> build)
+        where T : class
     {
-        // keyed by the endpoint, not by the table: endpoints sharing a table do not share forms
-        var dictKey = $"{dataSource}:{endpoint.Path}:{key.ToLowerInvariant()}";
-        if (_xamlFormCache.TryGetValue(dictKey, out var form))
-            return form;
-        form = getDefaultForm();
-        /* Initialized before it is shared: every request renders this one object, and a form other
-         * threads could see half-initialized would be initialized by all of them at once. Two first
-         * requests build and initialize two forms, and the cache keeps one.
-         */
-        form.InitComplete();
-        return _xamlFormCache.GetOrAdd(dictKey, form);
+        var dictKey = $"{typeof(T).FullName}:{dataSource}:{endpoint.Path}:{key.ToLowerInvariant()}";
+        if (_artifacts.TryGetValue(dictKey, out var found))
+            return (T)found;
+        return (T)_artifacts.GetOrAdd(dictKey, build());
     }
 
     private void Watcher_Changed(Object sender, FileSystemEventArgs e)

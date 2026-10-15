@@ -94,7 +94,7 @@ public class OperationTests
     [Fact]
     public async Task The_page_is_titled_by_the_document_and_the_operation_is_picked_in_the_taskpad()
     {
-        var mat = new EndpointMaterializer(TestHost.GetService<DatabaseMetadataProvider>());
+        var mat = TestHost.GetService<EndpointMaterializer>();
         var xaml = (await mat.MaterializeAsync("/document/receipt", "edit", MaterializeWhat.View)).Files[0].Text;
 
         Assert.Contains("@[Operation.receipt]", xaml);
@@ -108,7 +108,7 @@ public class OperationTests
     [Fact]
     public async Task Create_offers_the_operations_of_the_document()
     {
-        var mat = new EndpointMaterializer(TestHost.GetService<DatabaseMetadataProvider>());
+        var mat = TestHost.GetService<EndpointMaterializer>();
         var xaml = (await mat.MaterializeAsync("/document/receipt", "index", MaterializeWhat.View)).Files[0].Text;
 
         var supplier = xaml.IndexOf("/document/receipt/edit/{0}?Op=supplier");
@@ -121,7 +121,7 @@ public class OperationTests
     [Fact]
     public async Task The_filter_offers_the_operations_of_the_document()
     {
-        var mat = new EndpointMaterializer(TestHost.GetService<DatabaseMetadataProvider>());
+        var mat = TestHost.GetService<EndpointMaterializer>();
         var xaml = (await mat.MaterializeAsync("/document/receipt", "index", MaterializeWhat.View)).Files[0].Text;
 
         var all = xaml.IndexOf("@[Operation.All]");
@@ -132,7 +132,7 @@ public class OperationTests
     [Fact]
     public async Task A_document_that_is_one_operation_keeps_its_name_as_the_title()
     {
-        var mat = new EndpointMaterializer(TestHost.GetService<DatabaseMetadataProvider>());
+        var mat = TestHost.GetService<EndpointMaterializer>();
         var xaml = (await mat.MaterializeAsync("/document/waybillmove", "edit", MaterializeWhat.View)).Files[0].Text;
 
         Assert.Contains("{Bind Document.Operation.Name}", xaml);

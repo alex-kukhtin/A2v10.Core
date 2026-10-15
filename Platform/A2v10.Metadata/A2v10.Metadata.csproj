@@ -29,7 +29,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\ViewEngines\A2v10.ViewEngine.Xaml\A2v10.ViewEngine.Xaml.csproj" />
 		<ProjectReference Include="..\A2v10.App.Infrastructure\A2v10.App.Infrastructure.csproj" />
 		<ProjectReference Include="..\A2v10.Infrastructure\A2v10.Infrastructure.csproj" />
 		<ProjectReference Include="..\A2v10.Services\A2v10.Services.csproj" />
@@ -52,8 +51,9 @@
 		<None Include="README.md" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
-	<!-- almost everything worth asserting about is internal -->
+	<!-- almost everything worth asserting about is internal; the pages read the layer whole, one version with it -->
 	<ItemGroup>
 		<InternalsVisibleTo Include="TestsMetadata" />
+		<InternalsVisibleTo Include="A2v10.Metadata.Xaml" />
 	</ItemGroup>
 </Project>
