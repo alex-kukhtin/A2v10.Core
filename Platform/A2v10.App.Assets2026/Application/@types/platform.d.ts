@@ -1,7 +1,7 @@
 ﻿/* Copyright © 2019-2026 Oleksandr Kukhtin. All rights reserved. */
 
-/* Version 10.0.7999  */
-/* Date    2026.10.14 */
+/* Version 10.0.8672  */
+/* Date    2026.10.16 */
 
 declare function require(url: string): any;
 
@@ -323,7 +323,8 @@ interface IController {
 	$report(report: string, arg: object, opts?: { export?: Boolean, attach?: Boolean, print?: Boolean, format?: ReportFormat }, url?: string, data?: object): void;
 	$upload(url: string, accept?: string | AcceptFormat, data?: { Id?: any, Key?: any }, opts?: { catchError?: boolean }): Promise<any>;
 	$uploadBlob(url: string, accept?: string | AcceptFormat, data?: { Id: any, Base: string }, opts?: { catchError?: boolean }): Promise<any>;
-	$uploadBlobFile(url: string, file: File, data?: { Id: any, Base: string }, opts?: { catchError?: boolean }): Promise<any>;	$file(url: string, arg: any, opts?: { action: FileActions }, data?: object): void;
+	$uploadBlobFile(url: string, file: File, data?: { Id: any, Base: string }, opts?: { catchError?: boolean }): Promise<any>;	
+	$file(url: string, arg: any, opts?: { action: FileActions }, data?: object): void;
 	$emitCaller(event: string, ...params: any[]): void;
 	$emitSaveEvent(): void;
 	$emitGlobal(event: string, data?: any): void;
