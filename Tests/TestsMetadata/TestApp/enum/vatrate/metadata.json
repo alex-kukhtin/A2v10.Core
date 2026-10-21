@@ -2,12 +2,15 @@
 	"$schema": "../../../../../Platform/A2v10.App.Assets2026/Application/@schemas/metadata-enum-json-schema.json#",
 	"table": "VatRates",
 	"model": "VatRate",
+	"fields": {
+		"Rate": { "type": "percent" }
+	},
 	"values": [
-		{ "id": "20", "name": "20%" },
-		{ "id": "7", "name": "7%" },
-		{ "id": "14", "name": "14%" },
-		{ "id": "901", "name": "0% (901)" },
-		{ "id": "902", "name": "0% (902)" },
-		{ "id": "903", "name": "Без ПДВ (903)" }
+		{ "id": "20", "name": "20%", "Rate": 20 },
+		{ "id": "7", "name": "7%", "Rate": 7 },
+		{ "id": "14", "name": "14%", "Rate": 14 },
+		{ "id": "901", "name": "0% (901)", "Rate": 0 },
+		{ "id": "902", "name": "0% (902)", "Rate": 0 },
+		{ "id": "903", "name": "Без ПДВ (903)", "Rate": 0 }
 	]
 }

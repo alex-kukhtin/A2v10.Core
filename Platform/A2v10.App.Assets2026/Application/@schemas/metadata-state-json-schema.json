@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "A2v10 metadata.json (state)",
-    "description": "One set of states: the life cycle of an entity, as a closed list of codes each carrying a colour and a role. An enum plus those two, and the two are why it is a kind of its own - a column pointing here says the record HAS a life cycle. Named after the ENTITY whose states these are: 'state/order'. The shape of the table is fixed by the platform (Id, Name, Memo, Order, Void, Color, Role), so this file says only where the rows live and what they are - no fields, no forms, no rules. Transitions are not declared yet.",
+    "description": "One set of states: the life cycle of an entity, as a closed list of codes each carrying a colour and a role. An enum plus those two, and the two are why it is a kind of its own - a column pointing here says the record HAS a life cycle. Named after the ENTITY whose states these are: 'state/order'. The baseline is the platform's (Id, Name, Memo, Order, Void, Color, Role); 'fields' adds the author's own columns, which every state fills by name and which travel with every reference to the set. No forms, no rules. Transitions are not declared yet.",
     "type": "object",
     "additionalProperties": false,
     "required": [ "table" ],
@@ -17,12 +17,17 @@
             "type": "string",
             "description": "Base of the generated names: the row type ('T' + model), the array (its plural) and the localization keys of the values. Defaults to the folder name in PascalCase plus 'State' - 'order' gives 'OrderState' - because the entity's own word already names its records."
         },
+        "fields": {
+            "$ref": "metadata-endpoint-json-schema.json#/definitions/fields",
+            "description": "The author's own columns of a state, next to the baseline. Each state fills them under the column's name; they ride with every reference to the set."
+        },
         "values": {
             "type": "array",
             "description": "The states, in the order they are shown - 'order' is the position here and is never written. The list is the whole truth about the set: a state dropped from it is marked void on deploy, never deleted, so the records that carry it keep it and it merely stops being offered. The 'All' row a filter shows is not declared here - the platform adds it, with the empty string for a key and no role.",
             "items": {
                 "type": "object",
-                "additionalProperties": false,
+                "description": "Any key besides the ones below is a column of 'fields', spelled as the column, with a scalar value. A column the state does not name is left as the deploy found it. A key that is no column fails the load.",
+                "additionalProperties": { "type": [ "string", "number", "boolean", "null" ] },
                 "required": [ "id", "role" ],
                 "properties": {
                     "id": {

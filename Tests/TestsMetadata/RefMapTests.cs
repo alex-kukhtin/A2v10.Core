@@ -23,7 +23,8 @@ public class RefMapTests
 
     /* Two sets are referenced from the same document - one of values, one of states - so the two
      * halves of the rule are visible in one text: the colour and the role travel for the second and
-     * are not invented for the first.
+     * are not invented for the first. The enum's own field travels instead: a set has no screen,
+     * so its author's columns are read off the reference or nowhere.
      */
     [Fact]
     public async Task A_state_resolves_with_its_colour_and_its_role()
@@ -36,6 +37,7 @@ public class RefMapTests
         Assert.Contains("[Id!!Id] = a.Id, [Name!!Name] = a.[Name], a.[Color], a.[Role]", states);
 
         var rates = sql.Split("with T as").Single(s => s.Contains("enm.[VatRates]"));
+        Assert.Contains("[Name!!Name] = a.[Name], a.[Rate]", rates);
         Assert.DoesNotContain("[Color]", rates);
         Assert.DoesNotContain("[Role]", rates);
     }

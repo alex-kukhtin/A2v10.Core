@@ -43,6 +43,21 @@ public class JsonSchemaSetTests
         JsonSchemaSet.Load(ReadOriginal, files);
     }
 
+    /* A value names the author's columns beside the platform's keys, so the schema cannot list them:
+     * it holds the cell to a scalar, and the load holds the name to a column (RowCells).
+     */
+    [Fact]
+    public void A_set_value_names_the_author_columns_with_scalars()
+    {
+        const String Enum = "metadata-enum-json-schema.json";
+        static JsonSchemaFinding? Rates(String value) => JsonSchemaSet.Load(ReadOriginal, Enum).Validate(Enum, JsonSchemaSet.Parse($$"""
+            { "table": "VatRates", "fields": { "Rate": { "type": "percent" } }, "values": [ {{value}} ] }
+            """));
+
+        Assert.Null(Rates("""{ "id": "20", "Rate": 20 }"""));
+        Assert.NotNull(Rates("""{ "id": "20", "Rate": { "value": 20 } }"""));
+    }
+
     [Fact]
     public void A_file_that_passes_has_no_finding()
     {

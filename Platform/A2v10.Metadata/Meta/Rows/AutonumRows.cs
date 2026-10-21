@@ -91,12 +91,17 @@ internal static class AutonumRows
      * reordered file must not move the fingerprint. 'name' defaults as a set value's does; the
      * period is stored by NAME (AutonumDefaultColumns), never by the enum's number.
      */
-    internal static IReadOnlyList<SeedRow> Rows(TableMetadata registry) =>
+    internal static IReadOnlyList<SeedRow> Rows(TableMetadata registry, String file) =>
         [.. registry.Autonums.OrderBy(a => a.Id, StringComparer.Ordinal).Select(a =>
-            new SeedRow(a.Id, new Dictionary<String, String?>
+        {
+            var values = new Dictionary<String, String?>
             {
                 [Constants.FieldNames.Name] = a.Name ?? $"@[{registry.Model}.{a.Id}]",
                 [Constants.FieldNames.Pattern] = a.Pattern,
                 [Constants.FieldNames.Period] = a.Period.ToString()
-            }))];
+            };
+            foreach (var (name, token) in a.Cells)
+                values.Add(name, RowCells.Read($"{file}: '{a.Id}'", registry, name, token, []));
+            return new SeedRow(a.Id, values);
+        })];
 }

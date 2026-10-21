@@ -97,7 +97,8 @@ internal partial class ScriptBuilder(BuilderDescriptor desciptor, Boolean isTs)
 
     /* The type a reference to 'target' resolves to: exactly what the map sends and nothing more
      * (SqlBuilder.RefFields, RefMapBuilder.GenerateResolves) - the key, the presentation as Name,
-     * the choice column, the colour, a state's role, a document's Done with its address and icon,
+     * the choice column, the colour, a state's role, a set's own fields (TableMetadata.RefColumns,
+     * one list with the SQL), a document's Done with its address and icon,
      * and the columns an inherit of this endpoint reads off it. All read-only: a referenced element
      * is never edited through the reference.
      *
@@ -108,12 +109,8 @@ internal partial class ScriptBuilder(BuilderDescriptor desciptor, Boolean isTs)
     {
         yield return $"\treadonly {Constants.FieldNames.Id}: {target.KeyColumn.ToTsType(_descr.PlatformId)};";
         yield return $"\treadonly {Constants.FieldNames.Name}: string;";
-        if (target.ChoiceProperty is { } choice)
-            yield return $"\treadonly {TsMember(target.AllColumns().First(c => c.Name == choice))};";
-        if (target.ColorColumn is { } color)
-            yield return $"\treadonly {color.Name}: string;";
-        if (target.IsState)
-            yield return $"\treadonly {Constants.FieldNames.Role}: string;";
+        foreach (var c in target.RefColumns)
+            yield return $"\treadonly {TsMember(c)};";
         if (target.IsDocument)
         {
             yield return $"\treadonly {Constants.FieldNames.Done}: boolean;";

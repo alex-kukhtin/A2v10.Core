@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -76,36 +75,8 @@ internal static class AccountRows
 
         var values = new Dictionary<String, String?>();
         foreach (var (name, token) in row)
-        {
-            var column = storage.AllColumns().FirstOrDefault(c => c.Name == name)
-                ?? throw new InvalidOperationException(
-                    $"{head} - '{name}' is not a column of {storage.SqlTableName}");
-            if (!_columns.Contains(name) && !storage.Columns.Any(c => c.Name == name))
-                throw new InvalidOperationException(
-                    $"{head} - '{name}' is written by the platform, not by the seed");
-            if (column.HasSqlAs)
-                throw new InvalidOperationException($"{head} - '{name}' has 'sqlAs', nothing writes it");
-            var value = name == Constants.FieldNames.SplitBy ? SplitByValue(head, token) : token.Type switch
-            {
-                JTokenType.Null => null,
-                JTokenType.String or JTokenType.Integer or JTokenType.Float or JTokenType.Boolean
-                    => ((JValue)token).ToString(CultureInfo.InvariantCulture),
-                _ => throw new InvalidOperationException($"{head} - '{name}' is not a scalar value")
-            };
-            if (value != null)
-            {
-                try
-                {
-                    column.SqlLiteral(value);
-                }
-                // SqlLiteral refuses a value the column cannot hold with InvalidOperationException; anything else is ours
-                catch (InvalidOperationException ex)
-                {
-                    throw new InvalidOperationException($"{head} - {ex.Message}", ex);
-                }
-            }
-            values.Add(name, value);
-        }
+            values.Add(name, RowCells.Read(head, storage, name,
+                name == Constants.FieldNames.SplitBy ? new JValue(SplitByValue(head, token)) : token, _columns));
 
         foreach (var name in _required)
             if (values.GetValueOrDefault(name) == null)

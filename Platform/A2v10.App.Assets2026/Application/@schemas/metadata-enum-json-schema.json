@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "A2v10 metadata.json (enum)",
-    "description": "One enum set: a closed list of codes that a column points at and that code branches on. An open list somebody browses is a catalog, not this. The shape of the table is fixed by the platform (Id, Name, Memo, Order, Void), so this file says only where the rows live and what they are - no fields, no forms, no rules: nothing renders a page here, the values arrive with whatever screen references them.",
+    "description": "One enum set: a closed list of codes that a column points at and that code branches on. An open list somebody browses is a catalog, not this. The baseline is the platform's (Id, Name, Memo, Order, Void); 'fields' adds the author's own columns, which every value fills by name and which travel with every reference to the set. No forms, no rules: nothing renders a page here, the values arrive with whatever screen references them.",
     "type": "object",
     "additionalProperties": false,
     "required": [ "table" ],
@@ -17,12 +17,17 @@
             "type": "string",
             "description": "Base of the generated names: the row type ('T' + model), the array (its plural) and the localization keys of the values. Defaults to the endpoint folder name in PascalCase, so a folder written in kebab-case ('vat-rate') gives 'VatRate'."
         },
+        "fields": {
+            "$ref": "metadata-endpoint-json-schema.json#/definitions/fields",
+            "description": "The author's own columns of a value, next to the baseline: \"Rate\": { \"type\": \"percent\" }. Each value fills them under the column's name; they ride with every reference to the set, so a record reads row.VatRate.Rate. A column of type 'color' makes the values draw as badges."
+        },
         "values": {
             "type": "array",
             "description": "The values of the set, in the order they are shown - 'order' is the position here and is never written. The list is the whole truth about the set: a value dropped from it is marked void on deploy, never deleted, so the records that carry it keep it and it merely stops being offered. The 'All' row a filter shows is not declared here - the platform adds it, with the empty string for a key.",
             "items": {
                 "type": "object",
-                "additionalProperties": false,
+                "description": "Any key besides the ones below is a column of 'fields', spelled as the column, with a scalar value: { \"id\": \"20\", \"Rate\": 0.2 }. A column the value does not name is left as the deploy found it. A key that is no column fails the load.",
+                "additionalProperties": { "type": [ "string", "number", "boolean", "null" ] },
                 "required": [ "id" ],
                 "properties": {
                     "id": {
@@ -35,6 +40,15 @@
                         "description": "Presentation. Defaults to the localization key '@[{model}.{id}]'. The key carries the set's name on purpose: two equal codes in two sets would otherwise collapse into one translation, and that does not surface until the second language."
                     },
                     "memo": { "type": "string" },
+                    "color": {
+                        "type": "string",
+                        "description": "Fills the column 'Color', which an enum has when 'fields' declares it with type 'color'; without that column it fails the load. Lower case: the value goes straight into a CSS class, where case matters.",
+                        "enum": [
+                            "default", "success", "green", "warning", "orange", "info", "cyan",
+                            "danger", "red", "error", "purple", "pink", "gold", "blue", "salmon",
+                            "seagreen", "tan", "magenta", "lightgray", "olive", "teal", "white"
+                        ]
+                    },
                     "origin": { "$ref": "metadata-endpoint-json-schema.json#/definitions/origin" },
                     "void": {
                         "type": "boolean",

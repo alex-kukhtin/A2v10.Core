@@ -5,6 +5,7 @@ using System.Linq;
 using System.Collections.Generic;
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace A2v10.Metadata;
 
@@ -772,6 +773,29 @@ public sealed record TableMetadata
         }
     }
 
+    /* The columns a reference to this table carries beside its key and name: one list for the SQL
+     * that sends them (SqlBuilder.RefFields) and the type that promises them (ScriptBuilder
+     * .RefTsProperties), so a column sent is a column typed. The choice column, the colour, a
+     * state's role - and a set's own fields: a set has no screen and is read only through the
+     * columns pointing at it, so what its author declared is read off the reference
+     * (row.VatRate.Rate) or nowhere. Not a set's references: the map sends the column and resolves
+     * nothing behind it, and the type would promise an element where a key arrives. A document's
+     * Done and address are not columns of the table (RefSourceName) and are spelled apart.
+     */
+    [JsonIgnore]
+    internal IEnumerable<TableColumn> RefColumns
+    {
+        get
+        {
+            TableColumn?[] platform = [
+                ChoiceProperty is { } choice ? this.AllColumns().First(c => c.Name == choice) : null,
+                ColorColumn,
+                IsState ? DefaultColumns.First(c => c.Name == Constants.FieldNames.Role) : null];
+            var own = IsSet ? Columns.Where(c => !c.IsRef) : [];
+            return platform.OfType<TableColumn>().Concat(own).DistinctBy(c => c.Name);
+        }
+    }
+
     internal void SetDetailDefaults(TableMetadata table, String key)
     {
         Schema = table.Schema;
@@ -937,14 +961,23 @@ public record OperationMetadata(String Id, String Document, String Path, Int32 O
  * 'void' is a withdrawn value: it stays in the records that already carry it and leaves the list
  * of candidates.
  *
- * The last two belong to a set of STATES and are refused on an enum (SetRows.Check). Both are
+ * 'role' belongs to a set of STATES and is refused on an enum (SetRows.Check); 'color' fills the
+ * column Color, which a state has in its baseline and an enum when the author declares one. Both are
  * written in the file exactly as they will be stored, because nothing translates them on the way:
  * 'role' lands in the column and in a generated predicate, so it is spelled as the member of
  * StateRole; 'color' goes straight into a CSS class, so it is lower case. One is a name of the
  * platform and the other a name of the stylesheet - hence the two registers in one row.
+ *
+ * Every other key is a cell of the author's 'fields', spelled as the column ("Rate": 0.2), and goes
+ * to the one reading of a cell (RowCells) - a key that is no column fails the load instead of being
+ * dropped by the parser.
  */
 public record SetValueMetadata(String Id, String? Name, String? Memo, Boolean Void,
-    String? Color, StateRole? Role);
+    String? Color, StateRole? Role)
+{
+    [JsonExtensionData]
+    public Dictionary<String, JToken> Cells { get; init; } = [];
+}
 
 /* One row declared with a table (TableMetadata.Rows): the key, and the columns the row names with
  * their values as text. An author column the row does not name is absent from Values, not null - the
@@ -1035,7 +1068,8 @@ public enum AutonumPeriod
  * No 'void' - nobody picks a numbering at run time, a file names it - and the price is that a key
  * deleted from the file leaves a row nothing marks as dead; its counter has to outlive the key
  * anyway. Renaming one costs more than it looks: the counters stay under the old key and the
- * numbering silently restarts from one.
+ * numbering silently restarts from one. Every other key is a cell of the author's 'fields', as in a
+ * set's value (SetValueMetadata).
  */
 public record AutonumMetadata
 {
@@ -1044,5 +1078,7 @@ public record AutonumMetadata
     public String? Name { get; init; }
     public String Pattern { get; init; } = default!;
     public AutonumPeriod Period { get; init; }
+    [JsonExtensionData]
+    public Dictionary<String, JToken> Cells { get; init; } = [];
 }
 

@@ -9,7 +9,8 @@ namespace A2v10.Metadata;
 
 /* The rows a file declares WITH its table - one mechanism for every registry: a set's values, the
  * numberings, a chart's seed, the operation codes (OperationRows, filled by the deploy walk). Each
- * keeps its own grammar and its own checks in a file beside this one; what leaves is one thing,
+ * keeps its own grammar for the platform's keys and its own checks in a file beside this one; a
+ * cell of the author's 'fields' is read alike in all of them (RowCells); what leaves is one thing,
  * TableMetadata.Rows - the key and the columns the row names - read by the fingerprint (Xtra) and
  * by the one merge the deploy writes (SqlDbGenerator.CreateRowsScript). See CLAUDE.md, "Rows
  * declared with the table".
@@ -28,8 +29,8 @@ internal static class RegistryRows
         AccountRows.Check(storage, file);
         storage.Rows = storage.Kind switch
         {
-            TableKind.Enum or TableKind.State => SetRows.Rows(storage),
-            TableKind.Autonum => AutonumRows.Rows(storage),
+            TableKind.Enum or TableKind.State => SetRows.Rows(storage, file),
+            TableKind.Autonum => AutonumRows.Rows(storage, file),
             TableKind.AccPlan => await AccountRows.LoadAsync(storage, schema, table, codeProvider),
             _ => []
         };

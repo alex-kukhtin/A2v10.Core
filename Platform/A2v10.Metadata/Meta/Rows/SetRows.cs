@@ -8,11 +8,13 @@ using System.Linq;
 namespace A2v10.Metadata;
 
 /* The rows of a set ('values'): checked where the file is read and without a database - keys,
- * colours and roles - so a wrong file fails the load and never the deploy.
+ * roles and every cell - so a wrong file fails the load and never the deploy.
  *
- * The two halves refuse each other's keys. A colour and a role on an enum have no column to land
- * in; a role missing on a state leaves the cycle without the three facts it is read for. A key with
- * no effect is worse than a missing one - it teaches the next reader that it has one.
+ * A role is the state's own: on an enum it has no column to land in, and missing on a state it
+ * leaves the cycle without the three facts it is read for. A key with no effect is worse than a
+ * missing one - it teaches the next reader that it has one. The colour is a cell like the author's
+ * (RowCells): a set of states has the column in its baseline, an enum has it when the author
+ * declared one, and otherwise it is not a column.
  */
 internal static class SetRows
 {
@@ -56,24 +58,21 @@ internal static class SetRows
 
         if (!storage.IsState)
         {
-            var extra = storage.Values.FirstOrDefault(v => v.Color != null || v.Role != null);
+            var extra = storage.Values.FirstOrDefault(v => v.Role != null);
             if (extra != null)
                 throw new InvalidOperationException($"""
-                    {file}: value '{extra.Id}' declares '{(extra.Color != null ? "color" : "role")}', which belongs to a set of states.
-                      An enum value is a code and a name; a colour and a role are read from {Constants.SchemaNames.State}/<name>.
+                    {file}: value '{extra.Id}' declares 'role', which belongs to a set of states.
+                      A role is what a value is to a life cycle, read from {Constants.SchemaNames.State}/<name>.
                     """);
             return;
         }
 
         foreach (var value in storage.Values)
-        {
             if (value.Role == null)
                 throw new InvalidOperationException($"""
                     {file}: state '{value.Id}' declares no 'role', so nothing says what it is to the cycle.
                       One of: {String.Join(", ", Enum.GetNames<StateRole>())}.
                     """);
-            CheckColor(file, value);
-        }
 
         /* Over the living values alone. A void state is withdrawn - it keeps the records that
          * already carry it and leaves the candidates - so a new record cannot start on it and a
@@ -94,41 +93,23 @@ internal static class SetRows
         Exactly(StateRole.Success, "success is measured, so one state IS reaching the goal - a cycle with two good endings picks one and tells the rest apart by a field of its own");
     }
 
-    /* Against the palette (Palette.Colors). Not the picker's list (main.js): that one answers
-     * 'what to offer', a shorter question, and would refuse names that draw perfectly well.
-     *
-     * Lower case exactly, not case-insensitively: the value is written into a class attribute and
-     * CSS class names are case-sensitive, so 'Green' would pass a lenient check and then render a
-     * badge with no colour and no error anywhere.
-     */
-    private static void CheckColor(String file, SetValueMetadata value)
-    {
-        if (value.Color == null)
-            return;
-        if (Palette.Colors.Contains(value.Color))
-            return;
-        throw new InvalidOperationException($"""
-            {file}: state '{value.Id}' - '{value.Color}' is not a colour. They are written in lower case, and they are:
-              {String.Join(", ", Palette.Colors)}.
-            """);
-    }
-
     /* The 'All' row first, then every value in file order - the position IS data, it becomes Order.
      * 'name' defaults to the localization key '@[{Model}.{Id}]' (the key must carry the set's name,
      * or two 'Complete' in two sets collapse into one translation).
      *
      * The 'All' row is the platform's and never declared: its key is the empty string, it means
      * 'do not restrict' - a state of a filter rather than a value a record can hold - so it carries
-     * no role, a role on it would be a lie whichever of the four it was. A colour it does get, on a
-     * set that draws one: the picker draws this row like the others, and one with no colour draws
-     * as nothing at all - white on white, which reads as a control that failed rather than as 'no
-     * filter'. White is from the vocabulary the load checks against, so the row it writes is a row
-     * an author could have written. A declared value with no colour keeps none - that one is a
-     * choice, and it draws as a plain label.
+     * no role, a role on it would be a lie whichever of the four it was, and no cell of the author.
+     * A colour it does get, on a set that draws one (asked of the shape, TableMetadata.ColorColumn):
+     * the picker draws this row like the others, and one with no colour draws as nothing at all -
+     * white on white, which reads as a control that failed rather than as 'no filter'. White is from
+     * the vocabulary the load checks against, so the row it writes is a row an author could have
+     * written. A declared value with no colour keeps none - that one is a choice, and it draws as a
+     * plain label.
      */
-    internal static IReadOnlyList<SeedRow> Rows(TableMetadata set)
+    internal static IReadOnlyList<SeedRow> Rows(TableMetadata set, String file)
     {
-        var draws = set.DefaultColumns.Any(c => c.Type == ColumnType.Color);
+        var color = set.ColorColumn;
 
         SeedRow Row(SetValueMetadata? value, Int32 order)
         {
@@ -142,16 +123,20 @@ internal static class SetRows
             };
             if (value == null)
             {
-                if (draws)
-                    values[Constants.FieldNames.Color] = Palette.White;
+                if (color != null)
+                    values[color.Name] = Palette.White;
                 return new SeedRow(String.Empty, values);
             }
+            var head = $"{file}: value '{value.Id}'";
             if (value.Memo != null)
                 values[Constants.FieldNames.Memo] = value.Memo;
             if (value.Color != null)
-                values[Constants.FieldNames.Color] = value.Color;
+                values[Constants.FieldNames.Color] = RowCells.Read(head, set, Constants.FieldNames.Color,
+                    value.Color, [Constants.FieldNames.Color]);
             if (value.Role != null)
                 values[Constants.FieldNames.Role] = value.Role.ToString();
+            foreach (var (name, token) in value.Cells)
+                values.Add(name, RowCells.Read(head, set, name, token, []));
             return new SeedRow(value.Id, values);
         }
 

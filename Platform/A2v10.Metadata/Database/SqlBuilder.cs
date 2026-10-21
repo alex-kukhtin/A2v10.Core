@@ -170,9 +170,9 @@ internal partial class SqlBuilder(BuilderDescriptor desciptor, IServiceProvider 
      * referring side and no column type carries 'draw me'. A state answers yes because its
      * baseline holds the column, a catalog because the author wrote one.
      *
-     * Role stays the state's own - it is not drawing but what the value is to the cycle. An enum
-     * gets neither, and the type printed for it says so too: TsProperties walks the target's own
-     * columns, so what is not a column here is not promised there.
+     * Role stays the state's own - it is not drawing but what the value is to the cycle. A set's
+     * own fields ride too: nothing else reads them. Which columns, is one list for this and for the
+     * type that promises them (TableMetadata.RefColumns).
      *
      * A document sends whether it is posted, where it opens and how it draws. The last two are not
      * columns: they come from the reference view (TableMetadata.RefSourceName), and
@@ -182,9 +182,7 @@ internal partial class SqlBuilder(BuilderDescriptor desciptor, IServiceProvider 
      * for both kinds of place, each reading its own property (TableMetadata.ChoiceProperty).
      */
     internal static String RefFields(TableMetadata target, String alias) =>
-        ChoiceField(target, alias)
-        + ColorField(target, alias)
-        + (target.IsState ? $", {alias}.[{Constants.FieldNames.Role}]" : String.Empty)
+        String.Concat(target.RefColumns.Select(c => $", {alias}.[{c.Name}]"))
         + (target.IsDocument
             ? $", {alias}.[{Constants.FieldNames.Done}]" + String.Concat(Constants.FieldNames.RefViewMembers.Select(m => $", {alias}.[{m}]"))
             : String.Empty);

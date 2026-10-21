@@ -120,7 +120,8 @@ internal class RefMapBuilder
         return declaration.AllInherits()
             .Where(d => ReferenceEquals(d.Ref.RefTableCheck.Storage, target))
             .Select(SourceColumn)
-            .Where(c => c.Type != ColumnType.Id && c.Type != ColumnType.Name)
+            // what the resolve sends anyway: named twice, the select and the type would both repeat it
+            .Where(c => c.Type != ColumnType.Id && c.Type != ColumnType.Name && !target.RefColumns.Any(r => r.Name == c.Name))
             .DistinctBy(c => c.Name)
             .ToList();
     }
