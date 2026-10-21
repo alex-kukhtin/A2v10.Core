@@ -35,12 +35,11 @@ internal partial class ScriptBuilder
                 yield return $"\t{(p.Set == null ? "readonly " : "")}{key}: any;";
         }
 
-        // a total lands on the ARRAY - it is what the table footer shows, and the footer belongs
-        // to the collection, not to any row in it
-        static IEnumerable<String> totalMembers(RuleMetadata rules)
+        // a member of the ARRAY lands on the array's type - 'any', as a '$' name of the element is
+        static IEnumerable<String> arrayMembers(IReadOnlyDictionary<String, ArrayPropertyMetadata> properties)
         {
-            foreach (var name in rules.Total)
-                yield return $"\treadonly {name}: any;";
+            foreach (var key in properties.Keys)
+                yield return $"\treadonly {key}: any;";
         }
 
         /* The one artifact that is genuinely a join: a row's TYPE is its columns, which only the
@@ -60,7 +59,7 @@ internal partial class ScriptBuilder
         }
 
         export interface {{rs.Type}}Array extends IElementArray<{{rs.Type}}> {
-        {{String.Join("\n", totalMembers(rs.Rules))}}
+        {{String.Join("\n", arrayMembers(rs.ArrayProperties))}}
         }
 
         """));

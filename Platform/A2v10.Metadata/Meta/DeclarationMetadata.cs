@@ -20,18 +20,12 @@ namespace A2v10.Metadata;
 public abstract record RuleSet
 {
     public String[] Required { get; init; } = [];
-
-    /* Which members the ARRAY of a row set carries a sum for: a total is a member of the
-     * collection, where a property is a member of the element. It says nothing about storage.
-     */
-    public String[] Total { get; init; } = [];
     public Dictionary<String, String> Visible { get; init; } = [];
     public Dictionary<String, InheritMetadata> Inherit { get; init; } = [];
 }
 
 /* A member of the model whose value is JS - a Vue computed: a getter, and a setter when what it
- * shows can be typed. Not a rule: the author names it, where 'visible' and 'total' are named by the
- * platform. The key is a field (the property stands over its column, and the save sends what the
+ * shows can be typed. Not a rule: the author names it, where 'visible' is named by the platform. The key is a field (the property stands over its column, and the save sends what the
  * getter returns) or a '$' name of its own (no column, the client never sends it - so 'type' says
  * what it is). The type of a field is in 'fields', and one fact is written once.
  */
@@ -42,6 +36,28 @@ public sealed record PropertyMetadata
     public String? Set { get; init; }
 
     internal static Boolean IsOwnName(String key) => key.StartsWith('$');
+}
+
+/* A member of a collection's ARRAY ('array.properties'): a getter over the rows - '$sum', a list of
+ * ids, an object - and never a setter, an array is not typed into. The key is a '$' name, the array
+ * has no columns. 'Type' is written as text, a domain or 'any': a reduce returns whatever it builds,
+ * which no domain describes.
+ */
+public sealed record ArrayPropertyMetadata
+{
+    internal const String AnyType = "any";
+
+    public String Type { get; init; } = default!;
+    public String Get { get; init; } = default!;
+}
+
+/* The scope of the collection itself, beside the scope of its row: 'this' is the array, and the
+ * generated type is '{row type}Array'. A node and not a key, so the array has the same vocabulary as
+ * every other scope.
+ */
+public sealed record ArrayDeclarationMetadata
+{
+    public Dictionary<String, ArrayPropertyMetadata> Properties { get; init; } = [];
 }
 
 public sealed record RuleMetadata : RuleSet
@@ -59,7 +75,6 @@ public sealed record RuleMetadata : RuleSet
     public static RuleMetadata Merge(RuleMetadata own, RuleMetadata storage) => new()
     {
         Required = [.. storage.Required.Union(own.Required)],
-        Total = [.. storage.Total.Union(own.Total)],
         When = [.. storage.When, .. own.When],
         Visible = ByKey(own.Visible, storage.Visible),
         Inherit = ByKey(own.Inherit, storage.Inherit)
@@ -77,7 +92,7 @@ public sealed record RuleMetadata : RuleSet
     }
 }
 
-/* What one row kind declares. Rules and properties and nothing else: 'post' is what an operation
+/* What one row kind declares. Rules, properties and the members of its array, nothing else: 'post' is what an operation
  * does and 'table'/'storage' is where data lives - neither is a question a subset of rows can
  * answer. A property can be answered per kind because a kind is its own type.
  */
@@ -85,6 +100,8 @@ public sealed record KindDeclarationMetadata
 {
     public RuleMetadata Rules { get; init; } = new();
     public Dictionary<String, PropertyMetadata> Properties { get; init; } = [];
+    // a kind is its own array too ('StockRows'), so its members can differ from the collection's
+    public ArrayDeclarationMetadata Array { get; init; } = new();
 }
 
 /* The same kinds under a condition, which scopes rules instead of being a parameter of one ('on
@@ -165,6 +182,7 @@ public sealed record RowSetDeclaration(
     String Type,
     RuleMetadata Rules,
     Dictionary<String, PropertyMetadata> Properties,
+    Dictionary<String, ArrayPropertyMetadata> ArrayProperties,
     Dictionary<String, InheritDescriptor[]> Inherits);
 
 public sealed record DeclarationMetadata
@@ -197,6 +215,9 @@ public sealed record DeclarationMetadata
      * template and its own types.
      */
     public Dictionary<String, PropertyMetadata> Properties { get; init; } = [];
+
+    // the members of a collection's array; on the root there is no array, and the bake refuses it
+    public ArrayDeclarationMetadata Array { get; init; } = new();
     public List<PostMetadata>? Post { get; init; }
     public String? Autonum { get; init; }
 
@@ -397,6 +418,9 @@ public sealed record DeclarationMetadata
 
     public Dictionary<String, PropertyMetadata> PropertiesFor(String? kind) =>
         kind != null && Kinds.TryGetValue(kind, out var k) ? RuleMetadata.ByKey(k.Properties, Properties) : Properties;
+
+    public Dictionary<String, ArrayPropertyMetadata> ArrayPropertiesFor(String? kind) =>
+        kind != null && Kinds.TryGetValue(kind, out var k) ? RuleMetadata.ByKey(k.Array.Properties, Array.Properties) : Array.Properties;
 
     /* What a new record starts on AS THE FILE SAYS IT: the declared initials plus the fixed fields
      * as literals. Nothing reads InitialValues past the bake - the check of a set's code reads

@@ -31,7 +31,7 @@ public class PropertiesTests
     {
         var template = (await Materialize("/document/waybillin", "edit", MaterializeWhat.Template))[0].Text;
 
-        Assert.Contains("'TDocument.Sum'(this: TDocument) { return this.StockRows.$sum(r => r.Sum) + this.ServiceRows.$sum(r => r.Sum); }", template);
+        Assert.Contains("'TDocument.Sum'(this: TDocument) { return this.StockRows.$Sum + this.ServiceRows.$Sum; }", template);
         Assert.Contains("'TStockRow.Sum'(this: TStockRow) { return this.Qty * this.Price; }", template);
         Assert.Contains("'TServiceRow.Sum': { get(this: TServiceRow) { return this.Qty * this.Price; }, set(this: TServiceRow, value: any) { this.Qty = value / this.Price; } }", template);
         Assert.Contains("'TServiceRow.$Base'(this: TServiceRow) { return this.Qty * this.Price; }", template);
@@ -47,6 +47,39 @@ public class PropertiesTests
 
         Assert.Contains("readonly $Base: any;", map);
         Assert.DoesNotContain("readonly Sum: any;", map);
+    }
+
+    /* A member of the array lands on the array's type, and a kind is its own array: the collection's
+     * member is on both, the kind's own on its array alone.
+     */
+    [Fact]
+    public async Task An_array_property_lands_on_the_array_of_its_row_set()
+    {
+        var files = await Materialize("/document/waybillin", "edit", MaterializeWhat.Template);
+        var template = files[0].Text;
+        var map = files.Single(f => f.Path.EndsWith(".d.ts")).Text;
+
+        Assert.Contains("'TStockRowArray.$Sum'(this: TStockRowArray) { return this.$sum(r => r.Sum); }", template);
+        Assert.Contains("'TServiceRowArray.$Sum'(this: TServiceRowArray) { return this.$sum(r => r.Sum); }", template);
+        Assert.Contains("'TServiceRowArray.$Items'(this: TServiceRowArray) { return this.map(r => r.Item.Id); }", template);
+        Assert.DoesNotContain("'TStockRowArray.$Items'", template);
+        Assert.Contains("readonly $Items: any;", map);
+    }
+
+    [Theory]
+    [InlineData("""{ "details": { "Rows": { "array": { "properties": { "Sum": { "type": "Amount", "get": "1" } } } } } }""", "starts with '$'")]
+    [InlineData("""{ "details": { "Rows": { "array": { "properties": { "$Sum": { "get": "1" } } } } } }""", "'$Sum' declares no 'type'")]
+    [InlineData("""{ "details": { "Rows": { "array": { "properties": { "$Sum": { "type": "Amout", "get": "1" } } } } } }""", "neither a domain nor 'any'")]
+    [InlineData("""{ "details": { "Rows": { "array": { "properties": { "$Sum": { "type": "any" } } } } } }""", "'$Sum' declares no 'get'")]
+    // a record has no array: the collection's scope is under 'details'
+    [InlineData("""{ "array": { "properties": { "$Sum": { "type": "any", "get": "1" } } } }""", "which is a record")]
+    public async Task An_array_property_that_cannot_hold_is_refused(String json, String message)
+    {
+        var storage = (await LoadNormalAsync("document", String.Empty)).Storage;
+        var declaration = JsonConvert.DeserializeObject<DeclarationMetadata>(json, JsonSettings.CamelCaseSerializerSettings)!;
+
+        var ex = Assert.Throws<InvalidOperationException>(() => declaration.Bake(storage, PlatformId));
+        Assert.Contains(message, ex.Message);
     }
 
     // what is typed into a getter would not be kept, so it is shown; a setter takes it

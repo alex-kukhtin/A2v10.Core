@@ -58,6 +58,19 @@ public class JsonSchemaSetTests
         Assert.NotNull(Rates("""{ "id": "20", "Rate": { "value": 20 } }"""));
     }
 
+    // the collection's own scope; 'total' it replaced is no key at all, and nothing special says so
+    [Fact]
+    public void A_collection_declares_its_array_and_no_total()
+    {
+        Assert.Null(Validate("""
+            { "table": "Docs", "details": { "Rows": { "array": { "properties": {
+              "$Sum": { "type": "amount", "get": "this.$sum(r => r.Sum)" },
+              "$Ids": { "type": "any", "get": "this.map(r => r.Id)" } } } } } }
+            """));
+        Assert.NotNull(Validate("""{ "table": "Docs", "details": { "Rows": { "array": { "properties": { "Sum": { "type": "any", "get": "1" } } } } } }"""));
+        Assert.NotNull(Validate("""{ "table": "Docs", "details": { "Rows": { "rules": { "total": [ "Sum" ] } } } }"""));
+    }
+
     [Fact]
     public void A_file_that_passes_has_no_finding()
     {

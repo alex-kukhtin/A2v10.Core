@@ -101,9 +101,30 @@ internal static class DeclarationBake
         }
     }
 
+    /* A member of the array has no column, so every key is a '$' name. 'type' is required and is a
+     * domain or 'any': a reduce returns whatever it builds - a sum, a list of ids, an object.
+     */
+    private static void CheckArrayProperties(Dictionary<String, ArrayPropertyMetadata> properties)
+    {
+        foreach (var (key, p) in properties)
+        {
+            if (!PropertyMetadata.IsOwnName(key))
+                throw new InvalidOperationException(
+                    $"array: '{key}' - an array has no columns, so a member of it is a name of its own and starts with '$'");
+            if (String.IsNullOrEmpty(p.Get))
+                throw new InvalidOperationException($"array: '{key}' declares no 'get'");
+            if (String.IsNullOrEmpty(p.Type))
+                throw new InvalidOperationException(
+                    $"array: '{key}' declares no 'type'. A domain, or '{ArrayPropertyMetadata.AnyType}' for whatever the getter builds");
+            if (p.Type != ArrayPropertyMetadata.AnyType && !Enum.GetNames<ColumnType>().Contains(p.Type, StringComparer.OrdinalIgnoreCase))
+                throw new InvalidOperationException(
+                    $"array: '{key}' is of type '{p.Type}', which is neither a domain nor '{ArrayPropertyMetadata.AnyType}'");
+        }
+    }
+
     /* A condition holds the same rules as the block it stands in, and they are checked the same way.
-     * 'inherit' and 'total' under one are refused rather than dropped: no generator writes them, and
-     * 'inherit' also lands in the SQL of a birth, where a client test cannot run.
+     * 'inherit' under one is refused rather than dropped: no generator writes it, and it also lands
+     * in the SQL of a birth, where a client test cannot run.
      */
     private static void CheckWhen(TableMetadata table, RuleMetadata rules)
     {
@@ -115,9 +136,6 @@ internal static class DeclarationBake
             if (w.Inherit.Count > 0)
                 throw new InvalidOperationException(
                     $"when '{w.Test}': declares 'inherit'. An inherit under a condition is not generated yet; declare it unconditionally.");
-            if (w.Total.Length > 0)
-                throw new InvalidOperationException(
-                    $"when '{w.Test}': declares 'total'. A total under a condition is not generated yet; declare it unconditionally.");
         }
     }
 
@@ -140,12 +158,11 @@ internal static class DeclarationBake
         {
             IEnumerable<ConditionalRuleMetadata> conditional()
             {
-                if (rules.Required.Length > 0 || rules.Total.Length > 0 || rules.Visible.Count > 0 || rules.Inherit.Count > 0)
+                if (rules.Required.Length > 0 || rules.Visible.Count > 0 || rules.Inherit.Count > 0)
                     yield return new()
                     {
                         Test = test,
                         Required = rules.Required,
-                        Total = rules.Total,
                         Visible = rules.Visible,
                         Inherit = rules.Inherit
                     };
@@ -215,9 +232,9 @@ internal static class DeclarationBake
         declaration = declaration.WithOperationRules(table);
         CheckNames(table, declaration.Rules.Required, "required");
         CheckWhen(table, declaration.Rules);
-        if (declaration.Rules.Total.Length > 0)
+        if (declaration.Array.Properties.Count > 0)
             throw new InvalidOperationException(
-                $"total: declared on {table.SqlTableName}, which is a record. A sum is a member of a collection.");
+                $"array: declared on {table.SqlTableName}, which is a record. An array is a collection's, under 'details'.");
         CheckProperties(table, declaration.Properties, declaration.Rules);
         NoLeftovers(table, declaration.Kinds.Keys, [], "kinds");
         CheckFilterNames(table, declaration);
@@ -370,7 +387,7 @@ internal static class DeclarationBake
 
     private static DeclarationMetadata BakeCollection(this DeclarationMetadata declaration, TableMetadata table)
     {
-        // symmetric to 'total' on the root: 'details' holds the very same record type, so a key it
+        // symmetric to 'array' on the root: 'details' holds the very same record type, so a key it
         // has no answer for would deserialize and then vanish
         if (declaration.Forms.Count > 0)
             throw new InvalidOperationException(
@@ -383,12 +400,13 @@ internal static class DeclarationBake
             {
                 var rules = declaration.RulesFor(rs.Kind);
                 var properties = declaration.PropertiesFor(rs.Kind);
+                var arrayProperties = declaration.ArrayPropertiesFor(rs.Kind);
                 CheckNames(table, rules.Required, "required");
-                CheckNames(table, rules.Total, "total");
                 CheckWhen(table, rules);
                 CheckProperties(table, properties, rules);
+                CheckArrayProperties(arrayProperties);
                 return new RowSetDeclaration(rs.Kind, rs.Collection, rs.Type, rules, properties,
-                    BuildInherits(table, rules));
+                    arrayProperties, BuildInherits(table, rules));
             })]
         };
     }

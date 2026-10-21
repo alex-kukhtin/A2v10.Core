@@ -53,7 +53,7 @@
 		"required": [ "Date" ]
 	},
 	"properties": {
-		"Sum": { "get": "this.StockRows.$sum(r => r.Sum) + this.ServiceRows.$sum(r => r.Sum)" }
+		"Sum": { "get": "this.StockRows.$Sum + this.ServiceRows.$Sum" }
 	},
 	"details": {
 		"Rows": {
@@ -107,6 +107,11 @@
 					}
 				}
 			},
+			"array": {
+				"properties": {
+					"$Sum": { "type": "Amount", "get": "this.$sum(r => r.Sum)" }
+				}
+			},
 			"kinds": {
 				"Stock": {
 					"properties": {
@@ -120,6 +125,11 @@
 					"properties": {
 						"Sum": { "get": "this.Qty * this.Price", "set": "this.Qty = value / this.Price" },
 						"$Base": { "type": "Amount", "get": "this.Qty * this.Price" }
+					},
+					"array": {
+						"properties": {
+							"$Items": { "type": "any", "get": "this.map(r => r.Item.Id)" }
+						}
 					},
 					"rules": {
 						"required": [ "Item" ]

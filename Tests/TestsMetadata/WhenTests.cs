@@ -59,7 +59,6 @@ public class WhenTests
     [InlineData("""{ "rules": { "when": [ { "required": [ "Agent" ] } ] } }""", "declares no 'test'")]
     [InlineData("""{ "rules": { "when": [ { "test": "this.Sum > 0", "required": [ "Agnet" ] } ] } }""", "field 'Agnet' not found")]
     [InlineData("""{ "rules": { "when": [ { "test": "this.Sum > 0", "inherit": { "Contract": { "ref": "Agent", "field": "Contract" } } } ] } }""", "declares 'inherit'")]
-    [InlineData("""{ "details": { "Rows": { "rules": { "when": [ { "test": "this.Qty > 0", "total": [ "Sum" ] } ] } } } }""", "declares 'total'")]
     public async Task A_when_that_cannot_hold_is_refused(String json, String message)
     {
         var storage = (await LoadNormalAsync("document", String.Empty)).Storage;

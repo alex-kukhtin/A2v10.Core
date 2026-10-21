@@ -67,8 +67,13 @@ internal partial class ScriptBuilder
         foreach (var (key, p) in Endpoint.Declaration.Properties)
             yield return property(Table.TypeName, key, p);
         foreach (var rs in Endpoint.Declaration.Details.Values.SelectMany(d => d.RowSets))
+        {
             foreach (var (key, p) in rs.Properties)
                 yield return property(rs.Type, key, p);
+            // a member of the ARRAY lands on the array's type, and an array is not typed into
+            foreach (var (key, p) in rs.ArrayProperties)
+                yield return $$"""'{{rs.Type}}Array.{{key}}'({{Self($"{rs.Type}Array")}}) { return {{p.Get}}; }""";
+        }
     }
 
     /* 'required' of one scope, field by field. Unconditional, it is the platform's shorthand; only
@@ -196,11 +201,6 @@ internal partial class ScriptBuilder
                 yield return state;
             foreach (var p in DeclaredProperties())
                 yield return p;
-
-            // a total lands on the ARRAY of the row set's type
-            foreach (var rs in Endpoint.Declaration.Details.Values.SelectMany(d => d.RowSets))
-                foreach (var name in rs.Rules.Total)
-                    yield return $$"""'{{rs.Type}}Array.{{name}}'({{Self($"{rs.Type}Array")}}) { return this.$sum(c => c.{{name}}); }""";
             foreach (var owners in OwnerProperties())
                 yield return owners;
         }

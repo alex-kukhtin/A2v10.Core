@@ -151,20 +151,55 @@
                 "kinds": { "$ref": "#/definitions/kinds" },
                 "initialValues": { "$ref": "#/definitions/initialValues" },
                 "rules": { "$ref": "#/definitions/rules" },
-                "properties": { "$ref": "#/definitions/modelProperties" }
+                "properties": { "$ref": "#/definitions/modelProperties" },
+                "array": { "$ref": "#/definitions/array" }
             }
         },
 
         "kinds": {
             "type": "object",
-            "description": "Row kind key -> what that kind declares. The keys are the value set of the discriminator column; the value carries rules and properties and nothing else - a kind is its own type.",
+            "description": "Row kind key -> what that kind declares. The keys are the value set of the discriminator column; the value carries rules, properties and the members of its array, nothing else - a kind is its own type and its own array.",
             "additionalProperties": {
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
                     "rules": { "$ref": "#/definitions/rules" },
-                    "properties": { "$ref": "#/definitions/modelProperties" }
+                    "properties": { "$ref": "#/definitions/modelProperties" },
+                    "array": { "$ref": "#/definitions/array" }
                 }
+            }
+        },
+
+        "array": {
+            "type": "object",
+            "description": "The scope of the collection itself: 'this' is the array of rows ('$sum', 'map', 'length'), the generated type is '{row type}Array', reached as this.Rows.$Sum. The same vocabulary as every other scope.",
+            "additionalProperties": false,
+            "properties": {
+                "properties": {
+                    "type": "object",
+                    "description": "Members of the array: getters over the rows. The array has no columns, so every key is a '$' name.",
+                    "patternProperties": {
+                        "^\\$": { "$ref": "#/definitions/arrayProperty" }
+                    },
+                    "additionalProperties": false
+                }
+            }
+        },
+
+        "arrayProperty": {
+            "type": "object",
+            "description": "A getter over the rows - a sum, a list of ids, an object. No setter: an array is not typed into.",
+            "additionalProperties": false,
+            "required": [ "type", "get" ],
+            "properties": {
+                "type": {
+                    "description": "A domain, or 'any' for whatever the getter builds - a reduce returns what no domain describes.",
+                    "anyOf": [
+                        { "$ref": "#/definitions/columnType" },
+                        { "const": "any" }
+                    ]
+                },
+                "get": { "$ref": "#/definitions/propertyGet" }
             }
         },
 
@@ -190,7 +225,6 @@
             "additionalProperties": false,
             "properties": {
                 "required": { "$ref": "#/definitions/fieldNames" },
-                "total": { "$ref": "#/definitions/fieldNames" },
                 "visible": { "$ref": "#/definitions/expressions" },
                 "inherit": { "$ref": "#/definitions/inherits" },
                 "when": {
@@ -208,7 +242,6 @@
             "properties": {
                 "test": { "type": "string" },
                 "required": { "$ref": "#/definitions/fieldNames" },
-                "total": { "$ref": "#/definitions/fieldNames" },
                 "visible": { "$ref": "#/definitions/expressions" },
                 "inherit": { "$ref": "#/definitions/inherits" }
             }

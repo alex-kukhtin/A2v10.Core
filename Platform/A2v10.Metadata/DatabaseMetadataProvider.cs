@@ -660,7 +660,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         if (operation.Post is not { Count: > 0 } post)
             throw new InvalidOperationException($"{fileName}: declares no 'post'. What posting does is the whole of an operation.");
         if (operation.Properties.Count > 0
-            || operation.Details.Values.Any(d => d.Properties.Count > 0 || d.Kinds.Values.Any(k => k.Properties.Count > 0)))
+            || operation.Details.Values.Any(d => d.Properties.Count > 0 || d.Array.Properties.Count > 0
+                || d.Kinds.Values.Any(k => k.Properties.Count > 0 || k.Array.Properties.Count > 0)))
             throw new InvalidOperationException(
                 $"{fileName}: declares 'properties'. One type serves every operation of the document, so a property of one operation is a test of the Operation column, and that is not generated yet. Put them on the document for now.");
         // the rules become 'when' under the operation's code, and are checked as such by the bake
@@ -780,6 +781,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             InitialValues = MergeByKey(own.InitialValues, storage.InitialValues),
             Rules = RuleMetadata.Merge(own.Rules, storage.Rules),
             Properties = RuleMetadata.ByKey(own.Properties, storage.Properties),
+            Array = new() { Properties = RuleMetadata.ByKey(own.Array.Properties, storage.Array.Properties) },
             Kinds = MergeKinds(own.Kinds, storage.Kinds),
             Autonum = Mine(own.Autonum, storage.Autonum),
             Details = MergeDetails(own.Details, storage.Details),
@@ -818,7 +820,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                 ? new KindDeclarationMetadata()
                 {
                     Rules = RuleMetadata.Merge(value.Rules, below.Rules),
-                    Properties = RuleMetadata.ByKey(value.Properties, below.Properties)
+                    Properties = RuleMetadata.ByKey(value.Properties, below.Properties),
+                    Array = new() { Properties = RuleMetadata.ByKey(value.Array.Properties, below.Array.Properties) }
                 }
                 : value;
         return merged;
