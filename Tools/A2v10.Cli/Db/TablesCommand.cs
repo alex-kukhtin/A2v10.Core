@@ -18,42 +18,42 @@ namespace A2v10.Cli;
 
 internal class TablesCommand(IServiceProvider services)
 {
-    private readonly IDbContext _dbContext = services.GetRequiredService<IDbContext>();
-    internal Command Build()
-    {
-        var cmd = new Command("tables", "List database tables");
-        var schemaArg = new Argument<String?>("schema")
-        {
-            Description = "Filter by schema name",
-            DefaultValueFactory = _ => null
-        };
-        cmd.Arguments.Add(schemaArg);
+	private readonly IDbContext _dbContext = services.GetRequiredService<IDbContext>();
+	internal Command Build()
+	{
+		var cmd = new Command("tables", "List database tables");
+		var schemaArg = new Argument<String?>("schema")
+		{
+			Description = "Filter by schema name",
+			DefaultValueFactory = _ => null
+		};
+		cmd.Arguments.Add(schemaArg);
 
-        cmd.SetAction(r => JsonResult.Try(() =>  DbList(r.GetValue(schemaArg))));
-        return cmd;
-    }
-    async Task<Object> DbList(String? schema)
-    {
-        DbTarget.Create(services).EnsureNotSystem();
+		cmd.SetAction(r => JsonResult.Try(() =>  DbList(r.GetValue(schemaArg))));
+		return cmd;
+	}
+	async Task<Object> DbList(String? schema)
+	{
+		DbTarget.Create(services).EnsureNotSystem();
 
-        var sqlString = """
-        set nocount on;
-        set transaction isolation level read uncommitted;
+		var sqlString = """
+		set nocount on;
+		set transaction isolation level read uncommitted;
 
-        select [Tables!TTable!Array] = null, [Schema] = TABLE_SCHEMA, [Table] = TABLE_NAME 
-        from INFORMATION_SCHEMA.TABLES
-        where TABLE_SCHEMA not in ('a2wf', 'a2sys', 'a2meta', 'dbo', 'a2security', 'a2ui') and
-            @Schema is null or TABLE_SCHEMA = @Schema;        
-        """;
+		select [Tables!TTable!Array] = null, [Schema] = TABLE_SCHEMA, [Table] = TABLE_NAME 
+		from INFORMATION_SCHEMA.TABLES
+		where TABLE_SCHEMA not in ('a2wf', 'a2sys', 'a2meta', 'dbo', 'a2security', 'a2ui') and
+			@Schema is null or TABLE_SCHEMA = @Schema;        
+		""";
 
-        var dm = await _dbContext.LoadModelSqlAsync(null, sqlString, prms =>
-        {
-            prms.AddString("@Schema", schema);
-        });
+		var dm = await _dbContext.LoadModelSqlAsync(null, sqlString, prms =>
+		{
+			prms.AddString("@Schema", schema);
+		});
 
-        var tables = dm.Eval<List<ExpandoObject>>("Tables")?.Select(x => $"{x.Get<String>("Schema")}.[{x.Get<String>("Table")}]")
-             ?? [];
+		var tables = dm.Eval<List<ExpandoObject>>("Tables")?.Select(x => $"{x.Get<String>("Schema")}.[{x.Get<String>("Table")}]")
+			 ?? [];
 
-        return tables; 
-    }
+		return tables; 
+	}
 }
