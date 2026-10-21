@@ -57,7 +57,8 @@ public class NumberDomainTests
     [InlineData(ColumnType.Qty, DataType.Number)]
     [InlineData(ColumnType.Factor, DataType.Number)]
     [InlineData(ColumnType.Integer, DataType.Number)]
-    [InlineData(ColumnType.Percent, DataType.Percent)]
+    // stored as written, 20 is 20%: the obsolete DataType.Percent would show 2000%
+    [InlineData(ColumnType.Percent, DataType.Number)]
     public void The_format_of_a_number(ColumnType type, DataType expected) =>
         Assert.Equal(expected, type.ToXamlDataType());
 }

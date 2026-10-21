@@ -13,8 +13,7 @@ internal static class XamlExtensions
         {
             ColumnType.Date => DataType.Date,
             ColumnType.DateTime => DataType.DateTime,
-            // stored as a fraction: the client multiplies by 100 and adds '%'
-            ColumnType.Percent => DataType.Percent,
+            // a percent is stored as written (20 is 20%), so it draws as a number; DataType.Percent scales by 100
             _ when column.IsCurrency() => DataType.Currency,
             _ when column.IsNumber() => DataType.Number,
             _ => DataType.String,

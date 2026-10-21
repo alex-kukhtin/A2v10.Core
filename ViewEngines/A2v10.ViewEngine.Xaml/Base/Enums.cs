@@ -122,7 +122,8 @@ public enum DataType
 	Boolean,
 	Object,
 	Period,
-    Percent
+	[Obsolete("Scales by 100: shows a stored 0.2 as 20%. A percent is stored as written (20 is 20%) and drawn as Number.")]
+	Percent
 }
 
 public enum ControlSize
