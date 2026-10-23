@@ -5,6 +5,7 @@ using System.Data.Common;
 using System.Dynamic;
 using System.IO;
 using System.Reflection;
+using System.Security.Cryptography;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +20,8 @@ namespace TestServices;
  * a name that claims one of them without the bytes is refused; anything else keeps the type by the name.
  * The door's accept and maxSize are checked by that type, and the door takes the roles of its endpoint.
  * Everything is checked before Storage and the database: a refused upload leaves nothing behind.
+ * Hash: SHA-256 of the stored bytes - into Blob.Insert and the upload result, back from the read, and into the record
+ * the old path's Update procedure gets.
  * Read: only the issued token reads, and a wrong one is refused before Storage.
  * Save: a non-empty reference <model>.<Key> carries the token Load or the upload issued; empty passes.
  * Attachments: an upload into a requireBase endpoint links the file to the owner under the base, in the same
@@ -30,11 +33,14 @@ namespace TestServices;
 [TestCategory("Blobs")]
 public class BlobServiceTests
 {
-	// a2blob.Blobs in memory: answers Blob.Insert and Blob.Load by the names the procedures use
+	/* a2blob.Blobs in memory: answers Blob.Insert and Blob.Load by the names the procedures use;
+	 * any other command is the old path's Update procedure of the application, kept as it was passed
+	 */
 	private sealed class Db : IDbContext
 	{
-		public readonly Dictionary<Int64, (String Name, String Mime, String BlobName, Guid AccessToken)> Rows = [];
+		public readonly Dictionary<Int64, (String Name, String Mime, String BlobName, Guid AccessToken, Byte[]? Hash)> Rows = [];
 		public readonly Dictionary<Int64, (String Base, String LinkId, Int64 Blob)> Links = [];
+		public readonly List<(String Command, Object Element)> Updates = [];
 
 		static void Set(Object target, String name, Object? value) =>
 			target.GetType().GetProperty(name, BindingFlags.Public | BindingFlags.Instance)!.SetValue(target, value);
@@ -44,9 +50,15 @@ public class BlobServiceTests
 
 		public Task<TOut?> ExecuteAndLoadAsync<TIn, TOut>(String? source, String command, TIn element) where TIn : class where TOut : class
 		{
-			Assert.AreEqual("a2blob.[Blob.Insert]", command);
+			if (command != "a2blob.[Blob.Insert]")
+			{
+				Updates.Add((command, element));
+				var updated = Create<TOut>();
+				Set(updated, "Id", 1L);
+				return Task.FromResult<TOut?>(updated);
+			}
 			var id = 1000L + Rows.Count;
-			var row = ((String)Get(element, "Name")!, (String)Get(element, "Mime")!, (String)Get(element, "BlobName")!, Guid.NewGuid());
+			var row = ((String)Get(element, "Name")!, (String)Get(element, "Mime")!, (String)Get(element, "BlobName")!, Guid.NewGuid(), (Byte[]?)Get(element, "Hash"));
 			Rows.Add(id, row);
 			var output = Create<TOut>();
 			Set(output, "Id", id);
@@ -71,6 +83,7 @@ public class BlobServiceTests
 			Set(output, "Name", row.Name);
 			Set(output, "Mime", row.Mime);
 			Set(output, "BlobName", row.BlobName);
+			Set(output, "Hash", row.Hash);
 			Set(output, "AccessToken", row.AccessToken);
 			return Task.FromResult<T?>(output);
 		}
@@ -231,6 +244,16 @@ public class BlobServiceTests
 	}
 
 	[TestMethod]
+	public async Task The_hash_of_the_stored_bytes_is_written()
+	{
+		var stand = Create();
+		var result = await Upload(stand, "a.png", MimeTypes.Image.Png, Png);
+
+		CollectionAssert.AreEqual(SHA256.HashData(Png), stand.Db.Rows[result.Id].Hash);
+		CollectionAssert.AreEqual(SHA256.HashData(Png), result.Hash);
+	}
+
+	[TestMethod]
 	public async Task The_bytes_win_over_the_name()
 	{
 		var stand = Create();
@@ -320,6 +343,7 @@ public class BlobServiceTests
 
 		Assert.AreEqual("a.png", blob.Name);
 		Assert.AreEqual(MimeTypes.Image.Png, blob.Mime);
+		CollectionAssert.AreEqual(SHA256.HashData(Png), blob.Hash);
 		CollectionAssert.AreEqual(Png, blob.Data.ToArray());
 	}
 
@@ -561,6 +585,49 @@ public class BlobServiceTests
 		var stand = Create();
 
 		await Refused(stand, "Access denied", () => Attach(stand, "/catalog/locked", "1002"));
+	}
+
+	// The old path (files in model.json): the record the application's Update procedure gets carries the hash
+
+	private static async Task<BlobUpdateInfo> SaveOld(Stand stand, ModelJsonBlob blob)
+	{
+		var sp = new ServiceCollection().AddSingleton<IBlobStorageProvider>(stand.Storage).BuildServiceProvider();
+		ModelJson file() => new()
+		{
+			Schema = "cat",
+			Model = "Agent",
+			Roles = ["Manager"],
+			Files = new(StringComparer.OrdinalIgnoreCase) { ["photo"] = blob }
+		};
+		var data = new DataService(sp, new TestModelReader(file), stand.Db, new TestUser(["Manager"]), null!, null!, null!, null!, null!, null!);
+		await data.SaveBlobAsync("catalog/agent/photo/1", b =>
+		{
+			b.Name = "a.png";
+			b.Mime = MimeTypes.Image.Png;
+			b.Stream = new MemoryStream(Png);
+		}, p => ((IDictionary<String, Object?>)p)["UserId"] = 1L);
+		return (BlobUpdateInfo)stand.Db.Updates.Single().Element;
+	}
+
+	[TestMethod]
+	public async Task The_old_sql_path_passes_the_hash_to_the_procedure()
+	{
+		var stand = Create();
+		var saved = await SaveOld(stand, new ModelJsonBlob() { Type = ModelBlobType.sql });
+
+		CollectionAssert.AreEqual(SHA256.HashData(Png), saved.Hash);
+	}
+
+	// the stream goes to the Storage and not to SQL: the hash is taken before, and the Storage still gets every byte
+	[TestMethod]
+	public async Task The_old_storage_path_hashes_before_the_stream_is_dropped()
+	{
+		var stand = Create();
+		var saved = await SaveOld(stand, new ModelJsonBlob() { Type = ModelBlobType.blobStorage, BlobStorage = "Memory" });
+
+		CollectionAssert.AreEqual(SHA256.HashData(Png), saved.Hash);
+		Assert.IsNull(saved.Stream);
+		CollectionAssert.AreEqual(Png, stand.Storage.Files[saved.BlobName!]);
 	}
 
 	// requireBase through DataService: every call carries the base, the Base the procedure gets is checked

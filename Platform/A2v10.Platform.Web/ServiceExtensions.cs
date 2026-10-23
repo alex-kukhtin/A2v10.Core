@@ -119,7 +119,11 @@ public static class ServiceExtensions
 		var blobEngineFactory = new BlobStorageFactory();
 		action.Invoke(blobEngineFactory);
 		foreach (var r in blobEngineFactory.Engines)
+		{
 			services.AddSingleton(r.StorageType);
+			if (typeof(IBlobReadUrl).IsAssignableFrom(r.StorageType))
+				services.AddSingleton(s => (IBlobReadUrl) s.GetRequiredService(r.StorageType));
+		}
 
 		services.AddSingleton<IBlobStorageProvider>(s =>
 			new WebBlobStorageProvider(s, blobEngineFactory.Engines)

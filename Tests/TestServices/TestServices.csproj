@@ -41,6 +41,7 @@
 		<ProjectReference Include="..\..\Platform\A2v10.Platform\A2v10.Platform.csproj" />
 		<ProjectReference Include="..\..\Platform\A2v10.Services\A2v10.Services.csproj" />
 		<ProjectReference Include="..\..\BlobStorages\FileSystemBlobStorage\FileSystemBlobStorage.csproj" />
+		<ProjectReference Include="..\..\BlobStorages\AzureBlobStorage\AzureBlobStorage.csproj" />
 		<ProjectReference Include="..\..\Identity\A2v10.Web.Identity.UI\A2v10.Web.Identity.UI.csproj" />
 		<ProjectReference Include="..\..\Identity\A2v10.Web.Identity.ApiKey\A2v10.Web.Identity.ApiKey.csproj" />
 	</ItemGroup>

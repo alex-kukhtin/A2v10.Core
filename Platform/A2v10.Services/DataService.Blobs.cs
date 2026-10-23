@@ -77,7 +77,8 @@ public partial class DataService
 		{
 			Name = btInfo.Name,
 			Mime = btInfo.Mime,
-			Stream = btInfo.Stream,	
+			Stream = btInfo.Stream,
+			Hash = btInfo.Hash,
 			SkipToken = true,
 		};
     }
@@ -148,6 +149,7 @@ public partial class DataService
 			Name = result.Name,
 			Mime = result.Mime,
 			Stream = result.Stream,
+			Hash = result.Hash,
 			BlobName = result.BlobName,
 			SkipToken = true
 		};
@@ -206,6 +208,7 @@ public partial class DataService
 			Id = blobModel.Id,
 		};
 		setBlob(blobInfo);
+		await blobInfo.ComputeHashAsync();
 		var args = new ExpandoObject();
 		setParams?.Invoke(args);
 		args.Add("Blob", blobInfo);
@@ -221,6 +224,7 @@ public partial class DataService
 			if (invokeBlobResult.Stream == null)
 				throw new InvalidOperationException("InvokeBlobResult.Stream is null");
 			blobInfo.Stream = new MemoryStream(invokeBlobResult.Stream);
+			await blobInfo.ComputeHashAsync();
 			return await SaveBlobInt(blobInfo, blobModel, setParams);
 		}
 		else if (result is String strResult)
@@ -243,14 +247,15 @@ public partial class DataService
 		return eoResult;
 	}
 
-	private Task<ExpandoObject> SaveBlobSql(IModelBlob blobModel, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams)
+	private async Task<ExpandoObject> SaveBlobSql(IModelBlob blobModel, Action<IBlobUpdateInfo> setBlob, Action<ExpandoObject>? setParams)
 	{
 		BlobUpdateInfo blobInfo = new()
 		{
 			Id = blobModel.Id
 		};
 		setBlob(blobInfo);
-		return SaveBlobInt(blobInfo, blobModel, setParams);
+		await blobInfo.ComputeHashAsync();
+		return await SaveBlobInt(blobInfo, blobModel, setParams);
 	}
 
 	private async Task<ExpandoObject> SaveBlobString(BlobUpdateString blobInfo, IModelBlob blobModel, Action<ExpandoObject>? setParams)
@@ -320,6 +325,8 @@ public partial class DataService
 		setBlob(blobInfo);
 		if (blobInfo.Stream == null)
 			throw new InvalidOperationException("Stream is null");
+		// before the Storage: the stream is not passed to SQL, the hash is
+		await blobInfo.ComputeHashAsync();
 		var tenant = String.Empty;
 		if (blobInfo.TenantId != null)
 			tenant = $"{blobInfo.TenantId}/";

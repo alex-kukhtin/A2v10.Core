@@ -12,6 +12,7 @@ public record InvokeBlobResult
 	public String? Name { get; init; }
     public String? Mime { get; init; }
     public Byte[]? Stream { get; init; }
+	public Byte[]? Hash { get; init; }
 
 	public String? BlobName { get; init; }
 }

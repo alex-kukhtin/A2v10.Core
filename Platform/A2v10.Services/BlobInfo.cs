@@ -1,7 +1,9 @@
 ﻿// Copyright © 2021-2025 Oleksandr Kukhtin. All rights reserved.
 
 using System.IO;
+using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace A2v10.Services;
 public class BlobInfo : IBlobInfo
@@ -10,6 +12,7 @@ public class BlobInfo : IBlobInfo
 	public String? Name { get; init; }
 	public Guid Token { get; init; }
 	public Byte[]? Stream { get; set; }
+	public Byte[]? Hash { get; init; }
 	public String? BlobName { get; init; }
     public Boolean SkipToken { get; init; }
     public Boolean CheckToken => !SkipToken;
@@ -22,6 +25,7 @@ public class BlobTextInfo : IBlobInfo
     public Guid Token { get; init; }
     public String? Data { get; init; }   
     public Byte[]? Stream => Encoding.UTF8.GetBytes(Data ?? String.Empty);
+    public Byte[]? Hash { get; init; }
     public String? BlobName { get; init; }
     public Boolean SkipToken { get; init; }
     public Boolean CheckToken => !SkipToken;
@@ -35,10 +39,24 @@ public record BlobUpdateInfo : IBlobUpdateInfo
     public String? Mime { get; set; }
     public String? Name { get; set; }
     public Stream? Stream { get; set; }
+    public Byte[]? Hash { get; private set; }
     public String? BlobName { get; set; }
     public String? Key { get; set; }
     public String? Param { get; set; }
     public Object? Id { get; set; }
+
+    // again whenever Stream is replaced; the stream is seekable (IFormFile, MemoryStream) and is left at 0
+    public async Task ComputeHashAsync()
+    {
+        if (Stream == null)
+        {
+            Hash = null;
+            return;
+        }
+        Stream.Position = 0;
+        Hash = await SHA256.HashDataAsync(Stream);
+        Stream.Position = 0;
+    }
 }
 
 public record BlobUpdateString

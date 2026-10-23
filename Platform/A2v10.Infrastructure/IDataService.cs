@@ -22,6 +22,7 @@ public interface IBlobInfo
 	String? Name { get; }
 	Guid Token { get; }
 	Byte[]? Stream { get; }
+	Byte[]? Hash { get; }
 	String? BlobName { get; }
 	Boolean CheckToken { get; }
 }
@@ -34,6 +35,7 @@ public interface IBlobUpdateInfo
     public String? Mime { get; set; }
     public String? Name { get; set; }
     public Stream? Stream { get; set; }
+    public Byte[]? Hash { get; }
     public String? BlobName { get; set; }
     public Object? Id { get; set; }
 }

@@ -16,6 +16,7 @@ internal record BlobInsertInfo
 	public String Name { get; init; } = String.Empty;
 	public String Mime { get; init; } = String.Empty;
 	public String BlobName { get; init; } = String.Empty;
+	public Byte[]? Hash { get; init; }
 	// an attachment; the owner's key as text - platformid may be bigint or uniqueidentifier, the parameter converts
 	public String? Base { get; init; }
 	public String? LinkId { get; init; }
@@ -34,6 +35,7 @@ internal record BlobLoadOutput
 	public String Mime { get; set; } = String.Empty;
 	public String BlobName { get; set; } = String.Empty;
 	public String? ThumbName { get; set; }
+	public Byte[]? Hash { get; set; }
 	public Guid AccessToken { get; set; }
 }
 
@@ -45,8 +47,8 @@ public class BlobService(IServiceProvider _serviceProvider, IModelJsonReader _mo
 		var (url, blob) = await DoorAsync(path);
 		if (blob.RequireBase)
 			throw new DataServiceException($"'{url.LocalPath}' requires base: an upload there links the file to an owner");
-		var (output, realMime) = await StoreAsync(blob, name, mime, stream, null, null);
-		return Uploaded(output, name, realMime);
+		var (output, realMime, hash) = await StoreAsync(blob, name, mime, stream, null, null);
+		return Uploaded(output, name, realMime, hash);
 	}
 
 	public async Task<BlobLinkUploadResult> UploadLinkAsync(String path, String @base, String owner, String name, String mime, Stream stream)
@@ -57,9 +59,9 @@ public class BlobService(IServiceProvider _serviceProvider, IModelJsonReader _mo
 		if (String.IsNullOrEmpty(owner))
 			throw new DataServiceException("An upload into an attachment requires owner");
 		await BaseAccess.CheckAsync(_modelReader, _currentUser, @base);
-		var (output, realMime) = await StoreAsync(blob, name, mime, stream, @base, owner);
+		var (output, realMime, hash) = await StoreAsync(blob, name, mime, stream, @base, owner);
 		var link = output.Link ?? throw new InvalidOperationException("Blob.Insert returned no link");
-		return new BlobLinkUploadResult(link, Uploaded(output, name, realMime));
+		return new BlobLinkUploadResult(link, Uploaded(output, name, realMime, hash));
 	}
 
 	// "<endpoint>/<Key>": the trailing slash leaves the url without an id - Action = Key, LocalPath = endpoint
@@ -73,7 +75,7 @@ public class BlobService(IServiceProvider _serviceProvider, IModelJsonReader _mo
 	}
 
 	// every check before Storage and the database; the blob and its link are one insert
-	async Task<(BlobInsertOutput Output, String Mime)> StoreAsync(IModelBlobDoor blob, String name, String mime, Stream stream,
+	async Task<(BlobInsertOutput Output, String Mime, Byte[]? Hash)> StoreAsync(IModelBlobDoor blob, String name, String mime, Stream stream,
 		String? @base, String? owner)
 	{
 		mime = await RealMimeAsync(stream, mime);
@@ -83,13 +85,15 @@ public class BlobService(IServiceProvider _serviceProvider, IModelJsonReader _mo
 			throw new DataServiceException($"UI:File is too large (max {blob.MaxSize} KB)");
 
 		var blobName = $"{DateTime.UtcNow:yyyyMMdd}/{Guid.NewGuid()}_{name}";
-		await Storage().SaveAsync(null, null, new BlobUpdateInfo()
+		var info = new BlobUpdateInfo()
 		{
 			Name = name,
 			Mime = mime,
 			BlobName = blobName,
 			Stream = stream
-		});
+		};
+		await info.ComputeHashAsync();
+		await Storage().SaveAsync(null, null, info);
 
 		var output = await _dbContext.ExecuteAndLoadAsync<BlobInsertInfo, BlobInsertOutput>(blob.DataSource, "a2blob.[Blob.Insert]", new BlobInsertInfo()
 		{
@@ -97,22 +101,24 @@ public class BlobService(IServiceProvider _serviceProvider, IModelJsonReader _mo
 			Name = name,
 			Mime = mime,
 			BlobName = blobName,
+			Hash = info.Hash,
 			Base = @base,
 			LinkId = owner
 		}) ?? throw new InvalidOperationException("Blob.Insert returned nothing");
-		return (output, mime);
+		return (output, mime, info.Hash);
 	}
 
-	BlobUploadResult Uploaded(BlobInsertOutput output, String name, String mime) =>
-		new(output.Id, _tokenProvider.GenerateToken(output.AccessToken), name, mime);
+	BlobUploadResult Uploaded(BlobInsertOutput output, String name, String mime, Byte[]? hash) =>
+		new(output.Id, _tokenProvider.GenerateToken(output.AccessToken), name, mime, hash);
 
 	public async Task<BlobContent> LoadAsync(Int64 id, String token, Boolean thumb)
 	{
 		// before the storage: a wrong token reads nothing
 		var blob = await LoadCheckedAsync(id, token);
-		var blobName = thumb && blob.ThumbName != null ? blob.ThumbName : blob.BlobName;
-		var data = await Storage().LoadAsync(null, null, blobName);
-		return new BlobContent(blob.Name, blob.Mime, data);
+		var isThumb = thumb && blob.ThumbName != null;
+		var data = await Storage().LoadAsync(null, null, isThumb ? blob.ThumbName! : blob.BlobName);
+		// the hash is the original's: a thumbnail travels without one
+		return new BlobContent(blob.Name, blob.Mime, isThumb ? null : blob.Hash, data);
 	}
 
 	/* Save: a non-empty reference <model>.<Key> must carry the token that Load or the upload issued,

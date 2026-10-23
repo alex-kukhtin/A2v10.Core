@@ -8,13 +8,14 @@ using Microsoft.Extensions.Configuration;
 
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+using Azure.Storage.Sas;
 
 using A2v10.Infrastructure;
 using System.IO;
 
 namespace A2v10.BlobStorage.Azure;
 
-public class AzureBlobStorage(IConfiguration _configuration) : IBlobStorage
+public class AzureBlobStorage(IConfiguration _configuration) : IBlobStorage, IBlobReadUrl
 {
 	private readonly ConcurrentDictionary<String, BlobContainerClient> _containers = new();
 
@@ -60,5 +61,12 @@ public class AzureBlobStorage(IConfiguration _configuration) : IBlobStorage
 	{
 		var client = GetClient(source, container);
 		return client.GetBlobClient(blobName).DeleteAsync(DeleteSnapshotsOption.IncludeSnapshots);
+	}
+
+	// signed by the AccountKey of the connection string; without it GenerateSasUri throws
+	public Uri GetReadUrl(String? source, String? container, String blobName, TimeSpan lifetime)
+	{
+		var client = GetClient(source, container);
+		return client.GetBlobClient(blobName).GenerateSasUri(BlobSasPermissions.Read, DateTimeOffset.UtcNow.Add(lifetime));
 	}
 }

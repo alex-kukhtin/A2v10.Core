@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace A2v10.Infrastructure;
 
-public record BlobUploadResult(Int64 Id, String Token, String Name, String Mime);
+public record BlobUploadResult(Int64 Id, String Token, String Name, String Mime, Byte[]? Hash);
 // an attachment: the link row (Id) and its blob - the shape of a row of a2blob.BlobLinks with its Blob
 public record BlobLinkUploadResult(Int64 Id, BlobUploadResult Blob);
-public record BlobContent(String Name, String Mime, ReadOnlyMemory<Byte> Data);
+public record BlobContent(String Name, String Mime, Byte[]? Hash, ReadOnlyMemory<Byte> Data);
 
 // The token (AccessToken + user) is issued and checked here, in one place
 public interface IBlobService
