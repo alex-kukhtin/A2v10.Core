@@ -64,8 +64,7 @@ public class TabPanel : UIElement
 				throw new XamlException("If ItemsSource is specified, then only one Tab allowed in the collection");
 			panel.RenderStart(context);
 			var tml = new TagBuilder("template");
-			tml.MergeAttribute("slot", "items");
-			tml.MergeAttribute("slot-scope", "tabitem");
+			context.MergeSlot(tml, "items", "tabitem");
 			tml.RenderStart(context);
 			using (var cts = new ScopeContext(context, "tabitem.item", isBind.Path, ReplaceScope))
 			{
@@ -90,8 +89,7 @@ public class TabPanel : UIElement
 		if (Tabs[0].Header is not UIElementBase tabHeader)
 			return;
 		var tml = new TagBuilder("template");
-		tml.MergeAttribute("slot", "header");
-		tml.MergeAttribute("slot-scope", "tabitem");
+		context.MergeSlot(tml, "header", "tabitem");
 		tml.RenderStart(context);
 		using (var cts = new ScopeContext(context, "tabitem.item", null, ReplaceScope))
 		{
@@ -113,7 +111,7 @@ public class TabPanel : UIElement
 		if (hBind != null || Header != null)
 		{
 			var ht = new TagBuilder("template");
-			ht.MergeAttribute("slot", "title");
+			context.MergeSlot(ht, "title");
 			ht.RenderStart(context);
 			var tag = new TagBuilder("div", "pane-header");
 			if (hBind != null)

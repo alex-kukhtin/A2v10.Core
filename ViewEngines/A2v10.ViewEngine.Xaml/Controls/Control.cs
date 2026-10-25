@@ -72,7 +72,7 @@ public abstract class Control : UIElement
 		if (Popover == null)
 			return;
 		var tag = new TagBuilder("template");
-		tag.MergeAttribute("slot", "popover");
+		context.MergeSlot(tag, "popover");
 		tag.RenderStart(context);
 		Popover.RenderElement(context);
 		tag.RenderEnd(context);
@@ -103,7 +103,7 @@ public abstract class Control : UIElement
 		if (Hint.Icon == Icon.NoIcon)
 			Hint.Icon = Icon.Help;
 		var tag = new TagBuilder("template");
-		tag.MergeAttribute("slot", "hint");
+		context.MergeSlot(tag, "hint");
 		tag.RenderStart(context);
 		Hint.RenderElement(context, (t) =>
 		{
@@ -117,7 +117,7 @@ public abstract class Control : UIElement
 		if (Link == null)
 			return;
 		var tag = new TagBuilder("template");
-		tag.MergeAttribute("slot", "link");
+		context.MergeSlot(tag, "link");
 		tag.RenderStart(context);
 		Link.RenderElement(context, (t) =>
 		{

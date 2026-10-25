@@ -95,7 +95,7 @@ public class ComboBox : ValuedControl, ITableControl
 			return;
 		var combo = new TagBuilder("select", null, IsInGrid);
 		onRender?.Invoke(combo);
-		combo.MergeAttribute("is", "combobox");
+		context.MergeIs(combo, "combobox");
 		combo.MergeAttribute("v-cloak", String.Empty);
 		combo.MergeAttribute("name-prop", DisplayProperty);
 		if (Style != ComboBoxStyle.Default)

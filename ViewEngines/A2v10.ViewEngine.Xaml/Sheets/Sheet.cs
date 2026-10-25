@@ -110,7 +110,7 @@ public partial class Sheet : UIElement
 		if (_columns == null)
 			return;
 		var cs = new TagBuilder("template");
-		cs.MergeAttribute("slot", "col-shadow");
+		context.MergeSlot(cs, "col-shadow");
 		cs.RenderStart(context);
 		var tb = new TagBuilder("tbody", "col-shadow");
 		tb.RenderStart(context);
@@ -128,7 +128,7 @@ public partial class Sheet : UIElement
 		if (_columns == null)
 			return;
 		var cols = new TagBuilder("template");
-		cols.MergeAttribute("slot", "columns");
+		context.MergeSlot(cols, "columns");
 		cols.RenderStart(context);
 		_columns.Render(context);
 		cols.RenderEnd(context);
@@ -139,7 +139,7 @@ public partial class Sheet : UIElement
 		if (_header == null)
 			return;
 		var thead = new TagBuilder("template");
-		thead.MergeAttribute("slot", "header");
+		context.MergeSlot(thead, "header");
 		thead.RenderStart(context);
 		foreach (var h in Header)
 			h.RenderElement(context);
@@ -149,7 +149,7 @@ public partial class Sheet : UIElement
 	void RenderBody(RenderContext context)
 	{
 		var tbody = new TagBuilder("template");
-		tbody.MergeAttribute("slot", "body");
+		context.MergeSlot(tbody, "body");
 		tbody.RenderStart(context);
 		foreach (var s in Sections)
 			s.RenderElement(context, null);
@@ -161,7 +161,7 @@ public partial class Sheet : UIElement
 		if (_footer == null)
 			return;
 		var tfoot = new TagBuilder("template");
-		tfoot.MergeAttribute("slot", "footer");
+		context.MergeSlot(tfoot, "footer");
 		tfoot.RenderStart(context);
 		foreach (var f in Footer)
 			f.RenderElement(context);

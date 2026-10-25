@@ -44,8 +44,7 @@ public class DropDownMegaMenu : Container, IDropDownPros
 			throw new XamlException("DropDownMegaMenu. MenuItem must be specified");
 
 		var tml = new TagBuilder("template");
-		tml.MergeAttribute("slot", "item");
-		tml.MergeAttribute("slot-scope", "slotItem");
+		context.MergeSlot(tml, "item", "slotItem");
 		tml.RenderStart(context);
 		using (new ScopeContext(context, "slotItem.menuItem", itms.Path))
 		{

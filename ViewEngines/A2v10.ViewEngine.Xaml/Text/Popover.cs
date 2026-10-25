@@ -138,7 +138,7 @@ public class Popover : Inline
         if (GetBinding(nameof(Badge)) == null && Badge == null)
             return;
         var tag = new TagBuilder("template");
-        tag.MergeAttribute("slot", "badge");
+        context.MergeSlot(tag, "badge");
         tag.RenderStart(context);
         RenderBadge(context, Badge);
         tag.RenderEnd(context);

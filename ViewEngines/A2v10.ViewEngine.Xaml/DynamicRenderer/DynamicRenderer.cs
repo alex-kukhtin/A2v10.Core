@@ -3,6 +3,7 @@
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
@@ -46,7 +47,8 @@ public class DynamicRenderer(IServiceProvider serviceProvider)
 			RootId = info.RootId,
 			DataModel = info.Model,
 			// asked here, not in the constructor: a builder makes this renderer on hosts that never render (the API)
-			IsDebugConfiguration = serviceProvider.GetRequiredService<IApplicationHost>().IsDebugConfiguration
+			IsDebugConfiguration = serviceProvider.GetRequiredService<IApplicationHost>().IsDebugConfiguration,
+			Framework = serviceProvider.GetRequiredService<IOptions<AppOptions>>().Value.Framework
 		};
 		var ctx = new RenderContext(info.Page, ri, _localizer, stringWriter)
 		{

@@ -106,8 +106,7 @@ public class List : Control, ITableControl
 		var tml = new TagBuilder("template");
 		if (dyna)
 		{
-			tml.MergeAttribute("slot", "items");
-			tml.MergeAttribute("slot-scope", "listItem");
+			context.MergeSlot(tml, "items", "listItem");
 			tml.RenderStart(context);
 			using (new ScopeContext(context, "listItem.item", null))
 			{
@@ -137,7 +136,7 @@ public class List : Control, ITableControl
 		if (EmptyPanel == null)
 			return;
 		var panel = new TagBuilder("template");
-		panel.MergeAttribute("slot", "empty");
+		context.MergeSlot(panel, "empty");
 		panel.RenderStart(context);
 		EmptyPanel.RenderElement(context);
 		panel.RenderEnd(context);

@@ -19,7 +19,7 @@ public class SheetTreeSection : SheetSection
 		}
 		section.RenderStart(context);
 		var tml = new TagBuilder("template");
-		tml.MergeAttribute("slot-scope", "row");
+		context.MergeSlot(tml, null, "row");
 		tml.RenderStart(context);
 		using (var scope = new ScopeContext(context, "row.item", isBind?.Path))
 		{

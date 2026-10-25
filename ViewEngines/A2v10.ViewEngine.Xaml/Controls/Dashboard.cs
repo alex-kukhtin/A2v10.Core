@@ -103,7 +103,7 @@ public class Dashboard : UIElementBase
         if (EmptyPanel != null)
 		{
 			var panel = new TagBuilder("template");
-			panel.MergeAttribute("slot", "empty");
+			context.MergeSlot(panel, "empty");
 			panel.RenderStart(context);
 			EmptyPanel.RenderElement(context);
 			panel.RenderEnd(context);

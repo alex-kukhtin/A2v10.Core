@@ -90,7 +90,7 @@ public class Panel : Container, ITableControl
 		if (!HasHeader)
 			return;
 		var header = new TagBuilder("div", "panel-header-slot");
-		header.MergeAttribute("slot", "header");
+		context.MergeSlot(header, "header");
 		header.RenderStart(context);
 
 		RenderIcon(context, Icon);

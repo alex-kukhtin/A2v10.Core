@@ -171,8 +171,7 @@ public class DataGridColumn : XamlElement
 		if (isTemplate)
 		{
 			var templ = new TagBuilder("template");
-			templ.MergeAttribute("slot", tmlId);
-			templ.MergeAttribute("slot-scope", "cell");
+			context.MergeSlot(templ, tmlId, "cell");
 			templ.RenderStart(context);
 			using (var ctx = new ScopeContext(context, "cell.row", null))
 			{

@@ -1,4 +1,4 @@
-﻿// Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2023-2026 Oleksandr Kukhtin. All rights reserved.
 
 /*20230605-8109*/
 app.modules['std:signalR'] = function () {
@@ -25,7 +25,7 @@ app.modules['std:signalR'] = function () {
 			console.log("SignalR Connected.");
 		} catch (err) {
 			console.log(err);
-			setTimeout(start, 5000);
+			setTimeout(startService, 5000);
 		}
 	}
 };

@@ -1,4 +1,4 @@
-// Copyright © 2023 Oleksandr Kukhtin. All rights reserved.
+// Copyright © 2023-2026 Oleksandr Kukhtin. All rights reserved.
 
 /*20230605-8109*/
 app.modules['std:signalR'] = function () {
@@ -25,7 +25,7 @@ app.modules['std:signalR'] = function () {
 			console.log("SignalR Connected.");
 		} catch (err) {
 			console.log(err);
-			setTimeout(start, 5000);
+			setTimeout(startService, 5000);
 		}
 	}
 };
@@ -887,8 +887,8 @@ app.modules['std:signalR'] = function () {
 					let canResult = dlg.attrs.canClose();
 					if (canResult === true)
 						closeImpl(result);
-					else if (canResult.then) {
-						result.then(function (innerResult) {
+					else if (canResult && canResult.then) {
+						canResult.then(function (innerResult) {
 							if (innerResult === true)
 								closeImpl(result);
 							else if (innerResult) {

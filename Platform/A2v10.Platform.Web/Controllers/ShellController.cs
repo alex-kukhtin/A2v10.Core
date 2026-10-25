@@ -138,7 +138,12 @@ public class ShellController(IDbContext _dbContext, IApplicationHost _host, ICur
 
 	async Task<String> BuildScriptPlain()
 	{
-		String shell = Resource.shellPlain;
+		String shell = _appOptions.Framework switch
+		{
+			ClientFramework.Vue2 => Resource.shellPlain,
+			ClientFramework.Vue3 => ShellScriptsVue3.Plain,
+			var fw => throw HostHelpers.UnsupportedFramework(fw)
+		};
 
 		ExpandoObject loadPrms = [];
 		SetSqlParams(loadPrms);

@@ -44,6 +44,15 @@ namespace A2v10.Xaml
 		HashSet<String>? _cssClasses = null;
 		Dictionary<String, String>? _attributes = null;
 		Dictionary<String, String>? _styles = null;
+		TagBuilder? _wrapper = null;
+
+		// written around this tag: the <template> of a Vue 3 slot on another tag (RenderContext.MergeSlot)
+		internal TagBuilder WrapIn(TagBuilder wrapper)
+		{
+			CheckRendered();
+			_wrapper = wrapper;
+			return wrapper;
+		}
 
 		public TagBuilder SetInnerText(String? text)
 		{
@@ -189,6 +198,8 @@ namespace A2v10.Xaml
 
 		public TagBuilder Render(RenderContext context, TagRenderMode mode = TagRenderMode.Normal, Boolean addSpace = false)
 		{
+			if (mode != TagRenderMode.EndTag)
+				_wrapper?.RenderStart(context);
 			switch (mode)
 			{
 				case TagRenderMode.SelfClosing:
@@ -206,6 +217,8 @@ namespace A2v10.Xaml
 					context.Writer.Write($"</{TagName}>");
 					break;
 			}
+			if (mode != TagRenderMode.StartTag)
+				_wrapper?.RenderEnd(context);
 			if (addSpace)
 				context.Writer.WriteLine();
 			_bRender = true;

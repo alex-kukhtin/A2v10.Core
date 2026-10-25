@@ -99,6 +99,9 @@ public class RenderContext(IXamlElement _root, IRenderInfo _ri, ILocalizer _loca
     public TextWriter Writer { get; private set; } = writer;
     public Boolean IsDebugConfiguration { get; } = _ri.IsDebugConfiguration;
 
+	// read only by the methods below: a control writes a slot or `is` through them, never by Framework
+	private readonly ClientFramework _framework = _ri.Framework;
+
     private readonly Stack<GridRowCol> _stackGrid = new();
 	private readonly Stack<ScopeElem> _stackScope = new();
 
@@ -296,5 +299,38 @@ public class RenderContext(IXamlElement _root, IRenderInfo _ri, ILocalizer _loca
 			return null;
 		return txt.Replace("\\'", "'");
 	}
+
+	// Vue 3 reads no `slot`/`slot-scope`: its slot is `v-slot` and sits on <template> only, so another tag goes inside one;
+	// name null is the default slot
+	public void MergeSlot(TagBuilder tag, String? name, String? scope = null)
+	{
+		switch (_framework)
+		{
+			case ClientFramework.Vue2:
+				tag.MergeAttribute("slot", name);
+				tag.MergeAttribute("slot-scope", scope);
+				break;
+			case ClientFramework.Vue3:
+				var template = tag.TagName == "template" ? tag : tag.WrapIn(new TagBuilder("template"));
+				template.MergeAttribute(name == null ? "v-slot" : $"v-slot:{name}", scope ?? String.Empty);
+				break;
+			default:
+				throw UnsupportedFramework();
+		}
+	}
+
+	// a component on a native element: Vue 3 takes it by the `vue:` prefix only
+	public void MergeIs(TagBuilder tag, String component)
+	{
+		tag.MergeAttribute("is", _framework switch
+		{
+			ClientFramework.Vue2 => component,
+			ClientFramework.Vue3 => $"vue:{component}",
+			_ => throw UnsupportedFramework()
+		});
+	}
+
+	private InvalidOperationException UnsupportedFramework() =>
+		new($"Framework '{(Int32)_framework}' is not supported by the XAML renderer");
 }
 

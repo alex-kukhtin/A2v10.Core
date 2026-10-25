@@ -18,5 +18,7 @@ public class RenderInfo : IRenderInfo
 	public String? CurrentLocale { get; init; }
 	public Boolean IsDebugConfiguration { get; init; }
 	public Boolean SecondPhase { get; init; }
+	// required: a default would render Vue 2 under a Vue 3 shell wherever a builder forgot it
+	public required ClientFramework Framework { get; init; }
 }
 

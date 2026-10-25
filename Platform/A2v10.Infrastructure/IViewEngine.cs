@@ -20,6 +20,7 @@ public interface IRenderInfo
 	Boolean SecondPhase { get; }
 	// Render="Debug" elements and TestId are written only under it
 	Boolean IsDebugConfiguration { get; }
+	ClientFramework Framework { get; }
 }
 
 public interface IRenderResult

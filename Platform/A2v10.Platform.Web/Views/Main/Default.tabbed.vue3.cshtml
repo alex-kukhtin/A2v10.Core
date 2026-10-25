@@ -1,0 +1,127 @@
+@model MainViewModel
+@{
+	Layout = "_Layout.tabbed.vue3";
+}
+@inject ILocalizer loc
+@inject IApplicationHost host
+@inject IUserBannerProvider userBanner
+@inject IApplicationTheme theme
+
+@{
+	var bannerText = await userBanner.GetHtmlAsync();
+	var isBannerVisible = !String.IsNullOrEmpty(bannerText);
+	var hasLicense = Model.HasLicense.ToString().ToLowerInvariant();
+	var hasProfile = Model.HasProfile.ToString().ToLowerInvariant();
+}
+
+<div id="shell" class="mdi-shell @(Model!.Debug ? "debug" : "release")" v-cloak>
+	<a2-mdi-header :title="title" person-name="@Model.PersonName" :has-profile="@hasProfile" profile-text="@loc["Profile"]" enable-dark="@theme.IsDarkThemeEnabled"
+		is-dark="@theme.IsDark"
+		accesskeyprofile-text="@loc["Profile"]" :logo="'@Html.Raw(theme.LogoUrl())'" :has-license="@hasLicense" license-text="@loc["License"]" >
+		@if (Model.HasNavPane)
+		{
+			<include class=nav-pane src="/_page/_navpane/index/0" :hide-indicator="true"></include>
+		}
+	</a2-mdi-header>
+	<div class="load-indicator" v-show="processing"></div>
+	<a2-mdi-navbar :menu="menu" :columns="columns"></a2-mdi-navbar>
+	<div class="mdi-tabs-container" v-on:contextmenu.stop.prevent="tabsContextMenu">
+		<ul class="mdi-tabs" :style="{'--maxTabWidth': maxTabWidth}">
+			<li ref="home" v-on:click.stop.prevent="selectHome()" tab-key="10" class="tab-home" v-bind:class="{active: isHomeActive()}">
+				<span class="ico ico-home"></span>
+			</li>
+			<li v-for="t in tabs" :key="t.key" :tab-key="t.key" :title="t.title" v-on:mouseleave="t.debug = false"
+				ref="tab" :class="{active: isTabActive(t), drag: isDragged(t), willclose: willClose(t)}" v-on:click.stop.prevent="selectTab(t, false, $event)" v-on:mouseup.middle="closeTab(t)"
+					:style="{left:offsetLeft(t), order: t.o}" v-on:pointerdown="pointerDown($event, t)" v-on:pointermove="pointerMove($event, t)" v-on:pointerup="pointerUp($event,t)">
+				<span v-text="tabTitle(t)" class="tab-title"></span>
+				<span class="close ico ico-clear" v-on:click.stop.prevent="closeTab(t)"></span>
+				<span class="tab-tooltip" v-if="t.debug" v-text="tabTooltip(t)" v-on:click="clickTooltip(t)"></span>
+			</li>
+		</ul>
+		<div class="mdi-tabs-menu">
+			<span class="open-menu ico ico-chevron-down" v-on:click.stop.prevent="toggleTabPopup"></span>
+			<ul class="mdi-tabs-popup menu" v-if="tabPopupOpen" ref="tabPopup"
+				v-on:contextmenu.stop.prevent="dummy">
+				<li class="group">@loc["OpenTabs"]</li>
+				<li v-for="t in tabs" v-on:click.stop.prevent="selectTab(t, false, $event)">
+					<span v-text="fitText(t.title)"></span>
+				</li>
+				<li class="group">@loc["RecentlyClosedTabs"]</li>
+				<li v-for="t in closedTabs" v-on:click.stop.prevent="reopenTab(t)">
+					<span v-text="fitText(t.title)"></span>
+				</li>
+			</ul>
+		</div>
+	</div>
+	<div class="mdi-main">
+		<a2-include :source="homeSource()" :complete="tabLoadComplete" :lock="lockRoute" :on-error="tabLoadError" v-show="isHomeActive()"></a2-include>
+		<div class="mdi-view" v-for="(t, tx) in tabs" v-show="isTabActive(t)" :key="t.key">
+			<a2-include :source="tabSource(t)" :complete="tabLoadComplete" :lock="lockRoute" :reload="t.reload" :on-error="tabLoadError"></a2-include>
+		</div>
+	</div>
+	<div class="mdi-banner @(isBannerVisible ? "show" : "")">
+		@Html.Raw(bannerText)
+	</div>
+	<div class="mdi-footer">
+		<div :class="{spinner: true, active:processing}"></div>
+		<span class="divider"></span>
+
+		<span class="links">
+			<a target="_blank" tabindex="-1" href="" v-on:click.stop.prevent="navigateUrl('/app/about/0')">@loc.Localize(null, "@[About]")</a>
+		</span>
+		<span class="divider"></span>
+
+		<span class="version-info">
+			<a target="_blank" tabindex="-1" href="https://a2v10.com"><i class="ico ico-a2logo a2logo-layout"></i></a>
+			@loc.Localize(null, "@[Version]")
+			<span v-text="version"></span>
+		</span>
+		@if (host.IsDebugConfiguration)
+		{
+			<div class="debug-btn dropdown dir-up" v-dropdown>
+				<button class="btn btn-debug" toggle>@loc.Localize(null, "@[Debug]")<span class="caret up"></span></button>
+				<div class="dropdown-menu menu up-left">
+					<a v-on:click.prevent="debugModel" class="dropdown-item" tabindex="-1"><i class="ico ico-database"></i> @loc.Localize(null, "@[DataModel]")</a>
+					<a v-on:click.prevent="debugTrace" class="dropdown-item" tabindex="-1"><i class="ico ico-chart-stacked-line"></i> @loc.Localize(null, "@[Profiling]")</a>
+					<div class="divider"></div>
+					<label class="checkbox">
+						<input type="checkbox" v-model="traceEnabled" name="trace"/>
+						<span>@loc["Tracing"]</span>
+					</label>
+				</div>
+			</div>
+		} else {
+			@* use gap:12px*@
+			<div></div>
+		}
+	</div>
+	<a2-debug :model-stack="modelStack" :model-visible="debugShowModel" v-if="isDebug"
+			  :trace-visible="debugShowTrace" :counter="dataCounter" :close="debugClose"></a2-debug>
+	<div class=modal-stack v-if=hasModals>
+		<div class="modal-wrapper modal-animation-frame" v-for="dlg in modals" v-bind:class="{show: dlg.wrap}">
+			<a2-modal :dialog=dlg></a2-modal>
+		</div>
+	</div>
+	<a2-toastr></a2-toastr>
+	<div class="side-pane-frame" v-if="sidePaneVisible">
+		<include :src="sidePaneUrl" :hide-indicator="true"></include>
+	</div>
+	<div id="ctx-tabs-popup" class="contextmenu">
+		<div class="dropdown-menu menu" role="menu">
+			<button class="dropdown-item" v-on:click="reopenClosedTab" v-bind:disabled="!canReopenClosed"><span>@loc["ReopenClosedTab"]</span></button>
+			<button class="dropdown-item" v-on:click="popupClose" v-bind:disabled="!canPopupClose"><span>@loc["Close"]</span></button>
+			<button class="dropdown-item" v-on:click="popupCloseOther" v-bind:disabled="!contextTabKey"><span>@loc["CloseOtherTabs"]</span></button>
+			<button class="dropdown-item" v-on:click="popupCloseRight" v-bind:disabled="!canPopupCloseRight"><span>@loc["CloseTabsRight"]</span></button>
+			<button class="dropdown-item" v-on:click="popupCloseAll"><span>@loc["CloseAllTabs"]</span></button>
+			<div class="divider" role="separator"></div>
+			<button class="dropdown-item" v-on:click="copyTabUrl" v-bind:disabled="!canPopupClose"><span>@loc["CopyTabUrl"]</span></button>
+		</div>
+	</div>
+	<div v-if="newVersionAvailable" class="mdi-new-version">
+		<div class="nv-body">
+			<h3>A new version is available</h3>
+			<span>Reload the page to continue</span>
+			<button class="btn btn-primary" v-on:click="reloadApplication">Reload to update</button>
+		</div>
+	</div>
+</div>

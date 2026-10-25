@@ -169,8 +169,7 @@ public class DataGrid : Control
 		if (RowDetails == null || RowDetails.Content == null)
 			return;
 		var rdtag = new TagBuilder("template");
-		rdtag.MergeAttribute("slot", "row-details");
-		rdtag.MergeAttribute("slot-scope", "details");
+		context.MergeSlot(rdtag, "row-details", "details");
 		rdtag.RenderStart(context);
 		using (var ctx = new ScopeContext(context, "details.row", null))
 		{
@@ -185,7 +184,7 @@ public class DataGrid : Control
 		if (EmptyPanel == null)
 			return;
 		var panel = new TagBuilder("template");
-		panel.MergeAttribute("slot", "empty");
+		context.MergeSlot(panel, "empty");
 		panel.RenderStart(context);
 		EmptyPanel.RenderElement(context);
 		panel.RenderEnd(context);

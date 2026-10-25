@@ -187,8 +187,8 @@
 					let canResult = dlg.attrs.canClose();
 					if (canResult === true)
 						closeImpl(result);
-					else if (canResult.then) {
-						result.then(function (innerResult) {
+					else if (canResult && canResult.then) {
+						canResult.then(function (innerResult) {
 							if (innerResult === true)
 								closeImpl(result);
 							else if (innerResult) {

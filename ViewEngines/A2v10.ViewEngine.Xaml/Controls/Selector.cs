@@ -128,8 +128,7 @@ public class Selector : ValuedControl, ITableControl
 		if (NewPane == null)
 			return;
 		var npTag = new TagBuilder("template");
-		npTag.MergeAttribute("slot", "new-pane");
-		npTag.MergeAttribute("slot-scope", "newNane");
+		context.MergeSlot(npTag, "new-pane", "newNane");
 		npTag.RenderStart(context);
 		using (var ctx = new ScopeContext(context, "newPane.elem", null))
 		{
@@ -145,8 +144,7 @@ public class Selector : ValuedControl, ITableControl
 		if (ItemsPanel is not DataGrid dg)
 			throw new XamlException("Only DataGrid panel is supported");
 		var tml = new TagBuilder("template");
-		tml.MergeAttribute("slot", "pane");
-		tml.MergeAttribute("slot-scope", "root");
+		context.MergeSlot(tml, "pane", "root");
 		tml.RenderStart(context);
 		using (var ctx = new ScopeContext(context, "itm", null))
 		{

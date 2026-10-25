@@ -84,7 +84,7 @@ public class CollectionView : UIElementBase
 
 		_outer.RenderStart(context);
 		_inner = new TagBuilder("template");
-		_inner.MergeAttribute("slot-scope", "Parent");
+		context.MergeSlot(_inner, null, "Parent");
 		_inner.RenderStart(context);
 	}
 

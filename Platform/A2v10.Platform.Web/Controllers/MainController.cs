@@ -50,7 +50,7 @@ public class MainController(IDataService dataService, IOptions<AppOptions> appOp
 	public async Task<IActionResult> ViewLicense()
 	{
 		var licInfo = await _licenseManager.GetLicenseInfoAsync(_currentUser.Identity.Segment, _currentUser.Identity.Tenant);
-		return View(new ViewLicenseModel(licInfo));
+		return View(_appOptions.Framework.ViewName("ViewLicense"), new ViewLicenseModel(licInfo));
 	}
 
 	[HttpGet]
@@ -124,13 +124,13 @@ public class MainController(IDataService dataService, IOptions<AppOptions> appOp
 		if (pathInfo != null && _appOptions.SinglePages.Any(x => pathInfo.StartsWith(x, StringComparison.OrdinalIgnoreCase)))
 		{
 			viewModel.SinglePagePath = pathInfo;
-			return View("Default.singlepage", viewModel);
+			return View(_appOptions.Framework.ViewName("Default.singlepage"), viewModel);
 		}
 
 		if (!String.IsNullOrEmpty(_appOptions.Layout))
-			return View($"Default.{_appOptions.Layout}", viewModel);
+			return View(_appOptions.Framework.ViewName($"Default.{_appOptions.Layout}"), viewModel);
 
-		return View(viewModel);
+		return View(_appOptions.Framework.ViewName("Default"), viewModel);
 	}
 
 	[Route("main/error")]

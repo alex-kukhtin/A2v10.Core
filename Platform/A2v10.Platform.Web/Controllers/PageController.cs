@@ -10,6 +10,7 @@ using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
@@ -37,7 +38,7 @@ public class PageActionResult(IRenderResult render, String? script) : IActionRes
 public class PageController(IApplicationHost _host, ILocalizer _localizer, ICurrentUser _currentUser, 
 	IProfiler _profiler, IDataService _dataService,
 	IViewEngineProvider _viewEngineProvider, IAppDataProvider _appDataProvider, 
-	IAppVersion _appVersion, IDataScripter _scripter, IUserDevice _userDevice) 
+	IAppVersion _appVersion, IDataScripter _scripter, IUserDevice _userDevice, IOptions<AppOptions> _appOptions)
 	: BaseController(_host, _localizer, _currentUser, _profiler)
 {
 	[Route("_page/{*pathInfo}")]
@@ -178,6 +179,7 @@ public class PageController(IApplicationHost _host, ILocalizer _localizer, ICurr
 			CurrentLocale = null,
 			IsDebugConfiguration = _host.IsDebugConfiguration,
 			SecondPhase = secondPhase,
+			Framework = _appOptions.Value.Framework
 		};
 		var result = await viewEngine.Engine.RenderAsync(ri);
 		await ProcessDbEvents(rw);
@@ -196,11 +198,11 @@ public class PageController(IApplicationHost _host, ILocalizer _localizer, ICurr
 		switch (kind)
 		{
 			case "about":
-				return View("About", new AboutViewModel() { AppData = await _appDataProvider.GetAppDataAsStringAsync()});
+				return View(_appOptions.Value.Framework.ViewName("About"), new AboutViewModel() { AppData = await _appDataProvider.GetAppDataAsStringAsync()});
 			case "changepassword":
 				if (urlKind != UrlKind.Dialog)
 					throw new InvalidRequestException(exceptionInfo);
-				return View("ChangePassword", new ChangePasswordViewModel { UserName = _currentUser.Identity.Name});
+				return View(_appOptions.Value.Framework.ViewName("ChangePassword"), new ChangePasswordViewModel { UserName = _currentUser.Identity.Name});
 			default:
 				if (urlKind != UrlKind.Page)
 					throw new InvalidRequestException(exceptionInfo);

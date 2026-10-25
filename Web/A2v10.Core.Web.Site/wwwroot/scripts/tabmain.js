@@ -322,7 +322,11 @@ app.modules['std:utils'] = function () {
 	function isNumber(value) { return typeof value === 'number'; }
 	function isBoolean(value) { return typeof value === 'boolean'; }
 	function isObjectExact(value) { return isObject(value) && !Array.isArray(value); }
-	function isPromise(v) { return isDefined(v) && isFunction(v.then) && isFunction(v.catch); }
+
+	function isPromise(v) { 		
+		return v !== null && (typeof v === 'object' || typeof v === 'function')
+			&& isFunction(v.then) && isFunction(v.catch);
+	}
 
 	function isPrimitiveCtor(ctor) {
 		return ctor === String || ctor === Number || ctor === Boolean || ctor === Date || ctor === platform.File || ctor === Object;
@@ -570,7 +574,7 @@ app.modules['std:utils'] = function () {
 			return obj.Name;
 		else if (isDate(obj))
 			return formatDate(obj);
-		return '' + val;
+		return '' + obj;
 	}
 
 	function format(obj, dataType, opts) {
@@ -807,7 +811,7 @@ app.modules['std:utils'] = function () {
 
 	function dateHasTime(d1) {
 		if (!isDate(d1)) return false;
-		return d1.getHours() !== 0 || d1.getMinutes() !== 0 && d1.getSeconds() !== 0;
+		return d1.getHours() !== 0 || d1.getMinutes() !== 0 || d1.getSeconds() !== 0;
 	}
 
 	function endOfMonth(dt) {
@@ -1175,7 +1179,7 @@ app.modules['std:url'] = function () {
 	};
 
 	function normalize(elem) {
-		elem = '' + elem || '';
+		elem = elem == null ? '' : '' + elem;
 		elem = elem.replace(/\\/g, '/');
 		if (elem.startsWith('/'))
 			elem = elem.substring(1);
@@ -1349,10 +1353,6 @@ app.modules['std:url'] = function () {
 			return '';
 		}
 		return helpUrlElem.content + (path || '');
-	}
-
-	function replaceId(url, newId) {
-		alert('todo::replaceId');
 	}
 
 	function isDialogPath(url) {
@@ -1966,6 +1966,8 @@ app.modules['std:http'] = function () {
 					if (ct.startsWith('text/'))
 						txt = await response.text();
 					throw txt;
+				default:
+					throw response.statusText;
 			}
 
 		} catch (err) {
@@ -2013,7 +2015,7 @@ app.modules['std:http'] = function () {
 					let rdoc = dp.parseFromString(html, 'text/html');
 					// first element from fragment body
 					let srcElem = rdoc.body.firstElementChild;
-					let elemId = srcElem.id || null;
+					let elemId = srcElem ? srcElem.id || null : null;
 					selector.innerHTML = srcElem ? srcElem.outerHTML : '';
 					if (elemId && !document.getElementById(elemId)) {
 						selector.innerHTML = '';
@@ -2094,7 +2096,11 @@ app.modules['std:http'] = function () {
 		httpQueue.processing = true;
 		while (httpQueue.arr.length > 0) {
 			let el = httpQueue.arr.shift();
-			await load(el.url, el.selector, null);
+			try {
+				await load(el.url, el.selector, null);
+			} catch (err) {
+				console.error(err);
+			}
 		}
 		httpQueue.processing = false;
 	}
@@ -2136,7 +2142,7 @@ app.modules['std:http'] = function () {
 		let urlArr = url.split('/');
 		if (urlArr.length === 5)
 			return urlArr.slice(0, 3).join('/');
-		else if (url.length === 4)
+		else if (urlArr.length === 4)
 			return urlArr.slice(0, 2).join('/');
 		return url;
 	}
@@ -2167,7 +2173,6 @@ app.modules['std:http'] = function () {
 		}
 
 		navigate(url) {
-			this.route = url;
 			eventBus.$emit('closeAllPopups');
 			eventBus.$emit('modalCloseAll');
 			eventBus.$emit('showSidePane', null);
@@ -2396,7 +2401,7 @@ app.modules['std:validators'] = function () {
 				}
 				return val === '' || rule.regExp.test(val);
 		}
-		console.error(`invalid std rule: '${rule}'`);
+		console.error(`invalid std rule: '${rule.valid}'`);
 		return true;
 	}
 
@@ -2643,10 +2648,11 @@ app.modules['std:impl:array'] = function () {
 				return this;
 			this.$empty();
 			if (utils.isArray(src)) {
-				for (let i = 0; i < src.length; i++) {
+				for (let i = 0; i < src.length; i++)
 					this.push(this.$new(src[i]));
-				}
 			}
+			if ('$RowCount' in this)
+				this.$RowCount = this.length;			
 			this.$renumberRows();
 			return this;
 		};
@@ -2792,10 +2798,8 @@ app.modules['std:impl:array'] = function () {
 				let eventName = that._path_ + '[].add';
 				that._root_.$setDirty(true, that._path_);
 				that._root_.$emit(eventName, that /*array*/, ne /*elem*/, len - 1 /*index*/);
-				if (select) {
+				if (select)
 					ne.$select();
-					emitSelect(that, ne);
-				}
 				// set RowNumber
 				if ('$rowNo' in newElem._meta_) {
 					let rowNoProp = newElem._meta_.$rowNo;
@@ -3169,6 +3173,11 @@ app.modules['std:impl:array'] = function () {
 				let eventWasFired = false;
 				let skipDirty = prop.startsWith('$$');
 				let ctor = this._meta_.props[prop];
+				if (ctor === TMarker) {
+					let mp = this._meta_.markerProps[prop];
+					if (utils.isDefined(mp.type) && utils.isDefined(mp.value))
+						ctor = mp.type;
+				}
 				let isjson = false;
 				if (ctor.type) {
 					isjson = !!ctor.json;
@@ -3263,7 +3272,7 @@ app.modules['std:impl:array'] = function () {
 						});
 					}
 				} else {
-					alert('todo: invalid property type');
+					console.error(`invalid template property: ${objname}.${p}`);
 				}
 			}
 		}
@@ -3338,7 +3347,7 @@ app.modules['std:impl:array'] = function () {
 			let exp = false;
 			let clps = false;
 			if (elem._meta_.$expanded) {
-				let val = source[elem._meta_.$expanded];
+				let val = source ? source[elem._meta_.$expanded] : false;
 				exp = !!val;
 				clps = !val;
 			}
@@ -3426,7 +3435,9 @@ app.modules['std:impl:array'] = function () {
 
 		if (elem._meta_.$itemType) {
 			elem.$setProperty = function (prop, src) {
-				let itmPath = path + '.' + prop;
+				if (Object.isSealed(this))
+					throw new Error(`$setProperty: the map '${this._path_ || 'Root'}' is sealed after load`);
+				let itmPath = elem._path_ ? `${elem._path_}.${prop}` : prop;
 				let ne = new elem._meta_.$itemType(src, itmPath, elem);
 				platform.set(this, prop, ne);
 				this._root_.$setDirty(true);
@@ -3893,7 +3904,7 @@ app.modules['std:impl:array'] = function () {
 					else if (utils.isFunction(cmdf.exec))
 						return cmdf.exec.call(that, arg);
 					else
-						console.error($`There is no method 'exec' in command '${cmd}'`);
+						console.error(`There is no method 'exec' in command '${cmd}'`);
 				};
 
 				if (optConfirm) {
@@ -4207,6 +4218,7 @@ app.modules['std:impl:array'] = function () {
 				if (prop.startsWith('$$')) continue; // always skip
 				if (checkBindOnce && isSkipMerge(this._root_, prop)) continue;
 				let ctor = this._meta_.props[prop];
+				if (ctor === TMarker) continue; // a marker is client state, not data
 				if (ctor.type) ctor = ctor.type;
 				let trg = this[prop];
 				if (Array.isArray(trg)) {
@@ -4236,8 +4248,11 @@ app.modules['std:impl:array'] = function () {
 					} else {
 						if (existsOnly && !(prop in src))
 							continue; // no item in src
-						let newsrc = new ctor(src[prop], prop, this);
-						platform.set(this, prop, newsrc);
+
+						if (trg && trg.$merge)
+							trg.$merge(src[prop] || null);
+						else
+							platform.set(this, prop, new ctor(src[prop] || null, this._path_ ? `${this._path_}.${prop}` : prop, this));
 					}
 				}
 			}
@@ -5304,7 +5319,8 @@ app.modules['std:barcode'] = function () {
 			complete: Function,
 			lock: Boolean,
 			reload: Number,
-			onError: Function
+			onError: Function,
+			hideIndicator: Boolean
 		},
 		data() {
 			return {
@@ -14445,10 +14461,8 @@ Vue.directive('resize', {
 					err = err || 'unknown error';
 					if (opts && opts.catchError)
 						throw err;
-					else if (err.indexOf('UI:') === 0)
-						this.$alert(err.substring(3).replace('\\n', '\n'));
 					else
-						alert(err);
+						this.$alertUi(err);
 					return false;
 				}
 			},
@@ -14838,16 +14852,16 @@ Vue.directive('resize', {
 					}
 				}
 
-				if (opts && opts.validRequired && root.$invalid) {
+				if (opts && opts.validRequired && this.$data.$invalid) {
 					this.$alert(locale.$MakeValidFirst);
 					return;
 				}
 
 				let mo = this.$data.$mainObject;
 				if (opts && opts.saveRequired && (this.$isDirty || mo && mo.$isNew)) {
-					let dlgResult = null;
-					this.$save().then(() => { dlgResult = doDialog(); });
-					return dlgResult;
+					this.$data.$setDirty(true);
+					const saving = this.$save();
+					return saving ? saving.then(() => doDialog()) : undefined;
 				}
 				return doDialog();
 			},
@@ -14957,7 +14971,7 @@ Vue.directive('resize', {
 						window.open(url, '_blank');
 				};
 
-				if (opts && opts.validRequired && root.$invalid) {
+				if (opts && opts.validRequired && this.$data.$invalid) {
 					this.$alert(locale.$MakeValidFirst);
 					return;
 				}
@@ -15479,6 +15493,7 @@ Vue.directive('resize', {
 			eventBus.$off('invokeTest', this.__invoke__test__);
 			eventBus.$off('globalPeriodChanged', this.__global_period_changed__);
 			eventBus.$off('globalAppEvent', this.__globalAppEvent__);
+			eventBus.$off('signalEvent', this.__signalAppEvent__);
 
 			this.$off('cwChange', this.__cwChange);
 			htmlTools.removePrintFrame();

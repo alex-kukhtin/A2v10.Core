@@ -2,6 +2,7 @@
 
 using System;
 
+using Microsoft.Extensions.Options;
 
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
@@ -30,7 +31,12 @@ public static class ServiceExtensions
 		services.AddScoped<IApplicationHost, WebApplicationHost>()
 		.AddScoped<ITenantManager, WebTenantManager>()
 		.AddScoped<IAppTenantManager, AppTenantManager>()
-		.AddScoped<IDataScripter, VueDataScripter>();
+		.AddScoped<IDataScripter>(s => s.GetRequiredService<IOptions<AppOptions>>().Value.Framework switch
+		{
+			ClientFramework.Vue2 => ActivatorUtilities.CreateInstance<VueDataScripter>(s),
+			ClientFramework.Vue3 => ActivatorUtilities.CreateInstance<Vue3DataScripter>(s),
+			var fw => throw HostHelpers.UnsupportedFramework(fw)
+		});
 
 		services.AddScoped<IUserDevice, WebUserDevice>();
 
