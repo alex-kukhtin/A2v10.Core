@@ -1,0 +1,3395 @@
+(function (platform$1, vue) {
+    'use strict';
+
+    // What the XAML components take from the platform (a2v10-core.js, loaded before): the vocabulary they register into,
+    // app.js's registries (app.components: the bases the applications extend) and the std:* modules, untyped, as the
+    // Net48 components took them.
+    const app = window.app;
+    function require$1(name) {
+        return platform$1.require(name);
+    }
+
+    // v-focus, v-settabindex (Net48 directives/focus.js), v-disable (directives/disable.js), unchanged in behaviour.
+    // Vue 2's bind is created, inserted is mounted.
+    // selects all text on focus
+    platform$1.vocabulary.directive('focus', {
+        created(el) {
+            function doSelect(t) {
+                if (!t.select)
+                    return;
+                if (t._selectDone)
+                    return;
+                t.select();
+                t._selectDone = true;
+            }
+            el.addEventListener('focus', function (event) {
+                // focus occurs before click!
+                const target = event.target;
+                target.parentElement.classList.add('focus');
+                if (el.__opts && el.__opts.mask)
+                    return;
+                target._selectDone = false;
+                setTimeout(() => {
+                    doSelect(target);
+                }, 0);
+            }, false);
+            el.addEventListener('blur', function (event) {
+                const t = event.target;
+                t._selectDone = true;
+                t.parentElement.classList.remove('focus');
+            }, false);
+            el.addEventListener('click', function (event) {
+                if (el.__opts && el.__opts.mask)
+                    return;
+                doSelect(event.target);
+            }, false);
+        },
+        mounted(el) {
+            el._selectDone = false;
+            if (el.tabIndex === 1) {
+                setTimeout(() => {
+                    if (el.focus)
+                        el.focus();
+                    if (el.select)
+                        el.select();
+                }, 0);
+            }
+        }
+    });
+    // v-disable (Net48 directives/disable.js): a click on a disabled element stops in the capture phase
+    platform$1.vocabulary.directive('disable', {
+        created(el) {
+            function doDisable(event) {
+                if (this.getAttribute('disabled')) {
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                    return false;
+                }
+            }
+            // with capture !!!
+            el.addEventListener('click', doDisable, true);
+        }
+    });
+    platform$1.vocabulary.directive('settabindex', {
+        mounted(el) {
+            if (el.tabIndex === 1) {
+                setTimeout(() => {
+                    if (el.focus)
+                        el.focus();
+                }, 0);
+            }
+        }
+    });
+
+    // a2-pager (Net48 components/pager.js), unchanged in behaviour: the pages of a collection view's source
+    // (Parent.Pager: pageSize, offset, sourceCount, $setOffset). Vue 3's h takes flat props: on.click is onClick,
+    // domProps and attrs are props.
+    const locale$4 = window.$$locale;
+    const eventBus$5 = require$1('std:eventBus');
+    const fmt = new Intl.NumberFormat('uk-UA').format;
+    platform$1.vocabulary.component('a2-pager', vue.defineComponent({
+        props: {
+            source: Object,
+            emptyText: String,
+            templateText: String
+        },
+        computed: {
+            src() {
+                return this.source;
+            },
+            pages() {
+                return Math.ceil(this.count / this.src.pageSize);
+            },
+            currentPage() {
+                return Math.ceil(this.offset / this.src.pageSize) + 1;
+            },
+            title() {
+                if (!this.count)
+                    return this.emptyString;
+                return this.textString;
+            },
+            emptyString() {
+                return this.emptyText ? this.emptyText : locale$4.$NoElements;
+            },
+            textString() {
+                const lastNo = Math.min(this.count, this.offset + this.src.pageSize);
+                if (this.templateText)
+                    return this.templateText
+                        .replace(/\#\[Start\]/g, fmt(this.offset + 1))
+                        .replace(/\#\[End\]/g, fmt(lastNo))
+                        .replace(/\#\[Count\]/g, fmt(this.count));
+                else
+                    return `${locale$4.$PagerElements}: <b>${fmt(this.offset + 1)}</b>-<b>${fmt(lastNo)}</b> ${locale$4.$Of} <b>${fmt(this.count)}</b>`;
+            },
+            offset() {
+                return +this.src.offset;
+            },
+            count() {
+                return +this.src.sourceCount;
+            }
+        },
+        methods: {
+            setOffset(offset) {
+                offset = +offset;
+                if (this.offset === offset)
+                    return;
+                eventBus$5.$emit('closeAllPopups');
+                this.$nextTick(() => this.src.$setOffset(offset));
+            },
+            isActive(page) {
+                return page === this.currentPage;
+            },
+            click(arg, $ev) {
+                $ev.preventDefault();
+                switch (arg) {
+                    case 'prev':
+                        this.setOffset(this.offset - this.src.pageSize);
+                        break;
+                    case 'next':
+                        this.setOffset(this.offset + this.src.pageSize);
+                        break;
+                }
+            },
+            goto(page, $ev) {
+                $ev.preventDefault();
+                const offset = (page - 1) * this.src.pageSize;
+                this.setOffset(offset);
+            }
+        },
+        render() {
+            if (this.src.pageSize === -1)
+                return null; // invisible
+            const children = [];
+            const dotsClass = { class: 'a2-pager-dots' };
+            const renderBtn = (page) => {
+                return vue.h('button', {
+                    innerText: page,
+                    onClick: ($ev) => this.goto(page, $ev),
+                    class: { active: this.isActive(page) }
+                });
+            };
+            // prev
+            children.push(vue.h('button', {
+                onClick: ($ev) => this.click('prev', $ev),
+                disabled: this.offset === 0, 'aria-label': 'Previous page'
+            }, [vue.h('i', { class: 'ico ico-chevron-left' })]));
+            // first
+            if (this.pages > 0)
+                children.push(renderBtn(1));
+            // middle
+            let ms = 2;
+            let me = this.pages - 1;
+            if (this.pages == 2)
+                me = 2;
+            let sd = false, ed = false;
+            const cp = this.currentPage;
+            const len = me - ms;
+            if (len > 4) {
+                if (cp > 4)
+                    sd = true;
+                if (cp < this.pages - 3)
+                    ed = true;
+                if (sd && !ed)
+                    ms = me - 3;
+                else if (!sd && ed)
+                    me = ms + 3;
+                else if (sd && ed) {
+                    ms = cp - 1;
+                    me = cp + 1;
+                }
+            }
+            if (sd)
+                children.push(vue.h('span', dotsClass, '...'));
+            for (let mi = ms; mi <= me; ++mi)
+                children.push(renderBtn(mi));
+            if (ed)
+                children.push(vue.h('span', dotsClass, '...'));
+            // last
+            if (this.pages > 2)
+                children.push(renderBtn(this.pages));
+            // next
+            children.push(vue.h('button', {
+                onClick: ($ev) => this.click('next', $ev),
+                disabled: this.currentPage >= this.pages, 'aria-label': 'Next Page'
+            }, [vue.h('i', { class: 'ico ico-chevron-right' })]));
+            children.push(vue.h('span', { class: 'a2-pager-divider' }));
+            children.push(vue.h('span', { class: 'a2-pager-title', innerHTML: this.title }));
+            return vue.h('div', { class: 'a2-pager' }, children);
+        }
+    }));
+
+    // validator, a2-static-validator (Net48 components/validator.js), unchanged in behaviour: the errors of a control's
+    // value, and of a model property alone.
+    platform$1.vocabulary.component('validator', vue.defineComponent({
+        props: {
+            invalid: Function,
+            errors: Array,
+            options: Object
+        },
+        template: '<div v-if="invalid()" class="validator" :class="cssClass" :style="cssStyle"><span v-for="err in errors" v-text="err.msg" :class="err.severity"></span></div>',
+        computed: {
+            cssStyle() {
+                const r = {};
+                if (this.options && this.options.width)
+                    r.width = this.options.width;
+                return r;
+            },
+            cssClass() {
+                const r = {};
+                if (!this.options)
+                    return r;
+                if (this.options.placement)
+                    r[this.options.placement] = true;
+                if (this.options.width)
+                    r['with-width'] = true;
+                return r;
+            }
+        }
+    }));
+    platform$1.vocabulary.component('a2-static-validator', vue.defineComponent({
+        props: {
+            item: {
+                type: Object, default() {
+                    return {};
+                }
+            },
+            prop: String
+        },
+        template: '<div v-if="invalid()" class="static-validator"><span v-for="err in errors" v-text="err.msg" :class="err.severity"></span></div>',
+        computed: {
+            path() {
+                return this.item._path_ + '.' + this.prop;
+            },
+            modelValue() {
+                if (!this.item)
+                    return null;
+                return this.item[this.prop];
+            },
+            errors() {
+                const item = this.item;
+                if (!item)
+                    return null;
+                const root = item._root_;
+                if (!root)
+                    return null;
+                if (!root._validate_)
+                    return null;
+                return root._validate_(item, this.path, this.modelValue, this.deferUpdate);
+            }
+        },
+        methods: {
+            invalid() {
+                // method! no cache!
+                const err = this.errors;
+                if (!err)
+                    return false;
+                return err.length > 0;
+            }
+        }
+    }));
+
+    // control (Net48 components/control.js), unchanged in behaviour: the base of the input controls (textbox, combobox,
+    // datepicker…): label, validation, the masked or formatted value, the accelerator. Not a tag: app.components['control'],
+    // which the controls and the applications extend. The item and prop are the derived control's props.
+    // Vue 3: beforeDestroy is beforeUnmount; $children is gone (deferUpdate: forceUpdateChildren).
+    const utils$8 = require$1('std:utils');
+    const mask$1 = require$1('std:mask');
+    const maccel = require$1('std:accel');
+    // Vue 2's $children: the component instances of a component's own render, not deeper. Each is updated.
+    function forceUpdateChildren(instance) {
+        const walk = (vnode) => {
+            if (!vnode)
+                return;
+            if (vnode.component) {
+                vnode.component.proxy.$forceUpdate();
+                return;
+            }
+            if (Array.isArray(vnode.children))
+                for (const c of vnode.children)
+                    walk(c);
+        };
+        walk(instance.subTree);
+    }
+    const control = vue.defineComponent({
+        props: {
+            label: String,
+            required: { type: null },
+            align: { type: String, default: 'left' },
+            description: String,
+            disabled: { type: null },
+            tabIndex: Number,
+            dataType: String,
+            format: String,
+            validatorOptions: Object,
+            updateTrigger: String,
+            mask: String,
+            hideZeros: Boolean,
+            testId: String,
+            accel: String,
+            highlight: { type: null }
+        },
+        computed: {
+            path() {
+                const self = this;
+                if (self.item._path_)
+                    return self.item._path_ + '.' + self.prop;
+                else
+                    return self.prop;
+            },
+            pathToValidate() {
+                const self = this;
+                return self.itemToValidate._path_ + '.' + self.propToValidate;
+            },
+            modelValue() {
+                const self = this;
+                if (!self.item)
+                    return null;
+                const val = self.item[self.prop];
+                if (this.dataType)
+                    return utils$8.format(val, this.dataType, { hideZeros: this.hideZeros, format: this.format });
+                else if (this.mask && val)
+                    return mask$1.getMasked(this.mask, val);
+                return val;
+            },
+            hasValue() {
+                const self = this;
+                if (!self.item)
+                    return false;
+                const val = self.item[self.prop];
+                if (!val)
+                    return false;
+                if (utils$8.isObjectExact(val))
+                    return !!val.Id;
+                return true;
+            },
+            modelValueRaw() {
+                const self = this;
+                if (!self.item)
+                    return null;
+                return self.item[self.prop];
+            },
+            errors() {
+                const self = this;
+                if (!self.item)
+                    return null;
+                const root = self.item._root_;
+                if (!root)
+                    return null;
+                if (!root._validate_)
+                    return null;
+                let err;
+                if (self.itemToValidate)
+                    err = root._validate_(self.itemToValidate, this.pathToValidate, self.itemToValidate[self.propToValidate], this.deferUpdate);
+                else
+                    err = root._validate_(self.item, this.path, this.modelValueRaw, this.deferUpdate);
+                return err;
+            },
+            inputClass() {
+                let cls = '';
+                if (this.align && this.align !== 'left')
+                    cls += 'text-' + this.align;
+                if (this.isNegative)
+                    cls += ' negative-red';
+                if (this.updateTrigger === 'input')
+                    cls += ' trigger-input';
+                return cls;
+            },
+            isNegative() {
+                const self = this;
+                if (this.dataType === 'Number' || this.dataType === 'Currency')
+                    if (self.item && this.modelValue < 0)
+                        return true;
+                return false;
+            },
+            hasLabel() {
+                return !!this.label;
+            },
+            hasDescr() {
+                return !!this.description;
+            },
+            maxLength() {
+                const self = this;
+                if (!self.item)
+                    return undefined;
+                if (!self.item.$maxLength)
+                    return undefined;
+                return self.item.$maxLength(self.prop);
+            }
+        },
+        mounted() {
+            const self = this;
+            // direct parent only
+            if (self.$parent.$registerControl)
+                self.$parent.$registerControl(this);
+            if (this.accel)
+                self._accelKey = maccel.registerControl(this.accel, this.$refs.input, 'focus');
+            if (!this.mask)
+                return;
+            mask$1.mountElement(this.$refs.input, this.mask);
+        },
+        beforeUnmount() {
+            const self = this;
+            // direct parent only
+            if (self.$parent.$unregisterControl)
+                self.$parent.$unregisterControl(this);
+            if (this.accel)
+                maccel.unregisterControl(self._accelKey);
+            if (!this.mask)
+                return;
+            mask$1.unmountElement(this.$refs.input, this.mask);
+        },
+        methods: {
+            valid() {
+                // method! no cache!
+                return !this.invalid();
+            },
+            invalid(out) {
+                // method! no cache!
+                const err = this.errors;
+                if (!err)
+                    return false;
+                if (out) {
+                    out.warn = err.every((r) => r.severity === 'warning');
+                    out.info = err.every((r) => r.severity === 'info');
+                    out.all = err.length;
+                }
+                return err.length > 0;
+            },
+            pending() {
+                return this.errors && this.errors.pending > 0;
+            },
+            cssClass() {
+                // method! no cached!!!
+                const out = {};
+                const inv = this.invalid(out);
+                let cls = 'control-group' + (inv ? ' invalid' : ' valid');
+                if (inv && out.warn)
+                    cls += ' val-warning';
+                else if (inv && out.info)
+                    cls += ' val-info';
+                if (this.required)
+                    cls += ' required';
+                if (this.disabled)
+                    cls += ' disabled';
+                if (this.highlight && this.hasValue)
+                    cls += ' has-value';
+                return cls;
+            },
+            deferUpdate() {
+                forceUpdateChildren(this.$);
+                this.$forceUpdate();
+            },
+            test() {
+                alert('from base control');
+            }
+        },
+        watch: {
+            mask() {
+                const self = this;
+                mask$1.setMask(this.$refs.input, this.mask);
+                if (self.updateValue)
+                    self.updateValue(this.$refs.input.value);
+            }
+        }
+    });
+    app.components['control'] = control;
+
+    // textbox, a2-textarea, static (Net48 components/textbox.js), unchanged in behaviour: over control (control.ts).
+    // Vue 3: an event a component does not declare in emits is also a native listener on its root, and the input's own
+    // change bubbles to it: the handler would run twice. change is declared.
+    // password-- fake fields are a workaround for chrome autofill getting the wrong fields
+    const utils$7 = require$1('std:utils');
+    const mask = require$1('std:mask');
+    const textBoxTemplate = `<div :class="cssClass()" :test-id="testId">
+	<label v-if="hasLabel"><span v-text="label"/><slot name="hint"/><slot name="link"></slot></label>
+	<div class="input-group">
+		<input v-if="password" type="text" class="fake-pwd-field" tabindex="-1"/>
+		<input ref="input" :type="controlType" v-focus :autocomplete="autocompleteText"
+			v-bind:value="modelValue"
+				v-on:change="onChange($event.target.value)"
+				v-on:input="onInput($event.target.value)"
+				v-on:keypress="onKey($event)"
+				:class="inputClass" :placeholder="placeholder" :readonly="disabled" :tabindex="tabIndex" :maxlength="maxLength" :spellcheck="spellCheck"/>
+		<slot></slot>
+		<a class="a2-hyperlink add-on a2-inline" href="" @click.stop.prevent="dummy" v-if=hasFilter><i class="ico ico-filter-outline"></i></a>
+		<a class="a2-hyperlink add-on a2-inline" href="" @click.stop.prevent="dummy" v-if=searchVisible><i class="ico ico-search"></i></a>
+		<a class="a2-hyperlink add-on a2-inline" tabindex="-1" href="" @click.stop.prevent="clear" v-if="clearVisible"><i class="ico ico-clear"></i></a>
+		<validator :invalid="invalid" :errors="errors" :options="validatorOptions"></validator>
+	</div>
+	<slot name="popover"></slot>
+	<span class="descr" v-if="hasDescr" v-text="description"></span>
+</div>
+`;
+    const textAreaTemplate = `<div :class="cssClass()" :test-id="testId">
+	<label v-if="hasLabel"><span v-text="label"/><slot name="hint"/><slot name="link"></slot></label>
+	<div class="input-group">
+		<textarea ref="input" v-focus v-auto-size="autoSize" v-bind:value="modelValue2" :style="areaStyle"
+			v-on:change="onChange($event.target.value)"
+			v-on:input="onInput($event.target.value)"
+			v-on:keypress="onKey($event)"
+			:rows="rows" :class="inputClass" :placeholder="placeholder" :readonly="disabled" :tabindex="tabIndex" :maxlength="maxLength" :spellcheck="spellCheck"/>
+		<slot></slot>
+		<validator :invalid="invalid" :errors="errors" :options="validatorOptions"></validator>
+	</div>
+	<slot name="popover"></slot>
+	<span class="descr" v-if="hasDescr" v-text="description"></span>
+</div>
+`;
+    const staticTemplate = `<div :class="cssClass()" :test-id="testId">
+	<label v-if="hasLabel"><span v-text="label"/><slot name="hint"/><slot name="link"></slot></label>
+	<div class="input-group static">
+		<span v-focus v-text="textProp" :class="inputClass" :tabindex="tabIndex" class="static-input"/>
+		<slot></slot>
+		<validator :invalid="invalid" :errors="errors" :options="validatorOptions"></validator>
+	</div>
+	<slot name="popover"></slot>
+	<span class="descr" v-if="hasDescr" v-text="description"></span>
+</div>
+`;
+    const textbox = vue.defineComponent({
+        extends: control,
+        template: textBoxTemplate,
+        emits: ['change'],
+        props: {
+            item: {
+                type: [Object, Array], default() {
+                    return {};
+                }
+            },
+            prop: String,
+            itemToValidate: Object,
+            propToValidate: String,
+            placeholder: String,
+            password: Boolean,
+            number: Boolean,
+            spellCheck: { type: Boolean, default: undefined },
+            enterCommand: Function,
+            hasClear: Boolean,
+            hasFilter: Boolean,
+            hasSearch: Boolean,
+            filters: Array
+        },
+        computed: {
+            controlType() {
+                return this.password ? 'password' : 'text';
+            },
+            autocompleteText() {
+                return this.password ? 'new-password' : 'off';
+            },
+            searchVisible() {
+                if (this.clearVisible)
+                    return false;
+                return this.hasSearch;
+            },
+            clearVisible() {
+                if (!this.hasClear)
+                    return false;
+                return !!this.item[this.prop];
+            }
+        },
+        methods: {
+            doFilter(value) {
+                return utils$7.text.applyFilters(this.filters, value);
+            },
+            updateValue(value) {
+                const item = this.item;
+                if (this.mask)
+                    item[this.prop] = mask.getUnmasked(this.mask, this.doFilter(value));
+                else
+                    item[this.prop] = utils$7.parse(this.doFilter(value), this.dataType);
+                const mv = this.modelValue;
+                const input = this.$refs.input;
+                if (input.value !== mv) {
+                    input.value = mv;
+                    this.$emit('change', item[this.prop]);
+                }
+            },
+            onInput(value) {
+                if (this.updateTrigger === 'input')
+                    this.updateValue(value);
+            },
+            onChange(value) {
+                if (this.updateTrigger !== 'input')
+                    this.updateValue(value);
+            },
+            onKey(event) {
+                if (this.number) {
+                    if ((event.charCode < 48 || event.charCode > 57) && event.charCode !== 45 /*minus*/) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                }
+                if (event.code === 'Enter') {
+                    if (this.enterCommand) {
+                        this.enterCommand();
+                    }
+                }
+            },
+            clear() {
+                this.item[this.prop] = '';
+            },
+            dummy() {
+            }
+        }
+    });
+    const textarea = vue.defineComponent({
+        extends: control,
+        template: textAreaTemplate,
+        emits: ['change'],
+        props: {
+            item: {
+                type: [Object, Array], default() {
+                    return {};
+                }
+            },
+            prop: String,
+            itemToValidate: Object,
+            propToValidate: String,
+            placeholder: String,
+            autoSize: Boolean,
+            rows: Number,
+            spellCheck: { type: Boolean, default: undefined },
+            enterCommand: Function,
+            maxHeight: String,
+            filters: Array
+        },
+        computed: {
+            modelValue2() {
+                if (!this.item)
+                    return null;
+                return this.item[this.prop];
+            },
+            areaStyle() {
+                if (this.maxHeight)
+                    return { 'max-height': this.maxHeight };
+                return undefined;
+            }
+        },
+        methods: {
+            updateValue(value) {
+                const item = this.item;
+                value = utils$7.text.applyFilters(this.filters, value);
+                if (item[this.prop] === value)
+                    return;
+                item[this.prop] = value;
+                this.$emit('change', item[this.prop]);
+            },
+            onInput(value) {
+                if (this.updateTrigger === 'input')
+                    this.updateValue(value);
+            },
+            onChange(value) {
+                if (this.updateTrigger !== 'input')
+                    this.updateValue(value);
+            },
+            onKey(event) {
+                if (event.code === 'Enter' && event.ctrlKey) {
+                    if (this.enterCommand) {
+                        this.enterCommand();
+                    }
+                }
+            }
+        },
+        watch: {
+            modelValue() {
+                if (!this.autoSize)
+                    return;
+                const inp = this.$refs.input;
+                if (!inp)
+                    return;
+                // send for auto size
+                const evt = new Event('autosize', { bubbles: false, cancelable: true });
+                inp.dispatchEvent(evt);
+            }
+        }
+    });
+    const staticControl = vue.defineComponent({
+        extends: control,
+        template: staticTemplate,
+        props: {
+            item: {
+                type: [Object, Array], default() {
+                    return {};
+                }
+            },
+            prop: String,
+            itemToValidate: Object,
+            propToValidate: String,
+            text: [String, Number, Date]
+        },
+        computed: {
+            textProp() {
+                if (this.mask && this.text)
+                    return mask.getMasked(this.mask, this.text);
+                return this.text;
+            }
+        }
+    });
+    platform$1.vocabulary.component('textbox', textbox);
+    app.components['textbox'] = textbox;
+    // Net48 meant app.components for these two too, but wrote app.components['a2-textarea', textarea]: none.
+    platform$1.vocabulary.component('a2-textarea', textarea);
+    platform$1.vocabulary.component('static', staticControl);
+
+    // collection-view-server, collection-view-server-url (Net48 components/collectionviewplain.js), unchanged in behaviour:
+    // the pager, the sort and the filter of a server's array (its $ModelInfo); a change reloads the page's data. The
+    // client collection-view of the same file is not ported yet.
+    // Vue 3:
+    // - the prop is itemsSource: Vue 3 matches items-source to itemsSource only (Vue 2 also to ItemsSource); the code
+    //   reads ItemsSource, a computed;
+    // - Vue 2's $root was the page (base.js): $root.$emit('cwChange') and $root[prop] are the page's controller
+    //   (inject $page, page.ts): __cwChange, $data;
+    // - $on('sort') is gone: doSort is called by the data grid (the data-grid step).
+    const utils$6 = require$1('std:utils');
+    const period = require$1('std:period');
+    const eventBus$4 = require$1('std:eventBus');
+    const eqlower$1 = utils$6.text.equalNoCase;
+    function getModelInfoProp(src, propName) {
+        if (!src)
+            return undefined;
+        const mi = src.$ModelInfo;
+        if (!mi)
+            return undefined;
+        return mi[propName];
+    }
+    function setModelInfoProp(src, propName, value) {
+        if (!src)
+            return;
+        const mi = src.$ModelInfo;
+        if (!mi)
+            return;
+        mi[propName] = value;
+    }
+    function modelInfoToFilter(q, filter) {
+        if (!q)
+            return;
+        for (const x in filter) {
+            if (x in q) {
+                const iv = filter[x];
+                if (period.isPeriod(iv)) {
+                    filter[x] = iv.fromUrl(q[x]);
+                }
+                else if (utils$6.isDate(iv)) {
+                    filter[x] = utils$6.date.tryParse(q[x]);
+                }
+                else if (utils$6.isObjectExact(iv))
+                    iv.Id = q[x];
+                else if (utils$6.isNumber(iv))
+                    filter[x] = +q[x];
+                else {
+                    filter[x] = q[x];
+                }
+            }
+        }
+    }
+    // server collection view
+    const collectionView = vue.defineComponent({
+        template: `
+<div>
+	<slot :ItemsSource="ItemsSource" :Pager="thisPager" :Filter="filter" :ParentCollectionView="parentCw">
+	</slot>
+</div>
+`,
+        inject: {
+            page: { from: '$page', default: null }
+        },
+        props: {
+            itemsSource: [Array, Object],
+            initialFilter: Object,
+            persistentFilter: Array
+        },
+        data() {
+            return {
+                filter: this.initialFilter,
+                lockChange: true
+            };
+        },
+        watch: {
+            jsonFilter: {
+                handler() {
+                    this.filterChanged();
+                }
+            },
+            ItemsSource: {
+                handler() {
+                    this.updateFilter();
+                }
+            }
+        },
+        computed: {
+            ItemsSource() {
+                return this.itemsSource;
+            },
+            jsonFilter() {
+                return utils$6.toJson(this.filter);
+            },
+            thisPager() {
+                return this;
+            },
+            pageSize() {
+                return getModelInfoProp(this.ItemsSource, 'PageSize');
+            },
+            dir() {
+                return getModelInfoProp(this.ItemsSource, 'SortDir');
+            },
+            order() {
+                return getModelInfoProp(this.ItemsSource, 'SortOrder');
+            },
+            offset() {
+                return getModelInfoProp(this.ItemsSource, 'Offset');
+            },
+            pages() {
+                const cnt = this.sourceCount;
+                return Math.ceil(cnt / this.pageSize);
+            },
+            sourceCount() {
+                if (!this.ItemsSource)
+                    return 0;
+                return this.ItemsSource.$RowCount || 0;
+            },
+            parentCw() {
+                // find parent collection view; none: the page (Vue 2: the page's root instance)
+                let p = this.$parent;
+                while (p && p.$.type !== collectionView)
+                    p = p.$parent;
+                return p || this.page;
+            }
+        },
+        methods: {
+            $setOffset(offset) {
+                if (this.offset === offset)
+                    return;
+                setModelInfoProp(this.ItemsSource, 'Offset', offset);
+                this.reload();
+            },
+            sortDir(order) {
+                return eqlower$1(order, this.order) ? this.dir : undefined;
+            },
+            doSort(order) {
+                if (eqlower$1(order, this.order)) {
+                    const dir = eqlower$1(this.dir, 'asc') ? 'desc' : 'asc';
+                    setModelInfoProp(this.ItemsSource, 'SortDir', dir);
+                }
+                else {
+                    setModelInfoProp(this.ItemsSource, 'SortOrder', order);
+                    setModelInfoProp(this.ItemsSource, 'SortDir', 'asc');
+                }
+                this.reload();
+            },
+            filterChanged() {
+                if (this.lockChange)
+                    return;
+                let mi = this.ItemsSource.$ModelInfo;
+                if (!mi) {
+                    mi = { Filter: this.filter };
+                    this.ItemsSource.$ModelInfo = mi;
+                }
+                else {
+                    this.ItemsSource.$ModelInfo.Filter = this.filter;
+                }
+                if (this.persistentFilter && this.persistentFilter.length) {
+                    const parentProp = this.ItemsSource._path_;
+                    const propIx = parentProp.lastIndexOf('.');
+                    const propTop = parentProp.indexOf('[]');
+                    const lastProp = parentProp.substring(propIx + 1);
+                    const firstProp = parentProp.substring(0, propTop);
+                    for (const topElem of this.page.$data[firstProp].$allItems()) {
+                        if (!topElem[lastProp].$ModelInfo)
+                            topElem[lastProp].$ModelInfo = mi;
+                        else {
+                            for (const pp of this.persistentFilter) {
+                                const te = topElem[lastProp];
+                                if (!utils$6.isEqual(te.$ModelInfo.Filter[pp], this.filter[pp])) {
+                                    te.$ModelInfo.Filter[pp] = this.filter[pp];
+                                    if (te.$loaded)
+                                        te.$empty();
+                                    te.$loaded = false;
+                                }
+                            }
+                        }
+                    }
+                }
+                if ('Offset' in mi)
+                    setModelInfoProp(this.ItemsSource, 'Offset', 0);
+                this.reload();
+            },
+            reload() {
+                this.page.__cwChange(this.ItemsSource);
+            },
+            updateFilter() {
+                // modelInfo to filter
+                const mi = this.ItemsSource ? this.ItemsSource.$ModelInfo : null;
+                if (!mi)
+                    return;
+                const fi = mi.Filter;
+                if (!fi)
+                    return;
+                this.lockChange = true;
+                for (const prop in this.filter) {
+                    if (prop in fi)
+                        this.filter[prop] = fi[prop];
+                }
+                this.$nextTick(() => {
+                    this.lockChange = false;
+                });
+            },
+            __setFilter(props) {
+                if (this.ItemsSource !== props.source)
+                    return;
+                if (period.isPeriod(props.value))
+                    this.filter[props.prop].assign(props.value);
+                else
+                    this.filter[props.prop] = props.value;
+            }
+        },
+        created() {
+            // get filter values from modelInfo
+            const mi = this.ItemsSource ? this.ItemsSource.$ModelInfo : null;
+            if (mi) {
+                modelInfoToFilter(mi.Filter, this.filter);
+            }
+            this.$nextTick(() => {
+                this.lockChange = false;
+            });
+            eventBus$4.$on('setFilter', this.__setFilter);
+        },
+        beforeUnmount() {
+            eventBus$4.$off('setFilter', this.__setFilter);
+        }
+    });
+    platform$1.vocabulary.component('collection-view-server', collectionView);
+    platform$1.vocabulary.component('collection-view-server-url', collectionView);
+
+    // v-lazy (Net48 directives/lazy.js), unchanged in behaviour: a lazy array bound to an element loads itself when the
+    // element is mounted and when it updates. Vue 2's inserted is mounted, componentUpdated is updated.
+    function updateLazy(arr) {
+        if (arr && arr.$loadLazy) {
+            arr.$loadLazy();
+        }
+    }
+    platform$1.vocabulary.directive('lazy', {
+        updated(_el, binding) {
+            updateLazy(binding.value);
+        },
+        mounted(_el, binding) {
+            updateLazy(binding.value);
+        }
+    });
+
+    // data-grid, data-grid-column (Net48 components/datagrid.js), unchanged in behaviour: columns register with their grid
+    // ($parent.$addColumn), rows and cells render the grid's items, grouped or not, sorted by the collection view or
+    // locally. Some ideas from https://github.com/andrewcourtice/vuetiful/tree/master/src/components/datatable
+    // Groupings: "v-show" on a line is much faster than "v-if" on an entire template.
+    // Vue 3:
+    // - the cell is a functional component: a function of its props; h takes flat props;
+    // - the cell's validator and command link were component objects made at each render; Vue 2 cached their compiled
+    //   templates by text, this compiler keeps no cache: they are made once, the command's arguments are props;
+    // - <template v-for> carries the key (Vue 3 refuses it on the children); <col> is void;
+    // - a ref in v-for is an array in no promised order: the selected row is found by its index;
+    // - $parent.$emit('sort') was heard by the collection view's $on('sort', doSort): $parent.doSort;
+    // - $scopedSlots is $slots; Vue.set is an assignment; $root ($data, inDialog) is the page's controller (inject).
+    const utils$5 = require$1('std:utils');
+    const log = require$1('std:log');
+    const eventBus$3 = require$1('std:eventBus');
+    const locale$3 = window.$$locale;
+    const eqlower = utils$5.text.equalNoCase;
+    const dataGridTemplate = `
+<div v-lazy="itemsSource" :class="{'data-grid-container':true, 'fixed-header': fixedHeader, 'bordered': border, 'compact': compact}" :test-id="testId">
+	<div class="data-grid-header-border" v-if="fixedHeader" />
+	<div :class="{'data-grid-body': true, 'fixed-header': fixedHeader}">
+	<div class="data-grid-empty" v-if="$isEmpty">
+		<slot name="empty" />
+	</div>
+	<table :class="cssClass">
+		<colgroup>
+			<col v-if="isMarkCell" class="fit"/>
+			<col v-if="isRowDetailsCell" class="fit" />
+			<col v-bind:class="columnClass(col, colIndex)" v-bind:style="columnStyle(col)" v-for="(col, colIndex) in columns" :key="colIndex"/>
+		</colgroup>
+		<thead>
+			<tr v-show="isHeaderVisible">
+				<th v-if="isMarkCell" class="marker"><div v-if=fixedHeader class="h-fill"></div><div v-if=fixedHeader class="h-holder">&#160;</div></th>
+				<th v-if="isRowDetailsCell" class="details-marker"><div v-if="fixedHeader" class="h-holder">&#160;</div></th>
+				<slot></slot>
+			</tr>
+		</thead>
+		<template v-if="isGrouping">
+			<tbody>
+				<template v-for="(g, gIndex) of $groups" :key="gIndex">
+					<tr v-if="isGroupGroupVisible(g)" :class="'group lev-' + g.level">
+						<td @click.prevent='toggleGroup(g)' :colspan="groupColumns">
+						<span :class="{expmark: true, expanded: g.expanded}" />
+						<span class="grtitle" v-text="groupTitle(g)" />
+						<span v-if="isGroupCountVisible(g)" class="grcount" v-text="g.count" /></td>
+					</tr>
+					<template v-for="(row, rowIndex) in g.items" :key="gIndex + ':' + rowIndex">
+						<data-grid-row v-show="isGroupBodyVisible(g)" :group="true" :level="g.level" :cols="columns" :row="row" :index="rowIndex" :mark="mark" ref="row"  :is-item-active="isItemActive" :hit-item="hitItem"/>
+						<data-grid-row-details v-if="rowDetailsShow(row)" v-show="isGroupBodyVisible(g)" :cols="columns.length" :row="row" :mark="mark">
+							<slot name="row-details" :row="row"></slot>
+						</data-grid-row-details>
+					</template>
+				</template>
+			</tbody>
+		</template>
+		<template v-else>
+			<tbody>
+				<template v-for="(item, rowIndex) in $items" :key="rowIndex">
+					<data-grid-row :cols="columns" :row="item" :index="rowIndex" :mark="mark" ref="row" :is-item-active="isItemActive" :hit-item="hitItem"/>
+					<data-grid-row-details v-if="rowDetailsShow(item)" :cols="columns.length" :row="item" :mark="mark">
+						<slot name="row-details" :row="item"></slot>
+					</data-grid-row-details>
+				</template>
+			</tbody>
+		</template>
+		<slot name="footer"></slot>
+	</table>
+	</div>
+</div>
+`;
+    /* @click.prevent disables checkboxes & other controls in cells
+    <td class="group-marker" v-if="group"></td>
+    */
+    const dataGridRowTemplate = `
+<tr @click="rowSelect(row)" :class="rowClass()" v-on:dblclick.prevent="doDblClick" ref="tr" @mousedown="mouseDown(row)">
+	<td v-if="isMarkCell" class="marker">
+		<div :class="markClass"></div>
+	</td>
+	<td v-if="detailsMarker" class="details-marker" @click.prevent="toggleDetails">
+		<i v-if="detailsIcon" class="ico" :class="detailsExpandClass" />
+	</td>
+	<data-grid-cell v-for="(col, colIndex) in cols" :key="colIndex" :row="row" :col="col" :index="index" />
+</tr>`;
+    const dataGridRowDetailsTemplate = `
+<tr v-if="visible()" class="row-details">
+	<td v-if="isMarkCell" class="marker">
+		<div :class="markClass"></div>
+	</td>
+	<td :colspan='totalCols' class="details-cell">
+		<div class="details-wrapper"><slot></slot></div>
+	</td>
+</tr>
+`;
+    /**
+        icon on header!!!
+        <i :class="\'ico ico-\' + icon" v-if="icon"></i>
+     */
+    const dataGridColumnTemplate = `
+<th :class="cssClass" @click.prevent="doSort">
+	<div class="h-fill" v-if="fixedHeader" v-text="headerText">
+	</div>
+	<div class="h-holder">
+		<slot><label v-if=checkAll class="like-checkbox" :class="checkAllClass" @click=doCheckAll><span></span></label>
+			<span v-else v-text="headerText"></span>
+		</slot>
+	</div>
+</th>
+`;
+    const dataGridColumn = vue.defineComponent({
+        name: 'data-grid-column',
+        template: dataGridColumnTemplate,
+        inject: {
+            page: { from: '$page', default: null }
+        },
+        props: {
+            header: String,
+            content: String,
+            dataType: String,
+            hideZeros: Boolean,
+            format: String,
+            icon: String,
+            bindIcon: String,
+            id: String,
+            align: { type: String, default: 'left' },
+            editable: { type: Boolean, default: false },
+            noPadding: { type: Boolean, default: false },
+            validate: String,
+            sort: { type: Boolean, default: undefined },
+            sortProp: String,
+            small: { type: Boolean, default: undefined },
+            bold: String, //{ type: Boolean, default: undefined },
+            mark: String,
+            done: String,
+            controlType: String,
+            width: String,
+            minWidth: String,
+            fit: Boolean,
+            backColor: String,
+            wrap: String,
+            command: Object,
+            maxChars: Number,
+            lineClamp: Number,
+            colCssClass: String,
+            checkAll: String
+        },
+        created() {
+            this.$parent.$addColumn(this);
+        },
+        unmounted() {
+            this.$parent.$removeColumn(this);
+        },
+        computed: {
+            grid() {
+                return this.$parent;
+            },
+            sortProperty() {
+                return this.sortProp || this.content;
+            },
+            dir() {
+                return this.grid.sortDir(this.sortProperty);
+            },
+            fixedHeader() {
+                return this.grid.fixedHeader;
+            },
+            isSortable() {
+                if (!this.sortProperty)
+                    return false;
+                return typeof this.sort === 'undefined' ? this.grid.isGridSortable : this.sort;
+            },
+            isUpdateUrl() {
+                return !this.page.inDialog;
+            },
+            template() {
+                return this.id ? this.grid.$slots[this.id] : null;
+            },
+            classAlign() {
+                return this.align !== 'left' ? (' text-' + this.align).toLowerCase() : '';
+            },
+            checkAllClass() {
+                const state = this.grid.$checkAllState(this.checkAll);
+                if (state === 1)
+                    return 'checked'; // indeterminate';
+                else if (state === 2)
+                    return 'indeterminate';
+                return undefined;
+            },
+            cssClass() {
+                let cssClass = this.classAlign;
+                if (this.isSortable) {
+                    cssClass += ' sort';
+                    if (this.dir)
+                        cssClass += ' ' + this.dir;
+                }
+                if (this.checkAll)
+                    cssClass += ' check-all';
+                return cssClass;
+            },
+            headerText() {
+                return this.header || '\xa0';
+            },
+            evalOpts() {
+                return {
+                    hideZeros: this.hideZeros,
+                    format: this.format
+                };
+            }
+        },
+        methods: {
+            doSort() {
+                if (!this.isSortable)
+                    return;
+                this.grid.doSort(this.sortProperty);
+            },
+            doCheckAll() {
+                if (!this.checkAll)
+                    return;
+                this.grid.$checkAll(this.checkAll);
+            },
+            cellCssClass(row, editable) {
+                let cssClass = this.classAlign;
+                if (this.mark) {
+                    const mark = utils$5.simpleEval(row, this.mark);
+                    if (mark)
+                        cssClass += ' ' + mark;
+                }
+                if (editable && this.controlType !== 'checkbox')
+                    cssClass += ' cell-editable';
+                function addClassBool(bind, cls) {
+                    if (!bind)
+                        return;
+                    if (bind === 'true')
+                        cssClass += cls;
+                    else if (bind.startsWith('{')) {
+                        const prop = bind.substring(1, bind.length - 1);
+                        if (utils$5.simpleEval(row, prop))
+                            cssClass += cls;
+                    }
+                }
+                if (this.wrap)
+                    cssClass += ' ' + this.wrap;
+                if (this.small)
+                    cssClass += ' small';
+                addClassBool(this.bold, ' bold');
+                if (this.colCssClass)
+                    cssClass += ' ' + this.colCssClass;
+                return cssClass.trim();
+            }
+        }
+    });
+    platform$1.vocabulary.component('data-grid-column', dataGridColumn);
+    // what the cell renders by a column's controlType 'validator', its validate, its command
+    const cellValid = {
+        props: ['item', 'col'],
+        template: '<span><i v-if="item.$invalid" class="ico ico-error"></i></span>'
+    };
+    const cellValidator = {
+        props: ['path', 'item'],
+        template: '<validator :path="path" :item="item"></validator>'
+    };
+    // column command -> hyperlink; args: arg1..arg4 as the cell normalized them
+    const cellCommand = vue.defineComponent({
+        props: ['row', 'col', 'args'],
+        /*@click.prevent, no stop*/
+        template: '<a @click.prevent="doCommand($event)" :href="getHref()"><i v-if="hasIcon" :class="iconClass" class="ico"></i><span v-text="eval(row, col.content, col.dataType, col.evalOpts)"></span></a>',
+        computed: {
+            hasIcon() { return this.col.icon || this.col.bindIcon || this.col.done; },
+            iconClass() {
+                const col = this.col;
+                const icoSingle = !col.content ? ' ico-single' : '';
+                if (col.bindIcon)
+                    return 'ico-' + utils$5.eval(this.row, col.bindIcon) + icoSingle;
+                else if (col.done)
+                    return (utils$5.eval(this.row, col.done) ? 'ico-success-outline-green' : 'ico-warning-outline-yellow') + icoSingle;
+                else if (col.icon)
+                    return 'ico-' + col.icon + icoSingle;
+                return null;
+            }
+        },
+        methods: {
+            doCommand() {
+                this.col.command.cmd(...this.args);
+            },
+            eval: utils$5.eval,
+            getHref() {
+                const col = this.col;
+                if (!col.command)
+                    return null;
+                if (col.command.isDialog)
+                    return '';
+                if (col.command.cmd.name.indexOf('$exec') !== -1)
+                    return '';
+                const [arg1, arg2] = this.args;
+                let id = arg2;
+                if (utils$5.isObjectExact(arg2))
+                    id = arg2.$id;
+                return arg1 + '/' + id;
+            }
+        }
+    });
+    const dataGridCell = (props) => {
+        const tag = 'td';
+        const row = props.row;
+        const col = props.col;
+        const ix = props.index;
+        const cellProps = {
+            class: col.cellCssClass(row, col.editable || col.noPadding)
+        };
+        if (col.template) {
+            const vNodes = col.template({ row: row, col: col });
+            return vue.h(tag, cellProps, vNodes);
+        }
+        if (col.controlType === 'validator') {
+            cellProps.class = { 'cell-validator': true };
+            return vue.h(tag, cellProps, [vue.h(cellValid, { item: row, col: col })]);
+        }
+        if (!col.content && !col.icon && !col.bindIcon && !col.done) {
+            return vue.h(tag, cellProps);
+        }
+        function normalizeArg(arg, doEval) {
+            if (utils$5.isBoolean(arg) || utils$5.isNumber(arg) || utils$5.isObjectExact(arg))
+                return arg;
+            arg = arg || '';
+            if (arg === 'this')
+                arg = row;
+            else if (arg.startsWith('{')) {
+                arg = arg.substring(1, arg.length - 1);
+                if (arg.indexOf('.') !== -1)
+                    arg = utils$5.eval(row, arg);
+                else {
+                    if (!(arg in row))
+                        throw new Error(`Property '${arg}' not found in ${row.constructor.name} object`);
+                    arg = row[arg];
+                }
+            }
+            else if (arg && doEval) {
+                arg = utils$5.eval(row, arg, col.dataType, col.evalOpts);
+            }
+            return arg;
+        }
+        if (col.command) {
+            const arg1 = normalizeArg(col.command.arg1, false);
+            const arg2 = normalizeArg(col.command.arg2, col.command.eval);
+            const arg3 = normalizeArg(col.command.arg3, false);
+            const arg4 = col.command.arg4; // without normalize
+            return vue.h(tag, cellProps, [vue.h(cellCommand, { row: row, col: col, args: [arg1, arg2, arg3, arg4] })]);
+        }
+        /* simple content */
+        if (col.content === '$index')
+            return vue.h(tag, cellProps, [ix + 1]);
+        function isNegativeRed(col) {
+            if (col.dataType === 'Number' || col.dataType === 'Currency') {
+                const val = utils$5.eval(row, col.content, col.dataType, col.evalOpts, true /*skip format*/);
+                if (val < 0)
+                    return true;
+            }
+            return false;
+        }
+        let content = utils$5.eval(row, col.content, col.dataType, col.evalOpts);
+        const spanProps = { class: { 'dg-cell': true, 'negative-red': isNegativeRed(col), 'line-clamp': col.lineClamp > 0 } };
+        if (col.maxChars) {
+            spanProps.title = content;
+            content = utils$5.text.maxChars(content, col.maxChars);
+        }
+        else if (col.lineClamp > 0) {
+            spanProps.title = content;
+            spanProps.style = { '-webkit-line-clamp': col.lineClamp };
+        }
+        const chElems = [vue.h('span', spanProps, content)];
+        const icoSingle = !col.content ? ' ico-single' : '';
+        if (col.icon)
+            chElems.unshift(vue.h('i', { class: 'ico ico-' + col.icon + icoSingle }));
+        else if (col.bindIcon)
+            chElems.unshift(vue.h('i', { class: 'ico ico-' + utils$5.eval(row, col.bindIcon) + icoSingle }));
+        else if (col.done)
+            chElems.unshift(vue.h('i', { class: 'ico ico-' + (utils$5.eval(row, col.done) ? 'success-outline-green' : 'warning-outline-yellow') + icoSingle }));
+        /*TODO: validate ???? */
+        if (col.validate) {
+            chElems.push(vue.h(cellValidator, { path: col.validate, item: row }));
+        }
+        return vue.h(tag, cellProps, chElems);
+    };
+    dataGridCell.props = ['row', 'col', 'index'];
+    const dataGridRow = vue.defineComponent({
+        name: 'data-grid-row',
+        template: dataGridRowTemplate,
+        components: {
+            'data-grid-cell': dataGridCell
+        },
+        props: {
+            row: Object,
+            cols: Array,
+            index: Number,
+            mark: String,
+            group: Boolean,
+            level: Number,
+            isItemActive: Function,
+            hitItem: Function
+        },
+        computed: {
+            grid() {
+                return this.$parent;
+            },
+            isMarkCell() {
+                return this.grid.isMarkCell;
+            },
+            detailsMarker() {
+                return this.grid.isRowDetailsCell;
+            },
+            detailsIcon() {
+                if (!this.detailsMarker)
+                    return false;
+                const prdv = this.grid.rowDetailsVisible;
+                if (prdv === false)
+                    return true; // property not specified
+                return prdv && this.row[prdv];
+            },
+            detailsExpandClass() {
+                return this.row._uiprops_.$details ? 'ico-minus-circle' : 'ico-plus-circle';
+            },
+            totalColumns() {
+                console.error('implement me');
+            },
+            markClass() {
+                return this.mark ? utils$5.simpleEval(this.row, this.mark) : '';
+            },
+            _itemActive() {
+                return this.isItemActive ? this.isItemActive(this.index, this.row) : !!this.row.$selected;
+            }
+        },
+        watch: {
+            _itemActive(newValue) {
+                if (newValue) {
+                    const tr = this.$refs.tr;
+                    if (tr && tr.scrollIntoViewCheck)
+                        tr.scrollIntoViewCheck();
+                }
+            }
+        },
+        methods: {
+            rowClass() {
+                const row = this.row;
+                let cssClass = 'dg-row';
+                const isActive = this.isItemActive ? this.isItemActive(this.index, row) : !!row.$selected;
+                if (isActive)
+                    cssClass += ' active';
+                if (this.grid.isMarkRow && this.mark) {
+                    cssClass += ' ' + utils$5.simpleEval(row, this.mark);
+                }
+                if ((this.index + 1) % 2)
+                    cssClass += ' even';
+                if (this.grid.rowBold && row[this.grid.rowBold])
+                    cssClass += ' bold';
+                if (this.level)
+                    cssClass += ' lev-' + this.level;
+                return cssClass.trim();
+            },
+            rowSelect(row) {
+                if (row.$select)
+                    row.$select();
+            },
+            mouseDown(row) {
+                if (this.hitItem)
+                    this.hitItem(row);
+            },
+            doDblClick($event) {
+                // deselect text
+                $event.stopImmediatePropagation();
+                if (!this.grid.doubleclick)
+                    return;
+                window.getSelection().removeAllRanges();
+                this.grid.doubleclick();
+            },
+            toggleDetails() {
+                if (!this.detailsIcon)
+                    return;
+                const ui = this.row._uiprops_;
+                ui.$details = !ui.$details;
+            }
+        }
+    });
+    const dataGridRowDetails = vue.defineComponent({
+        name: 'data-grid-row-details',
+        template: dataGridRowDetailsTemplate,
+        props: {
+            cols: Number,
+            row: Object,
+            mark: String
+        },
+        computed: {
+            grid() {
+                return this.$parent;
+            },
+            isMarkCell() {
+                return this.grid.isMarkCell;
+            },
+            markClass() {
+                return this.mark ? utils$5.simpleEval(this.row, this.mark) : '';
+            },
+            detailsMarker() {
+                return this.grid.isRowDetailsCell;
+            },
+            totalCols() {
+                return this.cols +
+                    (this.isMarkCell ? 1 : 0) +
+                    (this.detailsMarker ? 1 : 0);
+            }
+        },
+        methods: {
+            visible() {
+                if (this.grid.isRowDetailsAlways)
+                    return true;
+                else if (this.grid.isRowDetailsCell)
+                    return this.row._uiprops_.$details ? true : false;
+                return this.row === this.grid.selected();
+            }
+        }
+    });
+    platform$1.vocabulary.component('data-grid', vue.defineComponent({
+        inject: {
+            page: { from: '$page', default: null }
+        },
+        props: {
+            itemsSource: [Object, Array],
+            border: Boolean,
+            grid: String,
+            fixedHeader: Boolean,
+            hideHeader: Boolean,
+            hover: {
+                type: Boolean, default: undefined
+            },
+            striped: {
+                type: Boolean,
+                default: undefined
+            },
+            compact: Boolean,
+            sort: Boolean,
+            routeQuery: Object,
+            mark: String,
+            filterFields: String,
+            markStyle: String,
+            rowBold: String,
+            doubleclick: Function,
+            groupBy: [Array, Object, String],
+            rowDetails: Boolean,
+            rowDetailsActivate: String,
+            rowDetailsVisible: [String /*path*/, Boolean],
+            isItemActive: Function,
+            hitItem: Function,
+            emptyPanelCallback: Function,
+            testId: String,
+            autoSelect: String
+        },
+        template: dataGridTemplate,
+        components: {
+            'data-grid-row': dataGridRow,
+            'data-grid-row-details': dataGridRowDetails
+        },
+        data() {
+            return {
+                columns: [],
+                clientItems: null,
+                clientGroups: null,
+                localSort: {
+                    dir: 'asc',
+                    order: ''
+                }
+            };
+        },
+        computed: {
+            $items() {
+                return this.clientItems ? this.clientItems : this.itemsSource;
+            },
+            isMarkCell() {
+                return this.markStyle === 'marker' || this.markStyle === 'both';
+            },
+            isRowDetailsCell() {
+                return this.rowDetails && this.rowDetailsActivate === 'cell';
+            },
+            isRowDetailsAlways() {
+                return this.rowDetails && this.rowDetailsActivate === 'always';
+            },
+            isMarkRow() {
+                return this.markStyle === 'row' || this.markStyle === 'both';
+            },
+            isHeaderVisible() {
+                return !this.hideHeader;
+            },
+            cssClass() {
+                let cssClass = 'data-grid';
+                if (this.grid)
+                    cssClass += ' grid-' + this.grid.toLowerCase();
+                if (this.striped != undefined)
+                    cssClass += this.striped ? ' striped' : ' no-striped';
+                if (this.hover != undefined)
+                    cssClass += this.hover ? ' hover' : ' no-hover';
+                if (this.compact)
+                    cssClass += ' compact';
+                return cssClass;
+            },
+            isGridSortable() {
+                return !!this.sort;
+            },
+            isLocal() {
+                return !this.$parent.sortDir;
+            },
+            isGrouping() {
+                return this.groupBy;
+            },
+            groupColumns() {
+                return this.columns.length + //1 +
+                    (this.isMarkCell ? 1 : 0) +
+                    (this.isRowDetailsCell ? 1 : 0);
+            },
+            $groupCount() {
+                const groupBy = this.groupBy;
+                if (utils$5.isString(groupBy))
+                    return groupBy.split('-').length;
+                else if (utils$5.isObjectExact(groupBy))
+                    return 1;
+                else
+                    return groupBy.length;
+            },
+            $groups() {
+                function* enumGroups(src, p0, lev, cnt) {
+                    for (const grKey in src) {
+                        if (grKey === 'items')
+                            continue;
+                        const srcElem = src[grKey];
+                        const count = srcElem.items ? srcElem.items.length : 0;
+                        if (cnt)
+                            cnt.c += count;
+                        const pElem = {
+                            group: grKey,
+                            p0: p0,
+                            expanded: true,
+                            level: lev,
+                            items: srcElem.items || null,
+                            count: count
+                        };
+                        yield pElem;
+                        if (!src.items) {
+                            const cnt = { c: 0 };
+                            yield* enumGroups(srcElem, pElem, lev + 1, cnt);
+                            pElem.count += cnt.c;
+                        }
+                    }
+                }
+                this.doSortLocally();
+                // classic tree
+                const startTime = performance.now();
+                const grmap = {};
+                let grBy = this.groupBy;
+                if (utils$5.isString(grBy)) {
+                    const rarr = [];
+                    for (const vs of grBy.split('-'))
+                        rarr.push({ prop: vs.trim(), count: true });
+                    grBy = rarr;
+                }
+                else if (utils$5.isObjectExact(grBy))
+                    grBy = [grBy];
+                if (!this.$items)
+                    return null;
+                for (const itm of this.$items) {
+                    let root = grmap;
+                    for (const gr of grBy) {
+                        let key = utils$5.eval(itm, gr.prop);
+                        if (utils$5.isDate(key))
+                            key = utils$5.format(key, 'Date');
+                        if (!utils$5.isDefined(key))
+                            key = '';
+                        if (key === '')
+                            key = locale$3.$Unknown || 'Unknown';
+                        if (!(key in root))
+                            root[key] = {};
+                        root = root[key];
+                    }
+                    if (!root.items)
+                        root.items = [];
+                    root.items.push(itm);
+                }
+                // tree to plain array
+                const grArray = [];
+                for (const el of enumGroups(grmap, null, 1)) {
+                    el.source = grBy[el.level - 1];
+                    if (el.source.expanded === false)
+                        el.expanded = false;
+                    grArray.push(el);
+                }
+                this.clientGroups = grArray;
+                log.time('datagrid grouping time:', startTime);
+                return this.clientGroups;
+            },
+            $isEmpty() {
+                const src = this.itemsSource;
+                if (!src)
+                    return false;
+                const mi = src.$ModelInfo;
+                if (!mi)
+                    return src.length === 0;
+                if ('HasRows' in mi) {
+                    if (src.length)
+                        return false;
+                    return mi.HasRows === false;
+                }
+                else {
+                    return src.length === 0;
+                }
+            }
+        },
+        watch: {
+            localSort: {
+                handler() {
+                    this.handleSort();
+                },
+                deep: true
+            },
+            'itemsSource.length'() {
+                this.handleSort();
+            },
+            '$isEmpty'(newval) {
+                if (this.emptyPanelCallback)
+                    this.emptyPanelCallback.call(this.page.$data, newval);
+            }
+        },
+        methods: {
+            selected() {
+                let src = this.itemsSource;
+                if (src.$origin)
+                    src = src.$origin;
+                return src.$selected;
+            },
+            $addColumn(column) {
+                this.columns.push(column);
+            },
+            $removeColumn(column) {
+                const ix = this.columns.indexOf(column);
+                if (ix !== -1)
+                    this.columns.splice(ix, 1);
+            },
+            rowDetailsShow(item) {
+                if (!this.rowDetails)
+                    return false;
+                if (utils$5.isBoolean(this.rowDetailsVisible))
+                    return this.rowDetailsVisible; // unset
+                const vis = item[this.rowDetailsVisible];
+                return !!vis;
+            },
+            columnClass(column) {
+                let cls = '';
+                if (column.fit || column.controlType === 'validator')
+                    cls += 'fit';
+                if (this.sort && column.isSortable && utils$5.isDefined(column.dir))
+                    cls += ' sorted';
+                if (column.backColor) {
+                    cls += ` ${column.backColor}`;
+                }
+                return cls;
+            },
+            columnStyle(column) {
+                return {
+                    width: utils$5.isDefined(column.width) ? column.width : undefined,
+                    minWidth: utils$5.isDefined(column.minWidth) ? column.minWidth : undefined
+                };
+            },
+            doSort(order) {
+                // TODO: // collectionView || locally
+                if (this.isLocal) {
+                    if (eqlower(this.localSort.order, order))
+                        this.localSort.dir = eqlower(this.localSort.dir, 'asc') ? 'desc' : 'asc';
+                    else {
+                        this.localSort = { order: order, dir: 'asc' };
+                    }
+                }
+                else {
+                    this.$parent.doSort(order);
+                }
+            },
+            sortDir(order) {
+                if (this.isLocal)
+                    return eqlower(this.localSort.order, order) ? this.localSort.dir : undefined;
+                else
+                    return this.$parent.sortDir(order);
+            },
+            doSortLocally() {
+                if (!this.isLocal)
+                    return;
+                if (!this.localSort.order)
+                    return;
+                const startTime = performance.now();
+                const rev = this.localSort.dir === 'desc';
+                const sortProp = this.localSort.order;
+                const arr = [].concat(this.itemsSource);
+                arr.sort((a, b) => {
+                    const av = a[sortProp];
+                    const bv = b[sortProp];
+                    if (av === bv)
+                        return 0;
+                    else if (av < bv)
+                        return rev ? 1 : -1;
+                    else
+                        return rev ? -1 : 1;
+                });
+                log.time('datagrid sorting time:', startTime);
+                this.clientItems = arr;
+            },
+            handleSort() {
+                if (this.isGrouping)
+                    this.clientGroups = null;
+                else
+                    this.doSortLocally();
+            },
+            toggleGroup(g) {
+                g.expanded = !g.expanded;
+            },
+            isGroupCountVisible(g) {
+                if (g && g.source && utils$5.isDefined(g.source.count))
+                    return g.source.count;
+                return true;
+            },
+            isGroupGroupVisible(g) {
+                if (!g.group)
+                    return false;
+                if (!g.p0)
+                    return true;
+                let cg = g.p0;
+                while (cg) {
+                    if (!cg.expanded)
+                        return false;
+                    cg = cg.p0;
+                }
+                return true;
+            },
+            isGroupBodyVisible(g) {
+                if (!g.expanded)
+                    return false;
+                let cg = g.p0;
+                while (cg) {
+                    if (!cg.expanded)
+                        return false;
+                    cg = cg.p0;
+                }
+                return true;
+            },
+            groupTitle(g) {
+                if (g.source && g.source.title)
+                    return g.source.title
+                        .replace('{Value}', g.group)
+                        .replace('{Count}', g.count);
+                return g.group;
+            },
+            expandGroups(lev) {
+                // lev 1-based
+                for (const gr of this.$groups)
+                    gr.expanded = gr.level < lev;
+            },
+            $checkAll(path) {
+                if (!this.$items)
+                    return;
+                const s = this.$checkAllState(path);
+                const val = s != 1;
+                this.$items.forEach((itm) => itm[path] = val);
+            },
+            $checkAllState(path) {
+                // 0 - unchecked; 1 - checked, 2-indeterminate
+                if (!this.$items)
+                    return 0;
+                let checked = 0;
+                let unchecked = 0;
+                this.$items.forEach((itm) => {
+                    if (itm[path])
+                        checked += 1;
+                    else
+                        unchecked += 1;
+                });
+                if (checked === 0)
+                    return 0;
+                else if (unchecked === 0)
+                    return 1;
+                return 2;
+            },
+            __autoSelect() {
+                if (!this.autoSelect || !this.$items || !this.$items.length)
+                    return;
+                if (this.$items.$selected)
+                    return;
+                switch (this.autoSelect) {
+                    case 'first-item':
+                        this.$items[0].$select();
+                        break;
+                    case 'last-item':
+                        this.$items[this.$items.length - 1].$select();
+                }
+            },
+            __invoke__test__(args) {
+                args = args || {};
+                if (args.target !== 'datagrid')
+                    return;
+                if (args.testId !== this.testId)
+                    return;
+                switch (args.action) {
+                    case 'selectRow':
+                        this.$items.forEach((e) => {
+                            if (e.$id.toString() === args.id) {
+                                e.$select();
+                                args.result = 'success';
+                            }
+                        });
+                        break;
+                }
+            }
+        },
+        updated() {
+            const src = this.itemsSource;
+            if (!src)
+                return;
+            const ix = src.$selectedIndex;
+            const rows = this.$refs.row;
+            const row = ix !== -1 && rows ? rows.find(r => r.index === ix) : null;
+            if (row) {
+                const tr = row.$refs.tr;
+                tr.scrollIntoViewCheck();
+            }
+            this.__autoSelect();
+        },
+        mounted() {
+            if (this.testId)
+                eventBus$3.$on('invokeTest', this.__invoke__test__);
+        },
+        beforeUnmount() {
+            if (this.testId)
+                eventBus$3.$off('invokeTest', this.__invoke__test__);
+        }
+    }));
+
+    // v-auto-size (Net48 directives/autosize.js, 'autoSize'), unchanged in behaviour: a textarea grows with its text, from
+    // its first height; 'autosize', dispatched on it, measures again after the update (a2-textarea, a value set by code).
+    // Vue 2's bind is created, inserted is mounted.
+    platform$1.vocabulary.directive('autoSize', {
+        created(el, binding) {
+            if (!binding.value)
+                return;
+            el.style.overflowY = '';
+            el._ops = {
+                initHeight: -1,
+                extraSpace: 0
+            };
+            el._autosize = function () {
+                if (!el.offsetHeight)
+                    return;
+                const ops = el._ops;
+                if (ops.initHeight === -1) {
+                    ops.initHeight = el.offsetHeight;
+                }
+                el.style.height = ops.initHeight + 'px';
+                const needHeight = el.scrollHeight + ops.extraSpace;
+                if (needHeight > ops.initHeight)
+                    el.style.height = needHeight + 'px';
+            };
+            function onInput() {
+                el._autosize();
+            }
+            function onAutoSize() {
+                vue.nextTick(() => el._autosize());
+            }
+            el.addEventListener('input', onInput);
+            // Perhaps the value was set programmatically.
+            el.addEventListener('autosize', onAutoSize);
+        },
+        mounted(el, binding) {
+            if (!binding.value)
+                return;
+            const style = window.getComputedStyle(el);
+            const es = parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth);
+            el._ops.extraSpace = es;
+            setTimeout(() => el._autosize(), 1);
+        }
+    });
+
+    // a2-taskpad, a2-panel (Net48 components/taskpad.js, panel.js), unchanged in behaviour: the page's side pane, a
+    // collapsible panel.
+    platform$1.vocabulary.component('a2-taskpad', vue.defineComponent({
+        template: `<div :class="cssClass" :style="{width:width}">
+	<a class="ico taskpad-collapse-handle" @click.stop="toggle"></a>
+	<div v-if="expanded" class="taskpad-body">
+		<slot>
+		</slot>
+	</div>
+	<div v-else class="taskpad-title" @click.prevent="toggle">
+		<span class="taskpad-label" v-text="tasksText"></span>
+	</div>
+</div>
+`,
+        props: {
+            title: String,
+            initialCollapsed: Boolean,
+            position: String,
+            initialWidth: { type: String, default: '20rem' }
+        },
+        data() {
+            return {
+                expanded: true
+            };
+        },
+        computed: {
+            width() {
+                return this.expanded ? this.initialWidth : undefined;
+            },
+            cssClass() {
+                let cls = 'taskpad';
+                cls += ' position-' + this.position;
+                if (this.expanded)
+                    cls += ' expanded';
+                else
+                    cls += ' collapsed';
+                return cls;
+            },
+            tasksText() {
+                return this.title || window.$$locale.$Tasks;
+            }
+        },
+        methods: {
+            setExpanded(exp) {
+                this.expanded = exp;
+            },
+            toggle() {
+                this.setExpanded(!this.expanded);
+            }
+        },
+        mounted() {
+            if (this.initialCollapsed)
+                this.setExpanded(false);
+        }
+    }));
+    platform$1.vocabulary.component('a2-panel', vue.defineComponent({
+        template: `<div :class="cssClass" :test-id="testId">
+	<div class="panel-header" @click.prevent="toggle" v-if="!noHeader">
+		<slot name='header'></slot>
+		<span v-if="collapsible" class="ico panel-collapse-handle"></span>
+	</div>
+	<slot v-if="expanded"></slot>
+</div>
+`,
+        props: {
+            initialCollapsed: Boolean,
+            collapsible: Boolean,
+            panelStyle: String,
+            noHeader: Boolean,
+            testId: String
+        },
+        data() {
+            return {
+                collapsed: this.initialCollapsed
+            };
+        },
+        computed: {
+            cssClass() {
+                let cls = 'panel';
+                if (this.collapsed)
+                    cls += ' collapsed';
+                else
+                    cls += ' expanded';
+                if (this.panelStyle) {
+                    const ps = this.panelStyle.toLowerCase();
+                    switch (ps) {
+                        case 'red':
+                        case 'danger':
+                        case 'error':
+                            cls += ' panel-red';
+                            break;
+                        case 'info':
+                        case 'cyan':
+                            cls += ' panel-cyan';
+                            break;
+                        case 'green':
+                        case 'success':
+                            cls += ' panel-green';
+                            break;
+                        case 'warning':
+                        case 'yellow':
+                            cls += ' panel-yellow';
+                            break;
+                        default:
+                            cls += ' panel-' + ps;
+                            break;
+                    }
+                }
+                return cls;
+            },
+            expanded() {
+                return !this.collapsed;
+            }
+        },
+        methods: {
+            toggle() {
+                if (!this.collapsible)
+                    return;
+                this.collapsed = !this.collapsed;
+            }
+        }
+    }));
+
+    // a2-calendar (Net48 components/calendar.js), unchanged in behaviour: a month of days, or a year of months; the owner
+    // (date picker, period picker) moves it and takes the day (setMonth, setDay).
+    // Vue 3's compiler refuses children under v-text: the weekday header has none.
+    const utils$4 = require$1('std:utils');
+    const locale$2 = window.$$locale;
+    platform$1.vocabulary.component('a2-calendar', vue.defineComponent({
+        template: `
+<div @click.stop.prevent="dummy">
+	<table class="calendar-pane">
+		<thead><tr>
+				<th class="h-btn"><a v-if="hasPrev" @click.stop.prevent="prevMonth"><i class="ico ico-triangle-left"></i></a></th>
+				<th :colspan="isDayView ? 5 : 7" class="month-title"><span v-text="title"></span></th>
+				<th class="h-btn"><a v-if="hasNext" @click.stop.prevent='nextMonth'><i class="ico ico-triangle-right"></i></a></th>
+			</tr>
+			<tr class="weekdays" v-if="isDayView"><th v-for="d in 7" v-text="wdTitle(d)"></th></tr>
+			<tr class="weekdays" v-else><th colspan="9"></th></tr>
+		</thead>
+		<tbody v-if="isDayView">
+			<tr v-for="row in days">
+				<td v-for="day in row" :class="dayClass(day)"><a @click.stop.prevent="selectDay(day)"
+					@mouseover="mouseOver(day)"
+					v-text="day.getDate()" :title="dayTitle(day)"/></td>
+			</tr>
+		</tbody>
+		<tbody v-else>
+			<tr v-for="qr in monthes">
+				<td v-for="m in qr" class="mcell" :class="monthClass(m.date)" colspan="3"><a @click.stop.prevent="selectDay(m.date)" v-text="m.name"/></td>
+			</tr>
+		</tbody>
+		<tfoot v-if="showFooter" ><tr><td colspan="7" class="calendar-footer">
+			<a class="today" @click.stop.prevent='today' v-text='todayText'></a></td></tr></tfoot>
+	</table>
+</div>
+`,
+        props: {
+            showToday: { type: Boolean, default: true },
+            pos: String,
+            model: Date,
+            setMonth: Function,
+            setDay: Function,
+            getDayClass: Function,
+            hover: Function,
+            view: String,
+            currentModel: Date
+        },
+        computed: {
+            isDayView() {
+                return (this.view || 'day') === 'day';
+            },
+            showFooter() {
+                return this.showToday && this.isDayView;
+            },
+            days() {
+                const dt = new Date(this.model);
+                dt.setDate(1); // 1-st day of month
+                let w = dt.getDay() - 1; // weekday
+                if (w === -1)
+                    w = 6;
+                dt.setDate(-w + 1);
+                const arr = [];
+                for (let r = 0; r < 6; r++) {
+                    const row = [];
+                    for (let c = 0; c < 7; c++) {
+                        row.push(new Date(dt));
+                        dt.setDate(dt.getDate() + 1);
+                    }
+                    arr.push(row);
+                }
+                return arr;
+            },
+            monthes() {
+                const ma = [];
+                for (let q = 0; q < 4; q++) {
+                    const ia = [];
+                    for (let m = 0; m < 3; m++) {
+                        const mno = q * 3 + m;
+                        const dt = utils$4.date.create(this.model.getFullYear(), mno + 1, 1);
+                        const mname = utils$4.text.capitalize(dt.toLocaleDateString(locale$2.$Locale, { month: 'long' }));
+                        ia.push({ date: dt, month: mno + 1, name: mname });
+                    }
+                    ma.push(ia);
+                }
+                return ma;
+            },
+            hasPrev() {
+                return this.pos !== 'right';
+            },
+            hasNext() {
+                return this.pos !== 'left';
+            },
+            title() {
+                const mn = this.model.toLocaleString(locale$2.$Locale, { month: 'long', year: 'numeric' });
+                return utils$4.text.capitalize(mn);
+            },
+            todayText() {
+                return locale$2.$Today;
+            },
+            todayDate() {
+                return utils$4.date.today();
+            }
+        },
+        methods: {
+            dummy() { },
+            nextMonth() {
+                let dt = new Date(this.model);
+                if (this.isDayView)
+                    dt = utils$4.date.add(dt, 1, 'month');
+                else
+                    dt.setFullYear(dt.getFullYear() + 1);
+                this.setMonth(dt, this.pos);
+            },
+            prevMonth() {
+                let dt = new Date(this.model);
+                if (this.isDayView)
+                    dt = utils$4.date.add(dt, -1, 'month');
+                else
+                    dt.setFullYear(dt.getFullYear() - 1);
+                this.setMonth(dt, this.pos);
+            },
+            wdTitle(d) {
+                const dt = this.days[0][d - 1];
+                return dt.toLocaleString(locale$2.$Locale, { weekday: 'short' });
+            },
+            today() {
+                this.setDay(this.todayDate);
+            },
+            selectDay(d) {
+                this.setDay(d, this.pos);
+            },
+            dayClass(day) {
+                let cls = '';
+                if (day.getMonth() !== this.model.getMonth())
+                    cls += ' other';
+                if (this.getDayClass) {
+                    cls += this.getDayClass(day);
+                    return cls;
+                }
+                const tls = utils$4.date;
+                if (tls.equal(day, this.todayDate))
+                    cls += ' today';
+                if (tls.equal(day, this.model))
+                    cls += ' active';
+                return cls;
+            },
+            monthClass(day) {
+                let cls = '';
+                const cm = this.currentModel || this.model;
+                if (day.getFullYear() === cm.getFullYear() && day.getMonth() === cm.getMonth())
+                    cls += ' active';
+                return cls;
+            },
+            dayTitle(day) {
+                return day.toLocaleString(locale$2.$Locale, { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+            },
+            mouseOver(day) {
+                if (this.hover)
+                    this.hover(day);
+            }
+        }
+    }));
+
+    // a2-period-picker (Net48 components/periodpicker.js), unchanged in behaviour: over control; the period of item[prop],
+    // chosen from the predefined menu, two calendars or typed dates; applied, it sets the model dirty and emits
+    // <path>.<prop>.change. A popup: a click outside closes it.
+    // Vue 3's compiler refuses attributes with no space between them (one calendar's style and :show-today): spaced.
+    const popup$2 = require$1('std:popup');
+    const utils$3 = require$1('std:utils');
+    const eventBus$2 = require$1('std:eventBus');
+    const uPeriod = require$1('std:period');
+    const du = utils$3.date;
+    const DEFAULT_DEBOUNCE = 150;
+    platform$1.vocabulary.component('a2-period-picker', vue.defineComponent({
+        extends: control,
+        template: `
+<div class="control-group period-picker" @click.stop.prevent="toggle($event)" :class="{open: isOpen, disabled: disabled}">
+	<label v-if="hasLabel"><span v-text="label"/><slot name="hint"/></label>
+	<div class="input-group">
+		<span class="period-text" v-text="text" :class="inputClass" :tabindex="tabIndex"/>
+		<span class="caret"/>
+		<div class="calendar period-pane" v-if="isOpen" @click.stop.prevent="dummy">
+			<ul class="period-menu" style="grid-area: 1 / 1 / span 2 / auto">
+				<li v-for='(mi, ix) in menu' :key="ix" :class="{active: isSelectedMenu(mi.key)}"><a v-text='mi.name' @click.stop.prevent="selectMenu(mi.key)"></a></li>
+			</ul>
+			<a2-calendar style="grid-area: 1 / 2" :show-today="false" pos="left" :model="prevModelDate"
+				:set-month="setMonth" :set-day="setDay" :get-day-class="dayClass" :hover="mouseHover"/>
+			<a2-calendar style="grid-area: 1 / 3; margin-left:6px" :show-today="false" pos="right" :model="modelDate"
+				:set-month="setMonth" :set-day="setDay" :get-day-class="dayClass" :hover="mouseHover"/>
+			<div class="period-footer" style="grid-area: 2 / 2 / auto / span 2">
+				<div v-if="customMode" class="custom-period">
+					<div><input type=text v-model.lazy.trim="customStart" v-focus></div>
+					<span> - </span>
+					<div><input type=text v-model.lazy.trim="customEnd" v-focus></div>
+				</div>
+				<a v-else class="current-period" v-text="currentText" :class="{processing: selection}" href="" @click.stop.prevent=startCustom></a>
+				<span class="aligner"></span>
+				<button class="btn btn-primary" @click.stop.prevent="apply" v-text="locale.$Apply" :disabled="applyDisabled"/>
+				<button class="btn btn-default" @click.stop.prevent="close" v-text="locale.$Cancel" />
+			</div>
+		</div>
+	</div>
+	<span class="descr" v-if="hasDescr" v-text="description"></span>
+</div>
+`,
+        props: {
+            item: Object,
+            prop: String,
+            showAll: {
+                type: Boolean,
+                default: true
+            },
+            display: String,
+            callback: Function
+        },
+        data() {
+            return {
+                isOpen: false,
+                selection: '',
+                modelDate: du.today(),
+                currentPeriod: uPeriod.zero(),
+                selectEnd: du.zero(),
+                timerId: undefined,
+                customMode: false
+            };
+        },
+        computed: {
+            locale() {
+                return window.$$locale;
+            },
+            text() {
+                if (this.display === 'name')
+                    return this.period.text();
+                else if (this.display === 'namedate') {
+                    if (this.period.isAllData())
+                        return this.period.text(true);
+                    return `${this.period.text(true)} [${this.period.format('Date')}]`;
+                }
+                return this.period.format('Date');
+            },
+            period() {
+                if (!this.item)
+                    return this.currentPeriod;
+                const period = this.item[this.prop];
+                if (!uPeriod.isPeriod(period))
+                    console.error('PeriodPicker. Value is not a Period');
+                return period;
+            },
+            prevModelDate() {
+                return du.add(this.modelDate, -1, 'month');
+            },
+            currentText() {
+                return this.currentPeriod.format('Date');
+            },
+            applyDisabled() {
+                return this.selection === 'start';
+            },
+            menu() {
+                return uPeriod.predefined(this.showAll);
+            },
+            customStart: {
+                get() {
+                    const dt = this.currentPeriod.From;
+                    if (du.equal(dt, du.minDate) || du.equal(dt, du.maxDate))
+                        return '';
+                    return du.format(dt);
+                },
+                set(val) {
+                    const dat = this.parseDate(val);
+                    this.currentPeriod.setFrom(dat);
+                    this.modelDate = this.currentPeriod.To;
+                }
+            },
+            customEnd: {
+                get() {
+                    const dt = this.currentPeriod.To;
+                    if (du.equal(dt, du.minDate) || du.equal(dt, du.maxDate))
+                        return '';
+                    return du.format(dt);
+                },
+                set(val) {
+                    const dat = this.parseDate(val);
+                    this.currentPeriod.setTo(dat);
+                    this.modelDate = this.currentPeriod.To;
+                }
+            }
+        },
+        methods: {
+            dummy() {
+            },
+            setMonth(d, pos) {
+                this.customMode = false;
+                if (pos === 'left')
+                    this.modelDate = du.add(d, 1, 'month'); // prev month
+                else
+                    this.modelDate = d;
+            },
+            setDay(d) {
+                this.customMode = false;
+                if (!this.selection) {
+                    this.selection = 'start';
+                    this.currentPeriod.From = d;
+                    this.currentPeriod.To = du.zero();
+                    this.selectEnd = du.zero();
+                }
+                else if (this.selection === 'start') {
+                    this.currentPeriod.To = d;
+                    this.currentPeriod.normalize();
+                    this.selection = '';
+                }
+            },
+            dayClass(day) {
+                let cls = '';
+                let px = this.currentPeriod;
+                if (this.selection)
+                    px = uPeriod.create('custom', this.currentPeriod.From, this.selectEnd);
+                if (px.in(day))
+                    cls += ' active';
+                if (px.From.getTime() === day.getTime())
+                    cls += ' period-start';
+                if (px.To.getTime() === day.getTime())
+                    cls += ' period-end';
+                return cls;
+            },
+            close() {
+                this.isOpen = false;
+                this.customMode = false;
+            },
+            apply() {
+                // apply period here
+                if (!this.period.equal(this.currentPeriod)) {
+                    this.period.assign(this.currentPeriod);
+                    this.fireEvent();
+                }
+                this.close();
+            },
+            fireEvent() {
+                const item = this.item;
+                if (this.callback)
+                    this.callback(this.period);
+                const root = item.$root;
+                if (!root)
+                    return;
+                const path = item._path_ || 'global';
+                const eventName = `${path}.${this.prop}.change`;
+                if (root && root.$setDirty)
+                    root.$setDirty(true, path, this.prop);
+                root.$emit(eventName, item, this.period, null);
+            },
+            toggle() {
+                if (!this.isOpen) {
+                    // close other popups
+                    eventBus$2.$emit('closeAllPopups');
+                    if (this.disabled)
+                        return;
+                    this.modelDate = this.period.To; // TODO: calc start month
+                    if (this.modelDate.isZero() || this.modelDate.getTime() === du.maxDate.getTime())
+                        this.modelDate = du.today();
+                    this.currentPeriod.assign(this.period);
+                    this.selection = '';
+                    this.selectEnd = du.zero();
+                    this.customMode = false;
+                }
+                this.isOpen = !this.isOpen;
+            },
+            __clickOutside() {
+                this.close();
+            },
+            isSelectedMenu(key) {
+                const p = uPeriod.create(key);
+                return p.equal(this.currentPeriod);
+            },
+            selectMenu(key) {
+                const p = uPeriod.create(key);
+                this.currentPeriod.assign(p);
+                this.apply();
+            },
+            mouseHover(day) {
+                if (!this.selection)
+                    return;
+                if (this.selectEnd.getTime() === day.getTime())
+                    return;
+                clearTimeout(this.timerId);
+                this.timerId = setTimeout(() => {
+                    this.selectEnd = day;
+                }, DEFAULT_DEBOUNCE);
+            },
+            startCustom() {
+                this.customMode = true;
+            },
+            parseDate(val) {
+                let dat = du.parse(val);
+                if (du.isZero(dat))
+                    dat = du.today();
+                else if (dat.getTime() < du.minDate.getTime())
+                    dat = du.minDate;
+                else if (dat.getTime() > du.maxDate.getTime())
+                    dat = du.maxDate;
+                return dat;
+            }
+        },
+        mounted() {
+            popup$2.registerPopup(this.$el);
+            this.$el._close = this.__clickOutside;
+        },
+        beforeUnmount() {
+            popup$2.unregisterPopup(this.$el);
+        }
+    }));
+
+    // a2-selector (Net48 components/selector.js), unchanged in behaviour: over control; a reference typed or picked from a
+    // list fetched as typed (fetch, fetchCommand through the page's $invoke, or itemsSource); a popup.
+    // Vue 3: $root was the page (base.js): here the page's controller (inject $page): fetchData's plain-object $vm.
+    const popup$1 = require$1('std:popup');
+    const utils$2 = require$1('std:utils');
+    const platform = require$1('std:platform');
+    const locale$1 = window.$$locale;
+    const eventBus$1 = require$1('std:eventBus');
+    const DEFAULT_DELAY = 300;
+    platform$1.vocabulary.component('a2-selector', vue.defineComponent({
+        extends: control,
+        template: `
+<div :class="cssClass2()"  :test-id="testId">
+	<label v-if="hasLabel"><span v-text="label"/><slot name="hint"/><slot name="link"></slot></label>
+	<div class="input-group">
+		<div v-if="isCombo" class="selector-combo" :class="colorClass" @click.stop.prevent="open"><span tabindex="-1" class="select-text" v-text="valueText" @keydown="keyDown" ref="xcombo"/></div>
+		<input v-focus v-model="query" :class="[inputClass, colorClass]" :placeholder="placeholder" v-else
+			@input="debouncedUpdate" @blur.stop="blur" @keydown="keyDown" @keyup="keyUp" ref="input"
+			:readonly="disabled" @click="clickInput($event)" :tabindex="tabIndex"/>
+		<slot></slot>
+		<a class="selector-open" href="" @click.stop.prevent="open" v-if="caret"><span class="caret"></span></a>
+		<a class="selector-clear" href="" @click.stop.prevent="clear" v-if="clearVisible" tabindex="-1">&#x2715;</a>
+		<validator :invalid="invalid" :errors="errors" :options="validatorOptions"></validator>
+		<div class="selector-pane" v-if="isOpen" ref="pane" :class="paneClass">
+			<div class="selector-body" :style="bodyStyle">
+				<slot name="pane" :items="items" :is-item-active="isItemActive2" :item-name="itemName" :hit="hit" :max-chars="maxChars" :line-clamp="lineClamp" :slotStyle="slotStyle">
+					<ul class="selector-ul">
+						<li @mousedown.prevent="hit(itm)" :class="{'active': isItemActive(itmIndex)}"
+							v-for="(itm, itmIndex) in items" :key="itmIndex">
+							<span :style="itemStyle(itm)" :class="itemClass(itm, itmIndex)" :title="itemTitle(itm)" v-text="itemName(itm)"></span>
+						</li>
+					</ul>
+				</slot>
+			</div>
+			<a v-if='canNew' class="create-elem a2-hyperlink a2-inline" @mousedown.stop.prevent="doNew()"><i class="ico ico-plus"/> <span v-text="newText"></span></a>
+		</div>
+		<div class="selector-pane" v-if="isOpenNew" @click.stop.prevent="dummy">
+			<slot name="new-pane"></slot>
+		</div>
+	</div>
+	<slot name="popover"></slot>
+	<span class="descr" v-if="hasDescr" v-text="description"></span>
+</div>
+`,
+        inject: {
+            page: { from: '$page', default: null }
+        },
+        props: {
+            item: Object,
+            prop: String,
+            itemsSource: Array,
+            textItem: Object,
+            textProp: String,
+            colorProp: String,
+            display: String,
+            itemToValidate: Object,
+            propToValidate: String,
+            placeholder: String,
+            delay: Number,
+            minChars: Number,
+            fetch: Function,
+            hitfunc: Function,
+            listWidth: String,
+            listHeight: String,
+            createNew: Function,
+            placement: String,
+            caret: Boolean,
+            hasClear: Boolean,
+            useAll: Boolean,
+            mode: String,
+            fetchCommand: String,
+            fetchCommandData: Object,
+            maxChars: Number,
+            lineClamp: Number,
+            highlight: Boolean
+        },
+        data() {
+            return {
+                isOpen: false,
+                isOpenNew: false,
+                loading: false,
+                items: [],
+                query: '',
+                filter: '',
+                current: -1
+            };
+        },
+        computed: {
+            valueText() {
+                const item = this.item;
+                if (!item)
+                    return '';
+                if (this.hasText) {
+                    const el = item[this.prop];
+                    if (el.$isEmpty)
+                        return this.textItem[this.textProp];
+                }
+                let el = item[this.prop];
+                if (utils$2.isNumber(el) && this.itemsSource) {
+                    el = this.itemsSource.find(x => x.$id === el);
+                    if (!el)
+                        return '';
+                }
+                return utils$2.simpleEval(el, this.display);
+            },
+            hasValue() {
+                if (!this.highlight)
+                    return false;
+                if (!this.item)
+                    return false;
+                const el = this.item[this.prop];
+                if (utils$2.isObjectExact(el) && el.Id && el.Id != -1)
+                    return true;
+                return undefined;
+            },
+            canNew() {
+                return !!this.createNew;
+            },
+            clearVisible() {
+                if (!this.hasClear)
+                    return false;
+                const to = this.item[this.prop];
+                if (!to)
+                    return false;
+                if (this.useAll && to.Id === -1)
+                    return false;
+                if (utils$2.isDefined(to.$isEmpty))
+                    return !to.$isEmpty;
+                return !utils$2.isPlainObjectEmpty(to);
+            },
+            hasText() { return !!this.textProp; },
+            newText() {
+                return `${locale$1.$CreateLC} "${this.query}"`;
+            },
+            pane() {
+                return {
+                    items: this.items,
+                    isItemActive: this.isItemActive2,
+                    itemName: this.itemName,
+                    hit: this.hit
+                };
+            },
+            paneClass() {
+                if (this.placement)
+                    return 'panel-' + this.placement;
+                return undefined;
+            },
+            bodyStyle() {
+                const s = {};
+                if (this.listWidth) {
+                    s.minWidth = this.listWidth;
+                }
+                if (this.listHeight)
+                    s.maxHeight = this.listHeight;
+                return s;
+            },
+            slotStyle() {
+                const r = {};
+                if (this.listWidth) {
+                    r.width = this.listWidth;
+                    r.minWidth = this.listWidth;
+                }
+                if (this.listHeight)
+                    r.maxHeight = this.maxHeight;
+                return r;
+            },
+            colorClass() {
+                return this.item ? this.colorOf(this.item[this.prop]) : undefined;
+            },
+            debouncedUpdate() {
+                const delay = this.delay || DEFAULT_DELAY;
+                return utils$2.debounce(() => {
+                    this.current = -1;
+                    this.filter = this.query;
+                    this.update();
+                }, delay);
+            },
+            isCombo() {
+                return this.mode === 'combo-box' || this.mode === 'hyperlink';
+            }
+        },
+        watch: {
+            valueText() {
+                if (this.hasText) {
+                    const el = this.item[this.prop];
+                    if (!el.$isEmpty)
+                        this.textItem[this.textProp] = ''; // clear text
+                }
+                this.query = this.valueText;
+            }
+        },
+        methods: {
+            dummy() {
+            },
+            __clickOutside() {
+                this.isOpen = false;
+                this.isOpenNew = false;
+            },
+            colorOf(el) {
+                if (!this.colorProp)
+                    return undefined;
+                const clr = utils$2.simpleEval(el, this.colorProp);
+                return clr ? `color color-${clr}` : undefined;
+            },
+            cssClass2() {
+                let cx = this.cssClass();
+                if (this.isOpen || this.isOpenNew)
+                    cx += ' open';
+                if (this.mode === 'hyperlink')
+                    cx += ' selector-hyperlink';
+                else if (this.mode === 'combo-box')
+                    cx += ' selector-combobox';
+                if (this.hasValue)
+                    cx += ' has-value';
+                return cx;
+            },
+            isItemActive(ix) {
+                return ix === this.current;
+            },
+            isItemActive2(ix, row) {
+                if (!row)
+                    return this.isItemActive(ix);
+                if (this.current === -1)
+                    return false;
+                return this.items[this.current] === row;
+            },
+            itemName(itm) {
+                const v = utils$2.simpleEval(itm, this.display);
+                if (this.maxChars)
+                    return utils$2.text.maxChars(v, this.maxChars);
+                return v;
+            },
+            blur() {
+                const text = this.query;
+                if (this.hasText && text !== this.valueText) {
+                    const to = this.item[this.prop];
+                    if (to && to.$empty)
+                        to.$empty();
+                    this.textItem[this.textProp] = text;
+                }
+                this.cancel();
+            },
+            open() {
+                if (!this.isOpen) {
+                    eventBus$1.$emit('closeAllPopups');
+                    if (this.current != -1)
+                        this.$nextTick(() => this.scrollIntoView());
+                    this.doFetch(this.valueText, true);
+                    if (this.isCombo) {
+                        const combo = this.$refs['xcombo'];
+                        if (combo)
+                            combo.focus();
+                    }
+                    else {
+                        const input = this.$refs['input'];
+                        if (input)
+                            input.focus();
+                    }
+                }
+                this.isOpen = !this.isOpen;
+            },
+            cancel() {
+                this.query = this.valueText;
+                this.isOpen = false;
+            },
+            keyUp(event) {
+                if (this.isOpen && event.which === 27) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    this.cancel();
+                }
+                else if (event.which === 13) {
+                    if (this.hasText)
+                        this.blur();
+                }
+            },
+            clickInput(event) {
+                if (this.caret && !this.isOpen) {
+                    event.stopPropagation();
+                    event.preventDefault();
+                    this.open();
+                }
+            },
+            keyDown(event) {
+                if (!this.isOpen) {
+                    if (event.which === 115)
+                        this.open();
+                    return;
+                }
+                event.stopPropagation();
+                switch (event.which) {
+                    case 27: // esc
+                        event.preventDefault();
+                        break;
+                    case 13: // enter
+                        if (this.current === -1)
+                            return;
+                        this.hit(this.items[this.current]);
+                        break;
+                    case 40: // down
+                        event.preventDefault();
+                        this.current += 1;
+                        if (this.current >= this.items.length)
+                            this.current = 0;
+                        this.query = this.itemName(this.items[this.current]);
+                        this.scrollIntoView();
+                        break;
+                    case 38: // up
+                        event.preventDefault();
+                        this.current -= 1;
+                        if (this.current < 0)
+                            this.current = this.items.length - 1;
+                        this.query = this.itemName(this.items[this.current]);
+                        this.scrollIntoView();
+                        break;
+                    case 115: // F4
+                        this.cancel();
+                        break;
+                    default:
+                        return;
+                }
+            },
+            itemTitle(itm) {
+                if (this.lineClamp > 0)
+                    return this.itemName(itm);
+                return '';
+            },
+            itemStyle() {
+                if (this.lineClamp > 0)
+                    return { '-webkit-line-clamp': this.lineClamp };
+                return undefined;
+            },
+            itemClass(itm) {
+                let cls = '';
+                if (this.lineClamp > 0)
+                    cls += ' line-clamp';
+                const clr = this.colorOf(itm);
+                if (clr)
+                    cls += ' ' + clr;
+                return cls;
+            },
+            hit(itm) {
+                const item = this.item;
+                const obj = item[this.prop];
+                this.query = this.valueText;
+                this.isOpen = false;
+                this.isOpenNew = false;
+                this.current = this.items.indexOf(itm);
+                this.$nextTick(() => {
+                    if (this.hitfunc) {
+                        this.hitfunc.call(item.$root, itm, item, this.prop);
+                        return;
+                    }
+                    if (obj && obj.$merge)
+                        obj.$merge(itm, true /*fire*/);
+                    else if (utils$2.isNumber(obj))
+                        item[this.prop] = itm.$id;
+                    else
+                        platform.set(item, this.prop, itm);
+                });
+            },
+            clear() {
+                this.query = '';
+                this.isOpen = false;
+                this.isOpenNew = false;
+                const obj = this.item[this.prop];
+                if (!obj)
+                    return;
+                if (this.useAll) {
+                    obj.Id = -1;
+                    obj.Name = '';
+                    return;
+                }
+                if (obj.$empty)
+                    obj.$empty();
+                else if (utils$2.isObjectExact(obj))
+                    utils$2.clearObject(obj);
+            },
+            scrollIntoView() {
+                this.$nextTick(() => {
+                    const pane = this.$refs['pane'];
+                    if (!pane)
+                        return;
+                    const elem = pane.querySelector('.active');
+                    if (!elem)
+                        return;
+                    elem.scrollIntoView(false);
+                });
+            },
+            update() {
+                const text = this.query || '';
+                const chars = +(this.minChars || 0);
+                if (chars && text.length < chars)
+                    return;
+                this.isOpen = true;
+                this.isOpenNew = false;
+                if (text === '') {
+                    this.clear();
+                    return;
+                }
+                this.doFetch(text, false);
+            },
+            doFetch(text, all) {
+                if (this.itemsSource) {
+                    if (!this.items.length)
+                        this.items = this.itemsSource;
+                    let fi = -1;
+                    const el = this.item[this.prop];
+                    if (utils$2.isNumber(el))
+                        fi = this.items.findIndex((x) => x.Id === el);
+                    else
+                        fi = this.items.indexOf(el);
+                    if (fi !== -1) {
+                        this.current = fi;
+                        setTimeout(() => this.scrollIntoView(), 10);
+                    }
+                    return;
+                }
+                this.loading = true;
+                const fData = this.fetchData(text, all);
+                if (fData.then) {
+                    // promise
+                    fData.then((result) => {
+                        this.loading = false;
+                        // first property from result
+                        const prop = Object.keys(result)[0];
+                        this.items = result[prop];
+                        if (this.items.length)
+                            this.current = 0;
+                    }).catch(() => {
+                        this.items = [];
+                    });
+                }
+                else {
+                    if (utils$2.isArray(fData)) {
+                        if (this.items != fData) {
+                            if (this.items.length != fData.length)
+                                this.current = -1; // reset current element
+                            this.items = fData;
+                        }
+                    }
+                }
+            },
+            fetchData(text, all) {
+                all = all || false;
+                const item = this.item;
+                const elem = item[this.prop];
+                if (elem && !('$vm' in elem)) {
+                    // plain object hack
+                    Object.defineProperty(elem, '$vm', { value: this.page, writable: false, enumerable: false });
+                }
+                if (this.fetch) {
+                    return this.fetch.call(item.$root, elem, text, all);
+                }
+                else if (this.fetchCommand) {
+                    if (!text)
+                        return [];
+                    const fc = this.fetchCommand.split('/');
+                    const action = fc.pop();
+                    const invokeArg = Object.assign({}, { Text: text }, this.fetchCommandData);
+                    return elem.$vm.$invoke(action, invokeArg, fc.join('/'));
+                }
+                console.error('Selector. Fetch or Delegate not defined');
+            },
+            doNew() {
+                this.isOpen = false;
+                if (this.createNew) {
+                    const elem = this.item[this.prop];
+                    const arg = {
+                        elem: elem,
+                        text: this.query
+                    };
+                    this.createNew(arg);
+                }
+            }
+        },
+        mounted() {
+            popup$1.registerPopup(this.$el);
+            this.query = this.valueText;
+            this.$el._close = this.__clickOutside;
+        },
+        beforeUnmount() {
+            popup$1.unregisterPopup(this.$el);
+        }
+    }));
+
+    // a2-date-picker (Net48 components/datepicker.js), unchanged in behaviour: over control; a date typed, or picked on a
+    // calendar (a month, for view 'month'); the time of the model's date is kept. A popup.
+    const popup = require$1('std:popup');
+    const utils$1 = require$1('std:utils');
+    const eventBus = require$1('std:eventBus');
+    const locale = window.$$locale;
+    const dateLocale = locale.$DateLocale || locale.$Locale;
+    const monthLocale = locale.$Locale; // for text
+    platform$1.vocabulary.component('a2-date-picker', vue.defineComponent({
+        extends: control,
+        template: `
+<div :class="cssClass2()" class="date-picker" :test-id="testId">
+	<label v-if="hasLabel"><span v-text="label"/><slot name="hint"/><slot name="link"></slot></label>
+	<div class="input-group"  @click="clickInput($event)">
+		<input v-focus v-model.lazy="model" v-if="!isMonth" :class="inputClass" :readonly="inputDisabled"/>
+		<div class="month-wrapper" v-if=isMonth v-text=model></div>
+		<a href @click.stop.prevent="toggle($event)" tabindex="-1"><i class="ico ico-calendar"></i></a>
+		<a href v-if="clearVisible" @click.stop.prevent="clear($event)" tabindex="-1">✕</a>
+		<validator :invalid="invalid" :errors="errors" :options="validatorOptions"></validator>
+		<div class="calendar" v-if="isOpen">
+			<a2-calendar :model="viewDate" :view="view" :current-model="modelDate"
+				:set-month="setMonth" :set-day="selectDay" :get-day-class="dayClass"/>
+		</div>
+	</div>
+	<span class="descr" v-if="hasDescr" v-text="description"></span>
+</div>
+`,
+        props: {
+            item: Object,
+            prop: String,
+            itemToValidate: Object,
+            propToValidate: String,
+            // override control.align (default value)
+            align: { type: String, default: 'center' },
+            view: String,
+            yearCutOff: String,
+            hasClear: Boolean
+        },
+        data() {
+            return {
+                isOpen: false,
+                viewDate: null
+            };
+        },
+        watch: {
+            modelDate() {
+                this.viewDate = this.modelDate;
+            }
+        },
+        methods: {
+            toggle() {
+                if (this.disabled)
+                    return;
+                if (!this.isOpen) {
+                    // close other popups
+                    eventBus.$emit('closeAllPopups');
+                    if (utils$1.date.isZero(this.modelDate))
+                        this.viewDate = utils$1.date.today();
+                }
+                this.isOpen = !this.isOpen;
+            },
+            clear() {
+                this.isOpen = false;
+                this.updateModel(utils$1.date.zero());
+            },
+            updateModel(date) {
+                this.item[this.prop] = date;
+                this.viewDate = date;
+            },
+            fitDate(dt) {
+                const du = utils$1.date;
+                if (du.isZero(dt))
+                    return dt;
+                if (dt < du.minDate)
+                    dt = du.minDate;
+                else if (dt > du.maxDate)
+                    dt = du.maxDate;
+                return dt;
+            },
+            clickInput(ev) {
+                if (this.view === 'month') {
+                    this.toggle();
+                    ev.stopPropagation();
+                    ev.preventDefault();
+                }
+            },
+            setMonth(dt) {
+                this.viewDate = dt;
+            },
+            selectDay(day) {
+                const dt = new Date(day.getFullYear(), day.getMonth(), day.getDate(), 0, 0, 0, 0);
+                this.setDate(dt);
+                this.isOpen = false;
+            },
+            setDate(d) {
+                // save time
+                const md = this.modelDate || d;
+                let nd = new Date(d.getFullYear(), d.getMonth(), d.getDate(), md.getHours(), md.getMinutes(), 0, 0);
+                nd = this.fitDate(nd);
+                this.updateModel(nd);
+            },
+            dayClass(day) {
+                let cls = '';
+                const tls = utils$1.date;
+                if (tls.equal(day, tls.today()))
+                    cls += ' today';
+                if (tls.equal(day, this.modelDate))
+                    cls += ' active';
+                if (day.getMonth() !== this.viewDate.getMonth())
+                    cls += ' other';
+                return cls;
+            },
+            cssClass2() {
+                let cx = this.cssClass();
+                if (this.isOpen)
+                    cx += ' open';
+                return cx;
+            },
+            __clickOutside() {
+                this.isOpen = false;
+            }
+        },
+        computed: {
+            modelDate() {
+                return this.item[this.prop];
+            },
+            isMonth() {
+                return this.view === 'month';
+            },
+            inputDisabled() {
+                return this.disabled || this.view === 'month';
+            },
+            clearVisible() {
+                return this.hasClear && !utils$1.date.isZero(this.modelDate);
+            },
+            model: {
+                get() {
+                    if (utils$1.date.isZero(this.modelDate))
+                        return ' '; /* avoid baseline problem */
+                    if (this.view === 'month')
+                        return utils$1.text.capitalize(this.modelDate.toLocaleString(monthLocale, { year: 'numeric', month: 'long' }));
+                    else
+                        return this.modelDate.toLocaleString(dateLocale, { year: 'numeric', month: '2-digit', day: '2-digit' });
+                },
+                set(str) {
+                    let md = utils$1.date.parse(str, this.yearCutOff);
+                    md = this.fitDate(md);
+                    if (utils$1.date.isZero(md)) {
+                        this.updateModel(md);
+                        this.isOpen = false;
+                    }
+                    else {
+                        this.setDate(md);
+                    }
+                }
+            }
+        },
+        mounted() {
+            this.viewDate = this.modelDate;
+            popup.registerPopup(this.$el);
+            this.$el._close = this.__clickOutside;
+        },
+        beforeUnmount() {
+            popup.unregisterPopup(this.$el);
+        }
+    }));
+
+    // combobox (Net48 components/combobox.js), unchanged in behaviour: over control; a select of itemsSource (or its own
+    // options in the slot), grouped by groupby; the value is always the itemsSource's element. The server writes it as
+    // <select is="vue:combobox"> (ComboBox.cs). v-if beside v-for tests groupby, a prop: Vue 3's order (v-if first)
+    // gives the same.
+    const utils = require$1('std:utils');
+    const comboBoxTemplate = `<div :class="cssClass()" v-lazy="itemsSource" :test-id="testId">
+	<label v-if="hasLabel"><span v-text="label"/><slot name="hint"/><slot name="link"></slot></label>
+	<div class="input-group">
+		<div class="select-wrapper" :disabled="disabled" >
+			<div v-text="getWrapText()" class="select-text" ref="wrap" :class="wrapClass"/>
+			<span class="caret"/>
+		</div>
+		<select v-focus v-model="cmbValue" :disabled="disabled" :tabindex="tabIndex" ref="sel" :title="getWrapText()">
+			<slot>
+				<optgroup v-for="(grp, grpIndex) in itemsSourceGroup" :key="grpIndex" v-if="groupby"
+					:label="grp.name">
+					<option v-for="(cmb, cmbIndex) in grp.items" :key="grpIndex + '_' + cmbIndex"
+						v-text="getName(cmb, true)" :value="getValue(cmb)" :class="getClass(cmb)"></option>
+				</optgroup>
+				<option v-for="(cmb, cmbIndex) in itemsSource" :key="cmbIndex" v-if="!groupby"
+					v-text="getName(cmb, true)" :value="getValue(cmb)" :class="getClass(cmb)"></option>
+			</slot>
+		</select>
+		<validator :invalid="invalid" :errors="errors" :options="validatorOptions"></validator>
+	</div>
+	<slot name="popover"></slot>
+	<span class="descr" v-if="hasDescr" v-text="description"></span>
+</div>
+`;
+    platform$1.vocabulary.component('combobox', vue.defineComponent({
+        extends: control,
+        template: comboBoxTemplate,
+        props: {
+            prop: String,
+            item: {
+                type: Object, default() { return {}; }
+            },
+            itemsSource: {
+                type: Array, default() { return []; }
+            },
+            itemToValidate: Object,
+            propToValidate: String,
+            nameProp: String,
+            valueProp: String,
+            boldProp: String,
+            cssClassProp: String,
+            showvalue: Boolean,
+            align: String,
+            groupby: String
+        },
+        computed: {
+            cmbValue: {
+                get() {
+                    const item = this.item;
+                    if (this.itemsSource.length === 0 && item) {
+                        const itemval = item[this.prop];
+                        if (itemval && itemval.$empty && !itemval.$isEmpty)
+                            itemval.$empty();
+                    }
+                    return this.getComboValue();
+                },
+                set(value) {
+                    if (this.item)
+                        this.item[this.prop] = value;
+                }
+            },
+            itemsSourceGroup() {
+                if (!this.groupby)
+                    return this.itemsSource;
+                const prop = this.groupby;
+                const items = this.itemsSource;
+                const set = new Set(items.map((x) => utils.eval(x, prop)));
+                return Array.from(set).map(key => { return { name: key, items: items.filter((val) => key == utils.eval(val, prop)) }; });
+            },
+            wrapClass() {
+                let cls = '';
+                if (this.align && this.align !== 'left')
+                    cls += 'text-' + this.align;
+                return cls;
+            }
+        },
+        methods: {
+            getName(itm) {
+                return this.nameProp ? utils.eval(itm, this.nameProp) : itm.$name;
+            },
+            getValue(itm) {
+                return this.valueProp ? utils.eval(itm, this.valueProp) : itm;
+            },
+            getClass(itm) {
+                if (this.boldProp)
+                    return utils.eval(itm, this.boldProp) ? 'bold' : undefined;
+                if (this.cssClassProp)
+                    return utils.eval(itm, this.cssClassProp);
+                return undefined;
+            },
+            getWrapText() {
+                return this.showvalue ? this.getComboValue() : this.getText();
+            },
+            getComboValue() {
+                const val = this.item ? this.item[this.prop] : null;
+                if (!utils.isObjectExact(val))
+                    return val;
+                const vProp = this.valueProp || '$id';
+                if (!(vProp in val))
+                    return val;
+                if (this.itemsSource.indexOf(val) !== -1) {
+                    return val;
+                }
+                // always return value from ItemsSource
+                return this.itemsSource.find((x) => x[vProp] === val[vProp]) || null;
+            },
+            getText() {
+                const cv = this.getComboValue();
+                if (cv === null)
+                    return '';
+                if (utils.isObjectExact(cv))
+                    return this.getName(cv);
+                if (this.itemsSource && this.itemsSource.length) {
+                    const vProp = this.valueProp || '$id';
+                    const ob = this.itemsSource.find((x) => x[vProp] === cv);
+                    return ob ? this.getName(ob) : '';
+                }
+                else {
+                    return this.getOptionsText(cv);
+                }
+            },
+            getOptionsText(cv) {
+                // get text from select directly.
+                const sel = this.$refs.sel;
+                if (!sel)
+                    return '';
+                const ops = sel.options;
+                for (let i = 0; i < ops.length; i++) {
+                    if ('' + ops[i].value === '' + cv)
+                        return ops[i].text;
+                }
+                const si = sel.selectedIndex;
+                if (si < 0 || si >= ops.length)
+                    return '';
+                return ops[si].text;
+            }
+        },
+        mounted() {
+            // litle hack. $refs are unavailable during init.
+            const t = this.getText();
+            if (t)
+                this.$refs.wrap.innerText = t;
+        }
+    }));
+
+    // a2-sheet, a2-sheet-section, a2-sheet-section-tree (Net48 components/sheet.js), unchanged in behaviour: a report's
+    // table by named slots (columns, header, col-shadow, body, footer); a tree section renders its slot once per element
+    // of the tree, walked depth first, a collapsed element's children skipped.
+    // Vue 3: the tree is a functional component, a function of (props, { slots }); the slot's first vnode is taken as it
+    // is (Vue 2 made it anew from tag, data and children); Vue.set is an assignment; the scope's functions are bound to
+    // the scope (Vue 2's callers called them as its methods: tree.toggle()).
+    const sheetTemplate = `
+<table class="sheet" :class="cssClass">
+	<slot name="columns"></slot>
+	<thead>
+		<slot name="header"></slot>
+	</thead>
+	<slot name="col-shadow"></slot>
+	<slot name="body"></slot>
+	<tfoot>
+		<slot name="footer"></slot>
+	</tfoot>
+</table>
+`;
+    const sheetSectionTemplate = `
+<tbody>
+	<slot></slot>
+</tbody>
+`;
+    function* traverse(item, prop, lev) {
+        if (prop in item) {
+            const arr = item[prop];
+            for (let i = 0; i < arr.length; i++) {
+                const elem = arr[i];
+                elem.$level = lev;
+                yield elem;
+                if (!elem.$collapsed) {
+                    const newprop = elem._meta_.$items || prop;
+                    yield* traverse(elem, newprop, lev + 1);
+                }
+            }
+        }
+    }
+    platform$1.vocabulary.component('a2-sheet', vue.defineComponent({
+        template: sheetTemplate,
+        props: {
+            stale: Boolean
+        },
+        computed: {
+            cssClass() {
+                return {
+                    'sheet-stale': this.stale
+                };
+            }
+        }
+    }));
+    platform$1.vocabulary.component('a2-sheet-section', vue.defineComponent({
+        template: sheetSectionTemplate
+    }));
+    const sheetSectionTree = (props, { slots }) => {
+        const prop = props.propName;
+        const source = props.itemsSource;
+        if (!source)
+            return null;
+        if (!prop)
+            return null;
+        const slot = slots.default;
+        if (!slot)
+            return null;
+        const compArr = [];
+        for (const v of traverse(source, prop, 1)) {
+            const scope = { item: v };
+            scope.hasChildren = function () {
+                const np = this.item._meta_.$items || prop;
+                const chElems = this.item[np];
+                return chElems && chElems.length > 0;
+            }.bind(scope);
+            scope.toggle = function () {
+                const clpsed = this.item.$collapsed || false;
+                this.item.$collapsed = !clpsed;
+            }.bind(scope);
+            scope.cssClass = function () {
+                let cls = '';
+                if (this.hasChildren())
+                    cls += 'has-children';
+                if (this.item.$collapsed)
+                    cls += ' collapsed';
+                cls += ' lev-' + this.item.$level;
+                return cls;
+            }.bind(scope);
+            scope.rowCssClass = function (mark) {
+                let cls = mark || '';
+                if (this.hasChildren())
+                    cls += ` group gl-${this.item.$level}`;
+                if (this.item.$collapsed)
+                    cls += ' collapsed';
+                return cls;
+            }.bind(scope);
+            scope.indentCssClass = function () {
+                return 'indent lev-' + this.item.$level;
+            }.bind(scope);
+            compArr.push(slot(scope)[0]);
+        }
+        return vue.h('tbody', {}, compArr);
+    };
+    sheetSectionTree.props = ['itemsSource', 'propName'];
+    platform$1.vocabulary.component('a2-sheet-section-tree', sheetSectionTree);
+
+})(a2v10.platform, a2v10.platform.Vue);
+//# sourceMappingURL=a2v10-xaml.js.map

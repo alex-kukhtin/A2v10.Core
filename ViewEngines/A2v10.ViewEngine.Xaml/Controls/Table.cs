@@ -182,13 +182,14 @@ public class Table : Control, ITableControl
 				{
 					var tml = new TagBuilder("template");
 					tml.MergeAttribute("v-for", repeatAttr);
+					context.MergeForTemplateKey(tml, "rowIndex");
 					tml.RenderStart(context);
 					using (var cts = new ScopeContext(context, "row", isBind.Path))
 					{
 						var rNo = 0;
 						foreach (var row in Rows)
 						{
-							row.RenderElement(context, (tag) => tag.MergeAttribute(":key", $"'r{rNo}:' + rowIndex"));
+							row.RenderElement(context, (tag) => context.MergeForItemKey(tag, $"'r{rNo}:' + rowIndex"));
 							rNo += 1;
 						}
 					}

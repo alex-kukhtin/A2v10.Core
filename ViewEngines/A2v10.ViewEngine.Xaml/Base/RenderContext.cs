@@ -330,6 +330,55 @@ public class RenderContext(IXamlElement _root, IRenderInfo _ri, ILocalizer _loca
 		});
 	}
 
+	// a bound `:disabled` false: Vue 2 removed the attribute, Vue 3 writes disabled="false" on a tag with no such property
+	// (<a>, <div>) and CSS [disabled] shows it off; null removes it. Called once on the final value: a wrapped part of an
+	// `||` chain would give `null || false`
+	public void MergeDisabledRemovable(TagBuilder tag)
+	{
+		switch (_framework)
+		{
+			case ClientFramework.Vue2:
+				break;
+			case ClientFramework.Vue3:
+				var disabled = tag.GetAttribute(":disabled");
+				if (!String.IsNullOrEmpty(disabled))
+					tag.MergeAttribute(":disabled", $"({disabled}) || null", replaceExisting: true);
+				break;
+			default:
+				throw UnsupportedFramework();
+		}
+	}
+
+	// the key of a <template v-for>: Vue 2 refuses it on the <template> and takes it on each item, Vue 3 the reverse
+	// (a compile error on the items); a call site calls both, each writes on one framework only
+	public void MergeForTemplateKey(TagBuilder template, String key)
+	{
+		switch (_framework)
+		{
+			case ClientFramework.Vue2:
+				break;
+			case ClientFramework.Vue3:
+				template.MergeAttribute(":key", key);
+				break;
+			default:
+				throw UnsupportedFramework();
+		}
+	}
+
+	public void MergeForItemKey(TagBuilder item, String key)
+	{
+		switch (_framework)
+		{
+			case ClientFramework.Vue2:
+				item.MergeAttribute(":key", key);
+				break;
+			case ClientFramework.Vue3:
+				break;
+			default:
+				throw UnsupportedFramework();
+		}
+	}
+
 	private InvalidOperationException UnsupportedFramework() =>
 		new($"Framework '{(Int32)_framework}' is not supported by the XAML renderer");
 }

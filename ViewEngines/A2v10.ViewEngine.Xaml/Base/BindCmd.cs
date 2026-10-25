@@ -688,6 +688,7 @@ public class BindCmd : BindBase
 				}
 				break;
 		}
+		context.MergeDisabledRemovable(tag);
 	}
 
 	internal Boolean IsSkipCheckReadOnly()

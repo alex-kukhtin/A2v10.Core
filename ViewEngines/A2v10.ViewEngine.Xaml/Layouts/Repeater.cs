@@ -19,6 +19,7 @@ public class Repeater : UIElement
 		onRender?.Invoke(div);
 		MergeAttributes(div, context);
 		div.MergeAttribute("v-for", $"(elem, elemIndex) in {isBind.GetPath(context)}");
+		context.MergeForTemplateKey(div, "elemIndex");
 		div.RenderStart(context);
 		if (Content != null)
 		{
@@ -27,7 +28,7 @@ public class Repeater : UIElement
 				Content.RenderElement(context, (tag) =>
 				{
 					onRender?.Invoke(tag);
-					tag.MergeAttribute(":key", "elemIndex");
+					context.MergeForItemKey(tag, "elemIndex");
 				});
 			}
 		}

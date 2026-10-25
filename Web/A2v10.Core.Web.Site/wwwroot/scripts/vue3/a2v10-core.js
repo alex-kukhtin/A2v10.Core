@@ -2592,7 +2592,8 @@
         else
             yield* enumData(root, path.substring(0, ld), path.substring(ld + 1), '');
     }
-    // Keeps an element's errors of one key; _errors_ is null when it has none.
+    // Keeps an element's errors of one key; _errors_ is null when it has none. item: the raw element (platform.raw):
+    // a control validates while it renders, and a write the runtime observes would render the others again, and so on.
     function saveErrors(item, path, errors) {
         if (!item._errors_ && !errors)
             return; // already null
@@ -2623,7 +2624,7 @@
             }
             const elemRules = rulesOf(item, path);
             const res = elemRules ? rules.validate(elemRules, item, val, onAsyncError) : null;
-            return saveErrors(item, path, res);
+            return saveErrors(ctx.platform.raw(item), path, res);
         }
         function validateOneElement(root, path, keyRules) {
             if (!keyRules)
@@ -2631,7 +2632,7 @@
             const errs = [];
             for (const elem of dataForVal(root, path)) {
                 const res = rules.validate(keyRules, elem.item, elem.val);
-                saveErrors(elem.item, path, res);
+                saveErrors(ctx.platform.raw(elem.item), path, res);
                 if (res && res.length)
                     errs.push(...res);
             }
@@ -16709,6 +16710,153 @@ Make sure to use the production build (*.prod.js) when deploying for production.
         });
     }
 
+    // std:html (Net48 services/html.js), unchanged in behaviour: what the page does with the document beside Vue: open,
+    // download (a url, a blob), print directly through a hidden frame, pick a file, measure and purge a sheet's table for
+    // export.
+    const frameId = 'print-direct-frame';
+    function createHtml() {
+        return {
+            getColumnsWidth,
+            getRowHeight,
+            downloadBlob,
+            downloadUrl,
+            openUrl,
+            printDirect,
+            removePrintFrame,
+            updateDocTitle,
+            uploadFile,
+            purgeTable
+        };
+        function getColumnsWidth(elem) {
+            const cols = elem.getElementsByTagName('col');
+            // FF bug fix. Popover does not work inside <td>.
+            const body = elem.querySelectorAll('tbody.col-shadow')[0];
+            body.style.display = 'table-row-group';
+            const cells = elem.querySelectorAll('tbody.col-shadow > tr > td');
+            const len = Math.min(cols.length, cells.length);
+            for (let i = 0; i < len; i++) {
+                const w = cells[i].offsetWidth;
+                cols[i].setAttribute('data-col-width', '' + w);
+            }
+            body.style.display = 'none';
+        }
+        function getRowHeight(elem, padding) {
+            const rows = elem.getElementsByTagName('tr');
+            for (let r = 0; r < rows.length; r++) {
+                const h = rows[r].offsetHeight - (padding || 12); /* padding from css */
+                rows[r].setAttribute('data-row-height', '' + h);
+            }
+        }
+        function hiddenLink(url) {
+            const link = document.createElement('a');
+            link.style.display = 'none';
+            document.body.appendChild(link); // FF!
+            link.href = url;
+            return link;
+        }
+        function openUrl(url) {
+            const link = hiddenLink(url);
+            link.setAttribute('target', '_blank');
+            link.click();
+            document.body.removeChild(link);
+        }
+        function downloadUrl(url) {
+            const link = hiddenLink(url);
+            link.setAttribute('download', '');
+            link.click();
+            document.body.removeChild(link);
+        }
+        function downloadBlob(blob, fileName, format) {
+            const objUrl = URL.createObjectURL(blob);
+            const link = hiddenLink(objUrl);
+            let downloadFile = fileName || 'file';
+            format = (format || '').toLowerCase();
+            if (format === 'excel')
+                downloadFile += '.xlsx';
+            else if (format === 'pdf')
+                downloadFile += '.pdf';
+            link.download = downloadFile;
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(objUrl);
+        }
+        function printDirect(url) {
+            if (window.cefHost || navigator.userAgent.toLowerCase().indexOf('firefox') > -1) {
+                window.open(url);
+                return;
+            }
+            removePrintFrame();
+            const frame = document.createElement('iframe');
+            document.body.classList.add('waiting');
+            frame.id = frameId;
+            frame.style.cssText = 'display:none;width:0;height:0;border:none;position:absolute;left:-10000,top:-100000';
+            document.body.appendChild(frame);
+            if (document.activeElement)
+                document.activeElement.blur();
+            frame.setAttribute('src', url);
+            frame.onload = function () {
+                const cw = frame.contentWindow;
+                if (cw.document.body) {
+                    const finp = cw.document.createElement('input');
+                    finp.setAttribute('id', 'dummy-focus');
+                    finp.style.cssText = 'width:0;height:0;border:none;position:absolute;left:-10000,top:-100000';
+                    cw.document.body.appendChild(finp);
+                    finp.focus();
+                    cw.document.body.removeChild(finp);
+                }
+                document.body.classList.remove('waiting');
+                cw.print();
+            };
+        }
+        // the frame element (Net48 took window.frames[id], the frame's window, and removeChild threw: B34)
+        function removePrintFrame() {
+            const frame = document.getElementById(frameId);
+            if (frame)
+                document.body.removeChild(frame);
+        }
+        function updateDocTitle(title) {
+            if (document.title === title)
+                return;
+            document.title = title;
+        }
+        function uploadFile(accept) {
+            return new Promise(function (resolve) {
+                const input = document.createElement('input');
+                input.setAttribute('type', 'file');
+                if (accept)
+                    input.setAttribute('accept', accept);
+                input.style.display = 'none';
+                input.addEventListener('change', ev => {
+                    resolve(ev.target.files[0]);
+                });
+                document.body.appendChild(input); // FF!
+                input.click();
+                document.body.removeChild(input);
+            });
+        }
+    }
+    // A sheet's table for export: no titles; a popover's or a dropdown's cell keeps its first element's text.
+    function purgeTable(tbl) {
+        const node = tbl.cloneNode(true);
+        for (const td of node.getElementsByTagName('TD')) {
+            if (!td.childNodes.length)
+                continue;
+            td.removeAttribute('title');
+            const qs = td.querySelector('.popover-wrapper, .hlink-dd-wrapper');
+            if (!qs)
+                continue;
+            if (!qs.childNodes.length)
+                continue;
+            for (const c of qs.childNodes) {
+                if (c.nodeType != c.ELEMENT_NODE)
+                    continue;
+                td.innerText = c.innerText;
+                break;
+            }
+        }
+        return node;
+    }
+
     // std:http (Net48 services/http.js), unchanged in behaviour but for load and queue: a page is loaded by include,
     // which mounts it (Vue 2's load wrote the page's HTML into a container and found the instance by __vue__).
     // A refusal is thrown as text: 255 carries the server's message ('UI:' for the user); '__blank__' means it is
@@ -16784,7 +16932,7 @@ Make sure to use the production build (*.prod.js) when deploying for production.
         function post(url, data, raw, skipEvents) {
             return doRequest('POST', url, data, raw, skipEvents);
         }
-        // A status but 200 and 255 resolves with undefined (B27: the switch has no default).
+        // A status but 200 and 255 rejects with its text (B27, the upload half: as Net48 since 84e0f9ffb).
         async function upload(url, data) {
             eventBus.$emit('beginRequest', url);
             try {
@@ -16808,6 +16956,8 @@ Make sure to use the production build (*.prod.js) when deploying for production.
                             txt = await response.text();
                         throw txt;
                     }
+                    default:
+                        throw response.statusText;
                 }
             }
             finally {
@@ -17266,7 +17416,7 @@ Make sure to use the production build (*.prod.js) when deploying for production.
 
     // std:platform on Vue 3 (Net48 platform/webvue.js on Vue 2): the seam through which the model core reaches the
     // runtime. set is a plain assignment: the model is read through reactive(), whose proxy tracks it.
-    // defer runs after the update: nextTick.
+    // defer runs after the update: nextTick. raw is toRaw: what the model keeps for itself goes past the proxy.
     const platform = {
         set(target, prop, value) {
             target[prop] = value;
@@ -17274,6 +17424,7 @@ Make sure to use the production build (*.prod.js) when deploying for production.
         defer(fn) {
             nextTick(fn);
         },
+        raw: toRaw,
         print() {
             window.print();
         },
@@ -17471,6 +17622,23 @@ Make sure to use the production build (*.prod.js) when deploying for production.
             // do nothing
         }
     };
+
+    // std:tools (Net48 services/tools.js), unchanged in behaviour: an alert through the shell's confirm (bus 'confirm'),
+    // for code with no page at hand (the controls).
+    function createTools() {
+        return {
+            alert
+        };
+        function alert(msg, title, list) {
+            const dlgData = {
+                promise: null, data: {
+                    message: msg, title: title, style: 'alert', list: list
+                }
+            };
+            bus.$emit('confirm', dlgData);
+            return dlgData.promise;
+        }
+    }
 
     // std:url (Net48 services/url.js), unchanged in behaviour: the platform's urls (/_page, /_dialog, /_blob…), the
     // query string of model values, the segments a save or a copy replaces.
@@ -17760,6 +17928,8 @@ Make sure to use the production build (*.prod.js) when deploying for production.
         },
         'std:routing': () => ({ dataUrl: () => '_data' }),
         'std:popup': createPopup,
+        'std:html': createHtml,
+        'std:tools': createTools,
         'std:mask': createMask,
         'std:accel': createAccel,
         'std:signalR': () => createSignalR(bus)
@@ -17770,14 +17940,17 @@ Make sure to use the production build (*.prod.js) when deploying for production.
     // over the page's reactive model root, created by the page's component (page.ts), which forwards its $-members to
     // the template. It is the page for everyone else: the model ($vm), the template code ($ctrl, its face), the shell
     // (tab.root, registerData, closePlain), the components (inject '$page').
-    // Ported member by member, as base.js has them (the trace: test/trace/base.net48.trace); step B1: the page's
-    // life, what the shell asks of a page, the messages. Its methods are bound to it, as Vue 2 bound a component's.
+    // Ported member by member, as base.js has them, every one (the trace: test/trace/base.port.js against
+    // base.net48.trace). Its methods are bound to it, as Vue 2 bound a component's.
     const __blank__ = '__blank__';
     const std = {
         get url() { return require$1('std:url'); },
         get utils() { return require$1('std:utils'); },
         get modelInfo() { return require$1('std:modelInfo'); },
         get dataservice() { return require$1('std:dataservice'); },
+        get mask() { return require$1('std:mask'); },
+        get html() { return require$1('std:html'); },
+        get http() { return require$1('std:http'); },
         get locale() { return window.$$locale; },
         get store() { return app.components['std:store']; }
     };
@@ -17797,6 +17970,23 @@ Make sure to use the production build (*.prod.js) when deploying for production.
         if (prop in perm)
             return !perm[prop];
         return true;
+    }
+    // The shell's modal (bus 'modal'): resolves with the dialog's result after cb has it; never, if the dialog is
+    // cancelled (the shell does not settle the promise).
+    function __runDialog(url, arg, query, cb) {
+        if (url.indexOf('?') !== -1) {
+            const x = std.url.parseUrlAndQuery(url);
+            url = x.url;
+            query = x.query;
+        }
+        return new Promise(function (resolve) {
+            const dlgData = { promise: null, data: arg, query: query, rd: true };
+            bus.$emit('modal', url, dlgData);
+            dlgData.promise.then(function (result) {
+                cb(result);
+                resolve(result);
+            });
+        });
     }
     function treeNormalPath(path) {
         if (!path)
@@ -17910,6 +18100,148 @@ Make sure to use the production build (*.prod.js) when deploying for production.
                 toast = { text: toast, style: style || 'success', time: time };
             bus.$emit('toast', toast);
         }
+        // --- dialogs --------------------------------------------------------------------------------------------------
+        $showDialog(url, arg, query, opts) {
+            return this.$dialog('show', url, arg, query, opts);
+        }
+        $inlineOpen(id) {
+            bus.$emit('inlineDialog', { cmd: 'open', id: id });
+        }
+        $inlineClose(id, result) {
+            bus.$emit('inlineDialog', { cmd: 'close', id: id, result: result });
+        }
+        $inlineDepth() {
+            const opts = { count: 0 };
+            bus.$emit('inlineDialogCount', opts);
+            return opts.count;
+        }
+        $closeAllPopups() {
+            bus.$emit('closeAllPopups');
+        }
+        // command: new, append, browse, edit-selected, show-selected, edit, copy; else a plain show. The result of the
+        // dialog is merged where the command says. saveRequired: the page is saved first, the dialog opens if it was (B22).
+        $dialog(command, url, arg, query, opts) {
+            if (this.$isReadOnly(opts))
+                return;
+            const that = this;
+            bus.$emit('closeAllPopups');
+            function argIsNotAnArray() {
+                if (!std.utils.isArray(arg)) {
+                    console.error(`$dialog.${command}. The argument is not an array`);
+                    return true;
+                }
+            }
+            function argIsNotAnObject() {
+                if (!std.utils.isObjectExact(arg)) {
+                    console.error(`$dialog.${command}. The argument is not an object`);
+                    return true;
+                }
+            }
+            function simpleMerge(target, src) {
+                for (const p in target) {
+                    if (p in src)
+                        target[p] = src[p];
+                    else
+                        target[p] = undefined;
+                }
+            }
+            function doDialog() {
+                // result always is raw data
+                if (that.$isDisabledAlert(opts, arg))
+                    return;
+                if (std.utils.isFunction(query))
+                    query = query();
+                const reloadAfter = opts && opts.reloadAfter;
+                switch (command) {
+                    case 'new':
+                        if (argIsNotAnArray())
+                            return;
+                        return __runDialog(url, 0, query, (result) => {
+                            const sel = arg.$selected;
+                            if (sel)
+                                sel.$merge(result);
+                        });
+                    case 'append':
+                        if (argIsNotAnArray())
+                            return;
+                        return __runDialog(url, 0, query, (result) => {
+                            arg.$append(result);
+                            if (reloadAfter)
+                                that.$reload();
+                        });
+                    case 'browse':
+                        if (!std.utils.isObject(arg)) {
+                            console.error(`$dialog.${command}. The argument is not an object`);
+                            return;
+                        }
+                        return __runDialog(url, arg, query, (result) => {
+                            if (arg.$merge) {
+                                arg.$merge(result);
+                            }
+                            else if (result !== false) {
+                                simpleMerge(arg, result);
+                            }
+                        });
+                    case 'edit-selected':
+                        if (argIsNotAnArray())
+                            return;
+                        if (!arg.$selected)
+                            return;
+                        if (that.$isDisabledAlert(opts, arg.$selected))
+                            return;
+                        return __runDialog(url, arg.$selected, query, (result) => {
+                            arg.$selected.$merge(result);
+                            arg.__fireChange__('selected');
+                            if (reloadAfter)
+                                that.$reload();
+                        });
+                    case 'show-selected':
+                        if (argIsNotAnArray())
+                            return;
+                        if (!arg.$selected)
+                            return;
+                        return __runDialog(url, arg.$selected, query, (result) => {
+                            if (result === 'reload' || reloadAfter)
+                                that.$reload();
+                        });
+                    case 'edit':
+                        if (argIsNotAnObject())
+                            return;
+                        return __runDialog(url, arg, query, (result) => {
+                            if (arg.$merge && std.utils.isObjectExact(result))
+                                arg.$merge(result);
+                            if (result === 'reload' || reloadAfter)
+                                that.$reload();
+                        });
+                    case 'copy': {
+                        if (argIsNotAnObject())
+                            return;
+                        const arr = arg.$parent;
+                        return __runDialog(url, arg, query, (result) => {
+                            arr.$append(result);
+                            if (reloadAfter)
+                                that.$reload();
+                        });
+                    }
+                    default: // simple show dialog
+                        return __runDialog(url, arg, query, () => {
+                            if (reloadAfter)
+                                that.$reload();
+                        });
+                }
+            }
+            if (opts && opts.validRequired && this.$data.$invalid) {
+                this.$alert(std.locale.$MakeValidFirst);
+                return;
+            }
+            const mo = this.$data.$mainObject;
+            if (opts && opts.saveRequired && (this.$isDirty || mo && mo.$isNew)) {
+                this.$data.$setDirty(true);
+                const saving = this.$save();
+                return saving ? saving.then(() => doDialog()) : undefined;
+            }
+            return doDialog();
+        }
         // --- closing --------------------------------------------------------------------------------------------------
         $close() {
             if (this.$saveModified())
@@ -17917,6 +18249,47 @@ Make sure to use the production build (*.prod.js) when deploying for production.
         }
         $modalClose(result) {
             bus.$emit('modalClose', result);
+        }
+        // A dialog's OK: saved first if dirty (valid first, if asked); the modal closes with the saved element.
+        $modalSaveAndClose(result, opts) {
+            if (this.$isDirty) {
+                const root = this.$data;
+                if (opts && opts.validRequired && root.$invalid) {
+                    const errs = makeErrors(root.$forceValidate());
+                    this.$alert(std.locale.$MakeValidFirst, undefined, errs);
+                    return;
+                }
+                this.$save().then((result) => bus.$emit('modalClose', result));
+            }
+            else
+                bus.$emit('modalClose', result);
+        }
+        $modalSelect(array, opts) {
+            if (!('$selected' in array)) {
+                console.error('Invalid array for $modalSelect');
+                return;
+            }
+            if (opts && opts.validRequired) {
+                const root = this.$data;
+                if (!root.$valid)
+                    return;
+            }
+            this.$modalClose(array.$selected);
+        }
+        $modalSelectChecked(array) {
+            if (!('$checked' in array)) {
+                console.error('invalid array for $modalSelectChecked');
+                return;
+            }
+            const chArray = array.$checked;
+            if (chArray.length > 0)
+                this.$modalClose(chArray);
+        }
+        $saveAndClose(opts) {
+            if (this.$isDirty)
+                this.$save(opts).then(() => this.$close());
+            else
+                this.$close();
         }
         $saveModified(message, title, validRequired) {
             if (!this.$isDirty)
@@ -18010,6 +18383,550 @@ Make sure to use the production build (*.prod.js) when deploying for production.
         }
         $delegate(name) {
             return this.$data._delegate_(name);
+        }
+        // --- commands: the template's (root._exec_, _canExec_), moves, delegates ----------------------------------------
+        $marker() {
+            return true;
+        }
+        $exec(cmd, arg, confirm, opts) {
+            if (this.$isReadOnly(opts))
+                return;
+            if (this.$isLoading)
+                return;
+            if (this.$isDisabledAlert(opts, arg))
+                return;
+            bus.$emit('closeAllPopups');
+            const root = this.$data;
+            return root._exec_(cmd, arg, confirm, opts);
+        }
+        $execSelected(cmd, arg, confirm) {
+            if (this.$isLoading)
+                return;
+            const root = this.$data;
+            if (!std.utils.isArray(arg)) {
+                console.error('Invalid argument for $execSelected');
+                return;
+            }
+            bus.$emit('closeAllPopups');
+            if (!confirm)
+                root._exec_(cmd, arg.$selected);
+            else
+                this.$confirm(confirm).then(() => root._exec_(cmd, arg.$selected));
+        }
+        $isPermissionsDisabled(opts, arg) {
+            return isPermissionsDisabled(opts, arg);
+        }
+        $canExecute(cmd, arg, opts) {
+            //if (this.$isLoading) return false; // do not check here. avoid blinking
+            if (this.$isReadOnly(opts))
+                return false;
+            const root = this.$data;
+            return root._canExec_(cmd, arg, opts);
+        }
+        $canExecSel(cmd, arg, opts) {
+            if (!arg)
+                return false;
+            const sel = arg.$selected;
+            if (!sel)
+                return false;
+            return this.$canExecute(cmd, sel, opts);
+        }
+        $move(dir, arg) {
+            if (!arg)
+                return;
+            arg.$parent.$move(arg, dir);
+        }
+        $moveSelected(dir, arg) {
+            if (!arg)
+                return;
+            const sel = arg.$selected;
+            if (sel)
+                arg.$move(sel, dir);
+        }
+        $canMove(dir, arg) {
+            if (!arg)
+                return false;
+            return arg.$parent.$canMove(arg, dir);
+        }
+        $canMoveSelected(dir, arg) {
+            if (!arg)
+                return false;
+            const sel = arg.$selected;
+            if (!sel)
+                return false;
+            return arg.$canMove(sel, dir);
+        }
+        // A delegate of the template (delegates[name]) called with the clicked element.
+        $handleClick(name, ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            const tml = this.$data.$template;
+            if (!tml)
+                return;
+            const cmd = tml.delegates;
+            if (!cmd)
+                return;
+            const func = cmd[name];
+            if (!func)
+                return;
+            func.call(this.$data, ev.target, name);
+        }
+        $hasChecked(arr) {
+            return arr && arr.$checked && arr.$checked.length;
+        }
+        $sanitize(text) {
+            return std.utils.text.sanitize(text);
+        }
+        // The element of id htmlid, or its first input, gets the focus after the update.
+        $focus(htmlid) {
+            const elem = document.querySelector('#' + htmlid);
+            if (!elem)
+                return;
+            const ch = elem.querySelector('input, textarea, button, select');
+            this.$defer(() => {
+                if (ch && ch.focus)
+                    ch.focus();
+                else if (elem.focus)
+                    elem.focus();
+            });
+        }
+        $toJson(data) {
+            return std.utils.toJson(data);
+        }
+        $maxChars(text, length) {
+            return std.utils.text.maxChars(text, length);
+        }
+        // --- navigation -----------------------------------------------------------------------------------------------
+        $mailto(arg, subject) {
+            let href = 'mailto:' + arg;
+            if (subject)
+                href += '?subject=' + std.url.encodeUrl(subject);
+            return href;
+        }
+        $callphone(phone) {
+            return `tel:${phone}`;
+        }
+        $href(url, data) {
+            return std.url.createUrlForNavigate(url, data);
+        }
+        // A new window gets this page's token: its saves come back through childrenSaved (__notified).
+        $navigate(url, data, newWindow, update, opts) {
+            if (this.$isReadOnly(opts))
+                return;
+            bus.$emit('closeAllPopups');
+            const doNavigate = () => {
+                const urlToNavigate = std.url.createUrlForNavigate(url, data);
+                if (newWindow === true) {
+                    const nwin = window.open(urlToNavigate, '_blank');
+                    if (nwin)
+                        nwin.$$token = { token: this.__currentToken__, update: update };
+                }
+                else
+                    this.$store.commit('navigate', { url: urlToNavigate });
+            };
+            if (opts && opts.saveRequired && this.$isDirty)
+                this.$save().then(() => doNavigate());
+            else
+                doNavigate();
+        }
+        $navigateSimple(url, newWindow, update) {
+            bus.$emit('closeAllPopups');
+            if (newWindow === true) {
+                const nwin = window.open(url, '_blank');
+                if (nwin)
+                    nwin.$$token = { token: this.__currentToken__, update: update };
+            }
+            else
+                this.$store.commit('navigate', { url: url });
+        }
+        $navigateExternal(url, newWindow) {
+            bus.$emit('closeAllPopups');
+            if (newWindow === true) {
+                window.open(url, '_blank');
+            }
+            else
+                window.location.assign(url);
+        }
+        $openSelectedFrame(url, arr) {
+            url = url || '';
+            const sel = arr.$selected;
+            if (!sel)
+                return;
+            const urlToNavigate = std.url.createUrlForNavigate(url, sel.$id);
+            bus.$emit('openframe', urlToNavigate);
+        }
+        // url '{Prop}': the selected element's property holds it.
+        $openSelected(url, arr, newwin, update) {
+            bus.$emit('closeAllPopups');
+            url = url || '';
+            const sel = arr.$selected;
+            if (!sel)
+                return;
+            if (url.startsWith('{')) { // decorated. defer evaluate
+                url = url.substring(1, url.length - 1);
+                const nUrl = std.utils.eval(sel, url);
+                if (!nUrl)
+                    throw new Error(`Property '${url}' not found in ${sel.constructor.name} object`);
+                url = nUrl;
+            }
+            this.$navigate(url, sel.$id, newwin, update);
+        }
+        // The side pane of the shell: _navpane/url/arg?data; null hides it.
+        $showSidePane(url, arg, data) {
+            const newurl = std.url.combine('_navpane', url, arg || '0') + std.url.makeQueryString(data);
+            bus.$emit('showSidePane', newurl);
+        }
+        $hideSidePane() {
+            bus.$emit('showSidePane', null);
+        }
+        $showHelp(path) {
+            const w = window;
+            if (w.$$helpWindow && !w.$$helpWindow.closed)
+                w.$$helpWindow.close();
+            w.$$helpWindow = window.open(this.$helpHref(path), '_blank');
+        }
+        $helpHref(path) {
+            return std.url.helpHref(path);
+        }
+        // --- files, exports, reports ----------------------------------------------------------------------------------
+        $download(url) {
+            bus.$emit('closeAllPopups');
+            const root = window.$$rootUrl;
+            url = std.url.combine('/file', url.replace('.', '-'));
+            window.location = root + url;
+        }
+        async $uploadBlob(url, accept, data, opts) {
+            bus.$emit('closeAllPopups');
+            try {
+                const file = await std.html.uploadFile(accept);
+                return await this.$uploadBlobFile(url, file, data, { catchError: true });
+            }
+            catch (err) {
+                err = err || 'unknown error';
+                if (opts && opts.catchError)
+                    throw err;
+                else
+                    this.$alertUi(err);
+                return false;
+            }
+        }
+        // a ready file (paste, drop): no picker. No closeAllPopups either — the editor may itself live in a popup
+        async $uploadBlobFile(url, file, data, opts) {
+            const root = window.$$rootUrl;
+            try {
+                const dat = new FormData();
+                dat.append('file', file, file.name);
+                // an attachment: exactly Id and Base of data, nothing else reaches the query
+                const qry = data ? { base: data.Base, owner: data.Id } : null;
+                const uploadUrl = std.url.combine(root, '_blob', url) + std.url.makeQueryString(qry);
+                return await std.http.upload(uploadUrl, dat);
+            }
+            catch (err) {
+                err = err || 'unknown error';
+                if (opts && opts.catchError)
+                    throw err;
+                else
+                    this.$alertUi(err);
+                return false;
+            }
+        }
+        async $upload(url, accept, data, opts) {
+            bus.$emit('closeAllPopups');
+            const root = window.$$rootUrl;
+            try {
+                const file = await std.html.uploadFile(accept, url);
+                const dat = new FormData();
+                dat.append('file', file, file.name);
+                if (data)
+                    dat.append('Key', data.Key || null);
+                let uploadUrl = std.url.combine(root, '_file', url);
+                uploadUrl = std.url.createUrlForNavigate(uploadUrl, data);
+                return await std.http.upload(uploadUrl, dat);
+            }
+            catch (err) {
+                err = err || 'unknown error';
+                if (opts && opts.catchError)
+                    throw err;
+                else
+                    this.$alertUi(err);
+                return false;
+            }
+        }
+        // _file/url/id: opened, downloaded (action 'download') or printed (action 'print'); the element's $token goes too.
+        $file(url, arg, opts, dat) {
+            bus.$emit('closeAllPopups');
+            const doFile = () => {
+                const root = window.$$rootUrl;
+                let id = arg;
+                let token = undefined;
+                if (arg && std.utils.isObject(arg)) {
+                    id = std.utils.getStringId(arg);
+                    if (arg._meta_ && arg._meta_.$token)
+                        token = arg[arg._meta_.$token];
+                }
+                let fileUrl = std.url.combine(root, '_file', url, id);
+                const qry = dat || {};
+                const action = (opts || {}).action;
+                if (token)
+                    qry.token = token;
+                if (action == 'download')
+                    qry.export = 1;
+                fileUrl += std.url.makeQueryString(qry);
+                switch (action) {
+                    case 'download':
+                        std.html.downloadUrl(fileUrl);
+                        break;
+                    case 'print':
+                        std.html.printDirect(fileUrl);
+                        break;
+                    default:
+                        window.open(fileUrl, '_blank');
+                }
+            };
+            if (opts && opts.saveRequired && this.$isDirty) {
+                this.$save().then(() => {
+                    doFile();
+                });
+            }
+            else
+                doFile();
+        }
+        $attachment(url, arg, opts) {
+            bus.$emit('closeAllPopups');
+            const root = window.$$rootUrl;
+            const cmd = opts && opts.export ? 'export' : 'show';
+            let id = arg;
+            let token = undefined;
+            if (arg && std.utils.isObject(arg)) {
+                id = std.utils.getStringId(arg);
+                if (arg._meta_ && arg._meta_.$token)
+                    token = arg[arg._meta_.$token];
+            }
+            let attUrl = std.url.combine(root, 'attachment', cmd, id);
+            const qry = { base: url };
+            if (token)
+                qry.token = token;
+            attUrl = attUrl + std.url.makeQueryString(qry);
+            if (opts && opts.newWindow)
+                window.open(attUrl, '_blank');
+            else if (opts && opts.print)
+                std.html.printDirect(attUrl);
+            else
+                window.location.assign(attUrl);
+        }
+        // The signing dialog (eusign/index) over the attachment arg; its result. Net48 called an undeclared cb and
+        // alerted (B25): fixed, the dialog's promise is returned.
+        $eusign(baseurl, arg) {
+            const dlgData = {
+                promise: null, data: arg, query: { base: baseurl }, raw: true
+            };
+            bus.$emit('modal', '/eusign/index', dlgData);
+            return dlgData.promise;
+        }
+        // _export/url/id (or this page's url): the browser goes there, to show the server's errors.
+        $export(arg, url, dat, opts) {
+            if (this.$isLoading)
+                return;
+            const doExport = () => {
+                let id = arg || '0';
+                if (arg && std.utils.isObject(arg))
+                    id = std.utils.getStringId(arg);
+                const root = window.$$rootUrl;
+                let newurl = url ? std.url.combine('/_export', url, id) : this.$baseUrl.split('?')[0].replace('/_page/', '/_export/');
+                newurl = std.url.combine(root, newurl) + std.url.makeQueryString(dat);
+                window.location = newurl; // to display errors
+            };
+            if (opts && opts.saveRequired && this.$isDirty) {
+                this.$save().then(() => {
+                    doExport();
+                });
+            }
+            else {
+                doExport();
+            }
+        }
+        // The page's sheet (.sheet-page table), measured and purged, to the server's exportTo: a file comes back.
+        $exportTo(format, fileName) {
+            const htmlTools = require$1('std:html', true);
+            const locale = std.locale;
+            const elem = this.$el.getElementsByClassName('sheet-page');
+            if (!elem.length) {
+                console.error('element not found (.sheet-page)');
+                return;
+            }
+            const table = elem[0];
+            const tbls = table.getElementsByTagName('table');
+            if (tbls.length == 0) {
+                console.error('element not found (.sheet-page table)');
+                return;
+            }
+            let tbl = tbls[0];
+            if (htmlTools) {
+                htmlTools.getColumnsWidth(tbl);
+                // attention! from css!
+                const padding = tbl.classList.contains('compact') ? 4 : 12;
+                htmlTools.getRowHeight(tbl, padding);
+                // after colWidth, rowHeight!
+                tbl = htmlTools.purgeTable(tbl);
+            }
+            const dateLocale = locale.$DateLocale || locale.$Locale;
+            const numLocale = locale.$NumberLocale || locale.$Locale;
+            const html = `<table data-num-locale="${numLocale}" data-date-locale="${dateLocale}">${tbl.innerHTML}</table>`;
+            const data = { format, html, fileName, zoom: +(window.devicePixelRatio).toFixed(2) };
+            std.dataservice.post(dataUrl('exportTo'), std.utils.toJson(data), true).then(function (blob) {
+                if (htmlTools)
+                    htmlTools.downloadBlob(blob, fileName, format);
+            }).catch(function (error) {
+                alert(error);
+            });
+        }
+        // <viewer>/<cmd>/<id>?base&rep: shown in a new window (no opts), exported, printed, or attached.
+        $report(rep, arg, opts, repBaseUrl, data) {
+            if (this.$isReadOnly(opts))
+                return;
+            if (this.$isLoading)
+                return;
+            bus.$emit('closeAllPopups');
+            let cmd = 'show';
+            let fmt = '';
+            let viewer = 'report';
+            if (opts) {
+                if (opts.export) {
+                    cmd = 'export';
+                    fmt = opts.format || '';
+                }
+                else if (opts.attach)
+                    cmd = 'attach';
+                else if (opts.print)
+                    cmd = 'print';
+                if (opts.viewer && cmd === 'show')
+                    viewer = opts.viewer;
+            }
+            const doReport = () => {
+                let id = arg;
+                if (arg && std.utils.isObject(arg))
+                    id = std.utils.getStringId(arg);
+                const root = window.$$rootUrl;
+                let url = `${root}/${viewer}/${cmd}/${id}`;
+                const reportUrl = std.url.removeFirstSlash(repBaseUrl) || this.$indirectUrl || this.$baseUrl;
+                const baseUrl = std.url.makeBaseUrl(reportUrl);
+                const qry = Object.assign({}, { base: baseUrl, rep: rep }, data);
+                if (fmt)
+                    qry.format = fmt;
+                url = url + std.url.makeQueryString(qry);
+                // open in new window
+                if (!opts) {
+                    window.open(url, '_blank');
+                    return;
+                }
+                if (opts.export)
+                    window.location = url;
+                else if (opts.print)
+                    std.html.printDirect(url);
+                else if (opts.attach)
+                    return; // do nothing
+                else
+                    window.open(url, '_blank');
+            };
+            if (opts && opts.validRequired && this.$data.$invalid) {
+                this.$alert(std.locale.$MakeValidFirst);
+                return;
+            }
+            if (opts && opts.saveRequired && this.$isDirty) {
+                this.$save().then(() => {
+                    doReport();
+                });
+            }
+            else
+                doReport();
+        }
+        // --- helpers --------------------------------------------------------------------------------------------------
+        $clearObject(obj) {
+            if (!obj)
+                return;
+            if (obj.$empty)
+                obj.$empty();
+            else {
+                for (const k of Object.keys(obj))
+                    obj[k] = null;
+            }
+        }
+        // The callback's changes leave the dirtiness as it was.
+        async $nodirty(callback) {
+            const wasDirty = this.$data.$dirty;
+            await callback();
+            if (!this.$data)
+                return;
+            this.$defer(() => this.$data ? this.$data.$setDirty(wasDirty) : undefined);
+        }
+        // path: 'Object.Prop' of the page's data; its element's errors of that key.
+        $hasError(path) {
+            const ps = std.utils.text.splitPath(path);
+            const err = this.$data[ps.obj]._errors_;
+            if (!err)
+                return false;
+            const arr = err[path];
+            return arr && arr.length;
+        }
+        $errorMessage(path) {
+            const ps = std.utils.text.splitPath(path);
+            const err = this.$data[ps.obj]._errors_;
+            if (!err)
+                return '';
+            const arr = err[path];
+            if (arr && arr.length)
+                return arr[0].msg;
+            return '';
+        }
+        // Every error of the model now (validated anew), of the severities asked; null when none.
+        $getErrors(severity) {
+            const errs = this.$data.$forceValidate();
+            if (!errs || !errs.length)
+                return null;
+            if (severity && !std.utils.isArray(severity))
+                severity = [severity];
+            function isInclude(sev) {
+                if (!severity)
+                    return true; // include
+                if (severity.indexOf(sev) !== -1)
+                    return true;
+                return false;
+            }
+            const result = [];
+            for (const x of errs) {
+                for (let ix = 0; ix < x.e.length; ix++) {
+                    const y = x.e[ix];
+                    if (isInclude(y.severity))
+                        result.push({ path: x, msg: y.msg, severity: y.severity, index: ix });
+                }
+            }
+            return result.length ? result : null;
+        }
+        // opts: a dataType, or { dataType, format, mask, hideZeros }; format 'ToString', or with {0}.
+        $format(value, opts) {
+            const utils = std.utils;
+            if (!opts)
+                return value;
+            if (utils.isString(opts))
+                opts = { dataType: opts };
+            if (!opts.format && !opts.dataType && !opts.mask)
+                return value;
+            if (opts.format === 'ToString')
+                return utils.convertToString(value, opts);
+            if (opts.mask)
+                return value ? std.mask.getMasked(opts.mask, value) : value;
+            if (opts.dataType)
+                return utils.format(value, opts.dataType, { hideZeros: opts.hideZeros, format: opts.format });
+            if (opts.format && opts.format.indexOf('{0}') !== -1)
+                return opts.format.replace('{0}', value);
+            if (utils.isDate(value) && opts.format)
+                return utils.format(value, 'DateTime', { format: opts.format });
+            return value;
+        }
+        $getNegativeRedClass(value) {
+            if (std.utils.isNumber(value))
+                return value < 0 ? 'negative-red' : '';
+            return '';
         }
         // --- the data: _data/save, reload, invoke, expand, loadlazy, dbRemove -------------------------------------------
         $isDisabledAlert(opts, arg) {
@@ -18563,7 +19480,6 @@ Make sure to use the production build (*.prod.js) when deploying for production.
             root._modelLoad_(caller);
         }
         // $ctrl: the face the template code gets ($ctrl.$save…): base.js's list, its members bound to this page.
-        // A member the port has not reached yet is absent (steps B2-B4).
         __createController__() {
             const self = this;
             const ctrl = {};

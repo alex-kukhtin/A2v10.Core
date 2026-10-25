@@ -39,6 +39,7 @@ public class Flex : Container
 			onRenderStatic?.Invoke(tml);
 			MergeAttributes(tml, context, MergeAttrMode.Visibility);
 			tml.MergeAttribute("v-for", $"(xelem, xIndex) in {isBind.GetPath(context)}");
+			context.MergeForTemplateKey(tml, "xIndex");
 			tml.RenderStart(context);
 			using (new ScopeContext(context, "xelem", isBind.Path))
 			{
@@ -47,7 +48,7 @@ public class Flex : Container
 					c.RenderElement(context, (tag) =>
 					{
 						onRenderStatic?.Invoke(tag);
-						tag.MergeAttribute(":key", "xIndex");
+						context.MergeForItemKey(tag, "xIndex");
 					});
 				}
 			}

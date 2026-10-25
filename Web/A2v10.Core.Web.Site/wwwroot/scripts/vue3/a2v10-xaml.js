@@ -1,4 +1,4 @@
-(function (platform, vue) {
+(function (platform$1, vue) {
     'use strict';
 
     // What the XAML components take from the platform (a2v10-core.js, loaded before): the vocabulary they register into,
@@ -6,13 +6,13 @@
     // Net48 components took them.
     const app = window.app;
     function require$1(name) {
-        return platform.require(name);
+        return platform$1.require(name);
     }
 
-    // v-focus, v-settabindex (Net48 directives/focus.js), unchanged in behaviour. Vue 2's bind is created, inserted is
-    // mounted.
+    // v-focus, v-settabindex (Net48 directives/focus.js), v-disable (directives/disable.js), unchanged in behaviour.
+    // Vue 2's bind is created, inserted is mounted.
     // selects all text on focus
-    platform.vocabulary.directive('focus', {
+    platform$1.vocabulary.directive('focus', {
         created(el) {
             function doSelect(t) {
                 if (!t.select)
@@ -56,7 +56,21 @@
             }
         }
     });
-    platform.vocabulary.directive('settabindex', {
+    // v-disable (Net48 directives/disable.js): a click on a disabled element stops in the capture phase
+    platform$1.vocabulary.directive('disable', {
+        created(el) {
+            function doDisable(event) {
+                if (this.getAttribute('disabled')) {
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                    return false;
+                }
+            }
+            // with capture !!!
+            el.addEventListener('click', doDisable, true);
+        }
+    });
+    platform$1.vocabulary.directive('settabindex', {
         mounted(el) {
             if (el.tabIndex === 1) {
                 setTimeout(() => {
@@ -70,10 +84,10 @@
     // a2-pager (Net48 components/pager.js), unchanged in behaviour: the pages of a collection view's source
     // (Parent.Pager: pageSize, offset, sourceCount, $setOffset). Vue 3's h takes flat props: on.click is onClick,
     // domProps and attrs are props.
-    const locale$1 = window.$$locale;
-    const eventBus$2 = require$1('std:eventBus');
+    const locale$7 = window.$$locale;
+    const eventBus$7 = require$1('std:eventBus');
     const fmt = new Intl.NumberFormat('uk-UA').format;
-    platform.vocabulary.component('a2-pager', vue.defineComponent({
+    platform$1.vocabulary.component('a2-pager', vue.defineComponent({
         props: {
             source: Object,
             emptyText: String,
@@ -95,7 +109,7 @@
                 return this.textString;
             },
             emptyString() {
-                return this.emptyText ? this.emptyText : locale$1.$NoElements;
+                return this.emptyText ? this.emptyText : locale$7.$NoElements;
             },
             textString() {
                 const lastNo = Math.min(this.count, this.offset + this.src.pageSize);
@@ -105,7 +119,7 @@
                         .replace(/\#\[End\]/g, fmt(lastNo))
                         .replace(/\#\[Count\]/g, fmt(this.count));
                 else
-                    return `${locale$1.$PagerElements}: <b>${fmt(this.offset + 1)}</b>-<b>${fmt(lastNo)}</b> ${locale$1.$Of} <b>${fmt(this.count)}</b>`;
+                    return `${locale$7.$PagerElements}: <b>${fmt(this.offset + 1)}</b>-<b>${fmt(lastNo)}</b> ${locale$7.$Of} <b>${fmt(this.count)}</b>`;
             },
             offset() {
                 return +this.src.offset;
@@ -119,7 +133,7 @@
                 offset = +offset;
                 if (this.offset === offset)
                     return;
-                eventBus$2.$emit('closeAllPopups');
+                eventBus$7.$emit('closeAllPopups');
                 this.$nextTick(() => this.src.$setOffset(offset));
             },
             isActive(page) {
@@ -206,7 +220,7 @@
 
     // validator, a2-static-validator (Net48 components/validator.js), unchanged in behaviour: the errors of a control's
     // value, and of a model property alone.
-    platform.vocabulary.component('validator', vue.defineComponent({
+    platform$1.vocabulary.component('validator', vue.defineComponent({
         props: {
             invalid: Function,
             errors: Array,
@@ -232,7 +246,7 @@
             }
         }
     }));
-    platform.vocabulary.component('a2-static-validator', vue.defineComponent({
+    platform$1.vocabulary.component('a2-static-validator', vue.defineComponent({
         props: {
             item: {
                 type: Object, default() {
@@ -277,8 +291,10 @@
     // control (Net48 components/control.js), unchanged in behaviour: the base of the input controls (textbox, combobox,
     // datepicker…): label, validation, the masked or formatted value, the accelerator. Not a tag: app.components['control'],
     // which the controls and the applications extend. The item and prop are the derived control's props.
-    // Vue 3: beforeDestroy is beforeUnmount; $children is gone (deferUpdate: forceUpdateChildren).
-    const utils$3 = require$1('std:utils');
+    // Vue 3: beforeDestroy is beforeUnmount; $children is gone (deferUpdate: forceUpdateChildren). itemToValidate and
+    // propToValidate are a derived control's, when it declares them: read from $props, where an undeclared one is
+    // undefined as in Vue 2, not through the instance, where Vue 3 warns while it renders.
+    const utils$b = require$1('std:utils');
     const mask$1 = require$1('std:mask');
     const maccel = require$1('std:accel');
     // Vue 2's $children: the component instances of a component's own render, not deeper. Each is updated.
@@ -324,7 +340,8 @@
             },
             pathToValidate() {
                 const self = this;
-                return self.itemToValidate._path_ + '.' + self.propToValidate;
+                const p = self.$props;
+                return p.itemToValidate._path_ + '.' + p.propToValidate;
             },
             modelValue() {
                 const self = this;
@@ -332,7 +349,7 @@
                     return null;
                 const val = self.item[self.prop];
                 if (this.dataType)
-                    return utils$3.format(val, this.dataType, { hideZeros: this.hideZeros, format: this.format });
+                    return utils$b.format(val, this.dataType, { hideZeros: this.hideZeros, format: this.format });
                 else if (this.mask && val)
                     return mask$1.getMasked(this.mask, val);
                 return val;
@@ -344,7 +361,7 @@
                 const val = self.item[self.prop];
                 if (!val)
                     return false;
-                if (utils$3.isObjectExact(val))
+                if (utils$b.isObjectExact(val))
                     return !!val.Id;
                 return true;
             },
@@ -364,8 +381,9 @@
                 if (!root._validate_)
                     return null;
                 let err;
-                if (self.itemToValidate)
-                    err = root._validate_(self.itemToValidate, this.pathToValidate, self.itemToValidate[self.propToValidate], this.deferUpdate);
+                const p = self.$props;
+                if (p.itemToValidate)
+                    err = root._validate_(p.itemToValidate, this.pathToValidate, p.itemToValidate[p.propToValidate], this.deferUpdate);
                 else
                     err = root._validate_(self.item, this.path, this.modelValueRaw, this.deferUpdate);
                 return err;
@@ -484,7 +502,7 @@
     // Vue 3: an event a component does not declare in emits is also a native listener on its root, and the input's own
     // change bubbles to it: the handler would run twice. change is declared.
     // password-- fake fields are a workaround for chrome autofill getting the wrong fields
-    const utils$2 = require$1('std:utils');
+    const utils$a = require$1('std:utils');
     const mask = require$1('std:mask');
     const textBoxTemplate = `<div :class="cssClass()" :test-id="testId">
 	<label v-if="hasLabel"><span v-text="label"/><slot name="hint"/><slot name="link"></slot></label>
@@ -575,14 +593,14 @@
         },
         methods: {
             doFilter(value) {
-                return utils$2.text.applyFilters(this.filters, value);
+                return utils$a.text.applyFilters(this.filters, value);
             },
             updateValue(value) {
                 const item = this.item;
                 if (this.mask)
                     item[this.prop] = mask.getUnmasked(this.mask, this.doFilter(value));
                 else
-                    item[this.prop] = utils$2.parse(this.doFilter(value), this.dataType);
+                    item[this.prop] = utils$a.parse(this.doFilter(value), this.dataType);
                 const mv = this.modelValue;
                 const input = this.$refs.input;
                 if (input.value !== mv) {
@@ -654,7 +672,7 @@
         methods: {
             updateValue(value) {
                 const item = this.item;
-                value = utils$2.text.applyFilters(this.filters, value);
+                value = utils$a.text.applyFilters(this.filters, value);
                 if (item[this.prop] === value)
                     return;
                 item[this.prop] = value;
@@ -711,11 +729,11 @@
             }
         }
     });
-    platform.vocabulary.component('textbox', textbox);
+    platform$1.vocabulary.component('textbox', textbox);
     app.components['textbox'] = textbox;
     // Net48 meant app.components for these two too, but wrote app.components['a2-textarea', textarea]: none.
-    platform.vocabulary.component('a2-textarea', textarea);
-    platform.vocabulary.component('static', staticControl);
+    platform$1.vocabulary.component('a2-textarea', textarea);
+    platform$1.vocabulary.component('static', staticControl);
 
     // collection-view-server, collection-view-server-url (Net48 components/collectionviewplain.js), unchanged in behaviour:
     // the pager, the sort and the filter of a server's array (its $ModelInfo); a change reloads the page's data. The
@@ -726,10 +744,10 @@
     // - Vue 2's $root was the page (base.js): $root.$emit('cwChange') and $root[prop] are the page's controller
     //   (inject $page, page.ts): __cwChange, $data;
     // - $on('sort') is gone: doSort is called by the data grid (the data-grid step).
-    const utils$1 = require$1('std:utils');
+    const utils$9 = require$1('std:utils');
     const period = require$1('std:period');
-    const eventBus$1 = require$1('std:eventBus');
-    const eqlower$1 = utils$1.text.equalNoCase;
+    const eventBus$6 = require$1('std:eventBus');
+    const eqlower$1 = utils$9.text.equalNoCase;
     function getModelInfoProp(src, propName) {
         if (!src)
             return undefined;
@@ -755,12 +773,12 @@
                 if (period.isPeriod(iv)) {
                     filter[x] = iv.fromUrl(q[x]);
                 }
-                else if (utils$1.isDate(iv)) {
-                    filter[x] = utils$1.date.tryParse(q[x]);
+                else if (utils$9.isDate(iv)) {
+                    filter[x] = utils$9.date.tryParse(q[x]);
                 }
-                else if (utils$1.isObjectExact(iv))
+                else if (utils$9.isObjectExact(iv))
                     iv.Id = q[x];
-                else if (utils$1.isNumber(iv))
+                else if (utils$9.isNumber(iv))
                     filter[x] = +q[x];
                 else {
                     filter[x] = q[x];
@@ -807,7 +825,7 @@
                 return this.itemsSource;
             },
             jsonFilter() {
-                return utils$1.toJson(this.filter);
+                return utils$9.toJson(this.filter);
             },
             thisPager() {
                 return this;
@@ -885,7 +903,7 @@
                         else {
                             for (const pp of this.persistentFilter) {
                                 const te = topElem[lastProp];
-                                if (!utils$1.isEqual(te.$ModelInfo.Filter[pp], this.filter[pp])) {
+                                if (!utils$9.isEqual(te.$ModelInfo.Filter[pp], this.filter[pp])) {
                                     te.$ModelInfo.Filter[pp] = this.filter[pp];
                                     if (te.$loaded)
                                         te.$empty();
@@ -937,14 +955,14 @@
             this.$nextTick(() => {
                 this.lockChange = false;
             });
-            eventBus$1.$on('setFilter', this.__setFilter);
+            eventBus$6.$on('setFilter', this.__setFilter);
         },
         beforeUnmount() {
-            eventBus$1.$off('setFilter', this.__setFilter);
+            eventBus$6.$off('setFilter', this.__setFilter);
         }
     });
-    platform.vocabulary.component('collection-view-server', collectionView);
-    platform.vocabulary.component('collection-view-server-url', collectionView);
+    platform$1.vocabulary.component('collection-view-server', collectionView);
+    platform$1.vocabulary.component('collection-view-server-url', collectionView);
 
     // v-lazy (Net48 directives/lazy.js), unchanged in behaviour: a lazy array bound to an element loads itself when the
     // element is mounted and when it updates. Vue 2's inserted is mounted, componentUpdated is updated.
@@ -953,7 +971,7 @@
             arr.$loadLazy();
         }
     }
-    platform.vocabulary.directive('lazy', {
+    platform$1.vocabulary.directive('lazy', {
         updated(_el, binding) {
             updateLazy(binding.value);
         },
@@ -974,11 +992,11 @@
     // - a ref in v-for is an array in no promised order: the selected row is found by its index;
     // - $parent.$emit('sort') was heard by the collection view's $on('sort', doSort): $parent.doSort;
     // - $scopedSlots is $slots; Vue.set is an assignment; $root ($data, inDialog) is the page's controller (inject).
-    const utils = require$1('std:utils');
+    const utils$8 = require$1('std:utils');
     const log = require$1('std:log');
-    const eventBus = require$1('std:eventBus');
-    const locale = window.$$locale;
-    const eqlower = utils.text.equalNoCase;
+    const eventBus$5 = require$1('std:eventBus');
+    const locale$6 = window.$$locale;
+    const eqlower = utils$8.text.equalNoCase;
     const dataGridTemplate = `
 <div v-lazy="itemsSource" :class="{'data-grid-container':true, 'fixed-header': fixedHeader, 'bordered': border, 'compact': compact}" :test-id="testId">
 	<div class="data-grid-header-border" v-if="fixedHeader" />
@@ -1183,7 +1201,7 @@
             cellCssClass(row, editable) {
                 let cssClass = this.classAlign;
                 if (this.mark) {
-                    const mark = utils.simpleEval(row, this.mark);
+                    const mark = utils$8.simpleEval(row, this.mark);
                     if (mark)
                         cssClass += ' ' + mark;
                 }
@@ -1196,7 +1214,7 @@
                         cssClass += cls;
                     else if (bind.startsWith('{')) {
                         const prop = bind.substring(1, bind.length - 1);
-                        if (utils.simpleEval(row, prop))
+                        if (utils$8.simpleEval(row, prop))
                             cssClass += cls;
                     }
                 }
@@ -1211,7 +1229,7 @@
             }
         }
     });
-    platform.vocabulary.component('data-grid-column', dataGridColumn);
+    platform$1.vocabulary.component('data-grid-column', dataGridColumn);
     // what the cell renders by a column's controlType 'validator', its validate, its command
     const cellValid = {
         props: ['item', 'col'],
@@ -1232,9 +1250,9 @@
                 const col = this.col;
                 const icoSingle = !col.content ? ' ico-single' : '';
                 if (col.bindIcon)
-                    return 'ico-' + utils.eval(this.row, col.bindIcon) + icoSingle;
+                    return 'ico-' + utils$8.eval(this.row, col.bindIcon) + icoSingle;
                 else if (col.done)
-                    return (utils.eval(this.row, col.done) ? 'ico-success-outline-green' : 'ico-warning-outline-yellow') + icoSingle;
+                    return (utils$8.eval(this.row, col.done) ? 'ico-success-outline-green' : 'ico-warning-outline-yellow') + icoSingle;
                 else if (col.icon)
                     return 'ico-' + col.icon + icoSingle;
                 return null;
@@ -1244,7 +1262,7 @@
             doCommand() {
                 this.col.command.cmd(...this.args);
             },
-            eval: utils.eval,
+            eval: utils$8.eval,
             getHref() {
                 const col = this.col;
                 if (!col.command)
@@ -1255,7 +1273,7 @@
                     return '';
                 const [arg1, arg2] = this.args;
                 let id = arg2;
-                if (utils.isObjectExact(arg2))
+                if (utils$8.isObjectExact(arg2))
                     id = arg2.$id;
                 return arg1 + '/' + id;
             }
@@ -1281,7 +1299,7 @@
             return vue.h(tag, cellProps);
         }
         function normalizeArg(arg, doEval) {
-            if (utils.isBoolean(arg) || utils.isNumber(arg) || utils.isObjectExact(arg))
+            if (utils$8.isBoolean(arg) || utils$8.isNumber(arg) || utils$8.isObjectExact(arg))
                 return arg;
             arg = arg || '';
             if (arg === 'this')
@@ -1289,7 +1307,7 @@
             else if (arg.startsWith('{')) {
                 arg = arg.substring(1, arg.length - 1);
                 if (arg.indexOf('.') !== -1)
-                    arg = utils.eval(row, arg);
+                    arg = utils$8.eval(row, arg);
                 else {
                     if (!(arg in row))
                         throw new Error(`Property '${arg}' not found in ${row.constructor.name} object`);
@@ -1297,7 +1315,7 @@
                 }
             }
             else if (arg && doEval) {
-                arg = utils.eval(row, arg, col.dataType, col.evalOpts);
+                arg = utils$8.eval(row, arg, col.dataType, col.evalOpts);
             }
             return arg;
         }
@@ -1313,17 +1331,17 @@
             return vue.h(tag, cellProps, [ix + 1]);
         function isNegativeRed(col) {
             if (col.dataType === 'Number' || col.dataType === 'Currency') {
-                const val = utils.eval(row, col.content, col.dataType, col.evalOpts, true /*skip format*/);
+                const val = utils$8.eval(row, col.content, col.dataType, col.evalOpts, true /*skip format*/);
                 if (val < 0)
                     return true;
             }
             return false;
         }
-        let content = utils.eval(row, col.content, col.dataType, col.evalOpts);
+        let content = utils$8.eval(row, col.content, col.dataType, col.evalOpts);
         const spanProps = { class: { 'dg-cell': true, 'negative-red': isNegativeRed(col), 'line-clamp': col.lineClamp > 0 } };
         if (col.maxChars) {
             spanProps.title = content;
-            content = utils.text.maxChars(content, col.maxChars);
+            content = utils$8.text.maxChars(content, col.maxChars);
         }
         else if (col.lineClamp > 0) {
             spanProps.title = content;
@@ -1334,9 +1352,9 @@
         if (col.icon)
             chElems.unshift(vue.h('i', { class: 'ico ico-' + col.icon + icoSingle }));
         else if (col.bindIcon)
-            chElems.unshift(vue.h('i', { class: 'ico ico-' + utils.eval(row, col.bindIcon) + icoSingle }));
+            chElems.unshift(vue.h('i', { class: 'ico ico-' + utils$8.eval(row, col.bindIcon) + icoSingle }));
         else if (col.done)
-            chElems.unshift(vue.h('i', { class: 'ico ico-' + (utils.eval(row, col.done) ? 'success-outline-green' : 'warning-outline-yellow') + icoSingle }));
+            chElems.unshift(vue.h('i', { class: 'ico ico-' + (utils$8.eval(row, col.done) ? 'success-outline-green' : 'warning-outline-yellow') + icoSingle }));
         /*TODO: validate ???? */
         if (col.validate) {
             chElems.push(vue.h(cellValidator, { path: col.validate, item: row }));
@@ -1385,7 +1403,7 @@
                 console.error('implement me');
             },
             markClass() {
-                return this.mark ? utils.simpleEval(this.row, this.mark) : '';
+                return this.mark ? utils$8.simpleEval(this.row, this.mark) : '';
             },
             _itemActive() {
                 return this.isItemActive ? this.isItemActive(this.index, this.row) : !!this.row.$selected;
@@ -1408,7 +1426,7 @@
                 if (isActive)
                     cssClass += ' active';
                 if (this.grid.isMarkRow && this.mark) {
-                    cssClass += ' ' + utils.simpleEval(row, this.mark);
+                    cssClass += ' ' + utils$8.simpleEval(row, this.mark);
                 }
                 if ((this.index + 1) % 2)
                     cssClass += ' even';
@@ -1458,7 +1476,7 @@
                 return this.grid.isMarkCell;
             },
             markClass() {
-                return this.mark ? utils.simpleEval(this.row, this.mark) : '';
+                return this.mark ? utils$8.simpleEval(this.row, this.mark) : '';
             },
             detailsMarker() {
                 return this.grid.isRowDetailsCell;
@@ -1479,7 +1497,7 @@
             }
         }
     });
-    platform.vocabulary.component('data-grid', vue.defineComponent({
+    platform$1.vocabulary.component('data-grid', vue.defineComponent({
         inject: {
             page: { from: '$page', default: null }
         },
@@ -1577,9 +1595,9 @@
             },
             $groupCount() {
                 const groupBy = this.groupBy;
-                if (utils.isString(groupBy))
+                if (utils$8.isString(groupBy))
                     return groupBy.split('-').length;
-                else if (utils.isObjectExact(groupBy))
+                else if (utils$8.isObjectExact(groupBy))
                     return 1;
                 else
                     return groupBy.length;
@@ -1614,26 +1632,26 @@
                 const startTime = performance.now();
                 const grmap = {};
                 let grBy = this.groupBy;
-                if (utils.isString(grBy)) {
+                if (utils$8.isString(grBy)) {
                     const rarr = [];
                     for (const vs of grBy.split('-'))
                         rarr.push({ prop: vs.trim(), count: true });
                     grBy = rarr;
                 }
-                else if (utils.isObjectExact(grBy))
+                else if (utils$8.isObjectExact(grBy))
                     grBy = [grBy];
                 if (!this.$items)
                     return null;
                 for (const itm of this.$items) {
                     let root = grmap;
                     for (const gr of grBy) {
-                        let key = utils.eval(itm, gr.prop);
-                        if (utils.isDate(key))
-                            key = utils.format(key, 'Date');
-                        if (!utils.isDefined(key))
+                        let key = utils$8.eval(itm, gr.prop);
+                        if (utils$8.isDate(key))
+                            key = utils$8.format(key, 'Date');
+                        if (!utils$8.isDefined(key))
                             key = '';
                         if (key === '')
-                            key = locale.$Unknown || 'Unknown';
+                            key = locale$6.$Unknown || 'Unknown';
                         if (!(key in root))
                             root[key] = {};
                         root = root[key];
@@ -1704,7 +1722,7 @@
             rowDetailsShow(item) {
                 if (!this.rowDetails)
                     return false;
-                if (utils.isBoolean(this.rowDetailsVisible))
+                if (utils$8.isBoolean(this.rowDetailsVisible))
                     return this.rowDetailsVisible; // unset
                 const vis = item[this.rowDetailsVisible];
                 return !!vis;
@@ -1713,7 +1731,7 @@
                 let cls = '';
                 if (column.fit || column.controlType === 'validator')
                     cls += 'fit';
-                if (this.sort && column.isSortable && utils.isDefined(column.dir))
+                if (this.sort && column.isSortable && utils$8.isDefined(column.dir))
                     cls += ' sorted';
                 if (column.backColor) {
                     cls += ` ${column.backColor}`;
@@ -1722,8 +1740,8 @@
             },
             columnStyle(column) {
                 return {
-                    width: utils.isDefined(column.width) ? column.width : undefined,
-                    minWidth: utils.isDefined(column.minWidth) ? column.minWidth : undefined
+                    width: utils$8.isDefined(column.width) ? column.width : undefined,
+                    minWidth: utils$8.isDefined(column.minWidth) ? column.minWidth : undefined
                 };
             },
             doSort(order) {
@@ -1777,7 +1795,7 @@
                 g.expanded = !g.expanded;
             },
             isGroupCountVisible(g) {
-                if (g && g.source && utils.isDefined(g.source.count))
+                if (g && g.source && utils$8.isDefined(g.source.count))
                     return g.source.count;
                 return true;
             },
@@ -1888,11 +1906,2608 @@
         },
         mounted() {
             if (this.testId)
-                eventBus.$on('invokeTest', this.__invoke__test__);
+                eventBus$5.$on('invokeTest', this.__invoke__test__);
         },
         beforeUnmount() {
             if (this.testId)
-                eventBus.$off('invokeTest', this.__invoke__test__);
+                eventBus$5.$off('invokeTest', this.__invoke__test__);
+        }
+    }));
+
+    // v-auto-size (Net48 directives/autosize.js, 'autoSize'), unchanged in behaviour: a textarea grows with its text, from
+    // its first height; 'autosize', dispatched on it, measures again after the update (a2-textarea, a value set by code).
+    // Vue 2's bind is created, inserted is mounted.
+    platform$1.vocabulary.directive('autoSize', {
+        created(el, binding) {
+            if (!binding.value)
+                return;
+            el.style.overflowY = '';
+            el._ops = {
+                initHeight: -1,
+                extraSpace: 0
+            };
+            el._autosize = function () {
+                if (!el.offsetHeight)
+                    return;
+                const ops = el._ops;
+                if (ops.initHeight === -1) {
+                    ops.initHeight = el.offsetHeight;
+                }
+                el.style.height = ops.initHeight + 'px';
+                const needHeight = el.scrollHeight + ops.extraSpace;
+                if (needHeight > ops.initHeight)
+                    el.style.height = needHeight + 'px';
+            };
+            function onInput() {
+                el._autosize();
+            }
+            function onAutoSize() {
+                vue.nextTick(() => el._autosize());
+            }
+            el.addEventListener('input', onInput);
+            // Perhaps the value was set programmatically.
+            el.addEventListener('autosize', onAutoSize);
+        },
+        mounted(el, binding) {
+            if (!binding.value)
+                return;
+            const style = window.getComputedStyle(el);
+            const es = parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth);
+            el._ops.extraSpace = es;
+            setTimeout(() => el._autosize(), 1);
+        }
+    });
+
+    // a2-taskpad, a2-panel (Net48 components/taskpad.js, panel.js), unchanged in behaviour: the page's side pane, a
+    // collapsible panel.
+    platform$1.vocabulary.component('a2-taskpad', vue.defineComponent({
+        template: `<div :class="cssClass" :style="{width:width}">
+	<a class="ico taskpad-collapse-handle" @click.stop="toggle"></a>
+	<div v-if="expanded" class="taskpad-body">
+		<slot>
+		</slot>
+	</div>
+	<div v-else class="taskpad-title" @click.prevent="toggle">
+		<span class="taskpad-label" v-text="tasksText"></span>
+	</div>
+</div>
+`,
+        props: {
+            title: String,
+            initialCollapsed: Boolean,
+            position: String,
+            initialWidth: { type: String, default: '20rem' }
+        },
+        data() {
+            return {
+                expanded: true
+            };
+        },
+        computed: {
+            width() {
+                return this.expanded ? this.initialWidth : undefined;
+            },
+            cssClass() {
+                let cls = 'taskpad';
+                cls += ' position-' + this.position;
+                if (this.expanded)
+                    cls += ' expanded';
+                else
+                    cls += ' collapsed';
+                return cls;
+            },
+            tasksText() {
+                return this.title || window.$$locale.$Tasks;
+            }
+        },
+        methods: {
+            setExpanded(exp) {
+                this.expanded = exp;
+            },
+            toggle() {
+                this.setExpanded(!this.expanded);
+            }
+        },
+        mounted() {
+            if (this.initialCollapsed)
+                this.setExpanded(false);
+        }
+    }));
+    platform$1.vocabulary.component('a2-panel', vue.defineComponent({
+        template: `<div :class="cssClass" :test-id="testId">
+	<div class="panel-header" @click.prevent="toggle" v-if="!noHeader">
+		<slot name='header'></slot>
+		<span v-if="collapsible" class="ico panel-collapse-handle"></span>
+	</div>
+	<slot v-if="expanded"></slot>
+</div>
+`,
+        props: {
+            initialCollapsed: Boolean,
+            collapsible: Boolean,
+            panelStyle: String,
+            noHeader: Boolean,
+            testId: String
+        },
+        data() {
+            return {
+                collapsed: this.initialCollapsed
+            };
+        },
+        computed: {
+            cssClass() {
+                let cls = 'panel';
+                if (this.collapsed)
+                    cls += ' collapsed';
+                else
+                    cls += ' expanded';
+                if (this.panelStyle) {
+                    const ps = this.panelStyle.toLowerCase();
+                    switch (ps) {
+                        case 'red':
+                        case 'danger':
+                        case 'error':
+                            cls += ' panel-red';
+                            break;
+                        case 'info':
+                        case 'cyan':
+                            cls += ' panel-cyan';
+                            break;
+                        case 'green':
+                        case 'success':
+                            cls += ' panel-green';
+                            break;
+                        case 'warning':
+                        case 'yellow':
+                            cls += ' panel-yellow';
+                            break;
+                        default:
+                            cls += ' panel-' + ps;
+                            break;
+                    }
+                }
+                return cls;
+            },
+            expanded() {
+                return !this.collapsed;
+            }
+        },
+        methods: {
+            toggle() {
+                if (!this.collapsible)
+                    return;
+                this.collapsed = !this.collapsed;
+            }
+        }
+    }));
+
+    // a2-calendar (Net48 components/calendar.js), unchanged in behaviour: a month of days, or a year of months; the owner
+    // (date picker, period picker) moves it and takes the day (setMonth, setDay).
+    // Vue 3's compiler refuses children under v-text: the weekday header has none.
+    const utils$7 = require$1('std:utils');
+    const locale$5 = window.$$locale;
+    platform$1.vocabulary.component('a2-calendar', vue.defineComponent({
+        template: `
+<div @click.stop.prevent="dummy">
+	<table class="calendar-pane">
+		<thead><tr>
+				<th class="h-btn"><a v-if="hasPrev" @click.stop.prevent="prevMonth"><i class="ico ico-triangle-left"></i></a></th>
+				<th :colspan="isDayView ? 5 : 7" class="month-title"><span v-text="title"></span></th>
+				<th class="h-btn"><a v-if="hasNext" @click.stop.prevent='nextMonth'><i class="ico ico-triangle-right"></i></a></th>
+			</tr>
+			<tr class="weekdays" v-if="isDayView"><th v-for="d in 7" v-text="wdTitle(d)"></th></tr>
+			<tr class="weekdays" v-else><th colspan="9"></th></tr>
+		</thead>
+		<tbody v-if="isDayView">
+			<tr v-for="row in days">
+				<td v-for="day in row" :class="dayClass(day)"><a @click.stop.prevent="selectDay(day)"
+					@mouseover="mouseOver(day)"
+					v-text="day.getDate()" :title="dayTitle(day)"/></td>
+			</tr>
+		</tbody>
+		<tbody v-else>
+			<tr v-for="qr in monthes">
+				<td v-for="m in qr" class="mcell" :class="monthClass(m.date)" colspan="3"><a @click.stop.prevent="selectDay(m.date)" v-text="m.name"/></td>
+			</tr>
+		</tbody>
+		<tfoot v-if="showFooter" ><tr><td colspan="7" class="calendar-footer">
+			<a class="today" @click.stop.prevent='today' v-text='todayText'></a></td></tr></tfoot>
+	</table>
+</div>
+`,
+        props: {
+            showToday: { type: Boolean, default: true },
+            pos: String,
+            model: Date,
+            setMonth: Function,
+            setDay: Function,
+            getDayClass: Function,
+            hover: Function,
+            view: String,
+            currentModel: Date
+        },
+        computed: {
+            isDayView() {
+                return (this.view || 'day') === 'day';
+            },
+            showFooter() {
+                return this.showToday && this.isDayView;
+            },
+            days() {
+                const dt = new Date(this.model);
+                dt.setDate(1); // 1-st day of month
+                let w = dt.getDay() - 1; // weekday
+                if (w === -1)
+                    w = 6;
+                dt.setDate(-w + 1);
+                const arr = [];
+                for (let r = 0; r < 6; r++) {
+                    const row = [];
+                    for (let c = 0; c < 7; c++) {
+                        row.push(new Date(dt));
+                        dt.setDate(dt.getDate() + 1);
+                    }
+                    arr.push(row);
+                }
+                return arr;
+            },
+            monthes() {
+                const ma = [];
+                for (let q = 0; q < 4; q++) {
+                    const ia = [];
+                    for (let m = 0; m < 3; m++) {
+                        const mno = q * 3 + m;
+                        const dt = utils$7.date.create(this.model.getFullYear(), mno + 1, 1);
+                        const mname = utils$7.text.capitalize(dt.toLocaleDateString(locale$5.$Locale, { month: 'long' }));
+                        ia.push({ date: dt, month: mno + 1, name: mname });
+                    }
+                    ma.push(ia);
+                }
+                return ma;
+            },
+            hasPrev() {
+                return this.pos !== 'right';
+            },
+            hasNext() {
+                return this.pos !== 'left';
+            },
+            title() {
+                const mn = this.model.toLocaleString(locale$5.$Locale, { month: 'long', year: 'numeric' });
+                return utils$7.text.capitalize(mn);
+            },
+            todayText() {
+                return locale$5.$Today;
+            },
+            todayDate() {
+                return utils$7.date.today();
+            }
+        },
+        methods: {
+            dummy() { },
+            nextMonth() {
+                let dt = new Date(this.model);
+                if (this.isDayView)
+                    dt = utils$7.date.add(dt, 1, 'month');
+                else
+                    dt.setFullYear(dt.getFullYear() + 1);
+                this.setMonth(dt, this.pos);
+            },
+            prevMonth() {
+                let dt = new Date(this.model);
+                if (this.isDayView)
+                    dt = utils$7.date.add(dt, -1, 'month');
+                else
+                    dt.setFullYear(dt.getFullYear() - 1);
+                this.setMonth(dt, this.pos);
+            },
+            wdTitle(d) {
+                const dt = this.days[0][d - 1];
+                return dt.toLocaleString(locale$5.$Locale, { weekday: 'short' });
+            },
+            today() {
+                this.setDay(this.todayDate);
+            },
+            selectDay(d) {
+                this.setDay(d, this.pos);
+            },
+            dayClass(day) {
+                let cls = '';
+                if (day.getMonth() !== this.model.getMonth())
+                    cls += ' other';
+                if (this.getDayClass) {
+                    cls += this.getDayClass(day);
+                    return cls;
+                }
+                const tls = utils$7.date;
+                if (tls.equal(day, this.todayDate))
+                    cls += ' today';
+                if (tls.equal(day, this.model))
+                    cls += ' active';
+                return cls;
+            },
+            monthClass(day) {
+                let cls = '';
+                const cm = this.currentModel || this.model;
+                if (day.getFullYear() === cm.getFullYear() && day.getMonth() === cm.getMonth())
+                    cls += ' active';
+                return cls;
+            },
+            dayTitle(day) {
+                return day.toLocaleString(locale$5.$Locale, { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+            },
+            mouseOver(day) {
+                if (this.hover)
+                    this.hover(day);
+            }
+        }
+    }));
+
+    // a2-period-picker (Net48 components/periodpicker.js), unchanged in behaviour: over control; the period of item[prop],
+    // chosen from the predefined menu, two calendars or typed dates; applied, it sets the model dirty and emits
+    // <path>.<prop>.change. A popup: a click outside closes it.
+    // Vue 3's compiler refuses attributes with no space between them (one calendar's style and :show-today): spaced.
+    const popup$3 = require$1('std:popup');
+    const utils$6 = require$1('std:utils');
+    const eventBus$4 = require$1('std:eventBus');
+    const uPeriod = require$1('std:period');
+    const du = utils$6.date;
+    const DEFAULT_DEBOUNCE = 150;
+    platform$1.vocabulary.component('a2-period-picker', vue.defineComponent({
+        extends: control,
+        template: `
+<div class="control-group period-picker" @click.stop.prevent="toggle($event)" :class="{open: isOpen, disabled: disabled}">
+	<label v-if="hasLabel"><span v-text="label"/><slot name="hint"/></label>
+	<div class="input-group">
+		<span class="period-text" v-text="text" :class="inputClass" :tabindex="tabIndex"/>
+		<span class="caret"/>
+		<div class="calendar period-pane" v-if="isOpen" @click.stop.prevent="dummy">
+			<ul class="period-menu" style="grid-area: 1 / 1 / span 2 / auto">
+				<li v-for='(mi, ix) in menu' :key="ix" :class="{active: isSelectedMenu(mi.key)}"><a v-text='mi.name' @click.stop.prevent="selectMenu(mi.key)"></a></li>
+			</ul>
+			<a2-calendar style="grid-area: 1 / 2" :show-today="false" pos="left" :model="prevModelDate"
+				:set-month="setMonth" :set-day="setDay" :get-day-class="dayClass" :hover="mouseHover"/>
+			<a2-calendar style="grid-area: 1 / 3; margin-left:6px" :show-today="false" pos="right" :model="modelDate"
+				:set-month="setMonth" :set-day="setDay" :get-day-class="dayClass" :hover="mouseHover"/>
+			<div class="period-footer" style="grid-area: 2 / 2 / auto / span 2">
+				<div v-if="customMode" class="custom-period">
+					<div><input type=text v-model.lazy.trim="customStart" v-focus></div>
+					<span> - </span>
+					<div><input type=text v-model.lazy.trim="customEnd" v-focus></div>
+				</div>
+				<a v-else class="current-period" v-text="currentText" :class="{processing: selection}" href="" @click.stop.prevent=startCustom></a>
+				<span class="aligner"></span>
+				<button class="btn btn-primary" @click.stop.prevent="apply" v-text="locale.$Apply" :disabled="applyDisabled"/>
+				<button class="btn btn-default" @click.stop.prevent="close" v-text="locale.$Cancel" />
+			</div>
+		</div>
+	</div>
+	<span class="descr" v-if="hasDescr" v-text="description"></span>
+</div>
+`,
+        props: {
+            item: Object,
+            prop: String,
+            showAll: {
+                type: Boolean,
+                default: true
+            },
+            display: String,
+            callback: Function
+        },
+        data() {
+            return {
+                isOpen: false,
+                selection: '',
+                modelDate: du.today(),
+                currentPeriod: uPeriod.zero(),
+                selectEnd: du.zero(),
+                timerId: undefined,
+                customMode: false
+            };
+        },
+        computed: {
+            locale() {
+                return window.$$locale;
+            },
+            text() {
+                if (this.display === 'name')
+                    return this.period.text();
+                else if (this.display === 'namedate') {
+                    if (this.period.isAllData())
+                        return this.period.text(true);
+                    return `${this.period.text(true)} [${this.period.format('Date')}]`;
+                }
+                return this.period.format('Date');
+            },
+            period() {
+                if (!this.item)
+                    return this.currentPeriod;
+                const period = this.item[this.prop];
+                if (!uPeriod.isPeriod(period))
+                    console.error('PeriodPicker. Value is not a Period');
+                return period;
+            },
+            prevModelDate() {
+                return du.add(this.modelDate, -1, 'month');
+            },
+            currentText() {
+                return this.currentPeriod.format('Date');
+            },
+            applyDisabled() {
+                return this.selection === 'start';
+            },
+            menu() {
+                return uPeriod.predefined(this.showAll);
+            },
+            customStart: {
+                get() {
+                    const dt = this.currentPeriod.From;
+                    if (du.equal(dt, du.minDate) || du.equal(dt, du.maxDate))
+                        return '';
+                    return du.format(dt);
+                },
+                set(val) {
+                    const dat = this.parseDate(val);
+                    this.currentPeriod.setFrom(dat);
+                    this.modelDate = this.currentPeriod.To;
+                }
+            },
+            customEnd: {
+                get() {
+                    const dt = this.currentPeriod.To;
+                    if (du.equal(dt, du.minDate) || du.equal(dt, du.maxDate))
+                        return '';
+                    return du.format(dt);
+                },
+                set(val) {
+                    const dat = this.parseDate(val);
+                    this.currentPeriod.setTo(dat);
+                    this.modelDate = this.currentPeriod.To;
+                }
+            }
+        },
+        methods: {
+            dummy() {
+            },
+            setMonth(d, pos) {
+                this.customMode = false;
+                if (pos === 'left')
+                    this.modelDate = du.add(d, 1, 'month'); // prev month
+                else
+                    this.modelDate = d;
+            },
+            setDay(d) {
+                this.customMode = false;
+                if (!this.selection) {
+                    this.selection = 'start';
+                    this.currentPeriod.From = d;
+                    this.currentPeriod.To = du.zero();
+                    this.selectEnd = du.zero();
+                }
+                else if (this.selection === 'start') {
+                    this.currentPeriod.To = d;
+                    this.currentPeriod.normalize();
+                    this.selection = '';
+                }
+            },
+            dayClass(day) {
+                let cls = '';
+                let px = this.currentPeriod;
+                if (this.selection)
+                    px = uPeriod.create('custom', this.currentPeriod.From, this.selectEnd);
+                if (px.in(day))
+                    cls += ' active';
+                if (px.From.getTime() === day.getTime())
+                    cls += ' period-start';
+                if (px.To.getTime() === day.getTime())
+                    cls += ' period-end';
+                return cls;
+            },
+            close() {
+                this.isOpen = false;
+                this.customMode = false;
+            },
+            apply() {
+                // apply period here
+                if (!this.period.equal(this.currentPeriod)) {
+                    this.period.assign(this.currentPeriod);
+                    this.fireEvent();
+                }
+                this.close();
+            },
+            fireEvent() {
+                const item = this.item;
+                if (this.callback)
+                    this.callback(this.period);
+                const root = item.$root;
+                if (!root)
+                    return;
+                const path = item._path_ || 'global';
+                const eventName = `${path}.${this.prop}.change`;
+                if (root && root.$setDirty)
+                    root.$setDirty(true, path, this.prop);
+                root.$emit(eventName, item, this.period, null);
+            },
+            toggle() {
+                if (!this.isOpen) {
+                    // close other popups
+                    eventBus$4.$emit('closeAllPopups');
+                    if (this.disabled)
+                        return;
+                    this.modelDate = this.period.To; // TODO: calc start month
+                    if (this.modelDate.isZero() || this.modelDate.getTime() === du.maxDate.getTime())
+                        this.modelDate = du.today();
+                    this.currentPeriod.assign(this.period);
+                    this.selection = '';
+                    this.selectEnd = du.zero();
+                    this.customMode = false;
+                }
+                this.isOpen = !this.isOpen;
+            },
+            __clickOutside() {
+                this.close();
+            },
+            isSelectedMenu(key) {
+                const p = uPeriod.create(key);
+                return p.equal(this.currentPeriod);
+            },
+            selectMenu(key) {
+                const p = uPeriod.create(key);
+                this.currentPeriod.assign(p);
+                this.apply();
+            },
+            mouseHover(day) {
+                if (!this.selection)
+                    return;
+                if (this.selectEnd.getTime() === day.getTime())
+                    return;
+                clearTimeout(this.timerId);
+                this.timerId = setTimeout(() => {
+                    this.selectEnd = day;
+                }, DEFAULT_DEBOUNCE);
+            },
+            startCustom() {
+                this.customMode = true;
+            },
+            parseDate(val) {
+                let dat = du.parse(val);
+                if (du.isZero(dat))
+                    dat = du.today();
+                else if (dat.getTime() < du.minDate.getTime())
+                    dat = du.minDate;
+                else if (dat.getTime() > du.maxDate.getTime())
+                    dat = du.maxDate;
+                return dat;
+            }
+        },
+        mounted() {
+            popup$3.registerPopup(this.$el);
+            this.$el._close = this.__clickOutside;
+        },
+        beforeUnmount() {
+            popup$3.unregisterPopup(this.$el);
+        }
+    }));
+
+    // a2-selector (Net48 components/selector.js), unchanged in behaviour: over control; a reference typed or picked from a
+    // list fetched as typed (fetch, fetchCommand through the page's $invoke, or itemsSource); a popup.
+    // Vue 3: $root was the page (base.js): here the page's controller (inject $page): fetchData's plain-object $vm.
+    const popup$2 = require$1('std:popup');
+    const utils$5 = require$1('std:utils');
+    const platform = require$1('std:platform');
+    const locale$4 = window.$$locale;
+    const eventBus$3 = require$1('std:eventBus');
+    const DEFAULT_DELAY = 300;
+    platform$1.vocabulary.component('a2-selector', vue.defineComponent({
+        extends: control,
+        template: `
+<div :class="cssClass2()"  :test-id="testId">
+	<label v-if="hasLabel"><span v-text="label"/><slot name="hint"/><slot name="link"></slot></label>
+	<div class="input-group">
+		<div v-if="isCombo" class="selector-combo" :class="colorClass" @click.stop.prevent="open"><span tabindex="-1" class="select-text" v-text="valueText" @keydown="keyDown" ref="xcombo"/></div>
+		<input v-focus v-model="query" :class="[inputClass, colorClass]" :placeholder="placeholder" v-else
+			@input="debouncedUpdate" @blur.stop="blur" @keydown="keyDown" @keyup="keyUp" ref="input"
+			:readonly="disabled" @click="clickInput($event)" :tabindex="tabIndex"/>
+		<slot></slot>
+		<a class="selector-open" href="" @click.stop.prevent="open" v-if="caret"><span class="caret"></span></a>
+		<a class="selector-clear" href="" @click.stop.prevent="clear" v-if="clearVisible" tabindex="-1">&#x2715;</a>
+		<validator :invalid="invalid" :errors="errors" :options="validatorOptions"></validator>
+		<div class="selector-pane" v-if="isOpen" ref="pane" :class="paneClass">
+			<div class="selector-body" :style="bodyStyle">
+				<slot name="pane" :items="items" :is-item-active="isItemActive2" :item-name="itemName" :hit="hit" :max-chars="maxChars" :line-clamp="lineClamp" :slotStyle="slotStyle">
+					<ul class="selector-ul">
+						<li @mousedown.prevent="hit(itm)" :class="{'active': isItemActive(itmIndex)}"
+							v-for="(itm, itmIndex) in items" :key="itmIndex">
+							<span :style="itemStyle(itm)" :class="itemClass(itm, itmIndex)" :title="itemTitle(itm)" v-text="itemName(itm)"></span>
+						</li>
+					</ul>
+				</slot>
+			</div>
+			<a v-if='canNew' class="create-elem a2-hyperlink a2-inline" @mousedown.stop.prevent="doNew()"><i class="ico ico-plus"/> <span v-text="newText"></span></a>
+		</div>
+		<div class="selector-pane" v-if="isOpenNew" @click.stop.prevent="dummy">
+			<slot name="new-pane"></slot>
+		</div>
+	</div>
+	<slot name="popover"></slot>
+	<span class="descr" v-if="hasDescr" v-text="description"></span>
+</div>
+`,
+        inject: {
+            page: { from: '$page', default: null }
+        },
+        props: {
+            item: Object,
+            prop: String,
+            itemsSource: Array,
+            textItem: Object,
+            textProp: String,
+            colorProp: String,
+            display: String,
+            itemToValidate: Object,
+            propToValidate: String,
+            placeholder: String,
+            delay: Number,
+            minChars: Number,
+            fetch: Function,
+            hitfunc: Function,
+            listWidth: String,
+            listHeight: String,
+            createNew: Function,
+            placement: String,
+            caret: Boolean,
+            hasClear: Boolean,
+            useAll: Boolean,
+            mode: String,
+            fetchCommand: String,
+            fetchCommandData: Object,
+            maxChars: Number,
+            lineClamp: Number,
+            highlight: Boolean
+        },
+        data() {
+            return {
+                isOpen: false,
+                isOpenNew: false,
+                loading: false,
+                items: [],
+                query: '',
+                filter: '',
+                current: -1
+            };
+        },
+        computed: {
+            valueText() {
+                const item = this.item;
+                if (!item)
+                    return '';
+                if (this.hasText) {
+                    const el = item[this.prop];
+                    if (el.$isEmpty)
+                        return this.textItem[this.textProp];
+                }
+                let el = item[this.prop];
+                if (utils$5.isNumber(el) && this.itemsSource) {
+                    el = this.itemsSource.find(x => x.$id === el);
+                    if (!el)
+                        return '';
+                }
+                return utils$5.simpleEval(el, this.display);
+            },
+            hasValue() {
+                if (!this.highlight)
+                    return false;
+                if (!this.item)
+                    return false;
+                const el = this.item[this.prop];
+                if (utils$5.isObjectExact(el) && el.Id && el.Id != -1)
+                    return true;
+                return undefined;
+            },
+            canNew() {
+                return !!this.createNew;
+            },
+            clearVisible() {
+                if (!this.hasClear)
+                    return false;
+                const to = this.item[this.prop];
+                if (!to)
+                    return false;
+                if (this.useAll && to.Id === -1)
+                    return false;
+                if (utils$5.isDefined(to.$isEmpty))
+                    return !to.$isEmpty;
+                return !utils$5.isPlainObjectEmpty(to);
+            },
+            hasText() { return !!this.textProp; },
+            newText() {
+                return `${locale$4.$CreateLC} "${this.query}"`;
+            },
+            pane() {
+                return {
+                    items: this.items,
+                    isItemActive: this.isItemActive2,
+                    itemName: this.itemName,
+                    hit: this.hit
+                };
+            },
+            paneClass() {
+                if (this.placement)
+                    return 'panel-' + this.placement;
+                return undefined;
+            },
+            bodyStyle() {
+                const s = {};
+                if (this.listWidth) {
+                    s.minWidth = this.listWidth;
+                }
+                if (this.listHeight)
+                    s.maxHeight = this.listHeight;
+                return s;
+            },
+            slotStyle() {
+                const r = {};
+                if (this.listWidth) {
+                    r.width = this.listWidth;
+                    r.minWidth = this.listWidth;
+                }
+                if (this.listHeight)
+                    r.maxHeight = this.maxHeight;
+                return r;
+            },
+            colorClass() {
+                return this.item ? this.colorOf(this.item[this.prop]) : undefined;
+            },
+            debouncedUpdate() {
+                const delay = this.delay || DEFAULT_DELAY;
+                return utils$5.debounce(() => {
+                    this.current = -1;
+                    this.filter = this.query;
+                    this.update();
+                }, delay);
+            },
+            isCombo() {
+                return this.mode === 'combo-box' || this.mode === 'hyperlink';
+            }
+        },
+        watch: {
+            valueText() {
+                if (this.hasText) {
+                    const el = this.item[this.prop];
+                    if (!el.$isEmpty)
+                        this.textItem[this.textProp] = ''; // clear text
+                }
+                this.query = this.valueText;
+            }
+        },
+        methods: {
+            dummy() {
+            },
+            __clickOutside() {
+                this.isOpen = false;
+                this.isOpenNew = false;
+            },
+            colorOf(el) {
+                if (!this.colorProp)
+                    return undefined;
+                const clr = utils$5.simpleEval(el, this.colorProp);
+                return clr ? `color color-${clr}` : undefined;
+            },
+            cssClass2() {
+                let cx = this.cssClass();
+                if (this.isOpen || this.isOpenNew)
+                    cx += ' open';
+                if (this.mode === 'hyperlink')
+                    cx += ' selector-hyperlink';
+                else if (this.mode === 'combo-box')
+                    cx += ' selector-combobox';
+                if (this.hasValue)
+                    cx += ' has-value';
+                return cx;
+            },
+            isItemActive(ix) {
+                return ix === this.current;
+            },
+            isItemActive2(ix, row) {
+                if (!row)
+                    return this.isItemActive(ix);
+                if (this.current === -1)
+                    return false;
+                return this.items[this.current] === row;
+            },
+            itemName(itm) {
+                const v = utils$5.simpleEval(itm, this.display);
+                if (this.maxChars)
+                    return utils$5.text.maxChars(v, this.maxChars);
+                return v;
+            },
+            blur() {
+                const text = this.query;
+                if (this.hasText && text !== this.valueText) {
+                    const to = this.item[this.prop];
+                    if (to && to.$empty)
+                        to.$empty();
+                    this.textItem[this.textProp] = text;
+                }
+                this.cancel();
+            },
+            open() {
+                if (!this.isOpen) {
+                    eventBus$3.$emit('closeAllPopups');
+                    if (this.current != -1)
+                        this.$nextTick(() => this.scrollIntoView());
+                    this.doFetch(this.valueText, true);
+                    if (this.isCombo) {
+                        const combo = this.$refs['xcombo'];
+                        if (combo)
+                            combo.focus();
+                    }
+                    else {
+                        const input = this.$refs['input'];
+                        if (input)
+                            input.focus();
+                    }
+                }
+                this.isOpen = !this.isOpen;
+            },
+            cancel() {
+                this.query = this.valueText;
+                this.isOpen = false;
+            },
+            keyUp(event) {
+                if (this.isOpen && event.which === 27) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    this.cancel();
+                }
+                else if (event.which === 13) {
+                    if (this.hasText)
+                        this.blur();
+                }
+            },
+            clickInput(event) {
+                if (this.caret && !this.isOpen) {
+                    event.stopPropagation();
+                    event.preventDefault();
+                    this.open();
+                }
+            },
+            keyDown(event) {
+                if (!this.isOpen) {
+                    if (event.which === 115)
+                        this.open();
+                    return;
+                }
+                event.stopPropagation();
+                switch (event.which) {
+                    case 27: // esc
+                        event.preventDefault();
+                        break;
+                    case 13: // enter
+                        if (this.current === -1)
+                            return;
+                        this.hit(this.items[this.current]);
+                        break;
+                    case 40: // down
+                        event.preventDefault();
+                        this.current += 1;
+                        if (this.current >= this.items.length)
+                            this.current = 0;
+                        this.query = this.itemName(this.items[this.current]);
+                        this.scrollIntoView();
+                        break;
+                    case 38: // up
+                        event.preventDefault();
+                        this.current -= 1;
+                        if (this.current < 0)
+                            this.current = this.items.length - 1;
+                        this.query = this.itemName(this.items[this.current]);
+                        this.scrollIntoView();
+                        break;
+                    case 115: // F4
+                        this.cancel();
+                        break;
+                    default:
+                        return;
+                }
+            },
+            itemTitle(itm) {
+                if (this.lineClamp > 0)
+                    return this.itemName(itm);
+                return '';
+            },
+            itemStyle() {
+                if (this.lineClamp > 0)
+                    return { '-webkit-line-clamp': this.lineClamp };
+                return undefined;
+            },
+            itemClass(itm) {
+                let cls = '';
+                if (this.lineClamp > 0)
+                    cls += ' line-clamp';
+                const clr = this.colorOf(itm);
+                if (clr)
+                    cls += ' ' + clr;
+                return cls;
+            },
+            hit(itm) {
+                const item = this.item;
+                const obj = item[this.prop];
+                this.query = this.valueText;
+                this.isOpen = false;
+                this.isOpenNew = false;
+                this.current = this.items.indexOf(itm);
+                this.$nextTick(() => {
+                    if (this.hitfunc) {
+                        this.hitfunc.call(item.$root, itm, item, this.prop);
+                        return;
+                    }
+                    if (obj && obj.$merge)
+                        obj.$merge(itm, true /*fire*/);
+                    else if (utils$5.isNumber(obj))
+                        item[this.prop] = itm.$id;
+                    else
+                        platform.set(item, this.prop, itm);
+                });
+            },
+            clear() {
+                this.query = '';
+                this.isOpen = false;
+                this.isOpenNew = false;
+                const obj = this.item[this.prop];
+                if (!obj)
+                    return;
+                if (this.useAll) {
+                    obj.Id = -1;
+                    obj.Name = '';
+                    return;
+                }
+                if (obj.$empty)
+                    obj.$empty();
+                else if (utils$5.isObjectExact(obj))
+                    utils$5.clearObject(obj);
+            },
+            scrollIntoView() {
+                this.$nextTick(() => {
+                    const pane = this.$refs['pane'];
+                    if (!pane)
+                        return;
+                    const elem = pane.querySelector('.active');
+                    if (!elem)
+                        return;
+                    elem.scrollIntoView(false);
+                });
+            },
+            update() {
+                const text = this.query || '';
+                const chars = +(this.minChars || 0);
+                if (chars && text.length < chars)
+                    return;
+                this.isOpen = true;
+                this.isOpenNew = false;
+                if (text === '') {
+                    this.clear();
+                    return;
+                }
+                this.doFetch(text, false);
+            },
+            doFetch(text, all) {
+                if (this.itemsSource) {
+                    if (!this.items.length)
+                        this.items = this.itemsSource;
+                    let fi = -1;
+                    const el = this.item[this.prop];
+                    if (utils$5.isNumber(el))
+                        fi = this.items.findIndex((x) => x.Id === el);
+                    else
+                        fi = this.items.indexOf(el);
+                    if (fi !== -1) {
+                        this.current = fi;
+                        setTimeout(() => this.scrollIntoView(), 10);
+                    }
+                    return;
+                }
+                this.loading = true;
+                const fData = this.fetchData(text, all);
+                if (fData.then) {
+                    // promise
+                    fData.then((result) => {
+                        this.loading = false;
+                        // first property from result
+                        const prop = Object.keys(result)[0];
+                        this.items = result[prop];
+                        if (this.items.length)
+                            this.current = 0;
+                    }).catch(() => {
+                        this.items = [];
+                    });
+                }
+                else {
+                    if (utils$5.isArray(fData)) {
+                        if (this.items != fData) {
+                            if (this.items.length != fData.length)
+                                this.current = -1; // reset current element
+                            this.items = fData;
+                        }
+                    }
+                }
+            },
+            fetchData(text, all) {
+                all = all || false;
+                const item = this.item;
+                const elem = item[this.prop];
+                if (elem && !('$vm' in elem)) {
+                    // plain object hack
+                    Object.defineProperty(elem, '$vm', { value: this.page, writable: false, enumerable: false });
+                }
+                if (this.fetch) {
+                    return this.fetch.call(item.$root, elem, text, all);
+                }
+                else if (this.fetchCommand) {
+                    if (!text)
+                        return [];
+                    const fc = this.fetchCommand.split('/');
+                    const action = fc.pop();
+                    const invokeArg = Object.assign({}, { Text: text }, this.fetchCommandData);
+                    return elem.$vm.$invoke(action, invokeArg, fc.join('/'));
+                }
+                console.error('Selector. Fetch or Delegate not defined');
+            },
+            doNew() {
+                this.isOpen = false;
+                if (this.createNew) {
+                    const elem = this.item[this.prop];
+                    const arg = {
+                        elem: elem,
+                        text: this.query
+                    };
+                    this.createNew(arg);
+                }
+            }
+        },
+        mounted() {
+            popup$2.registerPopup(this.$el);
+            this.query = this.valueText;
+            this.$el._close = this.__clickOutside;
+        },
+        beforeUnmount() {
+            popup$2.unregisterPopup(this.$el);
+        }
+    }));
+
+    // a2-date-picker (Net48 components/datepicker.js), unchanged in behaviour: over control; a date typed, or picked on a
+    // calendar (a month, for view 'month'); the time of the model's date is kept. A popup.
+    const popup$1 = require$1('std:popup');
+    const utils$4 = require$1('std:utils');
+    const eventBus$2 = require$1('std:eventBus');
+    const locale$3 = window.$$locale;
+    const dateLocale = locale$3.$DateLocale || locale$3.$Locale;
+    const monthLocale = locale$3.$Locale; // for text
+    platform$1.vocabulary.component('a2-date-picker', vue.defineComponent({
+        extends: control,
+        template: `
+<div :class="cssClass2()" class="date-picker" :test-id="testId">
+	<label v-if="hasLabel"><span v-text="label"/><slot name="hint"/><slot name="link"></slot></label>
+	<div class="input-group"  @click="clickInput($event)">
+		<input v-focus v-model.lazy="model" v-if="!isMonth" :class="inputClass" :readonly="inputDisabled"/>
+		<div class="month-wrapper" v-if=isMonth v-text=model></div>
+		<a href @click.stop.prevent="toggle($event)" tabindex="-1"><i class="ico ico-calendar"></i></a>
+		<a href v-if="clearVisible" @click.stop.prevent="clear($event)" tabindex="-1">✕</a>
+		<validator :invalid="invalid" :errors="errors" :options="validatorOptions"></validator>
+		<div class="calendar" v-if="isOpen">
+			<a2-calendar :model="viewDate" :view="view" :current-model="modelDate"
+				:set-month="setMonth" :set-day="selectDay" :get-day-class="dayClass"/>
+		</div>
+	</div>
+	<span class="descr" v-if="hasDescr" v-text="description"></span>
+</div>
+`,
+        props: {
+            item: Object,
+            prop: String,
+            itemToValidate: Object,
+            propToValidate: String,
+            // override control.align (default value)
+            align: { type: String, default: 'center' },
+            view: String,
+            yearCutOff: String,
+            hasClear: Boolean
+        },
+        data() {
+            return {
+                isOpen: false,
+                viewDate: null
+            };
+        },
+        watch: {
+            modelDate() {
+                this.viewDate = this.modelDate;
+            }
+        },
+        methods: {
+            toggle() {
+                if (this.disabled)
+                    return;
+                if (!this.isOpen) {
+                    // close other popups
+                    eventBus$2.$emit('closeAllPopups');
+                    if (utils$4.date.isZero(this.modelDate))
+                        this.viewDate = utils$4.date.today();
+                }
+                this.isOpen = !this.isOpen;
+            },
+            clear() {
+                this.isOpen = false;
+                this.updateModel(utils$4.date.zero());
+            },
+            updateModel(date) {
+                this.item[this.prop] = date;
+                this.viewDate = date;
+            },
+            fitDate(dt) {
+                const du = utils$4.date;
+                if (du.isZero(dt))
+                    return dt;
+                if (dt < du.minDate)
+                    dt = du.minDate;
+                else if (dt > du.maxDate)
+                    dt = du.maxDate;
+                return dt;
+            },
+            clickInput(ev) {
+                if (this.view === 'month') {
+                    this.toggle();
+                    ev.stopPropagation();
+                    ev.preventDefault();
+                }
+            },
+            setMonth(dt) {
+                this.viewDate = dt;
+            },
+            selectDay(day) {
+                const dt = new Date(day.getFullYear(), day.getMonth(), day.getDate(), 0, 0, 0, 0);
+                this.setDate(dt);
+                this.isOpen = false;
+            },
+            setDate(d) {
+                // save time
+                const md = this.modelDate || d;
+                let nd = new Date(d.getFullYear(), d.getMonth(), d.getDate(), md.getHours(), md.getMinutes(), 0, 0);
+                nd = this.fitDate(nd);
+                this.updateModel(nd);
+            },
+            dayClass(day) {
+                let cls = '';
+                const tls = utils$4.date;
+                if (tls.equal(day, tls.today()))
+                    cls += ' today';
+                if (tls.equal(day, this.modelDate))
+                    cls += ' active';
+                if (day.getMonth() !== this.viewDate.getMonth())
+                    cls += ' other';
+                return cls;
+            },
+            cssClass2() {
+                let cx = this.cssClass();
+                if (this.isOpen)
+                    cx += ' open';
+                return cx;
+            },
+            __clickOutside() {
+                this.isOpen = false;
+            }
+        },
+        computed: {
+            modelDate() {
+                return this.item[this.prop];
+            },
+            isMonth() {
+                return this.view === 'month';
+            },
+            inputDisabled() {
+                return this.disabled || this.view === 'month';
+            },
+            clearVisible() {
+                return this.hasClear && !utils$4.date.isZero(this.modelDate);
+            },
+            model: {
+                get() {
+                    if (utils$4.date.isZero(this.modelDate))
+                        return ' '; /* avoid baseline problem */
+                    if (this.view === 'month')
+                        return utils$4.text.capitalize(this.modelDate.toLocaleString(monthLocale, { year: 'numeric', month: 'long' }));
+                    else
+                        return this.modelDate.toLocaleString(dateLocale, { year: 'numeric', month: '2-digit', day: '2-digit' });
+                },
+                set(str) {
+                    let md = utils$4.date.parse(str, this.yearCutOff);
+                    md = this.fitDate(md);
+                    if (utils$4.date.isZero(md)) {
+                        this.updateModel(md);
+                        this.isOpen = false;
+                    }
+                    else {
+                        this.setDate(md);
+                    }
+                }
+            }
+        },
+        mounted() {
+            this.viewDate = this.modelDate;
+            popup$1.registerPopup(this.$el);
+            this.$el._close = this.__clickOutside;
+        },
+        beforeUnmount() {
+            popup$1.unregisterPopup(this.$el);
+        }
+    }));
+
+    // combobox (Net48 components/combobox.js), unchanged in behaviour: over control; a select of itemsSource (or its own
+    // options in the slot), grouped by groupby; the value is always the itemsSource's element. The server writes it as
+    // <select is="vue:combobox"> (ComboBox.cs). v-if beside v-for tests groupby, a prop: Vue 3's order (v-if first)
+    // gives the same.
+    const utils$3 = require$1('std:utils');
+    const comboBoxTemplate = `<div :class="cssClass()" v-lazy="itemsSource" :test-id="testId">
+	<label v-if="hasLabel"><span v-text="label"/><slot name="hint"/><slot name="link"></slot></label>
+	<div class="input-group">
+		<div class="select-wrapper" :disabled="disabled" >
+			<div v-text="getWrapText()" class="select-text" ref="wrap" :class="wrapClass"/>
+			<span class="caret"/>
+		</div>
+		<select v-focus v-model="cmbValue" :disabled="disabled" :tabindex="tabIndex" ref="sel" :title="getWrapText()">
+			<slot>
+				<optgroup v-for="(grp, grpIndex) in itemsSourceGroup" :key="grpIndex" v-if="groupby"
+					:label="grp.name">
+					<option v-for="(cmb, cmbIndex) in grp.items" :key="grpIndex + '_' + cmbIndex"
+						v-text="getName(cmb, true)" :value="getValue(cmb)" :class="getClass(cmb)"></option>
+				</optgroup>
+				<option v-for="(cmb, cmbIndex) in itemsSource" :key="cmbIndex" v-if="!groupby"
+					v-text="getName(cmb, true)" :value="getValue(cmb)" :class="getClass(cmb)"></option>
+			</slot>
+		</select>
+		<validator :invalid="invalid" :errors="errors" :options="validatorOptions"></validator>
+	</div>
+	<slot name="popover"></slot>
+	<span class="descr" v-if="hasDescr" v-text="description"></span>
+</div>
+`;
+    platform$1.vocabulary.component('combobox', vue.defineComponent({
+        extends: control,
+        template: comboBoxTemplate,
+        props: {
+            prop: String,
+            item: {
+                type: Object, default() { return {}; }
+            },
+            itemsSource: {
+                type: Array, default() { return []; }
+            },
+            itemToValidate: Object,
+            propToValidate: String,
+            nameProp: String,
+            valueProp: String,
+            boldProp: String,
+            cssClassProp: String,
+            showvalue: Boolean,
+            align: String,
+            groupby: String
+        },
+        computed: {
+            cmbValue: {
+                get() {
+                    const item = this.item;
+                    if (this.itemsSource.length === 0 && item) {
+                        const itemval = item[this.prop];
+                        if (itemval && itemval.$empty && !itemval.$isEmpty)
+                            itemval.$empty();
+                    }
+                    return this.getComboValue();
+                },
+                set(value) {
+                    if (this.item)
+                        this.item[this.prop] = value;
+                }
+            },
+            itemsSourceGroup() {
+                if (!this.groupby)
+                    return this.itemsSource;
+                const prop = this.groupby;
+                const items = this.itemsSource;
+                const set = new Set(items.map((x) => utils$3.eval(x, prop)));
+                return Array.from(set).map(key => { return { name: key, items: items.filter((val) => key == utils$3.eval(val, prop)) }; });
+            },
+            wrapClass() {
+                let cls = '';
+                if (this.align && this.align !== 'left')
+                    cls += 'text-' + this.align;
+                return cls;
+            }
+        },
+        methods: {
+            getName(itm) {
+                return this.nameProp ? utils$3.eval(itm, this.nameProp) : itm.$name;
+            },
+            getValue(itm) {
+                return this.valueProp ? utils$3.eval(itm, this.valueProp) : itm;
+            },
+            getClass(itm) {
+                if (this.boldProp)
+                    return utils$3.eval(itm, this.boldProp) ? 'bold' : undefined;
+                if (this.cssClassProp)
+                    return utils$3.eval(itm, this.cssClassProp);
+                return undefined;
+            },
+            getWrapText() {
+                return this.showvalue ? this.getComboValue() : this.getText();
+            },
+            getComboValue() {
+                const val = this.item ? this.item[this.prop] : null;
+                if (!utils$3.isObjectExact(val))
+                    return val;
+                const vProp = this.valueProp || '$id';
+                if (!(vProp in val))
+                    return val;
+                if (this.itemsSource.indexOf(val) !== -1) {
+                    return val;
+                }
+                // always return value from ItemsSource
+                return this.itemsSource.find((x) => x[vProp] === val[vProp]) || null;
+            },
+            getText() {
+                const cv = this.getComboValue();
+                if (cv === null)
+                    return '';
+                if (utils$3.isObjectExact(cv))
+                    return this.getName(cv);
+                if (this.itemsSource && this.itemsSource.length) {
+                    const vProp = this.valueProp || '$id';
+                    const ob = this.itemsSource.find((x) => x[vProp] === cv);
+                    return ob ? this.getName(ob) : '';
+                }
+                else {
+                    return this.getOptionsText(cv);
+                }
+            },
+            getOptionsText(cv) {
+                // get text from select directly.
+                const sel = this.$refs.sel;
+                if (!sel)
+                    return '';
+                const ops = sel.options;
+                for (let i = 0; i < ops.length; i++) {
+                    if ('' + ops[i].value === '' + cv)
+                        return ops[i].text;
+                }
+                const si = sel.selectedIndex;
+                if (si < 0 || si >= ops.length)
+                    return '';
+                return ops[si].text;
+            }
+        },
+        mounted() {
+            // litle hack. $refs are unavailable during init.
+            const t = this.getText();
+            if (t)
+                this.$refs.wrap.innerText = t;
+        }
+    }));
+
+    // a2-sheet, a2-sheet-section, a2-sheet-section-tree (Net48 components/sheet.js), unchanged in behaviour: a report's
+    // table by named slots (columns, header, col-shadow, body, footer); a tree section renders its slot once per element
+    // of the tree, walked depth first, a collapsed element's children skipped.
+    // Vue 3: the tree is a functional component, a function of (props, { slots }); the slot's first vnode is taken as it
+    // is (Vue 2 made it anew from tag, data and children); Vue.set is an assignment; the scope's functions are bound to
+    // the scope (Vue 2's callers called them as its methods: tree.toggle()).
+    const sheetTemplate = `
+<table class="sheet" :class="cssClass">
+	<slot name="columns"></slot>
+	<thead>
+		<slot name="header"></slot>
+	</thead>
+	<slot name="col-shadow"></slot>
+	<slot name="body"></slot>
+	<tfoot>
+		<slot name="footer"></slot>
+	</tfoot>
+</table>
+`;
+    const sheetSectionTemplate = `
+<tbody>
+	<slot></slot>
+</tbody>
+`;
+    function* traverse(item, prop, lev) {
+        if (prop in item) {
+            const arr = item[prop];
+            for (let i = 0; i < arr.length; i++) {
+                const elem = arr[i];
+                elem.$level = lev;
+                yield elem;
+                if (!elem.$collapsed) {
+                    const newprop = elem._meta_.$items || prop;
+                    yield* traverse(elem, newprop, lev + 1);
+                }
+            }
+        }
+    }
+    platform$1.vocabulary.component('a2-sheet', vue.defineComponent({
+        template: sheetTemplate,
+        props: {
+            stale: Boolean
+        },
+        computed: {
+            cssClass() {
+                return {
+                    'sheet-stale': this.stale
+                };
+            }
+        }
+    }));
+    platform$1.vocabulary.component('a2-sheet-section', vue.defineComponent({
+        template: sheetSectionTemplate
+    }));
+    const sheetSectionTree = (props, { slots }) => {
+        const prop = props.propName;
+        const source = props.itemsSource;
+        if (!source)
+            return null;
+        if (!prop)
+            return null;
+        const slot = slots.default;
+        if (!slot)
+            return null;
+        const compArr = [];
+        for (const v of traverse(source, prop, 1)) {
+            const scope = { item: v };
+            scope.hasChildren = function () {
+                const np = this.item._meta_.$items || prop;
+                const chElems = this.item[np];
+                return chElems && chElems.length > 0;
+            }.bind(scope);
+            scope.toggle = function () {
+                const clpsed = this.item.$collapsed || false;
+                this.item.$collapsed = !clpsed;
+            }.bind(scope);
+            scope.cssClass = function () {
+                let cls = '';
+                if (this.hasChildren())
+                    cls += 'has-children';
+                if (this.item.$collapsed)
+                    cls += ' collapsed';
+                cls += ' lev-' + this.item.$level;
+                return cls;
+            }.bind(scope);
+            scope.rowCssClass = function (mark) {
+                let cls = mark || '';
+                if (this.hasChildren())
+                    cls += ` group gl-${this.item.$level}`;
+                if (this.item.$collapsed)
+                    cls += ' collapsed';
+                return cls;
+            }.bind(scope);
+            scope.indentCssClass = function () {
+                return 'indent lev-' + this.item.$level;
+            }.bind(scope);
+            compArr.push(slot(scope)[0]);
+        }
+        return vue.h('tbody', {}, compArr);
+    };
+    sheetSectionTree.props = ['itemsSource', 'propName'];
+    platform$1.vocabulary.component('a2-sheet-section-tree', sheetSectionTree);
+
+    // a2-blob-image (Net48 components/blobimage.js), unchanged in behaviour: the image of a blob reference (item[prop]:
+    // always an object, $id 0 when empty), shown by its url (std:url blobUrl); a file chosen or dropped goes up to
+    // _blob/<url>/<prop>, and the answer (Id, Token, Name, Mime) is written into the reference.
+    const url$2 = require$1('std:url');
+    const http = require$1('std:http');
+    const tools = require$1('std:tools');
+    const locale$2 = window.$$locale;
+    platform$1.vocabulary.component('a2-blob-image', vue.defineComponent({
+        template: `
+<div class="a2-image">
+	<img v-if="hasImage" :src="href" :style="cssStyle"/>
+	<a class="remove-image" v-if="hasImage" @click.prevent="removeImage">&#x2715;</a>
+	<label v-else :class="uploadClass" :style="uploadStyle"
+			@dragover.prevent="hover = true" @dragleave.prevent="hover = false">
+		<input type="file" accept="image/*" @change="uploadImage"/>
+		<i class="ico ico-image"></i>
+		<span class="upload-tip" v-text="tip"></span>
+	</label>
+</div>
+`,
+        props: {
+            url: String,
+            item: Object,
+            prop: String,
+            width: String,
+            height: String
+        },
+        data() {
+            return {
+                hover: false
+            };
+        },
+        computed: {
+            blob() {
+                // RefId: always an object; an empty reference has $id = 0
+                return this.item[this.prop];
+            },
+            href() {
+                return url$2.blobUrl(this.blob);
+            },
+            hasImage() {
+                return !!this.href;
+            },
+            tip() {
+                return locale$2.$ClickToDownloadPicture;
+            },
+            cssStyle() {
+                return { maxWidth: this.width, maxHeight: this.height };
+            },
+            uploadStyle() {
+                const w = { width: this.width, height: this.height };
+                if (!w.width)
+                    w.width = w.height;
+                if (!w.height)
+                    w.height = w.width;
+                return w;
+            },
+            uploadClass() {
+                return 'file-upload' + (this.hover ? ' hover' : '');
+            }
+        },
+        methods: {
+            removeImage() {
+                this.blob.$empty();
+            },
+            uploadImage(ev) {
+                this.hover = false;
+                const input = ev.target;
+                const file = input.files[0];
+                if (!file)
+                    return;
+                const fd = new FormData();
+                fd.append('file', file, file.name);
+                // the door: endpoint from Url, key = prop
+                const uploadUrl = url$2.combine(window.$$rootUrl, '_blob', this.url, this.prop);
+                http.upload(uploadUrl, fd).then((result) => {
+                    // result = { Id, Token, Name, Mime }
+                    input.value = '';
+                    const b = this.blob;
+                    b[b._meta_.$id] = result.Id;
+                    b[b._meta_.$token] = result.Token;
+                    if ('Name' in b)
+                        b.Name = result.Name;
+                    if ('Mime' in b)
+                        b.Mime = result.Mime;
+                }).catch((msg) => {
+                    input.value = '';
+                    if (msg.indexOf('UI:') === 0)
+                        tools.alert(msg.substring(3).replace('\\n', '\n'));
+                    else
+                        alert(msg);
+                });
+            }
+        }
+    }));
+
+    // a2-blob-preview (Net48 components/blobpreview.js), unchanged in behaviour: a blob reference (value: an object,
+    // $id 0 when empty) previewed by its Mime: an image, a pdf object, else a link to it; nothing to show, a note.
+    const url$1 = require$1('std:url');
+    const locale$1 = window.$$locale;
+    platform$1.vocabulary.component('a2-blob-preview', vue.defineComponent({
+        template: `<div class="a2-file-preview">
+	<img v-if="isImage" :src="href" :style="cssStyle"/>
+	<object v-else-if="isPdf" type="application/pdf" :data="href"
+		:width="pdfWidth" :height="height" :style="cssStyle"></object>
+	<div v-else-if="hasBlob" class="no-preview">
+		<span class="ico ico-file-preview"></span>
+		<a :href="href" v-text="name"></a>
+	</div>
+	<div v-else class="no-preview">
+		<span class="ico ico-file-preview"></span>
+		<span v-text="unavailable"></span>
+	</div>
+</div>`,
+        props: {
+            value: Object,
+            width: String,
+            height: String
+        },
+        computed: {
+            val() {
+                return this.value;
+            },
+            // RefId: an object; an empty reference has $id = 0
+            hasBlob() {
+                return !!(this.val && this.val.$id);
+            },
+            mime() {
+                return this.hasBlob ? (this.val.Mime || '') : '';
+            },
+            name() {
+                return this.hasBlob ? this.val.Name : '';
+            },
+            // svg too: <img> runs no script, and the server never serves it inline
+            isImage() {
+                return this.mime.startsWith('image/');
+            },
+            isPdf() {
+                return this.mime === 'application/pdf';
+            },
+            href() {
+                if (!this.hasBlob)
+                    return undefined;
+                return url$1.blobUrl(this.val);
+            },
+            pdfWidth() {
+                return this.width || '100%';
+            },
+            unavailable() {
+                return locale$1.$PreviewIsUnavailable;
+            },
+            cssStyle() {
+                const r = {};
+                if (this.width)
+                    r.maxWidth = this.width;
+                if (this.height)
+                    r.maxHeight = this.height;
+                return r;
+            }
+        }
+    }));
+
+    // a2-list (Net48 components/list.js), unchanged in behaviour: the elements of an array by the slot 'items', grouped
+    // by a property if asked, selected by mouse and arrows; the first, the last or the model's element selected at start.
+    // Vue 3: $root was the page (base.js): its $modelInfo is the page's controller's (inject $page).
+    const utils$2 = require$1('std:utils');
+    const locale = window.$$locale;
+    platform$1.vocabulary.component('a2-list', vue.defineComponent({
+        template: `
+<ul class="a2-list" v-lazy="itemsSource">
+	<template v-if="itemsSource">
+		<li class="a2-list-item" tabindex="1" :class="cssClass(listItem)" v-for="(listItem, listItemIndex) in source" :key="listItemIndex"
+				@mousedown="select(listItem)" @keydown="keyDown"
+				ref="li" v-on:dblclick.prevent="doDblClick">
+			<span v-if="listItem.__group" v-text="listItem.__group"></span>
+			<slot name="items" :item="listItem" v-if="!listItem.__group"/>
+		</li>
+		<div class="list-empty" v-if="$isEmpty">
+			<slot name="empty" />
+		</div>
+	</template>
+	<template v-else>
+		<slot />
+	</template>
+</ul>
+`,
+        inject: {
+            page: { from: '$page', default: null }
+        },
+        props: {
+            itemsSource: Array,
+            autoSelect: String,
+            mark: String,
+            markStyle: String,
+            command: Function,
+            selectable: {
+                type: Boolean, default: true
+            },
+            hover: {
+                type: Boolean, default: true
+            },
+            groupBy: String,
+            doubleclick: Function
+        },
+        computed: {
+            items() {
+                return this.itemsSource;
+            },
+            selectedSource() {
+                let src = this.items;
+                if (!src)
+                    return null;
+                if (src.$origin)
+                    src = src.$origin;
+                return src.$selected;
+            },
+            source() {
+                if (!this.groupBy)
+                    return this.items;
+                const grmap = {};
+                for (const itm of this.items) {
+                    let key = utils$2.eval(itm, this.groupBy);
+                    if (utils$2.isDate(key))
+                        key = utils$2.format(key, 'Date');
+                    if (!utils$2.isDefined(key))
+                        key = '';
+                    if (key === '')
+                        key = locale.$Unknown || 'Unknown';
+                    if (!(key in grmap)) {
+                        grmap[key] = {
+                            group: key,
+                            items: []
+                        };
+                    }
+                    grmap[key].items.push(itm);
+                }
+                const rarr = [];
+                for (const key in grmap) {
+                    const me = grmap[key];
+                    rarr.push(Object.assign({}, me, { __group: me.group, __count: me.items.length }));
+                    for (const e of me.items) {
+                        rarr.push(e);
+                    }
+                }
+                return rarr;
+            },
+            $isEmpty() {
+                return this.items && this.items.length === 0;
+            }
+        },
+        methods: {
+            cssClass(item) {
+                const getMark = (el) => {
+                    if (!this.mark)
+                        return '';
+                    let cls = utils$2.eval(el, this.mark);
+                    if (this.markStyle === 'row')
+                        cls += ' no-marker';
+                    else if (this.markStyle === 'marker')
+                        cls += ' no-background';
+                    return cls;
+                };
+                if (this.groupBy && item.__group)
+                    return 'group' + (this.mark ? ' mark' : '');
+                return (item.$selected ? 'active ' : ' ') + getMark(item);
+            },
+            select(item) {
+                if (!this.selectable)
+                    return;
+                if (item.$select)
+                    item.$select();
+            },
+            selectStatic() {
+                alert('yet not implemented');
+                console.dir(this);
+            },
+            selectFirstItem() {
+                if (!this.autoSelect)
+                    return;
+                if (!this.selectable)
+                    return;
+                const src = this.items;
+                if (src.$selected)
+                    return; // already selected
+                if (!src || !src.length)
+                    return;
+                if (this.autoSelect === 'first-item') {
+                    // from source (not $origin!)
+                    const fe = src[0];
+                    this.select(fe);
+                    return;
+                }
+                else if (this.autoSelect === 'last-item') {
+                    // from source (not $origin!)
+                    const fe = src[src.length - 1];
+                    this.select(fe);
+                    return;
+                }
+                else if (this.autoSelect === 'item-id') {
+                    const rootId = this.page.$modelInfo.Id;
+                    if (!utils$2.isDefined(rootId)) {
+                        console.error('Id not found in Root.modelInfo');
+                        return;
+                    }
+                    let fe = src[0];
+                    if (rootId) {
+                        fe = src.find((itm) => itm.$id === rootId);
+                        if (!fe)
+                            console.error(`Element with id=${rootId} not found`);
+                    }
+                    if (fe)
+                        this.select(fe);
+                }
+            },
+            keyDown(e) {
+                const next = (delta) => {
+                    let index = this.items.indexOf(this.selectedSource);
+                    if (index === -1)
+                        return;
+                    index += delta;
+                    if (index === -1)
+                        return;
+                    if (index < this.items.length)
+                        this.select(this.items[index]);
+                };
+                switch (e.which) {
+                    case 38: // up
+                        next(-1);
+                        break;
+                    case 40: // down
+                        next(1);
+                        break;
+                    case 36: // home
+                    case 35: // end
+                    case 33: // pgUp
+                    case 34: // pgDn
+                        break;
+                    case 13: // Enter
+                        if (utils$2.isFunction(this.command)) {
+                            this.command();
+                        }
+                        break;
+                    default:
+                        return;
+                }
+                e.preventDefault();
+                e.stopPropagation();
+            },
+            doDblClick($event) {
+                $event.stopImmediatePropagation();
+                if (this.doubleclick)
+                    this.doubleclick();
+            }
+        },
+        created() {
+            this.selectFirstItem();
+        },
+        updated() {
+            if (!this.selectedSource && this.autoSelect) {
+                this.selectFirstItem();
+            }
+            const src = this.items;
+            if (!src)
+                return;
+            const li = this.$refs.li;
+            if (!li)
+                return;
+            setTimeout(() => {
+                const ix = li.findIndex(itm => itm.classList.contains('active'));
+                if (ix !== -1 && li && ix < li.length)
+                    li[ix].scrollIntoViewCheck();
+            }, 0);
+        }
+    }));
+
+    // a2-color-picker (Net48 components/colorpicker.js), unchanged in behaviour: over control; item[prop] is one of the
+    // tag colors, picked from a pane or stepped by the arrows. A popup. mounted's query = valueText is Net48's, a copy
+    // from the selector that sets nothing used.
+    const popup = require$1('std:popup');
+    const eventBus$1 = require$1('std:eventBus');
+    const colorPickerTemplate = `<div class="color-picker" :class="cssClass()" :test-id="testId">
+	<label v-if="hasLabel"><span v-text="label"/><slot name="hint"/><slot name="link"></slot></label>
+	<div class="input-group">
+		<div v-focus tabindex="0" @click.stop.prevent="toggle"
+				@keydown="keydown" class="color-picker-wrapper">
+			<span class="tag-label" :class="cmbValue" v-text="text"/>
+			<span class="caret"/>
+		</div>
+		<validator :invalid="invalid" :errors="errors" :options="validatorOptions"></validator>
+		<div class="color-picker-pane" v-show="isOpen">
+			<div class="color-picker-list">
+				<span class="tag-label" :class="itm" @mousedown.prevent="hit(itm)"
+					v-for="(itm, ix) in items" :key="ix" v-text="text">
+				</span>
+			</div>
+		</div>
+	</div>
+	<slot name="popover"></slot>
+	<span class="descr" v-if="hasDescr" v-text="description"></span>
+</div>
+`;
+    const colors = 'default|green|orange|cyan|red|purple|pink|gold|blue|salmon|seagreen|tan|magenta|lightgray|olive|teal';
+    platform$1.vocabulary.component('a2-color-picker', vue.defineComponent({
+        extends: control,
+        props: {
+            item: {
+                type: Object, default() { return {}; }
+            },
+            prop: String,
+            text: String
+        },
+        data() {
+            return {
+                isOpen: false
+            };
+        },
+        template: colorPickerTemplate,
+        computed: {
+            cmbValue: {
+                get() {
+                    return this.item[this.prop];
+                },
+                set(val) {
+                    this.item[this.prop] = val;
+                }
+            },
+            items() { return colors.split('|'); }
+        },
+        methods: {
+            keydown(event) {
+                event.stopPropagation();
+                const items = this.items;
+                switch (event.which) {
+                    case 40: { // down
+                        event.preventDefault();
+                        const ix = items.indexOf(this.cmbValue);
+                        if (ix < items.length - 1)
+                            this.cmbValue = items[ix + 1];
+                        else
+                            this.cmbValue = items[0];
+                        break;
+                    }
+                    case 38: { // up
+                        event.preventDefault();
+                        const ix = items.indexOf(this.cmbValue);
+                        if (ix > 0)
+                            this.cmbValue = items[ix - 1];
+                        else
+                            this.cmbValue = items[items.length - 1];
+                        break;
+                    }
+                }
+            },
+            toggle() {
+                if (!this.isOpen) {
+                    eventBus$1.$emit('closeAllPopups');
+                }
+                this.isOpen = !this.isOpen;
+            },
+            hit(itm) {
+                this.item[this.prop] = itm;
+                this.isOpen = false;
+            },
+            __clickOutside() {
+                this.isOpen = false;
+            }
+        },
+        mounted() {
+            const self = this;
+            popup.registerPopup(this.$el);
+            self.query = self.valueText;
+            this.$el._close = this.__clickOutside;
+        },
+        beforeUnmount() {
+            popup.unregisterPopup(this.$el);
+        }
+    }));
+
+    // a2-pdfreport-viewer (Net48 components/report.js), unchanged in behaviour: the report as pdf in an <object>, from
+    // report/show/<the argument's id>?base=<url>&rep=<report>.
+    const url = require$1('std:url');
+    const utils$1 = require$1('std:utils');
+    platform$1.vocabulary.component('a2-pdfreport-viewer', vue.defineComponent({
+        template: `
+<div class="a2-pdfreport-viewer">
+	<object type="application/pdf" :data="source" width="100%" height="100%"/>
+</div>
+`,
+        props: {
+            url: String,
+            argument: Object,
+            report: String
+        },
+        computed: {
+            source() {
+                const root = window.$$rootUrl;
+                let arg = this.argument || 0;
+                if (utils$1.isObjectExact(this.argument)) {
+                    arg = this.argument.$id || 0;
+                }
+                return url.combine(root, 'report/show', arg) + url.makeQueryString({ base: this.url, rep: this.report });
+            }
+        }
+    }));
+
+    // tree-grid (Net48 components/treegrid.js), unchanged in behaviour: a tree as table rows, an element's children
+    // (item) shown while it is $expanded; the rows, header and columns are the page's slots, given the grid as 'that'.
+    // Vue 3: <col> is void; $parent.$emit('sort') was heard by a collection view's $on('sort') only, else by none:
+    // $parent.doSort, when the parent has one.
+    const utils = require$1('std:utils');
+    const eventBus = require$1('std:eventBus');
+    const debouncedUpdate = utils.debounce((pane) => {
+        if (!pane)
+            return;
+        const elem = pane.querySelector('.active');
+        if (!elem)
+            return;
+        if (elem && elem.scrollIntoViewCheck)
+            elem.scrollIntoViewCheck();
+    }, 300);
+    const gridTemplate = `
+<table v-lazy="root">
+	<colgroup><col class="fit c-m" v-if=isMarkCell /><slot name="columns" v-bind:that="that"></slot></colgroup>
+	<thead><tr>
+		<th class="c-m" v-if=isMarkCell :class=gridLines></th>
+		<slot name="header" v-bind:that="that"></slot>
+	</tr></thead>
+	<tbody ref="pane">
+		<tr v-for="(itm, ix) in rows" :class="rowClass(itm)"
+				@click.stop="select(itm)" v-on:dblclick.prevent="dblClick($event, itm)">
+			<td class="c-m" v-if=isMarkCell :class="rowMarkClass(itm)"></td>
+			<slot name="row" v-bind:itm="itm.elem" v-bind:that="that"></slot>
+		</tr>
+	</tbody>
+</table>
+`;
+    platform$1.vocabulary.component('tree-grid', vue.defineComponent({
+        template: gridTemplate,
+        props: {
+            root: [Object, Array],
+            item: String,
+            folderStyle: String,
+            doubleclick: Function,
+            isFolder: String,
+            mark: String,
+            markStyle: String,
+            gridLines: String
+        },
+        computed: {
+            rows() {
+                const arr = [];
+                const collect = (pa, lev) => {
+                    for (let i = 0; i < pa.length; i++) {
+                        const el = pa[i];
+                        const ch = el[this.item];
+                        arr.push({ elem: el, level: lev });
+                        if (ch && el.$expanded)
+                            collect(ch, lev + 1);
+                    }
+                };
+                const root = this.root;
+                if (Array.isArray(root))
+                    collect(root, 0);
+                else
+                    collect(root[this.item], 0);
+                return arr;
+            },
+            sortColumn() {
+                const sort = {
+                    dir: '',
+                    order: ''
+                };
+                const mi = this.root.$ModelInfo;
+                if (!mi)
+                    return sort;
+                sort.dir = (mi.SortDir || '').toLowerCase();
+                sort.order = (mi.SortOrder || '').toLowerCase();
+                return sort;
+            },
+            that() {
+                return this;
+            },
+            isMarkCell() {
+                return this.markStyle === 'marker' || this.markStyle === 'both';
+            },
+            isMarkRow() {
+                return this.markStyle === 'row' || this.markStyle === 'both';
+            }
+        },
+        methods: {
+            toggle(itm) {
+                itm.$select(this.root);
+                if (itm.$expand) {
+                    if (!itm.$expanded)
+                        itm.$expand();
+                    else
+                        itm.$expanded = false;
+                }
+                else
+                    itm.$expanded = !itm.$expanded;
+            },
+            select(itm) {
+                eventBus.$emit('closeAllPopups');
+                itm.elem.$select(this.root);
+            },
+            dblClick(evt) {
+                eventBus.$emit('closeAllPopups');
+                evt.stopImmediatePropagation();
+                window.getSelection().removeAllRanges();
+                if (this.doubleclick)
+                    this.doubleclick();
+            },
+            hasChildren(itm) {
+                const hc = utils.isDefined(itm.$hasChildren) && itm.$hasChildren;
+                const ch = itm[this.item];
+                return hc || (ch && ch.length > 0);
+            },
+            isRowFolder(elm) {
+                if (this.hasChildren(elm))
+                    return true;
+                if (this.isFolder)
+                    return utils.simpleEval(elm, this.isFolder);
+                return '';
+            },
+            rowMarkClass(itm) {
+                if (this.isMarkRow && this.mark)
+                    return utils.simpleEval(itm.elem, this.mark) + ' ' + this.gridLines;
+                return this.gridLines;
+            },
+            rowMarker(itm) {
+                if (this.isMarkRow && this.mark)
+                    return utils.simpleEval(itm.elem, this.mark);
+                return '';
+            },
+            rowClass(itm) {
+                let cls = `lev lev-${itm.level} ` + this.rowMarker(itm);
+                if (itm.elem.$selected)
+                    cls += ' active';
+                if (this.isRowFolder(itm.elem) && this.folderStyle !== 'none')
+                    cls += ' ' + this.folderStyle;
+                return cls;
+            },
+            toggleClass(itm) {
+                return itm.$expanded ? 'expanded' : 'collapsed';
+            },
+            columnClass(sort, fitcol) {
+                const col = this.sortColumn;
+                const cls = {
+                    sorted: false,
+                    fit: fitcol
+                };
+                if (sort.toLowerCase() === col.order) {
+                    cls.sorted = true;
+                }
+                return cls;
+            },
+            headerClass(sort) {
+                const col = this.sortColumn;
+                if (col.order === (sort || '').toLowerCase())
+                    return col.dir;
+                return null;
+            },
+            doSort(prop) {
+                prop = (prop || '').toLowerCase();
+                const parent = this.$parent;
+                if (parent && parent.doSort)
+                    parent.doSort(prop);
+            }
+        },
+        updated() {
+            debouncedUpdate(this.$refs['pane']);
+        }
+    }));
+
+    // a2-text-editor, a2-text-view (A2v10.Core Web/A2v10.Core.Web.Site/Scripts/texteditor.js; not in Net48), unchanged
+    // in behaviour. A comment: own contenteditable, the text is markdown of three elements — \n, **bold**, ![name](src).
+    // Decisions — A2v10.Core design/texteditor.md.
+    // Vue 3: a hook's this was vm.$root.$data, the page's model: the page's controller's $data (inject $page);
+    // destroyed is unmounted. md, moving, gone, ranges are set on the instance in mounted: not reactive, as in Vue 2.
+    const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
+    function escapeHtml(s) {
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function escapeMd(s) {
+        return s.replace(/[\\*]/g, '\\$&');
+    }
+    // One rule for a link: the view makes it clickable, the editor highlights it. Trailing punctuation belongs to the sentence
+    function* findLinks(s) {
+        for (const m of s.matchAll(/https?:\/\/[^\s<>"]+/g))
+            yield { index: m.index, url: m[0].replace(/[.,;:!?)]+$/, '') };
+    }
+    function textHtml(s, view) {
+        if (!view)
+            return escapeHtml(s);
+        let out = '';
+        let last = 0;
+        for (const { index, url } of findLinks(s)) {
+            out += escapeHtml(s.substring(last, index));
+            out += `<a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(url)}</a>`;
+            last = index + url.length;
+        }
+        return out + escapeHtml(s.substring(last));
+    }
+    // The links of the editor's text, as ranges over its text nodes: the highlight paints them, a click opens them — one rule.
+    // A link cut by bold into two text nodes is not a link here — accepted
+    function linkRanges(el) {
+        const ranges = [];
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+        for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+            for (const { index, url } of findLinks(n.nodeValue)) {
+                const r = new Range();
+                r.setStart(n, index);
+                r.setEnd(n, index + url.length);
+                ranges.push(r);
+            }
+        }
+        return ranges;
+    }
+    // by the rects, not by the caret: a caret lands on the nearest boundary, a click past the end of a line would open the link
+    function hit(range, x, y) {
+        return Array.from(range.getClientRects()).some(c => x >= c.left && x <= c.right && y >= c.top && y <= c.bottom);
+    }
+    // The CSS Custom Highlight API paints over the text: the DOM, the caret and undo stay as they are.
+    // The registry is global, so editors share one Highlight, each holding its own ranges. No API — no highlight
+    const HIGHLIGHT = 'a2-link';
+    function linkHighlight() {
+        const css = window.CSS;
+        if (!css || !css.highlights)
+            return null;
+        let hl = css.highlights.get(HIGHLIGHT);
+        if (!hl) {
+            hl = new window.Highlight();
+            css.highlights.set(HIGHLIGHT, hl);
+        }
+        return hl;
+    }
+    const IMAGE_RX = /^!\[((?:\\.|[^\]\\])*)\]\(([^)\s]+)\)/;
+    // The one render: the view and the text loaded into the editor. Everything is escaped; the output is own markup only.
+    // An image is an <img> only if imageUrl gives it a URL — otherwise text (a spy pixel); data-src keeps the stored form.
+    // view: links clickable, an image is a link to its original (max-height cuts it) and lazy.
+    // .loading — a fixed block with a spinner in the background until load/error (from Azure it takes seconds); on the img itself,
+    // no wrapper: a wrapper in contenteditable breaks editing, and the editor loads images too
+    function toHtml(md, imageUrl, view) {
+        let out = '';
+        let text = '';
+        let bold = false;
+        const flush = () => { out += textHtml(text, view); text = ''; };
+        for (let i = 0; i < md.length;) {
+            const ch = md[i];
+            if (ch === '\\' && i + 1 < md.length) {
+                text += md[i + 1];
+                i += 2;
+            }
+            else if (ch === '*' && md[i + 1] === '*' && (bold || hasClose(md, i + 2))) {
+                flush();
+                out += bold ? '</b>' : '<b>';
+                bold = !bold;
+                i += 2;
+            }
+            else if (ch === '\n') {
+                flush();
+                out += '<br>';
+                i++;
+            }
+            else if (ch === '!' && md[i + 1] === '[') {
+                const m = IMAGE_RX.exec(md.substring(i));
+                const url = m ? imageUrl(m[2]) : null;
+                if (m && url) {
+                    flush();
+                    const name = m[1].replace(/\\(.)/g, '$1');
+                    const href = escapeHtml(url);
+                    const img = `<img src="${href}" data-src="${escapeHtml(m[2])}" alt="${escapeHtml(name)}" class="loading"`;
+                    out += view ? `<a href="${href}" target="_blank" rel="noopener">${img} loading="lazy"></a>` : `${img}>`;
+                    i += m[0].length;
+                }
+                else {
+                    text += ch;
+                    i++;
+                }
+            }
+            else {
+                text += ch;
+                i++;
+            }
+        }
+        flush();
+        return out;
+    }
+    // A hook is called as a template's function is: this = the model of the page (as emptyPanelCallback). No hook — undefined
+    function hook(vm, name, ...args) {
+        const d = vm.delegates;
+        return d && d[name] ? d[name].apply(vm.page.$data, args) : undefined;
+    }
+    // load/error do not bubble — the root sees them on capture. An error too: a broken image, not an endless spinner
+    function loaded(ev) {
+        const t = ev.target;
+        if (t.tagName === 'IMG')
+            t.classList.remove('loading');
+    }
+    // an unpaired ** is text
+    function hasClose(md, i) {
+        for (; i < md.length; i++) {
+            if (md[i] === '\\')
+                i++;
+            else if (md[i] === '*' && md[i + 1] === '*')
+                return true;
+        }
+        return false;
+    }
+    // Enter: Chrome makes a div, Firefox a br. The last br of a block is Chrome's stub of an empty line.
+    // An img without data-src (still uploading — blob:) is not written: the model never holds a dead address.
+    function toMarkdown(root) {
+        let out = '';
+        let breakAfterBlock = false;
+        const emit = (s) => {
+            if (breakAfterBlock) {
+                out += '\n';
+                breakAfterBlock = false;
+            }
+            out += s;
+        };
+        const walk = (node, inBold) => {
+            for (let n = node.firstChild; n; n = n.nextSibling) {
+                if (n.nodeType === Node.TEXT_NODE) {
+                    if (n.nodeValue)
+                        emit(escapeMd(n.nodeValue.replace(/\u00a0/g, ' ')));
+                    continue;
+                }
+                if (n.nodeType !== Node.ELEMENT_NODE)
+                    continue;
+                const e = n;
+                switch (e.tagName) {
+                    case 'BR':
+                        if (!e.nextSibling && (node.tagName === 'DIV' || node.tagName === 'P'))
+                            break;
+                        emit('\n');
+                        break;
+                    case 'B':
+                    case 'STRONG': {
+                        if (inBold) {
+                            walk(e, true);
+                            break;
+                        }
+                        emit('');
+                        const start = out.length;
+                        out += '**';
+                        walk(e, true);
+                        // an empty bold is skipped
+                        if (out.length === start + 2)
+                            out = out.substring(0, start);
+                        else
+                            out += '**';
+                        break;
+                    }
+                    case 'DIV':
+                    case 'P':
+                        if (out)
+                            out += '\n';
+                        breakAfterBlock = false;
+                        walk(e, inBold);
+                        breakAfterBlock = true;
+                        break;
+                    case 'IMG': {
+                        const src = e.getAttribute('data-src');
+                        if (src)
+                            emit(`![${(e.alt || '').replace(/[\\\]]/g, '\\$&')}](${src.replace(/[\s)]/g, encodeURIComponent)})`);
+                        break;
+                    }
+                    default:
+                        walk(e, inBold);
+                }
+            }
+        };
+        walk(root, false);
+        return out.replace(/\n+$/, '');
+    }
+    function images(files) {
+        return Array.from(files || []).filter(f => IMAGE_TYPES.includes(f.type));
+    }
+    // a screenshot from the clipboard is always image.png
+    function named(file) {
+        if (!/^image\.\w+$/i.test(file.name))
+            return file;
+        const d = new Date();
+        const p = (n) => String(n).padStart(2, '0');
+        const stamp = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}-${p(d.getMinutes())}-${p(d.getSeconds())}`;
+        return new File([file], `Знімок ${stamp}.${file.name.split('.').pop()}`, { type: file.type });
+    }
+    function caretAt(x, y) {
+        let r = null;
+        const doc = document;
+        if (doc.caretPositionFromPoint) {
+            const p = doc.caretPositionFromPoint(x, y);
+            if (p) {
+                r = document.createRange();
+                r.setStart(p.offsetNode, p.offset);
+            }
+        }
+        else if (doc.caretRangeFromPoint)
+            r = doc.caretRangeFromPoint(x, y);
+        if (!r)
+            return;
+        r.collapse(true);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(r);
+    }
+    platform$1.vocabulary.component('a2-text-editor', vue.defineComponent({
+        template: `
+<div class="a2-text-editor" :contenteditable="disabled ? 'false' : 'true'" :data-placeholder="placeholder"
+	@input="sync" @keydown="keydown" @focus="focus" @paste="paste" @click="open" @load.capture="loaded" @error.capture="loaded"
+	@dragstart="dragInside(true)" @dragend="dragInside(false)" @drop="drop"></div>
+`,
+        inject: {
+            page: { from: '$page', default: null }
+        },
+        props: {
+            item: Object,
+            prop: String,
+            placeholder: String,
+            disabled: Boolean,
+            delegates: Object
+        },
+        computed: {
+            value() {
+                return this.item[this.prop] || '';
+            }
+        },
+        watch: {
+            // own input is never re-rendered — the caret stays
+            value(v) {
+                if (v === this.md)
+                    return;
+                this.render(v);
+            }
+        },
+        methods: {
+            loaded,
+            imageUrl(src) {
+                return hook(this, 'ImageUrl', src) || null;
+            },
+            render(md) {
+                const self = this;
+                self.md = md;
+                this.$el.innerHTML = toHtml(md, src => this.imageUrl(src), false);
+                this.highlight();
+            },
+            highlight() {
+                const self = this;
+                const hl = linkHighlight();
+                if (!hl)
+                    return;
+                for (const r of self.ranges)
+                    hl.delete(r);
+                self.ranges = self.gone ? [] : linkRanges(this.$el);
+                for (const r of self.ranges)
+                    hl.add(r);
+            },
+            // Ctrl/⌘+click opens an image or a link, as a click in the view does; a plain click edits (places the caret,
+            // selects an image). A disabled editor cannot be edited, so any click opens. An image still uploading
+            // (blob:, no data-src) has nothing to open yet
+            open(ev) {
+                if (!(ev.ctrlKey || ev.metaKey) && !this.disabled)
+                    return;
+                let url = null;
+                const t = ev.target;
+                if (t.tagName === 'IMG') {
+                    if (t.getAttribute('data-src'))
+                        url = t.src;
+                }
+                else {
+                    const link = linkRanges(this.$el).find(r => hit(r, ev.clientX, ev.clientY));
+                    if (link)
+                        url = link.toString();
+                }
+                if (!url)
+                    return;
+                ev.preventDefault();
+                window.open(url, '_blank', 'noopener');
+            },
+            sync() {
+                const self = this;
+                if (self.gone)
+                    return;
+                const el = this.$el;
+                // Chrome leaves a <br> in an emptied editor — :empty and the placeholder need it gone
+                if (!el.textContent && !el.querySelector('img'))
+                    el.innerHTML = '';
+                self.md = toMarkdown(el);
+                this.highlight();
+                if (this.value !== self.md)
+                    this.item[this.prop] = self.md;
+            },
+            focus() {
+                // Ctrl+B → <b>, not <span style>
+                document.execCommand('styleWithCSS', false, 'false');
+            },
+            keydown(ev) {
+                if (!(ev.ctrlKey || ev.metaKey))
+                    return;
+                if (ev.key === 'Enter') {
+                    ev.preventDefault();
+                    hook(this, 'Submit');
+                }
+                else if (ev.code === 'KeyI' || ev.code === 'KeyU')
+                    ev.preventDefault(); // italic and underline would be lost on save
+            },
+            canUpload() {
+                const d = this.delegates;
+                return !!(d && d.UploadImage);
+            },
+            paste(ev) {
+                const dt = ev.clipboardData;
+                if (!dt)
+                    return;
+                ev.preventDefault();
+                const files = this.canUpload() ? images(dt.files) : [];
+                if (files.length)
+                    this.insertImages(files);
+                else
+                    this.insertText(dt.getData('text/plain'));
+            },
+            // dragstart fires only for a drag that began inside the editor
+            dragInside(on) {
+                this.moving = on;
+            },
+            drop(ev) {
+                if (this.moving)
+                    return; // a move inside the editor is the browser's
+                ev.preventDefault();
+                const dt = ev.dataTransfer;
+                this.$el.focus();
+                caretAt(ev.clientX, ev.clientY);
+                const files = this.canUpload() ? images(dt.files) : [];
+                if (files.length)
+                    this.insertImages(files);
+                else
+                    this.insertText(dt.getData('text/plain'));
+            },
+            insertText(text) {
+                // foreign HTML never enters
+                if (text)
+                    document.execCommand('insertText', false, text);
+            },
+            insertImages(files) {
+                const items = files.map(f => {
+                    const file = named(f);
+                    return { file, url: URL.createObjectURL(file) };
+                });
+                // execCommand — for the native undo
+                const html = items.map(x => `<img src="${x.url}" alt="${escapeHtml(x.file.name)}" class="uploading">`).join('');
+                document.execCommand('insertHTML', false, html);
+                for (const x of items)
+                    this.upload(x);
+            },
+            async upload(x) {
+                let src = null;
+                try {
+                    src = await hook(this, 'UploadImage', x.file);
+                }
+                catch (err) {
+                    console.error(err);
+                }
+                const url = src ? this.imageUrl(src) : null;
+                if (src && !url)
+                    console.error(`a2-text-editor: ImageUrl knows nothing of '${src}' returned by UploadImage`);
+                // erased while uploading — nothing to do
+                const img = Array.from(this.$el.querySelectorAll('img')).find(i => i.getAttribute('src') === x.url);
+                if (img) {
+                    if (url) {
+                        img.setAttribute('data-src', src);
+                        img.src = url;
+                        img.classList.remove('uploading');
+                    }
+                    else
+                        img.remove();
+                }
+                URL.revokeObjectURL(x.url);
+                // an attribute change fires no input
+                this.sync();
+            }
+        },
+        mounted() {
+            // not reactive: own state of the DOM, never rendered
+            const self = this;
+            self.md = '';
+            self.moving = false;
+            self.gone = false;
+            self.ranges = [];
+            this.render(this.value);
+        },
+        unmounted() {
+            this.gone = true;
+            this.highlight();
+        }
+    }));
+    platform$1.vocabulary.component('a2-text-view', vue.defineComponent({
+        template: `<div class="a2-text-view" v-html="html" @load.capture="loaded" @error.capture="loaded"></div>`,
+        inject: {
+            page: { from: '$page', default: null }
+        },
+        // shown, not written — value, as a2-blob-preview
+        props: {
+            value: String,
+            delegates: Object
+        },
+        computed: {
+            html() {
+                return toHtml(this.value || '', src => hook(this, 'ImageUrl', src) || null, true);
+            }
+        },
+        methods: {
+            loaded
         }
     }));
 

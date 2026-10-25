@@ -18,6 +18,7 @@ public abstract class Container : UIElement
 		if (isBind != null)
 		{
 			tml.MergeAttribute("v-for", $"(xelem, xIndex) in {isBind.GetPath(context)}");
+			context.MergeForTemplateKey(tml, "xIndex");
 			tml.RenderStart(context);
 			using (new ScopeContext(context, "xelem", isBind.Path))
 			{
@@ -26,7 +27,7 @@ public abstract class Container : UIElement
 					c.RenderElement(context, (tag) =>
 					{
 						onRenderStatic?.Invoke(tag);
-						tag.MergeAttribute(":key", "xIndex");
+						context.MergeForItemKey(tag, "xIndex");
 					});
 				}
 			}
