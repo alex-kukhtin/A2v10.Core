@@ -19641,6 +19641,8 @@ Make sure to use the production build (*.prod.js) when deploying for production.
     // A page as the server sends it: the HTML of its root element (from XAML) and a <script> whose body returns the
     // page's descriptor (Vue3DataScripter's FOOTER). The template is the root element whole: the root carries bindings
     // of its own (v-cloak, v-maximize, data-controller-attr), or is a component itself (collection-view).
+    // A page without a descriptor is static: shown as it came, as Net48's load inserted the root and found no script to
+    // run. The server answers so when the page's load throws (BaseController.WriteHtmlException: div.app-exception).
     // Nothing is registered and nothing mounted here: include renders what this returns, and drops it to close it.
     // Null where Net48's load (services/http.js:126-207) never settled: a 401 (handled), an empty answer, a login page
     // (it navigates away), an answer no longer wanted (isCurrent: include has asked for another url since).
@@ -19684,10 +19686,8 @@ Make sure to use the production build (*.prod.js) when deploying for production.
                 if (rv !== undefined)
                     descriptor = rv;
             }
-            if (!descriptor)
-                throw new Error(`page ${url}: its script returned no descriptor`);
             bus.$emit('endLoad');
-            return { url, template: root.outerHTML, descriptor };
+            return descriptor ? { url, template: root.outerHTML, descriptor } : { url, root };
         }
         catch (err) {
             bus.$emit('endLoad');
@@ -19760,6 +19760,17 @@ Make sure to use the production build (*.prod.js) when deploying for production.
             }
         });
     }
+    // A static page's component: its root as it came. A render function, not a template: the text is the server's
+    // (an exception's message, its stack), and {{ }} in it is text.
+    function staticComponent(page) {
+        const { root } = page;
+        const attrs = {};
+        for (const attr of root.attributes)
+            attrs[attr.name] = attr.value;
+        return markRaw({
+            render: () => h(root.localName, { ...attrs, innerHTML: root.innerHTML })
+        });
+    }
 
     // The vocabulary: the platform's components and directives, the only global registrations of the document's one
     // app (the shell's). They may come at any time: before the shell attaches its app they are kept, after it they go
@@ -19805,14 +19816,21 @@ Make sure to use the production build (*.prod.js) when deploying for production.
     // The last load each host asked for: an answer to an older one is dropped.
     const lastLoad = new WeakMap();
     // Loads url into the host. Resolves with the page (its controller) once it is mounted, as Vue 2's load resolved once
-    // the page's script had mounted it; what the host does then (loaded, complete) runs in this chain, and a throw there
-    // reaches the host's error, as it did (.then(loaded).catch(error)). Never settles for an answer dropped.
+    // the page's script had mounted it; with null at once for a static page, as it resolved with no script found.
+    // What the host does then (loaded, complete) runs in this chain, and a throw there reaches the host's error, as it
+    // did (.then(loaded).catch(error)). Never settles for an answer dropped.
     function show(host, url, hideIndicator) {
         const id = (lastLoad.get(host) || 0) + 1;
         lastLoad.set(host, id);
         return loadPage(url, hideIndicator, () => lastLoad.get(host) === id).then(page => new Promise(resolve => {
-            if (page && lastLoad.get(host) === id)
+            if (!page || lastLoad.get(host) !== id)
+                return;
+            if ('descriptor' in page)
                 host.page = pageComponent(page, resolve);
+            else {
+                host.page = staticComponent(page);
+                resolve(null);
+            }
         }));
     }
     const PAGE_TEMPLATE = '<component v-if="page" :is="page"/>';

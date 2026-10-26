@@ -84,7 +84,7 @@
     // a2-pager (Net48 components/pager.js), unchanged in behaviour: the pages of a collection view's source
     // (Parent.Pager: pageSize, offset, sourceCount, $setOffset). Vue 3's h takes flat props: on.click is onClick,
     // domProps and attrs are props.
-    const locale$a = window.$$locale;
+    const locale$c = window.$$locale;
     const eventBus$c = require$1('std:eventBus');
     const fmt = new Intl.NumberFormat('uk-UA').format;
     platform$3.vocabulary.component('a2-pager', vue.defineComponent({
@@ -109,7 +109,7 @@
                 return this.textString;
             },
             emptyString() {
-                return this.emptyText ? this.emptyText : locale$a.$NoElements;
+                return this.emptyText ? this.emptyText : locale$c.$NoElements;
             },
             textString() {
                 const lastNo = Math.min(this.count, this.offset + this.src.pageSize);
@@ -119,7 +119,7 @@
                         .replace(/\#\[End\]/g, fmt(lastNo))
                         .replace(/\#\[Count\]/g, fmt(this.count));
                 else
-                    return `${locale$a.$PagerElements}: <b>${fmt(this.offset + 1)}</b>-<b>${fmt(lastNo)}</b> ${locale$a.$Of} <b>${fmt(this.count)}</b>`;
+                    return `${locale$c.$PagerElements}: <b>${fmt(this.offset + 1)}</b>-<b>${fmt(lastNo)}</b> ${locale$c.$Of} <b>${fmt(this.count)}</b>`;
             },
             offset() {
                 return +this.src.offset;
@@ -294,7 +294,7 @@
     // Vue 3: beforeDestroy is beforeUnmount; $children is gone (deferUpdate: forceUpdateChildren). itemToValidate and
     // propToValidate are a derived control's, when it declares them: read from $props, where an undeclared one is
     // undefined as in Vue 2, not through the instance, where Vue 3 warns while it renders.
-    const utils$g = require$1('std:utils');
+    const utils$i = require$1('std:utils');
     const mask$1 = require$1('std:mask');
     const maccel = require$1('std:accel');
     // Vue 2's $children: the component instances of a component's own render, not deeper. Each is updated.
@@ -349,7 +349,7 @@
                     return null;
                 const val = self.item[self.prop];
                 if (this.dataType)
-                    return utils$g.format(val, this.dataType, { hideZeros: this.hideZeros, format: this.format });
+                    return utils$i.format(val, this.dataType, { hideZeros: this.hideZeros, format: this.format });
                 else if (this.mask && val)
                     return mask$1.getMasked(this.mask, val);
                 return val;
@@ -361,7 +361,7 @@
                 const val = self.item[self.prop];
                 if (!val)
                     return false;
-                if (utils$g.isObjectExact(val))
+                if (utils$i.isObjectExact(val))
                     return !!val.Id;
                 return true;
             },
@@ -502,7 +502,7 @@
     // Vue 3: an event a component does not declare in emits is also a native listener on its root, and the input's own
     // change bubbles to it: the handler would run twice. change is declared.
     // password-- fake fields are a workaround for chrome autofill getting the wrong fields
-    const utils$f = require$1('std:utils');
+    const utils$h = require$1('std:utils');
     const mask = require$1('std:mask');
     const textBoxTemplate = `<div :class="cssClass()" :test-id="testId">
 	<label v-if="hasLabel"><span v-text="label"/><slot name="hint"/><slot name="link"></slot></label>
@@ -593,14 +593,14 @@
         },
         methods: {
             doFilter(value) {
-                return utils$f.text.applyFilters(this.filters, value);
+                return utils$h.text.applyFilters(this.filters, value);
             },
             updateValue(value) {
                 const item = this.item;
                 if (this.mask)
                     item[this.prop] = mask.getUnmasked(this.mask, this.doFilter(value));
                 else
-                    item[this.prop] = utils$f.parse(this.doFilter(value), this.dataType);
+                    item[this.prop] = utils$h.parse(this.doFilter(value), this.dataType);
                 const mv = this.modelValue;
                 const input = this.$refs.input;
                 if (input.value !== mv) {
@@ -672,7 +672,7 @@
         methods: {
             updateValue(value) {
                 const item = this.item;
-                value = utils$f.text.applyFilters(this.filters, value);
+                value = utils$h.text.applyFilters(this.filters, value);
                 if (item[this.prop] === value)
                     return;
                 item[this.prop] = value;
@@ -744,10 +744,10 @@
     // - Vue 2's $root was the page (base.js): $root.$emit('cwChange') and $root[prop] are the page's controller
     //   (inject $page, page.ts): __cwChange, $data;
     // - $on('sort') is gone: doSort is called by the data grid (the data-grid step).
-    const utils$e = require$1('std:utils');
+    const utils$g = require$1('std:utils');
     const period = require$1('std:period');
     const eventBus$b = require$1('std:eventBus');
-    const eqlower$1 = utils$e.text.equalNoCase;
+    const eqlower$1 = utils$g.text.equalNoCase;
     function getModelInfoProp(src, propName) {
         if (!src)
             return undefined;
@@ -773,12 +773,12 @@
                 if (period.isPeriod(iv)) {
                     filter[x] = iv.fromUrl(q[x]);
                 }
-                else if (utils$e.isDate(iv)) {
-                    filter[x] = utils$e.date.tryParse(q[x]);
+                else if (utils$g.isDate(iv)) {
+                    filter[x] = utils$g.date.tryParse(q[x]);
                 }
-                else if (utils$e.isObjectExact(iv))
+                else if (utils$g.isObjectExact(iv))
                     iv.Id = q[x];
-                else if (utils$e.isNumber(iv))
+                else if (utils$g.isNumber(iv))
                     filter[x] = +q[x];
                 else {
                     filter[x] = q[x];
@@ -825,7 +825,7 @@
                 return this.itemsSource;
             },
             jsonFilter() {
-                return utils$e.toJson(this.filter);
+                return utils$g.toJson(this.filter);
             },
             thisPager() {
                 return this;
@@ -903,7 +903,7 @@
                         else {
                             for (const pp of this.persistentFilter) {
                                 const te = topElem[lastProp];
-                                if (!utils$e.isEqual(te.$ModelInfo.Filter[pp], this.filter[pp])) {
+                                if (!utils$g.isEqual(te.$ModelInfo.Filter[pp], this.filter[pp])) {
                                     te.$ModelInfo.Filter[pp] = this.filter[pp];
                                     if (te.$loaded)
                                         te.$empty();
@@ -992,11 +992,11 @@
     // - a ref in v-for is an array in no promised order: the selected row is found by its index;
     // - $parent.$emit('sort') was heard by the collection view's $on('sort', doSort): $parent.doSort;
     // - $scopedSlots is $slots; Vue.set is an assignment; $root ($data, inDialog) is the page's controller (inject).
-    const utils$d = require$1('std:utils');
+    const utils$f = require$1('std:utils');
     const log = require$1('std:log');
     const eventBus$a = require$1('std:eventBus');
-    const locale$9 = window.$$locale;
-    const eqlower = utils$d.text.equalNoCase;
+    const locale$b = window.$$locale;
+    const eqlower = utils$f.text.equalNoCase;
     const dataGridTemplate = `
 <div v-lazy="itemsSource" :class="{'data-grid-container':true, 'fixed-header': fixedHeader, 'bordered': border, 'compact': compact}" :test-id="testId">
 	<div class="data-grid-header-border" v-if="fixedHeader" />
@@ -1201,7 +1201,7 @@
             cellCssClass(row, editable) {
                 let cssClass = this.classAlign;
                 if (this.mark) {
-                    const mark = utils$d.simpleEval(row, this.mark);
+                    const mark = utils$f.simpleEval(row, this.mark);
                     if (mark)
                         cssClass += ' ' + mark;
                 }
@@ -1214,7 +1214,7 @@
                         cssClass += cls;
                     else if (bind.startsWith('{')) {
                         const prop = bind.substring(1, bind.length - 1);
-                        if (utils$d.simpleEval(row, prop))
+                        if (utils$f.simpleEval(row, prop))
                             cssClass += cls;
                     }
                 }
@@ -1250,9 +1250,9 @@
                 const col = this.col;
                 const icoSingle = !col.content ? ' ico-single' : '';
                 if (col.bindIcon)
-                    return 'ico-' + utils$d.eval(this.row, col.bindIcon) + icoSingle;
+                    return 'ico-' + utils$f.eval(this.row, col.bindIcon) + icoSingle;
                 else if (col.done)
-                    return (utils$d.eval(this.row, col.done) ? 'ico-success-outline-green' : 'ico-warning-outline-yellow') + icoSingle;
+                    return (utils$f.eval(this.row, col.done) ? 'ico-success-outline-green' : 'ico-warning-outline-yellow') + icoSingle;
                 else if (col.icon)
                     return 'ico-' + col.icon + icoSingle;
                 return null;
@@ -1262,7 +1262,7 @@
             doCommand() {
                 this.col.command.cmd(...this.args);
             },
-            eval: utils$d.eval,
+            eval: utils$f.eval,
             getHref() {
                 const col = this.col;
                 if (!col.command)
@@ -1273,7 +1273,7 @@
                     return '';
                 const [arg1, arg2] = this.args;
                 let id = arg2;
-                if (utils$d.isObjectExact(arg2))
+                if (utils$f.isObjectExact(arg2))
                     id = arg2.$id;
                 return arg1 + '/' + id;
             }
@@ -1299,7 +1299,7 @@
             return vue.h(tag, cellProps);
         }
         function normalizeArg(arg, doEval) {
-            if (utils$d.isBoolean(arg) || utils$d.isNumber(arg) || utils$d.isObjectExact(arg))
+            if (utils$f.isBoolean(arg) || utils$f.isNumber(arg) || utils$f.isObjectExact(arg))
                 return arg;
             arg = arg || '';
             if (arg === 'this')
@@ -1307,7 +1307,7 @@
             else if (arg.startsWith('{')) {
                 arg = arg.substring(1, arg.length - 1);
                 if (arg.indexOf('.') !== -1)
-                    arg = utils$d.eval(row, arg);
+                    arg = utils$f.eval(row, arg);
                 else {
                     if (!(arg in row))
                         throw new Error(`Property '${arg}' not found in ${row.constructor.name} object`);
@@ -1315,7 +1315,7 @@
                 }
             }
             else if (arg && doEval) {
-                arg = utils$d.eval(row, arg, col.dataType, col.evalOpts);
+                arg = utils$f.eval(row, arg, col.dataType, col.evalOpts);
             }
             return arg;
         }
@@ -1331,17 +1331,17 @@
             return vue.h(tag, cellProps, [ix + 1]);
         function isNegativeRed(col) {
             if (col.dataType === 'Number' || col.dataType === 'Currency') {
-                const val = utils$d.eval(row, col.content, col.dataType, col.evalOpts, true /*skip format*/);
+                const val = utils$f.eval(row, col.content, col.dataType, col.evalOpts, true /*skip format*/);
                 if (val < 0)
                     return true;
             }
             return false;
         }
-        let content = utils$d.eval(row, col.content, col.dataType, col.evalOpts);
+        let content = utils$f.eval(row, col.content, col.dataType, col.evalOpts);
         const spanProps = { class: { 'dg-cell': true, 'negative-red': isNegativeRed(col), 'line-clamp': col.lineClamp > 0 } };
         if (col.maxChars) {
             spanProps.title = content;
-            content = utils$d.text.maxChars(content, col.maxChars);
+            content = utils$f.text.maxChars(content, col.maxChars);
         }
         else if (col.lineClamp > 0) {
             spanProps.title = content;
@@ -1352,9 +1352,9 @@
         if (col.icon)
             chElems.unshift(vue.h('i', { class: 'ico ico-' + col.icon + icoSingle }));
         else if (col.bindIcon)
-            chElems.unshift(vue.h('i', { class: 'ico ico-' + utils$d.eval(row, col.bindIcon) + icoSingle }));
+            chElems.unshift(vue.h('i', { class: 'ico ico-' + utils$f.eval(row, col.bindIcon) + icoSingle }));
         else if (col.done)
-            chElems.unshift(vue.h('i', { class: 'ico ico-' + (utils$d.eval(row, col.done) ? 'success-outline-green' : 'warning-outline-yellow') + icoSingle }));
+            chElems.unshift(vue.h('i', { class: 'ico ico-' + (utils$f.eval(row, col.done) ? 'success-outline-green' : 'warning-outline-yellow') + icoSingle }));
         /*TODO: validate ???? */
         if (col.validate) {
             chElems.push(vue.h(cellValidator, { path: col.validate, item: row }));
@@ -1403,7 +1403,7 @@
                 console.error('implement me');
             },
             markClass() {
-                return this.mark ? utils$d.simpleEval(this.row, this.mark) : '';
+                return this.mark ? utils$f.simpleEval(this.row, this.mark) : '';
             },
             _itemActive() {
                 return this.isItemActive ? this.isItemActive(this.index, this.row) : !!this.row.$selected;
@@ -1426,7 +1426,7 @@
                 if (isActive)
                     cssClass += ' active';
                 if (this.grid.isMarkRow && this.mark) {
-                    cssClass += ' ' + utils$d.simpleEval(row, this.mark);
+                    cssClass += ' ' + utils$f.simpleEval(row, this.mark);
                 }
                 if ((this.index + 1) % 2)
                     cssClass += ' even';
@@ -1476,7 +1476,7 @@
                 return this.grid.isMarkCell;
             },
             markClass() {
-                return this.mark ? utils$d.simpleEval(this.row, this.mark) : '';
+                return this.mark ? utils$f.simpleEval(this.row, this.mark) : '';
             },
             detailsMarker() {
                 return this.grid.isRowDetailsCell;
@@ -1595,9 +1595,9 @@
             },
             $groupCount() {
                 const groupBy = this.groupBy;
-                if (utils$d.isString(groupBy))
+                if (utils$f.isString(groupBy))
                     return groupBy.split('-').length;
-                else if (utils$d.isObjectExact(groupBy))
+                else if (utils$f.isObjectExact(groupBy))
                     return 1;
                 else
                     return groupBy.length;
@@ -1632,26 +1632,26 @@
                 const startTime = performance.now();
                 const grmap = {};
                 let grBy = this.groupBy;
-                if (utils$d.isString(grBy)) {
+                if (utils$f.isString(grBy)) {
                     const rarr = [];
                     for (const vs of grBy.split('-'))
                         rarr.push({ prop: vs.trim(), count: true });
                     grBy = rarr;
                 }
-                else if (utils$d.isObjectExact(grBy))
+                else if (utils$f.isObjectExact(grBy))
                     grBy = [grBy];
                 if (!this.$items)
                     return null;
                 for (const itm of this.$items) {
                     let root = grmap;
                     for (const gr of grBy) {
-                        let key = utils$d.eval(itm, gr.prop);
-                        if (utils$d.isDate(key))
-                            key = utils$d.format(key, 'Date');
-                        if (!utils$d.isDefined(key))
+                        let key = utils$f.eval(itm, gr.prop);
+                        if (utils$f.isDate(key))
+                            key = utils$f.format(key, 'Date');
+                        if (!utils$f.isDefined(key))
                             key = '';
                         if (key === '')
-                            key = locale$9.$Unknown || 'Unknown';
+                            key = locale$b.$Unknown || 'Unknown';
                         if (!(key in root))
                             root[key] = {};
                         root = root[key];
@@ -1722,7 +1722,7 @@
             rowDetailsShow(item) {
                 if (!this.rowDetails)
                     return false;
-                if (utils$d.isBoolean(this.rowDetailsVisible))
+                if (utils$f.isBoolean(this.rowDetailsVisible))
                     return this.rowDetailsVisible; // unset
                 const vis = item[this.rowDetailsVisible];
                 return !!vis;
@@ -1731,7 +1731,7 @@
                 let cls = '';
                 if (column.fit || column.controlType === 'validator')
                     cls += 'fit';
-                if (this.sort && column.isSortable && utils$d.isDefined(column.dir))
+                if (this.sort && column.isSortable && utils$f.isDefined(column.dir))
                     cls += ' sorted';
                 if (column.backColor) {
                     cls += ` ${column.backColor}`;
@@ -1740,8 +1740,8 @@
             },
             columnStyle(column) {
                 return {
-                    width: utils$d.isDefined(column.width) ? column.width : undefined,
-                    minWidth: utils$d.isDefined(column.minWidth) ? column.minWidth : undefined
+                    width: utils$f.isDefined(column.width) ? column.width : undefined,
+                    minWidth: utils$f.isDefined(column.minWidth) ? column.minWidth : undefined
                 };
             },
             doSort(order) {
@@ -1795,7 +1795,7 @@
                 g.expanded = !g.expanded;
             },
             isGroupCountVisible(g) {
-                if (g && g.source && utils$d.isDefined(g.source.count))
+                if (g && g.source && utils$f.isDefined(g.source.count))
                     return g.source.count;
                 return true;
             },
@@ -2084,8 +2084,8 @@
     // a2-calendar (Net48 components/calendar.js), unchanged in behaviour: a month of days, or a year of months; the owner
     // (date picker, period picker) moves it and takes the day (setMonth, setDay).
     // Vue 3's compiler refuses children under v-text: the weekday header has none.
-    const utils$c = require$1('std:utils');
-    const locale$8 = window.$$locale;
+    const utils$e = require$1('std:utils');
+    const locale$a = window.$$locale;
     platform$3.vocabulary.component('a2-calendar', vue.defineComponent({
         template: `
 <div @click.stop.prevent="dummy">
@@ -2157,8 +2157,8 @@
                     const ia = [];
                     for (let m = 0; m < 3; m++) {
                         const mno = q * 3 + m;
-                        const dt = utils$c.date.create(this.model.getFullYear(), mno + 1, 1);
-                        const mname = utils$c.text.capitalize(dt.toLocaleDateString(locale$8.$Locale, { month: 'long' }));
+                        const dt = utils$e.date.create(this.model.getFullYear(), mno + 1, 1);
+                        const mname = utils$e.text.capitalize(dt.toLocaleDateString(locale$a.$Locale, { month: 'long' }));
                         ia.push({ date: dt, month: mno + 1, name: mname });
                     }
                     ma.push(ia);
@@ -2172,14 +2172,14 @@
                 return this.pos !== 'left';
             },
             title() {
-                const mn = this.model.toLocaleString(locale$8.$Locale, { month: 'long', year: 'numeric' });
-                return utils$c.text.capitalize(mn);
+                const mn = this.model.toLocaleString(locale$a.$Locale, { month: 'long', year: 'numeric' });
+                return utils$e.text.capitalize(mn);
             },
             todayText() {
-                return locale$8.$Today;
+                return locale$a.$Today;
             },
             todayDate() {
-                return utils$c.date.today();
+                return utils$e.date.today();
             }
         },
         methods: {
@@ -2187,7 +2187,7 @@
             nextMonth() {
                 let dt = new Date(this.model);
                 if (this.isDayView)
-                    dt = utils$c.date.add(dt, 1, 'month');
+                    dt = utils$e.date.add(dt, 1, 'month');
                 else
                     dt.setFullYear(dt.getFullYear() + 1);
                 this.setMonth(dt, this.pos);
@@ -2195,14 +2195,14 @@
             prevMonth() {
                 let dt = new Date(this.model);
                 if (this.isDayView)
-                    dt = utils$c.date.add(dt, -1, 'month');
+                    dt = utils$e.date.add(dt, -1, 'month');
                 else
                     dt.setFullYear(dt.getFullYear() - 1);
                 this.setMonth(dt, this.pos);
             },
             wdTitle(d) {
                 const dt = this.days[0][d - 1];
-                return dt.toLocaleString(locale$8.$Locale, { weekday: 'short' });
+                return dt.toLocaleString(locale$a.$Locale, { weekday: 'short' });
             },
             today() {
                 this.setDay(this.todayDate);
@@ -2218,7 +2218,7 @@
                     cls += this.getDayClass(day);
                     return cls;
                 }
-                const tls = utils$c.date;
+                const tls = utils$e.date;
                 if (tls.equal(day, this.todayDate))
                     cls += ' today';
                 if (tls.equal(day, this.model))
@@ -2233,7 +2233,7 @@
                 return cls;
             },
             dayTitle(day) {
-                return day.toLocaleString(locale$8.$Locale, { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+                return day.toLocaleString(locale$a.$Locale, { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
             },
             mouseOver(day) {
                 if (this.hover)
@@ -2246,11 +2246,11 @@
     // chosen from the predefined menu, two calendars or typed dates; applied, it sets the model dirty and emits
     // <path>.<prop>.change. A popup: a click outside closes it.
     // Vue 3's compiler refuses attributes with no space between them (one calendar's style and :show-today): spaced.
-    const popup$6 = require$1('std:popup');
-    const utils$b = require$1('std:utils');
+    const popup$7 = require$1('std:popup');
+    const utils$d = require$1('std:utils');
     const eventBus$9 = require$1('std:eventBus');
     const uPeriod = require$1('std:period');
-    const du$1 = utils$b.date;
+    const du$1 = utils$d.date;
     const DEFAULT_DEBOUNCE = 150;
     platform$3.vocabulary.component('a2-period-picker', vue.defineComponent({
         extends: control,
@@ -2481,23 +2481,23 @@
             }
         },
         mounted() {
-            popup$6.registerPopup(this.$el);
+            popup$7.registerPopup(this.$el);
             this.$el._close = this.__clickOutside;
         },
         beforeUnmount() {
-            popup$6.unregisterPopup(this.$el);
+            popup$7.unregisterPopup(this.$el);
         }
     }));
 
     // a2-selector (Net48 components/selector.js), unchanged in behaviour: over control; a reference typed or picked from a
     // list fetched as typed (fetch, fetchCommand through the page's $invoke, or itemsSource); a popup.
     // Vue 3: $root was the page (base.js): here the page's controller (inject $page): fetchData's plain-object $vm.
-    const popup$5 = require$1('std:popup');
-    const utils$a = require$1('std:utils');
+    const popup$6 = require$1('std:popup');
+    const utils$c = require$1('std:utils');
     const platform$2 = require$1('std:platform');
-    const locale$7 = window.$$locale;
+    const locale$9 = window.$$locale;
     const eventBus$8 = require$1('std:eventBus');
-    const DEFAULT_DELAY = 300;
+    const DEFAULT_DELAY$1 = 300;
     platform$3.vocabulary.component('a2-selector', vue.defineComponent({
         extends: control,
         template: `
@@ -2587,12 +2587,12 @@
                         return this.textItem[this.textProp];
                 }
                 let el = item[this.prop];
-                if (utils$a.isNumber(el) && this.itemsSource) {
+                if (utils$c.isNumber(el) && this.itemsSource) {
                     el = this.itemsSource.find(x => x.$id === el);
                     if (!el)
                         return '';
                 }
-                return utils$a.simpleEval(el, this.display);
+                return utils$c.simpleEval(el, this.display);
             },
             hasValue() {
                 if (!this.highlight)
@@ -2600,7 +2600,7 @@
                 if (!this.item)
                     return false;
                 const el = this.item[this.prop];
-                if (utils$a.isObjectExact(el) && el.Id && el.Id != -1)
+                if (utils$c.isObjectExact(el) && el.Id && el.Id != -1)
                     return true;
                 return undefined;
             },
@@ -2615,13 +2615,13 @@
                     return false;
                 if (this.useAll && to.Id === -1)
                     return false;
-                if (utils$a.isDefined(to.$isEmpty))
+                if (utils$c.isDefined(to.$isEmpty))
                     return !to.$isEmpty;
-                return !utils$a.isPlainObjectEmpty(to);
+                return !utils$c.isPlainObjectEmpty(to);
             },
             hasText() { return !!this.textProp; },
             newText() {
-                return `${locale$7.$CreateLC} "${this.query}"`;
+                return `${locale$9.$CreateLC} "${this.query}"`;
             },
             pane() {
                 return {
@@ -2659,8 +2659,8 @@
                 return this.item ? this.colorOf(this.item[this.prop]) : undefined;
             },
             debouncedUpdate() {
-                const delay = this.delay || DEFAULT_DELAY;
-                return utils$a.debounce(() => {
+                const delay = this.delay || DEFAULT_DELAY$1;
+                return utils$c.debounce(() => {
                     this.current = -1;
                     this.filter = this.query;
                     this.update();
@@ -2690,7 +2690,7 @@
             colorOf(el) {
                 if (!this.colorProp)
                     return undefined;
-                const clr = utils$a.simpleEval(el, this.colorProp);
+                const clr = utils$c.simpleEval(el, this.colorProp);
                 return clr ? `color color-${clr}` : undefined;
             },
             cssClass2() {
@@ -2716,9 +2716,9 @@
                 return this.items[this.current] === row;
             },
             itemName(itm) {
-                const v = utils$a.simpleEval(itm, this.display);
+                const v = utils$c.simpleEval(itm, this.display);
                 if (this.maxChars)
-                    return utils$a.text.maxChars(v, this.maxChars);
+                    return utils$c.text.maxChars(v, this.maxChars);
                 return v;
             },
             blur() {
@@ -2844,7 +2844,7 @@
                     }
                     if (obj && obj.$merge)
                         obj.$merge(itm, true /*fire*/);
-                    else if (utils$a.isNumber(obj))
+                    else if (utils$c.isNumber(obj))
                         item[this.prop] = itm.$id;
                     else
                         platform$2.set(item, this.prop, itm);
@@ -2864,8 +2864,8 @@
                 }
                 if (obj.$empty)
                     obj.$empty();
-                else if (utils$a.isObjectExact(obj))
-                    utils$a.clearObject(obj);
+                else if (utils$c.isObjectExact(obj))
+                    utils$c.clearObject(obj);
             },
             scrollIntoView() {
                 this.$nextTick(() => {
@@ -2897,7 +2897,7 @@
                         this.items = this.itemsSource;
                     let fi = -1;
                     const el = this.item[this.prop];
-                    if (utils$a.isNumber(el))
+                    if (utils$c.isNumber(el))
                         fi = this.items.findIndex((x) => x.Id === el);
                     else
                         fi = this.items.indexOf(el);
@@ -2923,7 +2923,7 @@
                     });
                 }
                 else {
-                    if (utils$a.isArray(fData)) {
+                    if (utils$c.isArray(fData)) {
                         if (this.items != fData) {
                             if (this.items.length != fData.length)
                                 this.current = -1; // reset current element
@@ -2966,23 +2966,23 @@
             }
         },
         mounted() {
-            popup$5.registerPopup(this.$el);
+            popup$6.registerPopup(this.$el);
             this.query = this.valueText;
             this.$el._close = this.__clickOutside;
         },
         beforeUnmount() {
-            popup$5.unregisterPopup(this.$el);
+            popup$6.unregisterPopup(this.$el);
         }
     }));
 
     // a2-date-picker (Net48 components/datepicker.js), unchanged in behaviour: over control; a date typed, or picked on a
     // calendar (a month, for view 'month'); the time of the model's date is kept. A popup.
-    const popup$4 = require$1('std:popup');
-    const utils$9 = require$1('std:utils');
+    const popup$5 = require$1('std:popup');
+    const utils$b = require$1('std:utils');
     const eventBus$7 = require$1('std:eventBus');
-    const locale$6 = window.$$locale;
-    const dateLocale$2 = locale$6.$DateLocale || locale$6.$Locale;
-    const monthLocale$1 = locale$6.$Locale; // for text
+    const locale$8 = window.$$locale;
+    const dateLocale$2 = locale$8.$DateLocale || locale$8.$Locale;
+    const monthLocale$1 = locale$8.$Locale; // for text
     platform$3.vocabulary.component('a2-date-picker', vue.defineComponent({
         extends: control,
         template: `
@@ -3031,21 +3031,21 @@
                 if (!this.isOpen) {
                     // close other popups
                     eventBus$7.$emit('closeAllPopups');
-                    if (utils$9.date.isZero(this.modelDate))
-                        this.viewDate = utils$9.date.today();
+                    if (utils$b.date.isZero(this.modelDate))
+                        this.viewDate = utils$b.date.today();
                 }
                 this.isOpen = !this.isOpen;
             },
             clear() {
                 this.isOpen = false;
-                this.updateModel(utils$9.date.zero());
+                this.updateModel(utils$b.date.zero());
             },
             updateModel(date) {
                 this.item[this.prop] = date;
                 this.viewDate = date;
             },
             fitDate(dt) {
-                const du = utils$9.date;
+                const du = utils$b.date;
                 if (du.isZero(dt))
                     return dt;
                 if (dt < du.minDate)
@@ -3078,7 +3078,7 @@
             },
             dayClass(day) {
                 let cls = '';
-                const tls = utils$9.date;
+                const tls = utils$b.date;
                 if (tls.equal(day, tls.today()))
                     cls += ' today';
                 if (tls.equal(day, this.modelDate))
@@ -3108,21 +3108,21 @@
                 return this.disabled || this.view === 'month';
             },
             clearVisible() {
-                return this.hasClear && !utils$9.date.isZero(this.modelDate);
+                return this.hasClear && !utils$b.date.isZero(this.modelDate);
             },
             model: {
                 get() {
-                    if (utils$9.date.isZero(this.modelDate))
+                    if (utils$b.date.isZero(this.modelDate))
                         return ' '; /* avoid baseline problem */
                     if (this.view === 'month')
-                        return utils$9.text.capitalize(this.modelDate.toLocaleString(monthLocale$1, { year: 'numeric', month: 'long' }));
+                        return utils$b.text.capitalize(this.modelDate.toLocaleString(monthLocale$1, { year: 'numeric', month: 'long' }));
                     else
                         return this.modelDate.toLocaleString(dateLocale$2, { year: 'numeric', month: '2-digit', day: '2-digit' });
                 },
                 set(str) {
-                    let md = utils$9.date.parse(str, this.yearCutOff);
+                    let md = utils$b.date.parse(str, this.yearCutOff);
                     md = this.fitDate(md);
-                    if (utils$9.date.isZero(md)) {
+                    if (utils$b.date.isZero(md)) {
                         this.updateModel(md);
                         this.isOpen = false;
                     }
@@ -3134,11 +3134,11 @@
         },
         mounted() {
             this.viewDate = this.modelDate;
-            popup$4.registerPopup(this.$el);
+            popup$5.registerPopup(this.$el);
             this.$el._close = this.__clickOutside;
         },
         beforeUnmount() {
-            popup$4.unregisterPopup(this.$el);
+            popup$5.unregisterPopup(this.$el);
         }
     }));
 
@@ -3146,7 +3146,7 @@
     // options in the slot), grouped by groupby; the value is always the itemsSource's element. The server writes it as
     // <select is="vue:combobox"> (ComboBox.cs). v-if beside v-for tests groupby, a prop: Vue 3's order (v-if first)
     // gives the same.
-    const utils$8 = require$1('std:utils');
+    const utils$a = require$1('std:utils');
     const comboBoxTemplate = `<div :class="cssClass()" v-lazy="itemsSource" :test-id="testId">
 	<label v-if="hasLabel"><span v-text="label"/><slot name="hint"/><slot name="link"></slot></label>
 	<div class="input-group">
@@ -3213,8 +3213,8 @@
                     return this.itemsSource;
                 const prop = this.groupby;
                 const items = this.itemsSource;
-                const set = new Set(items.map((x) => utils$8.eval(x, prop)));
-                return Array.from(set).map(key => { return { name: key, items: items.filter((val) => key == utils$8.eval(val, prop)) }; });
+                const set = new Set(items.map((x) => utils$a.eval(x, prop)));
+                return Array.from(set).map(key => { return { name: key, items: items.filter((val) => key == utils$a.eval(val, prop)) }; });
             },
             wrapClass() {
                 let cls = '';
@@ -3225,16 +3225,16 @@
         },
         methods: {
             getName(itm) {
-                return this.nameProp ? utils$8.eval(itm, this.nameProp) : itm.$name;
+                return this.nameProp ? utils$a.eval(itm, this.nameProp) : itm.$name;
             },
             getValue(itm) {
-                return this.valueProp ? utils$8.eval(itm, this.valueProp) : itm;
+                return this.valueProp ? utils$a.eval(itm, this.valueProp) : itm;
             },
             getClass(itm) {
                 if (this.boldProp)
-                    return utils$8.eval(itm, this.boldProp) ? 'bold' : undefined;
+                    return utils$a.eval(itm, this.boldProp) ? 'bold' : undefined;
                 if (this.cssClassProp)
-                    return utils$8.eval(itm, this.cssClassProp);
+                    return utils$a.eval(itm, this.cssClassProp);
                 return undefined;
             },
             getWrapText() {
@@ -3242,7 +3242,7 @@
             },
             getComboValue() {
                 const val = this.item ? this.item[this.prop] : null;
-                if (!utils$8.isObjectExact(val))
+                if (!utils$a.isObjectExact(val))
                     return val;
                 const vProp = this.valueProp || '$id';
                 if (!(vProp in val))
@@ -3257,7 +3257,7 @@
                 const cv = this.getComboValue();
                 if (cv === null)
                     return '';
-                if (utils$8.isObjectExact(cv))
+                if (utils$a.isObjectExact(cv))
                     return this.getName(cv);
                 if (this.itemsSource && this.itemsSource.length) {
                     const vProp = this.valueProp || '$id';
@@ -3398,10 +3398,10 @@
     // a2-blob-image (Net48 components/blobimage.js), unchanged in behaviour: the image of a blob reference (item[prop]:
     // always an object, $id 0 when empty), shown by its url (std:url blobUrl); a file chosen or dropped goes up to
     // _blob/<url>/<prop>, and the answer (Id, Token, Name, Mime) is written into the reference.
-    const url$3 = require$1('std:url');
-    const http = require$1('std:http');
-    const tools = require$1('std:tools');
-    const locale$5 = window.$$locale;
+    const url$4 = require$1('std:url');
+    const http$1 = require$1('std:http');
+    const tools$1 = require$1('std:tools');
+    const locale$7 = window.$$locale;
     platform$3.vocabulary.component('a2-blob-image', vue.defineComponent({
         template: `
 <div class="a2-image">
@@ -3433,13 +3433,13 @@
                 return this.item[this.prop];
             },
             href() {
-                return url$3.blobUrl(this.blob);
+                return url$4.blobUrl(this.blob);
             },
             hasImage() {
                 return !!this.href;
             },
             tip() {
-                return locale$5.$ClickToDownloadPicture;
+                return locale$7.$ClickToDownloadPicture;
             },
             cssStyle() {
                 return { maxWidth: this.width, maxHeight: this.height };
@@ -3469,8 +3469,8 @@
                 const fd = new FormData();
                 fd.append('file', file, file.name);
                 // the door: endpoint from Url, key = prop
-                const uploadUrl = url$3.combine(window.$$rootUrl, '_blob', this.url, this.prop);
-                http.upload(uploadUrl, fd).then((result) => {
+                const uploadUrl = url$4.combine(window.$$rootUrl, '_blob', this.url, this.prop);
+                http$1.upload(uploadUrl, fd).then((result) => {
                     // result = { Id, Token, Name, Mime }
                     input.value = '';
                     const b = this.blob;
@@ -3483,7 +3483,7 @@
                 }).catch((msg) => {
                     input.value = '';
                     if (msg.indexOf('UI:') === 0)
-                        tools.alert(msg.substring(3).replace('\\n', '\n'));
+                        tools$1.alert(msg.substring(3).replace('\\n', '\n'));
                     else
                         alert(msg);
                 });
@@ -3493,8 +3493,8 @@
 
     // a2-blob-preview (Net48 components/blobpreview.js), unchanged in behaviour: a blob reference (value: an object,
     // $id 0 when empty) previewed by its Mime: an image, a pdf object, else a link to it; nothing to show, a note.
-    const url$2 = require$1('std:url');
-    const locale$4 = window.$$locale;
+    const url$3 = require$1('std:url');
+    const locale$6 = window.$$locale;
     platform$3.vocabulary.component('a2-blob-preview', vue.defineComponent({
         template: `<div class="a2-file-preview">
 	<img v-if="isImage" :src="href" :style="cssStyle"/>
@@ -3538,13 +3538,13 @@
             href() {
                 if (!this.hasBlob)
                     return undefined;
-                return url$2.blobUrl(this.val);
+                return url$3.blobUrl(this.val);
             },
             pdfWidth() {
                 return this.width || '100%';
             },
             unavailable() {
-                return locale$4.$PreviewIsUnavailable;
+                return locale$6.$PreviewIsUnavailable;
             },
             cssStyle() {
                 const r = {};
@@ -3560,8 +3560,8 @@
     // a2-list (Net48 components/list.js), unchanged in behaviour: the elements of an array by the slot 'items', grouped
     // by a property if asked, selected by mouse and arrows; the first, the last or the model's element selected at start.
     // Vue 3: $root was the page (base.js): its $modelInfo is the page's controller's (inject $page).
-    const utils$7 = require$1('std:utils');
-    const locale$3 = window.$$locale;
+    const utils$9 = require$1('std:utils');
+    const locale$5 = window.$$locale;
     platform$3.vocabulary.component('a2-list', vue.defineComponent({
         template: `
 <ul class="a2-list" v-lazy="itemsSource">
@@ -3616,13 +3616,13 @@
                     return this.items;
                 const grmap = {};
                 for (const itm of this.items) {
-                    let key = utils$7.eval(itm, this.groupBy);
-                    if (utils$7.isDate(key))
-                        key = utils$7.format(key, 'Date');
-                    if (!utils$7.isDefined(key))
+                    let key = utils$9.eval(itm, this.groupBy);
+                    if (utils$9.isDate(key))
+                        key = utils$9.format(key, 'Date');
+                    if (!utils$9.isDefined(key))
                         key = '';
                     if (key === '')
-                        key = locale$3.$Unknown || 'Unknown';
+                        key = locale$5.$Unknown || 'Unknown';
                     if (!(key in grmap)) {
                         grmap[key] = {
                             group: key,
@@ -3650,7 +3650,7 @@
                 const getMark = (el) => {
                     if (!this.mark)
                         return '';
-                    let cls = utils$7.eval(el, this.mark);
+                    let cls = utils$9.eval(el, this.mark);
                     if (this.markStyle === 'row')
                         cls += ' no-marker';
                     else if (this.markStyle === 'marker')
@@ -3695,7 +3695,7 @@
                 }
                 else if (this.autoSelect === 'item-id') {
                     const rootId = this.page.$modelInfo.Id;
-                    if (!utils$7.isDefined(rootId)) {
+                    if (!utils$9.isDefined(rootId)) {
                         console.error('Id not found in Root.modelInfo');
                         return;
                     }
@@ -3733,7 +3733,7 @@
                     case 34: // pgDn
                         break;
                     case 13: // Enter
-                        if (utils$7.isFunction(this.command)) {
+                        if (utils$9.isFunction(this.command)) {
                             this.command();
                         }
                         break;
@@ -3773,7 +3773,7 @@
     // a2-color-picker (Net48 components/colorpicker.js), unchanged in behaviour: over control; item[prop] is one of the
     // tag colors, picked from a pane or stepped by the arrows. A popup. mounted's query = valueText is Net48's, a copy
     // from the selector that sets nothing used.
-    const popup$3 = require$1('std:popup');
+    const popup$4 = require$1('std:popup');
     const eventBus$6 = require$1('std:eventBus');
     const colorPickerTemplate = `<div class="color-picker" :class="cssClass()" :test-id="testId">
 	<label v-if="hasLabel"><span v-text="label"/><slot name="hint"/><slot name="link"></slot></label>
@@ -3864,22 +3864,22 @@
         },
         mounted() {
             const self = this;
-            popup$3.registerPopup(this.$el);
+            popup$4.registerPopup(this.$el);
             self.query = self.valueText;
             this.$el._close = this.__clickOutside;
         },
         beforeUnmount() {
-            popup$3.unregisterPopup(this.$el);
+            popup$4.unregisterPopup(this.$el);
         }
     }));
 
     // a2-color-combobox (Net48 components/colorcombobox.js), unchanged in behaviour: over control; item[prop] is one of
     // itemsSource, shown as a tag-label of its colorProp, picked from a pane or stepped by the arrows. item[prop] is the
     // element itself (an object) or its valueProp. A popup.
-    const popup$2 = require$1('std:popup');
+    const popup$3 = require$1('std:popup');
     const eventBus$5 = require$1('std:eventBus');
     const platform$1 = require$1('std:platform');
-    const utils$6 = require$1('std:utils');
+    const utils$8 = require$1('std:utils');
     const colorComboboxTemplate = `<div class="color-picker" :class="cssClass()" :test-id="testId">
 	<label v-if="hasLabel"><span v-text="label"/><slot name="hint"/><slot name="link"></slot></label>
 	<div class="input-group">
@@ -3935,13 +3935,13 @@
             cmbValue: {
                 get() {
                     const v = this.item[this.prop];
-                    if (utils$6.isObjectExact(v))
+                    if (utils$8.isObjectExact(v))
                         return v;
                     return this.itemsSource.find((s) => s[this.valueProp] === v);
                 },
                 set(val) {
                     const v = this.item[this.prop];
-                    if (utils$6.isObjectExact(v))
+                    if (utils$8.isObjectExact(v))
                         platform$1.set(this.item, this.prop, val);
                     else
                         this.item[this.prop] = val[this.valueProp];
@@ -3998,18 +3998,18 @@
             }
         },
         mounted() {
-            popup$2.registerPopup(this.$el);
+            popup$3.registerPopup(this.$el);
             this.$el._close = this.__clickOutside;
         },
         beforeUnmount() {
-            popup$2.unregisterPopup(this.$el);
+            popup$3.unregisterPopup(this.$el);
         }
     }));
 
     // a2-pdfreport-viewer (Net48 components/report.js), unchanged in behaviour: the report as pdf in an <object>, from
     // report/show/<the argument's id>?base=<url>&rep=<report>.
-    const url$1 = require$1('std:url');
-    const utils$5 = require$1('std:utils');
+    const url$2 = require$1('std:url');
+    const utils$7 = require$1('std:utils');
     platform$3.vocabulary.component('a2-pdfreport-viewer', vue.defineComponent({
         template: `
 <div class="a2-pdfreport-viewer">
@@ -4025,10 +4025,10 @@
             source() {
                 const root = window.$$rootUrl;
                 let arg = this.argument || 0;
-                if (utils$5.isObjectExact(this.argument)) {
+                if (utils$7.isObjectExact(this.argument)) {
                     arg = this.argument.$id || 0;
                 }
-                return url$1.combine(root, 'report/show', arg) + url$1.makeQueryString({ base: this.url, rep: this.report });
+                return url$2.combine(root, 'report/show', arg) + url$2.makeQueryString({ base: this.url, rep: this.report });
             }
         }
     }));
@@ -4037,9 +4037,9 @@
     // (item) shown while it is $expanded; the rows, header and columns are the page's slots, given the grid as 'that'.
     // Vue 3: <col> is void; $parent.$emit('sort') was heard by a collection view's $on('sort') only, else by none:
     // $parent.doSort, when the parent has one.
-    const utils$4 = require$1('std:utils');
+    const utils$6 = require$1('std:utils');
     const eventBus$4 = require$1('std:eventBus');
-    const debouncedUpdate = utils$4.debounce((pane) => {
+    const debouncedUpdate = utils$6.debounce((pane) => {
         if (!pane)
             return;
         const elem = pane.querySelector('.active');
@@ -4141,7 +4141,7 @@
                     this.doubleclick();
             },
             hasChildren(itm) {
-                const hc = utils$4.isDefined(itm.$hasChildren) && itm.$hasChildren;
+                const hc = utils$6.isDefined(itm.$hasChildren) && itm.$hasChildren;
                 const ch = itm[this.item];
                 return hc || (ch && ch.length > 0);
             },
@@ -4149,17 +4149,17 @@
                 if (this.hasChildren(elm))
                     return true;
                 if (this.isFolder)
-                    return utils$4.simpleEval(elm, this.isFolder);
+                    return utils$6.simpleEval(elm, this.isFolder);
                 return '';
             },
             rowMarkClass(itm) {
                 if (this.isMarkRow && this.mark)
-                    return utils$4.simpleEval(itm.elem, this.mark) + ' ' + this.gridLines;
+                    return utils$6.simpleEval(itm.elem, this.mark) + ' ' + this.gridLines;
                 return this.gridLines;
             },
             rowMarker(itm) {
                 if (this.isMarkRow && this.mark)
-                    return utils$4.simpleEval(itm.elem, this.mark);
+                    return utils$6.simpleEval(itm.elem, this.mark);
                 return '';
             },
             rowClass(itm) {
@@ -4207,7 +4207,7 @@
     // toggles a folder that options.folderSelect does not let select; options name the label, icon, title, css props.
     // Vue 3: tree-item resolves itself by its name; _toggling, a data key Vue 2 did not proxy (so not reactive), is set
     // on the instance in created; $children → ref 'items'.
-    const utils$3 = require$1('std:utils');
+    const utils$5 = require$1('std:utils');
     const eventBus$3 = require$1('std:eventBus');
     const platform = require$1('std:platform');
     //stop for toggle is required!
@@ -4246,7 +4246,7 @@
         methods: {
             isFolderSelect(item) {
                 const fs = this.options.folderSelect;
-                if (utils$3.isFunction(fs))
+                if (utils$5.isFunction(fs))
                     return fs(item);
                 return !!this.options.folderSelect;
             },
@@ -4295,9 +4295,9 @@
         },
         computed: {
             isFolder() {
-                if (utils$3.isDefined(this.item.$hasChildren) && this.item.$hasChildren)
+                if (utils$5.isDefined(this.item.$hasChildren) && this.item.$hasChildren)
                     return true;
-                if (utils$3.isDefined(this.options.isFolder))
+                if (utils$5.isDefined(this.options.isFolder))
                     return this.item[this.options.isFolder];
                 const ch = this.item[this.options.subitems];
                 return ch && ch.length;
@@ -4328,7 +4328,7 @@
             isItemGroup() {
                 const gp = this.options ? this.options.isGroup : undefined;
                 if (gp)
-                    return utils$3.eval(this.item, gp);
+                    return utils$5.eval(this.item, gp);
                 else
                     return this.isGroup && this.isGroup(this.item);
             },
@@ -4904,7 +4904,7 @@
     // a2-tags, a2-tags-list, a2-tags-filter (Net48 components/tagscontrol.js), unchanged in behaviour: an element's tags
     // (item[prop], an array) picked from itemsSource; the tags shown; a filter's tags as ids joined by '-'. a2-tags and
     // a2-tags-filter are popups over control.
-    const popup$1 = require$1('std:popup');
+    const popup$2 = require$1('std:popup');
     const eventBus$2 = require$1('std:eventBus');
     const template$2 = `
 <div class="tags-control" :class="cssClass()" :test-id="testId">
@@ -5039,11 +5039,11 @@
             }
         },
         mounted() {
-            popup$1.registerPopup(this.$el);
+            popup$2.registerPopup(this.$el);
             this.$el._close = this.__clickOutside;
         },
         beforeUnmount() {
-            popup$1.unregisterPopup(this.$el);
+            popup$2.unregisterPopup(this.$el);
         }
     }));
     platform$3.vocabulary.component('a2-tags-list', vue.defineComponent({
@@ -5125,11 +5125,11 @@
             }
         },
         mounted() {
-            popup$1.registerPopup(this.$el);
+            popup$2.registerPopup(this.$el);
             this.$el._close = this.__clickOutside;
         },
         beforeUnmount() {
-            popup$1.unregisterPopup(this.$el);
+            popup$2.unregisterPopup(this.$el);
         }
     }));
 
@@ -5461,11 +5461,11 @@
     // or picked on a sheet (an hour, then minutes by 5, which closes it); the date is kept, a zero date is today's on
     // open. A popup. beforeDestroy is beforeUnmount. The sheet's headers lose their text under v-text (Години, Хвилини):
     // Vue 2's v-text replaced it, Vue 3's compiler refuses it.
-    const popup = require$1('std:popup');
-    const utils$2 = require$1('std:utils');
+    const popup$1 = require$1('std:popup');
+    const utils$4 = require$1('std:utils');
     const eventBus = require$1('std:eventBus');
-    const locale$2 = window.$$locale;
-    const dateLocale$1 = locale$2.$DateLocale || locale$2.$Locale;
+    const locale$4 = window.$$locale;
+    const dateLocale$1 = locale$4.$DateLocale || locale$4.$Locale;
     const timesheet = vue.defineComponent({
         props: {
             model: Date,
@@ -5506,7 +5506,7 @@
             }
         },
         computed: {
-            locale() { return locale$2; },
+            locale() { return locale$4; },
             hours() {
                 const a = [];
                 for (let y = 0; y < 4; y++) {
@@ -5576,8 +5576,8 @@
                 if (!this.isOpen) {
                     // close other popups
                     eventBus.$emit('closeAllPopups');
-                    if (utils$2.date.isZero(this.modelDate))
-                        this.item[this.prop] = utils$2.date.today();
+                    if (utils$4.date.isZero(this.modelDate))
+                        this.item[this.prop] = utils$4.date.today();
                 }
                 this.isOpen = !this.isOpen;
             },
@@ -5621,16 +5621,16 @@
             model: {
                 get() {
                     const md = this.modelDate;
-                    if (utils$2.date.isZero(md))
+                    if (utils$4.date.isZero(md))
                         return '';
                     return md.toLocaleTimeString(dateLocale$1, { hour: '2-digit', minute: "2-digit" });
                 },
                 set(str) {
                     let md = new Date(this.modelDate);
                     if (str) {
-                        if (utils$2.date.isZero(md))
-                            md = utils$2.date.today();
-                        const time = utils$2.date.parseTime(str);
+                        if (utils$4.date.isZero(md))
+                            md = utils$4.date.today();
+                        const time = utils$4.date.parseTime(str);
                         md.setHours(time.getHours(), time.getMinutes());
                     }
                     else {
@@ -5642,11 +5642,11 @@
             }
         },
         mounted() {
-            popup.registerPopup(this.$el);
+            popup$1.registerPopup(this.$el);
             this.$el._close = this.__clickOutside;
         },
         beforeUnmount() {
-            popup.unregisterPopup(this.$el);
+            popup$1.unregisterPopup(this.$el);
         }
     }));
 
@@ -6038,14 +6038,243 @@
         }
     }));
 
-    // a2-file-preview (Net48 components/image.js), unchanged in behaviour: the file value (an object with Mime) at
-    // /_file/<url>/<id>?token=…, an <img> for image/*, an <object> for a pdf, else "preview is unavailable". The other
-    // components of image.js (a2-image over a2-upload, a2-file-image, a2-static-image) are not ported yet.
-    // Net48's template had a stray quote after v-if="isImage" and v-else-if="isPdf": Vue 2's parser took it, Vue 3's
-    // compiler refuses it; dropped.
+    // a2-upload (Net48 components/upload.js), unchanged in behaviour: a label with a file input, dropped on or clicked;
+    // the files posted to /_image/<base>/<prop>/<id>, the answer's { status: 'OK', elems: [{ Id, Token }] } written to
+    // item[prop] (a reference's $id and $token, or the id with the token beside it in item); newItem appends one element
+    // per file to item's parent array. A file over limit (KB) is refused with an alert. a2-simple-upload of upload.js is
+    // not ported yet.
+    const url$1 = require$1('std:url');
+    const http = require$1('std:http');
+    const tools = require$1('std:tools');
+    const utils$3 = require$1('std:utils');
+    const locale$3 = window.$$locale;
+    platform$3.vocabulary.component('a2-upload', vue.defineComponent({
+        template: `
+<label :class="cssClass" @dragover="dragOver" @dragleave="dragLeave">
+	<input v-if='canUpload' type="file" @change="uploadImage" v-bind:multiple="isMultiple" :accept="accept" />
+	<i class="ico" :class="icoClass"></i>
+	<span class="upload-tip" v-text="tip" v-if="tip"></span>
+</label>
+		`,
+        props: {
+            item: Object,
+            prop: String,
+            base: String,
+            newItem: Boolean,
+            tip: String,
+            readOnly: Boolean,
+            accept: String,
+            limit: Number,
+            icon: String
+        },
+        data() {
+            return {
+                hover: false
+            };
+        },
+        computed: {
+            cssClass() {
+                return 'file-upload' + (this.hover ? ' hover' : '');
+            },
+            isMultiple() {
+                return !!this.newItem;
+            },
+            canUpload() {
+                return !this.readOnly;
+            },
+            icoClass() {
+                if (this.icon)
+                    return `ico-${this.icon}`;
+                return this.accept === 'image/*' ? 'ico-image' : 'ico-upload';
+            }
+        },
+        methods: {
+            dragOver(ev) {
+                this.hover = true;
+                ev.preventDefault();
+            },
+            dragLeave(ev) {
+                this.hover = false;
+                ev.preventDefault();
+            },
+            checkLimit(file) {
+                if (!this.limit)
+                    return false;
+                const sizeKB = file.size / 1024;
+                return sizeKB > this.limit;
+            },
+            uploadImage(ev) {
+                const target = ev.target;
+                const item = this.item;
+                const root = window.$$rootUrl;
+                let id = item[this.prop];
+                if (utils$3.isObjectExact(id))
+                    id = id.$id;
+                const imgUrl = url$1.combine(root, '_image', this.base, this.prop, id);
+                const fd = new FormData();
+                for (const file of target.files) {
+                    if (this.checkLimit(file)) {
+                        target.value = ''; // clear current selection
+                        const msg = locale$3.$FileTooLarge.replace('{0}', this.limit);
+                        tools.alert(msg);
+                        return;
+                    }
+                    fd.append('file', file, file.name);
+                }
+                http.upload(imgUrl, fd).then((result) => {
+                    // result = {status: '', elems:[Id:0, Token:'']}
+                    target.value = ''; // clear current selection
+                    let token = undefined;
+                    if (item._meta_)
+                        token = item._meta_.$token;
+                    if (result.status === 'OK') {
+                        if (this.newItem) {
+                            const p0 = item.$parent;
+                            for (const elem of result.elems) {
+                                const ni = p0.$append();
+                                ni[this.prop] = elem.Id;
+                                ni[token] = elem.Token;
+                            }
+                        }
+                        else {
+                            const elem = item[this.prop];
+                            if (utils$3.isObjectExact(elem)) {
+                                elem[elem._meta_.$id] = result.elems[0].Id;
+                                elem[elem._meta_.$token] = result.elems[0].Token;
+                            }
+                            else {
+                                item[this.prop] = result.elems[0].Id;
+                                item[token] = result.elems[0].Token;
+                            }
+                        }
+                    }
+                }).catch((msg) => {
+                    if (msg.indexOf('UI:') === 0)
+                        tools.alert(msg.substring(3).replace('\\n', '\n'));
+                    else
+                        alert(msg);
+                });
+            }
+        }
+    }));
+
+    // a2-image, a2-file-preview (Net48 components/image.js), unchanged in behaviour. a2-file-image and a2-static-image of
+    // image.js are not ported yet.
+    // - a2-image: item[prop] (a reference with $id and $token, or an id with the token beside it in item) at
+    //   /_image/<base>/<prop>/<id>?token=…, removed by ✕ ($empty, or $remove inArray); none: a2-upload (upload.ts).
+    // - a2-file-preview: the file value (an object with Mime) at /_file/<url>/<id>?token=…, an <img> for image/*, an
+    //   <object> for a pdf, else "preview is unavailable". Net48's template had a stray quote after v-if="isImage" and
+    //   v-else-if="isPdf": Vue 2's parser took it, Vue 3's compiler refuses it; dropped.
     const url = require$1('std:url');
-    const utils$1 = require$1('std:utils');
-    const locale$1 = window.$$locale;
+    const utils$2 = require$1('std:utils');
+    const locale$2 = window.$$locale;
+    platform$3.vocabulary.component('a2-image', vue.defineComponent({
+        template: `
+<div class="a2-image">
+	<img v-if="hasImage" :src="href" :style="cssStyle" @click.prevent="clickOnImage"/>
+	<a class="remove-image" v-if="hasRemove" @click.prevent="removeImage">&#x2715;</a>
+	<a2-upload v-if="isUploadVisible" :style=uploadStyle accept="image/*"
+		:item=itemForUpload :base=base :prop=prop :new-item=newItem :tip=tip :read-only=readOnly :limit=limit :icon=icon></a2-upload>
+</div>
+`,
+        props: {
+            base: String,
+            item: Object,
+            prop: String,
+            newItem: Boolean,
+            inArray: Boolean,
+            source: Array,
+            width: String,
+            height: String,
+            readOnly: Boolean,
+            limit: Number,
+            placeholder: String,
+            icon: String
+        },
+        data() {
+            return {
+                newElem: {}
+            };
+        },
+        computed: {
+            href() {
+                if (this.newItem)
+                    return undefined;
+                const root = window.$$rootUrl;
+                const elem = this.imageOjb;
+                if (!elem || !elem.id)
+                    return undefined;
+                return url.combine(root, '_image', this.base, this.prop, elem.id) + url.makeQueryString({ token: elem.token });
+            },
+            tip() {
+                if (this.readOnly)
+                    return this.placeholder;
+                return this.placeholder ? this.placeholder : locale$2.$ClickToDownloadPicture;
+            },
+            cssStyle() {
+                return { maxWidth: this.width, maxHeight: this.height };
+            },
+            uploadStyle() {
+                const w = { width: this.width, height: this.height };
+                if (!w.width)
+                    w.width = w.height;
+                if (!w.height)
+                    w.height = w.width;
+                return w;
+            },
+            hasImage() {
+                return !!this.href;
+            },
+            hasRemove() {
+                if (this.readOnly)
+                    return false;
+                return this.hasImage;
+            },
+            isUploadVisible() {
+                if (this.newItem)
+                    return true;
+                if (this.readOnly)
+                    return !this.hasImage;
+                return !this.inArray && !this.hasImage;
+            },
+            imageOjb() {
+                const item = this.item;
+                const elem = item[this.prop];
+                if (!elem)
+                    return undefined;
+                if (utils$2.isObjectExact(elem))
+                    return { id: elem.$id, token: elem[elem._meta_.$token] };
+                else
+                    return { id: elem, token: item[item._meta_.$token] };
+            },
+            itemForUpload() {
+                return this.newItem ? this.newElem : this.item;
+            }
+        },
+        methods: {
+            removeImage() {
+                const item = this.item;
+                if (this.inArray)
+                    item.$remove();
+                else {
+                    const elem = item[this.prop];
+                    if (utils$2.isObjectExact(elem))
+                        elem.$empty();
+                    else
+                        item[this.prop] = undefined;
+                }
+            },
+            clickOnImage() {
+                //alert('click on image');
+            }
+        },
+        created() {
+            const source = this.source;
+            if (this.newItem && source && source.$new) {
+                this.newElem = source.$new();
+            }
+        }
+    }));
     platform$3.vocabulary.component('a2-file-preview', vue.defineComponent({
         template: `<div class="a2-file-preview">
 		<img v-if="isImage" :src=href :style=cssStyle />
@@ -6064,7 +6293,7 @@
         },
         computed: {
             mime() {
-                if (utils$1.isObjectExact(this.value))
+                if (utils$2.isObjectExact(this.value))
                     return this.value.Mime;
                 console.error('value must be an Object');
                 return undefined;
@@ -6083,15 +6312,15 @@
                 const value = this.value;
                 let id = value;
                 const qry = {};
-                if (utils$1.isObjectExact(value)) {
-                    id = utils$1.getStringId(value);
+                if (utils$2.isObjectExact(value)) {
+                    id = utils$2.getStringId(value);
                     if (value._meta_ && value._meta_.$token)
                         qry.token = value[value._meta_.$token];
                 }
                 return url.combine(root, '_file', this.url, id) + url.makeQueryString(qry);
             },
             unavailable() {
-                return locale$1.$PreviewIsUnavailable;
+                return locale$2.$PreviewIsUnavailable;
             },
             cssStyle() {
                 const r = {};
@@ -6109,12 +6338,12 @@
     // event goes to delegates.ClickDay, ClickEvent. In a week the current time's line is redrawn every 10 seconds.
     // destroyed is unmounted.
     const TODAY_COLOR = "#fffff080"; // sync with LESS!
-    const locale = window.$$locale;
-    const dateLocale = locale.$DateLocale || locale.$Locale;
-    const monthLocale = locale.$Locale; // for text
-    const utils = require$1('std:utils');
-    const tu = utils.text;
-    const du = utils.date;
+    const locale$1 = window.$$locale;
+    const dateLocale = locale$1.$DateLocale || locale$1.$Locale;
+    const monthLocale = locale$1.$Locale; // for text
+    const utils$1 = require$1('std:utils');
+    const tu = utils$1.text;
+    const du = utils$1.date;
     platform$3.vocabulary.component('a2-big-calendar', vue.defineComponent({
         template: `
 <div class="a2-big-calendar">
@@ -6216,7 +6445,7 @@
         },
         computed: {
             locale() {
-                return locale;
+                return locale$1;
             },
             modelDate() {
                 return this.item[this.prop];
@@ -6392,6 +6621,202 @@
         unmounted() {
             if (this.timerId)
                 clearInterval(this.timerId);
+        }
+    }));
+
+    // a2-multiselect (A2v10.Core Scripts/multiselect.js), unchanged in behaviour: item[prop] an array of { Id, Name } shown
+    // as tags; a pane fetches by the typed text (url's fetch through the page's $invoke, with fetchData), its checks applied
+    // to the array; the search link adds one picked in url's browse dialog. A popup.
+    // Vue 3: $root was the page (base.js): here the page's controller (inject $page); Vue.nextTick is $nextTick;
+    // destroyed is beforeUnmount.
+    const popup = require$1('std:popup');
+    const utils = require$1('std:utils');
+    const locale = window.$$locale;
+    const DEFAULT_DELAY = 300;
+    platform$3.vocabulary.component('a2-multiselect', vue.defineComponent({
+        template: `
+<div class="a2-multiselect control-group" :style="{'--x-width': maxWidth}">
+	<label v-text="label" />
+	<div class="input-group" @click.stop.prevent=toggle>
+		<div class="ms-placeholder" v-if="isEmpty">
+			<span v-text="placeholder" />
+		</div>
+		<div class="ms-text" v-else>
+			<span v-for="el in selArray" class="ms-tag">
+				<span v-text="el.Name" class="ms-tag-body"/>
+				<button @click.stop="removeItem(el)" class="ms-tag-remove">✕</button>
+			</span>
+		</div>
+		<a href="" class="a2-hyperlink add-on" @click.stop.prevent=browseItem>
+			<i class="ico ico-search"/>
+		</a>
+	</div>
+	<div v-if="isOpen" class="ms-pane">
+		<div class="input-group">
+			<input v-focus v-model="query" @input="debouncedUpdate" class="ms-fetch"
+				:placeholder="locale.$Search">
+		</div>
+		<ul class="ms-pane-list">
+			<li v-for="itm in items" class="ms-pane-item" @click.stop="clickItem(itm)" :class="itemClass(itm)">
+				<i class="ico" :class="itmIcon(itm)" />
+				<span v-text="itm.Name" class="ms-pane-item-text line-clamp"/>
+			</li>
+		</ul>
+		<div class="ms-pane-footer">
+			<button class="btn btn-primary sm" @click=apply v-text="locale.$Apply"/>
+			<button class="btn sm" @click=close v-text="locale.$Cancel"/>
+		</div>
+	</div>
+</div>
+`,
+        inject: {
+            page: { from: '$page', default: null }
+        },
+        props: {
+            item: Object,
+            prop: String,
+            url: String,
+            label: String,
+            placeholder: String,
+            fetchData: Object
+        },
+        data() {
+            return {
+                isOpen: false,
+                query: '',
+                items: [],
+                maxWidth: '250px'
+            };
+        },
+        computed: {
+            selArray() {
+                return this.item[this.prop];
+            },
+            locale() {
+                return locale;
+            },
+            isEmpty() {
+                return !this.selArray.length;
+            },
+            debouncedUpdate() {
+                const delay = DEFAULT_DELAY;
+                return utils.debounce(async () => {
+                    if (!this.query) {
+                        this.items.splice(0);
+                        return;
+                    }
+                    const invokeArg = Object.assign({}, { Text: this.query }, this.fetchData);
+                    const el = await this.page.$invoke('fetch', invokeArg, this.url);
+                    if (!el)
+                        return;
+                    const keys = Object.keys(el);
+                    if (!keys || !keys.length)
+                        return;
+                    const arr = el[keys[0]];
+                    this.items.splice(0);
+                    for (const ai of arr)
+                        this.items.push({ Id: ai.Id, Name: ai.Name, Checked: this.isChecked(ai) });
+                }, delay);
+            }
+        },
+        methods: {
+            async browseItem() {
+                const vm = this.page;
+                const be = await vm.$showDialog(this.url + '/browse', null, this.fetchData);
+                if (!be)
+                    return;
+                if (this.selArray.find((a) => a.Id === be.Id))
+                    return;
+                const arr = this.item[this.prop];
+                const nelem = { Id: be.Id, Name: be.Name };
+                if (arr.$append)
+                    arr.$append(nelem);
+                else
+                    arr.push(nelem);
+            },
+            isChecked(itm) {
+                return !!this.selArray.find((x) => x.Id === itm.Id);
+            },
+            itmIcon(itm) {
+                return itm.Checked ? 'ico-checkbox-checked' : 'ico-checkbox';
+            },
+            clickItem(itm) {
+                itm.Checked = !itm.Checked;
+            },
+            apply() {
+                for (const x of this.items) {
+                    if (x.Checked)
+                        this.addItemToFilter(x);
+                    else
+                        this.removeItemFromFilter(x);
+                }
+                this.close();
+            },
+            addItemToFilter(itm) {
+                const ix = this.selArray.findIndex((x) => x.Id === itm.Id);
+                if (ix >= 0)
+                    return;
+                const nelem = { Id: itm.Id, Name: itm.Name };
+                const arr = this.selArray;
+                if (arr.$append)
+                    arr.$append(nelem);
+                else
+                    arr.push(nelem);
+            },
+            removeItemFromFilter(itm) {
+                const arr = this.selArray;
+                const ix = arr.findIndex((x) => x.Id === itm.Id);
+                if (ix < 0)
+                    return;
+                const el = arr[ix];
+                if (el.$remove)
+                    el.$remove();
+                else
+                    arr.splice(ix, 1);
+            },
+            itemClass(itm) {
+                return itm.Checked ? 'active' : undefined;
+            },
+            toggle() {
+                if (this.isOpen)
+                    this.close();
+                else {
+                    this.isOpen = true;
+                    this.$nextTick(() => {
+                        const cs = this.$el.getElementsByClassName('ms-fetch');
+                        if (cs && cs.length && cs[0].focus)
+                            cs[0].focus();
+                    });
+                }
+            },
+            close() {
+                this.isOpen = false;
+                this.items.splice(0);
+                this.query = '';
+            },
+            removeItem(x) {
+                if (x.$remove)
+                    x.$remove();
+                else {
+                    const ix = this.selArray.indexOf(x);
+                    if (ix < 0)
+                        return;
+                    this.selArray.splice(ix, 1);
+                }
+            },
+            __clickOutside(el) {
+                if (el && el.closest && el.closest(".ms-pane"))
+                    return;
+                this.close();
+            }
+        },
+        mounted() {
+            popup.registerPopup(this.$el);
+            this.$el._close = this.__clickOutside;
+            this.maxWidth = (this.$el.offsetWidth - 62) + 'px';
+        },
+        beforeUnmount() {
+            popup.unregisterPopup(this.$el);
         }
     }));
 
