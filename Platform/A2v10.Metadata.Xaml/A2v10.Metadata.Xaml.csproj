@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
 		<!-- one version with A2v10.Metadata and the a2 CLI: it reads the layer's internals -->
-		<Version>10.1.8671</Version>
+		<Version>10.1.8672</Version>
 		<LangVersion>Latest</LangVersion>
 		<Product>A2v10</Product>
 		<ImplicitUsings>disable</ImplicitUsings>
@@ -35,7 +35,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.402" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.403" PrivateAssets="All" />
 	</ItemGroup>
 
 	<ItemGroup>

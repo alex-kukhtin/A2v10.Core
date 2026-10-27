@@ -59,7 +59,7 @@ public class Startup(IConfiguration configuration)
 	{
 		//services.AddSingleton<ILicenseManager, LicenseManager>();
 		//!!!Before UsePlatform(). It has a default implementation.
-		//services.UseMailClient();
+		services.UseMailClient();
 		services.UseAppMetadata()
 			.UseAppMetadataXaml();
 		//services.UsePermissions();

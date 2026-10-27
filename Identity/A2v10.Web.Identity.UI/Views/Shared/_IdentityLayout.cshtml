@@ -30,7 +30,8 @@ GitHub: https://github.com/alex-kukhtin/A2v10.Core
 	<link rel="icon" href="/favicon.ico" type="image/x-icon" />
 </head>
 <body class="@appTheme.BodyCssClass">
-	<div id="app" class="shell login-shell" v-cloak>
+	@* v-cloak only for a page with an app (it defines Scripts): a page without one stays as rendered *@
+	<div id="app" class="shell login-shell" @Html.Raw(IsSectionDefined("Scripts") ? "v-cloak" : "")>
 		<header class="header">
 			<a class="h-block" href="/">
 				@if (hasLogo) {

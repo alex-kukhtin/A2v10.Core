@@ -35,7 +35,7 @@ public static class ServiceExtensions
 		{
 			ClientFramework.Vue2 => ActivatorUtilities.CreateInstance<VueDataScripter>(s),
 			ClientFramework.Vue3 => ActivatorUtilities.CreateInstance<Vue3DataScripter>(s),
-			var fw => throw HostHelpers.UnsupportedFramework(fw)
+			var fw => throw ClientFrameworkExtensions.UnsupportedFramework(fw)
 		});
 
 		services.AddScoped<IUserDevice, WebUserDevice>();

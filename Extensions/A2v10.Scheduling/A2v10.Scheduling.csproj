@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
-		<Version>10.1.8671</Version>
+		<Version>10.1.8672</Version>
 		<LangVersion>Latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<Product>A2v10</Product>
@@ -32,10 +32,10 @@
 
 	<ItemGroup>
 		<PackageReference Include="A2v10.Data.Interfaces" Version="10.1.7625" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.13" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.13" />
-		<PackageReference Include="Quartz.AspNetCore" Version="3.22.5" />
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.402" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.14" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.14" />
+		<PackageReference Include="Quartz.AspNetCore" Version="3.22.9" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.403" PrivateAssets="All" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -1,0 +1,80 @@
+@model TwoFactorViewModel
+@inject ILocalizer _loc
+
+<div class="center-page">
+	<div class="initial-form">
+		<h3 class="a2-header text-center">@Html.Raw(_loc["TwoFactorPrompt"])</h3>
+		<hr />
+		<div v-if="serverError" class="validation-summary" style="margin-top:10px">
+			<span class="error" v-text="serverError"></span>
+		</div>
+		<div>
+			<p class="text-center">@Html.Raw(_loc["AuthenticatorText"])</p>
+			<div class="control-group" style="width:60%;margin:auto" v-bind:class="{invalid: !!errors.code}">
+				<label class="a2-label" style="text-align:center;margin-bottom:5px">@Html.Raw(_loc["AuthenticationCode"])</label>
+				<div class="input-group">
+					<input v-focus class="control text-center" type="text" v-model="code" tabindex="1" spellcheck="false" autocomplete="one-time-code" v-on:keydown.enter.stop.prevent="submit"/>
+					<div class="validator" v-if="errors.code">
+						<span class="error" v-text="errors.code"></span>
+					</div>
+				</div>
+			</div>
+
+			<button v-on:click.stop.prevent="submit" class="btn btn-primary">@Html.Raw(_loc["Verify"])</button>
+			<label class="checkbox" style="width:60%;margin:1rem auto;">
+				<input type="checkbox" v-model="rememberMe" tabindex="3" />
+				<span>@Html.Raw(_loc["RememberCredentials"])</span>
+			</label>
+		</div>
+
+		<a tabindex="3" href="/" class="a2-hyperlink">@Html.Raw(_loc["Login"])</a>
+	</div>
+</div>
+
+@section Scripts
+{
+<script type="text/javascript">
+'use strict';
+(function () {
+
+const page = @await Html.PartialAsync("~/Views/Account/TwoFactorPage.cshtml", Model);
+const validators = a2v10.platform.require('std:validators');
+
+// the first error of the member's rules, or ''
+function errorOf(rule, state, value) {
+	const errs = validators.validate(rule, state, value);
+	return errs.length ? errs[0].msg : '';
+}
+
+__identityApp({
+	data() {
+		return {
+			code: '',
+			rememberMe: true,
+			submitted: false,
+			serverError: ''
+		};
+	},
+	computed: {
+		// by the rules' members; shown after the first submit, as the user edits
+		errors() {
+			if (!this.submitted) return {};
+			return Object.fromEntries(Object.entries(page.rules).map(([key, rule]) => [key, errorOf(rule, this, this[key])]));
+		}
+	},
+	methods: {
+		async submit() {
+			this.submitted = true;
+			this.serverError = '';
+			if (Object.values(this.errors).some(e => e)) return;
+			const result = await page.submit({ code: this.code, rememberMe: this.rememberMe });
+			if (result.url)
+				window.location.replace(result.url);
+			else
+				this.serverError = result.error;
+		}
+	}
+});
+})();
+</script>
+}

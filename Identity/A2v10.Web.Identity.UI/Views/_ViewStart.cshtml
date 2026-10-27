@@ -1,3 +1,4 @@
-﻿@{
-	Layout = "_IdentityLayout";
+﻿@inject IOptions<AppOptions> _appOptions
+@{
+	Layout = _appOptions.Value.Framework.ViewName("_IdentityLayout");
 }

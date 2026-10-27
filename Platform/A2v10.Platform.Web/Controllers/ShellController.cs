@@ -142,7 +142,7 @@ public class ShellController(IDbContext _dbContext, IApplicationHost _host, ICur
 		{
 			ClientFramework.Vue2 => Resource.shellPlain,
 			ClientFramework.Vue3 => ShellScriptsVue3.Plain,
-			var fw => throw HostHelpers.UnsupportedFramework(fw)
+			var fw => throw ClientFrameworkExtensions.UnsupportedFramework(fw)
 		};
 
 		ExpandoObject loadPrms = [];

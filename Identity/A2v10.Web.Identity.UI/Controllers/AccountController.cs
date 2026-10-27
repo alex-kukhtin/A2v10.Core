@@ -44,10 +44,12 @@ public class AccountController(
 	ICurrentUser _currentUser,
 	IAppCodeProvider _appCodeProvider,
     IOptions<AppUserStoreOptions<Int64>> userStoreOptions,
+	IOptions<AppOptions> appOptions,
 	IOAuthConsent? _oauthConsent = null /* registered by the MCP package; without it there is no consent screen */) : Controller
 {
     private readonly IDataProtector _protector = protectionProvider.CreateProtector("Login");
 	private readonly AppUserStoreOptions<Int64> _userStoreOptions = userStoreOptions.Value;
+	private readonly AppOptions _appOptions = appOptions.Value;
 
     private Boolean IsMultiTenant => _userStoreOptions.MultiTenant ?? false;
 	private String? CatalogDataSource => _userStoreOptions.DataSource;
@@ -166,7 +168,7 @@ public class AccountController(
 			LoginProviders = providers != null ? String.Join(',', providers) : "Local",
 			ReturnUrl = returnUrl
 		};
-        return View(m);
+        return View(_appOptions.Framework.ViewName("Login"), m);
 	}
 
 	/*
@@ -251,7 +253,7 @@ public class AccountController(
 			Theme = _appTheme.MakeTheme(),
 			RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken
 		};
-		return View(m);
+		return View(_appOptions.Framework.ViewName("Register"), m);
 	}
 
 	async Task SendConfirmCode(AppUser<Int64> user)
@@ -339,7 +341,7 @@ public class AccountController(
 			Theme = _appTheme.MakeTheme(),
 			RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken
 		};
-		return View(m);
+		return View(_appOptions.Framework.ViewName("ForgotPassword"), m);
 	}
 
     [HttpPost]
@@ -419,7 +421,7 @@ public class AccountController(
 			var identityResult = await _userManager.ResetPasswordAsync(user, changePasswordToken, model.Password);
 			if (identityResult.Succeeded)
 				return new JsonResult(JsonResponse.Redirect("/account/login"));
-            return new JsonResult(JsonResponse.Error(String.Join(", ", identityResult.Errors)));
+            return new JsonResult(JsonResponse.Error(String.Join(", ", identityResult.Errors.Select(x => x.Description))));
         }
         catch (Exception ex)
 		{
@@ -446,7 +448,7 @@ public class AccountController(
 			Token = token,
             RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken
         };
-        return View(m);
+        return View(_appOptions.Framework.ViewName("Invite"), m);
     }
 
     [HttpPost]
@@ -467,12 +469,12 @@ public class AccountController(
 
             var confirmResult = await _userManager.ConfirmEmailAsync(user, model.Token);
             if (!confirmResult.Succeeded)
-                return new JsonResult(JsonResponse.Error(String.Join(", ", confirmResult.Errors.Select(x => x.Code))));
+                return new JsonResult(JsonResponse.Error(String.Join(", ", confirmResult.Errors.Select(x => x.Description))));
 
             var changePasswordToken = await _userManager.GeneratePasswordResetTokenAsync(user);
             var resetPasswordResult = await _userManager.ResetPasswordAsync(user, changePasswordToken, model.Password);
             if (!resetPasswordResult.Succeeded)
-                return new JsonResult(JsonResponse.Error(String.Join(", ", resetPasswordResult.Errors.Select(x => x.Code))));
+                return new JsonResult(JsonResponse.Error(String.Join(", ", resetPasswordResult.Errors.Select(x => x.Description))));
 
             user.PersonName = model.PersonName;
             user.PhoneNumber = model.Phone;
@@ -480,7 +482,7 @@ public class AccountController(
 
             var updateResult = await _userManager.UpdateAsync(user);
             if (!updateResult.Succeeded)
-                return new JsonResult(JsonResponse.Error(String.Join(", ", updateResult.Errors.Select(x => x.Code))));
+                return new JsonResult(JsonResponse.Error(String.Join(", ", updateResult.Errors.Select(x => x.Description))));
 
             await _signInManager.SignInAsync(user, isPersistent: true);
             RemoveAntiforgeryCookie();
@@ -604,7 +606,7 @@ public class AccountController(
 			Theme = _appTheme.MakeTheme(),
 			RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken
 		};
-		return View(m);
+		return View(_appOptions.Framework.ViewName("ConfirmCode"), m);
 	}
 
 	[HttpPost]
@@ -839,7 +841,7 @@ public class AccountController(
 				Token = token,
 				RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken
 			};
-			return View(vm);
+			return View(_appOptions.Framework.ViewName("InitPassword"), vm);
 		}
 		catch (Exception)
 		{
@@ -880,7 +882,7 @@ public class AccountController(
 				return new JsonResult(JsonResponse.Redirect("/"));
 			}
 			else
-				return new JsonResult(JsonResponse.Error(String.Join(", ", identityResult.Errors.Select(e => e.Code))));
+				return new JsonResult(JsonResponse.Error(String.Join(", ", identityResult.Errors.Select(e => e.Description))));
 		}
 		catch (Exception ex) 
 		{
@@ -889,7 +891,7 @@ public class AccountController(
 	}
 
 	[HttpGet]
-	public async Task<IActionResult> TwoFactor([FromQuery] String login)
+	public async Task<IActionResult> TwoFactor([FromQuery] String login, [FromQuery] String? returnUrl)
 	{
 		_logger.LogInformation("TwoFactor");
 
@@ -904,9 +906,10 @@ public class AccountController(
 			Title = await LoadTitleAsync(),
 			Theme = _appTheme.MakeTheme(),
 			Login = user.UserName ?? String.Empty,
+			ReturnUrl = returnUrl, // the login's, back to the POST; LocalOrRoot checks it there
 			RequestToken = _antiforgery.GetAndStoreTokens(HttpContext).RequestToken
 		};
-		return View(vm);
+		return View(_appOptions.Framework.ViewName("TwoFactor"), vm);
 	}
 
 	// https://github.com/chsakell/aspnet-core-identity/blob/master/AspNetCoreIdentity/Controllers/TwoFactorAuthenticationController.cs

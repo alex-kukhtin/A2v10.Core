@@ -1,0 +1,21 @@
+@*
+	The post of an identity page, without a framework; every framework's layout includes it (Vue 2's layout does not: it is frozen).
+	The server answers a success with a redirect, HTTP (register, confirmcode) or JSON 'Redirect' (login), or with JSON { success: true }
+	(a step of forgotpassword); a refusal with JSON { success: false, message: code }.
+*@
+// fields: the form's fields, the antiforgery token is added → { url } to go to, {} done (stay), { code } of a refusal, or { error } to show
+window.__identityPost = async function (url, fields, requestToken) {
+	const body = new URLSearchParams(fields);
+	body.append('__RequestVerificationToken', requestToken);
+	const resp = await fetch(url, { method: 'POST', body });
+	if (resp.redirected)
+		return { url: resp.url };
+	if (!resp.ok)
+		return { error: `${resp.status} ${resp.statusText}` };
+	const result = await resp.json();
+	if (!result.success)
+		return { code: result.message };
+	if (result.message === 'Redirect')
+		return { url: result.url };
+	return {};
+};

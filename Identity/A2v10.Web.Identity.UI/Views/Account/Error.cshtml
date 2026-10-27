@@ -1,5 +1,6 @@
 ﻿@model ErrorViewModel
 @inject ILocalizer _loc
+@* No logic and no app: one view for every framework, no Scripts section (the layout leaves out v-cloak) *@
 
 <div class="center-page">
 	<div class="initial-form">
@@ -13,20 +14,3 @@
 		</div>
 	</div>
 </div>
-@section Scripts
-{
-	<script type="text/javascript">
-		"use strict";
-		(function () {
-
-			new Vue({
-				el: "#app",
-				data: {
-				},
-				computed: {
-				},
-				methods: {
-				}
-			});
-		})();</script>
-}

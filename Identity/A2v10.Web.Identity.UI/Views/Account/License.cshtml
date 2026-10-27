@@ -1,5 +1,6 @@
 ﻿@model SimpleIdentityViewModel
 @inject ILocalizer _loc
+@* No logic and no app: one view for every framework, no Scripts section (the layout leaves out v-cloak) *@
 
 <div class="center-page">
 	<div class="initial-form">
@@ -8,10 +9,3 @@
 		<p>License not found</p>
 	</div>
 </div>
-
-@section Scripts
-	{
-	<script type="text/javascript">
-		@Html.Partial("~/Views/Account/LicenseScript.cshtml")
-	</script>
-}

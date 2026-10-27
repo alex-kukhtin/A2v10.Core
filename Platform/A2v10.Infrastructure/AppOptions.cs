@@ -12,12 +12,29 @@ public sealed record AppEnvironment
 	public String Stage { get; set; } = DEBUG;
 	public Boolean IsDebug => Stage == DEBUG;
 	public Boolean IsRelease => !IsDebug;
+	// the suffix of a delivered script: every layout asks for the same URL, so the browser's cache holds one file
+	public String Minify => IsRelease ? "min." : String.Empty;
 }
 
 public enum ClientFramework
 {
 	Vue2, // first: a host without the key stays on Vue 2
 	Vue3
+}
+
+public static class ClientFrameworkExtensions
+{
+	// a view that carries Vue: Vue 2 keeps its names, Vue 3 takes a suffix; a missing view fails loud, never falls back to Vue 2
+	public static String ViewName(this ClientFramework framework, String name) => framework switch
+	{
+		ClientFramework.Vue2 => name,
+		ClientFramework.Vue3 => $"{name}.vue3",
+		_ => throw UnsupportedFramework(framework)
+	};
+
+	// "Framework": 3 binds as (ClientFramework)3, not as Vue3
+	public static InvalidOperationException UnsupportedFramework(ClientFramework framework) =>
+		new($"Application:Framework = '{(Int32)framework}' is not supported; use vue2 | vue3");
 }
 
 public sealed record ModuleInfo

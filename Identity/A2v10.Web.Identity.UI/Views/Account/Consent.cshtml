@@ -1,9 +1,10 @@
 @model ConsentViewModel
 @inject ILocalizer _loc
 
-@* v-pre: the client name comes from dynamic registration, and Vue would evaluate a {{ }} in it. *@
+@* No logic and no app: one view for every framework, no Scripts section (the layout leaves out v-cloak).
+   No framework compiles this markup, so a {{ }} in the client name (it comes from dynamic registration) stays text. *@
 <div class="center-page">
-	<div class="initial-form" v-pre>
+	<div class="initial-form">
 		<h3 class="a2-header text-center">@Html.Raw(_loc["OAuthConsentPrompt"])</h3>
 		<hr />
 		<p><b>@Model.ClientName</b> @Html.Raw(_loc["OAuthConsentText"])</p>
@@ -20,10 +21,3 @@
 		</form>
 	</div>
 </div>
-
-@section Scripts
-{
-<script type="text/javascript">
-	new Vue({ el: "#app" });
-</script>
-}

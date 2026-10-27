@@ -14,18 +14,6 @@ using A2v10.Infrastructure;
 namespace A2v10.Platform.Web;
 public static class HostHelpers
 {
-	// a view that carries Vue: Vue 2 keeps its names, Vue 3 takes a suffix; a missing view fails loud, never falls back to Vue 2
-	public static String ViewName(this ClientFramework framework, String name) => framework switch
-	{
-		ClientFramework.Vue2 => name,
-		ClientFramework.Vue3 => $"{name}.vue3",
-		_ => throw UnsupportedFramework(framework)
-	};
-
-	// "Framework": 3 binds as (ClientFramework)3, not as Vue3
-	public static InvalidOperationException UnsupportedFramework(ClientFramework framework) =>
-		new($"Application:Framework = '{(Int32)framework}' is not supported; use vue2 | vue3");
-
 	// @Html.Raw
 	public static String AppStyleSheetsLink(this IAppCodeProvider provider)
 	{

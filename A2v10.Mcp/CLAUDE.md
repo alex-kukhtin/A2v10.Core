@@ -58,7 +58,7 @@ Only in `a2v10_security_simple.sql`. The multi-tenant scripts have no `RotateTok
 `IOAuthConsent` lives in Identity.Core (`Read` → client name, redirect host, loopback; `ApproveAsync` / `Deny` → the redirect). `A2v10.Mcp` implements and registers it; request format, code and PKCE live only there. Name and host are shown only from the decrypted request — open query parameters would let a phishing link choose them.
 
 - The screen is `Consent` GET/POST in `AccountController`, not its own controller: title, theme and antiforgery token are private helpers there. `IOAuthConsent? _oauthConsent = null` in the constructor; without MCP → 404.
-- A plain `<form>` POST answering 302 to the client. `v-pre` on the form: the client name comes from DCR, and Vue would evaluate a `{{ }}` in it.
+- A plain `<form>` POST answering 302 to the client. No framework on the page at all (no Scripts section, so no app compiles it): the client name comes from DCR, and a `{{ }}` in it stays text.
 - `/oauth/authorize` reaches the login by a cookie-scheme `Challenge`, and the login returns to it. `TwoFactor` lowercased the whole `returnUrl`, which broke `client_id` and `code_challenge`; now it lowercases only for the `/account` comparison.
 
 ## Tools: C# boxes behind one interface, registered in code (decided and built 2026-10-01)

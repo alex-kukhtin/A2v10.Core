@@ -116,6 +116,10 @@
                 "precision": { "type": "integer" },
                 "scale": { "type": "integer" },
                 "unique": { "type": "boolean" },
+                "maxSize": {
+                    "type": "integer",
+                    "description": "For 'image': the largest upload, KB, checked by the server. Not written: no limit."
+                },
                 "sqlAs": {
                     "type": "string",
                     "description": "T-SQL over the columns of the same row: the column is computed by the database, 'as cast(<expr> as <type>)'. Read like any column; nothing writes it, and naming it as a target - a posting, an initial value, a birth - is refused at load. Not a form property: that is 'properties', JavaScript over a column the save writes."
@@ -240,7 +244,7 @@
                     "description": "A value the client holds, never a reference: a reference is drawn through the map, and nothing loads one for a name with no column.",
                     "allOf": [
                         { "$ref": "#/definitions/columnType" },
-                        { "not": { "enum": [ "ref", "user", "document", "company", "owner", "basedOn", "operation", "enum", "state", "account", "folder" ] } }
+                        { "not": { "enum": [ "ref", "user", "document", "company", "owner", "basedOn", "operation", "enum", "state", "account", "folder", "image" ] } }
                     ]
                 },
                 "get": { "$ref": "#/definitions/propertyGet" },
@@ -771,7 +775,7 @@
                 "document", "documentType", "row", "color", "enum", "state", "account", "autonum",
                 "company", "owner", "basedOn", "prefix", "direction",
                 "amount", "price", "qty", "percent", "factor",
-                "ref", "date", "dateTime", "money", "boolean",
+                "ref", "date", "dateTime", "money", "boolean", "image",
                 "stream", "integer",
                 "bigInt", "nChar", "decimal", "float", "varBinary", "uniqueidentifier"
             ]

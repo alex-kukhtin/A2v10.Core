@@ -1,0 +1,75 @@
+@model ConfirmCodeViewModel
+@inject ILocalizer _loc
+
+<div class="center-page">
+	<div class="initial-form">
+		<h3 class="a2-header text-center">@Html.Raw(_loc["RegisterPrompt"])</h3>
+		<hr />
+		<div v-if="serverError" class="validation-summary" style="margin-top:10px">
+			<span class="error" v-text="serverError"></span>
+		</div>
+		<div>
+			<p>@Html.Raw(_loc["ConfirmRegister"]?.Replace("{0}", Model.Email))</p>
+
+			<div class="control-group" style="width:15rem;margin:auto" v-bind:class="{invalid: !!errors.code}">
+				<label class="a2-label required">@Html.Raw(_loc["ConfirmCode"])</label>
+				<div class="input-group">
+					<input v-focus class="control text-center" type="text" v-model="code" tabindex="1" spellcheck="false" />
+					<div class="validator" v-if="errors.code">
+						<span class="error" v-text="errors.code"></span>
+					</div>
+				</div>
+			</div>
+
+			<button v-on:click.stop.prevent="submit" class="btn btn-default">@Html.Raw(_loc["Continue"])</button>
+		</div>
+
+		<a tabindex="3" href="/" class="a2-hyperlink">@Html.Raw(_loc["Login"])</a>
+	</div>
+</div>
+
+@section Scripts
+{
+<script type="text/javascript">
+'use strict';
+(function () {
+
+const page = @await Html.PartialAsync("~/Views/Account/ConfirmCodePage.cshtml", Model);
+const validators = a2v10.platform.require('std:validators');
+
+// the first error of the member's rules, or ''
+function errorOf(rule, state, value) {
+	const errs = validators.validate(rule, state, value);
+	return errs.length ? errs[0].msg : '';
+}
+
+__identityApp({
+	data() {
+		return {
+			code: '',
+			submitted: false,
+			serverError: ''
+		};
+	},
+	computed: {
+		// by the rules' members; shown after the first submit, as the user edits
+		errors() {
+			if (!this.submitted) return {};
+			return Object.fromEntries(Object.entries(page.rules).map(([key, rule]) => [key, errorOf(rule, this, this[key])]));
+		}
+	},
+	methods: {
+		async submit() {
+			this.submitted = true;
+			if (Object.values(this.errors).some(e => e)) return;
+			const result = await page.submit({ code: this.code });
+			if (result.url)
+				window.location.assign(result.url);
+			else
+				this.serverError = result.error;
+		}
+	}
+});
+})();
+</script>
+}

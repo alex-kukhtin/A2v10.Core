@@ -66,7 +66,7 @@ public class MainController(IDataService dataService, IOptions<AppOptions> appOp
 		var m = new LicenseModel(licInfo)
 		{
 			Theme = _appTheme.MakeTheme(),
-			Minify = _appOptions.Environment.IsRelease ? "min." : String.Empty,
+			Minify = _appOptions.Environment.Minify,
 			AppTitle = licInfo.ApplicationName
 		};
 		return View(m);
@@ -117,7 +117,7 @@ public class MainController(IDataService dataService, IOptions<AppOptions> appOp
 			HasProfile = HasProfile(),
 			Theme = _appTheme.MakeTheme(),
 			HasSettings = _currentUser.Identity.IsAdmin && HasSettings(),
-			Minify = _appOptions.Environment.IsRelease ? "min." : String.Empty,
+			Minify = _appOptions.Environment.Minify,
 			HasLicense = licResult == LicenseResult.Success,
 		};
 

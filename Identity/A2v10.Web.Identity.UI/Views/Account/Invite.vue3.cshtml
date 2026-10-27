@@ -1,0 +1,129 @@
+
+@model InviteViewModel
+@inject ILocalizer _loc
+
+<div class="center-page">
+	<div class="initial-form">
+		<h3 class="a2-header text-center">@_loc["RegisterPrompt"]</h3>
+		<hr />
+		<div v-if="serverError" class="validation-summary" style="margin-top:10px">
+			<span class="error" v-text="serverError"></span>
+		</div>
+		<div novalidate=novalidate>
+			<div class="control-group disabled">
+				<label for="login" style="grid-row:1; grid-column:1" class="a2-label">@_loc["Email"]</label>
+				<div class="input-group">
+					<input class="control" id="login" name="email" type="text" disabled
+						:value="email" spellcheck="false" />
+				</div>
+			</div>
+			<div class="control-group" v-bind:class="{invalid: !!errors.name}">
+				<label for="name" class="a2-label required">@_loc["UserName"]</label>
+				<div class="input-group">
+					<input v-focus class="control" tabindex="1" type="text" name="name" v-model="name" autocomplete="off" maxlength="128" />
+					<div class="validator">
+						<span class="error" v-text="errors.name"></span>
+					</div>
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="a2-label">@_loc["Phone"]</label>
+				<div class="input-group">
+					<input v-focus class="control" type="text" name="phone" :value="maskedPhone"
+						   v-on:change="onPhoneChange($event.target.value)"
+						   tabindex="3" autocomplete="tel" ref="phoneInput" :placeholder="phonePlaceholder" />
+					<div class="validator">
+						<span class="error">@_loc["EnterPhone"]</span>
+					</div>
+				</div>
+			</div>
+			<div class="control-group" v-bind:class="{invalid: !!errors.password}">
+				<label for="password" style="grid-row:2; grid-column:1" class="a2-label required">@_loc["Password"]</label>
+				<div class="input-group">
+					<input class="control" v-focus type="password" name="password"
+						v-model="password" autocomplete="current-password" tabindex="5" />
+					<div class="validator">
+						<span class="error" v-text="errors.password"></span>
+					</div>
+				</div>
+			</div>
+			<div class="control-group" v-bind:class="{invalid: !!errors.confirm}">
+				<label class="a2-label required">@_loc["Confirm"]</label>
+				<div class="input-group">
+					<input class="control" v-focus type="password" v-model="confirm" autocomplete="off"
+						   tabindex="6" title="@_loc["PasswordTip"]" />
+					<div class="validator">
+						<span class="error" v-text="errors.confirm"></span>
+					</div>
+				</div>
+			</div>
+
+			<button v-on:click.stop.prevent="submit" class="btn btn-default" tabindex="7">@_loc["Register"]</button>
+			<a class="a2-hyperlink" href="/account/login" tabindex="8">@Html.Raw(_loc["Login"])</a>
+		</div>
+	</div>
+</div>
+
+@section Scripts
+{
+<script type="text/javascript">
+'use strict';
+(function () {
+
+const page = @await Html.PartialAsync("~/Views/Account/InvitePage.cshtml", Model);
+const validators = a2v10.platform.require('std:validators');
+const mask = a2v10.platform.require('std:mask');
+
+// the first error of the member's rules, or ''
+function errorOf(rule, state, value) {
+	const errs = validators.validate(rule, state, value);
+	return errs.length ? errs[0].msg : '';
+}
+
+__identityApp({
+	data() {
+		return {
+			email: page.init.email,
+			name: '',
+			phone: '',
+			password: '',
+			confirm: '',
+			submitted: false,
+			serverError: '',
+			phonePlaceholder: page.phoneMask.replace(/#/g, '0')
+		};
+	},
+	computed: {
+		maskedPhone() {
+			return this.phone ? mask.getMasked(page.phoneMask, this.phone) : this.phone;
+		},
+		// by the rules' members; shown after the first submit, as the user edits
+		errors() {
+			if (!this.submitted) return {};
+			return Object.fromEntries(Object.entries(page.rules).map(([key, rule]) => [key, errorOf(rule, this, this[key])]));
+		}
+	},
+	methods: {
+		onPhoneChange(value) {
+			this.phone = mask.getUnmasked(page.phoneMask, value);
+			if (this.$refs.phoneInput.value !== this.maskedPhone)
+				this.$refs.phoneInput.value = this.maskedPhone;
+		},
+		async submit() {
+			this.submitted = true;
+			this.serverError = '';
+			if (Object.values(this.errors).some(e => e)) return;
+			const result = await page.submit({ name: this.name, phone: this.phone, password: this.password });
+			if (result.url)
+				window.location.assign(result.url);
+			else
+				this.serverError = result.error;
+		}
+	},
+	mounted() {
+		mask.mountElement(this.$refs.phoneInput, page.phoneMask);
+	}
+});
+})();
+</script>
+}

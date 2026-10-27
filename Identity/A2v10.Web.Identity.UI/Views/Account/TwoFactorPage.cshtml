@@ -1,0 +1,54 @@
+@inject ILocalizer _loc
+@model TwoFactorViewModel
+@using System.Text.Json
+@using System.Text.Encodings.Web
+@using System.Text.Unicode
+@*
+	The second factor of a sign-in (the authenticator's code) without a framework: the server's data, the rules in the model core's format
+	(std:validators), the submit. An expression: a framework's view takes it as `const page = <this partial>;` and binds its own markup to it.
+	The validators and the redirect are the view's: this box reaches no runtime and no window.location; it posts by __identityPost.
+*@
+@{
+	var data = new
+	{
+		init = new
+		{
+			login = Model.Login,
+			returnUrl = Model.ReturnUrl ?? String.Empty,
+			requestToken = Model.RequestToken
+		},
+		texts = new
+		{
+			enterConfirmCode = _loc["EnterConfirmCode"],
+			errorText = _loc["ErrorText"], // any code not below
+			errors = new Dictionary<String, String?>
+			{
+				["InvalidCode"] = _loc["InvalidConfirmCode"],
+				["AntiForgery"] = _loc["AntiForgery"]
+			}
+		}
+	};
+}
+(function () {
+	@* Cyrillic as is, for reading in the debugger; <>&' stay escaped: the JSON cannot close the <script> *@
+	const data = @Html.Raw(JsonSerializer.Serialize(data, new JsonSerializerOptions { Encoder = JavaScriptEncoder.Create(UnicodeRanges.BasicLatin, UnicodeRanges.Cyrillic) }));
+	const texts = data.texts;
+	return {
+		// by the state's member; a string is notBlank with that message
+		rules: {
+			code: texts.enterConfirmCode
+		},
+		// state: { code, rememberMe } → { url } to go to (signed in), or { error } to show
+		async submit(state) {
+			const result = await __identityPost('/account/twofactor', {
+				Login: data.init.login,
+				Code: state.code.trim(),
+				RememberMe: state.rememberMe,
+				ReturnUrl: data.init.returnUrl
+			}, data.init.requestToken);
+			if (result.code)
+				return { error: texts.errors[result.code] || texts.errorText };
+			return result;
+		}
+	};
+})()

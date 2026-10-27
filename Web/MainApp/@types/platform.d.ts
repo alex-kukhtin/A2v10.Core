@@ -1,7 +1,7 @@
 ﻿/* Copyright © 2019-2026 Oleksandr Kukhtin. All rights reserved. */
 
-/* Version 10.0.7998  */
-/* Date    2026.10.10 */
+/* Version 10.0.7999  */
+/* Date    2026.10.14 */
 
 declare function require(url: string): any;
 
@@ -226,7 +226,8 @@ declare type templateValidatorResult = { msg: string, severity: Severity };
 type tempateValidatorFunc = (elem: IElement, value?: any) => boolean | string | templateValidatorResult | Promise<any>;
 
 interface templateValidatorObj {
-	valid: tempateValidatorFunc | StdValidator,
+	// the standard validators by name as well: a template written as text names them ('notBlank')
+	valid: tempateValidatorFunc | StdValidator | `${StdValidator}`,
 	async?: boolean,
 	msg?: string,
 	regExp?: RegExp,
@@ -241,6 +242,7 @@ interface Template {
 	options?: {
 		noDirty?: boolean,
 		persistSelect?: string[],
+		/** changes that do not make the model dirty: 'Path.Prop' of an element ('Comments[].Text'), or 'Path' of an array — its $append, $remove, $empty ('Comments'). Not the root's own props: use '$$Prop' for those */
 		skipDirty?: string[],
 		bindOnce?: string[],
 		globalSaveEvent?: string
@@ -293,6 +295,7 @@ declare const enum AcceptFormat {
 
 interface IController {
 	$save(): Promise<object>;
+	$ensureSaved(): Promise<boolean>;
 	$savePart(data: object, url: string, dialog?: boolean): Promise<object>;
 	$requery(query?: object): void;
 	$reload(args?: any): Promise<void>;
@@ -319,7 +322,8 @@ interface IController {
 	$focus(htmlid: string): void;
 	$report(report: string, arg: object, opts?: { export?: Boolean, attach?: Boolean, print?: Boolean, format?: ReportFormat }, url?: string, data?: object): void;
 	$upload(url: string, accept?: string | AcceptFormat, data?: { Id?: any, Key?: any }, opts?: { catchError?: boolean }): Promise<any>;
-	$file(url: string, arg: any, opts?: { action: FileActions }, data?: object): void;
+	$uploadBlob(url: string, accept?: string | AcceptFormat, data?: { Id: any, Base: string }, opts?: { catchError?: boolean }): Promise<any>;
+	$uploadBlobFile(url: string, file: File, data?: { Id: any, Base: string }, opts?: { catchError?: boolean }): Promise<any>;	$file(url: string, arg: any, opts?: { action: FileActions }, data?: object): void;
 	$emitCaller(event: string, ...params: any[]): void;
 	$emitSaveEvent(): void;
 	$emitGlobal(event: string, data?: any): void;

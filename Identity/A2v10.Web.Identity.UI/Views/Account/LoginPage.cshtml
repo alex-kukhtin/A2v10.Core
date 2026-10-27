@@ -1,0 +1,60 @@
+@inject ILocalizer _loc
+@model LoginViewModel
+@using System.Text.Json
+@using System.Text.Encodings.Web
+@using System.Text.Unicode
+@*
+	The login page without a framework: the server's data, the rules in the model core's format (std:validators), the submit.
+	An expression: a framework's view takes it as `const page = <this partial>;` and binds its own markup to it.
+	The validators and the redirect are the view's: this box reaches no runtime and no window.location; it posts by __identityPost.
+*@
+@{
+	var data = new
+	{
+		init = new
+		{
+			email = Model.Login ?? String.Empty,
+			providers = (Model.LoginProviders ?? String.Empty).Split(',').Where(p => p != "Local"),
+			returnUrl = Model.ReturnUrl ?? String.Empty,
+			requestToken = Model.RequestToken
+		},
+		texts = new
+		{
+			enterEmail = _loc["EnterEMail"],
+			invalidEmail = _loc["InvalidEMail"],
+			enterPassword = _loc["EnterPassword"],
+			errors = new Dictionary<String, String?>
+			{
+				["AntiForgery"] = _loc["AntiForgery"],
+				["Failed"] = _loc["InvalidLoginError"],
+				["Lockedout"] = _loc["UserLockuotError"],
+				["EmailNotConfirmed"] = _loc["EmailNotConfirmed"]
+			}
+		}
+	};
+}
+(function () {
+	@* Cyrillic as is, for reading in the debugger; <>&' stay escaped: the JSON cannot close the <script> *@
+	const data = @Html.Raw(JsonSerializer.Serialize(data, new JsonSerializerOptions { Encoder = JavaScriptEncoder.Create(UnicodeRanges.BasicLatin, UnicodeRanges.Cyrillic) }));
+	const texts = data.texts;
+	return {
+		init: data.init,
+		// by the state's member; a string is notBlank with that message
+		rules: {
+			email: [texts.enterEmail, { valid: 'email', msg: texts.invalidEmail }],
+			password: texts.enterPassword
+		},
+		// state: { email, password, rememberMe } → { url } to go to, or { error } to show
+		async submit(state) {
+			const result = await __identityPost('/account/login', {
+				Login: state.email,
+				Password: state.password,
+				RememberMe: state.rememberMe,
+				ReturnUrl: data.init.returnUrl
+			}, data.init.requestToken);
+			if (result.code)
+				return { error: texts.errors[result.code] || result.code };
+			return result;
+		}
+	};
+})()
