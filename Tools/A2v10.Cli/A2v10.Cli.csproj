@@ -33,7 +33,7 @@
 		<PackageReference Include="System.CommandLine" Version="2.0.14" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.14" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.14" />
-		<PackageReference Include="A2v10.Data.Core" Version="10.1.7628" />
+		<PackageReference Include="A2v10.Data.Core" Version="10.1.7629" />
 		<PackageReference Include="A2v10.Data.Providers" Version="10.1.7625" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
 	</ItemGroup>

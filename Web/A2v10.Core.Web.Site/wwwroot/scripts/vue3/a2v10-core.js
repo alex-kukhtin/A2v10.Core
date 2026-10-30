@@ -2140,6 +2140,15 @@
             p.$unlockEvents = function () {
                 this._lockEvents_ -= 1;
             };
+            p.$noChangeEvents = function (fn) {
+                this._lockEvents_ += 1;
+                try {
+                    return fn.call(this, this);
+                }
+                finally {
+                    this._lockEvents_ -= 1;
+                }
+            };
             defHiddenGet(p, '$eventsLocked', function () {
                 return this._lockEvents_ > 0;
             });

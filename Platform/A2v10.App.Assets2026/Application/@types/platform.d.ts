@@ -10,6 +10,7 @@ interface IElement {
 	readonly $invalid: boolean;
 	readonly $isNew: boolean;
 	readonly $isEmpty: boolean;
+	readonly $eventsLocked: boolean;
 
 	readonly $id: any;
 	readonly $name: any;
@@ -31,6 +32,9 @@ interface IElement {
 	$merge(src: object): IElement;
 	$empty(): IElement;
 	$set(src: object): IElement;
+	$lockEvents(): void;
+	$unlockEvents(): void;
+	$noChangeEvents<T>(fn: (elem: this) => T): T;
 }
 
 declare const enum MoveDir {

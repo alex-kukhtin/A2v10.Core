@@ -17,7 +17,8 @@ internal class ViewValidateCommand(IServiceProvider services)
     {
         var cmd = new Command("validate",
             "Validate a view file by loading and instantiating it as the server does: malformed markup, unknown elements or properties, " +
-            "bad enum values, missing includes. Bindings are not checked against the data model.");
+            "bad enum values, missing includes, more than one child in a content property that takes one object. " +
+            "Bindings are not checked against the data model.");
         var pathArg = new Argument<String>("view-file")
         {
             Description = "View file, relative to the module root; $prefix for a module. " +
