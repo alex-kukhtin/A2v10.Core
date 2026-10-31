@@ -22,6 +22,11 @@ public abstract record RuleSet
     public String[] Required { get; init; } = [];
     public Dictionary<String, String> Visible { get; init; } = [];
     public Dictionary<String, InheritMetadata> Inherit { get; init; } = [];
+
+    /* Role -> path, as written (VatRoles). null - not written, which '{}' is not: a layer that writes
+     * the map replaces the one beneath it (Merge).
+     */
+    public Dictionary<String, String>? Vat { get; init; }
 }
 
 /* A member of the model whose value is JS - a Vue computed: a getter, and a setter when what it
@@ -71,13 +76,17 @@ public sealed record RuleMetadata : RuleSet
      *
      * 'When' is a list and concatenates, storage first: a condition of the storage is said of every
      * document over it, for the same reason its 'required' is.
+     *
+     * 'Vat' is a map and replaces whole: by key, a kind could not drop a role - a service without
+     * Qty and Price would get the collection's back.
      */
     public static RuleMetadata Merge(RuleMetadata own, RuleMetadata storage) => new()
     {
         Required = [.. storage.Required.Union(own.Required)],
         When = [.. storage.When, .. own.When],
         Visible = ByKey(own.Visible, storage.Visible),
-        Inherit = ByKey(own.Inherit, storage.Inherit)
+        Inherit = ByKey(own.Inherit, storage.Inherit),
+        Vat = own.Vat ?? storage.Vat
     };
 
     // properties layer by the same law, so they take the same implementation
@@ -183,7 +192,8 @@ public sealed record RowSetDeclaration(
     RuleMetadata Rules,
     Dictionary<String, PropertyMetadata> Properties,
     Dictionary<String, ArrayPropertyMetadata> ArrayProperties,
-    Dictionary<String, InheritDescriptor[]> Inherits);
+    Dictionary<String, InheritDescriptor[]> Inherits,
+    VatDescriptor? Vat);
 
 public sealed record DeclarationMetadata
 {

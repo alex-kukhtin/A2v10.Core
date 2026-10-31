@@ -65,6 +65,86 @@ internal static class DeclarationBake
         return Resolve().GroupBy(d => d.Ref.Name).ToDictionary(g => g.Key, g => g.ToArray());
     }
 
+    /* The 'vat' map of one row set, resolved. A path is '[$root.<Model>.]Field[.Field]': the prefix
+     * moves to the root, the second name reads through a reference - one hop, as 'inherit' does - and
+     * stays a name until phase 2 (VatOperand). An output is a field of the row itself: the rule writes
+     * its row, never another record. The root is passed down because only a collection has rules of
+     * this kind, and its paths reach the header.
+     */
+    private static VatDescriptor? BuildVat(TableMetadata table, TableMetadata root, RuleMetadata rules)
+    {
+        if (rules.Vat is not { } declared)
+            return null;
+
+        static String List(IEnumerable<String> names) => String.Join(", ", names);
+
+        var unknown = declared.Keys.Where(k => !VatRoles.All.Any(r => r.Name == k)).ToList();
+        if (unknown.Count > 0)
+            throw new InvalidOperationException(
+                $"vat: [{List(unknown)}] declared, and the roles are: {List(VatRoles.All.Select(r => r.Name))}");
+        var missing = VatRoles.All.Where(r => r.IsRequired && !declared.ContainsKey(r.Name)).Select(r => r.Name).ToList();
+        if (missing.Count > 0)
+            throw new InvalidOperationException(
+                $"vat: [{List(missing)}] not named. Required: {List(VatRoles.All.Where(r => r.IsRequired).Select(r => r.Name))}");
+        if (declared.ContainsKey(VatRoles.Qty) != declared.ContainsKey(VatRoles.Price))
+            throw new InvalidOperationException(
+                $"vat: '{VatRoles.Qty}' and '{VatRoles.Price}' are named together or not at all - the amount is their product, and a row without them types its '{VatRoles.Sum}'");
+
+        const String rootPrefix = "$root.";
+
+        VatOperand Resolve(VatRole role, String path)
+        {
+            var head = $"vat: '{role.Name}' -> '{path}'";
+            var isRoot = path.StartsWith(rootPrefix, StringComparison.Ordinal);
+            var names = (isRoot ? path[rootPrefix.Length..] : path).Split('.');
+            var scope = table;
+            if (isRoot)
+            {
+                if (names[0] != root.Model)
+                    throw new InvalidOperationException($"{head}: the root is '{root.Model}' - '$root.{root.Model}.<field>'");
+                scope = root;
+                names = names[1..];
+            }
+            if (names.Length is 0 or > 2 || names.Any(String.IsNullOrEmpty))
+                throw new InvalidOperationException(
+                    $"{head}: a path is a field, or a reference and a field of its target, with '$root.{root.Model}.' before it for the header");
+            if (role.IsOutput && (isRoot || names.Length > 1))
+                throw new InvalidOperationException($"{head}: the rule writes '{role.Name}', so it names a field of the row itself");
+
+            var column = scope.AllColumns().FirstOrDefault(c => c.Name == names[0])
+                ?? throw new InvalidOperationException($"{head}: field '{names[0]}' not found in {scope.SqlTableName}");
+            if (names.Length == 2)
+                return column.IsRef
+                    ? new VatOperand(column, isRoot, names[1])
+                    : throw new InvalidOperationException($"{head}: '{column.Name}' is not a reference, so '{names[1]}' is read through nothing");
+
+            if (column.Type != role.Domain)
+                throw new InvalidOperationException($"{head}: '{role.Name}' is '{role.Domain}', and '{column.Name}' is '{column.Type}'");
+            if (role.IsOutput && column.HasSqlAs)
+                throw new InvalidOperationException(
+                    $"{head}: '{column.Name}' has 'sqlAs' - its value is the database's, what the rule writes has nowhere to land");
+            if (role.IsOutput && rules.Inherit.ContainsKey(column.Name))
+                throw new InvalidOperationException(
+                    $"{head}: '{column.Name}' is also in 'inherit'. The rule writes it; inherited, the value is the record's - one field, one source of value");
+            return new VatOperand(column, isRoot, null);
+        }
+
+        return new VatDescriptor(declared.ToDictionary(kp => kp.Key, kp => Resolve(VatRoles.Of(kp.Key), kp.Value)));
+    }
+
+    /* A field the rule names is not a property: an input under a getter emits no '.change', so the rows
+     * are never recomputed; an output under one has two sources of value. Asked by the scope that holds
+     * the properties - the row set for its own fields, the root for the '$root' ones.
+     */
+    private static void CheckVatNotProperty(VatDescriptor vat, Dictionary<String, PropertyMetadata> properties, Boolean root)
+    {
+        foreach (var (role, operand) in vat.Roles)
+            if (operand.IsRoot == root && properties.ContainsKey(operand.Column.Name))
+                throw new InvalidOperationException(VatRoles.Of(role).IsOutput
+                    ? $"properties: '{operand.Column.Name}' is written by 'vat' as '{role}' - one field, one source of value"
+                    : $"properties: '{operand.Column.Name}' is read by 'vat' as '{role}', and a getter emits no '.change' - the rows would never be recomputed");
+    }
+
     /* A property over a field stands in for its column, so the field must be one, and its type is
      * the one in 'fields'. A '$' name has no column to take a type from, and the form takes format
      * and control from the type, so it is written here - a value the client holds, never a
@@ -136,6 +216,9 @@ internal static class DeclarationBake
             if (w.Inherit.Count > 0)
                 throw new InvalidOperationException(
                     $"when '{w.Test}': declares 'inherit'. An inherit under a condition is not generated yet; declare it unconditionally.");
+            if (w.Vat != null)
+                throw new InvalidOperationException(
+                    $"when '{w.Test}': declares 'vat'. A vat under a condition is not generated; declare it unconditionally - a document without VAT fixes the field its 'IsVat' names ('fixed').");
         }
     }
 
@@ -158,13 +241,14 @@ internal static class DeclarationBake
         {
             IEnumerable<ConditionalRuleMetadata> conditional()
             {
-                if (rules.Required.Length > 0 || rules.Visible.Count > 0 || rules.Inherit.Count > 0)
+                if (rules.Required.Length > 0 || rules.Visible.Count > 0 || rules.Inherit.Count > 0 || rules.Vat != null)
                     yield return new()
                     {
                         Test = test,
                         Required = rules.Required,
                         Visible = rules.Visible,
-                        Inherit = rules.Inherit
+                        Inherit = rules.Inherit,
+                        Vat = rules.Vat
                     };
                 foreach (var w in rules.When)
                     yield return w with { Test = $"({test}) && ({w.Test})" };
@@ -232,13 +316,20 @@ internal static class DeclarationBake
         declaration = declaration.WithOperationRules(table);
         CheckNames(table, declaration.Rules.Required, "required");
         CheckWhen(table, declaration.Rules);
+        if (declaration.Rules.Vat != null)
+            throw new InvalidOperationException(
+                $"vat: declared on {table.SqlTableName}, which is a record. VAT is computed per row - declare it under 'details', a field of the header as '$root.{table.Model}.<field>'.");
         if (declaration.Array.Properties.Count > 0)
             throw new InvalidOperationException(
                 $"array: declared on {table.SqlTableName}, which is a record. An array is a collection's, under 'details'.");
         CheckProperties(table, declaration.Properties, declaration.Rules);
         NoLeftovers(table, declaration.Kinds.Keys, [], "kinds");
         CheckFilterNames(table, declaration);
-        return declaration.BakeNode(table) with
+        var baked = declaration.BakeNode(table, table);
+        foreach (var rowSet in baked.AllRowSets())
+            if (rowSet.Vat is { } vat)
+                CheckVatNotProperty(vat, declaration.Properties, root: true);
+        return baked with
         {
             BakedForms = BuildForms(declaration, table, platformId),
             Initials = BuildInitials(declaration, table)
@@ -373,7 +464,7 @@ internal static class DeclarationBake
         };
     }
 
-    private static DeclarationMetadata BakeNode(this DeclarationMetadata declaration, TableMetadata table)
+    private static DeclarationMetadata BakeNode(this DeclarationMetadata declaration, TableMetadata table, TableMetadata root)
     {
         NoLeftovers(table, declaration.Details.Keys, table.Details.Keys, "details");
         return declaration with
@@ -381,11 +472,11 @@ internal static class DeclarationBake
             Inherits = BuildInherits(table, declaration.Rules),
             Details = table.Details.ToDictionary(
                 kp => kp.Key,
-                kp => (declaration.Details.GetValueOrDefault(kp.Key) ?? new()).BakeCollection(kp.Value))
+                kp => (declaration.Details.GetValueOrDefault(kp.Key) ?? new()).BakeCollection(kp.Value, root))
         };
     }
 
-    private static DeclarationMetadata BakeCollection(this DeclarationMetadata declaration, TableMetadata table)
+    private static DeclarationMetadata BakeCollection(this DeclarationMetadata declaration, TableMetadata table, TableMetadata root)
     {
         // symmetric to 'array' on the root: 'details' holds the very same record type, so a key it
         // has no answer for would deserialize and then vanish
@@ -394,7 +485,7 @@ internal static class DeclarationBake
                 $"forms: declared on '{table.DetailsKey}', which is a collection. A form belongs to the "
                 + "endpoint that shows it and reaches the rows through 'scope'.");
         NoLeftovers(table, declaration.Kinds.Keys, table.Kinds.Keys, "kinds");
-        return declaration.BakeNode(table) with
+        return declaration.BakeNode(table, root) with
         {
             RowSets = [.. table.RowSets().Select(rs =>
             {
@@ -405,11 +496,18 @@ internal static class DeclarationBake
                 CheckWhen(table, rules);
                 CheckProperties(table, properties, rules);
                 CheckArrayProperties(arrayProperties);
+                var vat = BuildVat(table, root, rules);
+                if (vat != null)
+                    CheckVatNotProperty(vat, properties, root: false);
                 return new RowSetDeclaration(rs.Kind, rs.Collection, rs.Type, rules, properties,
-                    arrayProperties, BuildInherits(table, rules));
+                    arrayProperties, BuildInherits(table, rules), vat);
             })]
         };
     }
+
+    // every row set of an endpoint, nested collections included - the levels the pass fills
+    internal static IEnumerable<RowSetDeclaration> AllRowSets(this DeclarationMetadata declaration) =>
+        declaration.RowSets.Concat(declaration.Details.Values.SelectMany(d => d.AllRowSets()));
 
     /* Every inherit of an endpoint, root and rows alike. The consumer is the ref-map closure -
      * which columns a picked object has to carry - and there the union over kinds is what is

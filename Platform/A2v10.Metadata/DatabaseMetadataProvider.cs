@@ -1137,6 +1137,9 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         if (endpoint is NormalEndpointMetadata { Storage.Kind: TableKind.Ledger } ledger)
             CheckSplitColumns(ledger.Storage);
 
+        if (endpoint is NormalEndpointMetadata normal)
+            CheckVatHops(normal.Path, normal.Declaration);
+
         await CheckAutonumDeclaredAsync(load, endpoint, dataSource);
 
         await ResolvePostAsync(load, endpoint, dataSource);
@@ -1300,6 +1303,30 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                     throw new InvalidOperationException(
                         $"{ledger.Path}: account '{row.Id}' of {chart.Path} is split by [{name}], which {(column == null
                             ? "is not a column of the ledger" : column.IsProvenance ? "the platform fills" : "is a measure")} - SplitBy names an analytic the ledger declares");
+            }
+    }
+
+    /* The far half of a 'vat' path, checked where the target is linked - just above. A path reads what
+     * the reference brings (TableMetadata.RefColumns): a set's own fields, and nothing of a catalog. A
+     * second way of delivering a column is not built for it; the rate lives on a set.
+     */
+    internal static void CheckVatHops(String path, DeclarationMetadata declaration)
+    {
+        foreach (var rowSet in declaration.AllRowSets())
+            foreach (var (role, operand) in rowSet.Vat?.Roles ?? new Dictionary<String, VatOperand>())
+            {
+                if (operand.RefField is not { } name)
+                    continue;
+                var head = $"{path}: vat '{role}' of {rowSet.Collection} reads '{name}' through [{operand.Column.Name}]";
+                var target = operand.Column.RefTableCheck.Storage;
+                var carried = target.RefColumns.ToList();
+                var column = carried.FirstOrDefault(c => c.Name == name)
+                    ?? throw new InvalidOperationException(carried.Count == 0
+                        ? $"{head}, and a reference to {target.Path} carries nothing beyond its key and name"
+                        : $"{head}, and a reference to {target.Path} carries {String.Join(", ", carried.Select(c => $"[{c.Name}]"))}");
+                var domain = VatRoles.Of(role).Domain;
+                if (column.Type != domain)
+                    throw new InvalidOperationException($"{head}: '{role}' is '{domain}', and [{name}] of {target.Path} is '{column.Type}'");
             }
     }
 

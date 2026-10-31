@@ -37,6 +37,15 @@
 		"Sum": {
 			"type": "Amount"
 		},
+		"IsVat": {
+			"type": "Boolean"
+		},
+		"VatIncluded": {
+			"type": "Boolean"
+		},
+		"Manual": {
+			"type": "Boolean"
+		},
 		"DueDate": {
 			"type": "Date"
 		},
@@ -73,6 +82,12 @@
 					"type": "Price"
 				},
 				"Sum": {
+					"type": "Amount"
+				},
+				"Vat": {
+					"type": "Amount"
+				},
+				"Total": {
 					"type": "Amount"
 				},
 				"Item": {

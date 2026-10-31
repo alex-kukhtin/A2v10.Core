@@ -227,10 +227,29 @@
                 "required": { "$ref": "#/definitions/fieldNames" },
                 "visible": { "$ref": "#/definitions/expressions" },
                 "inherit": { "$ref": "#/definitions/inherits" },
+                "vat": { "$ref": "#/definitions/vat" },
                 "when": {
                     "type": "array",
                     "items": { "$ref": "#/definitions/conditionalRules" }
                 }
+            }
+        },
+
+        "vat": {
+            "type": "object",
+            "description": "Role -> path to the author's field; the rule computes Sum, Vat and Total of a row on input. A rule of rows: written in the rules of a collection or of a kind, and a kind's map replaces the collection's whole. A path is 'Field' or 'Ref.Field' (one hop; the target's field must ride on the reference - a set's own fields do), with '$root.<Model>.' before it for a field of the header. An absent input is a constant: no IsVat - VAT is charged, no Included - the price is net, no Manual - nothing is typed by hand.",
+            "additionalProperties": false,
+            "required": [ "Rate", "Sum", "Vat", "Total" ],
+            "properties": {
+                "Qty": { "type": "string", "description": "Input, qty. Named together with Price, or neither - a row without them types its Sum." },
+                "Price": { "type": "string", "description": "Input, price - as typed; Included says whether it carries VAT." },
+                "Rate": { "type": "string", "description": "Input, percent: 20 is 20%. Usually through the rate's set: 'VatRate.Rate'." },
+                "Sum": { "type": "string", "description": "Output, amount, always net. A field of the row itself: no property, no inherit, no sqlAs." },
+                "Vat": { "type": "string", "description": "Output, amount. A field of the row itself." },
+                "Total": { "type": "string", "description": "Output, amount, always gross. A field of the row itself." },
+                "IsVat": { "type": "string", "description": "Input, boolean: VAT is charged. Usually '$root.<Model>.<field>'." },
+                "Included": { "type": "string", "description": "Input, boolean: the price carries VAT." },
+                "Manual": { "type": "string", "description": "Input, boolean: everything is typed by hand, nothing is recomputed." }
             }
         },
 
