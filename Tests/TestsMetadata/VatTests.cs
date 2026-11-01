@@ -132,6 +132,39 @@ public class VatTests
         Assert.Contains("declares 'vat'", ex.Message);
     }
 
+    static async Task<String> Materialize(String endpoint, MaterializeWhat what) =>
+        (await TestHost.GetService<EndpointMaterializer>().MaterializeAsync(endpoint, "edit", what)).Files[0].Text;
+
+    /* The generator, on a catalog: 'vat' is a collection's rule, and a price list is not a document.
+     * TestApp: /catalog/pricelist - every role, the flags in the header, the rate inherited off Item.
+     */
+    [Fact]
+    public async Task A_role_is_a_handler_of_its_path_and_a_header_flag_recomputes_every_row()
+    {
+        var template = await Materialize("/catalog/pricelist", MaterializeWhat.Template);
+
+        Assert.Contains("const utils: Utils = require('std:utils');", template);
+        // inherit off a catalog's rows, which the generic template did not emit before
+        Assert.Contains("'PriceList.Rows[].Item.change'(row: TPriceRow) { row.VatRate = row.Item.VatRate; }", template);
+        Assert.Contains("'PriceList.Rows[].Qty.change'(row: TPriceRow) { vatRows(row, 'calc'); }", template);
+        Assert.Contains("'PriceList.Rows[].VatRate.change'(row: TPriceRow) { vatRows(row, 'calc'); }", template);
+        Assert.Contains("'PriceList.Rows[].Sum.change'(row: TPriceRow) { vatRows(row, 'sum'); }", template);
+        Assert.Contains("'PriceList.Rows[].Total.change'(row: TPriceRow) { vatRows(row, 'total'); }", template);
+        Assert.Contains("'PriceList.Rows[].Vat.change'(row: TPriceRow) { vatRows(row, 'vat'); }", template);
+        Assert.Contains("'PriceList.Manual.change'(doc: TPriceList) { doc.Rows.forEach(r => vatRows(r, 'calc')); }", template);
+        Assert.Contains("function vatRows(row: TPriceRow, typed: 'calc' | 'sum' | 'total' | 'vat') {", template);
+        Assert.Contains("row.$noChangeEvents(() => {", template);
+    }
+
+    // Vat typed only under Manual: the flag is the header's, a row reaches it through the root
+    [Fact]
+    public async Task The_vat_of_a_row_is_disabled_outside_manual()
+    {
+        var xaml = await Materialize("/catalog/pricelist", MaterializeWhat.View);
+
+        Assert.Contains("""Disabled="{Bind !Root.PriceList.Manual}""", xaml);
+    }
+
     // phase 2: the far half is read off the linked target - what the reference carries
     [Fact]
     public async Task A_hop_reads_a_field_the_reference_carries()

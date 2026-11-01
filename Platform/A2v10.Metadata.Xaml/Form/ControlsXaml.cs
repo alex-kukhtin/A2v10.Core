@@ -136,7 +136,7 @@ internal partial class XamlBuilder
         return member.Kind switch
         {
             _ when member.IsShownOnly => ShownControl(member, $"{at.Prefix}{member.ModelName}", label),
-            MemberKind.Column => Editor(member.ColumnCheck, at, inherits),
+            MemberKind.Column => Editor(member.ColumnCheck, at, inherits, TypedUnder(member, at)),
             MemberKind.Property => PropertyControl(member, $"{at.Prefix}{member.Name}", label),
             // value is the record's own tags, candidates the root 'Tags' array - the pair Load emits
             MemberKind.Tags => new TagsControl()
@@ -158,6 +158,15 @@ internal partial class XamlBuilder
             },
             _ => throw new InvalidOperationException($"Invalid member kind '{member.Kind}'")
         };
+    }
+
+    // the flag a rule lets the member be typed under, as the control reaches it - a header's from a row through the root
+    String? TypedUnder(MemberDescriptor member, Reach at)
+    {
+        if (member.Rule?.TypedUnder is not { } flag)
+            return null;
+        var field = $"{flag.Column.ModelName}{(flag.RefField != null ? $".{flag.RefField}" : "")}";
+        return flag.IsRoot ? $"{at.Root}{Table.Model}.{field}" : $"{at.Prefix}{field}";
     }
 
     XTable CreateDetailsTable(FormElement tab)
@@ -482,7 +491,7 @@ internal partial class XamlBuilder
      * never meant to decide differently: a boolean in a row was edited as text, a memo in a row lost
      * its lines, a document in a row was a text box over an object.
      */
-    UIElementBase Editor(TableColumn column, Reach at, Dictionary<String, InheritDescriptor[]> inherits)
+    UIElementBase Editor(TableColumn column, Reach at, Dictionary<String, InheritDescriptor[]> inherits, String? typedUnder = null)
     {
         var valueBind = new Bind($"{at.Prefix}{column.ModelName}")
         {
@@ -673,12 +682,18 @@ internal partial class XamlBuilder
                 Label = label,
                 Bindings = b => b.SetBinding(nameof(CheckBox.Value), valueBind)
             },
+            // a rule's member is an amount (DeclarationBake.BuildVat), so this arm is the one that gates
             _ => new TextBox()
             {
                 Label = label,
                 Align = column.Type.ToXamlAlign(),
                 CssClass = cssClass,
-                Bindings = b => b.SetBinding(nameof(TextBox.Value), valueBind)
+                Bindings = b =>
+                {
+                    b.SetBinding(nameof(TextBox.Value), valueBind);
+                    if (typedUnder != null)
+                        b.SetBinding(nameof(TextBox.Disabled), new Bind($"!{typedUnder}"));
+                }
             }
         };
     }

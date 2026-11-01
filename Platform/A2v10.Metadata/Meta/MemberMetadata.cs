@@ -15,12 +15,18 @@ public enum MemberKind
     Property
 }
 
+/* A column a rule writes and the user types into only while a flag holds - the VAT of a row, by
+ * hand under Manual. No flag: never typed, shown only.
+ */
+public sealed record WrittenByRule(VatOperand? TypedUnder);
+
 /* One member of the record a form node may show. 'Column' for the kind a column contributes and
  * for no other, so a consumer that only ever draws columns says ColumnCheck and is done. A property
  * over a column rides on the column's member: the control is still the column's, and the property
- * only says whether it can be typed into.
+ * only says whether it can be typed into. So does a rule that writes it.
  */
-public sealed record MemberDescriptor(MemberKind Kind, String Name, TableColumn? Column = null, PropertyMetadata? Property = null)
+public sealed record MemberDescriptor(MemberKind Kind, String Name, TableColumn? Column = null, PropertyMetadata? Property = null,
+    WrittenByRule? Rule = null)
 {
     internal TableColumn ColumnCheck => Column
         ?? throw new InvalidOperationException($"Member '{Name}' ({Kind}) has no column");
@@ -32,8 +38,8 @@ public sealed record MemberDescriptor(MemberKind Kind, String Name, TableColumn?
 
     internal String Header => Column?.Header ?? $"@[{Name.TrimStart('$')}]";
 
-    // what was typed into it would not be kept: a getter without a setter, a column the database computes
-    internal Boolean IsShownOnly => Property is { Set: null } || Column?.HasSqlAs == true;
+    // what was typed into it would not be kept: a getter without a setter, a column the database computes, one a rule always writes
+    internal Boolean IsShownOnly => Property is { Set: null } || Column?.HasSqlAs == true || Rule is { TypedUnder: null };
 
     internal static MemberDescriptor Of(TableColumn column) =>
         new(MemberKind.Column, column.Name, column);
@@ -74,6 +80,18 @@ internal static class MemberMetadata
             .. properties.Where(kp => PropertyMetadata.IsOwnName(kp.Key))
                 .Select(kp => new MemberDescriptor(MemberKind.Property, kp.Key, Property: kp.Value))
         ];
+    }
+
+    /* The VAT of a row is the rule's: typed only under Manual (concepts/vat). Sum and Total stay as
+     * they are - typing them is how a sum is entered, the rule takes it from there.
+     */
+    public static List<MemberDescriptor> WithVat(this List<MemberDescriptor> members, VatDescriptor? vat)
+    {
+        if (vat == null)
+            return members;
+        var column = vat.Roles[VatRoles.Vat].Column;
+        var rule = new WrittenByRule(vat.Roles.GetValueOrDefault(VatRoles.Manual));
+        return [.. members.Select(m => m.Column?.Name == column.Name ? m with { Rule = rule } : m)];
     }
 
     /* A journal's rows seen from the document that posted them: its index columns minus the four

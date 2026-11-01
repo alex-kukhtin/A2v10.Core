@@ -112,6 +112,8 @@ internal partial class ScriptBuilder
         {
             if (Table.HasTags)
                 yield return """'g.tags.saved': tagsSaved""";
+            foreach (var e in RuleEvents())
+                yield return e;
         }
 
         IEnumerable<String> validators()
@@ -163,18 +165,15 @@ internal partial class ScriptBuilder
                 }
                 """;
             }
-        }
 
-        IEnumerable<String> types()
-        {
-            yield return "TRoot";
-            yield return Table.TypeName;
+            foreach (var f in RuleFunctions())
+                yield return f;
         }
 
         const String jsDivider = ",\n\t\t";
 
         var templ = $$"""
-        {{Imports(types(), "./edit")}}{{TemplateDecl}} {
+        {{Imports(TemplateTypes(), "./edit")}}{{RuleRequires()}}{{TemplateDecl}} {
             properties: {
                 {{String.Join(jsDivider, properties())}}
             },
@@ -216,40 +215,11 @@ internal partial class ScriptBuilder
                     yield return $"'{Table.Model}.{rs.Collection}[].{f}': {rule}";
         }
 
-        IEnumerable<String> events()
-        {
-            foreach (var (refName, inherits) in Endpoint.Declaration.Inherits)
-            {
-                var body = String.Join(" ", inherits.Select(x => $"doc.{x.Field.Name} = doc.{x.Ref.Name}.{x.Source};"));
-                yield return $$"""'{{Table.Model}}.{{refName}}.change'(doc{{Ann(Table.TypeName)}}) { {{body}} }""";
-            }
-
-            // inherit lands on the PATH too - one handler per row set, not one per collection
-            foreach (var rs in Endpoint.Declaration.Details.Values.SelectMany(d => d.RowSets))
-                foreach (var (refName, inherits) in rs.Inherits)
-                {
-                    var body = String.Join(" ", inherits.Select(x => $"row.{x.Field.Name} = row.{x.Ref.Name}.{x.Source};"));
-                    yield return $$"""'{{Table.Model}}.{{rs.Collection}}[].{{refName}}.change'(row{{Ann(rs.Type)}}) { {{body}} }""";
-                }
-        }
-
-        // a kind is its own type (EditTSMap), so what is imported is the row sets' and not the collections'
-        IEnumerable<String> types()
-        {
-            yield return "TRoot";
-            yield return Table.TypeName;
-            foreach (var rs in Endpoint.Declaration.Details.Values.SelectMany(d => d.RowSets))
-            {
-                yield return rs.Type;
-                yield return $"{rs.Type}Array";
-            }
-        }
-
         const String jsDivider = ",\n\t\t";
 
         var endpoint = Endpoint.Path;
         var templ = $$"""
-        {{Imports(types(), "./edit")}}{{TemplateDecl}} {
+        {{Imports(TemplateTypes(), "./edit")}}{{RuleRequires()}}{{TemplateDecl}} {
             options: {
                 globalSaveEvent: 'g.document.saved'
             },
@@ -260,7 +230,7 @@ internal partial class ScriptBuilder
                 {{String.Join(jsDivider, validators())}}
             },
             events: {
-                {{String.Join(jsDivider, events())}}
+                {{String.Join(jsDivider, RuleEvents())}}
             },
             commands: {
                 post,
@@ -285,6 +255,8 @@ internal partial class ScriptBuilder
             ctrl.$emitGlobal('g.document.posted', this);
             ctrl.$requery();
         }
+
+        {{String.Join('\n', RuleFunctions())}}
         """;
         return Task.FromResult<String>(templ);
     }

@@ -329,9 +329,10 @@ internal static class DeclarationBake
         foreach (var rowSet in baked.AllRowSets())
             if (rowSet.Vat is { } vat)
                 CheckVatNotProperty(vat, declaration.Properties, root: true);
+        // the baked one: a row's form reads what the rules of its row set write
         return baked with
         {
-            BakedForms = BuildForms(declaration, table, platformId),
+            BakedForms = BuildForms(baked, table, platformId),
             Initials = BuildInitials(declaration, table)
         };
     }
@@ -443,8 +444,13 @@ internal static class DeclarationBake
 
         static List<MemberDescriptor> plainRows(String scope, TableMetadata rows, String? kind) => rows.RowMembers();
 
-        List<MemberDescriptor> editRows(String scope, TableMetadata rows, String? kind) =>
-            rows.RowMembers().WithProperties(declaration.Details.GetValueOrDefault(scope)?.PropertiesFor(kind) ?? []);
+        List<MemberDescriptor> editRows(String scope, TableMetadata rows, String? kind)
+        {
+            var collection = declaration.Details.GetValueOrDefault(scope);
+            return rows.RowMembers()
+                .WithProperties(collection?.PropertiesFor(kind) ?? [])
+                .WithVat(collection?.RowSets.FirstOrDefault(rs => rs.Kind == kind)?.Vat);
+        }
 
         /* The one place that says which form sees what: the index forms show columns, the edit form
          * shows columns plus whatever a trait contributes, plus the declared properties - the edit
