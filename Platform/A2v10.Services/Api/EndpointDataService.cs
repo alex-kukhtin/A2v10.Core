@@ -64,6 +64,21 @@ public sealed class DataAt(IDataService _dataService, String _route, Boolean _re
         };
     }
 
+    /* The rows alone, whatever the screen shows beside them: 'index' of a catalog with folders is the
+     * tree and an empty collection, the rows come with its lazy loads. A caller with no screen reads this.
+     */
+    public async Task<DataResult> ListAsync(IndexQuery query, ExpandoObject filters)
+    {
+        var url = $"{_route}/indexpartial/0?{CreateIndexQuery(query, filters)}";
+        var model = ModelOf(await _dataService.LoadAsync(UrlKind.Page, url, prms => { }, isReload: !_render));
+        return new DataResult()
+        {
+            Data = model.Root.FitModelInfo(),
+            Metadata = model.BuildDataModelMeta(),
+            Model = model
+        };
+    }
+
     public async Task<DataResult> LoadAsync(String id)
     {
         var model = ModelOf(await _dataService.LoadAsync(_kind.Kind, $"{_route}/edit/{id}", prms => { }, isReload: !_render));
@@ -127,11 +142,12 @@ public sealed class DataAt(IDataService _dataService, String _route, Boolean _re
             if (query.Skip != 0)
                 yield return $"Offset={query.Skip}";
             if (!String.IsNullOrEmpty(query.Sort))
-                yield return $"SortOrder={query.Sort}";
+                yield return $"SortOrder={Uri.EscapeDataString(query.Sort)}";
             yield return $"SortDir={(query.Desc ? "desc" : "asc")}";
+            // escaped: an '&' in a value would otherwise set another parameter of the query
             var d = filters as IDictionary<String, Object>;
             foreach (var x in d.Keys)
-                yield return $"{x}={d[x]}";
+                yield return $"{Uri.EscapeDataString(x)}={Uri.EscapeDataString($"{d[x]}")}";
         }
         return String.Join("&", Params());
     }
