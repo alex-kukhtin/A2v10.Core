@@ -359,12 +359,8 @@ internal partial class SqlBuilder
             sb.AppendLine(defs);
         }
 
-        /* STEP 5: system recorset. What makes a record read-only: a posted document, a row the
-         * deploy writes (IsSystem - editing it is forbidden whole, see CLAUDE.md, "Chart of accounts").
-         */
-        var readOnly = Table.IsDocument ? "a.[Done]"
-            : Table.AllColumns().Any(c => c.Type == ColumnType.IsSystem) ? $"a.[{Constants.FieldNames.IsSystem}]"
-            : null;
+        // STEP 5: system recorset
+        var readOnly = ReadOnlyFlag("a");
         if (readOnly != null)
         {
             sb.AppendLine();
@@ -376,6 +372,11 @@ internal partial class SqlBuilder
         }
         return sb.ToString();
     }
+
+    // What makes a record read-only: a posted document, a row the deploy writes (IsSystem - editing it is forbidden whole, see CLAUDE.md, "Chart of accounts")
+    String? ReadOnlyFlag(String alias) => Table.IsDocument ? $"{alias}.[{Constants.FieldNames.Done}]"
+        : Table.AllColumns().Any(c => c.Type == ColumnType.IsSystem) ? $"{alias}.[{Constants.FieldNames.IsSystem}]"
+        : null;
 
     public async Task<IDataModel> LoadPlainModelAsync()
     {
@@ -468,12 +469,9 @@ internal partial class SqlBuilder
         var sb = new StringBuilder("-- merge details");
         sb.AppendLine();
 
-        Boolean updateablePredicate(TableColumn c)
-            => c.Type != ColumnType.Master && c.Type != ColumnType.RowKind && c.Type != ColumnType.Id && !c.HasSqlAs;
-
         String mergeOneDetails(TableMetadata detailsTable, String key)
         {
-            var updateFields = detailsTable.AllColumns(updateablePredicate);
+            var updateFields = detailsTable.AllColumns(c => c.IsRowFieldUpdated());
 
             return $"""
 				merge {detailsTable.SqlTableName} as t
@@ -491,7 +489,7 @@ internal partial class SqlBuilder
         /* One table, N table-valued parameters - one per kind, since that is how the model
          * splits. The kind itself is never sent: it is a literal here, so a row cannot
          * arrive claiming a kind other than the collection it came in, and it is excluded
-         * from 'update set' (updateablePredicate) so an existing row never changes kind.
+         * from 'update set' (IsRowFieldUpdated) so an existing row never changes kind.
          *
          * The delete pass is limited to the DECLARED kinds. Without that, a row whose kind
          * was removed from the metadata - and which therefore arrives in no parameter -
@@ -500,7 +498,7 @@ internal partial class SqlBuilder
          */
         String mergeMultiDetails(TableMetadata detailsTable)
         {
-            var updateFields = detailsTable.AllColumns(updateablePredicate);
+            var updateFields = detailsTable.AllColumns(c => c.IsRowFieldUpdated());
             var kindField = detailsTable.Columns.FirstOrDefault(c => c.Type == ColumnType.RowKind)
                 ?? throw new InvalidOperationException("Kind field not found");
 
@@ -557,6 +555,19 @@ internal partial class SqlBuilder
             return String.Empty;
         }
 
+        /* The flag of the load closes the form, and only a form obeys it: a caller with no screen would
+         * rewrite a posted document under the journals it wrote. In the transaction, as rv: post takes
+         * the same row, so a save waits here and sees the flag.
+         */
+        String CheckReadOnly()
+        {
+            if (ReadOnlyFlag("c") is not { } flag)
+                return String.Empty;
+            return $"""
+                if exists(select * from @{Table.Model} t inner join {Table.SqlTableName} c with (updlock) on c.Id = t.Id where {flag} = 1)
+                {SqlExtensions.UserError(Table.IsDocument ? "Error.Document.AlreadyApplied" : "Error.Element.IsSystem")}
+            """;
+        }
 
         /* Tags are not a detail: no fields of their own, no RowNo, nothing to update - a row either
          * is in the set or is not. So the merge has no 'when matched' arm, and what is deleted is
@@ -677,11 +688,7 @@ internal partial class SqlBuilder
             // the key of THIS table: platformid for most, an account code for a chart of accounts
             var keyType = Table.KeyColumn.SqlDataType();
 
-            /* A document with a list of operations is switched between them while it is edited, so its
-             * operation is saved like any field; one implicit operation is the endpoint and never changes.
-             */
-            var switches = Endpoint.Declaration.OperationDeclarations.Count > 0;
-            var updatedFields = Table.AllColumns(c => c.IsFieldUpdated() || switches && c.IsOperation)
+            var updatedFields = Table.AllColumns(c => Endpoint.IsHeaderSaved(c))
                 .Select(c => $"t.[{c.Name}] = s.[{c.Name}]");
             var insertedFields = Table.AllColumns(c => c.IsFieldInserted()).Select(c => $"[{c.Name}]").ToList();
             List<String> insertedValues = [.. insertedFields];
@@ -713,6 +720,7 @@ internal partial class SqlBuilder
              */
             // STEP:1 - check row version
             sb.AppendLine(CheckRowVersion());
+            sb.AppendLine(CheckReadOnly());
             sb.AppendLine(OwnerCheck(Table));
             sb.AppendLine(SentOperationCheck());
 
@@ -773,10 +781,7 @@ internal partial class SqlBuilder
                  * 'Stock' declared in both Rows and Links is legal and would give two @Stock
                  * in one batch. The table type is one either way - one table, one shape.
                  */
-                IEnumerable<String> sources = t.Value.Kinds.Count > 0
-                    ? t.Value.Kinds.Keys.Select(t.Value.KindCollectionName)
-                    : [t.Key];
-                foreach (var name in sources)
+                foreach (var (_, name, _) in t.Value.RowSets())
                 {
                     var rows = item?.Get<List<Object>>(name);
                     var dt = detailsTableBuilder.BuildDataTable(rows);

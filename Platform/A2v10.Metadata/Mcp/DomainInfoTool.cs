@@ -12,9 +12,12 @@ using A2v10.Infrastructure;
 
 namespace A2v10.Metadata;
 
+// name is what document_create takes, as '?Op=' does on a screen; title is what the user calls it
+internal sealed record McpOperation(String Name, String Title);
+
 internal sealed record McpDomainEntity(String Name, String Kind,
     String Title,
-    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] IReadOnlyList<String>? Operations,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] IReadOnlyList<McpOperation>? Operations,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] String? Description);
 
 /* The glossary, per user: which word means which entity. The words are the screens' own
@@ -29,7 +32,7 @@ internal sealed class DomainInfoTool(IReadOnlyList<McpEntity> entities, Database
     public String Title => "Application entities";
     public PlatformMcpToolHints Hints => PlatformMcpToolHints.ReadOnly;
     public String Description => """
-        The entities of this application that the current user can reach: name, kind (catalog or document), title - what the user calls it, operations - the kinds of a document the user may name, description when the name is not enough.
+        The entities of this application that the current user can reach: name, kind (catalog or document), title - what the user calls it, operations - the kinds of a document: the user names the title, document_create takes the name; description when the name is not enough.
         Call once at the start of a task. A catalog's name is what the catalog_* tools take, a document's - the document_* tools.
         """;
     public JsonElement InputSchema => McpArgs.Schema(new { type = "object", properties = new { }, additionalProperties = false });
@@ -42,7 +45,7 @@ internal sealed class DomainInfoTool(IReadOnlyList<McpEntity> entities, Database
         {
             var endpoint = await metadata.GetNormalEndpointAsync(null, e.Schema, e.Table);
             var operations = endpoint.Declaration.OperationDeclarations
-                .Select(o => Label(MetadataExtensions.OperationLabel(o.Id)))
+                .Select(o => new McpOperation(o.Name, Label(MetadataExtensions.OperationLabel(o.Id))))
                 .ToList();
             list.Add(new McpDomainEntity(e.Name, e.Kind,
                 Label(e.IsCatalog ? endpoint.Storage.RecordLabel() : MetadataExtensions.OperationLabel(endpoint.Name)),

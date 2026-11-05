@@ -170,16 +170,19 @@ public class PropertiesTests
         Assert.Contains("declares 'properties'", ex.Message);
     }
 
-    // the model has no browser for the setter to run in: it sends the primary fields itself
+    // the model has no browser for the expression to run in: it is told the expression, and computes and sends the value
     [Fact]
-    public async Task For_the_model_a_column_under_a_property_is_computed()
+    public async Task For_the_model_a_column_under_a_property_has_its_expression()
     {
         var endpoint = await LoadNormalAsync("document", "waybillin");
         var entity = new McpEntity("waybillin", endpoint.Path, "document", "waybillin", "document", null, null);
 
         var info = McpProjection.Describe(endpoint, entity, _ => null);
 
-        Assert.True(info.Fields.Single(f => f.Name == "Sum").Computed);
-        Assert.True(info.Collections.Single(c => c.Name == "ServiceRows").Fields.Single(f => f.Name == "Sum").Computed);
+        foreach (var sum in new[] { info.Fields.Single(f => f.Name == "Sum"), info.Collections.Single(c => c.Name == "ServiceRows").Fields.Single(f => f.Name == "Sum") })
+        {
+            Assert.False(String.IsNullOrEmpty(sum.Get));
+            Assert.Null(sum.Computed);
+        }
     }
 }

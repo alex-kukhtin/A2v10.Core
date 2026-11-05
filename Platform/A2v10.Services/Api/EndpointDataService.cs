@@ -19,16 +19,30 @@ public sealed class DataResult
     [JsonIgnore]
     public IDataModel Model { get; init; } = default!;
 
-    /* The id the save gave the record this model opened. The main object is a fact of the model
-     * ('!MainObject'), not of the address, and the saved root carries no metadata - so it is asked
-     * of the model that was saved, as the client asks its '$main'.
+    /* The main object is a fact of the model ('!MainObject'), not of the address, and the saved root
+     * carries no metadata - so it is asked of the model that was saved, as the client asks its '$main'.
      */
-    public Object IdOf(ExpandoObject saved)
+    public String MainName => Model.Metadata["TRoot"].MainObject
+        ?? throw new InvalidOperationException("The model marks no main object");
+
+    // the record of this model, or of the root a save of it returned; null: there is no such record
+    public ExpandoObject? Main(ExpandoObject? root = null) => (root ?? Data)?.Get<ExpandoObject>(MainName);
+
+    // the id the save gave the record this model opened
+    public Object IdOf(ExpandoObject saved) => Main(saved)?.Get<Object>("Id")
+        ?? throw new InvalidOperationException($"The save returned no '{MainName}.Id'");
+
+    /* What to save: this model with the fields laid over its record. It crosses JSON on its way back,
+     * as it does between the browser and the server.
+     */
+    public ExpandoObject With(IEnumerable<KeyValuePair<String, Object?>> fields)
     {
-        var main = Model.Metadata["TRoot"].MainObject
-            ?? throw new InvalidOperationException("The model marks no main object");
-        return saved.Get<ExpandoObject>(main)?.Get<Object>("Id")
-            ?? throw new InvalidOperationException($"The save returned no '{main}.Id'");
+        var root = Newtonsoft.Json.JsonConvert.DeserializeObject<ExpandoObject>(Newtonsoft.Json.JsonConvert.SerializeObject(Data))!;
+        var element = (root.Get<ExpandoObject>(MainName) as IDictionary<String, Object?>)
+            ?? throw new InvalidOperationException($"The model has no '{MainName}'");
+        foreach (var (key, value) in fields)
+            element[key] = value;
+        return root;
     }
 }
 
@@ -93,9 +107,12 @@ public sealed class DataAt(IDataService _dataService, String _route, Boolean _re
     /* 'new' and not '0': the server reads both as no id (PlatformUrl), the client does not - for it
      * '/0' is new in a dialog only, and a page saved from 'edit/0' keeps that address.
      */
-    public async Task<DataResult> CreateAsync()
+    public async Task<DataResult> CreateAsync(IReadOnlyDictionary<String, String>? query = null)
     {
-        var model = ModelOf(await _dataService.LoadAsync(_kind.Kind, $"{_route}/edit/new", prms => { }, isReload: !_render));
+        var url = $"{_route}/edit/new";
+        if (query?.Count > 0)
+            url += $"?{String.Join("&", query.Select(q => $"{Uri.EscapeDataString(q.Key)}={Uri.EscapeDataString(q.Value)}"))}";
+        var model = ModelOf(await _dataService.LoadAsync(_kind.Kind, url, prms => { }, isReload: !_render));
         return new DataResult()
         {
             Data = model.BuildNewInstance(),
@@ -113,6 +130,9 @@ public sealed class DataAt(IDataService _dataService, String _route, Boolean _re
     public Task PostAsync(Object id) => InvokeAsync("post", id);
 
     public Task UnPostAsync(Object id) => InvokeAsync("unpost", id);
+
+    // the Delete of a screen: the record is voided, the row stays
+    public Task VoidAsync(Object id) => _dataService.DbRemoveAsync($"{_kind.Prefix}/{_route}/index/0", id, null, prms => { });
 
     // as the generated template calls it: $invoke('post', {Id}, endpoint) → _page/<endpoint>/index/0
     async Task InvokeAsync(String command, Object id)

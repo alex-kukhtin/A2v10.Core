@@ -17,10 +17,13 @@ internal sealed record McpField(String Name, String Type)
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public Boolean? Required { get; init; }
-    // the platform computes it: the model sends qty and price, never the sum
+    // the database computes it: nothing the model sends reaches it
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public Boolean? Computed { get; init; }
-    // written by the platform or fixed by the address: the model reads it and never sends it
+    // the expression a screen computes it by: it runs in the browser, and the model has none, so it computes and sends the value
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public String? Get { get; init; }
+    // written by the platform or fixed by the address: not sent on a create, back as it came on a save
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public Boolean? ReadOnly { get; init; }
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -45,7 +48,9 @@ internal sealed record McpFilter(String Name, String Kind);
 
 internal sealed record McpEntityInfo(String Entity, String Kind,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] String? Description,
-    IReadOnlyList<McpField> Fields, IReadOnlyList<McpCollection> Collections, IReadOnlyList<McpFilter> Filters);
+    IReadOnlyList<McpField> Fields, IReadOnlyList<McpCollection> Collections, IReadOnlyList<McpFilter> Filters,
+    // the listed documents this user reaches that can be created from this one; what is hidden is not named
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] IReadOnlyList<String>? BasedOn = null);
 
 /* What a record is for the model (catalog_info, document_info). Every column but TableColumn.IsMcpColumn's
  * exclusions, named as in the shape; not the form. A collection with kinds is one collection per kind, under its
@@ -67,13 +72,11 @@ internal static class McpProjection
                 .Select(c => Field(c, rs.Rules, rs.Properties, declaration, null, header: false, entityOf))])));
         var filters = endpoint.Storage.Filters(declaration)
             .Select(f => new McpFilter(f.Name, JsonNamingPolicy.CamelCase.ConvertName(f.Kind.ToString())));
-        return new McpEntityInfo(entity.Name, entity.Kind, entity.Mcp?.Description, [.. fields], [.. collections], [.. filters]);
+        List<String> births = [.. declaration.BasedOn.Select(b => entityOf(b.Target)).OfType<McpEntity>().Select(e => e.Name)];
+        return new McpEntityInfo(entity.Name, entity.Kind, entity.Mcp?.Description, [.. fields], [.. collections], [.. filters],
+            births.Count > 0 ? births : null);
     }
 
-    /* A column under a property is computed for the model even when the property has a setter: the
-     * setter runs in the browser and writes the primary fields there, and the model has no browser -
-     * it sends the primary fields itself.
-     */
     static McpField Field(TableColumn column, RuleMetadata rules, IReadOnlyDictionary<String, PropertyMetadata> properties,
         DeclarationMetadata declaration, IReadOnlyDictionary<String, InitialMetadata>? initials, Boolean header,
         Func<String, McpEntity?> entityOf)
@@ -89,7 +92,8 @@ internal static class McpProjection
         return new McpField(column.Name, TypeName(column))
         {
             Required = rules.Required.Contains(column.Name) ? true : null,
-            Computed = column.HasSqlAs || properties.ContainsKey(column.Name) ? true : null,
+            Computed = column.HasSqlAs ? true : null,
+            Get = properties.TryGetValue(column.Name, out var property) ? property.Get : null,
             ReadOnly = readOnly ? true : null,
             Default = Default(column, rules, initials),
             Catalog = target is { IsCatalog: true } ? target.Name : null,

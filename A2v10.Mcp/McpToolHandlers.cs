@@ -68,8 +68,15 @@ internal static class McpToolHandlers
 		catch (Exception ex) when (ex is not OperationCanceledException)
 		{
 			// Any exception, not only a refusal: the model acts as the same user. The stack stays here.
-			return new CallToolResult() { IsError = true, Content = [new TextContentBlock() { Text = ex.Message }] };
+			return new CallToolResult() { IsError = true, Content = [new TextContentBlock() { Text = RefusalText(ex, request.Services!) }] };
 		}
+	}
+
+	// as the browser reads a refusal: the key in the user's language; 'UI:' marks it for the screen and says nothing here
+	static String RefusalText(Exception ex, IServiceProvider services)
+	{
+		var text = services.GetRequiredService<ILocalizer>().Localize(null, ex.Message) ?? ex.Message;
+		return text.StartsWith("UI:", StringComparison.Ordinal) ? text[3..] : text;
 	}
 
 	/* Names are checked on the full set, before the roles filter: otherwise a collision with a hidden

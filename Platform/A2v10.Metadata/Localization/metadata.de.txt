@@ -48,6 +48,7 @@
 @Error.Owner=Der ausgewählte Datensatz gehört einem anderen Eigentümer
 @Error.Delete.Used=Das Element kann nicht gelöscht werden, es wird verwendet
 @Error.Element.RowVersion=Das Element wurde von einem anderen Benutzer geändert. Öffnen Sie es erneut
+@Error.Element.IsSystem=Dieser Datensatz gehört zum System und kann nicht geändert werden
 @Error.Document.RowVersion=Der Beleg wurde von einem anderen Benutzer geändert. Öffnen Sie ihn erneut
 @Error.Document.NoCompany=Ein Beleg ohne Unternehmen kann nicht gebucht werden
 @Error.Document.AlreadyPosted=Der Beleg ist bereits gebucht

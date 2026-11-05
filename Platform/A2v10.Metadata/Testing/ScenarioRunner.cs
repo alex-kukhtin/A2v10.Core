@@ -77,9 +77,7 @@ internal sealed class ScenarioRunner(IServiceScopeFactory scopeFactory)
         }
     }
 
-    /* New: the instance the screen starts from, defaults and all. Known: the record as loaded.
-     * Either way it crosses JSON on its way back, as it does between the browser and the server.
-     */
+    // new: the instance the screen starts from, defaults and all; known: the record as loaded
     async Task SaveAsync(String name, ExpandoObject step)
     {
         var at = Required<String>(step, "at");
@@ -94,15 +92,7 @@ internal sealed class ScenarioRunner(IServiceScopeFactory scopeFactory)
         }
         else
             opened = await _door.CreateAsync(at);
-        var main = MainObject(opened.Model);
-        var root = JsonConvert.DeserializeObject<ExpandoObject>(JsonConvert.SerializeObject(opened.Data))!;
-
-        var element = Get(root, main) as IDictionary<String, Object?>
-            ?? throw new ScenarioException($"{at}: the model has no '{main}'");
-        foreach (var (key, value) in data)
-            element[key] = Resolve(value);
-
-        var saved = await _door.SaveAsync(at, root);
+        var saved = await _door.SaveAsync(at, opened.With(data.Select(f => KeyValuePair.Create(f.Key, Resolve(f.Value)))));
         _records[name] = new Record(at, opened.IdOf(saved));
     }
 

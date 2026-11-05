@@ -31,6 +31,10 @@ public sealed class MetadataMcpToolProvider(DatabaseMetadataProvider metadata, I
             tools.Add(new RecordInfoTool(family.Key, entities, visible, metadata));
             tools.Add(new RecordQueryTool(family.Key, entities, metadata, dataService));
             tools.Add(new RecordLoadTool(family.Key, entities, metadata, dataService));
+            tools.Add(new RecordCreateTool(family.Key, entities, metadata, dataService));
+            tools.Add(new RecordSaveTool(family.Key, entities, metadata, dataService));
+            if (family.Key == Constants.SchemaNames.Document)
+                tools.AddRange(DocumentActionTool.All(entities, metadata, dataService));
         }
         return tools;
     }

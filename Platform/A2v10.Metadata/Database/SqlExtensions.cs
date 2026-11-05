@@ -357,6 +357,16 @@ internal static class SqlExtensions
             && !column.IsStamp
             && !column.HasSqlAs;
     }
+    /* A document with a list of operations is switched between them while it is edited, so its
+     * operation is saved like any field; one implicit operation is the endpoint and never changes.
+     */
+    internal static Boolean IsHeaderSaved(this NormalEndpointMetadata endpoint, TableColumn column)
+        => column.IsFieldUpdated() || endpoint.Declaration.OperationDeclarations.Count > 0 && column.IsOperation;
+
+    // of a collection's row: the master and the kind are the merge's own, a row's id is its key
+    internal static Boolean IsRowFieldUpdated(this TableColumn column)
+        => column.Type != ColumnType.Master && column.Type != ColumnType.RowKind && column.Type != ColumnType.Id && !column.HasSqlAs;
+
     internal static Boolean IsFieldInserted(this TableColumn column)
     {
         return column.IsFieldUpdated() || column.Type == ColumnType.Operation;

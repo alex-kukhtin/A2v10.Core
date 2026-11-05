@@ -48,6 +48,7 @@
 @Error.Owner=The selected record belongs to another owner
 @Error.Delete.Used=The item cannot be deleted: it is in use
 @Error.Element.RowVersion=The item was changed by another user. Open it again
+@Error.Element.IsSystem=This record belongs to the system and cannot be changed
 @Error.Document.RowVersion=The document was changed by another user. Open it again
 @Error.Document.NoCompany=A document without a company cannot be posted
 @Error.Document.AlreadyPosted=The document is already posted

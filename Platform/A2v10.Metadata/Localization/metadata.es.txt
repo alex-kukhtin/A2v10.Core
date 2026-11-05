@@ -48,6 +48,7 @@
 @Error.Owner=El registro seleccionado pertenece a otro propietario
 @Error.Delete.Used=No se puede eliminar el elemento: está en uso
 @Error.Element.RowVersion=Otro usuario ha modificado el elemento. Vuelva a abrirlo
+@Error.Element.IsSystem=Este registro pertenece al sistema y no se puede modificar
 @Error.Document.RowVersion=Otro usuario ha modificado el documento. Vuelva a abrirlo
 @Error.Document.NoCompany=Un documento sin empresa no se puede contabilizar
 @Error.Document.AlreadyPosted=El documento ya está contabilizado
