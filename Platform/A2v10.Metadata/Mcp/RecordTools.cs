@@ -172,7 +172,8 @@ internal sealed class RecordQueryTool(String kind, IReadOnlyList<McpEntity> enti
 }
 
 // one record with its rows, as the screen loads it; the main object alone, not what the screen needs beside it
-internal sealed class RecordReadTool(String kind, IReadOnlyList<McpEntity> entities, IDataService dataService) : IPlatformMcpTool
+internal sealed class RecordReadTool(String kind, IReadOnlyList<McpEntity> entities, DatabaseMetadataProvider metadata,
+    IDataService dataService) : IPlatformMcpTool
 {
     public String Name => $"{kind}_read";
     public String Title => kind == Constants.SchemaNames.Catalog ? "Read a catalog record" : "Read a document";
@@ -195,6 +196,14 @@ internal sealed class RecordReadTool(String kind, IReadOnlyList<McpEntity> entit
         var result = await RecordTool.At(dataService, entity).LoadAsync(McpArgs.Scalar(id, "id"));
         var main = result.Model.Metadata["TRoot"].MainObject
             ?? throw new InvalidOperationException($"{entity.Path}: the model marks no main object");
-        return result.Data!.Get<Object>(main);
+        var record = result.Data!.Get<ExpandoObject>(main);
+        if (record == null)
+            return null;
+        // the screen's load carries what the projection excludes: rv for the save, the stamps. *_info does not name them
+        var fields = (IDictionary<String, Object?>)record;
+        var table = (await metadata.GetNormalEndpointAsync(null, entity.Schema, entity.Table)).Storage;
+        foreach (var column in table.AllColumns(c => !c.IsMcpColumn))
+            fields.Remove(column.Name);
+        return record;
     }
 }

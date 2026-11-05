@@ -514,7 +514,7 @@ The schemas of `metadata.json` are the format's teaching text, so where they are
   - **Wide search on purpose.** `Fragment` looks at the `IsSearchable` columns and the names of references, so "яблука" finds items by their category and the row shows it. Which is what the question needs: one item, sorts, a category, nothing.
   - **The limit is in the description:** a page is not a balance, an unposted document moves nothing. Numbers are `report_query`'s (stage 5).
   - Not built: a `words` mode (all words, any order) — the weak step of the PDF flow, items under the supplier's names. Waits for a stand run that counts the retries.
-- **`catalog_read`, `document_read`** — one record by id through the door, the model's main object alone (`TRoot.MainObject`), not what the screen needs beside it.
+- **`catalog_read`, `document_read`** — one record by id through the door, the model's main object alone (`TRoot.MainObject`), not what the screen needs beside it; without what `IsMcpColumn` excludes (`rv`, the stamps), which the screen's load carries.
 
 ## Test environment: a service of the test host
 
