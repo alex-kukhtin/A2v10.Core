@@ -92,7 +92,7 @@ A tool is always a C# type: `IPlatformMcpTool` — `Name`, `Title`, `Description
 - **No default implementation**, as `Roles`: a forgotten member does not compile. `None` is a written answer — a tool that writes and erases nothing (a future `create`).
 - **The handler writes all four hints, always** (`McpToolHandlers.ListTools`): an absent hint means the spec's default, and `destructiveHint` and `openWorldHint` default to `true` — a create without them would read as destroying. Absent flag = `false`.
 - **What the client does with them, seen 2026-10-02:** Claude's connector settings group the tools — without annotations all four landed in "Other tools", each "Needs approval", one by one. With `ReadOnly` they moved to "Read-only tools", shown by `Title`, and the group takes one switch for all. The per-tool choices made before survived the move, so the group's default for a fresh connector is not seen yet. With the group on "Always allow": a claude.ai chat called the tools without a question; the Code tab, in a session opened in an empty folder, asked at every call — its MCP permissions are its own, not the connector's switches. A hint is a hint: the client trusts it or not; what the user may do is still the roles on the server.
-- **Reads are `ReadOnly` alone** (`domain_info`, `*_info`, `*_query`, `*_read`, `whoami`): `idempotentHint` means something only when `readOnlyHint` is false. `OpenWorld` is a tool that reaches outside the application (a bank's API), never the platform's own.
+- **Reads are `ReadOnly` alone** (`domain_info`, `*_info`, `*_query`, `*_load`, `whoami`): `idempotentHint` means something only when `readOnlyHint` is false. `OpenWorld` is a tool that reaches outside the application (a bank's API), never the platform's own.
 - **The second reader comes with the first writing tool:** an OAuth `scope` of reading lets through the tools with `ReadOnly` (Rights, "Not built: delegation") — the same member.
 - **`Title`** — the human's name of the tool (the client's list, its permissions screen; without it the client shows "Catalog find"). Not for the model, which reads `Description`. English, as the descriptions; written by the tool, `Tool.Title` (not the older `annotations.title`).
 
@@ -140,8 +140,8 @@ A tool is always a C# type: `IPlatformMcpTool` — `Name`, `Title`, `Description
 - `domain_info` — entities (later reports, domain tools) as this user's roles see them; was `map`. Built — Metadata CLAUDE.md;
 - `catalog_info`, `document_info` — what an entity is: fields, required, what the platform computes, where its references lead, its filters. Built — Metadata CLAUDE.md;
 - `catalog_query`, `document_query` — the index through its door, which is also the search. Built — Metadata CLAUDE.md;
-- `catalog_read`, `document_read` — one record with its rows. Built — Metadata CLAUDE.md;
-- `catalog_save`, `document_save`, `document_post`, `document_unpost`, `document_void` — writing (stage 2);
+- `catalog_load`, `document_load` — one record with its rows. Built — Metadata CLAUDE.md;
+- `catalog_create`, `document_create`, `catalog_save`, `document_save`, `document_post`, `document_unpost`, `document_void` — writing (stage 2); `*_save` takes back a loaded record whole;
 - `report_info`, `report_query`, `document_movements` — numbers (stage 5);
 - `document_calc` — the document's logic without saving (stage 6);
 - `tool_info` / `tool_run` — the description and the call of a catalogued tool.
@@ -156,13 +156,13 @@ A tool is always a C# type: `IPlatformMcpTool` — `Name`, `Title`, `Description
 1. **`domain_info`** — once per conversation: the entity is `invoice`.
 2. **`document_info("invoice")`** — `Date`, `No`, `Agent` → `agent`, `Company` → `company`, `Rows[]` {`Item` → `item`, `Qty`, `Price`}; what is required; that `Sum` is the platform's. The only source of what to search: the targets of its references.
 3. **`catalog_query`, a call per word** — the customer by ЄДРПОУ, our company, every item of the rows. One each → on; several → the card fields tell them apart, else the model asks the user ("is 'Папір А4 80г' 'Папір офісний А4' or a new item?"); none → retry with the most distinctive word.
-4. **`document_save invoice {…}`** — the client asks the user's approval (a write). The platform checks against the shape: violations come back as a list ("row 3: no `Item`"), the model fixes and resends; success → id and number. A draft, not posted.
+4. **`document_create invoice {…}`** — the client asks the user's approval (a write). The platform checks against the shape: violations come back as a list ("row 3: no `Item`"), the model fixes and resends; success → id and number. A draft, not posted.
 
 4–5 calls, no new tool. The flow is simple; the difficulty lives in the quality of two answers — the search and the check on write:
 - **Items by name miss.** The PDF carries the supplier's name, the catalogue its own; a substring of the whole phrase misses constantly. `Fragment` looks at every text field and the names of references, so a code, an article, a ЄДРПОУ are found too. A `words` mode (all words, any order) is deferred until a stand run counts the retries. This decides how often the model asks back.
 - **Reconciliation with the document's total.** The model sends qty and price, the platform computes the sum. A total that differs from the PDF (VAT inside or on top, rounding) comes back as a warning — otherwise "created successfully" with another sum.
 - **A repeated create.** The answer is lost, the model resends — two invoices. Needs an idempotency key, or a check by (customer, number, date) before creating.
-- **A cascade of new catalogue records.** A missing item can be created by `catalog_save`, but it has its own required fields (unit, VAT rate). "New catalogue records only with the user's consent" stands in `instructions`.
+- **A cascade of new catalogue records.** A missing item can be created by `catalog_create`, but it has its own required fields (unit, VAT rate). "New catalogue records only with the user's consent" stands in `instructions`.
 - **`Company`** resolves itself here — our ЄДРПОУ is in the PDF and `catalog_query` finds it. A special case; the general question stays open.
 
 Open, at the level of the concept:

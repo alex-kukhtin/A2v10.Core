@@ -30,7 +30,7 @@ public sealed class MetadataMcpToolProvider(DatabaseMetadataProvider metadata, I
             var entities = family.ToList();
             tools.Add(new RecordInfoTool(family.Key, entities, visible, metadata));
             tools.Add(new RecordQueryTool(family.Key, entities, metadata, dataService));
-            tools.Add(new RecordReadTool(family.Key, entities, metadata, dataService));
+            tools.Add(new RecordLoadTool(family.Key, entities, metadata, dataService));
         }
         return tools;
     }
