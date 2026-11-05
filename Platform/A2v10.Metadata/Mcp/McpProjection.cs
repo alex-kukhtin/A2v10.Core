@@ -10,7 +10,7 @@ namespace A2v10.Metadata;
 
 internal sealed record McpSetValue(String Id, String? Name);
 
-/* One field of a record as entity_info shows it. Optional members are absent, never null or false:
+/* One field of a record as catalog_info and document_info show it. Optional members are absent, never null or false:
  * the model reads every key it is given.
  */
 internal sealed record McpField(String Name, String Type)
@@ -25,16 +25,14 @@ internal sealed record McpField(String Name, String Type)
     public Boolean? ReadOnly { get; init; }
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public String? Default { get; init; }
-    // a reference to a catalog: its name, which is catalog_find's parameter as it stands
+    // a reference: its target's name under the key of its kind, which is the parameter of that family's tools
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public String? Catalog { get; init; }
-    // a reference the model cannot fill: not a listed catalog this user reaches - a document included,
-    // since nothing finds a document's id yet
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public String? Document { get; init; }
+    // a reference the model cannot fill: not a listed entity this user reaches
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public Boolean? Unavailable { get; init; }
-    // a catalog's field catalog_find matches: 'exact' or 'contains'
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public String? Search { get; init; }
     // an enum or a state: the closed set inline; the value is sent as the code
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public IReadOnlyList<McpSetValue>? Values { get; init; }
@@ -42,48 +40,34 @@ internal sealed record McpField(String Name, String Type)
 
 internal sealed record McpCollection(String Name, IReadOnlyList<McpField> Fields);
 
+// one filter *_query takes: the name is the key under its 'filter'
+internal sealed record McpFilter(String Name, String Kind);
+
 internal sealed record McpEntityInfo(String Entity, String Kind,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] String? Description,
-    IReadOnlyList<McpField> Fields, IReadOnlyList<McpCollection> Collections);
+    IReadOnlyList<McpField> Fields, IReadOnlyList<McpCollection> Collections, IReadOnlyList<McpFilter> Filters);
 
-/* What a record is for the model - one projection, three readers (entity_info describes it, catalog_find
- * returns rows in it, entity_crud will accept it). Every column but TableColumn.IsMcpColumn's exclusions,
- * named as in the shape; not the form. A collection with kinds is one collection per kind, under its
+/* What a record is for the model (catalog_info, document_info). Every column but TableColumn.IsMcpColumn's
+ * exclusions, named as in the shape; not the form. A collection with kinds is one collection per kind, under its
  * composed name (StockRows), each with its own rules - the model sets no Kind.
  */
 internal static class McpProjection
 {
     internal static String TypeName(TableColumn column) => JsonNamingPolicy.CamelCase.ConvertName(column.Type.ToString());
 
-    // catalogOf: the name of a listed catalog this user reaches, by its path; null otherwise
-    internal static McpEntityInfo Describe(NormalEndpointMetadata endpoint, McpEntity entity, Func<String, String?> catalogOf)
+    // entityOf: the listed entity this user reaches, by its path; null otherwise
+    internal static McpEntityInfo Describe(NormalEndpointMetadata endpoint, McpEntity entity, Func<String, McpEntity?> entityOf)
     {
         var declaration = endpoint.Declaration;
         var initials = endpoint.AllInitials();
-        var search = entity.IsCatalog
-            ? SearchSet(endpoint, entity).ToDictionary(s => s.Column.Name, s => JsonNamingPolicy.CamelCase.ConvertName(s.Mode.ToString()))
-            : [];
         var fields = endpoint.Storage.AllColumns(c => c.IsMcpColumn)
-            .Select(c => Field(c, declaration.Rules, declaration.Properties, declaration, initials, header: true, catalogOf)
-                with { Search = search.GetValueOrDefault(c.Name) });
+            .Select(c => Field(c, declaration.Rules, declaration.Properties, declaration, initials, header: true, entityOf));
         var collections = endpoint.Storage.Details.SelectMany(d => declaration.Details[d.Key].RowSets
             .Select(rs => new McpCollection(rs.Collection, [.. d.Value.AllColumns(c => c.IsMcpColumn)
-                .Select(c => Field(c, rs.Rules, rs.Properties, declaration, null, header: false, catalogOf))])));
-        return new McpEntityInfo(entity.Name, entity.Kind, entity.Mcp?.Description, [.. fields], [.. collections]);
-    }
-
-    /* What catalog_find matches a catalog by - and entity_info marks it, so the model knows which text finds what.
-     * Written: 'mcp.searchBy' of the address, whole. Derived: the column a record is chosen by (displayAs) as a substring - finding is choosing - a declared
-     * unique string field exactly - a code that is not unique is a bad exact key anyway.
-     */
-    internal static IEnumerable<(TableColumn Column, McpSearchMode Mode)> SearchSet(NormalEndpointMetadata endpoint, McpEntity catalog)
-    {
-        var table = endpoint.Storage;
-        if (catalog.Mcp?.SearchBy is { } written)
-            return written.Select(kp => (table.AllColumns().FirstOrDefault(c => c.Name == kp.Key)
-                ?? throw new InvalidOperationException($"{catalog.Path}: mcp.searchBy names '{kp.Key}', which is not a field of it"), kp.Value));
-        return table.AllColumns(c => c.Name == table.DisplayAs || c.Unique && c.Type is ColumnType.String or ColumnType.Name)
-            .Select(c => (c, c.Name == table.DisplayAs ? McpSearchMode.Contains : McpSearchMode.Exact));
+                .Select(c => Field(c, rs.Rules, rs.Properties, declaration, null, header: false, entityOf))])));
+        var filters = endpoint.Storage.Filters(declaration)
+            .Select(f => new McpFilter(f.Name, JsonNamingPolicy.CamelCase.ConvertName(f.Kind.ToString())));
+        return new McpEntityInfo(entity.Name, entity.Kind, entity.Mcp?.Description, [.. fields], [.. collections], [.. filters]);
     }
 
     /* A column under a property is computed for the model even when the property has a setter: the
@@ -92,15 +76,15 @@ internal static class McpProjection
      */
     static McpField Field(TableColumn column, RuleMetadata rules, IReadOnlyDictionary<String, PropertyMetadata> properties,
         DeclarationMetadata declaration, IReadOnlyDictionary<String, InitialMetadata>? initials, Boolean header,
-        Func<String, String?> catalogOf)
+        Func<String, McpEntity?> entityOf)
     {
         var readOnly = IsReadOnly(column, declaration, header);
-        String? catalog = null;
+        McpEntity? target = null;
         Boolean? unavailable = null;
         if (column.IsRef && !column.IsSetRef && !readOnly)
         {
-            catalog = column.RefTable is NormalEndpointMetadata ep ? catalogOf(ep.Path) : null;
-            unavailable = catalog == null ? true : null;
+            target = column.RefTable is NormalEndpointMetadata ep ? entityOf(ep.Path) : null;
+            unavailable = target == null ? true : null;
         }
         return new McpField(column.Name, TypeName(column))
         {
@@ -108,7 +92,8 @@ internal static class McpProjection
             Computed = column.HasSqlAs || properties.ContainsKey(column.Name) ? true : null,
             ReadOnly = readOnly ? true : null,
             Default = Default(column, rules, initials),
-            Catalog = catalog,
+            Catalog = target is { IsCatalog: true } ? target.Name : null,
+            Document = target is { IsCatalog: false } ? target.Name : null,
             Unavailable = unavailable,
             // the living values, without the filter's 'All' row (its key is the empty string)
             Values = column.IsSetRef

@@ -32,7 +32,7 @@ internal sealed record McpJsonFile
 /* mcp.json and what the index derives from it without loading an endpoint: the name (second segment),
  * the kind (the folder, through app.json aliases), the roles (the folder's model.json), the 'mcp' key of
  * the folder's metadata.json (parsed for that key alone - domain_info shows its description). Loaded at the
- * first tools/list - the schema of catalog_find enumerates the catalogs - and cached with the metadata.
+ * first tools/list - the schemas of the tools enumerate the entities - and cached with the metadata.
  * Refused here, naming the path: a path that is not two segments, a kind other than catalog/document,
  * no metadata.json in the folder, two equal names. The rest is `a2 meta validate`'s mcp stage.
  */

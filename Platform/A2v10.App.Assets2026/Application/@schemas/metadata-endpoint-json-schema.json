@@ -737,12 +737,6 @@
                 "description": {
                     "type": "string",
                     "description": "Shown by domain_info when the folder name is not enough."
-                },
-                "searchBy": {
-                    "type": "object",
-                    "description": "Catalog only. Field -> how catalog_find matches it: 'exact' (=) or 'contains' (substring). Written, it replaces the derived set whole (the presentation as 'contains', a 'unique' string field as 'exact').",
-                    "minProperties": 1,
-                    "additionalProperties": { "type": "string", "enum": [ "exact", "contains" ] }
                 }
             }
         },

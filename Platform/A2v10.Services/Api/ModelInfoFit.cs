@@ -48,12 +48,34 @@ public static class ModelInfoFit
                     // The wire has no asc/desc magic string — desc is a bool (IndexQuery.Desc).
                     dstDict["Desc"] = String.Equals(value as String, "desc", StringComparison.OrdinalIgnoreCase);
                     break;
+                case "Filter" when value is ExpandoObject filter:
+                    dstDict[key] = FitFilter(filter);
+                    break;
                 default:
-                    // Not the engine's control vocabulary (Filter, future keys) — carried as is.
+                    // Not the engine's control vocabulary (future keys) — carried as is.
                     dstDict[key] = value;
                     break;
             }
         }
+        return dst;
+    }
+
+    // the mark DataHelpers.DateTime2StringWrap puts on both sides of a date, for the browser's reviver
+    private const String DateWrap = "\"\\/\"";
+
+    // The wire has no such mark either: a date of the echo reads as a date of a row.
+    private static ExpandoObject FitFilter(ExpandoObject src)
+    {
+        var dst = new ExpandoObject();
+        var dstDict = (IDictionary<String, Object?>)dst;
+        foreach (var (key, value) in (IDictionary<String, Object?>)src)
+            dstDict[key] = value switch
+            {
+                ExpandoObject nested => FitFilter(nested),
+                String text when text.StartsWith(DateWrap, StringComparison.Ordinal) && text.EndsWith(DateWrap, StringComparison.Ordinal)
+                    => text[DateWrap.Length..^DateWrap.Length],
+                _ => value
+            };
         return dst;
     }
 }

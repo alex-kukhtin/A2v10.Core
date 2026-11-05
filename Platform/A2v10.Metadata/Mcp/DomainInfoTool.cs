@@ -30,7 +30,7 @@ internal sealed class DomainInfoTool(IReadOnlyList<McpEntity> entities, Database
     public PlatformMcpToolHints Hints => PlatformMcpToolHints.ReadOnly;
     public String Description => """
         The entities of this application that the current user can reach: name, kind (catalog or document), title - what the user calls it, operations - the kinds of a document the user may name, description when the name is not enough.
-        Call once at the start of a task. Entity names are the words the other tools take.
+        Call once at the start of a task. A catalog's name is what the catalog_* tools take, a document's - the document_* tools.
         """;
     public JsonElement InputSchema => McpArgs.Schema(new { type = "object", properties = new { }, additionalProperties = false });
     public String[]? Roles => null;
