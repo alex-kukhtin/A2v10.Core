@@ -1,0 +1,36 @@
+{
+	"$schema": "../../../../../Platform/A2v10.App.Assets2026/Application/@schemas/metadata-endpoint-json-schema.json#",
+	"table": "Payments",
+	"model": "Payment",
+	"presentation": "Memo",
+	"fields": {
+		"Account": {
+			"type": "Account",
+			"target": "/accplan/national"
+		}
+	},
+	"details": {
+		"Rows": {
+			"model": "Row",
+			"fields": {
+				"AccDt": {
+					"type": "Account",
+					"target": "/accplan/national"
+				},
+				"AccCt": {
+					"type": "Account",
+					"target": "/accplan/national"
+				},
+				"Sum": {
+					"type": "Amount"
+				}
+			}
+		}
+	},
+	"initialValues": {
+		"Account": {
+			"source": "literal",
+			"value": "361"
+		}
+	}
+}

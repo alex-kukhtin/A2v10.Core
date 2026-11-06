@@ -144,6 +144,12 @@ internal class RefMapBuilder
             );
     }
 
+    /* Where a key a column carries goes when it is not read from a row - an initial value. The slots
+     * are named after the widest source (BuildTableStructure), so a header column of a target the rows
+     * point at twice has no slot of its own name. Any slot of the target serves: the resolve unions them.
+     */
+    String SlotOf(TableColumn column) => _tableStruct[TargetKey(column)][0].Name;
+
     public String? GenerateDeclare()
     {
         var cols = _tableStruct
@@ -244,10 +250,11 @@ internal class RefMapBuilder
         sb.Append("exec usr.GetProfilePreferences @UserId = @UserId, ");
         sb.AppendJoin(',', profUser.Select(p => $"@{p.Value.Value} = @Init{p.Key} output"));
         sb.AppendLine(";");
-        var mapKeys = String.Join(',', profUser.Select(p => p.Key));
-        var mapValues = String.Join(",", profUser.Select(p => $"@Init{p.Key}"));
         sb.AppendLine();
-        sb.AppendLine($"insert into @map({mapKeys}) values ({mapValues});");
+        // one insert a key: two of one target share a slot
+        sb.AppendJoin(Environment.NewLine, profUser.Select(p =>
+            $"insert into @map([{SlotOf(_endpoint.Storage.AllColumns().First(c => c.Name == p.Key))}]) values (@Init{p.Key});"));
+        sb.AppendLine();
         return sb.ToString();
     }
     
@@ -267,12 +274,13 @@ internal class RefMapBuilder
             .Where(x => x.Value.Source is InitialSource.Literal or InitialSource.Query)
             .Select(x => (Column: _endpoint.Storage.AllColumns().FirstOrDefault(c => c.Name == x.Key), Initial: x.Value))
             .Where(x => x.Column != null && x.Column.IsRef)
+            .Select(x => (Column: x.Column!, x.Initial))
             .ToList();
         if (refs.Count == 0)
             return null;
         // a value from the url is the variable SqlBuilder.QueryInitialsSql declared, never a literal
         return String.Join(Environment.NewLine, refs.Select(r =>
-            $"insert into @map([{r.Column!.Name}]) values ({(r.Initial.Source == InitialSource.Query
+            $"insert into @map([{SlotOf(r.Column)}]) values ({(r.Initial.Source == InitialSource.Query
                 ? $"@Init{r.Column.Name}"
                 : r.Column.SqlLiteral(r.Initial.Value))});"));
     }
