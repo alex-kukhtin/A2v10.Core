@@ -25,7 +25,7 @@ internal class XamlAttachmentsBuilder
             Content = content,
             Bindings = b =>
             {
-                var cmd = new BindCmd(CommandType.Execute) { CommandName = name };
+                var cmd = new BindCmdExec(name);
                 if (argument != null)
                     cmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(argument));
                 b.SetBinding(nameof(Button.Command), cmd);

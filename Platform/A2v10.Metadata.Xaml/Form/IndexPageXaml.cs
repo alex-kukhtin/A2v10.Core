@@ -258,7 +258,7 @@ internal partial class XamlBuilder
         Icon = Icon.Clear,
         Tip = "@[Delete]",
         Bindings = b => b.SetBinding(nameof(Button.Command),
-            new BindCmd(CommandType.Execute) { CommandName = ScriptBuilder.DeleteFolderCommand })
+            new BindCmdExec(ScriptBuilder.DeleteFolderCommand))
     };
 
     /* The folder the tree has selected, in the owner's editFolder dialog - an action of the owner, the

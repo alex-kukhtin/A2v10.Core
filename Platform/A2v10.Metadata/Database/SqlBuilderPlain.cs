@@ -51,18 +51,27 @@ internal partial class SqlBuilder
         Table.AllColumns().FirstOrDefault(c => c.Name == key)
             ?? throw new InvalidOperationException($"initialValues: '{key}' is not a column of {Table.SqlTableName}");
 
-    String? QueryInitialsSql()
+    /* An expression the file writes (InitialSource.Sql) takes the same road: declared as @Init<field>,
+     * typed by the field and not by the expression, read by the map and the defaults alike - so a
+     * reference resolves into its object whichever source gave its key.
+     */
+    IReadOnlyList<(String Key, String Expression)> SqlInitials() =>
+        IsNewModel()
+            ? [.. Endpoint.AllInitials().Where(x => x.Value.Source == InitialSource.Sql).Select(x => (x.Key, x.Value.Value))]
+            : [];
+
+    String? InitialVariablesSql()
     {
-        var initials = QueryInitials();
-        if (initials.Count == 0)
-            return null;
-        return String.Join(Environment.NewLine, initials.Select(q =>
+        var query = QueryInitials().Select(q =>
         {
             var column = QueryColumn(q.Key);
             // CAST takes system types only: an identifier is cast to the base the database reported
             var castTo = column.ToSqlDbTypeInfo().SqlName == "platformid" ? _descr.PlatformId.SqlTypeName : column.SqlDataType();
             return $"declare @Init{q.Key} {column.SqlDataType()} = try_cast(@Query{q.Key} as {castTo});";
-        }));
+        });
+        var sql = SqlInitials().Select(s => $"declare @Init{s.Key} {QueryColumn(s.Key).SqlDataType()} = ({s.Expression});");
+        var lines = query.Concat(sql).ToList();
+        return lines.Count == 0 ? null : String.Join(Environment.NewLine, lines);
     }
 
     // the query keeps the name as the url spelled it, and a client may lower it
@@ -188,8 +197,8 @@ internal partial class SqlBuilder
                 };
             }
 
-            // the variable QueryInitialsSql declared - a reference comes back as an object, as a literal does
-            String getDefaultQuery(String key)
+            // the variable InitialVariablesSql declared - a reference comes back as an object, as a literal does
+            String getDefaultVariable(String key)
             {
                 var column = QueryColumn(key);
                 return column.IsRef
@@ -205,7 +214,7 @@ internal partial class SqlBuilder
                     InitialSource.Profile => getDefaultProfile(p.Key),
                     InitialSource.Literal => getDefaultLiteral(p.Key, p.Value.Value),
                     InitialSource.Context => getDefaultContext(p.Key, p.Value.Value),
-                    InitialSource.Query => getDefaultQuery(p.Key),
+                    InitialSource.Query or InitialSource.Sql => getDefaultVariable(p.Key),
                     _ => throw new InvalidOperationException($"Invalid initial source {p.Value.Source}")
                 }
             ));
@@ -310,10 +319,10 @@ internal partial class SqlBuilder
         }
 
         // before the map: it reads these for the references among them
-        if (QueryInitialsSql() is { } queryInitials)
+        if (InitialVariablesSql() is { } initialVariables)
         {
             sb.AppendLine();
-            sb.AppendLine(queryInitials);
+            sb.AppendLine(initialVariables);
         }
 
         var refMap = new RefMapBuilder(Endpoint, isPlain: true, hasDefaults: IsNewModel(), rows);

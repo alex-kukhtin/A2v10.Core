@@ -239,21 +239,24 @@ internal class RefMapBuilder
         if (!_hasDefaults || _endpoint == null)
             return null;
         // from user profile - the same one list, so there is no second place to ask what a new record starts on
-        var profUser = _endpoint.AllInitials().Where(x => x.Value.Source == InitialSource.Profile).ToList();
-        if (profUser.Count == 0) 
+        var storage = _endpoint.Storage;
+        var profUser = _endpoint.AllInitials().Where(x => x.Value.Source == InitialSource.Profile)
+            .Select(x => (x.Key, Slot: x.Value.Value, Column: storage.AllColumns().First(c => c.Name == x.Key)))
+            .ToList();
+        if (profUser.Count == 0)
             return null;
         var sb = new StringBuilder();
         sb.AppendLine();
-        sb.AppendJoin(Environment.NewLine, profUser.Select(p => $"declare @Init{p.Key} platformid;"));
+        // typed by the field, as the url and 'sql' variables are: an account's key is its code, not a platformid
+        sb.AppendJoin(Environment.NewLine, profUser.Select(p => $"declare @Init{p.Key} {p.Column.SqlDataType()};"));
         sb.AppendLine();
         sb.AppendLine();
         sb.Append("exec usr.GetProfilePreferences @UserId = @UserId, ");
-        sb.AppendJoin(',', profUser.Select(p => $"@{p.Value.Value} = @Init{p.Key} output"));
+        sb.AppendJoin(',', profUser.Select(p => $"@{p.Slot} = @Init{p.Key} output"));
         sb.AppendLine(";");
         sb.AppendLine();
         // one insert a key: two of one target share a slot
-        sb.AppendJoin(Environment.NewLine, profUser.Select(p =>
-            $"insert into @map([{SlotOf(_endpoint.Storage.AllColumns().First(c => c.Name == p.Key))}]) values (@Init{p.Key});"));
+        sb.AppendJoin(Environment.NewLine, profUser.Select(p => $"insert into @map([{SlotOf(p.Column)}]) values (@Init{p.Key});"));
         sb.AppendLine();
         return sb.ToString();
     }
@@ -271,16 +274,16 @@ internal class RefMapBuilder
         if (!_hasDefaults || _endpoint == null)
             return null;
         var refs = _endpoint.AllInitials()
-            .Where(x => x.Value.Source is InitialSource.Literal or InitialSource.Query)
+            .Where(x => x.Value.Source is InitialSource.Literal or InitialSource.Query or InitialSource.Sql)
             .Select(x => (Column: _endpoint.Storage.AllColumns().FirstOrDefault(c => c.Name == x.Key), Initial: x.Value))
             .Where(x => x.Column != null && x.Column.IsRef)
             .Select(x => (Column: x.Column!, x.Initial))
             .ToList();
         if (refs.Count == 0)
             return null;
-        // a value from the url is the variable SqlBuilder.QueryInitialsSql declared, never a literal
+        // a value from the url or an expression is the variable SqlBuilder.InitialVariablesSql declared, never a literal
         return String.Join(Environment.NewLine, refs.Select(r =>
-            $"insert into @map([{SlotOf(r.Column)}]) values ({(r.Initial.Source == InitialSource.Query
+            $"insert into @map([{SlotOf(r.Column)}]) values ({(r.Initial.Source is InitialSource.Query or InitialSource.Sql
                 ? $"@Init{r.Column.Name}"
                 : r.Column.SqlLiteral(r.Initial.Value))});"));
     }

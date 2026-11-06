@@ -7,6 +7,17 @@
 		"Account": {
 			"type": "Account",
 			"target": "/accplan/national"
+		},
+		"Agent": {
+			"type": "Ref",
+			"target": "/catalog/agent"
+		},
+		"DueDate": {
+			"type": "Date"
+		},
+		"CashAccount": {
+			"type": "Account",
+			"target": "/accplan/national"
 		}
 	},
 	"details": {
@@ -31,6 +42,18 @@
 		"Account": {
 			"source": "literal",
 			"value": "361"
+		},
+		"Agent": {
+			"source": "sql",
+			"value": "select min(Id) from cat.Agents"
+		},
+		"DueDate": {
+			"source": "sql",
+			"value": "dateadd(day, 30, getdate())"
+		},
+		"CashAccount": {
+			"source": "profile",
+			"value": "MainCashAccount"
 		}
 	}
 }

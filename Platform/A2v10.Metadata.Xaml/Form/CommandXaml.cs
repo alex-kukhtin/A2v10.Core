@@ -67,9 +67,9 @@ internal partial class XamlBuilder
 
     Toolbar IndexToolbar(FormElement slot) => Table.Kind switch
     {
+        // no Show: the owner's page it opens is not built yet (Constants.Actions.Show)
         TableKind.Catalog => StandardToolbar(
-            [EntityCommandType.Create, EntityCommandType.Edit, EntityCommandType.Delete,
-                CommandBarItem.Separator, EntityCommandType.Show],
+            [EntityCommandType.Create, EntityCommandType.Edit, EntityCommandType.Delete],
             slot, GridChrome(), CommandScope.Grid),
         TableKind.Document => StandardToolbar(
             [EntityCommandType.Create, EntityCommandType.Edit, EntityCommandType.Delete, .. PrintCommand(), .. BasedOnCommand()],
@@ -226,9 +226,8 @@ internal partial class XamlBuilder
                     Icon = Icon.Apply, 
                     Content = "@[Post]",
                     Bindings = b => {
-                        var cmd = new BindCmd(CommandType.Execute)
+                        var cmd = new BindCmdExec("post")
                         {
-                            CommandName = "post",
                             ValidRequired = true,
                             SaveRequired = true,
                             Confirm = new Confirm() { Message = "@[Confirm.Document.Post]"}
@@ -244,9 +243,8 @@ internal partial class XamlBuilder
                     Content = "@[UnPost]",
                     Bindings = b => {
                         b.SetBinding(nameof(Button.If), new Bind($"{Table.Model}.Done"));
-                        var cmd = new BindCmd(CommandType.Execute)
+                        var cmd = new BindCmdExec("unPost")
                         {
-                            CommandName = "unPost",
                             Confirm = new Confirm() { Message = "@[Confirm.Document.UnPost]" },
                             CheckReadOnly = false
                         };

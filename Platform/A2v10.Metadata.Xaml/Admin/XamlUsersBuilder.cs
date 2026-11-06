@@ -123,7 +123,7 @@ internal class XamlUsersBuilder(String _path)
                                     Icon = Icon.Add,
                                     Content = "@[Create]",
                                     Bindings = b => b.SetBinding(nameof(Button.Command),
-                                        new BindCmd(CommandType.Execute) { CommandName = UsersTemplateBuilder.CreateUser })
+                                        new BindCmdExec(UsersTemplateBuilder.CreateUser))
                                 },
                                 ToolbarButton(Icon.Edit, "@[Edit]", DialogSelected(UserAdminEndpointMetadata.EditAction)),
                                 ToolbarButton(Icon.Clear, "@[Delete]", ExecuteSelected(UsersTemplateBuilder.DeleteUser)),
@@ -261,7 +261,7 @@ internal class XamlUsersBuilder(String _path)
                 Content = "@[Create]",
                 Style = ButtonStyle.Primary,
                 Bindings = b => b.SetBinding(nameof(Button.Command),
-                    new BindCmd(CommandType.Execute) { CommandName = UsersTemplateBuilder.Create, ValidRequired = true })
+                    new BindCmdExec(UsersTemplateBuilder.Create) { ValidRequired = true })
             },
             CancelButton()
         ],
@@ -288,7 +288,7 @@ internal class XamlUsersBuilder(String _path)
                 Content = "@[SetPassword]",
                 Style = ButtonStyle.Primary,
                 Bindings = b => b.SetBinding(nameof(Button.Command),
-                    new BindCmd(CommandType.Execute) { CommandName = UsersTemplateBuilder.SetPassword, ValidRequired = true })
+                    new BindCmdExec(UsersTemplateBuilder.SetPassword) { ValidRequired = true })
             },
             CancelButton()
         ],
