@@ -16,12 +16,17 @@
             "type": "string",
             "description": "Base of the generated names and of the localization keys of the numberings. Defaults to 'Autonum', for the same reason as 'table'."
         },
+        "fields": {
+            "$ref": "metadata-endpoint-json-schema.json#/definitions/fields",
+            "description": "The author's own columns of a numbering, next to the baseline (Id, Name, Pattern, Period). Each numbering fills them under the column's name."
+        },
         "autonums": {
             "type": "object",
             "description": "Numbering by id. The key is the id - it is what an endpoint's 'autonum' names, and there is no 'id' inside. A key dropped from this file keeps its row and its counter: documents carry the numbers it issued, and the counter must not restart.",
             "additionalProperties": {
                 "type": "object",
-                "additionalProperties": false,
+                "description": "Any key besides the ones below is a column of 'fields', spelled as the column, with a scalar value. A column the numbering does not name is left as the deploy found it. A key that is no column fails the load.",
+                "additionalProperties": { "type": [ "string", "number", "boolean", "null" ] },
                 "required": [ "pattern" ],
                 "properties": {
                     "name": {

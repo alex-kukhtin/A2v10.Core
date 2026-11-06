@@ -935,8 +935,8 @@ go
 /*
 Copyright © 2026 Oleksandr Kukhtin
 
-Last updated : 13 oct 2026
-module version : 8671
+Last updated : 23 oct 2026
+module version : 8672
 */
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.SCHEMATA where SCHEMA_NAME=N'a2blob')
@@ -960,11 +960,21 @@ create table a2blob.Blobs
 	Mime nvarchar(255) not null,
 	BlobName nvarchar(1024) not null,
 	ThumbName nvarchar(1024) null,
+	[Hash] varbinary(32) null,
 	AccessToken uniqueidentifier not null constraint DF_Blobs_AccessToken default(newid()),
 	UserId bigint not null
 		constraint FK_Blobs_UserId_Users foreign key references a2security.Users(Id),
 	UtcDateCreated datetime not null constraint DF_Blobs_UtcDateCreated default(getutcdate())
 );
+go
+------------------------------------------------
+-- SHA-256 of the stored bytes, to find duplicates; null in rows written before it
+if not exists(select * from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = N'a2blob' and TABLE_NAME = N'Blobs' and COLUMN_NAME = N'Hash')
+	alter table a2blob.Blobs add [Hash] varbinary(32) null;
+go
+------------------------------------------------
+if not exists(select * from sys.indexes where [object_id] = object_id(N'a2blob.Blobs') and [name] = N'IX_Blobs_Hash')
+	create nonclustered index IX_Blobs_Hash on a2blob.Blobs([Hash]);
 go
 ------------------------------------------------
 if not exists(select * from INFORMATION_SCHEMA.SEQUENCES where SEQUENCE_SCHEMA=N'a2blob' and SEQUENCE_NAME=N'SQ_BlobLinks')
@@ -990,6 +1000,7 @@ create or alter procedure a2blob.[Blob.Insert]
 @Name nvarchar(255),
 @Mime nvarchar(255),
 @BlobName nvarchar(1024),
+@Hash varbinary(32),
 @ThumbName nvarchar(1024) = null,
 @Base nvarchar(255) = null,
 @LinkId platformid = null
@@ -1004,9 +1015,9 @@ begin
 
 	begin tran;
 
-	insert into a2blob.Blobs([Name], Mime, BlobName, ThumbName, UserId)
+	insert into a2blob.Blobs([Name], Mime, BlobName, ThumbName, [Hash], UserId)
 	output inserted.Id, inserted.AccessToken into @blobs(Id, AccessToken)
-	values (@Name, @Mime, @BlobName, @ThumbName, @UserId);
+	values (@Name, @Mime, @BlobName, @ThumbName, @Hash, @UserId);
 
 	-- an attachment: the link in the same transaction, never a blob linked by half
 	if @Base is not null
@@ -1028,7 +1039,7 @@ begin
 	set nocount on;
 	set transaction isolation level read uncommitted;
 
-	select [Name], Mime, BlobName, ThumbName, AccessToken
+	select [Name], Mime, BlobName, ThumbName, [Hash], AccessToken
 	from a2blob.Blobs where Id = @Id;
 end
 go

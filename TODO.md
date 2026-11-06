@@ -13,4 +13,6 @@ Help documents `DataGrid.GroupBy` as a comma-separated string only, until these 
 ## Client (`main.js`)
 
 - **`utils.text.maxChars` truncates text that fits.** `if (text.length < length)` → text of exactly `length` chars loses its last char to `…`. Fix: `<=`. Seen via `PropertyGrid(Item).NameMaxChars`/`ValueMaxChars` (`$maxChars`).
+- **`TreeGrid MarkerStyle="Marker"` shows nothing.** tree-grid `rowMarkClass` (marker cell `td.c-m`) and `rowMarker` (row) both gate on `isMarkRow`; with `Marker` the cell is rendered (`isMarkCell`) but never gets the `Mark` class. Fix: gate `rowMarkClass` on `isMarkCell`. `Both` and `Row` work.
+- **`TreeViewItem.IsFolder` is an alias of `IsGroup`** (`TreeView.cs`), while the folder flag is `IsFolder2` (→ client `isFolder`). Help documents it as is; consider renaming before the names spread.
 - **Check: `$requeryNew` in a dialog.** Commits `setnewid` unconditionally → `history.replaceState` rewrites the page URL under the dialog. `$save` guards the same commit with `if (!self.inDialog)`.

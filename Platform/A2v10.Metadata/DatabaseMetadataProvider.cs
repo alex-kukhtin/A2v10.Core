@@ -15,6 +15,7 @@ using Microsoft.Data.SqlClient;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+using A2v10.Data;
 using A2v10.Data.Interfaces;
 using A2v10.Infrastructure;
 
@@ -351,7 +352,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
      * Asked after SetDefaults, so a name derived from the folder is checked with the written ones.
      * The platform's own '$' tables are built in code and never pass through here.
      */
-    private static void CheckNames(TableMetadata storage, String schema, String table)
+    internal static void CheckNames(TableMetadata storage, String schema, String table)
     {
         var file = MetadataFileName(schema, table);
 
@@ -420,6 +421,22 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         if (storage.HasTags)
             members.Add((Constants.FieldNames.Tags, "the tags trait"));
         Unique(members, $"member of {storage.Model}");
+
+        /* The data loader refuses these as a property name (FieldInfo.ReservedWords), and it reads the
+         * model only when a form opens - long after validate and deploy passed. Checked on what lands,
+         * as above: the baseline 'Parent' lands as 'ParentElem' and passes.
+         */
+        void NotReserved(IEnumerable<(String Name, String Source)> landed)
+        {
+            foreach (var (name, source) in landed)
+                if (FieldInfo.ReservedWords.Contains(name))
+                    throw new InvalidOperationException(
+                        $"{file}: {source} lands in the model as '{name}', a name the data loader reserves ({String.Join(", ", FieldInfo.ReservedWords)}). Rename it.");
+        }
+
+        NotReserved(members);
+        foreach (var (key, details) in storage.Details)
+            NotReserved(details.AllColumns().Select(c => (c.ModelName, $"details '{key}', field '{c.Name}'")));
     }
 
     /* Endpoints the platform serves itself - no file to read, no shape to build, told apart by their

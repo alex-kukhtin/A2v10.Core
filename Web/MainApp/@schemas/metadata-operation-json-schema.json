@@ -16,7 +16,7 @@
         },
         "rules": {
             "$ref": "metadata-endpoint-json-schema.json#/definitions/rules",
-            "description": "Rules of the header that hold while the document carries this operation: the platform turns them into 'when' under the operation's code, layered over the document's. 'inherit' and 'total' are refused at load - not generated under a condition."
+            "description": "Rules of the header that hold while the document carries this operation: the platform turns them into 'when' under the operation's code, layered over the document's. 'inherit' is refused at load - not generated under a condition."
         },
         "details": {
             "type": "object",
