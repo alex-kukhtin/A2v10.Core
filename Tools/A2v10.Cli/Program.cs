@@ -96,6 +96,7 @@ internal sealed partial class Program
             .AddScoped<ICurrentUser, CurrentUser>()
             .AddSingleton<ISqlQueryTextProvider, NullSqlQueryTextProvider>()
             .AddScoped<ILocalizer, EmptyLocalizer>()
+            .AddSingleton<IProfiler, NullProfiler>()
             .AddScoped<IApplicationHost, WebApplicationHost>()
             .AddScoped<IDataScripter, VueDataScripter>()
             .AddSingleton<HostRoot>((_) => new HostRoot(webAppFolder, cdPath));
