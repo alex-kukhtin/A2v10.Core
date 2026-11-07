@@ -661,9 +661,6 @@ public sealed record TableMetadata
             ? [(null, DetailsKey, TypeName)]
             : Kinds.Keys.Select(k => ((String?)k, KindCollectionName(k), KindTypeName(k)));
 
-    [JsonIgnore]
-    public Boolean EditWithPage => IsDocument;
-
 
     [JsonIgnore]
     public Boolean HasTags => Traits.Contains(TableTrait.Tags);

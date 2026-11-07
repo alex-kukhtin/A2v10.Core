@@ -102,7 +102,7 @@ internal static class MetadataExtensions
      */
     public static IPlatformUrl PlatformUrl(this NormalEndpointMetadata endpoint, String action, String? query = null)
     {
-        var kind = action == "index" || action == "edit" && endpoint.Storage.EditWithPage ? "_page" : "_dialog";
+        var kind = action == "index" || action == "edit" && endpoint.Declaration.EditIsPage ? "_page" : "_dialog";
         var url = $"{kind}{endpoint.Path}/{action}/".ToLowerInvariant();
         return new PlatformUrl(query == null ? url : $"{url}?{query}");
     }

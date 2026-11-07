@@ -109,9 +109,10 @@ internal static class DefaultFormBuilder
         };
     }
 
+    // the default only: a document is a page, the rest a dialog; how the card opens is the endpoint's (DeclarationMetadata.EditIsPage)
     public static FormMetadata CreateEditForm(TableMetadata table, Boolean switchesOperation = false)
     {
-        return table.EditWithPage ? CreateEditPage(table, switchesOperation) : CreateEditFormDialog(table);
+        return table.IsDocument ? CreateEditPage(table, switchesOperation) : CreateEditFormDialog(table);
     }
 
     /* Members an edit form carries after its columns - what a trait contributes to the record, in

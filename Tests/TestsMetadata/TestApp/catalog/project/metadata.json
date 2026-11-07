@@ -1,0 +1,16 @@
+{
+	"$schema": "../../../../../Platform/A2v10.App.Assets2026/Application/@schemas/metadata-endpoint-json-schema.json#",
+	"description": "A catalog whose card is a page: the list opens it in a tab, as a document's (EditPageTests).",
+	"table": "Projects",
+	"forms": {
+		"edit": {
+			"is": "page",
+			"body": [
+				{
+					"is": "group",
+					"fields": [ "Name", "Memo" ]
+				}
+			]
+		}
+	}
+}
