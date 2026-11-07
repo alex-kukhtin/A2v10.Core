@@ -109,6 +109,7 @@ internal class XamlUsersBuilder(String _path)
 
         return new Page()
         {
+            Title = "@[Users]",
             Children = [
                 new Grid(_xamlServiceProvider)
                 {

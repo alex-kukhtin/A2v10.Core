@@ -431,6 +431,7 @@ internal partial class XamlBuilder
             taskpad.Children.Insert(0, FolderTree());
         return new Page()
         {
+            Title = ListTitle,
             // what a DataGrid reads through (Parent.ItemsSource, Parent.Pager); a tree is bound to its collection
             CollectionView = meta.Body.Any(e => e.Is == FormElementKind.DataGrid) ? XamlCollectionView(Table.HasFolders) : null,
             Children = [IndexGrid(meta)],

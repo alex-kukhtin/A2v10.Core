@@ -162,6 +162,8 @@ internal static class MetadataExtensions
      * the create and the basis menus. A record by the model: the title of a catalog's dialog.
      */
     internal static String OperationLabel(String code) => $"@[{TableMetadataDefaults.OperationModel}.{code}]";
+    // the list of a document: the pair of OperationLabel, the many beside the one
+    internal static String DocumentsLabel(String document) => $"@[Documents.{document}]";
     internal static String RecordLabel(this TableMetadata table) => $"@[{table.Model}]";
 
     internal static String TransName(this TableMetadata journal) =>

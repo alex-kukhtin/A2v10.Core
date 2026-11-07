@@ -87,7 +87,7 @@ public class XamlBeamTests
     /* Every screen the endpoint renders, with the url the builder reads for it: the print page takes
      * the blank from the query, the rest take nothing but the action.
      */
-    private static IEnumerable<(String Action, IPlatformUrl Url)> ScreensOf(NormalEndpointMetadata endpoint)
+    internal static IEnumerable<(String Action, IPlatformUrl Url)> ScreensOf(NormalEndpointMetadata endpoint)
     {
         foreach (var action in new[] { Constants.Actions.Index, Constants.Actions.IndexPartial, Constants.Actions.Browse, Constants.Actions.Edit })
             yield return (action, endpoint.PlatformUrl(action));

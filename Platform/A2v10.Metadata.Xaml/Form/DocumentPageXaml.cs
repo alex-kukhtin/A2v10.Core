@@ -25,6 +25,7 @@ internal partial class XamlBuilder
         var taskpad = (Taskpad)ElementToControl(form.Taskpad);
         return new Page()
         {
+            Bindings = b => b.SetBinding(nameof(Page.Title), RecordTitle()),
             Toolbar = EditToolbar(form.Toolbar),
             Children = [
                 new Grid(_xamlServiceProvider)
