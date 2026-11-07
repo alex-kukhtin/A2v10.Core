@@ -30,7 +30,7 @@
         },
         "model": {
             "type": "string",
-            "description": "Stem of the generated names. Defaults to the endpoint folder name in PascalCase."
+            "description": "Stem of the generated names. Defaults to the endpoint folder name in PascalCase; in document/metadata.json, to 'Document'."
         },
         "presentation": {
             "type": "string",

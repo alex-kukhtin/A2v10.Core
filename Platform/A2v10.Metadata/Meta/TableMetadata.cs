@@ -889,9 +889,11 @@ public sealed record TableMetadata
          * 'vat-rates', while Model is the stem of a TYPE name (TVatRates, TRVatRates) and of the
          * collection. A dash survives every quoted place it lands in and fails in the unquoted
          * ones - a generated class name among them - which is a break far from its cause.
+         * The file in the kind's folder (document/metadata.json) has no folder of its own: its
+         * folder is the kind's. Empty, the name travelled into the DDL as a column '[]'.
          */
         if (String.IsNullOrEmpty(Model))
-            Model = table.KebabToPascal();
+            Model = (String.IsNullOrEmpty(table) ? folder : table).KebabToPascal();
         Construct();
 
         /* Only the kinds a reference points at are shown by anything; a journal or the numbering
