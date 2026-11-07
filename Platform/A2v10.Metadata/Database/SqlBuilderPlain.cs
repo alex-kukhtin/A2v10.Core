@@ -160,64 +160,25 @@ internal partial class SqlBuilder
             if (initValues.Count == 0)
                 return null;
 
-            String getDefaultProfile(String key)
-            {
-                var column = Table.Columns.FirstOrDefault(c => c.Name == key)
-                    ?? throw new InvalidOperationException($"Column {key} not found in {Table.SqlTableName}");
-                return $"[{Table.Model}.{key}!{column.RefTableCheck.Storage.RefTypeName}!RefId] = @Init{key}";
-            }
-
             /* A value, whoever decided it - the file, the endpoint's own operation, the set's
              * initial state. A reference is written by its KEY and comes back as an object, so it
              * is emitted as a RefId and resolved through the map; the map is filled for it by
-             * RefMapBuilder.GenerateInitialRefs, from the same list, and without that the control
-             * opens empty.
+             * RefMapBuilder.GenerateInitialRefs, from the same list and the same value
+             * (SqlInitialValue), and without that the control opens empty. AllColumns: a fixed field
+             * may be one the kind adds (Done, IsSystem), not only a declared one.
              */
-            String getDefaultLiteral(String key, String value)
-            {
-                // AllColumns: a fixed field may be one the kind adds (Done, IsSystem), not only a declared one
-                var column = Table.AllColumns().FirstOrDefault(c => c.Name == key)
-                    ?? throw new InvalidOperationException($"Column {key} not found in {Table.SqlTableName}");
-                return column.IsRef
-                    ? $"[{Table.Model}.{key}!{column.RefTableCheck.Storage.RefTypeName}!RefId] = {column.SqlLiteral(value)}"
-                    : $"[{Table.Model}.{key}] = {column.SqlLiteral(value)}";
-            }
-
-            /* '$operation$' used to be a case here. It was the platform telling itself a fact it
-             * already knew, through a marker in a value, and it had to be spelled a second time in
-             * the map - so the operation is now an ordinary literal (MetadataExtensions.AllInitials)
-             * and this reads what a file can actually write.
-             */
-            String getDefaultContext(String key, String value)
-            {
-                return value switch
-                {
-                    Constants.ContextValues.Today => $"[{Table.Model}.{key}!!Utc] = a2meta.fn_getUtcDate()",
-                    _ => throw new InvalidOperationException($"Invalid initial context value '{value}'")
-                };
-            }
-
-            // the variable InitialVariablesSql declared - a reference comes back as an object, as a literal does
-            String getDefaultVariable(String key)
+            String getDefault(String key, InitialMetadata initial)
             {
                 var column = QueryColumn(key);
-                return column.IsRef
-                    ? $"[{Table.Model}.{key}!{column.RefTableCheck.Storage.RefTypeName}!RefId] = @Init{key}"
-                    : $"[{Table.Model}.{key}] = @Init{key}";
+                var member = column.IsRef ? $"[{Table.Model}.{key}!{column.RefTableCheck.Storage.RefTypeName}!RefId]"
+                    : initial is { Source: InitialSource.Context, Value: Constants.ContextValues.Today } ? $"[{Table.Model}.{key}!!Utc]"
+                    : $"[{Table.Model}.{key}]";
+                return $"{member} = {column.SqlInitialValue(initial)}";
             }
 
             var sb = new StringBuilder("select [!$Defaults!] = null, ");
 
-            sb.AppendJoin(", ", initValues.Select(p =>
-                p.Value.Source switch
-                {
-                    InitialSource.Profile => getDefaultProfile(p.Key),
-                    InitialSource.Literal => getDefaultLiteral(p.Key, p.Value.Value),
-                    InitialSource.Context => getDefaultContext(p.Key, p.Value.Value),
-                    InitialSource.Query or InitialSource.Sql => getDefaultVariable(p.Key),
-                    _ => throw new InvalidOperationException($"Invalid initial source {p.Value.Source}")
-                }
-            ));
+            sb.AppendJoin(", ", initValues.Select(p => getDefault(p.Key, p.Value)));
             sb.AppendLine(";");
             return sb.ToString();
         }

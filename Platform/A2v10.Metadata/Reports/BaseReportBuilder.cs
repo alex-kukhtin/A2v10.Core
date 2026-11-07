@@ -43,20 +43,12 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Repo
         return $"[{prefix}{item.Column}] {dt}";
     }
 
-    /* A filter parameter is declared as the key of its column (ToSqlDbTypeInfo): a platformid in the
-     * application's base, a code as a string. Bigint for everything but an operation sent an enum code
-     * to an int and a guid to nothing. Empty is 'not picked' - the WHERE reads null as no filter.
-     */
+    // a filter is a reference: typed as its key, empty is 'not picked' - the WHERE reads null as no filter
     protected void AddFilterParameters(DbParameterCollection dbprms, ExpandoObject prms)
     {
         foreach (var f in _grouping.Filters)
-        {
-            var value = prms.Get<Object>(f.Column)?.ToString();
-            if (f.DataType.ToSqlDbTypeInfo().SqlName == "platformid")
-                dbprms.AddTyped(SqlExtensions.ColumnParam(f.Column), platformId.SqlDbType, platformId.ParseId(value));
-            else
-                dbprms.AddString(SqlExtensions.ColumnParam(f.Column), String.IsNullOrEmpty(value) ? null : value);
-        }
+            dbprms.AddReference(SqlExtensions.ColumnParam(f.Column), f.DataType, platformId,
+                prms.Get<Object>(f.Column)?.ToString());
     }
 
     /* What a report TYPE means to the query and the template. The runtime asks on its way to the data

@@ -70,6 +70,7 @@
 @Operation=Vorgang
 @Operation.All=Alle Vorgänge
 @Operation.Browse=Vorgang auswählen
+@User.Browse=Benutzer auswählen
 ;
 ; Set of states - StateRole
 @StateRole=Phase

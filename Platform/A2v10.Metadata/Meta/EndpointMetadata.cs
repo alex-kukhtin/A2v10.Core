@@ -155,3 +155,15 @@ public sealed record OperationEndpointMetadata : EndpointMetadata, IRefTarget
      */
     public required TableMetadata Storage { get; init; }
 }
+
+/* The logins as a reference target: every 'user' column resolves here. The operations' case - a
+ * shape and no file - with a key of its own domain (ColumnType.UserKey). Not /admin/user: that one
+ * is the admin's alone, and a reference is read by everyone who reads the record.
+ */
+public sealed record UserEndpointMetadata : EndpointMetadata, IRefTarget
+{
+    internal const String BrowseAction = Constants.Actions.Browse;
+
+    // handed in, for the reason OperationEndpointMetadata.Storage is
+    public required TableMetadata Storage { get; init; }
+}

@@ -107,7 +107,7 @@
                 "type": { "$ref": "#/definitions/columnType" },
                 "target": {
                     "type": "string",
-                    "description": "For a reference: path of the endpoint it points at, e.g. '/catalog/item'. Required, and checked against the kind, for 'enum' ('/enum/...'), 'state' ('/state/...'), 'account' ('/accplan/...'), 'company' ('/catalog/company') and 'basedOn' ('/document/...'). At most one 'company' column per table, none in a collection."
+                    "description": "For a reference: path of the endpoint it points at, e.g. '/catalog/item'. Required, and checked against the kind, for 'enum' ('/enum/...'), 'state' ('/state/...'), 'account' ('/accplan/...'), 'company' ('/catalog/company') and 'basedOn' ('/document/...'); not written for 'user', whose target is the platform's logins. At most one 'company' column per table, none in a collection."
                 },
                 "length": {
                     "type": "integer",

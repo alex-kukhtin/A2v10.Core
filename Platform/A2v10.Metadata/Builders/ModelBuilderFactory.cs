@@ -39,6 +39,8 @@ internal partial class ModelBuilderFactory(
                 return new AttachmentEndpointBuilder(_serviceProvider, attachment, platformUrl, dataSource, platformId, useGrants);
             case OperationEndpointMetadata operation:
                 return new OperationEndpointBuilder(_serviceProvider, operation, platformUrl, dataSource);
+            case UserEndpointMetadata users:
+                return new UserEndpointBuilder(_serviceProvider, users, platformUrl, dataSource);
             case UserAdminEndpointMetadata user:
                 return new UserAdminBuilder(_serviceProvider, user, platformUrl, dataSource, platformId);
             case NormalEndpointMetadata normal:

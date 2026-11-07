@@ -273,19 +273,17 @@ internal class RefMapBuilder
     {
         if (!_hasDefaults || _endpoint == null)
             return null;
+        // not the profile's: its insert follows its call (GenerateInitials)
         var refs = _endpoint.AllInitials()
-            .Where(x => x.Value.Source is InitialSource.Literal or InitialSource.Query or InitialSource.Sql)
+            .Where(x => x.Value.Source != InitialSource.Profile)
             .Select(x => (Column: _endpoint.Storage.AllColumns().FirstOrDefault(c => c.Name == x.Key), Initial: x.Value))
             .Where(x => x.Column != null && x.Column.IsRef)
             .Select(x => (Column: x.Column!, x.Initial))
             .ToList();
         if (refs.Count == 0)
             return null;
-        // a value from the url or an expression is the variable SqlBuilder.InitialVariablesSql declared, never a literal
         return String.Join(Environment.NewLine, refs.Select(r =>
-            $"insert into @map([{SlotOf(r.Column)}]) values ({(r.Initial.Source is InitialSource.Query or InitialSource.Sql
-                ? $"@Init{r.Column.Name}"
-                : r.Column.SqlLiteral(r.Initial.Value))});"));
+            $"insert into @map([{SlotOf(r.Column)}]) values ({r.Column.SqlInitialValue(r.Initial)});"));
     }
     public void WriteRefMap(StringBuilder sb)
     {

@@ -227,6 +227,14 @@ begin
 end
 go
 ------------------------------------------------
+/* What a reference to a login resolves from (TableMetadataDefaults.UsersRefSourceName): the key and a
+   display name, every row - blocked, dismissed and the system user 0 too, or an old record opens with
+   an empty reference. Here and not in a2security: that schema is not ours to widen. */
+create or alter view a2meta.[Users$Ref]
+as
+	select [Id], [Name] = isnull(PersonName, UserName) from a2security.Users;
+go
+------------------------------------------------
 /* Which script this is. The metadata deploy runs the procedures above and refuses a database whose
    a2meta came from another version (SqlDbGenerator.EnsurePlatformVersionAsync). The literal is the
    package's <Version>, exactly. Last, so a run that failed halfway does not claim the version. */

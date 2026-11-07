@@ -26,6 +26,8 @@ public enum TableKind
     Autonum,
     // declared in code: the registry of operation codes (TableMetadataDefaults.OperationsTable)
     Operation,
+    // declared in code, deployed by nobody: the logins (TableMetadataDefaults.UsersTable)
+    User,
     // satellites of a table above - built beside it, no address of their own
     Details,
     Folders,
@@ -44,6 +46,13 @@ public enum ColumnType
      * into nvarchar is a discriminator nobody sees. The role is asked by TableColumn.IsKey.
      */
     NaturalKey,
+    /* The key of a login (a2security.Users) - the same role again, a third domain: bigint whatever
+     * base the application rests on. The key of the logins' storage (TableMetadataDefaults.UsersTable),
+     * which the reference's Id is typed by (ScriptBuilder.RefTsProperties). Not User: that is a
+     * reference, and a key that is a reference to itself is the double role an enum's key refuses.
+     * Not in the schema: no file writes it.
+     */
+    UserKey,
     Name,
     Memo,
     RowNumber,
@@ -217,7 +226,7 @@ public record TableColumn
     [JsonIgnore]
     internal Boolean HasSqlAs => SqlAs != null;
     [JsonIgnore]
-    internal Boolean IsKey => Type is ColumnType.Id or ColumnType.NaturalKey;
+    internal Boolean IsKey => Type is ColumnType.Id or ColumnType.NaturalKey or ColumnType.UserKey;
     /* A reference to a SET - a closed list of values declared in a file, which rides with the page
      * whole: there is nothing to browse, and the value travels as its own code. Deliberately not
      * 'keyed by a code': an account and an operation are keyed by one too, and both are fetched by
@@ -670,9 +679,16 @@ public sealed record TableMetadata
     public String SqlSchema => Schema.ToSqlSchema();
     [JsonIgnore]
     public String SqlTableName => $"{SqlSchema}.[{Table}]";
-    // what a reference to this table is resolved from - a document's carries its address (SqlDbGenerator.CreateRefViewsScript)
+    /* What a reference to this table is resolved from - a document's carries its address
+     * (SqlDbGenerator.CreateRefViewsScript), a login's its display name (a2v10_metadata.sql)
+     */
     [JsonIgnore]
-    internal String RefSourceName => IsDocument ? $"{SqlSchema}.[{Table}$Ref]" : SqlTableName;
+    internal String RefSourceName => Kind switch
+    {
+        TableKind.Document => $"{SqlSchema}.[{Table}$Ref]",
+        TableKind.User => TableMetadataDefaults.UsersRefSourceName,
+        _ => SqlTableName
+    };
     /* Indexes the PLATFORM needs, not indexes an application wants: code-only, no file key. An
      * index is safe to hold here in a way a primary key was not - nothing else in the platform
      * reads one, so this cannot become a knob that only the DDL honours. What it does buy is a
@@ -912,6 +928,7 @@ public sealed record TableMetadata
             case TableKind.Enum:
             case TableKind.State:
             case TableKind.Operation:
+            case TableKind.User:
                 present(column(ColumnType.Name));
                 break;
             case TableKind.Document:

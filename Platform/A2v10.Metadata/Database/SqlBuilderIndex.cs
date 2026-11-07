@@ -462,28 +462,22 @@ internal partial class SqlBuilder
             foreach (var role in roles)
                 dbprms.AddString(ColumnParam(role.Name), roleValues.GetValueOrDefault(role.Name));
             /* The parameter is declared as what the COLUMN is, never as what a filter usually turns
-             * out to be. An operation is keyed by its code; everything else by an identifier whose
-             * base the database reported. Assuming bigint for both was silent in the same way: the
-             * value came back null, which reads downstream as 'no filter picked' and clears the
-             * selector on the way back, rather than failing anywhere visible.
+             * out to be (AddReference). A wrong guess is silent: the value comes back null, which
+             * reads downstream as 'no filter picked' and clears the selector on the way back.
              */
             foreach (var rd in refs)
             {
                 var val = filters.FirstOrDefault(f => f.name == rd.Column.Name).value;
                 var name = ColumnParam(rd.Column.Name);
-                // keyed by a code: an operation, an account
-                if (rd.Column.IsOperation || rd.Column.Type == ColumnType.Account)
-                    dbprms.AddString(name, String.IsNullOrEmpty(val) ? null : val);
-                /* Deliberately NOT the line above. There an empty value means the filter was not
-                 * picked, so it is erased to null; here the empty string is the key of a real row -
-                 * the set's 'All' - and the WHERE reads it as such. Blanking it would make the
-                 * chosen 'All' indistinguishable from an untouched filter, on the way in and in the
-                 * Filter property that comes back.
+                /* Not AddReference: there an empty value is 'not picked' and becomes null; here the
+                 * empty string is the key of a real row - the set's 'All' - and the WHERE reads it as
+                 * such. Blanking it would make the chosen 'All' indistinguishable from an untouched
+                 * filter, on the way in and in the Filter property that comes back.
                  */
-                else if (rd.Column.IsSetRef)
+                if (rd.Column.IsSetRef)
                     dbprms.AddString(name, val);
                 else
-                    dbprms.AddTyped(name, _descr.PlatformId.SqlDbType, _descr.PlatformId.ParseId(val));
+                    dbprms.AddReference(name, rd.Column.Type, _descr.PlatformId, val);
             }
         });
     }

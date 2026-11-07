@@ -26,6 +26,26 @@ internal static class TableMetadataDefaults
         return table;
     }
 
+    /* The logins, the shape behind /user: a2security.Users, so the foreign key and the seed name the
+     * table by the general rule. Not ours to widen and not deployed - nothing walks a target into the
+     * deploy. Read through a view of our own (RefSourceName), every row of it: blocked, dismissed and
+     * the system user 0 too, or last year's document opens with an empty reference and a stamp draws
+     * nothing. Whom one may pick now is the browse's filter.
+     */
+    public const String UsersRefSourceName = "a2meta.[Users$Ref]";
+
+    public static TableMetadata UsersTable()
+    {
+        var table = new TableMetadata()
+        {
+            Schema = "a2security",
+            Model = "User",
+            Table = "Users"
+        };
+        table.SetDefaults(TableKind.User, Constants.SchemaNames.User, String.Empty);
+        return table;
+    }
+
     /* The three names of the numbering registry, in one place: SetDefaults gives them to the file,
      * the deploy writes the procedure with them and the save writes the call. Two files apart, so a
      * literal in each is a drift waiting for a rename.

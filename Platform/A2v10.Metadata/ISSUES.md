@@ -640,13 +640,6 @@ not null` без default — батч упадёт. Проходит тольк�
 состояние «написал `/document` с полем `operation`, операций ещё нет» роняет деплой на внешних
 ключах — ровно тот шаг, с которого приложение начинают писать.
 
-### 6.5. `user` объявляем, но неразрешим
-
-`TableMetadata` считает `User` ссылкой (`IsRef`), а цели у колонки нет: `TargetOf` для неё не отвечает,
-`RefTable` остаётся пустым, и `RefTableCheck` бросает в `CliDatabaseCreator.CreateTable` и в
-`MetadataExtensions.AllRefs`. Схема тип предлагает. Решение — `CLAUDE.md`, «Logins», не построено.
-`company` разрешён с 2026-09-29: владелец с фиксированной целью.
-
 ### 6.6. Схемы считаются по `tables`, а не по `DeployTables`
 
 `SqlDbGenerator.cs:154`. `$Tags` и `$TagEntries` всегда в `cat`; приложение, где единственная

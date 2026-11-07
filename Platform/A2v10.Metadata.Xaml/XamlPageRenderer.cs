@@ -24,6 +24,7 @@ internal class XamlPageRenderer(IServiceProvider _serviceProvider, DatabaseMetad
             TagEndpointMetadata => new XamlTagsBuilder().RenderSettingsDialog(),
             AttachmentEndpointMetadata => new XamlAttachmentsBuilder().RenderIndexDialog(),
             OperationEndpointMetadata => new XamlOperationsBuilder().RenderBrowseDialog(),
+            UserEndpointMetadata => new XamlOperationsBuilder().RenderUsersDialog(),
             UserAdminEndpointMetadata users => await UsersPageAsync(users, request),
             var other => throw new NotSupportedException($"{other.Path}: no page for {other.GetType().Name}")
         };

@@ -459,6 +459,14 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                 Storage = await load.StorageAsync(dataSource, schema, table,
                     () => Task.FromResult(TableMetadataDefaults.OperationsTable()))
             };
+        if (schema == Constants.SchemaNames.User)
+            return new UserEndpointMetadata()
+            {
+                Schema = schema,
+                Name = table,
+                Storage = await load.StorageAsync(dataSource, schema, table,
+                    () => Task.FromResult(TableMetadataDefaults.UsersTable()))
+            };
         if (schema == Constants.SchemaNames.Admin)
             return AdminEndpointMetadata.Create(table);
         if (schema == Constants.SchemaNames.Attachment)
@@ -1139,6 +1147,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             // a shape with no declared columns: the walk below finds nothing and that is correct,
             // its only column is the operation code and it points at this very endpoint
             OperationEndpointMetadata o => o.Storage,
+            // a key and a name, neither a reference
+            UserEndpointMetadata => null,
             // no shape, so no references - said by name, so an unknown subtype still fails loudly
             TagEndpointMetadata or AdminEndpointMetadata or AttachmentEndpointMetadata => null,
             _ => throw new InvalidOperationException($"Unknown endpoint {endpoint.Path}")
@@ -1205,6 +1215,16 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                             String.Empty) as IRefTarget
                         ?? throw new InvalidOperationException(
                             $"/{Constants.SchemaNames.Operation} is not a reference target");
+                    continue;
+                }
+                else if (gcol.Type == ColumnType.User)
+                {
+                    // a fixed target, as the operation's
+                    CheckUserColumn(endpoint.Path, gcol);
+                    gcol.RefTable = await LoadAsync(load, dataSource, Constants.SchemaNames.User,
+                            String.Empty) as IRefTarget
+                        ?? throw new InvalidOperationException(
+                            $"/{Constants.SchemaNames.User} is not a reference target");
                     continue;
                 }
             }
@@ -1280,6 +1300,14 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             throw new InvalidOperationException(prefixes.Count == 0
                 ? $"{head}, and {catalog.Path}, the catalog [{company.Name}] points at, declares no column of type 'prefix'"
                 : $"{head}, and {catalog.Path} declares {String.Join(", ", prefixes.Select(c => $"[{c.Name}]"))} of type 'prefix' - which one is the prefix would be a guess");
+    }
+
+    // a written target would be resolved over the platform's: the group of its target is resolved after this one
+    internal static void CheckUserColumn(String path, TableColumn column)
+    {
+        if (column.Target != null)
+            throw new InvalidOperationException(
+                $"{path}: [{column.Name}] is 'user' and declares 'target' - a login has one target, the platform's. Write no 'target'");
     }
 
     /* Five column types name WHAT they point at and not merely that they point: an account is a

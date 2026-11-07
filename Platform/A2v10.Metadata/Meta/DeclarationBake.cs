@@ -373,9 +373,15 @@ internal static class DeclarationBake
             if (column.HasSqlAs)
                 throw new InvalidOperationException(
                     $"initialValues: '{name}' has 'sqlAs' - its value is the database's, a new record does not start on one.");
-            if (initial.Source == InitialSource.Context && initial.Value != Constants.ContextValues.Today)
+            if (initial.Source == InitialSource.Context && !Constants.ContextValues.All.Contains(initial.Value))
                 throw new InvalidOperationException(
-                    $"initialValues: '{name}' - '{initial.Value}' is not a value of the context. Known: {Constants.ContextValues.Today}");
+                    $"initialValues: '{name}' - '{initial.Value}' is not a value of the context. Known: {String.Join(", ", Constants.ContextValues.All)}");
+            /* A login is not a person: a manager is the application's catalog, and its key is no login's.
+             * Taken silently, the key of the login would land in a reference to another table.
+             */
+            if (initial is { Source: InitialSource.Context, Value: Constants.ContextValues.CurrentUser } && column.Type != ColumnType.User)
+                throw new InvalidOperationException(
+                    $"initialValues: '{name}' is '{column.Type}', and 'currentUser' is a login - it starts a 'user' column only. The person linked to the login is 'source: \"sql\"' over the column of that catalog, '... where [User] = @UserId'.");
         }
 
         foreach (var (name, value) in declaration.Fixed)

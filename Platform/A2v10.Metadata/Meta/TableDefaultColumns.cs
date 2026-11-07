@@ -17,6 +17,7 @@ internal static class TableDefaultColumns
             TableKind.Journal => JournalDefaultColumns(table),
             TableKind.Details => DetailsDefaultColumns(table),
             TableKind.Operation => OperationDefaultColumns(table),
+            TableKind.User => UserDefaultColumns(),
             TableKind.Folders => FolderDefaultColumns(table),
             TableKind.Enum => EnumDefaultColumns(table),
             TableKind.State => StateDefaultColumns(table),
@@ -97,6 +98,16 @@ internal static class TableDefaultColumns
         yield return new TableColumn(Constants.FieldNames.Document, ColumnType.String) { Length = 64 };
         yield return new TableColumn(Constants.FieldNames.Path, ColumnType.String) { Length = 128 };
         yield return new TableColumn(Constants.FieldNames.Order, ColumnType.Integer);
+    }
+
+    /* What a reference to a login reads, and nothing of the account: the key and the name the
+     * resolve view composes (a2meta.[Users$Ref]). A login has no position, no phone, no department -
+     * those are a person's, and a person is the application's catalog.
+     */
+    static IEnumerable<TableColumn> UserDefaultColumns()
+    {
+        yield return new TableColumn(Constants.FieldNames.Id, ColumnType.UserKey);
+        yield return new TableColumn(Constants.FieldNames.Name, ColumnType.Name);
     }
 
     /* A closed set of columns: a folder carries a name and nothing the application reads, or moving

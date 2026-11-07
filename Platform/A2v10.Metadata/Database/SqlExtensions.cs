@@ -2,7 +2,10 @@
 
 using System;
 using System.Data;
+using System.Data.Common;
 using System.Globalization;
+
+using A2v10.Data.Core.Extensions;
 
 namespace A2v10.Metadata;
 
@@ -129,6 +132,39 @@ internal static class SqlExtensions
      */
     public static String ColumnParam(String name) => $"@${name}";
 
+    /* The value a new record starts on, as SQL: one spelling for the defaults recordset and for the
+     * map (RefMapBuilder.GenerateInitialRefs), which read it for the same key and spelled it apart. A
+     * variable for what the load computes first (SqlBuilder.InitialVariablesSql, the profile's call),
+     * the request's login for 'currentUser'.
+     */
+    internal static String SqlInitialValue(this TableColumn column, InitialMetadata initial) => initial.Source switch
+    {
+        InitialSource.Literal => column.SqlLiteral(initial.Value),
+        InitialSource.Query or InitialSource.Sql or InitialSource.Profile => $"@Init{column.Name}",
+        InitialSource.Context => initial.Value switch
+        {
+            Constants.ContextValues.Today => "a2meta.fn_getUtcDate()",
+            Constants.ContextValues.CurrentUser => "@UserId",
+            var value => throw new InvalidOperationException($"Invalid initial context value '{value}'")
+        },
+        var source => throw new InvalidOperationException($"Invalid initial source {source}")
+    };
+
+    /* A reference as it arrives from the browser, a parameter of the type of its column - the key it
+     * points at (ToSqlDbTypeInfo): platformid in the base, a login's bigint, a code as a string. Empty
+     * or unparseable is null, 'not picked', as ParseId says. The list filter and the report filter
+     * typed it each by its own branches, and both took a login for a platformid.
+     */
+    internal static DbParameterCollection AddReference(this DbParameterCollection dbprms, String name,
+        ColumnType type, AppPlatformId platformId, String? value)
+        => type.ToSqlDbTypeInfo().SqlName switch
+        {
+            "platformid" => dbprms.AddTyped(name, platformId.SqlDbType, platformId.ParseId(value)),
+            "bigint" => dbprms.AddBigInt(name, Int64.TryParse(value, out var id) ? id : null),
+            "nvarchar" => dbprms.AddString(name, String.IsNullOrEmpty(value) ? null : value),
+            var sqlName => throw new InvalidOperationException($"AddReference. '{type}' ({sqlName}) is not a reference key")
+        };
+
     /* A candidate whose owner is the given one - or none: an owner left empty is everyone's (a store of
      * every company). The picker's two roads and the save read this one predicate; the save refuses its
      * negation (SqlBuilder.OwnerCheck).
@@ -165,7 +201,7 @@ internal static class SqlExtensions
             ColumnType.Account or ColumnType.Enum or ColumnType.State or ColumnType.Operation
                 => ColumnType.NaturalKey.ToSqlDbTypeInfo(),
             // a login: a2security.Users is keyed bigint whatever base the application rests on
-            ColumnType.User or ColumnType.StampUser or ColumnType.StampUserNull
+            ColumnType.UserKey or ColumnType.User or ColumnType.StampUser or ColumnType.StampUserNull
                     => new SqlDbTypeInfo("bigint"),
             // a blob: a2blob.Blobs is keyed bigint, as the login is
             ColumnType.Image => new SqlDbTypeInfo("bigint"),
@@ -307,15 +343,15 @@ internal static class SqlExtensions
     public static String SqlModelColumnName(this TableColumn column, String alias)
         => column.Type switch
         {
-            ColumnType.Id or ColumnType.NaturalKey => $"[Id!!Id] = {alias}.[Id]",
+            _ when column.IsKey => $"[Id!!Id] = {alias}.[Id]",
             ColumnType.Name => $"[Name!!Name] = {alias}.[Name]",
             ColumnType.RowNumber => $"[{column.Name}!!RowNumber] = {alias}.[{column.Name}]",
             ColumnType.Parent => $"[{column.ModelName}] = {alias}.[{column.Name}]",
-            ColumnType.Ref or ColumnType.Company or ColumnType.Owner or ColumnType.BasedOn or ColumnType.Document
-                or ColumnType.Operation or ColumnType.Enum or ColumnType.State or ColumnType.Account or ColumnType.Folder =>
-                $"[{column.Name}!{column.RefTableCheck.Storage.RefTypeName}!RefId] = {alias}.[{column.Name}]",
             // not an endpoint, so no RefTable: the type is the platform's, resolved by the blob map
             ColumnType.Image => $"[{column.Name}!{Constants.Blobs.TypeName}!RefId] = {alias}.[{column.Name}]",
+            // the link to the header is nobody's display and resolves to nothing (RefMapBuilder.Flatten)
+            ColumnType.Master => $"{alias}.[{column.Name}]",
+            _ when column.IsRef => $"[{column.Name}!{column.RefTableCheck.Storage.RefTypeName}!RefId] = {alias}.[{column.Name}]",
             _ => $"{alias}.[{column.Name}]"
         };
 

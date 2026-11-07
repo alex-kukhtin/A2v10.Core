@@ -1,0 +1,15 @@
+{
+	"$schema": "../../../../../Platform/A2v10.App.Assets2026/Application/@schemas/metadata-endpoint-json-schema.json#",
+	"table": "Managers",
+	"fields": {
+		"User": {
+			"type": "User"
+		}
+	},
+	"initialValues": {
+		"User": {
+			"source": "context",
+			"value": "currentUser"
+		}
+	}
+}

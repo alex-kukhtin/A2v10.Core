@@ -2,6 +2,7 @@
 
 using System;
 using System.CommandLine;
+using System.Linq;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -12,6 +13,10 @@ namespace A2v10.Cli;
 internal class ViewValidateCommand(IServiceProvider services)
 {
     private readonly IXamlPartProvider _xamlPartProvider = services.GetRequiredService<IXamlPartProvider>();
+    private readonly IAppCodeProvider _codeProvider = services.GetRequiredService<IAppCodeProvider>();
+
+    // the host's probe (CodeLoader, the view engine): '.xaml' is still loaded, so it is still validated
+    private static readonly String[] _viewExtensions = [".vxaml", ".xaml"];
 
     internal Command Build()
     {
@@ -22,7 +27,7 @@ internal class ViewValidateCommand(IServiceProvider services)
         var pathArg = new Argument<String>("view-file")
         {
             Description = "View file, relative to the module root; $prefix for a module. " +
-                "Example: catalog/agent/index.view (.vxaml is appended if needed)."
+                "Example: catalog/agent/index.view (.vxaml, then .xaml, is appended if needed)."
         };
         cmd.Arguments.Add(pathArg);
 
@@ -38,9 +43,9 @@ internal class ViewValidateCommand(IServiceProvider services)
             // path - the argument is always relative to the module root, so drop it
             path = path.TrimStart('/', '\\');
             // a view name may contain dots (edit.dialog), so Path.GetExtension is useless here
-            if (!path.EndsWith(".vxaml", StringComparison.OrdinalIgnoreCase) &&
-                !path.EndsWith(".xaml", StringComparison.OrdinalIgnoreCase))
-                path += ".vxaml";
+            if (!_viewExtensions.Any(ext => path.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
+                path = _viewExtensions.Select(ext => path + ext).FirstOrDefault(_codeProvider.IsFileExists)
+                    ?? throw new InvalidOperationException($"The view '{path}' was not found ({String.Join(", ", _viewExtensions)})");
             _xamlPartProvider.GetXamlPart(path);
             JsonResult.Ok(null);
         }

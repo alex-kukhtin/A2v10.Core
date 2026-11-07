@@ -70,6 +70,7 @@
 @Operation=Operación
 @Operation.All=Todas las operaciones
 @Operation.Browse=Seleccionar operación
+@User.Browse=Seleccionar usuario
 ;
 ; Set of states - StateRole
 @StateRole=Etapa

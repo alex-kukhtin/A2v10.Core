@@ -607,7 +607,7 @@ internal partial class XamlBuilder
             // in a header set by birth and by nothing else: shown, not picked; in a row picked - an allocation over several
             ColumnType.BasedOn when !at.InRow => DocumentHyperlink($"{at.Prefix}{column.Name}"),
             ColumnType.Ref or ColumnType.Company or ColumnType.Owner or ColumnType.Document or ColumnType.Account
-                or ColumnType.BasedOn => new SelectorSimple()
+                or ColumnType.BasedOn or ColumnType.User => new SelectorSimple()
             {
                 Label = label,
                 CssClass = cssClass,

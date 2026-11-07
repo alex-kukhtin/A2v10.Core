@@ -10,6 +10,9 @@ internal static class Constants
     public static class ContextValues
     {
         public const String Today = "today";
+        // the login of the request (@UserId), into a 'user' column only
+        public const String CurrentUser = "currentUser";
+        public static readonly String[] All = [Today, CurrentUser];
     }
 
     public static class FieldNames
@@ -204,6 +207,8 @@ internal static class Constants
          * confused with, an application endpoint of the same name.
          */
         public const String Operation = "operation";
+        // the logins as a reference target - see UserEndpointMetadata
+        public const String User = "user";
         public const String Tag = "tag";
         // the attachments of any record, under ?base= - see AttachmentEndpointMetadata
         public const String Attachment = "attachment";
