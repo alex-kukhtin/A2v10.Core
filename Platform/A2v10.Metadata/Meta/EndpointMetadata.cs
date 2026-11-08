@@ -114,8 +114,8 @@ public sealed record TagEndpointMetadata : EndpointMetadata
 {
     internal const String SettingsAction = "settings";
 
-    internal static String SettingsUrl(String forEntity) =>
-        $"/{Constants.SchemaNames.Tag}/{SettingsAction}?{Constants.FieldNames.For}={forEntity}";
+    internal static String SettingsUrl(String screen) =>
+        $"/{Constants.SchemaNames.Tag}/{SettingsAction}?{Constants.FieldNames.BaseQuery}={screen}";
 }
 
 /* The attachments of any record: rows of a2blob.BlobLinks under ?base= - the address of the owner's

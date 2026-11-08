@@ -34,7 +34,7 @@ internal partial class ModelBuilderFactory(
             case ReportEndpointMetadata report:
                 return new ReportEndpointBuilder(_serviceProvider, report, platformUrl, platformId, useGrants);
             case TagEndpointMetadata tag:
-                return new TagEndpointBuilder(_serviceProvider, tag, platformUrl, dataSource, platformId);
+                return new TagEndpointBuilder(_serviceProvider, tag, platformUrl, dataSource, platformId, useGrants);
             case AttachmentEndpointMetadata attachment:
                 return new AttachmentEndpointBuilder(_serviceProvider, attachment, platformUrl, dataSource, platformId, useGrants);
             case OperationEndpointMetadata operation:

@@ -151,7 +151,7 @@ internal partial class XamlBuilder
                     {
                         Command = CommandType.Dialog,
                         Action = DialogAction.Show,
-                        Url = TagEndpointMetadata.SettingsUrl(Table.Model)
+                        Url = TagEndpointMetadata.SettingsUrl(Endpoint.Path)
                     };
                     b.SetBinding(nameof(TagsControl.SettingsCommand), cmd);
                 }

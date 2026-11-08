@@ -15,11 +15,14 @@ using A2v10.Infrastructure;
 
 namespace A2v10.Metadata;
 
-internal class SqlBuilderTags(IServiceProvider serviceProvider, AppPlatformId _platformId)
+internal class SqlBuilderTags(IServiceProvider serviceProvider, AppPlatformId _platformId, Boolean _useGrants)
 {
     private readonly IDbContext _dbContext = serviceProvider.GetRequiredService<IDbContext>();
     private readonly ICurrentUser _currentUser = serviceProvider.GetRequiredService<ICurrentUser>();
     private readonly Boolean _allowEmptyStrings = serviceProvider.GetRequiredService<IDataConfiguration>().AllowEmptyStrings;
+
+    // Edit on the open too: the dialog exists only to change the dictionary, so a refusal comes before the typing
+    private String GateSql(NormalEndpointMetadata screen) => _useGrants ? Gate.Edit.Sql(screen.Path) : String.Empty;
 
     /* 'Used' says the tag is on at least one record, and the dialog refuses to delete it - so it
      * is computed, never stored: a stored bit would be a second truth to keep in step with the
@@ -28,8 +31,8 @@ internal class SqlBuilderTags(IServiceProvider serviceProvider, AppPlatformId _p
      *
      * The entries table is named by the owner's model, and its schema is always 'cat' - see
      * TableMetadataDefaults.CreateTagEntriesTable. The model reaches SQL as an identifier rather
-     * than a parameter because a table name cannot be one; TagEndpointBuilder.TagsFor is what
-     * makes that safe, and it is why the check there is not decoration.
+     * than a parameter because a table name cannot be one; it is read off the endpoint's metadata
+     * (TagEndpointBuilder.ScreenAsync), never off the url.
      */
     private static String LoadSql(String tagsFor) => $"""
 
@@ -45,28 +48,29 @@ internal class SqlBuilderTags(IServiceProvider serviceProvider, AppPlatformId _p
         select [Params!TParam!Object] = null, [For] = N'{tagsFor}';
         """;
 
-    public Task<IDataModel> LoadTagsModel(String? dataSource, String tagsFor)
-    {
-        var sql = """
+    internal String LoadBatch(NormalEndpointMetadata screen) => $"""
         set nocount on;
         set transaction isolation level read uncommitted;
-        """ + LoadSql(tagsFor);
-        var prms = new ExpandoObject()
+        {GateSql(screen)}
+        """ + LoadSql(screen.Storage.Model);
+
+    public Task<IDataModel> LoadTagsModel(String? dataSource, NormalEndpointMetadata screen)
+    {
+        return _dbContext.LoadModelSqlAsync(dataSource, LoadBatch(screen), prms =>
         {
-            { Constants.FieldNames.For, tagsFor }
-        };
-        return _dbContext.LoadModelSqlAsync(dataSource, sql, prms);
+            prms.AddString(Constants.FieldNames.For, screen.Storage.Model);
+            prms.AddBigInt("@UserId", _currentUser.Identity.Id);
+        });
     }
 
     /* The dialog sends the whole set, so 'matched' is every tag, edited or not. The update is taken
      * only where a value differs - otherwise one renamed tag would stamp the rest as modified by
      * whoever pressed save. 'except' compares nulls as equal, which '<>' does not.
      */
-    public async Task<ExpandoObject> SaveModelAsync(String? dataSource, ExpandoObject data, String tagsFor)
-    {
-        var sql = $"""
+    internal String SaveBatch(NormalEndpointMetadata screen) => $"""
         set nocount on;
         set transaction isolation level read committed;
+        {GateSql(screen)}
         merge {TableMetadataDefaults.TagsTableName()} as t
         using @{Constants.FieldNames.Tags} as s
         on t.[Id] = s.[Id] and t.[For] = @{Constants.FieldNames.For}
@@ -81,8 +85,10 @@ internal class SqlBuilderTags(IServiceProvider serviceProvider, AppPlatformId _p
             [{Constants.FieldNames.UserModified}], [{Constants.FieldNames.UtcDateModified}]) values
             (@{Constants.FieldNames.For}, s.[Name], s.[Color], s.[Memo], @UserId, getutcdate(), @UserId, getutcdate())
         when not matched by source and t.[For] = @{Constants.FieldNames.For} then delete;
-        """ + LoadSql(tagsFor);
+        """ + LoadSql(screen.Storage.Model);
 
+    public async Task<ExpandoObject> SaveModelAsync(String? dataSource, ExpandoObject data, NormalEndpointMetadata screen)
+    {
         // the type name comes off the same table the deploy generates it from, so a rename moves both
         var tagsTable = TableMetadataDefaults.TagsTable();
         var dtb = new DataTableBuilder(tagsTable, _platformId, _allowEmptyStrings);
@@ -90,12 +96,12 @@ internal class SqlBuilderTags(IServiceProvider serviceProvider, AppPlatformId _p
 
         void SaveParams(DbParameterCollection prms)
         {
-            prms.AddString(Constants.FieldNames.For, tagsFor);
+            prms.AddString(Constants.FieldNames.For, screen.Storage.Model);
             prms.AddBigInt("@UserId", _currentUser.Identity.Id);
             prms.AddStructured(Constants.FieldNames.Tags, tagsTable.SqlTableTypeName, dtb.BuildDataTable(rows));
         }
 
-        var dm = await _dbContext.LoadModelSqlAsync(dataSource, sql, SaveParams)
+        var dm = await _dbContext.LoadModelSqlAsync(dataSource, SaveBatch(screen), SaveParams)
             ?? throw new InvalidOperationException("Tags. Save failed. DataModel is null");
 
         return dm.Root;

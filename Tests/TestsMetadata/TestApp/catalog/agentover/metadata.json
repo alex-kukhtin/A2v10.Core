@@ -1,0 +1,5 @@
+{
+	"$schema": "../../../../../Platform/A2v10.App.Assets2026/Application/@schemas/metadata-endpoint-json-schema.json#",
+	"description": "A second address over catalog/agent: one tag dictionary, and this address answers for itself (TagSettingsTests).",
+	"storage": "/catalog/agent"
+}
