@@ -143,6 +143,7 @@ internal partial class XamlBuilder
             {
                 Label = label,
                 Placeholder = "@[Tag.Choose]",
+                SettingsText = "@[Tag.Settings]",
                 Bindings = b =>
                 {
                     b.SetBinding(nameof(TagsControl.Value), new Bind($"{at.Prefix}{member.Name}"));

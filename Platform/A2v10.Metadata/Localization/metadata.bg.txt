@@ -64,6 +64,7 @@
 @Tags=Етикети
 @Color=Цвят
 @Tag.Choose=Изберете етикети
+@Tag.Settings=Настройки
 @Filter.Tag.All=Всички етикети
 ;
 ; Operations - the platform's table; Operation.<code> is the application's

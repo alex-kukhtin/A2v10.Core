@@ -64,6 +64,7 @@
 @Tags=Tags
 @Color=Farbe
 @Tag.Choose=Tags auswählen
+@Tag.Settings=Einstellungen
 @Filter.Tag.All=Alle Tags
 ;
 ; Operations - the platform's table; Operation.<code> is the application's

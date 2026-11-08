@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "A2v10 metadata.json (accplan)",
-    "description": "A chart of accounts: accplan/<name>/metadata.json, always named, even when there is only one. The table is keyed by the account code; its rows are declared in the seed file beside this one and written by the deploy. The baseline (Id, Name, Parent, AccountType, NormalBalance, Void, IsSystem, RowVersion, stamps) is the platform's and is not written here.",
+    "description": "A chart of accounts: accplan/<name>/metadata.json, always named, even when there is only one. The table is keyed by the account code; its rows are declared in the seed file beside this one and written by the deploy. The baseline (Id, Name, DisplayName, Parent, AccountType, NormalBalance, SplitBy, Void, IsSystem, RowVersion, stamps) is the platform's and is not written here.",
     "type": "object",
     "additionalProperties": false,
     "required": [ "table", "seed" ],
@@ -19,7 +19,7 @@
         },
         "seed": {
             "type": "string",
-            "description": "The file of rows, in this folder: a map 'account code -> { column: value }'. Required - nothing is inferred from a file lying in the folder. Checked at load: columns exist and are not the platform's, Name/AccountType/NormalBalance present, AccountType and NormalBalance spelled as their values, Parent is a code of the same file with no cycles, no '.' in a code (reserved for user sub-accounts), at most 64 characters."
+            "description": "The file of rows, in this folder: a map 'account code -> { column: value }'. Required - nothing is inferred from a file lying in the folder. Checked at load: columns exist and are not the platform's, Name/AccountType/NormalBalance present, AccountType and NormalBalance spelled as their values, SplitBy (an array of ledger columns) exactly when NormalBalance is Split, Parent is a code of the same file with no cycles, no '.' in a code (reserved for user sub-accounts), at most 64 characters."
         },
         "fields": {
             "$ref": "metadata-endpoint-json-schema.json#/definitions/fields",

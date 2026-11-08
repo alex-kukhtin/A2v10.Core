@@ -89,6 +89,16 @@ public class TagSettingsTests
         Assert.Contains("[For] = N'Agent'", sql.SaveBatch(screen));
     }
 
+    // unset, the client's default shows 'Settings' in English in every language
+    [Fact]
+    public async Task The_settings_button_is_localized()
+    {
+        var view = (await TestHost.GetService<EndpointMaterializer>()
+            .MaterializeAsync("/catalog/agent", "edit", MaterializeWhat.View)).Files[0].Text;
+
+        Assert.Contains("SettingsText=\"@[Tag.Settings]\"", view);
+    }
+
     [Theory]
     [InlineData("agent")]
     [InlineData("agentover")]

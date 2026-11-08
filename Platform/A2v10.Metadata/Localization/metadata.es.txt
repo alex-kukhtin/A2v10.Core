@@ -64,6 +64,7 @@
 @Tags=Etiquetas
 @Color=Color
 @Tag.Choose=Elija etiquetas
+@Tag.Settings=Configuración
 @Filter.Tag.All=Todas las etiquetas
 ;
 ; Operations - the platform's table; Operation.<code> is the application's

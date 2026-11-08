@@ -64,6 +64,7 @@
 @Tags=Ознаки
 @Color=Колір
 @Tag.Choose=Оберіть ознаки
+@Tag.Settings=Налаштування
 @Filter.Tag.All=Усі ознаки
 ;
 ; Operations - the platform's table; Operation.<code> is the application's
