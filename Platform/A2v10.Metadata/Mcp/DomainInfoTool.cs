@@ -32,8 +32,8 @@ internal sealed class DomainInfoTool(IReadOnlyList<McpEntity> entities, Database
     public String Title => "Application entities";
     public PlatformMcpToolHints Hints => PlatformMcpToolHints.ReadOnly;
     public String Description => """
-        The entities of this application that the current user can reach: name, kind (catalog or document), title - what the user calls it, operations - the kinds of a document: the user names the title, document_create takes the name; description when the name is not enough.
-        Call once at the start of a task. A catalog's name is what the catalog_* tools take, a document's - the document_* tools.
+        The entities of this application that the current user can reach: name, kind (catalog, document or report), title - what the user calls it, for a report - which numbers lie there; operations - the kinds of a document: the user names the title, document_create takes the name; description when the name is not enough.
+        Call once at the start of a task. A catalog's name is what the catalog_* tools take, a document's - the document_* tools, a report's - the report_* tools.
         """;
     public JsonElement InputSchema => McpArgs.Schema(new { type = "object", properties = new { }, additionalProperties = false });
     public String[]? Roles => null;
@@ -48,7 +48,7 @@ internal sealed class DomainInfoTool(IReadOnlyList<McpEntity> entities, Database
                 .Select(o => new McpOperation(o.Name, Label(MetadataExtensions.OperationLabel(o.Id))))
                 .ToList();
             list.Add(new McpDomainEntity(e.Name, e.Kind,
-                Label(e.IsCatalog ? endpoint.Storage.RecordLabel() : MetadataExtensions.OperationLabel(endpoint.Name)),
+                Label(e.IsReport ? e.Mcp!.Title! : e.IsCatalog ? endpoint.Storage.RecordLabel() : MetadataExtensions.OperationLabel(endpoint.Name)),
                 operations.Count > 0 ? operations : null,
                 e.Mcp?.Description));
         }

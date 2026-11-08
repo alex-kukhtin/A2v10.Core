@@ -22,7 +22,7 @@ namespace A2v10.Metadata;
  */
 internal static class RecordTool
 {
-    internal static JsonElement Schema(String kind, IReadOnlyList<McpEntity> entities, Object? properties = null)
+    internal static JsonElement Schema(String kind, IReadOnlyList<McpEntity> entities, Object? properties = null, String[]? alsoRequired = null)
     {
         var all = new Dictionary<String, Object>()
         {
@@ -31,7 +31,7 @@ internal static class RecordTool
         if (properties != null)
             foreach (var p in JsonSerializer.SerializeToElement(properties).EnumerateObject())
                 all[p.Name] = p.Value;
-        return McpArgs.Schema(new { type = "object", properties = all, required = new[] { kind }, additionalProperties = false });
+        return McpArgs.Schema(new { type = "object", properties = all, required = new[] { kind }.Concat(alsoRequired ?? []), additionalProperties = false });
     }
 
     // the door, no screen built; not asked of the host: a browser's host does not register it, and nothing else here needs it
@@ -214,10 +214,10 @@ internal sealed class RecordQueryTool(String kind, IReadOnlyList<McpEntity> enti
         };
     }
 
-    static Int32 Number(JsonElement args, String name) => args.TryGetProperty(name, out var value) ? value.GetInt32() : 0;
+    internal static Int32 Number(JsonElement args, String name) => args.TryGetProperty(name, out var value) ? value.GetInt32() : 0;
 
     // the query the builder reads: Period as its From and To, every other condition under its own name
-    static ExpandoObject Conditions(JsonElement args, TableMetadata table)
+    internal static ExpandoObject Conditions(JsonElement args, TableMetadata table)
     {
         var conditions = new ExpandoObject();
         JsonElement period = default;

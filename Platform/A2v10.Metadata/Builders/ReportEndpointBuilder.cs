@@ -19,7 +19,7 @@ internal class ReportEndpointBuilder(IServiceProvider _serviceProvider, ReportEn
     {
         var reportBuilder = BaseReportBuilder.Create(_serviceProvider, _endpoint, _platformId, _useGrants);
 
-        var dm = await reportBuilder.LoadReportModelAsync(view, platformUrl.Query ?? []);
+        var dm = await reportBuilder.LoadReportModelAsync(view.DataSource, platformUrl.Query ?? []);
 
         if (isReload)
             return new AppRuntimeResult(dm, null);

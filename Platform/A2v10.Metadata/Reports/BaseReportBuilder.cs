@@ -70,7 +70,7 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Repo
     internal void SetGrouping(ExpandoObject prms) =>
         _grouping = new ReportGrouping(_report, _source, prms);
 
-    public abstract Task<IDataModel> LoadReportModelAsync(IModelView view, ExpandoObject prms);
+    public abstract Task<IDataModel> LoadReportModelAsync(String? dataSource, ExpandoObject prms);
 
     // what the user picks besides the period and the filters: groups and data; a fixed report has none
     protected virtual Boolean HasChoices => true;

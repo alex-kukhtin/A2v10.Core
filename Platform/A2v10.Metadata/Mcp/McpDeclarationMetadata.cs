@@ -1,6 +1,7 @@
 // Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+using System.Collections.Generic;
 
 namespace A2v10.Metadata;
 
@@ -12,4 +13,8 @@ namespace A2v10.Metadata;
 public sealed record McpDeclarationMetadata
 {
     public String? Description { get; init; }
+    // a journal: which numbers lie here. The user never calls a journal anything, so no screen has the word
+    public String? Title { get; init; }
+    // a journal: measure -> what it is when the name and the type do not say (Sum: the cost or the revenue)
+    public Dictionary<String, String>? Measures { get; init; }
 }

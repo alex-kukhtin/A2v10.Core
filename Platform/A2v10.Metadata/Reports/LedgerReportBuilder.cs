@@ -37,10 +37,10 @@ internal abstract class LedgerReportBuilder : BaseReportBuilder
     // the statements between the period and the echo of the filters; @From, @end and @Run are declared
     protected abstract String CreateBodySql();
 
-    public override async Task<IDataModel> LoadReportModelAsync(IModelView view, ExpandoObject prms)
+    public override async Task<IDataModel> LoadReportModelAsync(String? dataSource, ExpandoObject prms)
     {
         SetGrouping(prms);
-        return await _dbContext.LoadModelSqlAsync(view.DataSource, CreateSqlText(), dbprms =>
+        return await _dbContext.LoadModelSqlAsync(dataSource, CreateSqlText(), dbprms =>
         {
             dbprms.AddBigInt("@UserId", _currentUser.Identity.Id);
             dbprms

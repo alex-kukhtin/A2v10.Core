@@ -10,13 +10,13 @@ using A2v10.Infrastructure;
 
 namespace A2v10.Metadata;
 
-/* The tools of the metadata layer: domain_info and the families catalog_*, document_*. The host registers it with
+/* The tools of the metadata layer: domain_info and the families catalog_*, document_*, report_*. The host registers it with
  * services.UseMcp(Configuration, tools => tools.AddProvider<MetadataMcpToolProvider>()).
  * The tools are created here, per request, for this user: the entities their roles reach are the enums
  * of the schemas. No entity reached - no tool; no entity of a kind reached - no family of that kind.
  */
 public sealed class MetadataMcpToolProvider(DatabaseMetadataProvider metadata, ICurrentUser currentUser, IDataService dataService,
-    ILocalizer localizer) : IPlatformMcpToolProvider
+    ILocalizer localizer, IServiceProvider services) : IPlatformMcpToolProvider
 {
     public async Task<IEnumerable<IPlatformMcpTool>> GetToolsAsync()
     {
@@ -28,6 +28,12 @@ public sealed class MetadataMcpToolProvider(DatabaseMetadataProvider metadata, I
         foreach (var family in visible.GroupBy(e => e.Kind))
         {
             var entities = family.ToList();
+            if (family.Key == McpIndex.ReportKind)
+            {
+                tools.Add(new ReportInfoTool(entities, visible, metadata));
+                tools.Add(new ReportQueryTool(entities, visible, metadata, services, localizer));
+                continue;
+            }
             tools.Add(new RecordInfoTool(family.Key, entities, visible, metadata));
             tools.Add(new RecordQueryTool(family.Key, entities, metadata, dataService));
             tools.Add(new RecordLoadTool(family.Key, entities, metadata, dataService));

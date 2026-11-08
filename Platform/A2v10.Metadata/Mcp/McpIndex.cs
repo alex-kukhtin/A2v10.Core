@@ -18,6 +18,7 @@ internal sealed record McpEntity(String Name, String Path, String Schema, String
     McpDeclarationMetadata? Mcp)
 {
     internal Boolean IsCatalog => Kind == Constants.SchemaNames.Catalog;
+    internal Boolean IsReport => Kind == McpIndex.ReportKind;
 
     // ModelJson.CheckRoles: no roles is everyone; otherwise the user's must intersect. No implicit Admin.
     internal Boolean IsVisibleTo(IEnumerable<String>? userRoles) =>
@@ -33,12 +34,14 @@ internal sealed record McpJsonFile
  * the kind (the folder, through app.json aliases), the roles (the folder's model.json), the 'mcp' key of
  * the folder's metadata.json (parsed for that key alone - domain_info shows its description). Loaded at the
  * first tools/list - the schemas of the tools enumerate the entities - and cached with the metadata.
- * Refused here, naming the path: a path that is not two segments, a kind other than catalog/document,
+ * A journal is listed under the kind 'report': the word for the reader, and the prefix of its tools.
+ * Refused here, naming the path: a path that is not two segments, a kind other than catalog/document/journal, a journal with no mcp.title,
  * no metadata.json in the folder, two equal names. The rest is `a2 meta validate`'s mcp stage.
  */
 internal sealed record McpIndex(IReadOnlyList<McpEntity> Entities)
 {
     internal const String FileName = "mcp.json";
+    internal const String ReportKind = "report";
 
     internal McpEntity? ByPath(String path) => Entities.FirstOrDefault(e => e.Path == path);
 
@@ -56,11 +59,15 @@ internal sealed record McpIndex(IReadOnlyList<McpEntity> Entities)
             var (schema, table) = DatabaseMetadataProvider.ParsePath(path);
             if (String.IsNullOrEmpty(table))
                 throw new InvalidOperationException($"{FileName}: '{path}' names no endpoint - a path is <kind>/<name>");
-            var kind = await kindOf(schema);
-            if (kind is not (Constants.SchemaNames.Catalog or Constants.SchemaNames.Document))
-                throw new InvalidOperationException($"{FileName}: '{path}' is a {kind}; the model is shown catalogs and documents");
+            var folder = await kindOf(schema);
+            if (folder is not (Constants.SchemaNames.Catalog or Constants.SchemaNames.Document or Constants.SchemaNames.Journal))
+                throw new InvalidOperationException($"{FileName}: '{path}' is a {folder}; the model is shown catalogs, documents and journals");
+            var kind = folder == Constants.SchemaNames.Journal ? ReportKind : folder;
+            var mcp = ReadMcp(code, path, schema, table);
+            if (kind == ReportKind && String.IsNullOrEmpty(mcp?.Title))
+                throw new InvalidOperationException($"{FileName}: '{path}' writes no 'mcp.title': nothing else tells the model which numbers lie in a journal");
             entities.Add(new McpEntity(table, $"/{schema}/{table}", schema, table, kind, ReadRoles(code, schema, table),
-                ReadMcp(code, path, schema, table)));
+                mcp));
         }
         if (entities.GroupBy(e => e.Name).FirstOrDefault(g => g.Count() > 1) is { } twice)
             throw new InvalidOperationException(

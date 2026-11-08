@@ -15,12 +15,12 @@ namespace A2v10.Metadata;
 internal class TurnoverReportBuilder(IServiceProvider serviceProvider, ReportMetadata report, TableMetadata source, AppPlatformId platformId) 
     : BaseReportBuilder(serviceProvider, report, source, platformId)
 {
-    public override async Task<IDataModel> LoadReportModelAsync(IModelView view, ExpandoObject prms)
+    public override async Task<IDataModel> LoadReportModelAsync(String? dataSource, ExpandoObject prms)
     {
         SetGrouping(prms);
         var sqlString = await CreateSqlTextAsync();
 
-        return await _dbContext.LoadModelSqlAsync(view.DataSource, sqlString, dbprms =>
+        return await _dbContext.LoadModelSqlAsync(dataSource, sqlString, dbprms =>
         {
             dbprms.AddBigInt("@UserId", _currentUser.Identity.Id);
             dbprms
