@@ -23,6 +23,12 @@ public class ModelJsonReader(IModelJsonPartProvider _partProvider, IAppRuntimeBu
 	 */
 	async Task<ModelJson> CreateMetaAsync(IPlatformUrl url)
 	{
+		// the last two segments are the action and the id: nothing before them, and the address was an endpoint's
+		if (String.IsNullOrEmpty(url.LocalPath))
+		{
+			var address = "/" + String.Join('/', new[] { url.Action, url.Id }.Where(s => !String.IsNullOrEmpty(s)));
+			throw new ModelJsonException($"'{address}' has no action. A page address is <endpoint>/<action>/<id>, a list is '{address}/index/0'; only menu.json names an endpoint");
+		}
 		var endpoint = await _appRuntimeBuilder.DescribeAsync(url.LocalPath);
         var ms = new ModelJson()
         {

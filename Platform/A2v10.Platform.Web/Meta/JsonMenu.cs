@@ -111,7 +111,7 @@ internal record JsonMenuRoot
             var items = Filter(item.Items, grants)!;
             return items.Any(i => !i.Grow) ? item with { Items = items } : null;
         }
-        var flags = item.Url != null && grants.TryGetValue(item.Url, out var found) ? found : default;
+        var flags = item.Endpoint != null && grants.TryGetValue(item.Endpoint, out var found) ? found : default;
         if (!flags.HasFlag(PermissionFlag.CanView))
             return null;
         return item.Create && !flags.HasFlag(PermissionFlag.CanCreate) ? item with { Create = false } : item;
@@ -146,7 +146,7 @@ internal record JsonMenuRoot
             ClassName = root.ToClassName(),
             CreateUrl = root.ToCreateUrl(),
             CreateName = root.ToCreateName(localizer),
-            Url = isAux ? $"page:/_auxmenu/any?mode={root.Id}" : $"page:{root.Url}/index/0",
+            Url = isAux ? $"page:/_auxmenu/any?mode={root.Id}" : $"page:{root.Endpoint}/index/0",
             Menu = isAux ? null : root.Items?.Select(i => ToPlatform(i, level + 1, localizer))?.ToList()
         };
 
@@ -157,7 +157,10 @@ internal record JsonMenuRoot
 internal record JsonMenu
 {
     public String Title { get; init; } = default!;
-    public String? Url { get; init; }
+    // the action and the id are the menu's to add: a full address here would get them twice
+    public String? Endpoint { get; init; }
+    // the key's former name: a menu.json written before the rename, set-only so that 'endpoint' wins in any order
+    public String? Url { init => Endpoint ??= value; }
     public String? Category { get; init; }
     public String? Id { get; init; }
     public String? Icon { get; init; }
@@ -183,10 +186,10 @@ internal record JsonMenu
     {
         if (!Create)
             return null;
-        return $"dialog:{Url}/edit/new";
+        return $"dialog:{Endpoint}/edit/new";
     }
 
-    internal String? IdFromUrl() => Url?.Split('/')[^1];
+    internal String? IdFromEndpoint() => Endpoint?.Split('/')[^1];
 
     internal String? ToCreateName(ILocalizer localizer)
     {

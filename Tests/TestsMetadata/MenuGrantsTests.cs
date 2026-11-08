@@ -21,7 +21,7 @@ public class MenuGrantsTests
     // the roles the procedure returns: assigned ones and Everyone
     static readonly HashSet<String> _roles = new(StringComparer.Ordinal) { "Storekeeper", "Everyone" };
 
-    static JsonMenu Leaf(String url, Boolean create = false) => new() { Title = url, Url = url, Create = create };
+    static JsonMenu Leaf(String url, Boolean create = false) => new() { Title = url, Endpoint = url, Create = create };
     static JsonMenu Node(String title, params JsonMenu[] items) => new() { Title = title, Items = [.. items] };
 
     [Fact]
@@ -29,7 +29,7 @@ public class MenuGrantsTests
     {
         var menu = JsonMenuRoot.Transform([Node("Sales", Node("Catalogs", Leaf("/catalog/agent"), Leaf("/catalog/contract")))], _grants, _roles)!;
 
-        Assert.Equal(["/catalog/agent"], menu[0].Items![0].Items!.Select(i => i.Url));
+        Assert.Equal(["/catalog/agent"], menu[0].Items![0].Items!.Select(i => i.Endpoint));
     }
 
     [Fact]
@@ -59,7 +59,7 @@ public class MenuGrantsTests
         ], _grants, _roles)!;
 
         Assert.Equal(["Open"], menu.Select(m => m.Title));
-        Assert.Equal(["/catalog/unit"], menu[0].Items![0].Items![0].Items!.Select(i => i.Url));
+        Assert.Equal(["/catalog/unit"], menu[0].Items![0].Items![0].Items!.Select(i => i.Endpoint));
     }
 
     [Fact]

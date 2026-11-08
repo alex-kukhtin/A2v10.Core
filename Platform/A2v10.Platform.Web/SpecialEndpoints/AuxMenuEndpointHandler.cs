@@ -71,10 +71,10 @@ public class AuxMenuEndpointHandler(IServiceProvider _serviceProvider, ILocalize
         {
             { "Menu", menu.Items?.Select(mi => new ExpandoObject()
                 {
-                    { "Id", mi.IdFromUrl() },
+                    { "Id", mi.IdFromEndpoint() },
                     { "Title", mi.Title },
                     { "Category", mi.Category },
-                    { "Url", Path.Combine(mi.Url ?? "/", "indexpartial/0") }
+                    { "Url", Path.Combine(mi.Endpoint ?? "/", "indexpartial/0") }
                 })
             }
         };
