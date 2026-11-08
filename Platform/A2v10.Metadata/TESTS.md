@@ -189,7 +189,7 @@ endpoint-ов TestApp в одну папку, уложенную как прил
   Материализовать один раз.
 
 Следствие второго пункта не косметическое: дефолтная колонка **физически не может нести
-`RefTable`**. Отсюда мёртвая ветка `ColumnType.Parent` в `ResolveReferencesAsync`
+`RefTable`**. Отсюда мёртвая ветка `ColumnType.Parent` в `ResolveColumnsAsync`
 (`:540` — `Parent` не входит в `IsRef`) и `Tag` в `TagsEntriesDefaultColumns`,
 объявленный с `Target = "/catalog/tags"`, который никто никогда не разрешит.
 

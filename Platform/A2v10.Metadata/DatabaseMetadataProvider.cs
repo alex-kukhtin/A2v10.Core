@@ -86,7 +86,16 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
      */
     public Task<EndpointMetadata> GetEndpointAsync(String? dataSource, String schema, String table)
     {
-        return _metadataCache.GetOrLoadAsync(dataSource, schema, table, LoadAsync);
+        return _metadataCache.GetOrLoadAsync(dataSource, schema, table, LoadAndCheckAsync);
+    }
+
+    // the descent is over, nothing is half linked: what the checks load is linked whole before they read it
+    private async Task<EndpointMetadata> LoadAndCheckAsync(EndpointLoad load, String? dataSource, String schema, String table)
+    {
+        var endpoint = await LoadAsync(load, dataSource, schema, table);
+        while (load.NextUnchecked() is { } next)
+            await CheckReferencesAsync(load, next, dataSource);
+        return endpoint;
     }
 
     /* Build, then link, and between the two the endpoint is put into the load: the graph is
@@ -99,7 +108,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             return found;
         var endpoint = await LoadEndpointAsync(load, dataSource, schema, table);
         load.Add(dataSource, schema, table, endpoint);
-        await ResolveReferencesAsync(load, endpoint, dataSource);
+        await LinkReferencesAsync(load, endpoint, dataSource);
+        load.Linked(endpoint);
         return endpoint;
     }
 
@@ -325,7 +335,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     /* A ledger posts against one chart, and nothing names it but this key - no default, and not the
      * ledger's folder name: ledger/national -> accplan/national is a coincidence, not a rule. Anywhere
      * else the key is refused rather than dropped. That the path is a chart is asked in phase 2, where
-     * the target is linked (ResolveReferencesAsync).
+     * the target is linked (LinkReferencesAsync).
      */
     private static void CheckAccPlan(TableMetadata storage, String schema, String table)
     {
@@ -1135,29 +1145,38 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             throw new InvalidOperationException($"{head}: '{b.Operation}' is not an operation of {target.Path}. Its operations: {String.Join(", ", names)}");
     }
 
-    /* Phase 2, run once per endpoint by LoadAsync and by nobody else. Reachable targets descend
+    private static TableMetadata? ShapeOf(EndpointMetadata endpoint) => endpoint switch
+    {
+        NormalEndpointMetadata n => n.Storage,
+        ReportEndpointMetadata r => r.Surface,
+        // a shape with no declared columns: the walk finds nothing and that is correct,
+        // its only column is the operation code and it points at this very endpoint
+        OperationEndpointMetadata o => o.Storage,
+        // a key and a name, neither a reference
+        UserEndpointMetadata => null,
+        // no shape, so no references - said by name, so an unknown subtype still fails loudly
+        TagEndpointMetadata or AdminEndpointMetadata or AttachmentEndpointMetadata => null,
+        _ => throw new InvalidOperationException($"Unknown endpoint {endpoint.Path}")
+    };
+
+    /* Phase 2, the link: run once per endpoint by LoadAsync and by nobody else. Reachable targets descend
      * through the same load, so one that comes back around finds the instance and returns -
      * which is what terminates a cycle, and what a second call from outside would undo.
      */
-    private async Task ResolveReferencesAsync(EndpointLoad load, EndpointMetadata endpoint, String? dataSource)
+    private async Task LinkReferencesAsync(EndpointLoad load, EndpointMetadata endpoint, String? dataSource)
     {
-        var meta = endpoint switch {
-            NormalEndpointMetadata n => n.Storage,
-            ReportEndpointMetadata r => r.Surface,
-            // a shape with no declared columns: the walk below finds nothing and that is correct,
-            // its only column is the operation code and it points at this very endpoint
-            OperationEndpointMetadata o => o.Storage,
-            // a key and a name, neither a reference
-            UserEndpointMetadata => null,
-            // no shape, so no references - said by name, so an unknown subtype still fails loudly
-            TagEndpointMetadata or AdminEndpointMetadata or AttachmentEndpointMetadata => null,
-            _ => throw new InvalidOperationException($"Unknown endpoint {endpoint.Path}")
-        };
-        if (meta == null)
-            return;
-
-        if (meta.Path == endpoint.Path)
+        if (ShapeOf(endpoint) is { } meta && meta.Path == endpoint.Path)
             await ResolveColumnsAsync(load, endpoint, meta, dataSource);
+    }
+
+    /* Phase 2, what reads the links - after the descent, never inside it: reached through a cycle,
+     * an address over a shared table was checked while the owner was still walking its columns, and
+     * whether a column was linked by then depended on the order of the fields.
+     */
+    private async Task CheckReferencesAsync(EndpointLoad load, EndpointMetadata endpoint, String? dataSource)
+    {
+        if (ShapeOf(endpoint) is not { } meta)
+            return;
 
         CheckLiteralInitials(endpoint, meta);
 
@@ -1175,8 +1194,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
     }
 
     /* The columns of a table are linked once, by the endpoint at the table's own address (TableMetadata.Path
-     * is the declaring file's). A second address ('storage') and a report ('surface') find the table linked:
-     * its owner was loaded first, in the same load. Walking it again wrote into a table already published
+     * is the declaring file's). A second address ('storage') and a report ('surface') do not walk it:
+     * the owner links it, in the same load, before anyone reads it. Walking it again wrote into a table already published
      * to another endpoint - and what differs by endpoint (the folders' address) went to the last writer.
      */
     private async Task ResolveColumnsAsync(EndpointLoad load, EndpointMetadata endpoint, TableMetadata meta, String? dataSource)

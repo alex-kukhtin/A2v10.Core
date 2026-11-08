@@ -1,0 +1,8 @@
+{
+	"$schema": "../../../../../Platform/A2v10.App.Assets2026/Application/@schemas/metadata-endpoint-json-schema.json#",
+	"description": "The second address over catalog/linkowner, reached while the owner links its columns. Its literal is checked against the set the owner links later (LoadOrderTests).",
+	"storage": "/catalog/linkowner",
+	"initialValues": {
+		"Rate": { "source": "literal", "value": "20" }
+	}
+}

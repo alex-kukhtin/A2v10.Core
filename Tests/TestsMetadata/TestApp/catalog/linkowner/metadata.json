@@ -1,0 +1,9 @@
+{
+	"$schema": "../../../../../Platform/A2v10.App.Assets2026/Application/@schemas/metadata-endpoint-json-schema.json#",
+	"description": "A cycle through a shared table (LoadOrderTests): the reference to an address over this very table stands BEFORE the set. The order is the fixture - do not sort it.",
+	"table": "LinkOwners",
+	"fields": {
+		"Link": { "type": "ref", "target": "/catalog/linkover" },
+		"Rate": { "type": "enum", "target": "/enum/vatrate" }
+	}
+}

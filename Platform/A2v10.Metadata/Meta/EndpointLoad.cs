@@ -45,6 +45,16 @@ internal sealed class EndpointLoad(ConcurrentDictionary<String, EndpointMetadata
     public void Add(String? dataSource, String schema, String table, EndpointMetadata endpoint) =>
         _loading[KeyOf(dataSource, schema, table)] = endpoint;
 
+    /* Linked and not yet checked. A check reads RefTable, and while any descent is still linking,
+     * a table may be half done: an address over it is reachable from its own columns. So checks wait
+     * here until the descent is over; one that loads another endpoint adds it to this same queue.
+     */
+    private readonly Queue<EndpointMetadata> _unchecked = [];
+
+    public void Linked(EndpointMetadata endpoint) => _unchecked.Enqueue(endpoint);
+
+    public EndpointMetadata? NextUnchecked() => _unchecked.TryDequeue(out var endpoint) ? endpoint : null;
+
     /* One of our tables, keyed by the file that declares it and not by the endpoint that asks: every
      * endpoint pointing at one table gets one instance. Built here and published with the endpoints,
      * never put into the cache as it is built: phase 2 writes into its columns (RefTable), and a load
