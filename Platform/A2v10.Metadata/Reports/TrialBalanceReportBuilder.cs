@@ -18,6 +18,9 @@ namespace A2v10.Metadata;
  * Split goes by sign as Both does, one grain finer: per account and object of its SplitBy, then summed
  * into the account. The grain is all it changes - for Debit and Credit a finer grain sums to the same
  * number, only a layout by sign is not additive.
+ *
+ * An off-balance account keeps its row and stays out of the total: debit against credit in the total
+ * is what shows an opening balance that does not add up, and such an account would blur it.
  */
 internal class TrialBalanceReportBuilder(IServiceProvider serviceProvider, ReportMetadata report, TableMetadata source, AppPlatformId platformId)
     : LedgerReportBuilder(serviceProvider, report, source, platformId)
@@ -26,9 +29,16 @@ internal class TrialBalanceReportBuilder(IServiceProvider serviceProvider, Repor
         One row per account (Acc). DtStart, CtStart - the balance before the period; DtSum, CtSum - the debit and the credit turnover within it; DtEnd, CtEnd - the balance at its end.
         A balance lies on the side the account keeps it: a minus in a debit column is an error in the books, not a credit balance.
         The balance on a date: Period with To alone, read DtEnd and CtEnd.
+        OffBalance true: the account is outside the balance, and its row is not in the summary.
+        A filter on an analytic keeps only the legs that carry it, so debit and credit do not meet in the summary: that says nothing about the books.
+        With no such filter (a filter by company keeps both legs), debit differing from credit means the postings do not add up: most often the opening balance is not fully entered.
         """;
 
     internal override IEnumerable<String> RowNumbers => ["DtStart", "CtStart", "DtSum", "CtSum", "DtEnd", "CtEnd"];
+
+    internal override IEnumerable<String> RowDetails => [OffBalance];
+
+    private const String OffBalance = nameof(AccountType.OffBalance);
 
     // the pair a balance is laid out into, by the side the account keeps it on
     private static String Debit(String balance) => $"""
@@ -69,6 +79,10 @@ internal class TrialBalanceReportBuilder(IServiceProvider serviceProvider, Repor
         var inOut = Constants.FieldNames.InOut;
         var (apply, groupBy) = SplitGrain();
 
+        // the total row of the rollup leaves the off-balance accounts out, an account's row is all of itself
+        String InTotal(String number) =>
+            $"[{number}] = iif(grouping([{acc}]) = 1, sum(iif([{OffBalance}] = 1, 0, [{number}])), sum([{number}]))";
+
         return $"""
         with J as (
             select j.[{acc}],
@@ -82,6 +96,7 @@ internal class TrialBalanceReportBuilder(IServiceProvider serviceProvider, Repor
         ),
         S as (
             select J.[{acc}], J.[DtSum], J.[CtSum],
+                [{OffBalance}] = iif(a.[{Constants.FieldNames.AccountType}] = N'{OffBalance}', 1, 0),
                 [DtStart] = {Debit("J.[Start]")},
                 [CtStart] = {Credit("J.[Start]")},
                 [DtEnd] = {Debit("J.[End]")},
@@ -89,15 +104,13 @@ internal class TrialBalanceReportBuilder(IServiceProvider serviceProvider, Repor
             from J inner join {ChartTableName} a on a.[Id] = J.[{acc}]
         ),
         T as (
-            select [{acc}], [Grp] = grouping([{acc}]),
-                [DtStart] = sum([DtStart]), [CtStart] = sum([CtStart]),
-                [DtSum] = sum([DtSum]), [CtSum] = sum([CtSum]),
-                [DtEnd] = sum([DtEnd]), [CtEnd] = sum([CtEnd])
+            select [{acc}], [Grp] = grouping([{acc}]), [{OffBalance}] = max([{OffBalance}]),
+                {String.Join(",\n        ", RowNumbers.Select(InTotal))}
             from S
             group by rollup([{acc}])
         )
         select [RepData!TRepData!Group] = null, [Id!!Id] = T.[{acc}],
-            [Name] = a.[Name],
+            [Name] = a.[Name], [{OffBalance}] = cast(T.[{OffBalance}] as bit),
             T.[DtStart], T.[CtStart], T.[DtSum], T.[CtSum], T.[DtEnd], T.[CtEnd],
             [{acc}!!GroupMarker] = T.[Grp],
             [Items!TRepData!Items] = null
@@ -106,4 +119,17 @@ internal class TrialBalanceReportBuilder(IServiceProvider serviceProvider, Repor
         order by T.[Grp] desc, T.[{acc}];
         """;
     }
+
+    // one list of accounts, two blocks of the page: the model reads the same rows, marked
+    protected override String TemplateProperties =>
+        $"'TRepDataArray.$Balance': balanceRows, 'TRepDataArray.${OffBalance}': offBalanceRows";
+
+    protected override String TemplateFunctions => $$"""
+        function balanceRows() {
+            return this.filter(r => !r.{{OffBalance}});
+        }
+        function offBalanceRows() {
+            return this.filter(r => r.{{OffBalance}});
+        }
+        """;
 }

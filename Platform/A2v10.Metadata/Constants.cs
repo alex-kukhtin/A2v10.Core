@@ -237,7 +237,7 @@ internal static class Constants
          * move the first one together with every reference to it.
          */
         public const String AccPlan = "accplan";
-        // the postings against one chart of accounts - two mirrored legs per posting
+        // the postings against one chart of accounts - two mirrored legs per posting, or one
         public const String Ledger = "ledger";
     }
 

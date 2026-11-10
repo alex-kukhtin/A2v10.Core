@@ -349,13 +349,18 @@ public sealed record PostSqlMetadata
  */
 public sealed record PostLegMetadata
 {
+    /* No blocks: this side of the posting does not exist - an opening balance, an off-balance account.
+     * Spelled {} and not left out: a forgotten key stays a refusal, and Newtonsoft reads null as left out.
+     */
+    internal Boolean IsEmpty => Const.Count == 0 && Document.Count == 0 && Row.Count == 0;
+
     public Dictionary<String, String> Const { get; init; } = [];
     public Dictionary<String, String> Document { get; init; } = [];
     public Dictionary<String, String> Row { get; init; } = [];
 }
 
 /* One posting, in one of three spellings: a leg into a journal that the platform maps, a posting
- * into a ledger (two mirrored legs from one declaration), or a procedure that posts the whole
+ * into a ledger (two mirrored legs from one declaration, or one leg), or a procedure that posts the whole
  * document. Which key is written decides every other key of the entry, and
  * DeclarationMetadata.CheckPost refuses the combinations that mean nothing.
  */

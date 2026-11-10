@@ -240,7 +240,7 @@ internal static class TableDefaultColumns
             yield return stamp;
     }
 
-    /* A ledger: one row per leg, two legs per posting. The baseline is what 'post' writes from its
+    /* A ledger: one row per leg, two legs per posting, or one with CorrAcc null. The baseline is what 'post' writes from its
      * own keys (dt/ct, sum), so the platform knows these names ahead. CorrAcc is the Acc of the other
      * leg. The provenance (Document, Operation, Row) is not here: its target is where the documents
      * of the application live, and an application may have documents without operations - so it is

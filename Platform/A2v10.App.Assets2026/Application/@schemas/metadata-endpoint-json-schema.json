@@ -366,7 +366,7 @@
 
         "postLedger": {
             "type": "object",
-            "description": "Posting into a ledger: two mirrored legs. CorrAcc, InOut, Date and the provenance are filled by the platform, never mapped. A leg with no 'row' block is collapsed to the header.",
+            "description": "Posting into a ledger: two mirrored legs, or one where the other side does not exist (an off-balance account, a document of the opening balance) - the other leg is then {}. CorrAcc, InOut, Date and the provenance are filled by the platform, never mapped. A leg with no 'row' block is collapsed to the header.",
             "additionalProperties": false,
             "required": [ "ledger", "sum", "dt", "ct" ],
             "properties": {
@@ -386,7 +386,7 @@
 
         "postLeg": {
             "type": "object",
-            "description": "One leg: ledger column -> its source, the source being the block key. Keys are 'Acc' or the author's columns of the ledger, never the provenance; a column in one block only; exactly one 'Acc' across the blocks.",
+            "description": "One leg: ledger column -> its source, the source being the block key. Keys are 'Acc' or the author's columns of the ledger, never the provenance; a column in one block only; exactly one 'Acc' across the blocks. {} - no blocks: this side of the posting does not exist; both legs empty is refused at load.",
             "additionalProperties": false,
             "properties": {
                 "const": {

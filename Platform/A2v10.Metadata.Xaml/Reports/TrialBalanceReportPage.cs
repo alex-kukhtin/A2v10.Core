@@ -27,6 +27,34 @@ internal class TrialBalanceReportPage(ReportMetadata report, ReportGrouping grou
 
         String[] pairs = ["DtStart", "CtStart", "DtSum", "CtSum", "DtEnd", "CtEnd"];
 
+        SheetSection Accounts(String source) => new()
+        {
+            Bindings = b => b.SetBinding(nameof(SheetSection.ItemsSource), new Bind(source)),
+            Children = [
+                new SheetRow() {
+                    Align = TextAlign.Right,
+                    Wrap = WrapMode.NoWrap,
+                    Cells = [
+                        new SheetCell() {
+                            Align = TextAlign.Center,
+                            Bindings = b => b.SetBinding(nameof(SheetCell.Content), new Bind("Id"))
+                        },
+                        new SheetCell() {
+                            ColSpan = 2,
+                            Align = TextAlign.Left,
+                            Wrap = WrapMode.Wrap,
+                            MinWidth = Length.FromString("20rem"),
+                            Bindings = b => {
+                                b.SetBinding(nameof(SheetCell.Content), new Bind("Name"));
+                                b.SetBinding(nameof(SheetCell.Tip), new Bind("Name"));
+                            }
+                        },
+                        ..pairs.Select(p => Sum(p))
+                    ]
+                }
+            ]
+        };
+
         return new Page()
         {
             Title = _report?.ItemLabel.Localize() ?? "@[TrialBalance]",
@@ -86,32 +114,17 @@ internal class TrialBalanceReportPage(ReportMetadata report, ReportGrouping grou
                                         }
                                     ]
                                 },
+                                Accounts("RepData.Items.$Balance"),
                                 new SheetSection() {
-                                    Bindings = b => b.SetBinding(nameof(SheetSection.ItemsSource), new Bind("RepData.Items")),
+                                    Bindings = b => b.SetBinding(nameof(SheetSection.If), new Bind("RepData.Items.$OffBalance.length")),
                                     Children = [
                                         new SheetRow() {
-                                            Align = TextAlign.Right,
-                                            Wrap = WrapMode.NoWrap,
-                                            Cells = [
-                                                new SheetCell() {
-                                                    Align = TextAlign.Center,
-                                                    Bindings = b => b.SetBinding(nameof(SheetCell.Content), new Bind("Id"))
-                                                },
-                                                new SheetCell() {
-                                                    ColSpan = 2,
-                                                    Align = TextAlign.Left,
-                                                    Wrap = WrapMode.Wrap,
-                                                    MinWidth = Length.FromString("20rem"),
-                                                    Bindings = b => {
-                                                        b.SetBinding(nameof(SheetCell.Content), new Bind("Name"));
-                                                        b.SetBinding(nameof(SheetCell.Tip), new Bind("Name"));
-                                                    }
-                                                },
-                                                ..pairs.Select(p => Sum(p))
-                                            ]
+                                            Style = RowStyle.Header,
+                                            Cells = [Text("@[AccountType.OffBalance]", colSpan: 9)]
                                         }
                                     ]
-                                }
+                                },
+                                Accounts("RepData.Items.$OffBalance")
                             ]
                         }
                     ]

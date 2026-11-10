@@ -328,7 +328,8 @@ internal sealed class PostStatements
      * both legs side by side - [Dt$X] and [Ct$X], '$' because the platform composes these names and an
      * author name cannot hold one. The insert selects it twice, the second time mirrored: Acc and
      * CorrAcc swap, the analytics of the other leg are taken, the sum is the same - so debit equals
-     * credit by construction and nothing checks it.
+     * credit by construction and nothing checks it. An empty leg writes no row: nothing is mirrored,
+     * and whether the books add up is then a fact of the data (concepts/ledger).
      *
      * Nothing is mapped by name: a name does not know its leg and would fill both rows. The legs name
      * Acc and the author's columns; the provenance is found by type, the rest of the baseline is the
@@ -395,7 +396,7 @@ internal sealed class PostStatements
                     if (!map.TryAdd(name, Expr(block, field, col)))
                         throw new InvalidOperationException($"{head}: '{leg}' names [{name}] in two blocks");
                 }
-            if (!map.ContainsKey(Constants.FieldNames.Acc))
+            if (!blocks.IsEmpty && !map.ContainsKey(Constants.FieldNames.Acc))
                 throw new InvalidOperationException($"{head}: '{leg}' declares no [{Constants.FieldNames.Acc}] - one account per leg, in any block");
             return map;
         }
@@ -476,6 +477,10 @@ internal sealed class PostStatements
             return $"select {String.Join(", ", fields)} from P group by {String.Join(", ", keys)}";
         }
 
+        var selects = new[] { (InOut: "1", Self: "Dt", Other: "Ct", Leg: p.Dt!), (InOut: "-1", Self: "Ct", Other: "Dt", Leg: p.Ct!) }
+            .Where(l => !l.Leg.IsEmpty)
+            .Select(l => Select(l.InOut, l.Self, l.Other, l.Leg));
+
         return $"""
             with P as (
                 select {String.Join(",\n        ", cte)}
@@ -484,9 +489,7 @@ internal sealed class PostStatements
                 where d.[{Constants.FieldNames.Id}] = @Id
             )
             insert into {ledger.SqlTableName} ({String.Join(", ", targets.Select(t => $"[{t}]"))})
-            {Select("1", "Dt", "Ct", p.Dt!)}
-            union all
-            {Select("-1", "Ct", "Dt", p.Ct!)};
+            {String.Join("\nunion all\n", selects)};
             """;
     }
 }

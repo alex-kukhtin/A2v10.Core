@@ -42,6 +42,28 @@ public class PostStatementsTests
         Assert.Contains("-r.[Sum]", post);
     }
 
+    static void CheckPost(String legs) =>
+        Newtonsoft.Json.JsonConvert.DeserializeObject<DeclarationMetadata>(
+            $$"""{ "post": [ { "ledger": "/ledger/national", "sum": "Sum", {{legs}} } ] }""",
+            JsonSettings.CamelCaseSerializerSettings)!.CheckPost("/document/x");
+
+    [Fact]
+    public void An_empty_leg_says_the_other_side_does_not_exist()
+    {
+        CheckPost("""  "dt": { "const": { "Acc": "281" } }, "ct": {}  """);
+        CheckPost("""  "dt": {}, "ct": { "const": { "Acc": "631" } }  """);
+    }
+
+    // a forgotten key is not an empty leg, and a posting has a side
+    [Theory]
+    [InlineData("""  "dt": { "const": { "Acc": "281" } }  """, "declares 'dt', 'ct'")]
+    [InlineData("""  "dt": {}, "ct": {}  """, "both legs are empty")]
+    public void A_posting_without_a_leg_is_refused(String legs, String message)
+    {
+        var ex = Assert.Throws<InvalidOperationException>(() => CheckPost(legs));
+        Assert.Contains(message, ex.Message);
+    }
+
     // CLAUDE.md, "Storno": only what adds up; Float and Decimal are declared Amount/Qty to flip
     [Theory]
     [InlineData(ColumnType.Amount, true)]

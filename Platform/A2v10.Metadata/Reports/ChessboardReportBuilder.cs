@@ -9,6 +9,7 @@ namespace A2v10.Metadata;
 /* The chessboard of a ledger: debit accounts down, credit accounts across, the turnover of the period
  * where they meet. Read from the debit legs alone - every posting is there once, as Acc with its
  * CorrAcc - so a row total is the debit turnover of the account and a column total its credit one.
+ * A leg with no other side has no cell to stand in, so a one-sided posting is not on the board.
  *
  * The columns are data: each row carries its cells as a cross array keyed by the corresponding
  * account's code, and the code is the key of the chart, so no join is needed to name a column.
@@ -18,6 +19,7 @@ internal class ChessboardReportBuilder(IServiceProvider serviceProvider, ReportM
 {
     internal override String Reading => """
         One row per debit account (Acc). Sum - its debit turnover within the period; Cross - where it came from: Key is the credit account, Sum the turnover between the two.
+        A one-sided posting (an opening balance, an off-balance account) has no correspondence and is not here.
         """;
 
     internal override IEnumerable<String> RowNumbers => [Constants.FieldNames.Sum];
@@ -31,7 +33,7 @@ internal class ChessboardReportBuilder(IServiceProvider serviceProvider, ReportM
         var sum = Constants.FieldNames.Sum;
         var legs = $"""
             from {_source.SqlTableName} j
-            where @Run = 1 and j.[{Constants.FieldNames.InOut}] = 1 and j.[Date] >= @From and j.[Date] < @end{_grouping.SqlWhereClause("j")}
+            where @Run = 1 and j.[{Constants.FieldNames.InOut}] = 1 and j.[{corrAcc}] is not null and j.[Date] >= @From and j.[Date] < @end{_grouping.SqlWhereClause("j")}
             """;
 
         return $"""

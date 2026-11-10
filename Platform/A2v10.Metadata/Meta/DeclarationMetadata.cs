@@ -394,7 +394,7 @@ public sealed record DeclarationMetadata
     }
 
     /* A mapped entry names one target, and the target decides the keys: a journal leg is one row
-     * with its direction ('dir', 'storno', blocks of the entry), a ledger posting is two legs with
+     * with its direction ('dir', 'storno', blocks of the entry), a ledger posting is two legs, one possibly empty, with
      * blocks of their own ('sum', 'dt', 'ct'). A key of the other spelling would be silently ignored.
      */
     private static void CheckMapped(String path, PostMetadata p)
@@ -425,6 +425,9 @@ public sealed record DeclarationMetadata
         if (p.IsLedger && (p.Dt == null || p.Ct == null || String.IsNullOrEmpty(p.Sum)))
             throw new InvalidOperationException(
                 $"post: {path} -> {p.Ledger}: a ledger posting declares 'dt', 'ct' and 'sum'");
+        if (p.IsLedger && p.Dt!.IsEmpty && p.Ct!.IsEmpty)
+            throw new InvalidOperationException(
+                $"post: {path} -> {p.Ledger}: both legs are empty, a posting has at least one side");
     }
 
     /* The rules in force for one row set. A kind that says nothing is not an empty layer to
