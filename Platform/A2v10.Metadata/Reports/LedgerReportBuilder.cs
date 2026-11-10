@@ -2,6 +2,7 @@
 
 using System;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 
@@ -30,6 +31,19 @@ internal abstract class LedgerReportBuilder : BaseReportBuilder
     }
 
     protected override Boolean HasChoices => false;
+
+    internal override IEnumerable<String> Measures => [Constants.FieldNames.Sum];
+
+    internal override IReadOnlyList<String> RowGroups => [Constants.FieldNames.Acc];
+
+    // the account is the row itself here, where a turnover's group is an object on it
+    internal override ExpandoObject? RowGroup(ExpandoObject node, String group)
+    {
+        var account = new ExpandoObject();
+        account.Set(Constants.FieldNames.Id, node.Get<Object>(Constants.FieldNames.Id));
+        account.Set(Constants.FieldNames.Name, node.Get<String>(Constants.FieldNames.Name));
+        return account;
+    }
 
     // the chart the accounts are named from
     protected String ChartTableName => _acc.RefTableCheck.Storage.SqlTableName;

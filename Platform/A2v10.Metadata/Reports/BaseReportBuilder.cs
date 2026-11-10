@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Dynamic;
+using System.Linq;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -74,6 +75,19 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Repo
 
     // what the user picks besides the period and the filters: groups and data; a fixed report has none
     protected virtual Boolean HasChoices => true;
+
+    /* What a type means to the model, the third half beside the query and the page. Here and not in the tools
+     * so that they never ask the type; abstract, so a fourth type does not build without it.
+     */
+    // what a row holds and how to read it, in the words of the row's own names
+    internal abstract String Reading { get; }
+    internal virtual IEnumerable<String> Measures => _report.Data;
+    internal abstract IEnumerable<String> RowNumbers { get; }
+    // what a row carries besides its numbers: nothing to sort or sum by
+    internal virtual IEnumerable<String> RowDetails => [];
+    // what a row is per, after the load: the depth of the tree, each level one name
+    internal virtual IReadOnlyList<String> RowGroups => [.. _grouping.Grouping.Select(c => c.Column)];
+    internal virtual ExpandoObject? RowGroup(ExpandoObject node, String group) => node.Get<ExpandoObject>(group);
 
     // what a page computes on the client: template properties, and the functions they name
     protected virtual String TemplateProperties => String.Empty;

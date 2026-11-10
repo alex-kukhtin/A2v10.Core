@@ -1,6 +1,7 @@
 // Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 
@@ -21,6 +22,14 @@ namespace A2v10.Metadata;
 internal class TrialBalanceReportBuilder(IServiceProvider serviceProvider, ReportMetadata report, TableMetadata source, AppPlatformId platformId)
     : LedgerReportBuilder(serviceProvider, report, source, platformId)
 {
+    internal override String Reading => """
+        One row per account (Acc). DtStart, CtStart - the balance before the period; DtSum, CtSum - the debit and the credit turnover within it; DtEnd, CtEnd - the balance at its end.
+        A balance lies on the side the account keeps it: a minus in a debit column is an error in the books, not a credit balance.
+        The balance on a date: Period with To alone, read DtEnd and CtEnd.
+        """;
+
+    internal override IEnumerable<String> RowNumbers => ["DtStart", "CtStart", "DtSum", "CtSum", "DtEnd", "CtEnd"];
+
     // the pair a balance is laid out into, by the side the account keeps it on
     private static String Debit(String balance) => $"""
         case a.[{Constants.FieldNames.NormalBalance}] when N'{nameof(NormalBalance.Debit)}' then {balance}

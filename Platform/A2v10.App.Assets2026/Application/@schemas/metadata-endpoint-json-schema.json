@@ -738,13 +738,9 @@
                     "type": "string",
                     "description": "Shown by domain_info when the folder name is not enough."
                 },
-                "title": {
-                    "type": "string",
-                    "description": "A journal, required when listed: which numbers lie here, the title domain_info shows."
-                },
                 "measures": {
                     "type": "object",
-                    "description": "A journal: measure -> what it is, when the name and the type do not say (Sum: the cost or the revenue).",
+                    "description": "A report: measure -> what it is, when the name and the type do not say (Sum: the cost or the revenue).",
                     "additionalProperties": { "type": "string" }
                 }
             }

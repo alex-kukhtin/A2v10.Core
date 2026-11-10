@@ -28,9 +28,9 @@ public sealed class MetadataMcpToolProvider(DatabaseMetadataProvider metadata, I
         foreach (var family in visible.GroupBy(e => e.Kind))
         {
             var entities = family.ToList();
-            if (family.Key == McpIndex.ReportKind)
+            if (family.Key == Constants.SchemaNames.Report)
             {
-                tools.Add(new ReportInfoTool(entities, visible, metadata));
+                tools.Add(new ReportInfoTool(entities, visible, metadata, services));
                 tools.Add(new ReportQueryTool(entities, visible, metadata, services, localizer));
                 continue;
             }

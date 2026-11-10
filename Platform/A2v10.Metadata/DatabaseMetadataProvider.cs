@@ -118,6 +118,10 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         => await GetEndpointAsync(dataSource, schema, table) as NormalEndpointMetadata
             ?? throw new InvalidOperationException($"Endpoint /{schema}/{table} is not a data endpoint");
 
+    internal async Task<ReportEndpointMetadata> GetReportEndpointAsync(String? dataSource, String schema, String table)
+        => await GetEndpointAsync(dataSource, schema, table) as ReportEndpointMetadata
+            ?? throw new InvalidOperationException($"Endpoint /{schema}/{table} is not a report");
+
     private async Task<NormalEndpointMetadata> GetNormalEndpointAsync(EndpointLoad load, String? dataSource, String schema, String table)
         => await LoadAsync(load, dataSource, schema, table) as NormalEndpointMetadata
             ?? throw new InvalidOperationException($"Endpoint /{schema}/{table} is not a data endpoint");

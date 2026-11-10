@@ -15,6 +15,15 @@ namespace A2v10.Metadata;
 internal class TurnoverReportBuilder(IServiceProvider serviceProvider, ReportMetadata report, TableMetadata source, AppPlatformId platformId) 
     : BaseReportBuilder(serviceProvider, report, source, platformId)
 {
+    static readonly String[] _forms = ["Start", "In", "Out", "End"];
+
+    internal override String Reading => """
+        One row per combination of groupBy. Each measure comes four ways: Start<M> before the period, In<M> and Out<M> within it, End<M> = Start + In - Out.
+        The balance on a date: Period with To alone, read End<M>.
+        """;
+
+    internal override IEnumerable<String> RowNumbers => _grouping.Data.SelectMany(d => _forms.Select(f => $"{f}{d.Column}"));
+
     public override async Task<IDataModel> LoadReportModelAsync(String? dataSource, ExpandoObject prms)
     {
         SetGrouping(prms);

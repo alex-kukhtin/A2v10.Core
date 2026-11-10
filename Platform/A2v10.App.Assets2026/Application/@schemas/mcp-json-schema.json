@@ -10,7 +10,7 @@
         "$schema": { "type": "string" },
         "endpoints": {
             "type": "array",
-            "description": "Paths of catalogs and documents open to the model, '/<kind>/<name>'. The name (second segment) is the entity name the model uses; two equal names are refused. Roles come from the folder's model.json.",
+            "description": "Paths of catalogs, documents and reports open to the model, '/<kind>/<name>'. The name (second segment) is the entity name the model uses; two equal names are refused. Roles come from the folder's model.json.",
             "items": {
                 "type": "string",
                 "pattern": "^/?[A-Za-z0-9_-]+/[A-Za-z0-9_-]+$"

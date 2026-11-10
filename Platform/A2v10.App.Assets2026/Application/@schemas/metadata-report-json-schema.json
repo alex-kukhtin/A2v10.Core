@@ -54,8 +54,9 @@
         },
         "itemLabel": {
             "type": "string",
-            "description": "The title of the page and the name of the exported file. A localization key ('@[Turnover]') or text."
+            "description": "The title of the page and the name of the exported file. A localization key ('@[Turnover]') or text. Required on a report listed in mcp.json: the word domain_info shows for it."
         },
+        "mcp": { "$ref": "metadata-endpoint-json-schema.json#/definitions/mcp" },
         "grants": {
             "$ref": "metadata-endpoint-json-schema.json#/definitions/grants",
             "description": "A report is read only: 'view' is the verb it means."

@@ -1,6 +1,7 @@
 // Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+using System.Collections.Generic;
 
 
 namespace A2v10.Metadata;
@@ -15,6 +16,14 @@ namespace A2v10.Metadata;
 internal class ChessboardReportBuilder(IServiceProvider serviceProvider, ReportMetadata report, TableMetadata source, AppPlatformId platformId)
     : LedgerReportBuilder(serviceProvider, report, source, platformId)
 {
+    internal override String Reading => """
+        One row per debit account (Acc). Sum - its debit turnover within the period; Cross - where it came from: Key is the credit account, Sum the turnover between the two.
+        """;
+
+    internal override IEnumerable<String> RowNumbers => [Constants.FieldNames.Sum];
+
+    internal override IEnumerable<String> RowDetails => ["Cross"];
+
     protected override String CreateBodySql()
     {
         var acc = Constants.FieldNames.Acc;
