@@ -411,17 +411,13 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         static String RowSetOf(String key, String? kind) =>
             kind == null ? $"details '{key}'" : $"details '{key}' (kind '{kind}')";
 
-        void Unique(IEnumerable<(String Name, String Source)> landed, String what)
+        void Unique(IEnumerable<String> landed)
         {
-            foreach (var g in landed.GroupBy(x => x.Name).Where(g => g.Count() > 1))
-                throw new InvalidOperationException(
-                    $"{file}: {String.Join(" and ", g.Select(x => x.Source))} all produce {what} '{g.Key}' - one name, two things under it");
+            foreach (var g in landed.GroupBy(x => x).Where(g => g.Count() > 1))
+                throw new InvalidOperationException($"{file}: {g.Key} - duplicate name");
         }
 
-        Unique([
-            (storage.TypeName, "the record"),
-            .. storage.Details.SelectMany(d => d.Value.RowSets().Select(rs => (rs.Type, RowSetOf(d.Key, rs.Kind))))
-        ], "type");
+        Unique([storage.TypeName, .. storage.Details.SelectMany(d => d.Value.RowSets().Select(rs => rs.Type))]);
 
         // the members of the record object: its columns, an array per row set, and the tags slot
         List<(String Name, String Source)> members = [
@@ -430,7 +426,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         ];
         if (storage.HasTags)
             members.Add((Constants.FieldNames.Tags, "the tags trait"));
-        Unique(members, $"member of {storage.Model}");
+        Unique(members.Select(m => m.Name));
 
         /* The data loader refuses these as a property name (FieldInfo.ReservedWords), and it reads the
          * model only when a form opens - long after validate and deploy passed. Checked on what lands,
@@ -451,42 +447,43 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
 
     /* Endpoints the platform serves itself - no file to read, no shape to build, told apart by their
      * type. Recognised before the folder is asked what it declares, since it declares nothing.
+     * A table and not a chain of ifs: HasEndpoint asks the same list.
      */
-    private static async Task<EndpointMetadata?> GetInternalEndpointAsync(EndpointLoad load, String? dataSource, String schema, String table)
+    private delegate Task<EndpointMetadata> InternalEndpoint(EndpointLoad load, String? dataSource, String schema, String table);
+
+    private static readonly Dictionary<String, InternalEndpoint> _internalEndpoints = new()
     {
-        if (schema == Constants.SchemaNames.Tag)
-            return new TagEndpointMetadata()
-            {
-                Schema = schema,
-                Name = table
-            };
-        if (schema == Constants.SchemaNames.Operation)
-            return new OperationEndpointMetadata()
-            {
-                Schema = schema,
-                Name = table,
-                // through the load like every other storage: the instance is shared, not remade
-                Storage = await load.StorageAsync(dataSource, schema, table,
-                    () => Task.FromResult(TableMetadataDefaults.OperationsTable()))
-            };
-        if (schema == Constants.SchemaNames.User)
-            return new UserEndpointMetadata()
-            {
-                Schema = schema,
-                Name = table,
-                Storage = await load.StorageAsync(dataSource, schema, table,
-                    () => Task.FromResult(TableMetadataDefaults.UsersTable()))
-            };
-        if (schema == Constants.SchemaNames.Admin)
-            return AdminEndpointMetadata.Create(table);
-        if (schema == Constants.SchemaNames.Attachment)
-            return new AttachmentEndpointMetadata()
-            {
-                Schema = schema,
-                Name = table
-            };
-        return null;
-    }
+        [Constants.SchemaNames.Tag] = (_, _, schema, table) => Task.FromResult<EndpointMetadata>(new TagEndpointMetadata()
+        {
+            Schema = schema,
+            Name = table
+        }),
+        [Constants.SchemaNames.Operation] = async (load, dataSource, schema, table) => new OperationEndpointMetadata()
+        {
+            Schema = schema,
+            Name = table,
+            // through the load like every other storage: the instance is shared, not remade
+            Storage = await load.StorageAsync(dataSource, schema, table,
+                () => Task.FromResult(TableMetadataDefaults.OperationsTable()))
+        },
+        [Constants.SchemaNames.User] = async (load, dataSource, schema, table) => new UserEndpointMetadata()
+        {
+            Schema = schema,
+            Name = table,
+            Storage = await load.StorageAsync(dataSource, schema, table,
+                () => Task.FromResult(TableMetadataDefaults.UsersTable()))
+        },
+        [Constants.SchemaNames.Admin] = (_, _, _, table) => Task.FromResult<EndpointMetadata>(AdminEndpointMetadata.Create(table)),
+        [Constants.SchemaNames.Attachment] = (_, _, schema, table) => Task.FromResult<EndpointMetadata>(new AttachmentEndpointMetadata()
+        {
+            Schema = schema,
+            Name = table
+        })
+    };
+
+    // whether a request routed by its folder lands here: a segment of the platform's own, or a file in that folder
+    internal Boolean HasEndpoint(String path) =>
+        _internalEndpoints.ContainsKey(path.Split('/')[0]) || _codeProvider.IsFileExists(MetadataFileName(path, String.Empty));
 
     /* The endpoint is built here, once, before it is published to the cache: the table it works
      * on is the same instance for every endpoint that points at it, and its declaration is what
@@ -498,9 +495,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
      */
     private async Task<EndpointMetadata> LoadEndpointAsync(EndpointLoad load, String? dataSource, String schema, String table)
     {
-        var internalEndpoint = await GetInternalEndpointAsync(load, dataSource, schema, table);
-        if (internalEndpoint != null)
-            return internalEndpoint;
+        if (_internalEndpoints.TryGetValue(schema, out var internalEndpoint))
+            return await internalEndpoint(load, dataSource, schema, table);
 
         var (text, hash) = await ReadMetadataFileAsync(schema, table);
         var declaration = JsonConvert.DeserializeObject<DeclarationMetadata>(text, JsonSettings.CamelCaseSerializerSettings)

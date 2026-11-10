@@ -6,6 +6,7 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Xml;
 
+using Microsoft.Data.SqlClient;
 using Newtonsoft.Json;
 
 using A2v10.Metadata;
@@ -41,7 +42,8 @@ internal record JsonResult
         // the coordinates are taken before the unwrapping below: the inner exception has none
         var script = ex as DeployScriptException;
         // message and line come from the same exception - taken from different ones they would lie
-        var ex2 = ex.InnerException ?? ex;
+        // a SqlException holds the text: its inner is a bare OS error of the failed connection
+        var ex2 = ex is SqlException ? ex : ex.InnerException ?? ex;
         Environment.ExitCode = 1;
         Write(new JsonResult()
         {

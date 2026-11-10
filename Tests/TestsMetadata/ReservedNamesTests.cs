@@ -40,6 +40,25 @@ public class ReservedNamesTests
     }
 
     [Fact]
+    public void A_field_repeating_a_baseline_one_is_a_duplicate()
+    {
+        var ex = Assert.Throws<InvalidOperationException>(() => DatabaseMetadataProvider.CheckNames(Table("/catalog/x", """
+            { "fields": { "Memo": { "type": "string", "length": 50 } } }
+            """), "catalog", "x"));
+        Assert.Contains("Memo - duplicate name", ex.Message);
+    }
+
+    [Fact]
+    public void Two_row_sets_of_one_model_are_a_duplicate()
+    {
+        var ex = Assert.Throws<InvalidOperationException>(() => DatabaseMetadataProvider.CheckNames(Table("/document/x", """
+            { "fields": { "Number": { "type": "autonum" } },
+              "details": { "Rows": { "model": "Row" }, "Others": { "model": "Row" } } }
+            """), "document", "x"));
+        Assert.Contains("TRow - duplicate name", ex.Message);
+    }
+
+    [Fact]
     public void The_platforms_own_parent_passes()
     {
         DatabaseMetadataProvider.CheckNames(Table("/catalog/x", """

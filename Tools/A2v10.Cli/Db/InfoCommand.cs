@@ -2,6 +2,7 @@
 
 using System;
 using System.CommandLine;
+using System.ComponentModel;
 using System.Dynamic;
 using System.Threading.Tasks;
 
@@ -32,16 +33,29 @@ internal class InfoCommand(IServiceProvider services)
         var target = DbTarget.Create(services);
         target.EnsureNotSystem();
 
-        var (exists, platform) = await Probe();
-
-        return new ExpandoObject()
+        try
         {
-            { "server", target.Server },
-            { "database", target.Database },
-            { "source", target.Source },
-            { "exists", exists },
-            { "platform", platform }
-        };
+            var (exists, platform) = await Probe();
+            return new ExpandoObject()
+            {
+                { "server", target.Server },
+                { "database", target.Database },
+                { "source", target.Source },
+                { "exists", exists },
+                { "platform", platform }
+            };
+        }
+        catch (SqlException ex) when (ex.InnerException is Win32Exception)
+        {
+            // the connection failed: which server and which file is what the caller needs now
+            return new ExpandoObject()
+            {
+                { "server", target.Server },
+                { "database", target.Database },
+                { "source", target.Source },
+                { "error", ex.Message }
+            };
+        }
     }
 
     private async Task<(Boolean Exists, Boolean Platform)> Probe()

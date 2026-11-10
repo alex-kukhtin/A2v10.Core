@@ -60,7 +60,7 @@ public class NullAppRuntimeBuilder : IAppRuntimeBuilder
         throw new NotImplementedException(THROW_MESSAGE);
     }
 
-    public Task<EndpointDescriptor> DescribeAsync(String path)
+    public Task<EndpointDescriptor?> DescribeAsync(String path)
     {
         throw new NotImplementedException(THROW_MESSAGE);
     }

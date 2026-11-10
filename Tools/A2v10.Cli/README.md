@@ -224,7 +224,7 @@ returns. Useful for verifying that the layers (model.json, XAML, SQL) agree afte
 deploy.
 
 `route` addresses the element as `/[$<module>]/<path>/<element>`, e.g.
-`catalog/agent/edit`. No record `id` is needed — types come from the result-set schema.
+`catalog/agent/edit`. No record `id`: the structure of the response is checked, not its data from the database.
 
 One command per model.json section:
 

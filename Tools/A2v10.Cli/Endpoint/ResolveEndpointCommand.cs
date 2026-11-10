@@ -4,7 +4,6 @@ using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Dynamic;
-using System.IO;
 using System.CommandLine;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +16,8 @@ namespace A2v10.Cli;
 internal class ResolveEndpointCommand(IServiceProvider services)
 {
     private readonly IDataService _dataService = services.GetRequiredService<IDataService>();
+
+    private const String NoRecordId = "No record id: the structure of the response is checked, not its data from the database.";
 
     internal IList<Command> Register(Command root)
     {
@@ -31,7 +32,7 @@ internal class ResolveEndpointCommand(IServiceProvider services)
             "Resolve an action (page) route to its runtime contract: bound procedures, view/template, and model type tree.");
         var routeArg = new Argument<String>("route")
         {
-            Description = "Endpoint route: <path>/<action>, $prefix for a module (e.g. catalog/agent/index)",
+            Description = $"Endpoint route: <path>/<action>, $prefix for a module (e.g. catalog/agent/index). {NoRecordId}",
         };
         cmd.Arguments.Add(routeArg);
 
@@ -44,7 +45,7 @@ internal class ResolveEndpointCommand(IServiceProvider services)
             "Resolve an action (popup) route to its runtime contract: bound procedures, view/template, and model type tree.");
         var routeArg = new Argument<String>("route")
         {
-            Description = "Endpoint route: <path>/<popup>, $prefix for a module (e.g. catalog/agent/balance)",
+            Description = $"Endpoint route: <path>/<popup>, $prefix for a module (e.g. catalog/agent/balance). {NoRecordId}",
         };
         cmd.Arguments.Add(routeArg);
 
@@ -58,7 +59,7 @@ internal class ResolveEndpointCommand(IServiceProvider services)
             "Resolve an dialog (model) route to its runtime contract: bound procedures, view/template, and model type tree.");
         var routeArg = new Argument<String>("route")
         {
-            Description = "Endpoint route: <path>/<dialog>, $prefix for a module (e.g. catalog/agent/edit)",
+            Description = $"Endpoint route: <path>/<dialog>, $prefix for a module (e.g. catalog/agent/edit). {NoRecordId}",
         };
         cmd.Arguments.Add(routeArg);
 
@@ -68,7 +69,9 @@ internal class ResolveEndpointCommand(IServiceProvider services)
 
     private async Task<Object> ResolveAction(String prefix, String route)
     {
-        var path = Path.Combine(prefix, route.RemoveHeadSlash(), "0").Replace('\\', '/');
+        // the id is the path's: a route may carry a query (a dialog under 'base' does not open without one)
+        var element = route.Split('?')[0];
+        var path = $"{prefix}/{element.RemoveHeadSlash()}/0{route[element.Length..]}";
         var dr = await _dataService.LoadAsync(path, p =>
         {
             p.Add("UserId", 99);
@@ -86,9 +89,9 @@ internal class ResolveEndpointCommand(IServiceProvider services)
         {
             { "route", route },
             { "model", dr.View.CurrentModel },
-            { "view", BuildResolvedPath(route, dr.View.GetRawView(false), "vxaml", meta) },
-            { "template", BuildResolvedPath(route, dr.View.Template, "ts", meta) },
-            { "sqlProcedures", meta ? MetaSqlProcedures(route) : BuildSqlProcedures(dr.View) },
+            { "view", BuildResolvedPath(element, dr.View.GetRawView(false), "vxaml", meta) },
+            { "template", BuildResolvedPath(element, dr.View.Template, "ts", meta) },
+            { "sqlProcedures", meta ? MetaSqlProcedures(element) : BuildSqlProcedures(dr.View) },
             { "dataModel", dr.Model.BuildDataModelMeta() }
         };
     }

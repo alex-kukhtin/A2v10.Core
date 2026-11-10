@@ -39,5 +39,6 @@ public interface IAppRuntimeBuilder
 	Task DbRemoveAsync(IPlatformUrl platformUrl, IModelView view, String? propName, ExpandoObject execPrms);
 	Task<IDataModel> ExpandAsync(IPlatformUrl platformUrl, IModelView view, ExpandoObject execPrms);
     Task<ExpandoObject> LoadLazyAsync(IPlatformUrl platformUrl, IModelView view);
-    Task<EndpointDescriptor> DescribeAsync(String path);
+    // null: this layer has no such address
+    Task<EndpointDescriptor?> DescribeAsync(String path);
 }

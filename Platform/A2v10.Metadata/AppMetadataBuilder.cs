@@ -25,15 +25,21 @@ internal class AppMetadataBuilder(
 
     public String MetadataScripts(String minify)
     {
+        return "";
+        /*
         return $"""
             <script type="text/javascript" src="/scripts/meta/a2v10spreadsheet.{minify}js?v={_appVersion.AppVersion}"></script>
             """;
+        */
     }
     public String MetadataStyles(String minify)
     {
+        return "";
+        /*
         return $"""
             <link rel="stylesheet" href="/css/meta/a2v10spreadsheet.{minify}css?v={_appVersion.AppVersion}">
             """;
+        */
     }
 
     public async Task<IAppRuntimeResult> RenderAsync(IPlatformUrl platformUrl, IModelView view, bool isReload)
@@ -86,8 +92,10 @@ internal class AppMetadataBuilder(
     }
 
     // the answer for the model.json the reader synthesizes - the endpoint's own; no source: that model.json has none
-    public async Task<EndpointDescriptor> DescribeAsync(String path)
+    public async Task<EndpointDescriptor?> DescribeAsync(String path)
     {
+        if (!_metadataProvider.HasEndpoint(path))
+            return null;
         var (schema, table) = DatabaseMetadataProvider.ParsePath(path);
         var endpoint = await _metadataProvider.GetEndpointAsync(null, schema, table);
         return new EndpointDescriptor(endpoint.RequireBase, endpoint.Blobs);

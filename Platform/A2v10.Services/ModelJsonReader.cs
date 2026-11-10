@@ -21,7 +21,7 @@ public class ModelJsonReader(IModelJsonPartProvider _partProvider, IAppRuntimeBu
 	 * each under the model the data come as ('$meta' routes, it names nothing). A model.json the author
 	 * wrote is never added to
 	 */
-	async Task<ModelJson> CreateMetaAsync(IPlatformUrl url)
+	async Task<ModelJson?> CreateMetaAsync(IPlatformUrl url)
 	{
 		// the last two segments are the action and the id: nothing before them, and the address was an endpoint's
 		if (String.IsNullOrEmpty(url.LocalPath))
@@ -30,6 +30,8 @@ public class ModelJsonReader(IModelJsonPartProvider _partProvider, IAppRuntimeBu
 			throw new ModelJsonException($"'{address}' has no action. A page address is <endpoint>/<action>/<id>, a list is '{address}/index/0'; only menu.json names an endpoint");
 		}
 		var endpoint = await _appRuntimeBuilder.DescribeAsync(url.LocalPath);
+		if (endpoint == null)
+			return null;
         var ms = new ModelJson()
         {
 			Model = IModelBase.MetaModel,
@@ -125,8 +127,9 @@ public class ModelJsonReader(IModelJsonPartProvider _partProvider, IAppRuntimeBu
 			return ms;
 		if (_appRuntimeBuilder.IsAutoSupported)
 			return CreateAuto(url, command);
-		else if (_appRuntimeBuilder.IsMetaSupported)
-			return await CreateMetaAsync(url);
+		if (_appRuntimeBuilder.IsMetaSupported)
+			return await CreateMetaAsync(url)
+				?? throw new ModelJsonException($"Neither model.json nor metadata.json in '{url.LocalPath}'");
 		throw new ModelJsonException($"File not found '{url.LocalPath}/model.json'");
 	}
 
