@@ -743,7 +743,12 @@
     //   reads ItemsSource, a computed;
     // - Vue 2's $root was the page (base.js): $root.$emit('cwChange') and $root[prop] are the page's controller
     //   (inject $page, page.ts): __cwChange, $data;
-    // - $on('sort') is gone: doSort is called by the data grid (the data-grid step).
+    // - $on('sort') is gone: doSort is called by the data grid (the data-grid step);
+    // - updateFilter watches ItemsSource.$ModelInfo: Vue 2's watcher on ItemsSource also fired on a mutation of the array,
+    //   by then a lazy load's $ModelInfo was set; Vue 3's fires on a new array only. Not deep: 1: an empty answer mutates
+    //   nothing.
+    // Not as Net48: a persistentFilter copied to an opened array resets its Offset (Net48 reopens it at the old page,
+    // maybe empty).
     const utils$g = require$1('std:utils');
     const period = require$1('std:period');
     const eventBus$b = require$1('std:eventBus');
@@ -814,7 +819,7 @@
                     this.filterChanged();
                 }
             },
-            ItemsSource: {
+            'ItemsSource.$ModelInfo': {
                 handler() {
                     this.updateFilter();
                 }
@@ -905,6 +910,8 @@
                                 const te = topElem[lastProp];
                                 if (!utils$g.isEqual(te.$ModelInfo.Filter[pp], this.filter[pp])) {
                                     te.$ModelInfo.Filter[pp] = this.filter[pp];
+                                    if ('Offset' in te.$ModelInfo)
+                                        te.$ModelInfo.Offset = 0;
                                     if (te.$loaded)
                                         te.$empty();
                                     te.$loaded = false;
@@ -6041,8 +6048,9 @@
     // a2-upload (Net48 components/upload.js), unchanged in behaviour: a label with a file input, dropped on or clicked;
     // the files posted to /_image/<base>/<prop>/<id>, the answer's { status: 'OK', elems: [{ Id, Token }] } written to
     // item[prop] (a reference's $id and $token, or the id with the token beside it in item); newItem appends one element
-    // per file to item's parent array. A file over limit (KB) is refused with an alert. a2-simple-upload of upload.js is
-    // not ported yet.
+    // per file to item's parent array. A file over limit (KB) is refused with an alert.
+    // a2-simple-upload (the same file), unchanged in behaviour: XAML's UploadFileSimple, the chosen File itself in
+    // item[prop] (nothing is posted), × clears it.
     const url$1 = require$1('std:url');
     const http = require$1('std:http');
     const tools = require$1('std:tools');
@@ -6154,6 +6162,53 @@
                     else
                         alert(msg);
                 });
+            }
+        }
+    }));
+    platform$3.vocabulary.component('a2-simple-upload', vue.defineComponent({
+        template: `
+<label class="a2-simple-upload" :class="labelClass">
+	<i class="ico" :class='icon'></i>
+	<input type="file" @change="uploadChange" ref="file"/>
+	<span v-text="labelText" class="upload-text"></span>
+	<button class="btnclose" @click.prevent="clear" v-if="file">&#x2715;</button>
+</label>
+		`,
+        props: {
+            item: Object,
+            prop: String,
+            text: String
+        },
+        computed: {
+            labelText() {
+                if (this.file)
+                    return this.file.name;
+                return this.text || locale$3.$ChooseFile;
+            },
+            icon() {
+                return this.file && this.file.name ? 'ico-file' : 'ico-attach';
+            },
+            file() {
+                return this.item ? this.item[this.prop] : null;
+            },
+            labelClass() {
+                return this.file ? 'has-file' : undefined;
+            }
+        },
+        methods: {
+            fireChange() {
+            },
+            clear() {
+                if (!this.item)
+                    return;
+                this.item[this.prop] = null;
+                this.fireChange();
+                this.$refs.file.value = '';
+            },
+            uploadChange(ev) {
+                const files = ev.target.files;
+                this.item[this.prop] = files[0];
+                this.fireChange();
             }
         }
     }));
@@ -6817,6 +6872,200 @@
         },
         beforeUnmount() {
             popup.unregisterPopup(this.$el);
+        }
+    }));
+
+    // a2-tab-panel, a2-tab-item (Net48 components/tab.js), unchanged in behaviour: XAML's TabPanel, its tabs static (the
+    // items reach the panel by $parent, a control its item by $registerControl: an invalid control marks the header) or
+    // over :items (the slots items, header); only the active tab is rendered. Keeps NET48-BUGS.md B35, B36.
+    // Vue 3:
+    // - v-if binds tighter than v-for: the dynamic tab's v-if is inside a <template v-for>;
+    // - the watcher on items is deep: 1: Vue 2's fired on a mutation of the array, not of its elements (B35);
+    // - destroyed is unmounted.
+    const tabPanelTemplate = `
+<div class="tab-panel">
+	<template v-if="static">
+		<ul class="tab-header">
+			<li :class="tab.tabCssClass" v-for="(tab, tabIndex) in tabs" :key="tabIndex" @click.prevent="select(tab)" v-show="tab.isVisible">
+				<i v-if="tab.hasIcon" :class="tab.iconCss" ></i>
+				<span v-text="tab.header"></span><span class="badge" v-if="tab.hasBadge" v-text="tab.badge"></span>
+				<i v-if="tab.isInvalid()" class="ico ico-error-outline"/>
+			</li>
+		</ul>
+		<slot name="title" />
+		<div class="tab-content" :class="contentCssClass">
+			<slot />
+		</div>
+	</template>
+	<template v-else>
+		<ul class="tab-header">
+			<li :class="{active: isActiveTab(item)}" v-for="(item, tabIndex) in items" :key="tabIndex" @click.prevent="select(item)" v-show="item.isVisible">
+				<slot name="header" :item="item" :index="tabIndex" :number="tabIndex + 1">
+					<span v-text="defaultTabHeader(item, tabIndex)"></span>
+				</slot>
+			</li>
+		</ul>
+		<slot name="title" />
+		<div class="tab-content">
+			<template v-for="(item, tabIndex) in items" :key="tabIndex">
+				<div class="tab-item" v-if="isActiveTab(item)">
+					<slot name="items" :item="item" :index="tabIndex" />
+				</div>
+			</template>
+		</div>
+	</template>
+</div>
+`;
+    const tabItemTemplate = `
+<div class="tab-item" v-if="isActive" v-show="isVisible">
+	<slot />
+</div>
+`;
+    platform$3.vocabulary.component('a2-tab-item', vue.defineComponent({
+        name: 'a2-tab-item',
+        template: tabItemTemplate,
+        props: {
+            header: String,
+            badge: [String, Number, Object],
+            icon: String,
+            tabStyle: String,
+            tabShow: { type: Boolean, default: true },
+            itemToValidate: Object,
+            propToValidate: String
+        },
+        data() {
+            return {
+                controls: []
+            };
+        },
+        computed: {
+            hasIcon() {
+                return !!this.icon;
+            },
+            hasBadge() {
+                return !!this.badge;
+            },
+            iconCss() {
+                return this.icon ? 'ico ico-' + this.icon : '';
+            },
+            isActive() {
+                return this === this.$parent.activeTab;
+            },
+            tabCssClass() {
+                return (this.isActive ? 'active ' : '') + (this.tabStyle || '');
+            },
+            isVisible() {
+                return this.tabShow;
+            }
+        },
+        methods: {
+            isInvalid() {
+                if (!this.controls.length)
+                    return false;
+                for (const c of this.controls) {
+                    if (c.invalid()) {
+                        return true;
+                    }
+                }
+                return false;
+            },
+            $registerControl(control) {
+                this.controls.push(control);
+            },
+            $unregisterControl(control) {
+                const ix = this.controls.indexOf(control);
+                if (ix !== -1)
+                    this.controls.splice(ix, 1);
+            }
+        },
+        created() {
+            this.$parent.$addTab(this);
+        },
+        unmounted() {
+            this.$parent.$removeTab(this);
+        }
+    }));
+    platform$3.vocabulary.component('a2-tab-panel', vue.defineComponent({
+        template: tabPanelTemplate,
+        props: {
+            items: Array,
+            header: String
+        },
+        data() {
+            return {
+                tabs: [],
+                activeTab: null
+            };
+        },
+        computed: {
+            static() {
+                return !this.items;
+            },
+            contentCssClass() {
+                return this.activeTab ? this.activeTab.tabStyle : '';
+            }
+        },
+        watch: {
+            items: {
+                deep: 1,
+                handler(newVal, oldVal) {
+                    const tabs = this.items;
+                    if (newVal.length < oldVal.length) {
+                        // tab has been removed
+                        if (this._index >= tabs.length)
+                            this._index = tabs.length - 1;
+                        this.select(tabs[this._index]);
+                    }
+                    else if (newVal.length === oldVal.length) {
+                        // may be reloaded; a mutation comes here too, newVal is oldVal (B35)
+                        if (tabs.length > 0)
+                            this.select(tabs[0]);
+                    }
+                    else {
+                        // tab has been added
+                        this.select(tabs[tabs.length - 1]);
+                    }
+                }
+            }
+        },
+        methods: {
+            select(item) {
+                this.activeTab = item;
+                if (this.items)
+                    this._index = this.items.indexOf(item);
+            },
+            nextTab() {
+                alert('next');
+            },
+            prevTab() {
+                alert('prev');
+            },
+            isActiveTab(item) {
+                return item === this.activeTab;
+            },
+            defaultTabHeader(item, index) {
+                return 'Tab ' + (index + 1);
+            },
+            $addTab(tab) {
+                this.tabs.push(tab);
+            },
+            $removeTab(tab) {
+                const ix = this.tabs.indexOf(tab);
+                if (ix === -1)
+                    return;
+                this.tabs.splice(ix, 1);
+                if (this.tabs.indexOf(this.activeTab) === -1) {
+                    if (this.tabs.length > 0)
+                        this.select(this.tabs[0]);
+                }
+            }
+        },
+        mounted() {
+            if (this.tabs.length > 0)
+                this.activeTab = this.tabs[0]; // no tab, reactive item
+            else if (this.items && this.items.length)
+                this.activeTab = this.items[0];
+            this._index = 0;
         }
     }));
 

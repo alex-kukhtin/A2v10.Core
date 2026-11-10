@@ -5078,9 +5078,9 @@ app.modules['std:routing'] = function () {
 	}
 };
 
-// Copyright © 2015-2024 Oleksandr Kukhtin. All rights reserved.
+// Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
 
-/*20210502-7773*/
+/*20261110-7984*/
 /* services/accel.js */
 
 app.modules['std:accel'] = function () {
@@ -5155,7 +5155,7 @@ app.modules['std:accel'] = function () {
 			return;
 		}
 		let elem1 = _elems[found];
-		elem1.handlers.shift();
+		elem1.handlers = elem1.handlers.filter(x => x.key !== key);
 		if (!elem1.handlers.length)
 			_elems.splice(found, 1);
 		setListeners();
@@ -10213,9 +10213,9 @@ TODO:
 	});
 
 })();
-// Copyright © 2015-2023 Oleksandr Kukhtin. All rights reserved.
+// Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
 
-// 20230811-7943
+// 20261110-7984
 // components/list.js
 
 (function () {
@@ -10231,7 +10231,7 @@ TODO:
 <ul class="a2-list" v-lazy="itemsSource">
 	<template v-if="itemsSource">
 		<li class="a2-list-item" tabindex="1" :class="cssClass(listItem)" v-for="(listItem, listItemIndex) in source" :key="listItemIndex" 
-				@mousedown="select(listItem)" @keydown="keyDown" 
+				@mousedown="mouseDown(listItem, $event)" @keydown="keyDown" 
 				ref="li" v-on:dblclick.prevent="doDblClick">
 			<span v-if="listItem.__group" v-text="listItem.__group"></span>
 			<slot name="items" :item="listItem" v-if="!listItem.__group"/>
@@ -10356,6 +10356,13 @@ TODO:
 					}
 					if (fe) this.select(fe);
 				}
+			},
+			mouseDown(item, ev) {
+				if (!this.selectable) return;
+				const active = document.activeElement;
+				if (active && !ev.currentTarget.contains(active))
+					active.blur();
+				this.select(item);
 			},
 			keyDown(e) {
 				const next = (delta) => {

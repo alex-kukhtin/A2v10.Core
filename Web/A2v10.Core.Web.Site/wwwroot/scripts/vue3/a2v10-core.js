@@ -16540,7 +16540,7 @@ Make sure to use the production build (*.prod.js) when deploying for production.
                 return;
             }
             const elem1 = _elems[found];
-            elem1.handlers.shift();
+            elem1.handlers = elem1.handlers.filter(x => x.key !== key);
             if (!elem1.handlers.length)
                 _elems.splice(found, 1);
             setListeners();
@@ -17557,7 +17557,7 @@ Make sure to use the production build (*.prod.js) when deploying for production.
             }
             catch (err) {
                 console.log(err);
-                setTimeout(startService, 5000); // Net48: setTimeout(start), start undeclared (B31)
+                setTimeout(startService, 5000);
             }
         }
     }
@@ -17672,9 +17672,8 @@ Make sure to use the production build (*.prod.js) when deploying for production.
             splitCommand,
             blobUrl
         };
-        // '' + elem: undefined and null become 'undefined' and 'null', kept (B26).
         function normalize(elem) {
-            let s = '' + elem || '';
+            let s = elem == null ? '' : '' + elem;
             s = s.replace(/\\/g, '/');
             if (s.startsWith('/'))
                 s = s.substring(1);
@@ -19982,7 +19981,8 @@ Make sure to use the production build (*.prod.js) when deploying for production.
             complete: Function,
             lock: Boolean,
             reload: Number,
-            onError: Function
+            onError: Function,
+            hideIndicator: Boolean
         },
         data() {
             return {
@@ -20012,8 +20012,7 @@ Make sure to use the production build (*.prod.js) when deploying for production.
                 return includeUrl(this.source, this.arg, this.dat, this.addRun);
             },
             load(url) {
-                // hideIndicator is not a prop here: Net48 read this.hideIndicator, always undefined (B29)
-                show(this, url, undefined).then(handle => this.loaded(handle)).catch(this.error);
+                show(this, url, this.hideIndicator).then(handle => this.loaded(handle)).catch(this.error);
             }
         },
         watch: {
@@ -20053,7 +20052,7 @@ Make sure to use the production build (*.prod.js) when deploying for production.
                 this.load(this.makeUrl());
         }
     }));
-    // a2-queued-include: pages loaded one after another, document-wide. A failed load stops the queue for good, and
+    // a2-queued-include: pages loaded one after another, document-wide. A failed load is logged, the queue goes on;
     // a load that never settles holds it (Net48 http.js doQueue: B30).
     const queue = [];
     let processing = false;
@@ -20068,7 +20067,12 @@ Make sure to use the production build (*.prod.js) when deploying for production.
         processing = true;
         while (queue.length > 0) {
             const el = queue.shift();
-            await show(el.host, el.url, undefined);
+            try {
+                await show(el.host, el.url, undefined);
+            }
+            catch (err) {
+                console.error(err);
+            }
         }
         processing = false;
     }

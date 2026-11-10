@@ -743,7 +743,12 @@
     //   reads ItemsSource, a computed;
     // - Vue 2's $root was the page (base.js): $root.$emit('cwChange') and $root[prop] are the page's controller
     //   (inject $page, page.ts): __cwChange, $data;
-    // - $on('sort') is gone: doSort is called by the data grid (the data-grid step).
+    // - $on('sort') is gone: doSort is called by the data grid (the data-grid step);
+    // - updateFilter watches ItemsSource.$ModelInfo: Vue 2's watcher on ItemsSource also fired on a mutation of the array,
+    //   by then a lazy load's $ModelInfo was set; Vue 3's fires on a new array only. Not deep: 1: an empty answer mutates
+    //   nothing.
+    // Not as Net48: a persistentFilter copied to an opened array resets its Offset (Net48 reopens it at the old page,
+    // maybe empty).
     const utils$g = require$1('std:utils');
     const period = require$1('std:period');
     const eventBus$b = require$1('std:eventBus');
@@ -814,7 +819,7 @@
                     this.filterChanged();
                 }
             },
-            ItemsSource: {
+            'ItemsSource.$ModelInfo': {
                 handler() {
                     this.updateFilter();
                 }
@@ -905,6 +910,8 @@
                                 const te = topElem[lastProp];
                                 if (!utils$g.isEqual(te.$ModelInfo.Filter[pp], this.filter[pp])) {
                                     te.$ModelInfo.Filter[pp] = this.filter[pp];
+                                    if ('Offset' in te.$ModelInfo)
+                                        te.$ModelInfo.Offset = 0;
                                     if (te.$loaded)
                                         te.$empty();
                                     te.$loaded = false;
@@ -3567,7 +3574,7 @@
 <ul class="a2-list" v-lazy="itemsSource">
 	<template v-if="itemsSource">
 		<li class="a2-list-item" tabindex="1" :class="cssClass(listItem)" v-for="(listItem, listItemIndex) in source" :key="listItemIndex"
-				@mousedown="select(listItem)" @keydown="keyDown"
+				@mousedown="mouseDown(listItem, $event)" @keydown="keyDown"
 				ref="li" v-on:dblclick.prevent="doDblClick">
 			<span v-if="listItem.__group" v-text="listItem.__group"></span>
 			<slot name="items" :item="listItem" v-if="!listItem.__group"/>
@@ -3708,6 +3715,14 @@
                     if (fe)
                         this.select(fe);
                 }
+            },
+            mouseDown(item, ev) {
+                if (!this.selectable)
+                    return;
+                const active = document.activeElement;
+                if (active && !ev.currentTarget.contains(active))
+                    active.blur();
+                this.select(item);
             },
             keyDown(e) {
                 const next = (delta) => {

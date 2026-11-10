@@ -166,22 +166,26 @@ internal partial class XamlBuilder
     }
 
     // the ENDPOINT's filters, not the form's - see CLAUDE.md, "Filters"
-    IEnumerable<FilterItem> CollectionViewFilters()
+    /* In a folder tree every filter is Persistent and none is picked: the panel is one for the whole
+     * tree, while the client keeps a filter per node. Marking a part would not work either - a node
+     * not yet opened takes the current node's whole $ModelInfo, listed or not. Never on a flat list:
+     * the client walks the tree from the '[]' in the array's path, and there is none.
+     */
+    IEnumerable<FilterItem> CollectionViewFilters(Boolean persistent)
     {
-        yield return new FilterItem()
-        {
-            Property = "Fragment",
-            DataType = DataType.String
-        };
+        FilterItem Item(String property, DataType dataType) =>
+            new() { Property = property, DataType = dataType, Persistent = persistent };
+
+        yield return Item("Fragment", DataType.String);
         foreach (var f in Table.Filters(Declaration))
-            yield return f.Kind switch
+            yield return Item(f.Name, f.Kind switch
             {
-                FilterKind.Period => new FilterItem() { Property = f.Name, DataType = DataType.Period },
-                FilterKind.Tags => new FilterItem() { Property = f.Name, DataType = DataType.String },
+                FilterKind.Period => DataType.Period,
+                FilterKind.Tags => DataType.String,
                 // the code itself, not an object - see the ComboBox in ControlsXaml
-                FilterKind.Set or FilterKind.Role => new FilterItem() { Property = f.Name, DataType = DataType.String },
-                _ => new FilterItem() { Property = f.Name, DataType = DataType.Object }
-            };
+                FilterKind.Set or FilterKind.Role => DataType.String,
+                _ => DataType.Object
+            });
     }
 
     /* In a folder, the grid reads the elements of the node the tree has selected - a LazyArray, loaded
@@ -197,7 +201,7 @@ internal partial class XamlBuilder
                 new Bind(inFolder ? $"Folders.Selected({Table.CollectionName})" : Table.CollectionName)),
             Filter = new FilterDescription()
             {
-                Items = [.. CollectionViewFilters()]
+                Items = [.. CollectionViewFilters(persistent: inFolder)]
             }
         };
 

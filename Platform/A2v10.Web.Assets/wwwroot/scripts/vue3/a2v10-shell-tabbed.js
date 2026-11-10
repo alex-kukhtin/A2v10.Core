@@ -1550,8 +1550,7 @@ this.a2v10 = this.a2v10 || {};
                     const canResult = dlg.attrs.canClose();
                     if (canResult === true)
                         closeImpl(result);
-                    else if (canResult.then) {
-                        // Core: result.then, the dialog's result, not the delegate's promise (B33)
+                    else if (canResult && canResult.then) {
                         canResult.then(function (innerResult) {
                             if (innerResult === true)
                                 closeImpl(result);
