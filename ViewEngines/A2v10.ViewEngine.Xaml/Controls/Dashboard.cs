@@ -119,6 +119,9 @@ public class Dashboard : UIElementBase
             EndEditToolbar.SetParent(this);
         if (StartEditButton != null)
             StartEditButton.SetParent(this);
+        ItemTemplate?.SetParent(this);
+        ListTemplate?.SetParent(this);
+        EmptyPanel?.SetParent(this);
     }
 }
 

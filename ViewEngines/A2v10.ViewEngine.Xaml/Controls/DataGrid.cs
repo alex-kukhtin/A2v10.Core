@@ -211,6 +211,8 @@ public class DataGrid : Control
 		foreach (var col in Columns)
 			col.SetParent(this);
 		ContextMenu?.InvokeEndInit();
+		RowDetails?.SetParent(this);
+		EmptyPanel?.SetParent(this);
 	}
 
 	public override void OnSetStyles(RootContainer root)

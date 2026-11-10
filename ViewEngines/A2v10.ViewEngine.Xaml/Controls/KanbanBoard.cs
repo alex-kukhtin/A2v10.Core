@@ -70,4 +70,15 @@ public class KanbanBoard : UIElement
         // end of control
         kb.RenderEnd(context);
     }
+
+    protected override void OnEndInit()
+    {
+        base.OnEndInit();
+        foreach (var ch in Header)
+            ch.SetParent(this);
+        foreach (var ch in Card)
+            ch.SetParent(this);
+        foreach (var ch in Footer)
+            ch.SetParent(this);
+    }
 }

@@ -86,5 +86,12 @@ public class TabButton : UIElementBase
 			context.Writer.Write(context.LocalizeCheckApostrophe(Description.ToString()));
 		span.RenderEnd(context);
 	}
+
+	protected override void OnEndInit()
+	{
+		base.OnEndInit();
+		(Content as XamlElement)?.SetParent(this);
+		(Description as XamlElement)?.SetParent(this);
+	}
 }
 

@@ -24,4 +24,10 @@ public class Lazy : UIElementBase
 		RenderContent(context, Content);
 		tag.RenderEnd(context);
 	}
+
+	protected override void OnEndInit()
+	{
+		base.OnEndInit();
+		(Content as XamlElement)?.SetParent(this);
+	}
 }

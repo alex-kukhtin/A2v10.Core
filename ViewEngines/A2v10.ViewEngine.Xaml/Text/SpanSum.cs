@@ -30,4 +30,10 @@ public class SpanSum : Inline
 			span.MergeAttribute(":dir", Dir.ToString());
 		span.Render(context);
 	}
+
+	protected override void OnEndInit()
+	{
+		base.OnEndInit();
+		(Content as XamlElement)?.SetParent(this);
+	}
 }

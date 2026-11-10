@@ -8,5 +8,11 @@ public class DataGridRowDetails : XamlElement
 	public UIElementBase? Content { get; set; }
 	public RowDetailsActivate Activate { get; set; }
 	public Boolean Visible { get; set; }
+
+	protected override void OnEndInit()
+	{
+		base.OnEndInit();
+		Content?.SetParent(this);
+	}
 }
 

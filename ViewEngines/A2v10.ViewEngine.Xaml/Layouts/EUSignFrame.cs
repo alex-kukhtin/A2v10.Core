@@ -36,4 +36,10 @@ public class EUSignFrame : UIElementBase
 
 		div.RenderEnd(context);
 	}
+
+	protected override void OnEndInit()
+	{
+		base.OnEndInit();
+		Content?.SetParent(this);
+	}
 }

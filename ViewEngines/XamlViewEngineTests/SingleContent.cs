@@ -13,7 +13,7 @@ namespace XamlViewEngineTests;
 [TestCategory("Xaml View Engine")]
 public class SingleContent
 {
-    static Object? Load(String xaml)
+    internal static Object? Load(String xaml)
     {
         var provider = new XamlPartProvider(new NoFilesCodeProvider(), Options.Create(new AppOptions()));
         return provider.GetXamlPartText(xaml, "view.vxaml");

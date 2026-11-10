@@ -170,6 +170,7 @@ public class Selector : ValuedControl, ITableControl
 		if (Style == SelectorStyle.ComboBox && !ShowCaret.HasValue)
 			ShowCaret = true;
 		ItemsPanel?.SetParent(this);
+		NewPane?.SetParent(this);
 	}
 	public override void OnSetStyles(RootContainer root)
 	{

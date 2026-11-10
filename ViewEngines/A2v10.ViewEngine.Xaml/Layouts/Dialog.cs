@@ -314,6 +314,7 @@ public class Dialog : RootContainer, ISupportTwoPhaseRendering
 		CollectionView?.SetParent(this);
 		Taskpad?.SetParent(this);
 		TitleInfo?.SetParent(this);
+		HeaderMenu?.SetParent(this);
 		foreach (var b in Buttons)
 			b.SetParent(this);
 		if (Size == DialogSize.Max)

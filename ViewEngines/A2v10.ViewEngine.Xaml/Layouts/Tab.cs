@@ -60,4 +60,10 @@ public class Tab : Container
 		// without outer tag
 		RenderChildren(context);
 	}
+
+	protected override void OnEndInit()
+	{
+		base.OnEndInit();
+		(Header as XamlElement)?.SetParent(this);
+	}
 }

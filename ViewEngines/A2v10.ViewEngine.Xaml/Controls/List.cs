@@ -147,5 +147,6 @@ public class List : Control, ITableControl
         base.OnEndInit();
         foreach (var el in Content)
             el.SetParent(this);
+        EmptyPanel?.SetParent(this);
     }
 }

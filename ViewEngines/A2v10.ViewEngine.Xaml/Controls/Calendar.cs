@@ -92,5 +92,16 @@ public class Calendar : UIElementBase
 		input.MergeAttribute(itemPropName, Path);
 		input.MergeAttribute(propPropName, Prop);
 	}
+
+	protected override void OnEndInit()
+	{
+		base.OnEndInit();
+		MonthEventTemplate?.SetParent(this);
+		WeekEventTemplate?.SetParent(this);
+		foreach (var el in ButtonsTemplate ?? [])
+			el.SetParent(this);
+		foreach (var el in ToolbarTemplate ?? [])
+			el.SetParent(this);
+	}
 }
 

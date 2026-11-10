@@ -169,5 +169,7 @@ public class Hyperlink : Inline
 		base.OnEndInit();
 		if (DropDown != null && GetBindingCommand(nameof(Command)) != null)
 			throw new XamlException("Hyperlink. The DropDown and Command can't be specified at the same time");
+		(Content as XamlElement)?.SetParent(this);
+		DropDown?.SetParent(this);
 	}
 }

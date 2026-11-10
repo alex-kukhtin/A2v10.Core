@@ -87,6 +87,7 @@ public class PropertyGridItem : UIElementBase
     protected override void OnEndInit()
     {
         base.OnEndInit();
+		(Content as XamlElement)?.SetParent(this);
 		if (Parent is not PropertyGrid propertyGrid)
 			return;
         if (NameMaxChars == 0)

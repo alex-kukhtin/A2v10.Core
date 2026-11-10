@@ -104,5 +104,14 @@ public class ListItem : UIElement
 			}
 		);
 	}
+
+	protected override void OnEndInit()
+	{
+		base.OnEndInit();
+		(Content as XamlElement)?.SetParent(this);
+		(Header as XamlElement)?.SetParent(this);
+		(Footer as XamlElement)?.SetParent(this);
+		CommandBar?.SetParent(this);
+	}
 }
 

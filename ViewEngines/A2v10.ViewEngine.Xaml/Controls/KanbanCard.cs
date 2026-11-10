@@ -86,4 +86,11 @@ public class KanbanCard : Container, ITableControl
         }
         f.RenderEnd(context);
     }
+
+    protected override void OnEndInit()
+    {
+        base.OnEndInit();
+        (Header as XamlElement)?.SetParent(this);
+        (Footer as XamlElement)?.SetParent(this);
+    }
 }

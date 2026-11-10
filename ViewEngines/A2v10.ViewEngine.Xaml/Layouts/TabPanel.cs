@@ -129,6 +129,7 @@ public class TabPanel : UIElement
 		base.OnEndInit();
 		foreach (var tab in Tabs)
 			tab.SetParent(this);
+		(Header as XamlElement)?.SetParent(this);
 	}
 
 	public override void OnSetStyles(RootContainer root)
