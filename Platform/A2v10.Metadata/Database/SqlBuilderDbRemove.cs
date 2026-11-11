@@ -47,23 +47,23 @@ internal partial class SqlBuilder
             {GateSql(Gate.Delete)}{RecordCheck("@Id")}
             {checkSql}
             """;
-        if (Table.IsDocument)
-        {
-            // Done = 0 claimed in the statement that writes Void, as the post claims it (SqlBuilderPost)
+        /* What the save refuses to rewrite, the delete refuses to void: one flag (ReadOnlyFlag) - a posted
+         * document, a row the deploy writes. The system account was voided by a direct dbRemove while its
+         * save was refused, and only a deploy that moved the hash brought it back. Claimed in the statement
+         * that writes Void, as the post claims Done (SqlBuilderPost).
+         */
+        if (ReadOnlyFlag("a") is { } flag)
             sqlString += $"""
 
-            update {Table.SqlTableName} set [Void] = 1{ModifiedStamp()} where [Id] = @Id and [{Constants.FieldNames.Done}] = 0;
+            update a set [Void] = 1{ModifiedStamp()} from {Table.SqlTableName} a where a.[Id] = @Id and {flag} = 0;
             if @@rowcount = 0
-                {SqlExtensions.UserError("Error.Document.AlreadyApplied")}
+                {ReadOnlyError}
             """;
-        }
         else
-        {
             sqlString += $"""
 
             update {Table.SqlTableName} set [Void] = 1{ModifiedStamp()} where [Id] = @Id;
             """;
-        }
         await _dbContext.LoadModelSqlAsync(DataSource, sqlString, dbprms =>
         {
             AddDefaultParameters(dbprms);

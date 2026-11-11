@@ -61,6 +61,18 @@ internal static class RecordTool
     internal static ExpandoObject Record(JsonElement args) => OptionalRecord(args)
         ?? throw new InvalidOperationException("'record' is required: an object");
 
+    /* An id of the model goes into the door's address, 'edit/{id}', where '?' starts a query and '0', 'new'
+     * and '' are a new record: 'new?BasedOn=..&Base=/document/order' loaded a birth from a document the
+     * model is not shown, and '0' passed the existence check of a save that then inserted. An id is what the
+     * SQL parses as one (AppPlatformId.ParseId), and not empty; the parsed value is what goes on.
+     */
+    internal static async Task<String> IdAsync(DatabaseMetadataProvider metadata, Object? id, String kind)
+    {
+        var parsed = (await metadata.GetPlatformIdAsync(null)).ParseId(id?.ToString());
+        return parsed != null && !AppPlatformId.IsEmpty(parsed) ? parsed.ToString()!
+            : throw new InvalidOperationException($"'{id}' is not an id: take one from {kind}_query");
+    }
+
     internal static async Task<DataResult> ExistingAsync(DataAt door, Object id, String kind)
     {
         var opened = await door.LoadAsync($"{id}");
@@ -299,7 +311,7 @@ internal sealed class RecordLoadTool(String kind, IReadOnlyList<McpEntity> entit
         var entity = McpArgs.Entity(entities, McpArgs.Text(args, kind), kind);
         if (!args.TryGetProperty("id", out var id))
             throw new InvalidOperationException("'id' is required");
-        var result = await RecordTool.At(dataService, entity).LoadAsync(McpArgs.Scalar(id, "id"));
+        var result = await RecordTool.At(dataService, entity).LoadAsync(await RecordTool.IdAsync(metadata, McpArgs.Scalar(id, "id"), kind));
         var table = (await metadata.GetNormalEndpointAsync(null, entity.Schema, entity.Table)).Storage;
         return RecordTool.Answer(result.Main(), table);
     }
@@ -421,7 +433,7 @@ internal sealed class RecordSaveTool(String kind, IReadOnlyList<McpEntity> entit
         RecordTool.RefuseBlank(record, endpoint);
         var door = RecordTool.At(dataService, entity);
         // the merge inserts an id it does not find: a record deleted meanwhile would come back as a new one
-        var opened = await RecordTool.ExistingAsync(door, record.Get<Object>(Constants.FieldNames.Id)!, kind);
+        var opened = await RecordTool.ExistingAsync(door, await RecordTool.IdAsync(metadata, record.Get<Object>(Constants.FieldNames.Id), kind), kind);
         RecordTool.NumberRows(record, table);
         var root = new ExpandoObject();
         root.Set(opened.MainName, record);

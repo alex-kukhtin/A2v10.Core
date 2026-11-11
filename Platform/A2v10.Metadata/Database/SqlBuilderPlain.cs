@@ -348,6 +348,9 @@ internal partial class SqlBuilder
         : Table.AllColumns().Any(c => c.Type == ColumnType.IsSystem) ? $"{alias}.[{Constants.FieldNames.IsSystem}]"
         : null;
 
+    // the refusal of a write over that flag - a save and a delete say the same
+    String ReadOnlyError => SqlExtensions.UserError(Table.IsDocument ? "Error.Document.AlreadyApplied" : "Error.Element.IsSystem");
+
     public async Task<IDataModel> LoadPlainModelAsync()
     {
         var basedOn = BasedOnQueryValue();
@@ -535,7 +538,7 @@ internal partial class SqlBuilder
                 return String.Empty;
             return $"""
                 if exists(select * from @{Table.Model} t inner join {Table.SqlTableName} c with (updlock) on c.Id = t.Id where {flag} = 1)
-                {SqlExtensions.UserError(Table.IsDocument ? "Error.Document.AlreadyApplied" : "Error.Element.IsSystem")}
+                {ReadOnlyError}
             """;
         }
 

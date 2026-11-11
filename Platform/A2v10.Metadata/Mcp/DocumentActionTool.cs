@@ -36,7 +36,7 @@ internal sealed class DocumentActionTool(String name, String title, PlatformMcpT
         var entity = McpArgs.Entity(entities, McpArgs.Text(args, Kind), Kind);
         if (!args.TryGetProperty("id", out var idArg))
             throw new InvalidOperationException("'id' is required");
-        var id = McpArgs.Scalar(idArg, "id");
+        var id = await RecordTool.IdAsync(metadata, McpArgs.Scalar(idArg, "id"), Kind);
         var door = RecordTool.At(dataService, entity);
         // the frame reports a missing document as a posted one; a void of nothing would pass in silence
         await RecordTool.ExistingAsync(door, id, Kind);
