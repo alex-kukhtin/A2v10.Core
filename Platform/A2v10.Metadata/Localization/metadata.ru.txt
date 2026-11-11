@@ -52,6 +52,7 @@
 @Error.Document.RowVersion=Документ изменён другим пользователем. Откройте его заново
 @Error.Document.NoCompany=Документ без компании не проводится
 @Error.Document.AlreadyPosted=Документ уже проведён
+@Error.Document.Deleted=Документ удалён, провести его невозможно
 @Error.Document.NotPosted=Документ не проведён
 @Error.Document.AlreadyApplied=Документ проведён, изменить его невозможно
 @Error.Document.BasedOnNotFound=Документ-основание не найден

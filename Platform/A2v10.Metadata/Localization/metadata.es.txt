@@ -52,6 +52,7 @@
 @Error.Document.RowVersion=Otro usuario ha modificado el documento. Vuelva a abrirlo
 @Error.Document.NoCompany=Un documento sin empresa no se puede contabilizar
 @Error.Document.AlreadyPosted=El documento ya está contabilizado
+@Error.Document.Deleted=El documento está eliminado y no se puede contabilizar
 @Error.Document.NotPosted=El documento no está contabilizado
 @Error.Document.AlreadyApplied=El documento está contabilizado y no se puede modificar
 @Error.Document.BasedOnNotFound=No se encontró el documento de origen

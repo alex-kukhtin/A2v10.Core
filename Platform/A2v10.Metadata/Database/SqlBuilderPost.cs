@@ -20,6 +20,11 @@ namespace A2v10.Metadata;
  * @@rowcount = 0 also answers for a document that is not there, which used to fall through both
  * branches of the 'if' and report success over an empty insert.
  *
+ * A deleted document is not claimed either: deleted in another tab and posted from this one, it
+ * left movements behind a document no list shows. The delete claims Done = 0 the same way, so the
+ * two never meet. Which of the two refusals is read after the claim failed - that only picks the
+ * text, the lock is already decided.
+ *
  * A procedure is called from inside all of this: it never sees a second caller, and it does not own
  * the transaction. It must not commit (which only decrements @@TRANCOUNT) or roll back (which kills
  * the outer one and makes the commit below fail far from the cause) - it fails by throwing. And the
@@ -54,9 +59,13 @@ internal partial class SqlBuilder
 
         {company}update {Table.SqlTableName} set [{Constants.FieldNames.Done}] = 1,
             [{Constants.FieldNames.UserPosted}] = @UserId, [{Constants.FieldNames.UtcDatePosted}] = getutcdate()
-        where [{Constants.FieldNames.Id}] = @Id and [{Constants.FieldNames.Done}] = 0;
+        where [{Constants.FieldNames.Id}] = @Id and [{Constants.FieldNames.Done}] = 0 and [{Constants.FieldNames.Void}] = 0;
         if @@rowcount = 0
+        begin
+            if exists(select 1 from {Table.SqlTableName} where [{Constants.FieldNames.Id}] = @Id and [{Constants.FieldNames.Void}] = 1)
+                {SqlExtensions.UserError("Error.Document.Deleted")}
             {SqlExtensions.UserError("Error.Document.AlreadyPosted")}
+        end;
 
         {statements.Post}
 

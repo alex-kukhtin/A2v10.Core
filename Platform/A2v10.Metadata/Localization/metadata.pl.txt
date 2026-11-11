@@ -52,6 +52,7 @@
 @Error.Document.RowVersion=Dokument został zmieniony przez innego użytkownika. Otwórz go ponownie
 @Error.Document.NoCompany=Dokumentu bez firmy nie można zaksięgować
 @Error.Document.AlreadyPosted=Dokument jest już zaksięgowany
+@Error.Document.Deleted=Dokument został usunięty i nie może zostać zaksięgowany
 @Error.Document.NotPosted=Dokument nie jest zaksięgowany
 @Error.Document.AlreadyApplied=Dokument jest zaksięgowany, nie można go zmienić
 @Error.Document.BasedOnNotFound=Nie znaleziono dokumentu źródłowego

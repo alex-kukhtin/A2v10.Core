@@ -49,14 +49,12 @@ internal partial class SqlBuilder
             """;
         if (Table.IsDocument)
         {
+            // Done = 0 claimed in the statement that writes Void, as the post claims it (SqlBuilderPost)
             sqlString += $"""
-            
-            declare @Done bit;
-            select @Done = Done from {Table.SqlTableName} where Id = @Id;
-            if @Done = 1
+
+            update {Table.SqlTableName} set [Void] = 1{ModifiedStamp()} where [Id] = @Id and [{Constants.FieldNames.Done}] = 0;
+            if @@rowcount = 0
                 {SqlExtensions.UserError("Error.Document.AlreadyApplied")}
-            else
-                update {Table.SqlTableName} set [Void] = 1{ModifiedStamp()} where [Id] = @Id;          
             """;
         }
         else
