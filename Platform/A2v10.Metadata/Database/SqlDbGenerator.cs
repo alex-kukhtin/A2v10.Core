@@ -113,7 +113,8 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         var rolesScript = CreateRolesScript(roles);
         var grantsScript = CreateGrantsScript(grants);
         var boundaryScript = CreateBoundaryScript(boundary);
-        var seedHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes((seedScript ?? "new") + rolesScript + grantsScript + boundaryScript))).ToLowerInvariant();
+        var seedHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes((seedScript ?? "new") + rolesScript + grantsScript + boundaryScript
+            + TableTypesFingerprint(tables)))).ToLowerInvariant();
         // read hash from DB
         var dbHash = await _dbContext.LoadAsync<DbHash>(dataSource, "a2meta.[GetDbHash]");
 
@@ -655,11 +656,29 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         return sb.ToString();
     }
 
+    // the tables a save sends rows of: each gets a table type
+    private static IEnumerable<TableMetadata> TypedTables(IEnumerable<TableMetadata> tables)
+    {
+        foreach (var table in tables.Where(t => !t.IsJournal && !t.IsLedger && !t.IsTags && !t.IsTagEntries))
+        {
+            yield return table;
+            foreach (var d in table.Details)
+                yield return d.Value;
+        }
+        if (tables.Any(t => t.HasTags))
+            yield return TableMetadataDefaults.TagsTable();
+    }
+
+    /* A table type is positional: a save fills it by column order, not by name. The seed does not
+     * carry that order, so two fields swapped in the file keep the hash, the deploy is skipped, and the
+     * old type swaps their values without a word. The types join the hash themselves, ordered by the
+     * table: the walk goes in file-system order, and that order is not a change.
+     */
+    internal static String TableTypesFingerprint(IEnumerable<TableMetadata> tables) =>
+        String.Concat(TypedTables(tables).OrderBy(t => t.SqlTableName, StringComparer.Ordinal).Select(CliDatabaseCreator.CreateTableType));
+
     private static String CreateTableTypesScript(IEnumerable<TableMetadata> tables)
     {
-        static Boolean HasTableType(TableMetadata table)
-            => !table.IsJournal && !table.IsLedger && !table.IsTags && !table.IsTagEntries;
-
         var strBuilder = new StringBuilder();
         strBuilder.AppendLine("-- TABLE TYPES");
         strBuilder.AppendLine(CliDatabaseCreator.CreateIdTableType());
@@ -668,20 +687,9 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         strBuilder.AppendLine("go");
         strBuilder.AppendLine(CliDatabaseCreator.CreateUserBoundaryTableType());
         strBuilder.AppendLine("go");
-        foreach (var table in tables.Where(HasTableType))
+        foreach (var table in TypedTables(tables))
         {
             strBuilder.AppendLine(CliDatabaseCreator.CreateTableType(table));
-            strBuilder.AppendLine("go");
-            foreach (var d in table.Details)
-            {
-                strBuilder.AppendLine(CliDatabaseCreator.CreateTableType(d.Value));
-                strBuilder.AppendLine("go");
-            }
-        }
-        if (tables.Any(t => t.HasTags))
-        {
-            var tagsTable = TableMetadataDefaults.TagsTable();
-            strBuilder.AppendLine(CliDatabaseCreator.CreateTableType(tagsTable));
             strBuilder.AppendLine("go");
         }
         return strBuilder.ToString();
