@@ -27,10 +27,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.403" PrivateAssets="All" />
-	</ItemGroup>
-
-	<ItemGroup>
 	  <ProjectReference Include="..\A2v10.Identity.Core\A2v10.Identity.Core.csproj" />
 	</ItemGroup>
 

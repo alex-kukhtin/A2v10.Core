@@ -16,8 +16,7 @@ namespace A2v10.Metadata;
  */
 internal class AppMetadataBuilder(
     DatabaseMetadataProvider _metadataProvider,
-    IModelBuilderFactory _modelBuilderFactory,
-    IAppVersion _appVersion) : IAppRuntimeBuilder
+    IModelBuilderFactory _modelBuilderFactory) : IAppRuntimeBuilder
 {
     public bool IsAutoSupported => false;
     public Boolean IsMetaSupported => true;

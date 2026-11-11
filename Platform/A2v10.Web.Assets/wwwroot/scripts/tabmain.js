@@ -9282,7 +9282,7 @@ Vue.component('popover', {
 })();
 // Copyright © 2015-2026 Oleksandr Kukhtin. All rights reserved.
 
-// 20260920-7987
+// 20261111-7987
 // components/collectionviewplain.js
 
 /*
@@ -9628,6 +9628,8 @@ TODO:
 								let te = topElem[lastProp];
 								if (!utils.isEqual(te.$ModelInfo.Filter[pp], this.filter[pp])) {
 									te.$ModelInfo.Filter[pp] = this.filter[pp];
+									if ('Offset' in te.$ModelInfo)
+										setModelInfoProp(te, 'Offset', 0);
 									if (te.$loaded)
 										te.$empty();
 									te.$loaded = false;
