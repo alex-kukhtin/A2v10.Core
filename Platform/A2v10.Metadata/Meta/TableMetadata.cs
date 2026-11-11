@@ -745,6 +745,17 @@ public sealed record TableMetadata
     [JsonIgnore]
     internal TableColumn KeyColumn => this.AllColumns().First(c => c.IsKey);
 
+    /* What a list sorts by: any column but a set's, and the header offers no sort on it. Both candidates
+     * lie about what the column shows: 'Order' is the order the set was declared in, 'Name' is a
+     * localization key, and the cell displays the translation of that key - so neither is the alphabet
+     * the reader sees. Read by the index and by the tool that refuses a name the index would drop.
+     */
+    [JsonIgnore]
+    internal IEnumerable<TableColumn> SortColumns => this.AllColumns().Where(c => !c.IsSetRef);
+
+    internal TableColumn? SortColumn(String? name) =>
+        SortColumns.FirstOrDefault(c => c.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+
     internal String RowKindField => this.AllColumns().FirstOrDefault(c => c.Type == ColumnType.RowKind)?.Name
         ?? throw new InvalidOperationException($"The table {SqlTableName} does not have a RowKind column");
 

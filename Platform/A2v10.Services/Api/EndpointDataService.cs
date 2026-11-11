@@ -161,9 +161,13 @@ public sealed class DataAt(IDataService _dataService, String _route, Boolean _re
                 yield return $"PageSize={query.Take}";
             if (query.Skip != 0)
                 yield return $"Offset={query.Skip}";
+            /* The names the index reads (A2v10.Metadata, Constants.QueryNames). Its answer names them
+             * SortOrder and SortDir (ModelInfoFit): sent under those, the sort was dropped as an unknown filter.
+             */
             if (!String.IsNullOrEmpty(query.Sort))
-                yield return $"SortOrder={Uri.EscapeDataString(query.Sort)}";
-            yield return $"SortDir={(query.Desc ? "desc" : "asc")}";
+                yield return $"Order={Uri.EscapeDataString(query.Sort)}";
+            if (query.Desc is { } desc)
+                yield return $"Dir={(desc ? "desc" : "asc")}";
             // escaped: an '&' in a value would otherwise set another parameter of the query
             var d = filters as IDictionary<String, Object>;
             foreach (var x in d.Keys)

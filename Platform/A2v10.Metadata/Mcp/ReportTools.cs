@@ -99,10 +99,10 @@ internal sealed class ReportQueryTool(IReadOnlyList<McpEntity> reports, IReadOnl
         report_info says what this report can do and how to read its rows.
         groupBy - from report_info, at least one when it lists any, in order.
         filter: Period - { From, To } as yyyy-MM-dd; a dimension from report_info - an id. No condition - no restriction: no Period is all the data.
-        The answer: rows - one page; total - how many rows there are; summary - the numbers over all rows, not only the page; filter, groupBy, sort, desc, take, skip - what was applied. Read 'filter': a name it does not show had no effect.
+        The answer: rows - one page; total - how many rows there are; summary - the numbers over all rows, not only the page; filter, groupBy, sort, desc, take, skip - what was applied.
         url - an absolute link that opens this report in the application, with these conditions: give it to the user when they want to see it.
         What a number is made of: when report_info offers Operation or Document, group by it. An Operation names its 'document' when you can open it; without it the movement is real and the document is not open to you.
-        Top N: sort by a number with take.
+        Top N: sort by a number, desc, with take.
         Comparing periods: one call per period. There is no breakdown by date.
         A measure of type qty: quantities of different items may be in different units - summed above Item, summary included, it is not a number to answer with; group by Item and name the unit from catalog_query.
         A measure of type amount or money: it adds up along any dimension.
@@ -113,7 +113,7 @@ internal sealed class ReportQueryTool(IReadOnlyList<McpEntity> reports, IReadOnl
         groupBy = new { type = "array", items = new { type = "string" }, description = "From report_info, in order" },
         filter = new { type = "object", description = "The conditions, in the form the answer's 'filter' has" },
         sort = new { type = "string", description = "A number as the rows name it, or a name of groupBy" },
-        desc = new { type = "boolean", description = "Descending; by default true", @default = true },
+        desc = new { type = "boolean", description = "Descending" },
         take = new { type = "integer", description = "The size of a page; by default 20" },
         skip = new { type = "integer", description = "Rows to skip" }
     });
@@ -124,7 +124,8 @@ internal sealed class ReportQueryTool(IReadOnlyList<McpEntity> reports, IReadOnl
         var entity = McpArgs.Entity(reports, McpArgs.Text(args, Constants.SchemaNames.Report), Constants.SchemaNames.Report);
         var endpoint = await metadata.GetReportEndpointAsync(null, entity.Schema, entity.Table);
 
-        var query = RecordQueryTool.Conditions(args, endpoint.Surface);
+        List<String> filters = [.. endpoint.Surface.HasPeriod ? [Constants.FilterNames.Period] : Array.Empty<String>(), .. endpoint.Report.Filters];
+        var query = RecordQueryTool.Conditions(args, endpoint.Surface, filters);
         query.Set("Group", String.Join('!', Groups(args, endpoint.Report.Groups, entity.Name)));
         query.Set("Data", String.Join('!', endpoint.Report.Data));
         query.Set("Run", "true");
@@ -141,8 +142,8 @@ internal sealed class ReportQueryTool(IReadOnlyList<McpEntity> reports, IReadOnl
 
         var sort = args.TryGetProperty("sort", out var sortBy) ? sortBy.GetString() : null;
         if (sort != null && !groups.Concat(numbers).Contains(sort))
-            sort = null;
-        var desc = !args.TryGetProperty("desc", out var descending) || descending.GetBoolean();
+            throw new InvalidOperationException($"'sort': a row of '{entity.Name}' has no '{sort}'. Known: {String.Join(", ", groups.Concat(numbers))}");
+        var desc = RecordQueryTool.Desc(args);
         var skip = RecordQueryTool.Number(args, "skip");
         var take = RecordQueryTool.Number(args, "take") is > 0 and var size ? size : DefaultTake;
 
@@ -177,16 +178,20 @@ internal sealed class ReportQueryTool(IReadOnlyList<McpEntity> reports, IReadOnl
         return $"{application}{endpoint.Path}/index/0?{String.Join('&', pairs)}";
     }
 
-    // the builder drops a name it does not know, and with none left it has nothing to group by
+    /* The builder drops a name it does not know, so a typo here grouped by the rest without a word; with
+     * none left it has nothing to group by. Every name is checked, and a report that breaks down needs one.
+     */
     static List<String> Groups(JsonElement args, List<String> known, String report)
     {
         List<String> asked = args.TryGetProperty("groupBy", out var groupBy) && groupBy.ValueKind == JsonValueKind.Array
             ? [.. groupBy.EnumerateArray().Select(n => n.GetString()!)]
             : [];
-        List<String> groups = [.. asked.Where(known.Contains)];
-        return groups.Count > 0 || (asked.Count == 0 && known.Count == 0) ? groups : throw new InvalidOperationException(known.Count > 0
-            ? $"'groupBy' names nothing '{report}' breaks down by. Known: {String.Join(", ", known)}"
-            : $"'{report}' has fixed rows: 'groupBy' is not taken");
+        if (known.Count == 0)
+            return asked.Count == 0 ? asked : throw new InvalidOperationException($"'{report}' has fixed rows: 'groupBy' is not taken");
+        String? refusal = asked.Count == 0 ? $"'groupBy' is required for '{report}'"
+            : asked.FirstOrDefault(n => !known.Contains(n)) is { } unknown ? $"'groupBy': '{report}' does not break down by '{unknown}'"
+            : null;
+        return refusal == null ? asked : throw new InvalidOperationException($"{refusal}. Known: {String.Join(", ", known)}");
     }
 
     // the screen's tree: the nodes between the total and the leaves are the screen's subtotals

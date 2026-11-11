@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -38,6 +39,32 @@ public interface IPlatformMcpTool
 	String[]? Roles { get; }
 	// The result is serialized to JSON for the model; an exception goes back as isError with its text.
 	Task<Object?> ExecuteAsync(JsonElement args, CancellationToken cancellationToken);
+}
+
+public static class PlatformMcpToolExtensions
+{
+	/* A schema a tool declares closed (additionalProperties: false) is held to before it runs, for every
+	 * tool: a name outside it is a typo, and a tool reading only its own names would drop it and answer as
+	 * if obeyed - 'sort' misspelled sorted by nothing. Down into a closed object too. An open schema is the
+	 * tool's word that it reads the rest itself (a record, a filter). Here, not in the handler: whoever
+	 * calls a tool without the handler (a test) calls this too.
+	 */
+	public static void CheckArguments(this IPlatformMcpTool tool, JsonElement args) => Check(args, tool.InputSchema, String.Empty);
+
+	static void Check(JsonElement args, JsonElement schema, String path)
+	{
+		if (args.ValueKind != JsonValueKind.Object
+			|| !schema.TryGetProperty("additionalProperties", out var additional) || additional.ValueKind != JsonValueKind.False)
+			return;
+		var properties = schema.TryGetProperty("properties", out var p) ? p : default;
+		List<String> known = properties.ValueKind == JsonValueKind.Object ? [.. properties.EnumerateObject().Select(x => x.Name)] : [];
+		foreach (var arg in args.EnumerateObject())
+		{
+			if (!known.Contains(arg.Name))
+				throw new InvalidOperationException($"Unknown argument '{path}{arg.Name}'. Known: {String.Join(", ", known)}");
+			Check(arg.Value, properties.GetProperty(arg.Name), $"{path}{arg.Name}.");
+		}
+	}
 }
 
 /* Scoped, resolved per request: the set of tools may depend on the user.

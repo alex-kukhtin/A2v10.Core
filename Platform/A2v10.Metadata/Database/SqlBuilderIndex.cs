@@ -78,14 +78,10 @@ internal partial class SqlBuilder
                 dir = DEFAULT_DIR;
             var queryOrder = qry.Get<String>(Constants.QueryNames.Order);
 
-            /* A set column is not sortable at all, and the header offers no sort on it. Both
-             * candidates lie about what the column shows: 'Order' is the order the set was
-             * declared in, 'Name' is a localization key, and the cell displays the translation of
-             * that key - so neither is the alphabet the reader sees. An unsortable name falls back
-             * to the default, exactly like an unknown one.
+            /* An unsortable name falls back to the default, exactly like an unknown one: a screen may
+             * send the name of a column it no longer has. A model is refused before it gets here (RecordQueryTool).
              */
-            var orderColumn = allColumns.FirstOrDefault(c =>
-                c.Name.Equals(queryOrder, StringComparison.OrdinalIgnoreCase) && !c.IsSetRef);
+            var orderColumn = Table.SortColumn(queryOrder);
             if (orderColumn != null)
             {
                 var rd = refs.FirstOrDefault(r => r.Column == orderColumn);

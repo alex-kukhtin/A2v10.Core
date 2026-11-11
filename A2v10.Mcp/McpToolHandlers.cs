@@ -62,6 +62,7 @@ internal static class McpToolHandlers
 		var args = JsonSerializer.SerializeToElement(request.Params?.Arguments ?? new Dictionary<String, JsonElement>());
 		try
 		{
+			tool.CheckArguments(args);
 			var result = await tool.ExecuteAsync(args, cancellationToken);
 			return new CallToolResult() { Content = [new TextContentBlock() { Text = JsonSerializer.Serialize(result, _resultOptions) }] };
 		}
