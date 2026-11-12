@@ -13,6 +13,23 @@
 			"document": {
 				"Store": "StoreTo"
 			}
+		},
+		{
+			"ledger": "/ledger/national",
+			"storno": true,
+			"each": {
+				"details": "Rows",
+				"kinds": [ "Stock" ]
+			},
+			"sum": "Sum",
+			"dt": {
+				"const": { "Acc": "361" },
+				"document": { "Agent": "Agent" }
+			},
+			"ct": {
+				"const": { "Acc": "281" },
+				"row": { "Item": "Item", "Qty": "Qty" }
+			}
 		}
 	]
 }

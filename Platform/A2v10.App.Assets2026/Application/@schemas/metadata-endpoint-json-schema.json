@@ -379,6 +379,10 @@
                     "type": "string",
                     "description": "The sum field: of the iterated row under 'each', else of the header. One for both legs."
                 },
+                "storno": {
+                    "type": "boolean",
+                    "description": "Red storno: Sum and the legs' Amount, Qty, Money are written negated; InOut, Acc and CorrAcc stay. Of the posting, both legs."
+                },
                 "dt": { "$ref": "#/definitions/postLeg" },
                 "ct": { "$ref": "#/definitions/postLeg" }
             }

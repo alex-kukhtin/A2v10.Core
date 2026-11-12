@@ -172,6 +172,10 @@ internal sealed class PostStatements
             $"Post {_endpoint.Path} -> {journal.Path}: the journal has a Direction column, so 'dir' is required ('in' or 'out')");
     }
 
+    // the journal's leg and the ledger's posting alike: what adds up is negated, the side is kept (CLAUDE.md, "Storno")
+    private static String Signed(PostMetadata p, TableColumn col, String expr) =>
+        p.Storno && col.IsAdditive ? $"-{expr}" : expr;
+
     // one collection and some of its kinds - naming two is not writable, see PostEachMetadata
     private (TableMetadata Table, String OnClause) FindDetailsTable(PostEachMetadata each)
     {
@@ -243,8 +247,6 @@ internal sealed class PostStatements
                     continue;
             }
 
-            String Signed(String expr) => p.Storno && col.IsAdditive ? $"-{expr}" : expr;
-
             // 1. explicit overrides
             if (p.Document.TryGetValue(name, out var docField))
             {
@@ -254,7 +256,7 @@ internal sealed class PostStatements
                 if (!DomainMatch(src, col))
                     throw new InvalidOperationException(
                         $"Post {_endpoint.Path} -> {journal.Path}: document field '{docField}' does not match journal column [{name}] ({DomainDiff("document", src, col)})");
-                result.Add((Signed($"d.[{docField}]"), name));
+                result.Add((Signed(p, col, $"d.[{docField}]"), name));
                 continue;
             }
             if (p.Row.TryGetValue(name, out var rowField))
@@ -268,7 +270,7 @@ internal sealed class PostStatements
                 if (!DomainMatch(src, col))
                     throw new InvalidOperationException(
                         $"Post {_endpoint.Path} -> {journal.Path}: row field '{rowField}' does not match journal column [{name}] ({DomainDiff("row", src, col)})");
-                result.Add((Signed($"r.[{rowField}]"), name));
+                result.Add((Signed(p, col, $"r.[{rowField}]"), name));
                 continue;
             }
 
@@ -290,7 +292,7 @@ internal sealed class PostStatements
                 throw new InvalidOperationException(
                     $"Post {_endpoint.Path} -> {journal.Path}: [{name}] exists in {(inRow != null ? $"the rows of {_table.Path}" : _table.Path)} but the domain differs ({DomainDiff(side, taken, col)}); map it explicitly in '{side}'");
 
-            result.Add((Signed($"{alias}.[{name}]"), name));
+            result.Add((Signed(p, col, $"{alias}.[{name}]"), name));
         }
         return result;
     }
@@ -329,7 +331,8 @@ internal sealed class PostStatements
      * author name cannot hold one. The insert selects it twice, the second time mirrored: Acc and
      * CorrAcc swap, the analytics of the other leg are taken, the sum is the same - so debit equals
      * credit by construction and nothing checks it. An empty leg writes no row: nothing is mirrored,
-     * and whether the books add up is then a fact of the data (concepts/ledger).
+     * and whether the books add up is then a fact of the data (concepts/ledger). 'storno' signs the values
+     * in the CTE, before the mirror reads them: both legs take one negated sum, and debit still equals credit.
      *
      * Nothing is mapped by name: a name does not know its leg and would fill both rows. The legs name
      * Acc and the author's columns; the provenance is found by type, the rest of the baseline is the
@@ -393,7 +396,7 @@ internal sealed class PostStatements
                 foreach (var (name, field) in entries)
                 {
                     var col = LegColumn(leg, name);
-                    if (!map.TryAdd(name, Expr(block, field, col)))
+                    if (!map.TryAdd(name, Signed(p, col, Expr(block, field, col))))
                         throw new InvalidOperationException($"{head}: '{leg}' names [{name}] in two blocks");
                 }
             if (!blocks.IsEmpty && !map.ContainsKey(Constants.FieldNames.Acc))
@@ -411,7 +414,7 @@ internal sealed class PostStatements
 
         // the sum is of the rows under 'each', of the header otherwise - one per posting either way
         var sumCol = ledger.AllColumns().First(c => c.Name == Constants.FieldNames.Sum);
-        var sum = Expr(detailsTable != null ? "row" : "document", p.Sum!, sumCol);
+        var sum = Signed(p, sumCol, Expr(detailsTable != null ? "row" : "document", p.Sum!, sumCol));
 
         // one value for both legs: the date, the company and the document's provenance
         List<(String Target, String Source)> common = [(Constants.FieldNames.Date, $"d.[{Constants.FieldNames.Date}]")];

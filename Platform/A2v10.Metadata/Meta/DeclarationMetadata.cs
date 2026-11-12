@@ -394,8 +394,10 @@ public sealed record DeclarationMetadata
     }
 
     /* A mapped entry names one target, and the target decides the keys: a journal leg is one row
-     * with its direction ('dir', 'storno', blocks of the entry), a ledger posting is two legs, one possibly empty, with
+     * with its direction ('dir', blocks of the entry), a ledger posting is two legs, one possibly empty, with
      * blocks of their own ('sum', 'dt', 'ct'). A key of the other spelling would be silently ignored.
+     * 'storno' is both's: it negates what adds up and keeps the side - of the posting, never of one leg,
+     * which would leave two debits.
      */
     private static void CheckMapped(String path, PostMetadata p)
     {
@@ -414,7 +416,6 @@ public sealed record DeclarationMetadata
         else
         {
             if (p.Dir != PostDirection.None) foreign.Add("dir");
-            if (p.Storno) foreign.Add("storno");
             if (p.Document.Count > 0) foreign.Add("document");
             if (p.Row.Count > 0) foreign.Add("row");
         }

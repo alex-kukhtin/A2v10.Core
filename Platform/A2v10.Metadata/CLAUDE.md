@@ -93,6 +93,7 @@ Never a field list: three of four kinds have no column (`Fragment`, `Period`, `T
 - **Negated: `Amount`, `Qty`, `Money`** — values whose sum over rows means something. `Direction` never: the leg keeps its side.
 - **Not negated: `Price`, `Percent`, `Factor`** — rates. A reversed row keeps its price; its quantity and amount carry the sign.
 - **Not negated: `Float`, `Decimal`.** Numbers without business meaning, and the platform does not guess one for them. A column meant to flip is declared `Amount` or `Qty` — the type is where the author says it adds up.
+- **A ledger posting: the posting's, never a leg's** (8674). The values are signed in the CTE, before the mirror reads them: both legs take the one negated sum, a leg's measure is negated, the other leg's empty is not. A storno of one leg would write two debits.
 - **The question is "does it add up", not "is it a number".** Alignment and column role ask the second — `IsNumber` (XamlExtensions); the format splits on `IsCurrency`: `Amount`, `Price`, `Money` show two decimals, `Qty` as many as it has.
 
 ## Computed columns: read by all, written by none

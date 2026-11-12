@@ -42,6 +42,31 @@ public class PostStatementsTests
         Assert.Contains("-r.[Sum]", post);
     }
 
+    /* The return of waybillout's posting in red: Dt 361 Kt 281 again, negated. Signed in the CTE, so
+     * the collapsed debit sums the negated rows and the credit leg, one per row, carries -Qty; the
+     * debit's Qty is its empty, not a negated one. The sides are the selects' literals, untouched.
+     */
+    [Fact]
+    public async Task Storno_into_a_ledger_negates_the_sum_and_the_legs_measures_and_keeps_the_sides()
+    {
+        var ret = await LoadNormalAsync("document", "waybillreturn");
+
+        var post = new PostStatements(ret).Post;
+
+        Assert.Contains("[Sum] = -r.[Sum]", post);
+        Assert.Contains("[Dt$Qty] = 0, [Ct$Qty] = -r.[Qty]", post);
+        Assert.Contains("[Dt$Acc] = N'361', [Ct$Acc] = N'281'", post);
+        Assert.Matches(@"select [^\n]*, 1, \[Dt\$Acc\], \[Ct\$Acc\], sum\(\[Sum\]\)", post);
+        Assert.Matches(@"select [^\n]*, -1, \[Ct\$Acc\], \[Dt\$Acc\], sum\(\[Sum\]\)", post);
+    }
+
+    // of the posting: a leg has no 'storno' to write
+    [Fact]
+    public void Storno_is_a_key_of_the_ledger_posting() =>
+        Newtonsoft.Json.JsonConvert.DeserializeObject<DeclarationMetadata>(
+            """{ "post": [ { "ledger": "/ledger/national", "sum": "Sum", "storno": true, "dt": { "const": { "Acc": "281" } }, "ct": { "const": { "Acc": "631" } } } ] }""",
+            JsonSettings.CamelCaseSerializerSettings)!.CheckPost("/document/x");
+
     static void CheckPost(String legs) =>
         Newtonsoft.Json.JsonConvert.DeserializeObject<DeclarationMetadata>(
             $$"""{ "post": [ { "ledger": "/ledger/national", "sum": "Sum", {{legs}} } ] }""",

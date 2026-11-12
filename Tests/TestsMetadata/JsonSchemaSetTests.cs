@@ -182,6 +182,28 @@ public class JsonSchemaSetTests
         Assert.Equal("'ct' is required here", finding.Message);
     }
 
+    // of the posting, not of a leg: the same key in 'dt' is refused
+    [Fact]
+    public void Storno_is_written_on_a_ledger_posting_and_not_in_a_leg()
+    {
+        Assert.Null(Validate("""
+            {
+              "storage": "/document",
+              "post": [ { "ledger": "/ledger/national", "sum": "Sum", "storno": true,
+                          "dt": { "const": { "Acc": "361" } }, "ct": { "const": { "Acc": "281" } } } ]
+            }
+            """));
+
+        var finding = Finding("""
+            {
+              "storage": "/document",
+              "post": [ { "ledger": "/ledger/national", "sum": "Sum",
+                          "dt": { "const": { "Acc": "361" } , "storno": true }, "ct": { "const": { "Acc": "281" } } } ]
+            }
+            """);
+        Assert.Equal("post[0].dt.storno", finding.Path);
+    }
+
     // a name has no token of its own, so what is said about it is said at its property
     [Fact]
     public void A_refused_key_name_is_reported_at_its_property()
