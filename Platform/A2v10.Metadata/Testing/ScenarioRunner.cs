@@ -110,7 +110,9 @@ internal sealed class ScenarioRunner(IServiceScopeFactory scopeFactory)
             return ExpectRecordAsync(name, Required<ExpandoObject>(step, "data"));
         if (Get(step, "list") is List<Object> rows)
             return ExpectListAsync(Required<String>(step, "at"), rows);
-        throw new ScenarioException("'expect' checks a 'record' (with 'data') or a 'list' (with 'at')");
+        if (Get(step, "report") is String report)
+            return ExpectReportAsync(report, step);
+        throw new ScenarioException("'expect' checks a 'record' (with 'data'), a 'list' (with 'at') or a 'report' (with 'rows')");
     }
 
     // the fields named, and only those: what the scenario does not mention it does not claim
@@ -136,11 +138,43 @@ internal sealed class ScenarioRunner(IServiceScopeFactory scopeFactory)
             ?? throw new ScenarioException($"{at}: the index has no collection of {type}");
 
         var own = _records.Values.Where(r => r.At == at).Select(r => r.Id).ToList();
-        var remaining = ((IList)Get(index.Root, collection)!).OfType<IDictionary<String, Object?>>()
-            .Where(row => own.Any(id => Same(id, Field(row, "Id"))))
-            .ToList();
-        var actualText = Show(remaining);
+        MatchSet(at, expected, [.. ((IList)Get(index.Root, collection)!).OfType<IDictionary<String, Object?>>()
+            .Where(row => own.Any(id => Same(id, Field(row, "Id"))))]);
+    }
 
+    /* The rows of a report, the whole set, as report_query answers the model. The run's database is shared and a
+     * report adds up all of it, so its numbers are this scenario's only where a record of the scenario restricts
+     * them: a filter by one keeps every row; otherwise a row is the scenario's when a group of it is one of its
+     * records. A step restricted by neither is refused: its numbers would depend on which scenarios ran before.
+     */
+    async Task ExpectReportAsync(String at, ExpandoObject step)
+    {
+        var expected = Required<List<Object>>(step, "rows");
+        var filter = Get(step, "filter") as ExpandoObject;
+        var byFilter = filter != null && filter.Any(f => f.Value is ExpandoObject eo && RefName(eo) != null);
+        if (!byFilter && !expected.Any(row => row is ExpandoObject eo && eo.Any(f => f.Value is ExpandoObject v && RefName(v) != null)))
+            throw new ScenarioException($"{at}: neither 'filter' nor a row names a record of this scenario - the run's database is shared, so these numbers are not the scenario's");
+
+        var args = new Dictionary<String, Object?>
+        {
+            ["filter"] = Resolve(filter ?? new ExpandoObject()),
+            ["groupBy"] = Get(step, "groupBy")
+        };
+        var (endpoint, report) = await _door.ReportAsync(at, System.Text.Json.JsonSerializer.SerializeToElement(args));
+
+        // the record a group of a row refers to is the scenario's when it was saved at the address that group refers to
+        Boolean Own(IDictionary<String, Object?> row) => report.Groups.Any(group =>
+            McpReport.Column(endpoint, group).RefTable is NormalEndpointMetadata target
+            && Field(Field(row, group), "Id") is { } id
+            && _records.Values.Any(r => r.At.Trim('/') == target.Path.Trim('/') && Same(r.Id, id)));
+
+        MatchSet(at, expected, [.. report.Rows.Cast<IDictionary<String, Object?>>().Where(row => byFilter || Own(row))]);
+    }
+
+    // every expected row matches one actual row of its own, and no actual row is left over
+    void MatchSet(String at, List<Object> expected, List<IDictionary<String, Object?>> remaining)
+    {
+        var actualText = Show(remaining);
         foreach (var row in expected)
         {
             var hit = remaining.FirstOrDefault(r => Matches(row, r));

@@ -27,16 +27,88 @@ internal sealed record McpDimension(String Name, String Type,
 internal sealed record McpReportInfo(IReadOnlyList<McpDimension> GroupBy, IReadOnlyList<McpDimension> Filter,
     IReadOnlyList<McpMeasure> Measures, String Reading);
 
+// a row: its groups as the builder names them ({ Id, Name }, not localized), its numbers, its details
+internal sealed record ReportRows(ExpandoObject Query, IReadOnlyList<String> Groups, IReadOnlyList<String> Numbers,
+    List<ExpandoObject> Rows, ExpandoObject? Summary, ExpandoObject? Filter);
+
 /* A report as the screen runs it: what its type means lives with its builder, so these tools never ask the type
  * or what the report reads. The storage under a report is no business of the model's.
  */
 internal static class McpReport
 {
+    const String Items = "Items";
+    const String Total = "RepData";
+    const String Filter = "Filter";
+
     internal static async Task<BaseReportBuilder> BuilderAsync(ReportEndpointMetadata endpoint, IServiceProvider services, DatabaseMetadataProvider metadata) =>
         BaseReportBuilder.Create(services, endpoint, await metadata.GetPlatformIdAsync(null), await metadata.UseGrantsAsync());
 
     internal static TableColumn Column(ReportEndpointMetadata endpoint, String name) =>
         endpoint.Surface.AllColumns().First(c => c.Name == name);
+
+    /* The report as rows, asked with 'filter' and 'groupBy' as report_query takes them. A scenario's 'expect report'
+     * asks through here too: what it compares is what the model is answered.
+     */
+    internal static async Task<ReportRows> RowsAsync(ReportEndpointMetadata endpoint, String report, JsonElement args,
+        IServiceProvider services, DatabaseMetadataProvider metadata)
+    {
+        List<String> filters = [.. endpoint.Surface.HasPeriod ? [Constants.FilterNames.Period] : Array.Empty<String>(), .. endpoint.Report.Filters];
+        var query = RecordQueryTool.Conditions(args, endpoint.Surface, filters);
+        query.Set("Group", String.Join('!', Groups(args, endpoint.Report.Groups, report)));
+        query.Set("Data", String.Join('!', endpoint.Report.Data));
+        query.Set("Run", "true");
+
+        var builder = await BuilderAsync(endpoint, services, metadata);
+        var root = (await builder.LoadReportModelAsync(null, query)).Root;
+
+        // read after the load: what a row is per is what the query was built for
+        var groups = builder.RowGroups;
+        List<String> numbers = [.. builder.RowNumbers];
+
+        var total = root.Get<ExpandoObject>(Total);
+        List<ExpandoObject> rows = total == null ? [] : [.. Leaves(total, groups.Count).Select(node => Row(node, builder, groups, numbers))];
+        return new ReportRows(query, groups, numbers, rows, total == null ? null : Numbers(total, new ExpandoObject(), numbers),
+            root.Get<ExpandoObject>(Filter));
+    }
+
+    /* The builder drops a name it does not know, so a typo here grouped by the rest without a word; with
+     * none left it has nothing to group by. Every name is checked, and a report that breaks down needs one.
+     */
+    static List<String> Groups(JsonElement args, List<String> known, String report)
+    {
+        List<String> asked = args.TryGetProperty("groupBy", out var groupBy) && groupBy.ValueKind == JsonValueKind.Array
+            ? [.. groupBy.EnumerateArray().Select(n => n.GetString()!)]
+            : [];
+        if (known.Count == 0)
+            return asked.Count == 0 ? asked : throw new InvalidOperationException($"'{report}' has fixed rows: 'groupBy' is not taken");
+        String? refusal = asked.Count == 0 ? $"'groupBy' is required for '{report}'"
+            : asked.FirstOrDefault(n => !known.Contains(n)) is { } unknown ? $"'groupBy': '{report}' does not break down by '{unknown}'"
+            : null;
+        return refusal == null ? asked : throw new InvalidOperationException($"{refusal}. Known: {String.Join(", ", known)}");
+    }
+
+    // the screen's tree: the nodes between the total and the leaves are the screen's subtotals
+    static IEnumerable<ExpandoObject> Leaves(ExpandoObject node, Int32 depth) => depth == 0
+        ? [node]
+        : (node.Get<IEnumerable<Object>>(Items) ?? []).OfType<ExpandoObject>().SelectMany(child => Leaves(child, depth - 1));
+
+    static ExpandoObject Row(ExpandoObject node, BaseReportBuilder builder, IReadOnlyList<String> groups, List<String> numbers)
+    {
+        var row = new ExpandoObject();
+        foreach (var group in groups)
+            row.Set(group, builder.RowGroup(node, group));
+        Numbers(node, row, numbers);
+        foreach (var detail in builder.RowDetails)
+            row.Set(detail, node.Get<Object>(detail));
+        return row;
+    }
+
+    static ExpandoObject Numbers(ExpandoObject node, ExpandoObject target, List<String> numbers)
+    {
+        foreach (var name in numbers)
+            target.Set(name, node.Get<Object>(name));
+        return target;
+    }
 }
 
 internal sealed class ReportInfoTool(IReadOnlyList<McpEntity> reports, IReadOnlyList<McpEntity> visible, DatabaseMetadataProvider metadata,
@@ -85,9 +157,6 @@ internal sealed class ReportInfoTool(IReadOnlyList<McpEntity> reports, IReadOnly
 internal sealed class ReportQueryTool(IReadOnlyList<McpEntity> reports, IReadOnlyList<McpEntity> visible, DatabaseMetadataProvider metadata,
     IServiceProvider services, ILocalizer localizer) : IPlatformMcpTool
 {
-    const String Items = "Items";
-    const String Total = "RepData";
-    const String Filter = "Filter";
     const Int32 DefaultTake = 20;
     const String ApplicationUrlKey = "Application:PublicUrl";
 
@@ -123,22 +192,10 @@ internal sealed class ReportQueryTool(IReadOnlyList<McpEntity> reports, IReadOnl
     {
         var entity = McpArgs.Entity(reports, McpArgs.Text(args, Constants.SchemaNames.Report), Constants.SchemaNames.Report);
         var endpoint = await metadata.GetReportEndpointAsync(null, entity.Schema, entity.Table);
-
-        List<String> filters = [.. endpoint.Surface.HasPeriod ? [Constants.FilterNames.Period] : Array.Empty<String>(), .. endpoint.Report.Filters];
-        var query = RecordQueryTool.Conditions(args, endpoint.Surface, filters);
-        query.Set("Group", String.Join('!', Groups(args, endpoint.Report.Groups, entity.Name)));
-        query.Set("Data", String.Join('!', endpoint.Report.Data));
-        query.Set("Run", "true");
-
-        var builder = await McpReport.BuilderAsync(endpoint, services, metadata);
-        var root = (await builder.LoadReportModelAsync(null, query)).Root;
-
-        // read after the load: what a row is per is what the query was built for
-        var groups = builder.RowGroups;
-        List<String> numbers = [.. builder.RowNumbers];
-
-        var total = root.Get<ExpandoObject>(Total);
-        List<ExpandoObject> rows = total == null ? [] : [.. Leaves(total, groups.Count).Select(node => Row(node, builder, endpoint, groups, numbers))];
+        var (query, groups, numbers, rows, summary, filter) = await McpReport.RowsAsync(endpoint, entity.Name, args, services, metadata);
+        foreach (var row in rows)
+            foreach (var group in groups)
+                row.Set(group, Reference(row.Get<ExpandoObject>(group), McpReport.Column(endpoint, group)));
 
         var sort = args.TryGetProperty("sort", out var sortBy) ? sortBy.GetString() : null;
         if (sort != null && !groups.Concat(numbers).Contains(sort))
@@ -151,8 +208,8 @@ internal sealed class ReportQueryTool(IReadOnlyList<McpEntity> reports, IReadOnl
         {
             Rows = Ordered(rows, sort, desc, groups).Skip(skip).Take(take).ToList(),
             Total = rows.Count,
-            Summary = total == null ? null : Numbers(total, new ExpandoObject(), numbers),
-            Filter = Echo(root.Get<ExpandoObject>(Filter), query, endpoint.Report.Filters),
+            Summary = summary,
+            Filter = Echo(filter, query, endpoint.Report.Filters),
             Url = Url(endpoint, query),
             GroupBy = groups,
             Sort = sort,
@@ -176,45 +233,6 @@ internal sealed class ReportQueryTool(IReadOnlyList<McpEntity> reports, IReadOnl
         if (String.IsNullOrEmpty(application))
             throw new InvalidOperationException($"Configuration key '{ApplicationUrlKey}' not found");
         return $"{application}{endpoint.Path}/index/0?{String.Join('&', pairs)}";
-    }
-
-    /* The builder drops a name it does not know, so a typo here grouped by the rest without a word; with
-     * none left it has nothing to group by. Every name is checked, and a report that breaks down needs one.
-     */
-    static List<String> Groups(JsonElement args, List<String> known, String report)
-    {
-        List<String> asked = args.TryGetProperty("groupBy", out var groupBy) && groupBy.ValueKind == JsonValueKind.Array
-            ? [.. groupBy.EnumerateArray().Select(n => n.GetString()!)]
-            : [];
-        if (known.Count == 0)
-            return asked.Count == 0 ? asked : throw new InvalidOperationException($"'{report}' has fixed rows: 'groupBy' is not taken");
-        String? refusal = asked.Count == 0 ? $"'groupBy' is required for '{report}'"
-            : asked.FirstOrDefault(n => !known.Contains(n)) is { } unknown ? $"'groupBy': '{report}' does not break down by '{unknown}'"
-            : null;
-        return refusal == null ? asked : throw new InvalidOperationException($"{refusal}. Known: {String.Join(", ", known)}");
-    }
-
-    // the screen's tree: the nodes between the total and the leaves are the screen's subtotals
-    static IEnumerable<ExpandoObject> Leaves(ExpandoObject node, Int32 depth) => depth == 0
-        ? [node]
-        : (node.Get<IEnumerable<Object>>(Items) ?? []).OfType<ExpandoObject>().SelectMany(child => Leaves(child, depth - 1));
-
-    ExpandoObject Row(ExpandoObject node, BaseReportBuilder builder, ReportEndpointMetadata endpoint, IReadOnlyList<String> groups, List<String> numbers)
-    {
-        var row = new ExpandoObject();
-        foreach (var group in groups)
-            row.Set(group, Reference(builder.RowGroup(node, group), McpReport.Column(endpoint, group)));
-        Numbers(node, row, numbers);
-        foreach (var detail in builder.RowDetails)
-            row.Set(detail, node.Get<Object>(detail));
-        return row;
-    }
-
-    static ExpandoObject Numbers(ExpandoObject node, ExpandoObject target, List<String> numbers)
-    {
-        foreach (var name in numbers)
-            target.Set(name, node.Get<Object>(name));
-        return target;
     }
 
     /* A name may be a key (the registry holds the screens' label of an operation, an empty group its NoData).
