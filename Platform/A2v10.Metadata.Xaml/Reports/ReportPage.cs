@@ -13,9 +13,11 @@ namespace A2v10.Metadata;
  * (BaseReportBuilder). Drawn from the declaration and the picks of the url - a ReportGrouping of its
  * own, built from the same query the builder's is, so the two cannot see different picks.
  */
-internal abstract class ReportPage(ReportMetadata report, ReportGrouping grouping)
+internal abstract class ReportPage(ReportMetadata report, String label, ReportGrouping grouping)
 {
     protected readonly ReportMetadata _report = report;
+    // the localization key of the title, MetadataExtensions.ReportLabel - the page, the sheet and the exported file
+    protected readonly String _label = label;
     protected readonly ReportGrouping _grouping = grouping;
     protected readonly IServiceProvider _xamlServiceProvider = new XamlServiceProvider();
 
@@ -25,11 +27,12 @@ internal abstract class ReportPage(ReportMetadata report, ReportGrouping groupin
     internal static ReportPage Create(ReportEndpointMetadata endpoint, ExpandoObject prms)
     {
         var grouping = new ReportGrouping(endpoint.Report, endpoint.Surface, prms);
+        var label = MetadataExtensions.ReportLabel(endpoint.Name);
         return endpoint.Report.Type switch
         {
-            "turnover" => new TurnoverReportPage(endpoint.Report, grouping),
-            "trialBalance" => new TrialBalanceReportPage(endpoint.Report, grouping),
-            "chessboard" => new ChessboardReportPage(endpoint.Report, grouping),
+            "turnover" => new TurnoverReportPage(endpoint.Report, label, grouping),
+            "trialBalance" => new TrialBalanceReportPage(endpoint.Report, label, grouping),
+            "chessboard" => new ChessboardReportPage(endpoint.Report, label, grouping),
             _ => throw new NotImplementedException($"Invalid Report type '{endpoint.Report.Type}' for {endpoint.Path}")
         };
     }
@@ -63,7 +66,7 @@ internal abstract class ReportPage(ReportMetadata report, ReportGrouping groupin
                         Bindings = b => b.SetBinding(nameof(Button.Command), new BindCmd() {
                             Command = CommandType.ExportTo,
                             Format = ExportToFormat.Excel,
-                            FileName = _report?.ItemLabel.Localize() ?? "@Report"
+                            FileName = _label
                         })
                     },
                     new ToolbarAligner(),
@@ -380,7 +383,7 @@ internal abstract class ReportPage(ReportMetadata report, ReportGrouping groupin
             Cells = [
                 new SheetCell() { 
                     ColSpan = 6,
-                    Content = _report.ItemLabel.Localize()
+                    Content = _label
                 }
             ]
         };

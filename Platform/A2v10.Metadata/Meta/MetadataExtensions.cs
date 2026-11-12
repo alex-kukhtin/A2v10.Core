@@ -165,6 +165,8 @@ internal static class MetadataExtensions
     // the list of a document: the pair of OperationLabel, the many beside the one
     internal static String DocumentsLabel(String document) => $"@[Documents.{document}]";
     internal static String RecordLabel(this TableMetadata table) => $"@[{table.Model}]";
+    // a report by its folder: the page, the sheet's title, the exported file. 'Reports.' - 'Report.' holds the platform's own keys (Report.Run)
+    internal static String ReportLabel(String report) => $"@[Reports.{report}]";
 
     internal static String TransName(this TableMetadata journal) =>
         journal.Path.Split('/')[^1].KebabToPascal();

@@ -32,9 +32,9 @@ internal sealed record McpJsonFile
 
 /* mcp.json and what the index derives from it without loading an endpoint: the name (second segment),
  * the kind (the folder, through app.json aliases), the roles (the folder's model.json), the 'mcp' key of
- * the folder's metadata.json (parsed for that key and a report's itemLabel alone - domain_info shows its description). Loaded at the
+ * the folder's metadata.json (parsed for that key alone - domain_info shows its description). Loaded at the
  * first tools/list - the schemas of the tools enumerate the entities - and cached with the metadata.
- * Refused here, naming the path: a path that is not two segments, a kind other than catalog/document/report, a report with no itemLabel,
+ * Refused here, naming the path: a path that is not two segments, a kind other than catalog/document/report,
  * no metadata.json in the folder, two equal names. The rest is `a2 meta validate`'s mcp stage.
  */
 internal sealed record McpIndex(IReadOnlyList<McpEntity> Entities)
@@ -61,8 +61,6 @@ internal sealed record McpIndex(IReadOnlyList<McpEntity> Entities)
             if (kind is not (Constants.SchemaNames.Catalog or Constants.SchemaNames.Document or Constants.SchemaNames.Report))
                 throw new InvalidOperationException($"{FileName}: '{path}' is a {kind}; the model is shown catalogs, documents and reports");
             var declared = ReadFile(code, path, schema, table);
-            if (kind == Constants.SchemaNames.Report && String.IsNullOrEmpty(declared["itemLabel"]?.ToString()))
-                throw new InvalidOperationException($"{FileName}: '{path}' writes no 'itemLabel': nothing else tells the model which numbers this report holds");
             entities.Add(new McpEntity(table, $"/{schema}/{table}", schema, table, kind, ReadRoles(code, schema, table),
                 declared["mcp"]?.ToObject<McpDeclarationMetadata>(JsonSerializer.Create(JsonSettings.CamelCaseSerializerSettings))));
         }

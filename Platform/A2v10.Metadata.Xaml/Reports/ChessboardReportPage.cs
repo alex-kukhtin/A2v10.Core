@@ -6,7 +6,7 @@ using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
-internal class ChessboardReportPage(ReportMetadata report, ReportGrouping grouping) : LedgerReportPage(report, grouping)
+internal class ChessboardReportPage(ReportMetadata report, String label, ReportGrouping grouping) : LedgerReportPage(report, label, grouping)
 {
     /* The layout of the hand-written chessboard: code, name over two columns, a column per
      * corresponding account, the row total on a yellow column; the column totals come from the
@@ -18,7 +18,7 @@ internal class ChessboardReportPage(ReportMetadata report, ReportGrouping groupi
 
         return new Page()
         {
-            Title = _report?.ItemLabel.Localize() ?? "@[Chessboard]",
+            Title = _label,
             CssClass = "report-page",
             UserSelect = true,
             Background = BackgroundStyle.White,

@@ -8,7 +8,7 @@ using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
-internal class TurnoverReportPage(ReportMetadata report, ReportGrouping grouping) : ReportPage(report, grouping)
+internal class TurnoverReportPage(ReportMetadata report, String label, ReportGrouping grouping) : ReportPage(report, label, grouping)
 {
     public override UIElement CreatePage()
     {
@@ -118,7 +118,7 @@ internal class TurnoverReportPage(ReportMetadata report, ReportGrouping grouping
 
         var page = new Page()
         {
-            Title = _report?.ItemLabel.Localize() ?? "@[Report]",
+            Title = _label,
             CssClass = "report-page",
             UserSelect = true,
             Background = BackgroundStyle.White,

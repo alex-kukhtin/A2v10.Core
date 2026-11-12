@@ -33,6 +33,4 @@ public sealed record ReportMetadata
     public List<String> Filters { get; init; } = [];
     public List<String> Data { get; init; } = [];
     public ReportDefaultMetadata Defaults { get; init; } = new();
-
-    public String? ItemLabel { get; init; }
 }

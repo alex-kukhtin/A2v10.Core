@@ -7,7 +7,7 @@ using A2v10.Xaml;
 
 namespace A2v10.Metadata;
 
-internal class TrialBalanceReportPage(ReportMetadata report, ReportGrouping grouping) : LedgerReportPage(report, grouping)
+internal class TrialBalanceReportPage(ReportMetadata report, String label, ReportGrouping grouping) : LedgerReportPage(report, label, grouping)
 {
     /* The layout of the hand-written trial balance: code, name over two columns, three debit/credit
      * pairs on gray-banded columns; a flat section, one row per account, the total row above it.
@@ -57,7 +57,7 @@ internal class TrialBalanceReportPage(ReportMetadata report, ReportGrouping grou
 
         return new Page()
         {
-            Title = _report?.ItemLabel.Localize() ?? "@[TrialBalance]",
+            Title = _label,
             CssClass = "report-page",
             UserSelect = true,
             Background = BackgroundStyle.White,

@@ -45,8 +45,7 @@ internal sealed class DomainInfoTool(IReadOnlyList<McpEntity> entities, Database
         {
             if (e.IsReport)
             {
-                var report = await metadata.GetReportEndpointAsync(null, e.Schema, e.Table);
-                list.Add(new McpDomainEntity(e.Name, e.Kind, Label(report.Report.ItemLabel!), null, e.Mcp?.Description));
+                list.Add(new McpDomainEntity(e.Name, e.Kind, Label(MetadataExtensions.ReportLabel(e.Table)), null, e.Mcp?.Description));
                 continue;
             }
             var endpoint = await metadata.GetNormalEndpointAsync(null, e.Schema, e.Table);
