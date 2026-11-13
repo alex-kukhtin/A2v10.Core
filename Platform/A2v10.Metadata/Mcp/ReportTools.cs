@@ -21,8 +21,11 @@ namespace A2v10.Metadata;
 internal sealed record McpMeasure(String Name, String Type,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] String? Description);
 
+// as a field of a record names what fills it (McpField): the family whose records or codes it takes, or the set inline
 internal sealed record McpDimension(String Name, String Type,
-    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] String? Catalog);
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] String? Catalog,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] String? Codeset,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] IReadOnlyList<McpSetValue>? Values);
 
 internal sealed record McpReportInfo(IReadOnlyList<McpDimension> GroupBy, IReadOnlyList<McpDimension> Filter,
     IReadOnlyList<McpMeasure> Measures, String Reading);
@@ -119,7 +122,7 @@ internal sealed class ReportInfoTool(IReadOnlyList<McpEntity> reports, IReadOnly
     public PlatformMcpToolHints Hints => PlatformMcpToolHints.ReadOnly;
     public String Description => """
         What can be asked of a report, and nothing else can: groupBy - what its rows can be broken down by (empty - the rows are fixed); filter - what they can be restricted by; measures - the numbers; reading - what a row of this report holds and how to read it.
-        A dimension has a type; 'catalog' names the catalog whose records it takes: catalog_query finds the ids report_query filters by.
+        A dimension has a type; 'catalog' names the catalog whose records it takes: catalog_query finds the ids report_query filters by; 'codeset' - codeset_query finds the codes; 'values' - the codes themselves.
         A measure has a type; description when the name is not enough.
         """;
     public JsonElement InputSchema => RecordTool.Schema(Constants.SchemaNames.Report, reports);
@@ -132,10 +135,15 @@ internal sealed class ReportInfoTool(IReadOnlyList<McpEntity> reports, IReadOnly
         var builder = await McpReport.BuilderAsync(endpoint, services, metadata);
         var notes = entity.Mcp?.Measures;
 
+        // what is hidden is not named: such a dimension still groups, its records just cannot be looked up
         McpDimension Dimension(String name)
         {
             var column = McpReport.Column(endpoint, name);
-            return new McpDimension(name, McpProjection.TypeName(column), CatalogOf(column));
+            var target = McpProjection.TargetOf(column, path => visible.FirstOrDefault(e => e.Path == path));
+            return new McpDimension(name, McpProjection.TypeName(column),
+                target is { IsCatalog: true } ? target.Name : null,
+                target is { IsCodeset: true } ? target.Name : null,
+                McpProjection.SetValues(column));
         }
         McpMeasure Measure(String name) =>
             new(name, McpProjection.TypeName(McpReport.Column(endpoint, name)), notes?.GetValueOrDefault(name));
@@ -143,12 +151,6 @@ internal sealed class ReportInfoTool(IReadOnlyList<McpEntity> reports, IReadOnly
         return new McpReportInfo([.. endpoint.Report.Groups.Select(Dimension)], [.. endpoint.Report.Filters.Select(Dimension)],
             [.. builder.Measures.Select(Measure)], builder.Reading);
     }
-
-    // what is hidden is not named: such a dimension still groups, its records just cannot be looked up
-    String? CatalogOf(TableColumn column) =>
-        column.RefTable is NormalEndpointMetadata target && visible.FirstOrDefault(e => e.Path == target.Path) is { IsCatalog: true } found
-            ? found.Name
-            : null;
 }
 
 /* The report the screen shows, by its builder and behind its gate: the number cannot differ from the page.

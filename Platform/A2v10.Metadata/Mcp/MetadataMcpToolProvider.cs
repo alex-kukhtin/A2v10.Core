@@ -10,7 +10,7 @@ using A2v10.Infrastructure;
 
 namespace A2v10.Metadata;
 
-/* The tools of the metadata layer: domain_info and the families catalog_*, document_*, report_*. The host registers it with
+/* The tools of the metadata layer: domain_info and the families catalog_*, document_*, report_*, codeset_*. The host registers it with
  * services.UseMcp(Configuration, tools => tools.AddProvider<MetadataMcpToolProvider>()).
  * The tools are created here, per request, for this user: the entities their roles reach are the enums
  * of the schemas. No entity reached - no tool; no entity of a kind reached - no family of that kind.
@@ -32,6 +32,11 @@ public sealed class MetadataMcpToolProvider(DatabaseMetadataProvider metadata, I
             {
                 tools.Add(new ReportInfoTool(entities, visible, metadata, services));
                 tools.Add(new ReportQueryTool(entities, visible, metadata, services, localizer));
+                continue;
+            }
+            if (family.Key == McpEntity.Codeset)
+            {
+                tools.Add(new CodesetQueryTool(entities, metadata, dataService, localizer));
                 continue;
             }
             tools.Add(new RecordInfoTool(family.Key, entities, visible, metadata));

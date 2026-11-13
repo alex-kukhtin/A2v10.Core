@@ -33,6 +33,8 @@ internal sealed record McpField(String Name, String Type)
     public String? Catalog { get; init; }
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public String? Document { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public String? Codeset { get; init; }
     // a reference the model cannot fill: not a listed entity this user reaches
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public Boolean? Unavailable { get; init; }
@@ -60,6 +62,15 @@ internal static class McpProjection
 {
     internal static String TypeName(TableColumn column) => JsonNamingPolicy.CamelCase.ConvertName(column.Type.ToString());
 
+    // the listed entity a reference points at, if this user reaches it - by a record's field and by a report's dimension alike
+    internal static McpEntity? TargetOf(TableColumn column, Func<String, McpEntity?> entityOf) =>
+        column.RefTable is NormalEndpointMetadata ep ? entityOf(ep.Path) : null;
+
+    // the living values of a set, without the filter's 'All' row (its key is the empty string)
+    internal static IReadOnlyList<McpSetValue>? SetValues(TableColumn column) => column.IsSetRef
+        ? [.. column.RefTableCheck.Storage.Values.Where(v => !v.Void && v.Id.Length > 0).Select(v => new McpSetValue(v.Id, v.Name))]
+        : null;
+
     // entityOf: the listed entity this user reaches, by its path; null otherwise
     internal static McpEntityInfo Describe(NormalEndpointMetadata endpoint, McpEntity entity, Func<String, McpEntity?> entityOf)
     {
@@ -86,7 +97,7 @@ internal static class McpProjection
         Boolean? unavailable = null;
         if (column.IsRef && !column.IsSetRef && !readOnly)
         {
-            target = column.RefTable is NormalEndpointMetadata ep ? entityOf(ep.Path) : null;
+            target = TargetOf(column, entityOf);
             unavailable = target == null ? true : null;
         }
         return new McpField(column.Name, TypeName(column))
@@ -97,12 +108,10 @@ internal static class McpProjection
             ReadOnly = readOnly ? true : null,
             Default = Default(column, rules, initials),
             Catalog = target is { IsCatalog: true } ? target.Name : null,
-            Document = target is { IsCatalog: false } ? target.Name : null,
+            Document = target is { IsDocument: true } ? target.Name : null,
+            Codeset = target is { IsCodeset: true } ? target.Name : null,
             Unavailable = unavailable,
-            // the living values, without the filter's 'All' row (its key is the empty string)
-            Values = column.IsSetRef
-                ? [.. column.RefTableCheck.Storage.Values.Where(v => !v.Void && v.Id.Length > 0).Select(v => new McpSetValue(v.Id, v.Name))]
-                : null
+            Values = SetValues(column)
         };
     }
 

@@ -93,6 +93,18 @@ public sealed class DataAt(IDataService _dataService, String _route, Boolean _re
         };
     }
 
+    // what a picker offers, whole: a chart of accounts is a tree read in one go, its closed accounts no candidates
+    public async Task<DataResult> BrowseAsync()
+    {
+        var model = ModelOf(await _dataService.LoadAsync(_kind.Kind, $"{_route}/browse/0", prms => { }, isReload: !_render));
+        return new DataResult()
+        {
+            Data = model.Root,
+            Metadata = model.BuildDataModelMeta(),
+            Model = model
+        };
+    }
+
     public async Task<DataResult> LoadAsync(String id)
     {
         var model = ModelOf(await _dataService.LoadAsync(_kind.Kind, $"{_route}/edit/{id}", prms => { }, isReload: !_render));
@@ -145,10 +157,10 @@ public sealed class DataAt(IDataService _dataService, String _route, Boolean _re
     IDataModel ModelOf(IDataLoadResult result)
         => result.Model ?? throw new InvalidOperationException($"{_route}: the load returned no model");
 
-    // a catalog opens in a dialog, a document on a page
+    // a catalog and a chart of accounts open in a dialog, a document on a page
     static (UrlKind Kind, String Prefix) KindOf(String route) => route.Split('/')[0] switch
     {
-        "catalog" => (UrlKind.Dialog, "_dialog"),
+        "catalog" or "accplan" => (UrlKind.Dialog, "_dialog"),
         "document" => (UrlKind.Page, "_page"),
         var other => throw new NotImplementedException($"Endpoint kind '{other}' in route '{route}'")
     };

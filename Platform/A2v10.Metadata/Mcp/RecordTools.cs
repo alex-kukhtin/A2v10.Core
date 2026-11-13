@@ -147,7 +147,7 @@ internal sealed class RecordInfoTool(String kind, IReadOnlyList<McpEntity> entit
         : "What a document is: its fields, its collections of rows (one collection per kind of row) and the filters of document_query.") + """
 
         A field has a type and may be: required; computed - the platform computes it, never send it; get - the expression a screen computes it by (this - the record or the row): compute it yourself and send the value; readOnly - written by the platform: leave it out of a create, on a save send it back as it came; default - what fills it when it is not sent.
-        A reference names its target in 'catalog' or 'document': the query tool of that family lists its records. 'unavailable' - a reference you cannot fill.
+        A reference names its target in 'catalog', 'document' or 'codeset': the query tool of that family lists its records; a code is the Id. 'unavailable' - a reference you cannot fill.
         An enum lists its values: send the id.
         """ + (kind == Constants.SchemaNames.Catalog ? "" : "\nbasedOn - the documents that can be created from this one: document_create takes this document under its basedOn.");
     public JsonElement InputSchema => RecordTool.Schema(kind, entities);
