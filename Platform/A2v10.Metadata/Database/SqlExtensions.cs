@@ -318,6 +318,9 @@ internal static class SqlExtensions
      * from the spelling would make the meaning of a declaration depend on how it was typed.
      * A reference is spelled by its KEY here - platformid is deliberately absent, because its base
      * is a property of the database and a literal identifier in a file is not a thing we support.
+     * A date is ISO 'yyyy-MM-dd' in the file and 'yyyyMMdd' in SQL - the one form SQL Server reads
+     * alike under any DATEFORMAT; cast, because a select hands the client the type of its expression,
+     * and a bare string would reach the defaults as text.
      */
     public static String SqlLiteral(this TableColumn column, String value)
     {
@@ -331,6 +334,11 @@ internal static class SqlExtensions
                     ? num.ToString(CultureInfo.InvariantCulture)
                     : throw new InvalidOperationException(
                         $"'{value}' is not a number, and column '{column.Name}' is {ti.SqlName}"),
+            "date" or "datetime" =>
+                DateTime.TryParseExact(value, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
+                    ? $"cast(N'{date.ToString("yyyyMMdd", CultureInfo.InvariantCulture)}' as {ti.SqlName})"
+                    : throw new InvalidOperationException(
+                        $"'{value}' is not a date 'yyyy-MM-dd', and column '{column.Name}' is {ti.SqlName}"),
             _ => throw new InvalidOperationException(
                 $"A literal value is not supported for column '{column.Name}' ({column.Type})")
         };

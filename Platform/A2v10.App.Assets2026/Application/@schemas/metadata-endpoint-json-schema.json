@@ -212,7 +212,7 @@
                 "properties": {
                     "source": { "$ref": "#/definitions/initialSource" },
                     "value": {
-                        "description": "For 'Literal' - the scalar itself, in the JSON type of the receiving domain. For every other source - a name or an expression, so a string.",
+                        "description": "For 'Literal' - the scalar itself, in the JSON type of the receiving domain; a date is \"yyyy-MM-dd\". For every other source - a name or an expression, so a string.",
                         "type": [ "string", "number", "boolean", "null" ]
                     }
                 }

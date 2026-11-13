@@ -2,6 +2,8 @@
 
 using System.Text.RegularExpressions;
 
+using Newtonsoft.Json;
+
 using A2v10.Metadata;
 using A2v10.Services;
 
@@ -70,5 +72,30 @@ public partial class InitialRefTests
         Assert.Contains("declare @InitCashAccount nvarchar", sql);
         Assert.DoesNotContain("declare @InitCashAccount platformid", sql);
         Assert.Contains("@MainCashAccount = @InitCashAccount output", sql);
+    }
+
+    // a select hands the client the type of its expression: a bare string would reach the defaults as text
+    [Theory]
+    [InlineData(ColumnType.Date, "cast(N'20261031' as date)")]
+    [InlineData(ColumnType.DateTime, "cast(N'20261031' as datetime)")]
+    public void A_literal_date_is_cast_to_the_column(ColumnType type, String expected) =>
+        Assert.Equal(expected, new TableColumn("Date", type).SqlLiteral("2026-10-31"));
+
+    /* A literal the column cannot hold is refused at the bake - 'a2 meta validate' - and not at the first
+     * 'edit/new': it broke the load of every new record, so neither a screen nor document_create could start one.
+     */
+    [Theory]
+    [InlineData("DueDate", "31.10.2026", "is not a date 'yyyy-MM-dd'")]
+    [InlineData("Agent", "7", "A literal value is not supported")]
+    public async Task A_literal_initial_the_column_cannot_hold_is_refused_at_the_bake(String field, String value, String message)
+    {
+        var storage = (await TestHost.GetService<DatabaseMetadataProvider>().GetNormalEndpointAsync(null, "document", "payment")).Storage;
+        var declaration = JsonConvert.DeserializeObject<DeclarationMetadata>(
+            $$"""{ "initialValues": { "{{field}}": { "source": "literal", "value": "{{value}}" } } }""",
+            JsonSettings.CamelCaseSerializerSettings)!;
+
+        var ex = Assert.Throws<InvalidOperationException>(() => declaration.Bake(storage, new AppPlatformId(typeof(Int64))));
+        Assert.Contains($"initialValues: '{field}'", ex.Message);
+        Assert.Contains(message, ex.Message);
     }
 }

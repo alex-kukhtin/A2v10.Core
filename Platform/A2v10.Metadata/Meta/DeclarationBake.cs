@@ -373,6 +373,16 @@ internal static class DeclarationBake
             if (column.HasSqlAs)
                 throw new InvalidOperationException(
                     $"initialValues: '{name}' has 'sqlAs' - its value is the database's, a new record does not start on one.");
+            // unasked, a literal the column cannot hold passed the bake and broke every new record at its load
+            if (initial.Source == InitialSource.Literal)
+                try
+                {
+                    column.SqlLiteral(initial.Value);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    throw new InvalidOperationException($"initialValues: '{name}' - {ex.Message}", ex);
+                }
             if (initial.Source == InitialSource.Context && !Constants.ContextValues.All.Contains(initial.Value))
                 throw new InvalidOperationException(
                     $"initialValues: '{name}' - '{initial.Value}' is not a value of the context. Known: {String.Join(", ", Constants.ContextValues.All)}");
