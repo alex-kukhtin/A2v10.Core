@@ -82,7 +82,11 @@
 @StateRole.Success=Succeeded
 @StateRole.Failure=Failed
 ;
-; Chart of accounts - AccountType, NormalBalance
+; Chart of accounts - the model Account (the application writes "model": "Account"), AccountType, NormalBalance
+@Account=Account
+@Account.All=All accounts
+@Accounts=Chart of accounts
+@Account.Browse=Select account
 @AccountType=Account type
 @AccountType.Asset=Assets
 @AccountType.Liability=Liabilities
@@ -126,8 +130,6 @@
 @TrialBalance.Start=Opening balance
 @TrialBalance.Turnover=Turnover
 @TrialBalance.End=Closing balance
-@Account=Account
-@Account.All=All accounts
 @Debit=Debit
 @Credit=Credit
 @Chessboard=Account matrix

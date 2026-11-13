@@ -82,7 +82,11 @@
 @StateRole.Success=Успішно
 @StateRole.Failure=Неуспішно
 ;
-; Chart of accounts - AccountType, NormalBalance
+; Chart of accounts - the model Account (the application writes "model": "Account"), AccountType, NormalBalance
+@Account=Рахунок
+@Account.All=Усі рахунки
+@Accounts=План рахунків
+@Account.Browse=Вибір рахунку
 @AccountType=Тип рахунку
 @AccountType.Asset=Активи
 @AccountType.Liability=Зобов'язання
@@ -126,8 +130,6 @@
 @TrialBalance.Start=Сальдо на початок
 @TrialBalance.Turnover=Обороти за період
 @TrialBalance.End=Сальдо на кінець
-@Account=Рахунок
-@Account.All=Усі рахунки
 @Debit=Дебет
 @Credit=Кредит
 @Chessboard=Шахова відомість

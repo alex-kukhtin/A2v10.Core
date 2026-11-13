@@ -82,7 +82,11 @@
 @StateRole.Success=Pomyślnie
 @StateRole.Failure=Niepomyślnie
 ;
-; Chart of accounts - AccountType, NormalBalance
+; Chart of accounts - the model Account (the application writes "model": "Account"), AccountType, NormalBalance
+@Account=Konto
+@Account.All=Wszystkie konta
+@Accounts=Plan kont
+@Account.Browse=Wybór konta
 @AccountType=Typ konta
 @AccountType.Asset=Aktywa
 @AccountType.Liability=Zobowiązania
@@ -126,8 +130,6 @@
 @TrialBalance.Start=Saldo początkowe
 @TrialBalance.Turnover=Obroty
 @TrialBalance.End=Saldo końcowe
-@Account=Konto
-@Account.All=Wszystkie konta
 @Debit=Winien
 @Credit=Ma
 @Chessboard=Zestawienie szachownicowe

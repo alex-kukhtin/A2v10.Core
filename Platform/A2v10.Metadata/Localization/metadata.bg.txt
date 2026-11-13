@@ -82,7 +82,11 @@
 @StateRole.Success=Успешно
 @StateRole.Failure=Неуспешно
 ;
-; Chart of accounts - AccountType, NormalBalance
+; Chart of accounts - the model Account (the application writes "model": "Account"), AccountType, NormalBalance
+@Account=Сметка
+@Account.All=Всички сметки
+@Accounts=Сметкоплан
+@Account.Browse=Избор на сметка
 @AccountType=Вид сметка
 @AccountType.Asset=Активи
 @AccountType.Liability=Пасиви
@@ -126,8 +130,6 @@
 @TrialBalance.Start=Начално салдо
 @TrialBalance.Turnover=Обороти
 @TrialBalance.End=Крайно салдо
-@Account=Сметка
-@Account.All=Всички сметки
 @Debit=Дебит
 @Credit=Кредит
 @Chessboard=Шахматна ведомост

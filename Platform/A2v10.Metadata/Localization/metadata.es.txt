@@ -82,7 +82,11 @@
 @StateRole.Success=Con éxito
 @StateRole.Failure=Fallido
 ;
-; Chart of accounts - AccountType, NormalBalance
+; Chart of accounts - the model Account (the application writes "model": "Account"), AccountType, NormalBalance
+@Account=Cuenta
+@Account.All=Todas las cuentas
+@Accounts=Plan de cuentas
+@Account.Browse=Seleccionar cuenta
 @AccountType=Tipo de cuenta
 @AccountType.Asset=Activos
 @AccountType.Liability=Pasivos
@@ -126,8 +130,6 @@
 @TrialBalance.Start=Saldo inicial
 @TrialBalance.Turnover=Movimientos
 @TrialBalance.End=Saldo final
-@Account=Cuenta
-@Account.All=Todas las cuentas
 @Debit=Debe
 @Credit=Haber
 @Chessboard=Matriz de cuentas
