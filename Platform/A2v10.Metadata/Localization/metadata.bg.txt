@@ -127,6 +127,7 @@
 @TrialBalance.Turnover=Обороти
 @TrialBalance.End=Крайно салдо
 @Account=Сметка
+@Account.All=Всички сметки
 @Debit=Дебит
 @Credit=Кредит
 @Chessboard=Шахматна ведомост

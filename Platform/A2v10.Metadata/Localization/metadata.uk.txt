@@ -127,6 +127,7 @@
 @TrialBalance.Turnover=Обороти за період
 @TrialBalance.End=Сальдо на кінець
 @Account=Рахунок
+@Account.All=Усі рахунки
 @Debit=Дебет
 @Credit=Кредит
 @Chessboard=Шахова відомість

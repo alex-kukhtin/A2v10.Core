@@ -127,6 +127,7 @@
 @TrialBalance.Turnover=Obroty
 @TrialBalance.End=Saldo końcowe
 @Account=Konto
+@Account.All=Wszystkie konta
 @Debit=Winien
 @Credit=Ma
 @Chessboard=Zestawienie szachownicowe

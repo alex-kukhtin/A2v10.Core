@@ -127,6 +127,7 @@
 @TrialBalance.Turnover=Movimientos
 @TrialBalance.End=Saldo final
 @Account=Cuenta
+@Account.All=Todas las cuentas
 @Debit=Debe
 @Credit=Haber
 @Chessboard=Matriz de cuentas

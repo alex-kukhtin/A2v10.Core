@@ -127,6 +127,7 @@
 @TrialBalance.Turnover=Umsatz
 @TrialBalance.End=Endsaldo
 @Account=Konto
+@Account.All=Alle Konten
 @Debit=Soll
 @Credit=Haben
 @Chessboard=Kontenmatrix
