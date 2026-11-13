@@ -279,6 +279,13 @@ internal static class SqlExtensions
     public static String EmptyLiteral(this TableColumn column)
         => column.HasZero ? "0" : "null";
 
+    /* A column of the sent row, as a save writes it. The merge names every column, so the default never
+     * fires: a key the sender left out - a model through MCP, unlike the browser that sends 0 - arrived
+     * as NULL and the save was refused. A zero domain's NULL is its zero, so nothing is guessed.
+     */
+    public static String SentValue(this TableColumn column, String alias)
+        => column.HasZero ? $"isnull({alias}.[{column.Name}], {column.EmptyLiteral()})" : $"{alias}.[{column.Name}]";
+
     /* IS_NULLABLE. Must match whatever CreateTable emits.
      * RowVersion is listed here not because we ask for not null, but because SQL Server
      * applies it itself: timestamp is an exception to the usual nullable default.

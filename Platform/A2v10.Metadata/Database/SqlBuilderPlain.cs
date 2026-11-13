@@ -451,10 +451,10 @@ internal partial class SqlBuilder
 				using @{key} as s
 				on t.[Id] = s.[Id] and t.[{detailsTable.MasterField}] = @Id
 				when matched then update set
-				    {String.Join(',', updateFields.Select(f => $"t.[{f.Name}] = s.[{f.Name}]"))}
+				    {String.Join(',', updateFields.Select(f => $"t.[{f.Name}] = {f.SentValue("s")}"))}
 				when not matched then insert
 				    ([{detailsTable.MasterField}], {String.Join(',', updateFields.Select(f => $"[{f.Name}]"))}) values
-				    (@Id, {String.Join(',', updateFields.Select(f => $"s.[{f.Name}]"))})
+				    (@Id, {String.Join(',', updateFields.Select(f => f.SentValue("s")))})
 				when not matched by source and t.[{detailsTable.MasterField}] = @Id then delete;
 				""";
         }
@@ -488,10 +488,10 @@ internal partial class SqlBuilder
 				using ST as s
 				on t.[Id] = s.[Id] and t.[{detailsTable.MasterField}] = @Id
 				when matched then update set
-					{String.Join(',', updateFields.Select(f => $"t.[{f.Name}] = s.[{f.Name}]"))}
+					{String.Join(',', updateFields.Select(f => $"t.[{f.Name}] = {f.SentValue("s")}"))}
 				when not matched then insert
 					([{detailsTable.MasterField}], [{kindField.Name}], {String.Join(',', updateFields.Select(f => $"[{f.Name}]"))}) values
-					(@Id, s.[$Kind], {String.Join(',', updateFields.Select(f => $"s.[{f.Name}]"))})
+					(@Id, s.[$Kind], {String.Join(',', updateFields.Select(f => f.SentValue("s")))})
 				when not matched by source and t.[{detailsTable.MasterField}] = @Id and t.[{kindField.Name}] in ({declaredKinds}) then delete;
 				""";
         }
@@ -662,9 +662,10 @@ internal partial class SqlBuilder
             var keyType = Table.KeyColumn.SqlDataType();
 
             var updatedFields = Table.AllColumns(c => Endpoint.IsHeaderSaved(c))
-                .Select(c => $"t.[{c.Name}] = s.[{c.Name}]");
-            var insertedFields = Table.AllColumns(c => c.IsFieldInserted()).Select(c => $"[{c.Name}]").ToList();
-            List<String> insertedValues = [.. insertedFields];
+                .Select(c => $"t.[{c.Name}] = {c.SentValue("s")}");
+            var inserted = Table.AllColumns(c => c.IsFieldInserted()).ToList();
+            var insertedFields = inserted.Select(c => $"[{c.Name}]").ToList();
+            List<String> insertedValues = [.. inserted.Select(c => c.SentValue("s"))];
             /* A new record is created and modified by the same hand, so both stamps are written on
              * insert: left to its default, the modification stamp would name the system user.
              */

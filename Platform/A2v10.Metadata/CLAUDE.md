@@ -128,7 +128,7 @@ A column is `NOT NULL DEFAULT 0` exactly when its domain has a zero — one pred
 - **None: a key, a code, a reference, a date, a string** (`Integer`, `BigInt`, `Ref`, …). Their 'nothing' is an absence, carried by NULL.
 - **By meaning, not by the client.** The client sends 0 for every number, but also '' and a zero date — asked that way, NOT NULL would spread to everything.
 - **`Factor` is 0, not its neutral 1.** A rate of 1 in a new document is the author's (`initialValues`); DEFAULT 1 would reach only an insert past the platform, since the client builds a row with 0 and the merge writes every column.
-- **A statement that names such a column with nothing for it writes the zero** (`EmptyLiteral`): the ledger leg that does not name a measure, the seed row that does not name a column. NULL there is refused.
+- **A statement that names such a column with nothing for it writes the zero** (`EmptyLiteral`): the ledger leg that does not name a measure, the seed row that does not name a column, the save of a record or row that left the key out (`SentValue` - the browser sends 0, a model through MCP does not). NULL there is refused.
 - **No `Bit`, no `Number`.** `Bit` was `Boolean` spelled by SQL; `Number` never had an SQL type, and `Decimal` is the number without semantics.
 
 ## Posting by procedure: a box with two ports

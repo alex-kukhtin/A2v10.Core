@@ -46,4 +46,19 @@ public class SaveTransactionTests
         Assert.True(commit < select, "the select reads what was committed");
         Assert.Equal(1, sql.Split("begin tran;").Length - 1);
     }
+
+    /* A row sent without a magnitude - a model through MCP leaves the key out - is its zero: the merge
+     * names the column, so its default never fires, and NULL into a zero domain was refused. An absence
+     * that NULL carries honestly - a reference - is written as sent.
+     */
+    [Fact]
+    public async Task A_magnitude_sent_empty_is_written_as_its_zero()
+    {
+        var sql = await SaveTextAsync("/document/payment/edit/new");
+
+        Assert.Contains("t.[Sum] = isnull(s.[Sum], 0)", sql);
+        Assert.Contains("t.[AccDt] = s.[AccDt]", sql);
+        var insert = sql[sql.IndexOf("[AccDt],[AccCt],[Sum]) values")..];
+        Assert.Contains("s.[AccDt],s.[AccCt],isnull(s.[Sum], 0))", insert);
+    }
 }
