@@ -131,3 +131,11 @@
 @Credit=Кредит
 @Chessboard=Шахматная ведомость
 @Chessboard.Header=С дебета в кредит счетов
+;
+; MCP - the consent screen of a client connecting to /mcp (A2v10.Mcp)
+@OAuthConsentPrompt=Запрос доступа
+@OAuthConsentText=запрашивает доступ к приложению от вашего имени — с вашими правами
+@OAuthConsentRedirect=Доступ будет передан на
+@OAuthConsentLoopback=Это программа на вашем компьютере. Разрешайте, только если только что подключили её сами
+@OAuthAllow=Разрешить
+@OAuthDeny=Отказать

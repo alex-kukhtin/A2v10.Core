@@ -131,3 +131,11 @@
 @Credit=Ma
 @Chessboard=Zestawienie szachownicowe
 @Chessboard.Header=Ze strony Winien na stronę Ma kont
+;
+; MCP - the consent screen of a client connecting to /mcp (A2v10.Mcp)
+@OAuthConsentPrompt=Prośba o dostęp
+@OAuthConsentText=prosi o dostęp do aplikacji w Twoim imieniu, z Twoimi uprawnieniami
+@OAuthConsentRedirect=Dostęp zostanie przekazany do
+@OAuthConsentLoopback=To program na Twoim komputerze. Zezwól tylko wtedy, gdy to Ty właśnie go podłączasz
+@OAuthAllow=Zezwól
+@OAuthDeny=Odmów

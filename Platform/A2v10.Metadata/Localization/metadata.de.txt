@@ -131,3 +131,11 @@
 @Credit=Haben
 @Chessboard=Kontenmatrix
 @Chessboard.Header=Aus dem Soll ins Haben der Konten
+;
+; MCP - the consent screen of a client connecting to /mcp (A2v10.Mcp)
+@OAuthConsentPrompt=Zugriffsanfrage
+@OAuthConsentText=fordert in Ihrem Namen Zugriff auf die Anwendung an, mit Ihren Rechten
+@OAuthConsentRedirect=Der Zugriff wird übergeben an
+@OAuthConsentLoopback=Dies ist ein Programm auf Ihrem Computer. Erlauben Sie es nur, wenn Sie es gerade selbst verbunden haben
+@OAuthAllow=Erlauben
+@OAuthDeny=Ablehnen

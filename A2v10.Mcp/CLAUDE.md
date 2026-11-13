@@ -182,7 +182,7 @@ Pieces outside this project:
 - `Identity/A2v10.Identity.Core`: `IOAuthConsent.cs`; `AppUserStore.RotateTokenAsync`.
 - `Identity/A2v10.Web.Identity.UI`: `AccountController.Consent` GET/POST, `Views/Account/Consent.cshtml`, `ConsentViewModel`; the `TwoFactor` returnUrl fix.
 - `Platform/SqlScripts/a2v10_security_simple.sql`: `a2security.RotateToken` (module version 8668).
-- Localization `@OAuthConsent*`, `@OAuthAllow`, `@OAuthDeny` in `Platform/A2v10.Web.Assets/wwwroot/localization` and the copy in `Web/A2v10.Core.Web.Site`.
+- Localization `@OAuthConsent*`, `@OAuthAllow`, `@OAuthDeny` in `Platform/A2v10.Metadata/Localization/metadata.*.txt` (8675; before it the screen showed the bare keys).
 - `Web/A2v10.Core.Web.Site`: project reference, `services.UseMcp(Configuration, tools => tools.Add<WhoAmITool>())`, `Mcp:PublicUrl`; `TestServices/WhoAmITool.cs`.
 - `Platform/A2v10.Infrastructure/IPlatformMcpTool.cs`: `IPlatformMcpTool`, `IPlatformMcpToolProvider`. Infrastructure and everything that depends on it went to 10.1.8668 (`dependency.txt`).
 
