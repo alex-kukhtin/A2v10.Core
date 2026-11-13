@@ -95,7 +95,10 @@ internal sealed partial class Program
             .AddSingleton<IAppVersion, PlatformAppVersion>()
             .AddScoped<ICurrentUser, CurrentUser>()
             .AddSingleton<ISqlQueryTextProvider, NullSqlQueryTextProvider>()
-            .AddScoped<ILocalizer, EmptyLocalizer>()
+            // the server's dictionaries, not an empty one: 'meta validate' checks keys against them
+            .AddScoped<ILocalizer, WebLocalizer>()
+            .AddSingleton<ILocalizerDictionary, WebLocalizerDictionary>()
+            .AddSingleton<IWebHostFilesProvider, HostFilesProvider>()
             .AddSingleton<IProfiler, NullProfiler>()
             .AddScoped<IApplicationHost, WebApplicationHost>()
             .AddScoped<IDataScripter, VueDataScripter>()

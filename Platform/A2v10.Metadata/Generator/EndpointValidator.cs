@@ -33,12 +33,13 @@ public sealed record EndpointValidation(
  * result exists to make.
  */
 public sealed class EndpointValidator(DatabaseMetadataProvider _metadataProvider,
-    IAppCodeProvider _codeProvider, IServiceProvider _serviceProvider)
+    IAppCodeProvider _codeProvider, IServiceProvider _serviceProvider, ILocalizer _localizer)
 {
     private const String Declaration = "declaration";
     private const String Schema = "schema";
     private const String Screen = "screen";
     private const String Print = "print";
+    private const String Localization = "localization";
 
     private const String Passed = "passed";
     private const String Failed = "failed";
@@ -119,7 +120,8 @@ public sealed class EndpointValidator(DatabaseMetadataProvider _metadataProvider
             [
                 (Schema, () => Schemas(files!)),
                 (Screen, () => Screens(normal, platformId)),
-                (Print, () => Prints(normal))
+                (Print, () => Prints(normal)),
+                (Localization, () => Localize(normal.Storage))
             ],
             // a report prints from the page it renders, so it has no blank of its own to resolve
             ReportEndpointMetadata report =>
@@ -275,6 +277,33 @@ public sealed class EndpointValidator(DatabaseMetadataProvider _metadataProvider
             var blank = PrintRequest.BlankOf(_codeProvider, endpoint, form.Path);
             // built, never run: the gate is not what is checked here
             new PrintSqlBuilder(endpoint.Storage, PrintModel.Parse(blank.Text), head: String.Empty).Build();
+        }
+    }
+
+    /* The keys spelled from the model - the record's title, the list's tab, the picker, a facet's
+     * placeholder (MetadataExtensions.RecordLabel and its neighbours) - against the dictionary they
+     * are looked up in, which compares ordinally. A miss is silent: the screen and domain_info show
+     * the key itself. The usual one is a default: 'bankaccount' gives 'Bankaccount', while the
+     * dictionary was written as 'BankAccount'.
+     *
+     * Only the name spelled one way nowhere and another way somewhere is refused. An untranslated
+     * endpoint has no such name and is not a finding; a name present in both spellings is read
+     * correctly, whatever the second one is for.
+     */
+    private void Localize(TableMetadata table)
+    {
+        var segments = _localizer.Dictionary.Keys
+            .SelectMany(k => k.TrimStart('@').Split('.'))
+            .ToHashSet(StringComparer.Ordinal);
+        foreach (var name in new[] { table.Model, table.CollectionName })
+        {
+            if (segments.Contains(name))
+                continue;
+            var other = segments.FirstOrDefault(s => String.Equals(s, name, StringComparison.OrdinalIgnoreCase));
+            if (other != null)
+                throw new InvalidOperationException(
+                    $"No localization key spells '{name}', the dictionary has '{other}': keys are case-sensitive, so @[{name}] shows as the key. " +
+                    $"'model' is '{table.Model}' - the folder name in PascalCase unless metadata.json writes it; write the model as the dictionary spells it.");
         }
     }
 }

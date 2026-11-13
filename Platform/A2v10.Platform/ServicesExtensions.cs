@@ -148,13 +148,7 @@ public static class ServicesExtensions
 			endpoints.MapHub<DefaultHub>("/_userhub");
 		});
 
-		var cultureInfo = new CultureInfo("uk-UA");
-		if (configuration != null)
-		{
-			var ci = configuration.GetValue<String>("Globalization:Locale");
-			if (!String.IsNullOrEmpty(ci))
-				cultureInfo = new CultureInfo(ci);
-		}
+		var cultureInfo = new CultureInfo(AppLocale.Of(configuration));
 
 		CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
 		CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;

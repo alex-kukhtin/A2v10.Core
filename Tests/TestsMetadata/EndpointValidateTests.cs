@@ -15,14 +15,15 @@ namespace A2v10.Metadata.Tests;
  */
 public class EndpointValidateTests
 {
-    static Task<EndpointValidation> ValidateAsync(String endpoint) =>
+    static Task<EndpointValidation> ValidateAsync(String endpoint, ILocalizer? localizer = null) =>
         new EndpointValidator(
             TestHost.GetService<DatabaseMetadataProvider>(),
             TestHost.GetService<IAppCodeProvider>(),
-            TestHost.Services).ValidateAsync(endpoint);
+            TestHost.Services,
+            localizer ?? TestHost.GetService<ILocalizer>()).ValidateAsync(endpoint);
 
-    static Dictionary<String, String> Checks(String declaration, String schema, String screen, String print) =>
-        new() { ["declaration"] = declaration, ["schema"] = schema, ["screen"] = screen, ["print"] = print };
+    static Dictionary<String, String> Checks(String declaration, String schema, String screen, String print, String localization) =>
+        new() { ["declaration"] = declaration, ["schema"] = schema, ["screen"] = screen, ["print"] = print, ["localization"] = localization };
 
     // a document with two blanks: all three stages have something to build, none of them vacuous
     [Fact]
@@ -31,7 +32,7 @@ public class EndpointValidateTests
         var result = await ValidateAsync("/document/waybillin");
 
         Assert.Null(result.Error);
-        Assert.Equal(Checks("passed", "passed", "passed", "passed"), result.Checks);
+        Assert.Equal(Checks("passed", "passed", "passed", "passed", "passed"), result.Checks);
     }
 
     /* Two keys and not three: which stages exist follows the endpoint's TYPE, and a report has no
@@ -79,7 +80,7 @@ public class EndpointValidateTests
     {
         var result = await ValidateAsync("/catalog/noformkind");
 
-        Assert.Equal(Checks("passed", "failed", "unknown", "unknown"), result.Checks);
+        Assert.Equal(Checks("passed", "failed", "unknown", "unknown", "unknown"), result.Checks);
         Assert.Contains("forms.edit: 'is' is required here", result.Error);
     }
 
@@ -94,5 +95,44 @@ public class EndpointValidateTests
 
         Assert.Equal(new Dictionary<String, String>() { ["declaration"] = "failed" }, result.Checks);
         Assert.False(String.IsNullOrEmpty(result.Error));
+    }
+
+    /* The keys spelled from the model against the dictionary, compared as the localizer compares -
+     * ordinally. catalog/linkowner writes no model, so the folder gives 'Linkowner'; a dictionary
+     * written as 'LinkOwner' leaves the title showing the key.
+     */
+    [Fact]
+    public async Task A_model_the_dictionary_spells_in_another_case_is_a_finding()
+    {
+        var result = await ValidateAsync("/catalog/linkowner",
+            new DictionaryLocalizer("@LinkOwner", "@LinkOwners", "@LinkOwner.Browse"));
+
+        Assert.Equal("failed", result.Checks["localization"]);
+        Assert.Contains("'Linkowner'", result.Error);
+        Assert.Contains("'LinkOwner'", result.Error);
+    }
+
+    /* Refused is only the name spelled one way nowhere and another way somewhere. Untranslated is
+     * not a finding - the dictionary simply lacks the endpoint - and a second spelling beside the
+     * one the keys read takes nothing away from the screen.
+     */
+    [Theory]
+    [InlineData]
+    [InlineData("@Linkowner", "@Linkowners")]
+    [InlineData("@Linkowner", "@Linkowners", "@LinkOwner")]
+    public async Task Untranslated_or_spelled_as_read_passes(params String[] keys)
+    {
+        var result = await ValidateAsync("/catalog/linkowner", new DictionaryLocalizer(keys));
+
+        Assert.Null(result.Error);
+        Assert.Equal("passed", result.Checks["localization"]);
+    }
+
+    private sealed class DictionaryLocalizer(params String[] keys) : ILocalizer
+    {
+        public IDictionary<String, String> Dictionary { get; } = keys.ToDictionary(k => k, k => k);
+        public String? this[String? index] => index;
+        public String? Localize(String? locale, String? content, Boolean replaceNewLine = true) => content;
+        public String? Localize(String? content) => content;
     }
 }

@@ -21,7 +21,7 @@ internal sealed class ValidateCommand(IServiceProvider services)
     internal Command Build()
     {
         var cmd = new Command("validate",
-            "Validate one endpoint: what it declares, the screens it renders and the print blanks it declares. " +
+            "Validate one endpoint: what it declares, the screens it renders, the print blanks it declares and the localization keys spelled from its model. " +
             "Which checks exist follows the endpoint's type and the result lists every one of them; they are " +
             "chained and stop at the first error. Nothing is written and the database is not read. " +
             "There is no application-wide form: validate the endpoint you just edited.");

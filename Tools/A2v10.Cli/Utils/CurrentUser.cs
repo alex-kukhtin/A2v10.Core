@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.Dynamic;
 
+using Microsoft.Extensions.Configuration;
+
 using A2v10.Infrastructure;
+using A2v10.Platform.Web;
 
 namespace A2v10.Cli;
 
@@ -37,19 +40,14 @@ public record UserState: IUserState
     public IEnumerable<Guid> Modules => [];
 }
 
-public record UserLocale : IUserLocale
-{
-    public string Locale => "en-US";
-    public string Language => "en";
-}
-
-internal record CurrentUser : ICurrentUser
+// in the application's locale: validate looks keys up in the dictionary a page reads
+internal record CurrentUser(IConfiguration Configuration) : ICurrentUser
 {
     public IUserIdentity Identity => new UserIdentity();
 
     public IUserState State => new UserState();
 
-    public IUserLocale Locale => new UserLocale();
+    public IUserLocale Locale => new UserLocale(AppLocale.Of(Configuration));
 
     public void AddModules(IEnumerable<Guid> modules)
     {

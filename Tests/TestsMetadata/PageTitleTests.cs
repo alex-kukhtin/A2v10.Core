@@ -31,7 +31,7 @@ public class PageTitleTests
     public async Task Every_generated_page_has_a_title()
     {
         var provider = TestHost.GetService<DatabaseMetadataProvider>();
-        var validator = new EndpointValidator(provider, TestHost.GetService<IAppCodeProvider>(), TestHost.Services);
+        var validator = new EndpointValidator(provider, TestHost.GetService<IAppCodeProvider>(), TestHost.Services, TestHost.GetService<ILocalizer>());
 
         var pages = 0;
         var untitled = new List<String>();

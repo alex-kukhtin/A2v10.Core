@@ -27,7 +27,7 @@ public class XamlBeamTests
         var provider = TestHost.GetService<DatabaseMetadataProvider>();
         var reader = TestHost.GetService<IXamlPartProvider>();
         // what validate refuses is out of scope: TestApp keeps negative fixtures for the validator's own tests
-        var validator = new EndpointValidator(provider, TestHost.GetService<IAppCodeProvider>(), TestHost.Services);
+        var validator = new EndpointValidator(provider, TestHost.GetService<IAppCodeProvider>(), TestHost.Services, TestHost.GetService<ILocalizer>());
         var platformId = await provider.DeclaredPlatformIdAsync()
             ?? throw new InvalidOperationException("TestApp/app.json declares no platformid");
 
