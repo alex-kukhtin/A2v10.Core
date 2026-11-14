@@ -251,9 +251,7 @@ internal class RefMapBuilder
         sb.AppendJoin(Environment.NewLine, profUser.Select(p => $"declare @Init{p.Key} {p.Column.SqlDataType()};"));
         sb.AppendLine();
         sb.AppendLine();
-        sb.Append("exec usr.GetProfilePreferences @UserId = @UserId, ");
-        sb.AppendJoin(',', profUser.Select(p => $"@{p.Slot} = @Init{p.Key} output"));
-        sb.AppendLine(";");
+        sb.AppendLine(SqlExtensions.ProfileReadSql(profUser.Select(p => ($"@Init{p.Key}", p.Slot))));
         sb.AppendLine();
         // one insert a key: two of one target share a slot
         sb.AppendJoin(Environment.NewLine, profUser.Select(p => $"insert into @map([{SlotOf(p.Column)}]) values (@Init{p.Key});"));

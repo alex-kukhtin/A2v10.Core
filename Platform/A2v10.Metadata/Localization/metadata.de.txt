@@ -13,6 +13,18 @@
 @Admin.Error.SelfAdmin=Sie können sich die Administratorrolle nicht selbst entziehen
 @Admin.BoundaryAll=Nichts ausgewählt bedeutet das ganze Netz
 ;
+; Profile (/_profile)
+@Profile.Title=Benutzerprofil
+@Profile.Personal=Personalisierung
+@Profile.Defaults=Standardwerte
+@Profile.Language=Sprache
+@Profile.Theme=Design
+@Profile.Theme.Light=Hell
+@Profile.Theme.Dark=Dunkel
+@Profile.Theme.Auto=Wie im System
+@Profile.Change=Ändern
+@Profile.Update=Übernehmen
+;
 ; Roles
 @Role.Admin=Administrator
 @Role.Everyone=Alle Benutzer

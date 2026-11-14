@@ -1,0 +1,11 @@
+{
+	"$schema": "../../../../Platform/A2v10.App.Assets2026/Application/@schemas/metadata-profile-json-schema.json#",
+	"description": "The slots the documents and the reports start on (waybill*, payment, trialbyprofile); a set's slot for the page (ProfilePageTests).",
+	"fields": {
+		"Store": { "type": "Ref", "target": "/catalog/store" },
+		"Agent": { "type": "Ref", "target": "/catalog/agent" },
+		"Company": { "type": "Company", "target": "/catalog/company" },
+		"MainCashAccount": { "type": "Account", "target": "/accplan/national" },
+		"VatRate": { "type": "Enum", "target": "/enum/vatrate" }
+	}
+}

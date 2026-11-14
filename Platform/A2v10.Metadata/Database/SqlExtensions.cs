@@ -1,9 +1,11 @@
 ﻿// Copyright © 2025-2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Globalization;
+using System.Linq;
 
 using A2v10.Data.Core.Extensions;
 
@@ -149,6 +151,13 @@ internal static class SqlExtensions
         },
         var source => throw new InvalidOperationException($"Invalid initial source {source}")
     };
+
+    /* The user's profile slots into declared variables - one statement, written here for every reader:
+     * the birth of a record (RefMapBuilder) and the start of a report's filter. A user who never saved the
+     * profile has no row, and the variables stay as declared: null.
+     */
+    internal static String ProfileReadSql(IEnumerable<(String Variable, String Slot)> slots) =>
+        $"select {String.Join(", ", slots.Select(s => $"{s.Variable} = [{s.Slot}]"))} from {TableMetadataDefaults.ProfileSqlTable} where [{Constants.FieldNames.Id}] = @UserId;";
 
     /* A reference as it arrives from the browser, a parameter of the type of its column - the key it
      * points at (ToSqlDbTypeInfo): platformid in the base, a login's bigint, a code as a string. Empty

@@ -43,6 +43,14 @@ internal partial class ModelBuilderFactory(
                 return new UserEndpointBuilder(_serviceProvider, users, platformUrl, dataSource);
             case UserAdminEndpointMetadata user:
                 return new UserAdminBuilder(_serviceProvider, user, platformUrl, dataSource, platformId);
+            case ProfilePageEndpointMetadata profilePage:
+                return new ProfilePageBuilder(_serviceProvider, profilePage, platformUrl, dataSource, platformId);
+            /* The file declares the slots; a row is the current user's and is read and written on
+             * /_profile only. Served here, '/profile/edit/<id>' would open anyone's row.
+             */
+            case NormalEndpointMetadata { Storage.Kind: TableKind.Profile }:
+                throw new InvalidOperationException(
+                    $"'{endpoint.Path}' declares the profile and is no page: the profile is '/{Constants.SchemaNames.ProfilePage}'");
             case NormalEndpointMetadata normal:
                 return new BaseModelBuilder(_serviceProvider, new BuilderDescriptor()
                 {

@@ -19,6 +19,7 @@ public static class ServicesExtensions
 			opts.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 		});
 		builder.Services.AddScoped<IAppUserAdmin, AppUserAdmin>();
+		builder.Services.AddScoped<IAppUserProfile, AppUserProfile>();
 		return builder;
 	}
 }

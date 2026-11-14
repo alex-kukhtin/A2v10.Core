@@ -22,7 +22,7 @@ namespace A2v10.Platform.Web.Controllers;
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 public class MainController(IDataService dataService, IOptions<AppOptions> appOptions,
 	IApplicationTheme appTheme, IAppCodeProvider codeProvider, IEnumerable<ILicenseManager> licenseManagers,
-	ICurrentUser currentUser) : Controller
+	ICurrentUser currentUser, IAppRuntimeBuilder runtimeBuilder) : Controller
 {
 	private readonly AppOptions _appOptions = appOptions.Value;
 	private readonly IDataService _dataService = dataService;
@@ -170,9 +170,10 @@ public class MainController(IDataService dataService, IOptions<AppOptions> appOp
 	{
 		return _codeProvider.IsFileExists("settings/model.json");
 	}
+	// a metadata application serves /_profile itself (ProfilePageEndpointMetadata); a model.json written there wins
 	private Boolean HasProfile()
 	{
-		return _codeProvider.IsFileExists("_profile/model.json");
+		return runtimeBuilder.IsMetaSupported || _codeProvider.IsFileExists("_profile/model.json");
 	}
 	public Boolean IsStaticFile()
 	{

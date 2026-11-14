@@ -13,6 +13,18 @@
 @Admin.Error.SelfAdmin=Не можете да премахнете от себе си ролята на администратор
 @Admin.BoundaryAll=Нищо не е отметнато — цялата мрежа
 ;
+; Profile (/_profile)
+@Profile.Title=Потребителски профил
+@Profile.Personal=Персонализация
+@Profile.Defaults=Стойности по подразбиране
+@Profile.Language=Език
+@Profile.Theme=Тема
+@Profile.Theme.Light=Светла
+@Profile.Theme.Dark=Тъмна
+@Profile.Theme.Auto=Като в системата
+@Profile.Change=Промяна
+@Profile.Update=Обнови
+;
 ; Roles
 @Role.Admin=Администратор
 @Role.Everyone=Всички потребители

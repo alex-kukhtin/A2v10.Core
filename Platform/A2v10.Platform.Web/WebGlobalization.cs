@@ -30,6 +30,8 @@ public class WebGlobalization : IGlobalization
             .ToDictionary(k => k[..2], v => v );
     }
 
+    public IReadOnlyCollection<String> AvailableLocales => _availableLanguages.Values;
+
     public String? IsAvailable(String lang)
     {
         if (_availableLanguages.TryGetValue(lang, out String? realValue))

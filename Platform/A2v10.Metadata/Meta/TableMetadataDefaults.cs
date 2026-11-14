@@ -53,6 +53,11 @@ internal static class TableMetadataDefaults
     public const String AutonumModel = "Autonum";
     public const String AutonumTable = "Autonums";
 
+    // the profile: one table, read by every 'source: profile' and written by the profile page
+    public const String ProfileModel = "Profile";
+    public const String ProfileTable = "Profile";
+    public static String ProfileSqlTable => $"{Constants.SchemaNames.Profile.ToSqlSchema()}.[{ProfileTable}]";
+
     public static String AutonumProcedureName() =>
         $"{Constants.SchemaNames.Document.ToSqlSchema()}.[{AutonumModel}.NextValue]";
 

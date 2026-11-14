@@ -23,8 +23,8 @@ public abstract record AdminEndpointMetadata : EndpointMetadata
     };
 }
 
-/* The users: the list, the card (profile and roles), a new user, a password. The account itself is
- * Identity's (IAppUserAdmin); this screen writes the profile and the roles.
+/* The users: the list, the card (name, phone, memo and roles), a new user, a password. The account itself is
+ * Identity's (IAppUserAdmin); this screen writes the card and the roles. The user's own page is /_profile.
  */
 public sealed record UserAdminEndpointMetadata : AdminEndpointMetadata
 {

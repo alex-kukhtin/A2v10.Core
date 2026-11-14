@@ -29,7 +29,7 @@ public class WebApplicationTheme(IWebHostEnvironment _webHostEnvironment, IOptio
     public String HtmlCssClass => IsDark ? "dark" : String.Empty;
 
     public Boolean IsDarkThemeEnabled => !String.IsNullOrEmpty(_appOptions.DarkTheme);
-    public Boolean IsDark => _currentUser.Identity.Theme == "D";
+    public Boolean IsDark => _currentUser.Identity.Theme == UserTheme.Dark;
 
 
     public String MakeTheme()
@@ -61,7 +61,7 @@ public class WebApplicationTheme(IWebHostEnvironment _webHostEnvironment, IOptio
 
     #endregion
 
-    Boolean IsAuto => IsDarkThemeEnabled && (_currentUser.Identity.Id == null || _currentUser.Identity.Theme == "A");
+    Boolean IsAuto => IsDarkThemeEnabled && (_currentUser.Identity.Id == null || _currentUser.Identity.Theme == UserTheme.Auto);
 
     (String theme, String colorScheme) UserColorScheme(String theme, String media = "")
     {

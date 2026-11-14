@@ -1,4 +1,4 @@
-// Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
 
 using System;
 using System.Dynamic;
@@ -26,6 +26,7 @@ internal class XamlPageRenderer(IServiceProvider _serviceProvider, DatabaseMetad
             OperationEndpointMetadata => new XamlOperationsBuilder().RenderBrowseDialog(),
             UserEndpointMetadata => new XamlOperationsBuilder().RenderUsersDialog(),
             UserAdminEndpointMetadata users => await UsersPageAsync(users, request),
+            ProfilePageEndpointMetadata => await ProfilePageAsync(request),
             var other => throw new NotSupportedException($"{other.Path}: no page for {other.GetType().Name}")
         };
 
@@ -66,6 +67,14 @@ internal class XamlPageRenderer(IServiceProvider _serviceProvider, DatabaseMetad
             default:
                 throw new NotSupportedException($"{endpoint.Path}: no pages to build for {endpoint.GetType().Name}");
         }
+    }
+
+    // the slots are the profile's card editors, bound under its model as the load sends them (SqlBuilderProfile)
+    async Task<UIElement> ProfilePageAsync(PageRequest request)
+    {
+        var profile = await _metadataProvider.ProfileEndpointAsync(request.DataSource);
+        var slots = profile == null ? [] : new XamlBuilder(profile, request.PlatformUrl).SlotEditors();
+        return new XamlProfileBuilder(_serviceProvider).Page(slots);
     }
 
     // the action is checked by the builder before the load; the card has a tab per dimension of app.json 'boundary'

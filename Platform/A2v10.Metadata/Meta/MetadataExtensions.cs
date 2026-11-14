@@ -67,6 +67,7 @@ internal static class MetadataExtensions
         [Constants.SchemaNames.State] = TableKind.State,
         [Constants.SchemaNames.AccPlan] = TableKind.AccPlan,
         [Constants.SchemaNames.Autonum] = TableKind.Autonum,
+        [Constants.SchemaNames.Profile] = TableKind.Profile,
         [Constants.SchemaNames.Report] = null
     };
 
@@ -92,6 +93,7 @@ internal static class MetadataExtensions
             Constants.SchemaNames.State => "state",
             Constants.SchemaNames.AccPlan => "acc",
             Constants.SchemaNames.Ledger => "led",
+            Constants.SchemaNames.Profile => "usr",
             _ => folder
         };
     }

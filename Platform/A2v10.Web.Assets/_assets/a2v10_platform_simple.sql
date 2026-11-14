@@ -215,7 +215,7 @@ as
 		LockoutEnabled, AccessFailedCount, LockoutEndDateUtc, TwoFactorEnabled, [Locale],
 		PersonName, Memo, Void, LastLoginDate, LastLoginHost, EmailConfirmed,
 		PhoneNumberConfirmed, RegisterHost, ChangePasswordEnabled,
-		SecurityStamp2, PasswordHash2, SetPassword, IsBlocked, AuthenticatorKey,
+		SecurityStamp2, PasswordHash2, SetPassword, IsBlocked, AuthenticatorKey, Theme,
 		[Roles] = (
 			select string_agg(ur.[Role], N',') within group (order by ur.[Role])
 			from a2security.UserRoles ur

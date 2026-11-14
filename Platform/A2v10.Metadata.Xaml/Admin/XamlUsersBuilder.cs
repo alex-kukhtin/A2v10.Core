@@ -147,7 +147,7 @@ internal class XamlUsersBuilder(String _path)
         };
     }
 
-    /* The card: the profile, the roles and the boundary - a tab per dimension of app.json 'boundary'.
+    /* The card: the name and phone, the roles and the boundary - a tab per dimension of app.json 'boundary'.
      * Nothing that acts on the account: the password and the block are commands of the list.
      */
     public Dialog EditDialog(IReadOnlyList<BoundaryDimension> boundary)

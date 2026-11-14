@@ -13,6 +13,18 @@
 @Admin.Error.SelfAdmin=No puede quitarse a sí mismo el rol de administrador
 @Admin.BoundaryAll=Nada marcado significa toda la red
 ;
+; Profile (/_profile)
+@Profile.Title=Perfil de usuario
+@Profile.Personal=Personalización
+@Profile.Defaults=Valores predeterminados
+@Profile.Language=Idioma
+@Profile.Theme=Tema
+@Profile.Theme.Light=Claro
+@Profile.Theme.Dark=Oscuro
+@Profile.Theme.Auto=Como en el sistema
+@Profile.Change=Cambiar
+@Profile.Update=Actualizar
+;
 ; Roles
 @Role.Admin=Administrador
 @Role.Everyone=Todos los usuarios

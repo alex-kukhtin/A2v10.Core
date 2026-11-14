@@ -59,19 +59,24 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Repo
      */
     protected String FilterStartSql()
     {
-        var starts = _report.InitialValues.Select(x =>
-        {
-            var column = _source.AllColumns().First(c => c.Name == x.Key);
-            var param = SqlExtensions.ColumnParam(x.Key);
-            var declare = x.Value.Source == InitialSource.Sql
-                ? $"declare @Init{x.Key} {column.SqlDataType()} = ({x.Value.Value});\n"
-                : String.Empty;
-            return $"{declare}set {param} = isnull({param}, {column.SqlInitialValue(x.Value)});";
-        }).ToList();
-        var start = starts.Count == 0 ? String.Empty : $"""
+        var initials = _report.InitialValues
+            .Select(x => (Name: x.Key, Initial: x.Value, Column: _source.AllColumns().First(c => c.Name == x.Key)))
+            .ToList();
+        // a variable for what is computed first, as a record's (SqlInitialValue): an expression, a profile slot
+        IEnumerable<String> declares = initials.Where(x => x.Initial.Source is InitialSource.Sql or InitialSource.Profile)
+            .Select(x => x.Initial.Source == InitialSource.Sql
+                ? $"declare @Init{x.Name} {x.Column.SqlDataType()} = ({x.Initial.Value});"
+                : $"declare @Init{x.Name} {x.Column.SqlDataType()};");
+        var slots = initials.Where(x => x.Initial.Source == InitialSource.Profile)
+            .Select(x => ($"@Init{x.Name}", x.Initial.Value)).ToList();
+        if (slots.Count > 0)
+            declares = declares.Append(SqlExtensions.ProfileReadSql(slots));
+        var sets = initials.Select(x =>
+            $"set {SqlExtensions.ColumnParam(x.Name)} = isnull({SqlExtensions.ColumnParam(x.Name)}, {x.Column.SqlInitialValue(x.Initial)});");
+        var start = initials.Count == 0 ? String.Empty : $"""
             if isnull(@Run, 0) = 0
             begin
-            {String.Join("\n", starts)}
+            {String.Join("\n", declares.Concat(sets))}
             end;
             """;
         var refuse = _report.Required.Count == 0 ? String.Empty : $"""

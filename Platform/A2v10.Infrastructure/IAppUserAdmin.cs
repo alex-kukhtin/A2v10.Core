@@ -7,7 +7,7 @@ namespace A2v10.Infrastructure;
 
 /* What an admin does to someone else's account. Only operations with an Identity invariant behind them
  * (password hash, security stamp, the invitation mail, the authenticator key, the deleted-users archive):
- * the caller holds no Identity reference and must not write those columns. The profile and the roles
+ * the caller holds no Identity reference and must not write those columns. The card (name, phone, memo) and the roles
  * carry no such invariant - the caller writes them with its own SQL.
  * The acting user is the current one, never an argument. A failure throws.
  */

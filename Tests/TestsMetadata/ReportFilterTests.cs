@@ -1,4 +1,4 @@
-// Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
+﻿// Copyright © 2026 Oleksandr Kukhtin. All rights reserved.
 
 using System.Dynamic;
 
@@ -15,13 +15,18 @@ public class ReportFilterTests
         Assert.IsType<ReportEndpointMetadata>(
             await TestHost.GetService<DatabaseMetadataProvider>().GetEndpointAsync(null, "report", report));
 
-    static async Task<String> SqlAsync()
+    static async Task<String> SqlAsync(String report = "trialbycompany")
     {
         var builder = Assert.IsType<TrialBalanceReportBuilder>(BaseReportBuilder.Create(TestHost.Services,
-            await EndpointAsync("trialbycompany"), new AppPlatformId(typeof(Int64)), useGrants: false));
+            await EndpointAsync(report), new AppPlatformId(typeof(Int64)), useGrants: false));
         builder.SetGrouping(new ExpandoObject());
         return builder.CreateSqlText();
     }
+
+    // a variable is typed by the filter's column, as a record's initial is
+    static String CompanyType() =>
+        TestHost.GetService<DatabaseMetadataProvider>().GetNormalEndpointAsync(null, "ledger", "national").Result
+            .Storage.AllColumns().First(c => c.Name == "Company").SqlDataType();
 
     [Fact]
     public async Task A_run_without_a_required_filter_is_refused_by_the_batch()
@@ -38,13 +43,11 @@ public class ReportFilterTests
     public async Task A_filter_starts_on_open_and_a_run_takes_its_url()
     {
         var sql = await SqlAsync();
-        // typed by the filter's column, as a record's 'sql' initial is
-        var type = (await EndpointAsync("trialbycompany")).Surface.AllColumns().First(c => c.Name == "Company").SqlDataType();
 
         Assert.Contains($"""
             if isnull(@Run, 0) = 0
             begin
-            declare @InitCompany {type} = (select min([Id]) from cat.Companies where [Void] = 0);
+            declare @InitCompany {CompanyType()} = (select min([Id]) from cat.Companies where [Void] = 0);
             set @$Company = isnull(@$Company, @InitCompany);
             end;
             """, sql);
@@ -90,18 +93,36 @@ public class ReportFilterTests
         Assert.Contains("initialValues: 'Agent' is not in 'filters'", message);
     }
 
-    // no registry behind 'profile' yet: unrefused, the batch read an undeclared @InitCompany
+    // the read a record's birth makes, inside the open's block
     [Fact]
-    public async Task A_start_from_the_profile_is_refused_at_load()
+    public async Task A_filter_starts_on_the_users_profile()
     {
-        var message = await RefusedAsync(new ReportMetadata()
-        {
-            Type = "trialBalance",
-            Filters = ["Company"],
-            InitialValues = new() { ["Company"] = new InitialMetadata(InitialSource.Profile, "Company") }
-        });
+        var sql = await SqlAsync("trialbyprofile");
 
-        Assert.Contains("not 'Profile'", message);
+        Assert.Contains($"""
+            if isnull(@Run, 0) = 0
+            begin
+            declare @InitCompany {CompanyType()};
+            select @InitCompany = [Company] from {TableMetadataDefaults.ProfileSqlTable} where [Id] = @UserId;
+            set @$Company = isnull(@$Company, @InitCompany);
+            end;
+            """, sql);
+    }
+
+    // a slot of another catalog put one catalog's key into a reference to another
+    [Fact]
+    public async Task A_slot_of_another_type_is_refused_at_load()
+    {
+        var provider = TestHost.GetService<DatabaseMetadataProvider>();
+        var profile = (await provider.GetNormalEndpointAsync(null, "profile", String.Empty)).Storage;
+        var company = (await provider.GetNormalEndpointAsync(null, "ledger", "national")).Storage.AllColumns().First(c => c.Name == "Company");
+
+        var wrong = Assert.Throws<InvalidOperationException>(() => DatabaseMetadataProvider.CheckProfileSlot("/report/x", "Store", profile, company));
+        var missing = Assert.Throws<InvalidOperationException>(() => DatabaseMetadataProvider.CheckProfileSlot("/report/x", "Firm", profile, company));
+        DatabaseMetadataProvider.CheckProfileSlot("/report/x", "Company", profile, company);
+
+        Assert.Contains("reads the profile slot 'Store', a 'Ref' to /catalog/store; 'Company' is a 'Company' to /catalog/company", wrong.Message);
+        Assert.Contains("does not declare. Slots: Store, Agent, Company, MainCashAccount, VatRate", missing.Message);
     }
 
     // the check of a record's initial, not a copy of it

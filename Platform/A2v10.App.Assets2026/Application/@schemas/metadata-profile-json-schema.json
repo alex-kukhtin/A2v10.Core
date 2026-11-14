@@ -1,0 +1,15 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "A2v10 metadata.json (profile)",
+    "description": "The user's own settings: one file at profile/metadata.json, a row per user (usr.Profile, keyed by the login), a column per slot. A slot is read by 'initialValues' with source 'profile' - of a record and of a report's filter - and edited by the user alone on the profile page (section 'Defaults'). Only a value with no carrier row: what belongs to a record (a company's currency) is a field of that record.",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "$schema": { "type": "string" },
+        "description": { "type": "string", "description": "For the model, not the platform: nothing reads it." },
+        "fields": {
+            "$ref": "metadata-endpoint-json-schema.json#/definitions/fields",
+            "description": "The slots. A slot read by 'initialValues' has the type and target of the field it starts - refused at load otherwise."
+        }
+    }
+}

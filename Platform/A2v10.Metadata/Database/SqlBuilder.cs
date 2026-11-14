@@ -145,7 +145,7 @@ internal partial class SqlBuilder(BuilderDescriptor desciptor, IServiceProvider 
      * empty string), and it says 'do not restrict' - a statement about a query, which a record
      * cannot make about its own value.
      */
-    String ValuesRecordset(TableMetadata target, Boolean withAll)
+    internal static String ValuesRecordset(TableMetadata target, Boolean withAll)
     {
         var exceptAll = withAll ? String.Empty : $" and e.[{Constants.FieldNames.Id}] <> N''";
         return $"""

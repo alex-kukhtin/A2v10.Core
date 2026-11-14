@@ -13,6 +13,18 @@
 @Admin.Error.SelfAdmin=Не можна зняти з себе роль адміністратора
 @Admin.BoundaryAll=Нічого не відмічено — уся мережа
 ;
+; Profile (/_profile)
+@Profile.Title=Профіль користувача
+@Profile.Personal=Персоналізація
+@Profile.Defaults=Замовчування
+@Profile.Language=Мова
+@Profile.Theme=Тема
+@Profile.Theme.Light=Світла
+@Profile.Theme.Dark=Темна
+@Profile.Theme.Auto=Як у системі
+@Profile.Change=Змінити
+@Profile.Update=Оновити
+;
 ; Roles
 @Role.Admin=Адміністратор
 @Role.Everyone=Усі користувачі

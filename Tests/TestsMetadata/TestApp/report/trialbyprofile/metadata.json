@@ -1,0 +1,11 @@
+{
+	"$schema": "../../../../../Platform/A2v10.App.Assets2026/Application/@schemas/metadata-report-json-schema.json#",
+	"description": "A trial balance that opens on the user's own company (ReportFilterTests).",
+	"type": "trialBalance",
+	"surface": "/ledger/national",
+	"filters": [ "Company" ],
+	"required": [ "Company" ],
+	"initialValues": {
+		"Company": { "source": "profile", "value": "Company" }
+	}
+}

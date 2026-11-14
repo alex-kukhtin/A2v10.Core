@@ -4,39 +4,25 @@ using System;
 using System.Dynamic;
 using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 
 using A2v10.Infrastructure;
-using A2v10.Web.Identity;
 
 namespace A2v10.Identity.UI;
 
+// the shell's own switch of the locale and the theme; the write is IAppUserProfile's
 public class SetPreferencesHandler(IServiceProvider serviceProvider) : IClrInvokeTarget
 {
-    private readonly UserManager<AppUser<Int64>> _userManager = serviceProvider.GetRequiredService<UserManager<AppUser<Int64>>>();
-    private readonly SignInManager<AppUser<Int64>> _signInManager = serviceProvider.GetRequiredService<SignInManager<AppUser<Int64>>>();
-    private readonly ICurrentUser _currentUser = serviceProvider.GetRequiredService<ICurrentUser>();
+    private readonly IAppUserProfile _profile = serviceProvider.GetRequiredService<IAppUserProfile>();
 
     public async Task<object> InvokeAsync(ExpandoObject args)
     {
-        var userId = _currentUser.Identity.Id ??
-            throw new InvalidOperationException("UserId is null");
-        
         var locale = args.Get<String>("Locale")
 			?? throw new InvalidOperationException("Locale is null");
         var theme = args.Get<String>("Theme")
             ?? throw new InvalidOperationException("Theme is null");
 
-        var user = await _userManager.FindByIdAsync(userId.ToString())
-			?? throw new InvalidOperationException("UserId not found");
-
-        user.Locale = locale;
-        user.Theme = theme;
-        user.Flags |= UpdateFlags.Locale | UpdateFlags.Theme;
-        await _userManager.UpdateAsync(user);
-
-        await _signInManager.RefreshSignInAsync(user);
+        await _profile.SetPersonalAsync(null, locale, theme);
 
         return new ExpandoObject();
     }

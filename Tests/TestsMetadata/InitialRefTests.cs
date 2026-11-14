@@ -71,7 +71,17 @@ public partial class InitialRefTests
 
         Assert.Contains("declare @InitCashAccount nvarchar", sql);
         Assert.DoesNotContain("declare @InitCashAccount platformid", sql);
-        Assert.Contains("@MainCashAccount = @InitCashAccount output", sql);
+        Assert.Contains($"select @InitCashAccount = [MainCashAccount] from {TableMetadataDefaults.ProfileSqlTable} where [Id] = @UserId;", sql);
+    }
+
+    // the readers spell the table, so the loaded profile has to be that very one
+    [Fact]
+    public async Task The_profile_is_the_table_the_readers_spell()
+    {
+        var profile = (await TestHost.GetService<DatabaseMetadataProvider>().GetNormalEndpointAsync(null, "profile", String.Empty)).Storage;
+
+        Assert.Equal(TableMetadataDefaults.ProfileSqlTable, profile.SqlTableName);
+        Assert.Equal(ColumnType.User, profile.AllColumns().First(c => c.Name == "Id").Type);
     }
 
     // a select hands the client the type of its expression: a bare string would reach the defaults as text

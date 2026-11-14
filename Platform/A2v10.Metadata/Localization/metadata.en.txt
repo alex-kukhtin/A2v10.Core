@@ -13,6 +13,18 @@
 @Admin.Error.SelfAdmin=You cannot take the administrator role from yourself
 @Admin.BoundaryAll=Nothing ticked means the whole network
 ;
+; Profile (/_profile)
+@Profile.Title=User profile
+@Profile.Personal=Personalization
+@Profile.Defaults=Defaults
+@Profile.Language=Language
+@Profile.Theme=Theme
+@Profile.Theme.Light=Light
+@Profile.Theme.Dark=Dark
+@Profile.Theme.Auto=As in the system
+@Profile.Change=Change
+@Profile.Update=Update
+;
 ; Roles
 @Role.Admin=Administrator
 @Role.Everyone=All users

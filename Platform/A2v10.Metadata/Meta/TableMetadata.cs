@@ -24,6 +24,8 @@ public enum TableKind
     State,
     AccPlan,
     Autonum,
+    // a row per user, keyed by the login
+    Profile,
     // declared in code: the registry of operation codes (TableMetadataDefaults.OperationsTable)
     Operation,
     // declared in code, deployed by nobody: the logins (TableMetadataDefaults.UsersTable)
@@ -888,6 +890,16 @@ public sealed record TableMetadata
          * table names: nothing is inflected, and 'order' + 'State' is reproducible in the head. A
          * written 'model' still wins - this only makes the readable address safe by default.
          */
+        // not defaults: the readers spell the table (TableMetadataDefaults.ProfileSqlTable), so the file names none
+        if (schema == Constants.SchemaNames.Profile)
+        {
+            // the page /_profile binds the account beside the slots, so the model is fixed as the table is
+            if (!String.IsNullOrEmpty(Table) || !String.IsNullOrEmpty(Schema) || !String.IsNullOrEmpty(Model))
+                throw new InvalidOperationException(
+                    $"{Path}: the profile's table is the platform's, {TableMetadataDefaults.ProfileSqlTable} - 'table', 'schema' and 'model' are not written");
+            Model = TableMetadataDefaults.ProfileModel;
+            Table = TableMetadataDefaults.ProfileTable;
+        }
         if (schema == Constants.SchemaNames.State && String.IsNullOrEmpty(Model))
             Model = $"{table.KebabToPascal()}State";
         if (String.IsNullOrEmpty(Schema))

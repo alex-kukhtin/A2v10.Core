@@ -214,6 +214,8 @@ internal static class Constants
         public const String Attachment = "attachment";
         // the platform's screens for running the application, one endpoint per screen - see AdminEndpointMetadata
         public const String Admin = "admin";
+        // the user's own page: the address the shell's menu under the user's name opens - see ProfilePageEndpointMetadata
+        public const String ProfilePage = "_profile";
         /* One step further than those two: an enum has no endpoint at all, in code or in files.
          * The namespace exists so that a reference can name a set by address.
          */
@@ -232,6 +234,11 @@ internal static class Constants
          * wrong one fails there and not at the first save.
          */
         public const String Autonum = "autonum";
+        /* The user's own settings - one file at the root, a row per user, a column per slot. Its table
+         * is the platform's name (TableMetadataDefaults.ProfileSqlTable): the readers spell it, so the
+         * file does not.
+         */
+        public const String Profile = "profile";
         /* A chart of accounts, always named - /accplan/national - even when there is one: a bare
          * accplan/metadata.json would be a second spelling of the same fact, and a second plan would
          * move the first one together with every reference to it.

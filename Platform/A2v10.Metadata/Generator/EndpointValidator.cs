@@ -159,6 +159,7 @@ public sealed class EndpointValidator(DatabaseMetadataProvider _metadataProvider
             => "metadata-endpoint-json-schema.json",
         Constants.SchemaNames.Report or Constants.SchemaNames.Enum or Constants.SchemaNames.State
             or Constants.SchemaNames.AccPlan or Constants.SchemaNames.Ledger or Constants.SchemaNames.Autonum
+            or Constants.SchemaNames.Profile
             => $"metadata-{kind}-json-schema.json",
         _ => throw new InvalidOperationException($"No schema is known for {kind}/")
     };

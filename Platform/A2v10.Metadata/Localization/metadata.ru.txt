@@ -13,6 +13,18 @@
 @Admin.Error.SelfAdmin=Нельзя снять с себя роль администратора
 @Admin.BoundaryAll=Ничего не отмечено — вся сеть
 ;
+; Profile (/_profile)
+@Profile.Title=Профиль пользователя
+@Profile.Personal=Персонализация
+@Profile.Defaults=Умолчания
+@Profile.Language=Язык
+@Profile.Theme=Тема
+@Profile.Theme.Light=Светлая
+@Profile.Theme.Dark=Тёмная
+@Profile.Theme.Auto=Как в системе
+@Profile.Change=Изменить
+@Profile.Update=Обновить
+;
 ; Roles
 @Role.Admin=Администратор
 @Role.Everyone=Все пользователи

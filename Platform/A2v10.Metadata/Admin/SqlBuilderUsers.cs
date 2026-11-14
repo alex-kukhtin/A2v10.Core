@@ -51,7 +51,8 @@ internal class SqlBuilderUsers(IServiceProvider serviceProvider, AppPlatformId _
     // an empty field of the form: the client takes the length from the column's type, and N'' is nvarchar(1)
     private const String Empty = "cast(null as nvarchar(255))";
 
-    private const String Head = """
+    // the profile page reads with the same head (SqlBuilderProfile)
+    internal const String Head = """
         set nocount on;
         set transaction isolation level read committed;
         """;
@@ -146,7 +147,7 @@ internal class SqlBuilderUsers(IServiceProvider serviceProvider, AppPlatformId _
         return _dbContext.LoadModelSqlAsync(dataSource, sql, dbprms => dbprms.AddBigInt("@Id", id));
     }
 
-    /* The profile, the roles and the boundary in one transaction. Roles and boundary come back as the
+    /* The card, the roles and the boundary in one transaction. Roles and boundary come back as the
      * card shows them, a row per offered value with its Checked; a value the card did not offer is not
      * in them, so it stays as is.
      */
@@ -202,7 +203,7 @@ internal class SqlBuilderUsers(IServiceProvider serviceProvider, AppPlatformId _
         return dm.Root;
     }
 
-    // after IAppUserAdmin.CreateAsync: the profile is the screen's to write, and the row goes back into the list
+    // after IAppUserAdmin.CreateAsync: the name is the screen's to write, and the row goes back into the list
     public Task<IDataModel> SetPersonNameAsync(String? dataSource, Int64 id, String? personName)
     {
         var sql = $"""

@@ -22,6 +22,7 @@ internal static class TableDefaultColumns
             TableKind.Enum => EnumDefaultColumns(table),
             TableKind.State => StateDefaultColumns(table),
             TableKind.Autonum => AutonumDefaultColumns(table),
+            TableKind.Profile => ProfileDefaultColumns(),
             TableKind.AutonumValues => AutonumValuesDefaultColumns(table),
             TableKind.Tags => TagsDefaultColumns(table),
             TableKind.TagEntries => TagsEntriesDefaultColumns(table),
@@ -113,6 +114,14 @@ internal static class TableDefaultColumns
     /* A closed set of columns: a folder carries a name and nothing the application reads, or moving
      * an element between folders would silently change what the element means. Always a tree.
      */
+    /* The key is the login: a row per user, read and written by @UserId and never by an address. A
+     * reference to a2security.Users, so the row goes only with its user. No stamps - the user is the key.
+     */
+    static IEnumerable<TableColumn> ProfileDefaultColumns()
+    {
+        yield return new TableColumn(Constants.FieldNames.Id, ColumnType.User);
+    }
+
     static IEnumerable<TableColumn> FolderDefaultColumns(TableMetadata table)
     {
         yield return new TableColumn(Constants.FieldNames.Id, ColumnType.Id);

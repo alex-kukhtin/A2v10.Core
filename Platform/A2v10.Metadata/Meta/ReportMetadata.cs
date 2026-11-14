@@ -42,8 +42,9 @@ public sealed record ReportMetadata
     public Dictionary<String, InitialMetadata> InitialValues { get; init; } = [];
 
     /* Both name filters, so both resolve against 'filters' and the surface - at load, where a wrong
-     * name names the file. 'query' is the url's and a filter already is one; 'profile' and 'policy'
-     * have no registry yet, and unrefused would reach the database as an undeclared variable.
+     * name names the file. 'query' is the url's and a filter already is one; 'policy' has no registry
+     * yet, and unrefused would reach the database as an undeclared variable. A 'profile' slot is
+     * checked with the record's (DatabaseMetadataProvider.CheckProfileInitialsAsync).
      */
     internal void Check(String file, TableMetadata surface)
     {
@@ -55,9 +56,9 @@ public sealed record ReportMetadata
             if (!Filters.Contains(name))
                 throw new InvalidOperationException(
                     $"{file}: initialValues: '{name}' is not in 'filters'. A report starts its filters, nothing else");
-            if (initial.Source is not (InitialSource.Sql or InitialSource.Literal or InitialSource.Context))
+            if (initial.Source is not (InitialSource.Sql or InitialSource.Literal or InitialSource.Context or InitialSource.Profile))
                 throw new InvalidOperationException(
-                    $"{file}: initialValues: '{name}' - a report filter starts on 'sql', 'literal' or 'context', not '{initial.Source}'");
+                    $"{file}: initialValues: '{name}' - a report filter starts on 'sql', 'literal', 'context' or 'profile', not '{initial.Source}'");
             var column = surface.AllColumns().FirstOrDefault(c => c.Name == name)
                 ?? throw new InvalidOperationException($"{file}: initialValues: '{name}' not found in surface '{surface.Path}'");
             DeclarationBake.CheckInitial(name, initial, column, $"{file}: initialValues");

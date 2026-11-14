@@ -478,6 +478,9 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                 () => Task.FromResult(TableMetadataDefaults.UsersTable()))
         },
         [Constants.SchemaNames.Admin] = (_, _, _, table) => Task.FromResult<EndpointMetadata>(AdminEndpointMetadata.Create(table)),
+        [Constants.SchemaNames.ProfilePage] = (_, _, schema, table) => Task.FromResult<EndpointMetadata>(String.IsNullOrEmpty(table)
+            ? new ProfilePageEndpointMetadata() { Schema = schema, Name = table }
+            : throw new InvalidOperationException($"'/{schema}/{table}': the profile is one page, '/{schema}'")),
         [Constants.SchemaNames.Attachment] = (_, _, schema, table) => Task.FromResult<EndpointMetadata>(new AttachmentEndpointMetadata()
         {
             Schema = schema,
@@ -927,6 +930,15 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             return;
         }
 
+        // a row per user, one address: nothing to point elsewhere with
+        if (kind == Constants.SchemaNames.Profile)
+        {
+            if (hasStorage || hasSurface)
+                throw new InvalidOperationException(
+                    $"{file}: declares '{(hasStorage ? "storage" : "surface")}', which {kind}/ may not do. The profile is one table of its own; its slots are 'fields'.");
+            return;
+        }
+
         if (kind == Constants.SchemaNames.Report)
         {
             if (hasTable || hasStorage)
@@ -1162,7 +1174,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         // a key and a name, neither a reference
         UserEndpointMetadata => null,
         // no shape, so no references - said by name, so an unknown subtype still fails loudly
-        TagEndpointMetadata or AdminEndpointMetadata or AttachmentEndpointMetadata => null,
+        TagEndpointMetadata or AdminEndpointMetadata or AttachmentEndpointMetadata or ProfilePageEndpointMetadata => null,
         _ => throw new InvalidOperationException($"Unknown endpoint {endpoint.Path}")
     };
 
@@ -1194,6 +1206,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             CheckVatHops(normal.Path, normal.Declaration);
 
         await CheckAutonumDeclaredAsync(load, endpoint, dataSource);
+
+        await CheckProfileInitialsAsync(load, endpoint, dataSource);
 
         await ResolvePostAsync(load, endpoint, dataSource);
 
@@ -1283,6 +1297,54 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
      * call and nothing else reads, so keeping the resolved row would put a second copy of what the
      * file says next to the file's own word.
      */
+    /* 'source: profile' names a slot of profile/metadata.json, and the value lands in a field of this
+     * endpoint (a record's) or a filter (a report's). Unasked, a missing slot failed in the database at
+     * the first 'new', and a slot of another catalog put one catalog's key into a reference to another.
+     * A reference is compared by the table it points at - two addresses over one table hold one key -
+     * the rest by type.
+     */
+    private async Task CheckProfileInitialsAsync(EndpointLoad load, EndpointMetadata endpoint, String? dataSource)
+    {
+        (IReadOnlyDictionary<String, InitialMetadata>? initials, TableMetadata? receiver) = endpoint switch
+        {
+            NormalEndpointMetadata normal => (normal.Declaration.Initials, normal.Storage),
+            ReportEndpointMetadata report => (report.Report.InitialValues, report.Surface),
+            _ => (null, null)
+        };
+        var slots = initials?.Where(x => x.Value.Source == InitialSource.Profile).ToList() ?? [];
+        if (slots.Count == 0)
+            return;
+
+        var profile = (await ProfileEndpointAsync(load, dataSource))?.Storage
+            ?? throw new InvalidOperationException(
+                $"{endpoint.Path}: initialValues: '{slots[0].Key}' reads the profile slot '{slots[0].Value.Value}', and the application has no {MetadataFileName(Constants.SchemaNames.Profile, String.Empty)}");
+        foreach (var (name, initial) in slots)
+            CheckProfileSlot(endpoint.Path, initial.Value, profile, receiver!.AllColumns().First(c => c.Name == name));
+    }
+
+    // the slots, if the application declares any: without the file a user has no defaults, and nothing reads them
+    internal async Task<NormalEndpointMetadata?> ProfileEndpointAsync(String? dataSource) =>
+        HasProfileFile ? await GetNormalEndpointAsync(dataSource, Constants.SchemaNames.Profile, String.Empty) : null;
+
+    private async Task<NormalEndpointMetadata?> ProfileEndpointAsync(EndpointLoad load, String? dataSource) =>
+        HasProfileFile ? await GetNormalEndpointAsync(load, dataSource, Constants.SchemaNames.Profile, String.Empty) : null;
+
+    private Boolean HasProfileFile => _codeProvider.IsFileExists(MetadataFileName(Constants.SchemaNames.Profile, String.Empty));
+
+    internal static void CheckProfileSlot(String path, String slotName, TableMetadata profile, TableColumn field)
+    {
+        var head = $"{path}: initialValues: '{field.Name}' reads the profile slot '{slotName}'";
+        var slot = profile.Columns.FirstOrDefault(c => c.Name == slotName)
+            ?? throw new InvalidOperationException(
+                $"{head}, which {MetadataFileName(Constants.SchemaNames.Profile, String.Empty)} does not declare. Slots: {String.Join(", ", profile.Columns.Select(c => c.Name))}");
+        var same = slot.Type == field.Type
+            && (!field.IsRef || slot.RefTableCheck.Storage.SqlTableName == field.RefTableCheck.Storage.SqlTableName);
+        if (!same)
+            throw new InvalidOperationException(field.IsRef
+                ? $"{head}, a '{slot.Type}' to {slot.RefTable?.Path}; '{field.Name}' is a '{field.Type}' to {field.RefTable?.Path}"
+                : $"{head}, a '{slot.Type}'; '{field.Name}' is a '{field.Type}'");
+    }
+
     private async Task CheckAutonumDeclaredAsync(EndpointLoad load, EndpointMetadata endpoint, String? dataSource)
     {
         if (endpoint is not NormalEndpointMetadata normal)

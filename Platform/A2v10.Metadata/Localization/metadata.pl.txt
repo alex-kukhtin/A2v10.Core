@@ -13,6 +13,18 @@
 @Admin.Error.SelfAdmin=Nie można odebrać sobie roli administratora
 @Admin.BoundaryAll=Nic nie zaznaczono — cała sieć
 ;
+; Profile (/_profile)
+@Profile.Title=Profil użytkownika
+@Profile.Personal=Personalizacja
+@Profile.Defaults=Wartości domyślne
+@Profile.Language=Język
+@Profile.Theme=Motyw
+@Profile.Theme.Light=Jasny
+@Profile.Theme.Dark=Ciemny
+@Profile.Theme.Auto=Jak w systemie
+@Profile.Change=Zmień
+@Profile.Update=Zapisz
+;
 ; Roles
 @Role.Admin=Administrator
 @Role.Everyone=Wszyscy użytkownicy
