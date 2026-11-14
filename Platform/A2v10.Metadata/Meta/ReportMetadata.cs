@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace A2v10.Metadata;
 
@@ -33,4 +34,33 @@ public sealed record ReportMetadata
     public List<String> Filters { get; init; } = [];
     public List<String> Data { get; init; } = [];
     public ReportDefaultMetadata Defaults { get; init; } = new();
+
+    // filters a run cannot go without: a trial balance across companies adds up and means nothing
+    public List<String> Required { get; init; } = [];
+
+    // what a filter starts on when the page opens; the form of an endpoint's, keyed by filter
+    public Dictionary<String, InitialMetadata> InitialValues { get; init; } = [];
+
+    /* Both name filters, so both resolve against 'filters' and the surface - at load, where a wrong
+     * name names the file. 'query' is the url's and a filter already is one; 'profile' and 'policy'
+     * have no registry yet, and unrefused would reach the database as an undeclared variable.
+     */
+    internal void Check(String file, TableMetadata surface)
+    {
+        foreach (var name in Required.Where(n => !Filters.Contains(n)))
+            throw new InvalidOperationException(
+                $"{file}: required: '{name}' is not in 'filters'. A required filter is one of those offered");
+        foreach (var (name, initial) in InitialValues)
+        {
+            if (!Filters.Contains(name))
+                throw new InvalidOperationException(
+                    $"{file}: initialValues: '{name}' is not in 'filters'. A report starts its filters, nothing else");
+            if (initial.Source is not (InitialSource.Sql or InitialSource.Literal or InitialSource.Context))
+                throw new InvalidOperationException(
+                    $"{file}: initialValues: '{name}' - a report filter starts on 'sql', 'literal' or 'context', not '{initial.Source}'");
+            var column = surface.AllColumns().FirstOrDefault(c => c.Name == name)
+                ?? throw new InvalidOperationException($"{file}: initialValues: '{name}' not found in surface '{surface.Path}'");
+            DeclarationBake.CheckInitial(name, initial, column, $"{file}: initialValues");
+        }
+    }
 }

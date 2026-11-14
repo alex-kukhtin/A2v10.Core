@@ -114,6 +114,7 @@
 @Report.NotYetBuild=El informe aún no se ha generado.
 @Report.Error.AtLeastGroup=Seleccione al menos una agrupación
 @Report.Error.AtLeastData=Seleccione al menos un indicador
+@Report.Error.FilterRequired=Seleccione un valor para el filtro obligatorio
 @Period=Periodo
 @Grouping=Agrupación
 @Data=Indicadores

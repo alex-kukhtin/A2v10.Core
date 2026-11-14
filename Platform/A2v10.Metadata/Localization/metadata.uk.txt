@@ -114,6 +114,7 @@
 @Report.NotYetBuild=Звіт ще не сформовано.
 @Report.Error.AtLeastGroup=Оберіть хоча б одне групування
 @Report.Error.AtLeastData=Оберіть хоча б один показник
+@Report.Error.FilterRequired=Оберіть значення обов'язкового фільтра
 @Period=Період
 @Grouping=Групування
 @Data=Показники

@@ -114,6 +114,7 @@
 @Report.NotYetBuild=The report has not been run yet.
 @Report.Error.AtLeastGroup=Select at least one grouping
 @Report.Error.AtLeastData=Select at least one measure
+@Report.Error.FilterRequired=Select a value for the required filter
 @Period=Period
 @Grouping=Grouping
 @Data=Measures

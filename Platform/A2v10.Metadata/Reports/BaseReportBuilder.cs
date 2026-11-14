@@ -52,6 +52,35 @@ internal abstract class BaseReportBuilder(IServiceProvider serviceProvider, Repo
                 prms.Get<Object>(f.Column)?.ToString());
     }
 
+    /* What the filters start on, and what a run cannot go without. A start is for the page that opens
+     * (no Run): a run is exactly its url, so a filter the user cleared stays cleared, and report_query,
+     * always a run, gets no preset. The refusal is the batch's, so the page ($alertUi) and the model
+     * read the one judge.
+     */
+    protected String FilterStartSql()
+    {
+        var starts = _report.InitialValues.Select(x =>
+        {
+            var column = _source.AllColumns().First(c => c.Name == x.Key);
+            var param = SqlExtensions.ColumnParam(x.Key);
+            var declare = x.Value.Source == InitialSource.Sql
+                ? $"declare @Init{x.Key} {column.SqlDataType()} = ({x.Value.Value});\n"
+                : String.Empty;
+            return $"{declare}set {param} = isnull({param}, {column.SqlInitialValue(x.Value)});";
+        }).ToList();
+        var start = starts.Count == 0 ? String.Empty : $"""
+            if isnull(@Run, 0) = 0
+            begin
+            {String.Join("\n", starts)}
+            end;
+            """;
+        var refuse = _report.Required.Count == 0 ? String.Empty : $"""
+            if @Run = 1 and ({String.Join(" or ", _report.Required.Select(r => $"{SqlExtensions.ColumnParam(r)} is null"))})
+                {SqlExtensions.UserError("Report.Error.FilterRequired")}
+            """;
+        return $"{start}\n{refuse}";
+    }
+
     /* What a report TYPE means to the query and the template. The runtime asks on its way to the data
      * and the validator on its way to the screen; the page half is ReportPage.Create, and the
      * validator builds both for every report, so a fourth type taught to one of the two fails there.

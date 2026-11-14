@@ -80,6 +80,7 @@ internal abstract class LedgerReportBuilder : BaseReportBuilder
         set @From = isnull(@From, datefromparts(year(@now), month(@now), 1));
         set @To = isnull(@To, eomonth(@From));
         declare @end date = dateadd(day, 1, @To);
+        {FilterStartSql()}
 
         {CreateBodySql()}
 

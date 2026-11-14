@@ -114,6 +114,7 @@
 @Report.NotYetBuild=Справката още не е генерирана.
 @Report.Error.AtLeastGroup=Изберете поне едно групиране
 @Report.Error.AtLeastData=Изберете поне един показател
+@Report.Error.FilterRequired=Изберете стойност на задължителния филтър
 @Period=Период
 @Grouping=Групиране
 @Data=Показатели

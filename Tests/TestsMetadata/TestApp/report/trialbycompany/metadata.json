@@ -1,0 +1,11 @@
+{
+	"$schema": "../../../../../Platform/A2v10.App.Assets2026/Application/@schemas/metadata-report-json-schema.json#",
+	"description": "A trial balance only per company: the filter is required and starts on one (ReportFilterTests).",
+	"type": "trialBalance",
+	"surface": "/ledger/national",
+	"filters": [ "Company" ],
+	"required": [ "Company" ],
+	"initialValues": {
+		"Company": { "source": "sql", "value": "select min([Id]) from cat.Companies where [Void] = 0" }
+	}
+}

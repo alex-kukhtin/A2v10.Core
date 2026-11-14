@@ -25,7 +25,12 @@ internal sealed record McpMeasure(String Name, String Type,
 internal sealed record McpDimension(String Name, String Type,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] String? Catalog,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] String? Codeset,
-    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] IReadOnlyList<McpSetValue>? Values);
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] IReadOnlyList<McpSetValue>? Values)
+{
+    // a filter the run is refused without, as a record's field (McpField)
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public Boolean? Required { get; init; }
+}
 
 internal sealed record McpReportInfo(IReadOnlyList<McpDimension> GroupBy, IReadOnlyList<McpDimension> Filter,
     IReadOnlyList<McpMeasure> Measures, String Reading);
@@ -122,7 +127,7 @@ internal sealed class ReportInfoTool(IReadOnlyList<McpEntity> reports, IReadOnly
     public PlatformMcpToolHints Hints => PlatformMcpToolHints.ReadOnly;
     public String Description => """
         What can be asked of a report, and nothing else can: groupBy - what its rows can be broken down by (empty - the rows are fixed); filter - what they can be restricted by; measures - the numbers; reading - what a row of this report holds and how to read it.
-        A dimension has a type; 'catalog' names the catalog whose records it takes: catalog_query finds the ids report_query filters by; 'codeset' - codeset_query finds the codes; 'values' - the codes themselves.
+        A dimension has a type; 'catalog' names the catalog whose records it takes: catalog_query finds the ids report_query filters by; 'codeset' - codeset_query finds the codes; 'values' - the codes themselves. A filter with 'required' must be given: report_query is refused without it.
         A measure has a type; description when the name is not enough.
         """;
     public JsonElement InputSchema => RecordTool.Schema(Constants.SchemaNames.Report, reports);
@@ -148,7 +153,10 @@ internal sealed class ReportInfoTool(IReadOnlyList<McpEntity> reports, IReadOnly
         McpMeasure Measure(String name) =>
             new(name, McpProjection.TypeName(McpReport.Column(endpoint, name)), notes?.GetValueOrDefault(name));
 
-        return new McpReportInfo([.. endpoint.Report.Groups.Select(Dimension)], [.. endpoint.Report.Filters.Select(Dimension)],
+        McpDimension Filter(String name) =>
+            Dimension(name) with { Required = endpoint.Report.Required.Contains(name) ? true : null };
+
+        return new McpReportInfo([.. endpoint.Report.Groups.Select(Dimension)], [.. endpoint.Report.Filters.Select(Filter)],
             [.. builder.Measures.Select(Measure)], builder.Reading);
     }
 }

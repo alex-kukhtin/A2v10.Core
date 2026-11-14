@@ -73,7 +73,8 @@ internal class TurnoverReportBuilder(IServiceProvider serviceProvider, ReportMet
         declare @now date = getdate();
         set @From = isnull(@From, datefromparts(year(@now), month(@now), 1));
         set @To = isnull(@To, eomonth(@From));
-        declare @end date = dateadd(day, 1, @To);    
+        declare @end date = dateadd(day, 1, @To);
+        {FilterStartSql()}
 
         insert into #tmpturn({_grouping.SimpleFields()}, {_grouping.SimpleDataFields()})
         select {_grouping.SelectFields("j")},

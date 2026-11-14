@@ -114,6 +114,7 @@
 @Report.NotYetBuild=Отчёт ещё не сформирован.
 @Report.Error.AtLeastGroup=Выберите хотя бы одну группировку
 @Report.Error.AtLeastData=Выберите хотя бы один показатель
+@Report.Error.FilterRequired=Выберите значение обязательного фильтра
 @Period=Период
 @Grouping=Группировка
 @Data=Показатели

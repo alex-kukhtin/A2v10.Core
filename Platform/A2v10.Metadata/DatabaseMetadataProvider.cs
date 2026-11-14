@@ -565,8 +565,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                     Name = table,
                     // the shape a report reads, resolved from 'surface'. It owns none of it
                     Surface = storage,
-                    Report = JsonConvert.DeserializeObject<ReportMetadata>(text, JsonSettings.CamelCaseSerializerSettings)
-                        ?? throw new InvalidOperationException($"{MetadataFileName(schema, table)}: ReportMetadata deserialization fails"),
+                    Report = CheckedReport(text, MetadataFileName(schema, table), storage),
                     FileHash = hash,
                     Grants = grants
                 },
@@ -583,6 +582,14 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                     Grants = grants
                 }
         };
+    }
+
+    private static ReportMetadata CheckedReport(String text, String file, TableMetadata surface)
+    {
+        var report = JsonConvert.DeserializeObject<ReportMetadata>(text, JsonSettings.CamelCaseSerializerSettings)
+            ?? throw new InvalidOperationException($"{file}: ReportMetadata deserialization fails");
+        report.Check(file, surface);
+        return report;
     }
 
     /* Everything the bake can say is about the file being loaded, and not one of its messages can

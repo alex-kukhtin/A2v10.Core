@@ -348,6 +348,30 @@ internal static class DeclarationBake
         _ => Convert.ToString(value, CultureInfo.InvariantCulture)!
     };
 
+    // what a value is checked for against the column it starts - a record's field and a report's filter alike
+    internal static void CheckInitial(String name, InitialMetadata initial, TableColumn column, String where)
+    {
+        // unasked, a literal the column cannot hold passed the bake and broke every new record at its load
+        if (initial.Source == InitialSource.Literal)
+            try
+            {
+                column.SqlLiteral(initial.Value);
+            }
+            catch (InvalidOperationException ex)
+            {
+                throw new InvalidOperationException($"{where}: '{name}' - {ex.Message}", ex);
+            }
+        if (initial.Source == InitialSource.Context && !Constants.ContextValues.All.Contains(initial.Value))
+            throw new InvalidOperationException(
+                $"{where}: '{name}' - '{initial.Value}' is not a value of the context. Known: {String.Join(", ", Constants.ContextValues.All)}");
+        /* A login is not a person: a manager is the application's catalog, and its key is no login's.
+         * Taken silently, the key of the login would land in a reference to another table.
+         */
+        if (initial is { Source: InitialSource.Context, Value: Constants.ContextValues.CurrentUser } && column.Type != ColumnType.User)
+            throw new InvalidOperationException(
+                $"{where}: '{name}' is '{column.Type}', and 'currentUser' is a login - it starts a 'user' column only. The person linked to the login is 'source: \"sql\"' over the column of that catalog, '... where [User] = @UserId'.");
+    }
+
     /* The initials of a new record: what the file declared, and the fixed fields on top as literals.
      * Checked here, where the table is at hand: a fixed field must be a column, its value must be
      * spellable for that column, and a field cannot be both fixed and given an initial - two
@@ -373,25 +397,7 @@ internal static class DeclarationBake
             if (column.HasSqlAs)
                 throw new InvalidOperationException(
                     $"initialValues: '{name}' has 'sqlAs' - its value is the database's, a new record does not start on one.");
-            // unasked, a literal the column cannot hold passed the bake and broke every new record at its load
-            if (initial.Source == InitialSource.Literal)
-                try
-                {
-                    column.SqlLiteral(initial.Value);
-                }
-                catch (InvalidOperationException ex)
-                {
-                    throw new InvalidOperationException($"initialValues: '{name}' - {ex.Message}", ex);
-                }
-            if (initial.Source == InitialSource.Context && !Constants.ContextValues.All.Contains(initial.Value))
-                throw new InvalidOperationException(
-                    $"initialValues: '{name}' - '{initial.Value}' is not a value of the context. Known: {String.Join(", ", Constants.ContextValues.All)}");
-            /* A login is not a person: a manager is the application's catalog, and its key is no login's.
-             * Taken silently, the key of the login would land in a reference to another table.
-             */
-            if (initial is { Source: InitialSource.Context, Value: Constants.ContextValues.CurrentUser } && column.Type != ColumnType.User)
-                throw new InvalidOperationException(
-                    $"initialValues: '{name}' is '{column.Type}', and 'currentUser' is a login - it starts a 'user' column only. The person linked to the login is 'source: \"sql\"' over the column of that catalog, '... where [User] = @UserId'.");
+            CheckInitial(name, initial, column, "initialValues");
         }
 
         foreach (var (name, value) in declaration.Fixed)

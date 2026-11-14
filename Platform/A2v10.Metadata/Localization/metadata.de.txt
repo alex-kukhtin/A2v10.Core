@@ -114,6 +114,7 @@
 @Report.NotYetBuild=Der Bericht wurde noch nicht erstellt.
 @Report.Error.AtLeastGroup=Wählen Sie mindestens eine Gruppierung
 @Report.Error.AtLeastData=Wählen Sie mindestens eine Kennzahl
+@Report.Error.FilterRequired=Wählen Sie einen Wert für den Pflichtfilter
 @Period=Zeitraum
 @Grouping=Gruppierung
 @Data=Kennzahlen

@@ -38,7 +38,7 @@
             "items": { "type": "string" }
         },
         "defaults": {
-            "description": "Ticked on open. Each name repeats one from the list it belongs to; absent there - refused at build. No 'filters' here: a filter opens empty.",
+            "description": "Ticked on open. Each name repeats one from the list it belongs to; absent there - refused at build. No 'filters' here: what a filter opens on is 'initialValues'.",
             "type": "object",
             "additionalProperties": false,
             "properties": {
@@ -51,6 +51,15 @@
                     "items": { "type": "string" }
                 }
             }
+        },
+        "required": {
+            "description": "Filters a run is refused without - 'UI:@[Report.Error.FilterRequired]', on the page and in report_query alike. Each repeats a name from 'filters'; absent there - refused at load. Opening the page is not a run and is not refused.",
+            "type": "array",
+            "items": { "type": "string" }
+        },
+        "initialValues": {
+            "$ref": "metadata-endpoint-json-schema.json#/definitions/initialValues",
+            "description": "What a filter is set to when the page opens; a run takes its url as is, so a filter the user cleared stays cleared and report_query gets none. Keys repeat names from 'filters'. Sources: 'sql', 'literal', 'context' - 'query' is what a filter already is, 'profile' and 'policy' are not served."
         },
         "mcp": { "$ref": "metadata-endpoint-json-schema.json#/definitions/mcp" },
         "grants": {
