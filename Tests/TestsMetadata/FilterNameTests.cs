@@ -24,7 +24,7 @@ public class FilterNameTests
             JsonSettings.CamelCaseSerializerSettings)!;
         table.SetDefaults(TableKind.Catalog, "catalog", "x");
 
-        var ex = Assert.Throws<InvalidOperationException>(() => new DeclarationMetadata().Bake(table, PlatformId));
+        var ex = Assert.Throws<InvalidOperationException>(() => new DeclarationMetadata().Bake(table));
         Assert.Contains($"its filter '{name}' is a key the index query reserves", ex.Message);
     }
 }

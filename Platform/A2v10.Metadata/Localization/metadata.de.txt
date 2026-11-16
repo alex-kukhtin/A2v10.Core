@@ -57,6 +57,7 @@
 ; Validation and errors
 @Error.Required=Pflichtfeld
 @Error.Duplicate=Dieser Wert ist bereits vorhanden
+@Error.Lookup.NotUnique=Der Wert ist nicht eindeutig: mehrere Datensätze haben ihn
 @Error.Owner=Der ausgewählte Datensatz gehört einem anderen Eigentümer
 @Error.Delete.Used=Das Element kann nicht gelöscht werden, es wird verwendet
 @Error.Element.RowVersion=Das Element wurde von einem anderen Benutzer geändert. Öffnen Sie es erneut

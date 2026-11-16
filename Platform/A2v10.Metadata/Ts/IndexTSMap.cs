@@ -14,7 +14,7 @@ internal partial class ScriptBuilder
     internal Task<String> CreateIndexMapTS()
     {
         var collType = $"{Table.TypeName}Array";
-        var refDecl = String.Join("\n", RefTargets(withDetails: false).Select(RefTsInterface));
+        var refDecl = String.Join("\n", RefTargets(withDetails: false).Select(t => RefTsInterface(t, card: false)));
 
         var templ = Table.HasFolders
             ? $$"""

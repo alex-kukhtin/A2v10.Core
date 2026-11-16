@@ -40,6 +40,14 @@
             "type": "string",
             "description": "The column a record is chosen by - a selector, the combo of a set, the text typed to find it. Defaults to 'presentation'. 'Name' with another presentation is refused: the element's Name IS the presentation."
         },
+        "lookup": {
+            "type": "object",
+            "description": "Other fields, besides 'displayAs', a record of this endpoint is found by where it is chosen. Key - a scalar field of this endpoint; value - how the typed text is matched. Each channel becomes a column of input beside the selector of every reference to this endpoint ('<Ref>.<field>' in a form).",
+            "additionalProperties": {
+                "enum": [ "contains", "equal" ],
+                "description": "'contains' - a substring: a selector with a list of candidates. 'equal' - the whole value, on a 'unique' field only: found, the reference becomes that record; not found, it is emptied."
+            }
+        },
 
         "fields": { "$ref": "#/definitions/fields" },
         "details": { "$ref": "#/definitions/details" },

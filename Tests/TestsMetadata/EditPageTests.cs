@@ -25,7 +25,7 @@ public class EditPageTests
         var endpoint = await LoadAsync("project");
         var view = await IndexAsync("project");
 
-        Assert.True(endpoint.Declaration.EditIsPage);
+        Assert.True(endpoint.EditIsPage);
         Assert.Equal(UrlKind.Page, endpoint.PlatformUrl("edit").Kind);
         Assert.Contains("{BindCmd Open, Url='/catalog/project/edit', Argument='new'}", view);
         Assert.Contains("{BindCmd OpenSelected, Url='/catalog/project/edit'", view);
@@ -37,7 +37,7 @@ public class EditPageTests
     {
         var endpoint = await LoadAsync("agent");
 
-        Assert.False(endpoint.Declaration.EditIsPage);
+        Assert.False(endpoint.EditIsPage);
         Assert.Equal(UrlKind.Dialog, endpoint.PlatformUrl("edit").Kind);
     }
 }

@@ -16,7 +16,8 @@ namespace A2v10.Metadata;
  * document storage behind it point at one and the same TableMetadata instance, and there is
  * nothing per-endpoint left in it to overwrite.
  *
- * Built by the loader and never mutated afterwards. It is not deserialized from JSON, so
+ * Built by the loader and never mutated after publication; inside the load one slot is written
+ * once, the forms (NormalEndpointMetadata.Forms). It is not deserialized from JSON, so
  * 'required' costs nothing here and states the invariant instead of documenting it.
  *
  * The union is over the BODY, not over the common part: both cases have an identity and a table
@@ -84,6 +85,37 @@ public sealed record NormalEndpointMetadata : EndpointMetadata, IRefTarget
 {
     public required TableMetadata Storage { get; init; }
     public required DeclarationMetadata Declaration { get; init; }
+
+    /* The forms in force: declared or default, every name resolved against the shape. Empty for a
+     * shape nothing renders (a set, a numbering): a table is deployed whether or not anything shows it.
+     *
+     * Phase 3 of the load, not the declaration's bake: a form reads what a reference brings from its
+     * target (the target's lookup channels), and the targets are linked in phase 2, after this record
+     * is already pointed at. So a slot, written once, before publication (BakeForms); read before
+     * that, it throws - an empty answer would read as "renders nothing".
+     */
+    private IReadOnlyDictionary<String, FormMetadata>? _forms;
+
+    public IReadOnlyDictionary<String, FormMetadata> Forms => _forms
+        ?? throw new InvalidOperationException($"{Path}: the forms are read before phase 3 of the load built them");
+
+    internal void BakeForms(AppPlatformId platformId)
+    {
+        if (_forms != null)
+            throw new InvalidOperationException($"{Path}: the forms are built once");
+        _forms = Declaration.BuildForms(Storage, platformId);
+    }
+
+    internal FormMetadata Form(String name) =>
+        Forms.TryGetValue(name, out var form)
+            ? form
+            : throw new InvalidOperationException($"The form '{name}' is not built for {Path}");
+
+    /* How the card opens - the list's commands and the address of 'edit' ask it. The baked form's,
+     * not the table's kind: 'forms.edit.is' is written per endpoint, and a catalog written 'page'
+     * built a page that the list opened in a dialog, where 'Save and close' had nothing to close.
+     */
+    public Boolean EditIsPage => Form(Constants.FormNames.Edit).Is == FormKind.Page;
 
     /* The Image columns of the shape, under its model: every address over one table has them. Root
      * columns only - a row set is another table

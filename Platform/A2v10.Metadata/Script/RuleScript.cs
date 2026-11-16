@@ -25,6 +25,8 @@ internal partial class ScriptBuilder
             yield return rs.Type;
             yield return $"{rs.Type}Array";
         }
+        foreach (var t in LookupTypes())
+            yield return t;
     }
 
     /* One handler per PATH. An inherit off a reference and a vat reading through it are one body,

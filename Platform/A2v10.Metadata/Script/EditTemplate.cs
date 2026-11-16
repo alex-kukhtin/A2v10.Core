@@ -25,7 +25,7 @@ internal partial class ScriptBuilder
      */
     private IEnumerable<String> TabStateProperties()
     {
-        foreach (var strip in Endpoint.Declaration.Form(Constants.FormNames.Edit).TabStrips())
+        foreach (var strip in Endpoint.Form(Constants.FormNames.Edit).TabStrips())
             yield return $$"""'{{Table.TypeName}}.{{strip.TabState}}': {type: String, value: '{{strip.Elements[0].RowSet}}'}""";
     }
 
@@ -112,7 +112,7 @@ internal partial class ScriptBuilder
         {
             if (Table.HasTags)
                 yield return """'g.tags.saved': tagsSaved""";
-            foreach (var e in RuleEvents())
+            foreach (var e in RuleEvents().Concat(LookupEvents()))
                 yield return e;
         }
 
@@ -230,7 +230,7 @@ internal partial class ScriptBuilder
                 {{String.Join(jsDivider, validators())}}
             },
             events: {
-                {{String.Join(jsDivider, RuleEvents())}}
+                {{String.Join(jsDivider, RuleEvents().Concat(LookupEvents()))}}
             },
             commands: {
                 post,

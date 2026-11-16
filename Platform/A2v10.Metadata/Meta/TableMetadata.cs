@@ -427,7 +427,7 @@ public sealed record BasedOnMetadata
     public Dictionary<String, String> Document { get; init; } = [];
     public PostEachMetadata? Each { get; init; }
 
-    // phase 2 (DatabaseMetadataProvider.ResolveBasedOnAsync): the document born
+    // phase 4 (DatabaseMetadataProvider.ResolveBasedOnAsync): the document born
     [JsonIgnore]
     public NormalEndpointMetadata? TargetEndpoint { get; set; }
 }
@@ -505,6 +505,20 @@ public sealed record TableMetadata
      */
     [JsonIgnore]
     internal String? ChoiceProperty => DisplayAs == Presentation ? null : DisplayAs;
+
+    /* The other columns a row is chosen by - an article, a barcode. On the target, beside DisplayAs,
+     * because "what am I chosen by" is the target's answer: the places of choice open the target's
+     * address and do not know who chooses. Each channel is a column of input of the reference that
+     * points here, so the element carries it where the target is chosen (the card's map, the fetch).
+     * Checked where DisplayAs is (SetDefaults).
+     */
+    [JsonProperty("lookup")]
+    private Dictionary<String, LookupMatch> _lookup { get; init; } = [];
+
+    [JsonIgnore]
+    internal IReadOnlyList<LookupChannel> Lookup { get; private set; } = [];
+
+    internal IEnumerable<TableColumn> LookupColumns => Lookup.Select(l => l.Column);
 
     [JsonProperty("fields")]
     private Dictionary<String, TableColumn> _fields { get; init; } = [];
@@ -947,6 +961,27 @@ public sealed record TableMetadata
             if (DisplayAs == Constants.FieldNames.Name && Presentation != Constants.FieldNames.Name)
                 throw new InvalidOperationException(
                     $"{Path}: displayAs is [Name] and presentation [{Presentation}] - a reference carries the presentation as its Name, so the two would be one property. Choose by a column of another name");
+
+            Lookup = [.. _lookup.Select(kp => channel(kp.Key, kp.Value))];
+        }
+
+        LookupChannel channel(String name, LookupMatch match)
+        {
+            var head = $"{Path}: lookup '{name}'";
+            var column = this.AllColumns().FirstOrDefault(c => c.Name == name)
+                ?? throw new InvalidOperationException($"{head} is not a column of this table");
+            if (column.IsRef)
+                throw new InvalidOperationException($"{head} is a reference. A channel is typed into; a reference is picked by its own target's channels");
+            if (name == DisplayAs)
+                throw new InvalidOperationException($"{head} is displayAs, which is a channel always. Remove it from 'lookup'");
+            // the element carries the presentation as its Name, so a channel called so has no property of its own
+            if (name == Constants.FieldNames.Name && Presentation != Constants.FieldNames.Name)
+                throw new InvalidOperationException(
+                    $"{head}: presentation is [{Presentation}], and a reference carries it as its Name - the two would be one property");
+            if (match == LookupMatch.Equal && !column.Unique)
+                throw new InvalidOperationException(
+                    $"{head} is 'equal' on a column without 'unique'. An exact match must find one record or none - declare the field unique, or make the channel 'contains'");
+            return new LookupChannel(column, match);
         }
 
         switch (Kind)
@@ -969,6 +1004,8 @@ public sealed record TableMetadata
                     throw new InvalidOperationException($"{Path}: 'presentation' on a {Kind} - nothing references it, so nothing is shown by it");
                 if (!String.IsNullOrEmpty(DisplayAs))
                     throw new InvalidOperationException($"{Path}: 'displayAs' on a {Kind} - nothing references it, so nothing is chosen by it");
+                if (_lookup.Count > 0)
+                    throw new InvalidOperationException($"{Path}: 'lookup' on a {Kind} - nothing references it, so nothing is chosen by it");
                 break;
         }
 

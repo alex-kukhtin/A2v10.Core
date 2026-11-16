@@ -14,7 +14,7 @@ internal partial class ScriptBuilder
         var detailsDecl = String.Empty;
 
         // the record's references and its rows': both are resolved into this one model
-        var refDecl = String.Join("\n", RefTargets(withDetails: true).Select(RefTsInterface)) + BlobTsInterface();
+        var refDecl = String.Join("\n", RefTargets(withDetails: true).Select(t => RefTsInterface(t, card: true))) + BlobTsInterface();
 
         IEnumerable<String> detailsFields()
         {

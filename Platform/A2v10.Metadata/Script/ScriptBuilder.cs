@@ -99,13 +99,15 @@ internal partial class ScriptBuilder(BuilderDescriptor desciptor, Boolean isTs)
      * (SqlBuilder.RefFields, RefMapBuilder.GenerateResolves) - the key, the presentation as Name,
      * the choice column, the colour, a state's role, a set's own fields (TableMetadata.RefColumns,
      * one list with the SQL), a document's Done with its address and icon,
-     * and the columns an inherit of this endpoint reads off it. All read-only: a referenced element
-     * is never edited through the reference.
+     * and the columns an inherit of this endpoint reads off it; in the card the target's lookup
+     * channels too (RefMapBuilder.CarriedColumns). Read-only, all but an 'equal' channel: a
+     * referenced element is never edited through the reference, and that channel is typed into to
+     * FIND one.
      *
      * Not the target's own columns: that promised every field, a stamp, a reference of the target's
      * own to a type the map never declared - and nothing read the promise until the compiler did.
      */
-    public IEnumerable<String> RefTsProperties(TableMetadata target)
+    public IEnumerable<String> RefTsProperties(TableMetadata target, Boolean card)
     {
         yield return $"\treadonly {Constants.FieldNames.Id}: {target.KeyColumn.ToTsType(_descr.PlatformId)};";
         yield return $"\treadonly {Constants.FieldNames.Name}: string;";
@@ -117,8 +119,16 @@ internal partial class ScriptBuilder(BuilderDescriptor desciptor, Boolean isTs)
             foreach (var m in Constants.FieldNames.RefViewMembers)
                 yield return $"\treadonly {m}: string;";
         }
-        foreach (var c in RefMapBuilder.InheritSources(Endpoint.Declaration, target))
-            yield return $"\treadonly {TsMember(c)};";
+        if (!card)
+        {
+            foreach (var c in RefMapBuilder.InheritSources(Endpoint.Declaration, target))
+                yield return $"\treadonly {TsMember(c)};";
+            yield break;
+        }
+        foreach (var c in RefMapBuilder.CarriedColumns(Endpoint.Declaration, target))
+            yield return target.Lookup.Any(l => l.Column.Name == c.Name && l.Match == LookupMatch.Equal)
+                ? $"\t{TsMember(c)};"
+                : $"\treadonly {TsMember(c)};";
     }
 
     /* Every table a type of the map is declared for: the targets of the references the recordsets
@@ -139,9 +149,9 @@ internal partial class ScriptBuilder(BuilderDescriptor desciptor, Boolean isTs)
     }
 
     // the declaration of one referenced type, for both maps
-    private String RefTsInterface(TableMetadata target) => $$"""
+    private String RefTsInterface(TableMetadata target, Boolean card) => $$"""
         export interface {{target.RefTypeName}} extends IElement {
-        {{String.Join("\n", RefTsProperties(target))}}
+        {{String.Join("\n", RefTsProperties(target, card))}}
         }
 
         """;

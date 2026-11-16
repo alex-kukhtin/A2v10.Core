@@ -6219,10 +6219,13 @@
         }
     }));
 
-    // a2-image, a2-file-preview (Net48 components/image.js), unchanged in behaviour. a2-file-image and a2-static-image of
-    // image.js are not ported yet.
+    // a2-image, a2-static-image, a2-file-image, a2-file-preview (Net48 components/image.js), unchanged in behaviour.
     // - a2-image: item[prop] (a reference with $id and $token, or an id with the token beside it in item) at
     //   /_image/<base>/<prop>/<id>?token=…, removed by ✕ ($empty, or $remove inArray); none: a2-upload (upload.ts).
+    // - a2-static-image: the site's image at /_static_image/<url, dots as dashes>. B40: no url, no src (Net48 threw
+    //   TypeError on render).
+    // - a2-file-image: the file value (an id, or an object with its $id and $token) at /_file/<url>/<id>?token=…,
+    //   width and height as its max size.
     // - a2-file-preview: the file value (an object with Mime) at /_file/<url>/<id>?token=…, an <img> for image/*, an
     //   <object> for a pdf, else "preview is unavailable". Net48's template had a stray quote after v-if="isImage" and
     //   v-else-if="isPdf": Vue 2's parser took it, Vue 3's compiler refuses it; dropped.
@@ -6333,6 +6336,52 @@
             const source = this.source;
             if (this.newItem && source && source.$new) {
                 this.newElem = source.$new();
+            }
+        }
+    }));
+    platform$3.vocabulary.component('a2-static-image', vue.defineComponent({
+        template: '<img :src="href" :alt="alt"/>',
+        props: {
+            url: String,
+            alt: String
+        },
+        computed: {
+            href() {
+                if (!this.url)
+                    return undefined; // B40
+                const root = window.$$rootUrl;
+                return url.combine(root, '_static_image', this.url.replace(/\./g, '-'));
+            }
+        }
+    }));
+    platform$3.vocabulary.component('a2-file-image', vue.defineComponent({
+        template: '<img :src="href" :style="cssStyle" />',
+        props: {
+            url: String,
+            width: String,
+            height: String,
+            value: [String, Number, Object]
+        },
+        computed: {
+            href() {
+                const root = window.$$rootUrl;
+                const value = this.value;
+                let id = value;
+                const qry = {};
+                if (utils$3.isObjectExact(value)) {
+                    id = utils$3.getStringId(value);
+                    if (value._meta_ && value._meta_.$token)
+                        qry.token = value[value._meta_.$token];
+                }
+                return url.combine(root, '_file', this.url, id) + url.makeQueryString(qry);
+            },
+            cssStyle() {
+                const r = {};
+                if (this.width)
+                    r.maxWidth = this.width;
+                if (this.height)
+                    r.maxHeight = this.height;
+                return r;
             }
         }
     }));

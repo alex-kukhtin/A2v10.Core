@@ -394,13 +394,13 @@ internal partial class XamlBuilder
     {
         return action switch
         {
-            Constants.Actions.Index => CreateIndexPageXaml(Declaration.Form(Constants.FormNames.Index)),
-            Constants.Actions.IndexPartial => CreateIndexPartialPageXaml(Declaration.Form(Constants.FormNames.Index)),
-            Constants.Actions.Browse => CreateBrowseDialogXaml(Declaration.Form(Constants.FormNames.Browse)),
+            Constants.Actions.Index => CreateIndexPageXaml(Endpoint.Form(Constants.FormNames.Index)),
+            Constants.Actions.IndexPartial => CreateIndexPartialPageXaml(Endpoint.Form(Constants.FormNames.Index)),
+            Constants.Actions.Browse => CreateBrowseDialogXaml(Endpoint.Form(Constants.FormNames.Browse)),
             // no form: the tree of the owner's folders, nothing to lay out
             Constants.Actions.BrowseFolder => CreateBrowseFolderDialogXaml(),
             Constants.Actions.EditFolder => CreateEditFolderDialogXaml(),
-            Constants.Actions.Edit => CreateEditXaml(Declaration.Form(Constants.FormNames.Edit)),
+            Constants.Actions.Edit => CreateEditXaml(Endpoint.Form(Constants.FormNames.Edit)),
             Constants.Actions.Show => throw Constants.Actions.NotBuilt(action, "XAML"),
             // no form: what it shows is derived from 'post' - see TransDialogXaml
             Constants.Trans.Action => CreateTransDialogXaml(),

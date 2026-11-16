@@ -57,6 +57,7 @@
 ; Validation and errors
 @Error.Required=Required field
 @Error.Duplicate=This value already exists
+@Error.Lookup.NotUnique=The value is not unique: several records have it
 @Error.Owner=The selected record belongs to another owner
 @Error.Delete.Used=The item cannot be deleted: it is in use
 @Error.Element.RowVersion=The item was changed by another user. Open it again

@@ -16,6 +16,7 @@ internal partial class BaseModelBuilder
         {
             "apply" or "post" => PostAsync(prms),
             "fetch" => _sqlBuilder.FetchAsync(prms),
+            "lookup" => _sqlBuilder.LookupAsync(prms),
             "fetchfolder" => _sqlBuilder.FetchFolderAsync(prms),
             "deletefolder" => _sqlBuilder.DeleteFolderAsync(prms),
             "unapply" or "unpost" => UnPostAsync(prms),

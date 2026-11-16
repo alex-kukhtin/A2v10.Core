@@ -64,7 +64,7 @@ public class WhenTests
         var storage = (await LoadNormalAsync("document", String.Empty)).Storage;
         var declaration = JsonConvert.DeserializeObject<DeclarationMetadata>(json, JsonSettings.CamelCaseSerializerSettings)!;
 
-        var ex = Assert.Throws<InvalidOperationException>(() => declaration.Bake(storage, PlatformId));
+        var ex = Assert.Throws<InvalidOperationException>(() => declaration.Bake(storage));
         Assert.Contains(message, ex.Message);
     }
 
@@ -84,7 +84,7 @@ public class WhenTests
             OperationDeclarations = [DatabaseMetadataProvider.ToOperationDeclaration("x.operation.json", "receipt", "x", operation)]
         };
 
-        var ex = Assert.Throws<InvalidOperationException>(() => declaration.Bake(storage, PlatformId));
+        var ex = Assert.Throws<InvalidOperationException>(() => declaration.Bake(storage));
         Assert.Contains("declares 'inherit'", ex.Message);
         Assert.Contains("'receipt.x'", ex.Message);
     }

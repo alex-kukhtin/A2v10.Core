@@ -67,7 +67,7 @@ internal static class DeclarationBake
 
     /* The 'vat' map of one row set, resolved. A path is '[$root.<Model>.]Field[.Field]': the prefix
      * moves to the root, the second name reads through a reference - one hop, as 'inherit' does - and
-     * stays a name until phase 2 (VatOperand). An output is a field of the row itself: the rule writes
+     * stays a name until phase 4 (VatOperand). An output is a field of the row itself: the rule writes
      * its row, never another record. The root is passed down because only a collection has rules of
      * this kind, and its paths reach the header.
      */
@@ -306,12 +306,12 @@ internal static class DeclarationBake
                     $"field '{f.Column!.Name}' of {table.SqlTableName}: its filter '{f.Name}' is a key the index query reserves ({String.Join(", ", Constants.QueryNames.All)}). Rename the field.");
     }
 
-    /* The root of the walk. It can run this early only because nothing here reaches outside its own
-     * table - see InheritDescriptor - and that is what keeps the endpoint immutable: a bake needing
-     * the reference graph would have to run after publication, and there is no way to put a new
-     * declaration into a record everyone already points at.
+    /* The root of the walk, phase 1 of the load. It can run this early only because nothing here
+     * reaches outside its own table - see InheritDescriptor: there is no way to put a new
+     * declaration into a record everyone already points at. What needs the reference graph is
+     * phase 3 (BuildForms) or later, into a slot of the endpoint.
      */
-    internal static DeclarationMetadata Bake(this DeclarationMetadata declaration, TableMetadata table, AppPlatformId platformId)
+    internal static DeclarationMetadata Bake(this DeclarationMetadata declaration, TableMetadata table)
     {
         declaration = declaration.WithOperationRules(table);
         CheckNames(table, declaration.Rules.Required, "required");
@@ -329,12 +329,7 @@ internal static class DeclarationBake
         foreach (var rowSet in baked.AllRowSets())
             if (rowSet.Vat is { } vat)
                 CheckVatNotProperty(vat, declaration.Properties, root: true);
-        // the baked one: a row's form reads what the rules of its row set write
-        return baked with
-        {
-            BakedForms = BuildForms(baked, table, platformId),
-            Initials = BuildInitials(declaration, table)
-        };
+        return baked with { Initials = BuildInitials(declaration, table) };
     }
 
     /* A fixed value as SQL will spell it, by the column and never by the look of the text - the
@@ -432,9 +427,10 @@ internal static class DeclarationBake
 
     /* Every form of the endpoint - declared or default, resolved against the shape either way, and
      * total: for a shape that renders, all three keys are present. See CLAUDE.md, "Forms: whole or
-     * nothing".
+     * nothing". Phase 3 (NormalEndpointMetadata.BakeForms), over the BAKED declaration: a row's form
+     * reads what the rules of its row set write.
      */
-    private static IReadOnlyDictionary<String, FormMetadata> BuildForms(DeclarationMetadata declaration,
+    internal static IReadOnlyDictionary<String, FormMetadata> BuildForms(this DeclarationMetadata declaration,
         TableMetadata table, AppPlatformId platformId)
     {
         String[] names = [Constants.FormNames.Index, Constants.FormNames.Browse, Constants.FormNames.Edit];
@@ -470,6 +466,7 @@ internal static class DeclarationBake
         {
             var collection = declaration.Details.GetValueOrDefault(scope);
             return rows.RowMembers()
+                .WithChannels()
                 .WithProperties(collection?.PropertiesFor(kind) ?? [])
                 .WithVat(collection?.RowSets.FirstOrDefault(rs => rs.Kind == kind)?.Vat);
         }
@@ -488,7 +485,7 @@ internal static class DeclarationBake
                     MemberMetadata.IndexMembers, plainRows) },
             { Constants.FormNames.Edit,
                 Build(Constants.FormNames.Edit, t => DefaultFormBuilder.CreateEditForm(t, switchesOperation: declaration.Operations.Count > 0),
-                    t => t.EditMembers().WithProperties(declaration.Properties), editRows) }
+                    t => t.EditMembers().WithChannels().WithProperties(declaration.Properties), editRows) }
         };
     }
 

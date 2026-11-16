@@ -89,15 +89,24 @@ internal partial class SqlBuilder
             .Where(o => !AppPlatformId.IsEmpty(o.Id))
             .Select(o => (o.Column, o.Id!))];
 
-    internal async Task<IInvokeResult> FetchAsync(ExpandoObject? prms)
+    internal async Task<IInvokeResult> FetchAsync(ExpandoObject? prms) =>
+        await ChoiceAsync(FetchSqlText(prms), prms, prms?.Get<String>("Text"));
+
+    /* An 'equal' channel typed into: the one record whose column is the text, or none
+     * (TableMetadata.Lookup). The channel is named, because two exact channels would answer two
+     * different questions about one text; it is resolved against the shape like the fetch's columns.
+     */
+    internal async Task<IInvokeResult> LookupAsync(ExpandoObject? prms) =>
+        await ChoiceAsync(LookupSqlText(prms), prms, prms?.Get<String>("Text")?.Trim());
+
+    private async Task<IInvokeResult> ChoiceAsync(String sql, ExpandoObject? prms, String? text)
     {
-        var sql = FetchSqlText(prms);
         var owners = FetchOwners(Table, PlatformId, prms);
 
         var model = await _dbContext.LoadModelSqlAsync(DataSource, sql, dbprms =>
         {
             dbprms.AddBigInt("@UserId", _currentUser.Identity.Id)
-            .AddString("@Text", prms?.Get<String>("Text"));
+            .AddString("@Text", text);
             foreach (var (column, id) in owners)
                 dbprms.AddTyped(ColumnParam(column.Name), PlatformId.SqlDbType, id);
         });
@@ -105,11 +114,53 @@ internal partial class SqlBuilder
         return model.ToInvokeResult();
     }
 
-    // the text of the fetch, built without the database
+    /* A fetch is a place of choice: searched by every column the target is chosen by - DisplayAs and
+     * the 'contains' channels by a substring, an 'equal' channel by the whole text - and ordered by
+     * the one the selector shows (DisplayAs).
+     */
     internal String FetchSqlText(ExpandoObject? prms)
     {
+        var match = String.Join(" or ", Table.Lookup
+            .Select(l => l.Match == LookupMatch.Equal ? $"a.[{l.Column.Name}] = @Text" : $"a.[{l.Column.Name}] like @fr")
+            .Prepend($"a.[{Table.DisplayAs}] like @fr"));
+        return ChoiceSqlText(prms, match, 100, String.Empty);
+    }
+
+    // the text of the exact search, built without the database
+    internal String LookupSqlText(ExpandoObject? prms)
+    {
+        var name = prms?.Get<String>("Channel");
+        var channel = Table.Lookup.FirstOrDefault(l => l.Column.Name == name && l.Match == LookupMatch.Equal)
+            ?? throw new InvalidOperationException(
+                $"lookup: '{name}' is no 'equal' channel of {Table.Path}. Equal: {String.Join(", ", Table.Lookup.Where(l => l.Match == LookupMatch.Equal).Select(l => l.Column.Name))}");
+        // 'unique' is checked at input, with no index under it (ISSUES 3.9): a duplicate written past the form is an error, never the first one
+        var guard = $"""
+
+            if (select count(*) from @map) > 1
+                {UserError("Error.Lookup.NotUnique")}
+            """;
+        return ChoiceSqlText(prms, $"a.[{channel.Column.Name}] = @Text", 2, guard);
+    }
+
+    /* The two answers share everything but the predicate: the rows of this address, and an element
+     * of one shape however it reached the record - Name the presentation, the choice column, the
+     * colour, the channels (RefMapBuilder.CarriedColumns has them in the card), and the columns the
+     * picking row inherits. Two shapes of the text, and the difference is real: without references
+     * there is nothing to resolve and one select answers; with them the rows are needed twice, so
+     * they are materialized once instead of being selected twice under the predicate. A guard reads
+     * the materialized rows, so it always takes the second shape.
+     */
+    private String ChoiceSqlText(ExpandoObject? prms, String match, Int32 top, String guard)
+    {
+        var shown = Table.Presentation;
+        var chosen = Table.DisplayAs;
+        var carried = ChoiceField(Table, "a") + ColorField(Table, "a")
+            + String.Concat(ChannelColumns().Select(c => $", a.[{c.Name}]"));
+        // what the picking row inherits, but not twice: an inherit may read a channel or the choice column
+        String?[] sent = [Table.ChoiceProperty, Table.ColorColumn?.Name, .. ChannelColumns().Select(c => c.Name)];
         var columns = FetchColumns(prms?.Get<String>("inherit"));
         var extra = String.Join("", columns
+            .Where(c => !sent.Contains(c.Name))
             .Select(c => $",\n    {c.SqlModelColumnName("a")}"));
 
         var refColumns = columns.Where(c => c.IsRef).ToList();
@@ -117,22 +168,11 @@ internal partial class SqlBuilder
         // the same rows the browse dialog of this address shows - see FixedPredicate
         var fixedRows = FixedPredicate("a")
             + String.Concat(owners.Select(o => $" and {OwnerMatch($"a.[{o.Column.Name}]", ColumnParam(o.Column.Name))}"));
-        /* A fetch is a place of choice: searched and ordered by the column the selector shows
-         * (DisplayAs), and the element carries what a map would - Name the presentation, the choice
-         * column, the colour - so it has one shape however it reached the record.
-         */
-        var shown = Table.Presentation;
-        var chosen = Table.DisplayAs;
-        var carried = ChoiceField(Table, "a") + ColorField(Table, "a");
         // the rows of this address, as the index has them: over a shared table, this document's alone
         var own = OwnOperations("a") is { } ownRows ? $" and {ownRows}" : String.Empty;
 
-        /* Two shapes, and the difference is real: without references there is nothing to resolve
-         * and one select answers; with them the same hundred rows are needed twice, so they are
-         * materialized once instead of being selected twice under a LIKE.
-         */
-        return refColumns.Count == 0
-            ? $"""
+        if (refColumns.Count == 0 && String.IsNullOrEmpty(guard))
+            return $"""
             set nocount on;
             set transaction isolation level read uncommitted;
             {GateSql(Gate.View)}
@@ -140,14 +180,18 @@ internal partial class SqlBuilder
             declare @fr nvarchar(255);
             set @fr = N'%' + @Text + N'%';
 
-            select top(100) [{Table.CollectionName}!{Table.TypeName}!Array] = null,
+            select top({top}) [{Table.CollectionName}!{Table.TypeName}!Array] = null,
                 [Id!!Id] = a.Id, [Name!!Name] = a.[{shown}]{carried}{extra}
             from {Table.SqlTableName} a
             where a.[Void] = 0{fixedRows}{own} and
-                (a.[{chosen}] like @fr)
+                ({match})
             order by a.[{chosen}];
-            """
-            : $"""
+            """;
+
+        var mapColumns = String.Concat(refColumns.Select(c => $", [{c.Name}] {c.SqlDataType()}"));
+        var mapNames = String.Concat(refColumns.Select(c => $", [{c.Name}]"));
+        var mapValues = String.Concat(refColumns.Select(c => $", a.[{c.Name}]"));
+        return $"""
             set nocount on;
             set transaction isolation level read uncommitted;
             {GateSql(Gate.View)}
@@ -155,15 +199,15 @@ internal partial class SqlBuilder
             declare @fr nvarchar(255);
             set @fr = N'%' + @Text + N'%';
 
-            declare @map table(Id platformid, {String.Join(", ", refColumns.Select(c => $"[{c.Name}] {c.SqlDataType()}"))});
+            declare @map table(Id platformid{mapColumns});
 
-            insert into @map(Id, {String.Join(", ", refColumns.Select(c => $"[{c.Name}]"))})
-            select top(100) a.Id, {String.Join(", ", refColumns.Select(c => $"a.[{c.Name}]"))}
+            insert into @map(Id{mapNames})
+            select top({top}) a.Id{mapValues}
             from {Table.SqlTableName} a
             where a.[Void] = 0{fixedRows}{own} and
-                (a.[{chosen}] like @fr)
+                ({match})
             order by a.[{chosen}];
-
+            {guard}
             select [{Table.CollectionName}!{Table.TypeName}!Array] = null,
                 [Id!!Id] = a.Id, [Name!!Name] = a.[{shown}]{carried}{extra}
             from {Table.SqlTableName} a
@@ -173,4 +217,8 @@ internal partial class SqlBuilder
             {FetchMaps(Table, refColumns)}
             """;
     }
+
+    // the channels the element carries beyond RefColumns - the ones a map sends in the card (RefMapBuilder.CarriedColumns)
+    private IEnumerable<TableColumn> ChannelColumns() =>
+        Table.LookupColumns.Where(c => c.Name != Constants.FieldNames.Name && c.Name != Table.ChoiceProperty);
 }

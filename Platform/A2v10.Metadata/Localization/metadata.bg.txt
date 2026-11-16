@@ -57,6 +57,7 @@
 ; Validation and errors
 @Error.Required=Задължително поле
 @Error.Duplicate=Тази стойност вече съществува
+@Error.Lookup.NotUnique=Стойността не е уникална: имат я няколко записа
 @Error.Owner=Избраният запис принадлежи на друг собственик
 @Error.Delete.Used=Елементът не може да бъде изтрит, той се използва
 @Error.Element.RowVersion=Елементът е променен от друг потребител. Отворете го отново

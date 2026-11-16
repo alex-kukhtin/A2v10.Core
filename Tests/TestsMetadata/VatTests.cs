@@ -32,7 +32,7 @@ public class VatTests
     [Fact]
     public async Task A_path_resolves_in_the_row_in_the_root_and_through_a_reference()
     {
-        var baked = OnRows(Roles).Bake(await StorageAsync(), PlatformId);
+        var baked = OnRows(Roles).Bake(await StorageAsync());
 
         var vat = baked.AllRowSets().Single(rs => rs.Kind == "Stock").Vat!.Roles;
         Assert.Equal(("Qty", false, null), (vat["Qty"].Column.Name, vat["Qty"].IsRoot, vat["Qty"].RefField));
@@ -48,7 +48,7 @@ public class VatTests
             , "kinds": { "Service": { "rules": { "vat": { "Rate": "VatRate.Rate", "Sum": "Sum", "Vat": "Vat", "Total": "Total" } } } }
             """);
 
-        var rowSets = declaration.Bake(await StorageAsync(), PlatformId).AllRowSets().ToList();
+        var rowSets = declaration.Bake(await StorageAsync()).AllRowSets().ToList();
 
         Assert.Contains("Qty", rowSets.Single(rs => rs.Kind == "Stock").Vat!.Roles.Keys);
         Assert.Equal(["Rate", "Sum", "Vat", "Total"], rowSets.Single(rs => rs.Kind == "Service").Vat!.Roles.Keys);
@@ -72,7 +72,7 @@ public class VatTests
     {
         var storage = await StorageAsync();
 
-        var ex = Assert.Throws<InvalidOperationException>(() => OnRows(vat).Bake(storage, PlatformId));
+        var ex = Assert.Throws<InvalidOperationException>(() => OnRows(vat).Bake(storage));
         Assert.Contains(message, ex.Message);
     }
 
@@ -86,7 +86,7 @@ public class VatTests
     {
         var storage = await StorageAsync();
 
-        var ex = Assert.Throws<InvalidOperationException>(() => OnRows(Roles, rules, rows).Bake(storage, PlatformId));
+        var ex = Assert.Throws<InvalidOperationException>(() => OnRows(Roles, rules, rows).Bake(storage));
         Assert.Contains(message, ex.Message);
     }
 
@@ -97,7 +97,7 @@ public class VatTests
         var storage = await StorageAsync();
         var declaration = OnRows(Roles, root: """ "properties": { "IsVat": { "get": "this.Agent != null" } }, """);
 
-        var ex = Assert.Throws<InvalidOperationException>(() => declaration.Bake(storage, PlatformId));
+        var ex = Assert.Throws<InvalidOperationException>(() => declaration.Bake(storage));
         Assert.Contains("'IsVat' is read by 'vat' as 'IsVat'", ex.Message);
     }
 
@@ -108,7 +108,7 @@ public class VatTests
         var declaration = JsonConvert.DeserializeObject<DeclarationMetadata>(
             $$"""{ "rules": { "vat": { {{Roles}} } } }""", JsonSettings.CamelCaseSerializerSettings)!;
 
-        var ex = Assert.Throws<InvalidOperationException>(() => declaration.Bake(storage, PlatformId));
+        var ex = Assert.Throws<InvalidOperationException>(() => declaration.Bake(storage));
         Assert.Contains("which is a record", ex.Message);
     }
 
@@ -128,7 +128,7 @@ public class VatTests
             OperationDeclarations = [DatabaseMetadataProvider.ToOperationDeclaration("x.operation.json", "receipt", "x", operation)]
         };
 
-        var ex = Assert.Throws<InvalidOperationException>(() => declaration.Bake(storage, PlatformId));
+        var ex = Assert.Throws<InvalidOperationException>(() => declaration.Bake(storage));
         Assert.Contains("declares 'vat'", ex.Message);
     }
 
@@ -169,7 +169,7 @@ public class VatTests
     [Fact]
     public async Task A_hop_reads_a_field_the_reference_carries()
     {
-        var baked = OnRows(Roles).Bake(await StorageAsync(), PlatformId);
+        var baked = OnRows(Roles).Bake(await StorageAsync());
 
         DatabaseMetadataProvider.CheckVatHops("/document", baked);
     }
@@ -177,7 +177,7 @@ public class VatTests
     [Fact]
     public async Task A_hop_to_a_field_the_reference_does_not_carry_is_refused()
     {
-        var baked = OnRows(Roles.Replace("VatRate.Rate", "Item.Rate")).Bake(await StorageAsync(), PlatformId);
+        var baked = OnRows(Roles.Replace("VatRate.Rate", "Item.Rate")).Bake(await StorageAsync());
 
         var ex = Assert.Throws<InvalidOperationException>(() => DatabaseMetadataProvider.CheckVatHops("/document", baked));
         Assert.Contains("reads 'Rate' through [Item]", ex.Message);

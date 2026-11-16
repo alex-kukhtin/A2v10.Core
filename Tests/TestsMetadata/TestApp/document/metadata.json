@@ -107,9 +107,6 @@
 					"target": "/catalog/contract"
 				}
 			},
-			"lookup": {
-				"Item": [ "Article", "Barcode" ]
-			},
 			"rules": {
 				"inherit": {
 					"Unit": {

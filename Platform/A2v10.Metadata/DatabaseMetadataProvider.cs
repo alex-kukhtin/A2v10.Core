@@ -89,17 +89,26 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         return _metadataCache.GetOrLoadAsync(dataSource, schema, table, LoadAndCheckAsync);
     }
 
-    // the descent is over, nothing is half linked: what the checks load is linked whole before they read it
+    /* The four phases of a load: 1 build (LoadEndpointAsync, the declaration's bake), 2 link
+     * (LinkReferencesAsync), 3 forms (BakeForms), 4 checks (CheckReferencesAsync). 1 and 2 are the
+     * descent; 3 and 4 wait until it is over - nothing is half linked then - and run per endpoint, in
+     * turn: a check may load another endpoint, which is linked whole and queued behind. A form reads
+     * the links and what the targets built in phase 1, and loads nothing; no check reads a form.
+     */
     private async Task<EndpointMetadata> LoadAndCheckAsync(EndpointLoad load, String? dataSource, String schema, String table)
     {
         var endpoint = await LoadAsync(load, dataSource, schema, table);
         while (load.NextUnchecked() is { } next)
+        {
+            if (next is NormalEndpointMetadata normal)
+                BakeForms(normal, await GetPlatformIdAsync(dataSource));
             await CheckReferencesAsync(load, next, dataSource);
+        }
         return endpoint;
     }
 
-    /* Build, then link, and between the two the endpoint is put into the load: the graph is
-     * cyclic, so a descent that comes back around has to find the instance and return.
+    /* Phases 1 and 2. Build, then link, and between the two the endpoint is put into the load: the
+     * graph is cyclic, so a descent that comes back around has to find the instance and return.
      */
     private async Task<EndpointMetadata> LoadAsync(EndpointLoad load, String? dataSource, String schema, String table)
     {
@@ -579,8 +588,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                     Storage = storage,
                     // layered first, then read against the shape - both while the endpoint is built,
                     // so what leaves here is finished and nothing has to come back to it
-                    Declaration = BakeDeclaration(MergeDeclaration(declaration, storageDeclaration), storage, schema, table,
-                        await GetPlatformIdAsync(dataSource)),
+                    Declaration = BakeDeclaration(MergeDeclaration(declaration, storageDeclaration), storage, schema, table),
                     FileHash = hash,
                     Grants = grants
                 }
@@ -606,17 +614,30 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
      * name already, so a message is never prefixed twice.
      */
     private static DeclarationMetadata BakeDeclaration(DeclarationMetadata declaration, TableMetadata storage,
-        String schema, String table, AppPlatformId platformId)
+        String schema, String table)
     {
         try
         {
             CheckAutonumColumn(declaration, storage);
-            return declaration.Bake(storage, platformId);
+            return declaration.Bake(storage);
         }
         // the author's refusals only - all InvalidOperationException; a fault of the platform passes as it is, not as this file's
         catch (InvalidOperationException ex)
         {
             throw new InvalidOperationException($"{MetadataFileName(schema, table)}: {ex.Message}", ex);
+        }
+    }
+
+    // phase 3; named by the file for the reason BakeDeclaration is
+    private static void BakeForms(NormalEndpointMetadata endpoint, AppPlatformId platformId)
+    {
+        try
+        {
+            endpoint.BakeForms(platformId);
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new InvalidOperationException($"{MetadataFileName(endpoint.Schema, endpoint.Name)}: {ex.Message}", ex);
         }
     }
 
@@ -1021,8 +1042,8 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         };
     }
 
-    /* The targets of 'post' are references like any other, so they are linked where the others
-     * are: phase 2, through the same load - once, before publication, and cycle-safe (a journal's
+    /* The targets of 'post' are references like any other, so they are resolved through the load
+     * as the others are: phase 4 - once, before publication, and cycle-safe (a journal's
      * Document column points back at the document). It used to run from the request pipeline,
      * after publication: it wrote into a container the loader declares immutable, on every request,
      * and left every entry point that is not a request holding null journals.
@@ -1112,7 +1133,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                 $"{head}: '{leg}' posts to '{account.Id}', which is split by {String.Join(", ", account.SplitBy.Select(c => $"[{c}]"))}, and names no {String.Join(", ", missing.Select(c => $"[{c}]"))}");
     }
 
-    /* 'basedOn' names other documents, so it is resolved where references are: phase 2, through the
+    /* 'basedOn' names other documents, so it is resolved where references are: phase 4, through the
      * same load. The target is a document; its operation is named exactly when it lists some, and is
      * one of them; a target is offered once; what is copied can be (BasedOnMapping) - asked in the
      * direction the file points, from this document to the target's columns. Where the basis lands in
@@ -1188,7 +1209,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
             await ResolveColumnsAsync(load, endpoint, meta, dataSource);
     }
 
-    /* Phase 2, what reads the links - after the descent, never inside it: reached through a cycle,
+    /* Phase 4, what reads the links - after the descent, never inside it: reached through a cycle,
      * an address over a shared table was checked while the owner was still walking its columns, and
      * whether a column was linked by then depended on the order of the fields.
      */
@@ -1288,7 +1309,7 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
         }
     }
 
-    /* 'autonum' names a row of another endpoint's file, so it can only be checked here - phase 2,
+    /* 'autonum' names a row of another endpoint's file, so it can only be checked here - phase 4,
      * through the same load, the way a reference target is resolved. Deferring it was a mistake
      * paid for once already: the failure surfaced at the first save of the first document, from
      * inside a procedure, which is as far from the file as it gets.

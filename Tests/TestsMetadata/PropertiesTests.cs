@@ -78,7 +78,7 @@ public class PropertiesTests
         var storage = (await LoadNormalAsync("document", String.Empty)).Storage;
         var declaration = JsonConvert.DeserializeObject<DeclarationMetadata>(json, JsonSettings.CamelCaseSerializerSettings)!;
 
-        var ex = Assert.Throws<InvalidOperationException>(() => declaration.Bake(storage, PlatformId));
+        var ex = Assert.Throws<InvalidOperationException>(() => declaration.Bake(storage));
         Assert.Contains(message, ex.Message);
     }
 
@@ -87,7 +87,7 @@ public class PropertiesTests
     public async Task A_getter_is_shown_and_a_setter_is_typed_into()
     {
         var endpoint = await LoadNormalAsync("document", "waybillin");
-        var tabs = endpoint.Declaration.Form(Constants.FormNames.Edit).TabStrips().Single().Elements;
+        var tabs = endpoint.Form(Constants.FormNames.Edit).TabStrips().Single().Elements;
 
         var stock = tabs.Single(t => t.Kind == "Stock").Members.Single(m => m.Name == "Sum");
         var service = tabs.Single(t => t.Kind == "Service").Members.Single(m => m.Name == "Sum");
@@ -114,7 +114,7 @@ public class PropertiesTests
             }
             """, JsonSettings.CamelCaseSerializerSettings)!;
 
-        var form = declaration.Bake(storage, PlatformId).BakedForms[Constants.FormNames.Edit];
+        var form = declaration.Bake(storage).BuildForms(storage, PlatformId)[Constants.FormNames.Edit];
 
         var due = form.Body[0].Members.Single(m => m.Name == "$Due");
         Assert.Equal(MemberKind.Property, due.Kind);
@@ -136,7 +136,7 @@ public class PropertiesTests
             }
             """, JsonSettings.CamelCaseSerializerSettings)!;
 
-        var ex = Assert.Throws<InvalidOperationException>(() => declaration.Bake(storage, PlatformId));
+        var ex = Assert.Throws<InvalidOperationException>(() => declaration.Bake(storage).BuildForms(storage, PlatformId));
         Assert.Contains("field '$Due' not found", ex.Message);
     }
 
@@ -153,7 +153,7 @@ public class PropertiesTests
         var storage = (await LoadNormalAsync("document", String.Empty)).Storage;
         var declaration = JsonConvert.DeserializeObject<DeclarationMetadata>(json, JsonSettings.CamelCaseSerializerSettings)!;
 
-        var ex = Assert.Throws<InvalidOperationException>(() => declaration.Bake(storage, PlatformId));
+        var ex = Assert.Throws<InvalidOperationException>(() => declaration.Bake(storage));
         Assert.Contains(message, ex.Message);
     }
 

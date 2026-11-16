@@ -47,7 +47,7 @@ internal static class VatRoles
 
 /* One role resolved. 'Column' is where the path starts - in the row, or in the root under '$root';
  * 'RefField' is the column of the target read through it, kept as a name: the target is linked
- * after the bake, and phase 2 checks it (DatabaseMetadataProvider.CheckVatHops), as
+ * after the bake, and phase 4 checks it (DatabaseMetadataProvider.CheckVatHops), as
  * InheritDescriptor.Source is kept.
  */
 public sealed record VatOperand(TableColumn Column, Boolean IsRoot, String? RefField);

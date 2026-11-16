@@ -124,7 +124,7 @@ public class UserRefTests
         var storage = (await TestHost.GetService<DatabaseMetadataProvider>().GetNormalEndpointAsync(null, "document", "payment")).Storage;
         var declaration = JsonConvert.DeserializeObject<DeclarationMetadata>(json, JsonSettings.CamelCaseSerializerSettings)!;
 
-        var ex = Assert.Throws<InvalidOperationException>(() => declaration.Bake(storage, new AppPlatformId(typeof(Int64))));
+        var ex = Assert.Throws<InvalidOperationException>(() => declaration.Bake(storage));
         Assert.Contains(message, ex.Message);
     }
 

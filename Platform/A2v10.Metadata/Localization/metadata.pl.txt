@@ -57,6 +57,7 @@
 ; Validation and errors
 @Error.Required=Pole wymagane
 @Error.Duplicate=Taka wartość już istnieje
+@Error.Lookup.NotUnique=Wartość nie jest unikalna: ma ją kilka rekordów
 @Error.Owner=Wybrany rekord należy do innego właściciela
 @Error.Delete.Used=Nie można usunąć elementu, jest używany
 @Error.Element.RowVersion=Element został zmieniony przez innego użytkownika. Otwórz go ponownie

@@ -48,7 +48,7 @@ public class TsBeamTests
             var folder = Path.GetDirectoryName(file)!.NormalizeSlash();
             var (schema, table) = DatabaseMetadataProvider.ParsePath(folder);
             // the shapes that render: a set or the numbering registry has no screen and no template
-            if (await provider.GetEndpointAsync(null, schema, table) is not NormalEndpointMetadata { Declaration.BakedForms.Count: > 0 })
+            if (await provider.GetEndpointAsync(null, schema, table) is not NormalEndpointMetadata { Forms.Count: > 0 })
                 continue;
             // browse runs the index template (EndpointMaterializer refuses it by design)
             foreach (var action in new[] { "index", "edit" })

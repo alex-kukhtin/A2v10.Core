@@ -36,6 +36,76 @@ internal partial class XamlBuilder
             : path;
     }
 
+    /* The picker of a reference, by whatever it shows: the choice column (null - the element's Name)
+     * or a 'contains' channel of the target (ChannelControl). One reference, one value, one address
+     * - only what is typed into it differs.
+     */
+    SelectorSimple RefSelector(TableColumn column, Reach at, Dictionary<String, InheritDescriptor[]> inherits,
+        String? display, String? label, String? cssClass)
+    {
+        var target = column.RefTableCheck.Storage;
+        return new SelectorSimple()
+        {
+            Label = label,
+            CssClass = cssClass,
+            Url = SelectorUrl(inherits, column),
+            DisplayProperty = display,
+            ColorProperty = target.ColorColumn?.Name,
+            ItemsPanel = LookupPanel(target),
+            Bindings = b =>
+            {
+                b.SetBinding(nameof(SelectorSimple.Value), new Bind($"{at.Prefix}{column.ModelName}") { DataType = column.Type.ToXamlDataType() });
+                // the owner is found in the editor's own scope first, then in the header beyond it
+                if (column.OwnerLinks(at.Scope, at.Header).Count > 0)
+                    b.SetBinding(nameof(SelectorSimple.Data), new Bind($"{at.Prefix}{column.OwnersName()}"));
+            }
+        };
+    }
+
+    /* The candidates of a target with channels: a grid of what it is chosen by - the choice column,
+     * the channels - and what it is shown by, so a candidate typed by its barcode is told apart by
+     * its name. What the fetch sends (SqlBuilder.ChoiceSqlText), nothing more. Without channels the
+     * list is the selector's own, one line a candidate.
+     */
+    private static DataGrid? LookupPanel(TableMetadata target)
+    {
+        if (target.Lookup.Count == 0)
+            return null;
+        var chosen = target.ChoiceProperty is { } choice ? [target.AllColumns().First(c => c.Name == choice)] : Array.Empty<TableColumn>();
+        var columns = chosen.Concat(target.LookupColumns).DistinctBy(c => c.Name)
+            .Select(c => (c.Header, Path: c.Name, Type: c.Type))
+            .Append((target.AllColumns().First(c => c.Name == target.Presentation).Header, Path: Constants.FieldNames.Name, Type: ColumnType.String));
+        return new DataGrid()
+        {
+            Compact = true,
+            Columns = [.. columns.Select(c => new DataGridColumn()
+            {
+                Header = c.Header,
+                Bindings = b => b.SetBinding(nameof(DataGridColumn.Content), new Bind(c.Path) { DataType = c.Type.ToXamlDataType() })
+            })]
+        };
+    }
+
+    /* A channel of a reference (MemberKind.Channel): 'contains' - the reference's own picker, showing
+     * the channel and searching the target's fetch; 'equal' - a text box over the channel of the
+     * element, and the exact search runs from the template on its change (ScriptBuilder.LookupEvents).
+     */
+    UIElementBase ChannelControl(MemberDescriptor member, Reach at, Dictionary<String, InheritDescriptor[]> inherits)
+    {
+        var channel = member.ChannelCheck;
+        var label = at.InRow ? null : member.Header;
+        return channel.Match switch
+        {
+            LookupMatch.Contains => RefSelector(member.ColumnCheck, at, inherits, channel.Column.Name, label, null),
+            LookupMatch.Equal => new TextBox()
+            {
+                Label = label,
+                Bindings = b => b.SetBinding(nameof(TextBox.Value), new Bind($"{at.Prefix}{member.ModelName}"))
+            },
+            _ => throw new InvalidOperationException($"Invalid lookup match '{channel.Match}'")
+        };
+    }
+
     /* A referenced document drawn as a link to it - in a grid cell and as the basis on a card. It
      * opens at the document's own address (SqlBuilder.RefFields), handed the reference itself.
      * Nothing referenced, nothing drawn: an empty link navigates to '/edit/null'. 'reference' is the
@@ -137,6 +207,7 @@ internal partial class XamlBuilder
         {
             _ when member.IsShownOnly => ShownControl(member, $"{at.Prefix}{member.ModelName}", label),
             MemberKind.Column => Editor(member.ColumnCheck, at, inherits, TypedUnder(member, at)),
+            MemberKind.Channel => ChannelControl(member, at, inherits),
             MemberKind.Property => PropertyControl(member, $"{at.Prefix}{member.Name}", label),
             // value is the record's own tags, candidates the root 'Tags' array - the pair Load emits
             MemberKind.Tags => new TagsControl()
@@ -608,21 +679,8 @@ internal partial class XamlBuilder
             // in a header set by birth and by nothing else: shown, not picked; in a row picked - an allocation over several
             ColumnType.BasedOn when !at.InRow => DocumentHyperlink($"{at.Prefix}{column.Name}"),
             ColumnType.Ref or ColumnType.Company or ColumnType.Owner or ColumnType.Document or ColumnType.Account
-                or ColumnType.BasedOn or ColumnType.User => new SelectorSimple()
-            {
-                Label = label,
-                CssClass = cssClass,
-                Url = SelectorUrl(inherits, column),
-                DisplayProperty = column.RefTableCheck.Storage.ChoiceProperty,
-                ColorProperty = column.RefTableCheck.Storage.ColorColumn?.Name,
-                Bindings = b =>
-                {
-                    b.SetBinding(nameof(SelectorSimple.Value), valueBind);
-                    // the owner is found in the editor's own scope first, then in the header beyond it
-                    if (column.OwnerLinks(at.Scope, at.Header).Count > 0)
-                        b.SetBinding(nameof(SelectorSimple.Data), new Bind($"{at.Prefix}{column.OwnersName()}"));
-                }
-            },
+                or ColumnType.BasedOn or ColumnType.User =>
+                RefSelector(column, at, inherits, column.RefTableCheck.Storage.ChoiceProperty, label, cssClass),
             // the folders of this endpoint are its own actions: Folder turns the url into browsefolder / fetchfolder
             ColumnType.Folder => new SelectorSimple()
             {

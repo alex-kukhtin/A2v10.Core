@@ -58,7 +58,7 @@ internal class XamlPageRenderer(IServiceProvider _serviceProvider, DatabaseMetad
         switch (endpoint)
         {
             case NormalEndpointMetadata normal:
-                foreach (var action in normal.Declaration.BakedForms.Keys)
+                foreach (var action in normal.Forms.Keys)
                     ViewText(normal, action);
                 break;
             case ReportEndpointMetadata report:

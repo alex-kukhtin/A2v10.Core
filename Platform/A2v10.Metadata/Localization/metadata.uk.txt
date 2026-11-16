@@ -57,6 +57,7 @@
 ; Validation and errors
 @Error.Required=Обов'язкове поле
 @Error.Duplicate=Таке значення вже існує
+@Error.Lookup.NotUnique=Значення не унікальне: його мають кілька записів
 @Error.Owner=Обраний запис належить іншому власнику
 @Error.Delete.Used=Неможливо видалити елемент, він використовується в системі
 @Error.Element.RowVersion=Елемент змінено іншим користувачем. Відкрийте його заново

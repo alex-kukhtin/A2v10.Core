@@ -12,7 +12,9 @@ public enum MemberKind
     Column,
     Tags,
     // a '$' name of the declaration's 'properties': a value the client holds, with no column
-    Property
+    Property,
+    // '<Ref>.<channel>': a column of input of a reference, by a lookup channel of its target
+    Channel
 }
 
 /* A column a rule writes and the user types into only while a flag holds - the VAT of a row, by
@@ -26,17 +28,21 @@ public sealed record WrittenByRule(VatOperand? TypedUnder);
  * only says whether it can be typed into. So does a rule that writes it.
  */
 public sealed record MemberDescriptor(MemberKind Kind, String Name, TableColumn? Column = null, PropertyMetadata? Property = null,
-    WrittenByRule? Rule = null)
+    WrittenByRule? Rule = null, LookupChannel? Channel = null)
 {
     internal TableColumn ColumnCheck => Column
         ?? throw new InvalidOperationException($"Member '{Name}' ({Kind}) has no column");
 
-    internal ColumnType Type => Column?.Type ?? Property?.Type
+    internal LookupChannel ChannelCheck => Channel
+        ?? throw new InvalidOperationException($"Member '{Name}' ({Kind}) is no channel");
+
+    // a channel is the reference's column, typed as the target's
+    internal ColumnType Type => Channel?.Column.Type ?? Column?.Type ?? Property?.Type
         ?? throw new InvalidOperationException($"Member '{Name}' ({Kind}) has no type");
 
-    internal String ModelName => Column?.ModelName ?? Name;
+    internal String ModelName => Channel is { } ch ? $"{ColumnCheck.ModelName}.{ch.Column.Name}" : Column?.ModelName ?? Name;
 
-    internal String Header => Column?.Header ?? $"@[{Name.TrimStart('$')}]";
+    internal String Header => Channel?.Column.Header ?? Column?.Header ?? $"@[{Name.TrimStart('$')}]";
 
     // what was typed into it would not be kept: a getter without a setter, a column the database computes, one a rule always writes
     internal Boolean IsShownOnly => Property is { Set: null } || Column?.HasSqlAs == true || Rule is { TypedUnder: null };
@@ -81,6 +87,20 @@ internal static class MemberMetadata
                 .Select(kp => new MemberDescriptor(MemberKind.Property, kp.Key, Property: kp.Value))
         ];
     }
+
+    /* The channels of the references among the members, each right after its reference: an edit
+     * form is where a target is chosen, so it may name '<Ref>.<channel>' (TableMetadata.Lookup).
+     * Nowhere else - a list shows a reference, and a channel there is a column nobody sends.
+     */
+    public static List<MemberDescriptor> WithChannels(this List<MemberDescriptor> members) =>
+        [.. members.SelectMany(m => m.Channels().Prepend(m))];
+
+    internal static IEnumerable<MemberDescriptor> Channels(this MemberDescriptor member) =>
+        member is { Kind: MemberKind.Column, Column: { IsRef: true, RefTable: { } target } column } && column.Type != ColumnType.Master
+            ? target.Storage.Lookup.Select(l => new MemberDescriptor(MemberKind.Channel, ChannelName(column, l), column, Channel: l))
+            : [];
+
+    internal static String ChannelName(TableColumn reference, LookupChannel channel) => $"{reference.Name}.{channel.Column.Name}";
 
     /* The VAT of a row is the rule's: typed only under Manual (concepts/vat). Sum and Total stay as
      * they are - typing them is how a sum is entered, the rule takes it from there.

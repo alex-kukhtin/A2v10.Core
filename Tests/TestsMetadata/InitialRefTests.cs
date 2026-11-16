@@ -104,7 +104,7 @@ public partial class InitialRefTests
             $$"""{ "initialValues": { "{{field}}": { "source": "literal", "value": "{{value}}" } } }""",
             JsonSettings.CamelCaseSerializerSettings)!;
 
-        var ex = Assert.Throws<InvalidOperationException>(() => declaration.Bake(storage, new AppPlatformId(typeof(Int64))));
+        var ex = Assert.Throws<InvalidOperationException>(() => declaration.Bake(storage));
         Assert.Contains($"initialValues: '{field}'", ex.Message);
         Assert.Contains(message, ex.Message);
     }

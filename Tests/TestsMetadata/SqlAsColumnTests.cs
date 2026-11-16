@@ -108,7 +108,7 @@ public class SqlAsColumnTests
         var unit = await UnitAsync();
         var declaration = JsonConvert.DeserializeObject<DeclarationMetadata>(json, JsonSettings.CamelCaseSerializerSettings)!;
 
-        var ex = Assert.Throws<InvalidOperationException>(() => declaration.Bake(unit, PlatformId));
+        var ex = Assert.Throws<InvalidOperationException>(() => declaration.Bake(unit));
         Assert.Contains(message, ex.Message);
     }
 
@@ -142,7 +142,7 @@ public class SqlAsColumnTests
 
         foreach (var form in new[] { "index", "browse", "edit" })
             Assert.DoesNotContain(Constants.FieldNames.DisplayName,
-                chart.Declaration.BakedForms[form].Body.SelectMany(e => e.Fields));
+                chart.Forms[form].Body.SelectMany(e => e.Fields));
     }
 
     [Fact]

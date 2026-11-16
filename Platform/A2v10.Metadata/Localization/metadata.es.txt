@@ -57,6 +57,7 @@
 ; Validation and errors
 @Error.Required=Campo obligatorio
 @Error.Duplicate=Este valor ya existe
+@Error.Lookup.NotUnique=El valor no es único: varios registros lo tienen
 @Error.Owner=El registro seleccionado pertenece a otro propietario
 @Error.Delete.Used=No se puede eliminar el elemento: está en uso
 @Error.Element.RowVersion=Otro usuario ha modificado el elemento. Vuelva a abrirlo

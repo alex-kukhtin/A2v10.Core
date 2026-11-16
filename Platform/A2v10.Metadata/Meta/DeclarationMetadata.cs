@@ -274,17 +274,6 @@ public sealed record DeclarationMetadata
      */
     public List<PrintFormMetadata> PrintForms { get; init; } = [];
 
-    /* The forms in force: declared or default, and every name in them already resolved against the
-     * shape. Filled by the bake. Empty for a shape nothing renders (tags, the rows of a
-     * collection): a table is deployed whether or not anything shows it.
-     *
-     * Separate from 'Forms' because declared and resolved never share a field - see CLAUDE.md,
-     * "Declarations".
-     */
-    [JsonIgnore]
-    public IReadOnlyDictionary<String, FormMetadata> BakedForms { get; init; }
-        = new Dictionary<String, FormMetadata>();
-
     /* The blank a request names. One place, because the fetch, the template and the page all ask -
      * and two blanks answering to one name is refused rather than won by the first: the URL would
      * then address neither of them in particular.
@@ -304,18 +293,6 @@ public sealed record DeclarationMetadata
                 $"print: {found.Count} print forms are named '{name}'")
         };
     }
-
-    internal FormMetadata Form(String name) =>
-        BakedForms.TryGetValue(name, out var form)
-            ? form
-            : throw new InvalidOperationException($"The form '{name}' is not built for this endpoint");
-
-    /* How the card opens - the list's commands and the address of 'edit' ask it. The baked form's,
-     * not the table's kind: 'forms.edit.is' is written per endpoint, and a catalog written 'page'
-     * built a page that the list opened in a dialog, where 'Save and close' had nothing to close.
-     */
-    [JsonIgnore]
-    public Boolean EditIsPage => Form(Constants.FormNames.Edit).Is == FormKind.Page;
 
     /* The journals this endpoint posts to, once each. Two legs into one journal (in/out, storno)
      * are two postings and one journal: everything that reads the RESULT of posting - the unpost

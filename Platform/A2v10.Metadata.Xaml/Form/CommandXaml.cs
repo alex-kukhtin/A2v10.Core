@@ -363,7 +363,7 @@ internal partial class XamlBuilder
      */
     Button ButtonCreate(CommandScope scope)
     {
-        if (Endpoint.Declaration.OperationDeclarations is { Count: > 0 } operations && Declaration.EditIsPage)
+        if (Endpoint.Declaration.OperationDeclarations is { Count: > 0 } operations && Endpoint.EditIsPage)
             return new Button()
             {
                 Icon = Icon.Add,
@@ -387,7 +387,7 @@ internal partial class XamlBuilder
         {
             Url = $"{Endpoint.Path}/edit"
         };
-        if (Declaration.EditIsPage)
+        if (Endpoint.EditIsPage)
         {
             bindCmd.Command = CommandType.Open;
             bindCmd.Argument = "new";
@@ -417,7 +417,7 @@ internal partial class XamlBuilder
             Url = $"{Endpoint.Path}/edit"
         };
         bindCmd.BindImpl.SetBinding(nameof(BindCmd.Argument), new Bind(CommandSource(scope)));
-        if (Declaration.EditIsPage)
+        if (Endpoint.EditIsPage)
         {
             bindCmd.Command = CommandType.OpenSelected;
         }

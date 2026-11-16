@@ -225,7 +225,7 @@ public sealed class EndpointValidator(DatabaseMetadataProvider _metadataProvider
     private void Screens(NormalEndpointMetadata endpoint, AppPlatformId platformId)
     {
         IPageRenderer.Of(_serviceProvider, endpoint.Path).BuildPages(endpoint);
-        foreach (var action in endpoint.Declaration.BakedForms.Keys)
+        foreach (var action in endpoint.Forms.Keys)
         {
             var descriptor = new BuilderDescriptor()
             {

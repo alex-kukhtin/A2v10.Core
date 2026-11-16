@@ -10,7 +10,20 @@
 		"VatRate": {
 			"type": "Enum",
 			"target": "/enum/vatrate"
+		},
+		"Article": {
+			"type": "String",
+			"length": 32
+		},
+		"Barcode": {
+			"type": "String",
+			"length": 32,
+			"unique": true
 		}
+	},
+	"lookup": {
+		"Article": "contains",
+		"Barcode": "equal"
 	},
 	"initialValues": {
 		"VatRate": { "source": "literal", "value": "20" }

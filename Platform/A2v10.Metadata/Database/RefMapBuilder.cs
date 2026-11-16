@@ -19,7 +19,7 @@ internal class RefMapBuilder
 {
     private readonly List<RefMapItem> _flat;
     private readonly Dictionary<String, List<TableColumn>> _tableStruct;
-    private readonly Dictionary<String, List<TableColumn>> _inheritStruct;
+    private readonly Dictionary<String, List<TableColumn>> _carriedStruct;
     private readonly Boolean _isPlain;
     private readonly Boolean _hasDefaults;
 
@@ -40,7 +40,7 @@ internal class RefMapBuilder
         rows ??= LoadRows.Stored;
         _flat = [.. Flatten(table, $"Id = {rows.Key}", rows)];
         _tableStruct = BuildTableStructure();
-        _inheritStruct = BuildInheritStructure();
+        _carriedStruct = BuildCarriedStructure();
     }
 
     /* The UNION of several tables into one map - which is the same machine, fed a list instead of
@@ -54,7 +54,7 @@ internal class RefMapBuilder
         _hasDefaults = false;
         _flat = [.. sources.Select(s => RefsOf(s.Table.SqlTableName, s.Where, s.Columns))];
         _tableStruct = BuildTableStructure();
-        _inheritStruct = [];
+        _carriedStruct = [];
     }
 
     public Boolean IsEmpty => _flat.Count == 0;
@@ -88,14 +88,26 @@ internal class RefMapBuilder
                 yield return item;
     }
 
-    private Dictionary<String, List<TableColumn>> BuildInheritStructure()
+    // the card only: it is the place a target is chosen, an index shows it (CarriedColumns)
+    private Dictionary<String, List<TableColumn>> BuildCarriedStructure()
     {
         if (!_isPlain || _declaration == null)
             return [];
-        return _declaration.AllInherits()
-            .GroupBy(d => TargetKey(d.Ref))
-            .ToDictionary(g => g.Key, g => InheritSources(_declaration, g.First().Ref.RefTableCheck.Storage));
+        return _tableStruct.ToDictionary(kvp => kvp.Key, kvp => CarriedColumns(_declaration, kvp.Value[0].RefTableCheck.Storage));
     }
+
+    /* What a reference to 'target' carries in the card beyond RefColumns, from two suppliers: the
+     * target's lookup channels - a column of input of every reference to it, so the element has them
+     * wherever it is chosen - and the columns the inherits of this endpoint read off it. One answer
+     * for the map that sends them and the type that promises them (ScriptBuilder.RefTsProperties).
+     * A channel an inherit reads too is sent once.
+     */
+    internal static List<TableColumn> CarriedColumns(DeclarationMetadata declaration, TableMetadata target) =>
+        [.. target.LookupColumns
+            // the presentation rides as Name already, the choice column among RefColumns
+            .Where(c => c.Name != Constants.FieldNames.Name && !target.RefColumns.Any(r => r.Name == c.Name))
+            .Concat(InheritSources(declaration, target))
+            .DistinctBy(c => c.Name)];
 
     /* The columns of 'target' the inherits of an endpoint read, so the resolve of that target sends
      * them beside its key and name. One answer for the map that sends them and the type that
@@ -218,12 +230,12 @@ internal class RefMapBuilder
                   ) ids group by id
                 )
                 """;
-            var inherits = _inheritStruct.TryGetValue(kvp.Key, out var inh) && inh.Count > 0
-                ? ", " + String.Join(", ", inh.Select(c => c.SqlModelColumnName("a")))
+            var carried = _carriedStruct.TryGetValue(kvp.Key, out var car) && car.Count > 0
+                ? ", " + String.Join(", ", car.Select(c => c.SqlModelColumnName("a")))
                 : String.Empty;
 
             var select = $"""
-            select [!{typeName}!Map] = null, [Id!!Id] = a.Id, [Name!!Name] = a.[{target.Presentation}]{SqlBuilder.RefFields(target, "a")}{inherits}
+            select [!{typeName}!Map] = null, [Id!!Id] = a.Id, [Name!!Name] = a.[{target.Presentation}]{SqlBuilder.RefFields(target, "a")}{carried}
             from {target.RefSourceName} a inner join T on a.Id = T.id;
             """;
             return $"{cte}\n{select}";

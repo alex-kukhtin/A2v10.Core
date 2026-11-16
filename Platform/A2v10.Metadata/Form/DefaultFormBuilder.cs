@@ -109,7 +109,7 @@ internal static class DefaultFormBuilder
         };
     }
 
-    // the default only: a document is a page, the rest a dialog; how the card opens is the endpoint's (DeclarationMetadata.EditIsPage)
+    // the default only: a document is a page, the rest a dialog; how the card opens is the endpoint's (NormalEndpointMetadata.EditIsPage)
     public static FormMetadata CreateEditForm(TableMetadata table, Boolean switchesOperation = false)
     {
         return table.IsDocument ? CreateEditPage(table, switchesOperation) : CreateEditFormDialog(table);
@@ -123,6 +123,10 @@ internal static class DefaultFormBuilder
         if (table.HasTags)
             yield return Constants.FieldNames.Tags;
     }
+
+    // a reference's channels right after it: the card is where its target is chosen (MemberMetadata.WithChannels)
+    static IEnumerable<String> EditNames(IEnumerable<TableColumn> cols) =>
+        cols.SelectMany(c => MemberDescriptor.Of(c).Channels().Select(m => m.Name).Prepend(c.Name));
 
     static Boolean IsDetailsColumn(TableColumn col)
         => col.Type != ColumnType.Id && col.Type != ColumnType.RowKind && col.Type != ColumnType.Master;
@@ -156,13 +160,13 @@ internal static class DefaultFormBuilder
                         Is = FormElementKind.Tab,
                         Scope = key,
                         Kind = k,
-                        Fields = [.. dt.AllColumns(IsDetailsColumn).OrderBy(SemanticDetailsOrder).Select(c => c.Name)]
+                        Fields = [.. EditNames(dt.AllColumns(IsDetailsColumn).OrderBy(SemanticDetailsOrder))]
                     })
                 : [new FormElement()
                     {
                         Is = FormElementKind.Tab,
                         Scope = key,
-                        Fields = [.. dt.AllColumns(IsDetailsColumn).Select(c => c.Name)]
+                        Fields = [.. EditNames(dt.AllColumns(IsDetailsColumn))]
                     }];
 
         List<FormElement> tabs = [.. table.Details.SelectMany(d => CollectionTabs(d.Key, d.Value))];
@@ -211,13 +215,13 @@ internal static class DefaultFormBuilder
                     Is = FormElementKind.Group,
                     LabelAt = LabelAt.Left,
                     Axis = FlowAxis.Rows,
-                    Fields = [..topCols.Select(c => c.Name)]
+                    Fields = [.. EditNames(topCols)]
                 },
                 new FormElement()
                 {
                     Is = FormElementKind.Group,
                     Axis = FlowAxis.Rows,
-                    Fields = [..middleCols.Select(c => c.Name)]
+                    Fields = [.. EditNames(middleCols)]
                 }
             ]
         };
@@ -230,7 +234,7 @@ internal static class DefaultFormBuilder
             Is = FormElementKind.Group,
             Axis = FlowAxis.Rows,
             LabelAt = LabelAt.Left,
-            Fields = [.. bottomCols.Select(c => c.Name), .. TrailingMembers(table)]
+            Fields = [.. EditNames(bottomCols), .. TrailingMembers(table)]
         });
 
         return fd;
@@ -251,7 +255,7 @@ internal static class DefaultFormBuilder
                 new FormElement()
                 {
                     Is = FormElementKind.Group,
-                    Fields = [..cols.Select(c => c.Name), .. TrailingMembers(table)]
+                    Fields = [.. EditNames(cols), .. TrailingMembers(table)]
                 }
             ]
         };

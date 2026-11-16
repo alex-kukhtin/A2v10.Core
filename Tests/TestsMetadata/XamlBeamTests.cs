@@ -42,7 +42,7 @@ public class XamlBeamTests
         {
             var folder = Path.GetDirectoryName(file)!.NormalizeSlash();
             var (schema, table) = DatabaseMetadataProvider.ParsePath(folder);
-            if (await provider.GetEndpointAsync(null, schema, table) is not NormalEndpointMetadata { Declaration.BakedForms.Count: > 0 } endpoint)
+            if (await provider.GetEndpointAsync(null, schema, table) is not NormalEndpointMetadata { Forms.Count: > 0 } endpoint)
                 continue;
             if ((await validator.ValidateAsync(folder)).Error != null)
                 continue;
