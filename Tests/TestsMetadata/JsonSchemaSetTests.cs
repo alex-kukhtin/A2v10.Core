@@ -95,7 +95,7 @@ public class JsonSchemaSetTests
 
         Assert.Equal(3, finding.Line);
         Assert.Equal("autonumm", finding.Path);
-        Assert.StartsWith("'autonumm' is not a key here. Allowed: $schema, description, table, storage", finding.Message);
+        Assert.StartsWith("'autonumm' is not a key here. Allowed: $schema, description, synonyms, triggers, table, storage", finding.Message);
     }
 
     // the loader reads it case-insensitively, so it works today and nobody reads it as a typo

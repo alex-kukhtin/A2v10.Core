@@ -8,6 +8,8 @@
     "properties": {
         "$schema": { "type": "string" },
         "description": { "type": "string", "description": "For the model, not the platform: nothing reads it - no generator, runtime or deploy." },
+        "synonyms": { "$ref": "metadata-endpoint-json-schema.json#/definitions/synonyms" },
+        "triggers": { "$ref": "metadata-endpoint-json-schema.json#/definitions/triggers" },
         "post": {
             "type": "array",
             "description": "What posting a document of this operation does - the same entries as 'post' of a document. Exactly one 'post' is in force at the moment of posting: the one of the operation the document carries.",

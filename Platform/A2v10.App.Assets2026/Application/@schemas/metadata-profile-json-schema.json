@@ -7,6 +7,8 @@
     "properties": {
         "$schema": { "type": "string" },
         "description": { "type": "string", "description": "For the model, not the platform: nothing reads it." },
+        "synonyms": { "$ref": "metadata-endpoint-json-schema.json#/definitions/synonyms" },
+        "triggers": { "$ref": "metadata-endpoint-json-schema.json#/definitions/triggers" },
         "fields": {
             "$ref": "metadata-endpoint-json-schema.json#/definitions/fields",
             "description": "The slots. A slot read by 'initialValues' has the type and target of the field it starts - refused at load otherwise."

@@ -13,6 +13,8 @@
     "properties": {
         "$schema": { "type": "string" },
         "description": { "type": "string", "description": "For the model, not the platform: nothing reads it - no generator, runtime or deploy. Where the model writes down what it must know about this endpoint - its rules and the reasons for them - so the next session finds them here." },
+        "synonyms": { "$ref": "metadata-endpoint-json-schema.json#/definitions/synonyms" },
+        "triggers": { "$ref": "metadata-endpoint-json-schema.json#/definitions/triggers" },
         "type": {
             "description": "Form of the answer. 'turnover' - opening balance, movements of the period, closing balance, in the groupings picked. 'trialBalance' - the trial balance of a ledger: per account, opening balance, debit and credit turnover, closing balance, each balance a debit/credit pair laid out by the account's NormalBalance; nothing to pick but the period and the filters. 'chessboard' - the turnover of a ledger in account correspondence: debit accounts down, credit accounts across, read from the debit legs; nothing to pick but the period and the filters.",
             "type": "string",
