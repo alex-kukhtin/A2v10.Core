@@ -50,18 +50,50 @@ public sealed class DataResult
  * client. Not a part of the platform host: registered by the callers that have no browser - the
  * API, the CLI, the scenario tests - via UseEndpointDataServices.
  */
-public class EndpointDataService(IDataService _dataService)
+public class EndpointDataService(IDataService _dataService, IAppRuntimeBuilder _runtime)
 {
     /* 'render': every load also builds the page and its template and drops them, so a screen that
      * cannot be built fails the call. The mode of the caller, not of a call: a test opens screens,
      * the API never does.
+     * 'edit': the door a record opens by, where the caller knows it (DataAt.DoorAsync).
      */
-    public DataAt At(String route, Boolean render = false) => new(_dataService, route, render);
+    public DataAt At(String route, Boolean render = false, UrlKind? edit = null) => new(_dataService, _runtime, route, render, edit);
 }
 
-public sealed class DataAt(IDataService _dataService, String _route, Boolean _render)
+public sealed class DataAt(IDataService _dataService, IAppRuntimeBuilder _runtime, String _route, Boolean _render, UrlKind? _edit)
 {
-    private readonly (UrlKind Kind, String Prefix) _kind = KindOf(_route);
+    private UrlKind? _door = _edit;
+
+    /* The door a record opens by: '_page' reads 'actions', '_dialog' reads 'dialogs'. The server has no
+     * default - the address picks the view and the client picks the address; this is a client with no
+     * screen. So: the door the caller names; for a folder of the metadata layer, the one its generated
+     * client opens (an alias of a kind is resolved there); else this client's own default - a catalog
+     * in a dialog, a document on a page. None of them - refused: a classic folder is named anyhow.
+     */
+    async Task<UrlKind> DoorAsync()
+    {
+        if (_door is { } door)
+            return door;
+        // asked as the reader asks it (ModelJsonReader.Load): a host without metadata has no answer, not an empty one
+        var described = _runtime.IsMetaSupported ? await _runtime.DescribeAsync(_route) : null;
+        _door = described?.EditIsPage switch
+        {
+            true => UrlKind.Page,
+            false => UrlKind.Dialog,
+            null => _route.Split('/')[0] switch
+            {
+                "catalog" or "accplan" => UrlKind.Dialog,
+                "document" => UrlKind.Page,
+                var other => throw new InvalidOperationException($"""
+                    '{_route}': no metadata.json opens a record here, and '{other}' is neither 'catalog' nor 'document'.
+                    The door is the caller's: At(route, edit: UrlKind.Page) for 'actions', UrlKind.Dialog for 'dialogs'.
+                    """)
+            }
+        };
+        return _door.Value;
+    }
+
+    async Task<String> PrefixAsync() => await DoorAsync() == UrlKind.Page ? "_page" : "_dialog";
 
     public async Task<DataResult> IndexAsync(IndexQuery query, ExpandoObject filters)
     {
@@ -96,7 +128,7 @@ public sealed class DataAt(IDataService _dataService, String _route, Boolean _re
     // what a picker offers, whole: a chart of accounts is a tree read in one go, its closed accounts no candidates
     public async Task<DataResult> BrowseAsync()
     {
-        var model = ModelOf(await _dataService.LoadAsync(_kind.Kind, $"{_route}/browse/0", prms => { }, isReload: !_render));
+        var model = ModelOf(await _dataService.LoadAsync(await DoorAsync(), $"{_route}/browse/0", prms => { }, isReload: !_render));
         return new DataResult()
         {
             Data = model.Root,
@@ -107,7 +139,7 @@ public sealed class DataAt(IDataService _dataService, String _route, Boolean _re
 
     public async Task<DataResult> LoadAsync(String id)
     {
-        var model = ModelOf(await _dataService.LoadAsync(_kind.Kind, $"{_route}/edit/{id}", prms => { }, isReload: !_render));
+        var model = ModelOf(await _dataService.LoadAsync(await DoorAsync(), $"{_route}/edit/{id}", prms => { }, isReload: !_render));
         return new DataResult()
         {
             Data = model.Root,
@@ -124,7 +156,7 @@ public sealed class DataAt(IDataService _dataService, String _route, Boolean _re
         var url = $"{_route}/edit/new";
         if (query?.Count > 0)
             url += $"?{String.Join("&", query.Select(q => $"{Uri.EscapeDataString(q.Key)}={Uri.EscapeDataString(q.Value)}"))}";
-        var model = ModelOf(await _dataService.LoadAsync(_kind.Kind, url, prms => { }, isReload: !_render));
+        var model = ModelOf(await _dataService.LoadAsync(await DoorAsync(), url, prms => { }, isReload: !_render));
         return new DataResult()
         {
             Data = model.BuildNewInstance(),
@@ -135,7 +167,7 @@ public sealed class DataAt(IDataService _dataService, String _route, Boolean _re
 
     public async Task<ExpandoObject> SaveAsync(ExpandoObject data)
     {
-        var lr = await _dataService.SaveAsync($"{_kind.Prefix}/{_route}/edit/0", data, prms => { });
+        var lr = await _dataService.SaveAsync($"{await PrefixAsync()}/{_route}/edit/0", data, prms => { });
         return lr.Raw;
     }
 
@@ -144,26 +176,18 @@ public sealed class DataAt(IDataService _dataService, String _route, Boolean _re
     public Task UnPostAsync(Object id) => InvokeAsync("unpost", id);
 
     // the Delete of a screen: the record is voided, the row stays
-    public Task VoidAsync(Object id) => _dataService.DbRemoveAsync($"{_kind.Prefix}/{_route}/index/0", id, null, prms => { });
+    public async Task VoidAsync(Object id) => await _dataService.DbRemoveAsync($"{await PrefixAsync()}/{_route}/index/0", id, null, prms => { });
 
     // as the generated template calls it: $invoke('post', {Id}, endpoint) → _page/<endpoint>/index/0
     async Task InvokeAsync(String command, Object id)
     {
         var data = new ExpandoObject();
         data.Set("Id", id);
-        await _dataService.InvokeAsync($"{_kind.Prefix}/{_route}/index/0", command, data, prms => { });
+        await _dataService.InvokeAsync($"{await PrefixAsync()}/{_route}/index/0", command, data, prms => { });
     }
 
     IDataModel ModelOf(IDataLoadResult result)
         => result.Model ?? throw new InvalidOperationException($"{_route}: the load returned no model");
-
-    // a catalog and a chart of accounts open in a dialog, a document on a page
-    static (UrlKind Kind, String Prefix) KindOf(String route) => route.Split('/')[0] switch
-    {
-        "catalog" or "accplan" => (UrlKind.Dialog, "_dialog"),
-        "document" => (UrlKind.Page, "_page"),
-        var other => throw new NotImplementedException($"Endpoint kind '{other}' in route '{route}'")
-    };
 
     static String CreateIndexQuery(IndexQuery query, ExpandoObject filters)
     {

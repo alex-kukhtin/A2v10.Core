@@ -97,6 +97,8 @@ internal class AppMetadataBuilder(
             return null;
         var (schema, table) = DatabaseMetadataProvider.ParsePath(path);
         var endpoint = await _metadataProvider.GetEndpointAsync(null, schema, table);
-        return new EndpointDescriptor(endpoint.RequireBase, endpoint.Blobs);
+        var editIsPage = endpoint is NormalEndpointMetadata data && data.Forms.ContainsKey(Constants.FormNames.Edit)
+            ? data.EditIsPage : (Boolean?)null;
+        return new EndpointDescriptor(endpoint.RequireBase, endpoint.Blobs, editIsPage);
     }
 }

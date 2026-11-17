@@ -23,7 +23,7 @@ internal sealed record McpCode([property: JsonPropertyName("Id")] String Id, [pr
  * so the page and the Fragment are cut here, over the tree laid flat in its own order - a parent before its children.
  * Fragment matches the code and the name in one string, as DisplayName does on a screen.
  */
-internal sealed class CodesetQueryTool(IReadOnlyList<McpEntity> codesets, DatabaseMetadataProvider metadata, IDataService dataService,
+internal sealed class CodesetQueryTool(IReadOnlyList<McpEntity> codesets, DatabaseMetadataProvider metadata, EndpointDataService doors,
     ILocalizer localizer) : IPlatformMcpTool
 {
     const Int32 DefaultTake = 20;
@@ -53,7 +53,7 @@ internal sealed class CodesetQueryTool(IReadOnlyList<McpEntity> codesets, Databa
         var skip = RecordQueryTool.Number(args, "skip");
         var take = RecordQueryTool.Number(args, "take") is > 0 and var size ? size : DefaultTake;
 
-        var result = await new EndpointDataService(dataService).At(entity.Path.Trim('/')).BrowseAsync();
+        var result = await RecordTool.At(doors, entity).BrowseAsync();
         var codes = Flat(result.Data?.Get<IEnumerable<Object>>(table.CollectionName))
             .Select(node => Code(node))
             .Where(c => fragment == null || $"{c.Id} {c.Name}".Contains(fragment, StringComparison.OrdinalIgnoreCase))

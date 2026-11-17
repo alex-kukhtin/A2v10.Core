@@ -19,8 +19,11 @@ public interface IAppRuntimeResult
  */
 public record BlobDoor(String? Model, String? Accept, Int32? MaxSize /*KB*/);
 
-// what the model.json the reader synthesizes for a folder without one says of it; Blobs: key -> door
-public record EndpointDescriptor(Boolean RequireBase, IReadOnlyDictionary<String, BlobDoor> Blobs);
+/* What the model.json the reader synthesizes for a folder without one says of it; Blobs: key -> door.
+ * EditIsPage: the door the generated client opens a record by - a caller with no browser (EndpointDataService)
+ * takes the same one; null - no record opens here
+ */
+public record EndpointDescriptor(Boolean RequireBase, IReadOnlyDictionary<String, BlobDoor> Blobs, Boolean? EditIsPage);
 
 public interface IAppRuntimeBuilder
 {

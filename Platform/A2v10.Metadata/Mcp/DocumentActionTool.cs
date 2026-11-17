@@ -16,7 +16,7 @@ namespace A2v10.Metadata;
  * sends no record, so the record's rv says nothing to it, and the builder's frame owns the double click.
  */
 internal sealed class DocumentActionTool(String name, String title, PlatformMcpToolHints hints, String description,
-    IReadOnlyList<McpEntity> entities, DatabaseMetadataProvider metadata, IDataService dataService,
+    IReadOnlyList<McpEntity> entities, DatabaseMetadataProvider metadata, EndpointDataService doors,
     Func<DataAt, Object, Task> action, Boolean answersRecord) : IPlatformMcpTool
 {
     const String Kind = Constants.SchemaNames.Document;
@@ -37,7 +37,7 @@ internal sealed class DocumentActionTool(String name, String title, PlatformMcpT
         if (!args.TryGetProperty("id", out var idArg))
             throw new InvalidOperationException("'id' is required");
         var id = await RecordTool.IdAsync(metadata, McpArgs.Scalar(idArg, "id"), Kind);
-        var door = RecordTool.At(dataService, entity);
+        var door = RecordTool.At(doors, entity);
         // the frame reports a missing document as a posted one; a void of nothing would pass in silence
         await RecordTool.ExistingAsync(door, id, Kind);
         await action(door, id);
@@ -47,10 +47,10 @@ internal sealed class DocumentActionTool(String name, String title, PlatformMcpT
         return RecordTool.Answer((await door.LoadAsync(id)).Main(), endpoint.Storage);
     }
 
-    internal static IEnumerable<IPlatformMcpTool> All(IReadOnlyList<McpEntity> entities, DatabaseMetadataProvider metadata, IDataService dataService)
+    internal static IEnumerable<IPlatformMcpTool> All(IReadOnlyList<McpEntity> entities, DatabaseMetadataProvider metadata, EndpointDataService doors)
     {
         DocumentActionTool tool(String name, String title, PlatformMcpToolHints hints, String description, Func<DataAt, Object, Task> action, Boolean answersRecord = true) =>
-            new(name, title, hints, description, entities, metadata, dataService, action, answersRecord);
+            new(name, title, hints, description, entities, metadata, doors, action, answersRecord);
         yield return tool("document_post", "Post a document", PlatformMcpToolHints.None, """
             Posts a document: its movements go to the journals, and it cannot be changed until document_unpost. Posting a document with no company, or one already posted, is refused.
             The answer is the document as posted, with its new rv.

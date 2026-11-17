@@ -34,9 +34,8 @@ internal static class RecordTool
         return McpArgs.Schema(new { type = "object", properties = all, required = new[] { kind }.Concat(alsoRequired ?? []), additionalProperties = false });
     }
 
-    // the door, no screen built; not asked of the host: a browser's host does not register it, and nothing else here needs it
-    internal static DataAt At(IDataService dataService, McpEntity entity) =>
-        new EndpointDataService(dataService).At(entity.Path.Trim('/'));
+    // the door, no screen built
+    internal static DataAt At(EndpointDataService doors, McpEntity entity) => doors.At(entity.Path.Trim('/'));
 
     /* What leaves as a record. The save takes a record back whole: a column it writes and does not get
      * becomes NULL, and without rv it checks nothing. So only what the projection excludes and the save
@@ -166,7 +165,7 @@ internal sealed class RecordInfoTool(String kind, IReadOnlyList<McpEntity> entit
  * What differs from a screen: no condition is no restriction. 'Today' is what a screen opens with.
  */
 internal sealed class RecordQueryTool(String kind, IReadOnlyList<McpEntity> entities, DatabaseMetadataProvider metadata,
-    IDataService dataService) : IPlatformMcpTool
+    EndpointDataService doors) : IPlatformMcpTool
 {
     // what a screen sends for 'all the data' (utils.date.minDate, maxDate)
     const String AllFrom = "19010101";
@@ -216,7 +215,7 @@ internal sealed class RecordQueryTool(String kind, IReadOnlyList<McpEntity> enti
             Desc = Desc(args)
         };
         List<String> filters = [.. table.Filters(endpoint.Declaration).Select(f => f.Name), Constants.QueryNames.Fragment];
-        var result = await RecordTool.At(dataService, entity).ListAsync(query, Conditions(args, table, filters));
+        var result = await RecordTool.At(doors, entity).ListAsync(query, Conditions(args, table, filters));
         var root = (IDictionary<String, Object?>)result.Data!;
         var info = result.Data!.Get<ExpandoObject>("$ModelInfo")?.Get<ExpandoObject>(table.CollectionName);
         return new
@@ -291,7 +290,7 @@ internal sealed class RecordQueryTool(String kind, IReadOnlyList<McpEntity> enti
 
 // one record with its rows, as the screen loads it; the main object alone, not what the screen needs beside it
 internal sealed class RecordLoadTool(String kind, IReadOnlyList<McpEntity> entities, DatabaseMetadataProvider metadata,
-    IDataService dataService) : IPlatformMcpTool
+    EndpointDataService doors) : IPlatformMcpTool
 {
     public String Name => $"{kind}_load";
     public String Title => kind == Constants.SchemaNames.Catalog ? "Load a catalog record" : "Load a document";
@@ -311,7 +310,7 @@ internal sealed class RecordLoadTool(String kind, IReadOnlyList<McpEntity> entit
         var entity = McpArgs.Entity(entities, McpArgs.Text(args, kind), kind);
         if (!args.TryGetProperty("id", out var id))
             throw new InvalidOperationException("'id' is required");
-        var result = await RecordTool.At(dataService, entity).LoadAsync(await RecordTool.IdAsync(metadata, McpArgs.Scalar(id, "id"), kind));
+        var result = await RecordTool.At(doors, entity).LoadAsync(await RecordTool.IdAsync(metadata, McpArgs.Scalar(id, "id"), kind));
         var table = (await metadata.GetNormalEndpointAsync(null, entity.Schema, entity.Table)).Storage;
         return RecordTool.Answer(result.Main(), table);
     }
@@ -319,7 +318,7 @@ internal sealed class RecordLoadTool(String kind, IReadOnlyList<McpEntity> entit
 
 // a new record: the instance the screen starts from, defaults and all, with the fields laid over it
 internal sealed class RecordCreateTool(String kind, IReadOnlyList<McpEntity> entities, DatabaseMetadataProvider metadata,
-    IDataService dataService) : IPlatformMcpTool
+    EndpointDataService doors) : IPlatformMcpTool
 {
     public String Name => $"{kind}_create";
     public String Title => kind == Constants.SchemaNames.Catalog ? "Create a catalog record" : "Create a document";
@@ -372,7 +371,7 @@ internal sealed class RecordCreateTool(String kind, IReadOnlyList<McpEntity> ent
             if (record.HasProperty(name))
                 throw new InvalidOperationException($"'{name}' is not for {Name}: {kind}_save changes a record");
         var endpoint = await metadata.GetNormalEndpointAsync(null, entity.Schema, entity.Table);
-        var door = RecordTool.At(dataService, entity);
+        var door = RecordTool.At(doors, entity);
         var opened = await door.CreateAsync(query);
         var root = opened.With(record);
         // over the instance: a default fills what is required, and a birth brought its rows
@@ -404,7 +403,7 @@ internal sealed class RecordCreateTool(String kind, IReadOnlyList<McpEntity> ent
  * no such rule; hence the refusal here. A row with no Id is new: it has nothing to erase.
  */
 internal sealed class RecordSaveTool(String kind, IReadOnlyList<McpEntity> entities, DatabaseMetadataProvider metadata,
-    IDataService dataService) : IPlatformMcpTool
+    EndpointDataService doors) : IPlatformMcpTool
 {
     public String Name => $"{kind}_save";
     public String Title => kind == Constants.SchemaNames.Catalog ? "Save a catalog record" : "Save a document";
@@ -431,7 +430,7 @@ internal sealed class RecordSaveTool(String kind, IReadOnlyList<McpEntity> entit
         if (missing.Count > 0)
             throw new InvalidOperationException($"The record is not whole, a save would erase: {String.Join(", ", missing)}. Send what {kind}_load gave, with null for a value to clear.");
         RecordTool.RefuseBlank(record, endpoint);
-        var door = RecordTool.At(dataService, entity);
+        var door = RecordTool.At(doors, entity);
         // the merge inserts an id it does not find: a record deleted meanwhile would come back as a new one
         var opened = await RecordTool.ExistingAsync(door, await RecordTool.IdAsync(metadata, record.Get<Object>(Constants.FieldNames.Id), kind), kind);
         RecordTool.NumberRows(record, table);

@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 
 using A2v10.Infrastructure;
+using A2v10.Services.Api;
 
 namespace A2v10.Metadata;
 
@@ -16,10 +17,12 @@ namespace A2v10.Metadata;
  * of the schemas. No entity reached - no tool; no entity of a kind reached - no family of that kind.
  */
 public sealed class MetadataMcpToolProvider(DatabaseMetadataProvider metadata, ICurrentUser currentUser, IDataService dataService,
-    ILocalizer localizer, IServiceProvider services) : IPlatformMcpToolProvider
+    IAppRuntimeBuilder runtime, ILocalizer localizer, IServiceProvider services) : IPlatformMcpToolProvider
 {
     public async Task<IEnumerable<IPlatformMcpTool>> GetToolsAsync()
     {
+        // not asked of the host: a browser's host does not register it, and nothing else here needs it
+        var doors = new EndpointDataService(dataService, runtime);
         var index = await metadata.GetMcpIndexAsync();
         var visible = index.Entities.Where(e => e.IsVisibleTo(currentUser.Identity.Roles)).ToList();
         if (visible.Count == 0)
@@ -36,16 +39,16 @@ public sealed class MetadataMcpToolProvider(DatabaseMetadataProvider metadata, I
             }
             if (family.Key == McpEntity.Codeset)
             {
-                tools.Add(new CodesetQueryTool(entities, metadata, dataService, localizer));
+                tools.Add(new CodesetQueryTool(entities, metadata, doors, localizer));
                 continue;
             }
             tools.Add(new RecordInfoTool(family.Key, entities, visible, metadata));
-            tools.Add(new RecordQueryTool(family.Key, entities, metadata, dataService));
-            tools.Add(new RecordLoadTool(family.Key, entities, metadata, dataService));
-            tools.Add(new RecordCreateTool(family.Key, entities, metadata, dataService));
-            tools.Add(new RecordSaveTool(family.Key, entities, metadata, dataService));
+            tools.Add(new RecordQueryTool(family.Key, entities, metadata, doors));
+            tools.Add(new RecordLoadTool(family.Key, entities, metadata, doors));
+            tools.Add(new RecordCreateTool(family.Key, entities, metadata, doors));
+            tools.Add(new RecordSaveTool(family.Key, entities, metadata, doors));
             if (family.Key == Constants.SchemaNames.Document)
-                tools.AddRange(DocumentActionTool.All(entities, metadata, dataService));
+                tools.AddRange(DocumentActionTool.All(entities, metadata, doors));
         }
         return tools;
     }
