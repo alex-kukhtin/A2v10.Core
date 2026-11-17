@@ -57,6 +57,19 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
     private static String Str(String? val) =>
         val == null ? "null" : $"N'{val.Replace("'", "''")}'";
 
+    /* Every table variable of the deploy is filled here, in batches: one 'insert ... values' takes at
+     * most 1000 rows (error 10738), and these rows grow with the application - a row per column of
+     * every table, per endpoint and role. No rows - no insert.
+     */
+    private const Int32 InsertBatch = 200;
+
+    private static String InsertValues(String into, IEnumerable<String> rows) =>
+        String.Concat(rows.Chunk(InsertBatch).Select(batch => $"""
+                insert into {into} values
+            {String.Join($",{Environment.NewLine}", batch)};
+
+            """));
+
     private String DatabaseFilePath => _appCodeProvider.GetMainModuleFullPath("_sqlscripts", DB_FILE);
 
     private String DeployFile => DatabaseFilePath.NormalizeSlash();
@@ -242,12 +255,8 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         if (roles == null)
             return String.Empty;
 
-        var rows = roles.Select(r => $"\t({Str(r.Id)}, {Str(r.Name)}, {Str(r.Memo)})");
-        var insert = roles.Count == 0 ? String.Empty : $"""
-                insert into @Roles([Id], [Name], [Memo]) values
-            {String.Join($",{Environment.NewLine}", rows)};
-
-            """;
+        var insert = InsertValues("@Roles([Id], [Name], [Memo])",
+            roles.Select(r => $"\t({Str(r.Id)}, {Str(r.Name)}, {Str(r.Memo)})"));
 
         return $"""
             -- ROLES
@@ -290,13 +299,8 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
             .ThenBy(g => g.Grant.Role, StringComparer.Ordinal)
             .Select(g => $"\t({Str(g.Endpoint)}, {Str(g.Grant.Role)}, {Bit(g.Grant, PermissionFlag.CanView)}, " +
                 $"{Bit(g.Grant, PermissionFlag.CanCreate)}, {Bit(g.Grant, PermissionFlag.CanEdit)}, {Bit(g.Grant, PermissionFlag.CanDelete)}, " +
-                $"{Bit(g.Grant, PermissionFlag.CanPost)}, {Bit(g.Grant, PermissionFlag.CanUnpost)})")
-            .ToList();
-        var insert = rows.Count == 0 ? String.Empty : $"""
-                insert into @Grants([Endpoint], [Role], [CanView], [CanCreate], [CanEdit], [CanDelete], [CanPost], [CanUnpost]) values
-            {String.Join($",{Environment.NewLine}", rows)};
-
-            """;
+                $"{Bit(g.Grant, PermissionFlag.CanPost)}, {Bit(g.Grant, PermissionFlag.CanUnpost)})");
+        var insert = InsertValues("@Grants([Endpoint], [Role], [CanView], [CanCreate], [CanEdit], [CanDelete], [CanPost], [CanUnpost])", rows);
 
         return $"""
             -- GRANTS
@@ -499,11 +503,7 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
             var inserted = baseline.Concat(authored).Select(c => $"[{c.Name}]");
             var sources = baseline.Concat(authored).Select(c => $"s.[{c.Name}]");
 
-            var insert = t.Rows.Count == 0 ? String.Empty : $"""
-                insert into @{t.Model}({String.Join(", ", names)}) values
-            {String.Join($",{Environment.NewLine}", rows)};
-
-            """;
+            var insert = InsertValues($"@{t.Model}({String.Join(", ", names)})", rows);
             var left = hasVoid && hasSystem ? $"""
 
                 when not matched by source and t.[{Constants.FieldNames.IsSystem}] = 1 then update set
@@ -783,7 +783,6 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
         sqlTables.Sort(StringComparer.Ordinal);
         sqlColumns.Sort(StringComparer.Ordinal);
 
-        var rowDiv = $",{Environment.NewLine}\t";
         var sqlScript = $"""
         /* METADATA SEED. Version: {PlatformVersion} */
         begin
@@ -795,13 +794,8 @@ public class SqlDbGenerator(IAppCodeProvider _appCodeProvider, IDbContext _dbCon
                 [length] int, [precision] tinyint, [scale] tinyint, [nullable] bit,
                 [ref_schema] nvarchar(128), [ref_table] nvarchar(128), [default] nvarchar(128), [sql_as] nvarchar(max));
 
-            insert into @tables([schema], [table], [xtra],
-                [master_schema], [master_table], [master_column]) values
-            {String.Join(rowDiv, sqlTables)};
-
-            insert into @columns([schema], [table], [column], [datatype],
-                [length], [precision], [scale], [nullable], [ref_schema], [ref_table], [default], [sql_as]) values
-            {String.Join(rowDiv, sqlColumns)};
+        {InsertValues("@tables([schema], [table], [xtra], [master_schema], [master_table], [master_column])", sqlTables)}
+        {InsertValues("@columns([schema], [table], [column], [datatype], [length], [precision], [scale], [nullable], [ref_schema], [ref_table], [default], [sql_as])", sqlColumns)}
 
             -- merge tables
             merge a2meta.Tables as t

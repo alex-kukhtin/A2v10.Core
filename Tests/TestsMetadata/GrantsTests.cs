@@ -83,4 +83,16 @@ public class GrantsTests
         Assert.DoesNotContain("insert into @Grants", sql);
         Assert.Contains("when not matched by source then delete;", sql);
     }
+
+    // one 'insert ... values' takes at most 1000 rows; every table variable of the deploy goes in batches of 200
+    [Fact]
+    public void Many_grants_go_in_batches()
+    {
+        var sql = SqlDbGenerator.CreateGrantsScript(Enumerable.Range(0, 450)
+            .Select(i => ($"/catalog/c{i:D3}", new EndpointGrant("Everyone", PermissionFlag.CanView))));
+
+        var batches = sql.Split("insert into @Grants").Skip(1).ToList();
+        Assert.Equal([200, 200, 50], batches.Select(b => b.Split("(N'/catalog/c").Length - 1));
+        Assert.Equal(1, sql.Split("merge a2security.Grants").Length - 1);
+    }
 }
