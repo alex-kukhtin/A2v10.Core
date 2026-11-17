@@ -174,7 +174,8 @@ public sealed record FormElement
         FormElementKind.Filters => ["filters"],
         FormElementKind.Taskpad or FormElementKind.Tabs => ["elements"],
         FormElementKind.Toolbar => ["commands"],
-        FormElementKind.DataGrid or FormElementKind.TreeGrid => ["fields"],
+        // a tab draws the grid of its rows and nothing else (XamlBuilder.CreateTabsScope)
+        FormElementKind.DataGrid or FormElementKind.TreeGrid or FormElementKind.Tab => ["fields"],
         // its own editors, and the groups under it
         FormElementKind.Group => ["fields", "elements"],
         FormElementKind.Pager => [],

@@ -204,6 +204,32 @@ public class JsonSchemaSetTests
         Assert.Equal("post[0].dt.storno", finding.Path);
     }
 
+    // the load refuses it too (ResolveColumnsAsync); the schema says it while the file is written
+    [Fact]
+    public void A_reference_without_a_target_names_the_target()
+    {
+        Assert.Null(Validate("""{ "table": "Items", "fields": { "Unit": { "type": "ref", "target": "/catalog/unit" } } }"""));
+
+        var finding = Finding("""{ "table": "Items", "fields": { "Unit": { "type": "ref" } } }""");
+        Assert.Equal("fields.Unit", finding.Path);
+        Assert.Equal("'target' is required here", finding.Message);
+        Assert.NotNull(Validate("""{ "table": "Items", "fields": { "Rate": { "type": "enum" } } }"""));
+    }
+
+    // the load refuses it too (PostStatements): a row needs the collection it is a row of
+    [Fact]
+    public void A_posting_row_without_each_names_each()
+    {
+        var finding = Finding("""
+            {
+              "storage": "/document",
+              "post": [ { "journal": "/journal/stock", "dir": "in", "row": { "Qty": "Qty" } } ]
+            }
+            """);
+        Assert.Equal("post[0]", finding.Path);
+        Assert.Equal("'each' is required here", finding.Message);
+    }
+
     // a name has no token of its own, so what is said about it is said at its property
     [Fact]
     public void A_refused_key_name_is_reported_at_its_property()

@@ -1,6 +1,5 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "https://a2v10.com/schemas/metadata-endpoint-json-schema.json",
     "title": "A2v10 metadata.json (endpoint)",
     "description": "One endpoint: catalog, document, journal, or an operation of a document. A report, the autonum registry, an enum set, a chart of accounts and a ledger have schemas of their own. Enum values are written in camelCase as listed; command tokens are PascalCase and case-sensitive.",
     "type": "object",
@@ -117,7 +116,7 @@
                 "type": { "$ref": "#/definitions/columnType" },
                 "target": {
                     "type": "string",
-                    "description": "For a reference: path of the endpoint it points at, e.g. '/catalog/item'. Required, and checked against the kind, for 'enum' ('/enum/...'), 'state' ('/state/...'), 'account' ('/accplan/...'), 'company' ('/catalog/company') and 'basedOn' ('/document/...'); not written for 'user', whose target is the platform's logins. At most one 'company' column per table, none in a collection."
+                    "description": "For a reference: path of the endpoint it points at, e.g. '/catalog/item'. Required for 'ref', and required and checked against the kind for 'enum' ('/enum/...'), 'state' ('/state/...'), 'account' ('/accplan/...'), 'company' ('/catalog/company') and 'basedOn' ('/document/...'); not written for 'user', whose target is the platform's logins. At most one 'company' column per table, none in a collection."
                 },
                 "length": {
                     "type": "integer",
@@ -136,7 +135,9 @@
                 },
                 "origin": { "$ref": "#/definitions/origin" },
                 "synonyms": { "$ref": "#/definitions/synonyms" }
-            }
+            },
+            "if": { "properties": { "type": { "enum": [ "ref", "enum", "state", "account", "company", "basedOn" ] } }, "required": [ "type" ] },
+            "then": { "required": [ "target" ] }
         },
 
         "origin": {
@@ -493,10 +494,12 @@
                 },
                 "row": {
                     "type": "object",
-                    "description": "Journal field -> field of the iterated row.",
+                    "description": "Journal field -> field of the iterated row. Requires 'each': without it there is no row.",
                     "additionalProperties": { "type": "string" }
                 }
-            }
+            },
+            "if": { "required": [ "row" ] },
+            "then": { "required": [ "each" ] }
         },
 
         "basedOn": {
@@ -780,7 +783,7 @@
             "properties": {
                 "path": {
                     "type": "string",
-                    "description": "Path of the blank file, relative to the endpoint folder, without extension ('.json' is appended). The last segment is the blank's name; two blanks under one name are refused."
+                    "description": "Path of the blank file, relative to the endpoint folder, without extension: the file is found as '.vxaml', '.xaml' or '.json', and two of them beside each other are refused. The last segment is the blank's name; two blanks under one name are refused."
                 },
                 "title": {
                     "type": "string",

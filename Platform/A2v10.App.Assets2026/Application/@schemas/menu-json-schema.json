@@ -1,15 +1,19 @@
-﻿{
-	"$schema": "http://json-schema.org/draft-04/schema",
-	"$version": "10.1.8666",
-	"$date": "2026-09-24",
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$version": "10.1.8675",
+	"$date": "2026-11-17",
 	"title": "JSON Schema for menu.json",
+	"description": "The menu: sections (first level), subsections (second), items (third), the rows of an aux (fourth). The level gives the role, and each role reads its own keys: a key off its level is not read - silently.",
 	"type": "object",
 	"required": [ "menu" ],
 	"additionalProperties": false,
 
 	"properties": {
 		"$schema": { "type": "string" },
-		"appTitle": { "type": "string" },
+		"appTitle": {
+			"description": "What the user sees in the title: not the name of the application, its folder or its database.",
+			"type": "string"
+		},
 		"columns": {
 			"description": "Columns of the section panel the second-level items are laid out in; 1 when absent.",
 			"type": "integer",
@@ -54,35 +58,41 @@
 
 			"properties": {
 				"title": {
+					"description": "Every level. '@[Key]' is a localization key, anything else a literal.",
 					"type": "string"
 				},
 
 				"icon": {
+					"description": "A section only: the strip on the left is the one place an icon is drawn.",
 					"$ref": "#/definitions/icon"
 				},
 
 				"endpoint": {
 					"type": "string",
-					"description": "The endpoint a leaf opens: /<kind>/<endpoint>. Not a page address: the menu adds the action and the id."
+					"description": "A leaf only - an item, or a row of an aux. The endpoint it opens: /<kind>/<endpoint>. Not a page address: the menu adds the action and the id."
 				},
 
 				"id": {
+					"description": "An aux only: an item with 'items', which opens a two-pane browser of them.",
 					"type": "string"
 				},
 
 				"category": {
+					"description": "A row of an aux only: the group it is listed under in the browser.",
 					"type": "string"
+				},
+
+				"underline": {
+					"description": "A section only: a line under it in the strip.",
+					"type": "boolean"
 				},
 
 				"create": {
 					"type": "boolean"
 				},
 
-				"underline": {
-					"type": "boolean"
-				},
-
 				"grow": {
+					"description": "A spacer in the array of sections, written alone - { \"grow\": true }: the sections after it are pushed to the end of the strip.",
 					"type": "boolean"
 				},
 
@@ -107,6 +117,7 @@
 				},
 
 				"items": {
+					"description": "What the node holds: a section its subsections, a subsection its items, an aux its rows.",
 					"type": "array",
 					"items": {
 						"$ref": "#/definitions/menuItem"

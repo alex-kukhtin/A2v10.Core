@@ -1,6 +1,5 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "https://a2v10.com/schemas/metadata-autonum-json-schema.json",
     "title": "A2v10 metadata.json (autonum)",
     "description": "The numberings of the application: one file, at the root of the 'autonum' folder, with no folders under it. An endpoint draws from one of these by writing \"autonum\": \"<id>\" in its own metadata.json, and the number lands in its column of type 'autonum'. What is NOT here: the counters. A numbering has one counter per period it has been used in, they change with every document, and they live in a table of their own - nothing about them is declared.",
     "type": "object",

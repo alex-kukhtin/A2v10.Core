@@ -1296,6 +1296,10 @@ public class DatabaseMetadataProvider(DatabaseMetadataCache _metadataCache, IDbC
                 if (group.FirstOrDefault(c => TargetOf(c.Type) != null) is { } untargeted)
                     throw new InvalidOperationException(
                         $"{endpoint.Path}: [{untargeted.Name}] is '{untargeted.Type}' and declares no 'target' - it has to name {TargetOf(untargeted.Type)!.Value.What}");
+                // any kind, so not in TargetOf - but it points somewhere, and without a target it is skipped here and read as nothing
+                if (group.FirstOrDefault(c => c.Type == ColumnType.Ref) is { } unnamed)
+                    throw new InvalidOperationException(
+                        $"{endpoint.Path}: [{unnamed.Name}] is 'ref' and declares no 'target' - it has to name the endpoint it points at (/catalog/<name>, /document/<name>)");
                 continue;
             }
 
